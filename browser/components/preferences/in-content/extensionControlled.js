@@ -6,14 +6,26 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                                  "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-                                  "resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "DeferredTask",
-                                  "resource://gre/modules/DeferredTask.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
-                                  "resource://gre/modules/ExtensionSettingsStore.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "DeferredTask",
+  "resource://gre/modules/DeferredTask.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionSettingsStore",
+  "resource://gre/modules/ExtensionSettingsStore.jsm"
+);
 
 const PREF_SETTING_TYPE = "prefs";
 const PROXY_KEY = "proxy.settings";
@@ -37,10 +49,10 @@ const API_PROXY_PREFS = [
 
 let extensionControlledContentIds = {
   "privacy.containers": "browserContainersExtensionContent",
-  "homepage_override": "browserHomePageExtensionContent",
-  "newTabURL": "browserNewTabExtensionContent",
-  "webNotificationsDisabled": "browserNotificationsPermissionExtensionContent",
-  "defaultSearch": "browserDefaultSearchExtensionContent",
+  homepage_override: "browserHomePageExtensionContent",
+  newTabURL: "browserNewTabExtensionContent",
+  webNotificationsDisabled: "browserNotificationsPermissionExtensionContent",
+  defaultSearch: "browserDefaultSearchExtensionContent",
   "proxy.settings": "proxyExtensionContent",
   get "websites.trackingProtectionMode"() {
     return {
@@ -51,10 +63,10 @@ let extensionControlledContentIds = {
 };
 
 const extensionControlledL10nKeys = {
-  "homepage_override": "homepage-override",
-  "newTabURL": "new-tab-url",
-  "webNotificationsDisabled": "web-notifications",
-  "defaultSearch": "default-search",
+  homepage_override: "homepage-override",
+  newTabURL: "new-tab-url",
+  webNotificationsDisabled: "web-notifications",
+  defaultSearch: "default-search",
   "privacy.containers": "privacy-containers",
   "websites.trackingProtectionMode": "websites-content-blocking-all-trackers",
   "proxy.settings": "proxy-config",
@@ -63,8 +75,8 @@ const extensionControlledL10nKeys = {
 let extensionControlledIds = {};
 
 /**
-  * Check if a pref is being managed by an extension.
-  */
+ * Check if a pref is being managed by an extension.
+ */
 async function getControllingExtensionInfo(type, settingName) {
   await ExtensionSettingsStore.initialize();
   return ExtensionSettingsStore.getSetting(type, settingName);
@@ -73,9 +85,9 @@ async function getControllingExtensionInfo(type, settingName) {
 function getControllingExtensionEls(settingName) {
   let idInfo = extensionControlledContentIds[settingName];
   let section = document.getElementById(idInfo.section || idInfo);
-  let button = idInfo.button ?
-    document.getElementById(idInfo.button) :
-    section.querySelector("button");
+  let button = idInfo.button
+    ? document.getElementById(idInfo.button)
+    : section.querySelector("button");
   return {
     section,
     button,
@@ -85,8 +97,7 @@ function getControllingExtensionEls(settingName) {
 
 async function getControllingExtension(type, settingName) {
   let info = await getControllingExtensionInfo(type, settingName);
-  let addon = info && info.id
-    && await AddonManager.getAddonByID(info.id);
+  let addon = info && info.id && (await AddonManager.getAddonByID(info.id));
   return addon;
 }
 
@@ -103,9 +114,11 @@ async function handleControllingExtension(type, settingName) {
     showControllingExtension(settingName, addon);
   } else {
     let elements = getControllingExtensionEls(settingName);
-    if (extensionControlledIds[settingName]
-        && !document.hidden
-        && elements.button) {
+    if (
+      extensionControlledIds[settingName] &&
+      !document.hidden &&
+      elements.button
+    ) {
       showEnableExtensionMessage(settingName);
     } else {
       hideControllingExtension(settingName);
@@ -118,11 +131,12 @@ async function handleControllingExtension(type, settingName) {
 
 function settingNameToL10nID(settingName) {
   if (!extensionControlledL10nKeys.hasOwnProperty(settingName)) {
-    throw new Error(`Unknown extension controlled setting name: ${settingName}`);
+    throw new Error(
+      `Unknown extension controlled setting name: ${settingName}`
+    );
   }
   return `extension-controlled-${extensionControlledL10nKeys[settingName]}`;
 }
-
 
 /**
  * Set the localization data for the description of the controlling extension.
@@ -232,7 +246,10 @@ function showEnableExtensionMessage(settingName) {
     return img;
   };
   let label = document.createXULElement("label");
-  let addonIcon = icon("chrome://mozapps/skin/extensions/extensionGeneric-16.svg", "addons-icon");
+  let addonIcon = icon(
+    "chrome://mozapps/skin/extensions/extensionGeneric-16.svg",
+    "addons-icon"
+  );
   let toolbarIcon = icon("chrome://browser/skin/menu.svg", "menu-icon");
   label.appendChild(addonIcon);
   label.appendChild(toolbarIcon);
@@ -249,7 +266,7 @@ function showEnableExtensionMessage(settingName) {
 
 function makeDisableControllingExtension(type, settingName) {
   return async function disableExtension() {
-    let {id} = await getControllingExtensionInfo(type, settingName);
+    let { id } = await getControllingExtensionInfo(type, settingName);
     let addon = await AddonManager.getAddonByID(id);
     await addon.disable();
   };

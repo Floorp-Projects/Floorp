@@ -8,11 +8,15 @@
 // ClientID fails without...
 do_get_profile();
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
-const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
-const {Discovery} = ChromeUtils.import("resource:///modules/Discovery.jsm");
-const {ContextualIdentityService} = ChromeUtils.import("resource://gre/modules/ContextualIdentityService.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const { Discovery } = ChromeUtils.import("resource:///modules/Discovery.jsm");
+const { ContextualIdentityService } = ChromeUtils.import(
+  "resource://gre/modules/ContextualIdentityService.jsm"
+);
 
 const TAAR_COOKIE_NAME = "taarId";
 
@@ -37,11 +41,25 @@ add_task(async function test_discovery() {
   await ClientID.getClientID();
   await Discovery.update();
 
-  ok(Services.cookies.cookieExists(uri.host, "/", TAAR_COOKIE_NAME, {}), "cookie exists");
-  ok(!Services.cookies.cookieExists(uri.host, "/", TAAR_COOKIE_NAME, {privateBrowsingId: 1}), "no private cookie exists");
+  ok(
+    Services.cookies.cookieExists(uri.host, "/", TAAR_COOKIE_NAME, {}),
+    "cookie exists"
+  );
+  ok(
+    !Services.cookies.cookieExists(uri.host, "/", TAAR_COOKIE_NAME, {
+      privateBrowsingId: 1,
+    }),
+    "no private cookie exists"
+  );
   ContextualIdentityService.getPublicIdentities().forEach(identity => {
-    let {userContextId} = identity;
-    equal(Services.cookies.cookieExists(uri.host, "/", TAAR_COOKIE_NAME, {userContextId}), identity.public, "cookie exists");
+    let { userContextId } = identity;
+    equal(
+      Services.cookies.cookieExists(uri.host, "/", TAAR_COOKIE_NAME, {
+        userContextId,
+      }),
+      identity.public,
+      "cookie exists"
+    );
   });
 
   // Test the addition of a new container.
@@ -49,10 +67,18 @@ add_task(async function test_discovery() {
     let cookie = subject.QueryInterface(Ci.nsICookie);
     equal(cookie.name, TAAR_COOKIE_NAME, "taar cookie exists");
     equal(cookie.host, uri.host, "cookie exists for host");
-    equal(cookie.originAttributes.userContextId, container.userContextId, "cookie userContextId is correct");
+    equal(
+      cookie.originAttributes.userContextId,
+      container.userContextId,
+      "cookie userContextId is correct"
+    );
     return true;
   });
-  let container = ContextualIdentityService.create("New Container", "Icon", "Color");
+  let container = ContextualIdentityService.create(
+    "New Container",
+    "Icon",
+    "Color"
+  );
   await changed;
 
   // Test disabling
@@ -63,8 +89,13 @@ add_task(async function test_discovery() {
   });
 
   ContextualIdentityService.getPublicIdentities().forEach(identity => {
-    let {userContextId} = identity;
-    ok(!Services.cookies.cookieExists(uri.host, "/", TAAR_COOKIE_NAME, {userContextId}), "no cookie exists");
+    let { userContextId } = identity;
+    ok(
+      !Services.cookies.cookieExists(uri.host, "/", TAAR_COOKIE_NAME, {
+        userContextId,
+      }),
+      "no cookie exists"
+    );
   });
 
   // turn off containers
@@ -76,8 +107,13 @@ add_task(async function test_discovery() {
   });
   // make sure we did not set cookies on containers
   ContextualIdentityService.getPublicIdentities().forEach(identity => {
-    let {userContextId} = identity;
-    ok(!Services.cookies.cookieExists(uri.host, "/", TAAR_COOKIE_NAME, {userContextId}), "no cookie exists");
+    let { userContextId } = identity;
+    ok(
+      !Services.cookies.cookieExists(uri.host, "/", TAAR_COOKIE_NAME, {
+        userContextId,
+      }),
+      "no cookie exists"
+    );
   });
 
   // Make sure clientId changes update discovery

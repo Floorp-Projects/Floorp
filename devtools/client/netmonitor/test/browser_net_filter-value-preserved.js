@@ -22,16 +22,27 @@ add_task(async function() {
 
   await monitor.toolbox.switchHost("right");
 
-  is(toolbars.querySelectorAll(".devtools-toolbar").length,
-     2, "Should be in 2 toolbar mode");
+  is(
+    toolbars.querySelectorAll(".devtools-toolbar").length,
+    2,
+    "Should be in 2 toolbar mode"
+  );
 
   input = toolbars.querySelector(".devtools-filterinput");
-  is(input.value, "hello", "Value should be preserved after switching to right host");
+  is(
+    input.value,
+    "hello",
+    "Value should be preserved after switching to right host"
+  );
 
   await monitor.toolbox.switchHost("bottom");
 
   input = toolbars.querySelector(".devtools-filterinput");
-  is(input.value, "hello", "Value should be preserved after switching to bottom host");
+  is(
+    input.value,
+    "hello",
+    "Value should be preserved after switching to bottom host"
+  );
 
   await monitor.toolbox.selectTool("inspector");
   await monitor.toolbox.selectTool("netmonitor");

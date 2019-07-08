@@ -7,10 +7,11 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console subresource STS " +
-                 "warning test";
-const TEST_DOC = "https://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/test-subresource-security-error.html";
+const TEST_URI =
+  "data:text/html;charset=utf-8,Web Console subresource STS " + "warning test";
+const TEST_DOC =
+  "https://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-subresource-security-error.html";
 const SAMPLE_MSG = "specified a header that could not be parsed successfully.";
 
 add_task(async function() {

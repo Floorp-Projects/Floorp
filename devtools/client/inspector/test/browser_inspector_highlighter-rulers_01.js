@@ -6,9 +6,10 @@
 
 // Test the creation of the geometry highlighter elements.
 
-const TEST_URL = "data:text/html;charset=utf-8," +
-                 "<div style='position:absolute;left: 0; top: 0; " +
-                 "width: 40000px; height: 8000px'></div>";
+const TEST_URL =
+  "data:text/html;charset=utf-8," +
+  "<div style='position:absolute;left: 0; top: 0; " +
+  "width: 40000px; height: 8000px'></div>";
 
 const ID = "rulers-highlighter-";
 
@@ -36,7 +37,10 @@ async function isHiddenByDefault(highlighterFront, inspector, testActor) {
   info("Checking the highlighter is hidden by default");
 
   let hidden = await testActor.getHighlighterNodeAttribute(
-      ID + "elements", "hidden", highlighterFront);
+    ID + "elements",
+    "hidden",
+    highlighterFront
+  );
 
   is(hidden, "true", "highlighter is hidden by default");
 
@@ -47,7 +51,10 @@ async function isHiddenByDefault(highlighterFront, inspector, testActor) {
   await highlighterFront.show(body);
 
   hidden = await testActor.getHighlighterNodeAttribute(
-      ID + "elements", "hidden", highlighterFront);
+    ID + "elements",
+    "hidden",
+    highlighterFront
+  );
 
   isnot(hidden, "true", "highlighter is visible after show");
 }
@@ -56,9 +63,13 @@ async function hasRightLabelsContent(highlighterFront, inspector, testActor) {
   info("Checking the rulers have the proper text, based on rulers' size");
 
   const contentX = await testActor.getHighlighterNodeTextContent(
-    `${ID}x-axis-text`, highlighterFront);
+    `${ID}x-axis-text`,
+    highlighterFront
+  );
   const contentY = await testActor.getHighlighterNodeTextContent(
-    `${ID}y-axis-text`, highlighterFront);
+    `${ID}y-axis-text`,
+    highlighterFront
+  );
 
   let expectedX = "";
   for (let i = RULERS_TEXT_STEP; i < RULERS_MAX_X_AXIS; i += RULERS_TEXT_STEP) {

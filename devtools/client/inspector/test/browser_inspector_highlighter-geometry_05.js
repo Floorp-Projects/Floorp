@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- /* Globals defined in: devtools/client/inspector/test/head.js */
+/* Globals defined in: devtools/client/inspector/test/head.js */
 
 "use strict";
 
@@ -13,66 +13,79 @@ const TEST_URL = URL_ROOT + "doc_inspector_highlighter-geometry_02.html";
 const ID = "geometry-editor-";
 const HIGHLIGHTER_TYPE = "GeometryEditorHighlighter";
 
-const TEST_DATA = [{
-  selector: "body",
-  isOffsetParentVisible: false,
-  isCurrentNodeVisible: false,
-  hasVisibleArrowsAndHandlers: false,
-}, {
-  selector: "h1",
-  isOffsetParentVisible: false,
-  isCurrentNodeVisible: false,
-  hasVisibleArrowsAndHandlers: false,
-}, {
-  selector: ".absolute",
-  isOffsetParentVisible: false,
-  isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: true,
-}, {
-  selector: "#absolute-container",
-  isOffsetParentVisible: false,
-  isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: false,
-}, {
-  selector: ".absolute-bottom-right",
-  isOffsetParentVisible: true,
-  isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: true,
-}, {
-  selector: ".absolute-width-margin",
-  isOffsetParentVisible: true,
-  isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: true,
-}, {
-  selector: ".absolute-all-4",
-  isOffsetParentVisible: true,
-  isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: true,
-}, {
-  selector: ".relative",
-  isOffsetParentVisible: true,
-  isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: true,
-}, {
-  selector: ".static",
-  isOffsetParentVisible: false,
-  isCurrentNodeVisible: false,
-  hasVisibleArrowsAndHandlers: false,
-}, {
-  selector: ".static-size",
-  isOffsetParentVisible: false,
-  isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: false,
-}, {
-  selector: ".fixed",
-  isOffsetParentVisible: false,
-  isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: true,
-}];
+const TEST_DATA = [
+  {
+    selector: "body",
+    isOffsetParentVisible: false,
+    isCurrentNodeVisible: false,
+    hasVisibleArrowsAndHandlers: false,
+  },
+  {
+    selector: "h1",
+    isOffsetParentVisible: false,
+    isCurrentNodeVisible: false,
+    hasVisibleArrowsAndHandlers: false,
+  },
+  {
+    selector: ".absolute",
+    isOffsetParentVisible: false,
+    isCurrentNodeVisible: true,
+    hasVisibleArrowsAndHandlers: true,
+  },
+  {
+    selector: "#absolute-container",
+    isOffsetParentVisible: false,
+    isCurrentNodeVisible: true,
+    hasVisibleArrowsAndHandlers: false,
+  },
+  {
+    selector: ".absolute-bottom-right",
+    isOffsetParentVisible: true,
+    isCurrentNodeVisible: true,
+    hasVisibleArrowsAndHandlers: true,
+  },
+  {
+    selector: ".absolute-width-margin",
+    isOffsetParentVisible: true,
+    isCurrentNodeVisible: true,
+    hasVisibleArrowsAndHandlers: true,
+  },
+  {
+    selector: ".absolute-all-4",
+    isOffsetParentVisible: true,
+    isCurrentNodeVisible: true,
+    hasVisibleArrowsAndHandlers: true,
+  },
+  {
+    selector: ".relative",
+    isOffsetParentVisible: true,
+    isCurrentNodeVisible: true,
+    hasVisibleArrowsAndHandlers: true,
+  },
+  {
+    selector: ".static",
+    isOffsetParentVisible: false,
+    isCurrentNodeVisible: false,
+    hasVisibleArrowsAndHandlers: false,
+  },
+  {
+    selector: ".static-size",
+    isOffsetParentVisible: false,
+    isCurrentNodeVisible: true,
+    hasVisibleArrowsAndHandlers: false,
+  },
+  {
+    selector: ".fixed",
+    isOffsetParentVisible: false,
+    isCurrentNodeVisible: true,
+    hasVisibleArrowsAndHandlers: true,
+  },
+];
 
 add_task(async function() {
-  const helper = await openInspectorForURL(TEST_URL)
-                       .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
+  const helper = await openInspectorForURL(TEST_URL).then(
+    getHighlighterHelperFor(HIGHLIGHTER_TYPE)
+  );
 
   helper.prefix = ID;
 
@@ -91,24 +104,32 @@ async function testNode(helper, data) {
   const { selector } = data;
   await helper.show(data.selector);
 
-  is((await isOffsetParentVisible(helper)), data.isOffsetParentVisible,
-    "The offset-parent highlighter visibility is correct for node " + selector);
-  is((await isCurrentNodeVisible(helper)), data.isCurrentNodeVisible,
-    "The current-node highlighter visibility is correct for node " + selector);
-  is((await hasVisibleArrowsAndHandlers(helper)),
+  is(
+    await isOffsetParentVisible(helper),
+    data.isOffsetParentVisible,
+    "The offset-parent highlighter visibility is correct for node " + selector
+  );
+  is(
+    await isCurrentNodeVisible(helper),
+    data.isCurrentNodeVisible,
+    "The current-node highlighter visibility is correct for node " + selector
+  );
+  is(
+    await hasVisibleArrowsAndHandlers(helper),
     data.hasVisibleArrowsAndHandlers,
-    "The arrows visibility is correct for node " + selector);
+    "The arrows visibility is correct for node " + selector
+  );
 }
 
-async function isOffsetParentVisible({isElementHidden}) {
+async function isOffsetParentVisible({ isElementHidden }) {
   return !(await isElementHidden("offset-parent"));
 }
 
-async function isCurrentNodeVisible({isElementHidden}) {
+async function isCurrentNodeVisible({ isElementHidden }) {
   return !(await isElementHidden("current-node"));
 }
 
-async function hasVisibleArrowsAndHandlers({isElementHidden}) {
+async function hasVisibleArrowsAndHandlers({ isElementHidden }) {
   for (const side of ["top", "left", "bottom", "right"]) {
     const hidden = await isElementHidden("arrow-" + side);
     if (!hidden) {

@@ -11,6 +11,8 @@ function run_test() {
   let query = PlacesUtils.history.getNewQuery();
   let options = PlacesUtils.history.getNewQueryOptions();
   query.setParents([PlacesUtils.bookmarks.rootGuid]);
-  Assert.equal(PlacesUtils.history.queryToQueryString(query, options),
-               `place:parent=${PlacesUtils.bookmarks.rootGuid}`);
+  Assert.equal(
+    PlacesUtils.history.queryToQueryString(query, options),
+    `place:parent=${PlacesUtils.bookmarks.rootGuid}`
+  );
 }

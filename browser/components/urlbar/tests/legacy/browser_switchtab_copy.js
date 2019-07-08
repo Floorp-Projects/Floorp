@@ -3,17 +3,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const TEST_URL = `${TEST_BASE_URL}dummy_page.html`;
-var testActionURL = "moz-action:switchtab," + JSON.stringify({url: TEST_URL});
+var testActionURL = "moz-action:switchtab," + JSON.stringify({ url: TEST_URL });
 const testURL = gURLBar.trimValue(TEST_URL);
 var testTab;
 
 function runNextTest() {
   if (tests.length) {
     let t = tests.shift();
-    waitForClipboard(t.expected, t.setup, function() {
-      t.success();
-      runNextTest();
-    }, cleanup);
+    waitForClipboard(
+      t.expected,
+      t.setup,
+      function() {
+        t.success();
+        runNextTest();
+      },
+      cleanup
+    );
   } else {
     cleanup();
   }
@@ -30,8 +35,16 @@ var tests = [
     setup() {
       gURLBar.value = testActionURL;
       gURLBar.valueIsTyped = true;
-      is(gURLBar.value, testActionURL, "gURLBar starts with the correct real value");
-      is(gURLBar.textValue, testURL, "gURLBar starts with the correct display value");
+      is(
+        gURLBar.value,
+        testActionURL,
+        "gURLBar starts with the correct real value"
+      );
+      is(
+        gURLBar.textValue,
+        testURL,
+        "gURLBar starts with the correct display value"
+      );
 
       // Focus the urlbar so we can select it all & copy
       gURLBar.focus();
@@ -39,7 +52,11 @@ var tests = [
       goDoCommand("cmd_copy");
     },
     success() {
-      is(gURLBar.value, testActionURL, "gURLBar.value didn't change when copying");
+      is(
+        gURLBar.value,
+        testActionURL,
+        "gURLBar.value didn't change when copying"
+      );
     },
   },
   {
@@ -51,7 +68,11 @@ var tests = [
       goDoCommand("cmd_copy");
     },
     success() {
-      is(gURLBar.value, testActionURL, "gURLBar.value didn't change when copying");
+      is(
+        gURLBar.value,
+        testActionURL,
+        "gURLBar.value didn't change when copying"
+      );
     },
   },
   {
@@ -73,8 +94,16 @@ var tests = [
       gURLBar.value = testActionURL;
       gURLBar.valueIsTyped = true;
       // Sanity check that we have the right value
-      is(gURLBar.value, testActionURL, "gURLBar starts with the correct real value");
-      is(gURLBar.textValue, testURL, "gURLBar starts with the correct display value");
+      is(
+        gURLBar.value,
+        testActionURL,
+        "gURLBar starts with the correct real value"
+      );
+      is(
+        gURLBar.textValue,
+        testURL,
+        "gURLBar starts with the correct display value"
+      );
 
       // Now just select part of the value & cut that.
       gURLBar.selectionStart = testURL.length - 10;
@@ -82,7 +111,11 @@ var tests = [
       goDoCommand("cmd_cut");
     },
     success() {
-      is(gURLBar.value, testURL.substring(0, testURL.length - 10), "gURLBar.value has the correct value");
+      is(
+        gURLBar.value,
+        testURL.substring(0, testURL.length - 10),
+        "gURLBar.value has the correct value"
+      );
     },
   },
 ];

@@ -277,7 +277,9 @@ var FormAutofillNameUtils = {
     // names (almost) never have a middle name.
 
     let reHangulName = new RegExp(
-      "^[" + this.HANGUL_RANGE.join("") + this.WHITESPACE.join("") + "]+$", "u");
+      "^[" + this.HANGUL_RANGE.join("") + this.WHITESPACE.join("") + "]+$",
+      "u"
+    );
     let nameParts = {
       given: "",
       middle: "",
@@ -297,13 +299,17 @@ var FormAutofillNameUtils = {
       // 4-character Korean names are more likely to be 2/2 than 1/3, so use
       // the full list of Korean 2-char surnames. (instead of only the common
       // ones)
-      let multiCharSurnames = (isKorean && name.length > 3) ?
-        this.KOREAN_MULTI_CHAR_SURNAMES :
-        this.COMMON_CJK_MULTI_CHAR_SURNAMES;
+      let multiCharSurnames =
+        isKorean && name.length > 3
+          ? this.KOREAN_MULTI_CHAR_SURNAMES
+          : this.COMMON_CJK_MULTI_CHAR_SURNAMES;
 
       // Default to 1 character if the surname is not in the list.
-      surnameLength =
-        multiCharSurnames.some(surname => name.startsWith(surname)) ? 2 : 1;
+      surnameLength = multiCharSurnames.some(surname =>
+        name.startsWith(surname)
+      )
+        ? 2
+        : 1;
 
       nameParts.family = name.substr(0, surnameLength);
       nameParts.given = name.substr(surnameLength);
@@ -391,11 +397,13 @@ var FormAutofillNameUtils = {
     return nameParts;
   },
 
-  joinNameParts({given, middle, family}) {
+  joinNameParts({ given, middle, family }) {
     if (this._isCJKName(given) && this._isCJKName(family) && !middle) {
       return family + given;
     }
-    return [given, middle, family].filter(part => part && part.length).join(" ");
+    return [given, middle, family]
+      .filter(part => part && part.length)
+      .join(" ");
   },
 };
 

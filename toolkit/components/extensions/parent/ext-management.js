@@ -3,22 +3,31 @@
 "use strict";
 
 XPCOMUtils.defineLazyGetter(this, "strBundle", function() {
-  return Services.strings.createBundle("chrome://global/locale/extensions.properties");
+  return Services.strings.createBundle(
+    "chrome://global/locale/extensions.properties"
+  );
 });
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "promptService",
-                                   "@mozilla.org/embedcomp/prompt-service;1",
-                                   "nsIPromptService");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "promptService",
+  "@mozilla.org/embedcomp/prompt-service;1",
+  "nsIPromptService"
+);
 
 XPCOMUtils.defineLazyGetter(this, "GlobalManager", () => {
-  const {GlobalManager} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  const { GlobalManager } = ChromeUtils.import(
+    "resource://gre/modules/Extension.jsm",
+    null
+  );
   return GlobalManager;
 });
 
-var {
-  ExtensionError,
-} = ExtensionUtils;
+var { ExtensionError } = ExtensionUtils;
 
 const _ = (key, ...args) => {
   if (args.length) {
@@ -54,7 +63,9 @@ const getExtensionInfoForAddon = (extension, addon) => {
   if (extension) {
     let m = extension.manifest;
 
-    let hostPerms = extension.whiteListedHosts.patterns.map(matcher => matcher.pattern);
+    let hostPerms = extension.whiteListedHosts.patterns.map(
+      matcher => matcher.pattern
+    );
 
     extInfo.permissions = Array.from(extension.permissions).filter(perm => {
       return !hostPerms.includes(perm);
@@ -64,7 +75,7 @@ const getExtensionInfoForAddon = (extension, addon) => {
     extInfo.shortName = m.short_name || "";
     if (m.icons) {
       extInfo.icons = Object.keys(m.icons).map(key => {
-        return {size: Number(key), url: m.icons[key]};
+        return { size: Number(key), url: m.icons[key] };
       });
     }
   }
@@ -162,7 +173,7 @@ const getManagementListener = (extension, context) => {
 
 this.management = class extends ExtensionAPI {
   getAPI(context) {
-    let {extension} = context;
+    let { extension } = context;
     return {
       management: {
         async get(id) {
@@ -187,7 +198,7 @@ this.management = class extends ExtensionAPI {
           });
         },
 
-        async install({url, hash}) {
+        async install({ url, hash }) {
           let listener = {
             onDownloadEnded(install) {
               if (install.addon.appDisabled || install.addon.type !== "theme") {
@@ -214,7 +225,7 @@ this.management = class extends ExtensionAPI {
             throw new ExtensionError("Incompatible addon");
           }
           await install.addon.enable();
-          return {id: install.addon.id};
+          return { id: install.addon.id };
         },
 
         async getSelf() {
@@ -229,17 +240,31 @@ this.management = class extends ExtensionAPI {
               message = `${options.dialogMessage}\n${message}`;
             }
             let title = _("uninstall.confirmation.title", extension.name);
-            let buttonFlags = promptService.BUTTON_POS_0 * promptService.BUTTON_TITLE_IS_STRING +
-                              promptService.BUTTON_POS_1 * promptService.BUTTON_TITLE_IS_STRING;
+            let buttonFlags =
+              promptService.BUTTON_POS_0 *
+                promptService.BUTTON_TITLE_IS_STRING +
+              promptService.BUTTON_POS_1 * promptService.BUTTON_TITLE_IS_STRING;
             let button0Title = _("uninstall.confirmation.button-0.label");
             let button1Title = _("uninstall.confirmation.button-1.label");
-            let response = promptService.confirmEx(null, title, message, buttonFlags, button0Title, button1Title, null, null, {value: 0});
+            let response = promptService.confirmEx(
+              null,
+              title,
+              message,
+              buttonFlags,
+              button0Title,
+              button1Title,
+              null,
+              null,
+              { value: 0 }
+            );
             if (response == 1) {
               throw new ExtensionError("User cancelled uninstall of extension");
             }
           }
           let addon = await AddonManager.getAddonByID(extension.id);
-          let canUninstall = Boolean(addon.permissions & AddonManager.PERM_CAN_UNINSTALL);
+          let canUninstall = Boolean(
+            addon.permissions & AddonManager.PERM_CAN_UNINSTALL
+          );
           if (!canUninstall) {
             throw new ExtensionError("The add-on cannot be uninstalled");
           }
@@ -255,7 +280,9 @@ this.management = class extends ExtensionAPI {
             throw new ExtensionError("setEnabled applies only to theme addons");
           }
           if (addon.isSystem) {
-            throw new ExtensionError("setEnabled cannot be used with a system addon");
+            throw new ExtensionError(
+              "setEnabled cannot be used with a system addon"
+            );
           }
           if (enabled) {
             await addon.enable();
@@ -272,9 +299,15 @@ this.management = class extends ExtensionAPI {
               fire.async(data);
             };
 
-            getManagementListener(extension, context).on("onDisabled", listener);
+            getManagementListener(extension, context).on(
+              "onDisabled",
+              listener
+            );
             return () => {
-              getManagementListener(extension, context).off("onDisabled", listener);
+              getManagementListener(extension, context).off(
+                "onDisabled",
+                listener
+              );
             };
           },
         }).api(),
@@ -289,7 +322,10 @@ this.management = class extends ExtensionAPI {
 
             getManagementListener(extension, context).on("onEnabled", listener);
             return () => {
-              getManagementListener(extension, context).off("onEnabled", listener);
+              getManagementListener(extension, context).off(
+                "onEnabled",
+                listener
+              );
             };
           },
         }).api(),
@@ -302,9 +338,15 @@ this.management = class extends ExtensionAPI {
               fire.async(data);
             };
 
-            getManagementListener(extension, context).on("onInstalled", listener);
+            getManagementListener(extension, context).on(
+              "onInstalled",
+              listener
+            );
             return () => {
-              getManagementListener(extension, context).off("onInstalled", listener);
+              getManagementListener(extension, context).off(
+                "onInstalled",
+                listener
+              );
             };
           },
         }).api(),
@@ -317,13 +359,18 @@ this.management = class extends ExtensionAPI {
               fire.async(data);
             };
 
-            getManagementListener(extension, context).on("onUninstalled", listener);
+            getManagementListener(extension, context).on(
+              "onUninstalled",
+              listener
+            );
             return () => {
-              getManagementListener(extension, context).off("onUninstalled", listener);
+              getManagementListener(extension, context).off(
+                "onUninstalled",
+                listener
+              );
             };
           },
         }).api(),
-
       },
     };
   }

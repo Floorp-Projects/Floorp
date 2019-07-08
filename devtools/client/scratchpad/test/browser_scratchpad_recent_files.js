@@ -48,8 +48,11 @@ async function testAddedToRecent() {
   // recent files.
   lists.recentFiles01 = gScratchpad.getRecentFiles();
 
-  is(lists.recentFiles01.length, 3,
-     "Temporary files created successfully and added to list of recent files.");
+  is(
+    lists.recentFiles01.length,
+    3,
+    "Temporary files created successfully and added to list of recent files."
+  );
 
   // Create a 4th file, this should clear the oldest file.
   gFile04 = await createAndLoadTemporaryFile(gFileName04, gFileContent04);
@@ -58,12 +61,21 @@ async function testAddedToRecent() {
   // and that the other files were reordered successfully.
   lists.recentFiles02 = gScratchpad.getRecentFiles();
 
-  is(lists.recentFiles02[0], lists.recentFiles01[1],
-     "File02 was reordered successfully in the 'recent files'-list.");
-  is(lists.recentFiles02[1], lists.recentFiles01[2],
-     "File03 was reordered successfully in the 'recent files'-list.");
-  isnot(lists.recentFiles02[2], lists.recentFiles01[2],
-        "File04: was added successfully.");
+  is(
+    lists.recentFiles02[0],
+    lists.recentFiles01[1],
+    "File02 was reordered successfully in the 'recent files'-list."
+  );
+  is(
+    lists.recentFiles02[1],
+    lists.recentFiles01[2],
+    "File03 was reordered successfully in the 'recent files'-list."
+  );
+  isnot(
+    lists.recentFiles02[2],
+    lists.recentFiles01[2],
+    "File04: was added successfully."
+  );
 
   // Open the oldest recent file.
   await gScratchpad.openFile(0);
@@ -72,12 +84,21 @@ async function testAddedToRecent() {
   // were reordered successfully.
   lists.recentFiles03 = gScratchpad.getRecentFiles();
 
-  is(lists.recentFiles02[0], lists.recentFiles03[2],
-     "File04 was reordered successfully in the 'recent files'-list.");
-  is(lists.recentFiles02[1], lists.recentFiles03[0],
-     "File03 was reordered successfully in the 'recent files'-list.");
-  is(lists.recentFiles02[2], lists.recentFiles03[1],
-     "File02 was reordered successfully in the 'recent files'-list.");
+  is(
+    lists.recentFiles02[0],
+    lists.recentFiles03[2],
+    "File04 was reordered successfully in the 'recent files'-list."
+  );
+  is(
+    lists.recentFiles02[1],
+    lists.recentFiles03[0],
+    "File03 was reordered successfully in the 'recent files'-list."
+  );
+  is(
+    lists.recentFiles02[2],
+    lists.recentFiles03[1],
+    "File02 was reordered successfully in the 'recent files'-list."
+  );
 }
 
 async function testHideMenu() {
@@ -111,21 +132,29 @@ async function testEnableMenu() {
 
   lists.recentFiles04 = gScratchpad.getRecentFiles();
 
-  is(lists.recentFiles04.length, 2,
-     "Two recent files were successfully removed from the 'recent files'-list");
+  is(
+    lists.recentFiles04.length,
+    2,
+    "Two recent files were successfully removed from the 'recent files'-list"
+  );
 
   const doc = gScratchpadWindow.document;
   const popup = doc.getElementById("sp-menu-open_recentPopup");
 
   const menuitemLabel = popup.children[0].getAttribute("label");
   let correctMenuItem = false;
-  if (menuitemLabel === lists.recentFiles03[2] &&
-      menuitemLabel === lists.recentFiles04[1]) {
+  if (
+    menuitemLabel === lists.recentFiles03[2] &&
+    menuitemLabel === lists.recentFiles04[1]
+  ) {
     correctMenuItem = true;
   }
 
-  is(correctMenuItem, true,
-     "Two recent files were successfully removed from the 'Open Recent'-menu");
+  is(
+    correctMenuItem,
+    true,
+    "Two recent files were successfully removed from the 'Open Recent'-menu"
+  );
 }
 
 async function testOpenDeletedFile() {
@@ -147,17 +176,27 @@ async function testOpenDeletedFile() {
   const doc = gScratchpadWindow.document;
   const popup = doc.getElementById("sp-menu-open_recentPopup");
 
-  is(gScratchpad.getRecentFiles().length, 1,
-     "The missing file was successfully removed from the list.");
+  is(
+    gScratchpad.getRecentFiles().length,
+    1,
+    "The missing file was successfully removed from the list."
+  );
   // The number of recent files stored, plus the separator and the
   // clearRecentMenuItems-item.
-  is(popup.children.length, 3,
-     "The missing file was successfully removed from the menu.");
-  ok(gScratchpad.notificationBox.currentNotification,
-     "The notification was successfully displayed.");
-  is(gScratchpad.notificationBox.currentNotification.messageText.textContent,
-     gScratchpad.strings.GetStringFromName("fileNoLongerExists.notification"),
-     "The notification label is correct.");
+  is(
+    popup.children.length,
+    3,
+    "The missing file was successfully removed from the menu."
+  );
+  ok(
+    gScratchpad.notificationBox.currentNotification,
+    "The notification was successfully displayed."
+  );
+  is(
+    gScratchpad.notificationBox.currentNotification.messageText.textContent,
+    gScratchpad.strings.GetStringFromName("fileNoLongerExists.notification"),
+    "The notification label is correct."
+  );
 }
 
 async function testClearAll() {
@@ -175,11 +214,16 @@ async function testClearAll() {
   const menu = doc.getElementById("sp-open_recent-menu");
   const popup = doc.getElementById("sp-menu-open_recentPopup");
 
-  is(gScratchpad.getRecentFiles().length, 0,
-     "All recent files removed successfully.");
+  is(
+    gScratchpad.getRecentFiles().length,
+    0,
+    "All recent files removed successfully."
+  );
   is(popup.children.length, 0, "All menuitems removed successfully.");
-  ok(menu.hasAttribute("disabled"),
-     "No files in the menu, it was disabled successfully.");
+  ok(
+    menu.hasAttribute("disabled"),
+    "No files in the menu, it was disabled successfully."
+  );
 }
 
 async function createAndLoadTemporaryFile(aFileName, aFileContent) {
@@ -193,12 +237,19 @@ async function createAndLoadTemporaryFile(aFileName, aFileContent) {
   await OS.File.writeAtomic(aFile.path, aFileContent);
 
   gScratchpad.setFilename(aFile.path);
-  let [status] = await gScratchpad.importFromFile(aFile.QueryInterface(Ci.nsIFile), true);
-  ok(Components.isSuccessCode(status),
-     "the temporary file was imported successfully with Scratchpad");
+  let [status] = await gScratchpad.importFromFile(
+    aFile.QueryInterface(Ci.nsIFile),
+    true
+  );
+  ok(
+    Components.isSuccessCode(status),
+    "the temporary file was imported successfully with Scratchpad"
+  );
   status = await gScratchpad.saveFile();
-  ok(Components.isSuccessCode(status),
-     "the temporary file was saved successfully with Scratchpad");
+  ok(
+    Components.isSuccessCode(status),
+    "the temporary file was saved successfully with Scratchpad"
+  );
   checkIfMenuIsPopulated();
 
   info(`File created: ${aFileName}`);
@@ -208,14 +259,17 @@ async function createAndLoadTemporaryFile(aFileName, aFileContent) {
 function checkIfMenuIsPopulated() {
   const doc = gScratchpadWindow.document;
   const expectedMenuitemCount = doc.getElementById("sp-menu-open_recentPopup")
-                              .children.length;
+    .children.length;
   // The number of recent files stored, plus the separator and the
   // clearRecentMenuItems-item.
   const recentFilesPlusExtra = gScratchpad.getRecentFiles().length + 2;
 
   if (expectedMenuitemCount > 2) {
-    is(expectedMenuitemCount, recentFilesPlusExtra,
-       "the recent files menu was populated successfully.");
+    is(
+      expectedMenuitemCount,
+      recentFilesPlusExtra,
+      "the recent files menu was populated successfully."
+    );
   }
 }
 
@@ -237,7 +291,10 @@ async function test() {
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   const loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<p>test recent files in Scratchpad");
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    "data:text/html,<p>test recent files in Scratchpad"
+  );
   await loaded;
   await new Promise(openScratchpad);
 

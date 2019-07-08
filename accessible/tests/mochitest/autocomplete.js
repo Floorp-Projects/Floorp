@@ -1,4 +1,3 @@
-
 const nsISupports = Ci.nsISupports;
 const nsIAutoCompleteResult = Ci.nsIAutoCompleteResult;
 const nsIAutoCompleteSearch = Ci.nsIAutoCompleteSearch;
@@ -16,10 +15,14 @@ var gDefaultAutoCompleteSearch = null;
  */
 function initAutoComplete(aValues, aComments) {
   var allResults = new ResultsHeap(aValues, aComments);
-  gDefaultAutoCompleteSearch =
-    new AutoCompleteSearch("test-a11y-search", allResults);
-  registerAutoCompleteSearch(gDefaultAutoCompleteSearch,
-                             "Accessibility Test AutoCompleteSearch");
+  gDefaultAutoCompleteSearch = new AutoCompleteSearch(
+    "test-a11y-search",
+    allResults
+  );
+  registerAutoCompleteSearch(
+    gDefaultAutoCompleteSearch,
+    "Accessibility Test AutoCompleteSearch"
+  );
 }
 
 /**
@@ -31,7 +34,6 @@ function shutdownAutoComplete() {
   gDefaultAutoCompleteSearch = null;
 }
 
-
 /**
  * Register the given AutoCompleteSearch.
  *
@@ -41,11 +43,14 @@ function shutdownAutoComplete() {
 function registerAutoCompleteSearch(aSearch, aDescription) {
   var name = "@mozilla.org/autocomplete/search;1?name=" + aSearch.name;
 
-  var uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].
-    getService(nsIUUIDGenerator);
+  var uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+    nsIUUIDGenerator
+  );
   var cid = uuidGenerator.generateUUID();
 
-  var componentManager = Components.manager.QueryInterface(nsIComponentRegistrar);
+  var componentManager = Components.manager.QueryInterface(
+    nsIComponentRegistrar
+  );
   componentManager.registerFactory(cid, aDescription, name, aSearch);
 
   // Keep the id on the object so we can unregister later.
@@ -56,10 +61,11 @@ function registerAutoCompleteSearch(aSearch, aDescription) {
  * Unregister the given AutoCompleteSearch.
  */
 function unregisterAutoCompleteSearch(aSearch) {
-  var componentManager = Components.manager.QueryInterface(nsIComponentRegistrar);
+  var componentManager = Components.manager.QueryInterface(
+    nsIComponentRegistrar
+  );
   componentManager.unregisterFactory(aSearch.cid, aSearch);
 }
-
 
 /**
  * A container to keep all possible results of autocomplete search.
@@ -69,15 +75,15 @@ function ResultsHeap(aValues, aComments) {
   this.comments = aComments;
 }
 
-ResultsHeap.prototype =
-{
+ResultsHeap.prototype = {
   constructor: ResultsHeap,
 
   /**
    * Return AutoCompleteResult for the given search string.
    */
   getAutoCompleteResultFor(aSearchString) {
-    var values = [], comments = [];
+    var values = [],
+      comments = [];
     for (var idx = 0; idx < this.values.length; idx++) {
       if (this.values[idx].includes(aSearchString)) {
         values.push(this.values[idx]);
@@ -87,7 +93,6 @@ ResultsHeap.prototype =
     return new AutoCompleteResult(values, comments);
   },
 };
-
 
 /**
  * nsIAutoCompleteSearch implementation.
@@ -100,8 +105,7 @@ function AutoCompleteSearch(aName, aAllResults) {
   this.allResults = aAllResults;
 }
 
-AutoCompleteSearch.prototype =
-{
+AutoCompleteSearch.prototype = {
   constructor: AutoCompleteSearch,
 
   // nsIAutoCompleteSearch implementation
@@ -113,7 +117,10 @@ AutoCompleteSearch.prototype =
   stopSearch() {},
 
   // nsISupports implementation
-  QueryInterface: ChromeUtils.generateQI(["nsIFactory", "nsIAutoCompleteSearch"]),
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIFactory",
+    "nsIAutoCompleteSearch",
+  ]),
 
   // nsIFactory implementation
   createInstance(outer, iid) {
@@ -127,7 +134,6 @@ AutoCompleteSearch.prototype =
   allResults: null,
 };
 
-
 /**
  * nsIAutoCompleteResult implementation.
  */
@@ -135,14 +141,14 @@ function AutoCompleteResult(aValues, aComments) {
   this.values = aValues;
   this.comments = aComments;
 
-  if (this.values.length > 0)
+  if (this.values.length > 0) {
     this.searchResult = nsIAutoCompleteResult.RESULT_SUCCESS;
-  else
+  } else {
     this.searchResult = nsIAutoCompleteResult.NOMATCH;
+  }
 }
 
-AutoCompleteResult.prototype =
-{
+AutoCompleteResult.prototype = {
   constructor: AutoCompleteResult,
 
   searchString: "",

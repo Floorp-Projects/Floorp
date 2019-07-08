@@ -4,7 +4,11 @@
 if (shouldDelay) {
   let shouldCrashNow = false;
 
-  Services.tm.dispatchToMainThread({ run: () => { shouldCrashNow = true; } });
+  Services.tm.dispatchToMainThread({
+    run: () => {
+      shouldCrashNow = true;
+    },
+  });
 
   Services.tm.spinEventLoopUntil(() => shouldCrashNow);
 }

@@ -2,8 +2,13 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function test_vertical_text() {
-  const URI = '<body><div style="writing-mode: vertical-rl">vertical-rl</div><div style="writing-mode: vertical-lr">vertical-lr</div><div style="writing-mode: sideways-rl">sideways-rl</div><div style="writing-mode: sideways-lr">sideways-lr</div></body>';
-  await BrowserTestUtils.withNewTab({ gBrowser, url: "data:text/html;charset=utf-8," + encodeURIComponent(URI) },
+  const URI =
+    '<body><div style="writing-mode: vertical-rl">vertical-rl</div><div style="writing-mode: vertical-lr">vertical-lr</div><div style="writing-mode: sideways-rl">sideways-rl</div><div style="writing-mode: sideways-lr">sideways-lr</div></body>';
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "data:text/html;charset=utf-8," + encodeURIComponent(URI),
+    },
     async function(browser) {
       let finder = browser.finder;
       let listener = {
@@ -32,9 +37,14 @@ add_task(async function test_vertical_text() {
         let promiseFind = waitForFind();
         finder.fastFind(target, false, false);
         let findResult = await promiseFind;
-        is(findResult.result, Ci.nsITypeAheadFind.FIND_FOUND, "Found target text '" + target + "'.");
+        is(
+          findResult.result,
+          Ci.nsITypeAheadFind.FIND_FOUND,
+          "Found target text '" + target + "'."
+        );
       }
 
       finder.removeResultListener(listener);
-    });
+    }
+  );
 });

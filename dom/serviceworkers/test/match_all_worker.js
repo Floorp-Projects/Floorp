@@ -7,4 +7,4 @@ function loop() {
 onactivate = function(e) {
   // spam matchAll until the worker is closed.
   loop();
-}
+};

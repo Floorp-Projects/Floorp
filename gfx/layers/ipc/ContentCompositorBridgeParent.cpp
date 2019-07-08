@@ -207,11 +207,6 @@ bool ContentCompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor) {
 PWebRenderBridgeParent*
 ContentCompositorBridgeParent::AllocPWebRenderBridgeParent(
     const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize& aSize) {
-#ifndef MOZ_BUILD_WEBRENDER
-  // Extra guard since this in the parent process and we don't want a malicious
-  // child process invoking this codepath before it's ready
-  MOZ_RELEASE_ASSERT(false);
-#endif
   LayersId layersId = wr::AsLayersId(aPipelineId);
   // Check to see if this child process has access to this layer tree.
   if (!LayerTreeOwnerTracker::Get()->IsMapped(layersId, OtherPid())) {
@@ -272,11 +267,6 @@ ContentCompositorBridgeParent::AllocPWebRenderBridgeParent(
 
 bool ContentCompositorBridgeParent::DeallocPWebRenderBridgeParent(
     PWebRenderBridgeParent* aActor) {
-#ifndef MOZ_BUILD_WEBRENDER
-  // Extra guard since this in the parent process and we don't want a malicious
-  // child process invoking this codepath before it's ready
-  MOZ_RELEASE_ASSERT(false);
-#endif
   WebRenderBridgeParent* parent = static_cast<WebRenderBridgeParent*>(aActor);
   EraseLayerState(wr::AsLayersId(parent->PipelineId()));
   parent->Release();  // IPDL reference

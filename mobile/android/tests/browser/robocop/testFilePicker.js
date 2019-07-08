@@ -5,7 +5,7 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_test(function filepicker_open() {
   let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
@@ -18,22 +18,41 @@ add_test(function filepicker_open() {
   fp.filterIndex = 0;
 
   let fpCallback = function(result) {
-    if (result == Ci.nsIFilePicker.returnOK || result == Ci.nsIFilePicker.returnReplace) {
+    if (
+      result == Ci.nsIFilePicker.returnOK ||
+      result == Ci.nsIFilePicker.returnReplace
+    ) {
       do_print("File: " + fp.file.path);
-      is(fp.file.path, "/mnt/sdcard/my-favorite-martian.png", "Retrieve the right martian file!");
+      is(
+        fp.file.path,
+        "/mnt/sdcard/my-favorite-martian.png",
+        "Retrieve the right martian file!"
+      );
 
       for (let file of fp.files) {
         do_print("File: " + file.path);
-        is(file.path, "/mnt/sdcard/my-favorite-martian.png", "Retrieve the right martian file from array!");
+        is(
+          file.path,
+          "/mnt/sdcard/my-favorite-martian.png",
+          "Retrieve the right martian file from array!"
+        );
       }
 
       let file = fp.domFileOrDirectory;
       do_print("DOMFile: " + file.mozFullPath);
-      is(file.mozFullPath, "/mnt/sdcard/my-favorite-martian.png", "Retrieve the right martian DOM File!");
+      is(
+        file.mozFullPath,
+        "/mnt/sdcard/my-favorite-martian.png",
+        "Retrieve the right martian DOM File!"
+      );
 
       for (let domFile of fp.domFileOrDirectoryEnumerator) {
         do_print("DOMFile: " + domFile.mozFullPath);
-        is(domFile.mozFullPath, "/mnt/sdcard/my-favorite-martian.png", "Retrieve the right martian file from domFileOrDirectoryEnumerator array!");
+        is(
+          domFile.mozFullPath,
+          "/mnt/sdcard/my-favorite-martian.png",
+          "Retrieve the right martian file from domFileOrDirectoryEnumerator array!"
+        );
       }
 
       do_test_finished();
@@ -64,4 +83,3 @@ add_test(function filepicker_save() {
 });
 
 run_next_test();
-

@@ -5,32 +5,52 @@
 
 var EXPORTED_SYMBOLS = ["ClickHandlerChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-                               "resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "WebNavigationFrames",
-                               "resource://gre/modules/WebNavigationFrames.jsm");
-ChromeUtils.defineModuleGetter(this, "E10SUtils",
-                               "resource://gre/modules/E10SUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "WebNavigationFrames",
+  "resource://gre/modules/WebNavigationFrames.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "E10SUtils",
+  "resource://gre/modules/E10SUtils.jsm"
+);
 
 class ClickHandlerChild extends ActorChild {
   handleEvent(event) {
-    if (!event.isTrusted || event.defaultPrevented || event.button == 2 ||
-        (event.type == "click" && event.button == 1)) {
+    if (
+      !event.isTrusted ||
+      event.defaultPrevented ||
+      event.button == 2 ||
+      (event.type == "click" && event.button == 1)
+    ) {
       return;
     }
     // Don't do anything on editable things, we shouldn't open links in
     // contenteditables, and editor needs to possibly handle middlemouse paste
     let composedTarget = event.composedTarget;
-    if (composedTarget.isContentEditable ||
-        (composedTarget.ownerDocument &&
-         composedTarget.ownerDocument.designMode == "on") ||
-        ChromeUtils.getClassName(composedTarget) == "HTMLInputElement" ||
-        ChromeUtils.getClassName(composedTarget) == "HTMLTextAreaElement") {
+    if (
+      composedTarget.isContentEditable ||
+      (composedTarget.ownerDocument &&
+        composedTarget.ownerDocument.designMode == "on") ||
+      ChromeUtils.getClassName(composedTarget) == "HTMLInputElement" ||
+      ChromeUtils.getClassName(composedTarget) == "HTMLTextAreaElement"
+    ) {
       return;
     }
 
@@ -54,24 +74,36 @@ class ClickHandlerChild extends ActorChild {
       csp = E10SUtils.serializeCSP(csp);
     }
 
-    let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(Ci.nsIReferrerInfo);
+    let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
+      Ci.nsIReferrerInfo
+    );
     if (node) {
       referrerInfo.initWithNode(node);
     } else {
       referrerInfo.initWithDocument(ownerDoc);
     }
     referrerInfo = E10SUtils.serializeReferrerInfo(referrerInfo);
-    let frameOuterWindowID = WebNavigationFrames.getFrameId(ownerDoc.defaultView);
+    let frameOuterWindowID = WebNavigationFrames.getFrameId(
+      ownerDoc.defaultView
+    );
 
-    let json = { button: event.button, shiftKey: event.shiftKey,
-                 ctrlKey: event.ctrlKey, metaKey: event.metaKey,
-                 altKey: event.altKey, href: null, title: null,
-                 frameOuterWindowID,
-                 triggeringPrincipal: principal,
-                 csp,
-                 referrerInfo,
-                 originAttributes: principal ? principal.originAttributes : {},
-                 isContentWindowPrivate: PrivateBrowsingUtils.isContentWindowPrivate(ownerDoc.defaultView)};
+    let json = {
+      button: event.button,
+      shiftKey: event.shiftKey,
+      ctrlKey: event.ctrlKey,
+      metaKey: event.metaKey,
+      altKey: event.altKey,
+      href: null,
+      title: null,
+      frameOuterWindowID,
+      triggeringPrincipal: principal,
+      csp,
+      referrerInfo,
+      originAttributes: principal ? principal.originAttributes : {},
+      isContentWindowPrivate: PrivateBrowsingUtils.isContentWindowPrivate(
+        ownerDoc.defaultView
+      ),
+    };
 
     if (href) {
       try {
@@ -85,7 +117,6 @@ class ClickHandlerChild extends ActorChild {
         json.title = node.getAttribute("title");
       }
 
-
       // Check if the link needs to be opened with mixed content allowed.
       // Only when the owner doc has |mixedContentChannel| and the same origin
       // should we allow mixed content.
@@ -95,8 +126,14 @@ class ClickHandlerChild extends ActorChild {
         const sm = Services.scriptSecurityManager;
         try {
           let targetURI = Services.io.newURI(href);
-          let isPrivateWin = ownerDoc.nodePrincipal.originAttributes.privateBrowsingId > 0;
-          sm.checkSameOriginURI(docshell.mixedContentChannel.URI, targetURI, false, isPrivateWin);
+          let isPrivateWin =
+            ownerDoc.nodePrincipal.originAttributes.privateBrowsingId > 0;
+          sm.checkSameOriginURI(
+            docshell.mixedContentChannel.URI,
+            targetURI,
+            false,
+            isPrivateWin
+          );
           json.allowMixedContent = true;
         } catch (e) {}
       }
@@ -136,12 +173,14 @@ class ClickHandlerChild extends ActorChild {
    *       to behave like an <a> element, which SVG links (XLink) don't.
    */
   _hrefAndLinkNodeForClickEvent(event) {
-    let {content} = this.mm;
+    let { content } = this.mm;
     function isHTMLLink(aNode) {
       // Be consistent with what nsContextMenu.js does.
-      return ((aNode instanceof content.HTMLAnchorElement && aNode.href) ||
-              (aNode instanceof content.HTMLAreaElement && aNode.href) ||
-              aNode instanceof content.HTMLLinkElement);
+      return (
+        (aNode instanceof content.HTMLAnchorElement && aNode.href) ||
+        (aNode instanceof content.HTMLAreaElement && aNode.href) ||
+        aNode instanceof content.HTMLLinkElement
+      );
     }
 
     let node = event.composedTarget;
@@ -149,18 +188,22 @@ class ClickHandlerChild extends ActorChild {
       node = node.flattenedTreeParentNode;
     }
 
-    if (node)
+    if (node) {
       return [node.href, node, node.ownerDocument.nodePrincipal];
+    }
 
     // If there is no linkNode, try simple XLink.
     let href, baseURI;
     node = event.composedTarget;
     while (node && !href) {
-      if (node.nodeType == content.Node.ELEMENT_NODE &&
-          (node.localName == "a" ||
-           node.namespaceURI == "http://www.w3.org/1998/Math/MathML")) {
-        href = node.getAttribute("href") ||
-               node.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+      if (
+        node.nodeType == content.Node.ELEMENT_NODE &&
+        (node.localName == "a" ||
+          node.namespaceURI == "http://www.w3.org/1998/Math/MathML")
+      ) {
+        href =
+          node.getAttribute("href") ||
+          node.getAttributeNS("http://www.w3.org/1999/xlink", "href");
         if (href) {
           baseURI = node.ownerDocument.baseURIObject;
           break;
@@ -172,7 +215,10 @@ class ClickHandlerChild extends ActorChild {
     // In case of XLink, we don't return the node we got href from since
     // callers expect <a>-like elements.
     // Note: makeURI() will throw if aUri is not a valid URI.
-    return [href ? Services.io.newURI(href, null, baseURI).spec : null, null,
-            node && node.ownerDocument.nodePrincipal];
+    return [
+      href ? Services.io.newURI(href, null, baseURI).spec : null,
+      null,
+      node && node.ownerDocument.nodePrincipal,
+    ];
   }
 }

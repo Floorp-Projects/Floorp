@@ -1,6 +1,6 @@
 "use strict";
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function run_test() {
   do_test_pending();
@@ -12,9 +12,11 @@ function run_test() {
  */
 
 add_task(async function test_flush() {
-  let path = OS.Path.join(OS.Constants.Path.tmpDir,
-                          "test_osfile_async_flush.tmp");
-  let file = await OS.File.open(path, {trunc: true, write: true});
+  let path = OS.Path.join(
+    OS.Constants.Path.tmpDir,
+    "test_osfile_async_flush.tmp"
+  );
+  let file = await OS.File.open(path, { trunc: true, write: true });
   try {
     try {
       await file.flush();

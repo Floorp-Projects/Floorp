@@ -50,8 +50,14 @@ add_task(function test_shadowHTTPLogins() {
     },
     {
       description: "same origin, different port, different scheme",
-      logins: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT],
-      expected: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT],
+      logins: [
+        DOMAIN1_HTTPS_TO_HTTPS_U1_P1,
+        DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT,
+      ],
+      expected: [
+        DOMAIN1_HTTPS_TO_HTTPS_U1_P1,
+        DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT,
+      ],
     },
     {
       description: "different origin, different scheme",
@@ -68,7 +74,11 @@ add_task(function test_shadowHTTPLogins() {
   for (let tc of testcases) {
     info(tc.description);
     let actual = LoginHelper.shadowHTTPLogins(tc.logins);
-    Assert.strictEqual(actual.length, tc.expected.length, `Check result length`);
+    Assert.strictEqual(
+      actual.length,
+      tc.expected.length,
+      `Check result length`
+    );
     for (let [i, login] of tc.expected.entries()) {
       Assert.strictEqual(actual[i], login, `Check index ${i}`);
     }

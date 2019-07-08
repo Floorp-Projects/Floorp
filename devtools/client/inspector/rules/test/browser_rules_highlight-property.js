@@ -30,17 +30,22 @@ add_task(async function() {
   await selectNode(".test", inspector);
   const { rules, styleWindow } = view;
 
-  info("Highlight the computed border-left-width declaration in the rule view.");
-  const borderLeftWidthStyle = rules[2].textProps[2].computed
-    .find(({ name }) => name === "border-left-width");
+  info(
+    "Highlight the computed border-left-width declaration in the rule view."
+  );
+  const borderLeftWidthStyle = rules[2].textProps[2].computed.find(
+    ({ name }) => name === "border-left-width"
+  );
 
   let onHighlightProperty = view.once("scrolled-to-element");
   let isHighlighted = view.highlightProperty("border-left-width");
   await onHighlightProperty;
 
   ok(isHighlighted, "border-left-property is highlighted.");
-  ok(isInViewport(borderLeftWidthStyle.element, styleWindow),
-    "border-left-width is in view.");
+  ok(
+    isInViewport(borderLeftWidthStyle.element, styleWindow),
+    "border-left-width is in view."
+  );
 
   info("Highlight the font-size declaration in the rule view.");
   const fontSize = rules[2].textProps[1].editor;
@@ -73,10 +78,18 @@ add_task(async function() {
   await onHighlightProperty;
 
   ok(isHighlighted, "margin-top property is highlighted.");
-  ok(isInViewport(marginTop.element, styleWindow), "margin-top property is in view.");
+  ok(
+    isInViewport(marginTop.element, styleWindow),
+    "margin-top property is in view."
+  );
 });
 
 function isInViewport(element, win) {
   const { top, left, bottom, right } = element.getBoundingClientRect();
-  return top >= 0 && bottom <= win.innerHeight && left >= 0 && right <= win.innerWidth;
+  return (
+    top >= 0 &&
+    bottom <= win.innerHeight &&
+    left >= 0 &&
+    right <= win.innerWidth
+  );
 }

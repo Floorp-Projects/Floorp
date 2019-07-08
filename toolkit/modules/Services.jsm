@@ -6,8 +6,12 @@
 
 var EXPORTED_SYMBOLS = ["Services"];
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 var Services = {};
 
@@ -18,18 +22,20 @@ var Services = {};
 
 XPCOMUtils.defineLazyGetter(Services, "prefs", function() {
   return Cc["@mozilla.org/preferences-service;1"]
-           .getService(Ci.nsIPrefService)
-           .QueryInterface(Ci.nsIPrefBranch);
+    .getService(Ci.nsIPrefService)
+    .QueryInterface(Ci.nsIPrefBranch);
 });
 
 XPCOMUtils.defineLazyGetter(Services, "appinfo", function() {
-  let appinfo = Cc["@mozilla.org/xre/app-info;1"]
-                  .getService(Ci.nsIXULRuntime);
+  let appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
   try {
     appinfo.QueryInterface(Ci.nsIXULAppInfo);
   } catch (ex) {
     // Not all applications implement nsIXULAppInfo (e.g. xpcshell doesn't).
-    if (!(ex instanceof Components.Exception) || ex.result != Cr.NS_NOINTERFACE) {
+    if (
+      !(ex instanceof Components.Exception) ||
+      ex.result != Cr.NS_NOINTERFACE
+    ) {
       throw ex;
     }
   }
@@ -38,14 +44,14 @@ XPCOMUtils.defineLazyGetter(Services, "appinfo", function() {
 
 XPCOMUtils.defineLazyGetter(Services, "dirsvc", function() {
   return Cc["@mozilla.org/file/directory_service;1"]
-           .getService(Ci.nsIDirectoryService)
-           .QueryInterface(Ci.nsIProperties);
+    .getService(Ci.nsIDirectoryService)
+    .QueryInterface(Ci.nsIProperties);
 });
 
 XPCOMUtils.defineLazyGetter(Services, "sysinfo", function() {
   return Cc["@mozilla.org/system-info;1"]
-           .getService(Ci.nsIPropertyBag2)
-           .QueryInterface(Ci.nsISystemInfo);
+    .getService(Ci.nsIPropertyBag2)
+    .QueryInterface(Ci.nsISystemInfo);
 });
 
 if (AppConstants.MOZ_CRASHREPORTER) {
@@ -59,21 +65,30 @@ if (AppConstants.MOZ_CRASHREPORTER) {
 
 XPCOMUtils.defineLazyGetter(Services, "io", () => {
   return Cc["@mozilla.org/network/io-service;1"]
-           .getService(Ci.nsIIOService)
-           .QueryInterface(Ci.nsISpeculativeConnect);
+    .getService(Ci.nsIIOService)
+    .QueryInterface(Ci.nsISpeculativeConnect);
 });
 
 var initTable = {
   appShell: ["@mozilla.org/appshell/appShellService;1", "nsIAppShellService"],
-  cache2: ["@mozilla.org/netwerk/cache-storage-service;1", "nsICacheStorageService"],
+  cache2: [
+    "@mozilla.org/netwerk/cache-storage-service;1",
+    "nsICacheStorageService",
+  ],
   catMan: ["@mozilla.org/categorymanager;1", "nsICategoryManager"],
   clearData: ["@mozilla.org/clear-data-service;1", "nsIClearDataService"],
   cpmm: ["@mozilla.org/childprocessmessagemanager;1", "nsIMessageSender"],
   console: ["@mozilla.org/consoleservice;1", "nsIConsoleService"],
   cookies: ["@mozilla.org/cookiemanager;1", "nsICookieManager"],
-  droppedLinkHandler: ["@mozilla.org/content/dropped-link-handler;1", "nsIDroppedLinkHandler"],
+  droppedLinkHandler: [
+    "@mozilla.org/content/dropped-link-handler;1",
+    "nsIDroppedLinkHandler",
+  ],
   els: ["@mozilla.org/eventlistenerservice;1", "nsIEventListenerService"],
-  eTLD: ["@mozilla.org/network/effective-tld-service;1", "nsIEffectiveTLDService"],
+  eTLD: [
+    "@mozilla.org/network/effective-tld-service;1",
+    "nsIEffectiveTLDService",
+  ],
   intl: ["@mozilla.org/mozintl;1", "mozIMozIntl"],
   locale: ["@mozilla.org/intl/localeservice;1", "mozILocaleService"],
   logins: ["@mozilla.org/login-manager;1", "nsILoginManager"],
@@ -82,44 +97,70 @@ var initTable = {
   perms: ["@mozilla.org/permissionmanager;1", "nsIPermissionManager"],
   ppmm: ["@mozilla.org/parentprocessmessagemanager;1", "nsISupports"],
   prompt: ["@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService"],
-  scriptloader: ["@mozilla.org/moz/jssubscript-loader;1", "mozIJSSubScriptLoader"],
-  scriptSecurityManager: ["@mozilla.org/scriptsecuritymanager;1", "nsIScriptSecurityManager"],
+  scriptloader: [
+    "@mozilla.org/moz/jssubscript-loader;1",
+    "mozIJSSubScriptLoader",
+  ],
+  scriptSecurityManager: [
+    "@mozilla.org/scriptsecuritymanager;1",
+    "nsIScriptSecurityManager",
+  ],
   storage: ["@mozilla.org/storage/service;1", "mozIStorageService"],
-  domStorageManager: ["@mozilla.org/dom/localStorage-manager;1", "nsIDOMStorageManager"],
+  domStorageManager: [
+    "@mozilla.org/dom/localStorage-manager;1",
+    "nsIDOMStorageManager",
+  ],
   lsm: ["@mozilla.org/dom/localStorage-manager;1", "nsILocalStorageManager"],
   search: ["@mozilla.org/browser/search-service;1", "nsISearchService"],
   strings: ["@mozilla.org/intl/stringbundle;1", "nsIStringBundleService"],
   telemetry: ["@mozilla.org/base/telemetry;1", "nsITelemetry"],
   textToSubURI: ["@mozilla.org/intl/texttosuburi;1", "nsITextToSubURI"],
   tm: ["@mozilla.org/thread-manager;1", "nsIThreadManager"],
-  urlFormatter: ["@mozilla.org/toolkit/URLFormatterService;1", "nsIURLFormatter"],
+  urlFormatter: [
+    "@mozilla.org/toolkit/URLFormatterService;1",
+    "nsIURLFormatter",
+  ],
   vc: ["@mozilla.org/xpcom/version-comparator;1", "nsIVersionComparator"],
   wm: ["@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator"],
   ww: ["@mozilla.org/embedcomp/window-watcher;1", "nsIWindowWatcher"],
   startup: ["@mozilla.org/toolkit/app-startup;1", "nsIAppStartup"],
   clipboard: ["@mozilla.org/widget/clipboard;1", "nsIClipboard"],
-  DOMRequest: ["@mozilla.org/dom/dom-request-service;1", "nsIDOMRequestService"],
+  DOMRequest: [
+    "@mozilla.org/dom/dom-request-service;1",
+    "nsIDOMRequestService",
+  ],
   focus: ["@mozilla.org/focus-manager;1", "nsIFocusManager"],
   uriFixup: ["@mozilla.org/docshell/urifixup;1", "nsIURIFixup"],
   blocklist: ["@mozilla.org/extensions/blocklist;1"],
   netUtils: ["@mozilla.org/network/util;1", "nsINetUtil"],
-  loadContextInfo: ["@mozilla.org/load-context-info-factory;1", "nsILoadContextInfoFactory"],
+  loadContextInfo: [
+    "@mozilla.org/load-context-info-factory;1",
+    "nsILoadContextInfoFactory",
+  ],
   qms: ["@mozilla.org/dom/quota-manager-service;1", "nsIQuotaManagerService"],
 };
 
 if (AppConstants.platform == "android") {
-  initTable.androidBridge = ["@mozilla.org/android/bridge;1", "nsIAndroidBridge"];
+  initTable.androidBridge = [
+    "@mozilla.org/android/bridge;1",
+    "nsIAndroidBridge",
+  ];
 }
 if (AppConstants.MOZ_GECKO_PROFILER) {
   initTable.profiler = ["@mozilla.org/tools/profiler;1", "nsIProfiler"];
 }
 if ("@mozilla.org/enterprisepolicies;1" in Cc) {
-  initTable.policies = ["@mozilla.org/enterprisepolicies;1", "nsIEnterprisePolicies"];
+  initTable.policies = [
+    "@mozilla.org/enterprisepolicies;1",
+    "nsIEnterprisePolicies",
+  ];
 }
 
 if (AppConstants.MOZ_NEW_XULSTORE) {
   XPCOMUtils.defineLazyGetter(Services, "xulStore", () => {
-    const {XULStore} = ChromeUtils.import("resource://gre/modules/XULStore.jsm");
+    const { XULStore } = ChromeUtils.import(
+      "resource://gre/modules/XULStore.jsm"
+    );
     return XULStore;
   });
 } else {

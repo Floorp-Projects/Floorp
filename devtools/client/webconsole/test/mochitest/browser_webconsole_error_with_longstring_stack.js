@@ -24,11 +24,17 @@ add_task(async function() {
   ok(errorNode.textContent.includes("longString stack"));
 
   info("Wait until the stacktrace gets rendered");
-  const stackTraceElement = await waitFor(() => errorNode.querySelector(".frames"));
+  const stackTraceElement = await waitFor(() =>
+    errorNode.querySelector(".frames")
+  );
 
   ok(stackTraceElement, "There's a stacktrace element");
-  ok(stackTraceElement.querySelectorAll(".frame .title").length > 0,
-    "Frames functions are displayed");
-  ok(stackTraceElement.querySelectorAll(".frame .location").length > 0,
-    "Frames location are displayed");
+  ok(
+    stackTraceElement.querySelectorAll(".frame .title").length > 0,
+    "Frames functions are displayed"
+  );
+  ok(
+    stackTraceElement.querySelectorAll(".frame .location").length > 0,
+    "Frames location are displayed"
+  );
 });

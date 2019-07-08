@@ -38,9 +38,10 @@ requestLongerTimeout(2);
 
 function runTools(target) {
   return (async function() {
-    const toolIds = gDevTools.getToolDefinitionArray()
-                           .filter(def => def.isTargetSupported(target))
-                           .map(def => def.id);
+    const toolIds = gDevTools
+      .getToolDefinitionArray()
+      .filter(def => def.isTargetSupported(target))
+      .map(def => def.id);
 
     let toolbox;
     for (let index = 0; index < toolIds.length; index++) {

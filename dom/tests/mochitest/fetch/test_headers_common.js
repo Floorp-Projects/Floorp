@@ -6,7 +6,7 @@ function shouldThrow(func, expected, msg) {
   var err;
   try {
     func();
-  } catch(e) {
+  } catch (e) {
     err = e;
   } finally {
     ok(err instanceof expected, msg);
@@ -14,7 +14,11 @@ function shouldThrow(func, expected, msg) {
 }
 
 function recursiveArrayCompare(actual, expected) {
-  is(Array.isArray(actual), Array.isArray(expected), "Both should either be arrays, or not");
+  is(
+    Array.isArray(actual),
+    Array.isArray(expected),
+    "Both should either be arrays, or not"
+  );
   if (Array.isArray(actual) && Array.isArray(expected)) {
     var diff = actual.length !== expected.length;
 
@@ -57,8 +61,8 @@ function checkNotHas(headers, name, msg) {
 
 function _checkHas(func, headers, name, msg) {
   ok(func(name), msg);
-  ok(func(name.toLowerCase()), msg)
-  ok(func(name.toUpperCase()), msg)
+  ok(func(name.toLowerCase()), msg);
+  ok(func(name.toUpperCase()), msg);
 }
 
 function checkGet(headers, name, expected, msg) {
@@ -77,12 +81,12 @@ function TestCoreBehavior(headers, name) {
   headers.append(name, "bar");
 
   checkHas(headers, name, "Has the header");
-  var expected = (start ? start.concat(", bar") : "bar");
+  var expected = start ? start.concat(", bar") : "bar";
   checkGet(headers, name, expected, "Retrieve all headers for name");
 
   headers.append(name, "baz");
   checkHas(headers, name, "Has the header");
-  expected = (start ? start.concat(", bar, baz") : "bar, baz");
+  expected = start ? start.concat(", bar, baz") : "bar, baz";
   checkGet(headers, name, expected, "Retrieve all headers for name");
 
   headers.set(name, "snafu");
@@ -96,24 +100,39 @@ function TestCoreBehavior(headers, name) {
 
     let char = testHTTPWhitespace.shift();
     headers.set(name, char);
-    checkGet(headers, name, "",
-             "Header value " + char +
-             " should be normalized before checking and throwing");
+    checkGet(
+      headers,
+      name,
+      "",
+      "Header value " +
+        char +
+        " should be normalized before checking and throwing"
+    );
     headers.delete(name);
 
     let valueFront = char + value_bam;
     headers.set(name, valueFront);
-    checkGet(headers, name, value_bam,
-             "Header value " + valueFront +
-             " should be normalized before checking and throwing");
+    checkGet(
+      headers,
+      name,
+      value_bam,
+      "Header value " +
+        valueFront +
+        " should be normalized before checking and throwing"
+    );
 
     headers.delete(name);
 
     let valueBack = value_bam + char;
     headers.set(name, valueBack);
-    checkGet(headers, name, value_bam,
-             "Header value " + valueBack +
-             " should be normalized before checking and throwing");
+    checkGet(
+      headers,
+      name,
+      value_bam,
+      "Header value " +
+        valueBack +
+        " should be normalized before checking and throwing"
+    );
   }
 
   headers.delete(name.toUpperCase());
@@ -123,17 +142,29 @@ function TestCoreBehavior(headers, name) {
   // should be ok to delete non-existent name
   headers.delete(name);
 
-  shouldThrow(function() {
-    headers.append("foo,", "bam");
-  }, TypeError, "Append invalid header name should throw TypeError.");
+  shouldThrow(
+    function() {
+      headers.append("foo,", "bam");
+    },
+    TypeError,
+    "Append invalid header name should throw TypeError."
+  );
 
-  shouldThrow(function() {
-    headers.append(name, "ba\nm");
-  }, TypeError, "Append invalid header value should throw TypeError.");
+  shouldThrow(
+    function() {
+      headers.append(name, "ba\nm");
+    },
+    TypeError,
+    "Append invalid header value should throw TypeError."
+  );
 
-  shouldThrow(function() {
-    headers.append(name, "ba\rm");
-  }, TypeError, "Append invalid header value should throw TypeError.");
+  shouldThrow(
+    function() {
+      headers.append(name, "ba\rm");
+    },
+    TypeError,
+    "Append invalid header value should throw TypeError."
+  );
 
   ok(!headers.guard, "guard should be undefined in content");
 }
@@ -157,14 +188,24 @@ function TestFilledHeaders() {
   source.append("def", "789");
 
   filled = new Headers(source);
-  checkGet(filled, "abc", source.get("abc"), "Single value header list matches");
-  checkGet(filled, "def", source.get("def"), "Multiple value header list matches");
+  checkGet(
+    filled,
+    "abc",
+    source.get("abc"),
+    "Single value header list matches"
+  );
+  checkGet(
+    filled,
+    "def",
+    source.get("def"),
+    "Multiple value header list matches"
+  );
   TestCoreBehavior(filled, "def");
 
   filled = new Headers({
-    "zxy": "987",
-    "xwv": "654",
-    "uts": "321"
+    zxy: "987",
+    xwv: "654",
+    uts: "321",
   });
   checkGet(filled, "zxy", "987", "Has first object filled key");
   checkGet(filled, "xwv", "654", "Has second object filled key");
@@ -175,31 +216,33 @@ function TestFilledHeaders() {
     ["zxy", "987"],
     ["xwv", "654"],
     ["xwv", "abc"],
-    ["uts", "321"]
+    ["uts", "321"],
   ]);
   checkGet(filled, "zxy", "987", "Has first sequence filled key");
   checkGet(filled, "xwv", "654, abc", "Has second sequence filled key");
   checkGet(filled, "uts", "321", "Has third sequence filled key");
   TestCoreBehavior(filled, "xwv");
 
-  shouldThrow(function() {
-    filled = new Headers([
-      ["zxy", "987", "654"],
-      ["uts", "321"]
-    ]);
-  }, TypeError, "Fill with non-tuple sequence should throw TypeError.");
+  shouldThrow(
+    function() {
+      filled = new Headers([["zxy", "987", "654"], ["uts", "321"]]);
+    },
+    TypeError,
+    "Fill with non-tuple sequence should throw TypeError."
+  );
 
-  shouldThrow(function() {
-    filled = new Headers([
-      ["zxy"],
-      ["uts", "321"]
-    ]);
-  }, TypeError, "Fill with non-tuple sequence should throw TypeError.");
+  shouldThrow(
+    function() {
+      filled = new Headers([["zxy"], ["uts", "321"]]);
+    },
+    TypeError,
+    "Fill with non-tuple sequence should throw TypeError."
+  );
 }
 
 function iterate(iter) {
   var result = [];
-  for (var val = iter.next(); !val.done;) {
+  for (var val = iter.next(); !val.done; ) {
     result.push(val.value);
     val = iter.next();
   }
@@ -221,7 +264,7 @@ function byteInflate(str) {
   for (var i = 0; i < encoded.length; ++i) {
     result += String.fromCharCode(encoded[i]);
   }
-  return result
+  return result;
 }
 
 function TestHeadersIterator() {
@@ -241,11 +284,27 @@ function TestHeadersIterator() {
   var entries_iter = headers.entries();
 
   arrayEquals(iterate(key_iter), ["foo", "foo2"], "Correct key iterator");
-  arrayEquals(iterate(value_iter), ["bar, " + ehsanInflated, "baz2"], "Correct value iterator");
-  arrayEquals(iterate(entries_iter), [["foo", "bar, " + ehsanInflated], ["foo2", "baz2"]], "Correct entries iterator");
+  arrayEquals(
+    iterate(value_iter),
+    ["bar, " + ehsanInflated, "baz2"],
+    "Correct value iterator"
+  );
+  arrayEquals(
+    iterate(entries_iter),
+    [["foo", "bar, " + ehsanInflated], ["foo2", "baz2"]],
+    "Correct entries iterator"
+  );
 
-  arrayEquals(iterateForOf(headers), [["foo", "bar, " + ehsanInflated], ["foo2", "baz2"]], "Correct entries iterator");
-  arrayEquals(iterateForOf(new Headers(headers)), [["foo", "bar, " + ehsanInflated], ["foo2", "baz2"]], "Correct entries iterator");
+  arrayEquals(
+    iterateForOf(headers),
+    [["foo", "bar, " + ehsanInflated], ["foo2", "baz2"]],
+    "Correct entries iterator"
+  );
+  arrayEquals(
+    iterateForOf(new Headers(headers)),
+    [["foo", "bar, " + ehsanInflated], ["foo2", "baz2"]],
+    "Correct entries iterator"
+  );
 }
 
 function runTest() {

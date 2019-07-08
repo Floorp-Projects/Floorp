@@ -3,12 +3,14 @@
 "use strict";
 
 const Services = require("Services");
-const { waitForMozAfterPaint } = require("devtools/client/performance/test/helpers/wait-utils");
+const {
+  waitForMozAfterPaint,
+} = require("devtools/client/performance/test/helpers/wait-utils");
 
 /**
  * Checks if a DOM node is considered visible.
  */
-exports.isVisible = (element) => {
+exports.isVisible = element => {
   return !element.classList.contains("hidden") && !element.hidden;
 };
 

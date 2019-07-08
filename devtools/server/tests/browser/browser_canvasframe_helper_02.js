@@ -11,8 +11,12 @@ add_task(async function() {
   const browser = await addTab("about:preferences");
 
   await ContentTask.spawn(browser, null, async function() {
-    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-    const {HighlighterEnvironment} = require("devtools/server/actors/highlighters");
+    const { require } = ChromeUtils.import(
+      "resource://devtools/shared/Loader.jsm"
+    );
+    const {
+      HighlighterEnvironment,
+    } = require("devtools/server/actors/highlighters");
     const {
       CanvasFrameAnonymousContentHelper,
     } = require("devtools/server/actors/highlighters/utils/markup");
@@ -35,8 +39,10 @@ add_task(async function() {
     const helper = new CanvasFrameAnonymousContentHelper(env, nodeBuilder);
 
     ok(!helper.content, "The AnonymousContent was not inserted in the window");
-    ok(!helper.getTextContentForElement("child-element"),
-      "No text content is returned");
+    ok(
+      !helper.getTextContentForElement("child-element"),
+      "No text content is returned"
+    );
 
     env.destroy();
     helper.destroy();

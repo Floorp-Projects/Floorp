@@ -2,18 +2,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
-const { PureComponent, createFactory } = require("devtools/client/shared/vendor/react");
-const { div, details, summary, label, input, span, h2, section, p } = require("devtools/client/shared/vendor/react-dom-factories");
-const Range = createFactory(require("devtools/client/performance-new/components/Range"));
-const DirectoryPicker = createFactory(require("devtools/client/performance-new/components/DirectoryPicker"));
-const { makeExponentialScale, formatFileSize, calculateOverhead } = require("devtools/client/performance-new/utils");
+const {
+  PureComponent,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
+const {
+  div,
+  details,
+  summary,
+  label,
+  input,
+  span,
+  h2,
+  section,
+  p,
+} = require("devtools/client/shared/vendor/react-dom-factories");
+const Range = createFactory(
+  require("devtools/client/performance-new/components/Range")
+);
+const DirectoryPicker = createFactory(
+  require("devtools/client/performance-new/components/DirectoryPicker")
+);
+const {
+  makeExponentialScale,
+  formatFileSize,
+  calculateOverhead,
+} = require("devtools/client/performance-new/utils");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const actions = require("devtools/client/performance-new/store/actions");
 const selectors = require("devtools/client/performance-new/store/selectors");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "FilePicker",
-                                   "@mozilla.org/filepicker;1", "nsIFilePicker");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "FilePicker",
+  "@mozilla.org/filepicker;1",
+  "nsIFilePicker"
+);
 
 // sizeof(double) + sizeof(char)
 // http://searchfox.org/mozilla-central/rev/e8835f52eff29772a57dca7bcc86a9a312a23729/tools/profiler/core/ProfileEntry.h#73
@@ -26,7 +51,8 @@ const threadColumns = [
     {
       name: "GeckoMain",
       id: "gecko-main",
-      title: "The main processes for both the parent process, and content processes",
+      title:
+        "The main processes for both the parent process, and content processes",
     },
     {
       name: "Compositor",
@@ -53,7 +79,8 @@ const threadColumns = [
     {
       name: "PaintWorker",
       id: "paint-worker",
-      title: "When off-main-thread painting is enabled, the thread on which " +
+      title:
+        "When off-main-thread painting is enabled, the thread on which " +
         "painting happens",
     },
     {
@@ -90,13 +117,15 @@ const featureCheckboxes = [
   {
     name: "Native Stacks",
     value: "stackwalk",
-    title: "Record native stacks (C++ and Rust). This is not available on all platforms.",
+    title:
+      "Record native stacks (C++ and Rust). This is not available on all platforms.",
     recommended: true,
   },
   {
     name: "JavaScript",
     value: "js",
-    title: "Record JavaScript stack information, and interleave it with native stacks.",
+    title:
+      "Record JavaScript stack information, and interleave it with native stacks.",
     recommended: true,
   },
   {
@@ -113,7 +142,8 @@ const featureCheckboxes = [
   {
     name: "Native Leaf Stack",
     value: "leaf",
-    title: "Record the native memory address of the leaf-most stack. This could be " +
+    title:
+      "Record the native memory address of the leaf-most stack. This could be " +
       "useful on platforms that do not support stack walking.",
   },
   {
@@ -124,7 +154,8 @@ const featureCheckboxes = [
   {
     name: "Memory",
     value: "memory",
-    title: "Add memory measurements to the samples, this includes resident set size " +
+    title:
+      "Add memory measurements to the samples, this includes resident set size " +
       "(RSS) and unique set size (USS).",
   },
   {
@@ -189,8 +220,12 @@ class Settings extends PureComponent {
       temporaryThreadText: null,
     };
 
-    this._handleThreadCheckboxChange = this._handleThreadCheckboxChange.bind(this);
-    this._handleFeaturesCheckboxChange = this._handleFeaturesCheckboxChange.bind(this);
+    this._handleThreadCheckboxChange = this._handleThreadCheckboxChange.bind(
+      this
+    );
+    this._handleFeaturesCheckboxChange = this._handleFeaturesCheckboxChange.bind(
+      this
+    );
     this._handleAddObjdir = this._handleAddObjdir.bind(this);
     this._handleRemoveObjdir = this._handleRemoveObjdir.bind(this);
     this._setThreadTextFromInput = this._setThreadTextFromInput.bind(this);
@@ -207,8 +242,10 @@ class Settings extends PureComponent {
     const notchCount = 22;
     const notches = [];
     for (let i = 0; i < notchCount; i++) {
-      const active = i <= Math.round(overhead * (NOTCHES.length - 1))
-        ? "active" : "inactive";
+      const active =
+        i <= Math.round(overhead * (NOTCHES.length - 1))
+          ? "active"
+          : "inactive";
 
       let level = "normal";
       if (i > 16) {
@@ -220,7 +257,7 @@ class Settings extends PureComponent {
         div({
           key: i,
           className:
-          `perf-settings-notch perf-settings-notch-${level} ` +
+            `perf-settings-notch perf-settings-notch-${level} ` +
             `perf-settings-notch-${active}`,
         })
       );
@@ -230,7 +267,7 @@ class Settings extends PureComponent {
 
   _handleThreadCheckboxChange(event) {
     const { threads, changeThreads } = this.props;
-    const { checked, value }  = event.target;
+    const { checked, value } = event.target;
 
     if (checked) {
       if (!threads.includes(value)) {
@@ -243,7 +280,7 @@ class Settings extends PureComponent {
 
   _handleFeaturesCheckboxChange(event) {
     const { features, changeFeatures } = this.props;
-    const { checked, value }  = event.target;
+    const { checked, value } = event.target;
 
     if (checked) {
       if (!features.includes(value)) {
@@ -288,22 +325,24 @@ class Settings extends PureComponent {
     const { threads } = this.props;
     return div(
       { className: "perf-settings-thread-column", key: index },
-      threadDisplay.map(({name, title, id}) => label(
-        {
-          className: "perf-settings-checkbox-label",
-          key: name,
-          title,
-        },
-        input({
-          className: "perf-settings-checkbox",
-          id: `perf-settings-thread-checkbox-${id}`,
-          type: "checkbox",
-          value: name,
-          checked: threads.includes(name),
-          onChange: this._handleThreadCheckboxChange,
-        }),
-        name
-      ))
+      threadDisplay.map(({ name, title, id }) =>
+        label(
+          {
+            className: "perf-settings-checkbox-label",
+            key: name,
+            title,
+          },
+          input({
+            className: "perf-settings-checkbox",
+            id: `perf-settings-thread-checkbox-${id}`,
+            type: "checkbox",
+            value: name,
+            checked: threads.includes(name),
+            onChange: this._handleThreadCheckboxChange,
+          }),
+          name
+        )
+      )
     );
   }
 
@@ -325,14 +364,15 @@ class Settings extends PureComponent {
           { className: "perf-settings-details-contents-slider" },
           div(
             { className: "perf-settings-thread-columns" },
-            threadColumns.map(this._renderThreadsColumns),
+            threadColumns.map(this._renderThreadsColumns)
           ),
           div(
             { className: "perf-settings-row" },
             label(
               {
                 className: "perf-settings-text-label",
-                title: "These thread names are a comma separated list that is used to " +
+                title:
+                  "These thread names are a comma separated list that is used to " +
                   "enable profiling of the threads in the profiler. The name needs to " +
                   "be only a partial match of the thread name to be included. It " +
                   "is whitespace sensitive.",
@@ -342,9 +382,10 @@ class Settings extends PureComponent {
                 className: "perf-settings-text-input",
                 id: "perf-settings-thread-text",
                 type: "text",
-                value: this.state.temporaryThreadText === null
-                  ? this.props.threads
-                  : this.state.temporaryThreadText,
+                value:
+                  this.state.temporaryThreadText === null
+                    ? this.props.threads
+                    : this.state.temporaryThreadText,
                 onBlur: this._handleThreadTextCleanup,
                 onFocus: this._setThreadTextFromInput,
                 onChange: this._setThreadTextFromInput,
@@ -370,31 +411,34 @@ class Settings extends PureComponent {
         { className: "perf-settings-details-contents" },
         div(
           { className: "perf-settings-details-contents-slider" },
-          featureCheckboxes.map(({name, value, title, recommended}) => label(
-            {
-              className: "perf-settings-checkbox-label perf-settings-feature-label",
-              key: value,
-            },
-            input({
-              className: "perf-settings-checkbox",
-              id: `perf-settings-feature-checkbox-${value}`,
-              type: "checkbox",
-              value,
-              checked: this.props.features.includes(value),
-              onChange: this._handleFeaturesCheckboxChange,
-            }),
-            div({ className: "perf-settings-feature-name" }, name),
-            div(
-              { className: "perf-settings-feature-title" },
-              title,
-              recommended
-                ? span(
-                  { className: "perf-settings-subtext" },
-                  " (Recommended on by default.)"
-                )
-                : null
+          featureCheckboxes.map(({ name, value, title, recommended }) =>
+            label(
+              {
+                className:
+                  "perf-settings-checkbox-label perf-settings-feature-label",
+                key: value,
+              },
+              input({
+                className: "perf-settings-checkbox",
+                id: `perf-settings-feature-checkbox-${value}`,
+                type: "checkbox",
+                value,
+                checked: this.props.features.includes(value),
+                onChange: this._handleFeaturesCheckboxChange,
+              }),
+              div({ className: "perf-settings-feature-name" }, name),
+              div(
+                { className: "perf-settings-feature-title" },
+                title,
+                recommended
+                  ? span(
+                      { className: "perf-settings-subtext" },
+                      " (Recommended on by default.)"
+                    )
+                  : null
+              )
             )
-          ))
+          )
         )
       )
     );
@@ -415,15 +459,17 @@ class Settings extends PureComponent {
         { className: "perf-settings-details-contents" },
         div(
           { className: "perf-settings-details-contents-slider" },
-          p(null,
+          p(
+            null,
             `If you're profiling a build that you have compiled yourself, on this
             machine, please add your build's objdir to the list below so that
-            it can be used to look up symbol information.`),
+            it can be used to look up symbol information.`
+          ),
           DirectoryPicker({
             dirs: objdirs,
             onAdd: this._handleAddObjdir,
             onRemove: this._handleRemoveObjdir,
-          }),
+          })
         )
       )
     );
@@ -470,13 +516,15 @@ class Settings extends PureComponent {
  * @return Array list of thread names
  */
 function _threadTextToList(threads) {
-  return threads
-    // Split on commas
-    .split(",")
-    // Clean up any extraneous whitespace
-    .map(string => string.trim())
-    // Filter out any blank strings
-    .filter(string => string);
+  return (
+    threads
+      // Split on commas
+      .split(",")
+      // Clean up any extraneous whitespace
+      .map(string => string.trim())
+      // Filter out any blank strings
+      .filter(string => string)
+  );
 }
 
 /**
@@ -516,4 +564,7 @@ const mapDispatchToProps = {
   changeObjdirs: actions.changeObjdirs,
 };
 
-module.exports = connect(mapStateToProps, mapDispatchToProps)(Settings);
+module.exports = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Settings);

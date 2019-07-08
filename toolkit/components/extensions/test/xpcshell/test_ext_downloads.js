@@ -5,14 +5,22 @@
 add_task(async function test_downloads_api_namespace_and_permissions() {
   function backgroundScript() {
     browser.test.assertTrue(!!browser.downloads, "`downloads` API is present.");
-    browser.test.assertTrue(!!browser.downloads.FilenameConflictAction,
-                            "`downloads.FilenameConflictAction` enum is present.");
-    browser.test.assertTrue(!!browser.downloads.InterruptReason,
-                            "`downloads.InterruptReason` enum is present.");
-    browser.test.assertTrue(!!browser.downloads.DangerType,
-                            "`downloads.DangerType` enum is present.");
-    browser.test.assertTrue(!!browser.downloads.State,
-                            "`downloads.State` enum is present.");
+    browser.test.assertTrue(
+      !!browser.downloads.FilenameConflictAction,
+      "`downloads.FilenameConflictAction` enum is present."
+    );
+    browser.test.assertTrue(
+      !!browser.downloads.InterruptReason,
+      "`downloads.InterruptReason` enum is present."
+    );
+    browser.test.assertTrue(
+      !!browser.downloads.DangerType,
+      "`downloads.DangerType` enum is present."
+    );
+    browser.test.assertTrue(
+      !!browser.downloads.State,
+      "`downloads.State` enum is present."
+    );
     browser.test.notifyPass("downloads tests");
   }
 

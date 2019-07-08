@@ -7,10 +7,12 @@
  * testrunner (no single quotes, extra comma's, etc).
  */
 
-var phases = { "phase1": "profile1",
-               "phase2": "profile2",
-               "phase3": "profile1",
-               "phase4": "profile2" };
+var phases = {
+  phase1: "profile1",
+  phase2: "profile2",
+  phase3: "profile1",
+  phase4: "profile2",
+};
 
 /*
  * Bookmark asset lists: these define bookmarks that are used during the test
@@ -18,15 +20,17 @@ var phases = { "phase1": "profile1",
 
 // the initial list of bookmarks to be added to the browser
 var bookmarks_initial = {
-  "menu": [
-    { uri: "http://www.google.com",
+  menu: [
+    {
+      uri: "http://www.google.com",
       tags: ["google", "computers", "internet", "www"],
       changes: {
         title: "Google",
         tags: ["google", "computers", "misc"],
       },
     },
-    { uri: "http://bugzilla.mozilla.org/show_bug.cgi?id=%s",
+    {
+      uri: "http://bugzilla.mozilla.org/show_bug.cgi?id=%s",
       title: "Bugzilla",
       keyword: "bz",
       changes: {
@@ -39,13 +43,15 @@ var bookmarks_initial = {
     { folder: "folderb" },
   ],
   "menu/foldera": [
-    { uri: "http://www.yahoo.com",
+    {
+      uri: "http://www.yahoo.com",
       title: "testing Yahoo",
       changes: {
         location: "menu/folderb",
       },
     },
-    { uri: "http://www.cnn.com",
+    {
+      uri: "http://www.cnn.com",
       description: "This is a description of the site a at www.cnn.com",
       changes: {
         uri: "http://money.cnn.com",
@@ -54,7 +60,8 @@ var bookmarks_initial = {
     },
   ],
   "menu/folderb": [
-    { uri: "http://www.apple.com",
+    {
+      uri: "http://www.apple.com",
       tags: ["apple", "mac"],
       changes: {
         uri: "http://www.apple.com/iphone/",
@@ -66,7 +73,8 @@ var bookmarks_initial = {
     },
   ],
   toolbar: [
-    { uri: "place:queryType=0&sort=8&maxResults=10&beginTimeRef=1&beginTime=0",
+    {
+      uri: "place:queryType=0&sort=8&maxResults=10&beginTimeRef=1&beginTime=0",
       title: "Visited Today",
     },
   ],
@@ -75,24 +83,28 @@ var bookmarks_initial = {
 // the state of bookmarks after the first 'modify' action has been performed
 // on them
 var bookmarks_after_first_modify = {
-  "menu": [
-    { uri: "http://www.apple.com/iphone/",
+  menu: [
+    {
+      uri: "http://www.apple.com/iphone/",
       title: "iPhone",
       before: "Google",
       tags: [],
     },
-    { uri: "http://www.google.com",
+    {
+      uri: "http://www.google.com",
       title: "Google",
-      tags: [ "google", "computers", "misc"],
+      tags: ["google", "computers", "misc"],
     },
-    { uri: "http://bugzilla.mozilla.org/show_bug.cgi?id=%s",
+    {
+      uri: "http://bugzilla.mozilla.org/show_bug.cgi?id=%s",
       title: "Bugzilla",
       keyword: "bugzilla",
     },
     { folder: "foldera" },
     { uri: "http://www.mozilla.com" },
     { separator: true },
-    { folder: "folderb",
+    {
+      folder: "folderb",
       changes: {
         location: "menu/foldera",
         folder: "Folder B",
@@ -101,18 +113,16 @@ var bookmarks_after_first_modify = {
     },
   ],
   "menu/foldera": [
-    { uri: "http://money.cnn.com",
+    {
+      uri: "http://money.cnn.com",
       title: "http://www.cnn.com",
       description: "new description",
     },
   ],
-  "menu/folderb": [
-    { uri: "http://www.yahoo.com",
-      title: "testing Yahoo",
-    },
-  ],
-  "toolbar": [
-    { uri: "place:queryType=0&sort=8&maxResults=10&beginTimeRef=1&beginTime=0",
+  "menu/folderb": [{ uri: "http://www.yahoo.com", title: "testing Yahoo" }],
+  toolbar: [
+    {
+      uri: "place:queryType=0&sort=8&maxResults=10&beginTimeRef=1&beginTime=0",
       title: "Visited Today",
     },
   ],
@@ -120,10 +130,11 @@ var bookmarks_after_first_modify = {
 
 // a list of bookmarks to delete during a 'delete' action
 var bookmarks_to_delete = {
-  "menu": [
-    { uri: "http://www.google.com",
+  menu: [
+    {
+      uri: "http://www.google.com",
       title: "Google",
-      tags: [ "google", "computers", "misc" ],
+      tags: ["google", "computers", "misc"],
     },
   ],
 };
@@ -131,11 +142,10 @@ var bookmarks_to_delete = {
 // the state of bookmarks after the second 'modify' action has been performed
 // on them
 var bookmarks_after_second_modify = {
-  "menu": [
-    { uri: "http://www.apple.com/iphone/",
-      title: "iPhone",
-    },
-    { uri: "http://bugzilla.mozilla.org/show_bug.cgi?id=%s",
+  menu: [
+    { uri: "http://www.apple.com/iphone/", title: "iPhone" },
+    {
+      uri: "http://bugzilla.mozilla.org/show_bug.cgi?id=%s",
       title: "Bugzilla",
       keyword: "bugzilla",
     },
@@ -144,28 +154,23 @@ var bookmarks_after_second_modify = {
     { separator: true },
   ],
   "menu/foldera": [
-    { uri: "http://money.cnn.com",
+    {
+      uri: "http://money.cnn.com",
       title: "http://www.cnn.com",
       description: "new description",
     },
-    { folder: "Folder B",
-      description: "folder description",
-    },
+    { folder: "Folder B", description: "folder description" },
   ],
   "menu/foldera/Folder B": [
-    { uri: "http://www.yahoo.com",
-      title: "testing Yahoo",
-    },
+    { uri: "http://www.yahoo.com", title: "testing Yahoo" },
   ],
 };
 
 // a list of bookmarks which should not be present after the last
 // 'delete' and 'modify' actions
 var bookmarks_absent = {
-  "menu": [
-    { uri: "http://www.google.com",
-      title: "Google",
-    },
+  menu: [
+    { uri: "http://www.google.com", title: "Google" },
     { folder: "folderb" },
     { folder: "Folder B" },
   ],
@@ -178,28 +183,23 @@ var bookmarks_absent = {
 
 // the initial list of history items to add to the browser
 var history_initial = [
-  { uri: "http://www.google.com/",
+  {
+    uri: "http://www.google.com/",
     title: "Google",
-    visits: [
-      { type: 1, date: 0 },
-      { type: 2, date: -1 },
-    ],
+    visits: [{ type: 1, date: 0 }, { type: 2, date: -1 }],
   },
-  { uri: "http://www.cnn.com/",
+  {
+    uri: "http://www.cnn.com/",
     title: "CNN",
-    visits: [
-      { type: 1, date: -1 },
-      { type: 2, date: -36 },
-    ],
+    visits: [{ type: 1, date: -1 }, { type: 2, date: -36 }],
   },
-  { uri: "http://www.google.com/language_tools?hl=en",
+  {
+    uri: "http://www.google.com/language_tools?hl=en",
     title: "Language Tools",
-    visits: [
-      { type: 1, date: 0 },
-      { type: 2, date: -40 },
-    ],
+    visits: [{ type: 1, date: 0 }, { type: 2, date: -40 }],
   },
-  { uri: "http://www.mozilla.com/",
+  {
+    uri: "http://www.mozilla.com/",
     title: "Mozilla",
     visits: [
       { type: 1, date: 0 },
@@ -213,71 +213,40 @@ var history_initial = [
 // a list of history entries to delete during a 'delete' action
 var history_to_delete = [
   { uri: "http://www.cnn.com/" },
-  { begin: -24,
-    end: -1 },
+  { begin: -24, end: -1 },
   { host: "www.google.com" },
 ];
 
 // the expected history entries after the first 'delete' action
 var history_after_delete = [
-  { uri: "http://www.mozilla.com/",
+  {
+    uri: "http://www.mozilla.com/",
     title: "Mozilla",
-    visits: [
-      { type: 1,
-        date: 0,
-      },
-      { type: 2,
-        date: -36,
-      },
-    ],
+    visits: [{ type: 1, date: 0 }, { type: 2, date: -36 }],
   },
 ];
 
 // history entries expected to not exist after a 'delete' action
 var history_absent = [
-  { uri: "http://www.google.com/",
+  {
+    uri: "http://www.google.com/",
     title: "Google",
-    visits: [
-      { type: 1,
-        date: 0,
-      },
-      { type: 2,
-        date: -1,
-      },
-    ],
+    visits: [{ type: 1, date: 0 }, { type: 2, date: -1 }],
   },
-  { uri: "http://www.cnn.com/",
+  {
+    uri: "http://www.cnn.com/",
     title: "CNN",
-    visits: [
-      { type: 1,
-        date: -1,
-      },
-      { type: 2,
-        date: -36,
-      },
-    ],
+    visits: [{ type: 1, date: -1 }, { type: 2, date: -36 }],
   },
-  { uri: "http://www.google.com/language_tools?hl=en",
+  {
+    uri: "http://www.google.com/language_tools?hl=en",
     title: "Language Tools",
-    visits: [
-      { type: 1,
-        date: 0,
-      },
-      { type: 2,
-        date: -40,
-      },
-    ],
+    visits: [{ type: 1, date: 0 }, { type: 2, date: -40 }],
   },
-  { uri: "http://www.mozilla.com/",
+  {
+    uri: "http://www.mozilla.com/",
     title: "Mozilla",
-    visits: [
-      { type: 1,
-        date: -1,
-      },
-      { type: 1,
-        date: -20,
-      },
-    ],
+    visits: [{ type: 1, date: -1 }, { type: 1, date: -20 }],
   },
 ];
 
@@ -288,7 +257,8 @@ var history_absent = [
 
 // the initial list of passwords to add to the browser
 var passwords_initial = [
-  { hostname: "http://www.example.com",
+  {
+    hostname: "http://www.example.com",
     submitURL: "http://login.example.com",
     username: "joe",
     password: "SeCrEt123",
@@ -298,7 +268,8 @@ var passwords_initial = [
       password: "zippity-do-dah",
     },
   },
-  { hostname: "http://www.example.com",
+  {
+    hostname: "http://www.example.com",
     realm: "login",
     username: "joe",
     password: "secretlogin",
@@ -307,14 +278,16 @@ var passwords_initial = [
 
 // the expected state of passwords after the first 'modify' action
 var passwords_after_first_modify = [
-  { hostname: "http://www.example.com",
+  {
+    hostname: "http://www.example.com",
     submitURL: "http://login.example.com",
     username: "joe",
     password: "zippity-do-dah",
     usernameField: "uname",
     passwordField: "pword",
   },
-  { hostname: "http://www.example.com",
+  {
+    hostname: "http://www.example.com",
     realm: "login",
     username: "joe",
     password: "secretlogin",
@@ -323,7 +296,8 @@ var passwords_after_first_modify = [
 
 // a list of passwords to delete during a 'delete' action
 var passwords_to_delete = [
-  { hostname: "http://www.example.com",
+  {
+    hostname: "http://www.example.com",
     realm: "login",
     username: "joe",
     password: "secretlogin",
@@ -333,7 +307,8 @@ var passwords_to_delete = [
 // a list of passwords expected to be absent after 'delete' and 'modify'
 // actions
 var passwords_absent = [
-  { hostname: "http://www.example.com",
+  {
+    hostname: "http://www.example.com",
     realm: "login",
     username: "joe",
     password: "secretlogin",
@@ -342,7 +317,8 @@ var passwords_absent = [
 
 // the expected state of passwords after the seconds 'modify' action
 var passwords_after_second_modify = [
-  { hostname: "http://www.example.com",
+  {
+    hostname: "http://www.example.com",
     submitURL: "http://login.example.com",
     username: "joe",
     password: "zippity-do-dah",

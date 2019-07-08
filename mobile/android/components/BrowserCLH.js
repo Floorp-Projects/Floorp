@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
@@ -58,14 +60,18 @@ BrowserCLH.prototype = {
         GeckoViewUtils.addLazyGetter(this, "FormAssistant", {
           module: "resource://gre/modules/FormAssistant.jsm",
         });
-        Services.obs.addObserver({
-          QueryInterface: ChromeUtils.generateQI([
-            Ci.nsIObserver, Ci.nsIFormSubmitObserver,
-          ]),
-          notifyInvalidSubmit: (form, element) => {
-            this.FormAssistant.notifyInvalidSubmit(form, element);
+        Services.obs.addObserver(
+          {
+            QueryInterface: ChromeUtils.generateQI([
+              Ci.nsIObserver,
+              Ci.nsIFormSubmitObserver,
+            ]),
+            notifyInvalidSubmit: (form, element) => {
+              this.FormAssistant.notifyInvalidSubmit(form, element);
+            },
           },
-        }, "invalidformsubmit");
+          "invalidformsubmit"
+        );
 
         GeckoViewUtils.addLazyGetter(this, "LoginManagerParent", {
           module: "resource://gre/modules/LoginManagerParent.jsm",
@@ -95,10 +101,11 @@ BrowserCLH.prototype = {
         GeckoViewUtils.addLazyGetter(this, "DelayedStartup", {
           observers: ["chrome-document-loaded"],
           once: true,
-          handler: _ => DelayedInit.scheduleList([
-            _ => Services.search.init(),
-            _ => Services.logins,
-          ], 10000 /* 10 seconds maximum wait. */),
+          handler: _ =>
+            DelayedInit.scheduleList(
+              [_ => Services.search.init(), _ => Services.logins],
+              10000 /* 10 seconds maximum wait. */
+            ),
         });
         break;
       }
@@ -121,35 +128,41 @@ BrowserCLH.prototype = {
           },
         });
 
-        GeckoViewUtils.addLazyEventListener(win, [
-          "focus", "blur", "click", "input",
-        ], {
-          handler: event => {
-            if (ChromeUtils.getClassName(event.target) === "HTMLInputElement" ||
-                ChromeUtils.getClassName(event.target) === "HTMLTextAreaElement" ||
-                ChromeUtils.getClassName(event.target) === "HTMLSelectElement" ||
-                ChromeUtils.getClassName(event.target) === "HTMLButtonElement") {
-              // Only load FormAssistant when the event target is what we care about.
-              return this.FormAssistant;
-            }
-            return null;
-          },
-          options: {
-            capture: true,
-            mozSystemGroup: true,
-          },
-        });
+        GeckoViewUtils.addLazyEventListener(
+          win,
+          ["focus", "blur", "click", "input"],
+          {
+            handler: event => {
+              if (
+                ChromeUtils.getClassName(event.target) === "HTMLInputElement" ||
+                ChromeUtils.getClassName(event.target) ===
+                  "HTMLTextAreaElement" ||
+                ChromeUtils.getClassName(event.target) ===
+                  "HTMLSelectElement" ||
+                ChromeUtils.getClassName(event.target) === "HTMLButtonElement"
+              ) {
+                // Only load FormAssistant when the event target is what we care about.
+                return this.FormAssistant;
+              }
+              return null;
+            },
+            options: {
+              capture: true,
+              mozSystemGroup: true,
+            },
+          }
+        );
 
         this._initLoginManagerEvents(win);
 
-        GeckoViewUtils.registerLazyWindowEventListener(win, [
-          "TextSelection:Get",
-          "TextSelection:Action",
-          "TextSelection:End",
-        ], {
-          scope: this,
-          name: "ActionBarHandler",
-        });
+        GeckoViewUtils.registerLazyWindowEventListener(
+          win,
+          ["TextSelection:Get", "TextSelection:Action", "TextSelection:End"],
+          {
+            scope: this,
+            name: "ActionBarHandler",
+          }
+        );
         GeckoViewUtils.addLazyEventListener(win, ["mozcaretstatechanged"], {
           scope: this,
           name: "ActionBarHandler",
@@ -162,7 +175,10 @@ BrowserCLH.prototype = {
       }
 
       case "profile-after-change": {
-        EventDispatcher.instance.registerListener(this, "GeckoView:SetDefaultPrefs");
+        EventDispatcher.instance.registerListener(
+          this,
+          "GeckoView:SetDefaultPrefs"
+        );
         break;
       }
     }
@@ -214,26 +230,41 @@ BrowserCLH.prototype = {
       }
       this.LoginManagerContent.onDOMFormBeforeSubmit(event);
     });
-    aWindow.addEventListener("DOMFormHasPassword", event => {
-      if (shouldIgnoreLoginManagerEvent(event)) {
-        return;
-      }
-      this.LoginManagerContent.onDOMFormHasPassword(event);
-    }, options);
+    aWindow.addEventListener(
+      "DOMFormHasPassword",
+      event => {
+        if (shouldIgnoreLoginManagerEvent(event)) {
+          return;
+        }
+        this.LoginManagerContent.onDOMFormHasPassword(event);
+      },
+      options
+    );
 
-    aWindow.addEventListener("DOMInputPasswordAdded", event => {
-      if (shouldIgnoreLoginManagerEvent(event)) {
-        return;
-      }
-      this.LoginManagerContent.onDOMInputPasswordAdded(event, event.target.ownerGlobal.top);
-    }, options);
+    aWindow.addEventListener(
+      "DOMInputPasswordAdded",
+      event => {
+        if (shouldIgnoreLoginManagerEvent(event)) {
+          return;
+        }
+        this.LoginManagerContent.onDOMInputPasswordAdded(
+          event,
+          event.target.ownerGlobal.top
+        );
+      },
+      options
+    );
 
-    aWindow.addEventListener("pageshow", event => {
-      // XXXbz what about non-HTML documents??
-      if (ChromeUtils.getClassName(event.target) == "HTMLDocument") {
-        this.LoginManagerContent.onPageShow(event);
-      }
-    }, options);
+    aWindow.addEventListener(
+      "pageshow",
+      event => {
+        // XXXbz what about non-HTML documents??
+        if (ChromeUtils.getClassName(event.target) == "HTMLDocument") {
+          this.LoginManagerContent.onPageShow(event);
+        }
+      },
+      options
+    );
   },
 
   // QI
@@ -243,5 +274,5 @@ BrowserCLH.prototype = {
   classID: Components.ID("{be623d20-d305-11de-8a39-0800200c9a66}"),
 };
 
-var components = [ BrowserCLH ];
+var components = [BrowserCLH];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

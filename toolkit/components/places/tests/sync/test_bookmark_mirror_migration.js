@@ -12,17 +12,20 @@ add_task(async function test_migrate_from_1_to_2() {
     },
   });
   let dbFileSize = Math.floor((await OS.File.stat(dbFile.path)).size / 1024);
-  deepEqual(telemetryEvents, [{
-    object: "mirror",
-    method: "open",
-    value: "retry",
-    extra: { why: "corrupt" },
-  }, {
-    object: "mirror",
-    method: "open",
-    value: "success",
-    extra: { size: dbFileSize.toString(10) },
-  }]);
+  deepEqual(telemetryEvents, [
+    {
+      object: "mirror",
+      method: "open",
+      value: "retry",
+      extra: { why: "corrupt" },
+    },
+    {
+      object: "mirror",
+      method: "open",
+      value: "success",
+      extra: { size: dbFileSize.toString(10) },
+    },
+  ]);
   await buf.finalize();
 });
 
@@ -35,19 +38,23 @@ add_task(async function test_database_corrupt() {
       telemetryEvents.push({ object, method, value, extra });
     },
   });
-  let dbFileSize = Math.floor((
-    await OS.File.stat(corruptFile.path)).size / 1024);
-  deepEqual(telemetryEvents, [{
-    object: "mirror",
-    method: "open",
-    value: "retry",
-    extra: { why: "corrupt" },
-  }, {
-    object: "mirror",
-    method: "open",
-    value: "success",
-    extra: { size: dbFileSize.toString(10) },
-  }]);
+  let dbFileSize = Math.floor(
+    (await OS.File.stat(corruptFile.path)).size / 1024
+  );
+  deepEqual(telemetryEvents, [
+    {
+      object: "mirror",
+      method: "open",
+      value: "retry",
+      extra: { why: "corrupt" },
+    },
+    {
+      object: "mirror",
+      method: "open",
+      value: "success",
+      extra: { size: dbFileSize.toString(10) },
+    },
+  ]);
   await buf.finalize();
 });
 
@@ -59,8 +66,10 @@ add_task(async function test_database_readonly() {
       winAttributes: { readOnly: true },
     });
   } catch (ex) {
-    if (ex instanceof OS.File.Error &&
-        ex.unixErrno == OS.Constants.libc.EPERM) {
+    if (
+      ex instanceof OS.File.Error &&
+      ex.unixErrno == OS.Constants.libc.EPERM
+    ) {
       info("Skipping test; can't change database mode to read-only");
       return;
     }
@@ -68,19 +77,28 @@ add_task(async function test_database_readonly() {
   }
   try {
     let telemetryEvents = [];
-    await Assert.rejects(SyncedBookmarksMirror.open({
-      path: dbFile.path,
-      recordTelemetryEvent(object, method, value, extra) {
-        telemetryEvents.push({ object, method, value, extra });
-      },
-    }), ex => ex.errors && ex.errors[0].result == Ci.mozIStorageError.READONLY,
-      "Should not try to recreate read-only database");
-    deepEqual(telemetryEvents, [{
-      object: "mirror",
-      method: "open",
-      value: "error",
-      extra: { why: "initialize" },
-    }], "Should record event for read-only error");
+    await Assert.rejects(
+      SyncedBookmarksMirror.open({
+        path: dbFile.path,
+        recordTelemetryEvent(object, method, value, extra) {
+          telemetryEvents.push({ object, method, value, extra });
+        },
+      }),
+      ex => ex.errors && ex.errors[0].result == Ci.mozIStorageError.READONLY,
+      "Should not try to recreate read-only database"
+    );
+    deepEqual(
+      telemetryEvents,
+      [
+        {
+          object: "mirror",
+          method: "open",
+          value: "error",
+          extra: { why: "initialize" },
+        },
+      ],
+      "Should record event for read-only error"
+    );
   } finally {
     await OS.File.setPermissions(dbFile.path, {
       unixMode: 0o644,

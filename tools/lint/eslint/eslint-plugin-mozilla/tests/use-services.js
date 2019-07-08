@@ -18,7 +18,7 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 
 function invalidCode(code, name) {
   let message = `Use Services.${name} rather than getService().`;
-  return {code, errors: [{message, type: "CallExpression"}]};
+  return { code, errors: [{ message, type: "CallExpression" }] };
 }
 
 ruleTester.run("use-services", rule, {
@@ -28,10 +28,13 @@ ruleTester.run("use-services", rule, {
     "Services.wm.addListener()",
   ],
   invalid: [
-    invalidCode('Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);',
-      "wm"),
+    invalidCode(
+      'Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);',
+      "wm"
+    ),
     invalidCode(
       'Components.classes["@mozilla.org/toolkit/app-startup;1"].getService(Components.interfaces.nsIAppStartup);',
-      "startup"),
+      "startup"
+    ),
   ],
 });

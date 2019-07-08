@@ -5,7 +5,9 @@
 "use strict";
 
 var navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
-var overflowList = document.getElementById(navbar.getAttribute("overflowtarget"));
+var overflowList = document.getElementById(
+  navbar.getAttribute("overflowtarget")
+);
 
 const kTestBtn1 = "test-addWidgetToArea-overflow";
 const kTestBtn2 = "test-removeWidgetFromArea-overflow";
@@ -23,38 +25,87 @@ var originalWindowWidth;
 add_task(async function() {
   originalWindowWidth = window.outerWidth;
   createDummyXULButton(kTestBtn1, "Test");
-  ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
+  ok(
+    !navbar.hasAttribute("overflowing"),
+    "Should start with a non-overflowing toolbar."
+  );
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
 
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await TestUtils.waitForCondition(() => {
-    return navbar.hasAttribute("overflowing") &&
-      document.getElementById(kSidebarBtn).getAttribute("overflowedItem") == "true";
+    return (
+      navbar.hasAttribute("overflowing") &&
+      document.getElementById(kSidebarBtn).getAttribute("overflowedItem") ==
+        "true"
+    );
   });
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
-  ok(!navbar.querySelector("#" + kSidebarBtn), "Sidebar button should no longer be in the navbar");
+  ok(
+    !navbar.querySelector("#" + kSidebarBtn),
+    "Sidebar button should no longer be in the navbar"
+  );
   let sidebarBtnNode = overflowList.querySelector("#" + kSidebarBtn);
   ok(sidebarBtnNode, "Sidebar button should be overflowing");
-  ok(sidebarBtnNode && sidebarBtnNode.getAttribute("overflowedItem") == "true", "Sidebar button should have overflowedItem attribute");
+  ok(
+    sidebarBtnNode && sidebarBtnNode.getAttribute("overflowedItem") == "true",
+    "Sidebar button should have overflowedItem attribute"
+  );
 
-  let placementOfSidebarButton = CustomizableUI.getWidgetIdsInArea(navbar.id).indexOf(kSidebarBtn);
-  CustomizableUI.addWidgetToArea(kTestBtn1, navbar.id, placementOfSidebarButton);
-  ok(!navbar.querySelector("#" + kTestBtn1), "New button should not be in the navbar");
+  let placementOfSidebarButton = CustomizableUI.getWidgetIdsInArea(
+    navbar.id
+  ).indexOf(kSidebarBtn);
+  CustomizableUI.addWidgetToArea(
+    kTestBtn1,
+    navbar.id,
+    placementOfSidebarButton
+  );
+  ok(
+    !navbar.querySelector("#" + kTestBtn1),
+    "New button should not be in the navbar"
+  );
   let newButtonNode = overflowList.querySelector("#" + kTestBtn1);
   ok(newButtonNode, "New button should be overflowing");
-  ok(newButtonNode && newButtonNode.getAttribute("overflowedItem") == "true", "New button should have overflowedItem attribute");
+  ok(
+    newButtonNode && newButtonNode.getAttribute("overflowedItem") == "true",
+    "New button should have overflowedItem attribute"
+  );
   let nextEl = newButtonNode && newButtonNode.nextElementSibling;
-  is(nextEl && nextEl.id, kSidebarBtn, "Test button should be next to sidebar button.");
+  is(
+    nextEl && nextEl.id,
+    kSidebarBtn,
+    "Test button should be next to sidebar button."
+  );
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
   await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));
-  ok(!navbar.hasAttribute("overflowing"), "Should not have an overflowing toolbar.");
-  ok(navbar.querySelector("#" + kSidebarBtn), "Sidebar button should be in the navbar");
-  ok(sidebarBtnNode && (sidebarBtnNode.getAttribute("overflowedItem") != "true"), "Sidebar button should no longer have overflowedItem attribute");
-  ok(!overflowList.querySelector("#" + kSidebarBtn), "Sidebar button should no longer be overflowing");
-  ok(navbar.querySelector("#" + kTestBtn1), "Test button should be in the navbar");
-  ok(!overflowList.querySelector("#" + kTestBtn1), "Test button should no longer be overflowing");
-  ok(newButtonNode && (newButtonNode.getAttribute("overflowedItem") != "true"), "New button should no longer have overflowedItem attribute");
+  ok(
+    !navbar.hasAttribute("overflowing"),
+    "Should not have an overflowing toolbar."
+  );
+  ok(
+    navbar.querySelector("#" + kSidebarBtn),
+    "Sidebar button should be in the navbar"
+  );
+  ok(
+    sidebarBtnNode && sidebarBtnNode.getAttribute("overflowedItem") != "true",
+    "Sidebar button should no longer have overflowedItem attribute"
+  );
+  ok(
+    !overflowList.querySelector("#" + kSidebarBtn),
+    "Sidebar button should no longer be overflowing"
+  );
+  ok(
+    navbar.querySelector("#" + kTestBtn1),
+    "Test button should be in the navbar"
+  );
+  ok(
+    !overflowList.querySelector("#" + kTestBtn1),
+    "Test button should no longer be overflowing"
+  );
+  ok(
+    newButtonNode && newButtonNode.getAttribute("overflowedItem") != "true",
+    "New button should no longer have overflowedItem attribute"
+  );
   let el = document.getElementById(kTestBtn1);
   if (el) {
     CustomizableUI.removeWidgetFromArea(kTestBtn1);
@@ -67,26 +118,50 @@ add_task(async function() {
 // Removing a widget should remove it from the overflow list if that is where it is, and update it accordingly.
 add_task(async function() {
   createDummyXULButton(kTestBtn2, "Test");
-  ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
+  ok(
+    !navbar.hasAttribute("overflowing"),
+    "Should start with a non-overflowing toolbar."
+  );
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
   CustomizableUI.addWidgetToArea(kTestBtn2, navbar.id);
-  ok(!navbar.hasAttribute("overflowing"), "Should still have a non-overflowing toolbar.");
+  ok(
+    !navbar.hasAttribute("overflowing"),
+    "Should still have a non-overflowing toolbar."
+  );
 
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await TestUtils.waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
-  ok(!navbar.querySelector("#" + kTestBtn2), "Test button should not be in the navbar");
-  ok(overflowList.querySelector("#" + kTestBtn2), "Test button should be overflowing");
+  ok(
+    !navbar.querySelector("#" + kTestBtn2),
+    "Test button should not be in the navbar"
+  );
+  ok(
+    overflowList.querySelector("#" + kTestBtn2),
+    "Test button should be overflowing"
+  );
 
   CustomizableUI.removeWidgetFromArea(kTestBtn2);
 
-  ok(!overflowList.querySelector("#" + kTestBtn2), "Test button should not be overflowing.");
-  ok(!navbar.querySelector("#" + kTestBtn2), "Test button should not be in the navbar");
-  ok(gNavToolbox.palette.querySelector("#" + kTestBtn2), "Test button should be in the palette");
+  ok(
+    !overflowList.querySelector("#" + kTestBtn2),
+    "Test button should not be overflowing."
+  );
+  ok(
+    !navbar.querySelector("#" + kTestBtn2),
+    "Test button should not be in the navbar"
+  );
+  ok(
+    gNavToolbox.palette.querySelector("#" + kTestBtn2),
+    "Test button should be in the palette"
+  );
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
   await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));
-  ok(!navbar.hasAttribute("overflowing"), "Should not have an overflowing toolbar.");
+  ok(
+    !navbar.hasAttribute("overflowing"),
+    "Should not have an overflowing toolbar."
+  );
   let el = document.getElementById(kTestBtn2);
   if (el) {
     CustomizableUI.removeWidgetFromArea(kTestBtn2);
@@ -99,25 +174,44 @@ add_task(async function() {
 // Constructing a widget while overflown should set the right class on it.
 add_task(async function() {
   originalWindowWidth = window.outerWidth;
-  ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
+  ok(
+    !navbar.hasAttribute("overflowing"),
+    "Should start with a non-overflowing toolbar."
+  );
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
 
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await TestUtils.waitForCondition(() => {
-    return navbar.hasAttribute("overflowing") &&
-      document.getElementById(kSidebarBtn).getAttribute("overflowedItem") == "true";
+    return (
+      navbar.hasAttribute("overflowing") &&
+      document.getElementById(kSidebarBtn).getAttribute("overflowedItem") ==
+        "true"
+    );
   });
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
-  ok(!navbar.querySelector("#" + kSidebarBtn), "Sidebar button should no longer be in the navbar");
+  ok(
+    !navbar.querySelector("#" + kSidebarBtn),
+    "Sidebar button should no longer be in the navbar"
+  );
   let sidebarBtnNode = overflowList.querySelector("#" + kSidebarBtn);
   ok(sidebarBtnNode, "Sidebar button should be overflowing");
-  ok(sidebarBtnNode && sidebarBtnNode.getAttribute("overflowedItem") == "true", "Sidebar button should have overflowedItem class");
+  ok(
+    sidebarBtnNode && sidebarBtnNode.getAttribute("overflowedItem") == "true",
+    "Sidebar button should have overflowedItem class"
+  );
 
-  let testBtnSpec = {id: kTestBtn3, label: "Overflowable widget test", defaultArea: "nav-bar"};
+  let testBtnSpec = {
+    id: kTestBtn3,
+    label: "Overflowable widget test",
+    defaultArea: "nav-bar",
+  };
   CustomizableUI.createWidget(testBtnSpec);
   let testNode = overflowList.querySelector("#" + kTestBtn3);
   ok(testNode, "Test button should be overflowing");
-  ok(testNode && testNode.getAttribute("overflowedItem") == "true", "Test button should have overflowedItem class");
+  ok(
+    testNode && testNode.getAttribute("overflowedItem") == "true",
+    "Test button should have overflowedItem class"
+  );
 
   CustomizableUI.destroyWidget(kTestBtn3);
   testNode = document.getElementById(kTestBtn3);
@@ -126,7 +220,10 @@ add_task(async function() {
   CustomizableUI.createWidget(testBtnSpec);
   testNode = overflowList.querySelector("#" + kTestBtn3);
   ok(testNode, "Test button should be overflowing");
-  ok(testNode && testNode.getAttribute("overflowedItem") == "true", "Test button should have overflowedItem class");
+  ok(
+    testNode && testNode.getAttribute("overflowedItem") == "true",
+    "Test button should have overflowedItem class"
+  );
 
   CustomizableUI.removeWidgetFromArea(kTestBtn3);
   testNode = document.getElementById(kTestBtn3);
@@ -139,10 +236,15 @@ add_task(async function() {
 add_task(async function insertBeforeFirstItemInOverflow() {
   originalWindowWidth = window.outerWidth;
 
-  ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
+  ok(
+    !navbar.hasAttribute("overflowing"),
+    "Should start with a non-overflowing toolbar."
+  );
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
   // Ensure nothing flexes to make the resize predictable:
-  navbar.querySelectorAll("toolbarspring").forEach(s => CustomizableUI.removeWidgetFromArea(s.id));
+  navbar
+    .querySelectorAll("toolbarspring")
+    .forEach(s => CustomizableUI.removeWidgetFromArea(s.id));
   let urlbar = document.getElementById("urlbar-container");
   urlbar.style.minWidth = urlbar.getBoundingClientRect().width + "px";
   let libraryButton = document.getElementById(kLibraryButton);
@@ -156,26 +258,44 @@ add_task(async function insertBeforeFirstItemInOverflow() {
     10; // Leave some margin for the margins between buttons etc.;
   window.resizeBy(resizeWidthToMakeLibraryLast, 0);
   await TestUtils.waitForCondition(() => {
-    return libraryButton.getAttribute("overflowedItem") == "true" &&
-           !libraryButton.previousElementSibling;
+    return (
+      libraryButton.getAttribute("overflowedItem") == "true" &&
+      !libraryButton.previousElementSibling
+    );
   });
 
-  let testBtnSpec = {id: kTestBtn4, label: "Overflowable widget test"};
-  let placementOfLibraryButton = CustomizableUI.getWidgetIdsInArea(navbar.id).indexOf(kLibraryButton);
+  let testBtnSpec = { id: kTestBtn4, label: "Overflowable widget test" };
+  let placementOfLibraryButton = CustomizableUI.getWidgetIdsInArea(
+    navbar.id
+  ).indexOf(kLibraryButton);
   CustomizableUI.createWidget(testBtnSpec);
-  CustomizableUI.addWidgetToArea(kTestBtn4, "nav-bar", placementOfLibraryButton);
+  CustomizableUI.addWidgetToArea(
+    kTestBtn4,
+    "nav-bar",
+    placementOfLibraryButton
+  );
   let testNode = overflowList.querySelector("#" + kTestBtn4);
   ok(testNode, "Test button should be overflowing");
-  ok(testNode && testNode.getAttribute("overflowedItem") == "true", "Test button should have overflowedItem class");
+  ok(
+    testNode && testNode.getAttribute("overflowedItem") == "true",
+    "Test button should have overflowedItem class"
+  );
   CustomizableUI.destroyWidget(kTestBtn4);
   testNode = document.getElementById(kTestBtn4);
   ok(!testNode, "Test button should be gone");
 
   createDummyXULButton(kTestBtn5, "Test");
-  CustomizableUI.addWidgetToArea(kTestBtn5, "nav-bar", placementOfLibraryButton);
+  CustomizableUI.addWidgetToArea(
+    kTestBtn5,
+    "nav-bar",
+    placementOfLibraryButton
+  );
   testNode = overflowList.querySelector("#" + kTestBtn5);
   ok(testNode, "Test button should be overflowing");
-  ok(testNode && testNode.getAttribute("overflowedItem") == "true", "Test button should have overflowedItem class");
+  ok(
+    testNode && testNode.getAttribute("overflowedItem") == "true",
+    "Test button should have overflowedItem class"
+  );
   CustomizableUI.removeWidgetFromArea(kTestBtn5);
   testNode && testNode.remove();
 

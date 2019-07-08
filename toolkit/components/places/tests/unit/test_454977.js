@@ -11,28 +11,36 @@ var visit_count = 0;
 async function task_add_visit(aURI, aVisitType) {
   // Wait for a visits notification and get the visitId.
   let visitId;
-  let visitsPromise = PlacesTestUtils.waitForNotification("page-visited", visits => {
-    visitId = visits[0].visitId;
-    let {url} = visits[0];
-    return url == aURI.spec;
-  }, "places");
+  let visitsPromise = PlacesTestUtils.waitForNotification(
+    "page-visited",
+    visits => {
+      visitId = visits[0].visitId;
+      let { url } = visits[0];
+      return url == aURI.spec;
+    },
+    "places"
+  );
 
   // Add visits.
-  await PlacesTestUtils.addVisits([{
-    uri: aURI,
-    transition: aVisitType,
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: aURI,
+      transition: aVisitType,
+    },
+  ]);
 
   if (aVisitType != TRANSITION_EMBED) {
     await visitsPromise;
   }
 
   // Increase visit_count if applicable
-  if (aVisitType != 0 &&
-      aVisitType != TRANSITION_EMBED &&
-      aVisitType != TRANSITION_FRAMED_LINK &&
-      aVisitType != TRANSITION_DOWNLOAD &&
-      aVisitType != TRANSITION_RELOAD) {
+  if (
+    aVisitType != 0 &&
+    aVisitType != TRANSITION_EMBED &&
+    aVisitType != TRANSITION_FRAMED_LINK &&
+    aVisitType != TRANSITION_DOWNLOAD &&
+    aVisitType != TRANSITION_RELOAD
+  ) {
     visit_count++;
   }
 
@@ -95,15 +103,15 @@ add_task(async function test_execute() {
   // Add a visit that force unhide and check the place id.
   // - We expect that the place gets hidden = 0 while retaining the same
   //   place id and a correct visit_count.
-  Assert.equal((await task_add_visit(TEST_URI, TRANSITION_TYPED)), placeId);
+  Assert.equal(await task_add_visit(TEST_URI, TRANSITION_TYPED), placeId);
   check_results(1, 1);
 
   // Add a visit that should not increase visit_count
-  Assert.equal((await task_add_visit(TEST_URI, TRANSITION_RELOAD)), placeId);
+  Assert.equal(await task_add_visit(TEST_URI, TRANSITION_RELOAD), placeId);
   check_results(1, 1);
 
   // Add a visit that should not increase visit_count
-  Assert.equal((await task_add_visit(TEST_URI, TRANSITION_DOWNLOAD)), placeId);
+  Assert.equal(await task_add_visit(TEST_URI, TRANSITION_DOWNLOAD), placeId);
   check_results(1, 1);
 
   // Add a visit, check that hidden is not overwritten

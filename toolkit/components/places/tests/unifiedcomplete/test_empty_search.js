@@ -25,14 +25,10 @@ add_task(async function test_javascript_match() {
     { uri: uri7, title: "title" },
   ]);
 
-  await addBookmark({ uri: uri2,
-                      title: "title" });
-  await addBookmark({ uri: uri4,
-                      title: "title" });
-  await addBookmark({ uri: uri5,
-                      title: "title" });
-  await addBookmark({ uri: uri6,
-                      title: "title" });
+  await addBookmark({ uri: uri2, title: "title" });
+  await addBookmark({ uri: uri4, title: "title" });
+  await addBookmark({ uri: uri5, title: "title" });
+  await addBookmark({ uri: uri6, title: "title" });
 
   addOpenPages(uri7, 1);
 
@@ -99,9 +95,7 @@ add_task(async function test_javascript_match() {
   await check_autocomplete({
     search: "",
     searchParam: "enable-actions",
-    matches: [
-      makeSwitchToTabMatch("http://t.foo/6", { title: "title" }),
-    ],
+    matches: [makeSwitchToTabMatch("http://t.foo/6", { title: "title" })],
   });
 
   Services.prefs.clearUserPref("browser.urlbar.suggest.history");

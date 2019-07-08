@@ -11,6 +11,8 @@
 
   <script type="application/javascript">
   <![CDATA[
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
     const PREFS = ['tests.onsyncfrompreference.pref1',
                    'tests.onsyncfrompreference.pref2',
                    'tests.onsyncfrompreference.pref3'];
@@ -18,7 +20,7 @@
     SimpleTest.waitForExplicitFinish();
 
     for (let pref of PREFS) {
-      SpecialPowers.setIntPref(pref, 1);
+      Services.prefs.setIntPref(pref, 1);
     }
 
     let counter = 0;
@@ -26,7 +28,7 @@
 
     SimpleTest.registerCleanupFunction(() => {
       for (let pref of PREFS) {
-        SpecialPowers.clearUserPref(pref);
+        Services.prefs.clearUserPref(pref);
       }
       prefWindow.close();
     });
@@ -36,7 +38,7 @@
       for (let pref of PREFS) {
         // The `value` field of each <preference> element should be initialized by now.
 
-        is(SpecialPowers.getIntPref(pref), prefWindow.Preferences.get(pref).value,
+        is(Services.prefs.getIntPref(pref), prefWindow.Preferences.get(pref).value,
            "Pref constructor was called correctly")
       }
 

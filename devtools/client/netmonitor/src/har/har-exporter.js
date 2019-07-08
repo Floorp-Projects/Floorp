@@ -14,8 +14,7 @@ var uid = 1;
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {
-  log: function(...args) {
-  },
+  log: function(...args) {},
 };
 
 /**
@@ -65,25 +64,36 @@ const HarExporter = {
   async save(options) {
     // Set default options related to save operation.
     const defaultFileName = Services.prefs.getCharPref(
-      "devtools.netmonitor.har.defaultFileName");
+      "devtools.netmonitor.har.defaultFileName"
+    );
     const compress = Services.prefs.getBoolPref(
-      "devtools.netmonitor.har.compress");
+      "devtools.netmonitor.har.compress"
+    );
 
     trace.log("HarExporter.save; " + defaultFileName, options);
 
     let data = await this.fetchHarData(options);
-    let fileName = this.getHarFileName(defaultFileName, options.jsonp, compress, options);
+    let fileName = this.getHarFileName(
+      defaultFileName,
+      options.jsonp,
+      compress,
+      options
+    );
 
     if (compress) {
-      data = await JSZip().file(fileName, data).generateAsync({
-        compression: "DEFLATE",
-        platform: Services.appinfo.OS === "WINNT" ? "DOS" : "UNIX",
-        type: "blob",
-      });
+      data = await JSZip()
+        .file(fileName, data)
+        .generateAsync({
+          compression: "DEFLATE",
+          platform: Services.appinfo.OS === "WINNT" ? "DOS" : "UNIX",
+          type: "blob",
+        });
     }
 
     fileName = `${fileName}${compress ? ".zip" : ""}`;
-    const blob = compress ? data : new Blob([data], { type: "application/json" });
+    const blob = compress
+      ? data
+      : new Blob([data], { type: "application/json" });
 
     FileSaver.saveAs(blob, fileName, document);
   },
@@ -144,46 +154,52 @@ const HarExporter = {
     // Set default generic HAR export options.
     if (typeof options.jsonp != "boolean") {
       options.jsonp = Services.prefs.getBoolPref(
-        "devtools.netmonitor.har.jsonp");
+        "devtools.netmonitor.har.jsonp"
+      );
     }
     if (typeof options.includeResponseBodies != "boolean") {
       options.includeResponseBodies = Services.prefs.getBoolPref(
-        "devtools.netmonitor.har.includeResponseBodies");
+        "devtools.netmonitor.har.includeResponseBodies"
+      );
     }
     if (typeof options.jsonpCallback != "boolean") {
       options.jsonpCallback = Services.prefs.getCharPref(
-        "devtools.netmonitor.har.jsonpCallback");
+        "devtools.netmonitor.har.jsonpCallback"
+      );
     }
     if (typeof options.forceExport != "boolean") {
       options.forceExport = Services.prefs.getBoolPref(
-        "devtools.netmonitor.har.forceExport");
+        "devtools.netmonitor.har.forceExport"
+      );
     }
 
     // Build HAR object.
-    return this.buildHarData(options).then(har => {
-      // Do not export an empty HAR file, unless the user
-      // explicitly says so (using the forceExport option).
-      if (!har.log.entries.length && !options.forceExport) {
-        return Promise.resolve();
-      }
+    return this.buildHarData(options)
+      .then(har => {
+        // Do not export an empty HAR file, unless the user
+        // explicitly says so (using the forceExport option).
+        if (!har.log.entries.length && !options.forceExport) {
+          return Promise.resolve();
+        }
 
-      let jsonString = this.stringify(har);
-      if (!jsonString) {
-        return Promise.resolve();
-      }
+        let jsonString = this.stringify(har);
+        if (!jsonString) {
+          return Promise.resolve();
+        }
 
-      // If JSONP is wanted, wrap the string in a function call
-      if (options.jsonp) {
-        // This callback name is also used in HAR Viewer by default.
-        // http://www.softwareishard.com/har/viewer/
-        const callbackName = options.jsonpCallback || "onInputData";
-        jsonString = callbackName + "(" + jsonString + ");";
-      }
+        // If JSONP is wanted, wrap the string in a function call
+        if (options.jsonp) {
+          // This callback name is also used in HAR Viewer by default.
+          // http://www.softwareishard.com/har/viewer/
+          const callbackName = options.jsonpCallback || "onInputData";
+          jsonString = callbackName + "(" + jsonString + ");";
+        }
 
-      return jsonString;
-    }).catch(function onError(err) {
-      console.error(err);
-    });
+        return jsonString;
+      })
+      .catch(function onError(err) {
+        console.error(err);
+      });
   },
 
   /**
@@ -194,9 +210,7 @@ const HarExporter = {
    */
   buildHarData: async function(options) {
     const { connector } = options;
-    const {
-      getTabTarget,
-    } = connector;
+    const { getTabTarget } = connector;
     const {
       form: { title, url },
     } = getTabTarget();

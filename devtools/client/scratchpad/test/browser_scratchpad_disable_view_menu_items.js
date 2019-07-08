@@ -6,7 +6,8 @@
 
 function test() {
   const options = {
-    tabContent: 'test if view menu items "Larger Font" and "Smaller Font" are enabled/disabled.',
+    tabContent:
+      'test if view menu items "Larger Font" and "Smaller Font" are enabled/disabled.',
   };
   openTabAndScratchpad(options)
     .then(runTests)
@@ -35,12 +36,18 @@ var testMaximumFontSize = async function(win, sp) {
   }
 
   const cmd = doc.getElementById("sp-cmd-larger-font");
-  ok(cmd.getAttribute("disabled") === "true", 'Command "sp-cmd-larger-font" is disabled.');
+  ok(
+    cmd.getAttribute("disabled") === "true",
+    'Command "sp-cmd-larger-font" is disabled.'
+  );
 
   menu = doc.getElementById("sp-menu-smaller-font");
   menu.doCommand();
 
-  ok(cmd.hasAttribute("disabled") === false, 'Command "sp-cmd-larger-font" is enabled.');
+  ok(
+    cmd.hasAttribute("disabled") === false,
+    'Command "sp-cmd-larger-font" is enabled.'
+  );
 };
 
 var testMinimumFontSize = async function(win, sp) {
@@ -53,12 +60,18 @@ var testMinimumFontSize = async function(win, sp) {
   }
 
   const cmd = doc.getElementById("sp-cmd-smaller-font");
-  ok(cmd.getAttribute("disabled") === "true", 'Command "sp-cmd-smaller-font" is disabled.');
+  ok(
+    cmd.getAttribute("disabled") === "true",
+    'Command "sp-cmd-smaller-font" is disabled.'
+  );
 
   menu = doc.getElementById("sp-menu-larger-font");
   menu.doCommand();
 
-  ok(cmd.hasAttribute("disabled") === false, 'Command "sp-cmd-smaller-font" is enabled.');
+  ok(
+    cmd.hasAttribute("disabled") === false,
+    'Command "sp-cmd-smaller-font" is enabled.'
+  );
 
   Services.prefs.clearUserPref("devtools.scratchpad.editorFontSize");
 };

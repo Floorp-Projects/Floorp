@@ -8,7 +8,7 @@
 const TEST_URL = URL_ROOT + "doc_inspector_delete-selected-node-01.html";
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   const span = await getNodeFrontInFrame("span", "iframe", inspector);
   await selectNode(span, inspector);
@@ -19,6 +19,9 @@ add_task(async function() {
 
   // Wait for the inspector to process the mutation
   await inspector.once("inspector-updated");
-  is(inspector.selection.nodeFront, parentNode,
-    "Parent node of selected <span> got selected.");
+  is(
+    inspector.selection.nodeFront,
+    parentNode,
+    "Parent node of selected <span> got selected."
+  );
 });

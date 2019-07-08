@@ -1,8 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 add_task(async function run_test() {
   let engine = Service.engineManager.get("prefs");
@@ -32,7 +34,7 @@ add_task(async function run_test() {
     Assert.ok(!tracker.modified);
 
     _("No modified state, so no changed IDs.");
-    do_check_empty((await engine.getChangedIDs()));
+    do_check_empty(await engine.getChangedIDs());
 
     _("Initial score is 0");
     Assert.equal(tracker.score, 0);
@@ -40,7 +42,9 @@ add_task(async function run_test() {
     _("Test fixtures.");
     Svc.Prefs.set("prefs.sync.testing.int", true);
 
-    _("Test fixtures haven't upped the tracker score yet because it hasn't started tracking yet.");
+    _(
+      "Test fixtures haven't upped the tracker score yet because it hasn't started tracking yet."
+    );
     Assert.equal(tracker.score, 0);
 
     _("Tell the tracker to start tracking changes.");
@@ -68,7 +72,9 @@ add_task(async function run_test() {
     Assert.equal(tracker.modified, true);
     await tracker.clearChangedIDs();
 
-    _("Now that the pref sync pref has been flipped, changes to it won't be picked up.");
+    _(
+      "Now that the pref sync pref has been flipped, changes to it won't be picked up."
+    );
     prefs.set("testing.int", 42);
     await tracker.asyncObserver.promiseObserversComplete();
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);

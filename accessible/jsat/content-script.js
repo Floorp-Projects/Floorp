@@ -4,16 +4,31 @@
 
 /* eslint-env mozilla/frame-script */
 
-ChromeUtils.defineModuleGetter(this, "Logger",
-  "resource://gre/modules/accessibility/Utils.jsm");
-ChromeUtils.defineModuleGetter(this, "Utils",
-  "resource://gre/modules/accessibility/Utils.jsm");
-ChromeUtils.defineModuleGetter(this, "EventManager",
-  "resource://gre/modules/accessibility/EventManager.jsm");
-ChromeUtils.defineModuleGetter(this, "ContentControl",
-  "resource://gre/modules/accessibility/ContentControl.jsm");
-ChromeUtils.defineModuleGetter(this, "States",
-  "resource://gre/modules/accessibility/Constants.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Logger",
+  "resource://gre/modules/accessibility/Utils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Utils",
+  "resource://gre/modules/accessibility/Utils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "EventManager",
+  "resource://gre/modules/accessibility/EventManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContentControl",
+  "resource://gre/modules/accessibility/ContentControl.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "States",
+  "resource://gre/modules/accessibility/Constants.jsm"
+);
 
 Logger.info("content-script.js", content.document.location);
 

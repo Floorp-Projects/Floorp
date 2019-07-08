@@ -10,25 +10,38 @@
 
 var EXPORTED_SYMBOLS = ["read", "writeAtomic"];
 
-var SharedAll = ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", null);
+var SharedAll = ChromeUtils.import(
+  "resource://gre/modules/osfile/osfile_shared_allthreads.jsm",
+  null
+);
 
 var SysAll = {};
 if (SharedAll.Constants.Win) {
-  ChromeUtils.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm", SysAll);
+  ChromeUtils.import(
+    "resource://gre/modules/osfile/osfile_win_allthreads.jsm",
+    SysAll
+  );
 } else if (SharedAll.Constants.libc) {
-  ChromeUtils.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm", SysAll);
+  ChromeUtils.import(
+    "resource://gre/modules/osfile/osfile_unix_allthreads.jsm",
+    SysAll
+  );
 } else {
   throw new Error("I am neither under Windows nor under a Posix system");
 }
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 /**
  * The native service holding the implementation of the functions.
  */
-XPCOMUtils.defineLazyServiceGetter(this,
+XPCOMUtils.defineLazyServiceGetter(
+  this,
   "Internals",
   "@mozilla.org/toolkit/osfile/native-internals;1",
-  "nsINativeOSFileInternalsService");
+  "nsINativeOSFileInternalsService"
+);
 
 /**
  * Native implementation of OS.File.read
@@ -48,14 +61,14 @@ var read = function(path, options = {}) {
   }
 
   return new Promise((resolve, reject) => {
-    Internals.read(path,
+    Internals.read(
+      path,
       options,
       function onSuccess(success) {
         success.QueryInterface(Ci.nsINativeOSFileResult);
         if ("outExecutionDuration" in options) {
           options.outExecutionDuration =
-            success.executionDurationMS +
-            (options.outExecutionDuration || 0);
+            success.executionDurationMS + (options.outExecutionDuration || 0);
         }
         resolve(success.result);
       },
@@ -87,7 +100,9 @@ var writeAtomic = function(path, buffer, options = {}) {
   if (ArrayBuffer.isView(buffer)) {
     // We need to throw an error if it's a buffer with some byte offset.
     if ("byteOffset" in buffer && buffer.byteOffset > 0) {
-      return Promise.reject(new Error("Invalid non-zero value of Typed Array byte offset"));
+      return Promise.reject(
+        new Error("Invalid non-zero value of Typed Array byte offset")
+      );
     }
     buffer = buffer.buffer;
   }
@@ -101,8 +116,7 @@ var writeAtomic = function(path, buffer, options = {}) {
         success.QueryInterface(Ci.nsINativeOSFileResult);
         if ("outExecutionDuration" in options) {
           options.outExecutionDuration =
-            success.executionDurationMS +
-            (options.outExecutionDuration || 0);
+            success.executionDurationMS + (options.outExecutionDuration || 0);
         }
         resolve(success.result);
       },

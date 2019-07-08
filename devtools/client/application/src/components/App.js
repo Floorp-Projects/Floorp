@@ -5,7 +5,10 @@
 "use strict";
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { createFactory, Component } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  Component,
+} = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { main } = require("devtools/client/shared/vendor/react-dom-factories");
 
@@ -44,17 +47,22 @@ class App extends Component {
     } = this.props;
 
     // Filter out workers from other domains
-    const domainWorkers = workers.filter((x) => new URL(x.url).hostname === domain);
+    const domainWorkers = workers.filter(
+      x => new URL(x.url).hostname === domain
+    );
     const isWorkerListEmpty = domainWorkers.length === 0;
 
-    return (
-      LocalizationProvider(
-        { messages: fluentBundles },
-        main(
-          { className: `application ${isWorkerListEmpty ? "application--empty" : ""}` },
-          isWorkerListEmpty ? WorkerListEmpty({ serviceContainer })
-                  : WorkerList({ canDebugWorkers, client, workers: domainWorkers })
-        )
+    return LocalizationProvider(
+      { messages: fluentBundles },
+      main(
+        {
+          className: `application ${
+            isWorkerListEmpty ? "application--empty" : ""
+          }`,
+        },
+        isWorkerListEmpty
+          ? WorkerListEmpty({ serviceContainer })
+          : WorkerList({ canDebugWorkers, client, workers: domainWorkers })
       )
     );
   }

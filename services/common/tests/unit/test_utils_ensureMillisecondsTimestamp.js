@@ -2,20 +2,39 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
-    Assert.equal(null, CommonUtils.ensureMillisecondsTimestamp(null));
-    Assert.equal(null, CommonUtils.ensureMillisecondsTimestamp(0));
-    Assert.equal(null, CommonUtils.ensureMillisecondsTimestamp("0"));
-    Assert.equal(null, CommonUtils.ensureMillisecondsTimestamp("000"));
+  Assert.equal(null, CommonUtils.ensureMillisecondsTimestamp(null));
+  Assert.equal(null, CommonUtils.ensureMillisecondsTimestamp(0));
+  Assert.equal(null, CommonUtils.ensureMillisecondsTimestamp("0"));
+  Assert.equal(null, CommonUtils.ensureMillisecondsTimestamp("000"));
 
-    Assert.equal(null, CommonUtils.ensureMillisecondsTimestamp(999 * 10000000000));
+  Assert.equal(
+    null,
+    CommonUtils.ensureMillisecondsTimestamp(999 * 10000000000)
+  );
 
-    do_check_throws(function err() { CommonUtils.ensureMillisecondsTimestamp(-1); });
-    do_check_throws(function err() { CommonUtils.ensureMillisecondsTimestamp(1); });
-    do_check_throws(function err() { CommonUtils.ensureMillisecondsTimestamp(1.5); });
-    do_check_throws(function err() { CommonUtils.ensureMillisecondsTimestamp(999 * 10000000000 + 0.5); });
+  do_check_throws(function err() {
+    CommonUtils.ensureMillisecondsTimestamp(-1);
+  });
+  do_check_throws(function err() {
+    CommonUtils.ensureMillisecondsTimestamp(1);
+  });
+  do_check_throws(function err() {
+    CommonUtils.ensureMillisecondsTimestamp(1.5);
+  });
+  do_check_throws(function err() {
+    CommonUtils.ensureMillisecondsTimestamp(999 * 10000000000 + 0.5);
+  });
 
-    do_check_throws(function err() { CommonUtils.ensureMillisecondsTimestamp("-1"); });
-    do_check_throws(function err() { CommonUtils.ensureMillisecondsTimestamp("1"); });
-    do_check_throws(function err() { CommonUtils.ensureMillisecondsTimestamp("1.5"); });
-    do_check_throws(function err() { CommonUtils.ensureMillisecondsTimestamp("" + (999 * 10000000000 + 0.5)); });
+  do_check_throws(function err() {
+    CommonUtils.ensureMillisecondsTimestamp("-1");
+  });
+  do_check_throws(function err() {
+    CommonUtils.ensureMillisecondsTimestamp("1");
+  });
+  do_check_throws(function err() {
+    CommonUtils.ensureMillisecondsTimestamp("1.5");
+  });
+  do_check_throws(function err() {
+    CommonUtils.ensureMillisecondsTimestamp("" + (999 * 10000000000 + 0.5));
+  });
 }

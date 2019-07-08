@@ -6,7 +6,10 @@
 
 const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { button, span } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  button,
+  span,
+} = require("devtools/client/shared/vendor/react-dom-factories");
 
 const defaultProps = {
   disabled: false,
@@ -53,10 +56,16 @@ class Button extends Component {
       classList.push("devtools-throbber");
     }
 
-    return (button(props, span({
-      className: classList.join(" "),
-      tabIndex: -1,
-    }, this.props.children)));
+    return button(
+      props,
+      span(
+        {
+          className: classList.join(" "),
+          tabIndex: -1,
+        },
+        this.props.children
+      )
+    );
   }
 }
 
@@ -71,10 +80,7 @@ function ToggleButton(props) {
     onKeyDown,
     tooltip,
   } = props;
-  const classList = [
-    ...className.split(" "),
-    "toggle-button",
-  ];
+  const classList = [...className.split(" "), "toggle-button"];
 
   if (active) {
     classList.push("checked");
@@ -84,15 +90,18 @@ function ToggleButton(props) {
     classList.push("devtools-throbber");
   }
 
-  return button({
-    disabled,
-    "aria-pressed": active === true,
-    "aria-busy": busy,
-    className: classList.join(" "),
-    onClick,
-    onKeyDown,
-    title: tooltip,
-  }, label);
+  return button(
+    {
+      disabled,
+      "aria-pressed": active === true,
+      "aria-busy": busy,
+      className: classList.join(" "),
+      onClick,
+      onKeyDown,
+      title: tooltip,
+    },
+    label
+  );
 }
 
 module.exports = {

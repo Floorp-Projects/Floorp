@@ -6,9 +6,10 @@
 // the common JS files used by safebrowsing and url-classifier into a
 // single component.
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const PREF_DISABLE_TEST_BACKOFF = "browser.safebrowsing.provider.test.disableBackoff";
+const PREF_DISABLE_TEST_BACKOFF =
+  "browser.safebrowsing.provider.test.disableBackoff";
 /**
  * Partially applies a function to a particular "this object" and zero or
  * more arguments. The result is a new function with some arguments of the first
@@ -31,13 +32,16 @@ const PREF_DISABLE_TEST_BACKOFF = "browser.safebrowsing.provider.test.disableBac
  */
 this.BindToObject = function BindToObject(fn, self, opt_args) {
   var boundargs = fn.boundArgs_ || [];
-  boundargs = boundargs.concat(Array.prototype.slice.call(arguments, 2,
-                                                          arguments.length));
+  boundargs = boundargs.concat(
+    Array.prototype.slice.call(arguments, 2, arguments.length)
+  );
 
-  if (fn.boundSelf_)
+  if (fn.boundSelf_) {
     self = fn.boundSelf_;
-  if (fn.boundFn_)
+  }
+  if (fn.boundFn_) {
     fn = fn.boundFn_;
+  }
 
   var newfn = function() {
     // Combine the static args and the new args into one big array
@@ -62,9 +66,9 @@ this.BindToObject = function BindToObject(fn, self, opt_args) {
 
 // HTTP responses that count as an error.  We also include any 5xx response
 // as an error.
-this.HTTP_FOUND                 = 302;
-this.HTTP_SEE_OTHER             = 303;
-this.HTTP_TEMPORARY_REDIRECT    = 307;
+this.HTTP_FOUND = 302;
+this.HTTP_SEE_OTHER = 303;
+this.HTTP_TEMPORARY_REDIRECT = 307;
 
 /**
  * @param maxErrors Number of times to request before backing off.
@@ -77,11 +81,16 @@ this.HTTP_TEMPORARY_REDIRECT    = 307;
  * @param maxTimeout Number time (ms) maximum timeout period
  * @param tolerance Checking next request tolerance.
  */
-this.RequestBackoff =
-function RequestBackoff(maxErrors, retryIncrement,
-                        maxRequests, requestPeriod,
-                        timeoutIncrement, maxTimeout,
-                        tolerance, provider = null) {
+this.RequestBackoff = function RequestBackoff(
+  maxErrors,
+  retryIncrement,
+  maxRequests,
+  requestPeriod,
+  timeoutIncrement,
+  maxTimeout,
+  tolerance,
+  provider = null
+) {
   this.MAX_ERRORS_ = maxErrors;
   this.RETRY_INCREMENT_ = retryIncrement;
   this.MAX_REQUESTS_ = maxRequests;
@@ -129,8 +138,10 @@ RequestBackoff.prototype.canMakeRequest = function() {
     return false;
   }
 
-  return (this.requestTimes_.length < this.MAX_REQUESTS_ ||
-          (now - this.requestTimes_[0]) > this.REQUEST_PERIOD_);
+  return (
+    this.requestTimes_.length < this.MAX_REQUESTS_ ||
+    now - this.requestTimes_[0] > this.REQUEST_PERIOD_
+  );
 };
 
 RequestBackoff.prototype.noteRequest = function() {
@@ -138,8 +149,9 @@ RequestBackoff.prototype.noteRequest = function() {
   this.requestTimes_.push(now);
 
   // We only care about keeping track of MAX_REQUESTS
-  if (this.requestTimes_.length > this.MAX_REQUESTS_)
+  if (this.requestTimes_.length > this.MAX_REQUESTS_) {
     this.requestTimes_.shift();
+  }
 };
 
 RequestBackoff.prototype.nextRequestDelay = function() {
@@ -153,12 +165,13 @@ RequestBackoff.prototype.noteServerResponse = function(status) {
   if (this.isErrorStatus(status)) {
     this.numErrors_++;
 
-    if (this.numErrors_ < this.MAX_ERRORS_)
+    if (this.numErrors_ < this.MAX_ERRORS_) {
       this.errorTimeout_ = this.RETRY_INCREMENT_;
-    else if (this.numErrors_ == this.MAX_ERRORS_)
+    } else if (this.numErrors_ == this.MAX_ERRORS_) {
       this.errorTimeout_ = this.TIMEOUT_INCREMENT_;
-    else
+    } else {
       this.errorTimeout_ *= 2;
+    }
 
     this.errorTimeout_ = Math.min(this.errorTimeout_, this.MAX_TIMEOUT_);
     this.nextRequestTime_ = Date.now() + this.errorTimeout_;
@@ -174,10 +187,12 @@ RequestBackoff.prototype.noteServerResponse = function(status) {
  * @return Boolean true if we consider this http status an error
  */
 RequestBackoff.prototype.isErrorStatus = function(status) {
-  return ((400 <= status && status <= 599) ||
-          HTTP_FOUND == status ||
-          HTTP_SEE_OTHER == status ||
-          HTTP_TEMPORARY_REDIRECT == status);
+  return (
+    (400 <= status && status <= 599) ||
+    HTTP_FOUND == status ||
+    HTTP_SEE_OTHER == status ||
+    HTTP_TEMPORARY_REDIRECT == status
+  );
 };
 
 // Wrap a general-purpose |RequestBackoff| to a v4-specific one
@@ -185,20 +200,21 @@ RequestBackoff.prototype.isErrorStatus = function(status) {
 // Note that |maxRequests| and |requestPeriod| is still configurable
 // to throttle pending requests.
 /* exported RequestBackoffV4 */
-function RequestBackoffV4(maxRequests, requestPeriod,
-                          provider = null) {
+function RequestBackoffV4(maxRequests, requestPeriod, provider = null) {
   let rand = Math.random();
   let retryInterval = Math.floor(15 * 60 * 1000 * (rand + 1)); // 15 ~ 30 min.
   let backoffInterval = Math.floor(30 * 60 * 1000 * (rand + 1)); // 30 ~ 60 min.
 
-  return new RequestBackoff(2 /* max errors */,
-                retryInterval /* retry interval, 15~30 min */,
-                  maxRequests /* num requests */,
-                requestPeriod /* request time, 60 min */,
-              backoffInterval /* backoff interval, 60 min */,
-          24 * 60 * 60 * 1000 /* max backoff, 24hr */,
-                         1000 /* tolerance of 1 sec */,
-                     provider /* provider name */);
+  return new RequestBackoff(
+    2 /* max errors */,
+    retryInterval /* retry interval, 15~30 min */,
+    maxRequests /* num requests */,
+    requestPeriod /* request time, 60 min */,
+    backoffInterval /* backoff interval, 60 min */,
+    24 * 60 * 60 * 1000 /* max backoff, 24hr */,
+    1000 /* tolerance of 1 sec */,
+    provider /* provider name */
+  );
 }
 
 // Expose this whole component.

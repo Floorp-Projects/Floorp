@@ -75,8 +75,15 @@ add_task(async function() {
   ok(true, "`foo + foo3` updated in `firstCall()`");
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    is(content.wrappedJSObject.foo, "globalFooBug783499", "`foo` in content window");
+    is(
+      content.wrappedJSObject.foo,
+      "globalFooBug783499",
+      "`foo` in content window"
+    );
     is(content.wrappedJSObject.foo2, "newFoo", "`foo2` in content window");
-    ok(!content.wrappedJSObject.foo3, "`foo3` was not added to the content window");
+    ok(
+      !content.wrappedJSObject.foo3,
+      "`foo3` was not added to the content window"
+    );
   });
 });

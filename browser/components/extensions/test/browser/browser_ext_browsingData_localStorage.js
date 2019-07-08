@@ -6,10 +6,7 @@ add_task(async function testLocalStorage() {
   async function background() {
     function openTabs() {
       let promise = new Promise(resolve => {
-        let tabURLs = [
-          "http://example.com/",
-          "http://example.net/",
-        ];
+        let tabURLs = ["http://example.com/", "http://example.net/"];
 
         let tabs;
         let waitingCount = tabURLs.length;
@@ -25,7 +22,7 @@ add_task(async function testLocalStorage() {
         browser.runtime.onMessage.addListener(listener);
 
         tabs = tabURLs.map(url => {
-          return browser.tabs.create({url: url});
+          return browser.tabs.create({ url: url });
         });
       });
 
@@ -34,19 +31,24 @@ add_task(async function testLocalStorage() {
 
     function sendMessageToTabs(tabs, message) {
       return Promise.all(
-        tabs.map(tab => { return browser.tabs.sendMessage(tab.id, message); }));
+        tabs.map(tab => {
+          return browser.tabs.sendMessage(tab.id, message);
+        })
+      );
     }
 
     let tabs = await openTabs();
 
     browser.test.assertRejects(
-      browser.browsingData.removeLocalStorage({since: Date.now()}),
+      browser.browsingData.removeLocalStorage({ since: Date.now() }),
       "Firefox does not support clearing localStorage with 'since'.",
       "Expected error received when using unimplemented parameter 'since'."
     );
 
     await sendMessageToTabs(tabs, "resetLocalStorage");
-    await browser.browsingData.removeLocalStorage({hostnames: ["example.com"]});
+    await browser.browsingData.removeLocalStorage({
+      hostnames: ["example.com"],
+    });
     await browser.tabs.sendMessage(tabs[0].id, "checkLocalStorageCleared");
     await browser.tabs.sendMessage(tabs[1].id, "checkLocalStorageSet");
 
@@ -57,7 +59,7 @@ add_task(async function testLocalStorage() {
 
     await sendMessageToTabs(tabs, "resetLocalStorage");
     await sendMessageToTabs(tabs, "checkLocalStorageSet");
-    await browser.browsingData.remove({}, {localStorage: true});
+    await browser.browsingData.remove({}, { localStorage: true });
     await sendMessageToTabs(tabs, "checkLocalStorageCleared");
 
     // Cleanup (checkLocalStorageCleared creates empty LS databases).
@@ -85,15 +87,14 @@ add_task(async function testLocalStorage() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      "permissions": ["browsingData"],
-      "content_scripts": [{
-        "matches": [
-          "http://example.com/",
-          "http://example.net/",
-        ],
-        "js": ["content-script.js"],
-        "run_at": "document_start",
-      }],
+      permissions: ["browsingData"],
+      content_scripts: [
+        {
+          matches: ["http://example.com/", "http://example.net/"],
+          js: ["content-script.js"],
+          run_at: "document_start",
+        },
+      ],
     },
     files: {
       "content-script.js": contentScript,
@@ -104,4 +105,3 @@ add_task(async function testLocalStorage() {
   await extension.awaitFinish("done");
   await extension.unload();
 });
-

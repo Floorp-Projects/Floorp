@@ -14,7 +14,9 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  info("Check that the error message is logged in telemetry with the expected key");
+  info(
+    "Check that the error message is logged in telemetry with the expected key"
+  );
   await waitFor(() => findMessage(hud, "is not a function"));
   checkErrorDisplayedTelemetry("JSMSG_NOT_FUNCTION", 1);
 
@@ -24,13 +26,17 @@ add_task(async function() {
   await waitFor(() => findMessage(hud, "is not a function"));
   checkErrorDisplayedTelemetry("JSMSG_NOT_FUNCTION", 2);
 
-  info("Evaluating an expression resulting in the same error increments the sum");
+  info(
+    "Evaluating an expression resulting in the same error increments the sum"
+  );
   let onMessage = waitForMessage(hud, "window is not a function");
   hud.jsterm.execute("window()");
   await onMessage;
   checkErrorDisplayedTelemetry("JSMSG_NOT_FUNCTION", 3);
 
-  info("Evaluating an expression resulting in another error is logged in telemetry");
+  info(
+    "Evaluating an expression resulting in another error is logged in telemetry"
+  );
   onMessage = waitForMessage(hud, "repeat count must be non-negative");
   hud.jsterm.execute(`"a".repeat(-1)`);
   await onMessage;
@@ -44,5 +50,9 @@ add_task(async function() {
 
 function checkErrorDisplayedTelemetry(key, count) {
   checkTelemetry(
-    "DEVTOOLS_JAVASCRIPT_ERROR_DISPLAYED", key, {0: 0, 1: count, 2: 0}, "array");
+    "DEVTOOLS_JAVASCRIPT_ERROR_DISPLAYED",
+    key,
+    { 0: 0, 1: count, 2: 0 },
+    "array"
+  );
 }

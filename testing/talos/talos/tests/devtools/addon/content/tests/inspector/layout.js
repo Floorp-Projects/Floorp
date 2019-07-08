@@ -6,15 +6,23 @@
 
 const Services = require("Services");
 
-const { openToolbox, closeToolbox, runTest, testSetup,
-        testTeardown, SIMPLE_URL } = require("../head");
+const {
+  openToolbox,
+  closeToolbox,
+  runTest,
+  testSetup,
+  testTeardown,
+  SIMPLE_URL,
+} = require("../head");
 
 module.exports = async function() {
   let tab = await testSetup(SIMPLE_URL);
   let messageManager = tab.linkedBrowser.messageManager;
 
   // Backup current sidebar tab preference
-  let sidebarTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
+  let sidebarTab = Services.prefs.getCharPref(
+    "devtools.inspector.activeSidebar"
+  );
 
   // Set layoutview as the current inspector sidebar tab.
   Services.prefs.setCharPref("devtools.inspector.activeSidebar", "layoutview");
@@ -26,8 +34,10 @@ module.exports = async function() {
 
     const NODES = 5000;
     const GRID_NODES = 10;
-    messageManager.loadFrameScript("data:,(" + encodeURIComponent(
-      `function () {
+    messageManager.loadFrameScript(
+      "data:,(" +
+        encodeURIComponent(
+          `function () {
         let div = content.document.createElement("div");
         div.innerHTML =
           new Array(${NODES}).join("<div></div>") +
@@ -35,7 +45,10 @@ module.exports = async function() {
         content.document.body.appendChild(div);
         sendSyncMessage("setup-test-done");
       }`
-    ) + ")()", false);
+        ) +
+        ")()",
+      false
+    );
   });
 
   // Record the time needed to open the toolbox.

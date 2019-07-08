@@ -8,15 +8,15 @@
  * This file tests the methods on NetUtil.jsm.
  */
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 // We need the profile directory so the test harness will clean up our test
 // files.
 do_get_profile();
 
 const OUTPUT_STREAM_CONTRACT_ID = "@mozilla.org/network/file-output-stream;1";
-const SAFE_OUTPUT_STREAM_CONTRACT_ID = "@mozilla.org/network/safe-file-output-stream;1";
+const SAFE_OUTPUT_STREAM_CONTRACT_ID =
+  "@mozilla.org/network/safe-file-output-stream;1";
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Helper Methods
@@ -28,24 +28,24 @@ const SAFE_OUTPUT_STREAM_CONTRACT_ID = "@mozilla.org/network/safe-file-output-st
  *        The file to return from.
  * @return the contents of the file in the form of a string.
  */
-function getFileContents(aFile)
-{
+function getFileContents(aFile) {
   "use strict";
 
-  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-                createInstance(Ci.nsIFileInputStream);
+  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   fstream.init(aFile, -1, 0, 0);
 
-  let cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].
-                createInstance(Ci.nsIConverterInputStream);
+  let cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(
+    Ci.nsIConverterInputStream
+  );
   cstream.init(fstream, "UTF-8", 0, 0);
 
-  let string  = {};
+  let string = {};
   cstream.readString(-1, string);
   cstream.close();
   return string.value;
 }
-
 
 /**
  * Tests asynchronously writing a file using NetUtil.asyncCopy.
@@ -55,25 +55,30 @@ function getFileContents(aFile)
  * @param aDeferOpen
  *        Whether to use DEFER_OPEN in the output stream.
  */
-function async_write_file(aContractId, aDeferOpen)
-{
+function async_write_file(aContractId, aDeferOpen) {
   do_test_pending();
 
   // First, we need an output file to write to.
-  let file = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties).
-             get("ProfD", Ci.nsIFile);
+  let file = Cc["@mozilla.org/file/directory_service;1"]
+    .getService(Ci.nsIProperties)
+    .get("ProfD", Ci.nsIFile);
   file.append("NetUtil-async-test-file.tmp");
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   // Then, we need an output stream to our output file.
   let ostream = Cc[aContractId].createInstance(Ci.nsIFileOutputStream);
-  ostream.init(file, -1, -1, aDeferOpen ? Ci.nsIFileOutputStream.DEFER_OPEN : 0);
+  ostream.init(
+    file,
+    -1,
+    -1,
+    aDeferOpen ? Ci.nsIFileOutputStream.DEFER_OPEN : 0
+  );
 
   // Finally, we need an input stream to take data from.
   const TEST_DATA = "this is a test string";
-  let istream = Cc["@mozilla.org/io/string-input-stream;1"].
-                createInstance(Ci.nsIStringInputStream);
+  let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   istream.setData(TEST_DATA, TEST_DATA.length);
 
   NetUtil.asyncCopy(istream, ostream, function(aResult) {
@@ -93,8 +98,7 @@ function async_write_file(aContractId, aDeferOpen)
 //// Tests
 
 // Test NetUtil.asyncCopy for all possible buffering scenarios
-function test_async_copy()
-{
+function test_async_copy() {
   // Create a data sample
   function make_sample(text) {
     let data = [];
@@ -108,27 +112,30 @@ function test_async_copy()
   function make_input(isBuffered, data) {
     if (isBuffered) {
       // String input streams are buffered
-      let istream = Cc["@mozilla.org/io/string-input-stream;1"].
-        createInstance(Ci.nsIStringInputStream);
+      let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+        Ci.nsIStringInputStream
+      );
       istream.setData(data, data.length);
       return istream;
     }
 
     // File input streams are not buffered, so let's create a file
-    let file = Cc["@mozilla.org/file/directory_service;1"].
-      getService(Ci.nsIProperties).
-      get("ProfD", Ci.nsIFile);
+    let file = Cc["@mozilla.org/file/directory_service;1"]
+      .getService(Ci.nsIProperties)
+      .get("ProfD", Ci.nsIFile);
     file.append("NetUtil-asyncFetch-test-file.tmp");
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
-    let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
-      createInstance(Ci.nsIFileOutputStream);
+    let ostream = Cc[
+      "@mozilla.org/network/file-output-stream;1"
+    ].createInstance(Ci.nsIFileOutputStream);
     ostream.init(file, -1, -1, 0);
     ostream.write(data, data.length);
     ostream.close();
 
-    let istream = Cc["@mozilla.org/network/file-input-stream;1"].
-      createInstance(Ci.nsIFileInputStream);
+    let istream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+      Ci.nsIFileInputStream
+    );
     istream.init(file, -1, 0, 0);
 
     return istream;
@@ -136,37 +143,40 @@ function test_async_copy()
 
   // Create an output buffer holding some data
   function make_output(isBuffered) {
-    let file = Cc["@mozilla.org/file/directory_service;1"].
-      getService(Ci.nsIProperties).
-      get("ProfD", Ci.nsIFile);
+    let file = Cc["@mozilla.org/file/directory_service;1"]
+      .getService(Ci.nsIProperties)
+      .get("ProfD", Ci.nsIFile);
     file.append("NetUtil-asyncFetch-test-file.tmp");
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
-    let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
-      createInstance(Ci.nsIFileOutputStream);
+    let ostream = Cc[
+      "@mozilla.org/network/file-output-stream;1"
+    ].createInstance(Ci.nsIFileOutputStream);
     ostream.init(file, -1, -1, 0);
 
     if (!isBuffered) {
-      return {file, sink: ostream};
+      return { file, sink: ostream };
     }
 
-    let bstream = Cc["@mozilla.org/network/buffered-output-stream;1"].
-      createInstance(Ci.nsIBufferedOutputStream);
+    let bstream = Cc[
+      "@mozilla.org/network/buffered-output-stream;1"
+    ].createInstance(Ci.nsIBufferedOutputStream);
     bstream.init(ostream, 256);
-    return {file, sink: bstream};
+    return { file, sink: bstream };
   }
   (async function() {
     do_test_pending();
     for (let bufferedInput of [true, false]) {
       for (let bufferedOutput of [true, false]) {
-        let text = "test_async_copy with "
-          + (bufferedInput?"buffered input":"unbuffered input")
-          + ", "
-          + (bufferedOutput?"buffered output":"unbuffered output");
+        let text =
+          "test_async_copy with " +
+          (bufferedInput ? "buffered input" : "unbuffered input") +
+          ", " +
+          (bufferedOutput ? "buffered output" : "unbuffered output");
         info(text);
         let TEST_DATA = "[" + make_sample(text) + "]";
         let source = make_input(bufferedInput, TEST_DATA);
-        let {file, sink} = make_output(bufferedOutput);
+        let { file, sink } = make_output(bufferedOutput);
         let result = await new Promise(resolve => {
           NetUtil.asyncCopy(source, sink, resolve);
         });
@@ -202,21 +212,18 @@ function test_async_write_file_safe_deferred() {
   async_write_file(SAFE_OUTPUT_STREAM_CONTRACT_ID, true);
 }
 
-function test_newURI_no_spec_throws()
-{
+function test_newURI_no_spec_throws() {
   try {
     NetUtil.newURI();
     do_throw("should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
   run_next_test();
 }
 
-function test_newURI()
-{
+function test_newURI() {
   let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
   // Check that we get the same URI back from the IO service and the utility
@@ -229,14 +236,13 @@ function test_newURI()
   run_next_test();
 }
 
-function test_newURI_takes_nsIFile()
-{
+function test_newURI_takes_nsIFile() {
   let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
   // Create a test file that we can pass into NetUtil.newURI
-  let file = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties).
-             get("ProfD", Ci.nsIFile);
+  let file = Cc["@mozilla.org/file/directory_service;1"]
+    .getService(Ci.nsIProperties)
+    .get("ProfD", Ci.nsIFile);
   file.append("NetUtil-test-file.tmp");
 
   // Check that we get the same URI back from the IO service and the utility
@@ -248,34 +254,29 @@ function test_newURI_takes_nsIFile()
   run_next_test();
 }
 
-function test_asyncFetch_no_channel()
-{
+function test_asyncFetch_no_channel() {
   try {
-    NetUtil.asyncFetch(null, function() { });
+    NetUtil.asyncFetch(null, function() {});
     do_throw("should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
   run_next_test();
 }
 
-function test_asyncFetch_no_callback()
-{
+function test_asyncFetch_no_callback() {
   try {
-    NetUtil.asyncFetch({ });
+    NetUtil.asyncFetch({});
     do_throw("should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
   run_next_test();
 }
 
-function test_asyncFetch_with_nsIChannel()
-{
+function test_asyncFetch_with_nsIChannel() {
   const TEST_DATA = "this is a test string";
 
   // Start the http server, and register our handler.
@@ -300,8 +301,9 @@ function test_asyncFetch_with_nsIChannel()
 
     // Check that we got the right data.
     Assert.equal(aInputStream.available(), TEST_DATA.length);
-    let is = Cc["@mozilla.org/scriptableinputstream;1"].
-             createInstance(Ci.nsIScriptableInputStream);
+    let is = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+      Ci.nsIScriptableInputStream
+    );
     is.init(aInputStream);
     let result = is.read(TEST_DATA.length);
     Assert.equal(TEST_DATA, result);
@@ -310,8 +312,7 @@ function test_asyncFetch_with_nsIChannel()
   });
 }
 
-function test_asyncFetch_with_nsIURI()
-{
+function test_asyncFetch_with_nsIURI() {
   const TEST_DATA = "this is a test string";
 
   // Start the http server, and register our handler.
@@ -324,36 +325,40 @@ function test_asyncFetch_with_nsIURI()
   server.start(-1);
 
   // Create our URI.
-  let uri = NetUtil.newURI("http://localhost:" +
-                           server.identity.primaryPort + "/test");
+  let uri = NetUtil.newURI(
+    "http://localhost:" + server.identity.primaryPort + "/test"
+  );
 
   // Open our URI asynchronously.
-  NetUtil.asyncFetch({
-    uri,
-    loadUsingSystemPrincipal: true,
-  }, function(aInputStream, aResult) {
-    // Check that we had success.
-    Assert.ok(Components.isSuccessCode(aResult));
+  NetUtil.asyncFetch(
+    {
+      uri,
+      loadUsingSystemPrincipal: true,
+    },
+    function(aInputStream, aResult) {
+      // Check that we had success.
+      Assert.ok(Components.isSuccessCode(aResult));
 
-    // Check that we got the right data.
-    Assert.equal(aInputStream.available(), TEST_DATA.length);
-    let is = Cc["@mozilla.org/scriptableinputstream;1"].
-             createInstance(Ci.nsIScriptableInputStream);
-    is.init(aInputStream);
-    let result = is.read(TEST_DATA.length);
-    Assert.equal(TEST_DATA, result);
+      // Check that we got the right data.
+      Assert.equal(aInputStream.available(), TEST_DATA.length);
+      let is = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+        Ci.nsIScriptableInputStream
+      );
+      is.init(aInputStream);
+      let result = is.read(TEST_DATA.length);
+      Assert.equal(TEST_DATA, result);
 
-    server.stop(run_next_test);
-  },
-  null,      // aLoadingNode
-  Services.scriptSecurityManager.getSystemPrincipal(),
-  null,      // aTriggeringPrincipal
-  Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-  Ci.nsIContentPolicy.TYPE_OTHER);
+      server.stop(run_next_test);
+    },
+    null, // aLoadingNode
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    null, // aTriggeringPrincipal
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+    Ci.nsIContentPolicy.TYPE_OTHER
+  );
 }
 
-function test_asyncFetch_with_string()
-{
+function test_asyncFetch_with_string() {
   const TEST_DATA = "this is a test string";
 
   // Start the http server, and register our handler.
@@ -366,44 +371,48 @@ function test_asyncFetch_with_string()
   server.start(-1);
 
   // Open our location asynchronously.
-  NetUtil.asyncFetch({
-    uri: "http://localhost:" + server.identity.primaryPort + "/test",
-    loadUsingSystemPrincipal: true,
-  }, function(aInputStream, aResult) {
-    // Check that we had success.
-    Assert.ok(Components.isSuccessCode(aResult));
+  NetUtil.asyncFetch(
+    {
+      uri: "http://localhost:" + server.identity.primaryPort + "/test",
+      loadUsingSystemPrincipal: true,
+    },
+    function(aInputStream, aResult) {
+      // Check that we had success.
+      Assert.ok(Components.isSuccessCode(aResult));
 
-    // Check that we got the right data.
-    Assert.equal(aInputStream.available(), TEST_DATA.length);
-    let is = Cc["@mozilla.org/scriptableinputstream;1"].
-             createInstance(Ci.nsIScriptableInputStream);
-    is.init(aInputStream);
-    let result = is.read(TEST_DATA.length);
-    Assert.equal(TEST_DATA, result);
+      // Check that we got the right data.
+      Assert.equal(aInputStream.available(), TEST_DATA.length);
+      let is = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+        Ci.nsIScriptableInputStream
+      );
+      is.init(aInputStream);
+      let result = is.read(TEST_DATA.length);
+      Assert.equal(TEST_DATA, result);
 
-    server.stop(run_next_test);
-  },
-  null,      // aLoadingNode
-  Services.scriptSecurityManager.getSystemPrincipal(),
-  null,      // aTriggeringPrincipal
-  Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-  Ci.nsIContentPolicy.TYPE_OTHER);
+      server.stop(run_next_test);
+    },
+    null, // aLoadingNode
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    null, // aTriggeringPrincipal
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+    Ci.nsIContentPolicy.TYPE_OTHER
+  );
 }
 
-function test_asyncFetch_with_nsIFile()
-{
+function test_asyncFetch_with_nsIFile() {
   const TEST_DATA = "this is a test string";
 
   // First we need a file to read from.
-  let file = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties).
-             get("ProfD", Ci.nsIFile);
+  let file = Cc["@mozilla.org/file/directory_service;1"]
+    .getService(Ci.nsIProperties)
+    .get("ProfD", Ci.nsIFile);
   file.append("NetUtil-asyncFetch-test-file.tmp");
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   // Write the test data to the file.
-  let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
-                createInstance(Ci.nsIFileOutputStream);
+  let ostream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
   ostream.init(file, -1, -1, 0);
   ostream.write(TEST_DATA, TEST_DATA.length);
 
@@ -412,58 +421,66 @@ function test_asyncFetch_with_nsIFile()
 
   // Open our file asynchronously.
   // Note that this causes main-tread I/O and should be avoided in production.
-  NetUtil.asyncFetch({
-    uri: NetUtil.newURI(file),
-    loadUsingSystemPrincipal: true,
-  }, function(aInputStream, aResult) {
-    // Check that we had success.
-    Assert.ok(Components.isSuccessCode(aResult));
+  NetUtil.asyncFetch(
+    {
+      uri: NetUtil.newURI(file),
+      loadUsingSystemPrincipal: true,
+    },
+    function(aInputStream, aResult) {
+      // Check that we had success.
+      Assert.ok(Components.isSuccessCode(aResult));
 
-    // Check that we got the right data.
-    Assert.equal(aInputStream.available(), TEST_DATA.length);
-    let is = Cc["@mozilla.org/scriptableinputstream;1"].
-             createInstance(Ci.nsIScriptableInputStream);
-    is.init(aInputStream);
-    let result = is.read(TEST_DATA.length);
-    Assert.equal(TEST_DATA, result);
+      // Check that we got the right data.
+      Assert.equal(aInputStream.available(), TEST_DATA.length);
+      let is = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+        Ci.nsIScriptableInputStream
+      );
+      is.init(aInputStream);
+      let result = is.read(TEST_DATA.length);
+      Assert.equal(TEST_DATA, result);
 
-    run_next_test();
-  },
-  null,      // aLoadingNode
-  Services.scriptSecurityManager.getSystemPrincipal(),
-  null,      // aTriggeringPrincipal
-  Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-  Ci.nsIContentPolicy.TYPE_OTHER);
+      run_next_test();
+    },
+    null, // aLoadingNode
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    null, // aTriggeringPrincipal
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+    Ci.nsIContentPolicy.TYPE_OTHER
+  );
 }
 
-function test_asyncFetch_with_nsIInputString()
-{
+function test_asyncFetch_with_nsIInputString() {
   const TEST_DATA = "this is a test string";
-  let istream = Cc["@mozilla.org/io/string-input-stream;1"].
-                createInstance(Ci.nsIStringInputStream);
+  let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   istream.setData(TEST_DATA, TEST_DATA.length);
 
   // Read the input stream asynchronously.
-  NetUtil.asyncFetch(istream, function(aInputStream, aResult) {
-    // Check that we had success.
-    Assert.ok(Components.isSuccessCode(aResult));
+  NetUtil.asyncFetch(
+    istream,
+    function(aInputStream, aResult) {
+      // Check that we had success.
+      Assert.ok(Components.isSuccessCode(aResult));
 
-    // Check that we got the right data.
-    Assert.equal(aInputStream.available(), TEST_DATA.length);
-    Assert.equal(NetUtil.readInputStreamToString(aInputStream, TEST_DATA.length),
-                 TEST_DATA);
+      // Check that we got the right data.
+      Assert.equal(aInputStream.available(), TEST_DATA.length);
+      Assert.equal(
+        NetUtil.readInputStreamToString(aInputStream, TEST_DATA.length),
+        TEST_DATA
+      );
 
-    run_next_test();
-  },
-  null,      // aLoadingNode
-  Services.scriptSecurityManager.getSystemPrincipal(),
-  null,      // aTriggeringPrincipal
-  Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-  Ci.nsIContentPolicy.TYPE_OTHER);
+      run_next_test();
+    },
+    null, // aLoadingNode
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    null, // aTriggeringPrincipal
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+    Ci.nsIContentPolicy.TYPE_OTHER
+  );
 }
 
-function test_asyncFetch_does_not_block()
-{
+function test_asyncFetch_does_not_block() {
   // Create our channel that has no data.
   let channel = NetUtil.newChannel({
     uri: "data:text/plain,",
@@ -477,14 +494,14 @@ function test_asyncFetch_does_not_block()
 
     // Check that reading a byte throws that the stream was closed (as opposed
     // saying it would block).
-    let is = Cc["@mozilla.org/scriptableinputstream;1"].
-             createInstance(Ci.nsIScriptableInputStream);
+    let is = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+      Ci.nsIScriptableInputStream
+    );
     is.init(aInputStream);
     try {
       is.read(1);
       do_throw("should throw!");
-    }
-    catch (e) {
+    } catch (e) {
       Assert.equal(e.result, Cr.NS_BASE_STREAM_CLOSED);
     }
 
@@ -492,97 +509,101 @@ function test_asyncFetch_does_not_block()
   });
 }
 
-function test_newChannel_no_specifier()
-{
+function test_newChannel_no_specifier() {
   try {
     NetUtil.newChannel();
     do_throw("should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
   run_next_test();
 }
 
-function test_newChannel_with_string()
-{
+function test_newChannel_with_string() {
   const TEST_SPEC = "http://mozilla.org";
 
   // Check that we get the same URI back from channel the IO service creates and
   // the channel the utility method creates.
-  let ios = Services.io
-  let iosChannel = ios.newChannel(TEST_SPEC,
-                                  null,
-                                  null,
-                                  null,      // aLoadingNode
-                                  Services.scriptSecurityManager.getSystemPrincipal(),
-                                  null,      // aTriggeringPrincipal
-                                  Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                  Ci.nsIContentPolicy.TYPE_OTHER);
+  let ios = Services.io;
+  let iosChannel = ios.newChannel(
+    TEST_SPEC,
+    null,
+    null,
+    null, // aLoadingNode
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    null, // aTriggeringPrincipal
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+    Ci.nsIContentPolicy.TYPE_OTHER
+  );
   let NetUtilChannel = NetUtil.newChannel({
     uri: TEST_SPEC,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   Assert.ok(iosChannel.URI.equals(NetUtilChannel.URI));
 
   run_next_test();
 }
 
-function test_newChannel_with_nsIURI()
-{
+function test_newChannel_with_nsIURI() {
   const TEST_SPEC = "http://mozilla.org";
 
   // Check that we get the same URI back from channel the IO service creates and
   // the channel the utility method creates.
   let uri = NetUtil.newURI(TEST_SPEC);
-  let iosChannel = Services.io.newChannelFromURI(uri,
-                                                 null,      // aLoadingNode
-                                                 Services.scriptSecurityManager.getSystemPrincipal(),
-                                                 null,      // aTriggeringPrincipal
-                                                 Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                                 Ci.nsIContentPolicy.TYPE_OTHER);
+  let iosChannel = Services.io.newChannelFromURI(
+    uri,
+    null, // aLoadingNode
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    null, // aTriggeringPrincipal
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+    Ci.nsIContentPolicy.TYPE_OTHER
+  );
   let NetUtilChannel = NetUtil.newChannel({
     uri,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   Assert.ok(iosChannel.URI.equals(NetUtilChannel.URI));
 
   run_next_test();
 }
 
-function test_newChannel_with_options()
-{
+function test_newChannel_with_options() {
   let uri = "data:text/plain,";
 
-  let iosChannel = Services.io.newChannelFromURI(NetUtil.newURI(uri),
-                                                 null,      // aLoadingNode
-                                                 Services.scriptSecurityManager.getSystemPrincipal(),
-                                                 null,      // aTriggeringPrincipal
-                                                 Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                                 Ci.nsIContentPolicy.TYPE_OTHER);
+  let iosChannel = Services.io.newChannelFromURI(
+    NetUtil.newURI(uri),
+    null, // aLoadingNode
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    null, // aTriggeringPrincipal
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+    Ci.nsIContentPolicy.TYPE_OTHER
+  );
 
   function checkEqualToIOSChannel(channel) {
-    Assert.ok(iosChannel.URI.equals(channel.URI));  
+    Assert.ok(iosChannel.URI.equals(channel.URI));
   }
 
-  checkEqualToIOSChannel(NetUtil.newChannel({
-    uri,
-    loadingPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
-  }));
+  checkEqualToIOSChannel(
+    NetUtil.newChannel({
+      uri,
+      loadingPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
+    })
+  );
 
-  checkEqualToIOSChannel(NetUtil.newChannel({
-    uri,
-    loadUsingSystemPrincipal: true,
-  }));
+  checkEqualToIOSChannel(
+    NetUtil.newChannel({
+      uri,
+      loadUsingSystemPrincipal: true,
+    })
+  );
 
   run_next_test();
 }
 
-function test_newChannel_with_wrong_options()
-{
+function test_newChannel_with_wrong_options() {
   let uri = "data:text/plain,";
   let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
@@ -628,135 +649,136 @@ function test_newChannel_with_wrong_options()
   run_next_test();
 }
 
-function test_readInputStreamToString()
-{
+function test_readInputStreamToString() {
   const TEST_DATA = "this is a test string\0 with an embedded null";
-  let istream = Cc["@mozilla.org/io/string-input-stream;1"].
-                createInstance(Ci.nsISupportsCString);
+  let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsISupportsCString
+  );
   istream.data = TEST_DATA;
 
-  Assert.equal(NetUtil.readInputStreamToString(istream, TEST_DATA.length),
-               TEST_DATA);
+  Assert.equal(
+    NetUtil.readInputStreamToString(istream, TEST_DATA.length),
+    TEST_DATA
+  );
 
   run_next_test();
 }
 
-function test_readInputStreamToString_no_input_stream()
-{
+function test_readInputStreamToString_no_input_stream() {
   try {
     NetUtil.readInputStreamToString("hi", 2);
     do_throw("should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
   run_next_test();
 }
 
-function test_readInputStreamToString_no_bytes_arg()
-{
+function test_readInputStreamToString_no_bytes_arg() {
   const TEST_DATA = "this is a test string";
-  let istream = Cc["@mozilla.org/io/string-input-stream;1"].
-                createInstance(Ci.nsIStringInputStream);
+  let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   istream.setData(TEST_DATA, TEST_DATA.length);
 
   try {
     NetUtil.readInputStreamToString(istream);
     do_throw("should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
   run_next_test();
 }
 
-function test_readInputStreamToString_blocking_stream()
-{
+function test_readInputStreamToString_blocking_stream() {
   let pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
   pipe.init(true, true, 0, 0, null);
 
   try {
     NetUtil.readInputStreamToString(pipe.inputStream, 10);
     do_throw("should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     Assert.equal(e.result, Cr.NS_BASE_STREAM_WOULD_BLOCK);
   }
   run_next_test();
 }
 
-function test_readInputStreamToString_too_many_bytes()
-{
+function test_readInputStreamToString_too_many_bytes() {
   const TEST_DATA = "this is a test string";
-  let istream = Cc["@mozilla.org/io/string-input-stream;1"].
-                createInstance(Ci.nsIStringInputStream);
+  let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   istream.setData(TEST_DATA, TEST_DATA.length);
 
   try {
     NetUtil.readInputStreamToString(istream, TEST_DATA.length + 10);
     do_throw("should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_FAILURE);
   }
 
   run_next_test();
 }
 
-function test_readInputStreamToString_with_charset()
-{
+function test_readInputStreamToString_with_charset() {
   const TEST_DATA = "\uff10\uff11\uff12\uff13";
   const TEST_DATA_UTF8 = "\xef\xbc\x90\xef\xbc\x91\xef\xbc\x92\xef\xbc\x93";
   const TEST_DATA_SJIS = "\x82\x4f\x82\x50\x82\x51\x82\x52";
 
-  let istream = Cc["@mozilla.org/io/string-input-stream;1"].
-                createInstance(Ci.nsIStringInputStream);
+  let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
 
   istream.setData(TEST_DATA_UTF8, TEST_DATA_UTF8.length);
-  Assert.equal(NetUtil.readInputStreamToString(istream,
-                                               TEST_DATA_UTF8.length,
-                                               { charset: "UTF-8"}),
-               TEST_DATA);
+  Assert.equal(
+    NetUtil.readInputStreamToString(istream, TEST_DATA_UTF8.length, {
+      charset: "UTF-8",
+    }),
+    TEST_DATA
+  );
 
   istream.setData(TEST_DATA_SJIS, TEST_DATA_SJIS.length);
-  Assert.equal(NetUtil.readInputStreamToString(istream,
-                                               TEST_DATA_SJIS.length,
-                                               { charset: "Shift_JIS"}),
-               TEST_DATA);
+  Assert.equal(
+    NetUtil.readInputStreamToString(istream, TEST_DATA_SJIS.length, {
+      charset: "Shift_JIS",
+    }),
+    TEST_DATA
+  );
 
   run_next_test();
 }
 
-function test_readInputStreamToString_invalid_sequence()
-{
+function test_readInputStreamToString_invalid_sequence() {
   const TEST_DATA = "\ufffd\ufffd\ufffd\ufffd";
   const TEST_DATA_UTF8 = "\xaa\xaa\xaa\xaa";
 
-  let istream = Cc["@mozilla.org/io/string-input-stream;1"].
-                createInstance(Ci.nsIStringInputStream);
+  let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
 
   istream.setData(TEST_DATA_UTF8, TEST_DATA_UTF8.length);
   try {
-    NetUtil.readInputStreamToString(istream,
-                                    TEST_DATA_UTF8.length,
-                                    { charset: "UTF-8" });
+    NetUtil.readInputStreamToString(istream, TEST_DATA_UTF8.length, {
+      charset: "UTF-8",
+    });
     do_throw("should throw!");
   } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_ILLEGAL_INPUT);
   }
 
   istream.setData(TEST_DATA_UTF8, TEST_DATA_UTF8.length);
-  Assert.equal(NetUtil.readInputStreamToString(istream,
-                                               TEST_DATA_UTF8.length, {
-                                                 charset: "UTF-8",
-                                                 replacement: Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER}),
-               TEST_DATA);
+  Assert.equal(
+    NetUtil.readInputStreamToString(istream, TEST_DATA_UTF8.length, {
+      charset: "UTF-8",
+      replacement: Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER,
+    }),
+    TEST_DATA
+  );
 
   run_next_test();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
@@ -792,4 +814,3 @@ function test_readInputStreamToString_invalid_sequence()
   test_readInputStreamToString_invalid_sequence,
 ].forEach(f => add_test(f));
 var index = 0;
-

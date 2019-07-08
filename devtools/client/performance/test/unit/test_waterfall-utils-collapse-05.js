@@ -51,7 +51,13 @@ const gTestMarkers = [
   // This should never collapse.
   { start: 10, end: 11, name: "E1", processType: 2, isOffMainThread: true },
 
-  { start: 13, end: 16, name: "A2-otmt", processType: 2, isOffMainThread: true },
+  {
+    start: 13,
+    end: 16,
+    name: "A2-otmt",
+    processType: 2,
+    isOffMainThread: true,
+  },
   // This should collapse only under A2-mt
   { start: 14, end: 15, name: "D2", processType: 2, isOffMainThread: false },
   // This should never collapse.
@@ -66,95 +72,114 @@ const gTestMarkers = [
 
 const gExpectedOutput = {
   name: "(root)",
-  submarkers: [{
-    start: 1,
-    end: 4,
-    name: "A1-mt",
-    processType: 1,
-    isOffMainThread: false,
-    submarkers: [{
+  submarkers: [
+    {
+      start: 1,
+      end: 4,
+      name: "A1-mt",
+      processType: 1,
+      isOffMainThread: false,
+      submarkers: [
+        {
+          start: 2,
+          end: 3,
+          name: "B1",
+          processType: 1,
+          isOffMainThread: false,
+        },
+      ],
+    },
+    {
       start: 2,
       end: 3,
-      name: "B1",
+      name: "C1",
       processType: 1,
-      isOffMainThread: false,
-    }],
-  }, {
-    start: 2,
-    end: 3,
-    name: "C1",
-    processType: 1,
-    isOffMainThread: true,
-  }, {
-    start: 5,
-    end: 8,
-    name: "A1-otmt",
-    processType: 1,
-    isOffMainThread: true,
-    submarkers: [{
+      isOffMainThread: true,
+    },
+    {
+      start: 5,
+      end: 8,
+      name: "A1-otmt",
+      processType: 1,
+      isOffMainThread: true,
+      submarkers: [
+        {
+          start: 6,
+          end: 7,
+          name: "B2",
+          processType: 1,
+          isOffMainThread: false,
+        },
+      ],
+    },
+    {
       start: 6,
       end: 7,
-      name: "B2",
+      name: "C2",
       processType: 1,
+      isOffMainThread: true,
+    },
+    {
+      start: 9,
+      end: 12,
+      name: "A2-mt",
+      processType: 2,
       isOffMainThread: false,
-    }],
-  }, {
-    start: 6,
-    end: 7,
-    name: "C2",
-    processType: 1,
-    isOffMainThread: true,
-  }, {
-    start: 9,
-    end: 12,
-    name: "A2-mt",
-    processType: 2,
-    isOffMainThread: false,
-    submarkers: [{
+      submarkers: [
+        {
+          start: 10,
+          end: 11,
+          name: "D1",
+          processType: 2,
+          isOffMainThread: false,
+        },
+      ],
+    },
+    {
       start: 10,
       end: 11,
-      name: "D1",
+      name: "E1",
       processType: 2,
-      isOffMainThread: false,
-    }],
-  }, {
-    start: 10,
-    end: 11,
-    name: "E1",
-    processType: 2,
-    isOffMainThread: true,
-  }, {
-    start: 13,
-    end: 16,
-    name: "A2-otmt",
-    processType: 2,
-    isOffMainThread: true,
-    submarkers: [{
+      isOffMainThread: true,
+    },
+    {
+      start: 13,
+      end: 16,
+      name: "A2-otmt",
+      processType: 2,
+      isOffMainThread: true,
+      submarkers: [
+        {
+          start: 14,
+          end: 15,
+          name: "D2",
+          processType: 2,
+          isOffMainThread: false,
+        },
+      ],
+    },
+    {
       start: 14,
       end: 15,
-      name: "D2",
+      name: "E2",
       processType: 2,
+      isOffMainThread: true,
+    },
+    {
+      start: 14,
+      end: 15,
+      name: "F",
+      processType: 3,
       isOffMainThread: false,
-    }],
-  }, {
-    start: 14,
-    end: 15,
-    name: "E2",
-    processType: 2,
-    isOffMainThread: true,
-  }, {
-    start: 14,
-    end: 15,
-    name: "F",
-    processType: 3,
-    isOffMainThread: false,
-    submarkers: [],
-  }, {
-    start: 14,
-    end: 15,
-    name: "G",
-    processType: 3,
-    isOffMainThread: true,
-    submarkers: [],
-  }],
+      submarkers: [],
+    },
+    {
+      start: 14,
+      end: 15,
+      name: "G",
+      processType: 3,
+      isOffMainThread: true,
+      submarkers: [],
+    },
+  ],
 };

@@ -8,11 +8,10 @@
 
 // Test basic breakpoint functionality in web replay.
 add_task(async function() {
-  const dbg = await attachRecordingDebugger(
-    "doc_rr_basic.html",
-    { waitForRecording: true }
-  );
-  const {threadClient, tab, toolbox, target} = dbg;
+  const dbg = await attachRecordingDebugger("doc_rr_basic.html", {
+    waitForRecording: true,
+  });
+  const { threadClient, tab, toolbox, target } = dbg;
 
   const bp = await setBreakpoint(threadClient, "doc_rr_basic.html", 21);
 

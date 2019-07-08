@@ -30,7 +30,7 @@ const TEST_URL = `data:text/html;charset=utf-8,
 
 add_task(async function() {
   const { inspector } = await openInspectorForURL(TEST_URL);
-  const {markup} = inspector;
+  const { markup } = inspector;
 
   info("Find and expand the closed-component shadow DOM host.");
   const closedHostFront = await getNodeFront("closed-component", inspector);

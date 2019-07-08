@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
+const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
 
 const userAgentID = "b2546987-4f63-49b1-99f7-739cd3c40e44";
 const channelID = "35a820f7-d7dd-43b3-af21-d65352212ae3";
@@ -20,12 +20,14 @@ function run_test() {
 
 add_task(async function test_register_rollback() {
   let db = PushServiceWebSocket.newPushDB();
-  registerCleanupFunction(() => { return db.drop().then(_ => db.close()); });
+  registerCleanupFunction(() => {
+    return db.drop().then(_ => db.close());
+  });
 
   let handshakes = 0;
   let registers = 0;
   let unregisterDone;
-  let unregisterPromise = new Promise(resolve => unregisterDone = resolve);
+  let unregisterPromise = new Promise(resolve => (unregisterDone = resolve));
   PushServiceWebSocket._generateID = () => channelID;
   PushService.init({
     serverURI: "wss://push.example.org/",
@@ -39,31 +41,37 @@ add_task(async function test_register_rollback() {
         onHello(request) {
           handshakes++;
           equal(request.uaid, userAgentID, "Handshake: wrong device ID");
-          this.serverSendMsg(JSON.stringify({
-            messageType: "hello",
-            status: 200,
-            uaid: userAgentID,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "hello",
+              status: 200,
+              uaid: userAgentID,
+            })
+          );
         },
         onRegister(request) {
           equal(request.channelID, channelID, "Register: wrong channel ID");
           registers++;
-          this.serverSendMsg(JSON.stringify({
-            messageType: "register",
-            status: 200,
-            uaid: userAgentID,
-            channelID,
-            pushEndpoint: "https://example.com/update/rollback",
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "register",
+              status: 200,
+              uaid: userAgentID,
+              channelID,
+              pushEndpoint: "https://example.com/update/rollback",
+            })
+          );
         },
         onUnregister(request) {
           equal(request.channelID, channelID, "Unregister: wrong channel ID");
           equal(request.code, 200, "Expected manual unregister reason");
-          this.serverSendMsg(JSON.stringify({
-            messageType: "unregister",
-            status: 200,
-            channelID,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "unregister",
+              status: 200,
+              channelID,
+            })
+          );
           unregisterDone();
         },
       });
@@ -74,8 +82,9 @@ add_task(async function test_register_rollback() {
   await Assert.rejects(
     PushService.register({
       scope: "https://example.com/storage-error",
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        { inIsolatedMozBrowser: false }),
+      originAttributes: ChromeUtils.originAttributesToSuffix({
+        inIsolatedMozBrowser: false,
+      }),
     }),
     /universe has imploded/,
     "Expected error for unregister database failure"

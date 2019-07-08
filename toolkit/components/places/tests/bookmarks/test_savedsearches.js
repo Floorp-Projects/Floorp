@@ -32,7 +32,10 @@ add_task(async function test_savedsearches_bookmarks() {
   let search = await PlacesUtils.bookmarks.insert({
     parentGuid: testRoot.guid,
     title: searchTerm,
-    url: "place:terms=" + searchTerm + "&excludeQueries=1&expandQueries=1&queryType=1",
+    url:
+      "place:terms=" +
+      searchTerm +
+      "&excludeQueries=1&expandQueries=1&queryType=1",
   });
 
   // query for the test root, expandQueries=0
@@ -134,7 +137,10 @@ add_task(async function test_savedsearches_history() {
   var searchItem = await PlacesUtils.bookmarks.insert({
     parentGuid: testRoot.guid,
     title: searchTerm,
-    url: "place:terms=" + searchTerm + "&excludeQueries=1&expandQueries=1&queryType=0",
+    url:
+      "place:terms=" +
+      searchTerm +
+      "&excludeQueries=1&expandQueries=1&queryType=0",
   });
 
   // query for the test root, expandQueries=1
@@ -204,8 +210,11 @@ add_task(async function test_savedsearches_history() {
 
     // test live-update of deleted queries
     await PlacesUtils.bookmarks.remove(searchItem);
-    Assert.throws(() => tmpFolderNode = rootNode.getChild(1), /NS_ERROR_ILLEGAL_VALUE/,
-      "getting a deleted child should throw");
+    Assert.throws(
+      () => (tmpFolderNode = rootNode.getChild(1)),
+      /NS_ERROR_ILLEGAL_VALUE/,
+      "getting a deleted child should throw"
+    );
 
     tmpFolderNode.containerOpen = false;
     rootNode.containerOpen = false;

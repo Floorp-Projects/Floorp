@@ -1,14 +1,12 @@
 /*
  * Bug 1270678 - A test case to test does the favicon obey originAttributes.
  */
-const {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-let {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-const USER_CONTEXTS = [
-  "default",
-  "personal",
-  "work",
-];
+const USER_CONTEXTS = ["default", "personal", "work"];
 
 let gHttpServer = null;
 let gUserContextId;
@@ -16,21 +14,25 @@ let gFaviconData;
 
 function getIconFile() {
   new Promise(resolve => {
-    NetUtil.asyncFetch({
-      uri: "http://www.example.com/browser/browser/components/contextualidentity/test/browser/favicon-normal32.png",
-      loadUsingSystemPrincipal: true,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON,
-    }, function(inputStream, status) {
+    NetUtil.asyncFetch(
+      {
+        uri:
+          "http://www.example.com/browser/browser/components/contextualidentity/test/browser/favicon-normal32.png",
+        loadUsingSystemPrincipal: true,
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON,
+      },
+      function(inputStream, status) {
         let size = inputStream.available();
         gFaviconData = NetUtil.readInputStreamToString(inputStream, size);
         resolve();
-    });
+      }
+    );
   });
 }
 
 async function openTabInUserContext(uri, userContextId) {
   // open the tab in the correct userContextId
-  let tab = BrowserTestUtils.addTab(gBrowser, uri, {userContextId});
+  let tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
 
   // select tab and make sure its browser is focused
   gBrowser.selectedTab = tab;
@@ -38,7 +40,7 @@ async function openTabInUserContext(uri, userContextId) {
 
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
-  return {tab, browser};
+  return { tab, browser };
 }
 
 function loadIndexHandler(metadata, response) {
@@ -62,7 +64,11 @@ function loadFaviconHandler(metadata, response) {
   let expectedCookie = "userContext=" + USER_CONTEXTS[gUserContextId];
 
   if (metadata.hasHeader("Cookie")) {
-    is(metadata.getHeader("Cookie"), expectedCookie, "The cookie has matched with the expected cookie.");
+    is(
+      metadata.getHeader("Cookie"),
+      expectedCookie,
+      "The cookie has matched with the expected cookie."
+    );
   } else {
     ok(false, "The request should have a cookie.");
   }
@@ -74,9 +80,9 @@ function loadFaviconHandler(metadata, response) {
 
 add_task(async function setup() {
   // Make sure userContext is enabled.
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.userContext.enabled", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.userContext.enabled", true]],
+  });
 
   // Create a http server for the image cache test.
   if (!gHttpServer) {
@@ -113,21 +119,30 @@ add_task(async function test() {
     let tabInfo = await openTabInUserContext(testURL, userContextId);
 
     // Write a cookie according to the userContext.
-    await ContentTask.spawn(tabInfo.browser, { userContext: USER_CONTEXTS[userContextId] }, function(arg) {
-      content.document.cookie = "userContext=" + arg.userContext;
-    });
+    await ContentTask.spawn(
+      tabInfo.browser,
+      { userContext: USER_CONTEXTS[userContextId] },
+      function(arg) {
+        content.document.cookie = "userContext=" + arg.userContext;
+      }
+    );
 
     let pageURI = NetUtil.newURI(testURL);
     let favIconURI = NetUtil.newURI(testFaviconURL);
 
     await new Promise(resolve => {
-      PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI, favIconURI,
-        true, PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, {
+      PlacesUtils.favicons.setAndFetchFaviconForPage(
+        pageURI,
+        favIconURI,
+        true,
+        PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+        {
           onComplete() {
             resolve();
           },
         },
-        tabInfo.browser.contentPrincipal);
+        tabInfo.browser.contentPrincipal
+      );
     });
 
     BrowserTestUtils.removeTab(tabInfo.tab);

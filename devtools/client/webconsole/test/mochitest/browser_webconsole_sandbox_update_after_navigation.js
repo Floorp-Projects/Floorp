@@ -9,8 +9,8 @@
 
 "use strict";
 
-const BASE_URI = "browser/devtools/client/webconsole/" +
-                 "test/mochitest/test-console.html";
+const BASE_URI =
+  "browser/devtools/client/webconsole/" + "test/mochitest/test-console.html";
 const TEST_URI1 = "http://example.com/" + BASE_URI;
 const TEST_URI2 = "http://example.org/" + BASE_URI;
 
@@ -21,10 +21,7 @@ add_task(async function() {
 
   let onMessages = waitForMessages({
     hud,
-    messages: [
-      { text: "window.location.href" },
-      { text: TEST_URI1 },
-    ],
+    messages: [{ text: "window.location.href" }, { text: TEST_URI1 }],
   });
 
   hud.jsterm.execute("window.location.href");
@@ -40,10 +37,7 @@ add_task(async function() {
 
   onMessages = waitForMessages({
     hud,
-    messages: [
-      { text: "window.location.href" },
-      { text: TEST_URI2 },
-    ],
+    messages: [{ text: "window.location.href" }, { text: TEST_URI2 }],
   });
 
   hud.ui.clearOutput();
@@ -68,10 +62,7 @@ add_task(async function() {
 
   onMessages = waitForMessages({
     hud,
-    messages: [
-      { text: "window.location.href" },
-      { text: TEST_URI1 },
-    ],
+    messages: [{ text: "window.location.href" }, { text: TEST_URI1 }],
   });
 
   hud.jsterm.execute("window.location.href");

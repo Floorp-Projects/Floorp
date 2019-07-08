@@ -1146,7 +1146,6 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
   nsLoadFlags loadFlags =
       aLoadFlags | nsContentUtils::CORSModeToLoadImageFlags(GetCORSMode());
 
-
   RefPtr<imgRequestProxy>& req = PrepareNextRequest(aImageLoadType);
   nsCOMPtr<nsIContent> content =
       do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));

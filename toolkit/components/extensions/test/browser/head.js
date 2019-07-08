@@ -4,9 +4,11 @@
 
 "use strict";
 
-const BACKGROUND = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0" +
+const BACKGROUND =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0" +
   "DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
-const ENCODED_IMAGE_DATA = "iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAYAAADE6YVjAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0h" +
+const ENCODED_IMAGE_DATA =
+  "iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAYAAADE6YVjAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0h" +
   "STQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAdhwAAHYcBj+XxZQAAB5dJREFUSMd" +
   "91vmTlEcZB/Bvd7/vO+/ce83O3gfLDUsC4VgIghBUEo2GM9GCFTaQBEISA1qIEVNQ4aggJDGIgAGTlFUKKcqKQpVHaQyny7FrCMiywp4ze+/Mzs67M/P" +
   "O+3a3v5jdWo32H/B86vv0U083weecV3+0C8lkEh6PhzS3tuLkieMSAKo3fW9Mb1eoUtM0jemerukLllzrbGlKheovUpeqkmt113hPfx/27tyFF7+/bbg" +
@@ -35,14 +37,14 @@ const ACCENT_COLOR = "#a14040";
 const TEXT_COLOR = "#fac96e";
 // For testing aliases of the colors above:
 const FRAME_COLOR = [71, 105, 91];
-const TAB_BACKGROUND_TEXT_COLOR = [207, 221, 192, .9];
+const TAB_BACKGROUND_TEXT_COLOR = [207, 221, 192, 0.9];
 
 function hexToRGB(hex) {
   if (!hex) {
     return null;
   }
-  hex = parseInt((hex.indexOf("#") > -1 ? hex.substring(1) : hex), 16);
-  return [hex >> 16, (hex & 0x00FF00) >> 8, (hex & 0x0000FF)];
+  hex = parseInt(hex.indexOf("#") > -1 ? hex.substring(1) : hex, 16);
+  return [hex >> 16, (hex & 0x00ff00) >> 8, hex & 0x0000ff];
 }
 
 function rgbToCSS(rgb) {
@@ -62,23 +64,36 @@ function imageBufferFromDataURI(encodedImageData) {
 }
 
 function waitForTransition(element, propertyName) {
-  return BrowserTestUtils.waitForEvent(element, "transitionend", false, event => {
-    return event.target == element && event.propertyName == propertyName;
-  });
+  return BrowserTestUtils.waitForEvent(
+    element,
+    "transitionend",
+    false,
+    event => {
+      return event.target == element && event.propertyName == propertyName;
+    }
+  );
 }
 
 function testBorderColor(element, expected) {
   let computedStyle = window.getComputedStyle(element);
-  Assert.equal(computedStyle.borderLeftColor,
-               hexToCSS(expected),
-               "Element left border color should be set.");
-  Assert.equal(computedStyle.borderRightColor,
-               hexToCSS(expected),
-               "Element right border color should be set.");
-  Assert.equal(computedStyle.borderTopColor,
-               hexToCSS(expected),
-               "Element top border color should be set.");
-  Assert.equal(computedStyle.borderBottomColor,
-               hexToCSS(expected),
-               "Element bottom border color should be set.");
+  Assert.equal(
+    computedStyle.borderLeftColor,
+    hexToCSS(expected),
+    "Element left border color should be set."
+  );
+  Assert.equal(
+    computedStyle.borderRightColor,
+    hexToCSS(expected),
+    "Element right border color should be set."
+  );
+  Assert.equal(
+    computedStyle.borderTopColor,
+    hexToCSS(expected),
+    "Element top border color should be set."
+  );
+  Assert.equal(
+    computedStyle.borderBottomColor,
+    hexToCSS(expected),
+    "Element bottom border color should be set."
+  );
 }

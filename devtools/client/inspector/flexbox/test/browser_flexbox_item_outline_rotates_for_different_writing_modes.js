@@ -14,21 +14,28 @@ add_task(async function() {
   const { document: doc } = flexboxInspector;
 
   info("Check that the row flex item rotated to vertical-bt.");
-  let onFlexItemOutlineRendered = waitForDOM(doc,
-    ".flex-outline-container .flex-outline");
+  let onFlexItemOutlineRendered = waitForDOM(
+    doc,
+    ".flex-outline-container .flex-outline"
+  );
   await selectNode(".row.vertical-bt.item", inspector);
   let [flexOutline] = await onFlexItemOutlineRendered;
 
-  ok(flexOutline.classList.contains("vertical-bt"),
-    "Row outline has been rotated to vertical-bt.");
+  ok(
+    flexOutline.classList.contains("vertical-bt"),
+    "Row outline has been rotated to vertical-bt."
+  );
 
   info("Check that the column flex item rotated to horizontal-rl.");
-  onFlexItemOutlineRendered = waitForDOM(doc,
-    ".flex-outline-container .flex-outline");
+  onFlexItemOutlineRendered = waitForDOM(
+    doc,
+    ".flex-outline-container .flex-outline"
+  );
   await selectNode(".column.horizontal-rl.item", inspector);
   await waitUntil(() => {
-    flexOutline =
-      doc.querySelector(".flex-outline-container .flex-outline.horizontal-rl");
+    flexOutline = doc.querySelector(
+      ".flex-outline-container .flex-outline.horizontal-rl"
+    );
     return flexOutline;
   });
 

@@ -5,9 +5,8 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
-  const dbName = ("window" in this) ? window.location.pathname : "test";
+function* testSteps() {
+  const dbName = "window" in this ? window.location.pathname : "test";
   const objName1 = "foo";
   const objName2 = "bar";
   const data1 = "1234567890";
@@ -64,16 +63,20 @@ function* testSteps()
 
   event = yield undefined;
 
-  info("Done modifying object store on readwrite transaction, creating " +
-       "readonly transaction");
+  info(
+    "Done modifying object store on readwrite transaction, creating " +
+      "readonly transaction"
+  );
 
   objectStore2 = db.transaction(objName2, "readonly").objectStore(objName2);
   request = objectStore2.getAll();
   request.onsuccess = function(event) {
     readResult = event.target.result;
-    is(readResult.length,
-       dataCount,
-       "Got correct number of results on readonly transaction");
+    is(
+      readResult.length,
+      dataCount,
+      "Got correct number of results on readonly transaction"
+    );
     for (let i = 0; i < readResult.length; i++) {
       is(readResult[i], data2, "Got correct data for readonly transaction");
     }

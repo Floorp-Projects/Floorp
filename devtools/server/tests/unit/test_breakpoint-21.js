@@ -9,33 +9,32 @@
  * scripts, so you can set breakpoints on deeply nested scripts
  */
 
-add_task(threadClientTest(async ({ threadClient, debuggee }) => {
-  // Populate the `ScriptStore` so that we only test that the script
-  // is added through `onNewScript`
-  await getSources(threadClient);
+add_task(
+  threadClientTest(async ({ threadClient, debuggee }) => {
+    // Populate the `ScriptStore` so that we only test that the script
+    // is added through `onNewScript`
+    await getSources(threadClient);
 
-  let packet = await executeOnNextTickAndWaitForPause(() => {
-    evalCode(debuggee);
-  }, threadClient);
-  const source = await getSourceById(
-      threadClient,
-      packet.frame.where.actor
-    );
-  const location = {
-    sourceUrl: source.url,
-    line: debuggee.line0 + 8,
-  };
+    let packet = await executeOnNextTickAndWaitForPause(() => {
+      evalCode(debuggee);
+    }, threadClient);
+    const source = await getSourceById(threadClient, packet.frame.where.actor);
+    const location = {
+      sourceUrl: source.url,
+      line: debuggee.line0 + 8,
+    };
 
-  setBreakpoint(threadClient, location);
+    setBreakpoint(threadClient, location);
 
-  await resume(threadClient);
-  packet = await waitForPause(threadClient);
-  Assert.equal(packet.why.type, "breakpoint");
-  Assert.equal(packet.frame.where.actor, source.actor);
-  Assert.equal(packet.frame.where.line, location.line);
+    await resume(threadClient);
+    packet = await waitForPause(threadClient);
+    Assert.equal(packet.why.type, "breakpoint");
+    Assert.equal(packet.frame.where.actor, source.actor);
+    Assert.equal(packet.frame.where.line, location.line);
 
-  await resume(threadClient);
-}));
+    await resume(threadClient);
+  })
+);
 
 /* eslint-disable */
 function evalCode(debuggee) {

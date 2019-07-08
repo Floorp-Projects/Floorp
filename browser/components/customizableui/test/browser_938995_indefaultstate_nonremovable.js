@@ -10,18 +10,36 @@ const kWidgetId = "test-non-removable-widget";
 add_task(async function() {
   ok(CustomizableUI.inDefaultState, "Should start in default state");
 
-  let button = createDummyXULButton(kWidgetId, "Test non-removable inDefaultState handling");
+  let button = createDummyXULButton(
+    kWidgetId,
+    "Test non-removable inDefaultState handling"
+  );
   CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_NAVBAR);
   button.setAttribute("removable", "false");
-  ok(CustomizableUI.inDefaultState, "Should still be in default state after navbar addition");
+  ok(
+    CustomizableUI.inDefaultState,
+    "Should still be in default state after navbar addition"
+  );
   button.remove();
 
-  button = createDummyXULButton(kWidgetId, "Test non-removable inDefaultState handling");
-  CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  button = createDummyXULButton(
+    kWidgetId,
+    "Test non-removable inDefaultState handling"
+  );
+  CustomizableUI.addWidgetToArea(
+    kWidgetId,
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
   button.setAttribute("removable", "false");
-  ok(CustomizableUI.inDefaultState, "Should still be in default state after panel addition");
+  ok(
+    CustomizableUI.inDefaultState,
+    "Should still be in default state after panel addition"
+  );
   button.remove();
-  ok(CustomizableUI.inDefaultState, "Should be in default state after destroying both widgets");
+  ok(
+    CustomizableUI.inDefaultState,
+    "Should be in default state after destroying both widgets"
+  );
   // reset now that button is gone.
   CustomizableUI.reset();
 });

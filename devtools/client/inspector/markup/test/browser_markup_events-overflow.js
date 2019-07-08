@@ -35,12 +35,16 @@ add_task(async function() {
 
   const markupContainer = await getContainerForSelector("#events", inspector);
   const evHolder = markupContainer.elt.querySelector(
-    ".inspector-badge.interactive[data-event]");
+    ".inspector-badge.interactive[data-event]"
+  );
   const tooltip = inspector.markup.eventDetailsTooltip;
 
   info("Clicking to open event tooltip.");
-  EventUtils.synthesizeMouseAtCenter(evHolder, {},
-    inspector.markup.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    evHolder,
+    {},
+    inspector.markup.doc.defaultView
+  );
   await tooltip.once("shown");
   info("EventTooltip visible.");
 
@@ -77,16 +81,25 @@ add_task(async function() {
     if (data.alignTop) {
       const headerRect = header.getBoundingClientRect();
 
-      is(Math.round(headerRect.top), Math.round(containerRect.top),
-        "Clicked header is aligned with the container top.");
+      is(
+        Math.round(headerRect.top),
+        Math.round(containerRect.top),
+        "Clicked header is aligned with the container top."
+      );
     } else if (data.alignBottom) {
       const editorRect = header.nextElementSibling.getBoundingClientRect();
 
-      is(Math.round(editorRect.bottom), Math.round(containerRect.bottom),
-        "Clicked event handler code is aligned with the container bottom.");
+      is(
+        Math.round(editorRect.bottom),
+        Math.round(containerRect.bottom),
+        "Clicked event handler code is aligned with the container bottom."
+      );
     } else {
-      is(container.scrollTop, data.initialScrollTop,
-        "Container did not scroll, as expected.");
+      is(
+        container.scrollTop,
+        data.initialScrollTop,
+        "Container did not scroll, as expected."
+      );
     }
   }
 });

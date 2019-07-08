@@ -4,4 +4,4 @@ oninstall = function(e) {
   });
 
   e.waitUntil(claimFailedPromise);
-}
+};

@@ -2,9 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.defineModuleGetter(this, "LogManager", "resource://normandy/lib/LogManager.jsm");
-ChromeUtils.defineModuleGetter(this, "Uptake", "resource://normandy/lib/Uptake.jsm");
-ChromeUtils.defineModuleGetter(this, "JsonSchemaValidator", "resource://gre/modules/components-utils/JsonSchemaValidator.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "LogManager",
+  "resource://normandy/lib/LogManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Uptake",
+  "resource://normandy/lib/Uptake.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "JsonSchemaValidator",
+  "resource://gre/modules/components-utils/JsonSchemaValidator.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["BaseAction"];
 
@@ -46,9 +58,13 @@ class BaseAction {
       // Sometimes err.message is editable. If it is, add helpful details.
       // Otherwise log the helpful details and move on.
       try {
-        err.message = `Could not initialize action ${this.name}: ${err.message}`;
+        err.message = `Could not initialize action ${this.name}: ${
+          err.message
+        }`;
       } catch (_e) {
-        this.log.error(`Could not initialize action ${this.name}, error follows.`);
+        this.log.error(
+          `Could not initialize action ${this.name}, error follows.`
+        );
       }
       this.fail(err);
     }
@@ -76,7 +92,9 @@ class BaseAction {
         break;
       }
       default: {
-        Cu.reportError(new Error("BaseAction.fail() called at unexpected time"));
+        Cu.reportError(
+          new Error("BaseAction.fail() called at unexpected time")
+        );
       }
     }
     this.state = BaseAction.STATE_FAILED;
@@ -99,11 +117,14 @@ class BaseAction {
   }
 
   validateArguments(args, schema = this.schema) {
-    let [valid, validated] = JsonSchemaValidator.validateAndParseParameters(args, schema);
+    let [valid, validated] = JsonSchemaValidator.validateAndParseParameters(
+      args,
+      schema
+    );
     if (!valid) {
       throw new Error(
-        `Arguments do not match schema. arguments:\n${JSON.stringify(args)}\n`
-        + `schema:\n${JSON.stringify(schema)}`
+        `Arguments do not match schema. arguments:\n${JSON.stringify(args)}\n` +
+          `schema:\n${JSON.stringify(schema)}`
       );
     }
     return validated;
@@ -125,7 +146,11 @@ class BaseAction {
 
     if (this.state !== BaseAction.STATE_READY) {
       Uptake.reportRecipe(recipe, Uptake.RECIPE_ACTION_DISABLED);
-      this.log.warn(`Skipping recipe ${recipe.name} because ${this.name} was disabled during preExecution.`);
+      this.log.warn(
+        `Skipping recipe ${recipe.name} because ${
+          this.name
+        } was disabled during preExecution.`
+      );
       return;
     }
 
@@ -180,7 +205,9 @@ class BaseAction {
           status = Uptake.ACTION_POST_EXECUTION_ERROR;
           // Sometimes Error.message can be updated in place. This gives better messages when debugging errors.
           try {
-            err.message = `Could not run postExecution hook for ${this.name}: ${err.message}`;
+            err.message = `Could not run postExecution hook for ${this.name}: ${
+              err.message
+            }`;
           } catch (err) {
             // Sometimes Error.message cannot be updated. Log a warning, and move on.
             this.log.debug(`Could not run postExecution hook for ${this.name}`);
@@ -192,12 +219,20 @@ class BaseAction {
         break;
       }
       case BaseAction.STATE_DISABLED: {
-        this.log.debug(`Skipping post-execution hook for ${this.name} because it is disabled.`);
+        this.log.debug(
+          `Skipping post-execution hook for ${
+            this.name
+          } because it is disabled.`
+        );
         status = Uptake.ACTION_SUCCESS;
         break;
       }
       case BaseAction.STATE_FAILED: {
-        this.log.debug(`Skipping post-execution hook for ${this.name} because it failed during pre-execution.`);
+        this.log.debug(
+          `Skipping post-execution hook for ${
+            this.name
+          } because it failed during pre-execution.`
+        );
         // Don't report a status. A status should have already been reported by this.fail().
         break;
       }

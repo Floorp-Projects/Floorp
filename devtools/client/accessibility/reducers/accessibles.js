@@ -103,7 +103,8 @@ function updateChildrenCache(cache, accessible, children) {
 
 function updateAncestry(cache, ancestry) {
   ancestry.forEach(({ accessible, children }) =>
-    updateChildrenCache(cache, accessible, children));
+    updateChildrenCache(cache, accessible, children)
+  );
 
   return cache;
 }

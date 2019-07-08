@@ -5,18 +5,32 @@
 "use strict";
 
 // Globals
-ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
-                               "resource://gre/modules/AsyncShutdown.jsm");
-ChromeUtils.defineModuleGetter(this, "DownloadPaths",
-                               "resource://gre/modules/DownloadPaths.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "JSONFile",
-                               "resource://gre/modules/JSONFile.jsm");
-ChromeUtils.defineModuleGetter(this, "FileTestUtils",
-                               "resource://testing-common/FileTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AsyncShutdown",
+  "resource://gre/modules/AsyncShutdown.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "DownloadPaths",
+  "resource://gre/modules/DownloadPaths.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "JSONFile",
+  "resource://gre/modules/JSONFile.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileTestUtils",
+  "resource://testing-common/FileTestUtils.jsm"
+);
 
 /**
  * Returns a reference to a temporary file that is guaranteed not to exist and
@@ -51,7 +65,7 @@ add_task(async function test_save_reload() {
 
   Object.assign(storeForSave.data, TEST_DATA);
 
-  await new Promise((resolve) => {
+  await new Promise(resolve => {
     let save = storeForSave._save.bind(storeForSave);
     storeForSave._save = () => {
       save();
@@ -96,7 +110,7 @@ add_task(async function test_load_with_dataPostProcessor() {
   let random = Math.random();
   let storeForLoad = new JSONFile({
     path: storeForSave.path,
-    dataPostProcessor: (data) => {
+    dataPostProcessor: data => {
       Assert.deepEqual(data, TEST_DATA);
 
       data.test = random;
@@ -144,11 +158,11 @@ add_task(async function test_load_string_predefined() {
     path: getTempFile(TEST_STORE_FILE_NAME).path,
   });
 
-  let string =
-    "{\"number\":123,\"string\":\"test\",\"object\":{\"prop1\":1,\"prop2\":2}}";
+  let string = '{"number":123,"string":"test","object":{"prop1":1,"prop2":2}}';
 
-  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string),
-                            { tmpPath: store.path + ".tmp" });
+  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string), {
+    tmpPath: store.path + ".tmp",
+  });
 
   await store.load();
 
@@ -163,10 +177,11 @@ add_task(async function test_load_string_malformed() {
     path: getTempFile(TEST_STORE_FILE_NAME).path,
   });
 
-  let string = "{\"number\":123,\"string\":\"test\",\"object\":{\"prop1\":1,";
+  let string = '{"number":123,"string":"test","object":{"prop1":1,';
 
-  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string),
-                            { tmpPath: store.path + ".tmp" });
+  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string), {
+    tmpPath: store.path + ".tmp",
+  });
 
   await store.load();
 
@@ -188,10 +203,11 @@ add_task(async function test_load_string_malformed_sync() {
     path: getTempFile(TEST_STORE_FILE_NAME).path,
   });
 
-  let string = "{\"number\":123,\"string\":\"test\",\"object\":{\"prop1\":1,";
+  let string = '{"number":123,"string":"test","object":{"prop1":1,';
 
-  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string),
-                            { tmpPath: store.path + ".tmp" });
+  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string), {
+    tmpPath: store.path + ".tmp",
+  });
 
   store.ensureDataReady();
 
@@ -211,15 +227,18 @@ add_task(async function test_overwrite_data() {
 
   let string = `{"number":456,"string":"tset","object":{"prop1":3,"prop2":4}}`;
 
-  await OS.File.writeAtomic(storeForSave.path, new TextEncoder().encode(string),
-                            { tmpPath: storeForSave.path + ".tmp" });
+  await OS.File.writeAtomic(
+    storeForSave.path,
+    new TextEncoder().encode(string),
+    { tmpPath: storeForSave.path + ".tmp" }
+  );
 
   Assert.ok(!storeForSave.dataReady);
   storeForSave.data = TEST_DATA;
   Assert.ok(storeForSave.dataReady);
   Assert.equal(storeForSave.data, TEST_DATA);
 
-  await new Promise((resolve) => {
+  await new Promise(resolve => {
     let save = storeForSave._save.bind(storeForSave);
     storeForSave._save = () => {
       save();
@@ -239,7 +258,7 @@ add_task(async function test_overwrite_data() {
 
 add_task(async function test_beforeSave() {
   let store;
-  let promiseBeforeSave = new Promise((resolve) => {
+  let promiseBeforeSave = new Promise(resolve => {
     store = new JSONFile({
       path: getTempFile(TEST_STORE_FILE_NAME).path,
       beforeSave: resolve,

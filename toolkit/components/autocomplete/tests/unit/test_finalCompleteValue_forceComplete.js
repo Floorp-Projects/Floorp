@@ -16,69 +16,107 @@ function AutoCompleteInput(aSearches) {
 AutoCompleteInput.prototype = Object.create(AutoCompleteInputBase.prototype);
 
 add_test(function test_handleEnterWithDirectMatchCompleteSelectedIndex() {
-  doSearch("moz", "mozilla.com", "http://www.mozilla.com",
-    { forceComplete: true, completeSelectedIndex: true }, function(aController) {
-    Assert.equal(aController.input.textValue, "moz");
-    Assert.equal(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
-    aController.handleEnter(false);
-    // After enter the final complete value should be shown in the input.
-    Assert.equal(aController.input.textValue, "http://www.mozilla.com");
-  });
+  doSearch(
+    "moz",
+    "mozilla.com",
+    "http://www.mozilla.com",
+    { forceComplete: true, completeSelectedIndex: true },
+    function(aController) {
+      Assert.equal(aController.input.textValue, "moz");
+      Assert.equal(
+        aController.getFinalCompleteValueAt(0),
+        "http://www.mozilla.com"
+      );
+      aController.handleEnter(false);
+      // After enter the final complete value should be shown in the input.
+      Assert.equal(aController.input.textValue, "http://www.mozilla.com");
+    }
+  );
 });
 
 add_test(function test_handleEnterWithDirectMatch() {
-  doSearch("mozilla", "mozilla.com", "http://www.mozilla.com",
-    { forceComplete: true, completeDefaultIndex: true }, function(aController) {
-    // Should autocomplete the search string to a suggestion.
-    Assert.equal(aController.input.textValue, "mozilla.com");
-    Assert.equal(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
-    aController.handleEnter(false);
-    // After enter the final complete value should be shown in the input.
-    Assert.equal(aController.input.textValue, "http://www.mozilla.com");
-  });
+  doSearch(
+    "mozilla",
+    "mozilla.com",
+    "http://www.mozilla.com",
+    { forceComplete: true, completeDefaultIndex: true },
+    function(aController) {
+      // Should autocomplete the search string to a suggestion.
+      Assert.equal(aController.input.textValue, "mozilla.com");
+      Assert.equal(
+        aController.getFinalCompleteValueAt(0),
+        "http://www.mozilla.com"
+      );
+      aController.handleEnter(false);
+      // After enter the final complete value should be shown in the input.
+      Assert.equal(aController.input.textValue, "http://www.mozilla.com");
+    }
+  );
 });
 
 add_test(function test_handleEnterWithNoMatch() {
-  doSearch("mozilla", "mozilla.com", "http://www.mozilla.com",
-    { forceComplete: true, completeDefaultIndex: true }, function(aController) {
-    // Should autocomplete the search string to a suggestion.
-    Assert.equal(aController.input.textValue, "mozilla.com");
-    Assert.equal(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
-    // Now input something that does not match...
-    aController.input.textValue = "mozillax";
-    // ... and confirm. We don't want one of the values from the previous
-    // results to be taken, since what's now in the input field doesn't match.
-    aController.handleEnter(false);
-    Assert.equal(aController.input.textValue, "mozillax");
-  });
+  doSearch(
+    "mozilla",
+    "mozilla.com",
+    "http://www.mozilla.com",
+    { forceComplete: true, completeDefaultIndex: true },
+    function(aController) {
+      // Should autocomplete the search string to a suggestion.
+      Assert.equal(aController.input.textValue, "mozilla.com");
+      Assert.equal(
+        aController.getFinalCompleteValueAt(0),
+        "http://www.mozilla.com"
+      );
+      // Now input something that does not match...
+      aController.input.textValue = "mozillax";
+      // ... and confirm. We don't want one of the values from the previous
+      // results to be taken, since what's now in the input field doesn't match.
+      aController.handleEnter(false);
+      Assert.equal(aController.input.textValue, "mozillax");
+    }
+  );
 });
 
 add_test(function test_handleEnterWithIndirectMatch() {
-  doSearch("com", "mozilla.com", "http://www.mozilla.com",
-    { forceComplete: true, completeDefaultIndex: true }, function(aController) {
-    // Should autocomplete the search string to a suggestion.
-    Assert.equal(aController.input.textValue, "com >> mozilla.com");
-    Assert.equal(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
-    aController.handleEnter(false);
-    // After enter the final complete value from the suggestion should be shown
-    // in the input.
-    Assert.equal(aController.input.textValue, "http://www.mozilla.com");
-  });
+  doSearch(
+    "com",
+    "mozilla.com",
+    "http://www.mozilla.com",
+    { forceComplete: true, completeDefaultIndex: true },
+    function(aController) {
+      // Should autocomplete the search string to a suggestion.
+      Assert.equal(aController.input.textValue, "com >> mozilla.com");
+      Assert.equal(
+        aController.getFinalCompleteValueAt(0),
+        "http://www.mozilla.com"
+      );
+      aController.handleEnter(false);
+      // After enter the final complete value from the suggestion should be shown
+      // in the input.
+      Assert.equal(aController.input.textValue, "http://www.mozilla.com");
+    }
+  );
 });
 
-function doSearch(aSearchString, aResultValue, aFinalCompleteValue,
-                  aInputProps, aOnCompleteCallback) {
+function doSearch(
+  aSearchString,
+  aResultValue,
+  aFinalCompleteValue,
+  aInputProps,
+  aOnCompleteCallback
+) {
   let search = new AutoCompleteSearchBase(
     "search",
-    new AutoCompleteResult([ aResultValue ], [ aFinalCompleteValue ])
+    new AutoCompleteResult([aResultValue], [aFinalCompleteValue])
   );
   registerAutoCompleteSearch(search);
 
-  let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);
+  let controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
+    Ci.nsIAutoCompleteController
+  );
 
   // Make an AutoCompleteInput that uses our searches and confirms results.
-  let input = new AutoCompleteInput([ search.name ]);
+  let input = new AutoCompleteInput([search.name]);
   for (var p in aInputProps) {
     input[p] = aInputProps[p];
   }

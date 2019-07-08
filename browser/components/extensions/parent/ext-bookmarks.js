@@ -2,17 +2,13 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-var {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+var { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 
-var {
-  ExtensionError,
-} = ExtensionUtils;
+var { ExtensionError } = ExtensionUtils;
 
-const {
-  TYPE_BOOKMARK,
-  TYPE_FOLDER,
-  TYPE_SEPARATOR,
-} = PlacesUtils.bookmarks;
+const { TYPE_BOOKMARK, TYPE_FOLDER, TYPE_SEPARATOR } = PlacesUtils.bookmarks;
 
 const BOOKMARKS_TYPES_TO_API_TYPES_MAP = new Map([
   [TYPE_BOOKMARK, "bookmark"],
@@ -72,16 +68,18 @@ const getTree = (rootGuid, onlyChildren) => {
     return treenode;
   }
 
-  return PlacesUtils.promiseBookmarksTree(rootGuid).then(root => {
-    if (onlyChildren) {
-      let children = root.children || [];
-      return children.map(child => convert(child, root));
-    }
-    let treenode = convert(root, null);
-    treenode.parentId = root.parentGuid;
-    // It seems like the array always just contains the root node.
-    return [treenode];
-  }).catch(e => Promise.reject({message: e.message}));
+  return PlacesUtils.promiseBookmarksTree(rootGuid)
+    .then(root => {
+      if (onlyChildren) {
+        let children = root.children || [];
+        return children.map(child => convert(child, root));
+      }
+      let treenode = convert(root, null);
+      treenode.parentId = root.parentGuid;
+      // It seems like the array always just contains the root node.
+      return [treenode];
+    })
+    .catch(e => Promise.reject({ message: e.message }));
 };
 
 const convertBookmarks = result => {
@@ -111,7 +109,7 @@ const throwIfRootId = id => {
   }
 };
 
-let observer = new class extends EventEmitter {
+let observer = new (class extends EventEmitter {
   constructor() {
     super();
 
@@ -149,14 +147,25 @@ let observer = new class extends EventEmitter {
 
   onItemVisited() {}
 
-  onItemMoved(id, oldParentId, oldIndex, newParentId, newIndex, itemType, guid, oldParentGuid, newParentGuid, source) {
+  onItemMoved(
+    id,
+    oldParentId,
+    oldIndex,
+    newParentId,
+    newIndex,
+    itemType,
+    guid,
+    oldParentGuid,
+    newParentGuid,
+    source
+  ) {
     let info = {
       parentId: newParentGuid,
       index: newIndex,
       oldParentId: oldParentGuid,
       oldIndex,
     };
-    this.emit("moved", {guid, info});
+    this.emit("moved", { guid, info });
   }
 
   onItemRemoved(id, parentId, index, itemType, uri, guid, parentGuid, source) {
@@ -168,10 +177,22 @@ let observer = new class extends EventEmitter {
       url: getUrl(itemType, uri && uri.spec),
     };
 
-    this.emit("removed", {guid, info: {parentId: parentGuid, index, node}});
+    this.emit("removed", { guid, info: { parentId: parentGuid, index, node } });
   }
 
-  onItemChanged(id, prop, isAnno, val, lastMod, itemType, parentId, guid, parentGuid, oldVal, source) {
+  onItemChanged(
+    id,
+    prop,
+    isAnno,
+    val,
+    lastMod,
+    itemType,
+    parentId,
+    guid,
+    parentGuid,
+    oldVal,
+    source
+  ) {
     let info = {};
     if (prop == "title") {
       info.title = val;
@@ -182,15 +203,18 @@ let observer = new class extends EventEmitter {
       return;
     }
 
-    this.emit("changed", {guid, info});
+    this.emit("changed", { guid, info });
   }
-}();
+})();
 
 const decrementListeners = () => {
   listenerCount -= 1;
   if (!listenerCount) {
     PlacesUtils.bookmarks.removeObserver(observer);
-    PlacesUtils.observers.removeListener(["bookmark-added"], observer.handlePlacesEvents);
+    PlacesUtils.observers.removeListener(
+      ["bookmark-added"],
+      observer.handlePlacesEvents
+    );
   }
 };
 
@@ -198,7 +222,10 @@ const incrementListeners = () => {
   listenerCount++;
   if (listenerCount == 1) {
     PlacesUtils.bookmarks.addObserver(observer);
-    PlacesUtils.observers.addListener(["bookmark-added"], observer.handlePlacesEvents);
+    PlacesUtils.observers.addListener(
+      ["bookmark-added"],
+      observer.handlePlacesEvents
+    );
   }
 };
 
@@ -212,7 +239,7 @@ this.bookmarks = class extends ExtensionAPI {
           try {
             let bookmarks = [];
             for (let id of list) {
-              let bookmark = await PlacesUtils.bookmarks.fetch({guid: id});
+              let bookmark = await PlacesUtils.bookmarks.fetch({ guid: id });
               if (!bookmark) {
                 throw new Error("Bookmark not found");
               }
@@ -220,7 +247,7 @@ this.bookmarks = class extends ExtensionAPI {
             }
             return bookmarks;
           } catch (error) {
-            return Promise.reject({message: error.message});
+            return Promise.reject({ message: error.message });
           }
         },
 
@@ -238,11 +265,15 @@ this.bookmarks = class extends ExtensionAPI {
         },
 
         search: function(query) {
-          return PlacesUtils.bookmarks.search(query).then(result => result.map(convertBookmarks));
+          return PlacesUtils.bookmarks
+            .search(query)
+            .then(result => result.map(convertBookmarks));
         },
 
         getRecent: function(numberOfItems) {
-          return PlacesUtils.bookmarks.getRecent(numberOfItems).then(result => result.map(convertBookmarks));
+          return PlacesUtils.bookmarks
+            .getRecent(numberOfItems)
+            .then(result => result.map(convertBookmarks));
         },
 
         create: function(bookmark) {
@@ -276,10 +307,14 @@ this.bookmarks = class extends ExtensionAPI {
           }
 
           try {
-            return PlacesUtils.bookmarks.insert(info).then(convertBookmarks)
-              .catch(error => Promise.reject({message: error.message}));
+            return PlacesUtils.bookmarks
+              .insert(info)
+              .then(convertBookmarks)
+              .catch(error => Promise.reject({ message: error.message }));
           } catch (e) {
-            return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
+            return Promise.reject({
+              message: `Invalid bookmark: ${JSON.stringify(info)}`,
+            });
           }
         },
 
@@ -293,14 +328,20 @@ this.bookmarks = class extends ExtensionAPI {
             throwIfRootId(destination.parentId);
             info.parentGuid = destination.parentId;
           }
-          info.index = (destination.index === null) ?
-            PlacesUtils.bookmarks.DEFAULT_INDEX : destination.index;
+          info.index =
+            destination.index === null
+              ? PlacesUtils.bookmarks.DEFAULT_INDEX
+              : destination.index;
 
           try {
-            return PlacesUtils.bookmarks.update(info).then(convertBookmarks)
-              .catch(error => Promise.reject({message: error.message}));
+            return PlacesUtils.bookmarks
+              .update(info)
+              .then(convertBookmarks)
+              .catch(error => Promise.reject({ message: error.message }));
           } catch (e) {
-            return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
+            return Promise.reject({
+              message: `Invalid bookmark: ${JSON.stringify(info)}`,
+            });
           }
         },
 
@@ -318,10 +359,14 @@ this.bookmarks = class extends ExtensionAPI {
           }
 
           try {
-            return PlacesUtils.bookmarks.update(info).then(convertBookmarks)
-              .catch(error => Promise.reject({message: error.message}));
+            return PlacesUtils.bookmarks
+              .update(info)
+              .then(convertBookmarks)
+              .catch(error => Promise.reject({ message: error.message }));
           } catch (e) {
-            return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
+            return Promise.reject({
+              message: `Invalid bookmark: ${JSON.stringify(info)}`,
+            });
           }
         },
 
@@ -333,10 +378,13 @@ this.bookmarks = class extends ExtensionAPI {
 
           // The API doesn't give you the old bookmark at the moment
           try {
-            return PlacesUtils.bookmarks.remove(info, {preventRemovalOfNonEmptyFolders: true})
-              .catch(error => Promise.reject({message: error.message}));
+            return PlacesUtils.bookmarks
+              .remove(info, { preventRemovalOfNonEmptyFolders: true })
+              .catch(error => Promise.reject({ message: error.message }));
           } catch (e) {
-            return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
+            return Promise.reject({
+              message: `Invalid bookmark: ${JSON.stringify(info)}`,
+            });
           }
         },
 
@@ -347,10 +395,13 @@ this.bookmarks = class extends ExtensionAPI {
           };
 
           try {
-            return PlacesUtils.bookmarks.remove(info)
-              .catch(error => Promise.reject({message: error.message}));
+            return PlacesUtils.bookmarks
+              .remove(info)
+              .catch(error => Promise.reject({ message: error.message }));
           } catch (e) {
-            return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
+            return Promise.reject({
+              message: `Invalid bookmark: ${JSON.stringify(info)}`,
+            });
           }
         },
 

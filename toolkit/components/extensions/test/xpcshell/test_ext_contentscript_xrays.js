@@ -13,19 +13,33 @@ add_task(async function test_contentscript_xrays() {
   async function contentScript() {
     let unwrapped = window.wrappedJSObject;
 
-    browser.test.assertEq("undefined", typeof test, "Should not have named X-ray property access");
-    browser.test.assertEq(undefined, window.test, "Should not have named X-ray property access");
-    browser.test.assertEq("object", typeof unwrapped.test, "Should always have non-X-ray named property access");
+    browser.test.assertEq(
+      "undefined",
+      typeof test,
+      "Should not have named X-ray property access"
+    );
+    browser.test.assertEq(
+      undefined,
+      window.test,
+      "Should not have named X-ray property access"
+    );
+    browser.test.assertEq(
+      "object",
+      typeof unwrapped.test,
+      "Should always have non-X-ray named property access"
+    );
 
     browser.test.notifyPass("contentScriptXrays");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      content_scripts: [{
-        "matches": ["http://*/*/file_sample.html"],
-        "js": ["content_script.js"],
-      }],
+      content_scripts: [
+        {
+          matches: ["http://*/*/file_sample.html"],
+          js: ["content_script.js"],
+        },
+      ],
     },
 
     files: {
@@ -34,7 +48,9 @@ add_task(async function test_contentscript_xrays() {
   });
 
   await extension.startup();
-  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    `${BASE_URL}/file_sample.html`
+  );
 
   await extension.awaitFinish("contentScriptXrays");
 

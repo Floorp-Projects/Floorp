@@ -39,7 +39,7 @@ function test_guid_invariants() {
   // position.
   let seenChars = 0;
   let stmt = DBConn().createStatement("SELECT GENERATE_GUID()");
-  while (seenChars != (kExpectedChars * kGuidLength)) {
+  while (seenChars != kExpectedChars * kGuidLength) {
     Assert.ok(stmt.executeStep());
     let guid = stmt.getString(0);
     check_invariants(guid);
@@ -91,7 +91,4 @@ function test_guid_on_background() {
 
 // Test Runner
 
-[
-  test_guid_invariants,
-  test_guid_on_background,
-].forEach(fn => add_test(fn));
+[test_guid_invariants, test_guid_on_background].forEach(fn => add_test(fn));

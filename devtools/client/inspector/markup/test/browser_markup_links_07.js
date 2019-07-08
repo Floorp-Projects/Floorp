@@ -10,28 +10,30 @@
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Select a node with a URI attribute");
   await selectNode("video", inspector);
 
   info("Find the link element from the markup-view");
-  let {editor} = await getContainerForSelector("video", inspector);
+  let { editor } = await getContainerForSelector("video", inspector);
   let linkEl = editor.attrElements.get("poster").querySelector(".link");
 
   info("Follow the link with middle-click and wait for the new tab to open");
-  await followLinkWaitForTab(linkEl, false,
-                             URL_ROOT + "doc_markup_tooltip.png");
+  await followLinkWaitForTab(
+    linkEl,
+    false,
+    URL_ROOT + "doc_markup_tooltip.png"
+  );
 
   info("Follow the link with meta/ctrl-click and wait for the new tab to open");
-  await followLinkWaitForTab(linkEl, true,
-                             URL_ROOT + "doc_markup_tooltip.png");
+  await followLinkWaitForTab(linkEl, true, URL_ROOT + "doc_markup_tooltip.png");
 
   info("Select a node with a IDREF attribute");
   await selectNode("label", inspector);
 
   info("Find the link element from the markup-view that contains the ref");
-  ({editor} = await getContainerForSelector("label", inspector));
+  ({ editor } = await getContainerForSelector("label", inspector));
   linkEl = editor.attrElements.get("for").querySelector(".link");
 
   info("Follow link with middle-click, wait for new node to be selected.");
@@ -48,7 +50,7 @@ add_task(async function() {
   await selectNode("output", inspector);
 
   info("Find the link element from the markup-view that contains the ref");
-  ({editor} = await getContainerForSelector("output", inspector));
+  ({ editor } = await getContainerForSelector("output", inspector));
   linkEl = editor.attrElements.get("for").querySelectorAll(".link")[2];
 
   info("Try to follow link wiith middle-click, check no new node selected");
@@ -71,9 +73,23 @@ function performMouseDown(linkEl, metactrl) {
     button = 1;
   }
 
-  evt.initMouseEvent("mousedown", true, true,
-      linkEl.ownerDocument.defaultView, 1, 0, 0, 0, 0, metactrl,
-      false, false, metactrl, button, null);
+  evt.initMouseEvent(
+    "mousedown",
+    true,
+    true,
+    linkEl.ownerDocument.defaultView,
+    1,
+    0,
+    0,
+    0,
+    0,
+    metactrl,
+    false,
+    false,
+    metactrl,
+    button,
+    null
+  );
 
   linkEl.dispatchEvent(evt);
 }
@@ -81,11 +97,14 @@ function performMouseDown(linkEl, metactrl) {
 async function followLinkWaitForTab(linkEl, isMetaClick, expectedTabURI) {
   const onTabOpened = once(gBrowser.tabContainer, "TabOpen");
   performMouseDown(linkEl, isMetaClick);
-  const {target} = await onTabOpened;
+  const { target } = await onTabOpened;
   await BrowserTestUtils.browserLoaded(target.linkedBrowser);
   ok(true, "A new tab opened");
-  is(target.linkedBrowser.currentURI.spec, expectedTabURI,
-     "The URL for the new tab is correct");
+  is(
+    target.linkedBrowser.currentURI.spec,
+    expectedTabURI,
+    "The URL for the new tab is correct"
+  );
   gBrowser.removeTab(target);
 }
 
@@ -104,6 +123,9 @@ async function followLinkNoNewNode(linkEl, isMetaClick, inspector) {
   await onFailed;
 
   ok(true, "The node selection failed");
-  is(inspector.selection.nodeFront.tagName.toLowerCase(), "output",
-    "The <output> node is still selected");
+  is(
+    inspector.selection.nodeFront.tagName.toLowerCase(),
+    "output",
+    "The <output> node is still selected"
+  );
 }

@@ -39,12 +39,14 @@ function makeCancelListener() {
   };
 }
 
-let testserver = createHttpServer({hosts: ["example.com"]});
+let testserver = createHttpServer({ hosts: ["example.com"] });
 
 // Set up the HTTP server so that we can control when it responds
 let _httpResolve;
 function resetUpdateListener() {
-  return new Promise(resolve => { _httpResolve = resolve; });
+  return new Promise(resolve => {
+    _httpResolve = resolve;
+  });
 }
 
 testserver.registerPathHandler("/data/test_update.json", (req, resp) => {
@@ -95,7 +97,7 @@ add_task(async function cancel_during_check() {
   a1.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
 
   // Wait for the http request to arrive
-  let [/* request */, response] = await requestPromise;
+  let [, /* request */ response] = await requestPromise;
 
   // cancelUpdate returns true if there is an update check in progress
   Assert.ok(a1.cancelUpdate());
@@ -124,7 +126,7 @@ add_task(async function shutdown_during_check() {
   a1.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
 
   // Wait for the http request to arrive
-  let [/* request */, response] = await requestPromise;
+  let [, /* request */ response] = await requestPromise;
 
   await promiseShutdownManager();
 

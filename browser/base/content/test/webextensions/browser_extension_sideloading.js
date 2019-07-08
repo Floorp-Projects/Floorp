@@ -1,7 +1,11 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
-const {AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const { AddonManagerPrivate } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
 
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 
 AddonTestUtils.initMochitest(this);
 
@@ -11,7 +15,7 @@ AddonTestUtils.hookAMTelemetryEvents();
 async function createWebExtension(details) {
   let options = {
     manifest: {
-      applications: {gecko: {id: details.id}},
+      applications: { gecko: { id: details.id } },
 
       name: details.name,
 
@@ -20,7 +24,7 @@ async function createWebExtension(details) {
   };
 
   if (details.iconURL) {
-    options.manifest.icons = {"64": details.iconURL};
+    options.manifest.icons = { "64": details.iconURL };
   }
 
   let xpi = AddonTestUtils.createTempWebExtensionFile(options);
@@ -37,10 +41,13 @@ function promiseEvent(eventEmitter, event) {
 async function getAddonElement(managerWindow, addonId) {
   if (managerWindow.useHtmlViews) {
     // about:addons is using the new HTML page.
-    const {contentDocument: doc} = managerWindow.document.getElementById("html-view-browser");
-    const card = await BrowserTestUtils.waitForCondition(() =>
-      doc.querySelector(`addon-card[addon-id="${addonId}"]`),
-      `Found entry for sideload extension addon "${addonId}" in HTML about:addons`);
+    const { contentDocument: doc } = managerWindow.document.getElementById(
+      "html-view-browser"
+    );
+    const card = await BrowserTestUtils.waitForCondition(
+      () => doc.querySelector(`addon-card[addon-id="${addonId}"]`),
+      `Found entry for sideload extension addon "${addonId}" in HTML about:addons`
+    );
 
     return card;
   }
@@ -60,28 +67,39 @@ function assertDisabledSideloadedAddonElement(managerWindow, addonElement) {
     // about:addons is using the new HTML page.
     const doc = addonElement.ownerDocument;
     const enableBtn = addonElement.querySelector('[action="toggle-disabled"]');
-    is(doc.l10n.getAttributes(enableBtn).id, "enable-addon-button",
-       "The button has the enable label");
+    is(
+      doc.l10n.getAttributes(enableBtn).id,
+      "enable-addon-button",
+      "The button has the enable label"
+    );
   } else {
-    addonElement.scrollIntoView({behavior: "instant"});
-    ok(BrowserTestUtils.is_visible(addonElement._enableBtn),
-       "Enable button is visible for sideloaded extension");
-    ok(BrowserTestUtils.is_hidden(addonElement._disableBtn),
-       "Disable button is not visible for sideloaded extension");
-   }
+    addonElement.scrollIntoView({ behavior: "instant" });
+    ok(
+      BrowserTestUtils.is_visible(addonElement._enableBtn),
+      "Enable button is visible for sideloaded extension"
+    );
+    ok(
+      BrowserTestUtils.is_hidden(addonElement._disableBtn),
+      "Disable button is not visible for sideloaded extension"
+    );
+  }
 }
 
 function clickEnableExtension(managerWindow, addonElement) {
   if (managerWindow.useHtmlViews) {
     addonElement.querySelector('[action="toggle-disabled"]').click();
   } else {
-    BrowserTestUtils.synthesizeMouseAtCenter(addonElement._enableBtn, {},
-                                             gBrowser.selectedBrowser);
+    BrowserTestUtils.synthesizeMouseAtCenter(
+      addonElement._enableBtn,
+      {},
+      gBrowser.selectedBrowser
+    );
   }
 }
 
-async function test_sideloading({useHtmlViews}) {
-  const DEFAULT_ICON_URL = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
+async function test_sideloading({ useHtmlViews }) {
+  const DEFAULT_ICON_URL =
+    "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -134,7 +152,6 @@ async function test_sideloading({useHtmlViews}) {
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   });
 
-
   let changePromise = new Promise(resolve => {
     ExtensionsUI.on("change", function listener() {
       ExtensionsUI.off("change", listener);
@@ -146,15 +163,25 @@ async function test_sideloading({useHtmlViews}) {
 
   // Check for the addons badge on the hamburger menu
   let menuButton = document.getElementById("PanelUI-menu-button");
-  is(menuButton.getAttribute("badge-status"), "addon-alert", "Should have addon alert badge");
+  is(
+    menuButton.getAttribute("badge-status"),
+    "addon-alert",
+    "Should have addon alert badge"
+  );
 
   // Find the menu entries for sideloaded extensions
   await gCUITestUtils.openMainMenu();
 
   let addons = PanelUI.addonNotificationContainer;
-  is(addons.children.length, 3, "Have 3 menu entries for sideloaded extensions");
+  is(
+    addons.children.length,
+    3,
+    "Have 3 menu entries for sideloaded extensions"
+  );
 
-  info("Test disabling sideloaded addon 1 using the permission prompt secondary button");
+  info(
+    "Test disabling sideloaded addon 1 using the permission prompt secondary button"
+  );
 
   // Click the first sideloaded extension
   let popupPromise = promisePopupNotificationShown("addon-webext-permissions");
@@ -166,14 +193,24 @@ async function test_sideloading({useHtmlViews}) {
   // When we get the permissions prompt, we should be at the extensions
   // list in about:addons
   let panel = await popupPromise;
-  is(gBrowser.currentURI.spec, "about:addons", "Foreground tab is at about:addons");
+  is(
+    gBrowser.currentURI.spec,
+    "about:addons",
+    "Foreground tab is at about:addons"
+  );
 
   const VIEW = "addons://list/extension";
   let win = gBrowser.selectedBrowser.contentWindow;
 
-  await BrowserTestUtils.waitForCondition(() => !win.gViewController.isLoading,
-                                          "about:addons view is fully loaded");
-  is(win.gViewController.currentViewId, VIEW, "about:addons is at extensions list");
+  await BrowserTestUtils.waitForCondition(
+    () => !win.gViewController.isLoading,
+    "about:addons view is fully loaded"
+  );
+  is(
+    win.gViewController.currentViewId,
+    VIEW,
+    "about:addons is at extensions list"
+  );
 
   // Check the contents of the notification, then choose "Cancel"
   checkNotification(panel, /\/foo-icon\.png$/, [
@@ -183,7 +220,11 @@ async function test_sideloading({useHtmlViews}) {
 
   panel.secondaryButton.click();
 
-  let [addon1, addon2, addon3] = await AddonManager.getAddonsByIDs([ID1, ID2, ID3]);
+  let [addon1, addon2, addon3] = await AddonManager.getAddonsByIDs([
+    ID1,
+    ID2,
+    ID3,
+  ]);
   ok(addon1.seen, "Addon should be marked as seen");
   is(addon1.userDisabled, true, "Addon 1 should still be disabled");
   is(addon2.userDisabled, true, "Addon 2 should still be disabled");
@@ -195,7 +236,11 @@ async function test_sideloading({useHtmlViews}) {
   await gCUITestUtils.openMainMenu();
 
   addons = PanelUI.addonNotificationContainer;
-  is(addons.children.length, 2, "Have 2 menu entries for sideloaded extensions");
+  is(
+    addons.children.length,
+    2,
+    "Have 2 menu entries for sideloaded extensions"
+  );
 
   // Close the hamburger menu and go directly to the addons manager
   await gCUITestUtils.hideMainMenu();
@@ -203,7 +248,9 @@ async function test_sideloading({useHtmlViews}) {
   win = await BrowserOpenAddonsMgr(VIEW);
 
   if (win.gViewController.isLoading) {
-    await new Promise(resolve => win.document.addEventListener("ViewChanged", resolve, {once: true}));
+    await new Promise(resolve =>
+      win.document.addEventListener("ViewChanged", resolve, { once: true })
+    );
   }
 
   // XUL or HTML about:addons addon entry element.
@@ -217,18 +264,30 @@ async function test_sideloading({useHtmlViews}) {
   popupPromise = promisePopupNotificationShown("addon-webext-permissions");
   clickEnableExtension(win, addonElement);
   panel = await popupPromise;
-  checkNotification(panel, DEFAULT_ICON_URL, [["webextPerms.hostDescription.allUrls"]]);
+  checkNotification(panel, DEFAULT_ICON_URL, [
+    ["webextPerms.hostDescription.allUrls"],
+  ]);
 
   // Test incognito checkbox in post install notification
   function setupPostInstallNotificationTest() {
-    let promiseNotificationShown = promiseAppMenuNotificationShown("addon-installed");
+    let promiseNotificationShown = promiseAppMenuNotificationShown(
+      "addon-installed"
+    );
     return async function(addon) {
       info(`Expect post install notification for "${addon.name}"`);
       let postInstallPanel = await promiseNotificationShown;
-      let incognitoCheckbox = postInstallPanel.querySelector("#addon-incognito-checkbox");
-      is(window.AppMenuNotifications.activeNotification.options.name, addon.name,
-         "Got the expected addon name in the active notification");
-      ok(incognitoCheckbox, "Got an incognito checkbox in the post install notification panel");
+      let incognitoCheckbox = postInstallPanel.querySelector(
+        "#addon-incognito-checkbox"
+      );
+      is(
+        window.AppMenuNotifications.activeNotification.options.name,
+        addon.name,
+        "Got the expected addon name in the active notification"
+      );
+      ok(
+        incognitoCheckbox,
+        "Got an incognito checkbox in the post install notification panel"
+      );
       ok(!incognitoCheckbox.hidden, "Incognito checkbox should not be hidden");
       // Dismiss post install notification.
       postInstallPanel.button.click();
@@ -257,7 +316,9 @@ async function test_sideloading({useHtmlViews}) {
   // Close the hamburger menu and go to the detail page for this addon
   await gCUITestUtils.hideMainMenu();
 
-  win = await BrowserOpenAddonsMgr(`addons://detail/${encodeURIComponent(ID3)}`);
+  win = await BrowserOpenAddonsMgr(
+    `addons://detail/${encodeURIComponent(ID3)}`
+  );
 
   info("Test enabling sideloaded addon 3 from app menu");
   // Trigger addon 3 install as triggered from the app menu, to be able to cover the
@@ -267,7 +328,9 @@ async function test_sideloading({useHtmlViews}) {
   ExtensionsUI.showSideloaded(gBrowser, addon3);
 
   panel = await popupPromise;
-  checkNotification(panel, DEFAULT_ICON_URL, [["webextPerms.hostDescription.allUrls"]]);
+  checkNotification(panel, DEFAULT_ICON_URL, [
+    ["webextPerms.hostDescription.allUrls"],
+  ]);
 
   // Setup async test for post install notification on addon 3
   testPostInstallIncognitoCheckbox = setupPostInstallNotificationTest();
@@ -285,7 +348,11 @@ async function test_sideloading({useHtmlViews}) {
   // We should have recorded 1 cancelled followed by 2 accepted sideloads.
   expectTelemetry(["sideloadRejected", "sideloadAccepted", "sideloadAccepted"]);
 
-  isnot(menuButton.getAttribute("badge-status"), "addon-alert", "Should no longer have addon alert badge");
+  isnot(
+    menuButton.getAttribute("badge-status"),
+    "addon-alert",
+    "Should no longer have addon alert badge"
+  );
 
   await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -296,11 +363,15 @@ async function test_sideloading({useHtmlViews}) {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // Assert that the expected AddonManager telemetry are being recorded.
-  const expectedExtra = {source: "app-profile", method: "sideload"};
+  const expectedExtra = { source: "app-profile", method: "sideload" };
 
-  const baseEvent = {object: "extension", extra: expectedExtra};
-  const createBaseEventAddon = (n) => ({...baseEvent, value: `addon${n}@tests.mozilla.org`});
-  const getEventsForAddonId = (events, addonId) => events.filter(ev => ev.value === addonId);
+  const baseEvent = { object: "extension", extra: expectedExtra };
+  const createBaseEventAddon = n => ({
+    ...baseEvent,
+    value: `addon${n}@tests.mozilla.org`,
+  });
+  const getEventsForAddonId = (events, addonId) =>
+    events.filter(ev => ev.value === addonId);
 
   const amEvents = AddonTestUtils.getAMTelemetryEvents();
 
@@ -308,49 +379,69 @@ async function test_sideloading({useHtmlViews}) {
   info("Test telemetry events collected for addon1");
 
   const baseEventAddon1 = createBaseEventAddon(1);
-  const collectedEventsAddon1 = getEventsForAddonId(amEvents, baseEventAddon1.value);
+  const collectedEventsAddon1 = getEventsForAddonId(
+    amEvents,
+    baseEventAddon1.value
+  );
   const expectedEventsAddon1 = [
     {
-      ...baseEventAddon1, method: "sideload_prompt",
-      extra: {...expectedExtra, num_strings: "2"},
+      ...baseEventAddon1,
+      method: "sideload_prompt",
+      extra: { ...expectedExtra, num_strings: "2" },
     },
-    {...baseEventAddon1, method: "uninstall"},
+    { ...baseEventAddon1, method: "uninstall" },
   ];
 
   let i = 0;
   for (let event of collectedEventsAddon1) {
-    Assert.deepEqual(event, expectedEventsAddon1[i++],
-                     "Got the expected telemetry event");
+    Assert.deepEqual(
+      event,
+      expectedEventsAddon1[i++],
+      "Got the expected telemetry event"
+    );
   }
 
-  is(collectedEventsAddon1.length, expectedEventsAddon1.length,
-     "Got the expected number of telemetry events for addon1");
+  is(
+    collectedEventsAddon1.length,
+    expectedEventsAddon1.length,
+    "Got the expected number of telemetry events for addon1"
+  );
 
   const baseEventAddon2 = createBaseEventAddon(2);
-  const collectedEventsAddon2 = getEventsForAddonId(amEvents, baseEventAddon2.value);
+  const collectedEventsAddon2 = getEventsForAddonId(
+    amEvents,
+    baseEventAddon2.value
+  );
   const expectedEventsAddon2 = [
     {
-      ...baseEventAddon2, method: "sideload_prompt",
-      extra: {...expectedExtra, num_strings: "1"},
+      ...baseEventAddon2,
+      method: "sideload_prompt",
+      extra: { ...expectedExtra, num_strings: "1" },
     },
-    {...baseEventAddon2, method: "enable"},
-    {...baseEventAddon2, method: "uninstall"},
+    { ...baseEventAddon2, method: "enable" },
+    { ...baseEventAddon2, method: "uninstall" },
   ];
 
   i = 0;
   for (let event of collectedEventsAddon2) {
-    Assert.deepEqual(event, expectedEventsAddon2[i++],
-                     "Got the expected telemetry event");
+    Assert.deepEqual(
+      event,
+      expectedEventsAddon2[i++],
+      "Got the expected telemetry event"
+    );
   }
 
-  is(collectedEventsAddon2.length, expectedEventsAddon2.length,
-     "Got the expected number of telemetry events for addon2");
+  is(
+    collectedEventsAddon2.length,
+    expectedEventsAddon2.length,
+    "Got the expected number of telemetry events for addon2"
+  );
 }
 
 add_task(async function test_xul_aboutaddons_sideloading() {
-  await test_sideloading({useHtmlViews: false});
+  await test_sideloading({ useHtmlViews: false });
 });
 
 add_task(async function test_html_aboutaddons_sideloading() {
-  await test_sideloading({useHtmlViews: true});
+  await test_sideloading({ useHtmlViews: true });
 });

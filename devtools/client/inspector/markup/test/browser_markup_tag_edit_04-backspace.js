@@ -32,26 +32,32 @@ const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 // - pseudo: (optional) if the focused node is actually supposed to be a pseudo element
 //   of the specified selector.
 // Note that after each test case, undo is called.
-const TEST_DATA = [{
-  selector: "#first",
-  focusedSelector: "#second",
-}, {
-  selector: "#second",
-  focusedSelector: "#first",
-}, {
-  selector: "#third",
-  focusedSelector: "#second",
-}, {
-  selector: "#fourth",
-  focusedSelector: "#only-child",
-}, {
-  selector: "#fifth",
-  focusedSelector: "#pseudo",
-  pseudo: "before",
-}];
+const TEST_DATA = [
+  {
+    selector: "#first",
+    focusedSelector: "#second",
+  },
+  {
+    selector: "#second",
+    focusedSelector: "#first",
+  },
+  {
+    selector: "#third",
+    focusedSelector: "#second",
+  },
+  {
+    selector: "#fourth",
+    focusedSelector: "#only-child",
+  },
+  {
+    selector: "#fifth",
+    focusedSelector: "#pseudo",
+    pseudo: "before",
+  },
+];
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   for (const data of TEST_DATA) {
     await checkDeleteAndSelection(inspector, "back_space", data);

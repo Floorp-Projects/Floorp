@@ -42,14 +42,18 @@ function timelineTestOpenUrl(url) {
   window.focus();
 
   let tabSwitchPromise = new Promise((resolve, reject) => {
-    window.gBrowser.addEventListener("TabSwitchDone", function() {
-      resolve();
-    }, {once: true});
+    window.gBrowser.addEventListener(
+      "TabSwitchDone",
+      function() {
+        resolve();
+      },
+      { once: true }
+    );
   });
 
   let loadPromise = new Promise(function(resolve, reject) {
     let browser = window.gBrowser;
-    let tab = browser.selectedTab = BrowserTestUtils.addTab(browser, url);
+    let tab = (browser.selectedTab = BrowserTestUtils.addTab(browser, url));
     let linkedBrowser = tab.linkedBrowser;
 
     BrowserTestUtils.browserLoaded(linkedBrowser).then(() => resolve(tab));
@@ -74,7 +78,9 @@ function runCharsetTest(url, check1, charset, check2) {
 
   function afterOpen() {
     if (charset) {
-      BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(afterChangeCharset);
+      BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(
+        afterChangeCharset
+      );
 
       ContentTask.spawn(gBrowser.selectedBrowser, null, check1).then(() => {
         BrowserSetForcedCharacterSet(charset);

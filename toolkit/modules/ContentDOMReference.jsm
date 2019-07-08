@@ -16,11 +16,16 @@
 
 var EXPORTED_SYMBOLS = ["ContentDOMReference"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "finalizationService",
-                                   "@mozilla.org/toolkit/finalizationwitness;1",
-                                   "nsIFinalizationWitnessService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "finalizationService",
+  "@mozilla.org/toolkit/finalizationwitness;1",
+  "nsIFinalizationWitnessService"
+);
 
 /**
  * @typedef {number} ElementID
@@ -50,7 +55,9 @@ var gRegistry = new WeakMap();
 
 var ContentDOMReference = {
   _init() {
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    const { Services } = ChromeUtils.import(
+      "resource://gre/modules/Services.jsm"
+    );
     Services.obs.addObserver(this, FINALIZATION_TOPIC);
   },
 
@@ -72,11 +79,14 @@ var ContentDOMReference = {
    */
   get(element) {
     if (!element) {
-      throw new Error("Can't create a ContentDOMReference identifier for " +
-                      "non-existant nodes.");
+      throw new Error(
+        "Can't create a ContentDOMReference identifier for " +
+          "non-existant nodes."
+      );
     }
 
-    let browsingContext = element.ownerGlobal.getWindowGlobalChild().browsingContext;
+    let browsingContext = element.ownerGlobal.getWindowGlobalChild()
+      .browsingContext;
     let mappings = gRegistry.get(browsingContext);
     if (!mappings) {
       mappings = {
@@ -100,9 +110,9 @@ var ContentDOMReference = {
     let identifier = { browsingContextId: browsingContext.id, id };
 
     finalizerRoots.set(
-        element,
-        finalizationService.make(FINALIZATION_TOPIC,
-                                 JSON.stringify(identifier)));
+      element,
+      finalizationService.make(FINALIZATION_TOPIC, JSON.stringify(identifier))
+    );
 
     return identifier;
   },
@@ -117,7 +127,7 @@ var ContentDOMReference = {
    */
   resolve(identifier) {
     let browsingContext = BrowsingContext.get(identifier.browsingContextId);
-    let {id} = identifier;
+    let { id } = identifier;
     return this._resolveIDToElement(browsingContext, id);
   },
 
@@ -131,7 +141,7 @@ var ContentDOMReference = {
    */
   _revoke(identifier) {
     let browsingContext = BrowsingContext.get(identifier.browsingContextId);
-    let {id} = identifier;
+    let { id } = identifier;
 
     let mappings = gRegistry.get(browsingContext);
     if (!mappings) {

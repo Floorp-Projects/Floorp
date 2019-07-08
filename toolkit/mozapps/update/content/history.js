@@ -12,24 +12,27 @@ var gUpdateHistory = {
   onLoad() {
     this._view = document.getElementById("historyItems");
 
-    var um =
-        Cc["@mozilla.org/updates/update-manager;1"].
-        getService(Ci.nsIUpdateManager);
+    var um = Cc["@mozilla.org/updates/update-manager;1"].getService(
+      Ci.nsIUpdateManager
+    );
     var uc = um.updateCount;
     if (uc) {
-      while (this._view.hasChildNodes())
+      while (this._view.hasChildNodes()) {
         this._view.firstChild.remove();
+      }
 
       for (var i = 0; i < uc; ++i) {
         var update = um.getUpdateAt(i);
 
-        if (!update || !update.name)
+        if (!update || !update.name) {
           continue;
+        }
 
         // Don't display updates that are downloading since they don't have
         // valid statusText for the UI (bug 485493).
-        if (!update.statusText)
+        if (!update.statusText) {
           continue;
+        }
 
         var element = document.createXULElement("richlistitem");
         element.className = "update";
@@ -44,7 +47,9 @@ var gUpdateHistory = {
         topLine.appendChild(nameLabel);
 
         if (update.detailsURL) {
-          const detailsLink = document.createXULElement("label", {is: "text-link"});
+          const detailsLink = document.createXULElement("label", {
+            is: "text-link",
+          });
           detailsLink.href = update.detailsURL;
           document.l10n.setAttributes(detailsLink, "update-details");
           topLine.appendChild(detailsLink);
@@ -78,8 +83,14 @@ var gUpdateHistory = {
    */
   _formatDate(seconds) {
     var date = new Date(seconds);
-    const dtOptions = { year: "numeric", month: "long", day: "numeric",
-                        hour: "numeric", minute: "numeric", second: "numeric" };
+    const dtOptions = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+    };
     return date.toLocaleString(undefined, dtOptions);
   },
 };

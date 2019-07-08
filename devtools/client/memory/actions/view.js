@@ -13,7 +13,7 @@ const refresh = require("./refresh");
  *
  * @param {viewState} view
  */
-const changeView = exports.changeView = function(view) {
+const changeView = (exports.changeView = function(view) {
   return function(dispatch, getState) {
     dispatch({
       type: actions.CHANGE_VIEW,
@@ -22,13 +22,13 @@ const changeView = exports.changeView = function(view) {
       oldSelected: findSelectedSnapshot(getState()),
     });
   };
-};
+});
 
 /**
  * Given that we are in the INDIVIDUALS view state, go back to the state we were
  * in before.
  */
-const popView = exports.popView = function() {
+const popView = (exports.popView = function() {
   return function(dispatch, getState) {
     const { previous } = getState().view;
     assert(previous);
@@ -37,7 +37,7 @@ const popView = exports.popView = function() {
       previousView: previous,
     });
   };
-};
+});
 
 /**
  * Change the currently selected view and ensure all our data is up to date from

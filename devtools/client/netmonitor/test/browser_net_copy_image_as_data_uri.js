@@ -16,13 +16,20 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[5]);
-  EventUtils.sendMouseEvent({ type: "contextmenu" },
-    document.querySelectorAll(".request-list-item")[5]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[5]
+  );
+  EventUtils.sendMouseEvent(
+    { type: "contextmenu" },
+    document.querySelectorAll(".request-list-item")[5]
+  );
 
   await waitForClipboardPromise(function setup() {
-    getContextMenuItem(monitor, "request-list-context-copy-image-as-data-uri").click();
+    getContextMenuItem(
+      monitor,
+      "request-list-context-copy-image-as-data-uri"
+    ).click();
   }, TEST_IMAGE_DATA_URI);
 
   ok(true, "Clipboard contains the currently selected image as data uri.");

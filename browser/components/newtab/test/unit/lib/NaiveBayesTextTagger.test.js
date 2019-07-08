@@ -1,5 +1,5 @@
-import {NaiveBayesTextTagger} from "lib/NaiveBayesTextTagger.jsm";
-import {tokenize} from "lib/Tokenize.jsm";
+import { NaiveBayesTextTagger } from "lib/NaiveBayesTextTagger.jsm";
+import { tokenize } from "lib/Tokenize.jsm";
 
 const EPSILON = 0.00001;
 
@@ -45,17 +45,17 @@ describe("Naive Bayes Tagger", () => {
         },
       ],
       vocab_idfs: {
-        deal:    [0,  5.5058519847862275],
-        easy:    [1,  5.5058519847862275],
-        tanks:   [2,  5.6011621645905520],
-        sites:   [3,  5.9578371085292850],
-        care:    [4,  5.9578371085292850],
-        needs:   [5,  5.8243057159047620],
-        finally: [6,  5.7065226802483790],
-        super:   [7,  5.2646899279693390],
-        heard:   [8,  5.5058519847862275],
-        reached: [9,  5.9578371085292850],
-        words:   [10, 5.0705339135283820],
+        deal: [0, 5.5058519847862275],
+        easy: [1, 5.5058519847862275],
+        tanks: [2, 5.601162164590552],
+        sites: [3, 5.957837108529285],
+        care: [4, 5.957837108529285],
+        needs: [5, 5.824305715904762],
+        finally: [6, 5.706522680248379],
+        super: [7, 5.264689927969339],
+        heard: [8, 5.5058519847862275],
+        reached: [9, 5.957837108529285],
+        words: [10, 5.070533913528382],
       },
     };
     let instance = new NaiveBayesTextTagger(model);

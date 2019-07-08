@@ -8,7 +8,10 @@ function backgroundScript() {
     let validArchs = ["arm", "x86-32", "x86-64", "aarch64"];
 
     browser.test.assertTrue(validOSs.includes(info.os), "OS is valid");
-    browser.test.assertTrue(validArchs.includes(info.arch), "Architecture is valid");
+    browser.test.assertTrue(
+      validArchs.includes(info.arch),
+      "Architecture is valid"
+    );
     browser.test.notifyPass("runtime.getPlatformInfo");
   });
 }

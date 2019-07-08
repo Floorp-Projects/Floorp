@@ -4,7 +4,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function test() {
-  const {ToolSidebar} = require("devtools/client/framework/sidebar");
+  const { ToolSidebar } = require("devtools/client/framework/sidebar");
 
   const tab1URL = "data:text/html;charset=utf8,<title>1</title><p>1</p>";
   const tab2URL = "data:text/html;charset=utf8,<title>2</title><p>2</p>";
@@ -39,52 +39,60 @@ function test() {
 
   addTab("about:blank").then(async function(aTab) {
     const target = await TargetFactory.forTab(aTab);
-    gDevTools.showToolbox(target, toolDefinition.id).then(function(toolbox) {
-      const panel = toolbox.getPanel(toolDefinition.id);
-      panel.toolbox = toolbox;
-      ok(true, "Tool open");
+    gDevTools
+      .showToolbox(target, toolDefinition.id)
+      .then(function(toolbox) {
+        const panel = toolbox.getPanel(toolDefinition.id);
+        panel.toolbox = toolbox;
+        ok(true, "Tool open");
 
-      const tabbox = panel.panelDoc.getElementById("sidebar");
-      panel.sidebar = new ToolSidebar(tabbox, panel, "testbug865688", true);
+        const tabbox = panel.panelDoc.getElementById("sidebar");
+        panel.sidebar = new ToolSidebar(tabbox, panel, "testbug865688", true);
 
-      panel.sidebar.on("new-tab-registered", function(id) {
-        registeredTabs[id] = true;
-      });
+        panel.sidebar.on("new-tab-registered", function(id) {
+          registeredTabs[id] = true;
+        });
 
-      panel.sidebar.once("tab1-ready", function() {
-        info("tab1-ready");
-        readyTabs.tab1 = true;
-        allTabsReady(panel);
-      });
+        panel.sidebar.once("tab1-ready", function() {
+          info("tab1-ready");
+          readyTabs.tab1 = true;
+          allTabsReady(panel);
+        });
 
-      panel.sidebar.once("tab2-ready", function() {
-        info("tab2-ready");
-        readyTabs.tab2 = true;
-        allTabsReady(panel);
-      });
+        panel.sidebar.once("tab2-ready", function() {
+          info("tab2-ready");
+          readyTabs.tab2 = true;
+          allTabsReady(panel);
+        });
 
-      panel.sidebar.once("tab3-ready", function() {
-        info("tab3-ready");
-        readyTabs.tab3 = true;
-        allTabsReady(panel);
-      });
+        panel.sidebar.once("tab3-ready", function() {
+          info("tab3-ready");
+          readyTabs.tab3 = true;
+          allTabsReady(panel);
+        });
 
-      panel.sidebar.once("tab1-selected", function() {
-        info("tab1-selected");
-        tab1Selected = true;
-        allTabsReady(panel);
-      });
+        panel.sidebar.once("tab1-selected", function() {
+          info("tab1-selected");
+          tab1Selected = true;
+          allTabsReady(panel);
+        });
 
-      panel.sidebar.addTab("tab1", tab1URL, {selected: true});
-      panel.sidebar.addTab("tab2", tab2URL);
-      panel.sidebar.addTab("tab3", tab3URL);
+        panel.sidebar.addTab("tab1", tab1URL, { selected: true });
+        panel.sidebar.addTab("tab2", tab2URL);
+        panel.sidebar.addTab("tab3", tab3URL);
 
-      panel.sidebar.show();
-    }).catch(console.error);
+        panel.sidebar.show();
+      })
+      .catch(console.error);
   });
 
   function allTabsReady(panel) {
-    if (!tab1Selected || !readyTabs.tab1 || !readyTabs.tab2 || !readyTabs.tab3) {
+    if (
+      !tab1Selected ||
+      !readyTabs.tab1 ||
+      !readyTabs.tab2 ||
+      !readyTabs.tab3
+    ) {
       return;
     }
 
@@ -111,13 +119,27 @@ function test() {
       panel.sidebar.once("tab2-selected", function() {
         ok(true, "received 'selected' event");
         tabs[1].focus();
-        is(panel.sidebar._panelDoc.activeElement, tabs[1],
-          "Focus is set to second tab");
+        is(
+          panel.sidebar._panelDoc.activeElement,
+          tabs[1],
+          "Focus is set to second tab"
+        );
         panel.sidebar.hide();
-        isnot(panel.sidebar._panelDoc.activeElement, tabs[1],
-          "Focus is reset for sidebar");
-        is(panel.sidebar._tabbox.getAttribute("hidden"), "true", "Sidebar hidden");
-        is(panel.sidebar.getWindowForTab("tab1").location.href, tab1URL, "Window is accessible");
+        isnot(
+          panel.sidebar._panelDoc.activeElement,
+          tabs[1],
+          "Focus is reset for sidebar"
+        );
+        is(
+          panel.sidebar._tabbox.getAttribute("hidden"),
+          "true",
+          "Sidebar hidden"
+        );
+        is(
+          panel.sidebar.getWindowForTab("tab1").location.href,
+          tab1URL,
+          "Window is accessible"
+        );
         testRemoval(panel);
       });
     });

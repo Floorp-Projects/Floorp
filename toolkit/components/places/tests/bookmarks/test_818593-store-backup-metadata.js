@@ -24,7 +24,9 @@ add_task(async function test_saveBookmarksToJSONFile_and_create() {
   // Ensure the backup would be copied to our backups folder when the original
   // backup is saved somewhere else.
   let recentBackup = await PlacesBackups.getMostRecentBackup();
-  let matches = OS.Path.basename(recentBackup).match(PlacesBackups.filenamesRegex);
+  let matches = OS.Path.basename(recentBackup).match(
+    PlacesBackups.filenamesRegex
+  );
   Assert.equal(matches[2], nodeCount);
   Assert.equal(matches[3].length, 24);
 

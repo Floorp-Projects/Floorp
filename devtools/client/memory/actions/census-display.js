@@ -20,16 +20,18 @@ exports.setCensusDisplayAndRefresh = function(heapWorker, display) {
  *
  * @param {censusDisplayModel} display
  */
-const setCensusDisplay = exports.setCensusDisplay = function(display) {
-  assert(typeof display === "object"
-         && display
-         && display.breakdown
-         && display.breakdown.by,
-    "Breakdowns must be an object with a \`by\` property, attempted to set: " +
-  uneval(display));
+const setCensusDisplay = (exports.setCensusDisplay = function(display) {
+  assert(
+    typeof display === "object" &&
+      display &&
+      display.breakdown &&
+      display.breakdown.by,
+    "Breakdowns must be an object with a `by` property, attempted to set: " +
+      uneval(display)
+  );
 
   return {
     type: actions.SET_CENSUS_DISPLAY,
     display,
   };
-};
+});

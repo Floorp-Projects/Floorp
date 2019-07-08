@@ -3,15 +3,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
+const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
 
-ChromeUtils.defineModuleGetter(this, "BookmarkRepairRequestor",
-  "resource://services-sync/bookmark_repair.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BookmarkRepairRequestor",
+  "resource://services-sync/bookmark_repair.js"
+);
 
-var EXPORTED_SYMBOLS = ["getRepairRequestor", "getAllRepairRequestors",
-                        "CollectionRepairRequestor",
-                        "getRepairResponder",
-                        "CollectionRepairResponder"];
+var EXPORTED_SYMBOLS = [
+  "getRepairRequestor",
+  "getAllRepairRequestors",
+  "CollectionRepairRequestor",
+  "getRepairResponder",
+  "CollectionRepairResponder",
+];
 
 // The individual requestors/responders, lazily loaded.
 const REQUESTORS = {

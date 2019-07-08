@@ -1,7 +1,7 @@
 // Bits and pieces copied from toolkit/components/search/tests/xpcshell/head_search.js
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {Task} = ChromeUtils.import("resource://testing-common/Task.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Task } = ChromeUtils.import("resource://testing-common/Task.jsm");
 
 /**
  * Adds test engines and returns a promise resolved when they are installed.
@@ -16,7 +16,7 @@ var {Task} = ChromeUtils.import("resource://testing-common/Task.jsm");
  *                   except for the engine name.  Alternative to xmlFileName.
  *        }
  */
-var addTestEngines = Task.async(function* (aItems) {
+var addTestEngines = Task.async(function*(aItems) {
   let engines = [];
 
   for (let item of aItems) {

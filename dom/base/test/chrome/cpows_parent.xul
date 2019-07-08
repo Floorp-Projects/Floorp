@@ -10,6 +10,8 @@
   <label value="CPOWs"/>
 
   <script type="application/javascript"><![CDATA[
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
     var test_state = "remote";
     var test_node = null;
     var reentered = false;
@@ -400,7 +402,7 @@
       let failed = false;
 
       const PREF_UNSAFE_FORBIDDEN = "dom.ipc.cpows.forbid-unsafe-from-browser";
-      opener.wrappedJSObject.SpecialPowers.setBoolPref(PREF_UNSAFE_FORBIDDEN, true);
+      Services.prefs.setBoolPref(PREF_UNSAFE_FORBIDDEN, true);
       try {
         msg.objects.f();
       } catch (e) {
@@ -416,7 +418,7 @@
 
     function recvSafe(msg) {
       const PREF_UNSAFE_FORBIDDEN = "dom.ipc.cpows.forbid-unsafe-from-browser";
-      opener.wrappedJSObject.SpecialPowers.setBoolPref(PREF_UNSAFE_FORBIDDEN, true);
+      Services.prefs.setBoolPref(PREF_UNSAFE_FORBIDDEN, true);
       try {
         msg.objects.f();
       } catch (e) {

@@ -7,8 +7,15 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
-  await removeAnimatedElementsExcept([".cssanimation-normal", ".delay-negative"]);
-  const { animationInspector, panel, inspector } = await openAnimationInspector();
+  await removeAnimatedElementsExcept([
+    ".cssanimation-normal",
+    ".delay-negative",
+  ]);
+  const {
+    animationInspector,
+    panel,
+    inspector,
+  } = await openAnimationInspector();
 
   info("Checking scrubber controller existence");
   const controllerEl = panel.querySelector(".current-time-scrubber-area");
@@ -17,11 +24,17 @@ add_task(async function() {
   info("Checking the current time of most left scrubber position");
   const timeScale = animationInspector.state.timeScale;
   await clickOnCurrentTimeScrubberController(animationInspector, panel, 0);
-  assertAnimationsCurrentTime(animationInspector, -1 * timeScale.zeroPositionTime);
+  assertAnimationsCurrentTime(
+    animationInspector,
+    -1 * timeScale.zeroPositionTime
+  );
 
   info("Select negative current time animation");
   await selectNodeAndWaitForAnimations(".cssanimation-normal", inspector);
-  assertAnimationsCurrentTime(animationInspector, -1 * timeScale.zeroPositionTime);
+  assertAnimationsCurrentTime(
+    animationInspector,
+    -1 * timeScale.zeroPositionTime
+  );
 
   info("Back to 'body' and rewind the animation");
   await selectNodeAndWaitForAnimations("body", inspector);

@@ -15,11 +15,7 @@ const TEST_DATA = [
     expectedPathList: [
       {
         selector: ".animation-iteration-path",
-        path: [
-          { x: 0, y: 100 },
-          { x: 50000, y: 50 },
-          { x: 100000, y: 0 },
-        ],
+        path: [{ x: 0, y: 100 }, { x: 50000, y: 50 }, { x: 100000, y: 0 }],
       },
     ],
     expectedTooltip: "Playback rate: -1",
@@ -30,11 +26,7 @@ const TEST_DATA = [
     expectedPathList: [
       {
         selector: ".animation-iteration-path",
-        path: [
-          { x: 0, y: 100 },
-          { x: 50000, y: 50 },
-          { x: 100000, y: 0 },
-        ],
+        path: [{ x: 0, y: 100 }, { x: 50000, y: 50 }, { x: 100000, y: 0 }],
       },
     ],
     expectedTooltip: "Playback rate: -2",
@@ -54,11 +46,7 @@ const TEST_DATA = [
     expectedPathList: [
       {
         selector: ".animation-iteration-path",
-        path: [
-          { x: 0, y: 100 },
-          { x: 50000, y: 50 },
-          { x: 100000, y: 0 },
-        ],
+        path: [{ x: 0, y: 100 }, { x: 50000, y: 50 }, { x: 100000, y: 0 }],
       },
     ],
     expectedTooltip: "Playback rate: -1",
@@ -77,18 +65,11 @@ const TEST_DATA = [
     expectedPathList: [
       {
         selector: ".animation-iteration-path",
-        path: [
-          { x: 0, y: 100 },
-          { x: 50000, y: 50 },
-          { x: 50000, y: 0 },
-        ],
+        path: [{ x: 0, y: 100 }, { x: 50000, y: 50 }, { x: 50000, y: 0 }],
       },
       {
         selector: ".animation-negative-delay-path path",
-        path: [
-          { x: 50000, y: 50 },
-          { x: 100000, y: 0 },
-        ],
+        path: [{ x: 50000, y: 50 }, { x: 100000, y: 0 }],
       },
     ],
     expectedTooltip: "Playback rate: -1",
@@ -108,11 +89,7 @@ const TEST_DATA = [
     expectedPathList: [
       {
         selector: ".animation-iteration-path",
-        path: [
-          { x: 50000, y: 100 },
-          { x: 100000, y: 50 },
-          { x: 150000, y: 0 },
-        ],
+        path: [{ x: 50000, y: 100 }, { x: 100000, y: 50 }, { x: 150000, y: 0 }],
       },
     ],
     expectedTooltip: "Playback rate: -1",
@@ -132,17 +109,11 @@ const TEST_DATA = [
     expectedPathList: [
       {
         selector: ".animation-iteration-path",
-        path: [
-          { x: 0, y: 50 },
-          { x: 50000, y: 0 },
-        ],
+        path: [{ x: 0, y: 50 }, { x: 50000, y: 0 }],
       },
       {
         selector: ".animation-negative-end-delay-path path",
-        path: [
-          { x: -50000, y: 100 },
-          { x: 0, y: 0 },
-        ],
+        path: [{ x: -50000, y: 100 }, { x: 0, y: 0 }],
       },
     ],
     expectedTooltip: "Playback rate: -1",
@@ -162,32 +133,41 @@ add_task(async function() {
       expectedViewboxWidth,
     } = testData;
 
-    const animationItemEl =
-      findAnimationItemElementsByTargetSelector(panel, targetSelector);
-    const summaryGraphEl = animationItemEl.querySelector(".animation-summary-graph");
+    const animationItemEl = findAnimationItemElementsByTargetSelector(
+      panel,
+      targetSelector
+    );
+    const summaryGraphEl = animationItemEl.querySelector(
+      ".animation-summary-graph"
+    );
 
-    info(`Check tooltip for the animation of ${ targetSelector }`);
+    info(`Check tooltip for the animation of ${targetSelector}`);
     assertTooltip(summaryGraphEl, expectedTooltip);
 
     if (expectedPathList) {
       for (const { selector, path } of expectedPathList) {
-        info(`Check path for ${ selector }`);
+        info(`Check path for ${selector}`);
         assertPath(summaryGraphEl, selector, path);
       }
     }
 
     if (expectedSignList) {
       for (const { selector, sign } of expectedSignList) {
-        info(`Check sign for ${ selector }`);
+        info(`Check sign for ${selector}`);
         assertSign(summaryGraphEl, selector, sign);
       }
     }
 
     if (expectedViewboxWidth) {
       info("Check width of viewbox of SVG");
-      const svgEl = summaryGraphEl.querySelector(".animation-summary-graph-path");
-      is(svgEl.viewBox.baseVal.width, expectedViewboxWidth,
-        `width of viewbox should be ${ expectedViewboxWidth }`);
+      const svgEl = summaryGraphEl.querySelector(
+        ".animation-summary-graph-path"
+      );
+      is(
+        svgEl.viewBox.baseVal.width,
+        expectedViewboxWidth,
+        `width of viewbox should be ${expectedViewboxWidth}`
+      );
     }
   }
 });
@@ -200,15 +180,27 @@ function assertPath(summaryGraphEl, pathSelector, expectedPath) {
 function assertSign(summaryGraphEl, selector, expectedSign) {
   const signEl = summaryGraphEl.querySelector(selector);
 
-  is(signEl.style.marginInlineStart, expectedSign.marginInlineStart,
-     `marginInlineStart position should be ${ expectedSign.marginInlineStart }`);
-  is(signEl.style.width, expectedSign.width,
-     `Width should be ${ expectedSign.width }`);
-  is(signEl.classList.contains("fill"), expectedSign.isFilled || false,
-     "signEl should be correct");
+  is(
+    signEl.style.marginInlineStart,
+    expectedSign.marginInlineStart,
+    `marginInlineStart position should be ${expectedSign.marginInlineStart}`
+  );
+  is(
+    signEl.style.width,
+    expectedSign.width,
+    `Width should be ${expectedSign.width}`
+  );
+  is(
+    signEl.classList.contains("fill"),
+    expectedSign.isFilled || false,
+    "signEl should be correct"
+  );
 }
 
 function assertTooltip(summaryGraphEl, expectedTooltip) {
   const tooltip = summaryGraphEl.getAttribute("title");
-  ok(tooltip.includes(expectedTooltip), `Tooltip should include '${ expectedTooltip }'`);
+  ok(
+    tooltip.includes(expectedTooltip),
+    `Tooltip should include '${expectedTooltip}'`
+  );
 }

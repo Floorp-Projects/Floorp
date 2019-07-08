@@ -8,12 +8,14 @@ function RemoteController(browser) {
 
   // A map of commands that have had their enabled/disabled state assigned. The
   // value of each key will be true if enabled, and false if disabled.
-  this._supportedCommands = { };
+  this._supportedCommands = {};
 }
 
 RemoteController.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIController,
-                                          Ci.nsICommandController]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIController,
+    Ci.nsICommandController,
+  ]),
 
   isCommandEnabled(aCommand) {
     return this._supportedCommands[aCommand] || false;
@@ -24,7 +26,10 @@ RemoteController.prototype = {
   },
 
   doCommand(aCommand) {
-    this._browser.messageManager.sendAsyncMessage("ControllerCommands:Do", aCommand);
+    this._browser.messageManager.sendAsyncMessage(
+      "ControllerCommands:Do",
+      aCommand
+    );
   },
 
   getCommandStateWithParams(aCommand, aCommandParams) {
@@ -43,7 +48,7 @@ RemoteController.prototype = {
       let rect = this._browser.getBoundingClientRect();
       let scale = this._browser.ownerGlobal.devicePixelRatio;
       cmd.params = {
-        x:  {
+        x: {
           type: "long",
           value: aCommandParams.getLongValue("x") - rect.left * scale,
         },
@@ -56,7 +61,9 @@ RemoteController.prototype = {
       throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     }
     this._browser.messageManager.sendAsyncMessage(
-      "ControllerCommands:DoWithParams", cmd);
+      "ControllerCommands:DoWithParams",
+      cmd
+    );
   },
 
   getSupportedCommands() {
@@ -69,7 +76,7 @@ RemoteController.prototype = {
   // the enabled and disabled commands.
   enableDisableCommands(aAction, aEnabledCommands, aDisabledCommands) {
     // Clear the list first
-    this._supportedCommands = { };
+    this._supportedCommands = {};
 
     for (let command of aEnabledCommands) {
       this._supportedCommands[command] = true;

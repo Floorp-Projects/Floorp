@@ -39,8 +39,14 @@ add_task(async function() {
 
   ok(flexItemPane, "The flex item accordion pane is rendered.");
   ok(flexContainerPane, "The flex container accordion pane is rendered.");
-  is(flexItemPane.children[0].textContent, "Flex Item of div#container.container",
-    "Got the correct header for the flex item pane.");
-  is(flexContainerPane.children[0].textContent, "Flex Container",
-    "Got the correct header for the flex container pane.");
+  is(
+    flexItemPane.children[0].textContent,
+    "Flex Item of div#container.container",
+    "Got the correct header for the flex item pane."
+  );
+  is(
+    flexContainerPane.children[0].textContent,
+    "Flex Container",
+    "Got the correct header for the flex container pane."
+  );
 });

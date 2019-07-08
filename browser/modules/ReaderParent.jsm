@@ -5,14 +5,24 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "ReaderParent" ];
+var EXPORTED_SYMBOLS = ["ReaderParent"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "ReaderMode", "resource://gre/modules/ReaderMode.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ReaderMode",
+  "resource://gre/modules/ReaderMode.jsm"
+);
 
-const gStringBundle = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
+const gStringBundle = Services.strings.createBundle(
+  "chrome://global/locale/aboutReader.properties"
+);
 
 var ReaderParent = {
   // Listeners are added in BrowserGlue.jsm
@@ -23,17 +33,26 @@ var ReaderParent = {
           try {
             let preferredWidth = message.data.preferredWidth || 0;
             let uri = Services.io.newURI(message.data.url);
-            PlacesUtils.favicons.getFaviconURLForPage(uri, iconUri => {
-              if (iconUri) {
-                iconUri = PlacesUtils.favicons.getFaviconLinkForIcon(iconUri);
-                message.target.messageManager.sendAsyncMessage("Reader:FaviconReturn", {
-                  url: message.data.url,
-                  faviconUrl: iconUri.pathQueryRef.replace(/^favicon:/, ""),
-                });
-              }
-            }, preferredWidth);
+            PlacesUtils.favicons.getFaviconURLForPage(
+              uri,
+              iconUri => {
+                if (iconUri) {
+                  iconUri = PlacesUtils.favicons.getFaviconLinkForIcon(iconUri);
+                  message.target.messageManager.sendAsyncMessage(
+                    "Reader:FaviconReturn",
+                    {
+                      url: message.data.url,
+                      faviconUrl: iconUri.pathQueryRef.replace(/^favicon:/, ""),
+                    }
+                  );
+                }
+              },
+              preferredWidth
+            );
           } catch (ex) {
-            Cu.reportError("Error requesting favicon URL for about:reader content: " + ex);
+            Cu.reportError(
+              "Error requesting favicon URL for about:reader content: " + ex
+            );
           }
         }
         break;
@@ -72,8 +91,10 @@ var ReaderParent = {
 
       menuitem.setAttribute("label", closeText);
       menuitem.setAttribute("hidden", false);
-      menuitem.setAttribute("accesskey",
-        gStringBundle.GetStringFromName("readerView.close.accesskey"));
+      menuitem.setAttribute(
+        "accesskey",
+        gStringBundle.GetStringFromName("readerView.close.accesskey")
+      );
 
       key.setAttribute("disabled", false);
 
@@ -88,8 +109,10 @@ var ReaderParent = {
 
       menuitem.setAttribute("label", enterText);
       menuitem.setAttribute("hidden", !browser.isArticle);
-      menuitem.setAttribute("accesskey",
-        gStringBundle.GetStringFromName("readerView.enter.accesskey"));
+      menuitem.setAttribute(
+        "accesskey",
+        gStringBundle.GetStringFromName("readerView.enter.accesskey")
+      );
 
       key.setAttribute("disabled", !browser.isArticle);
 

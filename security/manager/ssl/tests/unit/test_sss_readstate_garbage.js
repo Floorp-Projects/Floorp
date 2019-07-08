@@ -20,10 +20,14 @@ function checkStateRead(aSubject, aTopic, aData) {
     "https://example2.example.com",
   ];
   for (let host of HSTS_HOSTS) {
-    ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                              Services.io.newURI(host),
-                              0),
-       `${host} should be HSTS enabled`);
+    ok(
+      gSSService.isSecureURI(
+        Ci.nsISiteSecurityService.HEADER_HSTS,
+        Services.io.newURI(host),
+        0
+      ),
+      `${host} should be HSTS enabled`
+    );
   }
 
   const HPKP_HOSTS = [
@@ -33,10 +37,14 @@ function checkStateRead(aSubject, aTopic, aData) {
     "https://multiple.keys.example.com",
   ];
   for (let host of HPKP_HOSTS) {
-    ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HPKP,
-                              Services.io.newURI(host),
-                              0),
-       `${host} should be HPKP enabled`);
+    ok(
+      gSSService.isSecureURI(
+        Ci.nsISiteSecurityService.HEADER_HPKP,
+        Services.io.newURI(host),
+        0
+      ),
+      `${host} should be HPKP enabled`
+    );
   }
 
   const NOT_HSTS_OR_HPKP_HOSTS = [
@@ -53,14 +61,22 @@ function checkStateRead(aSubject, aTopic, aData) {
     "https://invalid.includesubdomains.example.com",
   ];
   for (let host of NOT_HSTS_OR_HPKP_HOSTS) {
-    ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                               Services.io.newURI(host),
-                               0),
-       `${host} should not be HSTS enabled`);
-    ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HPKP,
-                               Services.io.newURI(host),
-                               0),
-       `${host} should not be HPKP enabled`);
+    ok(
+      !gSSService.isSecureURI(
+        Ci.nsISiteSecurityService.HEADER_HSTS,
+        Services.io.newURI(host),
+        0
+      ),
+      `${host} should not be HSTS enabled`
+    );
+    ok(
+      !gSSService.isSecureURI(
+        Ci.nsISiteSecurityService.HEADER_HPKP,
+        Services.io.newURI(host),
+        0
+      ),
+      `${host} should not be HPKP enabled`
+    );
   }
 
   const NOT_HPKP_HOSTS = [
@@ -72,10 +88,14 @@ function checkStateRead(aSubject, aTopic, aData) {
     "https://not.sha256.key.example.com",
   ];
   for (let host of NOT_HPKP_HOSTS) {
-    ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HPKP,
-                               Services.io.newURI(host),
-                               0),
-       `${host} should not be HPKP enabled`);
+    ok(
+      !gSSService.isSecureURI(
+        Ci.nsISiteSecurityService.HEADER_HPKP,
+        Services.io.newURI(host),
+        0
+      ),
+      `${host} should not be HPKP enabled`
+    );
   }
 
   do_test_finished();
@@ -85,8 +105,8 @@ const PINNING_ROOT_KEY_HASH = "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=";
 const BASE64_BUT_NOT_SHA256 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 const STARTS_WITH_NUMBER = "1ABC23defG/hiJKlmNoP+QRStuVwxYZ9a+bcD/+/EFg=";
 const STARTS_WITH_SYMBOL = "+ABC23defG/hiJKlmNoP+QRStuVwxYZ9a+bcD/+/EFg=";
-const MULTIPLE_KEYS = PINNING_ROOT_KEY_HASH + STARTS_WITH_NUMBER +
-                      STARTS_WITH_SYMBOL;
+const MULTIPLE_KEYS =
+  PINNING_ROOT_KEY_HASH + STARTS_WITH_NUMBER + STARTS_WITH_SYMBOL;
 
 function run_test() {
   let profileDir = do_get_profile();
@@ -143,8 +163,9 @@ function run_test() {
   writeLinesAndClose(lines, outputStream);
   Services.obs.addObserver(checkStateRead, "data-storage-ready");
   do_test_pending();
-  gSSService = Cc["@mozilla.org/ssservice;1"]
-                 .getService(Ci.nsISiteSecurityService);
+  gSSService = Cc["@mozilla.org/ssservice;1"].getService(
+    Ci.nsISiteSecurityService
+  );
   notEqual(gSSService, null);
 
   Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 2);

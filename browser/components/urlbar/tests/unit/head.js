@@ -1,18 +1,26 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Import common head.
 /* import-globals-from ../../../../../toolkit/components/places/tests/head_common.js */
-var commonFile = do_get_file("../../../../../toolkit/components/places/tests/head_common.js", false);
+var commonFile = do_get_file(
+  "../../../../../toolkit/components/places/tests/head_common.js",
+  false
+);
 if (commonFile) {
   let uri = Services.io.newFileURI(commonFile);
   Services.scriptloader.loadSubScript(uri.spec, this);
 }
 
 // Put any other stuff relative to this test folder below.
-var {UrlbarMuxer, UrlbarProvider, UrlbarQueryContext, UrlbarUtils} = ChromeUtils.import("resource:///modules/UrlbarUtils.jsm");
+var {
+  UrlbarMuxer,
+  UrlbarProvider,
+  UrlbarQueryContext,
+  UrlbarUtils,
+} = ChromeUtils.import("resource:///modules/UrlbarUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   HttpServer: "resource://testing-common/httpd.js",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
@@ -25,7 +33,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
 });
-const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 /**
  * @param {string} searchString The search string to insert into the context.
@@ -52,23 +60,30 @@ function createContext(searchString = "foo", properties = {}) {
  * @returns {Promise} A promise that is resolved with the arguments supplied to
  *   the notification.
  */
-function promiseControllerNotification(controller, notification, expected = true) {
+function promiseControllerNotification(
+  controller,
+  notification,
+  expected = true
+) {
   return new Promise((resolve, reject) => {
-    let proxifiedObserver = new Proxy({}, {
-      get: (target, name) => {
-        if (name == notification) {
-          return (...args) => {
-            controller.removeQueryListener(proxifiedObserver);
-            if (expected) {
-              resolve(args);
-            } else {
-              reject();
-            }
-          };
-        }
-        return () => false;
-      },
-    });
+    let proxifiedObserver = new Proxy(
+      {},
+      {
+        get: (target, name) => {
+          if (name == notification) {
+            return (...args) => {
+              controller.removeQueryListener(proxifiedObserver);
+              if (expected) {
+                resolve(args);
+              } else {
+                reject();
+              }
+            };
+          }
+          return () => false;
+        },
+      }
+    );
     controller.addQueryListener(proxifiedObserver);
   });
 }
@@ -77,7 +92,11 @@ function promiseControllerNotification(controller, notification, expected = true
  * A basic test provider, returning all the provided matches.
  */
 class TestProvider extends UrlbarProvider {
-  constructor(matches, cancelCallback, type = UrlbarUtils.PROVIDER_TYPE.PROFILE) {
+  constructor(
+    matches,
+    cancelCallback,
+    type = UrlbarUtils.PROVIDER_TYPE.PROFILE
+  ) {
     super();
     this._name = "TestProvider" + Math.floor(Math.random() * 100000);
     this._cancelCallback = cancelCallback;
@@ -190,9 +209,9 @@ function addTestSuggestionsEngine(suggestionsFn = null) {
     // URL query params are x-www-form-urlencoded, which converts spaces into
     // plus signs, so un-convert any plus signs back to spaces.
     let searchStr = decodeURIComponent(req.queryString.replace(/\+/g, " "));
-    let suggestions =
-      suggestionsFn ? suggestionsFn(searchStr) :
-      [searchStr].concat(["foo", "bar"].map(s => searchStr + " " + s));
+    let suggestions = suggestionsFn
+      ? suggestionsFn(searchStr)
+      : [searchStr].concat(["foo", "bar"].map(s => searchStr + " " + s));
     let data = [searchStr, suggestions];
     resp.setHeader("Content-Type", "application/json", false);
     resp.write(JSON.stringify(data));

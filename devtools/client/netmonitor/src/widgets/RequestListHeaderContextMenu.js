@@ -8,17 +8,20 @@ const { showMenu } = require("devtools/client/shared/components/menu/utils");
 const { HEADERS } = require("../constants");
 const { L10N } = require("../utils/l10n");
 
-const stringMap = HEADERS
-  .filter((header) => header.hasOwnProperty("label"))
-  .reduce((acc, { name, label }) => Object.assign(acc, { [name]: label }), {});
+const stringMap = HEADERS.filter(header =>
+  header.hasOwnProperty("label")
+).reduce((acc, { name, label }) => Object.assign(acc, { [name]: label }), {});
 
-const subMenuMap = HEADERS
-  .filter((header) => header.hasOwnProperty("subMenu"))
-  .reduce((acc, { name, subMenu }) => Object.assign(acc, { [name]: subMenu }), {});
+const subMenuMap = HEADERS.filter(header =>
+  header.hasOwnProperty("subMenu")
+).reduce(
+  (acc, { name, subMenu }) => Object.assign(acc, { [name]: subMenu }),
+  {}
+);
 
-const nonLocalizedHeaders = HEADERS
-  .filter((header) => header.hasOwnProperty("noLocalization"))
-  .map((header) => header.name);
+const nonLocalizedHeaders = HEADERS.filter(header =>
+  header.hasOwnProperty("noLocalization")
+).map(header => header.name);
 
 class RequestListHeaderContextMenu {
   constructor(props) {
@@ -31,14 +34,16 @@ class RequestListHeaderContextMenu {
   open(event = {}, columns) {
     const menu = [];
     const subMenu = { timings: [], responseHeaders: [] };
-    const visibleColumns = Object.entries(columns).filter(([column, shown]) => shown);
+    const visibleColumns = Object.entries(columns).filter(
+      ([column, shown]) => shown
+    );
     const onlyOneColumn = visibleColumns.length === 1;
 
     for (const column in columns) {
       const shown = columns[column];
       const label = nonLocalizedHeaders.includes(column)
-          ? stringMap[column] || column
-          : L10N.getStr(`netmonitor.toolbar.${stringMap[column] || column}`);
+        ? stringMap[column] || column
+        : L10N.getStr(`netmonitor.toolbar.${stringMap[column] || column}`);
       const entry = {
         id: `request-list-header-${column}-toggle`,
         label,
@@ -48,9 +53,9 @@ class RequestListHeaderContextMenu {
         // We don't want to allow hiding the last visible column
         disabled: onlyOneColumn && shown,
       };
-      subMenuMap.hasOwnProperty(column) ?
-        subMenu[subMenuMap[column]].push(entry) :
-        menu.push(entry);
+      subMenuMap.hasOwnProperty(column)
+        ? subMenu[subMenuMap[column]].push(entry)
+        : menu.push(entry);
     }
 
     menu.push({ type: "separator" });

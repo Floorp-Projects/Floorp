@@ -1,26 +1,39 @@
 add_task(async function() {
-  var privWin = OpenBrowserWindow({private: true});
+  var privWin = OpenBrowserWindow({ private: true });
   await new privWin.Promise(resolve => {
-    privWin.addEventListener("load", function() {
-      resolve();
-    }, {once: true});
+    privWin.addEventListener(
+      "load",
+      function() {
+        resolve();
+      },
+      { once: true }
+    );
   });
 
-  var pubWin = OpenBrowserWindow({private: false});
+  var pubWin = OpenBrowserWindow({ private: false });
   await new pubWin.Promise(resolve => {
-    pubWin.addEventListener("load", function() {
-      resolve();
-    }, {once: true});
+    pubWin.addEventListener(
+      "load",
+      function() {
+        resolve();
+      },
+      { once: true }
+    );
   });
 
-  var URL = "http://mochi.test:8888/browser/dom/tests/browser/page_privatestorageevent.html";
+  var URL =
+    "http://mochi.test:8888/browser/dom/tests/browser/page_privatestorageevent.html";
 
   var privTab = BrowserTestUtils.addTab(privWin.gBrowser, URL);
-  await BrowserTestUtils.browserLoaded(privWin.gBrowser.getBrowserForTab(privTab));
+  await BrowserTestUtils.browserLoaded(
+    privWin.gBrowser.getBrowserForTab(privTab)
+  );
   var privBrowser = gBrowser.getBrowserForTab(privTab);
 
   var pubTab = BrowserTestUtils.addTab(pubWin.gBrowser, URL);
-  await BrowserTestUtils.browserLoaded(pubWin.gBrowser.getBrowserForTab(pubTab));
+  await BrowserTestUtils.browserLoaded(
+    pubWin.gBrowser.getBrowserForTab(pubTab)
+  );
   var pubBrowser = gBrowser.getBrowserForTab(pubTab);
 
   // Check if pubWin can see privWin's storage events

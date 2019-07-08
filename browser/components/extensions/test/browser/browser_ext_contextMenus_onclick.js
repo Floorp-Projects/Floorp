@@ -2,7 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
+const PAGE =
+  "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
 
 // Loaded both as a background script and a tab page.
 function testScript() {
@@ -28,32 +29,52 @@ function testScript() {
       clickCounts.old = clickCounts.new = 0;
       browser.test.sendMessage("next");
     } else if (msg == "create-with-onclick") {
-      browser.contextMenus.create({
-        id: "iden",
-        title: "tifier",
-        onclick() {
-          ++clickCounts.old;
-          browser.test.log(`onclick fired for original onclick property in ${page}`);
+      browser.contextMenus.create(
+        {
+          id: "iden",
+          title: "tifier",
+          onclick() {
+            ++clickCounts.old;
+            browser.test.log(
+              `onclick fired for original onclick property in ${page}`
+            );
+          },
         },
-      }, () => browser.test.sendMessage("next"));
+        () => browser.test.sendMessage("next")
+      );
     } else if (msg == "create-without-onclick") {
-      browser.contextMenus.create({
-        id: "iden",
-        title: "tifier",
-      }, () => browser.test.sendMessage("next"));
-    } else if (msg == "update-without-onclick") {
-      browser.contextMenus.update("iden", {
-        enabled: true,  // Already enabled, so this does nothing.
-      }, () => browser.test.sendMessage("next"));
-    } else if (msg == "update-with-onclick") {
-      browser.contextMenus.update("iden", {
-        onclick() {
-          ++clickCounts.new;
-          browser.test.log(`onclick fired for updated onclick property in ${page}`);
+      browser.contextMenus.create(
+        {
+          id: "iden",
+          title: "tifier",
         },
-      }, () => browser.test.sendMessage("next"));
+        () => browser.test.sendMessage("next")
+      );
+    } else if (msg == "update-without-onclick") {
+      browser.contextMenus.update(
+        "iden",
+        {
+          enabled: true, // Already enabled, so this does nothing.
+        },
+        () => browser.test.sendMessage("next")
+      );
+    } else if (msg == "update-with-onclick") {
+      browser.contextMenus.update(
+        "iden",
+        {
+          onclick() {
+            ++clickCounts.new;
+            browser.test.log(
+              `onclick fired for updated onclick property in ${page}`
+            );
+          },
+        },
+        () => browser.test.sendMessage("next")
+      );
     } else if (msg == "remove") {
-      browser.contextMenus.remove("iden", () => browser.test.sendMessage("next"));
+      browser.contextMenus.remove("iden", () =>
+        browser.test.sendMessage("next")
+      );
     } else if (msg == "removeAll") {
       browser.contextMenus.removeAll(() => browser.test.sendMessage("next"));
     }
@@ -63,16 +84,21 @@ function testScript() {
     browser.test.log("Opening tab.html");
     browser.tabs.create({
       url: "tab.html",
-      active: false,  // To not interfere with the context menu tests.
+      active: false, // To not interfere with the context menu tests.
     });
   } else {
     // Sanity check - the pages must be in the same process.
     let pages = browser.extension.getViews();
-    browser.test.assertTrue(pages.includes(window),
-                            "Expected this tab to be an extension view");
+    browser.test.assertTrue(
+      pages.includes(window),
+      "Expected this tab to be an extension view"
+    );
     pages = pages.filter(w => w !== window);
-    browser.test.assertEq(pages[0], browser.extension.getBackgroundPage(),
-                          "Expected the other page to be a background page");
+    browser.test.assertEq(
+      pages[0],
+      browser.extension.getBackgroundPage(),
+      "Expected the other page to be a background page"
+    );
     browser.test.sendMessage("tab.html ready");
   }
 }
@@ -84,7 +110,7 @@ add_task(async function() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["contextMenus"],
+      permissions: ["contextMenus"],
     },
     background: testScript,
     files: {
@@ -131,7 +157,11 @@ add_task(async function() {
       await extension.awaitMessage("next");
       await clickContextMenu();
       let clickCounts = await getCounts(pageOne);
-      is(clickCounts.old, 1, `Original onclick should still be present in ${pageOne}`);
+      is(
+        clickCounts.old,
+        1,
+        `Original onclick should still be present in ${pageOne}`
+      );
       is(clickCounts.new, 0, `Not expecting any new handlers in ${pageOne}`);
       if (pageOne !== pageTwo) {
         clickCounts = await getCounts(pageTwo);
@@ -148,7 +178,11 @@ add_task(async function() {
       clickCounts = await getCounts(pageOne);
       is(clickCounts.old, 0, `Original onclick should be gone from ${pageOne}`);
       if (pageOne !== pageTwo) {
-        is(clickCounts.new, 0, `Still not expecting new handlers in ${pageOne}`);
+        is(
+          clickCounts.new,
+          0,
+          `Still not expecting new handlers in ${pageOne}`
+        );
       }
       clickCounts = await getCounts(pageTwo);
       if (pageOne !== pageTwo) {
@@ -182,7 +216,11 @@ add_task(async function() {
       is(clickCounts.new, 0, `Did not expect any click handlers in ${pageOne}`);
       if (pageOne !== pageTwo) {
         clickCounts = await getCounts(pageTwo);
-        is(clickCounts.new, 0, `Did not expect any click handlers in ${pageTwo}`);
+        is(
+          clickCounts.new,
+          0,
+          `Did not expect any click handlers in ${pageTwo}`
+        );
       }
       await resetCounts();
 
@@ -205,12 +243,15 @@ add_task(async function test_onclick_modifiers() {
     function onclick(info) {
       browser.test.sendMessage("click", info);
     }
-    browser.contextMenus.create({contexts: ["all"], title: "modify", onclick}, () => {
-      browser.test.sendMessage("ready");
-    });
+    browser.contextMenus.create(
+      { contexts: ["all"], title: "modify", onclick },
+      () => {
+        browser.test.sendMessage("ready");
+      }
+    );
   }
 
-  const extension = ExtensionTestUtils.loadExtension({manifest, background});
+  const extension = ExtensionTestUtils.loadExtension({ manifest, background });
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
 
   await extension.startup();
@@ -227,21 +268,29 @@ add_task(async function test_onclick_modifiers() {
   const plain = await click();
   is(plain.modifiers.length, 0, "modifiers array empty with a plain click");
 
-  const shift = await click({shiftKey: true});
+  const shift = await click({ shiftKey: true });
   is(shift.modifiers.join(), "Shift", "Correct modifier: Shift");
 
-  const ctrl = await click({ctrlKey: true});
+  const ctrl = await click({ ctrlKey: true });
   if (AppConstants.platform !== "macosx") {
     is(ctrl.modifiers.join(), "Ctrl", "Correct modifier: Ctrl");
   } else {
-    is(ctrl.modifiers.sort().join(), "Ctrl,MacCtrl", "Correct modifier: Ctrl (and MacCtrl)");
+    is(
+      ctrl.modifiers.sort().join(),
+      "Ctrl,MacCtrl",
+      "Correct modifier: Ctrl (and MacCtrl)"
+    );
 
-    const meta = await click({metaKey: true});
+    const meta = await click({ metaKey: true });
     is(meta.modifiers.join(), "Command", "Correct modifier: Command");
   }
 
-  const altShift = await click({altKey: true, shiftKey: true});
-  is(altShift.modifiers.sort().join(), "Alt,Shift", "Correct modifiers: Shift+Alt");
+  const altShift = await click({ altKey: true, shiftKey: true });
+  is(
+    altShift.modifiers.sort().join(),
+    "Alt,Shift",
+    "Correct modifiers: Shift+Alt"
+  );
 
   BrowserTestUtils.removeTab(tab);
   await extension.unload();

@@ -4,13 +4,20 @@
 
 "use strict";
 
-const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  createElement,
+} = require("devtools/client/shared/vendor/react");
 
 const reps = require("devtools/client/shared/components/reps/reps");
 const { REPS, MODE, objectInspector } = reps;
 const ObjectInspector = createFactory(objectInspector.ObjectInspector);
 const { Grip } = REPS;
-loader.lazyRequireGetter(this, "SmartTrace", "devtools/client/shared/components/SmartTrace");
+loader.lazyRequireGetter(
+  this,
+  "SmartTrace",
+  "devtools/client/shared/components/SmartTrace"
+);
 
 /**
  * Create and return an ObjectInspector for the given grip.
@@ -32,15 +39,15 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
 
   if (serviceContainer) {
     onDOMNodeMouseOver = serviceContainer.highlightDomElement
-      ? (object) => serviceContainer.highlightDomElement(object)
+      ? object => serviceContainer.highlightDomElement(object)
       : null;
     onDOMNodeMouseOut = serviceContainer.unHighlightDomElement;
     onInspectIconClick = serviceContainer.openNodeInInspector
       ? (object, e) => {
-        // Stop the event propagation so we don't trigger ObjectInspector expand/collapse.
-        e.stopPropagation();
-        serviceContainer.openNodeInInspector(object);
-      }
+          // Stop the event propagation so we don't trigger ObjectInspector expand/collapse.
+          e.stopPropagation();
+          serviceContainer.openNodeInInspector(object);
+        }
       : null;
   }
 
@@ -53,18 +60,23 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
     onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
     recordTelemetryEvent: serviceContainer.recordTelemetryEvent,
     openLink: serviceContainer.openLink,
-    renderStacktrace: stacktrace => createElement(SmartTrace, {
-      stacktrace,
-      onViewSourceInDebugger: serviceContainer
-        ? serviceContainer.onViewSourceInDebugger || serviceContainer.onViewSource
-        : null,
-      onViewSourceInScratchpad: serviceContainer
-        ? serviceContainer.onViewSourceInScratchpad || serviceContainer.onViewSource
-        : null,
-      onViewSource: serviceContainer.onViewSource,
-      onReady: override.maybeScrollToBottom,
-      sourceMapService: serviceContainer ? serviceContainer.sourceMapService : null,
-    }),
+    renderStacktrace: stacktrace =>
+      createElement(SmartTrace, {
+        stacktrace,
+        onViewSourceInDebugger: serviceContainer
+          ? serviceContainer.onViewSourceInDebugger ||
+            serviceContainer.onViewSource
+          : null,
+        onViewSourceInScratchpad: serviceContainer
+          ? serviceContainer.onViewSourceInScratchpad ||
+            serviceContainer.onViewSource
+          : null,
+        onViewSource: serviceContainer.onViewSource,
+        onReady: override.maybeScrollToBottom,
+        sourceMapService: serviceContainer
+          ? serviceContainer.sourceMapService
+          : null,
+      }),
   };
 
   if (!(typeof grip === "string" || (grip && grip.type === "longString"))) {
@@ -82,14 +94,16 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
     });
   }
 
-  return ObjectInspector({...objectInspectorProps, ...override});
+  return ObjectInspector({ ...objectInspectorProps, ...override });
 }
 
 function createRootsFromGrip(grip) {
-  return [{
-    path: Symbol((grip && grip.actor) || JSON.stringify(grip)),
-    contents: { value: grip },
-  }];
+  return [
+    {
+      path: Symbol((grip && grip.actor) || JSON.stringify(grip)),
+      contents: { value: grip },
+    },
+  ];
 }
 
 module.exports = {

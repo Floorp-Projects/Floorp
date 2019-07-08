@@ -14,21 +14,34 @@ async function run_test() {
     return;
   }
   gTestFiles = gTestFilesCompleteSuccess;
-  gTestFiles[gTestFiles.length - 2].originalContents =
-    UPDATE_SETTINGS_CONTENTS.replace("xpcshell-test", "wrong-channel");
+  gTestFiles[
+    gTestFiles.length - 2
+  ].originalContents = UPDATE_SETTINGS_CONTENTS.replace(
+    "xpcshell-test",
+    "wrong-channel"
+  );
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
   await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   // If execv is used the updater process will turn into the callback process
   // and the updater's return code will be that of the callback process.
-  runUpdate(STATE_FAILED_MAR_CHANNEL_MISMATCH_ERROR,
-            false, (USE_EXECV ? 0 : 1), false);
+  runUpdate(
+    STATE_FAILED_MAR_CHANNEL_MISMATCH_ERROR,
+    false,
+    USE_EXECV ? 0 : 1,
+    false
+  );
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(STATE_FAILED_MAR_CHANNEL_MISMATCH_ERROR);
   await waitForUpdateXMLFiles();
-  checkUpdateManager(STATE_NONE, false, STATE_FAILED,
-                     MAR_CHANNEL_MISMATCH_ERROR, 1);
+  checkUpdateManager(
+    STATE_NONE,
+    false,
+    STATE_FAILED,
+    MAR_CHANNEL_MISMATCH_ERROR,
+    1
+  );
   waitForFilesInUse();
 }

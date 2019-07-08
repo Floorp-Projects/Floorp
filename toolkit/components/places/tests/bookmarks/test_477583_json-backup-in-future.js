@@ -18,12 +18,16 @@ add_task(async function test_json_backup_in_future() {
   let dateObj = new Date();
   dateObj.setYear(dateObj.getFullYear() + 1);
   let name = PlacesBackups.getFilenameForDate(dateObj);
-  Assert.equal(name, "bookmarks-" + PlacesBackups.toISODateString(dateObj) + ".json");
+  Assert.equal(
+    name,
+    "bookmarks-" + PlacesBackups.toISODateString(dateObj) + ".json"
+  );
   files = bookmarksBackupDir.directoryEntries;
   while (files.hasMoreElements()) {
     let entry = files.nextFile;
-    if (PlacesBackups.filenamesRegex.test(entry.leafName))
+    if (PlacesBackups.filenamesRegex.test(entry.leafName)) {
       entry.remove(false);
+    }
   }
 
   let futureBackupFile = bookmarksBackupDir.clone();
@@ -38,7 +42,9 @@ add_task(async function test_json_backup_in_future() {
   Assert.equal((await PlacesBackups.getBackupFiles()).length, 1);
   let mostRecentBackupFile = await PlacesBackups.getMostRecentBackup();
   Assert.notEqual(mostRecentBackupFile, null);
-  Assert.ok(PlacesBackups.filenamesRegex.test(OS.Path.basename(mostRecentBackupFile)));
+  Assert.ok(
+    PlacesBackups.filenamesRegex.test(OS.Path.basename(mostRecentBackupFile))
+  );
 
   // Check that future backup has been removed.
   Assert.ok(!futureBackupFile.exists());

@@ -20,9 +20,9 @@ const {
  * serialization redundancy.
  */
 types.addType("array-of-numbers-as-strings", {
-  write: (v) => v.join(","),
+  write: v => v.join(","),
   // In Gecko <= 37, `v` is an array; do not transform in this case.
-  read: (v) => typeof v === "string" ? v.split(",") : v,
+  read: v => (typeof v === "string" ? v.split(",") : v),
 });
 
 const timelineSpec = generateActorSpec({
@@ -43,7 +43,7 @@ const timelineSpec = generateActorSpec({
      * at most, when profile markers are found. The timestamps on each marker
      * are relative to when recording was started.
      */
-    "markers": {
+    markers: {
       type: "markers",
       markers: Arg(0, "json"),
       endTime: Arg(1, "number"),
@@ -54,7 +54,7 @@ const timelineSpec = generateActorSpec({
      * when the recording started. The `delta` timestamp on this measurement is
      * relative to when recording was started.
      */
-    "memory": {
+    memory: {
       type: "memory",
       delta: Arg(0, "number"),
       measurement: Arg(1, "json"),
@@ -65,7 +65,7 @@ const timelineSpec = generateActorSpec({
      * "markers", if this was enabled when the recording started. All ticks
      * are timestamps with a zero epoch.
      */
-    "ticks": {
+    ticks: {
       type: "ticks",
       delta: Arg(0, "number"),
       timestamps: Arg(1, "array-of-numbers-as-strings"),
@@ -76,7 +76,7 @@ const timelineSpec = generateActorSpec({
      * JS stack frames. The `delta` timestamp on this frames packet is
      * relative to when recording was started.
      */
-    "frames": {
+    frames: {
       type: "frames",
       delta: Arg(0, "number"),
       frames: Arg(1, "json"),

@@ -13,9 +13,15 @@ add_task(async function() {
   await clickOnAnimation(animationInspector, panel, 0);
   const detailEl = panel.querySelector("#animation-container .controlled");
   const win = panel.ownerGlobal;
-  isnot(win.getComputedStyle(detailEl).display, "none",
-    "detailEl should be visibled before clicking close button");
+  isnot(
+    win.getComputedStyle(detailEl).display,
+    "none",
+    "detailEl should be visibled before clicking close button"
+  );
   clickOnDetailCloseButton(panel);
-  is(win.getComputedStyle(detailEl).display, "none",
-    "detailEl should be unvisibled after clicking close button");
+  is(
+    win.getComputedStyle(detailEl).display,
+    "none",
+    "detailEl should be unvisibled after clicking close button"
+  );
 });

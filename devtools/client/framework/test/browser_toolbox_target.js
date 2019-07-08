@@ -38,8 +38,11 @@ add_task(async function() {
   info("Waiting for toolbox-ready");
   const toolbox = await onToolboxReady;
 
-  is(toolbox.hostType, Toolbox.HostType.PAGE,
-     "Host type of this toolbox shuld be Toolbox.HostType.PAGE");
+  is(
+    toolbox.hostType,
+    Toolbox.HostType.PAGE,
+    "Host type of this toolbox shuld be Toolbox.HostType.PAGE"
+  );
 
   const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
   const onTabDetached = toolbox.target.once("tabDetached");

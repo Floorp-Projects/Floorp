@@ -12,18 +12,14 @@ const { l10n } = require("devtools/client/webconsole/utils/messages");
 const messageToggleDetails = l10n.getStr("messageToggleDetails");
 
 function CollapseButton(props) {
-  const {
-    open,
-    onClick,
-    title = messageToggleDetails,
-  } = props;
+  const { open, onClick, title = messageToggleDetails } = props;
 
   return dom.button({
     "aria-expanded": open ? "true" : "false",
     "aria-label": title,
     className: "arrow collapse-button",
     onClick,
-    onMouseDown: (e) => {
+    onMouseDown: e => {
       // prevent focus from moving to the disclosure if clicked,
       // which is annoying if on the input
       e.preventDefault();

@@ -21,12 +21,15 @@ function createFavicon(fileName) {
   // remove any existing file at the path we're about to copy to
   let outfile = tempdir.clone();
   outfile.append(fileName);
-  try { outfile.remove(false); } catch (e) {}
+  try {
+    outfile.remove(false);
+  } catch (e) {}
 
   originalFavicon.file.copyToFollowingLinks(tempdir, fileName);
 
-  let stream = Cc["@mozilla.org/network/file-output-stream;1"]
-    .createInstance(Ci.nsIFileOutputStream);
+  let stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
   stream.init(outfile, 0x02 | 0x08 | 0x10, 0o600, 0);
 
   // append some data that sniffers/encoders will ignore that will distinguish
@@ -46,7 +49,12 @@ function createFavicon(fileName) {
   };
 }
 
-function checkCallbackSucceeded(callbackMimetype, callbackData, sourceMimetype, sourceData) {
+function checkCallbackSucceeded(
+  callbackMimetype,
+  callbackData,
+  sourceMimetype,
+  sourceData
+) {
   Assert.equal(callbackMimetype, sourceMimetype);
   Assert.ok(compareArrays(callbackData, sourceData));
 }
@@ -68,18 +76,36 @@ add_task(async function test_replaceFaviconData_validHistoryURI() {
   iconsvc.replaceFaviconData(favicon.uri, favicon.data, favicon.mimetype);
 
   await new Promise(resolve => {
-    iconsvc.setAndFetchFaviconForPage(pageURI, favicon.uri, true,
+    iconsvc.setAndFetchFaviconForPage(
+      pageURI,
+      favicon.uri,
+      true,
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-      function test_replaceFaviconData_validHistoryURI_check(aURI, aDataLen, aData, aMimeType) {
-  dump("GOT " + aMimeType + "\n");
-        checkCallbackSucceeded(aMimeType, aData, favicon.mimetype, favicon.data);
+      function test_replaceFaviconData_validHistoryURI_check(
+        aURI,
+        aDataLen,
+        aData,
+        aMimeType
+      ) {
+        dump("GOT " + aMimeType + "\n");
+        checkCallbackSucceeded(
+          aMimeType,
+          aData,
+          favicon.mimetype,
+          favicon.data
+        );
         checkFaviconDataForPage(
-          pageURI, favicon.mimetype, favicon.data,
+          pageURI,
+          favicon.mimetype,
+          favicon.data,
           function test_replaceFaviconData_validHistoryURI_callback() {
             favicon.file.remove(false);
             resolve();
-          });
-      }, systemPrincipal);
+          }
+        );
+      },
+      systemPrincipal
+    );
   });
 
   await PlacesUtils.history.clear();
@@ -95,29 +121,51 @@ add_task(async function test_replaceFaviconData_overrideDefaultFavicon() {
   let secondFavicon = createFavicon("favicon3.png");
 
   iconsvc.replaceFaviconData(
-    firstFavicon.uri, secondFavicon.data, secondFavicon.mimetype);
+    firstFavicon.uri,
+    secondFavicon.data,
+    secondFavicon.mimetype
+  );
 
   await new Promise(resolve => {
     iconsvc.setAndFetchFaviconForPage(
-      pageURI, firstFavicon.uri, true,
+      pageURI,
+      firstFavicon.uri,
+      true,
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-      function test_replaceFaviconData_overrideDefaultFavicon_check(aURI, aDataLen, aData, aMimeType) {
-        checkCallbackSucceeded(aMimeType, aData, secondFavicon.mimetype, secondFavicon.data);
+      function test_replaceFaviconData_overrideDefaultFavicon_check(
+        aURI,
+        aDataLen,
+        aData,
+        aMimeType
+      ) {
+        checkCallbackSucceeded(
+          aMimeType,
+          aData,
+          secondFavicon.mimetype,
+          secondFavicon.data
+        );
         checkFaviconDataForPage(
-          pageURI, secondFavicon.mimetype, secondFavicon.data,
+          pageURI,
+          secondFavicon.mimetype,
+          secondFavicon.data,
           function test_replaceFaviconData_overrideDefaultFavicon_callback() {
             firstFavicon.file.remove(false);
             secondFavicon.file.remove(false);
             resolve();
-          });
-      }, systemPrincipal);
+          }
+        );
+      },
+      systemPrincipal
+    );
   });
 
   await PlacesUtils.history.clear();
 });
 
 add_task(async function test_replaceFaviconData_replaceExisting() {
-  info("test replaceFaviconData to override a previous setAndFetchFaviconForPage");
+  info(
+    "test replaceFaviconData to override a previous setAndFetchFaviconForPage"
+  );
 
   let pageURI = uri("http://test3.bar");
   await PlacesTestUtils.addVisits(pageURI);
@@ -127,26 +175,50 @@ add_task(async function test_replaceFaviconData_replaceExisting() {
 
   await new Promise(resolve => {
     iconsvc.setAndFetchFaviconForPage(
-      pageURI, firstFavicon.uri, true,
+      pageURI,
+      firstFavicon.uri,
+      true,
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-      function test_replaceFaviconData_replaceExisting_firstSet_check(aURI, aDataLen, aData, aMimeType) {
-        checkCallbackSucceeded(aMimeType, aData, firstFavicon.mimetype, firstFavicon.data);
+      function test_replaceFaviconData_replaceExisting_firstSet_check(
+        aURI,
+        aDataLen,
+        aData,
+        aMimeType
+      ) {
+        checkCallbackSucceeded(
+          aMimeType,
+          aData,
+          firstFavicon.mimetype,
+          firstFavicon.data
+        );
         checkFaviconDataForPage(
-          pageURI, firstFavicon.mimetype, firstFavicon.data,
+          pageURI,
+          firstFavicon.mimetype,
+          firstFavicon.data,
           function test_replaceFaviconData_overrideDefaultFavicon_firstCallback() {
             iconsvc.replaceFaviconData(
-              firstFavicon.uri, secondFavicon.data, secondFavicon.mimetype);
+              firstFavicon.uri,
+              secondFavicon.data,
+              secondFavicon.mimetype
+            );
             PlacesTestUtils.promiseAsyncUpdates().then(() => {
               checkFaviconDataForPage(
-                pageURI, secondFavicon.mimetype, secondFavicon.data,
+                pageURI,
+                secondFavicon.mimetype,
+                secondFavicon.data,
                 function test_replaceFaviconData_overrideDefaultFavicon_secondCallback() {
                   firstFavicon.file.remove(false);
                   secondFavicon.file.remove(false);
                   resolve();
-                }, systemPrincipal);
+                },
+                systemPrincipal
+              );
             });
-          });
-      }, systemPrincipal);
+          }
+        );
+      },
+      systemPrincipal
+    );
   });
 
   await PlacesUtils.history.clear();
@@ -162,22 +234,42 @@ add_task(async function test_replaceFaviconData_unrelatedReplace() {
   let unrelatedFavicon = createFavicon("favicon7.png");
 
   iconsvc.replaceFaviconData(
-    unrelatedFavicon.uri, unrelatedFavicon.data, unrelatedFavicon.mimetype);
+    unrelatedFavicon.uri,
+    unrelatedFavicon.data,
+    unrelatedFavicon.mimetype
+  );
 
   await new Promise(resolve => {
     iconsvc.setAndFetchFaviconForPage(
-      pageURI, favicon.uri, true,
+      pageURI,
+      favicon.uri,
+      true,
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-      function test_replaceFaviconData_unrelatedReplace_check(aURI, aDataLen, aData, aMimeType) {
-        checkCallbackSucceeded(aMimeType, aData, favicon.mimetype, favicon.data);
+      function test_replaceFaviconData_unrelatedReplace_check(
+        aURI,
+        aDataLen,
+        aData,
+        aMimeType
+      ) {
+        checkCallbackSucceeded(
+          aMimeType,
+          aData,
+          favicon.mimetype,
+          favicon.data
+        );
         checkFaviconDataForPage(
-          pageURI, favicon.mimetype, favicon.data,
+          pageURI,
+          favicon.mimetype,
+          favicon.data,
           function test_replaceFaviconData_unrelatedReplace_callback() {
             favicon.file.remove(false);
             unrelatedFavicon.file.remove(false);
             resolve();
-          });
-      }, systemPrincipal);
+          }
+        );
+      },
+      systemPrincipal
+    );
   });
 
   await PlacesUtils.history.clear();
@@ -189,19 +281,24 @@ add_task(async function test_replaceFaviconData_badInputs() {
 
   Assert.throws(
     () => iconsvc.replaceFaviconData(icon.uri, icon.data, ""),
-    /NS_ERROR_ILLEGAL_VALUE/);
+    /NS_ERROR_ILLEGAL_VALUE/
+  );
   Assert.throws(
     () => iconsvc.replaceFaviconData(icon.uri, icon.data, "not-an-image"),
-    /NS_ERROR_ILLEGAL_VALUE/);
+    /NS_ERROR_ILLEGAL_VALUE/
+  );
   Assert.throws(
     () => iconsvc.replaceFaviconData(null, icon.data, icon.mimetype),
-    /NS_ERROR_ILLEGAL_VALUE/);
+    /NS_ERROR_ILLEGAL_VALUE/
+  );
   Assert.throws(
     () => iconsvc.replaceFaviconData(icon.uri, [], icon.mimetype),
-    /NS_ERROR_ILLEGAL_VALUE/);
+    /NS_ERROR_ILLEGAL_VALUE/
+  );
   Assert.throws(
     () => iconsvc.replaceFaviconData(icon.uri, null, icon.mimetype),
-    /NS_ERROR_XPC_CANT_CONVERT_PRIMITIVE_TO_ARRAY/);
+    /NS_ERROR_XPC_CANT_CONVERT_PRIMITIVE_TO_ARRAY/
+  );
 
   icon.file.remove(false);
   await PlacesUtils.history.clear();
@@ -217,24 +314,48 @@ add_task(async function test_replaceFaviconData_twiceReplace() {
   let secondFavicon = createFavicon("favicon10.png");
 
   iconsvc.replaceFaviconData(
-    firstFavicon.uri, firstFavicon.data, firstFavicon.mimetype);
+    firstFavicon.uri,
+    firstFavicon.data,
+    firstFavicon.mimetype
+  );
   iconsvc.replaceFaviconData(
-    firstFavicon.uri, secondFavicon.data, secondFavicon.mimetype);
+    firstFavicon.uri,
+    secondFavicon.data,
+    secondFavicon.mimetype
+  );
 
   await new Promise(resolve => {
     iconsvc.setAndFetchFaviconForPage(
-      pageURI, firstFavicon.uri, true,
+      pageURI,
+      firstFavicon.uri,
+      true,
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-      function test_replaceFaviconData_twiceReplace_check(aURI, aDataLen, aData, aMimeType) {
-        checkCallbackSucceeded(aMimeType, aData, secondFavicon.mimetype, secondFavicon.data);
+      function test_replaceFaviconData_twiceReplace_check(
+        aURI,
+        aDataLen,
+        aData,
+        aMimeType
+      ) {
+        checkCallbackSucceeded(
+          aMimeType,
+          aData,
+          secondFavicon.mimetype,
+          secondFavicon.data
+        );
         checkFaviconDataForPage(
-          pageURI, secondFavicon.mimetype, secondFavicon.data,
+          pageURI,
+          secondFavicon.mimetype,
+          secondFavicon.data,
           function test_replaceFaviconData_twiceReplace_callback() {
             firstFavicon.file.remove(false);
             secondFavicon.file.remove(false);
             resolve();
-          }, systemPrincipal);
-      }, systemPrincipal);
+          },
+          systemPrincipal
+        );
+      },
+      systemPrincipal
+    );
   });
 
   await PlacesUtils.history.clear();
@@ -245,8 +366,10 @@ add_task(async function test_replaceFaviconData_rootOverwrite() {
 
   async function getRootValue(url) {
     let db = await PlacesUtils.promiseDBConnection();
-    let rows = await db.execute("SELECT root FROM moz_icons WHERE icon_url = :url",
-                                {url});
+    let rows = await db.execute(
+      "SELECT root FROM moz_icons WHERE icon_url = :url",
+      { url }
+    );
     return rows[0].getResultByName("root");
   }
 

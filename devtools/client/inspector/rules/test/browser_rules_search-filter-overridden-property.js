@@ -21,7 +21,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
   await testFilterOverriddenProperty(inspector, view);
 });
@@ -33,18 +33,26 @@ async function testFilterOverriddenProperty(inspector, ruleView) {
   let rule = getRuleViewRuleEditor(ruleView, 1).rule;
   let textPropEditor = rule.textProps[0].editor;
   is(rule.selectorText, "#testid", "Second rule is #testid.");
-  ok(!textPropEditor.element.classList.contains("ruleview-overridden"),
-    "width property is not overridden.");
-  ok(textPropEditor.filterProperty.hidden,
-    "Overridden search button is hidden.");
+  ok(
+    !textPropEditor.element.classList.contains("ruleview-overridden"),
+    "width property is not overridden."
+  );
+  ok(
+    textPropEditor.filterProperty.hidden,
+    "Overridden search button is hidden."
+  );
 
   rule = getRuleViewRuleEditor(ruleView, 2).rule;
   textPropEditor = rule.textProps[0].editor;
   is(rule.selectorText, "h1", "Third rule is h1.");
-  ok(textPropEditor.element.classList.contains("ruleview-overridden"),
-    "width property is overridden.");
-  ok(!textPropEditor.filterProperty.hidden,
-    "Overridden search button is not hidden.");
+  ok(
+    textPropEditor.element.classList.contains("ruleview-overridden"),
+    "width property is overridden."
+  );
+  ok(
+    !textPropEditor.filterProperty.hidden,
+    "Overridden search button is not hidden."
+  );
 
   const searchField = ruleView.searchField;
   const onRuleViewFiltered = inspector.once("ruleview-filtered");
@@ -59,16 +67,24 @@ async function testFilterOverriddenProperty(inspector, ruleView) {
   rule = getRuleViewRuleEditor(ruleView, 1).rule;
   textPropEditor = rule.textProps[0].editor;
   is(rule.selectorText, "#testid", "Second rule is #testid.");
-  ok(textPropEditor.container.classList.contains("ruleview-highlight"),
-    "width property is correctly highlighted.");
+  ok(
+    textPropEditor.container.classList.contains("ruleview-highlight"),
+    "width property is correctly highlighted."
+  );
 
   rule = getRuleViewRuleEditor(ruleView, 2).rule;
   textPropEditor = rule.textProps[0].editor;
   is(rule.selectorText, "h1", "Third rule is h1.");
-  ok(textPropEditor.container.classList.contains("ruleview-highlight"),
-    "width property is correctly highlighted.");
-  ok(textPropEditor.element.classList.contains("ruleview-overridden"),
-    "width property is overridden.");
-  ok(!textPropEditor.filterProperty.hidden,
-    "Overridden search button is not hidden.");
+  ok(
+    textPropEditor.container.classList.contains("ruleview-highlight"),
+    "width property is correctly highlighted."
+  );
+  ok(
+    textPropEditor.element.classList.contains("ruleview-overridden"),
+    "width property is overridden."
+  );
+  ok(
+    !textPropEditor.filterProperty.hidden,
+    "Overridden search button is not hidden."
+  );
 }

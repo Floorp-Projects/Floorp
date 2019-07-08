@@ -19,8 +19,9 @@ add_task(async () => {
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const { getDisplayedRequestsSummary } =
-    windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getDisplayedRequestsSummary } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
   const { L10N } = windowRequire("devtools/client/netmonitor/src/utils/l10n");
 
   store.dispatch(Actions.batchEnable(false));
@@ -31,7 +32,8 @@ add_task(async () => {
   let cachedItemsInUI = 0;
   for (const requestItem of document.querySelectorAll(".request-list-item")) {
     const requestTransferStatus = requestItem.querySelector(
-      ".requests-list-transferred").textContent;
+      ".requests-list-transferred"
+    ).textContent;
     if (requestTransferStatus === "cached") {
       cachedItemsInUI++;
     }
@@ -44,15 +46,21 @@ add_task(async () => {
   const requestsSummary = getDisplayedRequestsSummary(state);
   info(`Current requests: ${requestsSummary.count} of ${totalRequestsCount}.`);
 
-  const valueTransfer =
-    document.querySelector(".requests-list-network-summary-transfer").textContent;
+  const valueTransfer = document.querySelector(
+    ".requests-list-network-summary-transfer"
+  ).textContent;
   info("Current summary transfer: " + valueTransfer);
   const expectedTransfer = L10N.getFormatStrWithNumbers(
     "networkMenu.summary.transferred",
     getFormattedSize(requestsSummary.contentSize),
-    getFormattedSize(requestsSummary.transferredSize));
+    getFormattedSize(requestsSummary.transferredSize)
+  );
 
-  is(valueTransfer, expectedTransfer, "The current summary transfer is correct.");
+  is(
+    valueTransfer,
+    expectedTransfer,
+    "The current summary transfer is correct."
+  );
 
   await teardown(monitor);
 

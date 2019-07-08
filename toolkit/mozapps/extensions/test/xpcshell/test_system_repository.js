@@ -23,28 +23,48 @@ add_task(async function test_app_addons() {
   registerDirectory("XREAppFeat", distroDir);
 
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
-  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, `http://localhost:${gServer.identity.primaryPort}/get?%IDS%`);
-  Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES, `http://localhost:${gServer.identity.primaryPort}/get?%IDS%`);
+  Services.prefs.setCharPref(
+    PREF_GETADDONS_BYIDS,
+    `http://localhost:${gServer.identity.primaryPort}/get?%IDS%`
+  );
+  Services.prefs.setCharPref(
+    PREF_COMPAT_OVERRIDES,
+    `http://localhost:${gServer.identity.primaryPort}/get?%IDS%`
+  );
 
   gServer.registerPathHandler("/get", (request, response) => {
     do_throw("Unexpected request to server.");
   });
 
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org"] });
+  await overrideBuiltIns({
+    system: [
+      "system1@tests.mozilla.org",
+      "system2@tests.mozilla.org",
+      "system3@tests.mozilla.org",
+    ],
+  });
 
   await promiseStartupManager();
 
-  await AddonRepository.cacheAddons(["system1@tests.mozilla.org",
-                                     "system2@tests.mozilla.org",
-                                     "system3@tests.mozilla.org"]);
+  await AddonRepository.cacheAddons([
+    "system1@tests.mozilla.org",
+    "system2@tests.mozilla.org",
+    "system3@tests.mozilla.org",
+  ]);
 
-  let cached = await AddonRepository.getCachedAddonByID("system1@tests.mozilla.org");
+  let cached = await AddonRepository.getCachedAddonByID(
+    "system1@tests.mozilla.org"
+  );
   Assert.equal(cached, null);
 
-  cached = await AddonRepository.getCachedAddonByID("system2@tests.mozilla.org");
+  cached = await AddonRepository.getCachedAddonByID(
+    "system2@tests.mozilla.org"
+  );
   Assert.equal(cached, null);
 
-  cached = await AddonRepository.getCachedAddonByID("system3@tests.mozilla.org");
+  cached = await AddonRepository.getCachedAddonByID(
+    "system3@tests.mozilla.org"
+  );
   Assert.equal(cached, null);
 
   await promiseShutdownManager();

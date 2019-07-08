@@ -17,94 +17,133 @@ This test exercises the CacheFileContextEvictor::WasEvicted API and code using i
 
 const kENTRYCOUNT = 10;
 
-function log_(msg) { if (true) dump(">>>>>>>>>>>>> " + msg + "\n"); }
+function log_(msg) {
+  if (true) {
+    dump(">>>>>>>>>>>>> " + msg + "\n");
+  }
+}
 
-function run_test()
-{
+function run_test() {
   do_get_profile();
 
   var lci = Services.loadContextInfo.default;
   var testingInterface = get_cache_service().QueryInterface(Ci.nsICacheTesting);
   Assert.ok(testingInterface);
 
-  var mc = new MultipleCallbacks(1, function() {
-    // (2)
+  var mc = new MultipleCallbacks(
+    1,
+    function() {
+      // (2)
 
-    mc = new MultipleCallbacks(1, finish_cache2_test);
-    // Release all references to cache entries so that they can be purged
-    // Calling gc() four times is needed to force it to actually release
-    // entries that are obviously unreferenced.  Yeah, I know, this is wacky...
-    gc();
-    gc();
-    executeSoon(() => {
+      mc = new MultipleCallbacks(1, finish_cache2_test);
+      // Release all references to cache entries so that they can be purged
+      // Calling gc() four times is needed to force it to actually release
+      // entries that are obviously unreferenced.  Yeah, I know, this is wacky...
       gc();
       gc();
-      log_("purging");
+      executeSoon(() => {
+        gc();
+        gc();
+        log_("purging");
 
-      // Invokes cacheservice:purge-memory-pools when done.
-      get_cache_service().purgeFromMemory(Ci.nsICacheStorageService.PURGE_EVERYTHING); // goes to (3)
-    });
-  }, true);
+        // Invokes cacheservice:purge-memory-pools when done.
+        get_cache_service().purgeFromMemory(
+          Ci.nsICacheStorageService.PURGE_EVERYTHING
+        ); // goes to (3)
+      });
+    },
+    true
+  );
 
   // (1), here we start
 
   log_("first set of opens");
   var i;
   for (i = 0; i < kENTRYCOUNT; ++i) {
-
     // Callbacks 1-20
     mc.add();
-    asyncOpenCacheEntry("http://pinned" + i + "/", "pin", Ci.nsICacheStorage.OPEN_TRUNCATE, lci,
-      new OpenCallback(NEW|WAITFORWRITE, "m" + i, "p" + i, function(entry) { mc.fired(); }));
+    asyncOpenCacheEntry(
+      "http://pinned" + i + "/",
+      "pin",
+      Ci.nsICacheStorage.OPEN_TRUNCATE,
+      lci,
+      new OpenCallback(NEW | WAITFORWRITE, "m" + i, "p" + i, function(entry) {
+        mc.fired();
+      })
+    );
 
     mc.add();
-    asyncOpenCacheEntry("http://common" + i + "/", "disk", Ci.nsICacheStorage.OPEN_TRUNCATE, lci,
-      new OpenCallback(NEW|WAITFORWRITE, "m" + i, "d" + i, function(entry) { mc.fired(); }));
+    asyncOpenCacheEntry(
+      "http://common" + i + "/",
+      "disk",
+      Ci.nsICacheStorage.OPEN_TRUNCATE,
+      lci,
+      new OpenCallback(NEW | WAITFORWRITE, "m" + i, "d" + i, function(entry) {
+        mc.fired();
+      })
+    );
   }
 
   mc.fired(); // Goes to (2)
 
-  var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-  os.addObserver({
-    observe(subject, topic, data)
+  var os = Cc["@mozilla.org/observer-service;1"].getService(
+    Ci.nsIObserverService
+  );
+  os.addObserver(
     {
-      // (3)
+      observe(subject, topic, data) {
+        // (3)
 
-      log_("after purge");
-      // Prevent the I/O thread from evicting physically the data.  We first want to re-open the entries.
-      // This deterministically emulates a slow hard drive.
-      testingInterface.suspendCacheIOThread(7);
+        log_("after purge");
+        // Prevent the I/O thread from evicting physically the data.  We first want to re-open the entries.
+        // This deterministically emulates a slow hard drive.
+        testingInterface.suspendCacheIOThread(7);
 
-      log_("clearing");
-      // Now clear everything except pinned.  Stores the "ce_*" file and schedules background eviction.
-      get_cache_service().clear();
-      log_("cleared");
+        log_("clearing");
+        // Now clear everything except pinned.  Stores the "ce_*" file and schedules background eviction.
+        get_cache_service().clear();
+        log_("cleared");
 
-      log_("second set of opens");
-      // Now open again.  Pinned entries should be there, disk entries should be the renewed entries.
-      // Callbacks 21-40
-      for (i = 0; i < kENTRYCOUNT; ++i) {
-        mc.add();
-        asyncOpenCacheEntry("http://pinned" + i + "/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, lci,
-          new OpenCallback(NORMAL, "m" + i, "p" + i, function(entry) { mc.fired(); }));
+        log_("second set of opens");
+        // Now open again.  Pinned entries should be there, disk entries should be the renewed entries.
+        // Callbacks 21-40
+        for (i = 0; i < kENTRYCOUNT; ++i) {
+          mc.add();
+          asyncOpenCacheEntry(
+            "http://pinned" + i + "/",
+            "disk",
+            Ci.nsICacheStorage.OPEN_NORMALLY,
+            lci,
+            new OpenCallback(NORMAL, "m" + i, "p" + i, function(entry) {
+              mc.fired();
+            })
+          );
 
-        mc.add();
-        asyncOpenCacheEntry("http://common" + i + "/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, lci,
-          new OpenCallback(NEW, "m2" + i, "d2" + i, function(entry) { mc.fired(); }));
-      }
+          mc.add();
+          asyncOpenCacheEntry(
+            "http://common" + i + "/",
+            "disk",
+            Ci.nsICacheStorage.OPEN_NORMALLY,
+            lci,
+            new OpenCallback(NEW, "m2" + i, "d2" + i, function(entry) {
+              mc.fired();
+            })
+          );
+        }
 
-      // Resume IO, this will just pop-off the CacheFileContextEvictor::EvictEntries() because of
-      // an early check on CacheIOThread::YieldAndRerun() in that method.
-      // CacheFileIOManager::OpenFileInternal should now run and CacheFileContextEvictor::WasEvicted
-      // should be checked on.
-      log_("resuming");
-      testingInterface.resumeCacheIOThread();
-      log_("resumed");
+        // Resume IO, this will just pop-off the CacheFileContextEvictor::EvictEntries() because of
+        // an early check on CacheIOThread::YieldAndRerun() in that method.
+        // CacheFileIOManager::OpenFileInternal should now run and CacheFileContextEvictor::WasEvicted
+        // should be checked on.
+        log_("resuming");
+        testingInterface.resumeCacheIOThread();
+        log_("resumed");
 
-      mc.fired(); // Finishes this test
-    }
-  }, "cacheservice:purge-memory-pools");
-
+        mc.fired(); // Finishes this test
+      },
+    },
+    "cacheservice:purge-memory-pools"
+  );
 
   do_test_pending();
 }

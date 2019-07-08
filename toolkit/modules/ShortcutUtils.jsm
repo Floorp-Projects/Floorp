@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["ShortcutUtils"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
@@ -15,12 +17,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGetter(this, "PlatformKeys", function() {
   return Services.strings.createBundle(
-    "chrome://global-platform/locale/platformKeys.properties");
+    "chrome://global-platform/locale/platformKeys.properties"
+  );
 });
 
 XPCOMUtils.defineLazyGetter(this, "Keys", function() {
   return Services.strings.createBundle(
-    "chrome://global/locale/keys.properties");
+    "chrome://global/locale/keys.properties"
+  );
 });
 
 var ShortcutUtils = {
@@ -39,22 +43,24 @@ var ShortcutUtils = {
   NEXT_TAB: "NEXT_TAB",
 
   /**
-    * Prettifies the modifier keys for an element.
-    *
-    * @param Node aElemKey
-    *        The key element to get the modifiers from.
-    * @param boolean aNoCloverLeaf
-    *        Pass true to use a descriptive string instead of the cloverleaf symbol. (OS X only)
-    * @return string
-    *         A prettified and properly separated modifier keys string.
-    */
+   * Prettifies the modifier keys for an element.
+   *
+   * @param Node aElemKey
+   *        The key element to get the modifiers from.
+   * @param boolean aNoCloverLeaf
+   *        Pass true to use a descriptive string instead of the cloverleaf symbol. (OS X only)
+   * @return string
+   *         A prettified and properly separated modifier keys string.
+   */
   prettifyShortcut(aElemKey, aNoCloverLeaf) {
     let elemString = this.getModifierString(
       aElemKey.getAttribute("modifiers"),
-      aNoCloverLeaf);
+      aNoCloverLeaf
+    );
     let key = this.getKeyString(
       aElemKey.getAttribute("keycode"),
-      aElemKey.getAttribute("key"));
+      aElemKey.getAttribute("key")
+    );
     return elemString + key;
   },
 
@@ -72,42 +78,51 @@ var ShortcutUtils = {
           haveCloverLeaf = true;
         }
       } else {
-        elemString += PlatformKeys.GetStringFromName("VK_CONTROL") +
+        elemString +=
+          PlatformKeys.GetStringFromName("VK_CONTROL") +
           PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
       }
     }
     if (elemMod.match("access")) {
       if (Services.appinfo.OS == "Darwin") {
-        elemString += PlatformKeys.GetStringFromName("VK_CONTROL") +
+        elemString +=
+          PlatformKeys.GetStringFromName("VK_CONTROL") +
           PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
       } else {
-        elemString += PlatformKeys.GetStringFromName("VK_ALT") +
+        elemString +=
+          PlatformKeys.GetStringFromName("VK_ALT") +
           PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
       }
     }
     if (elemMod.match("os")) {
-      elemString += PlatformKeys.GetStringFromName("VK_WIN") +
+      elemString +=
+        PlatformKeys.GetStringFromName("VK_WIN") +
         PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
     if (elemMod.match("shift")) {
-      elemString += PlatformKeys.GetStringFromName("VK_SHIFT") +
+      elemString +=
+        PlatformKeys.GetStringFromName("VK_SHIFT") +
         PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
     if (elemMod.match("alt")) {
-      elemString += PlatformKeys.GetStringFromName("VK_ALT") +
+      elemString +=
+        PlatformKeys.GetStringFromName("VK_ALT") +
         PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
     if (elemMod.match("ctrl") || elemMod.match("control")) {
-      elemString += PlatformKeys.GetStringFromName("VK_CONTROL") +
+      elemString +=
+        PlatformKeys.GetStringFromName("VK_CONTROL") +
         PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
     if (elemMod.match("meta")) {
-      elemString += PlatformKeys.GetStringFromName("VK_META") +
+      elemString +=
+        PlatformKeys.GetStringFromName("VK_META") +
         PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
 
     if (haveCloverLeaf) {
-      elemString += PlatformKeys.GetStringFromName("VK_META") +
+      elemString +=
+        PlatformKeys.GetStringFromName("VK_META") +
         PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
 
@@ -163,15 +178,17 @@ var ShortcutUtils = {
 
   findShortcut(aElemCommand) {
     let document = aElemCommand.ownerDocument;
-    return document.querySelector("key[command=\"" + aElemCommand.getAttribute("id") + "\"]");
+    return document.querySelector(
+      'key[command="' + aElemCommand.getAttribute("id") + '"]'
+    );
   },
 
   chromeModifierKeyMap: {
-    "Alt": "alt",
-    "Command": "accel",
-    "Ctrl": "accel",
-    "MacCtrl": "control",
-    "Shift": "shift",
+    Alt: "alt",
+    Command: "accel",
+    Ctrl: "accel",
+    MacCtrl: "control",
+    Shift: "shift",
   },
 
   /**
@@ -190,7 +207,9 @@ var ShortcutUtils = {
   getModifiersAttribute(chromeModifiers) {
     return Array.from(chromeModifiers, modifier => {
       return ShortcutUtils.chromeModifierKeyMap[modifier];
-    }).sort().join(",");
+    })
+      .sort()
+      .join(",");
   },
 
   /**
@@ -221,7 +240,9 @@ var ShortcutUtils = {
     let modifiers = string.split("+").map(s => s.trim());
     let key = modifiers.pop();
 
-    let chromeModifiers = modifiers.map(m => ShortcutUtils.chromeModifierKeyMap[m]);
+    let chromeModifiers = modifiers.map(
+      m => ShortcutUtils.chromeModifierKeyMap[m]
+    );
     // If the modifier wasn't found it will be undefined.
     if (chromeModifiers.some(modifier => !modifier)) {
       return this.INVALID_MODIFIER;
@@ -275,11 +296,13 @@ var ShortcutUtils = {
       baseSelector += `[modifiers="${modifiersString}"]`;
     }
 
-    let keyEl = win.document.querySelector([
-      `${baseSelector}[key="${chromeKey}"]`,
-      `${baseSelector}[key="${chromeKey.toLowerCase()}"]`,
-      `${baseSelector}[keycode="${keycode}"]`,
-    ].join(","));
+    let keyEl = win.document.querySelector(
+      [
+        `${baseSelector}[key="${chromeKey}"]`,
+        `${baseSelector}[key="${chromeKey.toLowerCase()}"]`,
+        `${baseSelector}[keycode="${keycode}"]`,
+      ].join(",")
+    );
     return keyEl && !keyEl.closest("keyset").id.startsWith("ext-keyset-id");
   },
 
@@ -289,31 +312,68 @@ var ShortcutUtils = {
    * @param {KeyboardEvent} event The event to check for a related system action.
    * @returns {string} A string identifying the action, or null if no action is found.
    */
-  getSystemActionForEvent(event, {rtl} = {}) {
+  getSystemActionForEvent(event, { rtl } = {}) {
     switch (event.keyCode) {
       case event.DOM_VK_TAB:
-        if (event.ctrlKey && !event.altKey && !event.metaKey)
+        if (event.ctrlKey && !event.altKey && !event.metaKey) {
           return ShortcutUtils.CYCLE_TABS;
+        }
         break;
       case event.DOM_VK_PAGE_UP:
-        if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
+        if (
+          event.ctrlKey &&
+          !event.shiftKey &&
+          !event.altKey &&
+          !event.metaKey
+        ) {
           return ShortcutUtils.PREVIOUS_TAB;
-        if (event.ctrlKey && event.shiftKey && !event.altKey && !event.metaKey)
+        }
+        if (
+          event.ctrlKey &&
+          event.shiftKey &&
+          !event.altKey &&
+          !event.metaKey
+        ) {
           return ShortcutUtils.MOVE_TAB_BACKWARD;
+        }
         break;
       case event.DOM_VK_PAGE_DOWN:
-        if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
+        if (
+          event.ctrlKey &&
+          !event.shiftKey &&
+          !event.altKey &&
+          !event.metaKey
+        ) {
           return ShortcutUtils.NEXT_TAB;
-        if (event.ctrlKey && event.shiftKey && !event.altKey && !event.metaKey)
+        }
+        if (
+          event.ctrlKey &&
+          event.shiftKey &&
+          !event.altKey &&
+          !event.metaKey
+        ) {
           return ShortcutUtils.MOVE_TAB_FORWARD;
+        }
         break;
       case event.DOM_VK_LEFT:
-        if (event.metaKey && event.altKey && !event.shiftKey && !event.ctrlKey)
+        if (
+          event.metaKey &&
+          event.altKey &&
+          !event.shiftKey &&
+          !event.ctrlKey
+        ) {
           return ShortcutUtils.PREVIOUS_TAB;
+        }
         break;
       case event.DOM_VK_RIGHT:
-        if (event.metaKey && event.altKey && !event.shiftKey && !event.ctrlKey)
+        if (
+          event.metaKey &&
+          event.altKey &&
+          !event.shiftKey &&
+          !event.ctrlKey
+        ) {
           return ShortcutUtils.NEXT_TAB;
+        }
         break;
     }
 
@@ -321,20 +381,26 @@ var ShortcutUtils = {
       if (!event.altKey && event.metaKey) {
         switch (event.charCode) {
           case "}".charCodeAt(0):
-            if (rtl)
+            if (rtl) {
               return ShortcutUtils.PREVIOUS_TAB;
+            }
             return ShortcutUtils.NEXT_TAB;
           case "{".charCodeAt(0):
-            if (rtl)
+            if (rtl) {
               return ShortcutUtils.NEXT_TAB;
+            }
             return ShortcutUtils.PREVIOUS_TAB;
         }
       }
     }
     // Not on Mac from now on.
     if (AppConstants.platform != "macosx") {
-      if (event.ctrlKey && !event.shiftKey && !event.metaKey &&
-          event.keyCode == KeyEvent.DOM_VK_F4) {
+      if (
+        event.ctrlKey &&
+        !event.shiftKey &&
+        !event.metaKey &&
+        event.keyCode == KeyEvent.DOM_VK_F4
+      ) {
         return ShortcutUtils.CLOSE_TAB;
       }
     }
@@ -344,4 +410,3 @@ var ShortcutUtils = {
 };
 
 Object.freeze(ShortcutUtils);
-

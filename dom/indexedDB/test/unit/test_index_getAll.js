@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const objectStoreName = "People";
 
@@ -47,8 +46,7 @@ function* testSteps()
   // First, add all our data to the object store.
   let addedData = 0;
   for (let i in objectStoreData) {
-    request = objectStore.add(objectStoreData[i].value,
-                              objectStoreData[i].key);
+    request = objectStore.add(objectStoreData[i].value, objectStoreData[i].key);
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       if (++addedData == objectStoreData.length) {
@@ -61,16 +59,18 @@ function* testSteps()
 
   // Now create the indexes.
   for (let i in indexData) {
-    objectStore.createIndex(indexData[i].name, indexData[i].keyPath,
-                            indexData[i].options);
+    objectStore.createIndex(
+      indexData[i].name,
+      indexData[i].keyPath,
+      indexData[i].options
+    );
   }
 
   is(objectStore.indexNames.length, indexData.length, "Good index count");
   yield undefined;
 
   ok(true, "2");
-  objectStore = db.transaction(objectStoreName)
-                  .objectStore(objectStoreName);
+  objectStore = db.transaction(objectStoreName).objectStore(objectStoreName);
 
   request = objectStore.index("height").mozGetAllKeys(65);
   request.onerror = errorHandler;
@@ -82,8 +82,11 @@ function* testSteps()
   is(event.target.result.length, 2, "Correct length");
 
   for (let i in event.target.result) {
-    is(event.target.result[i], objectStoreDataHeightSort[parseInt(i) + 3].key,
-       "Correct key");
+    is(
+      event.target.result[i],
+      objectStoreDataHeightSort[parseInt(i) + 3].key,
+      "Correct key"
+    );
   }
 
   request = objectStore.index("height").mozGetAllKeys(65, 0);
@@ -96,8 +99,11 @@ function* testSteps()
   is(event.target.result.length, 2, "Correct length");
 
   for (let i in event.target.result) {
-    is(event.target.result[i], objectStoreDataHeightSort[parseInt(i) + 3].key,
-       "Correct key");
+    is(
+      event.target.result[i],
+      objectStoreDataHeightSort[parseInt(i) + 3].key,
+      "Correct key"
+    );
   }
 
   request = objectStore.index("height").mozGetAllKeys(65, null);
@@ -110,8 +116,11 @@ function* testSteps()
   is(event.target.result.length, 2, "Correct length");
 
   for (let i in event.target.result) {
-    is(event.target.result[i], objectStoreDataHeightSort[parseInt(i) + 3].key,
-       "Correct key");
+    is(
+      event.target.result[i],
+      objectStoreDataHeightSort[parseInt(i) + 3].key,
+      "Correct key"
+    );
   }
 
   request = objectStore.index("height").mozGetAllKeys(65, undefined);
@@ -124,8 +133,11 @@ function* testSteps()
   is(event.target.result.length, 2, "Correct length");
 
   for (let i in event.target.result) {
-    is(event.target.result[i], objectStoreDataHeightSort[parseInt(i) + 3].key,
-       "Correct key");
+    is(
+      event.target.result[i],
+      objectStoreDataHeightSort[parseInt(i) + 3].key,
+      "Correct key"
+    );
   }
 
   request = objectStore.index("height").mozGetAllKeys();
@@ -135,8 +147,11 @@ function* testSteps()
   ok(true, "4");
 
   is(event.target.result instanceof Array, true, "Got an array object");
-  is(event.target.result.length, objectStoreDataHeightSort.length,
-     "Correct length");
+  is(
+    event.target.result.length,
+    objectStoreDataHeightSort.length,
+    "Correct length"
+  );
 
   for (let i in event.target.result) {
     is(event.target.result[i], objectStoreDataHeightSort[i].key, "Correct key");
@@ -165,8 +180,11 @@ function* testSteps()
   is(event.target.result.length, 1, "Correct length");
 
   for (let i in event.target.result) {
-    is(event.target.result[i], objectStoreDataHeightSort[parseInt(i) + 3].key,
-       "Correct key");
+    is(
+      event.target.result[i],
+      objectStoreDataHeightSort[parseInt(i) + 3].key,
+      "Correct key"
+    );
   }
 
   finishTest();

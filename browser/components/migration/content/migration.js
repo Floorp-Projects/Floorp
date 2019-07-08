@@ -7,13 +7,16 @@
 const kIMig = Ci.nsIBrowserProfileMigrator;
 const kIPStartup = Ci.nsIProfileStartup;
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {MigrationUtils} = ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { MigrationUtils } = ChromeUtils.import(
+  "resource:///modules/MigrationUtils.jsm"
+);
 
-var MigrationWizard = { /* exported MigrationWizard */
-  _source: "",                  // Source Profile Migrator ContractID suffix
-  _itemsFlags: kIMig.ALL,       // Selected Import Data Sources (16-bit bitfield)
-  _selectedProfile: null,       // Selected Profile name to import from
+var MigrationWizard = {
+  /* exported MigrationWizard */
+  _source: "", // Source Profile Migrator ContractID suffix
+  _itemsFlags: kIMig.ALL, // Selected Import Data Sources (16-bit bitfield)
+  _selectedProfile: null, // Selected Profile name to import from
   _wiz: null,
   _migrator: null,
   _autoMigrate: null,
@@ -30,8 +33,11 @@ var MigrationWizard = { /* exported MigrationWizard */
 
     let args = window.arguments;
     let entryPointId = args[0] || MigrationUtils.MIGRATION_ENTRYPOINT_UNKNOWN;
-    Services.telemetry.getHistogramById("FX_MIGRATION_ENTRY_POINT").add(entryPointId);
-    this.isInitialMigration = entryPointId == MigrationUtils.MIGRATION_ENTRYPOINT_FIRSTRUN;
+    Services.telemetry
+      .getHistogramById("FX_MIGRATION_ENTRY_POINT")
+      .add(entryPointId);
+    this.isInitialMigration =
+      entryPointId == MigrationUtils.MIGRATION_ENTRYPOINT_FIRSTRUN;
 
     if (args.length > 1) {
       this._source = args[1];
@@ -39,8 +45,12 @@ var MigrationWizard = { /* exported MigrationWizard */
       this._autoMigrate = args[3].QueryInterface(kIPStartup);
       this._skipImportSourcePage = args[4];
       if (this._migrator && args[5]) {
-        let sourceProfiles = this.spinResolve(this._migrator.getSourceProfiles());
-        this._selectedProfile = sourceProfiles.find(profile => profile.id == args[5]);
+        let sourceProfiles = this.spinResolve(
+          this._migrator.getSourceProfiles()
+        );
+        this._selectedProfile = sourceProfiles.find(
+          profile => profile.id == args[5]
+        );
       }
 
       if (this._autoMigrate) {
@@ -50,19 +60,55 @@ var MigrationWizard = { /* exported MigrationWizard */
       }
     }
 
-    document.addEventListener("wizardcancel", function() { MigrationWizard.onWizardCancel(); });
+    document.addEventListener("wizardcancel", function() {
+      MigrationWizard.onWizardCancel();
+    });
 
-    document.getElementById("selectProfile").addEventListener("pageshow", function() { MigrationWizard.onSelectProfilePageShow(); });
-    document.getElementById("importItems").addEventListener("pageshow", function() { MigrationWizard.onImportItemsPageShow(); });
-    document.getElementById("migrating").addEventListener("pageshow", function() { MigrationWizard.onMigratingPageShow(); });
-    document.getElementById("done").addEventListener("pageshow", function() { MigrationWizard.onDonePageShow(); });
+    document
+      .getElementById("selectProfile")
+      .addEventListener("pageshow", function() {
+        MigrationWizard.onSelectProfilePageShow();
+      });
+    document
+      .getElementById("importItems")
+      .addEventListener("pageshow", function() {
+        MigrationWizard.onImportItemsPageShow();
+      });
+    document
+      .getElementById("migrating")
+      .addEventListener("pageshow", function() {
+        MigrationWizard.onMigratingPageShow();
+      });
+    document.getElementById("done").addEventListener("pageshow", function() {
+      MigrationWizard.onDonePageShow();
+    });
 
-    document.getElementById("selectProfile").addEventListener("pagerewound", function() { MigrationWizard.onSelectProfilePageRewound(); });
-    document.getElementById("importItems").addEventListener("pagerewound", function() { MigrationWizard.onImportItemsPageRewound(); });
+    document
+      .getElementById("selectProfile")
+      .addEventListener("pagerewound", function() {
+        MigrationWizard.onSelectProfilePageRewound();
+      });
+    document
+      .getElementById("importItems")
+      .addEventListener("pagerewound", function() {
+        MigrationWizard.onImportItemsPageRewound();
+      });
 
-    document.getElementById("selectProfile").addEventListener("pageadvanced", function() { MigrationWizard.onSelectProfilePageAdvanced(); });
-    document.getElementById("importItems").addEventListener("pageadvanced", function() { MigrationWizard.onImportItemsPageAdvanced(); });
-    document.getElementById("importSource").addEventListener("pageadvanced", function(e) { MigrationWizard.onImportSourcePageAdvanced(e); });
+    document
+      .getElementById("selectProfile")
+      .addEventListener("pageadvanced", function() {
+        MigrationWizard.onSelectProfilePageAdvanced();
+      });
+    document
+      .getElementById("importItems")
+      .addEventListener("pageadvanced", function() {
+        MigrationWizard.onImportItemsPageAdvanced();
+      });
+    document
+      .getElementById("importSource")
+      .addEventListener("pageadvanced", function(e) {
+        MigrationWizard.onImportSourcePageAdvanced(e);
+      });
 
     this.onImportSourcePageShow();
   },
@@ -99,10 +145,14 @@ var MigrationWizard = { /* exported MigrationWizard */
     let toggleCloseBrowserWarning = () => {
       let visibility = "hidden";
       if (group.selectedItem.id != "nothing") {
-        let migrator = this.spinResolve(MigrationUtils.getMigrator(group.selectedItem.id));
+        let migrator = this.spinResolve(
+          MigrationUtils.getMigrator(group.selectedItem.id)
+        );
         visibility = migrator.sourceLocked ? "visible" : "hidden";
       }
-      document.getElementById("closeSourceBrowser").style.visibility = visibility;
+      document.getElementById(
+        "closeSourceBrowser"
+      ).style.visibility = visibility;
     };
     this._wiz.canRewind = false;
 
@@ -114,12 +164,15 @@ var MigrationWizard = { /* exported MigrationWizard */
     for (var i = 0; i < group.childNodes.length; ++i) {
       var migratorKey = group.childNodes[i].id;
       if (migratorKey != "nothing") {
-        var migrator = this.spinResolve(MigrationUtils.getMigrator(migratorKey));
+        var migrator = this.spinResolve(
+          MigrationUtils.getMigrator(migratorKey)
+        );
         if (migrator) {
           // Save this as the first selectable item, if we don't already have
           // one, or if it is the migrator that was passed to us.
-          if (!selectedMigrator || this._source == migratorKey)
+          if (!selectedMigrator || this._source == migratorKey) {
             selectedMigrator = group.childNodes[i];
+          }
           this._availableMigrators.push([migratorKey, migrator]);
         } else {
           // Hide this option
@@ -128,12 +181,14 @@ var MigrationWizard = { /* exported MigrationWizard */
       }
     }
     if (this.isInitialMigration) {
-      Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_BROWSER_COUNT")
+      Services.telemetry
+        .getHistogramById("FX_STARTUP_MIGRATION_BROWSER_COUNT")
         .add(this._availableMigrators.length);
       let defaultBrowser = MigrationUtils.getMigratorKeyForDefaultBrowser();
       // This will record 0 for unknown default browser IDs.
       defaultBrowser = MigrationUtils.getSourceIdForTelemetry(defaultBrowser);
-      Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_EXISTING_DEFAULT_BROWSER")
+      Services.telemetry
+        .getHistogramById("FX_STARTUP_MIGRATION_EXISTING_DEFAULT_BROWSER")
         .add(defaultBrowser);
     }
 
@@ -160,19 +215,21 @@ var MigrationWizard = { /* exported MigrationWizard */
   },
 
   onImportSourcePageAdvanced(event) {
-    var newSource = document.getElementById("importSourceGroup").selectedItem.id;
+    var newSource = document.getElementById("importSourceGroup").selectedItem
+      .id;
 
     if (newSource == "nothing") {
       // Need to do telemetry here because we're closing the dialog before we get to
       // do actual migration. For actual migration, this doesn't happen until after
       // migration takes place.
-      Services.telemetry.getHistogramById("FX_MIGRATION_SOURCE_BROWSER")
-                        .add(MigrationUtils.getSourceIdForTelemetry("nothing"));
+      Services.telemetry
+        .getHistogramById("FX_MIGRATION_SOURCE_BROWSER")
+        .add(MigrationUtils.getSourceIdForTelemetry("nothing"));
       document.documentElement.cancel();
       event.preventDefault();
     }
 
-    if (!this._migrator || (newSource != this._source)) {
+    if (!this._migrator || newSource != this._source) {
       // Create the migrator for the selected source.
       this._migrator = this.spinResolve(MigrationUtils.getMigrator(newSource));
 
@@ -188,15 +245,17 @@ var MigrationWizard = { /* exported MigrationWizard */
     } else if (sourceProfiles && sourceProfiles.length > 1) {
       this._wiz.currentPage.next = "selectProfile";
     } else {
-      if (this._autoMigrate)
+      if (this._autoMigrate) {
         this._wiz.currentPage.next = "migrating";
-      else
+      } else {
         this._wiz.currentPage.next = "importItems";
+      }
 
-      if (sourceProfiles && sourceProfiles.length == 1)
+      if (sourceProfiles && sourceProfiles.length == 1) {
         this._selectedProfile = sourceProfiles[0];
-      else
+      } else {
         this._selectedProfile = null;
+      }
     }
   },
 
@@ -208,8 +267,9 @@ var MigrationWizard = { /* exported MigrationWizard */
     //   document.documentElement.getButton("back").disabled = true;
 
     var profiles = document.getElementById("profiles");
-    while (profiles.hasChildNodes())
+    while (profiles.hasChildNodes()) {
       profiles.firstChild.remove();
+    }
 
     // Note that this block is still reached even if the user chose 'From File'
     // and we canceled the dialog.  When that happens, _migrator will be null.
@@ -224,47 +284,55 @@ var MigrationWizard = { /* exported MigrationWizard */
       }
     }
 
-    profiles.selectedItem = this._selectedProfile ? document.getElementById(this._selectedProfile.id) : profiles.firstChild;
+    profiles.selectedItem = this._selectedProfile
+      ? document.getElementById(this._selectedProfile.id)
+      : profiles.firstChild;
   },
 
   onSelectProfilePageRewound() {
     var profiles = document.getElementById("profiles");
     let sourceProfiles = this.spinResolve(this._migrator.getSourceProfiles());
-    this._selectedProfile = sourceProfiles.find(
-      profile => profile.id == profiles.selectedItem.id
-    ) || null;
+    this._selectedProfile =
+      sourceProfiles.find(profile => profile.id == profiles.selectedItem.id) ||
+      null;
   },
 
   onSelectProfilePageAdvanced() {
     var profiles = document.getElementById("profiles");
     let sourceProfiles = this.spinResolve(this._migrator.getSourceProfiles());
-    this._selectedProfile = sourceProfiles.find(
-      profile => profile.id == profiles.selectedItem.id
-    ) || null;
+    this._selectedProfile =
+      sourceProfiles.find(profile => profile.id == profiles.selectedItem.id) ||
+      null;
 
     // If we're automigrating or just doing bookmarks don't show the item selection page
-    if (this._autoMigrate)
+    if (this._autoMigrate) {
       this._wiz.currentPage.next = "migrating";
+    }
   },
 
   // 3 - ImportItems
   onImportItemsPageShow() {
     var dataSources = document.getElementById("dataSources");
-    while (dataSources.hasChildNodes())
+    while (dataSources.hasChildNodes()) {
       dataSources.firstChild.remove();
+    }
 
-    var items = this.spinResolve(this._migrator.getMigrateData(this._selectedProfile,
-                                                               this._autoMigrate));
+    var items = this.spinResolve(
+      this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate)
+    );
     for (var i = 0; i < 16; ++i) {
       var itemID = (items >> i) & 0x1 ? Math.pow(2, i) : 0;
       if (itemID > 0) {
         var checkbox = document.createXULElement("checkbox");
         checkbox.id = itemID;
-        checkbox.setAttribute("label",
-          MigrationUtils.getLocalizedString(itemID + "_" + this._source));
+        checkbox.setAttribute(
+          "label",
+          MigrationUtils.getLocalizedString(itemID + "_" + this._source)
+        );
         dataSources.appendChild(checkbox);
-        if (!this._itemsFlags || this._itemsFlags & itemID)
+        if (!this._itemsFlags || this._itemsFlags & itemID) {
           checkbox.checked = true;
+        }
       }
     }
   },
@@ -279,8 +347,9 @@ var MigrationWizard = { /* exported MigrationWizard */
     this._itemsFlags = 0;
     for (var i = 0; i < dataSources.childNodes.length; ++i) {
       var checkbox = dataSources.childNodes[i];
-      if (checkbox.localName == "checkbox" && checkbox.checked)
+      if (checkbox.localName == "checkbox" && checkbox.checked) {
         this._itemsFlags |= parseInt(checkbox.id);
+      }
     }
   },
 
@@ -307,9 +376,9 @@ var MigrationWizard = { /* exported MigrationWizard */
 
     // When automigrating, show all of the data that can be received from this source.
     if (this._autoMigrate) {
-      this._itemsFlags =
-        this.spinResolve(this._migrator.getMigrateData(this._selectedProfile,
-                                                       this._autoMigrate));
+      this._itemsFlags = this.spinResolve(
+        this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate)
+      );
     }
 
     this._listItems("migratingItems");
@@ -317,10 +386,15 @@ var MigrationWizard = { /* exported MigrationWizard */
   },
 
   async onMigratingMigrate() {
-    await this._migrator.migrate(this._itemsFlags, this._autoMigrate, this._selectedProfile);
+    await this._migrator.migrate(
+      this._itemsFlags,
+      this._autoMigrate,
+      this._selectedProfile
+    );
 
-    Services.telemetry.getHistogramById("FX_MIGRATION_SOURCE_BROWSER")
-                      .add(MigrationUtils.getSourceIdForTelemetry(this._source));
+    Services.telemetry
+      .getHistogramById("FX_MIGRATION_SOURCE_BROWSER")
+      .add(MigrationUtils.getSourceIdForTelemetry(this._source));
     if (!this._autoMigrate) {
       let hist = Services.telemetry.getKeyedHistogramById("FX_MIGRATION_USAGE");
       let exp = 0;
@@ -337,8 +411,9 @@ var MigrationWizard = { /* exported MigrationWizard */
 
   _listItems(aID) {
     var items = document.getElementById(aID);
-    while (items.hasChildNodes())
+    while (items.hasChildNodes()) {
       items.firstChild.remove();
+    }
 
     var itemID;
     for (var i = 0; i < 16; ++i) {
@@ -347,8 +422,10 @@ var MigrationWizard = { /* exported MigrationWizard */
         var label = document.createXULElement("label");
         label.id = itemID + "_migrated";
         try {
-          label.setAttribute("value",
-            MigrationUtils.getLocalizedString(itemID + "_" + this._source));
+          label.setAttribute(
+            "value",
+            MigrationUtils.getLocalizedString(itemID + "_" + this._source)
+          );
           items.appendChild(label);
         } catch (e) {
           // if the block above throws, we've enumerated all the import data types we
@@ -366,13 +443,15 @@ var MigrationWizard = { /* exported MigrationWizard */
         break;
       case "Migration:ItemBeforeMigrate":
         label = document.getElementById(aData + "_migrated");
-        if (label)
+        if (label) {
           label.setAttribute("style", "font-weight: bold");
+        }
         break;
       case "Migration:ItemAfterMigrate":
         label = document.getElementById(aData + "_migrated");
-        if (label)
+        if (label) {
           label.removeAttribute("style");
+        }
         break;
       case "Migration:Ended":
         if (this.isInitialMigration) {
@@ -421,9 +500,12 @@ var MigrationWizard = { /* exported MigrationWizard */
             type = "misc. data";
             break;
         }
-        Services.console.logStringMessage("some " + type + " did not successfully migrate.");
-        Services.telemetry.getKeyedHistogramById("FX_MIGRATION_ERRORS")
-                          .add(this._source, Math.log2(numericType));
+        Services.console.logStringMessage(
+          "some " + type + " did not successfully migrate."
+        );
+        Services.telemetry
+          .getKeyedHistogramById("FX_MIGRATION_ERRORS")
+          .add(this._source, Math.log2(numericType));
         break;
     }
   },
@@ -435,27 +517,36 @@ var MigrationWizard = { /* exported MigrationWizard */
   },
 
   reportDataRecencyTelemetry() {
-    let histogram = Services.telemetry.getKeyedHistogramById("FX_STARTUP_MIGRATION_DATA_RECENCY");
+    let histogram = Services.telemetry.getKeyedHistogramById(
+      "FX_STARTUP_MIGRATION_DATA_RECENCY"
+    );
     let lastUsedPromises = [];
     for (let [key, migrator] of this._availableMigrators) {
       // No block-scoped let in for...of loop conditions, so get the source:
       let localKey = key;
-      lastUsedPromises.push(migrator.getLastUsedDate().then(date => {
-        const ONE_YEAR = 24 * 365;
-        let diffInHours = Math.round((Date.now() - date) / (60 * 60 * 1000));
-        if (diffInHours > ONE_YEAR) {
-          diffInHours = ONE_YEAR;
-        }
-        histogram.add(localKey, diffInHours);
-        return [localKey, diffInHours];
-      }));
+      lastUsedPromises.push(
+        migrator.getLastUsedDate().then(date => {
+          const ONE_YEAR = 24 * 365;
+          let diffInHours = Math.round((Date.now() - date) / (60 * 60 * 1000));
+          if (diffInHours > ONE_YEAR) {
+            diffInHours = ONE_YEAR;
+          }
+          histogram.add(localKey, diffInHours);
+          return [localKey, diffInHours];
+        })
+      );
     }
     Promise.all(lastUsedPromises).then(migratorUsedTimeDiff => {
       // Sort low to high.
-      migratorUsedTimeDiff.sort(([keyA, diffA], [keyB, diffB]) => diffA - diffB); /* eslint no-unused-vars: off */
-      let usedMostRecentBrowser = migratorUsedTimeDiff.length && this._source == migratorUsedTimeDiff[0][0];
-      let usedRecentBrowser =
-        Services.telemetry.getKeyedHistogramById("FX_STARTUP_MIGRATION_USED_RECENT_BROWSER");
+      migratorUsedTimeDiff.sort(
+        ([keyA, diffA], [keyB, diffB]) => diffA - diffB
+      ); /* eslint no-unused-vars: off */
+      let usedMostRecentBrowser =
+        migratorUsedTimeDiff.length &&
+        this._source == migratorUsedTimeDiff[0][0];
+      let usedRecentBrowser = Services.telemetry.getKeyedHistogramById(
+        "FX_STARTUP_MIGRATION_USED_RECENT_BROWSER"
+      );
       usedRecentBrowser.add(this._source, usedMostRecentBrowser);
     });
   },

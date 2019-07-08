@@ -2,15 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var Pipe = CC("@mozilla.org/pipe;1",
-              "nsIPipe",
-              "init");
-var BinaryOutput = CC("@mozilla.org/binaryoutputstream;1",
-                      "nsIBinaryOutputStream",
-                      "setOutputStream");
-var BinaryInput = CC("@mozilla.org/binaryinputstream;1",
-                     "nsIBinaryInputStream",
-                     "setInputStream");
+var Pipe = CC("@mozilla.org/pipe;1", "nsIPipe", "init");
+var BinaryOutput = CC(
+  "@mozilla.org/binaryoutputstream;1",
+  "nsIBinaryOutputStream",
+  "setOutputStream"
+);
+var BinaryInput = CC(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
 
 /**
  * Binary stream tests.
@@ -25,7 +27,9 @@ function test_binary_streams() {
   const LargeNum = Math.pow(2, 18) + Math.pow(2, 12) + 1;
   const HugeNum = Math.pow(2, 62);
   const HelloStr = "Hello World";
-  const HelloArray = Array.from(HelloStr, function(c) { return c.charCodeAt(0); });
+  const HelloArray = Array.from(HelloStr, function(c) {
+    return c.charCodeAt(0);
+  });
   var countObj = {};
   var msg = {};
   var buffer = new ArrayBuffer(HelloArray.length);
@@ -51,8 +55,8 @@ function test_binary_streams() {
   Assert.equal(is.read64(), HugeNum);
   os.writeFloat(2.5);
   Assert.equal(is.readFloat(), 2.5);
-//  os.writeDouble(Math.SQRT2);
-//  do_check_eq(is.readDouble(), Math.SQRT2);
+  //  os.writeDouble(Math.SQRT2);
+  //  do_check_eq(is.readDouble(), Math.SQRT2);
   os.writeStringZ("Mozilla");
   Assert.equal(is.readCString(), "Mozilla");
   os.writeWStringZ("Gecko");
@@ -70,8 +74,11 @@ function test_binary_streams() {
   Assert.equal(msg.toSource(), HelloArray.toSource());
   Assert.equal(is.available(), 0);
   os.writeByteArray(HelloArray, HelloArray.length);
-  Assert.equal(is.readArrayBuffer(buffer.byteLength, buffer), HelloArray.length);
-  Assert.equal([...(new Uint8Array(buffer))].toSource(), HelloArray.toSource());
+  Assert.equal(
+    is.readArrayBuffer(buffer.byteLength, buffer),
+    HelloArray.length
+  );
+  Assert.equal([...new Uint8Array(buffer)].toSource(), HelloArray.toSource());
   Assert.equal(is.available(), 0);
 
   // Test writing in one big chunk.
@@ -85,7 +92,7 @@ function test_binary_streams() {
   os.write64(1024);
   os.write64(HugeNum);
   os.writeFloat(2.5);
-//  os.writeDouble(Math.SQRT2);
+  //  os.writeDouble(Math.SQRT2);
   os.writeStringZ("Mozilla");
   os.writeWStringZ("Gecko");
   os.writeBytes(HelloStr, HelloStr.length);
@@ -104,7 +111,7 @@ function test_binary_streams() {
   Assert.equal(is.read64(), 1024);
   Assert.equal(is.read64(), HugeNum);
   Assert.equal(is.readFloat(), 2.5);
-//  do_check_eq(is.readDouble(), Math.SQRT2);
+  //  do_check_eq(is.readDouble(), Math.SQRT2);
   Assert.equal(is.readCString(), "Mozilla");
   Assert.equal(is.readString(), "Gecko");
   // Remember, we wrote HelloStr twice - once as a string, and then as an array.
@@ -127,8 +134,9 @@ function test_binary_streams() {
     os.writeBoolean(false);
     do_throw("Not reached!");
   } catch (e) {
-    if (!(e instanceof Ci.nsIException &&
-          e.result == Cr.NS_BASE_STREAM_CLOSED)) {
+    if (
+      !(e instanceof Ci.nsIException && e.result == Cr.NS_BASE_STREAM_CLOSED)
+    ) {
       throw e;
     }
     // do nothing
@@ -138,8 +146,9 @@ function test_binary_streams() {
     is.available();
     do_throw("Not reached!");
   } catch (e) {
-    if (!(e instanceof Ci.nsIException &&
-          e.result == Cr.NS_BASE_STREAM_CLOSED)) {
+    if (
+      !(e instanceof Ci.nsIException && e.result == Cr.NS_BASE_STREAM_CLOSED)
+    ) {
       throw e;
     }
     // do nothing
@@ -149,8 +158,7 @@ function test_binary_streams() {
     is.readBoolean();
     do_throw("Not reached!");
   } catch (e) {
-    if (!(e instanceof Ci.nsIException &&
-          e.result == Cr.NS_ERROR_FAILURE)) {
+    if (!(e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_FAILURE)) {
       throw e;
     }
     // do nothing

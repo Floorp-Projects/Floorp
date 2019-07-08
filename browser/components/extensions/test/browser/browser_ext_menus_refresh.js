@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
+const PAGE =
+  "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
 
 // Load an extension that has the "menus" permission. The returned Extension
 // instance has a `callMenuApi` method to easily call a browser.menus method
@@ -71,7 +72,10 @@ function loadExtensionWithMenusApi() {
 // - browser.refresh before a menu is shown should not have any effect.
 // - browser.refresh while a menu is shown should update the menu.
 // - browser.refresh after a menu is hidden should not have any effect.
-async function testRefreshMenusWhileVisible({contexts, doOpenMenu, doCloseMenu,
+async function testRefreshMenusWhileVisible({
+  contexts,
+  doOpenMenu,
+  doCloseMenu,
 }) {
   let extension = loadExtensionWithMenusApi();
   await extension.startup();
@@ -96,7 +100,7 @@ async function testRefreshMenusWhileVisible({contexts, doOpenMenu, doCloseMenu,
   await extension.awaitMessage("onShown fired");
 
   // Add new menus, but don't expect them to be rendered yet.
-  await extension.callMenuApi("update", "abc", {title: "updated first"});
+  await extension.callMenuApi("update", "abc", { title: "updated first" });
   await extension.callMenuApi("create", {
     id: "def",
     title: "second",
@@ -117,8 +121,8 @@ async function testRefreshMenusWhileVisible({contexts, doOpenMenu, doCloseMenu,
   is(elem.getAttribute("label"), "second", "expected second label");
 
   // Update the two menu items again.
-  await extension.callMenuApi("update", "abc", {enabled: false});
-  await extension.callMenuApi("update", "def", {enabled: false});
+  await extension.callMenuApi("update", "abc", { enabled: false });
+  await extension.callMenuApi("update", "def", { enabled: false });
   await extension.callMenuApi("refresh");
   elem = extension.getXULElementByMenuId("abc");
   is(elem.getAttribute("disabled"), "true", "1st menu item should be disabled");
@@ -169,8 +173,12 @@ async function testRefreshMenusWhileVisible({contexts, doOpenMenu, doCloseMenu,
 // Check that one extension calling refresh() doesn't interfere with others.
 // When expectOtherItems == false, the other extension's menu items should not
 // show at all (e.g. for browserAction).
-async function testRefreshOther({contexts, doOpenMenu, doCloseMenu,
-                                 expectOtherItems}) {
+async function testRefreshOther({
+  contexts,
+  doOpenMenu,
+  doCloseMenu,
+  expectOtherItems,
+}) {
   let extension = loadExtensionWithMenusApi();
   let other_extension = loadExtensionWithMenusApi();
   await extension.startup();
@@ -198,14 +206,17 @@ async function testRefreshOther({contexts, doOpenMenu, doCloseMenu,
   is(elem.getAttribute("label"), "visible menu item", "extension menu shown");
   elem = other_extension.getXULElementByMenuId("action_item");
   if (expectOtherItems) {
-    is(elem.getAttribute("label"), "other menu item",
-       "other extension's menu is also shown");
+    is(
+      elem.getAttribute("label"),
+      "other menu item",
+      "other extension's menu is also shown"
+    );
   } else {
     is(elem, null, "other extension's menu should be hidden");
   }
 
-  await extension.callMenuApi("update", "action_item", {title: "changed"});
-  await other_extension.callMenuApi("update", "action_item", {title: "foo"});
+  await extension.callMenuApi("update", "action_item", { title: "changed" });
+  await other_extension.callMenuApi("update", "action_item", { title: "foo" });
   await other_extension.callMenuApi("refresh");
 
   // refreshing the menu of an unrelated extension should not affect the menu
@@ -304,10 +315,13 @@ add_task(async function refresh_without_menus_at_onShown() {
   });
   await extension.callMenuApi("refresh");
   let elem = extension.getXULElementByMenuId("too late");
-  is(elem.getAttribute("label"), "created after shown",
-     "extension without visible menu items can add new items");
+  is(
+    elem.getAttribute("label"),
+    "created after shown",
+    "extension without visible menu items can add new items"
+  );
 
-  await extension.callMenuApi("update", "too late", {title: "the menu item"});
+  await extension.callMenuApi("update", "too late", { title: "the menu item" });
   await extension.callMenuApi("refresh");
   elem = extension.getXULElementByMenuId("too late");
   is(elem.getAttribute("label"), "the menu item", "label should change");
@@ -340,13 +354,19 @@ add_task(async function refresh_without_onShown() {
     title: "created after shown",
   });
 
-  is(extension.getXULElementByMenuId("too late"), null,
-     "item created after shown is not visible before refresh");
+  is(
+    extension.getXULElementByMenuId("too late"),
+    null,
+    "item created after shown is not visible before refresh"
+  );
 
   await extension.callMenuApi("refresh");
   let elem = extension.getXULElementByMenuId("too late");
-  is(elem.getAttribute("label"), "created after shown",
-     "refresh updates the menu even without onShown");
+  is(
+    elem.getAttribute("label"),
+    "created after shown",
+    "refresh updates the menu even without onShown"
+  );
 
   await doCloseMenu();
   await extension.unload();
@@ -354,7 +374,10 @@ add_task(async function refresh_without_onShown() {
 });
 
 add_task(async function refresh_menus_during_navigation() {
-  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE + "?1");
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    PAGE + "?1"
+  );
   let extension = loadExtensionWithMenusApi();
   await extension.startup();
 

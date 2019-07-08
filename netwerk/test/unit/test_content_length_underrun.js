@@ -5,7 +5,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Test infrastructure
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
@@ -26,13 +26,13 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
 });
 
-function run_test()
-{
+function run_test() {
   prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
   enforcePrefStrict = prefs.getBoolPref("network.http.enforce-framing.http1");
   enforcePrefSoft = prefs.getBoolPref("network.http.enforce-framing.soft");
   enforcePrefStrictChunked = prefs.getBoolPref(
-      "network.http.enforce-framing.strict_chunked_encoding");
+    "network.http.enforce-framing.strict_chunked_encoding"
+  );
 
   prefs.setBoolPref("network.http.enforce-framing.http1", true);
 
@@ -42,19 +42,18 @@ function run_test()
   run_test_number(1);
 }
 
-function run_test_number(num)
-{
+function run_test_number(num) {
   testPath = testPathBase + num;
   httpserver.registerPathHandler(testPath, eval("handler" + num));
 
   var channel = setupChannel(testPath);
-  flags = test_flags[num];   // OK if flags undefined for test
-  channel.asyncOpen(new ChannelListener(eval("completeTest" + num),
-                                        channel, flags));
+  flags = test_flags[num]; // OK if flags undefined for test
+  channel.asyncOpen(
+    new ChannelListener(eval("completeTest" + num), channel, flags)
+  );
 }
 
-function run_gzip_test(num)
-{
+function run_gzip_test(num) {
   testPath = testPathBase + num;
   httpserver.registerPathHandler(testPath, eval("handler" + num));
 
@@ -63,7 +62,10 @@ function run_gzip_test(num)
   function StreamListener() {}
 
   StreamListener.prototype = {
-    QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
+    QueryInterface: ChromeUtils.generateQI([
+      "nsIStreamListener",
+      "nsIRequestObserver",
+    ]),
 
     onStartRequest(aRequest) {},
 
@@ -71,35 +73,34 @@ function run_gzip_test(num)
       // Make sure we catch the error NS_ERROR_NET_PARTIAL_TRANSFER here.
       Assert.equal(aStatusCode, Cr.NS_ERROR_NET_PARTIAL_TRANSFER);
       //  do_test_finished();
-        endTests();
+      endTests();
     },
 
-    onDataAvailable(request, stream, offset, count) {}
+    onDataAvailable(request, stream, offset, count) {},
   };
 
   let listener = new StreamListener();
- 
-  channel.asyncOpen(listener);
 
+  channel.asyncOpen(listener);
 }
 
-function setupChannel(url)
-{
+function setupChannel(url) {
   var chan = NetUtil.newChannel({
     uri: URL + url,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   var httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
   return httpChan;
 }
 
-function endTests()
-{
+function endTests() {
   // restore the prefs to pre-test values
   prefs.setBoolPref("network.http.enforce-framing.http1", enforcePrefStrict);
   prefs.setBoolPref("network.http.enforce-framing.soft", enforcePrefSoft);
-  prefs.setBoolPref("network.http.enforce-framing.strict_chunked_encoding",
-                    enforcePrefStrictChunked);
+  prefs.setBoolPref(
+    "network.http.enforce-framing.strict_chunked_encoding",
+    enforcePrefStrictChunked
+  );
   httpserver.stop(do_test_finished);
 }
 
@@ -107,8 +108,7 @@ function endTests()
 // Test 1: FAIL because of Content-Length underrun with HTTP 1.1
 test_flags[1] = CL_EXPECT_LATE_FAILURE;
 
-function handler1(metadata, response)
-{
+function handler1(metadata, response) {
   var body = "blablabla";
 
   response.seizePower();
@@ -120,8 +120,7 @@ function handler1(metadata, response)
   response.finish();
 }
 
-function completeTest1(request, data, ctx)
-{
+function completeTest1(request, data, ctx) {
   Assert.equal(request.status, Cr.NS_ERROR_NET_PARTIAL_TRANSFER);
 
   run_test_number(11);
@@ -131,8 +130,7 @@ function completeTest1(request, data, ctx)
 // Test 11: PASS because of Content-Length underrun with HTTP 1.1 but non 2xx
 test_flags[11] = CL_IGNORE_CL;
 
-function handler11(metadata, response)
-{
+function handler11(metadata, response) {
   var body = "blablabla";
 
   response.seizePower();
@@ -144,8 +142,7 @@ function handler11(metadata, response)
   response.finish();
 }
 
-function completeTest11(request, data, ctx)
-{
+function completeTest11(request, data, ctx) {
   Assert.equal(request.status, Cr.NS_OK);
   run_test_number(2);
 }
@@ -155,8 +152,7 @@ function completeTest11(request, data, ctx)
 
 test_flags[2] = CL_IGNORE_CL;
 
-function handler2(metadata, response)
-{
+function handler2(metadata, response) {
   var body = "short content";
 
   response.seizePower();
@@ -168,15 +164,16 @@ function handler2(metadata, response)
   response.finish();
 }
 
-function completeTest2(request, data, ctx)
-{
+function completeTest2(request, data, ctx) {
   Assert.equal(request.status, Cr.NS_OK);
 
   // test 3 requires the enforce-framing prefs to be false
   prefs.setBoolPref("network.http.enforce-framing.http1", false);
   prefs.setBoolPref("network.http.enforce-framing.soft", false);
-  prefs.setBoolPref("network.http.enforce-framing.strict_chunked_encoding",
-                    false);
+  prefs.setBoolPref(
+    "network.http.enforce-framing.strict_chunked_encoding",
+    false
+  );
   run_test_number(3);
 }
 
@@ -184,8 +181,7 @@ function completeTest2(request, data, ctx)
 // Test 3: SUCCEED with bad Content-Length because pref allows it
 test_flags[3] = CL_IGNORE_CL;
 
-function handler3(metadata, response)
-{
+function handler3(metadata, response) {
   var body = "blablabla";
 
   response.seizePower();
@@ -197,8 +193,7 @@ function handler3(metadata, response)
   response.finish();
 }
 
-function completeTest3(request, data, ctx)
-{
+function completeTest3(request, data, ctx) {
   Assert.equal(request.status, Cr.NS_OK);
   prefs.setBoolPref("network.http.enforce-framing.soft", true);
   run_test_number(4);
@@ -208,11 +203,11 @@ function completeTest3(request, data, ctx)
 // Test 4: Succeed because a cut off deflate stream can't be detected
 test_flags[4] = CL_IGNORE_CL;
 
-function handler4(metadata, response)
-{
-    // this is the beginning of a deflate compressed response body
-    
-  var body = "\xcd\x57\xcd\x6e\x1b\x37\x10\xbe\x07\xc8\x3b\x0c\x36\x68\x72\xd1" +
+function handler4(metadata, response) {
+  // this is the beginning of a deflate compressed response body
+
+  var body =
+    "\xcd\x57\xcd\x6e\x1b\x37\x10\xbe\x07\xc8\x3b\x0c\x36\x68\x72\xd1" +
     "\xbf\x92\x22\xb1\x57\x0a\x64\x4b\x6a\x0c\x28\xb6\x61\xa9\x41\x73" +
     "\x2a\xb8\xbb\x94\x44\x98\xfb\x03\x92\x92\xec\x06\x7d\x97\x1e\xeb" +
     "\xbe\x86\x5e\xac\xc3\x25\x97\xa2\x64\xb9\x75\x0b\x14\xe8\x69\x87" +
@@ -238,8 +233,7 @@ function handler4(metadata, response)
   response.finish();
 }
 
-function completeTest4(request, data, ctx)
-{
+function completeTest4(request, data, ctx) {
   Assert.equal(request.status, Cr.NS_OK);
 
   prefs.setBoolPref("network.http.enforce-framing.http1", true);
@@ -252,11 +246,11 @@ function completeTest4(request, data, ctx)
 // Note that test 99 here is run completely different than the other tests in
 // this file so if you add more tests here, consider adding them before this.
 
-function handler99(metadata, response)
-{
+function handler99(metadata, response) {
   // this is the beginning of a gzip compressed response body
-    
-  var body = "\x1f\x8b\x08\x00\x80\xb9\x25\x53\x00\x03\xd4\xd9\x79\xb8\x8e\xe5" +
+
+  var body =
+    "\x1f\x8b\x08\x00\x80\xb9\x25\x53\x00\x03\xd4\xd9\x79\xb8\x8e\xe5" +
     "\xba\x00\xf0\x65\x19\x33\x24\x15\x29\xf3\x50\x52\xc6\xac\x85\x10" +
     "\x8b\x12\x22\x45\xe6\xb6\x21\x9a\x96\x84\x4c\x69\x32\xec\x84\x92" +
     "\xcc\x99\x6a\xd9\x32\xa5\xd0\x40\xd9\xc6\x14\x15\x95\x28\x62\x9b" +

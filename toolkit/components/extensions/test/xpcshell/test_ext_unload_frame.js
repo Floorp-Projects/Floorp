@@ -1,6 +1,6 @@
 "use strict";
 
-const server = createHttpServer({hosts: ["example.com"]});
+const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));
 
 server.registerPathHandler("/dummy", (request, response) => {
@@ -39,14 +39,24 @@ function connect_background(delayedNotifyPass) {
     port.onDisconnect.addListener(() => {
       browser.test.assertFalse(disconnected, "onDisconnect should fire once");
       disconnected = true;
-      browser.test.assertTrue(hasMessage, "Expected onMessage before onDisconnect");
-      browser.test.assertEq(null, port.error, "The port is implicitly closed without errors when the other context unloads");
+      browser.test.assertTrue(
+        hasMessage,
+        "Expected onMessage before onDisconnect"
+      );
+      browser.test.assertEq(
+        null,
+        port.error,
+        "The port is implicitly closed without errors when the other context unloads"
+      );
       delayedNotifyPass("Received onDisconnect from closing frame");
     });
     port.onMessage.addListener(msg => {
       browser.test.assertFalse(hasMessage, "onMessage should fire once");
       hasMessage = true;
-      browser.test.assertFalse(disconnected, "Should get message before disconnect");
+      browser.test.assertFalse(
+        disconnected,
+        "Should get message before disconnect"
+      );
       browser.test.assertEq("from frame", msg, "Expected message from frame");
     });
 
@@ -55,15 +65,23 @@ function connect_background(delayedNotifyPass) {
 }
 function connect_contentScript(testType) {
   let isUnloading = false;
-  addEventListener("pagehide", () => { isUnloading = true; }, {once: true});
+  addEventListener(
+    "pagehide",
+    () => {
+      isUnloading = true;
+    },
+    { once: true }
+  );
 
-  let port = browser.runtime.connect({name: "port from frame"});
+  let port = browser.runtime.connect({ name: "port from frame" });
   port.onMessage.addListener(msg => {
     // The background page sends a reply as soon as we call runtime.connect().
     // It is possible that the reply reaches this frame before the
     // window.close() request has been processed.
     if (!isUnloading) {
-      browser.test.log(`Ignorting unexpected reply ("${msg}") because the page is not being unloaded.`);
+      browser.test.log(
+        `Ignorting unexpected reply ("${msg}") because the page is not being unloaded.`
+      );
       return;
     }
 
@@ -99,11 +117,13 @@ function createTestExtension(testType, backgroundScript, contentScript) {
   let extension = ExtensionTestUtils.loadExtension({
     background: `(${backgroundScript})(${delayedNotifyPass});`,
     manifest: {
-      content_scripts: [{
-        js: ["contentscript.js"],
-        all_frames: testType == "frame",
-        matches: ["http://example.com/data/file_sample.html"],
-      }],
+      content_scripts: [
+        {
+          js: ["contentscript.js"],
+          all_frames: testType == "frame",
+          matches: ["http://example.com/data/file_sample.html"],
+        },
+      ],
     },
     files: {
       "contentscript.js": `(${contentScript})("${testType}");`,
@@ -116,14 +136,19 @@ function createTestExtension(testType, backgroundScript, contentScript) {
 }
 
 add_task(async function testSendMessage_and_remove_frame() {
-  let extension = createTestExtension("frame", sendMessage_background, sendMessage_contentScript);
+  let extension = createTestExtension(
+    "frame",
+    sendMessage_background,
+    sendMessage_contentScript
+  );
   await extension.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
-    "http://example.com/dummy");
+    "http://example.com/dummy"
+  );
 
   await contentPage.spawn(null, () => {
-    let {document} = this.content;
+    let { document } = this.content;
     let frame = document.createElement("iframe");
     frame.src = "/data/file_sample.html";
     document.body.appendChild(frame);
@@ -135,14 +160,19 @@ add_task(async function testSendMessage_and_remove_frame() {
 });
 
 add_task(async function testConnect_and_remove_frame() {
-  let extension = createTestExtension("frame", connect_background, connect_contentScript);
+  let extension = createTestExtension(
+    "frame",
+    connect_background,
+    connect_contentScript
+  );
   await extension.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
-    "http://example.com/dummy");
+    "http://example.com/dummy"
+  );
 
   await contentPage.spawn(null, () => {
-    let {document} = this.content;
+    let { document } = this.content;
     let frame = document.createElement("iframe");
     frame.src = "/data/file_sample.html";
     document.body.appendChild(frame);
@@ -159,11 +189,16 @@ add_task(async function testSendMessage_and_remove_window() {
     return;
   }
 
-  let extension = createTestExtension("window", sendMessage_background, sendMessage_contentScript);
+  let extension = createTestExtension(
+    "window",
+    sendMessage_background,
+    sendMessage_contentScript
+  );
   await extension.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
-    "http://example.com/data/file_sample.html");
+    "http://example.com/data/file_sample.html"
+  );
   await extension.awaitMessage("close-window");
   await contentPage.close();
 
@@ -177,11 +212,16 @@ add_task(async function testConnect_and_remove_window() {
     return;
   }
 
-  let extension = createTestExtension("window", connect_background, connect_contentScript);
+  let extension = createTestExtension(
+    "window",
+    connect_background,
+    connect_contentScript
+  );
   await extension.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
-    "http://example.com/data/file_sample.html");
+    "http://example.com/data/file_sample.html"
+  );
   await extension.awaitMessage("close-window");
   await contentPage.close();
 

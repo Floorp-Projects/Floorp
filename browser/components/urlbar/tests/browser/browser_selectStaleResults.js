@@ -77,8 +77,9 @@ add_task(async function test() {
   Assert.equal(queryContext.results.length, halfResults + 1);
 
   // But there should be maxResults visible rows in the view.
-  let items = Array.from(gURLBar.view._rows.children)
-                   .filter(r => gURLBar.view._isRowVisible(r));
+  let items = Array.from(gURLBar.view._rows.children).filter(r =>
+    gURLBar.view._isRowVisible(r)
+  );
   Assert.equal(items.length, maxResults);
 
   // Arrow down through all the results.  After arrowing down from the last "xx"
@@ -99,6 +100,7 @@ add_task(async function test() {
     Assert.equal(UrlbarTestUtils.getSelectedIndex(window), i);
   }
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 });

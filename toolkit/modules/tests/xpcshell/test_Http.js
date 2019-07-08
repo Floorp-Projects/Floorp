@@ -1,11 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {httpRequest} = ChromeUtils.import("resource://gre/modules/Http.jsm");
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { httpRequest } = ChromeUtils.import("resource://gre/modules/Http.jsm");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-const BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream;1",
-  "nsIBinaryInputStream", "setInputStream");
+const BinaryInputStream = Components.Constructor(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
 
 var server;
 
@@ -18,7 +21,8 @@ const kPostPath = "/post";
 const kPostUrl = kBaseUrl + kPostPath;
 const kPostDataSent = [["foo", "bar"], ["complex", "!*()@"]];
 const kPostDataReceived = "foo=bar&complex=%21%2A%28%29%40";
-const kPostMimeTypeReceived = "application/x-www-form-urlencoded; charset=utf-8";
+const kPostMimeTypeReceived =
+  "application/x-www-form-urlencoded; charset=utf-8";
 
 const kJsonPostPath = "/json_post";
 const kJsonPostUrl = kBaseUrl + kJsonPostPath;
@@ -39,13 +43,18 @@ function successResult(aRequest, aResponse) {
   aResponse.write("Success!");
 }
 
-function getDataChecker(aExpectedMethod, aExpectedData, aExpectedMimeType = null) {
+function getDataChecker(
+  aExpectedMethod,
+  aExpectedData,
+  aExpectedMimeType = null
+) {
   return function(aRequest, aResponse) {
     let body = new BinaryInputStream(aRequest.bodyInputStream);
     let bytes = [];
     let avail;
-    while ((avail = body.available()) > 0)
+    while ((avail = body.available()) > 0) {
       Array.prototype.push.apply(bytes, body.readByteArray(avail));
+    }
 
     Assert.equal(aRequest.method, aExpectedMethod);
 
@@ -238,15 +247,16 @@ function run_test() {
   // Set up a mock HTTP server to serve a success page.
   server = new HttpServer();
   server.registerPathHandler(kSuccessPath, successResult);
-  server.registerPathHandler(kPostPath,
-                             getDataChecker("POST", kPostDataReceived,
-                                            kPostMimeTypeReceived));
-  server.registerPathHandler(kPutPath,
-                             getDataChecker("PUT", kPutDataReceived));
+  server.registerPathHandler(
+    kPostPath,
+    getDataChecker("POST", kPostDataReceived, kPostMimeTypeReceived)
+  );
+  server.registerPathHandler(kPutPath, getDataChecker("PUT", kPutDataReceived));
   server.registerPathHandler(kGetPath, getDataChecker("GET", ""));
-  server.registerPathHandler(kJsonPostPath,
-                             getDataChecker("POST", kJsonPostData,
-                                            kJsonPostMimeType));
+  server.registerPathHandler(
+    kJsonPostPath,
+    getDataChecker("POST", kJsonPostData, kJsonPostMimeType)
+  );
 
   server.start(kDefaultServerPort);
 
@@ -255,7 +265,6 @@ function run_test() {
   // Teardown.
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref(PREF);
-    server.stop(function() { });
+    server.stop(function() {});
   });
 }
-

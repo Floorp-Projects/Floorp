@@ -6,9 +6,13 @@
 
 var EXPORTED_SYMBOLS = ["Page"];
 
-const {ContentProcessDomain} = ChromeUtils.import("chrome://remote/content/domains/ContentProcessDomain.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {UnsupportedError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
+const { ContentProcessDomain } = ChromeUtils.import(
+  "chrome://remote/content/domains/ContentProcessDomain.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { UnsupportedError } = ChromeUtils.import(
+  "chrome://remote/content/Error.jsm"
+);
 
 class Page extends ContentProcessDomain {
   constructor(session) {
@@ -31,10 +35,12 @@ class Page extends ContentProcessDomain {
       this.enabled = true;
       this.contextObserver.on("frame-navigated", this.onFrameNavigated);
 
-      this.chromeEventHandler.addEventListener("DOMContentLoaded", this,
-        {mozSystemGroup: true});
-      this.chromeEventHandler.addEventListener("pageshow", this,
-        {mozSystemGroup: true});
+      this.chromeEventHandler.addEventListener("DOMContentLoaded", this, {
+        mozSystemGroup: true,
+      });
+      this.chromeEventHandler.addEventListener("pageshow", this, {
+        mozSystemGroup: true,
+      });
     }
   }
 
@@ -42,15 +48,17 @@ class Page extends ContentProcessDomain {
     if (this.enabled) {
       this.contextObserver.off("frame-navigated", this.onFrameNavigated);
 
-      this.chromeEventHandler.removeEventListener("DOMContentLoaded", this,
-        {mozSystemGroup: true});
-      this.chromeEventHandler.removeEventListener("pageshow", this,
-        {mozSystemGroup: true});
+      this.chromeEventHandler.removeEventListener("DOMContentLoaded", this, {
+        mozSystemGroup: true,
+      });
+      this.chromeEventHandler.removeEventListener("pageshow", this, {
+        mozSystemGroup: true,
+      });
       this.enabled = false;
     }
   }
 
-  async navigate({url, referrer, transitionType, frameId} = {}) {
+  async navigate({ url, referrer, transitionType, frameId } = {}) {
     if (frameId && frameId != this.content.windowUtils.outerWindowID) {
       throw new UnsupportedError("frameId not supported");
     }
@@ -108,7 +116,7 @@ class Page extends ContentProcessDomain {
     });
   }
 
-  handleEvent({type, target}) {
+  handleEvent({ type, target }) {
     if (target.defaultView != this.content) {
       // Ignore iframes for now
       return;
@@ -119,26 +127,26 @@ class Page extends ContentProcessDomain {
     const url = target.location.href;
 
     switch (type) {
-    case "DOMContentLoaded":
-      this.emit("Page.domContentEventFired", {timestamp});
-      break;
+      case "DOMContentLoaded":
+        this.emit("Page.domContentEventFired", { timestamp });
+        break;
 
-    case "pageshow":
-      this.emit("Page.loadEventFired", {timestamp, frameId});
-      // XXX this should most likely be sent differently
-      this.emit("Page.navigatedWithinDocument", {timestamp, frameId, url});
-      this.emit("Page.frameStoppedLoading", {timestamp, frameId});
-      break;
+      case "pageshow":
+        this.emit("Page.loadEventFired", { timestamp, frameId });
+        // XXX this should most likely be sent differently
+        this.emit("Page.navigatedWithinDocument", { timestamp, frameId, url });
+        this.emit("Page.frameStoppedLoading", { timestamp, frameId });
+        break;
     }
   }
 }
 
 function transitionToLoadFlag(transitionType) {
   switch (transitionType) {
-  case "reload":
-    return Ci.nsIWebNavigation.LOAD_FLAGS_IS_REFRESH;
-  case "link":
-  default:
-    return Ci.nsIWebNavigation.LOAD_FLAGS_IS_LINK;
+    case "reload":
+      return Ci.nsIWebNavigation.LOAD_FLAGS_IS_REFRESH;
+    case "link":
+    default:
+      return Ci.nsIWebNavigation.LOAD_FLAGS_IS_LINK;
   }
 }

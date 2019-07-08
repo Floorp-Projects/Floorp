@@ -12,17 +12,19 @@ add_task(async function enableHtmlViews() {
   });
 
   let gProvider = new MockProvider();
-  gProvider.createAddons([{
-    id: "no-ask-to-activate@mochi.test",
-    name: "No ask to activate",
-    getFullDescription(doc) {
-      let a = doc.createElement("a");
-      a.textContent = "A link";
-      a.href = "http://example.com/no-ask-to-activate";
-      return a;
+  gProvider.createAddons([
+    {
+      id: "no-ask-to-activate@mochi.test",
+      name: "No ask to activate",
+      getFullDescription(doc) {
+        let a = doc.createElement("a");
+        a.textContent = "A link";
+        a.href = "http://example.com/no-ask-to-activate";
+        return a;
+      },
+      type: "plugin",
     },
-    type: "plugin",
-  }]);
+  ]);
 
   Services.telemetry.clearEvents();
 });
@@ -42,7 +44,8 @@ add_task(async function testAskToActivate() {
 
   let plugins = await AddonManager.getAddonsByTypes(["plugin"]);
   let flash = plugins.find(
-    plugin => plugin.description == TEST_PLUGIN_DESCRIPTION);
+    plugin => plugin.description == TEST_PLUGIN_DESCRIPTION
+  );
   let addonId = flash.id;
 
   // Reset to default value.
@@ -54,14 +57,19 @@ add_task(async function testAskToActivate() {
   let card = doc.querySelector(`addon-card[addon-id="${flash.id}"]`);
   let panelItems = card.querySelectorAll("panel-item:not([hidden])");
   let actions = Array.from(panelItems).map(item => item.getAttribute("action"));
-  Assert.deepEqual(actions, [
-    "ask-to-activate", "never-activate", "preferences", "expand",
-  ], "The panel items are for a plugin");
+  Assert.deepEqual(
+    actions,
+    ["ask-to-activate", "never-activate", "preferences", "expand"],
+    "The panel items are for a plugin"
+  );
 
   checkItems(panelItems, "ask-to-activate");
 
-  is(flash.userDisabled, AddonManager.STATE_ASK_TO_ACTIVATE,
-     "Flash is ask-to-activate");
+  is(
+    flash.userDisabled,
+    AddonManager.STATE_ASK_TO_ACTIVATE,
+    "Flash is ask-to-activate"
+  );
   ok(flash.isActive, "Flash is active");
 
   // Switch to never activate.
@@ -77,8 +85,11 @@ add_task(async function testAskToActivate() {
   card.querySelector("panel-item[action*=ask]").click();
   await updated;
   checkItems(panelItems, "ask-to-activate");
-  is(flash.userDisabled, AddonManager.STATE_ASK_TO_ACTIVATE,
-     "Flash is ask-to-activate");
+  is(
+    flash.userDisabled,
+    AddonManager.STATE_ASK_TO_ACTIVATE,
+    "Flash is ask-to-activate"
+  );
   ok(flash.isActive, "Flash is active");
 
   // Check the detail view, too.
@@ -93,12 +104,22 @@ add_task(async function testAskToActivate() {
   await closeView(win);
 
   assertAboutAddonsTelemetryEvents([
-    ["addonsManager", "view", "aboutAddons", "list", {type: "plugin"}],
-    ["addonsManager", "action", "aboutAddons", null,
-     {type: "plugin", addonId, view: "list", action: "disable"}],
+    ["addonsManager", "view", "aboutAddons", "list", { type: "plugin" }],
+    [
+      "addonsManager",
+      "action",
+      "aboutAddons",
+      null,
+      { type: "plugin", addonId, view: "list", action: "disable" },
+    ],
     // Ask-to-activate doesn't trigger a telemetry event.
-    ["addonsManager", "view", "aboutAddons", "detail",
-     {type: "plugin", addonId}],
+    [
+      "addonsManager",
+      "view",
+      "aboutAddons",
+      "detail",
+      { type: "plugin", addonId },
+    ],
   ]);
 });
 
@@ -127,8 +148,10 @@ add_task(async function testNoAskToActivate() {
   // There's no preferences option.
   let actions = Array.from(menuItems).map(item => item.getAttribute("action"));
   Assert.deepEqual(
-    actions, ["ask-to-activate", "always-activate", "never-activate", "expand"],
-   "The panel items are for a plugin");
+    actions,
+    ["ask-to-activate", "always-activate", "never-activate", "expand"],
+    "The panel items are for a plugin"
+  );
 
   // Open the details page.
   let loaded = waitForViewLoad(win);
@@ -152,8 +175,10 @@ add_task(async function testNoAskToActivate() {
   // There's no preferences option, and expand is now hidden.
   actions = Array.from(menuItems).map(item => item.getAttribute("action"));
   Assert.deepEqual(
-    actions, ["ask-to-activate", "always-activate", "never-activate"],
-   "The panel items are for a detail page plugin");
+    actions,
+    ["ask-to-activate", "always-activate", "never-activate"],
+    "The panel items are for a detail page plugin"
+  );
 
   await closeView(win);
 });

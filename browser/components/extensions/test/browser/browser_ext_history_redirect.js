@@ -1,6 +1,7 @@
 "use strict";
 
-const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser";
+const BASE =
+  "http://mochi.test:8888/browser/browser/components/extensions/test/browser";
 const REDIRECT_URL = BASE + "/redirection.sjs";
 const REDIRECTED_URL = BASE + "/dummy_page.html";
 
@@ -14,12 +15,15 @@ add_task(async function history_redirect() {
           break;
         }
         case "search": {
-          let results = await browser.history.search({text: url, startTime: new Date(0)});
+          let results = await browser.history.search({
+            text: url,
+            startTime: new Date(0),
+          });
           browser.test.sendMessage("search-result", results);
           break;
         }
         case "get-visits": {
-          let results = await browser.history.getVisits({url});
+          let results = await browser.history.getVisits({ url });
           browser.test.sendMessage("get-visits-result", results);
           break;
         }
@@ -31,9 +35,7 @@ add_task(async function history_redirect() {
 
   let extensionData = {
     manifest: {
-      permissions: [
-        "history",
-      ],
+      permissions: ["history"],
     },
     background,
   };
@@ -46,17 +48,24 @@ add_task(async function history_redirect() {
   extension.sendMessage("delete-all");
   await extension.awaitMessage("delete-all-result");
 
-  await BrowserTestUtils.withNewTab({gBrowser, url: REDIRECT_URL}, async (browser) => {
-    is(browser.currentURI.spec, REDIRECTED_URL, "redirected to the expected location");
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: REDIRECT_URL },
+    async browser => {
+      is(
+        browser.currentURI.spec,
+        REDIRECTED_URL,
+        "redirected to the expected location"
+      );
 
-    extension.sendMessage("search", REDIRECT_URL);
-    let results = await extension.awaitMessage("search-result");
-    is(results.length, 1, "search returned expected length of results");
+      extension.sendMessage("search", REDIRECT_URL);
+      let results = await extension.awaitMessage("search-result");
+      is(results.length, 1, "search returned expected length of results");
 
-    extension.sendMessage("get-visits", REDIRECT_URL);
-    let visits = await extension.awaitMessage("get-visits-result");
-    is(visits.length, 1, "getVisits returned expected length of visits");
-  });
+      extension.sendMessage("get-visits", REDIRECT_URL);
+      let visits = await extension.awaitMessage("get-visits-result");
+      is(visits.length, 1, "getVisits returned expected length of visits");
+    }
+  );
 
   await extension.unload();
   info("extension unloaded");

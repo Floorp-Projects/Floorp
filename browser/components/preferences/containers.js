@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {ContextualIdentityService} = ChromeUtils.import("resource://gre/modules/ContextualIdentityService.jsm");
+const { ContextualIdentityService } = ChromeUtils.import(
+  "resource://gre/modules/ContextualIdentityService.jsm"
+);
 
 /**
  * We want to set the window title immediately to prevent flickers.
@@ -75,8 +77,7 @@ let gContainersManager = {
     document.getElementById("containers-content").removeAttribute("hidden");
   },
 
-  uninit() {
-  },
+  uninit() {},
 
   // Check if name is provided to determine if the form can be submitted
   checkForm() {
@@ -159,20 +160,16 @@ let gContainersManager = {
     }
 
     if (this.userContextId) {
-      ContextualIdentityService.update(this.userContextId,
-        name,
-        icon,
-        color);
+      ContextualIdentityService.update(this.userContextId, name, icon, color);
     } else {
-      ContextualIdentityService.create(name,
-        icon,
-        color);
+      ContextualIdentityService.create(name, icon, color);
     }
     window.parent.location.reload();
   },
 
   onWindowKeyPress(aEvent) {
-    if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE)
+    if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE) {
       window.close();
+    }
   },
 };

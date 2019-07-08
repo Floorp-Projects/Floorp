@@ -4,17 +4,40 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ShellService", "resource:///modules/ShellService.jsm");
-ChromeUtils.defineModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryArchive", "resource://gre/modules/TelemetryArchive.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment", "resource://gre/modules/TelemetryEnvironment.jsm");
-ChromeUtils.defineModuleGetter(this, "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ShellService",
+  "resource:///modules/ShellService.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryArchive",
+  "resource://gre/modules/TelemetryArchive.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryEnvironment",
+  "resource://gre/modules/TelemetryEnvironment.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "UpdateUtils",
+  "resource://gre/modules/UpdateUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["ClientEnvironmentBase"];
-
 
 /**
  * Create an object that provides general information about the client application.
@@ -39,7 +62,9 @@ class ClientEnvironmentBase {
       const mostRecentPings = {};
       for (const ping of pings) {
         if (ping.type in mostRecentPings) {
-          if (mostRecentPings[ping.type].timestampCreated < ping.timestampCreated) {
+          if (
+            mostRecentPings[ping.type].timestampCreated < ping.timestampCreated
+          ) {
             mostRecentPings[ping.type] = ping;
           }
         } else {
@@ -50,7 +75,9 @@ class ClientEnvironmentBase {
       const telemetry = {};
       for (const key in mostRecentPings) {
         const ping = mostRecentPings[key];
-        telemetry[ping.type] = await TelemetryArchive.promiseArchivedPingById(ping.id);
+        telemetry[ping.type] = await TelemetryArchive.promiseArchivedPingById(
+          ping.id
+        );
       }
       return telemetry;
     })();
@@ -71,7 +98,8 @@ class ClientEnvironmentBase {
   static get searchEngine() {
     return (async () => {
       await TelemetryEnvironment.onInitialized();
-      return TelemetryEnvironment.currentEnvironment.settings.defaultSearchEngine;
+      return TelemetryEnvironment.currentEnvironment.settings
+        .defaultSearchEngine;
     })();
   }
 
@@ -80,7 +108,10 @@ class ClientEnvironmentBase {
   }
 
   static get syncDesktopDevices() {
-    return Services.prefs.getIntPref("services.sync.clients.devices.desktop", 0);
+    return Services.prefs.getIntPref(
+      "services.sync.clients.devices.desktop",
+      0
+    );
   }
 
   static get syncMobileDevices() {
@@ -95,7 +126,14 @@ class ClientEnvironmentBase {
     return (async () => {
       const addons = await AddonManager.getAllAddons();
       return addons.reduce((acc, addon) => {
-        const { id, isActive, name, type, version, installDate: installDateN } = addon;
+        const {
+          id,
+          isActive,
+          name,
+          type,
+          version,
+          installDate: installDateN,
+        } = addon;
         const installDate = new Date(installDateN);
         acc[id] = { id, isActive, name, type, version, installDate };
         return acc;
@@ -119,7 +157,10 @@ class ClientEnvironmentBase {
   }
 
   static get doNotTrack() {
-    return Services.prefs.getBoolPref("privacy.donottrackheader.enabled", false);
+    return Services.prefs.getBoolPref(
+      "privacy.donottrackheader.enabled",
+      false
+    );
   }
 
   static get os() {

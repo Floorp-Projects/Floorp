@@ -22,7 +22,8 @@ function getWasmText(subject, data) {
     result = { lines: ["No luck with wast conversion"], offsets: [0], done };
   }
 
-  const offsets = result.offsets, lines = [];
+  const offsets = result.offsets,
+    lines = [];
   for (let i = 0; i < offsets.length; i++) {
     lines[offsets[i]] = i;
   }
@@ -33,9 +34,18 @@ function getWasmText(subject, data) {
 }
 
 function getWasmLineNumberFormatter(subject) {
-  const codeOf0 = 48, codeOfA = 65;
-  const buffer =
-    [codeOf0, codeOf0, codeOf0, codeOf0, codeOf0, codeOf0, codeOf0, codeOf0];
+  const codeOf0 = 48,
+    codeOfA = 65;
+  const buffer = [
+    codeOf0,
+    codeOf0,
+    codeOf0,
+    codeOf0,
+    codeOf0,
+    codeOf0,
+    codeOf0,
+    codeOf0,
+  ];
   let last0 = 7;
   return function(number) {
     const offset = lineToWasmOffset(subject, number - 1);

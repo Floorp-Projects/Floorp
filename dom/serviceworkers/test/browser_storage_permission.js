@@ -5,24 +5,28 @@ const PAGE_URI = BASE_URI + "empty.html";
 const SCOPE = PAGE_URI + "?storage_permission";
 const SW_SCRIPT = BASE_URI + "empty.js";
 
-
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({"set": [
-    // Until the e10s refactor is complete, use a single process to avoid
-    // service worker propagation race.
-    ["dom.ipc.processCount", 1],
-    ["dom.serviceWorkers.enabled", true],
-    ["dom.serviceWorkers.testing.enabled", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Until the e10s refactor is complete, use a single process to avoid
+      // service worker propagation race.
+      ["dom.ipc.processCount", 1],
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+    ],
+  });
 
   let tab = BrowserTestUtils.addTab(gBrowser, PAGE_URI);
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  await ContentTask.spawn(browser, { script: SW_SCRIPT, scope: SCOPE },
+  await ContentTask.spawn(
+    browser,
+    { script: SW_SCRIPT, scope: SCOPE },
     async function(opts) {
-      let reg = await content.navigator.serviceWorker.register(opts.script,
-                                                               { scope: opts.scope });
+      let reg = await content.navigator.serviceWorker.register(opts.script, {
+        scope: opts.scope,
+      });
       let worker = reg.installing || reg.waiting || reg.active;
       await new Promise(resolve => {
         if (worker.state === "activated") {
@@ -43,8 +47,11 @@ add_task(async function setup() {
 });
 
 add_task(async function test_allow_permission() {
-  Services.perms.add(Services.io.newURI(PAGE_URI), "cookie",
-                     Ci.nsICookiePermission.ACCESS_ALLOW);
+  Services.perms.add(
+    Services.io.newURI(PAGE_URI),
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_ALLOW
+  );
 
   let tab = BrowserTestUtils.addTab(gBrowser, SCOPE);
   let browser = gBrowser.getBrowserForTab(tab);
@@ -60,8 +67,11 @@ add_task(async function test_allow_permission() {
 });
 
 add_task(async function test_deny_permission() {
-  Services.perms.add(Services.io.newURI(PAGE_URI), "cookie",
-                     Ci.nsICookiePermission.ACCESS_DENY);
+  Services.perms.add(
+    Services.io.newURI(PAGE_URI),
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_DENY
+  );
 
   let tab = BrowserTestUtils.addTab(gBrowser, SCOPE);
   let browser = gBrowser.getBrowserForTab(tab);
@@ -78,8 +88,11 @@ add_task(async function test_deny_permission() {
 });
 
 add_task(async function test_session_permission() {
-  Services.perms.add(Services.io.newURI(PAGE_URI), "cookie",
-                     Ci.nsICookiePermission.ACCESS_SESSION);
+  Services.perms.add(
+    Services.io.newURI(PAGE_URI),
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_SESSION
+  );
 
   let tab = BrowserTestUtils.addTab(gBrowser, SCOPE);
   let browser = gBrowser.getBrowserForTab(tab);
@@ -114,20 +127,22 @@ add_task(async function test_block_storage_before_blank_iframe() {
   let controller2 = await ContentTask.spawn(browser, null, async function() {
     let f = content.document.createElement("iframe");
     content.document.body.appendChild(f);
-    await new Promise(resolve => f.onload = resolve);
+    await new Promise(resolve => (f.onload = resolve));
     return !!f.contentWindow.navigator.serviceWorker.controller;
   });
 
   ok(!!controller2, "page should be controlled with storage allowed");
 
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT],
+    ],
+  });
 
   let controller3 = await ContentTask.spawn(browser, null, async function() {
     let f = content.document.createElement("iframe");
     content.document.body.appendChild(f);
-    await new Promise(resolve => f.onload = resolve);
+    await new Promise(resolve => (f.onload = resolve));
     return !!f.contentWindow.navigator.serviceWorker.controller;
   });
 
@@ -154,28 +169,34 @@ add_task(async function test_block_storage_before_blob_iframe() {
   ok(!!controller, "page should be controlled with storage allowed");
 
   let controller2 = await ContentTask.spawn(browser, null, async function() {
-    let b = new content.Blob(["<!DOCTYPE html><html></html>"], { type: "text/html" });
+    let b = new content.Blob(["<!DOCTYPE html><html></html>"], {
+      type: "text/html",
+    });
     let f = content.document.createElement("iframe");
     // No need to call revokeObjectURL() since the window will be closed shortly.
     f.src = content.URL.createObjectURL(b);
     content.document.body.appendChild(f);
-    await new Promise(resolve => f.onload = resolve);
+    await new Promise(resolve => (f.onload = resolve));
     return !!f.contentWindow.navigator.serviceWorker.controller;
   });
 
   ok(!!controller2, "page should be controlled with storage allowed");
 
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT],
+    ],
+  });
 
   let controller3 = await ContentTask.spawn(browser, null, async function() {
-    let b = new content.Blob(["<!DOCTYPE html><html></html>"], { type: "text/html" });
+    let b = new content.Blob(["<!DOCTYPE html><html></html>"], {
+      type: "text/html",
+    });
     let f = content.document.createElement("iframe");
     // No need to call revokeObjectURL() since the window will be closed shortly.
     f.src = content.URL.createObjectURL(b);
     content.document.body.appendChild(f);
-    await new Promise(resolve => f.onload = resolve);
+    await new Promise(resolve => (f.onload = resolve));
     return !!f.contentWindow.navigator.serviceWorker.controller;
   });
 
@@ -204,8 +225,10 @@ add_task(async function test_block_storage_before_blob_worker() {
   ok(!!controller, "page should be controlled with storage allowed");
 
   let scriptURL = await ContentTask.spawn(browser, null, async function() {
-    let b = new content.Blob(["self.postMessage(self.location.href);self.close()"],
-                             { type: "application/javascript" });
+    let b = new content.Blob(
+      ["self.postMessage(self.location.href);self.close()"],
+      { type: "application/javascript" }
+    );
     // No need to call revokeObjectURL() since the window will be closed shortly.
     let u = content.URL.createObjectURL(b);
     let w = new content.Worker(u);
@@ -216,13 +239,17 @@ add_task(async function test_block_storage_before_blob_worker() {
 
   ok(scriptURL.startsWith("blob:"), "blob URL worker should run");
 
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT],
+    ],
+  });
 
   let scriptURL2 = await ContentTask.spawn(browser, null, async function() {
-    let b = new content.Blob(["self.postMessage(self.location.href);self.close()"],
-                             { type: "application/javascript" });
+    let b = new content.Blob(
+      ["self.postMessage(self.location.href);self.close()"],
+      { type: "application/javascript" }
+    );
     // No need to call revokeObjectURL() since the window will be closed shortly.
     let u = content.URL.createObjectURL(b);
     let w = new content.Worker(u);

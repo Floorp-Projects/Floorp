@@ -6,19 +6,27 @@
 
 "use strict";
 
-const {CC, Ci, Cc} = require("chrome");
+const { CC, Ci, Cc } = require("chrome");
 
-const ArrayBufferInputStream = CC("@mozilla.org/io/arraybuffer-input-stream;1",
-                                  "nsIArrayBufferInputStream");
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
-                             "nsIBinaryInputStream", "setInputStream");
+const ArrayBufferInputStream = CC(
+  "@mozilla.org/io/arraybuffer-input-stream;1",
+  "nsIArrayBufferInputStream"
+);
+const BinaryInputStream = CC(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
 
-loader.lazyServiceGetter(this, "gActivityDistributor",
-                         "@mozilla.org/network/http-activity-distributor;1",
-                         "nsIHttpActivityDistributor");
+loader.lazyServiceGetter(
+  this,
+  "gActivityDistributor",
+  "@mozilla.org/network/http-activity-distributor;1",
+  "nsIHttpActivityDistributor"
+);
 
 const ChromeUtils = require("ChromeUtils");
-const {setTimeout} = require("resource://gre/modules/Timer.jsm");
+const { setTimeout } = require("resource://gre/modules/Timer.jsm");
 
 /**
  * Construct a new nsIStreamListener that buffers data and provides a
@@ -41,8 +49,10 @@ function NetworkThrottleListener(queue) {
 }
 
 NetworkThrottleListener.prototype = {
-  QueryInterface:
-    ChromeUtils.generateQI([Ci.nsIStreamListener, Ci.nsIInterfaceRequestor]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIStreamListener,
+    Ci.nsIInterfaceRequestor,
+  ]),
 
   /**
    * Set the original listener for this object.  The original listener
@@ -68,7 +78,7 @@ NetworkThrottleListener.prototype = {
    * @see nsIStreamListener.onStopRequest.
    */
   onStopRequest: function(request, statusCode) {
-    this.pendingData.push({request, statusCode});
+    this.pendingData.push({ request, statusCode });
     this.queue.dataAvailable(this);
   },
 
@@ -87,7 +97,7 @@ NetworkThrottleListener.prototype = {
     const stream = new ArrayBufferInputStream();
     stream.setData(bytes, 0, count);
 
-    this.pendingData.push({request, stream, count});
+    this.pendingData.push({ request, stream, count });
     this.queue.dataAvailable(this);
   },
 
@@ -107,15 +117,15 @@ NetworkThrottleListener.prototype = {
   sendSomeData: function(bytesPermitted) {
     if (this.pendingData.length === 0) {
       // Shouldn't happen.
-      return {length: 0, done: true};
+      return { length: 0, done: true };
     }
 
-    const {request, stream, count, statusCode} = this.pendingData[0];
+    const { request, stream, count, statusCode } = this.pendingData[0];
 
     if (statusCode !== undefined) {
       this.pendingData.shift();
       this.originalListener.onStopRequest(request, statusCode);
-      return {length: 0, done: true};
+      return { length: 0, done: true };
     }
 
     if (bytesPermitted > count) {
@@ -123,8 +133,12 @@ NetworkThrottleListener.prototype = {
     }
 
     try {
-      this.originalListener.onDataAvailable(request, stream,
-                                            this.offset, bytesPermitted);
+      this.originalListener.onDataAvailable(
+        request,
+        stream,
+        this.offset,
+        bytesPermitted
+      );
     } catch (e) {
       this.pendingException = e;
     }
@@ -141,7 +155,7 @@ NetworkThrottleListener.prototype = {
     // Maybe our state has changed enough to emit an event.
     this.maybeEmitEvents();
 
-    return {length: bytesPermitted, done};
+    return { length: bytesPermitted, done };
   },
 
   /**
@@ -156,16 +170,31 @@ NetworkThrottleListener.prototype = {
    * This is called when an http activity event is delivered.  This
    * object delays the event until the appropriate moment.
    */
-  addActivityCallback: function(callback, httpActivity, channel, activityType,
-                                 activitySubtype, timestamp, extraSizeData,
-                                 extraStringData) {
-    const datum = {callback, httpActivity, channel, activityType,
-                   activitySubtype, extraSizeData,
-                   extraStringData};
+  addActivityCallback: function(
+    callback,
+    httpActivity,
+    channel,
+    activityType,
+    activitySubtype,
+    timestamp,
+    extraSizeData,
+    extraStringData
+  ) {
+    const datum = {
+      callback,
+      httpActivity,
+      channel,
+      activityType,
+      activitySubtype,
+      extraSizeData,
+      extraStringData,
+    };
     this.activities[activitySubtype] = datum;
 
-    if (activitySubtype ===
-        gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE) {
+    if (
+      activitySubtype ===
+      gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE
+    ) {
       this.totalSize = extraSizeData;
     }
 
@@ -207,12 +236,25 @@ NetworkThrottleListener.prototype = {
    */
   maybeEmit: function(code) {
     if (this.activities[code] !== undefined) {
-      const {callback, httpActivity, channel, activityType,
-           activitySubtype, extraSizeData,
-           extraStringData} = this.activities[code];
+      const {
+        callback,
+        httpActivity,
+        channel,
+        activityType,
+        activitySubtype,
+        extraSizeData,
+        extraStringData,
+      } = this.activities[code];
       const now = Date.now() * 1000;
-      callback(httpActivity, channel, activityType, activitySubtype,
-               now, extraSizeData, extraStringData);
+      callback(
+        httpActivity,
+        channel,
+        activityType,
+        activitySubtype,
+        now,
+        extraSizeData,
+        extraStringData
+      );
       this.activities[code] = undefined;
     }
   },
@@ -312,8 +354,10 @@ NetworkThrottleQueue.prototype = {
     const now = Date.now();
     const oneSecondAgo = now - 1000;
 
-    while (this.previousReads.length &&
-           this.previousReads[0].when < oneSecondAgo) {
+    while (
+      this.previousReads.length &&
+      this.previousReads[0].when < oneSecondAgo
+    ) {
       this.previousReads.shift();
     }
 
@@ -326,14 +370,16 @@ NetworkThrottleQueue.prototype = {
       thisSliceBytes -= totalBytes;
       let readThisTime = 0;
       while (thisSliceBytes > 0 && this.downloadQueue.length) {
-        const {length, done} = this.downloadQueue[0].sendSomeData(thisSliceBytes);
+        const { length, done } = this.downloadQueue[0].sendSomeData(
+          thisSliceBytes
+        );
         thisSliceBytes -= length;
         readThisTime += length;
         if (done) {
           this.downloadQueue.shift();
         }
       }
-      this.previousReads.push({when: now, numBytes: readThisTime});
+      this.previousReads.push({ when: now, numBytes: readThisTime });
     }
 
     // If there is more data to download, then schedule ourselves for
@@ -363,21 +409,30 @@ NetworkThrottleQueue.prototype = {
  * downloadBPSMax are <= 0.  Upload throttling will not be done if
  * uploadBPSMean and uploadBPSMax are <= 0.
  */
-function NetworkThrottleManager({latencyMean, latencyMax,
-                                 downloadBPSMean, downloadBPSMax,
-                                 uploadBPSMean, uploadBPSMax}) {
+function NetworkThrottleManager({
+  latencyMean,
+  latencyMax,
+  downloadBPSMean,
+  downloadBPSMax,
+  uploadBPSMean,
+  uploadBPSMax,
+}) {
   if (downloadBPSMax <= 0 && downloadBPSMean <= 0) {
     this.downloadQueue = null;
   } else {
-    this.downloadQueue =
-      new NetworkThrottleQueue(downloadBPSMean, downloadBPSMax,
-                               latencyMean, latencyMax);
+    this.downloadQueue = new NetworkThrottleQueue(
+      downloadBPSMean,
+      downloadBPSMax,
+      latencyMean,
+      latencyMax
+    );
   }
   if (uploadBPSMax <= 0 && uploadBPSMean <= 0) {
     this.uploadQueue = null;
   } else {
-    this.uploadQueue = Cc["@mozilla.org/network/throttlequeue;1"]
-      .createInstance(Ci.nsIInputChannelThrottleQueue);
+    this.uploadQueue = Cc[
+      "@mozilla.org/network/throttlequeue;1"
+    ].createInstance(Ci.nsIInputChannelThrottleQueue);
     this.uploadQueue.init(uploadBPSMean, uploadBPSMax);
   }
 }

@@ -6,13 +6,15 @@
 
 "use strict";
 
-var {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 var Services = require("Services");
-var {gDevTools} = require("devtools/client/framework/devtools");
-var {Toolbox} = require("devtools/client/framework/toolbox");
-var {DebuggerClient} = require("devtools/shared/client/debugger-client");
-var {LocalizationHelper} = require("devtools/shared/l10n");
-var L10N = new LocalizationHelper("devtools/client/locales/connection-screen.properties");
+var { gDevTools } = require("devtools/client/framework/devtools");
+var { Toolbox } = require("devtools/client/framework/toolbox");
+var { DebuggerClient } = require("devtools/shared/client/debugger-client");
+var { LocalizationHelper } = require("devtools/shared/l10n");
+var L10N = new LocalizationHelper(
+  "devtools/client/locales/connection-screen.properties"
+);
 
 var gClient;
 var gConnectionTimeout;
@@ -21,27 +23,31 @@ var gConnectionTimeout;
  * Once DOM is ready, we prefil the host/port inputs with
  * pref-stored values.
  */
-window.addEventListener("DOMContentLoaded", function() {
-  const host = Services.prefs.getCharPref("devtools.debugger.remote-host");
-  const port = Services.prefs.getIntPref("devtools.debugger.remote-port");
+window.addEventListener(
+  "DOMContentLoaded",
+  function() {
+    const host = Services.prefs.getCharPref("devtools.debugger.remote-host");
+    const port = Services.prefs.getIntPref("devtools.debugger.remote-port");
 
-  if (host) {
-    document.getElementById("host").value = host;
-  }
+    if (host) {
+      document.getElementById("host").value = host;
+    }
 
-  if (port) {
-    document.getElementById("port").value = port;
-  }
+    if (port) {
+      document.getElementById("port").value = port;
+    }
 
-  const form = document.querySelector("#connection-form form");
-  form.addEventListener("submit", function() {
-    window.submit().catch(e => {
-      console.error(e);
-      // Bug 921850: catch rare exception from DebuggerClient.socketConnect
-      showError("unexpected");
+    const form = document.querySelector("#connection-form form");
+    form.addEventListener("submit", function() {
+      window.submit().catch(e => {
+        console.error(e);
+        // Bug 921850: catch rare exception from DebuggerClient.socketConnect
+        showError("unexpected");
+      });
     });
-  });
-}, {capture: true, once: true});
+  },
+  { capture: true, once: true }
+);
 
 /**
  * Called when the "connect" button is clicked.
@@ -114,7 +120,9 @@ var onConnectionReady = async function([aType, aTraits]) {
     const a = document.createElement("a");
     a.onclick = function() {
       if (gClient.mainRoot.traits.allowChromeProcess) {
-        gClient.mainRoot.getMainProcess().then(front => openToolbox(front, true));
+        gClient.mainRoot
+          .getMainProcess()
+          .then(front => openToolbox(front, true));
       }
     };
     a.title = a.textContent = L10N.getStr("mainProcess");

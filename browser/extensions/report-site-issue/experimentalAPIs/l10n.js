@@ -6,11 +6,12 @@
 
 /* global ExtensionAPI, XPCOMUtils */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "l10nStrings", function() {
   return Services.strings.createBundle(
-    "chrome://report-site-issue/locale/webcompat.properties");
+    "chrome://report-site-issue/locale/webcompat.properties"
+  );
 });
 
 let l10nManifest;
@@ -26,8 +27,9 @@ this.l10n = class extends ExtensionAPI {
     // chrome.manifest for handling localization since its what the
     // build system can handle for localized repacks.
     if (context.extension.rootURI instanceof Ci.nsIJARURI) {
-      l10nManifest = context.extension.rootURI.JARFile
-                            .QueryInterface(Ci.nsIFileURL).file;
+      l10nManifest = context.extension.rootURI.JARFile.QueryInterface(
+        Ci.nsIFileURL
+      ).file;
     } else if (context.extension.rootURI instanceof Ci.nsIFileURL) {
       l10nManifest = context.extension.rootURI.file;
     }
@@ -35,7 +37,9 @@ this.l10n = class extends ExtensionAPI {
     if (l10nManifest) {
       Components.manager.addBootstrappedManifestLocation(l10nManifest);
     } else {
-      Cu.reportError("Cannot find webcompat reporter chrome.manifest for registring translated strings");
+      Cu.reportError(
+        "Cannot find webcompat reporter chrome.manifest for registring translated strings"
+      );
     }
 
     return {

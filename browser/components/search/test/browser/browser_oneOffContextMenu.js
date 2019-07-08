@@ -5,9 +5,13 @@ const TEST_ENGINE_BASENAME = "testEngine.xml";
 
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
 const oneOffInstance = searchPopup.oneOffButtons;
-const contextMenu = oneOffInstance.querySelector(".search-one-offs-context-menu");
+const contextMenu = oneOffInstance.querySelector(
+  ".search-one-offs-context-menu"
+);
 const oneOffButtons = oneOffInstance.buttons;
-const searchInNewTabMenuItem = oneOffInstance.querySelector(".search-one-offs-context-open-in-new-tab");
+const searchInNewTabMenuItem = oneOffInstance.querySelector(
+  ".search-one-offs-context-open-in-new-tab"
+);
 
 let searchbar;
 let searchIcon;
@@ -39,8 +43,11 @@ add_task(async function telemetry() {
       break;
     }
   }
-  Assert.notEqual(oneOffButton, undefined,
-                  "One-off for test engine should exist");
+  Assert.notEqual(
+    oneOffButton,
+    undefined,
+    "One-off for test engine should exist"
+  );
 
   // Open the context menu on the one-off.
   promise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
@@ -62,9 +69,11 @@ add_task(async function telemetry() {
   await promise;
 
   // Check the loaded tab.
-  Assert.equal(tab.linkedBrowser.currentURI.spec,
-               "http://mochi.test:8888/browser/browser/components/search/test/browser/",
-               "Expected search tab should have loaded");
+  Assert.equal(
+    tab.linkedBrowser.currentURI.spec,
+    "http://mochi.test:8888/browser/browser/components/search/test/browser/",
+    "Expected search tab should have loaded"
+  );
 
   BrowserTestUtils.removeTab(tab);
 

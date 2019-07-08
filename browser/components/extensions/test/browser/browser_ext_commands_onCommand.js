@@ -3,7 +3,9 @@
 "use strict";
 
 add_task(async function test_user_defined_commands() {
-  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
 
   const testCommands = [
     // Ctrl Shortcuts
@@ -179,7 +181,6 @@ add_task(async function test_user_defined_commands() {
         altKey: true,
       },
     },
-
   ];
 
   // Create a window before the extension is loaded.
@@ -224,16 +225,18 @@ add_task(async function test_user_defined_commands() {
   }
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "commands": commands,
+      commands: commands,
     },
     background,
   });
 
   SimpleTest.waitForExplicitFinish();
   let waitForConsole = new Promise(resolve => {
-    SimpleTest.monitorConsole(resolve, [{
-      message: /Reading manifest: Error processing commands.*.unrecognized_property: An unexpected property was found/,
-    }]);
+    SimpleTest.monitorConsole(resolve, [
+      {
+        message: /Reading manifest: Error processing commands.*.unrecognized_property: An unexpected property was found/,
+      },
+    ]);
   });
 
   await extension.startup();
@@ -246,7 +249,13 @@ add_task(async function test_user_defined_commands() {
       }
       EventUtils.synthesizeKey(testCommand.key, testCommand.modifiers, window);
       let message = await extension.awaitMessage("oncommand");
-      is(message, testCommand.name, `Expected onCommand listener to fire with the correct name: ${testCommand.name}`);
+      is(
+        message,
+        testCommand.name,
+        `Expected onCommand listener to fire with the correct name: ${
+          testCommand.name
+        }`
+      );
     }
   }
 
@@ -255,18 +264,29 @@ add_task(async function test_user_defined_commands() {
   await BrowserTestUtils.loadURI(win2.gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(win2.gBrowser.selectedBrowser);
 
-  let totalTestCommands = Object.keys(testCommands).length + numberNumericCommands;
-  let expectedCommandsRegistered = isMac ? totalTestCommands : totalTestCommands - totalMacOnlyCommands;
+  let totalTestCommands =
+    Object.keys(testCommands).length + numberNumericCommands;
+  let expectedCommandsRegistered = isMac
+    ? totalTestCommands
+    : totalTestCommands - totalMacOnlyCommands;
 
   // Confirm the keysets have been added to both windows.
   let keysetID = `ext-keyset-id-${makeWidgetId(extension.id)}`;
   let keyset = win1.document.getElementById(keysetID);
   ok(keyset != null, "Expected keyset to exist");
-  is(keyset.children.length, expectedCommandsRegistered, "Expected keyset to have the correct number of children");
+  is(
+    keyset.children.length,
+    expectedCommandsRegistered,
+    "Expected keyset to have the correct number of children"
+  );
 
   keyset = win2.document.getElementById(keysetID);
   ok(keyset != null, "Expected keyset to exist");
-  is(keyset.children.length, expectedCommandsRegistered, "Expected keyset to have the correct number of children");
+  is(
+    keyset.children.length,
+    expectedCommandsRegistered,
+    "Expected keyset to have the correct number of children"
+  );
 
   // Confirm that the commands are registered to both windows.
   await focusWindow(win1);
@@ -275,8 +295,13 @@ add_task(async function test_user_defined_commands() {
   await focusWindow(win2);
   await runTest(win2);
 
-  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
-  await BrowserTestUtils.loadURI(privateWin.gBrowser.selectedBrowser, "about:robots");
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  await BrowserTestUtils.loadURI(
+    privateWin.gBrowser.selectedBrowser,
+    "about:robots"
+  );
   await BrowserTestUtils.browserLoaded(privateWin.gBrowser.selectedBrowser);
   keyset = privateWin.document.getElementById(keysetID);
   is(keyset, null, "Expected keyset is not added to private windows");
@@ -293,7 +318,7 @@ add_task(async function test_user_defined_commands() {
   // Test that given permission the keyset is added to the private window.
   extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "commands": commands,
+      commands: commands,
     },
     incognitoOverride: "spanning",
     background,
@@ -304,15 +329,27 @@ add_task(async function test_user_defined_commands() {
 
   keyset = win1.document.getElementById(keysetID);
   ok(keyset != null, "Expected keyset to exist on win1");
-  is(keyset.children.length, expectedCommandsRegistered, "Expected keyset to have the correct number of children");
+  is(
+    keyset.children.length,
+    expectedCommandsRegistered,
+    "Expected keyset to have the correct number of children"
+  );
 
   keyset = win2.document.getElementById(keysetID);
   ok(keyset != null, "Expected keyset to exist on win2");
-  is(keyset.children.length, expectedCommandsRegistered, "Expected keyset to have the correct number of children");
+  is(
+    keyset.children.length,
+    expectedCommandsRegistered,
+    "Expected keyset to have the correct number of children"
+  );
 
   keyset = privateWin.document.getElementById(keysetID);
   ok(keyset != null, "Expected keyset was added to private windows");
-  is(keyset.children.length, expectedCommandsRegistered, "Expected keyset to have the correct number of children");
+  is(
+    keyset.children.length,
+    expectedCommandsRegistered,
+    "Expected keyset to have the correct number of children"
+  );
 
   await focusWindow(privateWin);
   await runTest(privateWin);

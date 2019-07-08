@@ -22,10 +22,10 @@ async function testSimpleIconsetParsing(manifest) {
 
   function check_icons(addon_copy) {
     deepEqual(addon_copy.icons, {
-        16: uri + "icon16.png",
-        32: uri + "icon32.png",
-        48: uri + "icon48.png",
-        64: uri + "icon64.png",
+      16: uri + "icon16.png",
+      32: uri + "icon32.png",
+      48: uri + "icon48.png",
+      64: uri + "icon64.png",
     });
 
     // iconURL should map to icons[48]
@@ -64,17 +64,26 @@ async function testRetinaIconsetParsing(manifest) {
   let uri = do_get_addon_root_uri(profileDir, ID);
 
   // AddonManager displays larger icons for higher pixel density
-  equal(AddonManager.getPreferredIconURL(addon, 32, {
-    devicePixelRatio: 2,
-  }), uri + "icon64.png");
+  equal(
+    AddonManager.getPreferredIconURL(addon, 32, {
+      devicePixelRatio: 2,
+    }),
+    uri + "icon64.png"
+  );
 
-  equal(AddonManager.getPreferredIconURL(addon, 48, {
-    devicePixelRatio: 2,
-  }), uri + "icon128.png");
+  equal(
+    AddonManager.getPreferredIconURL(addon, 48, {
+      devicePixelRatio: 2,
+    }),
+    uri + "icon128.png"
+  );
 
-  equal(AddonManager.getPreferredIconURL(addon, 64, {
-    devicePixelRatio: 2,
-  }), uri + "icon128.png");
+  equal(
+    AddonManager.getPreferredIconURL(addon, 64, {
+      devicePixelRatio: 2,
+    }),
+    uri + "icon128.png"
+  );
 
   await addon.uninstall();
 }

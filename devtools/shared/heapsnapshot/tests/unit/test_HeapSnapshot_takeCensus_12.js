@@ -30,20 +30,29 @@ function run_test() {
   });
 
   const keys = new Set(Object.keys(byClassName));
-  equal(keys.size, Object.keys(byClassNameCount).length,
-        "Should have the same number of keys.");
+  equal(
+    keys.size,
+    Object.keys(byClassNameCount).length,
+    "Should have the same number of keys."
+  );
   for (const k of Object.keys(byClassNameCount)) {
     ok(keys.has(k), "Should not have any unexpected class names");
   }
 
   for (const key of Object.keys(byClassName)) {
-    equal(byClassNameCount[key].count, byClassName[key].length,
-          "Length of the bucket and count should be equal");
+    equal(
+      byClassNameCount[key].count,
+      byClassName[key].length,
+      "Length of the bucket and count should be equal"
+    );
 
     for (const id of byClassName[key]) {
       const desc = snapshot.describeNode(objectClassCount, id);
-      equal(desc[key].count, 1,
-            "Describing the bucketed node confirms that it belongs to the category");
+      equal(
+        desc[key].count,
+        1,
+        "Describing the bucketed node confirms that it belongs to the category"
+      );
     }
   }
 

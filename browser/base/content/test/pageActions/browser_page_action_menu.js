@@ -1,13 +1,40 @@
 "use strict";
 
-const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 /* global UIState */
 
 const lastModifiedFixture = 1507655615.87; // Approx Oct 10th 2017
 const mockTargets = [
-  { id: "0", name: "foo", type: "phone", clientRecord: {id: "cli0", serverLastModified: lastModifiedFixture, type: "phone"} },
-  { id: "1", name: "bar", type: "desktop", clientRecord: {id: "cli1", serverLastModified: lastModifiedFixture, type: "desktop"} },
-  { id: "2", name: "baz", type: "phone", clientRecord: {id: "cli2", serverLastModified: lastModifiedFixture, type: "phone"} },
+  {
+    id: "0",
+    name: "foo",
+    type: "phone",
+    clientRecord: {
+      id: "cli0",
+      serverLastModified: lastModifiedFixture,
+      type: "phone",
+    },
+  },
+  {
+    id: "1",
+    name: "bar",
+    type: "desktop",
+    clientRecord: {
+      id: "cli1",
+      serverLastModified: lastModifiedFixture,
+      type: "desktop",
+    },
+  },
+  {
+    id: "2",
+    name: "baz",
+    type: "phone",
+    clientRecord: {
+      id: "cli2",
+      serverLastModified: lastModifiedFixture,
+      type: "phone",
+    },
+  },
   { id: "3", name: "no client record device", type: "phone" },
 ];
 
@@ -36,11 +63,16 @@ add_task(async function bookmark() {
       }
       StarUI.panel.addEventListener("popupshown", resolve, { once: true });
     });
-    Assert.equal(BookmarkingUI.starBox.getAttribute("open"), "true",
-      "Star has open attribute");
+    Assert.equal(
+      BookmarkingUI.starBox.getAttribute("open"),
+      "true",
+      "Star has open attribute"
+    );
     StarUI.panel.hidePopup();
-    Assert.ok(!BookmarkingUI.starBox.hasAttribute("open"),
-      "Star no longer has open attribute");
+    Assert.ok(
+      !BookmarkingUI.starBox.hasAttribute("open"),
+      "Star no longer has open attribute"
+    );
 
     // Open the panel again.
     await promisePageActionPanelOpen();
@@ -64,8 +96,10 @@ add_task(async function bookmark() {
       StarUI.panel.addEventListener("popupshown", resolve, { once: true });
     });
 
-    let onItemRemovedPromise = PlacesTestUtils.waitForNotification("onItemRemoved",
-      (id, parentId, index, type, itemUrl) => url == itemUrl.spec);
+    let onItemRemovedPromise = PlacesTestUtils.waitForNotification(
+      "onItemRemoved",
+      (id, parentId, index, type, itemUrl) => url == itemUrl.spec
+    );
 
     // Click the remove-bookmark button in the panel.
     StarUI._element("editBookmarkPanelRemoveButton").click();
@@ -115,7 +149,6 @@ add_task(async function pinTabFromPanel() {
   });
 });
 
-
 add_task(async function pinTabFromURLBar() {
   // Open an actionable page so that the main page action button appears.  (It
   // does not appear on about:blank for example.)
@@ -124,18 +157,22 @@ add_task(async function pinTabFromURLBar() {
     // Add action to URL bar.
     let action = PageActions._builtInActions.find(a => a.id == "pinTab");
     action.pinnedToUrlbar = true;
-    registerCleanupFunction(() => action.pinnedToUrlbar = false);
+    registerCleanupFunction(() => (action.pinnedToUrlbar = false));
 
     // Click the Pin Tab button.
     let pinTabButton = document.getElementById("pageAction-urlbar-pinTab");
     EventUtils.synthesizeMouseAtCenter(pinTabButton, {});
-    await BrowserTestUtils.waitForCondition(() => gBrowser.selectedTab.pinned,
-      "Tab was pinned");
+    await BrowserTestUtils.waitForCondition(
+      () => gBrowser.selectedTab.pinned,
+      "Tab was pinned"
+    );
 
     // Click the Unpin Tab button
     EventUtils.synthesizeMouseAtCenter(pinTabButton, {});
-    await BrowserTestUtils.waitForCondition(() => !gBrowser.selectedTab.pinned,
-      "Tab was unpinned");
+    await BrowserTestUtils.waitForCondition(
+      () => !gBrowser.selectedTab.pinned,
+      "Tab was unpinned"
+    );
   });
 });
 
@@ -156,8 +193,7 @@ add_task(async function emailLink() {
 
     // Open the panel and click Email Link.
     await promisePageActionPanelOpen();
-    let emailLinkButton =
-      document.getElementById("pageAction-panel-emailLink");
+    let emailLinkButton = document.getElementById("pageAction-panel-emailLink");
     let hiddenPromise = promisePageActionPanelHidden();
     EventUtils.synthesizeMouseAtCenter(emailLinkButton, {});
     await hiddenPromise;
@@ -174,22 +210,28 @@ add_task(async function copyURLFromPanel() {
     // Add action to URL bar.
     let action = PageActions._builtInActions.find(a => a.id == "copyURL");
     action.pinnedToUrlbar = true;
-    registerCleanupFunction(() => action.pinnedToUrlbar = false);
+    registerCleanupFunction(() => (action.pinnedToUrlbar = false));
 
     // Open the panel and click Copy URL.
     await promisePageActionPanelOpen();
     Assert.ok(true, "page action panel opened");
 
-    let copyURLButton =
-      document.getElementById("pageAction-panel-copyURL");
+    let copyURLButton = document.getElementById("pageAction-panel-copyURL");
     let hiddenPromise = promisePageActionPanelHidden();
     EventUtils.synthesizeMouseAtCenter(copyURLButton, {});
     await hiddenPromise;
 
     let feedbackPanel = document.getElementById("confirmation-hint");
-    let feedbackShownPromise = BrowserTestUtils.waitForEvent(feedbackPanel, "popupshown");
+    let feedbackShownPromise = BrowserTestUtils.waitForEvent(
+      feedbackPanel,
+      "popupshown"
+    );
     await feedbackShownPromise;
-    Assert.equal(feedbackPanel.anchorNode.id, "pageActionButton", "Feedback menu should be anchored on the main Page Action button");
+    Assert.equal(
+      feedbackPanel.anchorNode.id,
+      "pageActionButton",
+      "Feedback menu should be anchored on the main Page Action button"
+    );
     let feedbackHiddenPromise = promisePanelHidden("confirmation-hint");
     await feedbackHiddenPromise;
 
@@ -205,16 +247,19 @@ add_task(async function copyURLFromURLBar() {
     // Add action to URL bar.
     let action = PageActions._builtInActions.find(a => a.id == "copyURL");
     action.pinnedToUrlbar = true;
-    registerCleanupFunction(() => action.pinnedToUrlbar = false);
+    registerCleanupFunction(() => (action.pinnedToUrlbar = false));
 
-    let copyURLButton =
-      document.getElementById("pageAction-urlbar-copyURL");
+    let copyURLButton = document.getElementById("pageAction-urlbar-copyURL");
     let feedbackShownPromise = promisePanelShown("confirmation-hint");
     EventUtils.synthesizeMouseAtCenter(copyURLButton, {});
 
     await feedbackShownPromise;
     let panel = document.getElementById("confirmation-hint");
-    Assert.equal(panel.anchorNode.id, "pageAction-urlbar-copyURL", "Feedback menu should be anchored on the main URL bar button");
+    Assert.equal(
+      panel.anchorNode.id,
+      "pageAction-urlbar-copyURL",
+      "Feedback menu should be anchored on the main URL bar button"
+    );
     let feedbackHiddenPromise = promisePanelHidden("confirmation-hint");
     await feedbackHiddenPromise;
 
@@ -229,20 +274,30 @@ add_task(async function sendToDevice_nonSendable() {
     await promiseSyncReady();
     // Open the panel.  Send to Device should be disabled.
     await promisePageActionPanelOpen();
-    Assert.equal(BrowserPageActions.mainButtonNode.getAttribute("open"), "true",
-                 "Main button has 'open' attribute");
-    let panelButton =
-      BrowserPageActions.panelButtonNodeForActionID("sendToDevice");
-    Assert.equal(panelButton.disabled, true,
-                 "The panel button should be disabled");
+    Assert.equal(
+      BrowserPageActions.mainButtonNode.getAttribute("open"),
+      "true",
+      "Main button has 'open' attribute"
+    );
+    let panelButton = BrowserPageActions.panelButtonNodeForActionID(
+      "sendToDevice"
+    );
+    Assert.equal(
+      panelButton.disabled,
+      true,
+      "The panel button should be disabled"
+    );
     let hiddenPromise = promisePageActionPanelHidden();
     BrowserPageActions.panelNode.hidePopup();
     await hiddenPromise;
-    Assert.ok(!BrowserPageActions.mainButtonNode.hasAttribute("open"),
-              "Main button no longer has 'open' attribute");
+    Assert.ok(
+      !BrowserPageActions.mainButtonNode.hasAttribute("open"),
+      "Main button no longer has 'open' attribute"
+    );
     // The urlbar button shouldn't exist.
-    let urlbarButton =
-      BrowserPageActions.urlbarButtonNodeForActionID("sendToDevice");
+    let urlbarButton = BrowserPageActions.urlbarButtonNodeForActionID(
+      "sendToDevice"
+    );
     Assert.equal(urlbarButton, null, "The urlbar button shouldn't exist");
   });
 });
@@ -253,7 +308,9 @@ add_task(async function sendToDevice_syncNotReady_other_states() {
     await promiseSyncReady();
     const sandbox = sinon.createSandbox();
     sandbox.stub(gSync, "syncReady").get(() => false);
-    sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_NOT_VERIFIED });
+    sandbox
+      .stub(UIState, "get")
+      .returns({ status: UIState.STATUS_NOT_VERIFIED });
     sandbox.stub(gSync, "isSendableURI").returns(true);
 
     let cleanUp = () => {
@@ -263,8 +320,9 @@ add_task(async function sendToDevice_syncNotReady_other_states() {
 
     // Open the panel.
     await promisePageActionPanelOpen();
-    let sendToDeviceButton =
-      document.getElementById("pageAction-panel-sendToDevice");
+    let sendToDeviceButton = document.getElementById(
+      "pageAction-panel-sendToDevice"
+    );
     Assert.ok(!sendToDeviceButton.disabled);
 
     // Click Send to Device.
@@ -309,7 +367,9 @@ add_task(async function sendToDevice_syncNotReady_configured() {
     await promiseSyncReady();
     const sandbox = sinon.createSandbox();
     const syncReady = sandbox.stub(gSync, "syncReady").get(() => false);
-    const hasSyncedThisSession = sandbox.stub(Weave.Service.clientsEngine, "hasSyncedThisSession").get(() => false);
+    const hasSyncedThisSession = sandbox
+      .stub(Weave.Service.clientsEngine, "hasSyncedThisSession")
+      .get(() => false);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
 
@@ -317,15 +377,23 @@ add_task(async function sendToDevice_syncNotReady_configured() {
       syncReady.get(() => true);
       hasSyncedThisSession.get(() => true);
       sandbox.stub(gSync, "sendTabTargets").get(() => mockTargets);
-      sandbox.stub(Weave.Service.clientsEngine, "getClientType").callsFake(id => mockTargets.find(c => c.clientRecord && c.clientRecord.id == id).clientRecord.type);
+      sandbox
+        .stub(Weave.Service.clientsEngine, "getClientType")
+        .callsFake(
+          id =>
+            mockTargets.find(c => c.clientRecord && c.clientRecord.id == id)
+              .clientRecord.type
+        );
     });
 
     let onShowingSubview = BrowserPageActions.sendToDevice.onShowingSubview;
-    sandbox.stub(BrowserPageActions.sendToDevice, "onShowingSubview").callsFake((...args) => {
-      this.numCall++ || (this.numCall = 1);
-      onShowingSubview.call(BrowserPageActions.sendToDevice, ...args);
-      testSendTabToDeviceMenu(this.numCall);
-    });
+    sandbox
+      .stub(BrowserPageActions.sendToDevice, "onShowingSubview")
+      .callsFake((...args) => {
+        this.numCall++ || (this.numCall = 1);
+        onShowingSubview.call(BrowserPageActions.sendToDevice, ...args);
+        testSendTabToDeviceMenu(this.numCall);
+      });
 
     let cleanUp = () => {
       sandbox.restore();
@@ -334,8 +402,9 @@ add_task(async function sendToDevice_syncNotReady_configured() {
 
     // Open the panel.
     await promisePageActionPanelOpen();
-    let sendToDeviceButton =
-      document.getElementById("pageAction-panel-sendToDevice");
+    let sendToDeviceButton = document.getElementById(
+      "pageAction-panel-sendToDevice"
+    );
     Assert.ok(!sendToDeviceButton.disabled);
 
     // Click Send to Device.
@@ -369,20 +438,19 @@ add_task(async function sendToDevice_syncNotReady_configured() {
             clientType: target.type,
           };
           if (target.clientRecord && target.clientRecord.serverLastModified) {
-            attrs.tooltiptext = gSync.formatLastSyncDate(new Date(target.clientRecord.serverLastModified * 1000));
+            attrs.tooltiptext = gSync.formatLastSyncDate(
+              new Date(target.clientRecord.serverLastModified * 1000)
+            );
           }
           expectedItems.push({
             attrs,
           });
         }
-        expectedItems.push(
-          null,
-          {
-            attrs: {
-              label: "Send to All Devices",
-            },
-          }
-        );
+        expectedItems.push(null, {
+          attrs: {
+            label: "Send to All Devices",
+          },
+        });
         checkSendToDeviceItems(expectedItems);
       } else {
         ok(false, "This should never happen");
@@ -404,8 +472,9 @@ add_task(async function sendToDevice_notSignedIn() {
 
     // Open the panel.
     await promisePageActionPanelOpen();
-    let sendToDeviceButton =
-      document.getElementById("pageAction-panel-sendToDevice");
+    let sendToDeviceButton = document.getElementById(
+      "pageAction-panel-sendToDevice"
+    );
     Assert.ok(!sendToDeviceButton.disabled);
 
     // Click Send to Device.
@@ -453,11 +522,19 @@ add_task(async function sendToDevice_noDevices() {
     await promiseSyncReady();
     const sandbox = sinon.createSandbox();
     sandbox.stub(gSync, "syncReady").get(() => true);
-    sandbox.stub(Weave.Service.clientsEngine, "hasSyncedThisSession").get(() => true);
+    sandbox
+      .stub(Weave.Service.clientsEngine, "hasSyncedThisSession")
+      .get(() => true);
     sandbox.stub(Weave.Service.clientsEngine, "fxaDevices").get(() => []);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
-    sandbox.stub(Weave.Service.clientsEngine, "getClientType").callsFake(id => mockTargets.find(c => c.clientRecord && c.clientRecord.id == id).clientRecord.type);
+    sandbox
+      .stub(Weave.Service.clientsEngine, "getClientType")
+      .callsFake(
+        id =>
+          mockTargets.find(c => c.clientRecord && c.clientRecord.id == id)
+            .clientRecord.type
+      );
 
     let cleanUp = () => {
       sandbox.restore();
@@ -466,8 +543,9 @@ add_task(async function sendToDevice_noDevices() {
 
     // Open the panel.
     await promisePageActionPanelOpen();
-    let sendToDeviceButton =
-      document.getElementById("pageAction-panel-sendToDevice");
+    let sendToDeviceButton = document.getElementById(
+      "pageAction-panel-sendToDevice"
+    );
     Assert.ok(!sendToDeviceButton.disabled);
 
     // Click Send to Device.
@@ -519,11 +597,19 @@ add_task(async function sendToDevice_devices() {
     await promiseSyncReady();
     const sandbox = sinon.createSandbox();
     sandbox.stub(gSync, "syncReady").get(() => true);
-    sandbox.stub(Weave.Service.clientsEngine, "hasSyncedThisSession").get(() => true);
+    sandbox
+      .stub(Weave.Service.clientsEngine, "hasSyncedThisSession")
+      .get(() => true);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
     sandbox.stub(gSync, "sendTabTargets").get(() => mockTargets);
-    sandbox.stub(Weave.Service.clientsEngine, "getClientType").callsFake(id => mockTargets.find(c => c.clientRecord && c.clientRecord.id == id).clientRecord.type);
+    sandbox
+      .stub(Weave.Service.clientsEngine, "getClientType")
+      .callsFake(
+        id =>
+          mockTargets.find(c => c.clientRecord && c.clientRecord.id == id)
+            .clientRecord.type
+      );
 
     let cleanUp = () => {
       sandbox.restore();
@@ -532,8 +618,9 @@ add_task(async function sendToDevice_devices() {
 
     // Open the panel.
     await promisePageActionPanelOpen();
-    let sendToDeviceButton =
-      document.getElementById("pageAction-panel-sendToDevice");
+    let sendToDeviceButton = document.getElementById(
+      "pageAction-panel-sendToDevice"
+    );
     Assert.ok(!sendToDeviceButton.disabled);
 
     // Click Send to Device.
@@ -559,14 +646,11 @@ add_task(async function sendToDevice_devices() {
         },
       });
     }
-    expectedItems.push(
-      null,
-      {
-        attrs: {
-          label: "Send to All Devices",
-        },
-      }
-    );
+    expectedItems.push(null, {
+      attrs: {
+        label: "Send to All Devices",
+      },
+    });
     checkSendToDeviceItems(expectedItems);
 
     // Done, hide the panel.
@@ -580,60 +664,80 @@ add_task(async function sendToDevice_devices() {
 
 add_task(async function sendToDevice_title() {
   // Open two tabs that are sendable.
-  await BrowserTestUtils.withNewTab("http://example.com/a", async otherBrowser => {
-    await BrowserTestUtils.withNewTab("http://example.com/b", async () => {
-      await promiseSyncReady();
-      const sandbox = sinon.createSandbox();
-      sandbox.stub(gSync, "syncReady").get(() => true);
-      sandbox.stub(Weave.Service.clientsEngine, "hasSyncedThisSession").get(() => true);
-      sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
-      sandbox.stub(gSync, "isSendableURI").returns(true);
-      sandbox.stub(gSync, "sendTabTargets").get(() => []);
-      sandbox.stub(Weave.Service.clientsEngine, "getClientType").callsFake(id => mockTargets.find(c => c.clientRecord && c.clientRecord.id == id).clientRecord.type);
+  await BrowserTestUtils.withNewTab(
+    "http://example.com/a",
+    async otherBrowser => {
+      await BrowserTestUtils.withNewTab("http://example.com/b", async () => {
+        await promiseSyncReady();
+        const sandbox = sinon.createSandbox();
+        sandbox.stub(gSync, "syncReady").get(() => true);
+        sandbox
+          .stub(Weave.Service.clientsEngine, "hasSyncedThisSession")
+          .get(() => true);
+        sandbox
+          .stub(UIState, "get")
+          .returns({ status: UIState.STATUS_SIGNED_IN });
+        sandbox.stub(gSync, "isSendableURI").returns(true);
+        sandbox.stub(gSync, "sendTabTargets").get(() => []);
+        sandbox
+          .stub(Weave.Service.clientsEngine, "getClientType")
+          .callsFake(
+            id =>
+              mockTargets.find(c => c.clientRecord && c.clientRecord.id == id)
+                .clientRecord.type
+          );
 
-      let cleanUp = () => {
-        sandbox.restore();
-      };
-      registerCleanupFunction(cleanUp);
+        let cleanUp = () => {
+          sandbox.restore();
+        };
+        registerCleanupFunction(cleanUp);
 
-      // Open the panel.  Only one tab is selected, so the action's title should
-      // be "Send Tab to Device".
-      await promisePageActionPanelOpen();
-      let sendToDeviceButton =
-        document.getElementById("pageAction-panel-sendToDevice");
-      Assert.ok(!sendToDeviceButton.disabled);
+        // Open the panel.  Only one tab is selected, so the action's title should
+        // be "Send Tab to Device".
+        await promisePageActionPanelOpen();
+        let sendToDeviceButton = document.getElementById(
+          "pageAction-panel-sendToDevice"
+        );
+        Assert.ok(!sendToDeviceButton.disabled);
 
-      Assert.equal(sendToDeviceButton.label, "Send Tab to Device");
-      Assert.equal(PageActions.actionForID("sendToDevice").getTitle(window),
-                   "Send Tab to Device");
+        Assert.equal(sendToDeviceButton.label, "Send Tab to Device");
+        Assert.equal(
+          PageActions.actionForID("sendToDevice").getTitle(window),
+          "Send Tab to Device"
+        );
 
-      // Hide the panel.
-      let hiddenPromise = promisePageActionPanelHidden();
-      BrowserPageActions.panelNode.hidePopup();
-      await hiddenPromise;
+        // Hide the panel.
+        let hiddenPromise = promisePageActionPanelHidden();
+        BrowserPageActions.panelNode.hidePopup();
+        await hiddenPromise;
 
-      // Add the other tab to the selection.
-      gBrowser.addToMultiSelectedTabs(gBrowser.getTabForBrowser(otherBrowser),
-                                      false);
+        // Add the other tab to the selection.
+        gBrowser.addToMultiSelectedTabs(
+          gBrowser.getTabForBrowser(otherBrowser),
+          false
+        );
 
-      // Open the panel again.  Now the action's title should be "Send 2 Tabs to
-      // Device".
-      await promisePageActionPanelOpen();
-      Assert.ok(!sendToDeviceButton.disabled);
-      Assert.equal(sendToDeviceButton.label, "Send 2 Tabs to Device");
-      Assert.equal(PageActions.actionForID("sendToDevice").getTitle(window),
-                   "Send 2 Tabs to Device");
+        // Open the panel again.  Now the action's title should be "Send 2 Tabs to
+        // Device".
+        await promisePageActionPanelOpen();
+        Assert.ok(!sendToDeviceButton.disabled);
+        Assert.equal(sendToDeviceButton.label, "Send 2 Tabs to Device");
+        Assert.equal(
+          PageActions.actionForID("sendToDevice").getTitle(window),
+          "Send 2 Tabs to Device"
+        );
 
-      // Hide the panel.
-      hiddenPromise = promisePageActionPanelHidden();
-      BrowserPageActions.panelNode.hidePopup();
-      await hiddenPromise;
+        // Hide the panel.
+        hiddenPromise = promisePageActionPanelHidden();
+        BrowserPageActions.panelNode.hidePopup();
+        await hiddenPromise;
 
-      cleanUp();
+        cleanUp();
 
-      await UIState.reset();
-    });
-  });
+        await UIState.reset();
+      });
+    }
+  );
 });
 
 add_task(async function sendToDevice_inUrlbar() {
@@ -642,11 +746,19 @@ add_task(async function sendToDevice_inUrlbar() {
     await promiseSyncReady();
     const sandbox = sinon.createSandbox();
     sandbox.stub(gSync, "syncReady").get(() => true);
-    sandbox.stub(Weave.Service.clientsEngine, "hasSyncedThisSession").get(() => true);
+    sandbox
+      .stub(Weave.Service.clientsEngine, "hasSyncedThisSession")
+      .get(() => true);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
     sandbox.stub(gSync, "sendTabTargets").get(() => mockTargets);
-    sandbox.stub(Weave.Service.clientsEngine, "getClientType").callsFake(id => mockTargets.find(c => c.clientRecord && c.clientRecord.id == id).clientRecord.type);
+    sandbox
+      .stub(Weave.Service.clientsEngine, "getClientType")
+      .callsFake(
+        id =>
+          mockTargets.find(c => c.clientRecord && c.clientRecord.id == id)
+            .clientRecord.type
+      );
 
     let cleanUp = () => {
       sandbox.restore();
@@ -662,14 +774,19 @@ add_task(async function sendToDevice_inUrlbar() {
       BrowserPageActions.urlbarButtonNodeIDForActionID(action.id)
     );
     Assert.notEqual(urlbarButton, null, "The urlbar button should exist");
-    Assert.ok(!urlbarButton.disabled,
-              "The urlbar button should not be disabled");
+    Assert.ok(
+      !urlbarButton.disabled,
+      "The urlbar button should not be disabled"
+    );
     EventUtils.synthesizeMouseAtCenter(urlbarButton, {});
     // The panel element for _activatedActionPanelID is created synchronously
     // only after the associated button has been clicked.
     await promisePanelShown(BrowserPageActions._activatedActionPanelID);
-    Assert.equal(urlbarButton.getAttribute("open"), "true",
-      "Button has open attribute");
+    Assert.equal(
+      urlbarButton.getAttribute("open"),
+      "true",
+      "Button has open attribute"
+    );
 
     // The devices should be shown in the subview.
     let expectedItems = [
@@ -688,14 +805,11 @@ add_task(async function sendToDevice_inUrlbar() {
         },
       });
     }
-    expectedItems.push(
-      null,
-      {
-        attrs: {
-          label: "Send to All Devices",
-        },
-      }
-    );
+    expectedItems.push(null, {
+      attrs: {
+        label: "Send to All Devices",
+      },
+    });
     checkSendToDeviceItems(expectedItems, true);
 
     // Get the first device menu item in the panel.
@@ -714,22 +828,22 @@ add_task(async function sendToDevice_inUrlbar() {
     }, "Waiting for first device menu item to appear");
 
     // Click it, which should cause the panel to close.
-    let hiddenPromise =
-      promisePanelHidden(BrowserPageActions._activatedActionPanelID);
+    let hiddenPromise = promisePanelHidden(
+      BrowserPageActions._activatedActionPanelID
+    );
     EventUtils.synthesizeMouseAtCenter(deviceMenuItem, {});
     info("Waiting for Send to Device panel to close after clicking a device");
     await hiddenPromise;
-    Assert.ok(!urlbarButton.hasAttribute("open"),
-      "URL bar button no longer has open attribute");
+    Assert.ok(
+      !urlbarButton.hasAttribute("open"),
+      "URL bar button no longer has open attribute"
+    );
 
     // And then the "Sent!" notification panel should open and close by itself
     // after a moment.
     info("Waiting for the Sent! notification panel to open");
     await promisePanelShown(ConfirmationHint._panel.id);
-    Assert.equal(
-      ConfirmationHint._panel.anchorNode.id,
-      urlbarButton.id
-    );
+    Assert.equal(ConfirmationHint._panel.anchorNode.id, urlbarButton.id);
     info("Waiting for the Sent! notification panel to close");
     await promisePanelHidden(ConfirmationHint._panel.id);
 
@@ -756,10 +870,12 @@ add_task(async function contextMenu() {
 
     // The context menu should show the "remove" item.  Click it.
     let menuItems = collectContextMenuItems();
-    Assert.equal(menuItems.length, 1,
-                 "Context menu has one child");
-    Assert.equal(menuItems[0].label, "Remove from Address Bar",
-                 "Context menu is in the 'remove' state");
+    Assert.equal(menuItems.length, 1, "Context menu has one child");
+    Assert.equal(
+      menuItems[0].label,
+      "Remove from Address Bar",
+      "Context menu is in the 'remove' state"
+    );
     contextMenuPromise = promisePanelHidden("pageActionContextMenu");
     EventUtils.synthesizeMouseAtCenter(menuItems[0], {});
     await contextMenuPromise;
@@ -782,10 +898,12 @@ add_task(async function contextMenu() {
 
     // The context menu should show the "add" item.  Click it.
     menuItems = collectContextMenuItems();
-    Assert.equal(menuItems.length, 1,
-                 "Context menu has one child");
-    Assert.equal(menuItems[0].label, "Add to Address Bar",
-                 "Context menu is in the 'add' state");
+    Assert.equal(menuItems.length, 1, "Context menu has one child");
+    Assert.equal(
+      menuItems[0].label,
+      "Add to Address Bar",
+      "Context menu is in the 'add' state"
+    );
     contextMenuPromise = promisePanelHidden("pageActionContextMenu");
     EventUtils.synthesizeMouseAtCenter(menuItems[0], {});
     await contextMenuPromise;
@@ -805,10 +923,12 @@ add_task(async function contextMenu() {
 
     // The context menu should show the "remove" item.  Click it.
     menuItems = collectContextMenuItems();
-    Assert.equal(menuItems.length, 1,
-                 "Context menu has one child");
-    Assert.equal(menuItems[0].label, "Remove from Address Bar",
-                 "Context menu is in the 'remove' state");
+    Assert.equal(menuItems.length, 1, "Context menu has one child");
+    Assert.equal(
+      menuItems[0].label,
+      "Remove from Address Bar",
+      "Context menu is in the 'remove' state"
+    );
     contextMenuPromise = promisePanelHidden("pageActionContextMenu");
     EventUtils.synthesizeMouseAtCenter(menuItems[0], {});
     await contextMenuPromise;
@@ -829,10 +949,12 @@ add_task(async function contextMenu() {
     await contextMenuPromise;
 
     menuItems = collectContextMenuItems();
-    Assert.equal(menuItems.length, 1,
-                 "Context menu has one child");
-    Assert.equal(menuItems[0].label, "Add to Address Bar",
-                 "Context menu is in the 'add' state");
+    Assert.equal(menuItems.length, 1, "Context menu has one child");
+    Assert.equal(
+      menuItems[0].label,
+      "Add to Address Bar",
+      "Context menu is in the 'add' state"
+    );
     contextMenuPromise = promisePanelHidden("pageActionContextMenu");
     EventUtils.synthesizeMouseAtCenter(menuItems[0], {});
     await contextMenuPromise;
@@ -848,11 +970,9 @@ add_task(async function contextMenu() {
   gURLBar.focus();
 });
 
-
 function promiseSyncReady() {
-  let service = Cc["@mozilla.org/weave/service;1"]
-                  .getService(Ci.nsISupports)
-                  .wrappedJSObject;
+  let service = Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
+    .wrappedJSObject;
   return service.whenLoaded().then(() => {
     UIState.isReady();
     return UIState.refresh();
@@ -878,8 +998,10 @@ function checkSendToDeviceItems(expectedItems, forUrlbar = false) {
     if ("className" in expected) {
       let expectedNames = expected.className.split(/\s+/);
       for (let name of expectedNames) {
-        Assert.ok(actual.classList.contains(name),
-                  `classList contains: ${name}`);
+        Assert.ok(
+          actual.classList.contains(name),
+          `classList contains: ${name}`
+        );
       }
     }
     let display = "display" in expected ? expected.display : "-moz-box";

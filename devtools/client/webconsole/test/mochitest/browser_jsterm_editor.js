@@ -25,12 +25,22 @@ async function performTests() {
   let hud = await openConsole(tab);
 
   info("Test that the editor mode is disabled when the pref is set to false");
-  is(isEditorModeEnabled(hud), false, "Editor is disabled when pref is set to false");
+  is(
+    isEditorModeEnabled(hud),
+    false,
+    "Editor is disabled when pref is set to false"
+  );
 
   await closeConsole();
 
-  info("Test that wrapper does have the jsterm-editor class when editor is enabled");
+  info(
+    "Test that wrapper does have the jsterm-editor class when editor is enabled"
+  );
   await pushPref("devtools.webconsole.input.editor", true);
   hud = await openConsole(tab);
-  is(isEditorModeEnabled(hud), true, "Editor is enabled when pref is set to true");
+  is(
+    isEditorModeEnabled(hud),
+    true,
+    "Editor is enabled when pref is set to true"
+  );
 }

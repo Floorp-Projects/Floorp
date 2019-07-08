@@ -9,7 +9,9 @@ SpecialPowers.pushPrefEnv({
 });
 
 add_task(async function() {
-  const INFO_URL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "webextensions";
+  const INFO_URL =
+    Services.urlFormatter.formatURLPref("app.support.baseURL") +
+    "webextensions";
 
   const NAMES = {
     newTheme: "New LWT",
@@ -55,14 +57,19 @@ add_task(async function() {
 
     let document = mgrWin.document;
     // First find the  entry in the list.
-    let item = Array.from(document.getElementById("addon-list").childNodes)
-                    .find(i => i.getAttribute("name") == name);
+    let item = Array.from(
+      document.getElementById("addon-list").childNodes
+    ).find(i => i.getAttribute("name") == name);
 
     ok(item, `Found ${name} in list`);
     item.parentNode.ensureElementIsVisible(item);
 
     // Check the badge
-    let badge = document.getAnonymousElementByAttribute(item, "anonid", "legacy");
+    let badge = document.getAnonymousElementByAttribute(
+      item,
+      "anonid",
+      "legacy"
+    );
 
     if (isLegacy) {
       is_element_visible(badge, `Legacy badge is visible for ${name}`);

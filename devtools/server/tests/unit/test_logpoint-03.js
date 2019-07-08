@@ -17,18 +17,22 @@ function run_test() {
   gDebuggee = addTestGlobal("test-logpoint");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-logpoint",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_simple_breakpoint();
-                           });
+    attachTestTabAndResume(gClient, "test-logpoint", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_simple_breakpoint();
+    });
   });
   do_test_pending();
 }
 
 function test_simple_breakpoint() {
   const rootActor = gClient.transport._serverConnection.rootActor;
-  const threadActor = rootActor._parameters.tabList._targetActors[0].threadActor;
+  const threadActor =
+    rootActor._parameters.tabList._targetActors[0].threadActor;
 
   let lastMessage;
   threadActor._parent._consoleActor = {
@@ -38,21 +42,24 @@ function test_simple_breakpoint() {
   };
 
   gThreadClient.once("paused", async function(packet) {
-    const source = await getSourceById(
-      gThreadClient,
-      packet.frame.where.actor
-    );
+    const source = await getSourceById(gThreadClient, packet.frame.where.actor);
 
     // Set a logpoint which should throw an error message.
-    await gThreadClient.setBreakpoint({
-      sourceUrl: source.url,
-      line: 3,
-    }, { logValue: "c" });
+    await gThreadClient.setBreakpoint(
+      {
+        sourceUrl: source.url,
+        line: 3,
+      },
+      { logValue: "c" }
+    );
 
     // Execute the rest of the code.
     await gThreadClient.resume();
     Assert.equal(lastMessage.level, "logPointError");
-    Assert.equal(lastMessage.arguments[0], "[Logpoint threw]: c is not defined");
+    Assert.equal(
+      lastMessage.arguments[0],
+      "[Logpoint threw]: c is not defined"
+    );
     finishClient(gClient);
   });
 

@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["Accounts"];
 
-const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { EventDispatcher } = ChromeUtils.import(
+  "resource://gre/modules/Messaging.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * A promise-based API for querying the existence of Sync accounts,
@@ -30,10 +32,12 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
  */
 var Accounts = Object.freeze({
   _accountsExist: function(kind) {
-    return EventDispatcher.instance.sendRequestForResult({
-      type: "Accounts:Exist",
-      kind: kind,
-    }).then(data => data.exists);
+    return EventDispatcher.instance
+      .sendRequestForResult({
+        type: "Accounts:Exist",
+        kind: kind,
+      })
+      .then(data => data.exists);
   },
 
   firefoxAccountsExist: function() {
@@ -69,7 +73,8 @@ var Accounts = Object.freeze({
       tokenServerEndpoint: "identity.sync.tokenserver.uri",
     };
     for (let key in associations) {
-      newData[key] = newData[key] || Services.urlFormatter.formatURLPref(associations[key]);
+      newData[key] =
+        newData[key] || Services.urlFormatter.formatURLPref(associations[key]);
     }
     return newData;
   },
@@ -128,16 +133,18 @@ var Accounts = Object.freeze({
    * exists, or an object including at least a string-valued 'email' key.
    */
   getFirefoxAccount: function() {
-    return EventDispatcher.instance.sendRequestForResult({
-      type: "Accounts:Exist",
-      kind: "fxa",
-    }).then(data => {
-      if (!data || !data.exists) {
-        return null;
-      }
-      delete data.exists;
-      return data;
-    });
+    return EventDispatcher.instance
+      .sendRequestForResult({
+        type: "Accounts:Exist",
+        kind: "fxa",
+      })
+      .then(data => {
+        if (!data || !data.exists) {
+          return null;
+        }
+        delete data.exists;
+        return data;
+      });
   },
 
   /**
@@ -157,7 +164,9 @@ var Accounts = Object.freeze({
     // Only show Sync preferences of an existing Android Account.
     return Accounts.getFirefoxAccount().then(account => {
       if (!account) {
-        throw new Error("Can't show Sync preferences of non-existent Firefox Account!");
+        throw new Error(
+          "Can't show Sync preferences of non-existent Firefox Account!"
+        );
       }
       return EventDispatcher.instance.sendRequestForResult({
         type: "Accounts:ShowSyncPreferences",

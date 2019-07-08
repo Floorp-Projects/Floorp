@@ -26,10 +26,22 @@ function parseTestManifest(testManifest, params, callback) {
     }
     if (params.testRoot != "tests" && params.testRoot !== undefined) {
       let name = params.baseurl + "/" + params.testRoot + "/" + path;
-      links[name] = {"test": {"url": name, "expected": obj.expected, "uses-unsafe-cpows": obj["uses-unsafe-cpows"]}};
+      links[name] = {
+        test: {
+          url: name,
+          expected: obj.expected,
+          "uses-unsafe-cpows": obj["uses-unsafe-cpows"],
+        },
+      };
     } else {
       let name = params.testPrefix + path;
-      paths.push({"test": {"url": name, "expected": obj.expected, "uses-unsafe-cpows": obj["uses-unsafe-cpows"]}});
+      paths.push({
+        test: {
+          url: name,
+          expected: obj.expected,
+          "uses-unsafe-cpows": obj["uses-unsafe-cpows"],
+        },
+      });
     }
   }
   if (paths.length > 0) {
@@ -48,11 +60,23 @@ function getTestManifest(url, params, callback) {
         try {
           parseTestManifest(JSON.parse(req.responseText), params, callback);
         } catch (e) {
-          dump("TEST-UNEXPECTED-FAIL: manifestLibrary.js | error parsing " + url + " (" + e + ")\n");
+          dump(
+            "TEST-UNEXPECTED-FAIL: manifestLibrary.js | error parsing " +
+              url +
+              " (" +
+              e +
+              ")\n"
+          );
           throw e;
         }
       } else {
-        dump("TEST-UNEXPECTED-FAIL: manifestLibrary.js | error loading " + url + " (HTTP " + req.status + ")\n");
+        dump(
+          "TEST-UNEXPECTED-FAIL: manifestLibrary.js | error loading " +
+            url +
+            " (HTTP " +
+            req.status +
+            ")\n"
+        );
         callback({});
       }
     }
@@ -103,7 +127,7 @@ function filterTests(filter, testList, runOnly) {
   if (Object.keys(runtests).length) {
     for (let i = 0; i < testList.length; i++) {
       let testpath;
-      if ((testList[i] instanceof Object) && ("test" in testList[i])) {
+      if (testList[i] instanceof Object && "test" in testList[i]) {
         testpath = testList[i].test.url;
       } else {
         testpath = testList[i];
@@ -135,7 +159,7 @@ function filterTests(filter, testList, runOnly) {
   for (let i = 0; i < filteredTests.length; i++) {
     let found = false;
     let testpath;
-    if ((filteredTests[i] instanceof Object) && ("test" in filteredTests[i])) {
+    if (filteredTests[i] instanceof Object && "test" in filteredTests[i]) {
       testpath = filteredTests[i].test.url;
     } else {
       testpath = filteredTests[i];

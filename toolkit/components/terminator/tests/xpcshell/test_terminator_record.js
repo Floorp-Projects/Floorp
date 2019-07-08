@@ -4,14 +4,13 @@
 
 "use strict";
 
-
 // Test that the Shutdown Terminator records durations correctly
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 
-var {Path, File, Constants} = OS;
+var { Path, File, Constants } = OS;
 
 var PATH;
 var PATH_TMP;
@@ -26,8 +25,9 @@ add_task(async function init() {
   // (normally, this is done through the manifest file, but xpcshell
   // doesn't take them into account).
   info("Initializing the Terminator");
-  terminator = Cc["@mozilla.org/toolkit/shutdown-terminator;1"].
-    createInstance(Ci.nsIObserver);
+  terminator = Cc["@mozilla.org/toolkit/shutdown-terminator;1"].createInstance(
+    Ci.nsIObserver
+  );
   terminator.observe(null, "profile-after-change", null);
 });
 
@@ -36,7 +36,7 @@ var promiseShutdownDurationData = async function() {
   // Timeout if it is never created.
   info("Waiting for file creation: " + PATH);
   while (true) {
-    if ((await OS.File.exists(PATH))) {
+    if (await OS.File.exists(PATH)) {
       break;
     }
 
@@ -45,7 +45,7 @@ var promiseShutdownDurationData = async function() {
   }
 
   info("The file has been created");
-  let raw = await OS.File.read(PATH, { encoding: "utf-8"} );
+  let raw = await OS.File.read(PATH, { encoding: "utf-8" });
   info(raw);
   return JSON.parse(raw);
 };
@@ -70,10 +70,16 @@ add_task(async function test_record() {
   let duration = data[PHASE0];
   Assert.equal(typeof duration, "number");
   Assert.ok(duration >= 0, "Duration is a non-negative number");
-  Assert.ok(duration <= Math.ceil((t1 - t0) / 1000) + 1,
-    "Duration is reasonable");
+  Assert.ok(
+    duration <= Math.ceil((t1 - t0) / 1000) + 1,
+    "Duration is reasonable"
+  );
 
-  Assert.equal(Object.keys(data).length, 1, "Data does not contain other durations");
+  Assert.equal(
+    Object.keys(data).length,
+    1,
+    "Data does not contain other durations"
+  );
 
   info("Cleaning up and moving to next phase");
   await File.remove(PATH);
@@ -88,13 +94,22 @@ add_task(async function test_record() {
 
   let t2 = Date.now();
 
-  Assert.equal(Object.keys(data).sort().join(", "),
-               [PHASE0, PHASE1].sort().join(", "),
-               "The file contains the expected keys");
+  Assert.equal(
+    Object.keys(data)
+      .sort()
+      .join(", "),
+    [PHASE0, PHASE1].sort().join(", "),
+    "The file contains the expected keys"
+  );
   Assert.equal(data[PHASE0], duration, "Duration of phase 0 hasn't changed");
   let duration2 = data[PHASE1];
   Assert.equal(typeof duration2, "number");
-  Assert.ok(duration2 >= WAIT_MS / 2000, "We have waited at least " + (WAIT_MS / 2000) + " ticks");
-  Assert.ok(duration2 <= Math.ceil((t2 - t1) / 1000) + 1,
-    "Duration is reasonable");
+  Assert.ok(
+    duration2 >= WAIT_MS / 2000,
+    "We have waited at least " + WAIT_MS / 2000 + " ticks"
+  );
+  Assert.ok(
+    duration2 <= Math.ceil((t2 - t1) / 1000) + 1,
+    "Duration is reasonable"
+  );
 });

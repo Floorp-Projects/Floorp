@@ -42,19 +42,31 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionSettingsStore"];
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "JSONFile",
-                               "resource://gre/modules/JSONFile.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionParent",
-                               "resource://gre/modules/ExtensionParent.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "JSONFile",
+  "resource://gre/modules/JSONFile.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionParent",
+  "resource://gre/modules/ExtensionParent.jsm"
+);
 
 const JSON_FILE_NAME = "extension-settings.json";
 const JSON_FILE_VERSION = 2;
-const STORE_PATH = OS.Path.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, JSON_FILE_NAME);
+const STORE_PATH = OS.Path.join(
+  Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+  JSON_FILE_NAME
+);
 
 let _initializePromise;
 let _store = {};
@@ -103,7 +115,8 @@ async function reloadFile(saveChanges) {
 function ensureType(type) {
   if (!_store.dataReady) {
     throw new Error(
-      "The ExtensionSettingsStore was accessed before the initialize promise resolved.");
+      "The ExtensionSettingsStore was accessed before the initialize promise resolved."
+    );
   }
 
   // Ensure a property exists for the given type.
@@ -142,18 +155,18 @@ function getItem(type, key, id) {
   if (id) {
     // Return the item that corresponds to the extension with id of id.
     let item = keyInfo.precedenceList.find(item => item.id === id);
-    return item ? {key, value: item.value, id} : null;
+    return item ? { key, value: item.value, id } : null;
   }
 
   // Find the highest precedence, enabled setting.
   for (let item of keyInfo.precedenceList) {
     if (item.enabled) {
-      return {key, value: item.value, id: item.id};
+      return { key, value: item.value, id: item.id };
     }
   }
 
   // Nothing found in the precedenceList, return the initialValue.
-  return {key, initialValue: keyInfo.initialValue};
+  return { key, initialValue: keyInfo.initialValue };
 }
 
 // Comparator used when sorting the precedence list.
@@ -196,7 +209,8 @@ function alterSetting(id, type, key, action) {
       return null;
     }
     throw new Error(
-      `Cannot alter the setting for ${type}:${key} as it does not exist.`);
+      `Cannot alter the setting for ${type}:${key} as it does not exist.`
+    );
   }
 
   let foundIndex = keyInfo.precedenceList.findIndex(item => item.id == id);
@@ -206,7 +220,8 @@ function alterSetting(id, type, key, action) {
       return null;
     }
     throw new Error(
-      `Cannot alter the setting for ${type}:${key} as it does not exist.`);
+      `Cannot alter the setting for ${type}:${key} as it does not exist.`
+    );
   }
 
   switch (action) {
@@ -238,7 +253,13 @@ function alterSetting(id, type, key, action) {
   }
 
   _store.saveSoon();
-  ExtensionParent.apiManager.emit("extension-setting-changed", {action, id, type, key, item: returnItem});
+  ExtensionParent.apiManager.emit("extension-setting-changed", {
+    action,
+    id,
+    type,
+    key,
+    item: returnItem,
+  });
   return returnItem;
 }
 
@@ -281,7 +302,14 @@ var ExtensionSettingsStore = {
    *                          added does not need to be set because it is not
    *                          at the top of the precedence list.
    */
-  async addSetting(id, type, key, value, initialValueCallback = () => undefined, callbackArgument = key) {
+  async addSetting(
+    id,
+    type,
+    key,
+    value,
+    initialValueCallback = () => undefined,
+    callbackArgument = key
+  ) {
     if (typeof initialValueCallback != "function") {
       throw new Error("initialValueCallback must be a function.");
     }
@@ -302,8 +330,12 @@ var ExtensionSettingsStore = {
     if (foundIndex === -1) {
       // No item for this extension, so add a new one.
       let addon = await AddonManager.getAddonByID(id);
-      keyInfo.precedenceList.push(
-        {id, installDate: addon.installDate.valueOf(), value, enabled: true});
+      keyInfo.precedenceList.push({
+        id,
+        installDate: addon.installDate.valueOf(),
+        value,
+        enabled: true,
+      });
     } else {
       // Item already exists or this extension, so update it.
       let item = keyInfo.precedenceList[foundIndex];
@@ -319,7 +351,7 @@ var ExtensionSettingsStore = {
 
     // Check whether this is currently the top item.
     if (keyInfo.precedenceList[0].id == id) {
-      return {id, key, value};
+      return { id, key, value };
     }
     return null;
   },
@@ -392,7 +424,8 @@ var ExtensionSettingsStore = {
    * @param {string} key The key of the setting.
    */
   setByUser(type, key) {
-    let {precedenceList} = (_store.data[type] && _store.data[type][key]) || {};
+    let { precedenceList } =
+      (_store.data[type] && _store.data[type][key]) || {};
     if (!precedenceList) {
       // The setting for this key does not exist. Nothing to do.
       return;
@@ -401,7 +434,11 @@ var ExtensionSettingsStore = {
     for (let item of precedenceList) {
       item.enabled = false;
     }
-    ExtensionParent.apiManager.emit("extension-setting-changed", {action: "disable", type, key});
+    ExtensionParent.apiManager.emit("extension-setting-changed", {
+      action: "disable",
+      type,
+      key,
+    });
 
     _store.saveSoon();
   },
@@ -502,9 +539,9 @@ var ExtensionSettingsStore = {
     }
 
     let addon = await AddonManager.getAddonByID(id);
-    return topItem.installDate > addon.installDate.valueOf() ?
-      "controlled_by_other_extensions" :
-      "controllable_by_this_extension";
+    return topItem.installDate > addon.installDate.valueOf()
+      ? "controlled_by_other_extensions"
+      : "controllable_by_this_extension";
   },
 
   /**

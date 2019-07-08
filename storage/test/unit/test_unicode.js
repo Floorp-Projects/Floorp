@@ -29,7 +29,9 @@ add_task(async function setup() {
 });
 
 add_task(async function test_upper_ascii() {
-  var stmt = createStatement("SELECT name, id FROM test WHERE name = upper('a')");
+  var stmt = createStatement(
+    "SELECT name, id FROM test WHERE name = upper('a')"
+  );
   Assert.ok(stmt.executeStep());
   Assert.equal("A", stmt.getString(0));
   Assert.equal(2, stmt.getInt32(1));
@@ -38,7 +40,9 @@ add_task(async function test_upper_ascii() {
 });
 
 add_task(async function test_upper_non_ascii() {
-  var stmt = createStatement("SELECT name, id FROM test WHERE name = upper(?1)");
+  var stmt = createStatement(
+    "SELECT name, id FROM test WHERE name = upper(?1)"
+  );
   stmt.bindByIndex(0, LATIN1_ae);
   Assert.ok(stmt.executeStep());
   Assert.equal(LATIN1_AE, stmt.getString(0));
@@ -48,7 +52,9 @@ add_task(async function test_upper_non_ascii() {
 });
 
 add_task(async function test_lower_ascii() {
-  var stmt = createStatement("SELECT name, id FROM test WHERE name = lower('B')");
+  var stmt = createStatement(
+    "SELECT name, id FROM test WHERE name = lower('B')"
+  );
   Assert.ok(stmt.executeStep());
   Assert.equal("b", stmt.getString(0));
   Assert.equal(3, stmt.getInt32(1));
@@ -57,7 +63,9 @@ add_task(async function test_lower_ascii() {
 });
 
 add_task(async function test_lower_non_ascii() {
-  var stmt = createStatement("SELECT name, id FROM test WHERE name = lower(?1)");
+  var stmt = createStatement(
+    "SELECT name, id FROM test WHERE name = lower(?1)"
+  );
   stmt.bindByIndex(0, LATIN1_AE);
   Assert.ok(stmt.executeStep());
   Assert.equal(LATIN1_ae, stmt.getString(0));

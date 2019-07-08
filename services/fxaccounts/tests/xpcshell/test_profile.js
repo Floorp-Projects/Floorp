@@ -3,11 +3,19 @@
 
 "use strict";
 
-const {ON_PROFILE_CHANGE_NOTIFICATION, log} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const {FxAccountsProfileClient} = ChromeUtils.import("resource://gre/modules/FxAccountsProfileClient.jsm");
-const {FxAccountsProfile} = ChromeUtils.import("resource://gre/modules/FxAccountsProfile.jsm");
-const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { ON_PROFILE_CHANGE_NOTIFICATION, log } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
+);
+const { FxAccountsProfileClient } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsProfileClient.jsm"
+);
+const { FxAccountsProfile } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsProfile.jsm"
+);
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 let mockClient = function(fxa) {
   let options = {
@@ -24,8 +32,7 @@ const ACCOUNT_DATA = {
   email: ACCOUNT_EMAIL,
 };
 
-function FxaMock() {
-}
+function FxaMock() {}
 FxaMock.prototype = {
   currentAccountState: {
     profile: null,
@@ -69,7 +76,7 @@ function CreateFxAccountsProfile(fxa = null, client = null) {
 add_test(function cacheProfile_change() {
   let setProfileCacheCalled = false;
   let fxa = mockFxa();
-  fxa.setProfileCache = (data) => {
+  fxa.setProfileCache = data => {
     setProfileCacheCalled = true;
     Assert.equal(data.profile.avatar, "myurl");
     Assert.equal(data.etag, "bogusetag");
@@ -83,13 +90,16 @@ add_test(function cacheProfile_change() {
     run_next_test();
   });
 
-  return profile._cacheProfile({ body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myurl" }, etag: "bogusetag" });
+  return profile._cacheProfile({
+    body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myurl" },
+    etag: "bogusetag",
+  });
 });
 
 add_test(function fetchAndCacheProfile_ok() {
   let client = mockClient(mockFxa());
   client.fetchProfile = function() {
-    return Promise.resolve({ body: { uid: ACCOUNT_UID, avatar: "myimg"} });
+    return Promise.resolve({ body: { uid: ACCOUNT_UID, avatar: "myimg" } });
   };
   let profile = CreateFxAccountsProfile(null, client);
   profile._cachedAt = 12345;
@@ -99,12 +109,11 @@ add_test(function fetchAndCacheProfile_ok() {
     return Promise.resolve(toCache.body);
   };
 
-  return profile._fetchAndCacheProfile()
-    .then(result => {
-      Assert.equal(result.avatar, "myimg");
-      Assert.notEqual(profile._cachedAt, 12345, "cachedAt has been bumped");
-      run_next_test();
-    });
+  return profile._fetchAndCacheProfile().then(result => {
+    Assert.equal(result.avatar, "myimg");
+    Assert.notEqual(profile._cachedAt, 12345, "cachedAt has been bumped");
+    run_next_test();
+  });
 });
 
 add_test(function fetchAndCacheProfile_always_bumps_cachedAt() {
@@ -115,13 +124,15 @@ add_test(function fetchAndCacheProfile_always_bumps_cachedAt() {
   let profile = CreateFxAccountsProfile(null, client);
   profile._cachedAt = 12345;
 
-  return profile._fetchAndCacheProfile()
-    .then(result => {
+  return profile._fetchAndCacheProfile().then(
+    result => {
       do_throw("Should not succeed");
-    }, err => {
+    },
+    err => {
       Assert.notEqual(profile._cachedAt, 12345, "cachedAt has been bumped");
       run_next_test();
-    });
+    }
+  );
 });
 
 add_test(function fetchAndCacheProfile_sendsETag() {
@@ -130,14 +141,15 @@ add_test(function fetchAndCacheProfile_sendsETag() {
   let client = mockClient(fxa);
   client.fetchProfile = function(etag) {
     Assert.equal(etag, "bogusETag");
-    return Promise.resolve({ body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg"} });
+    return Promise.resolve({
+      body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg" },
+    });
   };
   let profile = CreateFxAccountsProfile(fxa, client);
 
-  return profile._fetchAndCacheProfile()
-    .then(result => {
-      run_next_test();
-    });
+  return profile._fetchAndCacheProfile().then(result => {
+    run_next_test();
+  });
 });
 
 // Check that a second profile request when one is already in-flight reuses
@@ -167,7 +179,9 @@ add_task(async function fetchAndCacheProfileOnce() {
   Assert.equal(numFetches, 1);
 
   // resolve the promise.
-  resolveProfile({ body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg"} });
+  resolveProfile({
+    body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg" },
+  });
 
   // both requests should complete with the same data.
   let got1 = await request1;
@@ -228,7 +242,9 @@ add_task(async function fetchAndCacheProfileOnce() {
 
   // but a new request should works.
   client.fetchProfile = function() {
-    return Promise.resolve({body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg"}});
+    return Promise.resolve({
+      body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg" },
+    });
   };
 
   let got = await profile._fetchAndCacheProfile();
@@ -238,7 +254,10 @@ add_task(async function fetchAndCacheProfileOnce() {
 add_test(function fetchAndCacheProfile_alreadyCached() {
   let cachedUrl = "cachedurl";
   let fxa = mockFxa();
-  fxa.profileCache = { profile: { uid: ACCOUNT_UID, avatar: cachedUrl }, etag: "bogusETag" };
+  fxa.profileCache = {
+    profile: { uid: ACCOUNT_UID, avatar: cachedUrl },
+    etag: "bogusETag",
+  };
   let client = mockClient(fxa);
   client.fetchProfile = function(etag) {
     Assert.equal(etag, "bogusETag");
@@ -250,12 +269,11 @@ add_test(function fetchAndCacheProfile_alreadyCached() {
     do_throw("This method should not be called.");
   };
 
-  return profile._fetchAndCacheProfile()
-    .then(result => {
-      Assert.equal(result, null);
-      Assert.equal(fxa.profileCache.profile.avatar, cachedUrl);
-      run_next_test();
-    });
+  return profile._fetchAndCacheProfile().then(result => {
+    Assert.equal(result, null);
+    Assert.equal(fxa.profileCache.profile.avatar, cachedUrl);
+    run_next_test();
+  });
 });
 
 // Check that a new profile request within PROFILE_FRESHNESS_THRESHOLD of the
@@ -275,7 +293,9 @@ add_task(async function fetchAndCacheProfileAfterThreshold() {
   let client = mockClient(mockFxa());
   client.fetchProfile = async function() {
     numFetches += 1;
-    return {body: {uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg"}};
+    return {
+      body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg" },
+    };
   };
   let profile = CreateFxAccountsProfile(null, client);
   profile.PROFILE_FRESHNESS_THRESHOLD = 1000;
@@ -317,7 +337,9 @@ add_task(async function fetchAndCacheProfileBeforeThresholdOnNotification() {
   let client = mockClient(mockFxa());
   client.fetchProfile = async function() {
     numFetches += 1;
-    return {body: {uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg"}};
+    return {
+      body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg" },
+    };
   };
   let profile = CreateFxAccountsProfile(null, client);
   profile.PROFILE_FRESHNESS_THRESHOLD = 1000;
@@ -398,47 +420,52 @@ add_test(function getProfile_has_cached_fetch_deleted() {
   let fxa = mockFxa();
   let client = mockClient(fxa);
   client.fetchProfile = function() {
-    return Promise.resolve({ body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: null } });
+    return Promise.resolve({
+      body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: null },
+    });
   };
 
   let profile = CreateFxAccountsProfile(fxa, client);
-  fxa.profileCache = { profile: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: cachedUrl } };
+  fxa.profileCache = {
+    profile: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: cachedUrl },
+  };
 
-// instead of checking this in a mocked "save" function, just check after the
-// observer
+  // instead of checking this in a mocked "save" function, just check after the
+  // observer
   makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function(subject, topic, data) {
-    profile.getProfile()
-      .then(profileData => {
-        Assert.equal(null, profileData.avatar);
-        run_next_test();
-      });
+    profile.getProfile().then(profileData => {
+      Assert.equal(null, profileData.avatar);
+      run_next_test();
+    });
   });
 
-  return profile.getProfile()
-    .then(result => {
-      Assert.equal(result.avatar, "myurl");
-    });
+  return profile.getProfile().then(result => {
+    Assert.equal(result.avatar, "myurl");
+  });
 });
 
 add_test(function getProfile_fetchAndCacheProfile_throws() {
   let fxa = mockFxa();
-  fxa.profileCache = { profile: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg" } };
+  fxa.profileCache = {
+    profile: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg" },
+  };
   let profile = CreateFxAccountsProfile(fxa);
 
   profile._fetchAndCacheProfile = () => Promise.reject(new Error());
 
-  return profile.getProfile()
-    .then(result => {
-      Assert.equal(result.avatar, "myimg");
-      run_next_test();
-    });
+  return profile.getProfile().then(result => {
+    Assert.equal(result.avatar, "myimg");
+    run_next_test();
+  });
 });
 
 add_test(function getProfile_email_changed() {
   let fxa = mockFxa();
   let client = mockClient(fxa);
   client.fetchProfile = function() {
-    return Promise.resolve({ body: { uid: ACCOUNT_UID, email: "newemail@bar.com" } });
+    return Promise.resolve({
+      body: { uid: ACCOUNT_UID, email: "newemail@bar.com" },
+    });
   };
   fxa.handleEmailUpdated = email => {
     Assert.equal(email, "newemail@bar.com");

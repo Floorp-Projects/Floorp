@@ -4,17 +4,19 @@
 
 "use strict";
 
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const {assert} = ChromeUtils.import("chrome://marionette/content/assert.js");
-const {
-  InvalidArgumentError,
-} = ChromeUtils.import("chrome://marionette/content/error.js");
-const {
-  pprint,
-} = ChromeUtils.import("chrome://marionette/content/format.js");
+const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
+const { InvalidArgumentError } = ChromeUtils.import(
+  "chrome://marionette/content/error.js"
+);
+const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
@@ -28,9 +30,13 @@ this.EXPORTED_SYMBOLS = [
 
 // Enable testing this module, as Services.appinfo.* is not available
 // in xpcshell tests.
-const appinfo = {name: "<missing>", version: "<missing>"};
-try { appinfo.name = Services.appinfo.name.toLowerCase(); } catch (e) {}
-try { appinfo.version = Services.appinfo.version; } catch (e) {}
+const appinfo = { name: "<missing>", version: "<missing>" };
+try {
+  appinfo.name = Services.appinfo.name.toLowerCase();
+} catch (e) {}
+try {
+  appinfo.version = Services.appinfo.version;
+} catch (e) {}
 
 /** Representation of WebDriver session timeouts. */
 class Timeouts {
@@ -43,7 +49,9 @@ class Timeouts {
     this.script = 30000;
   }
 
-  toString() { return "[object Timeouts]"; }
+  toString() {
+    return "[object Timeouts]";
+  }
 
   /** Marshals timeout durations to a JSON Object. */
   toJSON() {
@@ -55,28 +63,36 @@ class Timeouts {
   }
 
   static fromJSON(json) {
-    assert.object(json,
-        pprint`Expected "timeouts" to be an object, got ${json}`);
+    assert.object(
+      json,
+      pprint`Expected "timeouts" to be an object, got ${json}`
+    );
     let t = new Timeouts();
 
     for (let [type, ms] of Object.entries(json)) {
       switch (type) {
         case "implicit":
-          t.implicit = assert.positiveInteger(ms,
-              pprint`Expected ${type} to be a positive integer, got ${ms}`);
+          t.implicit = assert.positiveInteger(
+            ms,
+            pprint`Expected ${type} to be a positive integer, got ${ms}`
+          );
           break;
 
         case "script":
           if (ms !== null) {
-            assert.positiveInteger(ms,
-                pprint`Expected ${type} to be a positive integer, got ${ms}`);
+            assert.positiveInteger(
+              ms,
+              pprint`Expected ${type} to be a positive integer, got ${ms}`
+            );
           }
           t.script = ms;
           break;
 
         case "pageLoad":
-          t.pageLoad = assert.positiveInteger(ms,
-              pprint`Expected ${type} to be a positive integer, got ${ms}`);
+          t.pageLoad = assert.positiveInteger(
+            ms,
+            pprint`Expected ${type} to be a positive integer, got ${ms}`
+          );
           break;
 
         default:
@@ -179,14 +195,19 @@ class Proxy {
         }
 
         if (this.noProxy) {
-          Preferences.set("network.proxy.no_proxies_on", this.noProxy.join(", "));
+          Preferences.set(
+            "network.proxy.no_proxies_on",
+            this.noProxy.join(", ")
+          );
         }
         return true;
 
       case "pac":
         Preferences.set("network.proxy.type", 2);
         Preferences.set(
-            "network.proxy.autoconfig_url", this.proxyAutoconfigUrl);
+          "network.proxy.autoconfig_url",
+          this.proxyAutoconfigUrl
+        );
         return true;
 
       case "system":
@@ -207,13 +228,17 @@ class Proxy {
    */
   static fromJSON(json) {
     function stripBracketsFromIpv6Hostname(hostname) {
-      return hostname.includes(":") ? hostname.replace(/[\[\]]/g, "") : hostname;
+      return hostname.includes(":")
+        ? hostname.replace(/[\[\]]/g, "")
+        : hostname;
     }
 
     // Parse hostname and optional port from host
     function fromHost(scheme, host) {
-      assert.string(host,
-          pprint`Expected proxy "host" to be a string, got ${host}`);
+      assert.string(
+        host,
+        pprint`Expected proxy "host" to be a string, got ${host}`
+      );
 
       if (host.includes("://")) {
         throw new InvalidArgumentError(`${host} contains a scheme`);
@@ -247,13 +272,16 @@ class Proxy {
         }
       }
 
-      if (url.username != "" ||
-          url.password != "" ||
-          url.pathname != "/" ||
-          url.search != "" ||
-          url.hash != "") {
+      if (
+        url.username != "" ||
+        url.password != "" ||
+        url.pathname != "/" ||
+        url.search != "" ||
+        url.hash != ""
+      ) {
         throw new InvalidArgumentError(
-            `${host} was not of the form host[:port]`);
+          `${host} was not of the form host[:port]`
+        );
       }
 
       return [hostname, port];
@@ -266,10 +294,15 @@ class Proxy {
 
     assert.object(json, pprint`Expected "proxy" to be an object, got ${json}`);
 
-    assert.in("proxyType", json,
-        pprint`Expected "proxyType" in "proxy" object, got ${json}`);
-    p.proxyType = assert.string(json.proxyType,
-        pprint`Expected "proxyType" to be a string, got ${json.proxyType}`);
+    assert.in(
+      "proxyType",
+      json,
+      pprint`Expected "proxyType" in "proxy" object, got ${json}`
+    );
+    p.proxyType = assert.string(
+      json.proxyType,
+      pprint`Expected "proxyType" to be a string, got ${json.proxyType}`
+    );
 
     switch (p.proxyType) {
       case "autodetect":
@@ -278,9 +311,11 @@ class Proxy {
         break;
 
       case "pac":
-        p.proxyAutoconfigUrl = assert.string(json.proxyAutoconfigUrl,
-            `Expected "proxyAutoconfigUrl" to be a string, ` +
-            pprint`got ${json.proxyAutoconfigUrl}`);
+        p.proxyAutoconfigUrl = assert.string(
+          json.proxyAutoconfigUrl,
+          `Expected "proxyAutoconfigUrl" to be a string, ` +
+            pprint`got ${json.proxyAutoconfigUrl}`
+        );
         break;
 
       case "manual":
@@ -295,23 +330,30 @@ class Proxy {
         }
         if (typeof json.socksProxy != "undefined") {
           [p.socksProxy, p.socksProxyPort] = fromHost("socks", json.socksProxy);
-          p.socksVersion = assert.positiveInteger(json.socksVersion,
-              pprint`Expected "socksVersion" to be a positive integer, got ${json.socksVersion}`);
+          p.socksVersion = assert.positiveInteger(
+            json.socksVersion,
+            pprint`Expected "socksVersion" to be a positive integer, got ${
+              json.socksVersion
+            }`
+          );
         }
         if (typeof json.noProxy != "undefined") {
-          let entries = assert.array(json.noProxy,
-              pprint`Expected "noProxy" to be an array, got ${json.noProxy}`);
+          let entries = assert.array(
+            json.noProxy,
+            pprint`Expected "noProxy" to be an array, got ${json.noProxy}`
+          );
           p.noProxy = entries.map(entry => {
-            assert.string(entry,
-                pprint`Expected "noProxy" entry to be a string, got ${entry}`);
+            assert.string(
+              entry,
+              pprint`Expected "noProxy" entry to be a string, got ${entry}`
+            );
             return stripBracketsFromIpv6Hostname(entry);
           });
         }
         break;
 
       default:
-        throw new InvalidArgumentError(
-            `Invalid type of proxy: ${p.proxyType}`);
+        throw new InvalidArgumentError(`Invalid type of proxy: ${p.proxyType}`);
     }
 
     return p;
@@ -358,7 +400,9 @@ class Proxy {
     });
   }
 
-  toString() { return "[object Proxy]"; }
+  toString() {
+    return "[object Proxy]";
+  }
 }
 
 /**
@@ -409,10 +453,16 @@ class Capabilities extends Map {
       // proprietary
       ["moz:accessibilityChecks", false],
       ["moz:buildID", Services.appinfo.appBuildID],
-      ["moz:headless", Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless],
+      [
+        "moz:headless",
+        Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless,
+      ],
       ["moz:processID", Services.appinfo.processID],
       ["moz:profile", maybeProfile()],
-      ["moz:shutdownTimeout", Services.prefs.getIntPref("toolkit.asyncshutdown.crash_timeout")],
+      [
+        "moz:shutdownTimeout",
+        Services.prefs.getIntPref("toolkit.asyncshutdown.crash_timeout"),
+      ],
       ["moz:useNonSpecCompliantPointerOrigin", false],
       ["moz:webdriverClick", true],
     ]);
@@ -434,7 +484,9 @@ class Capabilities extends Map {
     return super.set(key, value);
   }
 
-  toString() { return "[object Capabilities]"; }
+  toString() {
+    return "[object Capabilities]";
+  }
 
   /**
    * JSON serialisation of capabilities object.
@@ -460,8 +512,10 @@ class Capabilities extends Map {
     if (typeof json == "undefined" || json === null) {
       json = {};
     }
-    assert.object(json,
-        pprint`Expected "capabilities" to be an object, got ${json}"`);
+    assert.object(
+      json,
+      pprint`Expected "capabilities" to be an object, got ${json}"`
+    );
 
     return Capabilities.match_(json);
   }
@@ -492,7 +546,9 @@ class Capabilities extends Map {
           if (appinfo.name == "firefox" && !v) {
             throw new InvalidArgumentError("setWindowRect cannot be disabled");
           } else if (appinfo.name != "firefox" && v) {
-            throw new InvalidArgumentError("setWindowRect is only supported in Firefox desktop");
+            throw new InvalidArgumentError(
+              "setWindowRect is only supported in Firefox desktop"
+            );
           }
           break;
 
@@ -508,7 +564,8 @@ class Capabilities extends Map {
           assert.string(v, pprint`Expected ${k} to be a string, got ${v}`);
           if (!Object.values(UnhandledPromptBehavior).includes(v)) {
             throw new InvalidArgumentError(
-                `Unknown unhandled prompt behavior: ${v}`);
+              `Unknown unhandled prompt behavior: ${v}`
+            );
           }
           break;
 
@@ -583,7 +640,7 @@ function marshal(obj) {
     if (typeof v.toJSON == "function") {
       v = marshal(v.toJSON());
 
-    // Or do the same for object literals.
+      // Or do the same for object literals.
     } else if (isObject(v)) {
       v = marshal(v);
     }

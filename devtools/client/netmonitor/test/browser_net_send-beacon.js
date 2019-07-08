@@ -11,17 +11,26 @@ add_task(async function() {
   const { tab, monitor } = await initNetMonitor(SEND_BEACON_URL);
   const { store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const { getSortedRequests } =
-    windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
-  is(store.getState().requests.requests.size, 0, "The requests menu should be empty.");
+  is(
+    store.getState().requests.requests.size,
+    0,
+    "The requests menu should be empty."
+  );
 
   // Execute requests.
   await performRequests(monitor, tab, 1);
 
-  is(store.getState().requests.requests.size, 1, "The beacon should be recorded.");
+  is(
+    store.getState().requests.requests.size,
+    1,
+    "The beacon should be recorded."
+  );
   const request = getSortedRequests(store.getState()).get(0);
   is(request.method, "POST", "The method is correct.");
   ok(request.url.endsWith("beacon_request"), "The URL is correct.");

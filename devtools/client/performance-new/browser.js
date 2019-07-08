@@ -40,7 +40,10 @@ function receiveProfile(profile, getSymbolTableCallback) {
   const browser = win.gBrowser;
   Services.focus.activeWindow = win;
 
-  const baseUrl = Services.prefs.getStringPref(UI_BASE_URL_PREF, UI_BASE_URL_DEFAULT);
+  const baseUrl = Services.prefs.getStringPref(
+    UI_BASE_URL_PREF,
+    UI_BASE_URL_DEFAULT
+  );
   const tab = browser.addWebTab(`${baseUrl}/from-addon`, {
     triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({
       userContextId: browser.contentPrincipal.userContextId,
@@ -55,19 +58,25 @@ function receiveProfile(profile, getSymbolTableCallback) {
   mm.sendAsyncMessage(TRANSFER_EVENT, profile);
   mm.addMessageListener(SYMBOL_TABLE_REQUEST_EVENT, e => {
     const { debugName, breakpadId } = e.data;
-    getSymbolTableCallback(debugName, breakpadId).then(result => {
-      const [addr, index, buffer] = result;
-      mm.sendAsyncMessage(SYMBOL_TABLE_RESPONSE_EVENT, {
-        status: "success",
-        debugName, breakpadId, result: [addr, index, buffer],
-      });
-    }, error => {
-      mm.sendAsyncMessage(SYMBOL_TABLE_RESPONSE_EVENT, {
-        status: "error",
-        debugName, breakpadId,
-        error: `${error}`,
-      });
-    });
+    getSymbolTableCallback(debugName, breakpadId).then(
+      result => {
+        const [addr, index, buffer] = result;
+        mm.sendAsyncMessage(SYMBOL_TABLE_RESPONSE_EVENT, {
+          status: "success",
+          debugName,
+          breakpadId,
+          result: [addr, index, buffer],
+        });
+      },
+      error => {
+        mm.sendAsyncMessage(SYMBOL_TABLE_RESPONSE_EVENT, {
+          status: "error",
+          debugName,
+          breakpadId,
+          error: `${error}`,
+        });
+      }
+    );
   });
 }
 
@@ -88,7 +97,10 @@ async function _getArrayOfStringsPref(preferenceFront, prefName, defaultValue) {
     return defaultValue;
   }
 
-  if (Array.isArray(array) && array.every(feature => typeof feature === "string")) {
+  if (
+    Array.isArray(array) &&
+    array.every(feature => typeof feature === "string")
+  ) {
     return array;
   }
 
@@ -107,13 +119,19 @@ async function _getArrayOfStringsPref(preferenceFront, prefName, defaultValue) {
 async function _getArrayOfStringsHostPref(prefName, defaultValue) {
   let array;
   try {
-    const text = Services.prefs.getStringPref(prefName, JSON.stringify(defaultValue));
+    const text = Services.prefs.getStringPref(
+      prefName,
+      JSON.stringify(defaultValue)
+    );
     array = JSON.parse(text);
   } catch (error) {
     return defaultValue;
   }
 
-  if (Array.isArray(array) && array.every(feature => typeof feature === "string")) {
+  if (
+    Array.isArray(array) &&
+    array.every(feature => typeof feature === "string")
+  ) {
     return array;
   }
 
@@ -146,7 +164,7 @@ async function _getIntPref(preferenceFront, prefName, defaultValue) {
  *                                 of the object and how it gets defined.
  */
 async function getRecordingPreferences(preferenceFront, defaultSettings = {}) {
-  const [ entries, interval, features, threads, objdirs ] = await Promise.all([
+  const [entries, interval, features, threads, objdirs] = await Promise.all([
     _getIntPref(
       preferenceFront,
       `devtools.performance.recording.entries`,
@@ -167,10 +185,7 @@ async function getRecordingPreferences(preferenceFront, defaultSettings = {}) {
       `devtools.performance.recording.threads`,
       defaultSettings.threads
     ),
-    _getArrayOfStringsHostPref(
-      OBJDIRS_PREF,
-      defaultSettings.objdirs
-    ),
+    _getArrayOfStringsHostPref(OBJDIRS_PREF, defaultSettings.objdirs),
   ]);
 
   // The pref stores the value in usec.
@@ -206,10 +221,7 @@ async function setRecordingPreferences(preferenceFront, settings) {
       `devtools.performance.recording.threads`,
       JSON.stringify(settings.threads)
     ),
-    Services.prefs.setCharPref(
-      OBJDIRS_PREF,
-      JSON.stringify(settings.objdirs)
-    ),
+    Services.prefs.setCharPref(OBJDIRS_PREF, JSON.stringify(settings.objdirs)),
   ]);
 }
 

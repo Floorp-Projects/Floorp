@@ -9,9 +9,11 @@
 "use strict";
 
 const TEST_URL = "http://example.com";
-const MATCH = new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-                               UrlbarUtils.RESULT_SOURCE.TABS,
-                               { url: TEST_URL });
+const MATCH = new UrlbarResult(
+  UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+  UrlbarUtils.RESULT_SOURCE.TABS,
+  { url: TEST_URL }
+);
 const TELEMETRY_1ST_RESULT = "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS";
 const TELEMETRY_6_FIRST_RESULTS = "PLACES_AUTOCOMPLETE_6_FIRST_RESULTS_TIME_MS";
 
@@ -52,8 +54,10 @@ class DelayedProvider extends UrlbarProvider {
   }
   async addResults(matches, finish = true) {
     // startQuery may have not been invoked yet, so wait for it
-    await TestUtils.waitForCondition(() => !!this._add,
-                                     "Waiting for the _add callback");
+    await TestUtils.waitForCondition(
+      () => !!this._add,
+      "Waiting for the _add callback"
+    );
     for (const match of matches) {
       this._add(this, match);
     }
@@ -88,7 +92,9 @@ add_task(function setup() {
   });
 
   firstHistogram = Services.telemetry.getHistogramById(TELEMETRY_1ST_RESULT);
-  sixthHistogram = Services.telemetry.getHistogramById(TELEMETRY_6_FIRST_RESULTS);
+  sixthHistogram = Services.telemetry.getHistogramById(
+    TELEMETRY_6_FIRST_RESULTS
+  );
 });
 
 add_task(async function test_n_autocomplete_cancel() {
@@ -98,33 +104,53 @@ add_task(async function test_n_autocomplete_cancel() {
   let providerCanceledDeferred = PromiseUtils.defer();
   let provider = new TestProvider([], providerCanceledDeferred.resolve);
   UrlbarProvidersManager.registerProvider(provider);
-  const context = createContext(TEST_URL, {providers: [provider.name]});
+  const context = createContext(TEST_URL, { providers: [provider.name] });
 
-  Assert.ok(!TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
-    "Should not have started first result stopwatch");
-  Assert.ok(!TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
-    "Should not have started first 6 results stopwatch");
+  Assert.ok(
+    !TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
+    "Should not have started first result stopwatch"
+  );
+  Assert.ok(
+    !TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
+    "Should not have started first 6 results stopwatch"
+  );
 
   controller.startQuery(context);
 
-  Assert.ok(TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
-    "Should have started first result stopwatch");
-  Assert.ok(TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
-    "Should have started first 6 results stopwatch");
+  Assert.ok(
+    TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
+    "Should have started first result stopwatch"
+  );
+  Assert.ok(
+    TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
+    "Should have started first 6 results stopwatch"
+  );
 
   controller.cancelQuery(context);
 
   await providerCanceledDeferred.promise;
 
-  Assert.ok(!TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
-    "Should have canceled first result stopwatch");
-  Assert.ok(!TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
-    "Should have canceled first 6 results stopwatch");
+  Assert.ok(
+    !TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
+    "Should have canceled first result stopwatch"
+  );
+  Assert.ok(
+    !TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
+    "Should have canceled first 6 results stopwatch"
+  );
 
   let results = firstHistogram.snapshot();
-  Assert.equal(results.sum, 0, "Should not have recorded any times (first result)");
+  Assert.equal(
+    results.sum,
+    0,
+    "Should not have recorded any times (first result)"
+  );
   results = sixthHistogram.snapshot();
-  Assert.equal(results.sum, 0, "Should not have recorded any times (first 6 results)");
+  Assert.equal(
+    results.sum,
+    0,
+    "Should not have recorded any times (first 6 results)"
+  );
 });
 
 add_task(async function test_n_autocomplete_results() {
@@ -133,73 +159,120 @@ add_task(async function test_n_autocomplete_results() {
 
   let provider = new DelayedProvider();
   UrlbarProvidersManager.registerProvider(provider);
-  const context = createContext(TEST_URL, {providers: [provider.name]});
+  const context = createContext(TEST_URL, { providers: [provider.name] });
 
-  let resultsPromise = promiseControllerNotification(controller, "onQueryResults");
+  let resultsPromise = promiseControllerNotification(
+    controller,
+    "onQueryResults"
+  );
 
-  Assert.ok(!TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
-    "Should not have started first result stopwatch");
-  Assert.ok(!TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
-    "Should not have started first 6 results stopwatch");
+  Assert.ok(
+    !TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
+    "Should not have started first result stopwatch"
+  );
+  Assert.ok(
+    !TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
+    "Should not have started first 6 results stopwatch"
+  );
 
   controller.startQuery(context);
 
-  Assert.ok(TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
-    "Should have started first result stopwatch");
-  Assert.ok(TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
-    "Should have started first 6 results stopwatch");
+  Assert.ok(
+    TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
+    "Should have started first result stopwatch"
+  );
+  Assert.ok(
+    TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
+    "Should have started first 6 results stopwatch"
+  );
 
   await provider.addResults([MATCH], false);
   await resultsPromise;
 
-  Assert.ok(!TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
-    "Should have stopped the first stopwatch");
-  Assert.ok(TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
-    "Should have kept the first 6 results stopwatch running");
+  Assert.ok(
+    !TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
+    "Should have stopped the first stopwatch"
+  );
+  Assert.ok(
+    TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
+    "Should have kept the first 6 results stopwatch running"
+  );
 
   let firstResults = firstHistogram.snapshot();
   let first6Results = sixthHistogram.snapshot();
-  Assert.equal(getHistogramReportsCount(firstResults), 1,
-    "Should have recorded one time for the first result");
-  Assert.equal(getHistogramReportsCount(first6Results), 0,
-    "Should not have recorded any times (first 6 results)");
+  Assert.equal(
+    getHistogramReportsCount(firstResults),
+    1,
+    "Should have recorded one time for the first result"
+  );
+  Assert.equal(
+    getHistogramReportsCount(first6Results),
+    0,
+    "Should not have recorded any times (first 6 results)"
+  );
 
   // Now add 5 more results, so that the first 6 results is triggered.
   for (let i = 0; i < 5; i++) {
-    resultsPromise = promiseControllerNotification(controller, "onQueryResults");
-    await provider.addResults([
-      new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-                       UrlbarUtils.RESULT_SOURCE.TABS,
-                       { url: TEST_URL + "/i" }),
-    ], false);
+    resultsPromise = promiseControllerNotification(
+      controller,
+      "onQueryResults"
+    );
+    await provider.addResults(
+      [
+        new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+          UrlbarUtils.RESULT_SOURCE.TABS,
+          { url: TEST_URL + "/i" }
+        ),
+      ],
+      false
+    );
     await resultsPromise;
   }
 
-  Assert.ok(!TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
-    "Should have stopped the first stopwatch");
-  Assert.ok(!TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
-    "Should have stopped the first 6 results stopwatch");
+  Assert.ok(
+    !TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
+    "Should have stopped the first stopwatch"
+  );
+  Assert.ok(
+    !TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
+    "Should have stopped the first 6 results stopwatch"
+  );
 
   let updatedResults = firstHistogram.snapshot();
   let updated6Results = sixthHistogram.snapshot();
-  Assert.deepEqual(updatedResults, firstResults,
-    "Should not have changed the histogram for the first result");
-  Assert.equal(getHistogramReportsCount(updated6Results), 1,
-    "Should have recorded one time for the first 6 results");
+  Assert.deepEqual(
+    updatedResults,
+    firstResults,
+    "Should not have changed the histogram for the first result"
+  );
+  Assert.equal(
+    getHistogramReportsCount(updated6Results),
+    1,
+    "Should have recorded one time for the first 6 results"
+  );
 
   // Add one more, to check neither are updated.
   resultsPromise = promiseControllerNotification(controller, "onQueryResults");
   await provider.addResults([
-    new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-                     UrlbarUtils.RESULT_SOURCE.TABS,
-                     { url: TEST_URL + "/6" }),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+      UrlbarUtils.RESULT_SOURCE.TABS,
+      { url: TEST_URL + "/6" }
+    ),
   ]);
   await resultsPromise;
 
   let secondUpdateResults = firstHistogram.snapshot();
   let secondUpdate6Results = sixthHistogram.snapshot();
-  Assert.deepEqual(secondUpdateResults, firstResults,
-    "Should not have changed the histogram for the first result");
-  Assert.equal(getHistogramReportsCount(secondUpdate6Results), 1,
-    "Should not have changed the histogram for the first 6 results");
+  Assert.deepEqual(
+    secondUpdateResults,
+    firstResults,
+    "Should not have changed the histogram for the first result"
+  );
+  Assert.equal(
+    getHistogramReportsCount(secondUpdate6Results),
+    1,
+    "Should not have changed the histogram for the first 6 results"
+  );
 });

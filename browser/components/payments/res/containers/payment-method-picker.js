@@ -73,20 +73,27 @@ export default class PaymentMethodPicker extends HandleEventMixin(RichPicker) {
       this.dropdown.value = selectedPaymentCardGUID;
 
       if (selectedPaymentCardGUID !== this.dropdown.value) {
-        throw new Error(`The option ${selectedPaymentCardGUID} ` +
-                        `does not exist in the payment method picker`);
+        throw new Error(
+          `The option ${selectedPaymentCardGUID} ` +
+            `does not exist in the payment method picker`
+        );
       }
     } else {
       this.dropdown.value = "";
     }
 
     let securityCodeState = state[this.selectedStateKey + "SecurityCode"];
-    if (securityCodeState && securityCodeState != this.securityCodeInput.value) {
+    if (
+      securityCodeState &&
+      securityCodeState != this.securityCodeInput.value
+    ) {
       this.securityCodeInput.defaultValue = securityCodeState;
     }
 
-    let selectedCardType = (basicCards[selectedPaymentCardGUID] &&
-                            basicCards[selectedPaymentCardGUID]["cc-type"]) || "";
+    let selectedCardType =
+      (basicCards[selectedPaymentCardGUID] &&
+        basicCards[selectedPaymentCardGUID]["cc-type"]) ||
+      "";
     this.securityCodeInput.cardType = selectedCardType;
 
     super.render(state);
@@ -102,14 +109,21 @@ export default class PaymentMethodPicker extends HandleEventMixin(RichPicker) {
       return "";
     }
 
-    let basicCardMethod = state.request.paymentMethods
-      .find(method => method.supportedMethods == "basic-card");
-    let merchantNetworks = basicCardMethod && basicCardMethod.data &&
-                           basicCardMethod.data.supportedNetworks;
-    let acceptedNetworks = merchantNetworks || PaymentDialogUtils.getCreditCardNetworks();
-    let selectedCard = paymentRequest.getBasicCards(state)[selectedOption.value];
-    let isSupported = selectedCard["cc-type"] &&
-                      acceptedNetworks.includes(selectedCard["cc-type"]);
+    let basicCardMethod = state.request.paymentMethods.find(
+      method => method.supportedMethods == "basic-card"
+    );
+    let merchantNetworks =
+      basicCardMethod &&
+      basicCardMethod.data &&
+      basicCardMethod.data.supportedNetworks;
+    let acceptedNetworks =
+      merchantNetworks || PaymentDialogUtils.getCreditCardNetworks();
+    let selectedCard = paymentRequest.getBasicCards(state)[
+      selectedOption.value
+    ];
+    let isSupported =
+      selectedCard["cc-type"] &&
+      acceptedNetworks.includes(selectedCard["cc-type"]);
     return isSupported ? "" : this.dataset.invalidLabel;
   }
 
@@ -125,7 +139,7 @@ export default class PaymentMethodPicker extends HandleEventMixin(RichPicker) {
     this.onInputOrChange(event);
   }
 
-  onInputOrChange({currentTarget}) {
+  onInputOrChange({ currentTarget }) {
     let selectedKey = this.selectedStateKey;
     let stateChange = {};
 
@@ -139,7 +153,9 @@ export default class PaymentMethodPicker extends HandleEventMixin(RichPicker) {
         break;
       }
       case this.securityCodeInput: {
-        stateChange[selectedKey + "SecurityCode"] = this.securityCodeInput.value;
+        stateChange[
+          selectedKey + "SecurityCode"
+        ] = this.securityCodeInput.value;
         break;
       }
       default: {
@@ -150,7 +166,7 @@ export default class PaymentMethodPicker extends HandleEventMixin(RichPicker) {
     this.requestStore.setState(stateChange);
   }
 
-  onClick({target}) {
+  onClick({ target }) {
     let nextState = {
       page: {
         id: "basic-card-page",

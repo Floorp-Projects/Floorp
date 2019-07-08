@@ -10,21 +10,25 @@ const maxNumPaths = 2;
 
 // Mock data mapping node id to shortest paths to that node id.
 const shortestPaths = new Map([
-  [1000, [
-    [pathEntry(1100, "a"), pathEntry(1200, "b")],
-    [pathEntry(1100, "c"), pathEntry(1300, "d")],
-  ]],
-  [2000, [
-    [pathEntry(2100, "e"), pathEntry(2200, "f"), pathEntry(2300, "g")],
-  ]],
-  [3000, [
-    [pathEntry(3100, "h")],
-    [pathEntry(3100, "i")],
-    [pathEntry(3100, "j")],
-    [pathEntry(3200, "k")],
-    [pathEntry(3300, "l")],
-    [pathEntry(3400, "m")],
-  ]],
+  [
+    1000,
+    [
+      [pathEntry(1100, "a"), pathEntry(1200, "b")],
+      [pathEntry(1100, "c"), pathEntry(1300, "d")],
+    ],
+  ],
+  [2000, [[pathEntry(2100, "e"), pathEntry(2200, "f"), pathEntry(2300, "g")]]],
+  [
+    3000,
+    [
+      [pathEntry(3100, "h")],
+      [pathEntry(3100, "i")],
+      [pathEntry(3100, "j")],
+      [pathEntry(3200, "k")],
+      [pathEntry(3300, "l")],
+      [pathEntry(3400, "m")],
+    ],
+  ],
 ]);
 
 const actual = [
@@ -101,11 +105,13 @@ const mockSnapshot = {
     equal(start, startNodeId);
     equal(max, maxNumPaths);
 
-    return new Map(nodeIds.map(nodeId => {
-      const paths = shortestPaths.get(nodeId);
-      ok(paths, "Expected computeShortestPaths call for node id = " + nodeId);
-      return [nodeId, paths];
-    }));
+    return new Map(
+      nodeIds.map(nodeId => {
+        const paths = shortestPaths.get(nodeId);
+        ok(paths, "Expected computeShortestPaths call for node id = " + nodeId);
+        return [nodeId, paths];
+      })
+    );
   },
 
   describeNode: (bd, nodeId) => {
@@ -120,11 +126,13 @@ const mockSnapshot = {
 };
 
 function run_test() {
-  DominatorTreeNode.attachShortestPaths(mockSnapshot,
-                                        breakdown,
-                                        startNodeId,
-                                        actual,
-                                        maxNumPaths);
+  DominatorTreeNode.attachShortestPaths(
+    mockSnapshot,
+    breakdown,
+    startNodeId,
+    actual,
+    maxNumPaths
+  );
 
   dumpn("Expected = " + JSON.stringify(expected, null, 2));
   dumpn("Actual = " + JSON.stringify(actual, null, 2));

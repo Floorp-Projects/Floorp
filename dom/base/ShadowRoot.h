@@ -161,9 +161,7 @@ class ShadowRoot final : public DocumentFragment,
   void PartAdded(const Element&);
   void PartRemoved(const Element&);
 
-  const nsTArray<const Element*>& Parts() const {
-    return mParts;
-  }
+  const nsTArray<const Element*>& Parts() const { return mParts; }
 
   const RawServoAuthorStyles* GetServoStyles() const {
     return mServoStyles.get();

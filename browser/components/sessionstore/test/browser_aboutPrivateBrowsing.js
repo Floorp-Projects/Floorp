@@ -9,8 +9,11 @@ add_task(async function() {
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
-  is(gBrowser.browsers[1].currentURI.spec, "about:privatebrowsing",
-     "we will be removing an about:privatebrowsing tab");
+  is(
+    gBrowser.browsers[1].currentURI.spec,
+    "about:privatebrowsing",
+    "we will be removing an about:privatebrowsing tab"
+  );
 
   let r = `rand-${Math.random()}`;
   ss.setCustomTabValue(tab, "foobar", r);

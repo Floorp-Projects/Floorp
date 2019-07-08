@@ -6,7 +6,9 @@
 // Test exporting a snapshot to a user specified location on disk.
 
 const { exportSnapshot } = require("devtools/client/memory/actions/io");
-const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
+const {
+  takeSnapshotAndCensus,
+} = require("devtools/client/memory/actions/snapshot");
 const { actions, treeMapState } = require("devtools/client/memory/constants");
 
 add_task(async function() {
@@ -18,8 +20,9 @@ add_task(async function() {
 
   const destPath = await createTempFile();
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  await waitUntilCensusState(store, snapshot => snapshot.treeMap,
-                             [treeMapState.SAVED]);
+  await waitUntilCensusState(store, snapshot => snapshot.treeMap, [
+    treeMapState.SAVED,
+  ]);
 
   const exportEvents = Promise.all([
     waitUntilAction(store, actions.EXPORT_SNAPSHOT_START),

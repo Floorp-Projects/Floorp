@@ -39,8 +39,16 @@ function checkToolLoading() {
 function selectAndCheckById(id) {
   return toolbox.selectTool(id).then(function() {
     const tab = toolbox.doc.getElementById("toolbox-tab-" + id);
-    is(tab.classList.contains("selected"), true, "The " + id + " tab is selected");
-    is(tab.getAttribute("aria-pressed"), "true", "The " + id + " tab is pressed");
+    is(
+      tab.classList.contains("selected"),
+      true,
+      "The " + id + " tab is selected"
+    );
+    is(
+      tab.getAttribute("aria-pressed"),
+      "true",
+      "The " + id + " tab is pressed"
+    );
   });
 }
 

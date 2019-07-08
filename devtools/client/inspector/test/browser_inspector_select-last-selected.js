@@ -68,8 +68,11 @@ add_task(async function() {
 
     const nodeFront = await getNodeFront(selectedNode, inspector);
     ok(nodeFront, "Got expected node front");
-    is(inspector.selection.nodeFront, nodeFront,
-       selectedNode + " is selected after navigation.");
+    is(
+      inspector.selection.nodeFront,
+      nodeFront,
+      selectedNode + " is selected after navigation."
+    );
   }
 
   async function navigateToAndWaitForNewRoot(url) {

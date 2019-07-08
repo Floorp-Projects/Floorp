@@ -44,7 +44,7 @@ const res1 = [
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, boxmodel} = await openLayoutView();
+  const { inspector, boxmodel } = await openLayoutView();
   const node = await getNodeFront("div", inspector);
   const children = await inspector.markup.walker.children(node);
   const beforeElement = children.nodes[0];
@@ -59,7 +59,10 @@ function testPositionValues(inspector, boxmodel) {
 
   for (let i = 0; i < res1.length; i++) {
     const elt = doc.querySelector(res1[i].selector);
-    is(elt.textContent, res1[i].value,
-       res1[i].selector + " has the right value.");
+    is(
+      elt.textContent,
+      res1[i].value,
+      res1[i].selector + " has the right value."
+    );
   }
 }

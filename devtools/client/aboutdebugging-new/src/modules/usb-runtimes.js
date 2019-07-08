@@ -80,7 +80,8 @@ async function getUSBRuntimes() {
 
   // Get devices found by ADB, but without any available runtime.
   const runtimeDevices = runtimes.map(r => r.deviceId);
-  const unavailableRuntimes = adb.getDevices()
+  const unavailableRuntimes = adb
+    .getDevices()
     .filter(d => !runtimeDevices.includes(d.id))
     .map(d => new UnavailableUsbRuntime(d));
 
@@ -93,7 +94,9 @@ async function getUSBRuntimes() {
   // Get devices previously found by ADB but no longer available.
   const currentDevices = allRuntimes.map(r => r.deviceId);
   const detectedDevices = [...devices.keys()];
-  const unpluggedDevices = detectedDevices.filter(id => !currentDevices.includes(id));
+  const unpluggedDevices = detectedDevices.filter(
+    id => !currentDevices.includes(id)
+  );
   const unpluggedRuntimes = unpluggedDevices.map(deviceId => {
     const deviceName = devices.get(deviceId);
     return new UnpluggedUsbRuntime(deviceId, deviceName);

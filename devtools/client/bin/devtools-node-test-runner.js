@@ -29,19 +29,19 @@ const SUITES = {
     path: "../aboutdebugging-new/test/jest",
     type: TEST_TYPES.JEST,
   },
-  "accessibility": {
+  accessibility: {
     path: "../accessibility/test/jest",
     type: TEST_TYPES.JEST,
   },
-  "framework": {
+  framework: {
     path: "../framework/test/jest",
     type: TEST_TYPES.JEST,
   },
-  "netmonitor": {
+  netmonitor: {
     path: "../netmonitor",
     type: TEST_TYPES.JEST,
   },
-  "webconsole": {
+  webconsole: {
     path: "../webconsole/test",
     type: TEST_TYPES.MOCHA,
   },
@@ -77,7 +77,9 @@ function getJestErrors(out, err) {
 
   // The individual failing tests are jammed into the same message string :/
   return results.testResults.reduce((p, testResult) => {
-    const failures = testResult.message.split("\n").filter(l => l.includes("●"));
+    const failures = testResult.message
+      .split("\n")
+      .filter(l => l.includes("●"));
     return p.concat(failures);
   }, []);
 }
@@ -86,13 +88,18 @@ function getMochaErrors(out, err) {
   // With mocha tests, the command itself contains curly braces already so we need
   // to find the first brace after the first line.
   const firstRelevantBracket = out.indexOf("{", out.indexOf("--reporter json"));
-  const mochaJsonOut = out.substring(firstRelevantBracket, out.lastIndexOf("}") + 1);
+  const mochaJsonOut = out.substring(
+    firstRelevantBracket,
+    out.lastIndexOf("}") + 1
+  );
   const results = JSON.parse(mochaJsonOut);
   if (!results.failures) {
     // No failures, return an empty array.
     return [];
   }
-  return results.failures.map(failure => failure.fullTitle + " | " + failure.err.message);
+  return results.failures.map(
+    failure => failure.fullTitle + " | " + failure.err.message
+  );
 }
 
 function runTests() {
@@ -100,7 +107,9 @@ function runTests() {
   const suiteArg = process.argv.find(arg => arg.includes("suite="));
   const suite = suiteArg.split("=")[1];
   if (!SUITES[suite]) {
-    throw new Error("Invalid suite argument to devtools-node-test-runner: " + suite);
+    throw new Error(
+      "Invalid suite argument to devtools-node-test-runner: " + suite
+    );
   }
 
   console.log("[devtools-node-test-runner] Found test suite: " + suite);
@@ -123,7 +132,9 @@ function runTests() {
   console.log("[devtools-node-test-runner] Parse errors from the test logs");
   const errors = getErrors(suite, out, err) || [];
   for (const error of errors) {
-    console.log(`TEST-UNEXPECTED-FAIL | ${SUITES[suite].type} | ${suite} | ${error}`);
+    console.log(
+      `TEST-UNEXPECTED-FAIL | ${SUITES[suite].type} | ${suite} | ${error}`
+    );
   }
 
   const success = errors.length === 0;

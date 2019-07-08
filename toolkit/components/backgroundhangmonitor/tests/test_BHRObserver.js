@@ -1,8 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { TelemetryUtils } = ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TelemetryUtils } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryUtils.jsm"
+);
 
 function ensureProfilerInitialized() {
   // Starting and stopping the profiler with the "stackwalk" flag will cause the
@@ -27,7 +29,8 @@ add_task(async function test_BHRObserver() {
     return;
   }
 
-  let telSvc = Cc["@mozilla.org/bhr-telemetry-service;1"].getService().wrappedJSObject;
+  let telSvc = Cc["@mozilla.org/bhr-telemetry-service;1"].getService()
+    .wrappedJSObject;
   ok(telSvc, "Should have BHRTelemetryService");
   let beforeLen = telSvc.payload.hangs.length;
 
@@ -35,8 +38,8 @@ add_task(async function test_BHRObserver() {
     // We use the rt_tgsigqueueinfo syscall on Linux which requires a
     // certain kernel version. It's not an error if the system running
     // the test is older than that.
-    let kernel = Services.sysinfo.get("kernel_version") ||
-          Services.sysinfo.get("version");
+    let kernel =
+      Services.sysinfo.get("kernel_version") || Services.sysinfo.get("version");
     if (Services.vc.compare(kernel, "2.6.31") < 0) {
       ok("Hang reporting not supported for old kernel.");
       return;
@@ -64,15 +67,20 @@ add_task(async function test_BHRObserver() {
 
   executeSoon(() => {
     let startTime = Date.now();
-    while ((Date.now() - startTime) < 10000);
+    // eslint-disable-next-line no-empty
+    while (Date.now() - startTime < 10000) {}
   });
 
   executeSoon(() => {
     let startTime = Date.now();
-    while ((Date.now() - startTime) < 1000);
+    // eslint-disable-next-line no-empty
+    while (Date.now() - startTime < 1000) {}
   });
 
-  Services.prefs.setBoolPref(TelemetryUtils.Preferences.OverridePreRelease, true);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.OverridePreRelease,
+    true
+  );
   let childDone = run_test_in_child("child_cause_hang.js");
 
   // Now we wait for the hangs to have their bhr-thread-hang message fired for

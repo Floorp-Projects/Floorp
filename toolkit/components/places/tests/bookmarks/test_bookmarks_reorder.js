@@ -2,59 +2,92 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function invalid_input_throws() {
-  Assert.throws(() => PlacesUtils.bookmarks.reorder(),
-                /Invalid value for property 'guid'/);
-  Assert.throws(() => PlacesUtils.bookmarks.reorder(null),
-                /Invalid value for property 'guid'/);
+  Assert.throws(
+    () => PlacesUtils.bookmarks.reorder(),
+    /Invalid value for property 'guid'/
+  );
+  Assert.throws(
+    () => PlacesUtils.bookmarks.reorder(null),
+    /Invalid value for property 'guid'/
+  );
 
-  Assert.throws(() => PlacesUtils.bookmarks.reorder("test"),
-                /Invalid value for property 'guid'/);
-  Assert.throws(() => PlacesUtils.bookmarks.reorder(123),
-                /Invalid value for property 'guid'/);
+  Assert.throws(
+    () => PlacesUtils.bookmarks.reorder("test"),
+    /Invalid value for property 'guid'/
+  );
+  Assert.throws(
+    () => PlacesUtils.bookmarks.reorder(123),
+    /Invalid value for property 'guid'/
+  );
 
-  Assert.throws(() => PlacesUtils.bookmarks.reorder({ guid: "test" }),
-                /Invalid value for property 'guid'/);
+  Assert.throws(
+    () => PlacesUtils.bookmarks.reorder({ guid: "test" }),
+    /Invalid value for property 'guid'/
+  );
 
-  Assert.throws(() => PlacesUtils.bookmarks.reorder("123456789012"),
-                /Must provide a sorted array of children GUIDs./);
-  Assert.throws(() => PlacesUtils.bookmarks.reorder("123456789012", {}),
-                /Must provide a sorted array of children GUIDs./);
-  Assert.throws(() => PlacesUtils.bookmarks.reorder("123456789012", null),
-                /Must provide a sorted array of children GUIDs./);
-  Assert.throws(() => PlacesUtils.bookmarks.reorder("123456789012", []),
-                /Must provide a sorted array of children GUIDs./);
+  Assert.throws(
+    () => PlacesUtils.bookmarks.reorder("123456789012"),
+    /Must provide a sorted array of children GUIDs./
+  );
+  Assert.throws(
+    () => PlacesUtils.bookmarks.reorder("123456789012", {}),
+    /Must provide a sorted array of children GUIDs./
+  );
+  Assert.throws(
+    () => PlacesUtils.bookmarks.reorder("123456789012", null),
+    /Must provide a sorted array of children GUIDs./
+  );
+  Assert.throws(
+    () => PlacesUtils.bookmarks.reorder("123456789012", []),
+    /Must provide a sorted array of children GUIDs./
+  );
 
-  Assert.throws(() => PlacesUtils.bookmarks.reorder("123456789012", [ null ]),
-                /Invalid GUID found in the sorted children array/);
-  Assert.throws(() => PlacesUtils.bookmarks.reorder("123456789012", [ "" ]),
-                /Invalid GUID found in the sorted children array/);
-  Assert.throws(() => PlacesUtils.bookmarks.reorder("123456789012", [ {} ]),
-                /Invalid GUID found in the sorted children array/);
-  Assert.throws(() => PlacesUtils.bookmarks.reorder("123456789012", [ "012345678901", null ]),
-                /Invalid GUID found in the sorted children array/);
+  Assert.throws(
+    () => PlacesUtils.bookmarks.reorder("123456789012", [null]),
+    /Invalid GUID found in the sorted children array/
+  );
+  Assert.throws(
+    () => PlacesUtils.bookmarks.reorder("123456789012", [""]),
+    /Invalid GUID found in the sorted children array/
+  );
+  Assert.throws(
+    () => PlacesUtils.bookmarks.reorder("123456789012", [{}]),
+    /Invalid GUID found in the sorted children array/
+  );
+  Assert.throws(
+    () => PlacesUtils.bookmarks.reorder("123456789012", ["012345678901", null]),
+    /Invalid GUID found in the sorted children array/
+  );
 });
 
 add_task(async function reorder_nonexistent_guid() {
-  await Assert.rejects(PlacesUtils.bookmarks.reorder("123456789012", [ "012345678901" ]),
-                       /No folder found for the provided GUID/,
-                       "Should throw for nonexisting guid");
+  await Assert.rejects(
+    PlacesUtils.bookmarks.reorder("123456789012", ["012345678901"]),
+    /No folder found for the provided GUID/,
+    "Should throw for nonexisting guid"
+  );
 });
 
 add_task(async function reorder() {
   let bookmarks = [
-    { url: "http://example1.com/",
+    {
+      url: "http://example1.com/",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     },
-    { type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    {
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     },
-    { type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+    {
+      type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     },
-    { url: "http://example2.com/",
+    {
+      url: "http://example2.com/",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     },
-    { url: "http://example3.com/",
+    {
+      url: "http://example3.com/",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     },
   ];
@@ -65,8 +98,10 @@ add_task(async function reorder() {
   }
 
   // Check the initial append sorting.
-  Assert.ok(sorted.every((bm, i) => bm.index == i),
-            "Initial bookmarks sorting is correct");
+  Assert.ok(
+    sorted.every((bm, i) => bm.index == i),
+    "Initial bookmarks sorting is correct"
+  );
 
   // Apply random sorting and run multiple tests.
   for (let t = 0; t < 4; t++) {
@@ -75,23 +110,26 @@ add_task(async function reorder() {
     dump("Expected order: " + sortedGuids.join() + "\n");
     // Add a nonexisting guid to the array, to ensure nothing will break.
     sortedGuids.push("123456789012");
-    await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
-                                        sortedGuids);
+    await PlacesUtils.bookmarks.reorder(
+      PlacesUtils.bookmarks.unfiledGuid,
+      sortedGuids
+    );
     for (let i = 0; i < sorted.length; ++i) {
       let item = await PlacesUtils.bookmarks.fetch(sorted[i].guid);
       Assert.equal(item.index, i);
     }
   }
 
-
   info("Test partial sorting");
   {
     // Try a partial sorting by passing 2 entries in same order as they
     // currently have. No entries should change order.
-    let sortedGuids = [ sorted[0].guid, sorted[3].guid ];
+    let sortedGuids = [sorted[0].guid, sorted[3].guid];
     dump("Expected order: " + sorted.map(b => b.guid).join() + "\n");
-    await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
-                                        sortedGuids);
+    await PlacesUtils.bookmarks.reorder(
+      PlacesUtils.bookmarks.unfiledGuid,
+      sortedGuids
+    );
     for (let i = 0; i < sorted.length; ++i) {
       let item = await PlacesUtils.bookmarks.fetch(sorted[i].guid);
       Assert.equal(item.index, i);
@@ -101,11 +139,13 @@ add_task(async function reorder() {
   {
     // Try a partial sorting by passing 2 entries out of order
     // The unspecified entries should be appended and retain the original order
-    sorted = [ sorted[1], sorted[0] ].concat(sorted.slice(2));
-    let sortedGuids = [ sorted[0].guid, sorted[1].guid ];
+    sorted = [sorted[1], sorted[0]].concat(sorted.slice(2));
+    let sortedGuids = [sorted[0].guid, sorted[1].guid];
     dump("Expected order: " + sorted.map(b => b.guid).join() + "\n");
-    await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
-                                        sortedGuids);
+    await PlacesUtils.bookmarks.reorder(
+      PlacesUtils.bookmarks.unfiledGuid,
+      sortedGuids
+    );
     for (let i = 0; i < sorted.length; ++i) {
       let item = await PlacesUtils.bookmarks.fetch(sorted[i].guid);
       Assert.equal(item.index, i);
@@ -117,8 +157,13 @@ add_task(async function reorder() {
     `SELECT parent
      FROM moz_bookmarks
      GROUP BY parent
-     HAVING (SUM(DISTINCT position + 1) - (count(*) * (count(*) + 1) / 2)) <> 0`);
-  Assert.equal(rows.length, 0, "All the bookmarks should have consistent positions");
+     HAVING (SUM(DISTINCT position + 1) - (count(*) * (count(*) + 1) / 2)) <> 0`
+  );
+  Assert.equal(
+    rows.length,
+    0,
+    "All the bookmarks should have consistent positions"
+  );
 });
 
 add_task(async function move_and_reorder() {
@@ -211,19 +256,22 @@ add_task(async function reorder_lastModified() {
   let lastModified = new Date(Date.now() - 1000);
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.menuGuid,
-    children: [{
-      guid: "bookmarkAAAA",
-      url: "http://example.com/a",
-      title: "A",
-      dateAdded: lastModified,
-      lastModified,
-    }, {
-      guid: "bookmarkBBBB",
-      url: "http://example.com/b",
-      title: "B",
-      dateAdded: lastModified,
-      lastModified,
-    }],
+    children: [
+      {
+        guid: "bookmarkAAAA",
+        url: "http://example.com/a",
+        title: "A",
+        dateAdded: lastModified,
+        lastModified,
+      },
+      {
+        guid: "bookmarkBBBB",
+        url: "http://example.com/b",
+        title: "B",
+        dateAdded: lastModified,
+        lastModified,
+      },
+    ],
   });
   await PlacesUtils.bookmarks.update({
     guid: PlacesUtils.bookmarks.menuGuid,
@@ -232,20 +280,30 @@ add_task(async function reorder_lastModified() {
 
   info("Reorder and set explicit last modified time");
   let newLastModified = new Date(lastModified.getTime() + 500);
-  await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.menuGuid,
+  await PlacesUtils.bookmarks.reorder(
+    PlacesUtils.bookmarks.menuGuid,
     ["bookmarkBBBB", "bookmarkAAAA"],
-    { lastModified: newLastModified });
-  for (let guid of [PlacesUtils.bookmarks.menuGuid, "bookmarkAAAA",
-                    "bookmarkBBBB"]) {
+    { lastModified: newLastModified }
+  );
+  for (let guid of [
+    PlacesUtils.bookmarks.menuGuid,
+    "bookmarkAAAA",
+    "bookmarkBBBB",
+  ]) {
     let info = await PlacesUtils.bookmarks.fetch(guid);
     Assert.equal(info.lastModified.getTime(), newLastModified.getTime());
   }
 
   info("Reorder and set default last modified time");
-  await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.menuGuid,
-    ["bookmarkAAAA", "bookmarkBBBB"]);
-  for (let guid of [PlacesUtils.bookmarks.menuGuid, "bookmarkAAAA",
-                    "bookmarkBBBB"]) {
+  await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.menuGuid, [
+    "bookmarkAAAA",
+    "bookmarkBBBB",
+  ]);
+  for (let guid of [
+    PlacesUtils.bookmarks.menuGuid,
+    "bookmarkAAAA",
+    "bookmarkBBBB",
+  ]) {
     let info = await PlacesUtils.bookmarks.fetch(guid);
     Assert.greater(info.lastModified.getTime(), newLastModified.getTime());
   }

@@ -1,12 +1,22 @@
- /* This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
 const InspectorUtils = require("InspectorUtils");
-loader.lazyRequireGetter(this, "loadSheet", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "removeSheet", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(
+  this,
+  "loadSheet",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "removeSheet",
+  "devtools/shared/layout/utils",
+  true
+);
 
 // How many text runs are we highlighting at a time. There may be many text runs, and we
 // want to prevent performance problems.
@@ -17,8 +27,11 @@ const MAX_TEXT_RANGES = 100;
 // Note that this color is defined as --highlighter-content-color in the highlighters.css
 // file, and corresponds to the box-model content color. We want to give it an opacity of
 // 0.6 here.
-const STYLESHEET_URI = "data:text/css," +
-  encodeURIComponent("::selection{background-color:hsl(197,71%,73%,.6)!important;}");
+const STYLESHEET_URI =
+  "data:text/css," +
+  encodeURIComponent(
+    "::selection{background-color:hsl(197,71%,73%,.6)!important;}"
+  );
 
 /**
  * This highlighter highlights runs of text in the page that have been rendered given a
@@ -65,8 +78,9 @@ class FontsHighlighter {
     const fonts = InspectorUtils.getUsedFontFaces(searchRange, MAX_TEXT_RANGES);
 
     // Find the ones we want, based on the provided option.
-    const matchingFonts = fonts.filter(f => f.CSSFamilyName === options.CSSFamilyName &&
-                                          f.name === options.name);
+    const matchingFonts = fonts.filter(
+      f => f.CSSFamilyName === options.CSSFamilyName && f.name === options.name
+    );
     if (!matchingFonts.length) {
       return;
     }

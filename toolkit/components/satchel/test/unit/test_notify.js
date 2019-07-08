@@ -5,17 +5,28 @@
  *
  */
 
-ChromeUtils.defineModuleGetter(this, "setTimeout", "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "setTimeout",
+  "resource://gre/modules/Timer.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Preferences",
+  "resource://gre/modules/Preferences.jsm"
+);
 
 const TestObserver = {
   observed: [],
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
   observe(subject, topic, data) {
     if (subject instanceof Ci.nsISupportsString) {
       subject = subject.toString();
     }
-    this.observed.push({subject, topic, data});
+    this.observed.push({ subject, topic, data });
   },
   reset() {
     this.observed = [];
@@ -39,7 +50,7 @@ add_task(async function addAndUpdateEntry() {
   // Add
   await promiseUpdateEntry("add", entry1[0], entry1[1]);
   Assert.equal(TestObserver.observed.length, 1);
-  let {subject, data} = TestObserver.observed[0];
+  let { subject, data } = TestObserver.observed[0];
   Assert.equal(data, "formhistory-add");
   Assert.ok(isGUID.test(subject));
 
@@ -51,7 +62,7 @@ add_task(async function addAndUpdateEntry() {
 
   await promiseUpdateEntry("update", entry1[0], entry1[1]);
   Assert.equal(TestObserver.observed.length, 1);
-  ({subject, data} = TestObserver.observed[0]);
+  ({ subject, data } = TestObserver.observed[0]);
   Assert.equal(data, "formhistory-update");
   Assert.ok(isGUID.test(subject));
 
@@ -69,24 +80,27 @@ add_task(async function removeEntry() {
   TestObserver.reset();
 
   await new Promise(res => {
-    FormHistory.update({
-      op: "remove",
-      fieldname: entry1[0],
-      value: entry1[1],
-      guid,
-    }, {
-      handleError(error) {
-        do_throw("Error occurred updating form history: " + error);
+    FormHistory.update(
+      {
+        op: "remove",
+        fieldname: entry1[0],
+        value: entry1[1],
+        guid,
       },
-      handleCompletion(reason) {
-        if (!reason) {
-          res();
-        }
-      },
-    });
+      {
+        handleError(error) {
+          do_throw("Error occurred updating form history: " + error);
+        },
+        handleCompletion(reason) {
+          if (!reason) {
+            res();
+          }
+        },
+      }
+    );
   });
   Assert.equal(TestObserver.observed.length, 1);
-  const {subject, data} = TestObserver.observed[0];
+  const { subject, data } = TestObserver.observed[0];
   Assert.equal(data, "formhistory-remove");
   Assert.ok(isGUID.test(subject));
 
@@ -103,7 +117,7 @@ add_task(async function removeAllEntries() {
   await promiseUpdateEntry("remove", null, null);
   Assert.equal(TestObserver.observed.length, 3);
   for (const notification of TestObserver.observed) {
-    const {subject, data} = notification;
+    const { subject, data } = notification;
     Assert.equal(data, "formhistory-remove");
     Assert.ok(isGUID.test(subject));
   }
@@ -120,7 +134,7 @@ add_task(async function removeEntriesForName() {
 
   await promiseUpdateEntry("remove", entry2[0], null);
   Assert.equal(TestObserver.observed.length, 1);
-  const {subject, data} = TestObserver.observed[0];
+  const { subject, data } = TestObserver.observed[0];
   Assert.equal(data, "formhistory-remove");
   Assert.ok(isGUID.test(subject));
 
@@ -153,24 +167,27 @@ add_task(async function removeEntriesByTimeframe() {
   TestObserver.reset();
 
   await new Promise(res => {
-    FormHistory.update({
-      op: "remove",
-      firstUsedStart: 10,
-      firstUsedEnd: cutoffDate * 1000,
-    }, {
-      handleCompletion(reason) {
-        if (!reason) {
-          res();
-        }
+    FormHistory.update(
+      {
+        op: "remove",
+        firstUsedStart: 10,
+        firstUsedEnd: cutoffDate * 1000,
       },
-      handleErrors(error) {
-        do_throw("Error occurred updating form history: " + error);
-      },
-    });
+      {
+        handleCompletion(reason) {
+          if (!reason) {
+            res();
+          }
+        },
+        handleErrors(error) {
+          do_throw("Error occurred updating form history: " + error);
+        },
+      }
+    );
   });
   Assert.equal(TestObserver.observed.length, 2);
   for (const notification of TestObserver.observed) {
-    const {subject, data} = notification;
+    const { subject, data } = notification;
     Assert.equal(data, "formhistory-remove");
     Assert.ok(isGUID.test(subject));
   }

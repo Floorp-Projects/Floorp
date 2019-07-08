@@ -1,18 +1,27 @@
-import {EventEmitter, FakePerformance, FakePrefs, GlobalOverrider} from "test/unit/utils";
+import {
+  EventEmitter,
+  FakePerformance,
+  FakePrefs,
+  GlobalOverrider,
+} from "test/unit/utils";
 import Adapter from "enzyme-adapter-react-16";
-import {chaiAssertions} from "test/schemas/pings";
+import { chaiAssertions } from "test/schemas/pings";
 import chaiJsonSchema from "chai-json-schema";
 import enzyme from "enzyme";
-enzyme.configure({adapter: new Adapter()});
+enzyme.configure({ adapter: new Adapter() });
 
 // Cause React warnings to make tests that trigger them fail
 const origConsoleError = console.error; // eslint-disable-line no-console
- // eslint-disable-next-line no-console
+// eslint-disable-next-line no-console
 console.error = function(msg, ...args) {
   // eslint-disable-next-line no-console
   origConsoleError.apply(console, [msg, ...args]);
 
-  if (/(Invalid prop|Failed prop type|Check the render method|React Intl)/.test(msg)) {
+  if (
+    /(Invalid prop|Failed prop type|Check the render method|React Intl)/.test(
+      msg
+    )
+  ) {
     throw new Error(msg);
   }
 };
@@ -21,7 +30,7 @@ const req = require.context(".", true, /\.test\.jsx?$/);
 const files = req.keys();
 
 // This exposes sinon assertions to chai.assert
-sinon.assert.expose(assert, {prefix: ""});
+sinon.assert.expose(assert, { prefix: "" });
 
 chai.use(chaiAssertions);
 chai.use(chaiJsonSchema);
@@ -30,19 +39,25 @@ const overrider = new GlobalOverrider();
 const TEST_GLOBAL = {
   AddonManager: {
     getActiveAddons() {
-      return Promise.resolve({addons: [], fullData: false});
+      return Promise.resolve({ addons: [], fullData: false });
     },
   },
-  AppConstants: {MOZILLA_OFFICIAL: true},
-  UpdateUtils: {getUpdateChannel() {}},
-  BrowserWindowTracker: {getTopWindow() {}},
+  AppConstants: { MOZILLA_OFFICIAL: true },
+  UpdateUtils: { getUpdateChannel() {} },
+  BrowserWindowTracker: { getTopWindow() {} },
   ChromeUtils: {
     defineModuleGetter() {},
-    generateQI() { return {}; },
-    import() { return global; },
+    generateQI() {
+      return {};
+    },
+    import() {
+      return global;
+    },
   },
   ClientEnvironment: {
-    get userId() { return "foo123"; },
+    get userId() {
+      return "foo123";
+    },
   },
   Components: {
     Constructor(classId) {
@@ -98,13 +113,13 @@ const TEST_GLOBAL = {
         };
       },
     },
-    "@mozilla.org/updates/update-checker;1": {createInstance() {}},
+    "@mozilla.org/updates/update-checker;1": { createInstance() {} },
   },
   Ci: {
     nsICryptoHash: {},
-    nsIHttpChannel: {REFERRER_POLICY_UNSAFE_URL: 5},
-    nsITimer: {TYPE_ONE_SHOT: 1},
-    nsIWebProgressListener: {LOCATION_CHANGE_SAME_DOCUMENT: 1},
+    nsIHttpChannel: { REFERRER_POLICY_UNSAFE_URL: 5 },
+    nsITimer: { TYPE_ONE_SHOT: 1 },
+    nsIWebProgressListener: { LOCATION_CHANGE_SAME_DOCUMENT: 1 },
     nsIDOMWindow: Object,
   },
   Cu: {
@@ -119,7 +134,7 @@ const TEST_GLOBAL = {
   NewTabUtils: {
     activityStreamProvider: {
       getTopFrecentSites: () => [],
-      executePlacesQuery: async (sql, options) => ({sql, options}),
+      executePlacesQuery: async (sql, options) => ({ sql, options }),
     },
   },
   OS: {
@@ -154,9 +169,9 @@ const TEST_GLOBAL = {
       removeListener() {},
     },
   },
-  PluralForm: {get() {}},
+  PluralForm: { get() {} },
   Preferences: FakePrefs,
-  PrivateBrowsingUtils: {isWindowPrivate: () => false},
+  PrivateBrowsingUtils: { isWindowPrivate: () => false },
   DownloadsViewUI: {
     getDisplayName: () => "filename.ext",
     getSizeWithUnits: () => "1.5 MB",
@@ -167,18 +182,20 @@ const TEST_GLOBAL = {
   },
   Services: {
     dirsvc: {
-      get: () => ({parent: {parent: {path: "appPath"}}}),
+      get: () => ({ parent: { parent: { path: "appPath" } } }),
     },
     locale: {
-      get appLocaleAsLangTag() { return "en-US"; },
+      get appLocaleAsLangTag() {
+        return "en-US";
+      },
       negotiateLanguages() {},
     },
-    urlFormatter: {formatURL: str => str, formatURLPref: str => str},
+    urlFormatter: { formatURL: str => str, formatURLPref: str => str },
     mm: {
       addMessageListener: (msg, cb) => cb(),
       removeMessageListener() {},
     },
-    appShell: {hiddenDOMWindow: {performance: new FakePerformance()}},
+    appShell: { hiddenDOMWindow: { performance: new FakePerformance() } },
     obs: {
       addObserver() {},
       removeObserver() {},
@@ -187,14 +204,16 @@ const TEST_GLOBAL = {
       setEventRecordingEnabled: () => {},
       recordEvent: eventDetails => {},
     },
-    console: {logStringMessage: () => {}},
+    console: { logStringMessage: () => {} },
     prefs: {
       addObserver() {},
       prefHasUserValue() {},
       removeObserver() {},
       getPrefType() {},
       clearUserPref() {},
-      getChildList() { return []; },
+      getChildList() {
+        return [];
+      },
       getStringPref() {},
       setStringPref() {},
       getIntPref() {},
@@ -221,7 +240,9 @@ const TEST_GLOBAL = {
       idleDispatchToMainThread: cb => cb(),
     },
     eTLD: {
-      getBaseDomain({spec}) { return spec.match(/\/([^/]+)/)[1]; },
+      getBaseDomain({ spec }) {
+        return spec.match(/\/([^/]+)/)[1];
+      },
       getPublicSuffix() {},
     },
     io: {
@@ -238,24 +259,32 @@ const TEST_GLOBAL = {
       }),
     },
     search: {
-      init() { return Promise.resolve(); },
-      getVisibleEngines: () => Promise.resolve([{identifier: "google"}, {identifier: "bing"}]),
+      init() {
+        return Promise.resolve();
+      },
+      getVisibleEngines: () =>
+        Promise.resolve([{ identifier: "google" }, { identifier: "bing" }]),
       defaultEngine: {
         identifier: "google",
-        searchForm: "https://www.google.com/search?q=&ie=utf-8&oe=utf-8&client=firefox-b",
+        searchForm:
+          "https://www.google.com/search?q=&ie=utf-8&oe=utf-8&client=firefox-b",
         wrappedJSObject: {
           __internalAliases: ["@google"],
         },
       },
-      currentEngine: {identifier: "google", searchForm: "https://www.google.com/search?q=&ie=utf-8&oe=utf-8&client=firefox-b"},
+      currentEngine: {
+        identifier: "google",
+        searchForm:
+          "https://www.google.com/search?q=&ie=utf-8&oe=utf-8&client=firefox-b",
+      },
     },
     scriptSecurityManager: {
       createNullPrincipal() {},
       getSystemPrincipal() {},
     },
-    wm: {getMostRecentWindow: () => window, getEnumerator: () => []},
-    ww: {registerNotification() {}, unregisterNotification() {}},
-    appinfo: {appBuildID: "20180710100040"},
+    wm: { getMostRecentWindow: () => window, getEnumerator: () => [] },
+    ww: { registerNotification() {}, unregisterNotification() {} },
+    appinfo: { appBuildID: "20180710100040" },
   },
   XPCOMUtils: {
     defineLazyGetter(object, name, f) {
@@ -270,16 +299,22 @@ const TEST_GLOBAL = {
     defineLazyModuleGetters() {},
     defineLazyServiceGetter() {},
     defineLazyServiceGetters() {},
-    generateQI() { return {}; },
+    generateQI() {
+      return {};
+    },
   },
   EventEmitter,
-  ShellService: {isDefaultBrowser: () => true},
-  FilterExpressions: {eval() { return Promise.resolve(false); }},
+  ShellService: { isDefaultBrowser: () => true },
+  FilterExpressions: {
+    eval() {
+      return Promise.resolve(false);
+    },
+  },
   RemoteSettings(name) {
     return {
       get() {
         if (name === "attachment") {
-          return Promise.resolve([{attachment: {}}]);
+          return Promise.resolve([{ attachment: {} }]);
         }
         return Promise.resolve([]);
       },
@@ -288,7 +323,9 @@ const TEST_GLOBAL = {
   },
   Localization: class {
     async formatMessages(stringsIds) {
-      return Promise.resolve(stringsIds.map(({id, args}) => ({value: {string_id: id, args}})));
+      return Promise.resolve(
+        stringsIds.map(({ id, args }) => ({ value: { string_id: id, args } }))
+      );
     }
   },
   FxAccountsConfig: {

@@ -3,19 +3,25 @@
 
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 // Required to avoid failures.
 do_get_profile();
 
 // Init FormHistoryStartup and pretend we opened a profile.
-var fhs = Cc["@mozilla.org/satchel/form-history-startup;1"]
-            .getService(Ci.nsIObserver);
+var fhs = Cc["@mozilla.org/satchel/form-history-startup;1"].getService(
+  Ci.nsIObserver
+);
 fhs.observe(null, "profile-after-change", null);
 
 // An app is going to have some prefs set which xpcshell tests don't.
-Services.prefs.setCharPref("identity.sync.tokenserver.uri", "http://token-server");
+Services.prefs.setCharPref(
+  "identity.sync.tokenserver.uri",
+  "http://token-server"
+);
 
 // Make sure to provide the right OS so crypto loads the right binaries
 function getOS() {
@@ -40,8 +46,9 @@ updateAppInfo({
 
 // Register resource aliases. Normally done in SyncComponents.manifest.
 function addResourceAlias() {
-  const resProt = Services.io.getProtocolHandler("resource")
-                          .QueryInterface(Ci.nsIResProtocolHandler);
+  const resProt = Services.io
+    .getProtocolHandler("resource")
+    .QueryInterface(Ci.nsIResProtocolHandler);
   for (let s of ["common", "sync", "crypto"]) {
     let uri = Services.io.newURI("resource://gre/modules/services-" + s + "/");
     resProt.setSubstitution("services-" + s, uri);

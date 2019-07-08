@@ -3,7 +3,7 @@
 
 /* import-globals-from head_global.js */
 
-var {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+var { CommonUtils } = ChromeUtils.import("resource://services-common/utils.js");
 
 function basic_auth_header(user, password) {
   return "Basic " + btoa(user + ":" + CommonUtils.encodeUTF8(password));

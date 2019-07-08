@@ -15,10 +15,15 @@ const PR_TRUNCATE = 0x20;
 const RW_OWNER = parseInt("0600", 8);
 
 function write_string_to_file(file, contents) {
-  let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"]
-                .createInstance(Ci.nsIFileOutputStream);
-  ostream.init(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
-               RW_OWNER, ostream.DEFER_OPEN);
+  let ostream = Cc[
+    "@mozilla.org/network/safe-file-output-stream;1"
+  ].createInstance(Ci.nsIFileOutputStream);
+  ostream.init(
+    file,
+    PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
+    RW_OWNER,
+    ostream.DEFER_OPEN
+  );
   ostream.write(contents, contents.length);
   ostream.QueryInterface(Ci.nsISafeOutputStream).finish();
   ostream.close();

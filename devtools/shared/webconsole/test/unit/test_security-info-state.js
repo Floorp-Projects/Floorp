@@ -40,8 +40,11 @@ function run_test() {
  */
 function test_nullSecurityInfo() {
   const result = NetworkHelper.parseSecurityInfo(null, {});
-  equal(result.state, "insecure",
-    "state == 'insecure' when securityInfo was undefined");
+  equal(
+    result.state,
+    "insecure",
+    "state == 'insecure' when securityInfo was undefined"
+  );
 }
 
 /**
@@ -54,9 +57,12 @@ function test_insecureSecurityInfoWithNSSError() {
   MockSecurityInfo.errorCode = -8180;
 
   const result = NetworkHelper.parseSecurityInfo(MockSecurityInfo, {});
-  equal(result.state, "broken",
+  equal(
+    result.state,
+    "broken",
     "state == 'broken' if securityState contains STATE_IS_INSECURE flag AND " +
-    "errorCode is NSS error.");
+      "errorCode is NSS error."
+  );
 
   MockSecurityInfo.errorCode = 0;
 }
@@ -68,9 +74,12 @@ function test_insecureSecurityInfoWithoutNSSError() {
   MockSecurityInfo.securityState = wpl.STATE_IS_INSECURE;
 
   const result = NetworkHelper.parseSecurityInfo(MockSecurityInfo, {});
-  equal(result.state, "insecure",
+  equal(
+    result.state,
+    "insecure",
     "state == 'insecure' if securityState contains STATE_IS_INSECURE flag BUT " +
-    "errorCode is not NSS error.");
+      "errorCode is not NSS error."
+  );
 }
 
 /**
@@ -80,8 +89,11 @@ function test_secureSecurityInfo() {
   MockSecurityInfo.securityState = wpl.STATE_IS_SECURE;
 
   const result = NetworkHelper.parseSecurityInfo(MockSecurityInfo, {});
-  equal(result.state, "secure",
-    "state == 'secure' if securityState contains STATE_IS_SECURE flag");
+  equal(
+    result.state,
+    "secure",
+    "state == 'secure' if securityState contains STATE_IS_SECURE flag"
+  );
 }
 
 /**
@@ -91,6 +103,9 @@ function test_brokenSecurityInfo() {
   MockSecurityInfo.securityState = wpl.STATE_IS_BROKEN;
 
   const result = NetworkHelper.parseSecurityInfo(MockSecurityInfo, {});
-  equal(result.state, "weak",
-    "state == 'weak' if securityState contains STATE_IS_BROKEN flag");
+  equal(
+    result.state,
+    "weak",
+    "state == 'weak' if securityState contains STATE_IS_BROKEN flag"
+  );
 }

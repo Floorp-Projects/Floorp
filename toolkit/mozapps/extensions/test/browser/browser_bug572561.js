@@ -8,10 +8,12 @@
 var gManagerWindow;
 var gCategoryUtilities;
 var gProvider;
-var gInstallProperties = [{
-  name: "Locale Category Test",
-  type: "locale",
-}];
+var gInstallProperties = [
+  {
+    name: "Locale Category Test",
+    type: "locale",
+  },
+];
 var gInstall;
 var gExpectedCancel = false;
 var gTestInstallListener = {
@@ -92,4 +94,3 @@ add_test(async function() {
   gExpectedCancel = true;
   gInstall.cancel();
 });
-

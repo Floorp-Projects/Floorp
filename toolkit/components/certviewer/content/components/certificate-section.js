@@ -13,8 +13,7 @@ class CertificateSection extends HTMLElement {
     let template = document.getElementById("certificate-section-template");
     let templateHtml = template.content.cloneNode(true);
 
-    this.attachShadow({mode: "open"})
-        .appendChild(templateHtml);
+    this.attachShadow({ mode: "open" }).appendChild(templateHtml);
 
     this.infoGroupsContainers = [];
     this.createInfoGroupsContainers();

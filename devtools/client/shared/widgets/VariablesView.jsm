@@ -14,7 +14,7 @@ const SEARCH_ACTION_MAX_DELAY = 300; // ms
 const ITEM_FLASH_DURATION = 300; // ms
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const EventEmitter = require("devtools/shared/event-emitter");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");
@@ -22,18 +22,23 @@ const { getSourceNames } = require("devtools/client/shared/source-utils");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const { extend } = require("devtools/shared/extend");
-const { ViewHelpers, setNamedTimeout } =
-  require("devtools/client/shared/widgets/view-helpers");
+const {
+  ViewHelpers,
+  setNamedTimeout,
+} = require("devtools/client/shared/widgets/view-helpers");
 const nodeConstants = require("devtools/shared/dom-node-constants");
-const {KeyCodes} = require("devtools/client/shared/keycodes");
-const {PluralForm} = require("devtools/shared/plural-form");
-const {LocalizationHelper, ELLIPSIS} = require("devtools/shared/l10n");
+const { KeyCodes } = require("devtools/client/shared/keycodes");
+const { PluralForm } = require("devtools/shared/plural-form");
+const { LocalizationHelper, ELLIPSIS } = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper(DBG_STRINGS_URI);
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1",
-  "nsIClipboardHelper");
+  "nsIClipboardHelper"
+);
 
 this.EXPORTED_SYMBOLS = ["VariablesView", "escapeHTML"];
 
@@ -92,8 +97,8 @@ VariablesView.prototype = {
   set rawObject(aObject) {
     this.empty();
     this.addScope()
-        .addItem(undefined, { enumerable: true })
-        .populate(aObject, { sorted: true });
+      .addItem(undefined, { enumerable: true })
+      .populate(aObject, { sorted: true });
   },
 
   /**
@@ -171,7 +176,7 @@ VariablesView.prototype = {
    */
   _emptySoon: function(aTimeout) {
     const prevList = this._list;
-    const currList = this._list = this.document.createXULElement("scrollbox");
+    const currList = (this._list = this.document.createXULElement("scrollbox"));
 
     this.window.setTimeout(() => {
       prevList.removeEventListener("keydown", this._onViewKeyDown);
@@ -424,14 +429,19 @@ VariablesView.prototype = {
     const document = this.document;
     const ownerNode = this._parent.parentNode;
 
-    const container = this._searchboxContainer = document.createXULElement("hbox");
+    const container = (this._searchboxContainer = document.createXULElement(
+      "hbox"
+    ));
     container.className = "devtools-toolbar devtools-input-toolbar";
 
     // Hide the variables searchbox container if there are no variables or
     // properties to display.
     container.hidden = !this._store.length;
 
-    const searchbox = this._searchboxNode = document.createElementNS(HTML_NS, "input");
+    const searchbox = (this._searchboxNode = document.createElementNS(
+      HTML_NS,
+      "input"
+    ));
     searchbox.className = "variables-view-searchinput devtools-filterinput";
     searchbox.setAttribute("placeholder", this._searchboxPlaceholder);
     searchbox.addEventListener("input", this._onSearchboxInput);
@@ -452,7 +462,10 @@ VariablesView.prototype = {
     }
     this._searchboxContainer.remove();
     this._searchboxNode.removeEventListener("input", this._onSearchboxInput);
-    this._searchboxNode.removeEventListener("keydown", this._onSearchboxKeyDown);
+    this._searchboxNode.removeEventListener(
+      "keydown",
+      this._onSearchboxKeyDown
+    );
 
     this._searchboxContainer = null;
     this._searchboxNode = null;
@@ -696,7 +709,9 @@ VariablesView.prototype = {
    * Focuses the last visible scope, variable, or property in this container.
    */
   focusLastVisibleItem: function() {
-    const focusableItem = this._findInVisibleItemsReverse(item => item.focusable);
+    const focusableItem = this._findInVisibleItemsReverse(
+      item => item.focusable
+    );
     if (focusableItem) {
       this._focusItem(focusableItem);
     }
@@ -847,16 +862,32 @@ VariablesView.prototype = {
 
       case KeyCodes.DOM_VK_PAGE_UP:
         // Rewind a certain number of elements based on the container height.
-        this.focusItemAtDelta(-(this.scrollPageSize || Math.min(Math.floor(this._list.scrollHeight /
-          PAGE_SIZE_SCROLL_HEIGHT_RATIO),
-          PAGE_SIZE_MAX_JUMPS)));
+        this.focusItemAtDelta(
+          -(
+            this.scrollPageSize ||
+            Math.min(
+              Math.floor(
+                this._list.scrollHeight / PAGE_SIZE_SCROLL_HEIGHT_RATIO
+              ),
+              PAGE_SIZE_MAX_JUMPS
+            )
+          )
+        );
         return;
 
       case KeyCodes.DOM_VK_PAGE_DOWN:
         // Advance a certain number of elements based on the container height.
-        this.focusItemAtDelta(+(this.scrollPageSize || Math.min(Math.floor(this._list.scrollHeight /
-          PAGE_SIZE_SCROLL_HEIGHT_RATIO),
-          PAGE_SIZE_MAX_JUMPS)));
+        this.focusItemAtDelta(
+          +(
+            this.scrollPageSize ||
+            Math.min(
+              Math.floor(
+                this._list.scrollHeight / PAGE_SIZE_SCROLL_HEIGHT_RATIO
+              ),
+              PAGE_SIZE_MAX_JUMPS
+            )
+          )
+        );
         return;
 
       case KeyCodes.DOM_VK_HOME:
@@ -1058,7 +1089,11 @@ VariablesView.isSortable = function(aClassName) {
  * @return string
  *         The string to be evaluated.
  */
-VariablesView.simpleValueEvalMacro = function(aItem, aCurrentString, aPrefix = "") {
+VariablesView.simpleValueEvalMacro = function(
+  aItem,
+  aCurrentString,
+  aPrefix = ""
+) {
   return aPrefix + aItem.symbolicName + "=" + aCurrentString;
 };
 
@@ -1075,16 +1110,31 @@ VariablesView.simpleValueEvalMacro = function(aItem, aCurrentString, aPrefix = "
  * @return string
  *         The string to be evaluated.
  */
-VariablesView.overrideValueEvalMacro = function(aItem, aCurrentString, aPrefix = "") {
+VariablesView.overrideValueEvalMacro = function(
+  aItem,
+  aCurrentString,
+  aPrefix = ""
+) {
   const property = escapeString(aItem._nameString);
   const parent = aPrefix + aItem.ownerView.symbolicName || "this";
 
-  return "Object.defineProperty(" + parent + "," + property + "," +
-    "{ value: " + aCurrentString +
-    ", enumerable: " + parent + ".propertyIsEnumerable(" + property + ")" +
+  return (
+    "Object.defineProperty(" +
+    parent +
+    "," +
+    property +
+    "," +
+    "{ value: " +
+    aCurrentString +
+    ", enumerable: " +
+    parent +
+    ".propertyIsEnumerable(" +
+    property +
+    ")" +
     ", configurable: true" +
     ", writable: true" +
-    "})";
+    "})"
+  );
 };
 
 /**
@@ -1099,7 +1149,11 @@ VariablesView.overrideValueEvalMacro = function(aItem, aCurrentString, aPrefix =
  * @return string
  *         The string to be evaluated.
  */
-VariablesView.getterOrSetterEvalMacro = function(aItem, aCurrentString, aPrefix = "") {
+VariablesView.getterOrSetterEvalMacro = function(
+  aItem,
+  aCurrentString,
+  aPrefix = ""
+) {
   const type = aItem._nameString;
   const propertyObject = aItem.ownerView;
   const parentObject = propertyObject.ownerView;
@@ -1111,15 +1165,22 @@ VariablesView.getterOrSetterEvalMacro = function(aItem, aCurrentString, aPrefix 
     case "null":
     case "undefined":
       const mirrorType = type == "get" ? "set" : "get";
-      const mirrorLookup = type == "get" ? "__lookupSetter__" : "__lookupGetter__";
+      const mirrorLookup =
+        type == "get" ? "__lookupSetter__" : "__lookupGetter__";
 
       // If the parent object will end up without any getter or setter,
       // morph it into a plain value.
-      if ((type == "set" && propertyObject.getter.type == "undefined") ||
-          (type == "get" && propertyObject.setter.type == "undefined")) {
+      if (
+        (type == "set" && propertyObject.getter.type == "undefined") ||
+        (type == "get" && propertyObject.setter.type == "undefined")
+      ) {
         // Make sure the right getter/setter to value override macro is applied
         // to the target object.
-        return propertyObject.evaluationMacro(propertyObject, "undefined", aPrefix);
+        return propertyObject.evaluationMacro(
+          propertyObject,
+          "undefined",
+          aPrefix
+        );
       }
 
       // Construct and return the getter/setter removal evaluation string.
@@ -1129,12 +1190,33 @@ VariablesView.getterOrSetterEvalMacro = function(aItem, aCurrentString, aPrefix 
       //   enumerable: true,
       //   configurable: true
       // })
-      return "Object.defineProperty(" + parent + "," + property + "," +
-        "{" + mirrorType + ":" + parent + "." + mirrorLookup + "(" + property + ")" +
-        "," + type + ":" + undefined +
-        ", enumerable: " + parent + ".propertyIsEnumerable(" + property + ")" +
+      return (
+        "Object.defineProperty(" +
+        parent +
+        "," +
+        property +
+        "," +
+        "{" +
+        mirrorType +
+        ":" +
+        parent +
+        "." +
+        mirrorLookup +
+        "(" +
+        property +
+        ")" +
+        "," +
+        type +
+        ":" +
+        undefined +
+        ", enumerable: " +
+        parent +
+        ".propertyIsEnumerable(" +
+        property +
+        ")" +
         ", configurable: true" +
-        "})";
+        "})"
+      );
 
     default:
       // Wrap statements inside a function declaration if not already wrapped.
@@ -1156,14 +1238,18 @@ VariablesView.getterOrSetterEvalMacro = function(aItem, aCurrentString, aPrefix 
       }
 
       // Determine if a new getter or setter should be defined.
-      const defineType = type == "get" ? "__defineGetter__" : "__defineSetter__";
+      const defineType =
+        type == "get" ? "__defineGetter__" : "__defineSetter__";
 
       // Make sure all quotes are escaped in the expression's syntax,
-      const defineFunc = "eval(\"(" + aCurrentString.replace(/"/g, "\\$&") + ")\")";
+      const defineFunc =
+        'eval("(' + aCurrentString.replace(/"/g, "\\$&") + ')")';
 
       // Construct and return the getter/setter evaluation string.
       // e.g: foo.__defineGetter__("bar", eval("(function() { return 42; })"))
-      return parent + "." + defineType + "(" + property + "," + defineFunc + ")";
+      return (
+        parent + "." + defineType + "(" + property + "," + defineFunc + ")"
+      );
   }
 };
 
@@ -1286,7 +1372,7 @@ Scope.prototype = {
    *         The newly created Variable instance, null if it already exists.
    */
   addItem: function(aName, aDescriptor = {}, aOptions = {}) {
-    const {relaxed} = aOptions;
+    const { relaxed } = aOptions;
     if (this._store.has(aName) && !relaxed) {
       return this._store.get(aName);
     }
@@ -1660,10 +1746,12 @@ Scope.prototype = {
    */
   get focusable() {
     // Check if this target node is actually visibile.
-    if (!this._nameString ||
-        !this._isContentVisible ||
-        !this._isHeaderVisible ||
-        !this._isMatch) {
+    if (
+      !this._nameString ||
+      !this._isContentVisible ||
+      !this._isHeaderVisible ||
+      !this._isMatch
+    ) {
       return false;
     }
     // Check if all parent objects are expanded.
@@ -1754,9 +1842,12 @@ Scope.prototype = {
    *        Additional options or flags for this scope.
    */
   _init: function(aName, aFlags) {
-    this._idString = generateId(this._nameString = aName);
-    this._displayScope(aName, `${this.targetClassName} ${aFlags.customClass}`,
-                       "devtools-toolbar");
+    this._idString = generateId((this._nameString = aName));
+    this._displayScope(
+      aName,
+      `${this.targetClassName} ${aFlags.customClass}`,
+      "devtools-toolbar"
+    );
     this._addEventListeners();
     this.parentNode.appendChild(this._target);
   },
@@ -1774,24 +1865,24 @@ Scope.prototype = {
   _displayScope: function(aName = "", aTargetClassName, aTitleClassName = "") {
     const document = this.document;
 
-    const element = this._target = document.createXULElement("vbox");
+    const element = (this._target = document.createXULElement("vbox"));
     element.id = this._idString;
     element.className = aTargetClassName;
 
-    const arrow = this._arrow = document.createXULElement("hbox");
+    const arrow = (this._arrow = document.createXULElement("hbox"));
     arrow.className = "arrow theme-twisty";
 
-    const name = this._name = document.createXULElement("label");
+    const name = (this._name = document.createXULElement("label"));
     name.className = "plain name";
     name.setAttribute("value", aName.trim());
     name.setAttribute("crop", "end");
 
-    const title = this._title = document.createXULElement("hbox");
+    const title = (this._title = document.createXULElement("hbox"));
     title.className = "title " + aTitleClassName;
     title.setAttribute("align", "center");
 
-    const enumerable = this._enum = document.createXULElement("vbox");
-    const nonenum = this._nonenum = document.createXULElement("vbox");
+    const enumerable = (this._enum = document.createXULElement("vbox"));
+    const nonenum = (this._nonenum = document.createXULElement("vbox"));
     enumerable.className = "variables-view-element-details enum";
     nonenum.className = "variables-view-element-details nonenum";
 
@@ -1814,11 +1905,13 @@ Scope.prototype = {
    * The click listener for this scope's title.
    */
   _onClick: function(e) {
-    if (this.editing ||
-        e.button != 0 ||
-        e.target == this._editNode ||
-        e.target == this._deleteNode ||
-        e.target == this._addPropertyNode) {
+    if (
+      this.editing ||
+      e.button != 0 ||
+      e.target == this._editNode ||
+      e.target == this._deleteNode ||
+      e.target == this._addPropertyNode
+    ) {
       return;
     }
     this.toggle();
@@ -1892,8 +1985,10 @@ Scope.prototype = {
       const lowerCaseValue = variable._valueString.toLowerCase();
 
       // Non-matched variables or properties require a corresponding attribute.
-      if (!lowerCaseName.includes(aLowerCaseQuery) &&
-          !lowerCaseValue.includes(aLowerCaseQuery)) {
+      if (
+        !lowerCaseName.includes(aLowerCaseQuery) &&
+        !lowerCaseValue.includes(aLowerCaseQuery)
+      ) {
         variable._matched = false;
       } else {
         // Variable or property is matched.
@@ -1916,7 +2011,11 @@ Scope.prototype = {
       }
 
       // Proceed with the search recursively inside this variable or property.
-      if (currentObject._store.size || currentObject.getter || currentObject.setter) {
+      if (
+        currentObject._store.size ||
+        currentObject.getter ||
+        currentObject.setter
+      ) {
         currentObject._performSearch(aLowerCaseQuery);
       }
     }
@@ -2027,15 +2126,18 @@ Scope.prototype = {
    * @return VariablesView
    */
   get _variablesView() {
-    return this._topView || (this._topView = (() => {
-      let parentView = this.ownerView;
-      let topView;
+    return (
+      this._topView ||
+      (this._topView = (() => {
+        let parentView = this.ownerView;
+        let topView;
 
-      while ((topView = parentView.ownerView)) {
-        parentView = topView;
-      }
-      return parentView;
-    })());
+        while ((topView = parentView.ownerView)) {
+          parentView = topView;
+        }
+        return parentView;
+      })())
+    );
   },
 
   /**
@@ -2106,9 +2208,17 @@ Scope.prototype = {
 // Creating maps and arrays thousands of times for variables or properties
 // with a large number of children fills up a lot of memory. Make sure
 // these are instantiated only if needed.
-DevToolsUtils.defineLazyPrototypeGetter(Scope.prototype, "_store", () => new Map());
+DevToolsUtils.defineLazyPrototypeGetter(
+  Scope.prototype,
+  "_store",
+  () => new Map()
+);
 DevToolsUtils.defineLazyPrototypeGetter(Scope.prototype, "_enumItems", Array);
-DevToolsUtils.defineLazyPrototypeGetter(Scope.prototype, "_nonEnumItems", Array);
+DevToolsUtils.defineLazyPrototypeGetter(
+  Scope.prototype,
+  "_nonEnumItems",
+  Array
+);
 
 /**
  * A Variable is a Scope holding Property instances.
@@ -2139,7 +2249,7 @@ function Variable(aScope, aName, aDescriptor, aOptions) {
     delete aDescriptor.set;
   }
 
-  Scope.call(this, aScope, aName, this._initialDescriptor = aDescriptor);
+  Scope.call(this, aScope, aName, (this._initialDescriptor = aDescriptor));
   this.setGrip(aDescriptor.value);
 }
 
@@ -2187,7 +2297,10 @@ Variable.prototype = extend(Scope.prototype, {
       this.unhighlightDomNode();
       this._valueLabel.removeEventListener("mouseover", this.highlightDomNode);
       this._valueLabel.removeEventListener("mouseout", this.unhighlightDomNode);
-      this._openInspectorNode.removeEventListener("mousedown", this.openNodeInInspector);
+      this._openInspectorNode.removeEventListener(
+        "mousedown",
+        this.openNodeInInspector
+      );
     }
 
     this.ownerView._store.delete(this._nameString);
@@ -2327,7 +2440,8 @@ Variable.prototype = extend(Scope.prototype, {
       return this._absoluteName;
     }
 
-    this._absoluteName = this.ownerView._nameString + "[" + escapeString(this._nameString) + "]";
+    this._absoluteName =
+      this.ownerView._nameString + "[" + escapeString(this._nameString) + "]";
     return this._absoluteName;
   },
 
@@ -2404,7 +2518,11 @@ Variable.prototype = extend(Scope.prototype, {
   setGrip: function(aGrip) {
     // Don't allow displaying grip information if there's no name available
     // or the grip is malformed.
-    if (this._nameString === undefined || aGrip === undefined || aGrip === null) {
+    if (
+      this._nameString === undefined ||
+      aGrip === undefined ||
+      aGrip === null
+    ) {
       return;
     }
     // Getters and setters should display grip information in sub-properties.
@@ -2418,7 +2536,10 @@ Variable.prototype = extend(Scope.prototype, {
     }
     this._valueGrip = aGrip;
 
-    if (aGrip && (aGrip.optimizedOut || aGrip.uninitialized || aGrip.missingArguments)) {
+    if (
+      aGrip &&
+      (aGrip.optimizedOut || aGrip.uninitialized || aGrip.missingArguments)
+    ) {
       if (aGrip.optimizedOut) {
         this._valueString = L10N.getStr("variablesViewOptimizedOut");
       } else if (aGrip.uninitialized) {
@@ -2471,11 +2592,13 @@ Variable.prototype = extend(Scope.prototype, {
     const fadeInDelay = this._variablesView.lazyEmptyDelay + 1;
     const fadeOutDelay = fadeInDelay + aDuration;
 
-    setNamedTimeout("vview-flash-in" + this.absoluteName,
-      fadeInDelay, () => this._target.setAttribute("changed", ""));
+    setNamedTimeout("vview-flash-in" + this.absoluteName, fadeInDelay, () =>
+      this._target.setAttribute("changed", "")
+    );
 
-    setNamedTimeout("vview-flash-out" + this.absoluteName,
-      fadeOutDelay, () => this._target.removeAttribute("changed"));
+    setNamedTimeout("vview-flash-out" + this.absoluteName, fadeOutDelay, () =>
+      this._target.removeAttribute("changed")
+    );
   },
 
   /**
@@ -2487,7 +2610,7 @@ Variable.prototype = extend(Scope.prototype, {
    *        The variable's descriptor.
    */
   _init: function(aName, aDescriptor) {
-    this._idString = generateId(this._nameString = aName);
+    this._idString = generateId((this._nameString = aName));
     this._displayScope(aName, this.targetClassName);
     this._displayVariable();
     this._customizeVariable();
@@ -2495,9 +2618,11 @@ Variable.prototype = extend(Scope.prototype, {
     this._setAttributes();
     this._addEventListeners();
 
-    if (this._initialDescriptor.enumerable ||
-        this._nameString == "this" ||
-        this._internalItem) {
+    if (
+      this._initialDescriptor.enumerable ||
+      this._nameString == "this" ||
+      this._internalItem
+    ) {
       this.ownerView._enum.appendChild(this._target);
       this.ownerView._enumItems.push(this);
     } else {
@@ -2513,11 +2638,13 @@ Variable.prototype = extend(Scope.prototype, {
     const document = this.document;
     const descriptor = this._initialDescriptor;
 
-    const separatorLabel = this._separatorLabel = document.createXULElement("label");
+    const separatorLabel = (this._separatorLabel = document.createXULElement(
+      "label"
+    ));
     separatorLabel.className = "plain separator";
     separatorLabel.setAttribute("value", this.separatorStr + " ");
 
-    const valueLabel = this._valueLabel = document.createXULElement("label");
+    const valueLabel = (this._valueLabel = document.createXULElement("label"));
     valueLabel.className = "plain value";
     valueLabel.setAttribute("flex", "1");
     valueLabel.setAttribute("crop", "center");
@@ -2573,24 +2700,33 @@ Variable.prototype = extend(Scope.prototype, {
     const ownerView = this.ownerView;
     const descriptor = this._initialDescriptor;
 
-    if (ownerView.eval && this.getter || this.setter) {
-      const editNode = this._editNode = this.document.createXULElement("toolbarbutton");
+    if ((ownerView.eval && this.getter) || this.setter) {
+      const editNode = (this._editNode = this.document.createXULElement(
+        "toolbarbutton"
+      ));
       editNode.className = "plain variables-view-edit";
       editNode.addEventListener("mousedown", this._onEdit.bind(this));
       this._title.insertBefore(editNode, this._spacer);
     }
 
     if (ownerView.delete) {
-      const deleteNode = this._deleteNode = this.document.createXULElement("toolbarbutton");
+      const deleteNode = (this._deleteNode = this.document.createXULElement(
+        "toolbarbutton"
+      ));
       deleteNode.className = "plain variables-view-delete";
       deleteNode.addEventListener("click", this._onDelete.bind(this));
       this._title.appendChild(deleteNode);
     }
 
     if (ownerView.new) {
-      const addPropertyNode = this._addPropertyNode = this.document.createXULElement("toolbarbutton");
+      const addPropertyNode = (this._addPropertyNode = this.document.createXULElement(
+        "toolbarbutton"
+      ));
       addPropertyNode.className = "plain variables-view-add-property";
-      addPropertyNode.addEventListener("mousedown", this._onAddProperty.bind(this));
+      addPropertyNode.addEventListener(
+        "mousedown",
+        this._onAddProperty.bind(this)
+      );
       this._title.appendChild(addPropertyNode);
 
       // Can't add properties to primitive values, hide the node in those cases.
@@ -2609,7 +2745,8 @@ Variable.prototype = extend(Scope.prototype, {
 
     if (!descriptor.writable && !ownerView.getter && !ownerView.setter) {
       const nonWritableIcon = this.document.createXULElement("hbox");
-      nonWritableIcon.className = "plain variable-or-property-non-writable-icon";
+      nonWritableIcon.className =
+        "plain variable-or-property-non-writable-icon";
       nonWritableIcon.setAttribute("optional-visibility", "");
       this._title.appendChild(nonWritableIcon);
     }
@@ -2630,7 +2767,8 @@ Variable.prototype = extend(Scope.prototype, {
       }
       if (!descriptor.value.extensible) {
         const nonExtensibleLabel = this.document.createXULElement("label");
-        nonExtensibleLabel.className = "plain variable-or-property-non-extensible-label";
+        nonExtensibleLabel.className =
+          "plain variable-or-property-non-extensible-label";
         nonExtensibleLabel.setAttribute("optional-visibility", "");
         nonExtensibleLabel.setAttribute("value", "N");
         this._title.appendChild(nonExtensibleLabel);
@@ -2661,8 +2799,15 @@ Variable.prototype = extend(Scope.prototype, {
     tooltip.setAttribute("orient", "horizontal");
 
     const labels = [
-      "configurable", "enumerable", "writable",
-      "frozen", "sealed", "extensible", "overridden", "WebIDL"];
+      "configurable",
+      "enumerable",
+      "writable",
+      "frozen",
+      "sealed",
+      "extensible",
+      "overridden",
+      "WebIDL",
+    ];
 
     for (const type of labels) {
       const labelElement = this.document.createXULElement("label");
@@ -2678,16 +2823,25 @@ Variable.prototype = extend(Scope.prototype, {
       this._editNode.setAttribute("tooltiptext", ownerView.editButtonTooltip);
     }
     if (this._openInspectorNode && this._linkedToInspector) {
-      this._openInspectorNode.setAttribute("tooltiptext", this.ownerView.domNodeValueTooltip);
+      this._openInspectorNode.setAttribute(
+        "tooltiptext",
+        this.ownerView.domNodeValueTooltip
+      );
     }
     if (this._valueLabel && ownerView.eval) {
-      this._valueLabel.setAttribute("tooltiptext", ownerView.editableValueTooltip);
+      this._valueLabel.setAttribute(
+        "tooltiptext",
+        ownerView.editableValueTooltip
+      );
     }
     if (this._name && ownerView.switch) {
       this._name.setAttribute("tooltiptext", ownerView.editableNameTooltip);
     }
     if (this._deleteNode && ownerView.delete) {
-      this._deleteNode.setAttribute("tooltiptext", ownerView.deleteButtonTooltip);
+      this._deleteNode.setAttribute(
+        "tooltiptext",
+        ownerView.deleteButtonTooltip
+      );
     }
   },
 
@@ -2704,7 +2858,8 @@ Variable.prototype = extend(Scope.prototype, {
    * inspector can be done.
    */
   _isLinkableToInspector: function() {
-    const isDomNode = this._valueGrip && this._valueGrip.preview.kind === "DOMNode";
+    const isDomNode =
+      this._valueGrip && this._valueGrip.preview.kind === "DOMNode";
     const hasBeenLinked = this._linkedToInspector;
     const hasToolbox = !!this.toolbox;
 
@@ -2727,7 +2882,10 @@ Variable.prototype = extend(Scope.prototype, {
     // Add a button to open the node in the inspector
     this._openInspectorNode = this.document.createXULElement("toolbarbutton");
     this._openInspectorNode.className = "plain variables-view-open-inspector";
-    this._openInspectorNode.addEventListener("mousedown", this.openNodeInInspector);
+    this._openInspectorNode.addEventListener(
+      "mousedown",
+      this.openNodeInInspector
+    );
     this._title.appendChild(this._openInspectorNode);
 
     this._linkedToInspector = true;
@@ -2747,7 +2905,7 @@ Variable.prototype = extend(Scope.prototype, {
 
     event && event.stopPropagation();
 
-    return (async function() {
+    return async function() {
       await this.toolbox.initInspector();
 
       let nodeFront = this._nodeFront;
@@ -2759,11 +2917,15 @@ Variable.prototype = extend(Scope.prototype, {
         await this.toolbox.selectTool("inspector");
 
         const inspectorReady = defer();
-        this.toolbox.getPanel("inspector").once("inspector-updated", inspectorReady.resolve);
-        await this.toolbox.selection.setNodeFront(nodeFront, { reason: "variables-view" });
+        this.toolbox
+          .getPanel("inspector")
+          .once("inspector-updated", inspectorReady.resolve);
+        await this.toolbox.selection.setNodeFront(nodeFront, {
+          reason: "variables-view",
+        });
         await inspectorReady.promise;
       }
-    }.bind(this))();
+    }.bind(this)();
   },
 
   /**
@@ -2774,7 +2936,9 @@ Variable.prototype = extend(Scope.prototype, {
     if (this.toolbox) {
       await this.toolbox.initInspector();
       if (!this._nodeFront) {
-        this.nodeFront = await this.toolbox.walker.gripToNodeFront(this._valueGrip);
+        this.nodeFront = await this.toolbox.walker.gripToNodeFront(
+          this._valueGrip
+        );
       }
       await this.toolbox.highlighter.highlight(this._nodeFront);
     }
@@ -2873,37 +3037,45 @@ Variable.prototype = extend(Scope.prototype, {
       this._valueLabel.hidden = true;
     }
 
-    EditableName.create(this, {
-      onSave: aKey => {
-        if (!this._variablesView.preventDisableOnChange) {
-          this._disable();
-        }
-        this.ownerView.switch(this, aKey);
+    EditableName.create(
+      this,
+      {
+        onSave: aKey => {
+          if (!this._variablesView.preventDisableOnChange) {
+            this._disable();
+          }
+          this.ownerView.switch(this, aKey);
+        },
+        onCleanup: () => {
+          if (!this._variablesView.alignedValues) {
+            this._separatorLabel.hidden = false;
+            this._valueLabel.hidden = false;
+          }
+        },
       },
-      onCleanup: () => {
-        if (!this._variablesView.alignedValues) {
-          this._separatorLabel.hidden = false;
-          this._valueLabel.hidden = false;
-        }
-      },
-    }, e);
+      e
+    );
   },
 
   /**
    * Makes this variable's value editable.
    */
   _activateValueInput: function(e) {
-    EditableValue.create(this, {
-      onSave: aString => {
-        if (this._linkedToInspector) {
-          this.unhighlightDomNode();
-        }
-        if (!this._variablesView.preventDisableOnChange) {
-          this._disable();
-        }
-        this.ownerView.eval(this, aString);
+    EditableValue.create(
+      this,
+      {
+        onSave: aString => {
+          if (this._linkedToInspector) {
+            this.unhighlightDomNode();
+          }
+          if (!this._variablesView.preventDisableOnChange) {
+            this._disable();
+          }
+          this.ownerView.eval(this, aString);
+        },
       },
-    }, e);
+      e
+    );
   },
 
   /**
@@ -2971,24 +3143,32 @@ Variable.prototype = extend(Scope.prototype, {
 
     this.expanded = true;
 
-    const item = this.addItem(" ", {
-      value: undefined,
-      configurable: true,
-      enumerable: true,
-      writable: true,
-    }, {relaxed: true});
+    const item = this.addItem(
+      " ",
+      {
+        value: undefined,
+        configurable: true,
+        enumerable: true,
+        writable: true,
+      },
+      { relaxed: true }
+    );
 
     // Force showing the separator.
     item._separatorLabel.hidden = false;
 
-    EditableNameAndValue.create(item, {
-      onSave: ([aKey, aValue]) => {
-        if (!this._variablesView.preventDisableOnChange) {
-          this._disable();
-        }
-        this.ownerView.new(this, aKey, aValue);
+    EditableNameAndValue.create(
+      item,
+      {
+        onSave: ([aKey, aValue]) => {
+          if (!this._variablesView.preventDisableOnChange) {
+            this._disable();
+          }
+          this.ownerView.new(this, aKey, aValue);
+        },
       },
-    }, e);
+      e
+    );
   },
 
   _symbolicName: null,
@@ -3041,7 +3221,8 @@ Property.prototype = extend(Variable.prototype, {
       return this._symbolicName;
     }
 
-    this._symbolicName = this.ownerView.symbolicName + "[" + escapeString(this._nameString) + "]";
+    this._symbolicName =
+      this.ownerView.symbolicName + "[" + escapeString(this._nameString) + "]";
     return this._symbolicName;
   },
 
@@ -3054,7 +3235,8 @@ Property.prototype = extend(Variable.prototype, {
       return this._absoluteName;
     }
 
-    this._absoluteName = this.ownerView.absoluteName + "[" + escapeString(this._nameString) + "]";
+    this._absoluteName =
+      this.ownerView.absoluteName + "[" + escapeString(this._nameString) + "]";
     return this._absoluteName;
   },
 });
@@ -3062,10 +3244,11 @@ Property.prototype = extend(Variable.prototype, {
 /**
  * A generator-iterator over the VariablesView, Scopes, Variables and Properties.
  */
-VariablesView.prototype[Symbol.iterator] =
-Scope.prototype[Symbol.iterator] =
-Variable.prototype[Symbol.iterator] =
-Property.prototype[Symbol.iterator] = function* () {
+VariablesView.prototype[Symbol.iterator] = Scope.prototype[
+  Symbol.iterator
+] = Variable.prototype[Symbol.iterator] = Property.prototype[
+  Symbol.iterator
+] = function*() {
   yield* this._store;
 };
 
@@ -3115,8 +3298,8 @@ VariablesView.prototype.commitHierarchy = function() {
 // Some variables are likely to contain a very large number of properties.
 // It would be a bad idea to re-expand them or perform expensive operations.
 VariablesView.prototype.commitHierarchyIgnoredItems = extend(null, {
-  "window": true,
-  "this": true,
+  window: true,
+  this: true,
 });
 
 /**
@@ -3132,7 +3315,9 @@ VariablesView.prototype.wasExpanded = function(aItem) {
   if (!(aItem instanceof Scope)) {
     return false;
   }
-  const prevItem = this._prevHierarchy.get(aItem.absoluteName || aItem._nameString);
+  const prevItem = this._prevHierarchy.get(
+    aItem.absoluteName || aItem._nameString
+  );
   return prevItem ? prevItem._isExpanded : false;
 };
 
@@ -3209,14 +3394,16 @@ VariablesView.isPrimitive = function(aDescriptor) {
   // For convenience, undefined, null, Infinity, -Infinity, NaN, -0, and long
   // strings are considered types.
   const type = grip.type;
-  if (type == "undefined" ||
-      type == "null" ||
-      type == "Infinity" ||
-      type == "-Infinity" ||
-      type == "NaN" ||
-      type == "-0" ||
-      type == "symbol" ||
-      type == "longString") {
+  if (
+    type == "undefined" ||
+    type == "null" ||
+    type == "Infinity" ||
+    type == "-Infinity" ||
+    type == "NaN" ||
+    type == "-0" ||
+    type == "symbol" ||
+    type == "longString"
+  ) {
     return true;
   }
 
@@ -3234,8 +3421,12 @@ VariablesView.isUndefined = function(aDescriptor) {
   // contained in 'get' and 'set' properties.
   const getter = aDescriptor.get;
   const setter = aDescriptor.set;
-  if (typeof getter == "object" && getter.type == "undefined" &&
-      typeof setter == "object" && setter.type == "undefined") {
+  if (
+    typeof getter == "object" &&
+    getter.type == "undefined" &&
+    typeof setter == "object" &&
+    setter.type == "undefined"
+  ) {
     return true;
   }
 
@@ -3265,10 +3456,7 @@ VariablesView.isFalsy = function(aDescriptor) {
 
   // For convenience, undefined, null, NaN, and -0 are all considered types.
   const type = grip.type;
-  if (type == "undefined" ||
-      type == "null" ||
-      type == "NaN" ||
-      type == "-0") {
+  if (type == "undefined" || type == "null" || type == "NaN" || type == "-0") {
     return true;
   }
 
@@ -3314,18 +3502,18 @@ VariablesView.getGrip = function(aValue) {
       if (aValue === undefined) {
         return { type: "undefined" };
       }
-      // fall through
+    // fall through
     case "object":
       if (aValue === null) {
         return { type: "null" };
       }
-      // fall through
+    // fall through
     case "function":
-      return { type: "object",
-               class: getObjectClassName(aValue) };
+      return { type: "object", class: getObjectClassName(aValue) };
     default:
-      console.error("Failed to provide a grip for value of " + typeof value +
-                    ": " + aValue);
+      console.error(
+        "Failed to provide a grip for value of " + typeof value + ": " + aValue
+      );
       return null;
   }
 };
@@ -3400,8 +3588,8 @@ function getObjectClassName(object) {
   try {
     className = ((object + "").match(/^\[object (\S+)\]$/) || [])[1];
     if (!className) {
-      className = ((object.constructor + "")
-                    .match(/^\[object (\S+)\]$/) || [])[1];
+      className = ((object.constructor + "").match(/^\[object (\S+)\]$/) ||
+        [])[1];
     }
     if (!className && typeof object.constructor == "function") {
       className = getFunctionName(object.constructor);
@@ -3467,7 +3655,7 @@ VariablesView.getString = function(aGrip, aOptions = {}) {
       if (!aGrip && 1 / aGrip === -Infinity) {
         return "-0";
       }
-      // fall through
+    // fall through
     default:
       return aGrip + "";
   }
@@ -3486,14 +3674,14 @@ VariablesView.getString = function(aGrip, aOptions = {}) {
 VariablesView.stringifiers = {};
 
 VariablesView.stringifiers.byType = {
-  string: function(aGrip, {noStringQuotes}) {
+  string: function(aGrip, { noStringQuotes }) {
     if (noStringQuotes) {
       return aGrip;
     }
     return '"' + aGrip + '"';
   },
 
-  longString: function({initial}, {noStringQuotes, noEllipsis}) {
+  longString: function({ initial }, { noStringQuotes, noEllipsis }) {
     const ellipsis = noEllipsis ? "" : ELLIPSIS;
     if (noStringQuotes) {
       return initial + ellipsis;
@@ -3506,7 +3694,7 @@ VariablesView.stringifiers.byType = {
   },
 
   object: function(aGrip, aOptions) {
-    const {preview} = aGrip;
+    const { preview } = aGrip;
     let stringifier;
     if (aGrip.class) {
       stringifier = VariablesView.stringifiers.byObjectClass[aGrip.class];
@@ -3525,8 +3713,10 @@ VariablesView.stringifiers.byType = {
     return "Symbol(" + name + ")";
   },
 
-  mapEntry: function(aGrip, {concise}) {
-    const { preview: { key, value }} = aGrip;
+  mapEntry: function(aGrip, { concise }) {
+    const {
+      preview: { key, value },
+    } = aGrip;
 
     const keyString = VariablesView.getString(key, {
       concise: true,
@@ -3536,11 +3726,10 @@ VariablesView.stringifiers.byType = {
 
     return keyString + " \u2192 " + valueString;
   },
-
 }; // VariablesView.stringifiers.byType
 
 VariablesView.stringifiers.byObjectClass = {
-  Function: function(aGrip, {concise}) {
+  Function: function(aGrip, { concise }) {
     // TODO: Bug 948484 - support arrow functions and ES6 generators
 
     let name = aGrip.userDisplayName || aGrip.displayName || aGrip.name || "";
@@ -3555,11 +3744,11 @@ VariablesView.stringifiers.byObjectClass = {
     return (name || "function ") + "(" + params + ")";
   },
 
-  RegExp: function({displayString}) {
+  RegExp: function({ displayString }) {
     return VariablesView.getString(displayString, { noStringQuotes: true });
   },
 
-  Date: function({preview}) {
+  Date: function({ preview }) {
     if (!preview || !("timestamp" in preview)) {
       return null;
     }
@@ -3572,12 +3761,13 @@ VariablesView.stringifiers.byObjectClass = {
   },
 
   Number: function(aGrip) {
-    const {preview} = aGrip;
+    const { preview } = aGrip;
     if (preview === undefined) {
       return null;
     }
-    return aGrip.class + " { " + VariablesView.getString(preview.wrappedValue) +
-      " }";
+    return (
+      aGrip.class + " { " + VariablesView.getString(preview.wrappedValue) + " }"
+    );
   },
 }; // VariablesView.stringifiers.byObjectClass
 
@@ -3585,8 +3775,8 @@ VariablesView.stringifiers.byObjectClass.Boolean =
   VariablesView.stringifiers.byObjectClass.Number;
 
 VariablesView.stringifiers.byObjectKind = {
-  ArrayLike: function(aGrip, {concise}) {
-    const {preview} = aGrip;
+  ArrayLike: function(aGrip, { concise }) {
+    const { preview } = aGrip;
     if (concise) {
       return aGrip.class + "[" + preview.length + "]";
     }
@@ -3595,7 +3785,8 @@ VariablesView.stringifiers.byObjectKind = {
       return null;
     }
 
-    let shown = 0, lastHole = null;
+    let shown = 0,
+      lastHole = null;
     const result = [];
     for (const item of preview.items) {
       if (item === null) {
@@ -3624,11 +3815,11 @@ VariablesView.stringifiers.byObjectKind = {
     return prefix + "[" + result.join(", ") + "]";
   },
 
-  MapLike: function(aGrip, {concise}) {
-    const {preview} = aGrip;
+  MapLike: function(aGrip, { concise }) {
+    const { preview } = aGrip;
     if (concise || !preview.entries) {
-      const size = typeof preview.size == "number" ?
-                   "[" + preview.size + "]" : "";
+      const size =
+        typeof preview.size == "number" ? "[" + preview.size + "]" : "";
       return aGrip.class + size;
     }
 
@@ -3650,7 +3841,7 @@ VariablesView.stringifiers.byObjectKind = {
     return aGrip.class + " {" + entries.join(", ") + "}";
   },
 
-  ObjectWithText: function(aGrip, {concise}) {
+  ObjectWithText: function(aGrip, { concise }) {
     if (concise) {
       return aGrip.class;
     }
@@ -3658,7 +3849,7 @@ VariablesView.stringifiers.byObjectKind = {
     return aGrip.class + " " + VariablesView.getString(aGrip.preview.text);
   },
 
-  ObjectWithURL: function(aGrip, {concise}) {
+  ObjectWithURL: function(aGrip, { concise }) {
     let result = aGrip.class;
     const url = aGrip.preview.url;
     if (!VariablesView.isFalsy({ value: url })) {
@@ -3668,21 +3859,25 @@ VariablesView.stringifiers.byObjectKind = {
   },
 
   // Stringifier for any kind of object.
-  Object: function(aGrip, {concise}) {
+  Object: function(aGrip, { concise }) {
     if (concise) {
       return aGrip.class;
     }
 
-    const {preview} = aGrip;
+    const { preview } = aGrip;
     const props = [];
 
     if (aGrip.class == "Promise" && aGrip.promiseState) {
       const { state, value, reason } = aGrip.promiseState;
       props.push("<state>: " + VariablesView.getString(state));
       if (state == "fulfilled") {
-        props.push("<value>: " + VariablesView.getString(value, { concise: true }));
+        props.push(
+          "<value>: " + VariablesView.getString(value, { concise: true })
+        );
       } else if (state == "rejected") {
-        props.push("<reason>: " + VariablesView.getString(reason, { concise: true }));
+        props.push(
+          "<reason>: " + VariablesView.getString(reason, { concise: true })
+        );
       }
     }
 
@@ -3701,8 +3896,9 @@ VariablesView.stringifiers.byObjectKind = {
 
     for (const key of Object.keys(preview.safeGetterValues || {})) {
       const value = preview.safeGetterValues[key];
-      const valueString = VariablesView.getString(value.getterValue,
-                                                { concise: true });
+      const valueString = VariablesView.getString(value.getterValue, {
+        concise: true,
+      });
       props.push(key + ": " + valueString);
     }
 
@@ -3722,34 +3918,49 @@ VariablesView.stringifiers.byObjectKind = {
     return prefix + "{" + props.join(", ") + "}";
   }, // Object
 
-  Error: function(aGrip, {concise}) {
-    const {preview} = aGrip;
-    const name = VariablesView.getString(preview.name, { noStringQuotes: true });
+  Error: function(aGrip, { concise }) {
+    const { preview } = aGrip;
+    const name = VariablesView.getString(preview.name, {
+      noStringQuotes: true,
+    });
     if (concise) {
       return name || aGrip.class;
     }
 
-    let msg = name + ": " +
-              VariablesView.getString(preview.message, { noStringQuotes: true });
+    let msg =
+      name +
+      ": " +
+      VariablesView.getString(preview.message, { noStringQuotes: true });
 
     if (!VariablesView.isFalsy({ value: preview.stack })) {
-      msg += "\n" + L10N.getStr("variablesViewErrorStacktrace") +
-             "\n" + preview.stack;
+      msg +=
+        "\n" +
+        L10N.getStr("variablesViewErrorStacktrace") +
+        "\n" +
+        preview.stack;
     }
 
     return msg;
   },
 
-  DOMException: function(aGrip, {concise}) {
-    const {preview} = aGrip;
+  DOMException: function(aGrip, { concise }) {
+    const { preview } = aGrip;
     if (concise) {
       return preview.name || aGrip.class;
     }
 
-    let msg = aGrip.class + " [" + preview.name + ": " +
-              VariablesView.getString(preview.message) + "\n" +
-              "code: " + preview.code + "\n" +
-              "nsresult: 0x" + (+preview.result).toString(16);
+    let msg =
+      aGrip.class +
+      " [" +
+      preview.name +
+      ": " +
+      VariablesView.getString(preview.message) +
+      "\n" +
+      "code: " +
+      preview.code +
+      "\n" +
+      "nsresult: 0x" +
+      (+preview.result).toString(16);
 
     if (preview.filename) {
       msg += "\nlocation: " + preview.filename;
@@ -3761,8 +3972,8 @@ VariablesView.stringifiers.byObjectKind = {
     return msg + "]";
   },
 
-  DOMEvent: function(aGrip, {concise}) {
-    const {preview} = aGrip;
+  DOMEvent: function(aGrip, { concise }) {
+    const { preview } = aGrip;
     if (!preview.type) {
       return null;
     }
@@ -3773,8 +3984,11 @@ VariablesView.stringifiers.byObjectKind = {
 
     let result = preview.type;
 
-    if (preview.eventKind == "key" && preview.modifiers &&
-        preview.modifiers.length) {
+    if (
+      preview.eventKind == "key" &&
+      preview.modifiers &&
+      preview.modifiers.length
+    ) {
       result += " " + preview.modifiers.join("-");
     }
 
@@ -3786,37 +4000,45 @@ VariablesView.stringifiers.byObjectKind = {
 
     for (const prop in preview.properties) {
       const value = preview.properties[prop];
-      props.push(prop + ": " + VariablesView.getString(value, { concise: true }));
+      props.push(
+        prop + ": " + VariablesView.getString(value, { concise: true })
+      );
     }
 
     return result + " {" + props.join(", ") + "}";
   }, // DOMEvent
 
-  DOMNode: function(aGrip, {concise}) {
-    const {preview} = aGrip;
+  DOMNode: function(aGrip, { concise }) {
+    const { preview } = aGrip;
 
     switch (preview.nodeType) {
       case nodeConstants.DOCUMENT_NODE: {
         let result = aGrip.class;
         if (preview.location) {
-          result += ` \u2192 ${getSourceNames(preview.location)[concise ? "short" : "long"]}`;
+          result += ` \u2192 ${
+            getSourceNames(preview.location)[concise ? "short" : "long"]
+          }`;
         }
 
         return result;
       }
 
       case nodeConstants.ATTRIBUTE_NODE: {
-        const value = VariablesView.getString(preview.value, { noStringQuotes: true });
+        const value = VariablesView.getString(preview.value, {
+          noStringQuotes: true,
+        });
         return preview.nodeName + '="' + escapeHTML(value) + '"';
       }
 
       case nodeConstants.TEXT_NODE:
-        return preview.nodeName + " " +
-               VariablesView.getString(preview.textContent);
+        return (
+          preview.nodeName + " " + VariablesView.getString(preview.textContent)
+        );
 
       case nodeConstants.COMMENT_NODE: {
-        const comment = VariablesView.getString(preview.textContent,
-                                              { noStringQuotes: true });
+        const comment = VariablesView.getString(preview.textContent, {
+          noStringQuotes: true,
+        });
         return "<!--" + comment + "-->";
       }
 
@@ -3838,10 +4060,12 @@ VariablesView.stringifiers.byObjectKind = {
       case nodeConstants.ELEMENT_NODE: {
         const attrs = preview.attributes;
         if (!concise) {
-          let n = 0, result = "<" + preview.nodeName;
+          let n = 0,
+            result = "<" + preview.nodeName;
           for (const name in attrs) {
-            const value = VariablesView.getString(attrs[name],
-                                                { noStringQuotes: true });
+            const value = VariablesView.getString(attrs[name], {
+              noStringQuotes: true,
+            });
             result += " " + name + '="' + escapeHTML(value) + '"';
             n++;
           }
@@ -3936,7 +4160,12 @@ VariablesView.getClass = function(aGrip) {
 var generateId = (function() {
   let count = 0;
   return function(aName = "") {
-    return aName.toLowerCase().trim().replace(/\s+/g, "-") + (++count);
+    return (
+      aName
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "-") + ++count
+    );
   };
 })();
 
@@ -3955,8 +4184,9 @@ function escapeString(aString) {
     return "";
   }
   // U+2028 and U+2029 are allowed in JSON but not in ECMAScript string literals.
-  return JSON.stringify(aString).replace(/\u2028/g, "\\u2028")
-                                .replace(/\u2029/g, "\\u2029");
+  return JSON.stringify(aString)
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }
 
 /**
@@ -3968,10 +4198,11 @@ function escapeString(aString) {
  * @return string
  */
 function escapeHTML(aString) {
-  return aString.replace(/&/g, "&amp;")
-                .replace(/"/g, "&quot;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;");
+  return aString
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 /**
@@ -4039,8 +4270,10 @@ Editable.prototype = {
 
     // Create a texbox input element which will be shown in the current
     // element's specified label location.
-    const input = this._input =
-      this._variable.document.createElementNS(HTML_NS, "input");
+    const input = (this._input = this._variable.document.createElementNS(
+      HTML_NS,
+      "input"
+    ));
     input.className = this.className;
     input.setAttribute("value", initialString);
 

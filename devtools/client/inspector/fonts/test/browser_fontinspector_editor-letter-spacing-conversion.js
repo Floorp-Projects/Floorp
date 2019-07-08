@@ -25,16 +25,20 @@ add_task(async function() {
   const viewDoc = view.document;
   const property = "letter-spacing";
   const UNITS = {
-    "px": 32,
-    "rem": 2,
-    "em": 1,
+    px: 32,
+    rem: 2,
+    em: 1,
   };
 
   await selectNode("div", inspector);
 
   info("Check that font editor shows letter-spacing value in original units");
   const letterSpacing = getPropertyValue(viewDoc, property);
-  is(letterSpacing.value + letterSpacing.unit, "1em", "Original letter spacing is 1em");
+  is(
+    letterSpacing.value + letterSpacing.unit,
+    "1em",
+    "Original letter spacing is 1em"
+  );
 
   // Starting value and unit for conversion.
   let prevValue = letterSpacing.value;
@@ -44,8 +48,17 @@ add_task(async function() {
     const value = UNITS[unit];
 
     info(`Convert letter-spacing from ${prevValue}${prevUnit} to ${unit}`);
-    const convertedValue = await view.convertUnits(property, prevValue, prevUnit, unit);
-    is(convertedValue, value, `Converting to ${unit} returns transformed value.`);
+    const convertedValue = await view.convertUnits(
+      property,
+      prevValue,
+      prevUnit,
+      unit
+    );
+    is(
+      convertedValue,
+      value,
+      `Converting to ${unit} returns transformed value.`
+    );
 
     // Store current unit and value to use in conversion on the next iteration.
     prevUnit = unit;

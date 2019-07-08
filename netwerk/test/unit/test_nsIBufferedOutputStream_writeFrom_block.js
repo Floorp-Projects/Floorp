@@ -1,11 +1,16 @@
-
 var CC = Components.Constructor;
 
-var Pipe = CC('@mozilla.org/pipe;1', Ci.nsIPipe, 'init');
-var BufferedOutputStream = CC('@mozilla.org/network/buffered-output-stream;1',
-                              Ci.nsIBufferedOutputStream, 'init');
-var ScriptableInputStream = CC('@mozilla.org/scriptableinputstream;1',
-                               Ci.nsIScriptableInputStream, 'init');
+var Pipe = CC("@mozilla.org/pipe;1", Ci.nsIPipe, "init");
+var BufferedOutputStream = CC(
+  "@mozilla.org/network/buffered-output-stream;1",
+  Ci.nsIBufferedOutputStream,
+  "init"
+);
+var ScriptableInputStream = CC(
+  "@mozilla.org/scriptableinputstream;1",
+  Ci.nsIScriptableInputStream,
+  "init"
+);
 
 // Verify that pipes behave as we expect. Subsequent tests assume
 // pipes behave as demonstrated here.
@@ -15,11 +20,13 @@ add_test(function checkWouldBlockPipe() {
 
   // Writing two bytes should transfer only one byte, and
   // return a partial count, not would-block.
-  Assert.equal(pipe.outputStream.write('xy', 2), 1);
+  Assert.equal(pipe.outputStream.write("xy", 2), 1);
   Assert.equal(pipe.inputStream.available(), 1);
 
-  do_check_throws_nsIException(() => pipe.outputStream.write('y', 1),
-                               'NS_BASE_STREAM_WOULD_BLOCK');
+  do_check_throws_nsIException(
+    () => pipe.outputStream.write("y", 1),
+    "NS_BASE_STREAM_WOULD_BLOCK"
+  );
 
   // Check that nothing was written to the pipe.
   Assert.equal(pipe.inputStream.available(), 1);
@@ -32,21 +39,23 @@ add_test(function writeFromBlocksImmediately() {
   // Create a full pipe for our output stream. This will 'would-block' when
   // written to.
   var outPipe = new Pipe(true, true, 1, 1);
-  Assert.equal(outPipe.outputStream.write('x', 1), 1);
+  Assert.equal(outPipe.outputStream.write("x", 1), 1);
 
   // Create a buffered stream, and fill its buffer, so the next write will
   // try to flush.
   var buffered = new BufferedOutputStream(outPipe.outputStream, 10);
-  Assert.equal(buffered.write('0123456789', 10), 10);
+  Assert.equal(buffered.write("0123456789", 10), 10);
 
   // Create a pipe with some data to be our input stream for the writeFrom
   // call.
   var inPipe = new Pipe(true, true, 1, 1);
-  Assert.equal(inPipe.outputStream.write('y', 1), 1);
+  Assert.equal(inPipe.outputStream.write("y", 1), 1);
 
   Assert.equal(inPipe.inputStream.available(), 1);
-  do_check_throws_nsIException(() => buffered.writeFrom(inPipe.inputStream, 1),
-                               'NS_BASE_STREAM_WOULD_BLOCK');
+  do_check_throws_nsIException(
+    () => buffered.writeFrom(inPipe.inputStream, 1),
+    "NS_BASE_STREAM_WOULD_BLOCK"
+  );
 
   // No data should have been consumed from the pipe.
   Assert.equal(inPipe.inputStream.available(), 1);
@@ -74,7 +83,7 @@ add_test(function writeFromReturnsPartialCountOnPartialFlush() {
   var inPipe = new Pipe(true, true, 15, 1);
 
   // Write some data to our input pipe, for the rest of the test to consume.
-  Assert.equal(inPipe.outputStream.write('0123456789abcde', 15), 15);
+  Assert.equal(inPipe.outputStream.write("0123456789abcde", 15), 15);
   Assert.equal(inPipe.inputStream.available(), 15);
 
   // Write from the input pipe to the buffered stream. The buffered stream
@@ -93,26 +102,28 @@ add_test(function writeFromReturnsPartialCountOnPartialFlush() {
   Assert.equal(inPipe.inputStream.available(), 3);
 
   // Attempting to write any more data should would-block.
-  do_check_throws_nsIException(() => buffered.writeFrom(inPipe.inputStream, 1),
-                               'NS_BASE_STREAM_WOULD_BLOCK');
+  do_check_throws_nsIException(
+    () => buffered.writeFrom(inPipe.inputStream, 1),
+    "NS_BASE_STREAM_WOULD_BLOCK"
+  );
 
   // No data should have been consumed from the pipe.
   Assert.equal(inPipe.inputStream.available(), 3);
 
   // Push the rest of the data through, checking that it all came through.
   Assert.equal(outPipeReadable.available(), 5);
-  Assert.equal(outPipeReadable.read(5), '01234');
+  Assert.equal(outPipeReadable.read(5), "01234");
   // Flush returns NS_ERROR_FAILURE if it can't transfer the full amount.
-  do_check_throws_nsIException(() => buffered.flush(), 'NS_ERROR_FAILURE');
+  do_check_throws_nsIException(() => buffered.flush(), "NS_ERROR_FAILURE");
   Assert.equal(outPipeReadable.available(), 5);
-  Assert.equal(outPipeReadable.read(5), '56789');
+  Assert.equal(outPipeReadable.read(5), "56789");
   buffered.flush();
   Assert.equal(outPipeReadable.available(), 2);
-  Assert.equal(outPipeReadable.read(2), 'ab');
+  Assert.equal(outPipeReadable.read(2), "ab");
   Assert.equal(buffered.writeFrom(inPipe.inputStream, 3), 3);
   buffered.flush();
   Assert.equal(outPipeReadable.available(), 3);
-  Assert.equal(outPipeReadable.read(3), 'cde');
+  Assert.equal(outPipeReadable.read(3), "cde");
 
   run_next_test();
 });
@@ -136,7 +147,7 @@ add_test(function writeFromReturnsPartialCountOnBlock() {
   var inPipe = new Pipe(true, true, 15, 1);
 
   // Write some data to our input pipe, for the rest of the test to consume.
-  Assert.equal(inPipe.outputStream.write('0123456789abcde', 15), 15);
+  Assert.equal(inPipe.outputStream.write("0123456789abcde", 15), 15);
   Assert.equal(inPipe.inputStream.available(), 15);
 
   // Write enough from the input pipe to the buffered stream to fill the
@@ -156,23 +167,25 @@ add_test(function writeFromReturnsPartialCountOnBlock() {
   Assert.equal(inPipe.inputStream.available(), 3);
 
   // Attempting to write any more data should would-block.
-  do_check_throws_nsIException(() => buffered.writeFrom(inPipe.inputStream, 3),
-                               'NS_BASE_STREAM_WOULD_BLOCK');
+  do_check_throws_nsIException(
+    () => buffered.writeFrom(inPipe.inputStream, 3),
+    "NS_BASE_STREAM_WOULD_BLOCK"
+  );
 
   // No data should have been consumed from the pipe.
   Assert.equal(inPipe.inputStream.available(), 3);
 
   // Push the rest of the data through, checking that it all came through.
   Assert.equal(outPipeReadable.available(), 5);
-  Assert.equal(outPipeReadable.read(5), '01234');
+  Assert.equal(outPipeReadable.read(5), "01234");
   // Flush returns NS_ERROR_FAILURE if it can't transfer the full amount.
-  do_check_throws_nsIException(() => buffered.flush(), 'NS_ERROR_FAILURE');
+  do_check_throws_nsIException(() => buffered.flush(), "NS_ERROR_FAILURE");
   Assert.equal(outPipeReadable.available(), 5);
-  Assert.equal(outPipeReadable.read(5), '56789');
+  Assert.equal(outPipeReadable.read(5), "56789");
   Assert.equal(buffered.writeFrom(inPipe.inputStream, 3), 3);
   buffered.flush();
   Assert.equal(outPipeReadable.available(), 5);
-  Assert.equal(outPipeReadable.read(5), 'abcde');
+  Assert.equal(outPipeReadable.read(5), "abcde");
 
   run_next_test();
 });

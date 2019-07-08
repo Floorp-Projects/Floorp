@@ -11,7 +11,8 @@ function test_table_creation() {
   var msc = getOpenedUnsharedDatabase();
 
   msc.executeSimpleSQL(
-    "CREATE VIRTUAL TABLE recipe USING fts3(name, ingredients)");
+    "CREATE VIRTUAL TABLE recipe USING fts3(name, ingredients)"
+  );
 
   Assert.ok(msc.tableExists("recipe"));
 }
@@ -19,14 +20,22 @@ function test_table_creation() {
 function test_insertion() {
   var msc = getOpenedUnsharedDatabase();
 
-  msc.executeSimpleSQL("INSERT INTO recipe (name, ingredients) VALUES " +
-                       "('broccoli stew', 'broccoli peppers cheese tomatoes')");
-  msc.executeSimpleSQL("INSERT INTO recipe (name, ingredients) VALUES " +
-                       "('pumpkin stew', 'pumpkin onions garlic celery')");
-  msc.executeSimpleSQL("INSERT INTO recipe (name, ingredients) VALUES " +
-                       "('broccoli pie', 'broccoli cheese onions flour')");
-  msc.executeSimpleSQL("INSERT INTO recipe (name, ingredients) VALUES " +
-                       "('pumpkin pie', 'pumpkin sugar flour butter')");
+  msc.executeSimpleSQL(
+    "INSERT INTO recipe (name, ingredients) VALUES " +
+      "('broccoli stew', 'broccoli peppers cheese tomatoes')"
+  );
+  msc.executeSimpleSQL(
+    "INSERT INTO recipe (name, ingredients) VALUES " +
+      "('pumpkin stew', 'pumpkin onions garlic celery')"
+  );
+  msc.executeSimpleSQL(
+    "INSERT INTO recipe (name, ingredients) VALUES " +
+      "('broccoli pie', 'broccoli cheese onions flour')"
+  );
+  msc.executeSimpleSQL(
+    "INSERT INTO recipe (name, ingredients) VALUES " +
+      "('pumpkin pie', 'pumpkin sugar flour butter')"
+  );
 
   var stmt = msc.createStatement("SELECT COUNT(*) FROM recipe");
   stmt.executeStep();
@@ -41,7 +50,8 @@ function test_selection() {
   var msc = getOpenedUnsharedDatabase();
 
   var stmt = msc.createStatement(
-    "SELECT rowid, name, ingredients FROM recipe WHERE name MATCH 'pie'");
+    "SELECT rowid, name, ingredients FROM recipe WHERE name MATCH 'pie'"
+  );
 
   Assert.ok(stmt.executeStep());
   Assert.equal(stmt.getInt32(0), 3);

@@ -13,8 +13,16 @@ add_task(async function test() {
       onOpenWindow(xulWin) {
         var domwindow = xulWin.docShell.domWindow;
         waitForFocus(() => {
-          is(domwindow.document.location.href, PROMPT_URL, "Should have seen a prompt window");
-          is(domwindow.args.promptType, "promptUserAndPass", "Should be an authenticate prompt");
+          is(
+            domwindow.document.location.href,
+            PROMPT_URL,
+            "Should have seen a prompt window"
+          );
+          is(
+            domwindow.args.promptType,
+            "promptUserAndPass",
+            "Should be an authenticate prompt"
+          );
 
           is(gBrowser.selectedTab, tab, "Should have selected the new tab");
 
@@ -22,8 +30,7 @@ add_task(async function test() {
         }, domwindow);
       },
 
-      onCloseWindow() {
-      },
+      onCloseWindow() {},
     };
 
     Services.wm.addListener(listener);
@@ -33,6 +40,9 @@ add_task(async function test() {
     });
 
     BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => finish());
-    BrowserTestUtils.loadURI(tab.linkedBrowser, "http://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs");
+    BrowserTestUtils.loadURI(
+      tab.linkedBrowser,
+      "http://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs"
+    );
   });
 });

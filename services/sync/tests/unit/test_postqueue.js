@@ -1,7 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let { PostQueue } = ChromeUtils.import("resource://services-sync/record.js", null);
+let { PostQueue } = ChromeUtils.import(
+  "resource://services-sync/record.js",
+  null
+);
 
 function makeRecord(nbytes) {
   return {
@@ -34,8 +37,11 @@ function makePostQueue(config, lastModTime, responseGenerator) {
     let numRecords = 0;
     for (let record of JSON.parse(data)) {
       if (config.max_record_payload_bytes) {
-        less(record.payload.length, config.max_record_payload_bytes,
-             "PostQueue should respect max_record_payload_bytes");
+        less(
+          record.payload.length,
+          config.max_record_payload_bytes,
+          "PostQueue should respect max_record_payload_bytes"
+        );
       }
       payloadBytes += record.payload.length;
       ++numRecords;
@@ -55,15 +61,27 @@ function makePostQueue(config, lastModTime, responseGenerator) {
 
     // check that we respected the provided limits for the post
     if (config.max_post_records) {
-      lessOrEqual(numRecords, config.max_post_records, "PostQueue should respect max_post_records");
+      lessOrEqual(
+        numRecords,
+        config.max_post_records,
+        "PostQueue should respect max_post_records"
+      );
     }
 
     if (config.max_post_bytes) {
-      less(payloadBytes, config.max_post_bytes, "PostQueue should respect max_post_bytes");
+      less(
+        payloadBytes,
+        config.max_post_bytes,
+        "PostQueue should respect max_post_bytes"
+      );
     }
 
     if (config.max_request_bytes) {
-      less(thisPost.nbytes, config.max_request_bytes, "PostQueue should respect max_request_bytes");
+      less(
+        thisPost.nbytes,
+        config.max_request_bytes,
+        "PostQueue should respect max_request_bytes"
+      );
     }
 
     stats.posts.push(thisPost);
@@ -108,13 +126,19 @@ function makePostQueue(config, lastModTime, responseGenerator) {
     // we respected the provided total limits
     if (commit && (batch == "true" || curBatch.serverBatch)) {
       if (config.max_total_records) {
-        lessOrEqual(curBatch.numRecords,
-          config.max_total_records, "PostQueue should respect max_total_records");
+        lessOrEqual(
+          curBatch.numRecords,
+          config.max_total_records,
+          "PostQueue should respect max_total_records"
+        );
       }
 
       if (config.max_total_bytes) {
-        less(curBatch.payloadBytes,
-          config.max_total_bytes, "PostQueue should respect max_total_bytes");
+        less(
+          curBatch.payloadBytes,
+          config.max_total_bytes,
+          "PostQueue should respect max_total_bytes"
+        );
       }
     }
 
@@ -135,29 +159,40 @@ add_task(async function test_simple() {
   const time = 11111111;
 
   function* responseGenerator() {
-    yield { success: true, status: 200, headers: { "x-weave-timestamp": time + 100, "x-last-modified": time + 100 } };
+    yield {
+      success: true,
+      status: 200,
+      headers: {
+        "x-weave-timestamp": time + 100,
+        "x-last-modified": time + 100,
+      },
+    };
   }
 
   let { pq, stats } = makePostQueue(config, time, responseGenerator());
   await pq.enqueue(makeRecord(10));
   await pq.flush(true);
 
-  deepEqual(stats.posts, [{
-    nbytes: requestBytesFor([10]),
-    payloadBytes: 10,
-    numRecords: 1,
-    commit: true, // we don't know if we have batch semantics, so committed.
-    headers: [["x-if-unmodified-since", time]],
-    batch: "true",
-  }]);
-  deepEqual(stats.batches, [{
-    posts: 1,
-    payloadBytes: 10,
-    numRecords: 1,
-    didCommit: true,
-    batch: "true",
-    serverBatch: false,
-  }]);
+  deepEqual(stats.posts, [
+    {
+      nbytes: requestBytesFor([10]),
+      payloadBytes: 10,
+      numRecords: 1,
+      commit: true, // we don't know if we have batch semantics, so committed.
+      headers: [["x-if-unmodified-since", time]],
+      batch: "true",
+    },
+  ]);
+  deepEqual(stats.batches, [
+    {
+      posts: 1,
+      payloadBytes: 10,
+      numRecords: 1,
+      didCommit: true,
+      batch: "true",
+      serverBatch: false,
+    },
+  ]);
 });
 
 // Test we do the right thing when we need to make multiple posts when there
@@ -170,8 +205,22 @@ add_task(async function test_max_request_bytes_no_batch() {
 
   const time = 11111111;
   function* responseGenerator() {
-    yield { success: true, status: 200, headers: { "x-weave-timestamp": time + 100, "x-last-modified": time + 100 } };
-    yield { success: true, status: 200, headers: { "x-weave-timestamp": time + 200, "x-last-modified": time + 200 } };
+    yield {
+      success: true,
+      status: 200,
+      headers: {
+        "x-weave-timestamp": time + 100,
+        "x-last-modified": time + 100,
+      },
+    };
+    yield {
+      success: true,
+      status: 200,
+      headers: {
+        "x-weave-timestamp": time + 200,
+        "x-last-modified": time + 200,
+      },
+    };
   }
 
   let { pq, stats } = makePostQueue(config, time, responseGenerator());
@@ -188,7 +237,8 @@ add_task(async function test_max_request_bytes_no_batch() {
       commit: false,
       headers: [["x-if-unmodified-since", time]],
       batch: "true",
-    }, {
+    },
+    {
       nbytes: 22,
       payloadBytes: payloadSize,
       numRecords: 1,
@@ -210,16 +260,27 @@ add_task(async function test_max_record_payload_bytes_no_batch() {
   const time = 11111111;
 
   function* responseGenerator() {
-    yield { success: true, status: 200, headers: { "x-weave-timestamp": time + 100, "x-last-modified": time + 100 } };
+    yield {
+      success: true,
+      status: 200,
+      headers: {
+        "x-weave-timestamp": time + 100,
+        "x-last-modified": time + 100,
+      },
+    };
   }
 
   let { pq, stats } = makePostQueue(config, time, responseGenerator());
   // Should trigger when the record really is too large to fit
-  let {enqueued} = await pq.enqueue(makeRecord(51));
+  let { enqueued } = await pq.enqueue(makeRecord(51));
   ok(!enqueued);
   // Shouldn't trigger when the encoded record is too big
-  ok((await pq.enqueue(makeRecord(50 - makeRecord.nonPayloadOverhead))).enqueued); // total size now 52 bytes - "[" + record + "]"
-  ok((await pq.enqueue(makeRecord(46 - makeRecord.nonPayloadOverhead))).enqueued); // total size now 99 bytes - "[" + record0 + "," + record1 + "]"
+  ok(
+    (await pq.enqueue(makeRecord(50 - makeRecord.nonPayloadOverhead))).enqueued
+  ); // total size now 52 bytes - "[" + record + "]"
+  ok(
+    (await pq.enqueue(makeRecord(46 - makeRecord.nonPayloadOverhead))).enqueued
+  ); // total size now 99 bytes - "[" + record0 + "," + record1 + "]"
 
   await pq.flush(true);
 
@@ -261,8 +322,11 @@ add_task(async function test_single_batch() {
   };
   const time = 11111111;
   function* responseGenerator() {
-    yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { "x-last-modified": time, "x-weave-timestamp": time + 100 },
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 1234 },
+      headers: { "x-last-modified": time, "x-weave-timestamp": time + 100 },
     };
   }
 
@@ -281,14 +345,16 @@ add_task(async function test_single_batch() {
     },
   ]);
 
-  deepEqual(stats.batches, [{
-    posts: 1,
-    payloadBytes: 10,
-    numRecords: 1,
-    didCommit: true,
-    batch: 1234,
-    serverBatch: true,
-  }]);
+  deepEqual(stats.batches, [
+    {
+      posts: 1,
+      payloadBytes: 10,
+      numRecords: 1,
+      didCommit: true,
+      batch: 1234,
+      serverBatch: true,
+    },
+  ]);
 });
 
 // Test we do the right thing when we need to make multiple posts due to
@@ -305,12 +371,21 @@ add_task(async function test_max_post_bytes_batch() {
 
   const time = 11111111;
   function* responseGenerator() {
-    yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { "x-last-modified": time, "x-weave-timestamp": time + 100 },
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 1234 },
+      headers: { "x-last-modified": time, "x-weave-timestamp": time + 100 },
     };
-    yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { "x-last-modified": time + 200, "x-weave-timestamp": time + 200 },
-   };
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 1234 },
+      headers: {
+        "x-last-modified": time + 200,
+        "x-weave-timestamp": time + 200,
+      },
+    };
   }
 
   let { pq, stats } = makePostQueue(config, time, responseGenerator());
@@ -328,7 +403,8 @@ add_task(async function test_max_post_bytes_batch() {
       commit: false,
       batch: "true",
       headers: [["x-if-unmodified-since", time]],
-    }, {
+    },
+    {
       nbytes: requestBytesFor([20]),
       payloadBytes: 20,
       numRecords: 1,
@@ -338,18 +414,19 @@ add_task(async function test_max_post_bytes_batch() {
     },
   ]);
 
-  deepEqual(stats.batches, [{
-    posts: 2,
-    payloadBytes: 60,
-    numRecords: 3,
-    didCommit: true,
-    batch: 1234,
-    serverBatch: true,
-  }]);
+  deepEqual(stats.batches, [
+    {
+      posts: 2,
+      payloadBytes: 60,
+      numRecords: 3,
+      didCommit: true,
+      batch: 1234,
+      serverBatch: true,
+    },
+  ]);
 
   equal(pq.lastModified, time + 200);
 });
-
 
 // Test we do the right thing when we need to make multiple posts due to
 // max_request_bytes when there are batch semantics in place.
@@ -365,11 +442,20 @@ add_task(async function test_max_request_bytes_batch() {
 
   const time = 11111111;
   function* responseGenerator() {
-    yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { "x-last-modified": time, "x-weave-timestamp": time + 100 },
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 1234 },
+      headers: { "x-last-modified": time, "x-weave-timestamp": time + 100 },
     };
-    yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { "x-last-modified": time + 200, "x-weave-timestamp": time + 200 },
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 1234 },
+      headers: {
+        "x-last-modified": time + 200,
+        "x-weave-timestamp": time + 200,
+      },
     };
   }
 
@@ -389,7 +475,8 @@ add_task(async function test_max_request_bytes_batch() {
       commit: false,
       batch: "true",
       headers: [["x-if-unmodified-since", time]],
-    }, {
+    },
+    {
       nbytes: requestBytesFor([10]),
       payloadBytes: 10,
       numRecords: 1,
@@ -399,14 +486,16 @@ add_task(async function test_max_request_bytes_batch() {
     },
   ]);
 
-  deepEqual(stats.batches, [{
-    posts: 2,
-    payloadBytes: 40,
-    numRecords: 4,
-    didCommit: true,
-    batch: 1234,
-    serverBatch: true,
-  }]);
+  deepEqual(stats.batches, [
+    {
+      posts: 2,
+      payloadBytes: 40,
+      numRecords: 4,
+      didCommit: true,
+      batch: 1234,
+      serverBatch: true,
+    },
+  ]);
 
   equal(pq.lastModified, time + 200);
 });
@@ -425,17 +514,32 @@ add_task(async function test_max_total_bytes_batch() {
   const time0 = 11111111;
   const time1 = 22222222;
   function* responseGenerator() {
-    yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { "x-last-modified": time0, "x-weave-timestamp": time0 + 100 },
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 1234 },
+      headers: { "x-last-modified": time0, "x-weave-timestamp": time0 + 100 },
     };
-    yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { "x-last-modified": time1, "x-weave-timestamp": time1 },
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 1234 },
+      headers: { "x-last-modified": time1, "x-weave-timestamp": time1 },
     };
-    yield { success: true, status: 202, obj: { batch: 5678 },
-            headers: { "x-last-modified": time1, "x-weave-timestamp": time1 + 100 },
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 5678 },
+      headers: { "x-last-modified": time1, "x-weave-timestamp": time1 + 100 },
     };
-    yield { success: true, status: 202, obj: { batch: 5678 },
-            headers: { "x-last-modified": time1 + 200, "x-weave-timestamp": time1 + 200 },
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 5678 },
+      headers: {
+        "x-last-modified": time1 + 200,
+        "x-weave-timestamp": time1 + 200,
+      },
     };
   }
 
@@ -462,21 +566,24 @@ add_task(async function test_max_total_bytes_batch() {
       commit: false,
       batch: "true",
       headers: [["x-if-unmodified-since", time0]],
-    }, {
+    },
+    {
       nbytes: requestBytesFor([20]),
       payloadBytes: 20,
       numRecords: 1,
       commit: true,
       batch: 1234,
       headers: [["x-if-unmodified-since", time0]],
-    }, {
+    },
+    {
       nbytes: requestBytesFor([20, 20]),
       payloadBytes: 40,
       numRecords: 2,
       commit: false,
       batch: "true",
       headers: [["x-if-unmodified-since", time1]],
-    }, {
+    },
+    {
       nbytes: requestBytesFor([20]),
       payloadBytes: 20,
       numRecords: 1,
@@ -522,12 +629,21 @@ add_task(async function test_max_post_records_batch() {
 
   const time = 11111111;
   function* responseGenerator() {
-    yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { "x-last-modified": time, "x-weave-timestamp": time + 100 },
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 1234 },
+      headers: { "x-last-modified": time, "x-weave-timestamp": time + 100 },
     };
-    yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { "x-last-modified": time + 200, "x-weave-timestamp": time + 200 },
-   };
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 1234 },
+      headers: {
+        "x-last-modified": time + 200,
+        "x-weave-timestamp": time + 200,
+      },
+    };
   }
 
   let { pq, stats } = makePostQueue(config, time, responseGenerator());
@@ -547,7 +663,8 @@ add_task(async function test_max_post_records_batch() {
       commit: false,
       batch: "true",
       headers: [["x-if-unmodified-since", time]],
-    }, {
+    },
+    {
       nbytes: requestBytesFor([20]),
       numRecords: 1,
       payloadBytes: 20,
@@ -557,14 +674,16 @@ add_task(async function test_max_post_records_batch() {
     },
   ]);
 
-  deepEqual(stats.batches, [{
-    posts: 2,
-    payloadBytes: 60,
-    numRecords: 3,
-    batch: 1234,
-    serverBatch: true,
-    didCommit: true,
-  }]);
+  deepEqual(stats.batches, [
+    {
+      posts: 2,
+      payloadBytes: 60,
+      numRecords: 3,
+      batch: 1234,
+      serverBatch: true,
+      didCommit: true,
+    },
+  ]);
 
   equal(pq.lastModified, time + 200);
 });
@@ -583,17 +702,32 @@ add_task(async function test_max_records_batch() {
   const time0 = 11111111;
   const time1 = 22222222;
   function* responseGenerator() {
-    yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { "x-last-modified": time0, "x-weave-timestamp": time0 + 100 },
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 1234 },
+      headers: { "x-last-modified": time0, "x-weave-timestamp": time0 + 100 },
     };
-    yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { "x-last-modified": time1, "x-weave-timestamp": time1 },
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 1234 },
+      headers: { "x-last-modified": time1, "x-weave-timestamp": time1 },
     };
-    yield { success: true, status: 202, obj: { batch: 5678 },
-            headers: { "x-last-modified": time1, "x-weave-timestamp": time1 + 100 },
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 5678 },
+      headers: { "x-last-modified": time1, "x-weave-timestamp": time1 + 100 },
     };
-    yield { success: true, status: 202, obj: { batch: 5678 },
-            headers: { "x-last-modified": time1 + 200, "x-weave-timestamp": time1 + 200 },
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 5678 },
+      headers: {
+        "x-last-modified": time1 + 200,
+        "x-weave-timestamp": time1 + 200,
+      },
     };
   }
 
@@ -615,28 +749,35 @@ add_task(async function test_max_records_batch() {
   await pq.flush(true);
 
   deepEqual(stats.posts, [
-    { // 3 records
+    {
+      // 3 records
       nbytes: requestBytesFor([20, 20, 20]),
       payloadBytes: 60,
       numRecords: 3,
       commit: false,
       batch: "true",
       headers: [["x-if-unmodified-since", time0]],
-    }, { // 2 records -- end batch1
+    },
+    {
+      // 2 records -- end batch1
       nbytes: requestBytesFor([20, 20]),
       payloadBytes: 40,
       numRecords: 2,
       commit: true,
       batch: 1234,
       headers: [["x-if-unmodified-since", time0]],
-    }, { // 3 records
+    },
+    {
+      // 3 records
       nbytes: requestBytesFor([20, 20, 20]),
       payloadBytes: 60,
       numRecords: 3,
       commit: false,
       batch: "true",
       headers: [["x-if-unmodified-since", time1]],
-    }, { // 1 record -- end batch2
+    },
+    {
+      // 1 record -- end batch2
       nbytes: requestBytesFor([20]),
       payloadBytes: 20,
       numRecords: 1,
@@ -646,21 +787,24 @@ add_task(async function test_max_records_batch() {
     },
   ]);
 
-  deepEqual(stats.batches, [{
-    posts: 2,
-    payloadBytes: 100,
-    numRecords: 5,
-    batch: 1234,
-    serverBatch: true,
-    didCommit: true,
-  }, {
-    posts: 2,
-    payloadBytes: 80,
-    numRecords: 4,
-    batch: 5678,
-    serverBatch: true,
-    didCommit: true,
-  }]);
+  deepEqual(stats.batches, [
+    {
+      posts: 2,
+      payloadBytes: 100,
+      numRecords: 5,
+      batch: 1234,
+      serverBatch: true,
+      didCommit: true,
+    },
+    {
+      posts: 2,
+      payloadBytes: 80,
+      numRecords: 4,
+      batch: 5678,
+      serverBatch: true,
+      didCommit: true,
+    },
+  ]);
 
   equal(pq.lastModified, time1 + 200);
 });
@@ -680,12 +824,21 @@ add_task(async function test_packed_batch() {
 
   const time = 11111111;
   function* responseGenerator() {
-    yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { "x-last-modified": time, "x-weave-timestamp": time + 100 },
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 1234 },
+      headers: { "x-last-modified": time, "x-weave-timestamp": time + 100 },
     };
-    yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { "x-last-modified": time + 200, "x-weave-timestamp": time + 200 },
-   };
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 1234 },
+      headers: {
+        "x-last-modified": time + 200,
+        "x-weave-timestamp": time + 200,
+      },
+    };
   }
 
   let { pq, stats } = makePostQueue(config, time, responseGenerator());
@@ -709,7 +862,8 @@ add_task(async function test_packed_batch() {
       commit: false,
       batch: "true",
       headers: [["x-if-unmodified-since", time]],
-    }, {
+    },
+    {
       nbytes: requestBytesFor([10, 10, 10, 10]),
       numRecords: 4,
       payloadBytes: 40,
@@ -719,14 +873,16 @@ add_task(async function test_packed_batch() {
     },
   ]);
 
-  deepEqual(stats.batches, [{
-    posts: 2,
-    payloadBytes: 80,
-    numRecords: 8,
-    batch: 1234,
-    serverBatch: true,
-    didCommit: true,
-  }]);
+  deepEqual(stats.batches, [
+    {
+      posts: 2,
+      payloadBytes: 80,
+      numRecords: 8,
+      batch: 1234,
+      serverBatch: true,
+      didCommit: true,
+    },
+  ]);
 
   equal(pq.lastModified, time + 200);
 });
@@ -735,8 +891,14 @@ add_task(async function test_packed_batch() {
 async function test_enqueue_failure_case(failureLimit, config) {
   const time = 11111111;
   function* responseGenerator() {
-    yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { "x-last-modified": time + 100, "x-weave-timestamp": time + 100 },
+    yield {
+      success: true,
+      status: 202,
+      obj: { batch: 1234 },
+      headers: {
+        "x-last-modified": time + 100,
+        "x-weave-timestamp": time + 100,
+      },
     };
   }
 
@@ -745,7 +907,6 @@ async function test_enqueue_failure_case(failureLimit, config) {
   let result = await pq.enqueue(makeRecord(failureLimit + 1));
   ok(!result.enqueued);
   notEqual(result.error, undefined);
-
 
   ok((await pq.enqueue(makeRecord(5))).enqueued);
 
@@ -771,14 +932,16 @@ async function test_enqueue_failure_case(failureLimit, config) {
     },
   ]);
 
-  deepEqual(stats.batches, [{
-    posts: 1,
-    payloadBytes: 10,
-    numRecords: 2,
-    batch: 1234,
-    serverBatch: true,
-    didCommit: true,
-  }]);
+  deepEqual(stats.batches, [
+    {
+      posts: 1,
+      payloadBytes: 10,
+      numRecords: 2,
+      batch: 1234,
+      serverBatch: true,
+      didCommit: true,
+    },
+  ]);
 
   equal(pq.lastModified, time + 100);
 }

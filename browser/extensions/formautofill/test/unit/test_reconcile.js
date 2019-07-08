@@ -16,28 +16,30 @@ const ADDRESS_RECONCILE_TESTCASES = [
     description: "Local change",
     parent: {
       // So when we last wrote the record to the server, it had these values.
-      "guid": "2bbd2d8fbc6b",
-      "version": 1,
+      guid: "2bbd2d8fbc6b",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
     },
-    local: [{
-      // The current local record - by comparing against parent we can see that
-      // only the given-name has changed locally.
-      "given-name": "Skip",
-      "family-name": "Hammond",
-    }],
+    local: [
+      {
+        // The current local record - by comparing against parent we can see that
+        // only the given-name has changed locally.
+        "given-name": "Skip",
+        "family-name": "Hammond",
+      },
+    ],
     remote: {
       // This is the incoming record. It has the same values as "parent", so
       // we can deduce the record hasn't actually been changed remotely so we
       // can safely ignore the incoming record and write our local changes.
-      "guid": "2bbd2d8fbc6b",
-      "version": 1,
+      guid: "2bbd2d8fbc6b",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
     },
     reconciled: {
-      "guid": "2bbd2d8fbc6b",
+      guid: "2bbd2d8fbc6b",
       "given-name": "Skip",
       "family-name": "Hammond",
     },
@@ -45,23 +47,25 @@ const ADDRESS_RECONCILE_TESTCASES = [
   {
     description: "Remote change",
     parent: {
-      "guid": "e3680e9f890d",
-      "version": 1,
+      guid: "e3680e9f890d",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
     },
-    local: [{
-      "given-name": "Mark",
-      "family-name": "Hammond",
-    }],
+    local: [
+      {
+        "given-name": "Mark",
+        "family-name": "Hammond",
+      },
+    ],
     remote: {
-      "guid": "e3680e9f890d",
-      "version": 1,
+      guid: "e3680e9f890d",
+      version: 1,
       "given-name": "Skip",
       "family-name": "Hammond",
     },
     reconciled: {
-      "guid": "e3680e9f890d",
+      guid: "e3680e9f890d",
       "given-name": "Skip",
       "family-name": "Hammond",
     },
@@ -69,77 +73,83 @@ const ADDRESS_RECONCILE_TESTCASES = [
   {
     description: "New local field",
     parent: {
-      "guid": "0cba738b1be0",
-      "version": 1,
+      guid: "0cba738b1be0",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
     },
-    local: [{
-      "given-name": "Mark",
-      "family-name": "Hammond",
-      "tel": "123456",
-    }],
+    local: [
+      {
+        "given-name": "Mark",
+        "family-name": "Hammond",
+        tel: "123456",
+      },
+    ],
     remote: {
-      "guid": "0cba738b1be0",
-      "version": 1,
+      guid: "0cba738b1be0",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
     },
     reconciled: {
-      "guid": "0cba738b1be0",
+      guid: "0cba738b1be0",
       "given-name": "Mark",
       "family-name": "Hammond",
-      "tel": "123456",
+      tel: "123456",
     },
   },
   {
     description: "New remote field",
     parent: {
-      "guid": "be3ef97f8285",
-      "version": 1,
+      guid: "be3ef97f8285",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
     },
-    local: [{
-      "given-name": "Mark",
-      "family-name": "Hammond",
-    }],
+    local: [
+      {
+        "given-name": "Mark",
+        "family-name": "Hammond",
+      },
+    ],
     remote: {
-      "guid": "be3ef97f8285",
-      "version": 1,
+      guid: "be3ef97f8285",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "tel": "123456",
+      tel: "123456",
     },
     reconciled: {
-      "guid": "be3ef97f8285",
+      guid: "be3ef97f8285",
       "given-name": "Mark",
       "family-name": "Hammond",
-      "tel": "123456",
+      tel: "123456",
     },
   },
   {
     description: "Deleted field locally",
     parent: {
-      "guid": "9627322248ec",
-      "version": 1,
+      guid: "9627322248ec",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "tel": "123456",
+      tel: "123456",
     },
-    local: [{
-      "given-name": "Mark",
-      "family-name": "Hammond",
-    }],
+    local: [
+      {
+        "given-name": "Mark",
+        "family-name": "Hammond",
+      },
+    ],
     remote: {
-      "guid": "9627322248ec",
-      "version": 1,
+      guid: "9627322248ec",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "tel": "123456",
+      tel: "123456",
     },
     reconciled: {
-      "guid": "9627322248ec",
+      guid: "9627322248ec",
       "given-name": "Mark",
       "family-name": "Hammond",
     },
@@ -147,25 +157,27 @@ const ADDRESS_RECONCILE_TESTCASES = [
   {
     description: "Deleted field remotely",
     parent: {
-      "guid": "7d7509f3eeb2",
-      "version": 1,
+      guid: "7d7509f3eeb2",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "tel": "123456",
+      tel: "123456",
     },
-    local: [{
-      "given-name": "Mark",
-      "family-name": "Hammond",
-      "tel": "123456",
-    }],
+    local: [
+      {
+        "given-name": "Mark",
+        "family-name": "Hammond",
+        tel: "123456",
+      },
+    ],
     remote: {
-      "guid": "7d7509f3eeb2",
-      "version": 1,
+      guid: "7d7509f3eeb2",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
     },
     reconciled: {
-      "guid": "7d7509f3eeb2",
+      guid: "7d7509f3eeb2",
       "given-name": "Mark",
       "family-name": "Hammond",
     },
@@ -174,64 +186,69 @@ const ADDRESS_RECONCILE_TESTCASES = [
     description: "Local and remote changes to unrelated fields",
     parent: {
       // The last time we wrote this to the server, country was NZ.
-      "guid": "e087a06dfc57",
-      "version": 1,
+      guid: "e087a06dfc57",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "country": "NZ",
+      country: "NZ",
     },
-    local: [{
-      // The current local record - so locally we've changed given-name to Skip.
-      "given-name": "Skip",
-      "family-name": "Hammond",
-      "country": "NZ",
-    }],
+    local: [
+      {
+        // The current local record - so locally we've changed given-name to Skip.
+        "given-name": "Skip",
+        "family-name": "Hammond",
+        country: "NZ",
+      },
+    ],
     remote: {
       // Remotely, we've changed the country to AU.
-      "guid": "e087a06dfc57",
-      "version": 1,
+      guid: "e087a06dfc57",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "country": "AU",
+      country: "AU",
     },
     reconciled: {
-      "guid": "e087a06dfc57",
+      guid: "e087a06dfc57",
       "given-name": "Skip",
       "family-name": "Hammond",
-      "country": "AU",
+      country: "AU",
     },
   },
   {
     description: "Multiple local changes",
     parent: {
-      "guid": "340a078c596f",
-      "version": 1,
+      guid: "340a078c596f",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "tel": "123456",
+      tel: "123456",
     },
-    local: [{
-      "given-name": "Skip",
-      "family-name": "Hammond",
-    }, {
-      "given-name": "Skip",
-      "family-name": "Hammond",
-      "organization": "Mozilla",
-    }],
+    local: [
+      {
+        "given-name": "Skip",
+        "family-name": "Hammond",
+      },
+      {
+        "given-name": "Skip",
+        "family-name": "Hammond",
+        organization: "Mozilla",
+      },
+    ],
     remote: {
-      "guid": "340a078c596f",
-      "version": 1,
+      guid: "340a078c596f",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "tel": "123456",
-      "country": "AU",
+      tel: "123456",
+      country: "AU",
     },
     reconciled: {
-      "guid": "340a078c596f",
+      guid: "340a078c596f",
       "given-name": "Skip",
       "family-name": "Hammond",
-      "organization": "Mozilla",
-      "country": "AU",
+      organization: "Mozilla",
+      country: "AU",
     },
   },
   {
@@ -239,23 +256,25 @@ const ADDRESS_RECONCILE_TESTCASES = [
     // same, so we shouldn't fork.
     description: "Same change to local and remote",
     parent: {
-      "guid": "0b3a72a1bea2",
-      "version": 1,
+      guid: "0b3a72a1bea2",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
     },
-    local: [{
-      "given-name": "Skip",
-      "family-name": "Hammond",
-    }],
+    local: [
+      {
+        "given-name": "Skip",
+        "family-name": "Hammond",
+      },
+    ],
     remote: {
-      "guid": "0b3a72a1bea2",
-      "version": 1,
+      guid: "0b3a72a1bea2",
+      version: 1,
       "given-name": "Skip",
       "family-name": "Hammond",
     },
     reconciled: {
-      "guid": "0b3a72a1bea2",
+      guid: "0b3a72a1bea2",
       "given-name": "Skip",
       "family-name": "Hammond",
     },
@@ -264,20 +283,22 @@ const ADDRESS_RECONCILE_TESTCASES = [
     description: "Conflicting changes to single field",
     parent: {
       // This is what we last wrote to the sync server.
-      "guid": "62068784d089",
-      "version": 1,
+      guid: "62068784d089",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
     },
-    local: [{
-      // The current version of the local record - the given-name has changed locally.
-      "given-name": "Skip",
-      "family-name": "Hammond",
-    }],
+    local: [
+      {
+        // The current version of the local record - the given-name has changed locally.
+        "given-name": "Skip",
+        "family-name": "Hammond",
+      },
+    ],
     remote: {
       // An incoming record has a different given-name than any of the above!
-      "guid": "62068784d089",
-      "version": 1,
+      guid: "62068784d089",
+      version: 1,
       "given-name": "Kip",
       "family-name": "Hammond",
     },
@@ -297,94 +318,100 @@ const ADDRESS_RECONCILE_TESTCASES = [
   {
     description: "Conflicting changes to multiple fields",
     parent: {
-      "guid": "244dbb692e94",
-      "version": 1,
+      guid: "244dbb692e94",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "country": "NZ",
+      country: "NZ",
     },
-    local: [{
-      "given-name": "Skip",
-      "family-name": "Hammond",
-      "country": "AU",
-    }],
+    local: [
+      {
+        "given-name": "Skip",
+        "family-name": "Hammond",
+        country: "AU",
+      },
+    ],
     remote: {
-      "guid": "244dbb692e94",
-      "version": 1,
+      guid: "244dbb692e94",
+      version: 1,
       "given-name": "Kip",
       "family-name": "Hammond",
-      "country": "CA",
+      country: "CA",
     },
     forked: {
       "given-name": "Skip",
       "family-name": "Hammond",
-      "country": "AU",
+      country: "AU",
     },
     reconciled: {
-      "guid": "244dbb692e94",
+      guid: "244dbb692e94",
       "given-name": "Kip",
       "family-name": "Hammond",
-      "country": "CA",
+      country: "CA",
     },
   },
   {
     description: "Field deleted locally, changed remotely",
     parent: {
-      "guid": "6fc45e03d19a",
-      "version": 1,
+      guid: "6fc45e03d19a",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "country": "AU",
+      country: "AU",
     },
-    local: [{
-      "given-name": "Mark",
-      "family-name": "Hammond",
-    }],
+    local: [
+      {
+        "given-name": "Mark",
+        "family-name": "Hammond",
+      },
+    ],
     remote: {
-      "guid": "6fc45e03d19a",
-      "version": 1,
+      guid: "6fc45e03d19a",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "country": "NZ",
+      country: "NZ",
     },
     forked: {
       "given-name": "Mark",
       "family-name": "Hammond",
     },
     reconciled: {
-      "guid": "6fc45e03d19a",
+      guid: "6fc45e03d19a",
       "given-name": "Mark",
       "family-name": "Hammond",
-      "country": "NZ",
+      country: "NZ",
     },
   },
   {
     description: "Field changed locally, deleted remotely",
     parent: {
-      "guid": "fff9fa27fa18",
-      "version": 1,
+      guid: "fff9fa27fa18",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "country": "AU",
+      country: "AU",
     },
-    local: [{
-      "given-name": "Mark",
-      "family-name": "Hammond",
-      "country": "NZ",
-    }],
+    local: [
+      {
+        "given-name": "Mark",
+        "family-name": "Hammond",
+        country: "NZ",
+      },
+    ],
     remote: {
-      "guid": "fff9fa27fa18",
-      "version": 1,
+      guid: "fff9fa27fa18",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
     },
     forked: {
       "given-name": "Mark",
       "family-name": "Hammond",
-      "country": "NZ",
+      country: "NZ",
     },
     reconciled: {
-      "guid": "fff9fa27fa18",
+      guid: "fff9fa27fa18",
       "given-name": "Mark",
       "family-name": "Hammond",
     },
@@ -393,73 +420,77 @@ const ADDRESS_RECONCILE_TESTCASES = [
     // Created, last modified should be synced; last used and times used should
     // be local. Remote created time older than local, remote modified time
     // newer than local.
-    description: "Created, last modified time reconciliation without local changes",
+    description:
+      "Created, last modified time reconciliation without local changes",
     parent: {
-      "guid": "5113f329c42f",
-      "version": 1,
+      guid: "5113f329c42f",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "timeCreated": 1234,
-      "timeLastModified": 5678,
-      "timeLastUsed": 5678,
-      "timesUsed": 6,
+      timeCreated: 1234,
+      timeLastModified: 5678,
+      timeLastUsed: 5678,
+      timesUsed: 6,
     },
     local: [],
     remote: {
-      "guid": "5113f329c42f",
-      "version": 1,
+      guid: "5113f329c42f",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "timeCreated": 1200,
-      "timeLastModified": 5700,
-      "timeLastUsed": 5700,
-      "timesUsed": 3,
+      timeCreated: 1200,
+      timeLastModified: 5700,
+      timeLastUsed: 5700,
+      timesUsed: 3,
     },
     reconciled: {
-      "guid": "5113f329c42f",
+      guid: "5113f329c42f",
       "given-name": "Mark",
       "family-name": "Hammond",
-      "timeCreated": 1200,
-      "timeLastModified": 5700,
-      "timeLastUsed": 5678,
-      "timesUsed": 6,
+      timeCreated: 1200,
+      timeLastModified: 5700,
+      timeLastUsed: 5678,
+      timesUsed: 6,
     },
   },
   {
     // Local changes, remote created time newer than local, remote modified time
     // older than local.
-    description: "Created, last modified time reconciliation with local changes",
+    description:
+      "Created, last modified time reconciliation with local changes",
     parent: {
-      "guid": "791e5608b80a",
-      "version": 1,
+      guid: "791e5608b80a",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "timeCreated": 1234,
-      "timeLastModified": 5678,
-      "timeLastUsed": 5678,
-      "timesUsed": 6,
+      timeCreated: 1234,
+      timeLastModified: 5678,
+      timeLastUsed: 5678,
+      timesUsed: 6,
     },
-    local: [{
-      "given-name": "Skip",
-      "family-name": "Hammond",
-    }],
+    local: [
+      {
+        "given-name": "Skip",
+        "family-name": "Hammond",
+      },
+    ],
     remote: {
-      "guid": "791e5608b80a",
-      "version": 1,
+      guid: "791e5608b80a",
+      version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "timeCreated": 1300,
-      "timeLastModified": 5000,
-      "timeLastUsed": 5000,
-      "timesUsed": 3,
+      timeCreated: 1300,
+      timeLastModified: 5000,
+      timeLastUsed: 5000,
+      timesUsed: 3,
     },
     reconciled: {
-      "guid": "791e5608b80a",
+      guid: "791e5608b80a",
       "given-name": "Skip",
       "family-name": "Hammond",
-      "timeCreated": 1234,
-      "timeLastUsed": 5678,
-      "timesUsed": 6,
+      timeCreated: 1234,
+      timeLastUsed: 5678,
+      timesUsed: 6,
     },
   },
 ];
@@ -469,28 +500,30 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     description: "Local change",
     parent: {
       // So when we last wrote the record to the server, it had these values.
-      "guid": "2bbd2d8fbc6b",
-      "version": 2,
+      guid: "2bbd2d8fbc6b",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
-    local: [{
-      // The current local record - by comparing against parent we can see that
-      // only the cc-number has changed locally.
-      "cc-name": "John Doe",
-      "cc-number": "4929001587121045",
-    }],
+    local: [
+      {
+        // The current local record - by comparing against parent we can see that
+        // only the cc-number has changed locally.
+        "cc-name": "John Doe",
+        "cc-number": "4929001587121045",
+      },
+    ],
     remote: {
       // This is the incoming record. It has the same values as "parent", so
       // we can deduce the record hasn't actually been changed remotely so we
       // can safely ignore the incoming record and write our local changes.
-      "guid": "2bbd2d8fbc6b",
-      "version": 2,
+      guid: "2bbd2d8fbc6b",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
     reconciled: {
-      "guid": "2bbd2d8fbc6b",
+      guid: "2bbd2d8fbc6b",
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
     },
@@ -498,23 +531,25 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
   {
     description: "Remote change",
     parent: {
-      "guid": "e3680e9f890d",
-      "version": 2,
+      guid: "e3680e9f890d",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
-    local: [{
-      "cc-name": "John Doe",
-      "cc-number": "4111111111111111",
-    }],
+    local: [
+      {
+        "cc-name": "John Doe",
+        "cc-number": "4111111111111111",
+      },
+    ],
     remote: {
-      "guid": "e3680e9f890d",
-      "version": 2,
+      guid: "e3680e9f890d",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
     },
     reconciled: {
-      "guid": "e3680e9f890d",
+      guid: "e3680e9f890d",
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
     },
@@ -523,24 +558,26 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
   {
     description: "New local field",
     parent: {
-      "guid": "0cba738b1be0",
-      "version": 2,
+      guid: "0cba738b1be0",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
-    local: [{
-      "cc-name": "John Doe",
-      "cc-number": "4111111111111111",
-      "cc-exp-month": 12,
-    }],
+    local: [
+      {
+        "cc-name": "John Doe",
+        "cc-number": "4111111111111111",
+        "cc-exp-month": 12,
+      },
+    ],
     remote: {
-      "guid": "0cba738b1be0",
-      "version": 2,
+      guid: "0cba738b1be0",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
     reconciled: {
-      "guid": "0cba738b1be0",
+      guid: "0cba738b1be0",
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
@@ -549,24 +586,26 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
   {
     description: "New remote field",
     parent: {
-      "guid": "be3ef97f8285",
-      "version": 2,
+      guid: "be3ef97f8285",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
-    local: [{
-      "cc-name": "John Doe",
-      "cc-number": "4111111111111111",
-    }],
+    local: [
+      {
+        "cc-name": "John Doe",
+        "cc-number": "4111111111111111",
+      },
+    ],
     remote: {
-      "guid": "be3ef97f8285",
-      "version": 2,
+      guid: "be3ef97f8285",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
     },
     reconciled: {
-      "guid": "be3ef97f8285",
+      guid: "be3ef97f8285",
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
@@ -575,25 +614,27 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
   {
     description: "Deleted field locally",
     parent: {
-      "guid": "9627322248ec",
-      "version": 2,
+      guid: "9627322248ec",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
     },
-    local: [{
-      "cc-name": "John Doe",
-      "cc-number": "4111111111111111",
-    }],
+    local: [
+      {
+        "cc-name": "John Doe",
+        "cc-number": "4111111111111111",
+      },
+    ],
     remote: {
-      "guid": "9627322248ec",
-      "version": 2,
+      guid: "9627322248ec",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
     },
     reconciled: {
-      "guid": "9627322248ec",
+      guid: "9627322248ec",
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
@@ -601,25 +642,27 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
   {
     description: "Deleted field remotely",
     parent: {
-      "guid": "7d7509f3eeb2",
-      "version": 2,
+      guid: "7d7509f3eeb2",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
     },
-    local: [{
-      "cc-name": "John Doe",
-      "cc-number": "4111111111111111",
-      "cc-exp-month": 12,
-    }],
+    local: [
+      {
+        "cc-name": "John Doe",
+        "cc-number": "4111111111111111",
+        "cc-exp-month": 12,
+      },
+    ],
     remote: {
-      "guid": "7d7509f3eeb2",
-      "version": 2,
+      guid: "7d7509f3eeb2",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
     reconciled: {
-      "guid": "7d7509f3eeb2",
+      guid: "7d7509f3eeb2",
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
@@ -628,28 +671,30 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     description: "Local and remote changes to unrelated fields",
     parent: {
       // The last time we wrote this to the server, "cc-exp-month" was 12.
-      "guid": "e087a06dfc57",
-      "version": 2,
+      guid: "e087a06dfc57",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
     },
-    local: [{
-      // The current local record - so locally we've changed "cc-number".
-      "cc-name": "John Doe",
-      "cc-number": "4929001587121045",
-      "cc-exp-month": 12,
-    }],
+    local: [
+      {
+        // The current local record - so locally we've changed "cc-number".
+        "cc-name": "John Doe",
+        "cc-number": "4929001587121045",
+        "cc-exp-month": 12,
+      },
+    ],
     remote: {
       // Remotely, we've changed "cc-exp-month" to 1.
-      "guid": "e087a06dfc57",
-      "version": 2,
+      guid: "e087a06dfc57",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 1,
     },
     reconciled: {
-      "guid": "e087a06dfc57",
+      guid: "e087a06dfc57",
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
       "cc-exp-month": 1,
@@ -658,28 +703,31 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
   {
     description: "Multiple local changes",
     parent: {
-      "guid": "340a078c596f",
-      "version": 2,
+      guid: "340a078c596f",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
-    local: [{
-      "cc-name": "Skip",
-      "cc-number": "4111111111111111",
-    }, {
-      "cc-name": "Skip",
-      "cc-number": "4111111111111111",
-      "cc-exp-month": 12,
-    }],
+    local: [
+      {
+        "cc-name": "Skip",
+        "cc-number": "4111111111111111",
+      },
+      {
+        "cc-name": "Skip",
+        "cc-number": "4111111111111111",
+        "cc-exp-month": 12,
+      },
+    ],
     remote: {
-      "guid": "340a078c596f",
-      "version": 2,
+      guid: "340a078c596f",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-year": 2000,
     },
     reconciled: {
-      "guid": "340a078c596f",
+      guid: "340a078c596f",
       "cc-name": "Skip",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
@@ -691,23 +739,25 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     // same, so we shouldn't fork.
     description: "Same change to local and remote",
     parent: {
-      "guid": "0b3a72a1bea2",
-      "version": 2,
+      guid: "0b3a72a1bea2",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
-    local: [{
-      "cc-name": "John Doe",
-      "cc-number": "4929001587121045",
-    }],
+    local: [
+      {
+        "cc-name": "John Doe",
+        "cc-number": "4929001587121045",
+      },
+    ],
     remote: {
-      "guid": "0b3a72a1bea2",
-      "version": 2,
+      guid: "0b3a72a1bea2",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
     },
     reconciled: {
-      "guid": "0b3a72a1bea2",
+      guid: "0b3a72a1bea2",
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
     },
@@ -716,20 +766,22 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     description: "Conflicting changes to single field",
     parent: {
       // This is what we last wrote to the sync server.
-      "guid": "62068784d089",
-      "version": 2,
+      guid: "62068784d089",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
-    local: [{
-      // The current version of the local record - the cc-number has changed locally.
-      "cc-name": "John Doe",
-      "cc-number": "5103059495477870",
-    }],
+    local: [
+      {
+        // The current version of the local record - the cc-number has changed locally.
+        "cc-name": "John Doe",
+        "cc-number": "5103059495477870",
+      },
+    ],
     remote: {
       // An incoming record has a different cc-number than any of the above!
-      "guid": "62068784d089",
-      "version": 2,
+      guid: "62068784d089",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
     },
@@ -749,20 +801,22 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
   {
     description: "Conflicting changes to multiple fields",
     parent: {
-      "guid": "244dbb692e94",
-      "version": 2,
+      guid: "244dbb692e94",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
     },
-    local: [{
-      "cc-name": "John Doe",
-      "cc-number": "5103059495477870",
-      "cc-exp-month": 1,
-    }],
+    local: [
+      {
+        "cc-name": "John Doe",
+        "cc-number": "5103059495477870",
+        "cc-exp-month": 1,
+      },
+    ],
     remote: {
-      "guid": "244dbb692e94",
-      "version": 2,
+      guid: "244dbb692e94",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
       "cc-exp-month": 3,
@@ -773,7 +827,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       "cc-exp-month": 1,
     },
     reconciled: {
-      "guid": "244dbb692e94",
+      guid: "244dbb692e94",
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
       "cc-exp-month": 3,
@@ -782,19 +836,21 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
   {
     description: "Field deleted locally, changed remotely",
     parent: {
-      "guid": "6fc45e03d19a",
-      "version": 2,
+      guid: "6fc45e03d19a",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
     },
-    local: [{
-      "cc-name": "John Doe",
-      "cc-number": "4111111111111111",
-    }],
+    local: [
+      {
+        "cc-name": "John Doe",
+        "cc-number": "4111111111111111",
+      },
+    ],
     remote: {
-      "guid": "6fc45e03d19a",
-      "version": 2,
+      guid: "6fc45e03d19a",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 3,
@@ -804,7 +860,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       "cc-number": "4111111111111111",
     },
     reconciled: {
-      "guid": "6fc45e03d19a",
+      guid: "6fc45e03d19a",
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 3,
@@ -813,20 +869,22 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
   {
     description: "Field changed locally, deleted remotely",
     parent: {
-      "guid": "fff9fa27fa18",
-      "version": 2,
+      guid: "fff9fa27fa18",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
     },
-    local: [{
-      "cc-name": "John Doe",
-      "cc-number": "4111111111111111",
-      "cc-exp-month": 3,
-    }],
+    local: [
+      {
+        "cc-name": "John Doe",
+        "cc-number": "4111111111111111",
+        "cc-exp-month": 3,
+      },
+    ],
     remote: {
-      "guid": "fff9fa27fa18",
-      "version": 2,
+      guid: "fff9fa27fa18",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
@@ -836,7 +894,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       "cc-exp-month": 3,
     },
     reconciled: {
-      "guid": "fff9fa27fa18",
+      guid: "fff9fa27fa18",
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
@@ -845,73 +903,77 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     // Created, last modified should be synced; last used and times used should
     // be local. Remote created time older than local, remote modified time
     // newer than local.
-    description: "Created, last modified time reconciliation without local changes",
+    description:
+      "Created, last modified time reconciliation without local changes",
     parent: {
-      "guid": "5113f329c42f",
-      "version": 2,
+      guid: "5113f329c42f",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
-      "timeCreated": 1234,
-      "timeLastModified": 5678,
-      "timeLastUsed": 5678,
-      "timesUsed": 6,
+      timeCreated: 1234,
+      timeLastModified: 5678,
+      timeLastUsed: 5678,
+      timesUsed: 6,
     },
     local: [],
     remote: {
-      "guid": "5113f329c42f",
-      "version": 2,
+      guid: "5113f329c42f",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
-      "timeCreated": 1200,
-      "timeLastModified": 5700,
-      "timeLastUsed": 5700,
-      "timesUsed": 3,
+      timeCreated: 1200,
+      timeLastModified: 5700,
+      timeLastUsed: 5700,
+      timesUsed: 3,
     },
     reconciled: {
-      "guid": "5113f329c42f",
+      guid: "5113f329c42f",
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
-      "timeCreated": 1200,
-      "timeLastModified": 5700,
-      "timeLastUsed": 5678,
-      "timesUsed": 6,
+      timeCreated: 1200,
+      timeLastModified: 5700,
+      timeLastUsed: 5678,
+      timesUsed: 6,
     },
   },
   {
     // Local changes, remote created time newer than local, remote modified time
     // older than local.
-    description: "Created, last modified time reconciliation with local changes",
+    description:
+      "Created, last modified time reconciliation with local changes",
     parent: {
-      "guid": "791e5608b80a",
-      "version": 2,
+      guid: "791e5608b80a",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
-      "timeCreated": 1234,
-      "timeLastModified": 5678,
-      "timeLastUsed": 5678,
-      "timesUsed": 6,
+      timeCreated: 1234,
+      timeLastModified: 5678,
+      timeLastUsed: 5678,
+      timesUsed: 6,
     },
-    local: [{
-      "cc-name": "John Doe",
-      "cc-number": "4929001587121045",
-    }],
+    local: [
+      {
+        "cc-name": "John Doe",
+        "cc-number": "4929001587121045",
+      },
+    ],
     remote: {
-      "guid": "791e5608b80a",
-      "version": 2,
+      guid: "791e5608b80a",
+      version: 2,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
-      "timeCreated": 1300,
-      "timeLastModified": 5000,
-      "timeLastUsed": 5000,
-      "timesUsed": 3,
+      timeCreated: 1300,
+      timeLastModified: 5000,
+      timeLastUsed: 5000,
+      timesUsed: 3,
     },
     reconciled: {
-      "guid": "791e5608b80a",
+      guid: "791e5608b80a",
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
-      "timeCreated": 1234,
-      "timeLastUsed": 5678,
-      "timesUsed": 6,
+      timeCreated: 1234,
+      timeLastUsed: 5678,
+      timesUsed: 6,
     },
   },
 ];
@@ -920,68 +982,80 @@ add_task(async function test_reconcile_unknown_version() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME);
 
   // Cross-version reconciliation isn't supported yet. See bug 1377204.
-  await Assert.rejects(profileStorage.addresses.reconcile({
-    "guid": "31d83d2725ec",
-    "version": 3,
-    "given-name": "Mark",
-    "family-name": "Hammond",
-  }), /Got unknown record version/);
+  await Assert.rejects(
+    profileStorage.addresses.reconcile({
+      guid: "31d83d2725ec",
+      version: 3,
+      "given-name": "Mark",
+      "family-name": "Hammond",
+    }),
+    /Got unknown record version/
+  );
 });
 
 add_task(async function test_reconcile_idempotent() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME);
 
   let guid = "de1ba7b094fe";
-  await profileStorage.addresses.add({
-    guid,
-    version: 1,
-    "given-name": "Mark",
-    "family-name": "Hammond",
-  }, {sourceSync: true});
+  await profileStorage.addresses.add(
+    {
+      guid,
+      version: 1,
+      "given-name": "Mark",
+      "family-name": "Hammond",
+    },
+    { sourceSync: true }
+  );
   await profileStorage.addresses.update(guid, {
     "given-name": "Skip",
     "family-name": "Hammond",
-    "organization": "Mozilla",
+    organization: "Mozilla",
   });
 
   let remote = {
     guid,
-    "version": 1,
+    version: 1,
     "given-name": "Mark",
     "family-name": "Hammond",
-    "tel": "123456",
+    tel: "123456",
   };
 
   {
-    let {forkedGUID} = await profileStorage.addresses.reconcile(remote);
+    let { forkedGUID } = await profileStorage.addresses.reconcile(remote);
     let updatedRecord = await profileStorage.addresses.get(guid, {
       rawData: true,
     });
 
     ok(!forkedGUID, "First merge should not fork record");
-    ok(objectMatches(updatedRecord, {
-      "guid": "de1ba7b094fe",
-      "given-name": "Skip",
-      "family-name": "Hammond",
-      "organization": "Mozilla",
-      "tel": "123456",
-    }), "First merge should merge local and remote changes");
+    ok(
+      objectMatches(updatedRecord, {
+        guid: "de1ba7b094fe",
+        "given-name": "Skip",
+        "family-name": "Hammond",
+        organization: "Mozilla",
+        tel: "123456",
+      }),
+      "First merge should merge local and remote changes"
+    );
   }
 
   {
-    let {forkedGUID} = await profileStorage.addresses.reconcile(remote);
+    let { forkedGUID } = await profileStorage.addresses.reconcile(remote);
     let updatedRecord = await profileStorage.addresses.get(guid, {
       rawData: true,
     });
 
     ok(!forkedGUID, "Second merge should not fork record");
-    ok(objectMatches(updatedRecord, {
-      "guid": "de1ba7b094fe",
-      "given-name": "Skip",
-      "family-name": "Hammond",
-      "organization": "Mozilla",
-      "tel": "123456",
-    }), "Second merge should not change record");
+    ok(
+      objectMatches(updatedRecord, {
+        guid: "de1ba7b094fe",
+        "given-name": "Skip",
+        "family-name": "Hammond",
+        organization: "Mozilla",
+        tel: "123456",
+      }),
+      "Second merge should not change record"
+    );
   }
 });
 
@@ -994,20 +1068,32 @@ add_task(async function test_reconcile_three_way_merge() {
   for (let collectionName in TESTCASES) {
     info(`Start to test reconcile on ${collectionName}`);
 
-    let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, null, collectionName);
+    let profileStorage = await initProfileStorage(
+      TEST_STORE_FILE_NAME,
+      null,
+      collectionName
+    );
 
     for (let test of TESTCASES[collectionName]) {
       info(test.description);
 
-      await profileStorage[collectionName].add(test.parent, {sourceSync: true});
+      await profileStorage[collectionName].add(test.parent, {
+        sourceSync: true,
+      });
 
       for (let updatedRecord of test.local) {
-        await profileStorage[collectionName].update(test.parent.guid, updatedRecord);
+        await profileStorage[collectionName].update(
+          test.parent.guid,
+          updatedRecord
+        );
       }
 
-      let localRecord = await profileStorage[collectionName].get(test.parent.guid, {
-        rawData: true,
-      });
+      let localRecord = await profileStorage[collectionName].get(
+        test.parent.guid,
+        {
+          rawData: true,
+        }
+      );
 
       let onReconciled = TestUtils.topicObserved(
         "formautofill-storage-changed",
@@ -1015,20 +1101,30 @@ add_task(async function test_reconcile_three_way_merge() {
           data == "reconcile" &&
           subject.wrappedJSObject.collectionName == collectionName
       );
-      let {forkedGUID} = await profileStorage[collectionName].reconcile(test.remote);
+      let { forkedGUID } = await profileStorage[collectionName].reconcile(
+        test.remote
+      );
       await onReconciled;
-      let reconciledRecord = await profileStorage[collectionName].get(test.parent.guid, {
-        rawData: true,
-      });
-      if (forkedGUID) {
-        let forkedRecord = await profileStorage[collectionName].get(forkedGUID, {
+      let reconciledRecord = await profileStorage[collectionName].get(
+        test.parent.guid,
+        {
           rawData: true,
-        });
+        }
+      );
+      if (forkedGUID) {
+        let forkedRecord = await profileStorage[collectionName].get(
+          forkedGUID,
+          {
+            rawData: true,
+          }
+        );
 
         notEqual(forkedRecord.guid, reconciledRecord.guid);
         equal(forkedRecord.timeLastModified, localRecord.timeLastModified);
-        ok(objectMatches(forkedRecord, test.forked),
-          `${test.description} should fork record`);
+        ok(
+          objectMatches(forkedRecord, test.forked),
+          `${test.description} should fork record`
+        );
       } else {
         ok(!test.forked, `${test.description} should not fork record`);
       }

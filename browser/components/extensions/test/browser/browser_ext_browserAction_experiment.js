@@ -21,26 +21,26 @@ let fooExperimentAPIs = {
 let fooExperimentFiles = {
   "schema.json": JSON.stringify([
     {
-      "namespace": "experiments.foo",
-      "types": [
+      namespace: "experiments.foo",
+      types: [
         {
-          "id": "Meh",
-          "type": "object",
-          "properties": {},
+          id: "Meh",
+          type: "object",
+          properties: {},
         },
       ],
-      "functions": [
+      functions: [
         {
-          "name": "parent",
-          "type": "function",
-          "async": true,
-          "parameters": [],
+          name: "parent",
+          type: "function",
+          async: true,
+          parameters: [],
         },
         {
-          "name": "child",
-          "type": "function",
-          "parameters": [],
-          "returns": {"type": "string"},
+          name: "child",
+          type: "function",
+          parameters: [],
+          returns: { type: "string" },
         },
       ],
     },
@@ -81,28 +81,48 @@ let fooExperimentFiles = {
 };
 
 async function testFooExperiment() {
-  browser.test.assertEq("object", typeof browser.experiments,
-                        "typeof browser.experiments");
+  browser.test.assertEq(
+    "object",
+    typeof browser.experiments,
+    "typeof browser.experiments"
+  );
 
-  browser.test.assertEq("object", typeof browser.experiments.foo,
-                        "typeof browser.experiments.foo");
+  browser.test.assertEq(
+    "object",
+    typeof browser.experiments.foo,
+    "typeof browser.experiments.foo"
+  );
 
-  browser.test.assertEq("function", typeof browser.experiments.foo.child,
-                        "typeof browser.experiments.foo.child");
+  browser.test.assertEq(
+    "function",
+    typeof browser.experiments.foo.child,
+    "typeof browser.experiments.foo.child"
+  );
 
-  browser.test.assertEq("function", typeof browser.experiments.foo.parent,
-                        "typeof browser.experiments.foo.parent");
+  browser.test.assertEq(
+    "function",
+    typeof browser.experiments.foo.parent,
+    "typeof browser.experiments.foo.parent"
+  );
 
-  browser.test.assertEq("child", browser.experiments.foo.child(),
-                        "foo.child()");
+  browser.test.assertEq(
+    "child",
+    browser.experiments.foo.child(),
+    "foo.child()"
+  );
 
-  browser.test.assertEq("parent", await browser.experiments.foo.parent(),
-                        "await foo.parent()");
+  browser.test.assertEq(
+    "parent",
+    await browser.experiments.foo.parent(),
+    "await foo.parent()"
+  );
 }
 
 add_task(async function test_browseraction_with_experiment() {
   async function background() {
-    await new Promise(resolve => browser.browserAction.onClicked.addListener(resolve));
+    await new Promise(resolve =>
+      browser.browserAction.onClicked.addListener(resolve)
+    );
     browser.test.log("Got browserAction.onClicked");
 
     await testFooExperiment();

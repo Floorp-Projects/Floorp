@@ -6,13 +6,13 @@
 
 var EXPORTED_SYMBOLS = ["AboutProtectionsHandler"];
 
-const {RemotePages} = ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm");
+const { RemotePages } = ChromeUtils.import(
+  "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
+);
 
 var AboutProtectionsHandler = {
   _inited: false,
-  _topics: [
-    "openContentBlockingPreferences",
-  ],
+  _topics: ["openContentBlockingPreferences"],
 
   init() {
     this.pageListener = new RemotePages("about:protections");
@@ -36,7 +36,9 @@ var AboutProtectionsHandler = {
     let win = aMessage.target.browser.ownerGlobal;
     switch (aMessage.name) {
       case "openContentBlockingPreferences":
-        win.openPreferences("privacy-trackingprotection", {origin: "about-protections"});
+        win.openPreferences("privacy-trackingprotection", {
+          origin: "about-protections",
+        });
         break;
     }
   },

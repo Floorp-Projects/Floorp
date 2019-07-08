@@ -8,7 +8,6 @@
  * startSearch call.
  */
 
-
 /**
  * Dummy nsIAutoCompleteInput source that returns
  * the given list of AutoCompleteSearch names.
@@ -26,10 +25,18 @@ AutoCompleteInput.prototype = {
   textValue: "hello",
   disableAutoComplete: false,
   completeDefaultIndex: false,
-  set popupOpen(val) { return val; }, // ignore
-  get popupOpen() { return false; },
-  get searchCount() { return this.searches.length; },
-  getSearchAt(aIndex) { return this.searches[aIndex]; },
+  set popupOpen(val) {
+    return val;
+  }, // ignore
+  get popupOpen() {
+    return false;
+  },
+  get searchCount() {
+    return this.searches.length;
+  },
+  getSearchAt(aIndex) {
+    return this.searches[aIndex];
+  },
   onSearchBegin() {},
   onSearchComplete() {},
   onTextReverted() {},
@@ -37,13 +44,16 @@ AutoCompleteInput.prototype = {
   popup: {
     selectBy() {},
     invalidate() {},
-    set selectedIndex(val) { return val; }, // ignore
-    get selectedIndex() { return -1; },
+    set selectedIndex(val) {
+      return val;
+    }, // ignore
+    get selectedIndex() {
+      return -1;
+    },
     QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompletePopup]),
   },
   QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteInput]),
 };
-
 
 /**
  * nsIAutoCompleteSearch implementation.
@@ -71,34 +81,34 @@ AutoCompleteSearch.prototype = {
   },
 };
 
-
 /**
  * Helper to register an AutoCompleteSearch with the given name.
  * Allows the AutoCompleteController to find the search.
  */
 function registerAutoCompleteSearch(aSearch) {
   let name = "@mozilla.org/autocomplete/search;1?name=" + aSearch.name;
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].
-                      getService(Ci.nsIUUIDGenerator);
+  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+    Ci.nsIUUIDGenerator
+  );
   let cid = uuidGenerator.generateUUID();
   let desc = "Test AutoCompleteSearch";
-  let componentManager = Components.manager
-                                   .QueryInterface(Ci.nsIComponentRegistrar);
+  let componentManager = Components.manager.QueryInterface(
+    Ci.nsIComponentRegistrar
+  );
   componentManager.registerFactory(cid, desc, name, aSearch);
   // Keep the id on the object so we can unregister later
   aSearch.cid = cid;
 }
 
-
 /**
  * Helper to unregister an AutoCompleteSearch.
  */
 function unregisterAutoCompleteSearch(aSearch) {
-  let componentManager = Components.manager
-                                   .QueryInterface(Ci.nsIComponentRegistrar);
+  let componentManager = Components.manager.QueryInterface(
+    Ci.nsIComponentRegistrar
+  );
   componentManager.unregisterFactory(aSearch.cid, aSearch);
 }
-
 
 var gTests = [
   function(controller) {
@@ -135,14 +145,14 @@ var gTests = [
   },
 ];
 
-
 add_task(async function() {
   // Make an AutoCompleteSearch that always returns nothing
   let search = new AutoCompleteSearch("test");
   registerAutoCompleteSearch(search);
 
-  let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);
+  let controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
+    Ci.nsIAutoCompleteController
+  );
 
   // Make an AutoCompleteInput that uses our search.
   let input = new AutoCompleteInput([search.name]);

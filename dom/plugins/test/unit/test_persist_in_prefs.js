@@ -14,22 +14,28 @@ function run_test() {
   Assert.ok(gIsWindows || gIsOSX || gIsLinux);
 
   let file = get_test_plugin_no_symlink();
-  if (!file)
+  if (!file) {
     do_throw("Plugin library not found");
+  }
 
   const pluginDir = file.parent;
   const tempDir = do_get_tempdir();
   const suffix = get_platform_specific_plugin_suffix();
-  const pluginName = file.leafName.substring(0, file.leafName.length - suffix.length).toLowerCase();
-  const pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+  const pluginName = file.leafName
+    .substring(0, file.leafName.length - suffix.length)
+    .toLowerCase();
+  const pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(
+    Ci.nsIPluginHost
+  );
   const statePref = "plugin.state." + pluginName;
 
   // Initialise profile folder
   do_get_profile();
 
   let plugin = get_test_plugintag();
-  if (!plugin)
+  if (!plugin) {
     do_throw("Plugin tag not found");
+  }
 
   plugin.enabledState = Ci.nsIPluginTag.STATE_DISABLED;
 

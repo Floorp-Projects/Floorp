@@ -14,7 +14,7 @@ var PaymentTestUtils = {
      * Add a completion handler to the existing `showPromise` to call .complete().
      * @returns {Object} representing the PaymentResponse
      */
-    addCompletionHandler: async ({result, delayMs = 0}) => {
+    addCompletionHandler: async ({ result, delayMs = 0 }) => {
       let response = await content.showPromise;
       let completeException;
 
@@ -42,7 +42,7 @@ var PaymentTestUtils = {
      * Add a retry handler to the existing `showPromise` to call .retry().
      * @returns {Object} representing the PaymentResponse
      */
-    addRetryHandler: async ({validationErrors, delayMs = 0}) => {
+    addRetryHandler: async ({ validationErrors, delayMs = 0 }) => {
       let response = await content.showPromise;
       let retryException;
 
@@ -66,58 +66,64 @@ var PaymentTestUtils = {
       };
     },
 
-    ensureNoPaymentRequestEvent: ({eventName}) => {
-      content.rq.addEventListener(eventName, (event) => {
+    ensureNoPaymentRequestEvent: ({ eventName }) => {
+      content.rq.addEventListener(eventName, event => {
         ok(false, `Unexpected ${eventName}`);
       });
     },
 
-    promisePaymentRequestEvent: ({eventName}) => {
-      content[eventName + "Promise"] =
-        new Promise(resolve => {
-          content.rq.addEventListener(eventName, () => {
-            info(`Received event: ${eventName}`);
-            resolve();
-          });
+    promisePaymentRequestEvent: ({ eventName }) => {
+      content[eventName + "Promise"] = new Promise(resolve => {
+        content.rq.addEventListener(eventName, () => {
+          info(`Received event: ${eventName}`);
+          resolve();
         });
+      });
     },
 
     /**
      * Used for PaymentRequest and PaymentResponse event promises.
      */
-    awaitPaymentEventPromise: async ({eventName}) => {
+    awaitPaymentEventPromise: async ({ eventName }) => {
       await content[eventName + "Promise"];
       return true;
     },
 
-    promisePaymentResponseEvent: async ({eventName}) => {
+    promisePaymentResponseEvent: async ({ eventName }) => {
       let response = await content.showPromise;
-      content[eventName + "Promise"] =
-        new Promise(resolve => {
-          response.addEventListener(eventName, () => {
-            info(`Received event: ${eventName}`);
-            resolve();
-          });
+      content[eventName + "Promise"] = new Promise(resolve => {
+        response.addEventListener(eventName, () => {
+          info(`Received event: ${eventName}`);
+          resolve();
         });
+      });
     },
 
-    updateWith: async ({eventName, details}) => {
+    updateWith: async ({ eventName, details }) => {
       /* globals ok */
-      if (details.error &&
-          (!details.shippingOptions || details.shippingOptions.length)) {
+      if (
+        details.error &&
+        (!details.shippingOptions || details.shippingOptions.length)
+      ) {
         ok(false, "Need to clear the shipping options to show error text");
       }
       if (!details.total) {
-        ok(false, "`total: { label, amount: { value, currency } }` is required for updateWith");
+        ok(
+          false,
+          "`total: { label, amount: { value, currency } }` is required for updateWith"
+        );
       }
 
-      content[eventName + "Promise"] =
-        new Promise(resolve => {
-          content.rq.addEventListener(eventName, event => {
+      content[eventName + "Promise"] = new Promise(resolve => {
+        content.rq.addEventListener(
+          eventName,
+          event => {
             event.updateWith(details);
             resolve();
-          }, {once: true});
-        });
+          },
+          { once: true }
+        );
+      });
     },
 
     /**
@@ -129,8 +135,12 @@ var PaymentTestUtils = {
      * @param {PaymentOptions} options
      * @returns {Object}
      */
-    createAndShowRequest: ({methodData, details, options}) => {
-      const rq = new content.PaymentRequest(Cu.cloneInto(methodData, content), details, options);
+    createAndShowRequest: ({ methodData, details, options }) => {
+      const rq = new content.PaymentRequest(
+        Cu.cloneInto(methodData, content),
+        details,
+        options
+      );
       content.rq = rq; // assign it so we can retrieve it later
 
       const handle = content.windowUtils.setHandlingUserInput(true);
@@ -168,8 +178,9 @@ var PaymentTestUtils = {
 
     getShippingAddresses: () => {
       let doc = content.document;
-      let addressPicker =
-        doc.querySelector("address-picker[selected-state-key='selectedShippingAddress']");
+      let addressPicker = doc.querySelector(
+        "address-picker[selected-state-key='selectedShippingAddress']"
+      );
       let popupBox = Cu.waiveXrays(addressPicker).dropdown.popupBox;
       let options = Array.from(popupBox.children).map(option => {
         return {
@@ -185,10 +196,11 @@ var PaymentTestUtils = {
       };
     },
 
-    selectShippingAddressByCountry: (country) => {
+    selectShippingAddressByCountry: country => {
       let doc = content.document;
-      let addressPicker =
-        doc.querySelector("address-picker[selected-state-key='selectedShippingAddress']");
+      let addressPicker = doc.querySelector(
+        "address-picker[selected-state-key='selectedShippingAddress']"
+      );
       let select = Cu.waiveXrays(addressPicker).dropdown.popupBox;
       let option = select.querySelector(`[country="${country}"]`);
       content.fillField(select, option.value);
@@ -196,24 +208,25 @@ var PaymentTestUtils = {
 
     selectPayerAddressByGuid: guid => {
       let doc = content.document;
-      let addressPicker =
-        doc.querySelector("address-picker[selected-state-key='selectedPayerAddress']");
+      let addressPicker = doc.querySelector(
+        "address-picker[selected-state-key='selectedPayerAddress']"
+      );
       let select = Cu.waiveXrays(addressPicker).dropdown.popupBox;
       content.fillField(select, guid);
     },
 
     selectShippingAddressByGuid: guid => {
       let doc = content.document;
-      let addressPicker =
-        doc.querySelector("address-picker[selected-state-key='selectedShippingAddress']");
+      let addressPicker = doc.querySelector(
+        "address-picker[selected-state-key='selectedShippingAddress']"
+      );
       let select = Cu.waiveXrays(addressPicker).dropdown.popupBox;
       content.fillField(select, guid);
     },
 
     selectShippingOptionById: value => {
       let doc = content.document;
-      let optionPicker =
-        doc.querySelector("shipping-option-picker");
+      let optionPicker = doc.querySelector("shipping-option-picker");
       let select = Cu.waiveXrays(optionPicker).dropdown.popupBox;
       content.fillField(select, value);
     },
@@ -233,10 +246,15 @@ var PaymentTestUtils = {
      * @returns {undefined}
      */
     clickPrimaryButton: () => {
-      let {requestStore} = Cu.waiveXrays(content.document.querySelector("payment-dialog"));
-      let {page} = requestStore.getState();
+      let { requestStore } = Cu.waiveXrays(
+        content.document.querySelector("payment-dialog")
+      );
+      let { page } = requestStore.getState();
       let button = content.document.querySelector(`#${page.id} button.primary`);
-      ok(!button.disabled, `#${page.id} primary button should not be disabled when clicking it`);
+      ok(
+        !button.disabled,
+        `#${page.id} primary button should not be disabled when clicking it`
+      );
       button.click();
     },
 
@@ -261,40 +279,58 @@ var PaymentTestUtils = {
      * @returns {undefined}
      */
     completePayment: async () => {
-      let {
-        PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
+      let { PaymentTestUtils: PTU } = ChromeUtils.import(
+        "resource://testing-common/PaymentTestUtils.jsm"
+      );
 
-      await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "payment-summary";
-      }, "Wait for change to payment-summary before clicking Pay");
+      await PTU.DialogContentUtils.waitForState(
+        content,
+        state => {
+          return state.page.id == "payment-summary";
+        },
+        "Wait for change to payment-summary before clicking Pay"
+      );
 
       let button = content.document.getElementById("pay");
-      ok(!button.disabled, "Pay button should not be disabled when clicking it");
+      ok(
+        !button.disabled,
+        "Pay button should not be disabled when clicking it"
+      );
       button.click();
     },
 
-    setSecurityCode: ({securityCode}) => {
+    setSecurityCode: ({ securityCode }) => {
       // Waive the xray to access the untrusted `securityCodeInput` property
-      let picker = Cu.waiveXrays(content.document.querySelector("payment-method-picker"));
+      let picker = Cu.waiveXrays(
+        content.document.querySelector("payment-method-picker")
+      );
       // Unwaive to access the ChromeOnly `setUserInput` API.
       // setUserInput dispatches changes events.
-      Cu.unwaiveXrays(picker.securityCodeInput).querySelector("input").setUserInput(securityCode);
+      Cu.unwaiveXrays(picker.securityCodeInput)
+        .querySelector("input")
+        .setUserInput(securityCode);
     },
   },
 
   DialogContentUtils: {
     waitForState: async (content, stateCheckFn, msg) => {
-      const {
-        ContentTaskUtils,
-      } = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
-      let {requestStore} = Cu.waiveXrays(content.document.querySelector("payment-dialog"));
-      await ContentTaskUtils.waitForCondition(() => stateCheckFn(requestStore.getState()), msg);
+      const { ContentTaskUtils } = ChromeUtils.import(
+        "resource://testing-common/ContentTaskUtils.jsm"
+      );
+      let { requestStore } = Cu.waiveXrays(
+        content.document.querySelector("payment-dialog")
+      );
+      await ContentTaskUtils.waitForCondition(
+        () => stateCheckFn(requestStore.getState()),
+        msg
+      );
       return requestStore.getState();
     },
 
-    getCurrentState: async (content) => {
-      let {requestStore} = Cu.waiveXrays(content.document.querySelector("payment-dialog"));
+    getCurrentState: async content => {
+      let { requestStore } = Cu.waiveXrays(
+        content.document.querySelector("payment-dialog")
+      );
       return requestStore.getState();
     },
   },
@@ -459,7 +495,8 @@ var PaymentTestUtils = {
     fieldSpecificErrors: {
       error: "There are errors related to specific parts of the address",
       shippingAddressErrors: {
-        addressLine: "Can only ship to ROADS, not DRIVES, BOULEVARDS, or STREETS",
+        addressLine:
+          "Can only ship to ROADS, not DRIVES, BOULEVARDS, or STREETS",
         city: "Can only ship to CITIES, not TOWNSHIPS or VILLAGES",
         country: "Can only ship to USA, not CA",
         dependentLocality: "Can only be SUBURBS, not NEIGHBORHOODS",
@@ -468,7 +505,8 @@ var PaymentTestUtils = {
         postalCode: "Only allowed to ship to postalCodes that start with 0",
         recipient: "Can only ship to names that start with J",
         region: "Can only ship to regions that start with M",
-        regionCode: "Regions must be 1 to 3 characters in length (sometimes ;) )",
+        regionCode:
+          "Regions must be 1 to 3 characters in length (sometimes ;) )",
       },
     },
   },
@@ -533,28 +571,28 @@ var PaymentTestUtils = {
     Temp: {
       "given-name": "Temp",
       "family-name": "McTempFace",
-      "organization": "Temps Inc.",
+      organization: "Temps Inc.",
       "street-address": "1a Temporary Ave.",
       "address-level2": "Temp Town",
       "address-level1": "CA",
       "postal-code": "31337",
-      "country": "US",
-      "tel": "+15032541000",
-      "email": "tempie@example.com",
+      country: "US",
+      tel: "+15032541000",
+      email: "tempie@example.com",
     },
   },
 
   BasicCards: {
     JohnDoe: {
       "cc-exp-month": 1,
-      "cc-exp-year": (new Date()).getFullYear() + 9,
+      "cc-exp-year": new Date().getFullYear() + 9,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-type": "visa",
     },
     JaneMasterCard: {
       "cc-exp-month": 12,
-      "cc-exp-year": (new Date()).getFullYear() + 9,
+      "cc-exp-year": new Date().getFullYear() + 9,
       "cc-name": "Jane McMaster-Card",
       "cc-number": "5555555555554444",
       "cc-type": "mastercard",
@@ -565,7 +603,7 @@ var PaymentTestUtils = {
     },
     Temp: {
       "cc-exp-month": 12,
-      "cc-exp-year": (new Date()).getFullYear() + 9,
+      "cc-exp-year": new Date().getFullYear() + 9,
       "cc-name": "Temp Name",
       "cc-number": "5105105105105100",
       "cc-type": "mastercard",

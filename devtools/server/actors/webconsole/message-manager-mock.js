@@ -44,8 +44,10 @@ MessageManagerMock.prototype = {
       data,
     };
     for (const listener of listeners) {
-      if (typeof listener === "object" &&
-          typeof listener.receiveMessage === "function") {
+      if (
+        typeof listener === "object" &&
+        typeof listener.receiveMessage === "function"
+      ) {
         listener.receiveMessage(message);
       } else if (typeof listener === "function") {
         listener(message);

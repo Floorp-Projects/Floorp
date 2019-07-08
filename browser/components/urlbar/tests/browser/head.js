@@ -9,7 +9,9 @@
 
 let sandbox;
 
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
@@ -23,9 +25,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 /* import-globals-from head-common.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-common.js",
-  this);
+  this
+);
 
-const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 registerCleanupFunction(async () => {
   // Ensure the Urlbar popup is always closed at the end of a test, to save having

@@ -12,9 +12,9 @@
 add_task(async function() {
   const { tab, monitor } = await initNetMonitor(POST_RAW_URL);
   const { document, store, windowRequire } = monitor.panelWin;
-  const {
-    getSelectedRequest,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getSelectedRequest } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
 
@@ -25,7 +25,9 @@ add_task(async function() {
   // Confirm XHR request and click it
   const xhrRequestItem = document.querySelectorAll(".request-list-item")[0];
   EventUtils.sendMouseEvent({ type: "mousedown" }, xhrRequestItem);
-  const waitForHeaders = waitUntil(() => document.querySelector(".headers-overview"));
+  const waitForHeaders = waitUntil(() =>
+    document.querySelector(".headers-overview")
+  );
   await waitForHeaders;
   const firstRequest = getSelectedRequest(store.getState());
 
@@ -42,8 +44,10 @@ add_task(async function() {
   document.querySelectorAll(".request-list-item")[1].click();
   const cloneRequest = getSelectedRequest(store.getState());
 
-  ok(cloneRequest.id.replace(/-clone$/, "") == firstRequest.id,
-    "The second XHR request is a clone of the first");
+  ok(
+    cloneRequest.id.replace(/-clone$/, "") == firstRequest.id,
+    "The second XHR request is a clone of the first"
+  );
 
   // Click the "Send" button and wait till the new request appears in the list
   document.querySelector("#custom-request-send-button").click();
@@ -56,8 +60,10 @@ add_task(async function() {
   document.querySelectorAll(".request-list-item")[0].click();
   const resendRequest = getSelectedRequest(store.getState());
 
-  ok(resendRequest.id !== firstRequest.id,
-    "The second XHR request was made and is unique");
+  ok(
+    resendRequest.id !== firstRequest.id,
+    "The second XHR request was made and is unique"
+  );
 
   return teardown(monitor);
 });

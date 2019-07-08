@@ -8,10 +8,10 @@ add_task(async function resetBeforeTests() {
 
 add_task(async function nonexistent() {
   await setGlobal("foo", 1);
-  await new Promise(resolve => cps.removeAllDomains(null, makeCallback(resolve)));
-  await dbOK([
-    [null, "foo", 1],
-  ]);
+  await new Promise(resolve =>
+    cps.removeAllDomains(null, makeCallback(resolve))
+  );
+  await dbOK([[null, "foo", 1]]);
   await getGlobalOK(["foo"], 1);
   await reset();
 });
@@ -24,11 +24,10 @@ add_task(async function domains() {
   await set("b.com", "foo", 5);
   await set("b.com", "bar", 6);
 
-  await new Promise(resolve => cps.removeAllDomains(null, makeCallback(resolve)));
-  await dbOK([
-    [null, "foo", 3],
-    [null, "bar", 4],
-  ]);
+  await new Promise(resolve =>
+    cps.removeAllDomains(null, makeCallback(resolve))
+  );
+  await dbOK([[null, "foo", 3], [null, "bar", 4]]);
   await getOK(["a.com", "foo"], undefined);
   await getOK(["a.com", "bar"], undefined);
   await getGlobalOK(["foo"], 3);
@@ -48,11 +47,10 @@ add_task(async function privateBrowsing() {
   let context = privateLoadContext;
   await set("a.com", "foo", 6, context);
   await setGlobal("foo", 7, context);
-  await new Promise(resolve => cps.removeAllDomains(context, makeCallback(resolve)));
-  await dbOK([
-    [null, "foo", 3],
-    [null, "bar", 4],
-  ]);
+  await new Promise(resolve =>
+    cps.removeAllDomains(context, makeCallback(resolve))
+  );
+  await dbOK([[null, "foo", 3], [null, "bar", 4]]);
   await getOK(["a.com", "foo", context], undefined);
   await getOK(["a.com", "bar", context], undefined);
   await getGlobalOK(["foo", context], 7);
@@ -79,7 +77,9 @@ add_task(async function invalidateCache() {
   getCachedOK(["a.com", "foo"], true, 1);
   getCachedOK(["b.com", "bar"], true, 2);
   getCachedGlobalOK(["baz"], true, 3);
-  let promiseRemoved = new Promise(resolve => cps.removeAllDomains(null, makeCallback(resolve)));
+  let promiseRemoved = new Promise(resolve =>
+    cps.removeAllDomains(null, makeCallback(resolve))
+  );
   getCachedOK(["a.com", "foo"], false);
   getCachedOK(["b.com", "bar"], false);
   getCachedGlobalOK(["baz"], true, 3);

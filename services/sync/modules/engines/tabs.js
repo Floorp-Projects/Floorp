@@ -7,18 +7,32 @@ var EXPORTED_SYMBOLS = ["TabEngine", "TabSetRecord"];
 const TABS_TTL = 1814400; // 21 days.
 const TAB_ENTRIES_LIMIT = 5; // How many URLs to include in tab history.
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {Store, SyncEngine, Tracker} = ChromeUtils.import("resource://services-sync/engines.js");
-const {CryptoWrapper} = ChromeUtils.import("resource://services-sync/record.js");
-const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
-const {SCORE_INCREMENT_SMALL, URI_LENGTH_MAX} = ChromeUtils.import("resource://services-sync/constants.js");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Store, SyncEngine, Tracker } = ChromeUtils.import(
+  "resource://services-sync/engines.js"
+);
+const { CryptoWrapper } = ChromeUtils.import(
+  "resource://services-sync/record.js"
+);
+const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+const { SCORE_INCREMENT_SMALL, URI_LENGTH_MAX } = ChromeUtils.import(
+  "resource://services-sync/constants.js"
+);
 
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "SessionStore",
-  "resource:///modules/sessionstore/SessionStore.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "SessionStore",
+  "resource:///modules/sessionstore/SessionStore.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
@@ -34,7 +48,6 @@ TabSetRecord.prototype = {
 };
 
 Utils.deferGetSet(TabSetRecord, "cleartext", ["clientName", "tabs"]);
-
 
 function TabEngine(service) {
   SyncEngine.call(this, "Tabs", service);
@@ -86,15 +99,16 @@ TabEngine.prototype = {
   async _reconcile(item) {
     // Skip our own record.
     // TabStore.itemExists tests only against our local client ID.
-    if ((await this._store.itemExists(item.id))) {
-      this._log.trace("Ignoring incoming tab item because of its id: " + item.id);
+    if (await this._store.itemExists(item.id)) {
+      this._log.trace(
+        "Ignoring incoming tab item because of its id: " + item.id
+      );
       return false;
     }
 
     return SyncEngine.prototype._reconcile.call(this, item);
   },
 };
-
 
 function TabStore(name, engine) {
   Store.call(this, name, engine);
@@ -111,8 +125,7 @@ TabStore.prototype = {
   },
 
   shouldSkipWindow(win) {
-    return win.closed ||
-           PrivateBrowsingUtils.isWindowPrivate(win);
+    return win.closed || PrivateBrowsingUtils.isWindowPrivate(win);
   },
 
   getTabState(tab) {
@@ -120,7 +133,10 @@ TabStore.prototype = {
   },
 
   async getAllTabs(filter) {
-    let filteredUrls = new RegExp(Svc.Prefs.get("engine.tabs.filteredUrls"), "i");
+    let filteredUrls = new RegExp(
+      Svc.Prefs.get("engine.tabs.filteredUrls"),
+      "i"
+    );
 
     let allTabs = [];
 
@@ -137,8 +153,9 @@ TabStore.prototype = {
           continue;
         }
 
-        let acceptable = !filter ? (url) => url :
-                                   (url) => url && !filteredUrls.test(url);
+        let acceptable = !filter
+          ? url => url
+          : url => url && !filteredUrls.test(url);
 
         let entries = tabState.entries;
         let index = tabState.index;
@@ -158,13 +175,13 @@ TabStore.prototype = {
         // The element at `index` is the current page. Previous URLs were
         // previously visited URLs; subsequent URLs are in the 'forward' stack,
         // which we can't represent in Sync, so we truncate here.
-        let candidates = (entries.length == index) ?
-                         entries :
-                         entries.slice(0, index);
+        let candidates =
+          entries.length == index ? entries : entries.slice(0, index);
 
-        let urls = candidates.map((entry) => entry.url)
-                             .filter(acceptable)
-                             .reverse(); // Because Sync puts current at index 0, and history after.
+        let urls = candidates
+          .map(entry => entry.url)
+          .filter(acceptable)
+          .reverse(); // Because Sync puts current at index 0, and history after.
 
         // Truncate if necessary.
         if (urls.length > TAB_ENTRIES_LIMIT) {
@@ -203,8 +220,11 @@ TabStore.prototype = {
     let records = Utils.tryFitItems(tabs, maxPayloadSize);
 
     if (records.length != tabs.length) {
-      this._log.warn(`Can't fit all tabs in sync payload: have ${
-                     tabs.length}, but can only fit ${records.length}.`);
+      this._log.warn(
+        `Can't fit all tabs in sync payload: have ${
+          tabs.length
+        }, but can only fit ${records.length}.`
+      );
     }
 
     if (this._log.level <= Log.Level.Trace) {
@@ -233,8 +253,10 @@ TabStore.prototype = {
       }
     }
 
-    if (allWindowsArePrivate &&
-        !PrivateBrowsingUtils.permanentPrivateBrowsing) {
+    if (
+      allWindowsArePrivate &&
+      !PrivateBrowsingUtils.permanentPrivateBrowsing
+    ) {
       return ids;
     }
 
@@ -257,7 +279,6 @@ TabStore.prototype = {
     this._log.trace("Ignoring tab updates as local ones win");
   },
 };
-
 
 function TabTracker(name, engine) {
   Tracker.call(this, name, engine);
@@ -336,8 +357,10 @@ TabTracker.prototype = {
   onTab(event) {
     if (event.originalTarget.linkedBrowser) {
       let browser = event.originalTarget.linkedBrowser;
-      if (PrivateBrowsingUtils.isBrowserPrivate(browser) &&
-          !PrivateBrowsingUtils.permanentPrivateBrowsing) {
+      if (
+        PrivateBrowsingUtils.isBrowserPrivate(browser) &&
+        !PrivateBrowsingUtils.permanentPrivateBrowsing
+      ) {
         this._log.trace("Ignoring tab event from private browsing.");
         return;
       }
@@ -349,7 +372,7 @@ TabTracker.prototype = {
     // For page shows, bump the score 10% of the time, emulating a partial
     // score. We don't want to sync too frequently. For all other page
     // events, always bump the score.
-    if (event.type != "pageshow" || Math.random() < .1) {
+    if (event.type != "pageshow" || Math.random() < 0.1) {
       this.score += SCORE_INCREMENT_SMALL;
     }
   },
@@ -358,8 +381,10 @@ TabTracker.prototype = {
   onLocationChange(webProgress, request, location, flags) {
     // We only care about top-level location changes which are not in the same
     // document.
-    if (webProgress.isTopLevel &&
-        ((flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) == 0)) {
+    if (
+      webProgress.isTopLevel &&
+      (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) == 0
+    ) {
       this.modified = true;
     }
   },

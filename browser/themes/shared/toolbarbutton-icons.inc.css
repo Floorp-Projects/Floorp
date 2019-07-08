@@ -595,3 +595,7 @@ toolbarbutton.bookmark-item {
 .bookmark-item[query][hostContainer] {
   list-style-image: url("chrome://browser/skin/places/folder.svg");
 }
+
+#whats-new-menu-button {
+  list-style-image: url("chrome://browser/skin/whatsnew.svg");
+}

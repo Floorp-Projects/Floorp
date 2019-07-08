@@ -3,9 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-var MANIFESTS = [
-  do_get_file("data/test_bug401153.manifest"),
-];
+var MANIFESTS = [do_get_file("data/test_bug401153.manifest")];
 
 registerManifests(MANIFESTS);
 
@@ -17,18 +15,22 @@ updateAppInfo({
   platformVersion: "1.9",
 });
 
-var chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
-                 .getService(Ci.nsIChromeRegistry);
+var chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+  Ci.nsIChromeRegistry
+);
 chromeReg.checkForNewChrome();
 
-var rph = Services.io.getProtocolHandler("resource")
-              .QueryInterface(Ci.nsIResProtocolHandler);
+var rph = Services.io
+  .getProtocolHandler("resource")
+  .QueryInterface(Ci.nsIResProtocolHandler);
 
 function test_succeeded_mapping(namespace, target) {
   try {
     Assert.ok(rph.hasSubstitution(namespace));
     var uri = Services.io.newURI("resource://" + namespace);
-    dump("### checking for " + target + ", getting " + rph.resolveURI(uri) + "\n");
+    dump(
+      "### checking for " + target + ", getting " + rph.resolveURI(uri) + "\n"
+    );
     Assert.equal(rph.resolveURI(uri), target);
   } catch (ex) {
     dump(ex + "\n");

@@ -4,7 +4,9 @@
 
 // There are shutdown issues for which multiple rejections are left uncaught.
 // See bug 1018184 for resolving these issues.
-const { PromiseTestUtils } = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
 PromiseTestUtils.whitelistRejectionsGlobally(/File closed/);
 
 // On debug test slave, it takes about 50s to run the test.
@@ -23,11 +25,18 @@ add_task(async function() {
     }, "browser-toolbox-inspector-dir");
   });
 
-  const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-  env.set("MOZ_TOOLBOX_TEST_SCRIPT", "new function() {(" + testScript + ")();}");
+  const env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  env.set(
+    "MOZ_TOOLBOX_TEST_SCRIPT",
+    "new function() {(" + testScript + ")();}"
+  );
   registerCleanupFunction(() => env.set("MOZ_TOOLBOX_TEST_SCRIPT", ""));
 
-  const { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm");
+  const { BrowserToolboxProcess } = ChromeUtils.import(
+    "resource://devtools/client/framework/ToolboxProcess.jsm"
+  );
 
   let closePromise;
   await new Promise(onRun => {
@@ -40,11 +49,19 @@ add_task(async function() {
 
   const inspectorPanelDirection = await onCustomMessage;
   info("Received the custom message");
-  is(inspectorPanelDirection, "rtl", "Inspector panel has the expected direction");
+  is(
+    inspectorPanelDirection,
+    "rtl",
+    "Inspector panel has the expected direction"
+  );
 
   await closePromise;
   info("Browser toolbox process just closed");
-  is(BrowserToolboxProcess.getBrowserToolboxSessionState(), false, "No session state after closing");
+  is(
+    BrowserToolboxProcess.getBrowserToolboxSessionState(),
+    false,
+    "No session state after closing"
+  );
 });
 
 // Be careful, this JS function is going to be executed in the addon toolbox,
@@ -57,8 +74,7 @@ async function testScript() {
 
   // Switch to the webconsole to send the result to the main test.
   const webconsole = await toolbox.selectTool("webconsole");
-  const js =
-    `Services.obs.notifyObservers(null, "browser-toolbox-inspector-dir", "${dir}");`;
+  const js = `Services.obs.notifyObservers(null, "browser-toolbox-inspector-dir", "${dir}");`;
   await webconsole.hud.jsterm.execute(js);
 
   // Destroy the toolbox.

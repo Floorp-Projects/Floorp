@@ -5,10 +5,8 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
-  const databaseName =
-    ("window" in this) ? window.location.pathname : "Test";
+function* testSteps() {
+  const databaseName = "window" in this ? window.location.pathname : "Test";
   const databaseCount = 10;
 
   // Test 1: Make sure basic versionchange events work and that they don't
@@ -97,7 +95,7 @@ function* testSteps()
     is(db.version, 1, "Got version 1");
 
     db.onversionchange = function(event) {
-      if (thisIndex == (databaseCount - 1)) {
+      if (thisIndex == databaseCount - 1) {
         info("Closing all databases with version 1");
 
         for (let j = 0; j < databases.length; j++) {

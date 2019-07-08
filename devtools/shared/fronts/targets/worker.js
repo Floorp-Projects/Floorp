@@ -3,12 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {workerTargetSpec} = require("devtools/shared/specs/targets/worker");
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const { workerTargetSpec } = require("devtools/shared/specs/targets/worker");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
 const { TargetMixin } = require("./target-mixin");
 
-class WorkerTargetFront extends
-  TargetMixin(FrontClassWithSpec(workerTargetSpec)) {
+class WorkerTargetFront extends TargetMixin(
+  FrontClassWithSpec(workerTargetSpec)
+) {
   constructor(client) {
     super(client);
 

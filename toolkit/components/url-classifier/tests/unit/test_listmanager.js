@@ -1,5 +1,8 @@
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
 
 // These tables share the same updateURL.
 const TEST_TABLE_DATA_LIST = [
@@ -42,14 +45,18 @@ const TEST_TABLE_DATA_V4_DISABLED = {
   gethashUrl: "http://localhost:5555/safebrowsing/gethash-v4",
 };
 
-const PREF_NEXTUPDATETIME = "browser.safebrowsing.provider.google.nextupdatetime";
-const PREF_NEXTUPDATETIME_V4 = "browser.safebrowsing.provider.google4.nextupdatetime";
+const PREF_NEXTUPDATETIME =
+  "browser.safebrowsing.provider.google.nextupdatetime";
+const PREF_NEXTUPDATETIME_V4 =
+  "browser.safebrowsing.provider.google4.nextupdatetime";
 
-let gListManager = Cc["@mozilla.org/url-classifier/listmanager;1"]
-                     .getService(Ci.nsIUrlListManager);
+let gListManager = Cc["@mozilla.org/url-classifier/listmanager;1"].getService(
+  Ci.nsIUrlListManager
+);
 
-let gUrlUtils = Cc["@mozilla.org/url-classifier/utils;1"]
-                   .getService(Ci.nsIUrlClassifierUtils);
+let gUrlUtils = Cc["@mozilla.org/url-classifier/utils;1"].getService(
+  Ci.nsIUrlClassifierUtils
+);
 
 // Global test server for serving safebrowsing updates.
 let gHttpServ = null;
@@ -66,7 +73,8 @@ let gUpdatedCntForTableData = 0; // For TEST_TABLE_DATA_LIST.
 let gIsV4Updated = false; // For TEST_TABLE_DATA_V4.
 
 const NEW_CLIENT_STATE = "sta\0te";
-const CHECKSUM = "\x30\x67\xc7\x2c\x5e\x50\x1c\x31\xe3\xfe\xca\x73\xf0\x47\xdc\x34\x1a\x95\x63\x99\xec\x70\x5e\x0a\xee\x9e\xfb\x17\xa1\x55\x35\x78";
+const CHECKSUM =
+  "\x30\x67\xc7\x2c\x5e\x50\x1c\x31\xe3\xfe\xca\x73\xf0\x47\xdc\x34\x1a\x95\x63\x99\xec\x70\x5e\x0a\xee\x9e\xfb\x17\xa1\x55\x35\x78";
 
 Services.prefs.setBoolPref("browser.safebrowsing.debug", true);
 
@@ -75,22 +83,28 @@ Services.prefs.setCharPref("browser.safebrowsing.id", "Firefox\xFF\xFF");
 
 // Register tables.
 TEST_TABLE_DATA_LIST.forEach(function(t) {
-  gListManager.registerTable(t.tableName,
-                             t.providerName,
-                             t.updateUrl,
-                             t.gethashUrl);
+  gListManager.registerTable(
+    t.tableName,
+    t.providerName,
+    t.updateUrl,
+    t.gethashUrl
+  );
 });
 
-gListManager.registerTable(TEST_TABLE_DATA_V4.tableName,
-                           TEST_TABLE_DATA_V4.providerName,
-                           TEST_TABLE_DATA_V4.updateUrl,
-                           TEST_TABLE_DATA_V4.gethashUrl);
+gListManager.registerTable(
+  TEST_TABLE_DATA_V4.tableName,
+  TEST_TABLE_DATA_V4.providerName,
+  TEST_TABLE_DATA_V4.updateUrl,
+  TEST_TABLE_DATA_V4.gethashUrl
+);
 
 // To test Bug 1302044.
-gListManager.registerTable(TEST_TABLE_DATA_V4_DISABLED.tableName,
-                           TEST_TABLE_DATA_V4_DISABLED.providerName,
-                           TEST_TABLE_DATA_V4_DISABLED.updateUrl,
-                           TEST_TABLE_DATA_V4_DISABLED.gethashUrl);
+gListManager.registerTable(
+  TEST_TABLE_DATA_V4_DISABLED.tableName,
+  TEST_TABLE_DATA_V4_DISABLED.providerName,
+  TEST_TABLE_DATA_V4_DISABLED.updateUrl,
+  TEST_TABLE_DATA_V4_DISABLED.gethashUrl
+);
 
 const SERVER_INVOLVED_TEST_CASE_LIST = [
   // - Do table0 update.
@@ -143,21 +157,26 @@ const SERVER_INVOLVED_TEST_CASE_LIST = [
     gListManager.disableUpdate(TEST_TABLE_DATA_V4_DISABLED.tableName);
 
     // Expected results for v2.
-    gExpectedUpdateRequest = TEST_TABLE_DATA_LIST[0].tableName + ";a:5:s:2-12\n" +
-                             TEST_TABLE_DATA_LIST[1].tableName + ";\n" +
-                             TEST_TABLE_DATA_LIST[2].tableName + ";\n";
+    gExpectedUpdateRequest =
+      TEST_TABLE_DATA_LIST[0].tableName +
+      ";a:5:s:2-12\n" +
+      TEST_TABLE_DATA_LIST[1].tableName +
+      ";\n" +
+      TEST_TABLE_DATA_LIST[2].tableName +
+      ";\n";
     gUpdateResponse = "n:1000\n";
 
     // We test the request against the query string since v4 request
     // would be appened to the query string. The request is generated
     // by protobuf API (binary) then encoded to base64 format.
-    let requestV4 = gUrlUtils.makeUpdateRequestV4([TEST_TABLE_DATA_V4.tableName],
-                                                  [""]);
+    let requestV4 = gUrlUtils.makeUpdateRequestV4(
+      [TEST_TABLE_DATA_V4.tableName],
+      [""]
+    );
     gExpectedQueryV4 = "&$req=" + requestV4;
 
     forceTableUpdate();
   },
-
 ];
 
 SERVER_INVOLVED_TEST_CASE_LIST.forEach(t => add_test(t));
@@ -170,8 +189,10 @@ add_test(function test_partialUpdateV4() {
   // Since the new client state has been responded and saved in
   // test_update_all_tables, this update request should send
   // a partial update to the server.
-  let requestV4 = gUrlUtils.makeUpdateRequestV4([TEST_TABLE_DATA_V4.tableName],
-                                                [btoa(NEW_CLIENT_STATE)]);
+  let requestV4 = gUrlUtils.makeUpdateRequestV4(
+    [TEST_TABLE_DATA_V4.tableName],
+    [btoa(NEW_CLIENT_STATE)]
+  );
   gExpectedQueryV4 = "&$req=" + requestV4;
 
   forceTableUpdate();
@@ -182,8 +203,10 @@ add_test(function test_getGethashUrl() {
   TEST_TABLE_DATA_LIST.forEach(function(t) {
     equal(gListManager.getGethashUrl(t.tableName), t.gethashUrl);
   });
-  equal(gListManager.getGethashUrl(TEST_TABLE_DATA_V4.tableName),
-        TEST_TABLE_DATA_V4.gethashUrl);
+  equal(
+    gListManager.getGethashUrl(TEST_TABLE_DATA_V4.tableName),
+    TEST_TABLE_DATA_V4.gethashUrl
+  );
   run_next_test();
 });
 
@@ -192,16 +215,24 @@ function run_test() {
   gHttpServ = new HttpServer();
   gHttpServ.registerDirectory("/", do_get_cwd());
 
-  gHttpServ.registerPathHandler("/safebrowsing/update", function(request, response) {
-    let body = NetUtil.readInputStreamToString(request.bodyInputStream,
-                                               request.bodyInputStream.available());
+  gHttpServ.registerPathHandler("/safebrowsing/update", function(
+    request,
+    response
+  ) {
+    let body = NetUtil.readInputStreamToString(
+      request.bodyInputStream,
+      request.bodyInputStream.available()
+    );
 
     // Verify if the request is as expected.
     equal(body, gExpectedUpdateRequest);
 
     // Respond the update which is controlled by the test case.
-    response.setHeader("Content-Type",
-                       "application/vnd.google.safebrowsing-update", false);
+    response.setHeader(
+      "Content-Type",
+      "application/vnd.google.safebrowsing-update",
+      false
+    );
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.bodyOutputStream.write(gUpdateResponse, gUpdateResponse.length);
 
@@ -228,7 +259,10 @@ function run_test() {
   gHttpServV4 = new HttpServer();
   gHttpServV4.registerDirectory("/", do_get_cwd());
 
-  gHttpServV4.registerPathHandler("/safebrowsing/update", function(request, response) {
+  gHttpServV4.registerPathHandler("/safebrowsing/update", function(
+    request,
+    response
+  ) {
     // V4 update request body should be empty.
     equal(request.bodyInputStream.available(), 0);
 
@@ -246,8 +280,11 @@ function run_test() {
     // Respond a V2 compatible content for now. In the future we can
     // send a meaningful response to test Bug 1284178 to see if the
     // update is successfully stored to database.
-    response.setHeader("Content-Type",
-                       "application/vnd.google.safebrowsing-update", false);
+    response.setHeader(
+      "Content-Type",
+      "application/vnd.google.safebrowsing-update",
+      false
+    );
     response.setStatusLine(request.httpVersion, 200, "OK");
 
     // The protobuf binary represention of response:
@@ -264,7 +301,8 @@ function run_test() {
     //   }
     // ]
     //
-    let content = "\x0A\x4A\x08\x02\x20\x02\x2A\x18\x08\x01\x12\x14\x08\x04\x12\x10\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x03\x3A\x06\x73\x74\x61\x00\x74\x65\x42\x22\x0A\x20\x30\x67\xC7\x2C\x5E\x50\x1C\x31\xE3\xFE\xCA\x73\xF0\x47\xDC\x34\x1A\x95\x63\x99\xEC\x70\x5E\x0A\xEE\x9E\xFB\x17\xA1\x55\x35\x78\x12\x08\x08\x08\x10\x80\x94\xEB\xDC\x03";
+    let content =
+      "\x0A\x4A\x08\x02\x20\x02\x2A\x18\x08\x01\x12\x14\x08\x04\x12\x10\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x03\x3A\x06\x73\x74\x61\x00\x74\x65\x42\x22\x0A\x20\x30\x67\xC7\x2C\x5E\x50\x1C\x31\xE3\xFE\xCA\x73\xF0\x47\xDC\x34\x1A\x95\x63\x99\xEC\x70\x5E\x0A\xEE\x9E\xFB\x17\xA1\x55\x35\x78\x12\x08\x08\x08\x10\x80\x94\xEB\xDC\x03";
 
     response.bodyOutputStream.write(content, content.length);
 
@@ -293,8 +331,7 @@ function run_test() {
 
   registerCleanupFunction(function() {
     return (async function() {
-      await Promise.all([gHttpServ.stop(),
-                         gHttpServV4.stop()]);
+      await Promise.all([gHttpServ.stop(), gHttpServV4.stop()]);
     })();
   });
 
@@ -326,8 +363,9 @@ function waitForUpdateSuccess(callback) {
 // Construct an update from a file.
 function readFileToString(aFilename) {
   let f = do_get_file(aFilename);
-  let stream = Cc["@mozilla.org/network/file-input-stream;1"]
-    .createInstance(Ci.nsIFileInputStream);
+  let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   stream.init(f, -1, 0, 0);
   let buf = NetUtil.readInputStreamToString(stream, stream.available());
   return buf;

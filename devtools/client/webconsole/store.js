@@ -40,13 +40,10 @@ const enableMessagesCacheClearing = require("./enhancers/message-cache-clearing"
  */
 function configureStore(webConsoleUI, options = {}) {
   const prefsService = getPrefsService(webConsoleUI);
-  const {
-    getBoolPref,
-    getIntPref,
-  } = prefsService;
+  const { getBoolPref, getIntPref } = prefsService;
 
-  const logLimit = options.logLimit
-    || Math.max(getIntPref("devtools.hud.loglimit"), 1);
+  const logLimit =
+    options.logLimit || Math.max(getIntPref("devtools.hud.loglimit"), 1);
   const sidebarToggle = getBoolPref(PREFS.FEATURES.SIDEBAR_TOGGLE);
   const jstermCodeMirror = getBoolPref(PREFS.FEATURES.JSTERM_CODE_MIRROR);
   const autocomplete = getBoolPref(PREFS.FEATURES.AUTOCOMPLETE);
@@ -86,7 +83,7 @@ function configureStore(webConsoleUI, options = {}) {
   };
 
   // Prepare middleware.
-  const services = (options.services || {});
+  const services = options.services || {};
 
   const middleware = applyMiddleware(
     thunk.bind(null, {
@@ -100,7 +97,7 @@ function configureStore(webConsoleUI, options = {}) {
       },
     }),
     historyPersistence,
-    eventTelemetry.bind(null, options.telemetry, options.sessionId),
+    eventTelemetry.bind(null, options.telemetry, options.sessionId)
   );
 
   return createStore(
@@ -112,7 +109,7 @@ function configureStore(webConsoleUI, options = {}) {
       enableBatching(),
       enableNetProvider(webConsoleUI),
       enableMessagesCacheClearing(webConsoleUI),
-      ensureCSSErrorReportingEnabled(webConsoleUI),
+      ensureCSSErrorReportingEnabled(webConsoleUI)
     )
   );
 }
@@ -138,7 +135,7 @@ function createRootReducer() {
       action,
       newState.filters,
       newState.prefs,
-      newState.ui,
+      newState.ui
     );
 
     return newState;

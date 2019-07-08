@@ -56,7 +56,7 @@ const BEFORE = [
     activeDeclarations: [
       {
         declarations: {
-          "order": "2",
+          order: "2",
         },
         ruleIndex: 0,
       },
@@ -83,7 +83,7 @@ const BEFORE = [
     activeDeclarations: [
       {
         declarations: {
-          "display": "flex",
+          display: "flex",
         },
         ruleIndex: 0,
       },
@@ -100,7 +100,7 @@ const BEFORE = [
     inactiveDeclarations: [
       {
         declaration: {
-          "order": "1",
+          order: "1",
         },
         ruleIndex: 1,
       },
@@ -114,7 +114,7 @@ const AFTER = [
     inactiveDeclarations: [
       {
         declaration: {
-          "order": "2",
+          order: "2",
         },
         ruleIndex: 0,
       },
@@ -150,7 +150,7 @@ add_task(async function() {
   await pushPref("devtools.inspector.inactive.css.enabled", true);
 
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   await runInactiveCSSTests(view, inspector, BEFORE);
 

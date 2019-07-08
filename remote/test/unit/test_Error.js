@@ -37,16 +37,19 @@ add_test(function test_RemoteAgentError_notify() {
 add_test(function test_RemoteAgentError_toString() {
   const e = new RemoteAgentError("message");
   equal(e.toString(), RemoteAgentError.format(e));
-  equal(e.toString({stack: true}), RemoteAgentError.format(e, {stack: true}));
+  equal(
+    e.toString({ stack: true }),
+    RemoteAgentError.format(e, { stack: true })
+  );
 
   run_next_test();
 });
 
 add_test(function test_RemoteAgentError_format() {
-  const {format} = RemoteAgentError;
+  const { format } = RemoteAgentError;
 
-  equal(format({name: "HippoError"}), "HippoError");
-  equal(format({name: "HorseError", message: "neigh"}), "HorseError: neigh");
+  equal(format({ name: "HippoError" }), "HippoError");
+  equal(format({ name: "HorseError", message: "neigh" }), "HorseError: neigh");
 
   const dog = {
     name: "DogError",
@@ -54,11 +57,13 @@ add_test(function test_RemoteAgentError_format() {
     stack: "  one\ntwo\nthree  ",
   };
   equal(format(dog), "DogError: woof");
-  equal(format(dog, {stack: true}),
-`DogError: woof:
+  equal(
+    format(dog, { stack: true }),
+    `DogError: woof:
 	one
 	two
-	three`);
+	three`
+  );
 
   const cat = {
     name: "CatError",
@@ -67,23 +72,27 @@ add_test(function test_RemoteAgentError_format() {
     cause: dog,
   };
   equal(format(cat), "CatError: meow");
-  equal(format(cat, {stack: true}),
-`CatError: meow:
+  equal(
+    format(cat, { stack: true }),
+    `CatError: meow:
 	four
 	five
 	six
 caused by: DogError: woof:
 	one
 	two
-	three`);
+	three`
+  );
 
   run_next_test();
 });
 
 add_test(function test_RemoteAgentError_fromJSON() {
-  const cdpErr = {message: `TypeError: foo:
+  const cdpErr = {
+    message: `TypeError: foo:
       bar
-      baz`};
+      baz`,
+  };
   const err = RemoteAgentError.fromJSON(cdpErr);
 
   equal(err.message, "TypeError: foo");
@@ -101,6 +110,10 @@ add_test(function test_UnsupportedError() {
 add_test(function test_UnknownMethodError() {
   ok(new UnknownMethodError() instanceof RemoteAgentError);
   ok(new UnknownMethodError("domain").message.endsWith("domain"));
-  ok(new UnknownMethodError("domain", "command").message.endsWith("domain.command"));
+  ok(
+    new UnknownMethodError("domain", "command").message.endsWith(
+      "domain.command"
+    )
+  );
   run_next_test();
 });

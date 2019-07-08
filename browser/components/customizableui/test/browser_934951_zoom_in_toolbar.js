@@ -33,33 +33,62 @@ add_task(async function() {
     gBrowser.removeTab(tab1);
   });
 
-  is(parseInt(gZoomResetButton.label, 10), 100, "Default zoom is 100% for about:mozilla");
+  is(
+    parseInt(gZoomResetButton.label, 10),
+    100,
+    "Default zoom is 100% for about:mozilla"
+  );
   FullZoom.enlarge();
   await waitForZoom(110);
-  is(parseInt(gZoomResetButton.label, 10), 110, "Zoom is changed to 110% for about:mozilla");
+  is(
+    parseInt(gZoomResetButton.label, 10),
+    110,
+    "Zoom is changed to 110% for about:mozilla"
+  );
 
-  let tabSelectPromise = TestUtils.topicObserved("browser-fullZoom:location-change");
+  let tabSelectPromise = TestUtils.topicObserved(
+    "browser-fullZoom:location-change"
+  );
   gBrowser.selectedTab = tab2;
   await tabSelectPromise;
   await waitForZoom(100);
-  is(parseInt(gZoomResetButton.label, 10), 100, "Default zoom is 100% for about:robots");
+  is(
+    parseInt(gZoomResetButton.label, 10),
+    100,
+    "Default zoom is 100% for about:robots"
+  );
 
   gBrowser.selectedTab = tab1;
   await waitForZoom(110);
   FullZoom.reset();
   await waitForZoom(100);
-  is(parseInt(gZoomResetButton.label, 10), 100, "Default zoom is 100% for about:mozilla");
+  is(
+    parseInt(gZoomResetButton.label, 10),
+    100,
+    "Default zoom is 100% for about:mozilla"
+  );
 
   // Test zoom label updates while navigating pages in the same tab.
   FullZoom.enlarge();
   await waitForZoom(110);
-  is(parseInt(gZoomResetButton.label, 10), 110, "Zoom is changed to 110% for about:mozilla");
+  is(
+    parseInt(gZoomResetButton.label, 10),
+    110,
+    "Zoom is changed to 110% for about:mozilla"
+  );
   await promiseTabLoadEvent(tab1, "about:home");
   await waitForZoom(100);
-  is(parseInt(gZoomResetButton.label, 10), 100, "Default zoom is 100% for about:home");
+  is(
+    parseInt(gZoomResetButton.label, 10),
+    100,
+    "Default zoom is 100% for about:home"
+  );
   gBrowser.selectedBrowser.goBack();
   await waitForZoom(110);
-  is(parseInt(gZoomResetButton.label, 10), 110, "Zoom is still 110% for about:mozilla");
+  is(
+    parseInt(gZoomResetButton.label, 10),
+    110,
+    "Zoom is still 110% for about:mozilla"
+  );
   FullZoom.reset();
 });
-

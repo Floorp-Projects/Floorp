@@ -3,28 +3,58 @@
 
 "use strict";
 
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {clearInterval, clearTimeout, setInterval, setIntervalWithTarget, setTimeout, setTimeoutWithTarget} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-var {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-var {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-var {ObjectUtils} = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {
+  clearInterval,
+  clearTimeout,
+  setInterval,
+  setIntervalWithTarget,
+  setTimeout,
+  setTimeoutWithTarget,
+} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+var { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+var { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+var { ObjectUtils } = ChromeUtils.import(
+  "resource://gre/modules/ObjectUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
-                               "resource://testing-common/PlacesTestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "pushBroadcastService",
-                               "resource://gre/modules/PushBroadcastService.jsm", {});
-XPCOMUtils.defineLazyServiceGetter(this, "PushServiceComponent",
-                                   "@mozilla.org/push/Service;1", "nsIPushService");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "pushBroadcastService",
+  "resource://gre/modules/PushBroadcastService.jsm",
+  {}
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "PushServiceComponent",
+  "@mozilla.org/push/Service;1",
+  "nsIPushService"
+);
 
-const serviceExports = ChromeUtils.import("resource://gre/modules/PushService.jsm", null);
+const serviceExports = ChromeUtils.import(
+  "resource://gre/modules/PushService.jsm",
+  null
+);
 const servicePrefs = new Preferences("dom.push.");
 
 const WEBSOCKET_CLOSE_GOING_AWAY = 1001;
 
 const MS_IN_ONE_DAY = 24 * 60 * 60 * 1000;
 
-var isParent = Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+var isParent =
+  Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 
 // Stop and clean up after the PushService.
 Services.obs.addObserver(function observe(subject, topic, data) {
@@ -35,7 +65,7 @@ Services.obs.addObserver(function observe(subject, topic, data) {
   // causes spurious errors and crashes, so we spin the event loop to let the
   // writes finish.
   let done = false;
-  setTimeout(() => done = true, 1000);
+  setTimeout(() => (done = true), 1000);
   let thread = Services.tm.mainThread;
   while (!done) {
     try {
@@ -70,9 +100,15 @@ function after(times, func) {
  *  executed per tick.
  */
 function waterfall(...callbacks) {
-  callbacks.reduce((promise, callback) => promise.then(() => {
-    callback();
-  }), Promise.resolve()).catch(Cu.reportError);
+  callbacks
+    .reduce(
+      (promise, callback) =>
+        promise.then(() => {
+          callback();
+        }),
+      Promise.resolve()
+    )
+    .catch(Cu.reportError);
 }
 
 /**
@@ -89,7 +125,7 @@ function promiseObserverNotification(topic, matchFunc) {
         return;
       }
       Services.obs.removeObserver(observe, aTopic);
-      resolve({subject, data});
+      resolve({ subject, data });
     }, topic);
   });
 }
@@ -132,24 +168,27 @@ function makeStub(target, stubs) {
  * @param {Object} [prefs] Additional preferences to set.
  */
 function setPrefs(prefs = {}) {
-  let defaultPrefs = Object.assign({
-    loglevel: "all",
-    serverURL: "wss://push.example.org",
-    "connection.enabled": true,
-    userAgentID: "",
-    enabled: true,
-    // Defaults taken from /modules/libpref/init/all.js.
-    requestTimeout: 10000,
-    retryBaseInterval: 5000,
-    pingInterval: 30 * 60 * 1000,
-    // Misc. defaults.
-    "http2.maxRetries": 2,
-    "http2.retryInterval": 500,
-    "http2.reset_retry_count_after_ms": 60000,
-    maxQuotaPerSubscription: 16,
-    quotaUpdateDelay: 3000,
-    "testing.notifyWorkers": false,
-  }, prefs);
+  let defaultPrefs = Object.assign(
+    {
+      loglevel: "all",
+      serverURL: "wss://push.example.org",
+      "connection.enabled": true,
+      userAgentID: "",
+      enabled: true,
+      // Defaults taken from /modules/libpref/init/all.js.
+      requestTimeout: 10000,
+      retryBaseInterval: 5000,
+      pingInterval: 30 * 60 * 1000,
+      // Misc. defaults.
+      "http2.maxRetries": 2,
+      "http2.retryInterval": 500,
+      "http2.reset_retry_count_after_ms": 60000,
+      maxQuotaPerSubscription: 16,
+      quotaUpdateDelay: 3000,
+      "testing.notifyWorkers": false,
+    },
+    prefs
+  );
   for (let pref in defaultPrefs) {
     servicePrefs.set(pref, defaultPrefs[pref]);
   }
@@ -224,52 +263,52 @@ MockWebSocket.prototype = {
       messageType = request.messageType;
     }
     switch (messageType) {
-    case "hello":
-      if (typeof this._onHello != "function") {
-        throw new Error("Unexpected handshake request");
-      }
-      this._onHello(request);
-      break;
+      case "hello":
+        if (typeof this._onHello != "function") {
+          throw new Error("Unexpected handshake request");
+        }
+        this._onHello(request);
+        break;
 
-    case "register":
-      if (typeof this._onRegister != "function") {
-        throw new Error("Unexpected register request");
-      }
-      this._onRegister(request);
-      break;
+      case "register":
+        if (typeof this._onRegister != "function") {
+          throw new Error("Unexpected register request");
+        }
+        this._onRegister(request);
+        break;
 
-    case "unregister":
-      if (typeof this._onUnregister != "function") {
-        throw new Error("Unexpected unregister request");
-      }
-      this._onUnregister(request);
-      break;
+      case "unregister":
+        if (typeof this._onUnregister != "function") {
+          throw new Error("Unexpected unregister request");
+        }
+        this._onUnregister(request);
+        break;
 
-    case "ack":
-      if (typeof this._onACK != "function") {
-        throw new Error("Unexpected acknowledgement");
-      }
-      this._onACK(request);
-      break;
+      case "ack":
+        if (typeof this._onACK != "function") {
+          throw new Error("Unexpected acknowledgement");
+        }
+        this._onACK(request);
+        break;
 
-    case "ping":
-      if (typeof this._onPing == "function") {
-        this._onPing(request);
-      } else {
-        // Echo ping packets.
-        this.serverSendMsg("{}");
-      }
-      break;
+      case "ping":
+        if (typeof this._onPing == "function") {
+          this._onPing(request);
+        } else {
+          // Echo ping packets.
+          this.serverSendMsg("{}");
+        }
+        break;
 
-    case "broadcast_subscribe":
-      if (typeof this._onBroadcastSubscribe != "function") {
-        throw new Error("Unexpected broadcast_subscribe");
-      }
-      this._onBroadcastSubscribe(request);
-      break;
+      case "broadcast_subscribe":
+        if (typeof this._onBroadcastSubscribe != "function") {
+          throw new Error("Unexpected broadcast_subscribe");
+        }
+        this._onBroadcastSubscribe(request);
+        break;
 
-    default:
-      throw new Error("Unexpected message: " + messageType);
+      default:
+        throw new Error("Unexpected message: " + messageType);
     }
   },
 
@@ -386,11 +425,13 @@ var setUpServiceInParent = async function(service, db) {
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          this.serverSendMsg(JSON.stringify({
-            messageType: "hello",
-            uaid: userAgentID,
-            status: 200,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "hello",
+              uaid: userAgentID,
+              status: 200,
+            })
+          );
         },
         onRegister(request) {
           if (request.key) {
@@ -402,20 +443,24 @@ var setUpServiceInParent = async function(service, db) {
             equal(appServerKey.length, 65, "Wrong app server key length");
             equal(appServerKey[0], 4, "Wrong app server key format");
           }
-          this.serverSendMsg(JSON.stringify({
-            messageType: "register",
-            uaid: userAgentID,
-            channelID: request.channelID,
-            status: 200,
-            pushEndpoint: "https://example.org/push/" + request.channelID,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "register",
+              uaid: userAgentID,
+              channelID: request.channelID,
+              status: 200,
+              pushEndpoint: "https://example.org/push/" + request.channelID,
+            })
+          );
         },
         onUnregister(request) {
-          this.serverSendMsg(JSON.stringify({
-            messageType: "unregister",
-            channelID: request.channelID,
-            status: 200,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "unregister",
+              channelID: request.channelID,
+              status: 200,
+            })
+          );
         },
       });
     },
@@ -431,8 +476,10 @@ var tearDownServiceInParent = async function(db) {
     scope: "https://example.com/sub/ok",
     originAttributes: "",
   });
-  ok(record.pushEndpoint.startsWith("https://example.org/push"),
-    "Wrong push endpoint in subscription record");
+  ok(
+    record.pushEndpoint.startsWith("https://example.org/push"),
+    "Wrong push endpoint in subscription record"
+  );
 
   record = await db.getByKeyID("3a414737-2fd0-44c0-af05-7efc172475fc");
   ok(!record, "Unsubscribed record should not exist");
@@ -453,7 +500,9 @@ function putTestRecord(db, keyID, scope, quota) {
 }
 
 function getAllKeyIDs(db) {
-  return db.getAllKeyIDs().then(records =>
-    records.map(record => record.keyID).sort(compareAscending)
-  );
+  return db
+    .getAllKeyIDs()
+    .then(records =>
+      records.map(record => record.keyID).sort(compareAscending)
+    );
 }

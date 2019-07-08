@@ -3,17 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* eslint max-len: ["error", 80] */
 
-const {
-  AbuseReporter,
-} = ChromeUtils.import("resource://gre/modules/AbuseReporter.jsm");
-const {
-  AddonTestUtils,
-} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-const {
-  ExtensionCommon,
-} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+const { AbuseReporter } = ChromeUtils.import(
+  "resource://gre/modules/AbuseReporter.jsm"
+);
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+const { ExtensionCommon } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionCommon.jsm"
+);
 
-const {makeWidgetId} = ExtensionCommon;
+const { makeWidgetId } = ExtensionCommon;
 
 const ADDON_ID = "test-extension-to-report@mochi.test";
 const REPORT_ENTRY_POINT = "menu";
@@ -21,7 +21,7 @@ const BASE_TEST_MANIFEST = {
   name: "Fake extension to report",
   author: "Fake author",
   homepage_url: "https://fake.extension.url/",
-  applications: {gecko: {id: ADDON_ID}},
+  applications: { gecko: { id: ADDON_ID } },
   icons: {
     32: "test-icon.png",
   },
@@ -42,34 +42,43 @@ let apiRequestHandler;
 AddonTestUtils.initMochitest(this);
 
 // Init test report api server.
-const server = AddonTestUtils.createHttpServer({hosts: ["test.addons.org"]});
+const server = AddonTestUtils.createHttpServer({ hosts: ["test.addons.org"] });
 server.registerPathHandler("/api/report/", (request, response) => {
   const stream = request.bodyInputStream;
   const buffer = NetUtil.readInputStream(stream, stream.available());
   const data = new TextDecoder().decode(buffer);
-  apiRequestHandler({data, request, response});
+  apiRequestHandler({ data, request, response });
 });
 
-function handleSubmitRequest({request, response}) {
+function handleSubmitRequest({ request, response }) {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "application/json", false);
   response.write("{}");
 }
 
 function createPromptConfirmEx({
-  remove = false, report = false, expectCheckboxHidden = false,
+  remove = false,
+  report = false,
+  expectCheckboxHidden = false,
 } = {}) {
   return (...args) => {
     const checkboxState = args.pop();
     const checkboxMessage = args.pop();
-    is(checkboxState && checkboxState.value, false,
-       "checkboxState should be initially false");
+    is(
+      checkboxState && checkboxState.value,
+      false,
+      "checkboxState should be initially false"
+    );
     if (expectCheckboxHidden) {
-      ok(!checkboxMessage,
-         "Should not have a checkboxMessage in promptService.confirmEx call");
+      ok(
+        !checkboxMessage,
+        "Should not have a checkboxMessage in promptService.confirmEx call"
+      );
     } else {
-      ok(checkboxMessage,
-         "Got a checkboxMessage in promptService.confirmEx call");
+      ok(
+        checkboxMessage,
+        "Got a checkboxMessage in promptService.confirmEx call"
+      );
     }
 
     // Report checkbox selected.
@@ -96,10 +105,11 @@ async function closeAboutAddons() {
 
 async function assertReportActionHidden(gManagerWindow, extId) {
   await gManagerWindow.htmlBrowserLoaded;
-  const {contentDocument: doc} = gManagerWindow.getHtmlBrowser();
+  const { contentDocument: doc } = gManagerWindow.getHtmlBrowser();
 
   let addonCard = doc.querySelector(
-    `addon-list addon-card[addon-id="${extId}"]`);
+    `addon-list addon-card[addon-id="${extId}"]`
+  );
   ok(addonCard, `Got the addon-card for the ${extId} test extension`);
 
   let reportButton = addonCard.querySelector("[action=report]");
@@ -108,22 +118,27 @@ async function assertReportActionHidden(gManagerWindow, extId) {
 }
 
 async function installTestExtension(
-  id = ADDON_ID, type = "extension", manifest = {}
+  id = ADDON_ID,
+  type = "extension",
+  manifest = {}
 ) {
-  const additionalProps = type === "theme" ? {
-    theme: {
-      colors: {
-        frame: "#a14040",
-        tab_background_text: "#fac96e",
-      },
-    },
-  } : {};
+  const additionalProps =
+    type === "theme"
+      ? {
+          theme: {
+            colors: {
+              frame: "#a14040",
+              tab_background_text: "#fac96e",
+            },
+          },
+        }
+      : {};
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       ...BASE_TEST_MANIFEST,
       ...additionalProps,
       ...manifest,
-      applications: {gecko: {id}},
+      applications: { gecko: { id } },
     },
     useAddonManager: "temporary",
   });
@@ -132,8 +147,7 @@ async function installTestExtension(
 }
 
 function getAbuseReportFrame() {
-  return gManagerWindow.document.querySelector(
-    "addon-abuse-report-xulframe");
+  return gManagerWindow.document.querySelector("addon-abuse-report-xulframe");
 }
 
 function getAbuseReasons(abuseReportEl) {
@@ -146,14 +160,16 @@ function getAbuseReasonInfo(abuseReportEl, reason) {
 
 function triggerNewAbuseReport(addonId, reportEntryPoint) {
   const el = getAbuseReportFrame();
-  el.ownerGlobal.openAbuseReport({addonId, reportEntryPoint});
+  el.ownerGlobal.openAbuseReport({ addonId, reportEntryPoint });
 }
 
 function triggerSubmitAbuseReport(reason, message) {
   const el = getAbuseReportFrame();
-  el.handleEvent(new CustomEvent("abuse-report:submit", {
-    detail: {report: el.report, reason, message},
-  }));
+  el.handleEvent(
+    new CustomEvent("abuse-report:submit", {
+      detail: { report: el.report, reason, message },
+    })
+  );
 }
 
 async function openAbuseReport(addonId, reportEntryPoint = REPORT_ENTRY_POINT) {
@@ -185,30 +201,41 @@ async function promiseAbuseReportRendered(abuseReportEl) {
     const frame = getAbuseReportFrame();
     el = await frame.promiseAbuseReport;
   }
-  return el._radioCheckedReason ? Promise.resolve() :
-    BrowserTestUtils.waitForEvent(el, "abuse-report:updated",
-                                  "Wait the abuse report panel to be rendered");
+  return el._radioCheckedReason
+    ? Promise.resolve()
+    : BrowserTestUtils.waitForEvent(
+        el,
+        "abuse-report:updated",
+        "Wait the abuse report panel to be rendered"
+      );
 }
 
 async function promiseAbuseReportUpdated(abuseReportEl, panel) {
   const evt = await BrowserTestUtils.waitForEvent(
-    abuseReportEl, "abuse-report:updated",
-    "Wait abuse report panel update");
+    abuseReportEl,
+    "abuse-report:updated",
+    "Wait abuse report panel update"
+  );
 
   if (panel) {
     is(evt.detail.panel, panel, `Got a "${panel}" update event`);
     switch (evt.detail.panel) {
       case "reasons":
-        ok(!abuseReportEl._reasonsPanel.hidden,
-           "Reasons panel should be visible");
-        ok(abuseReportEl._submitPanel.hidden,
-           "Submit panel should be hidden");
+        ok(
+          !abuseReportEl._reasonsPanel.hidden,
+          "Reasons panel should be visible"
+        );
+        ok(abuseReportEl._submitPanel.hidden, "Submit panel should be hidden");
         break;
       case "submit":
-        ok(abuseReportEl._reasonsPanel.hidden,
-           "Reasons panel should be hidden");
-        ok(!abuseReportEl._submitPanel.hidden,
-           "Submit panel should be visible");
+        ok(
+          abuseReportEl._reasonsPanel.hidden,
+          "Reasons panel should be hidden"
+        );
+        ok(
+          !abuseReportEl._submitPanel.hidden,
+          "Submit panel should be visible"
+        );
         break;
     }
   }
@@ -227,11 +254,15 @@ function promiseMessageBars(expectedMessageBarCount) {
     function cleanup() {
       if (gHtmlAboutAddonsWindow) {
         gHtmlAboutAddonsWindow.document.removeEventListener(
-          "abuse-report:new-message-bar", listener);
+          "abuse-report:new-message-bar",
+          listener
+        );
       }
     }
     gHtmlAboutAddonsWindow.document.addEventListener(
-      "abuse-report:new-message-bar", listener);
+      "abuse-report:new-message-bar",
+      listener
+    );
   });
 }
 
@@ -246,42 +277,49 @@ add_task(async function setup() {
   });
 
   gProvider = new MockProvider();
-  gProvider.createAddons([{
-    id: THEME_NO_UNINSTALL_ID,
-    name: "This theme cannot be uninstalled",
-    version: "1.1",
-    creator: {name: "Theme creator", url: "http://example.com/creator"},
-    type: "theme",
-    permissions: 0,
-  }, {
-    id: EXT_WITH_PRIVILEGED_URL_ID,
-    name: "This extension has an unexpected privileged creator URL",
-    version: "1.1",
-    creator: {name: "creator", url: "about:config"},
-    type: "extension",
-  }, {
-    id: EXT_SYSTEM_ADDON_ID,
-    name: "This is a system addon",
-    version: "1.1",
-    creator: {name: "creator", url: "http://example.com/creator"},
-    type: "extension",
-    isSystem: true,
-  }, {
-    id: EXT_UNSUPPORTED_TYPE_ADDON_ID,
-    name: "This is a fake unsupported addon type",
-    version: "1.1",
-    type: "unsupported_addon_type",
-  }, {
-    id: EXT_LANGPACK_ADDON_ID,
-    name: "This is a fake langpack",
-    version: "1.1",
-    type: "locale",
-  }, {
-    id: EXT_DICTIONARY_ADDON_ID,
-    name: "This is a fake dictionary",
-    version: "1.1",
-    type: "dictionary",
-  }]);
+  gProvider.createAddons([
+    {
+      id: THEME_NO_UNINSTALL_ID,
+      name: "This theme cannot be uninstalled",
+      version: "1.1",
+      creator: { name: "Theme creator", url: "http://example.com/creator" },
+      type: "theme",
+      permissions: 0,
+    },
+    {
+      id: EXT_WITH_PRIVILEGED_URL_ID,
+      name: "This extension has an unexpected privileged creator URL",
+      version: "1.1",
+      creator: { name: "creator", url: "about:config" },
+      type: "extension",
+    },
+    {
+      id: EXT_SYSTEM_ADDON_ID,
+      name: "This is a system addon",
+      version: "1.1",
+      creator: { name: "creator", url: "http://example.com/creator" },
+      type: "extension",
+      isSystem: true,
+    },
+    {
+      id: EXT_UNSUPPORTED_TYPE_ADDON_ID,
+      name: "This is a fake unsupported addon type",
+      version: "1.1",
+      type: "unsupported_addon_type",
+    },
+    {
+      id: EXT_LANGPACK_ADDON_ID,
+      name: "This is a fake langpack",
+      version: "1.1",
+      type: "locale",
+    },
+    {
+      id: EXT_DICTIONARY_ADDON_ID,
+      name: "This is a fake dictionary",
+      version: "1.1",
+      type: "dictionary",
+    },
+  ]);
 });
 
 // This test case verifies that:
@@ -309,41 +347,66 @@ add_task(async function addon_abusereport_xulframe() {
   // XUL about:addons page at the expected position.
   ok(el, "Got an addon-abuse-report-xulframe element in the about:addons page");
   is(el.parentNode.tagName, "stack", "Got the expected parent element");
-  is(el.previousElementSibling.tagName, "hbox",
-     "Got the expected previous sibling element");
-  is(el.parentNode.lastElementChild, el,
-     "The addon-abuse-report-xulframe is the last element of the XUL stack");
-  ok(!el.hasAttribute("addon-id"),
-     "The addon-id attribute should be initially empty");
+  is(
+    el.previousElementSibling.tagName,
+    "hbox",
+    "Got the expected previous sibling element"
+  );
+  is(
+    el.parentNode.lastElementChild,
+    el,
+    "The addon-abuse-report-xulframe is the last element of the XUL stack"
+  );
+  ok(
+    !el.hasAttribute("addon-id"),
+    "The addon-id attribute should be initially empty"
+  );
 
   // Set the addon-id attribute and check that the abuse report elements is
   // being shown.
   const onceUpdated = BrowserTestUtils.waitForEvent(el, "abuse-report:updated");
-  el.openReport({addonId: ADDON_ID, reportEntryPoint: "test"});
+  el.openReport({ addonId: ADDON_ID, reportEntryPoint: "test" });
 
   // Wait the abuse report to be loaded.
   const abuseReportEl = await el.promiseAbuseReport;
   await onceUpdated;
 
   ok(!el.hidden, "The addon-abuse-report-xulframe element is visible");
-  is(el.getAttribute("addon-id"), ADDON_ID,
-     "Got the expected addon-id attribute set on the frame element");
-  is(el.getAttribute("report-entry-point"), "test",
-     "Got the expected report-entry-point attribute set on the frame element");
+  is(
+    el.getAttribute("addon-id"),
+    ADDON_ID,
+    "Got the expected addon-id attribute set on the frame element"
+  );
+  is(
+    el.getAttribute("report-entry-point"),
+    "test",
+    "Got the expected report-entry-point attribute set on the frame element"
+  );
 
   const browser = el.querySelector("browser");
 
-  is(gManagerWindow.document.activeElement, browser,
-     "The addon-abuse-report-xulframe has been focused");
+  is(
+    gManagerWindow.document.activeElement,
+    browser,
+    "The addon-abuse-report-xulframe has been focused"
+  );
   ok(browser, "The addon-abuse-report-xulframe contains a XUL browser element");
-  is(browser.getAttribute("transparent"), "true",
-     "The XUL browser element is transparent as expected");
+  is(
+    browser.getAttribute("transparent"),
+    "true",
+    "The XUL browser element is transparent as expected"
+  );
 
   ok(abuseReportEl, "Got an addon-abuse-report element");
-  is(abuseReportEl.addonId, ADDON_ID,
-     "The addon-abuse-report element has the expected addonId property");
-  ok(browser.contentDocument.contains(abuseReportEl),
-     "The addon-abuse-report element is part of the embedded XUL browser");
+  is(
+    abuseReportEl.addonId,
+    ADDON_ID,
+    "The addon-abuse-report element has the expected addonId property"
+  );
+  ok(
+    browser.contentDocument.contains(abuseReportEl),
+    "The addon-abuse-report element is part of the embedded XUL browser"
+  );
 
   await extension.unload();
   await closeAboutAddons();
@@ -371,30 +434,39 @@ add_task(async function addon_abusereport_xulframe_hiding() {
     ok(!frameEl.hidden, "The abuse report frame is visible");
 
     const onceFrameHidden = BrowserTestUtils.waitForEvent(
-      frameEl, "abuse-report:frame-hidden");
-    await actionFn({frameEl, panelEl});
+      frameEl,
+      "abuse-report:frame-hidden"
+    );
+    await actionFn({ frameEl, panelEl });
     await onceFrameHidden;
 
-    ok(!panelEl.hasAttribute("addon-id"),
-       "addon-id attribute removed from the addon-abuse-report element");
+    ok(
+      !panelEl.hasAttribute("addon-id"),
+      "addon-id attribute removed from the addon-abuse-report element"
+    );
 
-    ok(gManagerWindow.document.activeElement != browser,
-       "addon-abuse-report-xulframe returned focus back to about:addons");
+    ok(
+      gManagerWindow.document.activeElement != browser,
+      "addon-abuse-report-xulframe returned focus back to about:addons"
+    );
 
     await closeAboutAddons();
   }
 
   const TESTS = [
     [
-      async ({panelEl}) => {
+      async ({ panelEl }) => {
         panelEl.dispatchEvent(new CustomEvent("abuse-report:cancel"));
       },
       "addon report panel hidden on abuse-report:cancel event",
     ],
     [
       async () => {
-        await EventUtils.synthesizeKey("KEY_Escape", {},
-                                       abuseReportEl.ownerGlobal);
+        await EventUtils.synthesizeKey(
+          "KEY_Escape",
+          {},
+          abuseReportEl.ownerGlobal
+        );
       },
       "addon report panel hidden on Escape key pressed in the xulframe window",
     ],
@@ -405,16 +477,22 @@ add_task(async function addon_abusereport_xulframe_hiding() {
       "addon report panel hidden on Escape key pressed about:addons window",
     ],
     [
-      async ({panelEl}) => {
-        await EventUtils.synthesizeMouseAtCenter(panelEl._iconClose, {},
-                                                 panelEl.ownerGlobal);
+      async ({ panelEl }) => {
+        await EventUtils.synthesizeMouseAtCenter(
+          panelEl._iconClose,
+          {},
+          panelEl.ownerGlobal
+        );
       },
       "addon report panel hidden on close icon click",
     ],
     [
-      async ({panelEl}) => {
-        await EventUtils.synthesizeMouseAtCenter(panelEl._btnCancel, {},
-                                                 panelEl.ownerGlobal);
+      async ({ panelEl }) => {
+        await EventUtils.synthesizeMouseAtCenter(
+          panelEl._btnCancel,
+          {},
+          panelEl.ownerGlobal
+        );
       },
       "addon report panel hidden on close button click",
     ],
@@ -450,19 +528,25 @@ add_task(async function test_abusereport_panel_refresh() {
   function assertExtensionMetadata(panel, expected) {
     let name = panel.querySelector(".addon-name").textContent;
     let authorLinkEl = reportPanel.querySelector("a.author");
-    Assert.deepEqual({
-      name,
-      author: authorLinkEl.textContent.trim(),
-      homepage_url: authorLinkEl.getAttribute("href"),
-      icon_url: panel.querySelector(".addon-icon").getAttribute("src"),
-    }, expected, "Got the expected addon metadata");
+    Assert.deepEqual(
+      {
+        name,
+        author: authorLinkEl.textContent.trim(),
+        homepage_url: authorLinkEl.getAttribute("href"),
+        icon_url: panel.querySelector(".addon-icon").getAttribute("src"),
+      },
+      expected,
+      "Got the expected addon metadata"
+    );
   }
 
   let reportPanel = await getAbuseReportForManifest(EXT_ID1);
-  let {name, author, homepage_url} = BASE_TEST_MANIFEST;
+  let { name, author, homepage_url } = BASE_TEST_MANIFEST;
 
   assertExtensionMetadata(reportPanel, {
-    name, author, homepage_url,
+    name,
+    author,
+    homepage_url,
     icon_url: addon.iconURL,
   });
 
@@ -487,8 +571,10 @@ add_task(async function test_abusereport_panel_refresh() {
   });
 
   const allButtons = Array.from(reportPanel.querySelectorAll("buttons"));
-  ok(allButtons.every(el => el.hasAttribute("data-l10n-id")),
-     "All the panel buttons have a data-l10n-id");
+  ok(
+    allButtons.every(el => el.hasAttribute("data-l10n-id")),
+    "All the panel buttons have a data-l10n-id"
+  );
 
   await addon.cancelUninstall();
   await extension.unload();
@@ -509,29 +595,43 @@ add_task(async function test_abusereport_issuelist() {
   const selectedRadios = reasonsPanel.querySelectorAll("[type=radio]:checked");
 
   is(selectedRadios.length, 1, "Expect only one radio button selected");
-  is(selectedRadios[0], radioButtons[0],
-     "Expect the first radio button to be selected");
+  is(
+    selectedRadios[0],
+    radioButtons[0],
+    "Expect the first radio button to be selected"
+  );
 
-  is(abuseReportEl.reason, radioButtons[0].value,
-     `The reason property has the expected value: ${radioButtons[0].value}`);
+  is(
+    abuseReportEl.reason,
+    radioButtons[0].value,
+    `The reason property has the expected value: ${radioButtons[0].value}`
+  );
 
   const reasons = Array.from(radioButtons).map(el => el.value);
-  Assert.deepEqual(reasons.sort(), getAbuseReasons(abuseReportEl).sort(),
-                   `Got a radio button for the expected reasons`);
+  Assert.deepEqual(
+    reasons.sort(),
+    getAbuseReasons(abuseReportEl).sort(),
+    `Got a radio button for the expected reasons`
+  );
 
   for (const radio of radioButtons) {
     const reasonInfo = getAbuseReasonInfo(abuseReportEl, radio.value);
-    const expectExampleHidden = reasonInfo &&
-                                reasonInfo.isExampleHidden("extension");
-    is(radio.parentNode.querySelector(".reason-example").hidden,
-       expectExampleHidden,
-       `Got expected visibility on the example for reason "${radio.value}"`);
+    const expectExampleHidden =
+      reasonInfo && reasonInfo.isExampleHidden("extension");
+    is(
+      radio.parentNode.querySelector(".reason-example").hidden,
+      expectExampleHidden,
+      `Got expected visibility on the example for reason "${radio.value}"`
+    );
   }
 
   info("Change the selected reason to " + radioButtons[3].value);
   radioButtons[3].checked = true;
-  is(abuseReportEl.reason, radioButtons[3].value,
-     "The reason property has the expected value");
+  is(
+    abuseReportEl.reason,
+    radioButtons[3].value,
+    "The reason property has the expected value"
+  );
 
   await extension.unload();
   await closeAboutAddons();
@@ -548,29 +648,44 @@ add_task(async function test_abusereport_submitpanel() {
   const abuseReportEl = await openAbuseReport(extension.id);
   await promiseAbuseReportRendered(abuseReportEl);
 
-  ok(!abuseReportEl._reasonsPanel.hidden,
-     "The list of abuse reasons is the currently visible");
-  ok(abuseReportEl._submitPanel.hidden,
-    "The submit panel is the currently hidden");
+  ok(
+    !abuseReportEl._reasonsPanel.hidden,
+    "The list of abuse reasons is the currently visible"
+  );
+  ok(
+    abuseReportEl._submitPanel.hidden,
+    "The submit panel is the currently hidden"
+  );
 
   info("Clicking the 'next' button");
   let onceUpdated = promiseAbuseReportUpdated(abuseReportEl, "submit");
-  EventUtils.synthesizeMouseAtCenter(abuseReportEl._btnNext, {},
-    abuseReportEl.ownerGlobal);
+  EventUtils.synthesizeMouseAtCenter(
+    abuseReportEl._btnNext,
+    {},
+    abuseReportEl.ownerGlobal
+  );
   await onceUpdated;
 
   info("Clicking the 'go back' button");
   onceUpdated = promiseAbuseReportUpdated(abuseReportEl, "reasons");
 
-  EventUtils.synthesizeMouseAtCenter(abuseReportEl._btnGoBack, {},
-                                     abuseReportEl.ownerGlobal);
+  EventUtils.synthesizeMouseAtCenter(
+    abuseReportEl._btnGoBack,
+    {},
+    abuseReportEl.ownerGlobal
+  );
   await onceUpdated;
 
   info("Clicking the 'close' icon");
-  const onceCancelEvent = BrowserTestUtils.waitForEvent(abuseReportEl,
-                                                        "abuse-report:cancel");
-  EventUtils.synthesizeMouseAtCenter(abuseReportEl._iconClose, {},
-                                     abuseReportEl.ownerGlobal);
+  const onceCancelEvent = BrowserTestUtils.waitForEvent(
+    abuseReportEl,
+    "abuse-report:cancel"
+  );
+  EventUtils.synthesizeMouseAtCenter(
+    abuseReportEl._iconClose,
+    {},
+    abuseReportEl.ownerGlobal
+  );
   await onceCancelEvent;
 
   const frameEl = getAbuseReportFrame();
@@ -592,13 +707,18 @@ add_task(async function test_abusereport_submit() {
   const abuseReportEl = await openAbuseReport(extension.id);
   await promiseAbuseReportRendered(abuseReportEl);
 
-  ok(!abuseReportEl._reasonsPanel.hidden,
-     "The list of abuse reasons is the currently visible");
+  ok(
+    !abuseReportEl._reasonsPanel.hidden,
+    "The list of abuse reasons is the currently visible"
+  );
 
   info("Clicking the 'next' button");
   let onceUpdated = promiseAbuseReportUpdated(abuseReportEl, "submit");
-  EventUtils.synthesizeMouseAtCenter(abuseReportEl._btnNext, {},
-                                     abuseReportEl.ownerGlobal);
+  EventUtils.synthesizeMouseAtCenter(
+    abuseReportEl._btnNext,
+    {},
+    abuseReportEl.ownerGlobal
+  );
   await onceUpdated;
 
   is(abuseReportEl.message, "", "The abuse report message is initially empty");
@@ -608,15 +728,20 @@ add_task(async function test_abusereport_submit() {
   await EventUtils.synthesizeCompositionChange({
     composition: {
       string: typedMessage,
-      clauses: [{
-        length: typedMessage.length,
-        attr: Ci.nsITextInputProcessor.ATTR_RAW_CLAUSE,
-      }],
+      clauses: [
+        {
+          length: typedMessage.length,
+          attr: Ci.nsITextInputProcessor.ATTR_RAW_CLAUSE,
+        },
+      ],
     },
   });
 
-  is(abuseReportEl.message, typedMessage,
-     "Got the expected typed message in the abuse report");
+  is(
+    abuseReportEl.message,
+    typedMessage,
+    "Got the expected typed message in the abuse report"
+  );
 
   const expectedDetail = {
     addonId: extension.id,
@@ -626,9 +751,9 @@ add_task(async function test_abusereport_submit() {
 
   let reportSubmitted;
   const onReportSubmitted = new Promise(resolve => {
-    apiRequestHandler = ({data, request, response}) => {
+    apiRequestHandler = ({ data, request, response }) => {
       reportSubmitted = JSON.parse(data);
-      handleSubmitRequest({request, response});
+      handleSubmitRequest({ request, response });
       resolve();
     };
   });
@@ -636,10 +761,15 @@ add_task(async function test_abusereport_submit() {
   info("Clicking the 'submit' button");
   const onMessageBarsCreated = promiseMessageBars(2);
 
-  const onceSubmitEvent = BrowserTestUtils.waitForEvent(abuseReportEl,
-                                                        "abuse-report:submit");
-  EventUtils.synthesizeMouseAtCenter(abuseReportEl._btnSubmit, {},
-                                     abuseReportEl.ownerGlobal);
+  const onceSubmitEvent = BrowserTestUtils.waitForEvent(
+    abuseReportEl,
+    "abuse-report:submit"
+  );
+  EventUtils.synthesizeMouseAtCenter(
+    abuseReportEl._btnSubmit,
+    {},
+    abuseReportEl.ownerGlobal
+  );
   const submitEvent = await onceSubmitEvent;
 
   const actualDetail = {
@@ -648,11 +778,15 @@ add_task(async function test_abusereport_submit() {
     message: submitEvent.detail.message,
   };
   Assert.deepEqual(
-    actualDetail, expectedDetail,
-    "Got the expected detail in the abuse-report:submit event");
+    actualDetail,
+    expectedDetail,
+    "Got the expected detail in the abuse-report:submit event"
+  );
 
-  ok(submitEvent.detail.report,
-     "Got a report object in the abuse-report:submit event detail");
+  ok(
+    submitEvent.detail.report,
+    "Got a report object in the abuse-report:submit event detail"
+  );
 
   const frameEl = getAbuseReportFrame();
 
@@ -663,26 +797,46 @@ add_task(async function test_abusereport_submit() {
   // panel has been hidden, the report has been submitted and the expected
   // message bar is created in the HTMl about addons page.
   ok(frameEl.hidden, "abuse report frame should be hidden");
-  ok(!frameEl.hasAttribute("addon-id"),
-     "addon-id attribute has been removed from the abuse report frame");
+  ok(
+    !frameEl.hasAttribute("addon-id"),
+    "addon-id attribute has been removed from the abuse report frame"
+  );
   ok(abuseReportEl.hidden, "abuse report panel should be hidden");
 
-  is(reportSubmitted.addon, ADDON_ID,
-     "Got the expected addon in the submitted report");
-  is(reportSubmitted.reason, expectedDetail.reason,
-     "Got the expected reason in the submitted report");
-  is(reportSubmitted.message, expectedDetail.message,
-     "Got the expected message in the submitted report");
-  is(reportSubmitted.report_entry_point, REPORT_ENTRY_POINT,
-     "Got the expected report_entry_point in the submitted report");
+  is(
+    reportSubmitted.addon,
+    ADDON_ID,
+    "Got the expected addon in the submitted report"
+  );
+  is(
+    reportSubmitted.reason,
+    expectedDetail.reason,
+    "Got the expected reason in the submitted report"
+  );
+  is(
+    reportSubmitted.message,
+    expectedDetail.message,
+    "Got the expected message in the submitted report"
+  );
+  is(
+    reportSubmitted.report_entry_point,
+    REPORT_ENTRY_POINT,
+    "Got the expected report_entry_point in the submitted report"
+  );
 
   info("Waiting the expected message bars to be created");
   const barDetails = await onMessageBarsCreated;
   is(barDetails.length, 2, "Expect two message bars to have been created");
-  is(barDetails[0].definitionId, "submitting",
-     "Got a submitting message bar as expected");
-  is(barDetails[1].definitionId, "submitted",
-     "Got a submitted message bar as expected");
+  is(
+    barDetails[0].definitionId,
+    "submitting",
+    "Got a submitting message bar as expected"
+  );
+  is(
+    barDetails[1].definitionId,
+    "submitted",
+    "Got a submitted message bar as expected"
+  );
 
   await extension.unload();
   await closeAboutAddons();
@@ -702,9 +856,7 @@ async function test_abuse_report_suggestions(addonId) {
     _btnGoBack,
     _reasonsPanel,
     _submitPanel,
-    _submitPanel: {
-      _suggestions,
-    },
+    _submitPanel: { _suggestions },
   } = abuseReportEl;
 
   for (const reason of getAbuseReasons(abuseReportEl)) {
@@ -730,21 +882,32 @@ async function test_abuse_report_suggestions(addonId) {
       _suggestions.querySelectorAll("[data-l10n-id]")
     ).filter(el => !el.hidden);
 
-    is(!_suggestions.hidden, !!reasonInfo.hasSuggestions,
-       `Suggestions block has the expected visibility for "${reason}"`);
+    is(
+      !_suggestions.hidden,
+      !!reasonInfo.hasSuggestions,
+      `Suggestions block has the expected visibility for "${reason}"`
+    );
     if (reasonInfo.hasSuggestions) {
-      ok(localizedSuggestionsContent.length > 0,
-         `Category suggestions should not be empty for "${reason}"`);
+      ok(
+        localizedSuggestionsContent.length > 0,
+        `Category suggestions should not be empty for "${reason}"`
+      );
     } else {
-      ok(localizedSuggestionsContent.length === 0,
-         `Category suggestions should be empty for "${reason}"`);
+      ok(
+        localizedSuggestionsContent.length === 0,
+        `Category suggestions should be empty for "${reason}"`
+      );
     }
 
     const extSupportLink = _suggestions.querySelector(
-      ".extension-support-link");
+      ".extension-support-link"
+    );
     if (extSupportLink) {
-      is(extSupportLink.getAttribute("href"), BASE_TEST_MANIFEST.homepage_url,
-         "Got the expected extension-support-url");
+      is(
+        extSupportLink.getAttribute("href"),
+        BASE_TEST_MANIFEST.homepage_url,
+        "Got the expected extension-support-url"
+      );
     }
 
     const learnMoreLinks = [];
@@ -753,16 +916,23 @@ async function test_abuse_report_suggestions(addonId) {
     }
 
     if (learnMoreLinks.length > 0) {
-      ok(learnMoreLinks.every(el => el.getAttribute("target") === "_blank"),
-         "All the learn more links have target _blank");
-      ok(learnMoreLinks.every(el => el.hasAttribute("href")),
-         "All the learn more links have a url set");
+      ok(
+        learnMoreLinks.every(el => el.getAttribute("target") === "_blank"),
+        "All the learn more links have target _blank"
+      );
+      ok(
+        learnMoreLinks.every(el => el.hasAttribute("href")),
+        "All the learn more links have a url set"
+      );
     }
 
     info("Clicking the 'go back' button");
     oncePanelUpdated = promiseAbuseReportUpdated(abuseReportEl, "reasons");
     EventUtils.synthesizeMouseAtCenter(
-      _btnGoBack, {}, abuseReportEl.ownerGlobal);
+      _btnGoBack,
+      {},
+      abuseReportEl.ownerGlobal
+    );
     await oncePanelUpdated;
     ok(!_reasonsPanel.hidden, "Reasons panel should be visible");
     ok(_submitPanel.hidden, "Submit panel should be hidden");
@@ -796,7 +966,9 @@ add_task(async function test_abuse_report_message_bars() {
   const theme = await installTestExtension(THEME_ID, "theme");
 
   async function assertMessageBars(
-    expectedMessageBarIds, testSetup, testMessageBarDetails
+    expectedMessageBarIds,
+    testSetup,
+    testMessageBarDetails
   ) {
     await openAboutAddons();
     const expectedLength = expectedMessageBarIds.length;
@@ -806,8 +978,11 @@ add_task(async function test_abuse_report_message_bars() {
     await testSetup();
     info(`Waiting for ${expectedLength} message-bars to be created`);
     const barDetails = await onMessageBarsCreated;
-    Assert.deepEqual(barDetails.map(d => d.definitionId), expectedMessageBarIds,
-                     "Got the expected message bars");
+    Assert.deepEqual(
+      barDetails.map(d => d.definitionId),
+      expectedMessageBarIds,
+      "Got the expected message bars"
+    );
     if (testMessageBarDetails) {
       await testMessageBarDetails(barDetails);
     }
@@ -815,7 +990,7 @@ add_task(async function test_abuse_report_message_bars() {
   }
 
   function setTestRequestHandler(responseStatus, responseData) {
-    apiRequestHandler = ({request, response}) => {
+    apiRequestHandler = ({ request, response }) => {
       response.setStatusLine(request.httpVersion, responseStatus, "Error");
       response.write(responseData);
     };
@@ -824,7 +999,9 @@ add_task(async function test_abuse_report_message_bars() {
   await assertMessageBars(["ERROR_ADDON_NOTFOUND"], async () => {
     info("Test message bars on addon not found");
     triggerNewAbuseReport(
-      "non-existend-addon-id@mochi.test", REPORT_ENTRY_POINT);
+      "non-existend-addon-id@mochi.test",
+      REPORT_ENTRY_POINT
+    );
   });
 
   await assertMessageBars(["submitting", "ERROR_RECENT_SUBMIT"], async () => {
@@ -839,7 +1016,7 @@ add_task(async function test_abuse_report_message_bars() {
     info("Test message bars on aborted submission");
     triggerNewAbuseReport(EXT_ID, REPORT_ENTRY_POINT);
     await promiseAbuseReportRendered();
-    const {report}  = getAbuseReportFrame();
+    const { report } = getAbuseReportFrame();
     report.abort();
     triggerSubmitAbuseReport("fake-reason", "fake-message");
   });
@@ -877,15 +1054,16 @@ add_task(async function test_abuse_report_message_bars() {
   });
 
   // Verify message bar on add-on without perm_can_uninstall.
-  await assertMessageBars([
-    "submitting", "submitted-no-remove-action",
-  ], async () => {
-    info("Test message bars on report submitted on an addon without remove");
-    setTestRequestHandler(200, "{}");
-    triggerNewAbuseReport(THEME_NO_UNINSTALL_ID, "menu");
-    await promiseAbuseReportRendered();
-    triggerSubmitAbuseReport("fake-reason", "fake-message");
-  });
+  await assertMessageBars(
+    ["submitting", "submitted-no-remove-action"],
+    async () => {
+      info("Test message bars on report submitted on an addon without remove");
+      setTestRequestHandler(200, "{}");
+      triggerNewAbuseReport(THEME_NO_UNINSTALL_ID, "menu");
+      await promiseAbuseReportRendered();
+      triggerSubmitAbuseReport("fake-reason", "fake-message");
+    }
+  );
 
   // Verify the 3 expected entry points:
   //   menu, toolbar_context_menu and uninstall
@@ -899,24 +1077,32 @@ add_task(async function test_abuse_report_message_bars() {
   });
 
   for (const extId of [EXT_ID, THEME_ID]) {
-    await assertMessageBars(["submitting", "submitted"], async () => {
-      info(`Test message bars on ${extId} reported from toolbar contextmenu`);
-      setTestRequestHandler(200, "{}");
-      triggerNewAbuseReport(extId, "toolbar_context_menu");
-      await promiseAbuseReportRendered();
-      triggerSubmitAbuseReport("fake-reason", "fake-message");
-    }, ([submittingDetails, submittedDetails]) => {
-      const buttonsL10nId = Array.from(
-        submittedDetails.messagebar.querySelectorAll("button")
-      ).map(el => el.getAttribute("data-l10n-id"));
-      if (extId === THEME_ID) {
-        ok(buttonsL10nId.every(id => id.endsWith("-theme")),
-           "submitted bar actions should use the Fluent id for themes");
-      } else {
-        ok(buttonsL10nId.every(id => id.endsWith("-extension")),
-           "submitted bar actions should use the Fluent id for extensions");
+    await assertMessageBars(
+      ["submitting", "submitted"],
+      async () => {
+        info(`Test message bars on ${extId} reported from toolbar contextmenu`);
+        setTestRequestHandler(200, "{}");
+        triggerNewAbuseReport(extId, "toolbar_context_menu");
+        await promiseAbuseReportRendered();
+        triggerSubmitAbuseReport("fake-reason", "fake-message");
+      },
+      ([submittingDetails, submittedDetails]) => {
+        const buttonsL10nId = Array.from(
+          submittedDetails.messagebar.querySelectorAll("button")
+        ).map(el => el.getAttribute("data-l10n-id"));
+        if (extId === THEME_ID) {
+          ok(
+            buttonsL10nId.every(id => id.endsWith("-theme")),
+            "submitted bar actions should use the Fluent id for themes"
+          );
+        } else {
+          ok(
+            buttonsL10nId.every(id => id.endsWith("-extension")),
+            "submitted bar actions should use the Fluent id for extensions"
+          );
+        }
       }
-    });
+    );
   }
 
   for (const extId of [EXT_ID2, THEME_ID]) {
@@ -943,43 +1129,56 @@ add_task(async function test_trigger_abusereport_from_aboutaddons_menu() {
   await gManagerWindow.htmlBrowserLoaded;
 
   const abuseReportFrameEl = getAbuseReportFrame();
-  ok(abuseReportFrameEl.hidden,
-     "Abuse Report frame should be initially hidden");
+  ok(
+    abuseReportFrameEl.hidden,
+    "Abuse Report frame should be initially hidden"
+  );
 
-  const {contentDocument: doc} = gManagerWindow.getHtmlBrowser();
+  const { contentDocument: doc } = gManagerWindow.getHtmlBrowser();
 
   const addonCard = doc.querySelector(
-    `addon-list addon-card[addon-id="${extension.id}"]`);
+    `addon-list addon-card[addon-id="${extension.id}"]`
+  );
   ok(addonCard, "Got the addon-card for the test extension");
 
   const reportButton = addonCard.querySelector("[action=report]");
   ok(reportButton, "Got the report action for the test extension");
 
   const onceReportNew = BrowserTestUtils.waitForEvent(
-    abuseReportFrameEl, "abuse-report:new");
+    abuseReportFrameEl,
+    "abuse-report:new"
+  );
   const onceReportFrameShown = BrowserTestUtils.waitForEvent(
-    abuseReportFrameEl, "abuse-report:frame-shown");
+    abuseReportFrameEl,
+    "abuse-report:frame-shown"
+  );
 
   info("Click the report action and wait for the 'abuse-report:new' event");
   reportButton.click();
   const newReportEvent = await onceReportNew;
 
-  Assert.deepEqual(newReportEvent.detail, {
-    addonId: extension.id,
-    reportEntryPoint: "menu",
-  }, "Got the expected details in the 'abuse-report:new' event");
+  Assert.deepEqual(
+    newReportEvent.detail,
+    {
+      addonId: extension.id,
+      reportEntryPoint: "menu",
+    },
+    "Got the expected details in the 'abuse-report:new' event"
+  );
 
   info("Wait for the abuse report frame to be visible");
   await onceReportFrameShown;
-  ok(!abuseReportFrameEl.hidden,
-    "Abuse Report frame should be visible");
+  ok(!abuseReportFrameEl.hidden, "Abuse Report frame should be visible");
 
   info("Wait for the abuse report panel to be rendered");
   const abuseReportEl = await abuseReportFrameEl.promiseAbuseReport;
   await promiseAbuseReportRendered(abuseReportEl);
 
-  is(abuseReportEl.addon && abuseReportEl.addon.id, extension.id,
-     "Abuse Report panel rendered for the expected addonId");
+  is(
+    abuseReportEl.addon && abuseReportEl.addon.id,
+    extension.id,
+    "Abuse Report panel rendered for the expected addonId"
+  );
 
   await closeAboutAddons();
   await extension.unload();
@@ -996,47 +1195,63 @@ add_task(async function test_trigger_abusereport_from_aboutaddons_remove() {
   await gManagerWindow.htmlBrowserLoaded;
 
   const abuseReportFrameEl = getAbuseReportFrame();
-  ok(abuseReportFrameEl.hidden,
-     "Abuse Report frame should be initially hidden");
+  ok(
+    abuseReportFrameEl.hidden,
+    "Abuse Report frame should be initially hidden"
+  );
 
-  const {contentDocument: doc} = gManagerWindow.getHtmlBrowser();
+  const { contentDocument: doc } = gManagerWindow.getHtmlBrowser();
 
   const addonCard = doc.querySelector(
-    `addon-list addon-card[addon-id="${extension.id}"]`);
+    `addon-list addon-card[addon-id="${extension.id}"]`
+  );
   ok(addonCard, "Got the addon-card for the test theme extension");
 
   const removeButton = addonCard.querySelector("[action=remove]");
   ok(removeButton, "Got the remove action for the test theme extension");
 
   const onceReportNew = BrowserTestUtils.waitForEvent(
-    abuseReportFrameEl, "abuse-report:new");
+    abuseReportFrameEl,
+    "abuse-report:new"
+  );
   const onceReportFrameShown = BrowserTestUtils.waitForEvent(
-    abuseReportFrameEl, "abuse-report:frame-shown");
+    abuseReportFrameEl,
+    "abuse-report:frame-shown"
+  );
 
   // Prepare the mocked prompt service.
   const promptService = mockPromptService();
-  promptService.confirmEx = createPromptConfirmEx({remove: true, report: true});
+  promptService.confirmEx = createPromptConfirmEx({
+    remove: true,
+    report: true,
+  });
 
   info("Click the report action and wait for the 'abuse-report:new' event");
   removeButton.click();
   const newReportEvent = await onceReportNew;
 
-  Assert.deepEqual(newReportEvent.detail, {
-    addonId: extension.id,
-    reportEntryPoint: "uninstall",
-  }, "Got the expected details in the 'abuse-report:new' event");
+  Assert.deepEqual(
+    newReportEvent.detail,
+    {
+      addonId: extension.id,
+      reportEntryPoint: "uninstall",
+    },
+    "Got the expected details in the 'abuse-report:new' event"
+  );
 
   info("Wait for the abuse report frame to be visible");
   await onceReportFrameShown;
-  ok(!abuseReportFrameEl.hidden,
-    "Abuse Report frame should be visible");
+  ok(!abuseReportFrameEl.hidden, "Abuse Report frame should be visible");
 
   info("Wait for the abuse report panel to be rendered");
   const abuseReportEl = await abuseReportFrameEl.promiseAbuseReport;
   await promiseAbuseReportRendered(abuseReportEl);
 
-  is(abuseReportEl.addon && abuseReportEl.addon.id, extension.id,
-     "Abuse Report panel rendered for the expected addonId");
+  is(
+    abuseReportEl.addon && abuseReportEl.addon.id,
+    extension.id,
+    "Abuse Report panel rendered for the expected addonId"
+  );
 
   await closeAboutAddons();
   await extension.unload();
@@ -1052,12 +1267,13 @@ add_task(async function test_trigger_abusereport_from_browserAction_remove() {
     const menu = document.getElementById("toolbar-context-menu");
     const node = document.getElementById(CSS.escape(buttonId));
     const shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
-    EventUtils.synthesizeMouseAtCenter(node, {type: "contextmenu"});
+    EventUtils.synthesizeMouseAtCenter(node, { type: "contextmenu" });
     await shown;
 
     info(`Clicking on "Remove Extension" context menu item`);
     let removeExtension = menu.querySelector(
-      ".customize-context-removeExtension");
+      ".customize-context-removeExtension"
+    );
     removeExtension.click();
 
     return menu;
@@ -1065,26 +1281,40 @@ add_task(async function test_trigger_abusereport_from_browserAction_remove() {
 
   async function assertAbuseReportPanelOpen() {
     const browser = gBrowser.selectedBrowser;
-    const abuseReportFrame = browser.contentDocument
-      .querySelector("addon-abuse-report-xulframe");
+    const abuseReportFrame = browser.contentDocument.querySelector(
+      "addon-abuse-report-xulframe"
+    );
 
-    ok(!abuseReportFrame.hidden,
-      "Abuse report frame has the expected visibility");
-    is(abuseReportFrame.report.addon.id, EXT_ID,
-      "Abuse report frame has the expected addon id");
-    is(abuseReportFrame.report.reportEntryPoint, "uninstall",
-      "Abuse report frame has the expected reportEntryPoint");
+    ok(
+      !abuseReportFrame.hidden,
+      "Abuse report frame has the expected visibility"
+    );
+    is(
+      abuseReportFrame.report.addon.id,
+      EXT_ID,
+      "Abuse report frame has the expected addon id"
+    );
+    is(
+      abuseReportFrame.report.reportEntryPoint,
+      "uninstall",
+      "Abuse report frame has the expected reportEntryPoint"
+    );
 
     const panelEl = await abuseReportFrame.promiseAbuseReport;
     const onceCancelled = BrowserTestUtils.waitForEvent(
-      abuseReportFrame, "abuse-report:cancel");
+      abuseReportFrame,
+      "abuse-report:cancel"
+    );
     panelEl.dispatchEvent(new CustomEvent("abuse-report:cancel"));
     await onceCancelled;
   }
 
   // Prepare the mocked prompt service.
   const promptService = mockPromptService();
-  promptService.confirmEx = createPromptConfirmEx({remove: true, report: true});
+  promptService.confirmEx = createPromptConfirmEx({
+    remove: true,
+    report: true,
+  });
 
   await BrowserTestUtils.withNewTab("about:blank", async function() {
     info(`Open browserAction context menu in toolbar context menu`);
@@ -1094,8 +1324,11 @@ add_task(async function test_trigger_abusereport_from_browserAction_remove() {
     // Wait about:addons to be loaded.
     let browser = gBrowser.selectedBrowser;
     await BrowserTestUtils.browserLoaded(browser);
-    is(browser.currentURI.spec, "about:addons",
-      "about:addons tab currently selected");
+    is(
+      browser.currentURI.spec,
+      "about:addons",
+      "about:addons tab currently selected"
+    );
     menu.hidePopup();
 
     await assertAbuseReportPanelOpen();
@@ -1106,13 +1339,19 @@ add_task(async function test_trigger_abusereport_from_browserAction_remove() {
     // Reload the tab to verify Bug 1559124 didn't regressed.
     browser.contentWindow.location.reload();
     await BrowserTestUtils.browserLoaded(browser);
-    is(browser.currentURI.spec, "about:addons",
-      "about:addons tab currently selected");
-    const abuseReportFrame = browser.contentDocument
-      .querySelector("addon-abuse-report-xulframe");
+    is(
+      browser.currentURI.spec,
+      "about:addons",
+      "about:addons tab currently selected"
+    );
+    const abuseReportFrame = browser.contentDocument.querySelector(
+      "addon-abuse-report-xulframe"
+    );
 
     const onceReportFrameShown = BrowserTestUtils.waitForEvent(
-      abuseReportFrame, "abuse-report:frame-shown");
+      abuseReportFrame,
+      "abuse-report:frame-shown"
+    );
     menu = await reportFromContextMenuRemove();
     await onceReportFrameShown;
 
@@ -1120,7 +1359,7 @@ add_task(async function test_trigger_abusereport_from_browserAction_remove() {
 
     menu.hidePopup();
     await addon.cancelUninstall();
-   });
+  });
 
   await extension.unload();
 });
@@ -1133,23 +1372,31 @@ add_task(async function test_abuse_report_open_author_url() {
 
   const authorLink = abuseReportEl._linkAddonAuthor;
   ok(authorLink, "Got the author link element");
-  is(authorLink.href, "about:config",
-     "Got a privileged url in the link element");
+  is(
+    authorLink.href,
+    "about:config",
+    "Got a privileged url in the link element"
+  );
 
   SimpleTest.waitForExplicitFinish();
   let waitForConsole = new Promise(resolve => {
-    SimpleTest.monitorConsole(resolve, [{
-      // eslint-disable-next-line max-len
-      message: /Security Error: Content at moz-nullprincipal:{.*} may not load or link to about:config/,
-    }]);
+    SimpleTest.monitorConsole(resolve, [
+      {
+        // eslint-disable-next-line max-len
+        message: /Security Error: Content at moz-nullprincipal:{.*} may not load or link to about:config/,
+      },
+    ]);
   });
 
   let tabSwitched = BrowserTestUtils.waitForEvent(gBrowser, "TabSwitchDone");
   authorLink.click();
   await tabSwitched;
 
-  is(gBrowser.selectedBrowser.currentURI.spec, "about:blank",
-     "Got about:blank loaded in the new tab");
+  is(
+    gBrowser.selectedBrowser.currentURI.spec,
+    "about:blank",
+    "Got about:blank loaded in the new tab"
+  );
 
   SimpleTest.endMonitorConsole();
   await waitForConsole;
@@ -1190,7 +1437,9 @@ add_task(async function test_frame_hidden_on_report_unsupported_addontype() {
   const el = getAbuseReportFrame();
 
   const onceCancelled = BrowserTestUtils.waitForEvent(
-    el, "abuse-report:cancel");
+    el,
+    "abuse-report:cancel"
+  );
   triggerNewAbuseReport(EXT_UNSUPPORTED_TYPE_ADDON_ID, "menu");
 
   await onceCancelled;
@@ -1206,13 +1455,13 @@ add_task(async function test_no_report_checkbox_for_unsupported_addon_types() {
     await gManagerWindow.htmlBrowserLoaded;
 
     const abuseReportFrameEl = getAbuseReportFrame();
-    ok(abuseReportFrameEl.hidden,
-       "Abuse Report frame should be hidden");
+    ok(abuseReportFrameEl.hidden, "Abuse Report frame should be hidden");
 
-    const {contentDocument: doc} = gManagerWindow.getHtmlBrowser();
+    const { contentDocument: doc } = gManagerWindow.getHtmlBrowser();
 
     const addonCard = doc.querySelector(
-      `addon-list addon-card[addon-id="${addon.id}"]`);
+      `addon-list addon-card[addon-id="${addon.id}"]`
+    );
     ok(addonCard, "Got the addon-card for the test extension");
 
     const removeButton = addonCard.querySelector("[action=remove]");
@@ -1221,36 +1470,42 @@ add_task(async function test_no_report_checkbox_for_unsupported_addon_types() {
     // Prepare the mocked prompt service.
     const promptService = mockPromptService();
     promptService.confirmEx = createPromptConfirmEx({
-      remove: true, report: false, expectCheckboxHidden: true,
+      remove: true,
+      report: false,
+      expectCheckboxHidden: true,
     });
 
     info("Click the report action and wait for the addon to be removed");
     const promiseCardRemoved = BrowserTestUtils.waitForEvent(
-      addonCard.closest("addon-list"), "remove");
+      addonCard.closest("addon-list"),
+      "remove"
+    );
     removeButton.click();
     await promiseCardRemoved;
 
-    ok(abuseReportFrameEl.hidden,
-      "Abuse Report frame should still be hidden");
+    ok(abuseReportFrameEl.hidden, "Abuse Report frame should still be hidden");
 
     await closeAboutAddons();
   }
 
-  const reportNotSupportedAddons = [{
-    id: "fake-langpack-to-remove@mochi.test",
-    name: "This is a fake langpack",
-    version: "1.1",
-    type: "locale",
-  }, {
-    id: "fake-dictionary-to-remove@mochi.test",
-    name: "This is a fake dictionary",
-    version: "1.1",
-    type: "dictionary",
-  }];
+  const reportNotSupportedAddons = [
+    {
+      id: "fake-langpack-to-remove@mochi.test",
+      name: "This is a fake langpack",
+      version: "1.1",
+      type: "locale",
+    },
+    {
+      id: "fake-dictionary-to-remove@mochi.test",
+      name: "This is a fake dictionary",
+      version: "1.1",
+      type: "dictionary",
+    },
+  ];
 
   gProvider.createAddons(reportNotSupportedAddons);
 
-  for (const {id} of reportNotSupportedAddons) {
+  for (const { id } of reportNotSupportedAddons) {
     const addon = await AddonManager.getAddonByID(id);
     await test_report_checkbox_hidden(addon);
   }

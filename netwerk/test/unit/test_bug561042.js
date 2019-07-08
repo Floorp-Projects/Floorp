@@ -4,40 +4,39 @@
 
 "use strict";
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const SERVER_PORT = 8080;
 const baseURL = "http://localhost:" + SERVER_PORT + "/";
 
 var cookie = "";
-for (let i =0; i < 10000; i++) {
-    cookie += " big cookie";
+for (let i = 0; i < 10000; i++) {
+  cookie += " big cookie";
 }
 
 var listener = {
-  onStartRequest (request) {
-  },
+  onStartRequest(request) {},
 
-  onDataAvailable (request, stream) {
-  },
+  onDataAvailable(request, stream) {},
 
-  onStopRequest (request, status) {
-      Assert.equal(status, Cr.NS_OK);
-      server.stop(do_test_finished);
+  onStopRequest(request, status) {
+    Assert.equal(status, Cr.NS_OK);
+    server.stop(do_test_finished);
   },
-
 };
 
 var server = new HttpServer();
 function run_test() {
-    server.start(SERVER_PORT);
-    server.registerPathHandler('/', function(metadata, response) {
-        response.setStatusLine(metadata.httpVersion, 200, "OK");
-        response.setHeader("Set-Cookie", "BigCookie=" + cookie, false);
-        response.write("Hello world");
-    });
-    var chan = NetUtil.newChannel({uri: baseURL, loadUsingSystemPrincipal: true})
-                      .QueryInterface(Ci.nsIHttpChannel);
-    chan.asyncOpen(listener);
-    do_test_pending();
+  server.start(SERVER_PORT);
+  server.registerPathHandler("/", function(metadata, response) {
+    response.setStatusLine(metadata.httpVersion, 200, "OK");
+    response.setHeader("Set-Cookie", "BigCookie=" + cookie, false);
+    response.write("Hello world");
+  });
+  var chan = NetUtil.newChannel({
+    uri: baseURL,
+    loadUsingSystemPrincipal: true,
+  }).QueryInterface(Ci.nsIHttpChannel);
+  chan.asyncOpen(listener);
+  do_test_pending();
 }

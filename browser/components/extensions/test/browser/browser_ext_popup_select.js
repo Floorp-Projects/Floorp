@@ -9,20 +9,20 @@ add_task(async function testSetup() {
 add_task(async function testPopupSelectPopup() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
-      browser.tabs.query({active: true, currentWindow: true}, tabs => {
+      browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         browser.pageAction.show(tabs[0].id);
       });
     },
 
     manifest: {
-      "browser_action": {
-        "default_popup": "popup.html",
-        "browser_style": false,
+      browser_action: {
+        default_popup: "popup.html",
+        browser_style: false,
       },
 
-      "page_action": {
-        "default_popup": "popup.html",
-        "browser_style": false,
+      page_action: {
+        default_popup: "popup.html",
+        browser_style: false,
       },
     },
 
@@ -45,7 +45,8 @@ add_task(async function testPopupSelectPopup() {
 
   await extension.startup();
 
-  let selectPopup = document.getElementById("ContentSelectDropdown").firstElementChild;
+  let selectPopup = document.getElementById("ContentSelectDropdown")
+    .firstElementChild;
 
   async function testPanel(browser) {
     let popupPromise = promisePopupShown(selectPopup);
@@ -65,19 +66,28 @@ add_task(async function testPopupSelectPopup() {
       let elem = content.document.getElementById("select");
       let r = elem.getBoundingClientRect();
 
-      return {left: r.left, bottom: r.bottom};
+      return { left: r.left, bottom: r.bottom };
     });
 
     let popupRect = selectPopup.getOuterScreenRect();
 
-    is(Math.floor(browser.screenX + elemRect.left), popupRect.left,
-       "Select popup has the correct x origin");
+    is(
+      Math.floor(browser.screenX + elemRect.left),
+      popupRect.left,
+      "Select popup has the correct x origin"
+    );
 
-    is(Math.floor(browser.screenY + elemRect.bottom), popupRect.top,
-       "Select popup has the correct y origin");
+    is(
+      Math.floor(browser.screenY + elemRect.bottom),
+      popupRect.top,
+      "Select popup has the correct y origin"
+    );
 
     // Close the select popup before proceeding to the next test.
-    const onPopupHidden = BrowserTestUtils.waitForEvent(selectPopup, "popuphidden");
+    const onPopupHidden = BrowserTestUtils.waitForEvent(
+      selectPopup,
+      "popuphidden"
+    );
     selectPopup.hidePopup();
     await onPopupHidden;
   }

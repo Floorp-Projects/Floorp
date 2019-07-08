@@ -7,7 +7,7 @@
 
 var EXPORTED_SYMBOLS = ["TabUnloader"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * This module is responsible for detecting low-memory scenarios and unloading

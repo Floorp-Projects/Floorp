@@ -6,8 +6,9 @@
 /* import-globals-from head.js */
 
 function _getSupportsFile(path) {
-  const cr = Cc["@mozilla.org/chrome/chrome-registry;1"]
-    .getService(Ci.nsIChromeRegistry);
+  const cr = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+    Ci.nsIChromeRegistry
+  );
   const uri = Services.io.newURI(CHROME_URL_ROOT + path);
   const fileurl = cr.convertChromeURL(uri);
   return fileurl.QueryInterface(Ci.nsIFileURL);
@@ -49,7 +50,10 @@ function installRegularExtension(pathOrFile) {
  * Will use a mock file picker to select the file.
  */
 async function installTemporaryExtension(pathOrFile, name, document) {
-  const { Management } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  const { Management } = ChromeUtils.import(
+    "resource://gre/modules/Extension.jsm",
+    null
+  );
 
   info("Install temporary extension named " + name);
   // Mock the file picker to select a test addon
@@ -75,20 +79,30 @@ async function installTemporaryExtension(pathOrFile, name, document) {
 /* exported installTemporaryExtension */
 
 function createTemporaryXPI(xpiData) {
-  const { ExtensionTestCommon } =
-    ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm", {});
+  const { ExtensionTestCommon } = ChromeUtils.import(
+    "resource://testing-common/ExtensionTestCommon.jsm",
+    {}
+  );
 
   const { background, files, id, name, extraProperties } = xpiData;
   info("Generate XPI file for " + id);
 
-  const manifest = Object.assign({}, {
-    applications: { gecko: { id }},
-    manifest_version: 2,
-    name,
-    version: "1.0",
-  }, extraProperties);
+  const manifest = Object.assign(
+    {},
+    {
+      applications: { gecko: { id } },
+      manifest_version: 2,
+      name,
+      version: "1.0",
+    },
+    extraProperties
+  );
 
-  const xpiFile = ExtensionTestCommon.generateXPI({ background, files, manifest });
+  const xpiFile = ExtensionTestCommon.generateXPI({
+    background,
+    files,
+    manifest,
+  });
   registerCleanupFunction(() => xpiFile.exists() && xpiFile.remove(false));
   return xpiFile;
 }
@@ -110,7 +124,9 @@ function updateTemporaryXPI(xpiData, existingXPI) {
   const xpiFile = createTemporaryXPI(xpiData);
   // Check that the name of the new file is correct
   if (xpiFile.leafName !== existingName) {
-    throw new Error("New XPI created with unexpected name: " + xpiFile.leafName);
+    throw new Error(
+      "New XPI created with unexpected name: " + xpiFile.leafName
+    );
   }
   return xpiFile;
 }
@@ -147,7 +163,9 @@ async function removeTemporaryExtension(name, document) {
 /* exported removeTemporaryExtension */
 
 async function removeExtension(id, name, document) {
-  info("Retrieve the extension instance from the addon manager, and uninstall it");
+  info(
+    "Retrieve the extension instance from the addon manager, and uninstall it"
+  );
   const extension = await AddonManager.getAddonByID(id);
   extension.uninstall();
 

@@ -9,20 +9,38 @@ var EXPORTED_SYMBOLS = ["ProxyScriptContext", "ProxyChannelFilter"];
 
 /* exported ProxyScriptContext, ProxyChannelFilter */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { ExtensionCommon } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionCommon.jsm"
+);
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "ExtensionChild",
-                               "resource://gre/modules/ExtensionChild.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionParent",
-                               "resource://gre/modules/ExtensionParent.jsm");
-ChromeUtils.defineModuleGetter(this, "Schemas",
-                               "resource://gre/modules/Schemas.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "ProxyService",
-                                   "@mozilla.org/network/protocol-proxy-service;1",
-                                   "nsIProtocolProxyService");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionChild",
+  "resource://gre/modules/ExtensionChild.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionParent",
+  "resource://gre/modules/ExtensionParent.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Schemas",
+  "resource://gre/modules/Schemas.jsm"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "ProxyService",
+  "@mozilla.org/network/protocol-proxy-service;1",
+  "nsIProtocolProxyService"
+);
 
 XPCOMUtils.defineLazyGetter(this, "tabTracker", () => {
   return ExtensionParent.apiManager.global.tabTracker;
@@ -34,14 +52,12 @@ XPCOMUtils.defineLazyGetter(this, "getCookieStoreIdForOriginAttributes", () => {
 const CATEGORY_EXTENSION_SCRIPTS_CONTENT = "webextension-scripts-content";
 
 // DNS is resolved on the SOCKS proxy server.
-const {TRANSPARENT_PROXY_RESOLVES_HOST} = Ci.nsIProxyInfo;
+const { TRANSPARENT_PROXY_RESOLVES_HOST } = Ci.nsIProxyInfo;
 
 // The length of time (seconds) to wait for a proxy to resolve before ignoring it.
 const PROXY_TIMEOUT_SEC = 10;
 
-const {
-  ExtensionError,
-} = ExtensionUtils;
+const { ExtensionError } = ExtensionUtils;
 
 const {
   BaseContext,
@@ -63,29 +79,48 @@ const PROXY_TYPES = Object.freeze({
 const ProxyInfoData = {
   validate(proxyData) {
     if (proxyData.type && proxyData.type.toLowerCase() === "direct") {
-      return {type: proxyData.type};
+      return { type: proxyData.type };
     }
-    for (let prop of ["type", "host", "port", "username", "password", "proxyDNS", "failoverTimeout", "proxyAuthorizationHeader", "connectionIsolationKey"]) {
+    for (let prop of [
+      "type",
+      "host",
+      "port",
+      "username",
+      "password",
+      "proxyDNS",
+      "failoverTimeout",
+      "proxyAuthorizationHeader",
+      "connectionIsolationKey",
+    ]) {
       this[prop](proxyData);
     }
     return proxyData;
   },
 
   type(proxyData) {
-    let {type} = proxyData;
-    if (typeof type !== "string" || !PROXY_TYPES.hasOwnProperty(type.toUpperCase())) {
-      throw new ExtensionError(`ProxyInfoData: Invalid proxy server type: "${type}"`);
+    let { type } = proxyData;
+    if (
+      typeof type !== "string" ||
+      !PROXY_TYPES.hasOwnProperty(type.toUpperCase())
+    ) {
+      throw new ExtensionError(
+        `ProxyInfoData: Invalid proxy server type: "${type}"`
+      );
     }
     proxyData.type = PROXY_TYPES[type.toUpperCase()];
   },
 
   host(proxyData) {
-    let {host} = proxyData;
+    let { host } = proxyData;
     if (typeof host !== "string" || host.includes(" ")) {
-      throw new ExtensionError(`ProxyInfoData: Invalid proxy server host: "${host}"`);
+      throw new ExtensionError(
+        `ProxyInfoData: Invalid proxy server host: "${host}"`
+      );
     }
     if (!host.length) {
-      throw new ExtensionError("ProxyInfoData: Proxy server host cannot be empty");
+      throw new ExtensionError(
+        "ProxyInfoData: Proxy server host cannot be empty"
+      );
     }
     proxyData.host = host;
   },
@@ -93,63 +128,95 @@ const ProxyInfoData = {
   port(proxyData) {
     let port = Number.parseInt(proxyData.port, 10);
     if (!Number.isInteger(port)) {
-      throw new ExtensionError(`ProxyInfoData: Invalid proxy server port: "${port}"`);
+      throw new ExtensionError(
+        `ProxyInfoData: Invalid proxy server port: "${port}"`
+      );
     }
 
     if (port < 1 || port > 0xffff) {
-      throw new ExtensionError(`ProxyInfoData: Proxy server port ${port} outside range 1 to 65535`);
+      throw new ExtensionError(
+        `ProxyInfoData: Proxy server port ${port} outside range 1 to 65535`
+      );
     }
     proxyData.port = port;
   },
 
   username(proxyData) {
-    let {username} = proxyData;
+    let { username } = proxyData;
     if (username !== undefined && typeof username !== "string") {
-      throw new ExtensionError(`ProxyInfoData: Invalid proxy server username: "${username}"`);
+      throw new ExtensionError(
+        `ProxyInfoData: Invalid proxy server username: "${username}"`
+      );
     }
   },
 
   password(proxyData) {
-    let {password} = proxyData;
+    let { password } = proxyData;
     if (password !== undefined && typeof password !== "string") {
-      throw new ExtensionError(`ProxyInfoData: Invalid proxy server password: "${password}"`);
+      throw new ExtensionError(
+        `ProxyInfoData: Invalid proxy server password: "${password}"`
+      );
     }
   },
 
   proxyDNS(proxyData) {
-    let {proxyDNS, type} = proxyData;
+    let { proxyDNS, type } = proxyData;
     if (proxyDNS !== undefined) {
       if (typeof proxyDNS !== "boolean") {
-        throw new ExtensionError(`ProxyInfoData: Invalid proxyDNS value: "${proxyDNS}"`);
+        throw new ExtensionError(
+          `ProxyInfoData: Invalid proxyDNS value: "${proxyDNS}"`
+        );
       }
-      if (proxyDNS && type !== PROXY_TYPES.SOCKS && type !== PROXY_TYPES.SOCKS4) {
-        throw new ExtensionError(`ProxyInfoData: proxyDNS can only be true for SOCKS proxy servers`);
+      if (
+        proxyDNS &&
+        type !== PROXY_TYPES.SOCKS &&
+        type !== PROXY_TYPES.SOCKS4
+      ) {
+        throw new ExtensionError(
+          `ProxyInfoData: proxyDNS can only be true for SOCKS proxy servers`
+        );
       }
     }
   },
 
   failoverTimeout(proxyData) {
-    let {failoverTimeout} = proxyData;
-    if (failoverTimeout !== undefined && (!Number.isInteger(failoverTimeout) || failoverTimeout < 1)) {
-      throw new ExtensionError(`ProxyInfoData: Invalid failover timeout: "${failoverTimeout}"`);
+    let { failoverTimeout } = proxyData;
+    if (
+      failoverTimeout !== undefined &&
+      (!Number.isInteger(failoverTimeout) || failoverTimeout < 1)
+    ) {
+      throw new ExtensionError(
+        `ProxyInfoData: Invalid failover timeout: "${failoverTimeout}"`
+      );
     }
   },
 
   proxyAuthorizationHeader(proxyData) {
-    let {proxyauthorizationheader} = proxyData;
-    if (proxyauthorizationheader !== undefined && typeof username !== "string") {
-      throw new ExtensionError(`ProxyInfoData: Invalid proxy server authorization header: "${proxyauthorizationheader}"`);
+    let { proxyauthorizationheader } = proxyData;
+    if (
+      proxyauthorizationheader !== undefined &&
+      typeof username !== "string"
+    ) {
+      throw new ExtensionError(
+        `ProxyInfoData: Invalid proxy server authorization header: "${proxyauthorizationheader}"`
+      );
     }
   },
 
   connectionIsolationKey(proxyData) {
-    let {connectionisolationkey} = proxyData;
+    let { connectionisolationkey } = proxyData;
     if (connectionisolationkey !== undefined && typeof username !== "string") {
-      throw new ExtensionError(`ProxyInfoData: Invalid proxy server authorization header: "${connectionisolationkey}"`);
+      throw new ExtensionError(
+        `ProxyInfoData: Invalid proxy server authorization header: "${connectionisolationkey}"`
+      );
     }
   },
 
-  createProxyInfoFromData(proxyDataList, defaultProxyInfo, proxyDataListIndex = 0) {
+  createProxyInfoFromData(
+    proxyDataList,
+    defaultProxyInfo,
+    proxyDataListIndex = 0
+  ) {
     if (proxyDataListIndex >= proxyDataList.length) {
       return defaultProxyInfo;
     }
@@ -157,25 +224,50 @@ const ProxyInfoData = {
     if (proxyData == null) {
       return null;
     }
-    let {type, host, port, username, password, proxyDNS, failoverTimeout, proxyAuthorizationHeader, connectionIsolationKey} =
-        ProxyInfoData.validate(proxyData);
+    let {
+      type,
+      host,
+      port,
+      username,
+      password,
+      proxyDNS,
+      failoverTimeout,
+      proxyAuthorizationHeader,
+      connectionIsolationKey,
+    } = ProxyInfoData.validate(proxyData);
     if (type === PROXY_TYPES.DIRECT) {
       return defaultProxyInfo;
     }
-    let failoverProxy = this.createProxyInfoFromData(proxyDataList, defaultProxyInfo, proxyDataListIndex + 1);
+    let failoverProxy = this.createProxyInfoFromData(
+      proxyDataList,
+      defaultProxyInfo,
+      proxyDataListIndex + 1
+    );
 
     if (type === PROXY_TYPES.SOCKS || type === PROXY_TYPES.SOCKS4) {
       return ProxyService.newProxyInfoWithAuth(
-        type, host, port, username, password, proxyAuthorizationHeader,
-        connectionIsolationKey, proxyDNS ? TRANSPARENT_PROXY_RESOLVES_HOST : 0,
-        failoverTimeout ? failoverTimeout : PROXY_TIMEOUT_SEC, failoverProxy);
+        type,
+        host,
+        port,
+        username,
+        password,
+        proxyAuthorizationHeader,
+        connectionIsolationKey,
+        proxyDNS ? TRANSPARENT_PROXY_RESOLVES_HOST : 0,
+        failoverTimeout ? failoverTimeout : PROXY_TIMEOUT_SEC,
+        failoverProxy
+      );
     }
     return ProxyService.newProxyInfo(
-      type, host, port,
-      proxyAuthorizationHeader, connectionIsolationKey,
+      type,
+      host,
+      port,
+      proxyAuthorizationHeader,
+      connectionIsolationKey,
       proxyDNS ? TRANSPARENT_PROXY_RESOLVES_HOST : 0,
       failoverTimeout ? failoverTimeout : PROXY_TIMEOUT_SEC,
-      failoverProxy);
+      failoverProxy
+    );
   },
 
   /**
@@ -192,7 +284,9 @@ const ProxyInfoData = {
 
     let parts = rule.toLowerCase().split(/\s+/);
     if (!parts[0] || parts.length > 2) {
-      throw new ExtensionError(`ProxyInfoData: Invalid arguments passed for proxy rule: "${rule}"`);
+      throw new ExtensionError(
+        `ProxyInfoData: Invalid arguments passed for proxy rule: "${rule}"`
+      );
     }
     let type = parts[0];
     let [host, port] = parts.length > 1 ? parts[1].split(":") : [];
@@ -203,16 +297,22 @@ const ProxyInfoData = {
       case PROXY_TYPES.SOCKS:
       case PROXY_TYPES.SOCKS4:
         if (!host || !port) {
-          throw new ExtensionError(`ProxyInfoData: Invalid host or port from proxy rule: "${rule}"`);
+          throw new ExtensionError(
+            `ProxyInfoData: Invalid host or port from proxy rule: "${rule}"`
+          );
         }
-        return {type, host, port};
+        return { type, host, port };
       case PROXY_TYPES.DIRECT:
         if (host || port) {
-          throw new ExtensionError(`ProxyInfoData: Invalid argument for proxy type: "${type}"`);
+          throw new ExtensionError(
+            `ProxyInfoData: Invalid argument for proxy type: "${type}"`
+          );
         }
-        return {type};
+        return { type };
       default:
-        throw new ExtensionError(`ProxyInfoData: Unrecognized proxy type: "${type}"`);
+        throw new ExtensionError(
+          `ProxyInfoData: Unrecognized proxy type: "${type}"`
+        );
     }
   },
 
@@ -222,7 +322,9 @@ const ProxyInfoData = {
         let proxyRules = [];
         try {
           for (let result of proxyData.split(";")) {
-            proxyRules.push(ProxyInfoData.parseProxyInfoDataFromPAC(result.trim()));
+            proxyRules.push(
+              ProxyInfoData.parseProxyInfoDataFromPAC(result.trim())
+            );
           }
         } catch (e) {
           // If we have valid proxies already, lets use them and just emit
@@ -239,14 +341,19 @@ const ProxyInfoData = {
           });
         }
         proxyData = proxyRules;
-        // fall through
+      // fall through
       case "object":
         if (Array.isArray(proxyData) && proxyData.length > 0) {
-          return ProxyInfoData.createProxyInfoFromData(proxyData, defaultProxyInfo);
+          return ProxyInfoData.createProxyInfoFromData(
+            proxyData,
+            defaultProxyInfo
+          );
         }
-        // Not an array, fall through to error.
+      // Not an array, fall through to error.
       default:
-        throw new ExtensionError("ProxyInfoData: proxyData must be a string or array of objects");
+        throw new ExtensionError(
+          "ProxyInfoData: proxyData must be a string or array of objects"
+        );
     }
   },
 };
@@ -256,8 +363,11 @@ function normalizeFilter(filter) {
     filter = {};
   }
 
-  return {urls: filter.urls || null, types: filter.types || null,
-          incognito: filter.incognito !== undefined ? filter.incognito : null};
+  return {
+    urls: filter.urls || null,
+    types: filter.types || null,
+    incognito: filter.incognito !== undefined ? filter.incognito : null,
+  };
 }
 
 class ProxyChannelFilter {
@@ -278,7 +388,8 @@ class ProxyChannelFilter {
   // in sync with WebRequest.jsm as well as parent/ext-webRequest.js when
   // apropiate.
   getRequestData(channel, extraData) {
-    let originAttributes = channel.loadInfo && channel.loadInfo.originAttributes;
+    let originAttributes =
+      channel.loadInfo && channel.loadInfo.originAttributes;
     let data = {
       requestId: String(channel.id),
       url: channel.finalURL,
@@ -300,7 +411,9 @@ class ProxyChannelFilter {
       ...extraData,
     };
     if (originAttributes && this.extension.hasPermission("cookies")) {
-      data.cookieStoreId = getCookieStoreIdForOriginAttributes(originAttributes);
+      data.cookieStoreId = getCookieStoreIdForOriginAttributes(
+        originAttributes
+      );
     }
     if (this.extraInfoSpec.includes("requestHeaders")) {
       data.requestHeaders = channel.getRequestHeaders();
@@ -324,11 +437,11 @@ class ProxyChannelFilter {
     try {
       let wrapper = ChannelWrapper.get(channel);
 
-      let browserData = {tabId: -1, windowId: -1};
+      let browserData = { tabId: -1, windowId: -1 };
       if (wrapper.browserElement) {
         browserData = tabTracker.getBrowserData(wrapper.browserElement);
       }
-      let {filter} = this;
+      let { filter } = this;
       if (filter.tabId != null && browserData.tabId !== filter.tabId) {
         return;
       }
@@ -336,8 +449,8 @@ class ProxyChannelFilter {
         return;
       }
 
-      if (wrapper.matches(filter, this.extension.policy, {isProxy: true})) {
-        let data = this.getRequestData(wrapper, {tabId: browserData.tabId});
+      if (wrapper.matches(filter, this.extension.policy, { isProxy: true })) {
+        let data = this.getRequestData(wrapper, { tabId: browserData.tabId });
 
         let ret = await this.listener(data);
         if (ret == null) {
@@ -348,13 +461,18 @@ class ProxyChannelFilter {
         // We only accept proxyInfo objects, not the PAC strings. ProxyInfoData will
         // accept either, so we want to enforce the limit here.
         if (typeof ret !== "object") {
-          throw new ExtensionError("ProxyInfoData: proxyData must be an object or array of objects");
+          throw new ExtensionError(
+            "ProxyInfoData: proxyData must be an object or array of objects"
+          );
         }
         // We allow the call to return either a single proxyInfo or an array of proxyInfo.
         if (!Array.isArray(ret)) {
           ret = [ret];
         }
-        proxyInfo = ProxyInfoData.createProxyInfoFromData(ret, defaultProxyInfo);
+        proxyInfo = ProxyInfoData.createProxyInfoFromData(
+          ret,
+          defaultProxyInfo
+        );
       }
     } catch (e) {
       // We need to normalize errors to dispatch them to the extension handler.  If
@@ -376,7 +494,9 @@ class ProxyChannelFilter {
       // If proxyInfo is null, that removes any prior proxy config.  This allows a
       // proxy extension to override higher level (e.g. prefs) config under certain
       // circumstances.
-      proxyFilter.onProxyFilterResult(proxyInfo !== undefined ? proxyInfo : defaultProxyInfo);
+      proxyFilter.onProxyFilterResult(
+        proxyInfo !== undefined ? proxyInfo : defaultProxyInfo
+      );
     }
   }
 
@@ -392,8 +512,10 @@ class ProxyScriptContext extends BaseContext {
     this.extension = extension;
     this.messageManager = Services.cpmm;
     this.sandbox = Cu.Sandbox(this.extension.principal, {
-      sandboxName: `Extension Proxy Script (${extension.policy.debugName}): ${url}`,
-      metadata: {addonID: extension.id},
+      sandboxName: `Extension Proxy Script (${
+        extension.policy.debugName
+      }): ${url}`,
+      metadata: { addonID: extension.id },
     });
     this.url = url;
     this.FindProxyForURL = null;
@@ -457,12 +579,18 @@ class ProxyScriptContext extends BaseContext {
     let proxyInfo;
     try {
       let wrapper = ChannelWrapper.get(channel);
-      if (this.extension.policy.privateBrowsingAllowed ||
-          wrapper.loadInfo.originAttributes.privateBrowsingId == 0) {
+      if (
+        this.extension.policy.privateBrowsingAllowed ||
+        wrapper.loadInfo.originAttributes.privateBrowsingId == 0
+      ) {
         let uri = wrapper.finalURI;
         // TODO Bug 1337001 - provide path and query components to non-https URLs.
         let ret = this.FindProxyForURL(uri.prePath, uri.host, this.contextInfo);
-        proxyInfo = ProxyInfoData.proxyInfoFromProxyData(this, ret, defaultProxyInfo);
+        proxyInfo = ProxyInfoData.proxyInfoFromProxyData(
+          this,
+          ret,
+          defaultProxyInfo
+        );
       }
     } catch (e) {
       let error = this.normalizeError(e);
@@ -474,7 +602,9 @@ class ProxyScriptContext extends BaseContext {
       });
     } finally {
       // FindProxyForURL may return nothing, null, or proxyInfo.
-      proxyFilter.onProxyFilterResult(proxyInfo !== undefined ? proxyInfo : defaultProxyInfo);
+      proxyFilter.onProxyFilterResult(
+        proxyInfo !== undefined ? proxyInfo : defaultProxyInfo
+      );
     }
   }
 
@@ -498,8 +628,10 @@ class ProxyScriptAPIManager extends SchemaAPIManager {
   lazyInit() {
     if (!this.initialized) {
       this.initGlobal();
-      let entries = Services.catMan.enumerateCategory(CATEGORY_EXTENSION_SCRIPTS_CONTENT);
-      for (let {value} of entries) {
+      let entries = Services.catMan.enumerateCategory(
+        CATEGORY_EXTENSION_SCRIPTS_CONTENT
+      );
+      for (let { value } of entries) {
         this.loadScript(value);
       }
       this.initialized = true;
@@ -542,9 +674,14 @@ class ProxyScriptInjectionContext {
 }
 
 defineLazyGetter(ProxyScriptContext.prototype, "messenger", function() {
-  let sender = {id: this.extension.id, frameId: this.frameId, url: this.url};
-  let filter = {extensionId: this.extension.id, toProxyScript: true};
-  return new ExtensionChild.Messenger(this, [this.messageManager], sender, filter);
+  let sender = { id: this.extension.id, frameId: this.frameId, url: this.url };
+  let filter = { extensionId: this.extension.id, toProxyScript: true };
+  return new ExtensionChild.Messenger(
+    this,
+    [this.messageManager],
+    sender,
+    filter
+  );
 });
 
 let proxyScriptAPIManager = new ProxyScriptAPIManager();

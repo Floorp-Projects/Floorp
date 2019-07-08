@@ -37,6 +37,6 @@ function f_key_test() {
 }
 
 function slash_key_test() {
-  EventUtils.synthesizeKey("/", { }, gManagerWindow);
+  EventUtils.synthesizeKey("/", {}, gManagerWindow);
   is(focusCount, 2, "Search box should have been focused due to the / key");
 }

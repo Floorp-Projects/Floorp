@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const BASE_LIST_ID = "base";
 const CONTENT_LIST_ID = "content";
 const TRACK_SUFFIX = "-track-digest256";
@@ -27,19 +27,30 @@ var gBlocklistManager = {
       return "";
     },
 
-    isSeparator(index) { return false; },
-    isSorted() { return false; },
-    isContainer(index) { return false; },
+    isSeparator(index) {
+      return false;
+    },
+    isSorted() {
+      return false;
+    },
+    isContainer(index) {
+      return false;
+    },
     setTree(tree) {},
     getImageSrc(row, column) {},
     getCellValue(row, column) {
-      if (column.id == "selectionCol")
+      if (column.id == "selectionCol") {
         return gBlocklistManager._blockLists[row].selected;
+      }
       return undefined;
     },
     cycleHeader(column) {},
-    getRowProperties(row) { return ""; },
-    getColumnProperties(column) { return ""; },
+    getRowProperties(row) {
+      return "";
+    },
+    getColumnProperties(column) {
+      return "";
+    },
     getCellProperties(row, column) {
       if (column.id == "selectionCol") {
         return "checkmark";
@@ -97,15 +108,19 @@ var gBlocklistManager = {
     if (activeList !== selected.id) {
       let trackingTable = Services.prefs.getCharPref(TRACKING_TABLE_PREF);
       if (selected.id != CONTENT_LIST_ID) {
-        trackingTable = trackingTable.replace("," + CONTENT_LIST_ID + TRACK_SUFFIX, "");
+        trackingTable = trackingTable.replace(
+          "," + CONTENT_LIST_ID + TRACK_SUFFIX,
+          ""
+        );
       } else {
         trackingTable += "," + CONTENT_LIST_ID + TRACK_SUFFIX;
       }
       Services.prefs.setCharPref(TRACKING_TABLE_PREF, trackingTable);
 
       // Force an update after changing the tracking protection table.
-      let listmanager = Cc["@mozilla.org/url-classifier/listmanager;1"]
-                        .getService(Ci.nsIUrlListManager);
+      let listmanager = Cc[
+        "@mozilla.org/url-classifier/listmanager;1"
+      ].getService(Ci.nsIUrlListManager);
       if (listmanager) {
         listmanager.forceUpdates(trackingTable);
       }
@@ -137,11 +152,13 @@ var gBlocklistManager = {
     let branch = Services.prefs.getBranch(LISTS_PREF_BRANCH);
     let l10nKey = branch.getCharPref(id);
     let [listName, description] = await document.l10n.formatValues([
-      {id: `blocklist-item-${l10nKey}-listName`},
-      {id: `blocklist-item-${l10nKey}-description`},
+      { id: `blocklist-item-${l10nKey}-listName` },
+      { id: `blocklist-item-${l10nKey}-description` },
     ]);
-    let name = await document.l10n.formatValue(
-      "blocklist-item-list-template", {listName, description});
+    let name = await document.l10n.formatValue("blocklist-item-list-template", {
+      listName,
+      description,
+    });
 
     return {
       id,
@@ -158,6 +175,8 @@ var gBlocklistManager = {
 
   _getActiveList() {
     let trackingTable = Services.prefs.getCharPref(TRACKING_TABLE_PREF);
-    return trackingTable.includes(CONTENT_LIST_ID) ? CONTENT_LIST_ID : BASE_LIST_ID;
+    return trackingTable.includes(CONTENT_LIST_ID)
+      ? CONTENT_LIST_ID
+      : BASE_LIST_ID;
   },
 };

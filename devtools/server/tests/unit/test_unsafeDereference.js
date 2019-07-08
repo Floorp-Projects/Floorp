@@ -21,8 +21,11 @@ Debugger.Object.prototype.getProperty = function(name) {
     return undefined;
   }
   if (!desc.value) {
-    throw Error("Debugger.Object.prototype.getProperty: " +
-                "not a value property: " + name);
+    throw Error(
+      "Debugger.Object.prototype.getProperty: " +
+        "not a value property: " +
+        name
+    );
   }
   return desc.value;
 };
@@ -36,15 +39,13 @@ function run_test() {
   // refer to the objects as "mainObj", "contentObj", and "chromeObj", in
   // variable and property names.
   const mainObj = { name: "mainObj" };
-  Cu.evalInSandbox('var contentObj = { name: "contentObj" };',
-                   contentBox);
-  Cu.evalInSandbox('var chromeObj = { name: "chromeObj" };',
-                   chromeBox);
+  Cu.evalInSandbox('var contentObj = { name: "contentObj" };', contentBox);
+  Cu.evalInSandbox('var chromeObj = { name: "chromeObj" };', chromeBox);
 
   // Give each global a pointer to all the other globals' objects.
   contentBox.mainObj = chromeBox.mainObj = mainObj;
-  const contentObj = chromeBox.contentObj = contentBox.contentObj;
-  const chromeObj = contentBox.chromeObj = chromeBox.chromeObj;
+  const contentObj = (chromeBox.contentObj = contentBox.contentObj);
+  const chromeObj = (contentBox.chromeObj = chromeBox.chromeObj);
 
   // First, a whole bunch of basic sanity checks, to ensure that JavaScript
   // evaluated in various scopes really does see the world the way this
@@ -52,18 +53,14 @@ function run_test() {
 
   // The objects appear as global variables in the sandbox, and as
   // the sandbox object's properties in chrome.
-  Assert.ok(Cu.evalInSandbox("mainObj", contentBox)
-            === contentBox.mainObj);
-  Assert.ok(Cu.evalInSandbox("contentObj", contentBox)
-            === contentBox.contentObj);
-  Assert.ok(Cu.evalInSandbox("chromeObj", contentBox)
-            === contentBox.chromeObj);
-  Assert.ok(Cu.evalInSandbox("mainObj", chromeBox)
-            === chromeBox.mainObj);
-  Assert.ok(Cu.evalInSandbox("contentObj", chromeBox)
-            === chromeBox.contentObj);
-  Assert.ok(Cu.evalInSandbox("chromeObj", chromeBox)
-            === chromeBox.chromeObj);
+  Assert.ok(Cu.evalInSandbox("mainObj", contentBox) === contentBox.mainObj);
+  Assert.ok(
+    Cu.evalInSandbox("contentObj", contentBox) === contentBox.contentObj
+  );
+  Assert.ok(Cu.evalInSandbox("chromeObj", contentBox) === contentBox.chromeObj);
+  Assert.ok(Cu.evalInSandbox("mainObj", chromeBox) === chromeBox.mainObj);
+  Assert.ok(Cu.evalInSandbox("contentObj", chromeBox) === chromeBox.contentObj);
+  Assert.ok(Cu.evalInSandbox("chromeObj", chromeBox) === chromeBox.chromeObj);
 
   // We (the main global) can see properties of all objects in all globals.
   Assert.ok(contentBox.mainObj.name === "mainObj");
@@ -71,22 +68,16 @@ function run_test() {
   Assert.ok(contentBox.chromeObj.name === "chromeObj");
 
   // chromeBox can see properties of all objects in all globals.
-  Assert.equal(Cu.evalInSandbox("mainObj.name", chromeBox),
-               "mainObj");
-  Assert.equal(Cu.evalInSandbox("contentObj.name", chromeBox),
-               "contentObj");
-  Assert.equal(Cu.evalInSandbox("chromeObj.name", chromeBox),
-               "chromeObj");
+  Assert.equal(Cu.evalInSandbox("mainObj.name", chromeBox), "mainObj");
+  Assert.equal(Cu.evalInSandbox("contentObj.name", chromeBox), "contentObj");
+  Assert.equal(Cu.evalInSandbox("chromeObj.name", chromeBox), "chromeObj");
 
   // contentBox can see properties of the content object, but not of either
   // chrome object, because by default, content -> chrome wrappers hide all
   // object properties.
-  Assert.equal(Cu.evalInSandbox("mainObj.name", contentBox),
-               undefined);
-  Assert.equal(Cu.evalInSandbox("contentObj.name", contentBox),
-               "contentObj");
-  Assert.equal(Cu.evalInSandbox("chromeObj.name", contentBox),
-               undefined);
+  Assert.equal(Cu.evalInSandbox("mainObj.name", contentBox), undefined);
+  Assert.equal(Cu.evalInSandbox("contentObj.name", contentBox), "contentObj");
+  Assert.equal(Cu.evalInSandbox("chromeObj.name", contentBox), undefined);
 
   // When viewing an object in compartment A from the vantage point of
   // compartment B, Debugger should give the same results as debuggee code
@@ -109,7 +100,10 @@ function run_test() {
   Assert.equal(mainFromContentDO.unsafeDereference(), mainObj);
 
   const contentFromContentDO = contentBoxDO.getProperty("contentObj");
-  Assert.equal(contentFromContentDO, contentBoxDO.makeDebuggeeValue(contentObj));
+  Assert.equal(
+    contentFromContentDO,
+    contentBoxDO.makeDebuggeeValue(contentObj)
+  );
   Assert.equal(contentFromContentDO.getProperty("name"), "contentObj");
   Assert.equal(contentFromContentDO.unsafeDereference(), contentObj);
 

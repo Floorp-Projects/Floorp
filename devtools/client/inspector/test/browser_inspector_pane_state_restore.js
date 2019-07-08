@@ -17,10 +17,18 @@ const EXPECTED_NEW_SIDEBAR_WIDTH = 250;
 
 add_task(async function() {
   // Simulate that the user has already stored their preferred split boxes widths.
-  await pushPref("devtools.toolsidebar-width.inspector", EXPECTED_INITIAL_WIDTH);
-  await pushPref("devtools.toolsidebar-height.inspector", EXPECTED_INITIAL_HEIGHT);
-  await pushPref("devtools.toolsidebar-width.inspector.splitsidebar",
-    EXPECTED_INITIAL_SIDEBAR_WIDTH);
+  await pushPref(
+    "devtools.toolsidebar-width.inspector",
+    EXPECTED_INITIAL_WIDTH
+  );
+  await pushPref(
+    "devtools.toolsidebar-height.inspector",
+    EXPECTED_INITIAL_HEIGHT
+  );
+  await pushPref(
+    "devtools.toolsidebar-width.inspector.splitsidebar",
+    EXPECTED_INITIAL_SIDEBAR_WIDTH
+  );
 
   const { inspector } = await openInspectorForURL("about:blank");
 
@@ -28,8 +36,11 @@ add_task(async function() {
   const { width, height, splitSidebarWidth } = inspector.getSidebarSize();
   is(width, EXPECTED_INITIAL_WIDTH, "Got correct initial width.");
   is(height, EXPECTED_INITIAL_HEIGHT, "Got correct initial height.");
-  is(splitSidebarWidth, EXPECTED_INITIAL_SIDEBAR_WIDTH,
-    "Got correct initial split sidebar width.");
+  is(
+    splitSidebarWidth,
+    EXPECTED_INITIAL_SIDEBAR_WIDTH,
+    "Got correct initial split sidebar width."
+  );
 
   info("Simulate updates to the dimensions of the various splitboxes.");
   inspector.splitBox.setState({
@@ -42,14 +53,24 @@ add_task(async function() {
 
   await closeToolbox();
 
-  info("Check the stored sizes of the inspector in the preferences when the inspector " +
-    "is closed");
-  const storedWidth = Services.prefs.getIntPref("devtools.toolsidebar-width.inspector");
-  const storedHeight = Services.prefs.getIntPref("devtools.toolsidebar-height.inspector");
-  const storedSplitSidebarWidth =
-    Services.prefs.getIntPref("devtools.toolsidebar-width.inspector.splitsidebar");
+  info(
+    "Check the stored sizes of the inspector in the preferences when the inspector " +
+      "is closed"
+  );
+  const storedWidth = Services.prefs.getIntPref(
+    "devtools.toolsidebar-width.inspector"
+  );
+  const storedHeight = Services.prefs.getIntPref(
+    "devtools.toolsidebar-height.inspector"
+  );
+  const storedSplitSidebarWidth = Services.prefs.getIntPref(
+    "devtools.toolsidebar-width.inspector.splitsidebar"
+  );
   is(storedWidth, EXPECTED_NEW_WIDTH, "Got correct stored width.");
   is(storedHeight, EXPECTED_NEW_HEIGHT, "Got correct stored height");
-  is(storedSplitSidebarWidth, EXPECTED_NEW_SIDEBAR_WIDTH,
-    "Got correct stored split sidebar width.");
+  is(
+    storedSplitSidebarWidth,
+    EXPECTED_NEW_SIDEBAR_WIDTH,
+    "Got correct stored split sidebar width."
+  );
 });

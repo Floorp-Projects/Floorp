@@ -18,8 +18,11 @@ async function testBody(url, expecting) {
 
   info("Wait for fetch flag.");
   await waitUntil(() => {
-    let fetchFlags =
-      [...document.querySelectorAll("#service-workers .service-worker-fetch-flag")];
+    let fetchFlags = [
+      ...document.querySelectorAll(
+        "#service-workers .service-worker-fetch-flag"
+      ),
+    ];
     fetchFlags = fetchFlags.map(element => element.textContent);
     return fetchFlags.includes(expecting);
   }, 100);

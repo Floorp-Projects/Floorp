@@ -65,11 +65,13 @@ const shell = async function(deviceId, command) {
             break;
           }
           ignoreResponseCode = true;
-          // eslint-disable-next-lined no-fallthrough
+        // eslint-disable-next-lined no-fallthrough
         case "decode-shell":
           const decoder = new TextDecoder();
-          const text = new Uint8Array(client.getBuffer(data),
-                                      ignoreResponseCode ? 4 : 0);
+          const text = new Uint8Array(
+            client.getBuffer(data),
+            ignoreResponseCode ? 4 : 0
+          );
           stdout += decoder.decode(text);
           break;
         default:

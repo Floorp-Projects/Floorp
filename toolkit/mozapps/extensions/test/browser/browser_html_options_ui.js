@@ -1,9 +1,11 @@
 /* eslint max-len: ["error", 80] */
 
-const {AddonTestUtils} =
-  ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-const {ExtensionParent} =
-  ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+const { ExtensionParent } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionParent.jsm"
+);
 
 AddonTestUtils.initMochitest(this);
 
@@ -39,7 +41,7 @@ add_task(async function testInlineOptions() {
   let id = "inline@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {gecko: {id}},
+      applications: { gecko: { id } },
       options_ui: {
         page: "options.html",
       },
@@ -94,8 +96,8 @@ add_task(async function testInlineOptions() {
   // Verify we're on the preferences tab.
   card = doc.querySelector("addon-card");
   is(card.addon.id, id, "The right page was loaded");
-  let {deck, tabGroup} = card.details;
-  let {selectedViewName} = deck;
+  let { deck, tabGroup } = card.details;
+  let { selectedViewName } = deck;
   is(selectedViewName, "preferences", "The preferences tab is shown");
 
   info("Check that there are two buttons and they're visible");
@@ -110,24 +112,33 @@ add_task(async function testInlineOptions() {
   // Check the attributes of the options browser.
   let browser = card.querySelector("inline-options-browser browser");
   ok(browser, "The visible view has a browser");
-  is(browser.currentURI.spec, card.addon.optionsURL,
-     "The browser has the expected options URL");
+  is(
+    browser.currentURI.spec,
+    card.addon.optionsURL,
+    "The browser has the expected options URL"
+  );
   is(url, card.addon.optionsURL, "Browser has the expected options URL loaded");
   let stack = browser.closest("stack");
-  is(browser.clientWidth, stack.clientWidth,
-     "Browser should be the same width as its direct parent");
+  is(
+    browser.clientWidth,
+    stack.clientWidth,
+    "Browser should be the same width as its direct parent"
+  );
   ok(stack.clientWidth > 0, "The stack has a width");
-  ok(card.querySelector('[action="preferences"]').hidden,
-     "The preferences option is hidden now");
+  ok(
+    card.querySelector('[action="preferences"]').hidden,
+    "The preferences option is hidden now"
+  );
 
   let lastHeight;
-  let waitForHeightChange = () => TestUtils.waitForCondition(() => {
-    if (browser.clientHeight !== lastHeight) {
-      lastHeight = browser.clientHeight;
-      return true;
-    }
-    return false;
-  });
+  let waitForHeightChange = () =>
+    TestUtils.waitForCondition(() => {
+      if (browser.clientHeight !== lastHeight) {
+        lastHeight = browser.clientHeight;
+        return true;
+      }
+      return false;
+    });
 
   // The expected heights are 1px taller, to work around bug 1548687.
   const EXPECTED_HEIGHT_SHORT = HEIGHT_SHORT + 1;
@@ -178,7 +189,7 @@ add_task(async function testCardRerender() {
   let id = "rerender@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {gecko: {id}},
+      applications: { gecko: { id } },
       options_ui: {
         page: "options.html",
       },
@@ -210,8 +221,11 @@ add_task(async function testCardRerender() {
   card.querySelector('named-deck-button[name="preferences"]').click();
   await browserAdded;
 
-  is(doc.querySelectorAll("inline-options-browser").length, 1,
-     "There is 1 inline-options-browser");
+  is(
+    doc.querySelectorAll("inline-options-browser").length,
+    1,
+    "There is 1 inline-options-browser"
+  );
   is(doc.querySelectorAll("browser").length, 1, "There is 1 browser");
 
   info("Reload the add-on and ensure there's still only one browser");
@@ -222,8 +236,11 @@ add_task(async function testCardRerender() {
   card.addon.reload();
   await updated;
 
-  is(doc.querySelectorAll("inline-options-browser").length, 1,
-     "There is 1 inline-options-browser");
+  is(
+    doc.querySelectorAll("inline-options-browser").length,
+    1,
+    "There is 1 inline-options-browser"
+  );
   is(doc.querySelectorAll("browser").length, 1, "There is 1 browser");
 
   info("Re-rendering card to ensure a second browser isn't added");
@@ -231,19 +248,28 @@ add_task(async function testCardRerender() {
   card.render();
   await updated;
 
-  is(card.details.deck.selectedViewName, "details",
-     "Rendering reverted to the details view");
+  is(
+    card.details.deck.selectedViewName,
+    "details",
+    "Rendering reverted to the details view"
+  );
 
-  is(doc.querySelectorAll("inline-options-browser").length, 1,
-     "There is still only 1 inline-options-browser after re-render");
+  is(
+    doc.querySelectorAll("inline-options-browser").length,
+    1,
+    "There is still only 1 inline-options-browser after re-render"
+  );
   is(doc.querySelectorAll("browser").length, 0, "There is no browser");
 
   let newBrowserAdded = waitOptionsBrowserInserted();
   card.showPrefs();
   await newBrowserAdded;
 
-  is(doc.querySelectorAll("inline-options-browser").length, 1,
-     "There is still only 1 inline-options-browser after opening preferences");
+  is(
+    doc.querySelectorAll("inline-options-browser").length,
+    1,
+    "There is still only 1 inline-options-browser after opening preferences"
+  );
   is(doc.querySelectorAll("browser").length, 1, "There is 1 browser");
 
   await closeView(win);

@@ -196,7 +196,8 @@ static wchar_t* ParseVP(wchar_t* aPart, VersionPartW& aResult) {
         aResult.strBlen = wcslen(aResult.strB);
       } else {
         aResult.strBlen = numstart - aResult.strB;
-        aResult.numC = ns_wcstol(numstart, const_cast<wchar_t**>(&aResult.extraD));
+        aResult.numC =
+            ns_wcstol(numstart, const_cast<wchar_t**>(&aResult.extraD));
 
         if (!*aResult.extraD) {
           aResult.extraD = nullptr;

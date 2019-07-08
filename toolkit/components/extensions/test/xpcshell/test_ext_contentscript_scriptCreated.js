@@ -14,22 +14,32 @@ ExtensionTestUtils.mockAppInfo();
 add_task(async function test_contentscript_scriptCreated() {
   let extensionData = {
     manifest: {
-      content_scripts: [{
-        "matches": ["http://*/*/file_document_write.html"],
-        "js": ["content_script.js"],
-        "run_at": "document_start",
-        "match_about_blank": true,
-        "all_frames": true,
-      }],
+      content_scripts: [
+        {
+          matches: ["http://*/*/file_document_write.html"],
+          js: ["content_script.js"],
+          run_at: "document_start",
+          match_about_blank: true,
+          all_frames: true,
+        },
+      ],
     },
 
     files: {
       "content_script.js": function() {
         if (window === top) {
-          addEventListener("message", msg => {
-            browser.test.assertEq("ok", msg.data, "document.write() succeeded");
-            browser.test.sendMessage("content-script-done");
-          }, {once: true});
+          addEventListener(
+            "message",
+            msg => {
+              browser.test.assertEq(
+                "ok",
+                msg.data,
+                "document.write() succeeded"
+              );
+              browser.test.sendMessage("content-script-done");
+            },
+            { once: true }
+          );
         }
       },
     },
@@ -39,7 +49,9 @@ add_task(async function test_contentscript_scriptCreated() {
 
   await extension.startup();
 
-  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_document_write.html`);
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    `${BASE_URL}/file_document_write.html`
+  );
 
   await extension.awaitMessage("content-script-done");
 

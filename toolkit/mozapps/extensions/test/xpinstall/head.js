@@ -7,8 +7,10 @@ const TESTROOT2 = "http://example.org/browser/" + RELATIVE_DIR;
 const PROMPT_URL = "chrome://global/content/commonDialog.xul";
 const ADDONS_URL = "chrome://mozapps/content/extensions/extensions.xul";
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
-const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
-const PREF_INSTALL_REQUIRESECUREORIGIN = "extensions.install.requireSecureOrigin";
+const PREF_INSTALL_REQUIREBUILTINCERTS =
+  "extensions.install.requireBuiltInCerts";
+const PREF_INSTALL_REQUIRESECUREORIGIN =
+  "extensions.install.requireSecureOrigin";
 const CHROME_NAME = "mochikit";
 
 function getChromeRoot(path) {
@@ -98,7 +100,10 @@ var Harness = {
 
       Services.prefs.setBoolPref(PREF_INSTALL_REQUIRESECUREORIGIN, false);
       Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
-      Services.prefs.setBoolPref("network.cookieSettings.unblocked_for_testing", true);
+      Services.prefs.setBoolPref(
+        "network.cookieSettings.unblocked_for_testing",
+        true
+      );
 
       Services.obs.addObserver(this, "addon-install-started");
       Services.obs.addObserver(this, "addon-install-disabled");
@@ -121,7 +126,9 @@ var Harness = {
       registerCleanupFunction(async function() {
         Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
         Services.prefs.clearUserPref(PREF_INSTALL_REQUIRESECUREORIGIN);
-        Services.prefs.clearUserPref("network.cookieSettings.unblocked_for_testing");
+        Services.prefs.clearUserPref(
+          "network.cookieSettings.unblocked_for_testing"
+        );
 
         Services.obs.removeObserver(self, "addon-install-started");
         Services.obs.removeObserver(self, "addon-install-disabled");
@@ -140,9 +147,18 @@ var Harness = {
         win = null;
 
         let aInstalls = await AddonManager.getAllInstalls();
-        is(aInstalls.length, 0, "Should be no active installs at the end of the test");
+        is(
+          aInstalls.length,
+          0,
+          "Should be no active installs at the end of the test"
+        );
         aInstalls.forEach(function(aInstall) {
-          info("Install for " + aInstall.sourceURI + " is in state " + aInstall.state);
+          info(
+            "Install for " +
+              aInstall.sourceURI +
+              " is in state " +
+              aInstall.state
+          );
           aInstall.cancel();
         });
       });
@@ -169,7 +185,9 @@ var Harness = {
 
     is(this.runningInstalls.length, 0, "Should be no running installs left");
     this.runningInstalls.forEach(function(aInstall) {
-      info("Install for " + aInstall.sourceURI + " is in state " + aInstall.state);
+      info(
+        "Install for " + aInstall.sourceURI + " is in state " + aInstall.state
+      );
     });
 
     this.installOriginBlockedCallback = null;
@@ -187,48 +205,51 @@ var Harness = {
     this.installsCompletedCallback = null;
     this.runningInstalls = null;
 
-    if (callback)
+    if (callback) {
       executeSoon(() => callback(count));
+    }
   },
 
   // Window open handling
   windowReady(window) {
     if (window.document.location.href == PROMPT_URL) {
-        var promptType = window.args.promptType;
-        switch (promptType) {
-          case "alert":
-          case "alertCheck":
-          case "confirmCheck":
-          case "confirm":
-          case "confirmEx":
-                window.document.documentElement.acceptDialog();
-                break;
-          case "promptUserAndPass":
-                  // This is a login dialog, hopefully an authentication prompt
-                  // for the xpi.
-                  if (this.authenticationCallback) {
-                    var auth = this.authenticationCallback();
-                    if (auth && auth.length == 2) {
-                      window.document.getElementById("loginTextbox").value = auth[0];
-                      window.document.getElementById("password1Textbox").value = auth[1];
-                      window.document.documentElement.acceptDialog();
-                    } else {
-                      window.document.documentElement.cancelDialog();
-                    }
-                  } else {
-                    window.document.documentElement.cancelDialog();
-                  }
-                break;
-          default:
-                ok(false, "prompt type " + promptType + " not handled in test.");
-                break;
+      var promptType = window.args.promptType;
+      switch (promptType) {
+        case "alert":
+        case "alertCheck":
+        case "confirmCheck":
+        case "confirm":
+        case "confirmEx":
+          window.document.documentElement.acceptDialog();
+          break;
+        case "promptUserAndPass":
+          // This is a login dialog, hopefully an authentication prompt
+          // for the xpi.
+          if (this.authenticationCallback) {
+            var auth = this.authenticationCallback();
+            if (auth && auth.length == 2) {
+              window.document.getElementById("loginTextbox").value = auth[0];
+              window.document.getElementById("password1Textbox").value =
+                auth[1];
+              window.document.documentElement.acceptDialog();
+            } else {
+              window.document.documentElement.cancelDialog();
+            }
+          } else {
+            window.document.documentElement.cancelDialog();
+          }
+          break;
+        default:
+          ok(false, "prompt type " + promptType + " not handled in test.");
+          break;
       }
     }
   },
 
   popupReady(panel) {
-    if (this.installBlockedCallback)
+    if (this.installBlockedCallback) {
       ok(false, "Should have been blocked by the whitelist");
+    }
     this.pendingCount++;
 
     // If there is a confirm callback then its return status determines whether
@@ -236,8 +257,9 @@ var Harness = {
     let result = true;
     if (this.installConfirmCallback) {
       result = this.installConfirmCallback(panel);
-      if (result === this.leaveOpen)
+      if (result === this.leaveOpen) {
         return;
+      }
     }
 
     if (!result) {
@@ -265,34 +287,50 @@ var Harness = {
   // Install blocked handling
 
   installDisabled(installInfo) {
-    ok(!!this.installDisabledCallback, "Installation shouldn't have been disabled");
-    if (this.installDisabledCallback)
+    ok(
+      !!this.installDisabledCallback,
+      "Installation shouldn't have been disabled"
+    );
+    if (this.installDisabledCallback) {
       this.installDisabledCallback(installInfo);
+    }
     this.expectingCancelled = true;
     this.expectingCancelled = false;
     this.endTest();
   },
 
   installCancelled(installInfo) {
-    if (this.expectingCancelled)
+    if (this.expectingCancelled) {
       return;
+    }
 
-    ok(!!this.installCancelledCallback, "Installation shouldn't have been cancelled");
-    if (this.installCancelledCallback)
+    ok(
+      !!this.installCancelledCallback,
+      "Installation shouldn't have been cancelled"
+    );
+    if (this.installCancelledCallback) {
       this.installCancelledCallback(installInfo);
+    }
     this.endTest();
   },
 
   installOriginBlocked(installInfo) {
     ok(!!this.installOriginBlockedCallback, "Shouldn't have been blocked");
-    if (this.installOriginBlockedCallback)
+    if (this.installOriginBlockedCallback) {
       this.installOriginBlockedCallback(installInfo);
+    }
     this.endTest();
   },
 
   installBlocked(installInfo) {
-    ok(!!this.installBlockedCallback, "Shouldn't have been blocked by the whitelist");
-    if (this.installBlockedCallback && this.installBlockedCallback(installInfo)) {
+    ok(
+      !!this.installBlockedCallback,
+      "Shouldn't have been blocked by the whitelist"
+    );
+    if (
+      this.installBlockedCallback &&
+      this.installBlockedCallback(installInfo)
+    ) {
       this.installBlockedCallback = null;
       installInfo.install();
     } else {
@@ -315,8 +353,7 @@ var Harness = {
     }, domwindow);
   },
 
-  onCloseWindow(window) {
-  },
+  onCloseWindow(window) {},
 
   // Addon Install Listener
 
@@ -327,13 +364,19 @@ var Harness = {
       this.waitingForEvent = true;
       info("Waiting for " + this.finalContentEvent);
       let mm = this._boundWin.get().gBrowser.selectedBrowser.messageManager;
-      mm.loadFrameScript(`data:,content.addEventListener("${this.finalContentEvent}", () => { sendAsyncMessage("Test:GotNewInstallEvent"); });`, false);
+      mm.loadFrameScript(
+        `data:,content.addEventListener("${
+          this.finalContentEvent
+        }", () => { sendAsyncMessage("Test:GotNewInstallEvent"); });`,
+        false
+      );
       let listener = () => {
         info("Saw " + this.finalContentEvent);
         mm.removeMessageListener("Test:GotNewInstallEvent", listener);
         this.waitingForEvent = false;
-        if (this.pendingCount == 0)
+        if (this.pendingCount == 0) {
           this.endTest();
+        }
       };
       mm.addMessageListener("Test:GotNewInstallEvent", listener);
     }
@@ -341,51 +384,62 @@ var Harness = {
 
   onDownloadStarted(install) {
     this.pendingCount++;
-    if (this.downloadStartedCallback)
+    if (this.downloadStartedCallback) {
       this.downloadStartedCallback(install);
+    }
   },
 
   onDownloadProgress(install) {
-    if (this.downloadProgressCallback)
+    if (this.downloadProgressCallback) {
       this.downloadProgressCallback(install);
+    }
   },
 
   onDownloadEnded(install) {
-    if (this.downloadEndedCallback)
+    if (this.downloadEndedCallback) {
       this.downloadEndedCallback(install);
+    }
   },
 
   onDownloadCancelled(install) {
-    isnot(this.runningInstalls.indexOf(install), -1,
-          "Should only see cancelations for started installs");
+    isnot(
+      this.runningInstalls.indexOf(install),
+      -1,
+      "Should only see cancelations for started installs"
+    );
     this.runningInstalls.splice(this.runningInstalls.indexOf(install), 1);
 
-    if (this.downloadCancelledCallback)
+    if (this.downloadCancelledCallback) {
       this.downloadCancelledCallback(install);
+    }
     this.checkTestEnded();
   },
 
   onDownloadFailed(install) {
-    if (this.downloadFailedCallback)
+    if (this.downloadFailedCallback) {
       this.downloadFailedCallback(install);
+    }
     this.checkTestEnded();
   },
 
   onInstallStarted(install) {
-    if (this.installStartedCallback)
+    if (this.installStartedCallback) {
       this.installStartedCallback(install);
+    }
   },
 
   onInstallEnded(install, addon) {
     this.installCount++;
-    if (this.installEndedCallback)
+    if (this.installEndedCallback) {
       this.installEndedCallback(install, addon);
+    }
     this.checkTestEnded();
   },
 
   onInstallFailed(install) {
-    if (this.installFailedCallback)
+    if (this.installFailedCallback) {
       this.installFailedCallback(install);
+    }
     this.checkTestEnded();
   },
 
@@ -407,8 +461,9 @@ var Harness = {
   },
 
   checkTestEnded() {
-    if (--this.pendingCount == 0 && !this.waitingForEvent)
+    if (--this.pendingCount == 0 && !this.waitingForEvent) {
       this.endTest();
+    }
   },
 
   // nsIObserver
@@ -416,52 +471,77 @@ var Harness = {
   observe(subject, topic, data) {
     var installInfo = subject.wrappedJSObject;
     switch (topic) {
-    case "addon-install-started":
-      is(this.runningInstalls.length, installInfo.installs.length,
-         "Should have seen the expected number of installs started");
-      break;
-    case "addon-install-disabled":
-      this.installDisabled(installInfo);
-      break;
-    case "addon-install-cancelled":
-      this.installCancelled(installInfo);
-      break;
-    case "addon-install-origin-blocked":
-      this.installOriginBlocked(installInfo);
-      break;
-    case "addon-install-blocked":
-      this.installBlocked(installInfo);
-      break;
-    case "addon-install-failed":
-      installInfo.installs.forEach(function(aInstall) {
-        isnot(this.runningInstalls.indexOf(aInstall), -1,
-              "Should only see failures for started installs");
+      case "addon-install-started":
+        is(
+          this.runningInstalls.length,
+          installInfo.installs.length,
+          "Should have seen the expected number of installs started"
+        );
+        break;
+      case "addon-install-disabled":
+        this.installDisabled(installInfo);
+        break;
+      case "addon-install-cancelled":
+        this.installCancelled(installInfo);
+        break;
+      case "addon-install-origin-blocked":
+        this.installOriginBlocked(installInfo);
+        break;
+      case "addon-install-blocked":
+        this.installBlocked(installInfo);
+        break;
+      case "addon-install-failed":
+        installInfo.installs.forEach(function(aInstall) {
+          isnot(
+            this.runningInstalls.indexOf(aInstall),
+            -1,
+            "Should only see failures for started installs"
+          );
 
-        ok(aInstall.error != 0 || aInstall.addon.appDisabled,
-           "Failed installs should have an error or be appDisabled");
+          ok(
+            aInstall.error != 0 || aInstall.addon.appDisabled,
+            "Failed installs should have an error or be appDisabled"
+          );
 
-        this.runningInstalls.splice(this.runningInstalls.indexOf(aInstall), 1);
-      }, this);
-      break;
-    case "addon-install-complete":
-      installInfo.installs.forEach(function(aInstall) {
-        isnot(this.runningInstalls.indexOf(aInstall), -1,
-              "Should only see completed events for started installs");
+          this.runningInstalls.splice(
+            this.runningInstalls.indexOf(aInstall),
+            1
+          );
+        }, this);
+        break;
+      case "addon-install-complete":
+        installInfo.installs.forEach(function(aInstall) {
+          isnot(
+            this.runningInstalls.indexOf(aInstall),
+            -1,
+            "Should only see completed events for started installs"
+          );
 
-        is(aInstall.error, 0, "Completed installs should have no error");
-        ok(!aInstall.appDisabled, "Completed installs should not be appDisabled");
+          is(aInstall.error, 0, "Completed installs should have no error");
+          ok(
+            !aInstall.appDisabled,
+            "Completed installs should not be appDisabled"
+          );
 
-        // Complete installs are either in the INSTALLED or CANCELLED state
-        // since the test may cancel installs the moment they complete.
-        ok(aInstall.state == AddonManager.STATE_INSTALLED ||
-           aInstall.state == AddonManager.STATE_CANCELLED,
-           "Completed installs should be in the right state");
+          // Complete installs are either in the INSTALLED or CANCELLED state
+          // since the test may cancel installs the moment they complete.
+          ok(
+            aInstall.state == AddonManager.STATE_INSTALLED ||
+              aInstall.state == AddonManager.STATE_CANCELLED,
+            "Completed installs should be in the right state"
+          );
 
-        this.runningInstalls.splice(this.runningInstalls.indexOf(aInstall), 1);
-      }, this);
-      break;
+          this.runningInstalls.splice(
+            this.runningInstalls.indexOf(aInstall),
+            1
+          );
+        }, this);
+        break;
     }
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsIWindowMediatorListener]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsIWindowMediatorListener,
+  ]),
 };

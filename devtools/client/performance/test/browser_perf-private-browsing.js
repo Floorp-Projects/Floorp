@@ -7,10 +7,20 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { addWindow } = require("devtools/client/performance/test/helpers/tab-utils");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  addWindow,
+} = require("devtools/client/performance/test/helpers/tab-utils");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
 
 let gPanelWinTuples = [];
 
@@ -32,10 +42,13 @@ async function createPanelInNewWindow(options) {
 }
 
 async function createPanelInWindow(options, win = window) {
-  const { panel } = await initPerformanceInNewTab({
-    url: SIMPLE_URL,
-    win: win,
-  }, options);
+  const { panel } = await initPerformanceInNewTab(
+    {
+      url: SIMPLE_URL,
+      win: win,
+    },
+    options
+  );
 
   gPanelWinTuples.push({ panel, win });
   return { panel, win };
@@ -48,8 +61,11 @@ async function testNormalWindow() {
 
   const { PerformanceView } = panel.panelWin;
 
-  is(PerformanceView.getState(), "empty",
-    "The initial state of the performance panel view is correct (1).");
+  is(
+    PerformanceView.getState(),
+    "empty",
+    "The initial state of the performance panel view is correct (1)."
+  );
 }
 
 async function testPrivateWindow() {
@@ -62,8 +78,11 @@ async function testPrivateWindow() {
 
   const { PerformanceView } = panel.panelWin;
 
-  is(PerformanceView.getState(), "unavailable",
-    "The initial state of the performance panel view is correct (2).");
+  is(
+    PerformanceView.getState(),
+    "unavailable",
+    "The initial state of the performance panel view is correct (2)."
+  );
 }
 
 async function testRecordingFailingInWindow(index) {
@@ -76,8 +95,10 @@ async function testRecordingFailingInWindow(index) {
 
   PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, onRecordingStarted);
 
-  const whenFailed = once(PerformanceController,
-                        EVENTS.BACKEND_FAILED_AFTER_RECORDING_START);
+  const whenFailed = once(
+    PerformanceController,
+    EVENTS.BACKEND_FAILED_AFTER_RECORDING_START
+  );
   PerformanceController.startRecording();
   await whenFailed;
   ok(true, "Recording has failed.");
@@ -93,15 +114,19 @@ async function testRecordingSucceedingInWindow(index) {
     ok(false, "Recording should start while now private windows are present.");
   };
 
-  PerformanceController.on(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START,
-                           onRecordingFailed);
+  PerformanceController.on(
+    EVENTS.BACKEND_FAILED_AFTER_RECORDING_START,
+    onRecordingFailed
+  );
 
   await startRecording(panel);
   await stopRecording(panel);
   ok(true, "Recording has succeeded.");
 
-  PerformanceController.off(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START,
-                           onRecordingFailed);
+  PerformanceController.off(
+    EVENTS.BACKEND_FAILED_AFTER_RECORDING_START,
+    onRecordingFailed
+  );
 }
 
 async function teardownPerfInWindow(index, options) {

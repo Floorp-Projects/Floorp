@@ -15,53 +15,80 @@ function promiseManyFrecenciesChanged() {
 }
 
 add_task(async function test_eraseEverything() {
-  await PlacesTestUtils.addVisits({ uri: NetUtil.newURI("http://example.com/") });
-  await PlacesTestUtils.addVisits({ uri: NetUtil.newURI("http://mozilla.org/") });
+  await PlacesTestUtils.addVisits({
+    uri: NetUtil.newURI("http://example.com/"),
+  });
+  await PlacesTestUtils.addVisits({
+    uri: NetUtil.newURI("http://mozilla.org/"),
+  });
   let frecencyForExample = frecencyForUrl("http://example.com/");
   let frecencyForMozilla = frecencyForUrl("http://example.com/");
   Assert.ok(frecencyForExample > 0);
   Assert.ok(frecencyForMozilla > 0);
-  let unfiledFolder = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                           type: PlacesUtils.bookmarks.TYPE_FOLDER });
+  let unfiledFolder = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+  });
   checkBookmarkObject(unfiledFolder);
-  let unfiledBookmark = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                             type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                                             url: "http://example.com/" });
+  let unfiledBookmark = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    url: "http://example.com/",
+  });
   checkBookmarkObject(unfiledBookmark);
-  let unfiledBookmarkInFolder =
-    await PlacesUtils.bookmarks.insert({ parentGuid: unfiledFolder.guid,
-                                         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                         url: "http://mozilla.org/" });
+  let unfiledBookmarkInFolder = await PlacesUtils.bookmarks.insert({
+    parentGuid: unfiledFolder.guid,
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    url: "http://mozilla.org/",
+  });
   checkBookmarkObject(unfiledBookmarkInFolder);
-  await setItemAnnotation(unfiledBookmarkInFolder.guid, "testanno1", "testvalue1");
+  await setItemAnnotation(
+    unfiledBookmarkInFolder.guid,
+    "testanno1",
+    "testvalue1"
+  );
 
-  let menuFolder = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.menuGuid,
-                                                        type: PlacesUtils.bookmarks.TYPE_FOLDER });
+  let menuFolder = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+  });
   checkBookmarkObject(menuFolder);
-  let menuBookmark = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.menuGuid,
-                                                          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                                          url: "http://example.com/" });
+  let menuBookmark = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    url: "http://example.com/",
+  });
   checkBookmarkObject(menuBookmark);
-  let menuBookmarkInFolder =
-    await PlacesUtils.bookmarks.insert({ parentGuid: menuFolder.guid,
-                                         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                         url: "http://mozilla.org/" });
+  let menuBookmarkInFolder = await PlacesUtils.bookmarks.insert({
+    parentGuid: menuFolder.guid,
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    url: "http://mozilla.org/",
+  });
   checkBookmarkObject(menuBookmarkInFolder);
   await setItemAnnotation(menuBookmarkInFolder.guid, "testanno1", "testvalue1");
 
-  let toolbarFolder = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-                                                           type: PlacesUtils.bookmarks.TYPE_FOLDER });
+  let toolbarFolder = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+  });
   checkBookmarkObject(toolbarFolder);
-  let toolbarBookmark = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-                                                             type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                                             url: "http://example.com/" });
+  let toolbarBookmark = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    url: "http://example.com/",
+  });
   checkBookmarkObject(toolbarBookmark);
-  let toolbarBookmarkInFolder =
-    await PlacesUtils.bookmarks.insert({ parentGuid: toolbarFolder.guid,
-                                         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                         url: "http://mozilla.org/" });
+  let toolbarBookmarkInFolder = await PlacesUtils.bookmarks.insert({
+    parentGuid: toolbarFolder.guid,
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    url: "http://mozilla.org/",
+  });
   checkBookmarkObject(toolbarBookmarkInFolder);
-  await setItemAnnotation(toolbarBookmarkInFolder.guid, "testanno1", "testvalue1");
+  await setItemAnnotation(
+    toolbarBookmarkInFolder.guid,
+    "testanno1",
+    "testvalue1"
+  );
 
   await PlacesTestUtils.promiseAsyncUpdates();
   Assert.ok(frecencyForUrl("http://example.com/") > frecencyForExample);
@@ -79,9 +106,13 @@ add_task(async function test_eraseEverything() {
 
   // Check there are no orphan annotations.
   let conn = await PlacesUtils.promiseDBConnection();
-  let annoAttrs = await conn.execute(`SELECT id, name FROM moz_anno_attributes`);
+  let annoAttrs = await conn.execute(
+    `SELECT id, name FROM moz_anno_attributes`
+  );
   Assert.equal(annoAttrs.length, 0);
-  let annos = await conn.execute(`SELECT item_id, anno_attribute_id FROM moz_items_annos`);
+  let annos = await conn.execute(
+    `SELECT item_id, anno_attribute_id FROM moz_items_annos`
+  );
   Assert.equal(annos.length, 0);
 });
 
@@ -89,8 +120,12 @@ add_task(async function test_eraseEverything_roots() {
   await PlacesUtils.bookmarks.eraseEverything();
 
   // Ensure the roots have not been removed.
-  Assert.ok(await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.unfiledGuid));
-  Assert.ok(await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.toolbarGuid));
+  Assert.ok(
+    await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.unfiledGuid)
+  );
+  Assert.ok(
+    await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.toolbarGuid)
+  );
   Assert.ok(await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.menuGuid));
   Assert.ok(await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.tagsGuid));
   Assert.ok(await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.rootGuid));
@@ -121,25 +156,32 @@ add_task(async function test_eraseEverything_reparented() {
 
   // All the above items should no longer be in the GUIDHelper cache.
   for (let guid of [folder1.guid, bookmark1.guid, folder2.guid]) {
-    await Assert.rejects(PlacesUtils.promiseItemId(guid),
-                         /no item found for the given GUID/);
+    await Assert.rejects(
+      PlacesUtils.promiseItemId(guid),
+      /no item found for the given GUID/
+    );
   }
 });
 
 add_task(async function test_notifications() {
   let bms = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
-    children: [{
-      title: "test",
-      url: "http://example.com",
-    }, {
-      title: "folder",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      children: [{
-        title: "test2",
-        url: "http://example.com/2",
-      }],
-    }],
+    children: [
+      {
+        title: "test",
+        url: "http://example.com",
+      },
+      {
+        title: "folder",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        children: [
+          {
+            title: "test2",
+            url: "http://example.com/2",
+          },
+        ],
+      },
+    ],
   });
 
   let skipDescendantsObserver = expectNotifications(true);
@@ -147,17 +189,20 @@ add_task(async function test_notifications() {
 
   await PlacesUtils.bookmarks.eraseEverything();
 
-  let expectedNotifications = [{
-    name: "onItemRemoved",
-    arguments: {
-      guid: bms[1].guid,
+  let expectedNotifications = [
+    {
+      name: "onItemRemoved",
+      arguments: {
+        guid: bms[1].guid,
+      },
     },
-  }, {
-    name: "onItemRemoved",
-    arguments: {
-      guid: bms[0].guid,
+    {
+      name: "onItemRemoved",
+      arguments: {
+        guid: bms[0].guid,
+      },
     },
-  }];
+  ];
 
   // If we're skipping descendents, we'll only be notified of the folder.
   skipDescendantsObserver.check(expectedNotifications);

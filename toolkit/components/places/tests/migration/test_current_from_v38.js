@@ -4,11 +4,13 @@ add_task(async function setup() {
 
 add_task(async function database_is_valid() {
   // Accessing the database for the first time triggers migration.
-  Assert.equal(PlacesUtils.history.databaseStatus,
-               PlacesUtils.history.DATABASE_STATUS_UPGRADED);
+  Assert.equal(
+    PlacesUtils.history.databaseStatus,
+    PlacesUtils.history.DATABASE_STATUS_UPGRADED
+  );
 
   let db = await PlacesUtils.promiseDBConnection();
-  Assert.equal((await db.getSchemaVersion()), CURRENT_SCHEMA_VERSION);
+  Assert.equal(await db.getSchemaVersion(), CURRENT_SCHEMA_VERSION);
 });
 
 add_task(async function test_select_new_fields() {

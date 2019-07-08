@@ -32,24 +32,33 @@ add_task(async function() {
 
   // Click on a request and wait till the default "Headers" side panel is opened.
   info("Click on a request");
-  const waitForHeaders = waitUntil(() => document.querySelector(".headers-overview"));
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
+  const waitForHeaders = waitUntil(() =>
+    document.querySelector(".headers-overview")
+  );
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
   await waitForHeaders;
   await waitForRequestData(store, ["requestHeaders", "responseHeaders"]);
 
   // Click on the Cookies panel and wait till it's opened.
   info("Click on the Cookies panel");
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#cookies-tab"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#cookies-tab")
+  );
   await waitForRequestData(store, ["requestCookies", "responseCookies"]);
 
-  checkTelemetryEvent({
-    oldpanel: "headers",
-    newpanel: "cookies",
-  }, {
-    method: "sidepanel_changed",
-  });
+  checkTelemetryEvent(
+    {
+      oldpanel: "headers",
+      newpanel: "cookies",
+    },
+    {
+      method: "sidepanel_changed",
+    }
+  );
 
   return teardown(monitor);
 });

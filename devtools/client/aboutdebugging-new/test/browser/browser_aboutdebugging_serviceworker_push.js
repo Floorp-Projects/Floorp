@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-serviceworker.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-serviceworker.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-serviceworker.js",
+  this
+);
 
 const SERVICE_WORKER = URL_ROOT + "resources/service-workers/push-sw.js";
 const TAB_URL = URL_ROOT + "resources/service-workers/push-sw.html";
@@ -13,8 +16,9 @@ const TAB_URL = URL_ROOT + "resources/service-workers/push-sw.html";
 // It should trigger a "push" notification in the worker.
 add_task(async function() {
   await enableServiceWorkerDebugging();
-  const { document, tab, window } =
-    await openAboutDebugging({ enableWorkerUpdates: true });
+  const { document, tab, window } = await openAboutDebugging({
+    enableWorkerUpdates: true,
+  });
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   // Open a tab that registers a push service worker.
@@ -23,11 +27,16 @@ add_task(async function() {
   info("Forward service worker messages to the test");
   await forwardServiceWorkerMessage(swTab);
 
-  info("Wait for the service worker to claim the test window before proceeding.");
+  info(
+    "Wait for the service worker to claim the test window before proceeding."
+  );
   await onTabMessage(swTab, "sw-claimed");
 
   info("Wait until the service worker appears and is running");
-  const targetElement = await waitForServiceWorkerRunning(SERVICE_WORKER, document);
+  const targetElement = await waitForServiceWorkerRunning(
+    SERVICE_WORKER,
+    document
+  );
 
   // Retrieve the Push button for the worker.
   const pushButton = targetElement.querySelector(".qa-push-button");

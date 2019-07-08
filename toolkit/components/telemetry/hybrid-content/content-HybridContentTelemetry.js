@@ -6,10 +6,14 @@
 
 "use strict";
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {TelemetryUtils} = ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TelemetryUtils } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryUtils.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const TelemetryPrefs = TelemetryUtils.Preferences;
 
@@ -25,9 +29,10 @@ var HybridContentTelemetryListener = {
 
   get _log() {
     if (!this._logger) {
-      this._logger =
-        Log.repository.getLoggerWithMessagePrefix("Toolkit.Telemetry",
-                                                  "HybridContentTelemetryListener::");
+      this._logger = Log.repository.getLoggerWithMessagePrefix(
+        "Toolkit.Telemetry",
+        "HybridContentTelemetryListener::"
+      );
     }
 
     return this._logger;
@@ -47,14 +52,17 @@ var HybridContentTelemetryListener = {
     // event's target as |content| always represents the current top level window in
     // the frame (or null). This means that a check like |content.top != content| will
     // always be false. See nsIMessageManager.idl for more info.
-    if (aEvent &&
-        (!("ownerGlobal" in aEvent.target) ||
-          aEvent.target.ownerGlobal != content)) {
+    if (
+      aEvent &&
+      (!("ownerGlobal" in aEvent.target) ||
+        aEvent.target.ownerGlobal != content)
+    ) {
       return false;
     }
 
-    const principal =
-      aEvent ? aEvent.target.ownerGlobal.document.nodePrincipal : content.document.nodePrincipal;
+    const principal = aEvent
+      ? aEvent.target.ownerGlobal.document.nodePrincipal
+      : content.document.nodePrincipal;
     if (principal.isSystemPrincipal) {
       return true;
     }
@@ -66,8 +74,10 @@ var HybridContentTelemetryListener = {
 
     // If this is not a system principal, it needs to have the
     // HCT_PERMISSION to use this API.
-    let permission =
-      Services.perms.testPermissionFromPrincipal(principal, HCT_PERMISSION);
+    let permission = Services.perms.testPermissionFromPrincipal(
+      principal,
+      HCT_PERMISSION
+    );
     if (permission == Services.perms.ALLOW_ACTION) {
       return true;
     }
@@ -95,21 +105,28 @@ var HybridContentTelemetryListener = {
   handleEvent(event) {
     const originNotTrusted = !this.isTrustedOrigin(event);
     if (!this._hybridContentEnabled || originNotTrusted) {
-      this._log.warn(`handleEvent - hct disabled ${!this._hybridContentEnabled}, `
-                     + `untrusted origin ${originNotTrusted}.`);
-      let errorEvent = Cu.cloneInto({bubbles: true, detail: {}}, content);
+      this._log.warn(
+        `handleEvent - hct disabled ${!this._hybridContentEnabled}, ` +
+          `untrusted origin ${originNotTrusted}.`
+      );
+      let errorEvent = Cu.cloneInto({ bubbles: true, detail: {} }, content);
       content.document.dispatchEvent(
-        new content.document.defaultView.CustomEvent("mozTelemetryUntrustedOrigin", errorEvent)
+        new content.document.defaultView.CustomEvent(
+          "mozTelemetryUntrustedOrigin",
+          errorEvent
+        )
       );
       return;
     }
 
-    if (!event ||
-        !("detail" in event) ||
-        !("name" in event.detail) ||
-        !("data" in event.detail) ||
-        typeof event.detail.name != "string" ||
-        typeof event.detail.data != "object") {
+    if (
+      !event ||
+      !("detail" in event) ||
+      !("name" in event.detail) ||
+      !("data" in event.detail) ||
+      typeof event.detail.name != "string" ||
+      typeof event.detail.data != "object"
+    ) {
       this._log.error("handleEvent - received a malformed message.");
       return;
     }
@@ -138,33 +155,46 @@ var HybridContentTelemetryListener = {
    */
   receiveMessage(aMessage) {
     if (!this.isTrustedOrigin()) {
-      this._log.warn("receiveMessage - accessing telemetry from an untrusted origin.");
+      this._log.warn(
+        "receiveMessage - accessing telemetry from an untrusted origin."
+      );
       return;
     }
 
-    if (aMessage.name != HCT_POLICY_CHANGE_MSG ||
-        !("data" in aMessage) ||
-        !("canUpload" in aMessage.data) ||
-        typeof aMessage.data.canUpload != "boolean") {
+    if (
+      aMessage.name != HCT_POLICY_CHANGE_MSG ||
+      !("data" in aMessage) ||
+      !("canUpload" in aMessage.data) ||
+      typeof aMessage.data.canUpload != "boolean"
+    ) {
       this._log.warn("receiveMessage - received an unexpected message.");
       return;
     }
 
     // Finally send the message down to the page.
-    let event = Cu.cloneInto({
-      bubbles: true,
-      detail: {canUpload: aMessage.data.canUpload},
-    }, content);
+    let event = Cu.cloneInto(
+      {
+        bubbles: true,
+        detail: { canUpload: aMessage.data.canUpload },
+      },
+      content
+    );
 
     content.document.dispatchEvent(
-      new content.document.defaultView.CustomEvent("mozTelemetryPolicyChange", event)
+      new content.document.defaultView.CustomEvent(
+        "mozTelemetryPolicyChange",
+        event
+      )
     );
   },
 };
 
-XPCOMUtils.defineLazyPreferenceGetter(HybridContentTelemetryListener, "_hybridContentEnabled",
-                                      TelemetryUtils.Preferences.HybridContentEnabled,
-                                      false /* aDefaultValue */);
+XPCOMUtils.defineLazyPreferenceGetter(
+  HybridContentTelemetryListener,
+  "_hybridContentEnabled",
+  TelemetryUtils.Preferences.HybridContentEnabled,
+  false /* aDefaultValue */
+);
 
 // The following function installs the handler for "mozTelemetry"
 // events in the chrome. Please note that the name of the message (i.e.

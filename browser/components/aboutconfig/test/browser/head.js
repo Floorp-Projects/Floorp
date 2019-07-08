@@ -78,14 +78,17 @@ class AboutConfigRowTest {
 
 class AboutConfigTest {
   static withNewTab(testFn, options = {}) {
-    return BrowserTestUtils.withNewTab({
-      gBrowser,
-      url: "chrome://browser/content/aboutconfig/aboutconfig.html",
-    }, async browser => {
-      let scope = new this(browser);
-      await scope.setupNewTab(options);
-      await testFn.call(scope);
-    });
+    return BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url: "chrome://browser/content/aboutconfig/aboutconfig.html",
+      },
+      async browser => {
+        let scope = new this(browser);
+        await scope.setupNewTab(options);
+        await testFn.call(scope);
+      }
+    );
   }
 
   constructor(browser) {

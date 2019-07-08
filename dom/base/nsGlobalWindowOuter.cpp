@@ -48,7 +48,6 @@
 #include "nsISizeOfEventTarget.h"
 #include "nsDOMJSUtils.h"
 #include "nsArrayUtils.h"
-#include "nsDOMWindowList.h"
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "nsIDocShellTreeOwner.h"
@@ -510,8 +509,9 @@ class nsOuterWindowProxy : public MaybeCrossOriginObject<js::Wrapper> {
 
   // Returns a non-null window only if id is an index and we have a
   // window at that index.
-  already_AddRefed<nsPIDOMWindowOuter> GetSubframeWindow(
-      JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id) const;
+  Nullable<WindowProxyHolder> GetSubframeWindow(JSContext* cx,
+                                                JS::Handle<JSObject*> proxy,
+                                                JS::Handle<jsid> id) const;
 
   bool AppendIndexedPropertyNames(JSObject* proxy,
                                   JS::MutableHandleVector<jsid> props) const;
@@ -784,7 +784,7 @@ bool nsOuterWindowProxy::delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
     return ReportCrossOriginDenial(cx, id, NS_LITERAL_CSTRING("delete"));
   }
 
-  if (nsCOMPtr<nsPIDOMWindowOuter> frame = GetSubframeWindow(cx, proxy, id)) {
+  if (!GetSubframeWindow(cx, proxy, id).IsNull()) {
     // Fail (which means throw if strict, else return false).
     return result.failCantDeleteWindowElement();
   }
@@ -818,7 +818,7 @@ bool nsOuterWindowProxy::has(JSContext* cx, JS::Handle<JSObject*> proxy,
     return hasOwn(cx, proxy, id, bp);
   }
 
-  if (nsCOMPtr<nsPIDOMWindowOuter> frame = GetSubframeWindow(cx, proxy, id)) {
+  if (!GetSubframeWindow(cx, proxy, id).IsNull()) {
     *bp = true;
     return true;
   }
@@ -851,7 +851,7 @@ bool nsOuterWindowProxy::hasOwn(JSContext* cx, JS::Handle<JSObject*> proxy,
     return js::BaseProxyHandler::hasOwn(cx, proxy, id, bp);
   }
 
-  if (nsCOMPtr<nsPIDOMWindowOuter> frame = GetSubframeWindow(cx, proxy, id)) {
+  if (!GetSubframeWindow(cx, proxy, id).IsNull()) {
     *bp = true;
     return true;
   }
@@ -982,28 +982,17 @@ bool nsOuterWindowProxy::GetSubframeWindow(JSContext* cx,
                                            JS::Handle<jsid> id,
                                            JS::MutableHandle<JS::Value> vp,
                                            bool& found) const {
-  nsCOMPtr<nsPIDOMWindowOuter> frame = GetSubframeWindow(cx, proxy, id);
-  if (!frame) {
+  Nullable<WindowProxyHolder> frame = GetSubframeWindow(cx, proxy, id);
+  if (frame.IsNull()) {
     found = false;
     return true;
   }
 
   found = true;
-  // Just return the window's global
-  nsGlobalWindowOuter* global = nsGlobalWindowOuter::Cast(frame);
-  frame->EnsureInnerWindow();
-  JSObject* obj = global->GetGlobalJSObject();
-  // This null check fixes a hard-to-reproduce crash that occurs when we
-  // get here when we're mid-call to nsDocShell::Destroy. See bug 640904
-  // comment 105.
-  if (MOZ_UNLIKELY(!obj)) {
-    return xpc::Throw(cx, NS_ERROR_FAILURE);
-  }
-  vp.setObject(*obj);
-  return JS_WrapValue(cx, vp);
+  return WrapObject(cx, frame.Value(), vp);
 }
 
-already_AddRefed<nsPIDOMWindowOuter> nsOuterWindowProxy::GetSubframeWindow(
+Nullable<WindowProxyHolder> nsOuterWindowProxy::GetSubframeWindow(
     JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id) const {
   uint32_t index = GetArrayIndexFromId(id);
   if (!IsArrayIndex(index)) {
@@ -1300,7 +1289,6 @@ void nsGlobalWindowOuter::CleanUp() {
 
   StartDying();
 
-  mFrames = nullptr;
   mWindowUtils = nullptr;
 
   ClearControllers();
@@ -2380,10 +2368,6 @@ void nsGlobalWindowOuter::SetDocShell(nsDocShell* aDocShell) {
   mTopLevelOuterContentWindow =
       !mIsChrome && GetScriptableTopInternal() == this;
 
-  if (mFrames) {
-    mFrames->SetDocShell(aDocShell);
-  }
-
   // Get our enclosing chrome shell and retrieve its global window impl, so
   // that we can do some forwarding to the chrome document.
   RefPtr<EventTarget> chromeEventHandler;
@@ -2474,10 +2458,6 @@ void nsGlobalWindowOuter::DetachFromDocShell() {
 
   mDocShell = nullptr;
   mBrowsingContext->ClearDocShell();
-
-  if (mFrames) {
-    mFrames->SetDocShell(nullptr);
-  }
 
   MaybeForgiveSpamCount();
   CleanUp();
@@ -3196,20 +3176,16 @@ bool nsGlobalWindowOuter::GetClosedOuter() {
 
 bool nsGlobalWindowOuter::Closed() { return GetClosedOuter(); }
 
-nsDOMWindowList* nsGlobalWindowOuter::GetFrames() {
-  if (!mFrames && mDocShell) {
-    mFrames = new nsDOMWindowList(mDocShell);
-  }
-
-  return mFrames;
-}
-
-already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::IndexedGetterOuter(
+Nullable<WindowProxyHolder> nsGlobalWindowOuter::IndexedGetterOuter(
     uint32_t aIndex) {
-  nsDOMWindowList* windows = GetFrames();
-  NS_ENSURE_TRUE(windows, nullptr);
+  BrowsingContext* bc = GetBrowsingContext();
+  NS_ENSURE_TRUE(bc, nullptr);
 
-  return windows->IndexedGetter(aIndex);
+  const BrowsingContext::Children& children = bc->GetChildren();
+  if (aIndex < children.Length()) {
+    return WindowProxyHolder(children[aIndex]);
+  }
+  return nullptr;
 }
 
 nsIControllers* nsGlobalWindowOuter::GetControllersOuter(ErrorResult& aError) {
@@ -3962,9 +3938,8 @@ double nsGlobalWindowOuter::GetScrollXOuter() { return GetScrollXY(false).x; }
 double nsGlobalWindowOuter::GetScrollYOuter() { return GetScrollXY(false).y; }
 
 uint32_t nsGlobalWindowOuter::Length() {
-  nsDOMWindowList* windows = GetFrames();
-
-  return windows ? windows->GetLength() : 0;
+  BrowsingContext* bc = GetBrowsingContext();
+  return bc ? bc->GetChildren().Length() : 0;
 }
 
 Nullable<WindowProxyHolder> nsGlobalWindowOuter::GetTopOuter() {

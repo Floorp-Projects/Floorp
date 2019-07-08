@@ -13,17 +13,32 @@ const RECENT_RUNTIME = "Recent Runtime";
 const RECENT_DEVICE = "Recent Device";
 
 add_task(async function() {
-  const { COMPATIBILITY_STATUS } =
-        require("devtools/client/shared/remote-debugging/version-checker");
-  const { COMPATIBLE, TOO_OLD, TOO_OLD_67_DEBUGGER, TOO_RECENT } = COMPATIBILITY_STATUS;
+  const {
+    COMPATIBILITY_STATUS,
+  } = require("devtools/client/shared/remote-debugging/version-checker");
+  const {
+    COMPATIBLE,
+    TOO_OLD,
+    TOO_OLD_67_DEBUGGER,
+    TOO_RECENT,
+  } = COMPATIBILITY_STATUS;
 
   info("Create several mocked runtimes, with different compatibility reports");
   const mocks = new Mocks();
-  createRuntimeWithReport(mocks, COMPATIBLE_RUNTIME, COMPATIBLE_DEVICE, COMPATIBLE);
+  createRuntimeWithReport(
+    mocks,
+    COMPATIBLE_RUNTIME,
+    COMPATIBLE_DEVICE,
+    COMPATIBLE
+  );
   createRuntimeWithReport(mocks, OLD_RUNTIME, OLD_DEVICE, TOO_OLD);
   createRuntimeWithReport(mocks, RECENT_RUNTIME, RECENT_DEVICE, TOO_RECENT);
-  createRuntimeWithReport(mocks, DEBUGGER_67_RUNTIME, DEBUGGER_67_DEVICE,
-    TOO_OLD_67_DEBUGGER);
+  createRuntimeWithReport(
+    mocks,
+    DEBUGGER_67_RUNTIME,
+    DEBUGGER_67_DEVICE,
+    TOO_OLD_67_DEBUGGER
+  );
 
   const { document, tab } = await openAboutDebugging();
   mocks.emitUSBUpdate();
@@ -36,21 +51,33 @@ add_task(async function() {
 
   info("Select the compatible runtime and check that no warning is displayed");
   await selectRuntime(COMPATIBLE_DEVICE, COMPATIBLE_RUNTIME, document);
-  ok(!document.querySelector(".qa-compatibility-warning"),
-    "Compatibility warning is not displayed");
+  ok(
+    !document.querySelector(".qa-compatibility-warning"),
+    "Compatibility warning is not displayed"
+  );
 
-  info("Select the old runtime and check that the too-old warning is displayed");
+  info(
+    "Select the old runtime and check that the too-old warning is displayed"
+  );
   await selectRuntime(OLD_DEVICE, OLD_RUNTIME, document);
-  ok(document.querySelector(".qa-compatibility-warning-too-old"),
-    "Expected compatibility warning is displayed (too-old)");
+  ok(
+    document.querySelector(".qa-compatibility-warning-too-old"),
+    "Expected compatibility warning is displayed (too-old)"
+  );
 
-  info("Select the recent runtime and check that the too-recent warning is displayed");
+  info(
+    "Select the recent runtime and check that the too-recent warning is displayed"
+  );
   await selectRuntime(RECENT_DEVICE, RECENT_RUNTIME, document);
-  ok(document.querySelector(".qa-compatibility-warning-too-recent"),
-    "Expected compatibility warning is displayed (too-recent)");
+  ok(
+    document.querySelector(".qa-compatibility-warning-too-recent"),
+    "Expected compatibility warning is displayed (too-recent)"
+  );
 
-  info("Select the runtime incompatible with Fx 67 " +
-    "and check that the debugger 67 warning is displayed");
+  info(
+    "Select the runtime incompatible with Fx 67 " +
+      "and check that the debugger 67 warning is displayed"
+  );
   await selectRuntime(DEBUGGER_67_DEVICE, DEBUGGER_67_RUNTIME, document);
   ok(document.querySelector(".qa-compatibility-warning-too-old-67-debugger"));
 
@@ -59,7 +86,10 @@ add_task(async function() {
 
 function createRuntimeWithReport(mocks, name, deviceName, status) {
   const runtimeId = [name, deviceName].join("-");
-  const compatibleUsbClient = mocks.createUSBRuntime(runtimeId, { deviceName, name });
+  const compatibleUsbClient = mocks.createUSBRuntime(runtimeId, {
+    deviceName,
+    name,
+  });
   const report = { status };
   compatibleUsbClient.checkVersionCompatibility = () => report;
 }

@@ -21,21 +21,40 @@ var EXPORTED_SYMBOLS = [
   "syncTestLogging",
 ];
 
-const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
-const {CryptoUtils} = ChromeUtils.import("resource://services-crypto/utils.js");
-const {Assert} = ChromeUtils.import("resource://testing-common/Assert.jsm");
-const {initTestLogging} = ChromeUtils.import("resource://testing-common/services/common/logging.js");
-const {FakeCryptoService, FakeFilesystemService, FakeGUIDService, fakeSHA256HMAC} = ChromeUtils.import("resource://testing-common/services/sync/fakeservices.js");
-const {FxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-const {FxAccountsClient} = ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
+const { CryptoUtils } = ChromeUtils.import(
+  "resource://services-crypto/utils.js"
+);
+const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+const { initTestLogging } = ChromeUtils.import(
+  "resource://testing-common/services/common/logging.js"
+);
+const {
+  FakeCryptoService,
+  FakeFilesystemService,
+  FakeGUIDService,
+  fakeSHA256HMAC,
+} = ChromeUtils.import(
+  "resource://testing-common/services/sync/fakeservices.js"
+);
+const { FxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
+const { FxAccountsClient } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsClient.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // and grab non-exported stuff via a backstage pass.
-const {AccountState} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm", null);
+const { AccountState } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm",
+  null
+);
 
 // A mock "storage manager" for FxAccounts that doesn't actually write anywhere.
-function MockFxaStorageManager() {
-}
+function MockFxaStorageManager() {}
 
 MockFxaStorageManager.prototype = {
   promiseInitialized: Promise.resolve(),
@@ -166,9 +185,11 @@ var makeFxAccountsInternalMock = function(config) {
 
 // Configure an instance of an FxAccount identity provider with the specified
 // config (or the default config if not specified).
-var configureFxAccountIdentity = function(authService,
-                                          config = makeIdentityConfig(),
-                                          fxaInternal = makeFxAccountsInternalMock(config)) {
+var configureFxAccountIdentity = function(
+  authService,
+  config = makeIdentityConfig(),
+  fxaInternal = makeFxAccountsInternalMock(config)
+) {
   // until we get better test infrastructure for bid_identity, we set the
   // signedin user's "email" to the username, simply as many tests rely on this.
   config.fxaccount.user.email = config.username;
@@ -187,9 +208,13 @@ var configureFxAccountIdentity = function(authService,
   let mockFxAClient = new MockFxAccountsClient();
   fxa.internal._fxAccountsClient = mockFxAClient;
 
-  let mockTSC = { // TokenServerClient
+  let mockTSC = {
+    // TokenServerClient
     async getTokenFromBrowserIDAssertion(uri, assertion) {
-      Assert.equal(uri, Services.prefs.getStringPref("identity.sync.tokenserver.uri"));
+      Assert.equal(
+        uri,
+        Services.prefs.getStringPref("identity.sync.tokenserver.uri")
+      );
       Assert.equal(assertion, config.fxaccount.user.assertion);
       config.fxaccount.token.uid = config.username;
       return config.fxaccount.token;
@@ -269,8 +294,9 @@ function encryptPayload(cleartext) {
 }
 
 var sumHistogram = function(name, options = {}) {
-  let histogram = options.key ? Services.telemetry.getKeyedHistogramById(name) :
-                  Services.telemetry.getHistogramById(name);
+  let histogram = options.key
+    ? Services.telemetry.getKeyedHistogramById(name)
+    : Services.telemetry.getHistogramById(name);
   let snapshot = histogram.snapshot();
   let sum = -Infinity;
   if (snapshot) {
@@ -286,5 +312,7 @@ var sumHistogram = function(name, options = {}) {
 
 var getLoginTelemetryScalar = function() {
   let snapshot = Services.telemetry.getSnapshotForKeyedScalars("main", true);
-  return snapshot.parent ? snapshot.parent["services.sync.sync_login_state_transitions"] : {};
+  return snapshot.parent
+    ? snapshot.parent["services.sync.sync_login_state_transitions"]
+    : {};
 };

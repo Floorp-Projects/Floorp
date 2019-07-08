@@ -4,9 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "UITelemetry",
-];
+var EXPORTED_SYMBOLS = ["UITelemetry"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
@@ -28,11 +26,17 @@ var UITelemetry = {
     }
 
     // Set an observer to watch for changes at runtime.
-    Services.prefs.addObserver(TelemetryUtils.Preferences.TelemetryEnabled, this);
+    Services.prefs.addObserver(
+      TelemetryUtils.Preferences.TelemetryEnabled,
+      this
+    );
     Services.obs.addObserver(this, "profile-before-change");
 
     // Pick up the current value.
-    this._enabled = Services.prefs.getBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, false);
+    this._enabled = Services.prefs.getBoolPref(
+      TelemetryUtils.Preferences.TelemetryEnabled,
+      false
+    );
 
     return this._enabled;
   },
@@ -40,7 +44,10 @@ var UITelemetry = {
   observe(aSubject, aTopic, aData) {
     if (aTopic == "profile-before-change") {
       Services.obs.removeObserver(this, "profile-before-change");
-      Services.prefs.removeObserver(TelemetryUtils.Preferences.TelemetryEnabled, this);
+      Services.prefs.removeObserver(
+        TelemetryUtils.Preferences.TelemetryEnabled,
+        this
+      );
       this._enabled = undefined;
       return;
     }
@@ -48,7 +55,9 @@ var UITelemetry = {
     if (aTopic == "nsPref:changed") {
       switch (aData) {
         case TelemetryUtils.Preferences.TelemetryEnabled:
-          let on = Services.prefs.getBoolPref(TelemetryUtils.Preferences.TelemetryEnabled);
+          let on = Services.prefs.getBoolPref(
+            TelemetryUtils.Preferences.TelemetryEnabled
+          );
           this._enabled = on;
 
           // Wipe ourselves if we were just disabled.
@@ -98,7 +107,7 @@ var UITelemetry = {
       action: aAction,
       method: aMethod,
       sessions,
-      timestamp: (aTimestamp == undefined) ? this.uptimeMillis() : aTimestamp,
+      timestamp: aTimestamp == undefined ? this.uptimeMillis() : aTimestamp,
     };
 
     if (aExtras) {
@@ -120,7 +129,8 @@ var UITelemetry = {
       // Do not overwrite a previous event start if it already exists.
       return;
     }
-    this._activeSessions[aName] = (aTimestamp == undefined) ? this.uptimeMillis() : aTimestamp;
+    this._activeSessions[aName] =
+      aTimestamp == undefined ? this.uptimeMillis() : aTimestamp;
   },
 
   /**
@@ -143,7 +153,7 @@ var UITelemetry = {
       name: aName,
       reason: aReason,
       start: sessionStart,
-      end: (aTimestamp == undefined) ? this.uptimeMillis() : aTimestamp,
+      end: aTimestamp == undefined ? this.uptimeMillis() : aTimestamp,
     };
 
     this._recordEvent(aEvent);

@@ -1,12 +1,8 @@
 "use strict";
 
-const HOSTS = new Set([
-  "example.com",
-  "example.org",
-  "example.net",
-]);
+const HOSTS = new Set(["example.com", "example.org", "example.net"]);
 
-const server = createHttpServer({hosts: HOSTS});
+const server = createHttpServer({ hosts: HOSTS });
 
 const FETCH_ORIGIN = "http://example.com/dummy";
 
@@ -62,36 +58,44 @@ add_task(async function test_xml_document_loadgroup_blocking() {
             browser.test.sendMessage("phase", "filter-onstop");
             filter.close();
           };
-        }, {
+        },
+        {
           urls: ["http://example.com/dummy.xhtml"],
         },
-        ["blocking"]);
+        ["blocking"]
+      );
     },
 
     files: {
       "content_script.js"() {
         browser.test.sendMessage("phase", "content-script-start");
-        window.addEventListener("DOMContentLoaded", () => {
-          browser.test.sendMessage("phase", "content-script-domload");
-        }, {once: true});
-        window.addEventListener("load", () => {
-          browser.test.sendMessage("phase", "content-script-load");
-        }, {once: true});
+        window.addEventListener(
+          "DOMContentLoaded",
+          () => {
+            browser.test.sendMessage("phase", "content-script-domload");
+          },
+          { once: true }
+        );
+        window.addEventListener(
+          "load",
+          () => {
+            browser.test.sendMessage("phase", "content-script-load");
+          },
+          { once: true }
+        );
       },
     },
 
     manifest: {
-      permissions: [
-        "webRequest",
-        "webRequestBlocking",
-        "http://example.com/",
-      ],
+      permissions: ["webRequest", "webRequestBlocking", "http://example.com/"],
 
-      content_scripts: [{
-        matches: ["http://example.com/dummy.xhtml"],
-        run_at: "document_start",
-        js: ["content_script.js"],
-      }],
+      content_scripts: [
+        {
+          matches: ["http://example.com/dummy.xhtml"],
+          run_at: "document_start",
+          js: ["content_script.js"],
+        },
+      ],
     },
   });
 
@@ -115,7 +119,9 @@ add_task(async function test_xml_document_loadgroup_blocking() {
     });
   });
 
-  let contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy.xhtml");
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/dummy.xhtml"
+  );
 
   deepEqual(await done, EXPECTED, "Things happened, and in the right order");
 
@@ -136,10 +142,16 @@ add_task(async function() {
 
           if (url.searchParams.get("redirect_uri")) {
             pending.push(
-              new Promise(resolve => { filter.onerror = resolve; }).then(() => {
-                browser.test.assertEq("Channel redirected", filter.error,
-                                      "Got correct error for redirected filter");
-              }));
+              new Promise(resolve => {
+                filter.onerror = resolve;
+              }).then(() => {
+                browser.test.assertEq(
+                  "Channel redirected",
+                  filter.error,
+                  "Got correct error for redirected filter"
+                );
+              })
+            );
           }
 
           filter.onstart = () => {
@@ -147,15 +159,21 @@ add_task(async function() {
           };
           filter.ondata = event => {
             let str = new TextDecoder().decode(event.data);
-            browser.test.assertEq("ok", str, `Got unfiltered data for ${data.url}`);
+            browser.test.assertEq(
+              "ok",
+              str,
+              `Got unfiltered data for ${data.url}`
+            );
           };
           filter.onstop = () => {
             filter.close();
           };
-        }, {
+        },
+        {
           urls: ["<all_urls>"],
         },
-        ["blocking"]);
+        ["blocking"]
+      );
 
       browser.test.onMessage.addListener(async msg => {
         if (msg === "done") {
@@ -181,10 +199,19 @@ add_task(async function() {
     ["http://example.com/dummy", "http://example.com/dummy"],
     ["http://example.org/dummy", "http://example.org/dummy"],
     ["http://example.net/dummy", "ok"],
-    ["http://example.com/redirect?redirect_uri=http://example.com/dummy", "http://example.com/dummy"],
-    ["http://example.com/redirect?redirect_uri=http://example.org/dummy", "http://example.org/dummy"],
+    [
+      "http://example.com/redirect?redirect_uri=http://example.com/dummy",
+      "http://example.com/dummy",
+    ],
+    [
+      "http://example.com/redirect?redirect_uri=http://example.org/dummy",
+      "http://example.org/dummy",
+    ],
     ["http://example.com/redirect?redirect_uri=http://example.net/dummy", "ok"],
-    ["http://example.net/redirect?redirect_uri=http://example.com/dummy", "http://example.com/dummy"],
+    [
+      "http://example.net/redirect?redirect_uri=http://example.com/dummy",
+      "http://example.com/dummy",
+    ],
   ].map(async ([url, expectedResponse]) => {
     let text = await ExtensionTestUtils.fetch(FETCH_ORIGIN, url);
     equal(text, expectedResponse, `Expected response for ${url}`);

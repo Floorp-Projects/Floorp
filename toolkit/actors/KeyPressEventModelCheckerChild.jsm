@@ -8,9 +8,13 @@
 
 var EXPORTED_SYMBOLS = ["KeyPressEventModelCheckerChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class KeyPressEventModelCheckerChild extends ActorChild {
   // Currently, the event is dispatched only when the document becomes editable
@@ -29,27 +33,33 @@ class KeyPressEventModelCheckerChild extends ActorChild {
     // here, conflated model isn't used forcibly.  If you need it, you need
     // to change WidgetKeyboardEvent, dom::KeyboardEvent and PresShell.
     let model = Document.KEYPRESS_EVENT_MODEL_DEFAULT;
-    if (this._isOldOfficeOnlineServer(aEvent.target) ||
-        this._isOldConfluence(aEvent.target.ownerGlobal)) {
+    if (
+      this._isOldOfficeOnlineServer(aEvent.target) ||
+      this._isOldConfluence(aEvent.target.ownerGlobal)
+    ) {
       model = Document.KEYPRESS_EVENT_MODEL_SPLIT;
     }
     aEvent.target.setKeyPressEventModel(model);
   }
 
   _isOldOfficeOnlineServer(aDocument) {
-    let editingElement =
-        aDocument.getElementById("WACViewPanel_EditingElement");
+    let editingElement = aDocument.getElementById(
+      "WACViewPanel_EditingElement"
+    );
     // If it's not Office Online Server, don't include it into the telemetry
     // because we just need to collect percentage of old version in all loaded
     // Office Online Server instances.
     if (!editingElement) {
       return false;
     }
-    let isOldVersion =
-        !editingElement.classList.contains(
-            "WACViewPanel_DisableLegacyKeyCodeAndCharCode");
-    Services.telemetry.keyedScalarAdd("dom.event.office_online_load_count",
-                                      isOldVersion ? "old" : "new", 1);
+    let isOldVersion = !editingElement.classList.contains(
+      "WACViewPanel_DisableLegacyKeyCodeAndCharCode"
+    );
+    Services.telemetry.keyedScalarAdd(
+      "dom.event.office_online_load_count",
+      isOldVersion ? "old" : "new",
+      1
+    );
     return isOldVersion;
   }
 
@@ -85,8 +95,10 @@ class KeyPressEventModelCheckerChild extends ActorChild {
     // instance.  So, let's check the version whether it allows conflated
     // keypress event model.
     try {
-      let {author, version} =
-          new tinyMCEObject.plugins.CursorTargetPlugin().getInfo();
+      let {
+        author,
+        version,
+      } = new tinyMCEObject.plugins.CursorTargetPlugin().getInfo();
       // If it's not Confluence, don't include it into the telemetry because
       // we just need to collect percentage of old version in all loaded
       // Confluence instances.
@@ -94,8 +106,11 @@ class KeyPressEventModelCheckerChild extends ActorChild {
         return false;
       }
       let isOldVersion = version === "1.0";
-      Services.telemetry.keyedScalarAdd("dom.event.confluence_load_count",
-                                        isOldVersion ? "old" : "new", 1);
+      Services.telemetry.keyedScalarAdd(
+        "dom.event.confluence_load_count",
+        isOldVersion ? "old" : "new",
+        1
+      );
       return isOldVersion;
     } catch (e) {
       return false;

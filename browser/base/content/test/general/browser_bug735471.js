@@ -4,7 +4,6 @@
  * obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-
 function test() {
   waitForExplicitFinish();
   // Open a new tab.
@@ -13,7 +12,11 @@ function test() {
 
 function testPreferences() {
   whenTabLoaded(gBrowser.selectedTab, function() {
-    is(content.location.href, "about:preferences", "Checking if the preferences tab was opened");
+    is(
+      content.location.href,
+      "about:preferences",
+      "Checking if the preferences tab was opened"
+    );
 
     gBrowser.removeCurrentTab();
     finish();

@@ -2,13 +2,17 @@
 // assert is available to chrome scripts loaded via SpecialPowers.loadChromeScript.
 /* global assert */
 
-const {FormHistory} = ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {ContentTaskUtils} = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
+const { FormHistory } = ChromeUtils.import(
+  "resource://gre/modules/FormHistory.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ContentTaskUtils } = ChromeUtils.import(
+  "resource://testing-common/ContentTaskUtils.jsm"
+);
 
-var gAutocompletePopup = Services.ww.activeWindow
-                                    .document
-                                    .getElementById("PopupAutoComplete");
+var gAutocompletePopup = Services.ww.activeWindow.document.getElementById(
+  "PopupAutoComplete"
+);
 assert.ok(gAutocompletePopup, "Got autocomplete popup");
 
 var ParentUtils = {
@@ -22,9 +26,12 @@ var ParentUtils = {
   },
 
   cleanUpFormHist(callback) {
-    FormHistory.update({ op: "remove" }, {
-      handleCompletion: callback,
-    });
+    FormHistory.update(
+      { op: "remove" },
+      {
+        handleCompletion: callback,
+      }
+    );
   },
 
   updateFormHistory(changes) {
@@ -58,7 +65,9 @@ var ParentUtils = {
 
     let count = 0;
     let listener = {
-      handleResult(result) { count = result; },
+      handleResult(result) {
+        count = result;
+      },
       handleError(error) {
         assert.ok(false, error);
         sendAsyncMessage("entriesCounted", { ok: false });
@@ -78,24 +87,29 @@ var ParentUtils = {
       // This may be called before gAutocompletePopup has initialised
       // which causes it to throw
       try {
-        return gAutocompletePopup.view.matchCount === expectedCount &&
+        return (
+          gAutocompletePopup.view.matchCount === expectedCount &&
           (!expectedFirstValue ||
-           expectedCount <= 1 ||
-           gAutocompletePopup.view.getValueAt(0) === expectedFirstValue);
+            expectedCount <= 1 ||
+            gAutocompletePopup.view.getValueAt(0) === expectedFirstValue)
+        );
       } catch (e) {
         return false;
       }
-    }, "Waiting for row count change: " + expectedCount + " First value: " + expectedFirstValue)
-    .then(() => {
-      let results = this.getMenuEntries();
-      sendAsyncMessage("gotMenuChange", { results });
-    });
+    }, "Waiting for row count change: " + expectedCount + " First value: " + expectedFirstValue).then(
+      () => {
+        let results = this.getMenuEntries();
+        sendAsyncMessage("gotMenuChange", { results });
+      }
+    );
   },
 
   checkSelectedIndex(expectedIndex) {
     ContentTaskUtils.waitForCondition(() => {
-      return gAutocompletePopup.popupOpen &&
-             gAutocompletePopup.selectedIndex === expectedIndex;
+      return (
+        gAutocompletePopup.popupOpen &&
+        gAutocompletePopup.selectedIndex === expectedIndex
+      );
     }, "Checking selected index").then(() => {
       sendAsyncMessage("gotSelectedIndex");
     });
@@ -107,7 +121,10 @@ var ParentUtils = {
   testMenuEntry(index, statement) {
     ContentTaskUtils.waitForCondition(() => {
       let el = gAutocompletePopup.richlistbox.getItemAtIndex(index);
-      let testFunc = new Services.ww.activeWindow.Function("el", `return ${statement}`);
+      let testFunc = new Services.ww.activeWindow.Function(
+        "el",
+        `return ${statement}`
+      );
       return gAutocompletePopup.popupOpen && el && testFunc(el);
     }, "Testing menu entry").then(() => {
       sendAsyncMessage("menuEntryTested");
@@ -128,19 +145,26 @@ var ParentUtils = {
   },
 
   cleanup() {
-    gAutocompletePopup.removeEventListener("popupshown", this._popupshownListener);
+    gAutocompletePopup.removeEventListener(
+      "popupshown",
+      this._popupshownListener
+    );
     this.cleanUpFormHist(() => {
       sendAsyncMessage("cleanup-done");
     });
   },
 };
 
-ParentUtils._popupshownListener =
-  ParentUtils.popupshownListener.bind(ParentUtils);
-gAutocompletePopup.addEventListener("popupshown", ParentUtils._popupshownListener);
+ParentUtils._popupshownListener = ParentUtils.popupshownListener.bind(
+  ParentUtils
+);
+gAutocompletePopup.addEventListener(
+  "popupshown",
+  ParentUtils._popupshownListener
+);
 ParentUtils.cleanUpFormHist();
 
-addMessageListener("updateFormHistory", (msg) => {
+addMessageListener("updateFormHistory", msg => {
   ParentUtils.updateFormHistory(msg.changes);
 });
 
@@ -148,9 +172,12 @@ addMessageListener("countEntries", ({ name, value }) => {
   ParentUtils.countEntries(name, value);
 });
 
-addMessageListener("waitForMenuChange", ({ expectedCount, expectedFirstValue }) => {
-  ParentUtils.checkRowCount(expectedCount, expectedFirstValue);
-});
+addMessageListener(
+  "waitForMenuChange",
+  ({ expectedCount, expectedFirstValue }) => {
+    ParentUtils.checkRowCount(expectedCount, expectedFirstValue);
+  }
+);
 
 addMessageListener("waitForSelectedIndex", ({ expectedIndex }) => {
   ParentUtils.checkSelectedIndex(expectedIndex);

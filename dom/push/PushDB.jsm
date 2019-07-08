@@ -4,13 +4,17 @@
 
 "use strict";
 
-const {IndexedDBHelper} = ChromeUtils.import("resource://gre/modules/IndexedDBHelper.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { IndexedDBHelper } = ChromeUtils.import(
+  "resource://gre/modules/IndexedDBHelper.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const EXPORTED_SYMBOLS = ["PushDB"];
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
-  let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     maxLogLevelPref: "dom.push.loglevel",
     prefix: "PushDB",
@@ -24,8 +28,7 @@ function PushDB(dbName, dbVersion, dbStoreName, keyPath, model) {
   this._model = model;
 
   // set the indexeddb database
-  this.initDBHelper(dbName, dbVersion,
-                    [dbStoreName]);
+  this.initDBHelper(dbName, dbVersion, [dbStoreName]);
 }
 
 this.PushDB.prototype = {
@@ -39,10 +42,13 @@ this.PushDB.prototype = {
   },
 
   isValidRecord(record) {
-    return record && typeof record.scope == "string" &&
-           typeof record.originAttributes == "string" &&
-           record.quota >= 0 &&
-           typeof record[this._keyPath] == "string";
+    return (
+      record &&
+      typeof record.scope == "string" &&
+      typeof record.originAttributes == "string" &&
+      record.quota >= 0 &&
+      typeof record[this._keyPath] == "string"
+    );
   },
 
   upgradeSchema(aTransaction, aDb, aOldVersion, aNewVersion) {
@@ -53,8 +59,9 @@ this.PushDB.prototype = {
         aDb.deleteObjectStore(this._dbStoreName);
       }
 
-      let objectStore = aDb.createObjectStore(this._dbStoreName,
-                                              { keyPath: this._keyPath });
+      let objectStore = aDb.createObjectStore(this._dbStoreName, {
+        keyPath: this._keyPath,
+      });
 
       // index to fetch records based on endpoints. used by unregister
       objectStore.createIndex("pushEndpoint", "pushEndpoint", { unique: true });
@@ -64,8 +71,12 @@ this.PushDB.prototype = {
       // different 'apps' on the same origin. Since ServiceWorkers are
       // same-origin to the scope they are registered for, the attributes and
       // scope are enough to reconstruct a valid principal.
-      objectStore.createIndex("identifiers", ["scope", "originAttributes"], { unique: true });
-      objectStore.createIndex("originAttributes", "originAttributes", { unique: false });
+      objectStore.createIndex("identifiers", ["scope", "originAttributes"], {
+        unique: true,
+      });
+      objectStore.createIndex("originAttributes", "originAttributes", {
+        unique: false,
+      });
     }
 
     if (aOldVersion < 4) {
@@ -84,9 +95,10 @@ this.PushDB.prototype = {
   put(aRecord) {
     console.debug("put()", aRecord);
     if (!this.isValidRecord(aRecord)) {
-      return Promise.reject(new TypeError(
-        "Scope, originAttributes, and quota are required! " +
-          JSON.stringify(aRecord)
+      return Promise.reject(
+        new TypeError(
+          "Scope, originAttributes, and quota are required! " +
+            JSON.stringify(aRecord)
         )
       );
     }
@@ -99,8 +111,10 @@ this.PushDB.prototype = {
           aTxn.result = undefined;
 
           aStore.put(aRecord).onsuccess = aEvent => {
-            console.debug("put: Request successful. Updated record",
-              aEvent.target.result);
+            console.debug(
+              "put: Request successful. Updated record",
+              aEvent.target.result
+            );
             aTxn.result = this.toPushRecord(aRecord);
           };
         },
@@ -152,8 +166,11 @@ this.PushDB.prototype = {
               if (testFn(record)) {
                 let deleteRequest = cursor.delete();
                 deleteRequest.onerror = e => {
-                  console.error("clearIf: Error removing record",
-                    record.keyID, e);
+                  console.error(
+                    "clearIf: Error removing record",
+                    record.keyID,
+                    e
+                  );
                 };
               }
               cursor.continue();
@@ -256,8 +273,10 @@ this.PushDB.prototype = {
   getByIdentifiers(aPageRecord) {
     console.debug("getByIdentifiers()", aPageRecord);
     if (!aPageRecord.scope || aPageRecord.originAttributes == undefined) {
-      console.error("getByIdentifiers: Scope and originAttributes are required",
-        aPageRecord);
+      console.error(
+        "getByIdentifiers: Scope and originAttributes are required",
+        aPageRecord
+      );
       return Promise.reject(new TypeError("Invalid page record"));
     }
 
@@ -269,7 +288,9 @@ this.PushDB.prototype = {
           aTxn.result = undefined;
 
           let index = aStore.index("identifiers");
-          let request = index.get(IDBKeyRange.only([aPageRecord.scope, aPageRecord.originAttributes]));
+          let request = index.get(
+            IDBKeyRange.only([aPageRecord.scope, aPageRecord.originAttributes])
+          );
           request.onsuccess = aEvent => {
             aTxn.result = this.toPushRecord(aEvent.target.result);
           };
@@ -294,8 +315,9 @@ this.PushDB.prototype = {
           // registrations per domain, and usually only one.
           let getAllReq = index.mozGetAll(aKeyValue);
           getAllReq.onsuccess = aEvent => {
-            aTxn.result = aEvent.target.result.map(
-              record => this.toPushRecord(record));
+            aTxn.result = aEvent.target.result.map(record =>
+              this.toPushRecord(record)
+            );
           };
         },
         resolve,
@@ -322,8 +344,9 @@ this.PushDB.prototype = {
         (aTxn, aStore) => {
           aTxn.result = undefined;
           aStore.mozGetAll().onsuccess = event => {
-            aTxn.result = event.target.result.map(
-              record => this.toPushRecord(record));
+            aTxn.result = event.target.result.map(record =>
+              this.toPushRecord(record)
+            );
           };
         },
         resolve,
@@ -392,8 +415,11 @@ this.PushDB.prototype = {
             }
             let newRecord = aUpdateFunc(this.toPushRecord(record));
             if (!this.isValidRecord(newRecord)) {
-              console.error("update: Ignoring invalid update",
-                aKeyID, newRecord);
+              console.error(
+                "update: Ignoring invalid update",
+                aKeyID,
+                newRecord
+              );
               throw new Error("Invalid update for record " + aKeyID);
             }
             function putRecord() {

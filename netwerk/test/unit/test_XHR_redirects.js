@@ -4,8 +4,10 @@
 // etc--see HttpBaseChannel::IsSafeMethod).  Since no prompting is possible
 // in xpcshell, we get an error for prompts, and the request fails.
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 
@@ -23,15 +25,13 @@ XPCOMUtils.defineLazyGetter(this, "pOther", function() {
   return sOther.identity.primaryPort;
 });
 
-function createXHR(async, method, path)
-{
+function createXHR(async, method, path) {
   var xhr = new XMLHttpRequest();
   xhr.open(method, "http://localhost:" + pSame + path, async);
   return xhr;
 }
 
-function checkResults(xhr, method, status, unsafe)
-{
+function checkResults(xhr, method, status, unsafe) {
   if (unsafe) {
     if (sRedirectPromptPref) {
       // The method is null if we prompt for unsafe redirects
@@ -42,8 +42,9 @@ function checkResults(xhr, method, status, unsafe)
     }
   }
 
-  if (xhr.readyState != 4)
+  if (xhr.readyState != 4) {
     return false;
+  }
   Assert.equal(xhr.status, status);
 
   if (status == 200) {
@@ -59,18 +60,48 @@ function run_test() {
   sSame = new HttpServer();
 
   // same-origin redirects
-  sSame.registerPathHandler("/bug" + BUGID + "-redirect301", bug676059redirect301);
-  sSame.registerPathHandler("/bug" + BUGID + "-redirect302", bug676059redirect302);
-  sSame.registerPathHandler("/bug" + BUGID + "-redirect303", bug676059redirect303);
-  sSame.registerPathHandler("/bug" + BUGID + "-redirect307", bug676059redirect307);
-  sSame.registerPathHandler("/bug" + BUGID + "-redirect308", bug676059redirect308);
+  sSame.registerPathHandler(
+    "/bug" + BUGID + "-redirect301",
+    bug676059redirect301
+  );
+  sSame.registerPathHandler(
+    "/bug" + BUGID + "-redirect302",
+    bug676059redirect302
+  );
+  sSame.registerPathHandler(
+    "/bug" + BUGID + "-redirect303",
+    bug676059redirect303
+  );
+  sSame.registerPathHandler(
+    "/bug" + BUGID + "-redirect307",
+    bug676059redirect307
+  );
+  sSame.registerPathHandler(
+    "/bug" + BUGID + "-redirect308",
+    bug676059redirect308
+  );
 
   // cross-origin redirects
-  sSame.registerPathHandler("/bug" + OTHERBUGID + "-redirect301", bug696849redirect301);
-  sSame.registerPathHandler("/bug" + OTHERBUGID + "-redirect302", bug696849redirect302);
-  sSame.registerPathHandler("/bug" + OTHERBUGID + "-redirect303", bug696849redirect303);
-  sSame.registerPathHandler("/bug" + OTHERBUGID + "-redirect307", bug696849redirect307);
-  sSame.registerPathHandler("/bug" + OTHERBUGID + "-redirect308", bug696849redirect308);
+  sSame.registerPathHandler(
+    "/bug" + OTHERBUGID + "-redirect301",
+    bug696849redirect301
+  );
+  sSame.registerPathHandler(
+    "/bug" + OTHERBUGID + "-redirect302",
+    bug696849redirect302
+  );
+  sSame.registerPathHandler(
+    "/bug" + OTHERBUGID + "-redirect303",
+    bug696849redirect303
+  );
+  sSame.registerPathHandler(
+    "/bug" + OTHERBUGID + "-redirect307",
+    bug696849redirect307
+  );
+  sSame.registerPathHandler(
+    "/bug" + OTHERBUGID + "-redirect308",
+    bug696849redirect308
+  );
 
   // same-origin target
   sSame.registerPathHandler("/bug" + BUGID + "-target", echoMethod);
@@ -86,10 +117,10 @@ function run_test() {
   //   methodToSend is the HTTP method to send
   //   redirectedMethod is the method to use for the redirect, if any
   //   finalStatus is 200 when the redirect takes place, redirectType otherwise
-  
+
   // Note that unsafe methods should not follow the redirect automatically
   // Of the methods below, DELETE, POST and PUT are unsafe
-  
+
   sRedirectPromptPref = Preferences.get("network.http.prompt-temp-redirect");
   // Following Bug 677754 we don't prompt for unsafe redirects
 
@@ -136,49 +167,56 @@ function run_test() {
   var othertests = tests; // for now these have identical results
 
   var xhr;
-  
+
   for (var i = 0; i < tests.length; ++i) {
     dump("Testing " + tests[i] + "\n");
-    xhr = createXHR(false, tests[i][1], "/bug" + BUGID + "-redirect" + tests[i][0]);
+    xhr = createXHR(
+      false,
+      tests[i][1],
+      "/bug" + BUGID + "-redirect" + tests[i][0]
+    );
     xhr.send(null);
     checkResults(xhr, tests[i][2], tests[i][3], tests[i][4]);
-  }  
+  }
 
   for (var i = 0; i < othertests.length; ++i) {
     dump("Testing " + othertests[i] + " (cross-origin)\n");
-    xhr = createXHR(false, othertests[i][1], "/bug" + OTHERBUGID + "-redirect" + othertests[i][0]);
+    xhr = createXHR(
+      false,
+      othertests[i][1],
+      "/bug" + OTHERBUGID + "-redirect" + othertests[i][0]
+    );
     xhr.send(null);
     checkResults(xhr, othertests[i][2], tests[i][3], tests[i][4]);
-  }  
+  }
 
   sSame.stop(do_test_finished);
   sOther.stop(do_test_finished);
 }
- 
+
 function redirect(metadata, response, status, port, bugid) {
   // set a proper reason string to avoid confusion when looking at the
   // HTTP messages
   var reason;
   if (status == 301) {
     reason = "Moved Permanently";
-  }
-  else if (status == 302) {
+  } else if (status == 302) {
     reason = "Found";
-  }
-  else if (status == 303) {
+  } else if (status == 303) {
     reason = "See Other";
-  }
-  else if (status == 307) {
+  } else if (status == 307) {
     reason = "Temporary Redirect";
-  }
-  else if (status == 308) {
+  } else if (status == 308) {
     reason = "Permanent Redirect";
   }
-  
+
   response.setStatusLine(metadata.httpVersion, status, reason);
-  response.setHeader("Location", "http://localhost:" + port + "/bug" + bugid + "-target");
-} 
- 
+  response.setHeader(
+    "Location",
+    "http://localhost:" + port + "/bug" + bugid + "-target"
+  );
+}
+
 // PATH HANDLER FOR /bug676059-redirect301
 function bug676059redirect301(metadata, response) {
   redirect(metadata, response, 301, pSame, BUGID);

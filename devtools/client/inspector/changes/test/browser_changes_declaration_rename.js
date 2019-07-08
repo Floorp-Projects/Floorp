@@ -39,15 +39,21 @@ add_task(async function() {
   let addDecl = getAddedDeclarations(doc);
 
   is(removeDecl.length, 1, "One declaration tracked as removed");
-  is(removeDecl[0].property, oldPropertyName,
+  is(
+    removeDecl[0].property,
+    oldPropertyName,
     `Removed declaration has old property name: ${oldPropertyName}`
   );
   is(addDecl.length, 1, "One declaration tracked as added");
-  is(addDecl[0].property, newPropertyName,
+  is(
+    addDecl[0].property,
+    newPropertyName,
     `Added declaration has new property name: ${newPropertyName}`
   );
 
-  info(`Reverting the CSS declaration name to ${oldPropertyName} should clear changes.`);
+  info(
+    `Reverting the CSS declaration name to ${oldPropertyName} should clear changes.`
+  );
   onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
   await renameProperty(ruleView, prop, oldPropertyName);
   info("Wait for the change to be tracked");

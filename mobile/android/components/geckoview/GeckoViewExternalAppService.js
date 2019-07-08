@@ -4,13 +4,20 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {GeckoViewUtils} = ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { GeckoViewUtils } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewUtils.jsm"
+);
 
-const {debug, warn} = GeckoViewUtils.initLogging("ExternalAppService"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewUtils.initLogging("ExternalAppService"); // eslint-disable-line no-unused-vars
 
-ChromeUtils.defineModuleGetter(this, "EventDispatcher",
-  "resource://gre/modules/Messaging.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "EventDispatcher",
+  "resource://gre/modules/Messaging.jsm"
+);
 
 function ExternalAppService() {
   this.wrappedJSObject = this;
@@ -22,7 +29,7 @@ ExternalAppService.prototype = {
 
   doContent(mimeType, request, context, forceSave) {
     const channel = request.QueryInterface(Ci.nsIChannel);
-    debug `doContent: uri=${channel.URI.displaySpec}
+    debug`doContent: uri=${channel.URI.displaySpec}
                       contentType=${channel.contentType}`;
 
     let filename = null;
@@ -46,7 +53,7 @@ ExternalAppService.prototype = {
   },
 
   applyDecodingForExtension(ext, encoding) {
-    debug `applyDecodingForExtension: extension=${ext}
+    debug`applyDecodingForExtension: extension=${ext}
                                       encoding=${encoding}`;
 
     // This doesn't matter for us right now because

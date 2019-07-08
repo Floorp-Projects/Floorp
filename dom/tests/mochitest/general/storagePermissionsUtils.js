@@ -26,32 +26,30 @@ if (inFrame) {
 }
 
 function setCookieBehavior(behavior) {
-  return SpecialPowers.pushPrefEnv({"set": [
-    [kPrefName, behavior],
-  ]});
+  return SpecialPowers.pushPrefEnv({ set: [[kPrefName, behavior]] });
 }
 
 function runIFrame(url) {
   return new Promise((resolve, reject) => {
-    function onMessage(e)  {
+    function onMessage(e) {
       if (e.data == "done") {
         resolve();
-        window.removeEventListener('message', onMessage);
+        window.removeEventListener("message", onMessage);
         return;
       }
 
       ok(!e.data.match(/^FAILURE/), e.data + " (IFRAME = " + url + ")");
     }
-    window.addEventListener('message', onMessage);
+    window.addEventListener("message", onMessage);
 
-    document.querySelector('iframe').src = url;
+    document.querySelector("iframe").src = url;
   });
 }
 
 function runWorker(url) {
   return new Promise((resolve, reject) => {
     var worker = new Worker(url);
-    worker.addEventListener('message', function(e) {
+    worker.addEventListener("message", function(e) {
       if (e.data == "done") {
         resolve();
         return;
@@ -63,7 +61,6 @@ function runWorker(url) {
 }
 
 function chromePower(allowed, blockSessionStorage) {
-
   // localStorage is affected by storage policy.
   try {
     SpecialPowers.wrap(window).localStorage.getItem("X");
@@ -71,7 +68,6 @@ function chromePower(allowed, blockSessionStorage) {
   } catch (e) {
     ok(!allowed, "getting localStorage from chrome threw");
   }
-
 
   // sessionStorage is not. See bug 1183968.
   try {
@@ -95,13 +91,16 @@ function chromePower(allowed, blockSessionStorage) {
     var promise = SpecialPowers.wrap(window).caches.keys();
     ok(true, "getting caches from chrome should never throw");
     return new Promise((resolve, reject) => {
-      promise.then(function() {
-        ok(shouldResolve, "The promise was resolved for chrome");
-        resolve();
-      }, function(e) {
-        ok(!shouldResolve, "The promise was rejected for chrome: " + e);
-        resolve();
-      });
+      promise.then(
+        function() {
+          ok(shouldResolve, "The promise was resolved for chrome");
+          resolve();
+        },
+        function(e) {
+          ok(!shouldResolve, "The promise was rejected for chrome: " + e);
+          resolve();
+        }
+      );
     });
   } catch (e) {
     ok(false, "getting caches from chrome threw");
@@ -135,13 +134,19 @@ function storageAllowed() {
     ok(true, "getting caches didn't throw");
 
     return new Promise((resolve, reject) => {
-      promise.then(function() {
-        ok(location.protocol == "https:", "The promise was not rejected");
-        resolve();
-      }, function() {
-        ok(location.protocol != "https:", "The promise should not have been rejected");
-        resolve();
-      });
+      promise.then(
+        function() {
+          ok(location.protocol == "https:", "The promise was not rejected");
+          resolve();
+        },
+        function() {
+          ok(
+            location.protocol != "https:",
+            "The promise should not have been rejected"
+          );
+          resolve();
+        }
+      );
     });
   } catch (e) {
     ok(false, "getting caches should not have thrown");
@@ -188,13 +193,16 @@ function storagePrevented() {
     ok(true, "getting caches didn't throw");
 
     return new Promise((resolve, reject) => {
-      promise.then(function() {
-        ok(false, "The promise should have rejected");
-        resolve();
-      }, function() {
-        ok(true, "The promise was rejected");
-        resolve();
-      });
+      promise.then(
+        function() {
+          ok(false, "The promise should have rejected");
+          resolve();
+        },
+        function() {
+          ok(true, "The promise was rejected");
+          resolve();
+        }
+      );
     });
   } catch (e) {
     ok(false, "getting caches should not have thrown");
@@ -228,7 +236,7 @@ function task(fn) {
       finishTest();
       return;
     }
-    it.value.then(next_step, (e) => next_step(null, e));
+    it.value.then(next_step, e => next_step(null, e));
   }
 
   if (!gen.then) {
@@ -247,8 +255,8 @@ async function runTestInWindow(test) {
   let w = window.open("window_storagePermissions.html");
   await new Promise(resolve => {
     w.onload = e => {
-     resolve();
-    }
+      resolve();
+    };
   });
 
   await new Promise(resolve => {

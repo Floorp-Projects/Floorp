@@ -23,7 +23,9 @@ window.talosDebug = {
   // End of config
 
   sum(values) {
-    return values.reduce(function(a, b) { return a + b; });
+    return values.reduce(function(a, b) {
+      return a + b;
+    });
   },
 
   average(values) {
@@ -33,13 +35,18 @@ window.talosDebug = {
 
   median(values) {
     var clone = values.slice(0);
-    // eslint-disable-next-line no-nested-ternary
-    var sorted = clone.sort(function(a, b) { return (a > b) ? 1 : ((a < b) ? -1 : 0); });
+    var sorted = clone.sort(function(a, b) {
+      // eslint-disable-next-line no-nested-ternary
+      return a > b ? 1 : a < b ? -1 : 0;
+    });
     var len = values.length;
-    if (!len)
+    if (!len) {
       return 999999;
-    if (len % 2) // We have a middle number
+    }
+    if (len % 2) {
+      // We have a middle number
       return sorted[(len - 1) / 2];
+    }
     return (sorted[len / 2] + sorted[len / 2 - 1]) / 2; // Average value of the two middle items.
   },
 
@@ -49,8 +56,15 @@ window.talosDebug = {
     }
 
     return Math.sqrt(
-      values.map(function(v) { return Math.pow(v - avg, 2); })
-            .reduce(function(a, b) { return a + b; }) / (values.length - 1));
+      values
+        .map(function(v) {
+          return Math.pow(v - avg, 2);
+        })
+        .reduce(function(a, b) {
+          return a + b;
+        }) /
+        (values.length - 1)
+    );
   },
 
   // Estimate the number of warmup iterations of this data set (in a completely unscrientific way).
@@ -78,7 +92,7 @@ window.talosDebug = {
     var stableFrom = -1;
     var overallAverage = d.median(values);
     // var overallStd = d.stddev(values, overallAverage);
-    for (var winWidth = MIN_WIDTH; winWidth < (MAX_WIDTH + 1); winWidth++) {
+    for (var winWidth = MIN_WIDTH; winWidth < MAX_WIDTH + 1; winWidth++) {
       var prevStd = windowStd(0, winWidth);
       for (var i = 1; i < values.length - winWidth - 3; i++) {
         var w0 = windowStd(i + 0, winWidth);
@@ -86,8 +100,9 @@ window.talosDebug = {
         var w2 = windowStd(i + 2, winWidth);
         // var currWindow = values.slice(i, i + winWidth);
         if (w0 >= prevStd && !(w1 < w0 && w2 < w1)) {
-          if (i > stableFrom)
+          if (i > stableFrom) {
             stableFrom = i;
+          }
           break;
         }
         prevStd = w0;
@@ -95,7 +110,7 @@ window.talosDebug = {
     }
 
     function withinPercentage(base, value, percentage) {
-      return Math.abs(base - value) < base * percentage / 100;
+      return Math.abs(base - value) < (base * percentage) / 100;
     }
     // Now go backwards as long as stddev decreases or doesn't increase in more than 1%.
     var baseStd = d.stddev(values.slice(stableFrom), overallAverage);
@@ -104,7 +119,11 @@ window.talosDebug = {
       var current = d.stddev(values.slice(stableFrom - 1), overallAverage);
       // 100/len : the more items we have, the more sensitively we compare:
       //   for 100 items, we're allowing 2% over baseStd.
-      if (stableFrom > 0 && (current < baseStd || withinPercentage(baseStd, current, 200 / (len ? len : 100)))) {
+      if (
+        stableFrom > 0 &&
+        (current < baseStd ||
+          withinPercentage(baseStd, current, 200 / (len ? len : 100)))
+      ) {
         stableFrom--;
       } else {
         break;
@@ -119,26 +138,44 @@ window.talosDebug = {
     var std = d.stddev(collection, d.average(collection));
     var avg = d.average(collection);
     var med = d.median(collection);
-    return "Count: " + collection.length +
-           "\nAverage: " + avg.toFixed(d.fixed) +
-           "\nMedian: " + med.toFixed(d.fixed) +
-           "\nStdDev: " + std.toFixed(d.fixed) + " (" + (100 * std / (avg ? avg : 1)).toFixed(d.fixed) + "% of average)";
+    return (
+      "Count: " +
+      collection.length +
+      "\nAverage: " +
+      avg.toFixed(d.fixed) +
+      "\nMedian: " +
+      med.toFixed(d.fixed) +
+      "\nStdDev: " +
+      std.toFixed(d.fixed) +
+      " (" +
+      ((100 * std) / (avg ? avg : 1)).toFixed(d.fixed) +
+      "% of average)"
+    );
   },
 
   tpRecordTime(dataCSV) {
     var d = window.talosDebug;
-    if (d.disabled)
+    if (d.disabled) {
       return;
+    }
 
-    var collection = ("" + dataCSV).split(",").map(function(item) { return parseFloat(item); });
+    var collection = ("" + dataCSV).split(",").map(function(item) {
+      return parseFloat(item);
+    });
     var res = d.statsDisplay(collection);
 
-    var warmup = (d.ignore >= 0) ? d.ignore : d.detectWarmup(collection);
+    var warmup = d.ignore >= 0 ? d.ignore : d.detectWarmup(collection);
     if (warmup >= 0) {
-      res += "\n\nWarmup " + ((d.ignore >= 0) ? "requested: " : "auto-detected: ") + warmup;
+      res +=
+        "\n\nWarmup " +
+        (d.ignore >= 0 ? "requested: " : "auto-detected: ") +
+        warmup;
       var warmedUp = collection.slice(warmup);
       if (warmup) {
-        res += "\nAfter ignoring first " + (warmup > 1 ? (warmup + " items") : "item") + ":\n";
+        res +=
+          "\nAfter ignoring first " +
+          (warmup > 1 ? warmup + " items" : "item") +
+          ":\n";
         res += d.statsDisplay(warmedUp);
       }
     } else {
@@ -147,18 +184,22 @@ window.talosDebug = {
 
     if (d.displayData) {
       var disp = collection.map(function(item) {
-                   return item.toFixed(d.fixed);
-                 });
-      if (warmup >= 0)
+        return item.toFixed(d.fixed);
+      });
+      if (warmup >= 0) {
         disp.splice(warmup, 0, "[warmed-up:]");
+      }
       res += "\n\nRecorded:\n" + disp.join(", ");
 
       res += "\n\nStddev from item NN to last:\n";
       disp = collection.map(function(value, index) {
-               return d.stddev(collection.slice(index), d.average(collection.slice(index))).toFixed(d.fixed);
-             });
-      if (warmup >= 0)
+        return d
+          .stddev(collection.slice(index), d.average(collection.slice(index)))
+          .toFixed(d.fixed);
+      });
+      if (warmup >= 0) {
         disp.splice(warmup, 0, "[warmed-up:]");
+      }
       res += disp.join(", ");
     } else {
       res += "\n\n[set window.talosDebug.displayData=true for data]";
@@ -169,6 +210,6 @@ window.talosDebug = {
 };
 
 // Enable testing outside of talos by providing an alternative report function.
-if (typeof(tpRecordTime) === "undefined") {
+if (typeof tpRecordTime === "undefined") {
   tpRecordTime = window.talosDebug.tpRecordTime;
 }

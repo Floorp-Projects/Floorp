@@ -47,7 +47,7 @@ const styleSheetSpec = generateActorSpec({
 
   methods: {
     toggleDisabled: {
-      response: { disabled: RetVal("boolean")},
+      response: { disabled: RetVal("boolean") },
     },
     getText: {
       response: {

@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = "Splendid Test";
 
   // Test for IDBKeyRange and indexedDB availability in xpcshell.

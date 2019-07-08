@@ -8,6 +8,10 @@
 <iframe height="200" width="600" type="content"></iframe>
 <script type="application/javascript">
 <![CDATA[
+// Note: We can't use window.frames directly here because the type="content"
+// attributes isolate the frames into their own BrowsingContext hierarchies.
+let frameElts = document.getElementsByTagName("iframe");
+
 var is = window.opener.wrappedJSObject.is;
 var isnot = window.opener.wrappedJSObject.isnot;
 var ok = window.opener.wrappedJSObject.ok;
@@ -24,7 +28,7 @@ var file = Cc["@mozilla.org/file/directory_service;1"]
 filePath = file.path;
 
 function printpreview(hasMozPrintCallback) {
-  gWbp = window.frames[1].docShell.initOrReusePrintPreviewViewer();
+  gWbp = frameElts[1].docShell.initOrReusePrintPreviewViewer();
   var listener = {
     onLocationChange: function(webProgress, request, location, flags) { },
     onProgressChange: function(webProgress, request, curSelfProgress, 
@@ -50,22 +54,22 @@ function printpreview(hasMozPrintCallback) {
   var after = 0;
   function beforeprint() { ++before; }
   function afterprint() { ++after; }
-  window.frames[0].addEventListener("beforeprint", beforeprint, true);
-  window.frames[0].addEventListener("afterprint", afterprint, true);
-  gWbp.printPreview(gWbp.globalPrintSettings, window.frames[0], listener);
+  frameElts[0].contentWindow.addEventListener("beforeprint", beforeprint, true);
+  frameElts[0].contentWindow.addEventListener("afterprint", afterprint, true);
+  gWbp.printPreview(gWbp.globalPrintSettings, frameElts[0].contentWindow, listener);
   is(before, 1, "Should have called beforeprint listener!");
   if (!hasMozPrintCallback) {
     // If there's a mozPrintCallback the after print event won't fire until
     // later.
     is(after, 1, "Should have called afterprint listener!");
   }
-  window.frames[0].removeEventListener("beforeprint", beforeprint, true);
-  window.frames[0].removeEventListener("afterprint", afterprint, true);
+  frameElts[0].contentWindow.removeEventListener("beforeprint", beforeprint, true);
+  frameElts[0].contentWindow.removeEventListener("afterprint", afterprint, true);
   prefs.clearUserPref('print.show_print_progress');
 }
 
 function exitprintpreview() {
-  window.frames[1].docShell.exitPrintPreview();
+  frameElts[1].contentWindow.docShell.exitPrintPreview();
 }
 
 function finish() {
@@ -117,45 +121,45 @@ function addHTMLContent(parent) {
 function startTest1() {
   ctx1 = document.getElementsByTagName("canvas")[0].getContext("2d");
   ctx2 = document.getElementsByTagName("canvas")[1].getContext("2d");
-  window.frames[0].document.body.innerHTML = "<div> </div><div>" + counter + " timers</div><div> </div>";
+  frameElts[0].contentDocument.body.innerHTML = "<div> </div><div>" + counter + " timers</div><div> </div>";
 
   // Note this timeout is needed so that we can check that timers run
   // after print preview, but not during it.
-  window.frames[0].wrappedJSObject.counter = counter;
-  window.frames[0].counterTimeout = "document.body.firstChild.nextSibling.innerHTML = ++counter + ' timers';" +
+  frameElts[0].contentWindow.wrappedJSObject.counter = counter;
+  frameElts[0].contentWindow.counterTimeout = "document.body.firstChild.nextSibling.innerHTML = ++counter + ' timers';" +
                                     "window.setTimeout(counterTimeout, 0);";
-  window.frames[0].setTimeout(window.frames[0].counterTimeout, 0);
-  window.frames[0].document.body.firstChild.innerHTML = "Print preview";
+  frameElts[0].contentWindow.setTimeout(frameElts[0].contentWindow.counterTimeout, 0);
+  frameElts[0].contentDocument.body.firstChild.innerHTML = "Print preview";
 
   printpreview();
-  ctx1.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(256,256,256)");
-  window.frames[0].document.body.firstChild.innerHTML = "Galley presentation";
+  ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(256,256,256)");
+  frameElts[0].contentDocument.body.firstChild.innerHTML = "Galley presentation";
 
   // Add some elements.
-  addHTMLContent(window.frames[0].document.body.lastChild);
+  addHTMLContent(frameElts[0].contentDocument.body.lastChild);
   // Delete them.
-  window.frames[0].document.body.lastChild.innerHTML = "";
+  frameElts[0].contentDocument.body.lastChild.innerHTML = "";
   // And readd.
-  addHTMLContent(window.frames[0].document.body.lastChild);
+  addHTMLContent(frameElts[0].contentDocument.body.lastChild);
 
   setTimeout(finalizeTest1, 1000);
 }
 
 function finalizeTest1() {
-  ctx2.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(256,256,256)");
+  ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(256,256,256)");
   exitprintpreview();
   ok(compareCanvases(), "Canvas should be the same!");
-  counter = window.frames[0].counter;
+  counter = frameElts[0].contentWindow.counter;
   // This timeout is needed so that we can check that timers do run after
   // print preview.
   setTimeout(runTest2, 1000);
 }
 
 function runTest2() {
-  isnot(window.frames[0].document.body.firstChild.nextSibling.textContent, "0 timers", "Timers should have run!");
-  isnot(window.frames[0].counter, 0, "Timers should have run!");
-  counter = window.frames[0].counter;
-  window.frames[0].counterTimeout = "";
+  isnot(frameElts[0].contentDocument.body.firstChild.nextSibling.textContent, "0 timers", "Timers should have run!");
+  isnot(frameElts[0].contentWindow.counter, 0, "Timers should have run!");
+  counter = frameElts[0].contentWindow.counter;
+  frameElts[0].contentWindow.counterTimeout = "";
   setTimeout(runTest3, 0);
 }
 
@@ -208,17 +212,17 @@ function runTest3() {
 }
 
 function compareFormElementPrint(el1, el2, equals) {
-  window.frames[0].document.body.innerHTML = el1;
-  window.frames[0].document.body.firstChild.value =
-    window.frames[0].document.body.firstChild.getAttribute('value');
+  frameElts[0].contentDocument.body.innerHTML = el1;
+  frameElts[0].contentDocument.body.firstChild.value =
+    frameElts[0].contentDocument.body.firstChild.getAttribute('value');
   printpreview();
-  ctx1.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(256,256,256)");
+  ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(256,256,256)");
   exitprintpreview();
-  window.frames[0].document.body.innerHTML = el2;
-  window.frames[0].document.body.firstChild.value =
-    window.frames[0].document.body.firstChild.getAttribute('value');
+  frameElts[0].contentDocument.body.innerHTML = el2;
+  frameElts[0].contentDocument.body.firstChild.value =
+    frameElts[0].contentDocument.body.firstChild.getAttribute('value');
   printpreview();
-  ctx2.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(256,256,256)");
+  ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(256,256,256)");
   exitprintpreview();
   is(compareCanvases(), equals,
      "Comparing print preview didn't succeed [" + el1 + " : " + el2 + "]");
@@ -227,7 +231,7 @@ function compareFormElementPrint(el1, el2, equals) {
 
 // This is a crash test for bug 539060.
 function runTest4() {
-  window.frames[0].document.body.innerHTML =
+  frameElts[0].contentDocument.body.innerHTML =
     "<iframe style='display: none;' src='data:text/html,<iframe>'></iframe>";
   setTimeout(runTest4end, 500);
 }
@@ -241,7 +245,7 @@ function runTest4end() {
 
 // This is a crash test for bug 595337
 function runTest5() {
-  window.frames[0].document.body.innerHTML =
+  frameElts[0].contentDocument.body.innerHTML =
     '<iframe style="position: fixed; visibility: hidden; bottom: 10em;"></iframe>' +
     '<input contenteditable="true" style="display: table; page-break-before: left; width: 10000px;">';
   printpreview();
@@ -252,7 +256,7 @@ function runTest5() {
 
 // Crash test for bug 878037
 function runTest6() {
-  window.frames[0].document.body.innerHTML =
+  frameElts[0].contentDocument.body.innerHTML =
     '<style> li { list-style-image: url("animated.gif"); } </style>' +
     '<li>Firefox will crash if you try and print this page</li>';
 
@@ -269,19 +273,19 @@ function runTest6end() {
 function runTest7() {
   var contentText = "<a href='#'>mozilla</a><input>test<select><option>option1</option></select>";
   // Create normal content
-  window.frames[0].document.body.innerHTML =
+  frameElts[0].contentDocument.body.innerHTML =
     "<div>" + contentText + "</div>";
-  window.frames[0].document.body.firstChild.value =
-    window.frames[0].document.body.firstChild.getAttribute('value');
+  frameElts[0].contentDocument.body.firstChild.value =
+    frameElts[0].contentDocument.body.firstChild.getAttribute('value');
   printpreview();
-  ctx1.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(255,255,255)");
+  ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
 
-  window.frames[0].document.body.innerHTML = "<div></div>";
-  var sr = window.frames[0].document.body.firstChild.attachShadow({mode: "open"});
+  frameElts[0].contentDocument.body.innerHTML = "<div></div>";
+  var sr = frameElts[0].contentDocument.body.firstChild.attachShadow({mode: "open"});
   sr.innerHTML = contentText;
   printpreview();
-  ctx2.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(255,255,255)");
+  ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
   ok(compareCanvases(), "Printing light DOM and shadow DOM should create same output");
 
@@ -298,7 +302,7 @@ async function runTest8() {
     iframeElement.setAttribute("src", "printpreview_font_api_ref.html");
   });
   printpreview();
-  ctx1.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(255,255,255)");
+  ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
 
   // Second, snapshot the page with font loaded in JS.
@@ -307,7 +311,7 @@ async function runTest8() {
     iframeElement.setAttribute("src", "printpreview_font_api.html");
   });
   printpreview();
-  ctx2.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(255,255,255)");
+  ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
   ok(compareCanvases(), "Printing pages with fonts loaded from CSS and JS should be the same.");
 
@@ -316,17 +320,17 @@ async function runTest8() {
 
 // Test for bug 1487649
 async function runTest9() {
-  window.frames[0].document.body.innerHTML = `
+  frameElts[0].contentDocument.body.innerHTML = `
     <svg width="100" height="100">
       <rect width='100' height='100' fill='lime'/>
     </svg>
   `;
 
   printpreview();
-  ctx1.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(255,255,255)");
+  ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
 
-  window.frames[0].document.body.innerHTML = `
+  frameElts[0].contentDocument.body.innerHTML = `
     <svg width="100" height="100">
       <defs>
         <g id="useme">
@@ -339,13 +343,13 @@ async function runTest9() {
 
   // Set the attribute explicitly because this is a chrome document, and the
   // href attribute would get sanitized.
-  window.frames[0].document.querySelector("use").setAttribute("href", "#useme");
+  frameElts[0].contentDocument.querySelector("use").setAttribute("href", "#useme");
 
   // Ensure the <use> shadow tree is created so we test what we want to test.
-  window.frames[0].document.body.offsetTop;
+  frameElts[0].contentDocument.body.offsetTop;
 
   printpreview();
-  ctx2.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(255,255,255)");
+  ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
   ok(compareCanvases(), "Printing <use> subtrees should create same output");
 
@@ -368,7 +372,7 @@ async function runTest10() {
   });
   printpreview(true);
   await mozPrintCallbackDone;
-  ctx1.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(255,255,255)");
+  ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
 
   // Second, snapshot the page with font loaded in JS.
@@ -382,7 +386,7 @@ async function runTest10() {
   printpreview(true);
   // Wait for the mozprintcallback to finish.
   await mozPrintCallbackDone;
-  ctx2.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(255,255,255)");
+  ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
 
   exitprintpreview();
   ok(compareCanvases(), "Printing pages with fonts loaded from a mozPrintCallback should be the same.");

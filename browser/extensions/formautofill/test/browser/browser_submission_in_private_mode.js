@@ -2,18 +2,21 @@
 "use strict";
 
 add_task(async function test_add_address() {
-  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
   let addresses = await getAddresses();
 
   is(addresses.length, 0, "No address in storage");
 
   await BrowserTestUtils.withNewTab(
-    {gBrowser: privateWin.gBrowser, url: FORM_URL},
+    { gBrowser: privateWin.gBrowser, url: FORM_URL },
     async function(privateBrowser) {
       await ContentTask.spawn(privateBrowser, null, async function() {
         content.document.getElementById("organization").focus();
         content.document.getElementById("organization").value = "Mozilla";
-        content.document.getElementById("street-address").value = "331 E. Evelyn Avenue";
+        content.document.getElementById("street-address").value =
+          "331 E. Evelyn Avenue";
         content.document.getElementById("tel").value = "1-650-903-0800";
 
         content.document.querySelector("input[type=submit]").click();

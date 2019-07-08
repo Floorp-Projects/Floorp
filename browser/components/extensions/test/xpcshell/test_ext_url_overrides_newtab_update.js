@@ -2,11 +2,16 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
-                                   "@mozilla.org/browser/aboutnewtab-service;1",
-                                   "nsIAboutNewTabService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "aboutNewTabService",
+  "@mozilla.org/browser/aboutnewtab-service;1",
+  "nsIAboutNewTabService"
+);
 
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 
 const {
   createAppInfo,
@@ -61,33 +66,45 @@ add_task(async function test_url_overrides_newtab_update() {
     },
   });
 
-  testServer.registerFile("/addons/test_url_overrides-2.0.xpi", webExtensionFile);
+  testServer.registerFile(
+    "/addons/test_url_overrides-2.0.xpi",
+    webExtensionFile
+  );
 
   await promiseStartupManager();
 
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
-      "version": "1.0",
-      "applications": {
-        "gecko": {
-          "id": EXTENSION_ID,
-          "update_url": `http://localhost:${port}/test_update.json`,
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
+          update_url: `http://localhost:${port}/test_update.json`,
         },
       },
-      chrome_url_overrides: {newtab: NEWTAB_URI},
+      chrome_url_overrides: { newtab: NEWTAB_URI },
     },
   });
 
   let defaultNewTabURL = aboutNewTabService.newTabURL;
-  equal(aboutNewTabService.newTabURL, defaultNewTabURL,
-        `Default newtab url is ${defaultNewTabURL}.`);
+  equal(
+    aboutNewTabService.newTabURL,
+    defaultNewTabURL,
+    `Default newtab url is ${defaultNewTabURL}.`
+  );
 
   await extension.startup();
 
-  equal(extension.version, "1.0", "The installed addon has the expected version.");
-  ok(aboutNewTabService.newTabURL.endsWith(NEWTAB_URI),
-     "Newtab url is overridden by the extension.");
+  equal(
+    extension.version,
+    "1.0",
+    "The installed addon has the expected version."
+  );
+  ok(
+    aboutNewTabService.newTabURL.endsWith(NEWTAB_URI),
+    "Newtab url is overridden by the extension."
+  );
 
   let update = await promiseFindAddonUpdates(extension.addon);
   let install = update.updateAvailable;
@@ -96,9 +113,16 @@ add_task(async function test_url_overrides_newtab_update() {
 
   await extension.awaitStartup();
 
-  equal(extension.version, "2.0", "The updated addon has the expected version.");
-  equal(aboutNewTabService.newTabURL, defaultNewTabURL,
-        "Newtab url reverted to the default after update.");
+  equal(
+    extension.version,
+    "2.0",
+    "The updated addon has the expected version."
+  );
+  equal(
+    aboutNewTabService.newTabURL,
+    defaultNewTabURL,
+    "Newtab url reverted to the default after update."
+  );
 
   await extension.unload();
 

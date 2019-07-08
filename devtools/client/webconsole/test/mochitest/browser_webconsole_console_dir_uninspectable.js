@@ -8,13 +8,14 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,test console.dir on uninspectable object";
+const TEST_URI =
+  "data:text/html;charset=utf8,test console.dir on uninspectable object";
 const FIRST_LOG_MESSAGE = "fooBug773466a";
 const SECOND_LOG_MESSAGE = "fooBug773466b";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
+  const { jsterm } = hud;
 
   info("Logging a first message to make sure everything is working");
   let onLogMessage = waitForMessage(hud, FIRST_LOG_MESSAGE);
@@ -29,10 +30,13 @@ add_task(async function() {
   info("Logging a second message to make sure the console is not broken");
   onLogMessage = waitForMessage(hud, SECOND_LOG_MESSAGE);
   // Logging from content to make sure the console API is working.
-  ContentTask.spawn(gBrowser.selectedBrowser, SECOND_LOG_MESSAGE, (string) => {
+  ContentTask.spawn(gBrowser.selectedBrowser, SECOND_LOG_MESSAGE, string => {
     content.console.log(string);
   });
   await onLogMessage;
 
-  ok(true, "The console.dir call on an uninspectable object did not break the console");
+  ok(
+    true,
+    "The console.dir call on an uninspectable object did not break the console"
+  );
 });

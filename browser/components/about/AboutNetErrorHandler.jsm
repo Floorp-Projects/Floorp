@@ -6,9 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["AboutNetErrorHandler"];
 
-const {RemotePages} = ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "BrowserUtils", "resource://gre/modules/BrowserUtils.jsm");
+const { RemotePages } = ChromeUtils.import(
+  "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
+);
 
 var AboutNetErrorHandler = {
   _inited: false,
@@ -52,7 +58,7 @@ var AboutNetErrorHandler = {
         // Send a message to the content when a captive portal is freed
         // so that error pages can refresh themselves.
         this.pageListener.sendAsyncMessage("AboutNetErrorCaptivePortalFreed");
-      break;
+        break;
     }
   },
 
@@ -60,20 +66,26 @@ var AboutNetErrorHandler = {
     switch (msg.name) {
       case "Browser:OpenCaptivePortalPage":
         Services.obs.notifyObservers(null, "ensure-captive-portal-tab");
-      break;
+        break;
       case "Browser:PrimeMitm":
         this.primeMitm(msg.target.browser);
-      break;
+        break;
       case "Browser:ResetEnterpriseRootsPref":
         Services.prefs.clearUserPref("security.enterprise_roots.enabled");
         Services.prefs.clearUserPref("security.enterprise_roots.auto-enabled");
-      break;
+        break;
       case "RecordCertErrorLoad":
-         Services.telemetry.recordEvent("security.ui.certerror", "load", "aboutcerterror", msg.data.errorCode, {
-           has_sts: msg.data.has_sts.toString(),
-           is_frame: msg.data.is_frame.toString(),
-         });
-      break;
+        Services.telemetry.recordEvent(
+          "security.ui.certerror",
+          "load",
+          "aboutcerterror",
+          msg.data.errorCode,
+          {
+            has_sts: msg.data.has_sts.toString(),
+            is_frame: msg.data.is_frame.toString(),
+          }
+        );
+        break;
     }
   },
 
@@ -88,8 +100,10 @@ var AboutNetErrorHandler = {
       return;
     }
 
-    let url = Services.prefs.getStringPref("security.certerrors.mitm.priming.endpoint");
-    let request = new XMLHttpRequest({mozAnon: true});
+    let url = Services.prefs.getStringPref(
+      "security.certerrors.mitm.priming.endpoint"
+    );
+    let request = new XMLHttpRequest({ mozAnon: true });
     request.open("HEAD", url);
     request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     request.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
@@ -100,7 +114,9 @@ var AboutNetErrorHandler = {
         return;
       }
 
-      let secInfo = request.channel.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+      let secInfo = request.channel.securityInfo.QueryInterface(
+        Ci.nsITransportSecurityInfo
+      );
       if (secInfo.errorCodeString != "SEC_ERROR_UNKNOWN_ISSUER") {
         return;
       }
@@ -110,22 +126,39 @@ var AboutNetErrorHandler = {
       if (secInfo.serverCert && secInfo.serverCert.issuerName) {
         // Grab the issuer of the certificate used in the exchange and store it so that our
         // network-level MitM detection code has a comparison baseline.
-        Services.prefs.setStringPref("security.pki.mitm_canary_issuer", secInfo.serverCert.issuerName);
+        Services.prefs.setStringPref(
+          "security.pki.mitm_canary_issuer",
+          secInfo.serverCert.issuerName
+        );
 
         // MitM issues are sometimes caused by software not registering their root certs in the
         // Firefox root store. We might opt for using third party roots from the system root store.
-        if (Services.prefs.getBoolPref("security.certerrors.mitm.auto_enable_enterprise_roots")) {
-          if (!Services.prefs.getBoolPref("security.enterprise_roots.enabled")) {
+        if (
+          Services.prefs.getBoolPref(
+            "security.certerrors.mitm.auto_enable_enterprise_roots"
+          )
+        ) {
+          if (
+            !Services.prefs.getBoolPref("security.enterprise_roots.enabled")
+          ) {
             // Loading enterprise roots happens on a background thread, so wait for import to finish.
-            BrowserUtils.promiseObserved("psm:enterprise-certs-imported").then(() => {
-              if (browser.documentURI.spec.startsWith("about:certerror")) {
-                browser.reload();
+            BrowserUtils.promiseObserved("psm:enterprise-certs-imported").then(
+              () => {
+                if (browser.documentURI.spec.startsWith("about:certerror")) {
+                  browser.reload();
+                }
               }
-            });
+            );
 
-            Services.prefs.setBoolPref("security.enterprise_roots.enabled", true);
+            Services.prefs.setBoolPref(
+              "security.enterprise_roots.enabled",
+              true
+            );
             // Record that this pref was automatically set.
-            Services.prefs.setBoolPref("security.enterprise_roots.auto-enabled", true);
+            Services.prefs.setBoolPref(
+              "security.enterprise_roots.auto-enabled",
+              true
+            );
           }
         } else {
           // Need to reload the page to make sure network code picks up the canary issuer pref.

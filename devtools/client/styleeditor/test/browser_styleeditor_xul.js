@@ -17,6 +17,8 @@ add_task(async function() {
   const toolbox = await gDevTools.showToolbox(target, "styleeditor");
   const panel = toolbox.getCurrentPanel();
 
-  ok(panel,
-     "The style-editor panel did initialize correctly for the XUL window");
+  ok(
+    panel,
+    "The style-editor panel did initialize correctly for the XUL window"
+  );
 });

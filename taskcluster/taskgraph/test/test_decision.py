@@ -77,7 +77,7 @@ class TestGetDecisionParameters(unittest.TestCase):
         self.assertEqual(params['moz_build_date'], '20170825200511')
         self.assertEqual(params['try_mode'], None)
         self.assertEqual(params['try_options'], None)
-        self.assertEqual(params['try_task_config'], None)
+        self.assertEqual(params['try_task_config'], {})
 
     @patch('taskgraph.decision.get_hg_revision_branch')
     def test_no_email_owner(self, mock_get_hg_revision_branch):
@@ -98,7 +98,7 @@ class TestGetDecisionParameters(unittest.TestCase):
         self.assertEqual(params['try_mode'], 'try_option_syntax')
         self.assertEqual(params['try_options']['build_types'], 'do')
         self.assertEqual(params['try_options']['unittests'], 'all')
-        self.assertEqual(params['try_task_config'], None)
+        self.assertEqual(params['try_task_config'], {})
 
     @patch('taskgraph.decision.get_hg_revision_branch')
     @patch('taskgraph.decision.get_hg_commit_message')

@@ -53,22 +53,34 @@ var sync_obj;
 var async_obj;
 
 function make_object() {
-  let o = { };
+  let o = {};
   o.i = 5;
   o.b = true;
   o.s = "hello";
   o.x = { i: 10 };
-  o.f = function() { return 99; };
-  o.ctor = function() { this.a = 3; };
+  o.f = function() {
+    return 99;
+  };
+  o.ctor = function() {
+    this.a = 3;
+  };
 
   // Doing anything with this Proxy will throw.
-  var throwing = new Proxy({}, new Proxy({}, {
-      get(trap) { throw trap; },
-    }));
+  var throwing = new Proxy(
+    {},
+    new Proxy(
+      {},
+      {
+        get(trap) {
+          throw trap;
+        },
+      }
+    )
+  );
 
   let array = [1, 2, 3];
 
-  let for_json = { "n": 3, "a": array, "s": "hello", o: { "x": 10 } };
+  let for_json = { n: 3, a: array, s: "hello", o: { x: 10 } };
 
   let proto = { data: 42 };
   let with_proto = Object.create(proto);
@@ -76,14 +88,15 @@ function make_object() {
   let with_null_proto = Object.create(null);
 
   content.document.title = "Hello, Kitty";
-  return { "data": o,
-           "throwing": throwing,
-           "document": content.document,
-           "array": array,
-           "for_json": for_json,
-           "with_proto": with_proto,
-           "with_null_proto": with_null_proto,
-         };
+  return {
+    data: o,
+    throwing,
+    document: content.document,
+    array,
+    for_json,
+    with_proto,
+    with_null_proto,
+  };
 }
 
 function make_json() {
@@ -101,7 +114,7 @@ function parent_test(finish) {
     return result;
   }
 
-  addMessageListener("cpows:from_parent", (msg) => {
+  addMessageListener("cpows:from_parent", msg => {
     let obj = msg.objects.obj;
     if (is_remote) {
       ok(obj.a == undefined, "__exposedProps__ should not work");
@@ -121,7 +134,7 @@ function parent_test(finish) {
 
     finish();
   });
-  sendRpcMessage("cpows:parent_test", {}, {func: f});
+  sendRpcMessage("cpows:parent_test", {}, { func: f });
 }
 
 function error_reporting_test(finish) {
@@ -134,7 +147,7 @@ function dom_test(finish) {
   element.id = "it_works";
   content.document.body.appendChild(element);
 
-  sendRpcMessage("cpows:dom_test", {}, {element});
+  sendRpcMessage("cpows:dom_test", {}, { element });
   Cu.schedulePreciseGC(function() {
     sendRpcMessage("cpows:dom_test_after_gc");
     finish();
@@ -145,7 +158,7 @@ function xray_test(finish) {
   let element = content.document.createElement("div");
   element.wrappedJSObject.foo = "hello";
 
-  sendRpcMessage("cpows:xray_test", {}, {element});
+  sendRpcMessage("cpows:xray_test", {}, { element });
   finish();
 }
 
@@ -158,7 +171,7 @@ function symbol_test(finish) {
     [named]: named,
   };
   let test = ["a"];
-  sendRpcMessage("cpows:symbol_test", {}, {object, test});
+  sendRpcMessage("cpows:symbol_test", {}, { object, test });
   finish();
 }
 
@@ -172,15 +185,26 @@ function compartment_test(finish) {
     return;
   }
 
-  let sb = Cu.Sandbox("http://www.example.com", { wantGlobalProperties: ["XMLHttpRequest"] });
-  sb.eval("function getUnprivilegedObject() { var xhr = new XMLHttpRequest(); xhr.expando = 42; return xhr; }");
+  let sb = Cu.Sandbox("http://www.example.com", {
+    wantGlobalProperties: ["XMLHttpRequest"],
+  });
+  sb.eval(
+    "function getUnprivilegedObject() { var xhr = new XMLHttpRequest(); xhr.expando = 42; return xhr; }"
+  );
   function testParentObject(obj) {
     let results = [];
-    function is(a, b, msg) { results.push({ result: a === b ? "PASS" : "FAIL", message: msg }); }
-    function ok1(x, msg) { results.push({ result: x ? "PASS" : "FAIL", message: msg }); }
+    function is(a, b, msg) {
+      results.push({ result: a === b ? "PASS" : "FAIL", message: msg });
+    }
+    function ok1(x, msg) {
+      results.push({ result: x ? "PASS" : "FAIL", message: msg });
+    }
     let cpowLocation = Cu.getRealmLocation(obj);
-    ok1(/shared JSM global/.test(cpowLocation),
-       "child->parent CPOWs should live in the privileged junk scope: " + cpowLocation);
+    ok1(
+      /shared JSM global/.test(cpowLocation),
+      "child->parent CPOWs should live in the privileged junk scope: " +
+        cpowLocation
+    );
     is(obj(), 42, "child->parent CPOW is invokable");
     try {
       obj.expando;
@@ -191,8 +215,11 @@ function compartment_test(finish) {
 
     return results;
   }
-  sendRpcMessage("cpows:compartment_test", {}, { getUnprivilegedObject: sb.getUnprivilegedObject,
-                                                 testParentObject });
+  sendRpcMessage(
+    "cpows:compartment_test",
+    {},
+    { getUnprivilegedObject: sb.getUnprivilegedObject, testParentObject }
+  );
   finish();
 }
 
@@ -209,18 +236,14 @@ function postmessage_test(finish) {
 function sync_test(finish) {
   dump("beginning cpow sync test\n");
   sync_obj = make_object();
-  sendRpcMessage("cpows:sync",
-    make_json(),
-    make_object());
+  sendRpcMessage("cpows:sync", make_json(), make_object());
   finish();
 }
 
 function async_test(finish) {
   dump("beginning cpow async test\n");
   async_obj = make_object();
-  sendAsyncMessage("cpows:async",
-    make_json(),
-    async_obj);
+  sendAsyncMessage("cpows:async", make_json(), async_obj);
 
   addMessageListener("cpows:async_done", finish);
 }
@@ -231,12 +254,10 @@ function rpc_test(finish) {
   dump("beginning cpow rpc test\n");
   rpc_obj = make_object();
   rpc_obj.data.reenter = function() {
-    sendRpcMessage("cpows:reenter", { }, { data: { valid: true } });
+    sendRpcMessage("cpows:reenter", {}, { data: { valid: true } });
     return "ok";
   };
-  sendRpcMessage("cpows:rpc",
-    make_json(),
-    rpc_obj);
+  sendRpcMessage("cpows:rpc", make_json(), rpc_obj);
   finish();
 }
 
@@ -250,13 +271,13 @@ function lifetime_test(finish) {
   }
 
   dump("beginning lifetime test\n");
-  var obj = {"will_die": {"f": 1}};
-  let [result] = sendRpcMessage("cpows:lifetime_test_1", {}, {obj});
+  var obj = { will_die: { f: 1 } };
+  let [result] = sendRpcMessage("cpows:lifetime_test_1", {}, { obj });
   ok(result == 10, "got sync result");
   ok(obj.wont_die.f == undefined, "got reverse CPOW");
   obj.will_die = null;
   Cu.schedulePreciseGC(function() {
-    addMessageListener("cpows:lifetime_test_3", (msg) => {
+    addMessageListener("cpows:lifetime_test_3", msg => {
       ok(obj.wont_die.f == undefined, "reverse CPOW still works");
       finish();
     });
@@ -271,7 +292,8 @@ function cancel_test(finish) {
     return;
   }
 
-  let fin1 = false, fin2 = false;
+  let fin1 = false,
+    fin2 = false;
 
   // CPOW from the parent runs f. When it sends a sync message, the
   // CPOW is canceled. The parent starts running again immediately
@@ -280,13 +302,17 @@ function cancel_test(finish) {
     let res = sendSyncMessage("cpows:cancel_sync_message");
     ok(res[0] == 12, "cancel_sync_message result correct");
     fin1 = true;
-    if (fin1 && fin2) finish();
+    if (fin1 && fin2) {
+      finish();
+    }
   }
 
-  sendAsyncMessage("cpows:cancel_test", null, {f});
+  sendAsyncMessage("cpows:cancel_test", null, { f });
   addMessageListener("cpows:cancel_test_done", msg => {
     fin2 = true;
-    if (fin1 && fin2) finish();
+    if (fin1 && fin2) {
+      finish();
+    }
   });
 }
 
@@ -297,7 +323,8 @@ function cancel_test2(finish) {
     return;
   }
 
-  let fin1 = false, fin2 = false;
+  let fin1 = false,
+    fin2 = false;
 
   // CPOW from the parent runs f. When it does a sync XHR, the
   // CPOW is canceled. The parent starts running again immediately
@@ -320,13 +347,17 @@ function cancel_test2(finish) {
     ok(fin === true, "XHR happened");
 
     fin1 = true;
-    if (fin1 && fin2) finish();
+    if (fin1 && fin2) {
+      finish();
+    }
   }
 
-  sendAsyncMessage("cpows:cancel_test2", null, {f});
+  sendAsyncMessage("cpows:cancel_test2", null, { f });
   addMessageListener("cpows:cancel_test2_done", msg => {
     fin2 = true;
-    if (fin1 && fin2) finish();
+    if (fin1 && fin2) {
+      finish();
+    }
   });
 }
 
@@ -339,9 +370,9 @@ function unsafe_test(finish) {
 
   function f() {}
 
-  sendAsyncMessage("cpows:unsafe", null, {f});
+  sendAsyncMessage("cpows:unsafe", null, { f });
   addMessageListener("cpows:unsafe_done", msg => {
-    sendRpcMessage("cpows:safe", null, {f});
+    sendRpcMessage("cpows:safe", null, { f });
     addMessageListener("cpows:safe_done", finish);
   });
 }
@@ -381,10 +412,12 @@ function localStorage_test(finish) {
 
   function f() {}
 
-  sendAsyncMessage("cpows:localStorage", null, {f});
+  sendAsyncMessage("cpows:localStorage", null, { f });
   addMessageListener("cpows:localStorage_done", finish);
 
   for (let i = 0; i < 3; i++) {
-    try { content.localStorage.setItem("foo", "bar"); } catch (ex) {}
+    try {
+      content.localStorage.setItem("foo", "bar");
+    } catch (ex) {}
   }
 }

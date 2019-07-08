@@ -15,12 +15,7 @@ async function testContainer1(browser, accDoc) {
   /* ================= Initial tree test ==================================== */
   // children are swapped by ARIA owns
   let tree = {
-    SECTION: [
-      { CHECKBUTTON: [
-        { SECTION: [] }
-      ] },
-      { PUSHBUTTON: [ ] }
-    ]
+    SECTION: [{ CHECKBUTTON: [{ SECTION: [] }] }, { PUSHBUTTON: [] }],
   };
   testAccessibleTree(acc, tree);
 
@@ -33,10 +28,10 @@ async function testContainer1(browser, accDoc) {
   // the children.
   tree = {
     SECTION: [
-      { CHECKBUTTON: [ ] }, // checkbox, native order
-      { PUSHBUTTON: [ ] }, // button, rearranged by ARIA own
-      { SECTION: [ ] } // subdiv from the subtree, ARIA owned
-    ]
+      { CHECKBUTTON: [] }, // checkbox, native order
+      { PUSHBUTTON: [] }, // button, rearranged by ARIA own
+      { SECTION: [] }, // subdiv from the subtree, ARIA owned
+    ],
   };
   testAccessibleTree(acc, tree);
 
@@ -47,12 +42,7 @@ async function testContainer1(browser, accDoc) {
 
   // children follow the DOM order
   tree = {
-    SECTION: [
-      { PUSHBUTTON: [ ] },
-      { CHECKBUTTON: [
-          { SECTION: [] }
-      ] }
-    ]
+    SECTION: [{ PUSHBUTTON: [] }, { CHECKBUTTON: [{ SECTION: [] }] }],
   };
   testAccessibleTree(acc, tree);
 
@@ -65,28 +55,32 @@ async function testContainer1(browser, accDoc) {
   // the children.
   tree = {
     SECTION: [
-      { CHECKBUTTON: [ ] }, // checkbox
-      { PUSHBUTTON: [ ] }, // button, rearranged by ARIA own
-      { SECTION: [ ] } // subdiv from the subtree, ARIA owned
-    ]
+      { CHECKBUTTON: [] }, // checkbox
+      { PUSHBUTTON: [] }, // button, rearranged by ARIA own
+      { SECTION: [] }, // subdiv from the subtree, ARIA owned
+    ],
   };
   testAccessibleTree(acc, tree);
 
   /* ================ Add ID to ARIA owns =================================== */
   onReorder = waitForEvent(EVENT_REORDER, docID);
-  await invokeSetAttribute(browser, id, "aria-owns",
-    "t1_button t1_subdiv t1_group");
+  await invokeSetAttribute(
+    browser,
+    id,
+    "aria-owns",
+    "t1_button t1_subdiv t1_group"
+  );
   await onReorder;
 
   // children are swapped again, button and subdiv are appended to
   // the children.
   tree = {
     SECTION: [
-      { CHECKBUTTON: [ ] }, // t1_checkbox
-      { PUSHBUTTON: [ ] }, // button, t1_button
-      { SECTION: [ ] }, // subdiv from the subtree, t1_subdiv
-      { GROUPING: [ ] } // group from outside, t1_group
-    ]
+      { CHECKBUTTON: [] }, // t1_checkbox
+      { PUSHBUTTON: [] }, // button, t1_button
+      { SECTION: [] }, // subdiv from the subtree, t1_subdiv
+      { GROUPING: [] }, // group from outside, t1_group
+    ],
   };
   testAccessibleTree(acc, tree);
 
@@ -104,29 +98,30 @@ async function testContainer1(browser, accDoc) {
   // newly inserted child.
   tree = {
     SECTION: [
-      { CHECKBUTTON: [ ] }, // existing explicit, t1_checkbox
-      { RADIOBUTTON: [ ] }, // new explicit, t1_child3
-      { PUSHBUTTON: [ ] }, // ARIA owned, t1_button
-      { SECTION: [ ] }, // ARIA owned, t1_subdiv
-      { GROUPING: [ ] } // ARIA owned, t1_group
-    ]
+      { CHECKBUTTON: [] }, // existing explicit, t1_checkbox
+      { RADIOBUTTON: [] }, // new explicit, t1_child3
+      { PUSHBUTTON: [] }, // ARIA owned, t1_button
+      { SECTION: [] }, // ARIA owned, t1_subdiv
+      { GROUPING: [] }, // ARIA owned, t1_group
+    ],
   };
   testAccessibleTree(acc, tree);
 
   /* ================ Remove element ======================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
   await ContentTask.spawn(browser, {}, () =>
-    content.document.getElementById("t1_span").remove());
+    content.document.getElementById("t1_span").remove()
+  );
   await onReorder;
 
   // subdiv should go away
   tree = {
     SECTION: [
-      { CHECKBUTTON: [ ] }, // explicit, t1_checkbox
-      { RADIOBUTTON: [ ] }, // explicit, t1_child3
-      { PUSHBUTTON: [ ] }, // ARIA owned, t1_button
-      { GROUPING: [ ] } // ARIA owned, t1_group
-    ]
+      { CHECKBUTTON: [] }, // explicit, t1_checkbox
+      { RADIOBUTTON: [] }, // explicit, t1_child3
+      { PUSHBUTTON: [] }, // ARIA owned, t1_button
+      { GROUPING: [] }, // ARIA owned, t1_group
+    ],
   };
   testAccessibleTree(acc, tree);
 
@@ -137,10 +132,10 @@ async function testContainer1(browser, accDoc) {
 
   tree = {
     SECTION: [
-      { CHECKBUTTON: [ ] },
-      { RADIOBUTTON: [ ] },
-      { PUSHBUTTON: [ ] } // ARIA owned, t1_button
-    ]
+      { CHECKBUTTON: [] },
+      { RADIOBUTTON: [] },
+      { PUSHBUTTON: [] }, // ARIA owned, t1_button
+    ],
   };
   testAccessibleTree(acc, tree);
 
@@ -151,11 +146,11 @@ async function testContainer1(browser, accDoc) {
 
   tree = {
     SECTION: [
-      { CHECKBUTTON: [ ] },
-      { RADIOBUTTON: [ ] },
-      { PUSHBUTTON: [ ] }, // ARIA owned, t1_button
-      { GROUPING: [ ] } // ARIA owned, t1_group, previously t1_grouptmp
-    ]
+      { CHECKBUTTON: [] },
+      { RADIOBUTTON: [] },
+      { PUSHBUTTON: [] }, // ARIA owned, t1_button
+      { GROUPING: [] }, // ARIA owned, t1_group, previously t1_grouptmp
+    ],
   };
   testAccessibleTree(acc, tree);
 }
@@ -166,19 +161,21 @@ async function removeContainer(browser, accDoc) {
 
   let tree = {
     SECTION: [
-      { CHECKBUTTON: [ ] } // ARIA owned, 't2_owned'
-    ]
+      { CHECKBUTTON: [] }, // ARIA owned, 't2_owned'
+    ],
   };
   testAccessibleTree(acc, tree);
 
   let onReorder = waitForEvent(EVENT_REORDER, id);
   await ContentTask.spawn(browser, {}, () =>
-    content.document.getElementById("t2_container2").removeChild(
-      content.document.getElementById("t2_container3")));
+    content.document
+      .getElementById("t2_container2")
+      .removeChild(content.document.getElementById("t2_container3"))
+  );
   await onReorder;
 
   tree = {
-    SECTION: [ ]
+    SECTION: [],
   };
   testAccessibleTree(acc, tree);
 }
@@ -201,15 +198,13 @@ async function stealAndRecacheChildren(browser, accDoc) {
 
   let tree = {
     SECTION: [
-      { CHECKBUTTON: [ ] } // ARIA owned
-    ]
+      { CHECKBUTTON: [] }, // ARIA owned
+    ],
   };
   testAccessibleTree(acc1, tree);
 
   tree = {
-    SECTION: [
-      { RADIOBUTTON: [ ] }
-    ]
+    SECTION: [{ RADIOBUTTON: [] }],
   };
   testAccessibleTree(acc2, tree);
 }
@@ -219,9 +214,7 @@ async function showHiddenElement(browser, accDoc) {
   const acc = findAccessibleChildByID(accDoc, id);
 
   let tree = {
-    SECTION: [
-      { RADIOBUTTON: [] }
-    ]
+    SECTION: [{ RADIOBUTTON: [] }],
   };
   testAccessibleTree(acc, tree);
 
@@ -230,10 +223,7 @@ async function showHiddenElement(browser, accDoc) {
   await onReorder;
 
   tree = {
-    SECTION: [
-      { CHECKBUTTON: [] },
-      { RADIOBUTTON: [] }
-    ]
+    SECTION: [{ CHECKBUTTON: [] }, { RADIOBUTTON: [] }],
   };
   testAccessibleTree(acc, tree);
 }
@@ -241,20 +231,23 @@ async function showHiddenElement(browser, accDoc) {
 async function rearrangeARIAOwns(browser, accDoc) {
   const id = "t5_container";
   const acc = findAccessibleChildByID(accDoc, id);
-  const tests = [{
-    val: "t5_checkbox t5_radio t5_button",
-    roleList: [ "CHECKBUTTON", "RADIOBUTTON", "PUSHBUTTON" ]
-  }, {
-    val: "t5_radio t5_button t5_checkbox",
-    roleList: [ "RADIOBUTTON", "PUSHBUTTON", "CHECKBUTTON" ]
-  }];
+  const tests = [
+    {
+      val: "t5_checkbox t5_radio t5_button",
+      roleList: ["CHECKBUTTON", "RADIOBUTTON", "PUSHBUTTON"],
+    },
+    {
+      val: "t5_radio t5_button t5_checkbox",
+      roleList: ["RADIOBUTTON", "PUSHBUTTON", "CHECKBUTTON"],
+    },
+  ];
 
   for (let { val, roleList } of tests) {
     let onReorder = waitForEvent(EVENT_REORDER, id);
     await invokeSetAttribute(browser, id, "aria-owns", val);
     await onReorder;
 
-    let tree = { SECTION: [ ] };
+    let tree = { SECTION: [] };
     for (let role of roleList) {
       let ch = {};
       ch[role] = [];
@@ -269,29 +262,28 @@ async function removeNotARIAOwnedEl(browser, accDoc) {
   const acc = findAccessibleChildByID(accDoc, id);
 
   let tree = {
-    SECTION: [
-      { TEXT_LEAF: [ ] },
-      { GROUPING: [ ] }
-    ]
+    SECTION: [{ TEXT_LEAF: [] }, { GROUPING: [] }],
   };
   testAccessibleTree(acc, tree);
 
   let onReorder = waitForEvent(EVENT_REORDER, id);
   await ContentTask.spawn(browser, id, contentId => {
-    content.document.getElementById(contentId).removeChild(
-      content.document.getElementById("t6_span"));
+    content.document
+      .getElementById(contentId)
+      .removeChild(content.document.getElementById("t6_span"));
   });
   await onReorder;
 
   tree = {
-    SECTION: [
-      { GROUPING: [ ] }
-    ]
+    SECTION: [{ GROUPING: [] }],
   };
   testAccessibleTree(acc, tree);
 }
 
-addAccessibleTask("doc_treeupdate_ariaowns.html", async function(browser, accDoc) {
+addAccessibleTask("doc_treeupdate_ariaowns.html", async function(
+  browser,
+  accDoc
+) {
   await testContainer1(browser, accDoc);
   await removeContainer(browser, accDoc);
   await stealAndRecacheChildren(browser, accDoc);

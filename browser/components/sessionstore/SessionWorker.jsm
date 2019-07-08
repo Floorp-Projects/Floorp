@@ -13,8 +13,9 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 
 var EXPORTED_SYMBOLS = ["SessionWorker"];
 
-var SessionWorker = new BasePromiseWorker("resource:///modules/sessionstore/SessionWorker.js");
+var SessionWorker = new BasePromiseWorker(
+  "resource:///modules/sessionstore/SessionWorker.js"
+);
 // As the Session Worker performs I/O, we can receive instances of
 // OS.File.Error, so we need to install a decoder.
 this.SessionWorker.ExceptionHandlers["OS.File.Error"] = OS.File.Error.fromMsg;
-

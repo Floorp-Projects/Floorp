@@ -9,14 +9,20 @@ const {
   WARNING_GROUPS_TOGGLE,
 } = require("devtools/client/webconsole/constants");
 
-const PrefState = (overrides) => Object.freeze(Object.assign({
-  logLimit: 1000,
-  sidebarToggle: false,
-  jstermCodeMirror: false,
-  groupWarnings: false,
-  historyCount: 50,
-  editor: false,
-}, overrides));
+const PrefState = overrides =>
+  Object.freeze(
+    Object.assign(
+      {
+        logLimit: 1000,
+        sidebarToggle: false,
+        jstermCodeMirror: false,
+        groupWarnings: false,
+        historyCount: 50,
+        editor: false,
+      },
+      overrides
+    )
+  );
 
 function prefs(state = PrefState(), action) {
   if (action.type === WARNING_GROUPS_TOGGLE) {

@@ -12,8 +12,10 @@ console.groupEnd();
 console.count("counter");
 console.count("counter");
 
-console.log("first", {a: 1}, "second", {b: "hello"}, "third", {c: new Map()});
-console.log("first", {a: 1}, "second", {b: "hello"});
-console.log("first", {a: 1}, "\nsecond", {b: "hello"});
+console.log("first", { a: 1 }, "second", { b: "hello" }, "third", {
+  c: new Map(),
+});
+console.log("first", { a: 1 }, "second", { b: "hello" });
+console.log("first", { a: 1 }, "\nsecond", { b: "hello" });
 console.log("first", "\nsecond");
 console.log("\nfirst", "second");

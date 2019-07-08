@@ -3,28 +3,31 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 
 const DEFAULT_TIME_SEGMENTS = [
-  {"id": "hour", "startTime": 3600, "endTime": 0, "weightPosition": 1},
-  {"id": "day", "startTime": 86400, "endTime": 3600, "weightPosition": 0.75},
-  {"id": "week", "startTime": 604800, "endTime": 86400, "weightPosition": 0.5},
-  {"id": "weekPlus", "startTime": 0, "endTime": 604800, "weightPosition": 0.25},
-  {"id": "alltime", "startTime": 0, "endTime": 0, "weightPosition": 0.25},
+  { id: "hour", startTime: 3600, endTime: 0, weightPosition: 1 },
+  { id: "day", startTime: 86400, endTime: 3600, weightPosition: 0.75 },
+  { id: "week", startTime: 604800, endTime: 86400, weightPosition: 0.5 },
+  { id: "weekPlus", startTime: 0, endTime: 604800, weightPosition: 0.25 },
+  { id: "alltime", startTime: 0, endTime: 0, weightPosition: 0.25 },
 ];
 
 const DEFAULT_PARAMETER_SETS = {
   "linear-frequency": {
-    "recencyFactor": 0.4,
-    "frequencyFactor": 0.5,
-    "combinedDomainFactor": 0.5,
-    "perfectFrequencyVisits": 10,
-    "perfectCombinedDomainScore": 2,
-    "multiDomainBoost": 0.1,
-    "itemScoreFactor": 0,
+    recencyFactor: 0.4,
+    frequencyFactor: 0.5,
+    combinedDomainFactor: 0.5,
+    perfectFrequencyVisits: 10,
+    perfectCombinedDomainScore: 2,
+    multiDomainBoost: 0.1,
+    itemScoreFactor: 0,
   },
 };
 
@@ -79,7 +82,8 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
     parameterSets = DEFAULT_PARAMETER_SETS,
     maxHistoryQueryResults = DEFAULT_MAX_HISTORY_QUERY_RESULTS,
     version,
-    scores) {
+    scores
+  ) {
     this.timeSegments = timeSegments;
     this.maxHistoryQueryResults = maxHistoryQueryResults;
     this.version = version;
@@ -100,11 +104,18 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
    * @return Updated parameter sets with additional fields (i.e. timeSegmentWeights)
    */
   prepareParameterSets(ps) {
-    return Object
-      .keys(ps)
-      // Add timeSegmentWeight fields to param sets e.g. timeSegmentWeights: {"hour": 1, "day": 0.8915, ...}
-      .map(k => ({[k]: merge(ps[k], {timeSegmentWeights: this.calculateTimeSegmentWeights(ps[k].recencyFactor)})}))
-      .reduce((acc, cur) => merge(acc, cur));
+    return (
+      Object.keys(ps)
+        // Add timeSegmentWeight fields to param sets e.g. timeSegmentWeights: {"hour": 1, "day": 0.8915, ...}
+        .map(k => ({
+          [k]: merge(ps[k], {
+            timeSegmentWeights: this.calculateTimeSegmentWeights(
+              ps[k].recencyFactor
+            ),
+          }),
+        }))
+        .reduce((acc, cur) => merge(acc, cur))
+    );
   }
 
   /**
@@ -114,8 +125,13 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
    * @return An object containing time segment weights: {"hour": 0.987, "day": 1}
    */
   calculateTimeSegmentWeights(recencyFactor) {
-    return this.timeSegments
-      .reduce((acc, cur) => merge(acc, ({[cur.id]: this.calculateScore(cur.weightPosition, 1, recencyFactor)})), {});
+    return this.timeSegments.reduce(
+      (acc, cur) =>
+        merge(acc, {
+          [cur.id]: this.calculateScore(cur.weightPosition, 1, recencyFactor),
+        }),
+      {}
+    );
   }
 
   /**
@@ -123,13 +139,15 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
    * available times segments and parameter sets.
    */
   calculateAllUserDomainAffinityScores() {
-    return this.timeSegments
-      // Calculate parameter set specific domain scores for each time segment
-      // => [{"a.com": {"ps1": 12, "ps2": 34}, "b.com": {"ps1": 56, "ps2": 78}}, ...]
-      .map(ts => this.calculateUserDomainAffinityScores(ts))
-      // Keep format, but reduce to single object, with combined scores across all time segments
-      // => "{a.com":{"ps1":2,"ps2":2}, "b.com":{"ps1":3,"ps2":3}}""
-      .reduce((acc, cur) => this._combineScores(acc, cur));
+    return (
+      this.timeSegments
+        // Calculate parameter set specific domain scores for each time segment
+        // => [{"a.com": {"ps1": 12, "ps2": 34}, "b.com": {"ps1": 56, "ps2": 78}}, ...]
+        .map(ts => this.calculateUserDomainAffinityScores(ts))
+        // Keep format, but reduce to single object, with combined scores across all time segments
+        // => "{a.com":{"ps1":2,"ps2":2}, "b.com":{"ps1":3,"ps2":3}}""
+        .reduce((acc, cur) => this._combineScores(acc, cur))
+    );
   }
 
   /**
@@ -143,9 +161,13 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
     // Returns domains and visit counts for this time segment: {"a.com": 1, "b.com": 2}
     let visits = this.queryVisits(ts);
 
-    return Object
-      .keys(visits)
-      .reduce((acc, d) => merge(acc, {[d]: this.calculateScoresForParameterSets(ts, visits[d])}), {});
+    return Object.keys(visits).reduce(
+      (acc, d) =>
+        merge(acc, {
+          [d]: this.calculateScoresForParameterSets(ts, visits[d]),
+        }),
+      {}
+    );
   }
 
   /**
@@ -158,9 +180,17 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
    * this time segment: {"ps1": 12, "ps2": 34}
    */
   calculateScoresForParameterSets(ts, vc) {
-    return Object
-      .keys(this.parameterSets)
-      .reduce((acc, ps) => merge(acc, {[ps]: this.calculateScoreForParameterSet(ts, vc, this.parameterSets[ps])}), {});
+    return Object.keys(this.parameterSets).reduce(
+      (acc, ps) =>
+        merge(acc, {
+          [ps]: this.calculateScoreForParameterSet(
+            ts,
+            vc,
+            this.parameterSets[ps]
+          ),
+        }),
+      {}
+    );
   }
 
   /**
@@ -175,7 +205,8 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
     return this.calculateScore(
       visitCount * parameterSet.timeSegmentWeights[timeSegment.id],
       parameterSet.perfectFrequencyVisits,
-      parameterSet.frequencyFactor);
+      parameterSet.frequencyFactor
+    );
   }
 
   /**
@@ -187,17 +218,28 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
     // Merge both score objects so we get a combined object holding all domains.
     // This is so we can combine them without missing domains that are in a and not in b and vice versa.
     const c = merge({}, a, b);
-    return Object.keys(c).reduce((acc, d) => merge(acc, this._combine(a, b, c, d)), {});
+    return Object.keys(c).reduce(
+      (acc, d) => merge(acc, this._combine(a, b, c, d)),
+      {}
+    );
   }
 
   _combine(a, b, c, d) {
-    return Object
-      .keys(c[d])
-      // Summing up the parameter set specific scores of each domain
-      .map(ps => ({[d]: {[ps]: Math.min(1, ((a[d] && a[d][ps]) || 0) + ((b[d] && b[d][ps]) || 0))}}))
-      // Reducing from an array of objects with a single parameter set to a single object
-      // [{"a.com":{"ps1":11}}, {"a.com: {"ps2":12}}] => {"a.com":{"ps1":11,"ps2":12}}
-      .reduce((acc, cur) => ({[d]: merge(acc[d], cur[d])}));
+    return (
+      Object.keys(c[d])
+        // Summing up the parameter set specific scores of each domain
+        .map(ps => ({
+          [d]: {
+            [ps]: Math.min(
+              1,
+              ((a[d] && a[d][ps]) || 0) + ((b[d] && b[d][ps]) || 0)
+            ),
+          },
+        }))
+        // Reducing from an array of objects with a single parameter set to a single object
+        // [{"a.com":{"ps1":11}}, {"a.com: {"ps2":12}}] => {"a.com":{"ps1":11,"ps2":12}}
+        .reduce((acc, cur) => ({ [d]: merge(acc[d], cur[d]) }))
+    );
   }
 
   /**
@@ -230,7 +272,7 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
       a = (factor / 0.5) * 0.49;
     } else if (factor > 0.5) {
       // We want an exp-shaped curve so we scale "a" between 1.01 and 10
-      a = 1 + (factor - 0.5) / 0.5 * 9;
+      a = 1 + ((factor - 0.5) / 0.5) * 9;
     }
 
     return (Math.pow(a, ease * x) - 1) / (Math.pow(a, ease) - 1);
@@ -248,16 +290,20 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
     const wwwRegEx = /^www\./;
 
     query.beginTimeReference = query.TIME_RELATIVE_NOW;
-    query.beginTime = (ts.startTime && ts.startTime !== 0) ? -(ts.startTime * 1000 * 1000) : -(Date.now() * 1000);
+    query.beginTime =
+      ts.startTime && ts.startTime !== 0
+        ? -(ts.startTime * 1000 * 1000)
+        : -(Date.now() * 1000);
 
     query.endTimeReference = query.TIME_RELATIVE_NOW;
-    query.endTime = (ts.endTime && ts.endTime !== 0) ? -(ts.endTime * 1000 * 1000) : 0;
+    query.endTime =
+      ts.endTime && ts.endTime !== 0 ? -(ts.endTime * 1000 * 1000) : 0;
 
     const options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = options.SORT_BY_VISITCOUNT_DESCENDING;
     options.maxResults = this.maxHistoryQueryResults;
 
-    const {root} = PlacesUtils.history.executeQuery(query, options);
+    const { root } = PlacesUtils.history.executeQuery(query, options);
     root.containerOpen = true;
     for (let i = 0; i < root.childCount; i++) {
       let node = root.getChild(i);
@@ -285,32 +331,43 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
       return item.item_score;
     }
 
-    const scores = Object
-      .keys(item.domain_affinities)
-      .reduce((acc, d) => {
-        let userDomainAffinityScore = this.scores[d] ? this.scores[d][item.parameter_set] : false;
+    const scores = Object.keys(item.domain_affinities).reduce(
+      (acc, d) => {
+        let userDomainAffinityScore = this.scores[d]
+          ? this.scores[d][item.parameter_set]
+          : false;
         if (userDomainAffinityScore) {
-          acc.combinedDomainScore += userDomainAffinityScore * item.domain_affinities[d];
+          acc.combinedDomainScore +=
+            userDomainAffinityScore * item.domain_affinities[d];
           acc.matchingDomainsCount++;
         }
         return acc;
-      }, {combinedDomainScore: 0, matchingDomainsCount: 0});
+      },
+      { combinedDomainScore: 0, matchingDomainsCount: 0 }
+    );
 
     // Boost the score as configured in the provided parameter set
-    const boostedCombinedDomainScore = scores.combinedDomainScore *
+    const boostedCombinedDomainScore =
+      scores.combinedDomainScore *
       Math.pow(params.multiDomainBoost + 1, scores.matchingDomainsCount);
 
     // Calculate what the score would be if the item score is ignored
-    const normalizedCombinedDomainScore = this.calculateScore(boostedCombinedDomainScore,
+    const normalizedCombinedDomainScore = this.calculateScore(
+      boostedCombinedDomainScore,
       params.perfectCombinedDomainScore,
-      params.combinedDomainFactor);
+      params.combinedDomainFactor
+    );
 
     // Calculate the final relevance score using the itemScoreFactor. The itemScoreFactor
     // allows weighting the item score in relation to the normalizedCombinedDomainScore:
     // An itemScoreFactor of 1 results in the item score and ignores the combined domain score
     // An itemScoreFactor of 0.5 results in the the average of item score and combined domain score
     // An itemScoreFactor of 0 results in the combined domain score and ignores the item score
-    return params.itemScoreFactor * (item.item_score - normalizedCombinedDomainScore) + normalizedCombinedDomainScore;
+    return (
+      params.itemScoreFactor *
+        (item.item_score - normalizedCombinedDomainScore) +
+      normalizedCombinedDomainScore
+    );
   }
 
   /**

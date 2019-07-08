@@ -22,8 +22,11 @@ function getSearchState(cm) {
 
 function getSearchCursor(cm, query, pos) {
   // If the query string is all lowercase, do a case insensitive search.
-  return cm.getSearchCursor(query, pos,
-    typeof query == "string" && query == query.toLowerCase());
+  return cm.getSearchCursor(
+    query,
+    pos,
+    typeof query == "string" && query == query.toLowerCase()
+  );
 }
 
 /**
@@ -58,12 +61,20 @@ function searchNext(ctx, rev) {
   const { cm, ed } = ctx;
   cm.operation(function() {
     const state = getSearchState(cm);
-    let cursor = getSearchCursor(cm, state.query,
-                                 rev ? state.posFrom : state.posTo);
+    let cursor = getSearchCursor(
+      cm,
+      state.query,
+      rev ? state.posFrom : state.posTo
+    );
 
     if (!cursor.find(rev)) {
-      cursor = getSearchCursor(cm, state.query, rev ?
-        { line: cm.lastLine(), ch: null } : { line: cm.firstLine(), ch: 0 });
+      cursor = getSearchCursor(
+        cm,
+        state.query,
+        rev
+          ? { line: cm.lastLine(), ch: null }
+          : { line: cm.firstLine(), ch: 0 }
+      );
       if (!cursor.find(rev)) {
         return;
       }
@@ -117,8 +128,7 @@ function hasBreakpoint(ctx, line) {
   }
   const markers = ed.lineInfo(line).wrapClass;
 
-  return markers != null &&
-         markers.includes("breakpoint");
+  return markers != null && markers.includes("breakpoint");
 }
 
 /**
@@ -189,7 +199,7 @@ function removeBreakpoints(ctx) {
     meta.breakpoints = {};
   }
 
-  cm.doc.iter((line) => {
+  cm.doc.iter(line => {
     // The hasBreakpoint is a slow operation: checks the line type, whether cm
     // is initialized and creates several new objects. Inlining the line's
     // wrapClass property check directly.
@@ -328,9 +338,20 @@ function findPrev(ctx, query) {
 // Export functions
 
 [
-  initialize, hasBreakpoint, addBreakpoint, removeBreakpoint, moveBreakpoint,
-  setBreakpointCondition, removeBreakpointCondition, getBreakpoints, removeBreakpoints,
-  setDebugLocation, getDebugLocation, clearDebugLocation, find, findNext,
+  initialize,
+  hasBreakpoint,
+  addBreakpoint,
+  removeBreakpoint,
+  moveBreakpoint,
+  setBreakpointCondition,
+  removeBreakpointCondition,
+  getBreakpoints,
+  removeBreakpoints,
+  setDebugLocation,
+  getDebugLocation,
+  clearDebugLocation,
+  find,
+  findNext,
   findPrev,
 ].forEach(func => {
   module.exports[func.name] = func;

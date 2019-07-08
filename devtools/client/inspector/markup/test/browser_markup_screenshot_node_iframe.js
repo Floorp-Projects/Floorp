@@ -21,7 +21,11 @@ add_task(async function() {
 
   info("Take a screenshot of the red node and verify it looks as expected");
   const redScreenshot = await takeNodeScreenshot(inspector);
-  await assertSingleColorScreenshotImage(redScreenshot, 30, 30, { r: 255, g: 0, b: 0 });
+  await assertSingleColorScreenshotImage(redScreenshot, 30, 30, {
+    r: 255,
+    g: 0,
+    b: 0,
+  });
 
   await toolbox.destroy();
 });

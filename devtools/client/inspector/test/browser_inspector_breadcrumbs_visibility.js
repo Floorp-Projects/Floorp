@@ -8,7 +8,9 @@
 
 // There are shutdown issues for which multiple rejections are left uncaught.
 // See bug 1018184 for resolving these issues.
-const { PromiseTestUtils } = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
 PromiseTestUtils.whitelistRejectionsGlobally(/Connection closed/);
 
 const { Toolbox } = require("devtools/client/framework/toolbox");
@@ -63,7 +65,9 @@ add_task(async function() {
 });
 
 async function testBreadcrumbTransitions(hostWindow, inspector) {
-  const breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
+  const breadcrumbs = inspector.panelDoc.getElementById(
+    "inspector-breadcrumbs"
+  );
   const startBtn = breadcrumbs.querySelector(".scrollbutton-up");
   const endBtn = breadcrumbs.querySelector(".scrollbutton-down");
   const container = breadcrumbs.querySelector(".html-arrowscrollbox-inner");
@@ -75,8 +79,11 @@ async function testBreadcrumbTransitions(hostWindow, inspector) {
   // So just need to wait for a duration
   await breadcrumbsUpdated;
   const initialCrumb = container.querySelector("button[checked]");
-  is(isElementInViewport(hostWindow, initialCrumb), true,
-     "initial element was visible");
+  is(
+    isElementInViewport(hostWindow, initialCrumb),
+    true,
+    "initial element was visible"
+  );
 
   for (const node of NODES) {
     info("Checking for visibility of crumb " + node.title);
@@ -89,10 +96,13 @@ async function testBreadcrumbTransitions(hostWindow, inspector) {
     }
 
     await breadcrumbsUpdated;
-    const selector = "button[title=\"" + node.title + "\"]";
+    const selector = 'button[title="' + node.title + '"]';
     const relevantCrumb = container.querySelector(selector);
-    is(isElementInViewport(hostWindow, relevantCrumb), true,
-       node.title + " crumb is visible");
+    is(
+      isElementInViewport(hostWindow, relevantCrumb),
+      true,
+      node.title + " crumb is visible"
+    );
   }
 }
 

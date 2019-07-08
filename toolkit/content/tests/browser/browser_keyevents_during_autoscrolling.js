@@ -1,13 +1,15 @@
 add_task(async function() {
   const kPrefName_AutoScroll = "general.autoScroll";
   Services.prefs.setBoolPref(kPrefName_AutoScroll, true);
-  registerCleanupFunction(() => Services.prefs.clearUserPref(kPrefName_AutoScroll));
+  registerCleanupFunction(() =>
+    Services.prefs.clearUserPref(kPrefName_AutoScroll)
+  );
 
-  const kNoKeyEvents   = 0;
-  const kKeyDownEvent  = 1;
+  const kNoKeyEvents = 0;
+  const kKeyDownEvent = 1;
   const kKeyPressEvent = 2;
-  const kKeyUpEvent    = 4;
-  const kAllKeyEvents  = 7;
+  const kKeyUpEvent = 4;
+  const kAllKeyEvents = 7;
 
   var expectedKeyEvents;
   var dispatchedKeyEvents;
@@ -20,8 +22,11 @@ add_task(async function() {
     key = aChar;
     dispatchedKeyEvents = kNoKeyEvents;
     EventUtils.sendChar(key);
-    is(dispatchedKeyEvents, expectedKeyEvents,
-       "unexpected key events were dispatched or not dispatched: " + key);
+    is(
+      dispatchedKeyEvents,
+      expectedKeyEvents,
+      "unexpected key events were dispatched or not dispatched: " + key
+    );
   }
 
   /**
@@ -31,15 +36,18 @@ add_task(async function() {
     key = aKey;
     dispatchedKeyEvents = kNoKeyEvents;
     EventUtils.sendKey(key);
-    is(dispatchedKeyEvents, expectedKeyEvents,
-       "unexpected key events were dispatched or not dispatched: " + key);
+    is(
+      dispatchedKeyEvents,
+      expectedKeyEvents,
+      "unexpected key events were dispatched or not dispatched: " + key
+    );
   }
 
   function onKey(aEvent) {
-//    if (aEvent.target != root && aEvent.target != root.ownerDocument.body) {
-//      ok(false, "unknown target: " + aEvent.target.tagName);
-//      return;
-//    }
+    //    if (aEvent.target != root && aEvent.target != root.ownerDocument.body) {
+    //      ok(false, "unknown target: " + aEvent.target.tagName);
+    //      return;
+    //    }
 
     var keyFlag;
     switch (aEvent.type) {
@@ -82,10 +90,18 @@ add_task(async function() {
 
     // Start autoscrolling by middle button click on the page
     info("Creating popup shown promise");
-    let shownPromise = BrowserTestUtils.waitForEvent(window, "popupshown", false,
-                         event => event.originalTarget.className == "autoscroller");
-    await BrowserTestUtils.synthesizeMouseAtPoint(10, 10, { button: 1 },
-                                                  gBrowser.selectedBrowser);
+    let shownPromise = BrowserTestUtils.waitForEvent(
+      window,
+      "popupshown",
+      false,
+      event => event.originalTarget.className == "autoscroller"
+    );
+    await BrowserTestUtils.synthesizeMouseAtPoint(
+      10,
+      10,
+      { button: 1 },
+      gBrowser.selectedBrowser
+    );
     info("Waiting for autoscroll popup to show");
     await shownPromise;
 

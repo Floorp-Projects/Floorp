@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Status} = ChromeUtils.import("resource://services-sync/status.js");
+const { Status } = ChromeUtils.import("resource://services-sync/status.js");
 
 add_task(async function test_status_checkSetup() {
   try {

@@ -8,7 +8,7 @@
  * current domain.
  */
 
-const EMPTY_URL = (URL_ROOT + "service-workers/empty.html");
+const EMPTY_URL = URL_ROOT + "service-workers/empty.html";
 
 add_task(async function() {
   await enableApplicationPanel();

@@ -13,19 +13,18 @@ add_task(async function doorhanger_bc_downloadOptIn_staging() {
   });
   await UpdateUtils.setAppUpdateAutoEnabled(false);
 
-  let params = {checkAttempts: 1,
-                queryString: "&invalidCompleteSize=1"};
+  let params = { checkAttempts: 1, queryString: "&invalidCompleteSize=1" };
   await runDoorhangerUpdateTest(params, [
     {
       notificationId: "update-available",
       button: "button",
       checkActiveUpdate: null,
-      pageURLs: {whatsNew: gDefaultWhatsNewURL},
+      pageURLs: { whatsNew: gDefaultWhatsNewURL },
     },
     {
       notificationId: "update-restart",
       button: "secondaryButton",
-      checkActiveUpdate: {state: STATE_APPLIED},
+      checkActiveUpdate: { state: STATE_APPLIED },
     },
   ]);
 });

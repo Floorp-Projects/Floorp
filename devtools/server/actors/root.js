@@ -9,15 +9,30 @@
 const { Cc, Ci, Cu } = require("chrome");
 const Services = require("Services");
 const { Pool } = require("devtools/shared/protocol");
-const { LazyPool, createExtraActors } = require("devtools/shared/protocol/lazy-pool");
+const {
+  LazyPool,
+  createExtraActors,
+} = require("devtools/shared/protocol/lazy-pool");
 const { DebuggerServer } = require("devtools/server/main");
 
-loader.lazyRequireGetter(this, "ChromeWindowTargetActor",
-  "devtools/server/actors/targets/chrome-window", true);
-loader.lazyRequireGetter(this, "ContentProcessTargetActor",
-  "devtools/server/actors/targets/content-process", true);
-loader.lazyRequireGetter(this, "ParentProcessTargetActor",
-  "devtools/server/actors/targets/parent-process", true);
+loader.lazyRequireGetter(
+  this,
+  "ChromeWindowTargetActor",
+  "devtools/server/actors/targets/chrome-window",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "ContentProcessTargetActor",
+  "devtools/server/actors/targets/content-process",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "ParentProcessTargetActor",
+  "devtools/server/actors/targets/parent-process",
+  true
+);
 
 /* Root actor for the remote debugging protocol. */
 
@@ -99,8 +114,9 @@ function RootActor(connection, parameters) {
   this._onTabListChanged = this.onTabListChanged.bind(this);
   this._onAddonListChanged = this.onAddonListChanged.bind(this);
   this._onWorkerListChanged = this.onWorkerListChanged.bind(this);
-  this._onServiceWorkerRegistrationListChanged =
-    this.onServiceWorkerRegistrationListChanged.bind(this);
+  this._onServiceWorkerRegistrationListChanged = this.onServiceWorkerRegistrationListChanged.bind(
+    this
+  );
   this._onProcessListChanged = this.onProcessListChanged.bind(this);
   this._extraActors = {};
 
@@ -284,8 +300,11 @@ RootActor.prototype = {
   onListTabs: async function(options) {
     const tabList = this._parameters.tabList;
     if (!tabList) {
-      return { from: this.actorID, error: "noTabs",
-               message: "This root actor has no browser tabs." };
+      return {
+        from: this.actorID,
+        error: "noTabs",
+        message: "This root actor has no browser tabs.",
+      };
     }
 
     // Now that a client has requested the list of tabs, we reattach the onListChanged
@@ -336,8 +355,10 @@ RootActor.prototype = {
   onGetTab: async function(options) {
     const tabList = this._parameters.tabList;
     if (!tabList) {
-      return { error: "noTabs",
-               message: "This root actor has no browser tabs." };
+      return {
+        error: "noTabs",
+        message: "This root actor has no browser tabs.",
+      };
     }
     if (!this._tabTargetActorPool) {
       this._tabTargetActorPool = new Pool(this.conn);
@@ -413,8 +434,11 @@ RootActor.prototype = {
   onListAddons: async function(option) {
     const addonList = this._parameters.addonList;
     if (!addonList) {
-      return { from: this.actorID, error: "noAddons",
-               message: "This root actor has no browser addons." };
+      return {
+        from: this.actorID,
+        error: "noAddons",
+        message: "This root actor has no browser addons.",
+      };
     }
 
     // Reattach the onListChanged listener now that a client requested the list.
@@ -436,8 +460,10 @@ RootActor.prototype = {
     this._addonTargetActorPool = addonTargetActorPool;
 
     return {
-      "from": this.actorID,
-      "addons": addonTargetActors.map(addonTargetActor => addonTargetActor.form()),
+      from: this.actorID,
+      addons: addonTargetActors.map(addonTargetActor =>
+        addonTargetActor.form()
+      ),
     };
   },
 
@@ -449,8 +475,11 @@ RootActor.prototype = {
   onListWorkers: function() {
     const workerList = this._parameters.workerList;
     if (!workerList) {
-      return { from: this.actorID, error: "noWorkers",
-               message: "This root actor has no workers." };
+      return {
+        from: this.actorID,
+        error: "noWorkers",
+        message: "This root actor has no workers.",
+      };
     }
 
     // Reattach the onListChanged listener now that a client requested the list.
@@ -471,8 +500,8 @@ RootActor.prototype = {
       this._workerTargetActorPool = pool;
 
       return {
-        "from": this.actorID,
-        "workers": actors.map(actor => actor.form()),
+        from: this.actorID,
+        workers: actors.map(actor => actor.form()),
       };
     });
   },
@@ -485,8 +514,11 @@ RootActor.prototype = {
   onListServiceWorkerRegistrations: function() {
     const registrationList = this._parameters.serviceWorkerRegistrationList;
     if (!registrationList) {
-      return { from: this.actorID, error: "noServiceWorkerRegistrations",
-               message: "This root actor has no service worker registrations." };
+      return {
+        from: this.actorID,
+        error: "noServiceWorkerRegistrations",
+        message: "This root actor has no service worker registrations.",
+      };
     }
 
     // Reattach the onListChanged listener now that a client requested the list.
@@ -504,22 +536,28 @@ RootActor.prototype = {
       this._serviceWorkerRegistrationActorPool = pool;
 
       return {
-        "from": this.actorID,
-        "registrations": actors.map(actor => actor.form()),
+        from: this.actorID,
+        registrations: actors.map(actor => actor.form()),
       };
     });
   },
 
   onServiceWorkerRegistrationListChanged: function() {
-    this.conn.send({ from: this.actorID, type: "serviceWorkerRegistrationListChanged" });
+    this.conn.send({
+      from: this.actorID,
+      type: "serviceWorkerRegistrationListChanged",
+    });
     this._parameters.serviceWorkerRegistrationList.onListChanged = null;
   },
 
   onListProcesses: function() {
     const { processList } = this._parameters;
     if (!processList) {
-      return { from: this.actorID, error: "noProcesses",
-               message: "This root actor has no processes." };
+      return {
+        from: this.actorID,
+        error: "noProcesses",
+        message: "This root actor has no processes.",
+      };
     }
     processList.onListChanged = this._onProcessListChanged;
     return {
@@ -534,36 +572,49 @@ RootActor.prototype = {
 
   async onGetProcess(request) {
     if (!DebuggerServer.allowChromeProcess) {
-      return { error: "forbidden",
-               message: "You are not allowed to debug chrome." };
+      return {
+        error: "forbidden",
+        message: "You are not allowed to debug chrome.",
+      };
     }
-    if (("id" in request) && typeof (request.id) != "number") {
-      return { error: "wrongParameter",
-               message: "getProcess requires a valid `id` attribute." };
+    if ("id" in request && typeof request.id != "number") {
+      return {
+        error: "wrongParameter",
+        message: "getProcess requires a valid `id` attribute.",
+      };
     }
     // If the request doesn't contains id parameter or id is 0
     // (id == 0, based on onListProcesses implementation)
-    if ((!("id" in request)) || request.id === 0) {
+    if (!("id" in request) || request.id === 0) {
       // Check if we are running on xpcshell.
       // When running on xpcshell, there is no valid browsing context to attach to
       // and so ParentProcessTargetActor doesn't make sense as it inherits from
       // BrowsingContextTargetActor. So instead use ContentProcessTargetActor, which
       // matches xpcshell needs.
-      const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+      const env = Cc["@mozilla.org/process/environment;1"].getService(
+        Ci.nsIEnvironment
+      );
       const isXpcshell = env.exists("XPCSHELL_TEST_PROFILE_DIR");
 
-      if (!isXpcshell && this._parentProcessTargetActor &&
-          (!this._parentProcessTargetActor.docShell ||
-            this._parentProcessTargetActor.docShell.isBeingDestroyed)) {
+      if (
+        !isXpcshell &&
+        this._parentProcessTargetActor &&
+        (!this._parentProcessTargetActor.docShell ||
+          this._parentProcessTargetActor.docShell.isBeingDestroyed)
+      ) {
         this._parentProcessTargetActor.destroy();
         this._parentProcessTargetActor = null;
       }
       if (!this._parentProcessTargetActor) {
         // Create the target actor for the parent process
         if (isXpcshell) {
-          this._parentProcessTargetActor = new ContentProcessTargetActor(this.conn);
+          this._parentProcessTargetActor = new ContentProcessTargetActor(
+            this.conn
+          );
         } else {
-          this._parentProcessTargetActor = new ParentProcessTargetActor(this.conn);
+          this._parentProcessTargetActor = new ParentProcessTargetActor(
+            this.conn
+          );
         }
         this._globalActorPool.manage(this._parentProcessTargetActor);
       }
@@ -574,8 +625,10 @@ RootActor.prototype = {
     const { id } = request;
     const mm = Services.ppmm.getChildAt(id);
     if (!mm) {
-      return { error: "noProcess",
-               message: "There is no process with id '" + id + "'." };
+      return {
+        error: "noProcess",
+        message: "There is no process with id '" + id + "'.",
+      };
     }
     let form = this._processActors.get(id);
     if (form) {
@@ -584,7 +637,11 @@ RootActor.prototype = {
     const onDestroy = () => {
       this._processActors.delete(id);
     };
-    form = await DebuggerServer.connectToContentProcess(this.conn, mm, onDestroy);
+    form = await DebuggerServer.connectToContentProcess(
+      this.conn,
+      mm,
+      onDestroy
+    );
     this._processActors.set(id, form);
     return { form };
   },
@@ -631,7 +688,8 @@ RootActor.prototype.requestTypes = {
   getWindow: RootActor.prototype.onGetWindow,
   listAddons: RootActor.prototype.onListAddons,
   listWorkers: RootActor.prototype.onListWorkers,
-  listServiceWorkerRegistrations: RootActor.prototype.onListServiceWorkerRegistrations,
+  listServiceWorkerRegistrations:
+    RootActor.prototype.onListServiceWorkerRegistrations,
   listProcesses: RootActor.prototype.onListProcesses,
   getProcess: RootActor.prototype.onGetProcess,
   echo: RootActor.prototype.onEcho,

@@ -3,8 +3,10 @@
 
 "use strict";
 
-const TAB_URL = (URL_ROOT + "service-workers/simple-unicode.html")
-  .replace("example.com", "xn--hxajbheg2az3al.xn--jxalpdlp");
+const TAB_URL = (URL_ROOT + "service-workers/simple-unicode.html").replace(
+  "example.com",
+  "xn--hxajbheg2az3al.xn--jxalpdlp"
+);
 
 /**
  * Check that the application panel displays filenames and URL's in human-readable,
@@ -26,7 +28,8 @@ add_task(async function() {
   ok(
     scopeEl.textContent.startsWith(
       "\u03C0\u03B1\u03C1\u03AC\u03B4\u03B5\u03B9\u03B3\u03BC\u03B1." +
-      "\u03B4\u03BF\u03BA\u03B9\u03BC\u03AE"),
+        "\u03B4\u03BF\u03BA\u03B9\u03BC\u03AE"
+    ),
     "Service worker has the expected Unicode scope"
   );
   const urlEl = workerContainer.querySelector(".js-source-url");

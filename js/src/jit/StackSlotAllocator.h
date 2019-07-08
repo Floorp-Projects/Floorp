@@ -88,7 +88,6 @@ class StackSlotAllocator {
 #endif
       case LDefinition::DOUBLE:
         return 8;
-      case LDefinition::SINCOS:
       case LDefinition::SIMD128INT:
       case LDefinition::SIMD128FLOAT:
         return 16;

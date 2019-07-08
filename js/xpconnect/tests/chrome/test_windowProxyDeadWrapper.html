@@ -14,10 +14,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1223372
 /** Test for Bug 1223372 **/
 const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
-function go() {
-    SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
-                                        true]]});
+async function go() {
     SimpleTest.waitForExplicitFinish();
+    await SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+                                             true]]});
 
     var frame = $('subframe');
     frame.onload = null;

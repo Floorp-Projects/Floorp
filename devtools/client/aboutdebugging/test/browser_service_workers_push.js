@@ -39,21 +39,30 @@ add_task(async function() {
   info("Wait until the service worker appears in the UI");
   await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
 
-  info("Ensure that the registration resolved before trying to interact with " +
-    "the service worker.");
+  info(
+    "Ensure that the registration resolved before trying to interact with " +
+      "the service worker."
+  );
   await waitForServiceWorkerRegistered(swTab);
   ok(true, "Service worker registration resolved");
 
   await waitForServiceWorkerActivation(SERVICE_WORKER, document);
 
   info("Wait until the service worker is running");
-  const container = await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
+  const container = await waitUntilServiceWorkerContainer(
+    SERVICE_WORKER,
+    document
+  );
   await waitUntil(
-    () => container.querySelector(".target-status").textContent === "Running", 100);
+    () => container.querySelector(".target-status").textContent === "Running",
+    100
+  );
 
   // Retrieve the Push button for the worker.
   const names = [...document.querySelectorAll("#service-workers .target-name")];
-  const name = names.filter(element => element.textContent === SERVICE_WORKER)[0];
+  const name = names.filter(
+    element => element.textContent === SERVICE_WORKER
+  )[0];
   ok(name, "Found the service worker in the list");
 
   const targetElement = name.parentNode.parentNode;
@@ -61,11 +70,15 @@ add_task(async function() {
   const pushBtn = targetElement.querySelector(".push-button");
   ok(pushBtn, "Found its push button");
 
-  info("Wait for the service worker to claim the test window before proceeding.");
+  info(
+    "Wait for the service worker to claim the test window before proceeding."
+  );
   await onClaimed;
 
-  info("Click on the Push button and wait for the service worker to receive " +
-    "a push notification");
+  info(
+    "Click on the Push button and wait for the service worker to receive " +
+      "a push notification"
+  );
   const onPushNotification = onTabMessage(swTab, "sw-pushed");
 
   pushBtn.click();

@@ -16,12 +16,16 @@ FilterCheckbox.propTypes = {
 };
 
 function FilterCheckbox(props) {
-  const {checked, label, title, onChange} = props;
-  return dom.label({ title, className: "filter-checkbox" }, dom.input({
-    type: "checkbox",
-    checked,
-    onChange,
-  }), label);
+  const { checked, label, title, onChange } = props;
+  return dom.label(
+    { title, className: "filter-checkbox" },
+    dom.input({
+      type: "checkbox",
+      checked,
+      onChange,
+    }),
+    label
+  );
 }
 
 module.exports = FilterCheckbox;

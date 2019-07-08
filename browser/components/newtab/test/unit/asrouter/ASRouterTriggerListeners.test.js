@@ -1,5 +1,5 @@
-import {ASRouterTriggerListeners} from "lib/ASRouterTriggerListeners.jsm";
-import {GlobalOverrider} from "test/unit/utils";
+import { ASRouterTriggerListeners } from "lib/ASRouterTriggerListeners.jsm";
+import { GlobalOverrider } from "test/unit/utils";
 
 describe("ASRouterTriggerListeners", () => {
   let sandbox;
@@ -13,16 +13,29 @@ describe("ASRouterTriggerListeners", () => {
   const hosts = ["www.mozilla.com", "www.mozilla.org"];
 
   function resetEnumeratorStub(windows) {
-    windowEnumeratorStub
-      .withArgs("navigator:browser")
-      .returns(windows);
+    windowEnumeratorStub.withArgs("navigator:browser").returns(windows);
   }
 
   beforeEach(async () => {
     sandbox = sinon.createSandbox();
-    registerWindowNotificationStub = sandbox.stub(global.Services.ww, "registerNotification");
-    unregisterWindoNotificationStub = sandbox.stub(global.Services.ww, "unregisterNotification");
-    existingWindow = {gBrowser: {addTabsProgressListener: sandbox.stub(), removeTabsProgressListener: sandbox.stub(), currentURI: {host: ""}}, gBrowserInit: {delayedStartupFinished: true}, addEventListener: sinon.stub(), removeEventListener: sinon.stub()};
+    registerWindowNotificationStub = sandbox.stub(
+      global.Services.ww,
+      "registerNotification"
+    );
+    unregisterWindoNotificationStub = sandbox.stub(
+      global.Services.ww,
+      "unregisterNotification"
+    );
+    existingWindow = {
+      gBrowser: {
+        addTabsProgressListener: sandbox.stub(),
+        removeTabsProgressListener: sandbox.stub(),
+        currentURI: { host: "" },
+      },
+      gBrowserInit: { delayedStartupFinished: true },
+      addEventListener: sinon.stub(),
+      removeEventListener: sinon.stub(),
+    };
     windowEnumeratorStub = sandbox.stub(global.Services.wm, "getEnumerator");
     resetEnumeratorStub([existingWindow]);
     sandbox.spy(openURLListener, "init");
@@ -48,7 +61,11 @@ describe("ASRouterTriggerListeners", () => {
     });
     it("should listen for TabSelect events", () => {
       assert.calledOnce(existingWindow.addEventListener);
-      assert.calledWith(existingWindow.addEventListener, "TabSelect", frequentVisitsListener.onTabSwitch);
+      assert.calledWith(
+        existingWindow.addEventListener,
+        "TabSelect",
+        frequentVisitsListener.onTabSwitch
+      );
     });
     it("should call _triggerHandler if the visit is valid (is recoreded)", () => {
       frequentVisitsListener.triggerHandler({}, "www.mozilla.com");
@@ -72,7 +89,9 @@ describe("ASRouterTriggerListeners", () => {
       const stub = sandbox.stub(frequentVisitsListener, "triggerHandler");
       existingWindow.gBrowser.currentURI.host = hosts[0]; // eslint-disable-line prefer-destructuring
 
-      frequentVisitsListener.onTabSwitch({target: {ownerGlobal: existingWindow}});
+      frequentVisitsListener.onTabSwitch({
+        target: { ownerGlobal: existingWindow },
+      });
 
       assert.calledOnce(stub);
     });
@@ -80,7 +99,9 @@ describe("ASRouterTriggerListeners", () => {
       const stub = sandbox.stub(frequentVisitsListener, "triggerHandler");
       existingWindow.gBrowser.currentURI.host = "foo.com";
 
-      frequentVisitsListener.onTabSwitch({target: {ownerGlobal: existingWindow}});
+      frequentVisitsListener.onTabSwitch({
+        target: { ownerGlobal: existingWindow },
+      });
 
       assert.notCalled(stub);
     });
@@ -88,7 +109,10 @@ describe("ASRouterTriggerListeners", () => {
       let globals;
       beforeEach(() => {
         globals = new GlobalOverrider();
-        globals.set("MatchPatternSet", sandbox.stub().callsFake(patterns => ({patterns})));
+        globals.set(
+          "MatchPatternSet",
+          sandbox.stub().callsFake(patterns => ({ patterns }))
+        );
       });
       afterEach(() => {
         globals.restore();
@@ -98,14 +122,20 @@ describe("ASRouterTriggerListeners", () => {
         await frequentVisitsListener.init(_triggerHandler, hosts, ["pattern"]);
 
         assert.calledOnce(window.MatchPatternSet);
-        assert.calledWithExactly(window.MatchPatternSet, ["pattern"], {ignorePath: true});
+        assert.calledWithExactly(window.MatchPatternSet, ["pattern"], {
+          ignorePath: true,
+        });
       });
       it("should allow to add multiple patterns and dedupe", async () => {
         await frequentVisitsListener.init(_triggerHandler, hosts, ["pattern"]);
         await frequentVisitsListener.init(_triggerHandler, hosts, ["foo"]);
 
         assert.calledTwice(window.MatchPatternSet);
-        assert.calledWithExactly(window.MatchPatternSet, new Set(["pattern", "foo"]), {ignorePath: true});
+        assert.calledWithExactly(
+          window.MatchPatternSet,
+          new Set(["pattern", "foo"]),
+          { ignorePath: true }
+        );
       });
     });
   });
@@ -137,7 +167,10 @@ describe("ASRouterTriggerListeners", () => {
 
       it("should add tab progress listeners to all existing browser windows", () => {
         assert.calledOnce(existingWindow.gBrowser.addTabsProgressListener);
-        assert.calledWithExactly(existingWindow.gBrowser.addTabsProgressListener, openURLListener);
+        assert.calledWithExactly(
+          existingWindow.gBrowser.addTabsProgressListener,
+          openURLListener
+        );
       });
 
       it("if already initialised, should only update the trigger handler and add the new hosts", () => {
@@ -149,7 +182,10 @@ describe("ASRouterTriggerListeners", () => {
 
         openURLListener.init(newTriggerHandler, newHosts);
         assert.ok(openURLListener._initialized);
-        assert.deepEqual(openURLListener._hosts, new Set([...hosts, ...newHosts]));
+        assert.deepEqual(
+          openURLListener._hosts,
+          new Set([...hosts, ...newHosts])
+        );
         assert.equal(openURLListener._triggerHandler, newTriggerHandler);
         assert.notCalled(registerWindowNotificationStub);
         assert.notCalled(existingWindow.gBrowser.addTabsProgressListener);
@@ -177,7 +213,10 @@ describe("ASRouterTriggerListeners", () => {
 
       it("should remove tab progress listeners from all existing browser windows", () => {
         assert.calledOnce(existingWindow.gBrowser.removeTabsProgressListener);
-        assert.calledWithExactly(existingWindow.gBrowser.removeTabsProgressListener, openURLListener);
+        assert.calledWithExactly(
+          existingWindow.gBrowser.removeTabsProgressListener,
+          openURLListener
+        );
       });
 
       it("should do nothing if already uninitialised", () => {
@@ -203,11 +242,17 @@ describe("ASRouterTriggerListeners", () => {
         await openURLListener.init(newTriggerHandler, hosts);
 
         const browser = {};
-        const webProgress = {isTopLevel: true};
+        const webProgress = { isTopLevel: true };
         const location = "www.mozilla.org";
-        openURLListener.onLocationChange(browser, webProgress, undefined, {host: location, spec: location});
+        openURLListener.onLocationChange(browser, webProgress, undefined, {
+          host: location,
+          spec: location,
+        });
         assert.calledOnce(newTriggerHandler);
-        assert.calledWithExactly(newTriggerHandler, browser, {id: "openURL", param: {host: "www.mozilla.org", url: "www.mozilla.org"}});
+        assert.calledWithExactly(newTriggerHandler, browser, {
+          id: "openURL",
+          param: { host: "www.mozilla.org", url: "www.mozilla.org" },
+        });
       });
       it("should call triggerHandler for a redirect (openURL + frequentVisits)", async () => {
         for (let trigger of [openURLListener, frequentVisitsListener]) {
@@ -215,14 +260,22 @@ describe("ASRouterTriggerListeners", () => {
           await trigger.init(newTriggerHandler, hosts);
 
           const browser = {};
-          const webProgress = {isTopLevel: true};
-          const aLocationURI = {host: "subdomain.mozilla.org", spec: "subdomain.mozilla.org"};
+          const webProgress = { isTopLevel: true };
+          const aLocationURI = {
+            host: "subdomain.mozilla.org",
+            spec: "subdomain.mozilla.org",
+          };
           const aRequest = {
             QueryInterface: sandbox.stub().returns({
-              originalURI: {spec: "www.mozilla.org", host: "www.mozilla.org"},
+              originalURI: { spec: "www.mozilla.org", host: "www.mozilla.org" },
             }),
           };
-          trigger.onLocationChange(browser, webProgress, aRequest, aLocationURI);
+          trigger.onLocationChange(
+            browser,
+            webProgress,
+            aRequest,
+            aLocationURI
+          );
           assert.calledOnce(aRequest.QueryInterface);
           assert.calledOnce(newTriggerHandler);
         }
@@ -232,15 +285,26 @@ describe("ASRouterTriggerListeners", () => {
         await openURLListener.init(newTriggerHandler, hosts);
 
         const browser = {};
-        const webProgress = {isTopLevel: true};
-        const aLocationURI = {host: "subdomain.mozilla.org", spec: "subdomain.mozilla.org"};
+        const webProgress = { isTopLevel: true };
+        const aLocationURI = {
+          host: "subdomain.mozilla.org",
+          spec: "subdomain.mozilla.org",
+        };
         const aRequest = {
           QueryInterface: sandbox.stub().returns({
-            originalURI: {spec: "www.mozilla.org", host: "www.mozilla.org"},
+            originalURI: { spec: "www.mozilla.org", host: "www.mozilla.org" },
           }),
         };
-        openURLListener.onLocationChange(browser, webProgress, aRequest, aLocationURI);
-        assert.calledWithExactly(newTriggerHandler, browser, {id: "openURL", param: {host: "www.mozilla.org", url: "www.mozilla.org"}});
+        openURLListener.onLocationChange(
+          browser,
+          webProgress,
+          aRequest,
+          aLocationURI
+        );
+        assert.calledWithExactly(newTriggerHandler, browser, {
+          id: "openURL",
+          param: { host: "www.mozilla.org", url: "www.mozilla.org" },
+        });
       });
       it("should call triggerHandler for a redirect (openURL + frequentVisits)", async () => {
         for (let trigger of [openURLListener, frequentVisitsListener]) {
@@ -248,14 +312,22 @@ describe("ASRouterTriggerListeners", () => {
           await trigger.init(newTriggerHandler, hosts);
 
           const browser = {};
-          const webProgress = {isTopLevel: true};
-          const aLocationURI = {host: "subdomain.mozilla.org", spec: "subdomain.mozilla.org"};
+          const webProgress = { isTopLevel: true };
+          const aLocationURI = {
+            host: "subdomain.mozilla.org",
+            spec: "subdomain.mozilla.org",
+          };
           const aRequest = {
             QueryInterface: sandbox.stub().returns({
-              originalURI: {spec: "www.mozilla.org", host: "www.mozilla.org"},
+              originalURI: { spec: "www.mozilla.org", host: "www.mozilla.org" },
             }),
           };
-          trigger.onLocationChange(browser, webProgress, aRequest, aLocationURI);
+          trigger.onLocationChange(
+            browser,
+            webProgress,
+            aRequest,
+            aLocationURI
+          );
           assert.calledOnce(aRequest.QueryInterface);
           assert.calledOnce(newTriggerHandler);
         }
@@ -265,29 +337,51 @@ describe("ASRouterTriggerListeners", () => {
         await openURLListener.init(newTriggerHandler, hosts);
 
         const browser = {};
-        const webProgress = {isTopLevel: true};
-        const aLocationURI = {host: "subdomain.mozilla.org", spec: "subdomain.mozilla.org"};
+        const webProgress = { isTopLevel: true };
+        const aLocationURI = {
+          host: "subdomain.mozilla.org",
+          spec: "subdomain.mozilla.org",
+        };
         const aRequest = {
           QueryInterface: sandbox.stub().returns({
-            originalURI: {spec: "www.mozilla.org", host: "www.mozilla.org"},
+            originalURI: { spec: "www.mozilla.org", host: "www.mozilla.org" },
           }),
         };
-        openURLListener.onLocationChange(browser, webProgress, aRequest, aLocationURI);
-        assert.calledWithExactly(newTriggerHandler, browser, {id: "openURL", param: {host: "www.mozilla.org", url: "www.mozilla.org"}});
+        openURLListener.onLocationChange(
+          browser,
+          webProgress,
+          aRequest,
+          aLocationURI
+        );
+        assert.calledWithExactly(newTriggerHandler, browser, {
+          id: "openURL",
+          param: { host: "www.mozilla.org", url: "www.mozilla.org" },
+        });
       });
       it("should fail for subdomains (not redirect)", async () => {
         const newTriggerHandler = sinon.stub();
         await openURLListener.init(newTriggerHandler, hosts);
 
         const browser = {};
-        const webProgress = {isTopLevel: true};
-        const aLocationURI = {host: "subdomain.mozilla.org", spec: "subdomain.mozilla.org"};
+        const webProgress = { isTopLevel: true };
+        const aLocationURI = {
+          host: "subdomain.mozilla.org",
+          spec: "subdomain.mozilla.org",
+        };
         const aRequest = {
           QueryInterface: sandbox.stub().returns({
-            originalURI: {spec: "subdomain.mozilla.org", host: "subdomain.mozilla.org"},
+            originalURI: {
+              spec: "subdomain.mozilla.org",
+              host: "subdomain.mozilla.org",
+            },
           }),
         };
-        openURLListener.onLocationChange(browser, webProgress, aRequest, aLocationURI);
+        openURLListener.onLocationChange(
+          browser,
+          webProgress,
+          aRequest,
+          aLocationURI
+        );
         assert.calledOnce(aRequest.QueryInterface);
         assert.notCalled(newTriggerHandler);
       });
@@ -296,7 +390,11 @@ describe("ASRouterTriggerListeners", () => {
     describe("delayed startup finished", () => {
       beforeEach(() => {
         existingWindow.gBrowserInit.delayedStartupFinished = false;
-        sandbox.stub(global.Services.obs, "addObserver").callsFake(fn => fn(existingWindow, "browser-delayed-startup-finished"));
+        sandbox
+          .stub(global.Services.obs, "addObserver")
+          .callsFake(fn =>
+            fn(existingWindow, "browser-delayed-startup-finished")
+          );
       });
       afterEach(() => {
         openURLListener.uninit();

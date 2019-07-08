@@ -2,21 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = [
-  "BackgroundPageThumbs",
-];
+const EXPORTED_SYMBOLS = ["BackgroundPageThumbs"];
 
 const DEFAULT_CAPTURE_TIMEOUT = 30000; // ms
 const DESTROY_BROWSER_TIMEOUT = 60000; // ms
-const FRAME_SCRIPT_URL = "chrome://global/content/backgroundPageThumbsContent.js";
+const FRAME_SCRIPT_URL =
+  "chrome://global/content/backgroundPageThumbsContent.js";
 
 const TELEMETRY_HISTOGRAM_ID_PREFIX = "FX_THUMBNAILS_BG_";
 
-const ABOUT_NEWTAB_SEGREGATION_PREF = "privacy.usercontext.about_newtab_segregation.enabled";
+const ABOUT_NEWTAB_SEGREGATION_PREF =
+  "privacy.usercontext.about_newtab_segregation.enabled";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-const {PageThumbs, PageThumbsStorage} = ChromeUtils.import("resource://gre/modules/PageThumbs.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { PageThumbs, PageThumbsStorage } = ChromeUtils.import(
+  "resource://gre/modules/PageThumbs.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // possible FX_THUMBNAILS_BG_CAPTURE_DONE_REASON_2 telemetry values
 const TEL_CAPTURE_DONE_OK = 0;
@@ -29,18 +31,40 @@ const TEL_CAPTURE_DONE_IMAGE_ZERO_DIMENSION = 7;
 
 // These are looked up on the global as properties below.
 XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_OK", TEL_CAPTURE_DONE_OK);
-XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_TIMEOUT", TEL_CAPTURE_DONE_TIMEOUT);
-XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_CRASHED", TEL_CAPTURE_DONE_CRASHED);
-XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_BAD_URI", TEL_CAPTURE_DONE_BAD_URI);
-XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_LOAD_FAILED", TEL_CAPTURE_DONE_LOAD_FAILED);
-XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_IMAGE_ZERO_DIMENSION", TEL_CAPTURE_DONE_IMAGE_ZERO_DIMENSION);
+XPCOMUtils.defineConstant(
+  this,
+  "TEL_CAPTURE_DONE_TIMEOUT",
+  TEL_CAPTURE_DONE_TIMEOUT
+);
+XPCOMUtils.defineConstant(
+  this,
+  "TEL_CAPTURE_DONE_CRASHED",
+  TEL_CAPTURE_DONE_CRASHED
+);
+XPCOMUtils.defineConstant(
+  this,
+  "TEL_CAPTURE_DONE_BAD_URI",
+  TEL_CAPTURE_DONE_BAD_URI
+);
+XPCOMUtils.defineConstant(
+  this,
+  "TEL_CAPTURE_DONE_LOAD_FAILED",
+  TEL_CAPTURE_DONE_LOAD_FAILED
+);
+XPCOMUtils.defineConstant(
+  this,
+  "TEL_CAPTURE_DONE_IMAGE_ZERO_DIMENSION",
+  TEL_CAPTURE_DONE_IMAGE_ZERO_DIMENSION
+);
 
-ChromeUtils.defineModuleGetter(this, "ContextualIdentityService",
-                               "resource://gre/modules/ContextualIdentityService.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContextualIdentityService",
+  "resource://gre/modules/ContextualIdentityService.jsm"
+);
 const global = this;
 
 const BackgroundPageThumbs = {
-
   /**
    * Asynchronously captures a thumbnail of the given URL.
    *
@@ -64,8 +88,9 @@ const BackgroundPageThumbs = {
    */
   capture(url, options = {}) {
     if (!PageThumbs._prefEnabled()) {
-      if (options.onDone)
+      if (options.onDone) {
         schedule(() => options.onDone(url));
+      }
       return;
     }
     this._captureQueue = this._captureQueue || [];
@@ -77,8 +102,9 @@ const BackgroundPageThumbs = {
     // existing one, we just add the callback to that one and we are done.
     let existing = this._capturesByURL.get(url);
     if (existing) {
-      if (options.onDone)
+      if (options.onDone) {
         existing.doneCallbacks.push(options.onDone);
+      }
       // The queue is already being processed, so nothing else to do...
       return;
     }
@@ -103,8 +129,9 @@ const BackgroundPageThumbs = {
     // Short circuit this function if pref is enabled, or else we leak observers.
     // See Bug 1400562
     if (!PageThumbs._prefEnabled()) {
-      if (options.onDone)
+      if (options.onDone) {
         options.onDone(url);
+      }
       return url;
     }
     // The fileExistsForURL call is an optimization, potentially but unlikely
@@ -175,12 +202,14 @@ const BackgroundPageThumbs = {
    *          used, and false if initialization has started but not completed.
    */
   _ensureParentWindowReady() {
-    if (this._parentWin)
+    if (this._parentWin) {
       // Already fully initialized.
       return true;
-    if (this._startedParentWinInit)
+    }
+    if (this._startedParentWinInit) {
       // Already started initializing.
       return false;
+    }
 
     this._startedParentWinInit = true;
 
@@ -191,15 +220,19 @@ const BackgroundPageThumbs = {
     let webProgress = wlBrowser.getInterface(Ci.nsIWebProgress);
     this._listener = {
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIWebProgressListener, Ci.nsIWebProgressListener2,
-        Ci.nsISupportsWeakReference]),
+        Ci.nsIWebProgressListener,
+        Ci.nsIWebProgressListener2,
+        Ci.nsISupportsWeakReference,
+      ]),
     };
     this._listener.onStateChange = (wbp, request, stateFlags, status) => {
       if (!request) {
         return;
       }
-      if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-          stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+      if (
+        stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+        stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK
+      ) {
         webProgress.removeProgressListener(this._listener);
         delete this._listener;
         // Get the window reference via the document.
@@ -207,12 +240,17 @@ const BackgroundPageThumbs = {
         this._processCaptureQueue();
       }
     };
-    webProgress.addProgressListener(this._listener, Ci.nsIWebProgress.NOTIFY_STATE_ALL);
+    webProgress.addProgressListener(
+      this._listener,
+      Ci.nsIWebProgress.NOTIFY_STATE_ALL
+    );
     let loadURIOptions = {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     };
-    wlBrowser.loadURI("chrome://global/content/backgroundPageThumbs.xhtml",
-                      loadURIOptions);
+    wlBrowser.loadURI(
+      "chrome://global/content/backgroundPageThumbs.xhtml",
+      loadURIOptions
+    );
     this._windowlessContainer = wlBrowser;
 
     return false;
@@ -226,7 +264,10 @@ const BackgroundPageThumbs = {
   observe(subject, topic, data) {
     if (topic == "profile-before-change") {
       this._destroy();
-    } else if (topic == "nsPref:changed" && data == ABOUT_NEWTAB_SEGREGATION_PREF) {
+    } else if (
+      topic == "nsPref:changed" &&
+      data == ABOUT_NEWTAB_SEGREGATION_PREF
+    ) {
       BackgroundPageThumbs.renewThumbnailBrowser();
     }
   },
@@ -236,11 +277,13 @@ const BackgroundPageThumbs = {
    * their consumer callbacks will never be called.
    */
   _destroy() {
-    if (this._captureQueue)
+    if (this._captureQueue) {
       this._captureQueue.forEach(cap => cap.destroy());
+    }
     this._destroyBrowser();
-    if (this._windowlessContainer)
+    if (this._windowlessContainer) {
       this._windowlessContainer.close();
+    }
     delete this._captureQueue;
     delete this._windowlessContainer;
     delete this._startedParentWinInit;
@@ -252,8 +295,9 @@ const BackgroundPageThumbs = {
    * Creates the thumbnail browser if it doesn't already exist.
    */
   _ensureBrowser() {
-    if (this._thumbBrowser && !this._renewThumbBrowser)
+    if (this._thumbBrowser && !this._renewThumbBrowser) {
       return;
+    }
 
     this._destroyBrowser();
     this._renewThumbBrowser = false;
@@ -265,8 +309,9 @@ const BackgroundPageThumbs = {
 
     if (Services.prefs.getBoolPref(ABOUT_NEWTAB_SEGREGATION_PREF)) {
       // Use the private container for thumbnails.
-      let privateIdentity =
-        ContextualIdentityService.getPrivateIdentity("userContextIdInternal.thumbnail");
+      let privateIdentity = ContextualIdentityService.getPrivateIdentity(
+        "userContextIdInternal.thumbnail"
+      );
       browser.setAttribute("usercontextid", privateIdentity.userContextId);
     }
 
@@ -274,15 +319,14 @@ const BackgroundPageThumbs = {
     // the thumbnails are drawn into; the canvases' aspect ratio is the same as
     // the screen's, so use that.  Aim for a size in the ballpark of 1024x768.
     let [swidth, sheight] = [{}, {}];
-    Cc["@mozilla.org/gfx/screenmanager;1"].
-      getService(Ci.nsIScreenManager).
-      primaryScreen.
-      GetRectDisplayPix({}, {}, swidth, sheight);
+    Cc["@mozilla.org/gfx/screenmanager;1"]
+      .getService(Ci.nsIScreenManager)
+      .primaryScreen.GetRectDisplayPix({}, {}, swidth, sheight);
     let bwidth = Math.min(1024, swidth.value);
     // Setting the width and height attributes doesn't work -- the resulting
     // thumbnails are blank and transparent -- but setting the style does.
     browser.style.width = bwidth + "px";
-    browser.style.height = (bwidth * sheight.value / swidth.value) + "px";
+    browser.style.height = (bwidth * sheight.value) / swidth.value + "px";
 
     this._parentWin.document.documentElement.appendChild(browser);
 
@@ -294,7 +338,9 @@ const BackgroundPageThumbs = {
         return;
       }
 
-      Cu.reportError("BackgroundThumbnails remote process crashed - recovering");
+      Cu.reportError(
+        "BackgroundThumbnails remote process crashed - recovering"
+      );
       this._destroyBrowser();
       let curCapture = this._captureQueue.length ? this._captureQueue[0] : null;
       // we could retry the pending capture, but it's possible the crash
@@ -325,8 +371,9 @@ const BackgroundPageThumbs = {
   },
 
   _destroyBrowser() {
-    if (!this._thumbBrowser)
+    if (!this._thumbBrowser) {
       return;
+    }
     this._thumbBrowser.remove();
     delete this._thumbBrowser;
   },
@@ -336,10 +383,13 @@ const BackgroundPageThumbs = {
    * initialized.
    */
   _processCaptureQueue() {
-    if (!this._captureQueue.length ||
-        this._captureQueue[0].pending ||
-        !this._ensureParentWindowReady())
+    if (
+      !this._captureQueue.length ||
+      this._captureQueue[0].pending ||
+      !this._ensureParentWindowReady()
+    ) {
       return;
+    }
 
     // Ready to start the first capture in the queue.
     this._ensureBrowser();
@@ -357,8 +407,9 @@ const BackgroundPageThumbs = {
   _onCaptureOrTimeout(capture) {
     // Since timeouts start as an item is being processed, only the first
     // item in the queue can be passed to this method.
-    if (capture !== this._captureQueue[0])
+    if (capture !== this._captureQueue[0]) {
       throw new Error("The capture should be at the head of the queue.");
+    }
     this._captureQueue.shift();
     this._capturesByURL.delete(capture.url);
     if (capture.doneReason != TEL_CAPTURE_DONE_OK) {
@@ -367,9 +418,11 @@ const BackgroundPageThumbs = {
 
     // Start the destroy-browser timer *before* processing the capture queue.
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    timer.initWithCallback(this._destroyBrowser.bind(this),
-                           this._destroyBrowserTimeout,
-                           Ci.nsITimer.TYPE_ONE_SHOT);
+    timer.initWithCallback(
+      this._destroyBrowser.bind(this),
+      this._destroyBrowserTimeout,
+      Ci.nsITimer.TYPE_ONE_SHOT
+    );
     this._destroyBrowserTimer = timer;
 
     this._processCaptureQueue();
@@ -401,12 +454,12 @@ function Capture(url, captureCallback, options) {
   this.creationDate = new Date();
   this.doneCallbacks = [];
   this.doneReason = -1;
-  if (options.onDone)
+  if (options.onDone) {
     this.doneCallbacks.push(options.onDone);
+  }
 }
 
 Capture.prototype = {
-
   get pending() {
     return !!this._msgMan;
   },
@@ -421,12 +474,16 @@ Capture.prototype = {
     tel("CAPTURE_QUEUE_TIME_MS", this.startDate - this.creationDate);
 
     // timeout timer
-    let timeout = typeof(this.options.timeout) == "number" ?
-                  this.options.timeout :
-                  DEFAULT_CAPTURE_TIMEOUT;
+    let timeout =
+      typeof this.options.timeout == "number"
+        ? this.options.timeout
+        : DEFAULT_CAPTURE_TIMEOUT;
     this._timeoutTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this._timeoutTimer.initWithCallback(this, timeout,
-                                        Ci.nsITimer.TYPE_ONE_SHOT);
+    this._timeoutTimer.initWithCallback(
+      this,
+      timeout,
+      Ci.nsITimer.TYPE_ONE_SHOT
+    );
 
     // didCapture registration
     this._msgMan = messageManager;
@@ -453,8 +510,10 @@ Capture.prototype = {
       delete this._timeoutTimer;
     }
     if (this._msgMan) {
-      this._msgMan.removeMessageListener("BackgroundPageThumbs:didCapture",
-                                         this);
+      this._msgMan.removeMessageListener(
+        "BackgroundPageThumbs:didCapture",
+        this
+      );
       delete this._msgMan;
     }
     delete this.captureCallback;
@@ -464,13 +523,15 @@ Capture.prototype = {
 
   // Called when the didCapture message is received.
   receiveMessage(msg) {
-    if (msg.data.imageData)
+    if (msg.data.imageData) {
       tel("CAPTURE_SERVICE_TIME_MS", new Date() - this.startDate);
+    }
 
     // A different timed-out capture may have finally successfully completed, so
     // discard messages that aren't meant for this capture.
-    if (msg.data.id != this.id)
+    if (msg.data.id != this.id) {
       return;
+    }
 
     if (msg.data.failReason) {
       let reason = global["TEL_CAPTURE_DONE_" + msg.data.failReason];
@@ -494,7 +555,7 @@ Capture.prototype = {
     this.destroy();
     this.doneReason = reason;
 
-    if (typeof(reason) != "number") {
+    if (typeof reason != "number") {
       throw new Error("A done reason must be given.");
     }
     tel("CAPTURE_DONE_REASON_2", reason);
@@ -517,10 +578,13 @@ Capture.prototype = {
 
       if (Services.prefs.getBoolPref(ABOUT_NEWTAB_SEGREGATION_PREF)) {
         // Clear the data in the private container for thumbnails.
-        let privateIdentity =
-          ContextualIdentityService.getPrivateIdentity("userContextIdInternal.thumbnail");
+        let privateIdentity = ContextualIdentityService.getPrivateIdentity(
+          "userContextIdInternal.thumbnail"
+        );
         if (privateIdentity) {
-          Services.clearData.deleteDataFromOriginAttributesPattern({ userContextId: privateIdentity.userContextId });
+          Services.clearData.deleteDataFromOriginAttributesPattern({
+            userContextId: privateIdentity.userContextId,
+          });
         }
       }
     };
@@ -530,8 +594,10 @@ Capture.prototype = {
       return;
     }
 
-    PageThumbs._store(this.url, data.finalURL, data.imageData, true)
-              .then(done, done);
+    PageThumbs._store(this.url, data.finalURL, data.imageData, true).then(
+      done,
+      done
+    );
   },
 };
 

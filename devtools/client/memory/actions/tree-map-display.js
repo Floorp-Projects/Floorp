@@ -23,16 +23,18 @@ exports.setTreeMapAndRefresh = function(heapWorker, display) {
  *
  * @param {treeMapModel} display
  */
-const setTreeMap = exports.setTreeMap = function(display) {
-  assert(typeof display === "object"
-         && display
-         && display.breakdown
-         && display.breakdown.by,
-    "Breakdowns must be an object with a \`by\` property, attempted to set: " +
-    uneval(display));
+const setTreeMap = (exports.setTreeMap = function(display) {
+  assert(
+    typeof display === "object" &&
+      display &&
+      display.breakdown &&
+      display.breakdown.by,
+    "Breakdowns must be an object with a `by` property, attempted to set: " +
+      uneval(display)
+  );
 
   return {
     type: actions.SET_TREE_MAP_DISPLAY,
     display,
   };
-};
+});

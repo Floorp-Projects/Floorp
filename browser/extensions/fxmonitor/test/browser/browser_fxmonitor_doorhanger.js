@@ -1,37 +1,52 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "RemoteSettings",
-                               "resource://services-settings/remote-settings.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "RemoteSettings",
+  "resource://services-settings/remote-settings.js"
+);
 
 const kNotificationId = "fxmonitor";
 const kRemoteSettingsKey = "fxmonitor-breaches";
 
 async function fxmonitorNotificationShown() {
   await TestUtils.waitForCondition(() => {
-    return PopupNotifications.getNotification(kNotificationId)
-      && PopupNotifications.panel.state == "open";
+    return (
+      PopupNotifications.getNotification(kNotificationId) &&
+      PopupNotifications.panel.state == "open"
+    );
   }, "Waiting for fxmonitor notification to be shown");
   ok(true, "Firefox Monitor PopupNotification was added.");
 }
 
 async function fxmonitorNotificationGone() {
   await TestUtils.waitForCondition(() => {
-    return !PopupNotifications.getNotification(kNotificationId)
-      && PopupNotifications.panel.state == "closed";
+    return (
+      !PopupNotifications.getNotification(kNotificationId) &&
+      PopupNotifications.panel.state == "closed"
+    );
   }, "Waiting for fxmonitor notification to go away");
   ok(true, "Firefox Monitor PopupNotification was removed.");
 }
 
-let cps2 = Cc["@mozilla.org/content-pref/service;1"]
-             .getService(Ci.nsIContentPrefService2);
+let cps2 = Cc["@mozilla.org/content-pref/service;1"].getService(
+  Ci.nsIContentPrefService2
+);
 
 async function clearWarnedHosts() {
   return new Promise((resolve, reject) => {
-    cps2.removeByName("extensions.fxmonitor.hostAlreadyWarned", Cu.createLoadContext(), {
-      handleCompletion: resolve,
-    });
+    cps2.removeByName(
+      "extensions.fxmonitor.hostAlreadyWarned",
+      Cu.createLoadContext(),
+      {
+        handleCompletion: resolve,
+      }
+    );
   });
 }
 
@@ -40,7 +55,7 @@ add_task(async function test_warnedHosts_migration() {
 
   // Pre-set the warnedHosts pref to include example.com.
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.fxmonitor.warnedHosts", "[\"example.com\"]"]],
+    set: [["extensions.fxmonitor.warnedHosts", '["example.com"]']],
   });
 
   // Pre-populate the Remote Settings collection with a breach.
@@ -50,8 +65,10 @@ add_task(async function test_warnedHosts_migration() {
   await collection.create({
     Domain: "example.com",
     Name: "Example Site",
-    BreachDate: `${BreachDate.getFullYear()}-${BreachDate.getMonth() + 1}-${BreachDate.getDate()}`,
-    AddedDate: `${AddedDate.getFullYear()}-${AddedDate.getMonth() + 1}-${AddedDate.getDate()}`,
+    BreachDate: `${BreachDate.getFullYear()}-${BreachDate.getMonth() +
+      1}-${BreachDate.getDate()}`,
+    AddedDate: `${AddedDate.getFullYear()}-${AddedDate.getMonth() +
+      1}-${AddedDate.getDate()}`,
     PwnCount: 1000000,
   });
   await collection.db.saveLastModified(1234567);
@@ -66,7 +83,10 @@ add_task(async function test_warnedHosts_migration() {
   ok(true, "The warnedHosts pref was cleared");
 
   // Open a tab and ensure the alert isn't shown.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.com"
+  );
   await fxmonitorNotificationGone();
 
   // Clean up.
@@ -81,8 +101,10 @@ add_task(async function test_warnedHosts_migration() {
   });
   await clearWarnedHosts();
   await SpecialPowers.pushPrefEnv({
-    clear: [["extensions.fxmonitor.enabled"],
-            ["extensions.fxmonitor.firstAlertShown"]],
+    clear: [
+      ["extensions.fxmonitor.enabled"],
+      ["extensions.fxmonitor.firstAlertShown"],
+    ],
   });
 });
 
@@ -96,8 +118,10 @@ add_task(async function test_main_flow() {
   await collection.create({
     Domain: "example.com",
     Name: "Example Site",
-    BreachDate: `${BreachDate.getFullYear()}-${BreachDate.getMonth() + 1}-${BreachDate.getDate()}`,
-    AddedDate: `${AddedDate.getFullYear()}-${AddedDate.getMonth() + 1}-${AddedDate.getDate()}`,
+    BreachDate: `${BreachDate.getFullYear()}-${BreachDate.getMonth() +
+      1}-${BreachDate.getDate()}`,
+    AddedDate: `${AddedDate.getFullYear()}-${AddedDate.getMonth() +
+      1}-${AddedDate.getDate()}`,
     PwnCount: 1000000,
   });
   await collection.db.saveLastModified(1234567);
@@ -115,12 +139,17 @@ add_task(async function test_main_flow() {
   });
 
   // Open a tab and wait for the alert.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.com"
+  );
   await fxmonitorNotificationShown();
 
   // Test that dismissing works.
-  let notification = Array.prototype.find.call(PopupNotifications.panel.children,
-    elt => elt.getAttribute("popupid") == kNotificationId);
+  let notification = Array.prototype.find.call(
+    PopupNotifications.panel.children,
+    elt => elt.getAttribute("popupid") == kNotificationId
+  );
   EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
   await fxmonitorNotificationGone();
 
@@ -145,10 +174,13 @@ add_task(async function test_main_flow() {
   await fxmonitorNotificationShown();
 
   // Test that the primary button opens Firefox Monitor in a new tab.
-  notification = Array.prototype.find.call(PopupNotifications.panel.children,
-    elt => elt.getAttribute("popupid") == kNotificationId);
-  let url =
-    `http://example.org/?breach=${encodeURIComponent("Example Site")}&utm_source=firefox&utm_medium=popup`;
+  notification = Array.prototype.find.call(
+    PopupNotifications.panel.children,
+    elt => elt.getAttribute("popupid") == kNotificationId
+  );
+  let url = `http://example.org/?breach=${encodeURIComponent(
+    "Example Site"
+  )}&utm_source=firefox&utm_medium=popup`;
   promise = BrowserTestUtils.waitForNewTab(gBrowser, url);
   EventUtils.synthesizeMouseAtCenter(notification.button, {});
   let newtab = await promise;
@@ -162,15 +194,19 @@ add_task(async function test_main_flow() {
   await collection.db.saveLastModified(1234567);
   await clearWarnedHosts();
 
-  info("Test that we do not show the second alert for a breach added over two months ago.");
+  info(
+    "Test that we do not show the second alert for a breach added over two months ago."
+  );
 
   // Add a new "old" breach - added over 2 months ago.
   AddedDate.setMonth(AddedDate.getMonth() - 3);
   await collection.create({
     Domain: "example.com",
     Name: "Example Site",
-    BreachDate: `${BreachDate.getFullYear()}-${BreachDate.getMonth() + 1}-${BreachDate.getDate()}`,
-    AddedDate: `${AddedDate.getFullYear()}-${AddedDate.getMonth() + 1}-${AddedDate.getDate()}`,
+    BreachDate: `${BreachDate.getFullYear()}-${BreachDate.getMonth() +
+      1}-${BreachDate.getDate()}`,
+    AddedDate: `${AddedDate.getFullYear()}-${AddedDate.getMonth() +
+      1}-${AddedDate.getDate()}`,
     PwnCount: 1000000,
   });
   await collection.db.saveLastModified(1234567);
@@ -200,8 +236,10 @@ add_task(async function test_main_flow() {
   await collection.create({
     Domain: "example.com",
     Name: "Example Site",
-    BreachDate: `${BreachDate.getFullYear()}-${BreachDate.getMonth() + 1}-${BreachDate.getDate()}`,
-    AddedDate: `${AddedDate.getFullYear()}-${AddedDate.getMonth() + 1}-${AddedDate.getDate()}`,
+    BreachDate: `${BreachDate.getFullYear()}-${BreachDate.getMonth() +
+      1}-${BreachDate.getDate()}`,
+    AddedDate: `${AddedDate.getFullYear()}-${AddedDate.getMonth() +
+      1}-${AddedDate.getDate()}`,
     PwnCount: 1000000,
   });
   await collection.db.saveLastModified(1234567);
@@ -227,15 +265,19 @@ add_task(async function test_main_flow() {
     clear: [["extensions.fxmonitor.firstAlertShown"]],
   });
 
-  info("Test that we do not show the first alert for a breach added over a year ago.");
+  info(
+    "Test that we do not show the first alert for a breach added over a year ago."
+  );
 
   // Add a new "old" breach - added over a year ago.
   AddedDate.setFullYear(AddedDate.getFullYear() - 2);
   await collection.create({
     Domain: "example.com",
     Name: "Example Site",
-    BreachDate: `${BreachDate.getFullYear()}-${BreachDate.getMonth() + 1}-${BreachDate.getDate()}`,
-    AddedDate: `${AddedDate.getFullYear()}-${AddedDate.getMonth() + 1}-${AddedDate.getDate()}`,
+    BreachDate: `${BreachDate.getFullYear()}-${BreachDate.getMonth() +
+      1}-${BreachDate.getDate()}`,
+    AddedDate: `${AddedDate.getFullYear()}-${AddedDate.getMonth() +
+      1}-${AddedDate.getDate()}`,
     PwnCount: 1000000,
   });
   await collection.db.saveLastModified(1234567);

@@ -80,8 +80,8 @@ function reset() {
 function testNegativeCache() {
   shouldLoad = true;
 
-  function setup() {
-    classifierHelper.allowCompletion([MALWARE_LIST, UNWANTED_LIST], GETHASH_URL);
+  async function setup() {
+    await classifierHelper.allowCompletion([MALWARE_LIST, UNWANTED_LIST], GETHASH_URL);
 
     // Only add prefix to database. not server, so gethash will not return
     // result.
@@ -108,8 +108,8 @@ function testNegativeCache() {
 function testPositiveCache() {
   shouldLoad = false;
 
-  function setup() {
-    classifierHelper.allowCompletion([MALWARE_LIST, UNWANTED_LIST], GETHASH_URL);
+  async function setup() {
+    await classifierHelper.allowCompletion([MALWARE_LIST, UNWANTED_LIST], GETHASH_URL);
 
     return Promise.all([
       addPrefixToDB(MALWARE_LIST, MALWARE_HOST),

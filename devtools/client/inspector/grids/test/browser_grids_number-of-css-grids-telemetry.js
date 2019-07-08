@@ -32,9 +32,14 @@ add_task(async function() {
 
   info("Navigate to TEST_URI2");
 
-  const onGridListUpdate = waitUntilState(store, state => state.grids.length == 1);
-  await navigateTo(inspector,
-    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI2));
+  const onGridListUpdate = waitUntilState(
+    store,
+    state => state.grids.length == 1
+  );
+  await navigateTo(
+    inspector,
+    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI2)
+  );
   await onGridListUpdate;
 
   checkResults();
@@ -43,6 +48,10 @@ add_task(async function() {
 function checkResults() {
   // Check for:
   //   - 1 CSS Grid Element
-  checkTelemetry("DEVTOOLS_NUMBER_OF_CSS_GRIDS_IN_A_PAGE", "",
-    {0: 0, 1: 1, 2: 0}, "array");
+  checkTelemetry(
+    "DEVTOOLS_NUMBER_OF_CSS_GRIDS_IN_A_PAGE",
+    "",
+    { 0: 0, 1: 1, 2: 0 },
+    "array"
+  );
 }

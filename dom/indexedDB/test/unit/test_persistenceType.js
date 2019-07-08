@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = "Splendid Test";
   const version = 1;
 
@@ -16,14 +15,12 @@ function* testSteps()
   try {
     indexedDB.open(name, { version, storage: "unknown" });
     ok(false, "Should have thrown!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(e instanceof TypeError, "Got TypeError.");
     is(e.name, "TypeError", "Good error name.");
   }
 
-  let request = indexedDB.open(name, { version,
-                                       storage: "persistent" });
+  let request = indexedDB.open(name, { version, storage: "persistent" });
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = grabEventAndContinueHandler;
@@ -34,7 +31,7 @@ function* testSteps()
   let db = event.target.result;
   db.onerror = errorHandler;
 
-  let objectStore = db.createObjectStore(objectStoreName, { });
+  let objectStore = db.createObjectStore(objectStoreName, {});
 
   event = yield undefined;
 
@@ -44,8 +41,9 @@ function* testSteps()
   is(db.version, version, "Correct version");
   is(db.storage, "persistent", "Correct persistence type");
 
-  objectStore = db.transaction([objectStoreName], "readwrite")
-                  .objectStore(objectStoreName);
+  objectStore = db
+    .transaction([objectStoreName], "readwrite")
+    .objectStore(objectStoreName);
 
   request = objectStore.get(data.key);
   request.onsuccess = grabEventAndContinueHandler;
@@ -59,8 +57,7 @@ function* testSteps()
 
   is(event.target.result, data.key, "Got correct key");
 
-  request = indexedDB.open(name, { version,
-                                   storage: "temporary" });
+  request = indexedDB.open(name, { version, storage: "temporary" });
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = grabEventAndContinueHandler;
@@ -72,8 +69,7 @@ function* testSteps()
   is(db.version, version, "Correct version");
   is(db.storage, "persistent", "Correct persistence type");
 
-  objectStore = db.transaction([objectStoreName])
-                  .objectStore(objectStoreName);
+  objectStore = db.transaction([objectStoreName]).objectStore(objectStoreName);
 
   request = objectStore.get(data.key);
   request.onsuccess = grabEventAndContinueHandler;

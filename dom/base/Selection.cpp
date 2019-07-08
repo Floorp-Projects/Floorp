@@ -584,7 +584,7 @@ nsresult Selection::AddTableCellRange(nsRange* aRange, bool* aDidAddRange,
     mFrameSelection->mSelectingTableCellMode = tableMode;
 
   *aDidAddRange = true;
-  return AddItem(aRange, aOutIndex);
+  return AddRangesForSelectableNodes(aRange, aOutIndex);
 }
 
 // TODO: Figure out TableSelection::Column and TableSelection::AllCells
@@ -927,8 +927,9 @@ void Selection::UserSelectRangesToAdd(nsRange* aItem,
   }
 }
 
-nsresult Selection::AddItem(nsRange* aItem, int32_t* aOutIndex,
-                            bool aNoStartSelect) {
+nsresult Selection::AddRangesForSelectableNodes(nsRange* aItem,
+                                                int32_t* aOutIndex,
+                                                bool aNoStartSelect) {
   if (!aItem) return NS_ERROR_NULL_POINTER;
   if (!aItem->IsPositioned()) return NS_ERROR_UNEXPECTED;
 
@@ -1010,7 +1011,7 @@ nsresult Selection::AddItem(nsRange* aItem, int32_t* aOutIndex,
         GetDirection() == eDirPrevious ? 0 : rangesToAdd.Length() - 1;
     for (size_t i = 0; i < rangesToAdd.Length(); ++i) {
       int32_t index;
-      nsresult rv = AddItemInternal(rangesToAdd[i], &index);
+      nsresult rv = MaybeAddRangeAndTruncateOverlaps(rangesToAdd[i], &index);
       NS_ENSURE_SUCCESS(rv, rv);
       if (i == newAnchorFocusIndex) {
         *aOutIndex = index;
@@ -1021,20 +1022,23 @@ nsresult Selection::AddItem(nsRange* aItem, int32_t* aOutIndex,
     }
     return NS_OK;
   }
-  return AddItemInternal(aItem, aOutIndex);
+  return MaybeAddRangeAndTruncateOverlaps(aItem, aOutIndex);
 }
 
-nsresult Selection::AddItemInternal(nsRange* aItem, int32_t* aOutIndex) {
-  MOZ_ASSERT(aItem);
-  MOZ_ASSERT(aItem->IsPositioned());
+nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
+                                                     int32_t* aOutIndex) {
+  MOZ_ASSERT(aRange);
+  MOZ_ASSERT(aRange->IsPositioned());
   MOZ_ASSERT(aOutIndex);
 
   *aOutIndex = -1;
 
   // a common case is that we have no ranges yet
   if (mRanges.Length() == 0) {
-    if (!mRanges.AppendElement(RangeData(aItem))) return NS_ERROR_OUT_OF_MEMORY;
-    aItem->SetSelection(this);
+    if (!mRanges.AppendElement(RangeData(aRange))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    aRange->SetSelection(this);
 
     *aOutIndex = 0;
     return NS_OK;
@@ -1042,9 +1046,9 @@ nsresult Selection::AddItemInternal(nsRange* aItem, int32_t* aOutIndex) {
 
   int32_t startIndex, endIndex;
   nsresult rv =
-      GetIndicesForInterval(aItem->GetStartContainer(), aItem->StartOffset(),
-                            aItem->GetEndContainer(), aItem->EndOffset(), false,
-                            &startIndex, &endIndex);
+      GetIndicesForInterval(aRange->GetStartContainer(), aRange->StartOffset(),
+                            aRange->GetEndContainer(), aRange->EndOffset(),
+                            false, &startIndex, &endIndex);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (endIndex == -1) {
@@ -1061,8 +1065,8 @@ nsresult Selection::AddItemInternal(nsRange* aItem, int32_t* aOutIndex) {
 
   // If the range is already contained in mRanges, silently succeed
   bool sameRange = EqualsRangeAtPoint(
-      aItem->GetStartContainer(), aItem->StartOffset(),
-      aItem->GetEndContainer(), aItem->EndOffset(), startIndex);
+      aRange->GetStartContainer(), aRange->StartOffset(),
+      aRange->GetEndContainer(), aRange->EndOffset(), startIndex);
   if (sameRange) {
     *aOutIndex = startIndex;
     return NS_OK;
@@ -1070,9 +1074,10 @@ nsresult Selection::AddItemInternal(nsRange* aItem, int32_t* aOutIndex) {
 
   if (startIndex == endIndex) {
     // The new range doesn't overlap any existing ranges
-    if (!mRanges.InsertElementAt(startIndex, RangeData(aItem)))
+    if (!mRanges.InsertElementAt(startIndex, RangeData(aRange))) {
       return NS_ERROR_OUT_OF_MEMORY;
-    aItem->SetSelection(this);
+    }
+    aRange->SetSelection(this);
     *aOutIndex = startIndex;
     return NS_OK;
   }
@@ -1100,19 +1105,20 @@ nsresult Selection::AddItemInternal(nsRange* aItem, int32_t* aOutIndex) {
 
   nsTArray<RangeData> temp;
   for (int32_t i = overlaps.Length() - 1; i >= 0; i--) {
-    nsresult rv = SubtractRange(&overlaps[i], aItem, &temp);
+    nsresult rv = SubtractRange(&overlaps[i], aRange, &temp);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Insert the new element into our "leftovers" array
   int32_t insertionPoint;
-  rv = FindInsertionPoint(&temp, aItem->GetStartContainer(),
-                          aItem->StartOffset(), CompareToRangeStart,
+  rv = FindInsertionPoint(&temp, aRange->GetStartContainer(),
+                          aRange->StartOffset(), CompareToRangeStart,
                           &insertionPoint);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!temp.InsertElementAt(insertionPoint, RangeData(aItem)))
+  if (!temp.InsertElementAt(insertionPoint, RangeData(aRange))) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // Merge the leftovers back in to mRanges
   if (!mRanges.InsertElementsAt(startIndex, temp))
@@ -1126,9 +1132,7 @@ nsresult Selection::AddItemInternal(nsRange* aItem, int32_t* aOutIndex) {
   return NS_OK;
 }
 
-nsresult Selection::RemoveItem(nsRange* aItem) {
-  if (!aItem) return NS_ERROR_NULL_POINTER;
-
+nsresult Selection::RemoveRangeInternal(nsRange& aRange) {
   // Find the range's index & remove it. We could use FindInsertionPoint to
   // get O(log n) time, but that requires many expensive DOM comparisons.
   // For even several thousand items, this is probably faster because the
@@ -1136,7 +1140,7 @@ nsresult Selection::RemoveItem(nsRange* aItem) {
   int32_t idx = -1;
   uint32_t i;
   for (i = 0; i < mRanges.Length(); i++) {
-    if (mRanges[i].mRange == aItem) {
+    if (mRanges[i].mRange == &aRange) {
       idx = (int32_t)i;
       break;
     }
@@ -1144,7 +1148,7 @@ nsresult Selection::RemoveItem(nsRange* aItem) {
   if (idx < 0) return NS_ERROR_DOM_NOT_FOUND_ERR;
 
   mRanges.RemoveElementAt(idx);
-  aItem->SetSelection(nullptr);
+  aRange.SetSelection(nullptr);
   return NS_OK;
 }
 
@@ -1152,7 +1156,7 @@ nsresult Selection::RemoveCollapsedRanges() {
   uint32_t i = 0;
   while (i < mRanges.Length()) {
     if (mRanges[i].mRange->Collapsed()) {
-      nsresult rv = RemoveItem(mRanges[i].mRange);
+      nsresult rv = RemoveRangeInternal(*mRanges[i].mRange);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       ++i;
@@ -2037,7 +2041,7 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
   }
 
   if (!didAddRange) {
-    result = AddItem(range, &rangeIndex);
+    result = AddRangesForSelectableNodes(range, &rangeIndex);
     if (NS_FAILED(result)) {
       aRv.Throw(result);
       return;
@@ -2083,7 +2087,7 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
 
 void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
     nsRange& aRange, ErrorResult& aRv) {
-  nsresult rv = RemoveItem(&aRange);
+  nsresult rv = RemoveRangeInternal(aRange);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -2267,7 +2271,7 @@ void Selection::Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
 #endif
 
   int32_t rangeIndex = -1;
-  result = AddItem(range, &rangeIndex);
+  result = AddRangesForSelectableNodes(range, &rangeIndex);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
     return;
@@ -2389,11 +2393,11 @@ nsresult Selection::SetAnchorFocusToRange(nsRange* aRange) {
 
   bool collapsed = IsCollapsed();
 
-  nsresult res = RemoveItem(mAnchorFocusRange);
+  nsresult res = RemoveRangeInternal(*mAnchorFocusRange);
   if (NS_FAILED(res)) return res;
 
   int32_t aOutIndex = -1;
-  res = AddItem(aRange, &aOutIndex, !collapsed);
+  res = AddRangesForSelectableNodes(aRange, &aOutIndex, !collapsed);
   if (NS_FAILED(res)) return res;
   SetAnchorFocusRange(aOutIndex);
 

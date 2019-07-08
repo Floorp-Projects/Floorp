@@ -56,20 +56,20 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
-  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
-  const { animationInspector, inspector, panel } = await openAnimationInspector();
+  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${t.targetClass}`));
+  const {
+    animationInspector,
+    inspector,
+    panel,
+  } = await openAnimationInspector();
 
   info("Checking progress bar position in multi effect timings");
 
   for (const testdata of TEST_DATA) {
-    const {
-      targetClass,
-      scrubberPositions,
-      expectedPositions,
-    } = testdata;
+    const { targetClass, scrubberPositions, expectedPositions } = testdata;
 
-    info(`Checking progress bar position for ${ targetClass }`);
-    await selectNodeAndWaitForAnimations(`.${ targetClass }`, inspector);
+    info(`Checking progress bar position for ${targetClass}`);
+    await selectNodeAndWaitForAnimations(`.${targetClass}`, inspector);
 
     info("Checking progress bar existence");
     const areaEl = panel.querySelector(".keyframes-progress-bar-area");
@@ -78,9 +78,12 @@ add_task(async function() {
     ok(barEl, "progress bar should exist");
 
     for (let i = 0; i < scrubberPositions.length; i++) {
-      info(`Scrubber position is ${ scrubberPositions[i] }`);
-      await clickOnCurrentTimeScrubberController(animationInspector,
-                                                 panel, scrubberPositions[i]);
+      info(`Scrubber position is ${scrubberPositions[i]}`);
+      await clickOnCurrentTimeScrubberController(
+        animationInspector,
+        panel,
+        scrubberPositions[i]
+      );
       assertPosition(barEl, areaEl, expectedPositions[i], animationInspector);
     }
   }
@@ -91,6 +94,8 @@ function assertPosition(barEl, areaEl, expectedRate, animationInspector) {
   const barBounds = barEl.getBoundingClientRect();
   const barX = barBounds.x + barBounds.width / 2 - controllerBounds.x;
   const expected = controllerBounds.width * expectedRate;
-  ok(expected - 1 < barX && barX < expected + 1,
-    `Position should apploximately be ${ expected } (x of bar is ${ barX })`);
+  ok(
+    expected - 1 < barX && barX < expected + 1,
+    `Position should apploximately be ${expected} (x of bar is ${barX})`
+  );
 }

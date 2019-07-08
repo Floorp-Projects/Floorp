@@ -7,8 +7,9 @@
 // authentication. Also tests that nsIClientAuthDialogs.chooseCertificate
 // is called at the appropriate times and with the correct arguments.
 
-const { MockRegistrar } =
-  ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+const { MockRegistrar } = ChromeUtils.import(
+  "resource://testing-common/MockRegistrar.jsm"
+);
 
 const DialogState = {
   // Assert that chooseCertificate() is never called.
@@ -53,25 +54,47 @@ const gClientAuthDialogs = {
     this._chooseCertificateCalled = value;
   },
 
-  chooseCertificate(ctx, hostname, port, organization, issuerOrg, certList,
-                    selectedIndex) {
+  chooseCertificate(
+    ctx,
+    hostname,
+    port,
+    organization,
+    issuerOrg,
+    certList,
+    selectedIndex
+  ) {
     this.chooseCertificateCalled = true;
-    Assert.notEqual(this.state, DialogState.ASSERT_NOT_CALLED,
-                    "chooseCertificate() should be called only when expected");
+    Assert.notEqual(
+      this.state,
+      DialogState.ASSERT_NOT_CALLED,
+      "chooseCertificate() should be called only when expected"
+    );
 
     let caud = ctx.QueryInterface(Ci.nsIClientAuthUserDecision);
-    Assert.notEqual(caud, null,
-                    "nsIClientAuthUserDecision should be queryable from the " +
-                    "given context");
+    Assert.notEqual(
+      caud,
+      null,
+      "nsIClientAuthUserDecision should be queryable from the " +
+        "given context"
+    );
     caud.rememberClientAuthCertificate = this.rememberClientAuthCertificate;
 
-    Assert.equal(hostname, "requireclientcert.example.com",
-                 "Hostname should be 'requireclientcert.example.com'");
+    Assert.equal(
+      hostname,
+      "requireclientcert.example.com",
+      "Hostname should be 'requireclientcert.example.com'"
+    );
     Assert.equal(port, 443, "Port should be 443");
-    Assert.equal(organization, "",
-                 "Server cert Organization should be empty/not present");
-    Assert.equal(issuerOrg, "Mozilla Testing",
-                 "Server cert issuer Organization should be 'Mozilla Testing'");
+    Assert.equal(
+      organization,
+      "",
+      "Server cert Organization should be empty/not present"
+    );
+    Assert.equal(
+      issuerOrg,
+      "Mozilla Testing",
+      "Server cert issuer Organization should be 'Mozilla Testing'"
+    );
 
     // For mochitests, only the cert at build/pgo/certs/mochitest.client should
     // be selectable, so we do some brief checks to confirm this.
@@ -79,8 +102,11 @@ const gClientAuthDialogs = {
     Assert.equal(certList.length, 1, "Only 1 certificate should be available");
     let cert = certList.queryElementAt(0, Ci.nsIX509Cert);
     Assert.notEqual(cert, null, "Cert list should contain an nsIX509Cert");
-    Assert.equal(cert.commonName, "Mochitest client",
-                 "Cert CN should be 'Mochitest client'");
+    Assert.equal(
+      cert.commonName,
+      "Mochitest client",
+      "Cert CN should be 'Mochitest client'"
+    );
 
     if (this.state == DialogState.RETURN_CERT_SELECTED) {
       selectedIndex.value = 0;
@@ -93,9 +119,10 @@ const gClientAuthDialogs = {
 };
 
 add_task(async function setup() {
-  let clientAuthDialogsCID =
-    MockRegistrar.register("@mozilla.org/nsClientAuthDialogs;1",
-                           gClientAuthDialogs);
+  let clientAuthDialogsCID = MockRegistrar.register(
+    "@mozilla.org/nsClientAuthDialogs;1",
+    gClientAuthDialogs
+  );
   registerCleanupFunction(() => {
     MockRegistrar.unregister(clientAuthDialogsCID);
   });
@@ -115,14 +142,16 @@ add_task(async function setup() {
  */
 async function testHelper(prefValue, expectedURL, options = undefined) {
   gClientAuthDialogs.chooseCertificateCalled = false;
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["security.default_personal_cert", prefValue],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["security.default_personal_cert", prefValue]],
+  });
 
   let win = await BrowserTestUtils.openNewBrowserWindow(options);
 
-  await BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser,
-                                 "https://requireclientcert.example.com:443");
+  await BrowserTestUtils.loadURI(
+    win.gBrowser.selectedBrowser,
+    "https://requireclientcert.example.com:443"
+  );
 
   // |loadedURL| will be a string URL if browserLoaded() wins the race, or
   // |undefined| if waitForErrorPage() wins the race.
@@ -131,9 +160,11 @@ async function testHelper(prefValue, expectedURL, options = undefined) {
     BrowserTestUtils.waitForErrorPage(win.gBrowser.selectedBrowser),
   ]);
   Assert.equal(expectedURL, loadedURL, "Expected and actual URLs should match");
-  Assert.equal(gClientAuthDialogs.chooseCertificateCalled,
-               prefValue == "Ask Every Time",
-               "chooseCertificate should have been called if we were expecting it to be called");
+  Assert.equal(
+    gClientAuthDialogs.chooseCertificateCalled,
+    prefValue == "Ask Every Time",
+    "chooseCertificate should have been called if we were expecting it to be called"
+  );
 
   await win.close();
 
@@ -147,7 +178,10 @@ async function testHelper(prefValue, expectedURL, options = undefined) {
 // and that nsIClientAuthDialogs.chooseCertificate() is never called.
 add_task(async function testCertChosenAutomatically() {
   gClientAuthDialogs.state = DialogState.ASSERT_NOT_CALLED;
-  await testHelper("Select Automatically", "https://requireclientcert.example.com/");
+  await testHelper(
+    "Select Automatically",
+    "https://requireclientcert.example.com/"
+  );
   // This clears all saved client auth certificate state so we don't influence
   // subsequent tests.
   sdr.logoutAndTeardown();
@@ -179,8 +213,12 @@ add_task(async function testCertChosenByUser() {
 add_task(async function testClearPrivateBrowsingState() {
   gClientAuthDialogs.rememberClientAuthCertificate = true;
   gClientAuthDialogs.state = DialogState.RETURN_CERT_SELECTED;
-  await testHelper("Ask Every Time", "https://requireclientcert.example.com/", {private: true});
-  await testHelper("Ask Every Time", "https://requireclientcert.example.com/", {private: true});
+  await testHelper("Ask Every Time", "https://requireclientcert.example.com/", {
+    private: true,
+  });
+  await testHelper("Ask Every Time", "https://requireclientcert.example.com/", {
+    private: true,
+  });
   await testHelper("Ask Every Time", "https://requireclientcert.example.com/");
   // NB: we don't `sdr.logoutAndTeardown()` in between the two calls to
   // `testHelper` because that would clear all client auth certificate state and

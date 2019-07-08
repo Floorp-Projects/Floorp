@@ -1,4 +1,4 @@
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 let cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
 
 var observer = {
@@ -8,15 +8,15 @@ var observer = {
       sendAsyncMessage("cookieName", cookie.name + "=" + cookie.value);
       sendAsyncMessage("cookieOperation", data);
     }
-  }
+  },
 };
 
-addMessageListener("createObserver" , function(e) {
+addMessageListener("createObserver", function(e) {
   Services.obs.addObserver(observer, "cookie-changed");
   sendAsyncMessage("createObserver:return");
 });
 
-addMessageListener("removeObserver" , function(e) {
+addMessageListener("removeObserver", function(e) {
   Services.obs.removeObserver(observer, "cookie-changed");
   sendAsyncMessage("removeObserver:return");
 });

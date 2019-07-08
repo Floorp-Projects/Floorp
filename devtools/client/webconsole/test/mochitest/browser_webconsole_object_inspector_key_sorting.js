@@ -52,28 +52,68 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // Array
-  await testKeyOrder(hud, "Array(0,1,2,3,4,5,6,7,8,9,10)",
-                    ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]);
+  await testKeyOrder(hud, "Array(0,1,2,3,4,5,6,7,8,9,10)", [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+  ]);
   // NodeList
-  await testKeyOrder(hud, "document.querySelectorAll('div')",
-                    ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]);
+  await testKeyOrder(hud, "document.querySelectorAll('div')", [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+  ]);
   // Object
-  await testKeyOrder(hud, "Object({'hello':1, 1:5, 10:2, 4:2, 'abc':1})",
-                    ["1", "4", "10", "abc", "hello"]);
+  await testKeyOrder(hud, "Object({'hello':1, 1:5, 10:2, 4:2, 'abc':1})", [
+    "1",
+    "4",
+    "10",
+    "abc",
+    "hello",
+  ]);
 
   // Typed arrays.
   for (const type of typedArrayTypes) {
     // size of 80 is enough to get 11 items on all ArrayTypes except for Float64Array.
     const size = type === "Float64Array" ? 120 : 80;
-    await testKeyOrder(hud, `new ${type}(new ArrayBuffer(${size}))`,
-                      ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]);
+    await testKeyOrder(hud, `new ${type}(new ArrayBuffer(${size}))`, [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+    ]);
   }
 });
 
 async function testKeyOrder(hud, command, expectedKeys) {
   info(`Testing command: [${command}]`);
 
-  info("Wait for a new .result message with an object inspector to be displayed");
+  info(
+    "Wait for a new .result message with an object inspector to be displayed"
+  );
   const resultsCount = findMessages(hud, "", ".result").length;
   hud.jsterm.execute(command);
   const oi = await waitFor(() => {
@@ -95,6 +135,10 @@ async function testKeyOrder(hud, command, expectedKeys) {
   for (let i = 0; i < expectedKeys.length; i++) {
     const key = expectedKeys[i];
     const labelNode = labelNodes[i];
-    is(labelNode.textContent, key, `Object inspector key is sorted as expected (${key})`);
+    is(
+      labelNode.textContent,
+      key,
+      `Object inspector key is sorted as expected (${key})`
+    );
   }
 }

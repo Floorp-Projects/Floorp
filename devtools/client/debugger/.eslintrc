@@ -93,14 +93,12 @@
     // since only let and const are used, see "no-var").
     "block-scoped-var": 2,
     // Require camel case names
-    "camelcase": 2,
+    "camelcase": ["error", { "properties": "never" }],
     // Warn about cyclomatic complexity in functions.
     "complexity": ["error", { "max": 22 }],
     // Don't warn for inconsistent naming when capturing this (not so important
     // with auto-binding fat arrow functions).
     "consistent-this": 0,
-    // Enforce curly brace conventions for all control statements.
-    "curly": 2,
     // Don't require a default case in switch statements. Avoid being forced to
     // add a bogus default when you know all possible cases are handled.
     "default-case": 0,
@@ -299,8 +297,6 @@
     // Dont require to sort variables within the same declaration block.
     // Anyway, one-var is disabled.
     "sort-vars": 0,
-    // Require a space immediately following the // in a line comment.
-    "spaced-comment": [2, "always"],
     // Require "use strict" to be defined globally in the script.
     "strict": [2, "global"],
     // Disallow comparisons with the value NaN.

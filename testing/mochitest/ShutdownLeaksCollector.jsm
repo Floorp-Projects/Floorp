@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 var EXPORTED_SYMBOLS = ["ContentCollector"];
 
@@ -14,11 +14,11 @@ var EXPORTED_SYMBOLS = ["ContentCollector"];
 
 var ContentCollector = {
   init() {
-      let processType = Services.appinfo.processType;
-      if (processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
-        // In the main process, we handle triggering collections in browser-test.js
-        return;
-      }
+    let processType = Services.appinfo.processType;
+    if (processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+      // In the main process, we handle triggering collections in browser-test.js
+      return;
+    }
 
     Services.cpmm.addMessageListener("browser-test:collect-request", this);
   },
@@ -59,6 +59,5 @@ var ContentCollector = {
 
     Services.cpmm.removeMessageListener("browser-test:collect-request", this);
   },
-
 };
 ContentCollector.init();

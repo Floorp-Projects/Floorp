@@ -29,7 +29,11 @@ function MozillaFormatter(runner) {
     failures++;
     // Replace any newlines in the title.
     let title = test.title.replace(/\n/g, "|");
-    console.log(`TEST-UNEXPECTED-FAIL | ${path.basename(test.file)} | ${title} | ${err.message}`);
+    console.log(
+      `TEST-UNEXPECTED-FAIL | ${path.basename(test.file)} | ${title} | ${
+        err.message
+      }`
+    );
   });
 
   runner.on("end", function() {

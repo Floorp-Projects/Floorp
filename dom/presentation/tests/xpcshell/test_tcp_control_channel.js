@@ -4,18 +4,20 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var pcs;
 
 // Call |run_next_test| if all functions in |names| are called
 function makeJointSuccess(names) {
-  let funcs = {}, successCount = 0;
+  let funcs = {},
+    successCount = 0;
   names.forEach(function(name) {
     funcs[name] = function() {
       info("got expected: " + name);
-      if (++successCount === names.length)
+      if (++successCount === names.length) {
         run_next_test();
+      }
     };
   });
   return funcs;
@@ -23,11 +25,13 @@ function makeJointSuccess(names) {
 
 function TestDescription(aType, aTcpAddress, aTcpPort) {
   this.type = aType;
-  this.tcpAddress = Cc["@mozilla.org/array;1"]
-                      .createInstance(Ci.nsIMutableArray);
+  this.tcpAddress = Cc["@mozilla.org/array;1"].createInstance(
+    Ci.nsIMutableArray
+  );
   for (let address of aTcpAddress) {
-    let wrapper = Cc["@mozilla.org/supports-cstring;1"]
-                    .createInstance(Ci.nsISupportsCString);
+    let wrapper = Cc["@mozilla.org/supports-cstring;1"].createInstance(
+      Ci.nsISupportsCString
+    );
     wrapper.data = address;
     this.tcpAddress.appendElement(wrapper);
   }
@@ -35,7 +39,9 @@ function TestDescription(aType, aTcpAddress, aTcpPort) {
 }
 
 TestDescription.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationChannelDescription]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIPresentationChannelDescription,
+  ]),
 };
 
 const CONTROLLER_CONTROL_CHANNEL_PORT = 36777;
@@ -53,8 +59,9 @@ const ANSWER_ADDRESS = "192.168.321.321";
 const ANSWER_PORT = 321;
 
 function loopOfferAnser() {
-  pcs = Cc["@mozilla.org/presentation/control-service;1"]
-        .createInstance(Ci.nsIPresentationControlService);
+  pcs = Cc["@mozilla.org/presentation/control-service;1"].createInstance(
+    Ci.nsIPresentationControlService
+  );
   pcs.id = "controllerID";
   pcs.listener = {
     onServerReady() {
@@ -66,37 +73,53 @@ function loopOfferAnser() {
   pcs.startServer(true, PRESENTER_CONTROL_CHANNEL_PORT);
 }
 
-
 function testPresentationServer() {
-  let yayFuncs = makeJointSuccess(["controllerControlChannelClose",
-                                   "presenterControlChannelClose",
-                                   "controllerControlChannelReconnect",
-                                   "presenterControlChannelReconnect"]);
+  let yayFuncs = makeJointSuccess([
+    "controllerControlChannelClose",
+    "presenterControlChannelClose",
+    "controllerControlChannelReconnect",
+    "presenterControlChannelReconnect",
+  ]);
   let presenterControlChannel;
 
   pcs.listener = {
-
     onSessionRequest(deviceInfo, url, presentationId, controlChannel) {
       presenterControlChannel = controlChannel;
       Assert.equal(deviceInfo.id, pcs.id, "expected device id");
       Assert.equal(deviceInfo.address, "127.0.0.1", "expected device address");
       Assert.equal(url, "http://example.com", "expected url");
-      Assert.equal(presentationId, "testPresentationId", "expected presentation id");
+      Assert.equal(
+        presentationId,
+        "testPresentationId",
+        "expected presentation id"
+      );
 
       presenterControlChannel.listener = {
         status: "created",
         onOffer(aOffer) {
-          Assert.equal(this.status, "opened", "1. presenterControlChannel: get offer, send answer");
+          Assert.equal(
+            this.status,
+            "opened",
+            "1. presenterControlChannel: get offer, send answer"
+          );
           this.status = "onOffer";
 
-          let offer = aOffer.QueryInterface(Ci.nsIPresentationChannelDescription);
-          Assert.strictEqual(offer.tcpAddress.queryElementAt(0, Ci.nsISupportsCString).data,
-                             OFFER_ADDRESS,
-                             "expected offer address array");
+          let offer = aOffer.QueryInterface(
+            Ci.nsIPresentationChannelDescription
+          );
+          Assert.strictEqual(
+            offer.tcpAddress.queryElementAt(0, Ci.nsISupportsCString).data,
+            OFFER_ADDRESS,
+            "expected offer address array"
+          );
           Assert.equal(offer.tcpPort, OFFER_PORT, "expected offer port");
           try {
             let tcpType = Ci.nsIPresentationChannelDescription.TYPE_TCP;
-            let answer = new TestDescription(tcpType, [ANSWER_ADDRESS], ANSWER_PORT);
+            let answer = new TestDescription(
+              tcpType,
+              [ANSWER_ADDRESS],
+              ANSWER_PORT
+            );
             presenterControlChannel.sendAnswer(answer);
           } catch (e) {
             Assert.ok(false, "sending answer fails" + e);
@@ -106,35 +129,62 @@ function testPresentationServer() {
           Assert.ok(false, "get answer");
         },
         onIceCandidate(aCandidate) {
-          Assert.ok(true, "3. presenterControlChannel: get ice candidate, close channel");
+          Assert.ok(
+            true,
+            "3. presenterControlChannel: get ice candidate, close channel"
+          );
           let recvCandidate = JSON.parse(aCandidate);
           for (let key in recvCandidate) {
-            if (typeof(recvCandidate[key]) !== "function") {
-              Assert.equal(recvCandidate[key], candidate[key], "key " + key + " should match.");
+            if (typeof recvCandidate[key] !== "function") {
+              Assert.equal(
+                recvCandidate[key],
+                candidate[key],
+                "key " + key + " should match."
+              );
             }
           }
           presenterControlChannel.disconnect(CLOSE_CONTROL_CHANNEL_REASON);
         },
         notifyConnected() {
-          Assert.equal(this.status, "created", "0. presenterControlChannel: opened");
+          Assert.equal(
+            this.status,
+            "created",
+            "0. presenterControlChannel: opened"
+          );
           this.status = "opened";
         },
         notifyDisconnected(aReason) {
-          Assert.equal(this.status, "onOffer", "4. presenterControlChannel: closed");
-          Assert.equal(aReason, CLOSE_CONTROL_CHANNEL_REASON, "presenterControlChannel notify closed");
+          Assert.equal(
+            this.status,
+            "onOffer",
+            "4. presenterControlChannel: closed"
+          );
+          Assert.equal(
+            aReason,
+            CLOSE_CONTROL_CHANNEL_REASON,
+            "presenterControlChannel notify closed"
+          );
           this.status = "closed";
           yayFuncs.controllerControlChannelClose();
         },
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannelListener]),
+        QueryInterface: ChromeUtils.generateQI([
+          Ci.nsIPresentationControlChannelListener,
+        ]),
       };
     },
     onReconnectRequest(deviceInfo, url, presentationId, controlChannel) {
       Assert.equal(url, "http://example.com", "expected url");
-      Assert.equal(presentationId, "testPresentationId", "expected presentation id");
+      Assert.equal(
+        presentationId,
+        "testPresentationId",
+        "expected presentation id"
+      );
       yayFuncs.presenterControlChannelReconnect();
     },
 
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlServerListener]),
+    QueryInterface: ChromeUtils.generateQI([
+      Ci.nsIPresentationControlServerListener,
+    ]),
   };
 
   let presenterDeviceInfo = {
@@ -153,12 +203,18 @@ function testPresentationServer() {
       Assert.ok(false, "get offer");
     },
     onAnswer(aAnswer) {
-      Assert.equal(this.status, "opened", "2. controllerControlChannel: get answer, send ICE candidate");
+      Assert.equal(
+        this.status,
+        "opened",
+        "2. controllerControlChannel: get answer, send ICE candidate"
+      );
 
       let answer = aAnswer.QueryInterface(Ci.nsIPresentationChannelDescription);
-      Assert.strictEqual(answer.tcpAddress.queryElementAt(0, Ci.nsISupportsCString).data,
-                         ANSWER_ADDRESS,
-                         "expected answer address array");
+      Assert.strictEqual(
+        answer.tcpAddress.queryElementAt(0, Ci.nsISupportsCString).data,
+        ANSWER_ADDRESS,
+        "expected answer address array"
+      );
       Assert.equal(answer.tcpPort, ANSWER_PORT, "expected answer port");
       candidate = {
         candidate: "1 1 UDP 1 127.0.0.1 34567 type host",
@@ -171,8 +227,15 @@ function testPresentationServer() {
       Assert.ok(false, "get ICE candidate");
     },
     notifyConnected() {
-      Assert.equal(this.status, "created", "0. controllerControlChannel: opened, send offer");
-      controllerControlChannel.launch("testPresentationId", "http://example.com");
+      Assert.equal(
+        this.status,
+        "created",
+        "0. controllerControlChannel: opened, send offer"
+      );
+      controllerControlChannel.launch(
+        "testPresentationId",
+        "http://example.com"
+      );
       this.status = "opened";
       try {
         let tcpType = Ci.nsIPresentationChannelDescription.TYPE_TCP;
@@ -184,37 +247,59 @@ function testPresentationServer() {
     },
     notifyDisconnected(aReason) {
       this.status = "closed";
-      Assert.equal(aReason, CLOSE_CONTROL_CHANNEL_REASON, "4. controllerControlChannel notify closed");
+      Assert.equal(
+        aReason,
+        CLOSE_CONTROL_CHANNEL_REASON,
+        "4. controllerControlChannel notify closed"
+      );
       yayFuncs.presenterControlChannelClose();
 
       let reconnectControllerControlChannel = pcs.connect(presenterDeviceInfo);
       reconnectControllerControlChannel.listener = {
         notifyConnected() {
-          reconnectControllerControlChannel.reconnect("testPresentationId", "http://example.com");
+          reconnectControllerControlChannel.reconnect(
+            "testPresentationId",
+            "http://example.com"
+          );
         },
         notifyReconnected() {
           yayFuncs.controllerControlChannelReconnect();
         },
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannelListener]),
+        QueryInterface: ChromeUtils.generateQI([
+          Ci.nsIPresentationControlChannelListener,
+        ]),
       };
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannelListener]),
+    QueryInterface: ChromeUtils.generateQI([
+      Ci.nsIPresentationControlChannelListener,
+    ]),
   };
 }
 
 function terminateRequest() {
-  let yayFuncs = makeJointSuccess(["controllerControlChannelConnected",
-                                   "controllerControlChannelDisconnected",
-                                   "presenterControlChannelDisconnected",
-                                   "terminatedByController",
-                                   "terminatedByReceiver"]);
+  let yayFuncs = makeJointSuccess([
+    "controllerControlChannelConnected",
+    "controllerControlChannelDisconnected",
+    "presenterControlChannelDisconnected",
+    "terminatedByController",
+    "terminatedByReceiver",
+  ]);
   let controllerControlChannel;
   let terminatePhase = "controller";
 
   pcs.listener = {
-    onTerminateRequest(deviceInfo, presentationId, controlChannel, isFromReceiver) {
+    onTerminateRequest(
+      deviceInfo,
+      presentationId,
+      controlChannel,
+      isFromReceiver
+    ) {
       Assert.equal(deviceInfo.address, "127.0.0.1", "expected device address");
-      Assert.equal(presentationId, "testPresentationId", "expected presentation id");
+      Assert.equal(
+        presentationId,
+        "testPresentationId",
+        "expected presentation id"
+      );
       controlChannel.terminate(presentationId); // Reply terminate ack.
 
       if (terminatePhase === "controller") {
@@ -232,19 +317,31 @@ function terminateRequest() {
             controllerControlChannel.terminate("testPresentationId");
           },
           notifyDisconnected(aReason) {
-            Assert.equal(aReason, CLOSE_CONTROL_CHANNEL_REASON, "controllerControlChannel notify disconncted");
+            Assert.equal(
+              aReason,
+              CLOSE_CONTROL_CHANNEL_REASON,
+              "controllerControlChannel notify disconncted"
+            );
             yayFuncs.controllerControlChannelDisconnected();
           },
-          QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannelListener]),
+          QueryInterface: ChromeUtils.generateQI([
+            Ci.nsIPresentationControlChannelListener,
+          ]),
         };
       } else {
-        Assert.equal(deviceInfo.id, presenterDeviceInfo.id, "expected presenter device id");
+        Assert.equal(
+          deviceInfo.id,
+          presenterDeviceInfo.id,
+          "expected presenter device id"
+        );
         Assert.equal(isFromReceiver, true, "expected request from receiver");
         yayFuncs.terminatedByReceiver();
         presenterControlChannel.disconnect(CLOSE_CONTROL_CHANNEL_REASON);
       }
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsITCPPresentationServerListener]),
+    QueryInterface: ChromeUtils.generateQI([
+      Ci.nsITCPPresentationServerListener,
+    ]),
   };
 
   let presenterDeviceInfo = {
@@ -262,42 +359,67 @@ function terminateRequest() {
       presenterControlChannel.terminate("testPresentationId");
     },
     notifyDisconnected(aReason) {
-      Assert.equal(aReason, CLOSE_CONTROL_CHANNEL_REASON, "4. presenterControlChannel notify disconnected");
+      Assert.equal(
+        aReason,
+        CLOSE_CONTROL_CHANNEL_REASON,
+        "4. presenterControlChannel notify disconnected"
+      );
       yayFuncs.presenterControlChannelDisconnected();
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannelListener]),
+    QueryInterface: ChromeUtils.generateQI([
+      Ci.nsIPresentationControlChannelListener,
+    ]),
   };
 }
 
 function terminateRequestAbnormal() {
-  let yayFuncs = makeJointSuccess(["controllerControlChannelConnected",
-                                   "controllerControlChannelDisconnected",
-                                   "presenterControlChannelDisconnected"]);
+  let yayFuncs = makeJointSuccess([
+    "controllerControlChannelConnected",
+    "controllerControlChannelDisconnected",
+    "presenterControlChannelDisconnected",
+  ]);
   let controllerControlChannel;
 
   pcs.listener = {
-    onTerminateRequest(deviceInfo, presentationId, controlChannel, isFromReceiver) {
+    onTerminateRequest(
+      deviceInfo,
+      presentationId,
+      controlChannel,
+      isFromReceiver
+    ) {
       Assert.equal(deviceInfo.id, pcs.id, "expected controller device id");
       Assert.equal(deviceInfo.address, "127.0.0.1", "expected device address");
-      Assert.equal(presentationId, "testPresentationId", "expected presentation id");
+      Assert.equal(
+        presentationId,
+        "testPresentationId",
+        "expected presentation id"
+      );
       Assert.equal(isFromReceiver, false, "expected request from controller");
       controlChannel.terminate("unmatched-presentationId"); // Reply abnormal terminate ack.
 
       controllerControlChannel = controlChannel;
 
       controllerControlChannel.listener = {
-          notifyConnected() {
+        notifyConnected() {
           Assert.ok(true, "control channel notify connected");
           yayFuncs.controllerControlChannelConnected();
         },
         notifyDisconnected(aReason) {
-          Assert.equal(aReason, Cr.NS_ERROR_FAILURE, "controllerControlChannel notify disconncted with error");
+          Assert.equal(
+            aReason,
+            Cr.NS_ERROR_FAILURE,
+            "controllerControlChannel notify disconncted with error"
+          );
           yayFuncs.controllerControlChannelDisconnected();
         },
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannelListener]),
+        QueryInterface: ChromeUtils.generateQI([
+          Ci.nsIPresentationControlChannelListener,
+        ]),
       };
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsITCPPresentationServerListener]),
+    QueryInterface: ChromeUtils.generateQI([
+      Ci.nsITCPPresentationServerListener,
+    ]),
   };
 
   let presenterDeviceInfo = {
@@ -315,17 +437,27 @@ function terminateRequestAbnormal() {
       presenterControlChannel.terminate("testPresentationId");
     },
     notifyDisconnected(aReason) {
-      Assert.equal(aReason, Cr.NS_ERROR_FAILURE, "4. presenterControlChannel notify disconnected with error");
+      Assert.equal(
+        aReason,
+        Cr.NS_ERROR_FAILURE,
+        "4. presenterControlChannel notify disconnected with error"
+      );
       yayFuncs.presenterControlChannelDisconnected();
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannelListener]),
+    QueryInterface: ChromeUtils.generateQI([
+      Ci.nsIPresentationControlChannelListener,
+    ]),
   };
 }
 
 function setOffline() {
   pcs.listener = {
     onServerReady(aPort, aCertFingerprint) {
-      Assert.notEqual(aPort, 0, "TCPPresentationServer port changed and the port should be valid");
+      Assert.notEqual(
+        aPort,
+        0,
+        "TCPPresentationServer port changed and the port should be valid"
+      );
       pcs.close();
       run_next_test();
     },
@@ -351,7 +483,6 @@ function oneMoreLoop() {
     run_next_test();
   }
 }
-
 
 function shutdown() {
   pcs.listener = {

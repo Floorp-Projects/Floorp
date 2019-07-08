@@ -320,7 +320,7 @@ macosx1014-64-tests:
     - mochitest
     - mochitest-a11y
     # - mochitest-browser-chrome
-    # - mochitest-chrome
+    - mochitest-chrome
     - mochitest-devtools-chrome
     - mochitest-devtools-webreplay
     - mochitest-gpu
@@ -328,7 +328,7 @@ macosx1014-64-tests:
     - mochitest-remote
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
-    # - mochitest-webgl2-core
+    - mochitest-webgl2-core
     # - mochitest-webgl2-ext test  # timeouts
     - reftest
     - telemetry-tests-client
@@ -346,11 +346,7 @@ macosx1014-64-qr-tests:
 
 macosx64-tests:
     - gtest
-    - mochitest
     - mochitest-browser-chrome
-    - mochitest-chrome
-    - mochitest-media
-    - mochitest-webgl2-core
     # - mochitest-webgl2-ext test timeouts
 
 macosx64-talos:
@@ -440,6 +436,10 @@ android-hw-arm7-debug-unittests:
     - jittest
     - jsreftest
     - mochitest-media
+
+android-hw-arm7-qr:
+    - crashtest
+    - reftest
 
 android-hw-arm7-raptor:
     - raptor-speedometer-geckoview

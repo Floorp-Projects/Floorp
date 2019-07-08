@@ -9,12 +9,11 @@
 // Test hitting breakpoints when rewinding past the point where the breakpoint
 // script was created.
 add_task(async function() {
-  const dbg = await attachRecordingDebugger(
-    "doc_rr_basic.html",
-    { waitForRecording: true }
-  );
+  const dbg = await attachRecordingDebugger("doc_rr_basic.html", {
+    waitForRecording: true,
+  });
 
-  const {threadClient, tab, toolbox, target} = dbg;
+  const { threadClient, tab, toolbox, target } = dbg;
 
   await threadClient.interrupt();
 

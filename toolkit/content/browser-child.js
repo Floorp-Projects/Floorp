@@ -4,36 +4,56 @@
 
 /* eslint-env mozilla/frame-script */
 
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-                               "resource://gre/modules/BrowserUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
+);
 
-const {WebProgressChild} = ChromeUtils.import("resource://gre/modules/WebProgressChild.jsm");
+const { WebProgressChild } = ChromeUtils.import(
+  "resource://gre/modules/WebProgressChild.jsm"
+);
 
 this.WebProgress = new WebProgressChild(this);
 
-docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+docShell
+  .QueryInterface(Ci.nsIInterfaceRequestor)
   .getInterface(Ci.nsIBrowserChild)
   .beginSendingWebProgressEventsToParent();
 
 // This message is used to measure content process startup performance in Talos
 // tests.
-sendAsyncMessage("Content:BrowserChildReady", { time: Services.telemetry.msSystemNow() });
+sendAsyncMessage("Content:BrowserChildReady", {
+  time: Services.telemetry.msSystemNow(),
+});
 
-addEventListener("DOMTitleChanged", function(aEvent) {
-  if (!aEvent.isTrusted || aEvent.target.defaultView != content)
-    return;
-  sendAsyncMessage("DOMTitleChanged", { title: content.document.title });
-}, false);
-
-addEventListener("ImageContentLoaded", function(aEvent) {
-  if (content.document instanceof Ci.nsIImageDocument) {
-    let req = content.document.imageRequest;
-    if (!req.image)
+addEventListener(
+  "DOMTitleChanged",
+  function(aEvent) {
+    if (!aEvent.isTrusted || aEvent.target.defaultView != content) {
       return;
-    sendAsyncMessage("ImageDocumentLoaded", { width: req.image.width,
-                                              height: req.image.height });
-  }
-}, false);
+    }
+    sendAsyncMessage("DOMTitleChanged", { title: content.document.title });
+  },
+  false
+);
+
+addEventListener(
+  "ImageContentLoaded",
+  function(aEvent) {
+    if (content.document instanceof Ci.nsIImageDocument) {
+      let req = content.document.imageRequest;
+      if (!req.image) {
+        return;
+      }
+      sendAsyncMessage("ImageDocumentLoaded", {
+        width: req.image.width,
+        height: req.image.height,
+      });
+    }
+  },
+  false
+);
 
 // This is here for now until we find a better way of forcing an about:blank load
 // with a particular principal that doesn't involve the message manager. We can't
@@ -44,11 +64,15 @@ addMessageListener("BrowserElement:CreateAboutBlank", message => {
   if (!content.document || content.document.documentURI != "about:blank") {
     throw new Error("Can't create a content viewer unless on about:blank");
   }
-  let {principal, storagePrincipal} = message.data;
-  principal = BrowserUtils.principalWithMatchingOA(principal,
-    content.document.nodePrincipal);
-  storagePrincipal = BrowserUtils.principalWithMatchingOA(storagePrincipal,
-    content.document.effectiveStoragePrincipal);
+  let { principal, storagePrincipal } = message.data;
+  principal = BrowserUtils.principalWithMatchingOA(
+    principal,
+    content.document.nodePrincipal
+  );
+  storagePrincipal = BrowserUtils.principalWithMatchingOA(
+    storagePrincipal,
+    content.document.effectiveStoragePrincipal
+  );
   docShell.createAboutBlankContentViewer(principal, storagePrincipal);
 });
 
@@ -56,4 +80,4 @@ addMessageListener("BrowserElement:CreateAboutBlank", message => {
 // is torn down too quickly.
 var outerWindowID = docShell.outerWindowID;
 var browsingContextId = docShell.browsingContext.id;
-sendAsyncMessage("Browser:Init", {outerWindowID, browsingContextId});
+sendAsyncMessage("Browser:Init", { outerWindowID, browsingContextId });

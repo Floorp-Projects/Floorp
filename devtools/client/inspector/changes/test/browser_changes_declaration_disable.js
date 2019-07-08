@@ -31,7 +31,11 @@ add_task(async function() {
   await onTrackChange;
 
   let removedDeclarations = getRemovedDeclarations(doc);
-  is(removedDeclarations.length, 1, "Only one declaration was tracked as removed");
+  is(
+    removedDeclarations.length,
+    1,
+    "Only one declaration was tracked as removed"
+  );
 
   onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
   info("Re-enable the first declaration");

@@ -5,11 +5,13 @@
 
 var EXPORTED_SYMBOLS = ["ChromeMigrationUtils"];
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const S100NS_FROM1601TO1970 = 0x19DB1DED53E8000;
+const S100NS_FROM1601TO1970 = 0x19db1ded53e8000;
 const S100NS_PER_MS = 10;
 
 var ChromeMigrationUtils = {
@@ -39,14 +41,19 @@ var ChromeMigrationUtils = {
     let path = this.getExtensionPath(profileId);
     let iterator = new OS.File.DirectoryIterator(path);
     let extensionList = [];
-    await iterator.forEach(async entry => {
-      if (entry.isDir) {
-        let extensionInformation = await this.getExtensionInformation(entry.name, profileId);
-        if (extensionInformation) {
-          extensionList.push(extensionInformation);
+    await iterator
+      .forEach(async entry => {
+        if (entry.isDir) {
+          let extensionInformation = await this.getExtensionInformation(
+            entry.name,
+            profileId
+          );
+          if (extensionInformation) {
+            extensionList.push(extensionInformation);
+          }
         }
-      }
-    }).catch(ex => Cu.reportError(ex));
+      })
+      .catch(ex => Cu.reportError(ex));
     return extensionList;
   },
 
@@ -66,19 +73,35 @@ var ChromeMigrationUtils = {
       manifestPath = OS.Path.join(manifestPath, extensionId);
       // If there are multiple sub-directories in the extension directory,
       // read the files in the latest directory.
-      let directories = await this._getSortedByVersionSubDirectoryNames(manifestPath);
+      let directories = await this._getSortedByVersionSubDirectoryNames(
+        manifestPath
+      );
       if (!directories[0]) {
         return null;
       }
 
-      manifestPath = OS.Path.join(manifestPath, directories[0], "manifest.json");
+      manifestPath = OS.Path.join(
+        manifestPath,
+        directories[0],
+        "manifest.json"
+      );
       let manifest = await OS.File.read(manifestPath, { encoding: "utf-8" });
       manifest = JSON.parse(manifest);
       // No app attribute means this is a Chrome extension not a Chrome app.
       if (!manifest.app) {
         const DEFAULT_LOCALE = manifest.default_locale;
-        let name = await this._getLocaleString(manifest.name, DEFAULT_LOCALE, extensionId, profileId);
-        let description = await this._getLocaleString(manifest.description, DEFAULT_LOCALE, extensionId, profileId);
+        let name = await this._getLocaleString(
+          manifest.name,
+          DEFAULT_LOCALE,
+          extensionId,
+          profileId
+        );
+        let description = await this._getLocaleString(
+          manifest.description,
+          DEFAULT_LOCALE,
+          extensionId,
+          profileId
+        );
         if (name) {
           extensionInformation = {
             id: extensionId,
@@ -115,8 +138,10 @@ var ChromeMigrationUtils = {
     let localeString = null;
     try {
       let localeFile;
-      if (this._extensionLocaleStrings[profileId] &&
-          this._extensionLocaleStrings[profileId][extensionId]) {
+      if (
+        this._extensionLocaleStrings[profileId] &&
+        this._extensionLocaleStrings[profileId][extensionId]
+      ) {
         localeFile = this._extensionLocaleStrings[profileId][extensionId];
       } else {
         if (!this._extensionLocaleStrings[profileId]) {
@@ -124,10 +149,18 @@ var ChromeMigrationUtils = {
         }
         let localeFilePath = this.getExtensionPath(profileId);
         localeFilePath = OS.Path.join(localeFilePath, extensionId);
-        let directories = await this._getSortedByVersionSubDirectoryNames(localeFilePath);
+        let directories = await this._getSortedByVersionSubDirectoryNames(
+          localeFilePath
+        );
         // If there are multiple sub-directories in the extension directory,
         // read the files in the latest directory.
-        localeFilePath = OS.Path.join(localeFilePath, directories[0], "_locales", locale, "messages.json");
+        localeFilePath = OS.Path.join(
+          localeFilePath,
+          directories[0],
+          "_locales",
+          locale,
+          "messages.json"
+        );
         localeFile = await OS.File.read(localeFilePath, { encoding: "utf-8" });
         localeFile = JSON.parse(localeFile);
         this._extensionLocaleStrings[profileId][extensionId] = localeFile;
@@ -157,7 +190,9 @@ var ChromeMigrationUtils = {
       profileId = await this.getLastUsedProfileId();
     }
     let extensionPath = this.getExtensionPath(profileId);
-    let isInstalled = await OS.File.exists(OS.Path.join(extensionPath, extensionId));
+    let isInstalled = await OS.File.exists(
+      OS.Path.join(extensionPath, extensionId)
+    );
     return isInstalled;
   },
 
@@ -178,8 +213,13 @@ var ChromeMigrationUtils = {
   async getLocalState(dataPath = "Chrome") {
     let localState = null;
     try {
-      let localStatePath = OS.Path.join(this.getDataPath(dataPath), "Local State");
-      let localStateJson = await OS.File.read(localStatePath, { encoding: "utf-8" });
+      let localStatePath = OS.Path.join(
+        this.getDataPath(dataPath),
+        "Local State"
+      );
+      let localStateJson = await OS.File.read(localStatePath, {
+        encoding: "utf-8",
+      });
       localState = JSON.parse(localStateJson);
     } catch (ex) {
       Cu.reportError(ex);
@@ -256,14 +296,16 @@ var ChromeMigrationUtils = {
 
     let iterator = new OS.File.DirectoryIterator(path);
     let entries = [];
-    await iterator.forEach(async entry => {
-      if (entry.isDir) {
-        entries.push(entry.name);
-      }
-    }).catch(ex => {
-      Cu.reportError(ex);
-      entries = [];
-    });
+    await iterator
+      .forEach(async entry => {
+        if (entry.isDir) {
+          entries.push(entry.name);
+        }
+      })
+      .catch(ex => {
+        Cu.reportError(ex);
+        entries = [];
+      });
     // The directory name is the version number string of the extension.
     // For example, it could be "1.0_0", "1.0_1", "1.0_2", 1.1_0, 1.1_1, or 1.1_2.
     // The "1.0_1" strings mean that the "1.0_0" directory is existed and you install the version 1.0 again.

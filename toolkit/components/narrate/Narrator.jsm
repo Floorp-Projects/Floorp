@@ -4,19 +4,32 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
-var EXPORTED_SYMBOLS = [ "Narrator" ];
+var EXPORTED_SYMBOLS = ["Narrator"];
 
 // Maximum time into paragraph when pressing "skip previous" will go
 // to previous paragraph and not the start of current one.
 const PREV_THRESHOLD = 2000;
 // All text-related style rules that we should copy over to the highlight node.
-const kTextStylesRules = ["font-family", "font-kerning", "font-size",
-  "font-size-adjust", "font-stretch", "font-variant", "font-weight",
-  "line-height", "letter-spacing", "text-orientation",
-  "text-transform", "word-spacing"];
+const kTextStylesRules = [
+  "font-family",
+  "font-kerning",
+  "font-size",
+  "font-size-adjust",
+  "font-stretch",
+  "font-variant",
+  "font-weight",
+  "line-height",
+  "letter-spacing",
+  "text-orientation",
+  "text-transform",
+  "word-spacing",
+];
 
 function Narrator(win, languagePromise) {
   this._winRef = Cu.getWeakReference(win);
@@ -83,9 +96,15 @@ Narrator.prototype = {
       // We can't hold a weak reference on the treewalker, because there
       // are no other strong references, and it will be GC'ed. Instead,
       // we rely on the window's lifetime and use it as a weak reference.
-      this._treeWalkerRef.set(this._win,
-        this._doc.createTreeWalker(this._doc.querySelector(".container"),
-          nf.SHOW_ELEMENT, filter, false));
+      this._treeWalkerRef.set(
+        this._win,
+        this._doc.createTreeWalker(
+          this._doc.querySelector(".container"),
+          nf.SHOW_ELEMENT,
+          filter,
+          false
+        )
+      );
     }
 
     return this._treeWalkerRef.get(this._win);
@@ -97,14 +116,16 @@ Narrator.prototype = {
   },
 
   get speaking() {
-    return this._win.speechSynthesis.speaking ||
-      this._win.speechSynthesis.pending;
+    return (
+      this._win.speechSynthesis.speaking || this._win.speechSynthesis.pending
+    );
   },
 
   _getVoice(voiceURI) {
     if (!this._voiceMap || !this._voiceMap.has(voiceURI)) {
       this._voiceMap = new Map(
-        this._win.speechSynthesis.getVoices().map(v => [v.voiceURI, v]));
+        this._win.speechSynthesis.getVoices().map(v => [v.voiceURI, v])
+      );
     }
 
     return this._voiceMap.get(voiceURI);
@@ -121,8 +142,11 @@ Narrator.prototype = {
 
   _sendTestEvent(eventType, detail) {
     let win = this._win;
-    win.dispatchEvent(new win.CustomEvent(eventType,
-      { detail: Cu.cloneInto(detail, win.document) }));
+    win.dispatchEvent(
+      new win.CustomEvent(eventType, {
+        detail: Cu.cloneInto(detail, win.document),
+      })
+    );
   },
 
   _speakInner() {
@@ -135,7 +159,8 @@ Narrator.prototype = {
     }
 
     let utterance = new this._win.SpeechSynthesisUtterance(
-      paragraph.textContent);
+      paragraph.textContent
+    );
     utterance.rate = this._speechOptions.rate;
     if (this._speechOptions.voice) {
       utterance.voice = this._speechOptions.voice;
@@ -170,7 +195,7 @@ Narrator.prototype = {
         paragraph.classList.add("narrating");
         let bb = paragraph.getBoundingClientRect();
         if (bb.top < 0 || bb.bottom > this._win.innerHeight) {
-          paragraph.scrollIntoView({ behavior: "smooth", block: "start"});
+          paragraph.scrollIntoView({ behavior: "smooth", block: "start" });
         }
 
         if (this._inTest) {
@@ -328,12 +353,15 @@ Highlighter.prototype = {
       let r = rangeRects[i];
       let node = nodes[i];
 
-      let style = Object.assign({
-        "top": `${r.top - containerRect.top + r.height / 2}px`,
-        "left": `${r.left - containerRect.left + r.width / 2}px`,
-        "width": `${r.width}px`,
-        "height": `${r.height}px`,
-      }, textStyle);
+      let style = Object.assign(
+        {
+          top: `${r.top - containerRect.top + r.height / 2}px`,
+          left: `${r.left - containerRect.left + r.width / 2}px`,
+          width: `${r.width}px`,
+          height: `${r.height}px`,
+        },
+        textStyle
+      );
 
       // Enables us to vary the CSS transition on a line change.
       node.classList.toggle("newline", style.top != node.dataset.top);
@@ -349,8 +377,9 @@ Highlighter.prototype = {
       node.dataset.word = range.toString();
 
       // Apply style
-      node.style = Object.entries(style).map(
-        s => `${s[0]}: ${s[1]};`).join(" ");
+      node.style = Object.entries(style)
+        .map(s => `${s[0]}: ${s[1]};`)
+        .join(" ");
     }
   },
 
@@ -402,7 +431,9 @@ Highlighter.prototype = {
     let doc = this.container.ownerDocument;
     let i = 0;
     let treeWalker = doc.createTreeWalker(
-      this.container, doc.defaultView.NodeFilter.SHOW_TEXT);
+      this.container,
+      doc.defaultView.NodeFilter.SHOW_TEXT
+    );
     let node = treeWalker.nextNode();
 
     function _findNodeAndOffset(offset) {

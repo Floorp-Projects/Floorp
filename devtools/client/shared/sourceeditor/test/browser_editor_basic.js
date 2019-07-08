@@ -6,7 +6,7 @@
 
 async function test() {
   waitForExplicitFinish();
-  const {ed, win} = await setup();
+  const { ed, win } = await setup();
   // appendTo
   const cmFrame = win.document.querySelector("iframe");
   const cmStyle = cmFrame.contentDocument.getElementById("cmBaseStyle");
@@ -36,7 +36,7 @@ async function test() {
   ed.replaceText("Hello.");
   is(ed.getText(), "Hello.", "replaceText(str)");
 
-  ed.insertText(", sir/madam", { line: 0, ch: 5});
+  ed.insertText(", sir/madam", { line: 0, ch: 5 });
   is(ed.getText(), "Hello, sir/madam.", "insertText");
 
   // Add-ons

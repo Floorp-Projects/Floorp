@@ -31,6 +31,6 @@ var LightweightThemeManager = {
   },
 
   get themeData() {
-    return _fallbackThemeData || {theme: null};
+    return _fallbackThemeData || { theme: null };
   },
 };

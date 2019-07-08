@@ -20,11 +20,14 @@ function run_test() {
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_pause_frame();
-                           });
+    attachTestTabAndResume(gClient, "test-stack", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_pause_frame();
+    });
   });
   do_test_pending();
 }
@@ -61,16 +64,20 @@ function test_pause_frame() {
     test_frame_packet();
   });
 
-  gDebuggee.eval("(" + function() {
-    function depth3() {
-      debugger;
-    }
-    function depth2() {
-      depth3();
-    }
-    function depth1() {
-      depth2();
-    }
-    depth1();
-  } + ")()");
+  gDebuggee.eval(
+    "(" +
+      function() {
+        function depth3() {
+          debugger;
+        }
+        function depth2() {
+          depth3();
+        }
+        function depth1() {
+          depth2();
+        }
+        depth1();
+      } +
+      ")()"
+  );
 }

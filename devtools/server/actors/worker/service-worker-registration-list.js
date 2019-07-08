@@ -6,11 +6,16 @@
 
 const { Ci } = require("chrome");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
-loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActor",
-  "devtools/server/actors/worker/service-worker-registration", true);
+loader.lazyRequireGetter(
+  this,
+  "ServiceWorkerRegistrationActor",
+  "devtools/server/actors/worker/service-worker-registration",
+  true
+);
 
 XPCOMUtils.defineLazyServiceGetter(
-  this, "swm",
+  this,
+  "swm",
   "@mozilla.org/serviceworkers/manager;1",
   "nsIServiceWorkerManager"
 );
@@ -31,11 +36,12 @@ ServiceWorkerRegistrationActorList.prototype = {
     const array = swm.getAllRegistrations();
     for (let index = 0; index < array.length; ++index) {
       registrations.add(
-        array.queryElementAt(index, Ci.nsIServiceWorkerRegistrationInfo));
+        array.queryElementAt(index, Ci.nsIServiceWorkerRegistrationInfo)
+      );
     }
 
     // Delete each actor for which we don't have a registration.
-    for (const [registration ] of this._actors) {
+    for (const [registration] of this._actors) {
       if (!registrations.has(registration)) {
         this._actors.delete(registration);
       }
@@ -44,8 +50,10 @@ ServiceWorkerRegistrationActorList.prototype = {
     // Create an actor for each registration for which we don't have one.
     for (const registration of registrations) {
       if (!this._actors.has(registration)) {
-        this._actors.set(registration,
-          new ServiceWorkerRegistrationActor(this._conn, registration));
+        this._actors.set(
+          registration,
+          new ServiceWorkerRegistrationActor(this._conn, registration)
+        );
       }
     }
 

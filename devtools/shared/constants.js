@@ -37,8 +37,6 @@ const ISSUE_TYPE = {
     FORM_NO_NAME: "FORM_NO_NAME",
     // Form element's name is not visible.
     FORM_NO_VISIBLE_NAME: "FORM_NO_VISIBLE_NAME",
-    // <OPTGROUP> name is not provided.
-    FORM_OPTGROUP_NO_NAME: "FORM_OPTGROUP_NO_NAME",
     // <OPTGROUP> name is not provided via "label" attribute.
     FORM_OPTGROUP_NO_NAME_FROM_LABEL: "FORM_OPTGROUP_NO_NAME_FROM_LABEL",
     // <FRAME> name is not provided.

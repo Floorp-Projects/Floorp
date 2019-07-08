@@ -19,34 +19,48 @@ add_task(async function() {
   tab.linkedBrowser.reload();
   await wait;
 
-  ok(!document.querySelector(".network-details-panel") &&
-     !document.querySelector(".sidebar-toggle"),
-    "The details panel should initially be hidden.");
+  ok(
+    !document.querySelector(".network-details-panel") &&
+      !document.querySelector(".sidebar-toggle"),
+    "The details panel should initially be hidden."
+  );
 
   store.dispatch(Actions.toggleNetworkDetails());
 
-  is(~~(document.querySelector(".network-details-panel").clientWidth),
+  is(
+    ~~document.querySelector(".network-details-panel").clientWidth,
     Prefs.networkDetailsWidth,
-    "The details panel has an incorrect width.");
-  ok(document.querySelector(".network-details-panel") &&
-     document.querySelector(".sidebar-toggle"),
-    "The details panel should at this point be visible.");
+    "The details panel has an incorrect width."
+  );
+  ok(
+    document.querySelector(".network-details-panel") &&
+      document.querySelector(".sidebar-toggle"),
+    "The details panel should at this point be visible."
+  );
 
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".sidebar-toggle"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".sidebar-toggle")
+  );
 
-  ok(!document.querySelector(".network-details-panel") &&
-     !document.querySelector(".sidebar-toggle"),
-    "The details panel should not be visible after collapsing.");
+  ok(
+    !document.querySelector(".network-details-panel") &&
+      !document.querySelector(".sidebar-toggle"),
+    "The details panel should not be visible after collapsing."
+  );
 
   store.dispatch(Actions.toggleNetworkDetails());
 
-  is(~~(document.querySelector(".network-details-panel").clientWidth),
+  is(
+    ~~document.querySelector(".network-details-panel").clientWidth,
     Prefs.networkDetailsWidth,
-    "The details panel has an incorrect width after uncollapsing.");
-  ok(document.querySelector(".network-details-panel") &&
-     document.querySelector(".sidebar-toggle"),
-    "The details panel should be visible again after uncollapsing.");
+    "The details panel has an incorrect width after uncollapsing."
+  );
+  ok(
+    document.querySelector(".network-details-panel") &&
+      document.querySelector(".sidebar-toggle"),
+    "The details panel should be visible again after uncollapsing."
+  );
 
   await teardown(monitor);
 });

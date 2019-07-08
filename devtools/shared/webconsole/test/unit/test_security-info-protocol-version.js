@@ -22,19 +22,23 @@ const TEST_CASES = [
     description: "TLS_VERSION_1",
     input: 1,
     expected: "TLSv1",
-  }, {
+  },
+  {
     description: "TLS_VERSION_1.1",
     input: 2,
     expected: "TLSv1.1",
-  }, {
+  },
+  {
     description: "TLS_VERSION_1.2",
     input: 3,
     expected: "TLSv1.2",
-  }, {
+  },
+  {
     description: "TLS_VERSION_1.3",
     input: 4,
     expected: "TLSv1.3",
-  }, {
+  },
+  {
     description: "invalid version",
     input: -1,
     expected: "Unknown",
@@ -44,10 +48,13 @@ const TEST_CASES = [
 function run_test() {
   info("Testing NetworkHelper.formatSecurityProtocol.");
 
-  for (const {description, input, expected} of TEST_CASES) {
+  for (const { description, input, expected } of TEST_CASES) {
     info("Testing " + description);
 
-    equal(NetworkHelper.formatSecurityProtocol(input), expected,
-      "Got the expected protocol string.");
+    equal(
+      NetworkHelper.formatSecurityProtocol(input),
+      expected,
+      "Got the expected protocol string."
+    );
   }
 }

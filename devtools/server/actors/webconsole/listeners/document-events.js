@@ -27,7 +27,11 @@ exports.DocumentEventsListener = DocumentEventsListener;
 
 DocumentEventsListener.prototype = {
   listen() {
-    EventEmitter.on(this.console.parentActor, "window-ready", this.onWindowReady);
+    EventEmitter.on(
+      this.console.parentActor,
+      "window-ready",
+      this.onWindowReady
+    );
     this.onWindowReady({ window: this.console.window, isTopLevel: true });
   },
 
@@ -44,7 +48,9 @@ DocumentEventsListener.prototype = {
 
     const { readyState } = window.document;
     if (readyState != "interactive" && readyState != "complete") {
-      window.addEventListener("DOMContentLoaded", this.onContentLoaded, { once: true });
+      window.addEventListener("DOMContentLoaded", this.onContentLoaded, {
+        once: true,
+      });
     } else {
       this.onContentLoaded({ target: window.document });
     }
@@ -94,7 +100,11 @@ DocumentEventsListener.prototype = {
   },
 
   destroy() {
-    EventEmitter.off(this.console.parentActor, "window-ready", this.onWindowReady);
+    EventEmitter.off(
+      this.console.parentActor,
+      "window-ready",
+      this.onWindowReady
+    );
 
     this.listener = null;
   },

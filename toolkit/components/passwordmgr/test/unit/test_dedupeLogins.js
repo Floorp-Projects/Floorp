@@ -84,7 +84,6 @@ const DOMAIN2_HTTPS_TO_HTTPS_U2_P2 = TestData.formLogin({
   username: "username two",
 });
 
-
 add_task(function test_dedupeLogins() {
   // [description, expectedOutput, dedupe arg. 0, dedupe arg 1, ...]
   let testcases = [
@@ -164,12 +163,17 @@ add_task(function test_dedupeLogins() {
   }
 });
 
-
 add_task(async function test_dedupeLogins_resolveBy() {
-  Assert.ok(DOMAIN1_HTTP_TO_HTTP_U1_P1.timeLastUsed > DOMAIN1_HTTPS_TO_HTTP_U1_P1.timeLastUsed,
-            "Sanity check timeLastUsed difference");
-  Assert.ok(DOMAIN1_HTTP_TO_HTTP_U1_P1.timePasswordChanged < DOMAIN1_HTTPS_TO_HTTP_U1_P1.timePasswordChanged,
-            "Sanity check timePasswordChanged difference");
+  Assert.ok(
+    DOMAIN1_HTTP_TO_HTTP_U1_P1.timeLastUsed >
+      DOMAIN1_HTTPS_TO_HTTP_U1_P1.timeLastUsed,
+    "Sanity check timeLastUsed difference"
+  );
+  Assert.ok(
+    DOMAIN1_HTTP_TO_HTTP_U1_P1.timePasswordChanged <
+      DOMAIN1_HTTPS_TO_HTTP_U1_P1.timePasswordChanged,
+    "Sanity check timePasswordChanged difference"
+  );
 
   let testcases = [
     [
@@ -307,7 +311,11 @@ add_task(async function test_dedupeLogins_resolveBy() {
     [
       "resolveBy subdomain, same subdomain, different ports",
       [DOMAIN1_HTTPS_LOGIN],
-      [DOMAIN1_HTTPS_LOGIN, DOMAIN1_HTTPS_NONSTANDARD_PORT1, DOMAIN1_HTTPS_NONSTANDARD_PORT2],
+      [
+        DOMAIN1_HTTPS_LOGIN,
+        DOMAIN1_HTTPS_NONSTANDARD_PORT1,
+        DOMAIN1_HTTPS_NONSTANDARD_PORT2,
+      ],
       undefined,
       ["subdomain"],
       DOMAIN1_HTTPS_LOGIN.origin,
@@ -315,7 +323,11 @@ add_task(async function test_dedupeLogins_resolveBy() {
     [
       "resolveBy subdomain, same subdomain, different schemes, different ports",
       [DOMAIN1_HTTPS_LOGIN],
-      [DOMAIN1_HTTPS_LOGIN, DOMAIN1_HTTPS_NONSTANDARD_PORT1, DOMAIN1_HTTPS_NONSTANDARD_PORT2],
+      [
+        DOMAIN1_HTTPS_LOGIN,
+        DOMAIN1_HTTPS_NONSTANDARD_PORT1,
+        DOMAIN1_HTTPS_NONSTANDARD_PORT2,
+      ],
       undefined,
       ["subdomain"],
       DOMAIN1_HTTPS_AUTH.origin,
@@ -325,7 +337,12 @@ add_task(async function test_dedupeLogins_resolveBy() {
       // expected:
       [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN2_HTTPS_TO_HTTPS_U2_P2],
       // logins:
-      [DOMAIN1_HTTP_TO_HTTP_U1_P1, DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN2_HTTP_TO_HTTP_U2_P2, DOMAIN2_HTTPS_TO_HTTPS_U2_P2],
+      [
+        DOMAIN1_HTTP_TO_HTTP_U1_P1,
+        DOMAIN1_HTTPS_TO_HTTPS_U1_P1,
+        DOMAIN2_HTTP_TO_HTTP_U2_P2,
+        DOMAIN2_HTTPS_TO_HTTPS_U2_P2,
+      ],
       // uniqueKeys:
       undefined,
       // resolveBy:
@@ -376,8 +393,12 @@ add_task(async function test_dedupeLogins_preferredOriginMissing() {
   for (let tc of testcases) {
     let description = tc.shift();
     let expectedException = tc.shift();
-    Assert.throws(() => {
-      LoginHelper.dedupeLogins(...tc);
-    }, expectedException, `Check: ${description}`);
+    Assert.throws(
+      () => {
+        LoginHelper.dedupeLogins(...tc);
+      },
+      expectedException,
+      `Check: ${description}`
+    );
   }
 });

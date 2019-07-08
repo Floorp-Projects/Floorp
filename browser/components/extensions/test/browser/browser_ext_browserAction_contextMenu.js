@@ -2,18 +2,28 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {TelemetryTestUtils} = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "ABUSE_REPORT_ENABLED",
-                                      "extensions.abuseReport.enabled", false);
-XPCOMUtils.defineLazyPreferenceGetter(this, "HTML_ABOUTADDONS_ENABLED",
-                                      "extensions.htmlaboutaddons.enabled", false);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "ABUSE_REPORT_ENABLED",
+  "extensions.abuseReport.enabled",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "HTML_ABOUTADDONS_ENABLED",
+  "extensions.htmlaboutaddons.enabled",
+  false
+);
 
 let extData = {
   manifest: {
-    "permissions": ["contextMenus"],
-    "browser_action": {
-      "default_popup": "popup.html",
+    permissions: ["contextMenus"],
+    browser_action: {
+      default_popup: "popup.html",
     },
   },
   useAddonManager: "temporary",
@@ -55,7 +65,7 @@ const type = "extension";
 
 function assertTelemetryMatches(events) {
   events = events.map(([method, object, value, extra]) => {
-    return {method, object, value, extra};
+    return { method, object, value, extra };
   });
   TelemetryTestUtils.assertEvents(events, {
     category: "addonsManager",
@@ -75,7 +85,10 @@ add_task(async function browseraction_popup_contextmenu() {
   await clickBrowserAction(extension, window);
 
   let contentAreaContextMenu = await openContextMenuInPopup(extension);
-  let item = contentAreaContextMenu.getElementsByAttribute("label", "Click me!");
+  let item = contentAreaContextMenu.getElementsByAttribute(
+    "label",
+    "Click me!"
+  );
   is(item.length, 1, "contextMenu item for page was found");
   await closeContextMenu(contentAreaContextMenu);
 
@@ -118,7 +131,10 @@ add_task(async function browseraction_popup_image_contextmenu() {
 
   await clickBrowserAction(extension);
 
-  let contentAreaContextMenu = await openContextMenuInPopup(extension, "#testimg");
+  let contentAreaContextMenu = await openContextMenuInPopup(
+    extension,
+    "#testimg"
+  );
 
   let item = contentAreaContextMenu.querySelector("#context-viewimageinfo");
   ok(!item.hidden);
@@ -151,12 +167,12 @@ add_task(async function browseraction_contextmenu_manage_extension() {
   let buttonId = `${makeWidgetId(id)}-browser-action`;
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "applications": {
-        "gecko": {id},
+      applications: {
+        gecko: { id },
       },
-      "browser_action": {},
-      "options_ui": {
-        "page": "options.html",
+      browser_action: {},
+      options_ui: {
+        page: "options.html",
       },
     },
     useAddonManager: "temporary",
@@ -167,19 +183,39 @@ add_task(async function browseraction_contextmenu_manage_extension() {
   });
 
   function checkVisibility(menu, visible) {
-    let removeExtension = menu.querySelector(".customize-context-removeExtension");
-    let manageExtension = menu.querySelector(".customize-context-manageExtension");
-    let reportExtension = menu.querySelector(".customize-context-reportExtension");
+    let removeExtension = menu.querySelector(
+      ".customize-context-removeExtension"
+    );
+    let manageExtension = menu.querySelector(
+      ".customize-context-manageExtension"
+    );
+    let reportExtension = menu.querySelector(
+      ".customize-context-reportExtension"
+    );
     let separator = reportExtension.nextElementSibling;
 
     info(`Check visibility: ${visible}`);
     let expected = visible ? "visible" : "hidden";
-    is(removeExtension.hidden, !visible, `Remove Extension should be ${expected}`);
-    is(manageExtension.hidden, !visible, `Manage Extension should be ${expected}`);
-    is(reportExtension.hidden,
-       !ABUSE_REPORT_ENABLED || !HTML_ABOUTADDONS_ENABLED || !visible,
-       `Report Extension should be ${expected}`);
-    is(separator.hidden, !visible, `Separator after Manage Extension should be ${expected}`);
+    is(
+      removeExtension.hidden,
+      !visible,
+      `Remove Extension should be ${expected}`
+    );
+    is(
+      manageExtension.hidden,
+      !visible,
+      `Manage Extension should be ${expected}`
+    );
+    is(
+      reportExtension.hidden,
+      !ABUSE_REPORT_ENABLED || !HTML_ABOUTADDONS_ENABLED || !visible,
+      `Report Extension should be ${expected}`
+    );
+    is(
+      separator.hidden,
+      !visible,
+      `Separator after Manage Extension should be ${expected}`
+    );
   }
 
   async function testContextMenu(menuId, customizing) {
@@ -188,15 +224,23 @@ add_task(async function browseraction_contextmenu_manage_extension() {
     await checkVisibility(menu, true);
 
     info(`Choosing 'Manage Extension' in ${menuId} should load options`);
-    let addonManagerPromise = BrowserTestUtils.waitForNewTab(win.gBrowser, "about:addons", true);
-    let manageExtension = menu.querySelector(".customize-context-manageExtension");
+    let addonManagerPromise = BrowserTestUtils.waitForNewTab(
+      win.gBrowser,
+      "about:addons",
+      true
+    );
+    let manageExtension = menu.querySelector(
+      ".customize-context-manageExtension"
+    );
     await closeChromeContextMenu(menuId, manageExtension, win);
     let managerWindow = (await addonManagerPromise).linkedBrowser.contentWindow;
     if (managerWindow.useHtmlViews) {
       // Check the UI to make sure that the correct view is loaded.
-      is(managerWindow.gViewController.currentViewId,
-         `addons://detail/${encodeURIComponent(id)}`,
-         "Expected extension details view in about:addons");
+      is(
+        managerWindow.gViewController.currentViewId,
+        `addons://detail/${encodeURIComponent(id)}`,
+        "Expected extension details view in about:addons"
+      );
       // In HTML about:addons, the default view does not show the inline
       // options browser, so we should not receive an "options-loaded" event.
       // (if we do, the test will fail due to the unexpected message).
@@ -206,11 +250,16 @@ add_task(async function browseraction_contextmenu_manage_extension() {
       await extension.awaitMessage("options-loaded");
     }
 
-    info(`Remove the opened tab, and await customize mode to be restored if necessary`);
+    info(
+      `Remove the opened tab, and await customize mode to be restored if necessary`
+    );
     let tab = win.gBrowser.selectedTab;
     is(tab.linkedBrowser.currentURI.spec, "about:addons");
     if (customizing) {
-      let customizationReady = BrowserTestUtils.waitForEvent(win.gNavToolbox, "customizationready");
+      let customizationReady = BrowserTestUtils.waitForEvent(
+        win.gNavToolbox,
+        "customizationready"
+      );
       win.gBrowser.removeTab(tab);
       await customizationReady;
     } else {
@@ -223,13 +272,19 @@ add_task(async function browseraction_contextmenu_manage_extension() {
   async function main(customizing) {
     if (customizing) {
       info("Enter customize mode");
-      let customizationReady = BrowserTestUtils.waitForEvent(win.gNavToolbox, "customizationready");
+      let customizationReady = BrowserTestUtils.waitForEvent(
+        win.gNavToolbox,
+        "customizationready"
+      );
       win.gCustomizeMode.enter();
       await customizationReady;
     }
 
     info("Test toolbar context menu in browserAction");
-    let toolbarCtxMenu = await testContextMenu("toolbar-context-menu", customizing);
+    let toolbarCtxMenu = await testContextMenu(
+      "toolbar-context-menu",
+      customizing
+    );
 
     info("Check toolbar context menu in another button");
     let otherButtonId = "home-button";
@@ -243,8 +298,14 @@ add_task(async function browseraction_contextmenu_manage_extension() {
     toolbarCtxMenu.hidePopup();
 
     info("Pin the browserAction and another button to the overflow menu");
-    CustomizableUI.addWidgetToArea(buttonId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
-    CustomizableUI.addWidgetToArea(otherButtonId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+    CustomizableUI.addWidgetToArea(
+      buttonId,
+      CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+    );
+    CustomizableUI.addWidgetToArea(
+      otherButtonId,
+      CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+    );
 
     info("Wait until the overflow menu is ready");
     let overflowButton = win.document.getElementById("nav-bar-overflow-button");
@@ -260,7 +321,11 @@ add_task(async function browseraction_contextmenu_manage_extension() {
     }
 
     info("Check overflow menu context menu in another button");
-    let overflowMenuCtxMenu = await openContextMenu("customizationPanelItemContextMenu", otherButtonId, win);
+    let overflowMenuCtxMenu = await openContextMenu(
+      "customizationPanelItemContextMenu",
+      otherButtonId,
+      win
+    );
     checkVisibility(overflowMenuCtxMenu, false);
     overflowMenuCtxMenu.hidePopup();
 
@@ -273,7 +338,10 @@ add_task(async function browseraction_contextmenu_manage_extension() {
 
     if (customizing) {
       info("Exit customize mode");
-      let afterCustomization = BrowserTestUtils.waitForEvent(win.gNavToolbox, "aftercustomization");
+      let afterCustomization = BrowserTestUtils.waitForEvent(
+        win.gNavToolbox,
+        "aftercustomization"
+      );
       win.gCustomizeMode.exit();
       await afterCustomization;
     }
@@ -281,25 +349,32 @@ add_task(async function browseraction_contextmenu_manage_extension() {
 
   await extension.startup();
 
-  info("Add a dummy tab to prevent about:addons from being loaded in the initial about:blank tab");
-  let dummyTab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "http://example.com", true, true);
+  info(
+    "Add a dummy tab to prevent about:addons from being loaded in the initial about:blank tab"
+  );
+  let dummyTab = await BrowserTestUtils.openNewForegroundTab(
+    win.gBrowser,
+    "http://example.com",
+    true,
+    true
+  );
 
   info("Run tests in normal mode");
   await main(false);
   assertTelemetryMatches([
-    ["action", "browserAction", null, {action: "manage", addonId: id}],
-    ["view", "aboutAddons", "detail", {addonId: id, type}],
-    ["action", "browserAction", null, {action: "manage", addonId: id}],
-    ["view", "aboutAddons", "detail", {addonId: id, type}],
+    ["action", "browserAction", null, { action: "manage", addonId: id }],
+    ["view", "aboutAddons", "detail", { addonId: id, type }],
+    ["action", "browserAction", null, { action: "manage", addonId: id }],
+    ["view", "aboutAddons", "detail", { addonId: id, type }],
   ]);
 
   info("Run tests in customize mode");
   await main(true);
   assertTelemetryMatches([
-    ["action", "browserAction", null, {action: "manage", addonId: id}],
-    ["view", "aboutAddons", "detail", {addonId: id, type}],
-    ["action", "browserAction", null, {action: "manage", addonId: id}],
-    ["view", "aboutAddons", "detail", {addonId: id, type}],
+    ["action", "browserAction", null, { action: "manage", addonId: id }],
+    ["view", "aboutAddons", "detail", { addonId: id, type }],
+    ["action", "browserAction", null, { action: "manage", addonId: id }],
+    ["view", "aboutAddons", "detail", { addonId: id, type }],
   ]);
 
   info("Close the dummy tab and finish");
@@ -310,11 +385,17 @@ add_task(async function browseraction_contextmenu_manage_extension() {
 });
 
 async function runTestContextMenu({
-  buttonId, customizing, testContextMenu, win,
+  buttonId,
+  customizing,
+  testContextMenu,
+  win,
 }) {
   if (customizing) {
     info("Enter customize mode");
-    let customizationReady = BrowserTestUtils.waitForEvent(win.gNavToolbox, "customizationready");
+    let customizationReady = BrowserTestUtils.waitForEvent(
+      win.gNavToolbox,
+      "customizationready"
+    );
     win.gCustomizeMode.enter();
     await customizationReady;
   }
@@ -323,7 +404,10 @@ async function runTestContextMenu({
   await testContextMenu("toolbar-context-menu", customizing);
 
   info("Pin the browserAction and another button to the overflow menu");
-  CustomizableUI.addWidgetToArea(buttonId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    buttonId,
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
 
   info("Wait until the overflow menu is ready");
   let overflowButton = win.document.getElementById("nav-bar-overflow-button");
@@ -346,7 +430,10 @@ async function runTestContextMenu({
 
   if (customizing) {
     info("Exit customize mode");
-    let afterCustomization = BrowserTestUtils.waitForEvent(win.gNavToolbox, "aftercustomization");
+    let afterCustomization = BrowserTestUtils.waitForEvent(
+      win.gNavToolbox,
+      "aftercustomization"
+    );
     win.gCustomizeMode.exit();
     await afterCustomization;
   }
@@ -362,16 +449,17 @@ add_task(async function browseraction_contextmenu_remove_extension() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name,
-      "applications": {
-        "gecko": {id},
+      applications: {
+        gecko: { id },
       },
-      "browser_action": {},
+      browser_action: {},
     },
     useAddonManager: "temporary",
   });
-  let brand = Services.strings.createBundle("chrome://branding/locale/brand.properties")
+  let brand = Services.strings
+    .createBundle("chrome://branding/locale/brand.properties")
     .GetStringFromName("brandShorterName");
-  let {prompt} = Services;
+  let { prompt } = Services;
   let promptService = {
     _response: 1,
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService]),
@@ -390,7 +478,9 @@ add_task(async function browseraction_contextmenu_remove_extension() {
     let menu = await openContextMenu(menuId, buttonId, win);
 
     info(`Choosing 'Remove Extension' in ${menuId} should show confirm dialog`);
-    let removeExtension = menu.querySelector(".customize-context-removeExtension");
+    let removeExtension = menu.querySelector(
+      ".customize-context-removeExtension"
+    );
     await closeChromeContextMenu(menuId, removeExtension, win);
     is(promptService._confirmExArgs[1], `Remove ${name}`);
     is(promptService._confirmExArgs[2], `Remove ${name} from ${brand}?`);
@@ -401,26 +491,56 @@ add_task(async function browseraction_contextmenu_remove_extension() {
   await extension.startup();
 
   info("Run tests in normal mode");
-  await runTestContextMenu({buttonId, customizing: false, testContextMenu, win});
+  await runTestContextMenu({
+    buttonId,
+    customizing: false,
+    testContextMenu,
+    win,
+  });
 
   assertTelemetryMatches([
-    ["action", "browserAction", "cancelled", {action: "uninstall", addonId: id}],
-    ["action", "browserAction", "cancelled", {action: "uninstall", addonId: id}],
+    [
+      "action",
+      "browserAction",
+      "cancelled",
+      { action: "uninstall", addonId: id },
+    ],
+    [
+      "action",
+      "browserAction",
+      "cancelled",
+      { action: "uninstall", addonId: id },
+    ],
   ]);
 
   info("Run tests in customize mode");
-  await runTestContextMenu({buttonId, customizing: true, testContextMenu, win});
+  await runTestContextMenu({
+    buttonId,
+    customizing: true,
+    testContextMenu,
+    win,
+  });
 
   assertTelemetryMatches([
-    ["action", "browserAction", "cancelled", {action: "uninstall", addonId: id}],
-    ["action", "browserAction", "cancelled", {action: "uninstall", addonId: id}],
+    [
+      "action",
+      "browserAction",
+      "cancelled",
+      { action: "uninstall", addonId: id },
+    ],
+    [
+      "action",
+      "browserAction",
+      "cancelled",
+      { action: "uninstall", addonId: id },
+    ],
   ]);
 
   let addon = await AddonManager.getAddonByID(id);
   ok(addon, "Addon is still installed");
 
   promptService._response = 0;
-  let uninstalled = new Promise((resolve) => {
+  let uninstalled = new Promise(resolve => {
     AddonManager.addAddonListener({
       onUninstalled(addon) {
         is(addon.id, id, "The expected add-on has been uninstalled");
@@ -433,7 +553,12 @@ add_task(async function browseraction_contextmenu_remove_extension() {
   await uninstalled;
 
   assertTelemetryMatches([
-    ["action", "browserAction", "accepted", {action: "uninstall", addonId: id}],
+    [
+      "action",
+      "browserAction",
+      "accepted",
+      { action: "uninstall", addonId: id },
+    ],
   ]);
 
   addon = await AddonManager.getAddonByID(id);
@@ -464,7 +589,7 @@ add_task(async function browseraction_contextmenu_report_extension() {
       name,
       author: "Bad author",
       applications: {
-        gecko: {id},
+        gecko: { id },
       },
       browser_action: {},
     },
@@ -476,35 +601,51 @@ add_task(async function browseraction_contextmenu_report_extension() {
     let menu = await openContextMenu(menuId, buttonId, win);
 
     info(`Choosing 'Report Extension' in ${menuId} should show confirm dialog`);
-    let reportExtension = menu.querySelector(".customize-context-reportExtension");
+    let reportExtension = menu.querySelector(
+      ".customize-context-reportExtension"
+    );
     ok(!reportExtension.hidden, "Report extension should be visibile");
 
     // When running in customizing mode "about:addons" will load in a new tab,
     // otherwise it will replace the existing blank tab.
-    const onceAboutAddonsTab = customizing ?
-      BrowserTestUtils.waitForNewTab(win.gBrowser, "about:addons") :
-      BrowserTestUtils.waitForCondition(() => {
-        return win.gBrowser.currentURI.spec === "about:addons";
-      }, "Wait an about:addons tab to be opened");
+    const onceAboutAddonsTab = customizing
+      ? BrowserTestUtils.waitForNewTab(win.gBrowser, "about:addons")
+      : BrowserTestUtils.waitForCondition(() => {
+          return win.gBrowser.currentURI.spec === "about:addons";
+        }, "Wait an about:addons tab to be opened");
 
     await closeChromeContextMenu(menuId, reportExtension, win);
     await onceAboutAddonsTab;
 
     const browser = win.gBrowser.selectedBrowser;
-    is(browser.currentURI.spec, "about:addons",
-       "Got about:addons tab selected");
+    is(
+      browser.currentURI.spec,
+      "about:addons",
+      "Got about:addons tab selected"
+    );
 
     await BrowserTestUtils.browserLoaded(browser);
 
     const abuseReportFrame = await BrowserTestUtils.waitForCondition(() => {
-      return browser.contentDocument.querySelector("addon-abuse-report-xulframe");
+      return browser.contentDocument.querySelector(
+        "addon-abuse-report-xulframe"
+      );
     }, "Wait the abuse report frame");
 
-    ok(!abuseReportFrame.hidden, "Abuse report frame has the expected visibility");
-    is(abuseReportFrame.report.addon.id, id,
-       "Abuse report frame has the expected addon id");
-    is(abuseReportFrame.report.reportEntryPoint, "toolbar_context_menu",
-       "Abuse report frame has the expected reportEntryPoint");
+    ok(
+      !abuseReportFrame.hidden,
+      "Abuse report frame has the expected visibility"
+    );
+    is(
+      abuseReportFrame.report.addon.id,
+      id,
+      "Abuse report frame has the expected addon id"
+    );
+    is(
+      abuseReportFrame.report.reportEntryPoint,
+      "toolbar_context_menu",
+      "Abuse report frame has the expected reportEntryPoint"
+    );
 
     // Close the new about:addons tab when running in customize mode,
     // or cancel the abuse report if the about:addons page has been
@@ -523,10 +664,20 @@ add_task(async function browseraction_contextmenu_report_extension() {
   await extension.startup();
 
   info("Run tests in normal mode");
-  await runTestContextMenu({buttonId, customizing: false, testContextMenu, win});
+  await runTestContextMenu({
+    buttonId,
+    customizing: false,
+    testContextMenu,
+    win,
+  });
 
   info("Run tests in customize mode");
-  await runTestContextMenu({buttonId, customizing: true, testContextMenu, win});
+  await runTestContextMenu({
+    buttonId,
+    customizing: true,
+    testContextMenu,
+    win,
+  });
 
   await extension.unload();
 

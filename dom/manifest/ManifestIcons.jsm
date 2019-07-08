@@ -1,14 +1,16 @@
 "use strict";
 
-const {PromiseMessage} = ChromeUtils.import("resource://gre/modules/PromiseMessage.jsm");
+const { PromiseMessage } = ChromeUtils.import(
+  "resource://gre/modules/PromiseMessage.jsm"
+);
 
 var ManifestIcons = {
-
   async browserFetchIcon(aBrowser, manifest, iconSize) {
     const msgKey = "DOM:WebManifest:fetchIcon";
     const mm = aBrowser.messageManager;
-    const {data: {success, result}} =
-      await PromiseMessage.send(mm, msgKey, {manifest, iconSize});
+    const {
+      data: { success, result },
+    } = await PromiseMessage.send(mm, msgKey, { manifest, iconSize });
     if (!success) {
       throw result;
     }
@@ -34,9 +36,9 @@ function parseIconSize(size) {
 function toIconArray(icons) {
   const iconBySize = [];
   icons.forEach(icon => {
-    const sizes = ("sizes" in icon) ? icon.sizes : "";
+    const sizes = "sizes" in icon ? icon.sizes : "";
     sizes.split(" ").forEach(size => {
-      iconBySize.push({src: icon.src, size: parseIconSize(size)});
+      iconBySize.push({ src: icon.src, size: parseIconSize(size) });
     });
   });
   return iconBySize.sort((a, b) => a.size - b.size);
@@ -64,16 +66,20 @@ async function getIcon(aWindow, icons, expectedSize) {
 
 async function fetchIcon(aWindow, src) {
   const iconURL = new aWindow.URL(src, aWindow.location);
-  const request = new aWindow.Request(iconURL, {mode: "cors"});
+  const request = new aWindow.Request(iconURL, { mode: "cors" });
   request.overrideContentPolicyType(Ci.nsIContentPolicy.TYPE_IMAGE);
-  return aWindow.fetch(request)
+  return aWindow
+    .fetch(request)
     .then(response => response.blob())
-    .then(blob => new Promise((resolve, reject) => {
-      var reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    }));
+    .then(
+      blob =>
+        new Promise((resolve, reject) => {
+          var reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        })
+    );
 }
 
 var EXPORTED_SYMBOLS = ["ManifestIcons"]; // jshint ignore:line

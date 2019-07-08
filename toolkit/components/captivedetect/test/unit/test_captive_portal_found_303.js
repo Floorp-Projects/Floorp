@@ -67,7 +67,8 @@ function test_portal_found() {
 function run_test() {
   gRedirectServer = new HttpServer();
   gRedirectServer.start(-1);
-  gRedirectServerURL = "http://localhost:" + gRedirectServer.identity.primaryPort;
+  gRedirectServerURL =
+    "http://localhost:" + gRedirectServer.identity.primaryPort;
 
   run_captivedetect_test(xhr_handler, fakeUIResponse, test_portal_found);
 }

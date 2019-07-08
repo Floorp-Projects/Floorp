@@ -6,6 +6,9 @@
 # received from the raptor control server
 from __future__ import absolute_import
 
+import json
+import os
+
 from logger.logger import RaptorLogger
 from output import Output
 
@@ -15,7 +18,8 @@ LOG = RaptorLogger(component='raptor-results-handler')
 class RaptorResultsHandler():
     """Handle Raptor test results"""
 
-    def __init__(self):
+    def __init__(self, config=None):
+        self.config = config
         self.results = []
         self.page_timeout_list = []
         self.images = []
@@ -71,6 +75,70 @@ class RaptorResultsHandler():
             self.supporting_data = []
         self.supporting_data.append(supporting_data)
 
+    def _get_expected_perfherder(self, output):
+        expected_perfherder = 1
+
+        def is_resource_test():
+            if self.config.get('power_test', None) or \
+               self.config.get('cpu_test', None) or \
+               self.config.get('memory_test', None):
+                return True
+            return False
+
+        if not is_resource_test() and \
+           (output.summarized_supporting_data or output.summarized_results):
+            data = output.summarized_supporting_data
+            if not data:
+                data = [output.summarized_results]
+
+            for next_data_set in data:
+                data_type = next_data_set['suites'][0]['type']
+                if data_type == 'scenario':
+                    return None
+
+        if self.config.get('power_test', None):
+            expected_perfherder += 1
+        if self.config.get('memory_test', None):
+            expected_perfherder += 1
+        if self.config.get('cpu_test', None):
+            expected_perfherder += 1
+
+        return expected_perfherder
+
+    def _validate_treeherder_data(self, output, output_perfdata):
+        # late import is required, because install is done in create_virtualenv
+        import jsonschema
+
+        expected_perfherder = self._get_expected_perfherder(output)
+        if expected_perfherder is None:
+            LOG.info(
+                "Skipping PERFHERDER_DATA check "
+                "because no perfherder data output is expected"
+            )
+            return True
+        elif output_perfdata != expected_perfherder:
+            LOG.critical("PERFHERDER_DATA was seen %d times, expected %d."
+                         % (output_perfdata, expected_perfherder))
+            return False
+
+        external_tools_path = os.environ['EXTERNALTOOLSPATH']
+        schema_path = os.path.join(external_tools_path,
+                                   'performance-artifact-schema.json')
+        LOG.info("Validating PERFHERDER_DATA against %s" % schema_path)
+        try:
+            with open(schema_path) as f:
+                schema = json.load(f)
+            if output.summarized_results:
+                data = output.summarized_results
+            else:
+                data = output.summarized_supporting_data[0]
+            jsonschema.validate(data, schema)
+        except Exception as e:
+            LOG.exception("Error while validating PERFHERDER_DATA")
+            LOG.info(str(e))
+            return False
+        return True
+
     def summarize_and_output(self, test_config, test_names):
         # summarize the result data, write to file and output PERFHERDER_DATA
         LOG.info("summarizing raptor test results")
@@ -81,10 +149,18 @@ class RaptorResultsHandler():
         output.combine_browser_cycles()
         output.summarize_screenshots(self.images)
         # only dump out supporting data (i.e. power) if actual Raptor test completed
+        out_sup_perfdata = 0
         if self.supporting_data is not None and len(self.results) != 0:
             output.summarize_supporting_data()
-            output.output_supporting_data(test_names)
-        return output.output(test_names)
+            res, out_sup_perfdata = output.output_supporting_data(test_names)
+        res, out_perfdata = output.output(test_names)
+
+        if not self.config['gecko_profile']:
+            # res will remain True if no problems are encountered
+            # during schema validation and perferder_data counting
+            res = self._validate_treeherder_data(output, out_sup_perfdata + out_perfdata)
+
+        return res
 
 
 class RaptorTestResult():

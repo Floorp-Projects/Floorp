@@ -19,8 +19,8 @@ function Spinner(props, context) {
 
 {
   const ITEM_HEIGHT = 2.5,
-        VIEWPORT_SIZE = 7,
-        VIEWPORT_COUNT = 5;
+    VIEWPORT_SIZE = 7,
+    VIEWPORT_COUNT = 5;
 
   Spinner.prototype = {
     /**
@@ -40,21 +40,31 @@ function Spinner(props, context) {
      *         }
      */
     _init(props) {
-      const { id, setValue, getDisplayString, hideButtons, rootFontSize = 10 } = props;
+      const {
+        id,
+        setValue,
+        getDisplayString,
+        hideButtons,
+        rootFontSize = 10,
+      } = props;
 
       const spinnerTemplate = document.getElementById("spinner-template");
       const spinnerElement = document.importNode(spinnerTemplate.content, true);
 
       // Make sure viewportSize is an odd number because we want to have the selected
       // item in the center. If it's an even number, use the default size instead.
-      const viewportSize = props.viewportSize % 2 ? props.viewportSize : VIEWPORT_SIZE;
+      const viewportSize =
+        props.viewportSize % 2 ? props.viewportSize : VIEWPORT_SIZE;
 
       this.state = {
         items: [],
         isScrolling: false,
       };
       this.props = {
-        setValue, getDisplayString, viewportSize, rootFontSize,
+        setValue,
+        getDisplayString,
+        viewportSize,
+        rootFontSize,
         // We can assume that the viewportSize is an odd number. Calculate how many
         // items we need to insert on top of the spinner so that the selected is at
         // the center. Ex: if viewportSize is 5, we need 2 items on top.
@@ -68,7 +78,7 @@ function Spinner(props, context) {
         itemsViewElements: [],
       };
 
-      this.elements.spinner.style.height = (ITEM_HEIGHT * viewportSize) + "rem";
+      this.elements.spinner.style.height = ITEM_HEIGHT * viewportSize + "rem";
 
       if (id) {
         this.elements.container.id = id;
@@ -97,7 +107,13 @@ function Spinner(props, context) {
      */
     setState(newState) {
       const { value, items } = this.state;
-      const { value: newValue, items: newItems, isValueSet, isInvalid, smoothScroll = true } = newState;
+      const {
+        value: newValue,
+        items: newItems,
+        isValueSet,
+        isInvalid,
+        smoothScroll = true,
+      } = newState;
 
       if (this._isArrayDiff(newItems, items)) {
         this.state = Object.assign(this.state, newState);
@@ -145,8 +161,10 @@ function Spinner(props, context) {
       if (items.length >= viewportSize && isInfiniteScroll) {
         // If the scroll position is near the top or bottom, jump back to the middle
         // so user can keep scrolling up or down.
-        if (this.state.index < viewportSize ||
-            this.state.index > itemsView.length - viewportSize) {
+        if (
+          this.state.index < viewportSize ||
+          this.state.index > itemsView.length - viewportSize
+        ) {
           this._scrollTo(this.state.value, true);
         }
       }
@@ -178,7 +196,8 @@ function Spinner(props, context) {
         // of items to act as buffer: one for the top and one for the bottom.
         // But if the number of items is small ( < viewportSize * viewport count)
         // we should add more sets.
-        let count = Math.ceil(viewportSize * VIEWPORT_COUNT / items.length) * 2;
+        let count =
+          Math.ceil((viewportSize * VIEWPORT_COUNT) / items.length) * 2;
         for (let i = 0; i < count; i += 1) {
           itemsView.push(...items);
         }
@@ -188,7 +207,10 @@ function Spinner(props, context) {
       // nodes based on how big itemsView is.
       this._prepareNodes(itemsView.length, this.elements.spinner);
       // Once DOM nodes are ready, set display strings using textContent
-      this._setDisplayStringAndClass(itemsView, this.elements.itemsViewElements);
+      this._setDisplayStringAndClass(
+        itemsView,
+        this.elements.itemsViewElements
+      );
 
       this.state.itemsView = itemsView;
     },
@@ -231,7 +253,7 @@ function Spinner(props, context) {
       }
 
       parent.lastChild.style.marginBottom =
-        (ITEM_HEIGHT * this.props.viewportTopOffset) + "rem";
+        ITEM_HEIGHT * this.props.viewportTopOffset + "rem";
     },
 
     /**
@@ -315,8 +337,13 @@ function Spinner(props, context) {
           if (event.target.parentNode == spinner) {
             // Check if user clicks or drags, scroll to the item if clicked,
             // otherwise get the current index and smooth scroll there.
-            if (event.layerX == mouseState.layerX && event.layerY == mouseState.layerY) {
-              const newIndex = this._getIndexByOffset(event.target.offsetTop) - viewportTopOffset;
+            if (
+              event.layerX == mouseState.layerX &&
+              event.layerY == mouseState.layerY
+            ) {
+              const newIndex =
+                this._getIndexByOffset(event.target.offsetTop) -
+                viewportTopOffset;
               if (index == newIndex) {
                 // Set value manually if the clicked element is already centered.
                 // This happens when the picker first opens, and user pick the
@@ -326,7 +353,9 @@ function Spinner(props, context) {
                 this._smoothScrollToIndex(newIndex);
               }
             } else {
-              this._smoothScrollToIndex(this._getIndexByOffset(spinner.scrollTop));
+              this._smoothScrollToIndex(
+                this._getIndexByOffset(spinner.scrollTop)
+              );
             }
             // Stop listening to dragging
             spinner.removeEventListener("mousemove", this, { passive: true });
@@ -337,7 +366,9 @@ function Spinner(props, context) {
         case "mouseleave": {
           if (event.target == spinner) {
             // Stop listening to drag event if mouse is out of the spinner
-            this._smoothScrollToIndex(this._getIndexByOffset(spinner.scrollTop));
+            this._smoothScrollToIndex(
+              this._getIndexByOffset(spinner.scrollTop)
+            );
             spinner.removeEventListener("mousemove", this, { passive: true });
             spinner.removeEventListener("mouseleave", this, { passive: true });
           }
@@ -373,9 +404,10 @@ function Spinner(props, context) {
       const { viewportTopOffset } = this.props;
 
       // If index doesn't exist, or centering is true, start from the middle point
-      let currentIndex = centering || (this.state.index == undefined) ?
-                         Math.round((itemsView.length - viewportTopOffset) / 2) :
-                         this.state.index;
+      let currentIndex =
+        centering || this.state.index == undefined
+          ? Math.round((itemsView.length - viewportTopOffset) / 2)
+          : this.state.index;
       let closestIndex = itemsView.length;
       let indexes = [];
       let diff = closestIndex;
@@ -398,7 +430,7 @@ function Spinner(props, context) {
         }
       });
 
-      return isValueFound ? (closestIndex - viewportTopOffset) : -1;
+      return isValueFound ? closestIndex - viewportTopOffset : -1;
     },
 
     /**
@@ -412,7 +444,8 @@ function Spinner(props, context) {
       // Do nothing if the value is not found
       if (index > -1) {
         this.state.index = index;
-        this.elements.spinner.scrollTop = this.state.index * ITEM_HEIGHT * this.props.rootFontSize;
+        this.elements.spinner.scrollTop =
+          this.state.index * ITEM_HEIGHT * this.props.rootFontSize;
       }
     },
 
@@ -439,7 +472,8 @@ function Spinner(props, context) {
       const element = this.elements.spinner.children[index];
       if (element) {
         element.scrollIntoView({
-          behavior: "smooth", block: "start",
+          behavior: "smooth",
+          block: "start",
         });
       }
     },

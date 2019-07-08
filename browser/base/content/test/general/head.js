@@ -1,13 +1,25 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
-  "resource://testing-common/PlacesTestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "BrowserTestUtils",
-  "resource://testing-common/BrowserTestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "TabCrashHandler",
-  "resource:///modules/ContentCrashHandlers.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserTestUtils",
+  "resource://testing-common/BrowserTestUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TabCrashHandler",
+  "resource:///modules/ContentCrashHandlers.jsm"
+);
 
 /**
  * Wait for a <notification> to be closed then call the specified callback.
@@ -25,7 +37,7 @@ function waitForNotificationClose(notification, cb) {
       }
     }
   });
-  observer.observe(notification.control.stack, {childList: true});
+  observer.observe(notification.control.stack, { childList: true });
 }
 
 function closeAllNotifications() {
@@ -55,22 +67,31 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
 }
 
 function openToolbarCustomizationUI(aCallback, aBrowserWin) {
-  if (!aBrowserWin)
+  if (!aBrowserWin) {
     aBrowserWin = window;
+  }
 
   aBrowserWin.gCustomizeMode.enter();
 
-  aBrowserWin.gNavToolbox.addEventListener("customizationready", function() {
-    executeSoon(function() {
-      aCallback(aBrowserWin);
-    });
-  }, {once: true});
+  aBrowserWin.gNavToolbox.addEventListener(
+    "customizationready",
+    function() {
+      executeSoon(function() {
+        aCallback(aBrowserWin);
+      });
+    },
+    { once: true }
+  );
 }
 
 function closeToolbarCustomizationUI(aCallback, aBrowserWin) {
-  aBrowserWin.gNavToolbox.addEventListener("aftercustomization", function() {
-    executeSoon(aCallback);
-  }, {once: true});
+  aBrowserWin.gNavToolbox.addEventListener(
+    "aftercustomization",
+    function() {
+      executeSoon(aCallback);
+    },
+    { once: true }
+  );
 
   aBrowserWin.gCustomizeMode.exit();
 }
@@ -95,7 +116,10 @@ function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
     }
     tries++;
   }, 100);
-  var moveOn = function() { clearInterval(interval); nextTest(); };
+  var moveOn = function() {
+    clearInterval(interval);
+    nextTest();
+  };
 }
 
 function promiseWaitForCondition(aConditionFn) {
@@ -104,8 +128,13 @@ function promiseWaitForCondition(aConditionFn) {
   });
 }
 
-function promiseWaitForEvent(object, eventName, capturing = false, chrome = false) {
-  return new Promise((resolve) => {
+function promiseWaitForEvent(
+  object,
+  eventName,
+  capturing = false,
+  chrome = false
+) {
+  return new Promise(resolve => {
     function listener(event) {
       info("Saw " + eventName);
       object.removeEventListener(eventName, listener, capturing, chrome);
@@ -129,7 +158,7 @@ function promiseWaitForEvent(object, eventName, capturing = false, chrome = fals
  * @rejects Never.
  */
 function promiseWaitForFocus(aWindow) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     waitForFocus(resolve, aWindow);
   });
 }
@@ -141,8 +170,9 @@ function getTestPlugin(aName) {
 
   // Find the test plugin
   for (var i = 0; i < tags.length; i++) {
-    if (tags[i].name == pluginName)
+    if (tags[i].name == pluginName) {
       return tags[i];
+    }
   }
   ok(false, "Unable to find plugin");
   return null;
@@ -161,20 +191,17 @@ function setTestPluginEnabledState(newEnabledState, pluginName) {
 }
 
 function pushPrefs(...aPrefs) {
-  return new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": aPrefs}, resolve);
-  });
+  return SpecialPowers.pushPrefEnv({ set: aPrefs });
 }
 
 function popPrefs() {
-  return new Promise(resolve => {
-    SpecialPowers.popPrefEnv(resolve);
-  });
+  return SpecialPowers.popPrefEnv();
 }
 
 function updateBlocklist(aCallback) {
-  var blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"]
-                          .getService(Ci.nsITimerCallback);
+  var blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"].getService(
+    Ci.nsITimerCallback
+  );
   var observer = function() {
     Services.obs.removeObserver(observer, "blocklist-updated");
     SimpleTest.executeSoon(aCallback);
@@ -185,14 +212,20 @@ function updateBlocklist(aCallback) {
 
 var _originalTestBlocklistURL = null;
 function setAndUpdateBlocklist(aURL, aCallback) {
-  if (!_originalTestBlocklistURL)
-    _originalTestBlocklistURL = Services.prefs.getCharPref("extensions.blocklist.url");
+  if (!_originalTestBlocklistURL) {
+    _originalTestBlocklistURL = Services.prefs.getCharPref(
+      "extensions.blocklist.url"
+    );
+  }
   Services.prefs.setCharPref("extensions.blocklist.url", aURL);
   updateBlocklist(aCallback);
 }
 
 function resetBlocklist() {
-  Services.prefs.setCharPref("extensions.blocklist.url", _originalTestBlocklistURL);
+  Services.prefs.setCharPref(
+    "extensions.blocklist.url",
+    _originalTestBlocklistURL
+  );
 }
 
 function promiseWindowClosed(win) {
@@ -213,9 +246,13 @@ function promiseOpenAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
         resolve(win);
       }, "browser-delayed-startup-finished");
     } else {
-      win.addEventListener("load", function() {
-        resolve(win);
-      }, {once: true});
+      win.addEventListener(
+        "load",
+        function() {
+          resolve(win);
+        },
+        { once: true }
+      );
     }
   });
 }
@@ -247,23 +284,31 @@ function promiseTabLoaded(aTab) {
 }
 
 var FullZoomHelper = {
-
-  selectTabAndWaitForLocationChange: function selectTabAndWaitForLocationChange(tab) {
-    if (!tab)
+  selectTabAndWaitForLocationChange: function selectTabAndWaitForLocationChange(
+    tab
+  ) {
+    if (!tab) {
       throw new Error("tab must be given.");
-    if (gBrowser.selectedTab == tab)
+    }
+    if (gBrowser.selectedTab == tab) {
       return Promise.resolve();
+    }
 
-    return Promise.all([BrowserTestUtils.switchTab(gBrowser, tab),
-                        this.waitForLocationChange()]);
+    return Promise.all([
+      BrowserTestUtils.switchTab(gBrowser, tab),
+      this.waitForLocationChange(),
+    ]);
   },
 
-  removeTabAndWaitForLocationChange: function removeTabAndWaitForLocationChange(tab) {
+  removeTabAndWaitForLocationChange: function removeTabAndWaitForLocationChange(
+    tab
+  ) {
     tab = tab || gBrowser.selectedTab;
     let selected = gBrowser.selectedTab == tab;
     gBrowser.removeTab(tab);
-    if (selected)
+    if (selected) {
       return this.waitForLocationChange();
+    }
     return Promise.resolve();
   },
 
@@ -283,14 +328,16 @@ var FullZoomHelper = {
 
       promiseTabLoadEvent(tab).then(event => {
         didLoad = true;
-        if (didZoom)
+        if (didZoom) {
           resolve();
+        }
       }, true);
 
       this.waitForLocationChange().then(function() {
         didZoom = true;
-        if (didLoad)
+        if (didLoad) {
           resolve();
+        }
       });
 
       BrowserTestUtils.loadURI(tab.linkedBrowser, url);
@@ -320,21 +367,28 @@ var FullZoomHelper = {
       let didPs = false;
       let didZoom = false;
 
-      BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "pageshow", true).then(() => {
+      BrowserTestUtils.waitForContentEvent(
+        gBrowser.selectedBrowser,
+        "pageshow",
+        true
+      ).then(() => {
         didPs = true;
-        if (didZoom)
+        if (didZoom) {
           resolve();
+        }
       });
 
-      if (direction == this.BACK)
+      if (direction == this.BACK) {
         gBrowser.goBack();
-      else if (direction == this.FORWARD)
+      } else if (direction == this.FORWARD) {
         gBrowser.goForward();
+      }
 
       this.waitForLocationChange().then(function() {
         didZoom = true;
-        if (didPs)
+        if (didPs) {
           resolve();
+        }
       });
     });
   },
@@ -374,8 +428,9 @@ function promiseTabLoadEvent(tab, url) {
 
   let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, handle);
 
-  if (url)
+  if (url) {
     BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+  }
 
   return loaded;
 }
@@ -397,16 +452,20 @@ function waitForNewTabEvent(aTabBrowser) {
 
 function is_hidden(element) {
   var style = element.ownerGlobal.getComputedStyle(element);
-  if (style.display == "none")
+  if (style.display == "none") {
     return true;
-  if (style.visibility != "visible")
+  }
+  if (style.visibility != "visible") {
     return true;
-  if (style.display == "-moz-popup")
+  }
+  if (style.display == "-moz-popup") {
     return ["hiding", "closed"].includes(element.state);
+  }
 
   // Hiding a parent element will hide all its children
-  if (element.parentNode != element.ownerDocument)
+  if (element.parentNode != element.ownerDocument) {
     return is_hidden(element.parentNode);
+  }
 
   return false;
 }
@@ -478,8 +537,10 @@ async function loadBadCertPage(url) {
  * @return Promise
  */
 async function promiseStylesheetsUpdated(browser) {
-  await BrowserTestUtils.waitForMessage(browser.messageManager,
-                                        "PageStyle:StyleSheets");
+  await BrowserTestUtils.waitForMessage(
+    browser.messageManager,
+    "PageStyle:StyleSheets"
+  );
   // Resolve on the next tick of the event loop to give the Page Style
   // menu code an opportunity to update.
   await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));

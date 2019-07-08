@@ -36,6 +36,8 @@ class MouseEvent : public UIEvent {
 
   int32_t ScreenX(CallerType aCallerType);
   int32_t ScreenY(CallerType aCallerType);
+  int32_t PageX() const;
+  int32_t PageY() const;
   int32_t ClientX();
   int32_t ClientY();
   int32_t OffsetX();

@@ -6,13 +6,11 @@
 
 let exports = this;
 
-const scripts = [
-  "util.js",
-  "test-vectors.js",
-];
+const scripts = ["util.js", "test-vectors.js"];
 
 for (let script of scripts) {
   Services.scriptloader.loadSubScript(
     `chrome://mochitests/content/browser/dom/crypto/test/browser/${script}`,
-    this);
+    this
+  );
 }

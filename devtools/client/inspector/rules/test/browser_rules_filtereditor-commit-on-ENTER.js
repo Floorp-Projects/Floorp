@@ -9,11 +9,14 @@ const TEST_URL = URL_ROOT + "doc_filter.html";
 
 add_task(async function() {
   await addTab(TEST_URL);
-  const {view} = await openRuleView();
+  const { view } = await openRuleView();
 
   info("Get the filter swatch element");
-  const swatch = getRuleViewProperty(view, "body", "filter").valueSpan
-    .querySelector(".ruleview-filterswatch");
+  const swatch = getRuleViewProperty(
+    view,
+    "body",
+    "filter"
+  ).valueSpan.querySelector(".ruleview-filterswatch");
 
   info("Click on the filter swatch element");
   // Clicking on a cssfilter swatch sets the current filter value in the tooltip
@@ -40,6 +43,9 @@ add_task(async function() {
   EventUtils.sendKey("RETURN", widget.styleWindow);
   await onRuleViewChanged;
 
-  is((await getComputedStyleProperty("body", null, "filter")), "blur(2px)",
-     "The elemenet's filter was kept after RETURN");
+  is(
+    await getComputedStyleProperty("body", null, "filter"),
+    "blur(2px)",
+    "The elemenet's filter was kept after RETURN"
+  );
 });

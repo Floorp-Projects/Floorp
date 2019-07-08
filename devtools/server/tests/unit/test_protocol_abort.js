@@ -9,7 +9,7 @@
  */
 
 var protocol = require("devtools/shared/protocol");
-var {RetVal} = protocol;
+var { RetVal } = protocol;
 
 function simpleHello() {
   return {
@@ -66,16 +66,22 @@ function run_test() {
   client.connect().then(([applicationType, traits]) => {
     rootFront = new RootFront(client);
 
-    rootFront.simpleReturn().then(() => {
-      ok(false, "Connection was aborted, request shouldn't resolve");
-      do_test_finished();
-    }, e => {
-      const error = e.toString();
-      ok(true, "Connection was aborted, request rejected correctly");
-      ok(error.includes("Request stack:"), "Error includes request stack");
-      ok(error.includes("test_protocol_abort.js"), "Stack includes this test");
-      do_test_finished();
-    });
+    rootFront.simpleReturn().then(
+      () => {
+        ok(false, "Connection was aborted, request shouldn't resolve");
+        do_test_finished();
+      },
+      e => {
+        const error = e.toString();
+        ok(true, "Connection was aborted, request rejected correctly");
+        ok(error.includes("Request stack:"), "Error includes request stack");
+        ok(
+          error.includes("test_protocol_abort.js"),
+          "Stack includes this test"
+        );
+        do_test_finished();
+      }
+    );
 
     trace.close();
   });

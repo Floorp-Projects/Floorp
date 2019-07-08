@@ -7,14 +7,23 @@
 
 /* eslint-disable mozilla/balanced-listeners */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
-                               "resource://gre/modules/AsyncShutdown.jsm");
-ChromeUtils.defineModuleGetter(this, "setTimeout",
-                               "resource://gre/modules/Timer.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AsyncShutdown",
+  "resource://gre/modules/AsyncShutdown.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "setTimeout",
+  "resource://gre/modules/Timer.jsm"
+);
 
-Services.scriptloader.loadSubScript("resource://gre/modules/subprocess/subprocess_shared.js", this);
+Services.scriptloader.loadSubScript(
+  "resource://gre/modules/subprocess/subprocess_shared.js",
+  this
+);
 
 /* global SubprocessConstants */
 var EXPORTED_SYMBOLS = ["BaseProcess", "PromiseWorker", "SubprocessConstants"];
@@ -45,7 +54,8 @@ class PromiseWorker extends ChromeWorker {
     this.shutdown = this.shutdown.bind(this);
     AsyncShutdown.webWorkersShutdown.addBlocker(
       "Subprocess.jsm: Shut down IO worker",
-      this.shutdown);
+      this.shutdown
+    );
   }
 
   onClose() {
@@ -93,7 +103,7 @@ class PromiseWorker extends ChromeWorker {
   }
 
   onmessage(event) {
-    let {msg} = event.data;
+    let { msg } = event.data;
     let listeners = this.listeners.get(msg) || new Set();
 
     for (let listener of listeners) {
@@ -111,7 +121,7 @@ class PromiseWorker extends ChromeWorker {
    *
    * @private
    */
-  onFailure({msgId, error}) {
+  onFailure({ msgId, error }) {
     this.pendingResponses.get(msgId).reject(error);
     this.pendingResponses.delete(msgId);
   }
@@ -122,12 +132,12 @@ class PromiseWorker extends ChromeWorker {
    *
    * @private
    */
-  onSuccess({msgId, data}) {
+  onSuccess({ msgId, data }) {
     this.pendingResponses.get(msgId).resolve(data);
     this.pendingResponses.delete(msgId);
   }
 
-  onDebug({message}) {
+  onDebug({ message }) {
     dump(`Worker debug: ${message}\n`);
   }
 
@@ -147,7 +157,7 @@ class PromiseWorker extends ChromeWorker {
     let msgId = nextResponseId++;
 
     return new Promise((resolve, reject) => {
-      this.pendingResponses.set(msgId, {resolve, reject});
+      this.pendingResponses.set(msgId, { resolve, reject });
 
       let message = {
         msg: method,
@@ -252,7 +262,10 @@ class OutputPipe extends Pipe {
       if (buffer.byteLength === buffer.buffer.byteLength) {
         buffer = buffer.buffer;
       } else {
-        buffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+        buffer = buffer.buffer.slice(
+          buffer.byteOffset,
+          buffer.byteOffset + buffer.byteLength
+        );
       }
     }
 
@@ -312,7 +325,7 @@ class InputPipe extends Pipe {
     if (!this._pendingBufferRead && dataWanted > 0) {
       this._pendingBufferRead = this._read(dataWanted);
 
-      this._pendingBufferRead.then((result) => {
+      this._pendingBufferRead.then(result => {
         this._pendingBufferRead = null;
 
         if (result) {
@@ -330,8 +343,11 @@ class InputPipe extends Pipe {
     return this.worker.call("read", args).catch(e => {
       this.closed = true;
 
-      for (let {length, resolve, reject} of this.pendingReads.splice(0)) {
-        if (length === null && e.errorCode === SubprocessConstants.ERROR_END_OF_FILE) {
+      for (let { length, resolve, reject } of this.pendingReads.splice(0)) {
+        if (
+          length === null &&
+          e.errorCode === SubprocessConstants.ERROR_END_OF_FILE
+        ) {
           resolve(new ArrayBuffer(0));
         } else {
           reject(e);
@@ -363,8 +379,11 @@ class InputPipe extends Pipe {
     this.fillBuffer();
 
     let reads = this.pendingReads;
-    while (reads.length && this.dataAvailable &&
-           reads[0].length <= this.dataAvailable) {
+    while (
+      reads.length &&
+      this.dataAvailable &&
+      reads[0].length <= this.dataAvailable
+    ) {
       let pending = this.pendingReads.shift();
 
       let length = pending.length || this.dataAvailable;
@@ -440,7 +459,7 @@ class InputPipe extends Pipe {
     }
 
     return new Promise((resolve, reject) => {
-      this.pendingReads.push({length, resolve, reject});
+      this.pendingReads.push({ length, resolve, reject });
       this.checkPendingReads();
     });
   }
@@ -504,7 +523,7 @@ class InputPipe extends Pipe {
    *            - Subprocess.ERROR_END_OF_FILE: The pipe was closed before
    *              enough input could be read to satisfy the request.
    */
-  readString(length = null, options = {stream: length === null}) {
+  readString(length = null, options = { stream: length === null }) {
     if (length !== null && !(Number.isInteger(length) && length >= 0)) {
       throw new RangeError("Length must be a non-negative integer");
     }
@@ -571,8 +590,8 @@ class BaseProcess {
     this.exitCode = null;
 
     this.exitPromise = new Promise(resolve => {
-      this.worker.call("wait", [this.id]).then(({exitCode}) => {
-        resolve(Object.freeze({exitCode}));
+      this.worker.call("wait", [this.id]).then(({ exitCode }) => {
+        resolve(Object.freeze({ exitCode }));
         this.exitCode = exitCode;
       });
     });
@@ -617,7 +636,7 @@ class BaseProcess {
   static create(options) {
     let worker = this.getWorker();
 
-    return worker.call("spawn", [options]).then(({processId, fds, pid}) => {
+    return worker.call("spawn", [options]).then(({ processId, fds, pid }) => {
       return new this(worker, processId, fds, pid);
     });
   }

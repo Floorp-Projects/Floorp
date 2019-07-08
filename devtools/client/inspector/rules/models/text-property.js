@@ -8,7 +8,12 @@
 
 const { generateUUID } = require("devtools/shared/generate-uuid");
 
-loader.lazyRequireGetter(this, "escapeCSSComment", "devtools/shared/css/parsing-utils", true);
+loader.lazyRequireGetter(
+  this,
+  "escapeCSSComment",
+  "devtools/shared/css/parsing-utils",
+  true
+);
 
 /**
  * TextProperty is responsible for the following:
@@ -155,7 +160,8 @@ class TextProperty {
       this.userProperties.setProperty(this.rule.domRule, this.name, value);
     }
 
-    return this.rule.setPropertyValue(this, value, priority)
+    return this.rule
+      .setPropertyValue(this, value, priority)
       .then(() => this.updateEditor());
   }
 
@@ -238,7 +244,11 @@ class TextProperty {
 
     // StyleRuleActor's declarations may have a isUsed flag (if the server is the right
     // version). Just return true if the information is missing.
-    if (!declarations || !declarations[selfIndex] || !declarations[selfIndex].isUsed) {
+    if (
+      !declarations ||
+      !declarations[selfIndex] ||
+      !declarations[selfIndex].isUsed
+    ) {
       return { used: true };
     }
 

@@ -4,11 +4,10 @@
  */
 
 function ok(a, msg) {
-  postMessage({type: "status", status: !!a, msg: msg });
+  postMessage({ type: "status", status: !!a, msg: msg });
 }
 
 onmessage = function(event) {
-
   function getResponse(url) {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", url, false);
@@ -33,19 +32,19 @@ onmessage = function(event) {
           break;
         case 2:
           ok(xhr.responseText == testData2, "Check data 2");
-          postMessage({type: "finish" });
+          postMessage({ type: "finish" });
           break;
         default:
           ok(false, "Unexpected response received");
-          postMessage({type: "finish" });
+          postMessage({ type: "finish" });
           break;
       }
     }
-  }
+  };
   xhr.onerror = function(e) {
     ok(false, "Got an error event: " + e);
-    postMessage({type: "finish" });
-  }
+    postMessage({ type: "finish" });
+  };
 
   function test_data1() {
     xhr.open("GET", testFile1, true);
@@ -61,4 +60,4 @@ onmessage = function(event) {
   }
 
   test_data1();
-}
+};

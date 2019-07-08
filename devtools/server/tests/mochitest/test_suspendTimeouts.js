@@ -60,7 +60,8 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   const iframe = document.createElement("iframe");
-  iframe.src = "http://mochi.test:8888/chrome/devtools/server/tests/mochitest/suspendTimeouts_content.html";
+  iframe.src =
+    "http://mochi.test:8888/chrome/devtools/server/tests/mochitest/suspendTimeouts_content.html";
   iframe.onload = iframe_onload_handler;
   document.body.appendChild(iframe);
 
@@ -85,7 +86,9 @@ window.onload = function() {
     content.ok = SimpleTest.ok;
     content.finish = finish;
 
-    SimpleTest.info("Disappointed with National Tautology Day? Well, it is what it is.");
+    SimpleTest.info(
+      "Disappointed with National Tautology Day? Well, it is what it is."
+    );
 
     // Once the worker has sent a message to its parent (which should get delayed),
     // it sends us a message directly on this channel.

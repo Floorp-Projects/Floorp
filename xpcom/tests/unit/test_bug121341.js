@@ -1,5 +1,5 @@
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   var dataFile = do_get_file("data/bug121341.properties");
@@ -59,6 +59,5 @@ function run_test() {
   try {
     properties2.load(inp);
     do_throw("load() didn't fail");
-  } catch (e) {
-  }
+  } catch (e) {}
 }

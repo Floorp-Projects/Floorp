@@ -1,6 +1,6 @@
 "use strict";
 
-let tests = [ "about:robots?foo", "about:robots#foo", "about:robots?foo#bar"];
+let tests = ["about:robots?foo", "about:robots#foo", "about:robots?foo#bar"];
 tests.forEach(async test => {
   add_task(async () => {
     await BrowserTestUtils.withNewTab(test, async browser => {

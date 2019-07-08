@@ -87,7 +87,8 @@ const editRemoveMethods = {
 createStorageSpec({
   typeName: "cookies",
   storeObjectType: "cookiestoreobject",
-  methods: Object.assign({},
+  methods: Object.assign(
+    {},
     editRemoveMethods,
     {
       addItem: {
@@ -96,7 +97,8 @@ createStorageSpec({
         },
         response: {},
       },
-    }, {
+    },
+    {
       removeAll: {
         request: {
           host: Arg(0, "string"),
@@ -104,7 +106,8 @@ createStorageSpec({
         },
         response: {},
       },
-    }, {
+    },
+    {
       removeAllSessionCookies: {
         request: {
           host: Arg(0, "string"),
@@ -123,7 +126,8 @@ types.addDictType("storageobject", {
 });
 
 // Common methods for local/session storage
-const storageMethods = Object.assign({},
+const storageMethods = Object.assign(
+  {},
   editRemoveMethods,
   {
     addItem: {
@@ -164,8 +168,8 @@ createStorageSpec({
 });
 
 types.addDictType("cacheobject", {
-  "url": "string",
-  "status": "string",
+  url: "string",
+  status: "string",
 });
 
 // Array of Cache store objects
@@ -264,10 +268,13 @@ types.addDictType("storeUpdateObject", {
 });
 
 // Generate a type definition for an object with actors for all storage types.
-types.addDictType("storelist", Object.keys(childSpecs).reduce((obj, type) => {
-  obj[type] = type;
-  return obj;
-}, {}));
+types.addDictType(
+  "storelist",
+  Object.keys(childSpecs).reduce((obj, type) => {
+    obj[type] = type;
+    return obj;
+  }, {})
+);
 
 exports.childSpecs = childSpecs;
 

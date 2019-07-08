@@ -5,19 +5,28 @@
 "use strict";
 
 const { Cu, Cr } = require("chrome");
-const { getCurrentZoom, getWindowDimensions, getViewportDimensions,
-  getRootBindingParent, loadSheet } = require("devtools/shared/layout/utils");
+const {
+  getCurrentZoom,
+  getWindowDimensions,
+  getViewportDimensions,
+  getRootBindingParent,
+  loadSheet,
+} = require("devtools/shared/layout/utils");
 const EventEmitter = require("devtools/shared/event-emitter");
 const InspectorUtils = require("InspectorUtils");
 
 const lazyContainer = {};
 
-loader.lazyRequireGetter(lazyContainer, "CssLogic",
-  "devtools/server/actors/inspector/css-logic", true);
-exports.getComputedStyle = (node) =>
+loader.lazyRequireGetter(
+  lazyContainer,
+  "CssLogic",
+  "devtools/server/actors/inspector/css-logic",
+  true
+);
+exports.getComputedStyle = node =>
   lazyContainer.CssLogic.getComputedStyle(node);
 
-exports.getBindingElementAndPseudo = (node) =>
+exports.getBindingElementAndPseudo = node =>
   lazyContainer.CssLogic.getBindingElementAndPseudo(node);
 
 exports.hasPseudoClassLock = (...args) =>
@@ -32,8 +41,8 @@ exports.removePseudoClassLock = (...args) =>
 const SVG_NS = "http://www.w3.org/2000/svg";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const STYLESHEET_URI = "resource://devtools/server/actors/" +
-                       "highlighters.css";
+const STYLESHEET_URI =
+  "resource://devtools/server/actors/" + "highlighters.css";
 
 const _tokens = Symbol("classList/tokens");
 
@@ -77,7 +86,7 @@ ClassList.prototype = {
   get length() {
     return this[_tokens].length;
   },
-  [Symbol.iterator]: function* () {
+  [Symbol.iterator]: function*() {
     for (let i = 0; i < this.tokens.length; i++) {
       yield this[_tokens][i];
     }
@@ -217,7 +226,8 @@ function CanvasFrameAnonymousContentHelper(highlighterEnv, nodeBuilder) {
   this.anonymousContentDocument = this.highlighterEnv.document;
   // XXX the next line is a wallpaper for bug 1123362.
   this.anonymousContentGlobal = Cu.getGlobalForObject(
-                                this.anonymousContentDocument);
+    this.anonymousContentDocument
+  );
 
   // Only try to create the highlighter when the document is loaded,
   // otherwise, wait for the window-ready event to fire.
@@ -249,8 +259,9 @@ CanvasFrameAnonymousContentHelper.prototype = {
     const doc = this.highlighterEnv.document;
     // Wait for DOMContentLoaded before injecting the anonymous content.
     if (doc.readyState != "interactive" && doc.readyState != "complete") {
-      doc.addEventListener("DOMContentLoaded", this._insert.bind(this),
-                           { once: true });
+      doc.addEventListener("DOMContentLoaded", this._insert.bind(this), {
+        once: true,
+      });
       return;
     }
     // Reject XUL documents. Check that after DOMContentLoaded as we query
@@ -280,11 +291,18 @@ CanvasFrameAnonymousContentHelper.prototype = {
       // At this point, it could only happen on document's interactive state, and we
       // need to wait until the `complete` state before inserting the anonymous content
       // again.
-      if (e.result === Cr.NS_ERROR_UNEXPECTED && doc.readyState === "interactive") {
+      if (
+        e.result === Cr.NS_ERROR_UNEXPECTED &&
+        doc.readyState === "interactive"
+      ) {
         // The next state change will be "complete" since the current is "interactive"
-        doc.addEventListener("readystatechange", () => {
-          this._content = doc.insertAnonymousContent(node);
-        }, { once: true });
+        doc.addEventListener(
+          "readystatechange",
+          () => {
+            this._content = doc.insertAnonymousContent(node);
+          },
+          { once: true }
+        );
       } else {
         throw e;
       }
@@ -308,7 +326,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
    *   - when first attaching to a page
    *   - when swapping frame loaders (moving tabs, toggling RDM)
    */
-  _onWindowReady({isTopLevel}) {
+  _onWindowReady({ isTopLevel }) {
     if (isTopLevel) {
       this._removeAllListeners();
       this.elements.clear();
@@ -318,7 +336,9 @@ CanvasFrameAnonymousContentHelper.prototype = {
   },
 
   getComputedStylePropertyValue(id, property) {
-    return this.content && this.content.getComputedStylePropertyValue(id, property);
+    return (
+      this.content && this.content.getComputedStylePropertyValue(id, property)
+    );
   },
 
   getTextContentForElement(id) {
@@ -393,8 +413,9 @@ CanvasFrameAnonymousContentHelper.prototype = {
    */
   addEventListenerForElement(id, type, handler) {
     if (typeof id !== "string") {
-      throw new Error("Expected a string ID in addEventListenerForElement but" +
-        " got: " + id);
+      throw new Error(
+        "Expected a string ID in addEventListenerForElement but" + " got: " + id
+      );
     }
 
     // If no one is listening for this type of event yet, add one listener.
@@ -502,7 +523,8 @@ CanvasFrameAnonymousContentHelper.prototype = {
         return this.removeEventListenerForElement(id, type, handler);
       },
       computedStyle: {
-        getPropertyValue: property => this.getComputedStylePropertyValue(id, property),
+        getPropertyValue: property =>
+          this.getComputedStylePropertyValue(id, property),
       },
       classList,
     };
@@ -596,8 +618,9 @@ function moveInfobar(container, bounds, win, options = {}) {
   const { computedStyle } = container;
 
   const margin = 2;
-  const arrowSize = parseFloat(computedStyle
-                              .getPropertyValue("--highlighter-bubble-arrow-size"));
+  const arrowSize = parseFloat(
+    computedStyle.getPropertyValue("--highlighter-bubble-arrow-size")
+  );
   const containerHeight = parseFloat(computedStyle.getPropertyValue("height"));
   const containerWidth = parseFloat(computedStyle.getPropertyValue("width"));
   const containerHalfWidth = containerWidth / 2;
@@ -635,7 +658,10 @@ function moveInfobar(container, bounds, win, options = {}) {
   const forcedOnTop = options.position === "top";
   const forcedOnBottom = options.position === "bottom";
 
-  if ((!canBePlacedOnTop && canBePlacedOnBottom && !forcedOnTop) || forcedOnBottom) {
+  if (
+    (!canBePlacedOnTop && canBePlacedOnBottom && !forcedOnTop) ||
+    forcedOnBottom
+  ) {
     top = bottom;
     positionAttribute = "bottom";
   }
@@ -676,10 +702,13 @@ function moveInfobar(container, bounds, win, options = {}) {
   // (See https://www.w3.org/TR/css-transforms-1/#transform-rendering)
   // We also need to shift the infobar 50% to the left in order for it to appear centered
   // on the element it points to.
-  container.setAttribute("style", `
+  container.setAttribute(
+    "style",
+    `
     position:${position};
     transform-origin: 0 0;
-    transform: scale(${1 / zoom}) translate(calc(${left}px - 50%), ${top}px)`);
+    transform: scale(${1 / zoom}) translate(calc(${left}px - 50%), ${top}px)`
+  );
 
   container.setAttribute("position", positionAttribute);
 }

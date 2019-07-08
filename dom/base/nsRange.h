@@ -112,7 +112,7 @@ class nsRange final : public mozilla::dom::AbstractRange,
    * Mark this range as being generated or not.
    * Currently it is used for marking ranges that are created when splitting up
    * a range to exclude a -moz-user-select:none region.
-   * @see Selection::AddItem
+   * @see Selection::AddRangesForSelectableNodes
    * @see ExcludeNonSelectableNodes
    */
   void SetIsGenerated(bool aIsGenerated) { mIsGenerated = aIsGenerated; }

@@ -34,8 +34,10 @@ add_task(async function() {
 
   info("Toggling ON the CSS grid highlighter from the layout panel.");
   const onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  let onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 1 && state.grids[0].highlighted);
+  let onCheckboxChange = waitUntilState(
+    store,
+    state => state.grids.length == 1 && state.grids[0].highlighted
+  );
   checkbox.click();
   await onHighlighterShown;
   await onCheckboxChange;
@@ -54,6 +56,8 @@ add_task(async function() {
 
   info("Checking the CSS grid highlighter is not shown.");
   ok(!highlighters.gridHighlighters.size, "No CSS grid highlighter is shown.");
-  const noGridList = doc.querySelector(".grid-pane .devtools-sidepanel-no-result");
+  const noGridList = doc.querySelector(
+    ".grid-pane .devtools-sidepanel-no-result"
+  );
   ok(noGridList, "The message no grid containers is displayed.");
 });

@@ -7,9 +7,11 @@ var disableWorkerTest = "This test uses SpecialPowers";
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
-  let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
+function* testSteps() {
+  let request = indexedDB.open(
+    this.window ? window.location.pathname : "Splendid Test",
+    1
+  );
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield undefined;

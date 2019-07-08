@@ -24,6 +24,14 @@ async function testNestedSpan(inspector, viewDoc) {
   await selectNode(".nested-span", inspector);
   const { value, unit } = getPropertyValue(viewDoc, "font-size");
 
-  isnot(value + unit, "1em", "Nested span should not reflect parent's font size.");
-  is(value + unit, "36px", "Nested span should have computed font-size of 36px");
+  isnot(
+    value + unit,
+    "1em",
+    "Nested span should not reflect parent's font size."
+  );
+  is(
+    value + unit,
+    "36px",
+    "Nested span should have computed font-size of 36px"
+  );
 }

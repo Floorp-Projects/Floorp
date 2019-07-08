@@ -4,7 +4,7 @@
 
 "use strict";
 
-function bytesToBase64(u8a){
+function bytesToBase64(u8a) {
   let CHUNK_SZ = 0x8000;
   let c = [];
   for (let i = 0; i < u8a.length; i += CHUNK_SZ) {
@@ -15,7 +15,7 @@ function bytesToBase64(u8a){
 
 function bytesToBase64UrlSafe(buf) {
   return bytesToBase64(buf)
-                 .replace(/\+/g, "-")
-                 .replace(/\//g, "_")
-                 .replace(/=/g, "");
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
 }

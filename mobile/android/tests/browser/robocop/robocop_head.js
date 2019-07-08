@@ -14,9 +14,10 @@
 // is whether the property is read-only or not.
 {
   let c = Object.getOwnPropertyDescriptor(this, "Components");
-  if ((!c || !c.value || c.writable) && typeof SpecialPowers === "object")
+  if ((!c || !c.value || c.writable) && typeof SpecialPowers === "object") {
     // eslint-disable-next-line no-global-assign
     Components = SpecialPowers.wrap(SpecialPowers.Components);
+  }
 }
 
 /*
@@ -43,8 +44,9 @@ function _dump(str) {
 // Disable automatic network detection, so tests work correctly when
 // not connected to a network.
 {
-  let ios = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Components.interfaces.nsIIOService);
+  let ios = Components.classes["@mozilla.org/network/io-service;1"].getService(
+    Components.interfaces.nsIIOService
+  );
   ios.manageOfflineStatus = false;
   ios.offline = false;
 }
@@ -52,15 +54,17 @@ function _dump(str) {
 // Determine if we're running on parent or child
 var runningInParent = true;
 try {
-  runningInParent = Components.classes["@mozilla.org/xre/runtime;1"].
-                    getService(Components.interfaces.nsIXULRuntime).processType
-                    == Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-} catch (e) { }
+  runningInParent =
+    Components.classes["@mozilla.org/xre/runtime;1"].getService(
+      Components.interfaces.nsIXULRuntime
+    ).processType == Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+} catch (e) {}
 
 try {
   if (runningInParent) {
-    let prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                .getService(Components.interfaces.nsIPrefBranch);
+    let prefs = Components.classes[
+      "@mozilla.org/preferences-service;1"
+    ].getService(Components.interfaces.nsIPrefBranch);
 
     // disable necko IPC security checks for xpcshell, as they lack the
     // docshells needed to pass them
@@ -71,25 +75,28 @@ try {
       prefs.setCharPref("network.dns.ipv4OnlyDomains", "localhost");
     }
   }
-} catch (e) { }
+} catch (e) {}
 
 // Enable crash reporting, if possible
 // We rely on the Python harness to set MOZ_CRASHREPORTER_NO_REPORT
 // and handle checking for minidumps.
 // Note that if we're in a child process, we don't want to init the
 // crashreporter component.
-try { // nsIXULRuntime is not available in some configurations.
-  if (runningInParent &&
-      "@mozilla.org/toolkit/crash-reporter;1" in Components.classes) {
+try {
+  // nsIXULRuntime is not available in some configurations.
+  if (
+    runningInParent &&
+    "@mozilla.org/toolkit/crash-reporter;1" in Components.classes
+  ) {
     // Remember to update </toolkit/crashreporter/test/unit/test_crashreporter.js>
     // too if you change this initial setting.
-    let crashReporter =
-          Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
-          .getService(Components.interfaces.nsICrashReporter);
+    let crashReporter = Components.classes[
+      "@mozilla.org/toolkit/crash-reporter;1"
+    ].getService(Components.interfaces.nsICrashReporter);
     crashReporter.enabled = true;
     crashReporter.minidumpPath = do_get_cwd();
   }
-} catch (e) { }
+} catch (e) {}
 
 /**
  * Date.now() is not necessarily monotonically increasing (insert sob story
@@ -101,18 +108,21 @@ const _timerFuzz = 15;
 
 function _Timer(func, delay) {
   delay = Number(delay);
-  if (delay < 0)
+  if (delay < 0) {
     do_throw("do_timeout() delay must be nonnegative");
+  }
 
-  if (typeof func !== "function")
+  if (typeof func !== "function") {
     do_throw("string callbacks no longer accepted; use a function!");
+  }
 
   this._func = func;
   this._start = Date.now();
   this._delay = delay;
 
-  var timer = Components.classes["@mozilla.org/timer;1"]
-                        .createInstance(Components.interfaces.nsITimer);
+  var timer = Components.classes["@mozilla.org/timer;1"].createInstance(
+    Components.interfaces.nsITimer
+  );
   timer.initWithCallback(this, delay + _timerFuzz, timer.TYPE_ONE_SHOT);
 
   // Keep timer alive until it fires
@@ -121,9 +131,12 @@ function _Timer(func, delay) {
 
 _Timer.prototype = {
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsITimerCallback) ||
-        iid.equals(Components.interfaces.nsISupports))
+    if (
+      iid.equals(Components.interfaces.nsITimerCallback) ||
+      iid.equals(Components.interfaces.nsISupports)
+    ) {
       return this;
+    }
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
@@ -160,16 +173,25 @@ function _do_quit() {
 
 function _dump_exception_stack(stack) {
   stack.split("\n").forEach(function(frame) {
-    if (!frame)
+    if (!frame) {
       return;
+    }
     // frame is of the form "fname(args)@file:line"
     let frame_regexp = new RegExp("(.*)\\(.*\\)@(.*):(\\d*)", "g");
     let parts = frame_regexp.exec(frame);
-    if (parts)
-        dump("JS frame :: " + parts[2] + " :: " + (parts[1] ? parts[1] : "anonymous")
-             + " :: line " + parts[3] + "\n");
-    else /* Could be a -e (command line string) style location. */
-        dump("JS frame :: " + frame + "\n");
+    if (parts) {
+      dump(
+        "JS frame :: " +
+          parts[2] +
+          " :: " +
+          (parts[1] ? parts[1] : "anonymous") +
+          " :: line " +
+          parts[3] +
+          "\n"
+      );
+    } /* Could be a -e (command line string) style location. */ else {
+      dump("JS frame :: " + frame + "\n");
+    }
   });
 }
 
@@ -199,8 +221,9 @@ function do_timeout(delay, func) {
 
 function do_execute_soon(callback) {
   do_test_pending();
-  var tm = Components.classes["@mozilla.org/thread-manager;1"]
-                     .getService(Components.interfaces.nsIThreadManager);
+  var tm = Components.classes["@mozilla.org/thread-manager;1"].getService(
+    Components.interfaces.nsIThreadManager
+  );
 
   tm.dispatchToMainThread({
     run: function() {
@@ -230,11 +253,17 @@ function do_execute_soon(callback) {
 }
 
 function do_throw(text, stack) {
-  if (!stack)
+  if (!stack) {
     stack = Components.stack.caller;
+  }
 
-  _dump("TEST-UNEXPECTED-FAIL | " + stack.filename + " | " + text +
-        " - See following stack:\n");
+  _dump(
+    "TEST-UNEXPECTED-FAIL | " +
+      stack.filename +
+      " | " +
+      text +
+      " - See following stack:\n"
+  );
   var frame = Components.stack;
   while (frame != null) {
     _dump(frame + "\n");
@@ -246,11 +275,17 @@ function do_throw(text, stack) {
 }
 
 function do_throw_todo(text, stack) {
-  if (!stack)
+  if (!stack) {
     stack = Components.stack.caller;
+  }
 
-  _dump("TEST-UNEXPECTED-PASS | " + stack.filename + " | " + text +
-        " - See following stack:\n");
+  _dump(
+    "TEST-UNEXPECTED-PASS | " +
+      stack.filename +
+      " | " +
+      text +
+      " - See following stack:\n"
+  );
   var frame = Components.stack;
   while (frame != null) {
     _dump(frame + "\n");
@@ -266,9 +301,17 @@ function do_report_unexpected_exception(ex, text) {
   text = text ? text + " - " : "";
   var caller_filename = caller_stack ? caller_stack.filename : "unknown file";
 
-  _dump("TEST-UNEXPECTED-FAIL | " + caller_filename + " | " + text +
-        "Unexpected exception " + ex + ", see following stack:\n" + ex.stack +
-        "\n");
+  _dump(
+    "TEST-UNEXPECTED-FAIL | " +
+      caller_filename +
+      " | " +
+      text +
+      "Unexpected exception " +
+      ex +
+      ", see following stack:\n" +
+      ex.stack +
+      "\n"
+  );
 
   _do_quit();
   throw Components.results.NS_ERROR_ABORT;
@@ -278,41 +321,70 @@ function do_note_exception(ex, text) {
   var caller_stack = Components.stack.caller;
   text = text ? text + " - " : "";
 
-  _dump("TEST-INFO | " + caller_stack.filename + " | " + text +
-        "Swallowed exception " + ex + ", see following stack:\n" + ex.stack +
-        "\n");
+  _dump(
+    "TEST-INFO | " +
+      caller_stack.filename +
+      " | " +
+      text +
+      "Swallowed exception " +
+      ex +
+      ", see following stack:\n" +
+      ex.stack +
+      "\n"
+  );
 }
 
 function _do_check_neq(left, right, stack, todo) {
-  if (!stack)
+  if (!stack) {
     stack = Components.stack.caller;
+  }
 
   var text = left + " != " + right;
   if (left == right) {
     if (!todo) {
       do_throw(text, stack);
     } else {
-      _dump("TEST-KNOWN-FAIL | " + stack.filename + " | [" + stack.name +
-            " : " + stack.lineNumber + "] " + text + "\n");
+      _dump(
+        "TEST-KNOWN-FAIL | " +
+          stack.filename +
+          " | [" +
+          stack.name +
+          " : " +
+          stack.lineNumber +
+          "] " +
+          text +
+          "\n"
+      );
     }
   } else if (!todo) {
-      _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
-            stack.lineNumber + "] " + text + "\n");
-    } else {
-      do_throw_todo(text, stack);
-    }
+    _dump(
+      "TEST-PASS | " +
+        stack.filename +
+        " | [" +
+        stack.name +
+        " : " +
+        stack.lineNumber +
+        "] " +
+        text +
+        "\n"
+    );
+  } else {
+    do_throw_todo(text, stack);
+  }
 }
 
 function do_check_neq(left, right, stack) {
-  if (!stack)
+  if (!stack) {
     stack = Components.stack.caller;
+  }
 
   _do_check_neq(left, right, stack, false);
 }
 
 function todo_check_neq(left, right, stack) {
-  if (!stack)
-      stack = Components.stack.caller;
+  if (!stack) {
+    stack = Components.stack.caller;
+  }
 
   _do_check_neq(left, right, stack, true);
 }
@@ -322,15 +394,33 @@ function do_report_result(passed, text, stack, todo) {
     if (todo) {
       do_throw_todo(text, stack);
     } else {
-      _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
-            stack.lineNumber + "] " + text + "\n");
+      _dump(
+        "TEST-PASS | " +
+          stack.filename +
+          " | [" +
+          stack.name +
+          " : " +
+          stack.lineNumber +
+          "] " +
+          text +
+          "\n"
+      );
     }
   } else if (todo) {
-      _dump("TEST-KNOWN-FAIL | " + stack.filename + " | [" + stack.name +
-            " : " + stack.lineNumber + "] " + text + "\n");
-    } else {
-      do_throw(text, stack);
-    }
+    _dump(
+      "TEST-KNOWN-FAIL | " +
+        stack.filename +
+        " | [" +
+        stack.name +
+        " : " +
+        stack.lineNumber +
+        "] " +
+        text +
+        "\n"
+    );
+  } else {
+    do_throw(text, stack);
+  }
 }
 
 /**
@@ -344,56 +434,67 @@ function ok(condition, msg) {
  * Checks for a condition equality, with a success message.
  */
 function is(left, right, msg) {
-  do_report_result(left === right, "[ " + left + " === " + right + " ] " + msg,
-    Components.stack.caller, false);
+  do_report_result(
+    left === right,
+    "[ " + left + " === " + right + " ] " + msg,
+    Components.stack.caller,
+    false
+  );
 }
 
 function _do_check_eq(left, right, stack, todo) {
-  if (!stack)
+  if (!stack) {
     stack = Components.stack.caller;
+  }
 
   var text = left + " == " + right;
   do_report_result(left == right, text, stack, todo);
 }
 
 function do_check_eq(left, right, stack) {
-  if (!stack)
+  if (!stack) {
     stack = Components.stack.caller;
+  }
 
   _do_check_eq(left, right, stack, false);
 }
 
 function todo_check_eq(left, right, stack) {
-  if (!stack)
-      stack = Components.stack.caller;
+  if (!stack) {
+    stack = Components.stack.caller;
+  }
 
   _do_check_eq(left, right, stack, true);
 }
 
 function do_check_true(condition, stack) {
-  if (!stack)
+  if (!stack) {
     stack = Components.stack.caller;
+  }
 
   do_check_eq(condition, true, stack);
 }
 
 function todo_check_true(condition, stack) {
-  if (!stack)
+  if (!stack) {
     stack = Components.stack.caller;
+  }
 
   todo_check_eq(condition, true, stack);
 }
 
 function do_check_false(condition, stack) {
-  if (!stack)
+  if (!stack) {
     stack = Components.stack.caller;
+  }
 
   do_check_eq(condition, false, stack);
 }
 
 function todo_check_false(condition, stack) {
-  if (!stack)
+  if (!stack) {
     stack = Components.stack.caller;
+  }
 
   todo_check_eq(condition, false, stack);
 }
@@ -473,17 +574,24 @@ function todo_check_null(condition, stack = Components.stack.caller) {
  * is ideal. If you do want to be more careful, you can use function
  * patterns to implement more stringent checks.
  */
-function do_check_matches(pattern, value, stack = Components.stack.caller, todo = false) {
+function do_check_matches(
+  pattern,
+  value,
+  stack = Components.stack.caller,
+  todo = false
+) {
   var matcher = pattern_matcher(pattern);
   var text = "VALUE: " + uneval(value) + "\nPATTERN: " + uneval(pattern) + "\n";
   var diagnosis = [];
   if (matcher(value, diagnosis)) {
     do_report_result(true, "value matches pattern:\n" + text, stack, todo);
   } else {
-    text = ("value doesn't match pattern:\n" +
-            text +
-            "DIAGNOSIS: " +
-            format_pattern_match_failure(diagnosis[0]) + "\n");
+    text =
+      "value doesn't match pattern:\n" +
+      text +
+      "DIAGNOSIS: " +
+      format_pattern_match_failure(diagnosis[0]) +
+      "\n";
     do_report_result(false, text, stack, todo);
   }
 }
@@ -527,21 +635,28 @@ function pattern_matcher(pattern) {
       for (let [p, m] of matchers) {
         var element_diagnosis = [];
         if (!(p in value && m(value[p], element_diagnosis))) {
-          return explain(diagnosis, { property: p,
-                                      diagnosis: element_diagnosis[0] });
+          return explain(diagnosis, {
+            property: p,
+            diagnosis: element_diagnosis[0],
+          });
         }
       }
       return true;
     };
   } else if (pattern === undefined) {
-    return function(value) { return true; };
-  }
-    return function(value, diagnosis) {
-      if (value !== pattern) {
-        return explain(diagnosis, "pattern " + uneval(pattern) + " not === to value " + uneval(value));
-      }
+    return function(value) {
       return true;
     };
+  }
+  return function(value, diagnosis) {
+    if (value !== pattern) {
+      return explain(
+        diagnosis,
+        "pattern " + uneval(pattern) + " not === to value " + uneval(value)
+      );
+    }
+    return true;
+  };
 }
 
 // Format an explanation for a pattern match failure, as stored in the
@@ -562,13 +677,15 @@ function format_pattern_match_failure(diagnosis, indent = "") {
 function do_test_pending() {
   ++_tests_pending;
 
-  _dump("TEST-INFO | (robocop_head.js) | test " + _tests_pending +
-         " pending\n");
+  _dump(
+    "TEST-INFO | (robocop_head.js) | test " + _tests_pending + " pending\n"
+  );
 }
 
 function do_test_finished() {
-  _dump("TEST-INFO | (robocop_head.js) | test " + _tests_pending +
-         " finished\n");
+  _dump(
+    "TEST-INFO | (robocop_head.js) | test " + _tests_pending + " finished\n"
+  );
 
   if (--_tests_pending == 0) {
     _do_execute_cleanup();
@@ -585,19 +702,28 @@ function do_get_file(path, allowNonexistent) {
     let bits = path.split("/");
     for (let i = 0; i < bits.length; i++) {
       if (bits[i]) {
-        if (bits[i] == "..")
+        if (bits[i] == "..") {
           lf = lf.parent;
-        else
+        } else {
           lf.append(bits[i]);
+        }
       }
     }
 
     if (!allowNonexistent && !lf.exists()) {
       // Not using do_throw(): caller will continue.
       var stack = Components.stack.caller;
-      _dump("TEST-UNEXPECTED-FAIL | " + stack.filename + " | [" +
-            stack.name + " : " + stack.lineNumber + "] " + lf.path +
-            " does not exist\n");
+      _dump(
+        "TEST-UNEXPECTED-FAIL | " +
+          stack.filename +
+          " | [" +
+          stack.name +
+          " : " +
+          stack.lineNumber +
+          "] " +
+          lf.path +
+          " does not exist\n"
+      );
     }
 
     return lf;
@@ -628,9 +754,13 @@ function do_load_manifest(path) {
  *        The function to be called when the test harness has finished running.
  */
 function do_register_cleanup(func) {
-  _dump("TEST-INFO | " + _TEST_FILE + " | " +
-    (_gRunningTest ? _gRunningTest.name + " " : "") +
-    "registering cleanup function.");
+  _dump(
+    "TEST-INFO | " +
+      _TEST_FILE +
+      " | " +
+      (_gRunningTest ? _gRunningTest.name + " " : "") +
+      "registering cleanup function."
+  );
 
   _cleanupFunctions.push(func);
 }
@@ -704,7 +834,8 @@ var _Task;
 function add_task(func) {
   if (!_Task) {
     let ns = {};
-    _Task = Components.utils.import("resource://testing-common/Task.jsm", ns).Task;
+    _Task = Components.utils.import("resource://testing-common/Task.jsm", ns)
+      .Task;
   }
 
   _gTests.push([true, func]);
@@ -724,8 +855,9 @@ function run_next_test() {
       _dump("TEST-INFO | " + _TEST_FILE + " | Starting " + _gRunningTest.name);
 
       if (_isTask) {
-        _Task.spawn(_gRunningTest)
-             .then(run_next_test, do_report_unexpected_exception);
+        _Task
+          .spawn(_gRunningTest)
+          .then(run_next_test, do_report_unexpected_exception);
       } else {
         // Exceptions do not kill asynchronous tests, so they'll time out.
         try {
@@ -753,7 +885,6 @@ function run_next_test() {
  * End of code adapted from xpcshell head.js
  */
 
-
 /**
  * JavaBridge facilitates communication between Java and JS. See
  * JavascriptBridge.java for the corresponding JavascriptBridge and docs.
@@ -771,12 +902,13 @@ function JavaBridge(obj) {
 }
 
 JavaBridge.prototype = {
-
-  _Services: Components.utils.import(
-    "resource://gre/modules/Services.jsm", {}).Services,
+  _Services: Components.utils.import("resource://gre/modules/Services.jsm", {})
+    .Services,
 
   _EventDispatcher: Components.utils.import(
-    "resource://gre/modules/Messaging.jsm", {}).EventDispatcher.instance,
+    "resource://gre/modules/Messaging.jsm",
+    {}
+  ).EventDispatcher.instance,
 
   _getArgs: function(args) {
     let out = {
@@ -831,7 +963,9 @@ JavaBridge.prototype = {
     // spin the event loop, but here we're in a test and our API
     // specifies a synchronous call, so we spin the loop to wait for
     // the call to finish.
-    this._Services.tm.spinEventLoopUntil(() => this._repliesNeeded <= initialReplies);
+    this._Services.tm.spinEventLoopUntil(
+      () => this._repliesNeeded <= initialReplies
+    );
   },
 
   /**

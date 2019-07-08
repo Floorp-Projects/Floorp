@@ -14,24 +14,33 @@ add_task(async function() {
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
-  await installTemporaryExtensionFromXPI({
-    id: EXTENSION_ID,
-    name: EXTENSION_NAME,
-    extraProperties: {
-      // This property is not expected in the manifest and should trigger a warning!
-      "wrongProperty": {},
+  await installTemporaryExtensionFromXPI(
+    {
+      id: EXTENSION_ID,
+      name: EXTENSION_NAME,
+      extraProperties: {
+        // This property is not expected in the manifest and should trigger a warning!
+        wrongProperty: {},
+      },
     },
-  }, document);
+    document
+  );
 
   info("Wait until a debug target item appears");
   await waitUntil(() => findDebugTargetByText(EXTENSION_NAME, document));
   const target = findDebugTargetByText(EXTENSION_NAME, document);
 
   const warningMessage = target.querySelector(".qa-message");
-  ok(!!warningMessage, "A warning message is displayed for the installed addon");
+  ok(
+    !!warningMessage,
+    "A warning message is displayed for the installed addon"
+  );
 
   const warningText = warningMessage.textContent;
-  ok(warningText.includes("wrongProperty"), "The warning message mentions wrongProperty");
+  ok(
+    warningText.includes("wrongProperty"),
+    "The warning message mentions wrongProperty"
+  );
 
   await removeTemporaryExtension(EXTENSION_NAME, document);
   await removeTab(tab);

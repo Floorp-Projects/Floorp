@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-
 /*
  * test_nodb: Start search service without existing cache file.
  *
@@ -26,7 +25,7 @@ add_task(async function setup() {
 add_task(async function test_nodb_pluschanges() {
   let [engine1, engine2] = await addTestEngines([
     { name: "Test search engine", xmlFileName: "engine.xml" },
-    { name: "A second test engine", xmlFileName: "engine2.xml"},
+    { name: "A second test engine", xmlFileName: "engine2.xml" },
   ]);
   await promiseAfterCache();
 
@@ -41,8 +40,7 @@ add_task(async function test_nodb_pluschanges() {
 
   info("Forcing flush");
   let promiseCommit = promiseAfterCache();
-  search.QueryInterface(Ci.nsIObserver)
-        .observe(null, "quit-application", "");
+  search.QueryInterface(Ci.nsIObserver).observe(null, "quit-application", "");
   await promiseCommit;
   info("Commit complete");
 

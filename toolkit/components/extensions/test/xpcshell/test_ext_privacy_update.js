@@ -2,8 +2,11 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Preferences",
+  "resource://gre/modules/Preferences.jsm"
+);
 
 const {
   createAppInfo,
@@ -50,13 +53,17 @@ add_task(async function test_privacy_update() {
       let settingData;
       switch (msg) {
         case "get":
-          settingData = await browser.privacy.network.networkPredictionEnabled.get({});
+          settingData = await browser.privacy.network.networkPredictionEnabled.get(
+            {}
+          );
           browser.test.sendMessage("privacyData", settingData);
           break;
 
         case "set":
           await browser.privacy.network.networkPredictionEnabled.set(data);
-          settingData = await browser.privacy.network.networkPredictionEnabled.get({});
+          settingData = await browser.privacy.network.networkPredictionEnabled.get(
+            {}
+          );
           browser.test.sendMessage("privacyData", settingData);
           break;
       }
@@ -104,11 +111,11 @@ add_task(async function test_privacy_update() {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
-      "version": "1.0",
-      "applications": {
-        "gecko": {
-          "id": EXTENSION_ID,
-          "update_url": `http://localhost:${port}/test_update.json`,
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
+          update_url: `http://localhost:${port}/test_update.json`,
         },
       },
       permissions: ["privacy"],
@@ -119,11 +126,15 @@ add_task(async function test_privacy_update() {
   await extension.startup();
 
   // Change the value to false.
-  extension.sendMessage("set", {value: false});
+  extension.sendMessage("set", { value: false });
   let data = await extension.awaitMessage("privacyData");
   ok(!data.value, "get returns expected value after setting.");
 
-  equal(extension.version, "1.0", "The installed addon has the expected version.");
+  equal(
+    extension.version,
+    "1.0",
+    "The installed addon has the expected version."
+  );
 
   let update = await promiseFindAddonUpdates(extension.addon);
   let install = update.updateAvailable;
@@ -132,7 +143,11 @@ add_task(async function test_privacy_update() {
 
   await extension.awaitStartup();
 
-  equal(extension.version, "2.0", "The updated addon has the expected version.");
+  equal(
+    extension.version,
+    "2.0",
+    "The updated addon has the expected version."
+  );
 
   extension.sendMessage("get");
   data = await extension.awaitMessage("privacyData");
@@ -141,7 +156,8 @@ add_task(async function test_privacy_update() {
   // Verify the prefs are still set to match the "false" setting.
   for (let pref in PREFS) {
     let msg = `${pref} set correctly.`;
-    let expectedValue = pref === "network.http.speculative-parallel-limit" ? 0 : !PREFS[pref];
+    let expectedValue =
+      pref === "network.http.speculative-parallel-limit" ? 0 : !PREFS[pref];
     equal(Preferences.get(pref), expectedValue, msg);
   }
 

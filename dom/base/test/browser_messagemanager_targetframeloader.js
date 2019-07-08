@@ -1,5 +1,4 @@
-function frameScript()
-{
+function frameScript() {
   sendSyncMessage("Test:Message");
   sendAsyncMessage("Test:Message");
   sendAsyncMessage("Test:Done");
@@ -15,12 +14,18 @@ function test() {
   let frameLoader = browser.frameLoader;
   ok(frameLoader !== null, "frameLoader looks okay");
 
-  browser.messageManager.loadFrameScript("data:,(" + frameScript.toString() + ")()", false);
+  browser.messageManager.loadFrameScript(
+    "data:,(" + frameScript.toString() + ")()",
+    false
+  );
 
-  browser.messageManager.addMessageListener("Test:Message", (msg) => {
+  browser.messageManager.addMessageListener("Test:Message", msg => {
     ok(msg.target === browser, "<browser> is correct");
     ok(msg.targetFrameLoader === frameLoader, "frameLoader is correct");
-    ok(browser.frameLoader === msg.targetFrameLoader, "browser frameloader is correct");
+    ok(
+      browser.frameLoader === msg.targetFrameLoader,
+      "browser frameloader is correct"
+    );
   });
 
   browser.messageManager.addMessageListener("Test:Done", () => {

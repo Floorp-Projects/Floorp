@@ -8,9 +8,9 @@
 // be GeneratorFunction or AsyncFunction
 /* global testGenerator, testSteps:false */
 
-var { "classes": Cc, "interfaces": Ci, "utils": Cu } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 if (!("self" in this)) {
   this.self = this;
@@ -39,8 +39,7 @@ function run_test() {
 }
 
 if (!this.runTest) {
-  this.runTest = function()
-  {
+  this.runTest = function() {
     if (SpecialPowers.isMainProcess()) {
       // XPCShell does not get a profile by default.
       do_get_profile();
@@ -54,8 +53,10 @@ if (!this.runTest) {
     // In order to support converting tests to using async functions from using
     // generator functions, we detect async functions by checking the name of
     // function's constructor.
-    Assert.ok(typeof testSteps === "function",
-              "There should be a testSteps function");
+    Assert.ok(
+      typeof testSteps === "function",
+      "There should be a testSteps function"
+    );
     if (testSteps.constructor.name === "AsyncFunction") {
       // Do run our existing cleanup function that would normally be called by
       // the generator's call to finishTest().
@@ -67,8 +68,10 @@ if (!this.runTest) {
       // async test.
       run_next_test();
     } else {
-      Assert.ok(testSteps.constructor.name === "GeneratorFunction",
-                "Unsupported function type");
+      Assert.ok(
+        testSteps.constructor.name === "GeneratorFunction",
+        "Unsupported function type"
+      );
 
       do_test_pending();
       testGenerator.next();
@@ -76,8 +79,7 @@ if (!this.runTest) {
   };
 }
 
-function finishTest()
-{
+function finishTest() {
   if (SpecialPowers.isMainProcess()) {
     resetExperimental();
     resetTesting();
@@ -90,20 +92,17 @@ function finishTest()
   });
 }
 
-function grabEventAndContinueHandler(event)
-{
+function grabEventAndContinueHandler(event) {
   testGenerator.next(event);
 }
 
-function continueToNextStep()
-{
+function continueToNextStep() {
   executeSoon(function() {
     testGenerator.next();
   });
 }
 
-function errorHandler(event)
-{
+function errorHandler(event) {
   try {
     dump("indexedDB error: " + event.target.error.name);
   } catch (e) {
@@ -113,14 +112,12 @@ function errorHandler(event)
   finishTest();
 }
 
-function unexpectedSuccessHandler()
-{
+function unexpectedSuccessHandler() {
   Assert.ok(false);
   finishTest();
 }
 
-function expectedErrorHandler(name)
-{
+function expectedErrorHandler(name) {
   return function(event) {
     Assert.equal(event.type, "error");
     Assert.equal(event.target.error.name, name);
@@ -129,19 +126,16 @@ function expectedErrorHandler(name)
   };
 }
 
-function expectUncaughtException(expecting)
-{
+function expectUncaughtException(expecting) {
   // This is dummy for xpcshell test.
 }
 
-function ExpectError(name, preventDefault)
-{
+function ExpectError(name, preventDefault) {
   this._name = name;
   this._preventDefault = preventDefault;
 }
 ExpectError.prototype = {
-  handleEvent(event)
-  {
+  handleEvent(event) {
     Assert.equal(event.type, "error");
     Assert.equal(this._name, event.target.error.name);
     if (this._preventDefault) {
@@ -152,32 +146,33 @@ ExpectError.prototype = {
   },
 };
 
-function continueToNextStepSync()
-{
+function continueToNextStepSync() {
   testGenerator.next();
 }
 
 function compareKeys(k1, k2) {
   let t = typeof k1;
-  if (t != typeof k2)
+  if (t != typeof k2) {
     return false;
+  }
 
-  if (t !== "object")
+  if (t !== "object") {
     return k1 === k2;
+  }
 
   if (k1 instanceof Date) {
-    return (k2 instanceof Date) &&
-      k1.getTime() === k2.getTime();
+    return k2 instanceof Date && k1.getTime() === k2.getTime();
   }
 
   if (k1 instanceof Array) {
-    if (!(k2 instanceof Array) ||
-        k1.length != k2.length)
+    if (!(k2 instanceof Array) || k1.length != k2.length) {
       return false;
+    }
 
     for (let i = 0; i < k1.length; ++i) {
-      if (!compareKeys(k1[i], k2[i]))
+      if (!compareKeys(k1[i], k2[i])) {
         return false;
+      }
     }
 
     return true;
@@ -186,67 +181,55 @@ function compareKeys(k1, k2) {
   return false;
 }
 
-function addPermission(permission, url)
-{
+function addPermission(permission, url) {
   throw new Error("addPermission");
 }
 
-function removePermission(permission, url)
-{
+function removePermission(permission, url) {
   throw new Error("removePermission");
 }
 
-function allowIndexedDB(url)
-{
+function allowIndexedDB(url) {
   throw new Error("allowIndexedDB");
 }
 
-function disallowIndexedDB(url)
-{
+function disallowIndexedDB(url) {
   throw new Error("disallowIndexedDB");
 }
 
-function enableExperimental()
-{
+function enableExperimental() {
   SpecialPowers.setBoolPref("dom.indexedDB.experimental", true);
 }
 
-function resetExperimental()
-{
+function resetExperimental() {
   SpecialPowers.clearUserPref("dom.indexedDB.experimental");
 }
 
-function enableTesting()
-{
+function enableTesting() {
   SpecialPowers.setBoolPref("dom.indexedDB.testing", true);
 }
 
-function resetTesting()
-{
+function resetTesting() {
   SpecialPowers.clearUserPref("dom.indexedDB.testing");
 }
 
-function gc()
-{
+function gc() {
   Cu.forceGC();
   Cu.forceCC();
 }
 
-function scheduleGC()
-{
+function scheduleGC() {
   SpecialPowers.exactGC(continueToNextStep);
 }
 
 function setTimeout(fun, timeout) {
-  let timer = Cc["@mozilla.org/timer;1"]
-                .createInstance(Ci.nsITimer);
+  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   var event = {
     notify(timer) {
       fun();
     },
   };
-  timer.initWithCallback(event, timeout,
-                         Ci.nsITimer.TYPE_ONE_SHOT);
+  timer.initWithCallback(event, timeout, Ci.nsITimer.TYPE_ONE_SHOT);
   return timer;
 }
 
@@ -292,8 +275,7 @@ function clearAllDatabases(callback) {
   resetOrClearAllDatabases(callback, true);
 }
 
-function installPackagedProfile(packageName)
-{
+function installPackagedProfile(packageName) {
   let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
 
   let currentDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
@@ -301,8 +283,9 @@ function installPackagedProfile(packageName)
   let packageFile = currentDir.clone();
   packageFile.append(packageName + ".zip");
 
-  let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
-                  .createInstance(Ci.nsIZipReader);
+  let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(
+    Ci.nsIZipReader
+  );
   zipReader.open(packageFile);
 
   let entryNames = [];
@@ -327,12 +310,14 @@ function installPackagedProfile(packageName)
     } else {
       let istream = zipReader.getInputStream(entryName);
 
-      var ostream = Cc["@mozilla.org/network/file-output-stream;1"]
-                    .createInstance(Ci.nsIFileOutputStream);
+      var ostream = Cc[
+        "@mozilla.org/network/file-output-stream;1"
+      ].createInstance(Ci.nsIFileOutputStream);
       ostream.init(file, -1, parseInt("0644", 8), 0);
 
-      let bostream = Cc["@mozilla.org/network/buffered-output-stream;1"]
-                     .createInstance(Ci.nsIBufferedOutputStream);
+      let bostream = Cc[
+        "@mozilla.org/network/buffered-output-stream;1"
+      ].createInstance(Ci.nsIBufferedOutputStream);
       bostream.init(ostream, 32768);
 
       bostream.writeFrom(istream, istream.available());
@@ -345,8 +330,7 @@ function installPackagedProfile(packageName)
   zipReader.close();
 }
 
-function getChromeFilesDir()
-{
+function getChromeFilesDir() {
   let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
 
   let idbDir = profileDir.clone();
@@ -366,16 +350,14 @@ function getChromeFilesDir()
   throw new Error("files directory doesn't exist!");
 }
 
-function getView(size)
-{
+function getView(size) {
   let buffer = new ArrayBuffer(size);
   let view = new Uint8Array(buffer);
   is(buffer.byteLength, size, "Correct byte length");
   return view;
 }
 
-function getRandomView(size)
-{
+function getRandomView(size) {
   let view = getView(size);
   for (let i = 0; i < size; i++) {
     view[i] = parseInt(Math.random() * 255);
@@ -383,45 +365,38 @@ function getRandomView(size)
   return view;
 }
 
-function getBlob(str)
-{
-  return new Blob([str], {type: "type/text"});
+function getBlob(str) {
+  return new Blob([str], { type: "type/text" });
 }
 
-function getFile(name, type, str)
-{
-  return new File([str], name, {type});
+function getFile(name, type, str) {
+  return new File([str], name, { type });
 }
 
-function isWasmSupported()
-{
+function isWasmSupported() {
   let testingFunctions = Cu.getJSTestingFunctions();
   return testingFunctions.wasmIsSupported();
 }
 
-function getWasmBinarySync(text)
-{
+function getWasmBinarySync(text) {
   let testingFunctions = Cu.getJSTestingFunctions();
   let binary = testingFunctions.wasmTextToBinary(text);
   return binary;
 }
 
-function getWasmBinary(text)
-{
+function getWasmBinary(text) {
   let binary = getWasmBinarySync(text);
   executeSoon(function() {
     testGenerator.next(binary);
   });
 }
 
-function getWasmModule(binary)
-{
+function getWasmModule(binary) {
   let module = new WebAssembly.Module(binary);
   return module;
 }
 
-function compareBuffers(buffer1, buffer2)
-{
+function compareBuffers(buffer1, buffer2) {
   if (buffer1.byteLength != buffer2.byteLength) {
     return false;
   }
@@ -436,17 +411,13 @@ function compareBuffers(buffer1, buffer2)
   return true;
 }
 
-function verifyBuffers(buffer1, buffer2)
-{
+function verifyBuffers(buffer1, buffer2) {
   ok(compareBuffers(buffer1, buffer2), "Correct buffer data");
 }
 
-function verifyBlob(blob1, blob2)
-{
-  is(Blob.isInstance(blob1), true,
-     "Instance of nsIDOMBlob");
-  is(blob1 instanceof File, blob2 instanceof File,
-     "Instance of DOM File");
+function verifyBlob(blob1, blob2) {
+  is(Blob.isInstance(blob1), true, "Instance of nsIDOMBlob");
+  is(blob1 instanceof File, blob2 instanceof File, "Instance of DOM File");
   is(blob1.size, blob2.size, "Correct size");
   is(blob1.type, blob2.type, "Correct type");
   if (blob2 instanceof File) {
@@ -487,24 +458,24 @@ function verifyBlob(blob1, blob2)
   };
 }
 
-function verifyMutableFile(mutableFile1, file2)
-{
-  is(mutableFile1 instanceof IDBMutableFile, true,
-     "Instance of IDBMutableFile");
+function verifyMutableFile(mutableFile1, file2) {
+  is(
+    mutableFile1 instanceof IDBMutableFile,
+    true,
+    "Instance of IDBMutableFile"
+  );
   is(mutableFile1.name, file2.name, "Correct name");
   is(mutableFile1.type, file2.type, "Correct type");
   continueToNextStep();
 }
 
-function verifyView(view1, view2)
-{
+function verifyView(view1, view2) {
   is(view1.byteLength, view2.byteLength, "Correct byteLength");
   verifyBuffers(view1, view2);
   continueToNextStep();
 }
 
-function verifyWasmModule(module1, module2)
-{
+function verifyWasmModule(module1, module2) {
   // We assume the given modules have no imports and export a single function
   // named 'run'.
   var instance1 = new WebAssembly.Instance(module1);
@@ -514,20 +485,18 @@ function verifyWasmModule(module1, module2)
   continueToNextStep();
 }
 
-function grabFileUsageAndContinueHandler(request)
-{
+function grabFileUsageAndContinueHandler(request) {
   testGenerator.next(request.result.fileUsage);
 }
 
-function getCurrentUsage(usageHandler)
-{
-  let principal = Cc["@mozilla.org/systemprincipal;1"]
-                    .createInstance(Ci.nsIPrincipal);
+function getCurrentUsage(usageHandler) {
+  let principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
+    Ci.nsIPrincipal
+  );
   Services.qms.getUsageForPrincipal(principal, usageHandler);
 }
 
-function setTemporaryStorageLimit(limit)
-{
+function setTemporaryStorageLimit(limit) {
   const pref = "dom.quotaManager.temporaryStorage.fixedLimit";
   if (limit) {
     info("Setting temporary storage limit to " + limit);
@@ -538,20 +507,17 @@ function setTemporaryStorageLimit(limit)
   }
 }
 
-function setDataThreshold(threshold)
-{
+function setDataThreshold(threshold) {
   info("Setting data threshold to " + threshold);
   SpecialPowers.setIntPref("dom.indexedDB.dataThreshold", threshold);
 }
 
-function setMaxSerializedMsgSize(aSize)
-{
+function setMaxSerializedMsgSize(aSize) {
   info("Setting maximal size of a serialized message to " + aSize);
   SpecialPowers.setIntPref("dom.indexedDB.maxSerializedMsgSize", aSize);
 }
 
-function getPrincipal(url)
-{
+function getPrincipal(url) {
   let uri = Services.io.newURI(url);
   return Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
 }
@@ -588,17 +554,16 @@ function expectingUpgrade(request) {
   });
 }
 
-function initChromeOrigin(persistence)
-{
-    let principal = Cc["@mozilla.org/systemprincipal;1"]
-                      .createInstance(Ci.nsIPrincipal);
-    return new Promise(function(resolve) {
-      let request =
-        Services.qms.initStoragesForPrincipal(principal, persistence);
-      request.callback = function() {
-        return resolve(request);
-      };
-    });
+function initChromeOrigin(persistence) {
+  let principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
+    Ci.nsIPrincipal
+  );
+  return new Promise(function(resolve) {
+    let request = Services.qms.initStoragesForPrincipal(principal, persistence);
+    request.callback = function() {
+      return resolve(request);
+    };
+  });
 }
 
 // Given a "/"-delimited path relative to the profile directory,
@@ -606,21 +571,22 @@ function initChromeOrigin(persistence)
 // for the existence of the file or parent directories.
 // It is safe even on Windows where the directory separator is not "/",
 // but make sure you're not passing in a "\"-delimited path.
-function getRelativeFile(relativePath)
-{
-    let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+function getRelativeFile(relativePath) {
+  let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
 
-    let file = profileDir.clone();
-    relativePath.split("/").forEach(function(component) {
-      file.append(component);
-    });
+  let file = profileDir.clone();
+  relativePath.split("/").forEach(function(component) {
+    file.append(component);
+  });
 
-    return file;
+  return file;
 }
 
 var SpecialPowers = {
   isMainProcess() {
-    return Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+    return (
+      Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
+    );
   },
   notifyObservers(subject, topic, data) {
     Services.obs.notifyObservers(subject, topic, data);
@@ -692,16 +658,26 @@ var SpecialPowers = {
       } else {
         testFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, filePerms);
       }
-      let outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-      outStream.init(testFile, 0x02 | 0x08 | 0x20, // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
-                     filePerms, 0);
+      let outStream = Cc[
+        "@mozilla.org/network/file-output-stream;1"
+      ].createInstance(Ci.nsIFileOutputStream);
+      outStream.init(
+        testFile,
+        0x02 | 0x08 | 0x20, // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
+        filePerms,
+        0
+      );
       if (request.data) {
         outStream.write(request.data, request.data.length);
         outStream.close();
       }
-      promises.push(File.createFromFileName(testFile.path, request.options).then(function(file) {
-        filePaths.push(file);
-      }));
+      promises.push(
+        File.createFromFileName(testFile.path, request.options).then(function(
+          file
+        ) {
+          filePaths.push(file);
+        })
+      );
       createdFiles.push(testFile);
     });
 

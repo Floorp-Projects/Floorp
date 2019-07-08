@@ -34,12 +34,20 @@ add_task(async function test_set_tabstate() {
 
   // verify the tab state's integrity
   state = JSON.parse(state);
-  ok(state instanceof Object && state.entries instanceof Array && state.entries.length > 0,
-     "state object seems valid");
-  ok(state.entries.length == 1 && state.entries[0].url == URL,
-     "Got the expected state object (test URL)");
-  ok(state.extData && state.extData[key] == value,
-     "Got the expected state object (test manually set tab value)");
+  ok(
+    state instanceof Object &&
+      state.entries instanceof Array &&
+      state.entries.length > 0,
+    "state object seems valid"
+  );
+  ok(
+    state.entries.length == 1 && state.entries[0].url == URL,
+    "Got the expected state object (test URL)"
+  );
+  ok(
+    state.extData && state.extData[key] == value,
+    "Got the expected state object (test manually set tab value)"
+  );
 
   // clean up
   gBrowser.removeTab(tab);
@@ -49,7 +57,10 @@ add_task(async function test_set_tabstate_and_duplicate() {
   let key2 = "key2";
   let value2 = "Value " + Math.random();
   let value3 = "Another value: " + Date.now();
-  let state = {entries: [{ url: URL, triggeringPrincipal_base64}], extData: { key2: value2 }};
+  let state = {
+    entries: [{ url: URL, triggeringPrincipal_base64 }],
+    extData: { key2: value2 },
+  };
 
   // create a new tab
   let tab = BrowserTestUtils.addTab(gBrowser);
@@ -58,24 +69,28 @@ add_task(async function test_set_tabstate_and_duplicate() {
   await promiseBrowserLoaded(tab.linkedBrowser);
 
   // verify the correctness of the restored tab
-  ok(ss.getCustomTabValue(tab, key2) == value2 && tab.linkedBrowser.currentURI.spec == URL,
-     "the tab's state was correctly restored");
+  ok(
+    ss.getCustomTabValue(tab, key2) == value2 &&
+      tab.linkedBrowser.currentURI.spec == URL,
+    "the tab's state was correctly restored"
+  );
 
-  let inputID = AppConstants.NIGHTLY_BUILD ? "about-config-search"
-                                           : "textbox";
+  let inputID = AppConstants.NIGHTLY_BUILD ? "about-config-search" : "textbox";
 
   // add text data
-  await setInputValue(tab.linkedBrowser, {id: inputID, value: value3});
+  await setInputValue(tab.linkedBrowser, { id: inputID, value: value3 });
 
   // duplicate the tab
   let tab2 = ss.duplicateTab(window, tab);
   await promiseTabRestored(tab2);
 
   // verify the correctness of the duplicated tab
-  ok(ss.getCustomTabValue(tab2, key2) == value2 &&
-     tab2.linkedBrowser.currentURI.spec == URL,
-     "correctly duplicated the tab's state");
-  let textbox = await getInputValue(tab2.linkedBrowser, {id: inputID});
+  ok(
+    ss.getCustomTabValue(tab2, key2) == value2 &&
+      tab2.linkedBrowser.currentURI.spec == URL,
+    "correctly duplicated the tab's state"
+  );
+  let textbox = await getInputValue(tab2.linkedBrowser, { id: inputID });
   is(textbox, value3, "also duplicated text data");
 
   // clean up

@@ -32,9 +32,11 @@ add_task(async function() {
   const dominatorTreeId = await client.computeDominatorTree(snapshotFilePath);
   ok(true, "Should have computed dominator tree");
 
-  const { report } = await client.takeCensus(snapshotFilePath,
-                                             { breakdown: CENSUS_BREAKDOWN },
-                                             { asTreeNode: true });
+  const { report } = await client.takeCensus(
+    snapshotFilePath,
+    { breakdown: CENSUS_BREAKDOWN },
+    { asTreeNode: true }
+  );
   ok(report, "Should get a report");
 
   let nodesWithLeafIndicesFound = 0;
@@ -56,20 +58,37 @@ add_task(async function() {
 
       dumpn(`response = ${JSON.stringify(response, null, 4)}`);
 
-      equal(response.nodes.length, Math.min(MAX_INDIVIDUALS, censusNode.count),
-         "response.nodes.length === Math.min(MAX_INDIVIDUALS, censusNode.count)");
+      equal(
+        response.nodes.length,
+        Math.min(MAX_INDIVIDUALS, censusNode.count),
+        "response.nodes.length === Math.min(MAX_INDIVIDUALS, censusNode.count)"
+      );
 
       let lastRetainedSize = Infinity;
       for (const individual of response.nodes) {
-        equal(typeof individual.nodeId, "number",
-              "individual.nodeId should be a number");
-        ok(individual.retainedSize <= lastRetainedSize,
-           "individual.retainedSize <= lastRetainedSize");
+        equal(
+          typeof individual.nodeId,
+          "number",
+          "individual.nodeId should be a number"
+        );
+        ok(
+          individual.retainedSize <= lastRetainedSize,
+          "individual.retainedSize <= lastRetainedSize"
+        );
         lastRetainedSize = individual.retainedSize;
-        ok(individual.shallowSize, "individual.shallowSize should exist and be non-zero");
+        ok(
+          individual.shallowSize,
+          "individual.shallowSize should exist and be non-zero"
+        );
         ok(individual.shortestPaths, "individual.shortestPaths should exist");
-        ok(individual.shortestPaths.nodes, "individual.shortestPaths.nodes should exist");
-        ok(individual.shortestPaths.edges, "individual.shortestPaths.edges should exist");
+        ok(
+          individual.shortestPaths.nodes,
+          "individual.shortestPaths.nodes should exist"
+        );
+        ok(
+          individual.shortestPaths.edges,
+          "individual.shortestPaths.edges should exist"
+        );
         ok(individual.label, "individual.label should exist");
       }
     }
@@ -79,9 +98,13 @@ add_task(async function() {
         await assertCanGetIndividuals(child);
       }
     }
-  }(report));
+  })(report);
 
-  equal(nodesWithLeafIndicesFound, 4, "Should have found a leaf for each coarse type");
+  equal(
+    nodesWithLeafIndicesFound,
+    4,
+    "Should have found a leaf for each coarse type"
+  );
 
   client.destroy();
 });

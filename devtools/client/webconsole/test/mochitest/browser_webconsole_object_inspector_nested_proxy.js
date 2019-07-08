@@ -6,8 +6,9 @@
 "use strict";
 
 // Check evaluating and expanding getters in the console.
-const TEST_URI = "data:text/html;charset=utf8,"
- + "<h1>Object Inspector on deeply nested proxies</h1>";
+const TEST_URI =
+  "data:text/html;charset=utf8," +
+  "<h1>Object Inspector on deeply nested proxies</h1>";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -41,10 +42,15 @@ add_task(async function() {
 
 function checkChildren(node, expectedChildren) {
   const children = getObjectInspectorChildrenNodes(node);
-  is(children.length, expectedChildren.length,
-    "There is the expected number of children");
+  is(
+    children.length,
+    expectedChildren.length,
+    "There is the expected number of children"
+  );
   children.forEach((child, index) => {
-    ok(child.textContent.includes(expectedChildren[index]),
-      `Expected "${expectedChildren[index]}" child`);
+    ok(
+      child.textContent.includes(expectedChildren[index]),
+      `Expected "${expectedChildren[index]}" child`
+    );
   });
 }

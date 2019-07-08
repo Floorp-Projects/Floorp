@@ -10,14 +10,85 @@
 // is used (from service.js).
 /* global Service */
 
-var {Changeset, EngineManager, Store, SyncEngine, Tracker} = ChromeUtils.import("resource://services-sync/engines.js");
-var {ABORT_SYNC_COMMAND, CLIENT_NOT_CONFIGURED, CREDENTIALS_CHANGED, DEFAULT_DOWNLOAD_BATCH_SIZE, DEFAULT_GUID_FETCH_BATCH_SIZE, DEFAULT_KEYBUNDLE_NAME, DEVICE_TYPE_DESKTOP, DEVICE_TYPE_MOBILE, ENGINE_APPLY_FAIL, ENGINE_BATCH_INTERRUPTED, ENGINE_DOWNLOAD_FAIL, ENGINE_SUCCEEDED, ENGINE_UNKNOWN_FAIL, ENGINE_UPLOAD_FAIL, HMAC_EVENT_INTERVAL, IDLE_OBSERVER_BACK_DELAY, LOGIN_FAILED, LOGIN_FAILED_INVALID_PASSPHRASE, LOGIN_FAILED_LOGIN_REJECTED, LOGIN_FAILED_NETWORK_ERROR, LOGIN_FAILED_NO_PASSPHRASE, LOGIN_FAILED_NO_USERNAME, LOGIN_FAILED_SERVER_ERROR, LOGIN_SUCCEEDED, MASTER_PASSWORD_LOCKED, MASTER_PASSWORD_LOCKED_RETRY_INTERVAL, MAXIMUM_BACKOFF_INTERVAL, MAX_ERROR_COUNT_BEFORE_BACKOFF, MAX_HISTORY_DOWNLOAD, MAX_HISTORY_UPLOAD, METARECORD_DOWNLOAD_FAIL, MINIMUM_BACKOFF_INTERVAL, MULTI_DEVICE_THRESHOLD, NO_SYNC_NODE_FOUND, NO_SYNC_NODE_INTERVAL, OVER_QUOTA, PREFS_BRANCH, RESPONSE_OVER_QUOTA, SCORE_INCREMENT_MEDIUM, SCORE_INCREMENT_SMALL, SCORE_INCREMENT_XLARGE, SCORE_UPDATE_DELAY, SERVER_MAINTENANCE, SINGLE_USER_THRESHOLD, SQLITE_MAX_VARIABLE_NUMBER, STATUS_DISABLED, STATUS_OK, STORAGE_VERSION, SYNC_FAILED, SYNC_FAILED_PARTIAL, SYNC_KEY_DECODED_LENGTH, SYNC_KEY_ENCODED_LENGTH, SYNC_SUCCEEDED, URI_LENGTH_MAX, VERSION_OUT_OF_DATE, WEAVE_VERSION, kFirefoxShuttingDown, kFirstSyncChoiceNotMade, kSyncBackoffNotMet, kSyncMasterPasswordLocked, kSyncNetworkOffline, kSyncNotConfigured, kSyncWeaveDisabled} = ChromeUtils.import("resource://services-sync/constants.js");
-var {BulkKeyBundle, SyncKeyBundle} = ChromeUtils.import("resource://services-sync/keys.js");
+var {
+  Changeset,
+  EngineManager,
+  Store,
+  SyncEngine,
+  Tracker,
+} = ChromeUtils.import("resource://services-sync/engines.js");
+var {
+  ABORT_SYNC_COMMAND,
+  CLIENT_NOT_CONFIGURED,
+  CREDENTIALS_CHANGED,
+  DEFAULT_DOWNLOAD_BATCH_SIZE,
+  DEFAULT_GUID_FETCH_BATCH_SIZE,
+  DEFAULT_KEYBUNDLE_NAME,
+  DEVICE_TYPE_DESKTOP,
+  DEVICE_TYPE_MOBILE,
+  ENGINE_APPLY_FAIL,
+  ENGINE_BATCH_INTERRUPTED,
+  ENGINE_DOWNLOAD_FAIL,
+  ENGINE_SUCCEEDED,
+  ENGINE_UNKNOWN_FAIL,
+  ENGINE_UPLOAD_FAIL,
+  HMAC_EVENT_INTERVAL,
+  IDLE_OBSERVER_BACK_DELAY,
+  LOGIN_FAILED,
+  LOGIN_FAILED_INVALID_PASSPHRASE,
+  LOGIN_FAILED_LOGIN_REJECTED,
+  LOGIN_FAILED_NETWORK_ERROR,
+  LOGIN_FAILED_NO_PASSPHRASE,
+  LOGIN_FAILED_NO_USERNAME,
+  LOGIN_FAILED_SERVER_ERROR,
+  LOGIN_SUCCEEDED,
+  MASTER_PASSWORD_LOCKED,
+  MASTER_PASSWORD_LOCKED_RETRY_INTERVAL,
+  MAXIMUM_BACKOFF_INTERVAL,
+  MAX_ERROR_COUNT_BEFORE_BACKOFF,
+  MAX_HISTORY_DOWNLOAD,
+  MAX_HISTORY_UPLOAD,
+  METARECORD_DOWNLOAD_FAIL,
+  MINIMUM_BACKOFF_INTERVAL,
+  MULTI_DEVICE_THRESHOLD,
+  NO_SYNC_NODE_FOUND,
+  NO_SYNC_NODE_INTERVAL,
+  OVER_QUOTA,
+  PREFS_BRANCH,
+  RESPONSE_OVER_QUOTA,
+  SCORE_INCREMENT_MEDIUM,
+  SCORE_INCREMENT_SMALL,
+  SCORE_INCREMENT_XLARGE,
+  SCORE_UPDATE_DELAY,
+  SERVER_MAINTENANCE,
+  SINGLE_USER_THRESHOLD,
+  SQLITE_MAX_VARIABLE_NUMBER,
+  STATUS_DISABLED,
+  STATUS_OK,
+  STORAGE_VERSION,
+  SYNC_FAILED,
+  SYNC_FAILED_PARTIAL,
+  SYNC_KEY_DECODED_LENGTH,
+  SYNC_KEY_ENCODED_LENGTH,
+  SYNC_SUCCEEDED,
+  URI_LENGTH_MAX,
+  VERSION_OUT_OF_DATE,
+  WEAVE_VERSION,
+  kFirefoxShuttingDown,
+  kFirstSyncChoiceNotMade,
+  kSyncBackoffNotMet,
+  kSyncMasterPasswordLocked,
+  kSyncNetworkOffline,
+  kSyncNotConfigured,
+  kSyncWeaveDisabled,
+} = ChromeUtils.import("resource://services-sync/constants.js");
+var { BulkKeyBundle, SyncKeyBundle } = ChromeUtils.import(
+  "resource://services-sync/keys.js"
+);
 
 // Common code for test_errorhandler_{1,2}.js -- pulled out to make it less
 // monolithic and take less time to execute.
 const EHTestsCommon = {
-
   service_unavailable(request, response) {
     let body = "Service Unavailable";
     response.setStatusLine(request.httpVersion, 503, "Service Unavailable");
@@ -33,10 +104,10 @@ const EHTestsCommon = {
     let global = new ServerWBO("global", {
       syncID: Service.syncID,
       storageVersion: STORAGE_VERSION,
-      engines: {clients: {version: clientsEngine.version,
-                          syncID: clientsSyncID},
-                catapult: {version: catapultEngine.version,
-                           syncID: catapultSyncID}},
+      engines: {
+        clients: { version: clientsEngine.version, syncID: clientsSyncID },
+        catapult: { version: catapultEngine.version, syncID: catapultSyncID },
+      },
     });
     let clientsColl = new ServerCollection({}, true);
 
@@ -49,8 +120,10 @@ const EHTestsCommon = {
       // Normal server behaviour.
       "/1.1/johndoe/storage/meta/global": upd("meta", global.handler()),
       "/1.1/johndoe/info/collections": collectionsHelper.handler,
-      "/1.1/johndoe/storage/crypto/keys":
-        upd("crypto", (new ServerWBO("keys")).handler()),
+      "/1.1/johndoe/storage/crypto/keys": upd(
+        "crypto",
+        new ServerWBO("keys").handler()
+      ),
       "/1.1/johndoe/storage/clients": upd("clients", clientsColl.handler()),
 
       // Credentials are wrong or node reallocated.
@@ -72,8 +145,10 @@ const EHTestsCommon = {
       // Maintenance or overloaded (503 + Retry-After) at wiping collection.
       "/1.1/broken.wipe/info/collections": collectionsHelper.handler,
       "/1.1/broken.wipe/storage/meta/global": upd("meta", global.handler()),
-      "/1.1/broken.wipe/storage/crypto/keys":
-        upd("crypto", (new ServerWBO("keys")).handler()),
+      "/1.1/broken.wipe/storage/crypto/keys": upd(
+        "crypto",
+        new ServerWBO("keys").handler()
+      ),
       "/1.1/broken.wipe/storage": EHTestsCommon.service_unavailable,
       "/1.1/broken.wipe/storage/clients": upd("clients", clientsColl.handler()),
       "/1.1/broken.wipe/storage/catapult": EHTestsCommon.service_unavailable,
@@ -95,8 +170,7 @@ const EHTestsCommon = {
     };
 
     return CatapultEngine;
-  }()),
-
+  })(),
 
   async generateCredentialsChangedFailure() {
     // Make sync fail due to changed credentials. We simply re-encrypt
@@ -118,7 +192,9 @@ const EHTestsCommon = {
     await generateNewKeys(Service.collectionKeys);
     let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
     await serverKeys.encrypt(Service.identity.syncKeyBundle);
-    let response = await serverKeys.upload(Service.resource(Service.cryptoKeysURL));
+    let response = await serverKeys.upload(
+      Service.resource(Service.cryptoKeysURL)
+    );
     return response.success;
   },
 };

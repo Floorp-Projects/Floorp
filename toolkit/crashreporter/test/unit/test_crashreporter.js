@@ -1,7 +1,8 @@
 function run_test() {
   dump("INFO | test_crashreporter.js | Get crashreporter service.\n");
-  var cr = Cc["@mozilla.org/toolkit/crash-reporter;1"]
-             .getService(Ci.nsICrashReporter);
+  var cr = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
+    Ci.nsICrashReporter
+  );
   Assert.notEqual(cr, null);
 
   Assert.ok(cr.enabled);
@@ -16,8 +17,10 @@ function run_test() {
   // check setting/getting serverURL
 
   // try it with two different URLs, just for kicks
-  var testspecs = ["http://example.com/submit",
-                   "https://example.org/anothersubmit"];
+  var testspecs = [
+    "http://example.com/submit",
+    "https://example.org/anothersubmit",
+  ];
   for (var i = 0; i < testspecs.length; ++i) {
     cr.serverURL = Services.io.newURI(testspecs[i]);
     Assert.equal(cr.serverURL.spec, testspecs[i]);
@@ -42,19 +45,25 @@ function run_test() {
   // Test annotateCrashReport()
   try {
     cr.annotateCrashReport(undefined, "");
-    do_throw("Calling annotateCrashReport() with an undefined key should have thrown!");
+    do_throw(
+      "Calling annotateCrashReport() with an undefined key should have thrown!"
+    );
   } catch (ex) {
     Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
   try {
     cr.annotateCrashReport("foobar", "");
-    do_throw("Calling annotateCrashReport() with a bogus key should have thrown!");
+    do_throw(
+      "Calling annotateCrashReport() with a bogus key should have thrown!"
+    );
   } catch (ex) {
     Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
   try {
     cr.annotateCrashReport("TestKey", "da\0ta");
-    do_throw("Calling annotateCrashReport() with a '\\0' in data should have thrown!");
+    do_throw(
+      "Calling annotateCrashReport() with a '\\0' in data should have thrown!"
+    );
   } catch (ex) {
     Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
@@ -64,7 +73,9 @@ function run_test() {
 
   try {
     cr.appendAppNotesToCrashReport("da\0ta");
-    do_throw("Calling appendAppNotesToCrashReport() with a '\\0' in data should have thrown!");
+    do_throw(
+      "Calling appendAppNotesToCrashReport() with a '\\0' in data should have thrown!"
+    );
   } catch (ex) {
     Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
@@ -75,13 +86,17 @@ function run_test() {
   // Test removeCrashReportAnnotation()
   try {
     cr.removeCrashReportAnnotation(undefined);
-    do_throw("Calling removeCrashReportAnnotation() with an undefined key should have thrown!");
+    do_throw(
+      "Calling removeCrashReportAnnotation() with an undefined key should have thrown!"
+    );
   } catch (ex) {
     Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
   try {
     cr.removeCrashReportAnnotation("foobar");
-    do_throw("Calling removeCrashReportAnnotation() with a bogus key should have thrown!");
+    do_throw(
+      "Calling removeCrashReportAnnotation() with a bogus key should have thrown!"
+    );
   } catch (ex) {
     Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }

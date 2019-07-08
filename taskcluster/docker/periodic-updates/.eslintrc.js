@@ -10,20 +10,11 @@ module.exports = {
     // Enforce return statements in callbacks of array methods.
     "array-callback-return": "error",
 
-    // Braces only needed for multi-line arrow function blocks
-    "arrow-body-style": ["error", "as-needed"],
-
     // Verify calls of super() in constructors.
     "constructor-super": "error",
 
-    // Require braces around blocks that start a new line
-    "curly": ["error", "multi-line"],
-
     // Require default case in switch statements.
     "default-case": "error",
-
-    // Always require parenthesis for new calls
-    "new-parens": "error",
 
     // Disallow use of alert(), confirm(), and prompt().
     "no-alert": "error",
@@ -65,23 +56,6 @@ module.exports = {
 
     // Disallow unnecessary escape usage in strings and regular expressions.
     "no-useless-escape": "error",
-
-    // Enforce spacing after semicolons.
-    "semi-spacing": ["error", { "before": false, "after": true }],
-
-    // Never use spaces before named function parentheses, but always for async
-    // arrow functions.
-    "space-before-function-paren": ["error", {
-      "anonymous": "ignore",
-      "asyncArrow": "always",
-      "named": "never",
-    }],
-
-    // No space padding in parentheses
-    "space-in-parens": ["error", "never"],
-
-    // ++ and -- should not need spacing
-    "space-unary-ops": ["error", { "words": true, "nonwords": false }],
 
     // Require "use strict" to be defined globally in the script.
     "strict": ["error", "global"],

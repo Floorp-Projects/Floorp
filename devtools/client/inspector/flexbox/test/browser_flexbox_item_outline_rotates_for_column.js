@@ -14,24 +14,32 @@ add_task(async function() {
   const { document: doc } = flexboxInspector;
 
   // Select a flex item in the row flexbox layout.
-  let onFlexItemOutlineRendered = waitForDOM(doc,
-    ".flex-outline-container .flex-outline");
+  let onFlexItemOutlineRendered = waitForDOM(
+    doc,
+    ".flex-outline-container .flex-outline"
+  );
   await selectNode(".container .item", inspector);
   let [flexOutline] = await onFlexItemOutlineRendered;
 
-  ok(flexOutline.classList.contains("horizontal-lr"),
-    "The flex outline has the horizontal-lr class");
+  ok(
+    flexOutline.classList.contains("horizontal-lr"),
+    "The flex outline has the horizontal-lr class"
+  );
 
   // Check that the outline is wider than it is tall in the configuration.
   let bounds = flexOutline.getBoxQuads()[0].getBounds();
   ok(bounds.width > bounds.height, "The outline looks like a row");
 
   // Select a flex item in the column flexbox layout.
-  onFlexItemOutlineRendered = waitForDOM(doc,
-    ".flex-outline-container .flex-outline");
+  onFlexItemOutlineRendered = waitForDOM(
+    doc,
+    ".flex-outline-container .flex-outline"
+  );
   await selectNode(".container.column .item", inspector);
   await waitUntil(() => {
-    flexOutline = doc.querySelector(".flex-outline-container .flex-outline.vertical-tb");
+    flexOutline = doc.querySelector(
+      ".flex-outline-container .flex-outline.vertical-tb"
+    );
     return flexOutline;
   });
   ok(true, "The flex outline has the vertical-tb class");

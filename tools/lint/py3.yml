@@ -12,17 +12,17 @@ py3:
         - dom/media/test
         - gfx
         - ipc/ipdl
-        - js/src
         - layout/reftests
         - layout/style
         - layout/tools/reftest
         - media
-        - modules/freetype2
         - security/manager/ssl
-        - servo
+        - testing/awsy
+        - testing/firefox-ui/harness/firefox_ui_harness/runners/update.py
+        - testing/gtest
         - testing/mochitest
         - testing/mozharness
-        - testing/tools/iceserver
+        - testing/tps
         - testing/web-platform
         - toolkit
         - tools/jprof

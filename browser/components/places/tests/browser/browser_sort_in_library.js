@@ -28,12 +28,12 @@
 // sortingMode is constructed from the key and dir properties (i.e.,
 // SORT_BY_<key>_<dir>).
 const SORT_LOOKUP_TABLE = {
-  title:        { key: "TITLE",        dir: "ASCENDING"  },
-  tags:         { key: "TAGS",         dir: "ASCENDING"  },
-  url:          { key: "URI",          dir: "ASCENDING"  },
-  date:         { key: "DATE",         dir: "DESCENDING" },
-  visitCount:   { key: "VISITCOUNT",   dir: "DESCENDING" },
-  dateAdded:    { key: "DATEADDED",    dir: "DESCENDING" },
+  title: { key: "TITLE", dir: "ASCENDING" },
+  tags: { key: "TAGS", dir: "ASCENDING" },
+  url: { key: "URI", dir: "ASCENDING" },
+  date: { key: "DATE", dir: "DESCENDING" },
+  visitCount: { key: "VISITCOUNT", dir: "DESCENDING" },
+  dateAdded: { key: "DATEADDED", dir: "DESCENDING" },
   lastModified: { key: "LASTMODIFIED", dir: "DESCENDING" },
 };
 
@@ -61,12 +61,14 @@ function checkSort(aTree, aSortingMode) {
   // The placeContent tree's sort is determined by the nsINavHistoryResult it
   // stores.  Get it and check that the sort is what the caller expects.
   let res = aTree.result;
-  isnot(res, null,
-        "sanity check: placeContent.result should not return null");
+  isnot(res, null, "sanity check: placeContent.result should not return null");
 
   // Check sortingMode.
-  is(res.sortingMode, aSortingMode,
-     "column should now have sortingMode " + aSortingMode);
+  is(
+    res.sortingMode,
+    aSortingMode,
+    "column should now have sortingMode " + aSortingMode
+  );
 }
 
 /**
@@ -105,26 +107,35 @@ function setSort(aOrganizerWin, aTree, aUnsortFirst, aShouldFail, aCol, aDir) {
       prevSortKey = null;
       prevSortDir = null;
     } else {
-      if (aCol)
+      if (aCol) {
         prevSortKey = SORT_LOOKUP_TABLE[aCol.getAttribute("anonid")].key;
-      else if (prevSortKey === null)
+      } else if (prevSortKey === null) {
         prevSortKey = DEFAULT_SORT_KEY;
+      }
 
-      if (aDir)
+      if (aDir) {
         prevSortDir = aDir.toUpperCase();
-      else if (prevSortDir === null)
+      } else if (prevSortDir === null) {
         prevSortDir = SORT_LOOKUP_TABLE[aCol.getAttribute("anonid")].dir;
+      }
     }
   } catch (exc) {
     failed = true;
   }
 
-  is(failed, !!aShouldFail,
-     "setSortColumn on column " +
-     (aCol ? aCol.getAttribute("anonid") : "(no column)") +
-     " with direction " + (aDir || "(no direction)") +
-     " and table previously " + (aUnsortFirst ? "unsorted" : "sorted") +
-     " should " + (aShouldFail ? "" : "not ") + "fail");
+  is(
+    failed,
+    !!aShouldFail,
+    "setSortColumn on column " +
+      (aCol ? aCol.getAttribute("anonid") : "(no column)") +
+      " with direction " +
+      (aDir || "(no direction)") +
+      " and table previously " +
+      (aUnsortFirst ? "unsorted" : "sorted") +
+      " should " +
+      (aShouldFail ? "" : "not ") +
+      "fail"
+  );
 }
 
 /**
@@ -163,15 +174,21 @@ function testSortByColAndDir(aOrganizerWin, aPlaceContentTree, aUnsortFirst) {
 
   for (let i = 0; i < cols.length; i++) {
     let col = cols.item(i);
-    ok(col.hasAttribute("anonid"),
-       "sanity check: column " + col.id + " should have anonid");
+    ok(
+      col.hasAttribute("anonid"),
+      "sanity check: column " + col.id + " should have anonid"
+    );
 
     let colId = col.getAttribute("anonid");
-    ok(colId in SORT_LOOKUP_TABLE,
-       "sanity check: unexpected placeContent column anonid");
+    ok(
+      colId in SORT_LOOKUP_TABLE,
+      "sanity check: unexpected placeContent column anonid"
+    );
 
     let sortStr =
-      "SORT_BY_" + SORT_LOOKUP_TABLE[colId].key + "_" +
+      "SORT_BY_" +
+      SORT_LOOKUP_TABLE[colId].key +
+      "_" +
       (aUnsortFirst ? SORT_LOOKUP_TABLE[colId].dir : prevSortDir);
     let expectedSortMode = Ci.nsINavHistoryQueryOptions[sortStr];
 
@@ -202,7 +219,7 @@ function testSortByColAndDir(aOrganizerWin, aPlaceContentTree, aUnsortFirst) {
  */
 function testSortByDir(aOrganizerWin, aPlaceContentTree, aUnsortFirst) {
   ["ascending", "descending"].forEach(function(dir) {
-    let key = (aUnsortFirst ? DEFAULT_SORT_KEY : prevSortKey);
+    let key = aUnsortFirst ? DEFAULT_SORT_KEY : prevSortKey;
     let sortStr = "SORT_BY_" + key + "_" + dir.toUpperCase();
     let expectedSortMode = Ci.nsINavHistoryQueryOptions[sortStr];
     setSort(aOrganizerWin, aPlaceContentTree, aUnsortFirst, false, null, dir);
@@ -214,18 +231,18 @@ function test() {
   waitForExplicitFinish();
 
   openLibrary(function(win) {
-        let tree = win.document.getElementById("placeContent");
-        isnot(tree, null, "sanity check: placeContent tree should exist");
-        // Run the tests.
-        testSortByColAndDir(win, tree, true);
-        testSortByColAndDir(win, tree, false);
-        testSortByDir(win, tree, true);
-        testSortByDir(win, tree, false);
-        testInvalid(win, tree);
-        // Reset the sort to SORT_BY_NONE.
-        setSort(win, tree, false, false);
-        // Close the window and finish.
-        win.close();
-        finish();
+    let tree = win.document.getElementById("placeContent");
+    isnot(tree, null, "sanity check: placeContent tree should exist");
+    // Run the tests.
+    testSortByColAndDir(win, tree, true);
+    testSortByColAndDir(win, tree, false);
+    testSortByDir(win, tree, true);
+    testSortByDir(win, tree, false);
+    testInvalid(win, tree);
+    // Reset the sort to SORT_BY_NONE.
+    setSort(win, tree, false, false);
+    // Close the window and finish.
+    win.close();
+    finish();
   });
 }

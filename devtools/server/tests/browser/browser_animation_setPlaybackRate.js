@@ -8,8 +8,9 @@
 // can have their rates changed at the same time.
 
 add_task(async function() {
-  const {target, walker, animations} =
-    await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
+  const { target, walker, animations } = await initAnimationsFrontForUrl(
+    MAIN_DOMAIN + "animation.html"
+  );
 
   info("Retrieve an animated node");
   let node = await walker.querySelector(walker.rootNode, ".simple-animation");
@@ -36,12 +37,12 @@ add_task(async function() {
   const players = await animations.getAnimationPlayersForNode(node);
 
   info("Change all animations in <body> to .5 rate");
-  await animations.setPlaybackRates(players, .5);
+  await animations.setPlaybackRates(players, 0.5);
 
   info("Query their states and check they are correct");
   for (const animPlayer of players) {
     const animPlayerState = await animPlayer.getCurrentState();
-    is(animPlayerState.playbackRate, .5, "The playbackRate was updated");
+    is(animPlayerState.playbackRate, 0.5, "The playbackRate was updated");
   }
 
   await target.destroy();

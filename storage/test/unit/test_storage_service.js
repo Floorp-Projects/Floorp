@@ -84,7 +84,10 @@ function test_backup_not_new_filename() {
 }
 
 function test_backup_new_filename() {
-  var backup = Services.storage.backupDatabaseFile(getTestDB(), BACKUP_FILE_NAME);
+  var backup = Services.storage.backupDatabaseFile(
+    getTestDB(),
+    BACKUP_FILE_NAME
+  );
   Assert.equal(BACKUP_FILE_NAME, backup.leafName);
 
   backup.remove(false);
@@ -93,13 +96,17 @@ function test_backup_new_filename() {
 function test_backup_new_folder() {
   var parentDir = getTestDB().parent;
   parentDir.append("test_storage_temp");
-  if (parentDir.exists())
+  if (parentDir.exists()) {
     parentDir.remove(true);
+  }
   parentDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
   Assert.ok(parentDir.exists());
 
-  var backup = Services.storage.backupDatabaseFile(getTestDB(), BACKUP_FILE_NAME,
-                                                   parentDir);
+  var backup = Services.storage.backupDatabaseFile(
+    getTestDB(),
+    BACKUP_FILE_NAME,
+    parentDir
+  );
   Assert.equal(BACKUP_FILE_NAME, backup.leafName);
   Assert.ok(parentDir.equals(backup.parent));
 

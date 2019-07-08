@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-collapsibilities.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-collapsibilities.js",
+  this
+);
 
 /**
  * Test that collapsibilities of DebugTargetPane on RuntimePage by mouse clicking.
@@ -37,8 +40,9 @@ async function assertDebugTargetCollapsed(paneEl, title) {
   is(targetEl.clientHeight, 0, "Height of list element is zero");
   // check title
   const titleEl = paneEl.querySelector(".qa-debug-target-pane-title");
-  const expectedTitle =
-    `${ title } (${ targetEl.querySelectorAll(".qa-debug-target-item").length })`;
+  const expectedTitle = `${title} (${
+    targetEl.querySelectorAll(".qa-debug-target-item").length
+  })`;
   is(titleEl.textContent, expectedTitle, "Collapsed title is correct");
 }
 
@@ -51,7 +55,8 @@ async function assertDebugTargetExpanded(paneEl, title) {
   ok(true, "Height of list element is greater than zero");
   // check title
   const titleEl = paneEl.querySelector(".qa-debug-target-pane-title");
-  const expectedTitle =
-    `${ title } (${ targetEl.querySelectorAll(".qa-debug-target-item").length })`;
+  const expectedTitle = `${title} (${
+    targetEl.querySelectorAll(".qa-debug-target-item").length
+  })`;
   is(titleEl.textContent, expectedTitle, "Expanded title is correct");
 }

@@ -17,14 +17,14 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openComputedView();
+  const { inspector, view } = await openComputedView();
   await selectNode("#matches", inspector);
   await testToggleDefaultStyles(inspector, view);
   await testAddTextInFilter(inspector, view);
 });
 
 async function testToggleDefaultStyles(inspector, computedView) {
-  info("checking \"Browser styles\" checkbox");
+  info('checking "Browser styles" checkbox');
   const checkbox = computedView.includeBrowserStylesCheckbox;
   const onRefreshed = inspector.once("computed-view-refreshed");
   checkbox.click();
@@ -32,7 +32,7 @@ async function testToggleDefaultStyles(inspector, computedView) {
 }
 
 async function testAddTextInFilter(inspector, computedView) {
-  info("setting filter text to \"color\"");
+  info('setting filter text to "color"');
   const searchField = computedView.searchField;
   const onRefreshed = inspector.once("computed-view-refreshed");
   const win = computedView.styleWindow;
@@ -41,8 +41,11 @@ async function testAddTextInFilter(inspector, computedView) {
   // container isn't focused
   inspector.panelWin.focus();
   EventUtils.synthesizeKey("f", { accelKey: true });
-  isnot(inspector.panelDoc.activeElement, searchField,
-        "Search field isn't focused");
+  isnot(
+    inspector.panelDoc.activeElement,
+    searchField,
+    "Search field isn't focused"
+  );
 
   computedView.element.focus();
   EventUtils.synthesizeKey("f", { accelKey: true });
@@ -56,7 +59,10 @@ async function testAddTextInFilter(inspector, computedView) {
   const propertyViews = computedView.propertyViews;
   propertyViews.forEach(propView => {
     const name = propView.name;
-    is(propView.visible, name.indexOf("color") > -1,
-      "span " + name + " property visibility check");
+    is(
+      propView.visible,
+      name.indexOf("color") > -1,
+      "span " + name + " property visibility check"
+    );
   });
 }

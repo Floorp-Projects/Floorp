@@ -9,8 +9,10 @@
 
 var EXPORTED_SYMBOLS = ["NewTabPagePreloading"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
@@ -19,7 +21,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyServiceGetters(this, {
-  gAboutNewTabService: ["@mozilla.org/browser/aboutnewtab-service;1", "nsIAboutNewTabService"],
+  gAboutNewTabService: [
+    "@mozilla.org/browser/aboutnewtab-service;1",
+    "nsIAboutNewTabService",
+  ],
 });
 
 let NewTabPagePreloading = {
@@ -36,8 +41,9 @@ let NewTabPagePreloading = {
   },
 
   get enabled() {
-    return this.prefEnabled && this.newTabEnabled &&
-      !gAboutNewTabService.overridden;
+    return (
+      this.prefEnabled && this.newTabEnabled && !gAboutNewTabService.overridden
+    );
   },
 
   /**
@@ -51,11 +57,15 @@ let NewTabPagePreloading = {
       BROWSER_NEW_TAB_URL,
     } = win;
 
-    let remoteType =
-      E10SUtils.getRemoteTypeForURI(BROWSER_NEW_TAB_URL,
-                                    gMultiProcessBrowser,
-                                    gFissionBrowser);
-    let browser = gBrowser.createBrowser({ isPreloadBrowser: true, remoteType });
+    let remoteType = E10SUtils.getRemoteTypeForURI(
+      BROWSER_NEW_TAB_URL,
+      gMultiProcessBrowser,
+      gFissionBrowser
+    );
+    let browser = gBrowser.createBrowser({
+      isPreloadBrowser: true,
+      remoteType,
+    });
     gBrowser.preloadedBrowser = browser;
 
     let panel = gBrowser.getPanel(browser);
@@ -76,10 +86,15 @@ let NewTabPagePreloading = {
   _adoptBrowserFromOtherWindow(window) {
     let winPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
     // Grab the least-recently-focused window with a preloaded browser:
-    let oldWin = BrowserWindowTracker.orderedWindows.filter(w => {
-      return winPrivate == PrivateBrowsingUtils.isWindowPrivate(w) &&
-        w.gBrowser && w.gBrowser.preloadedBrowser;
-    }).pop();
+    let oldWin = BrowserWindowTracker.orderedWindows
+      .filter(w => {
+        return (
+          winPrivate == PrivateBrowsingUtils.isWindowPrivate(w) &&
+          w.gBrowser &&
+          w.gBrowser.preloadedBrowser
+        );
+      })
+      .pop();
     if (!oldWin) {
       return null;
     }
@@ -99,7 +114,10 @@ let NewTabPagePreloading = {
       newBrowser._outerWindowID = oldBrowser._outerWindowID;
     }
 
-    window.gBrowser._outerWindowIDBrowserMap.set(newBrowser.outerWindowID, newBrowser);
+    window.gBrowser._outerWindowIDBrowserMap.set(
+      newBrowser.outerWindowID,
+      newBrowser
+    );
     newBrowser.permanentKey = oldBrowser.permanentKey;
 
     oldWin.gBrowser.getPanel(oldBrowser).remove();
@@ -109,16 +127,20 @@ let NewTabPagePreloading = {
   maybeCreatePreloadedBrowser(window) {
     // If we're not enabled, have already got one, or are in a popup window,
     // don't bother creating a preload browser - there's no point.
-    if (!this.enabled || window.gBrowser.preloadedBrowser ||
-        !window.toolbar.visible) {
+    if (
+      !this.enabled ||
+      window.gBrowser.preloadedBrowser ||
+      !window.toolbar.visible
+    ) {
       return;
     }
 
     // Don't bother creating a preload browser if we're not in the top set of windows:
     let windowPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
     let countKey = windowPrivate ? "private" : "normal";
-    let topWindows = BrowserWindowTracker.orderedWindows.filter(w =>
-      PrivateBrowsingUtils.isWindowPrivate(w) == windowPrivate);
+    let topWindows = BrowserWindowTracker.orderedWindows.filter(
+      w => PrivateBrowsingUtils.isWindowPrivate(w) == windowPrivate
+    );
     if (topWindows.indexOf(window) >= this.MAX_COUNT) {
       return;
     }
@@ -167,7 +189,9 @@ let NewTabPagePreloading = {
     // in the case that the browser is remote, as remote browsers take
     // care of that themselves.
     if (browser) {
-      let countKey = PrivateBrowsingUtils.isWindowPrivate(window) ? "private" : "normal";
+      let countKey = PrivateBrowsingUtils.isWindowPrivate(window)
+        ? "private"
+        : "normal";
       this.browserCounts[countKey]--;
       browser.setAttribute("preloadedState", "consumed");
       browser.setAttribute("autocompletepopup", "PopupAutoComplete");
@@ -184,5 +208,15 @@ let NewTabPagePreloading = {
   },
 };
 
-XPCOMUtils.defineLazyPreferenceGetter(NewTabPagePreloading, "prefEnabled", "browser.newtab.preload", true);
-XPCOMUtils.defineLazyPreferenceGetter(NewTabPagePreloading, "newTabEnabled", "browser.newtabpage.enabled", true);
+XPCOMUtils.defineLazyPreferenceGetter(
+  NewTabPagePreloading,
+  "prefEnabled",
+  "browser.newtab.preload",
+  true
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  NewTabPagePreloading,
+  "newTabEnabled",
+  "browser.newtabpage.enabled",
+  true
+);

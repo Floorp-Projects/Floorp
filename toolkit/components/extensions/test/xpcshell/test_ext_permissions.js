@@ -1,22 +1,38 @@
 "use strict";
 
-const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-const {ExtensionPermissions} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
+const { ExtensionPermissions } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
 
 // ExtensionParent.jsm is being imported lazily because when it is imported Services.appinfo will be
 // retrieved and cached (as a side-effect of Schemas.jsm being imported), and so Services.appinfo
 // will not be returning the version set by AddonTestUtils.createAppInfo and this test will
 // fail on non-nightly builds (because the cached appinfo.version will be undefined and
 // AddonManager startup will fail).
-ChromeUtils.defineModuleGetter(this, "ExtensionParent", "resource://gre/modules/ExtensionParent.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionParent",
+  "resource://gre/modules/ExtensionParent.jsm"
+);
 
 const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "42"
+);
 
-Services.prefs.setBoolPref("extensions.webextensions.background-delayed-startup", false);
+Services.prefs.setBoolPref(
+  "extensions.webextensions.background-delayed-startup",
+  false
+);
 
 let sawPrompt = false;
 let acceptPrompt = false;
@@ -24,30 +40,35 @@ const observer = {
   observe(subject, topic, data) {
     if (topic == "webextension-optional-permission-prompt") {
       sawPrompt = true;
-      let {resolve} = subject.wrappedJSObject;
+      let { resolve } = subject.wrappedJSObject;
       resolve(acceptPrompt);
     }
   },
 };
 
 add_task(async function setup() {
-  Services.prefs.setBoolPref("extensions.webextOptionalPermissionPrompts", true);
+  Services.prefs.setBoolPref(
+    "extensions.webextOptionalPermissionPrompts",
+    true
+  );
   Services.obs.addObserver(observer, "webextension-optional-permission-prompt");
   registerCleanupFunction(() => {
-    Services.obs.removeObserver(observer, "webextension-optional-permission-prompt");
+    Services.obs.removeObserver(
+      observer,
+      "webextension-optional-permission-prompt"
+    );
     Services.prefs.clearUserPref("extensions.webextOptionalPermissionPrompts");
   });
   await AddonTestUtils.promiseStartupManager();
   AddonTestUtils.usePrivilegedSignatures = false;
 });
 
-
 add_task(async function test_permissions_on_startup() {
   let extensionId = "@permissionTest";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       applications: {
-        gecko: {id: extensionId},
+        gecko: { id: extensionId },
       },
       permissions: ["tabs"],
     },
@@ -57,16 +78,21 @@ add_task(async function test_permissions_on_startup() {
       browser.test.sendMessage("permissions", perms);
     },
   });
-  let adding = {permissions: ["internal:privateBrowsingAllowed"], origins: []};
+  let adding = {
+    permissions: ["internal:privateBrowsingAllowed"],
+    origins: [],
+  };
   await extension.startup();
   let perms = await extension.awaitMessage("permissions");
   equal(perms.permissions.length, 1, "one permission");
   equal(perms.permissions[0], "tabs", "internal permission not present");
 
-  const {StartupCache} = ExtensionParent;
+  const { StartupCache } = ExtensionParent;
 
   // StartupCache.permissions will not contain the extension permissions.
-  let manifestData = await StartupCache.permissions.get(extensionId, () => { return {permissions: [], origins: []}; });
+  let manifestData = await StartupCache.permissions.get(extensionId, () => {
+    return { permissions: [], origins: [] };
+  });
   equal(manifestData.permissions.length, 0, "no permission");
 
   perms = await ExtensionPermissions.get(extensionId);
@@ -80,8 +106,14 @@ add_task(async function test_permissions_on_startup() {
   await extension.awaitStartup();
   perms = await restarted;
 
-  manifestData = await StartupCache.permissions.get(extensionId, () => { return {permissions: [], origins: []}; });
-  deepEqual(manifestData.permissions, adding.permissions, "StartupCache.permissions contains permission");
+  manifestData = await StartupCache.permissions.get(extensionId, () => {
+    return { permissions: [], origins: [] };
+  });
+  deepEqual(
+    manifestData.permissions,
+    adding.permissions,
+    "StartupCache.permissions contains permission"
+  );
 
   equal(perms.permissions.length, 1, "one permission");
   equal(perms.permissions[0], "tabs", "internal permission not present");
@@ -97,8 +129,14 @@ add_task(async function test_permissions() {
   const REQUIRED_ORIGINS_NORMALIZED = ["*://site.com/*", "*://*.domain.com/*"];
 
   const OPTIONAL_PERMISSIONS = ["idle", "clipboardWrite"];
-  const OPTIONAL_ORIGINS = ["http://optionalsite.com/", "https://*.optionaldomain.com/"];
-  const OPTIONAL_ORIGINS_NORMALIZED = ["http://optionalsite.com/*", "https://*.optionaldomain.com/*"];
+  const OPTIONAL_ORIGINS = [
+    "http://optionalsite.com/",
+    "https://*.optionaldomain.com/",
+  ];
+  const OPTIONAL_ORIGINS_NORMALIZED = [
+    "http://optionalsite.com/*",
+    "https://*.optionaldomain.com/*",
+  ];
 
   function background() {
     browser.test.onMessage.addListener(async (method, arg) => {
@@ -113,9 +151,15 @@ add_task(async function test_permissions() {
       } else if (method == "request") {
         try {
           let result = await browser.permissions.request(arg);
-          browser.test.sendMessage("request.result", {status: "success", result});
+          browser.test.sendMessage("request.result", {
+            status: "success",
+            result,
+          });
         } catch (err) {
-          browser.test.sendMessage("request.result", {status: "error", message: err.message});
+          browser.test.sendMessage("request.result", {
+            status: "error",
+            message: err.message,
+          });
         }
       } else if (method == "remove") {
         let result = await browser.permissions.remove(arg);
@@ -145,50 +189,74 @@ add_task(async function test_permissions() {
   deepEqual(result.origins, REQUIRED_ORIGINS_NORMALIZED);
 
   for (let perm of REQUIRED_PERMISSIONS) {
-    result = await call("contains", {permissions: [perm]});
+    result = await call("contains", { permissions: [perm] });
     equal(result, true, `contains() returns true for fixed permission ${perm}`);
   }
   for (let origin of REQUIRED_ORIGINS) {
-    result = await call("contains", {origins: [origin]});
+    result = await call("contains", { origins: [origin] });
     equal(result, true, `contains() returns true for fixed origin ${origin}`);
   }
 
   // None of the optional permissions should be available yet
   for (let perm of OPTIONAL_PERMISSIONS) {
-    result = await call("contains", {permissions: [perm]});
+    result = await call("contains", { permissions: [perm] });
     equal(result, false, `contains() returns false for permission ${perm}`);
   }
   for (let origin of OPTIONAL_ORIGINS) {
-    result = await call("contains", {origins: [origin]});
+    result = await call("contains", { origins: [origin] });
     equal(result, false, `contains() returns false for origin ${origin}`);
   }
 
   result = await call("contains", {
     permissions: [...REQUIRED_PERMISSIONS, ...OPTIONAL_PERMISSIONS],
   });
-  equal(result, false, "contains() returns false for a mix of available and unavailable permissions");
+  equal(
+    result,
+    false,
+    "contains() returns false for a mix of available and unavailable permissions"
+  );
 
   let perm = OPTIONAL_PERMISSIONS[0];
-  result = await call("request", {permissions: [perm]});
-  equal(result.status, "error", "request() fails if not called from an event handler");
-  ok(/request may only be called from a user input handler/.test(result.message),
-     "error message for calling request() outside an event handler is reasonable");
-  result = await call("contains", {permissions: [perm]});
-  equal(result, false, "Permission requested outside an event handler was not granted");
+  result = await call("request", { permissions: [perm] });
+  equal(
+    result.status,
+    "error",
+    "request() fails if not called from an event handler"
+  );
+  ok(
+    /request may only be called from a user input handler/.test(result.message),
+    "error message for calling request() outside an event handler is reasonable"
+  );
+  result = await call("contains", { permissions: [perm] });
+  equal(
+    result,
+    false,
+    "Permission requested outside an event handler was not granted"
+  );
 
   await withHandlingUserInput(extension, async () => {
-    result = await call("request", {permissions: ["notifications"]});
-    equal(result.status, "error", "request() for permission not in optional_permissions should fail");
-    ok(/since it was not declared in optional_permissions/.test(result.message),
-       "error message for undeclared optional_permission is reasonable");
+    result = await call("request", { permissions: ["notifications"] });
+    equal(
+      result.status,
+      "error",
+      "request() for permission not in optional_permissions should fail"
+    );
+    ok(
+      /since it was not declared in optional_permissions/.test(result.message),
+      "error message for undeclared optional_permission is reasonable"
+    );
 
     // Check request() when the prompt is canceled.
     acceptPrompt = false;
-    result = await call("request", {permissions: [perm]});
+    result = await call("request", { permissions: [perm] });
     equal(result.status, "success", "request() returned cleanly");
-    equal(result.result, false, "request() returned false for rejected permission");
+    equal(
+      result.result,
+      false,
+      "request() returned false for rejected permission"
+    );
 
-    result = await call("contains", {permissions: [perm]});
+    result = await call("contains", { permissions: [perm] });
     equal(result, false, "Rejected permission was not granted");
 
     // Call request() and accept the prompt
@@ -199,7 +267,11 @@ add_task(async function test_permissions() {
     };
     result = await call("request", allOptional);
     equal(result.status, "success", "request() returned cleanly");
-    equal(result.result, true, "request() returned true for accepted permissions");
+    equal(
+      result.result,
+      true,
+      "request() returned true for accepted permissions"
+    );
 
     // Verify that requesting a permission/origin in the wrong field fails
     let originsAsPerms = {
@@ -210,14 +282,30 @@ add_task(async function test_permissions() {
     };
 
     result = await call("request", originsAsPerms);
-    equal(result.status, "error", "Requesting an origin as a permission should fail");
-    ok(/Type error for parameter permissions \(Error processing permissions/.test(result.message),
-       "Error message for origin as permission is reasonable");
+    equal(
+      result.status,
+      "error",
+      "Requesting an origin as a permission should fail"
+    );
+    ok(
+      /Type error for parameter permissions \(Error processing permissions/.test(
+        result.message
+      ),
+      "Error message for origin as permission is reasonable"
+    );
 
     result = await call("request", permsAsOrigins);
-    equal(result.status, "error", "Requesting a permission as an origin should fail");
-    ok(/Type error for parameter permissions \(Error processing origins/.test(result.message),
-       "Error message for permission as origin is reasonable");
+    equal(
+      result.status,
+      "error",
+      "Requesting a permission as an origin should fail"
+    );
+    ok(
+      /Type error for parameter permissions \(Error processing origins/.test(
+        result.message
+      ),
+      "Error message for permission as origin is reasonable"
+    );
   });
 
   let allPermissions = {
@@ -226,20 +314,32 @@ add_task(async function test_permissions() {
   };
 
   result = await call("getAll");
-  deepEqual(result, allPermissions, "getAll() returns required and runtime requested permissions");
+  deepEqual(
+    result,
+    allPermissions,
+    "getAll() returns required and runtime requested permissions"
+  );
 
   result = await call("contains", allPermissions);
-  equal(result, true, "contains() returns true for runtime requested permissions");
+  equal(
+    result,
+    true,
+    "contains() returns true for runtime requested permissions"
+  );
 
   // Restart, verify permissions are still present
   await AddonTestUtils.promiseRestartManager();
   await extension.awaitStartup();
 
   result = await call("getAll");
-  deepEqual(result, allPermissions, "Runtime requested permissions are still present after restart");
+  deepEqual(
+    result,
+    allPermissions,
+    "Runtime requested permissions are still present after restart"
+  );
 
   // Check remove()
-  result = await call("remove", {permissions: OPTIONAL_PERMISSIONS});
+  result = await call("remove", { permissions: OPTIONAL_PERMISSIONS });
   equal(result, true, "remove() succeeded");
 
   let perms = {
@@ -249,7 +349,7 @@ add_task(async function test_permissions() {
   result = await call("getAll");
   deepEqual(result, perms, "Expected permissions remain after removing some");
 
-  result = await call("remove", {origins: OPTIONAL_ORIGINS});
+  result = await call("remove", { origins: OPTIONAL_ORIGINS });
   equal(result, true, "remove() succeeded");
 
   perms.origins = REQUIRED_ORIGINS_NORMALIZED;
@@ -261,7 +361,7 @@ add_task(async function test_permissions() {
 
 add_task(async function test_startup() {
   async function background() {
-    browser.test.onMessage.addListener(async (perms) => {
+    browser.test.onMessage.addListener(async perms => {
       await browser.permissions.request(perms);
       browser.test.sendMessage("requested");
     });
@@ -319,7 +419,7 @@ add_task(async function test_startup() {
 
   async function checkPermissions(extension, permissions) {
     perms = await extension.awaitMessage("perms");
-    let expect = Object.assign({permissions: [], origins: []}, permissions);
+    let expect = Object.assign({ permissions: [], origins: [] }, permissions);
     deepEqual(perms, expect, "Extension got correct permissions on startup");
   }
 
@@ -383,7 +483,7 @@ add_task(async function test_alreadyGranted() {
 
   await withHandlingUserInput(extension, async () => {
     let url = await extension.awaitMessage("ready");
-    let page = await ExtensionTestUtils.loadContentPage(url, {extension});
+    let page = await ExtensionTestUtils.loadContentPage(url, { extension });
     await extension.awaitMessage("page-ready");
 
     async function checkRequest(arg, expectPrompt, msg) {
@@ -391,33 +491,66 @@ add_task(async function test_alreadyGranted() {
       extension.sendMessage("request", arg);
       let result = await extension.awaitMessage("request.result");
       ok(result, "request() call succeeded");
-      equal(sawPrompt, expectPrompt,
-            `Got ${expectPrompt ? "" : "no "}permission prompt for ${msg}`);
+      equal(
+        sawPrompt,
+        expectPrompt,
+        `Got ${expectPrompt ? "" : "no "}permission prompt for ${msg}`
+      );
     }
 
-    await checkRequest({permissions: ["geolocation"]}, false,
-                       "required permission from manifest");
-    await checkRequest({origins: ["http://required-host.com/"]}, false,
-                       "origin permission from manifest");
-    await checkRequest({origins: ["http://host.required-domain.com/"]}, false,
-                       "wildcard origin permission from manifest");
+    await checkRequest(
+      { permissions: ["geolocation"] },
+      false,
+      "required permission from manifest"
+    );
+    await checkRequest(
+      { origins: ["http://required-host.com/"] },
+      false,
+      "origin permission from manifest"
+    );
+    await checkRequest(
+      { origins: ["http://host.required-domain.com/"] },
+      false,
+      "wildcard origin permission from manifest"
+    );
 
-    await checkRequest({permissions: ["clipboardRead"]}, true,
-                       "optional permission");
-    await checkRequest({permissions: ["clipboardRead"]}, false,
-                       "already granted optional permission");
+    await checkRequest(
+      { permissions: ["clipboardRead"] },
+      true,
+      "optional permission"
+    );
+    await checkRequest(
+      { permissions: ["clipboardRead"] },
+      false,
+      "already granted optional permission"
+    );
 
-    await checkRequest({origins: ["http://optional-host.com/"]}, true,
-                       "optional origin");
-    await checkRequest({origins: ["http://optional-host.com/"]}, false,
-                       "already granted origin permission");
+    await checkRequest(
+      { origins: ["http://optional-host.com/"] },
+      true,
+      "optional origin"
+    );
+    await checkRequest(
+      { origins: ["http://optional-host.com/"] },
+      false,
+      "already granted origin permission"
+    );
 
-    await checkRequest({origins: ["http://*.optional-domain.com/"]}, true,
-                       "optional wildcard origin");
-    await checkRequest({origins: ["http://*.optional-domain.com/"]}, false,
-                       "already granted optional wildcard origin");
-    await checkRequest({origins: ["http://host.optional-domain.com/"]}, false,
-                       "host matching optional wildcard origin");
+    await checkRequest(
+      { origins: ["http://*.optional-domain.com/"] },
+      true,
+      "optional wildcard origin"
+    );
+    await checkRequest(
+      { origins: ["http://*.optional-domain.com/"] },
+      false,
+      "already granted optional wildcard origin"
+    );
+    await checkRequest(
+      { origins: ["http://host.optional-domain.com/"] },
+      false,
+      "host matching optional wildcard origin"
+    );
     await page.close();
   });
 
@@ -464,8 +597,10 @@ add_task(function test_permissions_have_localization_strings() {
 
         ok(str.length, `Found localization string for '${perm}' permission`);
       } catch (e) {
-        ok(GRANTED_WITHOUT_USER_PROMPT.includes(perm),
-           `Permission '${perm}' intentionally granted without prompting the user`);
+        ok(
+          GRANTED_WITHOUT_USER_PROMPT.includes(perm),
+          `Permission '${perm}' intentionally granted without prompting the user`
+        );
       }
     }
   }
@@ -481,7 +616,9 @@ add_task(async function test_optional_all_urls() {
     background() {
       browser.test.onMessage.addListener(async () => {
         let before = !!browser.tabs.captureVisibleTab;
-        let granted = await browser.permissions.request({origins: ["<all_urls>"]});
+        let granted = await browser.permissions.request({
+          origins: ["<all_urls>"],
+        });
         let after = !!browser.tabs.captureVisibleTab;
 
         browser.test.sendMessage("results", [before, granted, after]);
@@ -495,9 +632,17 @@ add_task(async function test_optional_all_urls() {
     extension.sendMessage("request");
     let [before, granted, after] = await extension.awaitMessage("results");
 
-    equal(before, false, "captureVisibleTab() unavailable before optional permission request()");
+    equal(
+      before,
+      false,
+      "captureVisibleTab() unavailable before optional permission request()"
+    );
     equal(granted, true, "request() for optional permissions granted");
-    equal(after, true, "captureVisibleTab() available after optional permission request()");
+    equal(
+      after,
+      true,
+      "captureVisibleTab() available after optional permission request()"
+    );
   });
 
   await extension.unload();
@@ -556,7 +701,7 @@ add_task(async function test_permissions_prompt() {
       manifest_version: 2,
       version: "2.0",
 
-      applications: {gecko: {id: extension.id}},
+      applications: { gecko: { id: extension.id } },
 
       permissions: [...PERMS, ...ORIGINS],
       optional_permissions: ["clipboardWrite", "<all_urls>"],
@@ -581,8 +726,16 @@ add_task(async function test_permissions_prompt() {
 
   notEqual(perminfo, undefined, "Permission handler was invoked");
   let perms = perminfo.addon.userPermissions;
-  deepEqual(perms.permissions, PERMS, "Update details includes only manifest api permissions");
-  deepEqual(perms.origins, ORIGINS, "Update details includes only manifest origin permissions");
+  deepEqual(
+    perms.permissions,
+    PERMS,
+    "Update details includes only manifest api permissions"
+  );
+  deepEqual(
+    perms.origins,
+    ORIGINS,
+    "Update details includes only manifest origin permissions"
+  );
 
   await extension.unload();
 });
@@ -599,16 +752,25 @@ add_task(async function test_internal_permissions() {
           browser.test.sendMessage("getAll.result", perms);
         } else if (method == "contains") {
           let result = await browser.permissions.contains(arg);
-          browser.test.sendMessage("contains.result", {status: "success", result});
+          browser.test.sendMessage("contains.result", {
+            status: "success",
+            result,
+          });
         } else if (method == "request") {
           let result = await browser.permissions.request(arg);
-          browser.test.sendMessage("request.result", {status: "success", result});
+          browser.test.sendMessage("request.result", {
+            status: "success",
+            result,
+          });
         } else if (method == "remove") {
           let result = await browser.permissions.remove(arg);
           browser.test.sendMessage("remove.result", result);
         }
       } catch (err) {
-        browser.test.sendMessage(`${method}.result`, {status: "error", message: err.message});
+        browser.test.sendMessage(`${method}.result`, {
+          status: "error",
+          message: err.message,
+        });
       }
     });
   }
@@ -638,21 +800,33 @@ add_task(async function test_internal_permissions() {
   let result = await call("getAll");
   ok(!result.permissions.includes(perm), "internal not returned");
 
-  result = await call("contains", {permissions: [perm]});
-  ok(/Type error for parameter permissions \(Error processing permissions/.test(result.message),
-     `Unable to check for internal permission: ${result.message}`);
+  result = await call("contains", { permissions: [perm] });
+  ok(
+    /Type error for parameter permissions \(Error processing permissions/.test(
+      result.message
+    ),
+    `Unable to check for internal permission: ${result.message}`
+  );
 
-  result = await call("remove", {permissions: [perm]});
-  ok(/Type error for parameter permissions \(Error processing permissions/.test(result.message),
-     `Unable to remove for internal permission ${result.message}`);
+  result = await call("remove", { permissions: [perm] });
+  ok(
+    /Type error for parameter permissions \(Error processing permissions/.test(
+      result.message
+    ),
+    `Unable to remove for internal permission ${result.message}`
+  );
 
   await withHandlingUserInput(extension, async () => {
     result = await call("request", {
       permissions: [perm],
       origins: [],
     });
-    ok(/Type error for parameter permissions \(Error processing permissions/.test(result.message),
-       `Unable to request internal permission ${result.message}`);
+    ok(
+      /Type error for parameter permissions \(Error processing permissions/.test(
+        result.message
+      ),
+      `Unable to request internal permission ${result.message}`
+    );
   });
 
   await extension.unload();

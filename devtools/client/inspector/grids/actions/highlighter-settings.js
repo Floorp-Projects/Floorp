@@ -11,7 +11,6 @@ const {
 } = require("./index");
 
 module.exports = {
-
   /**
    * Updates the grid highlighter's show grid areas preference.
    *
@@ -50,5 +49,4 @@ module.exports = {
       enabled,
     };
   },
-
 };

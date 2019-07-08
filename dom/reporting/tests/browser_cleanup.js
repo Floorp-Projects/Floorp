@@ -7,25 +7,36 @@ const TEST_TOP_PAGE = TEST_DOMAIN + TEST_PATH + "empty.html";
 const TEST_SJS = TEST_DOMAIN + TEST_PATH + "delivering.sjs";
 
 async function storeReportingHeader(browser, extraParams = "") {
-  await ContentTask.spawn(browser, { url: TEST_SJS, extraParams }, async obj => {
-    await content.fetch(obj.url + "?task=header" + (obj.extraParams.length ? "&" + obj.extraParams : ""))
-    .then(r => r.text())
-    .then(text => {
-      is(text, "OK", "Report-to header sent");
-    });
-  });
+  await ContentTask.spawn(
+    browser,
+    { url: TEST_SJS, extraParams },
+    async obj => {
+      await content
+        .fetch(
+          obj.url +
+            "?task=header" +
+            (obj.extraParams.length ? "&" + obj.extraParams : "")
+        )
+        .then(r => r.text())
+        .then(text => {
+          is(text, "OK", "Report-to header sent");
+        });
+    }
+  );
 }
 
 add_task(async function() {
   await SpecialPowers.flushPrefEnv();
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["dom.reporting.enabled", true],
-    ["dom.reporting.header.enabled", true],
-    ["dom.reporting.testing.enabled", true],
-    ["dom.reporting.delivering.timeout", 1],
-    ["dom.reporting.cleanup.timeout", 1],
-    ["privacy.userContext.enabled", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.reporting.enabled", true],
+      ["dom.reporting.header.enabled", true],
+      ["dom.reporting.testing.enabled", true],
+      ["dom.reporting.delivering.timeout", 1],
+      ["dom.reporting.cleanup.timeout", 1],
+      ["privacy.userContext.enabled", true],
+    ],
+  });
 });
 
 add_task(async function() {
@@ -37,16 +48,24 @@ add_task(async function() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data before the test");
+  ok(
+    !ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN),
+    "No data before the test"
+  );
 
   await storeReportingHeader(browser);
   ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We have data");
 
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
   });
 
-  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data before a full cleanup");
+  ok(
+    !ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN),
+    "No data before a full cleanup"
+  );
 
   info("Removing the tab");
   BrowserTestUtils.removeTab(tab);
@@ -61,16 +80,24 @@ add_task(async function() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data before the test");
+  ok(
+    !ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN),
+    "No data before the test"
+  );
 
   await storeReportingHeader(browser);
   ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We have data");
 
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_REPORTS, value => resolve());
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_REPORTS, value =>
+      resolve()
+    );
   });
 
-  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data before a reports cleanup");
+  ok(
+    !ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN),
+    "No data before a reports cleanup"
+  );
 
   info("Removing the tab");
   BrowserTestUtils.removeTab(tab);
@@ -85,16 +112,27 @@ add_task(async function() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data before the test");
+  ok(
+    !ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN),
+    "No data before the test"
+  );
 
   await storeReportingHeader(browser);
   ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We have data");
 
   await new Promise(resolve => {
-    Services.clearData.deleteDataFromHost(TEST_HOST, true, Ci.nsIClearDataService.CLEAR_REPORTS, value => resolve());
+    Services.clearData.deleteDataFromHost(
+      TEST_HOST,
+      true,
+      Ci.nsIClearDataService.CLEAR_REPORTS,
+      value => resolve()
+    );
   });
 
-  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data before a reports cleanup");
+  ok(
+    !ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN),
+    "No data before a reports cleanup"
+  );
 
   info("Removing the tab");
   BrowserTestUtils.removeTab(tab);
@@ -109,7 +147,10 @@ add_task(async function() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data before the test");
+  ok(
+    !ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN),
+    "No data before the test"
+  );
 
   await storeReportingHeader(browser, "410=true");
   ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We have data");
@@ -144,28 +185,54 @@ add_task(async function() {
 add_task(async function() {
   info("Creating a new container");
 
-  let identity = ContextualIdentityService.create("Report-To-Test", "fingerprint", "orange");
+  let identity = ContextualIdentityService.create(
+    "Report-To-Test",
+    "fingerprint",
+    "orange"
+  );
 
   info("Creating a new container tab");
-  let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE, {userContextId: identity.userContextId});
-  is(tab.getAttribute("usercontextid"), identity.userContextId, "New tab has the right UCI");
+  let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE, {
+    userContextId: identity.userContextId,
+  });
+  is(
+    tab.getAttribute("usercontextid"),
+    identity.userContextId,
+    "New tab has the right UCI"
+  );
   gBrowser.selectedTab = tab;
 
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data before the test");
+  ok(
+    !ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN),
+    "No data before the test"
+  );
 
   await storeReportingHeader(browser);
-  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We don't have data for the origin");
-  ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN + "^userContextId=" + identity.userContextId), "We have data for the origin + userContextId");
+  ok(
+    !ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN),
+    "We don't have data for the origin"
+  );
+  ok(
+    ChromeUtils.hasReportingHeaderForOrigin(
+      TEST_DOMAIN + "^userContextId=" + identity.userContextId
+    ),
+    "We have data for the origin + userContextId"
+  );
 
   info("Removing the tab");
   BrowserTestUtils.removeTab(tab);
 
   ContextualIdentityService.remove(identity.userContextId);
 
-  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN + "^userContextId=" + identity.userContextId), "No more data after a container removal");
+  ok(
+    !ChromeUtils.hasReportingHeaderForOrigin(
+      TEST_DOMAIN + "^userContextId=" + identity.userContextId
+    ),
+    "No more data after a container removal"
+  );
 });
 
 add_task(async function() {
@@ -177,13 +244,21 @@ add_task(async function() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data before the test");
+  ok(
+    !ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN),
+    "No data before the test"
+  );
 
   await storeReportingHeader(browser);
-  ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We have data for the origin");
+  ok(
+    ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN),
+    "We have data for the origin"
+  );
 
   // Let's wait a bit.
-  await new Promise(resolve => { setTimeout(resolve, 5000); });
+  await new Promise(resolve => {
+    setTimeout(resolve, 5000);
+  });
 
   ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data anymore");
 
@@ -194,6 +269,8 @@ add_task(async function() {
 add_task(async function() {
   info("Cleaning up.");
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
   });
 });

@@ -2,13 +2,12 @@
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-
 /**
  * A wrapper for the findbar's method "close", which is not synchronous
  * because of animation.
  */
 function closeFindbarAndWait(findbar) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     if (findbar.hidden) {
       resolve();
       return;
@@ -27,7 +26,7 @@ function closeFindbarAndWait(findbar) {
 
 function pushPrefs(...aPrefs) {
   return new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": aPrefs}, resolve);
+    SpecialPowers.pushPrefEnv({ set: aPrefs }, resolve);
   });
 }
 
@@ -39,13 +38,22 @@ async function waitForTabBlockEvent(tab, expectBlocked) {
     ok(true, "The tab should " + (expectBlocked ? "" : "not ") + "be blocked");
   } else {
     info("Block state doens't match, wait for attributes changes.");
-    await BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
-      if (event.detail.changed.includes("activemedia-blocked")) {
-        is(tab.activeMediaBlocked, expectBlocked, "The tab should " + (expectBlocked ? "" : "not ") + "be blocked");
-        return true;
+    await BrowserTestUtils.waitForEvent(
+      tab,
+      "TabAttrModified",
+      false,
+      event => {
+        if (event.detail.changed.includes("activemedia-blocked")) {
+          is(
+            tab.activeMediaBlocked,
+            expectBlocked,
+            "The tab should " + (expectBlocked ? "" : "not ") + "be blocked"
+          );
+          return true;
+        }
+        return false;
       }
-      return false;
-    });
+    );
   }
 }
 
@@ -57,19 +65,29 @@ async function waitForTabPlayingEvent(tab, expectPlaying) {
     ok(true, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
   } else {
     info("Playing state doens't match, wait for attributes changes.");
-    await BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
-      if (event.detail.changed.includes("soundplaying")) {
-        is(tab.soundPlaying, expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
-        return true;
+    await BrowserTestUtils.waitForEvent(
+      tab,
+      "TabAttrModified",
+      false,
+      event => {
+        if (event.detail.changed.includes("soundplaying")) {
+          is(
+            tab.soundPlaying,
+            expectPlaying,
+            "The tab should " + (expectPlaying ? "" : "not ") + "be playing"
+          );
+          return true;
+        }
+        return false;
       }
-      return false;
-    });
+    );
   }
 }
 
 function getTestPlugin(pluginName) {
-  var ph = SpecialPowers.Cc["@mozilla.org/plugin/host;1"]
-                                 .getService(SpecialPowers.Ci.nsIPluginHost);
+  var ph = SpecialPowers.Cc["@mozilla.org/plugin/host;1"].getService(
+    SpecialPowers.Ci.nsIPluginHost
+  );
   var tags = ph.getPluginTags();
   var name = pluginName || "Test Plug-in";
   for (var tag of tags) {
@@ -82,8 +100,11 @@ function getTestPlugin(pluginName) {
   return null;
 }
 
-function setTestPluginEnabledState(newEnabledState, pluginName) {
-  var oldEnabledState = SpecialPowers.setTestPluginEnabledState(newEnabledState, pluginName);
+async function setTestPluginEnabledState(newEnabledState, pluginName) {
+  var oldEnabledState = await SpecialPowers.setTestPluginEnabledState(
+    newEnabledState,
+    pluginName
+  );
   if (!oldEnabledState) {
     return;
   }
@@ -94,7 +115,7 @@ function setTestPluginEnabledState(newEnabledState, pluginName) {
     return plugin.enabledState == newEnabledState;
   });
   SimpleTest.registerCleanupFunction(function() {
-    SpecialPowers.setTestPluginEnabledState(oldEnabledState, pluginName);
+    return SpecialPowers.setTestPluginEnabledState(oldEnabledState, pluginName);
   });
 }
 
@@ -107,18 +128,24 @@ function hover_icon(icon, tooltip) {
   disable_non_test_mouse(true);
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(tooltip, "popupshown");
-  EventUtils.synthesizeMouse(icon, 1, 1, {type: "mouseover"});
-  EventUtils.synthesizeMouse(icon, 2, 2, {type: "mousemove"});
-  EventUtils.synthesizeMouse(icon, 3, 3, {type: "mousemove"});
-  EventUtils.synthesizeMouse(icon, 4, 4, {type: "mousemove"});
+  EventUtils.synthesizeMouse(icon, 1, 1, { type: "mouseover" });
+  EventUtils.synthesizeMouse(icon, 2, 2, { type: "mousemove" });
+  EventUtils.synthesizeMouse(icon, 3, 3, { type: "mousemove" });
+  EventUtils.synthesizeMouse(icon, 4, 4, { type: "mousemove" });
   return popupShownPromise;
 }
 
 function leave_icon(icon) {
-  EventUtils.synthesizeMouse(icon, 0, 0, {type: "mouseout"});
-  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
-  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
-  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
+  EventUtils.synthesizeMouse(icon, 0, 0, { type: "mouseout" });
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {
+    type: "mousemove",
+  });
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {
+    type: "mousemove",
+  });
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {
+    type: "mousemove",
+  });
 
   disable_non_test_mouse(false);
 }
@@ -142,7 +169,11 @@ class DateTimeTestHelper {
    */
   async openPicker(pageUrl) {
     this.tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
-    await BrowserTestUtils.synthesizeMouseAtCenter("input", {}, gBrowser.selectedBrowser);
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "input",
+      {},
+      gBrowser.selectedBrowser
+    );
     this.frame = this.panel.querySelector("#dateTimePopupFrame");
     await this.waitForPickerReady();
   }
@@ -150,12 +181,19 @@ class DateTimeTestHelper {
   async waitForPickerReady() {
     let readyPromise;
     let loadPromise = new Promise(resolve => {
-      this.frame.addEventListener("load", () => {
-       // Add the PickerReady event listener directly inside the load event
-        // listener to avoid missing the event.
-        readyPromise = BrowserTestUtils.waitForEvent(this.frame.contentDocument, "PickerReady");
-        resolve();
-      }, { capture: true, once: true });
+      this.frame.addEventListener(
+        "load",
+        () => {
+          // Add the PickerReady event listener directly inside the load event
+          // listener to avoid missing the event.
+          readyPromise = BrowserTestUtils.waitForEvent(
+            this.frame.contentDocument,
+            "PickerReady"
+          );
+          resolve();
+        },
+        { capture: true, once: true }
+      );
     });
 
     await loadPromise;
@@ -198,7 +236,7 @@ class DateTimeTestHelper {
   async tearDown() {
     if (!this.panel.hidden) {
       let pickerClosePromise = new Promise(resolve => {
-        this.panel.addEventListener("popuphidden", resolve, {once: true});
+        this.panel.addEventListener("popuphidden", resolve, { once: true });
       });
       this.panel.hidePopup();
       await pickerClosePromise;
@@ -223,9 +261,13 @@ class DateTimeTestHelper {
  */
 function once(target, name) {
   var p = new Promise(function(resolve, reject) {
-    target.addEventListener(name, function() {
-      resolve();
-    }, {once: true});
+    target.addEventListener(
+      name,
+      function() {
+        resolve();
+      },
+      { once: true }
+    );
   });
   return p;
 }
@@ -236,34 +278,47 @@ function once(target, name) {
 //    mode: String, "autoplay attribute" or "call play".
 //  }
 function loadAutoplayVideo(browser, args) {
-  return ContentTask.spawn(browser, args, async (args) => {
+  return ContentTask.spawn(browser, args, async args => {
     info("- create a new autoplay video -");
     let video = content.document.createElement("video");
     video.id = "v1";
     video.didPlayPromise = new Promise((resolve, reject) => {
-      video.addEventListener("playing", (e) => {
-        video.didPlay = true;
-        resolve();
-      }, {once: true});
-      video.addEventListener("blocked", (e) => {
-        video.didPlay = false;
-        resolve();
-      }, {once: true});
+      video.addEventListener(
+        "playing",
+        e => {
+          video.didPlay = true;
+          resolve();
+        },
+        { once: true }
+      );
+      video.addEventListener(
+        "blocked",
+        e => {
+          video.didPlay = false;
+          resolve();
+        },
+        { once: true }
+      );
     });
     if (args.mode == "autoplay attribute") {
       info("autoplay attribute set to true");
       video.autoplay = true;
     } else if (args.mode == "call play") {
       info("will call play() when reached loadedmetadata");
-      video.addEventListener("loadedmetadata", (e) => {
-        video.play().then(
-          () => {
-            info("video play() resolved");
-          },
-          () => {
-            info("video play() rejected");
-          });
-      }, {once: true});
+      video.addEventListener(
+        "loadedmetadata",
+        e => {
+          video.play().then(
+            () => {
+              info("video play() resolved");
+            },
+            () => {
+              info("video play() rejected");
+            }
+          );
+        },
+        { once: true }
+      );
     } else {
       ok(false, "Invalid 'mode' arg");
     }
@@ -282,11 +337,17 @@ function loadAutoplayVideo(browser, args) {
 //    shouldPlay: boolean, whether video should play.
 //  }
 function checkVideoDidPlay(browser, args) {
-  return ContentTask.spawn(browser, args, async (args) => {
+  return ContentTask.spawn(browser, args, async args => {
     let video = content.document.getElementById("v1");
     await video.didPlayPromise;
-    is(video.didPlay, args.shouldPlay,
-      args.name + " should " + (!args.shouldPlay ? "not " : "") + "be able to autoplay");
+    is(
+      video.didPlay,
+      args.shouldPlay,
+      args.name +
+        " should " +
+        (!args.shouldPlay ? "not " : "") +
+        "be able to autoplay"
+    );
     video.src = "";
     content.document.body.remove(video);
   });

@@ -9,8 +9,8 @@
 const TEST_URL = URL_ROOT + "doc_markup_whitespace.html";
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
-  const {markup} = inspector;
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { markup } = inspector;
 
   await markup.expandAll();
 
@@ -18,7 +18,7 @@ add_task(async function() {
 
   // Body has 5 element children, but there are 6 text nodes in there too, they come from
   // the HTML file formatting (spaces and carriage returns).
-  let {numNodes, numChildren} = await testActor.getNodeInfo("body");
+  let { numNodes, numChildren } = await testActor.getNodeInfo("body");
   is(numNodes, 11, "The body node has 11 child nodes (includes text nodes)");
   is(numChildren, 5, "The body node has 5 child elements (only element nodes)");
 
@@ -27,15 +27,26 @@ add_task(async function() {
   info("Check that the body's whitespace text node children aren't shown");
   const bodyContainer = markup.getContainer(inspector.selection.nodeFront);
   let childContainers = bodyContainer.getChildContainers();
-  is(childContainers.length, 5,
-     "Only the element nodes are shown in the markup view");
+  is(
+    childContainers.length,
+    5,
+    "Only the element nodes are shown in the markup view"
+  );
 
   // div#inline has 3 element children, but there are 4 text nodes in there too, like in
   // body, they come from spaces and carriage returns in the HTML file.
   info("Verify the number of child nodes and child elements in div#inline");
-  ({numNodes, numChildren} = await testActor.getNodeInfo("#inline"));
-  is(numNodes, 7, "The div#inline node has 7 child nodes (includes text nodes)");
-  is(numChildren, 3, "The div#inline node has 3 child elements (only element nodes)");
+  ({ numNodes, numChildren } = await testActor.getNodeInfo("#inline"));
+  is(
+    numNodes,
+    7,
+    "The div#inline node has 7 child nodes (includes text nodes)"
+  );
+  is(
+    numChildren,
+    3,
+    "The div#inline node has 3 child elements (only element nodes)"
+  );
 
   // Within the inline formatting context in div#inline, the whitespace text nodes between
   // the images have layout, so they should appear in the markup-view.
@@ -43,15 +54,22 @@ add_task(async function() {
   await selectNode("#inline", inspector);
   let divContainer = markup.getContainer(inspector.selection.nodeFront);
   childContainers = divContainer.getChildContainers();
-  is(childContainers.length, 5,
-     "Both the element nodes and some text nodes are shown in the markup view");
+  is(
+    childContainers.length,
+    5,
+    "Both the element nodes and some text nodes are shown in the markup view"
+  );
 
   // div#pre has 2 element children, but there are 3 text nodes in there too, like in
   // div#inline, they come from spaces and carriage returns in the HTML file.
   info("Verify the number of child nodes and child elements in div#pre");
-  ({numNodes, numChildren} = await testActor.getNodeInfo("#pre"));
+  ({ numNodes, numChildren } = await testActor.getNodeInfo("#pre"));
   is(numNodes, 5, "The div#pre node has 5 child nodes (includes text nodes)");
-  is(numChildren, 2, "The div#pre node has 2 child elements (only element nodes)");
+  is(
+    numChildren,
+    2,
+    "The div#pre node has 2 child elements (only element nodes)"
+  );
 
   // Within the inline formatting context in div#pre, the whitespace text nodes between
   // the images have layout, so they should appear in the markup-view, but since
@@ -61,6 +79,9 @@ add_task(async function() {
   await selectNode("#pre", inspector);
   divContainer = markup.getContainer(inspector.selection.nodeFront);
   childContainers = divContainer.getChildContainers();
-  is(childContainers.length, 5,
-     "Both the element nodes and all text nodes are shown in the markup view");
+  is(
+    childContainers.length,
+    5,
+    "Both the element nodes and all text nodes are shown in the markup view"
+  );
 });

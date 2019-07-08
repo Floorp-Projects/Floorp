@@ -110,9 +110,7 @@ EventLoop.prototype = {
    * Enter this nested event loop.
    */
   enter: function() {
-    const nestData = this._hooks.preNest
-      ? this._hooks.preNest()
-      : null;
+    const nestData = this._hooks.preNest ? this._hooks.preNest() : null;
 
     this.entered = true;
     xpcInspector.enterNestedEventLoop(this);
@@ -140,7 +138,9 @@ EventLoop.prototype = {
    */
   resolve: function() {
     if (!this.entered) {
-      throw new Error("Can't resolve an event loop before it has been entered!");
+      throw new Error(
+        "Can't resolve an event loop before it has been entered!"
+      );
     }
     if (this.resolved) {
       throw new Error("Already resolved this nested event loop!");

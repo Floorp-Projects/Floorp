@@ -1,6 +1,6 @@
 var gData1 = "TEST_DATA_1:ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 var gData2 = "TEST_DATA_2:1234567890";
-var gPaddingChar = '.';
+var gPaddingChar = ".";
 var gPaddingSize = 10000;
 var gPadding = "";
 
@@ -9,11 +9,11 @@ for (var i = 0; i < gPaddingSize; i++) {
 }
 
 function ok(a, msg) {
-  postMessage({type: 'status', status: !!a, msg: msg });
+  postMessage({ type: "status", status: !!a, msg: msg });
 }
 
 function is(a, b, msg) {
-  postMessage({type: 'status', status: a === b, msg: msg });
+  postMessage({ type: "status", status: a === b, msg: msg });
 }
 
 function checkData(response, data_head, cb) {
@@ -33,9 +33,9 @@ self.onmessage = function onmessage(event) {
   }
 
   function test_mapped_sync() {
-    var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
-    xhr.open('GET', makeJarURL('data_1.txt'), false);
-    xhr.responseType = 'arraybuffer';
+    var xhr = new XMLHttpRequest({ mozAnon: true, mozSystem: true });
+    xhr.open("GET", makeJarURL("data_1.txt"), false);
+    xhr.responseType = "arraybuffer";
     xhr.send();
     if (xhr.status) {
       ok(xhr.status == 200, "Status is 200");
@@ -46,9 +46,9 @@ self.onmessage = function onmessage(event) {
   }
 
   function test_mapped_async() {
-    var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
-    xhr.open('GET', makeJarURL('data_1.txt'));
-    xhr.responseType = 'arraybuffer';
+    var xhr = new XMLHttpRequest({ mozAnon: true, mozSystem: true });
+    xhr.open("GET", makeJarURL("data_1.txt"));
+    xhr.responseType = "arraybuffer";
     xhr.onreadystatechange = function() {
       if (xhr.readyState !== xhr.DONE) {
         return;
@@ -58,17 +58,17 @@ self.onmessage = function onmessage(event) {
         var ct = xhr.getResponseHeader("Content-Type");
         ok(ct.includes("mem-mapped"), "Data is memory-mapped");
         checkData(xhr.response, gData1, runTests);
-       }
-    }
+      }
+    };
     xhr.send();
   }
 
   // Make sure array buffer retrieved from compressed file in package is
   // handled by memory allocation instead of memory mapping.
   function test_non_mapped() {
-    var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
-    xhr.open('GET', makeJarURL('data_2.txt'));
-    xhr.responseType = 'arraybuffer';
+    var xhr = new XMLHttpRequest({ mozAnon: true, mozSystem: true });
+    xhr.open("GET", makeJarURL("data_2.txt"));
+    xhr.responseType = "arraybuffer";
     xhr.onreadystatechange = function() {
       if (xhr.readyState !== xhr.DONE) {
         return;
@@ -78,20 +78,16 @@ self.onmessage = function onmessage(event) {
         var ct = xhr.getResponseHeader("Content-Type");
         ok(!ct.includes("mem-mapped"), "Data is not memory-mapped");
         checkData(xhr.response, gData2, runTests);
-       }
-    }
+      }
+    };
     xhr.send();
   }
 
-  var tests = [
-    test_mapped_sync,
-    test_mapped_async,
-    test_non_mapped
-  ];
+  var tests = [test_mapped_sync, test_mapped_async, test_non_mapped];
 
   function runTests() {
     if (!tests.length) {
-      postMessage({type: 'finish' });
+      postMessage({ type: "finish" });
       return;
     }
 

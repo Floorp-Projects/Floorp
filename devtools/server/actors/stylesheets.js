@@ -4,33 +4,60 @@
 
 "use strict";
 
-const {Ci} = require("chrome");
+const { Ci } = require("chrome");
 const defer = require("devtools/shared/defer");
 const protocol = require("devtools/shared/protocol");
-const {LongStringActor} = require("devtools/server/actors/string");
-const {fetch} = require("devtools/shared/DevToolsUtils");
-const {mediaRuleSpec, styleSheetSpec,
-       styleSheetsSpec} = require("devtools/shared/specs/stylesheets");
+const { LongStringActor } = require("devtools/server/actors/string");
+const { fetch } = require("devtools/shared/DevToolsUtils");
+const {
+  mediaRuleSpec,
+  styleSheetSpec,
+  styleSheetsSpec,
+} = require("devtools/shared/specs/stylesheets");
 const InspectorUtils = require("InspectorUtils");
 
-loader.lazyRequireGetter(this, "CssLogic", "devtools/shared/inspector/css-logic");
-loader.lazyRequireGetter(this, "addPseudoClassLock",
-  "devtools/server/actors/highlighters/utils/markup", true);
-loader.lazyRequireGetter(this, "removePseudoClassLock",
-  "devtools/server/actors/highlighters/utils/markup", true);
-loader.lazyRequireGetter(this, "loadSheet", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "ReplayDebugger",
-  "devtools/server/actors/replay/debugger");
-loader.lazyRequireGetter(this, "ReplayInspector",
-  "devtools/server/actors/replay/inspector");
+loader.lazyRequireGetter(
+  this,
+  "CssLogic",
+  "devtools/shared/inspector/css-logic"
+);
+loader.lazyRequireGetter(
+  this,
+  "addPseudoClassLock",
+  "devtools/server/actors/highlighters/utils/markup",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "removePseudoClassLock",
+  "devtools/server/actors/highlighters/utils/markup",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "loadSheet",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "ReplayDebugger",
+  "devtools/server/actors/replay/debugger"
+);
+loader.lazyRequireGetter(
+  this,
+  "ReplayInspector",
+  "devtools/server/actors/replay/inspector"
+);
 
 var TRANSITION_PSEUDO_CLASS = ":-moz-styleeditor-transitioning";
 var TRANSITION_DURATION_MS = 500;
 var TRANSITION_BUFFER_MS = 1000;
-var TRANSITION_RULE_SELECTOR =
-`:root${TRANSITION_PSEUDO_CLASS}, :root${TRANSITION_PSEUDO_CLASS} *`;
+var TRANSITION_RULE_SELECTOR = `:root${TRANSITION_PSEUDO_CLASS}, :root${TRANSITION_PSEUDO_CLASS} *`;
 
-var TRANSITION_SHEET = "data:text/css;charset=utf-8," + encodeURIComponent(`
+var TRANSITION_SHEET =
+  "data:text/css;charset=utf-8," +
+  encodeURIComponent(`
   ${TRANSITION_RULE_SELECTOR} {
     transition-duration: ${TRANSITION_DURATION_MS}ms !important;
     transition-delay: 0ms !important;
@@ -105,7 +132,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
 
   form: function() {
     const form = {
-      actor: this.actorID,  // actorID is set when this is added to a pool
+      actor: this.actorID, // actorID is set when this is added to a pool
       mediaText: this.rawRule.media.mediaText,
       conditionText: this.rawRule.conditionText,
       matches: this.matches,
@@ -216,8 +243,10 @@ async function fetchStylesheet(sheet, consoleActor) {
   } catch (e) {
     // The list of excluded protocols can be missing some protocols, try to use the
     // system principal if the first fetch failed.
-    console.error(`stylesheets actor: fetch failed for ${href},` +
-      ` using system principal instead.`);
+    console.error(
+      `stylesheets actor: fetch failed for ${href},` +
+        ` using system principal instead.`
+    );
     options.window = undefined;
     options.principal = undefined;
     result = await fetch(href, options);
@@ -275,8 +304,10 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     if (!href) {
       if (this.ownerNode.nodeType == this.ownerNode.DOCUMENT_NODE) {
         href = this.ownerNode.location.href;
-      } else if (this.ownerNode.ownerDocument &&
-                 this.ownerNode.ownerDocument.location) {
+      } else if (
+        this.ownerNode.ownerDocument &&
+        this.ownerNode.ownerDocument.location
+      ) {
         href = this.ownerNode.ownerDocument.location.href;
       }
     }
@@ -305,7 +336,9 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     if (this._transitionTimeout && this.window) {
       this.window.clearTimeout(this._transitionTimeout);
       removePseudoClassLock(
-                   this.document.documentElement, TRANSITION_PSEUDO_CLASS);
+        this.document.documentElement,
+        TRANSITION_PSEUDO_CLASS
+      );
     }
   },
 
@@ -372,7 +405,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
 
     const deferred = defer();
 
-    const onSheetLoaded = (event) => {
+    const onSheetLoaded = event => {
       this.ownerNode.removeEventListener("load", onSheetLoaded);
 
       deferred.resolve(this.rawSheet.cssRules);
@@ -398,13 +431,16 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     if (this.ownerNode) {
       if (this.ownerNode.nodeType == this.ownerNode.DOCUMENT_NODE) {
         docHref = this.ownerNode.location.href;
-      } else if (this.ownerNode.ownerDocument && this.ownerNode.ownerDocument.location) {
+      } else if (
+        this.ownerNode.ownerDocument &&
+        this.ownerNode.ownerDocument.location
+      ) {
         docHref = this.ownerNode.ownerDocument.location.href;
       }
     }
 
     const form = {
-      actor: this.actorID,  // actorID is set when this actor is added to a pool
+      actor: this.actorID, // actorID is set when this actor is added to a pool
       href: this.href,
       nodeHref: docHref,
       disabled: this.rawSheet.disabled,
@@ -453,7 +489,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * Protocol method to get the text of this stylesheet.
    */
   getText: function() {
-    return this._getText().then((text) => {
+    return this._getText().then(text => {
       return new LongStringActor(this.conn, text || "");
     });
   },
@@ -503,7 +539,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    *         A promise that resolves with an array of MediaRuleActors.
    */
   _getMediaRules: function() {
-    return this.getCSSRules().then((rules) => {
+    return this.getCSSRules().then(rules => {
       const mediaRules = [];
       for (let i = 0; i < rules.length; i++) {
         const rule = rules[i];
@@ -544,7 +580,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       this.emit("style-applied", kind, this);
     }
 
-    this._getMediaRules().then((rules) => {
+    this._getMediaRules().then(rules => {
       this.emit("media-rules-changed", rules);
     });
   },
@@ -569,7 +605,8 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     this.window.clearTimeout(this._transitionTimeout);
     this._transitionTimeout = this.window.setTimeout(
       this._onTransitionEnd.bind(this, kind),
-      TRANSITION_DURATION_MS + TRANSITION_BUFFER_MS);
+      TRANSITION_DURATION_MS + TRANSITION_BUFFER_MS
+    );
   },
 
   /**
@@ -578,7 +615,10 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    */
   _onTransitionEnd: function(kind) {
     this._transitionTimeout = null;
-    removePseudoClassLock(this.document.documentElement, TRANSITION_PSEUDO_CLASS);
+    removePseudoClassLock(
+      this.document.documentElement,
+      TRANSITION_PSEUDO_CLASS
+    );
     this.emit("style-applied", kind, this);
   },
 });
@@ -626,8 +666,11 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     // rules are ready.  Using the former (with a check to ensure that
     // the sheet is enabled) ensures that the sheet is ready before we
     // try to make an actor for it.
-    this.parentActor.chromeEventHandler
-      .addEventListener("StyleSheetApplicableStateChanged", this._onSheetAdded, true);
+    this.parentActor.chromeEventHandler.addEventListener(
+      "StyleSheetApplicableStateChanged",
+      this._onSheetAdded,
+      true
+    );
 
     // This is used when creating a new style sheet, so that we can
     // pass the correct flag when emitting our stylesheet-added event.
@@ -645,8 +688,11 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     this.parentActor.off("stylesheet-added", this._onNewStyleSheetActor);
     this.parentActor.off("window-ready", this._onWindowReady);
 
-    this.parentActor.chromeEventHandler
-      .removeEventListener("StyleSheetApplicableStateChanged", this._onSheetAdded, true);
+    this.parentActor.chromeEventHandler.removeEventListener(
+      "StyleSheetApplicableStateChanged",
+      this._onSheetAdded,
+      true
+    );
 
     protocol.Actor.prototype.destroy.call(this);
   },
@@ -680,7 +726,9 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   async getStyleSheets() {
     let actors = [];
 
-    const windows = isReplaying ? [ReplayInspector.window] : this.parentActor.windows;
+    const windows = isReplaying
+      ? [ReplayInspector.window]
+      : this.parentActor.windows;
     for (const win of windows) {
       const sheets = await this._addStyleSheets(win);
       actors = actors.concat(sheets);
@@ -701,7 +749,10 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     // Special case about:PreferenceStyleSheet, as it is generated on the
     // fly and the URI is not registered with the about: handler.
     // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
-    if (sheet.href && sheet.href.toLowerCase() == "about:preferencestylesheet") {
+    if (
+      sheet.href &&
+      sheet.href.toLowerCase() == "about:preferencestylesheet"
+    ) {
       return false;
     }
 
@@ -735,7 +786,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    *         Promise that resolves to an array of StyleSheetActors
    */
   _addStyleSheets: function(win) {
-    return (async function() {
+    return async function() {
       const doc = win.document;
       // We have to set this flag in order to get the
       // StyleSheetApplicableStateChanged events.  See Document.webidl.
@@ -759,7 +810,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
         actors = actors.concat(imports);
       }
       return actors;
-    }.bind(this))();
+    }.bind(this)();
   },
 
   /**
@@ -773,7 +824,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    *         A promise that resolves with an array of StyleSheetActors
    */
   _getImported: function(doc, styleSheet) {
-    return (async function() {
+    return async function() {
       const rules = await styleSheet.getCSSRules();
       let imported = [];
 
@@ -786,8 +837,11 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
           // the latest CSSOM spec), so we also need to check ancestors for the
           // same URL to avoid cycles.
           const sheet = rule.styleSheet;
-          if (!sheet || this._haveAncestorWithSameURL(sheet) ||
-              !this._shouldListSheet(sheet)) {
+          if (
+            !sheet ||
+            this._haveAncestorWithSameURL(sheet) ||
+            !this._shouldListSheet(sheet)
+          ) {
             continue;
           }
           const actor = this.parentActor.createStyleSheetActor(rule.styleSheet);
@@ -803,7 +857,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
       }
 
       return imported;
-    }.bind(this))();
+    }.bind(this)();
   },
 
   /**
@@ -841,7 +895,10 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     this._nextStyleSheetIsNew = true;
 
     const parent = this.document.documentElement;
-    const style = this.document.createElementNS("http://www.w3.org/1999/xhtml", "style");
+    const style = this.document.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "style"
+    );
     style.setAttribute("type", "text/css");
 
     if (text) {

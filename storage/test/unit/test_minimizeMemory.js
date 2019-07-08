@@ -5,8 +5,9 @@
 // and async connections.
 
 function minimizeMemory() {
-  Services.storage.QueryInterface(Ci.nsIObserver)
-                  .observe(null, "memory-pressure", null);
+  Services.storage
+    .QueryInterface(Ci.nsIObserver)
+    .observe(null, "memory-pressure", null);
 }
 
 add_task(async function test_minimizeMemory_async_connection() {

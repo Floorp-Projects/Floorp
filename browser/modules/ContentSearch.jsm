@@ -3,21 +3,30 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "ContentSearch",
-];
+var EXPORTED_SYMBOLS = ["ContentSearch"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
-ChromeUtils.defineModuleGetter(this, "FormHistory",
-  "resource://gre/modules/FormHistory.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "SearchSuggestionController",
-  "resource://gre/modules/SearchSuggestionController.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormHistory",
+  "resource://gre/modules/FormHistory.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "SearchSuggestionController",
+  "resource://gre/modules/SearchSuggestionController.jsm"
+);
 
 const INBOUND_MESSAGE = "ContentSearch";
 const OUTBOUND_MESSAGE = INBOUND_MESSAGE;
@@ -87,7 +96,6 @@ const MAX_SUGGESTIONS = 6;
  */
 
 var ContentSearch = {
-
   // Inbound events are queued and processed in FIFO order instead of handling
   // them immediately, which would result in non-FIFO responses due to the
   // asynchrononicity added by converting image data URIs to ArrayBuffers.
@@ -110,7 +118,9 @@ var ContentSearch = {
     Services.obs.addObserver(this, "browser-search-service");
     Services.obs.addObserver(this, "shutdown-leaks-before-check");
     Services.prefs.addObserver("browser.search.hiddenOneOffs", this);
-    this._stringBundle = Services.strings.createBundle("chrome://global/locale/autocomplete.properties");
+    this._stringBundle = Services.strings.createBundle(
+      "chrome://global/locale/autocomplete.properties"
+    );
   },
 
   get searchSuggestionUIStrings() {
@@ -118,12 +128,20 @@ var ContentSearch = {
       return this._searchSuggestionUIStrings;
     }
     this._searchSuggestionUIStrings = {};
-    let searchBundle = Services.strings.createBundle("chrome://browser/locale/search.properties");
-    let stringNames = ["searchHeader", "searchForSomethingWith2",
-                       "searchWithHeader", "searchSettings"];
+    let searchBundle = Services.strings.createBundle(
+      "chrome://browser/locale/search.properties"
+    );
+    let stringNames = [
+      "searchHeader",
+      "searchForSomethingWith2",
+      "searchWithHeader",
+      "searchSettings",
+    ];
 
     for (let name of stringNames) {
-      this._searchSuggestionUIStrings[name] = searchBundle.GetStringFromName(name);
+      this._searchSuggestionUIStrings[name] = searchBundle.GetStringFromName(
+        name
+      );
     }
     return this._searchSuggestionUIStrings;
   },
@@ -186,22 +204,24 @@ var ContentSearch = {
 
   observe(subj, topic, data) {
     switch (topic) {
-    case "browser-search-service":
-      if (data != "init-complete") {
+      case "browser-search-service":
+        if (data != "init-complete") {
+          break;
+        }
+      case "nsPref:changed":
+      case "browser-search-engine-modified":
+        this._eventQueue.push({
+          type: "Observe",
+          data,
+        });
+        this._processEventQueue();
         break;
-      }
-    case "nsPref:changed":
-    case "browser-search-engine-modified":
-      this._eventQueue.push({
-        type: "Observe",
-        data,
-      });
-      this._processEventQueue();
-      break;
-    case "shutdown-leaks-before-check":
-      subj.wrappedJSObject.client.addBlocker(
-        "ContentSearch: Wait until the service is destroyed", () => this.destroy());
-      break;
+      case "shutdown-leaks-before-check":
+        subj.wrappedJSObject.client.addBlocker(
+          "ContentSearch: Wait until the service is destroyed",
+          () => this.destroy()
+        );
+        break;
     }
   },
 
@@ -226,7 +246,11 @@ var ContentSearch = {
       "searchPurpose",
     ]);
     let engine = Services.search.getEngineByName(data.engineName);
-    let submission = engine.getSubmission(data.searchString, "", data.searchPurpose);
+    let submission = engine.getSubmission(
+      data.searchString,
+      "",
+      data.searchPurpose
+    );
     let browser = msg.target;
     let win = browser.ownerGlobal;
     if (!win) {
@@ -247,19 +271,26 @@ var ContentSearch = {
       this._reply(msg, "Blur");
       browser.loadURI(submission.uri.spec, {
         postData: submission.postData,
-        triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({
-          userContextId: win.gBrowser.selectedBrowser.getAttribute("userContextId"),
-        }),
+        triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
+          {
+            userContextId: win.gBrowser.selectedBrowser.getAttribute(
+              "userContextId"
+            ),
+          }
+        ),
       });
     } else {
       let params = {
         postData: submission.postData,
-        inBackground: Services.prefs.getBoolPref("browser.tabs.loadInBackground"),
+        inBackground: Services.prefs.getBoolPref(
+          "browser.tabs.loadInBackground"
+        ),
       };
       win.openTrustedLinkIn(submission.uri.spec, where, params);
     }
-    win.BrowserSearch.recordSearchInTelemetry(engine, data.healthReportKey,
-                                              { selection: data.selection });
+    win.BrowserSearch.recordSearchInTelemetry(engine, data.healthReportKey, {
+      selection: data.selection,
+    });
   },
 
   async getSuggestions(engineName, searchString, browser) {
@@ -315,16 +346,19 @@ var ContentSearch = {
       return false;
     }
     let browserData = this._suggestionDataForBrowser(browser.target, true);
-    FormHistory.update({
-      op: "bump",
-      fieldname: browserData.controller.formHistoryParam,
-      value: entry,
-    }, {
-      handleCompletion: () => {},
-      handleError: err => {
-        Cu.reportError("Error adding form history entry: " + err);
+    FormHistory.update(
+      {
+        op: "bump",
+        fieldname: browserData.controller.formHistoryParam,
+        value: entry,
       },
-    });
+      {
+        handleCompletion: () => {},
+        handleError: err => {
+          Cu.reportError("Error adding form history entry: " + err);
+        },
+      }
+    );
     return true;
   },
 
@@ -372,7 +406,10 @@ var ContentSearch = {
   _cancelSuggestions(msg) {
     let cancelled = false;
     // cancel active suggestion request
-    if (this._currentSuggestion && this._currentSuggestion.target === msg.target) {
+    if (
+      this._currentSuggestion &&
+      this._currentSuggestion.target === msg.target
+    ) {
       this._currentSuggestion.controller.stop();
       cancelled = true;
     }
@@ -424,12 +461,13 @@ var ContentSearch = {
   },
 
   async _onMessageGetSuggestions(msg, data) {
-    this._ensureDataHasProperties(data, [
-      "engineName",
-      "searchString",
-    ]);
-    let {engineName, searchString} = data;
-    let suggestions = await this.getSuggestions(engineName, searchString, msg.target);
+    this._ensureDataHasProperties(data, ["engineName", "searchString"]);
+    let { engineName, searchString } = data;
+    let suggestions = await this.getSuggestions(
+      engineName,
+      searchString,
+      msg.target
+    );
 
     this._reply(msg, "Suggestions", {
       engineName: data.engineName,
@@ -497,17 +535,22 @@ var ContentSearch = {
   },
 
   _msgArgs(type, data) {
-    return [OUTBOUND_MESSAGE, {
-      type,
-      data,
-    }];
+    return [
+      OUTBOUND_MESSAGE,
+      {
+        type,
+        data,
+      },
+    ];
   },
 
   async _currentEngineObj() {
     let engine = Services.search.defaultEngine;
     let favicon = engine.getIconURLBySize(16, 16);
     let placeholder = this._stringBundle.formatStringFromName(
-      "searchWithEngine", [engine.name]);
+      "searchWithEngine",
+      [engine.name]
+    );
     let obj = {
       name: engine.name,
       placeholder,

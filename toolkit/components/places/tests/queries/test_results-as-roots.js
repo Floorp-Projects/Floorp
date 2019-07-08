@@ -2,27 +2,36 @@
 
 const MOBILE_BOOKMARKS_PREF = "browser.bookmarks.showMobileBookmarks";
 
-const expectedRoots = [{
-  title: "BookmarksToolbarFolderTitle",
-  uri: `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`,
-  guid: PlacesUtils.bookmarks.virtualToolbarGuid,
-}, {
-  title: "BookmarksMenuFolderTitle",
-  uri: `place:parent=${PlacesUtils.bookmarks.menuGuid}`,
-  guid: PlacesUtils.bookmarks.virtualMenuGuid,
-}, {
-  title: "OtherBookmarksFolderTitle",
-  uri: `place:parent=${PlacesUtils.bookmarks.unfiledGuid}`,
-  guid: PlacesUtils.bookmarks.virtualUnfiledGuid,
-}];
+const expectedRoots = [
+  {
+    title: "BookmarksToolbarFolderTitle",
+    uri: `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`,
+    guid: PlacesUtils.bookmarks.virtualToolbarGuid,
+  },
+  {
+    title: "BookmarksMenuFolderTitle",
+    uri: `place:parent=${PlacesUtils.bookmarks.menuGuid}`,
+    guid: PlacesUtils.bookmarks.virtualMenuGuid,
+  },
+  {
+    title: "OtherBookmarksFolderTitle",
+    uri: `place:parent=${PlacesUtils.bookmarks.unfiledGuid}`,
+    guid: PlacesUtils.bookmarks.virtualUnfiledGuid,
+  },
+];
 
-const expectedRootsWithMobile = [...expectedRoots, {
-  title: "MobileBookmarksFolderTitle",
-  uri: `place:parent=${PlacesUtils.bookmarks.mobileGuid}`,
-  guid: PlacesUtils.bookmarks.virtualMobileGuid,
-}];
+const expectedRootsWithMobile = [
+  ...expectedRoots,
+  {
+    title: "MobileBookmarksFolderTitle",
+    uri: `place:parent=${PlacesUtils.bookmarks.mobileGuid}`,
+    guid: PlacesUtils.bookmarks.virtualMobileGuid,
+  },
+];
 
-const placesStrings = Services.strings.createBundle("chrome://places/locale/places.properties");
+const placesStrings = Services.strings.createBundle(
+  "chrome://places/locale/places.properties"
+);
 
 function getAllBookmarksQuery() {
   var query = PlacesUtils.history.getNewQuery();
@@ -38,13 +47,23 @@ function getAllBookmarksQuery() {
 }
 
 function assertExpectedChildren(root, expectedChildren) {
-  Assert.equal(root.childCount, expectedChildren.length, "Should have the expected number of children.");
+  Assert.equal(
+    root.childCount,
+    expectedChildren.length,
+    "Should have the expected number of children."
+  );
 
   for (let i = 0; i < root.childCount; i++) {
-    Assert.equal(root.getChild(i).uri, expectedChildren[i].uri,
-                 "Should have the correct uri for root ${i}");
-    Assert.equal(root.getChild(i).title, placesStrings.GetStringFromName(expectedChildren[i].title),
-                 "Should have the correct title for root ${i}");
+    Assert.equal(
+      root.getChild(i).uri,
+      expectedChildren[i].uri,
+      "Should have the correct uri for root ${i}"
+    );
+    Assert.equal(
+      root.getChild(i).title,
+      placesStrings.GetStringFromName(expectedChildren[i].title),
+      "Should have the correct title for root ${i}"
+    );
     Assert.equal(root.getChild(i).bookmarkGuid, expectedChildren[i].guid);
   }
 }
@@ -57,9 +76,11 @@ add_task(async function test_results_as_root() {
   let root = getAllBookmarksQuery();
   root.containerOpen = true;
 
-  Assert.equal(PlacesUtils.asQuery(root).queryOptions.queryType,
+  Assert.equal(
+    PlacesUtils.asQuery(root).queryOptions.queryType,
     Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS,
-    "Should have a query type of QUERY_TYPE_BOOKMARKS");
+    "Should have a query type of QUERY_TYPE_BOOKMARKS"
+  );
 
   assertExpectedChildren(root, expectedRoots);
 

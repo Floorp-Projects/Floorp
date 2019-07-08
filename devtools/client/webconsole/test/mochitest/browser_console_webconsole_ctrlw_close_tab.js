@@ -9,8 +9,8 @@
 "use strict";
 
 add_task(async function() {
-  const TEST_URI = "data:text/html;charset=utf8,<title>bug871156</title>\n" +
-                   "<p>hello world";
+  const TEST_URI =
+    "data:text/html;charset=utf8,<title>bug871156</title>\n" + "<p>hello world";
   const firstTab = gBrowser.selectedTab;
 
   await pushPref("toolkit.cosmeticAnimations.enabled", false);
@@ -24,17 +24,25 @@ add_task(async function() {
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
 
-  gBrowser.tabContainer.addEventListener("TabClose", function() {
-    info("tab closed");
-    tabClosed.resolve(null);
-  }, {once: true});
+  gBrowser.tabContainer.addEventListener(
+    "TabClose",
+    function() {
+      info("tab closed");
+      tabClosed.resolve(null);
+    },
+    { once: true }
+  );
 
-  gBrowser.tabContainer.addEventListener("TabSelect", function() {
-    if (gBrowser.selectedTab == firstTab) {
-      info("tab selected");
-      tabSelected.resolve(null);
-    }
-  }, {once: true});
+  gBrowser.tabContainer.addEventListener(
+    "TabSelect",
+    function() {
+      if (gBrowser.selectedTab == firstTab) {
+        info("tab selected");
+        tabSelected.resolve(null);
+      }
+    },
+    { once: true }
+  );
 
   toolbox.once("destroyed", () => {
     info("toolbox destroyed");
@@ -46,8 +54,11 @@ add_task(async function() {
     EventUtils.synthesizeKey("w", { accelKey: true });
   });
 
-  await promise.all([tabClosed.promise, toolboxDestroyed.promise,
-                     tabSelected.promise]);
+  await promise.all([
+    tabClosed.promise,
+    toolboxDestroyed.promise,
+    tabSelected.promise,
+  ]);
   info("promise.all resolved. start testing the Browser Console");
 
   hud = await HUDService.toggleBrowserConsole();

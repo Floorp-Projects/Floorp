@@ -13,20 +13,28 @@ add_task(async function() {
   const tab = await addTab("about:blank");
 
   info("Open devtools on the Inspector in a bottom dock");
-  const toolbox = await openToolboxForTab(tab, "inspector", Toolbox.HostType.BOTTOM);
+  const toolbox = await openToolboxForTab(
+    tab,
+    "inspector",
+    Toolbox.HostType.BOTTOM
+  );
 
   const hostWindow = toolbox.win.parent;
   const originalWidth = hostWindow.outerWidth;
   const originalHeight = hostWindow.outerHeight;
 
-  info("Resize devtools window to a width that should not trigger any overflow");
+  info(
+    "Resize devtools window to a width that should not trigger any overflow"
+  );
   let onResize = once(hostWindow, "resize");
   hostWindow.resizeTo(1350, 300);
   await onResize;
   waitUntil(() => {
     // Wait for all buttons are displayed.
-    return toolbox.panelDefinitions.length !==
-      toolbox.doc.querySelectorAll(".devtools-tab").length;
+    return (
+      toolbox.panelDefinitions.length !==
+      toolbox.doc.querySelectorAll(".devtools-tab").length
+    );
   });
 
   let chevronMenuButton = toolbox.doc.querySelector(".tools-chevron-menu");
@@ -44,16 +52,24 @@ add_task(async function() {
   chevronMenuButton = toolbox.doc.querySelector(".tools-chevron-menu");
   ok(chevronMenuButton, "The chevron menu button is displayed");
 
-  info("Open the tools-chevron-menupopup and verify that the inspector button is checked");
+  info(
+    "Open the tools-chevron-menupopup and verify that the inspector button is checked"
+  );
   await openChevronMenu(toolbox);
 
-  const inspectorButton = toolbox.doc.querySelector("#tools-chevron-menupopup-inspector");
+  const inspectorButton = toolbox.doc.querySelector(
+    "#tools-chevron-menupopup-inspector"
+  );
   ok(!inspectorButton, "The chevron menu doesn't have the inspector button.");
 
-  const consoleButton = toolbox.doc.querySelector("#tools-chevron-menupopup-webconsole");
+  const consoleButton = toolbox.doc.querySelector(
+    "#tools-chevron-menupopup-webconsole"
+  );
   ok(!consoleButton, "The chevron menu doesn't have the console button.");
 
-  const storageButton = toolbox.doc.querySelector("#tools-chevron-menupopup-storage");
+  const storageButton = toolbox.doc.querySelector(
+    "#tools-chevron-menupopup-storage"
+  );
   ok(storageButton, "The chevron menu has the storage button.");
 
   info("Switch to the performance using the tools-chevron-menupopup popup");

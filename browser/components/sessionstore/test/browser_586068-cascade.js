@@ -10,14 +10,50 @@ add_task(async function test() {
     Services.prefs.clearUserPref(PREF_RESTORE_ON_DEMAND);
   });
 
-  let state = { windows: [{ tabs: [
-    { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-  ] }] };
+  let state = {
+    windows: [
+      {
+        tabs: [
+          {
+            entries: [
+              { url: "http://example.com", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+        ],
+      },
+    ],
+  };
 
   let expectedCounts = [
     [3, 3, 0],
@@ -30,13 +66,30 @@ add_task(async function test() {
 
   let loadCount = 0;
   let promiseRestoringTabs = new Promise(resolve => {
-    gProgressListener.setCallback(function(aBrowser, aNeedRestore, aRestoring, aRestored) {
+    gProgressListener.setCallback(function(
+      aBrowser,
+      aNeedRestore,
+      aRestoring,
+      aRestored
+    ) {
       loadCount++;
       let expected = expectedCounts[loadCount - 1];
 
-      is(aNeedRestore, expected[0], "load " + loadCount + " - # tabs that need to be restored");
-      is(aRestoring, expected[1], "load " + loadCount + " - # tabs that are restoring");
-      is(aRestored, expected[2], "load " + loadCount + " - # tabs that has been restored");
+      is(
+        aNeedRestore,
+        expected[0],
+        "load " + loadCount + " - # tabs that need to be restored"
+      );
+      is(
+        aRestoring,
+        expected[1],
+        "load " + loadCount + " - # tabs that are restoring"
+      );
+      is(
+        aRestored,
+        expected[2],
+        "load " + loadCount + " - # tabs that has been restored"
+      );
 
       if (loadCount == state.windows[0].tabs.length) {
         gProgressListener.unsetCallback();

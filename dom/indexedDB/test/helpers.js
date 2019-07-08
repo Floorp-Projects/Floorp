@@ -24,8 +24,7 @@ if ((!c || !c.value || c.writable) && typeof SpecialPowers === "object") {
   Components = SpecialPowers.wrap(SpecialPowers.Components);
 }
 
-function executeSoon(aFun)
-{
+function executeSoon(aFun) {
   SpecialPowers.Services.tm.dispatchToMainThread({
     run() {
       aFun();
@@ -65,17 +64,16 @@ function* testHarnessSteps() {
 
   yield undefined;
 
-  info("Running" +
-       (testScriptFilename ? " '" + testScriptFilename + "'" : ""));
+  info("Running" + (testScriptFilename ? " '" + testScriptFilename + "'" : ""));
 
   info("Pushing preferences");
 
   SpecialPowers.pushPrefEnv(
     {
-      "set": [
+      set: [
         ["dom.indexedDB.testing", true],
         ["dom.indexedDB.experimental", true],
-        ["javascript.options.wasm_baselinejit", true],  // This can be removed when on by default
+        ["javascript.options.wasm_baselinejit", true], // This can be removed when on by default
       ],
     },
     nextTestHarnessStep
@@ -110,20 +108,25 @@ function* testHarnessSteps() {
         return executeWorkerTestAndCleanUp(testScriptPath);
       });
     } else {
-      ok(testSteps.constructor.name === "GeneratorFunction",
-         "Unsupported function type");
-      executeWorkerTestAndCleanUp(testScriptPath)
-        .then(nextTestHarnessStep);
+      ok(
+        testSteps.constructor.name === "GeneratorFunction",
+        "Unsupported function type"
+      );
+      executeWorkerTestAndCleanUp(testScriptPath).then(nextTestHarnessStep);
 
       yield undefined;
     }
   } else if (testScriptFilename) {
-    todo(false,
-         "Skipping test in a worker because it is explicitly disabled: " +
-         window.disableWorkerTest);
+    todo(
+      false,
+      "Skipping test in a worker because it is explicitly disabled: " +
+        window.disableWorkerTest
+    );
   } else {
-    todo(false,
-         "Skipping test in a worker because it's not structured properly");
+    todo(
+      false,
+      "Skipping test in a worker because it's not structured properly"
+    );
   }
 
   info("Running test in main thread");
@@ -153,80 +156,70 @@ function* testHarnessSteps() {
 }
 
 if (!window.runTest) {
-  window.runTest = function()
-  {
+  window.runTest = function() {
     SimpleTest.waitForExplicitFinish();
     testHarnessGenerator.next();
   };
 }
 
-function finishTest()
-{
-  ok(testSteps.constructor.name === "GeneratorFunction",
-     "Async/await tests shouldn't call finishTest()");
+function finishTest() {
+  ok(
+    testSteps.constructor.name === "GeneratorFunction",
+    "Async/await tests shouldn't call finishTest()"
+  );
   SimpleTest.executeSoon(function() {
-    clearAllDatabases(function() { SimpleTest.finish(); });
+    clearAllDatabases(function() {
+      SimpleTest.finish();
+    });
   });
 }
 
-function browserRunTest()
-{
+function browserRunTest() {
   testGenerator.next();
 }
 
-function browserFinishTest()
-{
-}
+function browserFinishTest() {}
 
-function grabEventAndContinueHandler(event)
-{
+function grabEventAndContinueHandler(event) {
   testGenerator.next(event);
 }
 
-function continueToNextStep()
-{
+function continueToNextStep() {
   SimpleTest.executeSoon(function() {
     testGenerator.next();
   });
 }
 
-function continueToNextStepSync()
-{
+function continueToNextStepSync() {
   testGenerator.next();
 }
 
-function errorHandler(event)
-{
+function errorHandler(event) {
   ok(false, "indexedDB error, '" + event.target.error.name + "'");
   finishTest();
 }
 
 // For error callbacks where the argument is not an event object.
-function errorCallbackHandler(err)
-{
+function errorCallbackHandler(err) {
   ok(false, "got unexpected error callback: " + err);
   finishTest();
 }
 
-function expectUncaughtException(expecting)
-{
+function expectUncaughtException(expecting) {
   SimpleTest.expectUncaughtException(expecting);
 }
 
-function browserErrorHandler(event)
-{
+function browserErrorHandler(event) {
   browserFinishTest();
   throw new Error("indexedDB error (" + event.code + "): " + event.message);
 }
 
-function unexpectedSuccessHandler()
-{
+function unexpectedSuccessHandler() {
   ok(false, "Got success, but did not expect it!");
   finishTest();
 }
 
-function expectedErrorHandler(name)
-{
+function expectedErrorHandler(name) {
   return function(event) {
     is(event.type, "error", "Got an error event");
     is(event.target.error.name, name, "Expected error was thrown.");
@@ -235,14 +228,12 @@ function expectedErrorHandler(name)
   };
 }
 
-function ExpectError(name, preventDefault)
-{
+function ExpectError(name, preventDefault) {
   this._name = name;
   this._preventDefault = preventDefault;
 }
 ExpectError.prototype = {
-  handleEvent(event)
-  {
+  handleEvent(event) {
     is(event.type, "error", "Got an error event");
     is(event.target.error.name, this._name, "Expected error was thrown.");
     if (this._preventDefault) {
@@ -255,25 +246,27 @@ ExpectError.prototype = {
 
 function compareKeys(_k1_, _k2_) {
   let t = typeof _k1_;
-  if (t != typeof _k2_)
+  if (t != typeof _k2_) {
     return false;
+  }
 
-  if (t !== "object")
+  if (t !== "object") {
     return _k1_ === _k2_;
+  }
 
   if (_k1_ instanceof Date) {
-    return (_k2_ instanceof Date) &&
-      _k1_.getTime() === _k2_.getTime();
+    return _k2_ instanceof Date && _k1_.getTime() === _k2_.getTime();
   }
 
   if (_k1_ instanceof Array) {
-    if (!(_k2_ instanceof Array) ||
-        _k1_.length != _k2_.length)
+    if (!(_k2_ instanceof Array) || _k1_.length != _k2_.length) {
       return false;
+    }
 
     for (let i = 0; i < _k1_.length; ++i) {
-      if (!compareKeys(_k1_[i], _k2_[i]))
+      if (!compareKeys(_k1_[i], _k2_[i])) {
         return false;
+      }
     }
 
     return true;
@@ -282,35 +275,32 @@ function compareKeys(_k1_, _k2_) {
   return false;
 }
 
-function removePermission(type, url)
-{
+function removePermission(type, url) {
   if (!url) {
     url = window.document;
   }
   SpecialPowers.removePermission(type, url);
 }
 
-function gc()
-{
+function gc() {
   SpecialPowers.forceGC();
   SpecialPowers.forceCC();
 }
 
-function scheduleGC()
-{
+function scheduleGC() {
   SpecialPowers.exactGC(continueToNextStep);
 }
 
-function isWasmSupported()
-{
+function isWasmSupported() {
   let testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
   return testingFunctions.wasmIsSupported();
 }
 
-function getWasmBinarySync(text)
-{
+function getWasmBinarySync(text) {
   let testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
-  let wasmTextToBinary = SpecialPowers.unwrap(testingFunctions.wasmTextToBinary);
+  let wasmTextToBinary = SpecialPowers.unwrap(
+    testingFunctions.wasmTextToBinary
+  );
   let binary = wasmTextToBinary(text);
   return binary;
 }
@@ -366,7 +356,7 @@ function workerScript() {
   self.wasmSupported = false;
 
   self.repr = function(_thing_) {
-    if (typeof(_thing_) == "undefined") {
+    if (typeof _thing_ == "undefined") {
       return "undefined";
     }
 
@@ -375,10 +365,10 @@ function workerScript() {
     try {
       str = _thing_ + "";
     } catch (e) {
-      return "[" + typeof(_thing_) + "]";
+      return "[" + typeof _thing_ + "]";
     }
 
-    if (typeof(_thing_) == "function") {
+    if (typeof _thing_ == "function") {
       str = str.replace(/^\s+/, "");
       let idx = str.indexOf("{");
       if (idx != -1) {
@@ -390,29 +380,33 @@ function workerScript() {
   };
 
   self.ok = function(_condition_, _name_, _diag_) {
-    self.postMessage({ op: "ok",
-                       condition: !!_condition_,
-                       name: _name_,
-                       diag: _diag_ });
+    self.postMessage({
+      op: "ok",
+      condition: !!_condition_,
+      name: _name_,
+      diag: _diag_,
+    });
   };
 
   self.is = function(_a_, _b_, _name_) {
-    let pass = (_a_ == _b_);
+    let pass = _a_ == _b_;
     let diag = pass ? "" : "got " + repr(_a_) + ", expected " + repr(_b_);
     ok(pass, _name_, diag);
   };
 
   self.isnot = function(_a_, _b_, _name_) {
-    let pass = (_a_ != _b_);
+    let pass = _a_ != _b_;
     let diag = pass ? "" : "didn't expect " + repr(_a_) + ", but got it";
     ok(pass, _name_, diag);
   };
 
   self.todo = function(_condition_, _name_, _diag_) {
-    self.postMessage({ op: "todo",
-                       condition: !!_condition_,
-                       name: _name_,
-                       diag: _diag_ });
+    self.postMessage({
+      op: "todo",
+      condition: !!_condition_,
+      name: _name_,
+      diag: _diag_,
+    });
   };
 
   self.info = function(_msg_) {
@@ -422,15 +416,22 @@ function workerScript() {
   self.executeSoon = function(_fun_) {
     var channel = new MessageChannel();
     channel.port1.postMessage("");
-    channel.port2.onmessage = function(event) { _fun_(); };
+    channel.port2.onmessage = function(event) {
+      _fun_();
+    };
   };
 
   self.finishTest = function() {
-    self.ok(testSteps.constructor.name === "GeneratorFunction",
-            "Async/await tests shouldn't call finishTest()");
+    self.ok(
+      testSteps.constructor.name === "GeneratorFunction",
+      "Async/await tests shouldn't call finishTest()"
+    );
     if (self._expectingUncaughtException) {
-      self.ok(false, "expectUncaughtException was called but no uncaught " +
-                     "exception was detected!");
+      self.ok(
+        false,
+        "expectUncaughtException was called but no uncaught " +
+          "exception was detected!"
+      );
     }
     self.postMessage({ op: "done" });
   };
@@ -454,14 +455,12 @@ function workerScript() {
     finishTest();
   };
 
-  self.unexpectedSuccessHandler = function()
-  {
+  self.unexpectedSuccessHandler = function() {
     ok(false, "Got success, but did not expect it!");
     finishTest();
   };
 
-  self.expectedErrorHandler = function(_name_)
-  {
+  self.expectedErrorHandler = function(_name_) {
     return function(_event_) {
       is(_event_.type, "error", "Got an error event");
       is(_event_.target.error.name, _name_, "Expected error was thrown.");
@@ -470,14 +469,12 @@ function workerScript() {
     };
   };
 
-  self.ExpectError = function(_name_, _preventDefault_)
-  {
+  self.ExpectError = function(_name_, _preventDefault_) {
     this._name = _name_;
     this._preventDefault = _preventDefault_;
   };
   self.ExpectError.prototype = {
-    handleEvent(_event_)
-    {
+    handleEvent(_event_) {
       is(_event_.type, "error", "Got an error event");
       is(_event_.target.error.name, this._name, "Expected error was thrown.");
       if (this._preventDefault) {
@@ -490,25 +487,27 @@ function workerScript() {
 
   self.compareKeys = function(_k1_, _k2_) {
     let t = typeof _k1_;
-    if (t != typeof _k2_)
+    if (t != typeof _k2_) {
       return false;
+    }
 
-    if (t !== "object")
+    if (t !== "object") {
       return _k1_ === _k2_;
+    }
 
     if (_k1_ instanceof Date) {
-      return (_k2_ instanceof Date) &&
-        _k1_.getTime() === _k2_.getTime();
+      return _k2_ instanceof Date && _k1_.getTime() === _k2_.getTime();
     }
 
     if (_k1_ instanceof Array) {
-      if (!(_k2_ instanceof Array) ||
-          _k1_.length != _k2_.length)
+      if (!(_k2_ instanceof Array) || _k1_.length != _k2_.length) {
         return false;
+      }
 
       for (let i = 0; i < _k1_.length; ++i) {
-        if (!compareKeys(_k1_[i], _k2_[i]))
+        if (!compareKeys(_k1_[i], _k2_[i])) {
           return false;
+        }
       }
 
       return true;
@@ -530,7 +529,10 @@ function workerScript() {
   self._expectingUncaughtException = false;
   self.expectUncaughtException = function(_expecting_) {
     self._expectingUncaughtException = !!_expecting_;
-    self.postMessage({ op: "expectUncaughtException", expecting: !!_expecting_ });
+    self.postMessage({
+      op: "expectUncaughtException",
+      expecting: !!_expecting_,
+    });
   };
 
   self._clearAllDatabasesCallback = undefined;
@@ -542,13 +544,28 @@ function workerScript() {
   self.onerror = function(_message_, _file_, _line_) {
     if (self._expectingUncaughtException) {
       self._expectingUncaughtException = false;
-      ok(true, "Worker: expected exception [" + _file_ + ":" + _line_ + "]: '" +
-         _message_ + "'");
+      ok(
+        true,
+        "Worker: expected exception [" +
+          _file_ +
+          ":" +
+          _line_ +
+          "]: '" +
+          _message_ +
+          "'"
+      );
       return false;
     }
-    ok(false,
-       "Worker: uncaught exception [" + _file_ + ":" + _line_ + "]: '" +
-         _message_ + "'");
+    ok(
+      false,
+      "Worker: uncaught exception [" +
+        _file_ +
+        ":" +
+        _line_ +
+        "]: '" +
+        _message_ +
+        "'"
+    );
     self.finishTest();
     self.close();
     return true;
@@ -592,13 +609,18 @@ function workerScript() {
           if (testSteps.constructor.name === "AsyncFunction") {
             await testSteps();
             if (self._expectingUncaughtException) {
-              self.ok(false, "expectUncaughtException was called but no " +
-                             "uncaught exception was detected!");
+              self.ok(
+                false,
+                "expectUncaughtException was called but no " +
+                  "uncaught exception was detected!"
+              );
             }
             self.postMessage({ op: "done" });
           } else {
-            ok(testSteps.constructor.name === "GeneratorFunction",
-               "Unsupported function type");
+            ok(
+              testSteps.constructor.name === "GeneratorFunction",
+              "Unsupported function type"
+            );
             testGenerator.next();
           }
         });
@@ -617,11 +639,11 @@ function workerScript() {
         break;
 
       default:
-        throw new Error("Received a bad message from parent: " +
-                        JSON.stringify(message));
+        throw new Error(
+          "Received a bad message from parent: " + JSON.stringify(message)
+        );
     }
   };
-
 
   self.expectingSuccess = function(_request_) {
     return new Promise(function(_resolve_, _reject_) {
@@ -635,8 +657,8 @@ function workerScript() {
       _request_.onupgradeneeded = function(_event_) {
         ok(false, "Got upgrade, but did not expect it!");
         _reject_(_event_);
-        };
-      });
+      };
+    });
   };
 
   self.expectingUpgrade = function(_request_) {
@@ -653,7 +675,7 @@ function workerScript() {
         _reject_(_event_);
       };
     });
- };
+  };
 
   self.postMessage({ op: "ready" });
 }
@@ -661,9 +683,9 @@ function workerScript() {
 async function executeWorkerTestAndCleanUp(testScriptPath) {
   info("Running test in a worker");
 
-  let workerScriptBlob =
-    new Blob([ "(" + workerScript.toString() + ")();" ],
-             { type: "text/javascript" });
+  let workerScriptBlob = new Blob(["(" + workerScript.toString() + ")();"], {
+    type: "text/javascript",
+  });
   let workerScriptURL = URL.createObjectURL(workerScriptBlob);
 
   let worker;
@@ -688,7 +710,10 @@ async function executeWorkerTestAndCleanUp(testScriptPath) {
         let message = event.data;
         switch (message.op) {
           case "ok":
-            SimpleTest.ok(message.condition, `${message.name}: ${message.diag}`);
+            SimpleTest.ok(
+              message.condition,
+              `${message.name}: ${message.diag}`
+            );
             break;
 
           case "todo":
@@ -700,11 +725,14 @@ async function executeWorkerTestAndCleanUp(testScriptPath) {
             break;
 
           case "ready":
-            worker.postMessage({ op: "load", files: [ testScriptPath ] });
+            worker.postMessage({ op: "load", files: [testScriptPath] });
             break;
 
           case "loaded":
-            worker.postMessage({ op: "start", wasmSupported: isWasmSupported() });
+            worker.postMessage({
+              op: "start",
+              wasmSupported: isWasmSupported(),
+            });
             break;
 
           case "done":
@@ -723,13 +751,17 @@ async function executeWorkerTestAndCleanUp(testScriptPath) {
             break;
 
           case "getWasmBinary":
-             worker.postMessage({ op: "getWasmBinaryDone",
-                                 wasmBinary: getWasmBinarySync(message.text) });
-             break;
+            worker.postMessage({
+              op: "getWasmBinaryDone",
+              wasmBinary: getWasmBinarySync(message.text),
+            });
+            break;
 
           default:
-            ok(false,
-               "Received a bad message from worker: " + JSON.stringify(message));
+            ok(
+              false,
+              "Received a bad message from worker: " + JSON.stringify(message)
+            );
             reject();
         }
       };
@@ -744,8 +776,11 @@ async function executeWorkerTestAndCleanUp(testScriptPath) {
     info("Cleaning up the databases");
 
     if (worker._expectingUncaughtException) {
-      ok(false, "expectUncaughtException was called but no uncaught " +
-                "exception was detected!");
+      ok(
+        false,
+        "expectUncaughtException was called but no uncaught " +
+          "exception was detected!"
+      );
     }
 
     worker.terminate();

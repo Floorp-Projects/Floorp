@@ -59,23 +59,30 @@ SourceMapURLService.prototype._getLoadingPromise = function() {
       }
       this._stylesheetsFront = await this._target.getFront("stylesheets");
       this._stylesheetsFront.on("stylesheet-added", this._onNewStyleSheet);
-      const styleSheetsLoadingPromise =
-          this._stylesheetsFront.getStyleSheets().then(sheets => {
+      const styleSheetsLoadingPromise = this._stylesheetsFront
+        .getStyleSheets()
+        .then(
+          sheets => {
             sheets.forEach(this._registerNewStyleSheet, this);
-          }, () => {
+          },
+          () => {
             // Ignore any protocol-based errors.
-          });
+          }
+        );
 
       // Start fetching the sources now.
-      const loadingPromise = this._toolbox.threadClient.getSources().then(({sources}) => {
-        // Ignore errors.  Register the sources we got; we can't rely on
-        // an event to arrive if the source actor already existed.
-        for (const source of sources) {
-          this._registerNewSource(source);
+      const loadingPromise = this._toolbox.threadClient.getSources().then(
+        ({ sources }) => {
+          // Ignore errors.  Register the sources we got; we can't rely on
+          // an event to arrive if the source actor already existed.
+          for (const source of sources) {
+            this._registerNewSource(source);
+          }
+        },
+        e => {
+          // Also ignore any protocol-based errors.
         }
-      }, e => {
-        // Also ignore any protocol-based errors.
-      });
+      );
 
       await styleSheetsLoadingPromise;
       await loadingPromise;
@@ -177,9 +184,9 @@ SourceMapURLService.prototype._registerNewStyleSheet = function(sheet) {
     return;
   }
 
-  const {href, nodeHref, sourceMapURL, actorID: id} = sheet;
+  const { href, nodeHref, sourceMapURL, actorID: id } = sheet;
   const url = href || nodeHref;
-  this._urls.set(url, { id, url, sourceMapURL});
+  this._urls.set(url, { id, url, sourceMapURL });
   this._idMap.set(id, url);
 
   return url;
@@ -245,7 +252,11 @@ SourceMapURLService.prototype._dispatchSubscribersForURL = function(urlKey) {
  * @return Promise
  *        A promise resolving either to the original location, or null.
  */
-SourceMapURLService.prototype.originalPositionFor = async function(url, line, column) {
+SourceMapURLService.prototype.originalPositionFor = async function(
+  url,
+  line,
+  column
+) {
   // Ensure the sources are loaded before replying.
   await this._getLoadingPromise();
 
@@ -262,11 +273,15 @@ SourceMapURLService.prototype.originalPositionFor = async function(url, line, co
   // fetched.  We don't actually need the result of this though.
   await this._sourceMapService.getOriginalURLs(urlInfo);
   const location = { sourceId: urlInfo.id, line, column, sourceUrl: url };
-  const resolvedLocation = await this._sourceMapService.getOriginalLocation(location);
-  if (!resolvedLocation ||
-      (resolvedLocation.line === location.line &&
-       resolvedLocation.column === location.column &&
-       resolvedLocation.sourceUrl === location.sourceUrl)) {
+  const resolvedLocation = await this._sourceMapService.getOriginalLocation(
+    location
+  );
+  if (
+    !resolvedLocation ||
+    (resolvedLocation.line === location.line &&
+      resolvedLocation.column === location.column &&
+      resolvedLocation.sourceUrl === location.sourceUrl)
+  ) {
     return null;
   }
   return resolvedLocation;
@@ -280,8 +295,10 @@ SourceMapURLService.prototype.originalPositionFor = async function(url, line, co
  * @param {Function} callback
  *                 The callback to call; @see subscribe
  */
-SourceMapURLService.prototype._callOneCallback = async function(subscriptionEntry,
-                                                                 callback) {
+SourceMapURLService.prototype._callOneCallback = async function(
+  subscriptionEntry,
+  callback
+) {
   // If source maps are disabled, immediately call with just "false".
   if (!this._prefValue) {
     callback(false);
@@ -289,13 +306,13 @@ SourceMapURLService.prototype._callOneCallback = async function(subscriptionEntr
   }
 
   if (!subscriptionEntry.promise) {
-    const {url, line, column} = subscriptionEntry;
+    const { url, line, column } = subscriptionEntry;
     subscriptionEntry.promise = this.originalPositionFor(url, line, column);
   }
 
   const resolvedLocation = await subscriptionEntry.promise;
   if (resolvedLocation) {
-    const {line, column, sourceUrl} = resolvedLocation;
+    const { line, column, sourceUrl } = resolvedLocation;
     // In case we're racing a pref change, pass the current value
     // here, not plain "true".
     callback(this._prefValue, sourceUrl, line, column);
@@ -327,7 +344,12 @@ SourceMapURLService.prototype._callOneCallback = async function(subscriptionEntr
  * @returns {Function | undefined} An unsubscribe function or undefined if the service
  *                                 was destroyed.
  */
-SourceMapURLService.prototype.subscribe = function(url, line, column, callback) {
+SourceMapURLService.prototype.subscribe = function(
+  url,
+  line,
+  column,
+  callback
+) {
   if (!this._subscriptions) {
     return;
   }
@@ -366,7 +388,12 @@ SourceMapURLService.prototype.subscribe = function(url, line, column, callback) 
  * @param {Function} callback
  *                 The callback.
  */
-SourceMapURLService.prototype.unsubscribe = function(url, line, column, callback) {
+SourceMapURLService.prototype.unsubscribe = function(
+  url,
+  line,
+  column,
+  callback
+) {
   if (!this._subscriptions) {
     return;
   }

@@ -33,45 +33,57 @@ function run_test() {
     }
   }
 
-  const census = saveHeapSnapshotAndTakeCensus(
-    dbg, { breakdown: {
+  const census = saveHeapSnapshotAndTakeCensus(dbg, {
+    breakdown: {
       by: "objectClass",
       then: {
         by: "allocationStack",
-        then: { by: "count", label: "haz stack"},
+        then: { by: "count", label: "haz stack" },
         noStack: {
           by: "count",
           label: "no haz stack",
         },
       },
     },
-    });
+  });
 
   const map = census.AllocationMarker;
   ok(map instanceof Map, "Should be a Map instance");
-  equal(map.size, 4, "Should have 4 allocation stacks (including the lack of a stack)");
+  equal(
+    map.size,
+    4,
+    "Should have 4 allocation stacks (including the lack of a stack)"
+  );
 
   // Gather the stacks we are expecting to appear as keys, and
   // check that there are no unexpected keys.
-  const stacks = { };
+  const stacks = {};
 
   map.forEach((v, k) => {
     if (k === "noStack") {
       // No need to save this key.
-    } else if (k.functionDisplayName === "f" &&
-               k.parent.functionDisplayName === "run_test") {
+    } else if (
+      k.functionDisplayName === "f" &&
+      k.parent.functionDisplayName === "run_test"
+    ) {
       stacks.f = k;
-    } else if (k.functionDisplayName === "f" &&
-               k.parent.functionDisplayName === "g" &&
-               k.parent.parent.functionDisplayName === "run_test") {
+    } else if (
+      k.functionDisplayName === "f" &&
+      k.parent.functionDisplayName === "g" &&
+      k.parent.parent.functionDisplayName === "run_test"
+    ) {
       stacks.fg = k;
-    } else if (k.functionDisplayName === "f" &&
-               k.parent.functionDisplayName === "h" &&
-               k.parent.parent.functionDisplayName === "run_test") {
+    } else if (
+      k.functionDisplayName === "f" &&
+      k.parent.functionDisplayName === "h" &&
+      k.parent.parent.functionDisplayName === "run_test"
+    ) {
       stacks.fh = k;
     } else {
       dumpn("Unexpected allocation stack:");
-      k.toString().split(/\n/g).forEach(s => dumpn(s));
+      k.toString()
+        .split(/\n/g)
+        .forEach(s => dumpn(s));
       ok(false);
     }
   });

@@ -17,29 +17,62 @@ const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
 const AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS = 400;
 const AUTOFILL_STATE = "-moz-autofill";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
-const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-const {CreditCard} = ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { PrivateBrowsingUtils } = ChromeUtils.import(
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
+const { CreditCard } = ChromeUtils.import(
+  "resource://gre/modules/CreditCard.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
-ChromeUtils.defineModuleGetter(this, "FormLikeFactory",
-                               "resource://gre/modules/FormLikeFactory.jsm");
-ChromeUtils.defineModuleGetter(this, "LoginFormFactory",
-                               "resource://gre/modules/LoginFormFactory.jsm");
-ChromeUtils.defineModuleGetter(this, "LoginRecipesContent",
-                               "resource://gre/modules/LoginRecipes.jsm");
-ChromeUtils.defineModuleGetter(this, "LoginHelper",
-                               "resource://gre/modules/LoginHelper.jsm");
-ChromeUtils.defineModuleGetter(this, "InsecurePasswordUtils",
-                               "resource://gre/modules/InsecurePasswordUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "ContentDOMReference",
-                               "resource://gre/modules/ContentDOMReference.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "DeferredTask",
+  "resource://gre/modules/DeferredTask.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormLikeFactory",
+  "resource://gre/modules/FormLikeFactory.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginFormFactory",
+  "resource://gre/modules/LoginFormFactory.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginRecipesContent",
+  "resource://gre/modules/LoginRecipes.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginHelper",
+  "resource://gre/modules/LoginHelper.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "InsecurePasswordUtils",
+  "resource://gre/modules/InsecurePasswordUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContentDOMReference",
+  "resource://gre/modules/ContentDOMReference.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "gNetUtil",
-                                   "@mozilla.org/network/util;1",
-                                   "nsINetUtil");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gNetUtil",
+  "@mozilla.org/network/util;1",
+  "nsINetUtil"
+);
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let logger = LoginHelper.createLogger("LoginManagerContent");
@@ -53,27 +86,36 @@ Services.cpmm.addMessageListener("clearRecipeCache", () => {
 let gLastRightClickTimeStamp = Number.NEGATIVE_INFINITY;
 
 const observer = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsIWebProgressListener,
-                                          Ci.nsISupportsWeakReference]),
-
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsIWebProgressListener,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   // nsIWebProgressListener
   onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
     // Only handle pushState/replaceState here.
-    if (!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) ||
-        !(aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_PUSHSTATE)) {
+    if (
+      !(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) ||
+      !(aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_PUSHSTATE)
+    ) {
       return;
     }
 
-    log("onLocationChange handled:", aLocation.displaySpec, aWebProgress.DOMWindow.document);
+    log(
+      "onLocationChange handled:",
+      aLocation.displaySpec,
+      aWebProgress.DOMWindow.document
+    );
 
     LoginManagerContent._onNavigation(aWebProgress.DOMWindow.document);
   },
 
   onStateChange(aWebProgress, aRequest, aState, aStatus) {
-    if ((aState & Ci.nsIWebProgressListener.STATE_RESTORING) &&
-        (aState & Ci.nsIWebProgressListener.STATE_STOP)) {
+    if (
+      aState & Ci.nsIWebProgressListener.STATE_RESTORING &&
+      aState & Ci.nsIWebProgressListener.STATE_STOP
+    ) {
       // Re-fill a document restored from bfcache since password field values
       // aren't persisted there.
       LoginManagerContent._onDocumentRestored(aWebProgress.DOMWindow.document);
@@ -89,15 +131,22 @@ const observer = {
     // likely to be when a user wants to save a login.
     let channel = aRequest.QueryInterface(Ci.nsIChannel);
     let triggeringPrincipal = channel.loadInfo.triggeringPrincipal;
-    if (triggeringPrincipal.isNullPrincipal ||
-        triggeringPrincipal.equals(Services.scriptSecurityManager.getSystemPrincipal())) {
+    if (
+      triggeringPrincipal.isNullPrincipal ||
+      triggeringPrincipal.equals(
+        Services.scriptSecurityManager.getSystemPrincipal()
+      )
+    ) {
       return;
     }
 
     // Don't handle history navigation, reload, or pushState not triggered via chrome UI.
     // e.g. history.go(-1), location.reload(), history.replaceState()
     if (!(aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_NORMAL)) {
-      log("onStateChange: loadType isn't LOAD_CMD_NORMAL:", aWebProgress.loadType);
+      log(
+        "onStateChange: loadType isn't LOAD_CMD_NORMAL:",
+        aWebProgress.loadType
+      );
       return;
     }
 
@@ -110,12 +159,12 @@ const observer = {
     switch (topic) {
       case "autocomplete-did-enter-text": {
         let input = subject.QueryInterface(Ci.nsIAutoCompleteInput);
-        let {selectedIndex} = input.popup;
+        let { selectedIndex } = input.popup;
         if (selectedIndex < 0) {
           break;
         }
 
-        let {focusedInput} = LoginManagerContent._formFillService;
+        let { focusedInput } = LoginManagerContent._formFillService;
         if (focusedInput.nodePrincipal.isNullPrincipal) {
           // If we have a null principal then prevent any more password manager code from running and
           // incorrectly using the document `location`.
@@ -124,7 +173,9 @@ const observer = {
 
         let style = input.controller.getStyleAt(selectedIndex);
         if (style == "login" || style == "loginWithOrigin") {
-          let details = JSON.parse(input.controller.getCommentAt(selectedIndex));
+          let details = JSON.parse(
+            input.controller.getCommentAt(selectedIndex)
+          );
           LoginManagerContent.onFieldAutoComplete(focusedInput, details.guid);
         } else if (style == "generatedPassword") {
           LoginManagerContent._generatedPasswordFilled(focusedInput);
@@ -146,8 +197,10 @@ const observer = {
 
     switch (aEvent.type) {
       case "keydown": {
-        if (aEvent.keyCode == aEvent.DOM_VK_TAB ||
-            aEvent.keyCode == aEvent.DOM_VK_RETURN) {
+        if (
+          aEvent.keyCode == aEvent.DOM_VK_TAB ||
+          aEvent.keyCode == aEvent.DOM_VK_RETURN
+        ) {
           LoginManagerContent.onUsernameAutocompleted(aEvent.target);
         }
         break;
@@ -184,16 +237,18 @@ this.LoginManagerContent = {
   __formFillService: null, // FormFillController, for username autocompleting
   get _formFillService() {
     if (!this.__formFillService) {
-      this.__formFillService =
-                      Cc["@mozilla.org/satchel/form-fill-controller;1"].
-                      getService(Ci.nsIFormFillController);
+      this.__formFillService = Cc[
+        "@mozilla.org/satchel/form-fill-controller;1"
+      ].getService(Ci.nsIFormFillController);
     }
     return this.__formFillService;
   },
 
   _getRandomId() {
     return Cc["@mozilla.org/uuid-generator;1"]
-             .getService(Ci.nsIUUIDGenerator).generateUUID().toString();
+      .getService(Ci.nsIUUIDGenerator)
+      .generateUUID()
+      .toString();
   },
 
   _messages: [
@@ -277,7 +332,10 @@ this.LoginManagerContent = {
 
   _onKeyDown(event) {
     let focusedElement = LoginManagerContent._formFillService.focusedInput;
-    if (event.keyCode != event.DOM_VK_RETURN || focusedElement != event.target) {
+    if (
+      event.keyCode != event.DOM_VK_RETURN ||
+      focusedElement != event.target
+    ) {
       this._keyDownEnterForInput = null;
       return;
     }
@@ -287,8 +345,11 @@ this.LoginManagerContent = {
   _onPopupClosed(selectedRowStyle, mm) {
     let focusedElement = LoginManagerContent._formFillService.focusedInput;
     let eventTarget = LoginManagerContent._keyDownEnterForInput;
-    if (!eventTarget || eventTarget !== focusedElement ||
-        selectedRowStyle != "loginsFooter") {
+    if (
+      !eventTarget ||
+      eventTarget !== focusedElement ||
+      selectedRowStyle != "loginsFooter"
+    ) {
       this._keyDownEnterForInput = null;
       return;
     }
@@ -337,12 +398,16 @@ this.LoginManagerContent = {
 
       case "PasswordManager:fillGeneratedPassword": {
         // make a login for the password
-        let generatedLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
-        generatedLogin.init(msg.data.origin,
-                            "", // empty formActionOrigin
-                            null, // no realm
-                            "", // empty username
-                            msg.data.password);
+        let generatedLogin = Cc[
+          "@mozilla.org/login-manager/loginInfo;1"
+        ].createInstance(Ci.nsILoginInfo);
+        generatedLogin.init(
+          msg.data.origin,
+          "", // empty formActionOrigin
+          null, // no realm
+          "", // empty username
+          msg.data.password
+        );
         this.fillForm({
           topDocument: topWindow.document,
           loginFormOrigin: msg.data.origin,
@@ -354,17 +419,19 @@ this.LoginManagerContent = {
       }
 
       case "FormAutoComplete:PopupOpened": {
-        let {chromeEventHandler} = msg.target.docShell;
-        chromeEventHandler.addEventListener("keydown", this._onKeyDown,
-                                            true);
+        let { chromeEventHandler } = msg.target.docShell;
+        chromeEventHandler.addEventListener("keydown", this._onKeyDown, true);
         break;
       }
 
       case "FormAutoComplete:PopupClosed": {
         this._onPopupClosed(msg.data.selectedRowStyle, msg.target);
-        let {chromeEventHandler} = msg.target.docShell;
-        chromeEventHandler.removeEventListener("keydown", this._onKeyDown,
-                                               true);
+        let { chromeEventHandler } = msg.target.docShell;
+        chromeEventHandler.removeEventListener(
+          "keydown",
+          this._onKeyDown,
+          true
+        );
         break;
       }
     }
@@ -384,7 +451,9 @@ this.LoginManagerContent = {
 
     let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
     if (!formOrigin) {
-      return Promise.reject("_getLoginDataFromParent: A form origin is required");
+      return Promise.reject(
+        "_getLoginDataFromParent: A form origin is required"
+      );
     }
     let actionOrigin = LoginHelper.getFormActionOrigin(form);
 
@@ -392,17 +461,17 @@ this.LoginManagerContent = {
 
     // XXX Weak??
     let requestData = { form };
-    let messageData = { formOrigin,
-                        actionOrigin,
-                        options };
+    let messageData = { formOrigin, actionOrigin, options };
 
-    return this._sendRequest(messageManager, requestData,
-                             "PasswordManager:findLogins",
-                             messageData);
+    return this._sendRequest(
+      messageManager,
+      requestData,
+      "PasswordManager:findLogins",
+      messageData
+    );
   },
 
-  _autoCompleteSearchAsync(aSearchString, aPreviousResult,
-                           aElement) {
+  _autoCompleteSearchAsync(aSearchString, aPreviousResult, aElement) {
     let doc = aElement.ownerDocument;
     let form = LoginFormFactory.createFromField(aElement);
     let win = doc.defaultView;
@@ -413,10 +482,12 @@ this.LoginManagerContent = {
 
     let messageManager = win.docShell.messageManager;
 
-    let previousResult = aPreviousResult ?
-                           { searchString: aPreviousResult.searchString,
-                             logins: LoginHelper.loginsToVanillaObjects(aPreviousResult.logins) } :
-                           null;
+    let previousResult = aPreviousResult
+      ? {
+          searchString: aPreviousResult.searchString,
+          logins: LoginHelper.loginsToVanillaObjects(aPreviousResult.logins),
+        }
+      : null;
 
     let requestData = {};
     let messageData = {
@@ -435,13 +506,16 @@ this.LoginManagerContent = {
       messageManager.addMessageListener("FormAutoComplete:PopupClosed", this);
     }
 
-    return this._sendRequest(messageManager, requestData,
-                             "PasswordManager:autoCompleteLogins",
-                             messageData);
+    return this._sendRequest(
+      messageManager,
+      requestData,
+      "PasswordManager:autoCompleteLogins",
+      messageData
+    );
   },
 
   setupEventListeners(global) {
-    global.addEventListener("pageshow", (event) => {
+    global.addEventListener("pageshow", event => {
       this.onPageShow(event);
     });
   },
@@ -452,12 +526,14 @@ this.LoginManagerContent = {
     }
 
     try {
-      let webProgress = window.docShell.
-                        QueryInterface(Ci.nsIInterfaceRequestor).
-                        getInterface(Ci.nsIWebProgress);
-      webProgress.addProgressListener(observer,
-                                      Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT |
-                                      Ci.nsIWebProgress.NOTIFY_LOCATION);
+      let webProgress = window.docShell
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIWebProgress);
+      webProgress.addProgressListener(
+        observer,
+        Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT |
+          Ci.nsIWebProgress.NOTIFY_LOCATION
+      );
     } catch (ex) {
       // Ignore NS_ERROR_FAILURE if the progress listener was already added
     }
@@ -492,15 +568,25 @@ this.LoginManagerContent = {
   },
 
   _deferHandlingEventUntilDocumentVisible(event, document, fn) {
-    log(`document.visibilityState: ${document.visibilityState}, defer handling ${event.type}`);
+    log(
+      `document.visibilityState: ${document.visibilityState}, defer handling ${
+        event.type
+      }`
+    );
     let onVisibleTasks = this._onVisibleTasksByDocument.get(document);
     if (!onVisibleTasks) {
-      log(`deferHandling, first queued event, register the visibilitychange handler`);
+      log(
+        `deferHandling, first queued event, register the visibilitychange handler`
+      );
       onVisibleTasks = [];
       this._onVisibleTasksByDocument.set(document, onVisibleTasks);
-      document.addEventListener("visibilitychange", event => {
-        this.onDocumentVisibilityChange(event);
-      }, { once: true });
+      document.addEventListener(
+        "visibilitychange",
+        event => {
+          this.onDocumentVisibilityChange(event);
+        },
+        { once: true }
+      );
     }
     onVisibleTasks.push(fn);
   },
@@ -509,14 +595,20 @@ this.LoginManagerContent = {
     if (!event.isTrusted) {
       return;
     }
-    let isMasterPasswordSet = Services.cpmm.sharedData.get("isMasterPasswordSet");
+    let isMasterPasswordSet = Services.cpmm.sharedData.get(
+      "isMasterPasswordSet"
+    );
     let document = event.target.ownerDocument;
 
     // don't attempt to defer handling when a master password is set
     // Showing the MP modal as soon as possible minimizes its interference with tab interactions
     // See bug 1539091 and bug 1538460.
-    log("onDOMFormHasPassword, visibilityState:", document.visibilityState,
-        "isMasterPasswordSet:", isMasterPasswordSet);
+    log(
+      "onDOMFormHasPassword, visibilityState:",
+      document.visibilityState,
+      "isMasterPasswordSet:",
+      isMasterPasswordSet
+    );
     if (document.visibilityState == "visible" || isMasterPasswordSet) {
       this._processDOMFormHasPasswordEvent(event);
     } else {
@@ -548,9 +640,15 @@ this.LoginManagerContent = {
     }
 
     let document = pwField.ownerDocument;
-    let isMasterPasswordSet = Services.cpmm.sharedData.get("isMasterPasswordSet");
-    log("onDOMInputPasswordAdded, visibilityState:", document.visibilityState,
-        "isMasterPasswordSet:", isMasterPasswordSet);
+    let isMasterPasswordSet = Services.cpmm.sharedData.get(
+      "isMasterPasswordSet"
+    );
+    log(
+      "onDOMInputPasswordAdded, visibilityState:",
+      document.visibilityState,
+      "isMasterPasswordSet:",
+      isMasterPasswordSet
+    );
 
     // don't attempt to defer handling when a master password is set
     // Showing the MP modal as soon as possible minimizes its interference with tab interactions
@@ -571,21 +669,39 @@ this.LoginManagerContent = {
     let formLike = LoginFormFactory.createFromField(pwField);
     log(" _processDOMInputPasswordAddedEvent:", pwField, formLike);
 
-    let deferredTask = this._deferredPasswordAddedTasksByRootElement.get(formLike.rootElement);
+    let deferredTask = this._deferredPasswordAddedTasksByRootElement.get(
+      formLike.rootElement
+    );
     if (!deferredTask) {
-      log("Creating a DeferredTask to call _fetchLoginsFromParentAndFillForm soon");
+      log(
+        "Creating a DeferredTask to call _fetchLoginsFromParentAndFillForm soon"
+      );
       LoginFormFactory.setForRootElement(formLike.rootElement, formLike);
 
-      deferredTask = new DeferredTask(() => {
-        // Get the updated LoginForm instead of the one at the time of creating the DeferredTask via
-        // a closure since it could be stale since LoginForm.elements isn't live.
-        let formLike2 = LoginFormFactory.getForRootElement(formLike.rootElement);
-        log("Running deferred processing of onDOMInputPasswordAdded", formLike2);
-        this._deferredPasswordAddedTasksByRootElement.delete(formLike2.rootElement);
-        this._fetchLoginsFromParentAndFillForm(formLike2);
-      }, PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS, 0);
+      deferredTask = new DeferredTask(
+        () => {
+          // Get the updated LoginForm instead of the one at the time of creating the DeferredTask via
+          // a closure since it could be stale since LoginForm.elements isn't live.
+          let formLike2 = LoginFormFactory.getForRootElement(
+            formLike.rootElement
+          );
+          log(
+            "Running deferred processing of onDOMInputPasswordAdded",
+            formLike2
+          );
+          this._deferredPasswordAddedTasksByRootElement.delete(
+            formLike2.rootElement
+          );
+          this._fetchLoginsFromParentAndFillForm(formLike2);
+        },
+        PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS,
+        0
+      );
 
-      this._deferredPasswordAddedTasksByRootElement.set(formLike.rootElement, deferredTask);
+      this._deferredPasswordAddedTasksByRootElement.set(
+        formLike.rootElement,
+        deferredTask
+      );
     }
 
     let window = pwField.ownerGlobal;
@@ -595,13 +711,21 @@ this.LoginManagerContent = {
       // runs since changes to the elements could affect our field heuristics.
       LoginFormFactory.setForRootElement(formLike.rootElement, formLike);
     } else if (window.document.readyState == "complete") {
-      log("Arming the DeferredTask we just created since document.readyState == 'complete'");
+      log(
+        "Arming the DeferredTask we just created since document.readyState == 'complete'"
+      );
       deferredTask.arm();
     } else {
-      window.addEventListener("DOMContentLoaded", function() {
-        log("Arming the onDOMInputPasswordAdded DeferredTask due to DOMContentLoaded");
-        deferredTask.arm();
-      }, {once: true});
+      window.addEventListener(
+        "DOMContentLoaded",
+        function() {
+          log(
+            "Arming the onDOMInputPasswordAdded DeferredTask due to DOMContentLoaded"
+          );
+          deferredTask.arm();
+        },
+        { once: true }
+      );
     }
   },
 
@@ -622,8 +746,8 @@ this.LoginManagerContent = {
     }
 
     this._getLoginDataFromParent(form, { showMasterPassword: true })
-        .then(this.loginsFound.bind(this))
-        .catch(Cu.reportError);
+      .then(this.loginsFound.bind(this))
+      .catch(Cu.reportError);
   },
 
   onPageShow(event) {
@@ -668,20 +792,30 @@ this.LoginManagerContent = {
     log("_detectInsecureFormLikes", topWindow.location.href);
 
     // Returns true if this window or any subframes have insecure login forms.
-    let hasInsecureLoginForms = (thisWindow) => {
+    let hasInsecureLoginForms = thisWindow => {
       let doc = thisWindow.document;
-      let rootElsWeakSet = LoginFormFactory.getRootElementsWeakSetForDocument(doc);
-      let hasLoginForm = ChromeUtils.nondeterministicGetWeakSetKeys(rootElsWeakSet)
-                                    .filter(el => el.isConnected).length > 0;
-      return (hasLoginForm && !thisWindow.isSecureContext) ||
-             Array.prototype.some.call(thisWindow.frames,
-                                       frame => hasInsecureLoginForms(frame));
+      let rootElsWeakSet = LoginFormFactory.getRootElementsWeakSetForDocument(
+        doc
+      );
+      let hasLoginForm =
+        ChromeUtils.nondeterministicGetWeakSetKeys(rootElsWeakSet).filter(
+          el => el.isConnected
+        ).length > 0;
+      return (
+        (hasLoginForm && !thisWindow.isSecureContext) ||
+        Array.prototype.some.call(thisWindow.frames, frame =>
+          hasInsecureLoginForms(frame)
+        )
+      );
     };
 
     let messageManager = topWindow.docShell.messageManager;
-    messageManager.sendAsyncMessage("PasswordManager:insecureLoginFormPresent", {
-      hasInsecureLoginForms: hasInsecureLoginForms(topWindow),
-    });
+    messageManager.sendAsyncMessage(
+      "PasswordManager:insecureLoginFormPresent",
+      {
+        hasInsecureLoginForms: hasInsecureLoginForms(topWindow),
+      }
+    );
   },
 
   /**
@@ -708,7 +842,13 @@ this.LoginManagerContent = {
    *            An identifier generated for the input element via ContentDOMReference.
    *        }
    */
-  fillForm({ topDocument, loginFormOrigin, loginsFound, recipes, inputElementIdentifier }) {
+  fillForm({
+    topDocument,
+    loginFormOrigin,
+    loginsFound,
+    recipes,
+    inputElementIdentifier,
+  }) {
     if (!inputElementIdentifier) {
       log("fillForm: No input element specified");
       return;
@@ -716,17 +856,26 @@ this.LoginManagerContent = {
 
     let inputElement = ContentDOMReference.resolve(inputElementIdentifier);
     if (!inputElement) {
-      log("fillForm: Could not resolve inputElementIdentifier to a living element.");
+      log(
+        "fillForm: Could not resolve inputElementIdentifier to a living element."
+      );
       return;
     }
 
-    if (LoginHelper.getLoginOrigin(topDocument.documentURI) != loginFormOrigin) {
-      if (!inputElement ||
-          LoginHelper.getLoginOrigin(inputElement.ownerDocument.documentURI) != loginFormOrigin) {
-        log("fillForm: The requested origin doesn't match the one from the",
-            "document. This may mean we navigated to a document from a different",
-            "site before we had a chance to indicate this change in the user",
-            "interface.");
+    if (
+      LoginHelper.getLoginOrigin(topDocument.documentURI) != loginFormOrigin
+    ) {
+      if (
+        !inputElement ||
+        LoginHelper.getLoginOrigin(inputElement.ownerDocument.documentURI) !=
+          loginFormOrigin
+      ) {
+        log(
+          "fillForm: The requested origin doesn't match the one from the",
+          "document. This may mean we navigated to a document from a different",
+          "site before we had a chance to indicate this change in the user",
+          "interface."
+        );
         return;
       }
     }
@@ -748,12 +897,14 @@ this.LoginManagerContent = {
 
   loginsFound({ form, loginsFound, recipes }) {
     let doc = form.ownerDocument;
-    let autofillForm = LoginHelper.autofillForms && !PrivateBrowsingUtils.isContentWindowPrivate(doc.defaultView);
+    let autofillForm =
+      LoginHelper.autofillForms &&
+      !PrivateBrowsingUtils.isContentWindowPrivate(doc.defaultView);
 
     let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
     LoginRecipesContent.cacheRecipes(formOrigin, doc.defaultView, recipes);
 
-    this._fillForm(form, loginsFound, recipes, {autofillForm});
+    this._fillForm(form, loginsFound, recipes, { autofillForm });
   },
 
   /**
@@ -783,8 +934,11 @@ this.LoginManagerContent = {
      */
     let timeDiff = Date.now() - gLastRightClickTimeStamp;
     if (timeDiff < AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS) {
-      log("Not opening autocomplete after focus since a context menu was opened within",
-          timeDiff, "ms");
+      log(
+        "Not opening autocomplete after focus since a context menu was opened within",
+        timeDiff,
+        "ms"
+      );
       return;
     }
 
@@ -801,7 +955,9 @@ this.LoginManagerContent = {
     }
 
     // This is probably a bit over-conservatative.
-    if (ChromeUtils.getClassName(acInputField.ownerDocument) != "HTMLDocument") {
+    if (
+      ChromeUtils.getClassName(acInputField.ownerDocument) != "HTMLDocument"
+    ) {
       return;
     }
 
@@ -830,21 +986,24 @@ this.LoginManagerContent = {
 
     // Make sure the username field fillForm will use is the
     // same field as the autocomplete was activated on.
-    let [usernameField, passwordField, ignored] =
-        this._getFormFields(acForm, false, recipes);
+    let [usernameField, passwordField, ignored] = this._getFormFields(
+      acForm,
+      false,
+      recipes
+    );
     if (usernameField == acInputField && passwordField) {
       this._getLoginDataFromParent(acForm, {
         guid: loginGUID,
         showMasterPassword: false,
       })
-          .then(({ form, loginsFound, recipes }) => {
-            this._fillForm(form, loginsFound, recipes, {
-              autofillForm: true,
-              clobberPassword: true,
-              userTriggered: true,
-            });
-          })
-          .catch(Cu.reportError);
+        .then(({ form, loginsFound, recipes }) => {
+          this._fillForm(form, loginsFound, recipes, {
+            autofillForm: true,
+            clobberPassword: true,
+            userTriggered: true,
+          });
+        })
+        .catch(Cu.reportError);
     } else {
       // Ignore the event, it's for some input we don't care about.
     }
@@ -861,34 +1020,52 @@ this.LoginManagerContent = {
    *                      If no pw fields are found, or if more than 3 are found, then null
    *                      is returned.
    */
-  _getPasswordFields(form, {
-    fieldOverrideRecipe = null,
-    minPasswordLength = 0,
-  } = {}) {
+  _getPasswordFields(
+    form,
+    { fieldOverrideRecipe = null, minPasswordLength = 0 } = {}
+  ) {
     // Locate the password fields in the form.
     let pwFields = [];
     for (let i = 0; i < form.elements.length; i++) {
       let element = form.elements[i];
-      if (ChromeUtils.getClassName(element) !== "HTMLInputElement" ||
-          element.type != "password" ||
-          !element.isConnected) {
+      if (
+        ChromeUtils.getClassName(element) !== "HTMLInputElement" ||
+        element.type != "password" ||
+        !element.isConnected
+      ) {
         continue;
       }
 
       // Exclude ones matching a `notPasswordSelector`, if specified.
-      if (fieldOverrideRecipe && fieldOverrideRecipe.notPasswordSelector &&
-          element.matches(fieldOverrideRecipe.notPasswordSelector)) {
-        log("skipping password field (id/name is", element.id, " / ",
-            element.name + ") due to recipe:", fieldOverrideRecipe);
+      if (
+        fieldOverrideRecipe &&
+        fieldOverrideRecipe.notPasswordSelector &&
+        element.matches(fieldOverrideRecipe.notPasswordSelector)
+      ) {
+        log(
+          "skipping password field (id/name is",
+          element.id,
+          " / ",
+          element.name + ") due to recipe:",
+          fieldOverrideRecipe
+        );
         continue;
       }
 
       // XXX: Bug 780449 tracks our handling of emoji and multi-code-point characters in
       // password fields. To avoid surprises, we should be consistent with the visual
       // representation of the masked password
-      if (minPasswordLength && element.value.trim().length < minPasswordLength) {
-        log("skipping password field (id/name is", element.id, " / ",
-            element.name + ") as value is too short:", element.value.trim().length);
+      if (
+        minPasswordLength &&
+        element.value.trim().length < minPasswordLength
+      ) {
+        log(
+          "skipping password field (id/name is",
+          element.id,
+          " / ",
+          element.name + ") as value is too short:",
+          element.value.trim().length
+        );
         continue; // Ignore empty or too-short passwords fields
       }
 
@@ -903,7 +1080,11 @@ this.LoginManagerContent = {
       log("(form ignored -- no password fields.)");
       return null;
     } else if (pwFields.length > 3) {
-      log("(form ignored -- too many password fields. [ got ", pwFields.length, "])");
+      log(
+        "(form ignored -- too many password fields. [ got ",
+        pwFields.length,
+        "])"
+      );
       return null;
     }
 
@@ -934,7 +1115,10 @@ this.LoginManagerContent = {
   _getFormFields(form, isSubmission, recipes) {
     let usernameField = null;
     let pwFields = null;
-    let fieldOverrideRecipe = LoginRecipesContent.getFieldOverrides(recipes, form);
+    let fieldOverrideRecipe = LoginRecipesContent.getFieldOverrides(
+      recipes,
+      form
+    );
     if (fieldOverrideRecipe) {
       let pwOverrideField = LoginRecipesContent.queryLoginField(
         form,
@@ -943,10 +1127,12 @@ this.LoginManagerContent = {
       if (pwOverrideField) {
         // The field from the password override may be in a different LoginForm.
         let formLike = LoginFormFactory.createFromField(pwOverrideField);
-        pwFields = [{
-          index: [...formLike.elements].indexOf(pwOverrideField),
-          element: pwOverrideField,
-        }];
+        pwFields = [
+          {
+            index: [...formLike.elements].indexOf(pwOverrideField),
+            element: pwOverrideField,
+          },
+        ];
       }
 
       let usernameOverrideField = LoginRecipesContent.queryLoginField(
@@ -984,8 +1170,11 @@ this.LoginManagerContent = {
           continue;
         }
 
-        if (fieldOverrideRecipe && fieldOverrideRecipe.notUsernameSelector &&
-            element.matches(fieldOverrideRecipe.notUsernameSelector)) {
+        if (
+          fieldOverrideRecipe &&
+          fieldOverrideRecipe.notUsernameSelector &&
+          element.matches(fieldOverrideRecipe.notUsernameSelector)
+        ) {
           continue;
         }
 
@@ -998,8 +1187,16 @@ this.LoginManagerContent = {
       log("(form -- no username field found)");
     } else {
       let acFieldName = usernameField.getAutocompleteInfo().fieldName;
-      log("Username field ", usernameField, "has name/value/autocomplete:",
-          usernameField.name, "/", usernameField.value, "/", acFieldName);
+      log(
+        "Username field ",
+        usernameField,
+        "has name/value/autocomplete:",
+        usernameField.name,
+        "/",
+        usernameField.value,
+        "/",
+        acFieldName
+      );
     }
     // If we're not submitting a form (it's a page load), there are no
     // password field values for us to use for identifying fields. So,
@@ -1010,12 +1207,11 @@ this.LoginManagerContent = {
       return [usernameField, passwordField, null];
     }
 
-
     // Try to figure out WTF is in the form based on the password values.
     let oldPasswordField, newPasswordField;
     let pw1 = pwFields[0].element.value;
     let pw2 = pwFields[1].element.value;
-    let pw3 = (pwFields[2] ? pwFields[2].element.value : null);
+    let pw3 = pwFields[2] ? pwFields[2].element.value : null;
 
     if (pwFields.length == 3) {
       // Look for two identical passwords, that's the new password
@@ -1050,15 +1246,24 @@ this.LoginManagerContent = {
       newPasswordField = pwFields[1].element;
     }
 
-    log("Password field (new) id/name is: ", newPasswordField.id, " / ", newPasswordField.name);
+    log(
+      "Password field (new) id/name is: ",
+      newPasswordField.id,
+      " / ",
+      newPasswordField.name
+    );
     if (oldPasswordField) {
-      log("Password field (old) id/name is: ", oldPasswordField.id, " / ", oldPasswordField.name);
+      log(
+        "Password field (old) id/name is: ",
+        oldPasswordField.id,
+        " / ",
+        oldPasswordField.name
+      );
     } else {
       log("Password field (old):", oldPasswordField);
     }
     return [usernameField, newPasswordField, oldPasswordField];
   },
-
 
   /**
    * @return true if the page requests autocomplete be disabled for the
@@ -1074,11 +1279,19 @@ this.LoginManagerContent = {
    * @param {Document} aDocument that was restored from bfcache.
    */
   _onDocumentRestored(aDocument) {
-    let rootElsWeakSet = LoginFormFactory.getRootElementsWeakSetForDocument(aDocument);
-    let weakLoginFormRootElements = ChromeUtils.nondeterministicGetWeakSetKeys(rootElsWeakSet);
+    let rootElsWeakSet = LoginFormFactory.getRootElementsWeakSetForDocument(
+      aDocument
+    );
+    let weakLoginFormRootElements = ChromeUtils.nondeterministicGetWeakSetKeys(
+      rootElsWeakSet
+    );
 
-    log("_onDocumentRestored: loginFormRootElements approx size:", weakLoginFormRootElements.length,
-        "document:", aDocument);
+    log(
+      "_onDocumentRestored: loginFormRootElements approx size:",
+      weakLoginFormRootElements.length,
+      "document:",
+      aDocument
+    );
 
     for (let formRoot of weakLoginFormRootElements) {
       if (!formRoot.isConnected) {
@@ -1102,11 +1315,19 @@ this.LoginManagerContent = {
    * @param {Document} document being navigated
    */
   _onNavigation(aDocument) {
-    let rootElsWeakSet = LoginFormFactory.getRootElementsWeakSetForDocument(aDocument);
-    let weakLoginFormRootElements = ChromeUtils.nondeterministicGetWeakSetKeys(rootElsWeakSet);
+    let rootElsWeakSet = LoginFormFactory.getRootElementsWeakSetForDocument(
+      aDocument
+    );
+    let weakLoginFormRootElements = ChromeUtils.nondeterministicGetWeakSetKeys(
+      rootElsWeakSet
+    );
 
-    log("_onNavigation: root elements approx size:", weakLoginFormRootElements.length,
-        "document:", aDocument);
+    log(
+      "_onNavigation: root elements approx size:",
+      weakLoginFormRootElements.length,
+      "document:",
+      aDocument
+    );
 
     for (let formRoot of weakLoginFormRootElements) {
       if (!formRoot.isConnected) {
@@ -1131,8 +1352,10 @@ this.LoginManagerContent = {
     let doc = form.ownerDocument;
     let win = doc.defaultView;
 
-    if (PrivateBrowsingUtils.isContentWindowPrivate(win) &&
-        !LoginHelper.privateBrowsingCaptureEnabled) {
+    if (
+      PrivateBrowsingUtils.isContentWindowPrivate(win) &&
+      !LoginHelper.privateBrowsingCaptureEnabled
+    ) {
       // We won't do anything in private browsing mode anyway,
       // so there's no need to perform further checks.
       log("(form submission ignored in private browsing mode)");
@@ -1156,8 +1379,11 @@ this.LoginManagerContent = {
     let recipes = LoginRecipesContent.getRecipes(origin, win);
 
     // Get the appropriate fields from the form.
-    let [usernameField, newPasswordField, oldPasswordField] =
-          this._getFormFields(form, true, recipes);
+    let [
+      usernameField,
+      newPasswordField,
+      oldPasswordField,
+    ] = this._getFormFields(form, true, recipes);
 
     // Need at least 1 valid password field to do anything.
     if (newPasswordField == null) {
@@ -1165,7 +1391,11 @@ this.LoginManagerContent = {
     }
 
     if (usernameField && usernameField.value.match(/[•\*]{3,}/)) {
-      log(`usernameField.value "${usernameField.value}" looks munged, setting to null`);
+      log(
+        `usernameField.value "${
+          usernameField.value
+        }" looks munged, setting to null`
+      );
       usernameField = null;
     }
 
@@ -1173,35 +1403,43 @@ this.LoginManagerContent = {
     // autofilling (for existing logins), but won't save logins when it's
     // present and the storeWhenAutocompleteOff pref is false.
     // XXX spin out a bug that we don't update timeLastUsed in this case?
-    if ((this._isAutocompleteDisabled(form) ||
-         this._isAutocompleteDisabled(usernameField) ||
-         this._isAutocompleteDisabled(newPasswordField) ||
-         this._isAutocompleteDisabled(oldPasswordField)) &&
-        !LoginHelper.storeWhenAutocompleteOff) {
+    if (
+      (this._isAutocompleteDisabled(form) ||
+        this._isAutocompleteDisabled(usernameField) ||
+        this._isAutocompleteDisabled(newPasswordField) ||
+        this._isAutocompleteDisabled(oldPasswordField)) &&
+      !LoginHelper.storeWhenAutocompleteOff
+    ) {
       log("(form submission ignored -- autocomplete=off found)");
       return;
     }
 
     // Don't try to send DOM nodes over IPC.
-    let mockUsername = usernameField ?
-                         { name: usernameField.name,
-                           value: usernameField.value } :
-                         null;
-    let mockPassword = { name: newPasswordField.name,
-                         value: newPasswordField.value };
-    let mockOldPassword = oldPasswordField ?
-                            { name: oldPasswordField.name,
-                              value: oldPasswordField.value } :
-                            null;
+    let mockUsername = usernameField
+      ? { name: usernameField.name, value: usernameField.value }
+      : null;
+    let mockPassword = {
+      name: newPasswordField.name,
+      value: newPasswordField.value,
+    };
+    let mockOldPassword = oldPasswordField
+      ? { name: oldPasswordField.name, value: oldPasswordField.value }
+      : null;
 
     let usernameValue = usernameField ? usernameField.value : null;
     let formLikeRoot = FormLikeFactory.findRootForField(newPasswordField);
     let state = this.stateForDocument(doc);
-    let lastSubmittedValues = state.lastSubmittedValuesByRootElement.get(formLikeRoot);
+    let lastSubmittedValues = state.lastSubmittedValuesByRootElement.get(
+      formLikeRoot
+    );
     if (lastSubmittedValues) {
-      if (lastSubmittedValues.username == usernameValue &&
-          lastSubmittedValues.password == newPasswordField.value) {
-        log("(form submission ignored -- already submitted with the same username and password)");
+      if (
+        lastSubmittedValues.username == usernameValue &&
+        lastSubmittedValues.password == newPasswordField.value
+      ) {
+        log(
+          "(form submission ignored -- already submitted with the same username and password)"
+        );
         return;
       }
     }
@@ -1225,22 +1463,28 @@ this.LoginManagerContent = {
     // autocomplete="cc-number".
     let dismissedPrompt = false;
     let newPasswordFieldValue = newPasswordField.value;
-    if ((CreditCard.isValidNumber(usernameValue) && newPasswordFieldValue.trim().match(/^[0-9]{3}$/)) ||
-        (CreditCard.isValidNumber(newPasswordFieldValue) && newPasswordField.getAutocompleteInfo().fieldName == "cc-number")) {
+    if (
+      (CreditCard.isValidNumber(usernameValue) &&
+        newPasswordFieldValue.trim().match(/^[0-9]{3}$/)) ||
+      (CreditCard.isValidNumber(newPasswordFieldValue) &&
+        newPasswordField.getAutocompleteInfo().fieldName == "cc-number")
+    ) {
       dismissedPrompt = true;
     }
 
-    let autoFilledLogin = this.stateForDocument(doc).fillsByRootElement.get(form.rootElement);
-    messageManager.sendAsyncMessage("PasswordManager:onFormSubmit",
-                                    { origin,
-                                      formActionOrigin,
-                                      autoFilledLoginGuid: autoFilledLogin && autoFilledLogin.guid,
-                                      usernameField: mockUsername,
-                                      newPasswordField: mockPassword,
-                                      oldPasswordField: mockOldPassword,
-                                      openerTopWindowID,
-                                      dismissedPrompt,
-                                    });
+    let autoFilledLogin = this.stateForDocument(doc).fillsByRootElement.get(
+      form.rootElement
+    );
+    messageManager.sendAsyncMessage("PasswordManager:onFormSubmit", {
+      origin,
+      formActionOrigin,
+      autoFilledLoginGuid: autoFilledLogin && autoFilledLogin.guid,
+      usernameField: mockUsername,
+      newPasswordField: mockPassword,
+      oldPasswordField: mockOldPassword,
+      openerTopWindowID,
+      dismissedPrompt,
+    });
   },
 
   /**
@@ -1254,20 +1498,27 @@ this.LoginManagerContent = {
     let win = input.ownerGlobal;
 
     if (PrivateBrowsingUtils.isContentWindowPrivate(win)) {
-      log("_generatedPasswordFilled: not automatically saving the password in private browsing mode");
+      log(
+        "_generatedPasswordFilled: not automatically saving the password in private browsing mode"
+      );
       return;
     }
 
     if (!LoginHelper.enabled) {
-      throw new Error("A generated password was filled while the password manager was disabled.");
+      throw new Error(
+        "A generated password was filled while the password manager was disabled."
+      );
     }
 
     let formActionOrigin = LoginHelper.getFormActionOrigin(loginForm);
     let messageManager = win.docShell.messageManager;
-    messageManager.sendAsyncMessage("PasswordManager:onGeneratedPasswordFilled", {
-      browsingContextId: win.docShell.browsingContext.id,
-      formActionOrigin,
-    });
+    messageManager.sendAsyncMessage(
+      "PasswordManager:onGeneratedPasswordFilled",
+      {
+        browsingContextId: win.docShell.browsingContext.id,
+        formActionOrigin,
+      }
+    );
   },
 
   /** Remove login field highlight when its value is cleared or overwritten.
@@ -1319,13 +1570,18 @@ this.LoginManagerContent = {
    *        this filling was triggered by the user
    */
   // eslint-disable-next-line complexity
-  _fillForm(form, foundLogins, recipes, {
-    inputElement = null,
-    autofillForm = false,
-    clobberUsername = false,
-    clobberPassword = false,
-    userTriggered = false,
-  } = {}) {
+  _fillForm(
+    form,
+    foundLogins,
+    recipes,
+    {
+      inputElement = null,
+      autofillForm = false,
+      clobberUsername = false,
+      clobberPassword = false,
+      userTriggered = false,
+    } = {}
+  ) {
     if (ChromeUtils.getClassName(form) === "HTMLFormElement") {
       throw new Error("_fillForm should only be called with LoginForm objects");
     }
@@ -1353,9 +1609,11 @@ this.LoginManagerContent = {
       // Nothing to do if we have no matching (excluding form action
       // checks) logins available, and there isn't a need to show
       // the insecure form warning.
-      if (foundLogins.length == 0 &&
-          (InsecurePasswordUtils.isFormSecure(form) ||
-          !LoginHelper.showInsecureFieldWarning)) {
+      if (
+        foundLogins.length == 0 &&
+        (InsecurePasswordUtils.isFormSecure(form) ||
+          !LoginHelper.showInsecureFieldWarning)
+      ) {
         // We don't log() here since this is a very common case.
         autofillResult = AUTOFILL_RESULT.NO_SAVED_LOGINS;
         return;
@@ -1366,7 +1624,11 @@ this.LoginManagerContent = {
       // so that the user isn't prompted for a master password
       // without need.
       let passwordField;
-      [usernameField, passwordField] = this._getFormFields(form, false, recipes);
+      [usernameField, passwordField] = this._getFormFields(
+        form,
+        false,
+        recipes
+      );
 
       // If we have a password inputElement parameter and it's not
       // the same as the one heuristically found, use the parameter
@@ -1411,36 +1673,41 @@ this.LoginManagerContent = {
       if (!userTriggered) {
         // Only autofill logins that match the form's action and origin. In the above code
         // we have attached autocomplete for logins that don't match the form action.
-        let loginOrigin = LoginHelper.getLoginOrigin(form.ownerDocument.documentURI);
+        let loginOrigin = LoginHelper.getLoginOrigin(
+          form.ownerDocument.documentURI
+        );
         let formActionOrigin = LoginHelper.getFormActionOrigin(form);
         foundLogins = foundLogins.filter(l => {
-          let formActionMatches = LoginHelper.isOriginMatching(l.formActionOrigin,
-                                                               formActionOrigin,
-                                                               {
-                                                                 schemeUpgrades: LoginHelper.schemeUpgrades,
-                                                                 acceptWildcardMatch: true,
-                                                                 acceptDifferentSubdomains: false,
-                                                               });
-          let formOriginMatches = LoginHelper.isOriginMatching(l.origin,
-                                                               loginOrigin,
-                                                               {
-                                                                 schemeUpgrades: LoginHelper.schemeUpgrades,
-                                                                 acceptWildcardMatch: true,
-                                                                 acceptDifferentSubdomains: false,
-                                                               });
+          let formActionMatches = LoginHelper.isOriginMatching(
+            l.formActionOrigin,
+            formActionOrigin,
+            {
+              schemeUpgrades: LoginHelper.schemeUpgrades,
+              acceptWildcardMatch: true,
+              acceptDifferentSubdomains: false,
+            }
+          );
+          let formOriginMatches = LoginHelper.isOriginMatching(
+            l.origin,
+            loginOrigin,
+            {
+              schemeUpgrades: LoginHelper.schemeUpgrades,
+              acceptWildcardMatch: true,
+              acceptDifferentSubdomains: false,
+            }
+          );
           return formActionMatches && formOriginMatches;
         });
 
         // Since the logins are already filtered now to only match the origin and formAction,
         // dedupe to just the username since remaining logins may have different schemes.
-        foundLogins = LoginHelper.dedupeLogins(foundLogins,
-                                               ["username"],
-                                               [
-                                                 "scheme",
-                                                 "timePasswordChanged",
-                                               ],
-                                               loginOrigin,
-                                               formActionOrigin);
+        foundLogins = LoginHelper.dedupeLogins(
+          foundLogins,
+          ["username"],
+          ["scheme", "timePasswordChanged"],
+          loginOrigin,
+          formActionOrigin
+        );
       }
 
       // Nothing to do if we have no matching logins available.
@@ -1453,8 +1720,11 @@ this.LoginManagerContent = {
       }
 
       // Prevent autofilling insecure forms.
-      if (!userTriggered && !LoginHelper.insecureAutofill &&
-          !InsecurePasswordUtils.isFormSecure(form)) {
+      if (
+        !userTriggered &&
+        !LoginHelper.insecureAutofill &&
+        !InsecurePasswordUtils.isFormSecure(form)
+      ) {
         log("not filling form since it's insecure");
         autofillResult = AUTOFILL_RESULT.INSECURE;
         return;
@@ -1476,8 +1746,9 @@ this.LoginManagerContent = {
       }
 
       let logins = foundLogins.filter(function(l) {
-        let fit = (l.username.length <= maxUsernameLen &&
-                   l.password.length <= maxPasswordLen);
+        let fit =
+          l.username.length <= maxUsernameLen &&
+          l.password.length <= maxPasswordLen;
         if (!fit) {
           log("Ignored", l.username, "login: won't fit");
         }
@@ -1496,7 +1767,9 @@ this.LoginManagerContent = {
       // If the password field has the autocomplete value of "new-password"
       // and we're autofilling without user interaction, there's nothing to do.
       if (!userTriggered && passwordACFieldName == "new-password") {
-        log("not filling form, password field has the autocomplete new-password value");
+        log(
+          "not filling form, password field has the autocomplete new-password value"
+        );
         autofillResult = AUTOFILL_RESULT.PASSWORD_AUTOCOMPLETE_NEW_PASSWORD;
         return;
       }
@@ -1510,17 +1783,24 @@ this.LoginManagerContent = {
 
       // Select a login to use for filling in the form.
       let selectedLogin;
-      if (!clobberUsername && usernameField && (usernameField.value ||
-                                                usernameField.disabled ||
-                                                usernameField.readOnly)) {
+      if (
+        !clobberUsername &&
+        usernameField &&
+        (usernameField.value ||
+          usernameField.disabled ||
+          usernameField.readOnly)
+      ) {
         // If username was specified in the field, it's disabled or it's readOnly, only fill in the
         // password if we find a matching login.
         let username = usernameField.value.toLowerCase();
 
-        let matchingLogins = logins.filter(l =>
-          l.username.toLowerCase() == username);
+        let matchingLogins = logins.filter(
+          l => l.username.toLowerCase() == username
+        );
         if (matchingLogins.length == 0) {
-          log("Password not filled. None of the stored logins match the username already present.");
+          log(
+            "Password not filled. None of the stored logins match the username already present."
+          );
           autofillResult = AUTOFILL_RESULT.EXISTING_USERNAME;
           return;
         }
@@ -1566,8 +1846,14 @@ this.LoginManagerContent = {
         return;
       }
 
-      if (!userTriggered && passwordACFieldName == "off" && !LoginHelper.autofillAutocompleteOff) {
-        log("Not autofilling the login because we're respecting autocomplete=off");
+      if (
+        !userTriggered &&
+        passwordACFieldName == "off" &&
+        !LoginHelper.autofillAutocompleteOff
+      ) {
+        log(
+          "Not autofilling the login because we're respecting autocomplete=off"
+        );
         autofillResult = AUTOFILL_RESULT.AUTOCOMPLETE_OFF;
         return;
       }
@@ -1576,14 +1862,18 @@ this.LoginManagerContent = {
 
       if (usernameField) {
         // Don't modify the username field if it's disabled or readOnly so we preserve its case.
-        let disabledOrReadOnly = usernameField.disabled || usernameField.readOnly;
+        let disabledOrReadOnly =
+          usernameField.disabled || usernameField.readOnly;
 
         let userNameDiffers = selectedLogin.username != usernameField.value;
         // Don't replace the username if it differs only in case, and the user triggered
         // this autocomplete. We assume that if it was user-triggered the entered text
         // is desired.
-        let userEnteredDifferentCase = userTriggered && userNameDiffers &&
-               usernameField.value.toLowerCase() == selectedLogin.username.toLowerCase();
+        let userEnteredDifferentCase =
+          userTriggered &&
+          userNameDiffers &&
+          usernameField.value.toLowerCase() ==
+            selectedLogin.username.toLowerCase();
 
         if (!disabledOrReadOnly) {
           if (!userEnteredDifferentCase && userNameDiffers) {
@@ -1600,12 +1890,22 @@ this.LoginManagerContent = {
         let autoFilledLogin = {
           guid: selectedLogin.QueryInterface(Ci.nsILoginMetaInfo).guid,
           username: selectedLogin.username,
-          usernameField: usernameField ? Cu.getWeakReference(usernameField) : null,
+          usernameField: usernameField
+            ? Cu.getWeakReference(usernameField)
+            : null,
           password: selectedLogin.password,
           passwordField: Cu.getWeakReference(passwordField),
         };
-        log("Saving autoFilledLogin", autoFilledLogin.guid, "for", form.rootElement);
-        this.stateForDocument(doc).fillsByRootElement.set(form.rootElement, autoFilledLogin);
+        log(
+          "Saving autoFilledLogin",
+          autoFilledLogin.guid,
+          "for",
+          form.rootElement
+        );
+        this.stateForDocument(doc).fillsByRootElement.set(
+          form.rootElement,
+          autoFilledLogin
+        );
       }
 
       this._highlightFilledField(passwordField);
@@ -1624,13 +1924,19 @@ this.LoginManagerContent = {
 
       if (!userTriggered) {
         // Ignore fills as a result of user action for this probe.
-        Services.telemetry.getHistogramById("PWMGR_FORM_AUTOFILL_RESULT").add(autofillResult);
+        Services.telemetry
+          .getHistogramById("PWMGR_FORM_AUTOFILL_RESULT")
+          .add(autofillResult);
 
         if (usernameField) {
           let focusedElement = this._formFillService.focusedInput;
-          if (usernameField == focusedElement &&
-              autofillResult !== AUTOFILL_RESULT.FILLED) {
-            log("_fillForm: Opening username autocomplete popup since the form wasn't autofilled");
+          if (
+            usernameField == focusedElement &&
+            autofillResult !== AUTOFILL_RESULT.FILLED
+          ) {
+            log(
+              "_fillForm: Opening username autocomplete popup since the form wasn't autofilled"
+            );
             this._formFillService.showPopup();
           }
         }
@@ -1642,7 +1948,10 @@ this.LoginManagerContent = {
         usernameField.addEventListener("mousedown", observer);
       }
 
-      Services.obs.notifyObservers(form.rootElement, "passwordmgr-processed-form");
+      Services.obs.notifyObservers(
+        form.rootElement,
+        "passwordmgr-processed-form"
+      );
     }
   },
 
@@ -1666,26 +1975,34 @@ this.LoginManagerContent = {
     // Look for the existing LoginForm.
     let existingLoginForm = LoginFormFactory.getForRootElement(formLikeRoot);
     if (!existingLoginForm) {
-      throw new Error("_isLoginAlreadyFilled called with a username field with " +
-                      "no rootElement LoginForm");
+      throw new Error(
+        "_isLoginAlreadyFilled called with a username field with " +
+          "no rootElement LoginForm"
+      );
     }
 
     log("_isLoginAlreadyFilled: existingLoginForm", existingLoginForm);
-    let filledLogin = this.stateForDocument(aUsernameField.ownerDocument).fillsByRootElement.get(formLikeRoot);
+    let filledLogin = this.stateForDocument(
+      aUsernameField.ownerDocument
+    ).fillsByRootElement.get(formLikeRoot);
     if (!filledLogin) {
       return false;
     }
 
     // Unpack the weak references.
-    let autoFilledUsernameField = filledLogin.usernameField ? filledLogin.usernameField.get() : null;
+    let autoFilledUsernameField = filledLogin.usernameField
+      ? filledLogin.usernameField.get()
+      : null;
     let autoFilledPasswordField = filledLogin.passwordField.get();
 
     // Check username and password values match what was filled.
-    if (!autoFilledUsernameField ||
-        autoFilledUsernameField != aUsernameField ||
-        autoFilledUsernameField.value != filledLogin.username ||
-        !autoFilledPasswordField ||
-        autoFilledPasswordField.value != filledLogin.password) {
+    if (
+      !autoFilledUsernameField ||
+      autoFilledUsernameField != aUsernameField ||
+      autoFilledUsernameField.value != filledLogin.username ||
+      !autoFilledPasswordField ||
+      autoFilledPasswordField.value != filledLogin.password
+    ) {
       return false;
     }
 
@@ -1704,10 +2021,12 @@ this.LoginManagerContent = {
    */
   getUserNameAndPasswordFields(aField) {
     // If the element is not a proper form field, return null.
-    if (ChromeUtils.getClassName(aField) !== "HTMLInputElement" ||
-        (aField.type != "password" && !LoginHelper.isUsernameFieldType(aField)) ||
-        aField.nodePrincipal.isNullPrincipal ||
-        !aField.ownerDocument) {
+    if (
+      ChromeUtils.getClassName(aField) !== "HTMLInputElement" ||
+      (aField.type != "password" && !LoginHelper.isUsernameFieldType(aField)) ||
+      aField.nodePrincipal.isNullPrincipal ||
+      !aField.ownerDocument
+    ) {
       return [null, null, null];
     }
     let form = LoginFormFactory.createFromField(aField);
@@ -1732,14 +2051,18 @@ this.LoginManagerContent = {
    */
   getFieldContext(aField) {
     // If the element is not a proper form field, return null.
-    if (ChromeUtils.getClassName(aField) !== "HTMLInputElement" ||
-        (aField.type != "password" && !LoginHelper.isUsernameFieldType(aField)) ||
-        aField.nodePrincipal.isNullPrincipal ||
-        !aField.ownerDocument) {
+    if (
+      ChromeUtils.getClassName(aField) !== "HTMLInputElement" ||
+      (aField.type != "password" && !LoginHelper.isUsernameFieldType(aField)) ||
+      aField.nodePrincipal.isNullPrincipal ||
+      !aField.ownerDocument
+    ) {
       return null;
     }
 
-    let [usernameField, newPasswordField] = this.getUserNameAndPasswordFields(aField);
+    let [usernameField, newPasswordField] = this.getUserNameAndPasswordFields(
+      aField
+    );
 
     // If we are not verifying a password field, we want
     // to use aField as the username field.
@@ -1750,11 +2073,14 @@ this.LoginManagerContent = {
     return {
       usernameField: {
         found: !!usernameField,
-        disabled: usernameField && (usernameField.disabled || usernameField.readOnly),
+        disabled:
+          usernameField && (usernameField.disabled || usernameField.readOnly),
       },
       passwordField: {
         found: !!newPasswordField,
-        disabled: newPasswordField && (newPasswordField.disabled || newPasswordField.readOnly),
+        disabled:
+          newPasswordField &&
+          (newPasswordField.disabled || newPasswordField.readOnly),
       },
     };
   },

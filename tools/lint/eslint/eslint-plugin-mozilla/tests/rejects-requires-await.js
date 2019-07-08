@@ -17,7 +17,7 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 8 } });
 // ------------------------------------------------------------------------------
 
 function invalidCode(code, messageId) {
-  return {code, errors: [{messageId: "rejectRequiresAwait"}]};
+  return { code, errors: [{ messageId: "rejectRequiresAwait" }] };
 }
 
 ruleTester.run("reject-requires-await", rule, {

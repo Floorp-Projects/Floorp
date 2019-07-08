@@ -5,7 +5,8 @@ var conn = PlacesUtils.history.DBConnection;
  */
 function getColumn(table, column, url) {
   var stmt = conn.createStatement(
-    `SELECT ${column} FROM ${table} WHERE url_hash = hash(:val) AND url = :val`);
+    `SELECT ${column} FROM ${table} WHERE url_hash = hash(:val) AND url = :val`
+  );
   try {
     stmt.params.val = url;
     stmt.executeStep();
@@ -46,16 +47,21 @@ add_task(async function() {
     PlacesUtils.history.addObserver(historyObserver);
   });
 
-  const url1 = "http://example.com/tests/toolkit/components/places/tests/browser/title1.html";
+  const url1 =
+    "http://example.com/tests/toolkit/components/places/tests/browser/title1.html";
   await BrowserTestUtils.openNewForegroundTab(gBrowser, url1);
 
-  const url2 = "http://example.com/tests/toolkit/components/places/tests/browser/title2.html";
+  const url2 =
+    "http://example.com/tests/toolkit/components/places/tests/browser/title2.html";
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url2);
   await loadPromise;
 
   let data = await titleChangedPromise;
-  is(data[0].uri.spec, "http://example.com/tests/toolkit/components/places/tests/browser/title2.html");
+  is(
+    data[0].uri.spec,
+    "http://example.com/tests/toolkit/components/places/tests/browser/title2.html"
+  );
   is(data[0].title, "Some title");
   is(data[0].guid, getColumn("moz_places", "guid", data[0].uri.spec));
 
@@ -67,4 +73,3 @@ add_task(async function() {
   gBrowser.removeCurrentTab();
   await PlacesUtils.history.clear();
 });
-

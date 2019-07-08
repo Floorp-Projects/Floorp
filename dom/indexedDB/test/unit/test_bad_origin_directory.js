@@ -5,14 +5,16 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const url = "ftp://ftp.example.com";
   const name = "test_bad_origin_directory.js";
 
   let uri = Services.io.newURI(url);
 
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    uri,
+    {}
+  );
 
   info("Opening database");
 

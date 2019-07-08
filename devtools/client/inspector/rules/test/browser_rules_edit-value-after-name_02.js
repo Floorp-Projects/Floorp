@@ -25,21 +25,25 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   info("Test shift + click on color swatch while editing property name");
 
   await selectNode("#testid", inspector);
   const ruleEditor = getRuleViewRuleEditor(view, 1);
   const propEditor = ruleEditor.rule.textProps[1].editor;
-  const swatchSpan = propEditor.valueSpan.querySelectorAll(".ruleview-colorswatch")[2];
+  const swatchSpan = propEditor.valueSpan.querySelectorAll(
+    ".ruleview-colorswatch"
+  )[2];
 
   info("Focus the background name span");
   await focusEditableField(view, propEditor.nameSpan);
   const editor = inplaceEditor(propEditor.doc.activeElement);
 
-  info("Modify the property to background-image to trigger the " +
-    "property-value-updated event");
+  info(
+    "Modify the property to background-image to trigger the " +
+      "property-value-updated event"
+  );
   editor.input.value = "background-image";
 
   const onPropertyValueUpdate = view.once("property-value-updated");
@@ -47,10 +51,15 @@ add_task(async function() {
   const onRuleViewChanged = view.once("ruleview-changed");
 
   info("blur propEditor.nameSpan by clicking on the color swatch");
-  EventUtils.synthesizeMouseAtCenter(swatchSpan, {shiftKey: true},
-    propEditor.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    swatchSpan,
+    { shiftKey: true },
+    propEditor.doc.defaultView
+  );
 
-  info("wait for ruleview-changed event to be triggered to prevent pending requests");
+  info(
+    "wait for ruleview-changed event to be triggered to prevent pending requests"
+  );
   await onRuleViewChanged;
 
   info("wait for the color unit to change");
@@ -60,6 +69,9 @@ add_task(async function() {
   info("wait for the property value to be updated");
   await onPropertyValueUpdate;
 
-  ok(!inplaceEditor(propEditor.valueSpan), "The inplace editor wasn't shown " +
-    "as a result of the color swatch shift + click");
+  ok(
+    !inplaceEditor(propEditor.valueSpan),
+    "The inplace editor wasn't shown " +
+      "as a result of the color swatch shift + click"
+  );
 });

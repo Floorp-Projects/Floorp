@@ -4,15 +4,16 @@
 
 "use strict";
 
-const SPECIALVALUES = new Set([
-  "initial",
-  "inherit",
-  "unset",
-]);
+const SPECIALVALUES = new Set(["initial", "inherit", "unset"]);
 
-const {getCSSLexer} = require("devtools/shared/css/lexer");
+const { getCSSLexer } = require("devtools/shared/css/lexer");
 
-loader.lazyRequireGetter(this, "CSS_ANGLEUNIT", "devtools/shared/css/constants", true);
+loader.lazyRequireGetter(
+  this,
+  "CSS_ANGLEUNIT",
+  "devtools/shared/css/constants",
+  true
+);
 
 /**
  * This module is used to convert between various angle units.
@@ -71,8 +72,10 @@ CssAngle.prototype = {
     if (!token) {
       return false;
     }
-    return (token.tokenType === "dimension"
-      && token.text.toLowerCase() in this.ANGLEUNIT);
+    return (
+      token.tokenType === "dimension" &&
+      token.text.toLowerCase() in this.ANGLEUNIT
+    );
   },
 
   get specialValue() {
@@ -204,7 +207,7 @@ CssAngle.prototype = {
 
     if (unit === this.ANGLEUNIT.rad) {
       // The angle is valid and is in radian
-      turnValue = (this.authoredAngleValue / (Math.PI / 180)) / 360;
+      turnValue = this.authoredAngleValue / (Math.PI / 180) / 360;
     }
 
     if (unit === this.ANGLEUNIT.grad) {
@@ -251,11 +254,10 @@ CssAngle.prototype = {
     // testing.  The original text is kept as well so it can be
     // returned when needed.
     this.lowerCased = angle.toLowerCase();
-    this._angleUnitUppercase = (angle === angle.toUpperCase());
+    this._angleUnitUppercase = angle === angle.toUpperCase();
     this.authored = angle;
 
-    const reg = new RegExp(
-      `(${Object.keys(this.ANGLEUNIT).join("|")})$`, "i");
+    const reg = new RegExp(`(${Object.keys(this.ANGLEUNIT).join("|")})$`, "i");
     const unitStartIdx = angle.search(reg);
     this.authoredAngleValue = angle.substring(0, unitStartIdx);
     this.authoredAngleUnit = angle.substring(unitStartIdx, angle.length);
@@ -303,8 +305,7 @@ CssAngle.prototype = {
         angle = this.deg;
     }
 
-    if (this._angleUnitUppercase &&
-        this.angleUnit != this.ANGLEUNIT.authored) {
+    if (this._angleUnitUppercase && this.angleUnit != this.ANGLEUNIT.authored) {
       angle = angle.toUpperCase();
     }
     return angle;

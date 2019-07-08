@@ -5,8 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { EventDispatcher } = ChromeUtils.import(
+  "resource://gre/modules/Messaging.jsm"
+);
 
 function log(str) {
   // dump("-*- AndroidCastDeviceProvider -*-: " + str + "\n");
@@ -34,19 +36,18 @@ function descriptionToString(aDescription) {
 }
 
 const TOPIC_ANDROID_CAST_DEVICE_SYNCDEVICE = "AndroidCastDevice:SyncDevice";
-const TOPIC_ANDROID_CAST_DEVICE_ADDED      = "AndroidCastDevice:Added";
-const TOPIC_ANDROID_CAST_DEVICE_CHANGED    = "AndroidCastDevice:Changed";
-const TOPIC_ANDROID_CAST_DEVICE_REMOVED    = "AndroidCastDevice:Removed";
-const TOPIC_ANDROID_CAST_DEVICE_START      = "AndroidCastDevice:Start";
-const TOPIC_ANDROID_CAST_DEVICE_STOP       = "AndroidCastDevice:Stop";
-const TOPIC_PRESENTATION_VIEW_READY        = "presentation-view-ready";
+const TOPIC_ANDROID_CAST_DEVICE_ADDED = "AndroidCastDevice:Added";
+const TOPIC_ANDROID_CAST_DEVICE_CHANGED = "AndroidCastDevice:Changed";
+const TOPIC_ANDROID_CAST_DEVICE_REMOVED = "AndroidCastDevice:Removed";
+const TOPIC_ANDROID_CAST_DEVICE_START = "AndroidCastDevice:Start";
+const TOPIC_ANDROID_CAST_DEVICE_STOP = "AndroidCastDevice:Stop";
+const TOPIC_PRESENTATION_VIEW_READY = "presentation-view-ready";
 
 function LocalControlChannel(aProvider, aDeviceId, aRole) {
-  log("LocalControlChannel - create new LocalControlChannel for : "
-      + aRole);
+  log("LocalControlChannel - create new LocalControlChannel for : " + aRole);
   this._provider = aProvider;
   this._deviceId = aDeviceId;
-  this._role     = aRole;
+  this._role = aRole;
 }
 
 LocalControlChannel.prototype = {
@@ -148,16 +149,22 @@ LocalControlChannel.prototype = {
       log("LocalControlChannel - sendOffer of receiver should not be called.");
       return;
     }
-    log("LocalControlChannel - sendOffer aOffer=" + descriptionToString(aOffer));
+    log(
+      "LocalControlChannel - sendOffer aOffer=" + descriptionToString(aOffer)
+    );
     this._correspondingControlChannel.onOffer(aOffer);
   },
 
   sendAnswer: function LCC_sendAnswer(aAnswer) {
     if (this._role == Ci.nsIPresentationService.ROLE_CONTROLLER) {
-      log("LocalControlChannel - sendAnswer of controller should not be called.");
+      log(
+        "LocalControlChannel - sendAnswer of controller should not be called."
+      );
       return;
     }
-    log("LocalControlChannel - sendAnswer aAnswer=" + descriptionToString(aAnswer));
+    log(
+      "LocalControlChannel - sendAnswer aAnswer=" + descriptionToString(aAnswer)
+    );
     this._correspondingControlChannel.onAnswer(aAnswer);
   },
 
@@ -167,39 +174,49 @@ LocalControlChannel.prototype = {
   },
 
   launch: function LCC_launch(aPresentationId, aUrl) {
-    log("LocalControlChannel - launch aPresentationId="
-        + aPresentationId + " aUrl=" + aUrl);
+    log(
+      "LocalControlChannel - launch aPresentationId=" +
+        aPresentationId +
+        " aUrl=" +
+        aUrl
+    );
     // Create control channel for receiver directly.
-    let controlChannel = new LocalControlChannel(this._provider,
-                                                 this._deviceId,
-                                                 Ci.nsIPresentationService.ROLE_RECEIVER);
+    let controlChannel = new LocalControlChannel(
+      this._provider,
+      this._deviceId,
+      Ci.nsIPresentationService.ROLE_RECEIVER
+    );
 
     // Set up the corresponding control channels for both controller and receiver.
     this._correspondingControlChannel = controlChannel;
     controlChannel._correspondingControlChannel = this;
 
-    this._provider.onSessionRequest(this._deviceId,
-                                    aUrl,
-                                    aPresentationId,
-                                    controlChannel);
+    this._provider.onSessionRequest(
+      this._deviceId,
+      aUrl,
+      aPresentationId,
+      controlChannel
+    );
     controlChannel.notifyConnected();
   },
 
   terminate: function LCC_terminate(aPresentationId) {
-    log("LocalControlChannel - terminate aPresentationId="
-        + aPresentationId);
+    log("LocalControlChannel - terminate aPresentationId=" + aPresentationId);
 
     if (this._isOnTerminating) {
       return;
     }
 
     // Create control channel for corresponding role directly.
-    let correspondingRole = this._role == Ci.nsIPresentationService.ROLE_CONTROLLER
-                          ? Ci.nsIPresentationService.ROLE_RECEIVER
-                          : Ci.nsIPresentationService.ROLE_CONTROLLER;
-    let controlChannel = new LocalControlChannel(this._provider,
-                                                 this._deviceId,
-                                                 correspondingRole);
+    let correspondingRole =
+      this._role == Ci.nsIPresentationService.ROLE_CONTROLLER
+        ? Ci.nsIPresentationService.ROLE_RECEIVER
+        : Ci.nsIPresentationService.ROLE_CONTROLLER;
+    let controlChannel = new LocalControlChannel(
+      this._provider,
+      this._deviceId,
+      correspondingRole
+    );
     // Prevent the termination recursion.
     controlChannel._isOnTerminating = true;
 
@@ -207,10 +224,12 @@ LocalControlChannel.prototype = {
     this._correspondingControlChannel = controlChannel;
     controlChannel._correspondingControlChannel = this;
 
-    this._provider.onTerminateRequest(this._deviceId,
-                                      aPresentationId,
-                                      controlChannel,
-                                      this._role == Ci.nsIPresentationService.ROLE_RECEIVER);
+    this._provider.onTerminateRequest(
+      this._deviceId,
+      aPresentationId,
+      controlChannel,
+      this._role == Ci.nsIPresentationService.ROLE_RECEIVER
+    );
     controlChannel.notifyConnected();
   },
 
@@ -232,9 +251,11 @@ LocalControlChannel.prototype = {
     // disconnected abnormally.
 
     // Remote endpoint closes the control channel with abnormal reason.
-    if (aReason == Cr.NS_OK &&
-        this._pendingDisconnect != null &&
-        this._pendingDisconnect != Cr.NS_OK) {
+    if (
+      aReason == Cr.NS_OK &&
+      this._pendingDisconnect != null &&
+      this._pendingDisconnect != Cr.NS_OK
+    ) {
       aReason = this._pendingDisconnect;
     }
 
@@ -259,16 +280,16 @@ LocalControlChannel.prototype = {
 
 function ChromecastRemoteDisplayDevice(aProvider, aId, aName, aRole) {
   this._provider = aProvider;
-  this._id       = aId;
-  this._name     = aName;
-  this._role     = aRole;
+  this._id = aId;
+  this._name = aName;
+  this._role = aRole;
 }
 
 ChromecastRemoteDisplayDevice.prototype = {
-  _id:          null,
-  _name:        null,
-  _role:        null,
-  _provider:    null,
+  _id: null,
+  _name: null,
+  _role: null,
+  _provider: null,
   _ctrlChannel: null,
 
   update: function CRDD_update(aName) {
@@ -276,16 +297,24 @@ ChromecastRemoteDisplayDevice.prototype = {
   },
 
   // nsIPresentationDevice
-  get id() { return this._id; },
+  get id() {
+    return this._id;
+  },
 
-  get name() { return this._name; },
+  get name() {
+    return this._name;
+  },
 
-  get type() { return "chromecast"; },
+  get type() {
+    return "chromecast";
+  },
 
   establishControlChannel: function CRDD_establishControlChannel() {
-    this._ctrlChannel = new LocalControlChannel(this._provider,
-                                                this._id,
-                                                this._role);
+    this._ctrlChannel = new LocalControlChannel(
+      this._provider,
+      this._id,
+      this._role
+    );
 
     if (this._role == Ci.nsIPresentationService.ROLE_CONTROLLER) {
       // Only connect to Chromecast for controller.
@@ -293,17 +322,20 @@ ChromecastRemoteDisplayDevice.prototype = {
       Services.obs.addObserver(this, TOPIC_PRESENTATION_VIEW_READY, true);
 
       // Launch Chromecast service in Android.
-      EventDispatcher.instance.sendRequestForResult({
-        type: TOPIC_ANDROID_CAST_DEVICE_START,
-        id:   this.id,
-      }).then(result => {
-        log("Chromecast is connected.");
-      }).catch(error => {
-        log("Can not connect to Chromecast.");
-        // If Chromecast can not be launched, remove the observer.
-        Services.obs.removeObserver(this, TOPIC_PRESENTATION_VIEW_READY);
-        this._ctrlChannel.disconnect(Cr.NS_ERROR_FAILURE);
-      });
+      EventDispatcher.instance
+        .sendRequestForResult({
+          type: TOPIC_ANDROID_CAST_DEVICE_START,
+          id: this.id,
+        })
+        .then(result => {
+          log("Chromecast is connected.");
+        })
+        .catch(error => {
+          log("Can not connect to Chromecast.");
+          // If Chromecast can not be launched, remove the observer.
+          Services.obs.removeObserver(this, TOPIC_PRESENTATION_VIEW_READY);
+          this._ctrlChannel.disconnect(Cr.NS_ERROR_FAILURE);
+        });
     } else {
       // If establishControlChannel called from the receiver, we don't need to
       // wait the 'presentation-view-ready' event.
@@ -317,7 +349,7 @@ ChromecastRemoteDisplayDevice.prototype = {
     // Disconnect from Chromecast.
     EventDispatcher.instance.sendRequestForResult({
       type: TOPIC_ANDROID_CAST_DEVICE_STOP,
-      id:   this.id,
+      id: this.id,
     });
   },
 
@@ -327,13 +359,19 @@ ChromecastRemoteDisplayDevice.prototype = {
   },
 
   // nsIPresentationLocalDevice
-  get windowId() { return this._id; },
+  get windowId() {
+    return this._id;
+  },
 
   // nsIObserver
   observe: function CRDD_observe(aSubject, aTopic, aData) {
     if (aTopic == TOPIC_PRESENTATION_VIEW_READY) {
-      log("ChromecastRemoteDisplayDevice - observe: aTopic="
-          + aTopic + " data=" + aData);
+      log(
+        "ChromecastRemoteDisplayDevice - observe: aTopic=" +
+          aTopic +
+          " data=" +
+          aData
+      );
       if (this.windowId === aData) {
         Services.obs.removeObserver(this, TOPIC_PRESENTATION_VIEW_READY);
         this._ctrlChannel.notifyConnected();
@@ -341,10 +379,12 @@ ChromecastRemoteDisplayDevice.prototype = {
     }
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice,
-                                          Ci.nsIPresentationLocalDevice,
-                                          Ci.nsISupportsWeakReference,
-                                          Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIPresentationDevice,
+    Ci.nsIPresentationLocalDevice,
+    Ci.nsISupportsWeakReference,
+    Ci.nsIObserver,
+  ]),
 };
 
 function AndroidCastDeviceProvider() {
@@ -353,36 +393,50 @@ function AndroidCastDeviceProvider() {
 }
 
 AndroidCastDeviceProvider.prototype = {
-  onSessionRequest: function APDP_onSessionRequest(aDeviceId,
-                                                   aUrl,
-                                                   aPresentationId,
-                                                   aControlChannel) {
-    log("AndroidCastDeviceProvider - onSessionRequest"
-        + " aDeviceId=" + aDeviceId);
+  onSessionRequest: function APDP_onSessionRequest(
+    aDeviceId,
+    aUrl,
+    aPresentationId,
+    aControlChannel
+  ) {
+    log("AndroidCastDeviceProvider - onSessionRequest aDeviceId=" + aDeviceId);
     let device = this._deviceList.get(aDeviceId);
-    let receiverDevice = new ChromecastRemoteDisplayDevice(this,
-                                                           device.id,
-                                                           device.name,
-                                                           Ci.nsIPresentationService.ROLE_RECEIVER);
-    this._listener.onSessionRequest(receiverDevice,
-                                    aUrl,
-                                    aPresentationId,
-                                    aControlChannel);
+    let receiverDevice = new ChromecastRemoteDisplayDevice(
+      this,
+      device.id,
+      device.name,
+      Ci.nsIPresentationService.ROLE_RECEIVER
+    );
+    this._listener.onSessionRequest(
+      receiverDevice,
+      aUrl,
+      aPresentationId,
+      aControlChannel
+    );
   },
 
-  onTerminateRequest: function APDP_onTerminateRequest(aDeviceId,
-                                                       aPresentationId,
-                                                       aControlChannel,
-                                                       aIsFromReceiver) {
-    log("AndroidCastDeviceProvider - onTerminateRequest"
-        + " aDeviceId=" + aDeviceId
-        + " aPresentationId=" + aPresentationId
-        + " aIsFromReceiver=" + aIsFromReceiver);
+  onTerminateRequest: function APDP_onTerminateRequest(
+    aDeviceId,
+    aPresentationId,
+    aControlChannel,
+    aIsFromReceiver
+  ) {
+    log(
+      "AndroidCastDeviceProvider - onTerminateRequest" +
+        " aDeviceId=" +
+        aDeviceId +
+        " aPresentationId=" +
+        aPresentationId +
+        " aIsFromReceiver=" +
+        aIsFromReceiver
+    );
     let device = this._deviceList.get(aDeviceId);
-    this._listener.onTerminateRequest(device,
-                                      aPresentationId,
-                                      aControlChannel,
-                                      aIsFromReceiver);
+    this._listener.onTerminateRequest(
+      device,
+      aPresentationId,
+      aControlChannel,
+      aIsFromReceiver
+    );
   },
 
   // nsIPresentationDeviceProvider
@@ -408,7 +462,9 @@ AndroidCastDeviceProvider.prototype = {
     ]);
 
     // Sync all device already found by Android.
-    EventDispatcher.instance.sendRequest({ type: TOPIC_ANDROID_CAST_DEVICE_SYNCDEVICE });
+    EventDispatcher.instance.sendRequest({
+      type: TOPIC_ANDROID_CAST_DEVICE_SYNCDEVICE,
+    });
   },
 
   get listener() {
@@ -424,13 +480,15 @@ AndroidCastDeviceProvider.prototype = {
       case TOPIC_ANDROID_CAST_DEVICE_ADDED:
       case TOPIC_ANDROID_CAST_DEVICE_CHANGED: {
         let deviceInfo = data;
-        let deviceId   = deviceInfo.uuid;
+        let deviceId = deviceInfo.uuid;
 
         if (!this._deviceList.has(deviceId)) {
-          let device = new ChromecastRemoteDisplayDevice(this,
-                                                         deviceInfo.uuid,
-                                                         deviceInfo.friendlyName,
-                                                         Ci.nsIPresentationService.ROLE_CONTROLLER);
+          let device = new ChromecastRemoteDisplayDevice(
+            this,
+            deviceInfo.uuid,
+            deviceInfo.friendlyName,
+            Ci.nsIPresentationService.ROLE_CONTROLLER
+          );
           this._deviceList.set(device.id, device);
           this._listener.addDevice(device);
         } else {
@@ -446,7 +504,7 @@ AndroidCastDeviceProvider.prototype = {
           break;
         }
 
-        let device   = this._deviceList.get(deviceId);
+        let device = this._deviceList.get(deviceId);
         this._listener.removeDevice(device);
         this._deviceList.delete(deviceId);
         break;
@@ -455,8 +513,10 @@ AndroidCastDeviceProvider.prototype = {
   },
 
   classID: Components.ID("{7394f24c-dbc3-48c8-8a47-cd10169b7c6b}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsIPresentationDeviceProvider]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsIPresentationDeviceProvider,
+  ]),
 };
 
 var EXPORTED_SYMBOLS = ["AndroidCastDeviceProvider"];

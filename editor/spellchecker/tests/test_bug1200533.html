@@ -50,7 +50,7 @@ var tests = [
 var loadCount = 0;
 var script;
 
-var loadListener = function(evt) {
+var loadListener = async function(evt) {
   if (loadCount == 0) {
     /* eslint-env mozilla/frame-script */
     script = SpecialPowers.loadChromeScript(function() {
@@ -86,7 +86,7 @@ var loadListener = function(evt) {
         hunspell.removeDirectory(de_DE);
       });
     });
-    var existenceChecks = script.sendSyncMessage("check-existence")[0][0];
+    var existenceChecks = await script.sendQuery("check-existence");
     is(existenceChecks[0], true, "true expected (en-GB directory should exist)");
     is(existenceChecks[1], true, "true expected (en-AU directory should exist)");
     is(existenceChecks[2], true, "true expected (de-DE directory should exist)");
@@ -124,7 +124,7 @@ function continueTest(evt) {
       content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug1200533_subframe.html?firstload=false";
     } else {
       // Remove the fake  dictionaries again, since it's otherwise picked up by later tests.
-      script.sendSyncMessage("destroy");
+      script.sendAsyncMessage("destroy");
 
       SimpleTest.finish();
     }

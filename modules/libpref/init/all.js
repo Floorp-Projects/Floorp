@@ -208,10 +208,6 @@ pref("ui.menu.incremental_search.timeout", 1000);
 // If true, all popups won't hide automatically on blur
 pref("ui.popup.disable_autohide", false);
 
-#ifdef XP_MACOSX
-pref("ui.touchbar.layout", "Back,Forward,Reload,OpenLocation,NewTab,Share");
-#endif
-
 // 0 = default: always, except in high contrast mode
 // 1 = always
 // 2 = never
@@ -2179,6 +2175,9 @@ pref("network.http.tailing.delay-max", 6000);
 // Total limit we delay tailed requests since a page load beginning.
 pref("network.http.tailing.total-max", 45000);
 
+// Enable or disable the whole fix from bug 1563538
+pref("network.http.spdy.bug1563538", true);
+
 pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAcceptForeign
 
 pref("network.proxy.type",                  5);
@@ -2510,7 +2509,7 @@ pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
 
 #if defined(DEBUG) && !defined(ANDROID)
-pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,addons,cache-entry,config,debugging,devtools,downloads,home,newtab,plugins,preferences,serviceworkers,sessionrestore,support,sync-log,telemetry,welcomeback");
+pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,addons,cache-entry,config,debugging,devtools,downloads,home,newtab,plugins,preferences,sessionrestore,support,sync-log,welcomeback");
 // the following prefs are for testing purposes only.
 pref("csp.overrule_about_uris_without_csp_whitelist", false);
 pref("csp.skip_about_page_has_csp_assert", false);

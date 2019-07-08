@@ -8,14 +8,16 @@
 
 // There are shutdown issues for which multiple rejections are left uncaught.
 // See bug 1018184 for resolving these issues.
-const { PromiseTestUtils } = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
 PromiseTestUtils.whitelistRejectionsGlobally(/Connection closed/);
 
 add_task(async function() {
   await addTab(`data:text/html;charset=utf-8,
                 <style>h1 { color: red; }</style>
                 <h1 id="title">textbox context menu test</h1>`);
-  const {toolbox, inspector} = await openInspector();
+  const { toolbox, inspector } = await openInspector();
   await selectNode("h1", inspector);
 
   info("Testing the markup-view tagname");
@@ -45,7 +47,11 @@ add_task(async function() {
   info("Testing the rule-view selector");
   const ruleView = inspector.getPanel("ruleview").view;
   const cssRuleEditor = getRuleViewRuleEditor(ruleView, 1);
-  EventUtils.synthesizeMouseAtCenter(cssRuleEditor.selectorText, {}, inspector.panelWin);
+  EventUtils.synthesizeMouseAtCenter(
+    cssRuleEditor.selectorText,
+    {},
+    inspector.panelWin
+  );
   await checkTextBox(inspector.panelDoc.activeElement, toolbox);
 
   info("Testing the rule-view property name");
@@ -71,7 +77,8 @@ add_task(async function() {
 
   info("Testing the box-model region");
   const margin = inspector.panelDoc.querySelector(
-    ".boxmodel-margin.boxmodel-top > span");
+    ".boxmodel-margin.boxmodel-top > span"
+  );
   EventUtils.synthesizeMouseAtCenter(margin, {}, inspector.panelWin);
   await checkTextBox(inspector.panelDoc.activeElement, toolbox);
 
@@ -84,7 +91,9 @@ async function checkTextBox(textBox, toolbox) {
   let textboxContextMenu = toolbox.getTextBoxContextMenu();
   ok(!textboxContextMenu, "The menu is closed");
 
-  info("Simulating context click on the textbox and expecting the menu to open");
+  info(
+    "Simulating context click on the textbox and expecting the menu to open"
+  );
   const onContextMenu = toolbox.once("menu-open");
   synthesizeContextMenuEvent(textBox);
   await onContextMenu;

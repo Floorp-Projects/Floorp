@@ -32,8 +32,8 @@ const TEST_URL = `data:text/html;charset=utf-8,
   </script>`;
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
-  const {markup} = inspector;
+  const { inspector } = await openInspectorForURL(TEST_URL);
+  const { markup } = inspector;
 
   info("Find and expand the test-component shadow DOM host.");
   const hostFront = await getNodeFront("test-component", inspector);
@@ -67,7 +67,11 @@ add_task(async function() {
 
   info("Scroll back to see the slotted element");
   slottedElement.scrollIntoView();
-  is(isScrolledOut(slottedElement), false, "slotted element is not scrolled out");
+  is(
+    isScrolledOut(slottedElement),
+    false,
+    "slotted element is not scrolled out"
+  );
   is(isScrolledOut(realElement), true, "real element is scrolled out");
 
   info("Click on the reveal link again");
@@ -81,5 +85,5 @@ add_task(async function() {
 function isScrolledOut(element) {
   const win = element.ownerGlobal;
   const rect = element.getBoundingClientRect();
-  return rect.top < 0 || (rect.top + rect.height) > win.innerHeight;
+  return rect.top < 0 || rect.top + rect.height > win.innerHeight;
 }

@@ -6,20 +6,32 @@
 const { mount } = require("enzyme");
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
-const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
+const Provider = createFactory(
+  require("devtools/client/shared/vendor/react-redux").Provider
+);
 
-const { ToggleButton } = require("devtools/client/accessibility/components/Button");
-const ConnectedAccessibilityTreeFilterClass =
-  require("devtools/client/accessibility/components/AccessibilityTreeFilter");
+const {
+  ToggleButton,
+} = require("devtools/client/accessibility/components/Button");
+const ConnectedAccessibilityTreeFilterClass = require("devtools/client/accessibility/components/AccessibilityTreeFilter");
 const AccessibilityTreeFilterClass =
   ConnectedAccessibilityTreeFilterClass.WrappedComponent;
-const AccessibilityTreeFilter = createFactory(ConnectedAccessibilityTreeFilterClass);
+const AccessibilityTreeFilter = createFactory(
+  ConnectedAccessibilityTreeFilterClass
+);
 const {
   setupStore,
 } = require("devtools/client/accessibility/test/jest/helpers");
 
-const { AUDIT, AUDITING, FILTERS, FILTER_TOGGLE } = require("devtools/client/accessibility/constants");
-const { accessibility: { AUDIT_TYPE } } = require("devtools/shared/constants");
+const {
+  AUDIT,
+  AUDITING,
+  FILTERS,
+  FILTER_TOGGLE,
+} = require("devtools/client/accessibility/constants");
+const {
+  accessibility: { AUDIT_TYPE },
+} = require("devtools/shared/constants");
 
 function checkFilter(button, expectedText) {
   expect(button.is("button")).toBe(true);
@@ -58,7 +70,7 @@ describe("AccessibilityTreeFilter component:", () => {
   it("audit filter not filtered", () => {
     const store = setupStore();
 
-    const wrapper = mount(Provider({store}, AccessibilityTreeFilter()));
+    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
     expect(wrapper.html()).toMatchSnapshot();
 
     const filters = wrapper.find(AccessibilityTreeFilterClass);
@@ -84,17 +96,19 @@ describe("AccessibilityTreeFilter component:", () => {
 
   it("audit filters filtered", () => {
     const store = setupStore({
-      preloadedState: { audit: {
-        filters: {
-          [FILTERS.ALL]: true,
-          [FILTERS.CONTRAST]: true,
-          [FILTERS.TEXT_LABEL]: true,
+      preloadedState: {
+        audit: {
+          filters: {
+            [FILTERS.ALL]: true,
+            [FILTERS.CONTRAST]: true,
+            [FILTERS.TEXT_LABEL]: true,
+          },
+          auditing: [],
         },
-        auditing: [],
-      }},
+      },
     });
 
-    const wrapper = mount(Provider({store}, AccessibilityTreeFilter()));
+    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
     expect(wrapper.html()).toMatchSnapshot();
 
     const buttons = wrapper.find("button");
@@ -107,15 +121,17 @@ describe("AccessibilityTreeFilter component:", () => {
 
   it("audit filter not filtered auditing", () => {
     const store = setupStore({
-      preloadedState: { audit: {
-        filters: {
-          [FILTERS.CONTRAST]: false,
+      preloadedState: {
+        audit: {
+          filters: {
+            [FILTERS.CONTRAST]: false,
+          },
+          auditing: [AUDIT_TYPE.CONTRAST],
         },
-        auditing: [AUDIT_TYPE.CONTRAST],
-      }},
+      },
     });
 
-    const wrapper = mount(Provider({store}, AccessibilityTreeFilter()));
+    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
     expect(wrapper.html()).toMatchSnapshot();
 
     const button = wrapper.find("button");
@@ -127,15 +143,17 @@ describe("AccessibilityTreeFilter component:", () => {
 
   it("audit filter filtered auditing", () => {
     const store = setupStore({
-      preloadedState: { audit: {
-        filters: {
-          [FILTERS.CONTRAST]: true,
+      preloadedState: {
+        audit: {
+          filters: {
+            [FILTERS.CONTRAST]: true,
+          },
+          auditing: [AUDIT_TYPE.CONTRAST],
         },
-        auditing: [AUDIT_TYPE.CONTRAST],
-      }},
+      },
     });
 
-    const wrapper = mount(Provider({store}, AccessibilityTreeFilter()));
+    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
     expect(wrapper.html()).toMatchSnapshot();
 
     const button = wrapper.find("button");
@@ -147,7 +165,7 @@ describe("AccessibilityTreeFilter component:", () => {
 
   it("toggle filter", () => {
     const store = setupStore();
-    const wrapper = mount(Provider({store}, AccessibilityTreeFilter()));
+    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
     expect(wrapper.html()).toMatchSnapshot();
 
     const filters = wrapper.find("button.toggle-button.badge");
@@ -159,125 +177,138 @@ describe("AccessibilityTreeFilter component:", () => {
 
   it("render filters after state changes", () => {
     const store = setupStore();
-    const wrapper = mount(Provider({store}, AccessibilityTreeFilter()));
+    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
 
-    const tests = [{
-      expected: [
-        { active: false, busy: false },
-        { active: false, busy: false },
-        { active: false, busy: false },
-      ],
-    }, {
-      action: {
-        type: AUDITING,
-        auditing: Object.values(FILTERS),
+    const tests = [
+      {
+        expected: [
+          { active: false, busy: false },
+          { active: false, busy: false },
+          { active: false, busy: false },
+        ],
       },
-      expected: [
-        { active: false, busy: true },
-        { active: false, busy: true },
-        { active: false, busy: true },
-      ],
-    }, {
-      action: {
-        type: AUDIT,
-        response: [],
+      {
+        action: {
+          type: AUDITING,
+          auditing: Object.values(FILTERS),
+        },
+        expected: [
+          { active: false, busy: true },
+          { active: false, busy: true },
+          { active: false, busy: true },
+        ],
       },
-      expected: [
-        { active: false, busy: false },
-        { active: false, busy: false },
-        { active: false, busy: false },
-      ],
-    }, {
-      action: {
-        type: FILTER_TOGGLE,
-        filter: FILTERS.ALL,
+      {
+        action: {
+          type: AUDIT,
+          response: [],
+        },
+        expected: [
+          { active: false, busy: false },
+          { active: false, busy: false },
+          { active: false, busy: false },
+        ],
       },
-      expected: [
-        { active: true, busy: false },
-        { active: true, busy: false },
-        { active: true, busy: false },
-      ],
-    }, {
-      action: {
-        type: FILTER_TOGGLE,
-        filter: FILTERS.CONTRAST,
+      {
+        action: {
+          type: FILTER_TOGGLE,
+          filter: FILTERS.ALL,
+        },
+        expected: [
+          { active: true, busy: false },
+          { active: true, busy: false },
+          { active: true, busy: false },
+        ],
       },
-      expected: [
-        { active: false, busy: false },
-        { active: false, busy: false },
-        { active: true, busy: false },
-      ],
-    }, {
-      action: {
-        type: AUDITING,
-        auditing: [FILTERS.CONTRAST],
+      {
+        action: {
+          type: FILTER_TOGGLE,
+          filter: FILTERS.CONTRAST,
+        },
+        expected: [
+          { active: false, busy: false },
+          { active: false, busy: false },
+          { active: true, busy: false },
+        ],
       },
-      expected: [
-        { active: false, busy: false },
-        { active: false, busy: true },
-        { active: true, busy: false },
-      ],
-    }, {
-      action: {
-        type: AUDIT,
-        response: [],
+      {
+        action: {
+          type: AUDITING,
+          auditing: [FILTERS.CONTRAST],
+        },
+        expected: [
+          { active: false, busy: false },
+          { active: false, busy: true },
+          { active: true, busy: false },
+        ],
       },
-      expected: [
-        { active: false, busy: false },
-        { active: false, busy: false },
-        { active: true, busy: false },
-      ],
-    }, {
-      action: {
-        type: FILTER_TOGGLE,
-        filter: FILTERS.CONTRAST,
+      {
+        action: {
+          type: AUDIT,
+          response: [],
+        },
+        expected: [
+          { active: false, busy: false },
+          { active: false, busy: false },
+          { active: true, busy: false },
+        ],
       },
-      expected: [
-        { active: true, busy: false },
-        { active: true, busy: false },
-        { active: true, busy: false },
-      ],
-    }, {
-      action: {
-        type: FILTER_TOGGLE,
-        filter: FILTERS.ALL,
+      {
+        action: {
+          type: FILTER_TOGGLE,
+          filter: FILTERS.CONTRAST,
+        },
+        expected: [
+          { active: true, busy: false },
+          { active: true, busy: false },
+          { active: true, busy: false },
+        ],
       },
-      expected: [
-        { active: false, busy: false },
-        { active: false, busy: false },
-        { active: false, busy: false },
-      ],
-    }, {
-      action: {
-        type: AUDITING,
-        auditing: [FILTERS.TEXT_LABEL],
+      {
+        action: {
+          type: FILTER_TOGGLE,
+          filter: FILTERS.ALL,
+        },
+        expected: [
+          { active: false, busy: false },
+          { active: false, busy: false },
+          { active: false, busy: false },
+        ],
       },
-      expected: [
-        { active: false, busy: false },
-        { active: false, busy: false },
-        { active: false, busy: true },
-      ],
-    }, {
-      action: {
-        type: AUDIT,
-        response: [],
+      {
+        action: {
+          type: AUDITING,
+          auditing: [FILTERS.TEXT_LABEL],
+        },
+        expected: [
+          { active: false, busy: false },
+          { active: false, busy: false },
+          { active: false, busy: true },
+        ],
       },
-      expected: [
-        { active: false, busy: false },
-        { active: false, busy: false },
-        { active: false, busy: false },
-      ],
-    }, {
-      action: {
-        type: FILTER_TOGGLE,
-        filter: FILTERS.TEXT_LABEL,
+      {
+        action: {
+          type: AUDIT,
+          response: [],
+        },
+        expected: [
+          { active: false, busy: false },
+          { active: false, busy: false },
+          { active: false, busy: false },
+        ],
       },
-      expected: [
-        { active: false, busy: false },
-        { active: false, busy: false },
-        { active: true, busy: false },
-      ],
-    }];
+      {
+        action: {
+          type: FILTER_TOGGLE,
+          filter: FILTERS.TEXT_LABEL,
+        },
+        expected: [
+          { active: false, busy: false },
+          { active: false, busy: false },
+          { active: true, busy: false },
+        ],
+      },
+    ];
 
     for (const test of tests) {
       const { action, expected } = test;

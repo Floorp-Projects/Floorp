@@ -9,7 +9,7 @@
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8,<h1>Some header text</h1>");
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("h1", inspector);
 
   info("Getting the ruleclose brace element");

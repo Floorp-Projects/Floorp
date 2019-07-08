@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {BrowserUtils} = ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
+const { BrowserUtils } = ChromeUtils.import(
+  "resource://gre/modules/BrowserUtils.jsm"
+);
 
 add_task(async function test_getSelectionDetails_input() {
   // Mostly a regression test for bug 1420560

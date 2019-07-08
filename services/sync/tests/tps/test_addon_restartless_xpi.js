@@ -6,14 +6,14 @@
 EnableEngines(["addons"]);
 
 var phases = {
-  "phase01": "profile1",
-  "phase02": "profile2",
-  "phase03": "profile1",
-  "phase04": "profile2",
-  "phase05": "profile1",
-  "phase06": "profile2",
-  "phase07": "profile1",
-  "phase08": "profile2"
+  phase01: "profile1",
+  phase02: "profile2",
+  phase03: "profile1",
+  phase04: "profile2",
+  phase05: "profile1",
+  phase06: "profile2",
+  phase07: "profile1",
+  phase08: "profile2",
 };
 
 const id = "restartless-xpi@tests.mozilla.org";
@@ -38,10 +38,7 @@ Phase("phase03", [
   [Addons.verify, [id], STATE_DISABLED],
   [Sync],
 ]);
-Phase("phase04", [
-  [Sync],
-  [Addons.verify, [id], STATE_DISABLED],
-]);
+Phase("phase04", [[Sync], [Addons.verify, [id], STATE_DISABLED]]);
 
 // Enable and see it is synced.
 Phase("phase05", [
@@ -50,10 +47,7 @@ Phase("phase05", [
   [Addons.verify, [id], STATE_ENABLED],
   [Sync],
 ]);
-Phase("phase06", [
-  [Sync],
-  [Addons.verify, [id], STATE_ENABLED],
-]);
+Phase("phase06", [[Sync], [Addons.verify, [id], STATE_ENABLED]]);
 
 // Uninstall and see it is synced.
 Phase("phase07", [

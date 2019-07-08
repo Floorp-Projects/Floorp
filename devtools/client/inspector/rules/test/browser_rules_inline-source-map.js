@@ -15,7 +15,7 @@ add_task(async function() {
   Services.prefs.setBoolPref(PREF, true);
 
   await addTab(TESTCASE_URI);
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   await selectNode("div", inspector);
 

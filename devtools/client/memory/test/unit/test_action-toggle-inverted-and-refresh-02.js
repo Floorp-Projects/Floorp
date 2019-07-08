@@ -6,8 +6,15 @@
 // Test that changing inverted state in the middle of taking a snapshot results
 // in an inverted census.
 
-const { censusDisplays, snapshotState: states, censusState, viewState } = require("devtools/client/memory/constants");
-const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
+const {
+  censusDisplays,
+  snapshotState: states,
+  censusState,
+  viewState,
+} = require("devtools/client/memory/constants");
+const {
+  takeSnapshotAndCensus,
+} = require("devtools/client/memory/actions/snapshot");
 const {
   setCensusDisplay,
   setCensusDisplayAndRefresh,
@@ -24,33 +31,49 @@ add_task(async function() {
   dispatch(changeView(viewState.CENSUS));
 
   dispatch(setCensusDisplay(censusDisplays.allocationStack));
-  equal(getState().censusDisplay.inverted, false,
-        "Should not have an inverted census display");
+  equal(
+    getState().censusDisplay.inverted,
+    false,
+    "Should not have an inverted census display"
+  );
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   await waitUntilSnapshotState(store, [states.SAVING]);
 
-  dispatch(setCensusDisplayAndRefresh(heapWorker,
-                                      censusDisplays.invertedAllocationStack));
+  dispatch(
+    setCensusDisplayAndRefresh(
+      heapWorker,
+      censusDisplays.invertedAllocationStack
+    )
+  );
 
   await waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
 
-  ok(getState().censusDisplay.inverted,
-     "should want inverted trees");
-  ok(getState().snapshots[0].census.display.inverted,
-     "snapshot-we-were-in-the-middle-of-saving's census should be inverted");
+  ok(getState().censusDisplay.inverted, "should want inverted trees");
+  ok(
+    getState().snapshots[0].census.display.inverted,
+    "snapshot-we-were-in-the-middle-of-saving's census should be inverted"
+  );
 
-  dispatch(setCensusDisplayAndRefresh(heapWorker, censusDisplays.allocationStack));
+  dispatch(
+    setCensusDisplayAndRefresh(heapWorker, censusDisplays.allocationStack)
+  );
   await waitUntilCensusState(store, s => s.census, [censusState.SAVING]);
   ok(true, "toggling inverted retriggers census");
   ok(!getState().censusDisplay.inverted, "no longer inverted");
 
-  dispatch(setCensusDisplayAndRefresh(heapWorker,
-                                      censusDisplays.invertedAllocationStack));
+  dispatch(
+    setCensusDisplayAndRefresh(
+      heapWorker,
+      censusDisplays.invertedAllocationStack
+    )
+  );
   await waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
   ok(getState().censusDisplay.inverted, "inverted again");
-  ok(getState().snapshots[0].census.display.inverted,
-     "census-we-were-in-the-middle-of-recomputing should be inverted again");
+  ok(
+    getState().snapshots[0].census.display.inverted,
+    "census-we-were-in-the-middle-of-recomputing should be inverted again"
+  );
 
   heapWorker.destroy();
   await front.detach();

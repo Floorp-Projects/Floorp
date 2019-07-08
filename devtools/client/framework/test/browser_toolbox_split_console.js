@@ -41,9 +41,13 @@ function testUseKeyWithSplitConsole() {
   let commandCalled = false;
 
   info("useKeyWithSplitConsole on debugger while debugger is focused");
-  gToolbox.useKeyWithSplitConsole("F3", () => {
-    commandCalled = true;
-  }, "jsdebugger");
+  gToolbox.useKeyWithSplitConsole(
+    "F3",
+    () => {
+      commandCalled = true;
+    },
+    "jsdebugger"
+  );
 
   info("synthesizeKey with the console focused");
   focusConsoleInput();
@@ -57,9 +61,13 @@ function testUseKeyWithSplitConsoleWrongTool() {
   let commandCalled = false;
 
   info("useKeyWithSplitConsole on inspector while debugger is focused");
-  gToolbox.useKeyWithSplitConsole("F4", () => {
-    commandCalled = true;
-  }, "inspector");
+  gToolbox.useKeyWithSplitConsole(
+    "F4",
+    () => {
+      commandCalled = true;
+    },
+    "inspector"
+  );
 
   info("synthesizeKey with the console focused");
   focusConsoleInput();

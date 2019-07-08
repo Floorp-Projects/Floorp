@@ -23,21 +23,31 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
-  info("Check the CSS declarations for ::before in the Pseudo-elements accordion.");
+  info(
+    "Check the CSS declarations for ::before in the Pseudo-elements accordion."
+  );
   const pseudoRule = getRuleViewRuleEditor(view, 1, 0).rule;
   const pseudoProp1 = pseudoRule.textProps[1];
   const pseudoProp2 = pseudoRule.textProps[2];
-  ok(pseudoProp1.overridden,
-    "First declaration of color in pseudo-element should be overridden.");
-  ok(!pseudoProp2.overridden,
-    "Second declaration of color in pseudo-element should not be overridden.");
+  ok(
+    pseudoProp1.overridden,
+    "First declaration of color in pseudo-element should be overridden."
+  );
+  ok(
+    !pseudoProp2.overridden,
+    "Second declaration of color in pseudo-element should not be overridden."
+  );
 
-  info("Check that pseudo-element declarations do not override the host's declarations");
+  info(
+    "Check that pseudo-element declarations do not override the host's declarations"
+  );
   const idRule = getRuleViewRuleEditor(view, 4).rule;
   const idProp = idRule.textProps[0];
-  ok(!idProp.overridden,
-      "The single declaration of color in ID selector should not be overridden");
+  ok(
+    !idProp.overridden,
+    "The single declaration of color in ID selector should not be overridden"
+  );
 });

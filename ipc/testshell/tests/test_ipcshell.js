@@ -15,15 +15,16 @@ function run_test() {
 
   sendCommand("runtime.processType;", callback);
 
-  [ [ "C", "D" ], [ "D", "C" ], [ "\u010C", "D" ], [ "D", "\u010C" ] ].forEach(
-    function(pair) {
-      do_test_pending();
-      var cmp = pair[0].localeCompare(pair[1]);
-      sendCommand(
-          "'" + pair[0] + "'.localeCompare('" + pair[1] + "');",
-          function(result) {
-              Assert.equal(cmp, result);
-              do_test_finished();
-          });
+  [["C", "D"], ["D", "C"], ["\u010C", "D"], ["D", "\u010C"]].forEach(function(
+    pair
+  ) {
+    do_test_pending();
+    var cmp = pair[0].localeCompare(pair[1]);
+    sendCommand("'" + pair[0] + "'.localeCompare('" + pair[1] + "');", function(
+      result
+    ) {
+      Assert.equal(cmp, result);
+      do_test_finished();
     });
+  });
 }

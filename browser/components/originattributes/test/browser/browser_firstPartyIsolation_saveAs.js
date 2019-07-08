@@ -6,13 +6,15 @@
 "use strict";
 
 /* import-globals-from ../../../../../toolkit/content/tests/browser/common/mockTransfer.js */
-Services.scriptloader
-        .loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
-                       this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
+  this
+);
 
 const TEST_FIRST_PARTY = "example.com";
 const TEST_ORIGIN = `http://${TEST_FIRST_PARTY}`;
-const TEST_BASE_PATH = "/browser/browser/components/originattributes/test/browser/";
+const TEST_BASE_PATH =
+  "/browser/browser/components/originattributes/test/browser/";
 const TEST_PATH = `${TEST_BASE_PATH}file_saveAs.sjs`;
 const TEST_PATH_VIDEO = `${TEST_BASE_PATH}file_thirdPartyChild.video.ogv`;
 const TEST_PATH_IMAGE = `${TEST_BASE_PATH}file_favicon.png`;
@@ -31,9 +33,9 @@ MockFilePicker.init(window);
 add_task(async function setup() {
   info("Setting the prefs.");
 
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.firstparty.isolate", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.firstparty.isolate", true]],
+  });
 
   info("Setting MockFilePicker.");
   let tempDir = createTemporarySaveDirectory();
@@ -81,8 +83,11 @@ function createPromiseForObservingChannel(aURL, aFirstParty) {
         }
 
         info(`Checking loadInfo for URI: ${httpChannel.URI.spec}\n`);
-        is(reqLoadInfo.originAttributes.firstPartyDomain, aFirstParty,
-          "The loadInfo has correct first party domain");
+        is(
+          reqLoadInfo.originAttributes.firstPartyDomain,
+          aFirstParty,
+          "The loadInfo has correct first party domain"
+        );
 
         Services.obs.removeObserver(observer, "http-on-modify-request");
         resolve();
@@ -94,11 +99,11 @@ function createPromiseForObservingChannel(aURL, aFirstParty) {
 }
 
 function createPromiseForTransferComplete() {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     function onTransferComplete(downloadSuccess) {
       ok(downloadSuccess, "File should have been downloaded successfully");
       // Clear the callback for now.
-      mockTransferCallback = () => { };
+      mockTransferCallback = () => {};
       resolve();
     }
 
@@ -110,8 +115,10 @@ async function doCommandForFrameType() {
   info("Opening the frame sub-menu under the context menu.");
   let contextMenu = document.getElementById("contentAreaContextMenu");
   let frameMenuPopup = contextMenu.querySelector("#frame").menupopup;
-  let frameMenuPopupPromise = BrowserTestUtils.waitForEvent(frameMenuPopup,
-                                                            "popupshown");
+  let frameMenuPopupPromise = BrowserTestUtils.waitForEvent(
+    frameMenuPopup,
+    "popupshown"
+  );
 
   frameMenuPopup.openPopup();
   await frameMenuPopupPromise;
@@ -127,28 +134,43 @@ add_task(async function testContextMenuSaveAs() {
     { type: "video", path: TEST_PATH_VIDEO, target: "#video1" },
     { type: "image", path: TEST_PATH_IMAGE, target: "#image1" },
     { type: "page", path: TEST_PATH_PAGE, target: "body" },
-    { type: "frame", path: TEST_PATH_FRAME, target: "#frame1",
-      doCommandFunc: doCommandForFrameType },
+    {
+      type: "frame",
+      path: TEST_PATH_FRAME,
+      target: "#frame1",
+      doCommandFunc: doCommandForFrameType,
+    },
   ];
 
   for (const data of TEST_DATA) {
     info(`Open a new tab for testing "Save ${data.type} as" in context menu.`);
-    let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser,
-      `${TEST_ORIGIN}${TEST_PATH}?${data.type}=1`);
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      `${TEST_ORIGIN}${TEST_PATH}?${data.type}=1`
+    );
 
-    let popupShownPromise = BrowserTestUtils.waitForEvent(document, "popupshown");
+    let popupShownPromise = BrowserTestUtils.waitForEvent(
+      document,
+      "popupshown"
+    );
 
     info("Open the context menu.");
-    await BrowserTestUtils.synthesizeMouseAtCenter(data.target, {
-      type: "contextmenu",
-      button: 2,
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      data.target,
+      {
+        type: "contextmenu",
+        button: 2,
       },
-      gBrowser.selectedBrowser);
+      gBrowser.selectedBrowser
+    );
 
     await popupShownPromise;
 
     let transferCompletePromise = createPromiseForTransferComplete();
-    let observerPromise = createPromiseForObservingChannel(data.path, TEST_FIRST_PARTY);
+    let observerPromise = createPromiseForObservingChannel(
+      data.path,
+      TEST_FIRST_PARTY
+    );
 
     // Select "Save As" option from context menu.
     if (!data.doCommandFunc) {
@@ -164,7 +186,10 @@ add_task(async function testContextMenuSaveAs() {
 
     info("Close the context menu.");
     let contextMenu = document.getElementById("contentAreaContextMenu");
-    let popupHiddenPromise = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+    let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+      contextMenu,
+      "popuphidden"
+    );
     contextMenu.hidePopup();
     await popupHiddenPromise;
 
@@ -177,11 +202,16 @@ add_task(async function testContextMenuSaveAs() {
 
 add_task(async function testFileMenuSavePageAs() {
   info(`Open a new tab for testing "Save Page AS" in the file menu.`);
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser,
-    `${TEST_ORIGIN}${TEST_PATH}?page=1`);
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    `${TEST_ORIGIN}${TEST_PATH}?page=1`
+  );
 
   let transferCompletePromise = createPromiseForTransferComplete();
-  let observerPromise = createPromiseForObservingChannel(TEST_PATH_PAGE, TEST_FIRST_PARTY);
+  let observerPromise = createPromiseForObservingChannel(
+    TEST_PATH_PAGE,
+    TEST_FIRST_PARTY
+  );
 
   let menubar = document.getElementById("main-menubar");
   let filePopup = document.getElementById("menu_FilePopup");
@@ -190,11 +220,17 @@ add_task(async function testFileMenuSavePageAs() {
   // Mac doesn't have a shortcut to only open the file menu. Instead, we directly
   // trigger the save in MAC without any UI interactions.
   if (Services.appinfo.OS !== "Darwin") {
-    let menubarActive = BrowserTestUtils.waitForEvent(menubar, "DOMMenuBarActive");
+    let menubarActive = BrowserTestUtils.waitForEvent(
+      menubar,
+      "DOMMenuBarActive"
+    );
     EventUtils.synthesizeKey("KEY_F10");
     await menubarActive;
 
-    let popupShownPromise = BrowserTestUtils.waitForEvent(filePopup, "popupshown");
+    let popupShownPromise = BrowserTestUtils.waitForEvent(
+      filePopup,
+      "popupshown"
+    );
     // In window, it still needs one extra down key to open the file menu.
     if (Services.appinfo.OS === "WINNT") {
       EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -211,7 +247,10 @@ add_task(async function testFileMenuSavePageAs() {
 
   // Close the file menu.
   if (Services.appinfo.OS !== "Darwin") {
-    let popupHiddenPromise = BrowserTestUtils.waitForEvent(filePopup, "popuphidden");
+    let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+      filePopup,
+      "popuphidden"
+    );
     filePopup.hidePopup();
     await popupHiddenPromise;
   }
@@ -223,16 +262,24 @@ add_task(async function testFileMenuSavePageAs() {
 });
 
 add_task(async function testPageInfoMediaSaveAs() {
-  info(`Open a new tab for testing "Save AS" in the media panel of the page info.`);
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser,
-    `${TEST_ORIGIN}${TEST_PATH}?pageinfo=1`);
+  info(
+    `Open a new tab for testing "Save AS" in the media panel of the page info.`
+  );
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    `${TEST_ORIGIN}${TEST_PATH}?pageinfo=1`
+  );
 
   info("Open the media panel of the pageinfo.");
-  let pageInfo = BrowserPageInfo(gBrowser.selectedBrowser.currentURI.spec,
-    "mediaTab");
+  let pageInfo = BrowserPageInfo(
+    gBrowser.selectedBrowser.currentURI.spec,
+    "mediaTab"
+  );
 
   await BrowserTestUtils.waitForEvent(pageInfo, "load");
-  await new Promise(resolve => pageInfo.onFinished.push(() => executeSoon(resolve)));
+  await new Promise(resolve =>
+    pageInfo.onFinished.push(() => executeSoon(resolve))
+  );
 
   let imageTree = pageInfo.document.getElementById("imagetree");
   let imageRowsNum = imageTree.view.rowCount;
@@ -248,7 +295,10 @@ add_task(async function testPageInfoMediaSaveAs() {
     info(`Start to save the media item with URL: ${url}`);
 
     let transferCompletePromise = createPromiseForTransferComplete();
-    let observerPromise = createPromiseForObservingChannel(url, TEST_FIRST_PARTY);
+    let observerPromise = createPromiseForObservingChannel(
+      url,
+      TEST_FIRST_PARTY
+    );
 
     info("Triggering the save process.");
     let saveElement = pageInfo.document.getElementById("imagesaveasbutton");

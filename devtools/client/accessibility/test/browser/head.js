@@ -14,17 +14,20 @@
 // Import framework's shared head.
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
-  this);
+  this
+);
 
 // Import inspector's shared head.
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/shared-head.js",
-  this);
+  this
+);
 
 // Load the shared Redux helpers into this compartment.
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
-  this);
+  this
+);
 
 const { ORDERED_PROPS } = require("devtools/client/accessibility/constants");
 
@@ -38,7 +41,8 @@ Services.prefs.setBoolPref("devtools.accessibility.enabled", true);
 async function initA11y() {
   if (Services.appinfo.accessibilityEnabled) {
     return Cc["@mozilla.org/accessibilityService;1"].getService(
-      Ci.nsIAccessibilityService);
+      Ci.nsIAccessibilityService
+    );
   }
 
   const initPromise = new Promise(resolve => {
@@ -50,7 +54,8 @@ async function initA11y() {
   });
 
   const a11yService = Cc["@mozilla.org/accessibilityService;1"].getService(
-    Ci.nsIAccessibilityService);
+    Ci.nsIAccessibilityService
+  );
   await initPromise;
   return a11yService;
 }
@@ -114,9 +119,13 @@ async function addTestTab(url) {
     EventUtils.sendMouseEvent({ type: "click" }, enableButton, win);
   }
 
-  await waitUntilState(store, state =>
-    state.accessibles.size === 1 && state.details.accessible &&
-    state.details.accessible.role === "document");
+  await waitUntilState(
+    store,
+    state =>
+      state.accessibles.size === 1 &&
+      state.details.accessible &&
+      state.details.accessible.role === "document"
+  );
 
   // Wait for inspector load here to avoid protocol errors on shutdown, since
   // accessibility panel test can be too fast.
@@ -142,8 +151,10 @@ async function disableAccessibilityInspector(env) {
   // Disable accessibility service through the panel and wait for the shutdown
   // event.
   const shutdown = panel.front.once("shutdown");
-  const disableButton = await BrowserTestUtils.waitForCondition(() =>
-    doc.getElementById("accessibility-disable-button"), "Wait for the disable button.");
+  const disableButton = await BrowserTestUtils.waitForCondition(
+    () => doc.getElementById("accessibility-disable-button"),
+    "Wait for the disable button."
+  );
   EventUtils.sendMouseEvent({ type: "click" }, disableButton, win);
   await shutdown;
 }
@@ -172,8 +183,10 @@ async function initAccessibilityPanel(tab = gBrowser.selectedTab) {
  */
 function compareBadges(badges, expected = []) {
   const badgeEls = badges ? [...badges.querySelectorAll(".badge")] : [];
-  return badgeEls.length === expected.length &&
-         badgeEls.every((badge, i) => badge.textContent === expected[i]);
+  return (
+    badgeEls.length === expected.length &&
+    badgeEls.every((badge, i) => badge.textContent === expected[i])
+  );
 }
 
 /**
@@ -207,10 +220,13 @@ function closestScrolledParent(node) {
 function isVisible(element) {
   const { top, bottom } = element.getBoundingClientRect();
   const scrolledParent = closestScrolledParent(element.parentNode);
-  const scrolledParentRect = scrolledParent ? scrolledParent.getBoundingClientRect() :
-                                              null;
-  return !scrolledParent ||
-         (top >= scrolledParentRect.top && bottom <= scrolledParentRect.bottom);
+  const scrolledParentRect = scrolledParent
+    ? scrolledParent.getBoundingClientRect()
+    : null;
+  return (
+    !scrolledParent ||
+    (top >= scrolledParentRect.top && bottom <= scrolledParentRect.bottom)
+  );
 }
 
 /**
@@ -261,15 +277,20 @@ function checkLevel(row, expected) {
  */
 async function checkTreeState(doc, expected) {
   info("Checking tree state.");
-  const hasExpectedStructure = await BrowserTestUtils.waitForCondition(() =>
-    [...doc.querySelectorAll(".treeRow")].every((row, i) => {
-      const { role, name, badges, selected, level } = expected[i];
-      return row.querySelector(".treeLabelCell").textContent === role &&
-        row.querySelector(".treeValueCell").textContent === name &&
-        compareBadges(row.querySelector(".badges"), badges) &&
-        checkSelected(row, selected) &&
-        checkLevel(row, level);
-    }), "Wait for the right tree update.");
+  const hasExpectedStructure = await BrowserTestUtils.waitForCondition(
+    () =>
+      [...doc.querySelectorAll(".treeRow")].every((row, i) => {
+        const { role, name, badges, selected, level } = expected[i];
+        return (
+          row.querySelector(".treeLabelCell").textContent === role &&
+          row.querySelector(".treeValueCell").textContent === name &&
+          compareBadges(row.querySelector(".badges"), badges) &&
+          checkSelected(row, selected) &&
+          checkLevel(row, level)
+        );
+      }),
+    "Wait for the right tree update."
+  );
 
   ok(hasExpectedStructure, "Tree structure is correct.");
 }
@@ -291,8 +312,10 @@ function relationsMatch(relations, expected) {
     targets = Array.isArray(targets) ? targets : [targets];
 
     for (const index in expTargets) {
-      if (expTargets[index].name !== targets[index].name ||
-          expTargets[index].role !== targets[index].role) {
+      if (
+        expTargets[index].name !== targets[index].name ||
+        expTargets[index].role !== targets[index].role
+      ) {
         return false;
       }
     }
@@ -333,8 +356,10 @@ async function checkAuditState(store, expectedState) {
     for (const key in expectedState) {
       const expected = expectedState[key];
       if (expected && typeof expected === "object") {
-        if (JSON.stringify(audit[key], parseNumReplacer) !==
-            JSON.stringify(expected, parseNumReplacer)) {
+        if (
+          JSON.stringify(audit[key], parseNumReplacer) !==
+          JSON.stringify(expected, parseNumReplacer)
+        ) {
           return false;
         }
       } else if (audit && audit[key] !== expected) {
@@ -367,7 +392,9 @@ async function checkSidebarState(store, expectedState) {
           return false;
         }
       } else if (EXPANDABLE_PROPS.includes(key)) {
-        if (JSON.stringify(details.accessible[key]) !== JSON.stringify(expected)) {
+        if (
+          JSON.stringify(details.accessible[key]) !== JSON.stringify(expected)
+        ) {
           return false;
         }
       } else if (details.accessible && details.accessible[key] !== expected) {
@@ -389,10 +416,13 @@ async function checkSidebarState(store, expectedState) {
  */
 async function checkToolbarState(doc, expected) {
   info("Checking toolbar state.");
-  const hasExpectedStructure = await BrowserTestUtils.waitForCondition(() =>
-    [...doc.querySelectorAll("button.toggle-button.badge")].every((filter, i) =>
-      expected[i] === filter.classList.contains("checked")),
-      "Wait for the right toolbar state.");
+  const hasExpectedStructure = await BrowserTestUtils.waitForCondition(
+    () =>
+      [...doc.querySelectorAll("button.toggle-button.badge")].every(
+        (filter, i) => expected[i] === filter.classList.contains("checked")
+      ),
+    "Wait for the right toolbar state."
+  );
 
   ok(hasExpectedStructure, "Toolbar state is correct.");
 }
@@ -408,8 +438,10 @@ async function focusAccessibleProperties(doc) {
   const tree = doc.querySelector(".tree");
   if (doc.activeElement !== tree) {
     tree.focus();
-    await BrowserTestUtils.waitForCondition(() =>
-      tree.querySelector(".node.focused"), "Tree selected.");
+    await BrowserTestUtils.waitForCondition(
+      () => tree.querySelector(".node.focused"),
+      "Tree selected."
+    );
   }
 }
 
@@ -452,8 +484,11 @@ async function selectProperty(doc, id) {
  */
 function selectRow(doc, rowNumber) {
   info(`Selecting row ${rowNumber}.`);
-  EventUtils.sendMouseEvent({ type: "click" },
-    doc.querySelectorAll(".treeRow")[rowNumber], doc.defaultView);
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    doc.querySelectorAll(".treeRow")[rowNumber],
+    doc.defaultView
+  );
 }
 
 /**
@@ -470,9 +505,12 @@ async function toggleRow(doc, rowNumber) {
   info(`${expected ? "Expanding" : "Collapsing"} row ${rowNumber}.`);
 
   EventUtils.sendMouseEvent({ type: "click" }, twisty, win);
-  await BrowserTestUtils.waitForCondition(() =>
-    !twisty.classList.contains("devtools-throbber") &&
-    expected === twisty.classList.contains("open"), "Twisty updated.");
+  await BrowserTestUtils.waitForCondition(
+    () =>
+      !twisty.classList.contains("devtools-throbber") &&
+      expected === twisty.classList.contains("open"),
+    "Twisty updated."
+  );
 }
 
 /**
@@ -482,19 +520,22 @@ async function toggleRow(doc, rowNumber) {
  */
 async function toggleFilter(doc, filterIndex) {
   const win = doc.defaultView;
-  const filter = doc.querySelectorAll(
-    ".devtools-toolbar .badge.toggle-button")[filterIndex];
+  const filter = doc.querySelectorAll(".devtools-toolbar .badge.toggle-button")[
+    filterIndex
+  ];
   const expected = !filter.classList.contains("checked");
 
   EventUtils.synthesizeMouseAtCenter(filter, {}, win);
-  await BrowserTestUtils.waitForCondition(() =>
-    expected === filter.classList.contains("checked"), "Filter updated.");
+  await BrowserTestUtils.waitForCondition(
+    () => expected === filter.classList.contains("checked"),
+    "Filter updated."
+  );
 }
 
-async function findAccessibleFor({
-  toolbox: { walker: domWalker },
-  panel: { walker: a11yWalker },
-}, selector) {
+async function findAccessibleFor(
+  { toolbox: { walker: domWalker }, panel: { walker: a11yWalker } },
+  selector
+) {
   const node = await domWalker.querySelector(domWalker.rootNode, selector);
   return a11yWalker.getAccessibleFor(node);
 }

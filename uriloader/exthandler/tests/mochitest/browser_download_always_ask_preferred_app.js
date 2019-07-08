@@ -10,9 +10,15 @@ add_task(async function() {
     info("Waiting for dialog to be populated.");
     await BrowserTestUtils.waitForAttribute("value", location, expectedValue);
   }
-  is(doc.getElementById("mode").selectedItem.id, "open", "Should be opening the file.");
-  ok(!dlg.document.getElementById("openHandler").selectedItem.hidden,
-     "Should not have selected a hidden item.");
+  is(
+    doc.getElementById("mode").selectedItem.id,
+    "open",
+    "Should be opening the file."
+  );
+  ok(
+    !dlg.document.getElementById("openHandler").selectedItem.hidden,
+    "Should not have selected a hidden item."
+  );
   let helperAppDialogHiddenPromise = BrowserTestUtils.windowClosed(dlg);
   doc.documentElement.cancelDialog();
   await helperAppDialogHiddenPromise;

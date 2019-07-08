@@ -5,17 +5,15 @@
 "use strict";
 
 const TESTS = [
-  { url: "about:config",
-    key: "bug 394759 Non-PB",
-    value: "uniq" + r() },
-  { url: "about:mozilla",
-    key: "bug 394759 PB",
-    value: "uniq" + r() },
+  { url: "about:config", key: "bug 394759 Non-PB", value: "uniq" + r() },
+  { url: "about:mozilla", key: "bug 394759 PB", value: "uniq" + r() },
 ];
 
 function promiseTestOpenCloseWindow(aIsPrivate, aTest) {
   return (async function() {
-    let win = await BrowserTestUtils.openNewBrowserWindow({ "private": aIsPrivate });
+    let win = await BrowserTestUtils.openNewBrowserWindow({
+      private: aIsPrivate,
+    });
     BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, aTest.url);
     await promiseBrowserLoaded(win.gBrowser.selectedBrowser, true, aTest.url);
     // Mark the window with some unique data to be restored later on.
@@ -28,12 +26,20 @@ function promiseTestOpenCloseWindow(aIsPrivate, aTest) {
 
 function promiseTestOnWindow(aIsPrivate, aValue) {
   return (async function() {
-    let win = await BrowserTestUtils.openNewBrowserWindow({ "private": aIsPrivate });
+    let win = await BrowserTestUtils.openNewBrowserWindow({
+      private: aIsPrivate,
+    });
     await TabStateFlusher.flushWindow(win);
     let data = JSON.parse(ss.getClosedWindowData())[0];
-    is(ss.getClosedWindowCount(), 1, "Check that the closed window count hasn't changed");
-    ok(JSON.stringify(data).indexOf(aValue) > -1,
-       "Check the closed window data was stored correctly");
+    is(
+      ss.getClosedWindowCount(),
+      1,
+      "Check that the closed window count hasn't changed"
+    );
+    ok(
+      JSON.stringify(data).indexOf(aValue) > -1,
+      "Check the closed window data was stored correctly"
+    );
     registerCleanupFunction(() => BrowserTestUtils.closeWindow(win));
   })();
 }
@@ -51,4 +57,3 @@ add_task(async function main() {
   await promiseTestOnWindow(false, TESTS[0].value);
   await promiseTestOnWindow(true, TESTS[0].value);
 });
-

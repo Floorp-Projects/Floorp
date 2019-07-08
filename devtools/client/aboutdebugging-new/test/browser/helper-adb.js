@@ -10,8 +10,10 @@ async function checkAdbNotRunning() {
   const { check } = require("devtools/shared/adb/adb-running-checker");
   const isAdbAlreadyRunning = await check();
   if (isAdbAlreadyRunning) {
-    throw new Error("The ADB process is already running on this machine, it should be " +
-      "stopped before running this test");
+    throw new Error(
+      "The ADB process is already running on this machine, it should be " +
+        "stopped before running this test"
+    );
   }
 }
 /* exported checkAdbNotRunning */

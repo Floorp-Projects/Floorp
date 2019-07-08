@@ -15,7 +15,7 @@ add_task(async function() {
   Services.prefs.setBoolPref(PREF, true);
 
   await addTab(TESTCASE_URI);
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   await selectNode("div", inspector);
 
@@ -35,8 +35,9 @@ add_task(async function() {
 
 function verifyLinkText(view, text) {
   info("Verifying that the rule-view stylesheet link is " + text);
-  const label = getRuleViewLinkByIndex(view, 1)
-    .querySelector(".ruleview-rule-source-label");
+  const label = getRuleViewLinkByIndex(view, 1).querySelector(
+    ".ruleview-rule-source-label"
+  );
   return waitForSuccess(
     () => label.textContent == text,
     "Link text changed to display correct location: " + text

@@ -16,7 +16,7 @@ from mozterm import Terminal
 
 from ..cli import BaseTryParser
 from ..tasks import generate_tasks, filter_tasks_by_paths
-from ..push import check_working_directory, push_to_try
+from ..push import check_working_directory, push_to_try, generate_try_task_config
 
 terminal = Terminal()
 
@@ -121,7 +121,9 @@ class FuzzyParser(BaseTryParser):
           }],
     ]
     common_groups = ['push', 'task', 'preset']
-    templates = ['artifact', 'path', 'env', 'rebuild', 'chemspill-prio', 'gecko-profile']
+    templates = [
+        'artifact', 'path', 'env', 'rebuild', 'chemspill-prio', 'gecko-profile', 'disable-pgo',
+    ]
 
 
 def run_cmd(cmd, cwd=None):
@@ -219,7 +221,7 @@ def filter_target_task(task):
     return not any(re.search(pattern, task) for pattern in TARGET_TASK_FILTERS)
 
 
-def run(update=False, query=None, intersect_query=None, templates=None, full=False,
+def run(update=False, query=None, intersect_query=None, try_config=None, full=False,
         parameters=None, save_query=False, push=True, message='{msg}',
         test_paths=None, exact=False, closed_tree=False):
     fzf = fzf_bootstrap(update)
@@ -295,5 +297,6 @@ def run(update=False, query=None, intersect_query=None, templates=None, full=Fal
         args.append("paths={}".format(':'.join(test_paths)))
     if args:
         msg = "{} {}".format(msg, '&'.join(args))
-    return push_to_try('fuzzy', message.format(msg=msg), selected, templates, push=push,
-                       closed_tree=closed_tree)
+    return push_to_try('fuzzy', message.format(msg=msg),
+                       try_task_config=generate_try_task_config('fuzzy', selected, try_config),
+                       push=push, closed_tree=closed_tree)

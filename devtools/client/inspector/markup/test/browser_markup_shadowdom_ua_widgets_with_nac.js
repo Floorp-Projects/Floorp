@@ -4,7 +4,9 @@
 
 "use strict";
 
-const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
+const TEST_URL =
+  `data:text/html;charset=utf-8,` +
+  encodeURIComponent(`
   <video id="video-with-subtitles" style="border: 4px solid red">
     <track label="en" kind="subtitles" srclang="en" src="data:text/vtt,WEBVTT" default>
   </video>`);
@@ -15,7 +17,9 @@ const TEST_ID = "#video-with-subtitles";
 // siblings of the ua widget closed shadow-root.
 
 add_task(async function testWithoutShowAllAnonymousContent() {
-  info("Test a <video> element with subtitles, without showAllAnonymousContent");
+  info(
+    "Test a <video> element with subtitles, without showAllAnonymousContent"
+  );
   const { inspector } = await setup({ showAllAnonymousContent: false });
 
   // We should only see the shadow root and the authored <track> element.
@@ -27,7 +31,9 @@ add_task(async function testWithoutShowAllAnonymousContent() {
 });
 
 add_task(async function testWithShowAllAnonymousContent() {
-  info("Test a <video> element with subtitles, expect to see native anonymous content");
+  info(
+    "Test a <video> element with subtitles, expect to see native anonymous content"
+  );
   const { inspector } = await setup({ showAllAnonymousContent: true });
 
   // We should only see the shadow root, the <track> and two NAC elements <img> and <div>.
@@ -41,8 +47,9 @@ add_task(async function testWithShowAllAnonymousContent() {
 });
 
 add_task(async function testElementPicker() {
-  const { inspector, markup, toolbox, testActor } =
-    await setup({ showAllAnonymousContent: true });
+  const { inspector, markup, toolbox, testActor } = await setup({
+    showAllAnonymousContent: true,
+  });
 
   info("Waiting for element picker to become active.");
   await startPicker(toolbox);
@@ -51,7 +58,9 @@ add_task(async function testElementPicker() {
   await hoverElement(inspector, testActor, TEST_ID, 50, 50);
   await pickElement(inspector, testActor, TEST_ID, 50, 50);
 
-  info("Check that the markup view has the expected content after using the picker");
+  info(
+    "Check that the markup view has the expected content after using the picker"
+  );
   const tree = `
   body
     video
@@ -64,12 +73,18 @@ add_task(async function testElementPicker() {
   await assertMarkupViewAsTree(tree, "body", inspector);
 
   const moreNodesLink = markup.doc.querySelector(".more-nodes");
-  ok(!moreNodesLink, "There is no 'more nodes' button displayed in the markup view");
+  ok(
+    !moreNodesLink,
+    "There is no 'more nodes' button displayed in the markup view"
+  );
 });
 
 async function setup({ showAllAnonymousContent }) {
   await pushPref("devtools.inspector.showUserAgentShadowRoots", true);
-  await pushPref("devtools.inspector.showAllAnonymousContent", showAllAnonymousContent);
+  await pushPref(
+    "devtools.inspector.showAllAnonymousContent",
+    showAllAnonymousContent
+  );
 
   const { inspector, testActor, toolbox } = await openInspectorForURL(TEST_URL);
   const { markup } = inspector;

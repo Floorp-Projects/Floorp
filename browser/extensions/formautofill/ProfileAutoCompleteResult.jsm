@@ -6,24 +6,40 @@
 
 var EXPORTED_SYMBOLS = ["AddressResult", "CreditCardResult"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {FormAutofill} = ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
-ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
-                               "resource://formautofill/FormAutofillUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "CreditCard",
-  "resource://gre/modules/CreditCard.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { FormAutofill } = ChromeUtils.import(
+  "resource://formautofill/FormAutofill.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormAutofillUtils",
+  "resource://formautofill/FormAutofillUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "CreditCard",
+  "resource://gre/modules/CreditCard.jsm"
+);
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "insecureWarningEnabled", "security.insecure_field_warning.contextual.enabled");
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "insecureWarningEnabled",
+  "security.insecure_field_warning.contextual.enabled"
+);
 
 this.log = null;
 FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 class ProfileAutoCompleteResult {
-  constructor(searchString, focusedFieldName, allFieldNames, matchingProfiles, {
-    resultCode = null,
-    isSecure = true,
-    isInputAutofilled = false,
-  }) {
+  constructor(
+    searchString,
+    focusedFieldName,
+    allFieldNames,
+    matchingProfiles,
+    { resultCode = null, isSecure = true, isInputAutofilled = false }
+  ) {
     log.debug("Constructing new ProfileAutoCompleteResult:", [...arguments]);
 
     // nsISupports
@@ -44,13 +60,15 @@ class ProfileAutoCompleteResult {
     // The value to indicate whether the focused input has been autofilled or not.
     this._isInputAutofilled = isInputAutofilled;
     // All fillable field names in the form including the field name of the currently-focused input.
-    this._allFieldNames = [...this._matchingProfiles.reduce((fieldSet, curProfile) => {
-      for (let field of Object.keys(curProfile)) {
-        fieldSet.add(field);
-      }
+    this._allFieldNames = [
+      ...this._matchingProfiles.reduce((fieldSet, curProfile) => {
+        for (let field of Object.keys(curProfile)) {
+          fieldSet.add(field);
+        }
 
-      return fieldSet;
-    }, new Set())].filter(field => allFieldNames.includes(field));
+        return fieldSet;
+      }, new Set()),
+    ].filter(field => allFieldNames.includes(field));
 
     // Force return success code if the focused field is auto-filled in order
     // to show clear form button popup.
@@ -67,9 +85,11 @@ class ProfileAutoCompleteResult {
     }
 
     // An array of primary and secondary labels for each profile.
-    this._popupLabels = this._generateLabels(this._focusedFieldName,
-                                             this._allFieldNames,
-                                             this._matchingProfiles);
+    this._popupLabels = this._generateLabels(
+      this._focusedFieldName,
+      this._allFieldNames,
+      this._matchingProfiles
+    );
   }
 
   /**
@@ -81,7 +101,10 @@ class ProfileAutoCompleteResult {
 
   _checkIndexBounds(index) {
     if (index < 0 || index >= this._popupLabels.length) {
-      throw Components.Exception("Index out of range.", Cr.NS_ERROR_ILLEGAL_VALUE);
+      throw Components.Exception(
+        "Index out of range.",
+        Cr.NS_ERROR_ILLEGAL_VALUE
+      );
     }
   }
 
@@ -190,23 +213,15 @@ class AddressResult extends ProfileAutoCompleteResult {
     // We group similar fields into the same field name so we won't pick another
     // field in the same group as the secondary label.
     const GROUP_FIELDS = {
-      "name": [
-        "name",
-        "given-name",
-        "additional-name",
-        "family-name",
-      ],
+      name: ["name", "given-name", "additional-name", "family-name"],
       "street-address": [
         "street-address",
         "address-line1",
         "address-line2",
         "address-line3",
       ],
-      "country-name": [
-        "country",
-        "country-name",
-      ],
-      "tel": [
+      "country-name": ["country", "country-name"],
+      tel: [
         "tel",
         "tel-country-code",
         "tel-national",
@@ -218,16 +233,16 @@ class AddressResult extends ProfileAutoCompleteResult {
     };
 
     const secondaryLabelOrder = [
-      "street-address",  // Street address
-      "name",            // Full name
-      "address-level3",  // Townland / Neighborhood / Village
-      "address-level2",  // City/Town
-      "organization",    // Company or organization name
-      "address-level1",  // Province/State (Standardized code if possible)
-      "country-name",    // Country name
-      "postal-code",     // Postal code
-      "tel",             // Phone number
-      "email",           // Email address
+      "street-address", // Street address
+      "name", // Full name
+      "address-level3", // Townland / Neighborhood / Village
+      "address-level2", // City/Town
+      "organization", // Company or organization name
+      "address-level1", // Province/State (Standardized code if possible)
+      "country-name", // Country name
+      "postal-code", // Postal code
+      "tel", // Phone number
+      "email", // Email address
     ];
 
     for (let field in GROUP_FIELDS) {
@@ -242,13 +257,17 @@ class AddressResult extends ProfileAutoCompleteResult {
         continue;
       }
 
-      let matching = GROUP_FIELDS[currentFieldName] ?
-        allFieldNames.some(fieldName => GROUP_FIELDS[currentFieldName].includes(fieldName)) :
-        allFieldNames.includes(currentFieldName);
+      let matching = GROUP_FIELDS[currentFieldName]
+        ? allFieldNames.some(fieldName =>
+            GROUP_FIELDS[currentFieldName].includes(fieldName)
+          )
+        : allFieldNames.includes(currentFieldName);
 
       if (matching) {
-        if (currentFieldName == "street-address" &&
-            profile["-moz-street-address-one-line"]) {
+        if (
+          currentFieldName == "street-address" &&
+          profile["-moz-street-address-one-line"]
+        ) {
           return profile["-moz-street-address-one-line"];
         }
         return profile[currentFieldName];
@@ -261,27 +280,33 @@ class AddressResult extends ProfileAutoCompleteResult {
   _generateLabels(focusedFieldName, allFieldNames, profiles) {
     if (this._isInputAutofilled) {
       return [
-        {primary: "", secondary: ""}, // Clear button
-        {primary: "", secondary: ""}, // Footer
+        { primary: "", secondary: "" }, // Clear button
+        { primary: "", secondary: "" }, // Footer
       ];
     }
 
     // Skip results without a primary label.
-    let labels = profiles.filter(profile => {
-      return !!profile[focusedFieldName];
-    }).map(profile => {
-      let primaryLabel = profile[focusedFieldName];
-      if (focusedFieldName == "street-address" &&
-          profile["-moz-street-address-one-line"]) {
-        primaryLabel = profile["-moz-street-address-one-line"];
-      }
-      return {
-        primary: primaryLabel,
-        secondary: this._getSecondaryLabel(focusedFieldName,
-                                           allFieldNames,
-                                           profile),
-      };
-    });
+    let labels = profiles
+      .filter(profile => {
+        return !!profile[focusedFieldName];
+      })
+      .map(profile => {
+        let primaryLabel = profile[focusedFieldName];
+        if (
+          focusedFieldName == "street-address" &&
+          profile["-moz-street-address-one-line"]
+        ) {
+          primaryLabel = profile["-moz-street-address-one-line"];
+        }
+        return {
+          primary: primaryLabel,
+          secondary: this._getSecondaryLabel(
+            focusedFieldName,
+            allFieldNames,
+            profile
+          ),
+        };
+      });
     // Add an empty result entry for footer. Its content will come from
     // the footer binding, so don't assign any value to it.
     // The additional properties: categories and focusedCategory are required of
@@ -289,8 +314,12 @@ class AddressResult extends ProfileAutoCompleteResult {
     labels.push({
       primary: "",
       secondary: "",
-      categories: FormAutofillUtils.getCategoriesFromFieldNames(this._allFieldNames),
-      focusedCategory: FormAutofillUtils.getCategoryFromFieldName(this._focusedFieldName),
+      categories: FormAutofillUtils.getCategoriesFromFieldNames(
+        this._allFieldNames
+      ),
+      focusedCategory: FormAutofillUtils.getCategoryFromFieldName(
+        this._focusedFieldName
+      ),
     });
 
     return labels;
@@ -310,17 +339,13 @@ class CreditCardResult extends ProfileAutoCompleteResult {
         "cc-additional-name",
         "cc-family-name",
       ],
-      "cc-exp": [
-        "cc-exp",
-        "cc-exp-month",
-        "cc-exp-year",
-      ],
+      "cc-exp": ["cc-exp", "cc-exp-month", "cc-exp-year"],
     };
 
     const secondaryLabelOrder = [
-      "cc-number",       // Credit card number
-      "cc-name",         // Full name
-      "cc-exp",          // Expiration date
+      "cc-number", // Credit card number
+      "cc-name", // Full name
+      "cc-exp", // Expiration date
     ];
 
     for (let field in GROUP_FIELDS) {
@@ -335,13 +360,17 @@ class CreditCardResult extends ProfileAutoCompleteResult {
         continue;
       }
 
-      let matching = GROUP_FIELDS[currentFieldName] ?
-        allFieldNames.some(fieldName => GROUP_FIELDS[currentFieldName].includes(fieldName)) :
-        allFieldNames.includes(currentFieldName);
+      let matching = GROUP_FIELDS[currentFieldName]
+        ? allFieldNames.some(fieldName =>
+            GROUP_FIELDS[currentFieldName].includes(fieldName)
+          )
+        : allFieldNames.includes(currentFieldName);
 
       if (matching) {
         if (currentFieldName == "cc-number") {
-          let {affix, label} = CreditCard.formatMaskedNumber(profile[currentFieldName]);
+          let { affix, label } = CreditCard.formatMaskedNumber(
+            profile[currentFieldName]
+          );
           return affix + label;
         }
         return profile[currentFieldName];
@@ -356,40 +385,51 @@ class CreditCardResult extends ProfileAutoCompleteResult {
       if (!insecureWarningEnabled) {
         return [];
       }
-      let brandName = FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
+      let brandName = FormAutofillUtils.brandBundle.GetStringFromName(
+        "brandShortName"
+      );
 
-      return [FormAutofillUtils.stringBundle.formatStringFromName("insecureFieldWarningDescription", [brandName])];
+      return [
+        FormAutofillUtils.stringBundle.formatStringFromName(
+          "insecureFieldWarningDescription",
+          [brandName]
+        ),
+      ];
     }
 
     if (this._isInputAutofilled) {
       return [
-        {primary: "", secondary: ""}, // Clear button
-        {primary: "", secondary: ""}, // Footer
+        { primary: "", secondary: "" }, // Clear button
+        { primary: "", secondary: "" }, // Footer
       ];
     }
 
     // Skip results without a primary label.
-    let labels = profiles.filter(profile => {
-      return !!profile[focusedFieldName];
-    }).map(profile => {
-      let primaryAffix;
-      let primary = profile[focusedFieldName];
+    let labels = profiles
+      .filter(profile => {
+        return !!profile[focusedFieldName];
+      })
+      .map(profile => {
+        let primaryAffix;
+        let primary = profile[focusedFieldName];
 
-      if (focusedFieldName == "cc-number") {
-        let {affix, label} = CreditCard.formatMaskedNumber(primary);
-        primaryAffix = affix;
-        primary = label;
-      }
-      return {
-        primaryAffix,
-        primary,
-        secondary: this._getSecondaryLabel(focusedFieldName,
-                                           allFieldNames,
-                                           profile),
-      };
-    });
+        if (focusedFieldName == "cc-number") {
+          let { affix, label } = CreditCard.formatMaskedNumber(primary);
+          primaryAffix = affix;
+          primary = label;
+        }
+        return {
+          primaryAffix,
+          primary,
+          secondary: this._getSecondaryLabel(
+            focusedFieldName,
+            allFieldNames,
+            profile
+          ),
+        };
+      });
     // Add an empty result entry for footer.
-    labels.push({primary: "", secondary: ""});
+    labels.push({ primary: "", secondary: "" });
 
     return labels;
   }

@@ -2,20 +2,27 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-
 XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
   return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js", {});
 });
 
-ChromeUtils.defineModuleGetter(this, "WebChannel",
-                               "resource://gre/modules/WebChannel.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "WebChannel",
+  "resource://gre/modules/WebChannel.jsm"
+);
 
 // FxAccountsWebChannel isn't explicitly exported by FxAccountsWebChannel.jsm
 // but we can get it here via a backstage pass.
-var {FxAccountsWebChannel} = ChromeUtils.import("resource://gre/modules/FxAccountsWebChannel.jsm", null);
+var { FxAccountsWebChannel } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsWebChannel.jsm",
+  null
+);
 
 const TEST_HTTP_PATH = "http://example.com";
-const TEST_BASE_URL = TEST_HTTP_PATH + "/browser/browser/base/content/test/sync/browser_fxa_web_channel.html";
+const TEST_BASE_URL =
+  TEST_HTTP_PATH +
+  "/browser/browser/base/content/test/sync/browser_fxa_web_channel.html";
 const TEST_CHANNEL_ID = "account_updates_test";
 
 var gTests = [
@@ -27,26 +34,34 @@ var gTests = [
         channel_id: TEST_CHANNEL_ID,
       });
       let promiseObserver = new Promise((resolve, reject) => {
-        makeObserver(FxAccountsCommon.ON_PROFILE_CHANGE_NOTIFICATION, function(subject, topic, data) {
+        makeObserver(FxAccountsCommon.ON_PROFILE_CHANGE_NOTIFICATION, function(
+          subject,
+          topic,
+          data
+        ) {
           Assert.equal(data, "abc123");
           client.tearDown();
           resolve();
         });
       });
 
-      await BrowserTestUtils.withNewTab({
-        gBrowser,
-        url: TEST_BASE_URL + "?profile_change",
-      }, async function() {
-        await promiseObserver;
-      });
+      await BrowserTestUtils.withNewTab(
+        {
+          gBrowser,
+          url: TEST_BASE_URL + "?profile_change",
+        },
+        async function() {
+          await promiseObserver;
+        }
+      );
     },
   },
   {
-    desc: "fxa web channel - login messages should notify the fxAccounts object",
+    desc:
+      "fxa web channel - login messages should notify the fxAccounts object",
     async run() {
       let promiseLogin = new Promise((resolve, reject) => {
-        let login = (accountData) => {
+        let login = accountData => {
           Assert.equal(typeof accountData.authAt, "number");
           Assert.equal(accountData.email, "testuser@testuser.com");
           Assert.equal(accountData.keyFetchToken, "key_fetch_token");
@@ -68,12 +83,15 @@ var gTests = [
         });
       });
 
-      await BrowserTestUtils.withNewTab({
-        gBrowser,
-        url: TEST_BASE_URL + "?login",
-      }, async function() {
-        await promiseLogin;
-      });
+      await BrowserTestUtils.withNewTab(
+        {
+          gBrowser,
+          url: TEST_BASE_URL + "?login",
+        },
+        async function() {
+          await promiseLogin;
+        }
+      );
     },
   },
   {
@@ -86,7 +104,10 @@ var gTests = [
         // responses sent to content are echoed back over the
         // `fxaccounts_webchannel_response_echo` channel. Ensure the
         // fxaccounts:can_link_account message is responded to.
-        let echoWebChannel = new WebChannel("fxaccounts_webchannel_response_echo", webChannelOrigin);
+        let echoWebChannel = new WebChannel(
+          "fxaccounts_webchannel_response_echo",
+          webChannelOrigin
+        );
         echoWebChannel.listen((webChannelId, message, target) => {
           Assert.equal(message.command, "fxaccounts:can_link_account");
           Assert.equal(message.messageId, 2);
@@ -109,19 +130,23 @@ var gTests = [
         });
       });
 
-      await BrowserTestUtils.withNewTab({
-        gBrowser,
-        url: properUrl,
-      }, async function() {
-        await promiseEcho;
-      });
+      await BrowserTestUtils.withNewTab(
+        {
+          gBrowser,
+          url: properUrl,
+        },
+        async function() {
+          await promiseEcho;
+        }
+      );
     },
   },
   {
-    desc: "fxa web channel - logout messages should notify the fxAccounts object",
+    desc:
+      "fxa web channel - logout messages should notify the fxAccounts object",
     async run() {
       let promiseLogout = new Promise((resolve, reject) => {
-        let logout = (uid) => {
+        let logout = uid => {
           Assert.equal(uid, "uid");
 
           client.tearDown();
@@ -137,19 +162,23 @@ var gTests = [
         });
       });
 
-      await BrowserTestUtils.withNewTab({
-        gBrowser,
-        url: TEST_BASE_URL + "?logout",
-      }, async function() {
-        await promiseLogout;
-      });
+      await BrowserTestUtils.withNewTab(
+        {
+          gBrowser,
+          url: TEST_BASE_URL + "?logout",
+        },
+        async function() {
+          await promiseLogout;
+        }
+      );
     },
   },
   {
-    desc: "fxa web channel - delete messages should notify the fxAccounts object",
+    desc:
+      "fxa web channel - delete messages should notify the fxAccounts object",
     async run() {
       let promiseDelete = new Promise((resolve, reject) => {
-        let logout = (uid) => {
+        let logout = uid => {
           Assert.equal(uid, "uid");
 
           client.tearDown();
@@ -165,12 +194,15 @@ var gTests = [
         });
       });
 
-      await BrowserTestUtils.withNewTab({
-        gBrowser,
-        url: TEST_BASE_URL + "?delete",
-      }, async function() {
-        await promiseDelete;
-      });
+      await BrowserTestUtils.withNewTab(
+        {
+          gBrowser,
+          url: TEST_BASE_URL + "?delete",
+        },
+        async function() {
+          await promiseDelete;
+        }
+      );
     },
   },
 ]; // gTests
@@ -192,13 +224,17 @@ function makeObserver(aObserveTopic, aObserveFunc) {
 }
 
 registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess");
+  Services.prefs.clearUserPref(
+    "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess"
+  );
 });
-
 
 function test() {
   waitForExplicitFinish();
-  Services.prefs.setBoolPref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
+  Services.prefs.setBoolPref(
+    "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess",
+    false
+  );
 
   (async function() {
     for (let testCase of gTests) {

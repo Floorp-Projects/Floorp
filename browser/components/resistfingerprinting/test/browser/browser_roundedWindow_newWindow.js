@@ -6,14 +6,15 @@
 const CC = Components.Constructor;
 
 const TEST_DOMAIN = "http://example.net/";
-const TEST_PATH = TEST_DOMAIN + "browser/browser/components/resistfingerprinting/test/browser/";
+const TEST_PATH =
+  TEST_DOMAIN + "browser/browser/components/resistfingerprinting/test/browser/";
 
 let gMaxAvailWidth;
 let gMaxAvailHeight;
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({"set":
-    [["privacy.resistFingerprinting", true]],
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.resistFingerprinting", true]],
   });
 
   // Calculate the maximum available size.
@@ -29,18 +30,34 @@ add_task(async function test_new_window() {
 
   // Load a page and verify its window size.
   let tab = await BrowserTestUtils.openNewForegroundTab(
-    win.gBrowser, TEST_PATH + "file_dummy.html");
+    win.gBrowser,
+    TEST_PATH + "file_dummy.html"
+  );
 
-  await ContentTask.spawn(tab.linkedBrowser, {gMaxAvailWidth, gMaxAvailHeight},
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    { gMaxAvailWidth, gMaxAvailHeight },
     async function(input) {
-      is(content.screen.width, input.gMaxAvailWidth,
-        "The screen.width has a correct rounded value");
-      is(content.screen.height, input.gMaxAvailHeight,
-        "The screen.height has a correct rounded value");
-      is(content.innerWidth, input.gMaxAvailWidth,
-        "The window.innerWidth has a correct rounded value");
-      is(content.innerHeight, input.gMaxAvailHeight,
-        "The window.innerHeight has a correct rounded value");
+      is(
+        content.screen.width,
+        input.gMaxAvailWidth,
+        "The screen.width has a correct rounded value"
+      );
+      is(
+        content.screen.height,
+        input.gMaxAvailHeight,
+        "The screen.height has a correct rounded value"
+      );
+      is(
+        content.innerWidth,
+        input.gMaxAvailWidth,
+        "The window.innerWidth has a correct rounded value"
+      );
+      is(
+        content.innerHeight,
+        input.gMaxAvailHeight,
+        "The window.innerHeight has a correct rounded value"
+      );
     }
   );
 

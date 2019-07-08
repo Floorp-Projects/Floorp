@@ -1,13 +1,15 @@
 SimpleTest.waitForExplicitFinish();
 
 // The main testing function.
-var test = function (isContent) {
+var test = function(isContent) {
   // Each definition is [eventType, prefSetting]
   // Where we are setting the "privacy.resistFingerprinting" pref.
-  let eventDefs = [["mousedown", true],
-                   ["mouseup", true],
-                   ["mousedown", false],
-                   ["mouseup", false]];
+  let eventDefs = [
+    ["mousedown", true],
+    ["mouseup", true],
+    ["mousedown", false],
+    ["mouseup", false],
+  ];
 
   let testCounter = 0;
 
@@ -15,11 +17,19 @@ var test = function (isContent) {
   let setup;
 
   // This function is called when the event handler fires.
-  let handleEvent = function (event, prefVal) {
+  let handleEvent = function(event, prefVal) {
     let resisting = prefVal && isContent;
     if (resisting) {
-      is(event.screenX, event.clientX, "event.screenX and event.clientX should be the same");
-      is(event.screenY, event.clientY, "event.screenY and event.clientY should be the same");
+      is(
+        event.screenX,
+        event.clientX,
+        "event.screenX and event.clientX should be the same"
+      );
+      is(
+        event.screenY,
+        event.clientY,
+        "event.screenY and event.clientY should be the same"
+      );
     } else {
       // We can't be sure about X coordinates not being equal, but we can test Y.
       isnot(event.screenY, event.clientY, "event.screenY !== event.clientY");
@@ -36,14 +46,18 @@ var test = function (isContent) {
   // and then synthesize a mouse event in the div, to test
   // whether the resulting events resist fingerprinting by
   // suppressing absolute screen coordinates.
-  nextTest = function () {
+  nextTest = function() {
     let [eventType, prefVal] = eventDefs[testCounter];
-    SpecialPowers.pushPrefEnv({set:[["privacy.resistFingerprinting", prefVal]]},
-      function () {
+    SpecialPowers.pushPrefEnv(
+      { set: [["privacy.resistFingerprinting", prefVal]] },
+      function() {
         // The following code creates a new div for each event in eventDefs,
         // attaches a listener to listen for the event, and then generates
         // a fake event at the center of the div.
-        let div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+        let div = document.createElementNS(
+          "http://www.w3.org/1999/xhtml",
+          "div"
+        );
         div.style.width = "10px";
         div.style.height = "10px";
         div.style.backgroundColor = "red";
@@ -56,14 +70,14 @@ var test = function (isContent) {
           div.addEventListener(eventType, event => handleEvent(event, prefVal));
           // For some reason, the following synthesizeMouseAtCenter call only seems to run if we
           // wrap it in a window.setTimeout(..., 0).
-          window.setTimeout(function () {
-            synthesizeMouseAtCenter(div, {type : eventType});
+          window.setTimeout(function() {
+            synthesizeMouseAtCenter(div, { type: eventType });
           }, 0);
         }, 0);
-      });
+      }
+    );
   };
 
   // Now run by starting with the 0th event.
   nextTest();
-
 };

@@ -6,7 +6,6 @@ const testserver = createHttpServer();
 gPort = testserver.identity.primaryPort;
 testserver.registerDirectory("/data/", do_get_file("../data"));
 
-
 function load_blocklist(aFile) {
   return new Promise((resolve, reject) => {
     Services.obs.addObserver(function observer() {
@@ -15,9 +14,13 @@ function load_blocklist(aFile) {
       resolve();
     }, "addon-blocklist-updated");
 
-    Services.prefs.setCharPref("extensions.blocklist.url", `http://localhost:${gPort}/data/${aFile}`);
-    var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
-                    getService(Ci.nsITimerCallback);
+    Services.prefs.setCharPref(
+      "extensions.blocklist.url",
+      `http://localhost:${gPort}/data/${aFile}`
+    );
+    var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(
+      Ci.nsITimerCallback
+    );
     blocklist.notify(null);
   });
 }
@@ -37,7 +40,8 @@ add_task(async function test_softblock() {
           id: "softblock1@tests.mozilla.org",
           strict_min_version: "2",
           strict_max_version: "3",
-        }},
+        },
+      },
     },
   });
   let s1 = await promiseAddonByID("softblock1@tests.mozilla.org");

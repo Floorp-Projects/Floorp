@@ -4,11 +4,16 @@
 "use strict";
 
 const ORIGIN = "https://example.com";
-const PERMISSIONS_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) + "permissions.html";
+const PERMISSIONS_PAGE =
+  getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) +
+  "permissions.html";
 
 function assertShown(task) {
   return BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
-    let popupshown = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+    let popupshown = BrowserTestUtils.waitForEvent(
+      PopupNotifications.panel,
+      "popupshown"
+    );
 
     await ContentTask.spawn(browser, null, task);
 
@@ -20,7 +25,10 @@ function assertShown(task) {
 
 function assertNotShown(task) {
   return BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
-    let popupshown = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+    let popupshown = BrowserTestUtils.waitForEvent(
+      PopupNotifications.panel,
+      "popupshown"
+    );
 
     await ContentTask.spawn(browser, null, task);
 
@@ -36,7 +44,10 @@ function assertNotShown(task) {
 
 // Tests that notification permissions are automatically denied without user interaction.
 add_task(async function testNotificationPermission() {
-  Services.prefs.setBoolPref("dom.webnotifications.requireuserinteraction", true);
+  Services.prefs.setBoolPref(
+    "dom.webnotifications.requireuserinteraction",
+    true
+  );
 
   // First test that when user interaction is required, requests
   // with user interaction will show the permission prompt.
@@ -64,7 +75,10 @@ add_task(async function testNotificationPermission() {
     is(response, "default", "The request was automatically denied");
   });
 
-  Services.prefs.setBoolPref("dom.webnotifications.requireuserinteraction", false);
+  Services.prefs.setBoolPref(
+    "dom.webnotifications.requireuserinteraction",
+    false
+  );
 
   // Finally test that those requests will show a prompt again
   // if the pref has been set to false.

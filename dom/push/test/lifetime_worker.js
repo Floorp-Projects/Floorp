@@ -9,25 +9,26 @@ self.onfetch = function(event) {
 
   var currentState = state;
   event.waitUntil(
-    self.clients.matchAll()
-      .then(clients => {
-        clients.forEach(client => {
-          client.postMessage({type: "fetch", state: currentState});
-        });
-      })
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({ type: "fetch", state: currentState });
+      });
+    })
   );
 
   if (event.request.url.includes("update")) {
     state = "update";
   } else if (event.request.url.includes("wait")) {
-    event.respondWith(new Promise(function(res, rej) {
-      if (resolvePromiseCallback) {
-        dump("ERROR: service worker was already waiting on a promise.\n");
-      }
-      resolvePromiseCallback = function() {
-        res(new Response("resolve_respondWithPromise"));
-      };
-    }));
+    event.respondWith(
+      new Promise(function(res, rej) {
+        if (resolvePromiseCallback) {
+          dump("ERROR: service worker was already waiting on a promise.\n");
+        }
+        resolvePromiseCallback = function() {
+          res(new Response("resolve_respondWithPromise"));
+        };
+      })
+    );
     state = "wait";
   } else if (event.request.url.includes("release")) {
     state = "release";
@@ -48,23 +49,27 @@ self.onmessage = function(event) {
   var lastState = state;
   state = event.data;
   if (state === "wait") {
-    event.waitUntil(new Promise(function(res, rej) {
-      if (resolvePromiseCallback) {
-        dump("ERROR: service worker was already waiting on a promise.\n");
-      }
-      resolvePromiseCallback = res;
-    }));
+    event.waitUntil(
+      new Promise(function(res, rej) {
+        if (resolvePromiseCallback) {
+          dump("ERROR: service worker was already waiting on a promise.\n");
+        }
+        resolvePromiseCallback = res;
+      })
+    );
   } else if (state === "release") {
     resolvePromise();
   }
-  event.source.postMessage({type: "message", state: lastState});
+  event.source.postMessage({ type: "message", state: lastState });
 };
 
 self.onpush = function(event) {
   var pushResolve;
-  event.waitUntil(new Promise(function(resolve) {
-    pushResolve = resolve;
-  }));
+  event.waitUntil(
+    new Promise(function(resolve) {
+      pushResolve = resolve;
+    })
+  );
 
   // FIXME(catalinb): push message carry no data. So we assume the only
   // push message we get is "wait"
@@ -73,7 +78,7 @@ self.onpush = function(event) {
       dump("ERROR: no clients to send the response to.\n");
     }
 
-    client[0].postMessage({type: "push", state});
+    client[0].postMessage({ type: "push", state });
 
     state = "wait";
     if (resolvePromiseCallback) {

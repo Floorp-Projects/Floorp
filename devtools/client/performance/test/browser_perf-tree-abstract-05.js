@@ -7,8 +7,12 @@
  * supports PageUp/PageDown/Home/End keys.
  */
 
-const { appendAndWaitForPaint } = require("devtools/client/performance/test/helpers/dom-utils");
-const { synthesizeCustomTreeClass } = require("devtools/client/performance/test/helpers/synth-utils");
+const {
+  appendAndWaitForPaint,
+} = require("devtools/client/performance/test/helpers/dom-utils");
+const {
+  synthesizeCustomTreeClass,
+} = require("devtools/client/performance/test/helpers/synth-utils");
 
 add_task(async function() {
   const { MyCustomTreeItem } = synthesizeCustomTreeClass();
@@ -35,69 +39,95 @@ add_task(async function() {
   treeRoot.focus();
   treeRoot.expand();
 
-  is(document.commandDispatcher.focusedElement, treeRoot.target,
-    "The root node is focused.");
+  is(
+    document.commandDispatcher.focusedElement,
+    treeRoot.target,
+    "The root node is focused."
+  );
 
   // Test HOME and END
 
   key("VK_END");
-  is(document.commandDispatcher.focusedElement,
+  is(
+    document.commandDispatcher.focusedElement,
     treeRoot.getChild(myDataSrc.children.length - 1).target,
-    "The last node is focused.");
+    "The last node is focused."
+  );
 
   key("VK_HOME");
-  is(document.commandDispatcher.focusedElement, treeRoot.target,
-    "The first (root) node is focused.");
+  is(
+    document.commandDispatcher.focusedElement,
+    treeRoot.target,
+    "The first (root) node is focused."
+  );
 
   // Test PageUp and PageDown
 
   const nodesPerPageSize = treeRoot._getNodesPerPageSize();
 
   key("VK_PAGE_DOWN");
-  is(document.commandDispatcher.focusedElement,
+  is(
+    document.commandDispatcher.focusedElement,
     treeRoot.getChild(nodesPerPageSize - 1).target,
-    "The first node in the second page is focused.");
+    "The first node in the second page is focused."
+  );
 
   key("VK_PAGE_DOWN");
-  is(document.commandDispatcher.focusedElement,
+  is(
+    document.commandDispatcher.focusedElement,
     treeRoot.getChild(nodesPerPageSize * 2 - 1).target,
-    "The first node in the third page is focused.");
+    "The first node in the third page is focused."
+  );
 
   key("VK_PAGE_UP");
-  is(document.commandDispatcher.focusedElement,
+  is(
+    document.commandDispatcher.focusedElement,
     treeRoot.getChild(nodesPerPageSize - 1).target,
-    "The first node in the second page is focused.");
+    "The first node in the second page is focused."
+  );
 
   key("VK_PAGE_UP");
-  is(document.commandDispatcher.focusedElement, treeRoot.target,
-    "The first (root) node is focused.");
+  is(
+    document.commandDispatcher.focusedElement,
+    treeRoot.target,
+    "The first (root) node is focused."
+  );
 
   // Test PageUp in the middle of the first page
 
   let middleIndex = Math.floor(nodesPerPageSize / 2);
 
   treeRoot.getChild(middleIndex).target.focus();
-  is(document.commandDispatcher.focusedElement,
+  is(
+    document.commandDispatcher.focusedElement,
     treeRoot.getChild(middleIndex).target,
-    "The middle node in the first page is focused.");
+    "The middle node in the first page is focused."
+  );
 
   key("VK_PAGE_UP");
-  is(document.commandDispatcher.focusedElement, treeRoot.target,
-    "The first (root) node is focused.");
+  is(
+    document.commandDispatcher.focusedElement,
+    treeRoot.target,
+    "The first (root) node is focused."
+  );
 
   // Test PageDown in the middle of the last page
 
   middleIndex = Math.ceil(myDataSrc.children.length - middleIndex);
 
   treeRoot.getChild(middleIndex).target.focus();
-  is(document.commandDispatcher.focusedElement,
+  is(
+    document.commandDispatcher.focusedElement,
     treeRoot.getChild(middleIndex).target,
-    "The middle node in the last page is focused.");
+    "The middle node in the last page is focused."
+  );
 
   key("VK_PAGE_DOWN");
-  is(document.commandDispatcher.focusedElement,
+  is(
+    document.commandDispatcher.focusedElement,
     treeRoot.getChild(myDataSrc.children.length - 1).target,
-    "The last node is focused.");
+    "The last node is focused."
+  );
 
   container.remove();
 });

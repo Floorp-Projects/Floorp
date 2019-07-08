@@ -10,13 +10,13 @@ var EXPORTED_SYMBOLS = ["InlineSpellCheckerParent"];
 
 class InlineSpellCheckerParent extends JSWindowActorParent {
   selectDictionary({ localeCode }) {
-    this.sendAsyncMessage("InlineSpellChecker:selectDictionary",
-                          { localeCode });
+    this.sendAsyncMessage("InlineSpellChecker:selectDictionary", {
+      localeCode,
+    });
   }
 
   replaceMisspelling({ index }) {
-    this.sendAsyncMessage("InlineSpellChecker:replaceMisspelling",
-                          { index });
+    this.sendAsyncMessage("InlineSpellChecker:replaceMisspelling", { index });
   }
 
   toggleEnabled() {

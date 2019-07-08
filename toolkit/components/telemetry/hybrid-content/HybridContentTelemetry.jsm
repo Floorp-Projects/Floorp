@@ -6,10 +6,14 @@
 
 var EXPORTED_SYMBOLS = ["HybridContentTelemetry"];
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {TelemetryUtils} = ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TelemetryUtils } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryUtils.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 let HybridContentTelemetry = {
   _logger: null,
@@ -17,9 +21,10 @@ let HybridContentTelemetry = {
 
   get _log() {
     if (!this._logger) {
-      this._logger =
-        Log.repository.getLoggerWithMessagePrefix("Toolkit.Telemetry",
-                                                  "HybridContentTelemetry::");
+      this._logger = Log.repository.getLoggerWithMessagePrefix(
+        "Toolkit.Telemetry",
+        "HybridContentTelemetry::"
+      );
     }
 
     return this._logger;
@@ -36,10 +41,13 @@ let HybridContentTelemetry = {
       return;
     }
     this._log.trace("_lazyObserverInit - installing the pref observers.");
-    XPCOMUtils.defineLazyPreferenceGetter(this, "_uploadEnabled",
-                                          TelemetryUtils.Preferences.FhrUploadEnabled,
-                                          false, /* aDefaultValue */
-                                          () => this._broadcastPolicyUpdate());
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_uploadEnabled",
+      TelemetryUtils.Preferences.FhrUploadEnabled,
+      false /* aDefaultValue */,
+      () => this._broadcastPolicyUpdate()
+    );
     this._observerInstalled = true;
   },
 
@@ -50,16 +58,22 @@ let HybridContentTelemetry = {
    */
   onTelemetryMessage(aMessage, aData) {
     if (!this._hybridContentEnabled) {
-      this._log.trace("onTelemetryMessage - hybrid content telemetry is disabled.");
+      this._log.trace(
+        "onTelemetryMessage - hybrid content telemetry is disabled."
+      );
       return;
     }
 
-    this._log.trace("onTelemetryMessage - Message received, dispatching API call.");
-    if (!aData ||
-        !("data" in aData) ||
-        !("name" in aData) ||
-        typeof aData.name != "string" ||
-        typeof aData.data != "object") {
+    this._log.trace(
+      "onTelemetryMessage - Message received, dispatching API call."
+    );
+    if (
+      !aData ||
+      !("data" in aData) ||
+      !("name" in aData) ||
+      typeof aData.name != "string" ||
+      typeof aData.data != "object"
+    ) {
       this._log.error("onTelemetryMessage - received a malformed message.");
       return;
     }
@@ -71,9 +85,12 @@ let HybridContentTelemetry = {
    * content telemetry.
    */
   _broadcastPolicyUpdate() {
-    this._log.trace(`_broadcastPolicyUpdate - New value is ${this._uploadEnabled}.`);
-    Services.mm.broadcastAsyncMessage("HybridContentTelemetry:PolicyChanged",
-                                      {canUpload: this._uploadEnabled});
+    this._log.trace(
+      `_broadcastPolicyUpdate - New value is ${this._uploadEnabled}.`
+    );
+    Services.mm.broadcastAsyncMessage("HybridContentTelemetry:PolicyChanged", {
+      canUpload: this._uploadEnabled,
+    });
   },
 
   /**
@@ -92,25 +109,30 @@ let HybridContentTelemetry = {
     try {
       switch (aEndpoint) {
         case "init":
-            this._lazyObserverInit();
-            this._broadcastPolicyUpdate();
-            break;
+          this._lazyObserverInit();
+          this._broadcastPolicyUpdate();
+          break;
         case "registerEvents":
-            Services.telemetry.registerEvents(aData.category, aData.eventData);
+          Services.telemetry.registerEvents(aData.category, aData.eventData);
           break;
         case "recordEvent":
-            // Don't pass "undefined" for the optional |value| and |extra|:
-            // the Telemetry API expects them to be "null" if something is being
-            // passed.
-            let check = (data, key) => (key in data && typeof data[key] != "undefined");
-            Services.telemetry.recordEvent(aData.category,
-                                           aData.method,
-                                           aData.object,
-                                           check(aData, "value") ? aData.value : null,
-                                           check(aData, "extra") ? aData.extra : null);
+          // Don't pass "undefined" for the optional |value| and |extra|:
+          // the Telemetry API expects them to be "null" if something is being
+          // passed.
+          let check = (data, key) =>
+            key in data && typeof data[key] != "undefined";
+          Services.telemetry.recordEvent(
+            aData.category,
+            aData.method,
+            aData.object,
+            check(aData, "value") ? aData.value : null,
+            check(aData, "extra") ? aData.extra : null
+          );
           break;
         default:
-          this._log.error(`_dispatchAPICall - unknown "${aEndpoint}"" API call.`);
+          this._log.error(
+            `_dispatchAPICall - unknown "${aEndpoint}"" API call.`
+          );
       }
     } catch (e) {
       this._log.error(`_dispatchAPICall - error executing "${aEndpoint}".`, e);
@@ -118,6 +140,9 @@ let HybridContentTelemetry = {
   },
 };
 
-XPCOMUtils.defineLazyPreferenceGetter(HybridContentTelemetry, "_hybridContentEnabled",
-                                      TelemetryUtils.Preferences.HybridContentEnabled,
-                                      false /* aDefaultValue */);
+XPCOMUtils.defineLazyPreferenceGetter(
+  HybridContentTelemetry,
+  "_hybridContentEnabled",
+  TelemetryUtils.Preferences.HybridContentEnabled,
+  false /* aDefaultValue */
+);

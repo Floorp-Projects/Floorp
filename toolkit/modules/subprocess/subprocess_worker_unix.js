@@ -10,9 +10,11 @@
 /* import-globals-from subprocess_shared.js */
 /* import-globals-from subprocess_shared_unix.js */
 /* import-globals-from subprocess_worker_common.js */
-importScripts("resource://gre/modules/subprocess/subprocess_shared.js",
-              "resource://gre/modules/subprocess/subprocess_shared_unix.js",
-              "resource://gre/modules/subprocess/subprocess_worker_common.js");
+importScripts(
+  "resource://gre/modules/subprocess/subprocess_shared.js",
+  "resource://gre/modules/subprocess/subprocess_shared_unix.js",
+  "resource://gre/modules/subprocess/subprocess_worker_common.js"
+);
 
 const POLL_TIMEOUT = 5000;
 
@@ -50,7 +52,7 @@ class Pipe extends BasePipe {
       return this.closedPromise;
     }
 
-    for (let {reject} of this.pending) {
+    for (let { reject } of this.pending) {
       let error = new Error("File closed");
       error.errorCode = SubprocessConstants.ERROR_END_OF_FILE;
       reject(error);
@@ -106,7 +108,7 @@ class InputPipe extends Pipe {
     }
 
     return new Promise((resolve, reject) => {
-      this.pending.push({resolve, reject, length});
+      this.pending.push({ resolve, reject, length });
       io.updatePollFds();
     });
   }
@@ -151,7 +153,7 @@ class InputPipe extends Pipe {
     let result = false;
     let reads = this.pending;
     while (reads.length) {
-      let {resolve, length} = reads[0];
+      let { resolve, length } = reads[0];
 
       let buffer = this.readBuffer(length);
       if (buffer) {
@@ -199,7 +201,7 @@ class OutputPipe extends Pipe {
     }
 
     return new Promise((resolve, reject) => {
-      this.pending.push({resolve, reject, buffer, length: buffer.byteLength});
+      this.pending.push({ resolve, reject, buffer, length: buffer.byteLength });
       io.updatePollFds();
     });
   }
@@ -234,7 +236,7 @@ class OutputPipe extends Pipe {
   onReady() {
     let writes = this.pending;
     while (writes.length) {
-      let {buffer, resolve, length} = writes[0];
+      let { buffer, resolve, length } = writes[0];
 
       let written = this.writeBuffer(buffer);
 
@@ -377,7 +379,7 @@ class Process extends BaseProcess {
   }
 
   spawn(options) {
-    let {command, arguments: args} = options;
+    let { command, arguments: args } = options;
 
     let argv = this.stringArray(args);
     let envp = this.stringArray(options.environment);
@@ -394,7 +396,9 @@ class Process extends BaseProcess {
         libc.getcwd(cwd, cwd.length);
 
         if (libc.chdir(options.workdir) < 0) {
-          throw new Error(`Unable to change working directory to ${options.workdir}`);
+          throw new Error(
+            `Unable to change working directory to ${options.workdir}`
+          );
         }
       }
 
@@ -404,7 +408,14 @@ class Process extends BaseProcess {
       }
 
       let pid = unix.pid_t();
-      let rv = libc.posix_spawn(pid.address(), command, actionsp, null, argv, envp);
+      let rv = libc.posix_spawn(
+        pid.address(),
+        command,
+        actionsp,
+        null,
+        argv,
+        envp
+      );
 
       if (rv != 0) {
         for (let pipe of this.pipes) {
@@ -515,7 +526,7 @@ io = {
       this.signal.cleanup();
       this.signal = null;
 
-      self.postMessage({msg: "close"});
+      self.postMessage({ msg: "close" });
       self.close();
     }
   },
@@ -541,9 +552,11 @@ io = {
   },
 
   updatePollFds() {
-    let handlers = [this.signal,
-                    ...this.pipes.values(),
-                    ...this.processes.values()];
+    let handlers = [
+      this.signal,
+      ...this.pipes.values(),
+      ...this.processes.values(),
+    ];
 
     handlers = handlers.filter(handler => handler.pollEvents);
 
@@ -601,7 +614,10 @@ io = {
           // on a pipe when it's closed but there's still buffered data to be
           // read, and Darwin sets POLLIN and POLLHUP on a closed pipe, even
           // when there's no data to be read.
-          if (!success && (pollfd.revents & (LIBC.POLLERR | LIBC.POLLHUP | LIBC.POLLNVAL))) {
+          if (
+            !success &&
+            pollfd.revents & (LIBC.POLLERR | LIBC.POLLHUP | LIBC.POLLNVAL)
+          ) {
             handler.onError();
           }
         } catch (e) {

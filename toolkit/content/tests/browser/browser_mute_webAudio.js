@@ -5,13 +5,14 @@ if (!gMultiProcessBrowser) {
   PromiseTestUtils.expectUncaughtRejection(/is no longer, usable/);
 }
 
-const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_webAudio.html";
+const PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_webAudio.html";
 
 async function click_icon(tab) {
   let icon = tab.soundPlayingIcon;
 
   await hover_icon(icon, document.getElementById("tabbrowser-tab-tooltip"));
-  EventUtils.synthesizeMouseAtCenter(icon, {button: 0});
+  EventUtils.synthesizeMouseAtCenter(icon, { button: 0 });
   leave_icon(icon);
 }
 
@@ -35,16 +36,20 @@ function stop_webAudio() {
 
 add_task(async function setup_test_preference() {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["media.useAudioChannelService.testing", true],
-    ["media.block-autoplay-until-in-foreground", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.useAudioChannelService.testing", true],
+      ["media.block-autoplay-until-in-foreground", true],
+    ],
+  });
 });
 
 add_task(async function mute_web_audio() {
   info("- open new tab -");
-  let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
-                                                        "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "about:blank"
+  );
   BrowserTestUtils.loadURI(tab.linkedBrowser, PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 

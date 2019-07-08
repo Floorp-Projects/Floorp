@@ -2,7 +2,11 @@
 
 const PREF_ACTIVE = "security.mixed_content.block_active_content";
 const PREF_INSECURE = "security.insecure_connection_icon.enabled";
-const TEST_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com") + "file_bug1045809_1.html";
+const TEST_URL =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "https://example.com"
+  ) + "file_bug1045809_1.html";
 
 var origBlockActive;
 
@@ -18,15 +22,14 @@ add_task(async function() {
   // Make sure mixed content blocking is on
   Services.prefs.setBoolPref(PREF_ACTIVE, true);
 
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
 
   // Check with insecure lock disabled
-  await SpecialPowers.pushPrefEnv({set: [[PREF_INSECURE, false]]});
+  await SpecialPowers.pushPrefEnv({ set: [[PREF_INSECURE, false]] });
   await runTests(tab);
 
-
   // Check with insecure lock disabled
-  await SpecialPowers.pushPrefEnv({set: [[PREF_INSECURE, true]]});
+  await SpecialPowers.pushPrefEnv({ set: [[PREF_INSECURE, true]] });
   await runTests(tab);
 });
 
@@ -45,10 +48,16 @@ async function runTests(tab) {
 }
 
 async function test1(gTestBrowser) {
-  await assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
+  await assertMixedContentBlockingState(gTestBrowser, {
+    activeLoaded: false,
+    activeBlocked: true,
+    passiveLoaded: false,
+  });
 
   await ContentTask.spawn(gTestBrowser, null, function() {
-    var x = content.document.getElementsByTagName("iframe")[0].contentDocument.getElementById("mixedContentContainer");
+    var x = content.document
+      .getElementsByTagName("iframe")[0]
+      .contentDocument.getElementById("mixedContentContainer");
     is(x, null, "Mixed Content is NOT to be found in Test1");
   });
 
@@ -57,10 +66,16 @@ async function test1(gTestBrowser) {
 }
 
 async function test2(gTestBrowser) {
-  await assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: false});
+  await assertMixedContentBlockingState(gTestBrowser, {
+    activeLoaded: true,
+    activeBlocked: false,
+    passiveLoaded: false,
+  });
 
   await ContentTask.spawn(gTestBrowser, null, function() {
-    var x = content.document.getElementsByTagName("iframe")[0].contentDocument.getElementById("mixedContentContainer");
+    var x = content.document
+      .getElementsByTagName("iframe")[0]
+      .contentDocument.getElementById("mixedContentContainer");
     isnot(x, null, "Mixed Content is to be found in Test2");
   });
 
@@ -69,10 +84,16 @@ async function test2(gTestBrowser) {
 }
 
 async function test3(gTestBrowser) {
-  await assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
+  await assertMixedContentBlockingState(gTestBrowser, {
+    activeLoaded: false,
+    activeBlocked: true,
+    passiveLoaded: false,
+  });
 
   await ContentTask.spawn(gTestBrowser, null, function() {
-    var x = content.document.getElementsByTagName("iframe")[0].contentDocument.getElementById("mixedContentContainer");
+    var x = content.document
+      .getElementsByTagName("iframe")[0]
+      .contentDocument.getElementById("mixedContentContainer");
     is(x, null, "Mixed Content is NOT to be found in Test3");
   });
 }

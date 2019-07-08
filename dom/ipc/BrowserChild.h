@@ -256,9 +256,9 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                                       JS::Handle<JSObject*> aCpows,
                                       nsIPrincipal* aPrincipal) override;
 
-  bool DoUpdateZoomConstraints(
-      const uint32_t& aPresShellId, const ViewID& aViewId,
-      const Maybe<ZoomConstraints>& aConstraints);
+  bool DoUpdateZoomConstraints(const uint32_t& aPresShellId,
+                               const ViewID& aViewId,
+                               const Maybe<ZoomConstraints>& aConstraints);
 
   mozilla::ipc::IPCResult RecvLoadURL(const nsCString& aURI,
                                       const ShowInfo& aInfo);

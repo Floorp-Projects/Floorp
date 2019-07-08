@@ -12,20 +12,24 @@
 /* import-globals-from helper_workers.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/helper_workers.js",
-  this);
+  this
+);
 
 var TAB_URL = EXAMPLE_URL + "doc_WorkerTargetActor.attachThread-tab.html";
 var WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 
 add_task(async function testWhilePaused() {
   const dbg = await initWorkerDebugger(TAB_URL, WORKER_URL);
-  const {client, tab, workerTargetFront, toolbox} = dbg;
+  const { client, tab, workerTargetFront, toolbox } = dbg;
   const workerThreadClient = await workerTargetFront.getFront("context");
 
   // Execute some basic math to make sure evaluations are working.
   const jsterm = await getSplitConsole(toolbox);
   let executed = await jsterm.execute("10000+1");
-  ok(executed.textContent.includes("10001"), "Text for message appeared correct");
+  ok(
+    executed.textContent.includes("10001"),
+    "Text for message appeared correct"
+  );
 
   await clickElement(dbg, "pause");
   workerThreadClient.once("willInterrupt").then(() => {
@@ -40,18 +44,18 @@ add_task(async function testWhilePaused() {
 
   info("Trying to get the result of command1");
   executed = await command1;
-  ok(executed.textContent.includes("10002"),
-      "command1 executed successfully");
+  ok(executed.textContent.includes("10002"), "command1 executed successfully");
 
   info("Trying to get the result of command2");
   executed = await command2;
-  ok(executed.textContent.includes("10003"),
-      "command2 executed successfully");
+  ok(executed.textContent.includes("10003"), "command2 executed successfully");
 
   info("Trying to get the result of command3");
   executed = await command3;
-  ok(executed.textContent.includes("ReferenceError: foobar is not defined"),
-     "command3 executed successfully");
+  ok(
+    executed.textContent.includes("ReferenceError: foobar is not defined"),
+    "command3 executed successfully"
+  );
 
   await resume(dbg);
 

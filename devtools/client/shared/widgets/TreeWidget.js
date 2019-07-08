@@ -8,7 +8,7 @@
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const {KeyCodes} = require("devtools/client/shared/keycodes");
+const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 /**
  * A tree widget with keyboard navigation and collapsable structure.
@@ -50,7 +50,6 @@ function TreeWidget(node, options = {}) {
 }
 
 TreeWidget.prototype = {
-
   _selectedLabel: null,
   _selectedItem: null,
 
@@ -80,8 +79,11 @@ TreeWidget.prototype = {
         this.ensureSelectedVisible();
       }
       this._selectedItem = ids;
-      this.emit("select", this._selectedItem,
-        this.attachments.get(JSON.stringify(ids)));
+      this.emit(
+        "select",
+        this._selectedItem,
+        this.attachments.get(JSON.stringify(ids))
+      );
     }
   },
 
@@ -126,7 +128,7 @@ TreeWidget.prototype = {
   setupRoot: function() {
     this.root = new TreeItem(this.document);
     if (this.contextMenuId) {
-      this.root.children.addEventListener("contextmenu", (event) => {
+      this.root.children.addEventListener("contextmenu", event => {
         // Call stopPropagation() and preventDefault() here so that avoid to show default
         // context menu in about:devtools-toolbox. See Bug 1515265.
         event.stopPropagation();
@@ -267,9 +269,10 @@ TreeWidget.prototype = {
     this.root.add(items, this.defaultType, this.sorted);
     for (let i = 0; i < items.length; i++) {
       if (items[i].attachment) {
-        this.attachments.set(JSON.stringify(
-          items.slice(0, i + 1).map(item => item.id || item)
-        ), items[i].attachment);
+        this.attachments.set(
+          JSON.stringify(items.slice(0, i + 1).map(item => item.id || item)),
+          items[i].attachment
+        );
       }
     }
     // Empty the empty-tree-text
@@ -386,15 +389,18 @@ TreeWidget.prototype = {
         break;
 
       case KeyCodes.DOM_VK_LEFT:
-        if (this._selectedLabel.hasAttribute("expanded") &&
-            !this._selectedLabel.hasAttribute("empty")) {
+        if (
+          this._selectedLabel.hasAttribute("expanded") &&
+          !this._selectedLabel.hasAttribute("empty")
+        ) {
           this._selectedLabel.removeAttribute("expanded");
         } else {
           this.selectPreviousItem();
         }
         break;
 
-      default: return;
+      default:
+        return;
     }
     event.preventDefault();
   },
@@ -404,7 +410,7 @@ TreeWidget.prototype = {
    * visible.
    */
   ensureSelectedVisible: function() {
-    const {top, bottom} = this._selectedLabel.getBoundingClientRect();
+    const { top, bottom } = this._selectedLabel.getBoundingClientRect();
     const height = this.root.children.parentNode.clientHeight;
     if (top < 0) {
       this._selectedLabel.scrollIntoView();
@@ -464,7 +470,6 @@ function TreeItem(document, parent, label, type) {
 }
 
 TreeItem.prototype = {
-
   items: null,
 
   isSelected: false,
@@ -508,22 +513,28 @@ TreeItem.prototype = {
     // method of that item.
     // The display string of the item can be the label, the id, or the item
     // itself if its a plain string.
-    let label = items[this.level].label ||
-                items[this.level].id ||
-                items[this.level];
+    let label =
+      items[this.level].label || items[this.level].id || items[this.level];
     const node = items[this.level].node;
     if (node) {
       // The item is supposed to be a DOMNode, so we fetch the textContent in
       // order to find the correct sorted location of this new item.
       label = node.textContent;
     }
-    const treeItem = new TreeItem(this.document, this, node || label,
-                                items[this.level].type || defaultType);
+    const treeItem = new TreeItem(
+      this.document,
+      this,
+      node || label,
+      items[this.level].type || defaultType
+    );
 
     treeItem.add(items, defaultType, sorted);
-    treeItem.node.setAttribute("data-id", JSON.stringify(
-      items.slice(0, this.level + 1).map(item => item.id || item)
-    ));
+    treeItem.node.setAttribute(
+      "data-id",
+      JSON.stringify(
+        items.slice(0, this.level + 1).map(item => item.id || item)
+      )
+    );
 
     if (sorted) {
       // Inserting this newly created item at correct position

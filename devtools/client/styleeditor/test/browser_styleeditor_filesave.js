@@ -27,14 +27,16 @@ add_task(async function() {
 
   info("Editing the style sheet.");
   let dirty = editor.sourceEditor.once("dirty-change");
-  const beginCursor = {line: 0, ch: 0};
+  const beginCursor = { line: 0, ch: 0 };
   editor.sourceEditor.replaceText("DIRTY TEXT", beginCursor, beginCursor);
 
   await dirty;
 
   is(editor.sourceEditor.isClean(), false, "Editor is dirty.");
-  ok(editor.summary.classList.contains("unsaved"),
-     "Star icon is present in the corresponding summary.");
+  ok(
+    editor.summary.classList.contains("unsaved"),
+    "Star icon is present in the corresponding summary."
+  );
 
   info("Saving the changes.");
   dirty = editor.sourceEditor.once("dirty-change");
@@ -46,8 +48,10 @@ add_task(async function() {
   await dirty;
 
   is(editor.sourceEditor.isClean(), true, "Editor is clean.");
-  ok(!editor.summary.classList.contains("unsaved"),
-     "Star icon is not present in the corresponding summary.");
+  ok(
+    !editor.summary.classList.contains("unsaved"),
+    "Star icon is not present in the corresponding summary."
+  );
 });
 
 function copy(srcChromeURL, destFileName) {
@@ -58,8 +62,9 @@ function copy(srcChromeURL, destFileName) {
 }
 
 function read(srcChromeURL) {
-  const scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
-    .getService(Ci.nsIScriptableInputStream);
+  const scriptableStream = Cc[
+    "@mozilla.org/scriptableinputstream;1"
+  ].getService(Ci.nsIScriptableInputStream);
 
   const channel = NetUtil.newChannel({
     uri: srcChromeURL,
@@ -79,8 +84,9 @@ function read(srcChromeURL) {
 }
 
 function write(data, file, callback) {
-  const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  const converter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
 
   converter.charset = "UTF-8";
 

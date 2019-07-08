@@ -14,7 +14,7 @@ function square(x) {
 }
 
 function squarePromise(x) {
-  return new Promise((resolve) => resolve(x * x));
+  return new Promise(resolve => resolve(x * x));
 }
 
 function squareError(x) {
@@ -27,11 +27,11 @@ function squarePromiseReject(x) {
 
 add_task(async function() {
   let fn = workerify(square);
-  is((await fn(5)), 25, "return primitives successful");
+  is(await fn(5), 25, "return primitives successful");
   fn.destroy();
 
   fn = workerify(squarePromise);
-  is((await fn(5)), 25, "promise primitives successful");
+  is(await fn(5), 25, "promise primitives successful");
   fn.destroy();
 
   fn = workerify(squareError);

@@ -1,5 +1,6 @@
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 // This url must sync with the table, url in SafeBrowsing.jsm addMozEntries
 const PHISH_TABLE = "moztest-phish-simple";
@@ -37,13 +38,18 @@ function promiseTabLoadEvent(tab, url, eventType = "load") {
     loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, handle);
   } else {
     // No need to use handle.
-    loaded =
-      BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, eventType,
-                                           true, undefined, true);
+    loaded = BrowserTestUtils.waitForContentEvent(
+      tab.linkedBrowser,
+      eventType,
+      true,
+      undefined,
+      true
+    );
   }
 
-  if (url)
+  if (url) {
     BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+  }
 
   return loaded;
 }
@@ -73,11 +79,14 @@ function waitForDBInit(callback) {
   // The second part: we might have missed the event. Just do
   // an internal database lookup to confirm if the url has been
   // added.
-  let principal = Services.scriptSecurityManager
-    .createCodebasePrincipal(Services.io.newURI(PHISH_URL), {});
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    Services.io.newURI(PHISH_URL),
+    {}
+  );
 
-  let dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
-    .getService(Ci.nsIUrlClassifierDBService);
+  let dbService = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(
+    Ci.nsIUrlClassifierDBService
+  );
   dbService.lookup(principal, PHISH_TABLE, value => {
     if (value === PHISH_TABLE) {
       ok(true, "DB lookup success!");
@@ -86,7 +95,13 @@ function waitForDBInit(callback) {
   });
 }
 
-Services.prefs.setCharPref("urlclassifier.malwareTable", "moztest-malware-simple,moztest-unwanted-simple,moztest-harmful-simple");
+Services.prefs.setCharPref(
+  "urlclassifier.malwareTable",
+  "moztest-malware-simple,moztest-unwanted-simple,moztest-harmful-simple"
+);
 Services.prefs.setCharPref("urlclassifier.phishTable", "moztest-phish-simple");
-Services.prefs.setCharPref("urlclassifier.blockedTable", "moztest-block-simple");
+Services.prefs.setCharPref(
+  "urlclassifier.blockedTable",
+  "moztest-block-simple"
+);
 SafeBrowsing.init();

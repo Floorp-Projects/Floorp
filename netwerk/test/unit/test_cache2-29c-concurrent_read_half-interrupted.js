@@ -13,10 +13,11 @@ This test is using a resumable response.
 
 */
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-var httpProtocolHandler = Cc["@mozilla.org/network/protocol;1?name=http"]
-                          .getService(Ci.nsIHttpProtocolHandler);
+var httpProtocolHandler = Cc[
+  "@mozilla.org/network/protocol;1?name=http"
+].getService(Ci.nsIHttpProtocolHandler);
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort;
@@ -25,7 +26,7 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 var httpServer = null;
 
 function make_channel(url, callback, ctx) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
 // need something bigger than 1024 bytes
@@ -42,24 +43,22 @@ const responseBody =
   "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" +
   "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
-function contentHandler(metadata, response)
-{
+function contentHandler(metadata, response) {
   response.setHeader("Content-Type", "text/plain");
   response.setHeader("ETag", "Just testing");
   response.setHeader("Cache-Control", "max-age=99999");
   response.setHeader("Accept-Ranges", "bytes");
   response.setHeader("Content-Length", "" + responseBody.length);
   if (metadata.hasHeader("If-Range")) {
-	  response.setStatusLine(metadata.httpVersion, 206, "Partial Content");
+    response.setStatusLine(metadata.httpVersion, 206, "Partial Content");
 
     let len = responseBody.length;
-	  response.setHeader("Content-Range", "0-" + (len - 1) + "/" + len);
+    response.setHeader("Content-Range", "0-" + (len - 1) + "/" + len);
   }
   response.bodyOutputStream.write(responseBody, responseBody.length);
 }
 
-function run_test()
-{
+function run_test() {
   // Static check
   Assert.ok(responseBody.length > 1024);
 
@@ -82,13 +81,11 @@ function run_test()
   do_test_pending();
 }
 
-function firstTimeThrough(request, buffer)
-{
+function firstTimeThrough(request, buffer) {
   Assert.equal(buffer, responseBody);
 }
 
-function secondTimeThrough(request, buffer)
-{
+function secondTimeThrough(request, buffer) {
   Assert.equal(buffer, responseBody);
   httpServer.stop(do_test_finished);
 }

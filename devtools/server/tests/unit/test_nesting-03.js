@@ -16,11 +16,14 @@ function run_test() {
   // Conect the first client to the first debuggee.
   gClient1 = new DebuggerClient(DebuggerServer.connectPipe());
   gClient1.connect(function() {
-    attachTestThread(gClient1, "test-nesting1",
-                     function(response, targetFront, threadClient) {
-                       gThreadClient1 = threadClient;
-                       start_second_connection();
-                     });
+    attachTestThread(gClient1, "test-nesting1", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient1 = threadClient;
+      start_second_connection();
+    });
   });
   do_test_pending();
 }
@@ -28,11 +31,14 @@ function run_test() {
 function start_second_connection() {
   gClient2 = new DebuggerClient(DebuggerServer.connectPipe());
   gClient2.connect(function() {
-    attachTestThread(gClient2, "test-nesting1",
-                     function(response, targetFront, threadClient) {
-                       gThreadClient2 = threadClient;
-                       test_nesting();
-                     });
+    attachTestThread(gClient2, "test-nesting1", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient2 = threadClient;
+      test_nesting();
+    });
   });
 }
 

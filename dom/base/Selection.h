@@ -161,17 +161,21 @@ class Selection final : public nsSupportsWeakReference,
                           ScrollAxis aVertical = ScrollAxis(),
                           ScrollAxis aHorizontal = ScrollAxis(),
                           int32_t aFlags = 0);
-  nsresult SubtractRange(RangeData* aRange, nsRange* aSubtract,
-                         nsTArray<RangeData>* aOutput);
+  static nsresult SubtractRange(RangeData* aRange, nsRange* aSubtract,
+                                nsTArray<RangeData>* aOutput);
+
+ private:
   /**
-   * AddItem adds aRange to this Selection.  If mUserInitiated is true,
+   * Adds aRange to this Selection.  If mUserInitiated is true,
    * then aRange is first scanned for -moz-user-select:none nodes and split up
    * into multiple ranges to exclude those before adding the resulting ranges
    * to this Selection.
    */
-  nsresult AddItem(nsRange* aRange, int32_t* aOutIndex,
-                   bool aNoStartSelect = false);
-  nsresult RemoveItem(nsRange* aRange);
+  nsresult AddRangesForSelectableNodes(nsRange* aRange, int32_t* aOutIndex,
+                                       bool aNoStartSelect = false);
+  nsresult RemoveRangeInternal(nsRange& aRange);
+
+ public:
   nsresult RemoveCollapsedRanges();
   nsresult Clear(nsPresContext* aPresContext);
   nsresult Collapse(nsINode* aContainer, int32_t aOffset) {
@@ -737,13 +741,14 @@ class Selection final : public nsSupportsWeakReference,
                                  int32_t* aEndIndex);
   RangeData* FindRangeData(nsRange* aRange);
 
-  void UserSelectRangesToAdd(nsRange* aItem,
-                             nsTArray<RefPtr<nsRange>>& rangesToAdd);
+  static void UserSelectRangesToAdd(nsRange* aItem,
+                                    nsTArray<RefPtr<nsRange>>& rangesToAdd);
 
   /**
-   * Helper method for AddItem.
+   * Preserves the sorting of mRanges.
    */
-  nsresult AddItemInternal(nsRange* aRange, int32_t* aOutIndex);
+  nsresult MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
+                                            int32_t* aOutIndex);
 
   Document* GetDocument() const;
   nsPIDOMWindowOuter* GetWindow() const;

@@ -3,12 +3,18 @@
 
 "use strict";
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "CloudStorage",
-                               "resource://gre/modules/CloudStorage.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "CloudStorage",
+  "resource://gre/modules/CloudStorage.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
 
 const DROPBOX_DOWNLOAD_FOLDER = "Dropbox";
 const CLOUD_SERVICES_PREF = "cloud.services.";
@@ -58,7 +64,10 @@ function registerFakePath(key, folderName) {
 
 async function mock_dropbox() {
   // Mock Dropbox Download folder in Home directory
-  let downloadFolder = FileUtils.getFile("Home", [DROPBOX_DOWNLOAD_FOLDER, "Downloads"]);
+  let downloadFolder = FileUtils.getFile("Home", [
+    DROPBOX_DOWNLOAD_FOLDER,
+    "Downloads",
+  ]);
   if (!downloadFolder.exists()) {
     downloadFolder.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   }
@@ -78,10 +87,12 @@ add_task(async function setup() {
   let folderName = "CloudStorage";
   registerFakePath("Home", folderName);
   await mock_dropbox();
-  await SpecialPowers.pushPrefEnv({set: [
-    [CLOUD_SERVICES_PREF + "api.enabled", true],
-    [CLOUD_SERVICES_PREF + "storage.key", "Dropbox"],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [CLOUD_SERVICES_PREF + "api.enabled", true],
+      [CLOUD_SERVICES_PREF + "storage.key", "Dropbox"],
+    ],
+  });
 });
 
 add_task(async function test_initProvider() {
@@ -94,7 +105,11 @@ add_task(async function test_initProvider() {
 
   // Get preferred provider in use display name
   let providerDisplayName = await CloudStorage.getProviderIfInUse();
-  is(providerDisplayName, "Dropbox", "Cloud Storage preferred provider display name");
+  is(
+    providerDisplayName,
+    "Dropbox",
+    "Cloud Storage preferred provider display name"
+  );
 });
 
 add_task(async function() {
@@ -107,8 +122,11 @@ add_task(async function() {
 
   let saveTo = doc.getElementById("saveTo");
   ok(saveTo.selected, "Ensure first option is selected by default");
-  is(Services.prefs.getIntPref("browser.download.folderList"), 1,
-                               "Set to system downloadsfolder as the default download location");
+  is(
+    Services.prefs.getIntPref("browser.download.folderList"),
+    1,
+    "Set to system downloadsfolder as the default download location"
+  );
 
   let downloadFolder = doc.getElementById("downloadFolder");
   let chooseFolder = doc.getElementById("chooseFolder");
@@ -119,8 +137,11 @@ add_task(async function() {
   // which means the default download location is elsewhere as specified by
   // cloud storage API getDownloadFolder and pref cloud.services.storage.key
   saveToCloud.click();
-  is(Services.prefs.getIntPref("browser.download.folderList"), 3,
-                               "Default download location is elsewhere as specified by cloud storage API");
+  is(
+    Services.prefs.getIntPref("browser.download.folderList"),
+    3,
+    "Default download location is elsewhere as specified by cloud storage API"
+  );
   is(downloadFolder.disabled, true, "downloadFolder filefield is disabled");
   is(chooseFolder.disabled, true, "chooseFolder button is disabled");
 

@@ -16,10 +16,9 @@ add_task(async function() {
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getDisplayedRequests,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getDisplayedRequests, getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -166,67 +165,123 @@ add_task(async function() {
    * A function that tests "Headers" panel contains correct information.
    */
   async function testHeaders(data, index) {
-    EventUtils.sendMouseEvent({ type: "mousedown" },
-      document.querySelectorAll(".request-list-item")[index]);
+    EventUtils.sendMouseEvent(
+      { type: "mousedown" },
+      document.querySelectorAll(".request-list-item")[index]
+    );
 
-    await waitUntil(() => document.querySelector(
-      "#headers-panel .tabpanel-summary-value.textbox-input"));
+    await waitUntil(() =>
+      document.querySelector(
+        "#headers-panel .tabpanel-summary-value.textbox-input"
+      )
+    );
 
     const panel = document.querySelector("#headers-panel");
-    const summaryValues = panel.querySelectorAll(".tabpanel-summary-value.textbox-input");
-    const { method, correctUri, details: { status, statusText } } = data;
+    const summaryValues = panel.querySelectorAll(
+      ".tabpanel-summary-value.textbox-input"
+    );
+    const {
+      method,
+      correctUri,
+      details: { status, statusText },
+    } = data;
     const statusCode = panel.querySelector(".status-code");
     const statusTextInput = panel.querySelector(".status-text");
     EventUtils.sendMouseEvent({ type: "mouseover" }, statusCode);
     await waitUntil(() => statusCode.title);
 
-    is(summaryValues[0].textContent, correctUri,
-      "The url summary value is incorrect.");
-    is(summaryValues[1].textContent, method, "The method summary value is incorrect.");
-    is(statusCode.dataset.code, status,
-      "The status summary code is incorrect.");
-    is(statusCode.getAttribute("title"), status + " " + statusText,
-      "The status summary value is incorrect.");
-    is(statusTextInput.value, statusText, "The status text value is incorrect.");
+    is(
+      summaryValues[0].textContent,
+      correctUri,
+      "The url summary value is incorrect."
+    );
+    is(
+      summaryValues[1].textContent,
+      method,
+      "The method summary value is incorrect."
+    );
+    is(
+      statusCode.dataset.code,
+      status,
+      "The status summary code is incorrect."
+    );
+    is(
+      statusCode.getAttribute("title"),
+      status + " " + statusText,
+      "The status summary value is incorrect."
+    );
+    is(
+      statusTextInput.value,
+      statusText,
+      "The status text value is incorrect."
+    );
   }
 
   /**
    * A function that tests "Params" panel contains correct information.
    */
   function testParams(data, index) {
-    EventUtils.sendMouseEvent({ type: "mousedown" },
-      document.querySelectorAll(".request-list-item")[index]);
-    EventUtils.sendMouseEvent({ type: "click" },
-      document.querySelector("#params-tab"));
+    EventUtils.sendMouseEvent(
+      { type: "mousedown" },
+      document.querySelectorAll(".request-list-item")[index]
+    );
+    EventUtils.sendMouseEvent(
+      { type: "click" },
+      document.querySelector("#params-tab")
+    );
 
     const panel = document.querySelector("#params-panel");
     // Bug 1414981 - Request URL should not show #hash
-    const statusParamValue = data.uri.split("=").pop().split("#")[0];
+    const statusParamValue = data.uri
+      .split("=")
+      .pop()
+      .split("#")[0];
     const treeSections = panel.querySelectorAll(".tree-section");
 
-    is(treeSections.length, 1,
-      "There should be 1 param section displayed in this panel.");
-    is(panel.querySelectorAll("tr:not(.tree-section).treeRow").length, 1,
-      "There should be 1 param row displayed in this panel.");
-    is(panel.querySelectorAll(".empty-notice").length, 0,
-      "The empty notice should not be displayed in this panel.");
+    is(
+      treeSections.length,
+      1,
+      "There should be 1 param section displayed in this panel."
+    );
+    is(
+      panel.querySelectorAll("tr:not(.tree-section).treeRow").length,
+      1,
+      "There should be 1 param row displayed in this panel."
+    );
+    is(
+      panel.querySelectorAll(".empty-notice").length,
+      0,
+      "The empty notice should not be displayed in this panel."
+    );
 
-    const labels = panel
-      .querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
-    const values = panel
-      .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
+    const labels = panel.querySelectorAll(
+      "tr:not(.tree-section) .treeLabelCell .treeLabel"
+    );
+    const values = panel.querySelectorAll(
+      "tr:not(.tree-section) .treeValueCell .objectBox"
+    );
 
-    is(treeSections[0].querySelector(".treeLabel").textContent,
+    is(
+      treeSections[0].querySelector(".treeLabel").textContent,
       L10N.getStr("paramsQueryString"),
-      "The params scope doesn't have the correct title.");
+      "The params scope doesn't have the correct title."
+    );
 
     is(labels[0].textContent, "sts", "The param name was incorrect.");
-    is(values[0].textContent, statusParamValue, "The param value was incorrect.");
+    is(
+      values[0].textContent,
+      statusParamValue,
+      "The param value was incorrect."
+    );
 
-    ok(panel.querySelector(".treeTable"),
-      "The request params tree view should be displayed.");
-    is(panel.querySelector(".editor-mount") === null,
+    ok(
+      panel.querySelector(".treeTable"),
+      "The request params tree view should be displayed."
+    );
+    is(
+      panel.querySelector(".editor-mount") === null,
       true,
-      "The request post data editor should be hidden.");
+      "The request post data editor should be hidden."
+    );
   }
 });

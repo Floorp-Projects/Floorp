@@ -6,7 +6,7 @@
 // Test for about:preferences foreground check for updates
 // with a malformed update XML file.
 add_task(async function aboutPrefs_foregroundCheck_malformedXML() {
-  let params = {queryString: "&xmlMalformed=1"};
+  let params = { queryString: "&xmlMalformed=1" };
   await runAboutPrefsUpdateTest(params, [
     {
       panelId: "checkingForUpdates",

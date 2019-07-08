@@ -26,95 +26,100 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(not(feature = "std"))]
-extern crate hashmap_core;
+#[macro_use]
+extern crate alloc as std;
+#[cfg(feature = "std")]
+#[macro_use]
+extern crate std;
 
 #[cfg(not(feature = "std"))]
-#[macro_use]
-extern crate alloc;
+use hashbrown::HashSet;
+#[cfg(feature = "std")]
+use std::collections::HashSet;
 
-pub use binary_reader::BinaryReader;
-pub use binary_reader::Range;
-use binary_reader::SectionHeader;
+pub use crate::binary_reader::BinaryReader;
+pub use crate::binary_reader::Range;
+use crate::binary_reader::SectionHeader;
 
-pub use parser::LocalName;
-pub use parser::NameEntry;
-pub use parser::Parser;
-pub use parser::ParserInput;
-pub use parser::ParserState;
-pub use parser::RelocEntry;
-pub use parser::WasmDecoder;
+pub use crate::parser::LocalName;
+pub use crate::parser::NameEntry;
+pub use crate::parser::Parser;
+pub use crate::parser::ParserInput;
+pub use crate::parser::ParserState;
+pub use crate::parser::RelocEntry;
+pub use crate::parser::WasmDecoder;
 
-pub use primitives::BinaryReaderError;
-pub use primitives::BrTable;
-pub use primitives::CustomSectionKind;
-pub use primitives::ExternalKind;
-pub use primitives::FuncType;
-pub use primitives::GlobalType;
-pub use primitives::Ieee32;
-pub use primitives::Ieee64;
-pub use primitives::ImportSectionEntryType;
-pub use primitives::LinkingType;
-pub use primitives::MemoryImmediate;
-pub use primitives::MemoryType;
-pub use primitives::NameType;
-pub use primitives::Naming;
-pub use primitives::Operator;
-pub use primitives::RelocType;
-pub use primitives::ResizableLimits;
-pub use primitives::Result;
-pub use primitives::SectionCode;
-pub use primitives::TableType;
-pub use primitives::Type;
-pub use primitives::TypeOrFuncType;
-pub use primitives::V128;
+pub use crate::primitives::BinaryReaderError;
+pub use crate::primitives::BrTable;
+pub use crate::primitives::CustomSectionKind;
+pub use crate::primitives::ExternalKind;
+pub use crate::primitives::FuncType;
+pub use crate::primitives::GlobalType;
+pub use crate::primitives::Ieee32;
+pub use crate::primitives::Ieee64;
+pub use crate::primitives::ImportSectionEntryType;
+pub use crate::primitives::LinkingType;
+pub use crate::primitives::MemoryImmediate;
+pub use crate::primitives::MemoryType;
+pub use crate::primitives::NameType;
+pub use crate::primitives::Naming;
+pub use crate::primitives::Operator;
+pub use crate::primitives::RelocType;
+pub use crate::primitives::ResizableLimits;
+pub use crate::primitives::Result;
+pub use crate::primitives::SectionCode;
+pub use crate::primitives::TableType;
+pub use crate::primitives::Type;
+pub use crate::primitives::TypeOrFuncType;
+pub use crate::primitives::V128;
 
-pub use validator::validate;
-pub use validator::validate_function_body;
-pub use validator::ValidatingOperatorParser;
-pub use validator::ValidatingParser;
-pub use validator::ValidatingParserConfig;
+pub use crate::validator::validate;
+pub use crate::validator::validate_function_body;
+pub use crate::validator::ValidatingOperatorParser;
+pub use crate::validator::ValidatingParser;
+pub use crate::validator::ValidatingParserConfig;
 
-pub use operators_validator::OperatorValidatorConfig;
-pub use operators_validator::WasmModuleResources;
+pub use crate::operators_validator::OperatorValidatorConfig;
+pub use crate::operators_validator::WasmModuleResources;
 
-pub use readers::CodeSectionReader;
-pub use readers::Data;
-pub use readers::DataKind;
-pub use readers::DataSectionReader;
-pub use readers::Element;
-pub use readers::ElementItems;
-pub use readers::ElementItemsReader;
-pub use readers::ElementKind;
-pub use readers::ElementSectionReader;
-pub use readers::Export;
-pub use readers::ExportSectionReader;
-pub use readers::FunctionBody;
-pub use readers::FunctionSectionReader;
-pub use readers::Global;
-pub use readers::GlobalSectionReader;
-pub use readers::Import;
-pub use readers::ImportSectionReader;
-pub use readers::InitExpr;
-pub use readers::LinkingSectionReader;
-pub use readers::LocalsReader;
-pub use readers::MemorySectionReader;
-pub use readers::ModuleReader;
-pub use readers::Name;
-pub use readers::NameSectionReader;
-pub use readers::NamingReader;
-pub use readers::OperatorsReader;
-pub use readers::ProducersField;
-pub use readers::ProducersFieldValue;
-pub use readers::ProducersSectionReader;
-pub use readers::Reloc;
-pub use readers::RelocSectionReader;
-pub use readers::Section;
-pub use readers::SectionIterator;
-pub use readers::SectionIteratorLimited;
-pub use readers::SectionReader;
-pub use readers::SectionWithLimitedItems;
-pub use readers::TableSectionReader;
-pub use readers::TypeSectionReader;
+pub use crate::readers::CodeSectionReader;
+pub use crate::readers::Data;
+pub use crate::readers::DataKind;
+pub use crate::readers::DataSectionReader;
+pub use crate::readers::Element;
+pub use crate::readers::ElementItems;
+pub use crate::readers::ElementItemsReader;
+pub use crate::readers::ElementKind;
+pub use crate::readers::ElementSectionReader;
+pub use crate::readers::Export;
+pub use crate::readers::ExportSectionReader;
+pub use crate::readers::FunctionBody;
+pub use crate::readers::FunctionSectionReader;
+pub use crate::readers::Global;
+pub use crate::readers::GlobalSectionReader;
+pub use crate::readers::Import;
+pub use crate::readers::ImportSectionReader;
+pub use crate::readers::InitExpr;
+pub use crate::readers::LinkingSectionReader;
+pub use crate::readers::LocalsReader;
+pub use crate::readers::MemorySectionReader;
+pub use crate::readers::ModuleReader;
+pub use crate::readers::Name;
+pub use crate::readers::NameSectionReader;
+pub use crate::readers::NamingReader;
+pub use crate::readers::OperatorsReader;
+pub use crate::readers::ProducersField;
+pub use crate::readers::ProducersFieldValue;
+pub use crate::readers::ProducersSectionReader;
+pub use crate::readers::Reloc;
+pub use crate::readers::RelocSectionReader;
+pub use crate::readers::Section;
+pub use crate::readers::SectionIterator;
+pub use crate::readers::SectionIteratorLimited;
+pub use crate::readers::SectionReader;
+pub use crate::readers::SectionWithLimitedItems;
+pub use crate::readers::TableSectionReader;
+pub use crate::readers::TypeSectionReader;
 
 mod binary_reader;
 mod limits;
@@ -124,12 +129,3 @@ mod primitives;
 mod readers;
 mod tests;
 mod validator;
-
-#[cfg(not(feature = "std"))]
-mod std {
-    pub use alloc::{boxed, string, vec};
-    pub use core::*;
-    pub mod collections {
-        pub use hashmap_core::HashSet;
-    }
-}

@@ -14,9 +14,7 @@ const {
   fetchIndividuals,
   takeSnapshotAndCensus,
 } = require("devtools/client/memory/actions/snapshot");
-const {
-  changeView,
-} = require("devtools/client/memory/actions/view");
+const { changeView } = require("devtools/client/memory/actions/view");
 
 const EXPECTED_INDIVIDUAL_STATES = [
   individualsState.COMPUTING_DOMINATOR_TREE,
@@ -31,8 +29,7 @@ add_task(async function() {
   const store = Store();
   const { getState, dispatch } = store;
 
-  equal(getState().individuals, null,
-        "no individuals state by default");
+  equal(getState().individuals, null, "no individuals state by default");
 
   dispatch(changeView(viewState.CENSUS));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
@@ -50,23 +47,28 @@ add_task(async function() {
   const breakdown = getState().snapshots[0].census.display.breakdown;
   ok(breakdown, "Should have a breakdown");
 
-  dispatch(fetchIndividuals(heapWorker, snapshotId, breakdown,
-                            reportLeafIndex));
+  dispatch(
+    fetchIndividuals(heapWorker, snapshotId, breakdown, reportLeafIndex)
+  );
 
   // Wait for each expected state.
   for (const state of EXPECTED_INDIVIDUAL_STATES) {
     await waitUntilState(store, s => {
-      return s.view.state === viewState.INDIVIDUALS &&
-             s.individuals &&
-             s.individuals.state === state;
+      return (
+        s.view.state === viewState.INDIVIDUALS &&
+        s.individuals &&
+        s.individuals.state === state
+      );
     });
     ok(true, `Reached state = ${state}`);
   }
 
   ok(getState().individuals, "Should have individuals state");
   ok(getState().individuals.nodes, "Should have individuals nodes");
-  ok(getState().individuals.nodes.length > 0,
-     "Should have a positive number of nodes");
+  ok(
+    getState().individuals.nodes.length > 0,
+    "Should have a positive number of nodes"
+  );
 
   heapWorker.destroy();
   await front.detach();

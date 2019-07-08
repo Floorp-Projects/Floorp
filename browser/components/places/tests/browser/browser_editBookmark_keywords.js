@@ -33,7 +33,9 @@ add_task(async function() {
     await BrowserTestUtils.removeTab(tab);
   });
 
-  let keywordField = library.document.getElementById("editBMPanel_keywordField");
+  let keywordField = library.document.getElementById(
+    "editBMPanel_keywordField"
+  );
 
   for (let i = 0; i < 2; ++i) {
     let bm = await PlacesUtils.bookmarks.insert({
@@ -47,22 +49,31 @@ add_task(async function() {
     library.ContentTree.view.selectNode(node);
     synthesizeClickOnSelectedTreeCell(library.ContentTree.view);
 
-    is(library.document.getElementById("editBMPanel_keywordField").value, "",
-      "The keyword field should be empty");
+    is(
+      library.document.getElementById("editBMPanel_keywordField").value,
+      "",
+      "The keyword field should be empty"
+    );
     info("Add a keyword to the bookmark");
     let promise = promiseOnItemChanged();
     keywordField.focus();
     keywordField.value = "kw";
     EventUtils.sendString(i.toString(), library);
     keywordField.blur();
-    let {property, value} = await promise;
+    let { property, value } = await promise;
     is(property, "keyword", "The keyword should have been changed");
 
     is(value, `kw${i}`, "The new keyword value is correct");
   }
 
   for (let i = 0; i < 2; ++i) {
-    let entry = await PlacesUtils.keywords.fetch({ url: `http://www.test${i}.me/` });
-    is(entry.keyword, `kw${i}`, `The keyword for http://www.test${i}.me/ is correct`);
+    let entry = await PlacesUtils.keywords.fetch({
+      url: `http://www.test${i}.me/`,
+    });
+    is(
+      entry.keyword,
+      `kw${i}`,
+      `The keyword for http://www.test${i}.me/ is correct`
+    );
   }
 });

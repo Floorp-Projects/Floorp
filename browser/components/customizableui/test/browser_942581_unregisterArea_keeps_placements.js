@@ -15,7 +15,13 @@ add_task(async function() {
   for (let i = 0; i < kTestWidgetCount; i++) {
     let id = kTestWidgetPfx + i;
     widgetIds.push(id);
-    let spec = {id, type: "button", removable: true, label: "unregisterArea test", tooltiptext: "" + i};
+    let spec = {
+      id,
+      type: "button",
+      removable: true,
+      label: "unregisterArea test",
+      tooltiptext: "" + i,
+    };
     CustomizableUI.createWidget(spec);
   }
   for (let i = kTestWidgetCount; i < kTestWidgetCount * 2; i++) {
@@ -86,18 +92,25 @@ add_task(async function() {
 
 function checkAbstractAndRealPlacements(aNode, aExpectedPlacements) {
   assertAreaPlacements(kToolbarName, aExpectedPlacements);
-  let physicalWidgetIds = Array.from(aNode.children, (node) => node.id);
+  let physicalWidgetIds = Array.from(aNode.children, node => node.id);
   placementArraysEqual(aNode.id, physicalWidgetIds, aExpectedPlacements);
 }
 
 function checkWidgetFates(aWidgetIds) {
   for (let widget of aWidgetIds) {
-    ok(!CustomizableUI.getPlacementOfWidget(widget), "Widget should be in palette");
+    ok(
+      !CustomizableUI.getPlacementOfWidget(widget),
+      "Widget should be in palette"
+    );
     ok(!document.getElementById(widget), "Widget should not be in the DOM");
     let widgetInPalette = !!gNavToolbox.palette.querySelector("#" + widget);
     let widgetProvider = CustomizableUI.getWidget(widget).provider;
     let widgetIsXULWidget = widgetProvider == CustomizableUI.PROVIDER_XUL;
-    is(widgetInPalette, widgetIsXULWidget, "Just XUL Widgets should be in the palette");
+    is(
+      widgetInPalette,
+      widgetIsXULWidget,
+      "Just XUL Widgets should be in the palette"
+    );
   }
 }
 

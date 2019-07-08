@@ -13,7 +13,9 @@
 // 4. [paste the output into the appropriate section in
 //     security/manager/tools/PreloadedHPKPins.json]
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
@@ -27,16 +29,18 @@ function downloadRoots() {
   }
 
   if (req.status != 200) {
-    throw new Error("ERROR: problem downloading Google Root PEMs. Status: " +
-                    req.status);
+    throw new Error(
+      "ERROR: problem downloading Google Root PEMs. Status: " + req.status
+    );
   }
 
   let pem = req.responseText;
   let roots = [];
   let currentPEM = "";
   let readingRoot = false;
-  let certDB = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
+  let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   for (let line of pem.split(/[\r\n]/)) {
     if (line == "-----END CERTIFICATE-----") {
       if (currentPEM) {
@@ -81,8 +85,8 @@ rootNicknames.sort(function(rootA, rootB) {
   return 0;
 });
 dump("    {\n");
-dump("      \"name\": \"google_root_pems\",\n");
-dump("      \"sha256_hashes\": [\n");
+dump('      "name": "google_root_pems",\n');
+dump('      "sha256_hashes": [\n');
 var first = true;
 for (var nickname of rootNicknames) {
   if (!first) {

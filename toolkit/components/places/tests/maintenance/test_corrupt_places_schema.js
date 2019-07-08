@@ -13,8 +13,10 @@ add_task(async function() {
   await db.execute("DROP TABLE moz_places");
   await db.close();
 
-  Assert.equal(PlacesUtils.history.databaseStatus,
-               PlacesUtils.history.DATABASE_STATUS_CORRUPT);
+  Assert.equal(
+    PlacesUtils.history.databaseStatus,
+    PlacesUtils.history.DATABASE_STATUS_CORRUPT
+  );
   db = await PlacesUtils.promiseDBConnection();
   await db.execute("SELECT * FROM moz_places LIMIT 1"); // Should not fail.
 });

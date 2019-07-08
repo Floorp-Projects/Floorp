@@ -5,7 +5,9 @@
 "use strict";
 
 const protocol = require("devtools/shared/protocol");
-const { serviceWorkerSpec } = require("devtools/shared/specs/worker/service-worker");
+const {
+  serviceWorkerSpec,
+} = require("devtools/shared/specs/worker/service-worker");
 
 const ServiceWorkerActor = protocol.ActorClassWithSpec(serviceWorkerSpec, {
   initialize(conn, worker) {

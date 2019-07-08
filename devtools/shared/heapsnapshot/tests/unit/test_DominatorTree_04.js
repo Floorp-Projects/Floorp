@@ -6,8 +6,11 @@
 
 function run_test() {
   const dominatorTree = saveHeapSnapshotAndComputeDominatorTree();
-  equal(typeof dominatorTree.getRetainedSize, "function",
-        "getRetainedSize should be a function");
+  equal(
+    typeof dominatorTree.getRetainedSize,
+    "function",
+    "getRetainedSize should be a function"
+  );
 
   const size = dominatorTree.getRetainedSize(dominatorTree.root);
   ok(size, "should get a size for the root");

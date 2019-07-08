@@ -38,7 +38,10 @@ function runTest() {
   });
 
   iframe.addEventListener("mozbrowsershowmodalprompt", function(e) {
-    ok(gotPopup, "Got mozbrowseropenwindow event before showmodalprompt event.");
+    ok(
+      gotPopup,
+      "Got mozbrowseropenwindow event before showmodalprompt event."
+    );
     if (e.detail.message.indexOf("success") == 0) {
       ok(true, e.detail.message);
       SimpleTest.finish();

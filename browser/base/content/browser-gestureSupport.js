@@ -19,7 +19,7 @@
 var gGestureSupport = {
   _currentRotation: 0,
   _lastRotateDelta: 0,
-  _rotateMomentumThreshold: .75,
+  _rotateMomentumThreshold: 0.75,
 
   /**
    * Add or remove mouse gesture event listeners
@@ -28,14 +28,25 @@ var gGestureSupport = {
    *        True to add/init listeners and false to remove/uninit
    */
   init: function GS_init(aAddListener) {
-    const gestureEvents = ["SwipeGestureMayStart", "SwipeGestureStart",
-      "SwipeGestureUpdate", "SwipeGestureEnd", "SwipeGesture",
-      "MagnifyGestureStart", "MagnifyGestureUpdate", "MagnifyGesture",
-      "RotateGestureStart", "RotateGestureUpdate", "RotateGesture",
-      "TapGesture", "PressTapGesture"];
+    const gestureEvents = [
+      "SwipeGestureMayStart",
+      "SwipeGestureStart",
+      "SwipeGestureUpdate",
+      "SwipeGestureEnd",
+      "SwipeGesture",
+      "MagnifyGestureStart",
+      "MagnifyGestureUpdate",
+      "MagnifyGesture",
+      "RotateGestureStart",
+      "RotateGestureUpdate",
+      "RotateGesture",
+      "TapGesture",
+      "PressTapGesture",
+    ];
 
-    let addRemove = aAddListener ? window.addEventListener :
-      window.removeEventListener;
+    let addRemove = aAddListener
+      ? window.addEventListener
+      : window.removeEventListener;
 
     for (let event of gestureEvents) {
       addRemove("Moz" + event, this, true);
@@ -51,14 +62,19 @@ var gGestureSupport = {
    *        The gesture event to handle
    */
   handleEvent: function GS_handleEvent(aEvent) {
-    if (!Services.prefs.getBoolPref(
-           "dom.debug.propagate_gesture_events_through_content")) {
+    if (
+      !Services.prefs.getBoolPref(
+        "dom.debug.propagate_gesture_events_through_content"
+      )
+    ) {
       aEvent.stopPropagation();
     }
 
     // Create a preference object with some defaults
-    let def = (aThreshold, aLatched) =>
-      ({ threshold: aThreshold, latched: !!aLatched });
+    let def = (aThreshold, aLatched) => ({
+      threshold: aThreshold,
+      latched: !!aLatched,
+    });
 
     switch (aEvent.type) {
       case "MozSwipeGestureMayStart":
@@ -84,9 +100,8 @@ var gGestureSupport = {
         break;
       case "MozMagnifyGestureStart":
         aEvent.preventDefault();
-        let pinchPref = AppConstants.platform == "win"
-                        ? def(25, 0)
-                        : def(150, 1);
+        let pinchPref =
+          AppConstants.platform == "win" ? def(25, 0) : def(150, 1);
         this._setupGesture(aEvent, "pinch", pinchPref, "out", "in");
         break;
       case "MozRotateGestureStart":
@@ -126,10 +141,17 @@ var gGestureSupport = {
    * @param aDec
    *        Command to trigger for decreasing motion (without gesture name)
    */
-  _setupGesture: function GS__setupGesture(aEvent, aGesture, aPref, aInc, aDec) {
+  _setupGesture: function GS__setupGesture(
+    aEvent,
+    aGesture,
+    aPref,
+    aInc,
+    aDec
+  ) {
     // Try to load user-set values from preferences
-    for (let [pref, def] of Object.entries(aPref))
+    for (let [pref, def] of Object.entries(aPref)) {
       aPref[pref] = this._getPref(aGesture + "." + pref, def);
+    }
 
     // Keep track of the total deltas and latching behavior
     let offset = 0;
@@ -147,7 +169,7 @@ var gGestureSupport = {
         // sure either we're not latched and going the same direction of the
         // initial motion; or we're latched and going the opposite way
         let sameDir = (latchDir ^ offset) >= 0;
-        if (!aPref.latched || (isLatched ^ sameDir)) {
+        if (!aPref.latched || isLatched ^ sameDir) {
           this._doAction(updateEvent, [aGesture, offset > 0 ? aInc : aDec]);
 
           // We must be getting latched or leaving it, so just toggle
@@ -172,10 +194,12 @@ var gGestureSupport = {
    * @return true if the swipe event may navigate the history, false othwerwise.
    */
   _swipeNavigatesHistory: function GS__swipeNavigatesHistory(aEvent) {
-    return this._getCommand(aEvent, ["swipe", "left"])
-              == "Browser:BackOrBackDuplicate" &&
-           this._getCommand(aEvent, ["swipe", "right"])
-              == "Browser:ForwardOrForwardDuplicate";
+    return (
+      this._getCommand(aEvent, ["swipe", "left"]) ==
+        "Browser:BackOrBackDuplicate" &&
+      this._getCommand(aEvent, ["swipe", "right"]) ==
+        "Browser:ForwardOrForwardDuplicate"
+    );
   },
 
   /**
@@ -199,7 +223,10 @@ var gGestureSupport = {
       }
       isVerticalSwipe = true;
     } else if (aEvent.direction == aEvent.DIRECTION_DOWN) {
-      if (gMultiProcessBrowser || window.content.pageYOffset < window.content.scrollMaxY) {
+      if (
+        gMultiProcessBrowser ||
+        window.content.pageYOffset < window.content.scrollMaxY
+      ) {
         return false;
       }
       isVerticalSwipe = true;
@@ -215,12 +242,14 @@ var gGestureSupport = {
     let isLTR = gHistorySwipeAnimation.isLTR;
 
     if (canGoBack) {
-      aEvent.allowedDirections |= isLTR ? aEvent.DIRECTION_LEFT :
-                                          aEvent.DIRECTION_RIGHT;
+      aEvent.allowedDirections |= isLTR
+        ? aEvent.DIRECTION_LEFT
+        : aEvent.DIRECTION_RIGHT;
     }
     if (canGoForward) {
-      aEvent.allowedDirections |= isLTR ? aEvent.DIRECTION_RIGHT :
-                                          aEvent.DIRECTION_LEFT;
+      aEvent.allowedDirections |= isLTR
+        ? aEvent.DIRECTION_RIGHT
+        : aEvent.DIRECTION_LEFT;
     }
 
     return true;
@@ -264,8 +293,9 @@ var gGestureSupport = {
     while (--num >= 0) {
       // Only select array elements where the current bit is set
       yield aArray.reduce(function(aPrev, aCurr, aIndex) {
-        if (num & 1 << aIndex)
+        if (num & (1 << aIndex)) {
           aPrev.push(aCurr);
+        }
         return aPrev;
       }, []);
     }
@@ -302,8 +332,9 @@ var gGestureSupport = {
     // command for both don't exist)
     let keyCombos = [];
     for (let key of ["shift", "alt", "ctrl", "meta"]) {
-      if (aEvent[key + "Key"])
+      if (aEvent[key + "Key"]) {
         keyCombos.push(key);
+      }
     }
 
     // Try each combination of key presses in decreasing order for commands
@@ -316,8 +347,9 @@ var gGestureSupport = {
         command = this._getPref(aGesture.concat(subCombo).join("."));
       } catch (e) {}
 
-      if (command)
+      if (command) {
         return command;
+      }
     }
     return null;
   },
@@ -335,10 +367,19 @@ var gGestureSupport = {
     if (node) {
       if (node.getAttribute("disabled") != "true") {
         let cmdEvent = document.createEvent("xulcommandevent");
-        cmdEvent.initCommandEvent("command", true, true, window, 0,
-                                  aEvent.ctrlKey, aEvent.altKey,
-                                  aEvent.shiftKey, aEvent.metaKey,
-                                  aEvent, aEvent.mozInputSource);
+        cmdEvent.initCommandEvent(
+          "command",
+          true,
+          true,
+          window,
+          0,
+          aEvent.ctrlKey,
+          aEvent.altKey,
+          aEvent.shiftKey,
+          aEvent.metaKey,
+          aEvent,
+          aEvent.mozInputSource
+        );
         node.dispatchEvent(cmdEvent);
       }
     } else {
@@ -402,8 +443,10 @@ var gGestureSupport = {
    * @param aDir
    *        The direction for the swipe event
    */
-  _coordinateSwipeEventWithAnimation:
-  function GS__coordinateSwipeEventWithAnimation(aEvent, aDir) {
+  _coordinateSwipeEventWithAnimation: function GS__coordinateSwipeEventWithAnimation(
+    aEvent,
+    aDir
+  ) {
     gHistorySwipeAnimation.stopAnimation();
     this.processSwipeEvent(aEvent, aDir);
   },
@@ -424,10 +467,11 @@ var gGestureSupport = {
       // Determine what type of data to load based on default value's type
       let type = typeof aDef;
       let getFunc = "Char";
-      if (type == "boolean")
+      if (type == "boolean") {
         getFunc = "Bool";
-      else if (type == "number")
+      } else if (type == "number") {
         getFunc = "Int";
+      }
       return Services.prefs["get" + getFunc + "Pref"](branch + aPref);
     } catch (e) {
       return aDef;
@@ -441,15 +485,18 @@ var gGestureSupport = {
    *        The MozRotateGestureUpdate event triggering this call
    */
   rotate(aEvent) {
-    if (!(window.content.document instanceof ImageDocument))
+    if (!(window.content.document instanceof ImageDocument)) {
       return;
+    }
 
     let contentElement = window.content.document.body.firstElementChild;
-    if (!contentElement)
+    if (!contentElement) {
       return;
+    }
     // If we're currently snapping, cancel that snap
-    if (contentElement.classList.contains("completeRotation"))
+    if (contentElement.classList.contains("completeRotation")) {
       this._clearCompleteRotation();
+    }
 
     this.rotation = Math.round(this.rotation + aEvent.delta);
     contentElement.style.transform = "rotate(" + this.rotation + "deg)";
@@ -460,42 +507,53 @@ var gGestureSupport = {
    * Perform a rotation end for ImageDocuments
    */
   rotateEnd() {
-    if (!(window.content.document instanceof ImageDocument))
+    if (!(window.content.document instanceof ImageDocument)) {
       return;
+    }
 
     let contentElement = window.content.document.body.firstElementChild;
-    if (!contentElement)
+    if (!contentElement) {
       return;
+    }
 
     let transitionRotation = 0;
 
     // The reason that 360 is allowed here is because when rotating between
     // 315 and 360, setting rotate(0deg) will cause it to rotate the wrong
     // direction around--spinning wildly.
-    if (this.rotation <= 45)
+    if (this.rotation <= 45) {
       transitionRotation = 0;
-    else if (this.rotation > 45 && this.rotation <= 135)
+    } else if (this.rotation > 45 && this.rotation <= 135) {
       transitionRotation = 90;
-    else if (this.rotation > 135 && this.rotation <= 225)
+    } else if (this.rotation > 135 && this.rotation <= 225) {
       transitionRotation = 180;
-    else if (this.rotation > 225 && this.rotation <= 315)
+    } else if (this.rotation > 225 && this.rotation <= 315) {
       transitionRotation = 270;
-    else
+    } else {
       transitionRotation = 360;
+    }
 
     // If we're going fast enough, and we didn't already snap ahead of rotation,
     // then snap ahead of rotation to simulate momentum
-    if (this._lastRotateDelta > this._rotateMomentumThreshold &&
-        this.rotation > transitionRotation)
+    if (
+      this._lastRotateDelta > this._rotateMomentumThreshold &&
+      this.rotation > transitionRotation
+    ) {
       transitionRotation += 90;
-    else if (this._lastRotateDelta < -1 * this._rotateMomentumThreshold &&
-             this.rotation < transitionRotation)
+    } else if (
+      this._lastRotateDelta < -1 * this._rotateMomentumThreshold &&
+      this.rotation < transitionRotation
+    ) {
       transitionRotation -= 90;
+    }
 
     // Only add the completeRotation class if it is is necessary
     if (transitionRotation != this.rotation) {
       contentElement.classList.add("completeRotation");
-      contentElement.addEventListener("transitionend", this._clearCompleteRotation);
+      contentElement.addEventListener(
+        "transitionend",
+        this._clearCompleteRotation
+      );
     }
 
     contentElement.style.transform = "rotate(" + transitionRotation + "deg)";
@@ -518,8 +576,9 @@ var gGestureSupport = {
    */
   set rotation(aVal) {
     this._currentRotation = aVal % 360;
-    if (this._currentRotation < 0)
+    if (this._currentRotation < 0) {
       this._currentRotation += 360;
+    }
     return this._currentRotation;
   },
 
@@ -529,15 +588,17 @@ var gGestureSupport = {
    */
   restoreRotationState() {
     // Bug 1108553 - Cannot rotate images in stand-alone image documents with e10s
-    if (gMultiProcessBrowser)
+    if (gMultiProcessBrowser) {
       return;
+    }
 
-    if (!(window.content.document instanceof ImageDocument))
+    if (!(window.content.document instanceof ImageDocument)) {
       return;
+    }
 
     let contentElement = window.content.document.body.firstElementChild;
     let transformValue = window.content.window.getComputedStyle(contentElement)
-                                              .transform;
+      .transform;
 
     if (transformValue == "none") {
       this.rotation = 0;
@@ -546,31 +607,37 @@ var gGestureSupport = {
 
     // transformValue is a rotation matrix--split it and do mathemagic to
     // obtain the real rotation value
-    transformValue = transformValue.split("(")[1]
-                                   .split(")")[0]
-                                   .split(",");
-    this.rotation = Math.round(Math.atan2(transformValue[1], transformValue[0]) *
-                               (180 / Math.PI));
+    transformValue = transformValue
+      .split("(")[1]
+      .split(")")[0]
+      .split(",");
+    this.rotation = Math.round(
+      Math.atan2(transformValue[1], transformValue[0]) * (180 / Math.PI)
+    );
   },
 
   /**
    * Removes the transition rule by removing the completeRotation class
    */
   _clearCompleteRotation() {
-    let contentElement = window.content.document &&
-                         window.content.document instanceof ImageDocument &&
-                         window.content.document.body &&
-                         window.content.document.body.firstElementChild;
-    if (!contentElement)
+    let contentElement =
+      window.content.document &&
+      window.content.document instanceof ImageDocument &&
+      window.content.document.body &&
+      window.content.document.body.firstElementChild;
+    if (!contentElement) {
       return;
+    }
     contentElement.classList.remove("completeRotation");
-    contentElement.removeEventListener("transitionend", this._clearCompleteRotation);
+    contentElement.removeEventListener(
+      "transitionend",
+      this._clearCompleteRotation
+    );
   },
 };
 
 // History Swipe Animation Support (bug 678392)
 var gHistorySwipeAnimation = {
-
   active: false,
   isLTR: false,
 
@@ -585,8 +652,12 @@ var gHistorySwipeAnimation = {
 
     this.isLTR = document.documentElement.matches(":-moz-locale-dir(ltr)");
     this._isStoppingAnimation = false;
-    if (!Services.prefs.getBoolPref("browser.history_swipe_animation.disabled",
-                                    false)) {
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.history_swipe_animation.disabled",
+        false
+      )
+    ) {
       this.active = true;
     }
   },
@@ -655,8 +726,7 @@ var gHistorySwipeAnimation = {
     // trigger history navigation, hence the multiplier 4 to set the arrows to
     // full opacity at 0.25 or greater.
     let opacity = Math.abs(aVal) * 4;
-    if ((aVal >= 0 && this.isLTR) ||
-        (aVal <= 0 && !this.isLTR)) {
+    if ((aVal >= 0 && this.isLTR) || (aVal <= 0 && !this.isLTR)) {
       // The intention is to go back.
       if (this._canGoBack) {
         this._prevBox.collapsed = false;
@@ -726,18 +796,24 @@ var gHistorySwipeAnimation = {
    */
   _addBoxes: function HSA__addBoxes() {
     let browserStack = gBrowser.getPanel().querySelector(".browserStack");
-    this._container = this._createElement("historySwipeAnimationContainer",
-                                          "stack");
+    this._container = this._createElement(
+      "historySwipeAnimationContainer",
+      "stack"
+    );
     browserStack.appendChild(this._container);
 
-    this._prevBox = this._createElement("historySwipeAnimationPreviousArrow",
-                                        "box");
+    this._prevBox = this._createElement(
+      "historySwipeAnimationPreviousArrow",
+      "box"
+    );
     this._prevBox.collapsed = true;
     this._prevBox.style.opacity = 0;
     this._container.appendChild(this._prevBox);
 
-    this._nextBox = this._createElement("historySwipeAnimationNextArrow",
-                                        "box");
+    this._nextBox = this._createElement(
+      "historySwipeAnimationNextArrow",
+      "box"
+    );
     this._nextBox.collapsed = true;
     this._nextBox.style.opacity = 0;
     this._container.appendChild(this._nextBox);
@@ -749,8 +825,9 @@ var gHistorySwipeAnimation = {
   _removeBoxes: function HSA__removeBoxes() {
     this._prevBox = null;
     this._nextBox = null;
-    if (this._container)
+    if (this._container) {
       this._container.remove();
+    }
     this._container = null;
   },
 

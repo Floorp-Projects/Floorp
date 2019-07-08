@@ -20,7 +20,7 @@ add_task(async function() {
 
 async function testHistory() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
+  const { jsterm } = hud;
   jsterm.focus();
 
   for (const command of COMMANDS) {
@@ -57,5 +57,9 @@ async function testHistory() {
 
   const idxLast = COMMANDS.length - 1;
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is(getInputValue(hud), COMMANDS[idxLast], "check history next idx:" + idxLast);
+  is(
+    getInputValue(hud),
+    COMMANDS[idxLast],
+    "check history next idx:" + idxLast
+  );
 }

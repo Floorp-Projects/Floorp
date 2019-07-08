@@ -41,52 +41,67 @@ function testRestore() {
     },
   ];
 
-  asyncMap(states, function(state, done) {
-    // Open some scratchpad windows
-    openScratchpad(done, {state: state, noFocus: true});
-  }, function(wins) {
-    // Then save the windows to session store
-    ScratchpadManager.saveOpenWindows();
+  asyncMap(
+    states,
+    function(state, done) {
+      // Open some scratchpad windows
+      openScratchpad(done, { state: state, noFocus: true });
+    },
+    function(wins) {
+      // Then save the windows to session store
+      ScratchpadManager.saveOpenWindows();
 
-    // Then get their states
-    const session = ScratchpadManager.getSessionState();
+      // Then get their states
+      const session = ScratchpadManager.getSessionState();
 
-    // Then close them
-    wins.forEach(function(win) {
-      win.close();
-    });
+      // Then close them
+      wins.forEach(function(win) {
+        win.close();
+      });
 
-    // Clear out session state for next tests
-    ScratchpadManager.saveOpenWindows();
+      // Clear out session state for next tests
+      ScratchpadManager.saveOpenWindows();
 
-    // Then restore them
-    const restoredWins = ScratchpadManager.restoreSession(session);
+      // Then restore them
+      const restoredWins = ScratchpadManager.restoreSession(session);
 
-    is(restoredWins.length, 3, "Three scratchad windows restored");
+      is(restoredWins.length, 3, "Three scratchad windows restored");
 
-    asyncMap(restoredWins, function(restoredWin, done) {
-      openScratchpad(function(aWin) {
-        const state = aWin.Scratchpad.getState();
-        aWin.close();
-        done(state);
-      }, {window: restoredWin, noFocus: true});
-    }, function(restoredStates) {
-      // Then make sure they were restored with the right states
-      ok(statesMatch(restoredStates, states),
-        "All scratchpad window states restored correctly");
+      asyncMap(
+        restoredWins,
+        function(restoredWin, done) {
+          openScratchpad(
+            function(aWin) {
+              const state = aWin.Scratchpad.getState();
+              aWin.close();
+              done(state);
+            },
+            { window: restoredWin, noFocus: true }
+          );
+        },
+        function(restoredStates) {
+          // Then make sure they were restored with the right states
+          ok(
+            statesMatch(restoredStates, states),
+            "All scratchpad window states restored correctly"
+          );
 
-      // Yay, we're done!
-      finish();
-    });
-  });
+          // Yay, we're done!
+          finish();
+        }
+      );
+    }
+  );
 }
 
 function statesMatch(restoredStates, states) {
   return states.every(function(state) {
     return restoredStates.some(function(restoredState) {
-      return state.filename == restoredState.filename
-        && state.text == restoredState.text
-        && state.executionContext == restoredState.executionContext;
+      return (
+        state.filename == restoredState.filename &&
+        state.text == restoredState.text &&
+        state.executionContext == restoredState.executionContext
+      );
     });
   });
 }

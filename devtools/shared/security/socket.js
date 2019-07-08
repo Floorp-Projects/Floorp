@@ -16,20 +16,40 @@ var promise = require("promise");
 var defer = require("devtools/shared/defer");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn, dumpv } = DevToolsUtils;
-loader.lazyRequireGetter(this, "WebSocketServer",
-  "devtools/server/socket/websocket-server");
-loader.lazyRequireGetter(this, "DebuggerTransport",
-  "devtools/shared/transport/transport", true);
-loader.lazyRequireGetter(this, "WebSocketDebuggerTransport",
-  "devtools/shared/transport/websocket-transport");
-loader.lazyRequireGetter(this, "discovery",
-  "devtools/shared/discovery/discovery");
-loader.lazyRequireGetter(this, "cert",
-  "devtools/shared/security/cert");
-loader.lazyRequireGetter(this, "Authenticators",
-  "devtools/shared/security/auth", true);
-loader.lazyRequireGetter(this, "AuthenticationResult",
-  "devtools/shared/security/auth", true);
+loader.lazyRequireGetter(
+  this,
+  "WebSocketServer",
+  "devtools/server/socket/websocket-server"
+);
+loader.lazyRequireGetter(
+  this,
+  "DebuggerTransport",
+  "devtools/shared/transport/transport",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "WebSocketDebuggerTransport",
+  "devtools/shared/transport/websocket-transport"
+);
+loader.lazyRequireGetter(
+  this,
+  "discovery",
+  "devtools/shared/discovery/discovery"
+);
+loader.lazyRequireGetter(this, "cert", "devtools/shared/security/cert");
+loader.lazyRequireGetter(
+  this,
+  "Authenticators",
+  "devtools/shared/security/auth",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "AuthenticationResult",
+  "devtools/shared/security/auth",
+  true
+);
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 DevToolsUtils.defineLazyGetter(this, "nsFile", () => {
@@ -37,18 +57,21 @@ DevToolsUtils.defineLazyGetter(this, "nsFile", () => {
 });
 
 DevToolsUtils.defineLazyGetter(this, "socketTransportService", () => {
-  return Cc["@mozilla.org/network/socket-transport-service;1"]
-         .getService(Ci.nsISocketTransportService);
+  return Cc["@mozilla.org/network/socket-transport-service;1"].getService(
+    Ci.nsISocketTransportService
+  );
 });
 
 DevToolsUtils.defineLazyGetter(this, "certOverrideService", () => {
-  return Cc["@mozilla.org/security/certoverride;1"]
-         .getService(Ci.nsICertOverrideService);
+  return Cc["@mozilla.org/security/certoverride;1"].getService(
+    Ci.nsICertOverrideService
+  );
 });
 
 DevToolsUtils.defineLazyGetter(this, "nssErrorsService", () => {
-  return Cc["@mozilla.org/nss_errors_service;1"]
-         .getService(Ci.nsINSSErrorsService);
+  return Cc["@mozilla.org/nss_errors_service;1"].getService(
+    Ci.nsINSSErrorsService
+  );
 });
 
 var DebuggerSocket = {};
@@ -75,7 +98,7 @@ var DebuggerSocket = {};
 DebuggerSocket.connect = async function(settings) {
   // Default to PROMPT |Authenticator| instance if not supplied
   if (!settings.authenticator) {
-    settings.authenticator = new (Authenticators.get().Client)();
+    settings.authenticator = new (Authenticators.get()).Client();
   }
   _validateSettings(settings);
   // eslint-disable-next-line no-shadow
@@ -211,13 +234,15 @@ var _attemptTransport = async function(settings) {
 
   // The |Authenticator| examines the connection as well and may determine it
   // should be dropped.
-  alive = alive && authenticator.validateConnection({
-    host: settings.host,
-    port: settings.port,
-    encryption: settings.encryption,
-    cert: settings.cert,
-    socket: s,
-  });
+  alive =
+    alive &&
+    authenticator.validateConnection({
+      host: settings.host,
+      port: settings.port,
+      encryption: settings.encryption,
+      cert: settings.cert,
+      socket: s,
+    });
 
   let transport;
   if (alive) {
@@ -274,24 +299,28 @@ var _attemptConnect = async function({ host, port, encryption }) {
   // specify a client cert programmatically, we need to access the transport's
   // nsISSLSocketControl interface, which is not accessible until the transport
   // has connected.
-  s.setEventSink({
-    onTransportStatus(transport, status) {
-      if (status != Ci.nsISocketTransport.STATUS_CONNECTING_TO) {
-        return;
-      }
-      if (encryption) {
-        const sslSocketControl =
-          transport.securityInfo.QueryInterface(Ci.nsISSLSocketControl);
-        sslSocketControl.clientCert = clientCert;
-      }
-      try {
-        input = s.openInputStream(0, 0, 0);
-      } catch (e) {
-        deferred.reject(e);
-      }
-      deferred.resolve({ s, input, output });
+  s.setEventSink(
+    {
+      onTransportStatus(transport, status) {
+        if (status != Ci.nsISocketTransport.STATUS_CONNECTING_TO) {
+          return;
+        }
+        if (encryption) {
+          const sslSocketControl = transport.securityInfo.QueryInterface(
+            Ci.nsISSLSocketControl
+          );
+          sslSocketControl.clientCert = clientCert;
+        }
+        try {
+          input = s.openInputStream(0, 0, 0);
+        } catch (e) {
+          deferred.reject(e);
+        }
+        deferred.resolve({ s, input, output });
+      },
     },
-  }, Services.tm.currentThread);
+    Services.tm.currentThread
+  );
 
   // openOutputStream may throw NS_ERROR_NOT_INITIALIZED if we hit some race
   // where the nsISocketTransport gets shutdown in between its instantiation and
@@ -322,26 +351,31 @@ var _attemptConnect = async function({ host, port, encryption }) {
  */
 function _isInputAlive(input) {
   const deferred = defer();
-  input.asyncWait({
-    onInputStreamReady(stream) {
-      try {
-        stream.available();
-        deferred.resolve({ alive: true });
-      } catch (e) {
+  input.asyncWait(
+    {
+      onInputStreamReady(stream) {
         try {
-          // getErrorClass may throw if you pass a non-NSS error
-          const errorClass = nssErrorsService.getErrorClass(e.result);
-          if (errorClass === Ci.nsINSSErrorsService.ERROR_CLASS_BAD_CERT) {
-            deferred.resolve({ certError: true });
-          } else {
+          stream.available();
+          deferred.resolve({ alive: true });
+        } catch (e) {
+          try {
+            // getErrorClass may throw if you pass a non-NSS error
+            const errorClass = nssErrorsService.getErrorClass(e.result);
+            if (errorClass === Ci.nsINSSErrorsService.ERROR_CLASS_BAD_CERT) {
+              deferred.resolve({ certError: true });
+            } else {
+              deferred.reject(e);
+            }
+          } catch (nssErr) {
             deferred.reject(e);
           }
-        } catch (nssErr) {
-          deferred.reject(e);
         }
-      }
+      },
     },
-  }, 0, 0, Services.tm.currentThread);
+    0,
+    0,
+    Services.tm.currentThread
+  );
   return deferred.promise;
 }
 
@@ -353,11 +387,17 @@ function _isInputAlive(input) {
 function _storeCertOverride(s, host, port) {
   // eslint-disable-next-line no-shadow
   const cert = s.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
-                             .serverCert;
-  const overrideBits = Ci.nsICertOverrideService.ERROR_UNTRUSTED |
-                     Ci.nsICertOverrideService.ERROR_MISMATCH;
-  certOverrideService.rememberValidityOverride(host, port, cert, overrideBits,
-                                               true /* temporary */);
+    .serverCert;
+  const overrideBits =
+    Ci.nsICertOverrideService.ERROR_UNTRUSTED |
+    Ci.nsICertOverrideService.ERROR_MISMATCH;
+  certOverrideService.rememberValidityOverride(
+    host,
+    port,
+    cert,
+    overrideBits,
+    true /* temporary */
+  );
 }
 
 /**
@@ -396,7 +436,8 @@ function SocketListener(debuggerServer, socketOptions) {
 
   // Set socket options with default value
   this._socketOptions = {
-    authenticator: socketOptions.authenticator || new (Authenticators.get().Server)(),
+    authenticator:
+      socketOptions.authenticator || new (Authenticators.get()).Server(),
     discoverable: !!socketOptions.discoverable,
     encryption: !!socketOptions.encryption,
     portOrPath: socketOptions.portOrPath || null,
@@ -476,13 +517,19 @@ SocketListener.prototype = {
       await self._setAdditionalSocketOptions();
       self._socket.asyncListen(self);
       dumpn("Socket listening on: " + (self.port || self.portOrPath));
-    })().then(() => {
-      this._advertise();
-    }).catch(e => {
-      dumpn("Could not start debugging listener on '" + this.portOrPath +
-            "': " + e);
-      this.close();
-    });
+    })()
+      .then(() => {
+        this._advertise();
+      })
+      .catch(e => {
+        dumpn(
+          "Could not start debugging listener on '" +
+            this.portOrPath +
+            "': " +
+            e
+        );
+        this.close();
+      });
   },
 
   _advertise: function() {
@@ -502,11 +549,13 @@ SocketListener.prototype = {
 
   _createSocketInstance: function() {
     if (this.encryption) {
-      return Cc["@mozilla.org/network/tls-server-socket;1"]
-             .createInstance(Ci.nsITLSServerSocket);
+      return Cc["@mozilla.org/network/tls-server-socket;1"].createInstance(
+        Ci.nsITLSServerSocket
+      );
     }
-    return Cc["@mozilla.org/network/server-socket;1"]
-           .createInstance(Ci.nsIServerSocket);
+    return Cc["@mozilla.org/network/server-socket;1"].createInstance(
+      Ci.nsIServerSocket
+    );
   },
 
   async _setAdditionalSocketOptions() {
@@ -578,16 +627,18 @@ SocketListener.prototype = {
 
   // nsIServerSocketListener implementation
 
-  onSocketAccepted:
-  DevToolsUtils.makeInfallible(function(socket, socketTransport) {
+  onSocketAccepted: DevToolsUtils.makeInfallible(function(
+    socket,
+    socketTransport
+  ) {
     const connection = new ServerSocketConnection(this, socketTransport);
     connection.once("allowed", this.onAllowedConnection.bind(this));
-  }, "SocketListener.onSocketAccepted"),
+  },
+  "SocketListener.onSocketAccepted"),
 
   onStopListening: function(socket, status) {
     dumpn("onStopListening, status: " + status);
   },
-
 };
 
 // Client must complete TLS handshake within this window (ms)
@@ -609,7 +660,6 @@ function ServerSocketConnection(listener, socketTransport) {
 }
 
 ServerSocketConnection.prototype = {
-
   get authentication() {
     return this._listener.authenticator.mode;
   },
@@ -684,7 +734,11 @@ ServerSocketConnection.prototype = {
     const output = this._socketTransport.openOutputStream(0, 0, 0);
 
     if (this._listener.webSocket) {
-      const socket = await WebSocketServer.accept(this._socketTransport, input, output);
+      const socket = await WebSocketServer.accept(
+        this._socketTransport,
+        input,
+        output
+      );
       this._transport = new WebSocketDebuggerTransport(socket);
     } else {
       this._transport = new DebuggerTransport(input, output);
@@ -708,8 +762,9 @@ ServerSocketConnection.prototype = {
     if (!this._socketTransport || !this._socketTransport.securityInfo) {
       return;
     }
-    const connectionInfo = this._socketTransport.securityInfo
-                         .QueryInterface(Ci.nsITLSServerConnectionInfo);
+    const connectionInfo = this._socketTransport.securityInfo.QueryInterface(
+      Ci.nsITLSServerConnectionInfo
+    );
     connectionInfo.setSecurityObserver(observer);
   },
 
@@ -725,8 +780,10 @@ ServerSocketConnection.prototype = {
       return;
     }
     this._setSecurityObserver(this);
-    this._handshakeTimeout = setTimeout(this._onHandshakeTimeout.bind(this),
-                                        HANDSHAKE_TIMEOUT);
+    this._handshakeTimeout = setTimeout(
+      this._onHandshakeTimeout.bind(this),
+      HANDSHAKE_TIMEOUT
+    );
   },
 
   _awaitTLSHandshake() {
@@ -795,8 +852,9 @@ ServerSocketConnection.prototype = {
         break;
       }
     }
-    dumpn("Debugging connection denied on " + this.address +
-          " (" + errorName + ")");
+    dumpn(
+      "Debugging connection denied on " + this.address + " (" + errorName + ")"
+    );
     if (this._transport) {
       this._transport.hooks = null;
       this._transport.close(result);
@@ -823,7 +881,6 @@ ServerSocketConnection.prototype = {
     this._transport = null;
     this._clientCert = null;
   },
-
 };
 
 exports.DebuggerSocket = DebuggerSocket;

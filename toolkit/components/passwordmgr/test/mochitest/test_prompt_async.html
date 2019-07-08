@@ -106,8 +106,7 @@
               mozproxyOrigin = "moz-proxy://" + SpecialPowers.wrap(pi).host + ":" +
                 SpecialPowers.wrap(pi).port;
 
-              pwmgrParent.sendSyncMessage("initLogins", {mozproxyOrigin});
-              resolve();
+              resolve(pwmgrParent.sendQuery("initLogins", {mozproxyOrigin}));
             },
           });
 

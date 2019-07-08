@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -35,12 +38,10 @@ class RuntimeInfo extends PureComponent {
       {
         className: "main-heading runtime-info",
       },
-      dom.img(
-        {
-          className: "main-heading__icon runtime-info__icon qa-runtime-icon",
-          src: icon,
-        }
-      ),
+      dom.img({
+        className: "main-heading__icon runtime-info__icon qa-runtime-icon",
+        src: icon,
+      }),
       Localized(
         {
           id: "about-debugging-runtime-name",
@@ -51,31 +52,34 @@ class RuntimeInfo extends PureComponent {
           {
             className: "qa-runtime-name runtime-info__title",
           },
-          `${ name } (${ version })`
+          `${name} (${version})`
         )
       ),
-      deviceName ?
-        dom.label(
-          {
-            className: "main-heading-subtitle runtime-info__subtitle",
-          },
-          deviceName
-        ) : null,
-      runtimeId !== RUNTIMES.THIS_FIREFOX ?
-        Localized(
-          {
-            id: "about-debugging-runtime-disconnect-button",
-          },
-          dom.button(
+      deviceName
+        ? dom.label(
             {
-              className: "default-button runtime-info__action qa-runtime-info__action",
-              onClick() {
-                dispatch(Actions.disconnectRuntime(runtimeId, true));
-              },
+              className: "main-heading-subtitle runtime-info__subtitle",
             },
-            "Disconnect"
+            deviceName
           )
-        ) : null,
+        : null,
+      runtimeId !== RUNTIMES.THIS_FIREFOX
+        ? Localized(
+            {
+              id: "about-debugging-runtime-disconnect-button",
+            },
+            dom.button(
+              {
+                className:
+                  "default-button runtime-info__action qa-runtime-info__action",
+                onClick() {
+                  dispatch(Actions.disconnectRuntime(runtimeId, true));
+                },
+              },
+              "Disconnect"
+            )
+          )
+        : null
     );
   }
 }

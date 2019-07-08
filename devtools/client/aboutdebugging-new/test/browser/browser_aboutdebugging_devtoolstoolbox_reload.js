@@ -7,7 +7,10 @@
 requestLongerTimeout(5);
 
 /* import-globals-from helper-collapsibilities.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-collapsibilities.js",
+  this
+);
 
 const TOOLS = [
   "inspector",
@@ -36,8 +39,11 @@ add_task(async function() {
 async function testReloadAboutDevToolsToolbox(toolId) {
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
-  const { devtoolsBrowser, devtoolsTab, devtoolsWindow } =
-    await openAboutDevtoolsToolbox(document, tab, window);
+  const {
+    devtoolsBrowser,
+    devtoolsTab,
+    devtoolsWindow,
+  } = await openAboutDevtoolsToolbox(document, tab, window);
 
   info(`Select tool: ${toolId}`);
   const toolbox = getToolbox(devtoolsWindow);
@@ -49,8 +55,10 @@ async function testReloadAboutDevToolsToolbox(toolId) {
   ok(true, "Toolbox is re-created again");
 
   info("Check whether about:devtools-toolbox page displays correctly");
-  ok(devtoolsBrowser.contentDocument.querySelector(".debug-target-info"),
-     "about:devtools-toolbox page displays correctly");
+  ok(
+    devtoolsBrowser.contentDocument.querySelector(".debug-target-info"),
+    "about:devtools-toolbox page displays correctly"
+  );
 
   await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
   await removeTab(tab);

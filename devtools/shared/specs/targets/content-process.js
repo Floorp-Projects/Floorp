@@ -3,7 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {types, RetVal, generateActorSpec} = require("devtools/shared/protocol");
+const {
+  types,
+  RetVal,
+  generateActorSpec,
+} = require("devtools/shared/protocol");
 
 types.addDictType("contentProcessTarget.workers", {
   error: "nullable:string",

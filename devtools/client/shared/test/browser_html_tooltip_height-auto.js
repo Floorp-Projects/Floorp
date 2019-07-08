@@ -12,15 +12,16 @@
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const TEST_URI = CHROME_URL_ROOT + "doc_html_tooltip.xul";
 
-const {HTMLTooltip} =
-  require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
+const {
+  HTMLTooltip,
+} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 loadHelperScript("helper_html_tooltip.js");
 
 let useXulWrapper;
 
 add_task(async function() {
   await addTab("about:blank");
-  const [,, doc] = await createHost("bottom", TEST_URI);
+  const [, , doc] = await createHost("bottom", TEST_URI);
 
   info("Run tests for a Tooltip without using a XUL panel");
   useXulWrapper = false;
@@ -32,7 +33,7 @@ add_task(async function() {
 });
 
 async function runTests(doc) {
-  const tooltip = new HTMLTooltip(doc, {useXulWrapper});
+  const tooltip = new HTMLTooltip(doc, { useXulWrapper });
   info("Create tooltip content height to 150px");
   const tooltipContent = doc.createElementNS(HTML_NS, "div");
   tooltipContent.style.cssText =
@@ -51,8 +52,7 @@ async function runTests(doc) {
   await hideTooltip(tooltip);
 
   info("Set tooltip content using fixed width and height:auto");
-  tooltipContent.style.cssText =
-    "width: auto; height: 200px; background: red;";
+  tooltipContent.style.cssText = "width: auto; height: 200px; background: red;";
   tooltip.setContentSize({ width: 400 });
 
   info("Show the tooltip and check the tooltip panel height.");

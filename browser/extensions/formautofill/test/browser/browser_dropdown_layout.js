@@ -1,6 +1,7 @@
 "use strict";
 
-const URL = "http://example.org/browser/browser/extensions/formautofill/test/browser/autocomplete_basic.html";
+const URL =
+  "http://example.org/browser/browser/extensions/formautofill/test/browser/autocomplete_basic.html";
 
 add_task(async function setup_storage() {
   await saveAddress(TEST_ADDRESS_1);
@@ -11,7 +12,10 @@ add_task(async function setup_storage() {
 async function reopenPopupWithResizedInput(browser, selector, newSize) {
   await closePopup(browser);
   /* eslint no-shadow: ["error", { "allow": ["selector", "newSize"] }] */
-  await ContentTask.spawn(browser, {selector, newSize}, async function({selector, newSize}) {
+  await ContentTask.spawn(browser, { selector, newSize }, async function({
+    selector,
+    newSize,
+  }) {
     const input = content.document.querySelector(selector);
 
     input.style.boxSizing = "border-box";
@@ -21,7 +25,9 @@ async function reopenPopupWithResizedInput(browser, selector, newSize) {
 }
 
 add_task(async function test_address_dropdown() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async function(browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
+    browser
+  ) {
     const focusInput = "#organization";
     await openPopupOn(browser, focusInput);
     const firstItem = getDisplayedPopupItems(browser)[0];
@@ -30,7 +36,11 @@ add_task(async function test_address_dropdown() {
 
     // The breakpoint of two-lines layout is 150px
     await reopenPopupWithResizedInput(browser, focusInput, 140);
-    is(firstItem._itemBox.getAttribute("size"), "small", "Show two-lines layout");
+    is(
+      firstItem._itemBox.getAttribute("size"),
+      "small",
+      "Show two-lines layout"
+    );
     await reopenPopupWithResizedInput(browser, focusInput, 160);
     is(firstItem._itemBox.hasAttribute("size"), false, "Show one-line layout");
 

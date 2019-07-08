@@ -13,10 +13,18 @@
 
 XPCOMUtils.defineLazyGetter(this, "tests", function() {
   return [
-    new Test("http://localhost:" + srv.identity.primaryPort + "/test",
-        null, start_test, null),
-    new Test("http://localhost:" + srv.identity.primaryPort + "/sjs/qi.sjs",
-        null, start_sjs_qi, null),
+    new Test(
+      "http://localhost:" + srv.identity.primaryPort + "/test",
+      null,
+      start_test,
+      null
+    ),
+    new Test(
+      "http://localhost:" + srv.identity.primaryPort + "/sjs/qi.sjs",
+      null,
+      start_sjs_qi,
+      null
+    ),
   ];
 });
 
@@ -41,7 +49,6 @@ function run_test() {
   runHttpTests(tests, testComplete(srv));
 }
 
-
 // TEST DATA
 
 function start_test(ch) {
@@ -53,7 +60,6 @@ function start_sjs_qi(ch) {
   Assert.equal(ch.responseStatusText, "SJS QI Tests Passed");
   Assert.equal(ch.responseStatus, 200);
 }
-
 
 function testHandler(request, response) {
   var exstr;
@@ -67,8 +73,11 @@ function testHandler(request, response) {
     passed = qid === request;
   } catch (e) {
     exstr = ("" + e).split(/[\x09\x20-\x7f\x81-\xff]+/)[0];
-    response.setStatusLine(request.httpVersion, 500,
-                           "request doesn't QI: " + exstr);
+    response.setStatusLine(
+      request.httpVersion,
+      500,
+      "request doesn't QI: " + exstr
+    );
     return;
   }
   if (!passed) {
@@ -82,8 +91,11 @@ function testHandler(request, response) {
     passed = qid === response;
   } catch (e) {
     exstr = ("" + e).split(/[\x09\x20-\x7f\x81-\xff]+/)[0];
-    response.setStatusLine(request.httpVersion, 500,
-                           "response doesn't QI: " + exstr);
+    response.setStatusLine(
+      request.httpVersion,
+      500,
+      "response doesn't QI: " + exstr
+    );
     return;
   }
   if (!passed) {

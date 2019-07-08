@@ -6,7 +6,7 @@
 
 async function test() {
   waitForExplicitFinish();
-  const {ed, win} = await setup();
+  const { ed, win } = await setup();
   ok(!ed.hasMarker(0, "breakpoints", "test"), "default is ok");
   ed.addMarker(0, "breakpoints", "test");
   ed.addMarker(0, "breakpoints", "test2");
@@ -22,15 +22,21 @@ async function test() {
   ok(!ed.hasMarker(0, "breakpoints", "test2"), "removeAllMarkers/2");
 
   ed.addMarker(0, "breakpoints", "breakpoint");
-  ed.setMarkerListeners(0, "breakpoints", "breakpoint", {
-    "click": (line, marker, param) => {
-      is(line, 0, "line is ok");
-      is(marker.className, "breakpoint", "marker is ok");
-      ok(param, "click is ok");
+  ed.setMarkerListeners(
+    0,
+    "breakpoints",
+    "breakpoint",
+    {
+      click: (line, marker, param) => {
+        is(line, 0, "line is ok");
+        is(marker.className, "breakpoint", "marker is ok");
+        ok(param, "click is ok");
 
-      teardown(ed, win);
+        teardown(ed, win);
+      },
     },
-  }, [ true ]);
+    [true]
+  );
 
   const env = win.document.querySelector("iframe").contentWindow;
   const div = env.document.querySelector("div.breakpoint");

@@ -1,7 +1,9 @@
 "use strict";
 
 const { extend } = require("devtools/shared/extend");
-const { AbstractCanvasGraph } = require("devtools/client/shared/widgets/Graphs");
+const {
+  AbstractCanvasGraph,
+} = require("devtools/client/shared/widgets/Graphs");
 
 // Bar graph constants.
 
@@ -113,8 +115,9 @@ MountainGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
    */
   buildGraphImage: function() {
     if (!this.format || !this.format.length) {
-      throw new Error("The graph format traits are mandatory to style " +
-                      "the data source.");
+      throw new Error(
+        "The graph format traits are mandatory to style " + "the data source."
+      );
     }
     const { canvas, ctx } = this._getNamedCanvas("mountain-graph-data");
     const width = this._width;
@@ -126,8 +129,9 @@ MountainGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
     const lastTick = totalTicks ? this._data[totalTicks - 1].delta : 0;
 
     const duration = this.dataDuration || lastTick;
-    const dataScaleX = this.dataScaleX = width / (duration - this.dataOffsetX);
-    const dataScaleY = this.dataScaleY = height * this.dampenValuesFactor;
+    const dataScaleX = (this.dataScaleX =
+      width / (duration - this.dataOffsetX));
+    const dataScaleY = (this.dataScaleY = height * this.dampenValuesFactor);
 
     // Draw the graph.
 
@@ -181,7 +185,7 @@ MountainGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
     // Draw the average value horizontal line.
 
     ctx.beginPath();
-    const averageY = height / 2 * this.dampenValuesFactor;
+    const averageY = (height / 2) * this.dampenValuesFactor;
     ctx.moveTo(0, averageY);
     ctx.lineTo(width, averageY);
     ctx.stroke();

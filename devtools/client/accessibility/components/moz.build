@@ -22,5 +22,6 @@ DevToolsModules(
     'MainFrame.js',
     'RightSidebar.js',
     'TextLabelBadge.js',
+    'TextLabelCheck.js',
     'Toolbar.js'
 )

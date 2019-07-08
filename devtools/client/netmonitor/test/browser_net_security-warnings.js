@@ -34,21 +34,27 @@ add_task(async function() {
 
     info("Selecting the request.");
     wait = waitForDOM(document, ".tabs");
-    EventUtils.sendMouseEvent({ type: "mousedown" },
-      document.querySelectorAll(".request-list-item")[0]);
+    EventUtils.sendMouseEvent(
+      { type: "mousedown" },
+      document.querySelectorAll(".request-list-item")[0]
+    );
     await wait;
 
     if (!document.querySelector("#security-tab[aria-selected=true]")) {
       info("Selecting security tab.");
       wait = waitForDOM(document, "#security-panel .properties-view");
-      EventUtils.sendMouseEvent({ type: "click" },
-        document.querySelector("#security-tab"));
+      EventUtils.sendMouseEvent(
+        { type: "click" },
+        document.querySelector("#security-tab")
+      );
       await wait;
     }
 
-    is(document.querySelector("#security-warning-cipher"),
+    is(
+      document.querySelector("#security-warning-cipher"),
       test.warnCipher,
-      "Cipher suite warning is hidden.");
+      "Cipher suite warning is hidden."
+    );
 
     store.dispatch(Actions.clearRequests());
   }

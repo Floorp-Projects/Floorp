@@ -8,7 +8,8 @@ add_task(async function() {
   // Create a11y service.
   let a11yInit = initPromise();
   let accService = Cc["@mozilla.org/accessibilityService;1"].getService(
-    Ci.nsIAccessibilityService);
+    Ci.nsIAccessibilityService
+  );
 
   await a11yInit;
   ok(accService, "Service initialized");
@@ -34,8 +35,12 @@ add_task(async function() {
   // 'a11y-init-or-shutdown' event with '0' flag comes before it can be shut
   // down, the promise will reject.
   let a11yShutdown = new Promise((resolve, reject) =>
-    shutdownPromise().then(flag => canShutdown ? resolve() :
-      reject("Accessible service was shut down incorrectly")));
+    shutdownPromise().then(flag =>
+      canShutdown
+        ? resolve()
+        : reject("Accessible service was shut down incorrectly")
+    )
+  );
 
   accService = null;
   ok(!accService, "Service is removed");

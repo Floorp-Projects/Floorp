@@ -4,15 +4,12 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "Translation",
-  "TranslationTelemetry",
-];
+var EXPORTED_SYMBOLS = ["Translation", "TranslationTelemetry"];
 
 const TRANSLATION_PREF_SHOWUI = "browser.translation.ui.show";
 const TRANSLATION_PREF_DETECT_LANG = "browser.translation.detectLanguage";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var Translation = {
   STATE_OFFER: 0,
@@ -23,14 +20,49 @@ var Translation = {
 
   serviceUnavailable: false,
 
-  supportedSourceLanguages: ["bg", "cs", "de", "en", "es", "fr", "ja", "ko", "nl", "no", "pl", "pt", "ru", "tr", "vi", "zh"],
-  supportedTargetLanguages: ["bg", "cs", "de", "en", "es", "fr", "ja", "ko", "nl", "no", "pl", "pt", "ru", "tr", "vi", "zh"],
+  supportedSourceLanguages: [
+    "bg",
+    "cs",
+    "de",
+    "en",
+    "es",
+    "fr",
+    "ja",
+    "ko",
+    "nl",
+    "no",
+    "pl",
+    "pt",
+    "ru",
+    "tr",
+    "vi",
+    "zh",
+  ],
+  supportedTargetLanguages: [
+    "bg",
+    "cs",
+    "de",
+    "en",
+    "es",
+    "fr",
+    "ja",
+    "ko",
+    "nl",
+    "no",
+    "pl",
+    "pt",
+    "ru",
+    "tr",
+    "vi",
+    "zh",
+  ],
 
   _defaultTargetLanguage: "",
   get defaultTargetLanguage() {
     if (!this._defaultTargetLanguage) {
-      this._defaultTargetLanguage = Services.locale.appLocaleAsLangTag
-                                      .split("-")[0];
+      this._defaultTargetLanguage = Services.locale.appLocaleAsLangTag.split(
+        "-"
+      )[0];
     }
     return this._defaultTargetLanguage;
   },
@@ -44,23 +76,28 @@ var Translation = {
 
       if (!this.supportedSourceLanguages.includes(aData.detectedLanguage)) {
         // Detected language is not part of the supported languages.
-        TranslationTelemetry.recordMissedTranslationOpportunity(aData.detectedLanguage);
+        TranslationTelemetry.recordMissedTranslationOpportunity(
+          aData.detectedLanguage
+        );
         return;
       }
 
       TranslationTelemetry.recordTranslationOpportunity(aData.detectedLanguage);
     }
 
-    if (!Services.prefs.getBoolPref(TRANSLATION_PREF_SHOWUI))
+    if (!Services.prefs.getBoolPref(TRANSLATION_PREF_SHOWUI)) {
       return;
+    }
 
-    if (!aBrowser.translationUI)
+    if (!aBrowser.translationUI) {
       aBrowser.translationUI = new TranslationUI(aBrowser);
+    }
     let trUI = aBrowser.translationUI;
 
     // Set all values before showing a new translation infobar.
-    trUI._state = Translation.serviceUnavailable ? Translation.STATE_UNAVAILABLE
-                                                 : aData.state;
+    trUI._state = Translation.serviceUnavailable
+      ? Translation.STATE_UNAVAILABLE
+      : aData.state;
     trUI.detectedLanguage = aData.detectedLanguage;
     trUI.translatedFrom = aData.translatedFrom;
     trUI.translatedTo = aData.translatedTo;
@@ -68,13 +105,16 @@ var Translation = {
 
     trUI.showURLBarIcon();
 
-    if (trUI.shouldShowInfoBar(aBrowser.contentPrincipal))
+    if (trUI.shouldShowInfoBar(aBrowser.contentPrincipal)) {
       trUI.showTranslationInfoBar();
+    }
   },
 
   openProviderAttribution() {
     let attribution = this.supportedEngines[this.translationEngine];
-    const {BrowserWindowTracker} = ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
+    const { BrowserWindowTracker } = ChromeUtils.import(
+      "resource:///modules/BrowserWindowTracker.jsm"
+    );
     BrowserWindowTracker.getTopWindow().openWebLinkIn(attribution, "tab");
   },
 
@@ -82,9 +122,9 @@ var Translation = {
    * The list of translation engines and their attributions.
    */
   supportedEngines: {
-    "Google": "",
-    "Bing": "http://aka.ms/MicrosoftTranslatorAttribution",
-    "Yandex": "http://translate.yandex.com/",
+    Google: "",
+    Bing: "http://aka.ms/MicrosoftTranslatorAttribution",
+    Yandex: "http://translate.yandex.com/",
   },
 
   /**
@@ -99,7 +139,9 @@ var Translation = {
    */
   get translationEngine() {
     let engine = Services.prefs.getCharPref("browser.translation.engine");
-    return !Object.keys(this.supportedEngines).includes(engine) ? this.defaultEngine : engine;
+    return !Object.keys(this.supportedEngines).includes(engine)
+      ? this.defaultEngine
+      : engine;
   },
 };
 
@@ -127,27 +169,37 @@ TranslationUI.prototype = {
     return this._browser;
   },
   set browser(aBrowser) {
-    if (this._browser)
-      this._browser.messageManager.removeMessageListener("Translation:Finished", this);
+    if (this._browser) {
+      this._browser.messageManager.removeMessageListener(
+        "Translation:Finished",
+        this
+      );
+    }
     aBrowser.messageManager.addMessageListener("Translation:Finished", this);
     this._browser = aBrowser;
   },
   translate(aFrom, aTo) {
-    if (aFrom == aTo ||
-        (this.state == Translation.STATE_TRANSLATED &&
-         this.translatedFrom == aFrom && this.translatedTo == aTo)) {
+    if (
+      aFrom == aTo ||
+      (this.state == Translation.STATE_TRANSLATED &&
+        this.translatedFrom == aFrom &&
+        this.translatedTo == aTo)
+    ) {
       // Nothing to do.
       return;
     }
 
     if (this.state == Translation.STATE_OFFER) {
-      if (this.detectedLanguage != aFrom)
+      if (this.detectedLanguage != aFrom) {
         TranslationTelemetry.recordDetectedLanguageChange(true);
+      }
     } else {
-      if (this.translatedFrom != aFrom)
+      if (this.translatedFrom != aFrom) {
         TranslationTelemetry.recordDetectedLanguageChange(false);
-      if (this.translatedTo != aTo)
+      }
+      if (this.translatedTo != aTo) {
         TranslationTelemetry.recordTargetLanguageChange();
+      }
     }
 
     this.state = Translation.STATE_TRANSLATING;
@@ -164,36 +216,51 @@ TranslationUI.prototype = {
     let chromeWin = this.browser.ownerGlobal;
     let PopupNotifications = chromeWin.PopupNotifications;
     let removeId = this.originalShown ? "translated" : "translate";
-    let notification =
-      PopupNotifications.getNotification(removeId, this.browser);
-    if (notification)
+    let notification = PopupNotifications.getNotification(
+      removeId,
+      this.browser
+    );
+    if (notification) {
       PopupNotifications.remove(notification);
+    }
 
     let callback = (aTopic, aNewBrowser) => {
       if (aTopic == "swapping") {
-        let infoBarVisible =
-          this.notificationBox.getNotificationWithValue("translation");
+        let infoBarVisible = this.notificationBox.getNotificationWithValue(
+          "translation"
+        );
         aNewBrowser.translationUI = this;
         this.browser = aNewBrowser;
-        if (infoBarVisible)
+        if (infoBarVisible) {
           this.showTranslationInfoBar();
+        }
         return true;
       }
 
-      if (aTopic != "showing")
+      if (aTopic != "showing") {
         return false;
-      let translationNotification = this.notificationBox.getNotificationWithValue("translation");
-      if (translationNotification)
+      }
+      let translationNotification = this.notificationBox.getNotificationWithValue(
+        "translation"
+      );
+      if (translationNotification) {
         translationNotification.close();
-      else
+      } else {
         this.showTranslationInfoBar();
+      }
       return true;
     };
 
     let addId = this.originalShown ? "translate" : "translated";
-    PopupNotifications.show(this.browser, addId, null,
-                            addId + "-notification-icon", null, null,
-                            {dismissed: true, eventCallback: callback});
+    PopupNotifications.show(
+      this.browser,
+      addId,
+      null,
+      addId + "-notification-icon",
+      null,
+      null,
+      { dismissed: true, eventCallback: callback }
+    );
   },
 
   _state: 0,
@@ -202,8 +269,9 @@ TranslationUI.prototype = {
   },
   set state(val) {
     let notif = this.notificationBox.getNotificationWithValue("translation");
-    if (notif)
+    if (notif) {
       notif.state = val;
+    }
     this._state = val;
   },
 
@@ -227,9 +295,15 @@ TranslationUI.prototype = {
 
   showTranslationInfoBar() {
     let notificationBox = this.notificationBox;
-    let notif = notificationBox.appendNotification("", "translation", null,
-      notificationBox.PRIORITY_INFO_HIGH, null, null,
-      "translation-notification");
+    let notif = notificationBox.appendNotification(
+      "",
+      "translation",
+      null,
+      notificationBox.PRIORITY_INFO_HIGH,
+      null,
+      null,
+      "translation-notification"
+    );
     notif.init(this);
     return notif;
   },
@@ -237,12 +311,14 @@ TranslationUI.prototype = {
   shouldShowInfoBar(aPrincipal) {
     // Never show the infobar automatically while the translation
     // service is temporarily unavailable.
-    if (Translation.serviceUnavailable)
+    if (Translation.serviceUnavailable) {
       return false;
+    }
 
     // Check if we should never show the infobar for this language.
-    let neverForLangs =
-      Services.prefs.getCharPref("browser.translation.neverForLanguages");
+    let neverForLangs = Services.prefs.getCharPref(
+      "browser.translation.neverForLanguages"
+    );
     if (neverForLangs.split(",").includes(this.detectedLanguage)) {
       TranslationTelemetry.recordAutoRejectedTranslationOffer();
       return false;
@@ -250,7 +326,10 @@ TranslationUI.prototype = {
 
     // or if we should never show the infobar for this domain.
     let perms = Services.perms;
-    if (perms.testExactPermissionFromPrincipal(aPrincipal, "translate") == perms.DENY_ACTION) {
+    if (
+      perms.testExactPermissionFromPrincipal(aPrincipal, "translate") ==
+      perms.DENY_ACTION
+    ) {
       TranslationTelemetry.recordAutoRejectedTranslationOffer();
       return false;
     }
@@ -267,8 +346,11 @@ TranslationUI.prototype = {
           this.showURLBarIcon();
 
           // Record the number of characters translated.
-          TranslationTelemetry.recordTranslation(msg.data.from, msg.data.to,
-                                                    msg.data.characterCount);
+          TranslationTelemetry.recordTranslation(
+            msg.data.from,
+            msg.data.to,
+            msg.data.characterCount
+          );
         } else if (msg.data.unavailable) {
           Translation.serviceUnavailable = true;
           this.state = Translation.STATE_UNAVAILABLE;
@@ -280,8 +362,9 @@ TranslationUI.prototype = {
   },
 
   infobarClosed() {
-    if (this.state == Translation.STATE_OFFER)
+    if (this.state == Translation.STATE_OFFER) {
       TranslationTelemetry.recordDeniedTranslationOffer();
+    }
   },
 };
 
@@ -292,14 +375,14 @@ TranslationUI.prototype = {
  * NOTE: Metrics are only recorded if the user enabled the telemetry option.
  */
 var TranslationTelemetry = {
-
   init() {
     // Constructing histograms.
-    const plain = (id) => Services.telemetry.getHistogramById(id);
-    const keyed = (id) => Services.telemetry.getKeyedHistogramById(id);
+    const plain = id => Services.telemetry.getHistogramById(id);
+    const keyed = id => Services.telemetry.getKeyedHistogramById(id);
     this.HISTOGRAMS = {
       OPPORTUNITIES: () => plain("TRANSLATION_OPPORTUNITIES"),
-      OPPORTUNITIES_BY_LANG: () => keyed("TRANSLATION_OPPORTUNITIES_BY_LANGUAGE"),
+      OPPORTUNITIES_BY_LANG: () =>
+        keyed("TRANSLATION_OPPORTUNITIES_BY_LANGUAGE"),
       PAGES: () => plain("TRANSLATED_PAGES"),
       PAGES_BY_LANG: () => keyed("TRANSLATED_PAGES_BY_LANGUAGE"),
       CHARACTERS: () => plain("TRANSLATED_CHARACTERS"),
@@ -350,7 +433,7 @@ var TranslationTelemetry = {
     this.HISTOGRAMS.AUTO_REJECTED().add();
   },
 
-   /**
+  /**
    * Record a translation in the health report.
    * @param langFrom
    *        The language of the page.

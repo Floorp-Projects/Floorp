@@ -6,9 +6,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "DeferredTask",
-];
+var EXPORTED_SYMBOLS = ["DeferredTask"];
 
 /**
  * Sets up a function or an asynchronous task whose execution can be triggered
@@ -84,11 +82,17 @@ var EXPORTED_SYMBOLS = [
 
 // Globals
 
-ChromeUtils.defineModuleGetter(this, "PromiseUtils",
-                               "resource://gre/modules/PromiseUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PromiseUtils",
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
-const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer",
-                                     "initWithCallback");
+const Timer = Components.Constructor(
+  "@mozilla.org/timer;1",
+  "nsITimer",
+  "initWithCallback"
+);
 
 // DeferredTask
 
@@ -161,8 +165,11 @@ this.DeferredTask.prototype = {
    * Actually starts the timer with the delay specified on construction.
    */
   _startTimer() {
-    this._timer = new Timer(this._timerCallback.bind(this), this._delayMs,
-                            Ci.nsITimer.TYPE_ONE_SHOT);
+    this._timer = new Timer(
+      this._timerCallback.bind(this),
+      this._delayMs,
+      Ci.nsITimer.TYPE_ONE_SHOT
+    );
   },
 
   /**
@@ -271,28 +278,30 @@ this.DeferredTask.prototype = {
     this._armed = false;
     this._runningPromise = runningDeferred.promise;
 
-    runningDeferred.resolve((async () => {
-      // Execute the provided function asynchronously.
-      await this._runTask();
+    runningDeferred.resolve(
+      (async () => {
+        // Execute the provided function asynchronously.
+        await this._runTask();
 
-      // Now that the task has finished, we check the state of the object to
-      // determine if we should restart the task again.
-      if (this._armed) {
-        if (!this._finalized) {
-          this._startTimer();
-        } else {
-          // Execute the task again immediately, for the last time.  The isArmed
-          // property should return false while the task is running, and should
-          // remain false after the last execution terminates.
-          this._armed = false;
-          await this._runTask();
+        // Now that the task has finished, we check the state of the object to
+        // determine if we should restart the task again.
+        if (this._armed) {
+          if (!this._finalized) {
+            this._startTimer();
+          } else {
+            // Execute the task again immediately, for the last time.  The isArmed
+            // property should return false while the task is running, and should
+            // remain false after the last execution terminates.
+            this._armed = false;
+            await this._runTask();
+          }
         }
-      }
 
-      // Indicate that the execution of the task has finished.  This happens
-      // synchronously with the previous state changes in the function.
-      this._runningPromise = null;
-    })().catch(Cu.reportError));
+        // Indicate that the execution of the task has finished.  This happens
+        // synchronously with the previous state changes in the function.
+        this._runningPromise = null;
+      })().catch(Cu.reportError)
+    );
   },
 
   /**

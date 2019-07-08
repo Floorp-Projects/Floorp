@@ -10,27 +10,31 @@
 void CheckCompatVersionCompare(const nsCString& aOldCompatVersion,
                                const nsCString& aNewCompatVersion,
                                bool aExpectedSame, bool aExpectedDowngrade) {
-  printf("Comparing '%s' to '%s'.\n", aOldCompatVersion.get(), aNewCompatVersion.get());
+  printf("Comparing '%s' to '%s'.\n", aOldCompatVersion.get(),
+         aNewCompatVersion.get());
 
   int32_t result = CompareCompatVersions(aOldCompatVersion, aNewCompatVersion);
 
-  ASSERT_EQ(aExpectedSame, result == 0) << "Version sameness check should match.";
-  ASSERT_EQ(aExpectedDowngrade, result > 0) << "Version downgrade check should match.";
+  ASSERT_EQ(aExpectedSame, result == 0)
+      << "Version sameness check should match.";
+  ASSERT_EQ(aExpectedDowngrade, result > 0)
+      << "Version downgrade check should match.";
 }
 
-void CheckExpectedResult(
-  const char* aOldAppVersion, const char* aOldAppID, const char* aOldToolkitID,
-  const char* aNewAppVersion, const char* aNewAppID, const char* aNewToolkitID,
-  bool aExpectedSame, bool aExpectedDowngrade) {
-
+void CheckExpectedResult(const char* aOldAppVersion, const char* aOldAppID,
+                         const char* aOldToolkitID, const char* aNewAppVersion,
+                         const char* aNewAppID, const char* aNewToolkitID,
+                         bool aExpectedSame, bool aExpectedDowngrade) {
   nsCString oldCompatVersion;
-  BuildCompatVersion(aOldAppVersion, aOldAppID, aOldToolkitID, oldCompatVersion);
+  BuildCompatVersion(aOldAppVersion, aOldAppID, aOldToolkitID,
+                     oldCompatVersion);
 
   nsCString newCompatVersion;
-  BuildCompatVersion(aNewAppVersion, aNewAppID, aNewToolkitID, newCompatVersion);
+  BuildCompatVersion(aNewAppVersion, aNewAppID, aNewToolkitID,
+                     newCompatVersion);
 
-  CheckCompatVersionCompare(oldCompatVersion, newCompatVersion,
-                            aExpectedSame, aExpectedDowngrade);
+  CheckCompatVersionCompare(oldCompatVersion, newCompatVersion, aExpectedSame,
+                            aExpectedDowngrade);
 }
 
 // clang-format off

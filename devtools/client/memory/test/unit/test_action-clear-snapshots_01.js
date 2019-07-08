@@ -5,7 +5,10 @@
 
 // Test clearSnapshots deletes snapshots with READ censuses
 
-const { takeSnapshotAndCensus, clearSnapshots } = require("devtools/client/memory/actions/snapshot");
+const {
+  takeSnapshotAndCensus,
+  clearSnapshots,
+} = require("devtools/client/memory/actions/snapshot");
 const { actions } = require("devtools/client/memory/constants");
 const { treeMapState } = require("devtools/client/memory/constants");
 

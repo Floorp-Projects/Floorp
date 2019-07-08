@@ -1087,7 +1087,8 @@ NS_IMETHODIMP GfxInfoBase::GetFailures(nsTArray<int32_t>& indices,
   // assuming this is not a big deal, as the size of the array should be small
   // and the strings in it should be small as well (the error messages in the
   // code.)  The second copy happens with the AppendElement() calls.
-  // Technically, we don't need the mutex lock after the StringVectorCopy() call.
+  // Technically, we don't need the mutex lock after the StringVectorCopy()
+  // call.
   LoggingRecord loggedStrings = logForwarder->LoggingRecordCopy();
   LoggingRecord::const_iterator it;
   for (it = loggedStrings.begin(); it != loggedStrings.end(); ++it) {

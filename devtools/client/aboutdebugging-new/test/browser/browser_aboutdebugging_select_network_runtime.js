@@ -33,13 +33,20 @@ add_task(async function() {
 
   info("Check that the network runtime mock is properly displayed");
   const thisFirefoxRuntimeInfo = document.querySelector(".qa-runtime-name");
-  ok(thisFirefoxRuntimeInfo, "Runtime info for this-firefox runtime is displayed");
+  ok(
+    thisFirefoxRuntimeInfo,
+    "Runtime info for this-firefox runtime is displayed"
+  );
   const runtimeInfoText = thisFirefoxRuntimeInfo.textContent;
 
-  ok(runtimeInfoText.includes(NETWORK_RUNTIME_APP_NAME),
-    "network runtime info shows the correct runtime name: " + runtimeInfoText);
-  ok(runtimeInfoText.includes(NETWORK_RUNTIME_VERSION),
-    "network runtime info shows the correct version number: " + runtimeInfoText);
+  ok(
+    runtimeInfoText.includes(NETWORK_RUNTIME_APP_NAME),
+    "network runtime info shows the correct runtime name: " + runtimeInfoText
+  );
+  ok(
+    runtimeInfoText.includes(NETWORK_RUNTIME_VERSION),
+    "network runtime info shows the correct version number: " + runtimeInfoText
+  );
 
   await removeTab(tab);
 });

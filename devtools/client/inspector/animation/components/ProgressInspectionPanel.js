@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
@@ -25,11 +28,7 @@ class ProgressInspectionPanel extends PureComponent {
   }
 
   render() {
-    const {
-      indicator,
-      list,
-      ticks,
-    } = this.props;
+    const { indicator, list, ticks } = this.props;
 
     return dom.div(
       {

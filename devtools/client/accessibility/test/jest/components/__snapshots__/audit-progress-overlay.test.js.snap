@@ -10,4 +10,4 @@ exports[`AuditProgressOverlay component: render auditing progress 2`] = `"<span 
 
 exports[`AuditProgressOverlay component: render auditing progress 3`] = `"<span id=\\"audit-progress-container\\">accessibility.progress.progressbar<progress max=\\"100\\" value=\\"75\\" class=\\"audit-progress-progressbar\\" aria-labelledby=\\"audit-progress-container\\"></progress></span>"`;
 
-exports[`AuditProgressOverlay component: render not auditing 1`] = `null`;
+exports[`AuditProgressOverlay component: render not auditing 1`] = `""`;

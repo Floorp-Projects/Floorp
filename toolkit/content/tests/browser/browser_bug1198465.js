@@ -40,9 +40,7 @@ add_task(async function() {
   findBar._findField.value = "xy";
   findBar.startFind();
   is(findBar._findField.value, "xy", "findbar should have xy initial query");
-  is(findBar._findField,
-    document.activeElement,
-    "findbar is now focused");
+  is(findBar._findField, document.activeElement, "findbar is now focused");
 
   EventUtils.sendChar("z", window);
   is(findBar._findField.value, "z", "z erases xy");
@@ -55,9 +53,7 @@ add_task(async function() {
 
   findBar.startFind();
   ok(findBar._startFindDeferred, "prefilled value hasn't been fetched yet");
-  is(findBar._findField,
-    document.activeElement,
-    "findbar is still focused");
+  is(findBar._findField, document.activeElement, "findbar is still focused");
 
   EventUtils.sendChar("a", window);
   EventUtils.sendChar("b", window);

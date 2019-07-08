@@ -5,18 +5,29 @@
 
 /* globals ContentAreaUtils */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Prompt",
-                               "resource://gre/modules/Prompt.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Prompt",
+  "resource://gre/modules/Prompt.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "EventDispatcher",
-                               "resource://gre/modules/Messaging.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "EventDispatcher",
+  "resource://gre/modules/Messaging.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "ContentAreaUtils", function() {
   let ContentAreaUtils = {};
-  Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", ContentAreaUtils);
+  Services.scriptloader.loadSubScript(
+    "chrome://global/content/contentAreaUtils.js",
+    ContentAreaUtils
+  );
   return ContentAreaUtils;
 });
 
@@ -43,7 +54,7 @@ class App {
   }
 }
 
-var HelperApps =  {
+var HelperApps = {
   get defaultBrowsers() {
     delete this.defaultBrowsers;
     this.defaultBrowsers = this._collectDefaultBrowsers();
@@ -59,17 +70,20 @@ var HelperApps =  {
       filterBrowsers: false,
       filterHtml: false,
     });
-    return {...httpHandlers, ...httpsHandlers};
+    return { ...httpHandlers, ...httpsHandlers };
   },
 
   // Finds handlers that have registered for urls ending in html. Some apps, like
   // the Samsung Video player, will only appear for these urls.
   get defaultHtmlHandlers() {
     delete this.defaultHtmlHandlers;
-    return this.defaultHtmlHandlers = this._getHandlers("http://www.example.com/index.html", {
-      filterBrowsers: false,
-      filterHtml: false,
-    });
+    return (this.defaultHtmlHandlers = this._getHandlers(
+      "http://www.example.com/index.html",
+      {
+        filterBrowsers: false,
+        filterHtml: false,
+      }
+    ));
   },
 
   _getHandlers(url, options) {
@@ -85,12 +99,16 @@ var HelperApps =  {
 
   get protoSvc() {
     delete this.protoSvc;
-    return this.protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService);
+    return (this.protoSvc = Cc[
+      "@mozilla.org/uriloader/external-protocol-service;1"
+    ].getService(Ci.nsIExternalProtocolService));
   },
 
   get urlHandlerService() {
     delete this.urlHandlerService;
-    return this.urlHandlerService = Cc["@mozilla.org/uriloader/external-url-handler-service;1"].getService(Ci.nsIExternalURLHandlerService);
+    return (this.urlHandlerService = Cc[
+      "@mozilla.org/uriloader/external-url-handler-service;1"
+    ].getService(Ci.nsIExternalURLHandlerService));
   },
 
   prompt(apps, promptOptions, callback) {
@@ -99,7 +117,8 @@ var HelperApps =  {
   },
 
   getAppsForProtocol(scheme) {
-    let protoHandlers = this.protoSvc.getProtocolHandlerInfoFromOS(scheme, {}).possibleApplicationHandlers;
+    let protoHandlers = this.protoSvc.getProtocolHandlerInfoFromOS(scheme, {})
+      .possibleApplicationHandlers;
 
     let results = {};
     for (let i = 0; i < protoHandlers.length; i++) {
@@ -115,7 +134,7 @@ var HelperApps =  {
     return results;
   },
 
-  getAppsForUri(uri, flags = { }, callback) {
+  getAppsForUri(uri, flags = {}, callback) {
     // Return early for well-known internal schemes
     if (!uri || uri.schemeIs("about") || uri.schemeIs("chrome")) {
       if (callback) {
@@ -124,12 +143,13 @@ var HelperApps =  {
       return [];
     }
 
-    flags.filterBrowsers = "filterBrowsers" in flags ? flags.filterBrowsers : true;
+    flags.filterBrowsers =
+      "filterBrowsers" in flags ? flags.filterBrowsers : true;
     flags.filterHtml = "filterHtml" in flags ? flags.filterHtml : true;
 
     // Query for apps that can/can't handle the mimetype
     let msg = this._getMessage("Intent:GetHandlers", uri, flags);
-    let parseData = (apps) => {
+    let parseData = apps => {
       if (!apps) {
         return [];
       }
@@ -137,8 +157,7 @@ var HelperApps =  {
       apps = this._parseApps(apps);
 
       if (flags.filterBrowsers) {
-        apps = apps.filter(app =>
-          app.name && !this.defaultBrowsers[app.name]);
+        apps = apps.filter(app => app.name && !this.defaultBrowsers[app.name]);
       }
 
       // Some apps will register for html files (the Samsung Video player) but should be shown
@@ -148,8 +167,9 @@ var HelperApps =  {
         // Matches from the first '.' to the end of the string, '?', or '#'
         let ext = /\.([^\?#]*)/.exec(uri.pathQueryRef);
         if (ext && (ext[1] === "html" || ext[1] === "htm")) {
-          apps = apps.filter(app =>
-            app.name && !this.defaultHtmlHandlers[app.name]);
+          apps = apps.filter(
+            app => app.name && !this.defaultHtmlHandlers[app.name]
+          );
         }
       }
 
@@ -160,17 +180,21 @@ var HelperApps =  {
       let data = null;
       // Use dispatch to enable synchronous callback for Gecko thread event.
       EventDispatcher.instance.dispatch(msg.type, msg, {
-        onSuccess: result => { data = result; },
-        onError: () => { throw new Error("Intent:GetHandler callback failed"); },
+        onSuccess: result => {
+          data = result;
+        },
+        onError: () => {
+          throw new Error("Intent:GetHandler callback failed");
+        },
       });
       if (data === null) {
         throw new Error("Intent:GetHandler did not return data");
       }
       return parseData(data);
     }
-      EventDispatcher.instance.sendRequestForResult(msg).then(data => {
-        callback(parseData(data));
-      });
+    EventDispatcher.instance.sendRequestForResult(msg).then(data => {
+      callback(parseData(data));
+    });
   },
 
   launchUri(uri) {
@@ -185,10 +209,14 @@ var HelperApps =  {
 
     let apps = [];
     for (let i = 0; i < appInfo.length; i += numAttr) {
-      apps.push(new App({"name": appInfo[i],
-                 "isDefault": appInfo[i + 1],
-                 "packageName": appInfo[i + 2],
-                 "activityName": appInfo[i + 3]}));
+      apps.push(
+        new App({
+          name: appInfo[i],
+          isDefault: appInfo[i + 1],
+          packageName: appInfo[i + 2],
+          activityName: appInfo[i + 3],
+        })
+      );
     }
 
     return apps;
@@ -198,7 +226,10 @@ var HelperApps =  {
     let mimeType = options.mimeType;
     if (uri && mimeType == undefined) {
       mimeType = ContentAreaUtils.getMIMETypeForURI(uri) || "";
-      if (uri.scheme != "file" && NON_FILE_URI_IGNORED_MIME_TYPES.has(mimeType)) {
+      if (
+        uri.scheme != "file" &&
+        NON_FILE_URI_IGNORED_MIME_TYPES.has(mimeType)
+      ) {
         // We're guessing the MIME type based on the extension, which especially
         // with non-local HTML documents will yield inconsistent results, as those
         // commonly use URLs without any sort of extension, too.
@@ -226,19 +257,19 @@ var HelperApps =  {
 
   _launchApp(app, uri, callback) {
     if (callback) {
-        let msg = this._getMessage("Intent:OpenForResult", uri, {
-            packageName: app.packageName,
-            className: app.activityName,
-        });
+      let msg = this._getMessage("Intent:OpenForResult", uri, {
+        packageName: app.packageName,
+        className: app.activityName,
+      });
 
-        EventDispatcher.instance.sendRequestForResult(msg).then(callback);
+      EventDispatcher.instance.sendRequestForResult(msg).then(callback);
     } else {
-        let msg = this._getMessage("Intent:Open", uri, {
-            packageName: app.packageName,
-            className: app.activityName,
-        });
+      let msg = this._getMessage("Intent:Open", uri, {
+        packageName: app.packageName,
+        className: app.activityName,
+      });
 
-        EventDispatcher.instance.sendRequest(msg);
+      EventDispatcher.instance.sendRequest(msg);
     }
   },
 };

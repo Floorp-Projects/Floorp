@@ -36,8 +36,10 @@ add_task(async function test_main() {
 
   // Check the database was corrupt.
   // nsBrowserGlue uses databaseStatus to manage initialization.
-  Assert.equal(PlacesUtils.history.databaseStatus,
-               PlacesUtils.history.DATABASE_STATUS_CORRUPT);
+  Assert.equal(
+    PlacesUtils.history.databaseStatus,
+    PlacesUtils.history.DATABASE_STATUS_CORRUPT
+  );
 
   // The test will continue once restore has finished.
   await promiseTopicObserved("places-browser-init-complete");

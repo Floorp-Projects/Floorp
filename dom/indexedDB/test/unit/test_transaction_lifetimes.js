@@ -5,9 +5,11 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
-  let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
+function* testSteps() {
+  let request = indexedDB.open(
+    this.window ? window.location.pathname : "Splendid Test",
+    1
+  );
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = unexpectedSuccessHandler;
@@ -23,8 +25,11 @@ function* testSteps()
   os.createIndex("bar", "foo.bar");
   event = yield undefined;
 
-  is(request.transaction, event.target,
-     "request.transaction should still be set");
+  is(
+    request.transaction,
+    event.target,
+    "request.transaction should still be set"
+  );
 
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
@@ -42,9 +47,12 @@ function* testSteps()
   let wasAbleToGrabIndexOutsideOfCallback = false;
   executeSoon(function() {
     ok(!requestComplete, "Ordering is correct.");
-    wasAbleToGrabObjectStoreOutsideOfCallback = !!transaction.objectStore("foo");
-    wasAbleToGrabIndexOutsideOfCallback =
-      !!transaction.objectStore("foo").index("bar");
+    wasAbleToGrabObjectStoreOutsideOfCallback = !!transaction.objectStore(
+      "foo"
+    );
+    wasAbleToGrabIndexOutsideOfCallback = !!transaction
+      .objectStore("foo")
+      .index("bar");
   });
 
   request = os.add({});
@@ -55,10 +63,11 @@ function* testSteps()
 
   requestComplete = true;
 
-  ok(wasAbleToGrabObjectStoreOutsideOfCallback,
-     "Should be able to get objectStore");
-  ok(wasAbleToGrabIndexOutsideOfCallback,
-     "Should be able to get index");
+  ok(
+    wasAbleToGrabObjectStoreOutsideOfCallback,
+    "Should be able to get objectStore"
+  );
+  ok(wasAbleToGrabIndexOutsideOfCallback, "Should be able to get index");
 
   transaction.oncomplete = grabEventAndContinueHandler;
   yield undefined;
@@ -66,8 +75,7 @@ function* testSteps()
   try {
     transaction.objectStore("foo");
     ok(false, "Should have thrown!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(e instanceof DOMException, "Got database exception.");
     is(e.name, "InvalidStateError", "Good error.");
     is(e.code, DOMException.INVALID_STATE_ERR, "Good error code.");
@@ -79,8 +87,7 @@ function* testSteps()
   try {
     transaction.objectStore("foo");
     ok(false, "Should have thrown!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(e instanceof DOMException, "Got database exception.");
     is(e.name, "InvalidStateError", "Good error.");
     is(e.code, DOMException.INVALID_STATE_ERR, "Good error code.");

@@ -26,14 +26,26 @@ const propertiesMap = {};
 // file.  In the webpack case this results in just the locale property
 // files being included in the pack; and in the devtools case this is
 // a wordy no-op.
-const reqShared = require.context("raw!devtools/shared/locales/",
-                                  true, /^.*\.properties$/);
-const reqClient = require.context("raw!devtools/client/locales/",
-                                  true, /^.*\.properties$/);
-const reqStartup = require.context("raw!devtools/startup/locales/",
-                                  true, /^.*\.properties$/);
-const reqGlobal = require.context("raw!toolkit/locales/",
-                                  true, /^.*\.properties$/);
+const reqShared = require.context(
+  "raw!devtools/shared/locales/",
+  true,
+  /^.*\.properties$/
+);
+const reqClient = require.context(
+  "raw!devtools/client/locales/",
+  true,
+  /^.*\.properties$/
+);
+const reqStartup = require.context(
+  "raw!devtools/startup/locales/",
+  true,
+  /^.*\.properties$/
+);
+const reqGlobal = require.context(
+  "raw!toolkit/locales/",
+  true,
+  /^.*\.properties$/
+);
 
 // Map used to memoize Number formatters.
 const numberFormatters = new Map();
@@ -160,7 +172,7 @@ LocalizationHelper.prototype = {
    */
   numberWithDecimals: function(number, decimals = 0) {
     // Do not show decimals for integers.
-    if (number === (number|0)) {
+    if (number === (number | 0)) {
       return getNumberFormatter(0).format(number);
     }
 
@@ -175,8 +187,8 @@ LocalizationHelper.prototype = {
     // Convert the localized number to a number again.
     const localizedNumber = localized * 1;
     // Check if this number is now equal to an integer.
-    if (localizedNumber === (localizedNumber|0)) {
-    // If it is, remove the fraction part.
+    if (localizedNumber === (localizedNumber | 0)) {
+      // If it is, remove the fraction part.
       return getNumberFormatter(0).format(localizedNumber);
     }
 
@@ -241,7 +253,9 @@ function localizeMarkup(root) {
   }
 }
 
-const sharedL10N = new LocalizationHelper("devtools/shared/locales/shared.properties");
+const sharedL10N = new LocalizationHelper(
+  "devtools/shared/locales/shared.properties"
+);
 
 /**
  * A helper for having the same interface as LocalizationHelper, but for more
@@ -260,8 +274,10 @@ function MultiLocalizationHelper(...stringBundleNames) {
   Object.getOwnPropertyNames(LocalizationHelper.prototype)
     .map(name => ({
       name: name,
-      descriptor: Object.getOwnPropertyDescriptor(LocalizationHelper.prototype,
-                                                  name),
+      descriptor: Object.getOwnPropertyDescriptor(
+        LocalizationHelper.prototype,
+        name
+      ),
     }))
     .filter(({ descriptor }) => descriptor.value instanceof Function)
     .forEach(method => {
@@ -281,4 +297,6 @@ function MultiLocalizationHelper(...stringBundleNames) {
 exports.LocalizationHelper = LocalizationHelper;
 exports.localizeMarkup = localizeMarkup;
 exports.MultiLocalizationHelper = MultiLocalizationHelper;
-Object.defineProperty(exports, "ELLIPSIS", { get: () => sharedL10N.getStr("ellipsis") });
+Object.defineProperty(exports, "ELLIPSIS", {
+  get: () => sharedL10N.getStr("ellipsis"),
+});

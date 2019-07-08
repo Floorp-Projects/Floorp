@@ -19,6 +19,5 @@ function doThrow() {
   debugger;
   try {
     throws();
-  } catch (e) {
-  }
+  } catch (e) {}
 }

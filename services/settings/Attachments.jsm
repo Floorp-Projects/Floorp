@@ -2,17 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = [
-  "Downloader",
-];
+var EXPORTED_SYMBOLS = ["Downloader"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "RemoteSettingsWorker",
-                               "resource://services-settings/RemoteSettingsWorker.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "RemoteSettingsWorker",
+  "resource://services-settings/RemoteSettingsWorker.jsm"
+);
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
-
 
 class DownloadError extends Error {
   constructor(url, resp) {
@@ -30,8 +32,12 @@ class BadContentError extends Error {
 }
 
 class Downloader {
-  static get DownloadError() { return DownloadError; }
-  static get BadContentError() { return BadContentError; }
+  static get DownloadError() {
+    return DownloadError;
+  }
+  static get BadContentError() {
+    return BadContentError;
+  }
 
   constructor(...folders) {
     this.folders = ["settings", ...folders];
@@ -53,8 +59,14 @@ class Downloader {
    */
   async download(record, options = {}) {
     const { retries = 3 } = options;
-    const { attachment: { location, filename, hash, size } } = record;
-    const localFilePath = OS.Path.join(OS.Constants.Path.localProfileDir, ...this.folders, filename);
+    const {
+      attachment: { location, filename, hash, size },
+    } = record;
+    const localFilePath = OS.Path.join(
+      OS.Constants.Path.localProfileDir,
+      ...this.folders,
+      filename
+    );
     const localFileUrl = `file://${[
       ...OS.Path.split(OS.Constants.Path.localProfileDir).components,
       ...this.folders,
@@ -91,8 +103,14 @@ class Downloader {
    * @param record A Remote Settings entry with attachment.
    */
   async delete(record) {
-    const { attachment: { filename } } = record;
-    const path = OS.Path.join(OS.Constants.Path.localProfileDir, ...this.folders, filename);
+    const {
+      attachment: { filename },
+    } = record;
+    const path = OS.Path.join(
+      OS.Constants.Path.localProfileDir,
+      ...this.folders,
+      filename
+    );
     await OS.File.remove(path, { ignoreAbsent: true });
     await this._rmDirs();
   }
@@ -102,7 +120,11 @@ class Downloader {
       const server = Services.prefs.getCharPref("services.settings.server");
       const serverInfo = await (await fetch(`${server}/`)).json();
       // Server capabilities expose attachments configuration.
-      const { capabilities: { attachments: { base_url } } } = serverInfo;
+      const {
+        capabilities: {
+          attachments: { base_url },
+        },
+      } = serverInfo;
       // Make sure the URL always has a trailing slash.
       this._cdnURL = base_url + (base_url.endsWith("/") ? "" : "/");
     }
@@ -117,17 +139,25 @@ class Downloader {
       throw new Downloader.DownloadError(url, resp);
     }
     const buffer = await resp.arrayBuffer();
-    await OS.File.writeAtomic(destination, buffer, { tmpPath: `${destination}.tmp` });
+    await OS.File.writeAtomic(destination, buffer, {
+      tmpPath: `${destination}.tmp`,
+    });
   }
 
   async _makeDirs() {
-    const dirPath = OS.Path.join(OS.Constants.Path.localProfileDir, ...this.folders);
+    const dirPath = OS.Path.join(
+      OS.Constants.Path.localProfileDir,
+      ...this.folders
+    );
     await OS.File.makeDir(dirPath, { from: OS.Constants.Path.localProfileDir });
   }
 
   async _rmDirs() {
     for (let i = this.folders.length; i > 0; i--) {
-      const dirPath = OS.Path.join(OS.Constants.Path.localProfileDir, ...this.folders.slice(0, i));
+      const dirPath = OS.Path.join(
+        OS.Constants.Path.localProfileDir,
+        ...this.folders.slice(0, i)
+      );
       try {
         await OS.File.removeEmptyDir(dirPath, { ignoreAbsent: true });
       } catch (e) {

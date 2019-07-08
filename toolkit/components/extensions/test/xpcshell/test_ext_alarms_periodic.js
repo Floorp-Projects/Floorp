@@ -10,7 +10,11 @@ add_task(async function test_periodic_alarm_fires() {
     let timer;
 
     browser.alarms.onAlarm.addListener(alarm => {
-      browser.test.assertEq(alarm.name, ALARM_NAME, "alarm has the expected name");
+      browser.test.assertEq(
+        alarm.name,
+        ALARM_NAME,
+        "alarm has the expected name"
+      );
       if (count++ === 3) {
         clearTimeout(timer);
         browser.alarms.clear(ALARM_NAME).then(wasCleared => {
@@ -21,7 +25,7 @@ add_task(async function test_periodic_alarm_fires() {
       }
     });
 
-    browser.alarms.create(ALARM_NAME, {periodInMinutes: 0.02});
+    browser.alarms.create(ALARM_NAME, { periodInMinutes: 0.02 });
 
     timer = setTimeout(async () => {
       browser.test.fail("alarm fired expected number of times");

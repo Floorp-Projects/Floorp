@@ -29,16 +29,26 @@ add_task(async function() {
   const { document: doc } = flexboxInspector;
 
   info("Select the flex container's grandchild.");
-  const onFlexContainerHeaderRendered = waitForDOM(doc, ".flex-header-container-label");
+  const onFlexContainerHeaderRendered = waitForDOM(
+    doc,
+    ".flex-header-container-label"
+  );
   await selectNode("#grandchild", inspector);
   await onFlexContainerHeaderRendered;
 
   info("Check that only the Flex Container accordion item is showing.");
   const flexPanes = doc.querySelectorAll(".flex-accordion");
-  is(flexPanes.length, 1, "There should only be one flex accordion item showing.");
+  is(
+    flexPanes.length,
+    1,
+    "There should only be one flex accordion item showing."
+  );
 
   info("Check that the container header shows Flex Container.");
   const flexAccordionHeader = flexPanes[0].querySelector("._header .truncate");
-  is(flexAccordionHeader.textContent, "Flex Container",
-    "The flexbox pane shows a flex container accordion item.");
+  is(
+    flexAccordionHeader.textContent,
+    "Flex Container",
+    "The flexbox pane shows a flex container accordion item."
+  );
 });

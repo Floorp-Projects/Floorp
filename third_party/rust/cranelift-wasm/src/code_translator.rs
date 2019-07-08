@@ -135,7 +135,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             if let Ok(ty_cre) = blocktype_to_type(ty) {
                 builder.append_ebb_param(next, ty_cre);
             }
-            state.push_block(next, num_return_values(ty));
+            state.push_block(next, num_return_values(ty)?);
         }
         Operator::Loop { ty } => {
             let loop_body = builder.create_ebb();
@@ -144,7 +144,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
                 builder.append_ebb_param(next, ty_cre);
             }
             builder.ins().jump(loop_body, &[]);
-            state.push_loop(loop_body, next, num_return_values(ty));
+            state.push_loop(loop_body, next, num_return_values(ty)?);
             builder.switch_to_block(loop_body);
             environ.translate_loop_header(builder.cursor())?;
         }
@@ -161,7 +161,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             if let Ok(ty_cre) = blocktype_to_type(ty) {
                 builder.append_ebb_param(if_not, ty_cre);
             }
-            state.push_if(jump_inst, if_not, num_return_values(ty));
+            state.push_if(jump_inst, if_not, num_return_values(ty)?);
         }
         Operator::Else => {
             // We take the control frame pushed by the if, use its ebb as the else body
@@ -1047,7 +1047,9 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         | Operator::F32x4ConvertSI32x4
         | Operator::F32x4ConvertUI32x4
         | Operator::F64x2ConvertSI64x2
-        | Operator::F64x2ConvertUI64x2 => {
+        | Operator::F64x2ConvertUI64x2
+        | Operator::V8x16Shuffle1
+        | Operator::V8x16Shuffle2Imm { .. } => {
             return Err(WasmError::Unsupported("proposed SIMD operators"));
         }
     };

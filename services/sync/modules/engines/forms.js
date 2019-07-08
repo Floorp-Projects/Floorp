@@ -4,15 +4,26 @@
 
 var EXPORTED_SYMBOLS = ["FormEngine", "FormRec", "FormValidator"];
 
-const {Store, SyncEngine, Tracker} = ChromeUtils.import("resource://services-sync/engines.js");
-const {CryptoWrapper} = ChromeUtils.import("resource://services-sync/record.js");
-const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
-const {SCORE_INCREMENT_MEDIUM} = ChromeUtils.import("resource://services-sync/constants.js");
-const {CollectionProblemData, CollectionValidator} = ChromeUtils.import("resource://services-sync/collection_validator.js");
-const {Async} = ChromeUtils.import("resource://services-common/async.js");
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.defineModuleGetter(this, "FormHistory",
-                               "resource://gre/modules/FormHistory.jsm");
+const { Store, SyncEngine, Tracker } = ChromeUtils.import(
+  "resource://services-sync/engines.js"
+);
+const { CryptoWrapper } = ChromeUtils.import(
+  "resource://services-sync/record.js"
+);
+const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+const { SCORE_INCREMENT_MEDIUM } = ChromeUtils.import(
+  "resource://services-sync/constants.js"
+);
+const { CollectionProblemData, CollectionValidator } = ChromeUtils.import(
+  "resource://services-sync/collection_validator.js"
+);
+const { Async } = ChromeUtils.import("resource://services-common/async.js");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormHistory",
+  "resource://gre/modules/FormHistory.jsm"
+);
 
 const FORMS_TTL = 3 * 365 * 24 * 60 * 60; // Three years in seconds.
 
@@ -27,12 +38,11 @@ FormRec.prototype = {
 
 Utils.deferGetSet(FormRec, "cleartext", ["name", "value"]);
 
-
 var FormWrapper = {
   _log: Log.repository.getLogger("Sync.Engine.Forms"),
 
   _getEntryCols: ["fieldname", "value"],
-  _guidCols:     ["guid"],
+  _guidCols: ["guid"],
 
   async _search(terms, searchData) {
     return new Promise(resolve => {
@@ -64,11 +74,11 @@ var FormWrapper = {
   },
 
   async getEntry(guid) {
-    let results = await this._search(this._getEntryCols, {guid});
+    let results = await this._search(this._getEntryCols, { guid });
     if (!results.length) {
       return null;
     }
-    return {name: results[0].fieldname, value: results[0].value};
+    return { name: results[0].fieldname, value: results[0].value };
   },
 
   async getGUID(name, value) {
@@ -80,7 +90,7 @@ var FormWrapper = {
 
   async hasGUID(guid) {
     // We could probably use a count function here, but search exists...
-    let results = await this._search(this._guidCols, {guid});
+    let results = await this._search(this._guidCols, { guid });
     return results.length != 0;
   },
 
@@ -92,7 +102,6 @@ var FormWrapper = {
     };
     await this._update(changes);
   },
-
 };
 
 function FormEngine(service) {
@@ -214,7 +223,8 @@ FormTracker.prototype = {
 
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
-    Ci.nsISupportsWeakReference]),
+    Ci.nsISupportsWeakReference,
+  ]),
 
   onStart() {
     Svc.Obs.add("satchel-storage-changed", this.asyncObserver);
@@ -246,12 +256,10 @@ FormTracker.prototype = {
   },
 };
 
-
 class FormsProblemData extends CollectionProblemData {
   getSummary() {
     // We don't support syncing deleted form data, so "clientMissing" isn't a problem
-    return super.getSummary().filter(entry =>
-      entry.name !== "clientMissing");
+    return super.getSummary().filter(entry => entry.name !== "clientMissing");
   }
 }
 
@@ -281,11 +289,14 @@ class FormValidator extends CollectionValidator {
   }
 
   async normalizeServerItem(item) {
-    let res = Object.assign({
-      guid: item.id,
-      fieldname: item.name,
-      original: item,
-    }, item);
+    let res = Object.assign(
+      {
+        guid: item.id,
+        fieldname: item.name,
+        original: item,
+      },
+      item
+    );
     // Missing `name` or `value` causes the getGUID call to throw
     if (item.name !== undefined && item.value !== undefined) {
       let guid = await FormWrapper.getGUID(item.name, item.value);

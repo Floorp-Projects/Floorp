@@ -47,8 +47,11 @@ add_task(async function test_infoURL() {
   // <infoURL> tag in pluginInfoURL_block.xml.
   let testInfoURL = "http://test.url.com/";
 
-  Assert.strictEqual(await Blocklist.getPluginBlockURL(PLUGINS[0]),
-    testInfoURL, "Should be the provided url when an infoURL tag is available");
+  Assert.strictEqual(
+    await Blocklist.getPluginBlockURL(PLUGINS[0]),
+    testInfoURL,
+    "Should be the provided url when an infoURL tag is available"
+  );
 });
 
 /**
@@ -58,8 +61,11 @@ add_task(async function test_infoURL() {
 add_task(async function test_altInfoURL() {
   let altTestInfoURL = "http://alt.test.url.com/";
 
-  Assert.strictEqual(await Blocklist.getPluginBlockURL(PLUGINS[1]),
-    altTestInfoURL, "Should be the alternative infoURL");
+  Assert.strictEqual(
+    await Blocklist.getPluginBlockURL(PLUGINS[1]),
+    altTestInfoURL,
+    "Should be the alternative infoURL"
+  );
 });
 
 /**
@@ -67,17 +73,27 @@ add_task(async function test_altInfoURL() {
  * if the infoURL tag is missing in the blocklist.xml file.
  */
 add_task(async function test_infoURL_missing() {
-  let fallback_URL = Services.prefs.getStringPref("extensions.blocklist.detailsURL")
-    + "test_plugin_noInfoURL.html";
+  let fallback_URL =
+    Services.prefs.getStringPref("extensions.blocklist.detailsURL") +
+    "test_plugin_noInfoURL.html";
 
-  Assert.strictEqual(await Blocklist.getPluginBlockURL(PLUGINS[2]), fallback_URL,
-    "Should be using fallback when no infoURL tag is available.");
+  Assert.strictEqual(
+    await Blocklist.getPluginBlockURL(PLUGINS[2]),
+    fallback_URL,
+    "Should be using fallback when no infoURL tag is available."
+  );
 });
 
 add_task(async function test_intoURL_newVersion() {
   let testInfoURL = "http://test.url2.com/";
-  Assert.strictEqual(await Blocklist.getPluginBlockURL(PLUGINS[3]),
-    testInfoURL, "Old plugin should match");
-  Assert.strictEqual(await Blocklist.getPluginBlockURL(PLUGINS[4]),
-    null, "New plugin should not match");
+  Assert.strictEqual(
+    await Blocklist.getPluginBlockURL(PLUGINS[3]),
+    testInfoURL,
+    "Old plugin should match"
+  );
+  Assert.strictEqual(
+    await Blocklist.getPluginBlockURL(PLUGINS[4]),
+    null,
+    "New plugin should not match"
+  );
 });

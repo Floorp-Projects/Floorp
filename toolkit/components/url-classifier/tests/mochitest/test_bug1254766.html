@@ -66,8 +66,8 @@ function getGethashCounter() {
 
 // setup function allows classifier send gethash request for test database
 // also it calculate to fullhash for url and store those hashes in gethash sjs.
-function setup() {
-  classifierHelper.allowCompletion([MALWARE_LIST, UNWANTED_LIST], GETHASH_URL);
+async function setup() {
+  await classifierHelper.allowCompletion([MALWARE_LIST, UNWANTED_LIST], GETHASH_URL);
 
   return Promise.all([
     addCompletionToServer(MALWARE_LIST, MALWARE_HOST1, GETHASH_URL),

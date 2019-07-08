@@ -8,13 +8,11 @@
 
 import ObservedPropertiesMixin from "../mixins/ObservedPropertiesMixin.js";
 
-export default class CurrencyAmount extends ObservedPropertiesMixin(HTMLElement) {
+export default class CurrencyAmount extends ObservedPropertiesMixin(
+  HTMLElement
+) {
   static get observedAttributes() {
-    return [
-      "currency",
-      "display-code",
-      "value",
-    ];
+    return ["currency", "display-code", "value"];
   }
 
   constructor() {

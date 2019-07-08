@@ -5,9 +5,15 @@
 
 const reduxActions = require("devtools/client/webconsole/actions/index");
 const { configureStore } = require("devtools/client/webconsole/store");
-const { IdGenerator } = require("devtools/client/webconsole/utils/id-generator");
-const { stubPackets } = require("devtools/client/webconsole/test/fixtures/stubs/index");
-const { getAllMessagesById } = require("devtools/client/webconsole/selectors/messages");
+const {
+  IdGenerator,
+} = require("devtools/client/webconsole/utils/id-generator");
+const {
+  stubPackets,
+} = require("devtools/client/webconsole/test/fixtures/stubs/index");
+const {
+  getAllMessagesById,
+} = require("devtools/client/webconsole/selectors/messages");
 const { getPrefsService } = require("devtools/client/webconsole/utils/prefs");
 const prefsService = getPrefsService({});
 const { PREFS } = require("devtools/client/webconsole/constants");
@@ -22,7 +28,7 @@ function setupActions() {
   const wrappedActions = Object.assign({}, reduxActions);
 
   const idGenerator = new IdGenerator();
-  wrappedActions.messagesAdd = (packets) => {
+  wrappedActions.messagesAdd = packets => {
     return reduxActions.messagesAdd(packets, idGenerator);
   };
 
@@ -35,11 +41,7 @@ function setupActions() {
 /**
  * Prepare the store for use in testing.
  */
-function setupStore(input = [], {
-  storeOptions = {},
-  actions,
-  hud,
-} = {}) {
+function setupStore(input = [], { storeOptions = {}, actions, hud } = {}) {
   if (!hud) {
     hud = {
       proxy: {
@@ -57,9 +59,7 @@ function setupStore(input = [], {
   });
 
   // Add the messages from the input commands to the store.
-  const messagesAdd = actions
-    ? actions.messagesAdd
-    : reduxActions.messagesAdd;
+  const messagesAdd = actions ? actions.messagesAdd : reduxActions.messagesAdd;
   store.dispatch(messagesAdd(input.map(cmd => stubPackets.get(cmd))));
 
   return store;

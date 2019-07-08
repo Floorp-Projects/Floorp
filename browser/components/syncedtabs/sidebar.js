@@ -4,30 +4,48 @@
 
 "use strict";
 
-const {SyncedTabs} = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm");
-const {SyncedTabsDeckComponent} = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsDeckComponent.js");
-const {LightweightThemeChild} = ChromeUtils.import("resource:///actors/LightweightThemeChild.jsm");
+const { SyncedTabs } = ChromeUtils.import(
+  "resource://services-sync/SyncedTabs.jsm"
+);
+const { SyncedTabsDeckComponent } = ChromeUtils.import(
+  "resource:///modules/syncedtabs/SyncedTabsDeckComponent.js"
+);
+const { LightweightThemeChild } = ChromeUtils.import(
+  "resource:///actors/LightweightThemeChild.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "fxAccounts",
-                               "resource://gre/modules/FxAccounts.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "fxAccounts",
+  "resource://gre/modules/FxAccounts.jsm"
+);
 
-var syncedTabsDeckComponent = new SyncedTabsDeckComponent({window, SyncedTabs, fxAccounts});
+var syncedTabsDeckComponent = new SyncedTabsDeckComponent({
+  window,
+  SyncedTabs,
+  fxAccounts,
+});
 
 let themeListener;
 
 let onLoaded = () => {
   window.top.MozXULElement.insertFTLIfNeeded("browser/syncedTabs.ftl");
-  window.top.document.getElementById("SyncedTabsSidebarContext").querySelectorAll("[data-lazy-l10n-id]").forEach(el => {
-    el.setAttribute("data-l10n-id", el.getAttribute("data-lazy-l10n-id"));
-    el.removeAttribute("data-lazy-l10n-id");
-  });
+  window.top.document
+    .getElementById("SyncedTabsSidebarContext")
+    .querySelectorAll("[data-lazy-l10n-id]")
+    .forEach(el => {
+      el.setAttribute("data-l10n-id", el.getAttribute("data-lazy-l10n-id"));
+      el.removeAttribute("data-lazy-l10n-id");
+    });
   themeListener = new LightweightThemeChild({
     content: window,
     chromeOuterWindowID: window.top.windowUtils.outerWindowID,
     docShell: window.docShell,
   });
   syncedTabsDeckComponent.init();
-  document.getElementById("template-container").appendChild(syncedTabsDeckComponent.container);
+  document
+    .getElementById("template-container")
+    .appendChild(syncedTabsDeckComponent.container);
 };
 
 let onUnloaded = () => {

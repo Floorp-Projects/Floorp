@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {RetVal, generateActorSpec} = require("devtools/shared/protocol");
+const { RetVal, generateActorSpec } = require("devtools/shared/protocol");
 
 const addonTargetSpec = generateActorSpec({
   typeName: "addonTarget",

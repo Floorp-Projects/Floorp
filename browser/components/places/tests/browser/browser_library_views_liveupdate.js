@@ -31,11 +31,14 @@ async function testInFolder(folderGuid, prefix) {
   await updateAndCheckItem(item);
   addedBookmarks.push(item);
 
-  item = await insertAndCheckItem({
-    parentGuid: folderGuid,
-    title: `${prefix}2`,
-    url: "place:",
-  }, 0);
+  item = await insertAndCheckItem(
+    {
+      parentGuid: folderGuid,
+      title: `${prefix}2`,
+      url: "place:",
+    },
+    0
+  );
 
   item.title = `${prefix}2_edited`;
   await updateAndCheckItem(item, 0);
@@ -47,11 +50,14 @@ async function testInFolder(folderGuid, prefix) {
   });
   addedBookmarks.push(item);
 
-  item = await insertAndCheckItem({
-    parentGuid: folderGuid,
-    title: `${prefix}f`,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER,
-  }, 1);
+  item = await insertAndCheckItem(
+    {
+      parentGuid: folderGuid,
+      title: `${prefix}f`,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    },
+    1
+  );
 
   item.title = `${prefix}f_edited`;
   await updateAndCheckItem(item, 1);
@@ -86,13 +92,19 @@ add_task(async function test() {
   let addedBookmarks = [];
 
   info("*** Acting on menu bookmarks");
-  addedBookmarks = addedBookmarks.concat(await testInFolder(PlacesUtils.bookmarks.menuGuid, "bm"));
+  addedBookmarks = addedBookmarks.concat(
+    await testInFolder(PlacesUtils.bookmarks.menuGuid, "bm")
+  );
 
   info("*** Acting on toolbar bookmarks");
-  addedBookmarks = addedBookmarks.concat(await testInFolder(PlacesUtils.bookmarks.toolbarGuid, "tb"));
+  addedBookmarks = addedBookmarks.concat(
+    await testInFolder(PlacesUtils.bookmarks.toolbarGuid, "tb")
+  );
 
   info("*** Acting on unsorted bookmarks");
-  addedBookmarks = addedBookmarks.concat(await testInFolder(PlacesUtils.bookmarks.unfiledGuid, "ub"));
+  addedBookmarks = addedBookmarks.concat(
+    await testInFolder(PlacesUtils.bookmarks.unfiledGuid, "ub")
+  );
 
   // Remove bookmarks in reverse order, so that the effects are correct.
   for (let i = addedBookmarks.length - 1; i >= 0; i--) {
@@ -103,7 +115,10 @@ add_task(async function test() {
 async function insertAndCheckItem(itemData, expectedIndex) {
   let item = await PlacesUtils.bookmarks.insert(itemData);
 
-  let [node, index, title] = getNodeForTreeItem(item.guid, gLibrary.PlacesOrganizer._places);
+  let [node, index, title] = getNodeForTreeItem(
+    item.guid,
+    gLibrary.PlacesOrganizer._places
+  );
   // Left pane should not be updated for normal bookmarks or separators.
   switch (itemData.type || PlacesUtils.bookmarks.TYPE_BOOKMARK) {
     case PlacesUtils.bookmarks.TYPE_BOOKMARK:
@@ -113,12 +128,18 @@ async function insertAndCheckItem(itemData, expectedIndex) {
         Assert.ok(node, "Should have a new query in the left pane.");
         break;
       }
-      // Fallthrough if this isn't a query
+    // Fallthrough if this isn't a query
     case PlacesUtils.bookmarks.TYPE_SEPARATOR:
-      Assert.ok(!node, "Should not have added a bookmark or separator to the left pane.");
+      Assert.ok(
+        !node,
+        "Should not have added a bookmark or separator to the left pane."
+      );
       break;
     default:
-      Assert.ok(node, "Should have added a new node in the left pane for a folder.");
+      Assert.ok(
+        node,
+        "Should have added a new node in the left pane for a folder."
+      );
   }
 
   if (node) {
@@ -132,7 +153,10 @@ async function insertAndCheckItem(itemData, expectedIndex) {
 async function updateAndCheckItem(newItemData, expectedIndex) {
   await PlacesUtils.bookmarks.update(newItemData);
 
-  let [node, index, title] = getNodeForTreeItem(newItemData.guid, gLibrary.PlacesOrganizer._places);
+  let [node, index, title] = getNodeForTreeItem(
+    newItemData.guid,
+    gLibrary.PlacesOrganizer._places
+  );
 
   // Left pane should not be updated for normal bookmarks or separators.
   switch (newItemData.type || PlacesUtils.bookmarks.TYPE_BOOKMARK) {
@@ -142,7 +166,7 @@ async function updateAndCheckItem(newItemData, expectedIndex) {
         Assert.ok(node, "Should be able to find the updated node");
         break;
       }
-      // Fallthrough if this isn't a query
+    // Fallthrough if this isn't a query
     case PlacesUtils.bookmarks.TYPE_SEPARATOR:
       Assert.ok(!node, "Should not be able to find the updated node");
       break;
@@ -158,7 +182,10 @@ async function updateAndCheckItem(newItemData, expectedIndex) {
 
 async function removeAndCheckItem(itemData) {
   await PlacesUtils.bookmarks.remove(itemData);
-  let [node ] = getNodeForTreeItem(itemData.guid, gLibrary.PlacesOrganizer._places);
+  let [node] = getNodeForTreeItem(
+    itemData.guid,
+    gLibrary.PlacesOrganizer._places
+  );
   Assert.ok(!node, "Should not be able to find the removed node");
 }
 
@@ -173,8 +200,9 @@ async function removeAndCheckItem(itemData) {
  */
 function getNodeForTreeItem(aItemGuid, aTree) {
   function findNode(aContainerIndex) {
-    if (aTree.view.isContainerEmpty(aContainerIndex))
+    if (aTree.view.isContainerEmpty(aContainerIndex)) {
       return [null, null, ""];
+    }
 
     // The rowCount limit is just for sanity, but we will end looping when
     // we have checked the last child of this container or we have found node.
@@ -196,13 +224,15 @@ function getNodeForTreeItem(aItemGuid, aTree) {
         // Close container.
         aTree.view.toggleOpenState(i);
         // Return node if found.
-        if (foundNode[0] != null)
+        if (foundNode[0] != null) {
           return foundNode;
+        }
       }
 
       // We have finished walking this container.
-      if (!aTree.view.hasNextSibling(aContainerIndex + 1, i))
+      if (!aTree.view.hasNextSibling(aContainerIndex + 1, i)) {
         break;
+      }
     }
     return [null, null, ""];
   }
@@ -216,8 +246,9 @@ function getNodeForTreeItem(aItemGuid, aTree) {
     // Close container.
     aTree.view.toggleOpenState(i);
     // Return node if found.
-    if (foundNode[0] != null)
+    if (foundNode[0] != null) {
       return foundNode;
+    }
   }
   return [null, null, ""];
 }

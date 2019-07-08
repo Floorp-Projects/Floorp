@@ -2,10 +2,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-ChromeUtils.defineModuleGetter(this, "UpdateUtils",
-                               "resource://gre/modules/UpdateUtils.jsm");
-var updateService = Cc["@mozilla.org/updates/update-service;1"].
-                    getService(Ci.nsIApplicationUpdateService);
+ChromeUtils.defineModuleGetter(
+  this,
+  "UpdateUtils",
+  "resource://gre/modules/UpdateUtils.jsm"
+);
+var updateService = Cc["@mozilla.org/updates/update-service;1"].getService(
+  Ci.nsIApplicationUpdateService
+);
 
 // This test is intended to ensure that nsIUpdateService::canCheckForUpdates
 // is true before the "DisableAppUpdate" policy is applied. Testing that
@@ -21,11 +25,19 @@ add_task(async function test_updates_pre_policy() {
     await UpdateUtils.setAppUpdateAutoEnabled(originalUpdateAutoValue);
   });
 
-  await SpecialPowers.pushPrefEnv({"set": [["app.update.disabledForTesting", false]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["app.update.disabledForTesting", false]],
+  });
 
-  is(Services.policies.isAllowed("appUpdate"), true,
-     "Since no policies have been set, appUpdate should be allowed by default");
+  is(
+    Services.policies.isAllowed("appUpdate"),
+    true,
+    "Since no policies have been set, appUpdate should be allowed by default"
+  );
 
-  is(updateService.canCheckForUpdates, true,
-     "Should be able to check for updates before any policies are in effect.");
+  is(
+    updateService.canCheckForUpdates,
+    true,
+    "Should be able to check for updates before any policies are in effect."
+  );
 });

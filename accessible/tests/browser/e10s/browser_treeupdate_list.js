@@ -13,30 +13,39 @@ async function setDisplayAndWaitForReorder(browser, value) {
   return onReorder;
 }
 
-addAccessibleTask(`
+addAccessibleTask(
+  `
   <ul id="ul">
     <li id="li">item1</li>
-  </ul>`, async function(browser, accDoc) {
-  let li = findAccessibleChildByID(accDoc, "li");
-  let bullet = li.firstChild;
-  let accTree = {
-    role: ROLE_LISTITEM,
-    children: [ {
-      role: ROLE_STATICTEXT,
-      children: []
-    }, {
-      role: ROLE_TEXT_LEAF,
-      children: []
-    } ]
-  };
-  testAccessibleTree(li, accTree);
+  </ul>`,
+  async function(browser, accDoc) {
+    let li = findAccessibleChildByID(accDoc, "li");
+    let bullet = li.firstChild;
+    let accTree = {
+      role: ROLE_LISTITEM,
+      children: [
+        {
+          role: ROLE_STATICTEXT,
+          children: [],
+        },
+        {
+          role: ROLE_TEXT_LEAF,
+          children: [],
+        },
+      ],
+    };
+    testAccessibleTree(li, accTree);
 
-  await setDisplayAndWaitForReorder(browser, "none");
+    await setDisplayAndWaitForReorder(browser, "none");
 
-  ok(isDefunct(li), "Check that li is defunct.");
-  ok(isDefunct(bullet), "Check that bullet is defunct.");
+    ok(isDefunct(li), "Check that li is defunct.");
+    ok(isDefunct(bullet), "Check that bullet is defunct.");
 
-  let event = await setDisplayAndWaitForReorder(browser, "list-item");
+    let event = await setDisplayAndWaitForReorder(browser, "list-item");
 
-  testAccessibleTree(findAccessibleChildByID(event.accessible, "li"), accTree);
-});
+    testAccessibleTree(
+      findAccessibleChildByID(event.accessible, "li"),
+      accTree
+    );
+  }
+);

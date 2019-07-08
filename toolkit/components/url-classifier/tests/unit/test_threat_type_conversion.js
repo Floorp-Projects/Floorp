@@ -1,6 +1,7 @@
 function run_test() {
-  let urlUtils = Cc["@mozilla.org/url-classifier/utils;1"]
-                   .getService(Ci.nsIUrlClassifierUtils);
+  let urlUtils = Cc["@mozilla.org/url-classifier/utils;1"].getService(
+    Ci.nsIUrlClassifierUtils
+  );
 
   // Test list name to threat type conversion.
 
@@ -25,12 +26,21 @@ function run_test() {
 
   // Test threat type to list name conversion.
   equal(urlUtils.convertThreatTypeToListNames(1), "goog-malware-proto");
-  equal(urlUtils.convertThreatTypeToListNames(2), "googpub-phish-proto,moztest-phish-proto,test-phish-proto");
-  equal(urlUtils.convertThreatTypeToListNames(3), "goog-unwanted-proto,moztest-unwanted-proto,test-unwanted-proto");
+  equal(
+    urlUtils.convertThreatTypeToListNames(2),
+    "googpub-phish-proto,moztest-phish-proto,test-phish-proto"
+  );
+  equal(
+    urlUtils.convertThreatTypeToListNames(3),
+    "goog-unwanted-proto,moztest-unwanted-proto,test-unwanted-proto"
+  );
   equal(urlUtils.convertThreatTypeToListNames(4), "goog-harmful-proto");
   equal(urlUtils.convertThreatTypeToListNames(5), "goog-phish-proto");
   equal(urlUtils.convertThreatTypeToListNames(7), "goog-badbinurl-proto");
-  equal(urlUtils.convertThreatTypeToListNames(8), "goog-passwordwhite-proto,moztest-passwordwhite-proto,test-passwordwhite-proto");
+  equal(
+    urlUtils.convertThreatTypeToListNames(8),
+    "goog-passwordwhite-proto,moztest-passwordwhite-proto,test-passwordwhite-proto"
+  );
   equal(urlUtils.convertThreatTypeToListNames(9), "goog-downloadwhite-proto");
 
   try {

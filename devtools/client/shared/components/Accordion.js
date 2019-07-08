@@ -4,24 +4,34 @@
 
 "use strict";
 
-const { Component, cloneElement } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  cloneElement,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { ul, li, h2, div } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  ul,
+  li,
+  h2,
+  div,
+} = require("devtools/client/shared/vendor/react-dom-factories");
 
 class Accordion extends Component {
   static get propTypes() {
     return {
       // A list of all items to be rendered using an Accordion component.
-      items: PropTypes.arrayOf(PropTypes.shape({
-        component: PropTypes.object,
-        componentProps: PropTypes.object,
-        buttons: PropTypes.arrayOf(PropTypes.object),
-        className: PropTypes.string,
-        header: PropTypes.string.isRequired,
-        labelledby: PropTypes.string.isRequired,
-        onToggle: PropTypes.func,
-        opened: PropTypes.bool.isRequired,
-      })).isRequired,
+      items: PropTypes.arrayOf(
+        PropTypes.shape({
+          component: PropTypes.object,
+          componentProps: PropTypes.object,
+          buttons: PropTypes.arrayOf(PropTypes.object),
+          className: PropTypes.string,
+          header: PropTypes.string.isRequired,
+          labelledby: PropTypes.string.isRequired,
+          onToggle: PropTypes.func,
+          opened: PropTypes.bool.isRequired,
+        })
+      ).isRequired,
     };
   }
 
@@ -67,58 +77,63 @@ class Accordion extends Component {
   }
 
   renderContainer(item, i) {
-    const { buttons, className, component, componentProps, labelledby, header } = item;
+    const {
+      buttons,
+      className,
+      component,
+      componentProps,
+      labelledby,
+      header,
+    } = item;
     const opened = this.state.opened[i];
 
-    return (
-      li(
+    return li(
+      {
+        className,
+        "aria-labelledby": labelledby,
+        key: labelledby,
+      },
+      h2(
         {
-          className,
-          "aria-labelledby": labelledby,
-          key: labelledby,
+          className: "accordion-header",
+          id: labelledby,
+          tabIndex: 0,
+          "aria-expanded": opened,
+          onKeyDown: e => this.onHandleHeaderKeyDown(e, i),
+          onClick: () => this.handleHeaderClick(i),
         },
-        h2(
-          {
-            className: "accordion-header",
-            id: labelledby,
-            tabIndex: 0,
-            "aria-expanded": opened,
-            onKeyDown: e => this.onHandleHeaderKeyDown(e, i),
-            onClick: () => this.handleHeaderClick(i),
-          },
+        div({
+          className: `arrow theme-twisty${opened ? " open" : ""}`,
+          role: "presentation",
+        }),
+        header,
+        buttons &&
           div(
-            {
-              className: `arrow theme-twisty${opened ? " open" : ""}`,
-              role: "presentation",
-            }
-          ),
-          header,
-          buttons && div(
             {
               className: "header-buttons",
               role: "presentation",
             },
             buttons
-          ),
-        ),
-        opened && div(
+          )
+      ),
+      opened &&
+        div(
           {
             className: "accordion-content",
             role: "presentation",
           },
           cloneElement(component, componentProps || {})
         )
-      )
     );
   }
 
   render() {
-    return (
-      ul({
+    return ul(
+      {
         className: "accordion",
         tabIndex: -1,
       },
-        this.props.items.map((item, i) => this.renderContainer(item, i)))
+      this.props.items.map((item, i) => this.renderContainer(item, i))
     );
   }
 }

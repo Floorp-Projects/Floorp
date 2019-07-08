@@ -5,16 +5,30 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-                               "resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PageActions",
-                               "resource:///modules/PageActions.jsm");
-ChromeUtils.defineModuleGetter(this, "Pocket",
-                               "chrome://pocket/content/Pocket.jsm");
-ChromeUtils.defineModuleGetter(this, "ReaderMode",
-                               "resource://gre/modules/ReaderMode.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PageActions",
+  "resource:///modules/PageActions.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Pocket",
+  "chrome://pocket/content/Pocket.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ReaderMode",
+  "resource://gre/modules/ReaderMode.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["SaveToPocket"];
 
@@ -26,70 +40,75 @@ var PocketPageAction = {
     let id = "pocket";
     this.pageAction = PageActions.actionForID(id);
     if (!this.pageAction) {
-      this.pageAction = PageActions.addAction(new PageActions.Action({
-        id,
-        title: "pocket-title",
-        pinnedToUrlbar: true,
-        wantsIframe: true,
-        urlbarIDOverride: "pocket-button-box",
-        anchorIDOverride: "pocket-button",
-        _insertBeforeActionID: PageActions.ACTION_ID_PIN_TAB,
-        _urlbarNodeInMarkup: true,
-        onBeforePlacedInWindow(window) {
-          let action = PageActions.actionForID("pocket");
-          window.BrowserPageActions.takeActionTitleFromPanel(action);
-        },
-        onIframeShowing(iframe, panel) {
-          Pocket.onShownInPhotonPageActionPanel(panel, iframe);
+      this.pageAction = PageActions.addAction(
+        new PageActions.Action({
+          id,
+          title: "pocket-title",
+          pinnedToUrlbar: true,
+          wantsIframe: true,
+          urlbarIDOverride: "pocket-button-box",
+          anchorIDOverride: "pocket-button",
+          _insertBeforeActionID: PageActions.ACTION_ID_PIN_TAB,
+          _urlbarNodeInMarkup: true,
+          onBeforePlacedInWindow(window) {
+            let action = PageActions.actionForID("pocket");
+            window.BrowserPageActions.takeActionTitleFromPanel(action);
+          },
+          onIframeShowing(iframe, panel) {
+            Pocket.onShownInPhotonPageActionPanel(panel, iframe);
 
-          let doc = panel.ownerDocument;
-          let urlbarNode = doc.getElementById("pocket-button-box");
-          if (!urlbarNode) {
-            return;
-          }
+            let doc = panel.ownerDocument;
+            let urlbarNode = doc.getElementById("pocket-button-box");
+            if (!urlbarNode) {
+              return;
+            }
 
-          BrowserUtils.setToolbarButtonHeightProperty(urlbarNode);
+            BrowserUtils.setToolbarButtonHeightProperty(urlbarNode);
 
-          PocketPageAction.urlbarNode = urlbarNode;
-          PocketPageAction.urlbarNode.setAttribute("open", "true");
-          if (Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
-            PocketPageAction.urlbarNode.setAttribute("animate", "true");
-          }
+            PocketPageAction.urlbarNode = urlbarNode;
+            PocketPageAction.urlbarNode.setAttribute("open", "true");
+            if (
+              Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")
+            ) {
+              PocketPageAction.urlbarNode.setAttribute("animate", "true");
+            }
 
-          let browser = panel.ownerGlobal.gBrowser.selectedBrowser;
-          PocketPageAction.pocketedBrowser = browser;
-          PocketPageAction.pocketedBrowserInnerWindowID = browser.innerWindowID;
-        },
-        onIframeHidden(iframe, panel) {
-          if (iframe.getAttribute("itemAdded") == "true") {
-            iframe.ownerGlobal.LibraryUI.triggerLibraryAnimation("pocket");
-          }
+            let browser = panel.ownerGlobal.gBrowser.selectedBrowser;
+            PocketPageAction.pocketedBrowser = browser;
+            PocketPageAction.pocketedBrowserInnerWindowID =
+              browser.innerWindowID;
+          },
+          onIframeHidden(iframe, panel) {
+            if (iframe.getAttribute("itemAdded") == "true") {
+              iframe.ownerGlobal.LibraryUI.triggerLibraryAnimation("pocket");
+            }
 
-          if (!PocketPageAction.urlbarNode) {
-            return;
-          }
-          PocketPageAction.urlbarNode.removeAttribute("animate");
-          PocketPageAction.urlbarNode.removeAttribute("open");
-          delete PocketPageAction.urlbarNode;
+            if (!PocketPageAction.urlbarNode) {
+              return;
+            }
+            PocketPageAction.urlbarNode.removeAttribute("animate");
+            PocketPageAction.urlbarNode.removeAttribute("open");
+            delete PocketPageAction.urlbarNode;
 
-          if (iframe.getAttribute("itemAdded") == "true") {
-            PocketPageAction.innerWindowIDsByBrowser.set(
-              PocketPageAction.pocketedBrowser,
-              PocketPageAction.pocketedBrowserInnerWindowID
-            );
-          } else {
-            PocketPageAction.innerWindowIDsByBrowser.delete(
-              PocketPageAction.pocketedBrowser
-            );
-          }
-          PocketPageAction.updateUrlbarNodeState(panel.ownerGlobal);
-          delete PocketPageAction.pocketedBrowser;
-          delete PocketPageAction.pocketedBrowserInnerWindowID;
-        },
-        onLocationChange(browserWindow) {
-          PocketPageAction.updateUrlbarNodeState(browserWindow);
-        },
-      }));
+            if (iframe.getAttribute("itemAdded") == "true") {
+              PocketPageAction.innerWindowIDsByBrowser.set(
+                PocketPageAction.pocketedBrowser,
+                PocketPageAction.pocketedBrowserInnerWindowID
+              );
+            } else {
+              PocketPageAction.innerWindowIDsByBrowser.delete(
+                PocketPageAction.pocketedBrowser
+              );
+            }
+            PocketPageAction.updateUrlbarNodeState(panel.ownerGlobal);
+            delete PocketPageAction.pocketedBrowser;
+            delete PocketPageAction.pocketedBrowserInnerWindowID;
+          },
+          onLocationChange(browserWindow) {
+            PocketPageAction.updateUrlbarNodeState(browserWindow);
+          },
+        })
+      );
     }
     Pocket.pageAction = this.pageAction;
   },
@@ -103,7 +122,7 @@ var PocketPageAction = {
   // inner window.
   get innerWindowIDsByBrowser() {
     delete this.innerWindowIDsByBrowser;
-    return this.innerWindowIDsByBrowser = new WeakMap();
+    return (this.innerWindowIDsByBrowser = new WeakMap());
   },
 
   // Sets or removes the "pocketed" attribute on the Pocket urlbar button as
@@ -112,7 +131,7 @@ var PocketPageAction = {
     if (!this.pageAction) {
       return;
     }
-    let {BrowserPageActions} = browserWindow;
+    let { BrowserPageActions } = browserWindow;
     let urlbarNode = browserWindow.document.getElementById(
       BrowserPageActions.urlbarButtonNodeIDForActionID(this.pageAction.id)
     );
@@ -160,15 +179,25 @@ var PocketContextMenu = {
     let document = subject.menu.ownerDocument;
     let pocketEnabled = SaveToPocket.prefEnabled;
 
-    let showSaveCurrentPageToPocket = !(subject.onTextInput || subject.onLink ||
-                                        subject.isContentSelected || subject.onImage ||
-                                        subject.onCanvas || subject.onVideo || subject.onAudio);
+    let showSaveCurrentPageToPocket = !(
+      subject.onTextInput ||
+      subject.onLink ||
+      subject.isContentSelected ||
+      subject.onImage ||
+      subject.onCanvas ||
+      subject.onVideo ||
+      subject.onAudio
+    );
     let targetUrl = subject.onLink ? subject.linkUrl : subject.pageUrl;
     let targetURI = Services.io.newURI(targetUrl);
-    let canPocket = pocketEnabled && (targetURI.schemeIs("http") || targetURI.schemeIs("https") ||
-                    (targetURI.schemeIs("about") && ReaderMode.getOriginalUrl(targetUrl)));
+    let canPocket =
+      pocketEnabled &&
+      (targetURI.schemeIs("http") ||
+        targetURI.schemeIs("https") ||
+        (targetURI.schemeIs("about") && ReaderMode.getOriginalUrl(targetUrl)));
 
-    let showSaveLinkToPocket = canPocket && !showSaveCurrentPageToPocket && subject.onLink;
+    let showSaveLinkToPocket =
+      canPocket && !showSaveCurrentPageToPocket && subject.onLink;
 
     let menu = document.getElementById("context-pocket");
     menu.hidden = !(canPocket && showSaveCurrentPageToPocket);
@@ -197,13 +226,21 @@ var SaveToPocket = {
   init() {
     // migrate enabled pref
     if (Services.prefs.prefHasUserValue("browser.pocket.enabled")) {
-      Services.prefs.setBoolPref("extensions.pocket.enabled", Services.prefs.getBoolPref("browser.pocket.enabled"));
+      Services.prefs.setBoolPref(
+        "extensions.pocket.enabled",
+        Services.prefs.getBoolPref("browser.pocket.enabled")
+      );
       Services.prefs.clearUserPref("browser.pocket.enabled");
     }
     // Only define the pref getter now, so we don't get notified for the
     // migrated pref above.
     XPCOMUtils.defineLazyPreferenceGetter(
-      this, "prefEnabled", "extensions.pocket.enabled", true, this.onPrefChange.bind(this));
+      this,
+      "prefEnabled",
+      "extensions.pocket.enabled",
+      true,
+      this.onPrefChange.bind(this)
+    );
     if (this.prefEnabled) {
       PocketOverlay.startup();
     } else {
@@ -234,7 +271,9 @@ var SaveToPocket = {
 
   onPrefChange(pref, oldValue, newValue) {
     if (!newValue) {
-      Services.mm.broadcastAsyncMessage("Reader:RemoveButton", { id: "pocket-button" });
+      Services.mm.broadcastAsyncMessage("Reader:RemoveButton", {
+        id: "pocket-button",
+      });
       PocketOverlay.shutdown();
       Services.obs.addObserver(this, "browser-delayed-startup-finished");
     } else {
@@ -244,7 +283,10 @@ var SaveToPocket = {
       // If we don't have this, there's also no possibility of there being a reader
       // mode tab already loaded. We'll get an Reader:OnSetup message when that happens.
       if (this._readerButtonData.title) {
-        Services.mm.broadcastAsyncMessage("Reader:AddButton", this._readerButtonData);
+        Services.mm.broadcastAsyncMessage(
+          "Reader:AddButton",
+          this._readerButtonData
+        );
       }
     }
     this.updateElements(newValue);
@@ -259,7 +301,8 @@ var SaveToPocket = {
 
   updateElementsInWindow(win, enabled) {
     let elementIds = [
-      "context-pocket", "context-savelinktopocket",
+      "context-pocket",
+      "context-savelinktopocket",
       "appMenu-library-pocket-button",
     ];
     let document = win.document;
@@ -282,8 +325,10 @@ var SaveToPocket = {
           this._readerButtonData.title = button.getAttribute("tooltiptext");
         }
         // Tell the reader about our button.
-        message.target.messageManager.
-          sendAsyncMessage("Reader:AddButton", this._readerButtonData);
+        message.target.messageManager.sendAsyncMessage(
+          "Reader:AddButton",
+          this._readerButtonData
+        );
         break;
       }
       case "Reader:Clicked-pocket-button": {

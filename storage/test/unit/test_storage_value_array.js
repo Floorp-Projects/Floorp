@@ -5,11 +5,15 @@
 // This file tests the functions of mozIStorageValueArray
 
 add_task(async function setup() {
-  getOpenedDatabase().createTable("test", "id INTEGER PRIMARY KEY, name TEXT," +
-                                          "number REAL, nuller NULL, blobber BLOB");
+  getOpenedDatabase().createTable(
+    "test",
+    "id INTEGER PRIMARY KEY, name TEXT," +
+      "number REAL, nuller NULL, blobber BLOB"
+  );
 
-  var stmt = createStatement("INSERT INTO test (name, number, blobber) " +
-                             "VALUES (?1, ?2, ?3)");
+  var stmt = createStatement(
+    "INSERT INTO test (name, number, blobber) VALUES (?1, ?2, ?3)"
+  );
   stmt.bindByIndex(0, "foo");
   stmt.bindByIndex(1, 2.34);
   stmt.bindBlobByIndex(2, [], 0);
@@ -53,8 +57,10 @@ add_task(async function test_value_type_null() {
   stmt.bindByIndex(0, 1);
   Assert.ok(stmt.executeStep());
 
-  Assert.equal(Ci.mozIStorageValueArray.VALUE_TYPE_NULL,
-               stmt.getTypeOfIndex(0));
+  Assert.equal(
+    Ci.mozIStorageValueArray.VALUE_TYPE_NULL,
+    stmt.getTypeOfIndex(0)
+  );
   stmt.reset();
   stmt.finalize();
 });
@@ -64,8 +70,10 @@ add_task(async function test_value_type_integer() {
   stmt.bindByIndex(0, 1);
   Assert.ok(stmt.executeStep());
 
-  Assert.equal(Ci.mozIStorageValueArray.VALUE_TYPE_INTEGER,
-               stmt.getTypeOfIndex(0));
+  Assert.equal(
+    Ci.mozIStorageValueArray.VALUE_TYPE_INTEGER,
+    stmt.getTypeOfIndex(0)
+  );
   stmt.reset();
   stmt.finalize();
 });
@@ -75,8 +83,10 @@ add_task(async function test_value_type_float() {
   stmt.bindByIndex(0, 1);
   Assert.ok(stmt.executeStep());
 
-  Assert.equal(Ci.mozIStorageValueArray.VALUE_TYPE_FLOAT,
-               stmt.getTypeOfIndex(0));
+  Assert.equal(
+    Ci.mozIStorageValueArray.VALUE_TYPE_FLOAT,
+    stmt.getTypeOfIndex(0)
+  );
   stmt.reset();
   stmt.finalize();
 });
@@ -86,8 +96,10 @@ add_task(async function test_value_type_text() {
   stmt.bindByIndex(0, 1);
   Assert.ok(stmt.executeStep());
 
-  Assert.equal(Ci.mozIStorageValueArray.VALUE_TYPE_TEXT,
-               stmt.getTypeOfIndex(0));
+  Assert.equal(
+    Ci.mozIStorageValueArray.VALUE_TYPE_TEXT,
+    stmt.getTypeOfIndex(0)
+  );
   stmt.reset();
   stmt.finalize();
 });
@@ -97,8 +109,10 @@ add_task(async function test_value_type_blob() {
   stmt.bindByIndex(0, 2);
   Assert.ok(stmt.executeStep());
 
-  Assert.equal(Ci.mozIStorageValueArray.VALUE_TYPE_BLOB,
-               stmt.getTypeOfIndex(0));
+  Assert.equal(
+    Ci.mozIStorageValueArray.VALUE_TYPE_BLOB,
+    stmt.getTypeOfIndex(0)
+  );
   stmt.reset();
   stmt.finalize();
 });
@@ -178,5 +192,3 @@ add_task(async function test_getBlob() {
   stmt.reset();
   stmt.finalize();
 });
-
-

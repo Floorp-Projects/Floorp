@@ -25,8 +25,9 @@ const HEIGHT = 100;
 const HYPOTENUSE = Math.hypot(WIDTH, HEIGHT).toFixed(2);
 
 add_task(async function() {
-  const helper = await openInspectorForURL(TEST_URL)
-                       .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
+  const helper = await openInspectorForURL(TEST_URL).then(
+    getHighlighterHelperFor(HIGHLIGHTER_TYPE)
+  );
 
   const { show, finalize } = helper;
 
@@ -43,12 +44,12 @@ add_task(async function() {
   await finalize();
 });
 
-async function hasNoLabelsWhenStarts({isElementHidden, synthesizeMouse}) {
+async function hasNoLabelsWhenStarts({ isElementHidden, synthesizeMouse }) {
   info("Checking highlighter has no labels when we start to select");
 
   await synthesizeMouse({
     selector: ":root",
-    options: {type: "mousedown"},
+    options: { type: "mousedown" },
     x: X,
     y: Y,
   });
@@ -69,12 +70,12 @@ async function hasNoLabelsWhenStarts({isElementHidden, synthesizeMouse}) {
   ok(guidesHidden, "guides are hidden during dragging");
 }
 
-async function hasSizeLabelWhenMoved({isElementHidden, synthesizeMouse}) {
+async function hasSizeLabelWhenMoved({ isElementHidden, synthesizeMouse }) {
   info("Checking highlighter has size label when we select the area");
 
   await synthesizeMouse({
     selector: ":root",
-    options: {type: "mousemove"},
+    options: { type: "mousemove" },
     x: X + WIDTH,
     y: Y + HEIGHT,
   });
@@ -95,12 +96,15 @@ async function hasSizeLabelWhenMoved({isElementHidden, synthesizeMouse}) {
   ok(guidesHidden, "guides are hidden during selection");
 }
 
-async function hasSizeLabelAndGuidesWhenStops({isElementHidden, synthesizeMouse}) {
+async function hasSizeLabelAndGuidesWhenStops({
+  isElementHidden,
+  synthesizeMouse,
+}) {
   info("Checking highlighter has size label and guides when we stop");
 
   await synthesizeMouse({
     selector: ":root",
-    options: {type: "mouseup"},
+    options: { type: "mouseup" },
     x: X + WIDTH,
     y: Y + HEIGHT,
   });
@@ -119,7 +123,7 @@ async function hasSizeLabelAndGuidesWhenStops({isElementHidden, synthesizeMouse}
   ok(guidesVisible, "guides are visible when the selection is done");
 }
 
-async function hasCorrectSizeLabelValue({getElementTextContent}) {
+async function hasCorrectSizeLabelValue({ getElementTextContent }) {
   const text = await getElementTextContent("label-size");
 
   const [width, height, hypot] = text.match(/\d.*px/g);

@@ -5,7 +5,9 @@
 
 add_task(async function() {
   Services.scriptloader.loadSubScript(
-    CHROME_URL_ROOT + "summary-graph_delay-sign_head.js", this);
+    CHROME_URL_ROOT + "summary-graph_delay-sign_head.js",
+    this
+  );
   // eslint-disable-next-line no-undef
   await testSummaryGraphDelaySign();
 });

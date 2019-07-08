@@ -90,29 +90,7 @@ void apz_sample_transforms(mozilla::wr::WrWindowId aWindowId,
 void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId);
 }  // extern "C"
 
-// Some useful defines to stub out webrender binding functions for when we
-// build gecko without webrender. We try to tell the compiler these functions
-// are unreachable in that case, but VC++ emits a warning if it finds any
-// unreachable functions invoked from destructors. That warning gets turned into
-// an error and causes the build to fail. So for wr_* functions called by
-// destructors in C++ classes, use WR_DESTRUCTOR_SAFE_FUNC instead, which omits
-// the unreachable annotation.
-#ifdef MOZ_BUILD_WEBRENDER
-#  define WR_INLINE
-#  define WR_FUNC
-#  define WR_DESTRUCTOR_SAFE_FUNC
-#else
-#  define WR_INLINE inline
-#  define WR_FUNC \
-    { MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("WebRender disabled"); }
-#  define WR_DESTRUCTOR_SAFE_FUNC \
-    {}
-#endif
-
 #include "webrender_ffi_generated.h"
-
-#undef WR_FUNC
-#undef WR_DESTRUCTOR_SAFE_FUNC
 
 // More functions invoked from Rust code. These are down here because they
 // refer to data structures from webrender_ffi_generated.h

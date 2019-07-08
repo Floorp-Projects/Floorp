@@ -5,16 +5,25 @@
 "use strict";
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const Route = createFactory(require("devtools/client/shared/vendor/react-router-dom").Route);
-const Switch = createFactory(require("devtools/client/shared/vendor/react-router-dom").Switch);
-const Redirect = createFactory(require("devtools/client/shared/vendor/react-router-dom").Redirect);
+const Route = createFactory(
+  require("devtools/client/shared/vendor/react-router-dom").Route
+);
+const Switch = createFactory(
+  require("devtools/client/shared/vendor/react-router-dom").Switch
+);
+const Redirect = createFactory(
+  require("devtools/client/shared/vendor/react-router-dom").Redirect
+);
 
 const Types = require("../types/index");
 const { PAGE_TYPES, RUNTIMES } = require("../constants");
@@ -50,19 +59,18 @@ class App extends PureComponent {
   updateTitle() {
     const { getString, selectedPage, selectedRuntimeId } = this.props;
 
-    const pageTitle = selectedPage === PAGE_TYPES.RUNTIME ?
-      getString("about-debugging-page-title-runtime-page", { selectedRuntimeId }) :
-      getString("about-debugging-page-title-setup-page");
+    const pageTitle =
+      selectedPage === PAGE_TYPES.RUNTIME
+        ? getString("about-debugging-page-title-runtime-page", {
+            selectedRuntimeId,
+          })
+        : getString("about-debugging-page-title-setup-page");
 
     document.title = pageTitle;
   }
 
   renderConnect() {
-    const {
-      adbAddonStatus,
-      dispatch,
-      networkLocations,
-    } = this.props;
+    const { adbAddonStatus, dispatch, networkLocations } = this.props;
 
     return ConnectPage({
       adbAddonStatus,
@@ -125,10 +133,14 @@ class App extends PureComponent {
           // about:debugging#workers, about:debugging#addons and about:debugging#tabs.
           // Such links can still be found in external documentation pages.
           // We redirect to This Firefox rather than the Setup Page here.
-          if (pathname === "/workers" || pathname === "/addons" || pathname === "/tabs") {
-            return Redirect({ to: `/runtime/${RUNTIMES.THIS_FIREFOX}`});
+          if (
+            pathname === "/workers" ||
+            pathname === "/addons" ||
+            pathname === "/tabs"
+          ) {
+            return Redirect({ to: `/runtime/${RUNTIMES.THIS_FIREFOX}` });
           }
-          return Redirect({ to: "/setup"});
+          return Redirect({ to: "/setup" });
         },
       })
     );
@@ -147,7 +159,7 @@ class App extends PureComponent {
     } = this.props;
 
     return Localized(
-      { },
+      {},
       dom.div(
         { className: "app" },
         Sidebar({
@@ -184,6 +196,9 @@ const mapDispatchToProps = dispatch => ({
   dispatch,
 });
 
-module.exports = FluentReact
-  .withLocalization(
-      connect(mapStateToProps, mapDispatchToProps)(App));
+module.exports = FluentReact.withLocalization(
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )(App)
+);

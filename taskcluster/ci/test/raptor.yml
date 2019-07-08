@@ -1587,10 +1587,7 @@ raptor-speedometer-geckoview-power:
     try-name: raptor-speedometer-geckoview-power
     treeherder-symbol: Rap(sp-p)
     target: geckoview_example.apk
-    run-on-projects:
-        by-test-platform:
-            android-hw.*/pgo: ['try', 'mozilla-central']
-            default: ['try']
+    run-on-projects: ['try']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -1648,10 +1645,7 @@ raptor-scn-power-idle-geckoview:
     try-name: raptor-scn-power-idle-geckoview
     treeherder-symbol: Rap(idl-p)
     target: geckoview_example.apk
-    run-on-projects:
-        by-test-platform:
-            android-hw.*/pgo: ['try', 'mozilla-central']
-            default: ['try']
+    run-on-projects: ['try']
     tier: 3
     max-run-time: 1800
     mozharness:
@@ -1733,10 +1727,7 @@ raptor-scn-power-idle-bg-geckoview:
     try-name: raptor-scn-power-idle-bg-geckoview
     treeherder-symbol: Rap(idlbg-p)
     target: geckoview_example.apk
-    run-on-projects:
-        by-test-platform:
-            android-hw.*/pgo: ['try', 'mozilla-central']
-            default: ['try']
+    run-on-projects: ['try']
     tier: 3
     max-run-time: 1800
     mozharness:

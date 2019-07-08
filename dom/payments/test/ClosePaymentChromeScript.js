@@ -3,9 +3,13 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
+const paymentSrv = Cc[
+  "@mozilla.org/dom/payments/payment-request-service;1"
+].getService(Ci.nsIPaymentRequestService);
 
 function emitTestFail(message) {
   sendAsyncMessage("test-fail", `${DummyUIService.testName}: ${message}`);
@@ -44,49 +48,68 @@ addMessageListener("payment-num-check", function(expectedNumPayments) {
     paymentEnum.getNext();
   }
   if (numPayments !== expectedNumPayments + setPaymentNums) {
-    emitTestFail("Expected '" + expectedNumPayments +
-                 "' PaymentRequests in PaymentRequestService" + ", but got '" +
-                 numPayments + "'.");
+    emitTestFail(
+      "Expected '" +
+        expectedNumPayments +
+        "' PaymentRequests in PaymentRequestService" +
+        ", but got '" +
+        numPayments +
+        "'."
+    );
   } else {
-    emitTestPass("Got expected '" + numPayments +
-                 "' PaymentRequests in PaymentRequestService.");
+    emitTestPass(
+      "Got expected '" +
+        numPayments +
+        "' PaymentRequests in PaymentRequestService."
+    );
   }
   // force cleanup PaymentRequests for clear environment to next testcase.
   paymentSrv.cleanup();
   sendAsyncMessage("payment-num-check-complete");
 });
 
-addMessageListener("test-setup", (testName) => {
+addMessageListener("test-setup", testName => {
   DummyUIService.testName = testName;
   sendAsyncMessage("test-setup-complete");
 });
 
-addMessageListener("reject-payment", (expectedError) => {
+addMessageListener("reject-payment", expectedError => {
   try {
-    const responseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
-                            createInstance(Ci.nsIGeneralResponseData);
+    const responseData = Cc[
+      "@mozilla.org/dom/payments/general-response-data;1"
+    ].createInstance(Ci.nsIGeneralResponseData);
     responseData.initData({});
-    const showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
-                            createInstance(Ci.nsIPaymentShowActionResponse);
-    showResponse.init(DummyUIService.respondRequestId,
-                      Ci.nsIPaymentActionResponse.PAYMENT_REJECTED,
-                      "",                 // payment method
-                      responseData,       // payment method data
-                      "",                 // payer name
-                      "",                 // payer email
-                      "");                // payer phone
-    paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+    const showResponse = Cc[
+      "@mozilla.org/dom/payments/payment-show-action-response;1"
+    ].createInstance(Ci.nsIPaymentShowActionResponse);
+    showResponse.init(
+      DummyUIService.respondRequestId,
+      Ci.nsIPaymentActionResponse.PAYMENT_REJECTED,
+      "", // payment method
+      responseData, // payment method data
+      "", // payer name
+      "", // payer email
+      ""
+    ); // payer phone
+    paymentSrv.respondPayment(
+      showResponse.QueryInterface(Ci.nsIPaymentActionResponse)
+    );
     emitTestPass("Reject PaymentRequest successfully");
   } catch (error) {
     if (expectedError) {
       if (error.name === "NS_ERROR_FAILURE") {
-        emitTestPass("Got expected NS_ERROR_FAILURE when responding a closed PaymentRequest");
+        emitTestPass(
+          "Got expected NS_ERROR_FAILURE when responding a closed PaymentRequest"
+        );
         sendAsyncMessage("reject-payment-complete");
         return;
       }
     }
-    emitTestFail("Unexpected error '" + error.name +
-                 "' when reponding a closed PaymentRequest");
+    emitTestFail(
+      "Unexpected error '" +
+        error.name +
+        "' when reponding a closed PaymentRequest"
+    );
   }
   sendAsyncMessage("reject-payment-complete");
 });
@@ -96,8 +119,9 @@ addMessageListener("update-payment", () => {
     paymentSrv.changeShippingOption(DummyUIService.respondRequestId, "");
     emitTestPass("Change shippingOption succefully");
   } catch (error) {
-    emitTestFail("Unexpected error '" + error.name +
-                 "' when changing the shipping option");
+    emitTestFail(
+      "Unexpected error '" + error.name + "' when changing the shipping option"
+    );
   }
   sendAsyncMessage("update-payment-complete");
 });
@@ -105,17 +129,29 @@ addMessageListener("update-payment", () => {
 const DummyUIService = {
   testName: "",
   respondRequestId: "",
-  showPayment: (requestId) => {DummyUIService.respondRequestId = requestId},
-  abortPayment: (requestId) => {DummyUIService.respondRequestId = requestId},
-  completePayment: (requestId) => {DummyUIService.respondRequestId = requestId},
-  updatePayment: (requestId) => {DummyUIService.respondRequestId = requestId},
-  closePayment: (requestId) => {this.respondRequestId = requestId},
+  showPayment: requestId => {
+    DummyUIService.respondRequestId = requestId;
+  },
+  abortPayment: requestId => {
+    DummyUIService.respondRequestId = requestId;
+  },
+  completePayment: requestId => {
+    DummyUIService.respondRequestId = requestId;
+  },
+  updatePayment: requestId => {
+    DummyUIService.respondRequestId = requestId;
+  },
+  closePayment: requestId => {
+    this.respondRequestId = requestId;
+  },
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
-paymentSrv.setTestingUIService(DummyUIService.QueryInterface(Ci.nsIPaymentUIService));
+paymentSrv.setTestingUIService(
+  DummyUIService.QueryInterface(Ci.nsIPaymentUIService)
+);
 
 addMessageListener("teardown", function() {
   paymentSrv.setTestingUIService(null);
-  sendAsyncMessage('teardown-complete');
+  sendAsyncMessage("teardown-complete");
 });

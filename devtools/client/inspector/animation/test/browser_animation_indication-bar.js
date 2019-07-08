@@ -10,7 +10,11 @@ add_task(async function() {
   await pushPref("devtools.inspector.three-pane-enabled", false);
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept([".animated"]);
-  const { animationInspector, inspector, panel } = await openAnimationInspector();
+  const {
+    animationInspector,
+    inspector,
+    panel,
+  } = await openAnimationInspector();
 
   info("Checking timeline tick item elements after enlarge sidebar width");
   await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
@@ -33,6 +37,8 @@ function assertPosition(indicationBarSelector, panel, expectedPositionRate) {
   const rectParent = parentEl.getBoundingClientRect();
   const barX = rectBar.x + rectBar.width * 0.5 - rectParent.x;
   const expectedPosition = rectParent.width * expectedPositionRate;
-  ok(expectedPosition - 1 <= barX && barX <= expectedPosition + 1,
-    `Indication bar position should be approximately ${ expectedPosition }`);
+  ok(
+    expectedPosition - 1 <= barX && barX <= expectedPosition + 1,
+    `Indication bar position should be approximately ${expectedPosition}`
+  );
 }

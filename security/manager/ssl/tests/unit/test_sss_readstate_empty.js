@@ -10,17 +10,29 @@ var gSSService = null;
 
 function checkStateRead(aSubject, aTopic, aData) {
   // nonexistent.example.com should never be an HSTS host
-  ok(!gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://nonexistent.example.com"), 0));
-  ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            Services.io.newURI("https://includesubdomains.preloaded.test"),
-                            0));
+  ok(
+    !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://nonexistent.example.com"),
+      0
+    )
+  );
+  ok(
+    gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://includesubdomains.preloaded.test"),
+      0
+    )
+  );
   // notexpired.example.com is an HSTS host in a different test - we
   // want to make sure that test hasn't interfered with this one.
-  ok(!gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://notexpired.example.com"), 0));
+  ok(
+    !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://notexpired.example.com"),
+      0
+    )
+  );
   do_test_finished();
 }
 
@@ -37,7 +49,8 @@ function run_test() {
   // can read the state file.
   Services.obs.addObserver(checkStateRead, "data-storage-ready");
   do_test_pending();
-  gSSService = Cc["@mozilla.org/ssservice;1"]
-                 .getService(Ci.nsISiteSecurityService);
+  gSSService = Cc["@mozilla.org/ssservice;1"].getService(
+    Ci.nsISiteSecurityService
+  );
   notEqual(gSSService, null);
 }

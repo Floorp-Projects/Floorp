@@ -5,36 +5,35 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const unknownRepoFiles = [
     {
       path: "storage/persistent/foo.bar",
-      dir: false
+      dir: false,
     },
 
     {
       path: "storage/permanent/foo.bar",
-      dir: false
-    }
+      dir: false,
+    },
   ];
 
   const exampleUrl = "http://example.com";
   const unknownRepoFile = {
     path: "storage/default/foo.bar",
-    dir: false
+    dir: false,
   };
 
   const unknownOriginFiles = [
     {
       path: "storage/permanent/chrome/foo.bar",
-      dir: false
+      dir: false,
     },
 
     {
       path: "storage/permanent/chrome/foo",
-      dir: true
-    }
+      dir: true,
+    },
   ];
 
   function createFile(unknownFile) {
@@ -60,7 +59,7 @@ function* testSteps()
 
     info("Initializing");
 
-    request = init(continueToNextStepSync)
+    request = init(continueToNextStepSync);
     yield undefined;
 
     ok(request.resultCode == NS_OK, "Initialization succeeded");
@@ -77,7 +76,7 @@ function* testSteps()
 
   info("Initializing");
 
-  request = init(continueToNextStepSync)
+  request = init(continueToNextStepSync);
   yield undefined;
 
   ok(request.resultCode == NS_OK, "Initialization succeeded");
@@ -113,7 +112,7 @@ function* testSteps()
 
   info("Initializing");
 
-  request = init(continueToNextStepSync)
+  request = init(continueToNextStepSync);
   yield undefined;
 
   ok(request.resultCode == NS_OK, "Initialization succeeded");

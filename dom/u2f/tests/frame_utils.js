@@ -14,7 +14,7 @@ function handleEventMessage(event) {
   } else if ("done" in event.data) {
     SimpleTest.finish();
   } else {
-    ok(false, "Unexpected message in the test harness: " + event.data)
+    ok(false, "Unexpected message in the test harness: " + event.data);
   }
 }
 
@@ -35,7 +35,7 @@ function local_isnot(value, expected, message) {
 }
 
 function local_ok(expression, message) {
-  let body = {"test": this.location.pathname, "status":expression, "msg": message}
+  let body = { test: this.location.pathname, status: expression, msg: message };
   parent.postMessage(body, _parentOrigin);
 }
 
@@ -43,10 +43,12 @@ function local_doesThrow(fn, name) {
   let gotException = false;
   try {
     fn();
-  } catch (ex) { gotException = true; }
+  } catch (ex) {
+    gotException = true;
+  }
   local_ok(gotException, name);
-};
+}
 
 function local_finished() {
-  parent.postMessage({"done":true}, _parentOrigin);
+  parent.postMessage({ done: true }, _parentOrigin);
 }

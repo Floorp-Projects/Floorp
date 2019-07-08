@@ -3,18 +3,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function whenBrowserLoaded(aBrowser, aCallback) {
-  aBrowser.addEventListener("load", function onLoad(event) {
-    if (event.target == aBrowser.contentDocument) {
-      aBrowser.removeEventListener("load", onLoad, true);
-      executeSoon(aCallback);
-    }
-  }, true);
+  aBrowser.addEventListener(
+    "load",
+    function onLoad(event) {
+      if (event.target == aBrowser.contentDocument) {
+        aBrowser.removeEventListener("load", onLoad, true);
+        executeSoon(aCallback);
+      }
+    },
+    true
+  );
 }
 
 function test() {
   waitForExplicitFinish();
 
-  let testURL = "chrome://mochitests/content/chrome/dom/base/test/file_empty.html";
+  let testURL =
+    "chrome://mochitests/content/chrome/dom/base/test/file_empty.html";
 
   let tab = BrowserTestUtils.addTab(gBrowser, testURL);
   gBrowser.selectedTab = tab;
@@ -23,7 +28,9 @@ function test() {
     let doc = tab.linkedBrowser.contentDocument;
     let contentWin = tab.linkedBrowser.contentWindow;
 
-    let blob = new contentWin.Blob(['onmessage = function() { postMessage(true); }']);
+    let blob = new contentWin.Blob([
+      "onmessage = function() { postMessage(true); }",
+    ]);
     ok(blob, "Blob has been created");
 
     let blobURL = contentWin.URL.createObjectURL(blob);
@@ -38,7 +45,7 @@ function test() {
       contentWin.URL.revokeObjectURL(blob);
       gBrowser.removeTab(tab);
       executeSoon(finish);
-    }
+    };
 
     worker.onmessage = function() {
       ok(true, "Worker.onmessage");
@@ -46,7 +53,7 @@ function test() {
       contentWin.URL.revokeObjectURL(blob);
       gBrowser.removeTab(tab);
       executeSoon(finish);
-    }
+    };
 
     worker.postMessage(true);
   });

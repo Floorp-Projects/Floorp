@@ -7,7 +7,7 @@ add_task(async function testSimpleDB() {
   const name = "data";
   const bufferSize = 100;
 
-  await SpecialPowers.pushPrefEnv({ set: [[ "dom.simpleDB.enabled", true ]] });
+  await SpecialPowers.pushPrefEnv({ set: [["dom.simpleDB.enabled", true]] });
 
   let database = getSimpleDatabase();
 
@@ -35,7 +35,7 @@ add_task(async function testSimpleDB() {
     request = database2.open(name);
     await requestFinished(request);
     ok(false, "Should have thrown!");
-  } catch(ex) {
+  } catch (ex) {
     ok(request.resultCode == NS_ERROR_STORAGE_BUSY, "Good result code.");
   }
 

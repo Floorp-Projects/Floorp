@@ -110,7 +110,10 @@ class TrackDevicesCommand extends EventEmitter {
       });
 
       // Fire events if needed.
-      const deviceIds = new Set([...this._devices.keys(), ...newDevices.keys()]);
+      const deviceIds = new Set([
+        ...this._devices.keys(),
+        ...newDevices.keys(),
+      ]);
       for (const deviceId of deviceIds) {
         const currentStatus = this._devices.get(deviceId);
         const newStatus = newDevices.get(deviceId);
@@ -137,7 +140,9 @@ class TrackDevicesCommand extends EventEmitter {
   }
 
   _fireConnectionEventIfNeeded(deviceId, currentStatus, newStatus) {
-    const isCurrentOnline = !!(currentStatus && currentStatus !== ADB_STATUS_OFFLINE);
+    const isCurrentOnline = !!(
+      currentStatus && currentStatus !== ADB_STATUS_OFFLINE
+    );
     const isNewOnline = !!(newStatus && newStatus !== ADB_STATUS_OFFLINE);
 
     if (isCurrentOnline === isNewOnline) {

@@ -15,7 +15,11 @@ add_task(async function() {
   info("Test getting a front twice");
   const getAccessibilityFront = await target.getFront("accessibility");
   const getAccessibilityFront2 = await target.getFront("accessibility");
-  is(getAccessibilityFront, getAccessibilityFront2, "got the same front when calling getFront twice");
+  is(
+    getAccessibilityFront,
+    getAccessibilityFront2,
+    "got the same front when calling getFront twice"
+  );
 
   info("Test getting a front on different targets");
   const target1Front = await target.getFront("accessibility");

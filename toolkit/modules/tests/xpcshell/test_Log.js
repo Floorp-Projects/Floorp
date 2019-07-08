@@ -3,7 +3,7 @@
 
 /* eslint-disable block-spacing */
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 registerCleanupFunction(() => {
@@ -12,9 +12,9 @@ registerCleanupFunction(() => {
 
 var testFormatter = {
   format: function format(message) {
-    return message.loggerName + "\t" +
-      message.levelDesc + "\t" +
-      message.message;
+    return (
+      message.loggerName + "\t" + message.levelDesc + "\t" + message.message
+    );
   },
 };
 
@@ -97,89 +97,147 @@ add_task(async function log_message_with_params() {
   let formatter = new Log.BasicFormatter();
 
   function formatMessage(text, params) {
-    let full = formatter.format(new Log.LogMessage("test.logger", Log.Level.Warn, text, params));
+    let full = formatter.format(
+      new Log.LogMessage("test.logger", Log.Level.Warn, text, params)
+    );
     return full.split("\t")[3];
   }
 
   // Strings are substituted directly.
-  Assert.equal(formatMessage("String is ${foo}", {foo: "bar"}),
-               "String is bar");
+  Assert.equal(
+    formatMessage("String is ${foo}", { foo: "bar" }),
+    "String is bar"
+  );
 
   // Numbers are substituted.
-  Assert.equal(formatMessage("Number is ${number}", {number: 47}),
-               "Number is 47");
+  Assert.equal(
+    formatMessage("Number is ${number}", { number: 47 }),
+    "Number is 47"
+  );
 
   // The entire params object is JSON-formatted and substituted.
-  Assert.equal(formatMessage("Object is ${}", {foo: "bar"}),
-               'Object is {"foo":"bar"}');
+  Assert.equal(
+    formatMessage("Object is ${}", { foo: "bar" }),
+    'Object is {"foo":"bar"}'
+  );
 
   // An object nested inside params is JSON-formatted and substituted.
-  Assert.equal(formatMessage("Sub object is ${sub}", {sub: {foo: "bar"}}),
-                 'Sub object is {"foo":"bar"}');
+  Assert.equal(
+    formatMessage("Sub object is ${sub}", { sub: { foo: "bar" } }),
+    'Sub object is {"foo":"bar"}'
+  );
 
   // The substitution field is missing from params. Leave the placeholder behind
   // to make the mistake obvious.
-  Assert.equal(formatMessage("Missing object is ${missing}", {}),
-               "Missing object is ${missing}");
+  Assert.equal(
+    formatMessage("Missing object is ${missing}", {}),
+    "Missing object is ${missing}"
+  );
 
   // Make sure we don't treat the parameter name 'false' as a falsey value.
-  Assert.equal(formatMessage("False is ${false}", {false: true}),
-               "False is true");
+  Assert.equal(
+    formatMessage("False is ${false}", { false: true }),
+    "False is true"
+  );
 
   // If an object has a .toJSON method, the formatter uses it.
   let ob = function() {};
-  ob.toJSON = function() {return {sneaky: "value"};};
-  Assert.equal(formatMessage("JSON is ${sub}", {sub: ob}),
-               'JSON is {"sneaky":"value"}');
+  ob.toJSON = function() {
+    return { sneaky: "value" };
+  };
+  Assert.equal(
+    formatMessage("JSON is ${sub}", { sub: ob }),
+    'JSON is {"sneaky":"value"}'
+  );
 
   // Fall back to .toSource() if JSON.stringify() fails on an object.
   ob = function() {};
-  ob.toJSON = function() {throw new Error("oh noes JSON");};
-  Assert.equal(formatMessage("Fail is ${sub}", {sub: ob}),
-               "Fail is (function() {})");
+  ob.toJSON = function() {
+    throw new Error("oh noes JSON");
+  };
+  Assert.equal(
+    formatMessage("Fail is ${sub}", { sub: ob }),
+    "Fail is (function() {})"
+  );
 
   // Fall back to .toString if both .toJSON and .toSource fail.
-  ob.toSource = function() {throw new Error("oh noes SOURCE");};
-  Assert.equal(formatMessage("Fail is ${sub}", {sub: ob}),
-               "Fail is function() {}");
+  ob.toSource = function() {
+    throw new Error("oh noes SOURCE");
+  };
+  Assert.equal(
+    formatMessage("Fail is ${sub}", { sub: ob }),
+    "Fail is function() {}"
+  );
 
   // Fall back to '[object]' if .toJSON, .toSource and .toString fail.
-  ob.toString = function() {throw new Error("oh noes STRING");};
-  Assert.equal(formatMessage("Fail is ${sub}", {sub: ob}),
-               "Fail is [object]");
+  ob.toString = function() {
+    throw new Error("oh noes STRING");
+  };
+  Assert.equal(
+    formatMessage("Fail is ${sub}", { sub: ob }),
+    "Fail is [object]"
+  );
 
   // If params are passed but there are no substitution in the text
   // we JSON format and append the entire parameters object.
-  Assert.equal(formatMessage("Text with no subs", {a: "b", c: "d"}),
-               'Text with no subs: {"a":"b","c":"d"}');
+  Assert.equal(
+    formatMessage("Text with no subs", { a: "b", c: "d" }),
+    'Text with no subs: {"a":"b","c":"d"}'
+  );
 
   // If we substitute one parameter but not the other,
   // we ignore any params that aren't substituted.
-  Assert.equal(formatMessage("Text with partial sub ${a}", {a: "b", c: "d"}),
-               "Text with partial sub b");
+  Assert.equal(
+    formatMessage("Text with partial sub ${a}", { a: "b", c: "d" }),
+    "Text with partial sub b"
+  );
 
   // We don't format internal fields stored in params.
-  Assert.equal(formatMessage("Params with _ ${}", {a: "b", _c: "d", _level: 20, _message: "froo",
-                                                   _time: 123456, _namespace: "here.there"}),
-               'Params with _ {"a":"b","_c":"d"}');
+  Assert.equal(
+    formatMessage("Params with _ ${}", {
+      a: "b",
+      _c: "d",
+      _level: 20,
+      _message: "froo",
+      _time: 123456,
+      _namespace: "here.there",
+    }),
+    'Params with _ {"a":"b","_c":"d"}'
+  );
 
   // Don't print an empty params holder if all params are internal.
-  Assert.equal(formatMessage("All params internal", {_level: 20, _message: "froo",
-                                                     _time: 123456, _namespace: "here.there"}),
-               "All params internal");
+  Assert.equal(
+    formatMessage("All params internal", {
+      _level: 20,
+      _message: "froo",
+      _time: 123456,
+      _namespace: "here.there",
+    }),
+    "All params internal"
+  );
 
   // Format params with null and undefined values.
-  Assert.equal(formatMessage("Null ${n} undefined ${u}", {n: null, u: undefined}),
-               "Null null undefined undefined");
+  Assert.equal(
+    formatMessage("Null ${n} undefined ${u}", { n: null, u: undefined }),
+    "Null null undefined undefined"
+  );
 
   // Format params with number, bool, and String type.
-  Assert.equal(formatMessage("number ${n} boolean ${b} boxed Boolean ${bx} String ${s}",
-                             {n: 45, b: false, bx: Boolean(true), s: String("whatevs")}),
-               "number 45 boolean false boxed Boolean true String whatevs");
+  Assert.equal(
+    formatMessage("number ${n} boolean ${b} boxed Boolean ${bx} String ${s}", {
+      n: 45,
+      b: false,
+      bx: Boolean(true),
+      s: String("whatevs"),
+    }),
+    "number 45 boolean false boxed Boolean true String whatevs"
+  );
 
   // Format params with consecutive tokens.
-  Assert.equal(formatMessage("${a}${b}${c}", {a: "foo", b: "bar", c: "baz"}),
-               "foobarbaz");
+  Assert.equal(
+    formatMessage("${a}${b}${c}", { a: "foo", b: "bar", c: "baz" }),
+    "foobarbaz"
+  );
 
   /*
    * Check that errors get special formatting if they're formatted directly as
@@ -192,9 +250,9 @@ add_task(async function log_message_with_params() {
   Assert.ok(str.includes("(NS_ERROR_FAILURE)"));
   str = formatMessage("Exception is", err);
   Assert.ok(str.includes('Exception is: [Exception... "test exception"'));
-  str = formatMessage("Exception is ${error}", {error: err});
+  str = formatMessage("Exception is ${error}", { error: err });
   Assert.ok(str.includes('Exception is [Exception... "test exception"'));
-  str = formatMessage("Exception is", {_error: err});
+  str = formatMessage("Exception is", { _error: err });
   info(str);
   // Exceptions buried inside objects are formatted badly.
   Assert.ok(str.includes('Exception is: {"_error":{}'));
@@ -208,36 +266,55 @@ add_task(async function log_message_with_params() {
   // We use object.valueOf() internally; make sure a broken valueOf() method
   // doesn't cause the logger to fail.
   /* eslint-disable object-shorthand */
-  let vOf = {a: 1, valueOf: function() {throw new Error("oh noes valueOf");}};
-  Assert.equal(formatMessage("Broken valueOf ${}", vOf),
-               'Broken valueOf ({a:1, valueOf:(function() {throw new Error("oh noes valueOf");})})');
+  let vOf = {
+    a: 1,
+    valueOf: function() {
+      throw new Error("oh noes valueOf");
+    },
+  };
+  Assert.equal(
+    formatMessage("Broken valueOf ${}", vOf),
+    'Broken valueOf ({a:1, valueOf:(function() {\n      throw new Error("oh noes valueOf");\n    })})'
+  );
   /* eslint-enable object-shorthand */
 
   // Test edge cases of bad data to formatter:
   // If 'params' is not an object, format it as a basic type.
-  Assert.equal(formatMessage("non-object no subst", 1),
-               "non-object no subst: 1");
-  Assert.equal(formatMessage("non-object all subst ${}", 2),
-               "non-object all subst 2");
-  Assert.equal(formatMessage("false no subst", false),
-               "false no subst: false");
-  Assert.equal(formatMessage("null no subst", null),
-               "null no subst: null");
+  Assert.equal(
+    formatMessage("non-object no subst", 1),
+    "non-object no subst: 1"
+  );
+  Assert.equal(
+    formatMessage("non-object all subst ${}", 2),
+    "non-object all subst 2"
+  );
+  Assert.equal(formatMessage("false no subst", false), "false no subst: false");
+  Assert.equal(formatMessage("null no subst", null), "null no subst: null");
   // If 'params' is undefined and there are no substitutions expected,
   // the message should still be output.
-  Assert.equal(formatMessage("undefined no subst", undefined),
-               "undefined no subst");
+  Assert.equal(
+    formatMessage("undefined no subst", undefined),
+    "undefined no subst"
+  );
   // If 'params' is not an object, no named substitutions can succeed;
   // therefore we leave the placeholder and append the formatted params.
-  Assert.equal(formatMessage("non-object named subst ${junk} space", 3),
-               "non-object named subst ${junk} space: 3");
+  Assert.equal(
+    formatMessage("non-object named subst ${junk} space", 3),
+    "non-object named subst ${junk} space: 3"
+  );
   // If there are no params, we leave behind the placeholders in the text.
-  Assert.equal(formatMessage("no params ${missing}", undefined),
-               "no params ${missing}");
+  Assert.equal(
+    formatMessage("no params ${missing}", undefined),
+    "no params ${missing}"
+  );
   // If params doesn't contain any of the tags requested in the text,
   // we leave them all behind and append the formatted params.
-  Assert.equal(formatMessage("object missing tag ${missing} space", {mising: "not here"}),
-               'object missing tag ${missing} space: {"mising":"not here"}');
+  Assert.equal(
+    formatMessage("object missing tag ${missing} space", {
+      mising: "not here",
+    }),
+    'object missing tag ${missing} space: {"mising":"not here"}'
+  );
   // If we are given null text and no params, the resulting formatted message is empty.
   Assert.equal(formatMessage(null), "");
 });
@@ -280,7 +357,7 @@ add_task(async function log_message_with_params() {
   let appender = new MockAppender(mockFormatter);
   log.addAppender(appender);
 
-  let testParams = {a: 1, b: 2};
+  let testParams = { a: 1, b: 2 };
   log.fatal("Test fatal", testParams);
   log.error("Test error", testParams);
   log.warn("Test warn", testParams);
@@ -303,13 +380,13 @@ add_task(async function log_template_literal_message() {
   let appender = new MockAppender(new Log.BasicFormatter());
   log.addAppender(appender);
 
-  log.fatal `Test ${"foo"} ${42}`;
-  log.error `Test ${"foo"} 42`;
-  log.warn `Test foo 42`;
-  log.info `Test ${"foo " + 42}`;
-  log.config `${"Test"} foo ${42}`;
-  log.debug `Test ${"f"}${"o"}${"o"} 42`;
-  log.trace `${"Test foo 42"}`;
+  log.fatal`Test ${"foo"} ${42}`;
+  log.error`Test ${"foo"} 42`;
+  log.warn`Test foo 42`;
+  log.info`Test ${"foo " + 42}`;
+  log.config`${"Test"} foo ${42}`;
+  log.debug`Test ${"f"}${"o"}${"o"} 42`;
+  log.trace`${"Test foo 42"}`;
   Assert.equal(appender.messages.length, 7);
   for (let msg of appender.messages) {
     Assert.equal(msg.split("\t")[3], "Test foo 42");

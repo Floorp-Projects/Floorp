@@ -1,42 +1,38 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 "use strict";
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var httpserver = null;
 const noRedirectURI = "/content";
 const pageValue = "Final page";
 const acceptType = "application/json";
 
-function redirectHandler(metadata, response)
-{
+function redirectHandler(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 302, "Moved Temporarily");
   response.setHeader("Location", noRedirectURI, false);
 }
 
-function contentHandler(metadata, response)
-{
+function contentHandler(metadata, response) {
   Assert.equal(metadata.getHeader("Accept"), acceptType);
   httpserver.stop(do_test_finished);
 }
 
-function dummyHandler(request, buffer)
-{
-}
+function dummyHandler(request, buffer) {}
 
-function run_test()
-{
+function run_test() {
   httpserver = new HttpServer();
   httpserver.registerPathHandler("/redirect", redirectHandler);
   httpserver.registerPathHandler("/content", contentHandler);
   httpserver.start(-1);
 
-  var prefs = Cc["@mozilla.org/preferences-service;1"]
-                .getService(Ci.nsIPrefBranch);
+  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
   prefs.setBoolPref("network.http.prompt-temp-redirect", false);
 
   var chan = NetUtil.newChannel({
     uri: "http://localhost:" + httpserver.identity.primaryPort + "/redirect",
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.setRequestHeader("Accept", acceptType, false);

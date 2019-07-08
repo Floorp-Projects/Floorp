@@ -1,9 +1,9 @@
-import {EOYSnippet} from "./EOYSnippet/EOYSnippet";
-import {FXASignupSnippet} from "./FXASignupSnippet/FXASignupSnippet";
-import {NewsletterSnippet} from "./NewsletterSnippet/NewsletterSnippet";
-import {SendToDeviceSnippet} from "./SendToDeviceSnippet/SendToDeviceSnippet";
-import {SimpleBelowSearchSnippet} from "./SimpleBelowSearchSnippet/SimpleBelowSearchSnippet";
-import {SimpleSnippet} from "./SimpleSnippet/SimpleSnippet";
+import { EOYSnippet } from "./EOYSnippet/EOYSnippet";
+import { FXASignupSnippet } from "./FXASignupSnippet/FXASignupSnippet";
+import { NewsletterSnippet } from "./NewsletterSnippet/NewsletterSnippet";
+import { SendToDeviceSnippet } from "./SendToDeviceSnippet/SendToDeviceSnippet";
+import { SimpleBelowSearchSnippet } from "./SimpleBelowSearchSnippet/SimpleBelowSearchSnippet";
+import { SimpleSnippet } from "./SimpleSnippet/SimpleSnippet";
 
 // Key names matching schema name of templates
 export const SnippetsTemplates = {

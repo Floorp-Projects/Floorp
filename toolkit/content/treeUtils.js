@@ -6,8 +6,9 @@
 
 var gTreeUtils = {
   deleteAll(aTree, aView, aItems, aDeletedItems) {
-    for (var i = 0; i < aItems.length; ++i)
+    for (var i = 0; i < aItems.length; ++i) {
       aDeletedItems.push(aItems[i]);
+    }
     aItems.splice(0, aItems.length);
     var oldCount = aView.rowCount;
     aView._rowCount = 0;
@@ -20,7 +21,8 @@ var gTreeUtils = {
 
     var rc = selection.getRangeCount();
     for (var i = 0; i < rc; ++i) {
-      var min = { }; var max = { };
+      var min = {};
+      var max = {};
       selection.getRangeAt(i, min, max);
       for (let j = min.value; j <= max.value; ++j) {
         aDeletedItems.push(aItems[j]);
@@ -32,8 +34,9 @@ var gTreeUtils = {
     for (i = 0; i < aItems.length; ++i) {
       if (!aItems[i]) {
         let j = i;
-        while (j < aItems.length && !aItems[j])
+        while (j < aItems.length && !aItems[j]) {
           ++j;
+        }
         aItems.splice(i, j - i);
         nextSelection = j < aView.rowCount ? j - 1 : j - 2;
         aView._rowCount -= j - i;
@@ -49,19 +52,30 @@ var gTreeUtils = {
     selection.selectEventsSuppressed = false;
   },
 
-  sort(aTree, aView, aDataSet, aColumn, aComparator,
-                 aLastSortColumn, aLastSortAscending) {
-    var ascending = (aColumn == aLastSortColumn) ? !aLastSortAscending : true;
-    if (aDataSet.length == 0)
+  sort(
+    aTree,
+    aView,
+    aDataSet,
+    aColumn,
+    aComparator,
+    aLastSortColumn,
+    aLastSortAscending
+  ) {
+    var ascending = aColumn == aLastSortColumn ? !aLastSortAscending : true;
+    if (aDataSet.length == 0) {
       return ascending;
+    }
 
     var sortFunction = null;
     if (aComparator) {
-      sortFunction = function(a, b) { return aComparator(a[aColumn], b[aColumn]); };
+      sortFunction = function(a, b) {
+        return aComparator(a[aColumn], b[aColumn]);
+      };
     }
     aDataSet.sort(sortFunction);
-    if (!ascending)
+    if (!ascending) {
       aDataSet.reverse();
+    }
 
     aTree.view.selection.clearSelection();
     aTree.view.selection.select(0);

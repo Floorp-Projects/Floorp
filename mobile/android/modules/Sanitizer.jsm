@@ -4,9 +4,13 @@
 
 /* globals LoadContextInfo, FormHistory, Accounts */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Integration} = ChromeUtils.import("resource://gre/modules/Integration.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Integration } = ChromeUtils.import(
+  "resource://gre/modules/Integration.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Accounts: "resource://gre/modules/Accounts.jsm",
@@ -19,13 +23,18 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyServiceGetters(this, {
-  quotaManagerService: ["@mozilla.org/dom/quota-manager-service;1", "nsIQuotaManagerService"],
+  quotaManagerService: [
+    "@mozilla.org/dom/quota-manager-service;1",
+    "nsIQuotaManagerService",
+  ],
 });
 
 /* global DownloadIntegration */
-Integration.downloads.defineModuleGetter(this, "DownloadIntegration",
-            "resource://gre/modules/DownloadIntegration.jsm");
-
+Integration.downloads.defineModuleGetter(
+  this,
+  "DownloadIntegration",
+  "resource://gre/modules/DownloadIntegration.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["Sanitizer"];
 
@@ -39,20 +48,28 @@ Sanitizer.prototype = {
         // Normal call to DownloadFiles remove actual data from storage, but our web-extension consumer
         // deletes only download history. So, for this reason we are passing a flag 'deleteFiles'.
         case "downloadHistory":
-          return this._clear("downloadFiles", { startTime, deleteFiles: false });
+          return this._clear("downloadFiles", {
+            startTime,
+            deleteFiles: false,
+          });
         case "formdata":
           return this._clear(aItemName, { startTime });
         default:
-          return Promise.reject({message: `Invalid argument: ${aItemName} does not support startTime argument.`});
+          return Promise.reject({
+            message: `Invalid argument: ${aItemName} does not support startTime argument.`,
+          });
       }
-    } else if (aItemName === "downloadFiles" && typeof clearUnfinishedDownloads != "undefined") {
+    } else if (
+      aItemName === "downloadFiles" &&
+      typeof clearUnfinishedDownloads != "undefined"
+    ) {
       return this._clear(aItemName, { clearUnfinishedDownloads });
     } else {
       return this._clear(aItemName);
     }
   },
 
- _clear: function(aItemName, options) {
+  _clear: function(aItemName, options) {
     let item = this.items[aItemName];
     let canClear = item.canClear;
     if (typeof canClear == "function") {
@@ -92,15 +109,19 @@ Sanitizer.prototype = {
           Services.cache2.clear();
         } catch (er) {}
 
-        let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
-                                                           .getImgCacheForDocument(null);
+        let imageCache = Cc["@mozilla.org/image/tools;1"]
+          .getService(Ci.imgITools)
+          .getImgCacheForDocument(null);
         try {
           imageCache.clearCache(false); // true=chrome, false=content
         } catch (er) {}
 
-        return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:Cache" })
-          .catch((err) => {
-            Cu.reportError(`Java-side cache clearing failed with error: ${err}`);
+        return EventDispatcher.instance
+          .sendRequestForResult({ type: "Sanitize:Cache" })
+          .catch(err => {
+            Cu.reportError(
+              `Java-side cache clearing failed with error: ${err}`
+            );
           })
           .then(() => {
             TelemetryStopwatch.finish("FX_SANITIZE_CACHE", refObj);
@@ -126,10 +147,11 @@ Sanitizer.prototype = {
 
           // Clear deviceIds. Done asynchronously (returns before complete).
           try {
-            let mediaMgr = Cc["@mozilla.org/mediaManagerService;1"]
-                             .getService(Ci.nsIMediaManagerService);
+            let mediaMgr = Cc["@mozilla.org/mediaManagerService;1"].getService(
+              Ci.nsIMediaManagerService
+            );
             mediaMgr.sanitizeDeviceIds(0);
-          } catch (er) { }
+          } catch (er) {}
 
           resolve();
         });
@@ -155,20 +177,21 @@ Sanitizer.prototype = {
           .removeAllDomains(null);
 
         // Clear site security settings
-        var sss = Cc["@mozilla.org/ssservice;1"]
-                    .getService(Ci.nsISiteSecurityService);
+        var sss = Cc["@mozilla.org/ssservice;1"].getService(
+          Ci.nsISiteSecurityService
+        );
         sss.clearAll();
 
         // Clear push subscriptions
         await new Promise((resolve, reject) => {
-          let push = Cc["@mozilla.org/push/Service;1"]
-                       .getService(Ci.nsIPushService);
+          let push = Cc["@mozilla.org/push/Service;1"].getService(
+            Ci.nsIPushService
+          );
           push.clearForDomain("*", status => {
             if (Components.isSuccessCode(status)) {
               resolve();
             } else {
-              reject(new Error("Error clearing push subscriptions: " +
-                               status));
+              reject(new Error("Error clearing push subscriptions: " + status));
             }
           });
         });
@@ -205,13 +228,25 @@ Sanitizer.prototype = {
             }
 
             for (let item of request.result) {
-              let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
+              let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+                item.origin
+              );
               let uri = principal.URI;
-              if (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "file") {
-                promises.push(new Promise(r => {
-                  let req = quotaManagerService.clearStoragesForPrincipal(principal);
-                  req.callback = () => { r(); };
-                }));
+              if (
+                uri.scheme == "http" ||
+                uri.scheme == "https" ||
+                uri.scheme == "file"
+              ) {
+                promises.push(
+                  new Promise(r => {
+                    let req = quotaManagerService.clearStoragesForPrincipal(
+                      principal
+                    );
+                    req.callback = () => {
+                      r();
+                    };
+                  })
+                );
               }
             }
             resolve();
@@ -222,7 +257,7 @@ Sanitizer.prototype = {
       },
 
       get canClear() {
-          return true;
+        return true;
       },
     },
 
@@ -233,18 +268,24 @@ Sanitizer.prototype = {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_HISTORY", refObj);
 
-        return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:ClearHistory" })
+        return EventDispatcher.instance
+          .sendRequestForResult({ type: "Sanitize:ClearHistory" })
           .catch(e => Cu.reportError("Java-side history clearing failed: " + e))
           .then(function() {
             TelemetryStopwatch.finish("FX_SANITIZE_HISTORY", refObj);
             try {
-              Services.obs.notifyObservers(null, "browser:purge-session-history");
-            } catch (e) { }
+              Services.obs.notifyObservers(
+                null,
+                "browser:purge-session-history"
+              );
+            } catch (e) {}
 
             try {
-              var predictor = Cc["@mozilla.org/network/predictor;1"].getService(Ci.nsINetworkPredictor);
+              var predictor = Cc["@mozilla.org/network/predictor;1"].getService(
+                Ci.nsINetworkPredictor
+              );
               predictor.reset();
-            } catch (e) { }
+            } catch (e) {}
           });
       },
 
@@ -262,13 +303,14 @@ Sanitizer.prototype = {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_OPENWINDOWS", refObj);
 
-        return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:OpenTabs" })
+        return EventDispatcher.instance
+          .sendRequestForResult({ type: "Sanitize:OpenTabs" })
           .catch(e => Cu.reportError("Java-side tab clearing failed: " + e))
           .then(function() {
             try {
               // clear "Recently Closed" tabs in Android App
               Services.obs.notifyObservers(null, "browser:purge-session-tabs");
-            } catch (e) { }
+            } catch (e) {}
             TelemetryStopwatch.finish("FX_SANITIZE_OPENWINDOWS", refObj);
           });
       },
@@ -281,8 +323,14 @@ Sanitizer.prototype = {
     // Specific to Fennec.
     searchHistory: {
       clear: function() {
-        return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:ClearHistory", clearSearchHistory: true })
-          .catch(e => Cu.reportError("Java-side search history clearing failed: " + e));
+        return EventDispatcher.instance
+          .sendRequestForResult({
+            type: "Sanitize:ClearHistory",
+            clearSearchHistory: true,
+          })
+          .catch(e =>
+            Cu.reportError("Java-side search history clearing failed: " + e)
+          );
       },
 
       get canClear() {
@@ -300,24 +348,33 @@ Sanitizer.prototype = {
 
           // Conver time to microseconds
           let time = startTime * 1000;
-          FormHistory.update({
-            op: "remove",
-            firstUsedStart: time,
-          }, {
-            handleCompletion() {
-              TelemetryStopwatch.finish("FX_SANITIZE_FORMDATA", refObj);
-              resolve();
+          FormHistory.update(
+            {
+              op: "remove",
+              firstUsedStart: time,
             },
-          });
+            {
+              handleCompletion() {
+                TelemetryStopwatch.finish("FX_SANITIZE_FORMDATA", refObj);
+                resolve();
+              },
+            }
+          );
         });
       },
 
       canClear: function(aCallback) {
         let count = 0;
         let countDone = {
-          handleResult: function(aResult) { count = aResult; },
-          handleError: function(aError) { Cu.reportError(aError); },
-          handleCompletion: function(aReason) { aCallback(aReason == 0 && count > 0); },
+          handleResult: function(aResult) {
+            count = aResult;
+          },
+          handleError: function(aError) {
+            Cu.reportError(aError);
+          },
+          handleCompletion: function(aReason) {
+            aCallback(aReason == 0 && count > 0);
+          },
         };
         FormHistory.count({}, countDone);
       },
@@ -341,10 +398,12 @@ Sanitizer.prototype = {
         // just use that method directly, but we want to be able to remove the
         // downloaded files as well.
         for (let download of downloads) {
-          let downloadFinished = download.stopped &&
-                                 (!download.hasPartialData || download.error);
-          if ((downloadFinished || clearUnfinishedDownloads) &&
-               download.startTime.getTime() >= startTime) {
+          let downloadFinished =
+            download.stopped && (!download.hasPartialData || download.error);
+          if (
+            (downloadFinished || clearUnfinishedDownloads) &&
+            download.startTime.getTime() >= startTime
+          ) {
             // Remove the download first, so that the views don't get the change
             // notifications that may occur during finalization.
             await list.remove(download);
@@ -352,15 +411,20 @@ Sanitizer.prototype = {
             // This works even if the download state has changed meanwhile.  We
             // don't need to wait for the procedure to be complete before
             // processing the other downloads in the list.
-            finalizePromises.push(download.finalize(true).then(() => null, Cu.reportError));
+            finalizePromises.push(
+              download.finalize(true).then(() => null, Cu.reportError)
+            );
 
             if (deleteFiles) {
               // Delete the downloaded files themselves.
-              OS.File.remove(download.target.path).then(() => null, ex => {
-                if (!(ex instanceof OS.File.Error && ex.becauseNoSuchFile)) {
-                  Cu.reportError(ex);
+              OS.File.remove(download.target.path).then(
+                () => null,
+                ex => {
+                  if (!(ex instanceof OS.File.Error && ex.becauseNoSuchFile)) {
+                    Cu.reportError(ex);
+                  }
                 }
-              });
+              );
             }
           }
         }
@@ -386,7 +450,7 @@ Sanitizer.prototype = {
 
       get canClear() {
         let count = Services.logins.countLogins("", "", ""); // count all logins
-        return (count > 0);
+        return count > 0;
       },
     },
 
@@ -398,7 +462,9 @@ Sanitizer.prototype = {
           TelemetryStopwatch.start("FX_SANITIZE_SESSIONS", refObj);
 
           // clear all auth tokens
-          var sdr = Cc["@mozilla.org/security/sdr;1"].getService(Ci.nsISecretDecoderRing);
+          var sdr = Cc["@mozilla.org/security/sdr;1"].getService(
+            Ci.nsISecretDecoderRing
+          );
           sdr.logoutAndTeardown();
 
           // clear FTP and plain HTTP auth sessions
@@ -417,19 +483,22 @@ Sanitizer.prototype = {
     // Specific to Fennec.
     syncedTabs: {
       clear: function() {
-        return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:ClearSyncedTabs" })
-          .catch(e => Cu.reportError("Java-side synced tabs clearing failed: " + e));
+        return EventDispatcher.instance
+          .sendRequestForResult({ type: "Sanitize:ClearSyncedTabs" })
+          .catch(e =>
+            Cu.reportError("Java-side synced tabs clearing failed: " + e)
+          );
       },
 
       canClear: function(aCallback) {
-        Accounts.anySyncAccountsExist().then(aCallback)
+        Accounts.anySyncAccountsExist()
+          .then(aCallback)
           .catch(function(err) {
             Cu.reportError("Java-side synced tabs clearing failed: " + err);
             aCallback(false);
           });
       },
     },
-
   },
 };
 

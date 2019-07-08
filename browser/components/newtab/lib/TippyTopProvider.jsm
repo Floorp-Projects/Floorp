@@ -2,12 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch", "URL"]);
 
-const TIPPYTOP_JSON_PATH = "resource://activity-stream/data/content/tippytop/top_sites.json";
-const TIPPYTOP_URL_PREFIX = "resource://activity-stream/data/content/tippytop/images/";
+const TIPPYTOP_JSON_PATH =
+  "resource://activity-stream/data/content/tippytop/top_sites.json";
+const TIPPYTOP_URL_PREFIX =
+  "resource://activity-stream/data/content/tippytop/images/";
 
 function getDomain(url) {
   let domain;
@@ -29,7 +33,9 @@ this.TippyTopProvider = class TippyTopProvider {
   async init() {
     // Load the Tippy Top sites from the json manifest.
     try {
-      for (const site of await (await fetch(TIPPYTOP_JSON_PATH, {credentials: "omit"})).json()) {
+      for (const site of await (await fetch(TIPPYTOP_JSON_PATH, {
+        credentials: "omit",
+      })).json()) {
         // The tippy top manifest can have a url property (string) or a
         // urls property (array of strings)
         for (const url of site.url ? [site.url] : site.urls || []) {

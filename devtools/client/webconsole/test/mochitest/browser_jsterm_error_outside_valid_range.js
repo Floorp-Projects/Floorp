@@ -19,12 +19,16 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
+  const { jsterm } = hud;
 
-  const text = "TypeError: 'redirect' member of RequestInit 'foo' is not a valid value " +
-               "for enumeration RequestRedirect";
-  const onErrorMessage =  waitForMessage(hud, text, ".message.error");
+  const text =
+    "TypeError: 'redirect' member of RequestInit 'foo' is not a valid value " +
+    "for enumeration RequestRedirect";
+  const onErrorMessage = waitForMessage(hud, text, ".message.error");
   jsterm.execute("new Request('',{redirect:'foo'})");
   await onErrorMessage;
-  ok(true, "Error message displayed as expected, without crashing the console.");
+  ok(
+    true,
+    "Error message displayed as expected, without crashing the console."
+  );
 }

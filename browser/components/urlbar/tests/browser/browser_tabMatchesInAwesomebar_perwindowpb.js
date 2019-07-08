@@ -12,18 +12,24 @@ const TEST_URL = `${TEST_BASE_URL}dummy_page.html`;
 
 add_task(async function() {
   let normalWindow = await BrowserTestUtils.openNewBrowserWindow();
-  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
   await runTest(normalWindow, privateWindow, false);
   await BrowserTestUtils.closeWindow(normalWindow);
   await BrowserTestUtils.closeWindow(privateWindow);
 
   normalWindow = await BrowserTestUtils.openNewBrowserWindow();
-  privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
   await runTest(privateWindow, normalWindow, false);
   await BrowserTestUtils.closeWindow(normalWindow);
   await BrowserTestUtils.closeWindow(privateWindow);
 
-  privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
   await runTest(privateWindow, privateWindow, false);
   await BrowserTestUtils.closeWindow(privateWindow);
 
@@ -34,7 +40,9 @@ add_task(async function() {
 
 async function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
   await BrowserTestUtils.openNewForegroundTab(aSourceWindow.gBrowser, TEST_URL);
-  let testTab = await BrowserTestUtils.openNewForegroundTab(aDestWindow.gBrowser);
+  let testTab = await BrowserTestUtils.openNewForegroundTab(
+    aDestWindow.gBrowser
+  );
 
   info("waiting for focus on the window");
   await SimpleTest.promiseFocus(aDestWindow);
@@ -45,33 +53,48 @@ async function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
 
   // Ensure that this tab has no history entries
   let sessionHistoryCount = await new Promise(resolve => {
-    SessionStore.getSessionHistory(gBrowser.selectedTab, function(sessionHistory) {
+    SessionStore.getSessionHistory(gBrowser.selectedTab, function(
+      sessionHistory
+    ) {
       resolve(sessionHistory.entries.length);
     });
   });
 
-  ok(sessionHistoryCount < 2,
-     `The test tab has 1 or fewer history entries. sessionHistoryCount=${sessionHistoryCount}`);
+  ok(
+    sessionHistoryCount < 2,
+    `The test tab has 1 or fewer history entries. sessionHistoryCount=${sessionHistoryCount}`
+  );
   // Ensure that this tab is on about:blank
-  is(testTab.linkedBrowser.currentURI.spec, "about:blank",
-     "The test tab is on about:blank");
+  is(
+    testTab.linkedBrowser.currentURI.spec,
+    "about:blank",
+    "The test tab is on about:blank"
+  );
   // Ensure that this tab's document has no child nodes
   await ContentTask.spawn(testTab.linkedBrowser, null, async function() {
-    ok(!content.document.body.hasChildNodes(),
-       "The test tab has no child nodes");
+    ok(
+      !content.document.body.hasChildNodes(),
+      "The test tab has no child nodes"
+    );
   });
-  ok(!testTab.hasAttribute("busy"),
-     "The test tab doesn't have the busy attribute");
+  ok(
+    !testTab.hasAttribute("busy"),
+    "The test tab doesn't have the busy attribute"
+  );
 
   // Wait for the Awesomebar popup to appear.
   // Use a slice to workaround bug 1507755.
-  let searchString = UrlbarPrefs.get("quantumbar") ? TEST_URL : TEST_URL.slice(1);
+  let searchString = UrlbarPrefs.get("quantumbar")
+    ? TEST_URL
+    : TEST_URL.slice(1);
   await promiseAutocompleteResultPopup(searchString, aDestWindow);
 
   info(`awesomebar popup appeared. aExpectSwitch: ${aExpectSwitch}`);
   // Make sure the last match is selected.
-  while (UrlbarTestUtils.getSelectedIndex(aDestWindow) <
-         UrlbarTestUtils.getResultCount(aDestWindow) - 1) {
+  while (
+    UrlbarTestUtils.getSelectedIndex(aDestWindow) <
+    UrlbarTestUtils.getResultCount(aDestWindow) - 1
+  ) {
     info("handling key navigation for DOM_VK_DOWN key");
     EventUtils.synthesizeKey("KEY_ArrowDown", {}, aDestWindow);
   }

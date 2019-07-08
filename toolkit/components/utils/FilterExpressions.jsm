@@ -4,12 +4,26 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "PreferenceFilters", "resource://gre/modules/components-utils/PreferenceFilters.jsm");
-ChromeUtils.defineModuleGetter(this, "Sampling", "resource://gre/modules/components-utils/Sampling.jsm");
-ChromeUtils.defineModuleGetter(this, "mozjexl", "resource://gre/modules/components-utils/mozjexl.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PreferenceFilters",
+  "resource://gre/modules/components-utils/PreferenceFilters.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Sampling",
+  "resource://gre/modules/components-utils/Sampling.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "mozjexl",
+  "resource://gre/modules/components-utils/mozjexl.js"
+);
 
 var EXPORTED_SYMBOLS = ["FilterExpressions"];
 
@@ -100,7 +114,6 @@ function regExpMatch(str, pattern, flags) {
   const re = new RegExp(pattern, flags);
   return str.match(re);
 }
-
 
 /**
  * Compares v1 to v2 and returns 0 if they are equal, a negative number if

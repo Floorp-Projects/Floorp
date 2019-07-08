@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { require, loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require, loader } = ChromeUtils.import(
+  "resource://devtools/shared/Loader.jsm"
+);
 const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 
@@ -150,7 +152,8 @@ AbstractTreeItem.prototype = {
    */
   _displaySelf: function(document, arrowNode) {
     throw new Error(
-      "The `_displaySelf` method needs to be implemented by inheriting classes.");
+      "The `_displaySelf` method needs to be implemented by inheriting classes."
+    );
   },
 
   /**
@@ -163,7 +166,8 @@ AbstractTreeItem.prototype = {
    */
   _populateSelf: function(children) {
     throw new Error(
-      "The `_populateSelf` method needs to be implemented by inheriting classes.");
+      "The `_populateSelf` method needs to be implemented by inheriting classes."
+    );
   },
 
   /**
@@ -251,7 +255,11 @@ AbstractTreeItem.prototype = {
    * @param Node beforeNode [optional]
    *        An optional child element which should succeed this tree item.
    */
-  attachTo: function(containerNode, fragmentNode = containerNode, beforeNode = null) {
+  attachTo: function(
+    containerNode,
+    fragmentNode = containerNode,
+    beforeNode = null
+  ) {
     this._containerNode = containerNode;
     this._constructTargetNode();
 
@@ -443,11 +451,14 @@ AbstractTreeItem.prototype = {
 
     const document = this.document;
 
-    const arrowNode = this._arrowNode = document.createXULElement("hbox");
+    const arrowNode = (this._arrowNode = document.createXULElement("hbox"));
     arrowNode.className = "arrow theme-twisty";
     arrowNode.addEventListener("mousedown", this._onArrowClick);
 
-    const targetNode = this._targetNode = this._displaySelf(document, arrowNode);
+    const targetNode = (this._targetNode = this._displaySelf(
+      document,
+      arrowNode
+    ));
     targetNode.style.MozUserFocus = "normal";
 
     targetNode.addEventListener("mousedown", this._onClick);
@@ -470,8 +481,10 @@ AbstractTreeItem.prototype = {
    */
   _getSiblingAtDelta: function(delta) {
     const childNodes = this._containerNode.childNodes;
-    const indexOfSelf =
-      Array.prototype.indexOf.call(childNodes, this._targetNode);
+    const indexOfSelf = Array.prototype.indexOf.call(
+      childNodes,
+      this._targetNode
+    );
     if (indexOfSelf + delta >= 0) {
       return childNodes[indexOfSelf + delta];
     }
@@ -612,8 +625,9 @@ AbstractTreeItem.prototype = {
         return;
 
       case KeyCodes.DOM_VK_PAGE_UP:
-        const pageUpElement =
-          this._getSiblingAtDelta(-this._getNodesPerPageSize());
+        const pageUpElement = this._getSiblingAtDelta(
+          -this._getNodesPerPageSize()
+        );
         // There's a chance that the root node is hidden. In this case, its
         // height will be 0.
         if (pageUpElement && this._getHeight(pageUpElement)) {
@@ -624,8 +638,9 @@ AbstractTreeItem.prototype = {
         return;
 
       case KeyCodes.DOM_VK_PAGE_DOWN:
-        const pageDownElement =
-          this._getSiblingAtDelta(this._getNodesPerPageSize());
+        const pageDownElement = this._getSiblingAtDelta(
+          this._getNodesPerPageSize()
+        );
         if (pageDownElement) {
           pageDownElement.focus();
         } else {

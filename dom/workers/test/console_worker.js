@@ -5,11 +5,15 @@
 
 onmessage = function(event) {
   // TEST: does console exist?
-  postMessage({event: 'console exists', status: !!console, last : false});
+  postMessage({ event: "console exists", status: !!console, last: false });
 
-  postMessage({event: 'console is the same object', status: console === console, last: false});
+  postMessage({
+    event: "console is the same object",
+    status: console === console,
+    last: false,
+  });
 
-  postMessage({event: 'trace without function', status: true, last : false});
+  postMessage({ event: "trace without function", status: true, last: false });
 
   for (var i = 0; i < 10; ++i) {
     console.log(i, i, i);
@@ -28,11 +32,11 @@ onmessage = function(event) {
 
   foobar585956c = function(a) {
     console.trace();
-    return a+"c";
+    return a + "c";
   };
 
   function foobar585956b(a) {
-    return foobar585956c(a+"b");
+    return foobar585956c(a + "b");
   }
 
   function foobar585956a(omg) {
@@ -61,20 +65,19 @@ onmessage = function(event) {
     console.groupEnd();
   }
 
-  foobar585956a('omg');
-  foobar646025('omg');
+  foobar585956a("omg");
+  foobar646025("omg");
   timeStamp();
-  timeStamp('foo');
+  timeStamp("foo");
   testGroups();
-  startTimer('foo');
+  startTimer("foo");
   setTimeout(function() {
-    stopTimer('foo');
+    stopTimer("foo");
     nextSteps(event);
   }, 10);
-}
+};
 
 function nextSteps(event) {
-
   function namelessTimer() {
     console.time();
     console.timeEnd();
@@ -82,7 +85,7 @@ function nextSteps(event) {
 
   namelessTimer();
 
-  var str = "Test Message."
+  var str = "Test Message.";
   console.log(str);
   console.info(str);
   console.warn(str);
@@ -94,16 +97,16 @@ function nextSteps(event) {
   console.profileEnd(str);
   console.timeStamp();
   console.clear();
-  postMessage({event: '4 messages', status: true, last : false});
+  postMessage({ event: "4 messages", status: true, last: false });
 
   // Recursive:
   if (event.data == true) {
-    var worker = new Worker('console_worker.js');
+    var worker = new Worker("console_worker.js");
     worker.onmessage = function(msg) {
       postMessage(msg.data);
-    }
+    };
     worker.postMessage(false);
   } else {
-    postMessage({event: 'bye bye', status: true, last : true});
+    postMessage({ event: "bye bye", status: true, last: true });
   }
 }

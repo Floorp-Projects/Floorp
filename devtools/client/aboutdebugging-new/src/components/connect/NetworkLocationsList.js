@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -48,8 +51,8 @@ class NetworkLocationsList extends PureComponent {
                   this.props.dispatch(Actions.removeNetworkLocation(location));
                 },
               },
-              "Remove",
-            ),
+              "Remove"
+            )
           )
         )
       )
@@ -57,8 +60,7 @@ class NetworkLocationsList extends PureComponent {
   }
 
   render() {
-    return this.props.networkLocations.length > 0 ?
-      this.renderList() : null;
+    return this.props.networkLocations.length > 0 ? this.renderList() : null;
   }
 }
 

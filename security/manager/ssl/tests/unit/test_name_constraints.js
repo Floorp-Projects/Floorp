@@ -25,26 +25,34 @@
 // existing hierarchy that has externally-imposed name constraints (DCISS).
 
 do_get_profile(); // must be called before getting nsIX509CertDB
-const certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
+const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
 
 function certFromFile(name) {
   return constructCertFromFile(`test_name_constraints/${name}.pem`);
 }
 
 function loadCertWithTrust(certName, trustString) {
-  addCertFromFile(certdb, `test_name_constraints/${certName}.pem`,
-                  trustString);
+  addCertFromFile(certdb, `test_name_constraints/${certName}.pem`, trustString);
 }
 
 function checkCertNotInNameSpace(cert) {
-  return checkCertErrorGeneric(certdb, cert, SEC_ERROR_CERT_NOT_IN_NAME_SPACE,
-                               certificateUsageSSLServer);
+  return checkCertErrorGeneric(
+    certdb,
+    cert,
+    SEC_ERROR_CERT_NOT_IN_NAME_SPACE,
+    certificateUsageSSLServer
+  );
 }
 
 function checkCertInNameSpace(cert) {
-  return checkCertErrorGeneric(certdb, cert, PRErrorCodeSuccess,
-                               certificateUsageSSLServer);
+  return checkCertErrorGeneric(
+    certdb,
+    cert,
+    PRErrorCodeSuccess,
+    certificateUsageSSLServer
+  );
 }
 
 add_task(async function() {

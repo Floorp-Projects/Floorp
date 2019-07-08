@@ -7,12 +7,16 @@ add_task(async function test_maxResults() {
   const MATCHES_LENGTH = 20;
   let matches = [];
   for (let i = 0; i < MATCHES_LENGTH; i++) {
-    matches.push(new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-                                  UrlbarUtils.RESULT_SOURCE.TABS,
-                                  { url: `http://mozilla.org/foo/${i}` }));
+    matches.push(
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+        UrlbarUtils.RESULT_SOURCE.TABS,
+        { url: `http://mozilla.org/foo/${i}` }
+      )
+    );
   }
   let providerName = registerBasicTestProvider(matches);
-  let context = createContext(undefined, {providers: [providerName]});
+  let context = createContext(undefined, { providers: [providerName] });
   let controller = new UrlbarController({
     browserWindow: {
       location: {
@@ -26,8 +30,11 @@ add_task(async function test_maxResults() {
     context.maxResults = count;
     await controller.startQuery(context);
     await promise;
-    Assert.equal(context.results.length, Math.min(MATCHES_LENGTH, count),
-                 "Check count");
+    Assert.equal(
+      context.results.length,
+      Math.min(MATCHES_LENGTH, count),
+      "Check count"
+    );
     Assert.deepEqual(context.results, matches.slice(0, count), "Check results");
   }
   await test_count(10);

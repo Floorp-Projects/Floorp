@@ -25,7 +25,7 @@ add_task(async function() {
   waitForExplicitFinish();
   await pushPref("devtools.chrome.enabled", false);
 
-  const {tab, inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const { tab, inspector, testActor } = await openInspectorForURL(TEST_URL);
   const browser = tab.linkedBrowser;
   const mm = browser.messageManager;
 
@@ -47,6 +47,6 @@ add_task(async function() {
 function frameScript() {
   const div = content.document.querySelector("div");
   div.addEventListener("click", () => {
-   /* Do nothing */
+    /* Do nothing */
   });
 }

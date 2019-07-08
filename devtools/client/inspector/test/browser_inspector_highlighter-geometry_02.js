@@ -39,43 +39,49 @@ const TEST_URL = `data:text/html;charset=utf-8,
 const ID = "geometry-editor-";
 const HIGHLIGHTER_TYPE = "GeometryEditorHighlighter";
 
-const POSITIONED_ELEMENT_TESTS = [{
-  selector: "#positioned",
-  expectedLabels: [
-    {side: "left", visible: true, label: "5rem"},
-    {side: "top", visible: true, label: "30px"},
-    {side: "right", visible: true, label: "300px"},
-    {side: "bottom", visible: true, label: "10em"},
-  ],
-}, {
-  selector: "#positioned2",
-  expectedLabels: [
-    {side: "left", visible: false},
-    {side: "top", visible: true, label: "5vmin"},
-    {side: "right", visible: true, label: "10%"},
-    {side: "bottom", visible: false},
-  ],
-}, {
-  selector: "#relative",
-  expectedLabels: [
-    {side: "left", visible: true, label: "20px"},
-    {side: "top", visible: true, label: "10px"},
-    {side: "right", visible: false},
-    {side: "bottom", visible: false},
-  ],
-}, {
-  selector: "#relative2",
-  expectedLabels: [
-    {side: "left", visible: false},
-    {side: "top", visible: true, label: "0px"},
-    {side: "right", visible: false},
-    {side: "bottom", visible: false},
-  ],
-}];
+const POSITIONED_ELEMENT_TESTS = [
+  {
+    selector: "#positioned",
+    expectedLabels: [
+      { side: "left", visible: true, label: "5rem" },
+      { side: "top", visible: true, label: "30px" },
+      { side: "right", visible: true, label: "300px" },
+      { side: "bottom", visible: true, label: "10em" },
+    ],
+  },
+  {
+    selector: "#positioned2",
+    expectedLabels: [
+      { side: "left", visible: false },
+      { side: "top", visible: true, label: "5vmin" },
+      { side: "right", visible: true, label: "10%" },
+      { side: "bottom", visible: false },
+    ],
+  },
+  {
+    selector: "#relative",
+    expectedLabels: [
+      { side: "left", visible: true, label: "20px" },
+      { side: "top", visible: true, label: "10px" },
+      { side: "right", visible: false },
+      { side: "bottom", visible: false },
+    ],
+  },
+  {
+    selector: "#relative2",
+    expectedLabels: [
+      { side: "left", visible: false },
+      { side: "top", visible: true, label: "0px" },
+      { side: "right", visible: false },
+      { side: "bottom", visible: false },
+    ],
+  },
+];
 
 add_task(async function() {
-  const helper = await openInspectorForURL(TEST_URL)
-                       .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
+  const helper = await openInspectorForURL(TEST_URL).then(
+    getHighlighterHelperFor(HIGHLIGHTER_TYPE)
+  );
 
   helper.prefix = ID;
 
@@ -86,17 +92,20 @@ add_task(async function() {
   await finalize();
 });
 
-async function positionLabelsAreCorrect(
-  {show, hide, isElementHidden, getElementTextContent}
-) {
+async function positionLabelsAreCorrect({
+  show,
+  hide,
+  isElementHidden,
+  getElementTextContent,
+}) {
   info("Highlight nodes and check position labels");
 
-  for (const {selector, expectedLabels} of POSITIONED_ELEMENT_TESTS) {
+  for (const { selector, expectedLabels } of POSITIONED_ELEMENT_TESTS) {
     info("Testing node " + selector);
 
     await show(selector);
 
-    for (const {side, visible, label} of expectedLabels) {
+    for (const { side, visible, label } of expectedLabels) {
       const id = "label-" + side;
 
       const hidden = await isElementHidden(id);

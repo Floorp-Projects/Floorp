@@ -32,10 +32,17 @@ async function performTests() {
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
 
-  let tooltip = await setInputValueForGetterConfirmDialog(toolbox, hud, "foo.rab.");
+  let tooltip = await setInputValueForGetterConfirmDialog(
+    toolbox,
+    hud,
+    "foo.rab."
+  );
   let labelEl = tooltip.querySelector(".confirm-label");
-  is(labelEl.textContent, "Invoke getter foo.rab to retrieve the property list?",
-    "Dialog has expected text content");
+  is(
+    labelEl.textContent,
+    "Invoke getter foo.rab to retrieve the property list?",
+    "Dialog has expected text content"
+  );
 
   info("Check that Escape closes the confirm tooltip");
   let onConfirmTooltipClosed = waitFor(() => !isConfirmDialogOpened(toolbox));
@@ -49,12 +56,15 @@ async function performTests() {
   is(isConfirmDialogOpened(toolbox), false, "The confirm dialog is not open");
 
   info("Check that Ctrl+space show the confirm tooltip again");
-  EventUtils.synthesizeKey(" ", {ctrlKey: true});
+  EventUtils.synthesizeKey(" ", { ctrlKey: true });
   await waitFor(() => isConfirmDialogOpened(toolbox));
   tooltip = getConfirmDialog(toolbox);
   labelEl = tooltip.querySelector(".confirm-label");
-  is(labelEl.textContent, "Invoke getter foo.rab to retrieve the property list?",
-    "Dialog has expected text content");
+  is(
+    labelEl.textContent,
+    "Invoke getter foo.rab to retrieve the property list?",
+    "Dialog has expected text content"
+  );
 
   info("Check that ArrowLeft closes the confirm tooltip");
   onConfirmTooltipClosed = waitFor(() => !isConfirmDialogOpened(toolbox));

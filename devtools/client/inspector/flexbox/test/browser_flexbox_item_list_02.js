@@ -18,8 +18,11 @@ add_task(async function() {
 
   info("Checking the initial state of the flex item list.");
   ok(flexItemList, "The flex item list is rendered.");
-  is(flexItemList.querySelectorAll("button").length, 1,
-    "Got the correct number of flex items in the list.");
+  is(
+    flexItemList.querySelectorAll("button").length,
+    1,
+    "Got the correct number of flex items in the list."
+  );
 
   info("Clicking on the first flex item to navigate to the flex item.");
   const onFlexItemOutlineRendered = waitForDOM(doc, ".flex-outline-container");

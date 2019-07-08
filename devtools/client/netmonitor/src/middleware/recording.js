@@ -4,13 +4,9 @@
 
 "use strict";
 
-const {
-  TOGGLE_RECORDING,
-} = require("../constants");
+const { TOGGLE_RECORDING } = require("../constants");
 
-const {
-  getRecordingState,
-} = require("../selectors/index");
+const { getRecordingState } = require("../selectors/index");
 
 /**
  * Start/stop HTTP traffic recording.

@@ -6,16 +6,17 @@
 
 "use strict";
 
-const { getUnicodeUrl, getUnicodeUrlPath, getUnicodeHostname } =
-  require("devtools/client/shared/unicode-url");
-
 const {
-  UPDATE_PROPS,
-} = require("devtools/client/netmonitor/src/constants");
+  getUnicodeUrl,
+  getUnicodeUrlPath,
+  getUnicodeHostname,
+} = require("devtools/client/shared/unicode-url");
+
+const { UPDATE_PROPS } = require("devtools/client/netmonitor/src/constants");
 
 const CONTENT_MIME_TYPE_ABBREVIATIONS = {
-  "ecmascript": "js",
-  "javascript": "js",
+  ecmascript: "js",
+  javascript: "js",
   "x-javascript": "js",
 };
 
@@ -28,7 +29,12 @@ const CONTENT_MIME_TYPE_ABBREVIATIONS = {
  * @param {object} postData - the "requestPostData".
  * @return {array} a promise list that is resolved with the extracted form data.
  */
-async function getFormDataSections(headers, uploadHeaders, postData, getLongString) {
+async function getFormDataSections(
+  headers,
+  uploadHeaders,
+  postData,
+  getLongString
+) {
   const formDataSections = [];
 
   const requestHeaders = headers.headers;
@@ -39,7 +45,9 @@ async function getFormDataSections(headers, uploadHeaders, postData, getLongStri
     return e.name.toLowerCase() == "content-type";
   });
 
-  const contentTypeLongString = contentTypeHeader ? contentTypeHeader.value : "";
+  const contentTypeLongString = contentTypeHeader
+    ? contentTypeHeader.value
+    : "";
 
   const contentType = await getLongString(contentTypeLongString);
 
@@ -81,7 +89,7 @@ async function fetchHeaders(headers, getLongString) {
  * @param {array} updateTypes - a list of network event update types
  */
 function fetchNetworkUpdatePacket(requestData, request, updateTypes) {
-  updateTypes.forEach((updateType) => {
+  updateTypes.forEach(updateType => {
     // Only stackTrace will be handled differently
     if (updateType === "stackTrace") {
       if (request.cause.stacktraceAvailable && !request.stacktrace) {
@@ -120,7 +128,7 @@ function formDataURI(mimeType, encoding, text) {
  * @return {string} list of headers in text format
  */
 function writeHeaderText(headers) {
-  return headers.map(({name, value}) => name + ": " + value).join("\n");
+  return headers.map(({ name, value }) => name + ": " + value).join("\n");
 }
 
 /**
@@ -199,8 +207,7 @@ function getUrlProperty(input, property) {
  */
 function getUrlBaseName(url) {
   const pathname = getUrlProperty(url, "pathname");
-  return getUnicodeUrlPath(
-    pathname.replace(/\S*\//, "") || pathname || "/");
+  return getUnicodeUrlPath(pathname.replace(/\S*\//, "") || pathname || "/");
 }
 
 /**
@@ -290,9 +297,10 @@ function getUrlDetails(url) {
   //
   // IPv6 parsing is a little sloppy; it assumes that the address has
   // been validated before it gets here.
-  const isLocal = hostname.match(/(.+\.)?localhost$/) ||
-                hostname.match(/^127\.\d{1,3}\.\d{1,3}\.\d{1,3}/) ||
-                hostname.match(/\[[0:]+1\]/);
+  const isLocal =
+    hostname.match(/(.+\.)?localhost$/) ||
+    hostname.match(/^127\.\d{1,3}\.\d{1,3}\.\d{1,3}/) ||
+    hostname.match(/\[[0:]+1\]/);
 
   return {
     baseNameWithQuery,
@@ -340,13 +348,16 @@ function parseFormData(sections) {
     return null;
   }
 
-  return sections.replace(/^&/, "").split("&").map(e => {
-    const param = e.split("=");
-    return {
-      name: param[0] ? getUnicodeUrlPath(param[0]) : "",
-      value: param[1] ? getUnicodeUrlPath(param[1]) : "",
-    };
-  });
+  return sections
+    .replace(/^&/, "")
+    .split("&")
+    .map(e => {
+      const param = e.split("=");
+      return {
+        name: param[0] ? getUnicodeUrlPath(param[0]) : "",
+        value: param[1] ? getUnicodeUrlPath(param[1]) : "",
+      };
+    });
 }
 
 /**
@@ -364,23 +375,29 @@ function ipToLong(ip) {
   let base;
   let octets = ip.split(".");
 
-  if (octets.length === 4) { // IPv4
+  if (octets.length === 4) {
+    // IPv4
     base = 10;
-  } else if (ip.includes(":")) { // IPv6
-    const numberOfZeroSections = 8 - ip.replace(/^:+|:+$/g, "").split(/:+/g).length;
+  } else if (ip.includes(":")) {
+    // IPv6
+    const numberOfZeroSections =
+      8 - ip.replace(/^:+|:+$/g, "").split(/:+/g).length;
     octets = ip
       .replace("::", `:${"0:".repeat(numberOfZeroSections)}`)
       .replace(/^:|:$/g, "")
       .split(":");
     base = 16;
-  } else { // Invalid IP
+  } else {
+    // Invalid IP
     return -1;
   }
-  return octets.map((val, ix, arr) => {
-    return parseInt(val, base) * Math.pow(256, (arr.length - 1) - ix);
-  }).reduce((sum, val) => {
-    return sum + val;
-  }, 0);
+  return octets
+    .map((val, ix, arr) => {
+      return parseInt(val, base) * Math.pow(256, arr.length - 1 - ix);
+    })
+    .reduce((sum, val) => {
+      return sum + val;
+    }, 0);
 }
 
 /**
@@ -425,8 +442,12 @@ function getEndTime(item, firstRequestStartedMillis = 0) {
  */
 function getResponseTime(item, firstRequestStartedMillis = 0) {
   const { startedMillis, totalTime, eventTimings = { timings: {} } } = item;
-  return startedMillis + totalTime - firstRequestStartedMillis -
-    eventTimings.timings.receive;
+  return (
+    startedMillis +
+    totalTime -
+    firstRequestStartedMillis -
+    eventTimings.timings.receive
+  );
 }
 
 /**
@@ -447,10 +468,14 @@ function getFormattedProtocol(item) {
        * @see https://bugzilla.mozilla.org/show_bug.cgi?id=1501357
        */
       if (h.value !== undefined && h.value.length > 0) {
-        if (h.value.toLowerCase() !== "http/1.1" ||
-            protocol[0].toLowerCase() !== "http/1.1") {
-          if (parseFloat(h.value.toLowerCase().split("")[1]) !==
-            parseFloat(protocol[0].toLowerCase().split("/")[1])) {
+        if (
+          h.value.toLowerCase() !== "http/1.1" ||
+          protocol[0].toLowerCase() !== "http/1.1"
+        ) {
+          if (
+            parseFloat(h.value.toLowerCase().split("")[1]) !==
+            parseFloat(protocol[0].toLowerCase().split("/")[1])
+          ) {
             protocol.push(h.value);
             return true;
           }
@@ -484,11 +509,7 @@ function getResponseHeader(item, header) {
  * Extracts any urlencoded form data sections from a POST request.
  */
 async function updateFormDataSections(props) {
-  const {
-    connector,
-    request = {},
-    updateRequest,
-  } = props;
+  const { connector, request = {}, updateRequest } = props;
   let {
     id,
     formDataSections,
@@ -507,13 +528,17 @@ async function updateFormDataSections(props) {
     requestPostData = await connector.requestData(id, "requestPostData");
   }
 
-  if (!formDataSections && requestHeaders && requestPostData &&
-      requestHeadersFromUploadStream) {
+  if (
+    !formDataSections &&
+    requestHeaders &&
+    requestPostData &&
+    requestHeadersFromUploadStream
+  ) {
     formDataSections = await getFormDataSections(
       requestHeaders,
       requestHeadersFromUploadStream,
       requestPostData,
-      connector.getLongString,
+      connector.getLongString
     );
 
     updateRequest(request.id, { formDataSections }, true);

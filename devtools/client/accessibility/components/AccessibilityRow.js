@@ -6,7 +6,10 @@
 /* global gTelemetry, gToolbox, EVENTS */
 
 // React & Redux
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
@@ -16,10 +19,15 @@ const AuditFilter = createFactory(require("./AuditFilter"));
 const AuditController = createFactory(require("./AuditController"));
 
 // Utils
-const {flashElementOn, flashElementOff} =
-  require("devtools/client/inspector/markup/utils");
+const {
+  flashElementOn,
+  flashElementOff,
+} = require("devtools/client/inspector/markup/utils");
 const { openDocLink } = require("devtools/client/shared/link");
-const { VALUE_FLASHING_DURATION, VALUE_HIGHLIGHT_DURATION } = require("../constants");
+const {
+  VALUE_FLASHING_DURATION,
+  VALUE_HIGHLIGHT_DURATION,
+} = require("../constants");
 
 // Actions
 const { updateDetails } = require("../actions/details");
@@ -28,7 +36,11 @@ const { unhighlight } = require("../actions/accessibles");
 const { L10N } = require("../utils/l10n");
 
 loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
-loader.lazyRequireGetter(this, "MenuItem", "devtools/client/framework/menu-item");
+loader.lazyRequireGetter(
+  this,
+  "MenuItem",
+  "devtools/client/framework/menu-item"
+);
 
 const { scrollIntoView } = require("devtools/client/shared/scroll");
 
@@ -46,8 +58,10 @@ class HighlightableTreeRowClass extends TreeRow {
       return shouldTreeRowUpdate;
     }
 
-    if (nextProps.highlighted !== this.props.highlighted ||
-        nextProps.filtered !== this.props.filtered) {
+    if (
+      nextProps.highlighted !== this.props.highlighted ||
+      nextProps.filtered !== this.props.filtered
+    ) {
       return true;
     }
 
@@ -116,7 +130,11 @@ class AccessibilityRow extends Component {
   }
 
   update() {
-    const { dispatch, member: { object }, supports } = this.props;
+    const {
+      dispatch,
+      member: { object },
+      supports,
+    } = this.props;
     if (!gToolbox || !object.actorID) {
       return;
     }
@@ -153,8 +171,9 @@ class AccessibilityRow extends Component {
       return;
     }
 
-    walker.highlightAccessible(accessible, options).catch(error =>
-      console.warn(error));
+    walker
+      .highlightAccessible(accessible, options)
+      .catch(error => console.warn(error));
   }
 
   unhighlight() {
@@ -176,12 +195,17 @@ class AccessibilityRow extends Component {
     }
 
     if (gTelemetry) {
-      gTelemetry.keyedScalarAdd(TELEMETRY_ACCESSIBLE_CONTEXT_MENU_ITEM_ACTIVATED,
-                                "print-to-json", 1);
+      gTelemetry.keyedScalarAdd(
+        TELEMETRY_ACCESSIBLE_CONTEXT_MENU_ITEM_ACTIVATED,
+        "print-to-json",
+        1
+      );
     }
 
     const snapshot = await member.object.snapshot();
-    openDocLink(`${JSON_URL_PREFIX}${encodeURIComponent(JSON.stringify(snapshot))}`);
+    openDocLink(
+      `${JSON_URL_PREFIX}${encodeURIComponent(JSON.stringify(snapshot))}`
+    );
   }
 
   onContextMenu(e) {
@@ -196,11 +220,13 @@ class AccessibilityRow extends Component {
     const { supports } = this.props;
 
     if (supports.snapshot) {
-      menu.append(new MenuItem({
-        id: "menu-printtojson",
-        label: L10N.getStr("accessibility.tree.menu.printToJSON"),
-        click: () => this.printToJSON(),
-      }));
+      menu.append(
+        new MenuItem({
+          id: "menu-printtojson",
+          label: L10N.getStr("accessibility.tree.menu.printToJSON"),
+          click: () => this.printToJSON(),
+        })
+      );
     }
 
     menu.popup(e.screenX, e.screenY, gToolbox.doc);
@@ -224,11 +250,12 @@ class AccessibilityRow extends Component {
       key: `${member.path}-${member.active ? "active" : "inactive"}`,
     };
 
-    return AuditController({
-      accessible: member.object,
-    },
-      AuditFilter({},
-        HighlightableTreeRow(props)));
+    return AuditController(
+      {
+        accessible: member.object,
+      },
+      AuditFilter({}, HighlightableTreeRow(props))
+    );
   }
 }
 
@@ -236,5 +263,9 @@ const mapStateToProps = ({ ui }) => ({
   supports: ui.supports,
 });
 
-module.exports =
-  connect(mapStateToProps, null, null, { withRef: true })(AccessibilityRow);
+module.exports = connect(
+  mapStateToProps,
+  null,
+  null,
+  { withRef: true }
+)(AccessibilityRow);

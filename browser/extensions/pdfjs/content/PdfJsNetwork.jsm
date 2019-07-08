@@ -15,11 +15,12 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = ["NetworkManager"];
 
-function log(aMsg) { // eslint-disable-line no-unused-vars
+// eslint-disable-next-line no-unused-vars
+function log(aMsg) {
   var msg = "PdfJsNetwork.jsm: " + (aMsg.join ? aMsg.join("") : aMsg);
   Services.console.logStringMessage(msg);
 }
@@ -36,7 +37,7 @@ var NetworkManager = (function NetworkManagerClosure() {
     var length = data.length;
     var array = new Uint8Array(length);
     for (var i = 0; i < length; i++) {
-      array[i] = data.charCodeAt(i) & 0xFF;
+      array[i] = data.charCodeAt(i) & 0xff;
     }
     return array.buffer;
   }
@@ -48,7 +49,8 @@ var NetworkManager = (function NetworkManagerClosure() {
       this.isHttp = /^https?:/i.test(url);
       this.httpHeaders = (this.isHttp && args.httpHeaders) || {};
       this.withCredentials = args.withCredentials || false;
-      this.getXhr = args.getXhr ||
+      this.getXhr =
+        args.getXhr ||
         function NetworkManager_getXhr() {
           return new XMLHttpRequest();
         };
@@ -75,9 +77,9 @@ var NetworkManager = (function NetworkManagerClosure() {
     request(args) {
       var xhr = this.getXhr();
       var xhrId = this.currXhrId++;
-      var pendingRequest = this.pendingRequests[xhrId] = {
+      var pendingRequest = (this.pendingRequests[xhrId] = {
         xhr,
-      };
+      });
 
       xhr.open("GET", this.url);
       xhr.withCredentials = this.withCredentials;
@@ -167,11 +169,13 @@ var NetworkManager = (function NetworkManagerClosure() {
       // "A server MAY ignore the Range header". This means it's possible to
       // get a 200 rather than a 206 response from a range request.
       var ok_response_on_range_request =
-          xhrStatus === OK_RESPONSE &&
-          pendingRequest.expectedStatus === PARTIAL_CONTENT_RESPONSE;
+        xhrStatus === OK_RESPONSE &&
+        pendingRequest.expectedStatus === PARTIAL_CONTENT_RESPONSE;
 
-      if (!ok_response_on_range_request &&
-          xhrStatus !== pendingRequest.expectedStatus) {
+      if (
+        !ok_response_on_range_request &&
+        xhrStatus !== pendingRequest.expectedStatus
+      ) {
         if (pendingRequest.onError) {
           pendingRequest.onError(xhr.status);
         }
@@ -219,4 +223,3 @@ var NetworkManager = (function NetworkManagerClosure() {
 
   return NetworkManagerClass;
 })();
-

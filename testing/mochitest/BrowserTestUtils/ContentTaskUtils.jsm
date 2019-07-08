@@ -12,12 +12,12 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "ContentTaskUtils",
-];
+var EXPORTED_SYMBOLS = ["ContentTaskUtils"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {clearInterval, setInterval, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { clearInterval, setInterval, setTimeout } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 
 var ContentTaskUtils = {
   /**
@@ -30,14 +30,17 @@ var ContentTaskUtils = {
    */
   is_hidden(element) {
     var style = element.ownerGlobal.getComputedStyle(element);
-    if (style.display == "none")
+    if (style.display == "none") {
       return true;
-    if (style.visibility != "visible")
+    }
+    if (style.visibility != "visible") {
       return true;
+    }
 
     // Hiding a parent element will hide all its children
-    if (element.parentNode != element.ownerDocument)
+    if (element.parentNode != element.ownerDocument) {
       return ContentTaskUtils.is_hidden(element.parentNode);
+    }
 
     return false;
   },
@@ -52,14 +55,17 @@ var ContentTaskUtils = {
    */
   is_visible(element) {
     var style = element.ownerGlobal.getComputedStyle(element);
-    if (style.display == "none")
+    if (style.display == "none") {
       return false;
-    if (style.visibility != "visible")
+    }
+    if (style.visibility != "visible") {
       return false;
+    }
 
     // Hiding a parent element will hide all its children
-    if (element.parentNode != element.ownerDocument)
+    if (element.parentNode != element.ownerDocument) {
       return ContentTaskUtils.is_visible(element.parentNode);
+    }
 
     return true;
   },
@@ -146,22 +152,27 @@ var ContentTaskUtils = {
    */
   waitForEvent(subject, eventName, capture, checkFn, wantsUntrusted = false) {
     return new Promise((resolve, reject) => {
-      subject.addEventListener(eventName, function listener(event) {
-        try {
-          if (checkFn && !checkFn(event)) {
-            return;
-          }
-          subject.removeEventListener(eventName, listener, capture);
-          setTimeout(() => resolve(event), 0);
-        } catch (ex) {
+      subject.addEventListener(
+        eventName,
+        function listener(event) {
           try {
+            if (checkFn && !checkFn(event)) {
+              return;
+            }
             subject.removeEventListener(eventName, listener, capture);
-          } catch (ex2) {
-            // Maybe the provided object does not support removeEventListener.
+            setTimeout(() => resolve(event), 0);
+          } catch (ex) {
+            try {
+              subject.removeEventListener(eventName, listener, capture);
+            } catch (ex2) {
+              // Maybe the provided object does not support removeEventListener.
+            }
+            setTimeout(() => reject(ex), 0);
           }
-          setTimeout(() => reject(ex), 0);
-        }
-      }, capture, wantsUntrusted);
+        },
+        capture,
+        wantsUntrusted
+      );
     });
   },
 
@@ -179,7 +190,7 @@ var ContentTaskUtils = {
       return content._EventUtils;
     }
 
-    let EventUtils = content._EventUtils = {};
+    let EventUtils = (content._EventUtils = {});
 
     EventUtils.window = {};
     EventUtils.parent = EventUtils.window;
@@ -192,7 +203,9 @@ var ContentTaskUtils = {
     EventUtils.KeyboardEvent = content.KeyboardEvent;
 
     Services.scriptloader.loadSubScript(
-      "chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+      "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
+      EventUtils
+    );
 
     return EventUtils;
   },

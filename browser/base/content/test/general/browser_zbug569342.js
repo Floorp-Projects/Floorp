@@ -5,17 +5,17 @@
 add_task(async function findBarDisabledOnSomePages() {
   ok(!gFindBar || gFindBar.hidden, "Find bar should not be visible by default");
 
-  let findbarOpenedPromise = BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "TabFindInitialized");
+  let findbarOpenedPromise = BrowserTestUtils.waitForEvent(
+    gBrowser.selectedTab,
+    "TabFindInitialized"
+  );
   document.documentElement.focus();
   // Open the Find bar before we navigate to pages that shouldn't have it.
   EventUtils.synthesizeKey("f", { accelKey: true });
   await findbarOpenedPromise;
   ok(!gFindBar.hidden, "Find bar should be visible");
 
-  let urls = [
-    "about:preferences",
-    "about:addons",
-  ];
+  let urls = ["about:preferences", "about:addons"];
 
   for (let url of urls) {
     await testFindDisabled(url);
@@ -33,25 +33,41 @@ function testFindDisabled(url) {
       await new Promise(r => requestAnimationFrame(r));
       await new Promise(r => Services.tm.dispatchToMainThread(r));
     };
-    ok(!gFindBar || gFindBar.hidden, "Find bar should not be visible at the start");
+    ok(
+      !gFindBar || gFindBar.hidden,
+      "Find bar should not be visible at the start"
+    );
     await BrowserTestUtils.synthesizeKey("/", {}, browser);
     await waitForFindBar();
-    ok(!gFindBar || gFindBar.hidden, "Find bar should not be visible after fast find");
-    EventUtils.synthesizeKey("f", {accelKey: true});
+    ok(
+      !gFindBar || gFindBar.hidden,
+      "Find bar should not be visible after fast find"
+    );
+    EventUtils.synthesizeKey("f", { accelKey: true });
     await waitForFindBar();
-    ok(!gFindBar || gFindBar.hidden, "Find bar should not be visible after find command");
-    ok(document.getElementById("cmd_find").getAttribute("disabled"),
-       "Find command should be disabled");
+    ok(
+      !gFindBar || gFindBar.hidden,
+      "Find bar should not be visible after find command"
+    );
+    ok(
+      document.getElementById("cmd_find").getAttribute("disabled"),
+      "Find command should be disabled"
+    );
   });
 }
 
 async function testFindEnabled(url) {
   return BrowserTestUtils.withNewTab(url, async function(browser) {
-    ok(!document.getElementById("cmd_find").getAttribute("disabled"),
-       "Find command should not be disabled");
+    ok(
+      !document.getElementById("cmd_find").getAttribute("disabled"),
+      "Find command should not be disabled"
+    );
 
     // Open Find bar and then close it.
-    let findbarOpenedPromise = BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "TabFindInitialized");
+    let findbarOpenedPromise = BrowserTestUtils.waitForEvent(
+      gBrowser.selectedTab,
+      "TabFindInitialized"
+    );
     EventUtils.synthesizeKey("f", { accelKey: true });
     await findbarOpenedPromise;
     ok(!gFindBar.hidden, "Find bar should be visible again");

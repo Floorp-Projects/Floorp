@@ -15,9 +15,9 @@ const BREAKDOWN = {
 };
 
 const REPORT = {
-  "Function": { bytes: 10, count: 10 },
-  "Array": { bytes: 100, count: 1 },
-  "other": {
+  Function: { bytes: 10, count: 10 },
+  Array: { bytes: 100, count: 1 },
+  other: {
     "JIT::CODE::NOW!!!": { bytes: 20, count: 2 },
     "JIT::CODE::LATER!!!": { bytes: 40, count: 4 },
   },

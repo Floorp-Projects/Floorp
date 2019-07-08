@@ -64,68 +64,65 @@
     return Promise.all(unregisterArray);
   }
 
-  function testScopes() {
-    return new Promise(function(resolve, reject) {
-      function chromeScriptSource() {
-        let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
-                    .getService(Ci.nsIServiceWorkerManager);
-        let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                       .getService(Ci.nsIScriptSecurityManager);
-        addMessageListener("getScope", (msg) => {
-          let principal = secMan.createCodebasePrincipalFromOrigin(msg.principal);
-          try {
-            return { scope: swm.getScopeForUrl(principal, msg.path) };
-          } catch (e) {
-            return { exception: e.message };
-          }
-        });
-      }
-
-      let getScope;
-      let parent_intercept_enabled =
-        SpecialPowers.getBoolPref("dom.serviceWorkers.parent_intercept");
-
-      if (parent_intercept_enabled) {
-        let chromeScript = SpecialPowers.loadChromeScript(chromeScriptSource);
-        let docPrincipal = SpecialPowers.wrap(document).nodePrincipal.URI.spec;
-
-        getScope = (path) => {
-          let rv = chromeScript.sendSyncMessage("getScope", { principal: docPrincipal, path })[0][0];
-          if (rv.exception)
-            throw rv.exception;
-          return rv.scope;
-        };
-      } else {
-        getScope = navigator.serviceWorker.getScopeForUrl.bind(navigator.serviceWorker);
-      }
-
-      var base = new URL(".", document.baseURI);
-
-      function p(s) {
-        return base + s;
-      }
-
-      function fail(fn) {
+  async function testScopes() {
+    function chromeScriptSource() {
+      let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
+                  .getService(Ci.nsIServiceWorkerManager);
+      let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                     .getService(Ci.nsIScriptSecurityManager);
+      addMessageListener("getScope", (msg) => {
+        let principal = secMan.createCodebasePrincipalFromOrigin(msg.principal);
         try {
-          getScope(p("index.html"));
-          ok(false, "No registration");
-        } catch(e) {
-          ok(true, "No registration");
+          return { scope: swm.getScopeForUrl(principal, msg.path) };
+        } catch (e) {
+          return { exception: e.message };
         }
-      }
+      });
+    }
 
-      is(getScope(p("sub.html")), p("sub"), "Scope should match");
-      is(getScope(p("sub/dir.html")), p("sub/dir.html"), "Scope should match");
-      is(getScope(p("sub/dir")), p("sub/dir"), "Scope should match");
-      is(getScope(p("sub/dir/foo")), p("sub/dir/"), "Scope should match");
-      is(getScope(p("sub/dir/afoo")), p("sub/dir/a"), "Scope should match");
-      is(getScope(p("star*wars")), p("star*"), "Scope should match");
-      is(getScope(p("scope/some_file.html")), p("scope/"), "Scope should match");
-      fail("index.html");
-      fail("sua.html");
-      fail("star/a.html");
-      resolve();
-    });
+    let getScope;
+    let parent_intercept_enabled =
+      SpecialPowers.getBoolPref("dom.serviceWorkers.parent_intercept");
+
+    if (parent_intercept_enabled) {
+      let chromeScript = SpecialPowers.loadChromeScript(chromeScriptSource);
+      let docPrincipal = SpecialPowers.wrap(document).nodePrincipal.URI.spec;
+
+      getScope = async (path) => {
+        let rv = await chromeScript.sendQuery("getScope", { principal: docPrincipal, path });
+        if (rv.exception)
+          throw rv.exception;
+        return rv.scope;
+      };
+    } else {
+      getScope = navigator.serviceWorker.getScopeForUrl.bind(navigator.serviceWorker);
+    }
+
+    var base = new URL(".", document.baseURI);
+
+    function p(s) {
+      return base + s;
+    }
+
+    async function fail(fn) {
+      try {
+        await getScope(p("index.html"));
+        ok(false, "No registration");
+      } catch(e) {
+        ok(true, "No registration");
+      }
+    }
+
+    is(await getScope(p("sub.html")), p("sub"), "Scope should match");
+    is(await getScope(p("sub/dir.html")), p("sub/dir.html"), "Scope should match");
+    is(await getScope(p("sub/dir")), p("sub/dir"), "Scope should match");
+    is(await getScope(p("sub/dir/foo")), p("sub/dir/"), "Scope should match");
+    is(await getScope(p("sub/dir/afoo")), p("sub/dir/a"), "Scope should match");
+    is(await getScope(p("star*wars")), p("star*"), "Scope should match");
+    is(await getScope(p("scope/some_file.html")), p("scope/"), "Scope should match");
+    await fail("index.html");
+    await fail("sua.html");
+    await fail("star/a.html");
   }
 
   function runTest() {

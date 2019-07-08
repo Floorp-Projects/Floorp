@@ -4,13 +4,16 @@
 
 "use strict";
 
-const {colorUtils} = require("devtools/shared/css/color");
-const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
+const { colorUtils } = require("devtools/shared/css/color");
+const { Spectrum } = require("devtools/client/shared/widgets/Spectrum");
 const SwatchBasedEditorTooltip = require("devtools/client/shared/widgets/tooltip/SwatchBasedEditorTooltip");
-const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/inspector.properties");
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/inspector.properties"
+);
 
-const TELEMETRY_PICKER_EYEDROPPER_OPEN_COUNT = "DEVTOOLS_PICKER_EYEDROPPER_OPENED_COUNT";
+const TELEMETRY_PICKER_EYEDROPPER_OPEN_COUNT =
+  "DEVTOOLS_PICKER_EYEDROPPER_OPENED_COUNT";
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -32,7 +35,7 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
  */
 
 class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
-  constructor(document, inspector, {supportsCssColor4ColorFunction}) {
+  constructor(document, inspector, { supportsCssColor4ColorFunction }) {
     super(document);
     this.inspector = inspector;
 
@@ -92,7 +95,8 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     }
 
     // only enable contrast if it is compatible and if the type of property is color.
-    this.spectrum.contrastEnabled = (name === "color") && this.isContrastCompatible;
+    this.spectrum.contrastEnabled =
+      name === "color" && this.isContrastCompatible;
 
     // Call then parent class' show function
     await super.show();
@@ -109,7 +113,9 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
       this.spectrum.updateUI();
     }
 
-    const eyeButton = this.tooltip.container.querySelector("#eyedropper-button");
+    const eyeButton = this.tooltip.container.querySelector(
+      "#eyedropper-button"
+    );
     const canShowEyeDropper = await this.inspector.supportsEyeDropper();
     if (canShowEyeDropper) {
       eyeButton.disabled = false;
@@ -155,9 +161,11 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
   }
 
   _openEyeDropper() {
-    const {inspector, toolbox, telemetry} = this.inspector;
+    const { inspector, toolbox, telemetry } = this.inspector;
 
-    telemetry.getHistogramById(TELEMETRY_PICKER_EYEDROPPER_OPEN_COUNT).add(true);
+    telemetry
+      .getHistogramById(TELEMETRY_PICKER_EYEDROPPER_OPEN_COUNT)
+      .add(true);
 
     // cancelling picker(if it is already selected) on opening eye-dropper
     inspector.nodePicker.cancel();
@@ -167,7 +175,7 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     // resolves. Flip the flag early to avoid issues with onTooltipHidden().
     this.eyedropperOpen = true;
 
-    inspector.pickColorFromPage({copyOnSelect: false}).then(() => {
+    inspector.pickColorFromPage({ copyOnSelect: false }).then(() => {
       // close the colorpicker tooltip so that only the eyedropper is open.
       this.hide();
 

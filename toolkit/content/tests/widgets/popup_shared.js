@@ -36,7 +36,8 @@ var gAutoHide = false;
 var gExpectedEventDetails = null;
 var gExpectedTriggerNode = null;
 var gWindowUtils;
-var gPopupWidth = -1, gPopupHeight = -1;
+var gPopupWidth = -1,
+  gPopupHeight = -1;
 
 function startPopupTests(tests) {
   document.addEventListener("popupshowing", eventOccurred);
@@ -66,17 +67,19 @@ function finish() {
 }
 
 function ok(condition, message) {
-  if (window.opener)
+  if (window.opener) {
     window.opener.SimpleTest.ok(condition, message);
-  else
+  } else {
     SimpleTest.ok(condition, message);
+  }
 }
 
 function is(left, right, message) {
-  if (window.opener)
+  if (window.opener) {
     window.opener.SimpleTest.is(left, right, message);
-  else
+  } else {
     SimpleTest.is(left, right, message);
+  }
 }
 
 function disableNonTestMouse(aDisable) {
@@ -99,29 +102,50 @@ function eventOccurred(event) {
   }
 
   var events = test.events;
-  if (typeof events == "function")
+  if (typeof events == "function") {
     events = events();
+  }
   if (events) {
     if (events.length <= gTestEventIndex) {
-      ok(false, "Extra " + event.type + " event fired for " + event.target.id +
-                  " " + gPopupTests[gTestIndex].testname);
+      ok(
+        false,
+        "Extra " +
+          event.type +
+          " event fired for " +
+          event.target.id +
+          " " +
+          gPopupTests[gTestIndex].testname
+      );
       return;
     }
 
     var eventitem = events[gTestEventIndex].split(" ");
     var matches;
     if (eventitem[1] == "#tooltip") {
-      is(event.originalTarget.localName, "tooltip",
-         test.testname + " event.originalTarget.localName is 'tooltip'");
-      is(event.originalTarget.getAttribute("default"), "true",
-         test.testname + " event.originalTarget default attribute is 'true'");
-      matches = event.originalTarget.localName == "tooltip" &&
-          event.originalTarget.getAttribute("default") == "true";
+      is(
+        event.originalTarget.localName,
+        "tooltip",
+        test.testname + " event.originalTarget.localName is 'tooltip'"
+      );
+      is(
+        event.originalTarget.getAttribute("default"),
+        "true",
+        test.testname + " event.originalTarget default attribute is 'true'"
+      );
+      matches =
+        event.originalTarget.localName == "tooltip" &&
+        event.originalTarget.getAttribute("default") == "true";
     } else {
-      is(event.type, eventitem[0],
-         test.testname + " event type " + event.type + " fired");
-      is(event.target.id, eventitem[1],
-         test.testname + " event target ID " + event.target.id);
+      is(
+        event.type,
+        eventitem[0],
+        test.testname + " event type " + event.type + " fired"
+      );
+      is(
+        event.target.id,
+        eventitem[1],
+        test.testname + " event target ID " + event.target.id
+      );
       matches = eventitem[0] == event.type && eventitem[1] == event.target.id;
     }
 
@@ -137,32 +161,57 @@ function eventOccurred(event) {
 
     var expectedState;
     switch (event.type) {
-      case "popupshowing": expectedState = "showing"; break;
-      case "popupshown": expectedState = "open"; break;
-      case "popuphiding": expectedState = "hiding"; break;
-      case "popuphidden": expectedState = "closed"; break;
+      case "popupshowing":
+        expectedState = "showing";
+        break;
+      case "popupshown":
+        expectedState = "open";
+        break;
+      case "popuphiding":
+        expectedState = "hiding";
+        break;
+      case "popuphidden":
+        expectedState = "closed";
+        break;
     }
 
     if (gExpectedTriggerNode && event.type == "popupshowing") {
-      if (gExpectedTriggerNode == "notset") // check against null instead
+      if (gExpectedTriggerNode == "notset") {
+        // check against null instead
         gExpectedTriggerNode = null;
+      }
 
-      is(event.originalTarget.triggerNode, gExpectedTriggerNode, test.testname + " popupshowing triggerNode");
-      var isTooltip = (event.target.localName == "tooltip");
-      is(document.popupNode, isTooltip ? null : gExpectedTriggerNode,
-         test.testname + " popupshowing document.popupNode");
-      is(document.tooltipNode, isTooltip ? gExpectedTriggerNode : null,
-         test.testname + " popupshowing document.tooltipNode");
+      is(
+        event.originalTarget.triggerNode,
+        gExpectedTriggerNode,
+        test.testname + " popupshowing triggerNode"
+      );
+      var isTooltip = event.target.localName == "tooltip";
+      is(
+        document.popupNode,
+        isTooltip ? null : gExpectedTriggerNode,
+        test.testname + " popupshowing document.popupNode"
+      );
+      is(
+        document.tooltipNode,
+        isTooltip ? gExpectedTriggerNode : null,
+        test.testname + " popupshowing document.tooltipNode"
+      );
     }
 
-    if (expectedState)
-      is(event.originalTarget.state, expectedState,
-         test.testname + " " + event.type + " state");
+    if (expectedState) {
+      is(
+        event.originalTarget.state,
+        expectedState,
+        test.testname + " " + event.type + " state"
+      );
+    }
 
     if (matches) {
       gTestEventIndex++;
-      if (events.length <= gTestEventIndex)
+      if (events.length <= gTestEventIndex) {
         setTimeout(checkResult, 0);
+      }
     }
   }
 }
@@ -170,11 +219,13 @@ function eventOccurred(event) {
 function checkResult() {
   var step = null;
   var test = gPopupTests[gTestIndex];
-  if ("steps" in test)
+  if ("steps" in test) {
     step = test.steps[gTestStepIndex];
+  }
 
-  if ("result" in test)
+  if ("result" in test) {
     test.result(test.testname, step);
+  }
 
   if ("autohide" in test) {
     gAutoHide = true;
@@ -205,15 +256,17 @@ function goNextStep() {
 function goNext() {
   // We want to continue after the next animation frame so that
   // we're in a stable state and don't get spurious mouse events at unexpected targets.
-  window.requestAnimationFrame(
-    function() {
-      setTimeout(goNextStepSync, 0);
-    }
-  );
+  window.requestAnimationFrame(function() {
+    setTimeout(goNextStepSync, 0);
+  });
 }
 
 function goNextStepSync() {
-  if (gTestIndex >= 0 && "end" in gPopupTests[gTestIndex] && gPopupTests[gTestIndex].end) {
+  if (
+    gTestIndex >= 0 &&
+    "end" in gPopupTests[gTestIndex] &&
+    gPopupTests[gTestIndex].end
+  ) {
     finish();
     return;
   }
@@ -233,8 +286,9 @@ function goNextStepSync() {
 
     // start with the first step if there are any
     var step = null;
-    if ("steps" in test)
+    if ("steps" in test) {
       step = test.steps[gTestStepIndex];
+    }
 
     test.test(test.testname, step);
 
@@ -255,7 +309,7 @@ function openMenu(menu) {
   } else if (menu.hasMenu()) {
     menu.openMenu(true);
   } else {
-    synthesizeMouse(menu, 4, 4, { });
+    synthesizeMouse(menu, 4, 4, {});
   }
 }
 
@@ -274,8 +328,10 @@ function checkActive(popup, id, testname) {
   var children = popup.childNodes;
   for (var c = 0; c < children.length; c++) {
     var child = children[c];
-    if ((id == child.id && child.getAttribute(menuactiveAttribute) != "true") ||
-        (id != child.id && child.hasAttribute(menuactiveAttribute) != "")) {
+    if (
+      (id == child.id && child.getAttribute(menuactiveAttribute) != "true") ||
+      (id != child.id && child.hasAttribute(menuactiveAttribute) != "")
+    ) {
       activeok = false;
       break;
     }
@@ -285,30 +341,53 @@ function checkActive(popup, id, testname) {
 
 function checkOpen(menuid, testname) {
   var menu = document.getElementById(menuid);
-  if ("open" in menu)
+  if ("open" in menu) {
     ok(menu.open, testname + " " + menuid + " menu is open");
-  else if (menu.hasMenu())
-    ok(menu.getAttribute("open") == "true", testname + " " + menuid + " menu is open");
+  } else if (menu.hasMenu()) {
+    ok(
+      menu.getAttribute("open") == "true",
+      testname + " " + menuid + " menu is open"
+    );
+  }
 }
 
 function checkClosed(menuid, testname) {
   var menu = document.getElementById(menuid);
-  if ("open" in menu)
+  if ("open" in menu) {
     ok(!menu.open, testname + " " + menuid + " menu is open");
-  else if (menu.hasMenu())
+  } else if (menu.hasMenu()) {
     ok(!menu.hasAttribute("open"), testname + " " + menuid + " menu is closed");
+  }
 }
 
 function convertPosition(anchor, align) {
-  if (anchor == "topleft" && align == "topleft") return "overlap";
-  if (anchor == "topleft" && align == "topright") return "start_before";
-  if (anchor == "topleft" && align == "bottomleft") return "before_start";
-  if (anchor == "topright" && align == "topleft") return "end_before";
-  if (anchor == "topright" && align == "bottomright") return "before_end";
-  if (anchor == "bottomleft" && align == "bottomright") return "start_after";
-  if (anchor == "bottomleft" && align == "topleft") return "after_start";
-  if (anchor == "bottomright" && align == "bottomleft") return "end_after";
-  if (anchor == "bottomright" && align == "topright") return "after_end";
+  if (anchor == "topleft" && align == "topleft") {
+    return "overlap";
+  }
+  if (anchor == "topleft" && align == "topright") {
+    return "start_before";
+  }
+  if (anchor == "topleft" && align == "bottomleft") {
+    return "before_start";
+  }
+  if (anchor == "topright" && align == "topleft") {
+    return "end_before";
+  }
+  if (anchor == "topright" && align == "bottomright") {
+    return "before_end";
+  }
+  if (anchor == "bottomleft" && align == "bottomright") {
+    return "start_after";
+  }
+  if (anchor == "bottomleft" && align == "topleft") {
+    return "after_start";
+  }
+  if (anchor == "bottomright" && align == "bottomleft") {
+    return "end_after";
+  }
+  if (anchor == "bottomright" && align == "topright") {
+    return "after_end";
+  }
   return "";
 }
 
@@ -330,12 +409,15 @@ function compareEdge(anchor, popup, edge, offsetX, offsetY, testname) {
 
   var anchorrect = anchor.getBoundingClientRect();
   var popuprect = popup.getBoundingClientRect();
-  var check1 = false, check2 = false;
+  var check1 = false,
+    check2 = false;
 
   if (gPopupWidth == -1) {
-    ok((Math.round(popuprect.right) - Math.round(popuprect.left)) &&
-       (Math.round(popuprect.bottom) - Math.round(popuprect.top)),
-       testname + " size");
+    ok(
+      Math.round(popuprect.right) - Math.round(popuprect.left) &&
+        Math.round(popuprect.bottom) - Math.round(popuprect.top),
+      testname + " size"
+    );
   } else {
     is(Math.round(popuprect.width), gPopupWidth, testname + " width");
     is(Math.round(popuprect.height), gPopupHeight, testname + " height");
@@ -346,58 +428,117 @@ function compareEdge(anchor, popup, edge, offsetX, offsetY, testname) {
     let cornerX, cornerY;
     let [position, align] = edge.split(" ");
     switch (position) {
-      case "topleft": cornerX = anchorrect.left; cornerY = anchorrect.top; break;
-      case "topcenter": cornerX = anchorrect.left + anchorrect.width / 2; cornerY = anchorrect.top; break;
-      case "topright": cornerX = anchorrect.right; cornerY = anchorrect.top; break;
-      case "leftcenter": cornerX = anchorrect.left; cornerY = anchorrect.top + anchorrect.height / 2; break;
-      case "rightcenter": cornerX = anchorrect.right; cornerY = anchorrect.top + anchorrect.height / 2; break;
-      case "bottomleft": cornerX = anchorrect.left; cornerY = anchorrect.bottom; break;
-      case "bottomcenter": cornerX = anchorrect.left + anchorrect.width / 2; cornerY = anchorrect.bottom; break;
-      case "bottomright": cornerX = anchorrect.right; cornerY = anchorrect.bottom; break;
+      case "topleft":
+        cornerX = anchorrect.left;
+        cornerY = anchorrect.top;
+        break;
+      case "topcenter":
+        cornerX = anchorrect.left + anchorrect.width / 2;
+        cornerY = anchorrect.top;
+        break;
+      case "topright":
+        cornerX = anchorrect.right;
+        cornerY = anchorrect.top;
+        break;
+      case "leftcenter":
+        cornerX = anchorrect.left;
+        cornerY = anchorrect.top + anchorrect.height / 2;
+        break;
+      case "rightcenter":
+        cornerX = anchorrect.right;
+        cornerY = anchorrect.top + anchorrect.height / 2;
+        break;
+      case "bottomleft":
+        cornerX = anchorrect.left;
+        cornerY = anchorrect.bottom;
+        break;
+      case "bottomcenter":
+        cornerX = anchorrect.left + anchorrect.width / 2;
+        cornerY = anchorrect.bottom;
+        break;
+      case "bottomright":
+        cornerX = anchorrect.right;
+        cornerY = anchorrect.bottom;
+        break;
     }
 
     switch (align) {
-      case "topleft": cornerX += offsetX; cornerY += offsetY; break;
-      case "topright": cornerX += -popuprect.width + offsetX; cornerY += offsetY; break;
-      case "bottomleft": cornerX += offsetX; cornerY += -popuprect.height + offsetY; break;
-      case "bottomright": cornerX += -popuprect.width + offsetX; cornerY += -popuprect.height + offsetY; break;
+      case "topleft":
+        cornerX += offsetX;
+        cornerY += offsetY;
+        break;
+      case "topright":
+        cornerX += -popuprect.width + offsetX;
+        cornerY += offsetY;
+        break;
+      case "bottomleft":
+        cornerX += offsetX;
+        cornerY += -popuprect.height + offsetY;
+        break;
+      case "bottomright":
+        cornerX += -popuprect.width + offsetX;
+        cornerY += -popuprect.height + offsetY;
+        break;
     }
 
-    is(Math.round(popuprect.left), Math.round(cornerX), testname + " x position");
-    is(Math.round(popuprect.top), Math.round(cornerY), testname + " y position");
+    is(
+      Math.round(popuprect.left),
+      Math.round(cornerX),
+      testname + " x position"
+    );
+    is(
+      Math.round(popuprect.top),
+      Math.round(cornerY),
+      testname + " y position"
+    );
     return;
   }
 
   if (edge == "after_pointer") {
-    is(Math.round(popuprect.left), Math.round(anchorrect.left) + offsetX, testname + " x position");
-    is(Math.round(popuprect.top), Math.round(anchorrect.top) + offsetY + 21, testname + " y position");
+    is(
+      Math.round(popuprect.left),
+      Math.round(anchorrect.left) + offsetX,
+      testname + " x position"
+    );
+    is(
+      Math.round(popuprect.top),
+      Math.round(anchorrect.top) + offsetY + 21,
+      testname + " y position"
+    );
     return;
   }
 
   if (edge == "overlap") {
-    ok(Math.round(anchorrect.left) + offsetY == Math.round(popuprect.left) &&
-       Math.round(anchorrect.top) + offsetY == Math.round(popuprect.top),
-       testname + " position");
+    ok(
+      Math.round(anchorrect.left) + offsetY == Math.round(popuprect.left) &&
+        Math.round(anchorrect.top) + offsetY == Math.round(popuprect.top),
+      testname + " position"
+    );
     return;
   }
 
-  if (edge.indexOf("before") == 0)
+  if (edge.indexOf("before") == 0) {
     check1 = isWithinHalfPixel(anchorrect.top + offsetY, popuprect.bottom);
-  else if (edge.indexOf("after") == 0)
-    check1 = (Math.round(anchorrect.bottom) + offsetY == Math.round(popuprect.top));
-  else if (edge.indexOf("start") == 0)
+  } else if (edge.indexOf("after") == 0) {
+    check1 =
+      Math.round(anchorrect.bottom) + offsetY == Math.round(popuprect.top);
+  } else if (edge.indexOf("start") == 0) {
     check1 = isWithinHalfPixel(anchorrect.left + offsetX, popuprect.right);
-  else if (edge.indexOf("end") == 0)
-    check1 = (Math.round(anchorrect.right) + offsetX == Math.round(popuprect.left));
+  } else if (edge.indexOf("end") == 0) {
+    check1 =
+      Math.round(anchorrect.right) + offsetX == Math.round(popuprect.left);
+  }
 
-  if (0 < edge.indexOf("before"))
-    check2 = (Math.round(anchorrect.top) + offsetY == Math.round(popuprect.top));
-  else if (0 < edge.indexOf("after"))
+  if (0 < edge.indexOf("before")) {
+    check2 = Math.round(anchorrect.top) + offsetY == Math.round(popuprect.top);
+  } else if (0 < edge.indexOf("after")) {
     check2 = isWithinHalfPixel(anchorrect.bottom + offsetY, popuprect.bottom);
-  else if (0 < edge.indexOf("start"))
-    check2 = (Math.round(anchorrect.left) + offsetX == Math.round(popuprect.left));
-  else if (0 < edge.indexOf("end"))
+  } else if (0 < edge.indexOf("start")) {
+    check2 =
+      Math.round(anchorrect.left) + offsetX == Math.round(popuprect.left);
+  } else if (0 < edge.indexOf("end")) {
     check2 = isWithinHalfPixel(anchorrect.right + offsetX, popuprect.right);
+  }
 
   ok(check1 && check2, testname + " position");
 }

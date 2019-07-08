@@ -3,8 +3,9 @@
 // Here we want to test that blob URLs are not available between private and
 // non-private browsing.
 
-const BASE_URI = "http://mochi.test:8888/browser/browser/components/"
-  + "privatebrowsing/test/browser/empty_file.html";
+const BASE_URI =
+  "http://mochi.test:8888/browser/browser/components/" +
+  "privatebrowsing/test/browser/empty_file.html";
 
 add_task(async function test() {
   info("Creating a normal window...");
@@ -17,13 +18,19 @@ add_task(async function test() {
 
   info("Creating a blob URL...");
   await ContentTask.spawn(tab, null, function() {
-    return Promise.resolve(content.window.URL.createObjectURL(new content.window.Blob([123])));
-  }).then(newURL => { blobURL = newURL; });
+    return Promise.resolve(
+      content.window.URL.createObjectURL(new content.window.Blob([123]))
+    );
+  }).then(newURL => {
+    blobURL = newURL;
+  });
 
   info("Blob URL: " + blobURL);
 
   info("Creating a private window...");
-  let privateWin = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
   let privateTab = privateWin.gBrowser.selectedBrowser;
   BrowserTestUtils.loadURI(privateTab, BASE_URI);
   await BrowserTestUtils.browserLoaded(privateTab);
@@ -31,13 +38,21 @@ add_task(async function test() {
   await ContentTask.spawn(privateTab, blobURL, function(url) {
     return new Promise(resolve => {
       var xhr = new content.window.XMLHttpRequest();
-      xhr.onerror = function() { resolve("SendErrored"); };
-      xhr.onload = function() { resolve("SendLoaded"); };
+      xhr.onerror = function() {
+        resolve("SendErrored");
+      };
+      xhr.onload = function() {
+        resolve("SendLoaded");
+      };
       xhr.open("GET", url);
       xhr.send();
     });
   }).then(status => {
-    is(status, "SendErrored", "Using a blob URI from one user context id in another should not work");
+    is(
+      status,
+      "SendErrored",
+      "Using a blob URI from one user context id in another should not work"
+    );
   });
 
   await BrowserTestUtils.closeWindow(win);

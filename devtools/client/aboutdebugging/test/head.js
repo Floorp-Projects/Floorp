@@ -10,11 +10,19 @@
 // Load the shared-head file first.
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
-  this);
+  this
+);
 
-const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-const { Management } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
-const { ExtensionTestCommon } = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm");
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
+const { Management } = ChromeUtils.import(
+  "resource://gre/modules/Extension.jsm",
+  null
+);
+const { ExtensionTestCommon } = ChromeUtils.import(
+  "resource://testing-common/ExtensionTestCommon.jsm"
+);
 
 async function openAboutDebugging(page, win) {
   info("Turn off the new about:debugging for the test");
@@ -43,8 +51,9 @@ function closeAboutDebugging(tab) {
 }
 
 function getSupportsFile(path) {
-  const cr = Cc["@mozilla.org/chrome/chrome-registry;1"]
-    .getService(Ci.nsIChromeRegistry);
+  const cr = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+    Ci.nsIChromeRegistry
+  );
   const uri = Services.io.newURI(CHROME_URL_ROOT + path);
   const fileurl = cr.convertChromeURL(uri);
   return fileurl.QueryInterface(Ci.nsIFileURL);
@@ -57,8 +66,10 @@ function getSupportsFile(path) {
  * @return {DOMNode}                 target list or container element
  */
 function getAddonList(document) {
-  return document.querySelector("#addons .target-list") ||
-    document.querySelector("#addons .targets");
+  return (
+    document.querySelector("#addons .target-list") ||
+    document.querySelector("#addons .targets")
+  );
 }
 
 /**
@@ -68,8 +79,10 @@ function getAddonList(document) {
  * @return {DOMNode}                 target list or container element
  */
 function getTemporaryAddonList(document) {
-  return document.querySelector("#temporary-addons .target-list") ||
-    document.querySelector("#temporary-addons .targets");
+  return (
+    document.querySelector("#temporary-addons .target-list") ||
+    document.querySelector("#temporary-addons .targets")
+  );
 }
 
 /**
@@ -99,8 +112,10 @@ function getInstalledAddonNames(document) {
  * @return {DOMNode}                 target list or container element
  */
 function getServiceWorkerList(document) {
-  return document.querySelector("#service-workers .target-list") ||
-    document.querySelector("#service-workers.targets");
+  return (
+    document.querySelector("#service-workers .target-list") ||
+    document.querySelector("#service-workers.targets")
+  );
 }
 
 /**
@@ -114,8 +129,12 @@ function getServiceWorkerList(document) {
  * @return {DOMNode} container element
  */
 function getServiceWorkerContainer(name, document) {
-  const nameElements = [...document.querySelectorAll("#service-workers .target-name")];
-  const nameElement = nameElements.filter(element => element.textContent === name)[0];
+  const nameElements = [
+    ...document.querySelectorAll("#service-workers .target-name"),
+  ];
+  const nameElement = nameElements.filter(
+    element => element.textContent === name
+  )[0];
   if (nameElement) {
     return nameElement.closest(".target-container");
   }
@@ -165,11 +184,13 @@ async function waitUntilElement(selector, parent) {
  * @return {DOMNode}                 target list or container element
  */
 function getTabList(document) {
-  return document.querySelector("#tabs .target-list") ||
-    document.querySelector("#tabs.targets");
+  return (
+    document.querySelector("#tabs .target-list") ||
+    document.querySelector("#tabs.targets")
+  );
 }
 
-async function installAddon({document, path, file, name}) {
+async function installAddon({ document, path, file, name }) {
   // Mock the file picker to select a test addon
   const MockFilePicker = SpecialPowers.MockFilePicker;
   MockFilePicker.init(window);
@@ -208,7 +229,7 @@ async function installAddon({document, path, file, name}) {
   await waitUntilAddonContainer(name, document);
 }
 
-async function uninstallAddon({document, id, name}) {
+async function uninstallAddon({ document, id, name }) {
   // Now uninstall this addon
   await new Promise(async done => {
     const addon = await AddonManager.getAddonByID(id);
@@ -243,13 +264,20 @@ function getAddonCount(document) {
  * @return {Promise}
  */
 function waitForInitialAddonList(document) {
-  info("Waiting for add-ons to load. Current add-on count: " + getAddonCount(document));
+  info(
+    "Waiting for add-ons to load. Current add-on count: " +
+      getAddonCount(document)
+  );
   return waitUntil(() => getAddonCount(document) > 0, 100);
 }
 
 function getAddonContainer(name, document) {
-  const nameElements = [...document.querySelectorAll("#addons-panel .target-name")];
-  const nameElement = nameElements.filter(element => element.textContent === name)[0];
+  const nameElements = [
+    ...document.querySelectorAll("#addons-panel .target-name"),
+  ];
+  const nameElement = nameElements.filter(
+    element => element.textContent === name
+  )[0];
   if (nameElement) {
     return nameElement.closest(".addon-target-container");
   }
@@ -275,8 +303,11 @@ async function waitUntilAddonContainer(name, document) {
 function assertHasTarget(expected, document, type, name) {
   let names = [...document.querySelectorAll("#" + type + " .target-name")];
   names = names.map(element => element.textContent);
-  is(names.includes(name), expected,
-    "The " + type + " url appears in the list: " + names);
+  is(
+    names.includes(name),
+    expected,
+    "The " + type + " url appears in the list: " + names
+  );
 }
 
 /**
@@ -304,7 +335,9 @@ function waitForServiceWorkerRegistered(tab) {
  */
 async function unregisterServiceWorker(tab, serviceWorkersElement) {
   // Get the initial count of service worker registrations.
-  let registrations = serviceWorkersElement.querySelectorAll(".target-container");
+  let registrations = serviceWorkersElement.querySelectorAll(
+    ".target-container"
+  );
   const registrationCount = registrations.length;
 
   // Wait until the registration count is decreased by one.
@@ -346,15 +379,17 @@ function waitForDelayedStartupFinished(win) {
  */
 async function setupTestAboutDebuggingWebExtension(name, file) {
   await new Promise(resolve => {
-    const options = {"set": [
-      // Force enabling of addons debugging
-      ["devtools.chrome.enabled", true],
-      ["devtools.debugger.remote-enabled", true],
-      // Disable security prompt
-      ["devtools.debugger.prompt-connection", false],
-      // Enable Browser toolbox test script execution via env variable
-      ["devtools.browser-toolbox.allow-unsafe-script", true],
-    ]};
+    const options = {
+      set: [
+        // Force enabling of addons debugging
+        ["devtools.chrome.enabled", true],
+        ["devtools.debugger.remote-enabled", true],
+        // Disable security prompt
+        ["devtools.debugger.prompt-connection", false],
+        // Enable Browser toolbox test script execution via env variable
+        ["devtools.browser-toolbox.allow-unsafe-script", true],
+      ],
+    };
     SpecialPowers.pushPrefEnv(options, resolve);
   });
 
@@ -398,14 +433,16 @@ async function waitForServiceWorkerActivation(swUrl, document) {
  * Set all preferences needed to enable service worker debugging and testing.
  */
 async function enableServiceWorkerDebugging() {
-  const options = { "set": [
-    // Enable service workers.
-    ["dom.serviceWorkers.enabled", true],
-    // Accept workers from mochitest's http.
-    ["dom.serviceWorkers.testing.enabled", true],
-    // Force single content process.
-    ["dom.ipc.processCount", 1],
-  ]};
+  const options = {
+    set: [
+      // Enable service workers.
+      ["dom.serviceWorkers.enabled", true],
+      // Accept workers from mochitest's http.
+      ["dom.serviceWorkers.testing.enabled", true],
+      // Force single content process.
+      ["dom.ipc.processCount", 1],
+    ],
+  };
 
   // Wait for dom.ipc.processCount to be updated before releasing processes.
   await new Promise(done => {
@@ -465,6 +502,9 @@ async function tearDownAddon(AboutDebugging, addon) {
   addon.uninstall();
   await onListUpdated;
   const [uninstalledAddon] = await onUninstalled;
-  is(uninstalledAddon.id, addon.id,
-     `Add-on was uninstalled: ${uninstalledAddon.id}`);
+  is(
+    uninstalledAddon.id,
+    addon.id,
+    `Add-on was uninstalled: ${uninstalledAddon.id}`
+  );
 }

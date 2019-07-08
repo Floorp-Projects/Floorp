@@ -31,54 +31,71 @@ const TEST_URI_2 = `<html>
  *   expected {JSON}      An expected states for the tree and the sidebar.
  * }
  */
-const tests = [{
-  desc: "Test the initial accessibility tree state after first row is expanded.",
-  setup: async ({ doc }) => toggleRow(doc, 0),
-  expected: {
-    tree: [{
-      role: "document",
-      name: `"Accessibility Panel Test"`,
-    }, {
-      role: "heading",
-      name: `"Top level header"`,
-    }, {
-      role: "paragraph",
-      name: `""`,
-    }],
-    sidebar: {
-      name: "Accessibility Panel Test",
-      role: "document",
+const tests = [
+  {
+    desc:
+      "Test the initial accessibility tree state after first row is expanded.",
+    setup: async ({ doc }) => toggleRow(doc, 0),
+    expected: {
+      tree: [
+        {
+          role: "document",
+          name: `"Accessibility Panel Test"`,
+        },
+        {
+          role: "heading",
+          name: `"Top level header"`,
+        },
+        {
+          role: "paragraph",
+          name: `""`,
+        },
+      ],
+      sidebar: {
+        name: "Accessibility Panel Test",
+        role: "document",
+      },
     },
   },
-}, {
-  desc: "Reload the page.",
-  setup: async ({ panel }) => reload(panel.target),
-  expected: {
-    tree: [{
-      role: "document",
-      name: `"Accessibility Panel Test"`,
-    }],
-    sidebar: {
-      name: "Accessibility Panel Test",
-      role: "document",
+  {
+    desc: "Reload the page.",
+    setup: async ({ panel }) => reload(panel.target),
+    expected: {
+      tree: [
+        {
+          role: "document",
+          name: `"Accessibility Panel Test"`,
+        },
+      ],
+      sidebar: {
+        name: "Accessibility Panel Test",
+        role: "document",
+      },
     },
   },
-}, {
-  desc: "Navigate to a new page.",
-  setup: async ({ panel }) => navigate(panel.target, buildURL(TEST_URI_2)),
-  expected: {
-    tree: [{
-      role: "document",
-      name: `"Navigation Accessibility Panel"`,
-    }],
-    sidebar: {
-      name: "Navigation Accessibility Panel",
-      role: "document",
+  {
+    desc: "Navigate to a new page.",
+    setup: async ({ panel }) => navigate(panel.target, buildURL(TEST_URI_2)),
+    expected: {
+      tree: [
+        {
+          role: "document",
+          name: `"Navigation Accessibility Panel"`,
+        },
+      ],
+      sidebar: {
+        name: "Navigation Accessibility Panel",
+        role: "document",
+      },
     },
   },
-}];
+];
 
 /**
  * Simple test that checks content of the Accessibility panel tree on reload.
  */
-addA11yPanelTestsTask(tests, TEST_URI_1, "Test Accessibility panel tree on reload.");
+addA11yPanelTestsTask(
+  tests,
+  TEST_URI_1,
+  "Test Accessibility panel tree on reload."
+);

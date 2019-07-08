@@ -4,9 +4,19 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "FeatureGateImplementation", "resource://featuregates/FeatureGateImplementation.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FeatureGateImplementation",
+  "resource://featuregates/FeatureGateImplementation.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
@@ -129,7 +139,10 @@ class FeatureGate {
    */
   static async addObserver(id, observer, testDefinitionsUrl = undefined) {
     if (!kFeatureGateCache.has(id)) {
-      kFeatureGateCache.set(id, await FeatureGate.fromId(id, testDefinitionsUrl));
+      kFeatureGateCache.set(
+        id,
+        await FeatureGate.fromId(id, testDefinitionsUrl)
+      );
     }
     const feature = kFeatureGateCache.get(id);
     return feature.addObserver(observer);

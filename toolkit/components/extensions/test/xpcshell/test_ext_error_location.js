@@ -5,7 +5,7 @@
 add_task(async function test_error_location() {
   let extension = ExtensionTestUtils.loadExtension({
     async background() {
-      let {fileName} = new Error();
+      let { fileName } = new Error();
 
       browser.test.sendMessage("fileName", fileName);
 
@@ -15,14 +15,15 @@ add_task(async function test_error_location() {
         browser.runtime.sendMessage("Meh"),
         error => {
           return error.fileName === fileName && error.lineNumber === 9;
-        });
+        }
+      );
 
       browser.test.notifyPass("error-location");
     },
   });
 
   let fileName;
-  const {messages} = await promiseConsoleOutput(async () => {
+  const { messages } = await promiseConsoleOutput(async () => {
     await extension.startup();
 
     fileName = await extension.awaitMessage("fileName");
@@ -45,4 +46,3 @@ add_task(async function test_error_location() {
     equal(frame.functionDisplayName, "background", "Frame function name");
   }
 });
-

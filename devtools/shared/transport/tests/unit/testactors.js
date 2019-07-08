@@ -2,11 +2,16 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { LazyPool, createExtraActors } = require("devtools/shared/protocol/lazy-pool");
+const {
+  LazyPool,
+  createExtraActors,
+} = require("devtools/shared/protocol/lazy-pool");
 const { RootActor } = require("devtools/server/actors/root");
 const { ThreadActor } = require("devtools/server/actors/thread");
 const { DebuggerServer } = require("devtools/server/main");
-const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
+const {
+  ActorRegistry,
+} = require("devtools/server/actors/utils/actor-registry");
 
 var gTestGlobals = [];
 DebuggerServer.addTestGlobal = function(global) {
@@ -104,13 +109,13 @@ TestTargetActor.prototype = {
 
   onDetach: function(request) {
     if (!this._attached) {
-      return { "error": "wrongState" };
+      return { error: "wrongState" };
     }
     return { type: "detached" };
   },
 };
 
 TestTargetActor.prototype.requestTypes = {
-  "attach": TestTargetActor.prototype.onAttach,
-  "detach": TestTargetActor.prototype.onDetach,
+  attach: TestTargetActor.prototype.onAttach,
+  detach: TestTargetActor.prototype.onDetach,
 };

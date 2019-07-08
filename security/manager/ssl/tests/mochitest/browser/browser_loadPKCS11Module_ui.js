@@ -4,8 +4,9 @@
 
 // Tests the dialog used for loading PKCS #11 modules.
 
-const { MockRegistrar } =
-  ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+const { MockRegistrar } = ChromeUtils.import(
+  "resource://testing-common/MockRegistrar.jsm"
+);
 
 const gMockPKCS11ModuleDB = {
   addModuleCallCount: 0,
@@ -15,14 +16,22 @@ const gMockPKCS11ModuleDB = {
 
   addModule(moduleName, libraryFullPath, cryptoMechanismFlags, cipherFlags) {
     this.addModuleCallCount++;
-    Assert.equal(moduleName, this.expectedModuleName,
-                 "addModule: Name given should be what's in the name textbox");
-    Assert.equal(libraryFullPath, this.expectedLibPath,
-                 "addModule: Path given should be what's in the path textbox");
-    Assert.equal(cryptoMechanismFlags, 0,
-                 "addModule: No crypto mechanism flags should be passed");
-    Assert.equal(cipherFlags, 0,
-                 "addModule: No cipher flags should be passed");
+    Assert.equal(
+      moduleName,
+      this.expectedModuleName,
+      "addModule: Name given should be what's in the name textbox"
+    );
+    Assert.equal(
+      libraryFullPath,
+      this.expectedLibPath,
+      "addModule: Path given should be what's in the path textbox"
+    );
+    Assert.equal(
+      cryptoMechanismFlags,
+      0,
+      "addModule: No crypto mechanism flags should be passed"
+    );
+    Assert.equal(cipherFlags, 0, "addModule: No cipher flags should be passed");
 
     if (this.throwOnAddModule) {
       throw new Error(`addModule: Throwing exception`);
@@ -67,22 +76,30 @@ const gMockPromptService = {
 
   alert(parent, dialogTitle, text) {
     this.alertCallCount++;
-    Assert.equal(parent, this.expectedWindow,
-                 "alert: Parent should be expected window");
+    Assert.equal(
+      parent,
+      this.expectedWindow,
+      "alert: Parent should be expected window"
+    );
     Assert.equal(dialogTitle, null, "alert: Title should be null");
-    Assert.equal(text, this.expectedText,
-                 "alert: Actual and expected text should match");
+    Assert.equal(
+      text,
+      this.expectedText,
+      "alert: Actual and expected text should match"
+    );
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService]),
 };
 
-var gMockPKCS11CID =
-  MockRegistrar.register("@mozilla.org/security/pkcs11moduledb;1",
-                         gMockPKCS11ModuleDB);
-var gMockPromptServiceCID =
-  MockRegistrar.register("@mozilla.org/embedcomp/prompt-service;1",
-                         gMockPromptService);
+var gMockPKCS11CID = MockRegistrar.register(
+  "@mozilla.org/security/pkcs11moduledb;1",
+  gMockPKCS11ModuleDB
+);
+var gMockPromptServiceCID = MockRegistrar.register(
+  "@mozilla.org/embedcomp/prompt-service;1",
+  gMockPromptService
+);
 
 var gMockFilePicker = SpecialPowers.MockFilePicker;
 gMockFilePicker.init(window);
@@ -109,11 +126,19 @@ function resetCallCounts() {
  *          the window of the opened dialog.
  */
 function openLoadModuleDialog() {
-  let win = window.openDialog("chrome://pippki/content/load_device.xul", "", "");
+  let win = window.openDialog(
+    "chrome://pippki/content/load_device.xul",
+    "",
+    ""
+  );
   return new Promise(resolve => {
-    win.addEventListener("load", function() {
-      executeSoon(() => resolve(win));
-    }, {once: true});
+    win.addEventListener(
+      "load",
+      function() {
+        executeSoon(() => resolve(win));
+      },
+      { once: true }
+    );
   });
 }
 
@@ -153,13 +178,19 @@ add_task(async function testBrowseButton() {
 
   // Test what happens if the file picker is canceled.
   await browseToTempFile(win, true);
-  Assert.equal(pathBox.value, originalPathBoxValue,
-               "Path shown should be unchanged due to canceled picker");
+  Assert.equal(
+    pathBox.value,
+    originalPathBoxValue,
+    "Path shown should be unchanged due to canceled picker"
+  );
 
   // Test what happens if the file picker is not canceled.
   await browseToTempFile(win, false);
-  Assert.equal(pathBox.value, gTempFile.path,
-               "Path shown should be same as the one chosen in the file picker");
+  Assert.equal(
+    pathBox.value,
+    gTempFile.path,
+    "Path shown should be same as the one chosen in the file picker"
+  );
 
   await BrowserTestUtils.closeWindow(win);
 });
@@ -185,10 +216,16 @@ add_task(async function testAddModuleSuccess() {
   testAddModuleHelper(win, false);
   await BrowserTestUtils.windowClosed(win);
 
-  Assert.equal(gMockPKCS11ModuleDB.addModuleCallCount, 1,
-               "addModule() should have been called once");
-  Assert.equal(gMockPromptService.alertCallCount, 0,
-               "alert() should never have been called");
+  Assert.equal(
+    gMockPKCS11ModuleDB.addModuleCallCount,
+    1,
+    "addModule() should have been called once"
+  );
+  Assert.equal(
+    gMockPromptService.alertCallCount,
+    0,
+    "alert() should never have been called"
+  );
 });
 
 add_task(async function testAddModuleFailure() {
@@ -207,10 +244,16 @@ add_task(async function testAddModuleFailure() {
   // close the window ourselves.
   await BrowserTestUtils.closeWindow(win);
 
-  Assert.equal(gMockPKCS11ModuleDB.addModuleCallCount, 1,
-               "addModule() should have been called once");
-  Assert.equal(gMockPromptService.alertCallCount, 1,
-               "alert() should have been called once");
+  Assert.equal(
+    gMockPKCS11ModuleDB.addModuleCallCount,
+    1,
+    "addModule() should have been called once"
+  );
+  Assert.equal(
+    gMockPromptService.alertCallCount,
+    1,
+    "alert() should have been called once"
+  );
 });
 
 add_task(async function testCancel() {
@@ -220,10 +263,16 @@ add_task(async function testCancel() {
   info("Canceling dialog");
   win.document.getElementById("loaddevice").cancelDialog();
 
-  Assert.equal(gMockPKCS11ModuleDB.addModuleCallCount, 0,
-               "addModule() should never have been called");
-  Assert.equal(gMockPromptService.alertCallCount, 0,
-               "alert() should never have been called");
+  Assert.equal(
+    gMockPKCS11ModuleDB.addModuleCallCount,
+    0,
+    "addModule() should never have been called"
+  );
+  Assert.equal(
+    gMockPromptService.alertCallCount,
+    0,
+    "alert() should never have been called"
+  );
 
   await BrowserTestUtils.windowClosed(win);
 });
@@ -239,9 +288,13 @@ async function testModuleNameHelper(moduleName, acceptButtonShouldBeDisabled) {
   moduleNameBox.onchange();
 
   let dialogNode = win.document.querySelector("dialog");
-  Assert.equal(dialogNode.getAttribute("buttondisabledaccept"),
-               acceptButtonShouldBeDisabled ? "true" : "", // it's a string
-               `dialog accept button should ${acceptButtonShouldBeDisabled ? "" : "not "}be disabled`);
+  Assert.equal(
+    dialogNode.getAttribute("buttondisabledaccept"),
+    acceptButtonShouldBeDisabled ? "true" : "", // it's a string
+    `dialog accept button should ${
+      acceptButtonShouldBeDisabled ? "" : "not "
+    }be disabled`
+  );
 
   return BrowserTestUtils.closeWindow(win);
 }

@@ -4,9 +4,18 @@
 
 "use strict";
 
-const { reloadInspectorAndLog, selectNodeFront } = require("./inspector-helpers");
-const { openToolboxAndLog, closeToolboxAndLog, runTest, testSetup,
-        testTeardown, PAGES_BASE_URL } = require("../head");
+const {
+  reloadInspectorAndLog,
+  selectNodeFront,
+} = require("./inspector-helpers");
+const {
+  openToolboxAndLog,
+  closeToolboxAndLog,
+  runTest,
+  testSetup,
+  testTeardown,
+  PAGES_BASE_URL,
+} = require("../head");
 
 module.exports = async function() {
   await testSetup(PAGES_BASE_URL + "custom/inspector/index.html");
@@ -34,8 +43,14 @@ async function selectNodeWithManyRulesAndLog(toolbox) {
 
   // Retrieve the node front for the test node.
   let root = await inspector.walker.getRootNode();
-  let referenceNodeFront = await inspector.walker.querySelector(root, ".no-css-rules");
-  let testNodeFront = await inspector.walker.querySelector(root, ".many-css-rules");
+  let referenceNodeFront = await inspector.walker.querySelector(
+    root,
+    ".no-css-rules"
+  );
+  let testNodeFront = await inspector.walker.querySelector(
+    root,
+    ".many-css-rules"
+  );
 
   // Select test node and measure the time to display the rule view with many rules.
   dump("Selecting .many-css-rules test node front\n");
@@ -59,7 +74,10 @@ async function collapseExpandAllAndLog(toolbox) {
   let root = await inspector.walker.getRootNode();
 
   dump("Select expand-many-children node\n");
-  let many = await inspector.walker.querySelector(root, ".expand-many-children");
+  let many = await inspector.walker.querySelector(
+    root,
+    ".expand-many-children"
+  );
   await selectNodeFront(inspector, many);
 
   dump("Expand all children of expand-many-children\n");

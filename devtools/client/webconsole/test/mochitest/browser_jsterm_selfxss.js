@@ -29,8 +29,8 @@ add_task(async function() {
 async function performTest() {
   await pushPref("devtools.selfxss.count", 0);
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm, ui} = hud;
-  const {document} = ui;
+  const { jsterm, ui } = hud;
+  const { document } = ui;
 
   info("Self-xss paste tests");
   WebConsoleUtils.usageCount = 0;
@@ -45,14 +45,19 @@ async function performTest() {
   WebConsoleUtils.usageCount = 0;
 
   info(`Copy "${stringToCopy}" in clipboard`);
-  await waitForClipboardPromise(() =>
-    clipboardHelper.copyString(stringToCopy), stringToCopy);
+  await waitForClipboardPromise(
+    () => clipboardHelper.copyString(stringToCopy),
+    stringToCopy
+  );
   goDoCommand("cmd_paste");
 
   const notificationbox = document.getElementById("webconsole-notificationbox");
   const notification = notificationbox.querySelector(".notification");
-  is(notification.getAttribute("data-key"), "selfxss-notification",
-    "Self-xss notification shown");
+  is(
+    notification.getAttribute("data-key"),
+    "selfxss-notification",
+    "Self-xss notification shown"
+  );
   is(getInputValue(hud), "", "Paste blocked by self-xss prevention");
 
   // Allow pasting

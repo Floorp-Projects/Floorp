@@ -6,7 +6,12 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "openDocLink", "devtools/client/shared/link", true);
+loader.lazyRequireGetter(
+  this,
+  "openDocLink",
+  "devtools/client/shared/link",
+  true
+);
 
 class InactiveCssTooltipHelper {
   constructor() {
@@ -41,7 +46,7 @@ class InactiveCssTooltipHelper {
     doc.l10n.resumeObserving();
 
     // Size the content.
-    tooltip.setContentSize({width: 275, height: Infinity});
+    tooltip.setContentSize({ width: 275, height: Infinity });
   }
 
   /**
@@ -80,8 +85,9 @@ class InactiveCssTooltipHelper {
     const { doc } = tooltip;
 
     this._currentTooltip = tooltip;
-    this._currentUrl = `https://developer.mozilla.org/docs/Web/CSS/${property}` +
-                       `?utm_source=devtools&utm_medium=inspector-inactive-css`;
+    this._currentUrl =
+      `https://developer.mozilla.org/docs/Web/CSS/${property}` +
+      `?utm_source=devtools&utm_medium=inspector-inactive-css`;
 
     const templateNode = doc.createElementNS(XHTML_NS, "template");
 
@@ -89,7 +95,7 @@ class InactiveCssTooltipHelper {
     templateNode.innerHTML = `
     <div class="devtools-tooltip-inactive-css">
       <p data-l10n-id="${msgId}"
-         data-l10n-args='${JSON.stringify({property, display})}'>
+         data-l10n-args='${JSON.stringify({ property, display })}'>
         <strong></strong>
       </p>
       <p data-l10n-id="${fixId}">

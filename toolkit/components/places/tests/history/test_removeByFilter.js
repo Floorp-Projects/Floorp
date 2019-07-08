@@ -25,14 +25,30 @@ add_task(async function test_removeByFilter() {
   await PlacesUtils.bookmarks.eraseEverything();
 
   // Adding a witness URI
-  let witnessURI = NetUtil.newURI("http://witnessmozilla.org/test_browserhistory/test_removeByFilter" + Math.random());
+  let witnessURI = NetUtil.newURI(
+    "http://witnessmozilla.org/test_browserhistory/test_removeByFilter" +
+      Math.random()
+  );
   await PlacesTestUtils.addVisits(witnessURI);
-  Assert.ok((await PlacesTestUtils.isPageInDB(witnessURI)), "Witness URI is in database");
+  Assert.ok(
+    await PlacesTestUtils.isPageInDB(witnessURI),
+    "Witness URI is in database"
+  );
 
-  let removeByFilterTester = async function(visits, filter, checkBeforeRemove, checkAfterRemove, useCallback, bookmarkedUri) {
+  let removeByFilterTester = async function(
+    visits,
+    filter,
+    checkBeforeRemove,
+    checkAfterRemove,
+    useCallback,
+    bookmarkedUri
+  ) {
     // Add visits for URIs
     await PlacesTestUtils.addVisits(visits);
-    if (bookmarkedUri !== null && visits.map(v => v.uri).includes(bookmarkedUri)) {
+    if (
+      bookmarkedUri !== null &&
+      visits.map(v => v.uri).includes(bookmarkedUri)
+    ) {
       await PlacesUtils.bookmarks.insert({
         parentGuid: PlacesUtils.bookmarks.unfiledGuid,
         url: bookmarkedUri,
@@ -50,10 +66,16 @@ add_task(async function test_removeByFilter() {
     let removed = false;
     if (useCallback) {
       // The amount of callbacks will be the unique URIs to remove from the database
-      let netCallbacksRequired = (new Set(visits.map(v => v.uri))).size;
+      let netCallbacksRequired = new Set(visits.map(v => v.uri)).size;
       removed = await PlacesUtils.history.removeByFilter(filter, pageInfo => {
-        Assert.ok(PlacesUtils.validatePageInfo(pageInfo, false), "pageInfo should follow a basic format");
-        Assert.ok(netCallbacksRequired > 0, "Callback called as many times as required");
+        Assert.ok(
+          PlacesUtils.validatePageInfo(pageInfo, false),
+          "pageInfo should follow a basic format"
+        );
+        Assert.ok(
+          netCallbacksRequired > 0,
+          "Callback called as many times as required"
+        );
         netCallbacksRequired--;
       });
     } else {
@@ -66,16 +88,26 @@ add_task(async function test_removeByFilter() {
       // Remove the added bookmarks as they interfere with following tests
       await PlacesUtils.bookmarks.eraseEverything();
     }
-      Assert.ok((await PlacesTestUtils.isPageInDB(witnessURI)), "Witness URI is still in database");
+    Assert.ok(
+      await PlacesTestUtils.isPageInDB(witnessURI),
+      "Witness URI is still in database"
+    );
     return removed;
   };
 
-  const remoteUriList = [ "http://mozilla.org/test_browserhistory/test_removeByFilter/" + Math.random(),
-                          "http://subdomain1.mozilla.org/test_browserhistory/test_removeByFilter/" + Math.random(),
-                          "http://subdomain2.mozilla.org/test_browserhistory/test_removeByFilter/" + Math.random(),
-                        ];
-  const localhostUriList = [ "http://localhost:4500/" + Math.random(), "http://localhost/" + Math.random() ];
-  const fileUriList = [ "file:///home/user/files" + Math.random() ];
+  const remoteUriList = [
+    "http://mozilla.org/test_browserhistory/test_removeByFilter/" +
+      Math.random(),
+    "http://subdomain1.mozilla.org/test_browserhistory/test_removeByFilter/" +
+      Math.random(),
+    "http://subdomain2.mozilla.org/test_browserhistory/test_removeByFilter/" +
+      Math.random(),
+  ];
+  const localhostUriList = [
+    "http://localhost:4500/" + Math.random(),
+    "http://localhost/" + Math.random(),
+  ];
+  const fileUriList = ["file:///home/user/files" + Math.random()];
   const title = "Title " + Math.random();
   let sameHostVisits = [
     {
@@ -128,7 +160,7 @@ add_task(async function test_removeByFilter() {
     },
   ];
   let assertInDB = async function(aUri) {
-      Assert.ok((await PlacesTestUtils.isPageInDB(aUri)));
+    Assert.ok(await PlacesTestUtils.isPageInDB(aUri));
   };
   let assertNotInDB = async function(aUri) {
     Assert.ok(!(await PlacesTestUtils.isPageInDB(aUri)));
@@ -136,148 +168,239 @@ add_task(async function test_removeByFilter() {
   for (let callbackUse of [true, false]) {
     // Case A Positives
     for (let bookmarkUse of [true, false]) {
-      let bookmarkedUri = (arr) => undefined;
-      let checkableArray = (arr) => arr;
+      let bookmarkedUri = arr => undefined;
+      let checkableArray = arr => arr;
       let checkClosure = assertNotInDB;
       if (bookmarkUse) {
-        bookmarkedUri = (arr) => arr[0];
-        checkableArray = (arr) => arr.slice(1);
-        checkClosure = function(aUri) { };
+        bookmarkedUri = arr => arr[0];
+        checkableArray = arr => arr.slice(1);
+        checkClosure = function(aUri) {};
       }
       // Case A 1: Dates
-      await removeByFilterTester(sameHostVisits,
-                                 { beginDate: new Date(2004, 1, 1), endDate: new Date(2006, 1, 1) },
-                                 () => assertInDB(remoteUriList[0]),
-                                 () => checkClosure(remoteUriList[0]),
-                                 callbackUse, bookmarkedUri(remoteUriList));
+      await removeByFilterTester(
+        sameHostVisits,
+        { beginDate: new Date(2004, 1, 1), endDate: new Date(2006, 1, 1) },
+        () => assertInDB(remoteUriList[0]),
+        () => checkClosure(remoteUriList[0]),
+        callbackUse,
+        bookmarkedUri(remoteUriList)
+      );
       // Case A 2: Single Sub-host
-      await removeByFilterTester(sameHostVisits, { host: "mozilla.org" },
-                                 () => assertInDB(remoteUriList[0]),
-                                 () => checkClosure(remoteUriList[0]),
-                                 callbackUse, bookmarkedUri(remoteUriList));
+      await removeByFilterTester(
+        sameHostVisits,
+        { host: "mozilla.org" },
+        () => assertInDB(remoteUriList[0]),
+        () => checkClosure(remoteUriList[0]),
+        callbackUse,
+        bookmarkedUri(remoteUriList)
+      );
       // Case A 3: Multiple subhost
-      await removeByFilterTester(randomHostVisits, { host: ".mozilla.org" },
-                                 async () => { for (let uri of remoteUriList) await assertInDB(uri); },
-                                 async () => { for (let uri of checkableArray(remoteUriList)) await checkClosure(uri); },
-                                 callbackUse, bookmarkedUri(remoteUriList));
+      await removeByFilterTester(
+        randomHostVisits,
+        { host: ".mozilla.org" },
+        async () => {
+          for (let uri of remoteUriList) {
+            await assertInDB(uri);
+          }
+        },
+        async () => {
+          for (let uri of checkableArray(remoteUriList)) {
+            await checkClosure(uri);
+          }
+        },
+        callbackUse,
+        bookmarkedUri(remoteUriList)
+      );
     }
 
     // Case A 4: Localhost
-    await removeByFilterTester(localhostVisits, { host: "localhost" },
-                               async () => { for (let uri of localhostUriList) await assertInDB(uri); },
-                               async () => { for (let uri of localhostUriList) await assertNotInDB(uri); },
-                               callbackUse);
+    await removeByFilterTester(
+      localhostVisits,
+      { host: "localhost" },
+      async () => {
+        for (let uri of localhostUriList) {
+          await assertInDB(uri);
+        }
+      },
+      async () => {
+        for (let uri of localhostUriList) {
+          await assertNotInDB(uri);
+        }
+      },
+      callbackUse
+    );
     // Case A 5: Local Files
-    await removeByFilterTester(fileVisits, { host: "." },
-                               async () => { for (let uri of fileUriList) await assertInDB(uri); },
-                               async () => { for (let uri of fileUriList) await assertNotInDB(uri); },
-                               callbackUse);
+    await removeByFilterTester(
+      fileVisits,
+      { host: "." },
+      async () => {
+        for (let uri of fileUriList) {
+          await assertInDB(uri);
+        }
+      },
+      async () => {
+        for (let uri of fileUriList) {
+          await assertNotInDB(uri);
+        }
+      },
+      callbackUse
+    );
 
     // Case B: Tests which do not remove anything (inverses)
     // Case B 1: Date
-    await removeByFilterTester(sameHostVisits,
-                               { beginDate: new Date(2001, 1, 1), endDate: new Date(2002, 1, 1) },
-                               () => assertInDB(remoteUriList[0]),
-                               () => assertInDB(remoteUriList[0]),
-                               callbackUse);
+    await removeByFilterTester(
+      sameHostVisits,
+      { beginDate: new Date(2001, 1, 1), endDate: new Date(2002, 1, 1) },
+      () => assertInDB(remoteUriList[0]),
+      () => assertInDB(remoteUriList[0]),
+      callbackUse
+    );
     // Case B 2 : Single subhost
-    await removeByFilterTester(sameHostVisits, { host: "notthere.org" },
-                               () => assertInDB(remoteUriList[0]),
-                               () => assertInDB(remoteUriList[0]),
-                               callbackUse);
+    await removeByFilterTester(
+      sameHostVisits,
+      { host: "notthere.org" },
+      () => assertInDB(remoteUriList[0]),
+      () => assertInDB(remoteUriList[0]),
+      callbackUse
+    );
     // Case B 3 : Multiple subhosts
-    await removeByFilterTester(randomHostVisits, { host: ".notthere.org" },
-                               async () => { for (let uri of remoteUriList) await assertInDB(uri); },
-                               async () => { for (let uri of remoteUriList) await assertInDB(uri); },
-                               callbackUse);
+    await removeByFilterTester(
+      randomHostVisits,
+      { host: ".notthere.org" },
+      async () => {
+        for (let uri of remoteUriList) {
+          await assertInDB(uri);
+        }
+      },
+      async () => {
+        for (let uri of remoteUriList) {
+          await assertInDB(uri);
+        }
+      },
+      callbackUse
+    );
     // Case B 4 : invalid local subhost
-    await removeByFilterTester(randomHostVisits, { host: ".org" },
-                               async () => { for (let uri of remoteUriList) await assertInDB(uri); },
-                               async () => { for (let uri of remoteUriList) await assertInDB(uri); },
-                               callbackUse);
+    await removeByFilterTester(
+      randomHostVisits,
+      { host: ".org" },
+      async () => {
+        for (let uri of remoteUriList) {
+          await assertInDB(uri);
+        }
+      },
+      async () => {
+        for (let uri of remoteUriList) {
+          await assertInDB(uri);
+        }
+      },
+      callbackUse
+    );
 
     // Case C: Combination Cases
     // Case C 1: single subhost
-    await removeByFilterTester(sameHostVisits,
-                               { host: "mozilla.org",
-                                 beginDate: new Date(2004, 1, 1),
-                                 endDate: new Date(2006, 1, 1) },
-                               () => assertInDB(remoteUriList[0]),
-                               () => assertNotInDB(remoteUriList[0]),
-                               callbackUse);
+    await removeByFilterTester(
+      sameHostVisits,
+      {
+        host: "mozilla.org",
+        beginDate: new Date(2004, 1, 1),
+        endDate: new Date(2006, 1, 1),
+      },
+      () => assertInDB(remoteUriList[0]),
+      () => assertNotInDB(remoteUriList[0]),
+      callbackUse
+    );
     // Case C 2: multiple subhost
-    await removeByFilterTester(randomHostVisits,
-                               { host: ".mozilla.org",
-                                 beginDate: new Date(2005, 1, 1),
-                                 endDate: new Date(2017, 1, 1) },
-                               async () => { for (let uri of remoteUriList) await assertInDB(uri); },
-                               async () => { for (let uri of remoteUriList) await assertNotInDB(uri); },
-                               callbackUse);
+    await removeByFilterTester(
+      randomHostVisits,
+      {
+        host: ".mozilla.org",
+        beginDate: new Date(2005, 1, 1),
+        endDate: new Date(2017, 1, 1),
+      },
+      async () => {
+        for (let uri of remoteUriList) {
+          await assertInDB(uri);
+        }
+      },
+      async () => {
+        for (let uri of remoteUriList) {
+          await assertNotInDB(uri);
+        }
+      },
+      callbackUse
+    );
   }
 });
-
 
 // Test various error cases
 add_task(async function test_error_cases() {
   Assert.throws(
     () => PlacesUtils.history.removeByFilter(),
-      /TypeError: Expected a filter/
+    /TypeError: Expected a filter/
   );
   Assert.throws(
     () => PlacesUtils.history.removeByFilter("obviously, not a filter"),
-      /TypeError: Expected a filter/
+    /TypeError: Expected a filter/
   );
   Assert.throws(
     () => PlacesUtils.history.removeByFilter({}),
-      /TypeError: Expected a non-empty filter/
+    /TypeError: Expected a non-empty filter/
   );
   Assert.throws(
-    () => PlacesUtils.history.removeVisitsByFilter({beginDate: "now"}),
-      /TypeError: Expected a Date/
+    () => PlacesUtils.history.removeVisitsByFilter({ beginDate: "now" }),
+    /TypeError: Expected a Date/
   );
   Assert.throws(
-    () => PlacesUtils.history.removeByFilter({beginDate: Date.now()}),
-      /TypeError: Expected a Date/
+    () => PlacesUtils.history.removeByFilter({ beginDate: Date.now() }),
+    /TypeError: Expected a Date/
   );
   Assert.throws(
-    () => PlacesUtils.history.removeByFilter({beginDate: new Date()}, "obviously, not a callback"),
-      /TypeError: Invalid function/
+    () =>
+      PlacesUtils.history.removeByFilter(
+        { beginDate: new Date() },
+        "obviously, not a callback"
+      ),
+    /TypeError: Invalid function/
   );
   Assert.throws(
-    () => PlacesUtils.history.removeByFilter({beginDate: new Date(1000), endDate: new Date(0)}),
-      /TypeError: `beginDate` should be at least as old/
+    () =>
+      PlacesUtils.history.removeByFilter({
+        beginDate: new Date(1000),
+        endDate: new Date(0),
+      }),
+    /TypeError: `beginDate` should be at least as old/
   );
   Assert.throws(
-    () => PlacesUtils.history.removeByFilter({host: "#"}),
-      /TypeError: Expected well formed hostname string for/
+    () => PlacesUtils.history.removeByFilter({ host: "#" }),
+    /TypeError: Expected well formed hostname string for/
   );
   Assert.throws(
-    () => PlacesUtils.history.removeByFilter({host: "www..org"}),
-      /TypeError: Expected well formed hostname string for/
+    () => PlacesUtils.history.removeByFilter({ host: "www..org" }),
+    /TypeError: Expected well formed hostname string for/
   );
   Assert.throws(
-    () => PlacesUtils.history.removeByFilter({host: {}}),
-      /TypeError: `host` should be a string/
+    () => PlacesUtils.history.removeByFilter({ host: {} }),
+    /TypeError: `host` should be a string/
   );
   Assert.throws(
-    () => PlacesUtils.history.removeByFilter({host: "*.mozilla.org"}),
-      /TypeError: Expected well formed hostname string for/
+    () => PlacesUtils.history.removeByFilter({ host: "*.mozilla.org" }),
+    /TypeError: Expected well formed hostname string for/
   );
   Assert.throws(
-    () => PlacesUtils.history.removeByFilter({host: "*"}),
-      /TypeError: Expected well formed hostname string for/
+    () => PlacesUtils.history.removeByFilter({ host: "*" }),
+    /TypeError: Expected well formed hostname string for/
   );
   Assert.throws(
-    () => PlacesUtils.history.removeByFilter({host: "local.host."}),
-      /TypeError: Expected well formed hostname string for/
+    () => PlacesUtils.history.removeByFilter({ host: "local.host." }),
+    /TypeError: Expected well formed hostname string for/
   );
   Assert.throws(
-    () => PlacesUtils.history.removeByFilter({host: "(local files)"}),
-      /TypeError: Expected well formed hostname string for/
+    () => PlacesUtils.history.removeByFilter({ host: "(local files)" }),
+    /TypeError: Expected well formed hostname string for/
   );
   Assert.throws(
-    () => PlacesUtils.history.removeByFilter({host: ""}),
-      /TypeError: Expected a non-empty filter/
+    () => PlacesUtils.history.removeByFilter({ host: "" }),
+    /TypeError: Expected a non-empty filter/
   );
 });
 
@@ -305,15 +428,27 @@ function getObserverPromise(bookmarkedUri) {
       onManyFrecenciesChanged() {},
       onDeleteURI(aURI) {
         try {
-          Assert.notEqual(aURI.spec, bookmarkedUri, "Bookmarked URI should not be deleted");
+          Assert.notEqual(
+            aURI.spec,
+            bookmarkedUri,
+            "Bookmarked URI should not be deleted"
+          );
         } finally {
           resolve();
         }
       },
       onDeleteVisits(aURI, aPartialRemoval) {
         try {
-          Assert.equal(aPartialRemoval, false, "Observing onDeleteVisits deletes all visits");
-          Assert.equal(aURI.spec, bookmarkedUri, "Bookmarked URI should have all visits removed but not the page itself");
+          Assert.equal(
+            aPartialRemoval,
+            false,
+            "Observing onDeleteVisits deletes all visits"
+          );
+          Assert.equal(
+            aURI.spec,
+            bookmarkedUri,
+            "Bookmarked URI should have all visits removed but not the page itself"
+          );
         } finally {
           resolve();
         }

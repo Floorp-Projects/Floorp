@@ -1,7 +1,7 @@
 "use strict";
 
 const STATE = {
-  entries: [{url: "about:robots"}, {url: "about:mozilla"}],
+  entries: [{ url: "about:robots" }, { url: "about:mozilla" }],
   selected: 2,
 };
 
@@ -13,8 +13,10 @@ const STATE = {
  * restored history around.
  */
 add_task(async function() {
-  await testSwitchToTab("about:mozilla#fooobar", {ignoreFragment: "whenComparingAndReplace"});
-  await testSwitchToTab("about:mozilla?foo=bar", {replaceQueryString: true});
+  await testSwitchToTab("about:mozilla#fooobar", {
+    ignoreFragment: "whenComparingAndReplace",
+  });
+  await testSwitchToTab("about:mozilla?foo=bar", { replaceQueryString: true });
 });
 
 var testSwitchToTab = async function(url, options) {

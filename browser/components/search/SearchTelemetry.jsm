@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["SearchTelemetry"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
@@ -38,42 +40,49 @@ const SEARCH_AD_CLICKS_SCALAR = "browser.search.ad_clicks";
  *     page mightbe an advert.
  */
 const SEARCH_PROVIDER_INFO = {
-  "google": {
-    "regexp": /^https:\/\/www\.google\.(?:.+)\/search/,
-    "queryParam": "q",
-    "codeParam": "client",
-    "codePrefixes": ["firefox"],
-    "followonParams": ["oq", "ved", "ei"],
-    "extraAdServersRegexps": [/^https:\/\/www\.googleadservices\.com\/(?:pagead\/)?aclk/],
+  google: {
+    regexp: /^https:\/\/www\.google\.(?:.+)\/search/,
+    queryParam: "q",
+    codeParam: "client",
+    codePrefixes: ["firefox"],
+    followonParams: ["oq", "ved", "ei"],
+    extraAdServersRegexps: [
+      /^https:\/\/www\.googleadservices\.com\/(?:pagead\/)?aclk/,
+    ],
   },
-  "duckduckgo": {
-    "regexp": /^https:\/\/duckduckgo\.com\//,
-    "queryParam": "q",
-    "codeParam": "t",
-    "codePrefixes": ["ff"],
+  duckduckgo: {
+    regexp: /^https:\/\/duckduckgo\.com\//,
+    queryParam: "q",
+    codeParam: "t",
+    codePrefixes: ["ff"],
   },
-  "yahoo": {
-    "regexp": /^https:\/\/(?:.*)search\.yahoo\.com\/search/,
-    "queryParam": "p",
+  yahoo: {
+    regexp: /^https:\/\/(?:.*)search\.yahoo\.com\/search/,
+    queryParam: "p",
   },
-  "baidu": {
-    "regexp": /^https:\/\/www\.baidu\.com\/(?:s|baidu)/,
-    "queryParam": "wd",
-    "codeParam": "tn",
-    "codePrefixes": ["34046034_", "monline_"],
-    "followonParams": ["oq"],
+  baidu: {
+    regexp: /^https:\/\/www\.baidu\.com\/(?:s|baidu)/,
+    queryParam: "wd",
+    codeParam: "tn",
+    codePrefixes: ["34046034_", "monline_"],
+    followonParams: ["oq"],
   },
-  "bing": {
-    "regexp": /^https:\/\/www\.bing\.com\/search/,
-    "queryParam": "q",
-    "codeParam": "pc",
-    "codePrefixes": ["MOZ", "MZ"],
+  bing: {
+    regexp: /^https:\/\/www\.bing\.com\/search/,
+    queryParam: "q",
+    codeParam: "pc",
+    codePrefixes: ["MOZ", "MZ"],
   },
 };
 
 const BROWSER_SEARCH_PREF = "browser.search.";
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "loggingEnabled", BROWSER_SEARCH_PREF + "log", false);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "loggingEnabled",
+  BROWSER_SEARCH_PREF + "log",
+  false
+);
 
 /**
  * TelemetryHandler is the main class handling search telemetry. It primarily
@@ -159,7 +168,9 @@ class TelemetryHandler {
     } else {
       this.__searchProviderInfo = SEARCH_PROVIDER_INFO;
     }
-    this._contentHandler.overrideSearchTelemetryForTests(this.__searchProviderInfo);
+    this._contentHandler.overrideSearchTelemetryForTests(
+      this.__searchProviderInfo
+    );
   }
 
   /**
@@ -219,13 +230,20 @@ class TelemetryHandler {
    */
   onOpenWindow(xulWin) {
     let win = xulWin.docShell.domWindow;
-    win.addEventListener("load", () => {
-      if (win.document.documentElement.getAttribute("windowtype") != "navigator:browser") {
-        return;
-      }
+    win.addEventListener(
+      "load",
+      () => {
+        if (
+          win.document.documentElement.getAttribute("windowtype") !=
+          "navigator:browser"
+        ) {
+          return;
+        }
 
-      this._registerWindow(win);
-    }, {once: true});
+        this._registerWindow(win);
+      },
+      { once: true }
+    );
   }
 
   /**
@@ -237,7 +255,10 @@ class TelemetryHandler {
   onCloseWindow(xulWin) {
     let win = xulWin.docShell.domWindow;
 
-    if (win.document.documentElement.getAttribute("windowtype") != "navigator:browser") {
+    if (
+      win.document.documentElement.getAttribute("windowtype") !=
+      "navigator:browser"
+    ) {
       return;
     }
 
@@ -279,22 +300,20 @@ class TelemetryHandler {
    */
   _getProviderInfoForUrl(url, useOnlyExtraAdServers = false) {
     if (useOnlyExtraAdServers) {
-      return Object.entries(this._searchProviderInfo).find(
-        ([_, info]) => {
-          if (info.extraAdServersRegexps) {
-            for (let regexp of info.extraAdServersRegexps) {
-              if (regexp.test(url)) {
-                return true;
-              }
+      return Object.entries(this._searchProviderInfo).find(([_, info]) => {
+        if (info.extraAdServersRegexps) {
+          for (let regexp of info.extraAdServersRegexps) {
+            if (regexp.test(url)) {
+              return true;
             }
           }
-          return false;
         }
-      );
+        return false;
+      });
     }
 
-    return Object.entries(this._searchProviderInfo).find(
-      ([_, info]) => info.regexp.test(url)
+    return Object.entries(this._searchProviderInfo).find(([_, info]) =>
+      info.regexp.test(url)
     );
   }
 
@@ -322,10 +341,14 @@ class TelemetryHandler {
     let code;
     if (searchProviderInfo.codeParam) {
       code = queries.get(searchProviderInfo.codeParam);
-      if (code &&
-          searchProviderInfo.codePrefixes.some(p => code.startsWith(p))) {
-        if (searchProviderInfo.followonParams &&
-           searchProviderInfo.followonParams.some(p => queries.has(p))) {
+      if (
+        code &&
+        searchProviderInfo.codePrefixes.some(p => code.startsWith(p))
+      ) {
+        if (
+          searchProviderInfo.followonParams &&
+          searchProviderInfo.followonParams.some(p => queries.has(p))
+        ) {
           type = "sap-follow-on";
         } else {
           type = "sap";
@@ -335,12 +358,19 @@ class TelemetryHandler {
         let secondaryCode = queries.get("form");
         // This code is used for all Bing follow-on searches.
         if (secondaryCode == "QBRE") {
-          for (let cookie of Services.cookies.getCookiesFromHost("www.bing.com", {})) {
+          for (let cookie of Services.cookies.getCookiesFromHost(
+            "www.bing.com",
+            {}
+          )) {
             if (cookie.name == "SRCHS") {
               // If this cookie is present, it's probably an SAP follow-on.
               // This might be an organic follow-on in the same session,
               // but there is no way to tell the difference.
-              if (searchProviderInfo.codePrefixes.some(p => cookie.value.startsWith("PC=" + p))) {
+              if (
+                searchProviderInfo.codePrefixes.some(p =>
+                  cookie.value.startsWith("PC=" + p)
+                )
+              ) {
                 type = "sap-follow-on";
                 code = cookie.value.split("=")[1];
                 break;
@@ -350,7 +380,7 @@ class TelemetryHandler {
         }
       }
     }
-    return {provider, type, code};
+    return { provider, type, code };
   }
 
   /**
@@ -363,8 +393,11 @@ class TelemetryHandler {
    * @param {string} url The url that was matched (for debug logging only).
    */
   _reportSerpPage(info, url) {
-    let payload = `${info.provider}.in-content:${info.type}:${info.code || "none"}`;
-    let histogram = Services.telemetry.getKeyedHistogramById(SEARCH_COUNTS_HISTOGRAM_KEY);
+    let payload = `${info.provider}.in-content:${info.type}:${info.code ||
+      "none"}`;
+    let histogram = Services.telemetry.getKeyedHistogramById(
+      SEARCH_COUNTS_HISTOGRAM_KEY
+    );
     histogram.add(payload);
     LOG(`SearchTelemetry: ${payload} for ${url}`);
   }
@@ -407,7 +440,10 @@ class ContentHandler {
    * shared with the SearchTelemetryChild actor.
    */
   init() {
-    Services.ppmm.sharedData.set("SearchTelemetry:ProviderInfo", SEARCH_PROVIDER_INFO);
+    Services.ppmm.sharedData.set(
+      "SearchTelemetry:ProviderInfo",
+      SEARCH_PROVIDER_INFO
+    );
 
     Cc["@mozilla.org/network/http-activity-distributor;1"]
       .getService(Ci.nsIHttpActivityDistributor)
@@ -460,10 +496,21 @@ class ContentHandler {
    * @param {string} [extraStringData] Any extra string data available for the
    *   activity.
    */
-  observeActivity(httpChannel, activityType, activitySubtype, timestamp, extraSizeData, extraStringData) {
-    if (!this._browserInfoByUrl.size ||
-        activityType != Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION ||
-        activitySubtype != Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE) {
+  observeActivity(
+    httpChannel,
+    activityType,
+    activitySubtype,
+    timestamp,
+    extraSizeData,
+    extraStringData
+  ) {
+    if (
+      !this._browserInfoByUrl.size ||
+      activityType !=
+        Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION ||
+      activitySubtype !=
+        Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
+    ) {
       return;
     }
 
@@ -490,7 +537,11 @@ class ContentHandler {
       }
 
       Services.telemetry.keyedScalarAdd(SEARCH_AD_CLICKS_SCALAR, info[0], 1);
-      LOG(`SearchTelemetry: Counting ad click in page for ${info[0]} ${triggerURI.spec}`);
+      LOG(
+        `SearchTelemetry: Counting ad click in page for ${info[0]} ${
+          triggerURI.spec
+        }`
+      );
     } catch (e) {
       Cu.reportError(e);
     }
@@ -530,8 +581,16 @@ class ContentHandler {
       return;
     }
 
-    Services.telemetry.keyedScalarAdd(SEARCH_WITH_ADS_SCALAR, item.info.provider, 1);
-    LOG(`SearchTelemetry: Counting ads in page for ${item.info.provider} ${info.url}`);
+    Services.telemetry.keyedScalarAdd(
+      SEARCH_WITH_ADS_SCALAR,
+      item.info.provider,
+      1
+    );
+    LOG(
+      `SearchTelemetry: Counting ads in page for ${item.info.provider} ${
+        info.url
+      }`
+    );
   }
 }
 

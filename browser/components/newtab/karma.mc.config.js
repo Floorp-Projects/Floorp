@@ -108,14 +108,13 @@ module.exports = function(config) {
       mode: "none",
       devtool: "inline-source-map",
       // This loader allows us to override required files in tests
-      resolveLoader: {alias: {inject: path.join(__dirname, "loaders/inject-loader")}},
+      resolveLoader: {
+        alias: { inject: path.join(__dirname, "loaders/inject-loader") },
+      },
       // This resolve config allows us to import with paths relative to the root directory, e.g. "lib/ActivityStream.jsm"
       resolve: {
         extensions: [".js", ".jsx"],
-        modules: [
-          PATHS.moduleResolveDirectory,
-          "node_modules",
-        ],
+        modules: [PATHS.moduleResolveDirectory, "node_modules"],
       },
       externals: {
         // enzyme needs these for backwards compatibility with 0.13.
@@ -130,15 +129,24 @@ module.exports = function(config) {
           {
             test: /\.jsm$/,
             exclude: [/node_modules/],
-            use: [{
-              loader: "babel-loader", // require("babel-core")
-              options: {
-                plugins: [
-                  // Converts .jsm files into common-js modules
-                  ["jsm-to-commonjs", {basePath: PATHS.resourcePathRegEx, removeOtherImports: true, replace: true}], // require("babel-plugin-jsm-to-commonjs")
-                ],
+            use: [
+              {
+                loader: "babel-loader", // require("babel-core")
+                options: {
+                  plugins: [
+                    // Converts .jsm files into common-js modules
+                    [
+                      "jsm-to-commonjs",
+                      {
+                        basePath: PATHS.resourcePathRegEx,
+                        removeOtherImports: true,
+                        replace: true,
+                      },
+                    ], // require("babel-plugin-jsm-to-commonjs")
+                  ],
+                },
               },
-            }],
+            ],
           },
           {
             test: /\.js$/,
@@ -161,7 +169,7 @@ module.exports = function(config) {
             enforce: "post",
             test: /\.js[mx]?$/,
             loader: "istanbul-instrumenter-loader",
-            options: {esModules: true},
+            options: { esModules: true },
             include: [
               path.resolve("content-src"),
               path.resolve("lib"),
@@ -181,6 +189,6 @@ module.exports = function(config) {
       },
     },
     // Silences some overly-verbose logging of individual module builds
-    webpackMiddleware: {noInfo: true},
+    webpackMiddleware: { noInfo: true },
   });
 };

@@ -7,11 +7,16 @@
 
 var EXPORTED_SYMBOLS = ["DelayedInit"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "MessageLoop",
-                                   "@mozilla.org/message-loop;1",
-                                   "nsIMessageLoop");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "MessageLoop",
+  "@mozilla.org/message-loop;1",
+  "nsIMessageLoop"
+);
 
 /**
  * Use DelayedInit to schedule initializers to run some time after startup.
@@ -87,12 +92,14 @@ var Impl = {
     }
 
     // Get rid of completed ones.
-    this.pendingInits = this.pendingInits.filter((init) => !init.complete);
+    this.pendingInits = this.pendingInits.filter(init => !init.complete);
 
     if (nextDue !== undefined) {
       // Schedule the next idle, if we still have pending inits.
-      MessageLoop.postIdleTask(() => this.onIdle(),
-                               Math.max(0, nextDue - time));
+      MessageLoop.postIdleTask(
+        () => this.onIdle(),
+        Math.max(0, nextDue - time)
+      );
     }
   },
 
@@ -129,8 +136,11 @@ var Impl = {
     }
 
     // Get any existing information about the property.
-    let prop = Object.getOwnPropertyDescriptor(object, name) ||
-               { configurable: true, enumerable: true, writable: true };
+    let prop = Object.getOwnPropertyDescriptor(object, name) || {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+    };
 
     if (!prop.configurable) {
       // Object.defineProperty won't work, so just perform init here.

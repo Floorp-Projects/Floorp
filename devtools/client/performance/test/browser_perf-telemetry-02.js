@@ -8,9 +8,17 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
   startTelemetry();
@@ -29,8 +37,10 @@ add_task(async function() {
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
 
   const exported = once(PerformanceController, EVENTS.RECORDING_EXPORTED);
-  await PerformanceController.exportRecording(PerformanceController.getCurrentRecording(),
-    file);
+  await PerformanceController.exportRecording(
+    PerformanceController.getCurrentRecording(),
+    file
+  );
   await exported;
 
   const imported = once(PerformanceController, EVENTS.RECORDING_IMPORTED);
@@ -44,8 +54,16 @@ add_task(async function() {
 function checkResults() {
   // For help generating these tests use generateTelemetryTests("DEVTOOLS_PERFTOOLS_")
   // here.
-  checkTelemetry("DEVTOOLS_PERFTOOLS_RECORDING_IMPORT_FLAG", "", {0: 0, 1: 1, 2: 0},
-    "array");
-  checkTelemetry("DEVTOOLS_PERFTOOLS_RECORDING_EXPORT_FLAG", "", {0: 0, 1: 1, 2: 0},
-    "array");
+  checkTelemetry(
+    "DEVTOOLS_PERFTOOLS_RECORDING_IMPORT_FLAG",
+    "",
+    { 0: 0, 1: 1, 2: 0 },
+    "array"
+  );
+  checkTelemetry(
+    "DEVTOOLS_PERFTOOLS_RECORDING_EXPORT_FLAG",
+    "",
+    { 0: 0, 1: 1, 2: 0 },
+    "array"
+  );
 }

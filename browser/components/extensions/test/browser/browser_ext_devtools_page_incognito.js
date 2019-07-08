@@ -5,9 +5,9 @@
 loadTestSubscript("head_devtools.js");
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({set: [
-    ["extensions.allowPrivateBrowsingByDefault", false],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
 });
 
 async function testIncognito(incognitoOverride) {
@@ -15,7 +15,9 @@ async function testIncognito(incognitoOverride) {
 
   function devtools_page(privateAllowed) {
     if (!privateAllowed) {
-      browser.test.fail("Extension devtools_page should not be created on private tabs if not allowed");
+      browser.test.fail(
+        "Extension devtools_page should not be created on private tabs if not allowed"
+      );
     }
 
     browser.test.sendMessage("devtools_page:loaded");
@@ -23,7 +25,7 @@ async function testIncognito(incognitoOverride) {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "devtools_page": "devtools_page.html",
+      devtools_page: "devtools_page.html",
     },
     incognitoOverride,
     files: {
@@ -40,7 +42,9 @@ async function testIncognito(incognitoOverride) {
     },
   });
 
-  let existingPrivateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let existingPrivateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
 
   await extension.startup();
 
@@ -54,9 +58,14 @@ async function testIncognito(incognitoOverride) {
   // If the devtools_page is created for a not allowed extension, the devtools page will
   // trigger a test failure, but let's make an explicit assertion otherwise mochitest will
   // complain because there was no assertion in the test.
-  ok(true, `Opened toolbox on an existing private window (extension ${incognitoOverride})`);
+  ok(
+    true,
+    `Opened toolbox on an existing private window (extension ${incognitoOverride})`
+  );
 
-  let newPrivateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let newPrivateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
 
   await openToolboxForTab(newPrivateWindow.gBrowser.selectedTab);
 
@@ -66,7 +75,10 @@ async function testIncognito(incognitoOverride) {
 
   // If the devtools_page is created for a not allowed extension, the devtools page will
   // trigger a test failure.
-  ok(true, `Opened toolbox on a newprivate window (extension ${incognitoOverride})`);
+  ok(
+    true,
+    `Opened toolbox on a newprivate window (extension ${incognitoOverride})`
+  );
 
   // Close opened toolboxes and private windows.
   await closeToolboxForTab(existingPrivateWindow.gBrowser.selectedTab);

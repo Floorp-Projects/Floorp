@@ -5,7 +5,9 @@
 
 const { generateActorSpec } = require("devtools/shared/protocol");
 const { extend } = require("devtools/shared/extend");
-const { browsingContextTargetSpecPrototype } = require("devtools/shared/specs/targets/browsing-context");
+const {
+  browsingContextTargetSpecPrototype,
+} = require("devtools/shared/specs/targets/browsing-context");
 
 const parentProcessTargetSpecPrototype = extend(
   browsingContextTargetSpecPrototype,
@@ -14,7 +16,9 @@ const parentProcessTargetSpecPrototype = extend(
   }
 );
 
-const parentProcessTargetSpec = generateActorSpec(parentProcessTargetSpecPrototype);
+const parentProcessTargetSpec = generateActorSpec(
+  parentProcessTargetSpecPrototype
+);
 
 exports.parentProcessTargetSpecPrototype = parentProcessTargetSpecPrototype;
 exports.parentProcessTargetSpec = parentProcessTargetSpec;

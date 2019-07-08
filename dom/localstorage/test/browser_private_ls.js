@@ -25,14 +25,19 @@ add_task(async function() {
     "http://example.com/browser/dom/localstorage/test/page_private_ls.html";
 
   for (let i = 0; i < 2; i++) {
-    let privateWin =
-      await BrowserTestUtils.openNewBrowserWindow({private: true});
+    let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+      private: true,
+    });
 
-    let privateTab =
-      await BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser, pageUrl);
+    let privateTab = await BrowserTestUtils.openNewForegroundTab(
+      privateWin.gBrowser,
+      pageUrl
+    );
 
-    ok(await checkTabWindowLS(privateTab),
-       "LS works correctly in a private-browsing page.");
+    ok(
+      await checkTabWindowLS(privateTab),
+      "LS works correctly in a private-browsing page."
+    );
 
     await BrowserTestUtils.closeWindow(privateWin);
   }

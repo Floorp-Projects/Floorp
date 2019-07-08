@@ -1,4 +1,3 @@
-
 // Use some CPU.
 var interval = window.setInterval(() => {
   // Compute an arbitrary value, print it out to make sure that the JS

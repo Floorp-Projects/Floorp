@@ -1,6 +1,8 @@
 "use strict";
 
-const { Preferences } = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 const UUID_REGEX = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
 const SHOW_SYSTEM_ADDONS_PREF = "devtools.aboutdebugging.showHiddenAddons";
@@ -9,8 +11,15 @@ function testFilePath(container, expectedFilePath) {
   // Verify that the path to the install location is shown next to its label.
   const filePath = container.querySelector(".file-path");
   ok(filePath, "file path is in DOM");
-  ok(filePath.textContent.endsWith(expectedFilePath), "file path is set correctly");
-  is(filePath.previousElementSibling.textContent, "Location", "file path has label");
+  ok(
+    filePath.textContent.endsWith(expectedFilePath),
+    "file path is set correctly"
+  );
+  is(
+    filePath.previousElementSibling.textContent,
+    "Location",
+    "file path has label"
+  );
 }
 
 add_task(async function testWebExtension() {
@@ -24,7 +33,7 @@ add_task(async function testWebExtension() {
     manifest: {
       name: addonName,
       applications: {
-        gecko: {id: addonId},
+        gecko: { id: addonId },
       },
     },
   });
@@ -47,9 +56,12 @@ add_task(async function testWebExtension() {
   ok(internalUUID.textContent.match(UUID_REGEX), "internalUUID is correct");
 
   const manifestURL = container.querySelector(".manifest-url");
-  ok(manifestURL.href.startsWith("moz-extension://"), "href for manifestURL exists");
+  ok(
+    manifestURL.href.startsWith("moz-extension://"),
+    "href for manifestURL exists"
+  );
 
-  await uninstallAddon({document, id: addonId, name: addonName});
+  await uninstallAddon({ document, id: addonId, name: addonName });
 
   await closeAboutDebugging(tab);
 });
@@ -73,8 +85,9 @@ add_task(async function testTemporaryWebExtension() {
     name: addonName,
   });
 
-  const addons =
-    document.querySelectorAll("#temporary-extensions .addon-target-container");
+  const addons = document.querySelectorAll(
+    "#temporary-extensions .addon-target-container"
+  );
   // Assuming that our temporary add-on is now at the top.
   const container = addons[addons.length - 1];
   const addonId = container.dataset.addonId;
@@ -85,7 +98,7 @@ add_task(async function testTemporaryWebExtension() {
   const temporaryID = container.querySelector(".temporary-id-url");
   ok(temporaryID, "Temporary ID message does appear");
 
-  await uninstallAddon({document, id: addonId, name: addonName});
+  await uninstallAddon({ document, id: addonId, name: addonName });
 
   await closeAboutDebugging(tab);
 });
@@ -101,10 +114,9 @@ add_task(async function testUnknownManifestProperty() {
     manifest: {
       name: addonName,
       applications: {
-        gecko: {id: addonId},
+        gecko: { id: addonId },
       },
-      wrong_manifest_property_name: {
-      },
+      wrong_manifest_property_name: {},
     },
   });
   registerCleanupFunction(() => addonFile.remove(false));
@@ -123,12 +135,18 @@ add_task(async function testUnknownManifestProperty() {
 
   const messages = container.querySelectorAll(".addon-target-message");
   ok(messages.length === 1, "there is one message");
-  ok(messages[0].textContent.match(/Error processing wrong_manifest_property_name/),
-     "the message is helpful");
-  ok(messages[0].classList.contains("addon-target-warning-message"),
-     "the message is a warning");
+  ok(
+    messages[0].textContent.match(
+      /Error processing wrong_manifest_property_name/
+    ),
+    "the message is helpful"
+  );
+  ok(
+    messages[0].classList.contains("addon-target-warning-message"),
+    "the message is a warning"
+  );
 
-  await uninstallAddon({document, id: addonId, name: addonName});
+  await uninstallAddon({ document, id: addonId, name: addonName });
 
   await closeAboutDebugging(tab);
 });
@@ -137,7 +155,8 @@ add_task(async function testSystemAddonsHidden() {
   await pushPref(SHOW_SYSTEM_ADDONS_PREF, false);
 
   const { document } = await openAboutDebugging("addons");
-  const systemAddonsShown = () => !!document.getElementById("system-extensions");
+  const systemAddonsShown = () =>
+    !!document.getElementById("system-extensions");
 
   await waitForInitialAddonList(document);
 

@@ -1,6 +1,6 @@
 "use strict";
 
-const {Schemas} = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
+const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
 
 const global = this;
 
@@ -8,30 +8,30 @@ let schemaJson = [
   {
     namespace: "noAllowedContexts",
     properties: {
-      prop1: {type: "object"},
-      prop2: {type: "object", allowedContexts: ["test_zero", "test_one"]},
-      prop3: {type: "number", value: 1},
-      prop4: {type: "number", value: 1, allowedContexts: ["numeric_one"]},
+      prop1: { type: "object" },
+      prop2: { type: "object", allowedContexts: ["test_zero", "test_one"] },
+      prop3: { type: "number", value: 1 },
+      prop4: { type: "number", value: 1, allowedContexts: ["numeric_one"] },
     },
   },
   {
     namespace: "defaultContexts",
     defaultContexts: ["test_two"],
     properties: {
-      prop1: {type: "object"},
-      prop2: {type: "object", allowedContexts: ["test_three"]},
-      prop3: {type: "number", value: 1},
-      prop4: {type: "number", value: 1, allowedContexts: ["numeric_two"]},
+      prop1: { type: "object" },
+      prop2: { type: "object", allowedContexts: ["test_three"] },
+      prop3: { type: "number", value: 1 },
+      prop4: { type: "number", value: 1, allowedContexts: ["numeric_two"] },
     },
   },
   {
     namespace: "withAllowedContexts",
     allowedContexts: ["test_four"],
     properties: {
-      prop1: {type: "object"},
-      prop2: {type: "object", allowedContexts: ["test_five"]},
-      prop3: {type: "number", value: 1},
-      prop4: {type: "number", value: 1, allowedContexts: ["numeric_three"]},
+      prop1: { type: "object" },
+      prop2: { type: "object", allowedContexts: ["test_five"] },
+      prop3: { type: "number", value: 1 },
+      prop4: { type: "number", value: 1, allowedContexts: ["numeric_three"] },
     },
   },
   {
@@ -39,32 +39,37 @@ let schemaJson = [
     allowedContexts: ["test_six"],
     defaultContexts: ["test_seven"],
     properties: {
-      prop1: {type: "object"},
-      prop2: {type: "object", allowedContexts: ["test_eight"]},
-      prop3: {type: "number", value: 1},
-      prop4: {type: "number", value: 1, allowedContexts: ["numeric_four"]},
+      prop1: { type: "object" },
+      prop2: { type: "object", allowedContexts: ["test_eight"] },
+      prop3: { type: "number", value: 1 },
+      prop4: { type: "number", value: 1, allowedContexts: ["numeric_four"] },
     },
   },
   {
     namespace: "with_submodule",
     defaultContexts: ["test_nine"],
-    types: [{
-      id: "subtype",
-      type: "object",
-      functions: [{
-        name: "noAllowedContexts",
-        type: "function",
-        parameters: [],
-      }, {
-        name: "allowedContexts",
-        allowedContexts: ["test_ten"],
-        type: "function",
-        parameters: [],
-      }],
-    }],
+    types: [
+      {
+        id: "subtype",
+        type: "object",
+        functions: [
+          {
+            name: "noAllowedContexts",
+            type: "function",
+            parameters: [],
+          },
+          {
+            name: "allowedContexts",
+            allowedContexts: ["test_ten"],
+            type: "function",
+            parameters: [],
+          },
+        ],
+      },
+    ],
     properties: {
-      prop1: {$ref: "subtype"},
-      prop2: {$ref: "subtype", allowedContexts: ["test_eleven"]},
+      prop1: { $ref: "subtype" },
+      prop2: { $ref: "subtype", allowedContexts: ["test_eleven"] },
     },
   },
 ];
@@ -144,8 +149,9 @@ add_task(async function testRestrictions() {
   // return an implementation since the API injector should take care of it.
   equal(root.noAllowedContexts.prop3, 1);
 
-  Assert.throws(() => root.noAllowedContexts.prop1,
-                /undefined/,
-                "Should throw when the implementation is absent.");
+  Assert.throws(
+    () => root.noAllowedContexts.prop1,
+    /undefined/,
+    "Should throw when the implementation is absent."
+  );
 });
-

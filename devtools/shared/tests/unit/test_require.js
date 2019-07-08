@@ -28,8 +28,10 @@ function testInvalidModule() {
     Assert.ok(false, "require should throw");
   } catch (error) {
     Assert.equal(error.message, "Module `foo` is not found at foo.js");
-    Assert.ok(error.stack.includes("testInvalidModule"),
-      "Exception's stack includes the test function");
+    Assert.ok(
+      error.stack.includes("testInvalidModule"),
+      "Exception's stack includes the test function"
+    );
   }
 
   try {
@@ -38,9 +40,14 @@ function testInvalidModule() {
     require("devtools/foo");
     Assert.ok(false, "require should throw");
   } catch (error) {
-    Assert.equal(error.message, "Module `devtools/foo` is not found at resource://devtools/foo.js");
-    Assert.ok(error.stack.includes("testInvalidModule"),
-      "Exception's stack includes the test function");
+    Assert.equal(
+      error.message,
+      "Module `devtools/foo` is not found at resource://devtools/foo.js"
+    );
+    Assert.ok(
+      error.stack.includes("testInvalidModule"),
+      "Exception's stack includes the test function"
+    );
   }
 }
 
@@ -54,23 +61,33 @@ function testThrowingModule() {
     Assert.ok(false, "require should throw");
   } catch (error) {
     Assert.equal(error.message, "my-exception");
-    Assert.ok(error.stack.includes("testThrowingModule"),
-      "Exception's stack includes the test function");
-    Assert.ok(error.stack.includes("throwingMethod"),
-      "Exception's stack also includes the module function that throws");
+    Assert.ok(
+      error.stack.includes("testThrowingModule"),
+      "Exception's stack includes the test function"
+    );
+    Assert.ok(
+      error.stack.includes("throwingMethod"),
+      "Exception's stack also includes the module function that throws"
+    );
   }
   try {
     // Require a test module that is throwing a string
     require("xpcshell-test/throwing-module-2.js");
     Assert.ok(false, "require should throw");
   } catch (error) {
-    Assert.equal(error.message,
+    Assert.equal(
+      error.message,
       "Error while loading module `xpcshell-test/throwing-module-2.js` at " +
-      "resource://test/throwing-module-2.js:\nmy-exception");
-    Assert.ok(error.stack.includes("testThrowingModule"),
-      "Exception's stack includes the test function");
-    Assert.ok(!error.stack.includes("throwingMethod"),
-      "Exception's stack also includes the module function that throws");
+        "resource://test/throwing-module-2.js:\nmy-exception"
+    );
+    Assert.ok(
+      error.stack.includes("testThrowingModule"),
+      "Exception's stack includes the test function"
+    );
+    Assert.ok(
+      !error.stack.includes("throwingMethod"),
+      "Exception's stack also includes the module function that throws"
+    );
   }
 }
 

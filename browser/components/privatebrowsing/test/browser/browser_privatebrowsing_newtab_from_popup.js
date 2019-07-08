@@ -24,13 +24,15 @@ const WINDOW_BODY = `data:text/html,
 add_task(async function test_private_popup_window_opens_private_tabs() {
   // allow top level data: URI navigations, otherwise clicking a data: link fails
   await SpecialPowers.pushPrefEnv({
-    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]],
+    set: [["security.data_uri.block_toplevel_data_uri_navigations", false]],
   });
   let privWin = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
   // Sanity check - this browser better be private.
-  ok(PrivateBrowsingUtils.isWindowPrivate(privWin),
-     "Opened a private browsing window.");
+  ok(
+    PrivateBrowsingUtils.isWindowPrivate(privWin),
+    "Opened a private browsing window."
+  );
 
   // First, open a private browsing window, and load our
   // testing page.
@@ -40,12 +42,14 @@ add_task(async function test_private_popup_window_opens_private_tabs() {
 
   // Next, click on the link in the testing page, and ensure
   // that a private popup window is opened.
-  let openedPromise = BrowserTestUtils.waitForNewWindow({url: POPUP_LINK});
+  let openedPromise = BrowserTestUtils.waitForNewWindow({ url: POPUP_LINK });
 
   await BrowserTestUtils.synthesizeMouseAtCenter("#first", {}, privBrowser);
   let popupWin = await openedPromise;
-  ok(PrivateBrowsingUtils.isWindowPrivate(popupWin),
-     "Popup window was private.");
+  ok(
+    PrivateBrowsingUtils.isWindowPrivate(popupWin),
+    "Popup window was private."
+  );
 
   // Now click on the link in the popup, and ensure that a new
   // tab is opened in the original private browsing window.
@@ -55,8 +59,10 @@ add_task(async function test_private_popup_window_opens_private_tabs() {
   let newPrivTab = await newTabPromise;
 
   // Ensure that the newly created tab's browser is private.
-  ok(PrivateBrowsingUtils.isBrowserPrivate(newPrivTab.linkedBrowser),
-     "Newly opened tab should be private.");
+  ok(
+    PrivateBrowsingUtils.isBrowserPrivate(newPrivTab.linkedBrowser),
+    "Newly opened tab should be private."
+  );
 
   // Clean up
   BrowserTestUtils.removeTab(newPrivTab);

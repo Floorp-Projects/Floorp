@@ -38,7 +38,7 @@ var historyListener = {
   ]),
 };
 
-var {sessionHistory} = docShell.QueryInterface(Ci.nsIWebNavigation);
+var { sessionHistory } = docShell.QueryInterface(Ci.nsIWebNavigation);
 if (sessionHistory) {
   sessionHistory.legacySHistory.addSHistoryListener(historyListener);
 }
@@ -62,13 +62,16 @@ addMessageListener("ss-test:enableStyleSheetsForSet", function(msg) {
   let sheets = content.document.styleSheets;
   let change = false;
   for (let i = 0; i < sheets.length; i++) {
-    if (sheets[i].disabled != (!msg.data.includes(sheets[i].title))) {
+    if (sheets[i].disabled != !msg.data.includes(sheets[i].title)) {
       change = true;
       break;
     }
   }
   function observer() {
-    Services.obs.removeObserver(observer, "style-sheet-applicable-state-changed");
+    Services.obs.removeObserver(
+      observer,
+      "style-sheet-applicable-state-changed"
+    );
 
     // It's possible our observer will run before the one in
     // content-sessionStore.js. Therefore, we run ours a little
@@ -93,21 +96,18 @@ addMessageListener("ss-test:enableSubDocumentStyleSheetsForSet", function(msg) {
 });
 
 addMessageListener("ss-test:getAuthorStyleDisabled", function(msg) {
-  let {authorStyleDisabled} =
-    docShell.contentViewer;
+  let { authorStyleDisabled } = docShell.contentViewer;
   sendSyncMessage("ss-test:getAuthorStyleDisabled", authorStyleDisabled);
 });
 
 addMessageListener("ss-test:setAuthorStyleDisabled", function(msg) {
-  let markupDocumentViewer =
-    docShell.contentViewer;
+  let markupDocumentViewer = docShell.contentViewer;
   markupDocumentViewer.authorStyleDisabled = msg.data;
   sendSyncMessage("ss-test:setAuthorStyleDisabled");
 });
 
 addMessageListener("ss-test:setUsePrivateBrowsing", function(msg) {
-  let loadContext =
-    docShell.QueryInterface(Ci.nsILoadContext);
+  let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
   loadContext.usePrivateBrowsing = msg.data;
   sendAsyncMessage("ss-test:setUsePrivateBrowsing");
 });
@@ -117,34 +117,47 @@ addMessageListener("ss-test:getScrollPosition", function(msg) {
   if (msg.data.hasOwnProperty("frame")) {
     frame = content.frames[msg.data.frame];
   }
-  let x = {}, y = {};
+  let x = {},
+    y = {};
   frame.windowUtils.getVisualViewportOffset(x, y);
-  sendAsyncMessage("ss-test:getScrollPosition", {x: x.value, y: y.value});
+  sendAsyncMessage("ss-test:getScrollPosition", { x: x.value, y: y.value });
 });
 
 addMessageListener("ss-test:setScrollPosition", function(msg) {
   let frame = content;
-  let {x, y} = msg.data;
+  let { x, y } = msg.data;
   if (msg.data.hasOwnProperty("frame")) {
     frame = content.frames[msg.data.frame];
   }
   frame.scrollTo(x, y);
 
-  frame.addEventListener("mozvisualscroll", function onScroll(event) {
-    if (frame.document.ownerGlobal.visualViewport == event.target) {
-      frame.removeEventListener("mozvisualscroll", onScroll,
-                                { mozSystemGroup: true });
-      sendAsyncMessage("ss-test:setScrollPosition");
-    }
-  }, { mozSystemGroup: true });
+  frame.addEventListener(
+    "mozvisualscroll",
+    function onScroll(event) {
+      if (frame.document.ownerGlobal.visualViewport == event.target) {
+        frame.removeEventListener("mozvisualscroll", onScroll, {
+          mozSystemGroup: true,
+        });
+        sendAsyncMessage("ss-test:setScrollPosition");
+      }
+    },
+    { mozSystemGroup: true }
+  );
 });
 
-addMessageListener("ss-test:click", function({data}) {
+addMessageListener("ss-test:click", function({ data }) {
   content.document.getElementById(data.id).click();
   sendAsyncMessage("ss-test:click");
 });
 
-addEventListener("load", function(event) {
-  let subframe = event.target != content.document;
-  sendAsyncMessage("ss-test:loadEvent", {subframe, url: event.target.documentURI});
-}, true);
+addEventListener(
+  "load",
+  function(event) {
+    let subframe = event.target != content.document;
+    sendAsyncMessage("ss-test:loadEvent", {
+      subframe,
+      url: event.target.documentURI,
+    });
+  },
+  true
+);

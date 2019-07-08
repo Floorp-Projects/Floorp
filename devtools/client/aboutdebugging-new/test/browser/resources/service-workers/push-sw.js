@@ -22,9 +22,11 @@ self.addEventListener("install", function(event) {
 
 // Claim control over the currently open test page when activating.
 self.addEventListener("activate", function(event) {
-  event.waitUntil(self.clients.claim().then(function() {
-    return postMessage("sw-claimed");
-  }));
+  event.waitUntil(
+    self.clients.claim().then(function() {
+      return postMessage("sw-claimed");
+    })
+  );
 });
 
 // Forward all "push" events to the controlled window.

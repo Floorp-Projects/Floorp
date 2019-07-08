@@ -25,7 +25,10 @@ add_task(async function new_window() {
   let newWin;
   try {
     newWin = await promiseNewWindowLoaded();
-    let tab = BrowserTestUtils.addTab(newWin.gBrowser, "http://example.com/browser_625016.js?" + Math.random());
+    let tab = BrowserTestUtils.addTab(
+      newWin.gBrowser,
+      "http://example.com/browser_625016.js?" + Math.random()
+    );
     await promiseBrowserLoaded(tab.linkedBrowser);
 
     // Double check that we have no closed windows
@@ -34,15 +37,20 @@ add_task(async function new_window() {
     await BrowserTestUtils.closeWindow(newWin);
     newWin = null;
 
-    let state = JSON.parse((await promiseRecoveryFileContents()));
-    is(state.windows.length, 1,
-      "observe1: 1 window in data written to disk");
-    is(state._closedWindows.length, 0,
-      "observe1: no closed windows in data written to disk");
+    let state = JSON.parse(await promiseRecoveryFileContents());
+    is(state.windows.length, 1, "observe1: 1 window in data written to disk");
+    is(
+      state._closedWindows.length,
+      0,
+      "observe1: no closed windows in data written to disk"
+    );
 
     // The API still treats the closed window as closed, so ensure that window is there
-    is(ss.getClosedWindowCount(), 1,
-      "observe1: 1 closed window according to API");
+    is(
+      ss.getClosedWindowCount(),
+      1,
+      "observe1: 1 closed window according to API"
+    );
   } finally {
     if (newWin) {
       await BrowserTestUtils.closeWindow(newWin);
@@ -60,15 +68,24 @@ add_task(async function new_tab() {
     await promiseBrowserLoaded(newTab.linkedBrowser);
     await TabStateFlusher.flush(newTab.linkedBrowser);
 
-    let state = JSON.parse((await promiseRecoveryFileContents()));
-    is(state.windows.length, 1,
-      "observe2: 1 window in data being written to disk");
-    is(state._closedWindows.length, 1,
-      "observe2: 1 closed window in data being written to disk");
+    let state = JSON.parse(await promiseRecoveryFileContents());
+    is(
+      state.windows.length,
+      1,
+      "observe2: 1 window in data being written to disk"
+    );
+    is(
+      state._closedWindows.length,
+      1,
+      "observe2: 1 closed window in data being written to disk"
+    );
 
     // The API still treats the closed window as closed, so ensure that window is there
-    is(ss.getClosedWindowCount(), 1,
-      "observe2: 1 closed window according to API");
+    is(
+      ss.getClosedWindowCount(),
+      1,
+      "observe2: 1 closed window according to API"
+    );
   } finally {
     if (newTab) {
       gBrowser.removeTab(newTab);
@@ -76,11 +93,10 @@ add_task(async function new_tab() {
   }
 });
 
-
 add_task(async function done() {
   // The API still represents the closed window as closed, so we can clear it
   // with the API, but just to make sure...
-//  is(ss.getClosedWindowCount(), 1, "1 closed window according to API");
+  //  is(ss.getClosedWindowCount(), 1, "1 closed window according to API");
   await promiseAllButPrimaryWindowClosed();
   forgetClosedWindows();
   Services.prefs.clearUserPref("browser.sessionstore.interval");

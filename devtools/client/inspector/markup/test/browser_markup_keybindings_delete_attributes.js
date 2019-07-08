@@ -16,21 +16,24 @@ const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 //   specify an attribute that would make it impossible to find the node using
 //   selector.
 // Note that after each test case, undo is called.
-const TEST_DATA = [{
-  selector: "#id",
-  attribute: "class",
-}, {
-  selector: "#id",
-  attribute: "data-id",
-}];
+const TEST_DATA = [
+  {
+    selector: "#id",
+    attribute: "class",
+  },
+  {
+    selector: "#id",
+    attribute: "data-id",
+  },
+];
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
-  const {walker} = inspector;
+  const { inspector } = await openInspectorForURL(TEST_URL);
+  const { walker } = inspector;
 
-  for (const {selector, attribute} of TEST_DATA) {
+  for (const { selector, attribute } of TEST_DATA) {
     info("Get the container for node " + selector);
-    const {editor} = await getContainerForSelector(selector, inspector);
+    const { editor } = await getContainerForSelector(selector, inspector);
 
     info("Focus attribute " + attribute);
     const attr = editor.attrElements.get(attribute).querySelector(".editable");
@@ -46,18 +49,26 @@ add_task(async function() {
     ok(node, "The node hasn't been deleted");
 
     info("Check that the attribute has been deleted");
-    node = await walker.querySelector(walker.rootNode,
-                                      selector + "[" + attribute + "]");
+    node = await walker.querySelector(
+      walker.rootNode,
+      selector + "[" + attribute + "]"
+    );
     ok(!node, "The attribute does not exist anymore in the DOM");
-    ok(!editor.attrElements.get(attribute),
-       "The attribute has been removed from the container");
+    ok(
+      !editor.attrElements.get(attribute),
+      "The attribute has been removed from the container"
+    );
 
     info("Undo the change");
     await undoChange(inspector);
-    node = await walker.querySelector(walker.rootNode,
-                                      selector + "[" + attribute + "]");
+    node = await walker.querySelector(
+      walker.rootNode,
+      selector + "[" + attribute + "]"
+    );
     ok(node, "The attribute is back in the DOM");
-    ok(editor.attrElements.get(attribute),
-       "The attribute is back on the container");
+    ok(
+      editor.attrElements.get(attribute),
+      "The attribute is back on the container"
+    );
   }
 });

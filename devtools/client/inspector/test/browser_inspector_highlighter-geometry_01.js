@@ -26,8 +26,9 @@ const ID = "geometry-editor-";
 const SIDES = ["left", "right", "top", "bottom"];
 
 add_task(async function() {
-  const helper = await openInspectorForURL(TEST_URL)
-                       .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
+  const helper = await openInspectorForURL(TEST_URL).then(
+    getHighlighterHelperFor(HIGHLIGHTER_TYPE)
+  );
 
   const { finalize } = helper;
 
@@ -40,7 +41,7 @@ add_task(async function() {
   finalize();
 });
 
-async function hasArrowsAndLabelsAndHandlers({getElementAttribute}) {
+async function hasArrowsAndLabelsAndHandlers({ getElementAttribute }) {
   info("Checking that the highlighter has the expected arrows and labels");
 
   for (const name of [...SIDES]) {
@@ -55,8 +56,11 @@ async function hasArrowsAndLabelsAndHandlers({getElementAttribute}) {
   }
 }
 
-async function isHiddenForNonPositionedNonSizedElement(
-  {show, hide, isElementHidden}) {
+async function isHiddenForNonPositionedNonSizedElement({
+  show,
+  hide,
+  isElementHidden,
+}) {
   info("Asking to show the highlighter on an inline, non p  ositioned element");
 
   await show("#inline");
@@ -70,8 +74,11 @@ async function isHiddenForNonPositionedNonSizedElement(
   }
 }
 
-async function sideArrowsAreDisplayedForPositionedNode(
-  {show, hide, isElementHidden}) {
+async function sideArrowsAreDisplayedForPositionedNode({
+  show,
+  hide,
+  isElementHidden,
+}) {
   info("Asking to show the highlighter on the positioned node");
 
   await show("#positioned");

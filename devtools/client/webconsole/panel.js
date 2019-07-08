@@ -6,8 +6,15 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "HUDService", "devtools/client/webconsole/hudservice", true);
-loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
+loader.lazyRequireGetter(
+  this,
+  "HUDService",
+  "devtools/client/webconsole/hudservice",
+  true
+);
+loader.lazyGetter(this, "EventEmitter", () =>
+  require("devtools/shared/event-emitter")
+);
 
 /**
  * A DevToolPanel that controls the Web Console.
@@ -41,14 +48,19 @@ WebConsolePanel.prototype = {
   open: async function() {
     try {
       const parentDoc = this._toolbox.doc;
-      const iframe = parentDoc.getElementById("toolbox-panel-iframe-webconsole");
+      const iframe = parentDoc.getElementById(
+        "toolbox-panel-iframe-webconsole"
+      );
 
       // Make sure the iframe content window is ready.
       const win = iframe.contentWindow;
       const doc = win && win.document;
       if (!doc || doc.readyState !== "complete") {
         await new Promise(resolve => {
-          iframe.addEventListener("load", resolve, {capture: true, once: true});
+          iframe.addEventListener("load", resolve, {
+            capture: true,
+            once: true,
+          });
         });
       }
 
@@ -57,7 +69,10 @@ WebConsolePanel.prototype = {
 
       // Open the Web Console.
       this.hud = await HUDService.openWebConsole(
-        this.target, webConsoleUIWindow, chromeWindow);
+        this.target,
+        webConsoleUIWindow,
+        chromeWindow
+      );
 
       // Pipe 'reloaded' event from WebConsoleUI to WebConsolePanel.
       // These events are listened by the Toolbox.

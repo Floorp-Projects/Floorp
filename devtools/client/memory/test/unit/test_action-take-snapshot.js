@@ -26,16 +26,24 @@ add_task(async function() {
 
     if (lastSnapshot.state === states.SAVING) {
       foundPendingState = true;
-      ok(foundPendingState, "Got state change for pending heap snapshot request");
+      ok(
+        foundPendingState,
+        "Got state change for pending heap snapshot request"
+      );
       ok(!lastSnapshot.path, "Snapshot does not yet have a path");
       ok(!lastSnapshot.census, "Has no census data when loading");
     } else if (lastSnapshot.state === states.SAVED) {
       foundDoneState = true;
-      ok(foundDoneState, "Got state change for completed heap snapshot request");
+      ok(
+        foundDoneState,
+        "Got state change for completed heap snapshot request"
+      );
       ok(foundPendingState, "SAVED state occurs after SAVING state");
       ok(lastSnapshot.path, "Snapshot fetched with a path");
-      ok(snapshots.every(s => s.selected === (s.id === lastSnapshot.id)),
-        "Only recent snapshot is selected");
+      ok(
+        snapshots.every(s => s.selected === (s.id === lastSnapshot.id)),
+        "Only recent snapshot is selected"
+      );
     }
   }
 

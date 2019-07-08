@@ -14,28 +14,43 @@ var EXPORTED_SYMBOLS = ["ExtensionPageChild"];
  * child process.
  */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ExtensionChildDevToolsUtils",
-                               "resource://gre/modules/ExtensionChildDevToolsUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionProcessScript",
-                               "resource://gre/modules/ExtensionProcessScript.jsm");
-ChromeUtils.defineModuleGetter(this, "Schemas",
-                               "resource://gre/modules/Schemas.jsm");
-ChromeUtils.defineModuleGetter(this, "WebNavigationFrames",
-                               "resource://gre/modules/WebNavigationFrames.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionChildDevToolsUtils",
+  "resource://gre/modules/ExtensionChildDevToolsUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionProcessScript",
+  "resource://gre/modules/ExtensionProcessScript.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Schemas",
+  "resource://gre/modules/Schemas.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "WebNavigationFrames",
+  "resource://gre/modules/WebNavigationFrames.jsm"
+);
 
 const CATEGORY_EXTENSION_SCRIPTS_ADDON = "webextension-scripts-addon";
 const CATEGORY_EXTENSION_SCRIPTS_DEVTOOLS = "webextension-scripts-devtools";
 
-const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-const {ExtensionChild} = ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm");
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const { ExtensionCommon } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionCommon.jsm"
+);
+const { ExtensionChild } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionChild.jsm"
+);
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
 
-const {
-  getInnerWindowID,
-  promiseEvent,
-} = ExtensionUtils;
+const { getInnerWindowID, promiseEvent } = ExtensionUtils;
 
 const {
   BaseContext,
@@ -44,52 +59,66 @@ const {
   defineLazyGetter,
 } = ExtensionCommon;
 
-const {
-  ChildAPIManager,
-  Messenger,
-} = ExtensionChild;
+const { ChildAPIManager, Messenger } = ExtensionChild;
 
 var ExtensionPageChild;
 
-const initializeBackgroundPage = (context) => {
+const initializeBackgroundPage = context => {
   // Override the `alert()` method inside background windows;
   // we alias it to console.log().
   // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1203394
   let alertDisplayedWarning = false;
   const innerWindowID = getInnerWindowID(context.contentWindow);
 
-  function logWarningMessage({text, filename, lineNumber, columnNumber}) {
-    let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
-    consoleMsg.initWithWindowID(text, filename, null, lineNumber, columnNumber,
-                                Ci.nsIScriptError.warningFlag, "webextension",
-                                innerWindowID);
+  function logWarningMessage({ text, filename, lineNumber, columnNumber }) {
+    let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(
+      Ci.nsIScriptError
+    );
+    consoleMsg.initWithWindowID(
+      text,
+      filename,
+      null,
+      lineNumber,
+      columnNumber,
+      Ci.nsIScriptError.warningFlag,
+      "webextension",
+      innerWindowID
+    );
     Services.console.logMessage(consoleMsg);
   }
 
   let alertOverwrite = text => {
-    const {filename, columnNumber, lineNumber} = Components.stack.caller;
+    const { filename, columnNumber, lineNumber } = Components.stack.caller;
 
     if (!alertDisplayedWarning) {
-      context.childManager.callParentAsyncFunction("runtime.openBrowserConsole", []);
+      context.childManager.callParentAsyncFunction(
+        "runtime.openBrowserConsole",
+        []
+      );
 
       logWarningMessage({
-        text: "alert() is not supported in background windows; please use console.log instead.",
-        filename, lineNumber, columnNumber,
+        text:
+          "alert() is not supported in background windows; please use console.log instead.",
+        filename,
+        lineNumber,
+        columnNumber,
       });
 
       alertDisplayedWarning = true;
     }
 
-    logWarningMessage({text, filename, lineNumber, columnNumber});
+    logWarningMessage({ text, filename, lineNumber, columnNumber });
   };
-  Cu.exportFunction(alertOverwrite, context.contentWindow, {defineAs: "alert"});
+  Cu.exportFunction(alertOverwrite, context.contentWindow, {
+    defineAs: "alert",
+  });
 };
 
 function getFrameData(global) {
   return ExtensionProcessScript.getFrameData(global, true);
 }
 
-var apiManager = new class extends SchemaAPIManager {
+var apiManager = new (class extends SchemaAPIManager {
   constructor() {
     super("addon", Schemas);
     this.initialized = false;
@@ -99,14 +128,16 @@ var apiManager = new class extends SchemaAPIManager {
     if (!this.initialized) {
       this.initialized = true;
       this.initGlobal();
-      for (let {value} of Services.catMan.enumerateCategory(CATEGORY_EXTENSION_SCRIPTS_ADDON)) {
+      for (let { value } of Services.catMan.enumerateCategory(
+        CATEGORY_EXTENSION_SCRIPTS_ADDON
+      )) {
         this.loadScript(value);
       }
     }
   }
-}();
+})();
 
-var devtoolsAPIManager = new class extends SchemaAPIManager {
+var devtoolsAPIManager = new (class extends SchemaAPIManager {
   constructor() {
     super("devtools", Schemas);
     this.initialized = false;
@@ -116,12 +147,14 @@ var devtoolsAPIManager = new class extends SchemaAPIManager {
     if (!this.initialized) {
       this.initialized = true;
       this.initGlobal();
-      for (let {value} of Services.catMan.enumerateCategory(CATEGORY_EXTENSION_SCRIPTS_DEVTOOLS)) {
+      for (let { value } of Services.catMan.enumerateCategory(
+        CATEGORY_EXTENSION_SCRIPTS_DEVTOOLS
+      )) {
         this.loadScript(value);
       }
     }
   }
-}();
+})();
 
 class ExtensionBaseContextChild extends BaseContext {
   /**
@@ -142,21 +175,22 @@ class ExtensionBaseContextChild extends BaseContext {
     }
 
     super(params.envType, extension);
-    let {viewType = "tab", uri, contentWindow, tabId} = params;
+    let { viewType = "tab", uri, contentWindow, tabId } = params;
     this.viewType = viewType;
     this.uri = uri || extension.baseURI;
 
     this.setContentWindow(contentWindow);
 
     // This is the MessageSender property passed to extension.
-    let sender = {id: extension.id};
+    let sender = { id: extension.id };
     if (viewType == "tab") {
       sender.frameId = WebNavigationFrames.getFrameId(contentWindow);
       sender.tabId = tabId;
-      Object.defineProperty(this, "tabId",
-                            {value: tabId,
-                             enumerable: true,
-                             configurable: true});
+      Object.defineProperty(this, "tabId", {
+        value: tabId,
+        enumerable: true,
+        configurable: true,
+      });
     }
     if (uri) {
       sender.url = uri.spec;
@@ -224,14 +258,19 @@ class ExtensionBaseContextChild extends BaseContext {
 }
 
 defineLazyGetter(ExtensionBaseContextChild.prototype, "messenger", function() {
-  let filter = {extensionId: this.extension.id};
+  let filter = { extensionId: this.extension.id };
   let optionalFilter = {};
   // Addon-generated messages (not necessarily from the same process as the
   // addon itself) are sent to the main process, which forwards them via the
   // parent process message manager. Specific replies can be sent to the frame
   // message manager.
-  return new Messenger(this, [Services.cpmm, this.messageManager], this.sender,
-                       filter, optionalFilter);
+  return new Messenger(
+    this,
+    [Services.cpmm, this.messageManager],
+    this.sender,
+    filter,
+    optionalFilter
+  );
 });
 
 class ExtensionPageContextChild extends ExtensionBaseContextChild {
@@ -253,7 +292,7 @@ class ExtensionPageContextChild extends ExtensionBaseContextChild {
    * @param {number} [params.tabId] This tab's ID, used if viewType is "tab".
    */
   constructor(extension, params) {
-    super(extension, Object.assign(params, {envType: "addon_child"}));
+    super(extension, Object.assign(params, { envType: "addon_child" }));
 
     if (this.viewType == "background") {
       initializeBackgroundPage(this);
@@ -268,23 +307,27 @@ class ExtensionPageContextChild extends ExtensionBaseContextChild {
   }
 }
 
-defineLazyGetter(ExtensionPageContextChild.prototype, "childManager", function() {
-  this.extension.apiManager.lazyInit();
+defineLazyGetter(
+  ExtensionPageContextChild.prototype,
+  "childManager",
+  function() {
+    this.extension.apiManager.lazyInit();
 
-  let localApis = {};
-  let can = new CanOfAPIs(this, this.extension.apiManager, localApis);
+    let localApis = {};
+    let can = new CanOfAPIs(this, this.extension.apiManager, localApis);
 
-  let childManager = new ChildAPIManager(this, this.messageManager, can, {
-    envType: "addon_parent",
-    viewType: this.viewType,
-    url: this.uri.spec,
-    incognito: this.incognito,
-  });
+    let childManager = new ChildAPIManager(this, this.messageManager, can, {
+      envType: "addon_parent",
+      viewType: this.viewType,
+      url: this.uri.spec,
+      incognito: this.incognito,
+    });
 
-  this.callOnClose(childManager);
+    this.callOnClose(childManager);
 
-  return childManager;
-});
+    return childManager;
+  }
+);
 
 class DevToolsContextChild extends ExtensionBaseContextChild {
   /**
@@ -300,11 +343,13 @@ class DevToolsContextChild extends ExtensionBaseContextChild {
    *   used if viewType is "devtools_page" or "devtools_panel".
    */
   constructor(extension, params) {
-    super(extension, Object.assign(params, {envType: "devtools_child"}));
+    super(extension, Object.assign(params, { envType: "devtools_child" }));
 
     this.devtoolsToolboxInfo = params.devtoolsToolboxInfo;
     ExtensionChildDevToolsUtils.initThemeChangeObserver(
-      params.devtoolsToolboxInfo.themeName, this);
+      params.devtoolsToolboxInfo.themeName,
+      this
+    );
 
     this.extension.devtoolsViews.add(this);
   }
@@ -363,12 +408,18 @@ ExtensionPageChild = {
       global.docShell.isAppTab = true;
     }
 
-    promiseEvent(global, "DOMContentLoaded", true, event => event.target.location != "about:blank").then(() => {
+    promiseEvent(
+      global,
+      "DOMContentLoaded",
+      true,
+      event => event.target.location != "about:blank"
+    ).then(() => {
       let windowId = getInnerWindowID(global.content);
       let context = this.extensionContexts.get(windowId);
 
-      global.sendAsyncMessage("Extension:ExtensionViewLoaded",
-                              {childId: context && context.childManager.id});
+      global.sendAsyncMessage("Extension:ExtensionViewLoaded", {
+        childId: context && context.childManager.id,
+      });
     });
   },
 
@@ -383,30 +434,45 @@ ExtensionPageChild = {
     this._init();
 
     if (!WebExtensionPolicy.isExtensionProcess) {
-      throw new Error("Cannot create an extension page context in current process");
+      throw new Error(
+        "Cannot create an extension page context in current process"
+      );
     }
 
     let windowId = getInnerWindowID(contentWindow);
     let context = this.extensionContexts.get(windowId);
     if (context) {
       if (context.extension !== extension) {
-        throw new Error("A different extension context already exists for this frame");
+        throw new Error(
+          "A different extension context already exists for this frame"
+        );
       }
-      throw new Error("An extension context was already initialized for this frame");
+      throw new Error(
+        "An extension context was already initialized for this frame"
+      );
     }
 
     let mm = contentWindow.docShell.messageManager;
 
-    let {viewType, tabId, devtoolsToolboxInfo} = getFrameData(mm) || {};
+    let { viewType, tabId, devtoolsToolboxInfo } = getFrameData(mm) || {};
 
     let uri = contentWindow.document.documentURIObject;
 
     if (devtoolsToolboxInfo) {
       context = new DevToolsContextChild(extension, {
-        viewType, contentWindow, uri, tabId, devtoolsToolboxInfo,
+        viewType,
+        contentWindow,
+        uri,
+        tabId,
+        devtoolsToolboxInfo,
       });
     } else {
-      context = new ExtensionPageContextChild(extension, {viewType, contentWindow, uri, tabId});
+      context = new ExtensionPageContextChild(extension, {
+        viewType,
+        contentWindow,
+        uri,
+        tabId,
+      });
     }
 
     this.extensionContexts.set(windowId, context);

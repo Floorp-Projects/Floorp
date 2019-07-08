@@ -54,7 +54,11 @@ function autocomplete(state = getDefaultState(), action) {
       if (action.data.isUnsafeGetter) {
         // We only want to display the getter confirm popup if the last char is a dot or
         // an opening bracket, or if the user forced the autocompletion with Ctrl+Space.
-        if (action.input.endsWith(".") || action.input.endsWith("[") || action.force) {
+        if (
+          action.input.endsWith(".") ||
+          action.input.endsWith("[") ||
+          action.force
+        ) {
           return {
             ...getDefaultState(),
             isUnsafeGetter: true,
@@ -109,8 +113,8 @@ function autocomplete(state = getDefaultState(), action) {
  * @returns {Object} new state.
  */
 function autoCompleteRetrieveFromCache(state, action) {
-  const {input} = action;
-  const {cache} = state;
+  const { input } = action;
+  const { cache } = state;
 
   let filterBy = input;
   if (cache.isElementAccess) {
@@ -126,9 +130,11 @@ function autoCompleteRetrieveFromCache(state, action) {
       filterBy = input.substring(input.lastIndexOf(lastNonAlpha) + 1);
     }
   }
-  const stripWrappingQuotes = s => s.replace(/^['"`](.+(?=['"`]$))['"`]$/g, "$1");
+  const stripWrappingQuotes = s =>
+    s.replace(/^['"`](.+(?=['"`]$))['"`]$/g, "$1");
   const filterByLc = filterBy.toLocaleLowerCase();
-  const looseMatching = !filterBy || filterBy[0].toLocaleLowerCase() === filterBy[0];
+  const looseMatching =
+    !filterBy || filterBy[0].toLocaleLowerCase() === filterBy[0];
   const needStripQuote = cache.isElementAccess && !/^[`"']/.test(filterBy);
   const newList = cache.matches.filter(l => {
     if (needStripQuote) {
@@ -146,8 +152,10 @@ function autoCompleteRetrieveFromCache(state, action) {
     const startingQuoteRegex = /^('|"|`)/;
     const aFirstMeaningfulChar = startingQuoteRegex.test(a) ? a[1] : a[0];
     const bFirstMeaningfulChar = startingQuoteRegex.test(b) ? b[1] : b[0];
-    const lA = aFirstMeaningfulChar.toLocaleLowerCase() === aFirstMeaningfulChar;
-    const lB = bFirstMeaningfulChar.toLocaleLowerCase() === bFirstMeaningfulChar;
+    const lA =
+      aFirstMeaningfulChar.toLocaleLowerCase() === aFirstMeaningfulChar;
+    const lB =
+      bFirstMeaningfulChar.toLocaleLowerCase() === bFirstMeaningfulChar;
     if (lA === lB) {
       if (a === filterBy) {
         return -1;

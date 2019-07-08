@@ -6,14 +6,25 @@
 
 "use strict";
 
-const DBG_XUL = "chrome://devtools/content/framework/toolbox-process-window.html";
+const DBG_XUL =
+  "chrome://devtools/content/framework/toolbox-process-window.html";
 const CHROME_DEBUGGER_PROFILE_NAME = "chrome_debugger_profile";
 
-const { require, DevToolsLoader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require, DevToolsLoader } = ChromeUtils.import(
+  "resource://devtools/shared/Loader.jsm"
+);
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Subprocess", "resource://gre/modules/Subprocess.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Subprocess",
+  "resource://gre/modules/Subprocess.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "Telemetry", function() {
   return require("devtools/client/shared/telemetry");
@@ -72,8 +83,10 @@ EventEmitter.decorate(BrowserToolboxProcess);
  * @return object
  */
 BrowserToolboxProcess.init = function(onClose, onRun) {
-  if (!Services.prefs.getBoolPref("devtools.chrome.enabled") ||
-      !Services.prefs.getBoolPref("devtools.debugger.remote-enabled")) {
+  if (
+    !Services.prefs.getBoolPref("devtools.chrome.enabled") ||
+    !Services.prefs.getBoolPref("devtools.debugger.remote-enabled")
+  ) {
     console.error("Could not start Browser Toolbox, you need to enable it.");
     return null;
   }
@@ -108,7 +121,9 @@ BrowserToolboxProcess.prototype = {
     this.loader = new DevToolsLoader();
     this.loader.invisibleToDebugger = true;
     const { DebuggerServer } = this.loader.require("devtools/server/main");
-    const { SocketListener } = this.loader.require("devtools/shared/security/socket");
+    const { SocketListener } = this.loader.require(
+      "devtools/shared/security/socket"
+    );
     this.debuggerServer = DebuggerServer;
     dumpn("Created a separate loader instance for the DebuggerServer.");
 
@@ -120,8 +135,9 @@ BrowserToolboxProcess.prototype = {
     this.debuggerServer.allowChromeProcess = true;
     dumpn("initialized and added the browser actors for the DebuggerServer.");
 
-    const chromeDebuggingWebSocket =
-      Services.prefs.getBoolPref("devtools.debugger.chrome-debugging-websocket");
+    const chromeDebuggingWebSocket = Services.prefs.getBoolPref(
+      "devtools.debugger.chrome-debugging-websocket"
+    );
     const socketOptions = {
       portOrPath: -1,
       webSocket: chromeDebuggingWebSocket,
@@ -136,7 +152,9 @@ BrowserToolboxProcess.prototype = {
     }
 
     dumpn("Finished initializing the chrome toolbox server.");
-    dump(`Debugger Server for Browser Toolbox listening on port: ${this.port}\n`);
+    dump(
+      `Debugger Server for Browser Toolbox listening on port: ${this.port}\n`
+    );
   },
 
   /**
@@ -177,8 +195,10 @@ BrowserToolboxProcess.prototype = {
     // always works:
     Services.prefs.savePrefFile(prefsFile);
 
-    dumpn("Finished creating the chrome toolbox user profile at: " +
-          this._dbgProfilePath);
+    dumpn(
+      "Finished creating the chrome toolbox user profile at: " +
+        this._dbgProfilePath
+    );
   },
 
   /**
@@ -207,7 +227,10 @@ BrowserToolboxProcess.prototype = {
         newDebuggingProfileDir.remove(true);
       }
       // Move profile from old to new location
-      const newDebuggingProfileParent = Services.dirsvc.get("ProfD", Ci.nsIFile);
+      const newDebuggingProfileParent = Services.dirsvc.get(
+        "ProfD",
+        Ci.nsIFile
+      );
       oldDebuggingProfileDir.moveTo(newDebuggingProfileParent, null);
       dumpn("Debugging profile migrated successfully");
     } catch (e) {
@@ -227,8 +250,10 @@ BrowserToolboxProcess.prototype = {
     const args = [
       "-no-remote",
       "-foreground",
-      "-profile", this._dbgProfilePath,
-      "-chrome", DBG_XUL,
+      "-profile",
+      this._dbgProfilePath,
+      "-chrome",
+      DBG_XUL,
     ];
     const environment = {
       // Disable safe mode for the new process in case this was opened via the
@@ -254,32 +279,38 @@ BrowserToolboxProcess.prototype = {
       environmentAppend: true,
       stderr: "stdout",
       environment,
-    }).then(proc => {
-      this._dbgProcess = proc;
+    }).then(
+      proc => {
+        this._dbgProcess = proc;
 
-      // jsbrowserdebugger is not connected with a toolbox so we pass -1 as the
-      // toolbox session id.
-      this._telemetry.toolOpened("jsbrowserdebugger", -1, this);
+        // jsbrowserdebugger is not connected with a toolbox so we pass -1 as the
+        // toolbox session id.
+        this._telemetry.toolOpened("jsbrowserdebugger", -1, this);
 
-      dumpn("Chrome toolbox is now running...");
-      this.emit("run", this);
+        dumpn("Chrome toolbox is now running...");
+        this.emit("run", this);
 
-      proc.stdin.close();
-      const dumpPipe = async pipe => {
-        let data = await pipe.readString();
-        while (data) {
-          dump(data);
-          data = await pipe.readString();
-        }
-      };
-      dumpPipe(proc.stdout);
+        proc.stdin.close();
+        const dumpPipe = async pipe => {
+          let data = await pipe.readString();
+          while (data) {
+            dump(data);
+            data = await pipe.readString();
+          }
+        };
+        dumpPipe(proc.stdout);
 
-      proc.wait().then(() => this.close());
+        proc.wait().then(() => this.close());
 
-      return proc;
-    }, err => {
-      console.log(`Error loading Browser Toolbox: ${command} ${args.join(" ")}`, err);
-    });
+        return proc;
+      },
+      err => {
+        console.log(
+          `Error loading Browser Toolbox: ${command} ${args.join(" ")}`,
+          err
+        );
+      }
+    );
   },
 
   /**

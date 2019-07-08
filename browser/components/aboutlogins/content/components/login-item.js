@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {recordTelemetryEvent} from "../aboutLoginsUtils.js";
+import { recordTelemetryEvent } from "../aboutLoginsUtils.js";
 
 export default class LoginItem extends HTMLElement {
   /**
@@ -25,34 +25,35 @@ export default class LoginItem extends HTMLElement {
     }
 
     let loginItemTemplate = document.querySelector("#login-item-template");
-    let shadowRoot = this.attachShadow({mode: "open"});
+    let shadowRoot = this.attachShadow({ mode: "open" });
     document.l10n.connectRoot(shadowRoot);
     shadowRoot.appendChild(loginItemTemplate.content.cloneNode(true));
 
-    for (let selector of [
-      ".copy-password-button",
-      ".copy-username-button",
-      ".delete-button",
-      ".edit-button",
-      ".open-site-button",
-      ".reveal-password-checkbox",
-      ".save-changes-button",
-      ".cancel-button",
-    ]) {
-      let button = this.shadowRoot.querySelector(selector);
-      button.addEventListener("click", this);
-    }
-
+    this._cancelButton = this.shadowRoot.querySelector(".cancel-button");
     this._confirmDeleteDialog = document.querySelector("confirm-delete-dialog");
-    this._copyPasswordButton = this.shadowRoot.querySelector(".copy-password-button");
-    this._copyUsernameButton = this.shadowRoot.querySelector(".copy-username-button");
+    this._copyPasswordButton = this.shadowRoot.querySelector(
+      ".copy-password-button"
+    );
+    this._copyUsernameButton = this.shadowRoot.querySelector(
+      ".copy-username-button"
+    );
     this._deleteButton = this.shadowRoot.querySelector(".delete-button");
     this._editButton = this.shadowRoot.querySelector(".edit-button");
     this._form = this.shadowRoot.querySelector("form");
+    this._openSiteButton = this.shadowRoot.querySelector(".open-site-button");
     this._originInput = this.shadowRoot.querySelector("input[name='origin']");
-    this._usernameInput = this.shadowRoot.querySelector("input[name='username']");
-    this._passwordInput = this.shadowRoot.querySelector("input[name='password']");
-    this._revealCheckbox = this.shadowRoot.querySelector(".reveal-password-checkbox");
+    this._usernameInput = this.shadowRoot.querySelector(
+      "input[name='username']"
+    );
+    this._passwordInput = this.shadowRoot.querySelector(
+      "input[name='password']"
+    );
+    this._revealCheckbox = this.shadowRoot.querySelector(
+      ".reveal-password-checkbox"
+    );
+    this._saveChangesButton = this.shadowRoot.querySelector(
+      ".save-changes-button"
+    );
     this._title = this.shadowRoot.querySelector(".login-item-title");
     this._timeCreated = this.shadowRoot.querySelector(".time-created");
     this._timeChanged = this.shadowRoot.querySelector(".time-changed");
@@ -61,13 +62,29 @@ export default class LoginItem extends HTMLElement {
     this.render();
 
     this._originInput.addEventListener("blur", this);
+    this._cancelButton.addEventListener("click", this);
+    this._copyPasswordButton.addEventListener("click", this);
+    this._copyUsernameButton.addEventListener("click", this);
+    this._deleteButton.addEventListener("click", this);
+    this._editButton.addEventListener("click", this);
+    this._openSiteButton.addEventListener("click", this);
+    this._originInput.addEventListener("click", this);
+    this._saveChangesButton.addEventListener("click", this);
+    window.addEventListener("AboutLoginsCreateLogin", this);
+    window.addEventListener("AboutLoginsInitialLoginSelected", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
   }
 
   render() {
-    document.l10n.setAttributes(this._timeCreated, "login-item-time-created", {timeCreated: this._login.timeCreated || ""});
-    document.l10n.setAttributes(this._timeChanged, "login-item-time-changed", {timeChanged: this._login.timePasswordChanged || ""});
-    document.l10n.setAttributes(this._timeUsed, "login-item-time-used", {timeUsed: this._login.timeLastUsed || ""});
+    document.l10n.setAttributes(this._timeCreated, "login-item-time-created", {
+      timeCreated: this._login.timeCreated || "",
+    });
+    document.l10n.setAttributes(this._timeChanged, "login-item-time-changed", {
+      timeChanged: this._login.timePasswordChanged || "",
+    });
+    document.l10n.setAttributes(this._timeUsed, "login-item-time-used", {
+      timeUsed: this._login.timeLastUsed || "",
+    });
 
     this._title.textContent = this._login.title;
     this._originInput.defaultValue = this._login.origin || "";
@@ -78,6 +95,14 @@ export default class LoginItem extends HTMLElement {
 
   handleEvent(event) {
     switch (event.type) {
+      case "AboutLoginsCreateLogin": {
+        this.setLogin({});
+        break;
+      }
+      case "AboutLoginsInitialLoginSelected": {
+        this.setLogin(event.detail, { skipFocusChange: true });
+        break;
+      }
       case "AboutLoginsLoginSelected": {
         this.setLogin(event.detail);
         break;
@@ -99,42 +124,48 @@ export default class LoginItem extends HTMLElement {
           this._updatePasswordRevealState();
 
           let method = this._revealCheckbox.checked ? "show" : "hide";
-          recordTelemetryEvent({object: "password", method});
+          recordTelemetryEvent({ object: "password", method });
           return;
         }
 
         // Prevent form submit behavior on the following buttons.
         event.preventDefault();
         if (classList.contains("cancel-button")) {
-          if (this._login.guid) {
+          let wasExistingLogin = !!this._login.guid;
+          if (wasExistingLogin) {
             this.setLogin(this._login);
           } else {
-            // TODO, should select the first login if it exists
-            // or show the no-logins view otherwise
-            this._toggleEditing();
-            this.render();
+            window.dispatchEvent(new CustomEvent("AboutLoginsClearSelection"));
           }
 
           recordTelemetryEvent({
-            object: this._login.guid ? "existing_login" : "new_login",
+            object: wasExistingLogin ? "existing_login" : "new_login",
             method: "cancel",
           });
           return;
         }
-        if (classList.contains("copy-password-button") ||
-            classList.contains("copy-username-button")) {
+        if (
+          classList.contains("copy-password-button") ||
+          classList.contains("copy-username-button")
+        ) {
           let copyButton = event.currentTarget;
           copyButton.disabled = true;
           let propertyToCopy = copyButton.dataset.copyLoginProperty;
-          navigator.clipboard.writeText(this._login[propertyToCopy]).then(() => {
-            copyButton.dataset.copied = true;
-            setTimeout(() => {
-              copyButton.disabled = false;
-              delete copyButton.dataset.copied;
-            }, LoginItem.COPY_BUTTON_RESET_TIMEOUT);
-          }, () => copyButton.disabled = false);
+          navigator.clipboard.writeText(this._login[propertyToCopy]).then(
+            () => {
+              copyButton.dataset.copied = true;
+              setTimeout(() => {
+                copyButton.disabled = false;
+                delete copyButton.dataset.copied;
+              }, LoginItem.COPY_BUTTON_RESET_TIMEOUT);
+            },
+            () => (copyButton.disabled = false)
+          );
 
-          recordTelemetryEvent({object: copyButton.dataset.telemetryObject, method: "copy"});
+          recordTelemetryEvent({
+            object: copyButton.dataset.telemetryObject,
+            method: "copy",
+          });
           return;
         }
         if (classList.contains("delete-button")) {
@@ -144,38 +175,50 @@ export default class LoginItem extends HTMLElement {
         if (classList.contains("edit-button")) {
           this._toggleEditing();
 
-          recordTelemetryEvent({object: "existing_login", method: "edit"});
+          recordTelemetryEvent({ object: "existing_login", method: "edit" });
           return;
         }
-        if (classList.contains("open-site-button")) {
-          document.dispatchEvent(new CustomEvent("AboutLoginsOpenSite", {
-            bubbles: true,
-            detail: this._login,
-          }));
+        if (
+          classList.contains("open-site-button") ||
+          (classList.contains("origin-input") && !this.dataset.editing)
+        ) {
+          document.dispatchEvent(
+            new CustomEvent("AboutLoginsOpenSite", {
+              bubbles: true,
+              detail: this._login,
+            })
+          );
 
-          recordTelemetryEvent({object: "existing_login", method: "open_site"});
+          recordTelemetryEvent({
+            object: "existing_login",
+            method: "open_site",
+          });
           return;
         }
         if (classList.contains("save-changes-button")) {
-          if (!this._isFormValid({reportErrors: true})) {
+          if (!this._isFormValid({ reportErrors: true })) {
             return;
           }
           let loginUpdates = this._loginFromForm();
           if (this._login.guid) {
             loginUpdates.guid = this._login.guid;
-            document.dispatchEvent(new CustomEvent("AboutLoginsUpdateLogin", {
-              bubbles: true,
-              detail: loginUpdates,
-            }));
+            document.dispatchEvent(
+              new CustomEvent("AboutLoginsUpdateLogin", {
+                bubbles: true,
+                detail: loginUpdates,
+              })
+            );
 
-            recordTelemetryEvent({object: "existing_login", method: "save"});
+            recordTelemetryEvent({ object: "existing_login", method: "save" });
           } else {
-            document.dispatchEvent(new CustomEvent("AboutLoginsCreateLogin", {
-              bubbles: true,
-              detail: loginUpdates,
-            }));
+            document.dispatchEvent(
+              new CustomEvent("AboutLoginsCreateLogin", {
+                bubbles: true,
+                detail: loginUpdates,
+              })
+            );
 
-            recordTelemetryEvent({object: "new_login", method: "save"});
+            recordTelemetryEvent({ object: "new_login", method: "save" });
           }
         }
         break;
@@ -189,20 +232,28 @@ export default class LoginItem extends HTMLElement {
    */
   confirmDelete() {
     const dialog = document.querySelector("confirm-delete-dialog");
-    dialog.show().then(() => {
-      document.dispatchEvent(new CustomEvent("AboutLoginsDeleteLogin", {
-        bubbles: true,
-        detail: this._login,
-      }));
-      recordTelemetryEvent({object: "existing_login", method: "delete"});
-    }, () => {});
+    dialog.show().then(
+      () => {
+        document.dispatchEvent(
+          new CustomEvent("AboutLoginsDeleteLogin", {
+            bubbles: true,
+            detail: this._login,
+          })
+        );
+        recordTelemetryEvent({ object: "existing_login", method: "delete" });
+      },
+      () => {}
+    );
   }
 
   /**
    * @param {login} login The login that should be displayed. The login object is
    *                      a plain JS object representation of nsILoginInfo/nsILoginMetaInfo.
+   * @param {boolean} skipFocusChange Optional, if present and set to true, the Edit button of the
+   *                                  login will not get focus automatically. This is used to prevent
+   *                                  stealing focus from the search filter upon page load.
    */
-  setLogin(login) {
+  setLogin(login, { skipFocusChange } = {}) {
     this._login = login;
 
     this._form.reset();
@@ -216,7 +267,9 @@ export default class LoginItem extends HTMLElement {
 
     this._revealCheckbox.checked = false;
 
-    this._editButton.focus();
+    if (!skipFocusChange) {
+      this._editButton.focus();
+    }
     this.render();
   }
 
@@ -228,8 +281,10 @@ export default class LoginItem extends HTMLElement {
    *                      a plain JS object representation of nsILoginInfo/nsILoginMetaInfo.
    */
   loginAdded(login) {
-    if (this._login.guid ||
-        !window.AboutLoginsUtils.doLoginsMatch(login, this._loginFromForm())) {
+    if (
+      this._login.guid ||
+      !window.AboutLoginsUtils.doLoginsMatch(login, this._loginFromForm())
+    ) {
       return;
     }
 
@@ -279,7 +334,7 @@ export default class LoginItem extends HTMLElement {
    * @param {boolean} reportErrors If true, validation errors will be reported
    *                               to the user.
    */
-  _isFormValid({reportErrors} = {}) {
+  _isFormValid({ reportErrors } = {}) {
     let fields = [this._passwordInput];
     if (this.dataset.isNewLogin) {
       fields.push(this._originInput);
@@ -323,7 +378,8 @@ export default class LoginItem extends HTMLElement {
     } else {
       // Need to set a shorter width than -moz-available so the reveal checkbox
       // will still appear next to the password.
-      this._passwordInput.style.width = (this._login.password || "").length + "ch";
+      this._passwordInput.style.width =
+        (this._login.password || "").length + "ch";
     }
 
     this._deleteButton.disabled = this.dataset.isNewLogin;
@@ -344,11 +400,12 @@ export default class LoginItem extends HTMLElement {
   }
 
   _updatePasswordRevealState() {
-    let titleId = this._revealCheckbox.checked ? "login-item-password-reveal-checkbox-hide"
-                                               : "login-item-password-reveal-checkbox-show";
+    let titleId = this._revealCheckbox.checked
+      ? "login-item-password-reveal-checkbox-hide"
+      : "login-item-password-reveal-checkbox-show";
     document.l10n.setAttributes(this._revealCheckbox, titleId);
 
-    let {checked} = this._revealCheckbox;
+    let { checked } = this._revealCheckbox;
     let inputType = checked ? "text" : "password";
     this._passwordInput.setAttribute("type", inputType);
   }

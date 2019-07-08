@@ -75,12 +75,14 @@ function loadRecordingFromFile(file) {
   channel.contentType = "text/plain";
 
   return new Promise((resolve, reject) => {
-    NetUtil.asyncFetch(channel, (inputStream) => {
+    NetUtil.asyncFetch(channel, inputStream => {
       let recordingData;
 
       try {
-        const string = NetUtil.readInputStreamToString(inputStream,
-                                                     inputStream.available());
+        const string = NetUtil.readInputStreamToString(
+          inputStream,
+          inputStream.available()
+        );
         recordingData = JSON.parse(string);
       } catch (e) {
         reject(new Error("Could not read recording data file."));

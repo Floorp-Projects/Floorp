@@ -40,6 +40,8 @@ class JSWindowActorParent final : public JSWindowActor {
     return MakeAndAddRef<JSWindowActorParent>();
   }
 
+  nsIGlobalObject* GetParentObject() const override;
+
   WindowGlobalParent* GetManager() const;
   void Init(const nsAString& aName, WindowGlobalParent* aManager);
   void StartDestroy();

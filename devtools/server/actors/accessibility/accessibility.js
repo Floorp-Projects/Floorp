@@ -10,7 +10,12 @@ const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const defer = require("devtools/shared/defer");
 const { accessibilitySpec } = require("devtools/shared/specs/accessibility");
 
-loader.lazyRequireGetter(this, "AccessibleWalkerActor", "devtools/server/actors/accessibility/walker", true);
+loader.lazyRequireGetter(
+  this,
+  "AccessibleWalkerActor",
+  "devtools/server/actors/accessibility/walker",
+  true
+);
 loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
 
 const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
@@ -35,9 +40,14 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
       });
 
       this.onMessage = this.onMessage.bind(this);
-      this.messageManager.addMessageListener(`${this._msgName}:event`, this.onMessage);
+      this.messageManager.addMessageListener(
+        `${this._msgName}:event`,
+        this.onMessage
+      );
     } else {
-      this.userPref = Services.prefs.getIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED);
+      this.userPref = Services.prefs.getIntPref(
+        PREF_ACCESSIBILITY_FORCE_DISABLED
+      );
       Services.obs.addObserver(this, "a11y-consumers-changed");
       Services.prefs.addObserver(PREF_ACCESSIBILITY_FORCE_DISABLED, this);
       this.initializedDeferred.resolve();
@@ -88,7 +98,8 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
   get messageManager() {
     if (!DebuggerServer.isInChildProcess) {
       throw new Error(
-        "Message manager should only be used when actor is in child process.");
+        "Message manager should only be used when actor is in child process."
+      );
     }
 
     return this.conn.parentMessageManager;
@@ -107,7 +118,9 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
         // parent process and the service was shut down there). We need to sync the two
         // services if possible.
         if (!data.enabled && this.enabled && data.canBeEnabled) {
-          this.messageManager.sendAsyncMessage(this._msgName, { action: "enable" });
+          this.messageManager.sendAsyncMessage(this._msgName, {
+            action: "enable",
+          });
         }
 
         this.initializedDeferred.resolve();
@@ -159,7 +172,9 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
     this.disabling = true;
     const shutdownPromise = this.once("shutdown");
     if (DebuggerServer.isInChildProcess) {
-      this.messageManager.sendAsyncMessage(this._msgName, { action: "disable" });
+      this.messageManager.sendAsyncMessage(this._msgName, {
+        action: "disable",
+      });
     } else {
       // Set PREF_ACCESSIBILITY_FORCE_DISABLED to 1 to force disable
       // accessibility service. This is the only way to guarantee an immediate
@@ -173,7 +188,10 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
       // set value. This will not start accessibility service until the user
       // activates it again. It simply ensures that accessibility service can
       // start again (when value is below 1).
-      Services.prefs.setIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED, this.userPref);
+      Services.prefs.setIntPref(
+        PREF_ACCESSIBILITY_FORCE_DISABLED,
+        this.userPref
+      );
     }
 
     await shutdownPromise;
@@ -217,8 +235,11 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
       // set, we can no longer disable accessibility service.
       const { PlatformAPI } = JSON.parse(data);
       events.emit(this, "can-be-disabled-change", !PlatformAPI);
-    } else if (!this.disabling && topic === "nsPref:changed" &&
-               data === PREF_ACCESSIBILITY_FORCE_DISABLED) {
+    } else if (
+      !this.disabling &&
+      topic === "nsPref:changed" &&
+      data === PREF_ACCESSIBILITY_FORCE_DISABLED
+    ) {
       // PREF_ACCESSIBILITY_FORCE_DISABLED preference change event. When set to
       // >=1, it means that the user wants to disable accessibility service and
       // prevent it from starting in the future. Note: we also check
@@ -262,8 +283,10 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
 
     Services.obs.removeObserver(this, "a11y-init-or-shutdown");
     if (DebuggerServer.isInChildProcess) {
-      this.messageManager.removeMessageListener(`${this._msgName}:event`,
-                                                this.onMessage);
+      this.messageManager.removeMessageListener(
+        `${this._msgName}:event`,
+        this.onMessage
+      );
     } else {
       Services.obs.removeObserver(this, "a11y-consumers-changed");
       Services.prefs.removeObserver(PREF_ACCESSIBILITY_FORCE_DISABLED, this);

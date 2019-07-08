@@ -1,4 +1,3 @@
-
 var prefs;
 var spdypref;
 var http2pref;
@@ -6,7 +5,9 @@ var origin;
 var rcwnpref;
 
 function run_test() {
-  var env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+  var env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   var h2Port = env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
@@ -21,18 +22,22 @@ function run_test() {
 
   prefs.setBoolPref("network.http.spdy.enabled", true);
   prefs.setBoolPref("network.http.spdy.enabled.http2", true);
-  prefs.setCharPref("network.dns.localDomains", "foo.example.com, bar.example.com");
+  prefs.setCharPref(
+    "network.dns.localDomains",
+    "foo.example.com, bar.example.com"
+  );
   // Disable rcwn to make cache behavior deterministic.
   prefs.setBoolPref("network.http.rcwn.enabled", false);
 
   // The moz-http2 cert is for foo.example.com and is signed by http2-ca.pem
   // so add that cert to the trust list as a signing cert.  // the foo.example.com domain name.
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                  .getService(Ci.nsIX509CertDB);
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
   origin = "https://foo.example.com:" + h2Port;
-  dump ("origin - " + origin + "\n");
+  dump("origin - " + origin + "\n");
   doTest1();
 }
 
@@ -46,7 +51,7 @@ function resetPrefs() {
 function makeChan(origin, path) {
   return NetUtil.newChannel({
     uri: origin + path,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   }).QueryInterface(Ci.nsIHttpChannel);
 }
 
@@ -61,7 +66,9 @@ Listener.prototype = {
 
     if (expectPass) {
       if (!Components.isSuccessCode(request.status)) {
-        do_throw("Channel should have a success code! (" + request.status + ")");
+        do_throw(
+          "Channel should have a success code! (" + request.status + ")"
+        );
       }
       Assert.equal(request.responseStatus, 200);
     } else {
@@ -74,25 +81,26 @@ Listener.prototype = {
   },
 
   onStopRequest: function testOnStopRequest(request, status) {
-      if (expectConditional) {
-        Assert.equal(request.getResponseHeader("x-conditional"), "true");
-      } else {
-	  try { Assert.notEqual(request.getResponseHeader("x-conditional"), "true"); }
-	  catch (e) { Assert.ok(true); }
+    if (expectConditional) {
+      Assert.equal(request.getResponseHeader("x-conditional"), "true");
+    } else {
+      try {
+        Assert.notEqual(request.getResponseHeader("x-conditional"), "true");
+      } catch (e) {
+        Assert.ok(true);
+      }
     }
     nextTest();
     do_test_finished();
-  }
+  },
 };
 
-function testsDone()
-{
+function testsDone() {
   dump("testDone\n");
   resetPrefs();
 }
 
-function doTest1()
-{
+function doTest1() {
   dump("execute doTest1 - resource without immutable. initial request\n");
   do_test_pending();
   expectConditional = false;
@@ -102,8 +110,7 @@ function doTest1()
   chan.asyncOpen(listener);
 }
 
-function doTest2()
-{
+function doTest2() {
   dump("execute doTest2 - resource without immutable. reload\n");
   do_test_pending();
   expectConditional = true;
@@ -114,8 +121,7 @@ function doTest2()
   chan.asyncOpen(listener);
 }
 
-function doTest3()
-{
+function doTest3() {
   dump("execute doTest3 - resource without immutable. shift reload\n");
   do_test_pending();
   expectConditional = false;
@@ -126,8 +132,7 @@ function doTest3()
   chan.asyncOpen(listener);
 }
 
-function doTest4()
-{
+function doTest4() {
   dump("execute doTest1 - resource with immutable. initial request\n");
   do_test_pending();
   expectConditional = false;
@@ -137,8 +142,7 @@ function doTest4()
   chan.asyncOpen(listener);
 }
 
-function doTest5()
-{
+function doTest5() {
   dump("execute doTest5 - resource with immutable. reload\n");
   do_test_pending();
   expectConditional = false;
@@ -149,8 +153,7 @@ function doTest5()
   chan.asyncOpen(listener);
 }
 
-function doTest6()
-{
+function doTest6() {
   dump("execute doTest3 - resource with immutable. shift reload\n");
   do_test_pending();
   expectConditional = false;
@@ -160,5 +163,3 @@ function doTest6()
   chan.loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
   chan.asyncOpen(listener);
 }
-
-

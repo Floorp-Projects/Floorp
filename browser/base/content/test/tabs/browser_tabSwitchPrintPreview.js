@@ -12,16 +12,44 @@ add_task(async function() {
     let tab = BrowserTestUtils.addTab(gBrowser, kURL2);
     document.getElementById("cmd_printPreview").doCommand();
     gBrowser.selectedTab = tab;
-    await BrowserTestUtils.waitForCondition(() => gInPrintPreviewMode, "should be in print preview mode");
-    isnot(gBrowser.selectedTab, tab, "Selected tab should not be the tab we added");
-    is(gBrowser.selectedTab, PrintPreviewListener._printPreviewTab, "Selected tab should be the print preview tab");
+    await BrowserTestUtils.waitForCondition(
+      () => gInPrintPreviewMode,
+      "should be in print preview mode"
+    );
+    isnot(
+      gBrowser.selectedTab,
+      tab,
+      "Selected tab should not be the tab we added"
+    );
+    is(
+      gBrowser.selectedTab,
+      PrintPreviewListener._printPreviewTab,
+      "Selected tab should be the print preview tab"
+    );
     gBrowser.selectedTab = tab;
-    isnot(gBrowser.selectedTab, tab, "Selected tab should still not be the tab we added");
-    is(gBrowser.selectedTab, PrintPreviewListener._printPreviewTab, "Selected tab should still be the print preview tab");
-    let tabSwitched = BrowserTestUtils.switchTab(gBrowser, () => { PrintUtils.exitPrintPreview(); });
-    await BrowserTestUtils.waitForCondition(() => !gInPrintPreviewMode, "should no longer be in print preview mode");
+    isnot(
+      gBrowser.selectedTab,
+      tab,
+      "Selected tab should still not be the tab we added"
+    );
+    is(
+      gBrowser.selectedTab,
+      PrintPreviewListener._printPreviewTab,
+      "Selected tab should still be the print preview tab"
+    );
+    let tabSwitched = BrowserTestUtils.switchTab(gBrowser, () => {
+      PrintUtils.exitPrintPreview();
+    });
+    await BrowserTestUtils.waitForCondition(
+      () => !gInPrintPreviewMode,
+      "should no longer be in print preview mode"
+    );
     await tabSwitched;
-    is(gBrowser.selectedTab, originalTab, "Selected tab should be back to the original tab that we print previewed");
+    is(
+      gBrowser.selectedTab,
+      originalTab,
+      "Selected tab should be back to the original tab that we print previewed"
+    );
     BrowserTestUtils.removeTab(tab);
   });
 });

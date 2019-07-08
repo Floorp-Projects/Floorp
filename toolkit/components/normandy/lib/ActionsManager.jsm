@@ -1,15 +1,24 @@
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {LogManager} = ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { LogManager } = ChromeUtils.import(
+  "resource://normandy/lib/LogManager.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonStudyAction: "resource://normandy/actions/AddonStudyAction.jsm",
-  BranchedAddonStudyAction: "resource://normandy/actions/BranchedAddonStudyAction.jsm",
+  BranchedAddonStudyAction:
+    "resource://normandy/actions/BranchedAddonStudyAction.jsm",
   ConsoleLogAction: "resource://normandy/actions/ConsoleLogAction.jsm",
-  PreferenceExperimentAction: "resource://normandy/actions/PreferenceExperimentAction.jsm",
-  PreferenceRollbackAction: "resource://normandy/actions/PreferenceRollbackAction.jsm",
-  PreferenceRolloutAction: "resource://normandy/actions/PreferenceRolloutAction.jsm",
+  PreferenceExperimentAction:
+    "resource://normandy/actions/PreferenceExperimentAction.jsm",
+  PreferenceRollbackAction:
+    "resource://normandy/actions/PreferenceRollbackAction.jsm",
+  PreferenceRolloutAction:
+    "resource://normandy/actions/PreferenceRolloutAction.jsm",
   ShowHeartbeatAction: "resource://normandy/actions/ShowHeartbeatAction.jsm",
-  SinglePreferenceExperimentAction: "resource://normandy/actions/SinglePreferenceExperimentAction.jsm",
+  SinglePreferenceExperimentAction:
+    "resource://normandy/actions/SinglePreferenceExperimentAction.jsm",
   Uptake: "resource://normandy/lib/Uptake.jsm",
 });
 

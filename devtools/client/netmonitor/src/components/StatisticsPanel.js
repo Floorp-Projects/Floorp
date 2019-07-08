@@ -6,21 +6,31 @@
 
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { FILTER_TAGS } = require("../constants");
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/redux/visibility-handler-connect");
+const {
+  connect,
+} = require("devtools/client/shared/redux/visibility-handler-connect");
 const { Chart } = require("devtools/client/shared/widgets/Chart");
 const { PluralForm } = require("devtools/shared/plural-form");
 const Actions = require("../actions/index");
 const { Filters } = require("../utils/filter-predicates");
-const { getSizeWithDecimals, getTimeWithDecimals } = require("../utils/format-utils");
+const {
+  getSizeWithDecimals,
+  getTimeWithDecimals,
+} = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
 const { getPerformanceAnalysisURL } = require("../utils/mdn-utils");
 const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
 
 // Components
-const MDNLink = createFactory(require("devtools/client/shared/components/MdnLink"));
+const MDNLink = createFactory(
+  require("devtools/client/shared/components/MdnLink")
+);
 
 const { button, div } = dom;
 const MediaQueryList = window.matchMedia("(min-width: 700px)");
@@ -67,7 +77,7 @@ class StatisticsPanel extends Component {
 
   componentDidMount() {
     const { requests, connector } = this.props;
-    requests.forEach((request) => {
+    requests.forEach(request => {
       fetchNetworkUpdatePacket(connector.requestData, request, [
         "eventTimings",
         "responseHeaders",
@@ -77,7 +87,7 @@ class StatisticsPanel extends Component {
 
   componentWillReceiveProps(nextProps) {
     const { requests, connector } = nextProps;
-    requests.forEach((request) => {
+    requests.forEach(request => {
       fetchNetworkUpdatePacket(connector.requestData, request, [
         "eventTimings",
         "responseHeaders",
@@ -89,10 +99,17 @@ class StatisticsPanel extends Component {
     MediaQueryList.addListener(this.onLayoutChange);
 
     const { requests } = this.props;
-    const ready = requests && requests.length && requests.every((req) =>
-      req.contentSize !== undefined && req.mimeType && req.responseHeaders &&
-      req.status !== undefined && req.totalTime !== undefined
-    );
+    const ready =
+      requests &&
+      requests.length &&
+      requests.every(
+        req =>
+          req.contentSize !== undefined &&
+          req.mimeType &&
+          req.responseHeaders &&
+          req.status !== undefined &&
+          req.totalTime !== undefined
+      );
 
     this.createChart({
       id: "primedCacheChart",
@@ -159,35 +176,46 @@ class StatisticsPanel extends Component {
       },
       data,
       strings: {
-        size: (value) =>
+        size: value =>
           L10N.getFormatStr("charts.sizeKB", getSizeWithDecimals(value / 1024)),
-        transferredSize: (value) =>
-          L10N.getFormatStr("charts.transferredSizeKB",
-            getSizeWithDecimals(value / 1024)),
-        time: (value) =>
+        transferredSize: value =>
+          L10N.getFormatStr(
+            "charts.transferredSizeKB",
+            getSizeWithDecimals(value / 1024)
+          ),
+        time: value =>
           L10N.getFormatStr("charts.totalS", getTimeWithDecimals(value / 1000)),
-        nonBlockingTime: (value) =>
+        nonBlockingTime: value =>
           L10N.getFormatStr("charts.totalS", getTimeWithDecimals(value / 1000)),
       },
       totals: {
-        cached: (total) => L10N.getFormatStr("charts.totalCached", total),
-        count: (total) => L10N.getFormatStr("charts.totalCount", total),
-        size: (total) =>
-          L10N.getFormatStr("charts.totalSize", getSizeWithDecimals(total / 1024)),
+        cached: total => L10N.getFormatStr("charts.totalCached", total),
+        count: total => L10N.getFormatStr("charts.totalCount", total),
+        size: total =>
+          L10N.getFormatStr(
+            "charts.totalSize",
+            getSizeWithDecimals(total / 1024)
+          ),
         transferredSize: total =>
-          L10N.getFormatStr("charts.totalTransferredSize",
-            getSizeWithDecimals(total / 1024)),
-        time: (total) => {
+          L10N.getFormatStr(
+            "charts.totalTransferredSize",
+            getSizeWithDecimals(total / 1024)
+          ),
+        time: total => {
           const seconds = total / 1000;
           const string = getTimeWithDecimals(seconds);
-          return PluralForm.get(seconds,
-            L10N.getStr("charts.totalSeconds")).replace("#1", string);
+          return PluralForm.get(
+            seconds,
+            L10N.getStr("charts.totalSeconds")
+          ).replace("#1", string);
         },
-        nonBlockingTime: (total) => {
+        nonBlockingTime: total => {
           const seconds = total / 1000;
           const string = getTimeWithDecimals(seconds);
-          return PluralForm.get(seconds,
-            L10N.getStr("charts.totalSecondsNonBlocking")).replace("#1", string);
+          return PluralForm.get(
+            seconds,
+            L10N.getStr("charts.totalSecondsNonBlocking")
+          ).replace("#1", string);
         },
       },
       sorted: true,
@@ -210,7 +238,7 @@ class StatisticsPanel extends Component {
   }
 
   sanitizeChartDataSource(requests, emptyCache) {
-    const data = FILTER_TAGS.map((type) => ({
+    const data = FILTER_TAGS.map(type => ({
       cached: 0,
       count: 0,
       label: type,
@@ -258,7 +286,7 @@ class StatisticsPanel extends Component {
         data[type].size += request.contentSize || 0;
         data[type].transferredSize += request.transferredSize || 0;
         const nonBlockingTime =
-           request.eventTimings.totalTime - request.eventTimings.timings.blocked;
+          request.eventTimings.totalTime - request.eventTimings.timings.blocked;
         data[type].nonBlockingTime += nonBlockingTime || 0;
       } else {
         data[type].cached++;
@@ -285,7 +313,9 @@ class StatisticsPanel extends Component {
     }
 
     const list = responseHeaders.headers;
-    const cacheControl = list.find(e => e.name.toLowerCase() === "cache-control");
+    const cacheControl = list.find(
+      e => e.name.toLowerCase() === "cache-control"
+    );
     const expires = list.find(e => e.name.toLowerCase() === "expires");
 
     // Check the "Cache-Control" header for a maximum age value.
@@ -323,31 +353,38 @@ class StatisticsPanel extends Component {
       splitterClassName.push("devtools-horizontal-splitter");
     }
 
-    return (
-      div({ className: "statistics-panel" },
-        button({
+    return div(
+      { className: "statistics-panel" },
+      button(
+        {
           className: "back-button devtools-button",
           "data-text-only": "true",
           title: BACK_BUTTON,
           onClick: closeStatistics,
-        }, BACK_BUTTON),
-        div({ className: "charts-container" },
-          div({ ref: "primedCacheChart", className: "charts primed-cache-chart" }),
-          div({ className: splitterClassName.join(" ") }),
-          div({ ref: "emptyCacheChart", className: "charts empty-cache-chart" }),
-        ),
+        },
+        BACK_BUTTON
+      ),
+      div(
+        { className: "charts-container" },
+        div({
+          ref: "primedCacheChart",
+          className: "charts primed-cache-chart",
+        }),
+        div({ className: splitterClassName.join(" ") }),
+        div({ ref: "emptyCacheChart", className: "charts empty-cache-chart" })
       )
     );
   }
 }
 
 module.exports = connect(
-  (state) => ({
+  state => ({
     requests: [...state.requests.requests.values()],
   }),
   (dispatch, props) => ({
-    closeStatistics: () => dispatch(Actions.openStatistics(props.connector, false)),
-    enableRequestFilterTypeOnly: (label) =>
+    closeStatistics: () =>
+      dispatch(Actions.openStatistics(props.connector, false)),
+    enableRequestFilterTypeOnly: label =>
       dispatch(Actions.enableRequestFilterTypeOnly(label)),
   })
 )(StatisticsPanel);

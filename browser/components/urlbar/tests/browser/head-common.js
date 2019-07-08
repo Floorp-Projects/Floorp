@@ -1,6 +1,8 @@
 /* eslint-env mozilla/frame-script */
 
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   HttpServer: "resource://testing-common/httpd.js",
@@ -13,8 +15,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "TEST_BASE_URL", () =>
-  getRootDirectory(gTestPath).replace("chrome://mochitests/content",
-                                      "https://example.com"));
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "https://example.com"
+  )
+);
 
 SearchTestUtils.init(Assert, registerCleanupFunction);
 
@@ -23,7 +28,10 @@ SearchTestUtils.init(Assert, registerCleanupFunction);
  * @param {object} details {scheme, host, port}
  * @param {function} taskFn The task to run, gets the server as argument.
  */
-async function withHttpServer(details = { scheme: "http", host: "localhost", port: -1}, taskFn) {
+async function withHttpServer(
+  details = { scheme: "http", host: "localhost", port: -1 },
+  taskFn
+) {
   let server = new HttpServer();
   let url = `${details.scheme}://${details.host}:${details.port}`;
   try {
@@ -35,8 +43,10 @@ async function withHttpServer(details = { scheme: "http", host: "localhost", por
     } catch (ex) {
       throw new Error("We can't launch our http server successfully. " + ex);
     }
-    Assert.ok(server.identity.has(details.scheme, details.host, details.port),
-              `${url} is listening.`);
+    Assert.ok(
+      server.identity.has(details.scheme, details.host, details.port),
+      `${url} is listening.`
+    );
     try {
       await taskFn(server);
     } catch (ex) {
@@ -55,9 +65,11 @@ function promiseSearchComplete(win = window, dontAnimate = false) {
   return UrlbarTestUtils.promiseSearchComplete(win, dontAnimate);
 }
 
-function promiseAutocompleteResultPopup(value,
-                                        win = window,
-                                        fireInputEvent = false) {
+function promiseAutocompleteResultPopup(
+  value,
+  win = window,
+  fireInputEvent = false
+) {
   return UrlbarTestUtils.promiseAutocompleteResultPopup({
     window: win,
     waitForFocus,

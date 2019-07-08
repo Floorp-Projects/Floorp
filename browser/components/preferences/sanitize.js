@@ -5,7 +5,10 @@
 
 /* import-globals-from ../../../toolkit/content/preferencesBindings.js */
 
-document.documentElement.addEventListener("dialoghelp", window.top.openPrefsHelp);
+document.documentElement.addEventListener(
+  "dialoghelp",
+  window.top.openPrefsHelp
+);
 
 Preferences.addAll([
   { id: "privacy.clearOnShutdown.history", type: "bool" },
@@ -22,7 +25,10 @@ var gSanitizeDialog = Object.freeze({
   init() {
     this.onClearHistoryChanged();
 
-    Preferences.get("privacy.clearOnShutdown.history").on("change", this.onClearHistoryChanged.bind(this));
+    Preferences.get("privacy.clearOnShutdown.history").on(
+      "change",
+      this.onClearHistoryChanged.bind(this)
+    );
   },
 
   onClearHistoryChanged() {

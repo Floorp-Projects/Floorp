@@ -15,12 +15,15 @@ LocationChangeListener.prototype = {
     this.wasSynthetic = this.browser.isSyntheticDocument;
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIWebProgressListener,
+    Ci.nsISupportsWeakReference,
+  ]),
 };
 
-const FILES = gTestPath.replace("browser_isSynthetic.js", "")
-                       .replace("chrome://mochitests/content/", "http://example.com/");
+const FILES = gTestPath
+  .replace("browser_isSynthetic.js", "")
+  .replace("chrome://mochitests/content/", "http://example.com/");
 
 function waitForPageShow(browser) {
   return ContentTask.spawn(browser, null, async function() {

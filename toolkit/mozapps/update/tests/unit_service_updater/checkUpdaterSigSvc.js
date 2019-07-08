@@ -19,21 +19,35 @@ function run_test() {
   let updaterBin = binDir.clone();
   updaterBin.append(FILE_UPDATER_BIN);
 
-  debugDump("Launching maintenance service bin: " +
-            maintenanceServiceBin.path + " to check updater: " +
-            updaterBin.path + " signature.");
+  debugDump(
+    "Launching maintenance service bin: " +
+      maintenanceServiceBin.path +
+      " to check updater: " +
+      updaterBin.path +
+      " signature."
+  );
 
   // Bypass the manifest and run as invoker
   gEnv.set("__COMPAT_LAYER", "RunAsInvoker");
 
   let dummyInstallPath = "---";
-  let maintenanceServiceBinArgs = ["check-cert", dummyInstallPath,
-                                   updaterBin.path];
-  let maintenanceServiceBinProcess = Cc["@mozilla.org/process/util;1"].
-                                     createInstance(Ci.nsIProcess);
+  let maintenanceServiceBinArgs = [
+    "check-cert",
+    dummyInstallPath,
+    updaterBin.path,
+  ];
+  let maintenanceServiceBinProcess = Cc[
+    "@mozilla.org/process/util;1"
+  ].createInstance(Ci.nsIProcess);
   maintenanceServiceBinProcess.init(maintenanceServiceBin);
-  maintenanceServiceBinProcess.run(true, maintenanceServiceBinArgs,
-                                   maintenanceServiceBinArgs.length);
-  Assert.equal(maintenanceServiceBinProcess.exitValue, 0,
-               "the maintenance service exit value should be 0");
+  maintenanceServiceBinProcess.run(
+    true,
+    maintenanceServiceBinArgs,
+    maintenanceServiceBinArgs.length
+  );
+  Assert.equal(
+    maintenanceServiceBinProcess.exitValue,
+    0,
+    "the maintenance service exit value should be 0"
+  );
 }

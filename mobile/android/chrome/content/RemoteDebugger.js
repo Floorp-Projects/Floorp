@@ -26,13 +26,13 @@ var RemoteDebugger = {
     USBRemoteDebugger.init();
     WiFiRemoteDebugger.init();
 
-    const listener = (event) => {
+    const listener = event => {
       if (event.target !== aWindow) {
         return;
       }
 
-      const newType = (event.type === "activate") ? "navigator:browser"
-                                                  : "navigator:geckoview";
+      const newType =
+        event.type === "activate" ? "navigator:browser" : "navigator:geckoview";
       if (this._windowType === newType) {
         return;
       }
@@ -83,7 +83,7 @@ var RemoteDebugger = {
     } else {
       this._promptingForAllow = this._promptForTCP(session);
     }
-    this._promptingForAllow.then(() => this._promptingForAllow = null);
+    this._promptingForAllow.then(() => (this._promptingForAllow = null));
 
     return this._promptingForAllow;
   },
@@ -96,9 +96,13 @@ var RemoteDebugger = {
     }
 
     return new Promise(resolve => {
-      let title = Strings.browser.GetStringFromName("remoteIncomingPromptTitle");
+      let title = Strings.browser.GetStringFromName(
+        "remoteIncomingPromptTitle"
+      );
       let msg = Strings.browser.GetStringFromName("remoteIncomingPromptUSB");
-      let allow = Strings.browser.GetStringFromName("remoteIncomingPromptAllow");
+      let allow = Strings.browser.GetStringFromName(
+        "remoteIncomingPromptAllow"
+      );
       let deny = Strings.browser.GetStringFromName("remoteIncomingPromptDeny");
 
       // Make prompt. Note: button order is in reverse.
@@ -107,7 +111,7 @@ var RemoteDebugger = {
         hint: "remotedebug",
         title: title,
         message: msg,
-        buttons: [ allow, deny ],
+        buttons: [allow, deny],
         priority: 1,
       });
 
@@ -130,13 +134,17 @@ var RemoteDebugger = {
     }
 
     return new Promise(resolve => {
-      let title = Strings.browser.GetStringFromName("remoteIncomingPromptTitle");
-      let msg = Strings.browser.formatStringFromName("remoteIncomingPromptTCP", [
-        session.client.host,
-        session.client.port,
-      ]);
+      let title = Strings.browser.GetStringFromName(
+        "remoteIncomingPromptTitle"
+      );
+      let msg = Strings.browser.formatStringFromName(
+        "remoteIncomingPromptTCP",
+        [session.client.host, session.client.port]
+      );
       let scan = Strings.browser.GetStringFromName("remoteIncomingPromptScan");
-      let scanAndRemember = Strings.browser.GetStringFromName("remoteIncomingPromptScanAndRemember");
+      let scanAndRemember = Strings.browser.GetStringFromName(
+        "remoteIncomingPromptScanAndRemember"
+      );
       let deny = Strings.browser.GetStringFromName("remoteIncomingPromptDeny");
 
       // Make prompt. Note: button order is in reverse.
@@ -145,7 +153,7 @@ var RemoteDebugger = {
         hint: "remotedebug",
         title: title,
         message: msg,
-        buttons: [ scan, scanAndRemember, deny ],
+        buttons: [scan, scanAndRemember, deny],
         priority: 1,
       });
 
@@ -182,24 +190,33 @@ var RemoteDebugger = {
 
     this._receivingOOB = WindowEventDispatcher.sendRequestForResult({
       type: "DevToolsAuth:Scan",
-    }).then(data => {
-      return JSON.parse(data);
-    }, () => {
-      let title = Strings.browser.GetStringFromName("remoteQRScanFailedPromptTitle");
-      let msg = Strings.browser.GetStringFromName("remoteQRScanFailedPromptMessage");
-      let ok = Strings.browser.GetStringFromName("remoteQRScanFailedPromptOK");
-      let prompt = new Prompt({
-        window: null,
-        hint: "remotedebug",
-        title: title,
-        message: msg,
-        buttons: [ ok ],
-        priority: 1,
-      });
-      prompt.show();
-    });
+    }).then(
+      data => {
+        return JSON.parse(data);
+      },
+      () => {
+        let title = Strings.browser.GetStringFromName(
+          "remoteQRScanFailedPromptTitle"
+        );
+        let msg = Strings.browser.GetStringFromName(
+          "remoteQRScanFailedPromptMessage"
+        );
+        let ok = Strings.browser.GetStringFromName(
+          "remoteQRScanFailedPromptOK"
+        );
+        let prompt = new Prompt({
+          window: null,
+          hint: "remotedebug",
+          title: title,
+          message: msg,
+          buttons: [ok],
+          priority: 1,
+        });
+        prompt.show();
+      }
+    );
 
-    this._receivingOOB.then(() => this._receivingOOB = null);
+    this._receivingOOB.then(() => (this._receivingOOB = null));
 
     return this._receivingOOB;
   },
@@ -209,7 +226,9 @@ var RemoteDebugger = {
 
     // Add browser and Fennec specific actors
     DebuggerServer.registerAllActors();
-    const { createRootActor } = require("resource://gre/modules/dbg-browser-actors.js");
+    const {
+      createRootActor,
+    } = require("resource://gre/modules/dbg-browser-actors.js");
     DebuggerServer.setRootActor(createRootActor);
 
     // Allow debugging of chrome for any process
@@ -220,13 +239,12 @@ var RemoteDebugger = {
   },
 };
 
-RemoteDebugger.allowConnection =
-  RemoteDebugger.allowConnection.bind(RemoteDebugger);
-RemoteDebugger.receiveOOB =
-  RemoteDebugger.receiveOOB.bind(RemoteDebugger);
+RemoteDebugger.allowConnection = RemoteDebugger.allowConnection.bind(
+  RemoteDebugger
+);
+RemoteDebugger.receiveOOB = RemoteDebugger.receiveOOB.bind(RemoteDebugger);
 
 var USBRemoteDebugger = {
-
   init() {
     Services.prefs.addObserver("devtools.", this);
 
@@ -242,8 +260,10 @@ var USBRemoteDebugger = {
 
     switch (data) {
       case "devtools.remote.usb.enabled":
-        Services.prefs.setBoolPref("devtools.debugger.remote-enabled",
-                                   RemoteDebugger.isAnyEnabled);
+        Services.prefs.setBoolPref(
+          "devtools.debugger.remote-enabled",
+          RemoteDebugger.isAnyEnabled
+        );
         if (this.isEnabled) {
           this.start();
         } else {
@@ -301,11 +321,9 @@ var USBRemoteDebugger = {
       dump("Unable to stop USB debugger server: " + e);
     }
   },
-
 };
 
 var WiFiRemoteDebugger = {
-
   init() {
     Services.prefs.addObserver("devtools.", this);
 
@@ -321,13 +339,17 @@ var WiFiRemoteDebugger = {
 
     switch (data) {
       case "devtools.remote.wifi.enabled":
-        Services.prefs.setBoolPref("devtools.debugger.remote-enabled",
-                                   RemoteDebugger.isAnyEnabled);
+        Services.prefs.setBoolPref(
+          "devtools.debugger.remote-enabled",
+          RemoteDebugger.isAnyEnabled
+        );
         // Allow remote debugging on non-local interfaces when WiFi debug is
         // enabled
         // TODO: Bug 1034411: Lock down to WiFi interface only
-        Services.prefs.setBoolPref("devtools.debugger.force-local",
-                                   !this.isEnabled);
+        Services.prefs.setBoolPref(
+          "devtools.debugger.force-local",
+          !this.isEnabled
+        );
         if (this.isEnabled) {
           this.start();
         } else {
@@ -381,5 +403,4 @@ var WiFiRemoteDebugger = {
       dump("Unable to stop WiFi debugger server: " + e);
     }
   },
-
 };

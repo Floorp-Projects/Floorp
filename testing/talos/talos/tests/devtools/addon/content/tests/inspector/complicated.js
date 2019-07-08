@@ -5,8 +5,13 @@
 "use strict";
 
 const { reloadInspectorAndLog } = require("./inspector-helpers");
-const { openToolboxAndLog, closeToolboxAndLog, testSetup,
-        testTeardown, COMPLICATED_URL } = require("../head");
+const {
+  openToolboxAndLog,
+  closeToolboxAndLog,
+  testSetup,
+  testTeardown,
+  COMPLICATED_URL,
+} = require("../head");
 
 module.exports = async function() {
   await testSetup(COMPLICATED_URL);

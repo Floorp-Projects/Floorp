@@ -18,7 +18,7 @@
  *         edited. These should be in order of priority, least
  *         important first.
  */
-function EditingSession({inspector, doc, elementRules}) {
+function EditingSession({ inspector, doc, elementRules }) {
   this._doc = doc;
   this._inspector = inspector;
   this._rules = elementRules;
@@ -111,12 +111,15 @@ EditingSession.prototype = {
       // Note that RuleRewriter doesn't support modifying several properties at
       // once, so we do this in a sequence here.
       const modifications = this._rules[0].startModifyingProperties(
-        this._inspector.cssProperties);
+        this._inspector.cssProperties
+      );
 
       // Remember the property so it can be reverted.
       if (!this._modifications.has(property.name)) {
-        this._modifications.set(property.name,
-          this.getPropertyFromRule(this._rules[0], property.name));
+        this._modifications.set(
+          property.name,
+          this.getPropertyFromRule(this._rules[0], property.name)
+        );
       }
 
       // Find the index of the property to be changed, or get the next index to
@@ -146,7 +149,8 @@ EditingSession.prototype = {
     // setProperties for information about why.
     for (const [property, value] of this._modifications) {
       const modifications = this._rules[0].startModifyingProperties(
-        this._inspector.cssProperties);
+        this._inspector.cssProperties
+      );
 
       // Find the index of the property to be reverted.
       let index = this.getPropertyIndex(property);

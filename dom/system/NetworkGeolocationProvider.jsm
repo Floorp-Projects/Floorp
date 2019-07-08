@@ -4,8 +4,10 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
@@ -50,9 +52,18 @@ function CachedRequest(loc, cellInfo, wifiList) {
   // Use only these values for equality
   // (the JSON will contain additional values in future)
   function makeCellKey(cell) {
-    return "" + cell.radio + ":" + cell.mobileCountryCode + ":" +
-    cell.mobileNetworkCode + ":" + cell.locationAreaCode + ":" +
-    cell.cellId;
+    return (
+      "" +
+      cell.radio +
+      ":" +
+      cell.mobileCountryCode +
+      ":" +
+      cell.mobileNetworkCode +
+      ":" +
+      cell.locationAreaCode +
+      ":" +
+      cell.cellId
+    );
   }
 
   let cells = new Set();
@@ -102,7 +113,7 @@ function CachedRequest(loc, cellInfo, wifiList) {
       }
     }
     let kPercentMatch = 0.5;
-    return common >= (Math.max(wifis.size, wifiList.length) * kPercentMatch);
+    return common >= Math.max(wifis.size, wifiList.length) * kPercentMatch;
   };
 
   this.isGeoip = function() {
@@ -120,7 +131,7 @@ function CachedRequest(loc, cellInfo, wifiList) {
   this.isWifiOnly = function() {
     return this.hasWifis() && !this.hasCells();
   };
- }
+}
 
 var gCachedRequest = null;
 var gDebugCacheReasoning = ""; // for logging the caching logic
@@ -139,7 +150,9 @@ function isCachedRequestMoreAccurateThanServerRequest(newCell, newWifiList) {
   let isNetworkRequestCacheEnabled = true;
   try {
     // Mochitest needs this pref to simulate request failure
-    isNetworkRequestCacheEnabled = Services.prefs.getBoolPref("geo.wifi.debug.requestCache.enabled");
+    isNetworkRequestCacheEnabled = Services.prefs.getBoolPref(
+      "geo.wifi.debug.requestCache.enabled"
+    );
     if (!isNetworkRequestCacheEnabled) {
       gCachedRequest = null;
     }
@@ -155,7 +168,11 @@ function isCachedRequestMoreAccurateThanServerRequest(newCell, newWifiList) {
     return true;
   }
 
-  if (newCell && newWifiList && (gCachedRequest.isCellOnly() || gCachedRequest.isWifiOnly())) {
+  if (
+    newCell &&
+    newWifiList &&
+    (gCachedRequest.isCellOnly() || gCachedRequest.isWifiOnly())
+  ) {
     gDebugCacheReasoning = "New req. is cell+wifi, cache only cell or wifi.";
     return false;
   }
@@ -165,7 +182,8 @@ function isCachedRequestMoreAccurateThanServerRequest(newCell, newWifiList) {
     // need to know if wifi is low accuracy. >5km would be VERY low accuracy,
     // it is worth trying the cell
     var isHighAccuracyWifi = gCachedRequest.location.coords.accuracy < 5000;
-    gDebugCacheReasoning = "Req. is cell, cache is wifi, isHigh:" + isHighAccuracyWifi;
+    gDebugCacheReasoning =
+      "Req. is cell, cache is wifi, isHigh:" + isHighAccuracyWifi;
     return isHighAccuracyWifi;
   }
 
@@ -179,7 +197,8 @@ function isCachedRequestMoreAccurateThanServerRequest(newCell, newWifiList) {
     hasEqualWifis = gCachedRequest.isWifiApproxEqual(newWifiList);
   }
 
-  gDebugCacheReasoning = "EqualCells:" + hasEqualCells + " EqualWifis:" + hasEqualWifis;
+  gDebugCacheReasoning =
+    "EqualCells:" + hasEqualCells + " EqualWifis:" + hasEqualWifis;
 
   if (gCachedRequest.isCellOnly()) {
     gDebugCacheReasoning += ", Cell only.";
@@ -190,11 +209,13 @@ function isCachedRequestMoreAccurateThanServerRequest(newCell, newWifiList) {
     gDebugCacheReasoning += ", Wifi only.";
     return true;
   } else if (gCachedRequest.isCellAndWifi()) {
-     gDebugCacheReasoning += ", Cache has Cell+Wifi.";
-    if ((hasEqualCells && hasEqualWifis) ||
-        (!newWifiList && hasEqualCells) ||
-        (!newCell && hasEqualWifis)) {
-     return true;
+    gDebugCacheReasoning += ", Cache has Cell+Wifi.";
+    if (
+      (hasEqualCells && hasEqualWifis) ||
+      (!newWifiList && hasEqualCells) ||
+      (!newCell && hasEqualWifis)
+    ) {
+      return true;
     }
   }
 
@@ -216,7 +237,7 @@ function WifiGeoCoordsObject(lat, lon, acc) {
 }
 
 WifiGeoCoordsObject.prototype = {
-  QueryInterface:  ChromeUtils.generateQI([Ci.nsIDOMGeoPositionCoords]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGeoPositionCoords]),
 };
 
 function WifiGeoPositionObject(lat, lng, acc) {
@@ -226,12 +247,18 @@ function WifiGeoPositionObject(lat, lng, acc) {
 }
 
 WifiGeoPositionObject.prototype = {
-  QueryInterface:   ChromeUtils.generateQI([Ci.nsIDOMGeoPosition]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGeoPosition]),
 };
 
 function WifiGeoPositionProvider() {
-  gLoggingEnabled = Services.prefs.getBoolPref("geo.wifi.logging.enabled", false);
-  gLocationRequestTimeout = Services.prefs.getIntPref("geo.wifi.timeToWaitBeforeSending", 5000);
+  gLoggingEnabled = Services.prefs.getBoolPref(
+    "geo.wifi.logging.enabled",
+    false
+  );
+  gLocationRequestTimeout = Services.prefs.getIntPref(
+    "geo.wifi.timeToWaitBeforeSending",
+    5000
+  );
   gWifiScanningEnabled = Services.prefs.getBoolPref("geo.wifi.scan", true);
 
   this.wifiService = null;
@@ -240,11 +267,13 @@ function WifiGeoPositionProvider() {
 }
 
 WifiGeoPositionProvider.prototype = {
-  classID:          Components.ID("{77DA64D3-7458-4920-9491-86CC9914F904}"),
-  QueryInterface:   ChromeUtils.generateQI([Ci.nsIGeolocationProvider,
-                                            Ci.nsIWifiListener,
-                                            Ci.nsITimerCallback,
-                                            Ci.nsIObserver]),
+  classID: Components.ID("{77DA64D3-7458-4920-9491-86CC9914F904}"),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIGeolocationProvider,
+    Ci.nsIWifiListener,
+    Ci.nsITimerCallback,
+    Ci.nsIObserver,
+  ]),
   listener: null,
 
   resetTimer() {
@@ -254,14 +283,17 @@ WifiGeoPositionProvider.prototype = {
     }
     // wifi thread triggers WifiGeoPositionProvider to proceed, with no wifi, do manual timeout
     this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this.timer.initWithCallback(this,
-                                gLocationRequestTimeout,
-                                this.timer.TYPE_REPEATING_SLACK);
+    this.timer.initWithCallback(
+      this,
+      gLocationRequestTimeout,
+      this.timer.TYPE_REPEATING_SLACK
+    );
   },
 
   startup() {
-    if (this.started)
+    if (this.started) {
       return;
+    }
 
     this.started = true;
 
@@ -269,7 +301,9 @@ WifiGeoPositionProvider.prototype = {
       if (this.wifiService) {
         this.wifiService.stopWatching(this);
       }
-      this.wifiService = Cc["@mozilla.org/wifi/monitor;1"].getService(Ci.nsIWifiMonitor);
+      this.wifiService = Cc["@mozilla.org/wifi/monitor;1"].getService(
+        Ci.nsIWifiMonitor
+      );
       this.wifiService.startWatching(this);
     }
 
@@ -305,8 +339,7 @@ WifiGeoPositionProvider.prototype = {
     this.started = false;
   },
 
-  setHighAccuracy(enable) {
-  },
+  setHighAccuracy(enable) {},
 
   onChange(accessPoints) {
     // we got some wifi data, rearm the timer.
@@ -327,12 +360,15 @@ WifiGeoPositionProvider.prototype = {
     }
 
     function encode(ap) {
-      return { "macAddress": ap.mac, "signalStrength": ap.signal };
+      return { macAddress: ap.mac, signalStrength: ap.signal };
     }
 
     let wifiData = null;
     if (accessPoints) {
-      wifiData = accessPoints.filter(isPublic).sort(sort).map(encode);
+      wifiData = accessPoints
+        .filter(isPublic)
+        .sort(sort)
+        .map(encode);
     }
     this.sendLocationRequest(wifiData);
   },
@@ -352,8 +388,10 @@ WifiGeoPositionProvider.prototype = {
       data.wifiAccessPoints = wifiData;
     }
 
-    let useCached = isCachedRequestMoreAccurateThanServerRequest(data.cellTowers,
-                                                                 data.wifiAccessPoints);
+    let useCached = isCachedRequestMoreAccurateThanServerRequest(
+      data.cellTowers,
+      data.wifiAccessPoints
+    );
 
     LOG("Use request cache:" + useCached + " reason:" + gDebugCacheReasoning);
 
@@ -389,21 +427,35 @@ WifiGeoPositionProvider.prototype = {
       notifyPositionUnavailable(this.listener);
     };
     xhr.onload = () => {
-      LOG("server returned status: " + xhr.status + " --> " + JSON.stringify(xhr.response));
-      if ((xhr.channel instanceof Ci.nsIHttpChannel && xhr.status != 200) ||
-          !xhr.response || !xhr.response.location) {
+      LOG(
+        "server returned status: " +
+          xhr.status +
+          " --> " +
+          JSON.stringify(xhr.response)
+      );
+      if (
+        (xhr.channel instanceof Ci.nsIHttpChannel && xhr.status != 200) ||
+        !xhr.response ||
+        !xhr.response.location
+      ) {
         notifyPositionUnavailable(this.listener);
         return;
       }
 
-      let newLocation = new WifiGeoPositionObject(xhr.response.location.lat,
-                                                  xhr.response.location.lng,
-                                                  xhr.response.accuracy);
+      let newLocation = new WifiGeoPositionObject(
+        xhr.response.location.lat,
+        xhr.response.location.lng,
+        xhr.response.accuracy
+      );
 
       if (this.listener) {
         this.listener.update(newLocation);
       }
-      gCachedRequest = new CachedRequest(newLocation, data.cellTowers, data.wifiAccessPoints);
+      gCachedRequest = new CachedRequest(
+        newLocation,
+        data.cellTowers,
+        data.wifiAccessPoints
+      );
     };
 
     var requestData = JSON.stringify(data);

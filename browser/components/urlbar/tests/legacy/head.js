@@ -4,7 +4,8 @@
 /* import-globals-from ../browser/head-common.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/components/urlbar/tests/legacy/head-common.js",
-  this);
+  this
+);
 
 function promisePopupShown(popup) {
   return BrowserTestUtils.waitForPopupEvent(popup, "shown");

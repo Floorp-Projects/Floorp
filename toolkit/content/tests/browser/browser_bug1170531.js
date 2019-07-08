@@ -13,9 +13,13 @@ add_task(async function() {
       return;
     }
 
-    menuPopup.addEventListener("popuphidden", function() {
-      executeSoon(aCallback);
-    }, {once: true});
+    menuPopup.addEventListener(
+      "popuphidden",
+      function() {
+        executeSoon(aCallback);
+      },
+      { once: true }
+    );
 
     executeSoon(function() {
       editMenu.open = false;
@@ -32,49 +36,71 @@ add_task(async function() {
       return;
     }
 
-    menuPopup.addEventListener("popupshown", function() {
-      executeSoon(aCallback);
-    }, {once: true});
+    menuPopup.addEventListener(
+      "popupshown",
+      function() {
+        executeSoon(aCallback);
+      },
+      { once: true }
+    );
 
     executeSoon(function() {
       editMenu.open = true;
     });
   };
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, async function(browser) {
-    let menu_cut_disabled, menu_copy_disabled;
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:blank" },
+    async function(browser) {
+      let menu_cut_disabled, menu_copy_disabled;
 
-    await BrowserTestUtils.loadURI(browser, "data:text/html,<div>hello!</div>");
-    await BrowserTestUtils.browserLoaded(browser);
-    browser.focus();
-    await new Promise(resolve => waitForFocus(resolve, window));
-    await new Promise(openMenu);
-    menu_cut_disabled = menuPopup.querySelector("#menu_cut").getAttribute("disabled") == "true";
-    is(menu_cut_disabled, false, "menu_cut should be enabled");
-    menu_copy_disabled = menuPopup.querySelector("#menu_copy").getAttribute("disabled") == "true";
-    is(menu_copy_disabled, false, "menu_copy should be enabled");
-    await new Promise(closeMenu);
+      await BrowserTestUtils.loadURI(
+        browser,
+        "data:text/html,<div>hello!</div>"
+      );
+      await BrowserTestUtils.browserLoaded(browser);
+      browser.focus();
+      await new Promise(resolve => waitForFocus(resolve, window));
+      await new Promise(openMenu);
+      menu_cut_disabled =
+        menuPopup.querySelector("#menu_cut").getAttribute("disabled") == "true";
+      is(menu_cut_disabled, false, "menu_cut should be enabled");
+      menu_copy_disabled =
+        menuPopup.querySelector("#menu_copy").getAttribute("disabled") ==
+        "true";
+      is(menu_copy_disabled, false, "menu_copy should be enabled");
+      await new Promise(closeMenu);
 
-    await BrowserTestUtils.loadURI(browser, "data:text/html,<div contentEditable='true'>hello!</div>");
-    await BrowserTestUtils.browserLoaded(browser);
-    browser.focus();
-    await new Promise(resolve => waitForFocus(resolve, window));
-    await new Promise(openMenu);
-    menu_cut_disabled = menuPopup.querySelector("#menu_cut").getAttribute("disabled") == "true";
-    is(menu_cut_disabled, false, "menu_cut should be enabled");
-    menu_copy_disabled = menuPopup.querySelector("#menu_copy").getAttribute("disabled") == "true";
-    is(menu_copy_disabled, false, "menu_copy should be enabled");
-    await new Promise(closeMenu);
+      await BrowserTestUtils.loadURI(
+        browser,
+        "data:text/html,<div contentEditable='true'>hello!</div>"
+      );
+      await BrowserTestUtils.browserLoaded(browser);
+      browser.focus();
+      await new Promise(resolve => waitForFocus(resolve, window));
+      await new Promise(openMenu);
+      menu_cut_disabled =
+        menuPopup.querySelector("#menu_cut").getAttribute("disabled") == "true";
+      is(menu_cut_disabled, false, "menu_cut should be enabled");
+      menu_copy_disabled =
+        menuPopup.querySelector("#menu_copy").getAttribute("disabled") ==
+        "true";
+      is(menu_copy_disabled, false, "menu_copy should be enabled");
+      await new Promise(closeMenu);
 
-    await BrowserTestUtils.loadURI(browser, "about:preferences");
-    await BrowserTestUtils.browserLoaded(browser);
-    browser.focus();
-    await new Promise(resolve => waitForFocus(resolve, window));
-    await new Promise(openMenu);
-    menu_cut_disabled = menuPopup.querySelector("#menu_cut").getAttribute("disabled") == "true";
-    is(menu_cut_disabled, true, "menu_cut should be disabled");
-    menu_copy_disabled = menuPopup.querySelector("#menu_copy").getAttribute("disabled") == "true";
-    is(menu_copy_disabled, true, "menu_copy should be disabled");
-    await new Promise(closeMenu);
-  });
+      await BrowserTestUtils.loadURI(browser, "about:preferences");
+      await BrowserTestUtils.browserLoaded(browser);
+      browser.focus();
+      await new Promise(resolve => waitForFocus(resolve, window));
+      await new Promise(openMenu);
+      menu_cut_disabled =
+        menuPopup.querySelector("#menu_cut").getAttribute("disabled") == "true";
+      is(menu_cut_disabled, true, "menu_cut should be disabled");
+      menu_copy_disabled =
+        menuPopup.querySelector("#menu_copy").getAttribute("disabled") ==
+        "true";
+      is(menu_copy_disabled, true, "menu_copy should be disabled");
+      await new Promise(closeMenu);
+    }
+  );
 });

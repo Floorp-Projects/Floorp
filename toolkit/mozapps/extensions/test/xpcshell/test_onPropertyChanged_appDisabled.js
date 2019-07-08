@@ -7,11 +7,13 @@ add_task(async function run_test() {
 
   let xpi = createAddon({
     id: ID,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "0.1",
-      maxVersion: "0.2",
-    }],
+    targetApplications: [
+      {
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "0.1",
+        maxVersion: "0.2",
+      },
+    ],
   });
   await manuallyInstall(xpi, AddonTestUtils.profileExtensions, ID);
 
@@ -30,16 +32,21 @@ add_task(async function run_test() {
   AddonManager.strictCompatibility = true;
   let [, properties] = await promise;
 
-  Assert.deepEqual(properties, ["appDisabled"],
-                   "Got onPropertyChanged for appDisabled");
+  Assert.deepEqual(
+    properties,
+    ["appDisabled"],
+    "Got onPropertyChanged for appDisabled"
+  );
   Assert.ok(addon.appDisabled);
 
   promise = promiseAddonEvent("onPropertyChanged");
   AddonManager.strictCompatibility = false;
   [, properties] = await promise;
 
-  Assert.deepEqual(properties, ["appDisabled"],
-                   "Got onPropertyChanged for appDisabled");
+  Assert.deepEqual(
+    properties,
+    ["appDisabled"],
+    "Got onPropertyChanged for appDisabled"
+  );
   Assert.ok(!addon.appDisabled);
 });
-

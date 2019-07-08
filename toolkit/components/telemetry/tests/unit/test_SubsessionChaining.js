@@ -9,8 +9,8 @@ ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-const MS_IN_ONE_HOUR  = 60 * 60 * 1000;
-const MS_IN_ONE_DAY   = 24 * MS_IN_ONE_HOUR;
+const MS_IN_ONE_HOUR = 60 * 60 * 1000;
+const MS_IN_ONE_DAY = 24 * MS_IN_ONE_HOUR;
 
 const PREF_BRANCH = "toolkit.telemetry.";
 
@@ -26,46 +26,92 @@ XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function() {
 var promiseValidateArchivedPings = async function(aExpectedReasons) {
   // The list of ping reasons which mark the session end (and must reset the subsession
   // count).
-  const SESSION_END_PING_REASONS = new Set([ REASON_ABORTED_SESSION, REASON_SHUTDOWN ]);
+  const SESSION_END_PING_REASONS = new Set([
+    REASON_ABORTED_SESSION,
+    REASON_SHUTDOWN,
+  ]);
 
   let list = await TelemetryArchive.promiseArchivedPingList();
 
   // We're just interested in the "main" pings.
   list = list.filter(p => p.type == "main");
 
-  Assert.equal(aExpectedReasons.length, list.length, "All the expected pings must be received.");
+  Assert.equal(
+    aExpectedReasons.length,
+    list.length,
+    "All the expected pings must be received."
+  );
 
   let previousPing = await TelemetryArchive.promiseArchivedPingById(list[0].id);
-  Assert.equal(aExpectedReasons.shift(), previousPing.payload.info.reason,
-               "Telemetry should only get pings with expected reasons.");
-  Assert.equal(previousPing.payload.info.previousSessionId, null,
-               "The first session must report a null previous session id.");
-  Assert.equal(previousPing.payload.info.previousSubsessionId, null,
-               "The first subsession must report a null previous subsession id.");
-  Assert.equal(previousPing.payload.info.profileSubsessionCounter, 1,
-               "profileSubsessionCounter must be 1 the first time.");
-  Assert.equal(previousPing.payload.info.subsessionCounter, 1,
-               "subsessionCounter must be 1 the first time.");
+  Assert.equal(
+    aExpectedReasons.shift(),
+    previousPing.payload.info.reason,
+    "Telemetry should only get pings with expected reasons."
+  );
+  Assert.equal(
+    previousPing.payload.info.previousSessionId,
+    null,
+    "The first session must report a null previous session id."
+  );
+  Assert.equal(
+    previousPing.payload.info.previousSubsessionId,
+    null,
+    "The first subsession must report a null previous subsession id."
+  );
+  Assert.equal(
+    previousPing.payload.info.profileSubsessionCounter,
+    1,
+    "profileSubsessionCounter must be 1 the first time."
+  );
+  Assert.equal(
+    previousPing.payload.info.subsessionCounter,
+    1,
+    "subsessionCounter must be 1 the first time."
+  );
 
   let expectedSubsessionCounter = 1;
   let expectedPreviousSessionId = previousPing.payload.info.sessionId;
 
   for (let i = 1; i < list.length; i++) {
-    let currentPing = await TelemetryArchive.promiseArchivedPingById(list[i].id);
+    let currentPing = await TelemetryArchive.promiseArchivedPingById(
+      list[i].id
+    );
     let currentInfo = currentPing.payload.info;
     let previousInfo = previousPing.payload.info;
-    info("Archive entry " + i + " - id: " + currentPing.id + ", reason: " + currentInfo.reason);
+    info(
+      "Archive entry " +
+        i +
+        " - id: " +
+        currentPing.id +
+        ", reason: " +
+        currentInfo.reason
+    );
 
-    Assert.equal(aExpectedReasons.shift(), currentInfo.reason,
-                 "Telemetry should only get pings with expected reasons.");
-    Assert.equal(currentInfo.previousSessionId, expectedPreviousSessionId,
-                 "Telemetry must correctly chain session identifiers.");
-    Assert.equal(currentInfo.previousSubsessionId, previousInfo.subsessionId,
-                 "Telemetry must correctly chain subsession identifiers.");
-    Assert.equal(currentInfo.profileSubsessionCounter, previousInfo.profileSubsessionCounter + 1,
-                 "Telemetry must correctly track the profile subsessions count.");
-    Assert.equal(currentInfo.subsessionCounter, expectedSubsessionCounter,
-                 "The subsession counter should be monotonically increasing.");
+    Assert.equal(
+      aExpectedReasons.shift(),
+      currentInfo.reason,
+      "Telemetry should only get pings with expected reasons."
+    );
+    Assert.equal(
+      currentInfo.previousSessionId,
+      expectedPreviousSessionId,
+      "Telemetry must correctly chain session identifiers."
+    );
+    Assert.equal(
+      currentInfo.previousSubsessionId,
+      previousInfo.subsessionId,
+      "Telemetry must correctly chain subsession identifiers."
+    );
+    Assert.equal(
+      currentInfo.profileSubsessionCounter,
+      previousInfo.profileSubsessionCounter + 1,
+      "Telemetry must correctly track the profile subsessions count."
+    );
+    Assert.equal(
+      currentInfo.subsessionCounter,
+      expectedSubsessionCounter,
+      "The subsession counter should be monotonically increasing."
+    );
 
     // Store the current ping as previous.
     previousPing = currentPing;
@@ -101,7 +147,7 @@ add_task(async function test_subsessionsChaining() {
 
   const PREF_TEST = PREF_BRANCH + "test.pref1";
   const PREFS_TO_WATCH = new Map([
-    [PREF_TEST, {what: TelemetryEnvironment.RECORD_PREF_VALUE}],
+    [PREF_TEST, { what: TelemetryEnvironment.RECORD_PREF_VALUE }],
   ]);
   Preferences.reset(PREF_TEST);
 
@@ -110,7 +156,7 @@ add_task(async function test_subsessionsChaining() {
   let now = fakeNow(2009, 9, 18, 0, 0, 0);
   let monotonicNow = fakeMonotonicNow(1000);
 
-  let moveClockForward = (minutes) => {
+  let moveClockForward = minutes => {
     let ms = minutes * MILLISECONDS_PER_MINUTE;
     now = fakeNow(futureDate(now, ms));
     monotonicNow = fakeMonotonicNow(monotonicNow + ms);
@@ -137,7 +183,7 @@ add_task(async function test_subsessionsChaining() {
   // with profileSubsessionCounter: 3, subsessionCounter: 1, subsessionId: C and
   // previousSubsessionId: B to be archived.
   let schedulerTickCallback = null;
-  fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
+  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
   await TelemetryController.testReset();
   moveClockForward(6);
   // Trigger the an aborted session ping save. When testing,we are not saving the aborted-session

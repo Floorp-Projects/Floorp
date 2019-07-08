@@ -22,28 +22,44 @@ add_task(async function() {
   const groupMessage = await waitFor(() => findMessage(hud, "GROUP"));
 
   is(hasVerticalOverflow(outputScroller), true, "output node overflows");
-  is(isScrolledToBottom(outputScroller), true, "output node is scrolled to the bottom");
+  is(
+    isScrolledToBottom(outputScroller),
+    true,
+    "output node is scrolled to the bottom"
+  );
 
   info("Expand the group");
   groupMessage.querySelector(".arrow").click();
   await waitFor(() => findMessage(hud, "in group"));
 
   is(hasVerticalOverflow(outputScroller), true, "output node overflows");
-  is(isScrolledToBottom(outputScroller), false,
-    "output node isn't scrolled to the bottom anymore");
+  is(
+    isScrolledToBottom(outputScroller),
+    false,
+    "output node isn't scrolled to the bottom anymore"
+  );
 
   info("Scroll to bottom");
   outputScroller.scrollTop = outputScroller.scrollHeight;
-  is(isScrolledToBottom(outputScroller), true, "output node is scrolled to the bottom");
+  is(
+    isScrolledToBottom(outputScroller),
+    true,
+    "output node is scrolled to the bottom"
+  );
 
-  info("Check that adding a message on an open group when scrolled to bottom scrolls " +
-    "to bottom");
+  info(
+    "Check that adding a message on an open group when scrolled to bottom scrolls " +
+      "to bottom"
+  );
   const onNewMessage = waitForMessage(hud, "new-message");
   ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.console.group("GROUP-2");
     content.console.log("new-message");
   });
   await onNewMessage;
-  is(isScrolledToBottom(outputScroller), true,
-    "output node is scrolled to the bottom after adding message in group");
+  is(
+    isScrolledToBottom(outputScroller),
+    true,
+    "output node is scrolled to the bottom after adding message in group"
+  );
 });

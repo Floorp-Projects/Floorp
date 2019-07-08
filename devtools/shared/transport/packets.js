@@ -32,8 +32,9 @@ const StreamUtils = require("devtools/shared/transport/stream-utils");
 
 DevToolsUtils.defineLazyGetter(this, "unicodeConverter", () => {
   // eslint-disable-next-line no-shadow
-  const unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                           .createInstance(Ci.nsIScriptableUnicodeConverter);
+  const unicodeConverter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
   unicodeConverter.charset = "UTF-8";
   return unicodeConverter;
 });
@@ -63,20 +64,25 @@ function Packet(transport) {
  *         The parsed packet of the matching type, or null if no types matched.
  */
 Packet.fromHeader = function(header, transport) {
-  return JSONPacket.fromHeader(header, transport) ||
-         BulkPacket.fromHeader(header, transport);
+  return (
+    JSONPacket.fromHeader(header, transport) ||
+    BulkPacket.fromHeader(header, transport)
+  );
 };
 
 Packet.prototype = {
-
   get length() {
     return this._length;
   },
 
   set length(length) {
     if (length > PACKET_LENGTH_MAX) {
-      throw Error("Packet length " + length + " exceeds the max length of " +
-                  PACKET_LENGTH_MAX);
+      throw Error(
+        "Packet length " +
+          length +
+          " exceeds the max length of " +
+          PACKET_LENGTH_MAX
+      );
     }
     this._length = length;
   },
@@ -84,7 +90,6 @@ Packet.prototype = {
   destroy: function() {
     this._transport = null;
   },
-
 };
 
 exports.Packet = Packet;
@@ -166,8 +171,14 @@ JSONPacket.prototype.read = function(stream, scriptableStream) {
     json = unicodeConverter.ConvertToUnicode(json);
     this._object = JSON.parse(json);
   } catch (e) {
-    const msg = "Error parsing incoming packet: " + json + " (" + e +
-              " - " + e.stack + ")";
+    const msg =
+      "Error parsing incoming packet: " +
+      json +
+      " (" +
+      e +
+      " - " +
+      e.stack +
+      ")";
     console.error(msg);
     dumpn(msg);
     return;
@@ -178,11 +189,19 @@ JSONPacket.prototype.read = function(stream, scriptableStream) {
 
 JSONPacket.prototype._readData = function(stream, scriptableStream) {
   if (flags.wantVerbose) {
-    dumpv("Reading JSON data: _l: " + this.length + " dL: " +
-          this._data.length + " sA: " + stream.available());
+    dumpv(
+      "Reading JSON data: _l: " +
+        this.length +
+        " dL: " +
+        this._data.length +
+        " sA: " +
+        stream.available()
+    );
   }
-  const bytesToRead = Math.min(this.length - this._data.length,
-                             stream.available());
+  const bytesToRead = Math.min(
+    this.length - this._data.length,
+    stream.available()
+  );
   this._data += scriptableStream.readBytes(bytesToRead);
   this._done = this._data.length === this.length;
 };
@@ -231,7 +250,7 @@ function BulkPacket(transport) {
   Packet.call(this, transport);
   this._done = false;
   let _resolve;
-  this._readyForWriting = new Promise((resolve) => {
+  this._readyForWriting = new Promise(resolve => {
     _resolve = resolve;
   });
   this._readyForWriting.resolve = _resolve;
@@ -274,12 +293,12 @@ BulkPacket.prototype.read = function(stream) {
   // Temporarily pause monitoring of the input stream
   this._transport.pauseIncoming();
 
-  new Promise((resolve) => {
+  new Promise(resolve => {
     this._transport._onBulkReadReady({
       actor: this.actor,
       type: this.type,
       length: this.length,
-      copyTo: (output) => {
+      copyTo: output => {
         dumpv("CT length: " + this.length);
         const copying = StreamUtils.copyStream(stream, output, this.length);
         resolve(copying);
@@ -289,8 +308,7 @@ BulkPacket.prototype.read = function(stream) {
       done: resolve,
     });
     // Await the result of reading from the stream
-  })
-  .then(() => {
+  }).then(() => {
     dumpv("onReadDone called, ending bulk mode");
     this._done = true;
     this._transport.resumeIncoming();
@@ -308,15 +326,17 @@ BulkPacket.prototype.write = function(stream) {
   if (this._outgoingHeader === undefined) {
     dumpv("Serializing bulk packet header");
     // Format the serialized packet header to a buffer
-    this._outgoingHeader = "bulk " + this.actor + " " + this.type + " " +
-                           this.length + ":";
+    this._outgoingHeader =
+      "bulk " + this.actor + " " + this.type + " " + this.length + ":";
   }
 
   // Write the header, or whatever's left of it to write.
   if (this._outgoingHeader.length) {
     dumpv("Writing bulk packet header");
-    const written = stream.write(this._outgoingHeader,
-                               this._outgoingHeader.length);
+    const written = stream.write(
+      this._outgoingHeader,
+      this._outgoingHeader.length
+    );
     this._outgoingHeader = this._outgoingHeader.slice(written);
     return;
   }
@@ -326,9 +346,9 @@ BulkPacket.prototype.write = function(stream) {
   // Temporarily pause the monitoring of the output stream
   this._transport.pauseOutgoing();
 
-  new Promise((resolve) => {
+  new Promise(resolve => {
     this._readyForWriting.resolve({
-      copyFrom: (input) => {
+      copyFrom: input => {
         dumpv("CF length: " + this.length);
         const copying = StreamUtils.copyStream(input, stream, this.length);
         resolve(copying);
@@ -338,8 +358,7 @@ BulkPacket.prototype.write = function(stream) {
       done: resolve,
     });
     // Await the result of writing to the stream
-  })
-  .then(() => {
+  }).then(() => {
     dumpv("onWriteDone called, ending bulk mode");
     this._done = true;
     this._transport.resumeOutgoing();

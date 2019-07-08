@@ -63,7 +63,11 @@ function getMenuEntries() {
 }
 
 function checkArrayValues(actualValues, expectedValues, msg) {
-  is(actualValues.length, expectedValues.length, "Checking array values: " + msg);
+  is(
+    actualValues.length,
+    expectedValues.length,
+    "Checking array values: " + msg
+  );
   for (let i = 0; i < expectedValues.length; i++) {
     is(actualValues[i], expectedValues[i], msg + " Checking array entry #" + i);
   }
@@ -75,7 +79,10 @@ var checkObserver = {
 
   init() {
     gChromeScript.sendAsyncMessage("addObserver");
-    gChromeScript.addMessageListener("satchel-storage-changed", this.observe.bind(this));
+    gChromeScript.addMessageListener(
+      "satchel-storage-changed",
+      this.observe.bind(this)
+    );
   },
 
   uninit() {
@@ -107,15 +114,14 @@ var checkObserver = {
     //
     let expected = this.verifyStack.shift();
 
-    countEntries(expected.name, expected.value,
-                 function(num) {
-                   ok(num > 0, expected.message);
-                   if (checkObserver.verifyStack.length == 0) {
-                     let callback = checkObserver.callback;
-                     checkObserver.callback = null;
-                     callback();
-                   }
-                 });
+    countEntries(expected.name, expected.value, function(num) {
+      ok(num > 0, expected.message);
+      if (checkObserver.verifyStack.length == 0) {
+        let callback = checkObserver.callback;
+        checkObserver.callback = null;
+        callback();
+      }
+    });
   },
 };
 
@@ -130,7 +136,9 @@ function getFormSubmitButton(formNum) {
   // we can't just call form.submit(), because that doesn't seem to
   // invoke the form onsubmit handler.
   let button = form.firstChild;
-  while (button && button.type != "submit") { button = button.nextSibling; }
+  while (button && button.type != "submit") {
+    button = button.nextSibling;
+  }
   ok(button != null, "getting form submit button");
 
   return button;
@@ -161,7 +169,9 @@ function countEntries(name, value, then = null) {
 function updateFormHistory(changes, then = null) {
   return new Promise(resolve => {
     gChromeScript.sendAsyncMessage("updateFormHistory", { changes });
-    gChromeScript.addMessageListener("formHistoryUpdated", function updated({ ok }) {
+    gChromeScript.addMessageListener("formHistoryUpdated", function updated({
+      ok,
+    }) {
       gChromeScript.removeMessageListener("formHistoryUpdated", updated);
       if (!ok) {
         ok(false, "Error occurred updating form history");
@@ -179,10 +189,13 @@ function updateFormHistory(changes, then = null) {
 
 function notifyMenuChanged(expectedCount, expectedFirstValue, then = null) {
   return new Promise(resolve => {
-    gChromeScript.sendAsyncMessage("waitForMenuChange",
-                                   { expectedCount,
-                                     expectedFirstValue });
-    gChromeScript.addMessageListener("gotMenuChange", function changed({ results }) {
+    gChromeScript.sendAsyncMessage("waitForMenuChange", {
+      expectedCount,
+      expectedFirstValue,
+    });
+    gChromeScript.addMessageListener("gotMenuChange", function changed({
+      results,
+    }) {
       gChromeScript.removeMessageListener("gotMenuChange", changed);
       gLastAutoCompleteResults = results;
       if (then) {
@@ -208,7 +221,10 @@ function notifySelectedIndex(expectedIndex, then = null) {
 
 function testMenuEntry(index, statement) {
   return new Promise(resolve => {
-    gChromeScript.sendAsyncMessage("waitForMenuEntryTest", { index, statement });
+    gChromeScript.sendAsyncMessage("waitForMenuEntryTest", {
+      index,
+      statement,
+    });
     gChromeScript.addMessageListener("menuEntryTested", function changed() {
       gChromeScript.removeMessageListener("menuEntryTested", changed);
       resolve();
@@ -240,7 +256,9 @@ function listenForUnexpectedPopupShown() {
 async function promiseNoUnexpectedPopupShown() {
   gPopupShownExpected = false;
   listenForUnexpectedPopupShown();
-  SimpleTest.requestFlakyTimeout("Giving a chance for an unexpected popupshown to occur");
+  SimpleTest.requestFlakyTimeout(
+    "Giving a chance for an unexpected popupshown to occur"
+  );
   await new Promise(resolve => setTimeout(resolve, 1000));
 }
 
@@ -264,7 +282,7 @@ function satchelCommonSetup() {
   gChromeScript.addMessageListener("onpopupshown", ({ results }) => {
     gLastAutoCompleteResults = results;
     if (gPopupShownListener) {
-      gPopupShownListener({results});
+      gPopupShownListener({ results });
     }
   });
 
@@ -279,6 +297,5 @@ function satchelCommonSetup() {
     });
   });
 }
-
 
 satchelCommonSetup();

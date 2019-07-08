@@ -34,9 +34,10 @@ function run_test() {
 
     const topRetainedSize = dominatorTree.getRetainedSize(top);
     const topShallowSize = snapshot.describeNode(COUNT, top).bytes;
-    fastAssert(topShallowSize <= topRetainedSize,
-               "The shallow size should be less than or equal to the " +
-               "retained size");
+    fastAssert(
+      topShallowSize <= topRetainedSize,
+      "The shallow size should be less than or equal to the " + "retained size"
+    );
 
     let sumOfChildrensRetainedSizes = 0;
     for (let i = 0; i < children.length; i++) {
@@ -44,12 +45,16 @@ function run_test() {
       stack.push(children[i]);
     }
 
-    fastAssert(sumOfChildrensRetainedSizes <= topRetainedSize,
-               "The sum of the children's retained sizes should be less than " +
-               "or equal to the retained size");
-    fastAssert(sumOfChildrensRetainedSizes + topShallowSize === topRetainedSize,
-               "The sum of the children's retained sizes plus the shallow " +
-               "size should be equal to the retained size");
+    fastAssert(
+      sumOfChildrensRetainedSizes <= topRetainedSize,
+      "The sum of the children's retained sizes should be less than " +
+        "or equal to the retained size"
+    );
+    fastAssert(
+      sumOfChildrensRetainedSizes + topShallowSize === topRetainedSize,
+      "The sum of the children's retained sizes plus the shallow " +
+        "size should be equal to the retained size"
+    );
   }
 
   ok(true, "Successfully walked the tree");

@@ -7,12 +7,19 @@ const URL3 = URL + "#3";
 const THUMBNAIL_DIRECTORY = "thumbnails";
 const PREF_STORAGE_VERSION = "browser.pagethumbnails.storage_version";
 
-var tmp = Cu.Sandbox(window, {wantGlobalProperties: ["ChromeUtils"]});
-Services.scriptloader.loadSubScript("resource://gre/modules/PageThumbs.jsm", tmp);
-var {PageThumbsStorageMigrator} = tmp;
+var tmp = Cu.Sandbox(window, { wantGlobalProperties: ["ChromeUtils"] });
+Services.scriptloader.loadSubScript(
+  "resource://gre/modules/PageThumbs.jsm",
+  tmp
+);
+var { PageThumbsStorageMigrator } = tmp;
 
-XPCOMUtils.defineLazyServiceGetter(this, "gDirSvc",
-  "@mozilla.org/file/directory_service;1", "nsIProperties");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gDirSvc",
+  "@mozilla.org/file/directory_service;1",
+  "nsIProperties"
+);
 
 /**
  * This test makes sure we correctly migrate to thumbnail storage version 3.
@@ -61,16 +68,22 @@ function* runTests() {
   ok(true, "roaming thumbnail directory removed");
 
   // Check that our existing thumbnail wasn't overwritten.
-  is(getFileContents(file), "no-overwrite-plz",
-    "existing thumbnail was not overwritten");
+  is(
+    getFileContents(file),
+    "no-overwrite-plz",
+    "existing thumbnail was not overwritten"
+  );
 
   // Sanity check: ensure that, until it is removed, deprecated
   // function |getFileForURL| points to the same path as
   // |getFilePathForURL|.
   if ("getFileForURL" in PageThumbsStorage) {
     file = PageThumbsStorage.getFileForURL(URL);
-    is(file.path, PageThumbsStorageService.getFilePathForURL(URL),
-       "Deprecated getFileForURL and getFilePathForURL return the same path");
+    is(
+      file.path,
+      PageThumbsStorageService.getFilePathForURL(URL),
+      "Deprecated getFileForURL and getFilePathForURL return the same path"
+    );
   }
 }
 
@@ -93,8 +106,9 @@ function writeDummyFile(aFile, aContents) {
 }
 
 function getFileContents(aFile) {
-  let istream = Cc["@mozilla.org/network/file-input-stream;1"]
-                  .createInstance(Ci.nsIFileInputStream);
+  let istream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   istream.init(aFile, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
   return NetUtil.readInputStreamToString(istream, istream.available());
 }

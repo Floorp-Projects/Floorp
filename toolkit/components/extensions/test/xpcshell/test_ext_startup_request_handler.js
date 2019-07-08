@@ -7,14 +7,16 @@ function delay(time) {
   });
 }
 
-const {Extension} = ChromeUtils.import("resource://gre/modules/Extension.jsm");
+const { Extension } = ChromeUtils.import(
+  "resource://gre/modules/Extension.jsm"
+);
 
 add_task(async function test_startup_request_handler() {
   const ID = "request-startup@xpcshell.mozilla.org";
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {gecko: {id: ID}},
+      applications: { gecko: { id: ID } },
     },
 
     files: {

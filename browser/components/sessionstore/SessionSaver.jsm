@@ -170,7 +170,9 @@ var SessionSaverInternal = {
     }
 
     // Interval until the next disk operation is allowed.
-    let interval = this._isIdle ? this._intervalWhileIdle : this._intervalWhileActive;
+    let interval = this._isIdle
+      ? this._intervalWhileIdle
+      : this._intervalWhileActive;
     delay = Math.max(this._lastSaveTime + interval - Date.now(), delay, 0);
 
     // Schedule a state save.
@@ -178,7 +180,7 @@ var SessionSaverInternal = {
     this._timeoutID = setTimeout(() => {
       // Execute _saveStateAsync when we have enough idle time. Otherwise,
       // another idle request is made to schedule _saveStateAsync again.
-      let saveStateAsyncWhenIdle = (deadline) => {
+      let saveStateAsyncWhenIdle = deadline => {
         // When looking at the telemetry data, the time it takes to execute
         // _saveStateAsync is around 5.9ms (median). Therefore,
         // we'll not execute the function when the idle time is less than 5ms.
@@ -303,14 +305,18 @@ var SessionSaverInternal = {
     }
 
     // Don't clear when restarting.
-    if (Services.prefs.getBoolPref("browser.sessionstore.resume_session_once")) {
+    if (
+      Services.prefs.getBoolPref("browser.sessionstore.resume_session_once")
+    ) {
       return;
     }
 
-    let expireCookies = Services.prefs.getIntPref("network.cookie.lifetimePolicy") ==
-                        Services.cookies.QueryInterface(Ci.nsICookieService).ACCEPT_SESSION;
-    let sanitizeCookies = Services.prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown") &&
-                          Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies");
+    let expireCookies =
+      Services.prefs.getIntPref("network.cookie.lifetimePolicy") ==
+      Services.cookies.QueryInterface(Ci.nsICookieService).ACCEPT_SESSION;
+    let sanitizeCookies =
+      Services.prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown") &&
+      Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies");
 
     if (expireCookies || sanitizeCookies) {
       // Remove cookies.
@@ -358,31 +364,52 @@ var SessionSaverInternal = {
   },
 };
 
-XPCOMUtils.defineLazyPreferenceGetter(SessionSaverInternal, "_intervalWhileActive", PREF_INTERVAL_ACTIVE,
-  15000 /* 15 seconds */, () => {
-  // Cancel any pending runs and call runDelayed() with
-  // zero to apply the newly configured interval.
-  SessionSaverInternal.cancel();
-  SessionSaverInternal.runDelayed(0);
-});
-
-XPCOMUtils.defineLazyPreferenceGetter(SessionSaverInternal, "_intervalWhileIdle", PREF_INTERVAL_IDLE,
-  3600000 /* 1 h */);
-
-XPCOMUtils.defineLazyPreferenceGetter(SessionSaverInternal, "_idleDelay", PREF_IDLE_DELAY,
-  180000 /* 3 minutes */, (key, previous, latest) => {
-  // Update the idle observer for the new `PREF_IDLE_DELAY` value. Here we need
-  // to re-fetch the service instead of the original one in use; This is for a
-  // case that the Mock service in the unit test needs to be fetched to
-  // replace the original one.
-  var idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(Ci.nsIIdleService);
-  if (previous != undefined) {
-    idleService.removeIdleObserver(SessionSaverInternal, previous);
+XPCOMUtils.defineLazyPreferenceGetter(
+  SessionSaverInternal,
+  "_intervalWhileActive",
+  PREF_INTERVAL_ACTIVE,
+  15000 /* 15 seconds */,
+  () => {
+    // Cancel any pending runs and call runDelayed() with
+    // zero to apply the newly configured interval.
+    SessionSaverInternal.cancel();
+    SessionSaverInternal.runDelayed(0);
   }
-  if (latest != undefined) {
-    idleService.addIdleObserver(SessionSaverInternal, latest);
-  }
-});
+);
 
-var idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(Ci.nsIIdleService);
-idleService.addIdleObserver(SessionSaverInternal, SessionSaverInternal._idleDelay);
+XPCOMUtils.defineLazyPreferenceGetter(
+  SessionSaverInternal,
+  "_intervalWhileIdle",
+  PREF_INTERVAL_IDLE,
+  3600000 /* 1 h */
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  SessionSaverInternal,
+  "_idleDelay",
+  PREF_IDLE_DELAY,
+  180000 /* 3 minutes */,
+  (key, previous, latest) => {
+    // Update the idle observer for the new `PREF_IDLE_DELAY` value. Here we need
+    // to re-fetch the service instead of the original one in use; This is for a
+    // case that the Mock service in the unit test needs to be fetched to
+    // replace the original one.
+    var idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(
+      Ci.nsIIdleService
+    );
+    if (previous != undefined) {
+      idleService.removeIdleObserver(SessionSaverInternal, previous);
+    }
+    if (latest != undefined) {
+      idleService.addIdleObserver(SessionSaverInternal, latest);
+    }
+  }
+);
+
+var idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(
+  Ci.nsIIdleService
+);
+idleService.addIdleObserver(
+  SessionSaverInternal,
+  SessionSaverInternal._idleDelay
+);

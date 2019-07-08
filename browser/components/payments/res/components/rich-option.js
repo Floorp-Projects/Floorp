@@ -12,10 +12,7 @@ import ObservedPropertiesMixin from "../mixins/ObservedPropertiesMixin.js";
 
 export default class RichOption extends ObservedPropertiesMixin(HTMLElement) {
   static get observedAttributes() {
-    return [
-      "selected",
-      "value",
-    ];
+    return ["selected", "value"];
   }
 
   connectedCallback() {

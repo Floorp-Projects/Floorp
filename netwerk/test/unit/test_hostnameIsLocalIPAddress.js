@@ -1,4 +1,6 @@
-var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
+  Ci.nsIIOService
+);
 
 function run_test() {
   let testURIs = [
@@ -26,4 +28,3 @@ function run_test() {
     equal(isLocal, ioService.hostnameIsLocalIPAddress(nsuri));
   }
 }
-

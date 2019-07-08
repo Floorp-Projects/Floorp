@@ -1,4 +1,4 @@
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
@@ -8,7 +8,8 @@ var httpserver = new HttpServer();
 var testpath = "/simple";
 var httpbody = "0123456789";
 
-var last = 0, max = 0;
+var last = 0,
+  max = 0;
 
 const STATUS_RECEIVING_FROM = 0x804b0006;
 const LOOPS = 50000;
@@ -25,13 +26,20 @@ var progressCallback = {
   _got_onstatus_after_onstartrequest: false,
   _last_callback_handled: null,
 
-  QueryInterface: ChromeUtils.generateQI(["nsIProgressEventSink", "nsIStreamListener", "nsIRequestObserver"]),
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIProgressEventSink",
+    "nsIStreamListener",
+    "nsIRequestObserver",
+  ]),
 
-  getInterface (iid) {
-    if (iid.equals(Ci.nsIProgressEventSink) ||
-        iid.equals(Ci.nsIStreamListener) ||
-        iid.equals(Ci.nsIRequestObserver))
+  getInterface(iid) {
+    if (
+      iid.equals(Ci.nsIProgressEventSink) ||
+      iid.equals(Ci.nsIStreamListener) ||
+      iid.equals(Ci.nsIRequestObserver)
+    ) {
       return this;
+    }
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
@@ -60,7 +68,7 @@ var progressCallback = {
     delete this._listener;
   },
 
-  onProgress (request, context, progress, progressMax) {
+  onProgress(request, context, progress, progressMax) {
     Assert.equal(this._last_callback_handled, TYPE_ONSTATUS);
     this._last_callback_handled = TYPE_ONPROGRESS;
 
@@ -69,11 +77,12 @@ var progressCallback = {
     max = progressMax;
   },
 
-  onStatus (request, context, status, statusArg) {
+  onStatus(request, context, status, statusArg) {
     if (!this._got_onstartrequest) {
       // Ensure that all messages before onStartRequest are onStatus
-      if (this._last_callback_handled)
+      if (this._last_callback_handled) {
         Assert.equal(this._last_callback_handled, TYPE_ONSTATUS);
+      }
     } else if (this._last_callback_handled == TYPE_ONSTARTREQUEST) {
       this._got_onstatus_after_onstartrequest = true;
     } else {
@@ -99,7 +108,7 @@ function run_test() {
 function setupChannel(path) {
   var chan = NetUtil.newChannel({
     uri: URL + path,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.requestMethod = "GET";
@@ -109,12 +118,13 @@ function setupChannel(path) {
 
 function serverHandler(metadata, response) {
   response.setHeader("Content-Type", "text/plain", false);
-  for (let i = 0; i < LOOPS; i++)
+  for (let i = 0; i < LOOPS; i++) {
     response.bodyOutputStream.write(httpbody, httpbody.length);
+  }
 }
 
 function checkRequest(request, data, context) {
-  Assert.equal(last, httpbody.length*LOOPS);
-  Assert.equal(max, httpbody.length*LOOPS);
+  Assert.equal(last, httpbody.length * LOOPS);
+  Assert.equal(max, httpbody.length * LOOPS);
   httpserver.stop(do_test_finished);
 }

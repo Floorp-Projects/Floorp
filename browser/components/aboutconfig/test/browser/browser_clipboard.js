@@ -6,7 +6,9 @@
  * be resolved in bug 1539000.
  */
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.whitelistRejectionsGlobally(/Too many characters in placeable/);
+PromiseTestUtils.whitelistRejectionsGlobally(
+  /Too many characters in placeable/
+);
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
@@ -39,19 +41,26 @@ add_task(async function test_copy() {
       let row = this.getRow(name);
 
       // Triple click at any location in the name cell should select the name.
-      await BrowserTestUtils.synthesizeMouseAtCenter(row.nameCell,
-                                                     { clickCount: 3 },
-                                                     this.browser);
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        row.nameCell,
+        { clickCount: 3 },
+        this.browser
+      );
       Assert.ok(row.nameCell.contains(this.window.getSelection().anchorNode));
       await SimpleTest.promiseClipboardChange(name, async () => {
-        await BrowserTestUtils.synthesizeKey("c", { accelKey: true },
-                                             this.browser);
+        await BrowserTestUtils.synthesizeKey(
+          "c",
+          { accelKey: true },
+          this.browser
+        );
       });
 
       // Triple click at any location in the value cell should select the value.
-      await BrowserTestUtils.synthesizeMouseAtCenter(row.valueCell,
-                                                     { clickCount: 3 },
-                                                     this.browser);
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        row.valueCell,
+        { clickCount: 3 },
+        this.browser
+      );
       let selection = this.window.getSelection();
       Assert.ok(row.valueCell.contains(selection.anchorNode));
 
@@ -59,8 +68,11 @@ add_task(async function test_copy() {
       // this makes sure that an empty string can be copied.
       Assert.ok(!selection.isCollapsed);
       await SimpleTest.promiseClipboardChange(expectedString, async () => {
-        await BrowserTestUtils.synthesizeKey("c", { accelKey: true },
-                                             this.browser);
+        await BrowserTestUtils.synthesizeKey(
+          "c",
+          { accelKey: true },
+          this.browser
+        );
       });
     }
   });
@@ -69,12 +81,13 @@ add_task(async function test_copy() {
 add_task(async function test_copy_multiple() {
   await AboutConfigTest.withNewTab(async function() {
     // Lines are separated by a single LF character on all platforms.
-    let expectedString = "test.aboutconfig.copy.false\tfalse\t\n" +
-                         "test.aboutconfig.copy.number\t10\t\n" +
-                         "test.aboutconfig.copy.spaces.1\t \t\n" +
-                         "test.aboutconfig.copy.spaces.2\t  \t\n" +
-                         "test.aboutconfig.copy.spaces.3\t   \t\n" +
-                         "test.aboutconfig.copy.string\t010.5";
+    let expectedString =
+      "test.aboutconfig.copy.false\tfalse\t\n" +
+      "test.aboutconfig.copy.number\t10\t\n" +
+      "test.aboutconfig.copy.spaces.1\t \t\n" +
+      "test.aboutconfig.copy.spaces.2\t  \t\n" +
+      "test.aboutconfig.copy.spaces.3\t   \t\n" +
+      "test.aboutconfig.copy.string\t010.5";
 
     this.search("test.aboutconfig.copy.");
     let startRow = this.getRow("test.aboutconfig.copy.false");
@@ -82,18 +95,34 @@ add_task(async function test_copy_multiple() {
     let { width, height } = endRow.valueCell.getBoundingClientRect();
 
     // Drag from the top left of the first row to the bottom right of the last.
-    await BrowserTestUtils.synthesizeMouse(startRow.nameCell, 1, 1,
-                                           { type: "mousedown" }, this.browser);
-    await BrowserTestUtils.synthesizeMouse(endRow.valueCell,
-                                           width - 1, height - 1,
-                                           { type: "mousemove" }, this.browser);
-    await BrowserTestUtils.synthesizeMouse(endRow.valueCell,
-                                           width - 1, height - 1,
-                                           { type: "mouseup" }, this.browser);
+    await BrowserTestUtils.synthesizeMouse(
+      startRow.nameCell,
+      1,
+      1,
+      { type: "mousedown" },
+      this.browser
+    );
+    await BrowserTestUtils.synthesizeMouse(
+      endRow.valueCell,
+      width - 1,
+      height - 1,
+      { type: "mousemove" },
+      this.browser
+    );
+    await BrowserTestUtils.synthesizeMouse(
+      endRow.valueCell,
+      width - 1,
+      height - 1,
+      { type: "mouseup" },
+      this.browser
+    );
 
     await SimpleTest.promiseClipboardChange(expectedString, async () => {
-      await BrowserTestUtils.synthesizeKey("c", { accelKey: true },
-                                           this.browser);
+      await BrowserTestUtils.synthesizeKey(
+        "c",
+        { accelKey: true },
+        this.browser
+      );
     });
   });
 });

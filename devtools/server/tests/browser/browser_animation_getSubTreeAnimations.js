@@ -12,9 +12,12 @@ const URL = MAIN_DOMAIN + "animation.html";
 add_task(async function() {
   info("Creating a test document with 2 iframes containing animated nodes");
 
-  const {target, walker, animations} = await initAnimationsFrontForUrl(
+  const { target, walker, animations } = await initAnimationsFrontForUrl(
     "data:text/html;charset=utf-8," +
-    "<iframe id='iframe' src='" + URL + "'></iframe>");
+      "<iframe id='iframe' src='" +
+      URL +
+      "'></iframe>"
+  );
 
   info("Try retrieving all animations from the root doc's <body> node");
   const rootBody = await walker.querySelector(walker.rootNode, "body");
@@ -23,7 +26,7 @@ add_task(async function() {
 
   info("Retrieve all animations from the iframe's <body> node");
   const iframe = await walker.querySelector(walker.rootNode, "#iframe");
-  const {nodes} = await walker.children(iframe);
+  const { nodes } = await walker.children(iframe);
   const frameBody = await walker.querySelector(nodes[0], "body");
   players = await animations.getAnimationPlayersForNode(frameBody);
 

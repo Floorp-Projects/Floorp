@@ -4,11 +4,14 @@
 
 "use strict";
 
-const {Cc, Ci} = require("chrome");
-const {isWindowIncluded} = require("devtools/shared/layout/utils");
+const { Cc, Ci } = require("chrome");
+const { isWindowIncluded } = require("devtools/shared/layout/utils");
 const Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
-const {CONSOLE_WORKER_IDS, WebConsoleUtils} = require("devtools/server/actors/webconsole/utils");
+const {
+  CONSOLE_WORKER_IDS,
+  WebConsoleUtils,
+} = require("devtools/server/actors/webconsole/utils");
 
 // The window.console API observer
 
@@ -29,15 +32,14 @@ const {CONSOLE_WORKER_IDS, WebConsoleUtils} = require("devtools/server/actors/we
  *        Optional - The filteringOptions that this listener should listen to:
  *        - addonId: filter console messages based on the addonId.
  */
-function ConsoleAPIListener(window, owner, {addonId} = {}) {
+function ConsoleAPIListener(window, owner, { addonId } = {}) {
   this.window = window;
   this.owner = owner;
   this.addonId = addonId;
 }
 exports.ConsoleAPIListener = ConsoleAPIListener;
 
-ConsoleAPIListener.prototype =
-{
+ConsoleAPIListener.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   /**
@@ -121,7 +123,9 @@ ConsoleAPIListener.prototype =
     }
 
     if (this.window && !workerType) {
-      const msgWindow = Services.wm.getCurrentInnerWindowWithId(message.innerID);
+      const msgWindow = Services.wm.getCurrentInnerWindowWithId(
+        message.innerID
+      );
       if (!msgWindow || !isWindowIncluded(this.window, msgWindow)) {
         // Not the same window!
         return false;
@@ -163,8 +167,9 @@ ConsoleAPIListener.prototype =
    */
   getCachedMessages: function(includePrivate = false) {
     let messages = [];
-    const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
-                              .getService(Ci.nsIConsoleAPIStorage);
+    const ConsoleAPIStorage = Cc[
+      "@mozilla.org/consoleAPI-storage;1"
+    ].getService(Ci.nsIConsoleAPIStorage);
 
     // if !this.window, we're in a browser console. Retrieve all events
     // for filtering based on privacy.
@@ -172,12 +177,12 @@ ConsoleAPIListener.prototype =
       messages = ConsoleAPIStorage.getEvents();
     } else {
       const ids = WebConsoleUtils.getInnerWindowIDsForFrames(this.window);
-      ids.forEach((id) => {
+      ids.forEach(id => {
         messages = messages.concat(ConsoleAPIStorage.getEvents(id));
       });
     }
 
-    CONSOLE_WORKER_IDS.forEach((id) => {
+    CONSOLE_WORKER_IDS.forEach(id => {
       messages = messages.concat(ConsoleAPIStorage.getEvents(id));
     });
 
@@ -189,7 +194,7 @@ ConsoleAPIListener.prototype =
       return messages;
     }
 
-    return messages.filter((m) => !m.private);
+    return messages.filter(m => !m.private);
   },
 
   /**

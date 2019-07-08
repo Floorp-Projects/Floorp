@@ -13,17 +13,26 @@ function tick(aHowMany) {
 
 function checkSessionTicks(aExpected) {
   let payload = TelemetrySession.getPayload();
-  Assert.equal(payload.simpleMeasurements.activeTicks, aExpected,
-               "Should record the expected number of active ticks for the session.");
+  Assert.equal(
+    payload.simpleMeasurements.activeTicks,
+    aExpected,
+    "Should record the expected number of active ticks for the session."
+  );
 }
 
 function checkSubsessionTicks(aExpected, aClearSubsession) {
   let payload = TelemetrySession.getPayload("main", aClearSubsession);
-  Assert.equal(payload.simpleMeasurements.activeTicks, aExpected,
-               "Should record the expected number of active ticks for the subsession.");
+  Assert.equal(
+    payload.simpleMeasurements.activeTicks,
+    aExpected,
+    "Should record the expected number of active ticks for the subsession."
+  );
   if (aExpected > 0) {
-    Assert.equal(payload.processes.parent.scalars["browser.engagement.active_ticks"], aExpected,
-                 "Should record the expected number of active ticks for the subsession, in a scalar.");
+    Assert.equal(
+      payload.processes.parent.scalars["browser.engagement.active_ticks"],
+      aExpected,
+      "Should record the expected number of active ticks for the subsession, in a scalar."
+    );
   }
 }
 
@@ -36,15 +45,21 @@ add_task(async function test_setup() {
 add_task(async function test_record_activeTicks() {
   await TelemetryController.testSetup();
 
-  let checkActiveTicks = (expected) => {
+  let checkActiveTicks = expected => {
     // Scalars are only present in subsession payloads.
     let payload = TelemetrySession.getPayload("main");
-    Assert.equal(payload.simpleMeasurements.activeTicks, expected,
-                 "TelemetrySession must record the expected number of active ticks (in simpleMeasurements).");
+    Assert.equal(
+      payload.simpleMeasurements.activeTicks,
+      expected,
+      "TelemetrySession must record the expected number of active ticks (in simpleMeasurements)."
+    );
     // Subsessions are not yet supported on Android.
     if (!gIsAndroid) {
-      Assert.equal(payload.processes.parent.scalars["browser.engagement.active_ticks"], expected,
-                   "TelemetrySession must record the expected number of active ticks (in scalars).");
+      Assert.equal(
+        payload.processes.parent.scalars["browser.engagement.active_ticks"],
+        expected,
+        "TelemetrySession must record the expected number of active ticks (in scalars)."
+      );
     }
   };
 
@@ -71,32 +86,34 @@ add_task(async function test_record_activeTicks() {
   await TelemetryController.testShutdown();
 });
 
-add_task({
-  skip_if: () => gIsAndroid,
-},
-async function test_subsession_activeTicks() {
-  await TelemetryController.testReset();
-  Telemetry.clearScalars();
+add_task(
+  {
+    skip_if: () => gIsAndroid,
+  },
+  async function test_subsession_activeTicks() {
+    await TelemetryController.testReset();
+    Telemetry.clearScalars();
 
-  tick(5);
-  checkSessionTicks(5);
-  checkSubsessionTicks(5, true);
+    tick(5);
+    checkSessionTicks(5);
+    checkSubsessionTicks(5, true);
 
-  // After clearing the subsession, subsession ticks should be 0 but session
-  // ticks should still be 5.
-  checkSubsessionTicks(0);
-  checkSessionTicks(5);
+    // After clearing the subsession, subsession ticks should be 0 but session
+    // ticks should still be 5.
+    checkSubsessionTicks(0);
+    checkSessionTicks(5);
 
-  tick(1);
-  checkSessionTicks(6);
-  checkSubsessionTicks(1, true);
+    tick(1);
+    checkSessionTicks(6);
+    checkSubsessionTicks(1, true);
 
-  checkSubsessionTicks(0);
-  checkSessionTicks(6);
+    checkSubsessionTicks(0);
+    checkSessionTicks(6);
 
-  tick(2);
-  checkSessionTicks(8);
-  checkSubsessionTicks(2);
+    tick(2);
+    checkSessionTicks(8);
+    checkSubsessionTicks(2);
 
-  await TelemetryController.testShutdown();
-});
+    await TelemetryController.testShutdown();
+  }
+);

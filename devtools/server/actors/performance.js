@@ -8,18 +8,32 @@ const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { actorBridgeWithSpec } = require("devtools/server/actors/common");
 const { performanceSpec } = require("devtools/shared/specs/performance");
 
-loader.lazyRequireGetter(this, "PerformanceRecorder",
-  "devtools/server/performance/recorder", true);
-loader.lazyRequireGetter(this, "normalizePerformanceFeatures",
-  "devtools/shared/performance/recording-utils", true);
+loader.lazyRequireGetter(
+  this,
+  "PerformanceRecorder",
+  "devtools/server/performance/recorder",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "normalizePerformanceFeatures",
+  "devtools/shared/performance/recording-utils",
+  true
+);
 
 const PIPE_TO_FRONT_EVENTS = new Set([
-  "recording-started", "recording-stopping", "recording-stopped",
-  "profiler-status", "timeline-data", "console-profile-start",
+  "recording-started",
+  "recording-stopping",
+  "recording-stopped",
+  "profiler-status",
+  "timeline-data",
+  "console-profile-start",
 ]);
 
 const RECORDING_STATE_CHANGE_EVENTS = new Set([
-  "recording-started", "recording-stopping", "recording-stopped",
+  "recording-started",
+  "recording-stopping",
+  "recording-stopped",
 ]);
 
 /**
@@ -87,7 +101,10 @@ var PerformanceActor = ActorClassWithSpec(performanceSpec, {
       return null;
     }
 
-    const normalizedOptions = normalizePerformanceFeatures(options, this.traits.features);
+    const normalizedOptions = normalizePerformanceFeatures(
+      options,
+      this.traits.features
+    );
     const recording = await this.bridge.startRecording(normalizedOptions);
     this.manage(recording);
 

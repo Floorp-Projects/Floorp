@@ -3,8 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-function getTestingFiles()
-{
+function getTestingFiles() {
   const filenameBase = "3128029391StpsleeTn+ddi";
   let baseDir = getRelativeFile("storage/permanent/chrome/idb");
 
@@ -17,22 +16,25 @@ function getTestingFiles()
   let markerFile = baseDir.clone();
   markerFile.append("idb-deleting-" + filenameBase);
 
-  return {dbFile, dir, markerFile};
+  return { dbFile, dir, markerFile };
 }
 
-function createTestingEnvironment(markerFileOnly = false)
-{
+function createTestingEnvironment(markerFileOnly = false) {
   let testingFiles = getTestingFiles();
 
   if (!markerFileOnly) {
-    testingFiles.dbFile.create(Ci.nsIFile.NORMAL_FILE_TYPE,
-                               parseInt("0644", 8));
+    testingFiles.dbFile.create(
+      Ci.nsIFile.NORMAL_FILE_TYPE,
+      parseInt("0644", 8)
+    );
 
     testingFiles.dir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
   }
 
-  testingFiles.markerFile.create(Ci.nsIFile.NORMAL_FILE_TYPE,
-                                 parseInt("0644", 8));
+  testingFiles.markerFile.create(
+    Ci.nsIFile.NORMAL_FILE_TYPE,
+    parseInt("0644", 8)
+  );
 }
 
 /**
@@ -47,8 +49,7 @@ function createTestingEnvironment(markerFileOnly = false)
  * marker-file, a databse file, and a directory exist in current idb directory.
  */
 
-async function testSteps()
-{
+async function testSteps() {
   SpecialPowers.setBoolPref("dom.quotaManager.testing", true);
 
   const name = this.window ? window.location.pathname : "Splendid Test";

@@ -4,11 +4,25 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const { Cc, Ci, Cu } = require("chrome");
 
-loader.lazyRequireGetter(this, "isShadowRoot", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "nodeFilterConstants", "devtools/shared/dom-node-filter-constants");
-loader.lazyRequireGetter(this, "standardTreeWalkerFilter", "devtools/server/actors/inspector/utils", true);
+loader.lazyRequireGetter(
+  this,
+  "isShadowRoot",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "nodeFilterConstants",
+  "devtools/shared/dom-node-filter-constants"
+);
+loader.lazyRequireGetter(
+  this,
+  "standardTreeWalkerFilter",
+  "devtools/server/actors/inspector/utils",
+  true
+);
 
 // SKIP_TO_* arguments are used with the DocumentWalker, driving the strategy to use if
 // the starting node is incompatible with the filter function of the walker.
@@ -37,19 +51,23 @@ const SKIP_TO_SIBLING = "SKIP_TO_SIBLING";
  *          will be visible only to a walker with showAnonymousContent=false. The shadow
  *          tree will only be visible to a walker with showAnonymousContent=true.
  */
-function DocumentWalker(node, rootWin,
+function DocumentWalker(
+  node,
+  rootWin,
   {
     whatToShow = nodeFilterConstants.SHOW_ALL,
     filter = standardTreeWalkerFilter,
     skipTo = SKIP_TO_PARENT,
     showAnonymousContent = true,
-  } = {}) {
+  } = {}
+) {
   if (Cu.isDeadWrapper(rootWin) || !rootWin.location) {
     throw new Error("Got an invalid root window in DocumentWalker");
   }
 
-  this.walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"]
-    .createInstance(Ci.inIDeepTreeWalker);
+  this.walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"].createInstance(
+    Ci.inIDeepTreeWalker
+  );
   this.walker.showAnonymousContent = showAnonymousContent;
   this.walker.showSubDocuments = true;
   this.walker.showDocumentsAsNodes = true;
@@ -62,7 +80,6 @@ function DocumentWalker(node, rootWin,
 }
 
 DocumentWalker.prototype = {
-
   get whatToShow() {
     return this.walker.whatToShow;
   },
@@ -179,7 +196,10 @@ DocumentWalker.prototype = {
       previous = previous && previous.previousSibling;
       next = next && next.nextSibling;
 
-      if (previous && this.filter(previous) === nodeFilterConstants.FILTER_ACCEPT) {
+      if (
+        previous &&
+        this.filter(previous) === nodeFilterConstants.FILTER_ACCEPT
+      ) {
         // A valid node was found in the previous siblings of the node.
         return previous;
       }

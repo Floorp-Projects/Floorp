@@ -12,8 +12,7 @@ function VoiceSelect(win, label) {
   let element = win.document.createElement("div");
   element.classList.add("voiceselect");
   // eslint-disable-next-line no-unsanitized/property
-  element.innerHTML =
-   `<button class="select-toggle" aria-controls="voice-options">
+  element.innerHTML = `<button class="select-toggle" aria-controls="voice-options">
       <span class="label">${label}</span> <span class="current-voice"></span>
     </button>
     <div class="options" id="voice-options" role="listbox"></div>`;
@@ -238,7 +237,7 @@ VoiceSelect.prototype = {
       let winHeight = this._win.innerHeight;
       let listbox = this.listbox;
       let listboxTop = listbox.getBoundingClientRect().top;
-      listbox.style.maxHeight = (winHeight - listboxTop - 10) + "px";
+      listbox.style.maxHeight = winHeight - listboxTop - 10 + "px";
     };
 
     if (now) {

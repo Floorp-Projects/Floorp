@@ -32,7 +32,7 @@ add_task(async function() {
   info("Create a new tab and wait for the target to be created");
   const otherTargetCreated = Target.targetCreated();
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URI);
-  const {targetInfo} = await otherTargetCreated;
+  const { targetInfo } = await otherTargetCreated;
   is(targetInfo.type, "page");
 
   const onTabClose = BrowserTestUtils.waitForEvent(tab, "TabClose");

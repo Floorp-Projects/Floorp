@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -54,7 +57,7 @@ class ProfilerDialog extends PureComponent {
               {
                 className: "profiler-dialog__header__title",
               },
-              "about-debugging-profiler-dialog-title2",
+              "about-debugging-profiler-dialog-title2"
             )
           ),
           dom.button(
@@ -62,17 +65,15 @@ class ProfilerDialog extends PureComponent {
               className: "ghost-button qa-profiler-dialog-close",
               onClick: () => this.hide(),
             },
-            dom.img(
-              {
-                src: "chrome://devtools/skin/images/close.svg",
-              }
-            )
+            dom.img({
+              src: "chrome://devtools/skin/images/close.svg",
+            })
           )
         ),
         dom.iframe({
           className: "profiler-dialog__frame",
           src: clientWrapper.getPerformancePanelUrl(),
-          onLoad: (e) => {
+          onLoad: e => {
             clientWrapper.loadPerformanceProfiler(e.target.contentWindow);
           },
         })

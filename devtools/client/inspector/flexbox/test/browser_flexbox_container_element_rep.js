@@ -13,7 +13,10 @@ add_task(async function() {
   const { inspector, flexboxInspector, toolbox } = await openLayoutView();
   const { document: doc } = flexboxInspector;
 
-  const onFlexContainerRepRendered = waitForDOM(doc, ".flex-header-content .objectBox");
+  const onFlexContainerRepRendered = waitForDOM(
+    doc,
+    ".flex-header-content .objectBox"
+  );
   await selectNode("#container", inspector);
   const [flexContainerRep] = await onFlexContainerRepRendered;
 
@@ -21,14 +24,25 @@ add_task(async function() {
 
   info("Listen to node-highlight event and mouse over the rep");
   const onHighlight = toolbox.highlighter.once("node-highlight");
-  EventUtils.synthesizeMouse(flexContainerRep, 10, 5, {type: "mouseover"},
-    doc.defaultView);
+  EventUtils.synthesizeMouse(
+    flexContainerRep,
+    10,
+    5,
+    { type: "mouseover" },
+    doc.defaultView
+  );
   const nodeFront = await onHighlight;
 
   ok(nodeFront, "nodeFront was returned from highlighting the node.");
   is(nodeFront.tagName, "DIV", "The highlighted node has the correct tagName.");
-  is(nodeFront.attributes[0].name, "id",
-    "The highlighted node has the correct attributes.");
-  is(nodeFront.attributes[0].value, "container",
-    "The highlighted node has the correct id.");
+  is(
+    nodeFront.attributes[0].name,
+    "id",
+    "The highlighted node has the correct attributes."
+  );
+  is(
+    nodeFront.attributes[0].value,
+    "container",
+    "The highlighted node has the correct id."
+  );
 });

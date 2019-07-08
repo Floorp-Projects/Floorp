@@ -12,8 +12,9 @@ class InfoGroup extends HTMLElement {
 
   connectedCallback() {
     let infoGroupTemplate = document.getElementById("info-group-template");
-    this.attachShadow({mode: "open"})
-        .appendChild(infoGroupTemplate.content.cloneNode(true));
+    this.attachShadow({ mode: "open" }).appendChild(
+      infoGroupTemplate.content.cloneNode(true)
+    );
     this.render();
   }
 

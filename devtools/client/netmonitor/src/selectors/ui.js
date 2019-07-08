@@ -14,19 +14,29 @@ const getWaterfallScale = createSelector(
   state => state.timingMarkers,
   state => state.ui,
   (requests, timingMarkers, ui) => {
-    if (requests.firstStartedMillis === +Infinity || ui.waterfallWidth === null) {
+    if (
+      requests.firstStartedMillis === +Infinity ||
+      ui.waterfallWidth === null
+    ) {
       return null;
     }
 
-    const lastEventMillis = Math.max(requests.lastEndedMillis,
-                                     timingMarkers.firstDocumentDOMContentLoadedTimestamp,
-                                     timingMarkers.firstDocumentLoadTimestamp);
+    const lastEventMillis = Math.max(
+      requests.lastEndedMillis,
+      timingMarkers.firstDocumentDOMContentLoadedTimestamp,
+      timingMarkers.firstDocumentLoadTimestamp
+    );
     const longestWidth = lastEventMillis - requests.firstStartedMillis;
 
-  // Reduce 20px for the last request's requests-list-timings-total
-    return Math.min(Math.max(
-      (ui.waterfallWidth - REQUESTS_WATERFALL.LABEL_WIDTH - 20) / longestWidth,
-      EPSILON), 1);
+    // Reduce 20px for the last request's requests-list-timings-total
+    return Math.min(
+      Math.max(
+        (ui.waterfallWidth - REQUESTS_WATERFALL.LABEL_WIDTH - 20) /
+          longestWidth,
+        EPSILON
+      ),
+      1
+    );
   }
 );
 

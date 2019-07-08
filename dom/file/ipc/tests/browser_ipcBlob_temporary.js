@@ -2,14 +2,12 @@
 
 requestLongerTimeout(3);
 
-
 const BASE_URI = "http://mochi.test:8888/browser/dom/file/ipc/tests/empty.html";
 
 add_task(async function test() {
-  await SpecialPowers.pushPrefEnv({ "set" : [
-    ["dom.blob.memoryToTemporaryFile", 1 ],
-    ["dom.ipc.processCount", 4],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.blob.memoryToTemporaryFile", 1], ["dom.ipc.processCount", 4]],
+  });
 
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URI);
   let browser1 = gBrowser.getBrowserForTab(tab1);
@@ -19,7 +17,7 @@ add_task(async function test() {
 
   await ContentTask.spawn(browser2, null, function() {
     content.window.testPromise = new content.window.Promise(resolve => {
-      let bc = new content.window.BroadcastChannel('foobar');
+      let bc = new content.window.BroadcastChannel("foobar");
       bc.onmessage = e => {
         function realTest() {
           return new content.window.Promise(resolve => {
@@ -30,14 +28,14 @@ add_task(async function test() {
               fr.readAsText(e.data);
               fr.onerror = () => {
                 ok(false, "Something wrong happened.");
-              }
+              };
 
               fr.onloadend = () => {
-                is (fr.result.length, e.data.size, "FileReader worked fine.");
+                is(fr.result.length, e.data.size, "FileReader worked fine.");
                 if (!--count) {
                   resolve(true);
                 }
-              }
+              };
             }
           });
         }
@@ -57,11 +55,11 @@ add_task(async function test() {
   let status = await ContentTask.spawn(browser1, null, function() {
     let p = new content.window.Promise(resolve => {
       let xhr = new content.window.XMLHttpRequest();
-      xhr.open('GET', 'temporary.sjs', true);
-      xhr.responseType = 'blob';
+      xhr.open("GET", "temporary.sjs", true);
+      xhr.responseType = "blob";
       xhr.onload = () => {
         resolve(xhr.response);
-      }
+      };
       xhr.send();
     });
 
@@ -69,7 +67,7 @@ add_task(async function test() {
       function realTest() {
         return new content.window.Promise(resolve => {
           info("Let's broadcast the blob...");
-          let bc = new content.window.BroadcastChannel('foobar');
+          let bc = new content.window.BroadcastChannel("foobar");
           bc.postMessage(blob);
 
           info("Here the test...");
@@ -80,14 +78,14 @@ add_task(async function test() {
             fr.readAsText(blob);
             fr.onerror = () => {
               ok(false, "Something wrong happened.");
-            }
+            };
 
             fr.onloadend = () => {
-              is (fr.result.length, blob.size, "FileReader worked fine.");
+              is(fr.result.length, blob.size, "FileReader worked fine.");
               if (!--count) {
                 resolve(true);
               }
-            }
+            };
           }
         });
       }

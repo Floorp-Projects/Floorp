@@ -37,12 +37,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
 
   function doTest() {
     var t = new TestInterfaceJS();
-    /* Async parent frames from pushPrefEnv don't show up in e10s.  */
-    var isE10S = !SpecialPowers.isMainProcess();
+
+
     var asyncStack = SpecialPowers.getBoolPref("javascript.options.asyncstack");
     var ourFile = location.href;
     var unwrapError = "Promise rejection value is a non-unwrappable cross-compartment wrapper.";
-    var parentFrame = (asyncStack && !isE10S) ? `Async*@${ourFile}:130:17
+    var parentFrame = asyncStack ? `Async*@${ourFile}:130:17
 ` : "";
 
     Promise.all([

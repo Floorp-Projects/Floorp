@@ -6,7 +6,9 @@
 
 "use strict";
 
-const { getAllFilters } = require("devtools/client/webconsole/selectors/filters");
+const {
+  getAllFilters,
+} = require("devtools/client/webconsole/selectors/filters");
 
 const {
   FILTER_TEXT_SET,
@@ -24,18 +26,21 @@ function filterTextSet(text) {
 }
 
 function filterToggle(filter) {
-  return ({dispatch, getState, prefsService}) => {
+  return ({ dispatch, getState, prefsService }) => {
     dispatch({
       type: FILTER_TOGGLE,
       filter,
     });
     const filterState = getAllFilters(getState());
-    prefsService.setBoolPref(PREFS.FILTER[filter.toUpperCase()], filterState[filter]);
+    prefsService.setBoolPref(
+      PREFS.FILTER[filter.toUpperCase()],
+      filterState[filter]
+    );
   };
 }
 
 function filtersClear() {
-  return ({dispatch, getState, prefsService}) => {
+  return ({ dispatch, getState, prefsService }) => {
     dispatch({
       type: FILTERS_CLEAR,
     });

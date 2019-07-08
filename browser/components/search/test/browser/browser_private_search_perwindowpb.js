@@ -16,7 +16,9 @@ add_task(async function() {
     let searchBar = aWin.BrowserSearch.searchBar;
     ok(searchBar, "got search bar");
 
-    let loadPromise = BrowserTestUtils.browserLoaded(aWin.gBrowser.selectedBrowser);
+    let loadPromise = BrowserTestUtils.browserLoaded(
+      aWin.gBrowser.selectedBrowser
+    );
 
     searchBar.value = aIsPrivate ? "private test" : "public test";
     searchBar.focus();
@@ -26,7 +28,9 @@ add_task(async function() {
   }
 
   async function testOnWindow(aIsPrivate) {
-    let win = await BrowserTestUtils.openNewBrowserWindow({ private: aIsPrivate });
+    let win = await BrowserTestUtils.openNewBrowserWindow({
+      private: aIsPrivate,
+    });
     await SimpleTest.promiseFocus(win);
     windowsToClose.push(win);
     return win;
@@ -53,8 +57,11 @@ add_task(async function() {
 
   let entries = getMenuEntries(searchBar);
   for (let i = 0; i < entries.length; i++) {
-    isnot(entries[i], "private test",
-          "shouldn't see private autocomplete entries");
+    isnot(
+      entries[i],
+      "private test",
+      "shouldn't see private autocomplete entries"
+    );
   }
 
   searchBar.textbox.toggleHistoryPopup();
@@ -68,6 +75,7 @@ add_task(async function() {
 function getMenuEntries(searchBar) {
   // Could perhaps pull values directly from the controller, but it seems
   // more reliable to test the values that are actually in the richlistbox?
-  return Array.from(searchBar.textbox.popup.richlistbox.itemChildren,
-                    item => item.getAttribute("ac-value"));
+  return Array.from(searchBar.textbox.popup.richlistbox.itemChildren, item =>
+    item.getAttribute("ac-value")
+  );
 }

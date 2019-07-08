@@ -4387,8 +4387,8 @@ nsresult Connection::BeginWriteTransaction() {
   MOZ_ASSERT(mStorageConnection);
 
   CachedStatement stmt;
-  nsresult rv = GetCachedStatement(NS_LITERAL_CSTRING("BEGIN IMMEDIATE;"),
-                                       &stmt);
+  nsresult rv =
+      GetCachedStatement(NS_LITERAL_CSTRING("BEGIN IMMEDIATE;"), &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9425,9 +9425,7 @@ QuotaClient::MatchFunction::OnFunctionCall(
  ******************************************************************************/
 
 AutoWriteTransaction::AutoWriteTransaction(bool aShadowWrites)
-    : mConnection(nullptr)
-    , mShadowWrites(aShadowWrites)
-{
+    : mConnection(nullptr), mShadowWrites(aShadowWrites) {
   AssertIsOnConnectionThread();
 
   MOZ_COUNT_CTOR(mozilla::dom::AutoWriteTransaction);
@@ -9494,7 +9492,8 @@ nsresult AutoWriteTransaction::Commit() {
   return NS_OK;
 }
 
-nsresult AutoWriteTransaction::LockAndAttachShadowDatabase(Connection* aConnection) {
+nsresult AutoWriteTransaction::LockAndAttachShadowDatabase(
+    Connection* aConnection) {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection);
   MOZ_ASSERT(!mConnection);
@@ -9511,7 +9510,8 @@ nsresult AutoWriteTransaction::LockAndAttachShadowDatabase(Connection* aConnecti
   mShadowDatabaseLock.emplace(
       aConnection->GetQuotaClient()->ShadowDatabaseMutex());
 
-  nsresult rv = AttachShadowDatabase(quotaManager->GetBasePath(), storageConnection);
+  nsresult rv =
+      AttachShadowDatabase(quotaManager->GetBasePath(), storageConnection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

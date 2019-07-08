@@ -19,8 +19,11 @@ add_task(async function() {
   CustomizableUI.getCustomizationTarget(navbar).appendChild(draggedItem);
   await startCustomizing();
   simulateItemDrag(draggedItem, gCustomizeMode.visiblePalette);
-  is(document.documentElement.hasAttribute("customizing-movingItem"), false,
-     "Make sure customizing-movingItem is removed after dragging to the palette");
+  is(
+    document.documentElement.hasAttribute("customizing-movingItem"),
+    false,
+    "Make sure customizing-movingItem is removed after dragging to the palette"
+  );
   await endCustomizing();
 });
 
@@ -35,8 +38,11 @@ add_task(async function() {
   CustomizableUI.getCustomizationTarget(navbar).appendChild(draggedItem);
   await startCustomizing();
   simulateItemDrag(draggedItem, CustomizableUI.getCustomizationTarget(dest));
-  is(document.documentElement.hasAttribute("customizing-movingItem"), false,
-     "Make sure customizing-movingItem is removed");
+  is(
+    document.documentElement.hasAttribute("customizing-movingItem"),
+    false,
+    "Make sure customizing-movingItem is removed"
+  );
   await endCustomizing();
 });
 

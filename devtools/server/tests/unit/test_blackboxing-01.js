@@ -16,11 +16,14 @@ function run_test() {
   gDebuggee = addTestGlobal("test-black-box");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-black-box",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             testBlackBox();
-                           });
+    attachTestTabAndResume(gClient, "test-black-box", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      testBlackBox();
+    });
   });
   do_test_pending();
 }
@@ -29,20 +32,22 @@ const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
 
 const testBlackBox = async function() {
-  const packet = await executeOnNextTickAndWaitForPause(evalCode, gThreadClient);
-
-  const bpSource = await getSourceById(
-    gThreadClient,
-    packet.frame.where.actor
+  const packet = await executeOnNextTickAndWaitForPause(
+    evalCode,
+    gThreadClient
   );
+
+  const bpSource = await getSourceById(gThreadClient, packet.frame.where.actor);
 
   await setBreakpoint(gThreadClient, { sourceUrl: bpSource.url, line: 2 });
   await resume(gThreadClient);
 
   let sourceForm = await getSourceForm(gThreadClient, BLACK_BOXED_URL);
 
-  Assert.ok(!sourceForm.isBlackBoxed,
-            "By default the source is not black boxed.");
+  Assert.ok(
+    !sourceForm.isBlackBoxed,
+    "By default the source is not black boxed."
+  );
 
   // Test that we can step into `doStuff` when we are not black boxed.
   await runTest(
@@ -53,7 +58,10 @@ const testBlackBox = async function() {
     },
     async function onDebuggerStatementFrames(frames) {
       for (const frame of frames) {
-        const source = await getSourceFormById(gThreadClient, frame.where.actor);
+        const source = await getSourceFormById(
+          gThreadClient,
+          frame.where.actor
+        );
         Assert.ok(!source.isBlackBoxed);
       }
     }
@@ -74,7 +82,10 @@ const testBlackBox = async function() {
     },
     async function onDebuggerStatementFrames(frames) {
       for (const frame of frames) {
-        const source = await getSourceFormById(gThreadClient, frame.where.actor);
+        const source = await getSourceFormById(
+          gThreadClient,
+          frame.where.actor
+        );
         if (source.url == BLACK_BOXED_URL) {
           Assert.ok(source.isBlackBoxed);
         } else {
@@ -97,7 +108,10 @@ const testBlackBox = async function() {
     },
     async function onDebuggerStatementFrames(frames) {
       for (const frame of frames) {
-        const source = await getSourceFormById(gThreadClient, frame.where.actor);
+        const source = await getSourceFormById(
+          gThreadClient,
+          frame.where.actor
+        );
         Assert.ok(!source.isBlackBoxed);
       }
     }
@@ -138,8 +152,10 @@ function evalCode() {
 }
 
 const runTest = async function(onSteppedLocation, onDebuggerStatementFrames) {
-  let packet = await executeOnNextTickAndWaitForPause(gDebuggee.runTest,
-                                                      gThreadClient);
+  let packet = await executeOnNextTickAndWaitForPause(
+    gDebuggee.runTest,
+    gThreadClient
+  );
   Assert.equal(packet.why.type, "breakpoint");
 
   await stepIn(gThreadClient);

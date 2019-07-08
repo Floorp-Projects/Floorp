@@ -14,18 +14,32 @@
 
 /* globals WebExtensionPolicy */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "streamConv", "@mozilla.org/streamConverters;1",
-                                   "nsIStreamConverterService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "streamConv",
+  "@mozilla.org/streamConverters;1",
+  "nsIStreamConverterService"
+);
 const ArrayBufferInputStream = Components.Constructor(
   "@mozilla.org/io/arraybuffer-input-stream;1",
-  "nsIArrayBufferInputStream", "setData");
+  "nsIArrayBufferInputStream",
+  "setData"
+);
 
 /*
  * This class provides a stream filter for locale messages in CSS files served
@@ -34,8 +48,7 @@ const ArrayBufferInputStream = Components.Constructor(
  * See SubstituteChannel in netwerk/protocol/res/ExtensionProtocolHandler.cpp
  * for usage.
  */
-function AddonLocalizationConverter() {
-}
+function AddonLocalizationConverter() {}
 
 AddonLocalizationConverter.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamConverter]),
@@ -45,12 +58,18 @@ AddonLocalizationConverter.prototype = {
 
   checkTypes(aFromType, aToType) {
     if (aFromType != this.FROM_TYPE) {
-      throw Components.Exception("Invalid aFromType value", Cr.NS_ERROR_INVALID_ARG,
-                                 Components.stack.caller.caller);
+      throw Components.Exception(
+        "Invalid aFromType value",
+        Cr.NS_ERROR_INVALID_ARG,
+        Components.stack.caller.caller
+      );
     }
     if (aToType != this.TO_TYPE) {
-      throw Components.Exception("Invalid aToType value", Cr.NS_ERROR_INVALID_ARG,
-                                 Components.stack.caller.caller);
+      throw Components.Exception(
+        "Invalid aToType value",
+        Cr.NS_ERROR_INVALID_ARG,
+        Components.stack.caller.caller
+      );
     }
   },
 
@@ -62,7 +81,10 @@ AddonLocalizationConverter.prototype = {
 
     let addon = WebExtensionPolicy.getByURI(uri);
     if (!addon) {
-      throw new Components.Exception("Invalid context", Cr.NS_ERROR_INVALID_ARG);
+      throw new Components.Exception(
+        "Invalid context",
+        Cr.NS_ERROR_INVALID_ARG
+      );
     }
     return addon;
   },
@@ -78,8 +100,9 @@ AddonLocalizationConverter.prototype = {
     let addon = this.getAddon(aContext);
 
     let count = aStream.available();
-    let string = count ?
-      new TextDecoder().decode(NetUtil.readInputStream(aStream, count)) : "";
+    let string = count
+      ? new TextDecoder().decode(NetUtil.readInputStream(aStream, count))
+      : "";
     return this.convertToStream(addon, string);
   },
 
@@ -96,7 +119,7 @@ AddonLocalizationConverter.prototype = {
 
   onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
     let bytes = NetUtil.readInputStream(aInputStream, aCount);
-    this.parts.push(this.decoder.decode(bytes, {stream: true}));
+    this.parts.push(this.decoder.decode(bytes, { stream: true }));
   },
 
   onStopRequest(aRequest, aStatusCode) {
@@ -116,27 +139,45 @@ AddonLocalizationConverter.prototype = {
   },
 };
 
-function HttpIndexViewer() {
-}
+function HttpIndexViewer() {}
 
 HttpIndexViewer.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIDocumentLoaderFactory]),
 
-  createInstance(aCommand, aChannel, aLoadGroup, aContentType, aContainer,
-                 aExtraInfo, aDocListenerResult) {
+  createInstance(
+    aCommand,
+    aChannel,
+    aLoadGroup,
+    aContentType,
+    aContainer,
+    aExtraInfo,
+    aDocListenerResult
+  ) {
     aChannel.contentType = "text/html";
 
-    let contract = Services.catMan.getCategoryEntry("Gecko-Content-Viewers", "text/html");
+    let contract = Services.catMan.getCategoryEntry(
+      "Gecko-Content-Viewers",
+      "text/html"
+    );
     let factory = Cc[contract].getService(Ci.nsIDocumentLoaderFactory);
 
     let listener = {};
-    let res = factory.createInstance("view", aChannel, aLoadGroup,
-                                     "text/html", aContainer, aExtraInfo,
-                                     listener);
+    let res = factory.createInstance(
+      "view",
+      aChannel,
+      aLoadGroup,
+      "text/html",
+      aContainer,
+      aExtraInfo,
+      listener
+    );
 
-    aDocListenerResult.value =
-      streamConv.asyncConvertData("application/http-index-format",
-                                  "text/html", listener.value, null);
+    aDocListenerResult.value = streamConv.asyncConvertData(
+      "application/http-index-format",
+      "text/html",
+      listener.value,
+      null
+    );
 
     return res;
   },

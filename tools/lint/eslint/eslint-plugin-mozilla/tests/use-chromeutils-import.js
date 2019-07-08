@@ -17,12 +17,13 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 // ------------------------------------------------------------------------------
 
 function callError(message) {
-  return [{message, type: "CallExpression"}];
+  return [{ message, type: "CallExpression" }];
 }
 
 const MESSAGE_IMPORT = "Please use ChromeUtils.import instead of Cu.import";
-const MESSAGE_DEFINE = ("Please use ChromeUtils.defineModuleGetter instead of " +
-                        "XPCOMUtils.defineLazyModuleGetter");
+const MESSAGE_DEFINE =
+  "Please use ChromeUtils.defineModuleGetter instead of " +
+  "XPCOMUtils.defineLazyModuleGetter";
 
 ruleTester.run("use-chromeutils-import", rule, {
   valid: [
@@ -37,7 +38,7 @@ ruleTester.run("use-chromeutils-import", rule, {
                                        "resource://gre/modules/Service.jsm",
                                        undefined, preServicesLambda);`,
     {
-      options: [{allowCu: true}],
+      options: [{ allowCu: true }],
       code: `Cu.import("resource://gre/modules/Service.jsm");`,
     },
   ],
@@ -63,7 +64,7 @@ ruleTester.run("use-chromeutils-import", rule, {
       errors: callError(MESSAGE_IMPORT),
     },
     {
-      options: [{allowCu: true}],
+      options: [{ allowCu: true }],
       code: `Components.utils.import("resource://gre/modules/Services.jsm", this);`,
       output: `ChromeUtils.import("resource://gre/modules/Services.jsm", this);`,
       errors: callError(MESSAGE_IMPORT),
@@ -77,4 +78,3 @@ ruleTester.run("use-chromeutils-import", rule, {
     },
   ],
 });
-

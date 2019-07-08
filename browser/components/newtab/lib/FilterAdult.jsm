@@ -3,8 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 // Keep a Set of adult base domains for lookup (initialized at end of file)
 let gAdultSet;
@@ -18,7 +21,9 @@ let gCryptoHash = null;
 function md5Hash(text) {
   // Lazily create a reusable hasher
   if (gCryptoHash === null) {
-    gCryptoHash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+    gCryptoHash = Cc["@mozilla.org/security/hash;1"].createInstance(
+      Ci.nsICryptoHash
+    );
   }
 
   gCryptoHash.init(gCryptoHash.MD5);
@@ -34,7 +39,7 @@ function md5Hash(text) {
  * Filter out any link objects that have a url with an adult base domain.
  */
 function filterAdult(links) {
-  return links.filter(({url}) => {
+  return links.filter(({ url }) => {
     try {
       const uri = Services.io.newURI(url);
       return !gAdultSet.has(md5Hash(Services.eTLD.getBaseDomain(uri)));

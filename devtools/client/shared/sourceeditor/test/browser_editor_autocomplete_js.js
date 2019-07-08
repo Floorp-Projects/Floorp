@@ -7,7 +7,7 @@
 // Test to make sure that JS autocompletion is opening popups.
 async function test() {
   waitForExplicitFinish();
-  const {ed, win} = await setup();
+  const { ed, win } = await setup();
   const edWin = ed.container.contentWindow.wrappedJSObject;
   await testJS(ed, edWin);
   teardown(ed, win);
@@ -25,17 +25,18 @@ function testJS(ed, win) {
 
   ed.focus();
   ed.setText("document.");
-  ed.setCursor({line: 0, ch: 9});
+  ed.setCursor({ line: 0, ch: 9 });
 
   return new Promise(resolve => {
     ed.on("before-suggest", () => {
       info("before-suggest has been triggered");
-      EventUtils.synthesizeKey("VK_ESCAPE", { }, win);
+      EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
       resolve();
     });
 
-    const autocompleteKey =
-      Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
+    const autocompleteKey = Editor.keyFor("autocompletion", {
+      noaccel: true,
+    }).toUpperCase();
     EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
   });
 }

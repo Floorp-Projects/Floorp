@@ -2,26 +2,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
 
 // -----------------------------------------------------------------------
 // Web Install Prompt service
 // -----------------------------------------------------------------------
 
-function WebInstallPrompt() { }
+function WebInstallPrompt() {}
 
 WebInstallPrompt.prototype = {
   classID: Components.ID("{c1242012-27d8-477e-a0f1-0b098ffc329b}"),
   QueryInterface: ChromeUtils.generateQI([Ci.amIWebInstallPrompt]),
 
   confirm: function(aBrowser, aURL, aInstalls) {
-    let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+    let bundle = Services.strings.createBundle(
+      "chrome://browser/locale/browser.properties"
+    );
 
     let prompt = Services.prompt;
-    let flags = prompt.BUTTON_POS_0 * prompt.BUTTON_TITLE_IS_STRING + prompt.BUTTON_POS_1 * prompt.BUTTON_TITLE_CANCEL;
+    let flags =
+      prompt.BUTTON_POS_0 * prompt.BUTTON_TITLE_IS_STRING +
+      prompt.BUTTON_POS_1 * prompt.BUTTON_TITLE_CANCEL;
     let title = bundle.GetStringFromName("addonsConfirmInstall.title");
     let button = bundle.GetStringFromName("addonsConfirmInstall.install");
 
@@ -29,16 +39,31 @@ WebInstallPrompt.prototype = {
       let message;
       if (install.addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
         title = bundle.GetStringFromName("addonsConfirmInstallUnsigned.title");
-        message = bundle.GetStringFromName("addonsConfirmInstallUnsigned.message") + "\n\n" + install.name;
+        message =
+          bundle.GetStringFromName("addonsConfirmInstallUnsigned.message") +
+          "\n\n" +
+          install.name;
       } else {
         message = install.name;
       }
 
-      let result = (prompt.confirmEx(aBrowser.contentWindow, title, message, flags, button, null, null, null, {value: false}) == 0);
-      if (result)
+      let result =
+        prompt.confirmEx(
+          aBrowser.contentWindow,
+          title,
+          message,
+          flags,
+          button,
+          null,
+          null,
+          null,
+          { value: false }
+        ) == 0;
+      if (result) {
         install.install();
-      else
+      } else {
         install.cancel();
+      }
     });
   },
 };

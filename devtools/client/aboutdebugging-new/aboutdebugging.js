@@ -8,10 +8,13 @@ const Services = require("Services");
 
 const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
 const { createFactory } = require("devtools/client/shared/vendor/react");
-const { render, unmountComponentAtNode } =
-  require("devtools/client/shared/vendor/react-dom");
-const Provider =
-  createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
+const {
+  render,
+  unmountComponentAtNode,
+} = require("devtools/client/shared/vendor/react-dom");
+const Provider = createFactory(
+  require("devtools/client/shared/vendor/react-redux").Provider
+);
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
@@ -36,10 +39,22 @@ const {
 } = require("./src/modules/usb-runtimes");
 
 loader.lazyRequireGetter(this, "adb", "devtools/shared/adb/adb", true);
-loader.lazyRequireGetter(this, "adbAddon", "devtools/shared/adb/adb-addon", true);
-loader.lazyRequireGetter(this, "adbProcess", "devtools/shared/adb/adb-process", true);
+loader.lazyRequireGetter(
+  this,
+  "adbAddon",
+  "devtools/shared/adb/adb-addon",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "adbProcess",
+  "devtools/shared/adb/adb-process",
+  true
+);
 
-const Router = createFactory(require("devtools/client/shared/vendor/react-router-dom").HashRouter);
+const Router = createFactory(
+  require("devtools/client/shared/vendor/react-router-dom").HashRouter
+);
 const App = createFactory(require("./src/components/App"));
 
 const AboutDebugging = {
@@ -61,10 +76,7 @@ const AboutDebugging = {
     const width = this.getRoundedViewportWidth();
     this.actions.recordTelemetryEvent("open_adbg", { width });
 
-    await l10n.init([
-      "branding/brand.ftl",
-      "devtools/aboutdebugging.ftl",
-    ]);
+    await l10n.init(["branding/brand.ftl", "devtools/aboutdebugging.ftl"]);
 
     this.actions.createThisFirefoxRuntime();
 
@@ -77,7 +89,9 @@ const AboutDebugging = {
     // If ADB is already started, wait for the initial runtime list to be able to restore
     // already connected runtimes.
     const isProcessStarted = await adb.isProcessStarted();
-    const onAdbRuntimesReady = isProcessStarted ? adb.once("runtime-list-ready") : null;
+    const onAdbRuntimesReady = isProcessStarted
+      ? adb.once("runtime-list-ready")
+      : null;
     addUSBRuntimesObserver(this.onUSBRuntimesUpdated);
     await onAdbRuntimesReady;
 
@@ -90,12 +104,7 @@ const AboutDebugging = {
         },
         LocalizationProvider(
           { messages: l10n.getBundles() },
-          Router(
-            {},
-            App(
-              {}
-            )
-          )
+          Router({}, App({}))
         )
       ),
       this.mount
@@ -161,13 +170,21 @@ const AboutDebugging = {
   },
 };
 
-window.addEventListener("DOMContentLoaded", () => {
-  AboutDebugging.init();
-}, { once: true });
+window.addEventListener(
+  "DOMContentLoaded",
+  () => {
+    AboutDebugging.init();
+  },
+  { once: true }
+);
 
-window.addEventListener("unload", () => {
-  AboutDebugging.destroy();
-}, {once: true});
+window.addEventListener(
+  "unload",
+  () => {
+    AboutDebugging.destroy();
+  },
+  { once: true }
+);
 
 // Expose AboutDebugging to tests so that they can access to the store.
 window.AboutDebugging = AboutDebugging;

@@ -6,18 +6,22 @@
 function synthesizeMouseOver(element) {
   info("synthesize mouseover");
   let promise = BrowserTestUtils.waitForEvent(element, "mouseover");
-  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mouseout"});
-  EventUtils.synthesizeMouseAtCenter(element, {type: "mouseover"});
-  EventUtils.synthesizeMouseAtCenter(element, {type: "mousemove"});
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {
+    type: "mouseout",
+  });
+  EventUtils.synthesizeMouseAtCenter(element, { type: "mouseover" });
+  EventUtils.synthesizeMouseAtCenter(element, { type: "mousemove" });
   return promise;
 }
 
 function synthesizeMouseOut(element) {
   info("synthesize mouseout");
   let promise = BrowserTestUtils.waitForEvent(element, "mouseout");
-  EventUtils.synthesizeMouseAtCenter(element, {type: "mouseover"});
-  EventUtils.synthesizeMouseAtCenter(element, {type: "mouseout"});
-  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
+  EventUtils.synthesizeMouseAtCenter(element, { type: "mouseover" });
+  EventUtils.synthesizeMouseAtCenter(element, { type: "mouseout" });
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {
+    type: "mousemove",
+  });
   return promise;
 }
 
@@ -70,6 +74,10 @@ add_task(async function() {
 
   let longURL = "http://longurl.com/" + "foobar/".repeat(30);
   gURLBar.value = longURL;
-  is(gURLBar.inputField.value, longURL.replace(/^http:\/\//, ""), "Urlbar value has http:// stripped");
+  is(
+    gURLBar.inputField.value,
+    longURL.replace(/^http:\/\//, ""),
+    "Urlbar value has http:// stripped"
+  );
   await expectTooltip(longURL);
 });

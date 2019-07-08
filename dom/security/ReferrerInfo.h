@@ -70,6 +70,10 @@ class ReferrerInfo : public nsIReferrerInfo {
   // create an copy of the ReferrerInfo with new referrer policy
   already_AddRefed<nsIReferrerInfo> CloneWithNewPolicy(uint32_t aPolicy) const;
 
+  // create an copy of the ReferrerInfo with new send referrer
+  already_AddRefed<nsIReferrerInfo> CloneWithNewSendReferrer(
+      bool aSendReferrer) const;
+
   // create an copy of the ReferrerInfo with new original referrer
   already_AddRefed<nsIReferrerInfo> CloneWithNewOriginalReferrer(
       nsIURI* aOriginalReferrer) const;

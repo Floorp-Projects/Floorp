@@ -9,15 +9,15 @@ const ID = "webextension1@tests.mozilla.org";
 const ADDONS = {
   webextension_1: {
     "manifest.json": {
-      "name": "Web Extension Name",
-      "version": "1.0",
-      "manifest_version": 2,
-      "applications": {
-        "gecko": {
-          "id": ID,
+      name: "Web Extension Name",
+      version: "1.0",
+      manifest_version: 2,
+      applications: {
+        gecko: {
+          id: ID,
         },
       },
-      "icons": {
+      icons: {
         "48": "icon48.png",
         "64": "icon64.png",
       },
@@ -43,21 +43,21 @@ add_task(async function test_reloading_a_temp_addon() {
 
   const onReload = new Promise(resolve => {
     const listener = {
-      onUninstalling: (addonObj) => {
+      onUninstalling: addonObj => {
         if (addonObj.id === ID) {
           receivedOnUninstalling = true;
         }
       },
-      onUninstalled: (addonObj) => {
+      onUninstalled: addonObj => {
         if (addonObj.id === ID) {
           receivedOnUninstalled = true;
         }
       },
-      onInstalling: (addonObj) => {
+      onInstalling: addonObj => {
         receivedOnInstalling = true;
         equal(addonObj.id, ID);
       },
-      onInstalled: (addonObj) => {
+      onInstalled: addonObj => {
         receivedOnInstalled = true;
         equal(addonObj.id, ID);
         // This should be the last event called.
@@ -72,8 +72,16 @@ add_task(async function test_reloading_a_temp_addon() {
   await onReload;
 
   // Make sure reload() doesn't trigger uninstall events.
-  equal(receivedOnUninstalled, false, "reload should not trigger onUninstalled");
-  equal(receivedOnUninstalling, false, "reload should not trigger onUninstalling");
+  equal(
+    receivedOnUninstalled,
+    false,
+    "reload should not trigger onUninstalled"
+  );
+  equal(
+    receivedOnUninstalling,
+    false,
+    "reload should not trigger onUninstalling"
+  );
 
   // Make sure reload() triggers install events, like an upgrade.
   equal(receivedOnInstalling, true, "reload should trigger onInstalling");
@@ -84,16 +92,18 @@ add_task(async function test_reloading_a_temp_addon() {
 
 add_task(async function test_can_reload_permanent_addon() {
   await promiseRestartManager();
-  const {addon} = await AddonTestUtils.promiseInstallXPI(ADDONS.webextension_1);
+  const { addon } = await AddonTestUtils.promiseInstallXPI(
+    ADDONS.webextension_1
+  );
 
   let disabledCalled = false;
   let enabledCalled = false;
   AddonManager.addAddonListener({
-    onDisabled: (aAddon) => {
+    onDisabled: aAddon => {
       Assert.ok(!enabledCalled);
       disabledCalled = true;
     },
-    onEnabled: (aAddon) => {
+    onEnabled: aAddon => {
       Assert.ok(disabledCalled);
       enabledCalled = true;
     },
@@ -129,7 +139,11 @@ add_task(async function test_reload_to_invalid_version_fails() {
     },
   };
 
-  let addonDir = await promiseWriteWebManifestForExtension(manifest, tempdir, "invalid_version");
+  let addonDir = await promiseWriteWebManifestForExtension(
+    manifest,
+    tempdir,
+    "invalid_version"
+  );
   await AddonManager.installTemporaryAddon(addonDir);
 
   let addon = await promiseAddonByID(addonId);
@@ -145,13 +159,22 @@ add_task(async function test_reload_to_invalid_version_fails() {
   manifest.applications.gecko.strict_max_version = "1";
   manifest.version = "2.0";
 
-  addonDir = await promiseWriteWebManifestForExtension(manifest, tempdir, "invalid_version", false);
-  let expectedMsg = new RegExp("Add-on invalid_version_cannot_be_reloaded@tests.mozilla.org is not compatible with application version. " +
-                               "add-on minVersion: 1. add-on maxVersion: 1.");
+  addonDir = await promiseWriteWebManifestForExtension(
+    manifest,
+    tempdir,
+    "invalid_version",
+    false
+  );
+  let expectedMsg = new RegExp(
+    "Add-on invalid_version_cannot_be_reloaded@tests.mozilla.org is not compatible with application version. " +
+      "add-on minVersion: 1. add-on maxVersion: 1."
+  );
 
-  await Assert.rejects(addon.reload(),
-                       expectedMsg,
-                       "Reload rejects when application version does not fall between minVersion and maxVersion");
+  await Assert.rejects(
+    addon.reload(),
+    expectedMsg,
+    "Reload rejects when application version does not fall between minVersion and maxVersion"
+  );
 
   let reloadedAddon = await promiseAddonByID(addonId);
   notEqual(reloadedAddon, null);

@@ -12,30 +12,72 @@ add_task(async function test() {
 
   // The first window will be put into the already open window and the second
   // window will be opened with _openWindowWithState, which is the source of the problem.
-  let state = { windows: [
-    {
-      tabs: [
-        { entries: [{ url: "http://example.org#0", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-      ],
-      selected: 1,
-    },
-    {
-      tabs: [
-        { entries: [{ url: "http://example.com#1", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#2", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#3", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#4", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#5", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#6", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-      ],
-      selected: 4,
-    },
-  ] };
+  let state = {
+    windows: [
+      {
+        tabs: [
+          {
+            entries: [
+              { url: "http://example.org#0", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+        ],
+        selected: 1,
+      },
+      {
+        tabs: [
+          {
+            entries: [
+              { url: "http://example.com#1", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com#2", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com#3", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com#4", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com#5", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com#6", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+        ],
+        selected: 4,
+      },
+    ],
+  };
   let numTabs = state.windows[0].tabs.length + state.windows[1].tabs.length;
 
   let loadCount = 0;
   let promiseRestoringTabs = new Promise(resolve => {
-    gProgressListener.setCallback(function(aBrowser, aNeedRestore, aRestoring, aRestored) {
+    gProgressListener.setCallback(function(
+      aBrowser,
+      aNeedRestore,
+      aRestoring,
+      aRestored
+    ) {
       if (++loadCount == numTabs) {
         // We don't actually care about load order in this test, just that they all
         // do load.
@@ -52,10 +94,14 @@ add_task(async function test() {
   Services.ww.registerNotification(function observer(aSubject, aTopic, aData) {
     if (aTopic == "domwindowopened") {
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      win.addEventListener("load", function() {
-        Services.ww.unregisterNotification(observer);
-        win.gBrowser.addTabsProgressListener(gProgressListener);
-      }, {once: true});
+      win.addEventListener(
+        "load",
+        function() {
+          Services.ww.unregisterNotification(observer);
+          win.gBrowser.addTabsProgressListener(gProgressListener);
+        },
+        { once: true }
+      );
     }
   });
 

@@ -31,33 +31,59 @@ const HTMLControlHeadRule = [...ARIARule, { elm: "label", isSibling: true }];
 const rules = {
   CSSContent: [{ elm: "style", isSibling: true }, { fromsubtree: true }],
   HTMLARIAGridCell: [...ARIARule, { fromsubtree: true }, { attr: "title" }],
-  HTMLControl: [...HTMLControlHeadRule, { fromsubtree: true },
-    { attr: "title" }],
+  HTMLControl: [
+    ...HTMLControlHeadRule,
+    { fromsubtree: true },
+    { attr: "title" },
+  ],
   HTMLElm: [...ARIARule, { attr: "title" }],
   HTMLImg: [...ARIARule, { attr: "alt", recreated: true }, { attr: "title" }],
   HTMLImgEmptyAlt: [...ARIARule, { attr: "title" }, { attr: "alt" }],
-  HTMLInputButton: [...HTMLControlHeadRule, { attr: "value" },
-    { attr: "title" }],
-  HTMLInputImage: [...HTMLControlHeadRule, { attr: "alt", recreated: true },
-    { attr: "value", recreated: true }, { attr: "title" }],
-  HTMLInputImageNoValidSrc: [...HTMLControlHeadRule,
-    { attr: "alt", recreated: true }, { attr: "value", recreated: true }],
-  HTMLInputReset: [...HTMLControlHeadRule,
-    { attr: "value", textchanged: true }],
-  HTMLInputSubmit: [...HTMLControlHeadRule,
-    { attr: "value", textchanged: true }],
+  HTMLInputButton: [
+    ...HTMLControlHeadRule,
+    { attr: "value" },
+    { attr: "title" },
+  ],
+  HTMLInputImage: [
+    ...HTMLControlHeadRule,
+    { attr: "alt", recreated: true },
+    { attr: "value", recreated: true },
+    { attr: "title" },
+  ],
+  HTMLInputImageNoValidSrc: [
+    ...HTMLControlHeadRule,
+    { attr: "alt", recreated: true },
+    { attr: "value", recreated: true },
+  ],
+  HTMLInputReset: [
+    ...HTMLControlHeadRule,
+    { attr: "value", textchanged: true },
+  ],
+  HTMLInputSubmit: [
+    ...HTMLControlHeadRule,
+    { attr: "value", textchanged: true },
+  ],
   HTMLLink: [...ARIARule, { fromsubtree: true }, { attr: "title" }],
   HTMLLinkImage: [...ARIARule, { elm: "img" }, { attr: "title" }],
-  HTMLOption: [...ARIARule, { attr: "label" }, { fromsubtree: true },
-    { attr: "title" }],
-  HTMLTable: [...ARIARule, { elm: "caption" }, { attr: "summary" },
-    { attr: "title" }]
+  HTMLOption: [
+    ...ARIARule,
+    { attr: "label" },
+    { fromsubtree: true },
+    { attr: "title" },
+  ],
+  HTMLTable: [
+    ...ARIARule,
+    { elm: "caption" },
+    { attr: "summary" },
+    { attr: "title" },
+  ],
 };
 
-const markupTests = [{
-  id: "btn",
-  ruleset: "HTMLControl",
-  markup: `
+const markupTests = [
+  {
+    id: "btn",
+    ruleset: "HTMLControl",
+    markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
     <label for="btn">test4</label>
@@ -65,11 +91,12 @@ const markupTests = [{
             aria-label="test1"
             aria-labelledby="l1 l2"
             title="test5">press me</button>`,
-  expected: ["test2 test3", "test1", "test4", "press me", "test5"]
-}, {
-  id: "btn",
-  ruleset: "HTMLInputButton",
-  markup: `
+    expected: ["test2 test3", "test1", "test4", "press me", "test5"],
+  },
+  {
+    id: "btn",
+    ruleset: "HTMLInputButton",
+    markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
     <label for="btn">test4</label>
@@ -82,12 +109,18 @@ const markupTests = [{
            src="no name from src"
            data="no name from data"
            title="name from title"/>`,
-  expected: ["test2 test3", "test1", "test4", "name from value",
-    "name from title"]
-}, {
-  id: "btn-submit",
-  ruleset: "HTMLInputSubmit",
-  markup: `
+    expected: [
+      "test2 test3",
+      "test1",
+      "test4",
+      "name from value",
+      "name from title",
+    ],
+  },
+  {
+    id: "btn-submit",
+    ruleset: "HTMLInputSubmit",
+    markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
     <label for="btn-submit">test4</label>
@@ -100,11 +133,12 @@ const markupTests = [{
            src="no name from src"
            data="no name from data"
            title="no name from title"/>`,
-  expected: ["test2 test3", "test1", "test4", "name from value"]
-}, {
-  id: "btn-reset",
-  ruleset: "HTMLInputReset",
-  markup: `
+    expected: ["test2 test3", "test1", "test4", "name from value"],
+  },
+  {
+    id: "btn-reset",
+    ruleset: "HTMLInputReset",
+    markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
     <label for="btn-reset">test4</label>
@@ -117,11 +151,12 @@ const markupTests = [{
            src="no name from src"
            data="no name from data"
            title="no name from title"/>`,
-  expected: ["test2 test3", "test1", "test4", "name from value"]
-}, {
-  id: "btn-image",
-  ruleset: "HTMLInputImage",
-  markup: `
+    expected: ["test2 test3", "test1", "test4", "name from value"],
+  },
+  {
+    id: "btn-image",
+    ruleset: "HTMLInputImage",
+    markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
     <label for="btn-image">test4</label>
@@ -134,12 +169,19 @@ const markupTests = [{
            src="http://example.com/a11y/accessible/tests/mochitest/moz.png"
            data="no name from data"
            title="name from title"/>`,
-  expected: ["test2 test3", "test1", "test4", "name from alt",
-    "name from value", "name from title"]
-}, {
-  id: "btn-image",
-  ruleset: "HTMLInputImageNoValidSrc",
-  markup: `
+    expected: [
+      "test2 test3",
+      "test1",
+      "test4",
+      "name from alt",
+      "name from value",
+      "name from title",
+    ],
+  },
+  {
+    id: "btn-image",
+    ruleset: "HTMLInputImageNoValidSrc",
+    markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
     <label for="btn-image">test4</label>
@@ -151,12 +193,18 @@ const markupTests = [{
            value="name from value"
            data="no name from data"
            title="no name from title"/>`,
-  expected: ["test2 test3", "test1", "test4", "name from alt",
-    "name from value"]
-}, {
-  id: "opt",
-  ruleset: "HTMLOption",
-  markup: `
+    expected: [
+      "test2 test3",
+      "test1",
+      "test4",
+      "name from alt",
+      "name from value",
+    ],
+  },
+  {
+    id: "opt",
+    ruleset: "HTMLOption",
+    markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
     <select>
@@ -167,11 +215,12 @@ const markupTests = [{
               title="test5">option1</option>
       <option>option2</option>
     </select>`,
-  expected: ["test2 test3", "test1", "test4", "option1", "test5"]
-}, {
-  id: "img",
-  ruleset: "HTMLImg",
-  markup: `
+    expected: ["test2 test3", "test1", "test4", "option1", "test5"],
+  },
+  {
+    id: "img",
+    ruleset: "HTMLImg",
+    markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
     <img id="img"
@@ -180,11 +229,17 @@ const markupTests = [{
          alt="Mozilla logo"
          title="This is a logo"
          src="http://example.com/a11y/accessible/tests/mochitest/moz.png"/>`,
-  expected: ["test2 test3", "Logo of Mozilla", "Mozilla logo", "This is a logo"]
-}, {
-  id: "imgemptyalt",
-  ruleset: "HTMLImgEmptyAlt",
-  markup: `
+    expected: [
+      "test2 test3",
+      "Logo of Mozilla",
+      "Mozilla logo",
+      "This is a logo",
+    ],
+  },
+  {
+    id: "imgemptyalt",
+    ruleset: "HTMLImgEmptyAlt",
+    markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
     <img id="imgemptyalt"
@@ -193,11 +248,12 @@ const markupTests = [{
          title="This is a logo"
          alt=""
          src="http://example.com/a11y/accessible/tests/mochitest/moz.png"/>`,
-  expected: ["test2 test3", "Logo of Mozilla", "This is a logo", ""]
-}, {
-  id: "tc",
-  ruleset: "HTMLElm",
-  markup: `
+    expected: ["test2 test3", "Logo of Mozilla", "This is a logo", ""],
+  },
+  {
+    id: "tc",
+    ruleset: "HTMLElm",
+    markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
     <label for="tc">test4</label>
@@ -215,11 +271,12 @@ const markupTests = [{
         </td>
       </tr>
     </table>`,
-  expected: ["test2 test3", "test1", "test5"]
-}, {
-  id: "gc",
-  ruleset: "HTMLARIAGridCell",
-  markup: `
+    expected: ["test2 test3", "test1", "test5"],
+  },
+  {
+    id: "gc",
+    ruleset: "HTMLARIAGridCell",
+    markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
     <label for="gc">test4</label>
@@ -239,13 +296,17 @@ const markupTests = [{
         </td>
       </tr>
     </table>`,
-  expected: ["test2 test3", "test1",
-    "This is a paragraph This is a link \u2022 Listitem1 \u2022 Listitem2",
-    "This is a paragraph This is a link This is a list"]
-}, {
-  id: "t",
-  ruleset: "HTMLTable",
-  markup: `
+    expected: [
+      "test2 test3",
+      "test1",
+      "This is a paragraph This is a link \u2022 Listitem1 \u2022 Listitem2",
+      "This is a paragraph This is a link This is a list",
+    ],
+  },
+  {
+    id: "t",
+    ruleset: "HTMLTable",
+    markup: `
     <span id="l1">lby_tst6_1</span>
     <span id="l2">lby_tst6_2</span>
     <label for="t">label_tst6</label>
@@ -260,56 +321,65 @@ const markupTests = [{
         <td>cell2</td>
       </tr>
     </table>`,
-  expected: ["lby_tst6_1 lby_tst6_2", "arialabel_tst6", "caption_tst6",
-    "summary_tst6", "title_tst6"]
-}, {
-  id: "btn",
-  ruleset: "CSSContent",
-  markup: `
+    expected: [
+      "lby_tst6_1 lby_tst6_2",
+      "arialabel_tst6",
+      "caption_tst6",
+      "summary_tst6",
+      "title_tst6",
+    ],
+  },
+  {
+    id: "btn",
+    ruleset: "CSSContent",
+    markup: `
     <style>
       button::before {
         content: "do not ";
       }
     </style>
     <button id="btn">press me</button>`,
-  expected: ["do not press me", "press me"]
-}, {
-  // TODO: uncomment when Bug-1256382 is resoved.
-  // id: 'li',
-  // ruleset: 'CSSContent',
-  // markup: `
-  //   <style>
-  //     ul {
-  //       list-style-type: decimal;
-  //     }
-  //   </style>
-  //   <ul id="ul">
-  //     <li id="li">Listitem</li>
-  //   </ul>`,
-  // expected: ['1. Listitem', `${String.fromCharCode(0x2022)} Listitem`]
-// }, {
-  id: "a",
-  ruleset: "HTMLLink",
-  markup: `
+    expected: ["do not press me", "press me"],
+  },
+  {
+    // TODO: uncomment when Bug-1256382 is resoved.
+    // id: 'li',
+    // ruleset: 'CSSContent',
+    // markup: `
+    //   <style>
+    //     ul {
+    //       list-style-type: decimal;
+    //     }
+    //   </style>
+    //   <ul id="ul">
+    //     <li id="li">Listitem</li>
+    //   </ul>`,
+    // expected: ['1. Listitem', `${String.fromCharCode(0x2022)} Listitem`]
+    // }, {
+    id: "a",
+    ruleset: "HTMLLink",
+    markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
     <a id="a"
        aria-label="test1"
        aria-labelledby="l1 l2"
        title="test4">test5</a>`,
-  expected: ["test2 test3", "test1", "test5", "test4"]
-}, {
-  id: "a-img",
-  ruleset: "HTMLLinkImage",
-  markup: `
+    expected: ["test2 test3", "test1", "test5", "test4"],
+  },
+  {
+    id: "a-img",
+    ruleset: "HTMLLinkImage",
+    markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
     <a id="a-img"
        aria-label="test1"
        aria-labelledby="l1 l2"
        title="test4"><img alt="test5"/></a>`,
-  expected: ["test2 test3", "test1", "test5", "test4"]
-}];
+    expected: ["test2 test3", "test1", "test5", "test4"],
+  },
+];
 
 /**
  * Test accessible name that is calculated from an attribute, remove the
@@ -325,16 +395,23 @@ const markupTests = [{
  * @param {[type]} expected     expected name value
  */
 async function testAttrRule(browser, target, rule, expected) {
-  let {id, parent, acc} = target;
-  let {recreated, textchanged, attr} = rule;
+  let { id, parent, acc } = target;
+  let { recreated, textchanged, attr } = rule;
 
   testName(acc, expected);
 
   if (recreated || textchanged) {
-    let [event] = await contentSpawnMutation(browser, {
-      expected: [recreated ? [EVENT_REORDER, parent] : [EVENT_TEXT_INSERTED, id]]
-    }, ([contentId, contentAttr]) =>
-      content.document.getElementById(contentId).removeAttribute(contentAttr), [id, attr]);
+    let [event] = await contentSpawnMutation(
+      browser,
+      {
+        expected: [
+          recreated ? [EVENT_REORDER, parent] : [EVENT_TEXT_INSERTED, id],
+        ],
+      },
+      ([contentId, contentAttr]) =>
+        content.document.getElementById(contentId).removeAttribute(contentAttr),
+      [id, attr]
+    );
 
     // Update accessible just in case it is now defunct.
     target.acc = findAccessibleChildByID(event.accessible, id);
@@ -356,13 +433,18 @@ async function testAttrRule(browser, target, rule, expected) {
  * @param {[type]} expected     expected name value
  */
 async function testElmRule(browser, target, rule, expected) {
-  let {id, parent, acc} = target;
-  let {isSibling, elm} = rule;
+  let { id, parent, acc } = target;
+  let { isSibling, elm } = rule;
 
   testName(acc, expected);
-  let [event] = await contentSpawnMutation(browser, {
-    expected: [[EVENT_REORDER, isSibling ? parent : id]]
-  }, contentElm => content.document.querySelector(`${contentElm}`).remove(), elm);
+  let [event] = await contentSpawnMutation(
+    browser,
+    {
+      expected: [[EVENT_REORDER, isSibling ? parent : id]],
+    },
+    contentElm => content.document.querySelector(`${contentElm}`).remove(),
+    elm
+  );
 
   // Update accessible just in case it is now defunct.
   target.acc = findAccessibleChildByID(event.accessible, id);
@@ -381,17 +463,22 @@ async function testElmRule(browser, target, rule, expected) {
  * @param {[type]} expected     expected name value
  */
 async function testSubtreeRule(browser, target, rule, expected) {
-  let {id, acc} = target;
+  let { id, acc } = target;
 
   testName(acc, expected);
-  let [event] = await contentSpawnMutation(browser, {
-    expected: [[EVENT_REORDER, id]]
-  }, contentId => {
-    let elm = content.document.getElementById(contentId);
-    while (elm.firstChild) {
-      elm.firstChild.remove();
-    }
-  }, id);
+  let [event] = await contentSpawnMutation(
+    browser,
+    {
+      expected: [[EVENT_REORDER, id]],
+    },
+    contentId => {
+      let elm = content.document.getElementById(contentId);
+      while (elm.firstChild) {
+        elm.firstChild.remove();
+      }
+    },
+    id
+  );
 
   // Update accessible just in case it is now defunct.
   target.acc = findAccessibleChildByID(event.accessible, id);
@@ -430,4 +517,5 @@ markupTests.forEach(({ id, ruleset, markup, expected }) =>
     let parent = getAccessibleDOMNodeID(acc.parent);
     let target = { id, parent, acc };
     await testNameRule(browser, target, rules[ruleset], expected);
-  }));
+  })
+);

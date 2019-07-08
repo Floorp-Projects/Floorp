@@ -8,16 +8,17 @@
 
 requestLongerTimeout(10);
 
-const PAGE_1 = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
-const PAGE_2 = "data:text/html,<html><body>Another%20regular,%20everyday,%20normal%20page.";
+const PAGE_1 =
+  "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
+const PAGE_2 =
+  "data:text/html,<html><body>Another%20regular,%20everyday,%20normal%20page.";
 
 // Turn off tab animations for testing and use a single content process
 // for these tests since we want to test tabs within the crashing process here.
 add_task(async function test_initialize() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [ "toolkit.cosmeticAnimations.enabled", false],
-  ] });
+    set: [["toolkit.cosmeticAnimations.enabled", false]],
+  });
 });
 
 // Allow tabs to restore on demand so we can test pending states
@@ -26,13 +27,16 @@ Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
 function clickButton(browser, id) {
   info("Clicking " + id);
 
-  let frame_script = (buttonId) => {
+  let frame_script = buttonId => {
     let button = content.document.getElementById(buttonId);
     button.click();
   };
 
   let mm = browser.messageManager;
-  mm.loadFrameScript("data:,(" + frame_script.toString() + ")('" + id + "');", false);
+  mm.loadFrameScript(
+    "data:,(" + frame_script.toString() + ")('" + id + "');",
+    false
+  );
 }
 
 /**
@@ -97,8 +101,10 @@ function promiseHistoryLength(browser, length) {
       if (contentLength == length) {
         resolve();
       } else {
-        reject(`Content has window.history.length ${contentLength} which does ` +
-               `not equal expected ${length}`);
+        reject(
+          `Content has window.history.length ${contentLength} which does ` +
+            `not equal expected ${length}`
+        );
       }
     });
 
@@ -115,11 +121,16 @@ function promiseHistoryLength(browser, length) {
  * @return Promise
  */
 function promiseTabCrashedReady(browser) {
-  return new Promise((resolve) => {
-    browser.addEventListener("AboutTabCrashedReady", function ready(e) {
-      browser.removeEventListener("AboutTabCrashedReady", ready, false, true);
-      resolve();
-    }, false, true);
+  return new Promise(resolve => {
+    browser.addEventListener(
+      "AboutTabCrashedReady",
+      function ready(e) {
+        browser.removeEventListener("AboutTabCrashedReady", ready, false, true);
+        resolve();
+      },
+      false,
+      true
+    );
   });
 }
 
@@ -143,10 +154,13 @@ add_task(async function test_crash_page_not_in_history() {
 
   // Check the tab state and make sure the tab crashed page isn't
   // mentioned.
-  let {entries} = JSON.parse(ss.getTabState(newTab));
+  let { entries } = JSON.parse(ss.getTabState(newTab));
   is(entries.length, 1, "Should have a single history entry");
-  is(entries[0].url, PAGE_1,
-    "Single entry should be the page we visited before crashing");
+  is(
+    entries[0].url,
+    PAGE_1,
+    "Single entry should be the page we visited before crashing"
+  );
 
   gBrowser.removeTab(newTab);
 });
@@ -174,18 +188,27 @@ add_task(async function test_revived_history_from_remote() {
   // become remote again.
   BrowserTestUtils.loadURI(browser, PAGE_2);
   await promiseTabRestored(newTab);
-  ok(!newTab.hasAttribute("crashed"), "Tab shouldn't be marked as crashed anymore.");
+  ok(
+    !newTab.hasAttribute("crashed"),
+    "Tab shouldn't be marked as crashed anymore."
+  );
   ok(browser.isRemoteBrowser, "Should be a remote browser");
   await TabStateFlusher.flush(browser);
 
   // Check the tab state and make sure the tab crashed page isn't
   // mentioned.
-  let {entries} = JSON.parse(ss.getTabState(newTab));
+  let { entries } = JSON.parse(ss.getTabState(newTab));
   is(entries.length, 2, "Should have two history entries");
-  is(entries[0].url, PAGE_1,
-    "First entry should be the page we visited before crashing");
-  is(entries[1].url, PAGE_2,
-    "Second entry should be the page we visited after crashing");
+  is(
+    entries[0].url,
+    PAGE_1,
+    "First entry should be the page we visited before crashing"
+  );
+  is(
+    entries[1].url,
+    PAGE_2,
+    "Second entry should be the page we visited after crashing"
+  );
 
   gBrowser.removeTab(newTab);
 });
@@ -213,18 +236,27 @@ add_task(async function test_revived_history_from_non_remote() {
   // become remote again.
   BrowserTestUtils.loadURI(browser, "about:mozilla");
   await promiseBrowserLoaded(browser);
-  ok(!newTab.hasAttribute("crashed"), "Tab shouldn't be marked as crashed anymore.");
+  ok(
+    !newTab.hasAttribute("crashed"),
+    "Tab shouldn't be marked as crashed anymore."
+  );
   ok(!browser.isRemoteBrowser, "Should not be a remote browser");
   await TabStateFlusher.flush(browser);
 
   // Check the tab state and make sure the tab crashed page isn't
   // mentioned.
-  let {entries} = JSON.parse(ss.getTabState(newTab));
+  let { entries } = JSON.parse(ss.getTabState(newTab));
   is(entries.length, 2, "Should have two history entries");
-  is(entries[0].url, PAGE_1,
-    "First entry should be the page we visited before crashing");
-  is(entries[1].url, "about:mozilla",
-    "Second entry should be the page we visited after crashing");
+  is(
+    entries[0].url,
+    PAGE_1,
+    "First entry should be the page we visited before crashing"
+  );
+  is(
+    entries[1].url,
+    "about:mozilla",
+    "Second entry should be the page we visited after crashing"
+  );
 
   gBrowser.removeTab(newTab);
 });
@@ -243,7 +275,9 @@ add_task(async function test_revive_tab_from_session_store() {
   BrowserTestUtils.loadURI(browser, PAGE_1);
   await promiseBrowserLoaded(browser);
 
-  let newTab2 = BrowserTestUtils.addTab(gBrowser, "about:blank", { sameProcessAsFrameLoader: browser.frameLoader });
+  let newTab2 = BrowserTestUtils.addTab(gBrowser, "about:blank", {
+    sameProcessAsFrameLoader: browser.frameLoader,
+  });
   let browser2 = newTab2.linkedBrowser;
   ok(browser2.isRemoteBrowser, "Should be a remote browser");
   await promiseBrowserLoaded(browser2);
@@ -266,7 +300,10 @@ add_task(async function test_revive_tab_from_session_store() {
   // Use SessionStore to revive the first tab
   clickButton(browser, "restoreTab");
   await promiseTabRestored(newTab);
-  ok(!newTab.hasAttribute("crashed"), "Tab shouldn't be marked as crashed anymore.");
+  ok(
+    !newTab.hasAttribute("crashed"),
+    "Tab shouldn't be marked as crashed anymore."
+  );
   ok(newTab2.hasAttribute("pending"), "Second tab should still be pending.");
 
   // We can't just check browser.currentURI.spec, because from
@@ -300,7 +337,9 @@ add_task(async function test_revive_all_tabs_from_session_store() {
   // a second window, since only selected tabs will show
   // about:tabcrashed.
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
-  let newTab2 = BrowserTestUtils.addTab(win2.gBrowser, PAGE_1, { sameProcessAsFrameLoader: browser.frameLoader });
+  let newTab2 = BrowserTestUtils.addTab(win2.gBrowser, PAGE_1, {
+    sameProcessAsFrameLoader: browser.frameLoader,
+  });
   win2.gBrowser.selectedTab = newTab2;
   let browser2 = newTab2.linkedBrowser;
   ok(browser2.isRemoteBrowser, "Should be a remote browser");
@@ -319,14 +358,24 @@ add_task(async function test_revive_all_tabs_from_session_store() {
   await BrowserTestUtils.crashBrowser(browser);
   // Both tabs should now be crashed.
   is(newTab.getAttribute("crashed"), "true", "First tab should be crashed");
-  is(newTab2.getAttribute("crashed"), "true", "Second window tab should be crashed");
+  is(
+    newTab2.getAttribute("crashed"),
+    "true",
+    "Second window tab should be crashed"
+  );
 
   // Use SessionStore to revive all the tabs
   clickButton(browser, "restoreAll");
   await promiseTabRestored(newTab);
-  ok(!newTab.hasAttribute("crashed"), "Tab shouldn't be marked as crashed anymore.");
+  ok(
+    !newTab.hasAttribute("crashed"),
+    "Tab shouldn't be marked as crashed anymore."
+  );
   ok(!newTab.hasAttribute("pending"), "Tab shouldn't be pending.");
-  ok(!newTab2.hasAttribute("crashed"), "Second tab shouldn't be marked as crashed anymore.");
+  ok(
+    !newTab2.hasAttribute("crashed"),
+    "Second tab shouldn't be marked as crashed anymore."
+  );
   ok(!newTab2.hasAttribute("pending"), "Second tab shouldn't be pending.");
 
   // We can't just check browser.currentURI.spec, because from
@@ -361,7 +410,10 @@ add_task(async function test_close_tab_after_crash() {
   // Crash the tab
   await BrowserTestUtils.crashBrowser(browser);
 
-  let promise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabClose");
+  let promise = BrowserTestUtils.waitForEvent(
+    gBrowser.tabContainer,
+    "TabClose"
+  );
 
   // Click the close tab button
   clickButton(browser, "closeTab");
@@ -369,7 +421,6 @@ add_task(async function test_close_tab_after_crash() {
 
   is(gBrowser.tabs.length, 1, "Should have closed the tab");
 });
-
 
 /**
  * Checks that "restore all" button is only shown if more than one tab
@@ -396,7 +447,10 @@ add_task(async function test_hide_restore_all_button() {
 
   let restoreAllStyles = window.getComputedStyle(restoreAllButton);
   is(restoreAllStyles.display, "none", "Restore All button should be hidden");
-  ok(restoreOneButton.classList.contains("primary"), "Restore Tab button should have the primary class");
+  ok(
+    restoreOneButton.classList.contains("primary"),
+    "Restore Tab button should have the primary class"
+  );
 
   let newTab2 = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
@@ -407,7 +461,9 @@ add_task(async function test_hide_restore_all_button() {
   // Load up a second window so we can get another tab to show
   // about:tabcrashed
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
-  let newTab3 = BrowserTestUtils.addTab(win2.gBrowser, PAGE_2, { sameProcessAsFrameLoader: browser.frameLoader });
+  let newTab3 = BrowserTestUtils.addTab(win2.gBrowser, PAGE_2, {
+    sameProcessAsFrameLoader: browser.frameLoader,
+  });
   win2.gBrowser.selectedTab = newTab3;
   let otherWinBrowser = newTab3.linkedBrowser;
   await promiseBrowserLoaded(otherWinBrowser);
@@ -425,8 +481,15 @@ add_task(async function test_hide_restore_all_button() {
   restoreOneButton = doc.getElementById("restoreTab");
 
   restoreAllStyles = window.getComputedStyle(restoreAllButton);
-  isnot(restoreAllStyles.display, "none", "Restore All button should not be hidden");
-  ok(!(restoreOneButton.classList.contains("primary")), "Restore Tab button should not have the primary class");
+  isnot(
+    restoreAllStyles.display,
+    "none",
+    "Restore All button should not be hidden"
+  );
+  ok(
+    !restoreOneButton.classList.contains("primary"),
+    "Restore Tab button should not have the primary class"
+  );
 
   await BrowserTestUtils.closeWindow(win2);
   gBrowser.removeTab(newTab);
@@ -452,12 +515,18 @@ add_task(async function test_aboutcrashedtabzoom() {
   // Crash the tab
   await BrowserTestUtils.crashBrowser(browser);
 
-  ok(ZoomManager.getZoomForBrowser(browser) === 1, "zoom should have reset on crash");
+  ok(
+    ZoomManager.getZoomForBrowser(browser) === 1,
+    "zoom should have reset on crash"
+  );
 
   clickButton(browser, "restoreTab");
   await promiseTabRestored(newTab);
 
-  ok(ZoomManager.getZoomForBrowser(browser) === zoomLevel, "zoom should have gone back to enlarged");
+  ok(
+    ZoomManager.getZoomForBrowser(browser) === zoomLevel,
+    "zoom should have gone back to enlarged"
+  );
   FullZoom.reset();
 
   gBrowser.removeTab(newTab);

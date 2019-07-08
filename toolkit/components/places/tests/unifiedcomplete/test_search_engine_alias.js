@@ -129,7 +129,6 @@ add_task(async function basicGetAndPost() {
   await cleanup();
 });
 
-
 // Uses an engine that provides search suggestions.
 add_task(async function engineWithSuggestions() {
   let engine = await addTestSuggestionsEngine();
@@ -240,7 +239,6 @@ add_task(async function engineWithSuggestions() {
   await cleanup();
 });
 
-
 // When the search is simply "@", the results should be a list of all the "@"
 // alias engines.
 add_task(async function tokenAliasEngines() {
@@ -269,8 +267,9 @@ add_task(async function tokenAliasEngines() {
     Assert.ok(true, "No token alias engines, skipping task.");
     return;
   }
-  info("Got token alias engines: " +
-       tokenEngines.map(({ engine }) => engine.name));
+  info(
+    "Got token alias engines: " + tokenEngines.map(({ engine }) => engine.name)
+  );
 
   await check_autocomplete({
     search: "@",

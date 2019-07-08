@@ -33,19 +33,29 @@ function run_test() {
 
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   const XULRUNTIME_CONTRACTID = "@mozilla.org/xre/runtime;1";
-  const XULRUNTIME_CID = Components.ID("{f0f0b230-5525-4127-98dc-7bca39059e70}");
-  registrar.registerFactory(XULRUNTIME_CID, "XULRuntime", XULRUNTIME_CONTRACTID,
-                            xulRuntimeFactory);
+  const XULRUNTIME_CID = Components.ID(
+    "{f0f0b230-5525-4127-98dc-7bca39059e70}"
+  );
+  registrar.registerFactory(
+    XULRUNTIME_CID,
+    "XULRuntime",
+    XULRUNTIME_CONTRACTID,
+    xulRuntimeFactory
+  );
 
   // When starting in safe mode, the test module should fail to load.
-  let pkcs11ModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
-                         .getService(Ci.nsIPKCS11ModuleDB);
+  let pkcs11ModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(
+    Ci.nsIPKCS11ModuleDB
+  );
   let libraryName = ctypes.libraryName("pkcs11testmodule");
   let libraryFile = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
   libraryFile.append("pkcs11testmodule");
   libraryFile.append(libraryName);
   ok(libraryFile.exists(), "The pkcs11testmodule file should exist");
-  throws(() => pkcs11ModuleDB.addModule("PKCS11 Test Module", libraryFile.path,
-                                        0, 0),
-         /NS_ERROR_FAILURE/, "addModule should throw when in safe mode");
+  throws(
+    () =>
+      pkcs11ModuleDB.addModule("PKCS11 Test Module", libraryFile.path, 0, 0),
+    /NS_ERROR_FAILURE/,
+    "addModule should throw when in safe mode"
+  );
 }

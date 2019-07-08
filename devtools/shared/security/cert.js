@@ -12,14 +12,14 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 DevToolsUtils.defineLazyGetter(this, "localCertService", () => {
   // Ensure PSM is initialized to support TLS sockets
   Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
-  return Cc["@mozilla.org/security/local-cert-service;1"]
-         .getService(Ci.nsILocalCertService);
+  return Cc["@mozilla.org/security/local-cert-service;1"].getService(
+    Ci.nsILocalCertService
+  );
 });
 
 const localCertName = "devtools";
 
 exports.local = {
-
   /**
    * Get or create a new self-signed X.509 cert to represent this device for
    * DevTools purposes over a secure transport, like TLS.
@@ -62,5 +62,4 @@ exports.local = {
     });
     return deferred.promise;
   },
-
 };

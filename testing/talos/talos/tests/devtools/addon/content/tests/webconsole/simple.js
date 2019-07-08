@@ -4,8 +4,13 @@
 
 "use strict";
 
-const { openToolboxAndLog, closeToolboxAndLog, testSetup,
-        testTeardown, SIMPLE_URL } = require("../head");
+const {
+  openToolboxAndLog,
+  closeToolboxAndLog,
+  testSetup,
+  testTeardown,
+  SIMPLE_URL,
+} = require("../head");
 const { reloadConsoleAndLog } = require("./webconsole-helpers");
 
 const EXPECTED_MESSAGES = 1;

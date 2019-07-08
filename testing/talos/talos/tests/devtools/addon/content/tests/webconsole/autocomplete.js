@@ -73,4 +73,3 @@ function setJsTermValueForCompletion(jsterm, value) {
   jsterm._setValue(value);
   jsterm.props.autocompleteUpdate();
 }
-

@@ -1,4 +1,5 @@
-const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_nonAutoplayAudio.html";
+const PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_nonAutoplayAudio.html";
 
 var SuspendedType = {
   NONE_SUSPENDED: 0,
@@ -8,8 +9,12 @@ var SuspendedType = {
 };
 
 function wait_for_event(browser, event) {
-  return BrowserTestUtils.waitForEvent(browser, event, false, (event) => {
-    is(event.originalTarget, browser, "Event must be dispatched to correct browser.");
+  return BrowserTestUtils.waitForEvent(browser, event, false, event => {
+    is(
+      event.originalTarget,
+      browser,
+      "Event must be dispatched to correct browser."
+    );
     return true;
   });
 }
@@ -31,8 +36,11 @@ function check_audio_suspended(suspendedType) {
     ok(false, "Can't get the audio element!");
   }
 
-  is(audio.computedSuspended, suspendedType,
-     "The suspeded state of audio is correct.");
+  is(
+    audio.computedSuspended,
+    suspendedType,
+    "The suspeded state of audio is correct."
+  );
 }
 
 function check_audio_pause_state(expectedPauseState) {
@@ -55,10 +63,12 @@ function play_audio() {
 }
 
 add_task(async function setup_test_preference() {
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["media.useAudioChannelService.testing", true],
-    ["media.block-autoplay-until-in-foreground", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.useAudioChannelService.testing", true],
+      ["media.block-autoplay-until-in-foreground", true],
+    ],
+  });
 });
 
 add_task(async function unblock_icon_should_disapear_after_resume_tab() {
@@ -68,14 +78,19 @@ add_task(async function unblock_icon_should_disapear_after_resume_tab() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- audio doesn't be started in beginning -");
-  await ContentTask.spawn(tab.linkedBrowser, true,
-                          check_audio_pause_state);
+  await ContentTask.spawn(tab.linkedBrowser, true, check_audio_pause_state);
 
   info("- audio shouldn't be muted or blocked -");
-  await ContentTask.spawn(tab.linkedBrowser, SuspendedType.NONE_SUSPENDED,
-                          check_audio_suspended);
-  await ContentTask.spawn(tab.linkedBrowser, false /* unmute */,
-                          check_audio_volume_and_mute);
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    SuspendedType.NONE_SUSPENDED,
+    check_audio_suspended
+  );
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    false /* unmute */,
+    check_audio_volume_and_mute
+  );
 
   info("- tab shouldn't display unblocking icon -");
   await waitForTabBlockEvent(tab, false);
@@ -85,14 +100,19 @@ add_task(async function unblock_icon_should_disapear_after_resume_tab() {
   ok(tab.linkedBrowser.audioMuted, "Audio should be muted now");
 
   info("- try to start audio in background tab -");
-  await ContentTask.spawn(tab.linkedBrowser, null,
-                          play_audio);
+  await ContentTask.spawn(tab.linkedBrowser, null, play_audio);
 
   info("- audio should be muted and blocked -");
-  await ContentTask.spawn(tab.linkedBrowser, SuspendedType.SUSPENDED_BLOCK,
-                          check_audio_suspended);
-  await ContentTask.spawn(tab.linkedBrowser, true /* mute */,
-                          check_audio_volume_and_mute);
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    SuspendedType.SUSPENDED_BLOCK,
+    check_audio_suspended
+  );
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    true /* mute */,
+    check_audio_volume_and_mute
+  );
 
   info("- tab should display unblocking icon -");
   await waitForTabBlockEvent(tab, true);
@@ -101,10 +121,16 @@ add_task(async function unblock_icon_should_disapear_after_resume_tab() {
   await BrowserTestUtils.switchTab(window.gBrowser, tab);
 
   info("- audio shoule be muted, but not be blocked -");
-  await ContentTask.spawn(tab.linkedBrowser, SuspendedType.NONE_SUSPENDED,
-                          check_audio_suspended);
-  await ContentTask.spawn(tab.linkedBrowser, true /* mute */,
-                          check_audio_volume_and_mute);
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    SuspendedType.NONE_SUSPENDED,
+    check_audio_suspended
+  );
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    true /* mute */,
+    check_audio_volume_and_mute
+  );
 
   info("- tab should not display unblocking icon -");
   await waitForTabBlockEvent(tab, false);

@@ -16,7 +16,9 @@ function new_file(name) {
   return file;
 }
 function run_test() {
-  let read_hgram = Services.telemetry.getHistogramById("MOZ_SQLITE_OTHER_READ_B");
+  let read_hgram = Services.telemetry.getHistogramById(
+    "MOZ_SQLITE_OTHER_READ_B"
+  );
   let old_sum = read_hgram.snapshot().sum;
   const file = new_file("telemetry.sqlite");
   var d = getDatabase(file);

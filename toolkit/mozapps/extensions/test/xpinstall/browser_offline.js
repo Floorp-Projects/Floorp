@@ -10,11 +10,16 @@ function test() {
   var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-  var triggers = encodeURIComponent(JSON.stringify({
-    "Unsigned XPI": TESTROOT + "amosigned.xpi",
-  }));
+  var triggers = encodeURIComponent(
+    JSON.stringify({
+      "Unsigned XPI": TESTROOT + "amosigned.xpi",
+    })
+  );
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    TESTROOT + "installtrigger.html?" + triggers
+  );
 }
 
 function download_progress(addon, value, maxValue) {
@@ -25,8 +30,7 @@ function download_progress(addon, value, maxValue) {
     Services.prefs.setIntPref("network.proxy.type", 0);
     Services.io.manageOfflineStatus = false;
     Services.io.offline = true;
-  } catch (ex) {
-  }
+  } catch (ex) {}
 }
 
 function finish_test(count) {
@@ -53,8 +57,7 @@ function finish_test(count) {
   try {
     Services.prefs.setIntPref("network.proxy.type", proxyPrefValue);
     Services.io.offline = false;
-  } catch (ex) {
-  }
+  } catch (ex) {}
 
   Services.perms.remove(makeURI("http://example.com"), "install");
 

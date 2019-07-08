@@ -106,7 +106,7 @@ WalkerIndex.prototype = {
           this._addToIndex("tag", node, node.localName);
         }
 
-        for (const {name, value} of node.attributes) {
+        for (const { name, value } of node.attributes) {
           this._addToIndex("attributeName", node, name);
           this._addToIndex("attributeValue", node, value);
         }
@@ -167,7 +167,7 @@ WalkerSearch.prototype = {
     }
 
     if (!isKnown) {
-      matches.push({type});
+      matches.push({ type });
     }
   },
 
@@ -178,11 +178,13 @@ WalkerSearch.prototype = {
       }
 
       // Add any relevant results (skipping non-requested options).
-      res.filter(entry => {
-        return options.types.includes(entry.type);
-      }).forEach(({node, type}) => {
-        this._addResult(node, type, results);
-      });
+      res
+        .filter(entry => {
+          return options.types.includes(entry.type);
+        })
+        .forEach(({ node, type }) => {
+          this._addResult(node, type, results);
+        });
     }
   },
 
@@ -216,7 +218,8 @@ WalkerSearch.prototype = {
    * }
    */
   search: function(query, options = {}) {
-    options.searchMethod = options.searchMethod || WalkerSearch.SEARCH_METHOD_CONTAINS;
+    options.searchMethod =
+      options.searchMethod || WalkerSearch.SEARCH_METHOD_CONTAINS;
     options.types = options.types || WalkerSearch.ALL_RESULTS_TYPES;
 
     // Empty strings will return no results, as will non-string input
@@ -236,7 +239,7 @@ WalkerSearch.prototype = {
     // Concatenate all results into an Array to return
     const resultList = [];
     for (const [node, matches] of results) {
-      for (const {type} of matches) {
+      for (const { type } of matches) {
         resultList.push({
           node: node,
           type: type,
@@ -249,7 +252,7 @@ WalkerSearch.prototype = {
       }
     }
 
-    const documents = this.walker.targetActor.windows.map(win=>win.document);
+    const documents = this.walker.targetActor.windows.map(win => win.document);
 
     // Sort the resulting nodes by order of appearance in the DOM
     resultList.sort((a, b) => {
@@ -273,7 +276,12 @@ WalkerSearch.SEARCH_METHOD_CONTAINS = (query, candidate) => {
   return query && candidate.toLowerCase().includes(query.toLowerCase());
 };
 
-WalkerSearch.ALL_RESULTS_TYPES = ["tag", "text", "attributeName",
-                                  "attributeValue", "selector"];
+WalkerSearch.ALL_RESULTS_TYPES = [
+  "tag",
+  "text",
+  "attributeName",
+  "attributeValue",
+  "selector",
+];
 
 exports.WalkerSearch = WalkerSearch;

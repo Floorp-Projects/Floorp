@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["FormLikeFactory"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 /**
  * A factory to generate FormLike objects that represent a set of related fields
@@ -14,11 +16,7 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
  * the properties of an HTMLFormElement which are relevant to form tasks.
  */
 let FormLikeFactory = {
-  _propsFromForm: [
-    "action",
-    "autocomplete",
-    "ownerDocument",
-  ],
+  _propsFromForm: ["action", "autocomplete", "ownerDocument"],
 
   /**
    * Create a FormLike object from a <form>.
@@ -63,9 +61,11 @@ let FormLikeFactory = {
    * @throws Error if aField isn't a password or username field in a document
    */
   createFromField(aField) {
-    if ((ChromeUtils.getClassName(aField) !== "HTMLInputElement" &&
-         ChromeUtils.getClassName(aField) !== "HTMLSelectElement") ||
-        !aField.ownerDocument) {
+    if (
+      (ChromeUtils.getClassName(aField) !== "HTMLInputElement" &&
+        ChromeUtils.getClassName(aField) !== "HTMLSelectElement") ||
+      !aField.ownerDocument
+    ) {
       throw new Error("createFromField requires a field in a document");
     }
 

@@ -14,7 +14,11 @@ function check_channel(subject) {
   ok(true, "Got request for " + uri.spec);
 
   let loadInfo = channel.loadInfo;
-  is(loadInfo.originAttributes.userContextId, MY_CONTEXT, "Got expected usercontextid");
+  is(
+    loadInfo.originAttributes.userContextId,
+    MY_CONTEXT,
+    "Got expected usercontextid"
+  );
 }
 // ----------------------------------------------------------------------------
 // Tests we send the right cookies when installing through an InstallTrigger call
@@ -28,16 +32,25 @@ function test() {
   var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-  var triggers = encodeURIComponent(JSON.stringify({
-    "Unsigned XPI": {
-      URL: TESTROOT + "amosigned.xpi",
-      IconURL: TESTROOT + "icon.png",
-      toString() { return this.URL; },
-    },
-  }));
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "", {userContextId: MY_CONTEXT});
+  var triggers = encodeURIComponent(
+    JSON.stringify({
+      "Unsigned XPI": {
+        URL: TESTROOT + "amosigned.xpi",
+        IconURL: TESTROOT + "icon.png",
+        toString() {
+          return this.URL;
+        },
+      },
+    })
+  );
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "", {
+    userContextId: MY_CONTEXT,
+  });
   Services.obs.addObserver(check_channel, "http-on-before-connect");
-  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    TESTROOT + "installtrigger.html?" + triggers
+  );
 }
 
 function confirm_install(panel) {
@@ -46,25 +59,35 @@ function confirm_install(panel) {
 }
 
 function install_ended(install, addon) {
-  Assert.deepEqual(install.installTelemetryInfo, {source: "test-host", method: "installTrigger"},
-                   "Got the expected install.installTelemetryInfo");
+  Assert.deepEqual(
+    install.installTelemetryInfo,
+    { source: "test-host", method: "installTrigger" },
+    "Got the expected install.installTelemetryInfo"
+  );
   install.cancel();
 }
 
 const finish_test = async function(count) {
-  ok(gDidSeeChannel, "Should have seen the request for the XPI and verified it was sent the right way.");
+  ok(
+    gDidSeeChannel,
+    "Should have seen the request for the XPI and verified it was sent the right way."
+  );
   is(count, 1, "1 Add-on should have been successfully installed");
 
   Services.obs.removeObserver(check_channel, "http-on-before-connect");
 
   Services.perms.remove(makeURI("http://example.com"), "install");
 
-  const results = await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
-    return {
-      return: content.document.getElementById("return").textContent,
-      status: content.document.getElementById("status").textContent,
-    };
-  });
+  const results = await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    null,
+    () => {
+      return {
+        return: content.document.getElementById("return").textContent,
+        status: content.document.getElementById("status").textContent,
+      };
+    }
+  );
 
   is(results.return, "true", "installTrigger should have claimed success");
   is(results.status, "0", "Callback should have seen a success");
@@ -72,4 +95,3 @@ const finish_test = async function(count) {
   gBrowser.removeCurrentTab();
   Harness.finish();
 };
-

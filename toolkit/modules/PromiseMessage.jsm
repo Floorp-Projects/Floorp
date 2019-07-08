@@ -14,7 +14,7 @@ var PromiseMessage = {
 
     // Make a copy of data so that the caller doesn't see us setting 'id':
     // To a new object, assign data's props, and then override the id.
-    const dataCopy = Object.assign({}, data, {id});
+    const dataCopy = Object.assign({}, data, { id });
 
     // Send the message.
     messageManager.sendAsyncMessage(name, dataCopy);

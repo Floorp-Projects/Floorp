@@ -9,10 +9,19 @@ requestLongerTimeout(4);
 loadTestSubscript("head_devtools.js");
 
 // Small helper which provides the common steps to the following reload test cases.
-async function runReloadTestCase({urlParams, background, devtoolsPage, testCase}) {
-  const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
+async function runReloadTestCase({
+  urlParams,
+  background,
+  devtoolsPage,
+  testCase,
+}) {
+  const BASE =
+    "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
   const TEST_TARGET_URL = `${BASE}/test-oop-extensions/file_inspectedwindow_reload_target.sjs?${urlParams}`;
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_TARGET_URL);
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    TEST_TARGET_URL
+  );
 
   let extension = ExtensionTestUtils.loadExtension({
     background,
@@ -56,17 +65,17 @@ async function runReloadTestCase({urlParams, background, devtoolsPage, testCase}
 add_task(async function test_devtools_inspectedWindow_reload_ignore_cache() {
   function background() {
     // Wait until the devtools page is ready to run the test.
-    browser.runtime.onMessage.addListener(async (msg) => {
+    browser.runtime.onMessage.addListener(async msg => {
       if (msg !== "devtools_page.ready") {
         browser.test.fail(`Unexpected message received: ${msg}`);
         return;
       }
 
-      const tabs = await browser.tabs.query({active: true});
+      const tabs = await browser.tabs.query({ active: true });
       const activeTabId = tabs[0].id;
       let reloads = 0;
 
-      browser.webNavigation.onCompleted.addListener(async (details) => {
+      browser.webNavigation.onCompleted.addListener(async details => {
         if (details.tabId == activeTabId && details.frameId == 0) {
           reloads++;
 
@@ -92,16 +101,23 @@ add_task(async function test_devtools_inspectedWindow_reload_ignore_cache() {
           } else {
             try {
               const code = `document.body.textContent`;
-              const [text] = await browser.tabs.executeScript(activeTabId, {code});
+              const [text] = await browser.tabs.executeScript(activeTabId, {
+                code,
+              });
 
-              browser.test.assertEq(text, expectedContent,
-                                    `Got the expected cache headers with ignoreCache=${enabled}`);
+              browser.test.assertEq(
+                text,
+                expectedContent,
+                `Got the expected cache headers with ignoreCache=${enabled}`
+              );
             } catch (err) {
               browser.test.fail(`Error: ${err.message} - ${err.stack}`);
             }
           }
 
-          browser.test.sendMessage("devtools_inspectedWindow_reload_checkIgnoreCache.done");
+          browser.test.sendMessage(
+            "devtools_inspectedWindow_reload_checkIgnoreCache.done"
+          );
         }
       });
 
@@ -116,7 +132,7 @@ add_task(async function test_devtools_inspectedWindow_reload_ignore_cache() {
           browser.devtools.inspectedWindow.reload();
           break;
         case "ignore-cache":
-          browser.devtools.inspectedWindow.reload({ignoreCache: true});
+          browser.devtools.inspectedWindow.reload({ ignoreCache: true });
           break;
         default:
           browser.test.fail(`Unexpected test message received: ${msg}`);
@@ -128,104 +144,127 @@ add_task(async function test_devtools_inspectedWindow_reload_ignore_cache() {
 
   await runReloadTestCase({
     urlParams: "test=cache",
-    background, devtoolsPage,
+    background,
+    devtoolsPage,
     testCase: async function(extension) {
       for (const testMessage of ["no-ignore-cache", "ignore-cache"]) {
         extension.sendMessage(testMessage);
-        await extension.awaitMessage("devtools_inspectedWindow_reload_checkIgnoreCache.done");
+        await extension.awaitMessage(
+          "devtools_inspectedWindow_reload_checkIgnoreCache.done"
+        );
       }
     },
   });
 });
 
-add_task(async function test_devtools_inspectedWindow_reload_custom_user_agent() {
-  function background() {
-    browser.runtime.onMessage.addListener(async (msg) => {
-      if (msg !== "devtools_page.ready") {
-        browser.test.fail(`Unexpected message received: ${msg}`);
-        return;
-      }
+add_task(
+  async function test_devtools_inspectedWindow_reload_custom_user_agent() {
+    function background() {
+      browser.runtime.onMessage.addListener(async msg => {
+        if (msg !== "devtools_page.ready") {
+          browser.test.fail(`Unexpected message received: ${msg}`);
+          return;
+        }
 
-      const tabs = await browser.tabs.query({active: true});
-      const activeTabId = tabs[0].id;
-      let reloads = 0;
+        const tabs = await browser.tabs.query({ active: true });
+        const activeTabId = tabs[0].id;
+        let reloads = 0;
 
-      browser.webNavigation.onCompleted.addListener(async (details) => {
-        if (details.tabId == activeTabId && details.frameId == 0) {
-          reloads++;
+        browser.webNavigation.onCompleted.addListener(async details => {
+          if (details.tabId == activeTabId && details.frameId == 0) {
+            reloads++;
 
-          let expectedContent;
-          let enabled;
+            let expectedContent;
+            let enabled;
 
-          switch (reloads) {
-            case 1:
-              enabled = false;
-              expectedContent = window.navigator.userAgent;
-              break;
-            case 2:
-              enabled = true;
-              expectedContent = "CustomizedUserAgent";
-              break;
-          }
-
-          if (!expectedContent) {
-            browser.test.fail(`Unexpected number of tab reloads: ${reloads}`);
-          } else {
-            const code = `document.body.textContent`;
-            try {
-              const [text] = await browser.tabs.executeScript(activeTabId, {code});
-              browser.test.assertEq(expectedContent, text,
-                                    `Got the expected userAgent with userAgent=${enabled}`);
-            } catch (err) {
-              browser.test.fail(`Error: ${err.message} - ${err.stack}`);
+            switch (reloads) {
+              case 1:
+                enabled = false;
+                expectedContent = window.navigator.userAgent;
+                break;
+              case 2:
+                enabled = true;
+                expectedContent = "CustomizedUserAgent";
+                break;
             }
-          }
 
-          browser.test.sendMessage("devtools_inspectedWindow_reload_checkUserAgent.done");
+            if (!expectedContent) {
+              browser.test.fail(`Unexpected number of tab reloads: ${reloads}`);
+            } else {
+              const code = `document.body.textContent`;
+              try {
+                const [text] = await browser.tabs.executeScript(activeTabId, {
+                  code,
+                });
+                browser.test.assertEq(
+                  expectedContent,
+                  text,
+                  `Got the expected userAgent with userAgent=${enabled}`
+                );
+              } catch (err) {
+                browser.test.fail(`Error: ${err.message} - ${err.stack}`);
+              }
+            }
+
+            browser.test.sendMessage(
+              "devtools_inspectedWindow_reload_checkUserAgent.done"
+            );
+          }
+        });
+
+        browser.test.sendMessage("devtools_inspected_window_reload.ready");
+      });
+    }
+
+    function devtoolsPage() {
+      browser.test.onMessage.addListener(msg => {
+        switch (msg) {
+          case "no-custom-user-agent":
+            browser.devtools.inspectedWindow.reload({});
+            break;
+          case "custom-user-agent":
+            browser.devtools.inspectedWindow.reload({
+              userAgent: "CustomizedUserAgent",
+            });
+            break;
+          default:
+            browser.test.fail(`Unexpected test message received: ${msg}`);
         }
       });
 
-      browser.test.sendMessage("devtools_inspected_window_reload.ready");
+      browser.runtime.sendMessage("devtools_page.ready");
+    }
+
+    await runReloadTestCase({
+      urlParams: "test=user-agent",
+      background,
+      devtoolsPage,
+      testCase: async function(extension) {
+        extension.sendMessage("no-custom-user-agent");
+
+        await extension.awaitMessage(
+          "devtools_inspectedWindow_reload_checkUserAgent.done"
+        );
+
+        extension.sendMessage("custom-user-agent");
+
+        await extension.awaitMessage(
+          "devtools_inspectedWindow_reload_checkUserAgent.done"
+        );
+      },
     });
   }
-
-  function devtoolsPage() {
-    browser.test.onMessage.addListener(msg => {
-      switch (msg) {
-        case "no-custom-user-agent":
-          browser.devtools.inspectedWindow.reload({});
-          break;
-        case "custom-user-agent":
-          browser.devtools.inspectedWindow.reload({userAgent: "CustomizedUserAgent"});
-          break;
-        default:
-          browser.test.fail(`Unexpected test message received: ${msg}`);
-      }
-    });
-
-    browser.runtime.sendMessage("devtools_page.ready");
-  }
-
-  await runReloadTestCase({
-    urlParams: "test=user-agent",
-    background, devtoolsPage,
-    testCase: async function(extension) {
-      extension.sendMessage("no-custom-user-agent");
-
-      await extension.awaitMessage("devtools_inspectedWindow_reload_checkUserAgent.done");
-
-      extension.sendMessage("custom-user-agent");
-
-      await extension.awaitMessage("devtools_inspectedWindow_reload_checkUserAgent.done");
-    },
-  });
-});
+);
 
 add_task(async function test_devtools_inspectedWindow_reload_injected_script() {
   function background() {
     function getIframesTextContent() {
       let docs = [];
-      for (let iframe, doc = document; doc; doc = iframe && iframe.contentDocument) {
+      for (
+        let iframe, doc = document;
+        doc;
+        doc = iframe && iframe.contentDocument
+      ) {
         docs.push(doc);
         iframe = doc.querySelector("iframe");
       }
@@ -233,17 +272,17 @@ add_task(async function test_devtools_inspectedWindow_reload_injected_script() {
       return docs.map(doc => doc.querySelector("pre").textContent);
     }
 
-    browser.runtime.onMessage.addListener(async (msg) => {
+    browser.runtime.onMessage.addListener(async msg => {
       if (msg !== "devtools_page.ready") {
         browser.test.fail(`Unexpected message received: ${msg}`);
         return;
       }
 
-      const tabs = await browser.tabs.query({active: true});
+      const tabs = await browser.tabs.query({ active: true });
       const activeTabId = tabs[0].id;
       let reloads = 0;
 
-      browser.webNavigation.onCompleted.addListener(async (details) => {
+      browser.webNavigation.onCompleted.addListener(async details => {
         if (details.tabId == activeTabId && details.frameId == 0) {
           reloads++;
 
@@ -266,20 +305,27 @@ add_task(async function test_devtools_inspectedWindow_reload_injected_script() {
           if (!expectedContent) {
             browser.test.fail(`Unexpected number of tab reloads: ${reloads}`);
           } else {
-            let expectedResults = (new Array(4)).fill(expectedContent);
+            let expectedResults = new Array(4).fill(expectedContent);
             let code = `(${getIframesTextContent})()`;
 
             try {
-              let [results] = await browser.tabs.executeScript(activeTabId, {code});
+              let [results] = await browser.tabs.executeScript(activeTabId, {
+                code,
+              });
 
-              browser.test.assertEq(JSON.stringify(expectedResults), JSON.stringify(results),
-                                    `Got the expected result with injectScript=${enabled}`);
+              browser.test.assertEq(
+                JSON.stringify(expectedResults),
+                JSON.stringify(results),
+                `Got the expected result with injectScript=${enabled}`
+              );
             } catch (err) {
               browser.test.fail(`Error: ${err.message} - ${err.stack}`);
             }
           }
 
-          browser.test.sendMessage(`devtools_inspectedWindow_reload_injectedScript.done`);
+          browser.test.sendMessage(
+            `devtools_inspectedWindow_reload_injectedScript.done`
+          );
         }
       });
 
@@ -290,9 +336,14 @@ add_task(async function test_devtools_inspectedWindow_reload_injected_script() {
   function devtoolsPage() {
     function injectedScript() {
       if (!window.pageScriptExecutedFirst) {
-        window.addEventListener("DOMContentLoaded", function listener() {
-          document.querySelector("pre").textContent = "injected script executed first";
-        }, {once: true});
+        window.addEventListener(
+          "DOMContentLoaded",
+          function listener() {
+            document.querySelector("pre").textContent =
+              "injected script executed first";
+          },
+          { once: true }
+        );
       }
     }
 
@@ -302,7 +353,9 @@ add_task(async function test_devtools_inspectedWindow_reload_injected_script() {
           browser.devtools.inspectedWindow.reload({});
           break;
         case "injected-script":
-          browser.devtools.inspectedWindow.reload({injectedScript: `new ${injectedScript}`});
+          browser.devtools.inspectedWindow.reload({
+            injectedScript: `new ${injectedScript}`,
+          });
           break;
         default:
           browser.test.fail(`Unexpected test message received: ${msg}`);
@@ -314,15 +367,20 @@ add_task(async function test_devtools_inspectedWindow_reload_injected_script() {
 
   await runReloadTestCase({
     urlParams: "test=injected-script&frames=3",
-    background, devtoolsPage,
+    background,
+    devtoolsPage,
     testCase: async function(extension) {
       extension.sendMessage("no-injected-script");
 
-      await extension.awaitMessage("devtools_inspectedWindow_reload_injectedScript.done");
+      await extension.awaitMessage(
+        "devtools_inspectedWindow_reload_injectedScript.done"
+      );
 
       extension.sendMessage("injected-script");
 
-      await extension.awaitMessage("devtools_inspectedWindow_reload_injectedScript.done");
+      await extension.awaitMessage(
+        "devtools_inspectedWindow_reload_injectedScript.done"
+      );
     },
   });
 });

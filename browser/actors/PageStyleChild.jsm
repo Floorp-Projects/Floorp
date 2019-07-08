@@ -2,11 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = ["PageStyleChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
 
 class PageStyleChild extends ActorChild {
   getViewer(content) {
@@ -16,7 +18,10 @@ class PageStyleChild extends ActorChild {
   sendStyleSheetInfo(mm) {
     let content = mm.content;
     content.requestIdleCallback(() => {
-      let filteredStyleSheets = this._filterStyleSheets(this.getAllStyleSheets(content), content);
+      let filteredStyleSheets = this._filterStyleSheets(
+        this.getAllStyleSheets(content),
+        content
+      );
 
       mm.sendAsyncMessage("PageStyle:StyleSheets", {
         filteredStyleSheets,
@@ -28,7 +33,9 @@ class PageStyleChild extends ActorChild {
 
   getAllStyleSheets(frameset) {
     let selfSheets = Array.from(frameset.document.styleSheets);
-    let subSheets = Array.from(frameset.frames, frame => this.getAllStyleSheets(frame));
+    let subSheets = Array.from(frameset.frames, frame =>
+      this.getAllStyleSheets(frame)
+    );
     return selfSheets.concat(...subSheets);
   }
 
@@ -75,7 +82,7 @@ class PageStyleChild extends ActorChild {
     for (let i = 0; i < docStyleSheets.length; ++i) {
       let docStyleSheet = docStyleSheets[i];
       if (docStyleSheet.title) {
-        docStyleSheet.disabled = (docStyleSheet.title != title);
+        docStyleSheet.disabled = docStyleSheet.title != title;
       } else if (docStyleSheet.disabled) {
         docStyleSheet.disabled = false;
       }
@@ -83,15 +90,18 @@ class PageStyleChild extends ActorChild {
   }
 
   _stylesheetInFrame(frame, title) {
-    return Array.from(frame.document.styleSheets).some((styleSheet) => styleSheet.title == title);
+    return Array.from(frame.document.styleSheets).some(
+      styleSheet => styleSheet.title == title
+    );
   }
 
   _filterStyleSheets(styleSheets, content) {
     let result = [];
 
     for (let currentStyleSheet of styleSheets) {
-      if (!currentStyleSheet.title)
+      if (!currentStyleSheet.title) {
         continue;
+      }
 
       // Skip any stylesheets that don't match the screen media type.
       if (currentStyleSheet.media.length > 0) {
@@ -103,9 +113,11 @@ class PageStyleChild extends ActorChild {
 
       let URI;
       try {
-        if (!currentStyleSheet.ownerNode ||
-            // special-case style nodes, which have no href
-            currentStyleSheet.ownerNode.nodeName.toLowerCase() != "style") {
+        if (
+          !currentStyleSheet.ownerNode ||
+          // special-case style nodes, which have no href
+          currentStyleSheet.ownerNode.nodeName.toLowerCase() != "style"
+        ) {
           URI = Services.io.newURI(currentStyleSheet.href);
         }
       } catch (e) {
@@ -117,7 +129,7 @@ class PageStyleChild extends ActorChild {
 
       // We won't send data URIs all of the way up to the parent, as these
       // can be arbitrarily large.
-      let sentURI = (!URI || URI.scheme == "data") ? null : URI.spec;
+      let sentURI = !URI || URI.scheme == "data" ? null : URI.spec;
 
       result.push({
         title: currentStyleSheet.title,

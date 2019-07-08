@@ -5,7 +5,7 @@
 "use strict";
 
 const Services = require("Services");
-const {AppConstants} = require("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
@@ -51,11 +51,11 @@ function computeMinMaxVersion(localVersion) {
     // remote runtime. (Use ".0a1" to support the very first nightly version)
     // This matches the release channel's version when we are on nightly,
     // or 2 versions before when we are on other channels.
-    minVersion: (localMajorVersion - 2) + ".0a1",
+    minVersion: localMajorVersion - 2 + ".0a1",
     // The maximum version is the first excluded from the support range. That's why we
     // increase the current version by 1 and use ".0a1" to point to the first Nightly.
     // We do not support forward compatibility at all.
-    maxVersion: (localMajorVersion + 1) + ".0a1",
+    maxVersion: localMajorVersion + 1 + ".0a1",
   };
 }
 

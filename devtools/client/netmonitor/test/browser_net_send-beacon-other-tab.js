@@ -11,16 +11,20 @@ add_task(async function() {
   const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   const { store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
   const beaconTab = await addTab(SEND_BEACON_URL);
   info("Beacon tab added successfully.");
 
-  is(store.getState().requests.requests.size, 0, "The requests menu should be empty.");
+  is(
+    store.getState().requests.requests.size,
+    0,
+    "The requests menu should be empty."
+  );
 
   const wait = waitForNetworkEvents(monitor, 1);
   await ContentTask.spawn(beaconTab.linkedBrowser, {}, async function() {
@@ -29,7 +33,11 @@ add_task(async function() {
   tab.linkedBrowser.reload();
   await wait;
 
-  is(store.getState().requests.requests.size, 1, "Only the reload should be recorded.");
+  is(
+    store.getState().requests.requests.size,
+    1,
+    "Only the reload should be recorded."
+  );
   const request = getSortedRequests(store.getState()).get(0);
   is(request.method, "GET", "The method is correct.");
   is(request.status, "200", "The status is correct.");

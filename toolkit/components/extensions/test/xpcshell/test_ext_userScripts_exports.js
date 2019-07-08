@@ -1,8 +1,6 @@
 "use strict";
 
-const {
-  createAppInfo,
-} = AddonTestUtils;
+const { createAppInfo } = AddonTestUtils;
 
 AddonTestUtils.init(this);
 
@@ -16,14 +14,23 @@ const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 // A small utility function used to test the expected behaviors of the userScripts API method
 // wrapper.
 async function test_userScript_APIMethod({
-  apiScript, userScript, userScriptMetadata, testFn,
+  apiScript,
+  userScript,
+  userScriptMetadata,
+  testFn,
   runtimeMessageListener,
 }) {
-  async function backgroundScript(userScriptFn, scriptMetadata, messageListener) {
+  async function backgroundScript(
+    userScriptFn,
+    scriptMetadata,
+    messageListener
+  ) {
     await browser.userScripts.register({
-      js: [{
-        code: `(${userScriptFn})();`,
-      }],
+      js: [
+        {
+          code: `(${userScriptFn})();`,
+        },
+      ],
       runAt: "document_end",
       matches: ["http://localhost/*/file_sample.html"],
       scriptMetadata,
@@ -37,7 +44,11 @@ async function test_userScript_APIMethod({
   }
 
   function notifyFinish(failureReason) {
-    browser.test.assertEq(undefined, failureReason, "should be completed without errors");
+    browser.test.assertEq(
+      undefined,
+      failureReason,
+      "should be completed without errors"
+    );
     browser.test.sendMessage("test_userScript_APIMethod:done");
   }
 
@@ -51,9 +62,7 @@ async function test_userScript_APIMethod({
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: [
-        "http://localhost/*/file_sample.html",
-      ],
+      permissions: ["http://localhost/*/file_sample.html"],
       user_scripts: {
         api_script: "api-script.js",
       },
@@ -82,7 +91,7 @@ async function test_userScript_APIMethod({
 
   // Run any additional test-specific assertions.
   if (testFn) {
-    await testFn({extension, contentPage, url});
+    await testFn({ extension, contentPage, url });
   }
 
   await extension.awaitMessage("test_userScript_APIMethod:done");
@@ -98,28 +107,71 @@ add_task(async function test_apiScript_exports_simple_sync_method() {
 
       script.defineGlobals({
         ...sharedTestAPIMethods,
-        testAPIMethod(stringParam, numberParam, boolParam, nullParam, undefinedParam, arrayParam) {
-          browser.test.assertEq("test-user-script-exported-apis", scriptMetadata.name,
-                                "Got the expected value for a string scriptMetadata property");
-          browser.test.assertEq(null, scriptMetadata.nullProperty,
-                                "Got the expected value for a null scriptMetadata property");
-          browser.test.assertTrue(scriptMetadata.arrayProperty &&
-                                  scriptMetadata.arrayProperty.length === 1 &&
-                                  scriptMetadata.arrayProperty[0] === "el1",
-                                  "Got the expected value for an array scriptMetadata property");
-          browser.test.assertTrue(scriptMetadata.objectProperty &&
-                                  scriptMetadata.objectProperty.nestedProp === "nestedValue",
-                                  "Got the expected value for an object scriptMetadata property");
+        testAPIMethod(
+          stringParam,
+          numberParam,
+          boolParam,
+          nullParam,
+          undefinedParam,
+          arrayParam
+        ) {
+          browser.test.assertEq(
+            "test-user-script-exported-apis",
+            scriptMetadata.name,
+            "Got the expected value for a string scriptMetadata property"
+          );
+          browser.test.assertEq(
+            null,
+            scriptMetadata.nullProperty,
+            "Got the expected value for a null scriptMetadata property"
+          );
+          browser.test.assertTrue(
+            scriptMetadata.arrayProperty &&
+              scriptMetadata.arrayProperty.length === 1 &&
+              scriptMetadata.arrayProperty[0] === "el1",
+            "Got the expected value for an array scriptMetadata property"
+          );
+          browser.test.assertTrue(
+            scriptMetadata.objectProperty &&
+              scriptMetadata.objectProperty.nestedProp === "nestedValue",
+            "Got the expected value for an object scriptMetadata property"
+          );
 
-          browser.test.assertEq("param1", stringParam, "Got the expected string parameter value");
-          browser.test.assertEq(123, numberParam, "Got the expected number parameter value");
-          browser.test.assertEq(true, boolParam, "Got the expected boolean parameter value");
-          browser.test.assertEq(null, nullParam, "Got the expected null parameter value");
-          browser.test.assertEq(undefined, undefinedParam, "Got the expected undefined parameter value");
+          browser.test.assertEq(
+            "param1",
+            stringParam,
+            "Got the expected string parameter value"
+          );
+          browser.test.assertEq(
+            123,
+            numberParam,
+            "Got the expected number parameter value"
+          );
+          browser.test.assertEq(
+            true,
+            boolParam,
+            "Got the expected boolean parameter value"
+          );
+          browser.test.assertEq(
+            null,
+            nullParam,
+            "Got the expected null parameter value"
+          );
+          browser.test.assertEq(
+            undefined,
+            undefinedParam,
+            "Got the expected undefined parameter value"
+          );
 
-          browser.test.assertEq(3, arrayParam.length, "Got the expected length on the array param");
-          browser.test.assertTrue(arrayParam.includes(1),
-                                  "Got the expected result when calling arrayParam.includes");
+          browser.test.assertEq(
+            3,
+            arrayParam.length,
+            "Got the expected length on the array param"
+          );
+          browser.test.assertTrue(
+            arrayParam.includes(1),
+            "Got the expected result when calling arrayParam.includes"
+          );
 
           return "returned_value";
         },
@@ -128,17 +180,28 @@ add_task(async function test_apiScript_exports_simple_sync_method() {
   }
 
   function userScript() {
-    const {assertTrue, notifyFinish, testAPIMethod} = this;
+    const { assertTrue, notifyFinish, testAPIMethod } = this;
 
     // Redefine the includes method on the Array prototype, to explicitly verify that the method
     // redefined in the userScript is not used when accessing arrayParam.includes from the API script.
-    Array.prototype.includes = () => { // eslint-disable-line no-extend-native
+    // eslint-disable-next-line no-extend-native
+    Array.prototype.includes = () => {
       throw new Error("Unexpected prototype leakage");
     };
     const arrayParam = new Array(1, 2, 3); // eslint-disable-line no-array-constructor
-    const result = testAPIMethod("param1", 123, true, null, undefined, arrayParam);
+    const result = testAPIMethod(
+      "param1",
+      123,
+      true,
+      null,
+      undefined,
+      arrayParam
+    );
 
-    assertTrue(result === "returned_value", `userScript got an unexpected result value: ${result}`);
+    assertTrue(
+      result === "returned_value",
+      `userScript got an unexpected result value: ${result}`
+    );
 
     notifyFinish();
   }
@@ -146,7 +209,7 @@ add_task(async function test_apiScript_exports_simple_sync_method() {
   const userScriptMetadata = {
     name: "test-user-script-exported-apis",
     arrayProperty: ["el1"],
-    objectProperty: {nestedProp: "nestedValue"},
+    objectProperty: { nestedProp: "nestedValue" },
     nullProperty: null,
   };
 
@@ -163,8 +226,15 @@ add_task(async function test_apiScript_async_method() {
       script.defineGlobals({
         ...sharedTestAPIMethods,
         testAPIMethod(param, cb, cb2, objWithCb) {
-          browser.test.assertEq("function", typeof cb, "Got a callback function parameter");
-          browser.test.assertTrue(cb === cb2, "Got the same cloned function for the same function parameter");
+          browser.test.assertEq(
+            "function",
+            typeof cb,
+            "Got a callback function parameter"
+          );
+          browser.test.assertTrue(
+            cb === cb2,
+            "Got the same cloned function for the same function parameter"
+          );
 
           browser.runtime.sendMessage(param).then(bgPageRes => {
             const cbResult = cb(script.export(bgPageRes));
@@ -180,7 +250,7 @@ add_task(async function test_apiScript_async_method() {
   async function userScript() {
     // Redefine Promise to verify that it doesn't break the WebExtensions internals
     // that are going to use them.
-    const {Promise} = this;
+    const { Promise } = this;
     Promise.resolve = function() {
       throw new Error("Promise.resolve poisoning");
     };
@@ -188,16 +258,18 @@ add_task(async function test_apiScript_async_method() {
       throw new Error("Promise constructor poisoning");
     };
 
-    const {assertTrue, notifyFinish, testAPIMethod} = this;
+    const { assertTrue, notifyFinish, testAPIMethod } = this;
 
-    const cb = (cbParam) => {
+    const cb = cbParam => {
       return `callback param: ${JSON.stringify(cbParam)}`;
     };
     const cb2 = cb;
     const asyncAPIResult = await testAPIMethod("param3", cb, cb2);
 
-    assertTrue(asyncAPIResult === "resolved_value",
-               `userScript got an unexpected resolved value: ${asyncAPIResult}`);
+    assertTrue(
+      asyncAPIResult === "resolved_value",
+      `userScript got an unexpected resolved value: ${asyncAPIResult}`
+    );
 
     notifyFinish();
   }
@@ -207,17 +279,20 @@ add_task(async function test_apiScript_async_method() {
       browser.test.fail(`Got an unexpected message: ${param}`);
     }
 
-    return {bgPageReply: true};
+    return { bgPageReply: true };
   }
 
   await test_userScript_APIMethod({
     userScript,
     apiScript,
     runtimeMessageListener,
-    async testFn({extension}) {
+    async testFn({ extension }) {
       const res = await extension.awaitMessage("user-script-callback-return");
-      equal(res, `callback param: ${JSON.stringify({bgPageReply: true})}`,
-            "Got the expected userScript callback return value");
+      equal(
+        res,
+        `callback param: ${JSON.stringify({ bgPageReply: true })}`,
+        "Got the expected userScript callback return value"
+      );
     },
   });
 });
@@ -228,9 +303,16 @@ add_task(async function test_apiScript_method_with_webpage_objects_params() {
       script.defineGlobals({
         ...sharedTestAPIMethods,
         testAPIMethod(windowParam, documentParam) {
-          browser.test.assertEq(window, windowParam, "Got a reference to the native window as first param");
-          browser.test.assertEq(window.document, documentParam,
-                                "Got a reference to the native document as second param");
+          browser.test.assertEq(
+            window,
+            windowParam,
+            "Got a reference to the native window as first param"
+          );
+          browser.test.assertEq(
+            window.document,
+            documentParam,
+            "Got a reference to the native document as second param"
+          );
 
           // Return an uncloneable webpage object, which checks that if the returned object is from a principal
           // that is subsumed by the userScript sandbox principal, it is returned without being cloned.
@@ -241,13 +323,15 @@ add_task(async function test_apiScript_method_with_webpage_objects_params() {
   }
 
   async function userScript() {
-    const {assertTrue, notifyFinish, testAPIMethod} = this;
+    const { assertTrue, notifyFinish, testAPIMethod } = this;
 
     const result = testAPIMethod(window, document);
 
     // We expect the returned value to be the uncloneable window object.
-    assertTrue(result === window,
-               `userScript got an unexpected returned value: ${result}`);
+    assertTrue(
+      result === window,
+      `userScript got an unexpected returned value: ${result}`
+    );
     notifyFinish();
   }
 
@@ -266,19 +350,32 @@ add_task(async function test_apiScript_method_got_param_with_methods() {
       script.defineGlobals({
         ...sharedTestAPIMethods,
         testAPIMethod(objWithMethods) {
-          browser.test.assertEq("objPropertyValue", objWithMethods && objWithMethods.objProperty,
-                                "Got the expected property on the object passed as a parameter");
-          browser.test.assertEq(undefined, typeof objWithMethods && objWithMethods.objMethod,
-                                "XrayWrapper should deny access to a callable property");
+          browser.test.assertEq(
+            "objPropertyValue",
+            objWithMethods && objWithMethods.objProperty,
+            "Got the expected property on the object passed as a parameter"
+          );
+          browser.test.assertEq(
+            undefined,
+            typeof objWithMethods && objWithMethods.objMethod,
+            "XrayWrapper should deny access to a callable property"
+          );
 
           browser.test.assertTrue(
-            objWithMethods && objWithMethods.wrappedJSObject &&
-            objWithMethods.wrappedJSObject.objMethod instanceof ScriptFunction.wrappedJSObject,
-            "The callable property is accessible on the wrappedJSObject");
+            objWithMethods &&
+              objWithMethods.wrappedJSObject &&
+              objWithMethods.wrappedJSObject.objMethod instanceof
+                ScriptFunction.wrappedJSObject,
+            "The callable property is accessible on the wrappedJSObject"
+          );
 
-          browser.test.assertEq("objMethodResult: p1", objWithMethods && objWithMethods.wrappedJSObject &&
-                                objWithMethods.wrappedJSObject.objMethod("p1"),
-                                "Got the expected result when calling the method on the wrappedJSObject");
+          browser.test.assertEq(
+            "objMethodResult: p1",
+            objWithMethods &&
+              objWithMethods.wrappedJSObject &&
+              objWithMethods.wrappedJSObject.objMethod("p1"),
+            "Got the expected result when calling the method on the wrappedJSObject"
+          );
           return true;
         },
       });
@@ -286,7 +383,7 @@ add_task(async function test_apiScript_method_got_param_with_methods() {
   }
 
   async function userScript() {
-    const {assertTrue, notifyFinish, testAPIMethod} = this;
+    const { assertTrue, notifyFinish, testAPIMethod } = this;
 
     let result = testAPIMethod({
       objProperty: "objPropertyValue",
@@ -295,7 +392,10 @@ add_task(async function test_apiScript_method_got_param_with_methods() {
       },
     });
 
-    assertTrue(result === true, `userScript got an unexpected returned value: ${result}`);
+    assertTrue(
+      result === true,
+      `userScript got an unexpected returned value: ${result}`
+    );
     notifyFinish();
   }
 
@@ -306,7 +406,7 @@ add_task(async function test_apiScript_method_got_param_with_methods() {
 });
 
 add_task(async function test_apiScript_method_throws_errors() {
-  function apiScript({notifyFinish}) {
+  function apiScript({ notifyFinish }) {
     let proxyTrapsCount = 0;
 
     browser.userScripts.onBeforeScript.addListener(script => {
@@ -339,7 +439,8 @@ add_task(async function test_apiScript_method_throws_errors() {
               break;
             case "userScriptProxyObject":
               let proxyTarget = script.export({
-                name: "ProxyObject", message: "ProxyObject message",
+                name: "ProxyObject",
+                message: "ProxyObject message",
               });
               let proxyHandlers = script.export({
                 get(target, prop) {
@@ -371,7 +472,11 @@ add_task(async function test_apiScript_method_throws_errors() {
           throw err;
         },
         assertNoProxyTrapTriggered() {
-          browser.test.assertEq(0, proxyTrapsCount, "Proxy traps should not be triggered");
+          browser.test.assertEq(
+            0,
+            proxyTrapsCount,
+            "Proxy traps should not be triggered"
+          );
         },
         resetProxyTrapCounter() {
           proxyTrapsCount = 0;
@@ -411,7 +516,10 @@ add_task(async function test_apiScript_method_throws_errors() {
         }
 
         if (err instanceof Error) {
-          apiThrowResults[errorTestName] = {name: err.name, message: err.message};
+          apiThrowResults[errorTestName] = {
+            name: err.name,
+            message: err.message,
+          };
         } else {
           apiThrowResults[errorTestName] = {
             name: err && err.name,
@@ -438,7 +546,10 @@ add_task(async function test_apiScript_method_throws_errors() {
         }
 
         if (err instanceof Error) {
-          apiRejectsResults[errorTestName] = {name: err.name, message: err.message};
+          apiRejectsResults[errorTestName] = {
+            name: err.name,
+            message: err.message,
+          };
         } else {
           apiRejectsResults[errorTestName] = {
             name: err && err.name,
@@ -458,117 +569,153 @@ add_task(async function test_apiScript_method_throws_errors() {
   await test_userScript_APIMethod({
     userScript,
     apiScript,
-    async testFn({extension}) {
+    async testFn({ extension }) {
       const expectedResults = {
         // Any error not explicitly raised as a userScript objects or error instance is
         // expected to be turned into a generic error message.
-        "apiScriptError": {name: "Error", message: "An unexpected apiScript error occurred"},
+        apiScriptError: {
+          name: "Error",
+          message: "An unexpected apiScript error occurred",
+        },
 
         // When the api script throws a primitive value, we expect to receive it unmodified on
         // the userScript side.
-        "apiScriptThrowsPlainString": {
-          typeOf: "string", value: "apiScriptThrowsPlainString message",
-          name: undefined, message: undefined,
+        apiScriptThrowsPlainString: {
+          typeOf: "string",
+          value: "apiScriptThrowsPlainString message",
+          name: undefined,
+          message: undefined,
         },
-        "apiScriptThrowsNull": {
-          typeOf: "object", value: null,
-          name: undefined, message: undefined,
+        apiScriptThrowsNull: {
+          typeOf: "object",
+          value: null,
+          name: undefined,
+          message: undefined,
         },
 
         // Error messages that the apiScript has explicitly created as userScript's Error
         // global instances are expected to be passing through unmodified.
-        "userScriptError": {name: "Error", message: "userScriptError message"},
-        "userScriptTypeError": {name: "TypeError", message: "userScriptTypeError message"},
+        userScriptError: { name: "Error", message: "userScriptError message" },
+        userScriptTypeError: {
+          name: "TypeError",
+          message: "userScriptTypeError message",
+        },
 
         // Error raised from the apiScript as userScript proxy objects are expected to
         // be passing through unmodified.
-        "userScriptProxyObject": {
-          typeOf: "object",  name: "ProxyObjectGetName", message: "ProxyObjectGetMessage",
+        userScriptProxyObject: {
+          typeOf: "object",
+          name: "ProxyObjectGetName",
+          message: "ProxyObjectGetMessage",
         },
       };
 
-      info("Checking results from errors raised from an apiScript exported function");
+      info(
+        "Checking results from errors raised from an apiScript exported function"
+      );
 
       const apiThrowResults = await extension.awaitMessage("test-results");
 
       for (let [key, expected] of Object.entries(expectedResults)) {
-        Assert.deepEqual(apiThrowResults[key], expected,
-                         `Got the expected error object for test case "${key}"`);
+        Assert.deepEqual(
+          apiThrowResults[key],
+          expected,
+          `Got the expected error object for test case "${key}"`
+        );
       }
 
-      Assert.deepEqual(Object.keys(expectedResults).sort(),
-                       Object.keys(apiThrowResults).sort(),
-                       "the expected and actual test case names matches");
+      Assert.deepEqual(
+        Object.keys(expectedResults).sort(),
+        Object.keys(apiThrowResults).sort(),
+        "the expected and actual test case names matches"
+      );
 
-      info("Checking expected results from errors raised from an apiScript exported function");
+      info(
+        "Checking expected results from errors raised from an apiScript exported function"
+      );
 
       // Verify expected results from rejected promises returned from an apiScript exported function.
       const apiThrowRejections = await extension.awaitMessage("test-results");
 
       for (let [key, expected] of Object.entries(expectedResults)) {
-        Assert.deepEqual(apiThrowRejections[key], expected,
-                         `Got the expected rejected object for test case "${key}"`);
+        Assert.deepEqual(
+          apiThrowRejections[key],
+          expected,
+          `Got the expected rejected object for test case "${key}"`
+        );
       }
 
-      Assert.deepEqual(Object.keys(expectedResults).sort(),
-                       Object.keys(apiThrowRejections).sort(),
-                       "the expected and actual test case names matches");
+      Assert.deepEqual(
+        Object.keys(expectedResults).sort(),
+        Object.keys(apiThrowRejections).sort(),
+        "the expected and actual test case names matches"
+      );
     },
   });
 });
 
-add_task(async function test_apiScript_method_ensure_xraywrapped_proxy_in_params() {
-  function apiScript(sharedTestAPIMethods) {
-    browser.userScripts.onBeforeScript.addListener(script => {
-      script.defineGlobals({
-        ...sharedTestAPIMethods,
-        testAPIMethod(...args) {
-          // Proxies are opaque when wrapped in Xrays, and the proto of an opaque object
-          // is supposed to be Object.prototype.
-          browser.test.assertEq(
-            script.global.Object.prototype,
-            Object.getPrototypeOf(args[0]),
-            "Calling getPrototypeOf on the XrayWrapped proxy object doesn't run the proxy trap");
+add_task(
+  async function test_apiScript_method_ensure_xraywrapped_proxy_in_params() {
+    function apiScript(sharedTestAPIMethods) {
+      browser.userScripts.onBeforeScript.addListener(script => {
+        script.defineGlobals({
+          ...sharedTestAPIMethods,
+          testAPIMethod(...args) {
+            // Proxies are opaque when wrapped in Xrays, and the proto of an opaque object
+            // is supposed to be Object.prototype.
+            browser.test.assertEq(
+              script.global.Object.prototype,
+              Object.getPrototypeOf(args[0]),
+              "Calling getPrototypeOf on the XrayWrapped proxy object doesn't run the proxy trap"
+            );
 
-          browser.test.assertTrue(Array.isArray(args[0]),
-                                  "Got an array object for the XrayWrapped proxy object param");
-          browser.test.assertEq(undefined, args[0].length,
-                                "XrayWrappers deny access to the length property");
-          browser.test.assertEq(undefined, args[0][0],
-                                "Got the expected item in the array object");
-          return true;
+            browser.test.assertTrue(
+              Array.isArray(args[0]),
+              "Got an array object for the XrayWrapped proxy object param"
+            );
+            browser.test.assertEq(
+              undefined,
+              args[0].length,
+              "XrayWrappers deny access to the length property"
+            );
+            browser.test.assertEq(
+              undefined,
+              args[0][0],
+              "Got the expected item in the array object"
+            );
+            return true;
+          },
+        });
+      });
+    }
+
+    async function userScript() {
+      const { assertTrue, notifyFinish, testAPIMethod } = this;
+
+      let proxy = new Proxy(["expectedArrayValue"], {
+        getPrototypeOf() {
+          throw new Error("Proxy's getPrototypeOf trap");
+        },
+        get(target, prop, receiver) {
+          throw new Error("Proxy's get trap");
         },
       });
+
+      let result = testAPIMethod(proxy);
+
+      assertTrue(
+        result,
+        `userScript got an unexpected returned value: ${result}`
+      );
+      notifyFinish();
+    }
+
+    await test_userScript_APIMethod({
+      userScript,
+      apiScript,
     });
   }
-
-  async function userScript() {
-    const {
-      assertTrue,
-      notifyFinish,
-      testAPIMethod,
-    } = this;
-
-    let proxy = new Proxy(["expectedArrayValue"], {
-      getPrototypeOf() {
-        throw new Error("Proxy's getPrototypeOf trap");
-      },
-      get(target, prop, receiver) {
-        throw new Error("Proxy's get trap");
-      },
-    });
-
-    let result = testAPIMethod(proxy);
-
-    assertTrue(result, `userScript got an unexpected returned value: ${result}`);
-    notifyFinish();
-  }
-
-  await test_userScript_APIMethod({
-    userScript,
-    apiScript,
-  });
-});
+);
 
 add_task(async function test_apiScript_method_return_proxy_object() {
   function apiScript(sharedTestAPIMethods) {
@@ -594,13 +741,22 @@ add_task(async function test_apiScript_method_return_proxy_object() {
                 scriptTrapsCount++;
                 return script.global.Object.getPrototypeOf(target);
               },
-            }));
+            })
+          );
         },
         assertNoProxyTrapTriggered() {
-          browser.test.assertEq(0, proxyTrapsCount, "Proxy traps should not be triggered");
+          browser.test.assertEq(
+            0,
+            proxyTrapsCount,
+            "Proxy traps should not be triggered"
+          );
         },
         assertScriptProxyTrapsCount(expected) {
-          browser.test.assertEq(expected, scriptTrapsCount, "Script Proxy traps should have been triggered");
+          browser.test.assertEq(
+            expected,
+            scriptTrapsCount,
+            "Script Proxy traps should have been triggered"
+          );
         },
       });
     });
@@ -619,14 +775,19 @@ add_task(async function test_apiScript_method_return_proxy_object() {
     let error;
     try {
       let result = testAPIMethodError();
-      notifyFinish(`Unexpected returned value while expecting error: ${result}`);
+      notifyFinish(
+        `Unexpected returned value while expecting error: ${result}`
+      );
       return;
     } catch (err) {
       error = err;
     }
 
-    assertTrue(error && error.message.includes("Return value not accessible to the userScript"),
-               `Got an unexpected error message: ${error}`);
+    assertTrue(
+      error &&
+        error.message.includes("Return value not accessible to the userScript"),
+      `Got an unexpected error message: ${error}`
+    );
 
     error = undefined;
     try {
@@ -684,21 +845,29 @@ add_task(async function test_apiScript_returns_functions() {
     } = this;
 
     let resultFn = testAPIReturnsFunction();
-    assertTrue(typeof resultFn === "function",
-               `userScript got an unexpected returned value: ${typeof resultFn}`);
+    assertTrue(
+      typeof resultFn === "function",
+      `userScript got an unexpected returned value: ${typeof resultFn}`
+    );
 
     let fnRes = resultFn();
-    assertTrue(fnRes === window,
-               `Got an unexpected value from the returned function: ${fnRes}`);
+    assertTrue(
+      fnRes === window,
+      `Got an unexpected value from the returned function: ${fnRes}`
+    );
 
     let resultObj = testAPIReturnsObjWithMethod();
     let actualTypeof = resultObj && typeof resultObj.getWindow;
-    assertTrue(actualTypeof === "function",
-               `Returned object does not have the expected getWindow method: ${actualTypeof}`);
+    assertTrue(
+      actualTypeof === "function",
+      `Returned object does not have the expected getWindow method: ${actualTypeof}`
+    );
 
     let methodRes = resultObj.getWindow();
-    assertTrue(methodRes === window,
-               `Got an unexpected value from the returned method: ${methodRes}`);
+    assertTrue(
+      methodRes === window,
+      `Got an unexpected value from the returned method: ${methodRes}`
+    );
 
     notifyFinish();
   }
@@ -709,76 +878,90 @@ add_task(async function test_apiScript_returns_functions() {
   });
 });
 
-add_task(async function test_apiScript_method_clone_non_subsumed_returned_values() {
-  function apiScript(sharedTestAPIMethods) {
-    browser.userScripts.onBeforeScript.addListener(script => {
-      script.defineGlobals({
-        ...sharedTestAPIMethods,
-        testAPIMethodReturnOk() {
-          return script.export({
-            objKey1: {
-              nestedProp: "nestedvalue",
-            },
-            window,
-          });
-        },
-        testAPIMethodExplicitlyClonedError() {
-          let result = script.export({apiScopeObject: undefined});
+add_task(
+  async function test_apiScript_method_clone_non_subsumed_returned_values() {
+    function apiScript(sharedTestAPIMethods) {
+      browser.userScripts.onBeforeScript.addListener(script => {
+        script.defineGlobals({
+          ...sharedTestAPIMethods,
+          testAPIMethodReturnOk() {
+            return script.export({
+              objKey1: {
+                nestedProp: "nestedvalue",
+              },
+              window,
+            });
+          },
+          testAPIMethodExplicitlyClonedError() {
+            let result = script.export({ apiScopeObject: undefined });
 
-          browser.test.assertThrows(
-            () => {
-              result.apiScopeObject = {disallowedProp: "disallowedValue"};
-            },
-            /Not allowed to define cross-origin object as property on .* XrayWrapper/,
-            "Assigning a property to a xRayWrapper is expected to throw");
+            browser.test.assertThrows(
+              () => {
+                result.apiScopeObject = { disallowedProp: "disallowedValue" };
+              },
+              /Not allowed to define cross-origin object as property on .* XrayWrapper/,
+              "Assigning a property to a xRayWrapper is expected to throw"
+            );
 
-          // Let the exception to be raised, so that we check that the actual underlying
-          // error message is not leaking in the userScript (replaced by the generic
-          // "An unexpected apiScript error occurred" error message).
-          result.apiScopeObject = {disallowedProp: "disallowedValue"};
-        },
+            // Let the exception to be raised, so that we check that the actual underlying
+            // error message is not leaking in the userScript (replaced by the generic
+            // "An unexpected apiScript error occurred" error message).
+            result.apiScopeObject = { disallowedProp: "disallowedValue" };
+          },
+        });
       });
-    });
-  }
-
-  async function userScript() {
-    const {
-      assertTrue,
-      notifyFinish,
-      testAPIMethodReturnOk,
-      testAPIMethodExplicitlyClonedError,
-    } = this;
-
-    let result = testAPIMethodReturnOk();
-
-    assertTrue(result && ("objKey1" in result) && result.objKey1.nestedProp === "nestedvalue",
-               `userScript got an unexpected returned value: ${result}`);
-
-    assertTrue(result.window === window,
-               `userScript should have access to the window property: ${result.window}`);
-
-    let error;
-    try {
-      result = testAPIMethodExplicitlyClonedError();
-      notifyFinish(`Unexpected returned value while expecting error: ${result}`);
-      return;
-    } catch (err) {
-      error = err;
     }
 
-    // We expect the generic "unexpected apiScript error occurred" to be raised to the
-    // userScript code.
-    assertTrue(error && error.message.includes("An unexpected apiScript error occurred"),
-               `Got an unexpected error message: ${error}`);
+    async function userScript() {
+      const {
+        assertTrue,
+        notifyFinish,
+        testAPIMethodReturnOk,
+        testAPIMethodExplicitlyClonedError,
+      } = this;
 
-    notifyFinish();
+      let result = testAPIMethodReturnOk();
+
+      assertTrue(
+        result &&
+          "objKey1" in result &&
+          result.objKey1.nestedProp === "nestedvalue",
+        `userScript got an unexpected returned value: ${result}`
+      );
+
+      assertTrue(
+        result.window === window,
+        `userScript should have access to the window property: ${result.window}`
+      );
+
+      let error;
+      try {
+        result = testAPIMethodExplicitlyClonedError();
+        notifyFinish(
+          `Unexpected returned value while expecting error: ${result}`
+        );
+        return;
+      } catch (err) {
+        error = err;
+      }
+
+      // We expect the generic "unexpected apiScript error occurred" to be raised to the
+      // userScript code.
+      assertTrue(
+        error &&
+          error.message.includes("An unexpected apiScript error occurred"),
+        `Got an unexpected error message: ${error}`
+      );
+
+      notifyFinish();
+    }
+
+    await test_userScript_APIMethod({
+      userScript,
+      apiScript,
+    });
   }
-
-  await test_userScript_APIMethod({
-    userScript,
-    apiScript,
-  });
-});
+);
 
 add_task(async function test_apiScript_method_export_primitive_types() {
   function apiScript(sharedTestAPIMethods) {
@@ -787,10 +970,14 @@ add_task(async function test_apiScript_method_export_primitive_types() {
         ...sharedTestAPIMethods,
         testAPIMethod(typeToExport) {
           switch (typeToExport) {
-            case "boolean": return script.export(true);
-            case "number": return script.export(123);
-            case "string": return script.export("a string");
-            case "symbol": return script.export(Symbol("a symbol"));
+            case "boolean":
+              return script.export(true);
+            case "number":
+              return script.export(123);
+            case "string":
+              return script.export("a string");
+            case "symbol":
+              return script.export(Symbol("a symbol"));
           }
           return undefined;
         },
@@ -799,7 +986,7 @@ add_task(async function test_apiScript_method_export_primitive_types() {
   }
 
   async function userScript() {
-    const {assertTrue, notifyFinish, testAPIMethod} = this;
+    const { assertTrue, notifyFinish, testAPIMethod } = this;
 
     let v = testAPIMethod("boolean");
     assertTrue(v === true, `Should export a boolean`);
@@ -822,49 +1009,55 @@ add_task(async function test_apiScript_method_export_primitive_types() {
   });
 });
 
-add_task(async function test_apiScript_method_avoid_unnecessary_params_cloning() {
-  function apiScript(sharedTestAPIMethods) {
-    browser.userScripts.onBeforeScript.addListener(script => {
-      script.defineGlobals({
-        ...sharedTestAPIMethods,
-        testAPIMethodReturnsParam(param) {
-          return param;
-        },
-        testAPIMethodReturnsUnwrappedParam(param) {
-          return param.wrappedJSObject;
-        },
+add_task(
+  async function test_apiScript_method_avoid_unnecessary_params_cloning() {
+    function apiScript(sharedTestAPIMethods) {
+      browser.userScripts.onBeforeScript.addListener(script => {
+        script.defineGlobals({
+          ...sharedTestAPIMethods,
+          testAPIMethodReturnsParam(param) {
+            return param;
+          },
+          testAPIMethodReturnsUnwrappedParam(param) {
+            return param.wrappedJSObject;
+          },
+        });
       });
+    }
+
+    async function userScript() {
+      const {
+        assertTrue,
+        notifyFinish,
+        testAPIMethodReturnsParam,
+        testAPIMethodReturnsUnwrappedParam,
+      } = this;
+
+      let obj = {};
+
+      let result = testAPIMethodReturnsParam(obj);
+
+      assertTrue(
+        result === obj,
+        `Expect returned value to be strictly equal to the API method parameter`
+      );
+
+      result = testAPIMethodReturnsUnwrappedParam(obj);
+
+      assertTrue(
+        result === obj,
+        `Expect returned value to be strictly equal to the unwrapped API method parameter`
+      );
+
+      notifyFinish();
+    }
+
+    await test_userScript_APIMethod({
+      userScript,
+      apiScript,
     });
   }
-
-  async function userScript() {
-    const {
-      assertTrue,
-      notifyFinish,
-      testAPIMethodReturnsParam,
-      testAPIMethodReturnsUnwrappedParam,
-    } = this;
-
-    let obj = {};
-
-    let result = testAPIMethodReturnsParam(obj);
-
-    assertTrue(result === obj,
-               `Expect returned value to be strictly equal to the API method parameter`);
-
-    result = testAPIMethodReturnsUnwrappedParam(obj);
-
-    assertTrue(result === obj,
-               `Expect returned value to be strictly equal to the unwrapped API method parameter`);
-
-    notifyFinish();
-  }
-
-  await test_userScript_APIMethod({
-    userScript,
-    apiScript,
-  });
-});
+);
 
 add_task(async function test_apiScript_method_export_sparse_arrays() {
   function apiScript(sharedTestAPIMethods) {
@@ -882,19 +1075,27 @@ add_task(async function test_apiScript_method_export_sparse_arrays() {
   }
 
   async function userScript() {
-    const {assertTrue, notifyFinish, testAPIMethod} = this;
+    const { assertTrue, notifyFinish, testAPIMethod } = this;
 
     const result = testAPIMethod(window, document);
 
     // We expect the returned value to be the uncloneable window object.
-    assertTrue(result && result.length === 6,
-               `the returned value should be an array of the expected length: ${result}`);
-    assertTrue(result[3] === "third-element",
-               `the third array element should have the expected value: ${result[3]}`);
-    assertTrue(result[5] === "fifth-element",
-               `the fifth array element should have the expected value: ${result[5]}`);
-    assertTrue(result[0] === undefined,
-               `the first array element should have the expected value: ${result[0]}`);
+    assertTrue(
+      result && result.length === 6,
+      `the returned value should be an array of the expected length: ${result}`
+    );
+    assertTrue(
+      result[3] === "third-element",
+      `the third array element should have the expected value: ${result[3]}`
+    );
+    assertTrue(
+      result[5] === "fifth-element",
+      `the fifth array element should have the expected value: ${result[5]}`
+    );
+    assertTrue(
+      result[0] === undefined,
+      `the first array element should have the expected value: ${result[0]}`
+    );
     assertTrue(!("0" in result), "Holey array should still be holey");
 
     notifyFinish();

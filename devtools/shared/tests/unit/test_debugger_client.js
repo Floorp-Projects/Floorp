@@ -30,7 +30,10 @@ async function testCloseLoops() {
     client.on("closed", async () => {
       dump(">> CLOSED\n");
       if (called) {
-        ok(false, "Calling client.close from closed event listener introduce loops");
+        ok(
+          false,
+          "Calling client.close from closed event listener introduce loops"
+        );
         return;
       }
       called = true;

@@ -11,55 +11,104 @@
 
 // Globals
 
-var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-var {Integration} = ChromeUtils.import("resource://gre/modules/Integration.jsm");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+var { Integration } = ChromeUtils.import(
+  "resource://gre/modules/Integration.jsm"
+);
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "DownloadPaths",
-                               "resource://gre/modules/DownloadPaths.jsm");
-ChromeUtils.defineModuleGetter(this, "Downloads",
-                               "resource://gre/modules/Downloads.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "HttpServer",
-                               "resource://testing-common/httpd.js");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Promise",
-                               "resource://gre/modules/Promise.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "FileTestUtils",
-                               "resource://testing-common/FileTestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "MockRegistrar",
-                               "resource://testing-common/MockRegistrar.jsm");
-ChromeUtils.defineModuleGetter(this, "TestUtils",
-                               "resource://testing-common/TestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "DownloadPaths",
+  "resource://gre/modules/DownloadPaths.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Downloads",
+  "resource://gre/modules/Downloads.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "HttpServer",
+  "resource://testing-common/httpd.js"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Promise",
+  "resource://gre/modules/Promise.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileTestUtils",
+  "resource://testing-common/FileTestUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "MockRegistrar",
+  "resource://testing-common/MockRegistrar.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TestUtils",
+  "resource://testing-common/TestUtils.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "gExternalHelperAppService",
-           "@mozilla.org/uriloader/external-helper-app-service;1",
-           Ci.nsIExternalHelperAppService);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gExternalHelperAppService",
+  "@mozilla.org/uriloader/external-helper-app-service;1",
+  Ci.nsIExternalHelperAppService
+);
 
 /* global DownloadIntegration */
-Integration.downloads.defineModuleGetter(this, "DownloadIntegration",
-            "resource://gre/modules/DownloadIntegration.jsm");
+Integration.downloads.defineModuleGetter(
+  this,
+  "DownloadIntegration",
+  "resource://gre/modules/DownloadIntegration.jsm"
+);
 
 const ServerSocket = Components.Constructor(
-                                "@mozilla.org/network/server-socket;1",
-                                "nsIServerSocket",
-                                "init");
+  "@mozilla.org/network/server-socket;1",
+  "nsIServerSocket",
+  "init"
+);
 const BinaryOutputStream = Components.Constructor(
-                                      "@mozilla.org/binaryoutputstream;1",
-                                      "nsIBinaryOutputStream",
-                                      "setOutputStream");
+  "@mozilla.org/binaryoutputstream;1",
+  "nsIBinaryOutputStream",
+  "setOutputStream"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "gMIMEService",
-                                   "@mozilla.org/mime;1",
-                                   "nsIMIMEService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gMIMEService",
+  "@mozilla.org/mime;1",
+  "nsIMIMEService"
+);
 
 const TEST_TARGET_FILE_NAME = "test-download.txt";
 const TEST_STORE_FILE_NAME = "test-downloads.json";
@@ -71,13 +120,61 @@ const TEST_REFERRER_URL = "https://www.example.com/referrer.html";
 const TEST_DATA_SHORT = "This test string is downloaded.";
 // Generate using gzipCompressString in TelemetryController.jsm.
 const TEST_DATA_SHORT_GZIP_ENCODED_FIRST = [
- 31, 139, 8, 0, 0, 0, 0, 0, 0, 3, 11, 201, 200, 44, 86, 40, 73, 45, 46, 81, 40, 46, 41, 202, 204,
+  31,
+  139,
+  8,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  3,
+  11,
+  201,
+  200,
+  44,
+  86,
+  40,
+  73,
+  45,
+  46,
+  81,
+  40,
+  46,
+  41,
+  202,
+  204,
 ];
 const TEST_DATA_SHORT_GZIP_ENCODED_SECOND = [
-  75, 87, 0, 114, 83, 242, 203, 243, 114, 242, 19, 83, 82, 83, 244, 0, 151, 222, 109, 43, 31, 0, 0, 0,
+  75,
+  87,
+  0,
+  114,
+  83,
+  242,
+  203,
+  243,
+  114,
+  242,
+  19,
+  83,
+  82,
+  83,
+  244,
+  0,
+  151,
+  222,
+  109,
+  43,
+  31,
+  0,
+  0,
+  0,
 ];
-const TEST_DATA_SHORT_GZIP_ENCODED =
-  TEST_DATA_SHORT_GZIP_ENCODED_FIRST.concat(TEST_DATA_SHORT_GZIP_ENCODED_SECOND);
+const TEST_DATA_SHORT_GZIP_ENCODED = TEST_DATA_SHORT_GZIP_ENCODED_FIRST.concat(
+  TEST_DATA_SHORT_GZIP_ENCODED_SECOND
+);
 
 /**
  * All the tests are implemented with add_task, this starts them automatically.
@@ -99,8 +196,12 @@ var gHttpServer;
  * on the currently running instance of the test HTTP server.
  */
 function httpUrl(aFileName) {
-  return "http://www.example.com:" + gHttpServer.identity.primaryPort + "/" +
-         aFileName;
+  return (
+    "http://www.example.com:" +
+    gHttpServer.identity.primaryPort +
+    "/" +
+    aFileName
+  );
 }
 
 /**
@@ -210,16 +311,18 @@ function promiseNewDownload(aSourceUrl) {
  */
 function promiseStartLegacyDownload(aSourceUrl, aOptions) {
   let sourceURI = NetUtil.newURI(aSourceUrl || httpUrl("source.txt"));
-  let targetFile = (aOptions && aOptions.targetFile)
-                   || getTempFile(TEST_TARGET_FILE_NAME);
+  let targetFile =
+    (aOptions && aOptions.targetFile) || getTempFile(TEST_TARGET_FILE_NAME);
 
-  let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
-                  .createInstance(Ci.nsIWebBrowserPersist);
+  let persist = Cc[
+    "@mozilla.org/embedding/browser/nsWebBrowserPersist;1"
+  ].createInstance(Ci.nsIWebBrowserPersist);
   if (aOptions) {
     aOptions.outPersist = persist;
   }
 
-  let fileExtension = null, mimeInfo = null;
+  let fileExtension = null,
+    mimeInfo = null;
   let match = sourceURI.pathQueryRef.match(/\.([^.\/]+)$/);
   if (match) {
     fileExtension = match[1];
@@ -229,14 +332,15 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
     try {
       mimeInfo = gMIMEService.getFromTypeAndExtension(null, fileExtension);
       mimeInfo.preferredAction = Ci.nsIMIMEInfo.saveToDisk;
-    } catch (ex) { }
+    } catch (ex) {}
   }
 
   if (aOptions && aOptions.launcherPath) {
     Assert.ok(mimeInfo != null);
 
-    let localHandlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"]
-                            .createInstance(Ci.nsILocalHandlerApp);
+    let localHandlerApp = Cc[
+      "@mozilla.org/uriloader/local-handler-app;1"
+    ].createInstance(Ci.nsILocalHandlerApp);
     localHandlerApp.executable = new FileUtils.File(aOptions.launcherPath);
 
     mimeInfo.preferredApplicationHandler = localHandlerApp;
@@ -257,38 +361,61 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
   let transfer = Cc["@mozilla.org/transfer;1"].createInstance(Ci.nsITransfer);
 
   return new Promise(resolve => {
-    Downloads.getList(Downloads.ALL).then(function(aList) {
-      // Temporarily register a view that will get notified when the download we
-      // are controlling becomes visible in the list of downloads.
-      aList.addView({
-        onDownloadAdded(aDownload) {
-          aList.removeView(this).catch(do_report_unexpected_exception);
+    Downloads.getList(Downloads.ALL)
+      .then(function(aList) {
+        // Temporarily register a view that will get notified when the download we
+        // are controlling becomes visible in the list of downloads.
+        aList
+          .addView({
+            onDownloadAdded(aDownload) {
+              aList.removeView(this).catch(do_report_unexpected_exception);
 
-          // Remove the download to keep the list empty for the next test.  This
-          // also allows the caller to register the "onchange" event directly.
-          let promise = aList.remove(aDownload);
+              // Remove the download to keep the list empty for the next test.  This
+              // also allows the caller to register the "onchange" event directly.
+              let promise = aList.remove(aDownload);
 
-          // When the download object is ready, make it available to the caller.
-          promise.then(() => resolve(aDownload),
-                       do_report_unexpected_exception);
-        },
-      }).catch(do_report_unexpected_exception);
+              // When the download object is ready, make it available to the caller.
+              promise.then(
+                () => resolve(aDownload),
+                do_report_unexpected_exception
+              );
+            },
+          })
+          .catch(do_report_unexpected_exception);
 
-      let isPrivate = aOptions && aOptions.isPrivate;
-      let referrer = aOptions && aOptions.referrer ?
-        NetUtil.newURI(aOptions.referrer) : null;
-      // Initialize the components so they reference each other.  This will cause
-      // the Download object to be created and added to the public downloads.
-      transfer.init(sourceURI, NetUtil.newURI(targetFile), null, mimeInfo, null,
-                    null, persist, isPrivate);
-      persist.progressListener = transfer;
+        let isPrivate = aOptions && aOptions.isPrivate;
+        let referrer =
+          aOptions && aOptions.referrer
+            ? NetUtil.newURI(aOptions.referrer)
+            : null;
+        // Initialize the components so they reference each other.  This will cause
+        // the Download object to be created and added to the public downloads.
+        transfer.init(
+          sourceURI,
+          NetUtil.newURI(targetFile),
+          null,
+          mimeInfo,
+          null,
+          null,
+          persist,
+          isPrivate
+        );
+        persist.progressListener = transfer;
 
-      // Start the actual download process.
-      persist.savePrivacyAwareURI(
-        sourceURI, Services.scriptSecurityManager.getSystemPrincipal(),
-        0, referrer, Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
-        null, null, targetFile, isPrivate);
-    }).catch(do_report_unexpected_exception);
+        // Start the actual download process.
+        persist.savePrivacyAwareURI(
+          sourceURI,
+          Services.scriptSecurityManager.getSystemPrincipal(),
+          0,
+          referrer,
+          Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
+          null,
+          null,
+          targetFile,
+          isPrivate
+        );
+      })
+      .catch(do_report_unexpected_exception);
   });
 }
 
@@ -307,54 +434,68 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
  * @rejects Never.  The current test fails in case of exceptions.
  */
 function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
-  let sourceURI = NetUtil.newURI(aSourceUrl ||
-                                 httpUrl("interruptible_resumable.txt"));
+  let sourceURI = NetUtil.newURI(
+    aSourceUrl || httpUrl("interruptible_resumable.txt")
+  );
 
   return new Promise(resolve => {
-    Downloads.getList(Downloads.PUBLIC).then(function(aList) {
-      // Temporarily register a view that will get notified when the download we
-      // are controlling becomes visible in the list of downloads.
-      aList.addView({
-        onDownloadAdded(aDownload) {
-          aList.removeView(this).catch(do_report_unexpected_exception);
+    Downloads.getList(Downloads.PUBLIC)
+      .then(function(aList) {
+        // Temporarily register a view that will get notified when the download we
+        // are controlling becomes visible in the list of downloads.
+        aList
+          .addView({
+            onDownloadAdded(aDownload) {
+              aList.removeView(this).catch(do_report_unexpected_exception);
 
-          // Remove the download to keep the list empty for the next test.  This
-          // also allows the caller to register the "onchange" event directly.
-          let promise = aList.remove(aDownload);
+              // Remove the download to keep the list empty for the next test.  This
+              // also allows the caller to register the "onchange" event directly.
+              let promise = aList.remove(aDownload);
 
-          // When the download object is ready, make it available to the caller.
-          promise.then(() => resolve(aDownload),
-                       do_report_unexpected_exception);
-        },
-      }).catch(do_report_unexpected_exception);
+              // When the download object is ready, make it available to the caller.
+              promise.then(
+                () => resolve(aDownload),
+                do_report_unexpected_exception
+              );
+            },
+          })
+          .catch(do_report_unexpected_exception);
 
-      let channel = NetUtil.newChannel({
-        uri: sourceURI,
-        loadUsingSystemPrincipal: true,
-      });
+        let channel = NetUtil.newChannel({
+          uri: sourceURI,
+          loadUsingSystemPrincipal: true,
+        });
 
-      // Start the actual download process.
-      channel.asyncOpen({
-        contentListener: null,
+        // Start the actual download process.
+        channel.asyncOpen({
+          contentListener: null,
 
-        onStartRequest(aRequest) {
-          let requestChannel = aRequest.QueryInterface(Ci.nsIChannel);
-          this.contentListener = gExternalHelperAppService.doContent(
-                                       requestChannel.contentType, aRequest, null, true);
-          this.contentListener.onStartRequest(aRequest);
-        },
+          onStartRequest(aRequest) {
+            let requestChannel = aRequest.QueryInterface(Ci.nsIChannel);
+            this.contentListener = gExternalHelperAppService.doContent(
+              requestChannel.contentType,
+              aRequest,
+              null,
+              true
+            );
+            this.contentListener.onStartRequest(aRequest);
+          },
 
-        onStopRequest(aRequest, aStatusCode) {
-          this.contentListener.onStopRequest(aRequest, aStatusCode);
-        },
+          onStopRequest(aRequest, aStatusCode) {
+            this.contentListener.onStopRequest(aRequest, aStatusCode);
+          },
 
-        onDataAvailable(aRequest, aInputStream, aOffset,
-                                  aCount) {
-          this.contentListener.onDataAvailable(aRequest, aInputStream,
-                                               aOffset, aCount);
-        },
-      });
-    }).catch(do_report_unexpected_exception);
+          onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
+            this.contentListener.onDataAvailable(
+              aRequest,
+              aInputStream,
+              aOffset,
+              aCount
+            );
+          },
+        });
+      })
+      .catch(do_report_unexpected_exception);
   });
 }
 
@@ -373,7 +514,11 @@ function promiseDownloadMidway(aDownload) {
   return new Promise(resolve => {
     // Wait for the download to reach half of its progress.
     let onchange = function() {
-      if (!aDownload.stopped && !aDownload.canceled && aDownload.progress == 50) {
+      if (
+        !aDownload.stopped &&
+        !aDownload.canceled &&
+        aDownload.progress == 50
+      ) {
         aDownload.onchange = null;
         resolve();
       }
@@ -461,10 +606,14 @@ function promiseVerifyContents(aPath, aExpectedContents) {
         { uri: NetUtil.newURI(file), loadUsingSystemPrincipal: true },
         function(aInputStream, aStatus) {
           Assert.ok(Components.isSuccessCode(aStatus));
-          let contents = NetUtil.readInputStreamToString(aInputStream,
-                                                         aInputStream.available());
-          if (contents.length > TEST_DATA_SHORT.length * 2 ||
-              /[^\x20-\x7E]/.test(contents)) {
+          let contents = NetUtil.readInputStreamToString(
+            aInputStream,
+            aInputStream.available()
+          );
+          if (
+            contents.length > TEST_DATA_SHORT.length * 2 ||
+            /[^\x20-\x7E]/.test(contents)
+          ) {
             // Do not print the entire content string to the test log.
             Assert.equal(contents.length, aExpectedContents.length);
             Assert.ok(contents == aExpectedContents);
@@ -473,7 +622,8 @@ function promiseVerifyContents(aPath, aExpectedContents) {
             Assert.equal(contents, aExpectedContents);
           }
           resolve();
-        });
+        }
+      );
     });
   })();
 }
@@ -490,7 +640,7 @@ function startFakeServer() {
     onSocketAccepted(aServ, aTransport) {
       aTransport.close(Cr.NS_BINDING_ABORTED);
     },
-    onStopListening() { },
+    onStopListening() {},
   });
   return serverSocket;
 }
@@ -558,11 +708,13 @@ function registerInterruptibleHandler(aPath, aFirstPartFn, aSecondPartFn) {
     aFirstPartFn(aRequest, aResponse);
 
     // Wait on the current deferred object, then finish the request.
-    _gDeferResponses.promise.then(function RIH_onSuccess() {
-      aSecondPartFn(aRequest, aResponse);
-      aResponse.finish();
-      info("Interruptible request finished.");
-    }).catch(Cu.reportError);
+    _gDeferResponses.promise
+      .then(function RIH_onSuccess() {
+        aSecondPartFn(aRequest, aResponse);
+        aResponse.finish();
+        info("Interruptible request finished.");
+      })
+      .catch(Cu.reportError);
   });
 }
 
@@ -582,7 +734,9 @@ function isValidDate(aDate) {
  */
 function waitForAnnotation(sourceUriSpec, annotationName) {
   return TestUtils.waitForCondition(async () => {
-    let pageInfo = await PlacesUtils.history.fetch(sourceUriSpec, {includeAnnotations: true});
+    let pageInfo = await PlacesUtils.history.fetch(sourceUriSpec, {
+      includeAnnotations: true,
+    });
     return pageInfo && pageInfo.annotations.has(annotationName);
   }, `Should have found annotation ${annotationName} for ${sourceUriSpec}`);
 }
@@ -610,8 +764,11 @@ add_task(function test_common_initialize() {
   });
 
   // Serve the downloads from a domain located in the Internet zone on Windows.
-  gHttpServer.identity.setPrimary("http", "www.example.com",
-                                  gHttpServer.identity.primaryPort);
+  gHttpServer.identity.setPrimary(
+    "http",
+    "www.example.com",
+    gHttpServer.identity.primaryPort
+  );
   Services.prefs.setCharPref("network.dns.localDomains", "www.example.com");
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("network.dns.localDomains");
@@ -626,40 +783,53 @@ add_task(function test_common_initialize() {
     Services.prefs.clearUserPref("browser.cache.memory.enable");
   });
 
-  registerInterruptibleHandler("/interruptible.txt",
+  registerInterruptibleHandler(
+    "/interruptible.txt",
     function firstPart(aRequest, aResponse) {
       aResponse.setHeader("Content-Type", "text/plain", false);
-      aResponse.setHeader("Content-Length", "" + (TEST_DATA_SHORT.length * 2),
-                          false);
+      aResponse.setHeader(
+        "Content-Length",
+        "" + TEST_DATA_SHORT.length * 2,
+        false
+      );
       aResponse.write(TEST_DATA_SHORT);
-    }, function secondPart(aRequest, aResponse) {
+    },
+    function secondPart(aRequest, aResponse) {
       aResponse.write(TEST_DATA_SHORT);
-    });
+    }
+  );
 
-  registerInterruptibleHandler("/interruptible_resumable.txt",
+  registerInterruptibleHandler(
+    "/interruptible_resumable.txt",
     function firstPart(aRequest, aResponse) {
       aResponse.setHeader("Content-Type", "text/plain", false);
 
       // Determine if only part of the data should be sent.
       let data = TEST_DATA_SHORT + TEST_DATA_SHORT;
       if (aRequest.hasHeader("Range")) {
-        var matches = aRequest.getHeader("Range")
-                              .match(/^\s*bytes=(\d+)?-(\d+)?\s*$/);
-        var firstBytePos = (matches[1] === undefined) ? 0 : matches[1];
-        var lastBytePos = (matches[2] === undefined) ? data.length - 1
-                                            : matches[2];
+        var matches = aRequest
+          .getHeader("Range")
+          .match(/^\s*bytes=(\d+)?-(\d+)?\s*$/);
+        var firstBytePos = matches[1] === undefined ? 0 : matches[1];
+        var lastBytePos =
+          matches[2] === undefined ? data.length - 1 : matches[2];
         if (firstBytePos >= data.length) {
-          aResponse.setStatusLine(aRequest.httpVersion, 416,
-                             "Requested Range Not Satisfiable");
+          aResponse.setStatusLine(
+            aRequest.httpVersion,
+            416,
+            "Requested Range Not Satisfiable"
+          );
           aResponse.setHeader("Content-Range", "*/" + data.length, false);
           aResponse.finish();
           return;
         }
 
         aResponse.setStatusLine(aRequest.httpVersion, 206, "Partial Content");
-        aResponse.setHeader("Content-Range", firstBytePos + "-" +
-                                             lastBytePos + "/" +
-                                             data.length, false);
+        aResponse.setHeader(
+          "Content-Range",
+          firstBytePos + "-" + lastBytePos + "/" + data.length,
+          false
+        );
 
         data = data.substring(firstBytePos, lastBytePos + 1);
 
@@ -675,56 +845,82 @@ add_task(function test_common_initialize() {
       // Store the second part of the data on the response object, so that it
       // can be used by the secondPart function.
       aResponse.secondPartData = data.substring(data.length / 2);
-    }, function secondPart(aRequest, aResponse) {
+    },
+    function secondPart(aRequest, aResponse) {
       aResponse.write(aResponse.secondPartData);
-    });
+    }
+  );
 
-  registerInterruptibleHandler("/interruptible_gzip.txt",
+  registerInterruptibleHandler(
+    "/interruptible_gzip.txt",
     function firstPart(aRequest, aResponse) {
       aResponse.setHeader("Content-Type", "text/plain", false);
       aResponse.setHeader("Content-Encoding", "gzip", false);
-      aResponse.setHeader("Content-Length", "" + TEST_DATA_SHORT_GZIP_ENCODED.length);
+      aResponse.setHeader(
+        "Content-Length",
+        "" + TEST_DATA_SHORT_GZIP_ENCODED.length
+      );
 
-      let bos =  new BinaryOutputStream(aResponse.bodyOutputStream);
-      bos.writeByteArray(TEST_DATA_SHORT_GZIP_ENCODED_FIRST,
-                         TEST_DATA_SHORT_GZIP_ENCODED_FIRST.length);
-    }, function secondPart(aRequest, aResponse) {
-      let bos =  new BinaryOutputStream(aResponse.bodyOutputStream);
-      bos.writeByteArray(TEST_DATA_SHORT_GZIP_ENCODED_SECOND,
-                         TEST_DATA_SHORT_GZIP_ENCODED_SECOND.length);
-    });
+      let bos = new BinaryOutputStream(aResponse.bodyOutputStream);
+      bos.writeByteArray(
+        TEST_DATA_SHORT_GZIP_ENCODED_FIRST,
+        TEST_DATA_SHORT_GZIP_ENCODED_FIRST.length
+      );
+    },
+    function secondPart(aRequest, aResponse) {
+      let bos = new BinaryOutputStream(aResponse.bodyOutputStream);
+      bos.writeByteArray(
+        TEST_DATA_SHORT_GZIP_ENCODED_SECOND,
+        TEST_DATA_SHORT_GZIP_ENCODED_SECOND.length
+      );
+    }
+  );
 
-  gHttpServer.registerPathHandler("/shorter-than-content-length-http-1-1.txt",
+  gHttpServer.registerPathHandler(
+    "/shorter-than-content-length-http-1-1.txt",
     function(aRequest, aResponse) {
       aResponse.processAsync();
       aResponse.setStatusLine("1.1", 200, "OK");
       aResponse.setHeader("Content-Type", "text/plain", false);
-      aResponse.setHeader("Content-Length", "" + (TEST_DATA_SHORT.length * 2),
-                          false);
+      aResponse.setHeader(
+        "Content-Length",
+        "" + TEST_DATA_SHORT.length * 2,
+        false
+      );
       aResponse.write(TEST_DATA_SHORT);
       aResponse.finish();
-    });
+    }
+  );
 
   // This URL will emulate being blocked by Windows Parental controls
-  gHttpServer.registerPathHandler("/parentalblocked.zip",
-    function(aRequest, aResponse) {
-      aResponse.setStatusLine(aRequest.httpVersion, 450,
-                              "Blocked by Windows Parental Controls");
-    });
+  gHttpServer.registerPathHandler("/parentalblocked.zip", function(
+    aRequest,
+    aResponse
+  ) {
+    aResponse.setStatusLine(
+      aRequest.httpVersion,
+      450,
+      "Blocked by Windows Parental Controls"
+    );
+  });
 
   // This URL sends some data followed by an RST packet
-  gHttpServer.registerPathHandler("/netreset.txt",
-    function(aRequest, aResponse) {
-      info("Starting response that will be aborted.");
-      aResponse.processAsync();
-      aResponse.setHeader("Content-Type", "text/plain", false);
-      aResponse.write(TEST_DATA_SHORT);
-      promiseExecuteSoon().then(() => {
+  gHttpServer.registerPathHandler("/netreset.txt", function(
+    aRequest,
+    aResponse
+  ) {
+    info("Starting response that will be aborted.");
+    aResponse.processAsync();
+    aResponse.setHeader("Content-Type", "text/plain", false);
+    aResponse.write(TEST_DATA_SHORT);
+    promiseExecuteSoon()
+      .then(() => {
         aResponse.abort(null, true);
         aResponse.finish();
         info("Aborting response with network reset.");
-      }).then(null, Cu.reportError);
-    });
+      })
+      .then(null, Cu.reportError);
+  });
 
   // During unit tests, most of the functions that require profile access or
   // operating system features will be disabled. Individual tests may override
@@ -735,18 +931,20 @@ add_task(function test_common_initialize() {
     shouldKeepBlockedData: () => Promise.resolve(false),
     shouldBlockForParentalControls: () => Promise.resolve(false),
     shouldBlockForRuntimePermissions: () => Promise.resolve(false),
-    shouldBlockForReputationCheck: () => Promise.resolve({
-      shouldBlock: false,
-      verdict: "",
-    }),
+    shouldBlockForReputationCheck: () =>
+      Promise.resolve({
+        shouldBlock: false,
+        verdict: "",
+      }),
     confirmLaunchExecutable: () => Promise.resolve(),
     launchFile: () => Promise.resolve(),
     showContainingDirectory: () => Promise.resolve(),
     // This flag allows re-enabling the default observers during their tests.
     allowObservers: false,
     addListObservers() {
-      return this.allowObservers ? super.addListObservers(...arguments)
-                                 : Promise.resolve();
+      return this.allowObservers
+        ? super.addListObservers(...arguments)
+        : Promise.resolve();
     },
     // This flag allows re-enabling the download directory logic for its tests.
     _allowDirectories: false,
@@ -764,11 +962,13 @@ add_task(function test_common_initialize() {
   // saved to disk without asking for a destination interactively.
   let mock = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
-    promptForSaveToFileAsync(aLauncher,
-                             aWindowContext,
-                             aDefaultFileName,
-                             aSuggestedFileExtension,
-                             aForcePrompt) {
+    promptForSaveToFileAsync(
+      aLauncher,
+      aWindowContext,
+      aDefaultFileName,
+      aSuggestedFileExtension,
+      aForcePrompt
+    ) {
       // The dialog should create the empty placeholder file.
       let file = getTempFile(TEST_TARGET_FILE_NAME);
       file.create(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
@@ -776,7 +976,10 @@ add_task(function test_common_initialize() {
     },
   };
 
-  let cid = MockRegistrar.register("@mozilla.org/helperapplauncherdialog;1", mock);
+  let cid = MockRegistrar.register(
+    "@mozilla.org/helperapplauncherdialog;1",
+    mock
+  );
   registerCleanupFunction(() => {
     MockRegistrar.unregister(cid);
   });

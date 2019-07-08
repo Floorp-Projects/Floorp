@@ -8,7 +8,9 @@
 
 var EXPORTED_SYMBOLS = ["SearchUtils"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
@@ -16,8 +18,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const BROWSER_SEARCH_PREF = "browser.search.";
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "loggingEnabled",
-  BROWSER_SEARCH_PREF + "log", false);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "loggingEnabled",
+  BROWSER_SEARCH_PREF + "log",
+  false
+);
 
 var SearchUtils = {
   APP_SEARCH_PREFIX: "resource://search-plugins/",
@@ -76,7 +82,7 @@ var SearchUtils = {
    */
   notifyAction(engine, verb) {
     if (Services.search.isInitialized) {
-      this.log("NOTIFY: Engine: \"" + engine.name + "\"; Verb: \"" + verb + "\"");
+      this.log('NOTIFY: Engine: "' + engine.name + '"; Verb: "' + verb + '"');
       Services.obs.notifyObservers(engine, this.TOPIC_ENGINE_MODIFIED, verb);
     }
   },
@@ -116,27 +122,31 @@ var SearchUtils = {
   makeURI(urlSpec) {
     try {
       return Services.io.newURI(urlSpec);
-    } catch (ex) { }
+    } catch (ex) {}
 
     return null;
   },
 
   /**
    * Wrapper function for nsIIOService::newChannel.
+   *
    * @param {string|nsIURI} url
-   *        The URL string from which to create an nsIChannel.
-   * @returns an nsIChannel object, or null if the url is invalid.
+   *   The URL string from which to create an nsIChannel.
+   * @returns {nsIChannel}
+   *   an nsIChannel object, or null if the url is invalid.
    */
   makeChannel(url) {
     try {
       let uri = typeof url == "string" ? Services.io.newURI(url) : url;
-      return Services.io.newChannelFromURI(uri,
-                                           null, /* loadingNode */
-                                           Services.scriptSecurityManager.getSystemPrincipal(),
-                                           null, /* triggeringPrincipal */
-                                           Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                           Ci.nsIContentPolicy.TYPE_OTHER);
-    } catch (ex) { }
+      return Services.io.newChannelFromURI(
+        uri,
+        null /* loadingNode */,
+        Services.scriptSecurityManager.getSystemPrincipal(),
+        null /* triggeringPrincipal */,
+        Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+        Ci.nsIContentPolicy.TYPE_OTHER
+      );
+    } catch (ex) {}
 
     return null;
   },

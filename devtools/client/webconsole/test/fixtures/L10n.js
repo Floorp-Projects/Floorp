@@ -56,7 +56,8 @@ class L10n {
 
   timestampString(milliseconds) {
     const d = new Date(milliseconds ? milliseconds : null);
-    let hours = d.getHours(), minutes = d.getMinutes();
+    let hours = d.getHours(),
+      minutes = d.getMinutes();
     let seconds = d.getSeconds();
     milliseconds = d.getMilliseconds();
 

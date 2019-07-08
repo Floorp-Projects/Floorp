@@ -14,58 +14,82 @@ add_task(async function test_setup_preexisting_permissions() {
   // No ALLOW -> DENY override for popup and install permissions,
   // because their policies only supports the Allow parameter.
 
-  Services.perms.add(URI("https://www.pre-existing-allow.com"),
-                     "cookie",
-                     Ci.nsIPermissionManager.ALLOW_ACTION,
-                     Ci.nsIPermissionManager.EXPIRE_SESSION);
+  Services.perms.add(
+    URI("https://www.pre-existing-allow.com"),
+    "cookie",
+    Ci.nsIPermissionManager.ALLOW_ACTION,
+    Ci.nsIPermissionManager.EXPIRE_SESSION
+  );
 
-  Services.perms.add(URI("https://www.pre-existing-allow.com"),
-                     "plugin:flash",
-                     Ci.nsIPermissionManager.ALLOW_ACTION,
-                     Ci.nsIPermissionManager.EXPIRE_SESSION);
+  Services.perms.add(
+    URI("https://www.pre-existing-allow.com"),
+    "plugin:flash",
+    Ci.nsIPermissionManager.ALLOW_ACTION,
+    Ci.nsIPermissionManager.EXPIRE_SESSION
+  );
 
   // Pre-existing DENY permissions that should be overriden
   // with ALLOW.
-  Services.perms.add(URI("https://www.pre-existing-deny.com"),
-                     "popup",
-                     Ci.nsIPermissionManager.DENY_ACTION,
-                     Ci.nsIPermissionManager.EXPIRE_SESSION);
+  Services.perms.add(
+    URI("https://www.pre-existing-deny.com"),
+    "popup",
+    Ci.nsIPermissionManager.DENY_ACTION,
+    Ci.nsIPermissionManager.EXPIRE_SESSION
+  );
 
-  Services.perms.add(URI("https://www.pre-existing-deny.com"),
-                     "install",
-                     Ci.nsIPermissionManager.DENY_ACTION,
-                     Ci.nsIPermissionManager.EXPIRE_SESSION);
+  Services.perms.add(
+    URI("https://www.pre-existing-deny.com"),
+    "install",
+    Ci.nsIPermissionManager.DENY_ACTION,
+    Ci.nsIPermissionManager.EXPIRE_SESSION
+  );
 
-  Services.perms.add(URI("https://www.pre-existing-deny.com"),
-                     "cookie",
-                     Ci.nsIPermissionManager.DENY_ACTION,
-                     Ci.nsIPermissionManager.EXPIRE_SESSION);
+  Services.perms.add(
+    URI("https://www.pre-existing-deny.com"),
+    "cookie",
+    Ci.nsIPermissionManager.DENY_ACTION,
+    Ci.nsIPermissionManager.EXPIRE_SESSION
+  );
 
-  Services.perms.add(URI("https://www.pre-existing-deny.com"),
-                     "plugin:flash",
-                     Ci.nsIPermissionManager.DENY_ACTION,
-                     Ci.nsIPermissionManager.EXPIRE_SESSION);
+  Services.perms.add(
+    URI("https://www.pre-existing-deny.com"),
+    "plugin:flash",
+    Ci.nsIPermissionManager.DENY_ACTION,
+    Ci.nsIPermissionManager.EXPIRE_SESSION
+  );
 });
 
 add_task(async function test_setup_activate_policies() {
   await setupPolicyEngineWithJson("config_popups_cookies_addons_flash.json");
-  equal(Services.policies.status, Ci.nsIEnterprisePolicies.ACTIVE, "Engine is active");
+  equal(
+    Services.policies.status,
+    Ci.nsIEnterprisePolicies.ACTIVE,
+    "Engine is active"
+  );
 });
 
 function checkPermission(url, expected, permissionName) {
   let expectedValue = Ci.nsIPermissionManager[`${expected}_ACTION`];
   let uri = Services.io.newURI(`https://www.${url}`);
 
-  equal(Services.perms.testPermission(uri, permissionName),
+  equal(
+    Services.perms.testPermission(uri, permissionName),
     expectedValue,
-    `Correct (${permissionName}=${expected}) for URL ${url}`);
+    `Correct (${permissionName}=${expected}) for URL ${url}`
+  );
 
   if (expected != "UNKNOWN") {
     let permission = Services.perms.getPermissionObjectForURI(
-      uri, permissionName, true);
+      uri,
+      permissionName,
+      true
+    );
     ok(permission, "Permission object exists");
-    equal(permission.expireType, Ci.nsIPermissionManager.EXPIRE_POLICY,
-       "Permission expireType is correct");
+    equal(
+      permission.expireType,
+      Ci.nsIPermissionManager.EXPIRE_POLICY,
+      "Permission expireType is correct"
+    );
   }
 }
 
@@ -99,15 +123,21 @@ add_task(async function test_flash_policy() {
 add_task(async function test_change_permission() {
   // Checks that changing a permission will still retain the
   // value set through the engine.
-  Services.perms.add(URI("https://www.allow.com"), "cookie",
-                     Ci.nsIPermissionManager.DENY_ACTION,
-                     Ci.nsIPermissionManager.EXPIRE_SESSION);
+  Services.perms.add(
+    URI("https://www.allow.com"),
+    "cookie",
+    Ci.nsIPermissionManager.DENY_ACTION,
+    Ci.nsIPermissionManager.EXPIRE_SESSION
+  );
 
   checkPermission("allow.com", "ALLOW", "cookie");
 
   // Also change one un-managed permission to make sure it doesn't
   // cause any problems to the policy engine or the permission manager.
-  Services.perms.add(URI("https://www.unmanaged.com"), "cookie",
-                   Ci.nsIPermissionManager.DENY_ACTION,
-                   Ci.nsIPermissionManager.EXPIRE_SESSION);
+  Services.perms.add(
+    URI("https://www.unmanaged.com"),
+    "cookie",
+    Ci.nsIPermissionManager.DENY_ACTION,
+    Ci.nsIPermissionManager.EXPIRE_SESSION
+  );
 });

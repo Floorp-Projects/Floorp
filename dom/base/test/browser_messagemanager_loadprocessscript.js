@@ -7,7 +7,9 @@ function getBaseNumberOfProcesses() {
   // additional processes for those, so let's add these to the base count to
   // not have system WebExtensions cause test failures.
   for (let i = 0; i < Services.ppmm.childCount; i++) {
-    if (Services.ppmm.getChildAt(i).remoteType === E10SUtils.EXTENSION_REMOTE_TYPE) {
+    if (
+      Services.ppmm.getChildAt(i).remoteType === E10SUtils.EXTENSION_REMOTE_TYPE
+    ) {
       processCount += 1;
     }
   }
@@ -17,15 +19,20 @@ function getBaseNumberOfProcesses() {
 
 function checkBaseProcessCount(description) {
   const baseProcessCount = getBaseNumberOfProcesses();
-  const {childCount} = Services.ppmm;
+  const { childCount } = Services.ppmm;
   // With preloaded activity-stream, process count is a bit undeterministic, so
   // allow for some variation
   const extraCount = baseProcessCount + 1;
-  ok(childCount === baseProcessCount || childCount === extraCount, `${description} (${baseProcessCount} or ${extraCount})`);
+  ok(
+    childCount === baseProcessCount || childCount === extraCount,
+    `${description} (${baseProcessCount} or ${extraCount})`
+  );
 }
 
 function processScript() {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
   if (Services.cpmm !== this) {
     dump("Test failed: wrong global object\n");
     return;
@@ -61,54 +68,65 @@ var checkProcess = async function(mm) {
 
 function promiseMessage(messageManager, message) {
   return new Promise(resolve => {
-    let listener = (msg) => {
+    let listener = msg => {
       messageManager.removeMessageListener(message, listener);
       resolve(msg);
     };
 
     messageManager.addMessageListener(message, listener);
-  })
+  });
 }
 
-add_task(async function(){
+add_task(async function() {
   // We want to count processes in this test, so let's disable the pre-allocated process manager.
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["dom.ipc.processPrelaunch.enabled", false],
-  ]});
-})
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.processPrelaunch.enabled", false]],
+  });
+});
 
-add_task(async function(){
+add_task(async function() {
   // This test is only relevant in e10s.
-  if (!gMultiProcessBrowser)
+  if (!gMultiProcessBrowser) {
     return;
+  }
 
   Services.ppmm.releaseCachedProcesses();
 
-  await SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 5]]})
-  await SpecialPowers.pushPrefEnv({"set": [["dom.ipc.keepProcessesAlive.web", 5]]})
+  await SpecialPowers.pushPrefEnv({ set: [["dom.ipc.processCount", 5]] });
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.keepProcessesAlive.web", 5]],
+  });
 
   let tabs = [];
   for (let i = 0; i < 3; i++) {
-    tabs[i] = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+    tabs[i] = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "about:blank"
+    );
   }
 
   for (let i = 0; i < 3; i++) {
     // FIXME: This should wait for the tab removal gets reflected to the
     //        process count (bug 1446726).
-    let sessionStorePromise = BrowserTestUtils.waitForSessionStoreUpdate(tabs[i]);
+    let sessionStorePromise = BrowserTestUtils.waitForSessionStoreUpdate(
+      tabs[i]
+    );
     BrowserTestUtils.removeTab(tabs[i]);
     await sessionStorePromise;
   }
 
   Services.ppmm.releaseCachedProcesses();
-  checkBaseProcessCount("Should get back to the base number of processes at this point");
-})
+  checkBaseProcessCount(
+    "Should get back to the base number of processes at this point"
+  );
+});
 
 // Test that loading a process script loads in all existing processes
 add_task(async function() {
   let checks = [];
-  for (let i = 0; i < Services.ppmm.childCount; i++)
+  for (let i = 0; i < Services.ppmm.childCount; i++) {
     checks.push(checkProcess(Services.ppmm.getChildAt(i)));
+  }
 
   Services.ppmm.loadProcessScript(processScriptURL, false);
   await Promise.all(checks);
@@ -117,10 +135,13 @@ add_task(async function() {
 // Test that loading a process script loads in new processes
 add_task(async function() {
   // This test is only relevant in e10s
-  if (!gMultiProcessBrowser)
+  if (!gMultiProcessBrowser) {
     return;
+  }
 
-  checkBaseProcessCount("Should still be at the base number of processes at this point");
+  checkBaseProcessCount(
+    "Should still be at the base number of processes at this point"
+  );
 
   // Load something in the main process
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:robots");
@@ -146,12 +167,15 @@ add_task(async function() {
 
     check = checkProcess(Services.ppmm);
     // Reset the default browser to start a new child process
-    gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser,
-                                     { remoteType: E10SUtils.DEFAULT_REMOTE_TYPE });
+    gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, {
+      remoteType: E10SUtils.DEFAULT_REMOTE_TYPE,
+    });
     BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:blank");
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-    checkBaseProcessCount("Should be back to the base number of processes at this point");
+    checkBaseProcessCount(
+      "Should be back to the base number of processes at this point"
+    );
 
     // The new process should have responded
     await check;

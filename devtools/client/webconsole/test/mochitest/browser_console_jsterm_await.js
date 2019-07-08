@@ -6,7 +6,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,Top-level await Browser Console test";
+const TEST_URI =
+  "data:text/html;charset=utf-8,Top-level await Browser Console test";
 
 add_task(async function() {
   // Enable await mapping.
@@ -29,17 +30,23 @@ async function performTests() {
 
   info("Evaluate a top-level await expression");
   const simpleAwait = `await new Promise(r => setTimeout(() => r(["await1"]), 500))`;
-  await executeAndWaitForResultMessage(
-    simpleAwait,
-    `Array [ "await1" ]`,
-  );
+  await executeAndWaitForResultMessage(simpleAwait, `Array [ "await1" ]`);
 
   // Check that the resulting promise of the async iife is not displayed.
   const messages = hud.ui.outputNode.querySelectorAll(".message .message-body");
-  const messagesText = Array.from(messages).map(n => n.textContent).join(" - ");
-  is(messagesText.includes("Promise {"), false, "The output does not contain a Promise");
-  ok(messagesText.includes(simpleAwait) && messagesText.includes(`Array [ "await1" ]`),
-    "The output contains the the expected messages");
+  const messagesText = Array.from(messages)
+    .map(n => n.textContent)
+    .join(" - ");
+  is(
+    messagesText.includes("Promise {"),
+    false,
+    "The output does not contain a Promise"
+  );
+  ok(
+    messagesText.includes(simpleAwait) &&
+      messagesText.includes(`Array [ "await1" ]`),
+    "The output contains the the expected messages"
+  );
 
   info("Close the Browser console");
   await HUDService.toggleBrowserConsole();

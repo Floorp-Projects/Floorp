@@ -16,8 +16,13 @@ add_task(async function setup() {
 
 // Simulating actual drag and drop is hard for a xul tree as we can't get the
 // required source elements, so we have to do a lot more work by hand.
-async function simulateDrop(selectTargets, sourceBm, dropEffect, targetGuid,
-                            isVirtualRoot = false) {
+async function simulateDrop(
+  selectTargets,
+  sourceBm,
+  dropEffect,
+  targetGuid,
+  isVirtualRoot = false
+) {
   await withSidebarTree("bookmarks", async function(tree) {
     for (let target of selectTargets) {
       tree.selectItems([target]);
@@ -31,7 +36,7 @@ async function simulateDrop(selectTargets, sourceBm, dropEffect, targetGuid,
       dropEffect,
       mozCursor: "auto",
       mozItemCount: 1,
-      types: [ PlacesUtils.TYPE_X_MOZ_PLACE ],
+      types: [PlacesUtils.TYPE_X_MOZ_PLACE],
       mozTypesAt(i) {
         return [this._data[0].type];
       },
@@ -55,17 +60,22 @@ async function simulateDrop(selectTargets, sourceBm, dropEffect, targetGuid,
 
     tree._controller.setDataTransfer(event);
 
-    Assert.equal(dataTransfer.mozTypesAt(0), PlacesUtils.TYPE_X_MOZ_PLACE,
-      "Should have x-moz-place as the first data type.");
+    Assert.equal(
+      dataTransfer.mozTypesAt(0),
+      PlacesUtils.TYPE_X_MOZ_PLACE,
+      "Should have x-moz-place as the first data type."
+    );
 
     let dataObject = JSON.parse(dataTransfer.mozGetDataAt(0));
 
     let guid = isVirtualRoot ? dataObject.concreteGuid : dataObject.itemGuid;
 
-    Assert.equal(guid, sourceBm.guid,
-      "Should have the correct guid.");
-    Assert.equal(dataObject.title, PlacesUtils.bookmarks.getLocalizedTitle(sourceBm),
-      "Should have the correct title.");
+    Assert.equal(guid, sourceBm.guid, "Should have the correct guid.");
+    Assert.equal(
+      dataObject.title,
+      PlacesUtils.bookmarks.getLocalizedTitle(sourceBm),
+      "Should have the correct title."
+    );
 
     Assert.equal(dataTransfer.dropEffect, dropEffect);
 
@@ -91,41 +101,67 @@ add_task(async function test_move_normal_bm_in_sidebar() {
 
   let newBm = await PlacesUtils.bookmarks.fetch(bm.guid);
 
-  Assert.equal(newBm.parentGuid, PlacesUtils.bookmarks.unfiledGuid,
-    "Should have moved to the new parent.");
+  Assert.equal(
+    newBm.parentGuid,
+    PlacesUtils.bookmarks.unfiledGuid,
+    "Should have moved to the new parent."
+  );
 
   let oldLocationBm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     index: 0,
   });
 
-  Assert.ok(!oldLocationBm,
-    "Should not have a bookmark at the old location.");
+  Assert.ok(!oldLocationBm, "Should not have a bookmark at the old location.");
 });
 
 add_task(async function test_try_move_root_in_sidebar() {
-  let menuFolder = await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.menuGuid);
-  await simulateDrop([menuFolder.guid], menuFolder, "move",
-    PlacesUtils.bookmarks.toolbarGuid, true);
+  let menuFolder = await PlacesUtils.bookmarks.fetch(
+    PlacesUtils.bookmarks.menuGuid
+  );
+  await simulateDrop(
+    [menuFolder.guid],
+    menuFolder,
+    "move",
+    PlacesUtils.bookmarks.toolbarGuid,
+    true
+  );
 
-  menuFolder = await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.menuGuid);
+  menuFolder = await PlacesUtils.bookmarks.fetch(
+    PlacesUtils.bookmarks.menuGuid
+  );
 
-  Assert.equal(menuFolder.parentGuid, PlacesUtils.bookmarks.rootGuid,
-    "Should have remained in the root");
+  Assert.equal(
+    menuFolder.parentGuid,
+    PlacesUtils.bookmarks.rootGuid,
+    "Should have remained in the root"
+  );
 
   let newFolder = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     index: 0,
   });
 
-  Assert.notEqual(newFolder.guid, menuFolder.guid,
-    "Should have created a different folder");
-  Assert.equal(newFolder.title, PlacesUtils.bookmarks.getLocalizedTitle(menuFolder),
-    "Should have copied the folder title.");
-  Assert.equal(newFolder.type, PlacesUtils.bookmarks.TYPE_BOOKMARK,
-    "Should have a bookmark type (for a folder shortcut).");
-  Assert.equal(newFolder.url, `place:parent=${PlacesUtils.bookmarks.menuGuid}`,
-    "Should have the correct url for the folder shortcut.");
+  Assert.notEqual(
+    newFolder.guid,
+    menuFolder.guid,
+    "Should have created a different folder"
+  );
+  Assert.equal(
+    newFolder.title,
+    PlacesUtils.bookmarks.getLocalizedTitle(menuFolder),
+    "Should have copied the folder title."
+  );
+  Assert.equal(
+    newFolder.type,
+    PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    "Should have a bookmark type (for a folder shortcut)."
+  );
+  Assert.equal(
+    newFolder.url,
+    `place:parent=${PlacesUtils.bookmarks.menuGuid}`,
+    "Should have the correct url for the folder shortcut."
+  );
 });
 
 add_task(async function test_try_move_bm_within_two_root_folder_queries() {
@@ -141,17 +177,26 @@ add_task(async function test_try_move_bm_within_two_root_folder_queries() {
 
   let queries = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.toolbarGuid,
-    children: [{
-      title: "Query",
-      url: `place:queryType=${queryType}&terms=Fake`,
-    }],
+    children: [
+      {
+        title: "Query",
+        url: `place:queryType=${queryType}&terms=Fake`,
+      },
+    ],
   });
 
-  await simulateDrop([queries[0].guid, bookmark.guid],
-    bookmark, "move", PlacesUtils.bookmarks.toolbarGuid);
+  await simulateDrop(
+    [queries[0].guid, bookmark.guid],
+    bookmark,
+    "move",
+    PlacesUtils.bookmarks.toolbarGuid
+  );
 
   let newBm = await PlacesUtils.bookmarks.fetch(bookmark.guid);
 
-  Assert.equal(newBm.parentGuid, PlacesUtils.bookmarks.toolbarGuid,
-    "should have moved the bookmark to a new folder.");
+  Assert.equal(
+    newBm.parentGuid,
+    PlacesUtils.bookmarks.toolbarGuid,
+    "should have moved the bookmark to a new folder."
+  );
 });

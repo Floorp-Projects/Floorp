@@ -8,9 +8,17 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
   startTelemetry();
@@ -30,8 +38,14 @@ add_task(async function() {
   await startRecording(panel);
   await stopRecording(panel);
 
-  const calltreeRendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
-  const flamegraphRendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
+  const calltreeRendered = once(
+    JsCallTreeView,
+    EVENTS.UI_JS_CALL_TREE_RENDERED
+  );
+  const flamegraphRendered = once(
+    JsFlameGraphView,
+    EVENTS.UI_JS_FLAMEGRAPH_RENDERED
+  );
 
   // Go through some views to check later.
   await DetailsView.selectView("js-calltree");
@@ -49,9 +63,21 @@ function checkResults() {
   // For help generating these tests use generateTelemetryTests("DEVTOOLS_PERFTOOLS_")
   // here.
   checkTelemetry(
-    "DEVTOOLS_PERFTOOLS_SELECTED_VIEW_MS", "js-calltree", null, "hasentries");
+    "DEVTOOLS_PERFTOOLS_SELECTED_VIEW_MS",
+    "js-calltree",
+    null,
+    "hasentries"
+  );
   checkTelemetry(
-    "DEVTOOLS_PERFTOOLS_SELECTED_VIEW_MS", "js-flamegraph", null, "hasentries");
+    "DEVTOOLS_PERFTOOLS_SELECTED_VIEW_MS",
+    "js-flamegraph",
+    null,
+    "hasentries"
+  );
   checkTelemetry(
-    "DEVTOOLS_PERFTOOLS_SELECTED_VIEW_MS", "waterfall", null, "hasentries");
+    "DEVTOOLS_PERFTOOLS_SELECTED_VIEW_MS",
+    "waterfall",
+    null,
+    "hasentries"
+  );
 }

@@ -8,8 +8,17 @@
 
 // React & Redux
 const { Component } = require("devtools/client/shared/vendor/react");
-loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
-loader.lazyRequireGetter(this, "isWarningGroup", "devtools/client/webconsole/utils/messages", true);
+loader.lazyRequireGetter(
+  this,
+  "PropTypes",
+  "devtools/client/shared/vendor/react-prop-types"
+);
+loader.lazyRequireGetter(
+  this,
+  "isWarningGroup",
+  "devtools/client/webconsole/utils/messages",
+  true
+);
 
 const {
   MESSAGE_SOURCE,
@@ -17,14 +26,38 @@ const {
 } = require("devtools/client/webconsole/constants");
 
 const componentMap = new Map([
-  ["ConsoleApiCall", require("devtools/client/webconsole/components/Output/message-types/ConsoleApiCall")],
-  ["ConsoleCommand", require("devtools/client/webconsole/components/Output/message-types/ConsoleCommand")],
-  ["CSSWarning", require("devtools/client/webconsole/components/Output/message-types/CSSWarning")],
-  ["DefaultRenderer", require("devtools/client/webconsole/components/Output/message-types/DefaultRenderer")],
-  ["EvaluationResult", require("devtools/client/webconsole/components/Output/message-types/EvaluationResult")],
-  ["NetworkEventMessage", require("devtools/client/webconsole/components/Output/message-types/NetworkEventMessage")],
-  ["PageError", require("devtools/client/webconsole/components/Output/message-types/PageError")],
-  ["WarningGroup", require("devtools/client/webconsole/components/Output/message-types/WarningGroup")],
+  [
+    "ConsoleApiCall",
+    require("devtools/client/webconsole/components/Output/message-types/ConsoleApiCall"),
+  ],
+  [
+    "ConsoleCommand",
+    require("devtools/client/webconsole/components/Output/message-types/ConsoleCommand"),
+  ],
+  [
+    "CSSWarning",
+    require("devtools/client/webconsole/components/Output/message-types/CSSWarning"),
+  ],
+  [
+    "DefaultRenderer",
+    require("devtools/client/webconsole/components/Output/message-types/DefaultRenderer"),
+  ],
+  [
+    "EvaluationResult",
+    require("devtools/client/webconsole/components/Output/message-types/EvaluationResult"),
+  ],
+  [
+    "NetworkEventMessage",
+    require("devtools/client/webconsole/components/Output/message-types/NetworkEventMessage"),
+  ],
+  [
+    "PageError",
+    require("devtools/client/webconsole/components/Output/message-types/PageError"),
+  ],
+  [
+    "WarningGroup",
+    require("devtools/client/webconsole/components/Output/message-types/WarningGroup"),
+  ],
 ]);
 
 class MessageContainer extends Component {
@@ -65,14 +98,16 @@ class MessageContainer extends Component {
       "inWarningGroup",
     ];
 
-    return triggeringUpdateProps.some(prop => this.props[prop] !== nextProps[prop]);
+    return triggeringUpdateProps.some(
+      prop => this.props[prop] !== nextProps[prop]
+    );
   }
 
   render() {
     const message = this.props.getMessage();
 
     const MessageComponent = getMessageComponent(message);
-    return MessageComponent(Object.assign({message}, this.props));
+    return MessageComponent(Object.assign({ message }, this.props));
   }
 }
 

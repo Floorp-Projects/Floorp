@@ -16,11 +16,18 @@ add_task(async function() {
   let markers = await waitForMarkerType(front, MARKER_NAME);
   await front.stopRecording(rec);
 
-  ok(markers.some(m => m.name === MARKER_NAME), `got some ${MARKER_NAME} markers`);
-  ok(markers.every(({causeName}) => typeof causeName === "string"),
-    "All markers have a causeName.");
-  ok(markers.every(({cycle}) => typeof cycle === "number"),
-    "All markers have a `cycle` ID.");
+  ok(
+    markers.some(m => m.name === MARKER_NAME),
+    `got some ${MARKER_NAME} markers`
+  );
+  ok(
+    markers.every(({ causeName }) => typeof causeName === "string"),
+    "All markers have a causeName."
+  );
+  ok(
+    markers.every(({ cycle }) => typeof cycle === "number"),
+    "All markers have a `cycle` ID."
+  );
 
   markers = rec.getMarkers();
 
@@ -31,8 +38,11 @@ add_task(async function() {
       return current.start;
     }
     if (current.start < previousStart) {
-      ok(false, `markers must be in order. ${current.name} marker has later\
-        start time (${current.start}) thanprevious: ${previousStart}`);
+      ok(
+        false,
+        `markers must be in order. ${current.name} marker has later\
+        start time (${current.start}) thanprevious: ${previousStart}`
+      );
       ordered = false;
     }
     return current.start;

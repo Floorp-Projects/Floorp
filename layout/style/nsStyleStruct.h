@@ -2269,91 +2269,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn {
   nscoord mTwipsPerPixel;
 };
 
-enum nsStyleSVGPaintType : uint8_t {
-  eStyleSVGPaintType_None = 1,
-  eStyleSVGPaintType_Color,
-  eStyleSVGPaintType_Server,
-  eStyleSVGPaintType_ContextFill,
-  eStyleSVGPaintType_ContextStroke
-};
-
-enum nsStyleSVGFallbackType : uint8_t {
-  eStyleSVGFallbackType_NotSet,
-  eStyleSVGFallbackType_None,
-  eStyleSVGFallbackType_Color,
-};
-
 enum nsStyleSVGOpacitySource : uint8_t {
   eStyleSVGOpacitySource_Normal,
   eStyleSVGOpacitySource_ContextFillOpacity,
   eStyleSVGOpacitySource_ContextStrokeOpacity
-};
-
-class nsStyleSVGPaint {
- public:
-  explicit nsStyleSVGPaint(nsStyleSVGPaintType aType = nsStyleSVGPaintType(0));
-  nsStyleSVGPaint(const nsStyleSVGPaint& aSource);
-  ~nsStyleSVGPaint();
-
-  nsStyleSVGPaint& operator=(const nsStyleSVGPaint& aOther);
-
-  nsStyleSVGPaintType Type() const { return mType; }
-
-  void SetNone();
-  void SetColor(mozilla::StyleColor aColor);
-  void SetPaintServer(const mozilla::StyleComputedUrl& aPaintServer,
-                      nsStyleSVGFallbackType aFallbackType,
-                      mozilla::StyleColor aFallbackColor);
-  void SetPaintServer(const mozilla::StyleComputedUrl& aPaintServer) {
-    SetPaintServer(aPaintServer, eStyleSVGFallbackType_NotSet,
-                   mozilla::StyleColor::Black());
-  }
-  void SetContextValue(nsStyleSVGPaintType aType,
-                       nsStyleSVGFallbackType aFallbackType,
-                       mozilla::StyleColor aFallbackColor);
-  void SetContextValue(nsStyleSVGPaintType aType) {
-    SetContextValue(aType, eStyleSVGFallbackType_NotSet,
-                    mozilla::StyleColor::Black());
-  }
-
-  nscolor GetColor(mozilla::ComputedStyle* aComputedStyle) const {
-    MOZ_ASSERT(mType == eStyleSVGPaintType_Color);
-    return mPaint.mColor.CalcColor(*aComputedStyle);
-  }
-
-  const mozilla::StyleComputedUrl& GetPaintServer() const {
-    MOZ_ASSERT(mType == eStyleSVGPaintType_Server);
-    return mPaint.mPaintServer;
-  }
-
-  nsStyleSVGFallbackType GetFallbackType() const { return mFallbackType; }
-
-  nscolor GetFallbackColor(mozilla::ComputedStyle* aComputedStyle) const {
-    MOZ_ASSERT(mType == eStyleSVGPaintType_Server ||
-               mType == eStyleSVGPaintType_ContextFill ||
-               mType == eStyleSVGPaintType_ContextStroke);
-    return mFallbackColor.CalcColor(*aComputedStyle);
-  }
-
-  bool operator==(const nsStyleSVGPaint& aOther) const;
-  bool operator!=(const nsStyleSVGPaint& aOther) const {
-    return !(*this == aOther);
-  }
-
- private:
-  void Reset();
-  void Assign(const nsStyleSVGPaint& aOther);
-
-  union ColorOrPaintServer {
-    mozilla::StyleColor mColor;
-    mozilla::StyleComputedUrl mPaintServer;
-    explicit ColorOrPaintServer(mozilla::StyleColor c) : mColor(c) {}
-    ~ColorOrPaintServer() {}  // Caller must call Reset().
-  };
-  ColorOrPaintServer mPaint;
-  nsStyleSVGPaintType mType;
-  nsStyleSVGFallbackType mFallbackType;
-  mozilla::StyleColor mFallbackColor;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG {
@@ -2365,8 +2284,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG {
 
   nsChangeHint CalcDifference(const nsStyleSVG& aNewData) const;
 
-  nsStyleSVGPaint mFill;
-  nsStyleSVGPaint mStroke;
+  mozilla::StyleSVGPaint mFill;
+  mozilla::StyleSVGPaint mStroke;
   mozilla::StyleUrlOrNone mMarkerEnd;
   mozilla::StyleUrlOrNone mMarkerMid;
   mozilla::StyleUrlOrNone mMarkerStart;
@@ -2425,16 +2344,14 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG {
    * than zero. This ignores stroke-widths as that depends on the context.
    */
   bool HasStroke() const {
-    return mStroke.Type() != eStyleSVGPaintType_None && mStrokeOpacity > 0;
+    return !mStroke.kind.IsNone() && mStrokeOpacity > 0;
   }
 
   /**
    * Returns true if the fill is not "none" and the fill-opacity is greater
    * than zero.
    */
-  bool HasFill() const {
-    return mFill.Type() != eStyleSVGPaintType_None && mFillOpacity > 0;
-  }
+  bool HasFill() const { return !mFill.kind.IsNone() && mFillOpacity > 0; }
 
  private:
   // Flags to represent the use of context-fill and context-stroke

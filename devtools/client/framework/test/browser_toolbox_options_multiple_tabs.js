@@ -3,8 +3,9 @@
 
 "use strict";
 
-const URL = "data:text/html;charset=utf8,test for dynamically registering " +
-            "and unregistering tools across multiple tabs";
+const URL =
+  "data:text/html;charset=utf8,test for dynamically registering " +
+  "and unregistering tools across multiple tabs";
 
 let tab1, tab2, modifiedPref;
 
@@ -23,7 +24,8 @@ async function openToolboxOptionsInNewTab() {
   const doc = toolbox.doc;
   const panel = await toolbox.selectTool("options");
   const { id } = panel.panelDoc.querySelector(
-    "#default-tools-box input[type=checkbox]:not([data-unsupported]):not([checked])");
+    "#default-tools-box input[type=checkbox]:not([data-unsupported]):not([checked])"
+  );
 
   return {
     tab,
@@ -71,7 +73,8 @@ async function toggleTool({ doc, panelWin, checkbox, tab }, toolId) {
   (prevChecked ? checkRegistered : checkUnregistered)(toolId);
 
   const onToggleTool = gDevTools.once(
-    `tool-${prevChecked ? "unregistered" : "registered"}`);
+    `tool-${prevChecked ? "unregistered" : "registered"}`
+  );
   EventUtils.sendMouseEvent({ type: "click" }, checkbox, panelWin);
   const id = await onToggleTool;
 
@@ -81,25 +84,41 @@ async function toggleTool({ doc, panelWin, checkbox, tab }, toolId) {
 }
 
 async function checkUnregistered(toolId) {
-  ok(!tab1.doc.getElementById("toolbox-tab-" + toolId),
-    `Tab for unregistered tool ${toolId} is not present in first toolbox`);
-  ok(!tab1.checkbox.checked,
-    `Checkbox for unregistered tool ${toolId} is not checked in first toolbox`);
-  ok(!tab2.doc.getElementById("toolbox-tab-" + toolId),
-    `Tab for unregistered tool ${toolId} is not present in second toolbox`);
-  ok(!tab2.checkbox.checked,
-    `Checkbox for unregistered tool ${toolId} is not checked in second toolbox`);
+  ok(
+    !tab1.doc.getElementById("toolbox-tab-" + toolId),
+    `Tab for unregistered tool ${toolId} is not present in first toolbox`
+  );
+  ok(
+    !tab1.checkbox.checked,
+    `Checkbox for unregistered tool ${toolId} is not checked in first toolbox`
+  );
+  ok(
+    !tab2.doc.getElementById("toolbox-tab-" + toolId),
+    `Tab for unregistered tool ${toolId} is not present in second toolbox`
+  );
+  ok(
+    !tab2.checkbox.checked,
+    `Checkbox for unregistered tool ${toolId} is not checked in second toolbox`
+  );
 }
 
 function checkRegistered(toolId) {
-  ok(tab1.doc.getElementById("toolbox-tab-" + toolId),
-    `Tab for registered tool ${toolId} is present in first toolbox`);
-  ok(tab1.checkbox.checked,
-    `Checkbox for registered tool ${toolId} is checked in first toolbox`);
-  ok(tab2.doc.getElementById("toolbox-tab-" + toolId),
-    `Tab for registered tool ${toolId} is present in second toolbox`);
-  ok(tab2.checkbox.checked,
-    `Checkbox for registered tool ${toolId} is checked in second toolbox`);
+  ok(
+    tab1.doc.getElementById("toolbox-tab-" + toolId),
+    `Tab for registered tool ${toolId} is present in first toolbox`
+  );
+  ok(
+    tab1.checkbox.checked,
+    `Checkbox for registered tool ${toolId} is checked in first toolbox`
+  );
+  ok(
+    tab2.doc.getElementById("toolbox-tab-" + toolId),
+    `Tab for registered tool ${toolId} is present in second toolbox`
+  );
+  ok(
+    tab2.checkbox.checked,
+    `Checkbox for registered tool ${toolId} is checked in second toolbox`
+  );
 }
 
 async function cleanup() {

@@ -7,7 +7,10 @@
 add_task(async function capture() {
   let setsEnv = env.get("MOZSCREENSHOTS_SETS");
   if (!setsEnv) {
-    ok(true, "MOZSCREENSHOTS_SETS wasn't specified so there's nothing to capture");
+    ok(
+      true,
+      "MOZSCREENSHOTS_SETS wasn't specified so there's nothing to capture"
+    );
     return;
   }
 

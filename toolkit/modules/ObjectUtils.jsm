@@ -8,9 +8,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "ObjectUtils",
-];
+var EXPORTED_SYMBOLS = ["ObjectUtils"];
 
 // Used only to cause test failures.
 
@@ -84,8 +82,8 @@ function _deepEqual(a, b) {
   // 7.1 All identical values are equivalent, as determined by ===.
   if (a === b) {
     return true;
-  // 7.2 If the b value is a Date object, the a value is
-  // equivalent if it is also a Date object that refers to the same time.
+    // 7.2 If the b value is a Date object, the a value is
+    // equivalent if it is also a Date object that refers to the same time.
   }
   let aIsDate = instanceOf(a, "Date");
   let bIsDate = instanceOf(b, "Date");
@@ -93,24 +91,28 @@ function _deepEqual(a, b) {
     if (!aIsDate || !bIsDate) {
       return false;
     }
-    if (isNaN(a.getTime()) && isNaN(b.getTime()))
+    if (isNaN(a.getTime()) && isNaN(b.getTime())) {
       return true;
+    }
     return a.getTime() === b.getTime();
-  // 7.3 If the b value is a RegExp object, the a value is
-  // equivalent if it is also a RegExp object with the same source and
-  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
+    // 7.3 If the b value is a RegExp object, the a value is
+    // equivalent if it is also a RegExp object with the same source and
+    // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
   }
   let aIsRegExp = instanceOf(a, "RegExp");
   let bIsRegExp = instanceOf(b, "RegExp");
   if (aIsRegExp || bIsRegExp) {
-    return aIsRegExp && bIsRegExp &&
-           a.source === b.source &&
-           a.global === b.global &&
-           a.multiline === b.multiline &&
-           a.lastIndex === b.lastIndex &&
-           a.ignoreCase === b.ignoreCase;
-  // 7.4 Other pairs that do not both pass typeof value == "object",
-  // equivalence is determined by ==.
+    return (
+      aIsRegExp &&
+      bIsRegExp &&
+      a.source === b.source &&
+      a.global === b.global &&
+      a.multiline === b.multiline &&
+      a.lastIndex === b.lastIndex &&
+      a.ignoreCase === b.ignoreCase
+    );
+    // 7.4 Other pairs that do not both pass typeof value == "object",
+    // equivalence is determined by ==.
   }
   if (typeof a != "object" || typeof b != "object") {
     return a == b;
@@ -164,8 +166,9 @@ function objEquiv(a, b) {
   }
   // Having the same number of owned properties (keys incorporates
   // hasOwnProperty)
-  if (ka.length != kb.length)
+  if (ka.length != kb.length) {
     return false;
+  }
   // The same set of keys (although not necessarily the same order),
   ka.sort();
   kb.sort();

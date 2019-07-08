@@ -7,36 +7,24 @@ Transform the beetmover task into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import re
+from copy import deepcopy
 
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import \
     craft_release_properties as beetmover_craft_release_properties
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
+from taskgraph.util.declarative_artifacts import (
+    get_geckoview_template_vars,
+    get_geckoview_upstream_artifacts,
+    get_geckoview_artifact_id,
+)
 from taskgraph.util.schema import resolve_keyed_by, optionally_keyed_by
 from taskgraph.util.scriptworker import (generate_beetmover_artifact_map,
-                                         generate_beetmover_compressed_upstream_artifacts,
                                          get_worker_type_for_scope)
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
 
-
-_ARTIFACT_ID_PER_PLATFORM = {
-    'android-aarch64': 'geckoview{update_channel}-arm64-v8a',
-    'android-api-16': 'geckoview{update_channel}-armeabi-v7a',
-    'android-x86': 'geckoview{update_channel}-x86',
-    'android-x86_64': 'geckoview{update_channel}-x86_64',
-    'android-geckoview-fat-aar': 'geckoview{update_channel}',
-}
-
-_MOZ_UPDATE_CHANNEL_PER_BRANCH = {
-    'mozilla-release': '',
-    'mozilla-beta': '-beta',
-    'mozilla-central': '-nightly',
-    'try': '-nightly-try',
-    'maple': '-nightly-maple',
-}
 
 beetmover_description_schema = schema.extend({
     Required('depname', default='build'): basestring,
@@ -97,7 +85,8 @@ def make_task_description(config, jobs):
             )
         )
 
-        dependencies = {dep_job.kind: dep_job.label}
+        dependencies = deepcopy(dep_job.dependencies)
+        dependencies[dep_job.kind] = dep_job.label
 
         attributes = copy_attributes_from_dependent_job(dep_job)
         attributes.update(job.get('attributes', {}))
@@ -122,62 +111,38 @@ def make_task_description(config, jobs):
         yield task
 
 
-def generate_upstream_artifacts(build_task_ref):
-    return [{
-        'taskId': {'task-reference': build_task_ref},
-        'taskType': 'build',
-        'paths': ['public/build/target.maven.zip'],
-        'zipExtract': True,
-    }]
-
-
 @transforms.add
 def make_task_worker(config, jobs):
     for job in jobs:
-        valid_beetmover_job = len(job['dependencies']) == 1 and 'build' in job['dependencies']
+        valid_beetmover_job = set(job['dependencies'].keys()) == {'build', 'build-signing'}
         if not valid_beetmover_job:
             raise NotImplementedError(
-                'Beetmover-geckoview must have a single dependency. Got: {}'.format(
+                'Beetmover-geckoview must have 2 dependencies: build and build-signing. '
+                'Got: {}'.format(
                     job['dependencies']
                 )
             )
 
-        worker = {
+        job['worker'] = {
+            'artifact-map': generate_beetmover_artifact_map(
+                config,
+                job,
+                **get_geckoview_template_vars(config, job['attributes']['build_platform'])
+            ),
             'implementation': 'beetmover-maven',
             'release-properties': craft_release_properties(config, job),
+            'upstream-artifacts': get_geckoview_upstream_artifacts(config, job),
         }
-
-        upstream_artifacts = generate_beetmover_compressed_upstream_artifacts(job)
-
-        worker['upstream-artifacts'] = upstream_artifacts
-
-        version_groups = re.match(r'(\d+).(\d+).*', config.params['version'])
-        if version_groups:
-            major_version, minor_version = version_groups.groups()
-
-        template_vars = {
-            'artifact_id': worker['release-properties']['artifact-id'],
-            'build_date': config.params['moz_build_date'],
-            'major_version': major_version,
-            'minor_version': minor_version,
-        }
-        worker['artifact-map'] = generate_beetmover_artifact_map(
-            config, job, **template_vars)
-
-        job["worker"] = worker
 
         yield job
 
 
 def craft_release_properties(config, job):
-    props = beetmover_craft_release_properties(config, job)
+    release_properties = beetmover_craft_release_properties(config, job)
 
-    platform = props['platform']
-    update_channel = _MOZ_UPDATE_CHANNEL_PER_BRANCH.get(
-        props['branch'], '-UNKNOWN_MOZ_UPDATE_CHANNEL'
+    release_properties['artifact-id'] = get_geckoview_artifact_id(
+        job['attributes']['build_platform'], release_properties['branch']
     )
-    artifact_id = _ARTIFACT_ID_PER_PLATFORM[platform].format(update_channel=update_channel)
-    props['artifact-id'] = artifact_id
-    props['app-name'] = 'geckoview'     # this beetmover job is not about pushing Fennec
+    release_properties['app-name'] = 'geckoview'
 
-    return props
+    return release_properties

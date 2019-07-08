@@ -3,9 +3,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Tree = createFactory(require("devtools/client/shared/components/VirtualizedTree"));
+const Tree = createFactory(
+  require("devtools/client/shared/components/VirtualizedTree")
+);
 const WaterfallTreeRow = createFactory(require("./WaterfallTreeRow"));
 
 // Keep in sync with var(--waterfall-tree-row-height) in performance.css

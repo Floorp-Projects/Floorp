@@ -6,20 +6,23 @@
 <body>
 <pre id="test">
 <script type="application/javascript">
-  createHTML({
-    bug: "1231975",
-    title: "Basic audio-only peer connection with port dependent NAT that blocks STUN"
-  });
+createHTML({
+  bug: "1231975",
+  title: "Basic audio-only peer connection with port dependent NAT that blocks STUN"
+});
 
-  // This test uses the NAT simulator, which doesn't work in https, so we turn
-  // on getUserMedia in http.
+// This test uses the NAT simulator, which doesn't work in https, so we turn
+// on getUserMedia in http, which requires a reload.
+if (!("mediaDevices" in navigator)) {
+  SpecialPowers.pushPrefEnv({set: [['media.devices.insecure.enabled', true]]},
+                            () => location.reload());
+} else {
   runNetworkTest(async (options = {}) => {
     await pushPrefs(
         ['media.peerconnection.nat_simulator.filtering_type', 'PORT_DEPENDENT'],
         ['media.peerconnection.nat_simulator.mapping_type', 'PORT_DEPENDENT'],
         ['media.peerconnection.nat_simulator.block_udp', true],
         ['media.peerconnection.nat_simulator.block_tcp', true],
-        ['media.devices.insecure.enabled', true],
         ['media.getusermedia.insecure.enabled', true]);
     options.expectedLocalCandidateType = "relay-tcp";
     options.expectedRemoteCandidateType = "relay-tcp";
@@ -29,6 +32,7 @@
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
     test.run();
   }, { useIceServer: true });
+}
 </script>
 </pre>
 </body>

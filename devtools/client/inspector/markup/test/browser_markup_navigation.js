@@ -77,7 +77,7 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Making sure the markup-view frame is focused");
   inspector.markup._frame.focus();
@@ -106,16 +106,24 @@ function checkSelectedNode(key, className, inspector) {
   const node = inspector.selection.nodeFront;
 
   if (className == "*comment*") {
-    is(node.nodeType, Node.COMMENT_NODE,
-       "Found a comment after pressing " + key);
+    is(
+      node.nodeType,
+      Node.COMMENT_NODE,
+      "Found a comment after pressing " + key
+    );
   } else if (className == "*text*") {
-    is(node.nodeType, Node.TEXT_NODE,
-       "Found text after pressing " + key);
+    is(node.nodeType, Node.TEXT_NODE, "Found text after pressing " + key);
   } else if (className == "*doctype*") {
-    is(node.nodeType, Node.DOCUMENT_TYPE_NODE,
-       "Found the doctype after pressing " + key);
+    is(
+      node.nodeType,
+      Node.DOCUMENT_TYPE_NODE,
+      "Found the doctype after pressing " + key
+    );
   } else {
-    is(node.className, className,
-       "Found node: " + className + " after pressing " + key);
+    is(
+      node.className,
+      className,
+      "Found node: " + className + " after pressing " + key
+    );
   }
 }

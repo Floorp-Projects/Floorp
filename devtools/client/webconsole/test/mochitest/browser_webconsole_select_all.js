@@ -36,8 +36,11 @@ function testBrowserMenuSelectAll(hud) {
   const { ui } = hud;
   const outputContainer = ui.outputNode.querySelector(".webconsole-output");
 
-  is(outputContainer.childNodes.length, 6,
-    "the output node contains the expected number of children");
+  is(
+    outputContainer.childNodes.length,
+    6,
+    "the output node contains the expected number of children"
+  );
 
   // The focus is on the JsTerm, so we need to blur it for the copy comand to
   // work.
@@ -59,8 +62,10 @@ async function testContextMenuSelectAll(hud) {
   const contextMenu = await openContextMenu(hud, outputContainer);
 
   const selectAllItem = contextMenu.querySelector("#console-menu-select");
-  ok(selectAllItem,
-     `the context menu on the output node has a "Select All" item`);
+  ok(
+    selectAllItem,
+    `the context menu on the output node has a "Select All" item`
+  );
 
   outputContainer.focus();
   selectAllItem.click();

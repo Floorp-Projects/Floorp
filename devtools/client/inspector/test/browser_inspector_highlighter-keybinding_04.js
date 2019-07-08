@@ -10,21 +10,23 @@
 const TEST_URL = "data:text/html;charset=utf8,<div></div>";
 
 add_task(async function() {
-  const {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
 
   await startPicker(toolbox);
 
   info("Start using the picker by hovering over nodes");
   const onHover = toolbox.inspector.nodePicker.once("picker-node-hovered");
   testActor.synthesizeMouse({
-    options: {type: "mousemove"},
+    options: { type: "mousemove" },
     center: true,
     selector: "div",
   });
   await onHover;
 
   info("Press escape and wait for the picker to stop");
-  const onPickerStopped = toolbox.inspector.nodePicker.once("picker-node-canceled");
+  const onPickerStopped = toolbox.inspector.nodePicker.once(
+    "picker-node-canceled"
+  );
   testActor.synthesizeKey({
     key: "VK_ESCAPE",
     options: {},

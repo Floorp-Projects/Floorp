@@ -8,7 +8,9 @@ const EXPORTED_SYMBOLS = ["httpRequest", "percentEncode"];
 // Accepts a unescaped string and returns the URI encoded string for use in
 // an HTTP request.
 function percentEncode(aString) {
-  return encodeURIComponent(aString).replace(/[!'()]/g, escape).replace(/\*/g, "%2A");
+  return encodeURIComponent(aString)
+    .replace(/[!'()]/g, escape)
+    .replace(/\*/g, "%2A");
 }
 
 /*
@@ -33,9 +35,10 @@ function httpRequest(aUrl, aOptions) {
   let xhr = new XMLHttpRequest();
   xhr.mozBackgroundRequest = true; // no error dialogs
   xhr.open(aOptions.method || (aOptions.postData ? "POST" : "GET"), aUrl);
-  xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS | // don't send cookies
-                          Ci.nsIChannel.LOAD_BYPASS_CACHE |
-                          Ci.nsIChannel.INHIBIT_CACHING;
+  xhr.channel.loadFlags =
+    Ci.nsIChannel.LOAD_ANONYMOUS | // don't send cookies
+    Ci.nsIChannel.LOAD_BYPASS_CACHE |
+    Ci.nsIChannel.INHIBIT_CACHING;
   xhr.onerror = function(aProgressEvent) {
     if (aOptions.onError) {
       // adapted from toolkit/mozapps/extensions/nsBlocklistService.js
@@ -56,19 +59,23 @@ function httpRequest(aUrl, aOptions) {
   xhr.onload = function(aRequest) {
     try {
       let target = aRequest.target;
-      if (aOptions.logger)
+      if (aOptions.logger) {
         aOptions.logger.debug("Received response: " + target.responseText);
+      }
       if (target.status < 200 || target.status >= 300) {
         let errorText = target.responseText;
-        if (!errorText || /<(ht|\?x)ml\b/i.test(errorText))
+        if (!errorText || /<(ht|\?x)ml\b/i.test(errorText)) {
           errorText = target.statusText;
+        }
         throw new Error(target.status + " - " + errorText);
       }
-      if (aOptions.onLoad)
+      if (aOptions.onLoad) {
         aOptions.onLoad(target.responseText, this);
+      }
     } catch (e) {
-      if (aOptions.onError)
+      if (aOptions.onError) {
         aOptions.onError(e, aRequest.target.responseText, this);
+      }
     }
   };
 
@@ -81,15 +88,17 @@ function httpRequest(aUrl, aOptions) {
   // Handle adding postData as defined above.
   let POSTData = aOptions.postData || null;
   if (POSTData && Array.isArray(POSTData)) {
-    xhr.setRequestHeader("Content-Type",
-                         "application/x-www-form-urlencoded; charset=utf-8");
-    POSTData = POSTData.map(p => p[0] + "=" + percentEncode(p[1]))
-                       .join("&");
+    xhr.setRequestHeader(
+      "Content-Type",
+      "application/x-www-form-urlencoded; charset=utf-8"
+    );
+    POSTData = POSTData.map(p => p[0] + "=" + percentEncode(p[1])).join("&");
   }
 
   if (aOptions.logger) {
-    aOptions.logger.log("sending request to " + aUrl + " (POSTData = " +
-                        POSTData + ")");
+    aOptions.logger.log(
+      "sending request to " + aUrl + " (POSTData = " + POSTData + ")"
+    );
   }
   xhr.send(POSTData);
   return xhr;

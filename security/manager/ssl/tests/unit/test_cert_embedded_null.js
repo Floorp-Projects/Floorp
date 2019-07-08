@@ -11,23 +11,37 @@
 "use strict";
 
 do_get_profile(); // must be called before getting nsIX509CertDB
-const certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
+const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
 
 async function do_testcase(certname, checkCommonName) {
   let cert = constructCertFromFile(`test_cert_embedded_null/${certname}.pem`);
   // Where applicable, check that the testcase is meaningful (i.e. that the
   // certificate's subject common name has an embedded NUL in it).
   if (checkCommonName) {
-    equal(cert.commonName, "www.bank1.com\\00www.bad-guy.com",
-          "certificate subject common name should have an embedded NUL byte");
+    equal(
+      cert.commonName,
+      "www.bank1.com\\00www.bad-guy.com",
+      "certificate subject common name should have an embedded NUL byte"
+    );
   }
-  await checkCertErrorGeneric(certdb, cert, SSL_ERROR_BAD_CERT_DOMAIN,
-                              certificateUsageSSLServer, undefined,
-                              "www.bank1.com");
-  await checkCertErrorGeneric(certdb, cert, SSL_ERROR_BAD_CERT_DOMAIN,
-                              certificateUsageSSLServer, undefined,
-                              "www.bad-guy.com");
+  await checkCertErrorGeneric(
+    certdb,
+    cert,
+    SSL_ERROR_BAD_CERT_DOMAIN,
+    certificateUsageSSLServer,
+    undefined,
+    "www.bank1.com"
+  );
+  await checkCertErrorGeneric(
+    certdb,
+    cert,
+    SSL_ERROR_BAD_CERT_DOMAIN,
+    certificateUsageSSLServer,
+    undefined,
+    "www.bad-guy.com"
+  );
 }
 
 add_task(async function() {

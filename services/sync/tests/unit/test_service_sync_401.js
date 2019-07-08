@@ -1,12 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 function login_handling(handler) {
   return function(request, response) {
-    if (request.hasHeader("Authorization") &&
-        request.getHeader("Authorization").includes('Hawk id="id"')) {
+    if (
+      request.hasHeader("Authorization") &&
+      request.getHeader("Authorization").includes('Hawk id="id"')
+    ) {
       handler(request, response);
     } else {
       let body = "Unauthorized";
@@ -23,9 +25,15 @@ add_task(async function run_test() {
   let upd = collectionsHelper.with_updated_collection;
 
   let server = httpd_setup({
-    "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
-    "/1.1/johndoe/storage/meta/global": upd("meta", new ServerWBO("global").handler()),
-    "/1.1/johndoe/info/collections":    login_handling(collectionsHelper.handler),
+    "/1.1/johndoe/storage/crypto/keys": upd(
+      "crypto",
+      new ServerWBO("keys").handler()
+    ),
+    "/1.1/johndoe/storage/meta/global": upd(
+      "meta",
+      new ServerWBO("global").handler()
+    ),
+    "/1.1/johndoe/info/collections": login_handling(collectionsHelper.handler),
   });
 
   const GLOBAL_SCORE = 42;
@@ -49,7 +57,8 @@ add_task(async function run_test() {
 
     _("Simulate having changed the password somewhere else.");
     Service.identity._token.id = "somethingelse";
-    Service.identity.unlockAndVerifyAuthState = () => Promise.resolve(LOGIN_FAILED_LOGIN_REJECTED);
+    Service.identity.unlockAndVerifyAuthState = () =>
+      Promise.resolve(LOGIN_FAILED_LOGIN_REJECTED);
 
     _("Let's try to sync.");
     await Service.sync();
@@ -68,8 +77,7 @@ add_task(async function run_test() {
     _("Our next sync will fail appropriately.");
     try {
       await Service.sync();
-    } catch (ex) {
-    }
+    } catch (ex) {}
     Assert.equal(Service.status.login, LOGIN_FAILED_LOGIN_REJECTED);
   } finally {
     Svc.Prefs.resetBranch("");

@@ -1,6 +1,6 @@
 "use strict";
 
-const server = createHttpServer({hosts: ["example.com"]});
+const server = createHttpServer({ hosts: ["example.com"] });
 
 server.registerPathHandler("/dummy", (request, response) => {
   response.setStatusLine(request.httpVersion, 200, "OK");
@@ -11,11 +11,13 @@ server.registerPathHandler("/dummy", (request, response) => {
 add_task(async function test_content_script_css() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "content_scripts": [{
-        "matches": ["http://example.com/dummy"],
-        "css": ["content.css"],
-        "run_at": "document_start",
-      }],
+      content_scripts: [
+        {
+          matches: ["http://example.com/dummy"],
+          css: ["content.css"],
+          run_at: "document_start",
+        },
+      ],
     },
 
     files: {
@@ -26,7 +28,8 @@ add_task(async function test_content_script_css() {
   await extension.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
-    "http://example.com/dummy");
+    "http://example.com/dummy"
+  );
 
   function task() {
     let style = this.content.getComputedStyle(this.content.document.body);

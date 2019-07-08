@@ -10,11 +10,11 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "DownloadsMacFinderProgress",
-];
+var EXPORTED_SYMBOLS = ["DownloadsMacFinderProgress"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.jsm",
@@ -43,8 +43,9 @@ var DownloadsMacFinderProgress = {
       return;
     }
 
-    let finderProgress = Cc["@mozilla.org/widget/macfinderprogress;1"]
-      .createInstance(Ci.nsIMacFinderProgress);
+    let finderProgress = Cc[
+      "@mozilla.org/widget/macfinderprogress;1"
+    ].createInstance(Ci.nsIMacFinderProgress);
 
     let path = download.target.path;
 

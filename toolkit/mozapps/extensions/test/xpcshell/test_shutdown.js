@@ -4,38 +4,70 @@
 
 // Verify that API functions fail if the Add-ons Manager isn't initialised.
 
-const IGNORE = ["getPreferredIconURL", "escapeAddonURI",
-                "shouldAutoUpdate", "getStartupChanges",
-                "addTypeListener", "removeTypeListener",
-                "addAddonListener", "removeAddonListener",
-                "addInstallListener", "removeInstallListener",
-                "addManagerListener", "removeManagerListener",
-                "addExternalExtensionLoader",
-                "beforeShutdown", "init",
-                "stateToString", "errorToString", "getUpgradeListener",
-                "addUpgradeListener", "removeUpgradeListener",
-                "getInstallSourceFromHost", "getInstallSourceFromPrincipal",
-               ];
+const IGNORE = [
+  "getPreferredIconURL",
+  "escapeAddonURI",
+  "shouldAutoUpdate",
+  "getStartupChanges",
+  "addTypeListener",
+  "removeTypeListener",
+  "addAddonListener",
+  "removeAddonListener",
+  "addInstallListener",
+  "removeInstallListener",
+  "addManagerListener",
+  "removeManagerListener",
+  "addExternalExtensionLoader",
+  "beforeShutdown",
+  "init",
+  "stateToString",
+  "errorToString",
+  "getUpgradeListener",
+  "addUpgradeListener",
+  "removeUpgradeListener",
+  "getInstallSourceFromHost",
+  "getInstallSourceFromPrincipal",
+];
 
-const IGNORE_PRIVATE = ["AddonAuthor", "AddonCompatibilityOverride",
-                        "AddonScreenshot", "AddonType", "startup", "shutdown",
-                        "addonIsActive", "registerProvider", "unregisterProvider",
-                        "addStartupChange", "removeStartupChange",
-                        "getNewSideloads", "finalShutdown",
-                        "recordTimestamp", "recordSimpleMeasure",
-                        "recordException", "getSimpleMeasures", "simpleTimer",
-                        "setTelemetryDetails", "getTelemetryDetails",
-                        "callNoUpdateListeners", "backgroundUpdateTimerHandler",
-                        "hasUpgradeListener", "getUpgradeListener",
-                        "isDBLoaded", "recordTiming", "BOOTSTRAP_REASONS",
-                        "notifyAddonChanged"];
+const IGNORE_PRIVATE = [
+  "AddonAuthor",
+  "AddonCompatibilityOverride",
+  "AddonScreenshot",
+  "AddonType",
+  "startup",
+  "shutdown",
+  "addonIsActive",
+  "registerProvider",
+  "unregisterProvider",
+  "addStartupChange",
+  "removeStartupChange",
+  "getNewSideloads",
+  "finalShutdown",
+  "recordTimestamp",
+  "recordSimpleMeasure",
+  "recordException",
+  "getSimpleMeasures",
+  "simpleTimer",
+  "setTelemetryDetails",
+  "getTelemetryDetails",
+  "callNoUpdateListeners",
+  "backgroundUpdateTimerHandler",
+  "hasUpgradeListener",
+  "getUpgradeListener",
+  "isDBLoaded",
+  "recordTiming",
+  "BOOTSTRAP_REASONS",
+  "notifyAddonChanged",
+];
 
 async function test_functions() {
   for (let prop in AddonManager) {
-    if (IGNORE.includes(prop))
+    if (IGNORE.includes(prop)) {
       continue;
-    if (typeof AddonManager[prop] != "function")
+    }
+    if (typeof AddonManager[prop] != "function") {
       continue;
+    }
 
     let args = [];
 
@@ -62,24 +94,28 @@ async function test_functions() {
       await AddonManager[prop](...args);
       do_throw(prop + " did not throw an exception");
     } catch (e) {
-      if (e.result != Cr.NS_ERROR_NOT_INITIALIZED)
+      if (e.result != Cr.NS_ERROR_NOT_INITIALIZED) {
         do_throw(prop + " threw an unexpected exception: " + e);
+      }
     }
   }
 
   for (let prop in AddonManagerPrivate) {
-    if (IGNORE_PRIVATE.includes(prop))
+    if (IGNORE_PRIVATE.includes(prop)) {
       continue;
-    if (typeof AddonManagerPrivate[prop] != "function")
+    }
+    if (typeof AddonManagerPrivate[prop] != "function") {
       continue;
+    }
 
     try {
       info("AddonManagerPrivate." + prop);
       AddonManagerPrivate[prop]();
       do_throw(prop + " did not throw an exception");
     } catch (e) {
-      if (e.result != Cr.NS_ERROR_NOT_INITIALIZED)
+      if (e.result != Cr.NS_ERROR_NOT_INITIALIZED) {
         do_throw(prop + " threw an unexpected exception: " + e);
+      }
     }
   }
 }

@@ -20,11 +20,13 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
-  const {autocompletePopup} = jsterm;
+  const { jsterm } = hud;
+  const { autocompletePopup } = jsterm;
 
-  info("Test that there's no issue when trying to do an autocompletion without last " +
-    "evaluation result");
+  info(
+    "Test that there's no issue when trying to do an autocompletion without last " +
+      "evaluation result"
+  );
   await setInputValueForAutocompletion(hud, "$_.");
   is(autocompletePopup.items.length, 0, "autocomplete popup has no items");
   is(autocompletePopup.isOpen, false, "autocomplete popup is not open");
@@ -37,19 +39,28 @@ async function performTests() {
 
   await setInputValueForAutocompletion(hud, "$_.");
   checkInputCompletionValue(hud, "   x", "'$_.' completion (completeNode)");
-  is(getAutocompletePopupLabels(autocompletePopup).join("|"), "x|y",
-    "autocomplete popup has expected items");
+  is(
+    getAutocompletePopupLabels(autocompletePopup).join("|"),
+    "x|y",
+    "autocomplete popup has expected items"
+  );
   is(autocompletePopup.isOpen, true, "autocomplete popup is open");
 
   await setInputValueForAutocompletion(hud, "$_.x.");
   is(autocompletePopup.isOpen, true, "autocomplete popup is open");
-  is(getAutocompletePopupLabels(autocompletePopup).includes("toExponential"), true,
-    "autocomplete popup has expected items");
+  is(
+    getAutocompletePopupLabels(autocompletePopup).includes("toExponential"),
+    true,
+    "autocomplete popup has expected items"
+  );
 
   await setInputValueForAutocompletion(hud, "$_.y.");
   is(autocompletePopup.isOpen, true, "autocomplete popup is open");
-  is(getAutocompletePopupLabels(autocompletePopup).includes("trim"), true,
-    "autocomplete popup has expected items");
+  is(
+    getAutocompletePopupLabels(autocompletePopup).includes("trim"),
+    true,
+    "autocomplete popup has expected items"
+  );
 }
 
 function getAutocompletePopupLabels(autocompletePopup) {

@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {PushDB, PushService, PushServiceHttp2} = serviceExports;
+const { PushDB, PushService, PushServiceHttp2 } = serviceExports;
 
 var serverURL;
 
@@ -34,21 +34,27 @@ add_task(async function test_pushSubscriptionNoConnection() {
   await Assert.rejects(
     PushService.register({
       scope: "https://example.net/page/invalid-response",
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        { inIsolatedMozBrowser: false }),
+      originAttributes: ChromeUtils.originAttributesToSuffix({
+        inIsolatedMozBrowser: false,
+      }),
     }),
     /Registration error/,
     "Expected error for not being able to establish connecion."
   );
 
   let record = await db.getAllKeyIDs();
-  ok(record.length === 0, "Should not store records when connection couldn't be established.");
+  ok(
+    record.length === 0,
+    "Should not store records when connection couldn't be established."
+  );
   PushService.uninit();
 });
 
 add_task(async function test_TLS() {
-    // Set to allow the cert presented by our H2 server
-  var oldPref = Services.prefs.getIntPref("network.http.speculative-parallel-limit");
+  // Set to allow the cert presented by our H2 server
+  var oldPref = Services.prefs.getIntPref(
+    "network.http.speculative-parallel-limit"
+  );
   Services.prefs.setIntPref("network.http.speculative-parallel-limit", 0);
 
   trustHttp2CA();
@@ -70,15 +76,19 @@ add_task(async function test_pushSubscriptionMissingLocation() {
   await Assert.rejects(
     PushService.register({
       scope: "https://example.net/page/invalid-response",
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        { inIsolatedMozBrowser: false }),
+      originAttributes: ChromeUtils.originAttributesToSuffix({
+        inIsolatedMozBrowser: false,
+      }),
     }),
     /Registration error/,
     "Expected error for the missing location header."
   );
 
   let record = await db.getAllKeyIDs();
-  ok(record.length === 0, "Should not store records when the location header is missing.");
+  ok(
+    record.length === 0,
+    "Should not store records when the location header is missing."
+  );
   PushService.uninit();
 });
 
@@ -96,15 +106,19 @@ add_task(async function test_pushSubscriptionMissingLink() {
   await Assert.rejects(
     PushService.register({
       scope: "https://example.net/page/invalid-response",
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        { inIsolatedMozBrowser: false }),
+      originAttributes: ChromeUtils.originAttributesToSuffix({
+        inIsolatedMozBrowser: false,
+      }),
     }),
     /Registration error/,
     "Expected error for the missing link header."
   );
 
   let record = await db.getAllKeyIDs();
-  ok(record.length === 0, "Should not store records when a link header is missing.");
+  ok(
+    record.length === 0,
+    "Should not store records when a link header is missing."
+  );
   PushService.uninit();
 });
 
@@ -122,15 +136,19 @@ add_task(async function test_pushSubscriptionMissingLink1() {
   await Assert.rejects(
     PushService.register({
       scope: "https://example.net/page/invalid-response",
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        { inIsolatedMozBrowser: false }),
+      originAttributes: ChromeUtils.originAttributesToSuffix({
+        inIsolatedMozBrowser: false,
+      }),
     }),
     /Registration error/,
     "Expected error for the missing push endpoint."
   );
 
   let record = await db.getAllKeyIDs();
-  ok(record.length === 0, "Should not store records when the push endpoint is missing.");
+  ok(
+    record.length === 0,
+    "Should not store records when the push endpoint is missing."
+  );
   PushService.uninit();
 });
 
@@ -148,15 +166,19 @@ add_task(async function test_pushSubscriptionLocationBogus() {
   await Assert.rejects(
     PushService.register({
       scope: "https://example.net/page/invalid-response",
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        { inIsolatedMozBrowser: false }),
+      originAttributes: ChromeUtils.originAttributesToSuffix({
+        inIsolatedMozBrowser: false,
+      }),
     }),
     /Registration error/,
     "Expected error for the bogus location"
   );
 
   let record = await db.getAllKeyIDs();
-  ok(record.length === 0, "Should not store records when location header is bogus.");
+  ok(
+    record.length === 0,
+    "Should not store records when location header is bogus."
+  );
   PushService.uninit();
 });
 
@@ -174,13 +196,17 @@ add_task(async function test_pushSubscriptionNot2xxCode() {
   await Assert.rejects(
     PushService.register({
       scope: "https://example.net/page/invalid-response",
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        { inIsolatedMozBrowser: false }),
+      originAttributes: ChromeUtils.originAttributesToSuffix({
+        inIsolatedMozBrowser: false,
+      }),
     }),
     /Registration error/,
     "Expected error for not 201 responce code."
   );
 
   let record = await db.getAllKeyIDs();
-  ok(record.length === 0, "Should not store records when respons code is not 201.");
+  ok(
+    record.length === 0,
+    "Should not store records when respons code is not 201."
+  );
 });

@@ -38,6 +38,9 @@ const MockHttpInfo = {
 
 function run_test() {
   Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 1);
-  const result = NetworkHelper.parseSecurityInfo(MockSecurityInfo, MockHttpInfo);
+  const result = NetworkHelper.parseSecurityInfo(
+    MockSecurityInfo,
+    MockHttpInfo
+  );
   equal(result.hpkp, true, "Static HPKP detected.");
 }

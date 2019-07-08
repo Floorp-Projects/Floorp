@@ -12,15 +12,25 @@ function testChildAtPoint(aID, aX, aY, aChildID, aGrandChildID) {
   var child = getChildAtPoint(aID, aX, aY, false);
   var expectedChild = getAccessible(aChildID);
 
-  var msg = "Wrong direct child accessible at the point (" + aX + ", " + aY +
-    ") of " + prettyName(aID);
+  var msg =
+    "Wrong direct child accessible at the point (" +
+    aX +
+    ", " +
+    aY +
+    ") of " +
+    prettyName(aID);
   isObject(child, expectedChild, msg);
 
   var grandChild = getChildAtPoint(aID, aX, aY, true);
   var expectedGrandChild = getAccessible(aGrandChildID);
 
-  msg = "Wrong deepest child accessible at the point (" + aX + ", " + aY +
-    ") of " + prettyName(aID);
+  msg =
+    "Wrong deepest child accessible at the point (" +
+    aX +
+    ", " +
+    aY +
+    ") of " +
+    prettyName(aID);
   isObject(grandChild, expectedGrandChild, msg);
 }
 
@@ -36,12 +46,18 @@ function hitTest(aContainerID, aChildID, aGrandChildID) {
   var [x, y] = getBoundsForDOMElm(child);
 
   var actualChild = container.getChildAtPoint(x + 1, y + 1);
-  isObject(actualChild, child,
-           "Wrong direct child of " + prettyName(aContainerID));
+  isObject(
+    actualChild,
+    child,
+    "Wrong direct child of " + prettyName(aContainerID)
+  );
 
   var actualGrandChild = container.getDeepestChildAtPoint(x + 1, y + 1);
-  isObject(actualGrandChild, grandChild,
-           "Wrong deepest child of " + prettyName(aContainerID));
+  isObject(
+    actualGrandChild,
+    grandChild,
+    "Wrong deepest child of " + prettyName(aContainerID)
+  );
 }
 
 /**
@@ -50,9 +66,16 @@ function hitTest(aContainerID, aChildID, aGrandChildID) {
 function testOffsetAtPoint(aHyperTextID, aX, aY, aCoordType, aExpectedOffset) {
   var hyperText = getAccessible(aHyperTextID, [nsIAccessibleText]);
   var offset = hyperText.getOffsetAtPoint(aX, aY, aCoordType);
-  is(offset, aExpectedOffset,
-     "Wrong offset at given point (" + aX + ", " + aY + ") for " +
-     prettyName(aHyperTextID));
+  is(
+    offset,
+    aExpectedOffset,
+    "Wrong offset at given point (" +
+      aX +
+      ", " +
+      aY +
+      ") for " +
+      prettyName(aHyperTextID)
+  );
 }
 
 /**
@@ -87,8 +110,9 @@ function setResolution(aDocument, aZoom) {
  */
 function getChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild) {
   var acc = getAccessible(aIdentifier);
-  if (!acc)
+  if (!acc) {
     return null;
+  }
 
   var [screenX, screenY] = getBoundsForDOMElm(acc.DOMNode);
 
@@ -96,10 +120,11 @@ function getChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild) {
   var y = screenY + aY;
 
   try {
-    if (aFindDeepestChild)
+    if (aFindDeepestChild) {
       return acc.getDeepestChildAtPoint(x, y);
+    }
     return acc.getChildAtPoint(x, y);
-  } catch (e) { }
+  } catch (e) {}
 
   return null;
 }
@@ -109,7 +134,7 @@ function getChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild) {
  */
 function testPos(aID, aPoint) {
   var [expectedX, expectedY] =
-    (aPoint != undefined) ? aPoint : getBoundsForDOMElm(aID);
+    aPoint != undefined ? aPoint : getBoundsForDOMElm(aID);
 
   var [x, y] = getBounds(aID);
   is(x, expectedX, "Wrong x coordinate of " + prettyName(aID));
@@ -121,7 +146,7 @@ function testPos(aID, aPoint) {
  */
 function testBounds(aID, aRect) {
   var [expectedX, expectedY, expectedWidth, expectedHeight] =
-    (aRect != undefined) ? aRect : getBoundsForDOMElm(aID);
+    aRect != undefined ? aRect : getBoundsForDOMElm(aID);
 
   var [x, y, width, height] = getBounds(aID);
   is(x, expectedX, "Wrong x coordinate of " + prettyName(aID));
@@ -136,15 +161,27 @@ function testBounds(aID, aRect) {
 function testTextPos(aID, aOffset, aPoint, aCoordOrigin) {
   var [expectedX, expectedY] = aPoint;
 
-  var xObj = {}, yObj = {};
+  var xObj = {},
+    yObj = {};
   var hyperText = getAccessible(aID, [nsIAccessibleText]);
   hyperText.getCharacterExtents(aOffset, xObj, yObj, {}, {}, aCoordOrigin);
-  is(xObj.value, expectedX,
-     "Wrong x coordinate at offset " + aOffset + " for " + prettyName(aID));
-  ok(yObj.value - expectedY < 2 && expectedY - yObj.value < 2,
-     "Wrong y coordinate at offset " + aOffset + " for " + prettyName(aID) +
-     " - got " + yObj.value + ", expected " + expectedY +
-     "The difference doesn't exceed 1.");
+  is(
+    xObj.value,
+    expectedX,
+    "Wrong x coordinate at offset " + aOffset + " for " + prettyName(aID)
+  );
+  ok(
+    yObj.value - expectedY < 2 && expectedY - yObj.value < 2,
+    "Wrong y coordinate at offset " +
+      aOffset +
+      " for " +
+      prettyName(aID) +
+      " - got " +
+      yObj.value +
+      ", expected " +
+      expectedY +
+      "The difference doesn't exceed 1."
+  );
 }
 
 /**
@@ -153,33 +190,64 @@ function testTextPos(aID, aOffset, aPoint, aCoordOrigin) {
 function testTextBounds(aID, aStartOffset, aEndOffset, aRect, aCoordOrigin) {
   var [expectedX, expectedY, expectedWidth, expectedHeight] = aRect;
 
-  var xObj = {}, yObj = {}, widthObj = {}, heightObj = {};
+  var xObj = {},
+    yObj = {},
+    widthObj = {},
+    heightObj = {};
   var hyperText = getAccessible(aID, [nsIAccessibleText]);
-  hyperText.getRangeExtents(aStartOffset, aEndOffset,
-                            xObj, yObj, widthObj, heightObj, aCoordOrigin);
+  hyperText.getRangeExtents(
+    aStartOffset,
+    aEndOffset,
+    xObj,
+    yObj,
+    widthObj,
+    heightObj,
+    aCoordOrigin
+  );
 
   // x
-  is(xObj.value, expectedX,
-     "Wrong x coordinate of text between offsets (" + aStartOffset + ", " +
-     aEndOffset + ") for " + prettyName(aID));
+  is(
+    xObj.value,
+    expectedX,
+    "Wrong x coordinate of text between offsets (" +
+      aStartOffset +
+      ", " +
+      aEndOffset +
+      ") for " +
+      prettyName(aID)
+  );
 
   // y
-  isWithin(yObj.value, expectedY, 1,
-           `y coord of text between offsets (${aStartOffset}, ${aEndOffset}) ` +
-           `for ${prettyName(aID)}`);
+  isWithin(
+    yObj.value,
+    expectedY,
+    1,
+    `y coord of text between offsets (${aStartOffset}, ${aEndOffset}) ` +
+      `for ${prettyName(aID)}`
+  );
 
   // Width
-  var msg = "Wrong width of text between offsets (" + aStartOffset + ", " +
-    aEndOffset + ") for " + prettyName(aID);
-  if (widthObj.value == expectedWidth)
+  var msg =
+    "Wrong width of text between offsets (" +
+    aStartOffset +
+    ", " +
+    aEndOffset +
+    ") for " +
+    prettyName(aID);
+  if (widthObj.value == expectedWidth) {
     ok(true, msg);
-  else
-    todo(false, msg); // fails on some windows machines
+  } else {
+    todo(false, msg);
+  } // fails on some windows machines
 
   // Height
-  isWithin(heightObj.value, expectedHeight, 1,
-           `height of text between offsets (${aStartOffset}, ${aEndOffset}) ` +
-           `for ${prettyName(aID)}`);
+  isWithin(
+    heightObj.value,
+    expectedHeight,
+    1,
+    `height of text between offsets (${aStartOffset}, ${aEndOffset}) ` +
+      `for ${prettyName(aID)}`
+  );
 }
 
 /**
@@ -187,7 +255,8 @@ function testTextBounds(aID, aStartOffset, aEndOffset, aRect, aCoordOrigin) {
  */
 function getPos(aID) {
   var accessible = getAccessible(aID);
-  var x = {}, y = {};
+  var x = {},
+    y = {};
   accessible.getBounds(x, y, {}, {});
   return [x.value, y.value];
 }
@@ -199,28 +268,60 @@ function getPos(aID) {
  */
 function getBounds(aID, aDPR = window.devicePixelRatio) {
   const accessible = getAccessible(aID);
-  let x = {}, y = {}, width = {}, height = {};
-  let xInCSS = {}, yInCSS = {}, widthInCSS = {}, heightInCSS = {};
+  let x = {},
+    y = {},
+    width = {},
+    height = {};
+  let xInCSS = {},
+    yInCSS = {},
+    widthInCSS = {},
+    heightInCSS = {};
   accessible.getBounds(x, y, width, height);
   accessible.getBoundsInCSSPixels(xInCSS, yInCSS, widthInCSS, heightInCSS);
 
-  isWithin(x.value / aDPR, xInCSS.value, 1,
-    "Heights in CSS pixels is calculated correctly");
-  isWithin(y.value / aDPR, yInCSS.value, 1,
-    "Heights in CSS pixels is calculated correctly");
-  isWithin(width.value / aDPR, widthInCSS.value, 1,
-    "Heights in CSS pixels is calculated correctly");
-  isWithin(height.value / aDPR, heightInCSS.value, 1,
-    "Heights in CSS pixels is calculated correctly");
+  isWithin(
+    x.value / aDPR,
+    xInCSS.value,
+    1,
+    "Heights in CSS pixels is calculated correctly"
+  );
+  isWithin(
+    y.value / aDPR,
+    yInCSS.value,
+    1,
+    "Heights in CSS pixels is calculated correctly"
+  );
+  isWithin(
+    width.value / aDPR,
+    widthInCSS.value,
+    1,
+    "Heights in CSS pixels is calculated correctly"
+  );
+  isWithin(
+    height.value / aDPR,
+    heightInCSS.value,
+    1,
+    "Heights in CSS pixels is calculated correctly"
+  );
 
   return [x.value, y.value, width.value, height.value];
 }
 
 function getRangeExtents(aID, aStartOffset, aEndOffset, aCoordOrigin) {
   var hyperText = getAccessible(aID, [nsIAccessibleText]);
-  var x = {}, y = {}, width = {}, height = {};
-  hyperText.getRangeExtents(aStartOffset, aEndOffset,
-                            x, y, width, height, aCoordOrigin);
+  var x = {},
+    y = {},
+    width = {},
+    height = {};
+  hyperText.getRangeExtents(
+    aStartOffset,
+    aEndOffset,
+    x,
+    y,
+    width,
+    height,
+    aCoordOrigin
+  );
   return [x.value, y.value, width.value, height.value];
 }
 
@@ -229,7 +330,10 @@ function getRangeExtents(aID, aStartOffset, aEndOffset, aCoordOrigin) {
  * pixels.
  */
 function getBoundsForDOMElm(aID) {
-  var x = 0, y = 0, width = 0, height = 0;
+  var x = 0,
+    y = 0,
+    width = 0,
+    height = 0;
 
   var elm = getNode(aID);
   if (elm.localName == "area") {
@@ -257,11 +361,13 @@ function getBoundsForDOMElm(aID) {
   }
 
   var elmWindow = elm.ownerGlobal;
-  return CSSToDevicePixels(elmWindow,
-                           x + elmWindow.mozInnerScreenX,
-                           y + elmWindow.mozInnerScreenY,
-                           width,
-                           height);
+  return CSSToDevicePixels(
+    elmWindow,
+    x + elmWindow.mozInnerScreenX,
+    y + elmWindow.mozInnerScreenY,
+    width,
+    height
+  );
 }
 
 function CSSToDevicePixels(aWindow, aX, aY, aWidth, aHeight) {
@@ -271,6 +377,10 @@ function CSSToDevicePixels(aWindow, aX, aY, aWidth, aHeight) {
 
   // CSS pixels and ratio can be not integer. Device pixels are always integer.
   // Do our best and hope it works.
-  return [ Math.round(aX * ratio), Math.round(aY * ratio),
-           Math.round(aWidth * ratio), Math.round(aHeight * ratio) ];
+  return [
+    Math.round(aX * ratio),
+    Math.round(aY * ratio),
+    Math.round(aWidth * ratio),
+    Math.round(aHeight * ratio),
+  ];
 }

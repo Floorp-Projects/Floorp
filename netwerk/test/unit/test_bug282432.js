@@ -1,11 +1,13 @@
-
 function run_test() {
   do_test_pending();
 
   function StreamListener() {}
 
   StreamListener.prototype = {
-    QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
+    QueryInterface: ChromeUtils.generateQI([
+      "nsIStreamListener",
+      "nsIRequestObserver",
+    ]),
 
     onStartRequest(aRequest) {},
 
@@ -17,19 +19,18 @@ function run_test() {
 
     onDataAvailable(aRequest, aStream, aOffset, aCount) {
       do_throw("The channel must not call onDataAvailable().");
-    }
+    },
   };
 
   let listener = new StreamListener();
-  let ios = Cc["@mozilla.org/network/io-service;1"]
-              .getService(Ci.nsIIOService);
+  let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
   // This file does not exist.
   let file = do_get_file("_NOT_EXIST_.txt", true);
   Assert.ok(!file.exists());
   let channel = NetUtil.newChannel({
     uri: ios.newFileURI(file),
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   channel.asyncOpen(listener);
 }

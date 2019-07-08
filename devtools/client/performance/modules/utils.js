@@ -15,7 +15,10 @@
  */
 
 exports.createHtmlMount = function(xulElement) {
-  const htmlElement = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  const htmlElement = document.createElementNS(
+    "http://www.w3.org/1999/xhtml",
+    "div"
+  );
   xulElement.appendChild(htmlElement);
   return htmlElement;
 };

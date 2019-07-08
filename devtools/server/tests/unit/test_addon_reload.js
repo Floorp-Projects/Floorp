@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {AddonManager} = require("resource://gre/modules/AddonManager.jsm");
+const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 
 startupAddonsManager();
 
@@ -22,7 +22,10 @@ function promiseAddonEvent(event) {
 }
 
 function promiseWebExtensionStartup() {
-  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  const { Management } = ChromeUtils.import(
+    "resource://gre/modules/Extension.jsm",
+    null
+  );
 
   return new Promise(resolve => {
     const listener = (evt, extension) => {
@@ -69,10 +72,7 @@ add_task(async function testReloadExitedAddon() {
 
   const addonFront = await client.mainRoot.getAddon({ id: installedAddon.id });
 
-  await Promise.all([
-    reloadAddon(addonFront),
-    promiseWebExtensionStartup(),
-  ]);
+  await Promise.all([reloadAddon(addonFront), promiseWebExtensionStartup()]);
 
   // Uninstall the decoy add-on, which should cause its actor to exit.
   const onUninstalled = promiseAddonEvent("onUninstalled");
@@ -81,7 +81,9 @@ add_task(async function testReloadExitedAddon() {
 
   // Try to re-list all add-ons after a reload.
   // This was throwing an exception because of the exited actor.
-  const newAddonFront = await client.mainRoot.getAddon({ id: installedAddon.id });
+  const newAddonFront = await client.mainRoot.getAddon({
+    id: installedAddon.id,
+  });
   equal(newAddonFront.id, addonFront.id);
 
   // The fronts should be the same after the reload
@@ -100,7 +102,9 @@ add_task(async function testReloadExitedAddon() {
   await onAddonListChanged;
 
   // re-list all add-ons after an upgrade.
-  const upgradedAddonFront = await client.mainRoot.getAddon({ id: upgradedAddon.id });
+  const upgradedAddonFront = await client.mainRoot.getAddon({
+    id: upgradedAddon.id,
+  });
   equal(upgradedAddonFront.id, addonFront.id);
   // The fronts should be the same after the upgrade.
   equal(upgradedAddonFront, addonFront);

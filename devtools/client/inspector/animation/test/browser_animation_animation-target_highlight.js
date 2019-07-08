@@ -37,18 +37,28 @@ add_task(async function() {
   ok(true, "Unhighlighted the targe node");
 
   info("Check node is highlighted when the inspect icon is clicked");
-  let onHighlighterShown = inspector.highlighters.once("box-model-highlighter-shown");
+  let onHighlighterShown = inspector.highlighters.once(
+    "box-model-highlighter-shown"
+  );
   await clickOnInspectIcon(animationInspector, panel, 0);
   nodeFront = await onHighlighterShown;
   assertNodeFront(nodeFront, "DIV", "ball animated");
-  ok(panel.querySelectorAll(".animation-target")[0].classList.contains("highlighting"),
-    "The highlighted animation target element should have 'highlighting' class");
+  ok(
+    panel
+      .querySelectorAll(".animation-target")[0]
+      .classList.contains("highlighting"),
+    "The highlighted animation target element should have 'highlighting' class"
+  );
 
   info("Check if the animation target is still highlighted on mouse out");
   mouseOutOnTargetNode(animationInspector, panel, 0);
   await wait(500);
-  ok(panel.querySelectorAll(".animation-target")[0].classList.contains("highlighting"),
-    "The highlighted element still should have 'highlighting' class");
+  ok(
+    panel
+      .querySelectorAll(".animation-target")[0]
+      .classList.contains("highlighting"),
+    "The highlighted element still should have 'highlighting' class"
+  );
 
   info("Check no highlight event occur by mouse over locked target");
   let highlightEventCount = 0;
@@ -62,37 +72,56 @@ add_task(async function() {
   toolbox.highlighter.off("node-highlight", highlightEventCounter);
 
   info("Highlighting another animation target");
-  onHighlighterShown = inspector.highlighters.once("box-model-highlighter-shown");
+  onHighlighterShown = inspector.highlighters.once(
+    "box-model-highlighter-shown"
+  );
   await clickOnInspectIcon(animationInspector, panel, 1);
   nodeFront = await onHighlighterShown;
   assertNodeFront(nodeFront, "DIV", "ball multi");
 
   info("Check the highlighted state of the animation targets");
   const animationTargetEls = panel.querySelectorAll(".animation-target");
-  ok(!animationTargetEls[0].classList.contains("highlighting"),
-    "The animation target[0] should not have 'highlighting' class");
-  ok(animationTargetEls[1].classList.contains("highlighting"),
-    "The animation target[1] should have 'highlighting' class");
-  ok(animationTargetEls[2].classList.contains("highlighting"),
-    "The animation target[2] should have 'highlighting' class");
+  ok(
+    !animationTargetEls[0].classList.contains("highlighting"),
+    "The animation target[0] should not have 'highlighting' class"
+  );
+  ok(
+    animationTargetEls[1].classList.contains("highlighting"),
+    "The animation target[1] should have 'highlighting' class"
+  );
+  ok(
+    animationTargetEls[2].classList.contains("highlighting"),
+    "The animation target[2] should have 'highlighting' class"
+  );
 
   info("Hide highlighter");
-  const onHighlighterHidden = inspector.highlighters.once("box-model-highlighter-hidden");
+  const onHighlighterHidden = inspector.highlighters.once(
+    "box-model-highlighter-hidden"
+  );
   await clickOnInspectIcon(animationInspector, panel, 1);
   await onHighlighterHidden;
 
   info("Check the highlighted state of the animation targets");
-  ok(!animationTargetEls[1].classList.contains("highlighting"),
-    "The animation target[1] should not have 'highlighting' class");
-  ok(!animationTargetEls[2].classList.contains("highlighting"),
-    "The animation target[2] should not have 'highlighting' class");
+  ok(
+    !animationTargetEls[1].classList.contains("highlighting"),
+    "The animation target[1] should not have 'highlighting' class"
+  );
+  ok(
+    !animationTargetEls[2].classList.contains("highlighting"),
+    "The animation target[2] should not have 'highlighting' class"
+  );
 });
 
 function assertNodeFront(nodeFront, tagName, classValue) {
-  is(nodeFront.tagName, "DIV",
-     "The highlighted node has the correct tagName");
-  is(nodeFront.attributes[0].name, "class",
-     "The highlighted node has the correct attributes");
-  is(nodeFront.attributes[0].value, classValue,
-     "The highlighted node has the correct class");
+  is(nodeFront.tagName, "DIV", "The highlighted node has the correct tagName");
+  is(
+    nodeFront.attributes[0].name,
+    "class",
+    "The highlighted node has the correct attributes"
+  );
+  is(
+    nodeFront.attributes[0].value,
+    classValue,
+    "The highlighted node has the correct class"
+  );
 }

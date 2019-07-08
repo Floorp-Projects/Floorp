@@ -4,20 +4,27 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "TranslationContentHandler" ];
+var EXPORTED_SYMBOLS = ["TranslationContentHandler"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "LanguageDetector",
-  "resource:///modules/translation/LanguageDetector.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "LanguageDetector",
+  "resource:///modules/translation/LanguageDetector.jsm"
+);
 
 const STATE_OFFER = 0;
 const STATE_TRANSLATED = 2;
 const STATE_ERROR = 3;
 
 var TranslationContentHandler = function(global, docShell) {
-  let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIWebProgress);
-  webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
+  let webProgress = docShell
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIWebProgress);
+  webProgress.addProgressListener(
+    this,
+    Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
+  );
 
   global.addEventListener("pageshow", this);
 
@@ -34,12 +41,14 @@ TranslationContentHandler.prototype = {
 
     // Only handle top-level frames.
     let win = target.defaultView;
-    if (win.parent !== win)
+    if (win.parent !== win) {
       return;
+    }
 
     let content = this.global.content;
-    if (!content.detectedLanguage)
+    if (!content.detectedLanguage) {
       return;
+    }
 
     let data = {};
     let trDoc = content.translationDocument;
@@ -59,23 +68,28 @@ TranslationContentHandler.prototype = {
 
   /* nsIWebProgressListener implementation */
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    if (!aWebProgress.isTopLevel ||
-        !(aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) ||
-        !this.global.content)
+    if (
+      !aWebProgress.isTopLevel ||
+      !(aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) ||
+      !this.global.content
+    ) {
       return;
+    }
 
     try {
       let url = aRequest.name;
-      if (!url.startsWith("http://") && !url.startsWith("https://"))
+      if (!url.startsWith("http://") && !url.startsWith("https://")) {
         return;
+      }
     } catch (e) {
       // nsIRequest.name throws NS_ERROR_NOT_IMPLEMENTED for view-source: tabs.
       return;
     }
 
     let content = this.global.content;
-    if (content.detectedLanguage)
+    if (content.detectedLanguage) {
       return;
+    }
 
     // Grab a 60k sample of text from the page.
     let encoder = Cu.createDocumentEncoder("text/plain");
@@ -83,8 +97,9 @@ TranslationContentHandler.prototype = {
     let string = encoder.encodeToStringWithMaxLength(60 * 1024);
 
     // Language detection isn't reliable on very short strings.
-    if (string.length < 100)
+    if (string.length < 100) {
       return;
+    }
 
     LanguageDetector.detectLanguage(string).then(result => {
       // Bail if we're not confident.
@@ -108,28 +123,36 @@ TranslationContentHandler.prototype = {
     });
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIWebProgressListener,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   receiveMessage(msg) {
     switch (msg.name) {
-      case "Translation:TranslateDocument":
-      {
-        var {TranslationDocument} = ChromeUtils.import("resource:///modules/translation/TranslationDocument.jsm");
+      case "Translation:TranslateDocument": {
+        var { TranslationDocument } = ChromeUtils.import(
+          "resource:///modules/translation/TranslationDocument.jsm"
+        );
 
         // If a TranslationDocument already exists for this document, it should
         // be used instead of creating a new one so that we can use the original
         // content of the page for the new translation instead of the newly
         // translated text.
-        let translationDocument = this.global.content.translationDocument ||
-                                  new TranslationDocument(this.global.content.document);
+        let translationDocument =
+          this.global.content.translationDocument ||
+          new TranslationDocument(this.global.content.document);
 
         let engine = Services.prefs.getCharPref("browser.translation.engine");
-        let importScope =
-          ChromeUtils.import(`resource:///modules/translation/${engine}Translator.jsm`, {});
-        let translator = new importScope[engine + "Translator"](translationDocument,
-                                                                msg.data.from,
-                                                                msg.data.to);
+        let importScope = ChromeUtils.import(
+          `resource:///modules/translation/${engine}Translator.jsm`,
+          {}
+        );
+        let translator = new importScope[engine + "Translator"](
+          translationDocument,
+          msg.data.from,
+          msg.data.to
+        );
 
         this.global.content.translationDocument = translationDocument;
         translationDocument.translatedFrom = msg.data.from;
@@ -148,9 +171,10 @@ TranslationContentHandler.prototype = {
           },
           error => {
             translationDocument.translationError = true;
-            let data = {success: false};
-            if (error == "unavailable")
+            let data = { success: false };
+            if (error == "unavailable") {
               data.unavailable = true;
+            }
             this.global.sendAsyncMessage("Translation:Finished", data);
           }
         );

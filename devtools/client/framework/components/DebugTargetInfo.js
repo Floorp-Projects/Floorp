@@ -6,8 +6,10 @@
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { CONNECTION_TYPES, DEBUG_TARGET_TYPES } =
-  require("devtools/client/shared/remote-debugging/constants");
+const {
+  CONNECTION_TYPES,
+  DEBUG_TARGET_TYPES,
+} = require("devtools/client/shared/remote-debugging/constants");
 
 /**
  * This is header that should be displayed on top of the toolbox when using
@@ -17,14 +19,16 @@ class DebugTargetInfo extends PureComponent {
   static get propTypes() {
     return {
       debugTargetData: PropTypes.shape({
-        connectionType: PropTypes.oneOf(Object.values(CONNECTION_TYPES)).isRequired,
+        connectionType: PropTypes.oneOf(Object.values(CONNECTION_TYPES))
+          .isRequired,
         runtimeInfo: PropTypes.shape({
           deviceName: PropTypes.string,
           icon: PropTypes.string.isRequired,
           name: PropTypes.string.isRequired,
           version: PropTypes.string.isRequired,
         }).isRequired,
-        targetType: PropTypes.oneOf(Object.values(DEBUG_TARGET_TYPES)).isRequired,
+        targetType: PropTypes.oneOf(Object.values(DEBUG_TARGET_TYPES))
+          .isRequired,
       }).isRequired,
       L10N: PropTypes.object.isRequired,
       toolbox: PropTypes.object.isRequired,
@@ -38,17 +42,23 @@ class DebugTargetInfo extends PureComponent {
   updateTitle() {
     const { L10N, debugTargetData, toolbox } = this.props;
     const title = toolbox.target.name;
-    const targetTypeStr = L10N.getStr(this.getAssetsForDebugTargetType().l10nId);
+    const targetTypeStr = L10N.getStr(
+      this.getAssetsForDebugTargetType().l10nId
+    );
 
     const { connectionType } = debugTargetData;
     if (connectionType === CONNECTION_TYPES.THIS_FIREFOX) {
-      toolbox.doc.title = L10N.getFormatStr("toolbox.debugTargetInfo.tabTitleLocal",
+      toolbox.doc.title = L10N.getFormatStr(
+        "toolbox.debugTargetInfo.tabTitleLocal",
         targetTypeStr,
         title
       );
     } else {
-      const connectionTypeStr = L10N.getStr(this.getAssetsForConnectionType().l10nId);
-      toolbox.doc.title = L10N.getFormatStr("toolbox.debugTargetInfo.tabTitleRemote",
+      const connectionTypeStr = L10N.getStr(
+        this.getAssetsForConnectionType().l10nId
+      );
+      toolbox.doc.title = L10N.getFormatStr(
+        "toolbox.debugTargetInfo.tabTitleRemote",
         connectionTypeStr,
         targetTypeStr,
         title
@@ -61,9 +71,16 @@ class DebugTargetInfo extends PureComponent {
     const { name, version } = debugTargetData.runtimeInfo;
     const { connectionType } = debugTargetData;
 
-    return (connectionType === CONNECTION_TYPES.THIS_FIREFOX)
-      ? L10N.getFormatStr("toolbox.debugTargetInfo.runtimeLabel.thisFirefox", version)
-      : L10N.getFormatStr("toolbox.debugTargetInfo.runtimeLabel", name, version);
+    return connectionType === CONNECTION_TYPES.THIS_FIREFOX
+      ? L10N.getFormatStr(
+          "toolbox.debugTargetInfo.runtimeLabel.thisFirefox",
+          version
+        )
+      : L10N.getFormatStr(
+          "toolbox.debugTargetInfo.runtimeLabel",
+          name,
+          version
+        );
   }
 
   getAssetsForConnectionType() {
@@ -121,10 +138,7 @@ class DebugTargetInfo extends PureComponent {
 
   shallRenderConnection() {
     const { connectionType } = this.props.debugTargetData;
-    const renderableTypes = [
-      CONNECTION_TYPES.USB,
-      CONNECTION_TYPES.NETWORK,
-    ];
+    const renderableTypes = [CONNECTION_TYPES.USB, CONNECTION_TYPES.NETWORK];
 
     return renderableTypes.includes(connectionType);
   }
@@ -137,8 +151,8 @@ class DebugTargetInfo extends PureComponent {
       {
         className: "iconized-label qa-connection-info",
       },
-      dom.img({ src: image, alt: `${connectionType} icon`}),
-      this.props.L10N.getStr(l10nId),
+      dom.img({ src: image, alt: `${connectionType} icon` }),
+      this.props.L10N.getStr(l10nId)
     );
   }
 
@@ -158,7 +172,7 @@ class DebugTargetInfo extends PureComponent {
       },
       dom.img({ src: icon, className: "channel-icon qa-runtime-icon" }),
       dom.b({ className: "devtools-ellipsis-text" }, this.getRuntimeText()),
-      dom.span({ className: "devtools-ellipsis-text" }, deviceName),
+      dom.span({ className: "devtools-ellipsis-text" }, deviceName)
     );
   }
 
@@ -172,9 +186,11 @@ class DebugTargetInfo extends PureComponent {
       {
         className: "iconized-label",
       },
-      dom.img({ src: image, alt: this.props.L10N.getStr(l10nId)}),
-      title ? dom.b({ className: "devtools-ellipsis-text qa-target-title"}, title) : null,
-      dom.span({ className: "devtools-ellipsis-text" }, url),
+      dom.img({ src: image, alt: this.props.L10N.getStr(l10nId) }),
+      title
+        ? dom.b({ className: "devtools-ellipsis-text qa-target-title" }, title)
+        : null,
+      dom.span({ className: "devtools-ellipsis-text" }, url)
     );
   }
 
@@ -185,7 +201,7 @@ class DebugTargetInfo extends PureComponent {
       },
       this.shallRenderConnection() ? this.renderConnection() : null,
       this.renderRuntime(),
-      this.renderTarget(),
+      this.renderTarget()
     );
   }
 }

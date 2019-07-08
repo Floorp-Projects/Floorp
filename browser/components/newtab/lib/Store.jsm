@@ -3,11 +3,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {ActivityStreamMessageChannel} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamMessageChannel.jsm");
-const {ActivityStreamStorage} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamStorage.jsm");
-const {Prefs} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm");
-const {reducers} = ChromeUtils.import("resource://activity-stream/common/Reducers.jsm");
-const {redux} = ChromeUtils.import("resource://activity-stream/vendor/Redux.jsm");
+const { ActivityStreamMessageChannel } = ChromeUtils.import(
+  "resource://activity-stream/lib/ActivityStreamMessageChannel.jsm"
+);
+const { ActivityStreamStorage } = ChromeUtils.import(
+  "resource://activity-stream/lib/ActivityStreamStorage.jsm"
+);
+const { Prefs } = ChromeUtils.import(
+  "resource://activity-stream/lib/ActivityStreamPrefs.jsm"
+);
+const { reducers } = ChromeUtils.import(
+  "resource://activity-stream/common/Reducers.jsm"
+);
+const { redux } = ChromeUtils.import(
+  "resource://activity-stream/vendor/Redux.jsm"
+);
 
 /**
  * Store - This has a similar structure to a redux store, but includes some extra
@@ -30,7 +40,9 @@ this.Store = class Store {
     }
     this.feeds = new Map();
     this._prefs = new Prefs();
-    this._messageChannel = new ActivityStreamMessageChannel({dispatch: this.dispatch});
+    this._messageChannel = new ActivityStreamMessageChannel({
+      dispatch: this.dispatch,
+    });
     this._store = redux.createStore(
       redux.combineReducers(reducers),
       redux.applyMiddleware(this._middleware, this._messageChannel.middleware)

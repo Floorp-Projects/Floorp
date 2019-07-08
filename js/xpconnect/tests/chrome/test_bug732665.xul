@@ -18,8 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=732665
   <script type="application/javascript">
   <![CDATA[
 
-  SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
-                                       true]]});
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+                                            true]]});
   //
   // Important! If this test starts failing after a tricky platform-y change,
   // the stack quota numbers in XPCJSContext probably need twiddling. We want
@@ -76,7 +77,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=732665
   contentSb.nnslChrome = chromeSb.nearNativeStackLimit;
   var nestedLimit = Cu.evalInSandbox("nearNativeStackLimit(1, function() { nestedLimit = nnslChrome(0);}); nestedLimit;", contentSb);
   ok(nestedLimit >= 11, "Chrome should be invokable from content script with an exhausted stack: " + nestedLimit);
-
+});
   ]]>
   </script>
 </window>

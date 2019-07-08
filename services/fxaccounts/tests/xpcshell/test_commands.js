@@ -3,17 +3,22 @@
 
 "use strict";
 
-const {FxAccountsCommands, SendTab} = ChromeUtils.import("resource://gre/modules/FxAccountsCommands.js");
+const { FxAccountsCommands, SendTab } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommands.js"
+);
 
 add_task(async function test_sendtab_isDeviceCompatible() {
   const sendTab = new SendTab(null, null);
-  let device = {name: "My device"};
+  let device = { name: "My device" };
   Assert.ok(!sendTab.isDeviceCompatible(device));
-  device = {name: "My device", availableCommands: {}};
+  device = { name: "My device", availableCommands: {} };
   Assert.ok(!sendTab.isDeviceCompatible(device));
-  device = {name: "My device", availableCommands: {
-    "https://identity.mozilla.com/cmd/open-uri": "payload",
-  }};
+  device = {
+    name: "My device",
+    availableCommands: {
+      "https://identity.mozilla.com/cmd/open-uri": "payload",
+    },
+  };
   Assert.ok(sendTab.isDeviceCompatible(device));
 });
 
@@ -33,12 +38,8 @@ add_task(async function test_sendtab_send() {
     }
     return "encryptedpayload";
   };
-  const to = [
-    {name: "Device 1"},
-    {name: "Device 2"},
-    {name: "Device 3"},
-  ];
-  const tab = {title: "Foo", url: "https://foo.bar/"};
+  const to = [{ name: "Device 1" }, { name: "Device 2" }, { name: "Device 3" }];
+  const tab = { title: "Foo", url: "https://foo.bar/" };
   const report = await sendTab.send(to, tab);
   Assert.equal(report.succeeded.length, 1);
   Assert.equal(report.failed.length, 2);
@@ -77,92 +78,116 @@ add_task(async function test_commands_pollDeviceCommands_push() {
   const fxAccounts = {
     async _withCurrentAccountState(cb) {
       const get = () => accountState.data;
-      const set = (val) => { accountState.data = val; };
+      const set = val => {
+        accountState.data = val;
+      };
       await cb(get, set);
     },
   };
   const commands = new FxAccountsCommands(fxAccounts);
   const mockCommands = sinon.mock(commands);
-  mockCommands.expects("_fetchDeviceCommands").once().withArgs(11).returns({
-    index: remoteIndex,
-    messages: remoteMessages,
-  });
-  mockCommands.expects("_handleCommands").once().withArgs(remoteMessages);
+  mockCommands
+    .expects("_fetchDeviceCommands")
+    .once()
+    .withArgs(11)
+    .returns({
+      index: remoteIndex,
+      messages: remoteMessages,
+    });
+  mockCommands
+    .expects("_handleCommands")
+    .once()
+    .withArgs(remoteMessages);
   await commands.pollDeviceCommands(pushIndexReceived);
 
   mockCommands.verify();
   Assert.equal(accountState.data.device.lastCommandIndex, 12);
 });
 
-add_task(async function test_commands_pollDeviceCommands_push_already_fetched() {
-  // Local state.
-  const pushIndexReceived = 12;
-  const accountState = {
-    data: {
-      device: {
-        lastCommandIndex: 12,
+add_task(
+  async function test_commands_pollDeviceCommands_push_already_fetched() {
+    // Local state.
+    const pushIndexReceived = 12;
+    const accountState = {
+      data: {
+        device: {
+          lastCommandIndex: 12,
+        },
       },
-    },
-  };
+    };
 
-  const fxAccounts = {
-    async _withCurrentAccountState(cb) {
-      const get = () => accountState.data;
-      const set = (val) => { accountState.data = val; };
-      await cb(get, set);
-    },
-  };
-  const commands = new FxAccountsCommands(fxAccounts);
-  const mockCommands = sinon.mock(commands);
-  mockCommands.expects("_fetchDeviceCommands").never();
-  mockCommands.expects("_handleCommands").never();
-  await commands.pollDeviceCommands(pushIndexReceived);
+    const fxAccounts = {
+      async _withCurrentAccountState(cb) {
+        const get = () => accountState.data;
+        const set = val => {
+          accountState.data = val;
+        };
+        await cb(get, set);
+      },
+    };
+    const commands = new FxAccountsCommands(fxAccounts);
+    const mockCommands = sinon.mock(commands);
+    mockCommands.expects("_fetchDeviceCommands").never();
+    mockCommands.expects("_handleCommands").never();
+    await commands.pollDeviceCommands(pushIndexReceived);
 
-  mockCommands.verify();
-  Assert.equal(accountState.data.device.lastCommandIndex, 12);
-});
+    mockCommands.verify();
+    Assert.equal(accountState.data.device.lastCommandIndex, 12);
+  }
+);
 
-add_task(async function test_commands_pollDeviceCommands_push_local_state_empty() {
-  // Server state.
-  const remoteMessages = [
-    {
-      index: 11,
-      data: {},
-    },
-    {
-      index: 12,
-      data: {},
-    },
-  ];
-  const remoteIndex = 12;
+add_task(
+  async function test_commands_pollDeviceCommands_push_local_state_empty() {
+    // Server state.
+    const remoteMessages = [
+      {
+        index: 11,
+        data: {},
+      },
+      {
+        index: 12,
+        data: {},
+      },
+    ];
+    const remoteIndex = 12;
 
-  // Local state.
-  const pushIndexReceived = 11;
-  const accountState = {
-    data: {
-      device: {},
-    },
-  };
+    // Local state.
+    const pushIndexReceived = 11;
+    const accountState = {
+      data: {
+        device: {},
+      },
+    };
 
-  const fxAccounts = {
-    async _withCurrentAccountState(cb) {
-      const get = () => accountState.data;
-      const set = (val) => { accountState.data = val; };
-      await cb(get, set);
-    },
-  };
-  const commands = new FxAccountsCommands(fxAccounts);
-  const mockCommands = sinon.mock(commands);
-  mockCommands.expects("_fetchDeviceCommands").once().withArgs(11).returns({
-    index: remoteIndex,
-    messages: remoteMessages,
-  });
-  mockCommands.expects("_handleCommands").once().withArgs(remoteMessages);
-  await commands.pollDeviceCommands(pushIndexReceived);
+    const fxAccounts = {
+      async _withCurrentAccountState(cb) {
+        const get = () => accountState.data;
+        const set = val => {
+          accountState.data = val;
+        };
+        await cb(get, set);
+      },
+    };
+    const commands = new FxAccountsCommands(fxAccounts);
+    const mockCommands = sinon.mock(commands);
+    mockCommands
+      .expects("_fetchDeviceCommands")
+      .once()
+      .withArgs(11)
+      .returns({
+        index: remoteIndex,
+        messages: remoteMessages,
+      });
+    mockCommands
+      .expects("_handleCommands")
+      .once()
+      .withArgs(remoteMessages);
+    await commands.pollDeviceCommands(pushIndexReceived);
 
-  mockCommands.verify();
-  Assert.equal(accountState.data.device.lastCommandIndex, 12);
-});
+    mockCommands.verify();
+    Assert.equal(accountState.data.device.lastCommandIndex, 12);
+  }
+);
 
 add_task(async function test_commands_pollDeviceCommands_scheduled_local() {
   // Server state.
@@ -190,60 +215,80 @@ add_task(async function test_commands_pollDeviceCommands_scheduled_local() {
   const fxAccounts = {
     async _withCurrentAccountState(cb) {
       const get = () => accountState.data;
-      const set = (val) => { accountState.data = val; };
+      const set = val => {
+        accountState.data = val;
+      };
       await cb(get, set);
     },
   };
   const commands = new FxAccountsCommands(fxAccounts);
   const mockCommands = sinon.mock(commands);
-  mockCommands.expects("_fetchDeviceCommands").once().withArgs(11).returns({
-    index: remoteIndex,
-    messages: remoteMessages,
-  });
-  mockCommands.expects("_handleCommands").once().withArgs(remoteMessages);
+  mockCommands
+    .expects("_fetchDeviceCommands")
+    .once()
+    .withArgs(11)
+    .returns({
+      index: remoteIndex,
+      messages: remoteMessages,
+    });
+  mockCommands
+    .expects("_handleCommands")
+    .once()
+    .withArgs(remoteMessages);
   await commands.pollDeviceCommands();
 
   mockCommands.verify();
   Assert.equal(accountState.data.device.lastCommandIndex, 12);
 });
 
-add_task(async function test_commands_pollDeviceCommands_scheduled_local_state_empty() {
-  // Server state.
-  const remoteMessages = [
-    {
-      index: 11,
-      data: {},
-    },
-    {
-      index: 12,
-      data: {},
-    },
-  ];
-  const remoteIndex = 12;
+add_task(
+  async function test_commands_pollDeviceCommands_scheduled_local_state_empty() {
+    // Server state.
+    const remoteMessages = [
+      {
+        index: 11,
+        data: {},
+      },
+      {
+        index: 12,
+        data: {},
+      },
+    ];
+    const remoteIndex = 12;
 
-  // Local state.
-  const accountState = {
-    data: {
-      device: {},
-    },
-  };
+    // Local state.
+    const accountState = {
+      data: {
+        device: {},
+      },
+    };
 
-  const fxAccounts = {
-    async _withCurrentAccountState(cb) {
-      const get = () => accountState.data;
-      const set = (val) => { accountState.data = val; };
-      await cb(get, set);
-    },
-  };
-  const commands = new FxAccountsCommands(fxAccounts);
-  const mockCommands = sinon.mock(commands);
-  mockCommands.expects("_fetchDeviceCommands").once().withArgs(0).returns({
-    index: remoteIndex,
-    messages: remoteMessages,
-  });
-  mockCommands.expects("_handleCommands").once().withArgs(remoteMessages);
-  await commands.pollDeviceCommands();
+    const fxAccounts = {
+      async _withCurrentAccountState(cb) {
+        const get = () => accountState.data;
+        const set = val => {
+          accountState.data = val;
+        };
+        await cb(get, set);
+      },
+    };
+    const commands = new FxAccountsCommands(fxAccounts);
+    const mockCommands = sinon.mock(commands);
+    mockCommands
+      .expects("_fetchDeviceCommands")
+      .once()
+      .withArgs(0)
+      .returns({
+        index: remoteIndex,
+        messages: remoteMessages,
+      });
+    mockCommands
+      .expects("_handleCommands")
+      .once()
+      .withArgs(remoteMessages);
+    await commands.pollDeviceCommands();
 
-  mockCommands.verify();
-  Assert.equal(accountState.data.device.lastCommandIndex, 12);
-});
+    mockCommands.verify();
+    Assert.equal(accountState.data.device.lastCommandIndex, 12);
+  }
+);

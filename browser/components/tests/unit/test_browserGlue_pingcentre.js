@@ -1,10 +1,11 @@
-const {PingCentre} = ChromeUtils.import("resource:///modules/PingCentre.jsm");
+const { PingCentre } = ChromeUtils.import("resource:///modules/PingCentre.jsm");
 
 const TOPIC_SHIELD_INIT_COMPLETE = "shield-init-complete";
 const SEND_PING_MOCK = sinon.stub(PingCentre.prototype, "sendPing");
 
-let gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"]
-                     .getService(Ci.nsIObserver);
+let gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"].getService(
+  Ci.nsIObserver
+);
 
 add_task(async function() {
   // Simulate ping centre sendPing() trigger.
@@ -16,7 +17,12 @@ add_task(async function() {
   };
   const SEND_PING_FILTER = { filter: "activity-stream" };
 
-  Assert.ok(SEND_PING_MOCK.called, "gBrowserGlue.pingCentre.sendPing() is called");
-  Assert.ok(SEND_PING_MOCK.calledWithExactly(SEND_PING_CALL_ARGS, SEND_PING_FILTER),
-    "sendPing() is called with the correct param");
+  Assert.ok(
+    SEND_PING_MOCK.called,
+    "gBrowserGlue.pingCentre.sendPing() is called"
+  );
+  Assert.ok(
+    SEND_PING_MOCK.calledWithExactly(SEND_PING_CALL_ARGS, SEND_PING_FILTER),
+    "sendPing() is called with the correct param"
+  );
 });

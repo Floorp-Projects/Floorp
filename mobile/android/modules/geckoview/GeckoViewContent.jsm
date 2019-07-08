@@ -6,8 +6,12 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewContent"];
 
-const {GeckoViewModule} = ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { GeckoViewModule } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewModule.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
@@ -30,36 +34,66 @@ class GeckoViewContent extends GeckoViewModule {
   }
 
   onEnable() {
-    this.window.addEventListener("MozDOMFullscreen:Entered", this,
-      /* capture */ true, /* untrusted */ false);
-    this.window.addEventListener("MozDOMFullscreen:Exited", this,
-      /* capture */ true, /* untrusted */ false);
-    this.window.addEventListener("framefocusrequested", this,
-      /* capture */ true, /* untrusted */ false);
+    this.window.addEventListener(
+      "MozDOMFullscreen:Entered",
+      this,
+      /* capture */ true,
+      /* untrusted */ false
+    );
+    this.window.addEventListener(
+      "MozDOMFullscreen:Exited",
+      this,
+      /* capture */ true,
+      /* untrusted */ false
+    );
+    this.window.addEventListener(
+      "framefocusrequested",
+      this,
+      /* capture */ true,
+      /* untrusted */ false
+    );
 
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenExit", this);
-    this.messageManager.addMessageListener("GeckoView:DOMFullscreenRequest", this);
+    this.messageManager.addMessageListener(
+      "GeckoView:DOMFullscreenRequest",
+      this
+    );
 
     Services.obs.addObserver(this, "oop-frameloader-crashed");
   }
 
   onDisable() {
-    this.window.removeEventListener("MozDOMFullscreen:Entered", this,
-      /* capture */ true);
-    this.window.removeEventListener("MozDOMFullscreen:Exited", this,
-      /* capture */ true);
-    this.window.removeEventListener("framefocusrequested", this,
-      /* capture */ true);
+    this.window.removeEventListener(
+      "MozDOMFullscreen:Entered",
+      this,
+      /* capture */ true
+    );
+    this.window.removeEventListener(
+      "MozDOMFullscreen:Exited",
+      this,
+      /* capture */ true
+    );
+    this.window.removeEventListener(
+      "framefocusrequested",
+      this,
+      /* capture */ true
+    );
 
-    this.messageManager.removeMessageListener("GeckoView:DOMFullscreenExit", this);
-    this.messageManager.removeMessageListener("GeckoView:DOMFullscreenRequest", this);
+    this.messageManager.removeMessageListener(
+      "GeckoView:DOMFullscreenExit",
+      this
+    );
+    this.messageManager.removeMessageListener(
+      "GeckoView:DOMFullscreenRequest",
+      this
+    );
 
     Services.obs.removeObserver(this, "oop-frameloader-crashed");
   }
 
   // Bundle event handler.
   onEvent(aEvent, aData, aCallback) {
-    debug `onEvent: event=${aEvent}, data=${aData}`;
+    debug`onEvent: event=${aEvent}, data=${aData}`;
 
     switch (aEvent) {
       case "GeckoViewContent:ExitFullScreen":
@@ -115,7 +149,7 @@ class GeckoViewContent extends GeckoViewModule {
 
   // DOM event handler
   handleEvent(aEvent) {
-    debug `handleEvent: ${aEvent.type}`;
+    debug`handleEvent: ${aEvent.type}`;
 
     switch (aEvent.type) {
       case "framefocusrequested":
@@ -133,7 +167,9 @@ class GeckoViewContent extends GeckoViewModule {
       case "MozDOMFullscreen:Entered":
         if (this.browser == aEvent.target) {
           // Remote browser; dispatch to content process.
-          this.messageManager.sendAsyncMessage("GeckoView:DOMFullscreenEntered");
+          this.messageManager.sendAsyncMessage(
+            "GeckoView:DOMFullscreenEntered"
+          );
         }
         break;
       case "MozDOMFullscreen:Exited":
@@ -144,23 +180,21 @@ class GeckoViewContent extends GeckoViewModule {
 
   // Message manager event handler.
   receiveMessage(aMsg) {
-    debug `receiveMessage: ${aMsg.name}`;
+    debug`receiveMessage: ${aMsg.name}`;
 
     switch (aMsg.name) {
       case "GeckoView:DOMFullscreenExit":
-        this.window.windowUtils
-                   .remoteFrameFullscreenReverted();
+        this.window.windowUtils.remoteFrameFullscreenReverted();
         break;
       case "GeckoView:DOMFullscreenRequest":
-        this.window.windowUtils
-                   .remoteFrameFullscreenChanged(aMsg.target);
+        this.window.windowUtils.remoteFrameFullscreenChanged(aMsg.target);
         break;
     }
   }
 
   // nsIObserver event handler
   observe(aSubject, aTopic, aData) {
-    debug `observe: ${aTopic}`;
+    debug`observe: ${aTopic}`;
 
     switch (aTopic) {
       case "oop-frameloader-crashed": {
@@ -178,7 +212,7 @@ class GeckoViewContent extends GeckoViewModule {
   }
 
   _findInPage(aData, aCallback) {
-    debug `findInPage: data=${aData} callback=${aCallback && "non-null"}`;
+    debug`findInPage: data=${aData} callback=${aCallback && "non-null"}`;
 
     let finder;
     try {
@@ -242,7 +276,7 @@ class GeckoViewContent extends GeckoViewModule {
 
         // Only send response if we have a count.
         if (!this.response.found || this.response.current !== 0) {
-          debug `onFindResult: ${this.response}`;
+          debug`onFindResult: ${this.response}`;
           aCallback.onSuccess(this.response);
           aCallback = undefined;
         }
@@ -262,41 +296,35 @@ class GeckoViewContent extends GeckoViewModule {
         // Only send response if we have a result. `found` and `wrapped` are
         // both false only when we haven't received a result yet.
         if (this.response.found || this.response.wrapped) {
-          debug `onMatchesCountResult: ${this.response}`;
+          debug`onMatchesCountResult: ${this.response}`;
           aCallback.onSuccess(this.response);
           aCallback = undefined;
         }
       },
 
-      onCurrentSelection() {
-      },
+      onCurrentSelection() {},
 
-      onHighlightFinished() {
-      },
+      onHighlightFinished() {},
     };
 
     finder.caseSensitive = !!aData.matchCase;
     finder.entireWord = !!aData.wholeWord;
     finder.addResultListener(this._finderListener);
 
-    const drawOutline = this._matchDisplayOptions &&
-                        !!this._matchDisplayOptions.drawOutline;
+    const drawOutline =
+      this._matchDisplayOptions && !!this._matchDisplayOptions.drawOutline;
 
     if (!aData.searchString || aData.searchString === finder.searchString) {
       // Search again.
       aData.searchString = finder.searchString;
-      finder.findAgain(!!aData.backwards,
-                       !!aData.linksOnly,
-                       drawOutline);
+      finder.findAgain(!!aData.backwards, !!aData.linksOnly, drawOutline);
     } else {
-      finder.fastFind(aData.searchString,
-                      !!aData.linksOnly,
-                      drawOutline);
+      finder.fastFind(aData.searchString, !!aData.linksOnly, drawOutline);
     }
   }
 
   _clearMatches() {
-    debug `clearMatches`;
+    debug`clearMatches`;
 
     let finder;
     try {
@@ -315,7 +343,7 @@ class GeckoViewContent extends GeckoViewModule {
   }
 
   _displayMatches(aData) {
-    debug `displayMatches: data=${aData}`;
+    debug`displayMatches: data=${aData}`;
 
     let finder;
     try {
@@ -341,4 +369,4 @@ class GeckoViewContent extends GeckoViewModule {
   }
 }
 
-const {debug, warn} = GeckoViewContent.initLogging("GeckoViewContent"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewContent.initLogging("GeckoViewContent"); // eslint-disable-line no-unused-vars

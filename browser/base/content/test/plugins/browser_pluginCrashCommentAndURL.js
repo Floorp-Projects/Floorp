@@ -1,9 +1,13 @@
 /* global gBrowser */
 ChromeUtils.import("resource://gre/modules/CrashSubmit.jsm", this);
 
-const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";
+const SERVER_URL =
+  "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";
 
-var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+var gTestRoot = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content/",
+  "http://127.0.0.1:8888/"
+);
 var gTestBrowser = null;
 var config = {};
 
@@ -13,8 +17,9 @@ add_task(async function() {
   // report server, and fortunately one is already set up by toolkit/
   // crashreporter/test/Makefile.in.  Assign its URL to MOZ_CRASHREPORTER_URL,
   // which CrashSubmit.jsm uses as a server override.
-  let env = Cc["@mozilla.org/process/environment;1"]
-              .getService(Ci.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   let noReport = env.get("MOZ_CRASHREPORTER_NO_REPORT");
   let serverUrl = env.get("MOZ_CRASHREPORTER_URL");
   env.set("MOZ_CRASHREPORTER_NO_REPORT", "");
@@ -49,7 +54,10 @@ add_task(async function() {
 
   let pluginCrashed = promisePluginCrashed();
 
-  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_crashCommentAndURL.html");
+  await promiseTabLoadEvent(
+    gBrowser.selectedTab,
+    gTestRoot + "plugin_crashCommentAndURL.html"
+  );
 
   // Work around for delayed PluginBindingAttached
   await promiseUpdatePluginBindings(gTestBrowser);
@@ -57,19 +65,30 @@ add_task(async function() {
   // Wait for the plugin to crash
   await pluginCrashed;
 
-  let crashReportStatus = TestUtils.topicObserved("crash-report-status", onSubmitStatus);
+  let crashReportStatus = TestUtils.topicObserved(
+    "crash-report-status",
+    onSubmitStatus
+  );
 
   // Test that the crash submission UI is actually visible and submit the crash report.
   await ContentTask.spawn(gTestBrowser, config, async function(aConfig) {
     let doc = content.document;
     let plugin = doc.getElementById("plugin");
-    let pleaseSubmit = plugin.openOrClosedShadowRoot.getElementById("pleaseSubmit");
-    let submitButton = plugin.openOrClosedShadowRoot.getElementById("submitButton");
+    let pleaseSubmit = plugin.openOrClosedShadowRoot.getElementById(
+      "pleaseSubmit"
+    );
+    let submitButton = plugin.openOrClosedShadowRoot.getElementById(
+      "submitButton"
+    );
     // Test that we don't send the URL when urlOptIn is false.
-    plugin.openOrClosedShadowRoot.getElementById("submitURLOptIn").checked = aConfig.urlOptIn;
+    plugin.openOrClosedShadowRoot.getElementById("submitURLOptIn").checked =
+      aConfig.urlOptIn;
     submitButton.click();
-    Assert.equal(content.getComputedStyle(pleaseSubmit).display == "block",
-      aConfig.shouldSubmissionUIBeVisible, "The crash UI should be visible");
+    Assert.equal(
+      content.getComputedStyle(pleaseSubmit).display == "block",
+      aConfig.shouldSubmissionUIBeVisible,
+      "The crash UI should be visible"
+    );
   });
 
   await crashReportStatus;
@@ -86,7 +105,10 @@ add_task(async function() {
 
   let pluginCrashed = promisePluginCrashed();
 
-  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_crashCommentAndURL.html");
+  await promiseTabLoadEvent(
+    gBrowser.selectedTab,
+    gTestRoot + "plugin_crashCommentAndURL.html"
+  );
 
   // Work around for delayed PluginBindingAttached
   await promiseUpdatePluginBindings(gTestBrowser);
@@ -94,20 +116,32 @@ add_task(async function() {
   // Wait for the plugin to crash
   await pluginCrashed;
 
-  let crashReportStatus = TestUtils.topicObserved("crash-report-status", onSubmitStatus);
+  let crashReportStatus = TestUtils.topicObserved(
+    "crash-report-status",
+    onSubmitStatus
+  );
 
   // Test that the crash submission UI is actually visible and submit the crash report.
   await ContentTask.spawn(gTestBrowser, config, async function(aConfig) {
     let doc = content.document;
     let plugin = doc.getElementById("plugin");
-    let pleaseSubmit = plugin.openOrClosedShadowRoot.getElementById("pleaseSubmit");
-    let submitButton = plugin.openOrClosedShadowRoot.getElementById("submitButton");
+    let pleaseSubmit = plugin.openOrClosedShadowRoot.getElementById(
+      "pleaseSubmit"
+    );
+    let submitButton = plugin.openOrClosedShadowRoot.getElementById(
+      "submitButton"
+    );
     // Test that we send the URL when urlOptIn is true.
-    plugin.openOrClosedShadowRoot.getElementById("submitURLOptIn").checked = aConfig.urlOptIn;
-    plugin.openOrClosedShadowRoot.getElementById("submitComment").value = aConfig.comment;
+    plugin.openOrClosedShadowRoot.getElementById("submitURLOptIn").checked =
+      aConfig.urlOptIn;
+    plugin.openOrClosedShadowRoot.getElementById("submitComment").value =
+      aConfig.comment;
     submitButton.click();
-    Assert.equal(content.getComputedStyle(pleaseSubmit).display == "block",
-      aConfig.shouldSubmissionUIBeVisible, "The crash UI should be visible");
+    Assert.equal(
+      content.getComputedStyle(pleaseSubmit).display == "block",
+      aConfig.shouldSubmissionUIBeVisible,
+      "The crash UI should be visible"
+    );
   });
 
   await crashReportStatus;
@@ -158,8 +192,12 @@ add_task(async function() {
   let pluginCrashed = promisePluginCrashed();
 
   // Make sure that the plugin container is too small to display the crash submission UI
-  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_crashCommentAndURL.html?" +
-                            encodeURIComponent(JSON.stringify({width: 300, height: 300})));
+  await promiseTabLoadEvent(
+    gBrowser.selectedTab,
+    gTestRoot +
+      "plugin_crashCommentAndURL.html?" +
+      encodeURIComponent(JSON.stringify({ width: 300, height: 300 }))
+  );
 
   // Work around for delayed PluginBindingAttached
   await promiseUpdatePluginBindings(gTestBrowser);
@@ -171,9 +209,15 @@ add_task(async function() {
   await ContentTask.spawn(gTestBrowser, config, async function(aConfig) {
     let doc = content.document;
     let plugin = doc.getElementById("plugin");
-    let pleaseSubmit = plugin.openOrClosedShadowRoot.getElementById("pleaseSubmit");
-    Assert.equal(!!pleaseSubmit && content.getComputedStyle(pleaseSubmit).display == "block",
-      aConfig.shouldSubmissionUIBeVisible, "Plugin crash UI should not be visible");
+    let pleaseSubmit = plugin.openOrClosedShadowRoot.getElementById(
+      "pleaseSubmit"
+    );
+    Assert.equal(
+      !!pleaseSubmit &&
+        content.getComputedStyle(pleaseSubmit).display == "block",
+      aConfig.shouldSubmissionUIBeVisible,
+      "Plugin crash UI should not be visible"
+    );
   });
 
   await crashDeferred.promise;
@@ -182,11 +226,14 @@ add_task(async function() {
 
 function promisePluginCrashed() {
   return new ContentTask.spawn(gTestBrowser, {}, async function() {
-    await new Promise((resolve) => {
-      addEventListener("PluginCrashReporterDisplayed", function onPluginCrashed() {
-        removeEventListener("PluginCrashReporterDisplayed", onPluginCrashed);
-        resolve();
-      });
+    await new Promise(resolve => {
+      addEventListener(
+        "PluginCrashReporterDisplayed",
+        function onPluginCrashed() {
+          removeEventListener("PluginCrashReporterDisplayed", onPluginCrashed);
+          resolve();
+        }
+      );
     });
   });
 }
@@ -216,20 +263,30 @@ function onSubmitStatus(aSubject, aData) {
 
   let val = getPropertyBagValue(extra, "PluginUserComment");
   if (config.comment) {
-    is(val, config.comment,
-       "Comment in extra data should match comment in textbox");
+    is(
+      val,
+      config.comment,
+      "Comment in extra data should match comment in textbox"
+    );
   } else {
-    ok(val === undefined,
-       "Comment should be absent from extra data when textbox is empty");
+    ok(
+      val === undefined,
+      "Comment should be absent from extra data when textbox is empty"
+    );
   }
 
   val = getPropertyBagValue(extra, "PluginContentURL");
   if (config.urlOptIn) {
-    is(val, gBrowser.currentURI.spec,
-       "URL in extra data should match browser URL when opt-in checked");
+    is(
+      val,
+      gBrowser.currentURI.spec,
+      "URL in extra data should match browser URL when opt-in checked"
+    );
   } else {
-    ok(val === undefined,
-       "URL should be absent from extra data when opt-in not checked");
+    ok(
+      val === undefined,
+      "URL should be absent from extra data when opt-in not checked"
+    );
   }
 
   return true;

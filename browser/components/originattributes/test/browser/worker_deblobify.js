@@ -16,7 +16,7 @@ self.addEventListener("message", function(message) {
     return;
   }
   var blobURL = message.data.blobURL,
-      xhr = new XMLHttpRequest();
+    xhr = new XMLHttpRequest();
   try {
     xhr.open("GET", blobURL, true);
     xhr.onload = function() {

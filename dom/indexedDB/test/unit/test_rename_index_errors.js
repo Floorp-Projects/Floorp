@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const storeName = "test store";
   const indexName1 = "test index 1";
@@ -60,7 +59,10 @@ function* testSteps()
   // Rename with the name already adopted by the other index.
   try {
     index1.name = indexName2;
-    ok(false, "ConstraintError shall be thrown if the index name already exists.");
+    ok(
+      false,
+      "ConstraintError shall be thrown if the index name already exists."
+    );
   } catch (e) {
     ok(e instanceof DOMException, "got a database exception");
     is(e.name, "ConstraintError", "correct error");
@@ -94,7 +96,10 @@ function* testSteps()
   // Rename when the transaction is inactive.
   try {
     index1.name = indexName1;
-    ok(false, "TransactionInactiveError shall be thrown if the transaction is inactive.");
+    ok(
+      false,
+      "TransactionInactiveError shall be thrown if the transaction is inactive."
+    );
   } catch (e) {
     ok(e instanceof DOMException, "got a database exception");
     is(e.name, "TransactionInactiveError", "correct error");
@@ -114,7 +119,10 @@ function* testSteps()
 
   try {
     index1.name = indexName1;
-    ok(false, "InvalidStateError shall be thrown if it's not an upgrade transaction.");
+    ok(
+      false,
+      "InvalidStateError shall be thrown if it's not an upgrade transaction."
+    );
   } catch (e) {
     ok(e instanceof DOMException, "got a database exception");
     is(e.name, "InvalidStateError", "correct error");

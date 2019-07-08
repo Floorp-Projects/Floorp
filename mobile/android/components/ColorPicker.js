@@ -2,14 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Prompt",
-                               "resource://gre/modules/Prompt.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Prompt",
+  "resource://gre/modules/Prompt.jsm"
+);
 
-function ColorPicker() {
-}
+function ColorPicker() {}
 
 ColorPicker.prototype = {
   _initial: 0,
@@ -18,7 +22,9 @@ ColorPicker.prototype = {
 
   get strings() {
     if (!this._strings) {
-      this._strings = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+      this._strings = Services.strings.createBundle(
+        "chrome://browser/locale/browser.properties"
+      );
     }
     return this._strings;
   },
@@ -38,13 +44,14 @@ ColorPicker.prototype = {
         this.strings.GetStringFromName("inputWidgetHelper.cancel"),
       ],
     })
-    .addColorPicker({ value: this._initial })
-    .show((data) => {
-      if (data.button == 0)
-        aCallback.done(data.color0);
-      else
-        aCallback.done(this._initial);
-    });
+      .addColorPicker({ value: this._initial })
+      .show(data => {
+        if (data.button == 0) {
+          aCallback.done(data.color0);
+        } else {
+          aCallback.done(this._initial);
+        }
+      });
   },
 
   classID: Components.ID("{430b987f-bb9f-46a3-99a5-241749220b29}"),

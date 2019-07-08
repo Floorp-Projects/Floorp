@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 /**
  * Waits for an observer notification to fire.
@@ -15,12 +15,12 @@ const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 function promiseObserverNotification(topic, matchFunc) {
   return new Promise((resolve, reject) => {
     Services.obs.addObserver(function observe(subject, topic, data) {
-      let matches = typeof matchFunc != 'function' || matchFunc(subject, data);
+      let matches = typeof matchFunc != "function" || matchFunc(subject, data);
       if (!matches) {
         return;
       }
       Services.obs.removeObserver(observe, topic);
-      resolve({subject, data});
+      resolve({ subject, data });
     }, topic);
   });
 }
@@ -43,8 +43,7 @@ XPCOMUtils.defineLazyGetter(this, "URLv6", function() {
   return "http://[::1]:" + httpserverv6.identity.primaryPort + "/content";
 });
 
-function contentHandler(metadata, response)
-{
+function contentHandler(metadata, response) {
   response.setHeader("Content-Type", "text/plain");
   response.setHeader("Cache-Control", "no-cache");
 
@@ -54,45 +53,100 @@ function contentHandler(metadata, response)
 
 const DEFAULT_WAIT_TIME = 200; // ms
 
-const kDNSv6Domain = (mozinfo.os == "linux")
-                       ? "ip6-localhost"
-                       : "localhost";
+const kDNSv6Domain = mozinfo.os == "linux" ? "ip6-localhost" : "localhost";
 
 add_task(async function testDNS() {
-  let ncs = Cc["@mozilla.org/network/network-connectivity-service;1"]
-              .getService(Ci.nsINetworkConnectivityService);
+  let ncs = Cc[
+    "@mozilla.org/network/network-connectivity-service;1"
+  ].getService(Ci.nsINetworkConnectivityService);
 
   // Set the endpoints, trigger a DNS recheck, and wait for it to complete.
-  Services.prefs.setCharPref("network.connectivity-service.DNSv4.domain", "example.org");
-  Services.prefs.setCharPref("network.connectivity-service.DNSv6.domain", kDNSv6Domain);
+  Services.prefs.setCharPref(
+    "network.connectivity-service.DNSv4.domain",
+    "example.org"
+  );
+  Services.prefs.setCharPref(
+    "network.connectivity-service.DNSv6.domain",
+    kDNSv6Domain
+  );
   ncs.recheckDNS();
-  await promiseObserverNotification("network:connectivity-service:dns-checks-complete");
+  await promiseObserverNotification(
+    "network:connectivity-service:dns-checks-complete"
+  );
 
-  equal(ncs.DNSv4, Ci.nsINetworkConnectivityService.OK, "Check DNSv4 support (expect OK)");
-  equal(ncs.DNSv6, Ci.nsINetworkConnectivityService.OK, "Check DNSv6 support (expect OK)");
+  equal(
+    ncs.DNSv4,
+    Ci.nsINetworkConnectivityService.OK,
+    "Check DNSv4 support (expect OK)"
+  );
+  equal(
+    ncs.DNSv6,
+    Ci.nsINetworkConnectivityService.OK,
+    "Check DNSv6 support (expect OK)"
+  );
 
   // Set the endpoints to non-exitant domains, trigger a DNS recheck, and wait for it to complete.
-  Services.prefs.setCharPref("network.connectivity-service.DNSv4.domain", "does-not-exist.example");
-  Services.prefs.setCharPref("network.connectivity-service.DNSv6.domain", "does-not-exist.example");
+  Services.prefs.setCharPref(
+    "network.connectivity-service.DNSv4.domain",
+    "does-not-exist.example"
+  );
+  Services.prefs.setCharPref(
+    "network.connectivity-service.DNSv6.domain",
+    "does-not-exist.example"
+  );
   ncs.recheckDNS();
-  await promiseObserverNotification("network:connectivity-service:dns-checks-complete");
+  await promiseObserverNotification(
+    "network:connectivity-service:dns-checks-complete"
+  );
 
-  equal(ncs.DNSv4, Ci.nsINetworkConnectivityService.NOT_AVAILABLE, "Check DNSv4 support (expect N/A)");
-  equal(ncs.DNSv6, Ci.nsINetworkConnectivityService.NOT_AVAILABLE, "Check DNSv6 support (expect N/A)");
+  equal(
+    ncs.DNSv4,
+    Ci.nsINetworkConnectivityService.NOT_AVAILABLE,
+    "Check DNSv4 support (expect N/A)"
+  );
+  equal(
+    ncs.DNSv6,
+    Ci.nsINetworkConnectivityService.NOT_AVAILABLE,
+    "Check DNSv6 support (expect N/A)"
+  );
 
   // Set the endpoints back to the proper domains, and simulate a captive portal
   // event.
-  Services.prefs.setCharPref("network.connectivity-service.DNSv4.domain", "example.org");
-  Services.prefs.setCharPref("network.connectivity-service.DNSv6.domain", kDNSv6Domain);
+  Services.prefs.setCharPref(
+    "network.connectivity-service.DNSv4.domain",
+    "example.org"
+  );
+  Services.prefs.setCharPref(
+    "network.connectivity-service.DNSv6.domain",
+    kDNSv6Domain
+  );
   Services.obs.notifyObservers(null, "network:captive-portal-connectivity");
   // This will cause the state to go to UNKNOWN for a bit, until the check is completed.
-  equal(ncs.DNSv4, Ci.nsINetworkConnectivityService.UNKNOWN, "Check DNSv4 support (expect UNKNOWN)");
-  equal(ncs.DNSv6, Ci.nsINetworkConnectivityService.UNKNOWN, "Check DNSv6 support (expect UNKNOWN)");
+  equal(
+    ncs.DNSv4,
+    Ci.nsINetworkConnectivityService.UNKNOWN,
+    "Check DNSv4 support (expect UNKNOWN)"
+  );
+  equal(
+    ncs.DNSv6,
+    Ci.nsINetworkConnectivityService.UNKNOWN,
+    "Check DNSv6 support (expect UNKNOWN)"
+  );
 
-  await promiseObserverNotification("network:connectivity-service:dns-checks-complete");
+  await promiseObserverNotification(
+    "network:connectivity-service:dns-checks-complete"
+  );
 
-  equal(ncs.DNSv4, Ci.nsINetworkConnectivityService.OK, "Check DNSv4 support (expect OK)");
-  equal(ncs.DNSv6, Ci.nsINetworkConnectivityService.OK, "Check DNSv6 support (expect OK)");
+  equal(
+    ncs.DNSv4,
+    Ci.nsINetworkConnectivityService.OK,
+    "Check DNSv4 support (expect OK)"
+  );
+  equal(
+    ncs.DNSv6,
+    Ci.nsINetworkConnectivityService.OK,
+    "Check DNSv6 support (expect OK)"
+  );
 
   httpserver = new HttpServer();
   httpserver.registerPathHandler("/content", contentHandler);
@@ -103,24 +157,52 @@ add_task(async function testDNS() {
   httpserverv6._start(-1, "[::1]");
 
   // Before setting the pref, this status is unknown in automation
-  equal(ncs.IPv4, Ci.nsINetworkConnectivityService.UNKNOWN, "Check IPv4 support (expect UNKNOWN)");
-  equal(ncs.IPv6, Ci.nsINetworkConnectivityService.UNKNOWN, "Check IPv6 support (expect UNKNOWN)");
+  equal(
+    ncs.IPv4,
+    Ci.nsINetworkConnectivityService.UNKNOWN,
+    "Check IPv4 support (expect UNKNOWN)"
+  );
+  equal(
+    ncs.IPv6,
+    Ci.nsINetworkConnectivityService.UNKNOWN,
+    "Check IPv6 support (expect UNKNOWN)"
+  );
 
   Services.prefs.setBoolPref("network.captive-portal-service.testMode", true);
   Services.prefs.setCharPref("network.connectivity-service.IPv4.url", URL);
   Services.prefs.setCharPref("network.connectivity-service.IPv6.url", URLv6);
   ncs.recheckIPConnectivity();
-  await promiseObserverNotification("network:connectivity-service:ip-checks-complete");
+  await promiseObserverNotification(
+    "network:connectivity-service:ip-checks-complete"
+  );
 
-  equal(ncs.IPv4, Ci.nsINetworkConnectivityService.OK, "Check IPv4 support (expect OK)");
-  equal(ncs.IPv6, Ci.nsINetworkConnectivityService.OK, "Check IPv6 support (expect OK)");
+  equal(
+    ncs.IPv4,
+    Ci.nsINetworkConnectivityService.OK,
+    "Check IPv4 support (expect OK)"
+  );
+  equal(
+    ncs.IPv6,
+    Ci.nsINetworkConnectivityService.OK,
+    "Check IPv6 support (expect OK)"
+  );
 
   // check that the CPS status is NOT_AVAILABLE when the endpoint is down.
   await new Promise(resolve => httpserver.stop(resolve));
   await new Promise(resolve => httpserverv6.stop(resolve));
   Services.obs.notifyObservers(null, "network:captive-portal-connectivity");
-  await promiseObserverNotification("network:connectivity-service:ip-checks-complete");
+  await promiseObserverNotification(
+    "network:connectivity-service:ip-checks-complete"
+  );
 
-  equal(ncs.IPv4, Ci.nsINetworkConnectivityService.NOT_AVAILABLE, "Check IPv4 support (expect NOT_AVAILABLE)");
-  equal(ncs.IPv6, Ci.nsINetworkConnectivityService.NOT_AVAILABLE, "Check IPv6 support (expect NOT_AVAILABLE)");
+  equal(
+    ncs.IPv4,
+    Ci.nsINetworkConnectivityService.NOT_AVAILABLE,
+    "Check IPv4 support (expect NOT_AVAILABLE)"
+  );
+  equal(
+    ncs.IPv6,
+    Ci.nsINetworkConnectivityService.NOT_AVAILABLE,
+    "Check IPv6 support (expect NOT_AVAILABLE)"
+  );
 });

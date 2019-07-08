@@ -1,7 +1,10 @@
-import {Navigation, Topic} from "content-src/components/DiscoveryStreamComponents/Navigation/Navigation";
+import {
+  Navigation,
+  Topic,
+} from "content-src/components/DiscoveryStreamComponents/Navigation/Navigation";
 import React from "react";
-import {SafeAnchor} from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
-import {shallow} from "enzyme";
+import { SafeAnchor } from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
+import { shallow } from "enzyme";
 
 describe("<Navigation>", () => {
   let wrapper;
@@ -15,7 +18,7 @@ describe("<Navigation>", () => {
   });
 
   it("should render a title", () => {
-    wrapper.setProps({header: {title: "Foo"}});
+    wrapper.setProps({ header: { title: "Foo" } });
 
     assert.equal(wrapper.find(".ds-header").text(), "Foo");
   });
@@ -23,8 +26,8 @@ describe("<Navigation>", () => {
   it("should render 2 Topics", () => {
     wrapper.setProps({
       links: [
-        {url: "https://foo.com", name: "foo"},
-        {url: "https://bar.com", name: "bar"},
+        { url: "https://foo.com", name: "foo" },
+        { url: "https://bar.com", name: "bar" },
       ],
     });
 
@@ -42,6 +45,12 @@ describe("<Topic>", () => {
   it("should render", () => {
     assert.ok(wrapper.exists());
     assert.equal(wrapper.type(), "li");
-    assert.equal(wrapper.children().at(0).type(), SafeAnchor);
+    assert.equal(
+      wrapper
+        .children()
+        .at(0)
+        .type(),
+      SafeAnchor
+    );
   });
 });

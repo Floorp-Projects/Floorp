@@ -3,11 +3,18 @@
 
 "use strict";
 
-const {AddonsEngine} = ChromeUtils.import("resource://services-sync/engines/addons.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { AddonsEngine } = ChromeUtils.import(
+  "resource://services-sync/engines/addons.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 AddonTestUtils.init(this);
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "1.9.2"
+);
 AddonTestUtils.overrideCertDB();
 
 Services.prefs.setCharPref("extensions.minCompatibleAppVersion", "0");
@@ -27,7 +34,7 @@ const addon1ID = "addon1@tests.mozilla.org";
 const ADDONS = {
   test_addon1: {
     manifest: {
-      applications: {gecko: {id: addon1ID}},
+      applications: { gecko: { id: addon1ID } },
     },
   },
 };
@@ -50,10 +57,10 @@ async function cleanup() {
 
 add_task(async function setup() {
   await Service.engineManager.register(AddonsEngine);
-  engine     = Service.engineManager.get("addons");
+  engine = Service.engineManager.get("addons");
   reconciler = engine._reconciler;
-  store      = engine._store;
-  tracker    = engine._tracker;
+  store = engine._store;
+  tracker = engine._tracker;
 
   // Don't write out by default.
   tracker.persistChangedIDs = false;
@@ -64,7 +71,7 @@ add_task(async function setup() {
 add_task(async function test_empty() {
   _("Verify the tracker is empty to start with.");
 
-  Assert.equal(0, Object.keys((await tracker.getChangedIDs())).length);
+  Assert.equal(0, Object.keys(await tracker.getChangedIDs()).length);
   Assert.equal(0, tracker.score);
 
   await cleanup();
@@ -76,7 +83,7 @@ add_task(async function test_not_tracking() {
   let addon = await installAddon(XPIS.test_addon1, reconciler);
   await uninstallAddon(addon, reconciler);
 
-  Assert.equal(0, Object.keys((await tracker.getChangedIDs())).length);
+  Assert.equal(0, Object.keys(await tracker.getChangedIDs()).length);
   Assert.equal(0, tracker.score);
 
   await cleanup();

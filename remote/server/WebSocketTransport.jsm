@@ -8,7 +8,9 @@
 
 var EXPORTED_SYMBOLS = ["WebSocketDebuggerTransport"];
 
-const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
 
 function WebSocketDebuggerTransport(socket) {
   EventEmitter.decorate(this);
@@ -72,7 +74,9 @@ WebSocketDebuggerTransport.prototype = {
 
   onMessage({ data }) {
     if (typeof data !== "string") {
-      throw new Error("Binary messages are not supported by WebSocket transport");
+      throw new Error(
+        "Binary messages are not supported by WebSocket transport"
+      );
     }
 
     const object = JSON.parse(data);

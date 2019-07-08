@@ -4,12 +4,22 @@
 "use strict";
 
 const { memorySpec } = require("devtools/shared/specs/memory");
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
 
-loader.lazyRequireGetter(this, "FileUtils",
-                         "resource://gre/modules/FileUtils.jsm", true);
-loader.lazyRequireGetter(this, "HeapSnapshotFileUtils",
-                         "devtools/shared/heapsnapshot/HeapSnapshotFileUtils");
+loader.lazyRequireGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "HeapSnapshotFileUtils",
+  "devtools/shared/heapsnapshot/HeapSnapshotFileUtils"
+);
 
 class MemoryFront extends FrontClassWithSpec(memorySpec) {
   constructor(client) {
@@ -42,8 +52,10 @@ class MemoryFront extends FrontClassWithSpec(memorySpec) {
   async saveHeapSnapshot(options = {}) {
     const snapshotId = await super.saveHeapSnapshot(options.boundaries);
 
-    if (!options.forceCopy &&
-        (await HeapSnapshotFileUtils.haveHeapSnapshotTempFile(snapshotId))) {
+    if (
+      !options.forceCopy &&
+      (await HeapSnapshotFileUtils.haveHeapSnapshotTempFile(snapshotId))
+    ) {
       return HeapSnapshotFileUtils.getHeapSnapshotTempFilePath(snapshotId);
     }
 
@@ -72,8 +84,7 @@ class MemoryFront extends FrontClassWithSpec(memorySpec) {
         snapshotId,
       });
 
-      const outFilePath =
-        HeapSnapshotFileUtils.getNewUniqueHeapSnapshotTempFilePath();
+      const outFilePath = HeapSnapshotFileUtils.getNewUniqueHeapSnapshotTempFilePath();
       const outFile = new FileUtils.File(outFilePath);
       const outFileStream = FileUtils.openSafeFileOutputStream(outFile);
 

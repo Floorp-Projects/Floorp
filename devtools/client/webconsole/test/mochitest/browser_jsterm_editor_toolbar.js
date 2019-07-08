@@ -37,11 +37,16 @@ async function performTests() {
   ok(toolbar, "The toolbar is displayed when in editor mode");
 
   info("Test that the toolbar has the expected items");
-  const runButton = toolbar.querySelector(".webconsole-editor-toolbar-executeButton");
+  const runButton = toolbar.querySelector(
+    ".webconsole-editor-toolbar-executeButton"
+  );
   is(runButton.textContent, "Run", "The button has the expected text");
-  const keyShortcut = (Services.appinfo.OS === "Darwin" ? "Cmd" : "Ctrl") + " + Enter";
-  is(runButton.getAttribute("title"),
-    `Run expression (${keyShortcut}). This won’t clear the input.`);
+  const keyShortcut =
+    (Services.appinfo.OS === "Darwin" ? "Cmd" : "Ctrl") + " + Enter";
+  is(
+    runButton.getAttribute("title"),
+    `Run expression (${keyShortcut}). This won’t clear the input.`
+  );
 
   info("Test that clicking on the Run button works as expected");
   // Setting the input value.
@@ -52,7 +57,10 @@ async function performTests() {
   await waitFor(() => findMessage(hud, input));
   await waitFor(() => findMessage(hud, "2 = 2", ".message.result"));
   ok(true, "The expression and its result are displayed in the output");
-  ok(isInputFocused(hud), "input is still focused after clicking the Run button");
+  ok(
+    isInputFocused(hud),
+    "input is still focused after clicking the Run button"
+  );
 }
 
 function getEditorToolbar(hud) {

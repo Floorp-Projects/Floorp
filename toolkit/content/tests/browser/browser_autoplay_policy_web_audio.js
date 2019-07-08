@@ -9,15 +9,18 @@
 "use strict";
 
 ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
-const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_empty.html";
+const PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_empty.html";
 
 function setup_test_preference() {
-  return SpecialPowers.pushPrefEnv({"set": [
-    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
-    ["media.autoplay.enabled.user-gestures-needed", true],
-    ["media.autoplay.block-webaudio", true],
-    ["media.autoplay.block-event.enabled", true],
-  ]});
+  return SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
+      ["media.autoplay.enabled.user-gestures-needed", true],
+      ["media.autoplay.block-webaudio", true],
+      ["media.autoplay.block-event.enabled", true],
+    ],
+  });
 }
 
 function createAudioContext() {
@@ -25,17 +28,25 @@ function createAudioContext() {
   const ac = content.ac;
 
   ac.allowedToStart = new Promise(resolve => {
-    ac.addEventListener("statechange", function() {
-      if (ac.state === "running") {
-        resolve();
-      }
-    }, {once: true});
+    ac.addEventListener(
+      "statechange",
+      function() {
+        if (ac.state === "running") {
+          resolve();
+        }
+      },
+      { once: true }
+    );
   });
 
   ac.notAllowedToStart = new Promise(resolve => {
-    ac.addEventListener("blocked", function() {
-      resolve();
-    }, {once: true});
+    ac.addEventListener(
+      "blocked",
+      function() {
+        resolve();
+      },
+      { once: true }
+    );
   });
 }
 
@@ -54,9 +65,13 @@ async function resumeAudioContext(isAllowedToStart) {
   const ac = content.ac;
   const resumePromise = ac.resume();
   const blockedPromise = new Promise(resolve => {
-    ac.addEventListener("blocked", function() {
-      resolve();
-    }, {once: true});
+    ac.addEventListener(
+      "blocked",
+      function() {
+        resolve();
+      },
+      { once: true }
+    );
   });
 
   if (isAllowedToStart) {
@@ -95,9 +110,12 @@ function startAudioContext(method) {
   node.start();
 }
 
-async function testAutoplayExistingPermission({name, permission}) {
+async function testAutoplayExistingPermission({ name, permission }) {
   info(`- starting \"${name}\" -`);
-  const tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, PAGE);
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    PAGE
+  );
   const browser = tab.linkedBrowser;
 
   info(`- set the 'autoplay-media' permission -`);
@@ -111,25 +129,34 @@ async function testAutoplayExistingPermission({name, permission}) {
 
   info(`- check AudioContext status -`);
   const isAllowedToStart = permission === SitePermissions.ALLOW;
-  await ContentTask.spawn(browser, isAllowedToStart,
-                          checkIfAudioContextIsAllowedToStart);
-  await ContentTask.spawn(browser, isAllowedToStart,
-                          resumeAudioContext);
+  await ContentTask.spawn(
+    browser,
+    isAllowedToStart,
+    checkIfAudioContextIsAllowedToStart
+  );
+  await ContentTask.spawn(browser, isAllowedToStart, resumeAudioContext);
 
   info(`- remove tab -`);
   SitePermissions.remove(browser.currentURI, "autoplay-media");
   await BrowserTestUtils.removeTab(tab);
 }
 
-async function testAutoplayUnknownPermission({name, method}) {
+async function testAutoplayUnknownPermission({ name, method }) {
   info(`- starting \"${name}\" -`);
-  const tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, PAGE);
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    PAGE
+  );
   const browser = tab.linkedBrowser;
 
   info(`- set the 'autoplay-media' permission to UNKNOWN -`);
   const promptShow = () =>
     PopupNotifications.getNotification("autoplay-media", browser);
-  SitePermissions.set(browser.currentURI, "autoplay-media", SitePermissions.UNKNOWN);
+  SitePermissions.set(
+    browser.currentURI,
+    "autoplay-media",
+    SitePermissions.UNKNOWN
+  );
   ok(!promptShow(), `should not be showing permission prompt yet`);
 
   info(`- create AudioContext which should not start -`);
@@ -145,10 +172,16 @@ async function testAutoplayUnknownPermission({name, method}) {
   await ContentTask.spawn(browser, method, startAudioContext);
 
   info(`- check AudioContext status -`);
-  await ContentTask.spawn(browser, true /* allow to start */,
-                          checkIfAudioContextIsAllowedToStart);
-  await ContentTask.spawn(browser, true /* allow to start */,
-                          resumeAudioContext);
+  await ContentTask.spawn(
+    browser,
+    true /* allow to start */,
+    checkIfAudioContextIsAllowedToStart
+  );
+  await ContentTask.spawn(
+    browser,
+    true /* allow to start */,
+    resumeAudioContext
+  );
 
   info(`- remove tab -`);
   SitePermissions.remove(browser.currentURI, "autoplay-media");
@@ -167,11 +200,16 @@ add_task(async function start_tests() {
     name: "Prexisting block permission",
     permission: SitePermissions.BLOCK,
   });
-  const startMethods = ["AudioContext", "AudioBufferSourceNode",
-                        "ConstantSourceNode", "OscillatorNode"];
+  const startMethods = [
+    "AudioContext",
+    "AudioBufferSourceNode",
+    "ConstantSourceNode",
+    "OscillatorNode",
+  ];
   for (let method of startMethods) {
     await testAutoplayUnknownPermission({
-      name: "Unknown permission and start AudioContext after granting user activation",
+      name:
+        "Unknown permission and start AudioContext after granting user activation",
       method,
     });
   }

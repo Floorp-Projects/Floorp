@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {FormAutoCompleteResult} =
-    ChromeUtils.import("resource://gre/modules/nsFormAutoCompleteResult.jsm");
+const { FormAutoCompleteResult } = ChromeUtils.import(
+  "resource://gre/modules/nsFormAutoCompleteResult.jsm"
+);
 
 function InputListAutoComplete() {}
 
@@ -13,19 +14,22 @@ InputListAutoComplete.prototype = {
 
   autoCompleteSearch(aUntrimmedSearchString, aField) {
     let [values, labels] = this.getListSuggestions(aField);
-    let searchResult = values.length > 0 ?
-      Ci.nsIAutoCompleteResult.RESULT_SUCCESS :
-      Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
+    let searchResult =
+      values.length > 0
+        ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
+        : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
     let defaultIndex = values.length > 0 ? 0 : -1;
 
-    return new FormAutoCompleteResult(aUntrimmedSearchString,
-                                      searchResult,
-                                      defaultIndex,
-                                      "",
-                                      values,
-                                      labels,
-                                      [],
-                                      null);
+    return new FormAutoCompleteResult(
+      aUntrimmedSearchString,
+      searchResult,
+      defaultIndex,
+      "",
+      values,
+      labels,
+      [],
+      null
+    );
   },
 
   getListSuggestions(aField) {

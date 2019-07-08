@@ -20,11 +20,18 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, gridInspector, layoutView, toolbox } = await openLayoutView();
+  const {
+    inspector,
+    gridInspector,
+    layoutView,
+    toolbox,
+  } = await openLayoutView();
   const { document: doc } = gridInspector;
   const { store } = inspector;
   const cPicker = layoutView.swatchColorPickerTooltip;
-  const swatch = doc.querySelector("#layout-grid-container .layout-color-swatch");
+  const swatch = doc.querySelector(
+    "#layout-grid-container .layout-color-swatch"
+  );
 
   info("Scrolling into view of the #grid color swatch.");
   swatch.scrollIntoView();
@@ -42,7 +49,14 @@ add_task(async function() {
   await openLayoutView();
 
   info("Check that the previously set custom color is used.");
-  is(swatch.style.backgroundColor, "rgb(51, 48, 0)",
-    "The color swatch's background is correct.");
-  is(store.getState().grids[0].color, "#333000", "The grid color state is correct.");
+  is(
+    swatch.style.backgroundColor,
+    "rgb(51, 48, 0)",
+    "The color swatch's background is correct."
+  );
+  is(
+    store.getState().grids[0].color,
+    "#333000",
+    "The grid color state is correct."
+  );
 });

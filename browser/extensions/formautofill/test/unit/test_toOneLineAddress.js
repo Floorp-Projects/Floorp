@@ -1,9 +1,10 @@
-
 "use strict";
 
 var FormAutofillUtils;
 add_task(async function setup() {
-  ({FormAutofillUtils} = ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm"));
+  ({ FormAutofillUtils } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillUtils.jsm"
+  ));
 });
 
 add_task(async function test_getCategoriesFromFieldNames() {

@@ -10,6 +10,7 @@ import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import android.view.Surface
 import org.hamcrest.Matchers.*
+import org.junit.Ignore
 import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
@@ -101,6 +102,7 @@ class ScreenshotTest : BaseSessionTest() {
         }
     }
 
+    @Ignore //Disable test for frequent failures Bug 1557569
     @Test
     fun capturePixelsThrowsCompositorNotReady() {
         expectedEx.expect(IllegalStateException::class.java)

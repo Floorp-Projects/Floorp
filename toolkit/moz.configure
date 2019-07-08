@@ -698,52 +698,14 @@ id_and_secret_keyfile('Leanplum SDK')
 simple_keyfile('Pocket API')
 
 
-# WebRender integration
+# WebRender Debugger integration
 # ==============================================================
-
-option('--enable-webrender', nargs='?', choices=('build',),
-       help='Include WebRender in the build and/or enable it at runtime')
-
-@depends('--enable-webrender')
-def webrender(value):
-    build_webrender = None
-    enable_webrender = None
-
-    if value.origin == 'default':
-        # if nothing is specified, default to building
-        build_webrender = True
-    elif len(value) and value[0] == 'build':
-        # if explicitly set to 'build', then we build but don't enable
-        build_webrender = True
-    elif bool(value):
-        # if set to true, then build and enable
-        build_webrender = True
-        enable_webrender = True
-
-    # in all other cases, don't build it or enable it (defaults are fine)
-    return namespace(
-        build = build_webrender,
-        enable = enable_webrender,
-    )
 
 option('--enable-webrender-debugger',
        help='Build the websocket debug server in WebRender')
 
-@depends(webrender, '--enable-webrender-debugger')
-def webrender_debugger(webrender, debugger):
-    if debugger.origin == 'default':
-        # Not trying to build the debuger
-        return None
-    if not webrender.build and debugger:
-        die('Cannot build WR debugger without also building webrender')
-    if debugger:
-        return True
-    return None
-
-set_config('MOZ_BUILD_WEBRENDER', webrender.build)
-set_define('MOZ_BUILD_WEBRENDER', webrender.build)
-set_config('MOZ_ENABLE_WEBRENDER', webrender.enable)
-set_config('MOZ_WEBRENDER_DEBUGGER', webrender_debugger)
+set_config('MOZ_WEBRENDER_DEBUGGER',
+           depends_if('--enable-webrender-debugger')(lambda _: True))
 
 # SIMD acceleration for Rust code (currently just encoding_rs)
 # ==============================================================

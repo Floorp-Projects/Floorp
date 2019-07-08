@@ -50,7 +50,11 @@ function test_promises_run_to_completion() {
     // run.
     log[0] += "debug-handler(";
     Promise.resolve(42).then(v => {
-      Assert.equal(v, 42, "debugger callback promise handler got the right value");
+      Assert.equal(
+        v,
+        42,
+        "debugger callback promise handler got the right value"
+      );
       log[0] += "debug-react";
     });
     log[0] += "(";
@@ -68,7 +72,8 @@ function test_promises_run_to_completion() {
   };
 
   // Evaluate some debuggee code that resolves a promise, and then enters the debugger.
-  Cu.evalInSandbox(`
+  Cu.evalInSandbox(
+    `
     log[0] += "eval(";
     Promise.resolve(42).then(function debuggeePromiseCallback(v) {
       Assert.equal(v, 42, "debuggee promise handler got the right value");
@@ -81,14 +86,18 @@ function test_promises_run_to_completion() {
     log[0] += "debugger(";
     debugger;
     log[0] += "))";
-  `, g);
+  `,
+    g
+  );
 
   // Let other microtasks run. This should run the debuggee's promise callback.
   log[0] += "final(";
   force_microtask_checkpoint();
   log[0] += ")";
 
-  Assert.equal(log[0], `\
+  Assert.equal(
+    log[0],
+    `\
 eval(\
 debugger(\
 debug-handler(\
@@ -99,7 +108,8 @@ debug-handler(\
 final(\
 eval-react\
 )`,
-               "microtasks ran as expected");
+    "microtasks ran as expected"
+  );
 
   run_next_test();
 }

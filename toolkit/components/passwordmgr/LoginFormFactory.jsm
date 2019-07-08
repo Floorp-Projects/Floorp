@@ -11,17 +11,24 @@
 
 const EXPORTED_SYMBOLS = ["LoginFormFactory"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "FormLikeFactory",
-                               "resource://gre/modules/FormLikeFactory.jsm");
-ChromeUtils.defineModuleGetter(this, "LoginHelper",
-                               "resource://gre/modules/LoginHelper.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormLikeFactory",
+  "resource://gre/modules/FormLikeFactory.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginHelper",
+  "resource://gre/modules/LoginHelper.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   return LoginHelper.createLogger("LoginFormFactory");
 });
-
 
 this.LoginFormFactory = {
   /**
@@ -54,9 +61,16 @@ this.LoginFormFactory = {
     let formLike = FormLikeFactory.createFromForm(aForm);
     formLike.action = LoginHelper.getFormActionOrigin(aForm);
 
-    let rootElementsSet = this.getRootElementsWeakSetForDocument(formLike.ownerDocument);
+    let rootElementsSet = this.getRootElementsWeakSetForDocument(
+      formLike.ownerDocument
+    );
     rootElementsSet.add(formLike.rootElement);
-    log.debug("adding", formLike.rootElement, "to root elements for", formLike.ownerDocument);
+    log.debug(
+      "adding",
+      formLike.rootElement,
+      "to root elements for",
+      formLike.ownerDocument
+    );
 
     this._loginFormsByRootElement.set(formLike.rootElement, formLike);
     return formLike;
@@ -79,10 +93,14 @@ this.LoginFormFactory = {
    * @throws Error if aField isn't a password or username field in a document
    */
   createFromField(aField) {
-    if (ChromeUtils.getClassName(aField) !== "HTMLInputElement" ||
-        (aField.type != "password" && !LoginHelper.isUsernameFieldType(aField)) ||
-        !aField.ownerDocument) {
-      throw new Error("createFromField requires a password or username field in a document");
+    if (
+      ChromeUtils.getClassName(aField) !== "HTMLInputElement" ||
+      (aField.type != "password" && !LoginHelper.isUsernameFieldType(aField)) ||
+      !aField.ownerDocument
+    ) {
+      throw new Error(
+        "createFromField requires a password or username field in a document"
+      );
     }
 
     if (aField.form) {
@@ -91,12 +109,21 @@ this.LoginFormFactory = {
 
     let formLike = FormLikeFactory.createFromField(aField);
     formLike.action = LoginHelper.getLoginOrigin(aField.ownerDocument.baseURI);
-    log.debug("Created non-form LoginForm for rootElement:", aField.ownerDocument.documentElement);
+    log.debug(
+      "Created non-form LoginForm for rootElement:",
+      aField.ownerDocument.documentElement
+    );
 
-    let rootElementsSet = this.getRootElementsWeakSetForDocument(formLike.ownerDocument);
+    let rootElementsSet = this.getRootElementsWeakSetForDocument(
+      formLike.ownerDocument
+    );
     rootElementsSet.add(formLike.rootElement);
-    log.debug("adding", formLike.rootElement, "to root elements for", formLike.ownerDocument);
-
+    log.debug(
+      "adding",
+      formLike.rootElement,
+      "to root elements for",
+      formLike.ownerDocument
+    );
 
     this._loginFormsByRootElement.set(formLike.rootElement, formLike);
 

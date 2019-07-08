@@ -2,39 +2,41 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const {
-  AbuseReporter,
-  AbuseReportError,
-} = ChromeUtils.import("resource://gre/modules/AbuseReporter.jsm");
+const { AbuseReporter, AbuseReportError } = ChromeUtils.import(
+  "resource://gre/modules/AbuseReporter.jsm"
+);
 
-const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
-const {
-  TelemetryController,
-} = ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
-const {
-  TelemetryTestUtils,
-} = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
+const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const { TelemetryController } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryController.jsm"
+);
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
 const APPNAME = "XPCShell";
 const APPVERSION = "1";
 const ADDON_ID = "test-addon@tests.mozilla.org";
 const ADDON_ID2 = "test-addon2@tests.mozilla.org";
-const FAKE_INSTALL_INFO = {source: "fake-install-method"};
-const REPORT_OPTIONS = {reportEntryPoint: "menu"};
-const TELEMETRY_EVENTS_FILTERS = {category: "addonsManager", method: "report"};
+const FAKE_INSTALL_INFO = { source: "fake-install-method" };
+const REPORT_OPTIONS = { reportEntryPoint: "menu" };
+const TELEMETRY_EVENTS_FILTERS = {
+  category: "addonsManager",
+  method: "report",
+};
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "49");
 
 let apiRequestHandler;
-const server = createHttpServer({hosts: ["test.addons.org"]});
+const server = createHttpServer({ hosts: ["test.addons.org"] });
 server.registerPathHandler("/api/report/", (request, response) => {
   const stream = request.bodyInputStream;
   const buffer = NetUtil.readInputStream(stream, stream.available());
   const data = new TextDecoder().decode(buffer);
-  apiRequestHandler({data, request, response});
+  apiRequestHandler({ data, request, response });
 });
 
-function handleSubmitRequest({request, response}) {
+function handleSubmitRequest({ request, response }) {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "application/json", false);
   response.write("{}");
@@ -48,7 +50,7 @@ async function clearAbuseReportState() {
 async function installTestExtension(overrideOptions = {}) {
   const extOptions = {
     manifest: {
-      applications: {gecko: {id: ADDON_ID}},
+      applications: { gecko: { id: ADDON_ID } },
       name: "Test Extension",
     },
     useAddonManager: "permanent",
@@ -61,54 +63,96 @@ async function installTestExtension(overrideOptions = {}) {
 
   const addon = await AddonManager.getAddonByID(ADDON_ID);
 
-  return {extension, addon};
+  return { extension, addon };
 }
 
 async function assertRejectsAbuseReportError(promise, errorType, errorInfo) {
   let error;
 
-  await Assert.rejects(promise, err => {
-    // Log the actual error to make investigating test failures easier.
-    Cu.reportError(err);
-    error = err;
-    return err instanceof AbuseReportError;
-  }, `Got an AbuseReportError`);
+  await Assert.rejects(
+    promise,
+    err => {
+      // Log the actual error to make investigating test failures easier.
+      Cu.reportError(err);
+      error = err;
+      return err instanceof AbuseReportError;
+    },
+    `Got an AbuseReportError`
+  );
 
   equal(error.errorType, errorType, "Got the expected errorType");
   equal(error.errorInfo, errorInfo, "Got the expected errorInfo");
-  ok(error.message.includes(errorType),
-    "errorType should be included in the error message");
+  ok(
+    error.message.includes(errorType),
+    "errorType should be included in the error message"
+  );
   if (errorInfo) {
-    ok(error.message.includes(errorInfo),
-      "errorInfo should be included in the error message");
+    ok(
+      error.message.includes(errorInfo),
+      "errorInfo should be included in the error message"
+    );
   }
 }
 
-async function assertBaseReportData({reportData, addon}) {
+async function assertBaseReportData({ reportData, addon }) {
   // Report properties related to addon metadata.
   equal(reportData.addon, ADDON_ID, "Got expected 'addon'");
-  equal(reportData.addon_version, addon.version, "Got expected 'addon_version'");
-  equal(reportData.install_date, addon.installDate.toISOString(),
-        "Got expected 'install_date' in ISO format");
-  equal(reportData.addon_install_origin, addon.sourceURI.spec,
-        "Got expected 'addon_install_origin'");
-  equal(reportData.addon_install_method, "other",
-        "Got expected 'addon_install_method'");
-  equal(reportData.addon_signature, "privileged", "Got expected 'addon_signature'");
+  equal(
+    reportData.addon_version,
+    addon.version,
+    "Got expected 'addon_version'"
+  );
+  equal(
+    reportData.install_date,
+    addon.installDate.toISOString(),
+    "Got expected 'install_date' in ISO format"
+  );
+  equal(
+    reportData.addon_install_origin,
+    addon.sourceURI.spec,
+    "Got expected 'addon_install_origin'"
+  );
+  equal(
+    reportData.addon_install_method,
+    "other",
+    "Got expected 'addon_install_method'"
+  );
+  equal(
+    reportData.addon_signature,
+    "privileged",
+    "Got expected 'addon_signature'"
+  );
 
   // Report properties related to the environment.
-  equal(reportData.client_id, await ClientID.getClientIdHash(),
-        "Got the expected 'client_id'");
+  equal(
+    reportData.client_id,
+    await ClientID.getClientIdHash(),
+    "Got the expected 'client_id'"
+  );
   equal(reportData.app, APPNAME.toLowerCase(), "Got expected 'app'");
   equal(reportData.appversion, APPVERSION, "Got expected 'appversion'");
-  equal(reportData.lang, Services.locale.appLocaleAsLangTag, "Got expected 'lang'");
-  equal(reportData.operating_system, AppConstants.platform, "Got expected 'operating_system'");
-  equal(reportData.operating_system_version, Services.sysinfo.getProperty("version"),
-        "Got expected 'operating_system_version'");
+  equal(
+    reportData.lang,
+    Services.locale.appLocaleAsLangTag,
+    "Got expected 'lang'"
+  );
+  equal(
+    reportData.operating_system,
+    AppConstants.platform,
+    "Got expected 'operating_system'"
+  );
+  equal(
+    reportData.operating_system_version,
+    Services.sysinfo.getProperty("version"),
+    "Got expected 'operating_system_version'"
+  );
 }
 
 add_task(async function test_setup() {
-  Services.prefs.setCharPref("extensions.abuseReport.url", "http://test.addons.org/api/report/");
+  Services.prefs.setCharPref(
+    "extensions.abuseReport.url",
+    "http://test.addons.org/api/report/"
+  );
   await promiseStartupManager();
   // Telemetry test setup needed to ensure that the builtin events are defined
   // and they can be collected and verified.
@@ -126,30 +170,32 @@ add_task(async function test_setup() {
 
 add_task(async function test_addon_report_data() {
   info("Verify report property for a privileged extension");
-  const {addon, extension} = await installTestExtension();
+  const { addon, extension } = await installTestExtension();
   const data = await AbuseReporter.getReportData(addon);
-  await assertBaseReportData({reportData: data, addon});
+  await assertBaseReportData({ reportData: data, addon });
   await extension.unload();
 
   info("Verify 'addon_signature' report property for non privileged extension");
   AddonTestUtils.usePrivilegedSignatures = false;
-  const {
-    addon: addon2,
-    extension: extension2,
-  } = await installTestExtension();
+  const { addon: addon2, extension: extension2 } = await installTestExtension();
   const data2 = await AbuseReporter.getReportData(addon2);
-  equal(data2.addon_signature, "signed",
-        "Got expected 'addon_signature' for non privileged extension");
+  equal(
+    data2.addon_signature,
+    "signed",
+    "Got expected 'addon_signature' for non privileged extension"
+  );
   await extension2.unload();
 
   info("Verify 'addon_install_method' report property on temporary install");
-  const {
-    addon: addon3,
-    extension: extension3,
-  } = await installTestExtension({useAddonManager: "temporary"});
+  const { addon: addon3, extension: extension3 } = await installTestExtension({
+    useAddonManager: "temporary",
+  });
   const data3 = await AbuseReporter.getReportData(addon3);
-  equal(data3.addon_install_method, "temporary_addon",
-        "Got expected 'addon_install_method' on temporary install");
+  equal(
+    data3.addon_install_method,
+    "temporary_addon",
+    "Got expected 'addon_install_method' on temporary install"
+  );
   await extension3.unload();
 });
 
@@ -158,45 +204,64 @@ add_task(async function test_report_on_not_installed_addon() {
 
   await assertRejectsAbuseReportError(
     AbuseReporter.createAbuseReport(ADDON_ID, REPORT_OPTIONS),
-    "ERROR_ADDON_NOTFOUND");
+    "ERROR_ADDON_NOTFOUND"
+  );
 
-  TelemetryTestUtils.assertEvents([{
-    object: REPORT_OPTIONS.reportEntryPoint,
-    value: ADDON_ID,
-    extra: {error_type: "ERROR_ADDON_NOTFOUND"},
-  }], TELEMETRY_EVENTS_FILTERS);
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        object: REPORT_OPTIONS.reportEntryPoint,
+        value: ADDON_ID,
+        extra: { error_type: "ERROR_ADDON_NOTFOUND" },
+      },
+    ],
+    TELEMETRY_EVENTS_FILTERS
+  );
 });
 
 // This tests verifies the mapping between the addon installTelemetryInfo
 // values and the addon_install_method expected by the API endpoint.
 add_task(async function test_addon_install_method_mapping() {
   async function assertAddonInstallMethod(amInstallTelemetryInfo, expected) {
-    const {addon, extension} = await installTestExtension({amInstallTelemetryInfo});
-    const {addon_install_method} = await AbuseReporter.getReportData(addon);
-    equal(addon_install_method, expected,
-          `Got the expected addon_install_method for ${JSON.stringify(amInstallTelemetryInfo)}`);
+    const { addon, extension } = await installTestExtension({
+      amInstallTelemetryInfo,
+    });
+    const { addon_install_method } = await AbuseReporter.getReportData(addon);
+    equal(
+      addon_install_method,
+      expected,
+      `Got the expected addon_install_method for ${JSON.stringify(
+        amInstallTelemetryInfo
+      )}`
+    );
     await extension.unload();
   }
 
   // Array of [ expected, amInstallTelemetryInfo ]
   const TEST_CASES = [
-    ["amwebapi", {source: "amo", method: "amWebAPI"}],
-    ["amwebapi", {source: "disco", method: "amWebAPI"}],
-    ["distribution", {source: "distribution"}],
-    ["drag_and_drop", {source: "about:addons", method: "drag-and-drop"}],
-    ["enterprise_policy", {source: "enterprise-policy"}],
-    ["file_url", {source: "file-url"}],
-    ["install_from_file", {source: "about:addons", method: "install-from-file"}],
-    ["installtrigger", {source: "test-host", method: "installTrigger"}],
-    ["link", {source: "unknown", method: "link"}],
-    ["management_webext_api", {source: "extension", method: "management-webext-api"}],
-    ["sideload", {source: "app-profile", method: "sideload"}],
-    ["sync", {source: "sync"}],
-    ["system_addon", {source: "system-addon"}],
-    ["temporary_addon", {source: "temporary-addon"}],
-    ["other", {source: "internal"}],
-    ["other", {source: "about:debugging"}],
-    ["other", {source: "webide"}],
+    ["amwebapi", { source: "amo", method: "amWebAPI" }],
+    ["amwebapi", { source: "disco", method: "amWebAPI" }],
+    ["distribution", { source: "distribution" }],
+    ["drag_and_drop", { source: "about:addons", method: "drag-and-drop" }],
+    ["enterprise_policy", { source: "enterprise-policy" }],
+    ["file_url", { source: "file-url" }],
+    [
+      "install_from_file",
+      { source: "about:addons", method: "install-from-file" },
+    ],
+    ["installtrigger", { source: "test-host", method: "installTrigger" }],
+    ["link", { source: "unknown", method: "link" }],
+    [
+      "management_webext_api",
+      { source: "extension", method: "management-webext-api" },
+    ],
+    ["sideload", { source: "app-profile", method: "sideload" }],
+    ["sync", { source: "sync" }],
+    ["system_addon", { source: "system-addon" }],
+    ["temporary_addon", { source: "temporary-addon" }],
+    ["other", { source: "internal" }],
+    ["other", { source: "about:debugging" }],
+    ["other", { source: "webide" }],
   ];
 
   for (const [expected, telemetryInfo] of TEST_CASES) {
@@ -210,18 +275,24 @@ add_task(async function test_report_create_and_submit() {
   // Override the test api server request handler, to be able to
   // intercept the submittions to the test api server.
   let reportSubmitted;
-  apiRequestHandler = ({data, request, response}) => {
+  apiRequestHandler = ({ data, request, response }) => {
     reportSubmitted = JSON.parse(data);
-    handleSubmitRequest({request, response});
+    handleSubmitRequest({ request, response });
   };
 
-  const {addon, extension} = await installTestExtension();
+  const { addon, extension } = await installTestExtension();
 
   const reportEntryPoint = "menu";
-  const report = await AbuseReporter.createAbuseReport(ADDON_ID, {reportEntryPoint});
+  const report = await AbuseReporter.createAbuseReport(ADDON_ID, {
+    reportEntryPoint,
+  });
 
   equal(report.addon, addon, "Got the expected addon property");
-  equal(report.reportEntryPoint, reportEntryPoint, "Got the expected reportEntryPoint");
+  equal(
+    report.reportEntryPoint,
+    reportEntryPoint,
+    "Got the expected reportEntryPoint"
+  );
 
   const baseReportData = await AbuseReporter.getReportData(addon);
   const reportProperties = {
@@ -239,15 +310,23 @@ add_task(async function test_report_create_and_submit() {
   });
 
   for (const [expectedKey, expectedValue] of expectedEntries) {
-    equal(reportSubmitted[expectedKey], expectedValue,
-          `Got the expected submitted value for "${expectedKey}"`);
+    equal(
+      reportSubmitted[expectedKey],
+      expectedValue,
+      `Got the expected submitted value for "${expectedKey}"`
+    );
   }
 
-  TelemetryTestUtils.assertEvents([{
-    object: reportEntryPoint,
-    value: ADDON_ID,
-    extra: {addon_type: "extension"},
-  }], TELEMETRY_EVENTS_FILTERS);
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        object: reportEntryPoint,
+        value: ADDON_ID,
+        extra: { addon_type: "extension" },
+      },
+    ],
+    TELEMETRY_EVENTS_FILTERS
+  );
 
   await extension.unload();
 });
@@ -257,53 +336,64 @@ add_task(async function test_error_recent_submit() {
   await clearAbuseReportState();
 
   let reportSubmitted;
-  apiRequestHandler = ({data, request, response}) => {
+  apiRequestHandler = ({ data, request, response }) => {
     reportSubmitted = JSON.parse(data);
-    handleSubmitRequest({request, response});
+    handleSubmitRequest({ request, response });
   };
 
-  const {extension} = await installTestExtension();
+  const { extension } = await installTestExtension();
   const report = await AbuseReporter.createAbuseReport(ADDON_ID, {
     reportEntryPoint: "uninstall",
   });
 
-  const {extension: extension2} = await installTestExtension({
+  const { extension: extension2 } = await installTestExtension({
     manifest: {
-      applications: {gecko: {id: ADDON_ID2}},
+      applications: { gecko: { id: ADDON_ID2 } },
       name: "Test Extension2",
     },
   });
-  const report2 = await AbuseReporter.createAbuseReport(ADDON_ID2, REPORT_OPTIONS);
+  const report2 = await AbuseReporter.createAbuseReport(
+    ADDON_ID2,
+    REPORT_OPTIONS
+  );
 
   // Submit the two reports in fast sequence.
-  await report.submit({reason: "reason1"});
-  await assertRejectsAbuseReportError(report2.submit({reason: "reason2"}),
-                                      "ERROR_RECENT_SUBMIT");
-  equal(reportSubmitted.reason, "reason1",
-        "Server only received the data from the first submission");
+  await report.submit({ reason: "reason1" });
+  await assertRejectsAbuseReportError(
+    report2.submit({ reason: "reason2" }),
+    "ERROR_RECENT_SUBMIT"
+  );
+  equal(
+    reportSubmitted.reason,
+    "reason1",
+    "Server only received the data from the first submission"
+  );
 
-  TelemetryTestUtils.assertEvents([
-    {
-      object: "uninstall",
-      value: ADDON_ID,
-      extra: {addon_type: "extension"},
-    },
-    {
-      object: REPORT_OPTIONS.reportEntryPoint,
-      value: ADDON_ID2,
-      extra: {
-        addon_type: "extension",
-        error_type: "ERROR_RECENT_SUBMIT",
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        object: "uninstall",
+        value: ADDON_ID,
+        extra: { addon_type: "extension" },
       },
-    },
-  ], TELEMETRY_EVENTS_FILTERS);
+      {
+        object: REPORT_OPTIONS.reportEntryPoint,
+        value: ADDON_ID2,
+        extra: {
+          addon_type: "extension",
+          error_type: "ERROR_RECENT_SUBMIT",
+        },
+      },
+    ],
+    TELEMETRY_EVENTS_FILTERS
+  );
 
   await extension.unload();
   await extension2.unload();
 });
 
 add_task(async function test_submission_server_error() {
-  const {extension} = await installTestExtension();
+  const { extension } = await installTestExtension();
 
   async function testErrorCode({
     responseStatus,
@@ -312,39 +402,57 @@ add_task(async function test_submission_server_error() {
     expectedErrorInfo,
     expectRequest = true,
   }) {
-    info(`Test expected AbuseReportError on response status "${responseStatus}"`);
+    info(
+      `Test expected AbuseReportError on response status "${responseStatus}"`
+    );
     Services.telemetry.clearEvents();
     await clearAbuseReportState();
 
     let requestReceived = false;
-    apiRequestHandler = ({request, response}) => {
+    apiRequestHandler = ({ request, response }) => {
       requestReceived = true;
       response.setStatusLine(request.httpVersion, responseStatus, "Error");
       response.write(responseText);
     };
 
-    const report = await AbuseReporter.createAbuseReport(ADDON_ID, REPORT_OPTIONS);
-    const promiseSubmit = report.submit({reason: "a-reason"});
+    const report = await AbuseReporter.createAbuseReport(
+      ADDON_ID,
+      REPORT_OPTIONS
+    );
+    const promiseSubmit = report.submit({ reason: "a-reason" });
     if (typeof expectedErrorType === "string") {
       // Assert a specific AbuseReportError errorType.
       await assertRejectsAbuseReportError(
-        promiseSubmit, expectedErrorType, expectedErrorInfo);
+        promiseSubmit,
+        expectedErrorType,
+        expectedErrorInfo
+      );
     } else {
       // Assert on a given Error class.
       await Assert.rejects(promiseSubmit, expectedErrorType);
     }
-    equal(requestReceived, expectRequest,
-          `${expectRequest ? "" : "Not "}received a request as expected`);
+    equal(
+      requestReceived,
+      expectRequest,
+      `${expectRequest ? "" : "Not "}received a request as expected`
+    );
 
-    TelemetryTestUtils.assertEvents([{
-      object: REPORT_OPTIONS.reportEntryPoint,
-      value: ADDON_ID,
-      extra: {
-        addon_type: "extension",
-        error_type: typeof expectedErrorType === "string" ?
-          expectedErrorType : "ERROR_UNKNOWN",
-      },
-    }], TELEMETRY_EVENTS_FILTERS);
+    TelemetryTestUtils.assertEvents(
+      [
+        {
+          object: REPORT_OPTIONS.reportEntryPoint,
+          value: ADDON_ID,
+          extra: {
+            addon_type: "extension",
+            error_type:
+              typeof expectedErrorType === "string"
+                ? expectedErrorType
+                : "ERROR_UNKNOWN",
+          },
+        },
+      ],
+      TELEMETRY_EVENTS_FILTERS
+    );
   }
 
   await testErrorCode({
@@ -382,8 +490,10 @@ add_task(async function test_submission_server_error() {
   });
 
   // Test on invalid url.
-  Services.prefs.setCharPref("extensions.abuseReport.url",
-                             "invalid-protocol://abuse-report");
+  Services.prefs.setCharPref(
+    "extensions.abuseReport.url",
+    "invalid-protocol://abuse-report"
+  );
   await testErrorCode({
     expectedErrorType: "ERROR_NETWORK",
     expectRequest: false,
@@ -393,23 +503,27 @@ add_task(async function test_submission_server_error() {
 });
 
 add_task(async function set_test_abusereport_url() {
-  Services.prefs.setCharPref("extensions.abuseReport.url",
-                             "http://test.addons.org/api/report/");
+  Services.prefs.setCharPref(
+    "extensions.abuseReport.url",
+    "http://test.addons.org/api/report/"
+  );
 });
 
 add_task(async function test_submission_aborting() {
   Services.telemetry.clearEvents();
   await clearAbuseReportState();
 
-  const {extension} = await installTestExtension();
+  const { extension } = await installTestExtension();
 
   // override the api request handler with one that is never going to reply.
   let receivedRequestsCount = 0;
   let resolvePendingResponses;
-  const waitToReply = new Promise(resolve => resolvePendingResponses = resolve);
+  const waitToReply = new Promise(
+    resolve => (resolvePendingResponses = resolve)
+  );
 
   const onRequestReceived = new Promise(resolve => {
-    apiRequestHandler = ({request, response}) => {
+    apiRequestHandler = ({ request, response }) => {
       response.processAsync();
       response.setStatusLine(request.httpVersion, 200, "OK");
       receivedRequestsCount++;
@@ -423,24 +537,35 @@ add_task(async function test_submission_aborting() {
     };
   });
 
-  const report = await AbuseReporter.createAbuseReport(ADDON_ID, REPORT_OPTIONS);
-  const promiseResult = report.submit({reason: "a-reason"});
+  const report = await AbuseReporter.createAbuseReport(
+    ADDON_ID,
+    REPORT_OPTIONS
+  );
+  const promiseResult = report.submit({ reason: "a-reason" });
 
   await onRequestReceived;
 
   ok(receivedRequestsCount > 0, "Got the expected number of requests");
-  ok(await Promise.race([promiseResult, Promise.resolve("pending")]) === "pending",
-    "Submission fetch request should still be pending");
+  ok(
+    (await Promise.race([promiseResult, Promise.resolve("pending")])) ===
+      "pending",
+    "Submission fetch request should still be pending"
+  );
 
   report.abort();
 
   await assertRejectsAbuseReportError(promiseResult, "ERROR_ABORTED_SUBMIT");
 
-  TelemetryTestUtils.assertEvents([{
-    object: REPORT_OPTIONS.reportEntryPoint,
-    value: ADDON_ID,
-    extra: {addon_type: "extension", error_type: "ERROR_ABORTED_SUBMIT"},
-  }], TELEMETRY_EVENTS_FILTERS);
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        object: REPORT_OPTIONS.reportEntryPoint,
+        value: ADDON_ID,
+        extra: { addon_type: "extension", error_type: "ERROR_ABORTED_SUBMIT" },
+      },
+    ],
+    TELEMETRY_EVENTS_FILTERS
+  );
 
   await extension.unload();
 
@@ -451,39 +576,45 @@ add_task(async function test_submission_aborting() {
 });
 
 add_task(async function test_truncated_string_properties() {
-  const generateString = len => (new Array(len)).fill("a").join("");
+  const generateString = len => new Array(len).fill("a").join("");
 
   const LONG_STRINGS_ADDON_ID = "addon-with-long-strings-props@mochi.test";
-  const {extension} = await installTestExtension({
+  const { extension } = await installTestExtension({
     manifest: {
       name: generateString(400),
       description: generateString(400),
-      applications: {gecko: {id: LONG_STRINGS_ADDON_ID}},
+      applications: { gecko: { id: LONG_STRINGS_ADDON_ID } },
     },
   });
 
   // Override the test api server request handler, to be able to
   // intercept the properties actually submitted.
   let reportSubmitted;
-  apiRequestHandler = ({data, request, response}) => {
+  apiRequestHandler = ({ data, request, response }) => {
     reportSubmitted = JSON.parse(data);
-    handleSubmitRequest({request, response});
+    handleSubmitRequest({ request, response });
   };
 
   const report = await AbuseReporter.createAbuseReport(
-    LONG_STRINGS_ADDON_ID, REPORT_OPTIONS);
+    LONG_STRINGS_ADDON_ID,
+    REPORT_OPTIONS
+  );
 
-  await report.submit({message: "fake-message", reason: "fake-reason"});
+  await report.submit({ message: "fake-message", reason: "fake-reason" });
 
   const expected = {
     addon_name: generateString(255),
     addon_summary: generateString(255),
   };
 
-  Assert.deepEqual({
-    addon_name: reportSubmitted.addon_name,
-    addon_summary: reportSubmitted.addon_summary,
-  }, expected, "Got the long strings truncated as expected");
+  Assert.deepEqual(
+    {
+      addon_name: reportSubmitted.addon_name,
+      addon_summary: reportSubmitted.addon_summary,
+    },
+    expected,
+    "Got the long strings truncated as expected"
+  );
 
   await extension.unload();
 });
@@ -496,23 +627,23 @@ add_task(async function test_report_recommended() {
   const not_before = new Date(now - 3600000).toISOString();
   const not_after = new Date(now + 3600000).toISOString();
 
-  const {extension: nonRecommended} = await installTestExtension({
+  const { extension: nonRecommended } = await installTestExtension({
     manifest: {
       name: "Fake non recommended addon",
-      applications: {gecko: {id: NON_RECOMMENDED_ADDON_ID}},
+      applications: { gecko: { id: NON_RECOMMENDED_ADDON_ID } },
     },
   });
 
-  const {extension: recommended} = await installTestExtension({
+  const { extension: recommended } = await installTestExtension({
     manifest: {
       name: "Fake recommended addon",
-      applications: {gecko: {id: RECOMMENDED_ADDON_ID}},
+      applications: { gecko: { id: RECOMMENDED_ADDON_ID } },
     },
     files: {
       "mozilla-recommendation.json": {
         addon_id: RECOMMENDED_ADDON_ID,
         states: ["recommended"],
-        validity: {not_before, not_after},
+        validity: { not_before, not_after },
       },
     },
   });
@@ -520,18 +651,23 @@ add_task(async function test_report_recommended() {
   // Override the test api server request handler, to be able to
   // intercept the properties actually submitted.
   let reportSubmitted;
-  apiRequestHandler = ({data, request, response}) => {
+  apiRequestHandler = ({ data, request, response }) => {
     reportSubmitted = JSON.parse(data);
-    handleSubmitRequest({request, response});
+    handleSubmitRequest({ request, response });
   };
 
   async function checkReportedSignature(addonId, expectedAddonSignature) {
     await clearAbuseReportState();
     const report = await AbuseReporter.createAbuseReport(
-      addonId, REPORT_OPTIONS);
-    await report.submit({message: "fake-message", reason: "fake-reason"});
-    equal(reportSubmitted.addon_signature, expectedAddonSignature,
-      `Got the expected addon_signature for ${addonId}`);
+      addonId,
+      REPORT_OPTIONS
+    );
+    await report.submit({ message: "fake-message", reason: "fake-reason" });
+    equal(
+      reportSubmitted.addon_signature,
+      expectedAddonSignature,
+      `Got the expected addon_signature for ${addonId}`
+    );
   }
 
   await checkReportedSignature(NON_RECOMMENDED_ADDON_ID, "signed");

@@ -8,8 +8,9 @@
 // state that change, the front reconstructs the whole state everytime.
 
 add_task(async function() {
-  const {target, walker, animations} =
-    await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
+  const { target, walker, animations } = await initAnimationsFrontForUrl(
+    MAIN_DOMAIN + "animation.html"
+  );
 
   await playerHasCompleteStateAtAllTimes(walker, animations);
 
@@ -30,8 +31,10 @@ async function playerHasCompleteStateAtAllTimes(walker, animations) {
   for (let i = 0; i < 10; i++) {
     await player.refreshState();
     keys.forEach(key => {
-      ok(typeof player.state[key] !== "undefined",
-         "The state retrieved has key " + key);
+      ok(
+        typeof player.state[key] !== "undefined",
+        "The state retrieved has key " + key
+      );
     });
   }
 }

@@ -3864,6 +3864,9 @@ bool nsCookieService::ParseAttributes(nsCString& aCookieHeader,
     }
   }
 
+  // re-assign aCookieHeader, in case we need to process another cookie
+  aCookieHeader.Assign(Substring(cookieStart, cookieEnd));
+
   // If same-site is set to 'none' but this is not a secure context, let's abort
   // the parsing.
   if (StaticPrefs::network_cookie_sameSite_laxByDefault() &&
@@ -3875,9 +3878,6 @@ bool nsCookieService::ParseAttributes(nsCString& aCookieHeader,
 
   // Cookie accepted.
   aAcceptedByParser = true;
-
-  // re-assign aCookieHeader, in case we need to process another cookie
-  aCookieHeader.Assign(Substring(cookieStart, cookieEnd));
 
   MOZ_ASSERT(nsCookie::ValidateRawSame(aCookieData));
   return newCookie;

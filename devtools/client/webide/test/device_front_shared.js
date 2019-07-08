@@ -71,7 +71,17 @@ function addNewFieldWithEnter() {
   const newAddField = doc.querySelector("#add-custom-field");
   const enter = doc.createEvent("KeyboardEvent");
   enter.initKeyEvent(
-    "keyup", true, true, null, false, false, false, false, 13, 0);
+    "keyup",
+    true,
+    true,
+    null,
+    false,
+    false,
+    false,
+    false,
+    13,
+    0
+  );
   newAddField.dispatchEvent(enter);
   newField = doc.querySelector("#new-string-field-two");
   if (newField) {

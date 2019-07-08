@@ -1,85 +1,57 @@
 # This list automatically picks up exclusions from .eslintignore
 
-# Ignore all top-level directories for now.
-accessible/**
-browser/**
-build/**
-caps/**
-chrome/**
-config/**
-db/**
-docshell/**
-dom/**
-editor/**
-extensions/**
-gfx/**
-gradle/**
-hal/**
-image/**
-intl/**
-ipc/**
-js/**
-layout/**
-media/**
-memory/**
-mfbt/**
-mobile/**
-modules/**
-mozglue/**
-netwerk/**
-node_modules/**
-nsprpub/**
-other-licenses/**
-parser/**
-python/**
-remote/**
-security/**
-services/**
-servo/**
-startupcache/**
-storage/**
-taskcluster/**
-testing/**
-third_party/**
-toolkit/**
-tools/**
-uriloader/**
-view/**
-widget/**
-xpcom/**
-xpfe/**
+# These files are disabled due to parsing errors when using Prettier.
+# Bug 1560186
+*.html
+*.xhtml
+*.xul
+*.xml
 
-# Ignore all devtools directories for now, except the debugger.
-devtools/client/*.js
-devtools/client/aboutdebugging/**
-devtools/client/aboutdebugging-new/**
-devtools/client/accessibility/**
-devtools/client/application/**
-devtools/client/bin/**
-devtools/client/dom/**
-devtools/client/framework/**
-devtools/client/inspector/**
-devtools/client/jsonview/**
-devtools/client/locales/**
-devtools/client/memory/**
-devtools/client/netmonitor/**
-devtools/client/performance/**
-devtools/client/performance-new/**
-devtools/client/preferences/**
-devtools/client/responsive.html/**
-devtools/client/scratchpad/**
-devtools/client/shared/**
-devtools/client/storage/**
-devtools/client/styleeditor/**
-devtools/client/themes/**
-devtools/client/webconsole/**
-devtools/client/webide/**
-devtools/client/webreplay/**
-devtools/docs/**
-devtools/platform/**
-devtools/server/**
-devtools/shared/**
-devtools/startup/**
+# Ignore default pref files which have a .js suffix but aren't parsed normally as JavaScript.
+browser/app/profile/channel-prefs.js
+browser/app/profile/firefox.js
+browser/branding/aurora/pref/firefox-branding.js
+browser/branding/nightly/pref/firefox-branding.js
+browser/branding/official/pref/firefox-branding.js
+browser/branding/unofficial/pref/firefox-branding.js
+devtools/client/netmonitor/launchpad.js
+devtools/client/preferences/debugger.js
+devtools/client/preferences/devtools-client.js
+devtools/client/webconsole/test/mocha-test-setup.js
+devtools/client/webide/preferences/webide.js
+devtools/shared/preferences/devtools-shared.js
+devtools/startup/preferences/devtools-startup.js
+extensions/pref/autoconfig/test/unit/autoconfig.js
+mobile/android/app/geckoview-prefs.js
+mobile/android/app/mobile.js
+mobile/android/installer/mobile-l10n.js
+modules/libpref/init/all.js
+modules/libpref/test/unit/data/testParser.js
+modules/libpref/test/unit/data/testPrefLocked.js
+modules/libpref/test/unit/data/testPrefSticky.js
+modules/libpref/test/unit/extdata/testExt.js
+remote/pref/remote.js
+security/manager/ssl/security-prefs.js
+services/common/services-common.js
+services/sync/services-sync.js
+services/sync/tests/unit/prefs_test_prefs_store.js
+testing/marionette/prefs/marionette.js
+toolkit/components/telemetry/datareporting-prefs.js
+toolkit/components/telemetry/healthreport-prefs.js
+
+# Ignore testing pref files which aren't parsed normally.
+testing/profiles/**/user.js
+
+# Ignore CORS fixtures which require specific resource hashes.
+dom/security/test/sri/script*
+
+# Ignore other DOM fixtures with funky chars.
+dom/base/test/file_bug687859-charset.js
+dom/base/test/file_bug687859-inherit.js
+
+# Ignore preprocessed files.
+js/src/builtin/**/*.js
+js/src/shell/**/*.js
 
 # Ignore devtools debugger files
 # Keep in sync with devtools/client/debugger/.prettierignore

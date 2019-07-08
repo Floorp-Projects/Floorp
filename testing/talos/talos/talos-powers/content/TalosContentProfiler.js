@@ -57,10 +57,12 @@ var TalosContentProfiler;
     // If we're running as a frame script, we can send messages directly to
     // the parent, rather than going through the talos-powers-content.js
     // mediator, which ends up being more complicated.
-    if (typeof(sendAsyncMessage) !== "undefined") {
+    if (typeof sendAsyncMessage !== "undefined") {
       return new Promise(resolve => {
         sendAsyncMessage("TalosContentProfiler:Command", { name, data });
-        addMessageListener("TalosContentProfiler:Response", function onMsg(msg) {
+        addMessageListener("TalosContentProfiler:Response", function onMsg(
+          msg
+        ) {
           if (msg.data.name != name) {
             return;
           }
@@ -71,7 +73,7 @@ var TalosContentProfiler;
       });
     }
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       var event = new CustomEvent("TalosContentProfilerCommand", {
         bubbles: true,
         detail: {
@@ -81,7 +83,9 @@ var TalosContentProfiler;
       });
       document.dispatchEvent(event);
 
-      addEventListener("TalosContentProfilerResponse", function onResponse(event) {
+      addEventListener("TalosContentProfilerResponse", function onResponse(
+        event
+      ) {
         if (event.detail.name != name) {
           return;
         }
@@ -129,17 +133,25 @@ var TalosContentProfiler;
      */
     initFromObject(obj = {}) {
       if (!initted) {
-        if (("gecko_profile_dir" in obj) && typeof obj.gecko_profile_dir == "string" &&
-            ("gecko_profile_interval" in obj) && Number.isFinite(obj.gecko_profile_interval * 1) &&
-            ("gecko_profile_entries" in obj) && Number.isFinite(obj.gecko_profile_entries * 1) &&
-            ("gecko_profile_threads" in obj) && typeof obj.gecko_profile_threads == "string") {
+        if (
+          "gecko_profile_dir" in obj &&
+          typeof obj.gecko_profile_dir == "string" &&
+          "gecko_profile_interval" in obj &&
+          Number.isFinite(obj.gecko_profile_interval * 1) &&
+          "gecko_profile_entries" in obj &&
+          Number.isFinite(obj.gecko_profile_entries * 1) &&
+          "gecko_profile_threads" in obj &&
+          typeof obj.gecko_profile_threads == "string"
+        ) {
           interval = obj.gecko_profile_interval;
           entries = obj.gecko_profile_entries;
           threadsArray = obj.gecko_profile_threads.split(",");
           profileDir = obj.gecko_profile_dir;
           initted = true;
         } else {
-          console.error("Profiler could not init with object: " + JSON.stringify(obj));
+          console.error(
+            "Profiler could not init with object: " + JSON.stringify(obj)
+          );
         }
       }
     },
@@ -285,7 +297,7 @@ var TalosContentProfiler;
   // sendAsyncMessage is a hack-y mechanism to determine whether or not
   // we're running as a frame script. If we are, jam TalosContentProfiler
   // into the content scope.
-  if (typeof(sendAsyncMessage) !== "undefined") {
+  if (typeof sendAsyncMessage !== "undefined") {
     content.wrappedJSObject.TalosContentProfiler = TalosContentProfiler;
   }
 })();

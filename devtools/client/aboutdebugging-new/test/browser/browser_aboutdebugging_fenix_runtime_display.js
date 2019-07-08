@@ -10,7 +10,8 @@ const ADB_RUNTIME_NAME = "Firefox Preview";
 const SERVER_VERSION = "v7.3.31";
 const ADB_VERSION = "v1.3.37";
 
-const FENIX_RELEASE_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-fenix.svg";
+const FENIX_RELEASE_ICON_SRC =
+  "chrome://devtools/skin/images/aboutdebugging-fenix.svg";
 const FENIX_NIGHTLY_ICON_SRC =
   "chrome://devtools/skin/images/aboutdebugging-fenix-nightly.svg";
 
@@ -42,15 +43,23 @@ add_task(async function() {
   const runtimeInfoText = runtimeInfo.textContent;
 
   ok(runtimeInfoText.includes(ADB_RUNTIME_NAME), "Name is the ADB name");
-  ok(!runtimeInfoText.includes(SERVER_RUNTIME_NAME),
-    "Name does not include the server name");
+  ok(
+    !runtimeInfoText.includes(SERVER_RUNTIME_NAME),
+    "Name does not include the server name"
+  );
 
   ok(runtimeInfoText.includes(ADB_VERSION), "Version contains the ADB version");
-  ok(!runtimeInfoText.includes(SERVER_VERSION),
-    "Version does not contain the server version");
+  ok(
+    !runtimeInfoText.includes(SERVER_VERSION),
+    "Version does not contain the server version"
+  );
 
   const runtimeIcon = document.querySelector(".qa-runtime-icon");
-  is(runtimeIcon.src, FENIX_RELEASE_ICON_SRC, "The runtime icon is the Fenix icon");
+  is(
+    runtimeIcon.src,
+    FENIX_RELEASE_ICON_SRC,
+    "The runtime icon is the Fenix icon"
+  );
 
   info("Remove USB runtime");
   mocks.removeUSBRuntime(RUNTIME_ID);
@@ -98,21 +107,33 @@ add_task(async function() {
   await connectToRuntime(DEVICE_NAME, document);
   await selectRuntime(DEVICE_NAME, ADB_RUNTIME_NAME, document);
 
-  info("Wait for requests to finish the USB runtime is backed by a real local client");
+  info(
+    "Wait for requests to finish the USB runtime is backed by a real local client"
+  );
   await onRequestSuccess;
 
   info("Wait for the about:debugging target to be available");
   await waitUntil(() => findDebugTargetByText("about:debugging", document));
-  const { devtoolsDocument, devtoolsTab } =
-    await openAboutDevtoolsToolbox(document, tab, window);
+  const { devtoolsDocument, devtoolsTab } = await openAboutDevtoolsToolbox(
+    document,
+    tab,
+    window
+  );
 
   const runtimeInfo = devtoolsDocument.querySelector(".qa-runtime-info");
   const runtimeInfoText = runtimeInfo.textContent;
-  ok(runtimeInfoText.includes(ADB_RUNTIME_NAME), "Name is the ADB runtime name");
+  ok(
+    runtimeInfoText.includes(ADB_RUNTIME_NAME),
+    "Name is the ADB runtime name"
+  );
   ok(runtimeInfoText.includes(ADB_VERSION), "Version is the ADB version");
 
   const runtimeIcon = devtoolsDocument.querySelector(".qa-runtime-icon");
-  is(runtimeIcon.src, FENIX_NIGHTLY_ICON_SRC, "The runtime icon is the Fenix icon");
+  is(
+    runtimeIcon.src,
+    FENIX_NIGHTLY_ICON_SRC,
+    "The runtime icon is the Fenix icon"
+  );
 
   info("Wait for all pending requests to settle on the DebuggerClient");
   await clientWrapper.client.waitForRequestsToSettle();
@@ -132,8 +153,9 @@ async function createLocalClientWrapper() {
   info("Create a local DebuggerClient");
   const { DebuggerServer } = require("devtools/server/main");
   const { DebuggerClient } = require("devtools/shared/client/debugger-client");
-  const { ClientWrapper } =
-    require("devtools/client/aboutdebugging-new/src/modules/client-wrapper");
+  const {
+    ClientWrapper,
+  } = require("devtools/client/aboutdebugging-new/src/modules/client-wrapper");
 
   DebuggerServer.init();
   DebuggerServer.registerAllActors();

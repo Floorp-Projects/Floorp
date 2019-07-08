@@ -15,19 +15,49 @@
 // Globals and Constants
 
 var resultTypes = [
-  {value: Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY, name: "RESULTS_AS_DATE_QUERY"},
-  {value: Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY, name: "RESULTS_AS_SITE_QUERY"},
-  {value: Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY, name: "RESULTS_AS_DATE_SITE_QUERY"},
-  {value: Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAGS_ROOT, name: "RESULTS_AS_TAGS_ROOT"},
+  {
+    value: Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY,
+    name: "RESULTS_AS_DATE_QUERY",
+  },
+  {
+    value: Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY,
+    name: "RESULTS_AS_SITE_QUERY",
+  },
+  {
+    value: Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY,
+    name: "RESULTS_AS_DATE_SITE_QUERY",
+  },
+  {
+    value: Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAGS_ROOT,
+    name: "RESULTS_AS_TAGS_ROOT",
+  },
 ];
 
 var sortingModes = [
-  {value: Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING, name: "SORT_BY_TITLE_ASCENDING"},
-  {value: Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_DESCENDING, name: "SORT_BY_TITLE_DESCENDING"},
-  {value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING, name: "SORT_BY_DATE_ASCENDING"},
-  {value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING, name: "SORT_BY_DATE_DESCENDING"},
-  {value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_ASCENDING, name: "SORT_BY_DATEADDED_ASCENDING"},
-  {value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING, name: "SORT_BY_DATEADDED_DESCENDING"},
+  {
+    value: Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING,
+    name: "SORT_BY_TITLE_ASCENDING",
+  },
+  {
+    value: Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_DESCENDING,
+    name: "SORT_BY_TITLE_DESCENDING",
+  },
+  {
+    value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING,
+    name: "SORT_BY_DATE_ASCENDING",
+  },
+  {
+    value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING,
+    name: "SORT_BY_DATE_DESCENDING",
+  },
+  {
+    value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_ASCENDING,
+    name: "SORT_BY_DATEADDED_ASCENDING",
+  },
+  {
+    value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING,
+    name: "SORT_BY_DATEADDED_DESCENDING",
+  },
 ];
 
 // These pages will be added from newest to oldest and from less visited to most
@@ -41,11 +71,7 @@ var pages = [
   "http://www.mozilla.com/b/",
 ];
 
-var tags = [
-  "mozilla",
-  "Development",
-  "test",
-];
+var tags = ["mozilla", "Development", "test"];
 
 // Test Runner
 
@@ -81,8 +107,9 @@ var tags = [
  * @return the total number of sequences in the product
  */
 function cartProd(aSequences, aCallback) {
-  if (aSequences.length === 0)
+  if (aSequences.length === 0) {
     return 0;
+  }
 
   // For each sequence in aSequences, we maintain a pointer (an array index,
   // really) to the element we're currently enumerating in that sequence
@@ -119,8 +146,9 @@ function cartProd(aSequences, aCallback) {
         seqPtr--;
 
         // All element pointers are past the ends of their sequences.
-        if (seqPtr < 0)
+        if (seqPtr < 0) {
           done = true;
+        }
       } else {
         break;
       }
@@ -139,22 +167,37 @@ function test_query_callback(aSequence) {
   Assert.equal(aSequence.length, 2);
   var resultType = aSequence[0];
   var sortingMode = aSequence[1];
-  print("\n\n*** Testing default sorting for resultType (" + resultType.name + ") and sortingMode (" + sortingMode.name + ")");
+  print(
+    "\n\n*** Testing default sorting for resultType (" +
+      resultType.name +
+      ") and sortingMode (" +
+      sortingMode.name +
+      ")"
+  );
 
   // Skip invalid combinations sorting queries by none.
-  if (resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAGS_ROOT &&
-      (sortingMode.value == Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING ||
-       sortingMode.value == Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING)) {
+  if (
+    resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAGS_ROOT &&
+    (sortingMode.value == Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING ||
+      sortingMode.value == Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING)
+  ) {
     // This is a bookmark query, we can't sort by visit date.
     sortingMode.value = Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
   }
-  if (resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY ||
-      resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY ||
-      resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY) {
+  if (
+    resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY ||
+    resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY ||
+    resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY
+  ) {
     // This is an history query, we can't sort by date added.
-    if (sortingMode.value == Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_ASCENDING ||
-       sortingMode.value == Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING)
-    sortingMode.value = Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
+    if (
+      sortingMode.value ==
+        Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_ASCENDING ||
+      sortingMode.value ==
+        Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING
+    ) {
+      sortingMode.value = Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
+    }
   }
 
   // Create a new query with required options.
@@ -168,39 +211,55 @@ function test_query_callback(aSequence) {
   var root = result.root;
   root.containerOpen = true;
 
-  if (resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY ||
-      resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY) {
+  if (
+    resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY ||
+    resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY
+  ) {
     // Date containers are always sorted by date descending.
-    check_children_sorting(root,
-                           Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING);
+    check_children_sorting(
+      root,
+      Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING
+    );
   } else {
     check_children_sorting(root, sortingMode.value);
   }
 
   // Now Check sorting of the first child container.
-  var container = root.getChild(0)
-                      .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  var container = root
+    .getChild(0)
+    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   container.containerOpen = true;
 
-  if (resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY) {
+  if (
+    resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY
+  ) {
     // Has more than one level of containers, first we check the sorting of
     // the first level (site containers), those won't inherit sorting...
-    check_children_sorting(container,
-                           Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING);
+    check_children_sorting(
+      container,
+      Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING
+    );
     // ...then we check sorting of the contained urls, we can't inherit sorting
     // since the above level does not inherit it, so they will be sorted by
     // title ascending.
-    let innerContainer = container.getChild(0)
-                                  .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+    let innerContainer = container
+      .getChild(0)
+      .QueryInterface(Ci.nsINavHistoryContainerResultNode);
     innerContainer.containerOpen = true;
-    check_children_sorting(innerContainer,
-                           Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING);
+    check_children_sorting(
+      innerContainer,
+      Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING
+    );
     innerContainer.containerOpen = false;
-  } else if (resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAGS_ROOT) {
+  } else if (
+    resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAGS_ROOT
+  ) {
     // Sorting mode for tag contents is hardcoded for now, to allow for faster
     // duplicates filtering.
-    check_children_sorting(container,
-                           Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
+    check_children_sorting(
+      container,
+      Ci.nsINavHistoryQueryOptions.SORT_BY_NONE
+    );
   } else {
     check_children_sorting(container, sortingMode.value);
   }
@@ -222,59 +281,95 @@ function test_query_callback(aSequence) {
  * @param aOriginalSortingMode
  *        the sorting mode from query's options.
  */
-function test_result_sortingMode_change(aResult, aResultType, aOriginalSortingMode) {
+function test_result_sortingMode_change(
+  aResult,
+  aResultType,
+  aOriginalSortingMode
+) {
   var root = aResult.root;
   // Now we set sortingMode on the result and check that containers are not
   // sorted while children are.
   sortingModes.forEach(function sortingModeChecker(aForcedSortingMode) {
-    print("\n* Test setting sortingMode (" + aForcedSortingMode.name + ") " +
-          "on result with resultType (" + aResultType.name + ") " +
-          "currently sorted as (" + aOriginalSortingMode.name + ")");
+    print(
+      "\n* Test setting sortingMode (" +
+        aForcedSortingMode.name +
+        ") " +
+        "on result with resultType (" +
+        aResultType.name +
+        ") " +
+        "currently sorted as (" +
+        aOriginalSortingMode.name +
+        ")"
+    );
 
     aResult.sortingMode = aForcedSortingMode.value;
     root.containerOpen = true;
 
-    if (aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY ||
-        aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY) {
+    if (
+      aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY ||
+      aResultType.value ==
+        Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY
+    ) {
       // Date containers are always sorted by date descending.
-      check_children_sorting(root,
-                             Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING);
-    } else if (aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY &&
-             (aOriginalSortingMode.value == Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING ||
-              aOriginalSortingMode.value == Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING)) {
+      check_children_sorting(
+        root,
+        Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING
+      );
+    } else if (
+      aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY &&
+      (aOriginalSortingMode.value ==
+        Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING ||
+        aOriginalSortingMode.value ==
+          Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING)
+    ) {
       // Site containers don't have a good time property to sort by.
-      check_children_sorting(root,
-                             Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
+      check_children_sorting(root, Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
     } else {
       check_children_sorting(root, aOriginalSortingMode.value);
     }
 
     // Now Check sorting of the first child container.
-    var container = root.getChild(0)
-                        .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+    var container = root
+      .getChild(0)
+      .QueryInterface(Ci.nsINavHistoryContainerResultNode);
     container.containerOpen = true;
 
-    if (aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY) {
+    if (
+      aResultType.value ==
+      Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY
+    ) {
       // Has more than one level of containers, first we check the sorting of
       // the first level (site containers), those won't be sorted...
-      check_children_sorting(container,
-                             Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING);
+      check_children_sorting(
+        container,
+        Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING
+      );
       // ...then we check sorting of the second level of containers, result
       // will sort them through recursiveSort.
-      let innerContainer = container.getChild(0)
-                                    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+      let innerContainer = container
+        .getChild(0)
+        .QueryInterface(Ci.nsINavHistoryContainerResultNode);
       innerContainer.containerOpen = true;
       check_children_sorting(innerContainer, aForcedSortingMode.value);
       innerContainer.containerOpen = false;
     } else {
-      if (aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY ||
-          aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY ||
-          aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY) {
+      if (
+        aResultType.value ==
+          Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY ||
+        aResultType.value ==
+          Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY ||
+        aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY
+      ) {
         // Date containers are always sorted by date descending.
         check_children_sorting(root, Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
-      } else if (aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY &&
-             (aOriginalSortingMode.value == Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING ||
-              aOriginalSortingMode.value == Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING)) {
+      } else if (
+        aResultType.value ==
+          Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY &&
+        (aOriginalSortingMode.value ==
+          Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING ||
+          aOriginalSortingMode.value ==
+            Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING)
+      ) {
         // Site containers don't have a good time property to sort by.
         check_children_sorting(root, Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
       } else {
@@ -309,10 +404,12 @@ function check_children_sorting(aRootNode, aExpectedSortingMode) {
   function caseInsensitiveStringComparator(a, b) {
     var aLC = a.toLowerCase();
     var bLC = b.toLowerCase();
-    if (aLC < bLC)
+    if (aLC < bLC) {
       return -1;
-    if (aLC > bLC)
+    }
+    if (aLC > bLC) {
       return 1;
+    }
     return 0;
   }
 
@@ -362,9 +459,15 @@ function check_children_sorting(aRootNode, aExpectedSortingMode) {
   sortedResults.sort(comparator);
   // Actually compare returned children with our sorted array.
   for (let i = 0; i < sortedResults.length; i++) {
-    if (sortedResults[i].title != results[i].title)
-      print(i + " index wrong, expected " + sortedResults[i].title +
-            " found " + results[i].title);
+    if (sortedResults[i].title != results[i].title) {
+      print(
+        i +
+          " index wrong, expected " +
+          sortedResults[i].title +
+          " found " +
+          results[i].title
+      );
+    }
     Assert.equal(sortedResults[i].title, results[i].title);
   }
 }
@@ -377,18 +480,21 @@ add_task(async function test_containersQueries_sorting() {
   var visitCount = 0;
   var dayOffset = 0;
   var visits = [];
-  pages.forEach(aPageUrl => visits.push(
-    { isVisit: true,
+  pages.forEach(aPageUrl =>
+    visits.push({
+      isVisit: true,
       isBookmark: true,
       transType: Ci.nsINavHistoryService.TRANSITION_TYPED,
       uri: aPageUrl,
       title: aPageUrl,
       // subtract 5 hours per iteration, to expose more than one day container.
-      lastVisit: (timeInMilliseconds - (18000 * 1000 * dayOffset++)) * 1000,
+      lastVisit: (timeInMilliseconds - 18000 * 1000 * dayOffset++) * 1000,
       visitCount: visitCount++,
       isTag: true,
       tagArray: tags,
-      isInQuery: true }));
+      isInQuery: true,
+    })
+  );
   await task_populateDB(visits);
 
   cartProd([resultTypes, sortingModes], test_query_callback);

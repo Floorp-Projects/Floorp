@@ -4,10 +4,15 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Link = createFactory(require("devtools/client/shared/vendor/react-router-dom").Link);
+const Link = createFactory(
+  require("devtools/client/shared/vendor/react-router-dom").Link
+);
 
 /**
  * This component is used as a wrapper by items in the sidebar.
@@ -36,20 +41,20 @@ class SidebarItem extends PureComponent {
 
       return isExternalUrl
         ? dom.a(
-          {
-            className: "sidebar-item__link",
-            href: to,
-            target: "_blank",
-          },
-          children,
-        )
+            {
+              className: "sidebar-item__link",
+              href: to,
+              target: "_blank",
+            },
+            children
+          )
         : Link(
-          {
-            className: "sidebar-item__link qa-sidebar-link",
-            to,
-          },
-          children,
-        );
+            {
+              className: "sidebar-item__link qa-sidebar-link",
+              to,
+            },
+            children
+          );
     }
 
     return children;
@@ -60,13 +65,13 @@ class SidebarItem extends PureComponent {
 
     return dom.li(
       {
-        className: "sidebar-item qa-sidebar-item" +
-                   (className ? ` ${className}` : "") +
-                   (isSelected ?
-                      " sidebar-item--selected qa-sidebar-item-selected" :
-                      ""
-                   ) +
-                   (to ? " sidebar-item--selectable" : ""),
+        className:
+          "sidebar-item qa-sidebar-item" +
+          (className ? ` ${className}` : "") +
+          (isSelected
+            ? " sidebar-item--selected qa-sidebar-item-selected"
+            : "") +
+          (to ? " sidebar-item--selectable" : ""),
       },
       this.renderContent()
     );

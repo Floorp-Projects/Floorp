@@ -6,7 +6,9 @@
 /* global browserElementTestHelpers */
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("testing mozbrowser data: navigation is blocked");
+SimpleTest.requestFlakyTimeout(
+  "testing mozbrowser data: navigation is blocked"
+);
 
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
@@ -28,9 +30,11 @@ function runTest1() {
 
   // wait for 1000ms and check that the data: URI did not load
   setTimeout(function() {
-    isnot(wrappedFrame.contentWindow.document.body.innerHTML,
-          INNER,
-          "data: URI navigation should be blocked");
+    isnot(
+      wrappedFrame.contentWindow.document.body.innerHTML,
+      INNER,
+      "data: URI navigation should be blocked"
+    );
     runTest2();
   }, 1000);
 }
@@ -42,19 +46,27 @@ function runTest2() {
   document.body.appendChild(frame);
   let wrappedFrame = SpecialPowers.wrap(frame);
 
-  wrappedFrame.addEventListener("mozbrowserloadend", function onloadend(e) {
-    ok(wrappedFrame.contentWindow.document.location.href.endsWith(HTTP_URI),
-       "http: URI navigation should be allowed");
-    frame.src = DATA_URI;
+  wrappedFrame.addEventListener(
+    "mozbrowserloadend",
+    function onloadend(e) {
+      ok(
+        wrappedFrame.contentWindow.document.location.href.endsWith(HTTP_URI),
+        "http: URI navigation should be allowed"
+      );
+      frame.src = DATA_URI;
 
-    // wait for 1000ms and check that the data: URI did not load
-    setTimeout(function() {
-      isnot(wrappedFrame.contentWindow.document.body.innerHTML,
-            INNER,
-            "data: URI navigation should be blocked");
-      SimpleTest.finish();
-    }, 1000);
-  }, {once: true});
+      // wait for 1000ms and check that the data: URI did not load
+      setTimeout(function() {
+        isnot(
+          wrappedFrame.contentWindow.document.body.innerHTML,
+          INNER,
+          "data: URI navigation should be blocked"
+        );
+        SimpleTest.finish();
+      }, 1000);
+    },
+    { once: true }
+  );
 }
 
 addEventListener("testready", runTest1);

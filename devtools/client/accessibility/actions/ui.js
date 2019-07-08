@@ -14,33 +14,35 @@ const {
 /**
  * Reset accessibility panel UI.
  */
-exports.reset = (accessibility, supports) =>
-  dispatch => dispatch({ accessibility, supports, type: RESET });
+exports.reset = (accessibility, supports) => dispatch =>
+  dispatch({ accessibility, supports, type: RESET });
 
 /**
  * Update a "canBeDisabled" flag for accessibility service.
  */
-exports.updateCanBeDisabled = canBeDisabled =>
-  dispatch => dispatch({ canBeDisabled, type: UPDATE_CAN_BE_DISABLED });
+exports.updateCanBeDisabled = canBeDisabled => dispatch =>
+  dispatch({ canBeDisabled, type: UPDATE_CAN_BE_DISABLED });
 
 /**
  * Update a "canBeEnabled" flag for accessibility service.
  */
-exports.updateCanBeEnabled = canBeEnabled =>
-  dispatch => dispatch({ canBeEnabled, type: UPDATE_CAN_BE_ENABLED });
+exports.updateCanBeEnabled = canBeEnabled => dispatch =>
+  dispatch({ canBeEnabled, type: UPDATE_CAN_BE_ENABLED });
 
 /**
  * Enable accessibility services in order to view accessible tree.
  */
-exports.enable = accessibility =>
-  dispatch => accessibility.enable()
+exports.enable = accessibility => dispatch =>
+  accessibility
+    .enable()
     .then(() => dispatch({ type: ENABLE }))
     .catch(error => dispatch({ error, type: ENABLE }));
 
 /**
  * Enable accessibility services in order to view accessible tree.
  */
-exports.disable = accessibility =>
-  dispatch => accessibility.disable()
+exports.disable = accessibility => dispatch =>
+  accessibility
+    .disable()
     .then(() => dispatch({ type: DISABLE }))
     .catch(error => dispatch({ type: DISABLE, error }));

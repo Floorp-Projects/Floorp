@@ -1,4 +1,4 @@
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var httpServer = null;
 var path = "/bug699001";
@@ -8,7 +8,7 @@ XPCOMUtils.defineLazyGetter(this, "URI", function() {
 });
 
 function make_channel(url) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
 var fetched;
@@ -22,54 +22,52 @@ var fetched;
 // from the server
 
 var tests = [
-{
-  prepare() { },
-  test(response) {
-    Assert.ok(fetched);
-  }
-},
-{
-  prepare() { },
-  test(response) {
-    Assert.ok(!fetched);
-  }
-},
-{
-  prepare() {
-    setUA("A different User Agent");
+  {
+    prepare() {},
+    test(response) {
+      Assert.ok(fetched);
+    },
   },
-  test(response) {
-    Assert.ok(fetched);
-  }
-},
-{
-  prepare() { },
-  test(response) {
-    Assert.ok(!fetched);
-  }
-},
-{
-  prepare() {
-    setUA("And another User Agent");
+  {
+    prepare() {},
+    test(response) {
+      Assert.ok(!fetched);
+    },
   },
-  test(response) {
-    Assert.ok(fetched);
-  }
-},
-{
-  prepare() { },
-  test(response) {
-    Assert.ok(!fetched);
-  }
-}
+  {
+    prepare() {
+      setUA("A different User Agent");
+    },
+    test(response) {
+      Assert.ok(fetched);
+    },
+  },
+  {
+    prepare() {},
+    test(response) {
+      Assert.ok(!fetched);
+    },
+  },
+  {
+    prepare() {
+      setUA("And another User Agent");
+    },
+    test(response) {
+      Assert.ok(fetched);
+    },
+  },
+  {
+    prepare() {},
+    test(response) {
+      Assert.ok(!fetched);
+    },
+  },
 ];
 
-function handler(metadata, response)
-{
+function handler(metadata, response) {
   if (metadata.hasHeader("If-None-Match")) {
     response.setStatusLine(metadata.httpVersion, 304, "Not modified");
-  }
-  else {
+  } else {
     response.setStatusLine(metadata.httpVersion, 200, "OK");
     response.setHeader("Content-Type", "text/plain");
 
@@ -85,8 +83,7 @@ function handler(metadata, response)
   response.setHeader("ETag", "1234");
 }
 
-function run_test()
-{
+function run_test() {
   httpServer = new HttpServer();
   httpServer.registerPathHandler(path, handler);
   httpServer.start(-1);
@@ -96,8 +93,7 @@ function run_test()
   nextTest();
 }
 
-function nextTest()
-{
+function nextTest() {
   fetched = false;
   tests[0].prepare();
 
@@ -111,8 +107,7 @@ function nextTest()
   });
 }
 
-function checkAndShiftTest(request, response)
-{
+function checkAndShiftTest(request, response) {
   tests[0].test(response);
 
   tests.shift();
@@ -124,36 +119,59 @@ function checkAndShiftTest(request, response)
   nextTest();
 }
 
-function tearDown()
-{
+function tearDown() {
   setUA("");
   do_test_finished();
 }
 
 // Helpers
 
-function getUA()
-{
-  var httphandler = Cc["@mozilla.org/network/protocol;1?name=http"].
-                 getService(Ci.nsIHttpProtocolHandler);
+function getUA() {
+  var httphandler = Cc["@mozilla.org/network/protocol;1?name=http"].getService(
+    Ci.nsIHttpProtocolHandler
+  );
   return httphandler.userAgent;
 }
 
-function setUA(value)
-{
-  var prefs = Cc["@mozilla.org/preferences-service;1"].
-                 getService(Ci.nsIPrefBranch);
+function setUA(value) {
+  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
   prefs.setCharPref("general.useragent.override", value);
 }
 
 function getDateString(yearDelta) {
-  var months = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
-          'Sep', 'Oct', 'Nov', 'Dec' ];
-  var days = [ 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat' ];
+  var months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   var d = new Date();
-  return days[d.getUTCDay()] + ", " + d.getUTCDate() + " "
-          + months[d.getUTCMonth()] + " " + (d.getUTCFullYear() + yearDelta)
-          + " " + d.getUTCHours() + ":" + d.getUTCMinutes() + ":"
-          + d.getUTCSeconds() + " UTC";
+  return (
+    days[d.getUTCDay()] +
+    ", " +
+    d.getUTCDate() +
+    " " +
+    months[d.getUTCMonth()] +
+    " " +
+    (d.getUTCFullYear() + yearDelta) +
+    " " +
+    d.getUTCHours() +
+    ":" +
+    d.getUTCMinutes() +
+    ":" +
+    d.getUTCSeconds() +
+    " UTC"
+  );
 }

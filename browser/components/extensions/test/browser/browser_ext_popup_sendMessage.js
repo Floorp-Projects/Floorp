@@ -4,18 +4,19 @@
 "use strict";
 
 add_task(async function test_popup_sendMessage_reply() {
-  let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>${url}</body></html>`;
+  let scriptPage = url =>
+    `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>${url}</body></html>`;
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "browser_action": {
-        "default_popup": "popup.html",
-        "browser_style": true,
+      browser_action: {
+        default_popup: "popup.html",
+        browser_style: true,
       },
 
-      "page_action": {
-        "default_popup": "popup.html",
-        "browser_style": true,
+      page_action: {
+        default_popup: "popup.html",
+        browser_style: true,
       },
     },
 
@@ -54,7 +55,10 @@ add_task(async function test_popup_sendMessage_reply() {
         }
       });
 
-      let [tab] = await browser.tabs.query({active: true, currentWindow: true});
+      let [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
 
       await browser.pageAction.show(tab.id);
 

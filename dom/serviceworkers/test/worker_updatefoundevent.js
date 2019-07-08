@@ -17,4 +17,4 @@ registration.onupdatefound = function(e) {
       dump("Scope did not match");
     }
   });
-}
+};

@@ -9,9 +9,15 @@
  * should be computed.
  */
 
-const { snapshotState, dominatorTreeState, viewState, treeMapState } =
-  require("devtools/client/memory/constants");
-const { importSnapshotAndCensus } = require("devtools/client/memory/actions/io");
+const {
+  snapshotState,
+  dominatorTreeState,
+  viewState,
+  treeMapState,
+} = require("devtools/client/memory/constants");
+const {
+  importSnapshotAndCensus,
+} = require("devtools/client/memory/actions/io");
 const { changeViewAndRefresh } = require("devtools/client/memory/actions/view");
 
 add_task(async function() {
@@ -22,8 +28,11 @@ add_task(async function() {
   const { subscribe, dispatch, getState } = store;
 
   dispatch(changeViewAndRefresh(viewState.DOMINATOR_TREE, heapWorker));
-  equal(getState().view.state, viewState.DOMINATOR_TREE,
-        "We should now be in the DOMINATOR_TREE view");
+  equal(
+    getState().view.state,
+    viewState.DOMINATOR_TREE,
+    "We should now be in the DOMINATOR_TREE view"
+  );
 
   let i = 0;
   const expected = [
@@ -50,10 +59,17 @@ add_task(async function() {
 
   await waitUntilState(store, () => i === expected.length);
   unsubscribe();
-  equal(i, expected.length, "importSnapshotAndCensus() produces the correct " +
-    "sequence of states in a snapshot");
-  equal(getState().snapshots[0].dominatorTree.state, dominatorTreeState.LOADED,
-    "imported snapshot's dominator tree is in LOADED state");
+  equal(
+    i,
+    expected.length,
+    "importSnapshotAndCensus() produces the correct " +
+      "sequence of states in a snapshot"
+  );
+  equal(
+    getState().snapshots[0].dominatorTree.state,
+    dominatorTreeState.LOADED,
+    "imported snapshot's dominator tree is in LOADED state"
+  );
   ok(getState().snapshots[0].selected, "imported snapshot is selected");
 });
 
@@ -66,7 +82,8 @@ add_task(async function() {
 function hasExpectedState(snapshot, expectedState) {
   const isDominatorState = expectedState.indexOf("dominatorTree:") === 0;
   if (isDominatorState) {
-    const state = dominatorTreeState[expectedState.replace("dominatorTree:", "")];
+    const state =
+      dominatorTreeState[expectedState.replace("dominatorTree:", "")];
     return snapshot.dominatorTree && snapshot.dominatorTree.state === state;
   }
 

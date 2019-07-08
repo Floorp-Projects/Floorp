@@ -1,11 +1,14 @@
 add_task(async function() {
-  let tabs = [ gBrowser.selectedTab, BrowserTestUtils.addTab(gBrowser) ];
+  let tabs = [gBrowser.selectedTab, BrowserTestUtils.addTab(gBrowser)];
 
   // The first tab has an autofocused element.
   // The second tab is exactly like the first one without the autofocus.
   let testingList = [
-    { uri: "data:text/html,<!DOCTYPE html><html><body><input autofocus id='target'></body></html>",
-      tagName: "INPUT"},
+    {
+      uri:
+        "data:text/html,<!DOCTYPE html><html><body><input autofocus id='target'></body></html>",
+      tagName: "INPUT",
+    },
   ];
 
   // Set the focus to the first tab.
@@ -18,20 +21,29 @@ add_task(async function() {
 
   for (var i = 0; i < testingList.length; ++i) {
     // Get active element in the tab.
-    let tagName = await ContentTask.spawn(tabs[i + 1].linkedBrowser, null, async function() {
-      return content.document.activeElement.tagName;
-    });
+    let tagName = await ContentTask.spawn(
+      tabs[i + 1].linkedBrowser,
+      null,
+      async function() {
+        return content.document.activeElement.tagName;
+      }
+    );
 
-    is(tagName, testingList[i].tagName,
-       "The background tab's focused element should be " + testingList[i].tagName);
+    is(
+      tagName,
+      testingList[i].tagName,
+      "The background tab's focused element should be " + testingList[i].tagName
+    );
   }
 
-  is(document.activeElement, tabs[0].linkedBrowser,
-     "The background tab's focused element should not cause the tab to be focused");
+  is(
+    document.activeElement,
+    tabs[0].linkedBrowser,
+    "The background tab's focused element should not cause the tab to be focused"
+  );
 
   // Cleaning up.
   for (let i = 1; i < tabs.length; i++) {
     BrowserTestUtils.removeTab(tabs[i]);
   }
 });
-

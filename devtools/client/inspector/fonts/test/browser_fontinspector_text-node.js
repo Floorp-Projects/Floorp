@@ -28,5 +28,9 @@ add_task(async function() {
   await selectNode("body", inspector);
 
   const parentFonts = getUsedFontsEls(viewDoc);
-  is(textFonts.length, parentFonts.length, "Font inspector shows same number of fonts");
+  is(
+    textFonts.length,
+    parentFonts.length,
+    "Font inspector shows same number of fonts"
+  );
 });

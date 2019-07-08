@@ -7,20 +7,28 @@
 
 const HIGHLIGHTER_TYPE = "EyeDropper";
 const ID = "eye-dropper-";
-const TEST_URI = "data:text/html;charset=utf-8,<style>html{background:red}</style>";
+const TEST_URI =
+  "data:text/html;charset=utf-8,<style>html{background:red}</style>";
 
 add_task(async function() {
-  const helper = await openInspectorForURL(TEST_URI)
-               .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
+  const helper = await openInspectorForURL(TEST_URI).then(
+    getHighlighterHelperFor(HIGHLIGHTER_TYPE)
+  );
   helper.prefix = ID;
 
-  const {show, finalize,
-       waitForElementAttributeSet, waitForElementAttributeRemoved} = helper;
+  const {
+    show,
+    finalize,
+    waitForElementAttributeSet,
+    waitForElementAttributeRemoved,
+  } = helper;
 
   info("Show the eyedropper with the copyOnSelect option");
-  await show("html", {copyOnSelect: true});
+  await show("html", { copyOnSelect: true });
 
-  info("Make sure to wait until the eyedropper is done taking a screenshot of the page");
+  info(
+    "Make sure to wait until the eyedropper is done taking a screenshot of the page"
+  );
   await waitForElementAttributeSet("root", "drawn", helper);
 
   await waitForClipboardPromise(() => {
@@ -36,4 +44,3 @@ add_task(async function() {
 
   finalize();
 });
-

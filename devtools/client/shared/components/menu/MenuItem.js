@@ -7,7 +7,10 @@
 
 // A command in a menu.
 
-const { createRef, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createRef,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { button, li, span } = dom;

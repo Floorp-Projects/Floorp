@@ -2,8 +2,19 @@
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
-var data = [ -1, 0, 1, 1.5, /* null ,*/ undefined, true, false, "foo",
-             "123456789012345", "1234567890123456", "12345678901234567"];
+var data = [
+  -1,
+  0,
+  1,
+  1.5,
+  /* null ,*/ undefined,
+  true,
+  false,
+  "foo",
+  "123456789012345",
+  "1234567890123456",
+  "12345678901234567",
+];
 
 var str = "";
 for (var i = 0; i < 30; i++) {
@@ -21,8 +32,7 @@ onmessage = function(event) {
   var threw;
   try {
     atob();
-  }
-  catch(e) {
+  } catch (e) {
     threw = true;
   }
 
@@ -33,8 +43,7 @@ onmessage = function(event) {
 
   try {
     btoa();
-  }
-  catch(e) {
+  } catch (e) {
     threw = true;
   }
 
@@ -43,4 +52,4 @@ onmessage = function(event) {
   }
 
   postMessage({ type: "done" });
-}
+};

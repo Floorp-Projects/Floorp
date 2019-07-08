@@ -3,21 +3,38 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
-const { performanceRecordingSpec } = require("devtools/shared/specs/performance-recording");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
+const {
+  performanceRecordingSpec,
+} = require("devtools/shared/specs/performance-recording");
 
-loader.lazyRequireGetter(this, "PerformanceIO",
-  "devtools/client/performance/modules/io");
-loader.lazyRequireGetter(this, "PerformanceRecordingCommon",
-  "devtools/shared/performance/recording-common", true);
-loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/shared/performance/recording-utils");
+loader.lazyRequireGetter(
+  this,
+  "PerformanceIO",
+  "devtools/client/performance/modules/io"
+);
+loader.lazyRequireGetter(
+  this,
+  "PerformanceRecordingCommon",
+  "devtools/shared/performance/recording-common",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "RecordingUtils",
+  "devtools/shared/performance/recording-utils"
+);
 
 /**
  * This can be used on older Profiler implementations, but the methods cannot
  * be changed -- you must introduce a new method, and detect the server.
  */
-class PerformanceRecordingFront extends FrontClassWithSpec(performanceRecordingSpec) {
+class PerformanceRecordingFront extends FrontClassWithSpec(
+  performanceRecordingSpec
+) {
   form(form) {
     this.actorID = form.actor;
     this._form = form;
@@ -41,7 +58,7 @@ class PerformanceRecordingFront extends FrontClassWithSpec(performanceRecordingS
     // just finished. This is because GC/Compositing markers can come into the array out
     // of order with the other markers, leading to strange collapsing in waterfall view.
     if (this._completed && !this._markersSorted) {
-      this._markers = this._markers.sort((a, b) => (a.start > b.start));
+      this._markers = this._markers.sort((a, b) => a.start > b.start);
       this._markersSorted = true;
     }
   }
@@ -145,8 +162,10 @@ class PerformanceRecordingFront extends FrontClassWithSpec(performanceRecordingS
 // PerformanceRecordingFront also needs to inherit from PerformanceRecordingCommon
 // but as ES classes don't support multiple inheritance, we are overriding the
 // prototype with PerformanceRecordingCommon methods.
-Object.defineProperties(PerformanceRecordingFront.prototype,
-  Object.getOwnPropertyDescriptors(PerformanceRecordingCommon));
+Object.defineProperties(
+  PerformanceRecordingFront.prototype,
+  Object.getOwnPropertyDescriptors(PerformanceRecordingCommon)
+);
 
 exports.PerformanceRecordingFront = PerformanceRecordingFront;
 registerFront(PerformanceRecordingFront);

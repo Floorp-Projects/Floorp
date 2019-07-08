@@ -16,8 +16,12 @@ function checkWarning(pref, buffer) {
     let listener = {
       observe(event) {
         let message = event.message;
-        if (!(message.startsWith("Warning: attempting to write")
-              && message.includes(pref))) {
+        if (
+          !(
+            message.startsWith("Warning: attempting to write") &&
+            message.includes(pref)
+          )
+        ) {
           return;
         }
         if (complete) {

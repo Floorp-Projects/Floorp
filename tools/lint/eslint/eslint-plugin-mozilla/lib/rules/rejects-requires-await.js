@@ -17,13 +17,15 @@ module.exports = {
 
   create(context) {
     return {
-      "CallExpression": function(node) {
+      CallExpression(node) {
         if (node.callee.type === "MemberExpression") {
           let memexp = node.callee;
-          if (memexp.object.type === "Identifier" &&
-              memexp.object.name === "Assert" &&
-              memexp.property.type === "Identifier" &&
-              memexp.property.name === "rejects") {
+          if (
+            memexp.object.type === "Identifier" &&
+            memexp.object.name === "Assert" &&
+            memexp.property.type === "Identifier" &&
+            memexp.property.name === "rejects"
+          ) {
             // We have ourselves an Assert.rejects.
 
             if (node.parent.type !== "AwaitExpression") {

@@ -11,13 +11,15 @@ function test() {
 
   const windowListener = {
     onOpenWindow(win) {
-      info("Observed window open")
+      info("Observed window open");
 
       const domWindow = win.docShell.domWindow;
       waitForFocus(() => {
-        is(domWindow.location,
-           "chrome://layoutdebug/content/layoutdebug.xul",
-           "Window location is correct");
+        is(
+          domWindow.location,
+          "chrome://layoutdebug/content/layoutdebug.xul",
+          "Window location is correct"
+        );
         domWindow.close();
       }, domWindow);
     },
@@ -26,7 +28,7 @@ function test() {
       info("Observed window closed");
       Services.wm.removeListener(this);
       finish();
-    }
+    },
   };
   Services.wm.addListener(windowListener);
 

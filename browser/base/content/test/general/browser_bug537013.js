@@ -14,8 +14,10 @@ var texts = [
 var HasFindClipboard = Services.clipboard.supportsFindClipboard();
 
 function addTabWithText(aText, aCallback) {
-  let newTab = BrowserTestUtils.addTab(gBrowser, "data:text/html;charset=utf-8,<h1 id='h1'>" +
-                                       aText + "</h1>");
+  let newTab = BrowserTestUtils.addTab(
+    gBrowser,
+    "data:text/html;charset=utf-8,<h1 id='h1'>" + aText + "</h1>"
+  );
   tabs.push(newTab);
   gBrowser.selectedTab = newTab;
 }
@@ -52,7 +54,9 @@ function initialTest() {
 
   // Make sure the second tab is correct, then set it up
   gBrowser.selectedTab = tabs[1];
-  gBrowser.selectedTab.addEventListener("TabFindInitialized", continueTests1, {once: true});
+  gBrowser.selectedTab.addEventListener("TabFindInitialized", continueTests1, {
+    once: true,
+  });
   // Initialize the findbar
   gBrowser.getFindBar();
 }
@@ -60,18 +64,24 @@ function continueTests1() {
   ok(true, "'TabFindInitialized' event properly dispatched!");
   ok(gFindBar.hidden, "Second tab doesn't show find bar!");
   gFindBar.open();
-  is(gFindBar._findField.value, texts[0],
-     "Second tab kept old find value for new initialization!");
+  is(
+    gFindBar._findField.value,
+    texts[0],
+    "Second tab kept old find value for new initialization!"
+  );
   setFindString(texts[1]);
 
   // Confirm the first tab is still correct, ensure re-hiding works as expected
   gBrowser.selectedTab = tabs[0];
   ok(!gFindBar.hidden, "First tab shows find bar!");
   // When the Find Clipboard is supported, this test not relevant.
-  if (!HasFindClipboard)
+  if (!HasFindClipboard) {
     is(gFindBar._findField.value, texts[0], "First tab persists find value!");
-  ok(gFindBar.getElement("highlight").checked,
-     "Highlight button state persists!");
+  }
+  ok(
+    gFindBar.getElement("highlight").checked,
+    "Highlight button state persists!"
+  );
 
   // While we're here, let's test bug 253793
   gBrowser.reload();
@@ -91,15 +101,20 @@ function continueTests3() {
   gBrowser.selectedTab = tabs[1];
   ok(!gFindBar.hidden, "Second tab shows find bar!");
   // Test for bug 892384
-  is(gFindBar._findField.getAttribute("focused"), "true",
-     "Open findbar refocused on tab change!");
+  is(
+    gFindBar._findField.getAttribute("focused"),
+    "true",
+    "Open findbar refocused on tab change!"
+  );
   gURLBar.focus();
   gBrowser.selectedTab = tabs[0];
   ok(gFindBar.hidden, "First tab doesn't show find bar!");
 
   // Set up a third tab, no tests here
   gBrowser.selectedTab = tabs[2];
-  gBrowser.selectedTab.addEventListener("TabFindInitialized", continueTests4, {once: true});
+  gBrowser.selectedTab.addEventListener("TabFindInitialized", continueTests4, {
+    once: true,
+  });
   gBrowser.getFindBar();
 }
 
@@ -109,8 +124,10 @@ function continueTests4() {
   // Now we jump to the second, then first, and then fourth
   gBrowser.selectedTab = tabs[1];
   // Test for bug 892384
-  ok(!gFindBar._findField.hasAttribute("focused"),
-     "Open findbar not refocused on tab change!");
+  ok(
+    !gFindBar._findField.hasAttribute("focused"),
+    "Open findbar not refocused on tab change!"
+  );
   gBrowser.selectedTab = tabs[0];
   gBrowser.selectedTab = tabs[3];
   ok(gFindBar.hidden, "Fourth tab doesn't show find bar!");
@@ -118,8 +135,11 @@ function continueTests4() {
   gFindBar.open();
   // Disabled the following assertion due to intermittent failure on OSX 10.6 Debug.
   if (!HasFindClipboard) {
-    is(gFindBar._findField.value, texts[1],
-       "Fourth tab has second tab's find value!");
+    is(
+      gFindBar._findField.value,
+      texts[1],
+      "Fourth tab has second tab's find value!"
+    );
   }
 
   newWindow = gBrowser.replaceTabWithWindow(tabs.pop());
@@ -131,10 +151,15 @@ function checkNewWindow() {
   ok(!newWindow.gFindBar.hidden, "New window shows find bar!");
   // Disabled the following assertion due to intermittent failure on OSX 10.6 Debug.
   if (!HasFindClipboard) {
-    is(newWindow.gFindBar._findField.value, texts[1],
-       "New window find bar has correct find value!");
-    ok(!newWindow.gFindBar.getElement("find-next").disabled,
-       "New window findbar has enabled buttons!");
+    is(
+      newWindow.gFindBar._findField.value,
+      texts[1],
+      "New window find bar has correct find value!"
+    );
+    ok(
+      !newWindow.gFindBar.getElement("find-next").disabled,
+      "New window findbar has enabled buttons!"
+    );
   }
   newWindow.close();
   finish();

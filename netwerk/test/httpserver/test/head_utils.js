@@ -13,8 +13,10 @@ load(_HTTPD_JS_PATH.path);
 // if these tests fail, we'll want the debug output
 var linDEBUG = true;
 
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 /**
  * Constructs a new nsHttpServer instance.  This function is intended to
@@ -33,8 +35,10 @@ function createServer() {
  *   the URL of the channel to create
  */
 function makeChannel(url) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
-                .QueryInterface(Ci.nsIHttpChannel);
+  return NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+  }).QueryInterface(Ci.nsIHttpChannel);
 }
 
 /**
@@ -47,7 +51,6 @@ function makeBIS(stream) {
   return new BinaryInputStream(stream);
 }
 
-
 /**
  * Returns the contents of the file as a string.
  *
@@ -58,8 +61,12 @@ function makeBIS(stream) {
  */
 function fileContents(file) {
   const PR_RDONLY = 0x01;
-  var fis = new FileInputStream(file, PR_RDONLY, 0o444,
-                                Ci.nsIFileInputStream.CLOSE_ON_EOF);
+  var fis = new FileInputStream(
+    file,
+    PR_RDONLY,
+    0o444,
+    Ci.nsIFileInputStream.CLOSE_ON_EOF
+  );
   var sis = new ScriptableInputStream(fis);
   var contents = sis.read(file.fileSize);
   sis.close();
@@ -80,14 +87,14 @@ function* LineIterator(data) {
   var index = 0;
   do {
     index = data.indexOf("\r\n");
-    if (index >= 0)
+    if (index >= 0) {
       yield data.substring(0, index);
-    else
+    } else {
       yield data;
+    }
 
     data = data.substring(index + 2);
-  }
-  while (index >= 0);
+  } while (index >= 0);
 }
 
 /**
@@ -103,14 +110,18 @@ function* LineIterator(data) {
 function expectLines(iter, expectedLines) {
   var index = 0;
   for (var line of iter) {
-    if (expectedLines.length == index)
-      throw new Error(`Error: got more than ${expectedLines.length} expected lines!`);
+    if (expectedLines.length == index) {
+      throw new Error(
+        `Error: got more than ${expectedLines.length} expected lines!`
+      );
+    }
 
     var expected = expectedLines[index++];
-    if (expected !== line)
+    if (expected !== line) {
       throw new Error(`Error on line ${index}!
   actual: '${line}',
   expect: '${expected}'`);
+    }
   }
 
   if (expectedLines.length !== index) {
@@ -148,8 +159,9 @@ function writeDetails(request, response) {
  */
 function skipHeaders(iter) {
   var line = iter.next().value;
-  while (line !== "")
+  while (line !== "") {
     line = iter.next().value;
+  }
 }
 
 /**
@@ -162,8 +174,9 @@ function skipHeaders(iter) {
  *   the expected exception
  */
 function isException(e, code) {
-  if (e !== code && e.result !== code)
+  if (e !== code && e.result !== code) {
     do_throw("unexpected error: " + e);
+  }
 }
 
 /**
@@ -180,7 +193,6 @@ function callLater(msecs, callback) {
   do_timeout(msecs, callback);
 }
 
-
 /** *****************************************************
  * SIMPLE SUPPORT FOR LOADING/TESTING A SERIES OF URLS *
  *******************************************************/
@@ -192,7 +204,9 @@ function callLater(msecs, callback) {
 function testComplete(srv) {
   return function complete() {
     do_test_pending();
-    srv.stop(function quit() { do_test_finished(); });
+    srv.stop(function quit() {
+      do_test_finished();
+    });
   };
 }
 
@@ -218,7 +232,7 @@ function testComplete(srv) {
  *   nothing needs to be done
  */
 function Test(path, initChannel, onStartRequest, onStopRequest) {
-  function nil() { }
+  function nil() {}
 
   this.path = path;
   this.initChannel = initChannel || nil;
@@ -254,7 +268,10 @@ function runHttpTests(testArray, done) {
       test.initChannel(ch);
     } catch (e) {
       try {
-        do_report_unexpected_exception(e, "testArray[" + testIndex + "].initChannel(ch)");
+        do_report_unexpected_exception(
+          e,
+          "testArray[" + testIndex + "].initChannel(ch)"
+        );
       } catch (x) {
         /* swallow and let tests continue */
       }
@@ -268,64 +285,73 @@ function runHttpTests(testArray, done) {
   var testIndex = -1;
 
   /** Stream listener for the channels. */
-  var listener =
-    {
-      /** Current channel being observed by this. */
-      _channel: null,
-      /** Array of bytes of data in body of response. */
-      _data: [],
+  var listener = {
+    /** Current channel being observed by this. */
+    _channel: null,
+    /** Array of bytes of data in body of response. */
+    _data: [],
 
-      onStartRequest(request) {
-        Assert.ok(request === this._channel);
-        var ch = request.QueryInterface(Ci.nsIHttpChannel)
-                        .QueryInterface(Ci.nsIHttpChannelInternal);
+    onStartRequest(request) {
+      Assert.ok(request === this._channel);
+      var ch = request
+        .QueryInterface(Ci.nsIHttpChannel)
+        .QueryInterface(Ci.nsIHttpChannelInternal);
 
-        this._data.length = 0;
+      this._data.length = 0;
+      try {
         try {
-          try {
-            testArray[testIndex].onStartRequest(ch);
-          } catch (e) {
-            do_report_unexpected_exception(e, "testArray[" + testIndex + "].onStartRequest");
-          }
+          testArray[testIndex].onStartRequest(ch);
         } catch (e) {
-          do_note_exception(e, "!!! swallowing onStartRequest exception so onStopRequest is " +
-                "called...");
+          do_report_unexpected_exception(
+            e,
+            "testArray[" + testIndex + "].onStartRequest"
+          );
         }
-      },
-      onDataAvailable(request, inputStream, offset, count) {
-        var quantum = 262144; // just above half the argument-count limit
-        var bis = makeBIS(inputStream);
-        for (var start = 0; start < count; start += quantum) {
-          var newData = bis.readByteArray(Math.min(quantum, count - start));
-          Array.prototype.push.apply(this._data, newData);
-        }
-      },
-      onStopRequest(request, status) {
-        this._channel = null;
+      } catch (e) {
+        do_note_exception(
+          e,
+          "!!! swallowing onStartRequest exception so onStopRequest is " +
+            "called..."
+        );
+      }
+    },
+    onDataAvailable(request, inputStream, offset, count) {
+      var quantum = 262144; // just above half the argument-count limit
+      var bis = makeBIS(inputStream);
+      for (var start = 0; start < count; start += quantum) {
+        var newData = bis.readByteArray(Math.min(quantum, count - start));
+        Array.prototype.push.apply(this._data, newData);
+      }
+    },
+    onStopRequest(request, status) {
+      this._channel = null;
 
-        var ch = request.QueryInterface(Ci.nsIHttpChannel)
-                        .QueryInterface(Ci.nsIHttpChannelInternal);
+      var ch = request
+        .QueryInterface(Ci.nsIHttpChannel)
+        .QueryInterface(Ci.nsIHttpChannelInternal);
 
-        // NB: The onStopRequest callback must run before performNextTest here,
-        //     because the latter runs the next test's initChannel callback, and
-        //     we want one test to be sequentially processed before the next
-        //     one.
+      // NB: The onStopRequest callback must run before performNextTest here,
+      //     because the latter runs the next test's initChannel callback, and
+      //     we want one test to be sequentially processed before the next
+      //     one.
+      try {
+        testArray[testIndex].onStopRequest(ch, status, this._data);
+      } finally {
         try {
-          testArray[testIndex].onStopRequest(ch, status, this._data);
+          performNextTest();
         } finally {
-          try {
-            performNextTest();
-          } finally {
-            do_test_finished();
-          }
+          do_test_finished();
         }
-      },
-      QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
-    };
+      }
+    },
+    QueryInterface: ChromeUtils.generateQI([
+      "nsIStreamListener",
+      "nsIRequestObserver",
+    ]),
+  };
 
   performNextTest();
 }
-
 
 /** **************************************
  * RAW REQUEST FORMAT TESTING FUNCTIONS *
@@ -350,16 +376,24 @@ function runHttpTests(testArray, done) {
  *   environment between tests
  */
 function RawTest(host, port, data, responseCheck) {
-  if (0 > port || 65535 < port || port % 1 !== 0)
+  if (0 > port || 65535 < port || port % 1 !== 0) {
     throw new Error("bad port");
-  if (!(data instanceof Array))
+  }
+  if (!(data instanceof Array)) {
     data = [data];
-  if (data.length <= 0)
+  }
+  if (data.length <= 0) {
     throw new Error("bad data length");
+  }
 
-  // eslint-disable-next-line no-control-regex
-  if (!data.every(function(v) { return /^[\x00-\xff]*$/.test(v); }))
+  if (
+    !data.every(function(v) {
+      // eslint-disable-next-line no-control-regex
+      return /^[\x00-\xff]*$/.test(v);
+    })
+  ) {
     throw new Error("bad data contained non-byte-valued character");
+  }
 
   this.host = host;
   this.port = port;
@@ -380,12 +414,12 @@ function RawTest(host, port, data, responseCheck) {
 function runRawTests(testArray, done, beforeTestCallback) {
   do_test_pending();
 
-  var sts = Cc["@mozilla.org/network/socket-transport-service;1"]
-              .getService(Ci.nsISocketTransportService);
+  var sts = Cc["@mozilla.org/network/socket-transport-service;1"].getService(
+    Ci.nsISocketTransportService
+  );
 
-  var currentThread = Cc["@mozilla.org/thread-manager;1"]
-                        .getService()
-                        .currentThread;
+  var currentThread = Cc["@mozilla.org/thread-manager;1"].getService()
+    .currentThread;
 
   /** Kicks off running the next test in the array. */
   function performNextTest() {
@@ -402,16 +436,17 @@ function runRawTests(testArray, done, beforeTestCallback) {
     if (beforeTestCallback) {
       try {
         beforeTestCallback(testIndex);
-      } catch (e) { /* We don't care if this call fails */ }
+      } catch (e) {
+        /* We don't care if this call fails */
+      }
     }
 
     var rawTest = testArray[testIndex];
 
-    var transport =
-      sts.createTransport([], rawTest.host, rawTest.port, null);
+    var transport = sts.createTransport([], rawTest.host, rawTest.port, null);
 
     var inStream = transport.openInputStream(0, 0, 0);
-    var outStream  = transport.openOutputStream(0, 0, 0);
+    var outStream = transport.openOutputStream(0, 0, 0);
 
     // reset
     dataIndex = 0;
@@ -432,8 +467,12 @@ function runRawTests(testArray, done, beforeTestCallback) {
     // guarantee that 'stream' passed in here been QIed to nsIAsyncOutputStream
     // since the last GC.
     stream = stream.QueryInterface(Ci.nsIAsyncOutputStream);
-    stream.asyncWait(writer, 0, testArray[testIndex].data[dataIndex].length,
-                     currentThread);
+    stream.asyncWait(
+      writer,
+      0,
+      testArray[testIndex].data[dataIndex].length,
+      currentThread
+    );
   }
 
   /** Index of the test being run. */
@@ -449,80 +488,80 @@ function runRawTests(testArray, done, beforeTestCallback) {
   var received = "";
 
   /** Reads data from the socket. */
-  var reader =
-    {
-      onInputStreamReady(stream) {
-        Assert.ok(stream === this.stream);
+  var reader = {
+    onInputStreamReady(stream) {
+      Assert.ok(stream === this.stream);
+      try {
+        var bis = new BinaryInputStream(stream);
+
+        var av = 0;
         try {
-          var bis = new BinaryInputStream(stream);
+          av = bis.available();
+        } catch (e) {
+          /* default to 0 */
+          do_note_exception(e);
+        }
 
-          var av = 0;
-          try {
-            av = bis.available();
-          } catch (e) {
-            /* default to 0 */
-            do_note_exception(e);
+        if (av > 0) {
+          var quantum = 262144;
+          for (var start = 0; start < av; start += quantum) {
+            var bytes = bis.readByteArray(Math.min(quantum, av - start));
+            received += String.fromCharCode.apply(null, bytes);
           }
+          waitForMoreInput(stream);
+          return;
+        }
+      } catch (e) {
+        do_report_unexpected_exception(e);
+      }
 
-          if (av > 0) {
-            var quantum = 262144;
-            for (var start = 0; start < av; start += quantum) {
-              var bytes = bis.readByteArray(Math.min(quantum, av - start));
-              received += String.fromCharCode.apply(null, bytes);
-            }
-            waitForMoreInput(stream);
-            return;
-          }
+      var rawTest = testArray[testIndex];
+      try {
+        rawTest.responseCheck(received);
+      } catch (e) {
+        do_report_unexpected_exception(e);
+      } finally {
+        try {
+          stream.close();
+          performNextTest();
         } catch (e) {
           do_report_unexpected_exception(e);
         }
-
-        var rawTest = testArray[testIndex];
-        try {
-          rawTest.responseCheck(received);
-        } catch (e) {
-          do_report_unexpected_exception(e);
-        } finally {
-          try {
-            stream.close();
-            performNextTest();
-          } catch (e) {
-            do_report_unexpected_exception(e);
-          }
-        }
-      },
-    };
+      }
+    },
+  };
 
   /** Writes data to the socket. */
-  var writer =
-    {
-      onOutputStreamReady(stream) {
-        var str = testArray[testIndex].data[dataIndex];
+  var writer = {
+    onOutputStreamReady(stream) {
+      var str = testArray[testIndex].data[dataIndex];
 
-        var written = 0;
-        try {
-          written = stream.write(str, str.length);
-          if (written == str.length)
-            dataIndex++;
-          else
-            testArray[testIndex].data[dataIndex] = str.substring(written);
-        } catch (e) {
-          do_note_exception(e);
-          /* stream could have been closed, just ignore */
+      var written = 0;
+      try {
+        written = stream.write(str, str.length);
+        if (written == str.length) {
+          dataIndex++;
+        } else {
+          testArray[testIndex].data[dataIndex] = str.substring(written);
         }
+      } catch (e) {
+        do_note_exception(e);
+        /* stream could have been closed, just ignore */
+      }
 
-        try {
-          // Keep writing data while we can write and
-          // until there's no more data to read
-          if (written > 0 && dataIndex < testArray[testIndex].data.length)
-            waitToWriteOutput(stream);
-          else
-            stream.close();
-        } catch (e) {
-          do_report_unexpected_exception(e);
+      try {
+        // Keep writing data while we can write and
+        // until there's no more data to read
+        if (written > 0 && dataIndex < testArray[testIndex].data.length) {
+          waitToWriteOutput(stream);
+        } else {
+          stream.close();
         }
-      },
-    };
+      } catch (e) {
+        do_report_unexpected_exception(e);
+      }
+    },
+  };
 
   performNextTest();
 }

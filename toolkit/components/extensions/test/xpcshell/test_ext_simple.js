@@ -5,10 +5,10 @@
 add_task(async function test_simple() {
   let extensionData = {
     manifest: {
-      "name": "Simple extension test",
-      "version": "1.0",
-      "manifest_version": 2,
-      "description": "",
+      name: "Simple extension test",
+      version: "1.0",
+      manifest_version: 2,
+      description: "",
     },
   };
 
@@ -34,16 +34,19 @@ add_task(async function test_background() {
   let extensionData = {
     background,
     manifest: {
-      "name": "Simple extension test",
-      "version": "1.0",
-      "manifest_version": 2,
-      "description": "",
+      name: "Simple extension test",
+      version: "1.0",
+      manifest_version: 2,
+      description: "",
     },
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
-  let [, x] = await Promise.all([extension.startup(), extension.awaitMessage("running")]);
+  let [, x] = await Promise.all([
+    extension.startup(),
+    extension.awaitMessage("running"),
+  ]);
   equal(x, 1, "got correct value from extension");
 
   extension.sendMessage(10, 20);
@@ -54,8 +57,16 @@ add_task(async function test_background() {
 add_task(async function test_extensionTypes() {
   let extensionData = {
     background: function() {
-      browser.test.assertEq(typeof browser.extensionTypes, "object", "browser.extensionTypes exists");
-      browser.test.assertEq(typeof browser.extensionTypes.RunAt, "object", "browser.extensionTypes.RunAt exists");
+      browser.test.assertEq(
+        typeof browser.extensionTypes,
+        "object",
+        "browser.extensionTypes exists"
+      );
+      browser.test.assertEq(
+        typeof browser.extensionTypes.RunAt,
+        "object",
+        "browser.extensionTypes.RunAt exists"
+      );
       browser.test.notifyPass("extentionTypes test passed");
     },
   };
@@ -66,4 +77,3 @@ add_task(async function test_extensionTypes() {
   await extension.awaitFinish();
   await extension.unload();
 });
-

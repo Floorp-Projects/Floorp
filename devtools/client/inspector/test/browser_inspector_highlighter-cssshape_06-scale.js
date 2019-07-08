@@ -13,7 +13,7 @@ const SHAPE_SELECTORS = ["#polygon-transform", "#circle", "#ellipse", "#inset"];
 add_task(async function() {
   const env = await openInspectorForURL(TEST_URL);
   const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(env);
-  const {testActor, inspector} = env;
+  const { testActor, inspector } = env;
   const view = selectRuleView(inspector);
   const highlighters = view.highlighters;
   const config = { inspector, view, highlighters, testActor, helper };
@@ -39,11 +39,13 @@ async function testScale(config) {
   const property = "clip-path";
 
   for (const selector of SHAPE_SELECTORS) {
-    await setup({selector, property, options, ...config});
+    await setup({ selector, property, options, ...config });
     const { mouse } = helper;
 
-    const { nw, width,
-          height, center } = await getBoundingBoxInPx({selector, ...config});
+    const { nw, width, height, center } = await getBoundingBoxInPx({
+      selector,
+      ...config,
+    });
 
     // if the top or left edges are not visible, move the shape so it is.
     if (nw[0] < 0 || nw[1] < 0) {
@@ -62,62 +64,82 @@ async function testScale(config) {
     let onShapeChangeApplied;
 
     info("Scaling from nw");
-    onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
+    onShapeChangeApplied = highlighters.once(
+      "shapes-highlighter-changes-applied"
+    );
     await mouse.down(nw[0], nw[1], selector);
     await mouse.move(nw[0] + dx, nw[1] + dy, selector);
     await mouse.up(nw[0] + dx, nw[1] + dy, selector);
     await testActor.reflow();
     await onShapeChangeApplied;
 
-    const nwBB = await getBoundingBoxInPx({selector, ...config});
+    const nwBB = await getBoundingBoxInPx({ selector, ...config });
     isnot(nwBB.nw[0], nw[0], `${selector} nw moved right after nw scale`);
     isnot(nwBB.nw[1], nw[1], `${selector} nw moved down after nw scale`);
     isnot(nwBB.width, width, `${selector} width reduced after nw scale`);
     isnot(nwBB.height, height, `${selector} height reduced after nw scale`);
 
     info("Scaling from ne");
-    onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
+    onShapeChangeApplied = highlighters.once(
+      "shapes-highlighter-changes-applied"
+    );
     await mouse.down(nwBB.ne[0], nwBB.ne[1], selector);
     await mouse.move(nwBB.ne[0] - dx, nwBB.ne[1] + dy, selector);
     await mouse.up(nwBB.ne[0] - dx, nwBB.ne[1] + dy, selector);
     await testActor.reflow();
     await onShapeChangeApplied;
 
-    const neBB = await getBoundingBoxInPx({selector, ...config});
+    const neBB = await getBoundingBoxInPx({ selector, ...config });
     isnot(neBB.ne[0], nwBB.ne[0], `${selector} ne moved right after ne scale`);
     isnot(neBB.ne[1], nwBB.ne[1], `${selector} ne moved down after ne scale`);
     isnot(neBB.width, nwBB.width, `${selector} width reduced after ne scale`);
-    isnot(neBB.height, nwBB.height, `${selector} height reduced after ne scale`);
+    isnot(
+      neBB.height,
+      nwBB.height,
+      `${selector} height reduced after ne scale`
+    );
 
     info("Scaling from sw");
-    onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
+    onShapeChangeApplied = highlighters.once(
+      "shapes-highlighter-changes-applied"
+    );
     await mouse.down(neBB.sw[0], neBB.sw[1], selector);
     await mouse.move(neBB.sw[0] + dx, neBB.sw[1] - dy, selector);
     await mouse.up(neBB.sw[0] + dx, neBB.sw[1] - dy, selector);
     await testActor.reflow();
     await onShapeChangeApplied;
 
-    const swBB = await getBoundingBoxInPx({selector, ...config});
+    const swBB = await getBoundingBoxInPx({ selector, ...config });
     isnot(swBB.sw[0], neBB.sw[0], `${selector} sw moved right after sw scale`);
     isnot(swBB.sw[1], neBB.sw[1], `${selector} sw moved down after sw scale`);
     isnot(swBB.width, neBB.width, `${selector} width reduced after sw scale`);
-    isnot(swBB.height, neBB.height, `${selector} height reduced after sw scale`);
+    isnot(
+      swBB.height,
+      neBB.height,
+      `${selector} height reduced after sw scale`
+    );
 
     info("Scaling from se");
-    onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
+    onShapeChangeApplied = highlighters.once(
+      "shapes-highlighter-changes-applied"
+    );
     await mouse.down(swBB.se[0], swBB.se[1], selector);
     await mouse.move(swBB.se[0] - dx, swBB.se[1] - dy, selector);
     await mouse.up(swBB.se[0] - dx, swBB.se[1] - dy, selector);
     await testActor.reflow();
     await onShapeChangeApplied;
 
-    const seBB = await getBoundingBoxInPx({selector, ...config});
+    const seBB = await getBoundingBoxInPx({ selector, ...config });
     isnot(seBB.se[0], swBB.se[0], `${selector} se moved right after se scale`);
     isnot(seBB.se[1], swBB.se[1], `${selector} se moved down after se scale`);
     isnot(seBB.width, swBB.width, `${selector} width reduced after se scale`);
-    isnot(seBB.height, swBB.height, `${selector} height reduced after se scale`);
+    isnot(
+      seBB.height,
+      swBB.height,
+      `${selector} height reduced after se scale`
+    );
 
-    await teardown({selector, property, ...config});
+    await teardown({ selector, property, ...config });
   }
 }
 
@@ -131,10 +153,18 @@ async function getBoundingBoxInPx(config) {
   const paddingLeft = parseFloat(computedStyle["padding-left"].value);
   // path is always of form "Mx y Lx y Lx y Lx y Z", where x/y are numbers
   const path = await testActor.getHighlighterNodeAttribute(
-    "shapes-bounding-box", "d", highlighters.highlighters[HIGHLIGHTER_TYPE]);
-  const coords = path.replace(/[MLZ]/g, "").split(" ").map((n, i) => {
-    return i % 2 === 0 ? paddingLeft + width * n / 100 : paddingTop + height * n / 100;
-  });
+    "shapes-bounding-box",
+    "d",
+    highlighters.highlighters[HIGHLIGHTER_TYPE]
+  );
+  const coords = path
+    .replace(/[MLZ]/g, "")
+    .split(" ")
+    .map((n, i) => {
+      return i % 2 === 0
+        ? paddingLeft + (width * n) / 100
+        : paddingTop + (height * n) / 100;
+    });
 
   const nw = [coords[0], coords[1]];
   const ne = [coords[2], coords[3]];

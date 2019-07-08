@@ -40,7 +40,10 @@ add_task(async function test_remove_bookmark_from_toolbar() {
   let toolbarNode = getToolbarNodeForItemGuid(toolbarBookmark.guid);
 
   let contextMenu = document.getElementById("placesContext");
-  let popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popupshown"
+  );
 
   EventUtils.synthesizeMouseAtCenter(toolbarNode, {
     button: 2,
@@ -50,13 +53,20 @@ add_task(async function test_remove_bookmark_from_toolbar() {
 
   let contextMenuDeleteItem = document.getElementById("placesContext_delete");
 
-  let removePromise = PlacesTestUtils.waitForNotification("onItemRemoved", (itemId, parentId, index, type, uri, guid) => uri.spec == TEST_URL);
+  let removePromise = PlacesTestUtils.waitForNotification(
+    "onItemRemoved",
+    (itemId, parentId, index, type, uri, guid) => uri.spec == TEST_URL
+  );
 
   EventUtils.synthesizeMouseAtCenter(contextMenuDeleteItem, {});
 
   await removePromise;
 
-  Assert.deepEqual(PlacesUtils.bookmarks.fetch({ url: TEST_URL }), {}, "Should have removed the bookmark from the database");
+  Assert.deepEqual(
+    PlacesUtils.bookmarks.fetch({ url: TEST_URL }),
+    {},
+    "Should have removed the bookmark from the database"
+  );
 });
 
 add_task(async function test_remove_bookmark_from_library() {
@@ -88,16 +98,28 @@ add_task(async function test_remove_bookmark_from_library() {
 
   let PO = library.PlacesOrganizer;
 
-  Assert.equal(PlacesUtils.getConcreteItemGuid(PO._places.selectedNode),
-    PlacesUtils.bookmarks.unfiledGuid, "Should have selected unfiled bookmarks.");
+  Assert.equal(
+    PlacesUtils.getConcreteItemGuid(PO._places.selectedNode),
+    PlacesUtils.bookmarks.unfiledGuid,
+    "Should have selected unfiled bookmarks."
+  );
 
   let contextMenu = library.document.getElementById("placesContext");
-  let contextMenuDeleteItem = library.document.getElementById("placesContext_delete");
+  let contextMenuDeleteItem = library.document.getElementById(
+    "placesContext_delete"
+  );
 
-  let popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popupshown"
+  );
 
   let firstColumn = library.ContentTree.view.columns[0];
-  let firstBookmarkRect = library.ContentTree.view.getCoordsForCellItem(0, firstColumn, "bm0");
+  let firstBookmarkRect = library.ContentTree.view.getCoordsForCellItem(
+    0,
+    firstColumn,
+    "bm0"
+  );
 
   EventUtils.synthesizeMouse(
     library.ContentTree.view.body,
@@ -109,12 +131,23 @@ add_task(async function test_remove_bookmark_from_library() {
 
   await popupShownPromise;
 
-  Assert.equal(library.ContentTree.view.result.root.childCount, 3, "Number of bookmarks before removal is right");
+  Assert.equal(
+    library.ContentTree.view.result.root.childCount,
+    3,
+    "Number of bookmarks before removal is right"
+  );
 
-  let removePromise = PlacesTestUtils.waitForNotification("onItemRemoved", (itemId, parentId, index, type, uri, guid) => uri.spec == uris[0]);
+  let removePromise = PlacesTestUtils.waitForNotification(
+    "onItemRemoved",
+    (itemId, parentId, index, type, uri, guid) => uri.spec == uris[0]
+  );
   EventUtils.synthesizeMouseAtCenter(contextMenuDeleteItem, {}, library);
 
   await removePromise;
 
-  Assert.equal(library.ContentTree.view.result.root.childCount, 2, "Should have removed the bookmark from the display");
+  Assert.equal(
+    library.ContentTree.view.result.root.childCount,
+    2,
+    "Should have removed the bookmark from the display"
+  );
 });

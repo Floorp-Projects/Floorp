@@ -20,16 +20,20 @@
 // indexedDB entries created in storage-listings.html,
 // storage-secured-iframe.html and storage-unsecured-iframe.html
 const storeItems = [
-  [["indexedDB", "http://test1.example.org"],
-   ["idb1 (default)", "idb2 (default)"]],
-  [["indexedDB", "http://test1.example.org", "idb1 (default)"],
-   ["obj1", "obj2"]],
-  [["indexedDB", "http://test1.example.org", "idb2 (default)"],
-   []],
-  [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
-   [1, 2, 3]],
-  [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj2"],
-   [1]],
+  [
+    ["indexedDB", "http://test1.example.org"],
+    ["idb1 (default)", "idb2 (default)"],
+  ],
+  [
+    ["indexedDB", "http://test1.example.org", "idb1 (default)"],
+    ["obj1", "obj2"],
+  ],
+  [["indexedDB", "http://test1.example.org", "idb2 (default)"], []],
+  [
+    ["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
+    [1, 2, 3],
+  ],
+  [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj2"], [1]],
 ];
 
 /**
@@ -38,8 +42,10 @@ const storeItems = [
 function testTree() {
   const doc = gPanelWindow.document;
   for (const [item] of storeItems) {
-    ok(doc.querySelector(`[data-id='${JSON.stringify(item)}']`),
-      `Tree item ${item} should be present in the storage tree`);
+    ok(
+      doc.querySelector(`[data-id='${JSON.stringify(item)}']`),
+      `Tree item ${item} should be present in the storage tree`
+    );
   }
 }
 
@@ -56,14 +62,20 @@ const testTables = async function() {
     await selectTreeItem(item);
 
     // Check whether correct number of items are present in the table
-    is(doc.querySelectorAll(
-         ".table-widget-wrapper:first-of-type .table-widget-cell"
-       ).length, ids.length, "Number of items in table is correct");
+    is(
+      doc.querySelectorAll(
+        ".table-widget-wrapper:first-of-type .table-widget-cell"
+      ).length,
+      ids.length,
+      "Number of items in table is correct"
+    );
 
     // Check if all the desired items are present in the table
     for (const id of ids) {
-      ok(doc.querySelector(".table-widget-cell[data-id='" + id + "']"),
-        `Table item ${id} should be present`);
+      ok(
+        doc.querySelector(".table-widget-cell[data-id='" + id + "']"),
+        `Table item ${id} should be present`
+      );
     }
   }
 };

@@ -11,8 +11,10 @@ add_task(setup_UITourTest);
 
 add_UITour_task(async function test_menu_show() {
   let panel = BrowserPageActions.activatedActionPanelNode;
-  Assert.ok(!panel || panel.state == "closed",
-            "Pocket panel should initially be closed");
+  Assert.ok(
+    !panel || panel.state == "closed",
+    "Pocket panel should initially be closed"
+  );
   gContentAPI.showMenu("pocket");
 
   // The panel gets created dynamically.
@@ -22,7 +24,10 @@ add_UITour_task(async function test_menu_show() {
     return panel && panel.state == "open";
   }, "Menu should be visible after showMenu()");
 
-  Assert.ok(!panel.hasAttribute("noautohide"), "@noautohide shouldn't be on the pocket panel");
+  Assert.ok(
+    !panel.hasAttribute("noautohide"),
+    "@noautohide shouldn't be on the pocket panel"
+  );
 
   panel.hidePopup();
   await new Promise(resolve => {

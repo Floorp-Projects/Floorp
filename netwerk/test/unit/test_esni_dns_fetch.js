@@ -5,13 +5,17 @@ var h2Port;
 var listen;
 
 var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
-var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
+var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
+  Ci.nsIThreadManager
+);
 var mainThread = threadManager.currentThread;
 
 const defaultOriginAttributes = {};
 
 function run_test() {
-  var env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+  var env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   h2Port = env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
@@ -37,8 +41,9 @@ function run_test() {
 
   // The moz-http2 cert is for foo.example.com and is signed by http2-ca.pem
   // so add that cert to the trust list as a signing cert.  // the foo.example.com domain name.
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
-      .getService(Ci.nsIX509CertDB);
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
   do_test_pending();
   run_dns_tests();
@@ -60,11 +65,10 @@ registerCleanupFunction(() => {
   prefs.clearUserPref("network.trr.bootstrapAddress");
   prefs.clearUserPref("network.trr.blacklist-duration");
   prefs.clearUserPref("network.trr.request-timeout");
-
 });
 
-var test_answer="bXkgdm9pY2UgaXMgbXkgcGFzc3dvcmQ=";
-var test_answer_addr="127.0.0.1";
+var test_answer = "bXkgdm9pY2UgaXMgbXkgcGFzc3dvcmQ=";
+var test_answer_addr = "127.0.0.1";
 
 // check that we do lookup by type fine
 var listenerEsni = {
@@ -77,7 +81,7 @@ var listenerEsni = {
       run_dns_tests();
     }
   },
-  QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"])
+  QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"]),
 };
 
 // check that we do lookup for A record is fine
@@ -91,52 +95,70 @@ var listenerAddr = {
       run_dns_tests();
     }
   },
-  QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"])
+  QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"]),
 };
 
-function testEsniRequest()
-{
+function testEsniRequest() {
   // use the h2 server as DOH provider
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/esni-dns");
-  listen = dns.asyncResolveByType("_esni.example.com", dns.RESOLVE_TYPE_TXT, 0, listenerEsni, mainThread, defaultOriginAttributes);
+  prefs.setCharPref(
+    "network.trr.uri",
+    "https://foo.example.com:" + h2Port + "/esni-dns"
+  );
+  listen = dns.asyncResolveByType(
+    "_esni.example.com",
+    dns.RESOLVE_TYPE_TXT,
+    0,
+    listenerEsni,
+    mainThread,
+    defaultOriginAttributes
+  );
 }
 
 // verify esni record pushed on a A record request
-function testEsniPushPart1()
-{
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/esni-dns-push");
-  listen = dns.asyncResolve("_esni_push.example.com", 0, listenerAddr, mainThread, defaultOriginAttributes);
+function testEsniPushPart1() {
+  prefs.setCharPref(
+    "network.trr.uri",
+    "https://foo.example.com:" + h2Port + "/esni-dns-push"
+  );
+  listen = dns.asyncResolve(
+    "_esni_push.example.com",
+    0,
+    listenerAddr,
+    mainThread,
+    defaultOriginAttributes
+  );
 }
 
 // verify the esni pushed record
-function testEsniPushPart2()
-{
+function testEsniPushPart2() {
   // At this point the second host name should've been pushed and we can resolve it using
   // cache only. Set back the URI to a path that fails.
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/404");
-  listen = dns.asyncResolveByType("_esni_push.example.com", dns.RESOLVE_TYPE_TXT, 0, listenerEsni, mainThread, defaultOriginAttributes);
+  prefs.setCharPref(
+    "network.trr.uri",
+    "https://foo.example.com:" + h2Port + "/404"
+  );
+  listen = dns.asyncResolveByType(
+    "_esni_push.example.com",
+    dns.RESOLVE_TYPE_TXT,
+    0,
+    listenerEsni,
+    mainThread,
+    defaultOriginAttributes
+  );
 }
 
-function testsDone()
-{
+function testsDone() {
   do_test_finished();
   do_test_finished();
 }
 
-var tests = [testEsniRequest,
-             testEsniPushPart1,
-             testEsniPushPart2,
-             testsDone
-            ];
+var tests = [testEsniRequest, testEsniPushPart1, testEsniPushPart2, testsDone];
 var current_test = 0;
 
-function run_dns_tests()
-{
+function run_dns_tests() {
   if (current_test < tests.length) {
     dump("starting test " + current_test + "\n");
     do_test_pending();
     tests[current_test++]();
   }
 }
-
-

@@ -1,4 +1,7 @@
-Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js", this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js",
+  this
+);
 
 add_task(async function() {
   const SEARCH_TEXT = "text";
@@ -9,8 +12,11 @@ add_task(async function() {
 
   // Bug 493658. An invisible iframe that shouldn't interfere with
   // highlighting matches lying after it in the document
-  let invisible = "<iframe id='invisible' style='display: none;' " +
-                  "src='" + DATAURI + "'></iframe>";
+  let invisible =
+    "<iframe id='invisible' style='display: none;' " +
+    "src='" +
+    DATAURI +
+    "'></iframe>";
 
   let uri = DATAURI + invisible + SEARCH_TEXT + visible + SEARCH_TEXT;
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);
@@ -22,8 +28,9 @@ add_task(async function() {
   gFindBar._findField.value = SEARCH_TEXT;
   await findAgainAndWait();
   var matchCase = gFindBar.getElement("find-case-sensitive");
-  if (matchCase.checked)
+  if (matchCase.checked) {
     matchCase.doCommand();
+  }
 
   // Turn on highlighting
   await toggleHighlightAndWait(true);
@@ -55,24 +62,26 @@ add_task(async function() {
     let ifWindow = iframe.contentWindow;
     let ifDocShell = ifWindow.docShell;
 
-    let ifController = ifDocShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsISelectionDisplay)
-                                 .QueryInterface(Ci.nsISelectionController);
+    let ifController = ifDocShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsISelectionDisplay)
+      .QueryInterface(Ci.nsISelectionController);
 
-    let frameFindSelection =
-      ifController.getSelection(ifController.SELECTION_FIND);
+    let frameFindSelection = ifController.getSelection(
+      ifController.SELECTION_FIND
+    );
     frameFindSelection.addRange(range);
 
     // Create manual highlights in the main document (the matches that lie
     // before/after the iframes
     let docShell = win.docShell;
 
-    let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsISelectionDisplay)
-                             .QueryInterface(Ci.nsISelectionController);
+    let controller = docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsISelectionDisplay)
+      .QueryInterface(Ci.nsISelectionController);
 
-    let docFindSelection =
-      controller.getSelection(ifController.SELECTION_FIND);
+    let docFindSelection = controller.getSelection(ifController.SELECTION_FIND);
 
     range = doc.createRange();
     range.selectNodeContents(doc.body.childNodes[0]);
@@ -101,7 +110,7 @@ add_task(async function() {
 });
 
 function toggleHighlightAndWait(shouldHighlight) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     let listener = {
       onFindResult() {},
       onHighlightFinished() {
@@ -132,7 +141,10 @@ function findAgainAndWait() {
 
 async function openFindBarAndWait() {
   await gFindBarPromise;
-  let awaitTransitionEnd = BrowserTestUtils.waitForEvent(gFindBar, "transitionend");
+  let awaitTransitionEnd = BrowserTestUtils.waitForEvent(
+    gFindBar,
+    "transitionend"
+  );
   gFindBar.open();
   await awaitTransitionEnd;
 }
@@ -141,9 +153,14 @@ async function openFindBarAndWait() {
 // to close before taking the snapshot so the gFindBar does not take up space
 // on the new snapshot.
 async function closeFindBarAndWait() {
-  let awaitTransitionEnd = BrowserTestUtils.waitForEvent(gFindBar, "transitionend", false, event => {
-    return event.propertyName == "visibility";
-  });
+  let awaitTransitionEnd = BrowserTestUtils.waitForEvent(
+    gFindBar,
+    "transitionend",
+    false,
+    event => {
+      return event.propertyName == "visibility";
+    }
+  );
   gFindBar.close();
   await awaitTransitionEnd;
 }

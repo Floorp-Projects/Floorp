@@ -26,41 +26,50 @@ onmessage = async function(msg) {
       let lineSplits = line.split(" ");
       let fileName = lineSplits[1];
       // We don't need these types of files.
-      if (fileName == "verified_contents.json" ||
-          fileName == "icon-128x128.png") {
+      if (
+        fileName == "verified_contents.json" ||
+        fileName == "icon-128x128.png"
+      ) {
         continue;
       }
       let filePath = jarPath + fileName;
       let filePathResponse = await fetch(filePath);
       let fileContents = await filePathResponse.blob();
       let fileData = await new Promise(resolve => {
-        reader.onloadend = function() { resolve(reader.result); };
+        reader.onloadend = function() {
+          resolve(reader.result);
+        };
         reader.readAsArrayBuffer(fileContents);
       });
       let profileDirPath = OS.Constants.Path.profileDir;
-      let installToDirPath = OS.Path.join(profileDirPath,
-                                          msg.data.relativeInstallPath);
-      await OS.File.makeDir(installToDirPath, {ignoreExisting: true,
-                                               unixMode: 0o755,
-                                               from: profileDirPath});
+      let installToDirPath = OS.Path.join(
+        profileDirPath,
+        msg.data.relativeInstallPath
+      );
+      await OS.File.makeDir(installToDirPath, {
+        ignoreExisting: true,
+        unixMode: 0o755,
+        from: profileDirPath,
+      });
       // Do not extract into directories. Extract all files to the same
       // directory.
       let destPath = OS.Path.join(installToDirPath, fileName);
-      await OS.File.writeAtomic(destPath, new Uint8Array(fileData),
-                                {tmpPath: destPath + ".tmp"});
+      await OS.File.writeAtomic(destPath, new Uint8Array(fileData), {
+        tmpPath: destPath + ".tmp",
+      });
       // Ensure files are writable and executable. Otherwise, we may be
       // unable to execute or uninstall them.
-      await OS.File.setPermissions(destPath, {unixMode: 0o700});
+      await OS.File.setPermissions(destPath, { unixMode: 0o700 });
       extractedPaths.push(destPath);
     }
     postMessage({
-      "result": "success",
+      result: "success",
       extractedPaths,
     });
   } catch (e) {
     postMessage({
-      "result": "fail",
-      "exception": e.message,
+      result: "fail",
+      exception: e.message,
     });
   }
 };

@@ -11,7 +11,7 @@ const TEST_URI = URL_ROOT + "doc_content_stylesheet.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#target", inspector);
 
   info("Setting a font-weight property on all rules");

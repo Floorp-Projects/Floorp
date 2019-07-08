@@ -11,51 +11,78 @@
  * body results in all mouse button events firing normally.
  */
 add_task(async () => {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: TEST_PAGE,
-  }, async browser => {
-    await SimpleTest.promiseFocus(browser);
-    await ensureVideosReady(browser);
-    let videoID = "no-controls";
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_PAGE,
+    },
+    async browser => {
+      await SimpleTest.promiseFocus(browser);
+      await ensureVideosReady(browser);
+      let videoID = "no-controls";
 
-    let { toggleClientRect } = await prepareForToggleClick(browser, videoID);
+      let { toggleClientRect } = await prepareForToggleClick(browser, videoID);
 
-    // Hover the mouse over the video to reveal the toggle, which is necessary
-    // if we want to click on the toggle.
-    await BrowserTestUtils.synthesizeMouseAtCenter(`#${videoID}`, {
-      type: "mousemove",
-    }, browser);
-    await BrowserTestUtils.synthesizeMouseAtCenter(`#${videoID}`, {
-      type: "mouseover",
-    }, browser);
+      // Hover the mouse over the video to reveal the toggle, which is necessary
+      // if we want to click on the toggle.
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        `#${videoID}`,
+        {
+          type: "mousemove",
+        },
+        browser
+      );
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        `#${videoID}`,
+        {
+          type: "mouseover",
+        },
+        browser
+      );
 
-    info("Waiting for toggle to become visible");
-    await toggleOpacityReachesThreshold(browser, videoID, HOVER_VIDEO_OPACITY);
+      info("Waiting for toggle to become visible");
+      await toggleOpacityReachesThreshold(
+        browser,
+        videoID,
+        HOVER_VIDEO_OPACITY
+      );
 
-    // The toggle center, because of how it slides out, is actually outside
-    // of the bounds of a click event. For now, we move the mouse in by a
-    // hard-coded 2 pixels along the x and y axis to achieve the hover.
-    let toggleLeft = toggleClientRect.left + 2;
-    let toggleTop = toggleClientRect.top + 2;
+      // The toggle center, because of how it slides out, is actually outside
+      // of the bounds of a click event. For now, we move the mouse in by a
+      // hard-coded 2 pixels along the x and y axis to achieve the hover.
+      let toggleLeft = toggleClientRect.left + 2;
+      let toggleTop = toggleClientRect.top + 2;
 
-    info("Clicking on toggle, and expecting a Picture-in-Picture window to open");
-    let domWindowOpened = BrowserTestUtils.domWindowOpened(null);
+      info(
+        "Clicking on toggle, and expecting a Picture-in-Picture window to open"
+      );
+      let domWindowOpened = BrowserTestUtils.domWindowOpened(null);
 
-    await BrowserTestUtils.synthesizeMouseAtPoint(toggleLeft, toggleTop, {
-      type: "mousedown",
-    }, browser);
+      await BrowserTestUtils.synthesizeMouseAtPoint(
+        toggleLeft,
+        toggleTop,
+        {
+          type: "mousedown",
+        },
+        browser
+      );
 
-    await BrowserTestUtils.synthesizeMouseAtPoint(1, 1, {
-      type: "mouseup",
-    }, browser);
+      await BrowserTestUtils.synthesizeMouseAtPoint(
+        1,
+        1,
+        {
+          type: "mouseup",
+        },
+        browser
+      );
 
-    let win = await domWindowOpened;
-    ok(win, "A Picture-in-Picture window opened.");
-    await BrowserTestUtils.closeWindow(win);
-    await assertSawMouseEvents(browser, false);
+      let win = await domWindowOpened;
+      ok(win, "A Picture-in-Picture window opened.");
+      await BrowserTestUtils.closeWindow(win);
+      await assertSawMouseEvents(browser, false);
 
-    await BrowserTestUtils.synthesizeMouseAtPoint(1, 1, {}, browser);
-    await assertSawMouseEvents(browser, true);
-  });
+      await BrowserTestUtils.synthesizeMouseAtPoint(1, 1, {}, browser);
+      await assertSawMouseEvents(browser, true);
+    }
+  );
 });

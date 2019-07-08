@@ -5,9 +5,13 @@
 
 add_task(async function() {
   await setupPlacesDatabase("corruptPayload.sqlite");
-  await Assert.rejects(PlacesDBUtils.checkIntegrity(),
-                       /will be replaced on next startup/,
-                       "Should reject on corruption");
-  Assert.equal(Services.prefs.getCharPref("places.database.replaceDatabaseOnStartup"),
-               DB_FILENAME);
+  await Assert.rejects(
+    PlacesDBUtils.checkIntegrity(),
+    /will be replaced on next startup/,
+    "Should reject on corruption"
+  );
+  Assert.equal(
+    Services.prefs.getCharPref("places.database.replaceDatabaseOnStartup"),
+    DB_FILENAME
+  );
 });

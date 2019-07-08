@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const morgueFile = "storage/default/http+++example.com/morgue";
 
   info("Clearing");

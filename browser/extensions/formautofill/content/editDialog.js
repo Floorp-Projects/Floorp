@@ -8,10 +8,15 @@
 "use strict";
 
 // eslint-disable-next-line no-unused-vars
-const {FormAutofill} = ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
+const { FormAutofill } = ChromeUtils.import(
+  "resource://formautofill/FormAutofill.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "formAutofillStorage",
-                               "resource://formautofill/FormAutofillStorage.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "formAutofillStorage",
+  "resource://formautofill/FormAutofillStorage.jsm"
+);
 
 class AutofillEditDialog {
   constructor(subStorageName, elements, record) {
@@ -20,7 +25,7 @@ class AutofillEditDialog {
     this._elements = elements;
     this._record = record;
     this.localizeDocument();
-    window.addEventListener("DOMContentLoaded", this, {once: true});
+    window.addEventListener("DOMContentLoaded", this, { once: true });
   }
 
   async init() {
@@ -79,8 +84,10 @@ class AutofillEditDialog {
         break;
       }
       case "contextmenu": {
-        if (!(event.target instanceof HTMLInputElement) &&
-            !(event.target instanceof HTMLTextAreaElement)) {
+        if (
+          !(event.target instanceof HTMLInputElement) &&
+          !(event.target instanceof HTMLTextAreaElement)
+        ) {
           event.preventDefault();
         }
         break;
@@ -125,7 +132,9 @@ class AutofillEditDialog {
   updateSaveButtonState() {
     // Toggle disabled attribute on the save button based on
     // whether the form is filled or empty.
-    if (Object.keys(this._elements.fieldContainer.buildFormObject()).length == 0) {
+    if (
+      Object.keys(this._elements.fieldContainer.buildFormObject()).length == 0
+    ) {
       this._elements.save.setAttribute("disabled", true);
     } else {
       this._elements.save.removeAttribute("disabled");
@@ -158,7 +167,10 @@ class EditAddressDialog extends AutofillEditDialog {
   }
 
   async handleSubmit() {
-    await this.saveRecord(this._elements.fieldContainer.buildFormObject(), this._record ? this._record.guid : null);
+    await this.saveRecord(
+      this._elements.fieldContainer.buildFormObject(),
+      this._record ? this._record.guid : null
+    );
     window.close();
   }
 }
@@ -181,7 +193,10 @@ class EditCreditCardDialog extends AutofillEditDialog {
     }
 
     try {
-      await this.saveRecord(creditCard, this._record ? this._record.guid : null);
+      await this.saveRecord(
+        creditCard,
+        this._record ? this._record.guid : null
+      );
       window.close();
     } catch (ex) {
       Cu.reportError(ex);

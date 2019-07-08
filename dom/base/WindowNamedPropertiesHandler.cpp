@@ -9,7 +9,6 @@
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "nsContentUtils.h"
-#include "nsDOMWindowList.h"
 #include "nsGlobalWindow.h"
 #include "nsHTMLDocument.h"
 #include "nsJSUtils.h"
@@ -18,18 +17,17 @@
 namespace mozilla {
 namespace dom {
 
-static bool ShouldExposeChildWindow(nsString& aNameBeingResolved,
+static bool ShouldExposeChildWindow(const nsString& aNameBeingResolved,
                                     BrowsingContext* aChild) {
-  nsPIDOMWindowOuter* child = aChild->GetDOMWindow();
-  Element* e = child->GetFrameElementInternal();
+  Element* e = aChild->GetEmbedderElement();
   if (e && e->IsInShadowTree()) {
     return false;
   }
 
   // If we're same-origin with the child, go ahead and expose it.
+  nsPIDOMWindowOuter* child = aChild->GetDOMWindow();
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(child);
-  NS_ENSURE_TRUE(sop, false);
-  if (nsContentUtils::SubjectPrincipal()->Equals(sop->GetPrincipal())) {
+  if (sop && nsContentUtils::SubjectPrincipal()->Equals(sop->GetPrincipal())) {
     return true;
   }
 
@@ -169,23 +167,12 @@ bool WindowNamedPropertiesHandler::ownPropNames(
   // The names live on the outer window, which might be null
   nsGlobalWindowOuter* outer = win->GetOuterWindowInternal();
   if (outer) {
-    nsDOMWindowList* childWindows = outer->GetFrames();
-    if (childWindows) {
-      uint32_t length = childWindows->GetLength();
-      for (uint32_t i = 0; i < length; ++i) {
-        nsCOMPtr<nsIDocShellTreeItem> item =
-            childWindows->GetDocShellTreeItemAt(i);
-        // This is a bit silly, since we could presumably just do
-        // item->GetWindow().  But it's not obvious whether this does the same
-        // thing as GetChildWindow() with the item's name (due to the complexity
-        // of FindChildWithName).  Since GetChildWindow is what we use in
-        // getOwnPropDescriptor, let's try to be consistent.
-        nsString name;
-        item->GetName(name);
-        if (!names.Contains(name)) {
+    if (BrowsingContext* bc = outer->GetBrowsingContext()) {
+      for (const auto& child : bc->GetChildren()) {
+        const nsString& name = child->Name();
+        if (!name.IsEmpty() && !names.Contains(name)) {
           // Make sure we really would expose it from getOwnPropDescriptor.
-          RefPtr<BrowsingContext> child = win->GetChildWindow(name);
-          if (child && ShouldExposeChildWindow(name, child)) {
+          if (ShouldExposeChildWindow(name, child)) {
             names.AppendElement(name);
           }
         }

@@ -130,8 +130,6 @@ rusty-enums = [
     "mozilla::StyleFlexDirection",
     "mozilla::StyleTextDecorationSkipInk",
     "nsStyleImageType",
-    "nsStyleSVGPaintType",
-    "nsStyleSVGFallbackType",
     "nsINode_BooleanFlag",
     "mozilla::PseudoStyleType",
     "mozilla::LookAndFeel_ColorID",
@@ -291,7 +289,6 @@ whitelist-types = [
     "nsStyleSides",
     "nsStyleSVG",
     "nsStyleSVGOpacitySource",
-    "nsStyleSVGPaint",
     "nsStyleSVGReset",
     "nsStyleTable",
     "nsStyleTableBorder",
@@ -516,6 +513,7 @@ cbindgen-types = [
     { gecko = "StyleGenericTrackSize", servo = "values::generics::grid::TrackSize" },
     { gecko = "StyleGenericTrackBreadth", servo = "values::generics::grid::TrackBreadth" },
     { gecko = "StyleNumberOrPercentage", servo = "values::computed::NumberOrPercentage" },
+    { gecko = "StyleGenericSVGPaint", servo = "values::generics::svg::SVGPaint" },
 ]
 
 mapped-generic-types = [

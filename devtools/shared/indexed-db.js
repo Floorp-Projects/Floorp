@@ -13,8 +13,10 @@ const Services = require("Services");
 
 const PSEUDOURI = "indexeddb://fx-devtools";
 const principaluri = Services.io.newURI(PSEUDOURI);
-const principal =
-  Services.scriptSecurityManager.createCodebasePrincipal(principaluri, {});
+const principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  principaluri,
+  {}
+);
 
 /**
  * Create the DevTools dedicated DB, by relying on the real indexedDB object passed as a

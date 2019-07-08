@@ -1,19 +1,18 @@
 /* eslint max-len: ["error", 80] */
 "use strict";
 
-const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 
-const {
-  AddonTestUtils,
-} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 
 AddonTestUtils.initMochitest(this);
 const server = AddonTestUtils.createHttpServer();
 const serverBaseUrl = `http://localhost:${server.identity.primaryPort}/`;
-server.registerPathHandler("/sumo/personalized-addons",
-  (request, response) => {
-    response.write("This is a SUMO page that explains personalized add-ons.");
-  });
+server.registerPathHandler("/sumo/personalized-addons", (request, response) => {
+  response.write("This is a SUMO page that explains personalized add-ons.");
+});
 
 // Before a discovery API request is triggered, this method should be called.
 // Resolves with the value of the "telemetry-client-id" query parameter.
@@ -80,8 +79,10 @@ add_task(async function clientid_enabled() {
   // TODO: Fix this together with bug 1537933
   //
   // is(await requestPromise, EXPECTED_CLIENT_ID,
-  ok(await requestPromise,
-     "Moz-Client-Id should be set when telemetry & discovery are enabled");
+  ok(
+    await requestPromise,
+    "Moz-Client-Id should be set when telemetry & discovery are enabled"
+  );
 
   Services.telemetry.clearEvents();
 
@@ -97,9 +98,18 @@ add_task(async function clientid_enabled() {
 
   await closeView(win);
 
-  assertAboutAddonsTelemetryEvents([
-    ["addonsManager", "link", "aboutAddons", "disconotice", {view: "discover"}],
-  ], {methods: ["link"]});
+  assertAboutAddonsTelemetryEvents(
+    [
+      [
+        "addonsManager",
+        "link",
+        "aboutAddons",
+        "disconotice",
+        { view: "discover" },
+      ],
+    ],
+    { methods: ["link"] }
+  );
 });
 
 // Test that the clientid is not sent when disabled via prefs.
@@ -111,25 +121,39 @@ add_task(async function clientid_disabled() {
   let requestPromise = promiseOneDiscoveryApiRequest();
   let win = await loadInitialView("discover");
   ok(!isNoticeVisible(win), "Notice about personalization should be hidden");
-  is(await requestPromise, null,
-     "Moz-Client-Id should not be sent when discovery is disabled");
+  is(
+    await requestPromise,
+    null,
+    "Moz-Client-Id should not be sent when discovery is disabled"
+  );
   await closeView(win);
   await SpecialPowers.popPrefEnv();
 });
 
 // Test that the clientid is not sent from private windows.
 add_task(async function clientid_from_private_window() {
-  let privateWindow =
-    await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
 
   let requestPromise = promiseOneDiscoveryApiRequest();
-  let managerWindow =
-    await open_manager("addons://discover/", null, null, null, privateWindow);
-  ok(PrivateBrowsingUtils.isContentWindowPrivate(managerWindow),
-     "Addon-manager is in a private window");
+  let managerWindow = await open_manager(
+    "addons://discover/",
+    null,
+    null,
+    null,
+    privateWindow
+  );
+  ok(
+    PrivateBrowsingUtils.isContentWindowPrivate(managerWindow),
+    "Addon-manager is in a private window"
+  );
 
-  is(await requestPromise, null,
-     "Moz-Client-Id should not be sent in private windows");
+  is(
+    await requestPromise,
+    null,
+    "Moz-Client-Id should not be sent in private windows"
+  );
 
   await close_manager(managerWindow);
   await BrowserTestUtils.closeWindow(privateWindow);
@@ -153,8 +177,10 @@ add_task(async function clientid_enabled_from_extension_list() {
 
   ok(isNoticeVisible(win), "Notice about personalization should be visible");
 
-  ok(await requestPromise,
-     "Moz-Client-Id should be set when telemetry & discovery are enabled");
+  ok(
+    await requestPromise,
+    "Moz-Client-Id should be set when telemetry & discovery are enabled"
+  );
 
   // Make sure switching to the theme view doesn't trigger another request.
   await switchView(win, "theme");
@@ -186,16 +212,18 @@ add_task(async function clientid_enabled_from_theme_list() {
 
   ok(!isNoticeVisible(win), "Notice about personalization should be hidden");
 
-  is(await requestPromise, null,
-     "Moz-Client-Id should not be sent when loading themes initially");
+  is(
+    await requestPromise,
+    null,
+    "Moz-Client-Id should not be sent when loading themes initially"
+  );
 
   info("Load the extension list and verify the client ID is now sent");
 
   requestPromise = promiseOneDiscoveryApiRequest();
   await switchView(win, "extension");
 
-  ok(await requestPromise,
-     "Moz-Client-Id is now sent for extensions");
+  ok(await requestPromise, "Moz-Client-Id is now sent for extensions");
 
   await closeView(win);
   await SpecialPowers.popPrefEnv();

@@ -5,7 +5,12 @@
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", this);
 
 add_task(async function test_no_condition() {
-  for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
+  for (let kind of [
+    "phase",
+    "barrier",
+    "xpcom-barrier",
+    "xpcom-barrier-unwrapped",
+  ]) {
     info("Testing a barrier with no condition (" + kind + ")");
     let lock = makeLock(kind);
     await lock.wait();
@@ -14,17 +19,31 @@ add_task(async function test_no_condition() {
 });
 
 add_task(async function test_phase_various_failures() {
-  for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
+  for (let kind of [
+    "phase",
+    "barrier",
+    "xpcom-barrier",
+    "xpcom-barrier-unwrapped",
+  ]) {
     info("Kind: " + kind);
     // Testing with wrong arguments
     let lock = makeLock(kind);
 
-    Assert.throws(() => lock.addBlocker(), /TypeError|NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS/);
-    Assert.throws(() => lock.addBlocker(null, true), /TypeError|NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS/);
+    Assert.throws(
+      () => lock.addBlocker(),
+      /TypeError|NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS/
+    );
+    Assert.throws(
+      () => lock.addBlocker(null, true),
+      /TypeError|NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS/
+    );
 
     if (kind != "xpcom-barrier") {
       // xpcom-barrier actually expects a string in that position
-      Assert.throws(() => lock.addBlocker("Test 2", () => true, "not a function"), /TypeError/);
+      Assert.throws(
+        () => lock.addBlocker("Test 2", () => true, "not a function"),
+        /TypeError/
+      );
     }
 
     // Attempting to add a blocker after we are done waiting
@@ -36,7 +55,12 @@ add_task(async function test_phase_various_failures() {
 add_task(async function test_reentrant() {
   info("Ensure that we can call addBlocker from within a blocker");
 
-  for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
+  for (let kind of [
+    "phase",
+    "barrier",
+    "xpcom-barrier",
+    "xpcom-barrier-unwrapped",
+  ]) {
     info("Kind: " + kind);
     let lock = makeLock(kind);
 
@@ -81,11 +105,17 @@ add_task(async function test_reentrant() {
   }
 });
 
-
 add_task(async function test_phase_removeBlocker() {
-  info("Testing that we can call removeBlocker before, during and after the call to wait()");
+  info(
+    "Testing that we can call removeBlocker before, during and after the call to wait()"
+  );
 
-  for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
+  for (let kind of [
+    "phase",
+    "barrier",
+    "xpcom-barrier",
+    "xpcom-barrier-unwrapped",
+  ]) {
     info("Switching to kind " + kind);
     info("Attempt to add then remove a blocker before wait()");
     let lock = makeLock(kind);
@@ -96,7 +126,12 @@ add_task(async function test_phase_removeBlocker() {
 
     lock.addBlocker("Wait forever", blocker);
     let do_remove_blocker = function(aLock, aBlocker, aShouldRemove) {
-      info("Attempting to remove blocker " + aBlocker + ", expecting result " + aShouldRemove);
+      info(
+        "Attempting to remove blocker " +
+          aBlocker +
+          ", expecting result " +
+          aShouldRemove
+      );
       if (kind == "xpcom-barrier") {
         // The xpcom variant always returns `undefined`, so we can't
         // check its result.
@@ -140,7 +175,6 @@ add_task(async function test_phase_removeBlocker() {
     await lock.wait();
     do_remove_blocker(lock, blockers[0], false);
 
-
     info("Attempt to remove a blocker after wait");
     lock = makeLock(kind);
     blocker = Promise.resolve.bind(Promise);
@@ -162,11 +196,10 @@ add_task(async function test_state() {
   // immediately, as it initially contains "Not started"
   let barrier = new AsyncShutdown.Barrier("test_filename");
   let deferred = PromiseUtils.defer();
-  let {filename, lineNumber} = Components.stack;
-  barrier.client.addBlocker(BLOCKER_NAME,
-    function() {
-      return deferred.promise;
-    });
+  let { filename, lineNumber } = Components.stack;
+  barrier.client.addBlocker(BLOCKER_NAME, function() {
+    return deferred.promise;
+  });
 
   let promiseDone = barrier.wait();
 
@@ -176,8 +209,14 @@ add_task(async function test_state() {
   Assert.equal(state.filename, filename);
   Assert.equal(state.lineNumber, lineNumber + 1);
   Assert.equal(state.name, BLOCKER_NAME);
-  Assert.ok(state.stack.some(x => x.includes("test_state")), "The stack contains the caller function's name");
-  Assert.ok(state.stack.some(x => x.includes(filename)), "The stack contains the calling file's name");
+  Assert.ok(
+    state.stack.some(x => x.includes("test_state")),
+    "The stack contains the caller function's name"
+  );
+  Assert.ok(
+    state.stack.some(x => x.includes(filename)),
+    "The stack contains the calling file's name"
+  );
 
   deferred.resolve();
   await promiseDone;

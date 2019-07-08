@@ -4,7 +4,12 @@
 
 "use strict";
 
-const { closeToolbox, testSetup, testTeardown, SIMPLE_URL } = require("../head");
+const {
+  closeToolbox,
+  testSetup,
+  testTeardown,
+  SIMPLE_URL,
+} = require("../head");
 const { openDebuggerAndLog } = require("./debugger-helpers");
 
 const EXPECTED = {

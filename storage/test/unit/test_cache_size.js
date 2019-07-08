@@ -53,17 +53,21 @@ function new_file(name) {
 function run_test() {
   const kExpectedCacheSize = -2048; // 2MiB
 
-  let pageSizes = [
-    1024,
-    4096,
-    32768,
-  ];
+  let pageSizes = [1024, 4096, 32768];
 
   for (let i = 0; i < pageSizes.length; i++) {
     let pageSize = pageSizes[i];
-    check_size(getDatabase,
-               new_file("shared" + pageSize), pageSize, kExpectedCacheSize);
-    check_size(Services.storage.openUnsharedDatabase,
-               new_file("unshared" + pageSize), pageSize, kExpectedCacheSize);
+    check_size(
+      getDatabase,
+      new_file("shared" + pageSize),
+      pageSize,
+      kExpectedCacheSize
+    );
+    check_size(
+      Services.storage.openUnsharedDatabase,
+      new_file("unshared" + pageSize),
+      pageSize,
+      kExpectedCacheSize
+    );
   }
 }

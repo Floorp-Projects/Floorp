@@ -6,7 +6,10 @@
 
 const { extend } = require("devtools/shared/extend");
 const EventEmitter = require("devtools/shared/event-emitter");
-const { setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
+const {
+  setNamedTimeout,
+  clearNamedTimeout,
+} = require("devtools/client/shared/widgets/view-helpers");
 
 const React = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
@@ -27,7 +30,6 @@ const WATERFALL_RESIZE_EVENTS_DRAIN = 100;
  * Waterfall view containing the timeline markers, controlled by DetailsView.
  */
 const WaterfallView = extend(DetailsSubview, {
-
   // Smallest unit of time between two markers. Larger by 10x^3 than Number.EPSILON.
   MARKER_EPSILON: 0.000000000001,
   // px
@@ -35,13 +37,9 @@ const WaterfallView = extend(DetailsSubview, {
   // px
   WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS: 20,
 
-  observedPrefs: [
-    "hidden-markers",
-  ],
+  observedPrefs: ["hidden-markers"],
 
-  rerenderPrefs: [
-    "hidden-markers",
-  ],
+  rerenderPrefs: ["hidden-markers"],
 
   // Units are in milliseconds.
   rangeChangeDebounceTime: 75,
@@ -64,8 +62,10 @@ const WaterfallView = extend(DetailsSubview, {
     this.detailsContainer = $("#waterfall-details");
     this.detailsSplitter = $("#waterfall-view > splitter");
 
-    this.details = new MarkerDetails($("#waterfall-details"),
-                                     $("#waterfall-view > splitter"));
+    this.details = new MarkerDetails(
+      $("#waterfall-details"),
+      $("#waterfall-view > splitter")
+    );
     this.details.hidden = true;
 
     this.details.on("resize", this._onResize);
@@ -157,7 +157,11 @@ const WaterfallView = extend(DetailsSubview, {
    * Called when MarkerDetails view emits an event to view source.
    */
   _onViewSource: function(data) {
-    PerformanceController.toolbox.viewSourceInDebugger(data.url, data.line, data.column);
+    PerformanceController.toolbox.viewSourceInDebugger(
+      data.url,
+      data.line,
+      data.column
+    );
   },
 
   /**
@@ -226,9 +230,10 @@ const WaterfallView = extend(DetailsSubview, {
    * This should be invoked every time the container node is resized.
    */
   _recalculateBounds: function() {
-    this.waterfallWidth = this.treeContainer.clientWidth
-      - this.WATERFALL_MARKER_SIDEBAR_WIDTH
-      - this.WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS;
+    this.waterfallWidth =
+      this.treeContainer.clientWidth -
+      this.WATERFALL_MARKER_SIDEBAR_WIDTH -
+      this.WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS;
   },
 
   /**
@@ -242,7 +247,11 @@ const WaterfallView = extend(DetailsSubview, {
     const endTime = interval.endTime | 0;
     const dataScale = this.waterfallWidth / (endTime - startTime);
 
-    this.canvas = TickUtils.drawWaterfallBackground(doc, dataScale, this.waterfallWidth);
+    this.canvas = TickUtils.drawWaterfallBackground(
+      doc,
+      dataScale,
+      this.waterfallWidth
+    );
 
     const treeView = Waterfall({
       marker: rootMarkerNode,

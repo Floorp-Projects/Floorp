@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { CONNECTION_TYPES } = require("devtools/client/shared/remote-debugging/constants");
+const {
+  CONNECTION_TYPES,
+} = require("devtools/client/shared/remote-debugging/constants");
 
 /**
  * This class is designed to be a singleton shared by all DevTools to get access to

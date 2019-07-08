@@ -1,16 +1,21 @@
 add_task(async function() {
   await SpecialPowers.flushPrefEnv();
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["dom.storage_access.enabled", true],
-    ["network.cookie.cookieBehavior", BEHAVIOR_REJECT],
-    ["privacy.trackingprotection.enabled", false],
-    ["privacy.trackingprotection.pbmode.enabled", false],
-    ["privacy.trackingprotection.annotate_channels", true],
-    ["dom.ipc.processCount", 4],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.storage_access.enabled", true],
+      ["network.cookie.cookieBehavior", BEHAVIOR_REJECT],
+      ["privacy.trackingprotection.enabled", false],
+      ["privacy.trackingprotection.pbmode.enabled", false],
+      ["privacy.trackingprotection.annotate_channels", true],
+      ["dom.ipc.processCount", 4],
+    ],
+  });
 
   info("First tab opened");
-  let tab = BrowserTestUtils.addTab(gBrowser, TEST_DOMAIN + TEST_PATH + "empty.html");
+  let tab = BrowserTestUtils.addTab(
+    gBrowser,
+    TEST_DOMAIN + TEST_PATH + "empty.html"
+  );
   gBrowser.selectedTab = tab;
 
   let browser = gBrowser.getBrowserForTab(tab);
@@ -28,7 +33,10 @@ add_task(async function() {
   });
 
   info("Second tab opened");
-  let tab2 = BrowserTestUtils.addTab(gBrowser, TEST_DOMAIN + TEST_PATH + "empty.html");
+  let tab2 = BrowserTestUtils.addTab(
+    gBrowser,
+    TEST_DOMAIN + TEST_PATH + "empty.html"
+  );
   gBrowser.selectedTab = tab2;
 
   let browser2 = gBrowser.getBrowserForTab(tab2);

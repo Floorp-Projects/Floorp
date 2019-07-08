@@ -60,10 +60,22 @@ function passWrongPromiseWithMatchingConstructor() {
   // or not.  If we are not, the current compartment while getting our promise
   // will be that of frames[0].  If we are, it will be our window's compartment.
   if (isXrayArgumentTest) {
-    isnot(p1, p2, "Should have wrapped the Promise in a new promise, because its constructor is not matching the current-compartment Promise constructor");
-    verifyPromiseGlobal(p2, window, "Promise wrapping xrayed promise with therefore non-matching constructor");
+    isnot(
+      p1,
+      p2,
+      "Should have wrapped the Promise in a new promise, because its constructor is not matching the current-compartment Promise constructor"
+    );
+    verifyPromiseGlobal(
+      p2,
+      window,
+      "Promise wrapping xrayed promise with therefore non-matching constructor"
+    );
   } else {
-    is(p1, p2, "Should have left the Promise alone because its constructor matched");
+    is(
+      p1,
+      p2,
+      "Should have left the Promise alone because its constructor matched"
+    );
   }
   return p2;
 }
@@ -73,10 +85,16 @@ function passCorrectPromiseWithMismatchedConstructor() {
   verifyPromiseGlobal(p1, window, "Promise.resolve() return value 3");
   p1.constructor = frames[0].Promise;
   var p2 = getPromise(window, p1);
-  isnot(p1, p2,
-        "Should have wrapped promise in a new promise, since its .constructor was wrong");
-  verifyPromiseGlobal(p2, window,
-                      "Promise wrapping passed-in promise with mismatched constructor");
+  isnot(
+    p1,
+    p2,
+    "Should have wrapped promise in a new promise, since its .constructor was wrong"
+  );
+  verifyPromiseGlobal(
+    p2,
+    window,
+    "Promise wrapping passed-in promise with mismatched constructor"
+  );
   return p2.then(function(arg) {
     is(arg, 9, "Should have propagated along our resolution value");
   });
@@ -90,11 +108,22 @@ function passPromiseToOtherGlobal() {
   // or not.  If we are not, the current compartment while getting our promise
   // will be that of frames[0].  If we are, it will be our window's compartment.
   if (isXrayArgumentTest) {
-    is(p1, p2, "Should have left the Promise alone, because its constructor matches the current compartment's constructor");
+    is(
+      p1,
+      p2,
+      "Should have left the Promise alone, because its constructor matches the current compartment's constructor"
+    );
   } else {
-    isnot(p1, p2, "Should have wrapped promise in a promise from the other global");
-    verifyPromiseGlobal(p2, frames[0],
-                        "Promise wrapping passed-in basic promise");
+    isnot(
+      p1,
+      p2,
+      "Should have wrapped promise in a promise from the other global"
+    );
+    verifyPromiseGlobal(
+      p2,
+      frames[0],
+      "Promise wrapping passed-in basic promise"
+    );
   }
   return p2;
 }
@@ -109,12 +138,18 @@ function passPromiseSubclass() {
   var p1 = PromiseSubclass.resolve(11);
   verifyPromiseGlobal(p1, window, "PromiseSubclass.resolve() return value");
   var p2 = getPromise(window, p1);
-  isnot(p1, p2,
-        "Should have wrapped promise subclass in a new promise");
-  verifyPromiseGlobal(p2, window,
-                      "Promise wrapping passed-in promise subclass");
+  isnot(p1, p2, "Should have wrapped promise subclass in a new promise");
+  verifyPromiseGlobal(
+    p2,
+    window,
+    "Promise wrapping passed-in promise subclass"
+  );
   return p2.then(function(arg) {
-    is(arg, 11, "Should have propagated along our resolution value from subclass");
+    is(
+      arg,
+      11,
+      "Should have propagated along our resolution value from subclass"
+    );
   });
 }
 
@@ -131,7 +166,12 @@ function runPromiseArgumentTests(finishFunc) {
     .then(passPromiseSubclass)
     .then(finishFunc)
     .catch(function(e) {
-      ok(false, `Exception thrown: ${e}@${location.pathname}:${e.lineNumber}:${e.columnNumber}`);
+      ok(
+        false,
+        `Exception thrown: ${e}@${location.pathname}:${e.lineNumber}:${
+          e.columnNumber
+        }`
+      );
       finishFunc();
     });
 }

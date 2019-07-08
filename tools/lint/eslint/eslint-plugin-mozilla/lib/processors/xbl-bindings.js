@@ -61,8 +61,11 @@ function addNodeLines(node, reindent) {
 
   // If the second to last line is also blank and has a higher indent than the
   // last one, then the CDATA block doesn't close with the closing tag.
-  if (lines.length > 2 && lines[lines.length - 2].trim() == "" &&
-      lines[lines.length - 2].length > lastIndent) {
+  if (
+    lines.length > 2 &&
+    lines[lines.length - 2].trim() == "" &&
+    lines[lines.length - 2].length > lastIndent
+  ) {
     lastIndent = lines[lines.length - 2].length;
   }
 
@@ -82,8 +85,9 @@ function addNodeLines(node, reindent) {
 
   // Find the preceding whitespace for all lines that aren't entirely
   // whitespace.
-  let indents = lines.filter(s => s.trim().length > 0)
-                     .map(s => s.length - s.trimLeft().length);
+  let indents = lines
+    .filter(s => s.trim().length > 0)
+    .map(s => s.length - s.trimLeft().length);
   // Find the smallest indent level in use
   let minIndent = Math.min.apply(null, indents);
   let indent = Math.max(2, minIndent - lastIndent);
@@ -172,7 +176,10 @@ module.exports = {
                 continue;
               }
 
-              addSyntheticLine(`get ${item.attributes.name}() {`, item.textLine);
+              addSyntheticLine(
+                `get ${item.attributes.name}() {`,
+                item.textLine
+              );
               addSyntheticLine(`return (`, item.textLine);
 
               // Remove trailing semicolons, as we are adding our own
@@ -195,16 +202,20 @@ module.exports = {
               // Methods become function declarations with the appropriate
               // params.
 
-              let params = item.children.filter(n => {
-                return n.local == "parameter" && n.namespace == NS_XBL;
-              })
-                                        .map(n => n.attributes.name)
-                                        .join(", ");
+              let params = item.children
+                .filter(n => {
+                  return n.local == "parameter" && n.namespace == NS_XBL;
+                })
+                .map(n => n.attributes.name)
+                .join(", ");
               let body = item.children.filter(n => {
                 return n.local == "body" && n.namespace == NS_XBL;
               })[0];
 
-              addSyntheticLine(`${item.attributes.name}(${params}) {`, item.textLine);
+              addSyntheticLine(
+                `${item.attributes.name}(${params}) {`,
+                item.textLine
+              );
               addNodeLines(body, 4);
               addSyntheticLine(`},`, item.textEndLine);
               break;
@@ -217,9 +228,15 @@ module.exports = {
                 }
 
                 if (propdef.local == "setter") {
-                  addSyntheticLine(`set ${item.attributes.name}(val) {`, propdef.textLine);
+                  addSyntheticLine(
+                    `set ${item.attributes.name}(val) {`,
+                    propdef.textLine
+                  );
                 } else if (propdef.local == "getter") {
-                  addSyntheticLine(`get ${item.attributes.name}() {`, propdef.textLine);
+                  addSyntheticLine(
+                    `get ${item.attributes.name}() {`,
+                    propdef.textLine
+                  );
                 } else {
                   continue;
                 }
@@ -241,7 +258,10 @@ module.exports = {
           }
         }
 
-        addSyntheticLine((part.local == "implementation" ? `},` : `],`), part.textEndLine);
+        addSyntheticLine(
+          part.local == "implementation" ? `},` : `],`,
+          part.textEndLine
+        );
       }
       addSyntheticLine(`},`, binding.textEndLine);
     }

@@ -922,6 +922,7 @@ bool DebugEpilogue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc,
   if (!ok) {
     // Pop this frame by updating packedExitFP, so that the exception
     // handling code will start at the previous frame.
+    frame->deleteDebugModeOSRInfo();
     JitFrameLayout* prefix = frame->framePrefix();
     EnsureBareExitFrame(cx->activation()->asJit(), prefix);
     return false;

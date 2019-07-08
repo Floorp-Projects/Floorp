@@ -25,6 +25,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/WindowBinding.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/dom/XrayExpandoClass.h"
 #include "nsGlobalWindow.h"
 
@@ -1648,16 +1649,12 @@ bool DOMXrayTraits::resolveOwnProperty(JSContext* cx, HandleObject wrapper,
     nsGlobalWindowInner* win = AsWindow(cx, wrapper);
     // Note: As() unwraps outer windows to get to the inner window.
     if (win) {
-      nsCOMPtr<nsPIDOMWindowOuter> subframe = win->IndexedGetter(index);
-      if (subframe) {
-        subframe->EnsureInnerWindow();
-        nsGlobalWindowOuter* global = nsGlobalWindowOuter::Cast(subframe);
-        JSObject* obj = global->GetGlobalJSObject();
-        if (MOZ_UNLIKELY(!obj)) {
+      Nullable<WindowProxyHolder> subframe = win->IndexedGetter(index);
+      if (!subframe.IsNull()) {
+        if (MOZ_UNLIKELY(!WrapObject(cx, subframe.Value(), desc.value()))) {
           // It's gone?
           return xpc::Throw(cx, NS_ERROR_FAILURE);
         }
-        desc.value().setObject(*obj);
         FillPropertyDescriptor(desc, wrapper, true);
         return JS_WrapPropertyDescriptor(cx, desc);
       }

@@ -9,36 +9,56 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "AddonUpdateChecker" ];
+var EXPORTED_SYMBOLS = ["AddonUpdateChecker"];
 
-const TIMEOUT               = 60 * 1000;
-const TOOLKIT_ID            = "toolkit@mozilla.org";
+const TIMEOUT = 60 * 1000;
+const TOOLKIT_ID = "toolkit@mozilla.org";
 
 const PREF_UPDATE_REQUIREBUILTINCERTS = "extensions.update.requireBuiltInCerts";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "AddonManagerPrivate",
-                               "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "AddonRepository",
-                               "resource://gre/modules/addons/AddonRepository.jsm");
-ChromeUtils.defineModuleGetter(this, "Blocklist",
-                               "resource://gre/modules/Blocklist.jsm");
-ChromeUtils.defineModuleGetter(this, "CertUtils",
-                               "resource://gre/modules/CertUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "ServiceRequest",
-                               "resource://gre/modules/ServiceRequest.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManagerPrivate",
+  "resource://gre/modules/AddonManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonRepository",
+  "resource://gre/modules/addons/AddonRepository.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Blocklist",
+  "resource://gre/modules/Blocklist.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "CertUtils",
+  "resource://gre/modules/CertUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ServiceRequest",
+  "resource://gre/modules/ServiceRequest.jsm"
+);
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.update-checker";
 
 // Create a new logger for use by the Addons Update Checker
 // (Requires AddonManager.jsm)
 var logger = Log.repository.getLogger(LOGGER_ID);
 
-const updateTypeHistogram = Services.telemetry.getHistogramById("EXTENSION_UPDATE_TYPE");
+const updateTypeHistogram = Services.telemetry.getHistogramById(
+  "EXTENSION_UPDATE_TYPE"
+);
 
 /**
  * Sanitizes the update URL in an update item, as returned by
@@ -64,18 +84,25 @@ function sanitizeUpdateURL(aUpdate, aRequest, aHashPattern, aHashString) {
     let principal = scriptSecurity.getChannelURIPrincipal(aRequest.channel);
     try {
       // This logs an error on failure, so no need to log it a second time
-      scriptSecurity.checkLoadURIStrWithPrincipal(principal, aUpdate.updateURL,
-                                                  scriptSecurity.DISALLOW_SCRIPT);
+      scriptSecurity.checkLoadURIStrWithPrincipal(
+        principal,
+        aUpdate.updateURL,
+        scriptSecurity.DISALLOW_SCRIPT
+      );
     } catch (e) {
       delete aUpdate.updateURL;
       return;
     }
 
-    if (AddonManager.checkUpdateSecurity &&
-        !aUpdate.updateURL.startsWith("https:") &&
-        !aHashPattern.test(aUpdate.updateHash)) {
-      logger.warn(`Update link ${aUpdate.updateURL} is not secure and is not verified ` +
-                  `by a strong enough hash (needs to be ${aHashString}).`);
+    if (
+      AddonManager.checkUpdateSecurity &&
+      !aUpdate.updateURL.startsWith("https:") &&
+      !aHashPattern.test(aUpdate.updateHash)
+    ) {
+      logger.warn(
+        `Update link ${aUpdate.updateURL} is not secure and is not verified ` +
+          `by a strong enough hash (needs to be ${aHashString}).`
+      );
       delete aUpdate.updateURL;
       delete aUpdate.updateHash;
     }
@@ -96,34 +123,45 @@ function sanitizeUpdateURL(aUpdate, aRequest, aHashPattern, aHashString) {
  */
 function parseJSONManifest(aId, aRequest, aManifestData) {
   let TYPE_CHECK = {
-    "array": val => Array.isArray(val),
-    "object": val => val && typeof val == "object" && !Array.isArray(val),
+    array: val => Array.isArray(val),
+    object: val => val && typeof val == "object" && !Array.isArray(val),
   };
 
   function getProperty(aObj, aProperty, aType, aDefault = undefined) {
-    if (!(aProperty in aObj))
+    if (!(aProperty in aObj)) {
       return aDefault;
+    }
 
     let value = aObj[aProperty];
 
-    let matchesType = aType in TYPE_CHECK ? TYPE_CHECK[aType](value) : typeof value == aType;
-    if (!matchesType)
-      throw Components.Exception(`Update manifest property '${aProperty}' has incorrect type (expected ${aType})`);
+    let matchesType =
+      aType in TYPE_CHECK ? TYPE_CHECK[aType](value) : typeof value == aType;
+    if (!matchesType) {
+      throw Components.Exception(
+        `Update manifest property '${aProperty}' has incorrect type (expected ${aType})`
+      );
+    }
 
     return value;
   }
 
   function getRequiredProperty(aObj, aProperty, aType) {
     let value = getProperty(aObj, aProperty, aType);
-    if (value === undefined)
-      throw Components.Exception(`Update manifest is missing a required ${aProperty} property.`);
+    if (value === undefined) {
+      throw Components.Exception(
+        `Update manifest is missing a required ${aProperty} property.`
+      );
+    }
     return value;
   }
 
   let manifest = aManifestData;
 
-  if (!TYPE_CHECK.object(manifest))
-    throw Components.Exception("Root element of update manifest must be a JSON object literal");
+  if (!TYPE_CHECK.object(manifest)) {
+    throw Components.Exception(
+      "Root element of update manifest must be a JSON object literal"
+    );
+  }
 
   // The set of add-ons this manifest has updates for
   let addons = getRequiredProperty(manifest, "addons", "object");
@@ -148,13 +186,16 @@ function parseJSONManifest(aId, aRequest, aManifestData) {
 
     logger.debug(`Found an update entry for ${aId} version ${version}`);
 
-    let applications = getProperty(update, "applications", "object",
-                                   { gecko: {} });
+    let applications = getProperty(update, "applications", "object", {
+      gecko: {},
+    });
 
     // "gecko" is currently the only supported application entry. If
     // it's missing, skip this update.
     if (!("gecko" in applications)) {
-      logger.debug("gecko not in application entry, skipping update of ${addon}");
+      logger.debug(
+        "gecko not in application entry, skipping update of ${addon}"
+      );
       continue;
     }
 
@@ -162,8 +203,12 @@ function parseJSONManifest(aId, aRequest, aManifestData) {
 
     let appEntry = {
       id: TOOLKIT_ID,
-      minVersion: getProperty(app, "strict_min_version", "string",
-                              AddonManagerPrivate.webExtensionsMinPlatformVersion),
+      minVersion: getProperty(
+        app,
+        "strict_min_version",
+        "string",
+        AddonManagerPrivate.webExtensionsMinPlatformVersion
+      ),
       maxVersion: "*",
     };
 
@@ -179,8 +224,11 @@ function parseJSONManifest(aId, aRequest, aManifestData) {
 
     if ("strict_max_version" in app) {
       if ("advisory_max_version" in app) {
-        logger.warn("Ignoring 'advisory_max_version' update manifest property for " +
-                    aId + " property since 'strict_max_version' also present");
+        logger.warn(
+          "Ignoring 'advisory_max_version' update manifest property for " +
+            aId +
+            " property since 'strict_max_version' also present"
+        );
       }
 
       appEntry.maxVersion = getProperty(app, "strict_max_version", "string");
@@ -196,8 +244,9 @@ function parseJSONManifest(aId, aRequest, aManifestData) {
     // Note: This currently only has any effect on legacy extensions (mainly
     // those used in tests), since WebExtensions cannot yet specify app-specific
     // compatibility ranges.
-    result.targetApplications.push(Object.assign({}, appEntry,
-                                                 {id: Services.appinfo.ID}));
+    result.targetApplications.push(
+      Object.assign({}, appEntry, { id: Services.appinfo.ID })
+    );
 
     // The JSON update protocol requires an SHA-2 hash. RDF still
     // supports SHA-1, for compatibility reasons.
@@ -224,13 +273,18 @@ function UpdateParser(aId, aUrl, aObserver) {
   this.observer = aObserver;
   this.url = aUrl;
 
-  let requireBuiltIn = Services.prefs.getBoolPref(PREF_UPDATE_REQUIREBUILTINCERTS, true);
+  let requireBuiltIn = Services.prefs.getBoolPref(
+    PREF_UPDATE_REQUIREBUILTINCERTS,
+    true
+  );
 
   logger.debug("Requesting " + aUrl);
   try {
-    this.request = new ServiceRequest({mozAnon: true});
+    this.request = new ServiceRequest({ mozAnon: true });
     this.request.open("GET", this.url, true);
-    this.request.channel.notificationCallbacks = new CertUtils.BadCertHandler(!requireBuiltIn);
+    this.request.channel.notificationCallbacks = new CertUtils.BadCertHandler(
+      !requireBuiltIn
+    );
     this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     // Prevent the request from writing to cache.
     this.request.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
@@ -259,7 +313,10 @@ UpdateParser.prototype = {
     this.request = null;
     this._doneAt = new Error("place holder");
 
-    let requireBuiltIn = Services.prefs.getBoolPref(PREF_UPDATE_REQUIREBUILTINCERTS, true);
+    let requireBuiltIn = Services.prefs.getBoolPref(
+      PREF_UPDATE_REQUIREBUILTINCERTS,
+      true
+    );
 
     try {
       CertUtils.checkCert(request.channel, !requireBuiltIn);
@@ -277,8 +334,14 @@ UpdateParser.prototype = {
 
     let channel = request.channel;
     if (channel instanceof Ci.nsIHttpChannel && !channel.requestSucceeded) {
-      logger.warn("Request failed: " + this.url + " - " + channel.responseStatus +
-           ": " + channel.responseStatusText);
+      logger.warn(
+        "Request failed: " +
+          this.url +
+          " - " +
+          channel.responseStatus +
+          ": " +
+          channel.responseStatusText
+      );
       this.notifyError(AddonManager.ERROR_DOWNLOAD_ERROR);
       return;
     }
@@ -301,7 +364,10 @@ UpdateParser.prototype = {
         logger.warn("onUpdateCheckComplete notification failed", e);
       }
     } else {
-      logger.warn("onUpdateCheckComplete may not properly cancel", new Error("stack marker"));
+      logger.warn(
+        "onUpdateCheckComplete may not properly cancel",
+        new Error("stack marker")
+      );
     }
   },
 
@@ -324,9 +390,14 @@ UpdateParser.prototype = {
     } else if (this.request.channel instanceof Ci.nsIHttpChannel) {
       try {
         if (this.request.channel.requestSucceeded) {
-          logger.warn("Request failed: " + this.url + " - " +
-               this.request.channel.responseStatus + ": " +
-               this.request.channel.responseStatusText);
+          logger.warn(
+            "Request failed: " +
+              this.url +
+              " - " +
+              this.request.channel.responseStatus +
+              ": " +
+              this.request.channel.responseStatusText
+          );
         }
       } catch (e) {
         logger.warn("HTTP Request failed for an unknown reason");
@@ -386,30 +457,44 @@ UpdateParser.prototype = {
  *         AddonCompatibilityOverride objects to match against. Optional.
  * @return true if the update is compatible with the application/platform
  */
-function matchesVersions(aUpdate, aAppVersion, aPlatformVersion,
-                         aIgnoreMaxVersion, aIgnoreStrictCompat,
-                         aCompatOverrides) {
+function matchesVersions(
+  aUpdate,
+  aAppVersion,
+  aPlatformVersion,
+  aIgnoreMaxVersion,
+  aIgnoreStrictCompat,
+  aCompatOverrides
+) {
   if (aCompatOverrides) {
-    let override = AddonRepository.findMatchingCompatOverride(aUpdate.version,
-                                                              aCompatOverrides,
-                                                              aAppVersion,
-                                                              aPlatformVersion);
-    if (override && override.type == "incompatible")
+    let override = AddonRepository.findMatchingCompatOverride(
+      aUpdate.version,
+      aCompatOverrides,
+      aAppVersion,
+      aPlatformVersion
+    );
+    if (override && override.type == "incompatible") {
       return false;
+    }
   }
 
-  if (aUpdate.strictCompatibility && !aIgnoreStrictCompat)
+  if (aUpdate.strictCompatibility && !aIgnoreStrictCompat) {
     aIgnoreMaxVersion = false;
+  }
 
   let result = false;
   for (let app of aUpdate.targetApplications) {
     if (app.id == Services.appinfo.ID) {
-      return (Services.vc.compare(aAppVersion, app.minVersion) >= 0) &&
-             (aIgnoreMaxVersion || (Services.vc.compare(aAppVersion, app.maxVersion) <= 0));
+      return (
+        Services.vc.compare(aAppVersion, app.minVersion) >= 0 &&
+        (aIgnoreMaxVersion ||
+          Services.vc.compare(aAppVersion, app.maxVersion) <= 0)
+      );
     }
     if (app.id == TOOLKIT_ID) {
-      result = (Services.vc.compare(aPlatformVersion, app.minVersion) >= 0) &&
-               (aIgnoreMaxVersion || (Services.vc.compare(aPlatformVersion, app.maxVersion) <= 0));
+      result =
+        Services.vc.compare(aPlatformVersion, app.minVersion) >= 0 &&
+        (aIgnoreMaxVersion ||
+          Services.vc.compare(aPlatformVersion, app.maxVersion) <= 0);
     }
   }
   return result;
@@ -437,24 +522,40 @@ var AddonUpdateChecker = {
    *         Ignore strictCompatibility when testing if an update matches. Optional.
    * @return an update object if one matches or null if not
    */
-  getCompatibilityUpdate(aUpdates, aVersion, aIgnoreCompatibility,
-                                   aAppVersion, aPlatformVersion,
-                                   aIgnoreMaxVersion, aIgnoreStrictCompat) {
-    if (!aAppVersion)
+  getCompatibilityUpdate(
+    aUpdates,
+    aVersion,
+    aIgnoreCompatibility,
+    aAppVersion,
+    aPlatformVersion,
+    aIgnoreMaxVersion,
+    aIgnoreStrictCompat
+  ) {
+    if (!aAppVersion) {
       aAppVersion = Services.appinfo.version;
-    if (!aPlatformVersion)
+    }
+    if (!aPlatformVersion) {
       aPlatformVersion = Services.appinfo.platformVersion;
+    }
 
     for (let update of aUpdates) {
       if (Services.vc.compare(update.version, aVersion) == 0) {
         if (aIgnoreCompatibility) {
           for (let targetApp of update.targetApplications) {
             let id = targetApp.id;
-            if (id == Services.appinfo.ID || id == TOOLKIT_ID)
+            if (id == Services.appinfo.ID || id == TOOLKIT_ID) {
               return update;
+            }
           }
-        } else if (matchesVersions(update, aAppVersion, aPlatformVersion,
-                                 aIgnoreMaxVersion, aIgnoreStrictCompat)) {
+        } else if (
+          matchesVersions(
+            update,
+            aAppVersion,
+            aPlatformVersion,
+            aIgnoreMaxVersion,
+            aIgnoreStrictCompat
+          )
+        ) {
           return update;
         }
       }
@@ -479,25 +580,46 @@ var AddonUpdateChecker = {
    *         Array of AddonCompatibilityOverride to take into account. Optional.
    * @return an update object if one matches or null if not
    */
-  async getNewestCompatibleUpdate(aUpdates, aAppVersion, aPlatformVersion,
-                                  aIgnoreMaxVersion, aIgnoreStrictCompat,
-                                  aCompatOverrides) {
-    if (!aAppVersion)
+  async getNewestCompatibleUpdate(
+    aUpdates,
+    aAppVersion,
+    aPlatformVersion,
+    aIgnoreMaxVersion,
+    aIgnoreStrictCompat,
+    aCompatOverrides
+  ) {
+    if (!aAppVersion) {
       aAppVersion = Services.appinfo.version;
-    if (!aPlatformVersion)
+    }
+    if (!aPlatformVersion) {
       aPlatformVersion = Services.appinfo.platformVersion;
+    }
 
     let newest = null;
     for (let update of aUpdates) {
-      if (!update.updateURL)
+      if (!update.updateURL) {
         continue;
-      let state = await Blocklist.getAddonBlocklistState(update, aAppVersion, aPlatformVersion);
-      if (state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED)
+      }
+      let state = await Blocklist.getAddonBlocklistState(
+        update,
+        aAppVersion,
+        aPlatformVersion
+      );
+      if (state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
         continue;
-      if ((newest == null || (Services.vc.compare(newest.version, update.version) < 0)) &&
-          matchesVersions(update, aAppVersion, aPlatformVersion,
-                          aIgnoreMaxVersion, aIgnoreStrictCompat,
-                          aCompatOverrides)) {
+      }
+      if (
+        (newest == null ||
+          Services.vc.compare(newest.version, update.version) < 0) &&
+        matchesVersions(
+          update,
+          aAppVersion,
+          aPlatformVersion,
+          aIgnoreMaxVersion,
+          aIgnoreStrictCompat,
+          aCompatOverrides
+        )
+      ) {
         newest = update;
       }
     }

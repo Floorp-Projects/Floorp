@@ -6,7 +6,9 @@ Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 var testserver = createHttpServer();
 gPort = testserver.identity.primaryPort;
 
-const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+  Ci.nsIUUIDGenerator
+);
 
 const extensionsDir = gProfD.clone();
 extensionsDir.append("extensions");
@@ -18,7 +20,6 @@ addonsDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
 registerCleanupFunction(() => addonsDir.remove(true));
 
 testserver.registerDirectory("/addons/", addonsDir);
-
 
 let gUpdateManifests = {};
 
@@ -37,24 +38,29 @@ function serveManifest(request, response) {
 async function promiseInstallWebExtension(aData) {
   let addonFile = createTempWebExtensionFile(aData);
 
-  let {addon} = await promiseInstallFile(addonFile);
+  let { addon } = await promiseInstallFile(addonFile);
   Services.obs.notifyObservers(addonFile, "flush-cache-entry");
   return addon;
 }
 
-var checkUpdates = async function(aData, aReason = AddonManager.UPDATE_WHEN_PERIODIC_UPDATE) {
+var checkUpdates = async function(
+  aData,
+  aReason = AddonManager.UPDATE_WHEN_PERIODIC_UPDATE
+) {
   function provide(obj, path, value) {
     path = path.split(".");
     let prop = path.pop();
 
     for (let key of path) {
-      if (!(key in obj))
-          obj[key] = {};
+      if (!(key in obj)) {
+        obj[key] = {};
+      }
       obj = obj[key];
     }
 
-    if (!(prop in obj))
+    if (!(prop in obj)) {
       obj[prop] = value;
+    }
   }
 
   let id = uuidGenerator.generateUUID().number;
@@ -69,10 +75,8 @@ var checkUpdates = async function(aData, aReason = AddonManager.UPDATE_WHEN_PERI
     addons: { [id]: addonData },
   };
 
-
   provide(aData, "addon.manifest.applications.gecko.update_url", updateUrl);
   let awaitInstall = promiseInstallWebExtension(aData.addon);
-
 
   for (let version of Object.keys(aData.updates)) {
     let update = aData.updates[version];
@@ -94,9 +98,10 @@ var checkUpdates = async function(aData, aReason = AddonManager.UPDATE_WHEN_PERI
     addonData.updates.push(update);
   }
 
-  mapManifest(updatePath, { data: JSON.stringify(manifestJSON),
-                            contentType: "application/json" });
-
+  mapManifest(updatePath, {
+    data: JSON.stringify(manifestJSON),
+    contentType: "application/json",
+  });
 
   let addon = await awaitInstall;
 
@@ -106,14 +111,12 @@ var checkUpdates = async function(aData, aReason = AddonManager.UPDATE_WHEN_PERI
   return updates;
 };
 
-
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42.0", "42.0");
 
   await promiseStartupManager();
   registerCleanupFunction(promiseShutdownManager);
 });
-
 
 // Check that compatibility updates are applied.
 add_task(async function checkUpdateMetadata() {
@@ -126,8 +129,9 @@ add_task(async function checkUpdateMetadata() {
     },
     updates: {
       "1.0": {
-        applications: { gecko: { strict_min_version: "40",
-                                 strict_max_version: "48" } },
+        applications: {
+          gecko: { strict_min_version: "40", strict_max_version: "48" },
+        },
       },
     },
   });
@@ -142,15 +146,14 @@ add_task(async function checkUpdateMetadata() {
   await update.addon.uninstall();
 });
 
-
 // Check that updates from web extensions to web extensions succeed.
 add_task(async function checkUpdateToWebExt() {
   let update = await checkUpdates({
     addon: { manifest: { version: "1.0" } },
     updates: {
-      "1.1": { },
-      "1.2": { },
-      "1.3": { "applications": { "gecko": { "strict_min_version": "48" } } },
+      "1.1": {},
+      "1.2": {},
+      "1.3": { applications: { gecko: { strict_min_version: "48" } } },
     },
   });
 
@@ -167,13 +170,14 @@ add_task(async function checkUpdateToWebExt() {
   await addon.uninstall();
 });
 
-
 // Check that illegal update URLs are rejected.
 add_task(async function checkIllegalUpdateURL() {
-  const URLS = ["chrome://browser/content/",
-                "data:text/json,...",
-                "javascript:;",
-                "/"];
+  const URLS = [
+    "chrome://browser/content/",
+    "data:text/json,...",
+    "javascript:;",
+    "/",
+  ];
 
   for (let url of URLS) {
     let { messages } = await promiseConsoleOutput(() => {
@@ -184,12 +188,19 @@ add_task(async function checkIllegalUpdateURL() {
       return AddonManager.getInstallForFile(addonFile).then(install => {
         Services.obs.notifyObservers(addonFile, "flush-cache-entry");
 
-        if (!install || install.state != AddonManager.STATE_DOWNLOAD_FAILED)
+        if (!install || install.state != AddonManager.STATE_DOWNLOAD_FAILED) {
           throw new Error("Unexpected state: " + (install && install.state));
+        }
       });
     });
 
-    ok(messages.some(msg => /Access denied for URL|may not load or link to|is not a valid URL/.test(msg)),
-       "Got checkLoadURI error");
+    ok(
+      messages.some(msg =>
+        /Access denied for URL|may not load or link to|is not a valid URL/.test(
+          msg
+        )
+      ),
+      "Got checkLoadURI error"
+    );
   }
 });

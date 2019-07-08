@@ -11,7 +11,7 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  let { inspector, view } = await openRuleView();
   await selectNode(".one", inspector);
 
   info("Testing rule view tooltip closes on new selection");
@@ -26,9 +26,12 @@ async function testRuleView(ruleView, inspector) {
   info("Showing the tooltip");
 
   const tooltip = ruleView.tooltips.getTooltip("previewTooltip");
-  const tooltipContent = ruleView.styleDocument.createElementNS(XHTML_NS, "div");
+  const tooltipContent = ruleView.styleDocument.createElementNS(
+    XHTML_NS,
+    "div"
+  );
   tooltip.panel.appendChild(tooltipContent);
-  tooltip.setContentSize({width: 100, height: 30});
+  tooltip.setContentSize({ width: 100, height: 30 });
 
   // Stop listening for mouse movements because it's not needed for this test,
   // and causes intermittent failures on Linux. When this test runs in the suite
@@ -52,9 +55,12 @@ async function testComputedView(computedView, inspector) {
   info("Showing the tooltip");
 
   const tooltip = computedView.tooltips.getTooltip("previewTooltip");
-  const tooltipContent = computedView.styleDocument.createElementNS(XHTML_NS, "div");
+  const tooltipContent = computedView.styleDocument.createElementNS(
+    XHTML_NS,
+    "div"
+  );
   tooltip.panel.appendChild(tooltipContent);
-  await tooltip.setContentSize({width: 100, height: 30});
+  await tooltip.setContentSize({ width: 100, height: 30 });
 
   // Stop listening for mouse movements because it's not needed for this test,
   // and causes intermittent failures on Linux. When this test runs in the suite

@@ -1,6 +1,7 @@
 /* import-globals-from antitracking_head.js */
 
-AntiTracking.runTest("Storage Access is removed when topframe navigates",
+AntiTracking.runTest(
+  "Storage Access is removed when topframe navigates",
   // blocking callback
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
@@ -24,7 +25,9 @@ AntiTracking.runTest("Storage Access is removed when topframe navigates",
   // cleanup function
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+        resolve()
+      );
     });
   },
   null, // extra prefs

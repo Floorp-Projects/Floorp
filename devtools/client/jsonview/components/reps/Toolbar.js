@@ -17,19 +17,12 @@ define(function(require, exports, module) {
   class Toolbar extends Component {
     static get propTypes() {
       return {
-        children: PropTypes.oneOfType([
-          PropTypes.array,
-          PropTypes.element,
-        ]),
+        children: PropTypes.oneOfType([PropTypes.array, PropTypes.element]),
       };
     }
 
     render() {
-      return (
-        dom.div({className: "toolbar"},
-          this.props.children
-        )
-      );
+      return dom.div({ className: "toolbar" }, this.props.children);
     }
   }
 
@@ -46,10 +39,8 @@ define(function(require, exports, module) {
     }
 
     render() {
-      const props = Object.assign({className: "btn"}, this.props);
-      return (
-        dom.button(props, this.props.children)
-      );
+      const props = Object.assign({ className: "btn" }, this.props);
+      return dom.button(props, this.props.children);
     }
   }
 

@@ -1,5 +1,5 @@
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /*
  * Test that when doing HTTP requests, the nsIHttpChannel is detected in
@@ -17,7 +17,7 @@ function startHttpServer() {
     response.setHeader("Content-Type", "text/plain", false);
     response.setHeader("Cache-Control", "no-cache", false);
     response.bodyOutputStream.write("data", 4);
- });
+  });
 
   httpserver.registerPathHandler("/redirect", (metadata, response) => {
     response.setStatusLine(metadata.httpVersion, 302, "Redirect");
@@ -30,7 +30,7 @@ function startHttpServer() {
 }
 
 function stopHttpServer(next) {
- httpserver.stop(next);
+  httpserver.stop(next);
 }
 
 let expectedParentChannels = [];

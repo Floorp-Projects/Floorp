@@ -18,7 +18,8 @@ const scripts = [
 for (let script of scripts) {
   Services.scriptloader.loadSubScript(
     `chrome://mochitests/content/browser/dom/webauthn/tests/${script}`,
-    this);
+    this
+  );
 }
 
 function memcmp(x, y) {

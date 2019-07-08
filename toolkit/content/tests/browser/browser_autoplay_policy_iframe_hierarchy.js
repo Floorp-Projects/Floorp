@@ -14,24 +14,33 @@
  * should be considered activated, even if they're cross origin from the
  * originally activated document.
  */
-const PAGE_A1_A2 = "https://example.com/browser/toolkit/content/tests/browser/file_autoplay_two_layers_frame1.html";
-const PAGE_A1_B2 = "https://example.com/browser/toolkit/content/tests/browser/file_autoplay_two_layers_frame2.html";
-const PAGE_A1_B2_C3 = "https://test1.example.org/browser/toolkit/content/tests/browser/file_autoplay_three_layers_frame1.html";
-const PAGE_A1_B2_A3 = "https://example.org/browser/toolkit/content/tests/browser/file_autoplay_three_layers_frame1.html";
-const PAGE_A1_B2_B3 = "https://example.org/browser/toolkit/content/tests/browser/file_autoplay_three_layers_frame2.html";
-const PAGE_A1_A2_A3 = "https://example.com/browser/toolkit/content/tests/browser/file_autoplay_three_layers_frame2.html";
-const PAGE_A1_A2_B3 = "https://example.com/browser/toolkit/content/tests/browser/file_autoplay_three_layers_frame1.html";
+const PAGE_A1_A2 =
+  "https://example.com/browser/toolkit/content/tests/browser/file_autoplay_two_layers_frame1.html";
+const PAGE_A1_B2 =
+  "https://example.com/browser/toolkit/content/tests/browser/file_autoplay_two_layers_frame2.html";
+const PAGE_A1_B2_C3 =
+  "https://test1.example.org/browser/toolkit/content/tests/browser/file_autoplay_three_layers_frame1.html";
+const PAGE_A1_B2_A3 =
+  "https://example.org/browser/toolkit/content/tests/browser/file_autoplay_three_layers_frame1.html";
+const PAGE_A1_B2_B3 =
+  "https://example.org/browser/toolkit/content/tests/browser/file_autoplay_three_layers_frame2.html";
+const PAGE_A1_A2_A3 =
+  "https://example.com/browser/toolkit/content/tests/browser/file_autoplay_three_layers_frame2.html";
+const PAGE_A1_A2_B3 =
+  "https://example.com/browser/toolkit/content/tests/browser/file_autoplay_three_layers_frame1.html";
 
 function setup_test_preference() {
-  return SpecialPowers.pushPrefEnv({"set": [
-    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
-    ["media.autoplay.enabled.user-gestures-needed", true],
-  ]});
+  return SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
+      ["media.autoplay.enabled.user-gestures-needed", true],
+    ],
+  });
 }
 
 var frameTestArray = [
-  { name: "A1_A2",    layersNum: 2, src: PAGE_A1_A2 },
-  { name: "A1_B2",    layersNum: 2, src: PAGE_A1_B2 },
+  { name: "A1_A2", layersNum: 2, src: PAGE_A1_A2 },
+  { name: "A1_B2", layersNum: 2, src: PAGE_A1_B2 },
   { name: "A1_B2_C3", layersNum: 3, src: PAGE_A1_B2_C3 },
   { name: "A1_B2_A3", layersNum: 3, src: PAGE_A1_B2_A3 },
   { name: "A1_B2_B3", layersNum: 3, src: PAGE_A1_B2_B3 },
@@ -43,8 +52,10 @@ async function test_permission_propagation(testName, testSrc, layersNum) {
   info(`- start test for ${testName} -`);
   for (let layerIdx = 1; layerIdx <= layersNum; layerIdx++) {
     info("- open new tab -");
-    let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
-                                                          "about:blank");
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      window.gBrowser,
+      "about:blank"
+    );
     BrowserTestUtils.loadURI(tab.linkedBrowser, testSrc);
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
@@ -55,16 +66,27 @@ async function test_permission_propagation(testName, testSrc, layersNum) {
         if (layerIdx == 1) {
           doc = content.document;
         } else {
-          doc = layerIdx == 2 ? content.frames[0].document :
-                                content.frames[0].frames[0].document;
+          doc =
+            layerIdx == 2
+              ? content.frames[0].document
+              : content.frames[0].frames[0].document;
         }
-        await doc.getElementById("v").play().catch(function() {
-          ok(true, `video in layer ${layerIdx} can't start play without user input.`);
-        });
+        await doc
+          .getElementById("v")
+          .play()
+          .catch(function() {
+            ok(
+              true,
+              `video in layer ${layerIdx} can't start play without user input.`
+            );
+          });
       }
     }
-    await ContentTask.spawn(tab.linkedBrowser, layersNum,
-                            playing_video_should_fail);
+    await ContentTask.spawn(
+      tab.linkedBrowser,
+      layersNum,
+      playing_video_should_fail
+    );
 
     function activate_frame(testInfo) {
       let layerIdx = testInfo[0];
@@ -73,13 +95,18 @@ async function test_permission_propagation(testName, testSrc, layersNum) {
       if (layerIdx == 1) {
         doc = content.document;
       } else {
-        doc = layerIdx == 2 ? content.frames[0].document :
-                              content.frames[0].frames[0].document;
+        doc =
+          layerIdx == 2
+            ? content.frames[0].document
+            : content.frames[0].frames[0].document;
       }
       doc.notifyUserGestureActivation();
     }
-    await ContentTask.spawn(tab.linkedBrowser, [layerIdx, testName],
-                            activate_frame);
+    await ContentTask.spawn(
+      tab.linkedBrowser,
+      [layerIdx, testName],
+      activate_frame
+    );
 
     // If frame is activated, the video play will succeed, as interaction
     // anywhere in the frame activates the entire doctree, irrespective
@@ -91,8 +118,10 @@ async function test_permission_propagation(testName, testSrc, layersNum) {
         if (layerIdx == 1) {
           doc = content.document;
         } else {
-          doc = layerIdx == 2 ? content.frames[0].document :
-                                content.frames[0].frames[0].document;
+          doc =
+            layerIdx == 2
+              ? content.frames[0].document
+              : content.frames[0].frames[0].document;
         }
         let video = doc.getElementById("v");
         try {
@@ -103,9 +132,11 @@ async function test_permission_propagation(testName, testSrc, layersNum) {
         }
       }
     }
-    await ContentTask.spawn(tab.linkedBrowser,
-                            [layerIdx, testName, layersNum],
-                            playing_video_may_success);
+    await ContentTask.spawn(
+      tab.linkedBrowser,
+      [layerIdx, testName, layersNum],
+      playing_video_may_success
+    );
 
     info("- remove tab -");
     BrowserTestUtils.removeTab(tab);

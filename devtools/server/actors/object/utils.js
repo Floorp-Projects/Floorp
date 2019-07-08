@@ -10,8 +10,18 @@ const { DebuggerServer } = require("devtools/server/main");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert } = DevToolsUtils;
 
-loader.lazyRequireGetter(this, "longStringGrip", "devtools/server/actors/object/long-string", true);
-loader.lazyRequireGetter(this, "symbolGrip", "devtools/server/actors/object/symbol", true);
+loader.lazyRequireGetter(
+  this,
+  "longStringGrip",
+  "devtools/server/actors/object/long-string",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "symbolGrip",
+  "devtools/server/actors/object/symbol",
+  true
+);
 
 /**
  * Get thisDebugger.Object referent's `promiseState`.
@@ -26,7 +36,8 @@ function getPromiseState(obj) {
   if (obj.class != "Promise") {
     throw new Error(
       "Can't call `getPromiseState` on `Debugger.Object`s that don't " +
-      "refer to Promise objects.");
+        "refer to Promise objects."
+    );
   }
 
   const state = { state: obj.promiseState };
@@ -107,9 +118,11 @@ function createValueGrip(value, pool, makeObjectGrip) {
     case "object":
       if (value === null) {
         return { type: "null" };
-      } else if (value.optimizedOut ||
-             value.uninitialized ||
-             value.missingArguments) {
+      } else if (
+        value.optimizedOut ||
+        value.uninitialized ||
+        value.missingArguments
+      ) {
         // The slot is optimized out, an uninitialized binding, or
         // arguments on a dead scope
         return {
@@ -140,9 +153,17 @@ function stringIsLong(str) {
   return str.length >= DebuggerServer.LONG_STRING_LENGTH;
 }
 
-const TYPED_ARRAY_CLASSES = ["Uint8Array", "Uint8ClampedArray", "Uint16Array",
-                             "Uint32Array", "Int8Array", "Int16Array", "Int32Array",
-                             "Float32Array", "Float64Array"];
+const TYPED_ARRAY_CLASSES = [
+  "Uint8Array",
+  "Uint8ClampedArray",
+  "Uint16Array",
+  "Uint32Array",
+  "Int8Array",
+  "Int16Array",
+  "Int32Array",
+  "Float32Array",
+  "Float64Array",
+];
 
 /**
  * Returns true if a debuggee object is a typed array.
@@ -202,9 +223,11 @@ function isArrayIndex(str) {
   // Transform the parameter to a 32-bit unsigned integer.
   const num = str >>> 0;
   // Check that the parameter is a canonical Uint32 index.
-  return num + "" === str &&
+  return (
+    num + "" === str &&
     // Array indices cannot attain the maximum Uint32 value.
-    num != -1 >>> 0;
+    num != -1 >>> 0
+  );
 }
 
 /**

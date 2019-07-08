@@ -4,12 +4,21 @@
 
 "use strict";
 
-const { openToolboxAndLog, closeToolboxAndLog, reloadPageAndLog, testSetup,
-        testTeardown, COMPLICATED_URL } = require("../head");
+const {
+  openToolboxAndLog,
+  closeToolboxAndLog,
+  reloadPageAndLog,
+  testSetup,
+  testTeardown,
+  COMPLICATED_URL,
+} = require("../head");
 
 module.exports = async function() {
   await testSetup(COMPLICATED_URL);
-  const toolbox = await openToolboxAndLog("complicated.styleeditor", "styleeditor");
+  const toolbox = await openToolboxAndLog(
+    "complicated.styleeditor",
+    "styleeditor"
+  );
   await reloadPageAndLog("complicated.styleeditor", toolbox);
   await closeToolboxAndLog("complicated.styleeditor", toolbox);
   await testTeardown();

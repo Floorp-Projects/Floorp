@@ -26,33 +26,47 @@ function test() {
  */
 var tests = [
   taskify(async function test_move_tab_to_new_window() {
-    const myDocIdentifier = "Hello, I'm a unique expando to identify this document.";
+    const myDocIdentifier =
+      "Hello, I'm a unique expando to identify this document.";
 
     let highlight = document.getElementById("UITourHighlight");
     let windowDestroyedDeferred = PromiseUtils.defer();
-    let onDOMWindowDestroyed = (aWindow) => {
+    let onDOMWindowDestroyed = aWindow => {
       if (gContentWindow && aWindow == gContentWindow) {
-        Services.obs.removeObserver(onDOMWindowDestroyed, "dom-window-destroyed");
+        Services.obs.removeObserver(
+          onDOMWindowDestroyed,
+          "dom-window-destroyed"
+        );
         windowDestroyedDeferred.resolve();
       }
     };
 
     let browserStartupDeferred = PromiseUtils.defer();
     Services.obs.addObserver(function onBrowserDelayedStartup(aWindow) {
-      Services.obs.removeObserver(onBrowserDelayedStartup, "browser-delayed-startup-finished");
+      Services.obs.removeObserver(
+        onBrowserDelayedStartup,
+        "browser-delayed-startup-finished"
+      );
       browserStartupDeferred.resolve(aWindow);
     }, "browser-delayed-startup-finished");
 
-    await ContentTask.spawn(gBrowser.selectedBrowser, myDocIdentifier, contentMyDocIdentifier => {
-      let onVisibilityChange = () => {
-        if (!content.document.hidden) {
-          let win = Cu.waiveXrays(content);
-          win.Mozilla.UITour.showHighlight("appMenu");
-        }
-      };
-      content.document.addEventListener("visibilitychange", onVisibilityChange);
-      content.document.myExpando = contentMyDocIdentifier;
-    });
+    await ContentTask.spawn(
+      gBrowser.selectedBrowser,
+      myDocIdentifier,
+      contentMyDocIdentifier => {
+        let onVisibilityChange = () => {
+          if (!content.document.hidden) {
+            let win = Cu.waiveXrays(content);
+            win.Mozilla.UITour.showHighlight("appMenu");
+          }
+        };
+        content.document.addEventListener(
+          "visibilitychange",
+          onVisibilityChange
+        );
+        content.document.myExpando = contentMyDocIdentifier;
+      }
+    );
     gContentAPI.showHighlight("appMenu");
 
     await elementVisiblePromise(highlight);
@@ -61,15 +75,34 @@ var tests = [
     await browserStartupDeferred.promise;
 
     // This highlight should be shown thanks to the visibilitychange listener.
-    let newWindowHighlight = gContentWindow.document.getElementById("UITourHighlight");
+    let newWindowHighlight = gContentWindow.document.getElementById(
+      "UITourHighlight"
+    );
     await elementVisiblePromise(newWindowHighlight);
 
     let selectedTab = gContentWindow.gBrowser.selectedTab;
-    await ContentTask.spawn(selectedTab.linkedBrowser, myDocIdentifier, contentMyDocIdentifier => {
-      is(content.document.myExpando, contentMyDocIdentifier, "Document should be selected in new window");
-    });
-    ok(UITour.tourBrowsersByWindow && UITour.tourBrowsersByWindow.has(gContentWindow), "Window should be known");
-    ok(UITour.tourBrowsersByWindow.get(gContentWindow).has(selectedTab.linkedBrowser), "Selected browser should be known");
+    await ContentTask.spawn(
+      selectedTab.linkedBrowser,
+      myDocIdentifier,
+      contentMyDocIdentifier => {
+        is(
+          content.document.myExpando,
+          contentMyDocIdentifier,
+          "Document should be selected in new window"
+        );
+      }
+    );
+    ok(
+      UITour.tourBrowsersByWindow &&
+        UITour.tourBrowsersByWindow.has(gContentWindow),
+      "Window should be known"
+    );
+    ok(
+      UITour.tourBrowsersByWindow
+        .get(gContentWindow)
+        .has(selectedTab.linkedBrowser),
+      "Selected browser should be known"
+    );
 
     // Need this because gContentAPI in e10s land will try to use gTestTab to
     // spawn a content task, which doesn't work if the tab is dead, for obvious

@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 const PREF_CLOSE_TAB_BY_DBLCLICK = "browser.tabs.closeTabByDblclick";
 
 function triggerDblclickOn(target) {
@@ -19,9 +18,9 @@ add_task(async function dblclick() {
 });
 
 add_task(async function dblclickWithPrefSet() {
-  await SpecialPowers.pushPrefEnv({set: [
-    [PREF_CLOSE_TAB_BY_DBLCLICK, true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [[PREF_CLOSE_TAB_BY_DBLCLICK, true]],
+  });
 
   let tab = BrowserTestUtils.addTab(gBrowser, "about:mozilla", {
     skipAnimation: true,

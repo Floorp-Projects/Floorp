@@ -1,7 +1,10 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "ContextMenuChild",
-                               "resource:///actors/ContextMenuChild.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContextMenuChild",
+  "resource:///actors/ContextMenuChild.jsm"
+);
 
 this.menusChild = class extends ExtensionAPI {
   getAPI(context) {
@@ -9,11 +12,20 @@ this.menusChild = class extends ExtensionAPI {
       menus: {
         getTargetElement(targetElementId) {
           let element;
-          let lastMenuTarget = ContextMenuChild.getLastTarget(context.contentWindow.docShell.browsingContext);
-          if (lastMenuTarget && Math.floor(lastMenuTarget.timeStamp) === targetElementId) {
+          let lastMenuTarget = ContextMenuChild.getLastTarget(
+            context.contentWindow.docShell.browsingContext
+          );
+          if (
+            lastMenuTarget &&
+            Math.floor(lastMenuTarget.timeStamp) === targetElementId
+          ) {
             element = lastMenuTarget.targetRef.get();
           }
-          if (element && element.getRootNode({composed: true}) === context.contentWindow.document) {
+          if (
+            element &&
+            element.getRootNode({ composed: true }) ===
+              context.contentWindow.document
+          ) {
             return element;
           }
           return null;

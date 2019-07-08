@@ -19,7 +19,8 @@ const DATA = [
       panel_name: "inspector",
       cold: "true",
     },
-  }, {
+  },
+  {
     timestamp: null,
     category: "devtools.main",
     method: "enter",
@@ -32,7 +33,8 @@ const DATA = [
       panel_name: "jsdebugger",
       cold: "true",
     },
-  }, {
+  },
+  {
     timestamp: null,
     category: "devtools.main",
     method: "enter",
@@ -45,7 +47,8 @@ const DATA = [
       panel_name: "styleeditor",
       cold: "true",
     },
-  }, {
+  },
+  {
     timestamp: null,
     category: "devtools.main",
     method: "enter",
@@ -58,7 +61,8 @@ const DATA = [
       panel_name: "netmonitor",
       cold: "true",
     },
-  }, {
+  },
+  {
     timestamp: null,
     category: "devtools.main",
     method: "enter",
@@ -71,7 +75,8 @@ const DATA = [
       panel_name: "storage",
       cold: "true",
     },
-  }, {
+  },
+  {
     timestamp: null,
     category: "devtools.main",
     method: "enter",
@@ -122,13 +127,13 @@ add_task(async function() {
 
 async function checkResults() {
   const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
-  const events = snapshot.parent.filter(event => event[1] === "devtools.main" &&
-                                                 event[2] === "enter" &&
-                                                 event[4] === null
+  const events = snapshot.parent.filter(
+    event =>
+      event[1] === "devtools.main" && event[2] === "enter" && event[4] === null
   );
 
   for (const i in DATA) {
-    const [ timestamp, category, method, object, value, extra ] = events[i];
+    const [timestamp, category, method, object, value, extra] = events[i];
     const expected = DATA[i];
 
     // ignore timestamp

@@ -4,7 +4,12 @@ PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "43");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "43"
+);
 
 let {
   promiseRestartManager,
@@ -13,7 +18,7 @@ let {
 } = AddonTestUtils;
 
 let nonProxiedRequests = 0;
-const nonProxiedServer = createHttpServer({hosts: ["example.com"]});
+const nonProxiedServer = createHttpServer({ hosts: ["example.com"] });
 nonProxiedServer.registerPathHandler("/", (request, response) => {
   nonProxiedRequests++;
   response.setStatusLine(request.httpVersion, 200, "OK");
@@ -30,7 +35,10 @@ server.registerPathHandler("/", (request, response) => {
   response.write("ok");
 });
 
-Services.prefs.setBoolPref("extensions.webextensions.background-delayed-startup", true);
+Services.prefs.setBoolPref(
+  "extensions.webextensions.background-delayed-startup",
+  true
+);
 
 function promiseExtensionEvent(wrapper, event) {
   return new Promise(resolve => {
@@ -54,16 +62,23 @@ add_task(async function test_proxy_startup() {
   await promiseStartupManager();
 
   function background(proxyInfo) {
-    browser.proxy.onRequest.addListener(details => {
-      // ignore speculative requests
-      if (details.type == "xmlhttprequest") {
-        browser.test.sendMessage("saw-request");
-      }
-      return proxyInfo;
-    }, {urls: ["<all_urls>"]});
+    browser.proxy.onRequest.addListener(
+      details => {
+        // ignore speculative requests
+        if (details.type == "xmlhttprequest") {
+          browser.test.sendMessage("saw-request");
+        }
+        return proxyInfo;
+      },
+      { urls: ["<all_urls>"] }
+    );
   }
 
-  let proxyInfo = {host: server.identity.primaryHost, port: server.identity.primaryPort, type: "http"};
+  let proxyInfo = {
+    host: server.identity.primaryHost,
+    port: server.identity.primaryPort,
+    type: "http",
+  };
 
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
@@ -98,8 +113,11 @@ add_task(async function test_proxy_startup() {
   equal(1, proxiedRequests, "proxied request ok");
   equal(2, nonProxiedRequests, "non proxied request ok");
 
-  equal(events.get("background-page-event"), false,
-        "Should not have gotten a background page event");
+  equal(
+    events.get("background-page-event"),
+    false,
+    "Should not have gotten a background page event"
+  );
 
   // Make a request that the extension will proxy once it is started.
   let request = Promise.all([
@@ -108,18 +126,27 @@ add_task(async function test_proxy_startup() {
   ]);
 
   await promiseExtensionEvent(extension, "background-page-event");
-  equal(events.get("background-page-event"), true,
-        "Should have gotten a background page event");
+  equal(
+    events.get("background-page-event"),
+    true,
+    "Should have gotten a background page event"
+  );
 
   // Test the background page startup.
-  equal(events.get("start-background-page"), false,
-        "Should have gotten a background page event");
+  equal(
+    events.get("start-background-page"),
+    false,
+    "Should have gotten a background page event"
+  );
 
   Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
   await new Promise(executeSoon);
 
-  equal(events.get("start-background-page"), true,
-        "Should have gotten a background page event");
+  equal(
+    events.get("start-background-page"),
+    true,
+    "Should have gotten a background page event"
+  );
 
   // Verify our proxied request finishes properly and that the
   // request was not handled via our non-proxied server.

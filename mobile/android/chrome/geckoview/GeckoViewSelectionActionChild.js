@@ -3,9 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {GeckoViewChildModule} = ChromeUtils.import("resource://gre/modules/GeckoViewChildModule.jsm");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { GeckoViewChildModule } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewChildModule.jsm"
+);
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Dispatches GeckoView:ShowSelectionAction and GeckoView:HideSelectionAction to
 // the GeckoSession on accessible caret changes.
@@ -17,49 +21,63 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
     this._isActive = false;
     this._previousMessage = "";
 
-    this._actions = [{
-      id: "org.mozilla.geckoview.HIDE",
-      predicate: _ => true,
-      perform: _ => this.handleEvent({type: "pagehide"}),
-    }, {
-      id: "org.mozilla.geckoview.CUT",
-      predicate: e => !e.collapsed && e.selectionEditable && !this._isPasswordField(e),
-      perform: _ => docShell.doCommand("cmd_cut"),
-    }, {
-      id: "org.mozilla.geckoview.COPY",
-      predicate: e => !e.collapsed && !this._isPasswordField(e),
-      perform: _ => docShell.doCommand("cmd_copy"),
-    }, {
-      id: "org.mozilla.geckoview.PASTE",
-      predicate: e => e.selectionEditable &&
-                      Services.clipboard.hasDataMatchingFlavors(
-                          ["text/unicode"], Ci.nsIClipboard.kGlobalClipboard),
-      perform: _ => this._performPaste(),
-    }, {
-      id: "org.mozilla.geckoview.DELETE",
-      predicate: e => !e.collapsed && e.selectionEditable,
-      perform: _ => docShell.doCommand("cmd_delete"),
-    }, {
-      id: "org.mozilla.geckoview.COLLAPSE_TO_START",
-      predicate: e => !e.collapsed && e.selectionEditable,
-      perform: e => docShell.doCommand("cmd_moveLeft"),
-    }, {
-      id: "org.mozilla.geckoview.COLLAPSE_TO_END",
-      predicate: e => !e.collapsed && e.selectionEditable,
-      perform: e => docShell.doCommand("cmd_moveRight"),
-    }, {
-      id: "org.mozilla.geckoview.UNSELECT",
-      predicate: e => !e.collapsed && !e.selectionEditable,
-      perform: e => docShell.doCommand("cmd_selectNone"),
-    }, {
-      id: "org.mozilla.geckoview.SELECT_ALL",
-      predicate: e => e.reason !== "longpressonemptycontent",
-      perform: e => docShell.doCommand("cmd_selectAll"),
-    }];
+    this._actions = [
+      {
+        id: "org.mozilla.geckoview.HIDE",
+        predicate: _ => true,
+        perform: _ => this.handleEvent({ type: "pagehide" }),
+      },
+      {
+        id: "org.mozilla.geckoview.CUT",
+        predicate: e =>
+          !e.collapsed && e.selectionEditable && !this._isPasswordField(e),
+        perform: _ => docShell.doCommand("cmd_cut"),
+      },
+      {
+        id: "org.mozilla.geckoview.COPY",
+        predicate: e => !e.collapsed && !this._isPasswordField(e),
+        perform: _ => docShell.doCommand("cmd_copy"),
+      },
+      {
+        id: "org.mozilla.geckoview.PASTE",
+        predicate: e =>
+          e.selectionEditable &&
+          Services.clipboard.hasDataMatchingFlavors(
+            ["text/unicode"],
+            Ci.nsIClipboard.kGlobalClipboard
+          ),
+        perform: _ => this._performPaste(),
+      },
+      {
+        id: "org.mozilla.geckoview.DELETE",
+        predicate: e => !e.collapsed && e.selectionEditable,
+        perform: _ => docShell.doCommand("cmd_delete"),
+      },
+      {
+        id: "org.mozilla.geckoview.COLLAPSE_TO_START",
+        predicate: e => !e.collapsed && e.selectionEditable,
+        perform: e => docShell.doCommand("cmd_moveLeft"),
+      },
+      {
+        id: "org.mozilla.geckoview.COLLAPSE_TO_END",
+        predicate: e => !e.collapsed && e.selectionEditable,
+        perform: e => docShell.doCommand("cmd_moveRight"),
+      },
+      {
+        id: "org.mozilla.geckoview.UNSELECT",
+        predicate: e => !e.collapsed && !e.selectionEditable,
+        perform: e => docShell.doCommand("cmd_selectNone"),
+      },
+      {
+        id: "org.mozilla.geckoview.SELECT_ALL",
+        predicate: e => e.reason !== "longpressonemptycontent",
+        perform: e => docShell.doCommand("cmd_selectAll"),
+      },
+    ];
   }
 
   _performPaste() {
-    this.handleEvent({type: "pagehide"});
+    this.handleEvent({ type: "pagehide" });
     docShell.doCommand("cmd_paste");
   }
 
@@ -70,9 +88,12 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
 
     const win = aEvent.target.defaultView;
     const focus = aEvent.target.activeElement;
-    return win && win.HTMLInputElement &&
-           focus instanceof win.HTMLInputElement &&
-           !focus.mozIsTextField(/* excludePassword */ true);
+    return (
+      win &&
+      win.HTMLInputElement &&
+      focus instanceof win.HTMLInputElement &&
+      !focus.mozIsTextField(/* excludePassword */ true)
+    );
   }
 
   _getFrameOffset(aEvent) {
@@ -100,16 +121,19 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
   }
 
   onEnable() {
-    debug `onEnable`;
+    debug`onEnable`;
     addEventListener("mozcaretstatechanged", this, { mozSystemGroup: true });
     addEventListener("pagehide", this, { capture: true, mozSystemGroup: true });
     addEventListener("deactivate", this, { mozSystemGroup: true });
   }
 
   onDisable() {
-    debug `onDisable`;
+    debug`onDisable`;
     removeEventListener("mozcaretstatechanged", this, { mozSystemGroup: true });
-    removeEventListener("pagehide", this, { capture: true, mozSystemGroup: true });
+    removeEventListener("pagehide", this, {
+      capture: true,
+      mozSystemGroup: true,
+    });
     removeEventListener("deactivate", this, { mozSystemGroup: true });
   }
 
@@ -134,30 +158,38 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
     if (this._isActive && !aEvent.caretVisible) {
       // For mozcaretstatechanged, "visibilitychange" means the caret is hidden.
       reason = "visibilitychange";
-    } else if (!aEvent.collapsed &&
-               !aEvent.selectionVisible) {
+    } else if (!aEvent.collapsed && !aEvent.selectionVisible) {
       reason = "invisibleselection";
-    } else if (!this._isActive &&
-               aEvent.selectionEditable &&
-               aEvent.collapsed &&
-               reason !== "longpressonemptycontent" &&
-               reason !== "taponcaret" &&
-               !Services.prefs.getBoolPref(
-                   "geckoview.selection_action.show_on_focus", false)) {
+    } else if (
+      !this._isActive &&
+      aEvent.selectionEditable &&
+      aEvent.collapsed &&
+      reason !== "longpressonemptycontent" &&
+      reason !== "taponcaret" &&
+      !Services.prefs.getBoolPref(
+        "geckoview.selection_action.show_on_focus",
+        false
+      )
+    ) {
       // Don't show selection actions when merely focusing on an editor or
       // repositioning the cursor. Wait until long press or the caret is tapped
       // in order to match Android behavior.
       reason = "visibilitychange";
     }
 
-    debug `handleEvent: ${reason}`;
+    debug`handleEvent: ${reason}`;
 
-    if (["longpressonemptycontent",
-         "releasecaret",
-         "taponcaret",
-         "updateposition"].includes(reason)) {
-      const actions = this._actions.filter(
-          action => action.predicate.call(this, aEvent));
+    if (
+      [
+        "longpressonemptycontent",
+        "releasecaret",
+        "taponcaret",
+        "updateposition",
+      ].includes(reason)
+    ) {
+      const actions = this._actions.filter(action =>
+        action.predicate.call(this, aEvent)
+      );
 
       const offset = this._getFrameOffset(aEvent);
       const password = this._isPasswordField(aEvent);
@@ -169,22 +201,24 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
         editable: aEvent.selectionEditable,
         password,
         selection: password ? "" : aEvent.selectedTextContent,
-        clientRect: !aEvent.boundingClientRect ? null : {
-          left: aEvent.boundingClientRect.left + offset.left,
-          top: aEvent.boundingClientRect.top + offset.top,
-          right: aEvent.boundingClientRect.right + offset.left,
-          bottom: aEvent.boundingClientRect.bottom + offset.top,
-        },
+        clientRect: !aEvent.boundingClientRect
+          ? null
+          : {
+              left: aEvent.boundingClientRect.left + offset.left,
+              top: aEvent.boundingClientRect.top + offset.top,
+              right: aEvent.boundingClientRect.right + offset.left,
+              bottom: aEvent.boundingClientRect.bottom + offset.top,
+            },
         actions: actions.map(action => action.id),
       };
 
       try {
         if (msg.clientRect) {
-          msg.clientRect.bottom += parseFloat(Services.prefs.getCharPref(
-              "layout.accessiblecaret.height", "0"));
+          msg.clientRect.bottom += parseFloat(
+            Services.prefs.getCharPref("layout.accessiblecaret.height", "0")
+          );
         }
-      } catch (e) {
-      }
+      } catch (e) {}
 
       if (this._isActive && JSON.stringify(msg) === this._previousMessage) {
         // Don't call again if we're already active and things haven't changed.
@@ -199,25 +233,29 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
         onSuccess: response => {
           if (response.seqNo !== this._seqNo) {
             // Stale action.
-            warn `Stale response ${response.id}`;
+            warn`Stale response ${response.id}`;
             return;
           }
           let action = actions.find(action => action.id === response.id);
           if (action) {
-            debug `Performing ${response.id}`;
+            debug`Performing ${response.id}`;
             action.perform.call(this, aEvent, response);
           } else {
-            warn `Invalid action ${response.id}`;
+            warn`Invalid action ${response.id}`;
           }
         },
         onError: _ => {
           // Do nothing; we can get here if the delegate was just unregistered.
         },
       });
-    } else if (["invisibleselection",
-                "presscaret",
-                "scroll",
-                "visibilitychange"].includes(reason)) {
+    } else if (
+      [
+        "invisibleselection",
+        "presscaret",
+        "scroll",
+        "visibilitychange",
+      ].includes(reason)
+    ) {
       if (!this._isActive) {
         return;
       }
@@ -236,10 +274,12 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
         reason: reason,
       });
     } else {
-      warn `Unknown reason: ${reason}`;
+      warn`Unknown reason: ${reason}`;
     }
   }
 }
 
-const {debug, warn} = GeckoViewSelectionActionChild.initLogging("GeckoViewSelectionAction"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewSelectionActionChild.initLogging(
+  "GeckoViewSelectionAction"
+); // eslint-disable-line no-unused-vars
 const module = GeckoViewSelectionActionChild.create(this);

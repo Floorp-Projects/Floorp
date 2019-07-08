@@ -8,10 +8,30 @@
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { Cu } = require("chrome");
-loader.lazyRequireGetter(this, "Parser", "resource://devtools/shared/Parser.jsm", true);
-loader.lazyRequireGetter(this, "formatCommand", "devtools/server/actors/webconsole/commands", true);
-loader.lazyRequireGetter(this, "isCommand", "devtools/server/actors/webconsole/commands", true);
-loader.lazyRequireGetter(this, "WebConsoleCommands", "devtools/server/actors/webconsole/utils", true);
+loader.lazyRequireGetter(
+  this,
+  "Parser",
+  "resource://devtools/shared/Parser.jsm",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "formatCommand",
+  "devtools/server/actors/webconsole/commands",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isCommand",
+  "devtools/server/actors/webconsole/commands",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "WebConsoleCommands",
+  "devtools/server/actors/webconsole/utils",
+  true
+);
 
 function isObject(value) {
   return Object(value) === value;
@@ -98,7 +118,8 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
 
   // Ready to evaluate the string.
   helpers.evalInput = string;
-  const evalOptions = typeof options.url === "string" ? { url: options.url } : null;
+  const evalOptions =
+    typeof options.url === "string" ? { url: options.url } : null;
 
   updateConsoleInputEvaluation(dbg, dbgWindow, webConsole);
 
@@ -131,7 +152,11 @@ function getEvalResult(string, evalOptions, bindings, frame, dbgWindow) {
   if (frame) {
     return frame.evalWithBindings(string, bindings, evalOptions);
   }
-  const result = dbgWindow.executeInGlobalWithBindings(string, bindings, evalOptions);
+  const result = dbgWindow.executeInGlobalWithBindings(
+    string,
+    bindings,
+    evalOptions
+  );
   // Attempt to initialize any declarations found in the evaluated string
   // since they may now be stuck in an "initializing" state due to the
   // error. Already-initialized bindings will be ignored.
@@ -231,8 +256,11 @@ function getEvalInput(string) {
   }
 
   // Add easter egg for console.mihai().
-  if (trimmedString == "console.mihai()" || trimmedString == "console.mihai();") {
-    return "\"http://incompleteness.me/blog/2015/02/09/console-dot-mihai/\"";
+  if (
+    trimmedString == "console.mihai()" ||
+    trimmedString == "console.mihai();"
+  ) {
+    return '"http://incompleteness.me/blog/2015/02/09/console-dot-mihai/"';
   }
   return string;
 }
@@ -244,16 +272,18 @@ function getFrameDbg(options, webConsole) {
   // Find the Debugger.Frame of the given FrameActor.
   const frameActor = webConsole.conn.getActor(options.frameActor);
   if (frameActor) {
-     // If we've been given a frame actor in whose scope we should evaluate the
-     // expression, be sure to use that frame's Debugger (that is, the JavaScript
-     // debugger's Debugger) for the whole operation, not the console's Debugger.
-     // (One Debugger will treat a different Debugger's Debugger.Object instances
-     // as ordinary objects, not as references to be followed, so mixing
-     // debuggers causes strange behaviors.)
+    // If we've been given a frame actor in whose scope we should evaluate the
+    // expression, be sure to use that frame's Debugger (that is, the JavaScript
+    // debugger's Debugger) for the whole operation, not the console's Debugger.
+    // (One Debugger will treat a different Debugger's Debugger.Object instances
+    // as ordinary objects, not as references to be followed, so mixing
+    // debuggers causes strange behaviors.)
     return { frame: frameActor.frame, dbg: frameActor.threadActor.dbg };
   }
-  return DevToolsUtils.reportException("evalWithDebugger",
-    Error("The frame actor was not found: " + options.frameActor));
+  return DevToolsUtils.reportException(
+    "evalWithDebugger",
+    Error("The frame actor was not found: " + options.frameActor)
+  );
 }
 
 function evalReplay(frame, dbg, string) {
@@ -264,10 +294,10 @@ function evalReplay(frame, dbg, string) {
     try {
       result = frame.eval(string);
     } catch (e) {
-      result = { "throw": e };
+      result = { throw: e };
     }
   } else {
-    result = { "throw": "Cannot evaluate while replaying without a frame" };
+    result = { throw: "Cannot evaluate while replaying without a frame" };
   }
   return {
     result: result,
@@ -351,8 +381,9 @@ function bindCommands(isCmd, dbgWindow, bindSelf, frame, helpers) {
   // helper function we set. We will not overwrite these functions with the Web Console
   // commands. The exception being "print" which should exist everywhere as
   // `window.print`, and that we don't want to trigger from the console.
-  const availableHelpers = [...WebConsoleCommands._originalCommands.keys()]
-    .filter(h => h !== "print");
+  const availableHelpers = [
+    ...WebConsoleCommands._originalCommands.keys(),
+  ].filter(h => h !== "print");
 
   let helpersToDisable = [];
   const helperCache = {};
@@ -366,8 +397,9 @@ function bindCommands(isCmd, dbgWindow, bindSelf, frame, helpers) {
         helpersToDisable = availableHelpers.filter(name => !!env.find(name));
       }
     } else {
-      helpersToDisable = availableHelpers.filter(name =>
-        !!dbgWindow.getOwnPropertyDescriptor(name));
+      helpersToDisable = availableHelpers.filter(
+        name => !!dbgWindow.getOwnPropertyDescriptor(name)
+      );
     }
     // if we do not have the command key as a prefix, screenshot is disabled by default
     helpersToDisable.push("screenshot");

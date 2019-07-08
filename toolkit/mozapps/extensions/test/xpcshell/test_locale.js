@@ -13,13 +13,13 @@ add_task(async function test_1() {
 
   let xpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
-      "name": "__MSG_name__",
-      "description": "__MSG_description__",
+      name: "__MSG_name__",
+      description: "__MSG_description__",
       default_locale: "en",
 
       applications: {
         gecko: {
-          "id": "addon1@tests.mozilla.org",
+          id: "addon1@tests.mozilla.org",
         },
       },
     },

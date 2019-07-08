@@ -12,7 +12,10 @@ add_task(async function test_label_and_icon() {
   });
 
   // Create a new tab.
-  let tab = BrowserTestUtils.addTab(gBrowser, "http://www.example.com/browser/browser/components/sessionstore/test/empty.html");
+  let tab = BrowserTestUtils.addTab(
+    gBrowser,
+    "http://www.example.com/browser/browser/components/sessionstore/test/empty.html"
+  );
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -33,9 +36,21 @@ add_task(async function test_label_and_icon() {
   await promiseTabRestoring(tab);
 
   // Check that label and icon are set for the restoring tab.
-  is(gBrowser.getIcon(tab), "http://www.example.com/favicon.ico", "icon is set");
-  is(tab.getAttribute("image"), "http://www.example.com/favicon.ico", "tab image is set");
-  is(tab.getAttribute("iconloadingprincipal"), serializedPrincipal, "tab image loading principal is set");
+  is(
+    gBrowser.getIcon(tab),
+    "http://www.example.com/favicon.ico",
+    "icon is set"
+  );
+  is(
+    tab.getAttribute("image"),
+    "http://www.example.com/favicon.ico",
+    "tab image is set"
+  );
+  is(
+    tab.getAttribute("iconloadingprincipal"),
+    serializedPrincipal,
+    "tab image loading principal is set"
+  );
 
   // Cleanup.
   BrowserTestUtils.removeTab(tab);

@@ -93,7 +93,7 @@ function runTest() {
   prompt("summary", "text");
   info("prompt is closed");
 
-  script.sendSyncMessage("destroy");
+  script.sendAsyncMessage("destroy");
 
   SimpleTest.finish();
 }

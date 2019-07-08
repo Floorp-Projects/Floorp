@@ -10,9 +10,10 @@
 // shared-head.js handles imports, constants, and utility functions
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
-  this);
+  this
+);
 
-const {TableWidget} = require("devtools/client/shared/widgets/TableWidget");
+const { TableWidget } = require("devtools/client/shared/widgets/TableWidget");
 const STORAGE_PREF = "devtools.storage.enabled";
 const DOM_CACHE = "dom.caches.enabled";
 const DUMPEMIT_PREF = "devtools.dump.emit";
@@ -354,8 +355,8 @@ function findVariableViewProperties(ruleArray, parsed) {
     // the storage sidebar. That scope uses a blank variable as a placeholder
     // Thus, adding a blank parent to each name
     if (parsed) {
-      ruleArray = ruleArray.map(({name, value, dontMatch}) => {
-        return {name: "." + name, value, dontMatch};
+      ruleArray = ruleArray.map(({ name, value, dontMatch }) => {
+        return { name: "." + name, value, dontMatch };
       });
     }
     // Separate out the rules that require expanding properties throughout the
@@ -382,7 +383,10 @@ function findVariableViewProperties(ruleArray, parsed) {
     // Return the results - a promise resolved to hold the updated ruleArray.
     const returnResults = onAllRulesMatched.bind(null, ruleArray);
 
-    return promise.all(outstanding).then(lastStep).then(returnResults);
+    return promise
+      .all(outstanding)
+      .then(lastStep)
+      .then(returnResults);
   }
 
   function onMatch(prop, rule, matched) {
@@ -414,20 +418,28 @@ function findVariableViewProperties(ruleArray, parsed) {
         expandTo: rule.name,
       };
 
-      variablesViewExpandTo(expandOptions).then(function onSuccess(prop) {
-        const name = rule.name;
-        const lastName = name.split(".").pop();
-        rule.name = lastName;
+      variablesViewExpandTo(expandOptions)
+        .then(
+          function onSuccess(prop) {
+            const name = rule.name;
+            const lastName = name.split(".").pop();
+            rule.name = lastName;
 
-        const matched = matchVariablesViewProperty(prop, rule);
-        return matched.then(onMatch.bind(null, prop, rule)).then(function() {
-          rule.name = name;
+            const matched = matchVariablesViewProperty(prop, rule);
+            return matched
+              .then(onMatch.bind(null, prop, rule))
+              .then(function() {
+                rule.name = name;
+              });
+          },
+          function onFailure() {
+            resolve(null);
+          }
+        )
+        .then(processExpandRules.bind(null, rules))
+        .then(function() {
+          resolve(null);
         });
-      }, function onFailure() {
-        resolve(null);
-      }).then(processExpandRules.bind(null, rules)).then(function() {
-        resolve(null);
-      });
     });
   }
 
@@ -437,8 +449,10 @@ function findVariableViewProperties(ruleArray, parsed) {
       if (matched && !rule.dontMatch) {
         ok(true, "rule " + rule.name + " matched for property " + matched.name);
       } else if (matched && rule.dontMatch) {
-        ok(false, "rule " + rule.name + " should not match property " +
-           matched.name);
+        ok(
+          false,
+          "rule " + rule.name + " should not match property " + matched.name
+        );
       } else {
         ok(rule.dontMatch, "rule " + rule.name + " did not match any property");
       }
@@ -473,9 +487,10 @@ function matchVariablesViewProperty(prop, rule) {
   }
 
   if (rule.name) {
-    const match = rule.name instanceof RegExp ?
-                rule.name.test(prop.name) :
-                prop.name == rule.name;
+    const match =
+      rule.name instanceof RegExp
+        ? rule.name.test(prop.name)
+        : prop.name == rule.name;
     if (!match) {
       return resolve(false);
     }
@@ -487,12 +502,20 @@ function matchVariablesViewProperty(prop, rule) {
       displayValue = displayValue.substring(1, displayValue.length - 1);
     }
 
-    const match = rule.value instanceof RegExp ?
-                rule.value.test(displayValue) :
-                displayValue == rule.value;
+    const match =
+      rule.value instanceof RegExp
+        ? rule.value.test(displayValue)
+        : displayValue == rule.value;
     if (!match) {
-      info("rule " + rule.name + " did not match value, expected '" +
-           rule.value + "', found '" + displayValue + "'");
+      info(
+        "rule " +
+          rule.name +
+          " did not match value, expected '" +
+          rule.value +
+          "', found '" +
+          displayValue +
+          "'"
+      );
       return resolve(false);
     }
   }
@@ -531,8 +554,12 @@ async function selectTreeItem(ids) {
  */
 async function selectTableItem(id) {
   const table = gUI.table;
-  const selector = ".table-widget-column#" + table.uniqueId +
-                 " .table-widget-cell[value='" + id + "']";
+  const selector =
+    ".table-widget-column#" +
+    table.uniqueId +
+    " .table-widget-cell[value='" +
+    id +
+    "']";
   const target = gPanelWindow.document.querySelector(selector);
 
   ok(target, `row found with id "${id}"`);
@@ -565,12 +592,16 @@ function once(target, eventName, useCapture = false) {
       ["addListener", "removeListener"],
       ["on", "off"],
     ]) {
-      if ((add in target) && (remove in target)) {
-        target[add](eventName, function onEvent(...aArgs) {
-          info("Got event: '" + eventName + "' on " + target + ".");
-          target[remove](eventName, onEvent, useCapture);
-          resolve(...aArgs);
-        }, useCapture);
+      if (add in target && remove in target) {
+        target[add](
+          eventName,
+          function onEvent(...aArgs) {
+            info("Got event: '" + eventName + "' on " + target + ".");
+            target[remove](eventName, onEvent, useCapture);
+            resolve(...aArgs);
+          },
+          useCapture
+        );
         break;
       }
     }
@@ -615,12 +646,20 @@ function getRowValues(id, includeHidden = false) {
 function getRowCells(id, includeHidden = false) {
   const doc = gPanelWindow.document;
   const table = gUI.table;
-  const item = doc.querySelector(".table-widget-column#" + table.uniqueId +
-                               " .table-widget-cell[value='" + id + "']");
+  const item = doc.querySelector(
+    ".table-widget-column#" +
+      table.uniqueId +
+      " .table-widget-cell[value='" +
+      id +
+      "']"
+  );
 
   if (!item) {
-    ok(false, `The row id '${id}' that was passed to getRowCells() does not ` +
-              `exist. ${getAvailableIds()}`);
+    ok(
+      false,
+      `The row id '${id}' that was passed to getRowCells() does not ` +
+        `exist. ${getAvailableIds()}`
+    );
   }
 
   const index = table.columns.get(table.uniqueId).cellNodes.indexOf(item);
@@ -642,8 +681,9 @@ function getRowCells(id, includeHidden = false) {
 function isTableEmpty() {
   const doc = gPanelWindow.document;
   const table = gUI.table;
-  const cells = doc.querySelectorAll(".table-widget-column#" + table.uniqueId +
-                                   " .table-widget-cell");
+  const cells = doc.querySelectorAll(
+    ".table-widget-column#" + table.uniqueId + " .table-widget-cell"
+  );
   return cells.length === 0;
 }
 
@@ -655,8 +695,9 @@ function getAvailableIds() {
   const table = gUI.table;
 
   let out = "Available ids:\n";
-  const cells = doc.querySelectorAll(".table-widget-column#" + table.uniqueId +
-                                   " .table-widget-cell");
+  const cells = doc.querySelectorAll(
+    ".table-widget-column#" + table.uniqueId + " .table-widget-cell"
+  );
   for (const cell of cells) {
     out += `  - ${cell.getAttribute("value")}\n`;
   }
@@ -693,9 +734,12 @@ function getCellValue(id, column) {
       out += `  - ${key} = ${value}\n`;
     }
 
-    ok(false, `The column name '${column}' that was passed to ` +
-              `getCellValue() does not exist. Current column names and row ` +
-              `values are:\n${out}`);
+    ok(
+      false,
+      `The column name '${column}' that was passed to ` +
+        `getCellValue() does not exist. Current column names and row ` +
+        `values are:\n${out}`
+    );
   }
 
   return row[column];
@@ -763,8 +807,11 @@ function startCellEdit(id, column, selectText = true) {
  *        Expected value.
  */
 function checkCell(id, column, expected) {
-  is(getCellValue(id, column), expected,
-     column + " column has the right value for " + id);
+  is(
+    getCellValue(id, column),
+    expected,
+    column + " column has the right value for " + id
+  );
 }
 
 /**
@@ -893,16 +940,18 @@ async function checkState(state) {
 
     const items = gUI.table.items;
 
-    is(items.size, names.length,
-      `There is correct number of rows in ${storeName}`);
+    is(
+      items.size,
+      names.length,
+      `There is correct number of rows in ${storeName}`
+    );
 
     if (names.length === 0) {
       showAvailableIds();
     }
 
     for (const name of names) {
-      ok(items.has(name),
-        `There is item with name '${name}' in ${storeName}`);
+      ok(items.has(name), `There is item with name '${name}' in ${storeName}`);
 
       if (!items.has(name)) {
         showAvailableIds();
@@ -935,7 +984,8 @@ var focusSearchBoxUsingShortcut = async function(panelWin, callback) {
 
   panelWin.focus();
   const strings = Services.strings.createBundle(
-    "chrome://devtools/locale/storage.properties");
+    "chrome://devtools/locale/storage.properties"
+  );
   synthesizeKeyShortcut(strings.GetStringFromName("storage.filter.key"));
 
   await focused;
@@ -953,12 +1003,14 @@ function setPermission(url, permission) {
   const nsIPermissionManager = Ci.nsIPermissionManager;
 
   const uri = Services.io.newURI(url);
-  const principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  const principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    uri,
+    {}
+  );
 
   Cc["@mozilla.org/permissionmanager;1"]
     .getService(nsIPermissionManager)
-    .addFromPrincipal(principal, permission,
-                      nsIPermissionManager.ALLOW_ACTION);
+    .addFromPrincipal(principal, permission, nsIPermissionManager.ALLOW_ACTION);
 }
 
 function toggleSidebar() {
@@ -996,12 +1048,14 @@ async function performAdd(store) {
 
   await selectTreeItem(store);
 
-  const menuAdd = toolbar.querySelector(
-    "#add-button");
+  const menuAdd = toolbar.querySelector("#add-button");
 
   if (menuAdd.hidden) {
-    is(menuAdd.hidden, false,
-       `performAdd called for ${storeName} but it is not supported`);
+    is(
+      menuAdd.hidden,
+      false,
+      `performAdd called for ${storeName} but it is not supported`
+    );
     return;
   }
 
@@ -1020,7 +1074,9 @@ async function performAdd(store) {
 }
 
 function checkCellLength(len) {
-  const cells = gPanelWindow.document.querySelectorAll("#name .table-widget-cell");
+  const cells = gPanelWindow.document.querySelectorAll(
+    "#name .table-widget-cell"
+  );
   const msg = `Table should initially display ${len} items`;
 
   is(cells.length, len, msg);

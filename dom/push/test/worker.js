@@ -34,27 +34,33 @@ function assert(value, message) {
 }
 
 function broadcast(event, promise) {
-  event.waitUntil(Promise.resolve(promise).then(message => {
-    return self.clients.matchAll().then(clients => {
-      clients.forEach(client => client.postMessage(message));
-    });
-  }));
+  event.waitUntil(
+    Promise.resolve(promise).then(message => {
+      return self.clients.matchAll().then(clients => {
+        clients.forEach(client => client.postMessage(message));
+      });
+    })
+  );
 }
 
 function reply(event, promise) {
-  event.waitUntil(Promise.resolve(promise).then(result => {
-    event.ports[0].postMessage(result);
-  }).catch(error => {
-    event.ports[0].postMessage({
-      error: String(error),
-    });
-  }));
+  event.waitUntil(
+    Promise.resolve(promise)
+      .then(result => {
+        event.ports[0].postMessage(result);
+      })
+      .catch(error => {
+        event.ports[0].postMessage({
+          error: String(error),
+        });
+      })
+  );
 }
 
 function handlePush(event) {
   if (event instanceof PushEvent) {
     if (!("data" in event)) {
-      broadcast(event, {type: "finished", okay: "yes"});
+      broadcast(event, { type: "finished", okay: "yes" });
       return;
     }
     var message = {
@@ -72,70 +78,85 @@ function handlePush(event) {
     broadcast(event, message);
     return;
   }
-  broadcast(event, {type: "finished", okay: "no"});
+  broadcast(event, { type: "finished", okay: "no" });
 }
 
 var testHandlers = {
   publicKey(data) {
-    return self.registration.pushManager.getSubscription().then(
-      subscription => ({
+    return self.registration.pushManager
+      .getSubscription()
+      .then(subscription => ({
         p256dh: subscription.getKey("p256dh"),
         auth: subscription.getKey("auth"),
-      })
-    );
+      }));
   },
 
   resubscribe(data) {
-    return self.registration.pushManager.getSubscription().then(
-      subscription => {
-        assert(subscription.endpoint == data.endpoint,
-          "Wrong push endpoint in worker");
+    return self.registration.pushManager
+      .getSubscription()
+      .then(subscription => {
+        assert(
+          subscription.endpoint == data.endpoint,
+          "Wrong push endpoint in worker"
+        );
         return subscription.unsubscribe();
-      }
-    ).then(result => {
-      assert(result, "Error unsubscribing in worker");
-      return self.registration.pushManager.getSubscription();
-    }).then(subscription => {
-      assert(!subscription, "Subscription not removed in worker");
-      return self.registration.pushManager.subscribe();
-    }).then(subscription => {
-      return {
-        endpoint: subscription.endpoint,
-      };
-    });
+      })
+      .then(result => {
+        assert(result, "Error unsubscribing in worker");
+        return self.registration.pushManager.getSubscription();
+      })
+      .then(subscription => {
+        assert(!subscription, "Subscription not removed in worker");
+        return self.registration.pushManager.subscribe();
+      })
+      .then(subscription => {
+        return {
+          endpoint: subscription.endpoint,
+        };
+      });
   },
 
   denySubscribe(data) {
-    return self.registration.pushManager.getSubscription().then(
-      subscription => {
-        assert(!subscription,
-          "Should not return worker subscription with revoked permission");
-        return self.registration.pushManager.subscribe().then(_ => {
-          assert(false, "Expected error subscribing with revoked permission");
-        }, error => {
+    return self.registration.pushManager
+      .getSubscription()
+      .then(subscription => {
+        assert(
+          !subscription,
+          "Should not return worker subscription with revoked permission"
+        );
+        return self.registration.pushManager.subscribe().then(
+          _ => {
+            assert(false, "Expected error subscribing with revoked permission");
+          },
+          error => {
+            return {
+              isDOMException: error instanceof DOMException,
+              name: error.name,
+            };
+          }
+        );
+      });
+  },
+
+  subscribeWithKey(data) {
+    return self.registration.pushManager
+      .subscribe({
+        applicationServerKey: data.key,
+      })
+      .then(
+        subscription => {
+          return {
+            endpoint: subscription.endpoint,
+            key: subscription.options.applicationServerKey,
+          };
+        },
+        error => {
           return {
             isDOMException: error instanceof DOMException,
             name: error.name,
           };
-        });
-      }
-    );
-  },
-
-  subscribeWithKey(data) {
-    return self.registration.pushManager.subscribe({
-      applicationServerKey: data.key,
-    }).then(subscription => {
-      return {
-        endpoint: subscription.endpoint,
-        key: subscription.options.applicationServerKey,
-      };
-    }, error => {
-      return {
-        isDOMException: error instanceof DOMException,
-        name: error.name,
-      };
-    });
+        }
+      );
   },
 };
 
@@ -144,11 +165,10 @@ function handleMessage(event) {
   if (handler) {
     reply(event, handler(event.data));
   } else {
-    reply(event, Promise.reject(
-      "Invalid message type: " + event.data.type));
+    reply(event, Promise.reject("Invalid message type: " + event.data.type));
   }
 }
 
 function handlePushSubscriptionChange(event) {
-  broadcast(event, {type: "changed", okay: "yes"});
+  broadcast(event, { type: "changed", okay: "yes" });
 }

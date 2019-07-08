@@ -1376,22 +1376,20 @@ gfxFontEntry* gfxMacPlatformFontList::LookupLocalFont(const nsACString& aFontNam
     return nullptr;
   }
 
-  newFontEntry = new MacOSFontEntry(aFontName, fontRef, aWeightForEntry,
-                                    aStretchForEntry, aStyleForEntry, false,
-                                    true);
+  newFontEntry = new MacOSFontEntry(aFontName, fontRef, aWeightForEntry, aStretchForEntry,
+                                    aStyleForEntry, false, true);
   ::CFRelease(fontRef);
 
   return newFontEntry;
 }
 
-static void ReleaseData(void* info, const void* data, size_t size) {
-  free((void*)data);
-}
+static void ReleaseData(void* info, const void* data, size_t size) { free((void*)data); }
 
-gfxFontEntry* gfxMacPlatformFontList::MakePlatformFont(
-    const nsACString& aFontName, WeightRange aWeightForEntry,
-    StretchRange aStretchForEntry, SlantStyleRange aStyleForEntry,
-    const uint8_t* aFontData, uint32_t aLength) {
+gfxFontEntry* gfxMacPlatformFontList::MakePlatformFont(const nsACString& aFontName,
+                                                       WeightRange aWeightForEntry,
+                                                       StretchRange aStretchForEntry,
+                                                       SlantStyleRange aStyleForEntry,
+                                                       const uint8_t* aFontData, uint32_t aLength) {
   NS_ASSERTION(aFontData, "MakePlatformFont called with null data");
 
   // create the font entry
@@ -1412,9 +1410,8 @@ gfxFontEntry* gfxMacPlatformFontList::MakePlatformFont(
   }
 
   auto newFontEntry =
-      MakeUnique<MacOSFontEntry>(NS_ConvertUTF16toUTF8(uniqueName), fontRef,
-                                 aWeightForEntry, aStretchForEntry,
-                                 aStyleForEntry, true, false);
+      MakeUnique<MacOSFontEntry>(NS_ConvertUTF16toUTF8(uniqueName), fontRef, aWeightForEntry,
+                                 aStretchForEntry, aStyleForEntry, true, false);
   ::CFRelease(fontRef);
   return newFontEntry.release();
 }

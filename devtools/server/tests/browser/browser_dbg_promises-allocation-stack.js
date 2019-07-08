@@ -34,8 +34,10 @@ async function testGetAllocationStack(tab, target) {
   const onNewPromise = new Promise(resolve => {
     front.on("new-promises", promises => {
       for (const p of promises) {
-        if (p.preview.ownProperties.name &&
-            p.preview.ownProperties.name.value === "p") {
+        if (
+          p.preview.ownProperties.name &&
+          p.preview.ownProperties.name.value === "p"
+        ) {
           resolve(p);
         }
       }
@@ -57,11 +59,13 @@ async function testGetAllocationStack(tab, target) {
 
   for (const stack of response.allocationStack) {
     is(stack.source.url, TAB_URL, "Got correct source URL.");
-    is(stack.functionDisplayName, "makePromises",
-       "Got correct function display name.");
+    is(
+      stack.functionDisplayName,
+      "makePromises",
+      "Got correct function display name."
+    );
     is(typeof stack.line, "number", "Expect stack line to be a number.");
-    is(typeof stack.column, "number",
-       "Expect stack column to be a number.");
+    is(typeof stack.column, "number", "Expect stack column to be a number.");
   }
 
   await front.detach();

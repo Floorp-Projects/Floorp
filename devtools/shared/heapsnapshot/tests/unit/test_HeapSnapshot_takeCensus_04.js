@@ -20,8 +20,11 @@ function withAllocationMarkerOnStack(f) {
 }
 `);
 
-  equal("AllocationMarker" in saveHeapSnapshotAndTakeCensus(dbg).objects, false,
-        "There shouldn't exist any allocation markers in the census.");
+  equal(
+    "AllocationMarker" in saveHeapSnapshotAndTakeCensus(dbg).objects,
+    false,
+    "There shouldn't exist any allocation markers in the census."
+  );
 
   let allocationMarkerCount;
   g.withAllocationMarkerOnStack(() => {
@@ -29,9 +32,12 @@ function withAllocationMarkerOnStack(f) {
     allocationMarkerCount = census.objects.AllocationMarker.count;
   });
 
-  equal(allocationMarkerCount, 1,
-        "Should have one allocation marker in the census, because there " +
-        "was one on the stack.");
+  equal(
+    allocationMarkerCount,
+    1,
+    "Should have one allocation marker in the census, because there " +
+      "was one on the stack."
+  );
 
   do_test_finished();
 }

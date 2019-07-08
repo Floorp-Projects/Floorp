@@ -27,8 +27,11 @@ add_task(async function() {
   info("Focusing a new property name in the rule-view");
   const ruleEditor = getRuleViewRuleEditor(view, 1);
   const editor = await focusEditableField(view, ruleEditor.closeBrace);
-  is(inplaceEditor(ruleEditor.newPropSpan), editor,
-    "The new property editor has focus");
+  is(
+    inplaceEditor(ruleEditor.newPropSpan),
+    editor,
+    "The new property editor has focus"
+  );
 
   const input = editor.input;
   input.value = "/* background-color: yellow; */";

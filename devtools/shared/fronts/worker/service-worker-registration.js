@@ -3,12 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { serviceWorkerRegistrationSpec } =
-  require("devtools/shared/specs/worker/service-worker-registration");
-const { FrontClassWithSpec, registerFront, types } = require("devtools/shared/protocol");
+const {
+  serviceWorkerRegistrationSpec,
+} = require("devtools/shared/specs/worker/service-worker-registration");
+const {
+  FrontClassWithSpec,
+  registerFront,
+  types,
+} = require("devtools/shared/protocol");
 
-class ServiceWorkerRegistrationFront extends
-  FrontClassWithSpec(serviceWorkerRegistrationSpec) {
+class ServiceWorkerRegistrationFront extends FrontClassWithSpec(
+  serviceWorkerRegistrationSpec
+) {
   get active() {
     return this._form.active;
   }

@@ -12,7 +12,6 @@ const {
 } = require("./index");
 
 module.exports = {
-
   /**
    * Update the sidebar with an object treeview.
    */
@@ -56,5 +55,4 @@ module.exports = {
       sidebarId,
     };
   },
-
 };

@@ -2,14 +2,21 @@
 // Clicks on the link, which opens it in the same tab.
 
 function startSimpleClickTestCase(aTestNumber) {
-  info("browser_referrer_simple_click: " +
-       getReferrerTestDescription(aTestNumber));
-  BrowserTestUtils.browserLoaded(gTestWindow.gBrowser.selectedBrowser, false,
-                                 (url) => url.endsWith("file_referrer_testserver.sjs"))
-                  .then(function() {
-                    checkReferrerAndStartNextTest(aTestNumber, null, null,
-                                                  startSimpleClickTestCase);
-                  });
+  info(
+    "browser_referrer_simple_click: " + getReferrerTestDescription(aTestNumber)
+  );
+  BrowserTestUtils.browserLoaded(
+    gTestWindow.gBrowser.selectedBrowser,
+    false,
+    url => url.endsWith("file_referrer_testserver.sjs")
+  ).then(function() {
+    checkReferrerAndStartNextTest(
+      aTestNumber,
+      null,
+      null,
+      startSimpleClickTestCase
+    );
+  });
 
   clickTheLink(gTestWindow, "testlink", {});
 }

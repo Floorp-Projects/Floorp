@@ -6,12 +6,16 @@
 
 function ok(a, msg) {
   dump("OK: " + !!a + "  =>  " + a + ": " + msg + "\n");
-  postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
+  postMessage({ type: "status", status: !!a, msg: a + ": " + msg });
 }
 
 function is(a, b, msg) {
-  dump("IS: " + (a===b) + "  =>  " + a + " | " + b + ": " + msg + "\n");
-  postMessage({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
+  dump("IS: " + (a === b) + "  =>  " + a + " | " + b + ": " + msg + "\n");
+  postMessage({
+    type: "status",
+    status: a === b,
+    msg: a + " === " + b + ": " + msg,
+  });
 }
 
 function workerTestArrayEquals(a, b) {
@@ -27,47 +31,49 @@ function workerTestArrayEquals(a, b) {
 }
 
 function workerTestDone() {
-  postMessage({ type: 'finish' });
+  postMessage({ type: "finish" });
 }
 
 function workerTestGetPermissions(permissions, cb) {
-  addEventListener('message', function workerTestGetPermissionsCB(e) {
-    if (e.data.type != 'returnPermissions' ||
-        !workerTestArrayEquals(permissions, e.data.permissions)) {
+  addEventListener("message", function workerTestGetPermissionsCB(e) {
+    if (
+      e.data.type != "returnPermissions" ||
+      !workerTestArrayEquals(permissions, e.data.permissions)
+    ) {
       return;
     }
-    removeEventListener('message', workerTestGetPermissionsCB);
+    removeEventListener("message", workerTestGetPermissionsCB);
     cb(e.data.result);
   });
   postMessage({
-    type: 'getPermissions',
-    permissions: permissions
+    type: "getPermissions",
+    permissions: permissions,
   });
 }
 
 function workerTestGetHelperData(cb) {
-  addEventListener('message', function workerTestGetHelperDataCB(e) {
-    if (e.data.type !== 'returnHelperData') {
+  addEventListener("message", function workerTestGetHelperDataCB(e) {
+    if (e.data.type !== "returnHelperData") {
       return;
     }
-    removeEventListener('message', workerTestGetHelperDataCB);
+    removeEventListener("message", workerTestGetHelperDataCB);
     cb(e.data.result);
   });
   postMessage({
-    type: 'getHelperData'
+    type: "getHelperData",
   });
 }
 
-addEventListener('message', function workerWrapperOnMessage(e) {
-  removeEventListener('message', workerWrapperOnMessage);
+addEventListener("message", function workerWrapperOnMessage(e) {
+  removeEventListener("message", workerWrapperOnMessage);
   var data = e.data;
   try {
     importScripts(data.script);
-  } catch(ex) {
+  } catch (ex) {
     postMessage({
-      type: 'status',
+      type: "status",
       status: false,
-      msg: 'worker failed to import ' + data.script + "; error: " + ex.message
+      msg: "worker failed to import " + data.script + "; error: " + ex.message,
     });
   }
 });

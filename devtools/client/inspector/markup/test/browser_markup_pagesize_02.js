@@ -14,7 +14,7 @@ const TEST_URL = URL_ROOT + "doc_markup_pagesize_02.html";
 Services.prefs.setIntPref("devtools.markup.pagesize", 5);
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
 
   info("Selecting the UL node");
   await clickContainer("ul", inspector);
@@ -34,14 +34,16 @@ async function showAllNodes(inspector) {
   ok(button, "All nodes button is here");
   const win = button.ownerDocument.defaultView;
 
-  EventUtils.sendMouseEvent({type: "click"}, button, win);
+  EventUtils.sendMouseEvent({ type: "click" }, button, win);
   await inspector.markup._waitForChildren();
 }
 
 async function assertAllNodesAreVisible(inspector, testActor) {
   const container = await getContainerForSelector("ul", inspector);
-  ok(!container.elt.querySelector("button"),
-     "All nodes button isn't here anymore");
+  ok(
+    !container.elt.querySelector("button"),
+    "All nodes button isn't here anymore"
+  );
   const numItems = await testActor.getNumberOfElementMatches("ul > *");
   is(container.children.childNodes.length, numItems);
 }

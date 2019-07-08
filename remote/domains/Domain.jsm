@@ -45,7 +45,7 @@ class Domain {
 }
 
 function isEventHandler(listener) {
-  return listener &&
-      "onEvent" in listener &&
-      typeof listener.onEvent == "function";
+  return (
+    listener && "onEvent" in listener && typeof listener.onEvent == "function"
+  );
 }

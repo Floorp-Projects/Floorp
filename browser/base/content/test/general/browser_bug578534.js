@@ -7,15 +7,21 @@ add_task(async function test() {
   let cookieBehavior = "network.cookie.cookieBehavior";
   let uriObj = Services.io.newURI(uriString);
 
-  await SpecialPowers.pushPrefEnv({ set: [[ cookieBehavior, 2 ]] });
+  await SpecialPowers.pushPrefEnv({ set: [[cookieBehavior, 2]] });
   Services.perms.add(uriObj, "cookie", Services.perms.ALLOW_ACTION);
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: uriString }, async function(browser) {
-    await ContentTask.spawn(browser, null, function() {
-      is(content.navigator.cookieEnabled, true,
-         "navigator.cookieEnabled should be true");
-    });
-  });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: uriString },
+    async function(browser) {
+      await ContentTask.spawn(browser, null, function() {
+        is(
+          content.navigator.cookieEnabled,
+          true,
+          "navigator.cookieEnabled should be true"
+        );
+      });
+    }
+  );
 
   Services.perms.add(uriObj, "cookie", Services.perms.UNKNOWN_ACTION);
 });

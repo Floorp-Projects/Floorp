@@ -7,8 +7,11 @@
 
 function run_test() {
   const dominatorTree = saveHeapSnapshotAndComputeDominatorTree();
-  equal(typeof dominatorTree.getImmediatelyDominated, "function",
-        "getImmediatelyDominated should be a function");
+  equal(
+    typeof dominatorTree.getImmediatelyDominated,
+    "function",
+    "getImmediatelyDominated should be a function"
+  );
 
   // Do a traversal of the dominator tree.
   //
@@ -18,8 +21,11 @@ function run_test() {
   // overflow the log size.
 
   const root = dominatorTree.root;
-  equal(dominatorTree.getImmediateDominator(root), null,
-        "The root should not have a parent");
+  equal(
+    dominatorTree.getImmediateDominator(root),
+    null,
+    "The root should not have a parent"
+  );
 
   const seen = new Set();
   const stack = [root];
@@ -27,8 +33,11 @@ function run_test() {
     const top = stack.pop();
 
     if (seen.has(top)) {
-      ok(false, "This is a tree, not a graph: we shouldn't have "
-        + "multiple edges to the same node");
+      ok(
+        false,
+        "This is a tree, not a graph: we shouldn't have " +
+          "multiple edges to the same node"
+      );
     }
     seen.add(top);
     if (seen.size % 1000 === 0) {
@@ -37,7 +46,10 @@ function run_test() {
 
     const newNodes = dominatorTree.getImmediatelyDominated(top);
     if (Object.prototype.toString.call(newNodes) !== "[object Array]") {
-      ok(false, "getImmediatelyDominated should return an array for known node ids");
+      ok(
+        false,
+        "getImmediatelyDominated should return an array for known node ids"
+      );
     }
 
     const topSize = dominatorTree.getRetainedSize(top);
@@ -55,14 +67,22 @@ function run_test() {
       const thisSize = dominatorTree.getRetainedSize(newNodes[i]);
 
       if (thisSize >= topSize) {
-        ok(false, "the size of children in the dominator tree should"
-          + " always be less than that of their parent");
+        ok(
+          false,
+          "the size of children in the dominator tree should" +
+            " always be less than that of their parent"
+        );
       }
 
       if (thisSize > lastSize) {
-        ok(false,
-           "children should be sorted by greatest to least retained size, "
-           + "lastSize = " + lastSize + ", thisSize = " + thisSize);
+        ok(
+          false,
+          "children should be sorted by greatest to least retained size, " +
+            "lastSize = " +
+            lastSize +
+            ", thisSize = " +
+            thisSize
+        );
       }
 
       lastSize = thisSize;

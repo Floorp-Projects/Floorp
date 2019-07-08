@@ -32,11 +32,15 @@ add_task(async function test() {
 });
 
 async function testTargetScopedActor(client, form) {
-  ok(form.testOneActor,
-    "Found the test target-scoped actor.");
-  ok(form.testOneActor.includes("testOne"),
-    "testOneActor's actorPrefix should be used.");
+  ok(form.testOneActor, "Found the test target-scoped actor.");
+  ok(
+    form.testOneActor.includes("testOne"),
+    "testOneActor's actorPrefix should be used."
+  );
 
-  const response = await client.request({ to: form.testOneActor, type: "ping" });
+  const response = await client.request({
+    to: form.testOneActor,
+    type: "ping",
+  });
   is(response.pong, "pong", "Actor should respond to requests.");
 }

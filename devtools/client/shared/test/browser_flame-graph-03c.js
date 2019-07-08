@@ -15,9 +15,7 @@ const TEST_DATA = [
   },
   {
     color: "#00f",
-    blocks: [
-      { x: 0, y: 30, width: 30, height: 20, text: "BAZ" },
-    ],
+    blocks: [{ x: 0, y: 30, width: 30, height: 20, text: "BAZ" }],
   },
 ];
 const TEST_BOUNDS = { startTime: 0, endTime: 150 };
@@ -25,7 +23,7 @@ const TEST_WIDTH = 200;
 const TEST_HEIGHT = 100;
 const TEST_DPI_DENSITIY = 2;
 
-const {FlameGraph} = require("devtools/client/shared/widgets/FlameGraph");
+const { FlameGraph } = require("devtools/client/shared/widgets/FlameGraph");
 
 add_task(async function() {
   await addTab("about:blank");
@@ -34,9 +32,11 @@ add_task(async function() {
 });
 
 async function performTest() {
-  const [host,, doc] = await createHost();
-  doc.body.setAttribute("style",
-                        "position: fixed; width: 100%; height: 100%; margin: 0;");
+  const [host, , doc] = await createHost();
+  doc.body.setAttribute(
+    "style",
+    "position: fixed; width: 100%; height: 100%; margin: 0;"
+  );
 
   const graph = new FlameGraph(doc.body, TEST_DPI_DENSITIY);
   graph.fixedWidth = TEST_WIDTH;
@@ -56,80 +56,161 @@ function testGraph(graph) {
   // Drag up vertically only.
 
   dragStart(graph, TEST_WIDTH / 2, TEST_HEIGHT / 2);
-  is(graph.getViewRange().startTime | 0, 0,
-    "The selection start boundary is correct (1).");
-  is(graph.getViewRange().endTime | 0, 150,
-    "The selection end boundary is correct (1).");
-  is(graph.getViewRange().verticalOffset | 0, 0,
-    "The vertical offset is correct (1).");
+  is(
+    graph.getViewRange().startTime | 0,
+    0,
+    "The selection start boundary is correct (1)."
+  );
+  is(
+    graph.getViewRange().endTime | 0,
+    150,
+    "The selection end boundary is correct (1)."
+  );
+  is(
+    graph.getViewRange().verticalOffset | 0,
+    0,
+    "The vertical offset is correct (1)."
+  );
 
   hover(graph, TEST_WIDTH / 2, TEST_HEIGHT / 2 - 50);
-  is(graph.getViewRange().startTime | 0, 0,
-    "The selection start boundary is correct (2).");
-  is(graph.getViewRange().endTime | 0, 150,
-    "The selection end boundary is correct (2).");
-  is(graph.getViewRange().verticalOffset | 0, 17,
-    "The vertical offset is correct (2).");
+  is(
+    graph.getViewRange().startTime | 0,
+    0,
+    "The selection start boundary is correct (2)."
+  );
+  is(
+    graph.getViewRange().endTime | 0,
+    150,
+    "The selection end boundary is correct (2)."
+  );
+  is(
+    graph.getViewRange().verticalOffset | 0,
+    17,
+    "The vertical offset is correct (2)."
+  );
 
   dragStop(graph, TEST_WIDTH / 2, TEST_HEIGHT / 2 - 100);
-  is(graph.getViewRange().startTime | 0, 0,
-    "The selection start boundary is correct (3).");
-  is(graph.getViewRange().endTime | 0, 150,
-    "The selection end boundary is correct (3).");
-  is(graph.getViewRange().verticalOffset | 0, 42,
-    "The vertical offset is correct (3).");
+  is(
+    graph.getViewRange().startTime | 0,
+    0,
+    "The selection start boundary is correct (3)."
+  );
+  is(
+    graph.getViewRange().endTime | 0,
+    150,
+    "The selection end boundary is correct (3)."
+  );
+  is(
+    graph.getViewRange().verticalOffset | 0,
+    42,
+    "The vertical offset is correct (3)."
+  );
 
   // Drag down strongly vertically and slightly horizontally.
 
   dragStart(graph, TEST_WIDTH / 2, TEST_HEIGHT / 2);
-  is(graph.getViewRange().startTime | 0, 0,
-    "The selection start boundary is correct (4).");
-  is(graph.getViewRange().endTime | 0, 150,
-    "The selection end boundary is correct (4).");
-  is(graph.getViewRange().verticalOffset | 0, 42,
-    "The vertical offset is correct (4).");
+  is(
+    graph.getViewRange().startTime | 0,
+    0,
+    "The selection start boundary is correct (4)."
+  );
+  is(
+    graph.getViewRange().endTime | 0,
+    150,
+    "The selection end boundary is correct (4)."
+  );
+  is(
+    graph.getViewRange().verticalOffset | 0,
+    42,
+    "The vertical offset is correct (4)."
+  );
 
   hover(graph, TEST_WIDTH / 2, TEST_HEIGHT / 2 + 50);
-  is(graph.getViewRange().startTime | 0, 0,
-    "The selection start boundary is correct (5).");
-  is(graph.getViewRange().endTime | 0, 150,
-    "The selection end boundary is correct (5).");
-  is(graph.getViewRange().verticalOffset | 0, 25,
-    "The vertical offset is correct (5).");
+  is(
+    graph.getViewRange().startTime | 0,
+    0,
+    "The selection start boundary is correct (5)."
+  );
+  is(
+    graph.getViewRange().endTime | 0,
+    150,
+    "The selection end boundary is correct (5)."
+  );
+  is(
+    graph.getViewRange().verticalOffset | 0,
+    25,
+    "The vertical offset is correct (5)."
+  );
 
   dragStop(graph, TEST_WIDTH / 2 + 100, TEST_HEIGHT / 2 + 500);
-  is(graph.getViewRange().startTime | 0, 0,
-    "The selection start boundary is correct (6).");
-  is(graph.getViewRange().endTime | 0, 150,
-    "The selection end boundary is correct (6).");
-  is(graph.getViewRange().verticalOffset | 0, 0,
-    "The vertical offset is correct (6).");
+  is(
+    graph.getViewRange().startTime | 0,
+    0,
+    "The selection start boundary is correct (6)."
+  );
+  is(
+    graph.getViewRange().endTime | 0,
+    150,
+    "The selection end boundary is correct (6)."
+  );
+  is(
+    graph.getViewRange().verticalOffset | 0,
+    0,
+    "The vertical offset is correct (6)."
+  );
 
   // Drag up slightly vertically and strongly horizontally.
 
   dragStart(graph, TEST_WIDTH / 2, TEST_HEIGHT / 2);
-  is(graph.getViewRange().startTime | 0, 0,
-    "The selection start boundary is correct (7).");
-  is(graph.getViewRange().endTime | 0, 150,
-    "The selection end boundary is correct (7).");
-  is(graph.getViewRange().verticalOffset | 0, 0,
-    "The vertical offset is correct (7).");
+  is(
+    graph.getViewRange().startTime | 0,
+    0,
+    "The selection start boundary is correct (7)."
+  );
+  is(
+    graph.getViewRange().endTime | 0,
+    150,
+    "The selection end boundary is correct (7)."
+  );
+  is(
+    graph.getViewRange().verticalOffset | 0,
+    0,
+    "The vertical offset is correct (7)."
+  );
 
   hover(graph, TEST_WIDTH / 2 + 50, TEST_HEIGHT / 2);
-  is(graph.getViewRange().startTime | 0, 0,
-    "The selection start boundary is correct (8).");
-  is(graph.getViewRange().endTime | 0, 116,
-    "The selection end boundary is correct (8).");
-  is(graph.getViewRange().verticalOffset | 0, 0,
-    "The vertical offset is correct (8).");
+  is(
+    graph.getViewRange().startTime | 0,
+    0,
+    "The selection start boundary is correct (8)."
+  );
+  is(
+    graph.getViewRange().endTime | 0,
+    116,
+    "The selection end boundary is correct (8)."
+  );
+  is(
+    graph.getViewRange().verticalOffset | 0,
+    0,
+    "The vertical offset is correct (8)."
+  );
 
   dragStop(graph, TEST_WIDTH / 2 + 500, TEST_HEIGHT / 2 + 100);
-  is(graph.getViewRange().startTime | 0, 0,
-    "The selection start boundary is correct (9).");
-  is(graph.getViewRange().endTime | 0, 0,
-    "The selection end boundary is correct (9).");
-  is(graph.getViewRange().verticalOffset | 0, 0,
-    "The vertical offset is correct (9).");
+  is(
+    graph.getViewRange().startTime | 0,
+    0,
+    "The selection start boundary is correct (9)."
+  );
+  is(
+    graph.getViewRange().endTime | 0,
+    0,
+    "The selection end boundary is correct (9)."
+  );
+  is(
+    graph.getViewRange().verticalOffset | 0,
+    0,
+    "The vertical offset is correct (9)."
+  );
 }
 
 // EventUtils just doesn't work!

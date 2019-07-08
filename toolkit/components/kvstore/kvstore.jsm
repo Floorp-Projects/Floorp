@@ -4,12 +4,11 @@
 
 "use strict";
 
-const gKeyValueService =
-  Cc["@mozilla.org/key-value-service;1"].getService(Ci.nsIKeyValueService);
+const gKeyValueService = Cc["@mozilla.org/key-value-service;1"].getService(
+  Ci.nsIKeyValueService
+);
 
-const EXPORTED_SYMBOLS = [
-  "KeyValueService",
-];
+const EXPORTED_SYMBOLS = ["KeyValueService"];
 
 function promisify(fn, ...args) {
   return new Promise((resolve, reject) => {
@@ -110,19 +109,25 @@ class KeyValueDatabase {
 
     let entries;
 
-    if (pairs instanceof Map || pairs instanceof Array ||
-        typeof(pairs[Symbol.iterator]) === "function") {
+    if (
+      pairs instanceof Map ||
+      pairs instanceof Array ||
+      typeof pairs[Symbol.iterator] === "function"
+    ) {
       try {
         // Let Map constructor validate the argument. Note that Map remembers
         // the original insertion order of the keys, which satisfies the ordering
         // premise of this function.
         const map = pairs instanceof Map ? pairs : new Map(pairs);
-        entries = Array.from(map, ([key, value]) => ({key, value}));
+        entries = Array.from(map, ([key, value]) => ({ key, value }));
       } catch (error) {
         throw new Error("writeMany(): unexpected argument.");
       }
-    } else if (typeof(pairs) === "object") {
-      entries = Array.from(Object.entries(pairs), ([key, value]) => ({key, value}));
+    } else if (typeof pairs === "object") {
+      entries = Array.from(Object.entries(pairs), ([key, value]) => ({
+        key,
+        value,
+      }));
     } else {
       throw new Error("writeMany(): unexpected argument.");
     }
@@ -198,9 +203,9 @@ class KeyValueEnumerator {
     return this.enumerator.getNext();
   }
 
-  * [Symbol.iterator]() {
+  *[Symbol.iterator]() {
     while (this.enumerator.hasMoreElements()) {
-      yield (this.enumerator.getNext());
+      yield this.enumerator.getNext();
     }
   }
 }

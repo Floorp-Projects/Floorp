@@ -5,7 +5,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console test top-level await bindings";
+const TEST_URI =
+  "data:text/html;charset=utf-8,Web Console test top-level await bindings";
 
 add_task(async function() {
   // Enable await mapping.
@@ -24,12 +25,16 @@ async function performTests() {
 
   info("Check that declaring a let variable does not create a global property");
   await hud.jsterm.execute(
-    `let bazA = await new Promise(r => setTimeout(() => r("local-bazA"), 10))`);
+    `let bazA = await new Promise(r => setTimeout(() => r("local-bazA"), 10))`
+  );
   await checkVariable(hud, "bazA");
 
-  info("Check that declaring a const variable does not create a global property");
+  info(
+    "Check that declaring a const variable does not create a global property"
+  );
   await hud.jsterm.execute(
-    `const bazB = await new Promise(r => setTimeout(() => r("local-bazB"), 10))`);
+    `const bazB = await new Promise(r => setTimeout(() => r("local-bazB"), 10))`
+  );
   await checkVariable(hud, "bazB");
 
   info("Check that complex variable declarations work as expected");
@@ -72,4 +77,3 @@ async function checkVariable(hud, varName) {
   await executeAndWaitForMessage(hud, varName, `"local-${varName}"`);
   ok(true, `"${varName}" has the expected value`);
 }
-

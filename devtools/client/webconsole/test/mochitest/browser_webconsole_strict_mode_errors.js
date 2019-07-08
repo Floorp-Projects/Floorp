@@ -8,11 +8,15 @@
 "use strict";
 
 add_task(async function() {
-  const hud = await openNewTabAndConsole("data:text/html;charset=utf8,empty page");
+  const hud = await openNewTabAndConsole(
+    "data:text/html;charset=utf8,empty page"
+  );
 
   loadScriptURI("'use strict';var arguments;");
-  await waitForError(hud,
-    "SyntaxError: 'arguments' can't be defined or assigned to in strict mode code");
+  await waitForError(
+    hud,
+    "SyntaxError: 'arguments' can't be defined or assigned to in strict mode code"
+  );
 
   loadScriptURI("'use strict';function f(a, a) {};");
   await waitForError(hud, "SyntaxError: duplicate formal argument a");
@@ -21,7 +25,10 @@ add_task(async function() {
   await waitForError(hud, 'TypeError: setting getter-only property "p"');
 
   loadScriptURI("'use strict';v = 1;");
-  await waitForError(hud, "ReferenceError: assignment to undeclared variable v");
+  await waitForError(
+    hud,
+    "ReferenceError: assignment to undeclared variable v"
+  );
 });
 
 async function waitForError(hud, text) {

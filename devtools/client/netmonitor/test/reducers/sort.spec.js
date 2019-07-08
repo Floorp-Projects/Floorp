@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { Sort, sortReducer} = require("../../src/reducers/sort");
+const { Sort, sortReducer } = require("../../src/reducers/sort");
 const { SORT_BY } = require("../../src/constants");
 
 describe("sorting reducer", () => {

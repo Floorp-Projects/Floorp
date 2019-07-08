@@ -3,11 +3,24 @@
 /* exported createHttpServer, promiseConsoleOutput, cleanupDir, clearCache, testEnv
             runWithPrefs, withHandlingUserInput */
 
-var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var {clearInterval, clearTimeout, setInterval, setIntervalWithTarget, setTimeout, setTimeoutWithTarget} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-var {AddonTestUtils, MockAsyncShutdown} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+var { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+var {
+  clearInterval,
+  clearTimeout,
+  setInterval,
+  setIntervalWithTarget,
+  setTimeout,
+  setTimeoutWithTarget,
+} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 
 // eslint-disable-next-line no-unused-vars
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -31,8 +44,16 @@ const testEnv = {
 };
 
 add_task(function check_remote() {
-  Assert.equal(WebExtensionPolicy.useRemoteWebExtensions, testEnv.expectRemote, "useRemoteWebExtensions matches");
-  Assert.equal(WebExtensionPolicy.isExtensionProcess, !testEnv.expectRemote, "testing from extension process");
+  Assert.equal(
+    WebExtensionPolicy.useRemoteWebExtensions,
+    testEnv.expectRemote,
+    "useRemoteWebExtensions matches"
+  );
+  Assert.equal(
+    WebExtensionPolicy.isExtensionProcess,
+    !testEnv.expectRemote,
+    "testing from extension process"
+  );
 });
 
 ExtensionTestUtils.init(this);
@@ -53,8 +74,8 @@ function clearCache() {
   Services.cache2.clear();
 
   let imageCache = Cc["@mozilla.org/image/tools;1"]
-      .getService(Ci.imgITools)
-      .getImgCacheForDocument(null);
+    .getService(Ci.imgITools)
+    .getImgCacheForDocument(null);
   imageCache.clearCache(false);
 }
 
@@ -82,7 +103,7 @@ var promiseConsoleOutput = async function(task) {
     Services.console.logStringMessage(DONE);
     await awaitListener;
 
-    return {messages, result};
+    return { messages, result };
   } finally {
     Services.console.unregisterListener(listener);
   }
@@ -116,7 +137,7 @@ function cleanupDir(dir) {
 // Run a test with the specified preferences and then restores their initial values
 // right after the test function run (whether it passes or fails).
 async function runWithPrefs(prefsToSet, testFn) {
-  const setPrefs = (prefs) => {
+  const setPrefs = prefs => {
     for (let [pref, value] of prefs) {
       if (value === undefined) {
         // Clear any pref that didn't have a user value.
@@ -126,7 +147,7 @@ async function runWithPrefs(prefsToSet, testFn) {
       }
 
       info(`Setting pref "${pref}": ${value}`);
-      switch (typeof(value)) {
+      switch (typeof value) {
         case "boolean":
           Services.prefs.setBoolPref(pref, value);
           break;
@@ -142,7 +163,7 @@ async function runWithPrefs(prefsToSet, testFn) {
     }
   };
 
-  const getPrefs = (prefs) => {
+  const getPrefs = prefs => {
     return prefs.map(([pref, value]) => {
       info(`Getting initial pref value for "${pref}"`);
       if (!Services.prefs.prefHasUserValue(pref)) {
@@ -183,11 +204,13 @@ let extensionHandlers = new WeakSet();
 function handlingUserInputFrameScript() {
   /* globals content */
   // eslint-disable-next-line no-shadow
-  const {MessageChannel} = ChromeUtils.import("resource://gre/modules/MessageChannel.jsm");
+  const { MessageChannel } = ChromeUtils.import(
+    "resource://gre/modules/MessageChannel.jsm"
+  );
 
   let handle;
   MessageChannel.addListener(this, "ExtensionTest:HandleUserInput", {
-    receiveMessage({name, data}) {
+    receiveMessage({ name, data }) {
       if (data) {
         handle = content.windowUtils.setHandlingUserInput(true);
       } else if (handle) {
@@ -199,15 +222,26 @@ function handlingUserInputFrameScript() {
 }
 
 async function withHandlingUserInput(extension, fn) {
-  let {messageManager} = extension.extension.groupFrameLoader;
+  let { messageManager } = extension.extension.groupFrameLoader;
 
   if (!extensionHandlers.has(extension)) {
-    messageManager.loadFrameScript(`data:,(${encodeURI(handlingUserInputFrameScript)}).call(this)`, false, true);
+    messageManager.loadFrameScript(
+      `data:,(${encodeURI(handlingUserInputFrameScript)}).call(this)`,
+      false,
+      true
+    );
     extensionHandlers.add(extension);
   }
 
-  await MessageChannel.sendMessage(messageManager, "ExtensionTest:HandleUserInput", true);
+  await MessageChannel.sendMessage(
+    messageManager,
+    "ExtensionTest:HandleUserInput",
+    true
+  );
   await fn();
-  await MessageChannel.sendMessage(messageManager, "ExtensionTest:HandleUserInput", false);
+  await MessageChannel.sendMessage(
+    messageManager,
+    "ExtensionTest:HandleUserInput",
+    false
+  );
 }
-

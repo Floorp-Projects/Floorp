@@ -14,11 +14,19 @@ async function checkInstallConfirmation(...names) {
   let observer = {
     observe(aSubject, aTopic, aData) {
       var installInfo = aSubject.wrappedJSObject;
-      isnot(installInfo.browser, null, "Notification should have non-null browser");
-      Assert.deepEqual(installInfo.installs[0].installTelemetryInfo, {
-        source: "about:addons",
-        method: "install-from-file",
-      }, "Got the expected installTelemetryInfo");
+      isnot(
+        installInfo.browser,
+        null,
+        "Notification should have non-null browser"
+      );
+      Assert.deepEqual(
+        installInfo.installs[0].installTelemetryInfo,
+        {
+          source: "about:addons",
+          method: "install-from-file",
+        },
+        "Got the expected installTelemetryInfo"
+      );
       notificationCount++;
     },
   };
@@ -34,7 +42,9 @@ async function checkInstallConfirmation(...names) {
 
     info(`Saw install for ${name}`);
     if (results.length < names.length) {
-      info(`Waiting for installs for ${names.filter(n => !results.includes(n))}`);
+      info(
+        `Waiting for installs for ${names.filter(n => !results.includes(n))}`
+      );
 
       promise = promisePopupNotificationShown("addon-webext-permissions");
     }
@@ -43,7 +53,11 @@ async function checkInstallConfirmation(...names) {
 
   Assert.deepEqual(results.sort(), names.sort(), "Got expected installs");
 
-  is(notificationCount, names.length, `Saw ${names.length} addon-install-started notification`);
+  is(
+    notificationCount,
+    names.length,
+    `Saw ${names.length} addon-install-started notification`
+  );
   Services.obs.removeObserver(observer, "addon-install-started");
 }
 
@@ -51,9 +65,9 @@ add_task(async function test_install_from_file() {
   gManagerWindow = await open_manager("addons://list/extension");
 
   var filePaths = [
-                   get_addon_file_url("browser_dragdrop1.xpi"),
-                   get_addon_file_url("browser_dragdrop2.xpi"),
-                  ];
+    get_addon_file_url("browser_dragdrop1.xpi"),
+    get_addon_file_url("browser_dragdrop2.xpi"),
+  ];
   for (let uri of filePaths) {
     ok(uri.file != null, `Should have file for ${uri.spec}`);
     ok(uri.file instanceof Ci.nsIFile, `Should have nsIFile for ${uri.spec}`);
@@ -62,7 +76,10 @@ add_task(async function test_install_from_file() {
 
   // Set handler that executes the core test after the window opens,
   // and resolves the promise when the window closes
-  let pInstallURIClosed = checkInstallConfirmation("Drag Drop test 1", "Drag Drop test 2");
+  let pInstallURIClosed = checkInstallConfirmation(
+    "Drag Drop test 1",
+    "Drag Drop test 2"
+  );
 
   gManagerWindow.gViewController.doCommand("cmd_installFromFile");
 

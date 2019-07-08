@@ -42,7 +42,9 @@ class WaterfallBackground {
 
   draw(state) {
     // Do a shallow compare of the previous and the new state
-    const shouldUpdate = STATE_KEYS.some(key => this.prevState[key] !== state[key]);
+    const shouldUpdate = STATE_KEYS.some(
+      key => this.prevState[key] !== state[key]
+    );
     if (!shouldUpdate) {
       return;
     }
@@ -55,10 +57,10 @@ class WaterfallBackground {
     }
 
     // Nuke the context.
-    const canvasWidth = this.canvas.width =
-      state.waterfallWidth - REQUESTS_WATERFALL.LABEL_WIDTH;
+    const canvasWidth = (this.canvas.width =
+      state.waterfallWidth - REQUESTS_WATERFALL.LABEL_WIDTH);
     // Awww yeah, 1px, repeats on Y axis.
-    const canvasHeight = this.canvas.height = 1;
+    const canvasHeight = (this.canvas.height = 1);
 
     // Start over.
     const imageData = this.ctx.createImageData(canvasWidth, canvasHeight);
@@ -107,17 +109,25 @@ class WaterfallBackground {
         return;
       }
 
-      const delta =
-        Math.floor((timestamp - state.firstRequestStartedMillis) * state.scale);
+      const delta = Math.floor(
+        (timestamp - state.firstRequestStartedMillis) * state.scale
+      );
       drawPixelAt(delta, color);
     }
 
-    const { DOMCONTENTLOADED_TICKS_COLOR, LOAD_TICKS_COLOR } = REQUESTS_WATERFALL;
-    drawTimestamp(state.timingMarkers.firstDocumentDOMContentLoadedTimestamp,
-      this.getThemeColorAsRgba(DOMCONTENTLOADED_TICKS_COLOR, state.theme));
+    const {
+      DOMCONTENTLOADED_TICKS_COLOR,
+      LOAD_TICKS_COLOR,
+    } = REQUESTS_WATERFALL;
+    drawTimestamp(
+      state.timingMarkers.firstDocumentDOMContentLoadedTimestamp,
+      this.getThemeColorAsRgba(DOMCONTENTLOADED_TICKS_COLOR, state.theme)
+    );
 
-    drawTimestamp(state.timingMarkers.firstDocumentLoadTimestamp,
-      this.getThemeColorAsRgba(LOAD_TICKS_COLOR, state.theme));
+    drawTimestamp(
+      state.timingMarkers.firstDocumentLoadTimestamp,
+      this.getThemeColorAsRgba(LOAD_TICKS_COLOR, state.theme)
+    );
 
     // Flush the image data and cache the waterfall background.
     pixelArray.set(view8bit);

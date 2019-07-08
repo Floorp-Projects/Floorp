@@ -58,7 +58,6 @@ const INITIAL_FLEXBOX = {
 };
 
 const reducers = {
-
   [CLEAR_FLEXBOX](flexbox, _) {
     return INITIAL_FLEXBOX;
   },
@@ -80,7 +79,6 @@ const reducers = {
       highlighted,
     };
   },
-
 };
 
 module.exports = function(flexbox = INITIAL_FLEXBOX, action) {

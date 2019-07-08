@@ -10,7 +10,10 @@ let gTests = [
     href: "http://example.com/normal",
     loadType: PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
     async setup() {
-      await PlacesTestUtils.addVisits({uri: this.href, transition: TRANSITION_TYPED});
+      await PlacesTestUtils.addVisits({
+        uri: this.href,
+        transition: TRANSITION_TYPED,
+      });
     },
   },
   {
@@ -68,27 +71,49 @@ add_task(async function() {
     await test.setup();
 
     let pageGuid;
-    let promise = PlacesTestUtils.waitForNotification("onPageChanged", (uri, prop, value, guid) => {
-      pageGuid = guid;
-      return prop == Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
-             uri.equals(pageURI) &&
-             value == faviconURI.spec;
-    }, "history");
+    let promise = PlacesTestUtils.waitForNotification(
+      "onPageChanged",
+      (uri, prop, value, guid) => {
+        pageGuid = guid;
+        return (
+          prop == Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
+          uri.equals(pageURI) &&
+          value == faviconURI.spec
+        );
+      },
+      "history"
+    );
 
-    PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI, faviconURI,
-      true, test.private, null,
-      Services.scriptSecurityManager.getSystemPrincipal());
+    PlacesUtils.favicons.setAndFetchFaviconForPage(
+      pageURI,
+      faviconURI,
+      true,
+      test.private,
+      null,
+      Services.scriptSecurityManager.getSystemPrincipal()
+    );
 
     await promise;
 
-    Assert.equal(pageGuid, await PlacesTestUtils.fieldInDB(pageURI, "guid"),
-                 "Page guid is correct");
-    let {dataLen, data, mimeType} = await PlacesUtils.promiseFaviconData(pageURI.spec);
+    Assert.equal(
+      pageGuid,
+      await PlacesTestUtils.fieldInDB(pageURI, "guid"),
+      "Page guid is correct"
+    );
+    let { dataLen, data, mimeType } = await PlacesUtils.promiseFaviconData(
+      pageURI.spec
+    );
     Assert.equal(faviconMimeType, mimeType, "Check expected MimeType");
-    Assert.equal(SMALLPNG_DATA_LEN, data.length,
-      "Check favicon data for the given page matches the provided data");
-    Assert.equal(dataLen, data.length,
-      "Check favicon dataLen for the given page matches the provided data");
+    Assert.equal(
+      SMALLPNG_DATA_LEN,
+      data.length,
+      "Check favicon data for the given page matches the provided data"
+    );
+    Assert.equal(
+      dataLen,
+      data.length,
+      "Check favicon dataLen for the given page matches the provided data"
+    );
 
     if (test.clean) {
       await test.clean();

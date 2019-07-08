@@ -2,16 +2,21 @@
 // Middle-clicks on the link, which opens it in a new tab.
 
 function startMiddleClickTestCase(aTestNumber) {
-  info("browser_referrer_middle_click: " +
-       getReferrerTestDescription(aTestNumber));
+  info(
+    "browser_referrer_middle_click: " + getReferrerTestDescription(aTestNumber)
+  );
   someTabLoaded(gTestWindow).then(function(aNewTab) {
     BrowserTestUtils.switchTab(gTestWindow.gBrowser, aNewTab).then(() => {
-      checkReferrerAndStartNextTest(aTestNumber, null, aNewTab,
-                                    startMiddleClickTestCase);
+      checkReferrerAndStartNextTest(
+        aTestNumber,
+        null,
+        aNewTab,
+        startMiddleClickTestCase
+      );
     });
   });
 
-  clickTheLink(gTestWindow, "testlink", {button: 1});
+  clickTheLink(gTestWindow, "testlink", { button: 1 });
 }
 
 function test() {

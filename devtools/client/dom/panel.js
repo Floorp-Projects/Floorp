@@ -9,7 +9,12 @@ const { Cu } = require("chrome");
 const ObjectClient = require("devtools/shared/client/object-client");
 
 const EventEmitter = require("devtools/shared/event-emitter");
-loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
+loader.lazyRequireGetter(
+  this,
+  "openContentLink",
+  "devtools/client/shared/link",
+  true
+);
 
 /**
  * This object represents DOM panel. It's responsibility is to
@@ -47,8 +52,11 @@ DomPanel.prototype = {
   // Initialization
 
   initialize: function() {
-    this.panelWin.addEventListener("devtools/content/message",
-      this.onContentMessage, true);
+    this.panelWin.addEventListener(
+      "devtools/content/message",
+      this.onContentMessage,
+      true
+    );
 
     this.target.on("navigate", this.onTabNavigated);
     this._toolbox.on("select", this.onPanelVisibilityChange);
@@ -167,7 +175,9 @@ DomPanel.prototype = {
   getRootGrip: async function() {
     // Attach Console. It might involve RDP communication, so wait
     // asynchronously for the result
-    const { result } = await this.target.activeConsole.evaluateJSAsync("window");
+    const { result } = await this.target.activeConsole.evaluateJSAsync(
+      "window"
+    );
     return result;
   },
 

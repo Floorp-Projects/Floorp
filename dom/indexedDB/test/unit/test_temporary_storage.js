@@ -6,11 +6,10 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
-  const name = this.window ?
-               window.location.pathname :
-               "test_temporary_storage.js";
+function* testSteps() {
+  const name = this.window
+    ? window.location.pathname
+    : "test_temporary_storage.js";
   const finalVersion = 2;
 
   const tempStorageLimitKB = 1024;
@@ -44,12 +43,17 @@ function* testSteps()
       let gotUpgradeIncomplete = false;
       let gotUpgradeComplete = false;
 
-      let request =
-        indexedDB.openForPrincipal(getPrincipal(spec), name, options);
+      let request = indexedDB.openForPrincipal(
+        getPrincipal(spec),
+        name,
+        options
+      );
       request.onerror = function(event) {
-        is(request.error.name,
-           gotUpgradeIncomplete ? "AbortError" : "QuotaExceededError",
-           "Reached quota limit");
+        is(
+          request.error.name,
+          gotUpgradeIncomplete ? "AbortError" : "QuotaExceededError",
+          "Reached quota limit"
+        );
         event.preventDefault();
         testGenerator.next(false);
       };
@@ -79,8 +83,12 @@ function* testSteps()
     }
 
     while (true) {
-      info("Sleeping for " + checkpointSleepTimeSec + " seconds to let all " +
-           "checkpoints finish so that we know we have reached quota limit");
+      info(
+        "Sleeping for " +
+          checkpointSleepTimeSec +
+          " seconds to let all " +
+          "checkpoints finish so that we know we have reached quota limit"
+      );
       setTimeout(continueToNextStepSync, checkpointSleepTimeSec * 1000);
       yield undefined;
 
@@ -91,12 +99,17 @@ function* testSteps()
       let gotUpgradeIncomplete = false;
       let gotUpgradeComplete = false;
 
-      let request =
-        indexedDB.openForPrincipal(getPrincipal(spec), name, options);
+      let request = indexedDB.openForPrincipal(
+        getPrincipal(spec),
+        name,
+        options
+      );
       request.onerror = function(event) {
-        is(request.error.name,
-           gotUpgradeIncomplete ? "AbortError" : "QuotaExceededError",
-           "Reached quota limit");
+        is(
+          request.error.name,
+          gotUpgradeIncomplete ? "AbortError" : "QuotaExceededError",
+          "Reached quota limit"
+        );
         event.preventDefault();
         testGenerator.next(false);
       };
@@ -128,9 +141,11 @@ function* testSteps()
     let databaseCount = databases.length;
     info("Created " + databaseCount + " databases before quota limit reached");
 
-    info("Stage 2 - " +
-         "Closing all databases and then attempting to create one more, then " +
-         "verifying that the oldest origin was cleared");
+    info(
+      "Stage 2 - " +
+        "Closing all databases and then attempting to create one more, then " +
+        "verifying that the oldest origin was cleared"
+    );
 
     for (let i = 0; i < databases.length; i++) {
       info("Closing database for " + getSpec(i));
@@ -193,8 +208,10 @@ function* testSteps()
     db.close();
     db = null;
 
-    info("Stage 3 - " +
-         "Cutting storage limit in half to force deletion of some databases");
+    info(
+      "Stage 3 - " +
+        "Cutting storage limit in half to force deletion of some databases"
+    );
 
     setTemporaryStorageLimit(tempStorageLimitKB / 2);
 
@@ -231,8 +248,11 @@ function* testSteps()
       let spec = getSpec(i);
       info("Opening database for " + spec + " with version " + options.version);
 
-      let request =
-        indexedDB.openForPrincipal(getPrincipal(spec), name, options);
+      let request = indexedDB.openForPrincipal(
+        getPrincipal(spec),
+        name,
+        options
+      );
       request.onerror = errorHandler;
       request.onupgradeneeded = function(event) {
         if (!event.oldVersion) {

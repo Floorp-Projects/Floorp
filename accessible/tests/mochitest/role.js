@@ -154,8 +154,9 @@ function testRole(aAccOrElmOrID, aRole) {
  */
 function getRole(aAccOrElmOrID) {
   var acc = getAccessible(aAccOrElmOrID);
-  if (!acc)
+  if (!acc) {
     return -1;
+  }
 
   var role = -1;
   try {
@@ -172,8 +173,9 @@ function getRole(aAccOrElmOrID) {
  */
 function isRole(aIdentifier, aRole, aMsg) {
   var role = getRole(aIdentifier);
-  if (role == -1)
+  if (role == -1) {
     return;
+  }
 
   if (role == aRole) {
     ok(true, aMsg);

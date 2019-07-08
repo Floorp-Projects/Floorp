@@ -72,24 +72,22 @@ module.exports = {
 
     // Parse font-variation-settings CSS declaration into an object
     // with axis tags as keys and axis values as values.
-    axes = string
-      .split(",")
-      .reduce((acc, pair) => {
-        // Tags are always in quotes. Split by quote and filter excessive whitespace.
-        pair = pair.split(/["']/).filter(part => part.trim() !== "");
-        // Guard against malformed input that may have slipped through.
-        if (pair.length === 0) {
-          return acc;
-        }
-
-        const tag = pair[0];
-        const value = pair[1].trim();
-        // Axis tags shorter or longer than 4 characters are invalid. Whitespace is valid.
-        if (tag.length === 4) {
-          acc[tag] = parseFloat(value);
-        }
+    axes = string.split(",").reduce((acc, pair) => {
+      // Tags are always in quotes. Split by quote and filter excessive whitespace.
+      pair = pair.split(/["']/).filter(part => part.trim() !== "");
+      // Guard against malformed input that may have slipped through.
+      if (pair.length === 0) {
         return acc;
-      }, {});
+      }
+
+      const tag = pair[0];
+      const value = pair[1].trim();
+      // Axis tags shorter or longer than 4 characters are invalid. Whitespace is valid.
+      if (tag.length === 4) {
+        acc[tag] = parseFloat(value);
+      }
+      return acc;
+    }, {});
 
     return axes;
   },

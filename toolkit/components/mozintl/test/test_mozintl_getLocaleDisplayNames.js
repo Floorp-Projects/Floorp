@@ -1,8 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { L10nRegistry, FileSource } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { L10nRegistry, FileSource } = ChromeUtils.import(
+  "resource://gre/modules/L10nRegistry.jsm"
+);
 
 const fs = {
   "toolkit/intl/languageNames.ftl": `
@@ -25,10 +27,21 @@ let locales = Services.locale.packagedLocales;
 const mockSource = new FileSource("mock", locales, "");
 L10nRegistry.registerSource(mockSource);
 
-const gLangDN = Services.intl.getLanguageDisplayNames.bind(Services.intl, undefined);
-const gAvLocDN = Services.intl.getAvailableLocaleDisplayNames.bind(Services.intl);
-const gRegDN = Services.intl.getRegionDisplayNames.bind(Services.intl, undefined);
-const gLocDN = Services.intl.getLocaleDisplayNames.bind(Services.intl, undefined);
+const gLangDN = Services.intl.getLanguageDisplayNames.bind(
+  Services.intl,
+  undefined
+);
+const gAvLocDN = Services.intl.getAvailableLocaleDisplayNames.bind(
+  Services.intl
+);
+const gRegDN = Services.intl.getRegionDisplayNames.bind(
+  Services.intl,
+  undefined
+);
+const gLocDN = Services.intl.getLocaleDisplayNames.bind(
+  Services.intl,
+  undefined
+);
 
 add_test(function test_valid_language_tag() {
   deepEqual(gLocDN([]), []);
@@ -52,7 +65,9 @@ add_test(function test_valid_script_tag() {
 add_test(function test_valid_variants_tag() {
   deepEqual(gLocDN(["en-Cyrl-macos"]), ["English (Cyrl, macos)"]);
   deepEqual(gLocDN(["en-Cyrl-RU-macos"]), ["English (Cyrl, Russia, macos)"]);
-  deepEqual(gLocDN(["en-Cyrl-RU-macos-modern"]), ["English (Cyrl, Russia, macos, modern)"]);
+  deepEqual(gLocDN(["en-Cyrl-RU-macos-modern"]), [
+    "English (Cyrl, Russia, macos, modern)",
+  ]);
   run_next_test();
 });
 
@@ -106,8 +121,16 @@ add_test(function test_invalid_regions() {
 
 add_test(function test_availableLocaleDisplayNames() {
   let langCodes = gAvLocDN("language");
-  equal(langCodes.length > 0, true, "There should be some language codes available");
+  equal(
+    langCodes.length > 0,
+    true,
+    "There should be some language codes available"
+  );
   let regCodes = gAvLocDN("region");
-  equal(regCodes.length > 0, true, "There should be some region codes available");
+  equal(
+    regCodes.length > 0,
+    true,
+    "There should be some region codes available"
+  );
   run_next_test();
 });

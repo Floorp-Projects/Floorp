@@ -4,13 +4,14 @@
 const TEST_URI_NAV = "http://example.com/browser/dom/tests/browser/";
 
 function tearDown() {
-  while (gBrowser.tabs.length > 1)
+  while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
+  }
 }
 
 add_task(async function() {
   // Don't cache removed tabs, so "clear console cache on tab close" triggers.
-  await SpecialPowers.pushPrefEnv({ set: [[ "browser.tabs.max_tabs_undo", 0 ]] });
+  await SpecialPowers.pushPrefEnv({ set: [["browser.tabs.max_tabs_undo", 0]] });
 
   registerCleanupFunction(tearDown);
 
@@ -24,9 +25,11 @@ add_task(async function() {
   var browser = gBrowser.selectedBrowser;
 
   let observerPromise = ContentTask.spawn(browser, null, async function(opt) {
-    const TEST_URI = "http://example.com/browser/dom/tests/browser/test-console-api.html";
-    let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
-          .getService(Ci.nsIConsoleAPIStorage);
+    const TEST_URI =
+      "http://example.com/browser/dom/tests/browser/test-console-api.html";
+    let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
+      Ci.nsIConsoleAPIStorage
+    );
 
     let observerPromise = new Promise(resolve => {
       let apiCallCount = 0;
@@ -40,9 +43,16 @@ add_task(async function() {
               let windowId = content.window.windowUtils.currentInnerWindowID;
 
               Services.obs.removeObserver(this, "console-storage-cache-event");
-              ok(ConsoleAPIStorage.getEvents(windowId).length >= 4, "Some messages found in the storage service");
+              ok(
+                ConsoleAPIStorage.getEvents(windowId).length >= 4,
+                "Some messages found in the storage service"
+              );
               ConsoleAPIStorage.clearEvents();
-              is(ConsoleAPIStorage.getEvents(windowId).length, 0, "Cleared Storage");
+              is(
+                ConsoleAPIStorage.getEvents(windowId).length,
+                0,
+                "Cleared Storage"
+              );
 
               resolve(windowId);
             }
@@ -74,7 +84,7 @@ add_task(async function() {
   });
 
   // Close the window.
-  gBrowser.removeTab(tab, {animate: false});
+  gBrowser.removeTab(tab, { animate: false });
   // Ensure actual window destruction is not delayed (too long).
   SpecialPowers.DOMWindowUtils.garbageCollect();
 
@@ -88,8 +98,13 @@ add_task(async function() {
   });
 
   await ContentTask.spawn(browser, windowId, function(windowId) {
-    var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
-          .getService(Ci.nsIConsoleAPIStorage);
-    is(ConsoleAPIStorage.getEvents(windowId).length, 0, "tab close is clearing the cache");
+    var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
+      Ci.nsIConsoleAPIStorage
+    );
+    is(
+      ConsoleAPIStorage.getEvents(windowId).length,
+      0,
+      "tab close is clearing the cache"
+    );
   });
 });

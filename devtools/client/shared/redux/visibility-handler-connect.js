@@ -4,8 +4,13 @@
 
 "use strict";
 
-const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
-const VisibilityHandler = createFactory(require("devtools/client/shared/components/VisibilityHandler"));
+const {
+  createFactory,
+  createElement,
+} = require("devtools/client/shared/vendor/react");
+const VisibilityHandler = createFactory(
+  require("devtools/client/shared/components/VisibilityHandler")
+);
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 /**

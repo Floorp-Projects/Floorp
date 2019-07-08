@@ -1,11 +1,18 @@
-import {A11yLinkButton} from "content-src/components/A11yLinkButton/A11yLinkButton";
-import {ErrorBoundary, ErrorBoundaryFallback} from "content-src/components/ErrorBoundary/ErrorBoundary";
+import { A11yLinkButton } from "content-src/components/A11yLinkButton/A11yLinkButton";
+import {
+  ErrorBoundary,
+  ErrorBoundaryFallback,
+} from "content-src/components/ErrorBoundary/ErrorBoundary";
 import React from "react";
-import {shallow} from "enzyme";
+import { shallow } from "enzyme";
 
 describe("<ErrorBoundary>", () => {
   it("should render its children if componentDidCatch wasn't called", () => {
-    const wrapper = shallow(<ErrorBoundary ><div className="kids" /></ErrorBoundary>);
+    const wrapper = shallow(
+      <ErrorBoundary>
+        <div className="kids" />
+      </ErrorBoundary>
+    );
 
     assert.lengthOf(wrapper.find(".kids"), 1);
   });
@@ -43,7 +50,8 @@ describe("<ErrorBoundary>", () => {
     }
 
     const wrapper = shallow(
-      <ErrorBoundary FallbackComponent={TestFallback} className="sheep" />);
+      <ErrorBoundary FallbackComponent={TestFallback} className="sheep" />
+    );
     wrapper.instance().componentDidCatch();
     // since shallow wrappers don't automatically manage lifecycle semantics:
     wrapper.update();
@@ -66,7 +74,7 @@ describe("ErrorBoundaryFallback", () => {
   });
 
   it("should call window.location.reload(true) if .reload-button clicked", () => {
-    const fakeWindow = {location: {reload: sinon.spy()}};
+    const fakeWindow = { location: { reload: sinon.spy() } };
     const wrapper = shallow(<ErrorBoundaryFallback windowObj={fakeWindow} />);
 
     wrapper.find(".reload-button").simulate("click");
@@ -81,22 +89,22 @@ describe("ErrorBoundaryFallback", () => {
     assert.lengthOf(wrapper.find("A11yLinkButton.reload-button"), 1);
   });
 
-  it("should render newtab-error-fallback-refresh-link node",
-    () => {
-      const wrapper = shallow(<ErrorBoundaryFallback />);
+  it("should render newtab-error-fallback-refresh-link node", () => {
+    const wrapper = shallow(<ErrorBoundaryFallback />);
 
-      const msgWrapper =
-        wrapper.find('[data-l10n-id="newtab-error-fallback-refresh-link"]');
-      assert.lengthOf(msgWrapper, 1);
-      assert.isTrue(msgWrapper.is(A11yLinkButton));
-    });
+    const msgWrapper = wrapper.find(
+      '[data-l10n-id="newtab-error-fallback-refresh-link"]'
+    );
+    assert.lengthOf(msgWrapper, 1);
+    assert.isTrue(msgWrapper.is(A11yLinkButton));
+  });
 
-  it("should render newtab-error-fallback-info node",
-    () => {
-      const wrapper = shallow(<ErrorBoundaryFallback />);
+  it("should render newtab-error-fallback-info node", () => {
+    const wrapper = shallow(<ErrorBoundaryFallback />);
 
-      const msgWrapper =
-        wrapper.find('[data-l10n-id="newtab-error-fallback-info"]');
-      assert.lengthOf(msgWrapper, 1);
-    });
+    const msgWrapper = wrapper.find(
+      '[data-l10n-id="newtab-error-fallback-info"]'
+    );
+    assert.lengthOf(msgWrapper, 1);
+  });
 });

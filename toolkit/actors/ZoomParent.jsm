@@ -16,32 +16,28 @@ class ZoomParent extends JSWindowActorParent {
     let document = browser.ownerGlobal.document;
 
     switch (message.name) {
-      case "FullZoomChange":
-        {
-          browser._fullZoom = message.data.value;
-          let event = document.createEvent("Events");
-          event.initEvent("FullZoomChange", true, false);
-          browser.dispatchEvent(event);
-          break;
-        }
+      case "FullZoomChange": {
+        browser._fullZoom = message.data.value;
+        let event = document.createEvent("Events");
+        event.initEvent("FullZoomChange", true, false);
+        browser.dispatchEvent(event);
+        break;
+      }
 
-      case "TextZoomChange":
-        {
-          browser._textZoom = message.data.value;
-          let event = document.createEvent("Events");
-          event.initEvent("TextZoomChange", true, false);
-          browser.dispatchEvent(event);
-          break;
-        }
+      case "TextZoomChange": {
+        browser._textZoom = message.data.value;
+        let event = document.createEvent("Events");
+        event.initEvent("TextZoomChange", true, false);
+        browser.dispatchEvent(event);
+        break;
+      }
 
-      case "ZoomChangeUsingMouseWheel":
-        {
-          let event = document.createEvent("Events");
-          event.initEvent("ZoomChangeUsingMouseWheel", true, false);
-          browser.dispatchEvent(event);
-          break;
-        }
+      case "ZoomChangeUsingMouseWheel": {
+        let event = document.createEvent("Events");
+        event.initEvent("ZoomChangeUsingMouseWheel", true, false);
+        browser.dispatchEvent(event);
+        break;
+      }
     }
   }
 }
-

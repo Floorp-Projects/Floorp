@@ -29,10 +29,15 @@ async function performTests() {
   await jsterm.execute("inspect(window)");
 
   const inspectWindowNode = await waitFor(() =>
-    findInspectResultMessage(hud.ui.outputNode, 1));
+    findInspectResultMessage(hud.ui.outputNode, 1)
+  );
 
   const objectInspectors = [...inspectWindowNode.querySelectorAll(".tree")];
-  is(objectInspectors.length, 1, "There is the expected number of object inspectors");
+  is(
+    objectInspectors.length,
+    1,
+    "There is the expected number of object inspectors"
+  );
 
   const [windowOi] = objectInspectors;
   let windowOiNodes = windowOi.querySelectorAll(".node");
@@ -47,22 +52,35 @@ async function performTests() {
   }
 
   const propertiesNodes = [...windowOi.querySelectorAll(".object-label")];
-  const testPropertyLabelNode = propertiesNodes.find(el => el.textContent === "testProp");
-  ok(testPropertyLabelNode, "The testProp property label is displayed as expected");
+  const testPropertyLabelNode = propertiesNodes.find(
+    el => el.textContent === "testProp"
+  );
+  ok(
+    testPropertyLabelNode,
+    "The testProp property label is displayed as expected"
+  );
 
   const testPropertyValueNode = testPropertyLabelNode
     .closest(".node")
     .querySelector(".objectBox");
-  is(testPropertyValueNode.textContent, '"testValue"',
-    "The testProp property value is displayed as expected");
+  is(
+    testPropertyValueNode.textContent,
+    '"testValue"',
+    "The testProp property value is displayed as expected"
+  );
 
   /* Check that a primitive value can be inspected, too */
   info("Test `inspect(1)`");
   await jsterm.execute("inspect(1)");
 
   const inspectPrimitiveNode = await waitFor(() =>
-    findInspectResultMessage(hud.ui.outputNode, 2));
-  is(inspectPrimitiveNode.textContent, 1, "The primitive is displayed as expected");
+    findInspectResultMessage(hud.ui.outputNode, 2)
+  );
+  is(
+    inspectPrimitiveNode.textContent,
+    1,
+    "The primitive is displayed as expected"
+  );
 }
 
 function findInspectResultMessage(node, index) {

@@ -20,7 +20,8 @@ const TESTS = [
         {
           name: "c1",
           value: "foobar1",
-        }, {
+        },
+        {
           name: "c2",
           value: "foobar2",
         },
@@ -45,7 +46,8 @@ const TESTS = [
         {
           name: "c1",
           value: "new_foobar1",
-        }, {
+        },
+        {
           name: "c2",
           value: "foobar2",
         },
@@ -54,7 +56,8 @@ const TESTS = [
         {
           name: "l1",
           value: "foobar1",
-        }, {
+        },
+        {
           name: "l2",
           value: "foobar2",
         },
@@ -80,7 +83,8 @@ const TESTS = [
         {
           name: "l2",
           value: "foobar2",
-        }, {
+        },
+        {
           name: "l3",
           value: "foobar3",
         },
@@ -115,7 +119,8 @@ const TESTS = [
         {
           name: "s1",
           value: "foobar1",
-        }, {
+        },
+        {
           name: "s2",
           value: "foobar2",
         },
@@ -156,7 +161,7 @@ const TESTS = [
       await clearCookies();
     },
     snapshot: {
-      cookies: [ ],
+      cookies: [],
       localStorage: [
         {
           name: "l3",
@@ -178,9 +183,9 @@ const TESTS = [
       await clearLocalAndSessionStores();
     },
     snapshot: {
-      cookies: [ ],
-      localStorage: [ ],
-      sessionStorage: [ ],
+      cookies: [],
+      localStorage: [],
+      sessionStorage: [],
     },
   },
 ];
@@ -197,7 +202,7 @@ add_task(async function() {
   await finishTests(target);
 });
 
-async function runTest({action, snapshot}, front, index) {
+async function runTest({ action, snapshot }, front, index) {
   info("Running test at index " + index);
   await action();
   await checkStores(front, snapshot);
@@ -215,7 +220,11 @@ async function checkStores(front, snapshot) {
   for (const [type, entries] of Object.entries(snapshot)) {
     const store = actual[type].data;
 
-    is(store.length, entries.length, `The number of entries in ${type} is correct`);
+    is(
+      store.length,
+      entries.length,
+      `The number of entries in ${type} is correct`
+    );
 
     for (const entry of entries) {
       checkStoreValue(entry.name, entry.value, store);
@@ -246,9 +255,13 @@ async function finishTests(target) {
 async function addCookie(name, value) {
   info(`addCookie("${name}", "${value}")`);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, [name, value], ([iName, iValue]) => {
-    content.wrappedJSObject.window.addCookie(iName, iValue);
-  });
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    [name, value],
+    ([iName, iValue]) => {
+      content.wrappedJSObject.window.addCookie(iName, iValue);
+    }
+  );
 }
 
 async function removeCookie(name) {
@@ -262,9 +275,13 @@ async function removeCookie(name) {
 async function localStorageSetItem(name, value) {
   info(`localStorageSetItem("${name}", "${value}")`);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, [name, value], ([iName, iValue]) => {
-    content.window.localStorage.setItem(iName, iValue);
-  });
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    [name, value],
+    ([iName, iValue]) => {
+      content.window.localStorage.setItem(iName, iValue);
+    }
+  );
 }
 
 async function localStorageRemoveItem(name) {
@@ -278,9 +295,13 @@ async function localStorageRemoveItem(name) {
 async function sessionStorageSetItem(name, value) {
   info(`sessionStorageSetItem("${name}", "${value}")`);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, [name, value], ([iName, iValue]) => {
-    content.window.sessionStorage.setItem(iName, iValue);
-  });
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    [name, value],
+    ([iName, iValue]) => {
+      content.window.sessionStorage.setItem(iName, iValue);
+    }
+  );
 }
 
 async function sessionStorageRemoveItem(name) {

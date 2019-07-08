@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {AddonValidator} = ChromeUtils.import("resource://services-sync/engines/addons.js");
+const { AddonValidator } = ChromeUtils.import(
+  "resource://services-sync/engines/addons.js"
+);
 
 function getDummyServerAndClient() {
   return {
@@ -54,8 +56,12 @@ add_task(async function test_valid() {
       return item.type != "plugin";
     },
   });
-  let { problemData, clientRecords, records, deletedRecords } =
-      await validator.compareClientWithServer(client, server);
+  let {
+    problemData,
+    clientRecords,
+    records,
+    deletedRecords,
+  } = await validator.compareClientWithServer(client, server);
   equal(clientRecords.length, 4);
   equal(records.length, 1);
   equal(deletedRecords.length, 0);

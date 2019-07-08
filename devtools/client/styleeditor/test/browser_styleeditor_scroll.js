@@ -10,18 +10,21 @@
 
 const SIMPLE = TEST_BASE_HTTP + "simple.css";
 const LONG = TEST_BASE_HTTP + "doc_long.css";
-const DOCUMENT_WITH_LONG_SHEET = "data:text/html;charset=UTF-8," +
-        encodeURIComponent(
-          ["<!DOCTYPE html>",
-           "<html>",
-           " <head>",
-           "  <title>Editor scroll test page</title>",
-           '  <link rel="stylesheet" type="text/css" href="' + SIMPLE + '">',
-           '  <link rel="stylesheet" type="text/css" href="' + LONG + '">',
-           " </head>",
-           " <body>Editor scroll test page</body>",
-           "</html>",
-          ].join("\n"));
+const DOCUMENT_WITH_LONG_SHEET =
+  "data:text/html;charset=UTF-8," +
+  encodeURIComponent(
+    [
+      "<!DOCTYPE html>",
+      "<html>",
+      " <head>",
+      "  <title>Editor scroll test page</title>",
+      '  <link rel="stylesheet" type="text/css" href="' + SIMPLE + '">',
+      '  <link rel="stylesheet" type="text/css" href="' + LONG + '">',
+      " </head>",
+      " <body>Editor scroll test page</body>",
+      "</html>",
+    ].join("\n")
+  );
 const LINE_TO_SELECT = 201;
 
 add_task(async function() {
@@ -67,8 +70,11 @@ add_task(async function() {
   await selectEventPromise;
 
   const scrollTop = longEditor.sourceEditor.getScrollInfo().top;
-  is(scrollTop, initialScrollTop,
-    "Scroll top was restored after the sheet was selected again.");
+  is(
+    scrollTop,
+    initialScrollTop,
+    "Scroll top was restored after the sheet was selected again."
+  );
 });
 
 /**

@@ -20,7 +20,8 @@ add_task(async function() {
 
   await checkState([
     [
-      ["indexedDB", "http://test1.example.org"], [
+      ["indexedDB", "http://test1.example.org"],
+      [
         "idb1 (default)",
         "idb1 (temporary)",
         "idb1 (persistent)",

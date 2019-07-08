@@ -13,24 +13,36 @@ add_task(async function() {
   const { document: doc } = flexboxInspector;
   const { highlighters, store } = inspector;
 
-  const onFlexHighlighterToggleRendered = waitForDOM(doc, "#flexbox-checkbox-toggle");
+  const onFlexHighlighterToggleRendered = waitForDOM(
+    doc,
+    "#flexbox-checkbox-toggle"
+  );
   await selectNode("#container", inspector);
   const [flexHighlighterToggle] = await onFlexHighlighterToggleRendered;
 
   info("Checking the initial state of the Flexbox Inspector.");
   ok(flexHighlighterToggle, "The flexbox highlighter toggle is rendered.");
-  ok(!flexHighlighterToggle.checked, "The flexbox highlighter toggle is unchecked.");
+  ok(
+    !flexHighlighterToggle.checked,
+    "The flexbox highlighter toggle is unchecked."
+  );
   ok(!highlighters.flexboxHighlighterShown, "No flexbox highlighter is shown.");
 
   await toggleHighlighterON(flexHighlighterToggle, highlighters, store);
 
   info("Checking the flexbox highlighter is created.");
   ok(highlighters.flexboxHighlighterShown, "Flexbox highlighter is shown.");
-  ok(flexHighlighterToggle.checked, "The flexbox highlighter toggle is checked.");
+  ok(
+    flexHighlighterToggle.checked,
+    "The flexbox highlighter toggle is checked."
+  );
 
   await toggleHighlighterOFF(flexHighlighterToggle, highlighters, store);
 
   info("Checking the flexbox highlighter is not shown.");
   ok(!highlighters.flexboxHighlighterShown, "No flexbox highlighter is shown.");
-  ok(!flexHighlighterToggle.checked, "The flexbox highlighter toggle is unchecked.");
+  ok(
+    !flexHighlighterToggle.checked,
+    "The flexbox highlighter toggle is unchecked."
+  );
 });

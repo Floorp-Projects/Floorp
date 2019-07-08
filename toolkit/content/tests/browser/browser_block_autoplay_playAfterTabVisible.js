@@ -1,4 +1,5 @@
-const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_nonAutoplayAudio.html";
+const PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_nonAutoplayAudio.html";
 
 var SuspendedType = {
   NONE_SUSPENDED: 0,
@@ -13,8 +14,11 @@ function check_audio_suspended(suspendedType) {
     ok(false, "Can't get the audio element!");
   }
 
-  is(audio.computedSuspended, suspendedType,
-     "The suspeded state of audio is correct.");
+  is(
+    audio.computedSuspended,
+    suspendedType,
+    "The suspeded state of audio is correct."
+  );
 }
 
 function check_audio_pause_state(expectPause) {
@@ -23,8 +27,7 @@ function check_audio_pause_state(expectPause) {
     ok(false, "Can't get the audio element!");
   }
 
-  is(audio.paused, expectPause,
-    "The pause state of audio is corret.");
+  is(audio.paused, expectPause, "The pause state of audio is corret.");
 }
 
 function play_audio() {
@@ -44,12 +47,13 @@ function play_audio() {
 }
 
 add_task(async function setup_test_preference() {
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["media.useAudioChannelService.testing", true],
-    ["media.block-autoplay-until-in-foreground", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.useAudioChannelService.testing", true],
+      ["media.block-autoplay-until-in-foreground", true],
+    ],
+  });
 });
-
 
 /**
  * This test is used for testing the visible tab which was not resumed yet.
@@ -61,23 +65,24 @@ add_task(async function media_should_be_able_to_play_in_visible_tab() {
   let tab = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
   BrowserTestUtils.loadURI(tab.linkedBrowser, PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await ContentTask.spawn(tab.linkedBrowser, true,
-                          check_audio_pause_state);
+  await ContentTask.spawn(tab.linkedBrowser, true, check_audio_pause_state);
 
-  info("- select tab as foreground tab, and tab's media should still be paused -");
+  info(
+    "- select tab as foreground tab, and tab's media should still be paused -"
+  );
   await BrowserTestUtils.switchTab(window.gBrowser, tab);
-  await ContentTask.spawn(tab.linkedBrowser, true,
-                          check_audio_pause_state);
+  await ContentTask.spawn(tab.linkedBrowser, true, check_audio_pause_state);
 
   info("- start audio in tab -");
-  await ContentTask.spawn(tab.linkedBrowser, null,
-                          play_audio);
+  await ContentTask.spawn(tab.linkedBrowser, null, play_audio);
 
   info("- audio should be playing -");
-  await ContentTask.spawn(tab.linkedBrowser, false,
-                          check_audio_pause_state);
-  await ContentTask.spawn(tab.linkedBrowser, SuspendedType.NONE_SUSPENDED,
-                          check_audio_suspended);
+  await ContentTask.spawn(tab.linkedBrowser, false, check_audio_pause_state);
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    SuspendedType.NONE_SUSPENDED,
+    check_audio_suspended
+  );
 
   info("- remove tab -");
   BrowserTestUtils.removeTab(tab);

@@ -1,12 +1,15 @@
 /* import-globals-from antitracking_head.js */
 
-AntiTracking.runTest("Storage Access API returns promises that maintain user activation",
+AntiTracking.runTest(
+  "Storage Access API returns promises that maintain user activation",
   // blocking callback
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
     let [threw, rejected] = await callRequestStorageAccess(dwu => {
-      ok(dwu.isHandlingUserInput,
-         "Promise handler must run as if we're handling user input");
+      ok(
+        dwu.isHandlingUserInput,
+        "Promise handler must run as if we're handling user input"
+      );
     });
     ok(!threw, "requestStorageAccess should not throw");
     ok(!rejected, "requestStorageAccess should be available");
@@ -21,8 +24,10 @@ AntiTracking.runTest("Storage Access API returns promises that maintain user act
       helper.destruct();
     }
     await promise.then(_ => {
-      ok(dwu.isHandlingUserInput,
-         "Promise handler must run as if we're handling user input");
+      ok(
+        dwu.isHandlingUserInput,
+        "Promise handler must run as if we're handling user input"
+      );
     });
   },
 
@@ -30,7 +35,9 @@ AntiTracking.runTest("Storage Access API returns promises that maintain user act
   // cleanup function
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+        resolve()
+      );
     });
   },
   null, // extra prefs

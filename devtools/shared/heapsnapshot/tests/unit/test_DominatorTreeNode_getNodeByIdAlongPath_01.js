@@ -34,12 +34,16 @@ function run_test() {
     equal(actual, expected, `We should have got the node with id = ${id}`);
   }
 
-  equal(null,
-        DominatorTreeNode.getNodeByIdAlongPath(999999999999, tree, path),
-        "null is returned for nodes that are not even in the tree");
+  equal(
+    null,
+    DominatorTreeNode.getNodeByIdAlongPath(999999999999, tree, path),
+    "null is returned for nodes that are not even in the tree"
+  );
 
   const lastNodeId = tree.children[tree.children.length - 1].nodeId;
-  equal(null,
-        DominatorTreeNode.getNodeByIdAlongPath(lastNodeId, tree, path),
-        "null is returned for nodes that are not along the path");
+  equal(
+    null,
+    DominatorTreeNode.getNodeByIdAlongPath(lastNodeId, tree, path),
+    "null is returned for nodes that are not along the path"
+  );
 }

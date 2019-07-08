@@ -1,4 +1,4 @@
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   var notifications = 0;
@@ -10,9 +10,8 @@ function run_test() {
   };
   Services.os.addObserver(obs, "last-pb-context-exited");
 
-  run_test_in_child("../unit/test_pb_notification.js",
-                    function() {
-                      Assert.equal(notifications, 1);
-                      do_test_finished();
-                    });
+  run_test_in_child("../unit/test_pb_notification.js", function() {
+    Assert.equal(notifications, 1);
+    do_test_finished();
+  });
 }

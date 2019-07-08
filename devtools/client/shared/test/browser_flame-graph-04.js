@@ -6,10 +6,14 @@
 // Tests that text metrics in the flame graph widget work properly.
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const {ELLIPSIS} = require("devtools/shared/l10n");
-const {FlameGraph} = require("devtools/client/shared/widgets/FlameGraph");
-const {FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE} = require("devtools/client/shared/widgets/FlameGraph");
-const {FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY} = require("devtools/client/shared/widgets/FlameGraph");
+const { ELLIPSIS } = require("devtools/shared/l10n");
+const { FlameGraph } = require("devtools/client/shared/widgets/FlameGraph");
+const {
+  FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE,
+} = require("devtools/client/shared/widgets/FlameGraph");
+const {
+  FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY,
+} = require("devtools/client/shared/widgets/FlameGraph");
 
 add_task(async function() {
   await addTab("about:blank");
@@ -18,7 +22,7 @@ add_task(async function() {
 });
 
 async function performTest() {
-  const [host,, doc] = await createHost();
+  const [host, , doc] = await createHost();
   const graph = new FlameGraph(doc.body, 1);
   await graph.ready();
 
@@ -29,10 +33,16 @@ async function performTest() {
 }
 
 function testGraph(graph) {
-  is(graph._averageCharWidth, getAverageCharWidth(),
-    "The average char width was calculated correctly.");
-  is(graph._overflowCharWidth, getCharWidth(ELLIPSIS),
-    "The ellipsis char width was calculated correctly.");
+  is(
+    graph._averageCharWidth,
+    getAverageCharWidth(),
+    "The average char width was calculated correctly."
+  );
+  is(
+    graph._overflowCharWidth,
+    getCharWidth(ELLIPSIS),
+    "The ellipsis char width was calculated correctly."
+  );
 
   const text = "This text is maybe overflowing";
   const text1000px = graph._getFittedText(text, 1000);
@@ -40,28 +50,37 @@ function testGraph(graph) {
   const text10px = graph._getFittedText(text, 10);
   const text1px = graph._getFittedText(text, 1);
 
-  is(graph._getTextWidthApprox(text), getAverageCharWidth() * text.length,
-    "The approximate width was calculated correctly.");
+  is(
+    graph._getTextWidthApprox(text),
+    getAverageCharWidth() * text.length,
+    "The approximate width was calculated correctly."
+  );
 
   info("Text at 1000px width: " + text1000px);
   info("Text at 50px width  : " + text50px);
   info("Text at 10px width  : " + text10px);
   info("Text at 1px width   : " + text1px);
 
-  is(text1000px, text,
-    "The fitted text for 1000px width is correct.");
+  is(text1000px, text, "The fitted text for 1000px width is correct.");
 
-  isnot(text50px, text,
-    "The fitted text for 50px width is correct (1).");
+  isnot(text50px, text, "The fitted text for 50px width is correct (1).");
 
-  ok(text50px.includes(ELLIPSIS),
-    "The fitted text for 50px width is correct (2).");
+  ok(
+    text50px.includes(ELLIPSIS),
+    "The fitted text for 50px width is correct (2)."
+  );
 
-  is(graph._getFittedText(text, FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE + 1), ELLIPSIS,
-    "The fitted text for text font size width is correct.");
+  is(
+    graph._getFittedText(text, FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE + 1),
+    ELLIPSIS,
+    "The fitted text for text font size width is correct."
+  );
 
-  is(graph._getFittedText(text, 1), "",
-    "The fitted text for 1px width is correct.");
+  is(
+    graph._getFittedText(text, 1),
+    "",
+    "The fitted text for 1px width is correct."
+  );
 }
 
 function getAverageCharWidth() {

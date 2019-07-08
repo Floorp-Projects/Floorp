@@ -44,15 +44,18 @@ function run_test() {
   g.eval("var fns  = times(800, () => () => {});");
 
   const census1 = dbg.memory.takeCensus(dbg);
-  Census.walkCensus(census1, "census1",
-                    Census.assertAllNotLessThan({
-                      "objects": {
-                        "Object": { count: 100 },
-                        "RegExp": { count: 200 },
-                        "Array": { count: 400 },
-                        "Function": { count: 800 },
-                      },
-                    }));
+  Census.walkCensus(
+    census1,
+    "census1",
+    Census.assertAllNotLessThan({
+      objects: {
+        Object: { count: 100 },
+        RegExp: { count: 200 },
+        Array: { count: 400 },
+        Function: { count: 800 },
+      },
+    })
+  );
 
   do_test_finished();
 }

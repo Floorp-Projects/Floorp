@@ -9,14 +9,16 @@
 var timeInMicroseconds = Date.now() * 1000;
 
 const VISITS = [
-  { isVisit: true,
+  {
+    isVisit: true,
     transType: TRANSITION_TYPED,
     uri: "http://redirect.example.com/",
     title: "example",
     isRedirect: true,
     lastVisit: timeInMicroseconds--,
   },
-  { isVisit: true,
+  {
+    isVisit: true,
     transType: TRANSITION_TYPED,
     uri: "http://target.example.com/",
     title: "example",
@@ -25,7 +27,8 @@ const VISITS = [
 ];
 
 const HIDDEN_VISITS = [
-  { isVisit: true,
+  {
+    isVisit: true,
     transType: TRANSITION_FRAMED_LINK,
     uri: "http://hidden.example.com/",
     title: "red",
@@ -34,18 +37,9 @@ const HIDDEN_VISITS = [
 ];
 
 const TEST_DATA = [
-  { searchTerms: "example",
-    includeHidden: true,
-    expectedResults: 2,
-  },
-  { searchTerms: "example",
-    includeHidden: false,
-    expectedResults: 1,
-  },
-  { searchTerms: "red",
-    includeHidden: true,
-    expectedResults: 1,
-  },
+  { searchTerms: "example", includeHidden: true, expectedResults: 2 },
+  { searchTerms: "example", includeHidden: false, expectedResults: 1 },
+  { searchTerms: "red", includeHidden: true, expectedResults: 1 },
 ];
 
 add_task(async function test_initalize() {
@@ -70,7 +64,10 @@ add_task(async function test_searchTerms_includeHidden() {
     root.containerOpen = false;
 
     Assert.equal(cc, data.expectedResults);
-    Assert.equal(cc_update, data.expectedResults + (data.includeHidden ? 1 : 0));
+    Assert.equal(
+      cc_update,
+      data.expectedResults + (data.includeHidden ? 1 : 0)
+    );
 
     await PlacesUtils.history.remove("http://hidden.example.com/");
   }

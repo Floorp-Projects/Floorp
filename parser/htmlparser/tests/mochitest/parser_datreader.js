@@ -13,16 +13,14 @@
 /**
  * A few utility functions.
  */
-function log(entry) {
-
-}
+function log(entry) {}
 
 function startsWith(s, s2) {
   return s.indexOf(s2) == 0;
 }
 
 function trimString(s) {
-  return (s.replace(/^\s+/, "").replace(/\s+$/, ""));
+  return s.replace(/^\s+/, "").replace(/\s+$/, "");
 }
 
 /**
@@ -40,8 +38,9 @@ function parseTestcase(testcase) {
     if (!line || startsWith(line, "##")) {
       continue;
     }
-    if (line == "#data")
+    if (line == "#data") {
       break;
+    }
     log(lines);
     throw new Error("Unknown test format.");
   }
@@ -56,10 +55,14 @@ function parseTestcase(testcase) {
       todo(false, line.substring(6));
       continue;
     }
-    if (!(startsWith(line, "#error") ||
-          startsWith(line, "#document") ||
-          startsWith(line, "#document-fragment") ||
-          startsWith(line, "#data"))) {
+    if (
+      !(
+        startsWith(line, "#error") ||
+        startsWith(line, "#document") ||
+        startsWith(line, "#document-fragment") ||
+        startsWith(line, "#data")
+      )
+    ) {
       currentList.push(line);
     } else if (line == "#errors") {
       currentList = errors;
@@ -110,10 +113,11 @@ function docToTestOutput(doc) {
  * @param an element
  */
 function createFragmentWalker(elt) {
-  return elt.ownerDocument.createTreeWalker(elt, NodeFilter.SHOW_ALL,
-    function(node) {
-      return elt == node ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT;
-    });
+  return elt.ownerDocument.createTreeWalker(elt, NodeFilter.SHOW_ALL, function(
+    node
+  ) {
+    return elt == node ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT;
+  });
 }
 
 /**
@@ -165,19 +169,25 @@ function addLevels(walker, buf, indent) {
             }
             var keys = Object.keys(valuesByName).sort();
             for (let i = 0; i < keys.length; ++i) {
-              buf += "\n" + indent + "  " + keys[i] +
-                     "=\"" + valuesByName[keys[i]] + "\"";
+              buf +=
+                "\n" +
+                indent +
+                "  " +
+                keys[i] +
+                '="' +
+                valuesByName[keys[i]] +
+                '"';
             }
           }
           break;
         case Node.DOCUMENT_TYPE_NODE:
           buf += "<!DOCTYPE " + walker.currentNode.name;
           if (walker.currentNode.publicId || walker.currentNode.systemId) {
-            buf += " \"";
+            buf += ' "';
             buf += walker.currentNode.publicId;
-            buf += "\" \"";
+            buf += '" "';
             buf += walker.currentNode.systemId;
-            buf += "\"";
+            buf += '"';
           }
           buf += ">";
           break;
@@ -185,7 +195,7 @@ function addLevels(walker, buf, indent) {
           buf += "<!-- " + walker.currentNode.nodeValue + " -->";
           break;
         case Node.TEXT_NODE:
-          buf += "\"" + walker.currentNode.nodeValue + "\"";
+          buf += '"' + walker.currentNode.nodeValue + '"';
           break;
       }
       buf += "\n";
@@ -204,4 +214,3 @@ function addLevels(walker, buf, indent) {
   }
   return buf;
 }
-

@@ -8,15 +8,18 @@
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_xbl.xul";
 
 add_task(async function() {
-  const {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
 
   await startPicker(toolbox);
 
   info("Selecting the host element");
   await moveMouseOver("#xbl-host");
-  await doKeyPick({key: "VK_RETURN", options: {}});
-  is(inspector.selection.nodeFront.className, "xbl-anon",
-     "The .xbl-anon inside the box was selected");
+  await doKeyPick({ key: "VK_RETURN", options: {} });
+  is(
+    inspector.selection.nodeFront.className,
+    "xbl-anon",
+    "The .xbl-anon inside the box was selected"
+  );
 
   function doKeyPick(msg) {
     info("Key pressed. Waiting for element to be picked");
@@ -30,7 +33,7 @@ add_task(async function() {
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
     testActor.synthesizeMouse({
-      options: {type: "mousemove"},
+      options: { type: "mousemove" },
       center: true,
       selector: selector,
     });

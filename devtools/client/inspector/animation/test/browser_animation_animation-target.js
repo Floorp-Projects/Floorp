@@ -20,23 +20,40 @@ add_task(async function() {
   const { animationInspector, panel } = await openAnimationInspector();
 
   info("Checking the animation target elements existance");
-  const animationItemEls = panel.querySelectorAll(".animation-list .animation-item");
-  is(animationItemEls.length, animationInspector.state.animations.length,
-     "Number of animation target element should be same to number of animations " +
-     "that displays");
+  const animationItemEls = panel.querySelectorAll(
+    ".animation-list .animation-item"
+  );
+  is(
+    animationItemEls.length,
+    animationInspector.state.animations.length,
+    "Number of animation target element should be same to number of animations " +
+      "that displays"
+  );
 
   for (let i = 0; i < animationItemEls.length; i++) {
     const animationItemEl = animationItemEls[i];
-    const animationTargetEl = animationItemEl.querySelector(".animation-target");
-    ok(animationTargetEl,
-      "The animation target element should be in each animation item element");
+    const animationTargetEl = animationItemEl.querySelector(
+      ".animation-target"
+    );
+    ok(
+      animationTargetEl,
+      "The animation target element should be in each animation item element"
+    );
 
     info("Checking the content of animation target");
     const testData = TEST_DATA[i];
-    is(animationTargetEl.textContent, testData.expectedTextContent,
-       "The target element's content is correct");
-    ok(animationTargetEl.querySelector(".objectBox"), "objectBox is in the page exists");
-    ok(animationTargetEl.querySelector(".open-inspector").title,
-       INSPECTOR_L10N.getStr("inspector.nodePreview.highlightNodeLabel"));
+    is(
+      animationTargetEl.textContent,
+      testData.expectedTextContent,
+      "The target element's content is correct"
+    );
+    ok(
+      animationTargetEl.querySelector(".objectBox"),
+      "objectBox is in the page exists"
+    );
+    ok(
+      animationTargetEl.querySelector(".open-inspector").title,
+      INSPECTOR_L10N.getStr("inspector.nodePreview.highlightNodeLabel")
+    );
   }
 });

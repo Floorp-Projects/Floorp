@@ -3,9 +3,12 @@
 
 /* eslint-env mozilla/frame-script */
 
-const {TabStateFlusher} = ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm");
+const { TabStateFlusher } = ChromeUtils.import(
+  "resource:///modules/sessionstore/TabStateFlusher.jsm"
+);
 
-const DUMMY = "http://example.com/browser/browser/base/content/test/general/dummy_page.html";
+const DUMMY =
+  "http://example.com/browser/browser/base/content/test/general/dummy_page.html";
 
 function frameScript() {
   addMessageListener("Test:GetIsAppTab", function() {
@@ -14,7 +17,10 @@ function frameScript() {
 }
 
 function loadFrameScript(browser) {
-  browser.messageManager.loadFrameScript("data:,(" + frameScript.toString() + ")();", true);
+  browser.messageManager.loadFrameScript(
+    "data:,(" + frameScript.toString() + ")();",
+    true
+  );
 }
 
 function isBrowserAppTab(browser) {
@@ -35,8 +41,9 @@ function isBrowserAppTab(browser) {
 // Restarts the child process by crashing it then reloading the tab
 var restart = async function(browser) {
   // If the tab isn't remote this would crash the main process so skip it
-  if (!browser.isRemoteBrowser)
+  if (!browser.isRemoteBrowser) {
     return;
+  }
 
   // Make sure the main process has all of the current tab state before crashing
   await TabStateFlusher.flush(browser);

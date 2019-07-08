@@ -6,12 +6,20 @@
 
 var EXPORTED_SYMBOLS = ["SelectChild"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-                               "resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "DeferredTask",
-                               "resource://gre/modules/DeferredTask.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "DeferredTask",
+  "resource://gre/modules/DeferredTask.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["InspectorUtils"]);
 
@@ -60,7 +68,9 @@ this.SelectContentHelper.prototype = {
     let win = this.element.ownerGlobal;
     win.addEventListener("pagehide", this, { mozSystemGroup: true });
     this.element.addEventListener("blur", this, { mozSystemGroup: true });
-    this.element.addEventListener("transitionend", this, { mozSystemGroup: true });
+    this.element.addEventListener("transitionend", this, {
+      mozSystemGroup: true,
+    });
     let MutationObserver = this.element.ownerGlobal.MutationObserver;
     this.mut = new MutationObserver(mutations => {
       // Something changed the <select> while it was open, so
@@ -68,7 +78,11 @@ this.SelectContentHelper.prototype = {
       // in the very near future.
       this._updateTimer.arm();
     });
-    this.mut.observe(this.element, {childList: true, subtree: true, attributes: true});
+    this.mut.observe(this.element, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    });
   },
 
   uninit() {
@@ -76,7 +90,9 @@ this.SelectContentHelper.prototype = {
     let win = this.element.ownerGlobal;
     win.removeEventListener("pagehide", this, { mozSystemGroup: true });
     this.element.removeEventListener("blur", this, { mozSystemGroup: true });
-    this.element.removeEventListener("transitionend", this, { mozSystemGroup: true });
+    this.element.removeEventListener("transitionend", this, {
+      mozSystemGroup: true,
+    });
     this.element = null;
     this.actor = null;
     this.mut.disconnect();
@@ -91,7 +107,9 @@ this.SelectContentHelper.prototype = {
     let rect = this._getBoundingContentRect();
     let computedStyles = getComputedStyles(this.element);
     let options = this._buildOptionList();
-    let defaultStyles = this.element.ownerGlobal.getDefaultComputedStyle(this.element);
+    let defaultStyles = this.element.ownerGlobal.getDefaultComputedStyle(
+      this.element
+    );
     this.actor.sendAsyncMessage("Forms:ShowDropDown", {
       isOpenedViaTouch: this.isOpenedViaTouch,
       options,
@@ -112,7 +130,9 @@ this.SelectContentHelper.prototype = {
     // any styles.
     this._pseudoStylesSetup = true;
     InspectorUtils.addPseudoClassLock(this.element, ":focus");
-    let lockedDescendants = this._lockedDescendants = this.element.querySelectorAll(":checked");
+    let lockedDescendants = (this._lockedDescendants = this.element.querySelectorAll(
+      ":checked"
+    ));
     for (let child of lockedDescendants) {
       // Selected options have the :checked pseudo-class, which
       // we want to disable before calculating the computed
@@ -158,7 +178,9 @@ this.SelectContentHelper.prototype = {
     // have :focus, though it is here for belt-and-suspenders.
     this._setupPseudoClassStyles();
     let computedStyles = getComputedStyles(this.element);
-    let defaultStyles = this.element.ownerGlobal.getDefaultComputedStyle(this.element);
+    let defaultStyles = this.element.ownerGlobal.getDefaultComputedStyle(
+      this.element
+    );
     this.actor.sendAsyncMessage("Forms:UpdateDropDown", {
       options: this._buildOptionList(),
       selectedIndex: this.element.selectedIndex,
@@ -185,51 +207,54 @@ this.SelectContentHelper.prototype = {
         break;
 
       case "Forms:DismissedDropDown": {
-          if (!this.element) {
-            return;
-          }
-
-          let win = this.element.ownerGlobal;
-          let selectedOption = this.element.item(this.element.selectedIndex);
-
-          // For ordering of events, we're using non-e10s as our guide here,
-          // since the spec isn't exactly clear. In non-e10s:
-          // - If the user clicks on an element in the dropdown, we fire
-          //   mousedown, mouseup, input, change, and click events.
-          // - If the user uses the keyboard to select an element in the
-          //   dropdown, we only fire input and change events.
-          // - If the user pressed ESC key or clicks outside the dropdown,
-          //   we fire nothing as the selected option is unchanged.
-          if (this.closedWithClickOn) {
-            this.dispatchMouseEvent(win, selectedOption, "mousedown");
-            this.dispatchMouseEvent(win, selectedOption, "mouseup");
-          }
-
-          // Clear active document no matter user selects via keyboard or mouse
-          InspectorUtils.removeContentState(this.element, kStateActive,
-                                            /* aClearActiveDocument */ true);
-
-          // Fire input and change events when selected option changes
-          if (this.initialSelection !== selectedOption) {
-            let inputEvent = new win.Event("input", {
-              bubbles: true,
-            });
-            this.element.dispatchEvent(inputEvent);
-
-            let changeEvent = new win.Event("change", {
-              bubbles: true,
-            });
-            this.element.dispatchEvent(changeEvent);
-          }
-
-          // Fire click event
-          if (this.closedWithClickOn) {
-            this.dispatchMouseEvent(win, selectedOption, "click");
-          }
-
-          this.uninit();
-          break;
+        if (!this.element) {
+          return;
         }
+
+        let win = this.element.ownerGlobal;
+        let selectedOption = this.element.item(this.element.selectedIndex);
+
+        // For ordering of events, we're using non-e10s as our guide here,
+        // since the spec isn't exactly clear. In non-e10s:
+        // - If the user clicks on an element in the dropdown, we fire
+        //   mousedown, mouseup, input, change, and click events.
+        // - If the user uses the keyboard to select an element in the
+        //   dropdown, we only fire input and change events.
+        // - If the user pressed ESC key or clicks outside the dropdown,
+        //   we fire nothing as the selected option is unchanged.
+        if (this.closedWithClickOn) {
+          this.dispatchMouseEvent(win, selectedOption, "mousedown");
+          this.dispatchMouseEvent(win, selectedOption, "mouseup");
+        }
+
+        // Clear active document no matter user selects via keyboard or mouse
+        InspectorUtils.removeContentState(
+          this.element,
+          kStateActive,
+          /* aClearActiveDocument */ true
+        );
+
+        // Fire input and change events when selected option changes
+        if (this.initialSelection !== selectedOption) {
+          let inputEvent = new win.Event("input", {
+            bubbles: true,
+          });
+          this.element.dispatchEvent(inputEvent);
+
+          let changeEvent = new win.Event("change", {
+            bubbles: true,
+          });
+          this.element.dispatchEvent(changeEvent);
+        }
+
+        // Fire click event
+        if (this.closedWithClickOn) {
+          this.dispatchMouseEvent(win, selectedOption, "click");
+        }
+
+        this.uninit();
+        break;
+      }
 
       case "Forms:MouseOver":
         InspectorUtils.setContentState(this.element, kStateHover);
@@ -342,8 +367,7 @@ function buildOptionListForChildren(node, uniqueStyles) {
       }
 
       let textContent =
-        tagName == "OPTGROUP" ? child.getAttribute("label")
-                              : child.text;
+        tagName == "OPTGROUP" ? child.getAttribute("label") : child.text;
       if (textContent == null) {
         textContent = "";
       }
@@ -356,9 +380,10 @@ function buildOptionListForChildren(node, uniqueStyles) {
         disabled: child.disabled,
         display: cs.display,
         tooltip: child.title,
-        children: tagName == "OPTGROUP"
-          ? buildOptionListForChildren(child, uniqueStyles)
-          : [],
+        children:
+          tagName == "OPTGROUP"
+            ? buildOptionListForChildren(child, uniqueStyles)
+            : [],
         // Most options have the same style. In order to reduce the size of the
         // IPC message, coalesce them in uniqueStyles.
         styleIndex: uniqueStylesIndex(cs, uniqueStyles),
@@ -369,7 +394,6 @@ function buildOptionListForChildren(node, uniqueStyles) {
   }
   return result;
 }
-
 
 // Hold the instance of SelectContentHelper created
 // when the dropdown list is opened. This variable helps
@@ -389,19 +413,25 @@ class SelectChild extends JSWindowActorChild {
     }
 
     switch (event.type) {
-      case "mozshowdropdown":
-        {
-          let contentHelper = new SelectContentHelper(event.target, {isOpenedViaTouch: false}, this);
-          currentSelectContentHelper.set(this, contentHelper);
-          break;
-        }
+      case "mozshowdropdown": {
+        let contentHelper = new SelectContentHelper(
+          event.target,
+          { isOpenedViaTouch: false },
+          this
+        );
+        currentSelectContentHelper.set(this, contentHelper);
+        break;
+      }
 
-      case "mozshowdropdown-sourcetouch":
-        {
-          let contentHelper = new SelectContentHelper(event.target, {isOpenedViaTouch: true}, this);
-          currentSelectContentHelper.set(this, contentHelper);
-          break;
-        }
+      case "mozshowdropdown-sourcetouch": {
+        let contentHelper = new SelectContentHelper(
+          event.target,
+          { isOpenedViaTouch: true },
+          this
+        );
+        currentSelectContentHelper.set(this, contentHelper);
+        break;
+      }
     }
   }
 

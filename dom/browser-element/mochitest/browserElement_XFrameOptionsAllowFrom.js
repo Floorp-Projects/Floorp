@@ -37,24 +37,28 @@ function runTest() {
   // The innermost page we load will fire an alert when it successfully loads.
   iframe.addEventListener("mozbrowsershowmodalprompt", function(e) {
     switch (e.detail.message) {
-    case "step 1":
-      step1 = SpecialPowers.snapshotWindow(iframe.contentWindow);
-      break;
-    case "step 2":
-      ok(false, "cross origin page loaded");
-      break;
-    case "finish":
-      // The page has now attempted to load the X-Frame-Options page; take
-      // another screenshot.
-      stepfinish = SpecialPowers.snapshotWindow(iframe.contentWindow);
-      ok(step1.toDataURL() == stepfinish.toDataURL(), "Screenshots should be identical");
-      SimpleTest.finish();
+      case "step 1":
+        step1 = SpecialPowers.snapshotWindow(iframe.contentWindow);
+        break;
+      case "step 2":
+        ok(false, "cross origin page loaded");
+        break;
+      case "finish":
+        // The page has now attempted to load the X-Frame-Options page; take
+        // another screenshot.
+        stepfinish = SpecialPowers.snapshotWindow(iframe.contentWindow);
+        ok(
+          step1.toDataURL() == stepfinish.toDataURL(),
+          "Screenshots should be identical"
+        );
+        SimpleTest.finish();
     }
   });
 
   document.body.appendChild(iframe);
 
-  iframe.src = "http://example.com/tests/dom/browser-element/mochitest/file_browserElement_XFrameOptionsAllowFrom.html";
+  iframe.src =
+    "http://example.com/tests/dom/browser-element/mochitest/file_browserElement_XFrameOptionsAllowFrom.html";
 }
 
 addEventListener("testready", runTest);

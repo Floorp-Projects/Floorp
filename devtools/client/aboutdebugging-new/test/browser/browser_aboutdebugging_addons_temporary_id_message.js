@@ -14,10 +14,13 @@ add_task(async function() {
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
-  await installTemporaryExtensionFromXPI({
-    id: EXTENSION_ID,
-    name: EXTENSION_NAME,
-  }, document);
+  await installTemporaryExtensionFromXPI(
+    {
+      id: EXTENSION_ID,
+      name: EXTENSION_NAME,
+    },
+    document
+  );
 
   info("Wait until a debug target item appears");
   await waitUntil(() => findDebugTargetByText(EXTENSION_NAME, document));
@@ -42,15 +45,26 @@ add_task(async function() {
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
-  await installRegularExtension("resources/packaged-extension/packaged-extension.xpi");
+  await installRegularExtension(
+    "resources/packaged-extension/packaged-extension.xpi"
+  );
 
   info("Wait until extension appears in about:debugging");
-  await waitUntil(() => findDebugTargetByText(PACKAGED_EXTENSION_NAME, document));
+  await waitUntil(() =>
+    findDebugTargetByText(PACKAGED_EXTENSION_NAME, document)
+  );
   const target = findDebugTargetByText(PACKAGED_EXTENSION_NAME, document);
 
   const tmpIdMessage = target.querySelector(".qa-temporary-id-message");
-  ok(!tmpIdMessage, "No temporary id message is displayed for a regular extension");
+  ok(
+    !tmpIdMessage,
+    "No temporary id message is displayed for a regular extension"
+  );
 
-  await removeExtension(PACKAGED_EXTENSION_ID, PACKAGED_EXTENSION_NAME, document);
+  await removeExtension(
+    PACKAGED_EXTENSION_ID,
+    PACKAGED_EXTENSION_NAME,
+    document
+  );
   await removeTab(tab);
 });

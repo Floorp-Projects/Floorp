@@ -1,8 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Bookmark, BookmarkFolder, BookmarkQuery, BookmarksEngine, PlacesItem} = ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const {
+  Bookmark,
+  BookmarkFolder,
+  BookmarkQuery,
+  BookmarksEngine,
+  PlacesItem,
+} = ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 const BookmarksToolbarTitle = "toolbar";
 
@@ -15,15 +21,19 @@ add_task(async function test_ignore_specials() {
   // Belt...
   let record = new BookmarkFolder("bookmarks", "toolbar", "folder");
   record.deleted = true;
-  Assert.notEqual(null, (await PlacesUtils.promiseItemId(
-    PlacesUtils.bookmarks.toolbarGuid)));
+  Assert.notEqual(
+    null,
+    await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
+  );
 
   await store.applyIncoming(record);
   await store.deletePending();
 
   // Ensure that the toolbar exists.
-  Assert.notEqual(null, (await PlacesUtils.promiseItemId(
-    PlacesUtils.bookmarks.toolbarGuid)));
+  Assert.notEqual(
+    null,
+    await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
+  );
 
   // This will fail to build the local tree if the deletion worked.
   await engine._buildGUIDMap();
@@ -31,8 +41,10 @@ add_task(async function test_ignore_specials() {
   // Braces...
   await store.remove(record);
   await store.deletePending();
-  Assert.notEqual(null, (await PlacesUtils.promiseItemId(
-    PlacesUtils.bookmarks.toolbarGuid)));
+  Assert.notEqual(
+    null,
+    await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
+  );
   await engine._buildGUIDMap();
 
   await store.wipe();
@@ -53,12 +65,12 @@ add_task(async function test_bookmark_create() {
 
     _("Let's create a new record.");
     let fxrecord = new Bookmark("bookmarks", "get-firefox1");
-    fxrecord.bmkUri        = "http://getfirefox.com/";
-    fxrecord.title         = "Get Firefox!";
-    fxrecord.tags          = ["firefox", "awesome", "browser"];
-    fxrecord.keyword       = "awesome";
-    fxrecord.parentName    = BookmarksToolbarTitle;
-    fxrecord.parentid      = "toolbar";
+    fxrecord.bmkUri = "http://getfirefox.com/";
+    fxrecord.title = "Get Firefox!";
+    fxrecord.tags = ["firefox", "awesome", "browser"];
+    fxrecord.keyword = "awesome";
+    fxrecord.parentName = BookmarksToolbarTitle;
+    fxrecord.parentid = "toolbar";
     await store.applyIncoming(fxrecord);
 
     _("Verify it has been created correctly.");
@@ -70,24 +82,31 @@ add_task(async function test_bookmark_create() {
     let keyword = await PlacesUtils.keywords.fetch(fxrecord.keyword);
     Assert.equal(keyword.url.href, "http://getfirefox.com/");
 
-    _("Have the store create a new record object. Verify that it has the same data.");
+    _(
+      "Have the store create a new record object. Verify that it has the same data."
+    );
     let newrecord = await store.createRecord(fxrecord.id);
     Assert.ok(newrecord instanceof Bookmark);
-    for (let property of ["type", "bmkUri", "title",
-                          "keyword", "parentName", "parentid"]) {
+    for (let property of [
+      "type",
+      "bmkUri",
+      "title",
+      "keyword",
+      "parentName",
+      "parentid",
+    ]) {
       Assert.equal(newrecord[property], fxrecord[property]);
     }
-    Assert.ok(Utils.deepEquals(newrecord.tags.sort(),
-                               fxrecord.tags.sort()));
+    Assert.ok(Utils.deepEquals(newrecord.tags.sort(), fxrecord.tags.sort()));
 
     _("The calculated sort index is based on frecency data.");
     Assert.ok(newrecord.sortindex >= 150);
 
     _("Create a record with some values missing.");
     let tbrecord = new Bookmark("bookmarks", "thunderbird1");
-    tbrecord.bmkUri        = "http://getthunderbird.com/";
-    tbrecord.parentName    = BookmarksToolbarTitle;
-    tbrecord.parentid      = "toolbar";
+    tbrecord.bmkUri = "http://getthunderbird.com/";
+    tbrecord.parentName = BookmarksToolbarTitle;
+    tbrecord.parentid = "toolbar";
     await store.applyIncoming(tbrecord);
 
     _("Verify it has been created correctly.");
@@ -173,8 +192,8 @@ add_task(async function test_folder_create() {
     _("Create a folder.");
     let folder = new BookmarkFolder("bookmarks", "testfolder-1");
     folder.parentName = BookmarksToolbarTitle;
-    folder.parentid   = "toolbar";
-    folder.title      = "Test Folder";
+    folder.parentid = "toolbar";
+    folder.title = "Test Folder";
     await store.applyIncoming(folder);
 
     _("Verify it has been created correctly.");
@@ -183,7 +202,9 @@ add_task(async function test_folder_create() {
     Assert.equal(item.title, folder.title);
     Assert.equal(item.parentGuid, PlacesUtils.bookmarks.toolbarGuid);
 
-    _("Have the store create a new record object. Verify that it has the same data.");
+    _(
+      "Have the store create a new record object. Verify that it has the same data."
+    );
     let newrecord = await store.createRecord(folder.id);
     Assert.ok(newrecord instanceof BookmarkFolder);
     for (let property of ["title", "parentName", "parentid"]) {
@@ -230,7 +251,9 @@ add_task(async function test_folder_createRecord() {
     Assert.equal(record.parentid, "toolbar");
     Assert.equal(record.parentName, BookmarksToolbarTitle);
 
-    _("Verify the folder's children. Ensures that the bookmarks were given GUIDs.");
+    _(
+      "Verify the folder's children. Ensures that the bookmarks were given GUIDs."
+    );
     Assert.deepEqual(record.children, [bmk1.guid, bmk2.guid]);
   } finally {
     _("Clean up.");
@@ -328,7 +351,8 @@ add_task(async function test_move_order() {
 
     _("Verify order.");
     let childIds = await PlacesSyncUtils.bookmarks.fetchChildRecordIds(
-      "toolbar");
+      "toolbar"
+    );
     Assert.deepEqual(childIds, [bmk1.guid, bmk2.guid]);
     let toolbar = await store.createRecord("toolbar");
     Assert.deepEqual(toolbar.children, [bmk1.guid, bmk2.guid]);
@@ -345,7 +369,8 @@ add_task(async function test_move_order() {
 
     _("Verify new order.");
     let newChildIds = await PlacesSyncUtils.bookmarks.fetchChildRecordIds(
-      "toolbar");
+      "toolbar"
+    );
     Assert.deepEqual(newChildIds, [bmk2.guid, bmk1.guid]);
   } finally {
     await tracker.stop();
@@ -368,11 +393,15 @@ add_task(async function test_orphan() {
     });
     let bmk1_id = await PlacesUtils.promiseItemId(bmk1.guid);
     do_check_throws(function() {
-      PlacesUtils.annotations.getItemAnnotation(bmk1_id,
-        PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO);
+      PlacesUtils.annotations.getItemAnnotation(
+        bmk1_id,
+        PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO
+      );
     }, Cr.NS_ERROR_NOT_AVAILABLE);
 
-    _("Apply a server record that is the same but refers to non-existent folder.");
+    _(
+      "Apply a server record that is the same but refers to non-existent folder."
+    );
     let record = await store.createRecord(bmk1.guid);
     record.parentid = "non-existent";
     await store.applyIncoming(record);
@@ -380,8 +409,10 @@ add_task(async function test_orphan() {
     _("Verify that bookmark has been flagged as orphan, has not moved.");
     let item = await PlacesUtils.bookmarks.fetch(bmk1.guid);
     Assert.equal(item.parentGuid, PlacesUtils.bookmarks.toolbarGuid);
-    let orphanAnno = PlacesUtils.annotations.getItemAnnotation(bmk1_id,
-      PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO);
+    let orphanAnno = PlacesUtils.annotations.getItemAnnotation(
+      bmk1_id,
+      PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO
+    );
     Assert.equal(orphanAnno, "non-existent");
   } finally {
     _("Clean up.");
@@ -402,18 +433,28 @@ add_task(async function test_reparentOrphans() {
     });
     let folder1_id = await PlacesUtils.promiseItemId(folder1.guid);
 
-    _("Create a bogus orphan record and write the record back to the store to trigger _reparentOrphans.");
+    _(
+      "Create a bogus orphan record and write the record back to the store to trigger _reparentOrphans."
+    );
     PlacesUtils.annotations.setItemAnnotation(
-      folder1_id, PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO, folder1.guid, 0,
-      PlacesUtils.annotations.EXPIRE_NEVER);
+      folder1_id,
+      PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO,
+      folder1.guid,
+      0,
+      PlacesUtils.annotations.EXPIRE_NEVER
+    );
     let record = await store.createRecord(folder1.guid);
     record.title = "New title for Folder 1";
     store._childrenToOrder = {};
     await store.applyIncoming(record);
 
-    _("Verify that is has been marked as an orphan even though it couldn't be moved into itself.");
-    let orphanAnno = PlacesUtils.annotations.getItemAnnotation(folder1_id,
-      PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO);
+    _(
+      "Verify that is has been marked as an orphan even though it couldn't be moved into itself."
+    );
+    let orphanAnno = PlacesUtils.annotations.getItemAnnotation(
+      folder1_id,
+      PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO
+    );
     Assert.equal(orphanAnno, folder1.guid);
   } finally {
     _("Clean up.");
@@ -429,10 +470,10 @@ add_task(async function test_empty_query_doesnt_die() {
   let store = engine._store;
 
   let record = new BookmarkQuery("bookmarks", "8xoDGqKrXf1P");
-  record.folderName    = "";
-  record.queryId       = "";
-  record.parentName    = "Toolbar";
-  record.parentid      = "toolbar";
+  record.folderName = "";
+  record.queryId = "";
+  record.parentName = "Toolbar";
+  record.parentid = "toolbar";
 
   // These should not throw.
   await store.applyIncoming(record);
@@ -463,18 +504,17 @@ add_task(async function test_delete_buffering() {
     folder.title = "Test Folder";
     await store.applyIncoming(folder);
 
-
     let fxRecord = new Bookmark("bookmarks", "get-firefox1");
-    fxRecord.bmkUri        = "http://getfirefox.com/";
-    fxRecord.title         = "Get Firefox!";
-    fxRecord.parentName    = "Test Folder";
-    fxRecord.parentid      = "testfolder-1";
+    fxRecord.bmkUri = "http://getfirefox.com/";
+    fxRecord.title = "Get Firefox!";
+    fxRecord.parentName = "Test Folder";
+    fxRecord.parentid = "testfolder-1";
 
     let tbRecord = new Bookmark("bookmarks", "get-tndrbrd1");
-    tbRecord.bmkUri        = "http://getthunderbird.com";
-    tbRecord.title         = "Get Thunderbird!";
-    tbRecord.parentName    = "Test Folder";
-    tbRecord.parentid      = "testfolder-1";
+    tbRecord.bmkUri = "http://getthunderbird.com";
+    tbRecord.title = "Get Thunderbird!";
+    tbRecord.parentName = "Test Folder";
+    tbRecord.parentid = "testfolder-1";
 
     await store.applyIncoming(fxRecord);
     await store.applyIncoming(tbRecord);
@@ -504,7 +544,9 @@ add_task(async function test_delete_buffering() {
     await store.applyIncoming(deleteFolder);
     await store.applyIncoming(deleteFxRecord);
 
-    _("Check that we haven't deleted them yet, but that the deletions are queued");
+    _(
+      "Check that we haven't deleted them yet, but that the deletions are queued"
+    );
     // these will return `null` if we've deleted them
     fxItem = await PlacesUtils.bookmarks.fetch(fxRecord.id);
     ok(fxItem);
@@ -518,10 +560,15 @@ add_task(async function test_delete_buffering() {
     ok(store._itemsToDelete.has(fxRecord.id));
     ok(!store._itemsToDelete.has(tbRecord.id));
 
-    _("Process pending deletions and ensure that the right things are deleted.");
+    _(
+      "Process pending deletions and ensure that the right things are deleted."
+    );
     let newChangeRecords = await store.deletePending();
 
-    deepEqual(Object.keys(newChangeRecords).sort(), ["get-tndrbrd1", "toolbar"]);
+    deepEqual(Object.keys(newChangeRecords).sort(), [
+      "get-tndrbrd1",
+      "toolbar",
+    ]);
 
     await assertDeleted(fxItem.guid);
     await assertDeleted(folderItem.guid);

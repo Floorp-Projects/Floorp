@@ -4,17 +4,24 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/redux/visibility-handler-connect");
+const {
+  connect,
+} = require("devtools/client/shared/redux/visibility-handler-connect");
 const Actions = require("../actions/index");
 const { ACTIVITY_TYPE } = require("../constants");
 const { L10N } = require("../utils/l10n");
 const { getPerformanceAnalysisURL } = require("../utils/mdn-utils");
 
 // Components
-const MDNLink = createFactory(require("devtools/client/shared/components/MdnLink"));
+const MDNLink = createFactory(
+  require("devtools/client/shared/components/MdnLink")
+);
 
 const { button, div, span } = dom;
 
@@ -44,7 +51,8 @@ class RequestListEmptyNotice extends Component {
       {
         className: "request-list-empty-notice",
       },
-      div({ className: "notice-reload-message empty-notice-element" },
+      div(
+        { className: "notice-reload-message empty-notice-element" },
         span(null, RELOAD_NOTICE_1),
         button(
           {
@@ -56,7 +64,8 @@ class RequestListEmptyNotice extends Component {
         ),
         span(null, RELOAD_NOTICE_3)
       ),
-      div({ className: "notice-perf-message empty-notice-element" },
+      div(
+        { className: "notice-perf-message empty-notice-element" },
         span(null, PERFORMANCE_NOTICE_1),
         button({
           title: PERFORMANCE_NOTICE_3,
@@ -78,7 +87,7 @@ module.exports = connect(
   undefined,
   (dispatch, props) => ({
     onPerfClick: () => dispatch(Actions.openStatistics(props.connector, true)),
-    onReloadClick: () => props.connector.triggerActivity(
-      ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT),
+    onReloadClick: () =>
+      props.connector.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT),
   })
 )(RequestListEmptyNotice);

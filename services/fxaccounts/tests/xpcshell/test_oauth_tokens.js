@@ -3,9 +3,16 @@
 
 "use strict";
 
-const {FxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-const {FxAccountsClient} = ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
-var {AccountState} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm", null);
+const { FxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
+const { FxAccountsClient } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsClient.jsm"
+);
+var { AccountState } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm",
+  null
+);
 
 function promiseNotification(topic) {
   return new Promise(resolve => {
@@ -18,8 +25,7 @@ function promiseNotification(topic) {
 }
 
 // Just enough mocks so we can avoid hawk and storage.
-function MockStorageManager() {
-}
+function MockStorageManager() {}
 
 MockStorageManager.prototype = {
   promiseInitialized: Promise.resolve(),
@@ -58,14 +64,24 @@ function MockFxAccountsClient() {
   this._verified = false;
 
   this.accountStatus = function(uid) {
-    return Promise.resolve(!!uid && (!this._deletedOnServer));
+    return Promise.resolve(!!uid && !this._deletedOnServer);
   };
 
-  this.signOut = function() { return Promise.resolve(); };
-  this.registerDevice = function() { return Promise.resolve(); };
-  this.updateDevice = function() { return Promise.resolve(); };
-  this.signOutAndDestroyDevice = function() { return Promise.resolve(); };
-  this.getDeviceList = function() { return Promise.resolve(); };
+  this.signOut = function() {
+    return Promise.resolve();
+  };
+  this.registerDevice = function() {
+    return Promise.resolve();
+  };
+  this.updateDevice = function() {
+    return Promise.resolve();
+  };
+  this.signOutAndDestroyDevice = function() {
+    return Promise.resolve();
+  };
+  this.getDeviceList = function() {
+    return Promise.resolve();
+  };
 
   FxAccountsClient.apply(this);
 }
@@ -86,7 +102,7 @@ function MockFxAccounts(mockGrantClient) {
     },
     _destroyOAuthToken(tokenData) {
       // somewhat sad duplication of _destroyOAuthToken, but hard to avoid.
-      return mockGrantClient.destroyToken(tokenData.token).then( () => {
+      return mockGrantClient.destroyToken(tokenData.token).then(() => {
         Services.obs.notifyObservers(null, "testhelper-fxa-revoke-complete");
       });
     },
@@ -95,7 +111,7 @@ function MockFxAccounts(mockGrantClient) {
     },
     fxaPushService: {
       registerPushEndpoint() {
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
           resolve({
             endpoint: "http://mochi.test:8888",
           });
@@ -130,13 +146,13 @@ function MockFxAccountsOAuthGrantClient() {
 }
 
 MockFxAccountsOAuthGrantClient.prototype = {
-  serverURL: {href: "http://localhost"},
+  serverURL: { href: "http://localhost" },
   getTokenFromAssertion(assertion, scope) {
     let token = "token" + this.numTokenFetches;
     this.numTokenFetches += 1;
     this.activeTokens.add(token);
     print("getTokenFromAssertion returning token", token);
-    return Promise.resolve({access_token: token});
+    return Promise.resolve({ access_token: token });
   },
   destroyToken(token) {
     ok(this.activeTokens.delete(token));
@@ -163,7 +179,7 @@ add_task(async function testRevoke() {
   // FxA fires an observer when the "background" revoke is complete.
   let revokeComplete = promiseNotification("testhelper-fxa-revoke-complete");
   // drop the new token from our cache.
-  await fxa.removeCachedOAuthToken({token: token1});
+  await fxa.removeCachedOAuthToken({ token: token1 });
   await revokeComplete;
 
   // the revoke should have been successful.
@@ -218,10 +234,10 @@ add_task(async function testTokenRaces() {
     promiseNotification("testhelper-fxa-revoke-complete"),
   ]);
   let results = await Promise.all([
-    fxa.getOAuthToken({scope: "test-scope", client}),
-    fxa.getOAuthToken({scope: "test-scope", client}),
-    fxa.getOAuthToken({scope: "test-scope-2", client}),
-    fxa.getOAuthToken({scope: "test-scope-2", client}),
+    fxa.getOAuthToken({ scope: "test-scope", client }),
+    fxa.getOAuthToken({ scope: "test-scope", client }),
+    fxa.getOAuthToken({ scope: "test-scope-2", client }),
+    fxa.getOAuthToken({ scope: "test-scope-2", client }),
   ]);
 
   equal(client.numTokenFetches, 4, "should have fetched 4 tokens.");
@@ -239,9 +255,9 @@ add_task(async function testTokenRaces() {
     promiseNotification("testhelper-fxa-revoke-complete"),
     promiseNotification("testhelper-fxa-revoke-complete"),
   ]);
-  await fxa.removeCachedOAuthToken({token: results[0]});
+  await fxa.removeCachedOAuthToken({ token: results[0] });
   equal(client.activeTokens.size, 1);
-  await fxa.removeCachedOAuthToken({token: results[2]});
+  await fxa.removeCachedOAuthToken({ token: results[2] });
   equal(client.activeTokens.size, 0);
   await notifications;
 });

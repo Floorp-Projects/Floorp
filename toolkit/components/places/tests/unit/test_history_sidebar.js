@@ -33,11 +33,18 @@ async function addNormalizedVisit(aURI, aTime, aDayOffset) {
   let dateObj = toMidnight(aTime);
   // Days where DST changes should be taken into account.
   let previousDateObj = new Date(dateObj.getTime() + aDayOffset * 86400000);
-  let DSTCorrection = (dateObj.getTimezoneOffset() -
-                       previousDateObj.getTimezoneOffset()) * 60 * 1000;
+  let DSTCorrection =
+    (dateObj.getTimezoneOffset() - previousDateObj.getTimezoneOffset()) *
+    60 *
+    1000;
   // Substract aDayOffset
   let PRTimeWithOffset = (previousDateObj.getTime() - DSTCorrection) * 1000;
-  info("Adding visit to " + aURI.spec + " at " + PlacesUtils.toDate(PRTimeWithOffset));
+  info(
+    "Adding visit to " +
+      aURI.spec +
+      " at " +
+      PlacesUtils.toDate(PRTimeWithOffset)
+  );
   await PlacesTestUtils.addVisits({
     uri: aURI,
     visitDate: PRTimeWithOffset,
@@ -67,15 +74,15 @@ function daysForMonthsAgo(months) {
 // This test relies on en-US locale
 // Offset is number of days
 let containers = [
-  { label: "Today",               offset: 0,                    visible: true },
-  { label: "Yesterday",           offset: -1,                   visible: true },
-  { label: "Last 7 days",         offset: -2,                   visible: true },
-  { label: "This month",          offset: -8,                   visible: nowObj.getDate() > 8 },
-  { label: "",                    offset: -daysForMonthsAgo(0), visible: true },
-  { label: "",                    offset: -daysForMonthsAgo(1), visible: true },
-  { label: "",                    offset: -daysForMonthsAgo(2), visible: true },
-  { label: "",                    offset: -daysForMonthsAgo(3), visible: true },
-  { label: "",                    offset: -daysForMonthsAgo(4), visible: true },
+  { label: "Today", offset: 0, visible: true },
+  { label: "Yesterday", offset: -1, visible: true },
+  { label: "Last 7 days", offset: -2, visible: true },
+  { label: "This month", offset: -8, visible: nowObj.getDate() > 8 },
+  { label: "", offset: -daysForMonthsAgo(0), visible: true },
+  { label: "", offset: -daysForMonthsAgo(1), visible: true },
+  { label: "", offset: -daysForMonthsAgo(2), visible: true },
+  { label: "", offset: -daysForMonthsAgo(3), visible: true },
+  { label: "", offset: -daysForMonthsAgo(4), visible: true },
   { label: "Older than 6 months", offset: -daysForMonthsAgo(5), visible: true },
 ];
 
@@ -104,7 +111,9 @@ add_task(async function task_fill_history() {
     check_visit(container.offset);
   }
 
-  let root = openRootForResultType(Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY).root;
+  let root = openRootForResultType(
+    Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY
+  ).root;
   let cc = root.childCount;
   info("Found containers:");
   let previousLabels = [];
@@ -112,8 +121,9 @@ add_task(async function task_fill_history() {
     let container = visibleContainers[i];
     let node = root.getChild(i);
     info(node.title);
-    if (container.label)
+    if (container.label) {
       Assert.equal(node.title, container.label);
+    }
     // Check labels are not repeated.
     Assert.ok(!previousLabels.includes(node.title));
     previousLabels.push(node.title);
@@ -127,7 +137,9 @@ add_task(async function task_fill_history() {
  *              to previous ones.
  */
 function check_visit(aOffset) {
-  let root = openRootForResultType(Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY).root;
+  let root = openRootForResultType(
+    Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY
+  ).root;
 
   let unexpected = [];
   switch (aOffset) {
@@ -141,7 +153,7 @@ function check_visit(aOffset) {
       unexpected = ["This month"];
       break;
     default:
-      // Other containers are tested later.
+    // Other containers are tested later.
   }
 
   info("Found containers:");
@@ -160,7 +172,9 @@ function check_visit(aOffset) {
  */
 add_task(async function test_RESULTS_AS_DATE_SITE_QUERY() {
   info("*** TEST RESULTS_AS_DATE_SITE_QUERY");
-  let result = openRootForResultType(Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY);
+  let result = openRootForResultType(
+    Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY
+  );
   let root = result.root;
 
   // Check one of the days
@@ -214,7 +228,9 @@ add_task(async function test_RESULTS_AS_DATE_SITE_QUERY() {
  */
 add_task(async function test_RESULTS_AS_DATE_QUERY() {
   info("*** TEST RESULTS_AS_DATE_QUERY");
-  let result = openRootForResultType(Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY);
+  let result = openRootForResultType(
+    Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY
+  );
   let root = result.root;
   let cc = root.childCount;
   Assert.equal(cc, visibleContainers.length);
@@ -223,8 +239,9 @@ add_task(async function test_RESULTS_AS_DATE_QUERY() {
     let container = visibleContainers[i];
     let node = root.getChild(i);
     info(node.title);
-    if (container.label)
+    if (container.label) {
       Assert.equal(node.title, container.label);
+    }
   }
 
   // Check one of the days
@@ -386,8 +403,12 @@ async function test_date_liveupdate(aResultType) {
 }
 
 add_task(async function test_history_sidebar() {
-  await test_date_liveupdate(Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY);
-  await test_date_liveupdate(Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY);
+  await test_date_liveupdate(
+    Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY
+  );
+  await test_date_liveupdate(
+    Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY
+  );
 
   // The remaining views are
   //   RESULTS_AS_URI + SORT_BY_VISITCOUNT_DESCENDING

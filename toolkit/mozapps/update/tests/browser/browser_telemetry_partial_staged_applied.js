@@ -11,9 +11,7 @@
 // Partial patch applied
 add_task(async function telemetry_partial_staged_applied() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [PREF_APP_UPDATE_STAGING_ENABLED, true],
-    ],
+    set: [[PREF_APP_UPDATE_STAGING_ENABLED, true]],
   });
 
   let updateParams = "";

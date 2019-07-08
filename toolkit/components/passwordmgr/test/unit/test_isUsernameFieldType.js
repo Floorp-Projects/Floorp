@@ -6,19 +6,19 @@
 
 const autocompleteTypes = {
   "": true,
-  "on": true,
-  "off": true,
-  "name": false,
+  on: true,
+  off: true,
+  name: false,
   "unrecognized-type": true,
   "given-name": false,
   "additional-name": false,
   "family-name": false,
-  "nickname": false,
-  "username": true,
+  nickname: false,
+  username: true,
   "new-password": false,
   "current-password": false,
   "organization-title": false,
-  "organization": false,
+  organization: false,
   "street-address": false,
   "address-line1": false,
   "address-line2": false,
@@ -27,7 +27,7 @@ const autocompleteTypes = {
   "address-level3": false,
   "address-level2": false,
   "address-level1": false,
-  "country": false,
+  country: false,
   "country-name": false,
   "postal-code": false,
   "cc-name": false,
@@ -42,15 +42,15 @@ const autocompleteTypes = {
   "cc-type": false,
   "transaction-currency": false,
   "transaction-amount": false,
-  "language": false,
-  "bday": false,
+  language: false,
+  bday: false,
   "bday-day": false,
   "bday-month": false,
   "bday-year": false,
-  "sex": false,
-  "url": false,
-  "photo": false,
-  "tel": true,
+  sex: false,
+  url: false,
+  photo: false,
+  tel: true,
   "tel-country-code": false,
   "tel-national": true,
   "tel-area-code": false,
@@ -58,8 +58,8 @@ const autocompleteTypes = {
   "tel-local-prefix": false,
   "tel-local-suffix": false,
   "tel-extension": false,
-  "email": true,
-  "impp": false,
+  email: true,
+  impp: false,
 };
 
 const TESTCASES = [
@@ -146,9 +146,15 @@ for (let [name, expected] of Object.entries(autocompleteTypes)) {
 TESTCASES.forEach(testcase => {
   add_task(async function() {
     info("Starting testcase: " + testcase.description);
-    let document = MockDocument.createTestDocument("http://localhost:8080/test/",
-                                                   testcase.document);
+    let document = MockDocument.createTestDocument(
+      "http://localhost:8080/test/",
+      testcase.document
+    );
     let input = document.querySelector("input");
-    Assert.equal(LoginHelper.isUsernameFieldType(input), testcase.expected, testcase.description);
+    Assert.equal(
+      LoginHelper.isUsernameFieldType(input),
+      testcase.expected,
+      testcase.description
+    );
   });
 });

@@ -9,14 +9,16 @@
 // process, and changes after that point are stored as entries in a dynamic hash
 // table, on top of the snapshot.
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {ExtensionTestUtils} = ChromeUtils.import("resource://testing-common/ExtensionXPCShellUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ExtensionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+);
 
 ExtensionTestUtils.init(this);
 
 let contentPage;
 
-const {prefs} = Services;
+const { prefs } = Services;
 const defaultPrefs = prefs.getDefaultBranch("");
 
 const FRAME_SCRIPT_INIT = `
@@ -74,7 +76,15 @@ function getPrefs(prefNames) {
   return result;
 }
 
-function checkPref(pref, proc, val, type, userVal, defaultVal, expectedFlags = {}) {
+function checkPref(
+  pref,
+  proc,
+  val,
+  type,
+  userVal,
+  defaultVal,
+  expectedFlags = {}
+) {
   info(`Check "${pref}" ${proc} value`);
 
   equal(val.type, type, `Expected type for "${pref}"`);
@@ -108,10 +118,16 @@ const TESTS = {
       ok(childList.includes(PREF), `Child list includes "${PREF}"`);
 
       prefs.clearUserPref(PREF);
-      ok(!getPrefList().includes(PREF), `Parent list doesn't include "${PREF}"`);
+      ok(
+        !getPrefList().includes(PREF),
+        `Parent list doesn't include "${PREF}"`
+      );
     },
     contentUpdate1(PREF, val, childList) {
-      ok(!getPrefList().includes(PREF), `Parent list doesn't include "${PREF}"`);
+      ok(
+        !getPrefList().includes(PREF),
+        `Parent list doesn't include "${PREF}"`
+      );
       ok(!childList.includes(PREF), `Child list doesn't include "${PREF}"`);
 
       prefs.setCharPref(PREF, "foo");
@@ -128,7 +144,10 @@ const TESTS = {
   },
   "doesNotExists.thenDoes": {
     contentStartup(PREF, val, childList) {
-      ok(!getPrefList().includes(PREF), `Parent list doesn't include "${PREF}"`);
+      ok(
+        !getPrefList().includes(PREF),
+        `Parent list doesn't include "${PREF}"`
+      );
       ok(!childList.includes(PREF), `Child list doesn't include "${PREF}"`);
 
       prefs.setIntPref(PREF, 42);
@@ -145,23 +164,41 @@ const TESTS = {
 };
 
 const PREFS = [
-  {type: "Bool", values: [true, false, true]},
-  {type: "Int", values: [24, 42, 73]},
-  {type: "String", values: ["meh", "hem", "hrm"]},
+  { type: "Bool", values: [true, false, true] },
+  { type: "Int", values: [24, 42, 73] },
+  { type: "String", values: ["meh", "hem", "hrm"] },
 ];
 
-for (let {type, values} of PREFS) {
+for (let { type, values } of PREFS) {
   let set = `set${type}Pref`;
 
   function prefTest(opts) {
-    function check(pref, proc, val, {expectedVal, defaultVal = undefined, expectedDefault = defaultVal, expectedFlags = {}}) {
-      checkPref(pref, proc, val, type, expectedVal, expectedDefault, expectedFlags);
+    function check(
+      pref,
+      proc,
+      val,
+      {
+        expectedVal,
+        defaultVal = undefined,
+        expectedDefault = defaultVal,
+        expectedFlags = {},
+      }
+    ) {
+      checkPref(
+        pref,
+        proc,
+        val,
+        type,
+        expectedVal,
+        expectedDefault,
+        expectedFlags
+      );
     }
 
-    function updatePref(PREF,
-                        {userVal = undefined,
-                         defaultVal = undefined,
-                         flags = {}}) {
+    function updatePref(
+      PREF,
+      { userVal = undefined, defaultVal = undefined, flags = {} }
+    ) {
       info(`Update "${PREF}"`);
       if (userVal !== undefined) {
         prefs[set](PREF, userVal);
@@ -211,54 +248,76 @@ for (let {type, values} of PREFS) {
     let defaultVal = values[+!i];
 
     TESTS[`type.${type}.${i}.default`] = prefTest({
-      initial: {defaultVal, expectedVal: defaultVal},
-      change1: {defaultVal: values[2], expectedVal: values[2]},
+      initial: { defaultVal, expectedVal: defaultVal },
+      change1: { defaultVal: values[2], expectedVal: values[2] },
     });
 
     TESTS[`type.${type}.${i}.user`] = prefTest({
-      initial: {userVal, expectedVal: userVal},
-      change1: {defaultVal: values[2], expectedVal: userVal},
-      change2: {userVal: values[2],
-                expectedDefault: values[2],
-                expectedVal: values[2]},
+      initial: { userVal, expectedVal: userVal },
+      change1: { defaultVal: values[2], expectedVal: userVal },
+      change2: {
+        userVal: values[2],
+        expectedDefault: values[2],
+        expectedVal: values[2],
+      },
     });
 
     TESTS[`type.${type}.${i}.both`] = prefTest({
-      initial: {userVal, defaultVal, expectedVal: userVal},
-      change1: {defaultVal: values[2], expectedVal: userVal},
-      change2: {userVal: values[2],
-                expectedDefault: values[2],
-                expectedVal: values[2]},
+      initial: { userVal, defaultVal, expectedVal: userVal },
+      change1: { defaultVal: values[2], expectedVal: userVal },
+      change2: {
+        userVal: values[2],
+        expectedDefault: values[2],
+        expectedVal: values[2],
+      },
     });
 
     TESTS[`type.${type}.${i}.both.thenLock`] = prefTest({
-      initial: {userVal, defaultVal, expectedVal: userVal},
-      change1: {expectedDefault: defaultVal,
-                expectedVal: defaultVal,
-                flags: {locked: true},
-                expectFlags: {locked: true}},
+      initial: { userVal, defaultVal, expectedVal: userVal },
+      change1: {
+        expectedDefault: defaultVal,
+        expectedVal: defaultVal,
+        flags: { locked: true },
+        expectFlags: { locked: true },
+      },
     });
 
     TESTS[`type.${type}.${i}.both.thenUnlock`] = prefTest({
-      initial: {userVal, defaultVal, expectedVal: defaultVal,
-                flags: {locked: true}, expectedFlags: {locked: true}},
-      change1: {expectedDefault: defaultVal,
-                expectedVal: userVal,
-                flags: {locked: false},
-                expectFlags: {locked: false}},
+      initial: {
+        userVal,
+        defaultVal,
+        expectedVal: defaultVal,
+        flags: { locked: true },
+        expectedFlags: { locked: true },
+      },
+      change1: {
+        expectedDefault: defaultVal,
+        expectedVal: userVal,
+        flags: { locked: false },
+        expectFlags: { locked: false },
+      },
     });
 
     TESTS[`type.${type}.${i}.both.locked`] = prefTest({
-      initial: {userVal, defaultVal, expectedVal: defaultVal,
-                flags: {locked: true}, expectedFlags: {locked: true}},
-      change1: {userVal: values[2],
-                expectedDefault: defaultVal,
-                expectedVal: defaultVal,
-                expectedFlags: {locked: true}},
-      change2: {defaultVal: values[2],
-                expectedDefault: defaultVal,
-                expectedVal: defaultVal,
-                expectedFlags: {locked: true}},
+      initial: {
+        userVal,
+        defaultVal,
+        expectedVal: defaultVal,
+        flags: { locked: true },
+        expectedFlags: { locked: true },
+      },
+      change1: {
+        userVal: values[2],
+        expectedDefault: defaultVal,
+        expectedVal: defaultVal,
+        expectedFlags: { locked: true },
+      },
+      change2: {
+        defaultVal: values[2],
+        expectedDefault: defaultVal,
+        expectedVal: defaultVal,
+        expectedFlags: { locked: true },
+      },
     });
   }
 }
@@ -270,16 +329,20 @@ add_task(async function test_sharedMap_prefs() {
     for (let [pref, ops] of Object.entries(TESTS)) {
       if (ops[op]) {
         info(`Running ${op} for "${pref}"`);
-        await ops[op](pref,
-                      prefValues[pref] || undefined,
-                      prefValues.childList || undefined);
+        await ops[op](
+          pref,
+          prefValues[pref] || undefined,
+          prefValues.childList || undefined
+        );
       }
     }
   }
 
   await runChecks("beforeContent");
 
-  contentPage = await ExtensionTestUtils.loadContentPage("about:blank", {remote: true});
+  contentPage = await ExtensionTestUtils.loadContentPage("about:blank", {
+    remote: true,
+  });
   registerCleanupFunction(() => contentPage.close());
 
   contentPage.addFrameScriptHelper(FRAME_SCRIPT_INIT);

@@ -38,7 +38,7 @@ fuzzy-if(webrender,0-1,0-10000) == grayscale-zero.html grayscale-zero-ref.html
 == hue-rotate.html hue-rotate-ref.html
 == hue-rotate-360.html hue-rotate-360-ref.html
 == hue-rotate-grad.html hue-rotate-grad-ref.html
-fuzzy-if(webrender,2-2,7500-7500) fuzzy-if(d2d,0-2,0-7500) == hue-rotate-multichannel.html hue-rotate-multichannel-ref.html
+fuzzy-if(webrender&&!geckoview,2-2,7500-7500) fuzzy-if(d2d,0-2,0-7500) == hue-rotate-multichannel.html hue-rotate-multichannel-ref.html
 == hue-rotate-negative.html hue-rotate-negative-ref.html
 == hue-rotate-over-360.html hue-rotate-over-360-ref.html
 == hue-rotate-rad.html hue-rotate-rad-ref.html
@@ -50,18 +50,18 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||webrender,0-1,0-10000) == i
 == invert-over-one.html invert-over-one-ref.html
 fuzzy-if(webrender,0-1,0-10000) fuzzy-if(d2d,0-1,0-10000) == invert-percent.html invert-percent-ref.html
 == invert-zero.html invert-zero-ref.html
-fuzzy-if(webrender,1-1,10000-10000) fuzzy-if(d2d,0-1,0-10000) == opacity.html opacity-ref.html
+fuzzy-if(webrender&&!geckoview,1-1,10000-10000) fuzzy-if(d2d,0-1,0-10000) == opacity.html opacity-ref.html
 == opacity-one.html opacity-one-ref.html
 == opacity-over-one.html opacity-over-one-ref.html
 fuzzy-if(skiaContent,0-1,0-10000) == opacity-over-one-translucent-source.html opacity-over-one-translucent-source-ref.html
-fuzzy-if(webrender,1-1,10000-10000) fuzzy-if(d2d,0-1,0-10000) == opacity-percent.html opacity-percent-ref.html
+fuzzy-if(webrender&&!geckoview,1-1,10000-10000) fuzzy-if(d2d,0-1,0-10000) == opacity-percent.html opacity-percent-ref.html
 == opacity-zero.html opacity-zero-ref.html
 == saturate.html saturate-ref.html
-fuzzy-if(webrender,1-1,10000-10000) fuzzy-if(d2d,0-1,0-10000) == saturate-desaturate.html saturate-desaturate-ref.html
+fuzzy-if(webrender&&!geckoview,1-1,10000-10000) fuzzy-if(d2d,0-1,0-10000) == saturate-desaturate.html saturate-desaturate-ref.html
 == saturate-extreme.html saturate-extreme-ref.html
 == saturate-one.html saturate-one-ref.html
 == saturate-percent.html saturate-percent-ref.html
-fuzzy-if(webrender,1-1,10000-10000) fuzzy-if(d2d,0-1,0-10000) == saturate-zero.html saturate-zero-ref.html
+fuzzy-if(webrender&&!geckoview,1-1,10000-10000) fuzzy-if(d2d,0-1,0-10000) == saturate-zero.html saturate-zero-ref.html
 fuzzy-if(webrender,0-1,0-10000) fuzzy-if(d2d,0-1,0-10000) == sepia.html sepia-ref.html
 fuzzy-if(webrender,0-1,0-10000) fuzzy-if(d2d,0-1,0-10000) == sepia-one.html sepia-one-ref.html
 fuzzy-if(webrender,0-1,0-10000) fuzzy-if(d2d,0-1,0-10000) == sepia-over-one.html sepia-over-one-ref.html

@@ -1,5 +1,9 @@
-const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
-const {ASRouter} = ChromeUtils.import("resource://activity-stream/lib/ASRouter.jsm");
+const { actionTypes: at } = ChromeUtils.import(
+  "resource://activity-stream/common/Actions.jsm"
+);
+const { ASRouter } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouter.jsm"
+);
 
 /**
  * @class ASRouterFeed - Connects ASRouter singleton (see above) to Activity Stream's

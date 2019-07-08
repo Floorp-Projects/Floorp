@@ -4,14 +4,17 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "console",
-                               "resource://gre/modules/Console.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "console",
+  "resource://gre/modules/Console.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["EventEmitter"];
 
-let EventEmitter = this.EventEmitter = function() {};
+let EventEmitter = (this.EventEmitter = function() {});
 
 let loggingEnabled = Services.prefs.getBoolPref("toolkit.dump.emit");
 Services.prefs.addObserver("toolkit.dump.emit", {
@@ -116,9 +119,12 @@ EventEmitter.prototype = {
     }
     let listeners = this._eventEmitterListeners.get(event);
     if (listeners) {
-      this._eventEmitterListeners.set(event, listeners.filter(l => {
-        return l !== listener && l._originalListener !== listener;
-      }));
+      this._eventEmitterListeners.set(
+        event,
+        listeners.filter(l => {
+          return l !== listener && l._originalListener !== listener;
+        })
+      );
     }
   },
 
@@ -129,7 +135,10 @@ EventEmitter.prototype = {
   emit(event) {
     this.logEvent(event, arguments);
 
-    if (!this._eventEmitterListeners || !this._eventEmitterListeners.has(event)) {
+    if (
+      !this._eventEmitterListeners ||
+      !this._eventEmitterListeners.has(event)
+    ) {
       return;
     }
 
@@ -143,8 +152,10 @@ EventEmitter.prototype = {
 
       // If listeners were removed during emission, make sure the
       // event handler we're going to fire wasn't removed.
-      if (originalListeners === this._eventEmitterListeners.get(event) ||
-        this._eventEmitterListeners.get(event).some(l => l === listener)) {
+      if (
+        originalListeners === this._eventEmitterListeners.get(event) ||
+        this._eventEmitterListeners.get(event).some(l => l === listener)
+      ) {
         try {
           listener.apply(null, arguments);
         } catch (ex) {

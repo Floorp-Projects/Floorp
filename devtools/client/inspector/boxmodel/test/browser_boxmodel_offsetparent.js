@@ -16,7 +16,8 @@ const TEST_URI = `
   <div id="fixed" style="position: fixed"></div>
 `;
 
-const OFFSET_PARENT_SELECTOR = ".computed-property-value-container .objectBox-node";
+const OFFSET_PARENT_SELECTOR =
+  ".computed-property-value-container .objectBox-node";
 
 const res1 = [
   {
@@ -64,14 +65,20 @@ add_task(async function() {
 });
 
 async function testInitialValues(inspector, boxmodel) {
-  info("Test that the initial values of the box model offset parent are correct");
+  info(
+    "Test that the initial values of the box model offset parent are correct"
+  );
   const viewdoc = boxmodel.document;
 
   for (const { selector, offsetParentValue } of res1) {
     await selectNode(selector, inspector);
 
     const elt = viewdoc.querySelector(OFFSET_PARENT_SELECTOR);
-    is(elt && elt.textContent, offsetParentValue, selector + " has the right value.");
+    is(
+      elt && elt.textContent,
+      offsetParentValue,
+      selector + " has the right value."
+    );
   }
 }
 
@@ -89,7 +96,10 @@ async function testChangingValues(inspector, boxmodel, testActor) {
     await selectNode(selector, inspector);
 
     const elt = viewdoc.querySelector(OFFSET_PARENT_SELECTOR);
-    is(elt && elt.textContent, offsetParentValue,
-      selector + " has the right value after style update.");
+    is(
+      elt && elt.textContent,
+      offsetParentValue,
+      selector + " has the right value after style update."
+    );
   }
 }

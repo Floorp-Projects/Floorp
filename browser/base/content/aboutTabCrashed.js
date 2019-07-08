@@ -14,21 +14,12 @@ var AboutTabCrashed = {
   /**
    * The messages that we might receive from the parent.
    */
-  MESSAGES: [
-    "SetCrashReportAvailable",
-    "CrashReportSent",
-    "UpdateCount",
-  ],
+  MESSAGES: ["SetCrashReportAvailable", "CrashReportSent", "UpdateCount"],
 
   /**
    * Items for which we will listen for click events.
    */
-  CLICK_TARGETS: [
-    "closeTab",
-    "restoreTab",
-    "restoreAll",
-    "sendReport",
-  ],
+  CLICK_TARGETS: ["closeTab", "restoreTab", "restoreAll", "sendReport"],
 
   /**
    * Returns information about this crashed tab.
@@ -48,14 +39,17 @@ var AboutTabCrashed = {
     let titleMatch = queryString.match(/d=([^&]*)/);
     let URLMatch = queryString.match(/u=([^&]*)/);
 
-    return this.pageData = {
-      title: titleMatch && titleMatch[1] ? decodeURIComponent(titleMatch[1]) : "",
+    return (this.pageData = {
+      title:
+        titleMatch && titleMatch[1] ? decodeURIComponent(titleMatch[1]) : "",
       URL: URLMatch && URLMatch[1] ? decodeURIComponent(URLMatch[1]) : "",
-    };
+    });
   },
 
   init() {
-    this.MESSAGES.forEach((msg) => RPMAddMessageListener(msg, this.receiveMessage.bind(this)));
+    this.MESSAGES.forEach(msg =>
+      RPMAddMessageListener(msg, this.receiveMessage.bind(this))
+    );
     addEventListener("DOMContentLoaded", this);
 
     document.title = this.pageData.title;
@@ -96,7 +90,7 @@ var AboutTabCrashed = {
   },
 
   onDOMContentLoaded() {
-    this.CLICK_TARGETS.forEach((targetID) => {
+    this.CLICK_TARGETS.forEach(targetID => {
       let el = document.getElementById(targetID);
       el.addEventListener("click", this);
     });
@@ -105,7 +99,7 @@ var AboutTabCrashed = {
     document.getElementById("email").addEventListener("input", this);
 
     // Error pages are loaded as LOAD_BACKGROUND, so they don't get load events.
-    let event = new CustomEvent("AboutTabCrashedLoad", {bubbles: true});
+    let event = new CustomEvent("AboutTabCrashedLoad", { bubbles: true });
     document.dispatchEvent(event);
 
     RPMSendAsyncMessage("Load");
@@ -202,7 +196,7 @@ var AboutTabCrashed = {
       document.getElementById("requestAutoSubmit").hidden = false;
     }
 
-    let event = new CustomEvent("AboutTabCrashedReady", {bubbles: true});
+    let event = new CustomEvent("AboutTabCrashedReady", { bubbles: true });
     document.dispatchEvent(event);
   },
 

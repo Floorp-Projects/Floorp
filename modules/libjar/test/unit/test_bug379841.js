@@ -10,12 +10,14 @@ var ENTRY_TIME = new Date(Date.UTC(2007, 4, 7, 13, 35, 49, 0));
 
 function run_test() {
   var file = do_get_file(path);
-  var zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
-                  createInstance(Ci.nsIZipReader);
+  var zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(
+    Ci.nsIZipReader
+  );
   zipReader.open(file);
   var entry = zipReader.getEntry(ENTRY_NAME);
   var diff = Math.abs(entry.lastModifiedTime - ENTRY_TIME.getTime() * 1000);
   zipReader.close();
-  if (diff >= MAX_TIME_DIFF)
+  if (diff >= MAX_TIME_DIFF) {
     do_throw(diff);
+  }
 }

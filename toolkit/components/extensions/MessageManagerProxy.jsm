@@ -7,12 +7,12 @@
 
 var EXPORTED_SYMBOLS = ["MessageManagerProxy"];
 
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const {
-  DefaultMap,
-} = ExtensionUtils;
+const { DefaultMap } = ExtensionUtils;
 
 /**
  * Acts as a proxy for a message manager or message manager owner, and
@@ -79,7 +79,9 @@ class MessageManagerProxy {
    *        is tied to it.
    */
   static matches(target, messageManager) {
-    return target === messageManager || target.messageManager === messageManager;
+    return (
+      target === messageManager || target.messageManager === messageManager
+    );
   }
 
   /**
@@ -102,7 +104,9 @@ class MessageManagerProxy {
       return this.messageManager.sendAsyncMessage(...args);
     }
 
-    Cu.reportError(`Cannot send message: Other side disconnected: ${uneval(args)}`);
+    Cu.reportError(
+      `Cannot send message: Other side disconnected: ${uneval(args)}`
+    );
   }
 
   get isDisconnected() {
@@ -148,10 +152,10 @@ class MessageManagerProxy {
    * @private
    * Iterates over all of the currently registered message listeners.
    */
-  * iterListeners() {
+  *iterListeners() {
     for (let [message, listeners] of this.listeners) {
       for (let [listener, listenWhenClosed] of listeners) {
-        yield {message, listener, listenWhenClosed};
+        yield { message, listener, listenWhenClosed };
       }
     }
   }
@@ -169,8 +173,12 @@ class MessageManagerProxy {
     this.eventTarget = target;
     this.messageManager = target.messageManager;
 
-    for (let {message, listener, listenWhenClosed} of this.iterListeners()) {
-      this.messageManager.addMessageListener(message, listener, listenWhenClosed);
+    for (let { message, listener, listenWhenClosed } of this.iterListeners()) {
+      this.messageManager.addMessageListener(
+        message,
+        listener,
+        listenWhenClosed
+      );
     }
   }
 
@@ -184,7 +192,7 @@ class MessageManagerProxy {
   removeListeners(target) {
     target.removeEventListener("SwapDocShells", this);
 
-    for (let {message, listener} of this.iterListeners()) {
+    for (let { message, listener } of this.iterListeners()) {
       this.messageManager.removeMessageListener(message, listener);
     }
   }
@@ -195,9 +203,13 @@ class MessageManagerProxy {
       // The SwapDocShells event is dispatched for both browsers that are being
       // swapped. To avoid double-swapping, register the event handler after
       // both SwapDocShells events have fired.
-      this.eventTarget.addEventListener("EndSwapDocShells", () => {
-        this.addListeners(event.detail);
-      }, {once: true});
+      this.eventTarget.addEventListener(
+        "EndSwapDocShells",
+        () => {
+          this.addListeners(event.detail);
+        },
+        { once: true }
+      );
     }
   }
 }

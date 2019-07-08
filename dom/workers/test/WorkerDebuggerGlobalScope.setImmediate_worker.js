@@ -1,3 +1,3 @@
-"use strict"
+"use strict";
 
-self.onmessage = function () {};
+self.onmessage = function() {};

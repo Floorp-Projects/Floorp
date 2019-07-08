@@ -7,7 +7,9 @@
  * Unit tests for the PanelMultiView module.
  */
 
-const {PanelMultiView} = ChromeUtils.import("resource:///modules/PanelMultiView.jsm");
+const { PanelMultiView } = ChromeUtils.import(
+  "resource:///modules/PanelMultiView.jsm"
+);
 
 const PANELS_COUNT = 2;
 let gPanelAnchors = [];
@@ -18,8 +20,14 @@ const PANELVIEWS_COUNT = 4;
 let gPanelViews = [];
 let gPanelViewLabels = [];
 
-const EVENT_TYPES = ["popupshown", "popuphidden", "PanelMultiViewHidden",
-                     "ViewShowing", "ViewShown", "ViewHiding"];
+const EVENT_TYPES = [
+  "popupshown",
+  "popuphidden",
+  "PanelMultiViewHidden",
+  "ViewShowing",
+  "ViewShown",
+  "ViewHiding",
+];
 
 /**
  * Checks that the element is displayed, including the state of the popup where
@@ -32,16 +40,20 @@ const EVENT_TYPES = ["popupshown", "popuphidden", "PanelMultiViewHidden",
  */
 function is_visible(element) {
   var style = element.ownerGlobal.getComputedStyle(element);
-  if (style.display == "none")
+  if (style.display == "none") {
     return false;
-  if (style.visibility != "visible")
+  }
+  if (style.visibility != "visible") {
     return false;
-  if (style.display == "-moz-popup" && element.state != "open")
+  }
+  if (style.display == "-moz-popup" && element.state != "open") {
     return false;
+  }
 
   // Hiding a parent element will hide all its children
-  if (element.parentNode != element.ownerDocument)
+  if (element.parentNode != element.ownerDocument) {
     return is_visible(element.parentNode);
+  }
 
   return true;
 }
@@ -50,21 +62,31 @@ function is_visible(element) {
  * Checks whether the label in the specified view is visible.
  */
 function assertLabelVisible(viewIndex, expectedVisible) {
-  Assert.equal(is_visible(gPanelViewLabels[viewIndex]), expectedVisible,
-               `Visibility of label in view ${viewIndex}`);
+  Assert.equal(
+    is_visible(gPanelViewLabels[viewIndex]),
+    expectedVisible,
+    `Visibility of label in view ${viewIndex}`
+  );
 }
 
 /**
  * Opens the specified view as the main view in the specified panel.
  */
 async function openPopup(panelIndex, viewIndex) {
-  gPanelMultiViews[panelIndex].setAttribute("mainViewId",
-                                            gPanelViews[viewIndex].id);
+  gPanelMultiViews[panelIndex].setAttribute(
+    "mainViewId",
+    gPanelViews[viewIndex].id
+  );
 
-  let promiseShown = BrowserTestUtils.waitForEvent(gPanelViews[viewIndex],
-                                                   "ViewShown");
-  PanelMultiView.openPopup(gPanels[panelIndex], gPanelAnchors[panelIndex],
-                           "bottomcenter topright");
+  let promiseShown = BrowserTestUtils.waitForEvent(
+    gPanelViews[viewIndex],
+    "ViewShown"
+  );
+  PanelMultiView.openPopup(
+    gPanels[panelIndex],
+    gPanelAnchors[panelIndex],
+    "bottomcenter topright"
+  );
   await promiseShown;
 
   Assert.ok(PanelView.forNode(gPanelViews[viewIndex]).active);
@@ -75,11 +97,15 @@ async function openPopup(panelIndex, viewIndex) {
  * Closes the specified panel.
  */
 async function hidePopup(panelIndex) {
-  gPanelMultiViews[panelIndex].setAttribute("mainViewId",
-                                            gPanelViews[panelIndex].id);
+  gPanelMultiViews[panelIndex].setAttribute(
+    "mainViewId",
+    gPanelViews[panelIndex].id
+  );
 
-  let promiseHidden = BrowserTestUtils.waitForEvent(gPanels[panelIndex],
-                                                   "popuphidden");
+  let promiseHidden = BrowserTestUtils.waitForEvent(
+    gPanels[panelIndex],
+    "popuphidden"
+  );
   PanelMultiView.hidePopup(gPanels[panelIndex]);
   await promiseHidden;
 }
@@ -88,8 +114,10 @@ async function hidePopup(panelIndex) {
  * Opens the specified subview in the specified panel.
  */
 async function showSubView(panelIndex, viewIndex) {
-  let promiseShown = BrowserTestUtils.waitForEvent(gPanelViews[viewIndex],
-                                                   "ViewShown");
+  let promiseShown = BrowserTestUtils.waitForEvent(
+    gPanelViews[viewIndex],
+    "ViewShown"
+  );
   gPanelMultiViews[panelIndex].showSubView(gPanelViews[viewIndex]);
   await promiseShown;
 
@@ -101,8 +129,10 @@ async function showSubView(panelIndex, viewIndex) {
  * Navigates backwards to the specified view, which is displayed as a result.
  */
 async function goBack(panelIndex, viewIndex) {
-  let promiseShown = BrowserTestUtils.waitForEvent(gPanelViews[viewIndex],
-                                                   "ViewShown");
+  let promiseShown = BrowserTestUtils.waitForEvent(
+    gPanelViews[viewIndex],
+    "ViewShown"
+  );
   gPanelMultiViews[panelIndex].goBack();
   await promiseShown;
 
@@ -114,15 +144,19 @@ async function goBack(panelIndex, viewIndex) {
  * Records the specified events on an element into the specified array. An
  * optional callback can be used to respond to events and trigger nested events.
  */
-function recordEvents(element, eventTypes, recordArray,
-                      eventCallback = () => {}) {
+function recordEvents(
+  element,
+  eventTypes,
+  recordArray,
+  eventCallback = () => {}
+) {
   let nestedEvents = [];
   element.recorders = eventTypes.map(eventType => {
     let recorder = {
       eventType,
       listener(event) {
-        let eventString = nestedEvents.join("") +
-          `${event.originalTarget.id}: ${event.type}`;
+        let eventString =
+          nestedEvents.join("") + `${event.originalTarget.id}: ${event.type}`;
         info(`Event on ${eventString}`);
         recordArray.push(eventString);
         // Any synchronous event triggered from within the given callback will
@@ -167,8 +201,10 @@ add_task(async function test_setup() {
 
   for (let i = 0; i < PANELS_COUNT; i++) {
     gPanelAnchors[i] = document.createXULElement("toolbarbutton");
-    gPanelAnchors[i].classList.add("toolbarbutton-1",
-                                   "chromeclass-toolbar-additional");
+    gPanelAnchors[i].classList.add(
+      "toolbarbutton-1",
+      "chromeclass-toolbar-additional"
+    );
     navBar.appendChild(gPanelAnchors[i]);
 
     gPanels[i] = document.createXULElement("panel");
@@ -290,8 +326,10 @@ add_task(async function test_navigation_suppression() {
   // Test re-entering the "showSubView" method.
   let promiseShown = BrowserTestUtils.waitForEvent(gPanelViews[1], "ViewShown");
   gPanelMultiViews[0].showSubView(gPanelViews[1]);
-  Assert.ok(!PanelView.forNode(gPanelViews[0]).active,
-            "The previous view should become inactive synchronously.");
+  Assert.ok(
+    !PanelView.forNode(gPanelViews[0]).active,
+    "The previous view should become inactive synchronously."
+  );
 
   // The following call will have no effect.
   gPanelMultiViews[0].showSubView(gPanelViews[2]);
@@ -300,8 +338,10 @@ add_task(async function test_navigation_suppression() {
   // Test re-entering the "goBack" method.
   promiseShown = BrowserTestUtils.waitForEvent(gPanelViews[0], "ViewShown");
   gPanelMultiViews[0].goBack();
-  Assert.ok(!PanelView.forNode(gPanelViews[1]).active,
-            "The previous view should become inactive synchronously.");
+  Assert.ok(
+    !PanelView.forNode(gPanelViews[1]).active,
+    "The previous view should become inactive synchronously."
+  );
 
   // The following call will have no effect.
   gPanelMultiViews[0].goBack();
@@ -397,8 +437,11 @@ add_task(async function test_cancel_mainview_event_sequence() {
   gPanelMultiViews[0].setAttribute("mainViewId", gPanelViews[0].id);
 
   let promiseHidden = BrowserTestUtils.waitForEvent(gPanels[0], "popuphidden");
-  PanelMultiView.openPopup(gPanels[0], gPanelAnchors[0],
-                           "bottomcenter topright");
+  PanelMultiView.openPopup(
+    gPanels[0],
+    gPanelAnchors[0],
+    "bottomcenter topright"
+  );
   await promiseHidden;
 
   stopRecordingEvents(gPanels[0]);
@@ -417,16 +460,20 @@ add_task(async function test_cancel_mainview_event_sequence() {
 add_task(async function test_cancel_subview_event_sequence() {
   let recordArray = [];
   recordEvents(gPanels[0], EVENT_TYPES, recordArray, event => {
-    if (event.type == "ViewShowing" &&
-        event.originalTarget.id == gPanelViews[1].id) {
+    if (
+      event.type == "ViewShowing" &&
+      event.originalTarget.id == gPanelViews[1].id
+    ) {
       event.preventDefault();
     }
   });
 
   await openPopup(0, 0);
 
-  let promiseHiding = BrowserTestUtils.waitForEvent(gPanelViews[1],
-                                                    "ViewHiding");
+  let promiseHiding = BrowserTestUtils.waitForEvent(
+    gPanelViews[1],
+    "ViewHiding"
+  );
   gPanelMultiViews[0].showSubView(gPanelViews[1]);
   await promiseHiding;
 
@@ -465,10 +512,15 @@ add_task(async function test_close_while_showing_mainview_event_sequence() {
   gPanelMultiViews[0].setAttribute("mainViewId", gPanelViews[0].id);
 
   let promiseHidden = BrowserTestUtils.waitForEvent(gPanels[0], "popuphidden");
-  let promiseHiding = BrowserTestUtils.waitForEvent(gPanelViews[0],
-                                                    "ViewHiding");
-  PanelMultiView.openPopup(gPanels[0], gPanelAnchors[0],
-                           "bottomcenter topright");
+  let promiseHiding = BrowserTestUtils.waitForEvent(
+    gPanelViews[0],
+    "ViewHiding"
+  );
+  PanelMultiView.openPopup(
+    gPanels[0],
+    gPanelAnchors[0],
+    "bottomcenter topright"
+  );
   await promiseHiding;
   await promiseHidden;
 
@@ -488,8 +540,10 @@ add_task(async function test_close_while_showing_mainview_event_sequence() {
 add_task(async function test_close_while_showing_subview_event_sequence() {
   let recordArray = [];
   recordEvents(gPanels[0], EVENT_TYPES, recordArray, event => {
-    if (event.type == "ViewShowing" &&
-        event.originalTarget.id == gPanelViews[1].id) {
+    if (
+      event.type == "ViewShowing" &&
+      event.originalTarget.id == gPanelViews[1].id
+    ) {
       PanelMultiView.hidePopup(gPanels[0]);
     }
   });

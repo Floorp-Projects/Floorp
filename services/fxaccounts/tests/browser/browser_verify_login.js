@@ -7,7 +7,8 @@ add_task(async function() {
       deviceName: "Laptop",
       url: "http://localhost/newLogin",
       title: "Sign-in Request",
-      body: "New sign-in request from vershwal's Nighty on Intel Mac OS X 10.12",
+      body:
+        "New sign-in request from vershwal's Nighty on Intel Mac OS X 10.12",
     },
   };
   info("testVerifyNewSignin");
@@ -17,7 +18,11 @@ add_task(async function() {
 
   let waitForTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
 
-  Services.obs.notifyObservers(null, "fxaccounts:verify_login", JSON.stringify(payload.data));
+  Services.obs.notifyObservers(
+    null,
+    "fxaccounts:verify_login",
+    JSON.stringify(payload.data)
+  );
 
   let tab = await waitForTabPromise;
   Assert.ok("Tab successfully opened");

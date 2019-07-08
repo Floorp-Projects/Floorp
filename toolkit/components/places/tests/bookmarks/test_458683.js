@@ -15,7 +15,8 @@ const ITEM_URL = "http://test.mozilla.org/";
 const TAG_NAME = "testTag";
 
 function validateResults() {
-  let toolbar = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid).root;
+  let toolbar = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid)
+    .root;
   // test for our bookmark
   Assert.equal(toolbar.childCount, 1);
   for (var i = 0; i < toolbar.childCount; i++) {
@@ -44,20 +45,26 @@ add_task(async function() {
   // create a tag
   PlacesUtils.tagging.tagURI(Services.io.newURI(ITEM_URL), [TAG_NAME]);
   // get tag folder id
-  let tagRoot = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.tagsGuid).root;
+  let tagRoot = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.tagsGuid)
+    .root;
   Assert.equal(tagRoot.childCount, 1);
   let tagItemGuid = PlacesUtils.asContainer(tagRoot.getChild(0)).bookmarkGuid;
   tagRoot.containerOpen = false;
 
-  function insert({type, parentGuid}) {
-    return PlacesUtils.withConnectionWrapper("test_458683: insert", async db => {
-      await db.executeCached(
-        `INSERT INTO moz_bookmarks (type, parent, position, guid)
+  function insert({ type, parentGuid }) {
+    return PlacesUtils.withConnectionWrapper(
+      "test_458683: insert",
+      async db => {
+        await db.executeCached(
+          `INSERT INTO moz_bookmarks (type, parent, position, guid)
          VALUES (:type,
                  (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid),
                  (SELECT MAX(position) + 1 FROM moz_bookmarks WHERE parent = (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid)),
-                 GENERATE_GUID())`, {type, parentGuid});
-    });
+                 GENERATE_GUID())`,
+          { type, parentGuid }
+        );
+      }
+    );
   }
 
   // add a separator and a folder inside tag folder

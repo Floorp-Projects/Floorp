@@ -10,7 +10,7 @@ const TEST_URI = "<div id='testid'></div>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
   await testCreateNewSetOfCommentedAndUncommentedProperties(view);
 });
@@ -21,11 +21,15 @@ async function testCreateNewSetOfCommentedAndUncommentedProperties(view) {
   info("Focusing a new property name in the rule-view");
   const ruleEditor = getRuleViewRuleEditor(view, 0);
   const editor = await focusEditableField(view, ruleEditor.closeBrace);
-  is(inplaceEditor(ruleEditor.newPropSpan), editor,
-    "The new property editor has focus");
+  is(
+    inplaceEditor(ruleEditor.newPropSpan),
+    editor,
+    "The new property editor has focus"
+  );
 
   info(
-    "Entering a commented property/value pair into the property name editor");
+    "Entering a commented property/value pair into the property name editor"
+  );
   const input = editor.input;
   input.value = `color: blue;
                  /* background-color: yellow; */

@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["OfflineAppsChild"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
 
 class OfflineAppsChild extends ActorChild {
   constructor(dispatcher) {
@@ -37,16 +39,21 @@ class OfflineAppsChild extends ActorChild {
   }
 
   _getManifestURI(aWindow) {
-    if (!aWindow.document.documentElement)
+    if (!aWindow.document.documentElement) {
       return null;
+    }
 
     var attr = aWindow.document.documentElement.getAttribute("manifest");
-    if (!attr)
+    if (!attr) {
       return null;
+    }
 
     try {
-      return Services.io.newURI(attr, aWindow.document.characterSet,
-                                Services.io.newURI(aWindow.location.href));
+      return Services.io.newURI(
+        attr,
+        aWindow.document.characterSet,
+        Services.io.newURI(aWindow.location.href)
+      );
     } catch (e) {
       return null;
     }
@@ -60,8 +67,12 @@ class OfflineAppsChild extends ActorChild {
 
     let currentURI = aContentWindow.document.documentURIObject;
     // don't bother showing UI if the user has already made a decision
-    if (Services.perms.testExactPermission(currentURI, "offline-app") != Services.perms.UNKNOWN_ACTION)
+    if (
+      Services.perms.testExactPermission(currentURI, "offline-app") !=
+      Services.perms.UNKNOWN_ACTION
+    ) {
       return;
+    }
 
     try {
       if (Services.prefs.getBoolPref("offline-apps.allow_by_default")) {
@@ -80,17 +91,24 @@ class OfflineAppsChild extends ActorChild {
   }
 
   _startFetching(aDocument) {
-    if (!aDocument.documentElement)
+    if (!aDocument.documentElement) {
       return;
+    }
 
     let manifestURI = this._getManifestURI(aDocument.defaultView);
-    if (!manifestURI)
+    if (!manifestURI) {
       return;
+    }
 
-    var updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].
-                        getService(Ci.nsIOfflineCacheUpdateService);
-    updateService.scheduleUpdate(manifestURI, aDocument.documentURIObject,
-                                 aDocument.nodePrincipal, aDocument.defaultView);
+    var updateService = Cc[
+      "@mozilla.org/offlinecacheupdate-service;1"
+    ].getService(Ci.nsIOfflineCacheUpdateService);
+    updateService.scheduleUpdate(
+      manifestURI,
+      aDocument.documentURIObject,
+      aDocument.nodePrincipal,
+      aDocument.defaultView
+    );
   }
 
   receiveMessage(aMessage) {
@@ -109,12 +127,13 @@ class OfflineAppsChild extends ActorChild {
       let cacheUpdate = aSubject.QueryInterface(Ci.nsIOfflineCacheUpdate);
       let uri = cacheUpdate.manifestURI;
       if (uri && this._docManifestSet.has(uri.spec)) {
-        this.mm.sendAsyncMessage("OfflineApps:CheckUsage", {uri: uri.spec});
+        this.mm.sendAsyncMessage("OfflineApps:CheckUsage", { uri: uri.spec });
       }
     }
   }
 }
 
-OfflineAppsChild.prototype.QueryInterface =
-  ChromeUtils.generateQI([Ci.nsIObserver,
-                          Ci.nsISupportsWeakReference]);
+OfflineAppsChild.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsIObserver,
+  Ci.nsISupportsWeakReference,
+]);

@@ -2,25 +2,33 @@ const { Cc, Ci } = SpecialPowers;
 
 function hasTabModalPrompts() {
   var prefName = "prompts.tab_modal.enabled";
-  var Services = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm").Services;
-  return Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
-         Services.prefs.getBoolPref(prefName);
+  var Services = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm")
+    .Services;
+  return (
+    Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
+    Services.prefs.getBoolPref(prefName)
+  );
 }
 var isTabModal = hasTabModalPrompts();
 var isSelectDialog = false;
-var isOSX = ("nsILocalFileMac" in SpecialPowers.Ci);
+var isOSX = "nsILocalFileMac" in SpecialPowers.Ci;
 var isE10S = SpecialPowers.Services.appinfo.processType == 2;
 
-
-var gChromeScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("chromeScript.js"));
+var gChromeScript = SpecialPowers.loadChromeScript(
+  SimpleTest.getTestFileURL("chromeScript.js")
+);
 SimpleTest.registerCleanupFunction(() => gChromeScript.destroy());
 
 function onloadPromiseFor(id) {
   var iframe = document.getElementById(id);
   return new Promise(resolve => {
-    iframe.addEventListener("load", function(e) {
-      resolve(true);
-    }, {once: true});
+    iframe.addEventListener(
+      "load",
+      function(e) {
+        resolve(true);
+      },
+      { once: true }
+    );
   });
 }
 
@@ -31,14 +39,14 @@ function onloadPromiseFor(id) {
  * If you know the state of the prompt you expect you should use `handlePrompt` instead.
  * @param {object} action defining how to handle the prompt
  * @returns {Promise} resolving with the prompt state.
-*/
+ */
 function handlePromptWithoutChecks(action) {
   return new Promise(resolve => {
     gChromeScript.addMessageListener("promptHandled", function handled(msg) {
       gChromeScript.removeMessageListener("promptHandled", handled);
       resolve(msg.promptState);
     });
-    gChromeScript.sendAsyncMessage("handlePrompt", { action, isTabModal});
+    gChromeScript.sendAsyncMessage("handlePrompt", { action, isTabModal });
   });
 }
 
@@ -48,72 +56,146 @@ async function handlePrompt(state, action) {
 }
 
 function checkPromptState(promptState, expectedState) {
-    info(`checkPromptState: Expected: ${expectedState.msg}`);
-    // XXX check title? OS X has title in content
-    is(promptState.msg, expectedState.msg, "Checking expected message");
-    if (isOSX && !isTabModal)
-      ok(!promptState.titleHidden, "Checking title always visible on OS X");
-    else
-      is(promptState.titleHidden, expectedState.titleHidden, "Checking title visibility");
-    is(promptState.textHidden, expectedState.textHidden, "Checking textbox visibility");
-    is(promptState.passHidden, expectedState.passHidden, "Checking passbox visibility");
-    is(promptState.checkHidden, expectedState.checkHidden, "Checking checkbox visibility");
-    is(promptState.checkMsg, expectedState.checkMsg, "Checking checkbox label");
-    is(promptState.checked, expectedState.checked, "Checking checkbox checked");
-    if (!isTabModal)
-      is(promptState.iconClass, expectedState.iconClass, "Checking expected icon CSS class");
-    is(promptState.textValue, expectedState.textValue, "Checking textbox value");
-    is(promptState.passValue, expectedState.passValue, "Checking passbox value");
+  info(`checkPromptState: Expected: ${expectedState.msg}`);
+  // XXX check title? OS X has title in content
+  is(promptState.msg, expectedState.msg, "Checking expected message");
+  if (isOSX && !isTabModal) {
+    ok(!promptState.titleHidden, "Checking title always visible on OS X");
+  } else {
+    is(
+      promptState.titleHidden,
+      expectedState.titleHidden,
+      "Checking title visibility"
+    );
+  }
+  is(
+    promptState.textHidden,
+    expectedState.textHidden,
+    "Checking textbox visibility"
+  );
+  is(
+    promptState.passHidden,
+    expectedState.passHidden,
+    "Checking passbox visibility"
+  );
+  is(
+    promptState.checkHidden,
+    expectedState.checkHidden,
+    "Checking checkbox visibility"
+  );
+  is(promptState.checkMsg, expectedState.checkMsg, "Checking checkbox label");
+  is(promptState.checked, expectedState.checked, "Checking checkbox checked");
+  if (!isTabModal) {
+    is(
+      promptState.iconClass,
+      expectedState.iconClass,
+      "Checking expected icon CSS class"
+    );
+  }
+  is(promptState.textValue, expectedState.textValue, "Checking textbox value");
+  is(promptState.passValue, expectedState.passValue, "Checking passbox value");
 
-    if (expectedState.butt0Label) {
-        is(promptState.butt0Label, expectedState.butt0Label, "Checking accept-button label");
-    }
-    if (expectedState.butt1Label) {
-        is(promptState.butt1Label, expectedState.butt1Label, "Checking cancel-button label");
-    }
-    if (expectedState.butt2Label) {
-        is(promptState.butt2Label, expectedState.butt2Label, "Checking extra1-button label");
-    }
+  if (expectedState.butt0Label) {
+    is(
+      promptState.butt0Label,
+      expectedState.butt0Label,
+      "Checking accept-button label"
+    );
+  }
+  if (expectedState.butt1Label) {
+    is(
+      promptState.butt1Label,
+      expectedState.butt1Label,
+      "Checking cancel-button label"
+    );
+  }
+  if (expectedState.butt2Label) {
+    is(
+      promptState.butt2Label,
+      expectedState.butt2Label,
+      "Checking extra1-button label"
+    );
+  }
 
-    // For prompts with a time-delay button.
-    if (expectedState.butt0Disabled) {
-        is(promptState.butt0Disabled, true, "Checking accept-button is disabled");
-        is(promptState.butt1Disabled, false, "Checking cancel-button isn't disabled");
-    }
+  // For prompts with a time-delay button.
+  if (expectedState.butt0Disabled) {
+    is(promptState.butt0Disabled, true, "Checking accept-button is disabled");
+    is(
+      promptState.butt1Disabled,
+      false,
+      "Checking cancel-button isn't disabled"
+    );
+  }
 
-    is(promptState.defButton0, expectedState.defButton == "button0", "checking button0 default");
-    is(promptState.defButton1, expectedState.defButton == "button1", "checking button1 default");
-    is(promptState.defButton2, expectedState.defButton == "button2", "checking button2 default");
+  is(
+    promptState.defButton0,
+    expectedState.defButton == "button0",
+    "checking button0 default"
+  );
+  is(
+    promptState.defButton1,
+    expectedState.defButton == "button1",
+    "checking button1 default"
+  );
+  is(
+    promptState.defButton2,
+    expectedState.defButton == "button2",
+    "checking button2 default"
+  );
 
-    if (isOSX && expectedState.focused && expectedState.focused.startsWith("button")) {
-        is(promptState.focused, "infoBody", "buttons don't focus on OS X, but infoBody does instead");
-    } else {
-        is(promptState.focused, expectedState.focused, "Checking focused element");
-    }
+  if (
+    isOSX &&
+    expectedState.focused &&
+    expectedState.focused.startsWith("button")
+  ) {
+    is(
+      promptState.focused,
+      "infoBody",
+      "buttons don't focus on OS X, but infoBody does instead"
+    );
+  } else {
+    is(promptState.focused, expectedState.focused, "Checking focused element");
+  }
 
-    if (expectedState.hasOwnProperty("chrome")) {
-        is(promptState.chrome, expectedState.chrome, "Dialog should be opened as chrome");
-    }
-    if (expectedState.hasOwnProperty("dialog")) {
-        is(promptState.dialog, expectedState.dialog, "Dialog should be opened as a dialog");
-    }
-    if (expectedState.hasOwnProperty("chromeDependent")) {
-        is(promptState.chromeDependent, expectedState.chromeDependent, "Dialog should be opened as dependent");
-    }
-    if (expectedState.hasOwnProperty("isWindowModal")) {
-        is(promptState.isWindowModal, expectedState.isWindowModal, "Dialog should be modal");
-    }
+  if (expectedState.hasOwnProperty("chrome")) {
+    is(
+      promptState.chrome,
+      expectedState.chrome,
+      "Dialog should be opened as chrome"
+    );
+  }
+  if (expectedState.hasOwnProperty("dialog")) {
+    is(
+      promptState.dialog,
+      expectedState.dialog,
+      "Dialog should be opened as a dialog"
+    );
+  }
+  if (expectedState.hasOwnProperty("chromeDependent")) {
+    is(
+      promptState.chromeDependent,
+      expectedState.chromeDependent,
+      "Dialog should be opened as dependent"
+    );
+  }
+  if (expectedState.hasOwnProperty("isWindowModal")) {
+    is(
+      promptState.isWindowModal,
+      expectedState.isWindowModal,
+      "Dialog should be modal"
+    );
+  }
 }
 
 function checkEchoedAuthInfo(expectedState, doc) {
-    // The server echos back the HTTP auth info it received.
-    let username = doc.getElementById("user").textContent;
-    let password = doc.getElementById("pass").textContent;
-    let authok = doc.getElementById("ok").textContent;
+  // The server echos back the HTTP auth info it received.
+  let username = doc.getElementById("user").textContent;
+  let password = doc.getElementById("pass").textContent;
+  let authok = doc.getElementById("ok").textContent;
 
-    is(authok, "PASS", "Checking for successful authentication");
-    is(username, expectedState.user, "Checking for echoed username");
-    is(password, expectedState.pass, "Checking for echoed password");
+  is(authok, "PASS", "Checking for successful authentication");
+  is(username, expectedState.user, "Checking for echoed username");
+  is(password, expectedState.pass, "Checking for echoed password");
 }
 
 /**
@@ -129,52 +211,61 @@ function checkEchoedAuthInfo(expectedState, doc) {
  *          been modified.
  */
 function PrompterProxy(chromeScript) {
-  return new Proxy({}, {
-    get(target, prop, receiver) {
-      return (...args) => {
-        // Array of indices of out/inout params to copy from the parent back to the caller.
-        let outParams = [];
+  return new Proxy(
+    {},
+    {
+      get(target, prop, receiver) {
+        return (...args) => {
+          // Array of indices of out/inout params to copy from the parent back to the caller.
+          let outParams = [];
 
-        switch (prop) {
-          case "prompt": {
-            outParams = [/* result */ 5];
-            break;
+          switch (prop) {
+            case "prompt": {
+              outParams = [/* result */ 5];
+              break;
+            }
+            case "promptAuth": {
+              outParams = [];
+              break;
+            }
+            case "promptPassword": {
+              outParams = [/* pwd */ 4];
+              break;
+            }
+            case "promptUsernameAndPassword": {
+              outParams = [/* user */ 4, /* pwd */ 5];
+              break;
+            }
+            default: {
+              throw new Error("Unknown nsIAuthPrompt method");
+            }
           }
-          case "promptAuth": {
-            outParams = [];
-            break;
-          }
-          case "promptPassword": {
-            outParams = [/* pwd */ 4];
-            break;
-          }
-          case "promptUsernameAndPassword": {
-            outParams = [/* user */ 4, /* pwd */ 5];
-            break;
-          }
-          default: {
-            throw new Error("Unknown nsIAuthPrompt method");
-          }
-        }
 
-        let result = chromeScript.sendSyncMessage("proxyPrompter", {
-          args,
-          methodName: prop,
-        })[0][0];
+          let result;
+          chromeScript
+            .sendQuery("proxyPrompter", {
+              args,
+              methodName: prop,
+            })
+            .then(val => {
+              result = val;
+            });
+          SpecialPowers.Services.tm.spinEventLoopUntil(() => result);
 
-        for (let outParam of outParams) {
-          // Copy the out or inout param value over the original
-          args[outParam].value = result.args[outParam].value;
-        }
+          for (let outParam of outParams) {
+            // Copy the out or inout param value over the original
+            args[outParam].value = result.args[outParam].value;
+          }
 
-        if (prop == "promptAuth") {
-          args[2].username = result.args[2].username;
-          args[2].password = result.args[2].password;
-          args[2].domain = result.args[2].domain;
-        }
+          if (prop == "promptAuth") {
+            args[2].username = result.args[2].username;
+            args[2].password = result.args[2].password;
+            args[2].domain = result.args[2].domain;
+          }
 
-        return result.rv;
-      };
-    },
-  });
+          return result.rv;
+        };
+      },
+    }
+  );
 }

@@ -3,8 +3,7 @@
 
 "use strict";
 
-const TEST_URI =
-  "data:text/html,Test evaluating null and undefined";
+const TEST_URI = "data:text/html,Test evaluating null and undefined";
 
 add_task(async function() {
   // Run test with legacy JsTerm

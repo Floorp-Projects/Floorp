@@ -11,7 +11,7 @@
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const { editableField } = require("devtools/client/shared/inplace-editor");
-const {colorUtils} = require("devtools/shared/css/color");
+const { colorUtils } = require("devtools/shared/css/color");
 
 /**
  * Create an inplace editor linked to a span element and click on the span to
@@ -25,7 +25,7 @@ const {colorUtils} = require("devtools/shared/css/color");
  *        (optional) String that will be used as the text content of the span.
  */
 const createInplaceEditorAndClick = async function(options, doc, textContent) {
-  const span = options.element = createSpan(doc);
+  const span = (options.element = createSpan(doc));
   if (textContent) {
     span.textContent = textContent;
   }
@@ -78,19 +78,23 @@ function createSpan(doc) {
  * @param {InplaceEditor} editor
  *        The InplaceEditor instance being tested
  */
-async function testCompletion([key, completion, index, total,
-    postLabel, colorSwatch], editor) {
+async function testCompletion(
+  [key, completion, index, total, postLabel, colorSwatch],
+  editor
+) {
   info("Pressing key " + key);
   info("Expecting " + completion);
 
   let onVisibilityChange = null;
   const open = total > 0;
   if (editor.popup.isOpen != open) {
-    onVisibilityChange = editor.popup.once(open ? "popup-opened" : "popup-closed");
+    onVisibilityChange = editor.popup.once(
+      open ? "popup-opened" : "popup-closed"
+    );
   }
 
   let onSuggest;
-  if (/(left|right|back_space|escape)/ig.test(key)) {
+  if (/(left|right|back_space|escape)/gi.test(key)) {
     info("Adding event listener for right|back_space|escape keys");
     onSuggest = once(editor.input, "keypress");
   } else {
@@ -113,16 +117,21 @@ async function testCompletion([key, completion, index, total,
   if (postLabel) {
     const selectedItem = editor.popup.getItems()[index];
     const selectedElement = editor.popup.elements.get(selectedItem);
-    ok(selectedElement.textContent.includes(postLabel),
-      "Selected popup element contains the expected post-label");
+    ok(
+      selectedElement.textContent.includes(postLabel),
+      "Selected popup element contains the expected post-label"
+    );
 
     // Determines if there is a color swatch attached to the label
     // and if the color swatch's background color matches the post label
     const swatchSpan = selectedElement.getElementsByClassName(
-      "autocomplete-swatch autocomplete-colorswatch");
+      "autocomplete-swatch autocomplete-colorswatch"
+    );
     if (colorSwatch) {
       ok(swatchSpan.length === 1, "Displayed the expected color swatch");
-      const color = new colorUtils.CssColor(swatchSpan[0].style.backgroundColor);
+      const color = new colorUtils.CssColor(
+        swatchSpan[0].style.backgroundColor
+      );
       const swatchColor = color.rgba;
       color.newColor(postLabel);
       const postColor = color.rgba;

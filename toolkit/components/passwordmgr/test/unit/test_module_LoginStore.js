@@ -9,8 +9,11 @@
 
 // Globals
 
-ChromeUtils.defineModuleGetter(this, "LoginStore",
-                               "resource://gre/modules/LoginStore.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginStore",
+  "resource://gre/modules/LoginStore.jsm"
+);
 
 const TEST_STORE_FILE_NAME = "test-logins.json";
 
@@ -26,20 +29,20 @@ add_task(async function test_save_reload() {
   await storeForSave.load();
 
   let rawLoginData = {
-    id:                  storeForSave.data.nextId++,
-    hostname:            "http://www.example.com",
-    httpRealm:           null,
-    formSubmitURL:       "http://www.example.com",
-    usernameField:       "field_" + String.fromCharCode(533, 537, 7570, 345),
-    passwordField:       "field_" + String.fromCharCode(421, 259, 349, 537),
-    encryptedUsername:   "(test)",
-    encryptedPassword:   "(test)",
-    guid:                "(test)",
-    encType:             Ci.nsILoginManagerCrypto.ENCTYPE_SDR,
-    timeCreated:         Date.now(),
-    timeLastUsed:        Date.now(),
+    id: storeForSave.data.nextId++,
+    hostname: "http://www.example.com",
+    httpRealm: null,
+    formSubmitURL: "http://www.example.com",
+    usernameField: "field_" + String.fromCharCode(533, 537, 7570, 345),
+    passwordField: "field_" + String.fromCharCode(421, 259, 349, 537),
+    encryptedUsername: "(test)",
+    encryptedPassword: "(test)",
+    guid: "(test)",
+    encType: Ci.nsILoginManagerCrypto.ENCTYPE_SDR,
+    timeCreated: Date.now(),
+    timeLastUsed: Date.now(),
     timePasswordChanged: Date.now(),
-    timesUsed:           1,
+    timesUsed: 1,
   };
   storeForSave.data.logins.push(rawLoginData);
 
@@ -98,45 +101,46 @@ add_task(async function test_save_empty() {
 add_task(async function test_load_string_predefined() {
   let store = new LoginStore(getTempFile(TEST_STORE_FILE_NAME).path);
 
-  let string = "{\"logins\":[{" +
-                "\"id\":1," +
-                "\"hostname\":\"http://www.example.com\"," +
-                "\"httpRealm\":null," +
-                "\"formSubmitURL\":\"http://www.example.com\"," +
-                "\"usernameField\":\"usernameField\"," +
-                "\"passwordField\":\"passwordField\"," +
-                "\"encryptedUsername\":\"(test)\"," +
-                "\"encryptedPassword\":\"(test)\"," +
-                "\"guid\":\"(test)\"," +
-                "\"encType\":1," +
-                "\"timeCreated\":1262304000000," +
-                "\"timeLastUsed\":1262390400000," +
-                "\"timePasswordChanged\":1262476800000," +
-                "\"timesUsed\":1}],\"disabledHosts\":[" +
-                "\"http://www.example.org\"]}";
+  let string =
+    '{"logins":[{' +
+    '"id":1,' +
+    '"hostname":"http://www.example.com",' +
+    '"httpRealm":null,' +
+    '"formSubmitURL":"http://www.example.com",' +
+    '"usernameField":"usernameField",' +
+    '"passwordField":"passwordField",' +
+    '"encryptedUsername":"(test)",' +
+    '"encryptedPassword":"(test)",' +
+    '"guid":"(test)",' +
+    '"encType":1,' +
+    '"timeCreated":1262304000000,' +
+    '"timeLastUsed":1262390400000,' +
+    '"timePasswordChanged":1262476800000,' +
+    '"timesUsed":1}],"disabledHosts":[' +
+    '"http://www.example.org"]}';
 
-  await OS.File.writeAtomic(store.path,
-                            new TextEncoder().encode(string),
-                            { tmpPath: store.path + ".tmp" });
+  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string), {
+    tmpPath: store.path + ".tmp",
+  });
 
   await store.load();
 
   Assert.equal(store.data.logins.length, 1);
   Assert.deepEqual(store.data.logins[0], {
-    id:                  1,
-    hostname:            "http://www.example.com",
-    httpRealm:           null,
-    formSubmitURL:       "http://www.example.com",
-    usernameField:       "usernameField",
-    passwordField:       "passwordField",
-    encryptedUsername:   "(test)",
-    encryptedPassword:   "(test)",
-    guid:                "(test)",
-    encType:             Ci.nsILoginManagerCrypto.ENCTYPE_SDR,
-    timeCreated:         1262304000000,
-    timeLastUsed:        1262390400000,
+    id: 1,
+    hostname: "http://www.example.com",
+    httpRealm: null,
+    formSubmitURL: "http://www.example.com",
+    usernameField: "usernameField",
+    passwordField: "passwordField",
+    encryptedUsername: "(test)",
+    encryptedPassword: "(test)",
+    guid: "(test)",
+    encType: Ci.nsILoginManagerCrypto.ENCTYPE_SDR,
+    timeCreated: 1262304000000,
+    timeLastUsed: 1262390400000,
     timePasswordChanged: 1262476800000,
-    timesUsed:           1,
+    timesUsed: 1,
   });
 });
 
@@ -146,11 +150,11 @@ add_task(async function test_load_string_predefined() {
 add_task(async function test_load_string_malformed() {
   let store = new LoginStore(getTempFile(TEST_STORE_FILE_NAME).path);
 
-  let string = "{\"logins\":[{\"hostname\":\"http://www.example.com\"," +
-                "\"id\":1,";
+  let string = '{"logins":[{"hostname":"http://www.example.com","id":1,';
 
-  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string),
-                            { tmpPath: store.path + ".tmp" });
+  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string), {
+    tmpPath: store.path + ".tmp",
+  });
 
   await store.load();
 
@@ -169,11 +173,11 @@ add_task(async function test_load_string_malformed() {
 add_task(async function test_load_string_malformed_sync() {
   let store = new LoginStore(getTempFile(TEST_STORE_FILE_NAME).path);
 
-  let string = "{\"logins\":[{\"hostname\":\"http://www.example.com\"," +
-                "\"id\":1,";
+  let string = '{"logins":[{"hostname":"http://www.example.com","id":1,';
 
-  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string),
-                            { tmpPath: store.path + ".tmp" });
+  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string), {
+    tmpPath: store.path + ".tmp",
+  });
 
   store.ensureDataReady();
 

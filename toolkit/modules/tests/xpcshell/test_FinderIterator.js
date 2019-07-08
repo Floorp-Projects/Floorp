@@ -1,11 +1,14 @@
-const { FinderIterator } = ChromeUtils.import("resource://gre/modules/FinderIterator.jsm");
+const { FinderIterator } = ChromeUtils.import(
+  "resource://gre/modules/FinderIterator.jsm"
+);
 
 var gFindResults = [];
 // Stub the method that instantiates nsIFind and does all the interaction with
 // the docShell to be searched through.
-FinderIterator._iterateDocument = function* (word, window, finder) {
-  for (let range of gFindResults)
+FinderIterator._iterateDocument = function*(word, window, finder) {
+  for (let range of gFindResults) {
     yield range;
+  }
 };
 
 FinderIterator._rangeStartsInLink = fakeRange => fakeRange.startsInLink;
@@ -18,19 +21,23 @@ function FakeRange(textContent, startsInLink = false) {
 
 var gMockWindow = {
   setTimeout(cb, delay) {
-    Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer)
+    Cc["@mozilla.org/timer;1"]
+      .createInstance(Ci.nsITimer)
       .initWithCallback(cb, delay, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 };
 
 var gMockFinder = {
-  _getWindow() { return gMockWindow; },
+  _getWindow() {
+    return gMockWindow;
+  },
 };
 
 function prepareIterator(findText, rangeCount) {
   gFindResults = [];
-  for (let i = rangeCount; --i >= 0;)
+  for (let i = rangeCount; --i >= 0; ) {
     gFindResults.push(new FakeRange(findText));
+  }
 }
 
 add_task(async function test_start() {
@@ -54,7 +61,11 @@ add_task(async function test_start() {
 
   Assert.equal(rangeCount, count, "Amount of ranges yielded should match!");
   Assert.ok(!FinderIterator.running, "Running state should match");
-  Assert.equal(FinderIterator._previousRanges.length, rangeCount, "Ranges cache should match");
+  Assert.equal(
+    FinderIterator._previousRanges.length,
+    rangeCount,
+    "Ranges cache should match"
+  );
 
   FinderIterator.reset();
 });
@@ -70,7 +81,11 @@ add_task(async function test_valid_arguments() {
     caseSensitive: false,
     entireWord: false,
     finder: gMockFinder,
-    listener: { onIteratorRangeFound(range) { ++count; } },
+    listener: {
+      onIteratorRangeFound(range) {
+        ++count;
+      },
+    },
     word: findText,
   });
 
@@ -80,42 +95,83 @@ add_task(async function test_valid_arguments() {
   Assert.equal(params.word, findText, "Words should match");
 
   count = 0;
-  Assert.throws(() => FinderIterator.start({
-    entireWord: false,
-    listener: { onIteratorRangeFound(range) { ++count; } },
-    word: findText,
-  }), /Missing required option 'caseSensitive'/, "Should throw when missing an argument");
+  Assert.throws(
+    () =>
+      FinderIterator.start({
+        entireWord: false,
+        listener: {
+          onIteratorRangeFound(range) {
+            ++count;
+          },
+        },
+        word: findText,
+      }),
+    /Missing required option 'caseSensitive'/,
+    "Should throw when missing an argument"
+  );
   FinderIterator.reset();
 
-  Assert.throws(() => FinderIterator.start({
-    caseSensitive: false,
-    listener: { onIteratorRangeFound(range) { ++count; } },
-    word: findText,
-  }), /Missing required option 'entireWord'/, "Should throw when missing an argument");
+  Assert.throws(
+    () =>
+      FinderIterator.start({
+        caseSensitive: false,
+        listener: {
+          onIteratorRangeFound(range) {
+            ++count;
+          },
+        },
+        word: findText,
+      }),
+    /Missing required option 'entireWord'/,
+    "Should throw when missing an argument"
+  );
   FinderIterator.reset();
 
-  Assert.throws(() => FinderIterator.start({
-    caseSensitive: false,
-    entireWord: false,
-    listener: { onIteratorRangeFound(range) { ++count; } },
-    word: findText,
-  }), /Missing required option 'finder'/, "Should throw when missing an argument");
+  Assert.throws(
+    () =>
+      FinderIterator.start({
+        caseSensitive: false,
+        entireWord: false,
+        listener: {
+          onIteratorRangeFound(range) {
+            ++count;
+          },
+        },
+        word: findText,
+      }),
+    /Missing required option 'finder'/,
+    "Should throw when missing an argument"
+  );
   FinderIterator.reset();
 
-  Assert.throws(() => FinderIterator.start({
-    caseSensitive: true,
-    entireWord: false,
-    finder: gMockFinder,
-    word: findText,
-  }), /Missing valid, required option 'listener'/, "Should throw when missing an argument");
+  Assert.throws(
+    () =>
+      FinderIterator.start({
+        caseSensitive: true,
+        entireWord: false,
+        finder: gMockFinder,
+        word: findText,
+      }),
+    /Missing valid, required option 'listener'/,
+    "Should throw when missing an argument"
+  );
   FinderIterator.reset();
 
-  Assert.throws(() => FinderIterator.start({
-    caseSensitive: false,
-    entireWord: true,
-    finder: gMockFinder,
-    listener: { onIteratorRangeFound(range) { ++count; } },
-  }), /Missing required option 'word'/, "Should throw when missing an argument");
+  Assert.throws(
+    () =>
+      FinderIterator.start({
+        caseSensitive: false,
+        entireWord: true,
+        finder: gMockFinder,
+        listener: {
+          onIteratorRangeFound(range) {
+            ++count;
+          },
+        },
+      }),
+    /Missing required option 'word'/,
+    "Should throw when missing an argument"
+  );
   FinderIterator.reset();
 
   Assert.equal(count, 0, "No ranges should've been counted");
@@ -131,7 +187,11 @@ add_task(async function test_stop() {
     caseSensitive: false,
     entireWord: false,
     finder: gMockFinder,
-    listener: { onIteratorRangeFound(range) { ++count; } },
+    listener: {
+      onIteratorRangeFound(range) {
+        ++count;
+      },
+    },
     word: findText,
   });
 
@@ -154,19 +214,31 @@ add_task(async function test_reset() {
     caseSensitive: false,
     entireWord: false,
     finder: gMockFinder,
-    listener: { onIteratorRangeFound(range) { ++count; } },
+    listener: {
+      onIteratorRangeFound(range) {
+        ++count;
+      },
+    },
     word: findText,
   });
 
   Assert.ok(FinderIterator.running, "Yup, running we are");
   Assert.equal(count, 0, "Number of ranges should match 0");
-  Assert.equal(FinderIterator.ranges.length, 0, "Number of ranges should match 0");
+  Assert.equal(
+    FinderIterator.ranges.length,
+    0,
+    "Number of ranges should match 0"
+  );
 
   FinderIterator.reset();
 
   Assert.ok(!FinderIterator.running, "Nope, running we are not");
   Assert.equal(FinderIterator.ranges.length, 0, "No ranges after reset");
-  Assert.equal(FinderIterator._previousRanges.length, 0, "No ranges after reset");
+  Assert.equal(
+    FinderIterator._previousRanges.length,
+    0,
+    "No ranges after reset"
+  );
 
   await whenDone;
 
@@ -184,7 +256,11 @@ add_task(async function test_parallel_starts() {
     caseSensitive: false,
     entireWord: false,
     finder: gMockFinder,
-    listener: { onIteratorRangeFound(range) { ++count; } },
+    listener: {
+      onIteratorRangeFound(range) {
+        ++count;
+      },
+    },
     word: findText,
   });
 
@@ -196,7 +272,11 @@ add_task(async function test_parallel_starts() {
     caseSensitive: false,
     entireWord: false,
     finder: gMockFinder,
-    listener: { onIteratorRangeFound(range) { ++count2; } },
+    listener: {
+      onIteratorRangeFound(range) {
+        ++count2;
+      },
+    },
     word: findText,
   });
 
@@ -209,12 +289,24 @@ add_task(async function test_parallel_starts() {
   await whenDone;
   await whenDone2;
 
-  Assert.greater(count, FinderIterator.kIterationSizeMax, "At least one range should've been found");
+  Assert.greater(
+    count,
+    FinderIterator.kIterationSizeMax,
+    "At least one range should've been found"
+  );
   Assert.less(count, rangeCount, "Not all ranges should've been found");
-  Assert.greater(count2, FinderIterator.kIterationSizeMax, "At least one range should've been found");
+  Assert.greater(
+    count2,
+    FinderIterator.kIterationSizeMax,
+    "At least one range should've been found"
+  );
   Assert.less(count2, rangeCount, "Not all ranges should've been found");
 
-  Assert.equal(count2, count, "The second start was later, but should have caught up");
+  Assert.equal(
+    count2,
+    count,
+    "The second start was later, but should have caught up"
+  );
 
   FinderIterator.reset();
 });
@@ -230,7 +322,11 @@ add_task(async function test_allowDistance() {
     caseSensitive: false,
     entireWord: false,
     finder: gMockFinder,
-    listener: { onIteratorRangeFound(range) { ++count; } },
+    listener: {
+      onIteratorRangeFound(range) {
+        ++count;
+      },
+    },
     word: findText,
   });
 
@@ -239,7 +335,11 @@ add_task(async function test_allowDistance() {
     caseSensitive: false,
     entireWord: false,
     finder: gMockFinder,
-    listener: { onIteratorRangeFound(range) { ++count2; } },
+    listener: {
+      onIteratorRangeFound(range) {
+        ++count2;
+      },
+    },
     word: "gu",
   });
 
@@ -249,15 +349,31 @@ add_task(async function test_allowDistance() {
     caseSensitive: false,
     entireWord: false,
     finder: gMockFinder,
-    listener: { onIteratorRangeFound(range) { ++count3; } },
+    listener: {
+      onIteratorRangeFound(range) {
+        ++count3;
+      },
+    },
     word: "gu",
   });
 
   await Promise.all([whenDone, whenDone2, whenDone3]);
 
-  Assert.equal(count, rangeCount, "The first iterator invocation should yield all results");
-  Assert.equal(count2, 0, "The second iterator invocation should yield _no_ results");
-  Assert.equal(count3, rangeCount, "The first iterator invocation should yield all results");
+  Assert.equal(
+    count,
+    rangeCount,
+    "The first iterator invocation should yield all results"
+  );
+  Assert.equal(
+    count2,
+    0,
+    "The second iterator invocation should yield _no_ results"
+  );
+  Assert.equal(
+    count3,
+    rangeCount,
+    "The first iterator invocation should yield all results"
+  );
 
   FinderIterator.reset();
 });

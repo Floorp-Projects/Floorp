@@ -6,7 +6,7 @@
 /**
  * Test the suggestion-picker helper methods.
  */
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const {
   findMostRelevantIndex,
   findMostRelevantCssPropertyIndex,
@@ -30,12 +30,14 @@ const TEST_DATA = [
     items: ["chrome", "edge", "firefox"],
     sortedItems: ["firefox", "chrome", "edge"],
     expectedIndex: 2,
-  }, {
+  },
+  {
     // No match in sortedItems array.
     items: ["apple", "oranges", "banana"],
     sortedItems: ["kiwi", "pear", "peach"],
     expectedIndex: 0,
-  }, {
+  },
+  {
     // Empty items array.
     items: [],
     sortedItems: ["empty", "arrays", "can't", "have", "relevant", "indexes"],
@@ -88,11 +90,7 @@ const CSS_TEST_DATA = [
     expectedIndex: 5,
   },
   {
-    items: [
-      "direction",
-      "display",
-      "dominant-baseline",
-    ],
+    items: ["direction", "display", "dominant-baseline"],
     expectedIndex: 1,
   },
   {

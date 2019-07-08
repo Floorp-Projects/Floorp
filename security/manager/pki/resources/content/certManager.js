@@ -10,7 +10,9 @@ var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var key;
 
-var certdialogs = Cc["@mozilla.org/nsCertificateDialogs;1"].getService(Ci.nsICertificateDialogs);
+var certdialogs = Cc["@mozilla.org/nsCertificateDialogs;1"].getService(
+  Ci.nsICertificateDialogs
+);
 
 /**
  * List of certs currently selected in the active tab.
@@ -43,26 +45,32 @@ var emailTreeView;
 var userTreeView;
 
 function LoadCerts() {
-  certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB);
+  certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   var certcache = certdb.getCerts();
 
-  caTreeView = Cc["@mozilla.org/security/nsCertTree;1"]
-                    .createInstance(Ci.nsICertTree);
+  caTreeView = Cc["@mozilla.org/security/nsCertTree;1"].createInstance(
+    Ci.nsICertTree
+  );
   caTreeView.loadCertsFromCache(certcache, Ci.nsIX509Cert.CA_CERT);
   document.getElementById("ca-tree").view = caTreeView;
 
-  serverTreeView = Cc["@mozilla.org/security/nsCertTree;1"]
-                        .createInstance(Ci.nsICertTree);
+  serverTreeView = Cc["@mozilla.org/security/nsCertTree;1"].createInstance(
+    Ci.nsICertTree
+  );
   serverTreeView.loadCertsFromCache(certcache, Ci.nsIX509Cert.SERVER_CERT);
   document.getElementById("server-tree").view = serverTreeView;
 
-  emailTreeView = Cc["@mozilla.org/security/nsCertTree;1"]
-                       .createInstance(Ci.nsICertTree);
+  emailTreeView = Cc["@mozilla.org/security/nsCertTree;1"].createInstance(
+    Ci.nsICertTree
+  );
   emailTreeView.loadCertsFromCache(certcache, Ci.nsIX509Cert.EMAIL_CERT);
   document.getElementById("email-tree").view = emailTreeView;
 
-  userTreeView = Cc["@mozilla.org/security/nsCertTree;1"]
-                      .createInstance(Ci.nsICertTree);
+  userTreeView = Cc["@mozilla.org/security/nsCertTree;1"].createInstance(
+    Ci.nsICertTree
+  );
   userTreeView.loadCertsFromCache(certcache, Ci.nsIX509Cert.USER_CERT);
   document.getElementById("user-tree").view = userTreeView;
 
@@ -92,7 +100,9 @@ function getSelectedCerts() {
   selected_certs = [];
   var cert = null;
   var nr = 0;
-  if (items != null) nr = items.getRangeCount();
+  if (items != null) {
+    nr = items.getRangeCount();
+  }
   if (nr > 0) {
     for (let i = 0; i < nr; i++) {
       var o1 = {};
@@ -140,7 +150,9 @@ function getSelectedTreeItems() {
   selected_index = [];
   var tree_item = null;
   var nr = 0;
-  if (items != null) nr = items.getRangeCount();
+  if (items != null) {
+    nr = items.getRangeCount();
+  }
   if (nr > 0) {
     for (let i = 0; i < nr; i++) {
       var o1 = {};
@@ -225,7 +237,7 @@ async function promptError(aErrorCode) {
       default:
         break;
     }
-    let [message] = await document.l10n.formatValues([{id: msgName}]);
+    let [message] = await document.l10n.formatValues([{ id: msgName }]);
     let prompter = Services.ww.getNewPrompter(window);
     prompter.alert(null, message);
   }
@@ -258,11 +270,7 @@ function ca_enableButtons() {
 }
 
 function mine_enableButtons() {
-  let idList = [
-    "mine_viewButton",
-    "mine_backupButton",
-    "mine_deleteButton",
-  ];
+  let idList = ["mine_viewButton", "mine_backupButton", "mine_deleteButton"];
   enableButtonsForCertTree(userTreeView, idList);
 }
 
@@ -276,11 +284,7 @@ function websites_enableButtons() {
 }
 
 function email_enableButtons() {
-  let idList = [
-    "email_viewButton",
-    "email_exportButton",
-    "email_deleteButton",
-  ];
+  let idList = ["email_viewButton", "email_exportButton", "email_deleteButton"];
   enableButtonsForCertTree(emailTreeView, idList);
 }
 
@@ -293,19 +297,25 @@ async function backupCerts() {
 
   var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
   let [backupFileDialog, filePkcs12Spec] = await document.l10n.formatValues([
-    {id: "choose-p12-backup-file-dialog"},
-    {id: "file-browse-pkcs12-spec"},
+    { id: "choose-p12-backup-file-dialog" },
+    { id: "file-browse-pkcs12-spec" },
   ]);
   fp.init(window, backupFileDialog, Ci.nsIFilePicker.modeSave);
   fp.appendFilter(filePkcs12Spec, "*.p12");
   fp.appendFilters(Ci.nsIFilePicker.filterAll);
   fp.defaultExtension = "p12";
   fp.open(rv => {
-    if (rv == Ci.nsIFilePicker.returnOK || rv == Ci.nsIFilePicker.returnReplace) {
+    if (
+      rv == Ci.nsIFilePicker.returnOK ||
+      rv == Ci.nsIFilePicker.returnReplace
+    ) {
       let password = {};
       if (certdialogs.setPKCS12FilePassword(window, password)) {
-        let errorCode = certdb.exportPKCS12File(fp.file, selected_certs,
-                                                password.value);
+        let errorCode = certdb.exportPKCS12File(
+          fp.file,
+          selected_certs,
+          password.value
+        );
         promptError(errorCode);
       }
     }
@@ -322,17 +332,25 @@ function editCerts() {
   getSelectedCerts();
 
   for (let cert of selected_certs) {
-    window.openDialog("chrome://pippki/content/editcacert.xul", "",
-                      "chrome,centerscreen,modal", cert);
+    window.openDialog(
+      "chrome://pippki/content/editcacert.xul",
+      "",
+      "chrome,centerscreen,modal",
+      cert
+    );
   }
 }
 
 async function restoreCerts() {
   var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-  let [restoreFileDialog, filePkcs12Spec, fileCertSpec] = await document.l10n.formatValues([
-    {id: "choose-p12-restore-file-dialog"},
-    {id: "file-browse-pkcs12-spec"},
-    {id: "file-browse-certificate-spec"},
+  let [
+    restoreFileDialog,
+    filePkcs12Spec,
+    fileCertSpec,
+  ] = await document.l10n.formatValues([
+    { id: "choose-p12-restore-file-dialog" },
+    { id: "file-browse-pkcs12-spec" },
+    { id: "file-browse-certificate-spec" },
   ]);
   fp.init(window, restoreFileDialog, Ci.nsIFilePicker.modeOpen);
   fp.appendFilter(filePkcs12Spec, "*.p12; *.pfx");
@@ -355,10 +373,14 @@ async function restoreCerts() {
     }
 
     if (isX509FileType) {
-      let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
-                      .createInstance(Ci.nsIFileInputStream);
+      let fstream = Cc[
+        "@mozilla.org/network/file-input-stream;1"
+      ].createInstance(Ci.nsIFileInputStream);
       fstream.init(fp.file, -1, 0, 0);
-      let dataString = NetUtil.readInputStreamToString(fstream, fstream.available());
+      let dataString = NetUtil.readInputStreamToString(
+        fstream,
+        fstream.available()
+      );
       let dataArray = [];
       for (let i = 0; i < dataString.length; i++) {
         dataArray.push(dataString.charCodeAt(i));
@@ -370,16 +392,24 @@ async function restoreCerts() {
           return prompter;
         },
       };
-      certdb.importUserCertificate(dataArray, dataArray.length, interfaceRequestor);
+      certdb.importUserCertificate(
+        dataArray,
+        dataArray.length,
+        interfaceRequestor
+      );
     } else {
       // Otherwise, assume it's a PKCS12 file and import it that way.
       let password = {};
       let errorCode = Ci.nsIX509CertDB.ERROR_BAD_PASSWORD;
-      while (errorCode == Ci.nsIX509CertDB.ERROR_BAD_PASSWORD &&
-             certdialogs.getPKCS12FilePassword(window, password)) {
+      while (
+        errorCode == Ci.nsIX509CertDB.ERROR_BAD_PASSWORD &&
+        certdialogs.getPKCS12FilePassword(window, password)
+      ) {
         errorCode = certdb.importPKCS12File(fp.file, password.value);
-        if (errorCode == Ci.nsIX509CertDB.ERROR_BAD_PASSWORD &&
-            password.value.length == 0) {
+        if (
+          errorCode == Ci.nsIX509CertDB.ERROR_BAD_PASSWORD &&
+          password.value.length == 0
+        ) {
           // It didn't like empty string password, try no password.
           errorCode = certdb.importPKCS12File(fp.file, null);
         }
@@ -415,10 +445,10 @@ function deleteCerts() {
   }
 
   const treeViewMap = {
-    "mine_tab": userTreeView,
-    "websites_tab": serverTreeView,
-    "ca_tab": caTreeView,
-    "others_tab": emailTreeView,
+    mine_tab: userTreeView,
+    websites_tab: serverTreeView,
+    ca_tab: caTreeView,
+    others_tab: emailTreeView,
   };
   let selTab = document.getElementById("certMgrTabbox").selectedItem;
   let selTabID = selTab.getAttribute("id");
@@ -430,9 +460,14 @@ function deleteCerts() {
   let retVals = {
     deleteConfirmed: false,
   };
-  window.openDialog("chrome://pippki/content/deletecert.xul", "",
-                    "chrome,centerscreen,modal", selTabID, selected_tree_items,
-                    retVals);
+  window.openDialog(
+    "chrome://pippki/content/deletecert.xul",
+    "",
+    "chrome,centerscreen,modal",
+    selTabID,
+    selected_tree_items,
+    retVals
+  );
 
   if (retVals.deleteConfirmed) {
     let treeView = treeViewMap[selTabID];
@@ -461,8 +496,8 @@ function viewCerts() {
 async function addCACerts() {
   var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
   let [importCa, fileCertSpec] = await document.l10n.formatValues([
-    {id: "import-ca-certs-prompt"},
-    {id: "file-browse-certificate-spec"},
+    { id: "import-ca-certs-prompt" },
+    { id: "file-browse-certificate-spec" },
   ]);
   fp.init(window, importCa, Ci.nsIFilePicker.modeOpen);
   fp.appendFilter(fileCertSpec, gCertFileTypes);
@@ -479,8 +514,8 @@ async function addCACerts() {
 async function addEmailCert() {
   var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
   let [importEmail, fileCertSpec] = await document.l10n.formatValues([
-    {id: "import-email-cert-prompt"},
-    {id: "file-browse-certificate-spec"},
+    { id: "import-email-cert-prompt" },
+    { id: "file-browse-certificate-spec" },
   ]);
   fp.init(window, importEmail, Ci.nsIFilePicker.modeOpen);
   fp.appendFilter(fileCertSpec, gCertFileTypes);
@@ -498,8 +533,11 @@ async function addEmailCert() {
 }
 
 function addException() {
-  window.openDialog("chrome://pippki/content/exceptionDialog.xul", "",
-                    "chrome,centerscreen,modal");
+  window.openDialog(
+    "chrome://pippki/content/exceptionDialog.xul",
+    "",
+    "chrome,centerscreen,modal"
+  );
   var certcache = certdb.getCerts();
   serverTreeView.loadCertsFromCache(certcache, Ci.nsIX509Cert.SERVER_CERT);
   serverTreeView.selection.clearSelection();

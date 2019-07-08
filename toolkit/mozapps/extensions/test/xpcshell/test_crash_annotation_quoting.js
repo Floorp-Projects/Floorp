@@ -11,12 +11,12 @@ add_task(async function run_test() {
   await promiseStartupManager();
 
   let n = 1;
-  for (let version in [ "1,0", "1:0" ]) {
+  for (let version in ["1,0", "1:0"]) {
     let id = `addon${n++}@tests.mozilla.org`;
     await promiseInstallWebExtension({
       manifest: {
         version,
-        applications: {gecko: {id}},
+        applications: { gecko: { id } },
       },
     });
 

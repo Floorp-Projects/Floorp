@@ -63,8 +63,10 @@ const Curl = {
 
     // The cURL command is expected to run on the same platform that Firefox runs
     // (it may be different from the inspected page platform).
-    const escapeString = Services.appinfo.OS == "WINNT" ?
-                       utils.escapeStringWin : utils.escapeStringPosix;
+    const escapeString =
+      Services.appinfo.OS == "WINNT"
+        ? utils.escapeStringWin
+        : utils.escapeStringPosix;
 
     // Add URL.
     command.push(escapeString(data.url));
@@ -85,11 +87,16 @@ const Curl = {
       postDataText = data.postDataText;
       postData.push("--data-binary");
       const boundary = utils.getMultipartBoundary(data);
-      const text = utils.removeBinaryDataFromMultipartText(postDataText, boundary);
+      const text = utils.removeBinaryDataFromMultipartText(
+        postDataText,
+        boundary
+      );
       postData.push(escapeString(text));
       ignoredHeaders.add("content-length");
-    } else if (utils.isUrlEncodedRequest(data) ||
-          ["PUT", "POST", "PATCH"].includes(data.method)) {
+    } else if (
+      utils.isUrlEncodedRequest(data) ||
+      ["PUT", "POST", "PATCH"].includes(data.method)
+    ) {
       postDataText = data.postDataText;
       postData.push("--data");
       postData.push(escapeString(utils.writePostDataTextParams(postDataText)));
@@ -158,14 +165,18 @@ const CurlUtils = {
     }
 
     postDataText = postDataText.toLowerCase();
-    if (postDataText.includes("content-type: application/x-www-form-urlencoded")) {
+    if (
+      postDataText.includes("content-type: application/x-www-form-urlencoded")
+    ) {
       return true;
     }
 
     const contentType = this.findHeader(data.headers, "content-type");
 
-    return (contentType &&
-      contentType.toLowerCase().includes("application/x-www-form-urlencoded"));
+    return (
+      contentType &&
+      contentType.toLowerCase().includes("application/x-www-form-urlencoded")
+    );
   },
 
   /**
@@ -189,8 +200,9 @@ const CurlUtils = {
 
     const contentType = this.findHeader(data.headers, "content-type");
 
-    return (contentType &&
-      contentType.toLowerCase().includes("multipart/form-data;"));
+    return (
+      contentType && contentType.toLowerCase().includes("multipart/form-data;")
+    );
   },
 
   /**
@@ -337,7 +349,10 @@ const CurlUtils = {
         continue;
       }
 
-      const header = [line.slice(0, indexOfColon), line.slice(indexOfColon + 1)];
+      const header = [
+        line.slice(0, indexOfColon),
+        line.slice(indexOfColon + 1),
+      ];
       if (header.length != 2) {
         continue;
       }
@@ -357,7 +372,9 @@ const CurlUtils = {
       let code = x.charCodeAt(0);
       if (code < 256) {
         // Add leading zero when needed to not care about the next character.
-        return code < 16 ? "\\x0" + code.toString(16) : "\\x" + code.toString(16);
+        return code < 16
+          ? "\\x0" + code.toString(16)
+          : "\\x" + code.toString(16);
       }
       code = code.toString(16);
       return "\\u" + ("0000" + code).substr(code.length, 4);
@@ -365,12 +382,17 @@ const CurlUtils = {
 
     if (/[^\x20-\x7E]|\'/.test(str)) {
       // Use ANSI-C quoting syntax.
-      return "$\'" + str.replace(/\\/g, "\\\\")
-                        .replace(/\'/g, "\\\'")
-                        .replace(/\n/g, "\\n")
-                        .replace(/\r/g, "\\r")
-                        .replace(/!/g, "\\041")
-                        .replace(/[^\x20-\x7E]/g, escapeCharacter) + "'";
+      return (
+        "$'" +
+        str
+          .replace(/\\/g, "\\\\")
+          .replace(/\'/g, "\\'")
+          .replace(/\n/g, "\\n")
+          .replace(/\r/g, "\\r")
+          .replace(/!/g, "\\041")
+          .replace(/[^\x20-\x7E]/g, escapeCharacter) +
+        "'"
+      );
     }
 
     // Use single quote syntax.
@@ -401,10 +423,15 @@ const CurlUtils = {
        where `^\r\n` is just breaking the command, the `\r\n` right
        after is actual escaped newline.
     */
-    return "\"" + str.replace(/"/g, "\"\"")
-                     .replace(/%/g, "\"%\"")
-                     .replace(/\\/g, "\\\\")
-                     .replace(/[\r\n]{1,2}/g, "\"^$&$&\"") + "\"";
+    return (
+      '"' +
+      str
+        .replace(/"/g, '""')
+        .replace(/%/g, '"%"')
+        .replace(/\\/g, "\\\\")
+        .replace(/[\r\n]{1,2}/g, '"^$&$&"') +
+      '"'
+    );
   },
 };
 

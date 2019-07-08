@@ -1,6 +1,7 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-const VIDEO_PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_video.html";
+const VIDEO_PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_video.html";
 
 const UserGestures = {
   MOUSE_CLICK: "mouse-click",
@@ -9,14 +10,30 @@ const UserGestures = {
 };
 
 const UserGestureTests = [
-  {type: UserGestures.MOUSE_CLICK, isActivationGesture: true},
-  {type: UserGestures.MOUSE_MOVE, isActivationGesture: false},
+  { type: UserGestures.MOUSE_CLICK, isActivationGesture: true },
+  { type: UserGestures.MOUSE_MOVE, isActivationGesture: false },
   // test different keycode here. printable key, non-printable key and other
   // special keys.
-  {type: UserGestures.KEYBOARD_PRESS, isActivationGesture: true, keyCode: "a"},
-  {type: UserGestures.KEYBOARD_PRESS, isActivationGesture: false, keyCode: "VK_ESCAPE"},
-  {type: UserGestures.KEYBOARD_PRESS, isActivationGesture: true, keyCode: "VK_RETURN"},
-  {type: UserGestures.KEYBOARD_PRESS, isActivationGesture: true, keyCode: "VK_SPACE"},
+  {
+    type: UserGestures.KEYBOARD_PRESS,
+    isActivationGesture: true,
+    keyCode: "a",
+  },
+  {
+    type: UserGestures.KEYBOARD_PRESS,
+    isActivationGesture: false,
+    keyCode: "VK_ESCAPE",
+  },
+  {
+    type: UserGestures.KEYBOARD_PRESS,
+    isActivationGesture: true,
+    keyCode: "VK_RETURN",
+  },
+  {
+    type: UserGestures.KEYBOARD_PRESS,
+    isActivationGesture: true,
+    keyCode: "VK_SPACE",
+  },
 ];
 
 /**
@@ -45,24 +62,32 @@ add_task(async function startTestUserGestureInput() {
  * testing helper functions
  */
 function setupTestPreferences() {
-  return SpecialPowers.pushPrefEnv({"set": [
-    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
-    ["media.autoplay.enabled.user-gestures-needed", true],
-    ["media.autoplay.block-event.enabled", true],
-    ["media.autoplay.block-webaudio", true],
-    ["media.navigator.permission.fake", true],
-  ]});
+  return SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
+      ["media.autoplay.enabled.user-gestures-needed", true],
+      ["media.autoplay.block-event.enabled", true],
+      ["media.autoplay.block-webaudio", true],
+      ["media.navigator.permission.fake", true],
+    ],
+  });
 }
 
 function simulateUserGesture(gesture, targetBrowser) {
   info(`- simulate ${gesture.type} event -`);
   switch (gesture.type) {
     case UserGestures.MOUSE_CLICK:
-      return BrowserTestUtils.synthesizeMouseAtCenter("body", {button: 0},
-                                                      targetBrowser);
+      return BrowserTestUtils.synthesizeMouseAtCenter(
+        "body",
+        { button: 0 },
+        targetBrowser
+      );
     case UserGestures.MOUSE_MOVE:
-      return BrowserTestUtils.synthesizeMouseAtCenter("body", {type: "mousemove"},
-                                                      targetBrowser);
+      return BrowserTestUtils.synthesizeMouseAtCenter(
+        "body",
+        { type: "mousemove" },
+        targetBrowser
+      );
     case UserGestures.KEYBOARD_PRESS:
       info(`- keycode=${gesture.keyCode} -`);
       return BrowserTestUtils.synthesizeKey(gesture.keyCode, {}, targetBrowser);
@@ -74,8 +99,10 @@ function simulateUserGesture(gesture, targetBrowser) {
 
 async function testPlayWithoutUserGesture() {
   info("- open new tab -");
-  let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
-                                                        "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "about:blank"
+  );
   BrowserTestUtils.loadURI(tab.linkedBrowser, VIDEO_PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
@@ -85,9 +112,13 @@ async function testPlayWithoutUserGesture() {
     video.src = "gizmo.mp4";
     video.autoplay = true;
     let canplayPromise = new Promise(function(resolve) {
-      video.addEventListener("canplaythrough", function() {
-        resolve();
-      }, {once: true});
+      video.addEventListener(
+        "canplaythrough",
+        function() {
+          resolve();
+        },
+        { once: true }
+      );
     });
     content.document.body.appendChild(video);
 
@@ -112,8 +143,10 @@ async function testPlayWithoutUserGesture() {
 
 async function testPlayWithUserGesture(gesture) {
   info("- open new tab -");
-  let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
-                                                        "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "about:blank"
+  );
   BrowserTestUtils.loadURI(tab.linkedBrowser, VIDEO_PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
@@ -128,7 +161,10 @@ async function testPlayWithUserGesture(gesture) {
       ok(gesture.isActivationGesture, "user gesture can activate the page");
       ok(!video.paused, "video starts playing.");
     } catch (e) {
-      ok(!gesture.isActivationGesture, "user gesture can not activate the page");
+      ok(
+        !gesture.isActivationGesture,
+        "user gesture can not activate the page"
+      );
       ok(video.paused, "video can not start playing.");
     }
   }
@@ -144,14 +180,22 @@ function createAudioContext() {
   let ac = content.ac;
   ac.resumePromises = [];
   ac.stateChangePromise = new Promise(resolve => {
-    ac.addEventListener("statechange", function() {
-      resolve();
-    }, {once: true});
+    ac.addEventListener(
+      "statechange",
+      function() {
+        resolve();
+      },
+      { once: true }
+    );
   });
   ac.notAllowedToStart = new Promise(resolve => {
-    ac.addEventListener("blocked", function() {
-      resolve();
-    }, {once: true});
+    ac.addEventListener(
+      "blocked",
+      function() {
+        resolve();
+      },
+      { once: true }
+    );
   });
 }
 
@@ -187,8 +231,10 @@ function resumeWithExpectedSuccess() {
 
 async function testWebAudioWithUserGesture(gesture) {
   info("- open new tab -");
-  let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
-                                                        "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "about:blank"
+  );
   info("- create audio context -");
   // We want the same audio context to be used across different content
   // tasks, so it needs to be loaded by a frame script.
@@ -197,16 +243,22 @@ async function testWebAudioWithUserGesture(gesture) {
 
   info("- check whether audio context starts running -");
   try {
-    await ContentTask.spawn(tab.linkedBrowser, null,
-                            checkingAudioContextRunningState);
+    await ContentTask.spawn(
+      tab.linkedBrowser,
+      null,
+      checkingAudioContextRunningState
+    );
   } catch (error) {
     ok(false, error.toString());
   }
 
   info("- calling resume() -");
   try {
-    await ContentTask.spawn(tab.linkedBrowser, null,
-                            resumeWithoutExpectedSuccess);
+    await ContentTask.spawn(
+      tab.linkedBrowser,
+      null,
+      resumeWithoutExpectedSuccess
+    );
   } catch (error) {
     ok(false, error.toString());
   }
@@ -216,9 +268,9 @@ async function testWebAudioWithUserGesture(gesture) {
 
   info("- calling resume() again");
   try {
-    let resumeFunc = gesture.isActivationGesture ?
-      resumeWithExpectedSuccess :
-      resumeWithoutExpectedSuccess;
+    let resumeFunc = gesture.isActivationGesture
+      ? resumeWithExpectedSuccess
+      : resumeWithoutExpectedSuccess;
     await ContentTask.spawn(tab.linkedBrowser, null, resumeFunc);
   } catch (error) {
     ok(false, error.toString());

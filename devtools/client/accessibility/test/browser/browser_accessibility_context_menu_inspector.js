@@ -32,35 +32,53 @@ async function openContextMenuForNode({ toolbox }, selector) {
 }
 
 function checkShowA11YPropertiesNode(allMenuItems, disabled) {
-  const showA11YPropertiesNode = allMenuItems.find(item =>
-    item.id === "node-menu-showaccessibilityproperties");
-  ok(showA11YPropertiesNode,
-    "the popup menu now has a show accessibility properties item");
-  is(showA11YPropertiesNode.disabled, disabled,
-    "Show accessibility properties item has correct state");
+  const showA11YPropertiesNode = allMenuItems.find(
+    item => item.id === "node-menu-showaccessibilityproperties"
+  );
+  ok(
+    showA11YPropertiesNode,
+    "the popup menu now has a show accessibility properties item"
+  );
+  is(
+    showA11YPropertiesNode.disabled,
+    disabled,
+    "Show accessibility properties item has correct state"
+  );
   return showA11YPropertiesNode;
 }
 
-async function checkAccessibleObjectSelection({ toolbox, panel }, menuItem, isText) {
+async function checkAccessibleObjectSelection(
+  { toolbox, panel },
+  menuItem,
+  isText
+) {
   const inspector = await toolbox.getPanel("inspector");
-  info("Triggering 'Show Accessibility Properties' and waiting for " +
-       "accessibility panel to open");
+  info(
+    "Triggering 'Show Accessibility Properties' and waiting for " +
+      "accessibility panel to open"
+  );
   const panelSelected = toolbox.once("accessibility-selected");
   const objectSelected = panel.once("new-accessible-front-selected");
   menuItem.click();
   await panelSelected;
   const selected = await objectSelected;
 
-  const expectedNode = isText ?
-    inspector.selection.nodeFront.inlineTextChild : inspector.selection.nodeFront;
+  const expectedNode = isText
+    ? inspector.selection.nodeFront.inlineTextChild
+    : inspector.selection.nodeFront;
   const expectedSelected = await panel.walker.getAccessibleFor(expectedNode);
   is(selected, expectedSelected, "Accessible front selected correctly");
 }
 
-addA11YPanelTask("Test show accessibility properties context menu.", TEST_URI,
+addA11YPanelTask(
+  "Test show accessibility properties context menu.",
+  TEST_URI,
   async function testShowAccessibilityPropertiesContextMenu(env) {
     let allMenuItems = await openContextMenuForNode(env);
-    let showA11YPropertiesNode = checkShowA11YPropertiesNode(allMenuItems, true);
+    let showA11YPropertiesNode = checkShowA11YPropertiesNode(
+      allMenuItems,
+      true
+    );
 
     allMenuItems = await openContextMenuForNode(env, "#h1");
     showA11YPropertiesNode = checkShowA11YPropertiesNode(allMenuItems, false);
@@ -80,4 +98,5 @@ addA11YPanelTask("Test show accessibility properties context menu.", TEST_URI,
     allMenuItems = await openContextMenuForNode(env, nodes[0]);
     showA11YPropertiesNode = checkShowA11YPropertiesNode(allMenuItems, false);
     await checkAccessibleObjectSelection(env, showA11YPropertiesNode, false);
-  });
+  }
+);

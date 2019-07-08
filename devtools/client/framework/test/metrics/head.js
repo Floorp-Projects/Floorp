@@ -5,7 +5,10 @@
 /* import-globals-from ../../../shared/test/telemetry-test-helpers.js */
 
 // shared-head.js handles imports, constants, and utility functions
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js", this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
+  this
+);
 
 // So that PERFHERDER data can be extracted from the logs.
 SimpleTest.requestCompleteLog();
@@ -53,34 +56,40 @@ function runMetricsTest({ filterString, loaders, panelName }) {
     framework: {
       name: "devtools",
     },
-    suites: [{
-      name: panelName + "-metrics",
-      value: allModulesChars,
-      subtests: [
-        {
-          name: panelName + "-modules",
-          value: panelModulesCount,
-        },
-        {
-          name: panelName + "-chars",
-          value: panelModulesChars,
-        },
-        {
-          name: "all-modules",
-          value: allModulesCount,
-        },
-        {
-          name: "all-chars",
-          value: allModulesChars,
-        },
-      ],
-    }],
+    suites: [
+      {
+        name: panelName + "-metrics",
+        value: allModulesChars,
+        subtests: [
+          {
+            name: panelName + "-modules",
+            value: panelModulesCount,
+          },
+          {
+            name: panelName + "-chars",
+            value: panelModulesChars,
+          },
+          {
+            name: "all-modules",
+            value: allModulesCount,
+          },
+          {
+            name: "all-chars",
+            value: allModulesChars,
+          },
+        ],
+      },
+    ],
   };
   info("PERFHERDER_DATA: " + JSON.stringify(PERFHERDER_DATA));
 
   // Simply check that we found valid values.
-  ok(allModulesCount > panelModulesCount &&
-     panelModulesCount > 0, "Successfully recorded module count for " + panelName);
-  ok(allModulesChars > panelModulesChars &&
-     panelModulesChars > 0, "Successfully recorded char count for " + panelName);
+  ok(
+    allModulesCount > panelModulesCount && panelModulesCount > 0,
+    "Successfully recorded module count for " + panelName
+  );
+  ok(
+    allModulesChars > panelModulesChars && panelModulesChars > 0,
+    "Successfully recorded char count for " + panelName
+  );
 }

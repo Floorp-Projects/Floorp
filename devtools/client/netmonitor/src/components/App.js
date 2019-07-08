@@ -4,10 +4,15 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { connect } = require("devtools/client/shared/redux/visibility-handler-connect");
+const {
+  connect,
+} = require("devtools/client/shared/redux/visibility-handler-connect");
 
 // Components
 loader.lazyGetter(this, "MonitorPanel", function() {
@@ -56,13 +61,14 @@ class App extends Component {
       statisticsOpen,
     } = this.props;
 
-    return (
-      div({className: "network-monitor"},
-        !statisticsOpen ?
-          DropHarHandler({
-            actions,
-            openSplitConsole,
-          },
+    return div(
+      { className: "network-monitor" },
+      !statisticsOpen
+        ? DropHarHandler(
+            {
+              actions,
+              openSplitConsole,
+            },
             MonitorPanel({
               actions,
               connector,
@@ -70,16 +76,16 @@ class App extends Component {
               sourceMapService,
               openLink,
             })
-          ) : StatisticsPanel({
+          )
+        : StatisticsPanel({
             connector,
-          }),
-      )
+          })
     );
   }
 }
 
 // Exports
 
-module.exports = connect(
-  (state) => ({ statisticsOpen: state.ui.statisticsOpen }),
-)(App);
+module.exports = connect(state => ({
+  statisticsOpen: state.ui.statisticsOpen,
+}))(App);

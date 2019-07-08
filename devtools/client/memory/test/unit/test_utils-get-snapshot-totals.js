@@ -8,10 +8,18 @@
  * in `utils.getSnapshotTotals(snapshot)`
  */
 
-const { censusDisplays, viewState, censusState } = require("devtools/client/memory/constants");
+const {
+  censusDisplays,
+  viewState,
+  censusState,
+} = require("devtools/client/memory/constants");
 const { getSnapshotTotals } = require("devtools/client/memory/utils");
-const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
-const { setCensusDisplayAndRefresh } = require("devtools/client/memory/actions/census-display");
+const {
+  takeSnapshotAndCensus,
+} = require("devtools/client/memory/actions/snapshot");
+const {
+  setCensusDisplayAndRefresh,
+} = require("devtools/client/memory/actions/census-display");
 const { changeView } = require("devtools/client/memory/actions/view");
 
 add_task(async function() {
@@ -23,13 +31,17 @@ add_task(async function() {
 
   dispatch(changeView(viewState.CENSUS));
 
-  await dispatch(setCensusDisplayAndRefresh(heapWorker,
-                                            censusDisplays.allocationStack));
+  await dispatch(
+    setCensusDisplayAndRefresh(heapWorker, censusDisplays.allocationStack)
+  );
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   await waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
 
-  ok(!getState().snapshots[0].census.display.inverted, "Snapshot is not inverted");
+  ok(
+    !getState().snapshots[0].census.display.inverted,
+    "Snapshot is not inverted"
+  );
 
   const census = getState().snapshots[0].census;
   let result = aggregate(census.report);
@@ -40,27 +52,45 @@ add_task(async function() {
   ok(totalCount > 0, "counted up count in the census");
 
   result = getSnapshotTotals(getState().snapshots[0].census);
-  equal(totalBytes, result.bytes, "getSnapshotTotals reuslted in correct bytes");
-  equal(totalCount, result.count, "getSnapshotTotals reuslted in correct count");
+  equal(
+    totalBytes,
+    result.bytes,
+    "getSnapshotTotals reuslted in correct bytes"
+  );
+  equal(
+    totalCount,
+    result.count,
+    "getSnapshotTotals reuslted in correct count"
+  );
 
-  dispatch(setCensusDisplayAndRefresh(heapWorker,
-                                      censusDisplays.invertedAllocationStack));
+  dispatch(
+    setCensusDisplayAndRefresh(
+      heapWorker,
+      censusDisplays.invertedAllocationStack
+    )
+  );
 
   await waitUntilCensusState(store, s => s.census, [censusState.SAVING]);
   await waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
   ok(getState().snapshots[0].census.display.inverted, "Snapshot is inverted");
 
   result = getSnapshotTotals(getState().snapshots[0].census);
-  equal(totalBytes, result.bytes,
-        "getSnapshotTotals reuslted in correct bytes when inverted");
-  equal(totalCount, result.count,
-        "getSnapshotTotals reuslted in correct count when inverted");
+  equal(
+    totalBytes,
+    result.bytes,
+    "getSnapshotTotals reuslted in correct bytes when inverted"
+  );
+  equal(
+    totalCount,
+    result.count,
+    "getSnapshotTotals reuslted in correct count when inverted"
+  );
 });
 
 function aggregate(report) {
   let totalBytes = report.bytes;
   let totalCount = report.count;
-  for (const child of (report.children || [])) {
+  for (const child of report.children || []) {
     const { bytes, count } = aggregate(child);
     totalBytes += bytes;
     totalCount += count;

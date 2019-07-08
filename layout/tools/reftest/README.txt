@@ -179,6 +179,14 @@ must be one of the following:
       asserts-if(condition,minCount-maxCount)
           Same as above, but only if condition is true.
 
+      noautofuzz
+          Disables the autofuzzing behaviour hard-coded in the reftest harness
+          for specific platform configurations. The autofuzzing is intended to
+          compensate for inherent nondeterminism that results in intermittently
+          fuzzy results (with small amounts of fuzz) across many/all tests on
+          a given platform. Specifying 'noautofuzz' on the test will disable
+          the autofuzzing for that test and require an exact match.
+
       Conditions are JavaScript expressions *without spaces* in them.
       They are evaluated in a sandbox in which a limited set of
       variables are defined.  See the BuildConditionSandbox function in

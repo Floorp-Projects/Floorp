@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createRef, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createRef,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { editableItem } = require("devtools/client/shared/inplace-editor");
@@ -36,24 +39,32 @@ class Selector extends PureComponent {
   }
 
   componentDidMount() {
-    if (this.props.isUserAgentStyle ||
-        this.props.type === ELEMENT_STYLE ||
-        this.props.type === CSSRule.KEYFRAME_RULE) {
+    if (
+      this.props.isUserAgentStyle ||
+      this.props.type === ELEMENT_STYLE ||
+      this.props.type === CSSRule.KEYFRAME_RULE
+    ) {
       // Selector is not editable.
       return;
     }
 
-    editableItem({
-      element: this.selectorRef.current,
-    }, element => {
-      this.props.showSelectorEditor(element, this.props.id);
-    });
+    editableItem(
+      {
+        element: this.selectorRef.current,
+      },
+      element => {
+        this.props.showSelectorEditor(element, this.props.id);
+      }
+    );
   }
 
   renderSelector() {
     // Show the text directly for custom selector text (such as the inline "element"
     // style and Keyframes rules).
-    if (this.props.type === ELEMENT_STYLE || this.props.type === CSSRule.KEYFRAME_RULE) {
+    if (
+      this.props.type === ELEMENT_STYLE ||
+      this.props.type === CSSRule.KEYFRAME_RULE
+    ) {
       return this.props.selector.selectorText;
     }
 
@@ -70,8 +81,10 @@ class Selector extends PureComponent {
       output.push(
         dom.span(
           {
-            className: matchedSelectors.indexOf(selector) > -1 ?
-                       "ruleview-selector-matched" : "ruleview-selector-unmatched",
+            className:
+              matchedSelectors.indexOf(selector) > -1
+                ? "ruleview-selector-matched"
+                : "ruleview-selector-unmatched",
           },
           parsePseudoClassesAndAttributes(selector).map(({ type, value }) => {
             let selectorSpanClass = "";
@@ -84,20 +97,18 @@ class Selector extends PureComponent {
                 selectorSpanClass += " ruleview-selector";
                 break;
               case SELECTOR_PSEUDO_CLASS:
-                selectorSpanClass += PSEUDO_CLASSES.some(p => value === p) ?
-                  " ruleview-selector-pseudo-class-lock" :
-                  " ruleview-selector-pseudo-class";
+                selectorSpanClass += PSEUDO_CLASSES.some(p => value === p)
+                  ? " ruleview-selector-pseudo-class-lock"
+                  : " ruleview-selector-pseudo-class";
                 break;
             }
 
-            return (
-              dom.span(
-                {
-                  key: value,
-                  className: selectorSpanClass,
-                },
-                value
-              )
+            return dom.span(
+              {
+                key: value,
+                className: selectorSpanClass,
+              },
+              value
             );
           })
         )
@@ -115,15 +126,13 @@ class Selector extends PureComponent {
   }
 
   render() {
-    return (
-      dom.span(
-        {
-          className: "ruleview-selectorcontainer",
-          ref: this.selectorRef,
-          tabIndex: 0,
-        },
-        this.renderSelector()
-      )
+    return dom.span(
+      {
+        className: "ruleview-selectorcontainer",
+        ref: this.selectorRef,
+        tabIndex: 0,
+      },
+      this.renderSelector()
     );
   }
 }

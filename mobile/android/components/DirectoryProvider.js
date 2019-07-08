@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
@@ -19,19 +21,23 @@ const NS_APP_CACHE_PARENT_DIR = "cachePDir";
 const NS_APP_DISTRIBUTION_SEARCH_DIR_LIST = "SrchPluginsDistDL";
 const NS_XPCOM_CURRENT_PROCESS_DIR = "XCurProcD";
 const XRE_APP_DISTRIBUTION_DIR = "XREAppDist";
-const XRE_UPDATE_ROOT_DIR     = "UpdRootD";
-const ENVVAR_UPDATE_DIR       = "UPDATES_DIRECTORY";
-const WEBAPPS_DIR             = "webappsDir";
+const XRE_UPDATE_ROOT_DIR = "UpdRootD";
+const ENVVAR_UPDATE_DIR = "UPDATES_DIRECTORY";
+const WEBAPPS_DIR = "webappsDir";
 
-const SYSTEM_DIST_PATH = `/system/${AppConstants.ANDROID_PACKAGE_NAME}/distribution`;
+const SYSTEM_DIST_PATH = `/system/${
+  AppConstants.ANDROID_PACKAGE_NAME
+}/distribution`;
 
 function DirectoryProvider() {}
 
 DirectoryProvider.prototype = {
   classID: Components.ID("{ef0f7a87-c1ee-45a8-8d67-26f586e46a4b}"),
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIDirectoryServiceProvider,
-                                          Ci.nsIDirectoryServiceProvider2]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIDirectoryServiceProvider,
+    Ci.nsIDirectoryServiceProvider2,
+  ]),
 
   getFile: function(prop, persistent) {
     if (prop == NS_APP_CACHE_PARENT_DIR) {
@@ -44,16 +50,22 @@ DirectoryProvider.prototype = {
       let profile = Services.dirsvc.get("ProfD", Ci.nsIFile);
       return profile.parent;
     } else if (prop == XRE_APP_DISTRIBUTION_DIR) {
-      let distributionDirectories =  this._getDistributionDirectories();
+      let distributionDirectories = this._getDistributionDirectories();
       for (let i = 0; i < distributionDirectories.length; i++) {
         if (distributionDirectories[i].exists()) {
           return distributionDirectories[i];
         }
       }
       // Fallback: Return default data distribution directory
-      return FileUtils.getDir(NS_XPCOM_CURRENT_PROCESS_DIR, ["distribution"], false);
+      return FileUtils.getDir(
+        NS_XPCOM_CURRENT_PROCESS_DIR,
+        ["distribution"],
+        false
+      );
     } else if (prop == XRE_UPDATE_ROOT_DIR) {
-      let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+      let env = Cc["@mozilla.org/process/environment;1"].getService(
+        Ci.nsIEnvironment
+      );
       if (env.exists(ENVVAR_UPDATE_DIR)) {
         let path = env.get(ENVVAR_UPDATE_DIR);
         if (path) {
@@ -87,23 +99,27 @@ DirectoryProvider.prototype = {
    */
   _appendDistroSearchDirs: function(array) {
     let distro = this.getFile(XRE_APP_DISTRIBUTION_DIR);
-    if (!distro.exists())
+    if (!distro.exists()) {
       return;
+    }
 
     let searchPlugins = distro.clone();
     searchPlugins.append("searchplugins");
-    if (!searchPlugins.exists())
+    if (!searchPlugins.exists()) {
       return;
+    }
 
     let commonPlugins = searchPlugins.clone();
     commonPlugins.append("common");
-    if (commonPlugins.exists())
+    if (commonPlugins.exists()) {
       array.push(commonPlugins);
+    }
 
     let localePlugins = searchPlugins.clone();
     localePlugins.append("locale");
-    if (!localePlugins.exists())
+    if (!localePlugins.exists()) {
       return;
+    }
 
     let curLocale = "";
     let reqLocales = Services.locale.requestedLocales;
@@ -122,18 +138,21 @@ DirectoryProvider.prototype = {
 
     // We didn't append the locale dir - try the default one.
     try {
-      let defLocale = Services.prefs.getCharPref("distribution.searchplugins.defaultLocale");
+      let defLocale = Services.prefs.getCharPref(
+        "distribution.searchplugins.defaultLocale"
+      );
       let defLocalePlugins = localePlugins.clone();
       defLocalePlugins.append(defLocale);
-      if (defLocalePlugins.exists())
+      if (defLocalePlugins.exists()) {
         array.push(defLocalePlugins);
-    } catch (e) {
-    }
+      }
+    } catch (e) {}
   },
 
   getFiles: function(prop) {
-    if (prop != NS_APP_DISTRIBUTION_SEARCH_DIR_LIST)
+    if (prop != NS_APP_DISTRIBUTION_SEARCH_DIR_LIST) {
       return null;
+    }
 
     let result = [];
     this._appendDistroSearchDirs(result);
@@ -146,7 +165,7 @@ DirectoryProvider.prototype = {
     // Send a synchronous Gecko thread event.
     EventDispatcher.instance.dispatch("Distribution:GetDirectories", null, {
       onSuccess: response =>
-        directories = response.map(dir => new FileUtils.File(dir)),
+        (directories = response.map(dir => new FileUtils.File(dir))),
     });
 
     return directories;

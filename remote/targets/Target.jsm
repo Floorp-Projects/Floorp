@@ -6,9 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["Target"];
 
-const {Connection} = ChromeUtils.import("chrome://remote/content/Connection.jsm");
-const {WebSocketDebuggerTransport} = ChromeUtils.import("chrome://remote/content/server/WebSocketTransport.jsm");
-const {WebSocketServer} = ChromeUtils.import("chrome://remote/content/server/WebSocket.jsm");
+const { Connection } = ChromeUtils.import(
+  "chrome://remote/content/Connection.jsm"
+);
+const { WebSocketDebuggerTransport } = ChromeUtils.import(
+  "chrome://remote/content/server/WebSocketTransport.jsm"
+);
+const { WebSocketServer } = ChromeUtils.import(
+  "chrome://remote/content/server/WebSocket.jsm"
+);
 
 /**
  * Base class for all the Targets.
@@ -45,8 +51,6 @@ class Target {
   // XPCOM
 
   get QueryInterface() {
-    return ChromeUtils.generateQI([
-      Ci.nsIHttpRequestHandler,
-    ]);
+    return ChromeUtils.generateQI([Ci.nsIHttpRequestHandler]);
   }
 }

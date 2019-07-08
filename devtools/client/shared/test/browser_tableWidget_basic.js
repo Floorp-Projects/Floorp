@@ -8,7 +8,7 @@
 
 const TEST_URI = CHROME_URL_ROOT + "doc_tableWidget_basic.html";
 
-const {TableWidget} = require("devtools/client/shared/widgets/TableWidget");
+const { TableWidget } = require("devtools/client/shared/widgets/TableWidget");
 
 add_task(async function() {
   await addTab("about:blank");
@@ -119,20 +119,35 @@ function testTreeItemInsertedCorrectly(doc, table) {
   is(table.tbody.children.length, 4 * 2, "4 columns exist");
 
   // Test firstColumn option and check if the nodes are inserted correctly
-  is(table.tbody.children[0].firstChild.children.length, 9 + 1,
-     "Correct rows in column 4");
-  is(table.tbody.children[0].firstChild.firstChild.value, "Column 4",
-     "Correct column header value");
+  is(
+    table.tbody.children[0].firstChild.children.length,
+    9 + 1,
+    "Correct rows in column 4"
+  );
+  is(
+    table.tbody.children[0].firstChild.firstChild.value,
+    "Column 4",
+    "Correct column header value"
+  );
 
   for (let i = 1; i < 4; i++) {
-    is(table.tbody.children[i * 2].firstChild.children.length, 9 + 1,
-       `Correct rows in column ${i}`);
-    is(table.tbody.children[i * 2].firstChild.firstChild.value, `Column ${i}`,
-       "Correct column header value");
+    is(
+      table.tbody.children[i * 2].firstChild.children.length,
+      9 + 1,
+      `Correct rows in column ${i}`
+    );
+    is(
+      table.tbody.children[i * 2].firstChild.firstChild.value,
+      `Column ${i}`,
+      "Correct column header value"
+    );
   }
   for (let i = 1; i < 10; i++) {
-    is(table.tbody.children[2].firstChild.children[i].value, `id${i}`,
-     `Correct value in row ${i}`);
+    is(
+      table.tbody.children[2].firstChild.children[i].value,
+      `id${i}`,
+      `Correct value in row ${i}`
+    );
   }
 
   // Remove firstColumn option and reset the table
@@ -148,16 +163,24 @@ function testTreeItemInsertedCorrectly(doc, table) {
 
   // Check if the nodes are inserted correctly without firstColumn option
   for (let i = 0; i < 4; i++) {
-    is(table.tbody.children[i * 2].firstChild.children.length, 9 + 1,
-      `Correct rows in column ${i}`);
-    is(table.tbody.children[i * 2].firstChild.firstChild.value,
+    is(
+      table.tbody.children[i * 2].firstChild.children.length,
+      9 + 1,
+      `Correct rows in column ${i}`
+    );
+    is(
+      table.tbody.children[i * 2].firstChild.firstChild.value,
       `Column ${i + 1}`,
-      "Correct column header value");
+      "Correct column header value"
+    );
   }
 
   for (let i = 1; i < 10; i++) {
-    is(table.tbody.firstChild.firstChild.children[i].value, `id${i}`,
-      `Correct value in row ${i}`);
+    is(
+      table.tbody.firstChild.firstChild.children[i].value,
+      `id${i}`,
+      `Correct value in row ${i}`
+    );
   }
 }
 
@@ -185,13 +208,16 @@ function testAPI(doc, table) {
 
   // test if isSelected works
   ok(table.isSelected("id7"), "isSelected with column id works");
-  ok(table.isSelected({
-    col1: "id7",
-    col2: "value18",
-    col3: "value21",
-    col4: "value36",
-    somethingExtra: "Hello World!",
-  }), "isSelected with json works");
+  ok(
+    table.isSelected({
+      col1: "id7",
+      col2: "value18",
+      col3: "value21",
+      col4: "value36",
+      somethingExtra: "Hello World!",
+    }),
+    "isSelected with json works"
+  );
 
   table.selectedRow = "id4";
   const node3 = doc.querySelector(".theme-selected");
@@ -205,8 +231,10 @@ function testAPI(doc, table) {
 
   // test if clear selection works
   table.clearSelection();
-  ok(!doc.querySelector(".theme-selected"),
-     "Nothing selected after clear selection call");
+  ok(
+    !doc.querySelector(".theme-selected"),
+    "Nothing selected after clear selection call"
+  );
 
   // test if selectNextRow and selectPreviousRow work
   table.selectedRow = "id7";
@@ -218,25 +246,33 @@ function testAPI(doc, table) {
   ok(table.isSelected("id9"), "Correct row selected after selectNextRow call");
 
   table.selectNextRow();
-  ok(table.isSelected("id1"),
-     "Properly cycled to first row after selectNextRow call on last row");
+  ok(
+    table.isSelected("id1"),
+    "Properly cycled to first row after selectNextRow call on last row"
+  );
 
   table.selectNextRow();
   ok(table.isSelected("id2"), "Correct row selected after selectNextRow call");
 
   table.selectPreviousRow();
-  ok(table.isSelected("id1"),
-    "Correct row selected after selectPreviousRow call");
+  ok(
+    table.isSelected("id1"),
+    "Correct row selected after selectPreviousRow call"
+  );
 
   table.selectPreviousRow();
-  ok(table.isSelected("id9"),
-     "Properly cycled to last row after selectPreviousRow call on first row");
+  ok(
+    table.isSelected("id9"),
+    "Properly cycled to last row after selectPreviousRow call on first row"
+  );
 
   // test if remove works
   ok(doc.querySelector("[data-id='id4']"), "id4 row exists before removal");
   table.remove("id4");
-  ok(!doc.querySelector("[data-id='id4']"),
-     "id4 row does not exist after removal through id");
+  ok(
+    !doc.querySelector("[data-id='id4']"),
+    "id4 row does not exist after removal through id"
+  );
 
   ok(doc.querySelector("[data-id='id6']"), "id6 row exists before removal");
   table.remove({
@@ -245,8 +281,10 @@ function testAPI(doc, table) {
     col3: "value25",
     col4: "value37",
   });
-  ok(!doc.querySelector("[data-id='id6']"),
-     "id6 row does not exist after removal through json");
+  ok(
+    !doc.querySelector("[data-id='id6']"),
+    "id6 row does not exist after removal through json"
+  );
 
   table.push({
     col1: "id4",
@@ -274,14 +312,18 @@ function testAPI(doc, table) {
   // testing if clear works
   table.clear();
   // double because splitters
-  is(table.tbody.children.length, 4 * 2,
-     "4 columns exist even after clear");
+  is(table.tbody.children.length, 4 * 2, "4 columns exist even after clear");
   for (let i = 0; i < 4; i++) {
-    is(table.tbody.children[i * 2].firstChild.children.length, 1,
-      `Only header in the column ${i} after clear call`);
-    is(table.tbody.children[i * 2].firstChild.firstChild.value,
+    is(
+      table.tbody.children[i * 2].firstChild.children.length,
+      1,
+      `Only header in the column ${i} after clear call`
+    );
+    is(
+      table.tbody.children[i * 2].firstChild.firstChild.value,
       `Column ${i + 1}`,
-      "Correct column header value");
+      "Correct column header value"
+    );
   }
 
   // testing if setColumns work
@@ -291,14 +333,21 @@ function testAPI(doc, table) {
   });
 
   // double because splitters
-  is(table.tbody.children.length, 2 * 2,
-     "2 columns exist after setColumn call");
-  is(table.tbody.children[0].firstChild.firstChild.getAttribute("value"),
-     "Foobar",
-     "Correct column header value for first column");
-  is(table.tbody.children[2].firstChild.firstChild.getAttribute("value"),
-     "Testing",
-     "Correct column header value for second column");
+  is(
+    table.tbody.children.length,
+    2 * 2,
+    "2 columns exist after setColumn call"
+  );
+  is(
+    table.tbody.children[0].firstChild.firstChild.getAttribute("value"),
+    "Foobar",
+    "Correct column header value for first column"
+  );
+  is(
+    table.tbody.children[2].firstChild.firstChild.getAttribute("value"),
+    "Testing",
+    "Correct column header value for second column"
+  );
 
   table.setColumns({
     col1: "Column 1",
@@ -307,29 +356,41 @@ function testAPI(doc, table) {
     col4: "Column 4",
   });
   // double because splitters
-  is(table.tbody.children.length, 4 * 2,
-     "4 columns exist after second setColumn call");
+  is(
+    table.tbody.children.length,
+    4 * 2,
+    "4 columns exist after second setColumn call"
+  );
 
   populateTable(doc, table);
 
   // testing if update works
-  is(doc.querySelectorAll("[data-id='id4']")[1].value, "value12",
-     "Correct value before update");
+  is(
+    doc.querySelectorAll("[data-id='id4']")[1].value,
+    "value12",
+    "Correct value before update"
+  );
   table.update({
     col1: "id4",
     col2: "UPDATED",
     col3: "value26",
     col4: "value33",
   });
-  is(doc.querySelectorAll("[data-id='id4']")[1].value, "UPDATED",
-     "Correct value after update");
+  is(
+    doc.querySelectorAll("[data-id='id4']")[1].value,
+    "UPDATED",
+    "Correct value after update"
+  );
 
   // testing if sorting works by calling it once on an already sorted column
   // should sort descending
   table.sortBy("col1");
   for (let i = 1; i < 10; i++) {
-    is(table.tbody.firstChild.firstChild.children[i].value, `id${10 - i}`,
-     `Correct value in row ${i} after descending sort by on col1`);
+    is(
+      table.tbody.firstChild.firstChild.children[i].value,
+      `id${10 - i}`,
+      `Correct value in row ${i} after descending sort by on col1`
+    );
   }
   // Calling it on an unsorted column should sort by it in ascending manner
   table.sortBy("col2");
@@ -365,8 +426,8 @@ function testAPI(doc, table) {
 function checkAscendingOrder(cell) {
   while (cell) {
     const currentCell = cell.value || cell.textContent;
-    const prevCell = cell.previousSibling.value ||
-                   cell.previousSibling.textContent;
+    const prevCell =
+      cell.previousSibling.value || cell.previousSibling.textContent;
     ok(currentCell >= prevCell, "Sorting is in ascending order");
     cell = cell.nextSibling;
   }

@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-  * License, v. 2.0. If a copy of the MPL was not distributed with this
-  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
@@ -11,7 +11,10 @@ add_task(async function() {
 
   is(initialPageZoom, 1, "Initial zoom factor should be 1");
 
-  CustomizableUI.addWidgetToArea("zoom-controls", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "zoom-controls",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
   registerCleanupFunction(() => CustomizableUI.reset());
 
   await waitForOverflowButtonShown();
@@ -27,7 +30,10 @@ add_task(async function() {
 
   let zoomResetButton = document.getElementById("zoom-reset-button");
   let expectedZoomLevel = parseInt(zoomResetButton.getAttribute("label"), 10);
-  ok(pageZoomLevel < 100 && pageZoomLevel == expectedZoomLevel, "Page zoomed out correctly");
+  ok(
+    pageZoomLevel < 100 && pageZoomLevel == expectedZoomLevel,
+    "Page zoomed out correctly"
+  );
 
   // close the panel
   let panelHiddenPromise = promiseOverflowHidden(window);

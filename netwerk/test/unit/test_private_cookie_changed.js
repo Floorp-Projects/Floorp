@@ -3,9 +3,9 @@
  */
 
 function makeChan(uri, isPrivate) {
-  var chan = NetUtil.newChannel ({
+  var chan = NetUtil.newChannel({
     uri: uri.spec,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   }).QueryInterface(Ci.nsIHttpChannel);
 
   chan.QueryInterface(Ci.nsIPrivateBrowsingChannel).setPrivate(isPrivate);
@@ -14,15 +14,22 @@ function makeChan(uri, isPrivate) {
 
 function run_test() {
   // We don't want to have CookieSettings blocking this test.
-  Services.prefs.setBoolPref("network.cookieSettings.unblocked_for_testing", true);
+  Services.prefs.setBoolPref(
+    "network.cookieSettings.unblocked_for_testing",
+    true
+  );
 
   // Allow all cookies.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
-  
+
   let publicNotifications = 0;
   let privateNotifications = 0;
-  Services.obs.addObserver(function() {publicNotifications++;}, "cookie-changed");
-  Services.obs.addObserver(function() {privateNotifications++;}, "private-cookie-changed");
+  Services.obs.addObserver(function() {
+    publicNotifications++;
+  }, "cookie-changed");
+  Services.obs.addObserver(function() {
+    privateNotifications++;
+  }, "private-cookie-changed");
 
   let uri = NetUtil.newURI("http://foo.com/");
   let publicChan = makeChan(uri, false);

@@ -8,10 +8,9 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "FormValidationHandler" ];
+var EXPORTED_SYMBOLS = ["FormValidationHandler"];
 
-var FormValidationHandler =
-{
+var FormValidationHandler = {
   _panel: null,
   _anchor: null,
 
@@ -80,7 +79,10 @@ var FormValidationHandler =
     tabBrowser.selectedBrowser.removeEventListener("scroll", this, true);
     tabBrowser.selectedBrowser.removeEventListener("FullZoomChange", this);
     tabBrowser.selectedBrowser.removeEventListener("TextZoomChange", this);
-    tabBrowser.selectedBrowser.removeEventListener("ZoomChangeUsingMouseWheel", this);
+    tabBrowser.selectedBrowser.removeEventListener(
+      "ZoomChangeUsingMouseWheel",
+      this
+    );
 
     this._panel.hidden = true;
     this._panel = null;
@@ -124,7 +126,10 @@ var FormValidationHandler =
       tabBrowser.selectedBrowser.addEventListener("scroll", this, true);
       tabBrowser.selectedBrowser.addEventListener("FullZoomChange", this);
       tabBrowser.selectedBrowser.addEventListener("TextZoomChange", this);
-      tabBrowser.selectedBrowser.addEventListener("ZoomChangeUsingMouseWheel", this);
+      tabBrowser.selectedBrowser.addEventListener(
+        "ZoomChangeUsingMouseWheel",
+        this
+      );
 
       // Open the popup
       this._panel.openPopup(this._anchor, aPanelData.position, 0, 0, false);

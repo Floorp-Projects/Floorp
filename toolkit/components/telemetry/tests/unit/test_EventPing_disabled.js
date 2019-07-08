@@ -9,15 +9,24 @@ ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
+ChromeUtils.import(
+  "resource://testing-common/TelemetryArchiveTesting.jsm",
+  this
+);
 
-ChromeUtils.defineModuleGetter(this, "TelemetryEventPing",
-                               "resource://gre/modules/EventPing.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryEventPing",
+  "resource://gre/modules/EventPing.jsm"
+);
 
 const PRERELEASE_CHANNELS = Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS;
 
 add_task(async function setup() {
-  Services.prefs.setBoolPref(TelemetryUtils.Preferences.EventPingEnabled, false);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.EventPingEnabled,
+    false
+  );
   // Trigger a proper telemetry init.
   do_get_profile(true);
   // Make sure we don't generate unexpected pings due to pref changes.
@@ -31,5 +40,9 @@ add_task(async function setup() {
 add_task(async function test_EventsNotRecorded() {
   Telemetry.recordEvent("telemetry.test", "test1", "object1");
   let snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
-  Assert.equal(Object.keys(snapshot).length, 0, "Should not have recorded any events.");
+  Assert.equal(
+    Object.keys(snapshot).length,
+    0,
+    "Should not have recorded any events."
+  );
 });

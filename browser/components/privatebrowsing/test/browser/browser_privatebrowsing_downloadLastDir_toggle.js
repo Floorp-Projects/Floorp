@@ -1,5 +1,9 @@
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-const {DownloadLastDir} = ChromeUtils.import("resource://gre/modules/DownloadLastDir.jsm");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+const { DownloadLastDir } = ChromeUtils.import(
+  "resource://gre/modules/DownloadLastDir.jsm"
+);
 
 /**
  * Tests how the browser remembers the last download folder
@@ -17,16 +21,28 @@ add_task(async function test_downloads_last_dir_toggle() {
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let gDownloadLastDir = new DownloadLastDir(win);
-  is(typeof gDownloadLastDir, "object",
-     "gDownloadLastDir should be a valid object");
-  is(gDownloadLastDir.file, null,
-     "gDownloadLastDir.file should be null to start with");
+  is(
+    typeof gDownloadLastDir,
+    "object",
+    "gDownloadLastDir should be a valid object"
+  );
+  is(
+    gDownloadLastDir.file,
+    null,
+    "gDownloadLastDir.file should be null to start with"
+  );
 
   gDownloadLastDir.file = tmpDir;
-  is(gDownloadLastDir.file.path, tmpDir.path,
-     "LastDir should point to the temporary directory");
-  isnot(gDownloadLastDir.file, tmpDir,
-        "gDownloadLastDir.file should not be pointing to the tmpDir");
+  is(
+    gDownloadLastDir.file.path,
+    tmpDir.path,
+    "LastDir should point to the temporary directory"
+  );
+  isnot(
+    gDownloadLastDir.file,
+    tmpDir,
+    "gDownloadLastDir.file should not be pointing to the tmpDir"
+  );
 
   gDownloadLastDir.file = 1; // not an nsIFile
   is(gDownloadLastDir.file, null, "gDownloadLastDir.file should be null");
@@ -90,10 +106,16 @@ async function testHelper(options) {
   let expectedDir = options.expectedDir;
 
   if (expectedDir) {
-    is(gDownloadLastDir.file.path, expectedDir.path,
-       "gDownloadLastDir should point to the expected last directory");
-    isnot(gDownloadLastDir.file, expectedDir,
-          "gDownloadLastDir.file should not be pointing to the last directory");
+    is(
+      gDownloadLastDir.file.path,
+      expectedDir.path,
+      "gDownloadLastDir should point to the expected last directory"
+    );
+    isnot(
+      gDownloadLastDir.file,
+      expectedDir,
+      "gDownloadLastDir.file should not be pointing to the last directory"
+    );
   } else {
     is(gDownloadLastDir.file, null, "gDownloadLastDir should be null");
   }

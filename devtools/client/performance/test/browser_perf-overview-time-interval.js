@@ -8,9 +8,17 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
@@ -46,10 +54,16 @@ add_task(async function() {
   const firstInterval = OverviewView.getTimeInterval();
   info("First interval start time: " + firstInterval.startTime);
   info("First interval end time: " + firstInterval.endTime);
-  is(Math.round(firstInterval.startTime), 10,
-    "The interval's start time was properly set.");
-  is(Math.round(firstInterval.endTime), 20,
-    "The interval's end time was properly set.");
+  is(
+    Math.round(firstInterval.startTime),
+    10,
+    "The interval's start time was properly set."
+  );
+  is(
+    Math.round(firstInterval.endTime),
+    20,
+    "The interval's end time was properly set."
+  );
 
   // Get/set another time interval and make sure there's no event propagation.
 
@@ -58,16 +72,25 @@ add_task(async function() {
   }
 
   OverviewView.on(EVENTS.UI_OVERVIEW_RANGE_SELECTED, fail);
-  OverviewView.setTimeInterval({ startTime: 30, endTime: 40 }, { stopPropagation: true });
+  OverviewView.setTimeInterval(
+    { startTime: 30, endTime: 40 },
+    { stopPropagation: true }
+  );
   OverviewView.off(EVENTS.UI_OVERVIEW_RANGE_SELECTED, fail);
 
   const secondInterval = OverviewView.getTimeInterval();
   info("Second interval start time: " + secondInterval.startTime);
   info("Second interval end time: " + secondInterval.endTime);
-  is(Math.round(secondInterval.startTime), 30,
-    "The interval's start time was properly set again.");
-  is(Math.round(secondInterval.endTime), 40,
-    "The interval's end time was properly set again.");
+  is(
+    Math.round(secondInterval.startTime),
+    30,
+    "The interval's start time was properly set again."
+  );
+  is(
+    Math.round(secondInterval.endTime),
+    40,
+    "The interval's end time was properly set again."
+  );
 
   await teardownToolboxAndRemoveTab(panel);
 });

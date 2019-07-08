@@ -24,7 +24,11 @@ add_task(async function() {
   const monitor = await toolbox.selectTool("netmonitor");
   const { store } = monitor.panelWin;
 
-  is(store.getState().requests.requests.size, 0, "No network requests appear in the network panel");
+  is(
+    store.getState().requests.requests.size,
+    0,
+    "No network requests appear in the network panel"
+  );
 
   await toolbox.destroy();
   tab = target = toolbox = panel = null;

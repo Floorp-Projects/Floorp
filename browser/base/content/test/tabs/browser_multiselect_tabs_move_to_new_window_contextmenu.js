@@ -29,28 +29,38 @@ add_task(async function test() {
   // waiting for tab2 to close ensure that the newWindow is created,
   // thus newWindow.gBrowser used in the second waitForCondition
   // will not be undefined.
-  await TestUtils.waitForCondition(() => tab2.closing, "Wait for tab2 to close");
-  await TestUtils.waitForCondition(() => newWindow.gBrowser.visibleTabs.length == 3,
-    "Wait for all three tabs to get moved to the new window");
+  await TestUtils.waitForCondition(
+    () => tab2.closing,
+    "Wait for tab2 to close"
+  );
+  await TestUtils.waitForCondition(
+    () => newWindow.gBrowser.visibleTabs.length == 3,
+    "Wait for all three tabs to get moved to the new window"
+  );
 
   let gBrowser2 = newWindow.gBrowser;
 
   is(gBrowser.multiSelectedTabsCount, 0, "Zero multiselected tabs");
   is(gBrowser.visibleTabs.length, 2, "Two tabs now in the old window");
   is(gBrowser2.visibleTabs.length, 3, "Three tabs in the new window");
-  is(gBrowser2.visibleTabs.indexOf(gBrowser2.selectedTab), 1,
-    "Previously active tab is still the active tab in the new window");
+  is(
+    gBrowser2.visibleTabs.indexOf(gBrowser2.selectedTab),
+    1,
+    "Previously active tab is still the active tab in the new window"
+  );
 
   BrowserTestUtils.closeWindow(newWindow);
   BrowserTestUtils.removeTab(tab4);
 });
 
 add_task(async function testLazyTabs() {
-  let params = {createLazyBrowser: true};
+  let params = { createLazyBrowser: true };
   let oldTabs = [];
   let numTabs = 4;
   for (let i = 0; i < numTabs; ++i) {
-    oldTabs.push(BrowserTestUtils.addTab(gBrowser, `http://example.com/?${i}`, params));
+    oldTabs.push(
+      BrowserTestUtils.addTab(gBrowser, `http://example.com/?${i}`, params)
+    );
   }
 
   await BrowserTestUtils.switchTab(gBrowser, oldTabs[0]);
@@ -74,7 +84,11 @@ add_task(async function testLazyTabs() {
       let oldTab = event.target;
       let i = oldTabs.indexOf(oldTab);
       if (i == 0) {
-        isnot(oldTab.linkedPanel, "", `Old tab ${i} should continue not being lazy`);
+        isnot(
+          oldTab.linkedPanel,
+          "",
+          `Old tab ${i} should continue not being lazy`
+        );
       } else if (i > 0) {
         is(oldTab.linkedPanel, "", `Old tab ${i} should continue being lazy`);
       } else {
@@ -99,11 +113,17 @@ add_task(async function testLazyTabs() {
     is(newTabs[i].linkedPanel, "", `New tab ${i} should continue being lazy`);
   }
 
-  is(newTabs[0].linkedBrowser.currentURI.spec, `http://example.com/?0`,
-    `New tab 0 should have the right URL`);
+  is(
+    newTabs[0].linkedBrowser.currentURI.spec,
+    `http://example.com/?0`,
+    `New tab 0 should have the right URL`
+  );
   for (let i = 1; i < numTabs; ++i) {
-    is(SessionStore.getLazyTabValue(newTabs[i], "url"), `http://example.com/?${i}`,
-      `New tab ${i} should have the right lazy URL`);
+    is(
+      SessionStore.getLazyTabValue(newTabs[i], "url"),
+      `http://example.com/?${i}`,
+      `New tab ${i} should have the right lazy URL`
+    );
   }
 
   for (let i = 0; i < numTabs; ++i) {

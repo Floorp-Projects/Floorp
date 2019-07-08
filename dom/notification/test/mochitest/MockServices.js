@@ -2,16 +2,20 @@
 var MockServices = (function() {
   "use strict";
 
-  const MOCK_ALERTS_CID = SpecialPowers.wrap(SpecialPowers.Components)
-                          .ID("{48068bc2-40ab-4904-8afd-4cdfb3a385f3}");
+  const MOCK_ALERTS_CID = SpecialPowers.wrap(SpecialPowers.Components).ID(
+    "{48068bc2-40ab-4904-8afd-4cdfb3a385f3}"
+  );
   const ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/alerts-service;1";
 
-  const MOCK_SYSTEM_ALERTS_CID = SpecialPowers.wrap(SpecialPowers.Components)
-                                 .ID("{e86d888c-e41b-4b78-9104-2f2742a532de}");
-  const SYSTEM_ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/system-alerts-service;1";
+  const MOCK_SYSTEM_ALERTS_CID = SpecialPowers.wrap(
+    SpecialPowers.Components
+  ).ID("{e86d888c-e41b-4b78-9104-2f2742a532de}");
+  const SYSTEM_ALERTS_SERVICE_CONTRACT_ID =
+    "@mozilla.org/system-alerts-service;1";
 
-  var registrar = SpecialPowers.wrap(SpecialPowers.Components).manager
-                  .QueryInterface(SpecialPowers.Ci.nsIComponentRegistrar);
+  var registrar = SpecialPowers.wrap(
+    SpecialPowers.Components
+  ).manager.QueryInterface(SpecialPowers.Ci.nsIComponentRegistrar);
 
   var activeAlertNotifications = Object.create(null);
 
@@ -53,20 +57,34 @@ var MockServices = (function() {
       }
     },
 
-    showAlertNotification(imageUrl, title, text, textClickable,
-                                    cookie, alertListener, name) {
-      this.showAlert({
-        name,
-        cookie,
-        title,
-      }, alertListener);
+    showAlertNotification(
+      imageUrl,
+      title,
+      text,
+      textClickable,
+      cookie,
+      alertListener,
+      name
+    ) {
+      this.showAlert(
+        {
+          name,
+          cookie,
+          title,
+        },
+        alertListener
+      );
     },
 
     closeAlert(name) {
       var alertNotification = activeAlertNotifications[name];
       if (alertNotification) {
         if (alertNotification.listener) {
-          alertNotification.listener.observe(null, "alertfinished", alertNotification.cookie);
+          alertNotification.listener.observe(
+            null,
+            "alertfinished",
+            alertNotification.cookie
+          );
         }
         delete activeAlertNotifications[name];
       }
@@ -78,8 +96,10 @@ var MockServices = (function() {
     },
 
     QueryInterface(aIID) {
-      if (SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsISupports) ||
-          SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsIAlertsService)) {
+      if (
+        SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsISupports) ||
+        SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsIAlertsService)
+      ) {
         return this;
       }
       throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;
@@ -97,13 +117,19 @@ var MockServices = (function() {
   // MockServices API
   return {
     register() {
-      registrar.registerFactory(MOCK_ALERTS_CID, "alerts service",
-          ALERTS_SERVICE_CONTRACT_ID,
-          mockAlertsService);
+      registrar.registerFactory(
+        MOCK_ALERTS_CID,
+        "alerts service",
+        ALERTS_SERVICE_CONTRACT_ID,
+        mockAlertsService
+      );
 
-      registrar.registerFactory(MOCK_SYSTEM_ALERTS_CID, "system alerts service",
-          SYSTEM_ALERTS_SERVICE_CONTRACT_ID,
-          mockAlertsService);
+      registrar.registerFactory(
+        MOCK_SYSTEM_ALERTS_CID,
+        "system alerts service",
+        SYSTEM_ALERTS_SERVICE_CONTRACT_ID,
+        mockAlertsService
+      );
     },
 
     unregister() {

@@ -1,5 +1,3 @@
-
-
 createAppInfo("xpcshell@tessts.mozilla.org", "XPCShell", "1", "1");
 BootstrapMonitor.init();
 
@@ -24,9 +22,12 @@ add_task(async function test_startup_enable() {
 
   BootstrapMonitor.checkInstalled(ID);
   BootstrapMonitor.checkStarted(ID);
-  let {reason} = BootstrapMonitor.started.get(ID);
-  equal(reason, BOOTSTRAP_REASONS.ADDON_INSTALL,
-        "Startup reason is ADDON_INSTALL at install");
+  let { reason } = BootstrapMonitor.started.get(ID);
+  equal(
+    reason,
+    BOOTSTRAP_REASONS.ADDON_INSTALL,
+    "Startup reason is ADDON_INSTALL at install"
+  );
 
   gAppInfo.platformVersion = "2";
   await promiseRestartManager("2");
@@ -37,7 +38,10 @@ add_task(async function test_startup_enable() {
   await promiseRestartManager("1");
   BootstrapMonitor.checkInstalled(ID);
   BootstrapMonitor.checkStarted(ID);
-  ({reason} = BootstrapMonitor.started.get(ID));
-  equal(reason, BOOTSTRAP_REASONS.ADDON_ENABLE,
-        "Startup reason is ADDON_ENABLE when re-enabled at startup");
+  ({ reason } = BootstrapMonitor.started.get(ID));
+  equal(
+    reason,
+    BOOTSTRAP_REASONS.ADDON_ENABLE,
+    "Startup reason is ADDON_ENABLE when re-enabled at startup"
+  );
 });

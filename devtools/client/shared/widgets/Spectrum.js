@@ -118,12 +118,36 @@ Spectrum.hsvToRgb = function(h, s, v, a) {
   const t = v * (1 - (1 - f) * s);
 
   switch (i % 6) {
-    case 0: r = v; g = t; b = p; break;
-    case 1: r = q; g = v; b = p; break;
-    case 2: r = p; g = v; b = t; break;
-    case 3: r = p; g = q; b = v; break;
-    case 4: r = t; g = p; b = v; break;
-    case 5: r = v; g = p; b = q; break;
+    case 0:
+      r = v;
+      g = t;
+      b = p;
+      break;
+    case 1:
+      r = q;
+      g = v;
+      b = p;
+      break;
+    case 2:
+      r = p;
+      g = v;
+      b = t;
+      break;
+    case 3:
+      r = p;
+      g = q;
+      b = v;
+      break;
+    case 4:
+      r = t;
+      g = p;
+      b = v;
+      break;
+    case 5:
+      r = v;
+      g = p;
+      b = q;
+      break;
   }
 
   return [r * 255, g * 255, b * 255, a];
@@ -147,9 +171,15 @@ Spectrum.rgbToHsv = function(r, g, b, a) {
     h = 0;
   } else {
     switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
     }
     h /= 6;
   }
@@ -232,10 +262,18 @@ Spectrum.prototype = {
   },
 
   get rgb() {
-    const rgb = Spectrum.hsvToRgb(this.hsv[0], this.hsv[1], this.hsv[2],
-      this.hsv[3]);
-    return [Math.round(rgb[0]), Math.round(rgb[1]), Math.round(rgb[2]),
-            Math.round(rgb[3] * 100) / 100];
+    const rgb = Spectrum.hsvToRgb(
+      this.hsv[0],
+      this.hsv[1],
+      this.hsv[2],
+      this.hsv[3]
+    );
+    return [
+      Math.round(rgb[0]),
+      Math.round(rgb[1]),
+      Math.round(rgb[2]),
+      Math.round(rgb[3] * 100) / 100,
+    ];
   },
 
   get rgbNoSatVal() {
@@ -245,8 +283,9 @@ Spectrum.prototype = {
 
   get rgbCssString() {
     const rgb = this.rgb;
-    return "rgba(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ", " +
-      rgb[3] + ")";
+    return (
+      "rgba(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ", " + rgb[3] + ")"
+    );
   },
 
   show: function() {
@@ -268,7 +307,7 @@ Spectrum.prototype = {
   },
 
   onHueSliderMove: function(dragX, dragY) {
-    this.hsv[0] = (dragX / this.hueSliderWidth);
+    this.hsv[0] = dragX / this.hueSliderWidth;
     this.updateUI();
     this.onChange();
   },
@@ -295,8 +334,8 @@ Spectrum.prototype = {
 
     const rgbNoAlpha = "rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")";
     const rgbAlpha0 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ", 0)";
-    const alphaGradient = "linear-gradient(to right, " + rgbAlpha0 + ", " +
-      rgbNoAlpha + ")";
+    const alphaGradient =
+      "linear-gradient(to right, " + rgbAlpha0 + ", " + rgbNoAlpha + ")";
     this.alphaSliderInner.style.background = alphaGradient;
   },
 
@@ -312,8 +351,14 @@ Spectrum.prototype = {
   },
 
   updateDraggerBackgroundColor: function() {
-    const flatColor = "rgb(" + this.rgbNoSatVal[0] + ", " + this.rgbNoSatVal[1] + ", " +
-     this.rgbNoSatVal[2] + ")";
+    const flatColor =
+      "rgb(" +
+      this.rgbNoSatVal[0] +
+      ", " +
+      this.rgbNoSatVal[1] +
+      ", " +
+      this.rgbNoSatVal[2] +
+      ")";
     this.dragger.style.backgroundColor = flatColor;
   },
 
@@ -324,7 +369,7 @@ Spectrum.prototype = {
 
     // Placing the color dragger
     let dragX = s * this.dragWidth;
-    let dragY = this.dragHeight - (v * this.dragHeight);
+    let dragY = this.dragHeight - v * this.dragHeight;
     const helperDim = this.dragHelperHeight / 2;
 
     dragX = Math.max(
@@ -340,12 +385,12 @@ Spectrum.prototype = {
     this.dragHelper.style.left = dragX + "px";
 
     // Placing the hue slider
-    const hueSliderX = (h * this.hueSliderWidth) - (this.hueSliderHelperWidth / 2);
+    const hueSliderX = h * this.hueSliderWidth - this.hueSliderHelperWidth / 2;
     this.hueSliderHelper.style.left = hueSliderX + "px";
 
     // Placing the alpha slider
-    const alphaSliderX = (this.hsv[3] * this.alphaSliderWidth) -
-      (this.alphaSliderHelperWidth / 2);
+    const alphaSliderX =
+      this.hsv[3] * this.alphaSliderWidth - this.alphaSliderHelperWidth / 2;
     this.alphaSliderHelper.style.left = alphaSliderX + "px";
   },
 

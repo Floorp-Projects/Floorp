@@ -5,13 +5,14 @@
 
 const { generateActorSpec } = require("devtools/shared/protocol");
 const { extend } = require("devtools/shared/extend");
-const { browsingContextTargetSpecPrototype } = require("devtools/shared/specs/targets/browsing-context");
-
-const chromeWindowTargetSpec = generateActorSpec(extend(
+const {
   browsingContextTargetSpecPrototype,
-  {
+} = require("devtools/shared/specs/targets/browsing-context");
+
+const chromeWindowTargetSpec = generateActorSpec(
+  extend(browsingContextTargetSpecPrototype, {
     typeName: "chromeWindowTarget",
-  }
-));
+  })
+);
 
 exports.chromeWindowTargetSpec = chromeWindowTargetSpec;

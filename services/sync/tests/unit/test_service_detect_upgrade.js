@@ -1,8 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {CryptoWrapper, WBORecord} = ChromeUtils.import("resource://services-sync/record.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { CryptoWrapper, WBORecord } = ChromeUtils.import(
+  "resource://services-sync/record.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 add_task(async function v4_upgrade() {
   enableValidationPrefs();
@@ -39,24 +41,25 @@ add_task(async function v4_upgrade() {
 
     _("Logging in.");
 
-    await configureIdentity({ "username": "johndoe" }, server);
+    await configureIdentity({ username: "johndoe" }, server);
 
     await Service.login();
     Assert.ok(Service.isLoggedIn);
     await Service.verifyAndFetchSymmetricKeys();
-    Assert.ok((await Service._remoteSetup()));
+    Assert.ok(await Service._remoteSetup());
 
     async function test_out_of_date() {
       _("Old meta/global: " + JSON.stringify(meta_global));
-      meta_global.payload = JSON.stringify({"syncID": "foooooooooooooooooooooooooo",
-                                            "storageVersion": STORAGE_VERSION + 1});
+      meta_global.payload = JSON.stringify({
+        syncID: "foooooooooooooooooooooooooo",
+        storageVersion: STORAGE_VERSION + 1,
+      });
       collections.meta = Date.now() / 1000;
       _("New meta/global: " + JSON.stringify(meta_global));
       Service.recordManager.set(Service.metaURL, meta_global);
       try {
         await Service.sync();
-      } catch (ex) {
-      }
+      } catch (ex) {}
       Assert.equal(Service.status.sync, VERSION_OUT_OF_DATE);
     }
 
@@ -73,8 +76,10 @@ add_task(async function v4_upgrade() {
     _("Syncing afresh...");
     Service.logout();
     Service.collectionKeys.clear();
-    meta_global.payload = JSON.stringify({"syncID": "foooooooooooooobbbbbbbbbbbb",
-                                          "storageVersion": STORAGE_VERSION});
+    meta_global.payload = JSON.stringify({
+      syncID: "foooooooooooooobbbbbbbbbbbb",
+      storageVersion: STORAGE_VERSION,
+    });
     collections.meta = Date.now() / 1000;
     Service.recordManager.set(Service.metaURL, meta_global);
     await Service.login();
@@ -86,15 +91,18 @@ add_task(async function v4_upgrade() {
     let serverKeys;
     let serverResp;
 
-
     async function retrieve_server_default() {
       serverKeys = serverResp = serverDecrypted = null;
 
       serverKeys = new CryptoWrapper("crypto", "keys");
-      serverResp = (await serverKeys.fetch(Service.resource(Service.cryptoKeysURL))).response;
+      serverResp = (await serverKeys.fetch(
+        Service.resource(Service.cryptoKeysURL)
+      )).response;
       Assert.ok(serverResp.success);
 
-      serverDecrypted = await serverKeys.decrypt(Service.identity.syncKeyBundle);
+      serverDecrypted = await serverKeys.decrypt(
+        Service.identity.syncKeyBundle
+      );
       _("Retrieved WBO:       " + JSON.stringify(serverDecrypted));
       _("serverKeys:          " + JSON.stringify(serverKeys));
 
@@ -109,9 +117,15 @@ add_task(async function v4_upgrade() {
       _("Local keyBundle:     " + JSON.stringify(localDefault));
 
       if (should_succeed) {
-        Assert.equal(JSON.stringify(serverDefault), JSON.stringify(localDefault));
+        Assert.equal(
+          JSON.stringify(serverDefault),
+          JSON.stringify(localDefault)
+        );
       } else {
-        Assert.notEqual(JSON.stringify(serverDefault), JSON.stringify(localDefault));
+        Assert.notEqual(
+          JSON.stringify(serverDefault),
+          JSON.stringify(localDefault)
+        );
       }
     }
 
@@ -127,15 +141,19 @@ add_task(async function v4_upgrade() {
     await retrieve_and_compare_default(true);
 
     _("Update keys on server.");
-    await set_server_keys(["KaaaaaaaaaaaHAtfmuRY0XEJ7LXfFuqvF7opFdBD/MY=",
-                           "aaaaaaaaaaaapxMO6TEWtLIOv9dj6kBAJdzhWDkkkis="]);
+    await set_server_keys([
+      "KaaaaaaaaaaaHAtfmuRY0XEJ7LXfFuqvF7opFdBD/MY=",
+      "aaaaaaaaaaaapxMO6TEWtLIOv9dj6kBAJdzhWDkkkis=",
+    ]);
 
     _("Checking that we no longer have the latest keys.");
     await retrieve_and_compare_default(false);
 
     _("Indeed, they're what we set them to...");
-    Assert.equal("KaaaaaaaaaaaHAtfmuRY0XEJ7LXfFuqvF7opFdBD/MY=",
-                 (await retrieve_server_default())[0]);
+    Assert.equal(
+      "KaaaaaaaaaaaHAtfmuRY0XEJ7LXfFuqvF7opFdBD/MY=",
+      (await retrieve_server_default())[0]
+    );
 
     _("Sync. Should download changed keys automatically.");
     let oldClientsModified = collections.clients;
@@ -189,7 +207,7 @@ add_task(async function v5_upgrade() {
 
     Service.clusterURL = server.baseURI + "/";
 
-    await configureIdentity({ "username": "johndoe" }, server);
+    await configureIdentity({ username: "johndoe" }, server);
 
     // Test an upgrade where the contents of the server would cause us to error
     // -- keys decrypted with a different sync key, for example.
@@ -205,8 +223,10 @@ add_task(async function v5_upgrade() {
     _("Bumping version.");
     // Bump version on the server.
     let m = new WBORecord("meta", "global");
-    m.payload = {"syncID": "foooooooooooooooooooooooooo",
-                 "storageVersion": STORAGE_VERSION + 1};
+    m.payload = {
+      syncID: "foooooooooooooooooooooooooo",
+      storageVersion: STORAGE_VERSION + 1,
+    };
     await m.upload(Service.resource(Service.metaURL));
 
     _("New meta/global: " + JSON.stringify(meta_global));

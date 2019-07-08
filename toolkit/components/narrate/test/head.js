@@ -13,11 +13,16 @@ const TEST_ARTICLE =
 const TEST_ITALIAN_ARTICLE =
   "http://example.com/browser/toolkit/components/narrate/test/inferno.html";
 
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-  "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
 
 const TEST_PREFS = {
   "reader.parse-on-load.enabled": true,
@@ -57,22 +62,24 @@ function teardown() {
 
 function spawnInNewReaderTab(url, func) {
   return BrowserTestUtils.withNewTab(
-    { gBrowser,
-      url: `about:reader?url=${encodeURIComponent(url)}` },
-      async function(browser) {
-        await ContentTask.spawn(browser, null, async function() {
-          // This imports the test utils for all tests, so we'll declare it as
-          // a global here which will make it ESLint happy.
-          /* global NarrateTestUtils */
-          ChromeUtils.import("chrome://mochitests/content/browser/" +
+    { gBrowser, url: `about:reader?url=${encodeURIComponent(url)}` },
+    async function(browser) {
+      await ContentTask.spawn(browser, null, async function() {
+        // This imports the test utils for all tests, so we'll declare it as
+        // a global here which will make it ESLint happy.
+        /* global NarrateTestUtils */
+        ChromeUtils.import(
+          "chrome://mochitests/content/browser/" +
             "toolkit/components/narrate/test/NarrateTestUtils.jsm",
-            Cu.getGlobalForObject({}));
+          Cu.getGlobalForObject({})
+        );
 
-          await NarrateTestUtils.getReaderReadyPromise(content);
-        });
-
-        await ContentTask.spawn(browser, null, func);
+        await NarrateTestUtils.getReaderReadyPromise(content);
       });
+
+      await ContentTask.spawn(browser, null, func);
+    }
+  );
 }
 
 function setBoolPref(name, value) {

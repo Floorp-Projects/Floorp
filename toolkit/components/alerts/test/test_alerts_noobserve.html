@@ -52,7 +52,10 @@ function waitForAlertsThenFinish() {
   chromeScript.sendAsyncMessage("waitForAlerts");
 }
 
-function runTest() {
+async function runTest() {
+  var alertsVisible = await chromeScript.sendQuery("anyXULAlertsVisible");
+  ok(!alertsVisible, "Alerts should not be present at the start of the test.");
+
   if (!("@mozilla.org/alerts-service;1" in Cc)) {
     todo(false, "Alerts service does not exist in this application");
   } else {
@@ -82,11 +85,6 @@ function runTest() {
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 
-// sendSyncMessage returns an array of arrays: the outer array is from the
-// message manager, and the inner array is from the chrome script's listeners.
-// See the comment in test_SpecialPowersLoadChromeScript.html.
-var [[alertsVisible]] = chromeScript.sendSyncMessage("anyXULAlertsVisible");
-ok(!alertsVisible, "Alerts should not be present at the start of the test.");
 runTest();
 setTimeout(waitForAlertsThenFinish, 1000);
 </script>

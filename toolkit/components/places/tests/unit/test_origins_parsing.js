@@ -9,25 +9,11 @@
 "use strict";
 
 add_task(async function parsing() {
-  let prefixes = [
-    "http://",
-    "https://",
-    "ftp://",
-    "foo://",
-    "bar:",
-  ];
+  let prefixes = ["http://", "https://", "ftp://", "foo://", "bar:"];
 
-  let userinfos = [
-    "",
-    "user:pass@",
-    "user:pass:word@",
-    "user:@",
-  ];
+  let userinfos = ["", "user:pass@", "user:pass:word@", "user:@"];
 
-  let ports = [
-    "",
-    ":8888",
-  ];
+  let ports = ["", ":8888"];
 
   let paths = [
     "",
@@ -64,11 +50,12 @@ add_task(async function parsing() {
     for (let port of ports) {
       for (let path of paths) {
         info(`Testing userinfo='${userinfo}' port='${port}' path='${path}'`);
-        let expectedOrigins = prefixes.map(prefix =>
-          [prefix, "example.com" + port]
-        );
-        let uris = expectedOrigins.map(([prefix, hostPort]) =>
-          prefix + userinfo + hostPort + path
+        let expectedOrigins = prefixes.map(prefix => [
+          prefix,
+          "example.com" + port,
+        ]);
+        let uris = expectedOrigins.map(
+          ([prefix, hostPort]) => prefix + userinfo + hostPort + path
         );
 
         await PlacesTestUtils.addVisits(uris.map(uri => ({ uri })));
@@ -86,7 +73,6 @@ add_task(async function parsing() {
   }
   await checkDB([]);
 });
-
 
 /**
  * Asserts that the moz_origins table is correct.

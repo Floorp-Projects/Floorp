@@ -9,11 +9,12 @@
  * payload.
  **/
 
-let stringBundleService =
-  SpecialPowers.Cc["@mozilla.org/intl/stringbundle;1"]
-               .getService(SpecialPowers.Ci.nsIStringBundleService);
-let localizer =
-  stringBundleService.createBundle("chrome://global/locale/dom/dom.properties");
+let stringBundleService = SpecialPowers.Cc[
+  "@mozilla.org/intl/stringbundle;1"
+].getService(SpecialPowers.Ci.nsIStringBundleService);
+let localizer = stringBundleService.createBundle(
+  "chrome://global/locale/dom/dom.properties"
+);
 
 /**
  * Start monitoring the console for the given localized error message string(s)
@@ -38,10 +39,10 @@ function expect_console_message(/* msgId, args, ... */) {
     let msgId = arguments[i];
     let args = arguments[i + 1];
     if (args.length === 0) {
-      expectations.push({errorMessage: localizer.GetStringFromName(msgId)});
+      expectations.push({ errorMessage: localizer.GetStringFromName(msgId) });
     } else {
       expectations.push({
-        errorMessage: localizer.formatStringFromName(msgId, args)
+        errorMessage: localizer.formatStringFromName(msgId, args),
       });
     }
   }

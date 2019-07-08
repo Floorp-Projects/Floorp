@@ -19,8 +19,10 @@ class PanelHeader extends Component {
   render() {
     const { name, id } = this.props;
 
-    return dom.div({ className: "header" },
-      dom.h1({ id, className: "header-name" }, name));
+    return dom.div(
+      { className: "header" },
+      dom.h1({ id, className: "header-name" }, name)
+    );
   }
 }
 

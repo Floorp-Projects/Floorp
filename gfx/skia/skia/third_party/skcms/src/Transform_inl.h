@@ -559,7 +559,8 @@ SI void sample_clut_16(const skcms_A2B* a2b, I32 ix, F* r, F* g, F* b) {
 
 // GCC 7.2.0 hits an internal compiler error with -finline-functions (or -O3)
 // when targeting MIPS 64,  I think attempting to inline clut() into exec_ops().
-#if 1 && defined(__GNUC__) && !defined(__clang__) && defined(__mips64)
+// s390x and i*86 also hit this with GCC 7.4 and -O2
+#if 1 && defined(__GNUC__) && !defined(__clang__) && (defined(__mips64) || defined(__s390x__) || defined(__i586__) || defined(__i486__) || defined(__i386__))
     #define MAYBE_NOINLINE __attribute__((noinline))
 #else
     #define MAYBE_NOINLINE

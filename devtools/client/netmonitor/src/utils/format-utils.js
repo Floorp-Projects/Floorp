@@ -29,7 +29,7 @@ function getTimeWithDecimals(time) {
 }
 
 function formatDecimals(size, decimals) {
-  return (size % 1 > 0) ? decimals : 0;
+  return size % 1 > 0 ? decimals : 0;
 }
 
 /**
@@ -46,19 +46,25 @@ function getFormattedSize(bytes, decimals = REQUEST_DECIMALS) {
     const kb = bytes / BYTES_IN_KB;
     const formattedDecimals = formatDecimals(kb, decimals);
 
-    return L10N.getFormatStr("networkMenu.sizeKB",
-      getSizeWithDecimals(kb, formattedDecimals));
+    return L10N.getFormatStr(
+      "networkMenu.sizeKB",
+      getSizeWithDecimals(kb, formattedDecimals)
+    );
   }
   if (bytes < MAX_MB_SIZE) {
     const mb = bytes / BYTES_IN_MB;
     const formattedDecimals = formatDecimals(mb, decimals);
-    return L10N.getFormatStr("networkMenu.sizeMB",
-      getSizeWithDecimals(mb, formattedDecimals));
+    return L10N.getFormatStr(
+      "networkMenu.sizeMB",
+      getSizeWithDecimals(mb, formattedDecimals)
+    );
   }
   const gb = bytes / BYTES_IN_GB;
   const formattedDecimals = formatDecimals(gb, decimals);
-  return L10N.getFormatStr("networkMenu.sizeGB",
-    getSizeWithDecimals(gb, formattedDecimals));
+  return L10N.getFormatStr(
+    "networkMenu.sizeGB",
+    getSizeWithDecimals(gb, formattedDecimals)
+  );
 }
 
 /**

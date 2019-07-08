@@ -13,8 +13,10 @@ function promiseInstallNotification(aBrowser) {
         return;
       }
 
-      let notification =
-        PopupNotifications.getNotification(ADDON_INSTALL_ID, aBrowser);
+      let notification = PopupNotifications.getNotification(
+        ADDON_INSTALL_ID,
+        aBrowser
+      );
       if (!notification) {
         return;
       }
@@ -30,16 +32,20 @@ function promiseInstallNotification(aBrowser) {
 }
 
 function waitForAnyNewTabAndInstallNotification() {
-  return new Promise((resolve) => {
-    gBrowser.tabContainer.addEventListener("TabOpen", function(openEvent) {
-      let newTab = openEvent.target;
-      resolve([newTab, promiseInstallNotification(newTab.linkedBrowser)]);
-    }, {once: true});
+  return new Promise(resolve => {
+    gBrowser.tabContainer.addEventListener(
+      "TabOpen",
+      function(openEvent) {
+        let newTab = openEvent.target;
+        resolve([newTab, promiseInstallNotification(newTab.linkedBrowser)]);
+      },
+      { once: true }
+    );
   });
 }
 
 function CheckBrowserInPid(browser, expectedPid, message) {
-  return ContentTask.spawn(browser, { expectedPid, message }, (arg) => {
+  return ContentTask.spawn(browser, { expectedPid, message }, arg => {
     is(Services.appinfo.processID, arg.expectedPid, arg.message);
   });
 }
@@ -57,27 +63,41 @@ async function testOpenedAndDraggedXPI(aBrowser) {
   urlbar.focus();
   EventUtils.synthesizeKey("KEY_Enter");
   await promiseNotification;
-  await CheckBrowserInPid(aBrowser, browserPid,
-                          "Check that browser has not switched process.");
+  await CheckBrowserInPid(
+    aBrowser,
+    browserPid,
+    "Check that browser has not switched process."
+  );
 
   // No process switch for XPI file:// URI dragged to tab.
   let tab = gBrowser.getTabForBrowser(aBrowser);
   promiseNotification = promiseInstallNotification(aBrowser);
-  let effect = EventUtils.synthesizeDrop(tab, tab,
-               [[{type: "text/uri-list", data: fileurl1.spec}]],
-               "move");
+  let effect = EventUtils.synthesizeDrop(
+    tab,
+    tab,
+    [[{ type: "text/uri-list", data: fileurl1.spec }]],
+    "move"
+  );
   is(effect, "move", "Drag should be accepted");
   await promiseNotification;
-  await CheckBrowserInPid(aBrowser, browserPid,
-                          "Check that browser has not switched process.");
+  await CheckBrowserInPid(
+    aBrowser,
+    browserPid,
+    "Check that browser has not switched process."
+  );
 
   // No process switch for two XPI file:// URIs dragged to tab.
   promiseNotification = promiseInstallNotification(aBrowser);
   let promiseTabAndNotification = waitForAnyNewTabAndInstallNotification();
-  effect = EventUtils.synthesizeDrop(tab, tab,
-           [[{type: "text/uri-list", data: fileurl1.spec}],
-            [{type: "text/uri-list", data: fileurl2.spec}]],
-           "move");
+  effect = EventUtils.synthesizeDrop(
+    tab,
+    tab,
+    [
+      [{ type: "text/uri-list", data: fileurl1.spec }],
+      [{ type: "text/uri-list", data: fileurl2.spec }],
+    ],
+    "move"
+  );
   is(effect, "move", "Drag should be accepted");
   let [newTab, newTabInstallNotification] = await promiseTabAndNotification;
   await promiseNotification;
@@ -86,12 +106,18 @@ async function testOpenedAndDraggedXPI(aBrowser) {
   }
   await newTabInstallNotification;
   BrowserTestUtils.removeTab(newTab);
-  await CheckBrowserInPid(aBrowser, browserPid,
-                          "Check that browser has not switched process.");
+  await CheckBrowserInPid(
+    aBrowser,
+    browserPid,
+    "Check that browser has not switched process."
+  );
 }
 
 // Test for bug 1175267.
 add_task(async function() {
-  await BrowserTestUtils.withNewTab("http://example.com", testOpenedAndDraggedXPI);
+  await BrowserTestUtils.withNewTab(
+    "http://example.com",
+    testOpenedAndDraggedXPI
+  );
   await BrowserTestUtils.withNewTab("about:robots", testOpenedAndDraggedXPI);
 });

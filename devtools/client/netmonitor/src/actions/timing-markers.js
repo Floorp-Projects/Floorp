@@ -5,7 +5,7 @@
 
 const { ADD_TIMING_MARKER, CLEAR_TIMING_MARKERS } = require("../constants");
 
-exports.addTimingMarker = (marker) => {
+exports.addTimingMarker = marker => {
   return {
     type: ADD_TIMING_MARKER,
     marker,

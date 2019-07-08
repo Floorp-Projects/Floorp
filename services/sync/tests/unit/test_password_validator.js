@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {PasswordValidator} = ChromeUtils.import("resource://services-sync/engines/passwords.js");
+const { PasswordValidator } = ChromeUtils.import(
+  "resource://services-sync/engines/passwords.js"
+);
 
 function getDummyServerAndClient() {
   return {
@@ -62,7 +64,6 @@ function getDummyServerAndClient() {
         username: "baz12345",
         usernameField: "user",
         httpRealm: null,
-
       },
       {
         id: "33333",
@@ -79,12 +80,15 @@ function getDummyServerAndClient() {
   };
 }
 
-
 add_task(async function test_valid() {
   let { server, client } = getDummyServerAndClient();
   let validator = new PasswordValidator();
-  let { problemData, clientRecords, records, deletedRecords } =
-      await validator.compareClientWithServer(client, server);
+  let {
+    problemData,
+    clientRecords,
+    records,
+    deletedRecords,
+  } = await validator.compareClientWithServer(client, server);
   equal(clientRecords.length, 3);
   equal(records.length, 3);
   equal(deletedRecords.length, 0);
@@ -98,8 +102,12 @@ add_task(async function test_missing() {
 
     client.pop();
 
-    let { problemData, clientRecords, records, deletedRecords } =
-        await validator.compareClientWithServer(client, server);
+    let {
+      problemData,
+      clientRecords,
+      records,
+      deletedRecords,
+    } = await validator.compareClientWithServer(client, server);
 
     equal(clientRecords.length, 2);
     equal(records.length, 3);
@@ -114,8 +122,12 @@ add_task(async function test_missing() {
 
     server.pop();
 
-    let { problemData, clientRecords, records, deletedRecords } =
-        await validator.compareClientWithServer(client, server);
+    let {
+      problemData,
+      clientRecords,
+      records,
+      deletedRecords,
+    } = await validator.compareClientWithServer(client, server);
 
     equal(clientRecords.length, 3);
     equal(records.length, 2);
@@ -127,7 +139,6 @@ add_task(async function test_missing() {
   }
 });
 
-
 add_task(async function test_deleted() {
   let { server, client } = getDummyServerAndClient();
   let deletionRecord = { id: "444444", guid: "444444", deleted: true };
@@ -135,8 +146,12 @@ add_task(async function test_deleted() {
   server.push(deletionRecord);
   let validator = new PasswordValidator();
 
-  let { problemData, clientRecords, records, deletedRecords } =
-      await validator.compareClientWithServer(client, server);
+  let {
+    problemData,
+    clientRecords,
+    records,
+    deletedRecords,
+  } = await validator.compareClientWithServer(client, server);
 
   equal(clientRecords.length, 3);
   equal(records.length, 4);
@@ -153,7 +168,9 @@ add_task(async function test_duplicates() {
     client.push(Cu.cloneInto(client[0], {}));
 
     let { problemData } = await validator.compareClientWithServer(
-      client, server);
+      client,
+      server
+    );
 
     let expected = validator.emptyProblemData();
     expected.clientDuplicates.push("11111");
@@ -164,7 +181,9 @@ add_task(async function test_duplicates() {
     server.push(Cu.cloneInto(server[server.length - 1], {}));
 
     let { problemData } = await validator.compareClientWithServer(
-      client, server);
+      client,
+      server
+    );
 
     let expected = validator.emptyProblemData();
     expected.duplicates.push("33333");

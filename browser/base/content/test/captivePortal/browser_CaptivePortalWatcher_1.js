@@ -14,8 +14,11 @@ let testcases = [
     await portalDetected();
     let win = await focusWindowAndWaitForPortalUI();
     let browser = win.gBrowser.selectedTab.linkedBrowser;
-    let loadPromise =
-      BrowserTestUtils.browserLoaded(browser, false, CANONICAL_URL_REDIRECTED);
+    let loadPromise = BrowserTestUtils.browserLoaded(
+      browser,
+      false,
+      CANONICAL_URL_REDIRECTED
+    );
     BrowserTestUtils.loadURI(browser, CANONICAL_URL_REDIRECTED);
     await loadPromise;
     await freePortal(true);
@@ -37,7 +40,11 @@ let testcases = [
     testShowLoginPageButtonVisibility(notification, "visible");
 
     function testPortalTabSelectedAndButtonNotVisible() {
-      is(win.gBrowser.selectedTab, tab, "The captive portal tab should be selected.");
+      is(
+        win.gBrowser.selectedTab,
+        tab,
+        "The captive portal tab should be selected."
+      );
       testShowLoginPageButtonVisibility(notification, "hidden");
     }
 
@@ -46,7 +53,11 @@ let testcases = [
       let p = BrowserTestUtils.waitForNewTab(win.gBrowser, CANONICAL_URL);
       button.click();
       let tab = await p;
-      is(win.gBrowser.selectedTab, tab, "The captive portal tab should be selected.");
+      is(
+        win.gBrowser.selectedTab,
+        tab,
+        "The captive portal tab should be selected."
+      );
       return tab;
     }
 
@@ -69,7 +80,11 @@ let testcases = [
     let anotherTab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser);
     testShowLoginPageButtonVisibility(notification, "visible");
     button.click();
-    is(win.gBrowser.selectedTab, tab, "The captive portal tab should be selected.");
+    is(
+      win.gBrowser.selectedTab,
+      tab,
+      "The captive portal tab should be selected."
+    );
 
     // Close the portal tab and select the arbitrary tab. The button should become
     // visible and when it's clicked, a new portal tab should be opened.

@@ -1,27 +1,51 @@
 "use strict";
 
-var {MigrationUtils, MigratorPrototype} = ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
-var {LoginHelper} = ChromeUtils.import("resource://gre/modules/LoginHelper.jsm");
-var {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-var {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-var {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-var {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
-var {PlacesTestUtils} = ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
+var { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
+  "resource:///modules/MigrationUtils.jsm"
+);
+var { LoginHelper } = ChromeUtils.import(
+  "resource://gre/modules/LoginHelper.jsm"
+);
+var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+var { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+var { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+var { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+var { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+var { PlacesTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 
-XPCOMUtils.defineLazyGlobalGetters(this, [ "URL" ]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Sqlite",
-                               "resource://gre/modules/Sqlite.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Sqlite",
+  "resource://gre/modules/Sqlite.jsm"
+);
 
 // Initialize profile.
 var gProfD = do_get_profile();
 
-var {getAppInfo, newAppInfo, updateAppInfo} = ChromeUtils.import("resource://testing-common/AppInfo.jsm");
+var { getAppInfo, newAppInfo, updateAppInfo } = ChromeUtils.import(
+  "resource://testing-common/AppInfo.jsm"
+);
 updateAppInfo();
 
 /**
@@ -30,7 +54,10 @@ updateAppInfo();
 async function promiseMigration(migrator, resourceType, aProfile = null) {
   // Ensure resource migration is available.
   let availableSources = await migrator.getMigrateData(aProfile, false);
-  Assert.ok((availableSources & resourceType) > 0, "Resource supported by migrator");
+  Assert.ok(
+    (availableSources & resourceType) > 0,
+    "Resource supported by migrator"
+  );
 
   return new Promise(resolve => {
     Services.obs.addObserver(function onMigrationEnded() {

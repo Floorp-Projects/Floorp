@@ -9,7 +9,10 @@
 function caretMoveChecker(target, caretOffset) {
   return function(event) {
     let cmEvent = event.QueryInterface(nsIAccessibleCaretMoveEvent);
-    return cmEvent.accessible == getAccessible(target) && cmEvent.caretOffset == caretOffset;
+    return (
+      cmEvent.accessible == getAccessible(target) &&
+      cmEvent.caretOffset == caretOffset
+    );
   };
 }
 
@@ -18,24 +21,21 @@ async function checkURLBarCaretEvents() {
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
   BrowserTestUtils.loadURI(newWin.gBrowser.selectedBrowser, kURL);
 
-  await waitForEvent(
-    EVENT_DOCUMENT_LOAD_COMPLETE,
-    event => {
-      try {
-        return event.accessible.QueryInterface(nsIAccessibleDocument).URL == kURL;
-      } catch (e) {
-        return false;
-      }
+  await waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, event => {
+    try {
+      return event.accessible.QueryInterface(nsIAccessibleDocument).URL == kURL;
+    } catch (e) {
+      return false;
     }
-  );
+  });
   info("Loaded " + kURL);
 
   let urlbarInputEl = newWin.document.getElementById("urlbar").inputField;
-  let urlbarInput = getAccessible(urlbarInputEl, [ nsIAccessibleText ]);
+  let urlbarInput = getAccessible(urlbarInputEl, [nsIAccessibleText]);
 
   let onCaretMove = waitForEvents([
-    [ EVENT_TEXT_CARET_MOVED, caretMoveChecker(urlbarInput, kURL.length) ],
-    [ EVENT_FOCUS, urlbarInput ]
+    [EVENT_TEXT_CARET_MOVED, caretMoveChecker(urlbarInput, kURL.length)],
+    [EVENT_FOCUS, urlbarInput],
   ]);
 
   urlbarInput.caretOffset = -1;
@@ -43,7 +43,8 @@ async function checkURLBarCaretEvents() {
   ok(true, "Caret move in URL bar #1");
 
   onCaretMove = waitForEvent(
-    EVENT_TEXT_CARET_MOVED, caretMoveChecker(urlbarInput, 0)
+    EVENT_TEXT_CARET_MOVED,
+    caretMoveChecker(urlbarInput, 0)
   );
 
   urlbarInput.caretOffset = 0;

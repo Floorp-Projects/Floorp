@@ -7,9 +7,11 @@
 // Checks for the AccessibleActor
 
 add_task(async function() {
-  const {target, walker, accessibility} =
-    await initAccessibilityFrontForUrl(MAIN_DOMAIN + "doc_accessibility.html");
-  const modifiers = Services.appinfo.OS === "Darwin" ? "\u2303\u2325" : "Alt+Shift+";
+  const { target, walker, accessibility } = await initAccessibilityFrontForUrl(
+    MAIN_DOMAIN + "doc_accessibility.html"
+  );
+  const modifiers =
+    Services.appinfo.OS === "Darwin" ? "\u2303\u2325" : "Alt+Shift+";
 
   const a11yWalker = await accessibility.getWalker();
   await accessibility.enable();
@@ -34,7 +36,7 @@ add_task(async function() {
     domNodeType: 1,
     indexInParent: 1,
     states: ["focusable", "selectable text", "opaque", "enabled", "sensitive"],
-    actions: [ "Press" ],
+    actions: ["Press"],
     attributes: {
       "margin-top": "0px",
       display: "inline-block",
@@ -66,28 +68,37 @@ add_task(async function() {
   is(relations.length, 2, "Accessible front has a correct number of relations");
   is(relations[0].type, "label for", "Label has a label for relation");
   is(relations[0].targets.length, 1, "Label is a label for one target");
-  is(relations[0].targets[0], controlAccessibleFront,
-     "Label is a label for control accessible front");
-  is(relations[1].type, "containing document",
-     "Label has a containing document relation");
+  is(
+    relations[0].targets[0],
+    controlAccessibleFront,
+    "Label is a label for control accessible front"
+  );
+  is(
+    relations[1].type,
+    "containing document",
+    "Label has a containing document relation"
+  );
   is(relations[1].targets.length, 1, "Label is contained by just one document");
-  is(relations[1].targets[0], docAccessibleFront,
-     "Label's containing document is a root document");
+  is(
+    relations[1].targets[0],
+    docAccessibleFront,
+    "Label's containing document is a root document"
+  );
 
   info("Snapshot");
   const snapshot = await controlAccessibleFront.snapshot();
   Assert.deepEqual(snapshot, {
-    "name": "Label",
-    "role": "entry",
-    "actions": [ "Activate" ],
-    "value": "",
-    "nodeCssSelector": "#control",
-    "nodeType": 1,
-    "description": "",
-    "keyboardShortcut": "",
-    "childCount": 0,
-    "indexInParent": 1,
-    "states": [
+    name: "Label",
+    role: "entry",
+    actions: ["Activate"],
+    value: "",
+    nodeCssSelector: "#control",
+    nodeType: 1,
+    description: "",
+    keyboardShortcut: "",
+    childCount: 0,
+    indexInParent: 1,
+    states: [
       "focusable",
       "autocompletion",
       "editable",
@@ -96,19 +107,20 @@ add_task(async function() {
       "enabled",
       "sensitive",
     ],
-    "children": [],
-    "attributes": {
+    children: [],
+    attributes: {
       "margin-left": "0px",
       "text-align": "start",
       "text-indent": "0px",
-      "id": "control",
-      "tag": "input",
+      id: "control",
+      tag: "input",
       "margin-top": "0px",
       "margin-bottom": "0px",
       "margin-right": "0px",
-      "display": "inline-block",
+      display: "inline-block",
       "explicit-name": "true",
-    }});
+    },
+  });
 
   await accessibility.disable();
   await waitForA11yShutdown();

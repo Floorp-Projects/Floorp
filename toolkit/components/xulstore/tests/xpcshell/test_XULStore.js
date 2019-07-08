@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var XULStore = null;
 var browserURI = "chrome://browser/content/browser.xhtml";
@@ -47,10 +47,16 @@ add_task(async function setup() {
 add_task(async function testTruncation() {
   let dos = Array(8192).join("~");
   // Long id names should trigger an exception
-  Assert.throws(() => XULStore.setValue(browserURI, dos, "foo", "foo"), /NS_ERROR_ILLEGAL_VALUE/);
+  Assert.throws(
+    () => XULStore.setValue(browserURI, dos, "foo", "foo"),
+    /NS_ERROR_ILLEGAL_VALUE/
+  );
 
   // Long attr names should trigger an exception
-  Assert.throws(() => XULStore.setValue(browserURI, "foo", dos, "foo"), /NS_ERROR_ILLEGAL_VALUE/);
+  Assert.throws(
+    () => XULStore.setValue(browserURI, "foo", dos, "foo"),
+    /NS_ERROR_ILLEGAL_VALUE/
+  );
 
   // Long values should be truncated
   XULStore.setValue(browserURI, "dos", "dos", dos);

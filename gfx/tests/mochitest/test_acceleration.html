@@ -111,8 +111,7 @@ function runTest() {
 
       var shouldGetWR = false;
       try {
-        shouldGetWR = SpecialPowers.DOMWindowUtils.isWebRenderBuilt &&
-                      SpecialPowers.DOMWindowUtils.isWebRenderRequested;
+        shouldGetWR = SpecialPowers.DOMWindowUtils.isWebRenderRequested;
       } catch (e) {}
 
       var advancedLayersEnabled = false;

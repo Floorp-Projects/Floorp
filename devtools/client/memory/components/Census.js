@@ -4,9 +4,14 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Tree = createFactory(require("devtools/client/shared/components/VirtualizedTree"));
+const Tree = createFactory(
+  require("devtools/client/shared/components/VirtualizedTree")
+);
 const CensusTreeItem = createFactory(require("./CensusTreeItem"));
 const { TREE_ROW_HEIGHT } = require("../constants");
 const { censusModel, diffingModel } = require("../models");
@@ -39,13 +44,11 @@ class Census extends Component {
     const parentMap = census.parentMap;
     const { totalBytes, totalCount } = report;
 
-    const getPercentBytes = totalBytes === 0
-      ? _ => 0
-      : bytes => (bytes / totalBytes) * 100;
+    const getPercentBytes =
+      totalBytes === 0 ? _ => 0 : bytes => (bytes / totalBytes) * 100;
 
-    const getPercentCount = totalCount === 0
-      ? _ => 0
-      : count => (count / totalCount) * 100;
+    const getPercentCount =
+      totalCount === 0 ? _ => 0 : count => (count / totalCount) * 100;
 
     return Tree({
       autoExpandDepth: 0,

@@ -7,8 +7,18 @@
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { networkMonitorSpec } = require("devtools/shared/specs/network-monitor");
 
-loader.lazyRequireGetter(this, "NetworkObserver", "devtools/server/actors/network-monitor/network-observer", true);
-loader.lazyRequireGetter(this, "NetworkEventActor", "devtools/server/actors/network-event", true);
+loader.lazyRequireGetter(
+  this,
+  "NetworkObserver",
+  "devtools/server/actors/network-monitor/network-observer",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "NetworkEventActor",
+  "devtools/server/actors/network-event",
+  true
+);
 
 const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
   /**
@@ -67,37 +77,65 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
   },
 
   startListening() {
-    this.messageManager.addMessageListener("debug:request-stack-available",
-      this.onStackTraceAvailable);
-    this.messageManager.addMessageListener("debug:request-content:request",
-      this.onRequestContent);
-    this.messageManager.addMessageListener("debug:netmonitor-preference",
-      this.onSetPreference);
-    this.messageManager.addMessageListener("debug:block-request",
-      this.onBlockRequest);
-    this.messageManager.addMessageListener("debug:unblock-request",
-      this.onUnblockRequest);
-    this.messageManager.addMessageListener("debug:get-network-event-actor:request",
-      this.onGetNetworkEventActor);
-    this.messageManager.addMessageListener("debug:destroy-network-monitor",
-      this.onDestroyMessage);
+    this.messageManager.addMessageListener(
+      "debug:request-stack-available",
+      this.onStackTraceAvailable
+    );
+    this.messageManager.addMessageListener(
+      "debug:request-content:request",
+      this.onRequestContent
+    );
+    this.messageManager.addMessageListener(
+      "debug:netmonitor-preference",
+      this.onSetPreference
+    );
+    this.messageManager.addMessageListener(
+      "debug:block-request",
+      this.onBlockRequest
+    );
+    this.messageManager.addMessageListener(
+      "debug:unblock-request",
+      this.onUnblockRequest
+    );
+    this.messageManager.addMessageListener(
+      "debug:get-network-event-actor:request",
+      this.onGetNetworkEventActor
+    );
+    this.messageManager.addMessageListener(
+      "debug:destroy-network-monitor",
+      this.onDestroyMessage
+    );
   },
 
   stopListening() {
-    this.messageManager.removeMessageListener("debug:request-stack-available",
-      this.onStackTraceAvailable);
-    this.messageManager.removeMessageListener("debug:request-content:request",
-      this.onRequestContent);
-    this.messageManager.removeMessageListener("debug:netmonitor-preference",
-      this.onSetPreference);
-    this.messageManager.removeMessageListener("debug:block-request",
-      this.onBlockRequest);
-    this.messageManager.removeMessageListener("debug:unblock-request",
-      this.onUnblockRequest);
-    this.messageManager.removeMessageListener("debug:get-network-event-actor:request",
-      this.onGetNetworkEventActor);
-    this.messageManager.removeMessageListener("debug:destroy-network-monitor",
-      this.onDestroyMessage);
+    this.messageManager.removeMessageListener(
+      "debug:request-stack-available",
+      this.onStackTraceAvailable
+    );
+    this.messageManager.removeMessageListener(
+      "debug:request-content:request",
+      this.onRequestContent
+    );
+    this.messageManager.removeMessageListener(
+      "debug:netmonitor-preference",
+      this.onSetPreference
+    );
+    this.messageManager.removeMessageListener(
+      "debug:block-request",
+      this.onBlockRequest
+    );
+    this.messageManager.removeMessageListener(
+      "debug:unblock-request",
+      this.onUnblockRequest
+    );
+    this.messageManager.removeMessageListener(
+      "debug:get-network-event-actor:request",
+      this.onGetNetworkEventActor
+    );
+    this.messageManager.removeMessageListener(
+      "debug:destroy-network-monitor",
+      this.onDestroyMessage
+    );
   },
 
   destroy() {
@@ -137,7 +175,12 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
 
   getRequestContentForActor(actor) {
     const content = actor._response.content;
-    if (actor._discardResponseBody || actor._truncated || !content || !content.size) {
+    if (
+      actor._discardResponseBody ||
+      actor._truncated ||
+      !content ||
+      !content.size
+    ) {
       // Do not return the stylesheet text if there is no meaningful content or if it's
       // still loading. Let the caller handle it by doing its own separate request.
       return null;
@@ -175,7 +218,8 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
 
   onSetPreference({ data }) {
     if ("saveRequestAndResponseBodies" in data) {
-      this.observer.saveRequestAndResponseBodies = data.saveRequestAndResponseBodies;
+      this.observer.saveRequestAndResponseBodies =
+        data.saveRequestAndResponseBodies;
     }
     if ("throttleData" in data) {
       this.observer.throttleData = data.throttleData;
@@ -194,10 +238,13 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
 
   onGetNetworkEventActor({ data }) {
     const actor = this.getNetworkEventActor(data.channelId);
-    this.messageManager.sendAsyncMessage("debug:get-network-event-actor:response", {
-      channelId: data.channelId,
-      actor: actor.form(),
-    });
+    this.messageManager.sendAsyncMessage(
+      "debug:get-network-event-actor:response",
+      {
+        channelId: data.channelId,
+        actor: actor.form(),
+      }
+    );
   },
 
   getNetworkEventActor(channelId) {
@@ -240,9 +287,10 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
 
     this._networkEventActorsByURL.set(actor._request.url, actor);
 
-    this.conn.sendActorEvent(this.parentID, "networkEvent", { eventActor: actor.form() });
+    this.conn.sendActorEvent(this.parentID, "networkEvent", {
+      eventActor: actor.form(),
+    });
     return actor;
   },
-
 });
 exports.NetworkMonitorActor = NetworkMonitorActor;

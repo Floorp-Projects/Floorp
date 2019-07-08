@@ -3,15 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-const {UpdateUtils} = ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+const { UpdateUtils } = ChromeUtils.import(
+  "resource://gre/modules/UpdateUtils.jsm"
+);
 
 const PREF_APP_UPDATE_CHANNEL = "app.update.channel";
-const TEST_CHANNEL            = "TestChannel";
-const PREF_PARTNER_A          = "app.partner.test_partner_a";
-const TEST_PARTNER_A          = "TestPartnerA";
-const PREF_PARTNER_B          = "app.partner.test_partner_b";
-const TEST_PARTNER_B          = "TestPartnerB";
+const TEST_CHANNEL = "TestChannel";
+const PREF_PARTNER_A = "app.partner.test_partner_a";
+const TEST_PARTNER_A = "TestPartnerA";
+const PREF_PARTNER_B = "app.partner.test_partner_b";
+const TEST_PARTNER_B = "TestPartnerB";
 
 add_task(async function test_updatechannel() {
   let defaultPrefs = new Preferences({ defaultBranch: true });
@@ -28,9 +32,13 @@ add_task(async function test_updatechannel() {
 
   defaultPrefs.set(PREF_PARTNER_A, TEST_PARTNER_A);
   defaultPrefs.set(PREF_PARTNER_B, TEST_PARTNER_B);
-  Assert.equal(UpdateUtils.UpdateChannel,
-               TEST_CHANNEL + "-cck-" + TEST_PARTNER_A + "-" + TEST_PARTNER_B);
-  Assert.equal(UpdateUtils.getUpdateChannel(true),
-               TEST_CHANNEL + "-cck-" + TEST_PARTNER_A + "-" + TEST_PARTNER_B);
+  Assert.equal(
+    UpdateUtils.UpdateChannel,
+    TEST_CHANNEL + "-cck-" + TEST_PARTNER_A + "-" + TEST_PARTNER_B
+  );
+  Assert.equal(
+    UpdateUtils.getUpdateChannel(true),
+    TEST_CHANNEL + "-cck-" + TEST_PARTNER_A + "-" + TEST_PARTNER_B
+  );
   Assert.equal(UpdateUtils.getUpdateChannel(false), TEST_CHANNEL);
 });

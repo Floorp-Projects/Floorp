@@ -9,20 +9,22 @@
  * potentially be a little flaky due to the precision of different color representations.
  */
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {colorUtils} = require("devtools/shared/css/color");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { colorUtils } = require("devtools/shared/css/color");
 const getFixtureColorData = require("resource://test/helper_color_data.js");
 
 function run_test() {
-  getFixtureColorData().forEach(({authored, name, hex, hsl, rgb, cycle}) => {
+  getFixtureColorData().forEach(({ authored, name, hex, hsl, rgb, cycle }) => {
     if (cycle) {
       const nameCycled = runCycle(name, cycle);
       const hexCycled = runCycle(hex, cycle);
       const hslCycled = runCycle(hsl, cycle);
       const rgbCycled = runCycle(rgb, cycle);
       // Cut down on log output by only reporting a single pass/fail for the color.
-      ok(nameCycled && hexCycled && hslCycled && rgbCycled,
-        `${authored} was able to cycle back to the original value`);
+      ok(
+        nameCycled && hexCycled && hslCycled && rgbCycled,
+        `${authored} was able to cycle back to the original value`
+      );
     }
   });
 }

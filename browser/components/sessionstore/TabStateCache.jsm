@@ -129,7 +129,9 @@ var TabStateCacheInternal = {
         if (change.fromIdx != kLastIndex) {
           let start = change.fromIdx + 1;
           history.entries.splice.apply(
-            history.entries, [start, toIdx - start].concat(change.entries));
+            history.entries,
+            [start, toIdx - start].concat(change.entries)
+          );
         }
       } else if (key != "fromIdx" && key != "toIdx") {
         history[key] = change[key];

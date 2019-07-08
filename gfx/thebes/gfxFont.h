@@ -1883,7 +1883,11 @@ class gfxFont {
   bool DrawGlyphs(const gfxShapedText* aShapedText,
                   uint32_t aOffset,  // offset in the textrun
                   uint32_t aCount,   // length of run to draw
-                  mozilla::gfx::Point* aPt, GlyphBufferAzure& aBuffer);
+                  mozilla::gfx::Point* aPt,
+                  // transform for mOffset field in DetailedGlyph records,
+                  // to account for rotations (may be null)
+                  const mozilla::gfx::Matrix* aOffsetMatrix,
+                  GlyphBufferAzure& aBuffer);
 
   // Output a single glyph at *aPt.
   // Normal glyphs are simply accumulated in aBuffer until it is full and

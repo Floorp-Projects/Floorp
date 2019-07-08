@@ -3,10 +3,16 @@
 /* globals MozXULElement, Services, useHtmlViews, getHtmlBrowser, htmlBrowserLoaded */
 
 {
-  const ABUSE_REPORT_ENABLED = Services.prefs.getBoolPref("extensions.abuseReport.enabled", false);
-  const ABUSE_REPORT_FRAME_URL = "chrome://mozapps/content/extensions/abuse-report-frame.html";
+  const ABUSE_REPORT_ENABLED = Services.prefs.getBoolPref(
+    "extensions.abuseReport.enabled",
+    false
+  );
+  const ABUSE_REPORT_FRAME_URL =
+    "chrome://mozapps/content/extensions/abuse-report-frame.html";
   const fm = Services.focus;
-  const {AbuseReporter} = ChromeUtils.import("resource://gre/modules/AbuseReporter.jsm");
+  const { AbuseReporter } = ChromeUtils.import(
+    "resource://gre/modules/AbuseReporter.jsm"
+  );
 
   class AddonAbuseReportsXULFrame extends MozXULElement {
     constructor() {
@@ -33,7 +39,9 @@
 
       const browser = this.querySelector("browser");
       this.promiseBrowserLoaded = new Promise(resolve => {
-        browser.addEventListener("load", () => resolve(browser), {once: true});
+        browser.addEventListener("load", () => resolve(browser), {
+          once: true,
+        });
       });
 
       document.addEventListener("focus", this);
@@ -88,15 +96,19 @@
     }
 
     forwardEvent(evt) {
-      this.dispatchEvent(new CustomEvent(evt.type, {detail: evt.detail}));
+      this.dispatchEvent(new CustomEvent(evt.type, { detail: evt.detail }));
     }
 
-    async openReport({addonId, reportEntryPoint}) {
+    async openReport({ addonId, reportEntryPoint }) {
       if (this.report) {
-        throw new Error("Ignoring new abuse report request. AbuseReport panel already open");
+        throw new Error(
+          "Ignoring new abuse report request. AbuseReport panel already open"
+        );
       } else {
         try {
-          this.report = await AbuseReporter.createAbuseReport(addonId, {reportEntryPoint});
+          this.report = await AbuseReporter.createAbuseReport(addonId, {
+            reportEntryPoint,
+          });
           this.update();
         } catch (err) {
           // Log the complete error in the console.
@@ -105,9 +117,14 @@
           // panel an error message-bar is created on the HTML about:addons page.
           const win = await this.promiseHtmlAboutAddons;
           win.document.dispatchEvent(
-            new CustomEvent("abuse-report:create-error", {detail: {
-              addonId, addon: err.addon, errorType: err.errorType,
-            }}));
+            new CustomEvent("abuse-report:create-error", {
+              detail: {
+                addonId,
+                addon: err.addon,
+                errorType: err.errorType,
+              },
+            })
+          );
         }
       }
     }
@@ -139,9 +156,9 @@
     }
 
     async update() {
-      const {report} = this;
+      const { report } = this;
       if (report && report.addon && !report.errorType) {
-        const {addon, reportEntryPoint} = this.report;
+        const { addon, reportEntryPoint } = this.report;
         this.addonId = addon.id;
         this.reportEntryPoint = reportEntryPoint;
 
@@ -149,9 +166,15 @@
         // embedded in the XUL browser.
         this.promiseAbuseReport.then(abuseReport => {
           this.hidden = false;
-          abuseReport.addEventListener("abuse-report:updated", this, {once: true});
-          abuseReport.addEventListener("abuse-report:submit", this, {once: true});
-          abuseReport.addEventListener("abuse-report:cancel", this, {once: true});
+          abuseReport.addEventListener("abuse-report:updated", this, {
+            once: true,
+          });
+          abuseReport.addEventListener("abuse-report:submit", this, {
+            once: true,
+          });
+          abuseReport.addEventListener("abuse-report:cancel", this, {
+            once: true,
+          });
           abuseReport.setAbuseReport(report);
           // Hide the content of the underlying about:addons page from
           // screen readers.
@@ -171,16 +194,27 @@
 
         // Move the focus back to the top level window.
         fm.moveFocus(window, null, fm.MOVEFOCUS_ROOT, fm.FLAG_BYKEY);
-        this.promiseAbuseReport.then(abuseReport => {
-          abuseReport.removeEventListener("abuse-report:updated", this, {once: true});
-          abuseReport.removeEventListener("abuse-report:submit", this, {once: true});
-          abuseReport.removeEventListener("abuse-report:cancel", this, {once: true});
-          abuseReport.setAbuseReport(null);
-        }, err => {
-          console.error("promiseAbuseReport rejected", err);
-        }).then(() => {
-          this.dispatchEvent(new CustomEvent("abuse-report:frame-hidden"));
-        });
+        this.promiseAbuseReport
+          .then(
+            abuseReport => {
+              abuseReport.removeEventListener("abuse-report:updated", this, {
+                once: true,
+              });
+              abuseReport.removeEventListener("abuse-report:submit", this, {
+                once: true,
+              });
+              abuseReport.removeEventListener("abuse-report:cancel", this, {
+                once: true,
+              });
+              abuseReport.setAbuseReport(null);
+            },
+            err => {
+              console.error("promiseAbuseReport rejected", err);
+            }
+          )
+          .then(() => {
+            this.dispatchEvent(new CustomEvent("abuse-report:frame-hidden"));
+          });
       }
     }
 
@@ -233,14 +267,17 @@
   // the custom XUL WebComponent and append it to the XUL stack element
   // (if not registered the element will be just a dummy hidden box)
   if (useHtmlViews && ABUSE_REPORT_ENABLED) {
-    customElements.define("addon-abuse-report-xulframe", AddonAbuseReportsXULFrame);
+    customElements.define(
+      "addon-abuse-report-xulframe",
+      AddonAbuseReportsXULFrame
+    );
   }
 
   // Helper method exported into the about:addons global, used to open the
   // abuse report panel from outside of the about:addons page
   // (e.g. triggered from the browserAction context menu).
-  window.openAbuseReport = ({addonId, reportEntryPoint}) => {
+  window.openAbuseReport = ({ addonId, reportEntryPoint }) => {
     const frame = document.querySelector("addon-abuse-report-xulframe");
-    frame.openReport({addonId, reportEntryPoint});
+    frame.openReport({ addonId, reportEntryPoint });
   };
 }

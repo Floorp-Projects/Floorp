@@ -10,12 +10,16 @@ add_task(async function() {
   let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
   let scrollbox = arrowScrollbox.scrollbox;
   let originalSmoothScroll = arrowScrollbox.smoothScroll;
-  let tabMinWidth = parseInt(getComputedStyle(gBrowser.selectedTab, null).minWidth);
+  let tabMinWidth = parseInt(
+    getComputedStyle(gBrowser.selectedTab, null).minWidth
+  );
 
   let rect = ele => ele.getBoundingClientRect();
   let width = ele => rect(ele).width;
 
-  let tabCountForOverflow = Math.ceil(width(arrowScrollbox) / tabMinWidth * 3);
+  let tabCountForOverflow = Math.ceil(
+    (width(arrowScrollbox) / tabMinWidth) * 3
+  );
 
   let left = ele => rect(ele).left;
   let right = ele => rect(ele).right;
@@ -45,16 +49,25 @@ add_task(async function() {
     return Array.from(gBrowser.tabs).every(tab => tab._fullyOpen);
   });
 
-  ok(!scrollbox.hasAttribute("notoverflowing"),
-     "Tab strip should be overflowing");
+  ok(
+    !scrollbox.hasAttribute("notoverflowing"),
+    "Tab strip should be overflowing"
+  );
 
   let upButton = arrowScrollbox._scrollButtonUp;
   let downButton = arrowScrollbox._scrollButtonDown;
   let element;
 
   gBrowser.selectedTab = firstScrollable();
-  ok(left(scrollbox) <= left(firstScrollable()), "Selecting the first tab scrolls it into view " +
-     "(" + left(scrollbox) + " <= " + left(firstScrollable()) + ")");
+  ok(
+    left(scrollbox) <= left(firstScrollable()),
+    "Selecting the first tab scrolls it into view " +
+      "(" +
+      left(scrollbox) +
+      " <= " +
+      left(firstScrollable()) +
+      ")"
+  );
 
   element = nextRightElement();
   EventUtils.synthesizeMouseAtCenter(downButton, {});
@@ -63,8 +76,15 @@ add_task(async function() {
 
   gBrowser.selectedTab = gBrowser.tabs[gBrowser.tabs.length - 1];
   await waitForNextFrame();
-  ok(right(gBrowser.selectedTab) <= right(scrollbox), "Selecting the last tab scrolls it into view " +
-     "(" + right(gBrowser.selectedTab) + " <= " + right(scrollbox) + ")");
+  ok(
+    right(gBrowser.selectedTab) <= right(scrollbox),
+    "Selecting the last tab scrolls it into view " +
+      "(" +
+      right(gBrowser.selectedTab) +
+      " <= " +
+      right(scrollbox) +
+      ")"
+  );
 
   element = nextLeftElement();
   EventUtils.synthesizeMouseAtCenter(upButton, {});
@@ -75,17 +95,25 @@ add_task(async function() {
   element = elementFromPoint(elementPoint);
   element = element.nextElementSibling;
 
-  EventUtils.synthesizeMouseAtCenter(upButton, {clickCount: 2});
+  EventUtils.synthesizeMouseAtCenter(upButton, { clickCount: 2 });
   await waitForNextFrame();
-  await BrowserTestUtils.waitForCondition(() =>
-    !gBrowser.tabContainer.arrowScrollbox._isScrolling);
+  await BrowserTestUtils.waitForCondition(
+    () => !gBrowser.tabContainer.arrowScrollbox._isScrolling
+  );
   isLeft(element, "Scrolled one page of tabs with a double click");
 
-  EventUtils.synthesizeMouseAtCenter(upButton, {clickCount: 3});
+  EventUtils.synthesizeMouseAtCenter(upButton, { clickCount: 3 });
   await waitForNextFrame();
   var firstScrollableLeft = left(firstScrollable());
-  ok(left(scrollbox) <= firstScrollableLeft, "Scrolled to the start with a triple click " +
-     "(" + left(scrollbox) + " <= " + firstScrollableLeft + ")");
+  ok(
+    left(scrollbox) <= firstScrollableLeft,
+    "Scrolled to the start with a triple click " +
+      "(" +
+      left(scrollbox) +
+      " <= " +
+      firstScrollableLeft +
+      ")"
+  );
 
   while (gBrowser.tabs.length > 1) {
     BrowserTestUtils.removeTab(gBrowser.tabs[0]);

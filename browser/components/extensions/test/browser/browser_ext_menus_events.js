@@ -3,10 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {GlobalManager} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
-const {ExtensionPermissions} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
+const { GlobalManager } = ChromeUtils.import(
+  "resource://gre/modules/Extension.jsm",
+  null
+);
+const { ExtensionPermissions } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
 
-const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
+const PAGE =
+  "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
 const PAGE_BASE = PAGE.replace("context.html", "");
 const PAGE_HOST_PATTERN = "http://mochi.test/*";
 
@@ -21,9 +27,13 @@ async function grantOptionalPermission(extension, permissions) {
 // whether the menus.onShown and menus.onHidden events are fired as expected.
 // doOpenMenu must open the menu and its returned promise must resolve after the
 // menu is shown. Similarly, doCloseMenu must hide the menu.
-async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
-                                  expectedShownEvent,
-                                  expectedShownEventWithPermissions = null}) {
+async function testShowHideEvent({
+  menuCreateParams,
+  doOpenMenu,
+  doCloseMenu,
+  expectedShownEvent,
+  expectedShownEventWithPermissions = null,
+}) {
   async function background() {
     function awaitMessage(expectedId) {
       return new Promise(resolve => {
@@ -43,7 +53,10 @@ async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
     }
 
     let menuCreateParams = await awaitMessage("create-params");
-    const [tab] = await browser.tabs.query({active: true, currentWindow: true});
+    const [tab] = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
 
     let shownEvents = [];
     let hiddenEvents = [];
@@ -131,8 +144,11 @@ async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
     await doOpenMenu(extension);
     extension.sendMessage("optional-menu-shown-with-permissions");
     let shownEvent2 = await extension.awaitMessage("onShown-event-data2");
-    Assert.deepEqual(shownEvent2, expectedShownEventWithPermissions,
-                     "expected onShown info when host permissions are enabled");
+    Assert.deepEqual(
+      shownEvent2,
+      expectedShownEventWithPermissions,
+      "expected onShown info when host permissions are enabled"
+    );
     await doCloseMenu(extension);
   }
 
@@ -148,8 +164,11 @@ add_task(async function test_no_show_hide_for_unsupported_menu() {
       browser.menus.onShown.addListener(data => events.push(data));
       browser.menus.onHidden.addListener(() => events.push("onHidden"));
       browser.test.onMessage.addListener(() => {
-        browser.test.assertEq("[]", JSON.stringify(events),
-                              "Should not have any events when the context is unsupported.");
+        browser.test.assertEq(
+          "[]",
+          JSON.stringify(events),
+          "Should not have any events when the context is unsupported."
+        );
         browser.test.notifyPass("done listening to menu events");
       });
     },
@@ -220,14 +239,18 @@ add_task(async function test_show_hide_without_menu_item() {
   is(events[1], "onHidden", "last event should be onHidden");
   ok(events[0].targetElementId, "info.targetElementId must be set in onShown");
   delete events[0].targetElementId;
-  Assert.deepEqual(events[0], {
-    menuIds: [],
-    contexts: ["page", "all"],
-    viewType: "tab",
-    editable: false,
-    pageUrl: PAGE,
-    frameId: 0,
-  }, "expected onShown info from menuless extension");
+  Assert.deepEqual(
+    events[0],
+    {
+      menuIds: [],
+      contexts: ["page", "all"],
+      viewType: "tab",
+      editable: false,
+      pageUrl: PAGE,
+      frameId: 0,
+    },
+    "expected onShown info from menuless extension"
+  );
   await extension.unload();
 });
 
@@ -295,7 +318,9 @@ add_task(async function test_show_hide_browserAction_popup() {
       viewType: "popup",
       frameId: 0,
       editable: false,
-      get pageUrl() { return popupUrl; },
+      get pageUrl() {
+        return popupUrl;
+      },
       targetElementId: EXPECT_TARGET_ELEMENT,
     },
     expectedShownEventWithPermissions: {
@@ -303,7 +328,9 @@ add_task(async function test_show_hide_browserAction_popup() {
       viewType: "popup",
       frameId: 0,
       editable: false,
-      get pageUrl() { return popupUrl; },
+      get pageUrl() {
+        return popupUrl;
+      },
       targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu(extension) {
@@ -411,24 +438,34 @@ add_task(async function test_show_hide_frame() {
       contexts: ["frame", "all"],
       viewType: "tab",
       editable: false,
-      get frameId() { return frameId; },
+      get frameId() {
+        return frameId;
+      },
     },
     expectedShownEventWithPermissions: {
       contexts: ["frame", "all"],
       viewType: "tab",
       editable: false,
-      get frameId() { return frameId; },
+      get frameId() {
+        return frameId;
+      },
       pageUrl: PAGE,
       frameUrl: PAGE_BASE + "context_frame.html",
       targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
-      frameId = await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-        const {WebNavigationFrames} = ChromeUtils.import("resource://gre/modules/WebNavigationFrames.jsm");
+      frameId = await ContentTask.spawn(
+        gBrowser.selectedBrowser,
+        {},
+        function() {
+          const { WebNavigationFrames } = ChromeUtils.import(
+            "resource://gre/modules/WebNavigationFrames.jsm"
+          );
 
-        let {contentWindow} = content.document.getElementById("frame");
-        return WebNavigationFrames.getFrameId(contentWindow);
-      });
+          let { contentWindow } = content.document.getElementById("frame");
+          return WebNavigationFrames.getFrameId(contentWindow);
+        }
+      );
       await openContextMenuInFrame("#frame");
     },
     async doCloseMenu() {
@@ -551,17 +588,23 @@ add_task(async function test_show_hide_editable_selection() {
       editable: true,
       frameId: 0,
       pageUrl: PAGE,
-      get selectionText() { return selectionText; },
+      get selectionText() {
+        return selectionText;
+      },
       targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
       // Select lots of text in the test page before opening the menu.
-      selectionText = await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-        let node = content.document.getElementById("editabletext");
-        node.select();
-        node.focus();
-        return node.value;
-      });
+      selectionText = await ContentTask.spawn(
+        gBrowser.selectedBrowser,
+        {},
+        function() {
+          let node = content.document.getElementById("editabletext");
+          node.select();
+          node.focus();
+          return node.value;
+        }
+      );
 
       await openContextMenu("#editabletext");
     },
@@ -596,7 +639,9 @@ add_task(async function test_show_hide_video() {
       targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
-      await ContentTask.spawn(gBrowser.selectedBrowser, VIDEO_URL, function(VIDEO_URL) {
+      await ContentTask.spawn(gBrowser.selectedBrowser, VIDEO_URL, function(
+        VIDEO_URL
+      ) {
         let video = content.document.createElement("video");
         video.controls = true;
         video.src = VIDEO_URL;
@@ -637,7 +682,9 @@ add_task(async function test_show_hide_audio() {
       targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
-      await ContentTask.spawn(gBrowser.selectedBrowser, AUDIO_URL, function(AUDIO_URL) {
+      await ContentTask.spawn(gBrowser.selectedBrowser, AUDIO_URL, function(
+        AUDIO_URL
+      ) {
         let audio = content.document.createElement("audio");
         audio.controls = true;
         audio.src = AUDIO_URL;

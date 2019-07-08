@@ -1,14 +1,19 @@
 function contentTask() {
   let finish;
-  let promise = new Promise(resolve => { finish = resolve; });
+  let promise = new Promise(resolve => {
+    finish = resolve;
+  });
 
   let contentWindow;
   let originalLocation;
   let currentTest = -1;
   let stayingOnPage = true;
 
-  const TEST_PAGE = "http://mochi.test:8888/browser/docshell/test/browser/file_bug1046022.html";
-  const TARGETED_PAGE = "data:text/html," + encodeURIComponent("<body>Shouldn't be seeing this</body>");
+  const TEST_PAGE =
+    "http://mochi.test:8888/browser/docshell/test/browser/file_bug1046022.html";
+  const TARGETED_PAGE =
+    "data:text/html," +
+    encodeURIComponent("<body>Shouldn't be seeing this</body>");
 
   let loadExpected = TEST_PAGE;
   var testsLength;
@@ -16,13 +21,18 @@ function contentTask() {
   function onTabLoaded(event) {
     info("A document loaded in a tab!");
     let loadedPage = event.target.location.href;
-    if (loadedPage == "about:blank" ||
-        event.originalTarget != content.document) {
+    if (
+      loadedPage == "about:blank" ||
+      event.originalTarget != content.document
+    ) {
       return;
     }
 
     if (!loadExpected) {
-      ok(false, "Expected no page loads, but loaded " + loadedPage + " instead!");
+      ok(
+        false,
+        "Expected no page loads, but loaded " + loadedPage + " instead!"
+      );
       return;
     }
 
@@ -40,8 +50,15 @@ function contentTask() {
   }
 
   function onAfterTargetedPageLoad() {
-    ok(!stayingOnPage, "We should only fire if we're expecting to let the onbeforeunload dialog proceed to the new location");
-    is(content.location.href, TARGETED_PAGE, "Should have loaded the expected new page");
+    ok(
+      !stayingOnPage,
+      "We should only fire if we're expecting to let the onbeforeunload dialog proceed to the new location"
+    );
+    is(
+      content.location.href,
+      TARGETED_PAGE,
+      "Should have loaded the expected new page"
+    );
 
     runNextTest();
   }
@@ -49,10 +66,17 @@ function contentTask() {
   function onTabModalDialogLoaded() {
     info(content.location.href);
     is(content, contentWindow, "Window should be the same still.");
-    is(content.location.href, originalLocation, "Page should not have changed.");
+    is(
+      content.location.href,
+      originalLocation,
+      "Page should not have changed."
+    );
     is(content.mySuperSpecialMark, 42, "Page should not have refreshed.");
 
-    ok(!content.dialogWasInvoked, "Dialog should only be invoked once per test.");
+    ok(
+      !content.dialogWasInvoked,
+      "Dialog should only be invoked once per test."
+    );
     content.dialogWasInvoked = true;
 
     addMessageListener("test-beforeunload:dialog-gone", function listener(msg) {
@@ -93,7 +117,6 @@ function contentTask() {
       currentTest = 0;
     }
 
-
     if (!stayingOnPage) {
       // Right now we're on the data: page. Null contentWindow out to
       // avoid CPOW errors when contentWindow is no longer the correct
@@ -115,8 +138,12 @@ function contentTask() {
     contentWindow.dialogWasInvoked = false;
     originalLocation = contentWindow.location.href;
     // And run this test:
-    info("Running test with onbeforeunload " + contentWindow.wrappedJSObject.testFns[currentTest].toSource());
-    contentWindow.onbeforeunload = contentWindow.wrappedJSObject.testFns[currentTest];
+    info(
+      "Running test with onbeforeunload " +
+        contentWindow.wrappedJSObject.testFns[currentTest].toSource()
+    );
+    contentWindow.onbeforeunload =
+      contentWindow.wrappedJSObject.testFns[currentTest];
     sendAsyncMessage("test-beforeunload:reset");
     content.location = TARGETED_PAGE;
   }
@@ -138,15 +165,18 @@ function contentTask() {
   });
 }
 
-SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", false]]});
+SpecialPowers.pushPrefEnv({
+  set: [["dom.require_user_interaction_for_beforeunload", false]],
+});
 
 var testTab;
 
 var loadStarted = false;
 var tabStateListener = {
   onStateChange(webprogress, request, stateFlags, status) {
-    let startDocumentFlags = Ci.nsIWebProgressListener.STATE_START |
-                             Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
+    let startDocumentFlags =
+      Ci.nsIWebProgressListener.STATE_START |
+      Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
     if ((stateFlags & startDocumentFlags) == startDocumentFlags) {
       loadStarted = true;
     }
@@ -183,14 +213,18 @@ function onTabModalDialogLoaded(node) {
       });
     }
   });
-  observer.observe(node.parentNode, {childList: true});
+  observer.observe(node.parentNode, { childList: true });
 
-  BrowserTestUtils.waitForMessage(mm, "test-beforeunload:dialog-response").then((stayingOnPage) => {
-    let button = node.querySelector(stayingOnPage ? ".tabmodalprompt-button1" : ".tabmodalprompt-button0");
-    // ... and then actually make the dialog go away
-    info("Clicking button: " + button.label);
-    EventUtils.synthesizeMouseAtCenter(button, {});
-  });
+  BrowserTestUtils.waitForMessage(mm, "test-beforeunload:dialog-response").then(
+    stayingOnPage => {
+      let button = node.querySelector(
+        stayingOnPage ? ".tabmodalprompt-button1" : ".tabmodalprompt-button0"
+      );
+      // ... and then actually make the dialog go away
+      info("Clicking button: " + button.label);
+      EventUtils.synthesizeMouseAtCenter(button, {});
+    }
+  );
 }
 
 // Listen for the dialog being created
@@ -202,9 +236,12 @@ function test() {
 
   testTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
-  testTab.linkedBrowser.messageManager.addMessageListener("test-beforeunload:reset", () => {
-    loadStarted = false;
-  });
+  testTab.linkedBrowser.messageManager.addMessageListener(
+    "test-beforeunload:reset",
+    () => {
+      loadStarted = false;
+    }
+  );
 
   ContentTask.spawn(testTab.linkedBrowser, null, contentTask).then(finish);
 }
@@ -214,4 +251,3 @@ registerCleanupFunction(function() {
   gBrowser.removeProgressListener(tabStateListener);
   gBrowser.removeTab(testTab);
 });
-

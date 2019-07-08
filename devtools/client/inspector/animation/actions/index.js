@@ -6,27 +6,28 @@
 
 const { createEnum } = require("devtools/client/shared/enum");
 
-createEnum([
+createEnum(
+  [
+    // Update the list of animation.
+    "UPDATE_ANIMATIONS",
 
-  // Update the list of animation.
-  "UPDATE_ANIMATIONS",
+    // Update visibility of detail pane.
+    "UPDATE_DETAIL_VISIBILITY",
 
-  // Update visibility of detail pane.
-  "UPDATE_DETAIL_VISIBILITY",
+    // Update state of the picker enabled.
+    "UPDATE_ELEMENT_PICKER_ENABLED",
 
-  // Update state of the picker enabled.
-  "UPDATE_ELEMENT_PICKER_ENABLED",
+    // Update highlighted node.
+    "UPDATE_HIGHLIGHTED_NODE",
 
-  // Update highlighted node.
-  "UPDATE_HIGHLIGHTED_NODE",
+    // Update playback rate.
+    "UPDATE_PLAYBACK_RATES",
 
-  // Update playback rate.
-  "UPDATE_PLAYBACK_RATES",
+    // Update selected animation.
+    "UPDATE_SELECTED_ANIMATION",
 
-  // Update selected animation.
-  "UPDATE_SELECTED_ANIMATION",
-
-  // Update sidebar size.
-  "UPDATE_SIDEBAR_SIZE",
-
-], module.exports);
+    // Update sidebar size.
+    "UPDATE_SIDEBAR_SIZE",
+  ],
+  module.exports
+);

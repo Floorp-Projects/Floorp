@@ -7,23 +7,31 @@ add_task(async function setup() {
   await setupPlacesDatabase("places_v43.sqlite");
 });
 
-
 // Accessing the database for the first time should trigger migration, and the
 // schema version should be updated.
 add_task(async function database_is_valid() {
-  Assert.equal(PlacesUtils.history.databaseStatus,
-               PlacesUtils.history.DATABASE_STATUS_UPGRADED);
+  Assert.equal(
+    PlacesUtils.history.databaseStatus,
+    PlacesUtils.history.DATABASE_STATUS_UPGRADED
+  );
 
   let db = await PlacesUtils.promiseDBConnection();
-  Assert.equal((await db.getSchemaVersion()), CURRENT_SCHEMA_VERSION);
+  Assert.equal(await db.getSchemaVersion(), CURRENT_SCHEMA_VERSION);
 
   // Now wait for moz_origins.frecency to be populated before continuing with
   // other test tasks.
-  await TestUtils.waitForCondition(() => {
-    return !Services.prefs.getBoolPref("places.database.migrateV52OriginFrecencies", false);
-  }, "Waiting for v52 origin frecencies to be migrated", 100, 3000);
+  await TestUtils.waitForCondition(
+    () => {
+      return !Services.prefs.getBoolPref(
+        "places.database.migrateV52OriginFrecencies",
+        false
+      );
+    },
+    "Waiting for v52 origin frecencies to be migrated",
+    100,
+    3000
+  );
 });
-
 
 // moz_origins should be populated.
 add_task(async function test_origins() {
@@ -86,7 +94,6 @@ add_task(async function test_origins() {
   Assert.equal(rows.length, 0);
 });
 
-
 // Frecency stats should have been collected.
 add_task(async function test_frecency_stats() {
   let db = await PlacesUtils.promiseDBConnection();
@@ -111,5 +118,5 @@ add_task(async function test_frecency_stats() {
 
   Assert.equal(count, frecencies.length);
   Assert.equal(sum, frecencies.reduce((memo, f) => memo + f, 0));
-  Assert.equal(squares, frecencies.reduce((memo, f) => memo + (f * f), 0));
+  Assert.equal(squares, frecencies.reduce((memo, f) => memo + f * f, 0));
 });

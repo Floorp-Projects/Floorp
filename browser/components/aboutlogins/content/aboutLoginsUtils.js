@@ -10,8 +10,10 @@
  * @params {object} event.value [optional] The telemety event value
  */
 export function recordTelemetryEvent(event) {
-  document.dispatchEvent(new CustomEvent("AboutLoginsRecordTelemetryEvent", {
-    bubbles: true,
-    detail: event,
-  }));
+  document.dispatchEvent(
+    new CustomEvent("AboutLoginsRecordTelemetryEvent", {
+      bubbles: true,
+      detail: event,
+    })
+  );
 }

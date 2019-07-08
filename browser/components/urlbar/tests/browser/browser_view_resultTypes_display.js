@@ -3,46 +3,66 @@
 
 "use strict";
 
-const {SyncedTabs} = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm");
+const { SyncedTabs } = ChromeUtils.import(
+  "resource://services-sync/SyncedTabs.jsm"
+);
 
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 function assertElementsDisplayed(details, expected) {
-  Assert.equal(details.type, expected.type,
-    "Should be displaying a row of the correct type");
-  Assert.equal(details.title, expected.title,
-    "Should be displaying the correct title");
+  Assert.equal(
+    details.type,
+    expected.type,
+    "Should be displaying a row of the correct type"
+  );
+  Assert.equal(
+    details.title,
+    expected.title,
+    "Should be displaying the correct title"
+  );
   if (expected.separator) {
-    Assert.notEqual(window.getComputedStyle(details.element.separator).display,
-                    "none", "Should be displaying a separator");
-    Assert.notEqual(window.getComputedStyle(details.element.separator).visibility,
-                    "collapse", "Should be displaying a separator");
+    Assert.notEqual(
+      window.getComputedStyle(details.element.separator).display,
+      "none",
+      "Should be displaying a separator"
+    );
+    Assert.notEqual(
+      window.getComputedStyle(details.element.separator).visibility,
+      "collapse",
+      "Should be displaying a separator"
+    );
   } else {
-    Assert.ok(window.getComputedStyle(details.element.separator).display == "none" ||
-              window.getComputedStyle(details.element.separator).visibility == "collapse",
-              "Should not be displaying a separator");
+    Assert.ok(
+      window.getComputedStyle(details.element.separator).display == "none" ||
+        window.getComputedStyle(details.element.separator).visibility ==
+          "collapse",
+      "Should not be displaying a separator"
+    );
   }
 }
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({set: [
-    ["browser.urlbar.suggest.searches", false],
-    // Disable search suggestions in the urlbar.
-    ["browser.urlbar.suggest.searches", false],
-    // Clear historical search suggestions to avoid interference from previous
-    // tests.
-    ["browser.urlbar.maxHistoricalSearchSuggestions", 0],
-    // Use the default matching bucket configuration.
-    ["browser.urlbar.matchBuckets", "general:5,suggestion:4"],
-    // Turn autofill off.
-    ["browser.urlbar.autoFill", false],
-    // Special prefs for remote tabs.
-    ["services.sync.username", "fake"],
-    ["services.sync.syncedTabs.showRemoteTabs", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.suggest.searches", false],
+      // Disable search suggestions in the urlbar.
+      ["browser.urlbar.suggest.searches", false],
+      // Clear historical search suggestions to avoid interference from previous
+      // tests.
+      ["browser.urlbar.maxHistoricalSearchSuggestions", 0],
+      // Use the default matching bucket configuration.
+      ["browser.urlbar.matchBuckets", "general:5,suggestion:4"],
+      // Turn autofill off.
+      ["browser.urlbar.autoFill", false],
+      // Special prefs for remote tabs.
+      ["services.sync.username", "fake"],
+      ["services.sync.syncedTabs.showRemoteTabs", true],
+    ],
+  });
 
   let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
+    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
+  );
   let oldDefaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(engine);
 
@@ -52,9 +72,12 @@ add_task(async function setup() {
 });
 
 add_task(async function test_tab_switch_result() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:mozilla"
+  );
 
-  await BrowserTestUtils.withNewTab({gBrowser}, async () => {
+  await BrowserTestUtils.withNewTab({ gBrowser }, async () => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       waitForFocus,
@@ -77,7 +100,7 @@ add_task(async function test_tab_switch_result() {
 add_task(async function test_search_result() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.searches", true);
 
-  await BrowserTestUtils.withNewTab({gBrowser}, async () => {
+  await BrowserTestUtils.withNewTab({ gBrowser }, async () => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       waitForFocus,
@@ -109,13 +132,15 @@ add_task(async function test_search_result() {
 });
 
 add_task(async function test_url_result() {
-  await PlacesTestUtils.addVisits([{
-    uri: "http://example.com",
-    title: "example",
-    transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://example.com",
+      title: "example",
+      transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
+    },
+  ]);
 
-  await BrowserTestUtils.withNewTab({gBrowser}, async () => {
+  await BrowserTestUtils.withNewTab({ gBrowser }, async () => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       waitForFocus,
@@ -143,7 +168,7 @@ add_task(async function test_keyword_result() {
     url: TEST_URL + "?q=%s",
   });
 
-  await BrowserTestUtils.withNewTab({gBrowser}, async () => {
+  await BrowserTestUtils.withNewTab({ gBrowser }, async () => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       waitForFocus,
@@ -179,8 +204,8 @@ add_task(async function test_keyword_result() {
 add_task(async function test_omnibox_result() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "omnibox": {
-        "keyword": "omniboxtest",
+      omnibox: {
+        keyword: "omniboxtest",
       },
 
       background() {
@@ -189,8 +214,7 @@ add_task(async function test_omnibox_result() {
           description: "doit",
         });
         // Just do nothing for this test.
-        browser.omnibox.onInputEntered.addListener(() => {
-        });
+        browser.omnibox.onInputEntered.addListener(() => {});
         browser.omnibox.onInputChanged.addListener((text, suggest) => {
           suggest([]);
         });
@@ -200,7 +224,7 @@ add_task(async function test_omnibox_result() {
 
   await extension.startup();
 
-  await BrowserTestUtils.withNewTab({gBrowser}, async () => {
+  await BrowserTestUtils.withNewTab({ gBrowser }, async () => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       waitForFocus,
@@ -227,19 +251,19 @@ add_task(async function test_remote_tab_result() {
   await PlacesUtils.bookmarks.eraseEverything();
 
   const REMOTE_TAB = {
-    "id": "7cqCr77ptzX3",
-    "type": "client",
-    "lastModified": 1492201200,
-    "name": "zcarter's Nightly on MacBook-Pro-25",
-    "clientType": "desktop",
-    "tabs": [
+    id: "7cqCr77ptzX3",
+    type: "client",
+    lastModified: 1492201200,
+    name: "zcarter's Nightly on MacBook-Pro-25",
+    clientType: "desktop",
+    tabs: [
       {
-        "type": "tab",
-        "title": "Test Remote",
-        "url": "http://example.com",
-        "icon": UrlbarUtils.ICON.DEFAULT,
-        "client": "7cqCr77ptzX3",
-        "lastUsed": 1452124677,
+        type: "tab",
+        title: "Test Remote",
+        url: "http://example.com",
+        icon: UrlbarUtils.ICON.DEFAULT,
+        client: "7cqCr77ptzX3",
+        lastUsed: 1452124677,
       },
     ],
   };
@@ -250,19 +274,24 @@ add_task(async function test_remote_tab_result() {
   SyncedTabs._internal = {
     isConfiguredToSyncTabs: true,
     hasSyncedThisSession: true,
-    getTabClients() { return Promise.resolve([]); },
-    syncTabs() { return Promise.resolve(); },
+    getTabClients() {
+      return Promise.resolve([]);
+    },
+    syncTabs() {
+      return Promise.resolve();
+    },
   };
 
   // Tell the Sync XPCOM service it is initialized.
-  let weaveXPCService = Cc["@mozilla.org/weave/service;1"]
-                          .getService(Ci.nsISupports)
-                          .wrappedJSObject;
+  let weaveXPCService = Cc["@mozilla.org/weave/service;1"].getService(
+    Ci.nsISupports
+  ).wrappedJSObject;
   let oldWeaveServiceReady = weaveXPCService.ready;
   weaveXPCService.ready = true;
 
-  sandbox.stub(SyncedTabs._internal, "getTabClients")
-         .callsFake(() => Promise.resolve(Cu.cloneInto([REMOTE_TAB], {})));
+  sandbox
+    .stub(SyncedTabs._internal, "getTabClients")
+    .callsFake(() => Promise.resolve(Cu.cloneInto([REMOTE_TAB], {})));
 
   registerCleanupFunction(async function() {
     sandbox.restore();
@@ -273,7 +302,7 @@ add_task(async function test_remote_tab_result() {
     Services.telemetry.setEventRecordingEnabled("navigation", false);
   });
 
-  await BrowserTestUtils.withNewTab({gBrowser}, async () => {
+  await BrowserTestUtils.withNewTab({ gBrowser }, async () => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       waitForFocus,

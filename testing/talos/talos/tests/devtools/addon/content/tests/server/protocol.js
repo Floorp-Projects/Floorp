@@ -4,8 +4,14 @@
 
 "use strict";
 
-const { openToolbox, closeToolbox, testSetup, testTeardown, runTest,
-        SIMPLE_URL } = require("../head");
+const {
+  openToolbox,
+  closeToolbox,
+  testSetup,
+  testTeardown,
+  runTest,
+  SIMPLE_URL,
+} = require("../head");
 
 const protocol = require("devtools/shared/protocol");
 const { FrontClassWithSpec } = protocol;
@@ -34,8 +40,10 @@ module.exports = async function() {
   let url = module.uri.replace(/protocol\.js$/, "actor.js");
 
   // Register a test actor within the content process
-  messageManager.loadFrameScript("data:,(" + encodeURIComponent(
-    `function () {
+  messageManager.loadFrameScript(
+    "data:,(" +
+      encodeURIComponent(
+        `function () {
       const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
       const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
@@ -45,7 +53,10 @@ module.exports = async function() {
         type: { target: true }
       });
     }`
-  ) + ")()", true);
+      ) +
+      ")()",
+    true
+  );
 
   // Create test payloads
   let bigString = "";
@@ -58,7 +69,7 @@ module.exports = async function() {
     bigObject["attribute-" + i] = bigString;
   }
 
-  let bigArray = Array.from({length: ARRAY_SIZE}, (_, i) => bigObject);
+  let bigArray = Array.from({ length: ARRAY_SIZE }, (_, i) => bigObject);
 
   // Open against options to avoid noise from tools
   let toolbox = await openToolbox("options");

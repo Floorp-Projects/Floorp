@@ -35,8 +35,10 @@ add_task(async function() {
   // Check that the service worker disappeared from the UI
   let names = [...document.querySelectorAll("#service-workers .target-name")];
   names = names.map(element => element.textContent);
-  ok(!names.includes(SERVICE_WORKER),
-    "The service worker url is no longer in the list: " + names);
+  ok(
+    !names.includes(SERVICE_WORKER),
+    "The service worker url is no longer in the list: " + names
+  );
 
   await removeTab(swTab);
   await closeAboutDebugging(tab);

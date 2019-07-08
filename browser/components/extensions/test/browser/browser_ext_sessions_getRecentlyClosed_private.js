@@ -26,11 +26,17 @@ async function run_test_extension(incognitoOverride) {
   });
 
   // Open a private browsing window.
-  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
 
   await extension.startup();
 
-  let {Management: {global: {windowTracker}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  let {
+    Management: {
+      global: { windowTracker },
+    },
+  } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
   let privateWinId = windowTracker.getId(privateWin);
 
   extension.sendMessage("check-sessions");
@@ -38,10 +44,16 @@ async function run_test_extension(incognitoOverride) {
   recordInitialTimestamps(recentlyClosed.map(item => item.lastModified));
 
   // Open and close two tabs in the private window
-  let tab = await BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser, "http://example.com");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    privateWin.gBrowser,
+    "http://example.com"
+  );
   BrowserTestUtils.removeTab(tab);
 
-  tab = await BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser, "http://example.com");
+  tab = await BrowserTestUtils.openNewForegroundTab(
+    privateWin.gBrowser,
+    "http://example.com"
+  );
   let sessionPromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
   BrowserTestUtils.removeTab(tab);
   await sessionPromise;
@@ -49,30 +61,39 @@ async function run_test_extension(incognitoOverride) {
   extension.sendMessage("check-sessions");
   recentlyClosed = await extension.awaitMessage("recentlyClosed");
   let expectedCount = incognitoOverride == "not_allowed" ? 0 : 2;
-  checkRecentlyClosed(recentlyClosed.filter(onlyNewItemsFilter), expectedCount, privateWinId, true);
+  checkRecentlyClosed(
+    recentlyClosed.filter(onlyNewItemsFilter),
+    expectedCount,
+    privateWinId,
+    true
+  );
 
   // Close the private window.
   await BrowserTestUtils.closeWindow(privateWin);
 
   extension.sendMessage("check-sessions");
   recentlyClosed = await extension.awaitMessage("recentlyClosed");
-  is(recentlyClosed.filter(onlyNewItemsFilter).length, 0, "the closed private window info was not found in recently closed data");
+  is(
+    recentlyClosed.filter(onlyNewItemsFilter).length,
+    0,
+    "the closed private window info was not found in recently closed data"
+  );
 
   await extension.unload();
 }
 
 add_task(async function test_sessions_get_recently_closed_default() {
-  SpecialPowers.pushPrefEnv({set: [
-    ["extensions.allowPrivateBrowsingByDefault", true],
-  ]});
+  SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", true]],
+  });
 
   await run_test_extension();
 });
 
 add_task(async function test_sessions_get_recently_closed_private_incognito() {
-  SpecialPowers.pushPrefEnv({set: [
-    ["extensions.allowPrivateBrowsingByDefault", false],
-  ]});
+  SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
 
   await run_test_extension("spanning");
   await run_test_extension("not_allowed");

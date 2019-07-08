@@ -1,4 +1,4 @@
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   var tmpDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
@@ -11,7 +11,9 @@ function run_test() {
     testFile.remove(false);
   }
 
-  var zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
+  var zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(
+    Ci.nsIZipReader
+  );
   zipreader.open(zipfile);
 
   var entries = zipreader.findEntries(null);

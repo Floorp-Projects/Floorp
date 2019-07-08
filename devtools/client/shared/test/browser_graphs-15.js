@@ -32,7 +32,7 @@ add_task(async function() {
 });
 
 async function performTest() {
-  const [host,, doc] = await createHost();
+  const [host, , doc] = await createHost();
   const graph = new LineGraphWidget(doc.body, "fps");
 
   await testGraph(graph);
@@ -44,6 +44,9 @@ async function performTest() {
 async function testGraph(graph) {
   console.log("test data", TEST_DATA);
   await graph.setDataFromTimestamps(TEST_DATA, INTERVAL, DURATION);
-  is(graph._avgTooltip.querySelector("[text=value]").textContent, "50",
-    "The average tooltip displays the correct value.");
+  is(
+    graph._avgTooltip.querySelector("[text=value]").textContent,
+    "50",
+    "The average tooltip displays the correct value."
+  );
 }

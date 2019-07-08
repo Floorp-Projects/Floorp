@@ -3,9 +3,13 @@
 
 "use strict";
 
-const {ExtensionStorageEngine} = ChromeUtils.import("resource://services-sync/engines/extension-storage.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
-const {extensionStorageSync} = ChromeUtils.import("resource://gre/modules/ExtensionStorageSync.jsm");
+const { ExtensionStorageEngine } = ChromeUtils.import(
+  "resource://services-sync/engines/extension-storage.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { extensionStorageSync } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionStorageSync.jsm"
+);
 
 let engine;
 
@@ -33,7 +37,9 @@ add_task(async function setup() {
 
 add_task(async function test_calling_sync_calls__sync() {
   let oldSync = ExtensionStorageEngine.prototype._sync;
-  let syncMock = ExtensionStorageEngine.prototype._sync = mock({returns: true});
+  let syncMock = (ExtensionStorageEngine.prototype._sync = mock({
+    returns: true,
+  }));
   try {
     // I wanted to call the main sync entry point for the entire
     // package, but that fails because it tries to sync ClientEngine
@@ -47,7 +53,9 @@ add_task(async function test_calling_sync_calls__sync() {
 
 add_task(async function test_calling_wipeClient_calls_clearAll() {
   let oldClearAll = extensionStorageSync.clearAll;
-  let clearMock = extensionStorageSync.clearAll = mock({returns: Promise.resolve()});
+  let clearMock = (extensionStorageSync.clearAll = mock({
+    returns: Promise.resolve(),
+  }));
   try {
     await engine.wipeClient();
   } finally {
@@ -57,13 +65,15 @@ add_task(async function test_calling_wipeClient_calls_clearAll() {
 });
 
 add_task(async function test_calling_sync_calls_ext_storage_sync() {
-  const extension = {id: "my-extension"};
+  const extension = { id: "my-extension" };
   let oldSync = extensionStorageSync.syncAll;
-  let syncMock = extensionStorageSync.syncAll = mock({returns: Promise.resolve()});
+  let syncMock = (extensionStorageSync.syncAll = mock({
+    returns: Promise.resolve(),
+  }));
   try {
     await withSyncContext(async function(context) {
       // Set something so that everyone knows that we're using storage.sync
-      await extensionStorageSync.set(extension, {"a": "b"}, context);
+      await extensionStorageSync.set(extension, { a: "b" }, context);
 
       await engine._sync();
     });

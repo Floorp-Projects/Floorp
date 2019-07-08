@@ -52,14 +52,18 @@ add_task(async function() {
     `Assertion failed`,
   ];
   await waitFor(() =>
-    expectedMessages.every(expectedMessage => findMessage(hud, expectedMessage)));
+    expectedMessages.every(expectedMessage => findMessage(hud, expectedMessage))
+  );
 
   ok(true, "Expected messages are displayed in the browser console");
 
   info("Uncheck the Show content messages checkbox");
-  const onContentMessagesHidden = waitFor(() => !findMessage(hud, contentArgs.log));
-  const checkbox =
-    hud.ui.outputNode.querySelector(".webconsole-filterbar-primary .filter-checkbox");
+  const onContentMessagesHidden = waitFor(
+    () => !findMessage(hud, contentArgs.log)
+  );
+  const checkbox = hud.ui.outputNode.querySelector(
+    ".webconsole-filterbar-primary .filter-checkbox"
+  );
   checkbox.click();
   await onContentMessagesHidden;
 
@@ -69,7 +73,8 @@ add_task(async function() {
 
   info("Check the Show content messages checkbox");
   const onContentMessagesDisplayed = waitFor(() =>
-    expectedMessages.every(expectedMessage => findMessage(hud, expectedMessage)));
+    expectedMessages.every(expectedMessage => findMessage(hud, expectedMessage))
+  );
   checkbox.click();
   await onContentMessagesDisplayed;
 

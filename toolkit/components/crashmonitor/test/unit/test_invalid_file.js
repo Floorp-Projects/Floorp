@@ -9,8 +9,9 @@
 add_task(async function test_invalid_file() {
   // Write bogus data to checkpoint file
   let data = "1234";
-  await OS.File.writeAtomic(sessionCheckpointsPath, data,
-                            {tmpPath: sessionCheckpointsPath + ".tmp"});
+  await OS.File.writeAtomic(sessionCheckpointsPath, data, {
+    tmpPath: sessionCheckpointsPath + ".tmp",
+  });
 
   // An invalid file will cause |init| to return null
   let status = await CrashMonitor.init();

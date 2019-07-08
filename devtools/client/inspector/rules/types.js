@@ -20,18 +20,20 @@ exports.classes = {
 /**
  * A CSS declaration.
  */
-const declaration = exports.declaration = {
+const declaration = (exports.declaration = {
   // Array of the computed properties for a CSS declaration.
-  computedProperties: PropTypes.arrayOf(PropTypes.shape({
-    // Whether or not the computed property is overridden.
-    isOverridden: PropTypes.bool,
-    // The computed property name.
-    name: PropTypes.string,
-    // The computed priority (either "important" or an empty string).
-    priority: PropTypes.string,
-    // The computed property value.
-    value: PropTypes.string,
-  })),
+  computedProperties: PropTypes.arrayOf(
+    PropTypes.shape({
+      // Whether or not the computed property is overridden.
+      isOverridden: PropTypes.bool,
+      // The computed property name.
+      name: PropTypes.string,
+      // The computed priority (either "important" or an empty string).
+      priority: PropTypes.string,
+      // The computed property value.
+      value: PropTypes.string,
+    })
+  ),
 
   // An unique CSS declaration id.
   id: PropTypes.string,
@@ -67,7 +69,7 @@ const declaration = exports.declaration = {
 
   // The declaration's property value.
   value: PropTypes.string,
-};
+});
 
 /**
  * The pseudo classes redux structure.
@@ -109,7 +111,7 @@ exports.pseudoClasses = {
 /**
  * A CSS selector.
  */
-const selector = exports.selector = {
+const selector = (exports.selector = {
   // Function that returns a Promise containing an unique CSS selector.
   getUniqueSelector: PropTypes.func,
   // Array of the selectors that match the selected element.
@@ -118,7 +120,7 @@ const selector = exports.selector = {
   selectorText: PropTypes.string,
   // Array of the CSS rule's selectors.
   selectors: PropTypes.arrayOf(PropTypes.string),
-};
+});
 
 /**
  * A CSS Rule.

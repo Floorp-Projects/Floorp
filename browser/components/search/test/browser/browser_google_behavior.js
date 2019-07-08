@@ -9,16 +9,18 @@
 
 "use strict";
 
-let searchEngineDetails = [{
-  alias: "g",
-  codes: {
-    context: "",
-    keyword: "",
-    newTab: "",
-    submission: "",
+let searchEngineDetails = [
+  {
+    alias: "g",
+    codes: {
+      context: "",
+      keyword: "",
+      newTab: "",
+      submission: "",
+    },
+    name: "Google",
   },
-  name: "Google",
-}];
+];
 
 let region = Services.prefs.getCharPref("browser.search.region");
 let code = "";
@@ -57,7 +59,9 @@ function promiseContentSearchReady(browser) {
         }
       }
 
-      content.addEventListener("ContentSearchService", function listener(aEvent) {
+      content.addEventListener("ContentSearchService", function listener(
+        aEvent
+      ) {
         if (aEvent.detail.type == "State") {
           content.removeEventListener("ContentSearchService", listener);
           resolve();
@@ -102,7 +106,12 @@ async function testSearchEngine(engineDetails) {
       run() {
         // Simulate a contextmenu search
         // FIXME: This is a bit "low-level"...
-        BrowserSearch._loadSearch("foo", false, "contextmenu", Services.scriptSecurityManager.getSystemPrincipal());
+        BrowserSearch._loadSearch(
+          "foo",
+          false,
+          "contextmenu",
+          Services.scriptSecurityManager.getSystemPrincipal()
+        );
       },
     },
     {

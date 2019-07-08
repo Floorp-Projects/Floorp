@@ -22,24 +22,30 @@ add_task(async function() {
   await selectTableItem(c1id);
 
   // test that value is something initially
-  const initialValue = [[
-    {name: "c1", value: "1.2.3.4.5.6.7"},
-    {name: "c1.Path", value: "/browser"},
-  ], [
-    {name: "c1", value: "Array"},
-    {name: "c1.0", value: "1"},
-    {name: "c1.6", value: "7"},
-  ]];
+  const initialValue = [
+    [
+      { name: "c1", value: "1.2.3.4.5.6.7" },
+      { name: "c1.Path", value: "/browser" },
+    ],
+    [
+      { name: "c1", value: "Array" },
+      { name: "c1.0", value: "1" },
+      { name: "c1.6", value: "7" },
+    ],
+  ];
 
   // test that value is something initially
-  const finalValue = [[
-    {name: "c1", value: '{"foo": 4,"bar":6}'},
-    {name: "c1.Path", value: "/browser"},
-  ], [
-    {name: "c1", value: "Object"},
-    {name: "c1.foo", value: "4"},
-    {name: "c1.bar", value: "6"},
-  ]];
+  const finalValue = [
+    [
+      { name: "c1", value: '{"foo": 4,"bar":6}' },
+      { name: "c1.Path", value: "/browser" },
+    ],
+    [
+      { name: "c1", value: "Object" },
+      { name: "c1.foo", value: "4" },
+      { name: "c1.bar", value: "6" },
+    ],
+  ];
 
   // Check that sidebar shows correct initial value
   await findVariableViewProperties(initialValue[0], false);
@@ -86,13 +92,19 @@ add_task(async function() {
       [
         getCookieId("c1", "test1.example.org", "/browser"),
         getCookieId("c2", "test1.example.org", "/browser"),
-        getCookieId("c3", "test1.example.org",
-                    "/browser/devtools/client/storage/test"),
+        getCookieId(
+          "c3",
+          "test1.example.org",
+          "/browser/devtools/client/storage/test"
+        ),
       ],
     ],
   ]);
-  const c3id = getCookieId("c3", "test1.example.org",
-                         "/browser/devtools/client/storage/test");
+  const c3id = getCookieId(
+    "c3",
+    "test1.example.org",
+    "/browser/devtools/client/storage/test"
+  );
   checkCell(c3id, "value", "booyeah");
 
   // Add another
@@ -106,15 +118,24 @@ add_task(async function() {
       [
         getCookieId("c1", "test1.example.org", "/browser"),
         getCookieId("c2", "test1.example.org", "/browser"),
-        getCookieId("c3", "test1.example.org",
-                    "/browser/devtools/client/storage/test"),
-        getCookieId("c4", "test1.example.org",
-                    "/browser/devtools/client/storage/test"),
+        getCookieId(
+          "c3",
+          "test1.example.org",
+          "/browser/devtools/client/storage/test"
+        ),
+        getCookieId(
+          "c4",
+          "test1.example.org",
+          "/browser/devtools/client/storage/test"
+        ),
       ],
     ],
   ]);
-  const c4id = getCookieId("c4", "test1.example.org",
-                         "/browser/devtools/client/storage/test");
+  const c4id = getCookieId(
+    "c4",
+    "test1.example.org",
+    "/browser/devtools/client/storage/test"
+  );
   checkCell(c4id, "value", "booyeah");
 
   // Removing cookies
@@ -127,10 +148,16 @@ add_task(async function() {
       ["cookies", "http://test1.example.org"],
       [
         getCookieId("c2", "test1.example.org", "/browser"),
-        getCookieId("c3", "test1.example.org",
-                    "/browser/devtools/client/storage/test"),
-        getCookieId("c4", "test1.example.org",
-                    "/browser/devtools/client/storage/test"),
+        getCookieId(
+          "c3",
+          "test1.example.org",
+          "/browser/devtools/client/storage/test"
+        ),
+        getCookieId(
+          "c4",
+          "test1.example.org",
+          "/browser/devtools/client/storage/test"
+        ),
       ],
     ],
   ]);
@@ -138,7 +165,7 @@ add_task(async function() {
   ok(!gUI.sidebar.hidden, "Sidebar still visible for next row");
 
   // Check if next element's value is visible in sidebar
-  await findVariableViewProperties([{name: "c2", value: "foobar"}]);
+  await findVariableViewProperties([{ name: "c2", value: "foobar" }]);
 
   // Keep deleting till no rows
   await removeCookie("c3");
@@ -150,14 +177,17 @@ add_task(async function() {
       ["cookies", "http://test1.example.org"],
       [
         getCookieId("c2", "test1.example.org", "/browser"),
-        getCookieId("c4", "test1.example.org",
-                    "/browser/devtools/client/storage/test"),
+        getCookieId(
+          "c4",
+          "test1.example.org",
+          "/browser/devtools/client/storage/test"
+        ),
       ],
     ],
   ]);
 
   // Check if next element's value is visible in sidebar
-  await findVariableViewProperties([{name: "c2", value: "foobar"}]);
+  await findVariableViewProperties([{ name: "c2", value: "foobar" }]);
 
   await removeCookie("c2", "/browser");
 
@@ -167,22 +197,23 @@ add_task(async function() {
     [
       ["cookies", "http://test1.example.org"],
       [
-        getCookieId("c4", "test1.example.org",
-                    "/browser/devtools/client/storage/test"),
+        getCookieId(
+          "c4",
+          "test1.example.org",
+          "/browser/devtools/client/storage/test"
+        ),
       ],
     ],
   ]);
 
   // Check if next element's value is visible in sidebar
-  await findVariableViewProperties([{name: "c4", value: "booyeah"}]);
+  await findVariableViewProperties([{ name: "c4", value: "booyeah" }]);
 
   await removeCookie("c4");
 
   await gUI.once("store-objects-edit");
 
-  await checkState([
-    [["cookies", "http://test1.example.org"], [ ]],
-  ]);
+  await checkState([[["cookies", "http://test1.example.org"], []]]);
 
   ok(gUI.sidebar.hidden, "Sidebar is hidden when no rows");
 
@@ -190,7 +221,9 @@ add_task(async function() {
 });
 
 async function addCookie(name, value, path) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, [name, value, path],
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    [name, value, path],
     ([nam, valu, pat]) => {
       content.wrappedJSObject.addCookie(nam, valu, pat);
     }
@@ -198,7 +231,9 @@ async function addCookie(name, value, path) {
 }
 
 async function removeCookie(name, path) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, [name, path],
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    [name, path],
     ([nam, pat]) => {
       content.wrappedJSObject.removeCookie(nam, pat);
     }

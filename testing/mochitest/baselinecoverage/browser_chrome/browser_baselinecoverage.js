@@ -9,5 +9,5 @@ const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 add_task(async function() {
   requestLongerTimeout(2);
   ok(true, "Collecting baseline coverage for javascript (.js) file types.");
-  await new Promise((c) => setTimeout(c, 30 * 1000));
+  await new Promise(c => setTimeout(c, 30 * 1000));
 });

@@ -8,7 +8,10 @@
 requestLongerTimeout(3);
 
 /* import-globals-from helper-serviceworker.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-serviceworker.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-serviceworker.js",
+  this
+);
 
 const SW_TAB_URL = URL_ROOT + "resources/service-workers/empty-sw.html";
 const SW_URL = URL_ROOT + "resources/service-workers/empty-sw.js";
@@ -31,8 +34,9 @@ add_task(async function() {
   await pushPref("dom.serviceWorkers.idle_timeout", SW_TIMEOUT);
   await pushPref("dom.serviceWorkers.idle_extended_timeout", SW_TIMEOUT);
 
-  const { document, tab, window } =
-    await openAboutDebugging({ enableWorkerUpdates: true });
+  const { document, tab, window } = await openAboutDebugging({
+    enableWorkerUpdates: true,
+  });
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   // Open a tab that registers a basic service worker.
@@ -45,7 +49,9 @@ add_task(async function() {
   info("Wait until the service worker stops");
   await waitForServiceWorkerStopped(SW_URL, document);
 
-  info("Click on the start button and wait for the service worker to be running");
+  info(
+    "Click on the start button and wait for the service worker to be running"
+  );
   const onServiceWorkerRunning = waitForServiceWorkerRunning(SW_URL, document);
   const startButton = getStartButton(SW_URL, document);
   startButton.click();
@@ -95,5 +101,7 @@ function getStartButton(workerText, doc) {
 
 function getInspectButton(workerText, doc) {
   const target = findDebugTargetByText(workerText, doc);
-  return target ? target.querySelector(".qa-debug-target-inspect-button") : null;
+  return target
+    ? target.querySelector(".qa-debug-target-inspect-button")
+    : null;
 }

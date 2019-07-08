@@ -11,10 +11,15 @@
 
 // Globals
 
-const {ForgetAboutSite} = ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm");
+const { ForgetAboutSite } = ChromeUtils.import(
+  "resource://gre/modules/ForgetAboutSite.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
-                               "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 
 const COOKIE_EXPIRY = Math.round(Date.now() / 1000) + 60;
 const COOKIE_NAME = "testcookie";
@@ -39,8 +44,18 @@ const PREFERENCE_NAME = "test-pref";
  */
 function add_cookie(aDomain) {
   check_cookie_exists(aDomain, false);
-  Services.cookies.add(aDomain, COOKIE_PATH, COOKIE_NAME, "", false, false, false,
-                       COOKIE_EXPIRY, {}, Ci.nsICookie.SAMESITE_NONE);
+  Services.cookies.add(
+    aDomain,
+    COOKIE_PATH,
+    COOKIE_NAME,
+    "",
+    false,
+    false,
+    false,
+    COOKIE_EXPIRY,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
   check_cookie_exists(aDomain, true);
 }
 
@@ -53,7 +68,10 @@ function add_cookie(aDomain) {
  *        True if the cookie should exist, false otherwise.
  */
 function check_cookie_exists(aDomain, aExists) {
-  Assert.equal(aExists, Services.cookies.cookieExists(aDomain, COOKIE_PATH, COOKIE_NAME, {}));
+  Assert.equal(
+    aExists,
+    Services.cookies.cookieExists(aDomain, COOKIE_PATH, COOKIE_NAME, {})
+  );
 }
 
 /**
@@ -88,10 +106,18 @@ function check_disabled_host(aHost, aIsDisabled) {
  */
 function add_login(aHost) {
   check_login_exists(aHost, false);
-  let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
-              createInstance(Ci.nsILoginInfo);
-  login.init(aHost, "", null, LOGIN_USERNAME, LOGIN_PASSWORD,
-             LOGIN_USERNAME_FIELD, LOGIN_PASSWORD_FIELD);
+  let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
+    Ci.nsILoginInfo
+  );
+  login.init(
+    aHost,
+    "",
+    null,
+    LOGIN_USERNAME,
+    LOGIN_PASSWORD,
+    LOGIN_USERNAME_FIELD,
+    LOGIN_PASSWORD_FIELD
+  );
   Services.logins.addLogin(login);
   check_login_exists(aHost, true);
 }
@@ -117,7 +143,10 @@ function check_login_exists(aHost, aExists) {
  */
 function add_permission(aURI) {
   check_permission_exists(aURI, false);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(aURI, {});
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    aURI,
+    {}
+  );
 
   Services.perms.addFromPrincipal(principal, PERMISSION_TYPE, PERMISSION_VALUE);
   check_permission_exists(aURI, true);
@@ -132,9 +161,15 @@ function add_permission(aURI) {
  *        True if the permission should exist, false otherwise.
  */
 function check_permission_exists(aURI, aExists) {
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(aURI, {});
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    aURI,
+    {}
+  );
 
-  let perm = Services.perms.testExactPermissionFromPrincipal(principal, PERMISSION_TYPE);
+  let perm = Services.perms.testExactPermissionFromPrincipal(
+    principal,
+    PERMISSION_TYPE
+  );
   let checker = aExists ? "equal" : "notEqual";
   Assert[checker](perm, PERMISSION_VALUE);
 }
@@ -147,8 +182,9 @@ function check_permission_exists(aURI, aExists) {
  */
 function add_preference(aURI) {
   return new Promise(resolve => {
-    let cp = Cc["@mozilla.org/content-pref/service;1"].
-               getService(Ci.nsIContentPrefService2);
+    let cp = Cc["@mozilla.org/content-pref/service;1"].getService(
+      Ci.nsIContentPrefService2
+    );
     cp.set(aURI.spec, PREFERENCE_NAME, "foo", null, {
       handleCompletion: () => resolve(),
     });
@@ -163,11 +199,12 @@ function add_preference(aURI) {
  */
 function preference_exists(aURI) {
   return new Promise(resolve => {
-    let cp = Cc["@mozilla.org/content-pref/service;1"].
-               getService(Ci.nsIContentPrefService2);
+    let cp = Cc["@mozilla.org/content-pref/service;1"].getService(
+      Ci.nsIContentPrefService2
+    );
     let exists = false;
     cp.getByDomainAndName(aURI.spec, PREFERENCE_NAME, null, {
-      handleResult: () => exists = true,
+      handleResult: () => (exists = true),
       handleCompletion: () => resolve(exists),
     });
   });
@@ -338,7 +375,9 @@ async function test_content_preferences_not_cleared_with_uri_contains_domain() {
 
 function push_registration_exists(aURL, ps) {
   return new Promise(resolve => {
-    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(aURL);
+    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+      aURL
+    );
     return ps.getSubscription(aURL, principal, (status, record) => {
       if (!Components.isSuccessCode(status)) {
         resolve(false);
@@ -353,8 +392,7 @@ function push_registration_exists(aURL, ps) {
 async function test_push_cleared() {
   let ps;
   try {
-    ps = Cc["@mozilla.org/push/Service;1"].
-           getService(Ci.nsIPushService);
+    ps = Cc["@mozilla.org/push/Service;1"].getService(Ci.nsIPushService);
   } catch (e) {
     // No push service, skip test.
     return;
@@ -362,8 +400,10 @@ async function test_push_cleared() {
 
   do_get_profile();
   setPrefs();
-  const {PushServiceWebSocket} = ChromeUtils.import("resource://gre/modules/PushServiceWebSocket.jsm");
-  const {PushService} = serviceExports;
+  const { PushServiceWebSocket } = ChromeUtils.import(
+    "resource://gre/modules/PushServiceWebSocket.jsm"
+  );
+  const { PushService } = serviceExports;
   const userAgentID = "bd744428-f125-436a-b6d0-dd0c9845837f";
   const channelID = "0ef2ad4a-6c49-41ad-af6e-95d2425276bf";
 
@@ -376,18 +416,22 @@ async function test_push_cleared() {
       makeWebSocket(uriObj) {
         return new MockWebSocket(uriObj, {
           onHello(request) {
-            this.serverSendMsg(JSON.stringify({
-              messageType: "hello",
-              status: 200,
-              uaid: userAgentID,
-            }));
+            this.serverSendMsg(
+              JSON.stringify({
+                messageType: "hello",
+                status: 200,
+                uaid: userAgentID,
+              })
+            );
           },
           onUnregister(request) {
-            this.serverSendMsg(JSON.stringify({
-              messageType: "unregister",
-              status: 200,
-              channelID: request.channelID,
-            }));
+            this.serverSendMsg(
+              JSON.stringify({
+                messageType: "unregister",
+                status: 200,
+                channelID: request.channelID,
+              })
+            );
           },
         });
       },
@@ -438,9 +482,17 @@ async function test_cache_cleared() {
 
 async function test_storage_cleared() {
   function getStorageForURI(aURI) {
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(aURI, {});
+    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+      aURI,
+      {}
+    );
 
-    return Services.domStorageManager.createStorage(null, principal, principal, "");
+    return Services.domStorageManager.createStorage(
+      null,
+      principal,
+      principal,
+      ""
+    );
   }
 
   Services.prefs.setBoolPref("dom.storage.client_validation", false);
@@ -509,8 +561,9 @@ var tests = [
 ];
 
 function run_test() {
-  for (let i = 0; i < tests.length; i++)
+  for (let i = 0; i < tests.length; i++) {
     add_task(tests[i]);
+  }
 
   run_next_test();
 }

@@ -6,7 +6,9 @@
 
 // Get history service
 try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
+  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(
+    Ci.nsINavHistoryService
+  );
 } catch (ex) {
   do_throw("Could not get history service\n");
 }
@@ -14,31 +16,43 @@ try {
 add_task(async function test_hierarchical_query() {
   let bookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
-    children: [{
-      title: "test folder",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      children: [{
-        title: "1 title",
-        url: "http://a1.com/",
-      }, {
-        title: "subfolder 1",
+    children: [
+      {
+        title: "test folder",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
-        children: [{
-          title: "2 title",
-          url: "http://a2.com/",
-        }, {
-          title: "subfolder 2",
-          type: PlacesUtils.bookmarks.TYPE_FOLDER,
-          children: [{
-            title: "3 title",
-            url: "http://a3.com/",
-          }],
-        }],
-      }],
-    }],
+        children: [
+          {
+            title: "1 title",
+            url: "http://a1.com/",
+          },
+          {
+            title: "subfolder 1",
+            type: PlacesUtils.bookmarks.TYPE_FOLDER,
+            children: [
+              {
+                title: "2 title",
+                url: "http://a2.com/",
+              },
+              {
+                title: "subfolder 2",
+                type: PlacesUtils.bookmarks.TYPE_FOLDER,
+                children: [
+                  {
+                    title: "3 title",
+                    url: "http://a3.com/",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
   });
 
-  let [folderGuid, b1, sf1, b2, sf2, b3] = bookmarks.map((bookmark) => bookmark.guid);
+  let [folderGuid, b1, sf1, b2, sf2, b3] = bookmarks.map(
+    bookmark => bookmark.guid
+  );
 
   // bookmark query that should result in the "hierarchical" result
   // because there is one query, one folder,

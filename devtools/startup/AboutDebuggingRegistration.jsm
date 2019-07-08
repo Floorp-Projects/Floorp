@@ -22,9 +22,11 @@ AboutDebugging.prototype = {
   QueryInterface: ChromeUtils.generateQI([nsIAboutModule]),
 
   newChannel: function(_, loadInfo) {
-    const uri = Services.prefs.getBoolPref("devtools.aboutdebugging.new-enabled")
-                  ? "chrome://devtools/content/aboutdebugging-new/index.html"
-                  : "chrome://devtools/content/aboutdebugging/aboutdebugging.xhtml";
+    const uri = Services.prefs.getBoolPref(
+      "devtools.aboutdebugging.new-enabled"
+    )
+      ? "chrome://devtools/content/aboutdebugging-new/index.html"
+      : "chrome://devtools/content/aboutdebugging/aboutdebugging.xhtml";
 
     const chan = Services.io.newChannelFromURIWithLoadInfo(
       Services.io.newURI(uri),

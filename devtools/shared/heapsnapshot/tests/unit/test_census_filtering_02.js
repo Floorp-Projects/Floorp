@@ -19,14 +19,14 @@ function run_test() {
     (function bar() {
       (function baz() {
         stack1 = saveStack(3);
-      }());
+      })();
       (function quux() {
         stack2 = saveStack(3);
         stack3 = saveStack(3);
-      }());
-    }());
+      })();
+    })();
     stack4 = saveStack(2);
-  }());
+  })();
 
   const stack5 = saveStack(1);
 

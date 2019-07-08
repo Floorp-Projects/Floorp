@@ -7,7 +7,10 @@
 requestLongerTimeout(2);
 
 /* import-globals-from helper-collapsibilities.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-collapsibilities.js",
+  this
+);
 
 /**
  * Check that graphs used by the old performance panel are correctly displayed.
@@ -21,20 +24,27 @@ add_task(async function() {
 
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
-  const { devtoolsTab, devtoolsWindow } =
-    await openAboutDevtoolsToolbox(document, tab, window);
+  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
+    document,
+    tab,
+    window
+  );
 
   info("Select performance panel");
   const toolbox = getToolbox(devtoolsWindow);
   await toolbox.selectTool("performance");
 
   // Retrieve shared helpers for the old performance panel.
-  const { startRecording, stopRecording } =
-    require("devtools/client/performance/test/helpers/actions");
+  const {
+    startRecording,
+    stopRecording,
+  } = require("devtools/client/performance/test/helpers/actions");
   const performancePanel = toolbox.getCurrentPanel();
   await startRecording(performancePanel);
 
-  const { idleWait } = require("devtools/client/performance/test/helpers/wait-utils");
+  const {
+    idleWait,
+  } = require("devtools/client/performance/test/helpers/wait-utils");
   await idleWait(100);
 
   info("Stop recording");

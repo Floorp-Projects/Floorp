@@ -729,12 +729,15 @@ nsChangeHint nsStyleColumn::CalcDifference(
   return nsChangeHint(0);
 }
 
+using SVGPaintFallback = StyleGenericSVGPaintFallback<StyleColor>;
+
 // --------------------
 // nsStyleSVG
 //
 nsStyleSVG::nsStyleSVG(const Document& aDocument)
-    : mFill(eStyleSVGPaintType_Color),  // Will be initialized to NS_RGB(0,0,0)
-      mStroke(eStyleSVGPaintType_None),
+    : mFill{StyleSVGPaintKind::Color(StyleColor::Black()),
+            SVGPaintFallback::Unset()},
+      mStroke{StyleSVGPaintKind::None(), SVGPaintFallback::Unset()},
       mMarkerEnd(StyleUrlOrNone::None()),
       mMarkerMid(StyleUrlOrNone::None()),
       mMarkerStart(StyleUrlOrNone::None()),
@@ -787,14 +790,13 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   MOZ_COUNT_CTOR(nsStyleSVG);
 }
 
-static bool PaintURIChanged(const nsStyleSVGPaint& aPaint1,
-                            const nsStyleSVGPaint& aPaint2) {
-  if (aPaint1.Type() != aPaint2.Type()) {
-    return aPaint1.Type() == eStyleSVGPaintType_Server ||
-           aPaint2.Type() == eStyleSVGPaintType_Server;
+static bool PaintURIChanged(const StyleSVGPaint& aPaint1,
+                            const StyleSVGPaint& aPaint2) {
+  if (aPaint1.kind.IsPaintServer() != aPaint2.kind.IsPaintServer()) {
+    return true;
   }
-  return aPaint1.Type() == eStyleSVGPaintType_Server &&
-         aPaint1.GetPaintServer() != aPaint2.GetPaintServer();
+  return aPaint1.kind.IsPaintServer() &&
+         aPaint1.kind.AsPaintServer() != aPaint2.kind.AsPaintServer();
 }
 
 nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aNewData) const {
@@ -1150,126 +1152,6 @@ bool nsStyleSVGReset::HasMask() const {
   return false;
 }
 
-// nsStyleSVGPaint implementation
-nsStyleSVGPaint::nsStyleSVGPaint(nsStyleSVGPaintType aType)
-    : mPaint(StyleColor::Black()),
-      mType(aType),
-      mFallbackType(eStyleSVGFallbackType_NotSet),
-      mFallbackColor(StyleColor::Black()) {
-  MOZ_ASSERT(aType == nsStyleSVGPaintType(0) ||
-             aType == eStyleSVGPaintType_None ||
-             aType == eStyleSVGPaintType_Color);
-}
-
-nsStyleSVGPaint::nsStyleSVGPaint(const nsStyleSVGPaint& aSource)
-    : nsStyleSVGPaint(nsStyleSVGPaintType(0)) {
-  Assign(aSource);
-}
-
-nsStyleSVGPaint::~nsStyleSVGPaint() { Reset(); }
-
-void nsStyleSVGPaint::Reset() {
-  switch (mType) {
-    case eStyleSVGPaintType_None:
-      break;
-    case eStyleSVGPaintType_Color:
-      mPaint.mColor = StyleColor::Black();
-      break;
-    case eStyleSVGPaintType_Server:
-      mPaint.mPaintServer.~StyleComputedUrl();
-      MOZ_FALLTHROUGH;
-    case eStyleSVGPaintType_ContextFill:
-    case eStyleSVGPaintType_ContextStroke:
-      mFallbackType = eStyleSVGFallbackType_NotSet;
-      mFallbackColor = StyleColor::Black();
-      break;
-  }
-  mType = nsStyleSVGPaintType(0);
-}
-
-nsStyleSVGPaint& nsStyleSVGPaint::operator=(const nsStyleSVGPaint& aOther) {
-  if (this != &aOther) {
-    Assign(aOther);
-  }
-  return *this;
-}
-
-void nsStyleSVGPaint::Assign(const nsStyleSVGPaint& aOther) {
-  MOZ_ASSERT(aOther.mType != nsStyleSVGPaintType(0),
-             "shouldn't copy uninitialized nsStyleSVGPaint");
-
-  switch (aOther.mType) {
-    case eStyleSVGPaintType_None:
-      SetNone();
-      break;
-    case eStyleSVGPaintType_Color:
-      SetColor(aOther.mPaint.mColor);
-      break;
-    case eStyleSVGPaintType_Server:
-      SetPaintServer(aOther.mPaint.mPaintServer, aOther.mFallbackType,
-                     aOther.mFallbackColor);
-      break;
-    case eStyleSVGPaintType_ContextFill:
-    case eStyleSVGPaintType_ContextStroke:
-      SetContextValue(aOther.mType, aOther.mFallbackType,
-                      aOther.mFallbackColor);
-      break;
-  }
-}
-
-void nsStyleSVGPaint::SetNone() {
-  Reset();
-  mType = eStyleSVGPaintType_None;
-}
-
-void nsStyleSVGPaint::SetContextValue(nsStyleSVGPaintType aType,
-                                      nsStyleSVGFallbackType aFallbackType,
-                                      StyleColor aFallbackColor) {
-  MOZ_ASSERT(aType == eStyleSVGPaintType_ContextFill ||
-             aType == eStyleSVGPaintType_ContextStroke);
-  Reset();
-  mType = aType;
-  mFallbackType = aFallbackType;
-  mFallbackColor = aFallbackColor;
-}
-
-void nsStyleSVGPaint::SetColor(StyleColor aColor) {
-  Reset();
-  mType = eStyleSVGPaintType_Color;
-  mPaint.mColor = aColor;
-}
-
-void nsStyleSVGPaint::SetPaintServer(const StyleComputedUrl& aPaintServer,
-                                     nsStyleSVGFallbackType aFallbackType,
-                                     StyleColor aFallbackColor) {
-  Reset();
-  mType = eStyleSVGPaintType_Server;
-  new (&mPaint.mPaintServer) StyleComputedUrl(aPaintServer);
-  mFallbackType = aFallbackType;
-  mFallbackColor = aFallbackColor;
-}
-
-bool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const {
-  if (mType != aOther.mType) {
-    return false;
-  }
-  switch (mType) {
-    case eStyleSVGPaintType_Color:
-      return mPaint.mColor == aOther.mPaint.mColor;
-    case eStyleSVGPaintType_Server:
-      return mPaint.mPaintServer == aOther.mPaint.mPaintServer &&
-             mFallbackType == aOther.mFallbackType &&
-             mFallbackColor == aOther.mFallbackColor;
-    case eStyleSVGPaintType_ContextFill:
-    case eStyleSVGPaintType_ContextStroke:
-      return mFallbackType == aOther.mFallbackType &&
-             mFallbackColor == aOther.mFallbackColor;
-    default:
-      MOZ_ASSERT(mType == eStyleSVGPaintType_None, "Unexpected SVG paint type");
-      return true;
-  }
-}
-
 // --------------------
 // nsStylePosition
 //
@@ -1520,7 +1402,8 @@ nsChangeHint nsStylePosition::CalcDifference(
       hint |=
           nsChangeHint_RecomputePosition | nsChangeHint_UpdateParentOverflow;
     } else {
-      hint |= nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition;
+      hint |=
+          nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition;
     }
   }
   return hint;
@@ -3185,7 +3068,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     // reflow anyway.
     if (IsAbsolutelyPositionedStyle() &&
         aOldPosition.NeedsHypotheticalPositionIfAbsPos()) {
-      hint |= nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition;
+      hint |=
+          nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition;
     } else {
       hint |= nsChangeHint_NeutralChange;
     }

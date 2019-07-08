@@ -8,7 +8,7 @@
 
 const URL = "data:text/html;charset=utf8,test for host sizes";
 
-var {Toolbox} = require("devtools/client/framework/toolbox");
+var { Toolbox } = require("devtools/client/framework/toolbox");
 
 add_task(async function() {
   // Set size prefs to make the hosts way too big, so that the size has
@@ -18,20 +18,36 @@ add_task(async function() {
 
   const tab = await addTab(URL);
   const panel = gBrowser.getPanel();
-  const {clientHeight: panelHeight, clientWidth: panelWidth} = panel;
+  const { clientHeight: panelHeight, clientWidth: panelWidth } = panel;
   const target = await TargetFactory.forTab(tab);
   const toolbox = await gDevTools.showToolbox(target);
 
-  is(panel.clientHeight, panelHeight, "Opening the toolbox hasn't changed the height of the panel");
-  is(panel.clientWidth, panelWidth, "Opening the toolbox hasn't changed the width of the panel");
+  is(
+    panel.clientHeight,
+    panelHeight,
+    "Opening the toolbox hasn't changed the height of the panel"
+  );
+  is(
+    panel.clientWidth,
+    panelWidth,
+    "Opening the toolbox hasn't changed the width of the panel"
+  );
 
   let iframe = panel.querySelector(".devtools-toolbox-bottom-iframe");
-  is(iframe.clientHeight, panelHeight - 25, "The iframe fits within the available space");
+  is(
+    iframe.clientHeight,
+    panelHeight - 25,
+    "The iframe fits within the available space"
+  );
 
   await toolbox.switchHost(Toolbox.HostType.RIGHT);
   iframe = panel.querySelector(".devtools-toolbox-side-iframe");
   iframe.style.minWidth = "1px"; // Disable the min width set in css
-  is(iframe.clientWidth, panelWidth - 25, "The iframe fits within the available space");
+  is(
+    iframe.clientWidth,
+    panelWidth - 25,
+    "The iframe fits within the available space"
+  );
 
   // on shutdown, the sidebar width will be set to the clientWidth of the iframe
   const expectedWidth = iframe.clientWidth;
@@ -39,7 +55,9 @@ add_task(async function() {
   // Wait until the toolbox-host-manager was destroyed and updated the preferences
   // to avoid side effects in the next test.
   await waitUntil(() => {
-    const savedWidth = Services.prefs.getIntPref("devtools.toolbox.sidebar.width");
+    const savedWidth = Services.prefs.getIntPref(
+      "devtools.toolbox.sidebar.width"
+    );
     return savedWidth === expectedWidth;
   });
 });
@@ -52,12 +70,20 @@ add_task(async function() {
 
   const tab = await addTab(URL);
   const panel = gBrowser.getPanel();
-  const {clientHeight: panelHeight, clientWidth: panelWidth} = panel;
+  const { clientHeight: panelHeight, clientWidth: panelWidth } = panel;
   const target = await TargetFactory.forTab(tab);
   const toolbox = await gDevTools.showToolbox(target);
 
-  is(panel.clientHeight, panelHeight, "Opening the toolbox hasn't changed the height of the panel");
-  is(panel.clientWidth, panelWidth, "Opening the toolbox hasn't changed the width of the panel");
+  is(
+    panel.clientHeight,
+    panelHeight,
+    "Opening the toolbox hasn't changed the height of the panel"
+  );
+  is(
+    panel.clientWidth,
+    panelWidth,
+    "Opening the toolbox hasn't changed the width of the panel"
+  );
 
   let iframe = panel.querySelector(".devtools-toolbox-bottom-iframe");
   is(iframe.clientHeight, 100, "The iframe is resized properly");

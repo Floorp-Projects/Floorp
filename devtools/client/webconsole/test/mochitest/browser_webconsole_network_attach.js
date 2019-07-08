@@ -4,8 +4,8 @@
 "use strict";
 
 const TEST_FILE = "test-network-request.html";
-const TEST_PATH = "http://example.com/browser/devtools/client/webconsole/" +
-                  "test/mochitest/";
+const TEST_PATH =
+  "http://example.com/browser/devtools/client/webconsole/" + "test/mochitest/";
 const TEST_URI = TEST_PATH + TEST_FILE;
 
 add_task(async function task() {
@@ -31,7 +31,7 @@ add_task(async function task() {
 
   info("NetMonitor:PayloadReady received");
 
-  const {hud} = await toolbox.selectTool("webconsole");
+  const { hud } = await toolbox.selectTool("webconsole");
 
   const xhrUrl = TEST_PATH + "test-data.json";
   const messageNode = await waitFor(() => findMessage(hud, xhrUrl));
@@ -59,7 +59,8 @@ async function testNetworkMessage(messageNode) {
   let headersContent;
   await waitUntil(() => {
     headersContent = messageNode.querySelector(
-      "#headers-panel .headers-overview");
+      "#headers-panel .headers-overview"
+    );
     return headersContent;
   });
 

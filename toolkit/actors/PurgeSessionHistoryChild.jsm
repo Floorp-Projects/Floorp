@@ -6,14 +6,17 @@
 
 var EXPORTED_SYMBOLS = ["PurgeSessionHistoryChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
 
 class PurgeSessionHistoryChild extends ActorChild {
   receiveMessage(message) {
     if (message.name != "Browser:PurgeSessionHistory") {
       return;
     }
-    let sessionHistory = this.docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
+    let sessionHistory = this.docShell.QueryInterface(Ci.nsIWebNavigation)
+      .sessionHistory;
     if (!sessionHistory) {
       return;
     }

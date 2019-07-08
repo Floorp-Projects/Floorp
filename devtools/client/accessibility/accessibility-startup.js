@@ -48,11 +48,13 @@ class AccessibilityStartup {
       this._walker = await this._accessibility.getWalker();
       this._supports = {};
       // Only works with FF61+ targets
-      this._supports.enableDisable =
-        await this.target.actorHasMethod("accessibility", "enable");
+      this._supports.enableDisable = await this.target.actorHasMethod(
+        "accessibility",
+        "enable"
+      );
 
       if (this._supports.enableDisable) {
-        ([
+        [
           this._supports.relations,
           this._supports.snapshot,
           this._supports.audit,
@@ -62,7 +64,7 @@ class AccessibilityStartup {
           this.target.actorHasMethod("accessible", "snapshot"),
           this.target.actorHasMethod("accessible", "audit"),
           this.target.actorHasMethod("accessible", "hydrate"),
-        ]));
+        ]);
 
         await this._accessibility.bootstrap();
       }
@@ -82,7 +84,7 @@ class AccessibilityStartup {
    */
   initAccessibility() {
     if (!this._initAccessibility) {
-      this._initAccessibility = (async function() {
+      this._initAccessibility = async function() {
         await Promise.race([
           this.toolbox.isOpen,
           this.toolbox.once("accessibility-init"),
@@ -105,7 +107,7 @@ class AccessibilityStartup {
 
         this._accessibility.on("init", this._updateToolHighlight);
         this._accessibility.on("shutdown", this._updateToolHighlight);
-      }.bind(this))();
+      }.bind(this)();
     }
 
     return this._initAccessibility;
@@ -122,7 +124,7 @@ class AccessibilityStartup {
       return this._destroyingAccessibility;
     }
 
-    this._destroyingAccessibility = (async function() {
+    this._destroyingAccessibility = async function() {
       if (!this._accessibility) {
         return;
       }
@@ -137,7 +139,7 @@ class AccessibilityStartup {
       await this._walker.destroy();
       this._accessibility = null;
       this._walker = null;
-    }.bind(this))();
+    }.bind(this)();
     return this._destroyingAccessibility;
   }
 

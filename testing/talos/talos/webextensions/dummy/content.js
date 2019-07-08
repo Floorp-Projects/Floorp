@@ -8,5 +8,5 @@ browser.runtime.sendMessage({
 });
 
 browser.runtime.onMessage.addListener(msg => {
-  return Promise.resolve({code: "10-4", msg});
+  return Promise.resolve({ code: "10-4", msg });
 });

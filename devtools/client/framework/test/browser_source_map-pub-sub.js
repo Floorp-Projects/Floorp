@@ -34,27 +34,51 @@ add_task(async function() {
 
   const unsubscribe1 = service.subscribe(JS_URL, GENERATED_LINE, 1, cb);
   await waitForSubscribtionsPromise(service);
-  is(cbCalls.length, 1, "The callback function is called directly when subscribing");
-  Assert.deepEqual(cbCalls[0], expectedArgs, "callback called with expected arguments");
+  is(
+    cbCalls.length,
+    1,
+    "The callback function is called directly when subscribing"
+  );
+  Assert.deepEqual(
+    cbCalls[0],
+    expectedArgs,
+    "callback called with expected arguments"
+  );
 
   const unsubscribe2 = service.subscribe(JS_URL, GENERATED_LINE, 1, cb);
   await waitForSubscribtionsPromise(service);
   is(cbCalls.length, 2, "Subscribing to the same location twice works");
-  Assert.deepEqual(cbCalls[1], expectedArgs, "callback called with expected arguments");
+  Assert.deepEqual(
+    cbCalls[1],
+    expectedArgs,
+    "callback called with expected arguments"
+  );
 
   info("Manually call the dispatcher to ensure subscribers are called");
   service._dispatchSubscribersForURL(JS_URL);
   await waitForSubscribtionsPromise(service);
   is(cbCalls.length, 4, "both subscribers were called");
-  Assert.deepEqual(cbCalls[2], expectedArgs, "callback called with expected arguments");
-  Assert.deepEqual(cbCalls[2], cbCalls[3], "callbacks were passed the same arguments");
+  Assert.deepEqual(
+    cbCalls[2],
+    expectedArgs,
+    "callback called with expected arguments"
+  );
+  Assert.deepEqual(
+    cbCalls[2],
+    cbCalls[3],
+    "callbacks were passed the same arguments"
+  );
 
   info("Check unsubscribe functions");
   unsubscribe1();
   service._dispatchSubscribersForURL(JS_URL);
   await waitForSubscribtionsPromise(service);
   is(cbCalls.length, 5, "Only remainer subscriber callback was called");
-  Assert.deepEqual(cbCalls[4], expectedArgs, "callback called with expected arguments");
+  Assert.deepEqual(
+    cbCalls[4],
+    expectedArgs,
+    "callback called with expected arguments"
+  );
 
   unsubscribe2();
   service._dispatchSubscribersForURL(JS_URL);

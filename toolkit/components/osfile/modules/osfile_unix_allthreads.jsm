@@ -27,21 +27,30 @@ if (typeof Components != "undefined") {
   ChromeUtils.import("resource://gre/modules/ctypes.jsm", this);
 
   SharedAll = {};
-  ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
+  ChromeUtils.import(
+    "resource://gre/modules/osfile/osfile_shared_allthreads.jsm",
+    SharedAll
+  );
   this.exports = {};
 } else if (typeof module != "undefined" && typeof require != "undefined") {
   // Module is loaded with require()
   SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
 } else {
-  throw new Error("Please open this module with Component.utils.import or with require()");
+  throw new Error(
+    "Please open this module with Component.utils.import or with require()"
+  );
 }
 
 SharedAll.LOG.bind(SharedAll, "Unix", "allthreads");
 var Const = SharedAll.Constants.libc;
 
 // Open libc
-var libc = new SharedAll.Library("libc",
-                                 "libc.so", "libSystem.B.dylib", "a.out");
+var libc = new SharedAll.Library(
+  "libc",
+  "libc.so",
+  "libSystem.B.dylib",
+  "a.out"
+);
 exports.libc = libc;
 
 // Define declareFFI
@@ -50,10 +59,14 @@ exports.declareFFI = declareFFI;
 
 // Define lazy binding
 var LazyBindings = {};
-libc.declareLazy(LazyBindings, "strerror",
-                 "strerror", ctypes.default_abi,
-                 /* return*/ ctypes.char.ptr,
-                 /* errnum*/ ctypes.int);
+libc.declareLazy(
+  LazyBindings,
+  "strerror",
+  "strerror",
+  ctypes.default_abi,
+  /* return*/ ctypes.char.ptr,
+  /* errnum*/ ctypes.int
+);
 
 /**
  * A File-related error.
@@ -80,17 +93,26 @@ libc.declareLazy(LazyBindings, "strerror",
  * @constructor
  * @extends {OS.Shared.Error}
  */
-var OSError = function OSError(operation = "unknown operation",
-                               errno = ctypes.errno, path = "") {
+var OSError = function OSError(
+  operation = "unknown operation",
+  errno = ctypes.errno,
+  path = ""
+) {
   SharedAll.OSError.call(this, operation, path);
   this.unixErrno = errno;
 };
 OSError.prototype = Object.create(SharedAll.OSError.prototype);
 OSError.prototype.toString = function toString() {
-  return "Unix error " + this.unixErrno +
-    " during operation " + this.operation +
+  return (
+    "Unix error " +
+    this.unixErrno +
+    " during operation " +
+    this.operation +
     (this.path ? " on file " + this.path : "") +
-    " (" + LazyBindings.strerror(this.unixErrno).readString() + ")";
+    " (" +
+    LazyBindings.strerror(this.unixErrno).readString() +
+    ")"
+  );
 };
 OSError.prototype.toMsg = function toMsg() {
   return OSError.toMsg(this);
@@ -119,11 +141,11 @@ Object.defineProperty(OSError.prototype, "becauseNoSuchFile", {
  * |true| if the error was raised because a directory is not empty
  * does not exist, |false| otherwise.
  */
- Object.defineProperty(OSError.prototype, "becauseNotEmpty", {
-   get: function becauseNotEmpty() {
-     return this.unixErrno == Const.ENOTEMPTY;
-   },
- });
+Object.defineProperty(OSError.prototype, "becauseNotEmpty", {
+  get: function becauseNotEmpty() {
+    return this.unixErrno == Const.ENOTEMPTY;
+  },
+});
 /**
  * |true| if the error was raised because a file or directory
  * is closed, |false| otherwise.
@@ -184,10 +206,19 @@ exports.Error = OSError;
  * Code shared by implementations of File.Info on Unix
  *
  * @constructor
-*/
-var AbstractInfo = function AbstractInfo(path, isDir, isSymLink, size, lastAccessDate,
-                                         lastModificationDate, unixLastStatusChangeDate,
-                                         unixOwner, unixGroup, unixMode) {
+ */
+var AbstractInfo = function AbstractInfo(
+  path,
+  isDir,
+  isSymLink,
+  size,
+  lastAccessDate,
+  lastModificationDate,
+  unixLastStatusChangeDate,
+  unixOwner,
+  unixGroup,
+  unixMode
+) {
   this._path = path;
   this._isDir = isDir;
   this._isSymlLink = isSymLink;
@@ -282,7 +313,7 @@ exports.AbstractInfo = AbstractInfo;
  * Code shared by implementations of File.DirectoryIterator.Entry on Unix
  *
  * @constructor
-*/
+ */
 var AbstractEntry = function AbstractEntry(isDir, isSymLink, name, path) {
   this._isDir = isDir;
   this._isSymlLink = isSymLink;

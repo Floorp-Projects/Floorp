@@ -4,8 +4,11 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 /* exported MatchURLFilters */
 
@@ -63,14 +66,16 @@ class MatchURLFilters {
     };
 
     // If any of the filters matches, matches returns true.
-    return this.filters.some(filter => this.matchURLFilter({filter, data, uri, uriURL}));
+    return this.filters.some(filter =>
+      this.matchURLFilter({ filter, data, uri, uriURL })
+    );
   }
 
-  matchURLFilter({filter, data, uri, uriURL}) {
+  matchURLFilter({ filter, data, uri, uriURL }) {
     // Test for scheme based filtering.
     if (filter.schemes) {
       // Return false if none of the schemes matches.
-      if (!filter.schemes.some((scheme) => uri.schemeIs(scheme))) {
+      if (!filter.schemes.some(scheme => uri.schemeIs(scheme))) {
         return false;
       }
     }
@@ -89,7 +94,7 @@ class MatchURLFilters {
       }
 
       // Return false if none of the ports (or port ranges) is verified
-      return filter.ports.some((filterPort) => {
+      return filter.ports.some(filterPort => {
         if (Array.isArray(filterPort)) {
           let [lower, upper] = filterPort;
           return port >= lower && port <= upper;
@@ -103,7 +108,7 @@ class MatchURLFilters {
     // hostContains, hostEquals, hostSuffix, hostPrefix,
     // urlContains, urlEquals, ...
     for (let urlComponent of ["host", "path", "query", "url"]) {
-      if (!this.testMatchOnURLComponent({urlComponent, data, filter})) {
+      if (!this.testMatchOnURLComponent({ urlComponent, data, filter })) {
         return false;
       }
     }
@@ -126,8 +131,10 @@ class MatchURLFilters {
       // TODO: handle schemes which will not be able to resolve the filePath
       // (e.g. for "about:blank", 'urlWithoutQueryAndRef' should be "about:blank" instead
       // of null)
-      if (!urlWithoutQueryAndRef ||
-          !urlWithoutQueryAndRef.match(filter.originAndPathMatches)) {
+      if (
+        !urlWithoutQueryAndRef ||
+        !urlWithoutQueryAndRef.match(filter.originAndPathMatches)
+      ) {
         return false;
       }
     }
@@ -135,7 +142,7 @@ class MatchURLFilters {
     return true;
   }
 
-  testMatchOnURLComponent({urlComponent: key, data, filter}) {
+  testMatchOnURLComponent({ urlComponent: key, data, filter }) {
     // Test for equals.
     // NOTE: an empty string should not be considered a filter to skip.
     if (filter[`${key}Equals`] != null) {

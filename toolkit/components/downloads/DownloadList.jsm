@@ -213,8 +213,11 @@ this.DownloadList.prototype = {
         // Remove downloads that have been canceled, even if the cancellation
         // operation hasn't completed yet so we don't check "stopped" here.
         // Failed downloads with partial data are also removed.
-        if (download.stopped && (!download.hasPartialData || download.error) &&
-            (!aFilterFn || aFilterFn(download))) {
+        if (
+          download.stopped &&
+          (!download.hasPartialData || download.error) &&
+          (!aFilterFn || aFilterFn(download))
+        ) {
           // Remove the download first, so that the views don't get the change
           // notifications that may occur during finalization.
           await this.remove(download);
@@ -467,16 +470,19 @@ this.DownloadSummary.prototype = {
     for (let download of this._downloads) {
       if (!download.stopped) {
         allHaveStopped = false;
-        progressTotalBytes += download.hasProgress ? download.totalBytes
-                                                   : download.currentBytes;
+        progressTotalBytes += download.hasProgress
+          ? download.totalBytes
+          : download.currentBytes;
         progressCurrentBytes += download.currentBytes;
       }
     }
 
     // Exit now if the properties did not change.
-    if (this.allHaveStopped == allHaveStopped &&
-        this.progressTotalBytes == progressTotalBytes &&
-        this.progressCurrentBytes == progressCurrentBytes) {
+    if (
+      this.allHaveStopped == allHaveStopped &&
+      this.progressTotalBytes == progressTotalBytes &&
+      this.progressCurrentBytes == progressCurrentBytes
+    ) {
       return;
     }
 

@@ -3336,15 +3336,8 @@ static nscoord ComputeWhereToScroll(WhereToScroll aWhereToScroll,
  * visual viewport.
  *
  * This needs to work even if aRect has a width or height of zero.
- *
- * Note that, since we are performing a layout scroll, it's possible that
- * this fnction will sometimes be unsuccessful; the content will move as
- * fast as it can on the screen using layout viewport scrolling, and then
- * stop there, even if it could get closer to the desired position by
- * moving the visual viewport within the layout viewport.
  */
-static void ScrollToShowRect(PresShell* aPresShell,
-                             nsIScrollableFrame* aFrameAsScrollable,
+static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
                              const nsRect& aRect, ScrollAxis aVertical,
                              ScrollAxis aHorizontal, ScrollFlags aScrollFlags) {
   nsPoint scrollPt = aFrameAsScrollable->GetVisualViewportOffset();
@@ -3423,9 +3416,9 @@ static void ScrollToShowRect(PresShell* aPresShell,
     // the visual viewport in scenarios where there is not enough layout
     // scroll range.
     if (aFrameAsScrollable->IsRootScrollFrameOfDocument() &&
-        aPresShell->GetPresContext()->IsRootContentDocument()) {
-      aPresShell->ScrollToVisual(scrollPt, FrameMetrics::eMainThread,
-                                 scrollMode);
+        frame->PresShell()->GetPresContext()->IsRootContentDocument()) {
+      frame->PresShell()->ScrollToVisual(scrollPt, FrameMetrics::eMainThread,
+                                         scrollMode);
     }
   }
 }
@@ -3593,8 +3586,7 @@ bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
 
       {
         AutoWeakFrame wf(container);
-        ScrollToShowRect(this, sf, targetRect, aVertical, aHorizontal,
-                         aScrollFlags);
+        ScrollToShowRect(sf, targetRect, aVertical, aHorizontal, aScrollFlags);
         if (!wf.IsAlive()) {
           return didScroll;
         }

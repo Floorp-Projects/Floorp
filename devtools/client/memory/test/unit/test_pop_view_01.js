@@ -32,8 +32,7 @@ add_task(async function() {
   const store = Store();
   const { getState, dispatch } = store;
 
-  equal(getState().individuals, null,
-        "no individuals state by default");
+  equal(getState().individuals, null, "no individuals state by default");
 
   dispatch(changeView(viewState.CENSUS));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
@@ -54,14 +53,17 @@ add_task(async function() {
   for (const state of TEST_STATES) {
     dumpn(`Testing popping back to the old view from state = ${state}`);
 
-    dispatch(fetchIndividuals(heapWorker, snapshotId, breakdown,
-                              reportLeafIndex));
+    dispatch(
+      fetchIndividuals(heapWorker, snapshotId, breakdown, reportLeafIndex)
+    );
 
     // Wait for the expected test state.
     await waitUntilState(store, s => {
-      return s.view.state === viewState.INDIVIDUALS &&
-             s.individuals &&
-             s.individuals.state === state;
+      return (
+        s.view.state === viewState.INDIVIDUALS &&
+        s.individuals &&
+        s.individuals.state === state
+      );
     });
     ok(true, `Reached state = ${state}`);
 

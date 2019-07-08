@@ -12,8 +12,10 @@ add_task(async function() {
   const cacheItemId = ["Cache", "javascript:parent.frameContent"];
 
   await selectTreeItem(cacheItemId);
-  ok(gUI.tree.isSelected(cacheItemId),
-    `The item ${cacheItemId.join(" > ")} is present in the tree`);
+  ok(
+    gUI.tree.isSelected(cacheItemId),
+    `The item ${cacheItemId.join(" > ")} is present in the tree`
+  );
 
   await finishTests();
 });

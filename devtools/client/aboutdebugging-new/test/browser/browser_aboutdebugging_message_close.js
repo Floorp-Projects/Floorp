@@ -28,7 +28,9 @@ add_task(async function() {
 });
 
 async function testCloseMessageWithIcon(warningMessage, doc) {
-  const closeIcon = warningMessage.querySelector(".qa-message-button-close-icon");
+  const closeIcon = warningMessage.querySelector(
+    ".qa-message-button-close-icon"
+  );
   ok(!!closeIcon, "The warning message has a close icon");
 
   info("Closing the message and waiting for it to disappear");
@@ -39,7 +41,9 @@ async function testCloseMessageWithIcon(warningMessage, doc) {
 }
 
 async function testCloseMessageWithButton(warningMessage, doc) {
-  const closeButton = warningMessage.querySelector(".qa-message-button-close-button");
+  const closeButton = warningMessage.querySelector(
+    ".qa-message-button-close-button"
+  );
   ok(!!closeButton, "The warning message has a close button");
 
   info("Click on the button and wait for the message to disappear");
@@ -50,21 +54,27 @@ async function testCloseMessageWithButton(warningMessage, doc) {
 }
 
 async function installExtensionWithWarning(doc) {
-  await installTemporaryExtensionFromXPI({
-    id: EXTENSION_ID,
-    name: EXTENSION_NAME,
-    extraProperties: {
-      // This property is not expected in the manifest and should trigger a warning!
-      "wrongProperty": {},
+  await installTemporaryExtensionFromXPI(
+    {
+      id: EXTENSION_ID,
+      name: EXTENSION_NAME,
+      extraProperties: {
+        // This property is not expected in the manifest and should trigger a warning!
+        wrongProperty: {},
+      },
     },
-  }, doc);
+    doc
+  );
 
   info("Wait until a debug target item appears");
   await waitUntil(() => findDebugTargetByText(EXTENSION_NAME, doc));
 
   const target = findDebugTargetByText(EXTENSION_NAME, doc);
   const warningMessage = target.querySelector(".qa-message");
-  ok(!!warningMessage, "A warning message is displayed for the installed addon");
+  ok(
+    !!warningMessage,
+    "A warning message is displayed for the installed addon"
+  );
 
   return warningMessage;
 }

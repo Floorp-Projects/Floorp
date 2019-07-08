@@ -1,9 +1,8 @@
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const URI = Services.io.newURI("http://example.org/");
 
-const cs = Cc["@mozilla.org/cookieService;1"]
-             .getService(Ci.nsICookieService);
+const cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
 
 function run_test() {
   // Allow all cookies.
@@ -14,29 +13,44 @@ function run_test() {
 
   // Add a new cookie.
   setCookie("foo=bar", {
-    type: "added", isSession: true, isSecure: false, isHttpOnly: false,
+    type: "added",
+    isSession: true,
+    isSecure: false,
+    isHttpOnly: false,
   });
 
   // Update cookie with isHttpOnly=true.
   setCookie("foo=bar; HttpOnly", {
-    type: "changed", isSession: true, isSecure: false, isHttpOnly: true,
+    type: "changed",
+    isSession: true,
+    isSecure: false,
+    isHttpOnly: true,
   });
 
   // Update cookie with isSecure=true.
   setCookie("foo=bar; Secure", {
-    type: "changed", isSession: true, isSecure: true, isHttpOnly: false,
+    type: "changed",
+    isSession: true,
+    isSecure: true,
+    isHttpOnly: false,
   });
 
   // Update cookie with isSession=false.
   let expiry = new Date();
   expiry.setUTCFullYear(expiry.getUTCFullYear() + 2);
   setCookie(`foo=bar; Expires=${expiry.toGMTString()}`, {
-    type: "changed", isSession: false, isSecure: false, isHttpOnly: false,
+    type: "changed",
+    isSession: false,
+    isSecure: false,
+    isHttpOnly: false,
   });
 
   // Reset cookie.
   setCookie("foo=bar", {
-    type: "changed", isSession: true, isSecure: false, isHttpOnly: false,
+    type: "changed",
+    isSession: true,
+    isSecure: false,
+    isHttpOnly: false,
   });
 }
 

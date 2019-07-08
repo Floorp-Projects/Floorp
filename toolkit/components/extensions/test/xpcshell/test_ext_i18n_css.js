@@ -1,7 +1,8 @@
 "use strict";
 
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 const server = createHttpServer();
 server.registerDirectory("/data/", do_get_file("data"));
@@ -29,17 +30,35 @@ let extensionData = {
         let xhr = new XMLHttpRequest();
         xhr.overrideMimeType("text/plain");
         xhr.open("GET", url);
-        xhr.onload = () => { resolve(xhr.responseText); };
+        xhr.onload = () => {
+          resolve(xhr.responseText);
+        };
         xhr.onerror = reject;
         xhr.send();
       });
     }
 
-    Promise.all([backgroundFetch("foo.css"), backgroundFetch("bar.CsS?x#y"), backgroundFetch("foo.txt")]).then(results => {
-      browser.test.assertEq("body { max-width: 42px; }", results[0], "CSS file localized");
-      browser.test.assertEq("body { max-width: 42px; }", results[1], "CSS file localized");
+    Promise.all([
+      backgroundFetch("foo.css"),
+      backgroundFetch("bar.CsS?x#y"),
+      backgroundFetch("foo.txt"),
+    ]).then(results => {
+      browser.test.assertEq(
+        "body { max-width: 42px; }",
+        results[0],
+        "CSS file localized"
+      );
+      browser.test.assertEq(
+        "body { max-width: 42px; }",
+        results[1],
+        "CSS file localized"
+      );
 
-      browser.test.assertEq("body { __MSG_foo__; }", results[2], "Text file not localized");
+      browser.test.assertEq(
+        "body { __MSG_foo__; }",
+        results[2],
+        "Text file not localized"
+      );
 
       browser.test.notifyPass("i18n-css");
     });
@@ -48,37 +67,42 @@ let extensionData = {
   },
 
   manifest: {
-    "applications": {
-      "gecko": {
-        "id": "i18n_css@mochi.test",
+    applications: {
+      gecko: {
+        id: "i18n_css@mochi.test",
       },
     },
 
-    "web_accessible_resources": ["foo.css", "foo.txt", "locale.css", "multibyte.css"],
+    web_accessible_resources: [
+      "foo.css",
+      "foo.txt",
+      "locale.css",
+      "multibyte.css",
+    ],
 
-    "content_scripts": [
+    content_scripts: [
       {
-        "matches": ["http://*/*/file_sample.html"],
-        "css": ["foo.css"],
-        "run_at": "document_start",
+        matches: ["http://*/*/file_sample.html"],
+        css: ["foo.css"],
+        run_at: "document_start",
       },
       {
-        "matches": ["http://*/*/file_sample.html"],
-        "js": ["content.js"],
+        matches: ["http://*/*/file_sample.html"],
+        js: ["content.js"],
       },
     ],
 
-    "default_locale": "en",
+    default_locale: "en",
   },
 
   files: {
     "_locales/en/messages.json": JSON.stringify({
-      "foo": {
-        "message": "max-width: 42px",
-        "description": "foo",
+      foo: {
+        message: "max-width: 42px",
+        description: "foo",
       },
-      "multibyteKey": {
-        "message": MULTIBYTE_STRING,
+      multibyteKey: {
+        message: MULTIBYTE_STRING,
       },
     }),
 
@@ -90,7 +114,8 @@ let extensionData = {
     "foo.css": "body { __MSG_foo__; }",
     "bar.CsS": "body { __MSG_foo__; }",
     "foo.txt": "body { __MSG_foo__; }",
-    "locale.css": '* { content: "__MSG_@@ui_locale__ __MSG_@@bidi_dir__ __MSG_@@bidi_reversed_dir__ __MSG_@@bidi_start_edge__ __MSG_@@bidi_end_edge__" }',
+    "locale.css":
+      '* { content: "__MSG_@@ui_locale__ __MSG_@@bidi_dir__ __MSG_@@bidi_reversed_dir__ __MSG_@@bidi_start_edge__ __MSG_@@bidi_end_edge__" }',
     "multibyte.css": getCSS("__MSG_multibyteKey__", MULTIBYTE_STRING),
   },
 };
@@ -102,21 +127,35 @@ async function test_i18n_css(options = {}) {
   await extension.startup();
   let baseURL = await extension.awaitMessage("ready");
 
-  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    `${BASE_URL}/file_sample.html`
+  );
 
   let css = await contentPage.fetch(baseURL + "foo.css");
 
-  equal(css, "body { max-width: 42px; }", "CSS file localized in mochitest scope");
+  equal(
+    css,
+    "body { max-width: 42px; }",
+    "CSS file localized in mochitest scope"
+  );
 
   let maxWidth = await extension.awaitMessage("content-maxWidth");
 
   equal(maxWidth, "42px", "stylesheet correctly applied");
 
   css = await contentPage.fetch(baseURL + "locale.css");
-  equal(css, '* { content: "en-US ltr rtl left right" }', "CSS file localized in mochitest scope");
+  equal(
+    css,
+    '* { content: "en-US ltr rtl left right" }',
+    "CSS file localized in mochitest scope"
+  );
 
   css = await contentPage.fetch(baseURL + "multibyte.css");
-  equal(css, getCSS(MULTIBYTE_STRING, MULTIBYTE_STRING), "CSS file contains multibyte string");
+  equal(
+    css,
+    getCSS(MULTIBYTE_STRING, MULTIBYTE_STRING),
+    "CSS file contains multibyte string"
+  );
 
   await contentPage.close();
 
@@ -132,7 +171,11 @@ async function test_i18n_css(options = {}) {
     Preferences.set(DIR, 1);
 
     css = await fetch(baseURL + "locale.css");
-    equal(css, '* { content: "he rtl ltr right left" }', "CSS file localized in mochitest scope");
+    equal(
+      css,
+      '* { content: "he rtl ltr right left" }',
+      "CSS file localized in mochitest scope"
+    );
 
     Services.locale.requestedLocales = origReqLocales;
     Preferences.reset(DIR);
@@ -147,7 +190,7 @@ add_task(async function startup() {
 });
 add_task(test_i18n_css);
 add_task(async function test_i18n_css_xpi() {
-  await test_i18n_css({useAddonManager: "temporary"});
+  await test_i18n_css({ useAddonManager: "temporary" });
 });
 add_task(async function startup() {
   await promiseShutdownManager();

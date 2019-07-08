@@ -43,11 +43,11 @@ function pressButton() {
   GamepadService.newButtonEvent(gamepad_index, 0, false, false);
 }
 
-function startTest() {
-  SpecialPowers.pushPrefEnv({ "set": [
-                              ["dom.gamepad.extensions.enabled", true],
-                              ["dom.gamepad.extensions.lightindicator", true],
-                              ["dom.gamepad.extensions.multitouch", true]] });
+async function startTest() {
+  await SpecialPowers.pushPrefEnv({ "set": [
+                                    ["dom.gamepad.extensions.enabled", true],
+                                    ["dom.gamepad.extensions.lightindicator", true],
+                                    ["dom.gamepad.extensions.multitouch", true]] });
   // Add a gamepad
   GamepadService.addGamepad("test gamepad", // id
                      GamepadService.standardMapping,

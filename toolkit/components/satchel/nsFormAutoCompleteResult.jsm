@@ -4,14 +4,16 @@
 
 var EXPORTED_SYMBOLS = ["FormAutoCompleteResult"];
 
-function FormAutoCompleteResult(searchString,
-                                searchResult,
-                                defaultIndex,
-                                errorDescription,
-                                values,
-                                labels,
-                                comments,
-                                prevResult) {
+function FormAutoCompleteResult(
+  searchString,
+  searchResult,
+  defaultIndex,
+  errorDescription,
+  values,
+  labels,
+  comments,
+  prevResult
+) {
   this.searchString = searchString;
   this._searchResult = searchResult;
   this._defaultIndex = defaultIndex;
@@ -24,7 +26,6 @@ function FormAutoCompleteResult(searchString,
 }
 
 FormAutoCompleteResult.prototype = {
-
   // The user's query string
   searchString: "",
 
@@ -83,7 +84,10 @@ FormAutoCompleteResult.prototype = {
 
   _checkIndexBounds(index) {
     if (index < 0 || index >= this._values.length) {
-      throw Components.Exception("Index out of range.", Cr.NS_ERROR_ILLEGAL_VALUE);
+      throw Components.Exception(
+        "Index out of range.",
+        Cr.NS_ERROR_ILLEGAL_VALUE
+      );
     }
   },
 
@@ -124,9 +128,11 @@ FormAutoCompleteResult.prototype = {
       return "fromhistory";
     }
 
-    if (this._formHistResult &&
-        this._formHistResult.matchCount > 0 &&
-        index == this._formHistResult.matchCount) {
+    if (
+      this._formHistResult &&
+      this._formHistResult.matchCount > 0 &&
+      index == this._formHistResult.matchCount
+    ) {
       return "datalist-first";
     }
 
@@ -162,8 +168,11 @@ FormAutoCompleteResult.prototype = {
     // Forward the removeValueAt call to the underlying result if we have one
     // Note: this assumes that the form history results were added to the top
     // of our arrays.
-    if (removeFromDatabase && this._formHistResult &&
-        index < this._formHistResult.matchCount) {
+    if (
+      removeFromDatabase &&
+      this._formHistResult &&
+      index < this._formHistResult.matchCount
+    ) {
       // Delete the history result from the DB
       this._formHistResult.removeValueAt(index, true);
     }

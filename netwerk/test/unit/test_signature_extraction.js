@@ -11,21 +11,32 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Globals
 
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
-ChromeUtils.defineModuleGetter(this, "FileTestUtils",
-                               "resource://testing-common/FileTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileTestUtils",
+  "resource://testing-common/FileTestUtils.jsm"
+);
 
 const BackgroundFileSaverOutputStream = Components.Constructor(
-      "@mozilla.org/network/background-file-saver;1?mode=outputstream",
-      "nsIBackgroundFileSaver");
+  "@mozilla.org/network/background-file-saver;1?mode=outputstream",
+  "nsIBackgroundFileSaver"
+);
 
 const StringInputStream = Components.Constructor(
-      "@mozilla.org/io/string-input-stream;1",
-      "nsIStringInputStream",
-      "setData");
+  "@mozilla.org/io/string-input-stream;1",
+  "nsIStringInputStream",
+  "setData"
+);
 
 const TEST_FILE_NAME_1 = "test-backgroundfilesaver-1.txt";
 
@@ -52,14 +63,12 @@ function getTempFile(leafName) {
 function promiseSaverComplete(aSaver, aOnTargetChangeFn) {
   return new Promise((resolve, reject) => {
     aSaver.observer = {
-      onTargetChange: function BFSO_onSaveComplete(aSaver, aTarget)
-      {
+      onTargetChange: function BFSO_onSaveComplete(aSaver, aTarget) {
         if (aOnTargetChangeFn) {
           aOnTargetChangeFn(aTarget);
         }
       },
-      onSaveComplete: function BFSO_onSaveComplete(aSaver, aStatus)
-      {
+      onSaveComplete: function BFSO_onSaveComplete(aSaver, aStatus) {
         if (Components.isSuccessCode(aStatus)) {
           resolve();
         } else {
@@ -86,22 +95,36 @@ function promiseSaverComplete(aSaver, aOnTargetChangeFn) {
  */
 function promiseCopyToSaver(aSourceString, aSaverOutputStream, aCloseWhenDone) {
   return new Promise((resolve, reject) => {
-    let inputStream = new StringInputStream(aSourceString, aSourceString.length);
-    let copier = Cc["@mozilla.org/network/async-stream-copier;1"]
-                 .createInstance(Ci.nsIAsyncStreamCopier);
-    copier.init(inputStream, aSaverOutputStream, null, false, true, 0x8000, true,
-                aCloseWhenDone);
-    copier.asyncCopy({
-      onStartRequest () { },
-      onStopRequest (aRequest, aContext, aStatusCode)
+    let inputStream = new StringInputStream(
+      aSourceString,
+      aSourceString.length
+    );
+    let copier = Cc[
+      "@mozilla.org/network/async-stream-copier;1"
+    ].createInstance(Ci.nsIAsyncStreamCopier);
+    copier.init(
+      inputStream,
+      aSaverOutputStream,
+      null,
+      false,
+      true,
+      0x8000,
+      true,
+      aCloseWhenDone
+    );
+    copier.asyncCopy(
       {
-        if (Components.isSuccessCode(aStatusCode)) {
-          resolve();
-        } else {
-          reject(new Components.Exception(aResult));
-        }
+        onStartRequest() {},
+        onStopRequest(aRequest, aContext, aStatusCode) {
+          if (Components.isSuccessCode(aStatusCode)) {
+            resolve();
+          } else {
+            reject(new Components.Exception(aResult));
+          }
+        },
       },
-    }, null);
+      null
+    );
   });
 }
 
@@ -110,27 +133,26 @@ var gStillRunning = true;
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests
 
-add_task(function test_setup()
-{
+add_task(function test_setup() {
   // Wait 10 minutes, that is half of the external xpcshell timeout.
   do_timeout(10 * 60 * 1000, function() {
     if (gStillRunning) {
       do_throw("Test timed out.");
     }
-  })
+  });
 });
 
 function readFileToString(aFilename) {
   let f = do_get_file(aFilename);
-  let stream = Cc["@mozilla.org/network/file-input-stream;1"]
-                 .createInstance(Ci.nsIFileInputStream);
+  let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   stream.init(f, -1, 0, 0);
   let buf = NetUtil.readInputStreamToString(stream, stream.available());
   return buf;
 }
 
-add_task(async function test_signature()
-{
+add_task(async function test_signature() {
   // Check that we get a signature if the saver is finished on Windows.
   let destFile = getTempFile(TEST_FILE_NAME_1);
 
@@ -189,7 +211,6 @@ add_task(async function test_signature()
   destFile.remove(false);
 });
 
-add_task(function test_teardown()
-{
+add_task(function test_teardown() {
   gStillRunning = false;
 });

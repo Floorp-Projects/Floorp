@@ -2,8 +2,11 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-loader.lazyImporter(this, "AddonTestUtils",
-  "resource://testing-common/AddonTestUtils.jsm");
+loader.lazyImporter(
+  this,
+  "AddonTestUtils",
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 
 AddonTestUtils.initMochitest(this);
 
@@ -28,7 +31,11 @@ function promiseWriteWebManifestForExtension(manifest, dir) {
     "manifest.json": JSON.stringify(manifest),
   };
   return AddonTestUtils.promiseWriteFilesToExtension(
-    dir.path, manifest.applications.gecko.id, files, true);
+    dir.path,
+    manifest.applications.gecko.id,
+    files,
+    true
+  );
 }
 
 add_task(async function testWebextensionInstallSuccess() {
@@ -105,10 +112,12 @@ add_task(async function testWebextensionInstallErrorRetry() {
 
   // Fix the manifest so the add-on will install.
   // eslint-disable-next-line camelcase
-  manifest.content_scripts = [{
-    matches: ["http://*/"],
-    js: ["foo.js"],
-  }];
+  manifest.content_scripts = [
+    {
+      matches: ["http://*/"],
+      js: ["foo.js"],
+    },
+  ];
   await promiseWriteWebManifestForExtension(manifest, tempdir);
 
   const addonEl = document.querySelector(`[data-addon-id="${addonId}"]`);
@@ -123,7 +132,7 @@ add_task(async function testWebextensionInstallErrorRetry() {
   info("Addon is installed");
 
   // Install the add-on, and verify that it disappears in the about:debugging UI
-  await uninstallAddon({document, id: addonId, name: addonName});
+  await uninstallAddon({ document, id: addonId, name: addonName });
 
   await closeAboutDebugging(tab);
 });

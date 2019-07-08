@@ -5,9 +5,11 @@
 var tabs = [];
 
 function addTab(aURL) {
-  tabs.push(BrowserTestUtils.addTab(gBrowser, aURL, {
-    skipAnimation: true,
-  }));
+  tabs.push(
+    BrowserTestUtils.addTab(gBrowser, aURL, {
+      skipAnimation: true,
+    })
+  );
 }
 
 function switchTab(index) {
@@ -15,8 +17,13 @@ function switchTab(index) {
 }
 
 function testAttrib(tabIndex, attrib, expected) {
-  is(gBrowser.tabs[tabIndex].hasAttribute(attrib), expected,
-     `tab #${tabIndex} should${expected ? "" : "n't"} have the ${attrib} attribute`);
+  is(
+    gBrowser.tabs[tabIndex].hasAttribute(attrib),
+    expected,
+    `tab #${tabIndex} should${
+      expected ? "" : "n't"
+    } have the ${attrib} attribute`
+  );
 }
 
 add_task(async function setup() {

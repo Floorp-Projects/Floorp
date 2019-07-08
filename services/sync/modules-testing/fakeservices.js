@@ -11,9 +11,11 @@ var EXPORTED_SYMBOLS = [
   "fakeSHA256HMAC",
 ];
 
-const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
-const {CryptoWrapper} = ChromeUtils.import("resource://services-sync/record.js");
-const {Utils} = ChromeUtils.import("resource://services-sync/util.js");
+const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
+const { CryptoWrapper } = ChromeUtils.import(
+  "resource://services-sync/record.js"
+);
+const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
 
 function FakeFilesystemService(contents) {
   this.fakeContents = contents;
@@ -61,11 +63,11 @@ function FakeFilesystemService(contents) {
 }
 
 function fakeSHA256HMAC(message) {
-   message = message.substr(0, 64);
-   while (message.length < 64) {
-     message += " ";
-   }
-   return message;
+  message = message.substr(0, 64);
+  while (message.length < 64) {
+    message += " ";
+  }
+  return message;
 }
 
 function FakeGUIDService() {
@@ -93,7 +95,6 @@ function FakeCryptoService() {
   };
 }
 FakeCryptoService.prototype = {
-
   async encrypt(clearText, symmetricKey, iv) {
     return clearText;
   },
@@ -119,4 +120,3 @@ FakeCryptoService.prototype = {
     return "not-so-random-now-are-we-HA-HA-HA! >:)".slice(byteCount);
   },
 };
-

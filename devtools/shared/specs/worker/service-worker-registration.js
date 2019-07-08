@@ -34,4 +34,3 @@ const serviceWorkerRegistrationSpec = generateActorSpec({
 });
 
 exports.serviceWorkerRegistrationSpec = serviceWorkerRegistrationSpec;
-

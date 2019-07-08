@@ -22,142 +22,210 @@ const TEST_URI = URL_ROOT + "doc_inspector_breadcrumbs.html";
 //   verify if the breadcrumbs has refreshed or not.
 // - output {Array} A list of strings for the text that should be found in each
 //   button after the test has run.
-const TEST_DATA = [{
-  desc: "Adding a child at the end of the chain shouldn't change anything",
-  setup: async function(inspector) {
-    await selectNode("#i1111", inspector);
+const TEST_DATA = [
+  {
+    desc: "Adding a child at the end of the chain shouldn't change anything",
+    setup: async function(inspector) {
+      await selectNode("#i1111", inspector);
+    },
+    run: async function({ walker, selection }) {
+      await walker.setInnerHTML(selection.nodeFront, "<b>test</b>");
+    },
+    shouldRefresh: false,
+    output: ["html", "body", "article#i1", "div#i11", "div#i111", "div#i1111"],
   },
-  run: async function({walker, selection}) {
-    await walker.setInnerHTML(selection.nodeFront, "<b>test</b>");
+  {
+    desc: "Updating an ID to an displayed element should refresh",
+    setup: function() {},
+    run: async function({ walker }) {
+      const node = await walker.querySelector(walker.rootNode, "#i1");
+      await node.modifyAttributes([
+        {
+          attributeName: "id",
+          newValue: "i1-changed",
+        },
+      ]);
+    },
+    shouldRefresh: true,
+    output: [
+      "html",
+      "body",
+      "article#i1-changed",
+      "div#i11",
+      "div#i111",
+      "div#i1111",
+    ],
   },
-  shouldRefresh: false,
-  output: ["html", "body", "article#i1", "div#i11", "div#i111", "div#i1111"],
-}, {
-  desc: "Updating an ID to an displayed element should refresh",
-  setup: function() {},
-  run: async function({walker}) {
-    const node = await walker.querySelector(walker.rootNode, "#i1");
-    await node.modifyAttributes([{
-      attributeName: "id",
-      newValue: "i1-changed",
-    }]);
+  {
+    desc: "Updating an class to a displayed element should refresh",
+    setup: function() {},
+    run: async function({ walker }) {
+      const node = await walker.querySelector(walker.rootNode, "body");
+      await node.modifyAttributes([
+        {
+          attributeName: "class",
+          newValue: "test-class",
+        },
+      ]);
+    },
+    shouldRefresh: true,
+    output: [
+      "html",
+      "body.test-class",
+      "article#i1-changed",
+      "div#i11",
+      "div#i111",
+      "div#i1111",
+    ],
   },
-  shouldRefresh: true,
-  output: ["html", "body", "article#i1-changed", "div#i11", "div#i111",
-           "div#i1111"],
-}, {
-  desc: "Updating an class to a displayed element should refresh",
-  setup: function() {},
-  run: async function({walker}) {
-    const node = await walker.querySelector(walker.rootNode, "body");
-    await node.modifyAttributes([{
-      attributeName: "class",
-      newValue: "test-class",
-    }]);
+  {
+    desc:
+      "Updating a non id/class attribute to a displayed element should not " +
+      "refresh",
+    setup: function() {},
+    run: async function({ walker }) {
+      const node = await walker.querySelector(walker.rootNode, "#i11");
+      await node.modifyAttributes([
+        {
+          attributeName: "name",
+          newValue: "value",
+        },
+      ]);
+    },
+    shouldRefresh: false,
+    output: [
+      "html",
+      "body.test-class",
+      "article#i1-changed",
+      "div#i11",
+      "div#i111",
+      "div#i1111",
+    ],
   },
-  shouldRefresh: true,
-  output: ["html", "body.test-class", "article#i1-changed", "div#i11",
-           "div#i111", "div#i1111"],
-}, {
-  desc: "Updating a non id/class attribute to a displayed element should not " +
-        "refresh",
-  setup: function() {},
-  run: async function({walker}) {
-    const node = await walker.querySelector(walker.rootNode, "#i11");
-    await node.modifyAttributes([{
-      attributeName: "name",
-      newValue: "value",
-    }]);
+  {
+    desc:
+      "Moving a child in an element that's not displayed should not refresh",
+    setup: function() {},
+    run: async function({ walker }) {
+      // Re-append #i1211 as a last child of #i2.
+      const parent = await walker.querySelector(walker.rootNode, "#i2");
+      const child = await walker.querySelector(walker.rootNode, "#i211");
+      await walker.insertBefore(child, parent);
+    },
+    shouldRefresh: false,
+    output: [
+      "html",
+      "body.test-class",
+      "article#i1-changed",
+      "div#i11",
+      "div#i111",
+      "div#i1111",
+    ],
   },
-  shouldRefresh: false,
-  output: ["html", "body.test-class", "article#i1-changed", "div#i11",
-           "div#i111", "div#i1111"],
-}, {
-  desc: "Moving a child in an element that's not displayed should not refresh",
-  setup: function() {},
-  run: async function({walker}) {
-    // Re-append #i1211 as a last child of #i2.
-    const parent = await walker.querySelector(walker.rootNode, "#i2");
-    const child = await walker.querySelector(walker.rootNode, "#i211");
-    await walker.insertBefore(child, parent);
+  {
+    desc:
+      "Moving an undisplayed child in a displayed element should not refresh",
+    setup: function() {},
+    run: async function({ walker }) {
+      // Re-append #i2 in body (move it to the end).
+      const parent = await walker.querySelector(walker.rootNode, "body");
+      const child = await walker.querySelector(walker.rootNode, "#i2");
+      await walker.insertBefore(child, parent);
+    },
+    shouldRefresh: false,
+    output: [
+      "html",
+      "body.test-class",
+      "article#i1-changed",
+      "div#i11",
+      "div#i111",
+      "div#i1111",
+    ],
   },
-  shouldRefresh: false,
-  output: ["html", "body.test-class", "article#i1-changed", "div#i11",
-           "div#i111", "div#i1111"],
-}, {
-  desc: "Moving an undisplayed child in a displayed element should not refresh",
-  setup: function() {},
-  run: async function({walker}) {
-    // Re-append #i2 in body (move it to the end).
-    const parent = await walker.querySelector(walker.rootNode, "body");
-    const child = await walker.querySelector(walker.rootNode, "#i2");
-    await walker.insertBefore(child, parent);
+  {
+    desc:
+      "Updating attributes on an element that's not displayed should not " +
+      "refresh",
+    setup: function() {},
+    run: async function({ walker }) {
+      const node = await walker.querySelector(walker.rootNode, "#i2");
+      await node.modifyAttributes([
+        {
+          attributeName: "id",
+          newValue: "i2-changed",
+        },
+        {
+          attributeName: "class",
+          newValue: "test-class",
+        },
+      ]);
+    },
+    shouldRefresh: false,
+    output: [
+      "html",
+      "body.test-class",
+      "article#i1-changed",
+      "div#i11",
+      "div#i111",
+      "div#i1111",
+    ],
   },
-  shouldRefresh: false,
-  output: ["html", "body.test-class", "article#i1-changed", "div#i11",
-           "div#i111", "div#i1111"],
-}, {
-  desc: "Updating attributes on an element that's not displayed should not " +
-        "refresh",
-  setup: function() {},
-  run: async function({walker}) {
-    const node = await walker.querySelector(walker.rootNode, "#i2");
-    await node.modifyAttributes([{
-      attributeName: "id",
-      newValue: "i2-changed",
-    }, {
-      attributeName: "class",
-      newValue: "test-class",
-    }]);
+  {
+    desc: "Removing the currently selected node should refresh",
+    setup: async function(inspector) {
+      await selectNode("#i2-changed", inspector);
+    },
+    run: async function({ walker, selection }) {
+      await walker.removeNode(selection.nodeFront);
+    },
+    shouldRefresh: true,
+    output: ["html", "body.test-class"],
   },
-  shouldRefresh: false,
-  output: ["html", "body.test-class", "article#i1-changed", "div#i11",
-           "div#i111", "div#i1111"],
-}, {
-  desc: "Removing the currently selected node should refresh",
-  setup: async function(inspector) {
-    await selectNode("#i2-changed", inspector);
+  {
+    desc: "Changing the class of the currently selected node should refresh",
+    setup: function() {},
+    run: async function({ selection }) {
+      await selection.nodeFront.modifyAttributes([
+        {
+          attributeName: "class",
+          newValue: "test-class-changed",
+        },
+      ]);
+    },
+    shouldRefresh: true,
+    output: ["html", "body.test-class-changed"],
   },
-  run: async function({walker, selection}) {
-    await walker.removeNode(selection.nodeFront);
+  {
+    desc: "Changing the id of the currently selected node should refresh",
+    setup: function() {},
+    run: async function({ selection }) {
+      await selection.nodeFront.modifyAttributes([
+        {
+          attributeName: "id",
+          newValue: "new-id",
+        },
+      ]);
+    },
+    shouldRefresh: true,
+    output: ["html", "body#new-id.test-class-changed"],
   },
-  shouldRefresh: true,
-  output: ["html", "body.test-class"],
-}, {
-  desc: "Changing the class of the currently selected node should refresh",
-  setup: function() {},
-  run: async function({selection}) {
-    await selection.nodeFront.modifyAttributes([{
-      attributeName: "class",
-      newValue: "test-class-changed",
-    }]);
-  },
-  shouldRefresh: true,
-  output: ["html", "body.test-class-changed"],
-}, {
-  desc: "Changing the id of the currently selected node should refresh",
-  setup: function() {},
-  run: async function({selection}) {
-    await selection.nodeFront.modifyAttributes([{
-      attributeName: "id",
-      newValue: "new-id",
-    }]);
-  },
-  shouldRefresh: true,
-  output: ["html", "body#new-id.test-class-changed"],
-}];
+];
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URI);
-  const breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
+  const { inspector } = await openInspectorForURL(TEST_URI);
+  const breadcrumbs = inspector.panelDoc.getElementById(
+    "inspector-breadcrumbs"
+  );
   const container = breadcrumbs.querySelector(".html-arrowscrollbox-inner");
   const win = container.ownerDocument.defaultView;
 
-  for (const {desc, setup, run, shouldRefresh, output} of TEST_DATA) {
+  for (const { desc, setup, run, shouldRefresh, output } of TEST_DATA) {
     info("Running test case: " + desc);
 
-    info("Listen to markupmutation events from the inspector to know when a " +
-         "test case has completed");
+    info(
+      "Listen to markupmutation events from the inspector to know when a " +
+        "test case has completed"
+    );
     const onContentMutation = inspector.once("markupmutation");
 
     info("Running setup");
@@ -168,11 +236,11 @@ add_task(async function() {
     const observer = new win.MutationObserver(mutations => {
       // Only consider childList changes or tooltiptext/checked attributes
       // changes. The rest may be mutations caused by the overflowing arrowbox.
-      for (const {type, attributeName} of mutations) {
+      for (const { type, attributeName } of mutations) {
         const isChildList = type === "childList";
-        const isAttributes = type === "attributes" &&
-                           (attributeName === "checked" ||
-                            attributeName === "tooltiptext");
+        const isAttributes =
+          type === "attributes" &&
+          (attributeName === "checked" || attributeName === "tooltiptext");
         if (isChildList || isAttributes) {
           hasBreadcrumbsMutated = true;
           break;
@@ -195,8 +263,10 @@ add_task(async function() {
       info("The breadcrumbs is expected to refresh, so wait for it");
       await inspector.once("inspector-updated");
     } else {
-      ok(!inspector._updateProgress,
-        "The breadcrumbs widget is not currently updating");
+      ok(
+        !inspector._updateProgress,
+        "The breadcrumbs widget is not currently updating"
+      );
     }
 
     is(shouldRefresh, hasBreadcrumbsMutated, "Has the breadcrumbs refreshed?");
@@ -205,8 +275,11 @@ add_task(async function() {
     info("Check the output of the breadcrumbs widget");
     is(container.childNodes.length, output.length, "Correct number of buttons");
     for (let i = 0; i < container.childNodes.length; i++) {
-      is(output[i], container.childNodes[i].textContent,
-        "Text content for button " + i + " is correct");
+      is(
+        output[i],
+        container.childNodes[i].textContent,
+        "Text content for button " + i + " is correct"
+      );
     }
   }
 });

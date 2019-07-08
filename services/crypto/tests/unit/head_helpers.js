@@ -1,29 +1,32 @@
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
 
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 try {
   // In the context of xpcshell tests, there won't be a default AppInfo
   // eslint-disable-next-line mozilla/use-services
   Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
 } catch (ex) {
-// Make sure to provide the right OS so crypto loads the right binaries
-var OS = "XPCShell";
-if (mozinfo.os == "win")
-  OS = "WINNT";
-else if (mozinfo.os == "mac")
-  OS = "Darwin";
-else
-  OS = "Linux";
+  // Make sure to provide the right OS so crypto loads the right binaries
+  var OS = "XPCShell";
+  if (mozinfo.os == "win") {
+    OS = "WINNT";
+  } else if (mozinfo.os == "mac") {
+    OS = "Darwin";
+  } else {
+    OS = "Linux";
+  }
 
-ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
-updateAppInfo({
-  name: "XPCShell",
-  ID: "{3e3ba16c-1675-4e88-b9c8-afef81b3d2ef}",
-  version: "1",
-  platformVersion: "",
-  OS,
-});
+  ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
+  updateAppInfo({
+    name: "XPCShell",
+    ID: "{3e3ba16c-1675-4e88-b9c8-afef81b3d2ef}",
+    version: "1",
+    platformVersion: "",
+    OS,
+  });
 }
 
 function base64UrlDecode(s) {
@@ -51,9 +54,12 @@ function base64UrlDecode(s) {
 
 // Register resource alias. Normally done in SyncComponents.manifest.
 function addResourceAlias() {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-  const resProt = Services.io.getProtocolHandler("resource")
-                          .QueryInterface(Ci.nsIResProtocolHandler);
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
+  const resProt = Services.io
+    .getProtocolHandler("resource")
+    .QueryInterface(Ci.nsIResProtocolHandler);
   let uri = Services.io.newURI("resource://gre/modules/services-crypto/");
   resProt.setSubstitution("services-crypto", uri);
 }

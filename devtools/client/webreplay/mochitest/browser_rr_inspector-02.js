@@ -12,11 +12,10 @@ Services.scriptloader.loadSubScript(
 
 // Test that the element highlighter works when paused and replaying.
 add_task(async function() {
-  const dbg = await attachRecordingDebugger(
-    "doc_inspector_basic.html",
-    { waitForRecording: true }
-  );
-  const {threadClient, tab, toolbox} = dbg;
+  const dbg = await attachRecordingDebugger("doc_inspector_basic.html", {
+    waitForRecording: true,
+  });
+  const { threadClient, tab, toolbox } = dbg;
 
   await threadClient.interrupt();
   await threadClient.resume();
@@ -25,7 +24,7 @@ add_task(async function() {
   const bp = await setBreakpoint(threadClient, "doc_inspector_basic.html", 9);
   await rewindToLine(threadClient, 9);
 
-  const {inspector, testActor} = await openInspector();
+  const { inspector, testActor } = await openInspector();
 
   info("Waiting for element picker to become active.");
   toolbox.win.focus();
@@ -45,7 +44,12 @@ add_task(async function() {
 
   function moveMouseOver(selector, x, y) {
     info("Waiting for element " + selector + " to be highlighted");
-    testActor.synthesizeMouse({selector, x, y, options: {type: "mousemove"}});
+    testActor.synthesizeMouse({
+      selector,
+      x,
+      y,
+      options: { type: "mousemove" },
+    });
     return inspector.inspector.nodePicker.once("picker-node-hovered");
   }
 });

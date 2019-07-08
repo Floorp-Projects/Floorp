@@ -7,8 +7,9 @@
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const defer = require("devtools/shared/defer");
-const { NetworkThrottleManager } =
-      require("devtools/shared/webconsole/throttle");
+const {
+  NetworkThrottleManager,
+} = require("devtools/shared/webconsole/throttle");
 const nsIScriptableInputStream = Ci.nsIScriptableInputStream;
 
 function TestStreamListener() {
@@ -24,8 +25,9 @@ TestStreamListener.prototype = {
   },
 
   onDataAvailable: function(request, inputStream, offset, count) {
-    const sin = Cc["@mozilla.org/scriptableinputstream;1"]
-          .createInstance(nsIScriptableInputStream);
+    const sin = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+      nsIScriptableInputStream
+    );
     sin.init(inputStream);
     this.data = sin.read(count);
     this.setState("data");
@@ -85,15 +87,21 @@ add_task(async function() {
 
   const uploadChannel = new TestChannel();
   throttler.manageUpload(uploadChannel);
-  equal(uploadChannel.state, "throttled",
-        "NetworkThrottleManager set throttleQueue");
+  equal(
+    uploadChannel.state,
+    "throttled",
+    "NetworkThrottleManager set throttleQueue"
+  );
 
   const downloadChannel = new TestChannel();
   const testListener = downloadChannel.testListener;
 
   const listener = throttler.manage(downloadChannel);
-  equal(downloadChannel.state, "listener",
-     "NetworkThrottleManager called setNewListener");
+  equal(
+    downloadChannel.state,
+    "listener",
+    "NetworkThrottleManager called setNewListener"
+  );
 
   equal(testListener.state, "initial", "test listener in initial state");
 
@@ -103,32 +111,40 @@ add_task(async function() {
 
   const TEST_INPUT = "hi bob";
 
-  const testStream = Cc["@mozilla.org/storagestream;1"]
-      .createInstance(Ci.nsIStorageStream);
+  const testStream = Cc["@mozilla.org/storagestream;1"].createInstance(
+    Ci.nsIStorageStream
+  );
   testStream.init(512, 512);
   const out = testStream.getOutputStream(0);
   out.write(TEST_INPUT, TEST_INPUT.length);
   out.close();
   const testInputStream = testStream.newInputStream(0);
 
-  const activityDistributor =
-      Cc["@mozilla.org/network/http-activity-distributor;1"]
-      .getService(Ci.nsIHttpActivityDistributor);
+  const activityDistributor = Cc[
+    "@mozilla.org/network/http-activity-distributor;1"
+  ].getService(Ci.nsIHttpActivityDistributor);
   let activitySeen = false;
   listener.addActivityCallback(
     () => {
       activitySeen = true;
     },
-    null, null, null,
+    null,
+    null,
+    null,
     activityDistributor.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
-    null, TEST_INPUT.length, null
+    null,
+    TEST_INPUT.length,
+    null
   );
 
   // onDataAvailable is required to immediately read the data.
   listener.onDataAvailable(null, testInputStream, 0, 6);
   equal(testInputStream.available(), 0, "no more data should be available");
-  equal(testListener.state, "start",
-     "test listener should not have received data");
+  equal(
+    testListener.state,
+    "start",
+    "test listener should not have received data"
+  );
   equal(activitySeen, false, "activity not distributed yet");
 
   let newState = await testListener.onStateChanged();

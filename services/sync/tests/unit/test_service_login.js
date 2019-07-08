@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
@@ -32,9 +32,9 @@ add_task(async function test_offline() {
 
 function setup() {
   let janeHelper = track_collections_helper();
-  let janeU      = janeHelper.with_updated_collection;
+  let janeU = janeHelper.with_updated_collection;
   let johnHelper = track_collections_helper();
-  let johnU      = johnHelper.with_updated_collection;
+  let johnU = johnHelper.with_updated_collection;
 
   let server = httpd_setup({
     "/1.1/johndoe/info/collections": login_handling(johnHelper.handler),
@@ -43,10 +43,22 @@ function setup() {
     // We need these handlers because we test login, and login
     // is where keys are generated or fetched.
     // TODO: have Jane fetch her keys, not generate them...
-    "/1.1/johndoe/storage/crypto/keys": johnU("crypto", new ServerWBO("keys").handler()),
-    "/1.1/johndoe/storage/meta/global": johnU("meta", new ServerWBO("global").handler()),
-    "/1.1/janedoe/storage/crypto/keys": janeU("crypto", new ServerWBO("keys").handler()),
-    "/1.1/janedoe/storage/meta/global": janeU("meta", new ServerWBO("global").handler()),
+    "/1.1/johndoe/storage/crypto/keys": johnU(
+      "crypto",
+      new ServerWBO("keys").handler()
+    ),
+    "/1.1/johndoe/storage/meta/global": johnU(
+      "meta",
+      new ServerWBO("global").handler()
+    ),
+    "/1.1/janedoe/storage/crypto/keys": janeU(
+      "crypto",
+      new ServerWBO("keys").handler()
+    ),
+    "/1.1/janedoe/storage/meta/global": janeU(
+      "meta",
+      new ServerWBO("global").handler()
+    ),
   });
 
   return server;
@@ -90,7 +102,8 @@ add_task(async function test_login_logout() {
     _("Profile refresh edge case: FxA configured but prefs reset");
     await Service.startOver();
     let config = makeIdentityConfig({ username: "johndoe" }, server);
-    config.fxaccount.token.endpoint = server.baseURI + "/1.1/" + config.username + "/";
+    config.fxaccount.token.endpoint =
+      server.baseURI + "/1.1/" + config.username + "/";
     configureFxAccountIdentity(Service.identity, config);
 
     await Service.login();
@@ -177,13 +190,18 @@ add_task(async function test_login_on_sync() {
 
     // Testing exception handling if master password dialog is canceled.
     // Do this by monkeypatching.
-    Service.identity.unlockAndVerifyAuthState = () => Promise.resolve(MASTER_PASSWORD_LOCKED);
+    Service.identity.unlockAndVerifyAuthState = () =>
+      Promise.resolve(MASTER_PASSWORD_LOCKED);
 
     let cSTCalled = false;
     let lockedSyncCalled = false;
 
-    Service.scheduler.clearSyncTriggers = function() { cSTCalled = true; };
-    Service._lockedSync = async function() { lockedSyncCalled = true; };
+    Service.scheduler.clearSyncTriggers = function() {
+      cSTCalled = true;
+    };
+    Service._lockedSync = async function() {
+      lockedSyncCalled = true;
+    };
 
     _("If master password is canceled, login fails and we report lockage.");
     Assert.ok(!(await Service.login()));

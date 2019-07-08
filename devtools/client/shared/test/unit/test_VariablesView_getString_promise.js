@@ -5,61 +5,63 @@
 
 "use strict";
 
-const { VariablesView } = ChromeUtils.import("resource://devtools/client/shared/widgets/VariablesView.jsm");
+const { VariablesView } = ChromeUtils.import(
+  "resource://devtools/client/shared/widgets/VariablesView.jsm"
+);
 
 const PENDING = {
-  "type": "object",
-  "class": "Promise",
-  "actor": "conn0.pausedobj35",
-  "extensible": true,
-  "frozen": false,
-  "sealed": false,
-  "promiseState": {
-    "state": "pending",
+  type: "object",
+  class: "Promise",
+  actor: "conn0.pausedobj35",
+  extensible: true,
+  frozen: false,
+  sealed: false,
+  promiseState: {
+    state: "pending",
   },
-  "preview": {
-    "kind": "Object",
-    "ownProperties": {},
-    "ownPropertiesLength": 0,
-    "safeGetterValues": {},
+  preview: {
+    kind: "Object",
+    ownProperties: {},
+    ownPropertiesLength: 0,
+    safeGetterValues: {},
   },
 };
 
 const FULFILLED = {
-  "type": "object",
-  "class": "Promise",
-  "actor": "conn0.pausedobj35",
-  "extensible": true,
-  "frozen": false,
-  "sealed": false,
-  "promiseState": {
-    "state": "fulfilled",
-    "value": 10,
+  type: "object",
+  class: "Promise",
+  actor: "conn0.pausedobj35",
+  extensible: true,
+  frozen: false,
+  sealed: false,
+  promiseState: {
+    state: "fulfilled",
+    value: 10,
   },
-  "preview": {
-    "kind": "Object",
-    "ownProperties": {},
-    "ownPropertiesLength": 0,
-    "safeGetterValues": {},
+  preview: {
+    kind: "Object",
+    ownProperties: {},
+    ownPropertiesLength: 0,
+    safeGetterValues: {},
   },
 };
 
 const REJECTED = {
-  "type": "object",
-  "class": "Promise",
-  "actor": "conn0.pausedobj35",
-  "extensible": true,
-  "frozen": false,
-  "sealed": false,
-  "promiseState": {
-    "state": "rejected",
-    "reason": 10,
+  type: "object",
+  class: "Promise",
+  actor: "conn0.pausedobj35",
+  extensible: true,
+  frozen: false,
+  sealed: false,
+  promiseState: {
+    state: "rejected",
+    reason: 10,
   },
-  "preview": {
-    "kind": "Object",
-    "ownProperties": {},
-    "ownPropertiesLength": 0,
-    "safeGetterValues": {},
+  preview: {
+    kind: "Object",
+    ownProperties: {},
+    ownPropertiesLength: 0,
+    safeGetterValues: {},
   },
 };
 
@@ -68,9 +70,14 @@ function run_test() {
   equal(VariablesView.getString(PENDING), 'Promise {<state>: "pending"}');
 
   equal(VariablesView.getString(FULFILLED, { concise: true }), "Promise");
-  equal(VariablesView.getString(FULFILLED),
-        'Promise {<state>: "fulfilled", <value>: 10}');
+  equal(
+    VariablesView.getString(FULFILLED),
+    'Promise {<state>: "fulfilled", <value>: 10}'
+  );
 
   equal(VariablesView.getString(REJECTED, { concise: true }), "Promise");
-  equal(VariablesView.getString(REJECTED), 'Promise {<state>: "rejected", <reason>: 10}');
+  equal(
+    VariablesView.getString(REJECTED),
+    'Promise {<state>: "rejected", <reason>: 10}'
+  );
 }

@@ -43,15 +43,12 @@ const stack3 = saveStack();
 
 const REPORT1 = {
   objects: new Map([
-    [stack1, { Function: { bytes: 1 },
-               Object: { bytes: 2 },
-               other: { bytes: 0 },
-    }],
-    [stack2, { Array: { bytes: 3 },
-               Date: { bytes: 4 },
-               other: { bytes: 0 },
-    }],
-    ["noStack", { Object: { bytes: 3 }}],
+    [
+      stack1,
+      { Function: { bytes: 1 }, Object: { bytes: 2 }, other: { bytes: 0 } },
+    ],
+    [stack2, { Array: { bytes: 3 }, Date: { bytes: 4 }, other: { bytes: 0 } }],
+    ["noStack", { Object: { bytes: 3 } }],
   ]),
   strings: {
     JSAtom: { bytes: 10 },
@@ -69,15 +66,12 @@ const REPORT1 = {
 
 const REPORT2 = {
   objects: new Map([
-    [stack2, { Array: { bytes: 1 },
-               Date: { bytes: 2 },
-               other: { bytes: 3 },
-    }],
-    [stack3, { Function: { bytes: 1 },
-               Object: { bytes: 2 },
-               other: { bytes: 0 },
-    }],
-    ["noStack", { Object: { bytes: 3 }}],
+    [stack2, { Array: { bytes: 1 }, Date: { bytes: 2 }, other: { bytes: 3 } }],
+    [
+      stack3,
+      { Function: { bytes: 1 }, Object: { bytes: 2 }, other: { bytes: 0 } },
+    ],
+    ["noStack", { Object: { bytes: 3 } }],
   ]),
   strings: {
     JSAtom: { bytes: 5 },
@@ -95,49 +89,49 @@ const REPORT2 = {
 };
 
 const EXPECTED = {
-  "objects": new Map([
-    [stack1, { Function: { bytes: -1 },
-               Object: { bytes: -2 },
-               other: { bytes: 0 },
-    }],
-    [stack2, { Array: { bytes: -2 },
-               Date: { bytes: -2 },
-               other: { bytes: 3 },
-    }],
-    [stack3, { Function: { bytes: 1 },
-               Object: { bytes: 2 },
-               other: { bytes: 0 },
-    }],
-    ["noStack", { Object: { bytes: 0 }}],
+  objects: new Map([
+    [
+      stack1,
+      { Function: { bytes: -1 }, Object: { bytes: -2 }, other: { bytes: 0 } },
+    ],
+    [
+      stack2,
+      { Array: { bytes: -2 }, Date: { bytes: -2 }, other: { bytes: 3 } },
+    ],
+    [
+      stack3,
+      { Function: { bytes: 1 }, Object: { bytes: 2 }, other: { bytes: 0 } },
+    ],
+    ["noStack", { Object: { bytes: 0 } }],
   ]),
-  "scripts": {
-    "JSScript": {
-      "bytes": 1,
+  scripts: {
+    JSScript: {
+      bytes: 1,
     },
     "js::jit::JitCode": {
-      "bytes": -1,
+      bytes: -1,
     },
     "js::LazyScript": {
-      "bytes": 42,
+      bytes: 42,
     },
   },
-  "strings": {
-    "JSAtom": {
-      "bytes": -5,
+  strings: {
+    JSAtom: {
+      bytes: -5,
     },
-    "JSLinearString": {
-      "bytes": 5,
+    JSLinearString: {
+      bytes: 5,
     },
   },
-  "other": {
+  other: {
     "mozilla::dom::Thing": {
-      "bytes": -1,
+      bytes: -1,
     },
     "mozilla::dom::OtherThing": {
-      "bytes": 1,
+      bytes: 1,
     },
   },
-  "domNode": {},
+  domNode: {},
 };
 
 function run_test() {

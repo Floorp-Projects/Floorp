@@ -6,18 +6,19 @@
 
 const { createEnum } = require("devtools/client/shared/enum");
 
-createEnum([
+createEnum(
+  [
+    // Clears the flexbox state by resetting it back to the initial flexbox state.
+    "CLEAR_FLEXBOX",
 
-  // Clears the flexbox state by resetting it back to the initial flexbox state.
-  "CLEAR_FLEXBOX",
+    // Updates the flexbox state with the newly selected flexbox.
+    "UPDATE_FLEXBOX",
 
-  // Updates the flexbox state with the newly selected flexbox.
-  "UPDATE_FLEXBOX",
+    // Updates the color used for the overlay of a flexbox.
+    "UPDATE_FLEXBOX_COLOR",
 
-  // Updates the color used for the overlay of a flexbox.
-  "UPDATE_FLEXBOX_COLOR",
-
-  // Updates the flexbox highlighted state.
-  "UPDATE_FLEXBOX_HIGHLIGHTED",
-
-], module.exports);
+    // Updates the flexbox highlighted state.
+    "UPDATE_FLEXBOX_HIGHLIGHTED",
+  ],
+  module.exports
+);

@@ -15,21 +15,31 @@ var EXPORTED_SYMBOLS = ["ShieldFrameChild"];
  * is opened.
  */
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const frameGlobal = {};
 ChromeUtils.defineModuleGetter(
-  frameGlobal, "AboutPages", "resource://normandy-content/AboutPages.jsm",
+  frameGlobal,
+  "AboutPages",
+  "resource://normandy-content/AboutPages.jsm"
 );
 
 XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
-  return Services.strings.createBundle("chrome://branding/locale/brand.properties");
+  return Services.strings.createBundle(
+    "chrome://branding/locale/brand.properties"
+  );
 });
 
 XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
-  return Services.strings.createBundle("chrome://global/locale/aboutStudies.properties");
+  return Services.strings.createBundle(
+    "chrome://global/locale/aboutStudies.properties"
+  );
 });
 
 /**
@@ -58,7 +68,10 @@ class ShieldFrameChild extends ActorChild {
         this.mm.sendAsyncMessage("Shield:RemoveAddonStudy", event.detail.data);
         break;
       case "RemovePreferenceStudy":
-        this.mm.sendAsyncMessage("Shield:RemovePreferenceStudy", event.detail.data);
+        this.mm.sendAsyncMessage(
+          "Shield:RemovePreferenceStudy",
+          event.detail.data
+        );
         break;
       case "GetRemoteValue:StudiesEnabled":
         this.mm.sendAsyncMessage("Shield:GetStudiesEnabled");
@@ -79,11 +92,14 @@ class ShieldFrameChild extends ActorChild {
           strings[str.key] = str.value;
         }
         const brandName = gBrandBundle.GetStringFromName("brandShortName");
-        strings.enabledList = gStringBundle.formatStringFromName("enabledList", [brandName]);
+        strings.enabledList = gStringBundle.formatStringFromName(
+          "enabledList",
+          [brandName]
+        );
 
         this.triggerPageCallback(
           "ReceiveRemoteValue:ShieldTranslations",
-           strings
+          strings
         );
         break;
     }
@@ -97,13 +113,22 @@ class ShieldFrameChild extends ActorChild {
   receiveMessage(message) {
     switch (message.name) {
       case "Shield:ReceiveAddonStudyList":
-        this.triggerPageCallback("ReceiveRemoteValue:AddonStudyList", message.data.studies);
+        this.triggerPageCallback(
+          "ReceiveRemoteValue:AddonStudyList",
+          message.data.studies
+        );
         break;
       case "Shield:ReceivePreferenceStudyList":
-        this.triggerPageCallback("ReceiveRemoteValue:PreferenceStudyList", message.data.studies);
+        this.triggerPageCallback(
+          "ReceiveRemoteValue:PreferenceStudyList",
+          message.data.studies
+        );
         break;
       case "Shield:ReceiveStudiesEnabled":
-        this.triggerPageCallback("ReceiveRemoteValue:StudiesEnabled", message.data.studiesEnabled);
+        this.triggerPageCallback(
+          "ReceiveRemoteValue:StudiesEnabled",
+          message.data.studiesEnabled
+        );
         break;
       case "Shield:ShuttingDown":
         this.onShutdown();
@@ -117,7 +142,7 @@ class ShieldFrameChild extends ActorChild {
    * @param {Object} detail
    */
   triggerPageCallback(type, detail) {
-    let {content} = this.mm;
+    let { content } = this.mm;
 
     // Clone details and use the event class from the unprivileged context.
     const event = new content.document.defaultView.CustomEvent(type, {

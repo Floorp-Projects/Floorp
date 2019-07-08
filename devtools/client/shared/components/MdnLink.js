@@ -8,16 +8,19 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { a } = dom;
 
-loader.lazyRequireGetter(this, "openDocLink", "devtools/client/shared/link", true);
+loader.lazyRequireGetter(
+  this,
+  "openDocLink",
+  "devtools/client/shared/link",
+  true
+);
 
 function MDNLink({ url, title }) {
-  return (
-    a({
-      className: "devtools-button learn-more-link",
-      title,
-      onClick: (e) => onLearnMoreClick(e, url),
-    })
-  );
+  return a({
+    className: "devtools-button learn-more-link",
+    title,
+    onClick: e => onLearnMoreClick(e, url),
+  });
 }
 
 MDNLink.displayName = "MDNLink";

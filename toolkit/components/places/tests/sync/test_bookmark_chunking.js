@@ -8,30 +8,39 @@
 // is an order of magnitude slower, so we write bookmarks directly into the
 // database.
 async function insertManyUnfiledBookmarks(db, url) {
-  await db.executeCached(`
+  await db.executeCached(
+    `
     INSERT OR IGNORE INTO moz_places(id, url, url_hash, rev_host, hidden,
                                      frecency, guid)
     VALUES((SELECT id FROM moz_places
             WHERE url_hash = hash(:url) AND
                   url = :url), :url, hash(:url), :revHost, 0, -1,
            generate_guid())`,
-    { url: url.href, revHost: PlacesUtils.getReversedHost(url) });
+    { url: url.href, revHost: PlacesUtils.getReversedHost(url) }
+  );
 
   let guids = [];
 
   for (let position = 0; position < 1500; ++position) {
     let title = position.toString(10);
     let guid = title.padStart(12, "A");
-    await db.executeCached(`
+    await db.executeCached(
+      `
       INSERT INTO moz_bookmarks(guid, parent, fk, position, type, title,
                                 syncStatus, syncChangeCounter)
       VALUES(:guid, (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid),
              (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND
                                               url = :url),
              :position, :type, :title, :syncStatus, 1)`,
-      { guid, parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-        position, type: PlacesUtils.bookmarks.TYPE_BOOKMARK, title,
-        syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW });
+      {
+        guid,
+        parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+        position,
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        title,
+        syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+      }
+    );
     guids.push(guid);
   }
 
@@ -60,13 +69,15 @@ add_task(async function test_merged_item_chunking() {
     let title = i.toString(10);
     let guid = title.padStart(12, "B");
     toolbarRecord.children.push(guid);
-    records.push(makeRecord({
-      id: guid,
-      parentid: "toolbar",
-      type: "bookmark",
-      title,
-      bmkUri: "http://example.com/b",
-    }));
+    records.push(
+      makeRecord({
+        id: guid,
+        parentid: "toolbar",
+        type: "bookmark",
+        title,
+        bmkUri: "http://example.com/b",
+      })
+    );
   }
   await buf.store(shuffle(records));
 
@@ -75,13 +86,20 @@ add_task(async function test_merged_item_chunking() {
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
   let localChildRecordIds = await PlacesSyncUtils.bookmarks.fetchChildRecordIds(
-    "toolbar");
-  deepEqual(localChildRecordIds, toolbarRecord.children,
-    "Should apply all remote toolbar children");
+    "toolbar"
+  );
+  deepEqual(
+    localChildRecordIds,
+    toolbarRecord.children,
+    "Should apply all remote toolbar children"
+  );
 
   let guidsToUpload = Object.keys(changesToUpload);
-  deepEqual(guidsToUpload.sort(), ["unfiled", ...localGuids].sort(),
-    "Should upload unfiled and all new local children");
+  deepEqual(
+    guidsToUpload.sort(),
+    ["unfiled", ...localGuids].sort(),
+    "Should upload unfiled and all new local children"
+  );
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -99,17 +117,21 @@ add_task(async function test_deletion_chunking() {
   await PlacesTestUtils.markBookmarksAsSynced();
 
   info("Delete them all on the server");
-  let records = [makeRecord({
-    id: "unfiled",
-    parentid: "places",
-    type: "folder",
-    children: [],
-  })];
+  let records = [
+    makeRecord({
+      id: "unfiled",
+      parentid: "places",
+      type: "folder",
+      children: [],
+    }),
+  ];
   for (let guid of guids) {
-    records.push(makeRecord({
-      id: guid,
-      deleted: true,
-    }));
+    records.push(
+      makeRecord({
+        id: guid,
+        deleted: true,
+      })
+    );
   }
   await buf.store(shuffle(records));
 
@@ -122,9 +144,13 @@ add_task(async function test_deletion_chunking() {
   deepEqual(tombstones, [], "Shouldn't store tombstones for remote deletions");
 
   let localChildRecordIds = await PlacesSyncUtils.bookmarks.fetchChildRecordIds(
-    "unfiled");
-  deepEqual(localChildRecordIds, [],
-    "Should delete all unfiled children locally");
+    "unfiled"
+  );
+  deepEqual(
+    localChildRecordIds,
+    [],
+    "Should delete all unfiled children locally"
+  );
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -149,13 +175,15 @@ add_task(async function test_weak_upload_chunking() {
     let title = i.toString(10);
     let guid = title.padStart(12, "B");
     toolbarRecord.children.push(guid);
-    records.push(makeRecord({
-      id: guid,
-      parentid: "toolbar",
-      type: "bookmark",
-      title,
-      bmkUri: "http://example.com/b",
-    }));
+    records.push(
+      makeRecord({
+        id: guid,
+        parentid: "toolbar",
+        type: "bookmark",
+        title,
+        bmkUri: "http://example.com/b",
+      })
+    );
   }
   await buf.store(shuffle(records));
 
@@ -165,8 +193,11 @@ add_task(async function test_weak_upload_chunking() {
   });
 
   let guidsToUpload = Object.keys(changesToUpload);
-  deepEqual(guidsToUpload.sort(), toolbarRecord.children.sort(),
-    "Should weakly upload records that haven't changed locally");
+  deepEqual(
+    guidsToUpload.sort(),
+    toolbarRecord.children.sort(),
+    "Should weakly upload records that haven't changed locally"
+  );
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();

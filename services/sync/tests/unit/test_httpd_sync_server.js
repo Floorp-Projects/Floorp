@@ -50,14 +50,16 @@ add_test(function test_url_parsing() {
 
   parts = server.storageRE.exec("storage");
   let collection;
-  [all, , collection ] = parts;
+  [all, , collection] = parts;
   Assert.equal(all, "storage");
   Assert.equal(collection, undefined);
 
   run_next_test();
 });
 
-const {RESTRequest} = ChromeUtils.import("resource://services-common/rest.js");
+const { RESTRequest } = ChromeUtils.import(
+  "resource://services-common/rest.js"
+);
 function localRequest(server, path) {
   _("localRequest: " + path);
   let url = server.baseURI.substr(0, server.baseURI.length - 1) + path;
@@ -99,7 +101,7 @@ add_task(async function test_info_collections() {
   Assert.equal(req.response.body, "{}");
 
   let putReq = localRequest(server, "/1.1/john/storage/crypto/keys");
-  let payload = JSON.stringify({foo: "bar"});
+  let payload = JSON.stringify({ foo: "bar" });
   let putResp = await putReq.put(payload);
 
   responseHasCorrectHeaders(putResp);
@@ -132,7 +134,7 @@ add_task(async function test_storage_request() {
   server.registerUser("john", "password");
 
   server.createContents("john", {
-    crypto: {foos: {foo: "bar"}},
+    crypto: { foos: { foo: "bar" } },
   });
   let coll = server.user("john").collection("crypto");
   Assert.ok(!!coll);
@@ -236,8 +238,7 @@ add_task(async function test_x_weave_records() {
   server.registerUser("john", "password");
 
   server.createContents("john", {
-    crypto: {foos: {foo: "bar"},
-             bars: {foo: "baz"}},
+    crypto: { foos: { foo: "bar" }, bars: { foo: "baz" } },
   });
   server.start();
 

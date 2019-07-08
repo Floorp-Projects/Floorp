@@ -8,7 +8,9 @@
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(JSON_BASIC_URL + "?name=nogrip");
+  const { tab, monitor } = await initNetMonitor(
+    JSON_BASIC_URL + "?name=nogrip"
+  );
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;
@@ -18,10 +20,15 @@ add_task(async function() {
 
   await performRequests(monitor, tab, 1);
 
-  const onResponsePanelReady = waitForDOM(document, "#response-panel .treeTable");
+  const onResponsePanelReady = waitForDOM(
+    document,
+    "#response-panel .treeTable"
+  );
   store.dispatch(Actions.toggleNetworkDetails());
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#response-tab"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#response-tab")
+  );
   await onResponsePanelReady;
 
   const responsePanel = document.querySelector("#response-panel");
@@ -30,15 +37,13 @@ add_task(async function() {
   const stringRow = responsePanel.querySelectorAll(".stringRow")[0];
 
   /* Test for copy an object */
-  EventUtils.sendMouseEvent({ type: "contextmenu" },
-    objectRow);
+  EventUtils.sendMouseEvent({ type: "contextmenu" }, objectRow);
   await waitForClipboardPromise(function setup() {
     getContextMenuItem(monitor, "properties-view-context-menu-copy").click();
   }, `{"obj":{"type":"string"}}`);
 
   /* Test for copy all */
-  EventUtils.sendMouseEvent({ type: "contextmenu" },
-    objectRow);
+  EventUtils.sendMouseEvent({ type: "contextmenu" }, objectRow);
   await waitForClipboardPromise(function setup() {
     getContextMenuItem(monitor, "properties-view-context-menu-copyall").click();
   }, `{"JSON":{"obj":{"type":"string"}},` +
@@ -46,8 +51,7 @@ add_task(async function() {
     `"{\\"obj\\": {\\"type\\": \\"string\\" }}","mode":"application/json"}}}`);
 
   /* Test for copy a single row */
-  EventUtils.sendMouseEvent({ type: "contextmenu" },
-    stringRow);
+  EventUtils.sendMouseEvent({ type: "contextmenu" }, stringRow);
   await waitForClipboardPromise(function setup() {
     getContextMenuItem(monitor, "properties-view-context-menu-copy").click();
   }, "type: string");
@@ -74,28 +78,36 @@ add_task(async function() {
   await wait;
 
   wait = waitForDOM(document, ".headers-overview");
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
   await wait;
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#cookies-tab"));
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#cookies-tab")
+  );
 
   const cookiesPanel = document.querySelector("#cookies-panel");
 
-  const objectRows = cookiesPanel.querySelectorAll(".objectRow:not(.tree-section)");
+  const objectRows = cookiesPanel.querySelectorAll(
+    ".objectRow:not(.tree-section)"
+  );
   const stringRows = cookiesPanel.querySelectorAll(".stringRow");
 
   const expectedResponseCookies = [
     { bob: { httpOnly: true, value: "true" } },
-    { foo: { httpOnly: true, value: "bar"  } },
-    { tom: { httpOnly: true, value: "cool" } }];
+    { foo: { httpOnly: true, value: "bar" } },
+    { tom: { httpOnly: true, value: "cool" } },
+  ];
   for (let i = 0; i < objectRows.length; i++) {
     const cur = objectRows[i];
-    EventUtils.sendMouseEvent({ type: "contextmenu" },
-      cur);
+    EventUtils.sendMouseEvent({ type: "contextmenu" }, cur);
     await waitForClipboardPromise(function setup() {
       getContextMenuItem(monitor, "properties-view-context-menu-copy").click();
     }, JSON.stringify(expectedResponseCookies[i]));
@@ -104,8 +116,7 @@ add_task(async function() {
   const expectedRequestCookies = ["bob: true", "foo: bar", "tom: cool"];
   for (let i = 0; i < expectedRequestCookies.length; i++) {
     const cur = stringRows[objectRows.length + i];
-    EventUtils.sendMouseEvent({ type: "contextmenu" },
-      cur);
+    EventUtils.sendMouseEvent({ type: "contextmenu" }, cur);
     await waitForClipboardPromise(function setup() {
       getContextMenuItem(monitor, "properties-view-context-menu-copy").click();
     }, expectedRequestCookies[i]);

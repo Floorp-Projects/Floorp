@@ -3,7 +3,9 @@
 "use strict";
 
 add_task(async function test_background_incognito() {
-  info("Test background page incognito value with permanent private browsing enabled");
+  info(
+    "Test background page incognito value with permanent private browsing enabled"
+  );
 
   Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
   Services.prefs.setBoolPref("browser.privatebrowsing.autostart", true);
@@ -15,13 +17,22 @@ add_task(async function test_background_incognito() {
   let extension = ExtensionTestUtils.loadExtension({
     incognitoOverride: "spanning",
     async background() {
-      browser.test.assertEq(window, browser.extension.getBackgroundPage(),
-                            "Caller should be able to access itself as a background page");
-      browser.test.assertEq(window, await browser.runtime.getBackgroundPage(),
-                            "Caller should be able to access itself as a background page");
+      browser.test.assertEq(
+        window,
+        browser.extension.getBackgroundPage(),
+        "Caller should be able to access itself as a background page"
+      );
+      browser.test.assertEq(
+        window,
+        await browser.runtime.getBackgroundPage(),
+        "Caller should be able to access itself as a background page"
+      );
 
-      browser.test.assertEq(browser.extension.inIncognitoContext, true,
-                            "inIncognitoContext is true for permanent private browsing");
+      browser.test.assertEq(
+        browser.extension.inIncognitoContext,
+        true,
+        "inIncognitoContext is true for permanent private browsing"
+      );
 
       browser.test.notifyPass("incognito");
     },

@@ -30,8 +30,9 @@ function contentLength(request, response) {
 
   var avail;
   var data = "";
-  while ((avail = body.available()) > 0)
+  while ((avail = body.available()) > 0) {
     data += body.read(avail);
+  }
 
   Assert.equal(data, REQUEST_DATA);
 }
@@ -42,18 +43,24 @@ function contentLength(request, response) {
 
 XPCOMUtils.defineLazyGetter(this, "tests", function() {
   return [
-           new Test("http://localhost:" + srv.identity.primaryPort + "/content-length",
-                    init_content_length),
+    new Test(
+      "http://localhost:" + srv.identity.primaryPort + "/content-length",
+      init_content_length
+    ),
   ];
 });
 
 function init_content_length(ch) {
-  var content = Cc["@mozilla.org/io/string-input-stream;1"]
-                  .createInstance(Ci.nsIStringInputStream);
+  var content = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   content.data = REQUEST_DATA;
 
-  ch.QueryInterface(Ci.nsIUploadChannel)
-    .setUploadStream(content, "text/plain", REQUEST_DATA.length);
+  ch.QueryInterface(Ci.nsIUploadChannel).setUploadStream(
+    content,
+    "text/plain",
+    REQUEST_DATA.length
+  );
 
   // Override the values implicitly set by setUploadStream above.
   ch.requestMethod = "POST";

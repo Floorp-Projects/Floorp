@@ -68,7 +68,7 @@ add_task(async function() {
   await setUserAgentStylesPref(true);
 
   await addTab(TEST_URI);
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   info("Making sure that UA styles are visible on initial load");
   await userAgentStylesVisible(inspector, view);
@@ -117,26 +117,37 @@ async function userAgentStylesVisible(inspector, view) {
     await selectNode(data.selector, inspector);
     await compareAppliedStylesWithUI(inspector, view, "ua");
 
-    userRules = view._elementStyle.rules.filter(rule=>rule.editor.isEditable);
-    uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
+    userRules = view._elementStyle.rules.filter(rule => rule.editor.isEditable);
+    uaRules = view._elementStyle.rules.filter(rule => !rule.editor.isEditable);
     is(userRules.length, data.numUserRules, "Correct number of user rules");
     ok(uaRules.length > data.numUARules, "Has UA rules");
   }
 
-  ok(userRules.some(rule => rule.matchedSelectors.length === 1),
-    "There is an inline style for element in user styles");
+  ok(
+    userRules.some(rule => rule.matchedSelectors.length === 1),
+    "There is an inline style for element in user styles"
+  );
 
   // These tests rely on the "a" selector being the last test in
   // TEST_DATA.
-  ok(uaRules.some(rule => {
-    return rule.matchedSelectors.includes(":any-link");
-  }), "There is a rule for :any-link");
-  ok(uaRules.some(rule => {
-    return rule.matchedSelectors.includes("*|*:link");
-  }), "There is a rule for *|*:link");
-  ok(uaRules.some(rule => {
-    return rule.matchedSelectors.length === 1;
-  }), "Inline styles for ua styles");
+  ok(
+    uaRules.some(rule => {
+      return rule.matchedSelectors.includes(":any-link");
+    }),
+    "There is a rule for :any-link"
+  );
+  ok(
+    uaRules.some(rule => {
+      return rule.matchedSelectors.includes("*|*:link");
+    }),
+    "There is a rule for *|*:link"
+  );
+  ok(
+    uaRules.some(rule => {
+      return rule.matchedSelectors.length === 1;
+    }),
+    "Inline styles for ua styles"
+  );
 }
 
 async function userAgentStylesNotVisible(inspector, view) {
@@ -149,8 +160,8 @@ async function userAgentStylesNotVisible(inspector, view) {
     await selectNode(data.selector, inspector);
     await compareAppliedStylesWithUI(inspector, view);
 
-    userRules = view._elementStyle.rules.filter(rule=>rule.editor.isEditable);
-    uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
+    userRules = view._elementStyle.rules.filter(rule => rule.editor.isEditable);
+    uaRules = view._elementStyle.rules.filter(rule => !rule.editor.isEditable);
     is(userRules.length, data.numUserRules, "Correct number of user rules");
     is(uaRules.length, data.numUARules, "No UA rules");
   }
@@ -177,8 +188,11 @@ async function compareAppliedStylesWithUI(inspector, view, filter) {
   entries = [...entryMap.values()];
 
   const elementStyle = view._elementStyle;
-  is(elementStyle.rules.length, entries.length,
-    "Should have correct number of rules (" + entries.length + ")");
+  is(
+    elementStyle.rules.length,
+    entries.length,
+    "Should have correct number of rules (" + entries.length + ")"
+  );
 
   entries = entries.sort((a, b) => {
     return (a.pseudoElement || "z") > (b.pseudoElement || "z");
@@ -186,11 +200,20 @@ async function compareAppliedStylesWithUI(inspector, view, filter) {
 
   entries.forEach((entry, i) => {
     const elementStyleRule = elementStyle.rules[i];
-    is(elementStyleRule.inherited, entry.inherited,
-      "Same inherited (" + entry.inherited + ")");
-    is(elementStyleRule.isSystem, entry.isSystem,
-      "Same isSystem (" + entry.isSystem + ")");
-    is(elementStyleRule.editor.isEditable, !entry.isSystem,
-      "Editor isEditable opposite of UA (" + entry.isSystem + ")");
+    is(
+      elementStyleRule.inherited,
+      entry.inherited,
+      "Same inherited (" + entry.inherited + ")"
+    );
+    is(
+      elementStyleRule.isSystem,
+      entry.isSystem,
+      "Same isSystem (" + entry.isSystem + ")"
+    );
+    is(
+      elementStyleRule.editor.isEditable,
+      !entry.isSystem,
+      "Editor isEditable opposite of UA (" + entry.isSystem + ")"
+    );
   });
 }

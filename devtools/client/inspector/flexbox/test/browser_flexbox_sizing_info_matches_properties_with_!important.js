@@ -19,14 +19,24 @@ add_task(async function() {
   await selectNode(".item", inspector);
   const [flexItemSizingContainer] = await onFlexItemSizingRendered;
 
-  info("Check that the max and flexibility sections show correct CSS property value.");
-  const flexSection = flexItemSizingContainer.querySelector(".section.flexibility");
+  info(
+    "Check that the max and flexibility sections show correct CSS property value."
+  );
+  const flexSection = flexItemSizingContainer.querySelector(
+    ".section.flexibility"
+  );
   const maxSection = flexItemSizingContainer.querySelector(".section.max");
   const flexGrow = flexSection.querySelector(".css-property-link");
   const maxSize = maxSection.querySelector(".css-property-link");
 
-  is(maxSize.textContent, "(max-width: 400px !important)",
-    "Maximum size section shows CSS property value with highest specificity.");
-  is(flexGrow.textContent, "(flex-grow: 5 !important)",
-    "Flexibility size section shows CSS property value with highest specificity.");
+  is(
+    maxSize.textContent,
+    "(max-width: 400px !important)",
+    "Maximum size section shows CSS property value with highest specificity."
+  );
+  is(
+    flexGrow.textContent,
+    "(flex-grow: 5 !important)",
+    "Flexibility size section shows CSS property value with highest specificity."
+  );
 });

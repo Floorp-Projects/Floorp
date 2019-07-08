@@ -25,7 +25,9 @@ function DominatorTreeLazyChildren(parentNodeId, siblingIndex) {
  * @returns {String}
  */
 DominatorTreeLazyChildren.prototype.key = function() {
-  return `dominator-tree-lazy-children-${this._parentNodeId}-${this._siblingIndex}`;
+  return `dominator-tree-lazy-children-${this._parentNodeId}-${
+    this._siblingIndex
+  }`;
 };
 
 /**

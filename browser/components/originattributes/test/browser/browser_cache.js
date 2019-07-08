@@ -10,26 +10,42 @@
 
 const CC = Components.Constructor;
 
-let protocolProxyService = Cc["@mozilla.org/network/protocol-proxy-service;1"]
-                             .getService(Ci.nsIProtocolProxyService);
+let protocolProxyService = Cc[
+  "@mozilla.org/network/protocol-proxy-service;1"
+].getService(Ci.nsIProtocolProxyService);
 
 const TEST_DOMAIN = "http://example.net";
 const TEST_PATH = "/browser/browser/components/originattributes/test/browser/";
 const TEST_PAGE = TEST_DOMAIN + TEST_PATH + "file_cache.html";
 
-let suffixes = ["iframe.html", "link.css", "script.js", "img.png", "object.png",
-                "embed.png", "xhr.html", "worker.xhr.html", "audio.ogg",
-                "video.ogv", "track.vtt",
-                "fetch.html", "worker.fetch.html",
-                "request.html", "worker.request.html",
-                "import.js", "worker.js", "sharedworker.js"];
+let suffixes = [
+  "iframe.html",
+  "link.css",
+  "script.js",
+  "img.png",
+  "object.png",
+  "embed.png",
+  "xhr.html",
+  "worker.xhr.html",
+  "audio.ogg",
+  "video.ogv",
+  "track.vtt",
+  "fetch.html",
+  "worker.fetch.html",
+  "request.html",
+  "worker.request.html",
+  "import.js",
+  "worker.js",
+  "sharedworker.js",
+];
 
 // A random value for isolating video/audio elements across different tests.
 let randomSuffix;
 
 function clearAllImageCaches() {
-  let tools = SpecialPowers.Cc["@mozilla.org/image/tools;1"]
-                             .getService(SpecialPowers.Ci.imgITools);
+  let tools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(
+    SpecialPowers.Ci.imgITools
+  );
   let imageCache = tools.getImgCacheForDocument(window.document);
   imageCache.clearCache(true); // true=chrome
   imageCache.clearCache(false); // false=content
@@ -41,8 +57,7 @@ function cacheDataForContext(loadContextInfo) {
     let cacheVisitor = {
       onCacheStorageInfo(num, consumption) {},
       onCacheEntryInfo(uri, idEnhance) {
-        cacheEntries.push({ uri,
-                            idEnhance });
+        cacheEntries.push({ uri, idEnhance });
       },
       onCacheEntryVisitCompleted() {
         resolve(cacheEntries);
@@ -57,10 +72,10 @@ function cacheDataForContext(loadContextInfo) {
 }
 
 let countMatchingCacheEntries = function(cacheEntries, domain, fileSuffix) {
-  return cacheEntries.map(entry => entry.uri.asciiSpec)
-                     .filter(spec => spec.includes(domain))
-                     .filter(spec => spec.includes("file_thirdPartyChild." + fileSuffix))
-                     .length;
+  return cacheEntries
+    .map(entry => entry.uri.asciiSpec)
+    .filter(spec => spec.includes(domain))
+    .filter(spec => spec.includes("file_thirdPartyChild." + fileSuffix)).length;
 };
 
 function observeChannels(onChannel) {
@@ -87,20 +102,35 @@ function startObservingChannels(aMode) {
 
       switch (aMode) {
         case TEST_MODE_FIRSTPARTY:
-          ok(loadInfo.originAttributes.firstPartyDomain === "example.com" ||
-             loadInfo.originAttributes.firstPartyDomain === "example.org",
-             "first party for " + originalURISpec + " is " + loadInfo.originAttributes.firstPartyDomain);
+          ok(
+            loadInfo.originAttributes.firstPartyDomain === "example.com" ||
+              loadInfo.originAttributes.firstPartyDomain === "example.org",
+            "first party for " +
+              originalURISpec +
+              " is " +
+              loadInfo.originAttributes.firstPartyDomain
+          );
           break;
 
         case TEST_MODE_NO_ISOLATION:
-          ok(ChromeUtils.isOriginAttributesEqual(loadInfo.originAttributes, ChromeUtils.fillNonDefaultOriginAttributes()),
-             "OriginAttributes for " + originalURISpec + " is default.");
+          ok(
+            ChromeUtils.isOriginAttributesEqual(
+              loadInfo.originAttributes,
+              ChromeUtils.fillNonDefaultOriginAttributes()
+            ),
+            "OriginAttributes for " + originalURISpec + " is default."
+          );
           break;
 
         case TEST_MODE_CONTAINERS:
-          ok(loadInfo.originAttributes.userContextId === 1 ||
-             loadInfo.originAttributes.userContextId === 2,
-             "userContextId for " + originalURISpec + " is " + loadInfo.originAttributes.userContextId);
+          ok(
+            loadInfo.originAttributes.userContextId === 1 ||
+              loadInfo.originAttributes.userContextId === 2,
+            "userContextId for " +
+              originalURISpec +
+              " is " +
+              loadInfo.originAttributes.userContextId
+          );
           break;
 
         default:
@@ -117,8 +147,12 @@ let stopObservingChannels;
 // the random value for isolating video and audio elements across different
 // test runs.
 async function doInit(aMode) {
-  await SpecialPowers.pushPrefEnv({"set": [["network.predictor.enabled",         false],
-                                           ["network.predictor.enable-prefetch", false]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["network.predictor.enabled", false],
+      ["network.predictor.enable-prefetch", false],
+    ],
+  });
   clearAllImageCaches();
 
   Services.cache2.clear();
@@ -221,27 +255,80 @@ async function doTest(aBrowser) {
 async function doCheck(aShouldIsolate, aInputA, aInputB) {
   let expectedEntryCount = 1;
   let data = [];
-  data = data.concat(await cacheDataForContext(Services.loadContextInfo.default));
-  data = data.concat(await cacheDataForContext(Services.loadContextInfo.private));
-  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(true, {})));
-  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(false, { userContextId: 1 })));
-  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(true, { userContextId: 1 })));
-  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(false, { userContextId: 2 })));
-  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(true, { userContextId: 2 })));
-  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(false, { firstPartyDomain: "example.com" })));
-  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(true, { firstPartyDomain: "example.com" })));
-  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(false, { firstPartyDomain: "example.org" })));
-  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(true, { firstPartyDomain: "example.org" })));
+  data = data.concat(
+    await cacheDataForContext(Services.loadContextInfo.default)
+  );
+  data = data.concat(
+    await cacheDataForContext(Services.loadContextInfo.private)
+  );
+  data = data.concat(
+    await cacheDataForContext(Services.loadContextInfo.custom(true, {}))
+  );
+  data = data.concat(
+    await cacheDataForContext(
+      Services.loadContextInfo.custom(false, { userContextId: 1 })
+    )
+  );
+  data = data.concat(
+    await cacheDataForContext(
+      Services.loadContextInfo.custom(true, { userContextId: 1 })
+    )
+  );
+  data = data.concat(
+    await cacheDataForContext(
+      Services.loadContextInfo.custom(false, { userContextId: 2 })
+    )
+  );
+  data = data.concat(
+    await cacheDataForContext(
+      Services.loadContextInfo.custom(true, { userContextId: 2 })
+    )
+  );
+  data = data.concat(
+    await cacheDataForContext(
+      Services.loadContextInfo.custom(false, {
+        firstPartyDomain: "example.com",
+      })
+    )
+  );
+  data = data.concat(
+    await cacheDataForContext(
+      Services.loadContextInfo.custom(true, { firstPartyDomain: "example.com" })
+    )
+  );
+  data = data.concat(
+    await cacheDataForContext(
+      Services.loadContextInfo.custom(false, {
+        firstPartyDomain: "example.org",
+      })
+    )
+  );
+  data = data.concat(
+    await cacheDataForContext(
+      Services.loadContextInfo.custom(true, { firstPartyDomain: "example.org" })
+    )
+  );
 
   if (aShouldIsolate) {
     expectedEntryCount = 2;
   }
 
   for (let suffix of suffixes) {
-    let foundEntryCount = countMatchingCacheEntries(data, "example.net", suffix);
-    let result = (expectedEntryCount === foundEntryCount);
-    ok(result, "Cache entries expected for " + suffix + ": " + expectedEntryCount +
-               ", and found " + foundEntryCount);
+    let foundEntryCount = countMatchingCacheEntries(
+      data,
+      "example.net",
+      suffix
+    );
+    let result = expectedEntryCount === foundEntryCount;
+    ok(
+      result,
+      "Cache entries expected for " +
+        suffix +
+        ": " +
+        expectedEntryCount +
+        ", and found " +
+        foundEntryCount
+    );
   }
 
   stopObservingChannels();

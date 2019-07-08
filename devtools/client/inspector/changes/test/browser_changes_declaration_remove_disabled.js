@@ -54,7 +54,9 @@ async function testRemoveValue(ruleView, store, doc, prop) {
 }
 
 async function testToggle(ruleView, store, doc, prop) {
-  info("Test toggling leftover declaration off and on will not track extra changes.");
+  info(
+    "Test toggling leftover declaration off and on will not track extra changes."
+  );
   let onTrackChange;
 
   onTrackChange = waitUntilAction(store, "TRACK_CHANGE");

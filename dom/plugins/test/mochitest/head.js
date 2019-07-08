@@ -1,12 +1,15 @@
-
 /**
  * Waits for a tab switch.
  */
 function waitTabSwitched() {
   return new Promise(resolve => {
-    gBrowser.addEventListener("TabSwitchDone", function() {
-      executeSoon(resolve);
-    }, {once: true});
+    gBrowser.addEventListener(
+      "TabSwitchDone",
+      function() {
+        executeSoon(resolve);
+      },
+      { once: true }
+    );
   });
 }
 
@@ -21,7 +24,7 @@ function waitTabSwitched() {
  * @returns a Promise that resolves to true after the time has elapsed
  */
 function waitForMs(aMs) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     setTimeout(done, aMs);
     function done() {
       resolve(true);
@@ -51,11 +54,16 @@ function getPlatform() {
  */
 function nativeVerticalWheelEventMsg() {
   switch (getPlatform()) {
-    case "windows": return 0x020A; // WM_MOUSEWHEEL
-    case "mac": return 0; // value is unused, can be anything
-    case "linux": return 4; // value is unused, pass GDK_SCROLL_SMOOTH anyway
+    case "windows":
+      return 0x020a; // WM_MOUSEWHEEL
+    case "mac":
+      return 0; // value is unused, can be anything
+    case "linux":
+      return 4; // value is unused, pass GDK_SCROLL_SMOOTH anyway
   }
-  throw new Error("Native wheel events not supported on platform " + getPlatform());
+  throw new Error(
+    "Native wheel events not supported on platform " + getPlatform()
+  );
 }
 
 /**
@@ -63,9 +71,13 @@ function nativeVerticalWheelEventMsg() {
  */
 function waitScrollStart(aTarget) {
   return new Promise((resolve, reject) => {
-    aTarget.addEventListener("scroll", function(event) {
-      resolve(event);
-    }, {capture: true, once: true});
+    aTarget.addEventListener(
+      "scroll",
+      function(event) {
+        resolve(event);
+      },
+      { capture: true, once: true }
+    );
   });
 }
 
@@ -108,7 +120,11 @@ function waitScrollFinish(aTarget) {
  */
 function setTestPluginEnabledState(aState, aPluginName) {
   let name = aPluginName || "Test Plug-in";
-  SpecialPowers.setTestPluginEnabledState(aState, name);
+  let resolved = false;
+  SpecialPowers.setTestPluginEnabledState(aState, name).then(() => {
+    resolved = true;
+  });
+  SpecialPowers.Services.tm.spinEventLoopUntil(() => resolved);
 }
 
 /**
@@ -122,10 +138,10 @@ function getTestPlugin(aName) {
 
   // Find the test plugin
   for (let i = 0; i < tags.length; i++) {
-    if (tags[i].name == pluginName)
+    if (tags[i].name == pluginName) {
       return tags[i];
+    }
   }
   ok(false, "Unable to find plugin");
   return null;
 }
-

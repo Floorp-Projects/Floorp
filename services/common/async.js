@@ -4,13 +4,12 @@
 
 var EXPORTED_SYMBOLS = ["Async"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /*
  * Helpers for various async operations.
  */
 var Async = {
-
   /**
    * Execute an arbitrary number of asynchronous functions one after the
    * other, passing the callback arguments on to the next one.  All functions
@@ -49,13 +48,18 @@ var Async = {
     Services.obs.addObserver(function onQuitApplication() {
       Services.obs.removeObserver(onQuitApplication, "quit-application");
       Async.checkAppReady = Async.promiseYield = function() {
-        let exception = Components.Exception("App. Quitting", Cr.NS_ERROR_ABORT);
+        let exception = Components.Exception(
+          "App. Quitting",
+          Cr.NS_ERROR_ABORT
+        );
         exception.appIsShuttingDown = true;
         throw exception;
       };
     }, "quit-application");
     // In the common case, checkAppReady just returns true
-    return (Async.checkAppReady = function() { return true; })();
+    return (Async.checkAppReady = function() {
+      return true;
+    })();
   },
 
   /**
@@ -135,7 +139,10 @@ var Async = {
    *         Whether or not the function returned early.
    */
   async yieldingForEach(iterable, fn, yieldEvery = 50) {
-    const yieldState = typeof yieldEvery === "number" ? Async.yieldState(yieldEvery) : yieldEvery;
+    const yieldState =
+      typeof yieldEvery === "number"
+        ? Async.yieldState(yieldEvery)
+        : yieldEvery;
     let iteration = 0;
 
     for (const item of iterable) {
@@ -178,7 +185,10 @@ class AsyncQueueCaller {
   constructor(log) {
     this._log = log;
     this._queue = Promise.resolve();
-    this.QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]);
+    this.QueryInterface = ChromeUtils.generateQI([
+      Ci.nsIObserver,
+      Ci.nsISupportsWeakReference,
+    ]);
   }
 
   /**

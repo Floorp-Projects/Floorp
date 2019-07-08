@@ -7,11 +7,11 @@ var disableWorkerTest = "Need a way to set temporary prefs from a worker";
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const spec = "http://foo.com";
-  const name =
-    this.window ? window.location.pathname : "test_quotaExceeded_recovery";
+  const name = this.window
+    ? window.location.pathname
+    : "test_quotaExceeded_recovery";
   const objectStoreName = "foo";
 
   // We want 32 MB database, but there's the group limit so we need to
@@ -69,8 +69,7 @@ function* testSteps()
 
       let trans = db.transaction(objectStoreName, "readwrite");
       request = trans.objectStore(objectStoreName).add(obj, i);
-      request.onerror = function(event)
-      {
+      request.onerror = function(event) {
         event.stopPropagation();
       };
 

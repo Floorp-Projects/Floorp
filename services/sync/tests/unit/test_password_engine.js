@@ -1,12 +1,21 @@
-const {FXA_PWDMGR_HOST, FXA_PWDMGR_REALM} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const {LoginRec} = ChromeUtils.import("resource://services-sync/engines/passwords.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { FXA_PWDMGR_HOST, FXA_PWDMGR_REALM } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
+);
+const { LoginRec } = ChromeUtils.import(
+  "resource://services-sync/engines/passwords.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 const LoginInfo = Components.Constructor(
-  "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
+  "@mozilla.org/login-manager/loginInfo;1",
+  Ci.nsILoginInfo,
+  "init"
+);
 
 const PropertyBag = Components.Constructor(
-  "@mozilla.org/hash-property-bag;1", Ci.nsIWritablePropertyBag);
+  "@mozilla.org/hash-property-bag;1",
+  Ci.nsIWritablePropertyBag
+);
 
 async function cleanup(engine, server) {
   await engine._tracker.stop();
@@ -30,8 +39,17 @@ add_task(async function test_ignored_fields() {
 
   enableValidationPrefs();
 
-  let login = Services.logins.addLogin(new LoginInfo("https://example.com", "",
-    null, "username", "password", "", ""));
+  let login = Services.logins.addLogin(
+    new LoginInfo(
+      "https://example.com",
+      "",
+      null,
+      "username",
+      "password",
+      "",
+      ""
+    )
+  );
   login.QueryInterface(Ci.nsILoginMetaInfo); // For `guid`.
 
   engine._tracker.start();
@@ -50,8 +68,11 @@ add_task(async function test_ignored_fields() {
     Services.logins.modifyLogin(login, syncableProps);
 
     let changes = await engine.pullNewChanges();
-    deepEqual(Object.keys(changes), [login.guid],
-      "Should track syncable fields");
+    deepEqual(
+      Object.keys(changes),
+      [login.guid],
+      "Should track syncable fields"
+    );
   } finally {
     await cleanup(engine, server);
   }
@@ -70,8 +91,17 @@ add_task(async function test_ignored_sync_credentials() {
   engine._tracker.start();
 
   try {
-    let login = Services.logins.addLogin(new LoginInfo(FXA_PWDMGR_HOST, null,
-      FXA_PWDMGR_REALM, "fxa-uid", "creds", "", ""));
+    let login = Services.logins.addLogin(
+      new LoginInfo(
+        FXA_PWDMGR_HOST,
+        null,
+        FXA_PWDMGR_REALM,
+        "fxa-uid",
+        "creds",
+        "",
+        ""
+      )
+    );
 
     let noChanges = await engine.pullNewChanges();
     deepEqual(noChanges, {}, "Should not track new FxA credentials");
@@ -101,8 +131,15 @@ add_task(async function test_password_engine() {
   _("Add new login to upload during first sync");
   let newLogin;
   {
-    let login = new LoginInfo("https://example.com", "", null, "username",
-      "password", "", "");
+    let login = new LoginInfo(
+      "https://example.com",
+      "",
+      null,
+      "username",
+      "password",
+      "",
+      ""
+    );
     Services.logins.addLogin(login);
 
     let logins = Services.logins.findLogins("https://example.com", "", "");
@@ -119,15 +156,25 @@ add_task(async function test_password_engine() {
     let remotePasswordChangeTime = Date.now() - 1 * 60 * 60 * 24 * 1000;
     rec.timeCreated = remotePasswordChangeTime;
     rec.timePasswordChanged = remotePasswordChangeTime;
-    collection.insert(newLogin.guid, encryptPayload(rec.cleartext),
-      remotePasswordChangeTime / 1000);
+    collection.insert(
+      newLogin.guid,
+      encryptPayload(rec.cleartext),
+      remotePasswordChangeTime / 1000
+    );
   }
 
   _("Add login with older password change time to replace during first sync");
   let oldLogin;
   {
-    let login = new LoginInfo("https://mozilla.com", "", null, "us3r",
-      "0ldpa55", "", "");
+    let login = new LoginInfo(
+      "https://mozilla.com",
+      "",
+      null,
+      "us3r",
+      "0ldpa55",
+      "",
+      ""
+    );
     Services.logins.addLogin(login);
 
     let props = new PropertyBag();
@@ -161,12 +208,18 @@ add_task(async function test_password_engine() {
     await sync_engine_and_validate_telem(engine, false);
 
     let newRec = collection.cleartext(newLogin.guid);
-    equal(newRec.password, "password",
-      "Should update remote password for newer login");
+    equal(
+      newRec.password,
+      "password",
+      "Should update remote password for newer login"
+    );
 
     let logins = Services.logins.findLogins("https://mozilla.com", "", "");
-    equal(logins[0].password, "n3wpa55",
-      "Should update local password for older login");
+    equal(
+      logins[0].password,
+      "n3wpa55",
+      "Should update local password for older login"
+    );
   } finally {
     await cleanup(engine, server);
   }
@@ -192,7 +245,6 @@ add_task(async function test_password_dupe() {
     timeCreated: Date.now(),
     timePasswordChanged: Date.now(),
   };
-
 
   _("Create remote record with same details and guid1");
   collection.insertRecord(Object.assign({}, details, { id: guid1 }));

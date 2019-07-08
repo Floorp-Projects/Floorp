@@ -6,29 +6,29 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewSettings"];
 
-const {GeckoViewModule} = ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { GeckoViewModule } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewModule.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-XPCOMUtils.defineLazyGetter(
-  this, "MOBILE_USER_AGENT",
-  function() {
-    return Cc["@mozilla.org/network/protocol;1?name=http"]
-           .getService(Ci.nsIHttpProtocolHandler).userAgent;
-  });
+XPCOMUtils.defineLazyGetter(this, "MOBILE_USER_AGENT", function() {
+  return Cc["@mozilla.org/network/protocol;1?name=http"].getService(
+    Ci.nsIHttpProtocolHandler
+  ).userAgent;
+});
 
-XPCOMUtils.defineLazyGetter(
-  this, "DESKTOP_USER_AGENT",
-  function() {
-    return MOBILE_USER_AGENT
-           .replace(/Android \d.+?; [a-zA-Z]+/, "X11; Linux x86_64")
-           .replace(/Gecko\/[0-9\.]+/, "Gecko/20100101");
-  });
+XPCOMUtils.defineLazyGetter(this, "DESKTOP_USER_AGENT", function() {
+  return MOBILE_USER_AGENT.replace(
+    /Android \d.+?; [a-zA-Z]+/,
+    "X11; Linux x86_64"
+  ).replace(/Gecko\/[0-9\.]+/, "Gecko/20100101");
+});
 
-XPCOMUtils.defineLazyGetter(
-  this, "VR_USER_AGENT",
-  function() {
-    return MOBILE_USER_AGENT.replace(/Mobile/, "Mobile VR");
-  });
+XPCOMUtils.defineLazyGetter(this, "VR_USER_AGENT", function() {
+  return MOBILE_USER_AGENT.replace(/Mobile/, "Mobile VR");
+});
 
 // This needs to match GeckoSessionSettings.java
 const USER_AGENT_MODE_MOBILE = 0;
@@ -40,18 +40,16 @@ const USER_AGENT_MODE_VR = 2;
 // * user agent override
 class GeckoViewSettings extends GeckoViewModule {
   onInit() {
-    debug `onInit`;
+    debug`onInit`;
     this._userAgentMode = USER_AGENT_MODE_MOBILE;
     this._userAgentOverride = null;
     // Required for safe browsing and tracking protection.
 
-    this.registerListener([
-      "GeckoView:GetUserAgent",
-    ]);
+    this.registerListener(["GeckoView:GetUserAgent"]);
   }
 
   onEvent(aEvent, aData, aCallback) {
-    debug `onEvent ${aEvent} ${aData}`;
+    debug`onEvent ${aEvent} ${aData}`;
 
     switch (aEvent) {
       case "GeckoView:GetUserAgent": {
@@ -62,7 +60,7 @@ class GeckoViewSettings extends GeckoViewModule {
 
   onSettingsUpdate() {
     const settings = this.settings;
-    debug `onSettingsUpdate: ${settings}`;
+    debug`onSettingsUpdate: ${settings}`;
 
     this.displayMode = settings.displayMode;
     this.userAgentMode = settings.userAgentMode;
@@ -114,4 +112,4 @@ class GeckoViewSettings extends GeckoViewModule {
   }
 }
 
-const {debug, warn} = GeckoViewSettings.initLogging("GeckoViewSettings"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewSettings.initLogging("GeckoViewSettings"); // eslint-disable-line no-unused-vars

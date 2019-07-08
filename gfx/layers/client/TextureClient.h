@@ -246,11 +246,9 @@ class TextureData {
   };
 
   static TextureData* Create(TextureForwarder* aAllocator,
-                             gfx::SurfaceFormat aFormat,
-                             gfx::IntSize aSize,
+                             gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
                              LayersBackend aLayersBackend,
-                             int32_t aMaxTextureSize,
-                             BackendSelector aSelector,
+                             int32_t aMaxTextureSize, BackendSelector aSelector,
                              TextureFlags aTextureFlags,
                              TextureAllocationFlags aAllocFlags);
 
@@ -314,7 +312,7 @@ class TextureData {
 
   virtual GPUVideoTextureData* AsGPUVideoTextureData() { return nullptr; }
 
-protected:
+ protected:
   TextureData() { MOZ_COUNT_CTOR(TextureData); }
 };
 

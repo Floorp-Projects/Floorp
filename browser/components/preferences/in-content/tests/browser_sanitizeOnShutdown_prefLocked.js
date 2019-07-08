@@ -14,7 +14,11 @@ function testPrefStateMatchesLockedState() {
 
   let checkbox = doc.getElementById("alwaysClear");
   let preference = win.Preferences.get("privacy.sanitize.sanitizeOnShutdown");
-  is(checkbox.disabled, preference.locked, "Always Clear checkbox should be enabled when preference is not locked.");
+  is(
+    checkbox.disabled,
+    preference.locked,
+    "Always Clear checkbox should be enabled when preference is not locked."
+  );
 
   Services.prefs.clearUserPref("privacy.history.custom");
   gBrowser.removeCurrentTab();
@@ -28,12 +32,16 @@ add_task(function setup() {
 });
 
 add_task(async function test_preference_enabled_when_unlocked() {
-  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
+    leaveOpen: true,
+  });
   testPrefStateMatchesLockedState();
 });
 
 add_task(async function test_preference_disabled_when_locked() {
   Services.prefs.lockPref("privacy.sanitize.sanitizeOnShutdown");
-  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
+    leaveOpen: true,
+  });
   testPrefStateMatchesLockedState();
 });

@@ -19,10 +19,16 @@ const attrRelationsSpec = [
   ["aria-labelledby", RELATION_LABELLED_BY, RELATION_LABEL_FOR],
   ["aria-describedby", RELATION_DESCRIBED_BY, RELATION_DESCRIPTION_FOR],
   ["aria-controls", RELATION_CONTROLLER_FOR, RELATION_CONTROLLED_BY],
-  ["aria-flowto", RELATION_FLOWS_TO, RELATION_FLOWS_FROM]
+  ["aria-flowto", RELATION_FLOWS_TO, RELATION_FLOWS_FROM],
 ];
 
-async function testRelated(browser, accDoc, attr, hostRelation, dependantRelation) {
+async function testRelated(
+  browser,
+  accDoc,
+  attr,
+  hostRelation,
+  dependantRelation
+) {
   let host = findAccessibleChildByID(accDoc, "host");
   let dependant1 = findAccessibleChildByID(accDoc, "dependant1");
   let dependant2 = findAccessibleChildByID(accDoc, "dependant2");
@@ -36,22 +42,27 @@ async function testRelated(browser, accDoc, attr, hostRelation, dependantRelatio
    *                        and host respectively.
    * }
    */
-  const tests = [{
-    desc: "No attribute",
-    expected: [ null, null, null ]
-  }, {
-    desc: "Set attribute",
-    attrs: [{ key: attr, value: "dependant1" }],
-    expected: [ host, null, dependant1 ]
-  }, {
-    desc: "Change attribute",
-    attrs: [{ key: attr, value: "dependant2" }],
-    expected: [ null, host, dependant2 ]
-  }, {
-    desc: "Remove attribute",
-    attrs: [{ key: attr }],
-    expected: [ null, null, null ]
-  }];
+  const tests = [
+    {
+      desc: "No attribute",
+      expected: [null, null, null],
+    },
+    {
+      desc: "Set attribute",
+      attrs: [{ key: attr, value: "dependant1" }],
+      expected: [host, null, dependant1],
+    },
+    {
+      desc: "Change attribute",
+      attrs: [{ key: attr, value: "dependant2" }],
+      expected: [null, host, dependant2],
+    },
+    {
+      desc: "Remove attribute",
+      attrs: [{ key: attr }],
+      expected: [null, null, null],
+    },
+  ];
 
   for (let { desc, attrs, expected } of tests) {
     info(desc);
@@ -71,7 +82,8 @@ async function testRelated(browser, accDoc, attr, hostRelation, dependantRelatio
 /**
  * Test caching of relations between accessible objects.
  */
-addAccessibleTask(`
+addAccessibleTask(
+  `
   <div id="dependant1">label</div>
   <div id="dependant2">label2</div>
   <div role="checkbox" id="host"></div>`,

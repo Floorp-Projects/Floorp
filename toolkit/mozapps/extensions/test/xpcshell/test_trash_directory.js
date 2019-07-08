@@ -20,7 +20,7 @@ add_task(async function test() {
   let trashDirExists = await OS.File.exists(trashDir);
   ok(trashDirExists, "trash directory should have been created");
 
-  let file = await OS.File.open(testFile, {create: true}, {winShare: 0});
+  let file = await OS.File.open(testFile, { create: true }, { winShare: 0 });
   let fileExists = await OS.File.exists(testFile);
   ok(fileExists, "test.txt should have been created in " + trashDir);
 

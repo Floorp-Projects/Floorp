@@ -10,13 +10,20 @@ add_task(async function testSources() {
           let result = await browser.permissions.request({
             permissions: [perm],
           });
-          browser.test.sendMessage("request", {success: true, result, perm});
+          browser.test.sendMessage("request", { success: true, result, perm });
         } catch (err) {
-          browser.test.sendMessage("request", {success: false, errmsg: err.message, perm});
+          browser.test.sendMessage("request", {
+            success: false,
+            errmsg: err.message,
+            perm,
+          });
         }
       }
 
-      let tabs = await browser.tabs.query({active: true, currentWindow: true});
+      let tabs = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
       await browser.pageAction.show(tabs[0].id);
 
       browser.pageAction.onClicked.addListener(() => request("bookmarks"));
@@ -25,27 +32,36 @@ add_task(async function testSources() {
 
       browser.test.onMessage.addListener(msg => {
         if (msg === "contextMenus.update") {
-          browser.contextMenus.onClicked.addListener(() => request("webNavigation"));
-          browser.contextMenus.update("menu", {
-            title: "test user events in onClicked",
-            onclick: null,
-          }, () => browser.test.sendMessage("contextMenus.update-done"));
+          browser.contextMenus.onClicked.addListener(() =>
+            request("webNavigation")
+          );
+          browser.contextMenus.update(
+            "menu",
+            {
+              title: "test user events in onClicked",
+              onclick: null,
+            },
+            () => browser.test.sendMessage("contextMenus.update-done")
+          );
         }
         if (msg === "openOptionsPage") {
           browser.runtime.openOptionsPage();
         }
       });
 
-      browser.contextMenus.create({
-        id: "menu",
-        title: "test user events in onclick",
-        contexts: ["page"],
-        onclick() {
-          request("cookies");
+      browser.contextMenus.create(
+        {
+          id: "menu",
+          title: "test user events in onclick",
+          contexts: ["page"],
+          onclick() {
+            request("cookies");
+          },
         },
-      }, () => {
-        browser.test.sendMessage("actions-ready");
-      });
+        () => {
+          browser.test.sendMessage("actions-ready");
+        }
+      );
     },
 
     files: {
@@ -75,9 +91,17 @@ add_task(async function testSources() {
               let result = await browser.permissions.request({
                 permissions: [perm],
               });
-              browser.test.sendMessage("request", {success: true, result, perm});
+              browser.test.sendMessage("request", {
+                success: true,
+                result,
+                perm,
+              });
             } catch (err) {
-              browser.test.sendMessage("request", {success: false, errmsg: err.message, perm});
+              browser.test.sendMessage("request", {
+                success: false,
+                errmsg: err.message,
+                perm,
+              });
             }
           };
 
@@ -87,7 +111,9 @@ add_task(async function testSources() {
           // options page side, and synthetic click events won't work
           // until it is.
           do {
-            browser.test.log("Waiting for the options browser to be visible...");
+            browser.test.log(
+              "Waiting for the options browser to be visible..."
+            );
             await new Promise(resolve => setTimeout(resolve, 0));
             synthesizeMouseAtCenter(link, {});
           } while (link.onclick !== null);
@@ -96,17 +122,24 @@ add_task(async function testSources() {
     },
 
     manifest: {
-      browser_action: {default_title: "test"},
-      page_action: {default_title: "test"},
+      browser_action: { default_title: "test" },
+      page_action: { default_title: "test" },
       permissions: ["contextMenus"],
-      optional_permissions: ["bookmarks", "tabs", "webNavigation", "history",
-                             "cookies", "downloads"],
-      options_ui: {page: "options.html"},
-      content_security_policy: "script-src 'self' https://example.com; object-src 'none';",
+      optional_permissions: [
+        "bookmarks",
+        "tabs",
+        "webNavigation",
+        "history",
+        "cookies",
+        "downloads",
+      ],
+      options_ui: { page: "options.html" },
+      content_security_policy:
+        "script-src 'self' https://example.com; object-src 'none';",
       commands: {
         command: {
           suggested_key: {
-            "default": "Alt+Shift+J",
+            default: "Alt+Shift+J",
           },
         },
       },
@@ -115,15 +148,19 @@ add_task(async function testSources() {
     useAddonManager: "temporary",
   });
 
-  async function testPermissionRequest({requestPermission, expectPrompt, perm}, what) {
+  async function testPermissionRequest(
+    { requestPermission, expectPrompt, perm },
+    what
+  ) {
     info(`check request permission from '${what}'`);
 
     let promptPromise = null;
     if (expectPrompt) {
-      promptPromise = promisePopupNotificationShown("addon-webext-permissions")
-        .then(panel => {
-          panel.button.click();
-        });
+      promptPromise = promisePopupNotificationShown(
+        "addon-webext-permissions"
+      ).then(panel => {
+        panel.button.click();
+      });
     }
 
     await requestPermission();
@@ -142,61 +179,85 @@ add_task(async function testSources() {
   await extension.startup();
   await extension.awaitMessage("actions-ready");
 
-  await testPermissionRequest({
-    requestPermission: () => clickPageAction(extension),
-    expectPrompt: true,
-    perm: "bookmarks",
-  }, "page action click");
+  await testPermissionRequest(
+    {
+      requestPermission: () => clickPageAction(extension),
+      expectPrompt: true,
+      perm: "bookmarks",
+    },
+    "page action click"
+  );
 
-  await testPermissionRequest({
-    requestPermission: () => clickBrowserAction(extension),
-    expectPrompt: true,
-    perm: "tabs",
-  }, "browser action click");
+  await testPermissionRequest(
+    {
+      requestPermission: () => clickBrowserAction(extension),
+      expectPrompt: true,
+      perm: "tabs",
+    },
+    "browser action click"
+  );
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   gBrowser.selectedTab = tab;
 
-  await testPermissionRequest({
-    requestPermission: async () => {
-      let menu = await openContextMenu("body");
-      let items = menu.getElementsByAttribute("label", "test user events in onclick");
-      is(items.length, 1, "Found context menu item");
-      EventUtils.synthesizeMouseAtCenter(items[0], {});
+  await testPermissionRequest(
+    {
+      requestPermission: async () => {
+        let menu = await openContextMenu("body");
+        let items = menu.getElementsByAttribute(
+          "label",
+          "test user events in onclick"
+        );
+        is(items.length, 1, "Found context menu item");
+        EventUtils.synthesizeMouseAtCenter(items[0], {});
+      },
+      expectPrompt: false, // cookies permission has no prompt.
+      perm: "cookies",
     },
-    expectPrompt: false, // cookies permission has no prompt.
-    perm: "cookies",
-  }, "context menu in onclick");
+    "context menu in onclick"
+  );
 
   extension.sendMessage("contextMenus.update");
   await extension.awaitMessage("contextMenus.update-done");
 
-  await testPermissionRequest({
-    requestPermission: async () => {
-      let menu = await openContextMenu("body");
-      let items = menu.getElementsByAttribute("label", "test user events in onClicked");
-      is(items.length, 1, "Found context menu item again");
-      EventUtils.synthesizeMouseAtCenter(items[0], {});
+  await testPermissionRequest(
+    {
+      requestPermission: async () => {
+        let menu = await openContextMenu("body");
+        let items = menu.getElementsByAttribute(
+          "label",
+          "test user events in onClicked"
+        );
+        is(items.length, 1, "Found context menu item again");
+        EventUtils.synthesizeMouseAtCenter(items[0], {});
+      },
+      expectPrompt: true,
+      perm: "webNavigation",
     },
-    expectPrompt: true,
-    perm: "webNavigation",
-  }, "context menu in onClicked");
+    "context menu in onClicked"
+  );
 
-  await testPermissionRequest({
-    requestPermission: () => {
-      EventUtils.synthesizeKey("j", {altKey: true, shiftKey: true});
+  await testPermissionRequest(
+    {
+      requestPermission: () => {
+        EventUtils.synthesizeKey("j", { altKey: true, shiftKey: true });
+      },
+      expectPrompt: true,
+      perm: "downloads",
     },
-    expectPrompt: true,
-    perm: "downloads",
-  }, "commands shortcut");
+    "commands shortcut"
+  );
 
-  await testPermissionRequest({
-    requestPermission: () => {
-      extension.sendMessage("openOptionsPage");
+  await testPermissionRequest(
+    {
+      requestPermission: () => {
+        extension.sendMessage("openOptionsPage");
+      },
+      expectPrompt: true,
+      perm: "history",
     },
-    expectPrompt: true,
-    perm: "history",
-  }, "options page link click");
+    "options page link click"
+  );
 
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await BrowserTestUtils.removeTab(tab);
@@ -205,5 +266,3 @@ add_task(async function testSources() {
 
   registerCleanupFunction(() => CustomizableUI.reset());
 });
-
-

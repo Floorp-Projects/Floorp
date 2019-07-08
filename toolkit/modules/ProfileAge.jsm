@@ -6,11 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["ProfileAge"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {TelemetryUtils} = ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TelemetryUtils } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryUtils.jsm"
+);
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
 
 const FILE_TIMES = "times.json";
 
@@ -24,7 +28,6 @@ function getElapsedTimeInDays(aStartDate, aEndDate) {
   return TelemetryUtils.millisecondsToDays(aEndDate - aStartDate);
 }
 
-
 /**
  * Traverse the contents of the profile directory, finding the oldest file
  * and returning its creation timestamp.
@@ -35,14 +38,18 @@ async function getOldestProfileTimestamp(profilePath, log) {
   let iterator = new OS.File.DirectoryIterator(profilePath);
   log.debug("Iterating over profile " + profilePath);
   if (!iterator) {
-    throw new Error("Unable to fetch oldest profile entry: no profile iterator.");
+    throw new Error(
+      "Unable to fetch oldest profile entry: no profile iterator."
+    );
   }
 
   Services.telemetry.scalarAdd("telemetry.profile_directory_scans", 1);
-  let histogram = Services.telemetry.getHistogramById("PROFILE_DIRECTORY_FILE_AGE");
+  let histogram = Services.telemetry.getHistogramById(
+    "PROFILE_DIRECTORY_FILE_AGE"
+  );
 
   try {
-    await iterator.forEach(async (entry) => {
+    await iterator.forEach(async entry => {
       try {
         let info = await OS.File.stat(entry.path);
 
@@ -143,7 +150,10 @@ class ProfileAgeImpl {
    * Return a promise representing the writing the current times to the profile.
    */
   writeTimes() {
-    return CommonUtils.writeJSON(this._times, OS.Path.join(this.profilePath, FILE_TIMES));
+    return CommonUtils.writeJSON(
+      this._times,
+      OS.Path.join(this.profilePath, FILE_TIMES)
+    );
   }
 
   /**
@@ -154,8 +164,10 @@ class ProfileAgeImpl {
   async computeAndPersistCreated() {
     let oldest = await getOldestProfileTimestamp(this.profilePath, this._log);
     this._times.created = oldest;
-    Services.telemetry.scalarSet("telemetry.profile_directory_scan_date",
-      TelemetryUtils.millisecondsToDays(Date.now()));
+    Services.telemetry.scalarSet(
+      "telemetry.profile_directory_scan_date",
+      TelemetryUtils.millisecondsToDays(Date.now())
+    );
     await this.writeTimes();
     return oldest;
   }

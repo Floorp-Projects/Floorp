@@ -10,7 +10,7 @@ const run_test = Test(async function() {
   const response = await client.mainRoot.protocolDescription();
 
   assert(response.from == "root");
-  assert(typeof (response.types) === "object");
+  assert(typeof response.types === "object");
 
   await client.close();
 });

@@ -43,16 +43,18 @@ async function testAddDuplicateDeclarations(ruleView, store, doc) {
 
   const addDecl = getAddedDeclarations(doc);
   is(addDecl.length, 2, "Two declarations were tracked as added");
-  is(addDecl[0].value, "red",
-     "First declaration has correct property value"
-  );
-  is(addDecl[0].value, addDecl[1].value,
-     "First and second declarations have identical property values"
+  is(addDecl[0].value, "red", "First declaration has correct property value");
+  is(
+    addDecl[0].value,
+    addDecl[1].value,
+    "First and second declarations have identical property values"
   );
 }
 
 async function testChangeDuplicateDeclarations(ruleView, store, doc) {
-  info("Test that changing one of the duplicate declarations won't change the other");
+  info(
+    "Test that changing one of the duplicate declarations won't change the other"
+  );
   const rule = getRuleViewRuleEditor(ruleView, 1).rule;
   const prop = rule.textProps[0];
 
@@ -64,7 +66,11 @@ async function testChangeDuplicateDeclarations(ruleView, store, doc) {
 
   const addDecl = getAddedDeclarations(doc);
   is(addDecl[0].value, "black", "First declaration has changed property value");
-  is(addDecl[1].value, "red", "Second declaration has not changed property value");
+  is(
+    addDecl[1].value,
+    "red",
+    "Second declaration has not changed property value"
+  );
 }
 
 async function testRemoveDuplicateDeclarations(ruleView, store, doc) {
@@ -84,7 +90,9 @@ async function testRemoveDuplicateDeclarations(ruleView, store, doc) {
   // Expect no remove operation tracked because it cancels out the original add operation.
   is(removeDecl.length, 0, "No declaration was tracked as removed");
   is(addDecl.length, 1, "Just one declaration left tracked as added");
-  is(addDecl[0].value, "red",
-     "Leftover declaration has property value of the former second declaration"
+  is(
+    addDecl[0].value,
+    "red",
+    "Leftover declaration has property value of the former second declaration"
   );
 }

@@ -194,14 +194,12 @@ void DocGroup::SignalSlotChange(HTMLSlotElement& aSlot) {
 }
 
 bool DocGroup::TryToLoadIframesInBackground() {
-  return
-    StaticPrefs::dom_separate_event_queue_for_post_message_enabled() &&
-    StaticPrefs::dom_cross_origin_iframes_loaded_in_background();
+  return StaticPrefs::dom_separate_event_queue_for_post_message_enabled() &&
+         StaticPrefs::dom_cross_origin_iframes_loaded_in_background();
 }
 
 nsresult DocGroup::QueueIframePostMessages(
-    already_AddRefed<nsIRunnable>&& aRunnable,
-    uint64_t aWindowId) {
+    already_AddRefed<nsIRunnable>&& aRunnable, uint64_t aWindowId) {
   if (DocGroup::TryToLoadIframesInBackground()) {
     if (!mIframePostMessageQueue) {
       nsCOMPtr<nsISerialEventTarget> target = GetMainThreadSerialEventTarget();
@@ -221,8 +219,7 @@ nsresult DocGroup::QueueIframePostMessages(
 
     mIframesUsedPostMessageQueue.PutEntry(aWindowId);
 
-    mIframePostMessageQueue->Dispatch(std::move(aRunnable),
-                                      NS_DISPATCH_NORMAL);
+    mIframePostMessageQueue->Dispatch(std::move(aRunnable), NS_DISPATCH_NORMAL);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -231,8 +228,7 @@ nsresult DocGroup::QueueIframePostMessages(
 void DocGroup::TryFlushIframePostMessages(uint64_t aWindowId) {
   if (DocGroup::TryToLoadIframesInBackground()) {
     mIframesUsedPostMessageQueue.RemoveEntry(aWindowId);
-    if (mIframePostMessageQueue &&
-        mIframesUsedPostMessageQueue.IsEmpty()) {
+    if (mIframePostMessageQueue && mIframesUsedPostMessageQueue.IsEmpty()) {
       MOZ_ASSERT(mIframePostMessageQueue->IsPaused());
       nsresult rv = mIframePostMessageQueue->SetIsPaused(true);
       MOZ_ALWAYS_SUCCEEDS(rv);

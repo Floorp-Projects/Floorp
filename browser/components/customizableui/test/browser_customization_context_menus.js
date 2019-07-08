@@ -6,7 +6,7 @@
 
 requestLongerTimeout(2);
 
-const isOSX = (Services.appinfo.OS === "Darwin");
+const isOSX = Services.appinfo.OS === "Darwin";
 
 const overflowButton = document.getElementById("nav-bar-overflow-button");
 const overflowPanel = document.getElementById("widget-overflow");
@@ -17,7 +17,10 @@ add_task(async function home_button_context() {
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownPromise = popupShown(contextMenu);
   let homeButton = document.getElementById("home-button");
-  EventUtils.synthesizeMouse(homeButton, 2, 2, {type: "contextmenu", button: 2 });
+  EventUtils.synthesizeMouse(homeButton, 2, 2, {
+    type: "contextmenu",
+    button: 2,
+  });
   await shownPromise;
 
   let expectedEntries = [
@@ -45,12 +48,18 @@ add_task(async function home_button_context() {
 // but with tab-specific options instead.
 add_task(async function tabstrip_context() {
   // ensure there are tabs to reload/bookmark:
-  let extraTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  let extraTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.com/"
+  );
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownPromise = popupShown(contextMenu);
   let tabstrip = document.getElementById("tabbrowser-tabs");
   let rect = tabstrip.getBoundingClientRect();
-  EventUtils.synthesizeMouse(tabstrip, rect.width - 2, 2, {type: "contextmenu", button: 2 });
+  EventUtils.synthesizeMouse(tabstrip, rect.width - 2, 2, {
+    type: "contextmenu",
+    button: 2,
+  });
   await shownPromise;
 
   let closedTabsAvailable = SessionStore.getClosedTabCount(window) == 0;
@@ -88,8 +97,13 @@ add_task(async function titlebar_spacer_context() {
 
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownPromise = popupShown(contextMenu);
-  let spacer = document.querySelector("#TabsToolbar .titlebar-spacer[type='pre-tabs']");
-  EventUtils.synthesizeMouseAtCenter(spacer, {type: "contextmenu", button: 2 });
+  let spacer = document.querySelector(
+    "#TabsToolbar .titlebar-spacer[type='pre-tabs']"
+  );
+  EventUtils.synthesizeMouseAtCenter(spacer, {
+    type: "contextmenu",
+    button: 2,
+  });
   await shownPromise;
 
   let expectedEntries = [
@@ -121,7 +135,10 @@ add_task(async function empty_toolbar_context() {
   let toolbar = createToolbarWithPlacements("880164_empty_toolbar", []);
   toolbar.setAttribute("context", "toolbar-context-menu");
   toolbar.setAttribute("toolbarname", "Fancy Toolbar for Context Menu");
-  EventUtils.synthesizeMouseAtCenter(toolbar, {type: "contextmenu", button: 2 });
+  EventUtils.synthesizeMouseAtCenter(toolbar, {
+    type: "contextmenu",
+    button: 2,
+  });
   await shownPromise;
 
   let expectedEntries = [
@@ -146,7 +163,6 @@ add_task(async function empty_toolbar_context() {
   removeCustomToolbars();
 });
 
-
 // Right-click on the urlbar-container should
 // show a context menu with disabled options to move it.
 add_task(async function urlbar_context() {
@@ -154,7 +170,10 @@ add_task(async function urlbar_context() {
   let shownPromise = popupShown(contextMenu);
   let urlBarContainer = document.getElementById("urlbar-container");
   // Need to make sure not to click within an edit field.
-  EventUtils.synthesizeMouse(urlBarContainer, 100, 1, {type: "contextmenu", button: 2 });
+  EventUtils.synthesizeMouse(urlBarContainer, 100, 1, {
+    type: "contextmenu",
+    button: 2,
+  });
   await shownPromise;
 
   let expectedEntries = [
@@ -190,7 +209,11 @@ add_task(async function searchbar_context_move_to_panel_and_back() {
   // from the nav bar.
   await gCustomizeMode.addToPanel(searchbar);
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
-  is(placement.area, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, "Should be in panel");
+  is(
+    placement.area,
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
+    "Should be in panel"
+  );
 
   await waitForOverflowButtonShown();
 
@@ -215,7 +238,10 @@ add_task(async function searchbar_context_move_to_panel_and_back() {
 // Right-click on an item within the panel should
 // show a context menu with options to move it.
 add_task(async function context_within_panel() {
-  CustomizableUI.addWidgetToArea("new-window-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "new-window-button",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
 
   await waitForOverflowButtonShown();
 
@@ -223,11 +249,16 @@ add_task(async function context_within_panel() {
   overflowButton.click();
   await shownPanelPromise;
 
-  let contextMenu = document.getElementById("customizationPanelItemContextMenu");
+  let contextMenu = document.getElementById(
+    "customizationPanelItemContextMenu"
+  );
   let shownContextPromise = popupShown(contextMenu);
   let newWindowButton = document.getElementById("new-window-button");
   ok(newWindowButton, "new-window-button was found");
-  EventUtils.synthesizeMouse(newWindowButton, 2, 2, {type: "contextmenu", button: 2});
+  EventUtils.synthesizeMouse(newWindowButton, 2, 2, {
+    type: "contextmenu",
+    button: 2,
+  });
   await shownContextPromise;
 
   is(overflowPanel.state, "open", "The overflow panel should still be open.");
@@ -258,7 +289,10 @@ add_task(async function context_home_button_in_customize_mode() {
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownPromise = popupShown(contextMenu);
   let homeButton = document.getElementById("wrapper-home-button");
-  EventUtils.synthesizeMouse(homeButton, 2, 2, {type: "contextmenu", button: 2});
+  EventUtils.synthesizeMouse(homeButton, 2, 2, {
+    type: "contextmenu",
+    button: 2,
+  });
   await shownPromise;
 
   let expectedEntries = [
@@ -284,10 +318,15 @@ add_task(async function context_home_button_in_customize_mode() {
 // Right-click on an item in the palette should
 // show a context menu with options to move it.
 add_task(async function context_click_in_palette() {
-  let contextMenu = document.getElementById("customizationPaletteItemContextMenu");
+  let contextMenu = document.getElementById(
+    "customizationPaletteItemContextMenu"
+  );
   let shownPromise = popupShown(contextMenu);
   let openFileButton = document.getElementById("wrapper-open-file-button");
-  EventUtils.synthesizeMouse(openFileButton, 2, 2, {type: "contextmenu", button: 2});
+  EventUtils.synthesizeMouse(openFileButton, 2, 2, {
+    type: "contextmenu",
+    button: 2,
+  });
   await shownPromise;
 
   let expectedEntries = [
@@ -304,11 +343,19 @@ add_task(async function context_click_in_palette() {
 // Right-click on an item in the panel while in customization mode
 // should show a context menu with options to move it.
 add_task(async function context_click_in_customize_mode() {
-  CustomizableUI.addWidgetToArea("new-window-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
-  let contextMenu = document.getElementById("customizationPanelItemContextMenu");
+  CustomizableUI.addWidgetToArea(
+    "new-window-button",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
+  let contextMenu = document.getElementById(
+    "customizationPanelItemContextMenu"
+  );
   let shownPromise = popupShown(contextMenu);
   let newWindowButton = document.getElementById("wrapper-new-window-button");
-  EventUtils.synthesizeMouse(newWindowButton, 2, 2, {type: "contextmenu", button: 2});
+  EventUtils.synthesizeMouse(newWindowButton, 2, 2, {
+    type: "contextmenu",
+    button: 2,
+  });
   await shownPromise;
 
   let expectedEntries = [
@@ -329,17 +376,30 @@ add_task(async function context_click_in_customize_mode() {
 // Test the toolbarbutton panel context menu in customization mode
 // without opening the panel before customization mode
 add_task(async function context_click_customize_mode_panel_not_opened() {
-  CustomizableUI.addWidgetToArea("new-window-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "new-window-button",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
   this.otherWin = await openAndLoadWindow(null, true);
 
   await new Promise(resolve => waitForFocus(resolve, this.otherWin));
 
   await startCustomizing(this.otherWin);
 
-  let contextMenu = this.otherWin.document.getElementById("customizationPanelItemContextMenu");
+  let contextMenu = this.otherWin.document.getElementById(
+    "customizationPanelItemContextMenu"
+  );
   let shownPromise = popupShown(contextMenu);
-  let newWindowButton = this.otherWin.document.getElementById("wrapper-new-window-button");
-  EventUtils.synthesizeMouse(newWindowButton, 2, 2, {type: "contextmenu", button: 2}, this.otherWin);
+  let newWindowButton = this.otherWin.document.getElementById(
+    "wrapper-new-window-button"
+  );
+  EventUtils.synthesizeMouse(
+    newWindowButton,
+    2,
+    2,
+    { type: "contextmenu", button: 2 },
+    this.otherWin
+  );
   await shownPromise;
 
   let expectedEntries = [
@@ -364,15 +424,25 @@ add_task(async function context_click_customize_mode_panel_not_opened() {
 // Bug 945191 - Combined buttons show wrong context menu options
 // when they are in the toolbar.
 add_task(async function context_combined_buttons_toolbar() {
-  CustomizableUI.addWidgetToArea("zoom-controls", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "zoom-controls",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
   await startCustomizing();
-  let contextMenu = document.getElementById("customizationPanelItemContextMenu");
+  let contextMenu = document.getElementById(
+    "customizationPanelItemContextMenu"
+  );
   let shownPromise = popupShown(contextMenu);
   let zoomControls = document.getElementById("wrapper-zoom-controls");
-  EventUtils.synthesizeMouse(zoomControls, 2, 2, {type: "contextmenu", button: 2});
+  EventUtils.synthesizeMouse(zoomControls, 2, 2, {
+    type: "contextmenu",
+    button: 2,
+  });
   await shownPromise;
   // Execute the command to move the item from the panel to the toolbar.
-  let moveToToolbar = contextMenu.querySelector(".customize-context-moveToToolbar");
+  let moveToToolbar = contextMenu.querySelector(
+    ".customize-context-moveToToolbar"
+  );
   moveToToolbar.doCommand();
   let hiddenPromise = popupHidden(contextMenu);
   contextMenu.hidePopup();
@@ -380,11 +450,18 @@ add_task(async function context_combined_buttons_toolbar() {
   await endCustomizing();
 
   zoomControls = document.getElementById("zoom-controls");
-  is(zoomControls.parentNode.id, "nav-bar-customization-target", "Zoom-controls should be on the nav-bar");
+  is(
+    zoomControls.parentNode.id,
+    "nav-bar-customization-target",
+    "Zoom-controls should be on the nav-bar"
+  );
 
   contextMenu = document.getElementById("toolbar-context-menu");
   shownPromise = popupShown(contextMenu);
-  EventUtils.synthesizeMouse(zoomControls, 2, 2, {type: "contextmenu", button: 2});
+  EventUtils.synthesizeMouse(zoomControls, 2, 2, {
+    type: "contextmenu",
+    button: 2,
+  });
   await shownPromise;
 
   let expectedEntries = [
@@ -414,16 +491,24 @@ add_task(async function context_after_customization_panel() {
   await startCustomizing();
   await endCustomizing();
 
-  CustomizableUI.addWidgetToArea("new-window-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "new-window-button",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
   let shownPanelPromise = popupShown(overflowPanel);
   overflowButton.click();
   await shownPanelPromise;
 
-  let contextMenu = document.getElementById("customizationPanelItemContextMenu");
+  let contextMenu = document.getElementById(
+    "customizationPanelItemContextMenu"
+  );
   let shownContextPromise = popupShown(contextMenu);
   let newWindowButton = document.getElementById("new-window-button");
   ok(newWindowButton, "new-window-button was found");
-  EventUtils.synthesizeMouse(newWindowButton, 2, 2, {type: "contextmenu", button: 2});
+  EventUtils.synthesizeMouse(newWindowButton, 2, 2, {
+    type: "contextmenu",
+    button: 2,
+  });
   await shownContextPromise;
 
   is(overflowPanel.state, "open", "The panel should still be open.");
@@ -446,7 +531,6 @@ add_task(async function context_after_customization_panel() {
   CustomizableUI.removeWidgetFromArea("new-window-button");
 });
 
-
 // Bug 982027 - moving icon around removes custom context menu.
 add_task(async function custom_context_menus() {
   let widgetId = "custom-context-menu-toolbarbutton";
@@ -454,26 +538,64 @@ add_task(async function custom_context_menus() {
   let widget = createDummyXULButton(widgetId, "Test ctxt menu");
   widget.setAttribute("context", expectedContext);
   CustomizableUI.addWidgetToArea(widgetId, CustomizableUI.AREA_NAVBAR);
-  is(widget.getAttribute("context"), expectedContext, "Should have context menu when added to the toolbar.");
+  is(
+    widget.getAttribute("context"),
+    expectedContext,
+    "Should have context menu when added to the toolbar."
+  );
 
   await startCustomizing();
-  is(widget.getAttribute("context"), "", "Should not have own context menu in the toolbar now that we're customizing.");
-  is(widget.getAttribute("wrapped-context"), expectedContext, "Should keep own context menu wrapped when in toolbar.");
+  is(
+    widget.getAttribute("context"),
+    "",
+    "Should not have own context menu in the toolbar now that we're customizing."
+  );
+  is(
+    widget.getAttribute("wrapped-context"),
+    expectedContext,
+    "Should keep own context menu wrapped when in toolbar."
+  );
 
   let panel = document.getElementById("widget-overflow-fixed-list");
   simulateItemDrag(widget, panel);
-  is(widget.getAttribute("context"), "", "Should not have own context menu when in the panel.");
-  is(widget.getAttribute("wrapped-context"), expectedContext, "Should keep own context menu wrapped now that we're in the panel.");
+  is(
+    widget.getAttribute("context"),
+    "",
+    "Should not have own context menu when in the panel."
+  );
+  is(
+    widget.getAttribute("wrapped-context"),
+    expectedContext,
+    "Should keep own context menu wrapped now that we're in the panel."
+  );
 
-  simulateItemDrag(widget, CustomizableUI.getCustomizationTarget(document.getElementById("nav-bar")));
-  is(widget.getAttribute("context"), "", "Should not have own context menu when back in toolbar because we're still customizing.");
-  is(widget.getAttribute("wrapped-context"), expectedContext, "Should keep own context menu wrapped now that we're back in the toolbar.");
+  simulateItemDrag(
+    widget,
+    CustomizableUI.getCustomizationTarget(document.getElementById("nav-bar"))
+  );
+  is(
+    widget.getAttribute("context"),
+    "",
+    "Should not have own context menu when back in toolbar because we're still customizing."
+  );
+  is(
+    widget.getAttribute("wrapped-context"),
+    expectedContext,
+    "Should keep own context menu wrapped now that we're back in the toolbar."
+  );
 
   await endCustomizing();
-  is(widget.getAttribute("context"), expectedContext, "Should have context menu again now that we're out of customize mode.");
+  is(
+    widget.getAttribute("context"),
+    expectedContext,
+    "Should have context menu again now that we're out of customize mode."
+  );
   CustomizableUI.removeWidgetFromArea(widgetId);
   widget.remove();
-  ok(CustomizableUI.inDefaultState, "Should be in default state after removing button.");
+  ok(
+    CustomizableUI.inDefaultState,
+    "Should be in default state after removing button."
+  );
 });
 
 // Bug 1383458 - shouldn't enable 'pin to overflow menu' for flexible spaces
@@ -484,7 +606,10 @@ add_task(async function flexible_space_context_menu() {
   ok(lastSpring, "we added a spring");
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownPromise = popupShown(contextMenu);
-  EventUtils.synthesizeMouse(lastSpring, 2, 2, {type: "contextmenu", button: 2});
+  EventUtils.synthesizeMouse(lastSpring, 2, 2, {
+    type: "contextmenu",
+    button: 2,
+  });
   await shownPromise;
   let expectedEntries = [
     [".customize-context-moveToPanel", false],

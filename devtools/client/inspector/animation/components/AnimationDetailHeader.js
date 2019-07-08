@@ -37,12 +37,10 @@ class AnimationDetailHeader extends PureComponent {
         },
         getFormattedTitle(animation.state)
       ),
-      dom.button(
-        {
-          className: "animation-detail-close-button devtools-button",
-          onClick: this.onClick.bind(this),
-        }
-      )
+      dom.button({
+        className: "animation-detail-close-button devtools-button",
+        onClick: this.onClick.bind(this),
+      })
     );
   }
 }

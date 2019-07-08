@@ -44,16 +44,16 @@
 
 function canQuitApplication() {
   try {
-    var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
-      .createInstance(Ci.nsISupportsPRBool);
+    var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(
+      Ci.nsISupportsPRBool
+    );
     Services.obs.notifyObservers(cancelQuit, "quit-application-requested");
 
     // Something aborted the quit process.
     if (cancelQuit.data) {
       return false;
     }
-  } catch (ex) {
-  }
+  } catch (ex) {}
   return true;
 }
 

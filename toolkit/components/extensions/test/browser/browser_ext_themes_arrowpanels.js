@@ -1,13 +1,19 @@
 "use strict";
 
 function openIdentityPopup() {
-  let promise = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popupshown");
+  let promise = BrowserTestUtils.waitForEvent(
+    gIdentityHandler._identityPopup,
+    "popupshown"
+  );
   gIdentityHandler._identityBox.click();
   return promise;
 }
 
 function closeIdentityPopup() {
-  let promise = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popuphidden");
+  let promise = BrowserTestUtils.waitForEvent(
+    gIdentityHandler._identityPopup,
+    "popuphidden"
+  );
   gIdentityHandler._identityPopup.hidePopup();
   return promise;
 }
@@ -22,16 +28,16 @@ add_task(async function test_popup_styling(browser, accDoc) {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "theme": {
-        "images": {
-          "theme_frame": "image1.png",
+      theme: {
+        images: {
+          theme_frame: "image1.png",
         },
-        "colors": {
-          "frame": ACCENT_COLOR,
-          "tab_background_text": TEXT_COLOR,
-          "popup": POPUP_BACKGROUND_COLOR,
-          "popup_text": POPUP_TEXT_COLOR,
-          "popup_border": POPUP_BORDER_COLOR,
+        colors: {
+          frame: ACCENT_COLOR,
+          tab_background_text: TEXT_COLOR,
+          popup: POPUP_BACKGROUND_COLOR,
+          popup_text: POPUP_TEXT_COLOR,
+          popup_border: POPUP_BORDER_COLOR,
         },
       },
     },
@@ -40,40 +46,48 @@ add_task(async function test_popup_styling(browser, accDoc) {
     },
   });
 
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "https://example.com" },
+    async function(browser) {
+      await extension.startup();
 
-  await BrowserTestUtils.withNewTab({gBrowser, url: "https://example.com"}, async function(browser) {
-    await extension.startup();
+      // Open the information arrow panel
+      await openIdentityPopup();
 
-    // Open the information arrow panel
-    await openIdentityPopup();
-
-    let arrowContent = document.getAnonymousElementByAttribute(gIdentityHandler._identityPopup, "class", "panel-arrowcontent");
-    let arrowContentComputedStyle = window.getComputedStyle(arrowContent);
-    // Ensure popup background color was set properly
-    Assert.equal(
-      arrowContentComputedStyle.getPropertyValue("background-color"),
-      `rgb(${hexToRGB(POPUP_BACKGROUND_COLOR).join(", ")})`,
-      "Popup background color should have been themed"
-    );
-
-    // Ensure popup text color was set properly
-    Assert.equal(
-      arrowContentComputedStyle.getPropertyValue("color"),
-      `rgb(${hexToRGB(POPUP_TEXT_COLOR).join(", ")})`,
-      "Popup text color should have been themed"
-    );
-
-    // Ensure popup border color was set properly
-    if (AppConstants.platform == "macosx") {
-      Assert.ok(
-        arrowContentComputedStyle.getPropertyValue("box-shadow").includes(`rgb(${hexToRGB(POPUP_BORDER_COLOR).join(", ")})`),
-        "Popup border color should be set"
+      let arrowContent = document.getAnonymousElementByAttribute(
+        gIdentityHandler._identityPopup,
+        "class",
+        "panel-arrowcontent"
       );
-    } else {
-      testBorderColor(arrowContent, POPUP_BORDER_COLOR);
-    }
+      let arrowContentComputedStyle = window.getComputedStyle(arrowContent);
+      // Ensure popup background color was set properly
+      Assert.equal(
+        arrowContentComputedStyle.getPropertyValue("background-color"),
+        `rgb(${hexToRGB(POPUP_BACKGROUND_COLOR).join(", ")})`,
+        "Popup background color should have been themed"
+      );
 
-    await closeIdentityPopup();
-    await extension.unload();
-  });
+      // Ensure popup text color was set properly
+      Assert.equal(
+        arrowContentComputedStyle.getPropertyValue("color"),
+        `rgb(${hexToRGB(POPUP_TEXT_COLOR).join(", ")})`,
+        "Popup text color should have been themed"
+      );
+
+      // Ensure popup border color was set properly
+      if (AppConstants.platform == "macosx") {
+        Assert.ok(
+          arrowContentComputedStyle
+            .getPropertyValue("box-shadow")
+            .includes(`rgb(${hexToRGB(POPUP_BORDER_COLOR).join(", ")})`),
+          "Popup border color should be set"
+        );
+      } else {
+        testBorderColor(arrowContent, POPUP_BORDER_COLOR);
+      }
+
+      await closeIdentityPopup();
+      await extension.unload();
+    }
+  );
 });

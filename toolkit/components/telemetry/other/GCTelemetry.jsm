@@ -21,7 +21,7 @@
  */
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 var EXPORTED_SYMBOLS = ["GCTelemetry"];
 
@@ -34,8 +34,8 @@ const BASE_TIME = Date.now() - Services.telemetry.msSinceProcessStart();
 // Records selected GCs. There is one instance per process type.
 class GCData {
   constructor(kind) {
-    let numRandom = {main: 0, content: 2};
-    let numWorst = {main: 2, content: 2};
+    let numRandom = { main: 0, content: 2 };
+    let numWorst = { main: 2, content: 2 };
 
     this.totalGCTime = 0;
     this.randomlySelected = Array(numRandom[kind]).fill(null);
@@ -126,27 +126,31 @@ function limitProperties(name, obj, count, log) {
     for (let key of Object.keys(obj)) {
       // If this is the main GC object then save some of the critical
       // properties.
-      if (name === "data" && (
-          key === "max_pause" ||
+      if (
+        name === "data" &&
+        (key === "max_pause" ||
           key === "slices" ||
           key === "slices_list" ||
           key === "status" ||
           key === "timestamp" ||
           key === "total_time" ||
-          key === "totals")) {
+          key === "totals")
+      ) {
         continue;
       }
 
       delete obj[key];
     }
     let log_fn;
-    if ((name === "slice.times") || (name === "data.totals")) {
-        // This is a bit more likely, but is mostly-okay.
-        log_fn = s => log.info(s);
+    if (name === "slice.times" || name === "data.totals") {
+      // This is a bit more likely, but is mostly-okay.
+      log_fn = s => log.info(s);
     } else {
-        log_fn = s => log.warn(s);
+      log_fn = s => log.warn(s);
     }
-    log_fn(`Number of properties exceeded in the GC telemetry ${name} ping, expected ${count} got ${num_properties}`);
+    log_fn(
+      `Number of properties exceeded in the GC telemetry ${name} ping, expected ${count} got ${num_properties}`
+    );
   }
 }
 
@@ -195,7 +199,9 @@ var GCTelemetry = {
 
     this.initialized = true;
     this._log = Log.repository.getLoggerWithMessagePrefix(
-      LOGGER_NAME, "GCTelemetry::");
+      LOGGER_NAME,
+      "GCTelemetry::"
+    );
 
     Services.obs.addObserver(this, "garbage-collection-statistics");
 

@@ -35,8 +35,9 @@ function macWindowMenuDidHide() {
 }
 
 function zoomWindow() {
-  if (window.windowState == window.STATE_NORMAL)
+  if (window.windowState == window.STATE_NORMAL) {
     window.maximize();
-  else
+  } else {
     window.restore();
+  }
 }

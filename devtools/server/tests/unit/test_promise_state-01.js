@@ -14,21 +14,25 @@ function run_test() {
   const debuggee = addTestGlobal("test-promise-state");
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function() {
-    attachTestTabAndResume(
-      client, "test-promise-state",
-      function(response, targetFront, threadClient) {
-        (async function() {
-          const packet = await executeOnNextTickAndWaitForPause(
-            () => evalCode(debuggee), threadClient);
+    attachTestTabAndResume(client, "test-promise-state", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      (async function() {
+        const packet = await executeOnNextTickAndWaitForPause(
+          () => evalCode(debuggee),
+          threadClient
+        );
 
-          const grip = packet.frame.environment.bindings.variables.p;
-          ok(grip.value.preview);
-          equal(grip.value.class, "Promise");
-          equal(grip.value.promiseState.state, "pending");
+        const grip = packet.frame.environment.bindings.variables.p;
+        ok(grip.value.preview);
+        equal(grip.value.class, "Promise");
+        equal(grip.value.promiseState.state, "pending");
 
-          finishClient(client);
-        })();
-      });
+        finishClient(client);
+      })();
+    });
   });
   do_test_pending();
 }

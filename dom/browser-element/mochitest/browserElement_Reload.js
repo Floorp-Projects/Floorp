@@ -39,17 +39,17 @@ function iframeBodyRecv(data) {
   var currentCount = parseInt(data.json.data, 10);
   countAcc = currentCount;
   switch (loadedEvents) {
-  case 1:
-    iframe.reload();
-    break;
-  case 2:
-    ok(true, "reload was triggered");
-    ok(previousCount === currentCount, "reload was a soft reload");
-    iframe.reload(true);
-    break;
-  case 3:
-    ok(currentCount > previousCount, "reload was a hard reload");
-    SimpleTest.finish();
+    case 1:
+      iframe.reload();
+      break;
+    case 2:
+      ok(true, "reload was triggered");
+      ok(previousCount === currentCount, "reload was a soft reload");
+      iframe.reload(true);
+      break;
+    case 3:
+      ok(currentCount > previousCount, "reload was a hard reload");
+      SimpleTest.finish();
   }
 }
 

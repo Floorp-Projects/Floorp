@@ -44,51 +44,70 @@ const testCases = [
       getCookieId("uc1", ".example.org", "/"),
       getCookieId("uc2", ".example.org", "/"),
       getCookieId("cs2", ".example.org", "/"),
-      getCookieId("sc1", "sectest1.example.org",
-        "/browser/devtools/client/storage/test"),
-      getCookieId("sc2", "sectest1.example.org",
-        "/browser/devtools/client/storage/test"),
+      getCookieId(
+        "sc1",
+        "sectest1.example.org",
+        "/browser/devtools/client/storage/test"
+      ),
+      getCookieId(
+        "sc2",
+        "sectest1.example.org",
+        "/browser/devtools/client/storage/test"
+      ),
     ],
   ],
-  [["localStorage", "http://test1.example.org"],
-   ["ls1", "ls2"]],
-  [["localStorage", "http://sectest1.example.org"],
-   ["iframe-u-ls1"]],
-  [["localStorage", "https://sectest1.example.org"],
-   ["iframe-s-ls1"]],
-  [["sessionStorage", "http://test1.example.org"],
-   ["ss1"]],
-  [["sessionStorage", "http://sectest1.example.org"],
-   ["iframe-u-ss1", "iframe-u-ss2"]],
-  [["sessionStorage", "https://sectest1.example.org"],
-   ["iframe-s-ss1"]],
-  [["indexedDB", "http://test1.example.org"],
-   ["idb1 (default)", "idb2 (default)"]],
-  [["indexedDB", "http://test1.example.org", "idb1 (default)"],
-   ["obj1", "obj2"]],
-  [["indexedDB", "http://test1.example.org", "idb2 (default)"],
-   ["obj3"]],
-  [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
-   [1, 2, 3]],
-  [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj2"],
-   [1]],
-  [["indexedDB", "http://test1.example.org", "idb2 (default)", "obj3"],
-   []],
-  [["indexedDB", "http://sectest1.example.org"],
-   []],
-  [["indexedDB", "https://sectest1.example.org"],
-   ["idb-s1 (default)", "idb-s2 (default)"]],
-  [["indexedDB", "https://sectest1.example.org", "idb-s1 (default)"],
-   ["obj-s1"]],
-  [["indexedDB", "https://sectest1.example.org", "idb-s2 (default)"],
-   ["obj-s2"]],
-  [["indexedDB", "https://sectest1.example.org", "idb-s1 (default)", "obj-s1"],
-   [6, 7]],
-  [["indexedDB", "https://sectest1.example.org", "idb-s2 (default)", "obj-s2"],
-   [16]],
-  [["Cache", "http://test1.example.org", "plop"],
-   [MAIN_DOMAIN + "404_cached_file.js",
-    MAIN_DOMAIN + "browser_storage_basic.js"]],
+  [["localStorage", "http://test1.example.org"], ["ls1", "ls2"]],
+  [["localStorage", "http://sectest1.example.org"], ["iframe-u-ls1"]],
+  [["localStorage", "https://sectest1.example.org"], ["iframe-s-ls1"]],
+  [["sessionStorage", "http://test1.example.org"], ["ss1"]],
+  [
+    ["sessionStorage", "http://sectest1.example.org"],
+    ["iframe-u-ss1", "iframe-u-ss2"],
+  ],
+  [["sessionStorage", "https://sectest1.example.org"], ["iframe-s-ss1"]],
+  [
+    ["indexedDB", "http://test1.example.org"],
+    ["idb1 (default)", "idb2 (default)"],
+  ],
+  [
+    ["indexedDB", "http://test1.example.org", "idb1 (default)"],
+    ["obj1", "obj2"],
+  ],
+  [["indexedDB", "http://test1.example.org", "idb2 (default)"], ["obj3"]],
+  [
+    ["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
+    [1, 2, 3],
+  ],
+  [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj2"], [1]],
+  [["indexedDB", "http://test1.example.org", "idb2 (default)", "obj3"], []],
+  [["indexedDB", "http://sectest1.example.org"], []],
+  [
+    ["indexedDB", "https://sectest1.example.org"],
+    ["idb-s1 (default)", "idb-s2 (default)"],
+  ],
+  [
+    ["indexedDB", "https://sectest1.example.org", "idb-s1 (default)"],
+    ["obj-s1"],
+  ],
+  [
+    ["indexedDB", "https://sectest1.example.org", "idb-s2 (default)"],
+    ["obj-s2"],
+  ],
+  [
+    ["indexedDB", "https://sectest1.example.org", "idb-s1 (default)", "obj-s1"],
+    [6, 7],
+  ],
+  [
+    ["indexedDB", "https://sectest1.example.org", "idb-s2 (default)", "obj-s2"],
+    [16],
+  ],
+  [
+    ["Cache", "http://test1.example.org", "plop"],
+    [
+      MAIN_DOMAIN + "404_cached_file.js",
+      MAIN_DOMAIN + "browser_storage_basic.js",
+    ],
+  ],
 ];
 
 /**
@@ -97,8 +116,10 @@ const testCases = [
 function testTree() {
   const doc = gPanelWindow.document;
   for (const [item] of testCases) {
-    ok(doc.querySelector("[data-id='" + JSON.stringify(item) + "']"),
-      `Tree item ${item.toSource()} should be present in the storage tree`);
+    ok(
+      doc.querySelector("[data-id='" + JSON.stringify(item) + "']"),
+      `Tree item ${item.toSource()} should be present in the storage tree`
+    );
   }
 }
 
@@ -112,8 +133,10 @@ async function testTables() {
 
   // First tree item is already selected so no clicking and waiting for update
   for (const id of testCases[0][1]) {
-    ok(doc.querySelector(".table-widget-cell[data-id='" + id + "']"),
-       "Table item " + id + " should be present");
+    ok(
+      doc.querySelector(".table-widget-cell[data-id='" + id + "']"),
+      "Table item " + id + " should be present"
+    );
   }
 
   // Click rest of the tree items and wait for the table to be updated
@@ -121,21 +144,28 @@ async function testTables() {
     await selectTreeItem(treeItem);
 
     // Check whether correct number of items are present in the table
-    is(doc.querySelectorAll(
-         ".table-widget-wrapper:first-of-type .table-widget-cell"
-       ).length, items.length, "Number of items in table is correct");
+    is(
+      doc.querySelectorAll(
+        ".table-widget-wrapper:first-of-type .table-widget-cell"
+      ).length,
+      items.length,
+      "Number of items in table is correct"
+    );
 
     // Check if all the desired items are present in the table
     for (const id of items) {
-      ok(doc.querySelector(".table-widget-cell[data-id='" + id + "']"),
-         "Table item " + id + " should be present");
+      ok(
+        doc.querySelector(".table-widget-cell[data-id='" + id + "']"),
+        "Table item " + id + " should be present"
+      );
     }
   }
 }
 
 add_task(async function() {
   await openTabAndSetupStorage(
-    MAIN_DOMAIN + "storage-listings-with-fragment.html#abc");
+    MAIN_DOMAIN + "storage-listings-with-fragment.html#abc"
+  );
 
   testTree();
   await testTables();

@@ -12,22 +12,42 @@ ChromeUtils.import("resource://gre/modules/NewTabUtils.jsm", tmp);
 ChromeUtils.import("resource:///modules/sessionstore/SessionStore.jsm", tmp);
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm", tmp);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", tmp);
-var {PageThumbs, BackgroundPageThumbs, NewTabUtils, PageThumbsStorage, SessionStore, FileUtils, OS} = tmp;
+var {
+  PageThumbs,
+  BackgroundPageThumbs,
+  NewTabUtils,
+  PageThumbsStorage,
+  SessionStore,
+  FileUtils,
+  OS,
+} = tmp;
 
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
-  "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "PageThumbsStorageService",
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "PageThumbsStorageService",
   "@mozilla.org/thumbnails/pagethumbs-service;1",
-  "nsIPageThumbsStorageService");
+  "nsIPageThumbsStorageService"
+);
 
-var oldEnabledPref = Services.prefs.getBoolPref("browser.pagethumbnails.capturing_disabled");
+var oldEnabledPref = Services.prefs.getBoolPref(
+  "browser.pagethumbnails.capturing_disabled"
+);
 Services.prefs.setBoolPref("browser.pagethumbnails.capturing_disabled", false);
 
 registerCleanupFunction(function() {
-  while (gBrowser.tabs.length > 1)
+  while (gBrowser.tabs.length > 1) {
     gBrowser.removeTab(gBrowser.tabs[1]);
-  Services.prefs.setBoolPref("browser.pagethumbnails.capturing_disabled", oldEnabledPref);
+  }
+  Services.prefs.setBoolPref(
+    "browser.pagethumbnails.capturing_disabled",
+    oldEnabledPref
+  );
 });
 
 /**
@@ -71,11 +91,14 @@ var TestRunner = {
 
     let value = obj.value || obj;
     if (value && typeof value.then == "function") {
-      value.then(result => {
-        next(result);
-      }, error => {
-        ok(false, error + "\n" + error.stack);
-      });
+      value.then(
+        result => {
+          next(result);
+        },
+        error => {
+          ok(false, error + "\n" + error.stack);
+        }
+      );
     }
   },
 };
@@ -95,7 +118,7 @@ function next(aValue) {
  * @param aCallback The function to call when the tab has loaded.
  */
 function addTab(aURI, aCallback) {
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, aURI);
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, aURI));
   let callback = aCallback ? aCallback : next;
   BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(callback);
 }
@@ -117,9 +140,13 @@ function navigateTo(aURI) {
  * @param aCallback The function to call when the load event was dispatched.
  */
 function whenLoaded(aElement, aCallback = next) {
-  aElement.addEventListener("load", function() {
-    executeSoon(aCallback);
-  }, {capture: true, once: true});
+  aElement.addEventListener(
+    "load",
+    function() {
+      executeSoon(aCallback);
+    },
+    { capture: true, once: true }
+  );
 }
 
 /**
@@ -153,7 +180,8 @@ function captureAndCheckColor(aRed, aGreen, aBlue, aMessage) {
  * @param aCallback The function to pass the image data to.
  */
 function retrieveImageDataForURL(aURL, aCallback) {
-  let width = 100, height = 100;
+  let width = 100,
+    height = 100;
   let thumb = PageThumbs.getThumbnailURL(aURL, width, height);
 
   let htmlns = "http://www.w3.org/1999/xhtml";
@@ -209,7 +237,9 @@ function addVisitsAndRepopulateNewTabLinks(aPlaceInfo, aCallback) {
   });
 }
 function promiseAddVisitsAndRepopulateNewTabLinks(aPlaceInfo) {
-  return new Promise(resolve => addVisitsAndRepopulateNewTabLinks(aPlaceInfo, resolve));
+  return new Promise(resolve =>
+    addVisitsAndRepopulateNewTabLinks(aPlaceInfo, resolve)
+  );
 }
 
 /**
@@ -256,7 +286,7 @@ function wait(aMillis) {
  * @param aURLs The list of URLs that should not be expired.
  */
 function dontExpireThumbnailURLs(aURLs) {
-  let dontExpireURLs = (cb) => cb(aURLs);
+  let dontExpireURLs = cb => cb(aURLs);
   PageThumbs.addExpirationFilter(dontExpireURLs);
 
   registerCleanupFunction(function() {
@@ -276,19 +306,22 @@ function bgCaptureWithMethod(aMethodName, aURL, aOptions = {}) {
   // We'll get oranges if the expiration filter removes the file during the
   // test.
   dontExpireThumbnailURLs([aURL]);
-  if (!aOptions.onDone)
+  if (!aOptions.onDone) {
     aOptions.onDone = next;
+  }
   BackgroundPageThumbs[aMethodName](aURL, aOptions);
 }
 
 function bgTestPageURL(aOpts = {}) {
-  let TEST_PAGE_URL = "http://mochi.test:8888/browser/toolkit/components/thumbnails/test/thumbnails_background.sjs";
+  let TEST_PAGE_URL =
+    "http://mochi.test:8888/browser/toolkit/components/thumbnails/test/thumbnails_background.sjs";
   return TEST_PAGE_URL + "?" + encodeURIComponent(JSON.stringify(aOpts));
 }
 
 function bgAddPageThumbObserver(url) {
   return new Promise((resolve, reject) => {
-    function observe(subject, topic, data) { // jshint ignore:line
+    function observe(subject, topic, data) {
+      // jshint ignore:line
       if (data === url) {
         switch (topic) {
           case "page-thumbnail:create":

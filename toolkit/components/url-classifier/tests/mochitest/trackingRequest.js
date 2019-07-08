@@ -1,4 +1,3 @@
-
 window.addEventListener("message", function onMessage(evt) {
   if (evt.data.type === "doXHR") {
     var request = new XMLHttpRequest();

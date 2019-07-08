@@ -1,25 +1,29 @@
 add_task(async function test() {
-  await BrowserTestUtils.withNewTab("data:text/plain;charset=utf-8,1", async function(browser) {
-    BrowserTestUtils.loadURI(browser, "data:text/plain;charset=utf-8,2");
-    await BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.withNewTab(
+    "data:text/plain;charset=utf-8,1",
+    async function(browser) {
+      BrowserTestUtils.loadURI(browser, "data:text/plain;charset=utf-8,2");
+      await BrowserTestUtils.browserLoaded(browser);
 
-    BrowserTestUtils.loadURI(browser, "data:text/plain;charset=utf-8,3");
-    await BrowserTestUtils.browserLoaded(browser);
+      BrowserTestUtils.loadURI(browser, "data:text/plain;charset=utf-8,3");
+      await BrowserTestUtils.browserLoaded(browser);
 
-    await duplicate(0, "maintained the original index");
-    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+      await duplicate(0, "maintained the original index");
+      BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-    await duplicate(-1, "went back");
-    await duplicate(1, "went forward");
-    BrowserTestUtils.removeTab(gBrowser.selectedTab);
-    BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  });
+      await duplicate(-1, "went back");
+      await duplicate(1, "went forward");
+      BrowserTestUtils.removeTab(gBrowser.selectedTab);
+      BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    }
+  );
 });
 
 function promiseGetIndex(browser) {
   return ContentTask.spawn(browser, null, function() {
-    let shistory = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsISHistory);
+    let shistory = docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsISHistory);
     return shistory.index;
   });
 }

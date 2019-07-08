@@ -3,12 +3,23 @@
 
 "use strict";
 
-const {AddonsReconciler, CHANGE_INSTALLED, CHANGE_UNINSTALLED} = ChromeUtils.import("resource://services-sync/addonsreconciler.js");
-const {AddonsEngine} = ChromeUtils.import("resource://services-sync/engines/addons.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const {
+  AddonsReconciler,
+  CHANGE_INSTALLED,
+  CHANGE_UNINSTALLED,
+} = ChromeUtils.import("resource://services-sync/addonsreconciler.js");
+const { AddonsEngine } = ChromeUtils.import(
+  "resource://services-sync/engines/addons.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 AddonTestUtils.init(this);
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "1.9.2"
+);
 AddonTestUtils.overrideCertDB();
 AddonTestUtils.awaitPromise(AddonTestUtils.promiseStartupManager());
 
@@ -39,7 +50,7 @@ add_task(async function test_defaults() {
   await reconciler.ensureStateLoaded();
 
   Assert.ok(!reconciler._listening);
-  Assert.equal("object", typeof(reconciler.addons));
+  Assert.equal("object", typeof reconciler.addons);
   Assert.equal(0, Object.keys(reconciler.addons).length);
   Assert.equal(0, reconciler._changes.length);
   Assert.equal(0, reconciler._listeners.length);
@@ -54,7 +65,7 @@ add_task(async function test_load_state_empty_file() {
   let loaded = await reconciler.loadState();
   Assert.ok(!loaded);
 
-  Assert.equal("object", typeof(reconciler.addons));
+  Assert.equal("object", typeof reconciler.addons);
   Assert.equal(0, Object.keys(reconciler.addons).length);
   Assert.equal(0, reconciler._changes.length);
 });
@@ -74,8 +85,16 @@ add_task(async function test_install_detection() {
   Assert.ok(addon.id in reconciler.addons);
   let record = reconciler.addons[ADDON_ID];
 
-  const KEYS = ["id", "guid", "enabled", "installed", "modified", "type",
-                "scope", "foreignInstall"];
+  const KEYS = [
+    "id",
+    "guid",
+    "enabled",
+    "installed",
+    "modified",
+    "type",
+    "scope",
+    "foreignInstall",
+  ];
   for (let key of KEYS) {
     Assert.ok(key in record);
     Assert.notEqual(null, record[key]);
@@ -135,7 +154,7 @@ add_task(async function test_load_state_future_version() {
   await reconciler.ensureStateLoaded();
 
   // First we populate our new file.
-  let state = {version: 100, addons: {foo: {}}, changes: [[1, 1, "foo"]]};
+  let state = { version: 100, addons: { foo: {} }, changes: [[1, 1, "foo"]] };
 
   // jsonSave() expects an object with ._log, so we give it a reconciler
   // instance.
@@ -144,7 +163,7 @@ add_task(async function test_load_state_future_version() {
   let loaded = await reconciler.loadState(FILENAME);
   Assert.ok(!loaded);
 
-  Assert.equal("object", typeof(reconciler.addons));
+  Assert.equal("object", typeof reconciler.addons);
   Assert.equal(0, Object.keys(reconciler.addons).length);
   Assert.equal(0, reconciler._changes.length);
 });

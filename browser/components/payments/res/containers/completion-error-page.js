@@ -16,8 +16,9 @@ import paymentRequest from "../paymentRequest.js";
  * as it will be much easier to implement and share the logic once we switch to Fluent.
  */
 
-export default class CompletionErrorPage extends
-    HandleEventMixin(PaymentStateSubscriberMixin(PaymentRequestPage)) {
+export default class CompletionErrorPage extends HandleEventMixin(
+  PaymentStateSubscriberMixin(PaymentRequestPage)
+) {
   constructor() {
     super();
 
@@ -43,17 +44,28 @@ export default class CompletionErrorPage extends
     let { page } = state;
 
     if (this.id && page && page.id !== this.id) {
-      log.debug(`CompletionErrorPage: no need to further render inactive page: ${page.id}`);
+      log.debug(
+        `CompletionErrorPage: no need to further render inactive page: ${
+          page.id
+        }`
+      );
       return;
     }
 
-    let {request} = this.requestStore.getState();
-    let {displayHost} = request.topLevelPrincipal.URI;
+    let { request } = this.requestStore.getState();
+    let { displayHost } = request.topLevelPrincipal.URI;
     for (let key of [
-      "pageTitle", "suggestion-heading", "suggestion-1", "suggestion-2", "suggestion-3",
+      "pageTitle",
+      "suggestion-heading",
+      "suggestion-1",
+      "suggestion-2",
+      "suggestion-3",
     ]) {
       if (this.dataset[key] && displayHost) {
-        this.dataset[key] = this.dataset[key].replace("**host-name**", displayHost);
+        this.dataset[key] = this.dataset[key].replace(
+          "**host-name**",
+          displayHost
+        );
       }
     }
 

@@ -63,5 +63,5 @@ async function runTest(callback, locationSearch) {
 
   let total = times.reduce((a, b) => a + b);
   let average = total / times.length;
-  callback({average});
+  callback({ average });
 }

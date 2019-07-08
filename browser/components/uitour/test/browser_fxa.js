@@ -3,10 +3,13 @@
 
 "use strict";
 
-const {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm");
+const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
-ChromeUtils.defineModuleGetter(this, "fxAccounts",
-                               "resource://gre/modules/FxAccounts.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "fxAccounts",
+  "resource://gre/modules/FxAccounts.jsm"
+);
 
 var gTestTab;
 var gContentAPI;
@@ -27,17 +30,29 @@ var tests = [
     await showMenuPromise("appMenu");
     await showHighlightPromise("accountStatus");
     let highlight = document.getElementById("UITourHighlightContainer");
-    is(highlight.getAttribute("targetName"), "accountStatus", "Correct highlight target");
+    is(
+      highlight.getAttribute("targetName"),
+      "accountStatus",
+      "Correct highlight target"
+    );
   }),
 
   taskify(async function test_highlight_accountStatus_loggedIn() {
-    gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, lastSync: new Date(), email: "foo@example.com" });
+    gSync.updateAllUI({
+      status: UIState.STATUS_SIGNED_IN,
+      lastSync: new Date(),
+      email: "foo@example.com",
+    });
     await showMenuPromise("appMenu");
     await showHighlightPromise("accountStatus");
     let highlight = document.getElementById("UITourHighlightContainer");
     let expectedTarget = "appMenu-fxa-avatar";
     is(highlight.anchorNode.id, expectedTarget, "Anchored on avatar");
-    is(highlight.getAttribute("targetName"), "accountStatus", "Correct highlight target");
+    is(
+      highlight.getAttribute("targetName"),
+      "accountStatus",
+      "Correct highlight target"
+    );
   }),
 ];
 

@@ -72,11 +72,13 @@ add_task(async function test_expire_orphans_optionalarg() {
 
 add_task(async function test_expire_limited() {
   await PlacesTestUtils.addVisits([
-    { // Should be expired cause it's the oldest visit
+    {
+      // Should be expired cause it's the oldest visit
       uri: "http://old.mozilla.org/",
       visitDate: gNow++,
     },
-    { // Should not be expired cause we limit 1
+    {
+      // Should not be expired cause we limit 1
       uri: "http://new.mozilla.org/",
       visitDate: gNow++,
     },
@@ -97,15 +99,18 @@ add_task(async function test_expire_limited() {
 add_task(async function test_expire_limited_longurl() {
   let longurl = "http://long.mozilla.org/" + "a".repeat(232);
   await PlacesTestUtils.addVisits([
-    { // Should be expired cause it's the oldest visit
+    {
+      // Should be expired cause it's the oldest visit
       uri: "http://old.mozilla.org/",
       visitDate: gNow++,
     },
-    { // Should be expired cause it's a long url older than 60 days.
+    {
+      // Should be expired cause it's a long url older than 60 days.
       uri: longurl,
       visitDate: gNow++,
     },
-    { // Should not be expired cause younger than 60 days.
+    {
+      // Should not be expired cause younger than 60 days.
       uri: longurl,
       visitDate: getExpirablePRTime(58),
     },
@@ -124,16 +129,19 @@ add_task(async function test_expire_limited_longurl() {
 
 add_task(async function test_expire_limited_exoticurl() {
   await PlacesTestUtils.addVisits([
-    { // Should be expired cause it's the oldest visit
+    {
+      // Should be expired cause it's the oldest visit
       uri: "http://old.mozilla.org/",
       visitDate: gNow++,
     },
-    { // Should be expired cause it's a long url older than 60 days.
+    {
+      // Should be expired cause it's a long url older than 60 days.
       uri: "http://download.mozilla.org",
       visitDate: gNow++,
       transition: 7,
     },
-    { // Should not be expired cause younger than 60 days.
+    {
+      // Should not be expired cause younger than 60 days.
       uri: "http://nonexpirable-download.mozilla.org",
       visitDate: getExpirablePRTime(58),
       transition: 7,
@@ -143,7 +151,10 @@ add_task(async function test_expire_limited_exoticurl() {
   await promiseForceExpirationStep(1);
 
   // Check that some visits survived.
-  Assert.equal(visits_in_database("http://nonexpirable-download.mozilla.org/"), 1);
+  Assert.equal(
+    visits_in_database("http://nonexpirable-download.mozilla.org/"),
+    1
+  );
   // The visits are gone, the url is not yet, cause we limited the expiration
   // to one entry, and we already removed http://old.mozilla.org/.
   // The page normally would be expired by the next expiration run.
@@ -197,7 +208,10 @@ add_task(async function test_expire_unlimited() {
 
   // Check that some visits survived.
   Assert.equal(visits_in_database("http://nonexpirable.mozilla.org/"), 1);
-  Assert.equal(visits_in_database("http://nonexpirable-download.mozilla.org/"), 1);
+  Assert.equal(
+    visits_in_database("http://nonexpirable-download.mozilla.org/"),
+    1
+  );
   Assert.equal(visits_in_database(longurl), 1);
   // Other visits should have been expired.
   Assert.ok(!page_in_database("http://old.mozilla.org/"));

@@ -11,7 +11,7 @@
 
 "use strict";
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 registerCleanupFunction(() => {
@@ -27,47 +27,43 @@ var index = 0;
 var test_flags = new Array();
 var testPathBase = "/chunked_hdrs";
 
-function run_test()
-{
+function run_test() {
   httpserver.start(-1);
 
   do_test_pending();
   run_test_number(1);
 }
 
-function run_test_number(num)
-{
+function run_test_number(num) {
   var testPath = testPathBase + num;
   httpserver.registerPathHandler(testPath, eval("handler" + num));
 
   var channel = setupChannel(testPath);
-  var flags = test_flags[num];   // OK if flags undefined for test
-  channel.asyncOpen(new ChannelListener(eval("completeTest" + num),
-                                        channel, flags));
+  var flags = test_flags[num]; // OK if flags undefined for test
+  channel.asyncOpen(
+    new ChannelListener(eval("completeTest" + num), channel, flags)
+  );
 }
 
-function setupChannel(url)
-{
+function setupChannel(url) {
   var chan = NetUtil.newChannel({
     uri: URL + url,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   var httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
   return httpChan;
 }
 
-function endTests()
-{
+function endTests() {
   httpserver.stop(do_test_finished);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Test 1: FAIL because of overflowed chunked size. The parser uses long so
 //         the test case uses >64bit to fail on all platforms.
-test_flags[1] = CL_EXPECT_LATE_FAILURE|CL_ALLOW_UNKNOWN_CL;
+test_flags[1] = CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL;
 
-function handler1(metadata, response)
-{
+function handler1(metadata, response) {
   var body = "12345678123456789\r\ndata never reached";
 
   response.seizePower();
@@ -79,8 +75,7 @@ function handler1(metadata, response)
   response.finish();
 }
 
-function completeTest1(request, data, ctx)
-{
+function completeTest1(request, data, ctx) {
   Assert.equal(request.status, Cr.NS_ERROR_UNEXPECTED);
 
   run_test_number(2);
@@ -89,10 +84,9 @@ function completeTest1(request, data, ctx)
 ////////////////////////////////////////////////////////////////////////////////
 // Test 2: FAIL because of non-hex in chunked length
 
-test_flags[2] = CL_EXPECT_LATE_FAILURE|CL_ALLOW_UNKNOWN_CL;
+test_flags[2] = CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL;
 
-function handler2(metadata, response)
-{
+function handler2(metadata, response) {
   var body = "junkintheway 123\r\ndata never reached";
 
   response.seizePower();
@@ -104,8 +98,7 @@ function handler2(metadata, response)
   response.finish();
 }
 
-function completeTest2(request, data, ctx)
-{
+function completeTest2(request, data, ctx) {
   Assert.equal(request.status, Cr.NS_ERROR_UNEXPECTED);
   run_test_number(3);
 }
@@ -115,8 +108,7 @@ function completeTest2(request, data, ctx)
 
 test_flags[3] = CL_ALLOW_UNKNOWN_CL;
 
-function handler3(metadata, response)
-{
+function handler3(metadata, response) {
   var body = "c junkafter\r\ndata reached\r\n0\r\n\r\n";
 
   response.seizePower();
@@ -128,8 +120,7 @@ function handler3(metadata, response)
   response.finish();
 }
 
-function completeTest3(request, data, ctx)
-{
+function completeTest3(request, data, ctx) {
   Assert.equal(request.status, 0);
   run_test_number(4);
 }
@@ -139,8 +130,7 @@ function completeTest3(request, data, ctx)
 
 test_flags[4] = CL_ALLOW_UNKNOWN_CL;
 
-function handler4(metadata, response)
-{
+function handler4(metadata, response) {
   var body = "c\r\ndata reached\r\n3\r\nhej\r\n0\r\n\r\n";
 
   response.seizePower();
@@ -152,8 +142,7 @@ function handler4(metadata, response)
   response.finish();
 }
 
-function completeTest4(request, data, ctx)
-{
+function completeTest4(request, data, ctx) {
   Assert.equal(request.status, 0);
   run_test_number(5);
 }
@@ -162,10 +151,9 @@ function completeTest4(request, data, ctx)
 // Test 5: A chunk size larger than 32 bit but smaller than 64bit also fails
 // This is probabaly subject to get improved at some point.
 
-test_flags[5] = CL_EXPECT_LATE_FAILURE|CL_ALLOW_UNKNOWN_CL;
+test_flags[5] = CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL;
 
-function handler5(metadata, response)
-{
+function handler5(metadata, response) {
   var body = "123456781\r\ndata never reached";
 
   response.seizePower();
@@ -177,9 +165,8 @@ function handler5(metadata, response)
   response.finish();
 }
 
-function completeTest5(request, data, ctx)
-{
+function completeTest5(request, data, ctx) {
   Assert.equal(request.status, Cr.NS_ERROR_UNEXPECTED);
   endTests();
-//  run_test_number(6);
+  //  run_test_number(6);
 }

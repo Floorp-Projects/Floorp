@@ -47,10 +47,7 @@ add_task(async function test_swap_protocol() {
   info("http://www.site matches 'www.site' pages");
   await check_autocomplete({
     search: "http://www.site",
-    matches: [
-      { uri: uri1, title: "title" },
-      { uri: uri5, title: "title" },
-    ],
+    matches: [{ uri: uri1, title: "title" }, { uri: uri5, title: "title" }],
   });
 
   info("http://site matches all site");
@@ -62,7 +59,7 @@ add_task(async function test_swap_protocol() {
   info("ftp://ftp.site matches itself");
   await check_autocomplete({
     search: "ftp://ftp.site",
-    matches: [ { uri: uri3, title: "title" } ],
+    matches: [{ uri: uri3, title: "title" }],
   });
 
   info("ftp://site matches all site");
@@ -74,10 +71,7 @@ add_task(async function test_swap_protocol() {
   info("https://www.site matches all site");
   await check_autocomplete({
     search: "https://www.site",
-    matches: [
-      { uri: uri1, title: "title" },
-      { uri: uri5, title: "title" },
-    ],
+    matches: [{ uri: uri1, title: "title" }, { uri: uri5, title: "title" }],
   });
 
   info("https://site matches all site");
@@ -89,10 +83,7 @@ add_task(async function test_swap_protocol() {
   info("www.site matches 'www.site' pages");
   await check_autocomplete({
     search: "www.site",
-    matches: [
-      { uri: uri1, title: "title" },
-      { uri: uri5, title: "title" },
-    ],
+    matches: [{ uri: uri1, title: "title" }, { uri: uri5, title: "title" }],
   });
 
   info("w matches 'w' pages, including 'www'");

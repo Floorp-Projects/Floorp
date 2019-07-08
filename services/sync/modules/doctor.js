@@ -11,18 +11,26 @@
 
 var EXPORTED_SYMBOLS = ["Doctor"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {Async} = ChromeUtils.import("resource://services-common/async.js");
-const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
-const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Async } = ChromeUtils.import("resource://services-common/async.js");
+const { Observers } = ChromeUtils.import(
+  "resource://services-common/observers.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
 
-const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.defineModuleGetter(this, "getRepairRequestor",
-  "resource://services-sync/collection_repair.js");
-ChromeUtils.defineModuleGetter(this, "getAllRepairRequestors",
-  "resource://services-sync/collection_repair.js");
+const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "getRepairRequestor",
+  "resource://services-sync/collection_repair.js"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "getAllRepairRequestors",
+  "resource://services-sync/collection_repair.js"
+);
 
 const log = Log.repository.getLogger("Sync.Doctor");
 
@@ -34,22 +42,27 @@ var Doctor = {
       log.info("Missing clients engine, assuming we're in test code");
       return false;
     }
-    return service.clientsEngine.remoteClients.some(client =>
-      client.commands && client.commands.some(command => {
-        if (command.command != "repairResponse" && command.command != "repairRequest") {
-          return false;
-        }
-        if (!command.args || command.args.length != 1) {
-          return false;
-        }
-        if (command.args[0].collection != collection) {
-          return false;
-        }
-        if (ignoreFlowID != null && command.args[0].flowID == ignoreFlowID) {
-          return false;
-        }
-        return true;
-      })
+    return service.clientsEngine.remoteClients.some(
+      client =>
+        client.commands &&
+        client.commands.some(command => {
+          if (
+            command.command != "repairResponse" &&
+            command.command != "repairRequest"
+          ) {
+            return false;
+          }
+          if (!command.args || command.args.length != 1) {
+            return false;
+          }
+          if (command.args[0].collection != collection) {
+            return false;
+          }
+          if (ignoreFlowID != null && command.args[0].flowID == ignoreFlowID) {
+            return false;
+          }
+          return true;
+        })
     );
   },
 
@@ -67,10 +80,16 @@ var Doctor = {
     // check each repairer to see if it can advance.
     if (this._now() - this.lastRepairAdvance > REPAIR_ADVANCE_PERIOD) {
       try {
-        for (let [collection, requestor] of Object.entries(this._getAllRepairRequestors())) {
+        for (let [collection, requestor] of Object.entries(
+          this._getAllRepairRequestors()
+        )) {
           try {
             let advanced = await requestor.continueRepairs();
-            log.info(`${collection} reparier ${advanced ? "advanced" : "did not advance"}.`);
+            log.info(
+              `${collection} reparier ${
+                advanced ? "advanced" : "did not advance"
+              }.`
+            );
           } catch (ex) {
             if (Async.isShutdownException(ex)) {
               throw ex;
@@ -94,11 +113,17 @@ var Doctor = {
       }
       // Check the last validation time for the engine.
       let lastValidation = Svc.Prefs.get(prefPrefix + "validation.lastTime", 0);
-      let validationInterval = Svc.Prefs.get(prefPrefix + "validation.interval");
+      let validationInterval = Svc.Prefs.get(
+        prefPrefix + "validation.interval"
+      );
       let nowSeconds = this._now();
 
       if (nowSeconds - lastValidation < validationInterval) {
-        log.info(`Skipping validation of ${e.name}: too recent since last validation attempt`);
+        log.info(
+          `Skipping validation of ${
+            e.name
+          }: too recent since last validation attempt`
+        );
         continue;
       }
       // Update the time now, even if we decline to actually perform a
@@ -107,9 +132,12 @@ var Doctor = {
       Svc.Prefs.set(prefPrefix + "validation.lastTime", Math.floor(nowSeconds));
 
       // Validation only occurs a certain percentage of the time.
-      let validationProbability = Svc.Prefs.get(prefPrefix + "validation.percentageChance", 0) / 100.0;
+      let validationProbability =
+        Svc.Prefs.get(prefPrefix + "validation.percentageChance", 0) / 100.0;
       if (validationProbability < Math.random()) {
-        log.info(`Skipping validation of ${e.name}: Probability threshold not met`);
+        log.info(
+          `Skipping validation of ${e.name}: Probability threshold not met`
+        );
         continue;
       }
 
@@ -131,7 +159,9 @@ var Doctor = {
       return;
     }
 
-    if (Object.values(engineInfos).filter(i => i.maxRecords != -1).length != 0) {
+    if (
+      Object.values(engineInfos).filter(i => i.maxRecords != -1).length != 0
+    ) {
       // at least some of the engines have maxRecord restrictions which require
       // us to ask the server for the counts.
       let countInfo = await this._fetchCollectionCounts();
@@ -142,33 +172,46 @@ var Doctor = {
       }
     }
 
-    for (let [engineName, { engine, maxRecords, recordCount }] of Object.entries(engineInfos)) {
+    for (let [
+      engineName,
+      { engine, maxRecords, recordCount },
+    ] of Object.entries(engineInfos)) {
       // maxRecords of -1 means "any number", so we can skip asking the server.
       // Used for tests.
       if (maxRecords >= 0 && recordCount > maxRecords) {
-        log.debug(`Skipping validation for ${engineName} because ` +
-                        `the number of records (${recordCount}) is greater ` +
-                        `than the maximum allowed (${maxRecords}).`);
+        log.debug(
+          `Skipping validation for ${engineName} because ` +
+            `the number of records (${recordCount}) is greater ` +
+            `than the maximum allowed (${maxRecords}).`
+        );
         continue;
       }
       let validator = engine.getValidator();
       if (!validator) {
         // This is probably only possible in profile downgrade cases.
-        log.warn(`engine.getValidator returned null for ${engineName
-                 } but the pref that controls validation is enabled.`);
+        log.warn(
+          `engine.getValidator returned null for ${engineName} but the pref that controls validation is enabled.`
+        );
         continue;
       }
 
-      if (!await validator.canValidate()) {
-        log.debug(`Skipping validation for ${engineName} because validator.canValidate() is false`);
+      if (!(await validator.canValidate())) {
+        log.debug(
+          `Skipping validation for ${engineName} because validator.canValidate() is false`
+        );
         continue;
       }
 
       // Let's do it!
       Services.console.logStringMessage(
-        `Sync is about to run a consistency check of ${engine.name}. This may be slow, and ` +
-        `can be controlled using the pref "services.sync.${engine.name}.validation.enabled".\n` +
-        `If you encounter any problems because of this, please file a bug.`);
+        `Sync is about to run a consistency check of ${
+          engine.name
+        }. This may be slow, and ` +
+          `can be controlled using the pref "services.sync.${
+            engine.name
+          }.validation.enabled".\n` +
+          `If you encounter any problems because of this, please file a bug.`
+      );
 
       // Make a new flowID just incase we end up starting a repair.
       let flowID = Utils.makeGUID();
@@ -179,12 +222,16 @@ var Doctor = {
         log.info(`Running validator for ${engine.name}`);
         let result = await validator.validate(engine);
         let { problems, version, duration, recordCount } = result;
-        Observers.notify("weave:engine:validate:finish", {
-          version,
-          checked: recordCount,
-          took: duration,
-          problems: problems ? problems.getSummary(true) : null,
-        }, engine.name);
+        Observers.notify(
+          "weave:engine:validate:finish",
+          {
+            version,
+            checked: recordCount,
+            took: duration,
+            problems: problems ? problems.getSummary(true) : null,
+          },
+          engine.name
+        );
         // And see if we should repair.
         await this._maybeCure(engine, result, flowID);
       } catch (ex) {
@@ -210,11 +257,15 @@ var Doctor = {
     if (requestor) {
       if (requestor.tryServerOnlyRepairs(validationResults)) {
         return; // TODO: It would be nice if we could request a validation to be
-                // done on next sync.
+        // done on next sync.
       }
       didStart = await requestor.startRepairs(validationResults, flowID);
     }
-    log.info(`${didStart ? "did" : "didn't"} start a repair of ${engine.name} with flowID ${flowID}`);
+    log.info(
+      `${didStart ? "did" : "didn't"} start a repair of ${
+        engine.name
+      } with flowID ${flowID}`
+    );
   },
 
   _shouldRepair(engine) {
@@ -227,8 +278,10 @@ var Doctor = {
     try {
       let infoResp = await Service._fetchInfo(collectionCountsURL);
       if (!infoResp.success) {
-        log.error("Can't fetch collection counts: request to info/collection_counts responded with "
-                        + infoResp.status);
+        log.error(
+          "Can't fetch collection counts: request to info/collection_counts responded with " +
+            infoResp.status
+        );
         return {};
       }
       return infoResp.obj; // might throw because obj is a getter which parses json.

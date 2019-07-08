@@ -13,7 +13,7 @@
  * for tips on how to do that.
  */
 const EXPECTED_REFLOWS = [
-   /**
+  /**
    * Nothing here! Please don't add anything new!
    */
 ];
@@ -29,9 +29,11 @@ const gToolbar = document.getElementById("PersonalToolbar");
  * @returns Promise
  */
 async function toggleBookmarksToolbar(visible) {
-  let transitionPromise =
-    BrowserTestUtils.waitForEvent(gToolbar, "transitionend",
-                                  e => e.propertyName == "max-height");
+  let transitionPromise = BrowserTestUtils.waitForEvent(
+    gToolbar,
+    "transitionend",
+    e => e.propertyName == "max-height"
+  );
 
   setToolbarVisibility(gToolbar, visible);
   await transitionPromise;
@@ -50,10 +52,11 @@ async function toggleBookmarksToolbar(visible) {
  * @returns Promise
  */
 async function resizeWindow(win, width, height) {
-  let toolbarEvent =
-    BrowserTestUtils.waitForEvent(win, "BookmarksToolbarVisibilityUpdated");
-  let resizeEvent =
-    BrowserTestUtils.waitForEvent(win, "resize");
+  let toolbarEvent = BrowserTestUtils.waitForEvent(
+    win,
+    "BookmarksToolbarVisibilityUpdated"
+  );
+  let resizeEvent = BrowserTestUtils.waitForEvent(win, "resize");
   let dwu = win.windowUtils;
   dwu.ensureDirtyRootFrame();
   win.resizeTo(width, height);
@@ -78,15 +81,18 @@ add_task(async function() {
   // Add a bunch of bookmarks to display in the Bookmarks toolbar
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.toolbarGuid,
-    children: Array(BOOKMARKS_COUNT).fill("")
-                                    .map((_, i) => ({ url: `http://test.places.${i}/`})),
+    children: Array(BOOKMARKS_COUNT)
+      .fill("")
+      .map((_, i) => ({ url: `http://test.places.${i}/` })),
   });
 
   let wasCollapsed = gToolbar.collapsed;
   Assert.ok(wasCollapsed, "The toolbar is collapsed by default");
   if (wasCollapsed) {
-    let promiseReady =
-      BrowserTestUtils.waitForEvent(gToolbar, "BookmarksToolbarVisibilityUpdated");
+    let promiseReady = BrowserTestUtils.waitForEvent(
+      gToolbar,
+      "BookmarksToolbarVisibilityUpdated"
+    );
     await toggleBookmarksToolbar(true);
     await promiseReady;
   }
@@ -101,19 +107,28 @@ add_task(async function() {
 
   let win = await prepareSettledWindow();
 
-  if (win.screen.availWidth < STARTING_WIDTH ||
-      win.screen.availHeight < STARTING_HEIGHT) {
-    Assert.ok(false, "This test is running on too small a display - " +
-              `(${STARTING_WIDTH}x${STARTING_HEIGHT} min)`);
+  if (
+    win.screen.availWidth < STARTING_WIDTH ||
+    win.screen.availHeight < STARTING_HEIGHT
+  ) {
+    Assert.ok(
+      false,
+      "This test is running on too small a display - " +
+        `(${STARTING_WIDTH}x${STARTING_HEIGHT} min)`
+    );
     return;
   }
 
   await resizeWindow(win, STARTING_WIDTH, STARTING_HEIGHT);
 
-  await withPerfObserver(async function() {
-    await resizeWindow(win, SMALL_WIDTH, SMALL_HEIGHT);
-    await resizeWindow(win, STARTING_WIDTH, STARTING_HEIGHT);
-  }, {expectedReflows: EXPECTED_REFLOWS, frames: {filter: () => []}}, win);
+  await withPerfObserver(
+    async function() {
+      await resizeWindow(win, SMALL_WIDTH, SMALL_HEIGHT);
+      await resizeWindow(win, STARTING_WIDTH, STARTING_HEIGHT);
+    },
+    { expectedReflows: EXPECTED_REFLOWS, frames: { filter: () => [] } },
+    win
+  );
 
   await BrowserTestUtils.closeWindow(win);
 });

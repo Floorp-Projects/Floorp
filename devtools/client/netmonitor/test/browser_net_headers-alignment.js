@@ -19,7 +19,9 @@ add_task(async function() {
   // Wait until the first request makes the empty notice disappear
   await waitForRequestListToAppear();
 
-  const requestsContainerScroll = document.querySelector(".requests-list-scroll");
+  const requestsContainerScroll = document.querySelector(
+    ".requests-list-scroll"
+  );
   ok(requestsContainerScroll, "Container element exists as expected.");
   const requestsContainer = document.querySelector(".requests-list-row-group");
   const headers = document.querySelector(".requests-list-headers");
@@ -38,8 +40,12 @@ add_task(async function() {
   return teardown(monitor);
 
   function waitForRequestListToAppear() {
-    info("Waiting until the empty notice disappears and is replaced with the list");
-    return waitUntil(() => !!document.querySelector(".requests-list-row-group"));
+    info(
+      "Waiting until the empty notice disappears and is replaced with the list"
+    );
+    return waitUntil(
+      () => !!document.querySelector(".requests-list-row-group")
+    );
   }
 });
 

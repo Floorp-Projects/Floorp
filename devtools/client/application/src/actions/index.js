@@ -7,7 +7,4 @@
 const workers = require("./workers");
 const page = require("./page");
 
-Object.assign(exports,
-  workers,
-  page
-);
+Object.assign(exports, workers, page);

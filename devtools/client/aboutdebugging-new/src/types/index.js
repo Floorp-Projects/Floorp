@@ -8,8 +8,11 @@ const debugTargetTypes = require("./debug-target");
 const runtimeTypes = require("./runtime");
 const uiTypes = require("./ui");
 
-module.exports = Object.assign({}, {
-  ...debugTargetTypes,
-  ...runtimeTypes,
-  ...uiTypes,
-});
+module.exports = Object.assign(
+  {},
+  {
+    ...debugTargetTypes,
+    ...runtimeTypes,
+    ...uiTypes,
+  }
+);

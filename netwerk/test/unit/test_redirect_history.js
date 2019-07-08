@@ -1,7 +1,9 @@
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
-                                            "nsIReferrerInfo",
-                                            "init");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const ReferrerInfo = Components.Constructor(
+  "@mozilla.org/referrer-info;1",
+  "nsIReferrerInfo",
+  "init"
+);
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort;
@@ -13,19 +15,17 @@ var redirects = [];
 const numRedirects = 10;
 
 function make_channel(url, callback, ctx) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
 const responseBody = "response body";
 
-function contentHandler(request, response)
-{
+function contentHandler(request, response) {
   response.setHeader("Content-Type", "text/plain");
   response.bodyOutputStream.write(responseBody, responseBody.length);
 }
 
-function finish_test(request, buffer)
-{
+function finish_test(request, buffer) {
   Assert.equal(buffer, responseBody);
   let chan = request.QueryInterface(Ci.nsIChannel);
   let redirectChain = chan.loadInfo.redirectChain;
@@ -46,8 +46,7 @@ function redirectHandler(index, request, response) {
   response.setHeader("Location", URL + path, false);
 }
 
-function run_test()
-{
+function run_test() {
   httpServer = new HttpServer();
   for (let i = 0; i < numRedirects; ++i) {
     var randomPath = "/redirect/" + Math.random();
@@ -56,8 +55,10 @@ function run_test()
       httpServer.registerPathHandler(randomPath, redirectHandler.bind(this, i));
     } else {
       // The last one doesn't redirect
-      httpServer.registerPathHandler(redirects[numRedirects - 1],
-                                     contentHandler);
+      httpServer.registerPathHandler(
+        redirects[numRedirects - 1],
+        contentHandler
+      );
     }
   }
   httpServer.start(-1);
@@ -65,7 +66,11 @@ function run_test()
   var chan = make_channel(URL + redirects[0]);
   var uri = NetUtil.newURI("http://test.com");
   httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
-  httpChan.referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, uri);
+  httpChan.referrerInfo = new ReferrerInfo(
+    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    true,
+    uri
+  );
   chan.asyncOpen(new ChannelListener(finish_test, null));
   do_test_pending();
 }

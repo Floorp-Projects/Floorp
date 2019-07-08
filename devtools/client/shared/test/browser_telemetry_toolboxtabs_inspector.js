@@ -3,7 +3,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8," +
+const TEST_URI =
+  "data:text/html;charset=utf-8," +
   "<p>browser_telemetry_toolboxtabs_inspector.js</p>";
 
 // Because we need to gather stats for the period of time that a tool has been
@@ -23,6 +24,16 @@ add_task(async function() {
 function checkResults() {
   // For help generating these tests use generateTelemetryTests("DEVTOOLS_INSPECTOR_")
   // here.
-  checkTelemetry("DEVTOOLS_INSPECTOR_OPENED_COUNT", "", {0: 2, 1: 0}, "array");
-  checkTelemetry("DEVTOOLS_INSPECTOR_TIME_ACTIVE_SECONDS", "", null, "hasentries");
+  checkTelemetry(
+    "DEVTOOLS_INSPECTOR_OPENED_COUNT",
+    "",
+    { 0: 2, 1: 0 },
+    "array"
+  );
+  checkTelemetry(
+    "DEVTOOLS_INSPECTOR_TIME_ACTIVE_SECONDS",
+    "",
+    null,
+    "hasentries"
+  );
 }

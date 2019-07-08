@@ -5,7 +5,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console test top-level await";
+const TEST_URI =
+  "data:text/html;charset=utf-8,Web Console test top-level await";
 
 add_task(async function() {
   // Enable await mapping.
@@ -21,15 +22,21 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
+  const { jsterm } = hud;
 
   hud.ui.clearOutput();
   const delays = [3000, 500, 9000, 6000];
-  const inputs = delays.map(delay => `await new Promise(
-    r => setTimeout(() => r("await-concurrent-" + ${delay}), ${delay}))`);
+  const inputs = delays.map(
+    delay => `await new Promise(
+    r => setTimeout(() => r("await-concurrent-" + ${delay}), ${delay}))`
+  );
 
   // Let's wait for the message that sould be displayed last.
-  const onMessage = waitForMessage(hud, "await-concurrent-9000", ".message.result");
+  const onMessage = waitForMessage(
+    hud,
+    "await-concurrent-9000",
+    ".message.result"
+  );
   for (const input of inputs) {
     jsterm.execute(input);
   }
@@ -44,6 +51,9 @@ async function performTests() {
     `"await-concurrent-6000"`,
     `"await-concurrent-9000"`,
   ];
-  is(JSON.stringify(messagesText, null, 2), JSON.stringify(expectedMessages, null, 2),
-    "The output contains the the expected messages, in the expected order");
+  is(
+    JSON.stringify(messagesText, null, 2),
+    JSON.stringify(expectedMessages, null, 2),
+    "The output contains the the expected messages, in the expected order"
+  );
 }

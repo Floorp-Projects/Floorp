@@ -6,13 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["AboutCompat"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const addonID = "webcompat@mozilla.org";
 const addonPageRelativeURL = "/aboutCompat.html";
 
 function AboutCompat() {
-  this.chromeURL = WebExtensionPolicy.getByID(addonID).getURL(addonPageRelativeURL);
+  this.chromeURL = WebExtensionPolicy.getByID(addonID).getURL(
+    addonPageRelativeURL
+  );
 }
 AboutCompat.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIAboutModule]),
@@ -25,7 +27,10 @@ AboutCompat.prototype = {
     const channel = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
     channel.originalURI = aURI;
 
-    channel.owner = Services.scriptSecurityManager.createCodebasePrincipal(uri, aLoadInfo.originAttributes);
+    channel.owner = Services.scriptSecurityManager.createCodebasePrincipal(
+      uri,
+      aLoadInfo.originAttributes
+    );
     return channel;
   },
 };

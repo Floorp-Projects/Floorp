@@ -6,7 +6,10 @@
 
 add_task(async function compress_bookmark_backups_test() {
   // Check for jsonlz4 extension
-  let todayFilename = PlacesBackups.getFilenameForDate(new Date(2014, 4, 15), true);
+  let todayFilename = PlacesBackups.getFilenameForDate(
+    new Date(2014, 4, 15),
+    true
+  );
   Assert.equal(todayFilename, "bookmarks-2014-05-15.jsonlz4");
 
   await PlacesBackups.create();
@@ -15,13 +18,15 @@ add_task(async function compress_bookmark_backups_test() {
   Assert.equal((await PlacesBackups.getBackupFiles()).length, 1);
   let mostRecentBackupFile = await PlacesBackups.getMostRecentBackup();
   Assert.notEqual(mostRecentBackupFile, null);
-  Assert.ok(PlacesBackups.filenamesRegex.test(OS.Path.basename(mostRecentBackupFile)));
+  Assert.ok(
+    PlacesBackups.filenamesRegex.test(OS.Path.basename(mostRecentBackupFile))
+  );
 
   // The most recent backup file has to be removed since saveBookmarksToJSONFile
   // will otherwise over-write the current backup, since it will be made on the
   // same date
   await OS.File.remove(mostRecentBackupFile);
-  Assert.equal(false, (await OS.File.exists(mostRecentBackupFile)));
+  Assert.equal(false, await OS.File.exists(mostRecentBackupFile));
 
   // Check that, if the user created a custom backup out of the default
   // backups folder, it gets copied (compressed) into it.
@@ -42,7 +47,8 @@ add_task(async function compress_bookmark_backups_test() {
   let recentBackup = await PlacesBackups.getMostRecentBackup();
   await PlacesUtils.bookmarks.remove(bm);
   await BookmarkJSONUtils.importFromFile(recentBackup, { replace: true });
-  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid).root;
+  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid)
+    .root;
   let node = root.getChild(0);
   Assert.equal(node.uri, url);
 

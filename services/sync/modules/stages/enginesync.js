@@ -8,12 +8,24 @@
 
 var EXPORTED_SYMBOLS = ["EngineSynchronizer"];
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {ABORT_SYNC_COMMAND, LOGIN_FAILED_NETWORK_ERROR, NO_SYNC_NODE_FOUND, STATUS_OK, SYNC_FAILED_PARTIAL, SYNC_SUCCEEDED, WEAVE_VERSION, kSyncNetworkOffline} = ChromeUtils.import("resource://services-sync/constants.js");
-const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
-const {Async} = ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.defineModuleGetter(this, "Doctor",
-                               "resource://services-sync/doctor.js");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {
+  ABORT_SYNC_COMMAND,
+  LOGIN_FAILED_NETWORK_ERROR,
+  NO_SYNC_NODE_FOUND,
+  STATUS_OK,
+  SYNC_FAILED_PARTIAL,
+  SYNC_SUCCEEDED,
+  WEAVE_VERSION,
+  kSyncNetworkOffline,
+} = ChromeUtils.import("resource://services-sync/constants.js");
+const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+const { Async } = ChromeUtils.import("resource://services-common/async.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Doctor",
+  "resource://services-sync/doctor.js"
+);
 
 /**
  * Perform synchronization of engines.
@@ -48,7 +60,10 @@ EngineSynchronizer.prototype = {
     }
 
     // If we don't have a node, get one. If that fails, retry in 10 minutes.
-    if (!this.service.clusterURL && !(await this.service.identity.setCluster())) {
+    if (
+      !this.service.clusterURL &&
+      !(await this.service.identity.setCluster())
+    ) {
       this.service.status.sync = NO_SYNC_NODE_FOUND;
       this._log.info("No cluster URL found. Cannot sync.");
       return;
@@ -58,7 +73,8 @@ EngineSynchronizer.prototype = {
     let infoURL = this.service.infoURL;
     let now = Math.floor(Date.now() / 1000);
     let lastPing = Svc.Prefs.get("lastPing", 0);
-    if (now - lastPing > 86400) { // 60 * 60 * 24
+    if (now - lastPing > 86400) {
+      // 60 * 60 * 24
       infoURL += "?v=" + WEAVE_VERSION;
       Svc.Prefs.set("lastPing", now);
     }
@@ -69,7 +85,9 @@ EngineSynchronizer.prototype = {
     let info = await this.service._fetchInfo(infoURL);
 
     // Convert the response to an object and read out the modified times
-    for (let engine of [this.service.clientsEngine].concat(engineManager.getAll())) {
+    for (let engine of [this.service.clientsEngine].concat(
+      engineManager.getAll()
+    )) {
       engine.lastModified = info.obj[engine.name] || 0;
     }
 
@@ -142,7 +160,9 @@ EngineSynchronizer.prototype = {
     let enginesToSync;
     if (allowEnginesHint && engineNamesToSync) {
       this._log.info("Syncing specified engines", engineNamesToSync);
-      enginesToSync = engineManager.get(engineNamesToSync).filter(e => e.enabled);
+      enginesToSync = engineManager
+        .get(engineNamesToSync)
+        .filter(e => e.enabled);
     } else {
       this._log.info("Syncing all enabled engines.");
       enginesToSync = engineManager.getEnabled();
@@ -152,7 +172,10 @@ EngineSynchronizer.prototype = {
       let enginesToValidate = [];
       for (let engine of enginesToSync) {
         // If there's any problems with syncing the engine, report the failure
-        if (!(await this._syncEngine(engine)) || this.service.status.enforceBackoff) {
+        if (
+          !(await this._syncEngine(engine)) ||
+          this.service.status.enforceBackoff
+        ) {
           this._log.info("Aborting sync for failure in " + engine.name);
           break;
         }
@@ -163,8 +186,9 @@ EngineSynchronizer.prototype = {
       // If that's the case, break out of this immediately, rather than
       // throwing an exception when trying to fetch metaURL.
       if (!this.service.clusterURL) {
-        this._log.debug("Aborting sync, no cluster URL: " +
-                        "not uploading new meta/global.");
+        this._log.debug(
+          "Aborting sync, no cluster URL: not uploading new meta/global."
+        );
         return;
       }
 
@@ -177,7 +201,9 @@ EngineSynchronizer.prototype = {
           delete meta.isNew;
           delete meta.changed;
         } catch (error) {
-          this._log.error("Unable to upload meta/global. Leaving marked as new.");
+          this._log.error(
+            "Unable to upload meta/global. Leaving marked as new."
+          );
         }
       }
 
@@ -192,8 +218,10 @@ EngineSynchronizer.prototype = {
 
       // Even if there were engine failures, bump lastSync even on partial since
       // it's reflected in the UI (bug 1439777).
-      if (this.service.status.service == SYNC_FAILED_PARTIAL ||
-          this.service.status.service == STATUS_OK) {
+      if (
+        this.service.status.service == SYNC_FAILED_PARTIAL ||
+        this.service.status.service == STATUS_OK
+      ) {
         Svc.Prefs.set("lastSync", new Date().toString());
       }
     } finally {
@@ -201,8 +229,9 @@ EngineSynchronizer.prototype = {
 
       let syncTime = ((Date.now() - startTime) / 1000).toFixed(2);
       let dateStr = Utils.formatTimestamp(new Date());
-      this._log.info("Sync completed at " + dateStr
-                     + " after " + syncTime + " secs.");
+      this._log.info(
+        "Sync completed at " + dateStr + " after " + syncTime + " secs."
+      );
     }
   },
 
@@ -224,7 +253,11 @@ EngineSynchronizer.prototype = {
       if (Async.isShutdownException(e)) {
         // Failure due to a shutdown exception should prevent other engines
         // trying to start and immediately failing.
-        this._log.info(`${engine.name} was interrupted by shutdown; no other engines will sync`);
+        this._log.info(
+          `${
+            engine.name
+          } was interrupted by shutdown; no other engines will sync`
+        );
         return false;
       }
     }
@@ -232,12 +265,17 @@ EngineSynchronizer.prototype = {
     return true;
   },
 
-  async _updateEnabledFromMeta(meta, numClients, engineManager = this.service.engineManager) {
-    this._log.info("Updating enabled engines: " +
-                    numClients + " clients.");
+  async _updateEnabledFromMeta(
+    meta,
+    numClients,
+    engineManager = this.service.engineManager
+  ) {
+    this._log.info("Updating enabled engines: " + numClients + " clients.");
 
     if (meta.isNew || !meta.payload.engines) {
-      this._log.debug("meta/global isn't new, or is missing engines. Not updating enabled state.");
+      this._log.debug(
+        "meta/global isn't new, or is missing engines. Not updating enabled state."
+      );
       return;
     }
 
@@ -252,8 +290,10 @@ EngineSynchronizer.prototype = {
       }
     }
 
-    if ((numClients <= 1) && !hasEnabledEngines) {
-      this._log.info("One client and no enabled engines: not touching local engine status.");
+    if (numClients <= 1 && !hasEnabledEngines) {
+      this._log.info(
+        "One client and no enabled engines: not touching local engine status."
+      );
       return;
     }
 
@@ -284,7 +324,9 @@ EngineSynchronizer.prototype = {
       let attemptedEnable = false;
       // If the engine was enabled remotely, enable it locally.
       if (!Svc.Prefs.get("engineStatusChanged." + engine.prefName, false)) {
-        this._log.trace("Engine " + engineName + " was enabled. Marking as non-declined.");
+        this._log.trace(
+          "Engine " + engineName + " was enabled. Marking as non-declined."
+        );
         toUndecline.add(engineName);
         this._log.trace(engineName + " engine was enabled remotely.");
         engine.enabled = true;
@@ -309,7 +351,11 @@ EngineSynchronizer.prototype = {
         // to enable it - in which case we leave the declined state alone.
         if (!attemptedEnable) {
           // This will be reflected in meta/global in the next stage.
-          this._log.trace("Engine " + engineName + " was disabled locally. Marking as declined.");
+          this._log.trace(
+            "Engine " +
+              engineName +
+              " was disabled locally. Marking as declined."
+          );
           toDecline.add(engineName);
         }
       }

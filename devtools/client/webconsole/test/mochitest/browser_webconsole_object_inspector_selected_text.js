@@ -16,7 +16,7 @@ add_task(async function() {
   await ContentTask.spawn(gBrowser.selectedBrowser, label, function(str) {
     content.wrappedJSObject.console.log(str, [1, 2, 3]);
   });
-  const {node} = await onLoggedMessage;
+  const { node } = await onLoggedMessage;
 
   info(`Select the "Array" text`);
   selectNode(hud, node.querySelector(".objectTitle"));

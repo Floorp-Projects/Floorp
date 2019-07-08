@@ -14,24 +14,49 @@ const TEST_URI = `
 <body>eye-dropper test</body>`;
 
 const MOVE_EVENTS_DATA = [
-  {type: "mouse", x: 200, y: 100, expected: {x: 200, y: 100}},
-  {type: "mouse", x: 100, y: 200, expected: {x: 100, y: 200}},
-  {type: "keyboard", key: "VK_LEFT", expected: {x: 99, y: 200}},
-  {type: "keyboard", key: "VK_LEFT", shift: true, expected: {x: 89, y: 200}},
-  {type: "keyboard", key: "VK_RIGHT", expected: {x: 90, y: 200}},
-  {type: "keyboard", key: "VK_RIGHT", shift: true, expected: {x: 100, y: 200}},
-  {type: "keyboard", key: "VK_DOWN", expected: {x: 100, y: 201}},
-  {type: "keyboard", key: "VK_DOWN", shift: true, expected: {x: 100, y: 211}},
-  {type: "keyboard", key: "VK_UP", expected: {x: 100, y: 210}},
-  {type: "keyboard", key: "VK_UP", shift: true, expected: {x: 100, y: 200}},
+  { type: "mouse", x: 200, y: 100, expected: { x: 200, y: 100 } },
+  { type: "mouse", x: 100, y: 200, expected: { x: 100, y: 200 } },
+  { type: "keyboard", key: "VK_LEFT", expected: { x: 99, y: 200 } },
+  {
+    type: "keyboard",
+    key: "VK_LEFT",
+    shift: true,
+    expected: { x: 89, y: 200 },
+  },
+  { type: "keyboard", key: "VK_RIGHT", expected: { x: 90, y: 200 } },
+  {
+    type: "keyboard",
+    key: "VK_RIGHT",
+    shift: true,
+    expected: { x: 100, y: 200 },
+  },
+  { type: "keyboard", key: "VK_DOWN", expected: { x: 100, y: 201 } },
+  {
+    type: "keyboard",
+    key: "VK_DOWN",
+    shift: true,
+    expected: { x: 100, y: 211 },
+  },
+  { type: "keyboard", key: "VK_UP", expected: { x: 100, y: 210 } },
+  { type: "keyboard", key: "VK_UP", shift: true, expected: { x: 100, y: 200 } },
   // Mouse initialization for left and top snapping
-  {type: "mouse", x: 7, y: 7, expected: {x: 7, y: 7}},
+  { type: "mouse", x: 7, y: 7, expected: { x: 7, y: 7 } },
   // Left Snapping
-  {type: "keyboard", key: "VK_LEFT", shift: true, expected: {x: 0, y: 7},
-   desc: "Left Snapping to x=0"},
+  {
+    type: "keyboard",
+    key: "VK_LEFT",
+    shift: true,
+    expected: { x: 0, y: 7 },
+    desc: "Left Snapping to x=0",
+  },
   // Top Snapping
-  {type: "keyboard", key: "VK_UP", shift: true, expected: {x: 0, y: 0},
-   desc: "Top Snapping to y=0"},
+  {
+    type: "keyboard",
+    key: "VK_UP",
+    shift: true,
+    expected: { x: 0, y: 0 },
+    desc: "Top Snapping to y=0",
+  },
   // Mouse initialization for right snapping
   {
     type: "mouse",
@@ -77,9 +102,13 @@ const MOVE_EVENTS_DATA = [
 ];
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL(
-    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)({inspector, testActor});
+  const { inspector, testActor } = await openInspectorForURL(
+    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
+  );
+  const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)({
+    inspector,
+    testActor,
+  });
 
   helper.prefix = ID;
 
@@ -91,17 +120,19 @@ add_task(async function() {
 });
 
 async function respondsToMoveEvents(helper, testActor) {
-  info("Checking that the eyedropper responds to events from the mouse and keyboard");
-  const {mouse} = helper;
-  const {width, height} = await testActor.getBoundingClientRect("html");
+  info(
+    "Checking that the eyedropper responds to events from the mouse and keyboard"
+  );
+  const { mouse } = helper;
+  const { width, height } = await testActor.getBoundingClientRect("html");
 
-  for (let {type, x, y, key, shift, expected, desc} of MOVE_EVENTS_DATA) {
+  for (let { type, x, y, key, shift, expected, desc } of MOVE_EVENTS_DATA) {
     x = typeof x === "function" ? x(width, height) : x;
     y = typeof y === "function" ? y(width, height) : y;
-    expected.x = typeof expected.x === "function" ?
-      expected.x(width, height) : expected.x;
-    expected.y = typeof expected.y === "function" ?
-      expected.y(width, height) : expected.y;
+    expected.x =
+      typeof expected.x === "function" ? expected.x(width, height) : expected.x;
+    expected.y =
+      typeof expected.y === "function" ? expected.y(width, height) : expected.y;
 
     if (typeof desc === "undefined") {
       info(`Simulating a ${type} event to move to ${expected.x} ${expected.y}`);
@@ -112,20 +143,23 @@ async function respondsToMoveEvents(helper, testActor) {
     if (type === "mouse") {
       await mouse.move(x, y);
     } else if (type === "keyboard") {
-      const options = shift ? {shiftKey: true} : {};
+      const options = shift ? { shiftKey: true } : {};
       await EventUtils.synthesizeAndWaitKey(key, options);
     }
     await checkPosition(expected, helper);
   }
 }
 
-async function checkPosition({x, y}, {getElementAttribute}) {
+async function checkPosition({ x, y }, { getElementAttribute }) {
   const style = await getElementAttribute("root", "style");
-  is(style, `top:${y}px;left:${x}px;`,
-     `The eyedropper is at the expected ${x} ${y} position`);
+  is(
+    style,
+    `top:${y}px;left:${x}px;`,
+    `The eyedropper is at the expected ${x} ${y} position`
+  );
 }
 
-async function respondsToReturnAndEscape({isElementHidden, show}) {
+async function respondsToReturnAndEscape({ isElementHidden, show }) {
   info("Simulating return to select the color and hide the eyedropper");
 
   await EventUtils.synthesizeAndWaitKey("VK_RETURN", {});

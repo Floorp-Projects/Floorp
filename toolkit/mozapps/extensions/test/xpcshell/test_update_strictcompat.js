@@ -13,17 +13,21 @@ Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 
 const appId = "toolkit@mozilla.org";
 
-testserver = createHttpServer({hosts: ["example.com"]});
+testserver = createHttpServer({ hosts: ["example.com"] });
 testserver.registerDirectory("/data/", do_get_file("data"));
 
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
   AddonTestUtils.updateReason = AddonManager.UPDATE_WHEN_USER_REQUESTED;
 
-  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS,
-                             "http://example.com/data/test_update_addons.json");
-  Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES,
-                             "http://example.com/data/test_update_compat.json");
+  Services.prefs.setCharPref(
+    PREF_GETADDONS_BYIDS,
+    "http://example.com/data/test_update_addons.json"
+  );
+  Services.prefs.setCharPref(
+    PREF_COMPAT_OVERRIDES,
+    "http://example.com/data/test_update_compat.json"
+  );
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
 });
 
@@ -34,11 +38,13 @@ add_task(async function test_update_strict() {
   let xpi = await createAddon({
     id: ID,
     updateURL: "http://example.com/update.json",
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "0.1",
-      maxVersion: "0.2",
-    }],
+    targetApplications: [
+      {
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "0.1",
+        maxVersion: "0.2",
+      },
+    ],
   });
   await manuallyInstall(xpi, AddonTestUtils.profileExtensions, ID);
 
@@ -104,10 +110,14 @@ add_task(async function test_update_strict() {
   AddonTestUtils.registerJSON(testserver, "/update.json", UPDATE);
 
   let addon = await AddonManager.getAddonByID(ID);
-  let {updateAvailable} = await promiseFindAddonUpdates(addon);
+  let { updateAvailable } = await promiseFindAddonUpdates(addon);
 
   Assert.notEqual(updateAvailable, null, "Got update");
-  Assert.equal(updateAvailable.version, "3.0", "The correct update was selected");
+  Assert.equal(
+    updateAvailable.version,
+    "3.0",
+    "The correct update was selected"
+  );
   await addon.uninstall();
 
   await promiseShutdownManager();
@@ -120,11 +130,13 @@ add_task(async function test_update_strict2() {
   let xpi = createAddon({
     id: ID,
     updateURL: "http://example.com/update.json",
-    targetApplications: [{
-      id: appId,
-      minVersion: "0.1",
-      maxVersion: "0.2",
-    }],
+    targetApplications: [
+      {
+        id: appId,
+        minVersion: "0.1",
+        maxVersion: "0.2",
+      },
+    ],
   });
   await manuallyInstall(xpi, AddonTestUtils.profileExtensions, ID);
 
@@ -170,11 +182,13 @@ add_task(async function test_update_strict_optin() {
   let xpi = await createAddon({
     id: ID,
     updateURL: "http://example.com/update.json",
-    targetApplications: [{
-      id: appId,
-      minVersion: "0.1",
-      maxVersion: "0.2",
-    }],
+    targetApplications: [
+      {
+        id: appId,
+        minVersion: "0.1",
+        maxVersion: "0.2",
+      },
+    ],
   });
   await manuallyInstall(xpi, AddonTestUtils.profileExtensions, ID);
 
@@ -207,7 +221,10 @@ add_task(async function test_update_strict_optin() {
   notEqual(addon, null);
 
   let result = await AddonTestUtils.promiseFindAddonUpdates(addon);
-  ok(!result.compatibilityUpdate, "Should not have seen a compatibility update");
+  ok(
+    !result.compatibilityUpdate,
+    "Should not have seen a compatibility update"
+  );
   ok(!result.updateAvailable, "Should not have seen a version update");
 
   await addon.uninstall();

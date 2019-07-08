@@ -8,8 +8,9 @@
 
 do_get_profile();
 
-const gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
-                  .getService(Ci.nsIX509CertDB);
+const gCertDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
 
 const PKCS12_FILE = "test_certDB_import/cert_from_windows.pfx";
 const CERT_COMMON_NAME = "test_cert_from_windows";

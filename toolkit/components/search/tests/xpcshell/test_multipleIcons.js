@@ -32,21 +32,27 @@ add_task(async function test_multipleIcons() {
   info("Check that allIcons contains expected icon sizes");
   Assert.equal(allIcons.length, 3);
   let expectedWidths = [16, 32, 74];
-  Assert.ok(allIcons.every((item) => {
-    let width = item.width;
-    Assert.notEqual(expectedWidths.indexOf(width), -1);
-    Assert.equal(width, item.height);
+  Assert.ok(
+    allIcons.every(item => {
+      let width = item.width;
+      Assert.notEqual(expectedWidths.indexOf(width), -1);
+      Assert.equal(width, item.height);
 
-    let icon = item.url.split(",").pop();
-    Assert.equal(icon, "ico" + width);
+      let icon = item.url.split(",").pop();
+      Assert.equal(icon, "ico" + width);
 
-    return true;
-  }));
+      return true;
+    })
+  );
 });
 
 add_task(async function test_icon_not_in_file() {
   let engineUrl = gDataUrl + "engine-fr.xml";
-  let engine = await Services.search.addEngine(engineUrl, "data:image/x-icon;base64,ico16", false);
+  let engine = await Services.search.addEngine(
+    engineUrl,
+    "data:image/x-icon;base64,ico16",
+    false
+  );
 
   // Even though the icon wasn't specified inside the XML file, it should be
   // available both in the iconURI attribute and with getIconURLBySize.

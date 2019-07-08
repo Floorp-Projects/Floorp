@@ -1,0 +1,2 @@
+# Prevent line ending normalization to follow the mercurial behavior
+* -text

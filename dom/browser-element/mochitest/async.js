@@ -41,9 +41,9 @@
         }
         // not a generator, wrap it.
         if (func.constructor.name !== "GeneratorFunction") {
-          gen = (function* () {
+          gen = (function*() {
             return func.apply(self, functionArgs);
-          }());
+          })();
         } else {
           gen = func.apply(self, functionArgs);
         }
@@ -53,21 +53,23 @@
           reject(err);
         }
 
-        function step({value, done}) {
+        function step({ value, done }) {
           if (done) {
             return resolve(value);
           }
           if (value instanceof Promise) {
-            return value.then(
-              result => step(gen.next(result)),
-              error => {
-                try {
-                  step(gen.throw(error));
-                } catch (err) {
-                  throw err;
+            return value
+              .then(
+                result => step(gen.next(result)),
+                error => {
+                  try {
+                    step(gen.throw(error));
+                  } catch (err) {
+                    throw err;
+                  }
                 }
-              }
-            ).catch(err => reject(err));
+              )
+              .catch(err => reject(err));
           }
           return step(gen.next(value));
         }
@@ -75,4 +77,4 @@
     };
   }
   exports.async = async;
-}(this || self));
+})(this || self);

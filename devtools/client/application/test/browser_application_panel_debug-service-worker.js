@@ -6,12 +6,14 @@
 /* import-globals-from ../../debugger/test/mochitest/helpers.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers.js",
-  this);
+  this
+);
 
 /* import-globals-from ../../debugger/test/mochitest/helpers/context.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers/context.js",
-  this);
+  this
+);
 
 const TAB_URL = URL_ROOT + "service-workers/debug.html";
 
@@ -27,7 +29,8 @@ add_task(async function() {
   const container = getWorkerContainers(doc)[0];
   info("Wait until the debug link is displayed and enabled");
   await waitUntil(() =>
-    container.querySelector(".js-debug-link:not(.worker__debug-link--disabled)"));
+    container.querySelector(".js-debug-link:not(.worker__debug-link--disabled)")
+  );
 
   info("Click on the debug link and wait for the new toolbox to be ready");
   const onToolboxReady = gDevTools.once("toolbox-ready");
@@ -45,7 +48,9 @@ add_task(async function() {
 
   await addBreakpoint(debuggerContext, "debug-sw.js", 8);
 
-  info("Reload the main tab, expect the service worker script to pause on line 8");
+  info(
+    "Reload the main tab, expect the service worker script to pause on line 8"
+  );
   tab.linkedBrowser.reload();
 
   await waitForPaused(debuggerContext);

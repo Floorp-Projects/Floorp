@@ -3,18 +3,18 @@
 /* eslint max-len: ["error", 80] */
 "use strict";
 
-const {
-  AddonTestUtils,
-} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 
 AddonTestUtils.initMochitest(this);
 
-function makeResult({guid, type}) {
+function makeResult({ guid, type }) {
   return {
     addon: {
-      authors: [{name: "Some author"}],
+      authors: [{ name: "Some author" }],
       current_version: {
-        files: [{platform: "all", url: "data:,"}],
+        files: [{ platform: "all", url: "data:," }],
       },
       url: "data:,",
       guid,
@@ -26,10 +26,12 @@ function makeResult({guid, type}) {
 function mockResults() {
   let types = ["extension", "theme", "extension", "extension", "theme"];
   return {
-    results: types.map((type, i) => makeResult({
-      guid: `${type}${i}@mochi.test`,
-      type,
-    })),
+    results: types.map((type, i) =>
+      makeResult({
+        guid: `${type}${i}@mochi.test`,
+        type,
+      })
+    ),
   };
 }
 
@@ -41,8 +43,10 @@ add_task(async function setup() {
       ["browser.discovery.enabled", false],
       ["extensions.htmlaboutaddons.enabled", true],
       ["extensions.getAddons.discovery.api_url", `data:;base64,${results}`],
-      ["extensions.recommendations.themeRecommendationUrl",
-       "https://example.com/theme"],
+      [
+        "extensions.recommendations.themeRecommendationUrl",
+        "https://example.com/theme",
+      ],
     ],
   });
 });
@@ -62,7 +66,6 @@ function checkExtraContents(doc, type, opts = {}) {
 
   is_element_visible(footer, "The footer is visible");
 
-
   if (type == "extension") {
     ok(taarNotice, "There is a TAAR notice");
     if (showAmoButton) {
@@ -81,26 +84,40 @@ function checkExtraContents(doc, type, opts = {}) {
 
   if (showThemeRecommendationFooter) {
     is_element_visible(
-      themeRecommendationFooter, "There's a theme recommendation footer");
+      themeRecommendationFooter,
+      "There's a theme recommendation footer"
+    );
     is_element_visible(themeRecommendationLink, "There's a link to the theme");
     is(themeRecommendationLink.target, "_blank", "The link opens in a new tab");
-    is(themeRecommendationLink.href, "https://example.com/theme",
-       "The link goes to the pref's URL");
-    is(doc.l10n.getAttributes(themeRecommendationFooter).id,
-       "recommended-theme-1", "The recommendation has the right l10n-id");
+    is(
+      themeRecommendationLink.href,
+      "https://example.com/theme",
+      "The link goes to the pref's URL"
+    );
+    is(
+      doc.l10n.getAttributes(themeRecommendationFooter).id,
+      "recommended-theme-1",
+      "The recommendation has the right l10n-id"
+    );
   } else {
-    ok(!themeRecommendationFooter || themeRecommendationFooter.hidden,
-       "There's no theme recommendation");
+    ok(
+      !themeRecommendationFooter || themeRecommendationFooter.hidden,
+      "There's no theme recommendation"
+    );
   }
 }
 
-async function installAddon({card, recommendedList, manifestExtra = {}}) {
+async function installAddon({ card, recommendedList, manifestExtra = {} }) {
   // Install an add-on to hide the card.
   let hidden = BrowserTestUtils.waitForEvent(
-    recommendedList, "card-hidden", false, e => e.detail.card == card);
+    recommendedList,
+    "card-hidden",
+    false,
+    e => e.detail.card == card
+  );
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {gecko: {id: card.addonId}},
+      applications: { gecko: { id: card.addonId } },
       ...manifestExtra,
     },
     useAddonManager: "temporary",
@@ -110,7 +127,7 @@ async function installAddon({card, recommendedList, manifestExtra = {}}) {
   return extension;
 }
 
-async function testListRecommendations({type, manifestExtra = {}}) {
+async function testListRecommendations({ type, manifestExtra = {} }) {
   Services.telemetry.clearEvents();
 
   let win = await loadInitialView(type);
@@ -131,13 +148,13 @@ async function testListRecommendations({type, manifestExtra = {}}) {
   }
 
   // Install an add-on for the first card, verify it is hidden.
-  let {addonId} = cards[0];
+  let { addonId } = cards[0];
   ok(addonId, "The card has an addonId");
 
   // Installing the add-on will fail since the URL doesn't point to a valid
   // XPI. This will trigger the telemetry though.
   let installButton = cards[0].querySelector('[action="install-addon"]');
-  let {panel} = PopupNotifications;
+  let { panel } = PopupNotifications;
   let popupId = "addon-install-failed-notification";
   let failPromise = TestUtils.topicObserved("addon-install-failed");
   installButton.click();
@@ -151,7 +168,7 @@ async function testListRecommendations({type, manifestExtra = {}}) {
   panel.firstElementChild.button.click();
   await BrowserTestUtils.waitForPopupEvent(panel, "hidden");
 
-  let extension = await installAddon({card: cards[0], recommendedList});
+  let extension = await installAddon({ card: cards[0], recommendedList });
   is_element_hidden(cards[0], "The card is now hidden");
 
   // Switch away and back, there should still be a hidden card.
@@ -182,20 +199,28 @@ async function testListRecommendations({type, manifestExtra = {}}) {
 
   await closeView(win);
 
-  assertAboutAddonsTelemetryEvents([
-    ["addonsManager", "action", "aboutAddons", null,
-     {action: "installFromRecommendation", view: "list", addonId, type}],
-  ], {methods: ["action"]});
+  assertAboutAddonsTelemetryEvents(
+    [
+      [
+        "addonsManager",
+        "action",
+        "aboutAddons",
+        null,
+        { action: "installFromRecommendation", view: "list", addonId, type },
+      ],
+    ],
+    { methods: ["action"] }
+  );
 }
 
 add_task(async function testExtensionList() {
-  await testListRecommendations({type: "extension"});
+  await testListRecommendations({ type: "extension" });
 });
 
 add_task(async function testThemeList() {
   await testListRecommendations({
     type: "theme",
-    manifestExtra: {theme: {}},
+    manifestExtra: { theme: {} },
   });
 });
 
@@ -215,10 +240,11 @@ add_task(async function testInstallAllExtensions() {
   is(cards.length, 3, "We found some cards");
 
   let extensions = await Promise.all(
-    cards.map(card => installAddon({card, recommendedList})));
+    cards.map(card => installAddon({ card, recommendedList }))
+  );
 
   // The find more on AMO button is now shown.
-  checkExtraContents(doc, type, {showAmoButton: true});
+  checkExtraContents(doc, type, { showAmoButton: true });
 
   // Uninstall one of the extensions, the button should be hidden again.
   let extension = extensions.pop();
@@ -235,9 +261,7 @@ add_task(async function testInstallAllExtensions() {
 
 add_task(async function testError() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["extensions.getAddons.discovery.api_url", "data:,"],
-    ],
+    set: [["extensions.getAddons.discovery.api_url", "data:,"]],
   });
 
   let win = await loadInitialView("extension");
@@ -247,7 +271,7 @@ add_task(async function testError() {
   let recommendedList = doc.querySelector("recommended-addon-list");
   await recommendedList.cardsReady;
 
-  checkExtraContents(doc, "extension", {showAmoButton: true});
+  checkExtraContents(doc, "extension", { showAmoButton: true });
 
   await closeView(win);
   await SpecialPowers.popPrefEnv();
@@ -265,7 +289,7 @@ add_task(async function testThemesNoRecommendationUrl() {
   let recommendedList = doc.querySelector("recommended-addon-list");
   await recommendedList.cardsReady;
 
-  checkExtraContents(doc, "theme", {showThemeRecommendationFooter: false});
+  checkExtraContents(doc, "theme", { showThemeRecommendationFooter: false });
 
   await closeView(win);
   await SpecialPowers.popPrefEnv();

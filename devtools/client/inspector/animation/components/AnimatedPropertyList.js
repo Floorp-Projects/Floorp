@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -61,10 +64,7 @@ class AnimatedPropertyList extends Component {
   }
 
   async updateState(animation) {
-    const {
-      getAnimatedPropertyMap,
-      emitEventForTest,
-    } = this.props;
+    const { getAnimatedPropertyMap, emitEventForTest } = this.props;
 
     let propertyMap = null;
     let propertyNames = null;
@@ -84,8 +84,9 @@ class AnimatedPropertyList extends Component {
     const animatedProperties = propertyNames.map(name => {
       const keyframes = propertyMap.get(name);
       const type = types[name];
-      const isUnchanged =
-        keyframes.every(keyframe => keyframe.value === keyframes[0].value);
+      const isUnchanged = keyframes.every(
+        keyframe => keyframe.value === keyframes[0].value
+      );
       return { isUnchanged, keyframes, name, type };
     });
 
@@ -97,24 +98,17 @@ class AnimatedPropertyList extends Component {
       return a.isUnchanged ? 1 : -1;
     });
 
-    this.setState(
-      {
-        animatedProperties,
-        isStateUpdating: false,
-      }
-    );
+    this.setState({
+      animatedProperties,
+      isStateUpdating: false,
+    });
 
     emitEventForTest("animation-keyframes-rendered");
   }
 
   render() {
-    const {
-      getComputedStyle,
-      simulateAnimation,
-    } = this.props;
-    const {
-      animatedProperties,
-    } = this.state;
+    const { getComputedStyle, simulateAnimation } = this.props;
+    const { animatedProperties } = this.state;
 
     if (!animatedProperties) {
       return null;
@@ -126,17 +120,15 @@ class AnimatedPropertyList extends Component {
       },
       animatedProperties.map(({ isUnchanged, keyframes, name, type }) => {
         const state = this.getPropertyState(name);
-        return AnimatedPropertyItem(
-          {
-            getComputedStyle,
-            isUnchanged,
-            keyframes,
-            name,
-            simulateAnimation,
-            state,
-            type,
-          }
-        );
+        return AnimatedPropertyItem({
+          getComputedStyle,
+          isUnchanged,
+          keyframes,
+          name,
+          simulateAnimation,
+          state,
+          type,
+        });
       })
     );
   }

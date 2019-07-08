@@ -4,8 +4,15 @@
 
 "use strict";
 
-const { openToolbox, closeToolbox, getBrowserWindow, runTest, testSetup,
-        testTeardown, SIMPLE_URL } = require("../head");
+const {
+  openToolbox,
+  closeToolbox,
+  getBrowserWindow,
+  runTest,
+  testSetup,
+  testTeardown,
+  SIMPLE_URL,
+} = require("../head");
 
 module.exports = async function() {
   let TOTAL_MESSAGES = 10;
@@ -30,15 +37,20 @@ module.exports = async function() {
 
   // Load a frame script using a data URI so we can do logs
   // from the page.  So this is running in content.
-  messageManager.loadFrameScript("data:,(" + encodeURIComponent(
-    `function () {
+  messageManager.loadFrameScript(
+    "data:,(" +
+      encodeURIComponent(
+        `function () {
       addMessageListener("do-logs", function () {
         for (var i = 0; i < ${TOTAL_MESSAGES}; i++) {
           content.console.log('damp', i+1, content);
         }
       });
     }`
-  ) + ")()", true);
+      ) +
+      ")()",
+    true
+  );
 
   let test = runTest("console.bulklog");
   // Kick off the logging

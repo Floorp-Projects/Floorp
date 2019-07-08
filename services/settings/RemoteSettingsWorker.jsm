@@ -7,12 +7,18 @@
 /**
  * Interface to a dedicated thread handling for Remote Settings heavy operations.
  */
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const { setTimeout, clearTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { setTimeout, clearTimeout } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["RemoteSettingsWorker"];
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "gMaxIdleMilliseconds",
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gMaxIdleMilliseconds",
   "services.settings.worker_idle_max_milliseconds",
   30 * 1000 // Default of 30 seconds.
 );
@@ -66,7 +72,11 @@ class Worker {
   }
 
   async canonicalStringify(localRecords, remoteRecords, timestamp) {
-    return this._execute("canonicalStringify", [localRecords, remoteRecords, timestamp]);
+    return this._execute("canonicalStringify", [
+      localRecords,
+      remoteRecords,
+      timestamp,
+    ]);
   }
 
   async importJSONDump(bucket, collection) {
@@ -78,4 +88,6 @@ class Worker {
   }
 }
 
-var RemoteSettingsWorker = new Worker("resource://services-settings/RemoteSettingsWorker.js");
+var RemoteSettingsWorker = new Worker(
+  "resource://services-settings/RemoteSettingsWorker.js"
+);

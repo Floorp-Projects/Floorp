@@ -15,7 +15,8 @@
 //    is a suggestion selected in the popup,
 //  ]
 
-const OPEN = true, SELECTED = true;
+const OPEN = true,
+  SELECTED = true;
 var testData = [
   ["VK_RIGHT", "font", !OPEN, !SELECTED],
   ["-", "font-size", OPEN, SELECTED],
@@ -70,7 +71,7 @@ const TEST_URI = "<h1 style='font: 24px serif'>Header</h1>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {toolbox, inspector, view, testActor} = await openRuleView();
+  const { toolbox, inspector, view, testActor } = await openRuleView();
 
   info("Test autocompletion after 1st page load");
   await runAutocompletionTest(toolbox, inspector, view);
@@ -85,7 +86,9 @@ async function runAutocompletionTest(toolbox, inspector, view) {
   await selectNode("h1", inspector);
 
   info("Focusing the css property editable field");
-  const propertyName = view.styleDocument.querySelectorAll(".ruleview-propertyname")[0];
+  const propertyName = view.styleDocument.querySelectorAll(
+    ".ruleview-propertyname"
+  )[0];
   const editor = await focusEditableField(view, propertyName);
 
   info("Starting to test for css property completion");
@@ -94,8 +97,7 @@ async function runAutocompletionTest(toolbox, inspector, view) {
   }
 }
 
-async function testCompletion([key, completion, open, selected],
-                         editor, view) {
+async function testCompletion([key, completion, open, selected], editor, view) {
   info("Pressing key " + key);
   info("Expecting " + completion);
   info("Is popup opened: " + open);
@@ -104,9 +106,11 @@ async function testCompletion([key, completion, open, selected],
   // Listening for the right event that will tell us when the key has been
   // entered and processed.
   let onSuggest;
-  if (/(left|right|back_space|escape|home|end|page_up|page_down)/ig.test(key)) {
-    info("Adding event listener for " +
-      "left|right|back_space|escape|home|end|page_up|page_down keys");
+  if (/(left|right|back_space|escape|home|end|page_up|page_down)/gi.test(key)) {
+    info(
+      "Adding event listener for " +
+        "left|right|back_space|escape|home|end|page_up|page_down keys"
+    );
     onSuggest = once(editor.input, "keypress");
   } else {
     info("Waiting for after-suggest event on the editor");
@@ -115,9 +119,8 @@ async function testCompletion([key, completion, open, selected],
 
   // Also listening for popup opened/closed events if needed.
   const popupEvent = open ? "popup-opened" : "popup-closed";
-  const onPopupEvent = editor.popup.isOpen !== open
-    ? once(editor.popup, popupEvent)
-    : null;
+  const onPopupEvent =
+    editor.popup.isOpen !== open ? once(editor.popup, popupEvent) : null;
 
   info("Synthesizing key " + key);
   EventUtils.synthesizeKey(key, {}, view.styleWindow);

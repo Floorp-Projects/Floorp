@@ -20,8 +20,15 @@ function createLink(name, sizes, rel) {
   if (!rel) {
     rel = "icon";
   }
-  return '<link rel="' + rel + '" type="image/png" ' + s +
-    ' href="http://example.com/' + name + '.png">';
+  return (
+    '<link rel="' +
+    rel +
+    '" type="image/png" ' +
+    s +
+    ' href="http://example.com/' +
+    name +
+    '.png">'
+  );
 }
 
 function runTest() {
@@ -51,17 +58,20 @@ function runTest() {
 
       // We should recieve iconchange events when the user creates new links
       // to a favicon, but only when we listen for them
-      SpecialPowers.getBrowserFrameMessageManager(iframe1)
-                   .loadFrameScript("data:,content.document.title='New title';",
-                                    /* allowDelayedLoad = */ false);
+      SpecialPowers.getBrowserFrameMessageManager(iframe1).loadFrameScript(
+        "data:,content.document.title='New title';",
+        /* allowDelayedLoad = */ false
+      );
 
-      SpecialPowers.getBrowserFrameMessageManager(iframe1)
-                   .loadFrameScript("data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=ICON href=http://example.com/newicon.png>')",
-                                    /* allowDelayedLoad = */ false);
+      SpecialPowers.getBrowserFrameMessageManager(iframe1).loadFrameScript(
+        "data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=ICON href=http://example.com/newicon.png>')",
+        /* allowDelayedLoad = */ false
+      );
 
-      SpecialPowers.getBrowserFrameMessageManager(iframe2)
-                   .loadFrameScript("data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=ICON href=http://example.com/newicon.png>')",
-                                    /* allowDelayedLoad = */ false);
+      SpecialPowers.getBrowserFrameMessageManager(iframe2).loadFrameScript(
+        "data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=ICON href=http://example.com/newicon.png>')",
+        /* allowDelayedLoad = */ false
+      );
     } else if (numIconChanges == 2) {
       is(e.detail.href, "http://example.com/newicon.png");
 
@@ -72,9 +82,10 @@ function runTest() {
 
       // the rel attribute can have various space seperated values, make
       // sure we only pick up correct values for 'icon'
-      SpecialPowers.getBrowserFrameMessageManager(iframe1)
-                   .loadFrameScript("data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=shortcuticon href=http://example.com/newicon.png>')",
-                                    /* allowDelayedLoad = */ false);
+      SpecialPowers.getBrowserFrameMessageManager(iframe1).loadFrameScript(
+        "data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=shortcuticon href=http://example.com/newicon.png>')",
+        /* allowDelayedLoad = */ false
+      );
       // Test setting a page with multiple links elements
       iframe1.src = createHtml(createLink("another") + createLink("icon"));
     } else if (numIconChanges == 4) {
@@ -84,22 +95,27 @@ function runTest() {
       is(e.detail.href, "http://example.com/icon.png");
 
       // Make sure icon check is case insensitive
-      SpecialPowers.getBrowserFrameMessageManager(iframe1)
-                   .loadFrameScript("data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=ICON href=http://example.com/ucaseicon.png>')",
-                                    /* allowDelayedLoad = */ false);
+      SpecialPowers.getBrowserFrameMessageManager(iframe1).loadFrameScript(
+        "data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=ICON href=http://example.com/ucaseicon.png>')",
+        /* allowDelayedLoad = */ false
+      );
     } else if (numIconChanges == 6) {
       is(e.detail.href, "http://example.com/ucaseicon.png");
       iframe1.src = createHtml(createLink("testsize", "50x50", "icon"));
     } else if (numIconChanges == 7) {
       is(e.detail.href, "http://example.com/testsize.png");
       is(e.detail.sizes, "50x50");
-      iframe1.src = createHtml(createLink("testapple1", "100x100", "apple-touch-icon"));
+      iframe1.src = createHtml(
+        createLink("testapple1", "100x100", "apple-touch-icon")
+      );
     } else if (numIconChanges == 8) {
       is(e.detail.href, "http://example.com/testapple1.png");
       is(e.detail.rel, "apple-touch-icon");
       is(e.detail.sizes, "100x100");
 
-      iframe1.src = createHtml(createLink("testapple2", "100x100", "apple-touch-icon-precomposed"));
+      iframe1.src = createHtml(
+        createLink("testapple2", "100x100", "apple-touch-icon-precomposed")
+      );
     } else if (numIconChanges == 9) {
       is(e.detail.href, "http://example.com/testapple2.png");
       is(e.detail.rel, "apple-touch-icon-precomposed");
@@ -113,7 +129,6 @@ function runTest() {
   iframe3.addEventListener("mozbrowsericonchange", function(e) {
     ok(false, "Should not get a iconchange event for iframe3.");
   });
-
 
   iframe1.src = createHtml(createLink("myicon"));
   // We should not recieve icon change events for either of the below iframes

@@ -1,16 +1,17 @@
 // Description of the test:
 //   Ensure that FTP subresource loads trigger a warning in the webconsole.
-'use strict';
+"use strict";
 
 function scopedCuImport(path) {
   const scope = {};
   ChromeUtils.import(path, scope);
   return scope;
 }
-const {loader, require} = scopedCuImport("resource://devtools/shared/Loader.jsm");
-const {TargetFactory} = require("devtools/client/framework/target");
-const {Utils: WebConsoleUtils} =
-  require("devtools/client/webconsole/utils");
+const { loader, require } = scopedCuImport(
+  "resource://devtools/shared/Loader.jsm"
+);
+const { TargetFactory } = require("devtools/client/framework/target");
+const { Utils: WebConsoleUtils } = require("devtools/client/webconsole/utils");
 let { gDevTools } = require("devtools/client/framework/devtools");
 let promise = require("promise");
 
@@ -48,11 +49,10 @@ var openToolboxForTab = async function(tab, toolId, hostType) {
   return toolbox;
 };
 
-
 function console_observer(subject, topic, data) {
   var message = subject.wrappedJSObject.arguments[0];
   ok(false, message);
-};
+}
 
 var webconsole = null;
 // These files don't actually exist, we are just looking for messages
@@ -64,7 +64,9 @@ function on_new_message(new_messages) {
     let elem = message.node;
     let text = elem.textContent;
 
-    if (text.includes("Loading FTP subresource within http(s) page not allowed")) {
+    if (
+      text.includes("Loading FTP subresource within http(s) page not allowed")
+    ) {
       // Remove the file in the message from the list.
       seen_files = seen_files.filter(file => {
         return !text.includes(file);
@@ -79,8 +81,10 @@ async function do_cleanup() {
   }
 }
 
-const kTestPath = getRootDirectory(gTestPath)
-                  .replace("chrome://mochitests/content", "http://mochi.test:8888")
+const kTestPath = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  "http://mochi.test:8888"
+);
 const kTestURI = kTestPath + "file_FTP_console_warning.html";
 
 add_task(async function() {
@@ -89,7 +93,10 @@ add_task(async function() {
   requestLongerTimeout(4);
   registerCleanupFunction(do_cleanup);
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
 
   let toolbox = await openToolboxForTab(tab, "webconsole");
   ok(toolbox, "Got toolbox");

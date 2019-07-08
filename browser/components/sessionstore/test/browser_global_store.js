@@ -23,7 +23,11 @@ add_task(async function() {
   };
 
   function testRestoredState() {
-    is(ss.getCustomGlobalValue(key1), value1, "restored state has global value");
+    is(
+      ss.getCustomGlobalValue(key1),
+      value1,
+      "restored state has global value"
+    );
   }
 
   function testGlobalStore() {
@@ -33,7 +37,11 @@ add_task(async function() {
     is(ss.getCustomGlobalValue(key2), value1, "retreived value matches stored");
 
     ss.setCustomGlobalValue(key2, value2);
-    is(ss.getCustomGlobalValue(key2), value2, "previously stored value was overwritten");
+    is(
+      ss.getCustomGlobalValue(key2),
+      value2,
+      "previously stored value was overwritten"
+    );
 
     ss.deleteCustomGlobalValue(key2);
     is(ss.getCustomGlobalValue(key2), "", "global value was deleted");

@@ -3,8 +3,10 @@
  */
 
 const TEST_URL =
-  getRootDirectory(gTestPath).replace("chrome://mochitests/content",
-  "https://example.com") + "empty_file.html";
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "https://example.com"
+  ) + "empty_file.html";
 
 add_task(async function() {
   await BrowserTestUtils.withNewTab(TEST_URL, async function(browser) {
@@ -12,12 +14,18 @@ add_task(async function() {
     // button on the notification box toggling the prefs. So manually
     // set/unset the prefs the UI we're testing toggles.
     let emeWasEnabled = Services.prefs.getBoolPref("media.eme.enabled", false);
-    let cdmWasEnabled = Services.prefs.getBoolPref("media.gmp-widevinecdm.enabled", false);
+    let cdmWasEnabled = Services.prefs.getBoolPref(
+      "media.gmp-widevinecdm.enabled",
+      false
+    );
 
     // Restore the preferences to their pre-test state on test finish.
     registerCleanupFunction(function() {
-        Services.prefs.setBoolPref("media.eme.enabled", emeWasEnabled);
-        Services.prefs.setBoolPref("media.gmp-widevinecdm.enabled", cdmWasEnabled);
+      Services.prefs.setBoolPref("media.eme.enabled", emeWasEnabled);
+      Services.prefs.setBoolPref(
+        "media.gmp-widevinecdm.enabled",
+        cdmWasEnabled
+      );
     });
 
     // Turn off EME and Widevine CDM.
@@ -28,25 +36,37 @@ add_task(async function() {
     // prompt user to enable DRM.
     let result = await ContentTask.spawn(browser, {}, async function() {
       try {
-        let config = [{
-          initDataTypes: ["webm"],
-          videoCapabilities: [{contentType: 'video/webm; codecs="vp9"'}],
-        }];
-        await content.navigator.requestMediaKeySystemAccess("com.widevine.alpha", config);
+        let config = [
+          {
+            initDataTypes: ["webm"],
+            videoCapabilities: [{ contentType: 'video/webm; codecs="vp9"' }],
+          },
+        ];
+        await content.navigator.requestMediaKeySystemAccess(
+          "com.widevine.alpha",
+          config
+        );
       } catch (ex) {
-        return {rejected: true};
+        return { rejected: true };
       }
-      return {rejected: false};
+      return { rejected: false };
     });
-    is(result.rejected, true, "EME request should be denied because EME disabled.");
+    is(
+      result.rejected,
+      true,
+      "EME request should be denied because EME disabled."
+    );
 
     // Verify the UI prompt showed.
     let box = gBrowser.getNotificationBox(browser);
     let notification = box.currentNotification;
 
     ok(notification, "Notification should be visible");
-    is(notification.getAttribute("value"), "drmContentDisabled",
-       "Should be showing the right notification");
+    is(
+      notification.getAttribute("value"),
+      "drmContentDisabled",
+      "Should be showing the right notification"
+    );
 
     // Verify the "Enable DRM" button is there.
     let buttons = notification.querySelectorAll(".notification-button");
@@ -62,6 +82,10 @@ add_task(async function() {
 
     // Verify clicking the "Enable DRM" button enabled DRM.
     let enabled = Services.prefs.getBoolPref("media.eme.enabled", true);
-    is(enabled, true, "EME should be enabled after click on 'Enable DRM' button");
+    is(
+      enabled,
+      true,
+      "EME should be enabled after click on 'Enable DRM' button"
+    );
   });
 });

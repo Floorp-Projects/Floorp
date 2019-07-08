@@ -10,15 +10,23 @@ var EXPORTED_SYMBOLS = ["WebSocketServer"];
 
 const CC = Components.Constructor;
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Stream} = ChromeUtils.import("chrome://remote/content/server/Stream.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Stream } = ChromeUtils.import(
+  "chrome://remote/content/server/Stream.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "WebSocket", () => {
   return Services.appShell.hiddenDOMWindow.WebSocket;
 });
 
-const CryptoHash = CC("@mozilla.org/security/hash;1", "nsICryptoHash", "initWithString");
+const CryptoHash = CC(
+  "@mozilla.org/security/hash;1",
+  "nsICryptoHash",
+  "initWithString"
+);
 const threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
 
 // limit the header size to put an upper bound on allocated memory
@@ -36,26 +44,32 @@ function readLine(input) {
   return new Promise((resolve, reject) => {
     let line = "";
     const wait = () => {
-      input.asyncWait(stream => {
-        try {
-          const amountToRead = HEADER_MAX_LEN - line.length;
-          line += Stream.delimitedRead(input, "\n", amountToRead);
+      input.asyncWait(
+        stream => {
+          try {
+            const amountToRead = HEADER_MAX_LEN - line.length;
+            line += Stream.delimitedRead(input, "\n", amountToRead);
 
-          if (line.endsWith("\n")) {
-            resolve(line.trimRight());
-            return;
+            if (line.endsWith("\n")) {
+              resolve(line.trimRight());
+              return;
+            }
+
+            if (line.length >= HEADER_MAX_LEN) {
+              throw new Error(
+                `Failed to read HTTP header longer than ${HEADER_MAX_LEN} bytes`
+              );
+            }
+
+            wait();
+          } catch (ex) {
+            reject(ex);
           }
-
-          if (line.length >= HEADER_MAX_LEN) {
-            throw new Error(
-                `Failed to read HTTP header longer than ${HEADER_MAX_LEN} bytes`);
-          }
-
-          wait();
-        } catch (ex) {
-          reject(ex);
-        }
-      }, 0, 0, threadManager.currentThread);
+        },
+        0,
+        0,
+        threadManager.currentThread
+      );
     };
 
     wait();
@@ -76,15 +90,20 @@ function writeString(output, data) {
         return;
       }
 
-      output.asyncWait(stream => {
-        try {
-          const written = output.write(data, data.length);
-          data = data.slice(written);
-          wait();
-        } catch (ex) {
-          reject(ex);
-        }
-      }, 0, 0, threadManager.currentThread);
+      output.asyncWait(
+        stream => {
+          try {
+            const written = output.write(data, data.length);
+            data = data.slice(written);
+            wait();
+          } catch (ex) {
+            reject(ex);
+          }
+        },
+        0,
+        0,
+        threadManager.currentThread
+      );
     };
 
     wait();
@@ -120,7 +139,7 @@ const readHttpRequest = async function(input) {
     }
   }
 
-  return {requestLine, headers};
+  return { requestLine, headers };
 };
 
 /** Write HTTP response (array of strings) to async output stream. */
@@ -133,7 +152,7 @@ function writeHttpResponse(output, response) {
  * Process the WebSocket handshake headers and return the key to be sent in
  * Sec-WebSocket-Accept response header.
  */
-function processRequest({requestLine, headers}) {
+function processRequest({ requestLine, headers }) {
   const method = requestLine.split(" ")[0];
   if (method !== "GET") {
     throw new Error("The handshake request must use GET method");
@@ -145,19 +164,29 @@ function processRequest({requestLine, headers}) {
   }
 
   const connection = headers.get("connection");
-  if (!connection || !connection.split(",").map(t => t.trim()).includes("Upgrade")) {
+  if (
+    !connection ||
+    !connection
+      .split(",")
+      .map(t => t.trim())
+      .includes("Upgrade")
+  ) {
     throw new Error("The handshake request has incorrect Connection header");
   }
 
   const version = headers.get("sec-websocket-version");
   if (!version || version !== "13") {
-    throw new Error("The handshake request must have Sec-WebSocket-Version: 13");
+    throw new Error(
+      "The handshake request must have Sec-WebSocket-Version: 13"
+    );
   }
 
   // Compute the accept key
   const key = headers.get("sec-websocket-key");
   if (!key) {
-    throw new Error("The handshake request must have a Sec-WebSocket-Key header");
+    throw new Error(
+      "The handshake request must have a Sec-WebSocket-Key header"
+    );
   }
 
   return { acceptKey: computeKey(key) };
@@ -178,7 +207,7 @@ function computeKey(key) {
 async function serverHandshake(request, output) {
   try {
     // Check and extract info from the request
-    const {acceptKey} = processRequest(request);
+    const { acceptKey } = processRequest(request);
 
     // Send response headers
     await writeHttpResponse(output, [
@@ -189,7 +218,7 @@ async function serverHandshake(request, output) {
     ]);
   } catch (error) {
     // Send error response in case of error
-    await writeHttpResponse(output, [ "HTTP/1.1 400 Bad Request" ]);
+    await writeHttpResponse(output, ["HTTP/1.1 400 Bad Request"]);
     throw error;
   }
 }
@@ -205,7 +234,12 @@ async function createWebSocket(transport, input, output) {
   };
 
   return new Promise((resolve, reject) => {
-    const socket = WebSocket.createServerWebSocket(null, [], transportProvider, "");
+    const socket = WebSocket.createServerWebSocket(
+      null,
+      [],
+      transportProvider,
+      ""
+    );
     socket.addEventListener("close", () => {
       input.close();
       output.close();
@@ -233,7 +267,7 @@ async function upgrade(request, response) {
   // handle response manually, allowing us to send arbitrary data
   response._powerSeized = true;
 
-  const {transport, input, output} = response._connection;
+  const { transport, input, output } = response._connection;
 
   const headers = new Map();
   for (let [key, values] of Object.entries(request._headers._headers)) {
@@ -248,4 +282,4 @@ async function upgrade(request, response) {
   return createWebSocket(transport, input, output);
 }
 
-const WebSocketServer = {accept, upgrade};
+const WebSocketServer = { accept, upgrade };

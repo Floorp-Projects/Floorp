@@ -5,11 +5,12 @@
 add_task(async function() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs", "<all_urls>"],
+      permissions: ["tabs", "<all_urls>"],
     },
 
     async background() {
-      const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
+      const BASE =
+        "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
       const URL = BASE + "file_bypass_cache.sjs";
 
       let tabId = null;
@@ -26,31 +27,51 @@ add_task(async function() {
       }
       resetLoad();
 
-      browser.tabs.onUpdated.addListener(function listener(tabId_, changed, tab) {
+      browser.tabs.onUpdated.addListener(function listener(
+        tabId_,
+        changed,
+        tab
+      ) {
         if (tabId == tabId_ && changed.status == "complete" && tab.url == URL) {
           resolveLoad();
         }
       });
 
       try {
-        let tab = await browser.tabs.create({url: URL});
+        let tab = await browser.tabs.create({ url: URL });
         tabId = tab.id;
         await awaitLoad();
 
-        await browser.tabs.reload(tab.id, {bypassCache: false});
+        await browser.tabs.reload(tab.id, { bypassCache: false });
         await awaitLoad();
 
-        let [textContent] = await browser.tabs.executeScript(tab.id, {code: "document.body.textContent"});
-        browser.test.assertEq("", textContent, "`textContent` should be empty when bypassCache=false");
+        let [textContent] = await browser.tabs.executeScript(tab.id, {
+          code: "document.body.textContent",
+        });
+        browser.test.assertEq(
+          "",
+          textContent,
+          "`textContent` should be empty when bypassCache=false"
+        );
 
-        await browser.tabs.reload(tab.id, {bypassCache: true});
+        await browser.tabs.reload(tab.id, { bypassCache: true });
         await awaitLoad();
 
-        [textContent] = await browser.tabs.executeScript(tab.id, {code: "document.body.textContent"});
+        [textContent] = await browser.tabs.executeScript(tab.id, {
+          code: "document.body.textContent",
+        });
 
         let [pragma, cacheControl] = textContent.split(":");
-        browser.test.assertEq("no-cache", pragma, "`pragma` should be set to `no-cache` when bypassCache is true");
-        browser.test.assertEq("no-cache", cacheControl, "`cacheControl` should be set to `no-cache` when bypassCache is true");
+        browser.test.assertEq(
+          "no-cache",
+          pragma,
+          "`pragma` should be set to `no-cache` when bypassCache is true"
+        );
+        browser.test.assertEq(
+          "no-cache",
+          cacheControl,
+          "`cacheControl` should be set to `no-cache` when bypassCache is true"
+        );
 
         await browser.tabs.remove(tab.id);
 

@@ -20,7 +20,9 @@
 function appendStyleSheet(xulDocument, url) {
   const styleSheetAttr = `href="${url}" type="text/css"`;
   const styleSheet = xulDocument.createProcessingInstruction(
-    "xml-stylesheet", styleSheetAttr);
+    "xml-stylesheet",
+    styleSheetAttr
+  );
   const loadPromise = new Promise((resolve, reject) => {
     function onload() {
       styleSheet.removeEventListener("load", onload);
@@ -37,7 +39,7 @@ function appendStyleSheet(xulDocument, url) {
     styleSheet.addEventListener("error", onerror);
   });
   xulDocument.insertBefore(styleSheet, xulDocument.documentElement);
-  return {styleSheet, loadPromise};
+  return { styleSheet, loadPromise };
 }
 
 exports.appendStyleSheet = appendStyleSheet;

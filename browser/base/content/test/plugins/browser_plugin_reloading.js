@@ -1,4 +1,7 @@
-var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+var gTestRoot = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content/",
+  "http://127.0.0.1:8888/"
+);
 var gPluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 var gTestBrowser = null;
 
@@ -11,8 +14,14 @@ add_task(async function() {
   registerCleanupFunction(async function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
-    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
-    await asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins", gTestBrowser);
+    setTestPluginEnabledState(
+      Ci.nsIPluginTag.STATE_ENABLED,
+      "Second Test Plug-in"
+    );
+    await asyncSetAndUpdateBlocklist(
+      gTestRoot + "blockNoPlugins",
+      gTestBrowser
+    );
     resetBlocklist();
     gTestBrowser = null;
     gBrowser.removeCurrentTab();
@@ -29,7 +38,10 @@ add_task(async function() {
   updateAllTestPlugins(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
   // Prime the blocklist service, the remote service doesn't launch on startup.
-  await promiseTabLoadEvent(gBrowser.selectedTab, "data:text/html,<html></html>");
+  await promiseTabLoadEvent(
+    gBrowser.selectedTab,
+    "data:text/html,<html></html>"
+  );
 
   await asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins", gTestBrowser);
 });
@@ -40,17 +52,26 @@ add_task(async function() {
 
   updateAllTestPlugins(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
-  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
+  await promiseTabLoadEvent(
+    gBrowser.selectedTab,
+    gTestRoot + "plugin_test.html"
+  );
 
   // Work around for delayed PluginBindingAttached
   await promiseUpdatePluginBindings(gTestBrowser);
 
-  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  let notification = PopupNotifications.getNotification(
+    "click-to-play-plugins",
+    gTestBrowser
+  );
   ok(notification, "Test 1, Should have a click-to-play notification");
 
   let pluginInfo = await promiseForPluginInfo("test");
-  is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
-     "Test 2, plugin fallback type should be PLUGIN_CLICK_TO_PLAY");
+  is(
+    pluginInfo.pluginFallbackType,
+    Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
+    "Test 2, plugin fallback type should be PLUGIN_CLICK_TO_PLAY"
+  );
 
   // run the plugin
   await promisePlayObject("test");
@@ -58,7 +79,11 @@ add_task(async function() {
   await promiseUpdatePluginBindings(gTestBrowser);
 
   pluginInfo = await promiseForPluginInfo("test");
-  is(pluginInfo.displayedType, Ci.nsIObjectLoadingContent.TYPE_PLUGIN, "Test 3, plugin should have started");
+  is(
+    pluginInfo.displayedType,
+    Ci.nsIObjectLoadingContent.TYPE_PLUGIN,
+    "Test 3, plugin should have started"
+  );
   ok(pluginInfo.activated, "Test 4, plugin node should not be activated");
 
   await ContentTask.spawn(gTestBrowser, null, async function() {
@@ -73,10 +98,17 @@ add_task(async function() {
       pluginsDiffer = true;
     }
 
-     Assert.ok(pluginsDiffer, "Test 5, plugins differ.");
+    Assert.ok(pluginsDiffer, "Test 5, plugins differ.");
   });
 
   pluginInfo = await promiseForPluginInfo("test");
-  ok(pluginInfo.activated, "Test 6, Plugin should have retained activated state.");
-  is(pluginInfo.displayedType, Ci.nsIObjectLoadingContent.TYPE_PLUGIN, "Test 7, plugin should have started");
+  ok(
+    pluginInfo.activated,
+    "Test 6, Plugin should have retained activated state."
+  );
+  is(
+    pluginInfo.displayedType,
+    Ci.nsIObjectLoadingContent.TYPE_PLUGIN,
+    "Test 7, plugin should have started"
+  );
 });

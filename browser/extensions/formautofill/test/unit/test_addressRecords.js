@@ -80,18 +80,18 @@ const MERGE_TESTCASES = [
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
     },
     addressToMerge: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
   },
@@ -100,18 +100,18 @@ const MERGE_TESTCASES = [
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
     addressToMerge: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
     },
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
     noNeedToUpdate: true,
@@ -121,18 +121,18 @@ const MERGE_TESTCASES = [
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
     addressToMerge: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
     },
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
     strict: true,
@@ -143,93 +143,97 @@ const MERGE_TESTCASES = [
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
     },
     addressToMerge: {
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
   },
   {
-    description: "Merge an address with multi-line street-address in storage and single-line incoming one",
+    description:
+      "Merge an address with multi-line street-address in storage and single-line incoming one",
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue\nLine2",
-      "tel": "+16509030800",
+      tel: "+16509030800",
     },
     addressToMerge: {
       "street-address": "331 E. Evelyn Avenue Line2",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue\nLine2",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
   },
   {
-    description: "Merge an address with 3-line street-address in storage and 2-line incoming one",
+    description:
+      "Merge an address with 3-line street-address in storage and 2-line incoming one",
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
-      "tel": "+16509030800",
+      tel: "+16509030800",
     },
     addressToMerge: {
       "street-address": "331 E. Evelyn Avenue\nLine2 Line3",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
   },
   {
-    description: "Merge an address with single-line street-address in storage and multi-line incoming one",
+    description:
+      "Merge an address with single-line street-address in storage and multi-line incoming one",
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue Line2",
-      "tel": "+16509030800",
+      tel: "+16509030800",
     },
     addressToMerge: {
       "street-address": "331 E. Evelyn Avenue\nLine2",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue\nLine2",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
   },
   {
-    description: "Merge an address with 2-line street-address in storage and 3-line incoming one",
+    description:
+      "Merge an address with 2-line street-address in storage and 3-line incoming one",
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue\nLine2 Line3",
-      "tel": "+16509030800",
+      tel: "+16509030800",
     },
     addressToMerge: {
       "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
   },
@@ -238,26 +242,27 @@ const MERGE_TESTCASES = [
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
-      "tel": "+16509030800",
+      tel: "+16509030800",
     },
     addressToMerge: {
       "street-address": "331 E. Evelyn\nAvenue Line2\nLine3",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
   },
   {
-    description: "Merge an address with superfluous external and internal whitespace in the street-address",
+    description:
+      "Merge an address with superfluous external and internal whitespace in the street-address",
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
-      "tel": "+16509030800",
+      tel: "+16509030800",
     },
     addressToMerge: {
       "street-address": "  331 E. Evelyn\n  Avenue Line2\n  Line3  ",
@@ -266,7 +271,7 @@ const MERGE_TESTCASES = [
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
   },
@@ -275,7 +280,7 @@ const MERGE_TESTCASES = [
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
     },
     addressToMerge: {
       "street-address": "331 E.Evelyn Avenue",
@@ -284,7 +289,7 @@ const MERGE_TESTCASES = [
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
   },
@@ -293,7 +298,7 @@ const MERGE_TESTCASES = [
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
     },
     addressToMerge: {
       "street-address": "331.e.EVELYN AVENUE",
@@ -302,7 +307,7 @@ const MERGE_TESTCASES = [
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
   },
@@ -311,7 +316,7 @@ const MERGE_TESTCASES = [
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Straße",
-      "tel": "+16509030800",
+      tel: "+16509030800",
     },
     addressToMerge: {
       "street-address": "331.e.EVELYN Strasse",
@@ -320,7 +325,7 @@ const MERGE_TESTCASES = [
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Straße",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
   },
@@ -328,23 +333,26 @@ const MERGE_TESTCASES = [
     description: "Merge an address with a mIxEd-cAsE name",
     addressInStorage: {
       "given-name": "Timothy",
-      "tel": "+16509030800",
+      tel: "+16509030800",
     },
     addressToMerge: {
       "given-name": "TIMOTHY",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
     expectedAddress: {
       "given-name": "Timothy",
-      "tel": "+16509030800",
+      tel: "+16509030800",
       country: "US",
     },
   },
 ];
 
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Preferences",
+  "resource://gre/modules/Preferences.jsm"
+);
 
 let do_check_record_matches = (recordWithMeta, record) => {
   for (let key in record) {
@@ -366,15 +374,17 @@ add_task(async function test_initialize() {
   profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME);
 
   Assert.deepEqual(profileStorage._store.data, data);
-  for (let {_sync} of profileStorage._store.data.addresses) {
+  for (let { _sync } of profileStorage._store.data.addresses) {
     Assert.ok(_sync);
     Assert.equal(_sync.changeCounter, 1);
   }
 });
 
 add_task(async function test_getAll() {
-  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
-                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, [
+    TEST_ADDRESS_1,
+    TEST_ADDRESS_2,
+  ]);
 
   let addresses = await profileStorage.addresses.getAll();
 
@@ -388,19 +398,24 @@ add_task(async function test_getAll() {
   Assert.equal(addresses[0]["address-line2"], "MIT Room 32-G524");
 
   // Test with rawData set.
-  addresses = await profileStorage.addresses.getAll({rawData: true});
+  addresses = await profileStorage.addresses.getAll({ rawData: true });
   Assert.equal(addresses[0].name, undefined);
   Assert.equal(addresses[0]["address-line1"], undefined);
   Assert.equal(addresses[0]["address-line2"], undefined);
 
   // Modifying output shouldn't affect the storage.
   addresses[0].organization = "test";
-  do_check_record_matches((await profileStorage.addresses.getAll())[0], TEST_ADDRESS_1);
+  do_check_record_matches(
+    (await profileStorage.addresses.getAll())[0],
+    TEST_ADDRESS_1
+  );
 });
 
 add_task(async function test_get() {
-  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
-                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, [
+    TEST_ADDRESS_1,
+    TEST_ADDRESS_2,
+  ]);
 
   let addresses = await profileStorage.addresses.getAll();
   let guid = addresses[0].guid;
@@ -409,21 +424,26 @@ add_task(async function test_get() {
   do_check_record_matches(address, TEST_ADDRESS_1);
 
   // Test with rawData set.
-  address = await profileStorage.addresses.get(guid, {rawData: true});
+  address = await profileStorage.addresses.get(guid, { rawData: true });
   Assert.equal(address.name, undefined);
   Assert.equal(address["address-line1"], undefined);
   Assert.equal(address["address-line2"], undefined);
 
   // Modifying output shouldn't affect the storage.
   address.organization = "test";
-  do_check_record_matches(await profileStorage.addresses.get(guid), TEST_ADDRESS_1);
+  do_check_record_matches(
+    await profileStorage.addresses.get(guid),
+    TEST_ADDRESS_1
+  );
 
   Assert.equal(await profileStorage.addresses.get("INVALID_GUID"), null);
 });
 
 add_task(async function test_add() {
-  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
-                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, [
+    TEST_ADDRESS_1,
+    TEST_ADDRESS_2,
+  ]);
 
   let addresses = await profileStorage.addresses.getAll();
 
@@ -450,14 +470,20 @@ add_task(async function test_add() {
   address = profileStorage.addresses._data[3];
   Assert.equal(address.email, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD.email);
 
-  await Assert.rejects(profileStorage.addresses.add(TEST_ADDRESS_WITH_INVALID_FIELD),
-    /"invalidField" is not a valid field\./);
+  await Assert.rejects(
+    profileStorage.addresses.add(TEST_ADDRESS_WITH_INVALID_FIELD),
+    /"invalidField" is not a valid field\./
+  );
 
-  await Assert.rejects(profileStorage.addresses.add({}),
-    /Record contains no valid field\./);
+  await Assert.rejects(
+    profileStorage.addresses.add({}),
+    /Record contains no valid field\./
+  );
 
-  await Assert.rejects(profileStorage.addresses.add(TEST_ADDRESS_EMPTY_AFTER_NORMALIZE),
-    /Record contains no valid field\./);
+  await Assert.rejects(
+    profileStorage.addresses.add(TEST_ADDRESS_EMPTY_AFTER_NORMALIZE),
+    /Record contains no valid field\./
+  );
 });
 
 add_task(async function test_update() {
@@ -471,8 +497,10 @@ add_task(async function test_update() {
     Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
   });
 
-  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
-                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, [
+    TEST_ADDRESS_1,
+    TEST_ADDRESS_2,
+  ]);
 
   let addresses = await profileStorage.addresses.getAll();
   let guid = addresses[1].guid;
@@ -494,7 +522,7 @@ add_task(async function test_update() {
 
   profileStorage.addresses.pullSyncChanges(); // force sync metadata, which we check below.
 
-  let address = await profileStorage.addresses.get(guid, {rawData: true});
+  let address = await profileStorage.addresses.get(guid, { rawData: true });
 
   Assert.equal(address.country, undefined);
   Assert.notEqual(address.timeLastModified, timeLastModified);
@@ -502,13 +530,17 @@ add_task(async function test_update() {
   Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 
   // Test preserveOldProperties parameter and field with empty string.
-  await profileStorage.addresses.update(guid, TEST_ADDRESS_WITH_EMPTY_FIELD, true);
+  await profileStorage.addresses.update(
+    guid,
+    TEST_ADDRESS_WITH_EMPTY_FIELD,
+    true
+  );
   await onChanged;
   await profileStorage._saveImmediately();
 
   profileStorage.addresses.pullSyncChanges(); // force sync metadata, which we check below.
 
-  address = await profileStorage.addresses.get(guid, {rawData: true});
+  address = await profileStorage.addresses.get(guid, { rawData: true });
 
   Assert.equal(address["given-name"], "Tim");
   Assert.equal(address["family-name"], "Berners");
@@ -518,44 +550,65 @@ add_task(async function test_update() {
   Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 2);
 
   // Empty string should be deleted while updating.
-  await profileStorage.addresses.update(profileStorage.addresses._data[0].guid, TEST_ADDRESS_WITH_EMPTY_FIELD);
+  await profileStorage.addresses.update(
+    profileStorage.addresses._data[0].guid,
+    TEST_ADDRESS_WITH_EMPTY_FIELD
+  );
   address = profileStorage.addresses._data[0];
   Assert.equal(address.name, TEST_ADDRESS_WITH_EMPTY_FIELD.name);
   Assert.equal(address["street-address"], undefined);
 
   // Empty computed fields shouldn't cause any problem.
-  await profileStorage.addresses.update(profileStorage.addresses._data[0].guid, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, false);
+  await profileStorage.addresses.update(
+    profileStorage.addresses._data[0].guid,
+    TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD,
+    false
+  );
   address = profileStorage.addresses._data[0];
   Assert.equal(address.email, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD.email);
-  await profileStorage.addresses.update(profileStorage.addresses._data[1].guid, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, true);
+  await profileStorage.addresses.update(
+    profileStorage.addresses._data[1].guid,
+    TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD,
+    true
+  );
   address = profileStorage.addresses._data[1];
   Assert.equal(address.email, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD.email);
 
-  await Assert.rejects(profileStorage.addresses.update("INVALID_GUID", TEST_ADDRESS_3),
+  await Assert.rejects(
+    profileStorage.addresses.update("INVALID_GUID", TEST_ADDRESS_3),
     /No matching record\./
   );
 
-  await Assert.rejects(profileStorage.addresses.update(guid, TEST_ADDRESS_WITH_INVALID_FIELD),
+  await Assert.rejects(
+    profileStorage.addresses.update(guid, TEST_ADDRESS_WITH_INVALID_FIELD),
     /"invalidField" is not a valid field\./
   );
 
-  await Assert.rejects(profileStorage.addresses.update(guid, {}),
+  await Assert.rejects(
+    profileStorage.addresses.update(guid, {}),
     /Record contains no valid field\./
   );
 
-  await Assert.rejects(profileStorage.addresses.update(guid, TEST_ADDRESS_EMPTY_AFTER_NORMALIZE),
+  await Assert.rejects(
+    profileStorage.addresses.update(guid, TEST_ADDRESS_EMPTY_AFTER_NORMALIZE),
     /Record contains no valid field\./
   );
 
   profileStorage.addresses.update(guid, TEST_ADDRESS_2);
-  await Assert.rejects(profileStorage.addresses.update(guid, TEST_ADDRESS_EMPTY_AFTER_UPDATE_ADDRESS_2),
+  await Assert.rejects(
+    profileStorage.addresses.update(
+      guid,
+      TEST_ADDRESS_EMPTY_AFTER_UPDATE_ADDRESS_2
+    ),
     /Record contains no valid field\./
   );
 });
 
 add_task(async function test_notifyUsed() {
-  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
-                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, [
+    TEST_ADDRESS_1,
+    TEST_ADDRESS_2,
+  ]);
 
   let addresses = await profileStorage.addresses.getAll();
   let guid = addresses[1].guid;
@@ -565,7 +618,8 @@ add_task(async function test_notifyUsed() {
   profileStorage.addresses.pullSyncChanges(); // force sync metadata, which we check below.
   let changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
 
-  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
+  let onChanged = TestUtils.topicObserved(
+    "formautofill-storage-changed",
     (subject, data) =>
       data == "notifyUsed" &&
       subject.wrappedJSObject.guid == guid &&
@@ -581,16 +635,22 @@ add_task(async function test_notifyUsed() {
   Assert.notEqual(address.timeLastUsed, timeLastUsed);
 
   // Using a record should not bump its change counter.
-  Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid),
-    changeCounter);
+  Assert.equal(
+    getSyncChangeCounter(profileStorage.addresses, guid),
+    changeCounter
+  );
 
-  Assert.throws(() => profileStorage.addresses.notifyUsed("INVALID_GUID"),
-    /No matching record\./);
+  Assert.throws(
+    () => profileStorage.addresses.notifyUsed("INVALID_GUID"),
+    /No matching record\./
+  );
 });
 
 add_task(async function test_remove() {
-  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
-                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, [
+    TEST_ADDRESS_1,
+    TEST_ADDRESS_2,
+  ]);
 
   let addresses = await profileStorage.addresses.getAll();
   let guid = addresses[1].guid;
@@ -615,11 +675,12 @@ add_task(async function test_remove() {
   Assert.equal(await profileStorage.addresses.get(guid), null);
 });
 
-MERGE_TESTCASES.forEach((testcase) => {
+MERGE_TESTCASES.forEach(testcase => {
   add_task(async function test_merge() {
     info("Starting testcase: " + testcase.description);
-    let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
-                                                  [testcase.addressInStorage]);
+    let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, [
+      testcase.addressInStorage,
+    ]);
     let addresses = await profileStorage.addresses.getAll();
     let guid = addresses[0].guid;
     let timeLastModified = addresses[0].timeLastModified;
@@ -637,9 +698,13 @@ MERGE_TESTCASES.forEach((testcase) => {
     profileStorage.addresses.pullSyncChanges();
     Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 
-    Assert.ok(profileStorage.addresses.mergeIfPossible(guid,
-                                                       testcase.addressToMerge,
-                                                       testcase.strict));
+    Assert.ok(
+      profileStorage.addresses.mergeIfPossible(
+        guid,
+        testcase.addressToMerge,
+        testcase.strict
+      )
+    );
     if (!testcase.noNeedToUpdate) {
       await onMerged;
     }
@@ -662,7 +727,9 @@ MERGE_TESTCASES.forEach((testcase) => {
 });
 
 add_task(async function test_merge_same_address() {
-  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, [TEST_ADDRESS_1]);
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, [
+    TEST_ADDRESS_1,
+  ]);
   let addresses = await profileStorage.addresses.getAll();
   let guid = addresses[0].guid;
   let timeLastModified = addresses[0].timeLastModified;
@@ -680,8 +747,10 @@ add_task(async function test_merge_same_address() {
 });
 
 add_task(async function test_merge_unable_merge() {
-  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
-                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, [
+    TEST_ADDRESS_1,
+    TEST_ADDRESS_2,
+  ]);
 
   let addresses = await profileStorage.addresses.getAll();
   let guid = addresses[1].guid;
@@ -691,45 +760,85 @@ add_task(async function test_merge_unable_merge() {
   Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 
   // Unable to merge because of conflict
-  Assert.equal(await profileStorage.addresses.mergeIfPossible(guid, TEST_ADDRESS_3), false);
+  Assert.equal(
+    await profileStorage.addresses.mergeIfPossible(guid, TEST_ADDRESS_3),
+    false
+  );
 
   // Unable to merge because no overlap
-  Assert.equal(await profileStorage.addresses.mergeIfPossible(guid, TEST_ADDRESS_4), false);
+  Assert.equal(
+    await profileStorage.addresses.mergeIfPossible(guid, TEST_ADDRESS_4),
+    false
+  );
 
   // Unable to strict merge because subset with empty string
   let subset = Object.assign({}, TEST_ADDRESS_1);
   subset.organization = "";
-  Assert.equal(await profileStorage.addresses.mergeIfPossible(guid, subset, true), false);
+  Assert.equal(
+    await profileStorage.addresses.mergeIfPossible(guid, subset, true),
+    false
+  );
 
   // Shouldn't bump the change counter
   Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 });
 
 add_task(async function test_mergeToStorage() {
-  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
-                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, [
+    TEST_ADDRESS_1,
+    TEST_ADDRESS_2,
+  ]);
   // Merge an address to storage
   let anotherAddress = profileStorage.addresses._clone(TEST_ADDRESS_2);
   await profileStorage.addresses.add(anotherAddress);
   anotherAddress.email = "timbl@w3.org";
-  Assert.equal((await profileStorage.addresses.mergeToStorage(anotherAddress)).length, 2);
+  Assert.equal(
+    (await profileStorage.addresses.mergeToStorage(anotherAddress)).length,
+    2
+  );
 
-  Assert.equal((await profileStorage.addresses.getAll())[1].email, anotherAddress.email);
-  Assert.equal((await profileStorage.addresses.getAll())[2].email, anotherAddress.email);
+  Assert.equal(
+    (await profileStorage.addresses.getAll())[1].email,
+    anotherAddress.email
+  );
+  Assert.equal(
+    (await profileStorage.addresses.getAll())[2].email,
+    anotherAddress.email
+  );
 
   // Empty computed fields shouldn't cause any problem.
-  Assert.equal((await profileStorage.addresses.mergeToStorage(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD)).length, 3);
+  Assert.equal(
+    (await profileStorage.addresses.mergeToStorage(
+      TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD
+    )).length,
+    3
+  );
 });
 
 add_task(async function test_mergeToStorage_strict() {
-  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
-                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, [
+    TEST_ADDRESS_1,
+    TEST_ADDRESS_2,
+  ]);
   // Try to merge a subset with empty string
   let anotherAddress = profileStorage.addresses._clone(TEST_ADDRESS_1);
   anotherAddress.email = "";
-  Assert.equal((await profileStorage.addresses.mergeToStorage(anotherAddress, true)).length, 0);
-  Assert.equal((await profileStorage.addresses.getAll())[0].email, TEST_ADDRESS_1.email);
+  Assert.equal(
+    (await profileStorage.addresses.mergeToStorage(anotherAddress, true))
+      .length,
+    0
+  );
+  Assert.equal(
+    (await profileStorage.addresses.getAll())[0].email,
+    TEST_ADDRESS_1.email
+  );
 
   // Empty computed fields shouldn't cause any problem.
-  Assert.equal((await profileStorage.addresses.mergeToStorage(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, true)).length, 1);
+  Assert.equal(
+    (await profileStorage.addresses.mergeToStorage(
+      TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD,
+      true
+    )).length,
+    1
+  );
 });

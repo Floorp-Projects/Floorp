@@ -4,16 +4,17 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const {
-  SERVICE_WORKER_FETCH_STATES,
-} = require("../../constants");
+const { SERVICE_WORKER_FETCH_STATES } = require("../../constants");
 
 const FieldPair = createFactory(require("./FieldPair"));
 
@@ -35,8 +36,8 @@ class WorkerDetail extends PureComponent {
     const { fetch } = this.props.target.details;
     const isListening = fetch === SERVICE_WORKER_FETCH_STATES.LISTENING;
     const localizationId = isListening
-                    ? "about-debugging-worker-fetch-listening"
-                    : "about-debugging-worker-fetch-not-listening";
+      ? "about-debugging-worker-fetch-listening"
+      : "about-debugging-worker-fetch-not-listening";
 
     return Localized(
       {
@@ -46,15 +47,14 @@ class WorkerDetail extends PureComponent {
           value: true,
         },
       },
-      FieldPair(
-        {
-          className: isListening ?
-            "qa-worker-fetch-listening" : "qa-worker-fetch-not-listening",
-          label: "Fetch",
-          slug: "fetch",
-          value: "about-debugging-worker-fetch-value",
-        }
-      )
+      FieldPair({
+        className: isListening
+          ? "qa-worker-fetch-listening"
+          : "qa-worker-fetch-not-listening",
+        label: "Fetch",
+        slug: "fetch",
+        value: "about-debugging-worker-fetch-value",
+      })
     );
   }
 
@@ -66,18 +66,16 @@ class WorkerDetail extends PureComponent {
         id: "about-debugging-worker-push-service",
         attrs: { label: true },
       },
-      FieldPair(
-        {
-          slug: "push-service",
-          label: "Push Service",
-          value: dom.span(
-            {
-              className: "qa-worker-push-service-value",
-            },
-            pushServiceEndpoint,
-          ),
-        }
-      ),
+      FieldPair({
+        slug: "push-service",
+        label: "Push Service",
+        value: dom.span(
+          {
+            className: "qa-worker-push-service-value",
+          },
+          pushServiceEndpoint
+        ),
+      })
     );
   }
 
@@ -89,13 +87,11 @@ class WorkerDetail extends PureComponent {
         id: "about-debugging-worker-scope",
         attrs: { label: true },
       },
-      FieldPair(
-        {
-          slug: "scope",
-          label: "Scope",
-          value: scope,
-        }
-      ),
+      FieldPair({
+        slug: "scope",
+        label: "Scope",
+        value: scope,
+      })
     );
   }
 
@@ -106,12 +102,13 @@ class WorkerDetail extends PureComponent {
 
     return dom.dl(
       {
-        className: "debug-target-item__detail" +
-                   (isEmptyList ? " debug-target-item__detail--empty" : ""),
+        className:
+          "debug-target-item__detail" +
+          (isEmptyList ? " debug-target-item__detail--empty" : ""),
       },
       pushServiceEndpoint ? this.renderPushService() : null,
       fetch ? this.renderFetch() : null,
-      scope ? this.renderScope() : null,
+      scope ? this.renderScope() : null
     );
   }
 }

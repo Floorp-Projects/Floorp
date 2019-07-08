@@ -93,8 +93,10 @@ function PieTableChart(node, pie, table) {
  *           - "mouseout", when the mouse leaves a slice or a row
  *           - "click", when the mouse enters a slice or a row
  */
-function createPieTableChart(document,
-                             { title, diameter, data, strings, totals, sorted, header }) {
+function createPieTableChart(
+  document,
+  { title, diameter, data, strings, totals, sorted, header }
+) {
   if (data && sorted) {
     data = data.slice().sort((a, b) => +(a.size < b.size));
   }
@@ -119,36 +121,36 @@ function createPieTableChart(document,
 
   const proxy = new PieTableChart(container, pie, table);
 
-  pie.on("click", (item) => {
+  pie.on("click", item => {
     proxy.emit("click", item);
   });
 
-  table.on("click", (item) => {
+  table.on("click", item => {
     proxy.emit("click", item);
   });
 
-  pie.on("mouseover", (item) => {
+  pie.on("mouseover", item => {
     proxy.emit("mouseover", item);
     if (table.rows.has(item)) {
       table.rows.get(item).setAttribute("focused", "");
     }
   });
 
-  pie.on("mouseout", (item) => {
+  pie.on("mouseout", item => {
     proxy.emit("mouseout", item);
     if (table.rows.has(item)) {
       table.rows.get(item).removeAttribute("focused");
     }
   });
 
-  table.on("mouseover", (item) => {
+  table.on("mouseover", item => {
     proxy.emit("mouseover", item);
     if (pie.slices.has(item)) {
       pie.slices.get(item).setAttribute("focused", "");
     }
   });
 
-  table.on("mouseout", (item) => {
+  table.on("mouseout", item => {
     proxy.emit("mouseout", item);
     if (pie.slices.has(item)) {
       pie.slices.get(item).removeAttribute("focused");
@@ -185,7 +187,10 @@ function createPieTableChart(document,
  *           - "mouseout", when the mouse leaves a slice
  *           - "click", when the mouse clicks a slice
  */
-function createPieChart(document, { data, width, height, centerX, centerY, radius }) {
+function createPieChart(
+  document,
+  { data, width, height, centerX, centerY, radius }
+) {
   height = height || width;
   centerX = centerX || width / 2;
   centerY = centerY || height / 2;
@@ -206,7 +211,10 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
   }
 
   const container = document.createElementNS(SVG_NS, "svg");
-  container.setAttribute("class", "generic-chart-container pie-chart-container");
+  container.setAttribute(
+    "class",
+    "generic-chart-container pie-chart-container"
+  );
   container.setAttribute("pack", "center");
   container.setAttribute("flex", "1");
   container.setAttribute("width", width);
@@ -218,9 +226,9 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
   const proxy = new PieChart(container);
 
   const total = data.reduce((acc, e) => acc + e.size, 0);
-  const angles = data.map(e => e.size / total * (TAU - EPSILON));
-  const largest = data.reduce((a, b) => a.size > b.size ? a : b);
-  const smallest = data.reduce((a, b) => a.size < b.size ? a : b);
+  const angles = data.map(e => (e.size / total) * (TAU - EPSILON));
+  const largest = data.reduce((a, b) => (a.size > b.size ? a : b));
+  const smallest = data.reduce((a, b) => (a.size < b.size ? a : b));
 
   const textDistance = radius / NAMED_SLICE_TEXT_DISTANCE_RATIO;
   const translateDistance = radius / HOVERED_SLICE_TRANSLATE_DISTANCE_RATIO;
@@ -248,13 +256,28 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
     const pathNode = document.createElementNS(SVG_NS, "path");
     pathNode.setAttribute("class", "pie-chart-slice chart-colored-blob");
     pathNode.setAttribute("name", sliceInfo.label);
-    pathNode.setAttribute("d",
-      " M " + centerX + "," + centerY +
-      " L " + x2 + "," + y2 +
-      " A " + radius + "," + radius +
-      " 0 " + largeArcFlag +
-      " 1 " + x1 + "," + y1 +
-      " Z");
+    pathNode.setAttribute(
+      "d",
+      " M " +
+        centerX +
+        "," +
+        centerY +
+        " L " +
+        x2 +
+        "," +
+        y2 +
+        " A " +
+        radius +
+        "," +
+        radius +
+        " 0 " +
+        largeArcFlag +
+        " 1 " +
+        x1 +
+        "," +
+        y1 +
+        " Z"
+    );
 
     if (sliceInfo == largest) {
       pathNode.setAttribute("largest", "");
@@ -265,7 +288,8 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
 
     const hoverX = translateDistance * Math.sin(midAngle);
     const hoverY = -translateDistance * Math.cos(midAngle);
-    const hoverTransform = "transform: translate(" + hoverX + "px, " + hoverY + "px)";
+    const hoverTransform =
+      "transform: translate(" + hoverX + "px, " + hoverY + "px)";
     pathNode.setAttribute("style", data.length > 1 ? hoverTransform : "");
 
     proxy.slices.set(sliceInfo, pathNode);

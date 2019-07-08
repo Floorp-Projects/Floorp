@@ -18,27 +18,39 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, boxmodel} = await openLayoutView();
+  const { inspector, boxmodel } = await openLayoutView();
 
   await selectNode("#mydiv", inspector);
-  let editPositionButton = boxmodel.document.querySelector(".layout-geometry-editor");
+  let editPositionButton = boxmodel.document.querySelector(
+    ".layout-geometry-editor"
+  );
 
-  ok(isNodeVisible(editPositionButton), "Edit Position button is visible initially");
+  ok(
+    isNodeVisible(editPositionButton),
+    "Edit Position button is visible initially"
+  );
 
   const positionLeftTextbox = boxmodel.document.querySelector(
-      ".boxmodel-editable[title=position-left]"
+    ".boxmodel-editable[title=position-left]"
   );
   ok(isNodeVisible(positionLeftTextbox), "Position-left edit box exists");
 
   info("Change the value of position-left and submit");
   const onUpdate = waitForUpdate(inspector);
-  EventUtils.synthesizeMouseAtCenter(positionLeftTextbox, {},
-    boxmodel.document.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    positionLeftTextbox,
+    {},
+    boxmodel.document.defaultView
+  );
   EventUtils.synthesizeKey("8", {}, boxmodel.document.defaultView);
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
   await onUpdate;
-  editPositionButton = boxmodel.document.querySelector(".layout-geometry-editor");
-  ok(isNodeVisible(editPositionButton),
-    "Edit Position button is still visible after layout change");
+  editPositionButton = boxmodel.document.querySelector(
+    ".layout-geometry-editor"
+  );
+  ok(
+    isNodeVisible(editPositionButton),
+    "Edit Position button is still visible after layout change"
+  );
 });

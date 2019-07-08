@@ -4,7 +4,9 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const PREF_LOGLEVEL = "browser.policies.loglevel";
 
@@ -41,7 +43,9 @@ var macOSPoliciesParser = {
   },
 
   removeUnknownPolicies(policies) {
-    let { schema } = ChromeUtils.import("resource:///modules/policies/schema.jsm");
+    let { schema } = ChromeUtils.import(
+      "resource:///modules/policies/schema.jsm"
+    );
 
     for (let policyName of Object.keys(policies)) {
       if (!schema.properties.hasOwnProperty(policyName)) {

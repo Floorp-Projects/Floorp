@@ -9,8 +9,9 @@
 // AnimationPlayerFront should be sent, and the old one should be removed.
 
 add_task(async function() {
-  const {target, walker, animations} =
-    await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
+  const { target, walker, animations } = await initAnimationsFrontForUrl(
+    MAIN_DOMAIN + "animation.html"
+  );
 
   info("Retrieve the test node");
   const node = await walker.querySelector(walker.rootNode, ".all-transitions");
@@ -44,10 +45,16 @@ add_task(async function() {
   reportedMutations = await onMutations;
 
   is(reportedMutations.length, 4, "4 new mutation events were received");
-  is(reportedMutations.filter(m => m.type === "removed").length, 2,
-    "2 'removed' events were sent (for the old transitions)");
-  is(reportedMutations.filter(m => m.type === "added").length, 2,
-    "2 'added' events were sent (for the new transitions)");
+  is(
+    reportedMutations.filter(m => m.type === "removed").length,
+    2,
+    "2 'removed' events were sent (for the old transitions)"
+  );
+  is(
+    reportedMutations.filter(m => m.type === "added").length,
+    2,
+    "2 'added' events were sent (for the new transitions)"
+  );
 
   await target.destroy();
   gBrowser.removeCurrentTab();
@@ -58,8 +65,13 @@ function expectMutationEvents(animationsFront, nbOfEvents) {
     let reportedMutations = [];
     function onMutations(mutations) {
       reportedMutations = [...reportedMutations, ...mutations];
-      info("Received " + reportedMutations.length + " mutation events, " +
-           "expecting " + nbOfEvents);
+      info(
+        "Received " +
+          reportedMutations.length +
+          " mutation events, " +
+          "expecting " +
+          nbOfEvents
+      );
       if (reportedMutations.length === nbOfEvents) {
         animationsFront.off("mutations", onMutations);
         resolve(reportedMutations);
@@ -76,7 +88,11 @@ async function waitForEnd(animationFront) {
   while (playState !== "finished") {
     const state = await animationFront.getCurrentState();
     playState = state.playState;
-    info("Wait for transition " + animationFront.state.name +
-         " to finish, playState=" + playState);
+    info(
+      "Wait for transition " +
+        animationFront.state.name +
+        " to finish, playState=" +
+        playState
+    );
   }
 }

@@ -3,8 +3,10 @@ const HELPER_PAGE_URL =
 const HELPER_PAGE_ORIGIN = "http://example.com/";
 
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
-Services.scriptloader.loadSubScript(testDir + "/helper_localStorage_e10s.js",
-                                    this);
+Services.scriptloader.loadSubScript(
+  testDir + "/helper_localStorage_e10s.js",
+  this
+);
 
 /**
  * Wait for a LocalStorage flush to occur.  This notification can occur as a
@@ -14,7 +16,7 @@ Services.scriptloader.loadSubScript(testDir + "/helper_localStorage_e10s.js",
  * - Us generating a "domstorage-test-flush-force" observer notification.
  */
 
- /* import-globals-from helper_localStorage_e10s.js */
+/* import-globals-from helper_localStorage_e10s.js */
 
 function waitForLocalStorageFlush() {
   if (Services.lsm.nextGenLocalStorageEnabled) {
@@ -70,13 +72,16 @@ function triggerAndWaitForLocalStorageFlush() {
  * like asking for intermittent failures.
  */
 function clearOriginStorageEnsuringNoPreload() {
-  let principal =
-    Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
-      HELPER_PAGE_ORIGIN);
+  let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+    HELPER_PAGE_ORIGIN
+  );
 
   if (Services.lsm.nextGenLocalStorageEnabled) {
-    let request =
-      Services.qms.clearStoragesForPrincipal(principal, "default", "ls");
+    let request = Services.qms.clearStoragesForPrincipal(
+      principal,
+      "default",
+      "ls"
+    );
     let promise = new Promise(resolve => {
       request.callback = () => {
         resolve();
@@ -88,7 +93,12 @@ function clearOriginStorageEnsuringNoPreload() {
   // We want to use createStorage to force the cache to be created so we can
   // issue the clear.  It's possible for getStorage to return false but for the
   // origin preload hash to still have our origin in it.
-  let storage = Services.domStorageManager.createStorage(null, principal, principal, "");
+  let storage = Services.domStorageManager.createStorage(
+    null,
+    principal,
+    principal,
+    ""
+  );
   storage.clear();
 
   // We also need to trigger a flush os that mOriginsHavingData gets updated.
@@ -101,14 +111,19 @@ async function verifyTabPreload(knownTab, expectStorageExists) {
     knownTab.tab.linkedBrowser,
     HELPER_PAGE_ORIGIN,
     function(origin) {
-      let principal =
-        Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
-          origin);
+      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+        origin
+      );
       if (Services.lsm.nextGenLocalStorageEnabled) {
         return Services.lsm.isPreloaded(principal);
       }
-      return !!Services.domStorageManager.getStorage(null, principal, principal);
-    });
+      return !!Services.domStorageManager.getStorage(
+        null,
+        principal,
+        principal
+      );
+    }
+  );
   is(storageExists, expectStorageExists, "Storage existence === preload");
 }
 
@@ -122,7 +137,8 @@ async function mutateTabStorage(knownTab, mutations, sentinelValue) {
     { mutations, sentinelValue },
     function(args) {
       return content.wrappedJSObject.mutateStorage(Cu.cloneInto(args, content));
-    });
+    }
+  );
 }
 
 /**
@@ -131,12 +147,11 @@ async function mutateTabStorage(knownTab, mutations, sentinelValue) {
  * check and assert the recorded events.
  */
 async function recordTabStorageEvents(knownTab, sentinelValue) {
-  await ContentTask.spawn(
-    knownTab.tab.linkedBrowser,
-    sentinelValue,
-    function(sentinelValue) {
-      return content.wrappedJSObject.listenForStorageEvents(sentinelValue);
-    });
+  await ContentTask.spawn(knownTab.tab.linkedBrowser, sentinelValue, function(
+    sentinelValue
+  ) {
+    return content.wrappedJSObject.listenForStorageEvents(sentinelValue);
+  });
 }
 
 /**
@@ -157,7 +172,8 @@ async function verifyTabStorageState(knownTab, expectedState, maybeSentinel) {
     maybeSentinel,
     function(maybeSentinel) {
       return content.wrappedJSObject.getStorageState(maybeSentinel);
-    });
+    }
+  );
 
   for (let [expectedKey, expectedValue] of Object.entries(expectedState)) {
     ok(actualState.hasOwnProperty(expectedKey), "key present: " + expectedKey);
@@ -184,7 +200,8 @@ async function verifyTabStorageEvents(knownTab, expectedEvents) {
     {},
     function() {
       return content.wrappedJSObject.returnAndClearStorageEvents();
-    });
+    }
+  );
 
   is(actualEvents.length, expectedEvents.length, "right number of events");
   for (let i = 0; i < actualEvents.length; i++) {
@@ -278,14 +295,26 @@ add_task(async function() {
 
   // - Open tabs.  Don't configure any of them yet.
   const knownTabs = new KnownTabs();
-  const writerTab = await openTestTabInOwnProcess(HELPER_PAGE_URL, "writer",
-    knownTabs);
-  const listenerTab = await openTestTabInOwnProcess(HELPER_PAGE_URL, "listener",
-    knownTabs);
-  const readerTab = await openTestTabInOwnProcess(HELPER_PAGE_URL, "reader",
-    knownTabs);
-  const lateWriteThenListenTab = await openTestTabInOwnProcess(HELPER_PAGE_URL,
-    "lateWriteThenListen", knownTabs);
+  const writerTab = await openTestTabInOwnProcess(
+    HELPER_PAGE_URL,
+    "writer",
+    knownTabs
+  );
+  const listenerTab = await openTestTabInOwnProcess(
+    HELPER_PAGE_URL,
+    "listener",
+    knownTabs
+  );
+  const readerTab = await openTestTabInOwnProcess(
+    HELPER_PAGE_URL,
+    "reader",
+    knownTabs
+  );
+  const lateWriteThenListenTab = await openTestTabInOwnProcess(
+    HELPER_PAGE_URL,
+    "lateWriteThenListen",
+    knownTabs
+  );
 
   // Sanity check that preloading did not occur in the tabs.
   await verifyTabPreload(writerTab, false);
@@ -335,9 +364,11 @@ add_task(async function() {
   // recordTabStorageEvents to listen for the given sentinel.  The state check
   // then does not need to do a sentinel check.
   await verifyTabStorageEvents(
-    listenerTab, initialWriteMutations, initialSentinel);
-  await verifyTabStorageState(
-    listenerTab, initialWriteState, noSentinelCheck);
+    listenerTab,
+    initialWriteMutations,
+    initialSentinel
+  );
+  await verifyTabStorageState(listenerTab, initialWriteState, noSentinelCheck);
   // We expect the reader tab to retrieve the current localStorage state from
   // the database.  Because of the above checks, we are confident that the
   // writes have hit PBackground and therefore that the (synchronous) state
@@ -368,14 +399,20 @@ add_task(async function() {
   await recordTabStorageEvents(listenerTab, lateWriteSentinel);
 
   await mutateTabStorage(
-    lateWriteThenListenTab, lateWriteMutations, lateWriteSentinel);
+    lateWriteThenListenTab,
+    lateWriteMutations,
+    lateWriteSentinel
+  );
 
   // Verify the writer tab saw the writes.  It has to wait for the sentinel to
   // appear before checking.
   await verifyTabStorageState(writerTab, lateWriteState, lateWriteSentinel);
   // Wait for the sentinel event before checking the events and then the state.
   await verifyTabStorageEvents(
-    listenerTab, lateWriteMutations, lateWriteSentinel);
+    listenerTab,
+    lateWriteMutations,
+    lateWriteSentinel
+  );
   await verifyTabStorageState(listenerTab, lateWriteState, noSentinelCheck);
   // We need to wait for the sentinel to show up for the reader.
   await verifyTabStorageState(readerTab, lateWriteState, lateWriteSentinel);
@@ -404,15 +441,24 @@ add_task(async function() {
   await verifyTabStorageState(writerTab, lastWriteState, noSentinelCheck);
   // Wait for the sentinel event to be received, then check.
   await verifyTabStorageEvents(
-    listenerTab, lastWriteMutations, lastWriteSentinel);
+    listenerTab,
+    lastWriteMutations,
+    lastWriteSentinel
+  );
   await verifyTabStorageState(listenerTab, lastWriteState, noSentinelCheck);
   // We need to wait for the sentinel to show up for the reader.
   await verifyTabStorageState(readerTab, lastWriteState, lastWriteSentinel);
   // Wait for the sentinel event to be received, then check.
   await verifyTabStorageEvents(
-    lateWriteThenListenTab, lastWriteMutations, lastWriteSentinel);
+    lateWriteThenListenTab,
+    lastWriteMutations,
+    lastWriteSentinel
+  );
   await verifyTabStorageState(
-    lateWriteThenListenTab, lastWriteState, noSentinelCheck);
+    lateWriteThenListenTab,
+    lastWriteState,
+    noSentinelCheck
+  );
 
   // - Force a LocalStorage DB flush so mOriginsHavingData is updated.
   // mOriginsHavingData is only updated when the storage thread runs its
@@ -425,8 +471,11 @@ add_task(async function() {
 
   // - Open a fresh tab and make sure it sees the precache/preload
   info("late open preload check");
-  const lateOpenSeesPreload = await openTestTabInOwnProcess(HELPER_PAGE_URL,
-    "lateOpenSeesPreload", knownTabs);
+  const lateOpenSeesPreload = await openTestTabInOwnProcess(
+    HELPER_PAGE_URL,
+    "lateOpenSeesPreload",
+    knownTabs
+  );
   await verifyTabPreload(lateOpenSeesPreload, true);
 
   // - Clean up.

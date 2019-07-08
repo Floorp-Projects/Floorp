@@ -9,7 +9,11 @@
  */
 add_task(async function() {
   let input = "i-definitely-dont-exist.example.com";
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank", false);
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank",
+    false
+  );
   let browser = tab.linkedBrowser;
   // Note: Waiting on content document not being hidden because new tab pages can be preloaded,
   // in which case no load events fire.
@@ -36,8 +40,12 @@ add_task(async function() {
  */
 add_task(async function() {
   let input = "To be or not to be-that is the question";
-  await SpecialPowers.pushPrefEnv({set: [["keyword.enabled", false]]});
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank", false);
+  await SpecialPowers.pushPrefEnv({ set: [["keyword.enabled", false]] });
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank",
+    false
+  );
   let browser = tab.linkedBrowser;
   // Note: Waiting on content document not being hidden because new tab pages can be preloaded,
   // in which case no load events fire.

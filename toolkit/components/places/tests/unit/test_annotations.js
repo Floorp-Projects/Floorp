@@ -6,7 +6,9 @@
 
 // Get annotation service
 try {
-  var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].getService(Ci.nsIAnnotationService);
+  var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].getService(
+    Ci.nsIAnnotationService
+  );
 } catch (ex) {
   do_throw("Could not get annotation service\n");
 }
@@ -36,15 +38,24 @@ add_task(async function test_execute() {
   });
 
   try {
-    annosvc.setItemAnnotation(testItemId, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_NEVER);
+    annosvc.setItemAnnotation(
+      testItemId,
+      testAnnoName,
+      testAnnoVal,
+      0,
+      annosvc.EXPIRE_NEVER
+    );
   } catch (ex) {
     do_throw("unable to add item annotation " + ex);
   }
 
   let updatedItem = await PlacesUtils.bookmarks.fetch(testItem.guid);
 
-  Assert.equal(updatedItem.lastModified.getTime(), earlierDate.getTime(),
-               "Setting an item annotation should not update lastModified");
+  Assert.equal(
+    updatedItem.lastModified.getTime(),
+    earlierDate.getTime(),
+    "Setting an item annotation should not update lastModified"
+  );
 
   try {
     var annoVal = annosvc.getItemAnnotation(testItemId, testAnnoName);
@@ -62,7 +73,13 @@ add_task(async function test_execute() {
   // test int32 anno type
   var int32Key = testAnnoName + "/types/Int32";
   var int32Val = 23;
-  annosvc.setItemAnnotation(testItemId, int32Key, int32Val, 0, annosvc.EXPIRE_NEVER);
+  annosvc.setItemAnnotation(
+    testItemId,
+    int32Key,
+    int32Val,
+    0,
+    annosvc.EXPIRE_NEVER
+  );
   Assert.ok(annosvc.itemHasAnnotation(testItemId, int32Key));
   let storedVal = annosvc.getItemAnnotation(testItemId, int32Key);
   Assert.ok(int32Val === storedVal);
@@ -70,7 +87,13 @@ add_task(async function test_execute() {
   // test int64 anno type
   var int64Key = testAnnoName + "/types/Int64";
   var int64Val = 4294967296;
-  annosvc.setItemAnnotation(testItemId, int64Key, int64Val, 0, annosvc.EXPIRE_NEVER);
+  annosvc.setItemAnnotation(
+    testItemId,
+    int64Key,
+    int64Val,
+    0,
+    annosvc.EXPIRE_NEVER
+  );
   Assert.ok(annosvc.itemHasAnnotation(testItemId, int64Key));
   storedVal = annosvc.getItemAnnotation(testItemId, int64Key);
   Assert.ok(int64Val === storedVal);
@@ -78,13 +101,25 @@ add_task(async function test_execute() {
   // test double anno type
   var doubleKey = testAnnoName + "/types/Double";
   var doubleVal = 0.000002342;
-  annosvc.setItemAnnotation(testItemId, doubleKey, doubleVal, 0, annosvc.EXPIRE_NEVER);
+  annosvc.setItemAnnotation(
+    testItemId,
+    doubleKey,
+    doubleVal,
+    0,
+    annosvc.EXPIRE_NEVER
+  );
   Assert.ok(annosvc.itemHasAnnotation(testItemId, doubleKey));
   storedVal = annosvc.getItemAnnotation(testItemId, doubleKey);
   Assert.ok(doubleVal === storedVal);
 
   // test annotation removal
-  annosvc.setItemAnnotation(testItemId, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_NEVER);
+  annosvc.setItemAnnotation(
+    testItemId,
+    testAnnoName,
+    testAnnoVal,
+    0,
+    annosvc.EXPIRE_NEVER
+  );
   // verify that removing an annotation does not update the last modified date
   testItem = await PlacesUtils.bookmarks.fetch(testItem.guid);
 
@@ -97,9 +132,14 @@ add_task(async function test_execute() {
   annosvc.removeItemAnnotation(testItemId, int32Key);
 
   testItem = await PlacesUtils.bookmarks.fetch(testItem.guid);
-  info("verify that removing an annotation does not update the last modified date");
-  Assert.equal(testItem.lastModified.getTime(), earlierDate.getTime(),
-               "Setting an item annotation should not update lastModified");
+  info(
+    "verify that removing an annotation does not update the last modified date"
+  );
+  Assert.equal(
+    testItem.lastModified.getTime(),
+    earlierDate.getTime(),
+    "Setting an item annotation should not update lastModified"
+  );
 
   // test that getItems/PagesWithAnnotation returns an empty array after
   // removing all items/pages which had the annotation set, see bug 380317.
@@ -112,7 +152,7 @@ add_task(async function test_execute() {
     try {
       annosvc.setItemAnnotation(id, "foo", "bar", 0, annosvc.EXPIRE_NEVER);
       do_throw("setItemAnnotation* should throw for invalid item id: " + id);
-    } catch (ex) { }
+    } catch (ex) {}
   }
 
   // setting an annotation with EXPIRE_HISTORY for an item should throw

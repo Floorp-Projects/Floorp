@@ -11,9 +11,11 @@ var EXPORTED_SYMBOLS = [
   "UnsupportedError",
 ];
 
-const {Log} = ChromeUtils.import("chrome://remote/content/Log.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Log } = ChromeUtils.import("chrome://remote/content/Log.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
@@ -31,15 +33,15 @@ class RemoteAgentError extends Error {
 
   notify() {
     Cu.reportError(this);
-    log.error(this.toString({stack: true}));
+    log.error(this.toString({ stack: true }));
   }
 
-  toString({stack = false} = {}) {
-    return RemoteAgentError.format(this, {stack});
+  toString({ stack = false } = {}) {
+    return RemoteAgentError.format(this, { stack });
   }
 
-  static format(e, {stack = false} = {}) {
-    return formatError(e, {stack});
+  static format(e, { stack = false } = {}) {
+    return formatError(e, { stack });
   }
 
   /**
@@ -88,7 +90,7 @@ class FatalError extends RemoteAgentError {
   }
 
   notify() {
-    log.fatal(this.toString({stack: true}));
+    log.fatal(this.toString({ stack: true }));
   }
 
   quit(mode = Ci.nsIAppStartup.eForceQuit) {
@@ -110,7 +112,7 @@ class UnknownMethodError extends RemoteAgentError {
   }
 }
 
-function formatError(error, {stack = false} = {}) {
+function formatError(error, { stack = false } = {}) {
   const els = [];
 
   els.push(error.name);
@@ -127,7 +129,7 @@ function formatError(error, {stack = false} = {}) {
 
     if (error.cause) {
       els.push("\n");
-      els.push("caused by: " + formatError(error.cause, {stack}));
+      els.push("caused by: " + formatError(error.cause, { stack }));
     }
   }
 

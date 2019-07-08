@@ -19,8 +19,11 @@
  *        True if the error matches the expected error.
  */
 const errorMatches = (error, expectedError, context) => {
-  if (typeof error === "object" && error !== null &&
-      !context.principal.subsumes(Cu.getObjectPrincipal(error))) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    !context.principal.subsumes(Cu.getObjectPrincipal(error))
+  ) {
     Cu.reportError("Error object belongs to the wrong scope.");
     return false;
   }
@@ -32,8 +35,11 @@ const errorMatches = (error, expectedError, context) => {
     return context.runSafeWithoutClone(expectedError, error);
   }
 
-  if (typeof error !== "object" || error == null ||
-      typeof error.message !== "string") {
+  if (
+    typeof error !== "object" ||
+    error == null ||
+    typeof error.message !== "string"
+  ) {
     return false;
   }
 
@@ -77,7 +83,7 @@ const toSource = value => {
 
 this.test = class extends ExtensionAPI {
   getAPI(context) {
-    const {extension} = context;
+    const { extension } = context;
 
     function getStack() {
       return new context.Error().stack.replace(/^/gm, "    ");
@@ -142,7 +148,14 @@ this.test = class extends ExtensionAPI {
           if (!equal && expected === actual) {
             actual += " (different)";
           }
-          extension.emit("test-eq", equal, String(msg), expected, actual, getStack());
+          extension.emit(
+            "test-eq",
+            equal,
+            String(msg),
+            expected,
+            actual,
+            getStack()
+          );
         },
 
         assertRejects(promise, expectedError, msg) {
@@ -153,15 +166,21 @@ this.test = class extends ExtensionAPI {
             msg = `: ${msg}`;
           }
 
-          return promise.then(result => {
-            assertTrue(false, `Promise resolved, expected rejection${msg}`);
-          }, error => {
-            let errorMessage = toSource(error && error.message);
+          return promise.then(
+            result => {
+              assertTrue(false, `Promise resolved, expected rejection${msg}`);
+            },
+            error => {
+              let errorMessage = toSource(error && error.message);
 
-            assertTrue(errorMatches(error, expectedError, context),
-                       `Promise rejected, expecting rejection to match ${toSource(expectedError)}, ` +
-                       `got ${errorMessage}${msg}`);
-          });
+              assertTrue(
+                errorMatches(error, expectedError, context),
+                `Promise rejected, expecting rejection to match ${toSource(
+                  expectedError
+                )}, got ${errorMessage}${msg}`
+              );
+            }
+          );
         },
 
         assertThrows(func, expectedError, msg) {
@@ -176,9 +195,12 @@ this.test = class extends ExtensionAPI {
           } catch (error) {
             let errorMessage = toSource(error && error.message);
 
-            assertTrue(errorMatches(error, expectedError, context),
-                       `Function threw, expecting error to match ${toSource(expectedError)}` +
-                       `got ${errorMessage}${msg}`);
+            assertTrue(
+              errorMatches(error, expectedError, context),
+              `Function threw, expecting error to match ${toSource(
+                expectedError
+              )}got ${errorMessage}${msg}`
+            );
           }
         },
 

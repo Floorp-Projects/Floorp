@@ -14,8 +14,9 @@ const MESSAGES = [
   "123 working",
 ];
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                  "test/mochitest/test-console-filter-by-regex-input.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-console-filter-by-regex-input.html";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -28,10 +29,7 @@ add_task(async function() {
   info("Filter out messages that begin with numbers");
   await setFilterInput(hud, "/^[0-9]/", MESSAGES[5]);
   filteredNodes = outputNode.querySelectorAll(".message");
-  checkFilteredMessages(filteredNodes, [
-    MESSAGES[0],
-    MESSAGES[5],
-  ], 2);
+  checkFilteredMessages(filteredNodes, [MESSAGES[0], MESSAGES[5]], 2);
 
   info("Filter out messages that are phone numbers");
   await setFilterInput(hud, "/\\d{3}\\-\\d{3}\\-\\d{4}/", MESSAGES[0]);
@@ -57,23 +55,24 @@ add_task(async function() {
   info("Filter out messages not ending with numbers");
   await setFilterInput(hud, "/[^0-9]$/", MESSAGES[5]);
   filteredNodes = outputNode.querySelectorAll(".message");
-  checkFilteredMessages(filteredNodes, [
-    MESSAGES[1],
-    MESSAGES[2],
-    MESSAGES[3],
-    MESSAGES[4],
-    MESSAGES[5],
-  ], 5);
+  checkFilteredMessages(
+    filteredNodes,
+    [MESSAGES[1], MESSAGES[2], MESSAGES[3], MESSAGES[4], MESSAGES[5]],
+    5
+  );
 });
 
 async function setFilterInput(hud, value, lastMessage) {
-  await setFilterState(hud, {text: value});
+  await setFilterState(hud, { text: value });
   await waitFor(() => findMessage(hud, lastMessage), null, 200);
 }
 
 function checkFilteredMessages(filteredNodes, expectedMessages, expectedCount) {
-  is(filteredNodes.length, expectedCount,
-    `${expectedCount} messages should be displayed`);
+  is(
+    filteredNodes.length,
+    expectedCount,
+    `${expectedCount} messages should be displayed`
+  );
 
   filteredNodes.forEach((node, id) => {
     const messageBody = node.querySelector(".message-body").textContent;

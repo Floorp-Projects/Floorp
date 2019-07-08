@@ -5,13 +5,17 @@
 "use strict";
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const AnimationDetailHeader = createFactory(require("./AnimationDetailHeader"));
-const AnimatedPropertyListContainer =
-  createFactory(require("./AnimatedPropertyListContainer"));
+const AnimatedPropertyListContainer = createFactory(
+  require("./AnimatedPropertyListContainer")
+);
 
 class AnimationDetailContainer extends PureComponent {
   static get propTypes() {
@@ -49,18 +53,14 @@ class AnimationDetailContainer extends PureComponent {
       {
         className: "animation-detail-container",
       },
-      animation ?
-        AnimationDetailHeader(
-          {
+      animation
+        ? AnimationDetailHeader({
             animation,
             setDetailVisibility,
-          }
-        )
-      :
-        null,
-      animation ?
-        AnimatedPropertyListContainer(
-          {
+          })
+        : null,
+      animation
+        ? AnimatedPropertyListContainer({
             addAnimationsCurrentTimeListener,
             animation,
             emitEventForTest,
@@ -71,10 +71,8 @@ class AnimationDetailContainer extends PureComponent {
             simulateAnimation,
             simulateAnimationForKeyframesProgressBar,
             timeScale,
-          }
-        )
-      :
-        null
+          })
+        : null
     );
   }
 }

@@ -21,9 +21,14 @@ add_task(async function test() {
   // Because there is debounce logic in ContentLinkHandler.jsm to reduce the
   // favicon loads, we have to wait some time before checking that icon was
   // stored properly.
-  await BrowserTestUtils.waitForCondition(() => {
-    return gBrowser.getIcon(tab) != null;
-  }, "wait for favicon load to finish", 100, 5);
+  await BrowserTestUtils.waitForCondition(
+    () => {
+      return gBrowser.getIcon(tab) != null;
+    },
+    "wait for favicon load to finish",
+    100,
+    5
+  );
 
   // Check that the tab has an 'image' attribute.
   ok(tab.hasAttribute("image"), "tab.image exists");
@@ -35,7 +40,7 @@ add_task(async function test() {
   // Make sure we do not persist 'image' and 'muted' attributes.
   ss.persistTabAttribute("image");
   ss.persistTabAttribute("muted");
-  let {attributes} = JSON.parse(ss.getTabState(tab));
+  let { attributes } = JSON.parse(ss.getTabState(tab));
   ok(!("image" in attributes), "'image' attribute not saved");
   ok(!("muted" in attributes), "'muted' attribute not saved");
   ok(!("custom" in attributes), "'custom' attribute not saved");
@@ -44,13 +49,13 @@ add_task(async function test() {
   tab.setAttribute("custom", "foobar");
   ss.persistTabAttribute("custom");
 
-  ({attributes} = JSON.parse(ss.getTabState(tab)));
+  ({ attributes } = JSON.parse(ss.getTabState(tab)));
   is(attributes.custom, "foobar", "'custom' attribute is correct");
 
   // Make sure we're backwards compatible and restore old 'image' attributes.
   let state = {
-    entries: [{url: "about:mozilla", triggeringPrincipal_base64 }],
-    attributes: {custom: "foobaz"},
+    entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }],
+    attributes: { custom: "foobaz" },
     image: gBrowser.getIcon(tab),
   };
 
@@ -68,7 +73,7 @@ add_task(async function test() {
   await promiseTabRestored(tab);
 
   // Ensure no 'image' or 'pending' attributes are stored.
-  ({attributes} = JSON.parse(ss.getTabState(tab)));
+  ({ attributes } = JSON.parse(ss.getTabState(tab)));
   ok(!("image" in attributes), "'image' attribute not saved");
   ok(!("pending" in attributes), "'pending' attribute not saved");
   is(attributes.custom, "foobaz", "'custom' attribute is correct");

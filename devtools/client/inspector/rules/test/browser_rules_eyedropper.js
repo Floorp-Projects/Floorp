@@ -45,7 +45,7 @@ add_task(async function() {
   const url = "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI);
   await addTab(url);
 
-  const {testActor, inspector, view, toolbox} = await openRuleView();
+  const { testActor, inspector, view, toolbox } = await openRuleView();
 
   await runTest(testActor, inspector, view);
 
@@ -70,7 +70,10 @@ async function runTest(testActor, inspector, view) {
   await openEyedropper(view, swatch);
 
   const tooltip = view.tooltips.getTooltip("colorPicker").tooltip;
-  ok(!tooltip.isVisible(), "color picker tooltip is closed after opening eyedropper");
+  ok(
+    !tooltip.isVisible(),
+    "color picker tooltip is closed after opening eyedropper"
+  );
 
   info("Test that pressing escape dismisses the eyedropper");
   await testESC(swatch, inspector, testActor);
@@ -94,7 +97,7 @@ async function testESC(swatch, inspector, testActor) {
   const onCanceled = new Promise(resolve => {
     inspector.inspector.once("color-pick-canceled", resolve);
   });
-  await testActor.synthesizeKey({key: "VK_ESCAPE", options: {}});
+  await testActor.synthesizeKey({ key: "VK_ESCAPE", options: {} });
   await onCanceled;
 
   const color = swatch.style.backgroundColor;
@@ -109,12 +112,24 @@ async function testSelect(view, swatch, inspector, testActor) {
   // The change to the content is done async after rule view change
   const onRuleViewChanged = view.once("ruleview-changed");
 
-  await testActor.synthesizeMouse({selector: "html", x: 10, y: 10,
-                                   options: {type: "mousemove"}});
-  await testActor.synthesizeMouse({selector: "html", x: 10, y: 10,
-                                   options: {type: "mousedown"}});
-  await testActor.synthesizeMouse({selector: "html", x: 10, y: 10,
-                                   options: {type: "mouseup"}});
+  await testActor.synthesizeMouse({
+    selector: "html",
+    x: 10,
+    y: 10,
+    options: { type: "mousemove" },
+  });
+  await testActor.synthesizeMouse({
+    selector: "html",
+    x: 10,
+    y: 10,
+    options: { type: "mousedown" },
+  });
+  await testActor.synthesizeMouse({
+    selector: "html",
+    x: 10,
+    y: 10,
+    options: { type: "mouseup" },
+  });
 
   await onPicked;
   await onRuleViewChanged;
@@ -125,8 +140,9 @@ async function testSelect(view, swatch, inspector, testActor) {
   ok(!swatch.eyedropperOpen, "swatch eye dropper is closed");
   ok(!swatch.activeSwatch, "no active swatch");
 
-  is((await getComputedStyleProperty("div", null, "background-color")),
-     EXPECTED_COLOR,
-     "div's color set to body color after dropper");
+  is(
+    await getComputedStyleProperty("div", null, "background-color"),
+    EXPECTED_COLOR,
+    "div's color set to body color after dropper"
+  );
 }
-

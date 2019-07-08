@@ -28,7 +28,8 @@ const ControllerEvents = {
 
   // When starting a recording is attempted and fails because the backend
   // does not permit it at this time.
-  BACKEND_FAILED_AFTER_RECORDING_START: "Performance:BackendFailedRecordingStart",
+  BACKEND_FAILED_AFTER_RECORDING_START:
+    "Performance:BackendFailedRecordingStart",
 
   // When a recording is started and the backend has started working.
   BACKEND_READY_AFTER_RECORDING_START: "Performance:BackendReadyRecordingStart",
@@ -72,7 +73,8 @@ const ViewEvents = {
 
   // Emitted by the `PerformanceView` when the profiler's circular buffer
   // status has been rendered.
-  UI_RECORDING_PROFILER_STATUS_RENDERED: "Performance:UI:RecordingProfilerStatusRendered",
+  UI_RECORDING_PROFILER_STATUS_RENDERED:
+    "Performance:UI:RecordingProfilerStatusRendered",
 
   // When a recording is selected in the UI.
   UI_RECORDING_SELECTED: "Performance:UI:RecordingSelected",

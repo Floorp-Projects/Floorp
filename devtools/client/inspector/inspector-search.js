@@ -5,7 +5,7 @@
 "use strict";
 
 const promise = require("promise");
-const {KeyCodes} = require("devtools/client/shared/keycodes");
+const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
@@ -69,8 +69,7 @@ InspectorSearch.prototype = {
   },
 
   _onSearch: function(reverse = false) {
-    this.doFullTextSearch(this.searchBox.value, reverse)
-        .catch(console.error);
+    this.doFullTextSearch(this.searchBox.value, reverse).catch(console.error);
   },
 
   async doFullTextSearch(query, reverse) {
@@ -95,7 +94,9 @@ InspectorSearch.prototype = {
     }
 
     if (res) {
-      this.inspector.selection.setNodeFront(res.node, { reason: "inspectorsearch" });
+      this.inspector.selection.setNodeFront(res.node, {
+        reason: "inspectorsearch",
+      });
       searchContainer.classList.remove("devtools-searchbox-no-match");
 
       res.query = query;
@@ -120,8 +121,8 @@ InspectorSearch.prototype = {
       this._onSearch(event.shiftKey);
     }
 
-    const modifierKey = Services.appinfo.OS === "Darwin"
-                        ? event.metaKey : event.ctrlKey;
+    const modifierKey =
+      Services.appinfo.OS === "Darwin" ? event.metaKey : event.ctrlKey;
     if (event.keyCode === KeyCodes.DOM_VK_G && modifierKey) {
       this._onSearch(event.shiftKey);
       event.preventDefault();
@@ -314,8 +315,11 @@ SelectorAutocompleter.prototype = {
    */
   destroy: function() {
     this.searchBox.removeEventListener("input", this.showSuggestions, true);
-    this.searchBox.removeEventListener("keypress",
-      this._onSearchKeypress, true);
+    this.searchBox.removeEventListener(
+      "keypress",
+      this._onSearchKeypress,
+      true
+    );
     this.inspector.off("markupmutation", this._onMarkupMutation);
     this.searchPopup.destroy();
     this.searchPopup = null;
@@ -511,7 +515,10 @@ SelectorAutocompleter.prototype = {
     }
 
     const suggestionsPromise = this.walker.getSuggestionsForQuery(
-      query, firstPart, state);
+      query,
+      firstPart,
+      state
+    );
     this._lastQuery = suggestionsPromise.then(result => {
       this.emit("processing-done");
       if (result.query !== query) {
@@ -528,8 +535,10 @@ SelectorAutocompleter.prototype = {
 
       // If there is a single tag match and it's what the user typed, then
       // don't need to show a popup.
-      if (result.suggestions.length === 1 &&
-          result.suggestions[0][0] === firstPart) {
+      if (
+        result.suggestions.length === 1 &&
+        result.suggestions[0][0] === firstPart
+      ) {
         result.suggestions = [];
       }
 

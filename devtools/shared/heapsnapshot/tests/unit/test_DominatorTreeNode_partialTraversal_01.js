@@ -57,20 +57,14 @@ const breakdown = {
 
 const expected = {
   nodeId: 100,
-  label: [
-    "other",
-    "SomeType",
-  ],
+  label: ["other", "SomeType"],
   shallowSize: 10,
   retainedSize: 10,
   shortestPaths: undefined,
   children: [
     {
       nodeId: 200,
-      label: [
-        "other",
-        "SomeType",
-      ],
+      label: ["other", "SomeType"],
       shallowSize: 10,
       retainedSize: 10,
       parentId: 100,
@@ -78,10 +72,7 @@ const expected = {
       children: [
         {
           nodeId: 500,
-          label: [
-            "other",
-            "SomeType",
-          ],
+          label: ["other", "SomeType"],
           shallowSize: 10,
           retainedSize: 10,
           parentId: 200,
@@ -91,10 +82,7 @@ const expected = {
         },
         {
           nodeId: 600,
-          label: [
-            "other",
-            "SomeType",
-          ],
+          label: ["other", "SomeType"],
           shallowSize: 10,
           retainedSize: 10,
           parentId: 200,
@@ -107,10 +95,7 @@ const expected = {
     },
     {
       nodeId: 300,
-      label: [
-        "other",
-        "SomeType",
-      ],
+      label: ["other", "SomeType"],
       shallowSize: 10,
       retainedSize: 10,
       parentId: 100,
@@ -118,10 +103,7 @@ const expected = {
       children: [
         {
           nodeId: 800,
-          label: [
-            "other",
-            "SomeType",
-          ],
+          label: ["other", "SomeType"],
           shallowSize: 10,
           retainedSize: 10,
           parentId: 300,
@@ -131,10 +113,7 @@ const expected = {
         },
         {
           nodeId: 900,
-          label: [
-            "other",
-            "SomeType",
-          ],
+          label: ["other", "SomeType"],
           shallowSize: 10,
           retainedSize: 10,
           parentId: 300,
@@ -154,13 +133,15 @@ function run_test() {
   // Traverse the whole depth of the test tree, but one short of the number of
   // siblings. This will exercise the moreChildrenAvailable handling for
   // siblings.
-  const actual = DominatorTreeNode.partialTraversal(mockDominatorTree,
-                                                    mockSnapshot,
-                                                    breakdown,
-                                                    // maxDepth
-                                                    4,
-                                                    // siblings
-                                                    2);
+  const actual = DominatorTreeNode.partialTraversal(
+    mockDominatorTree,
+    mockSnapshot,
+    breakdown,
+    // maxDepth
+    4,
+    // siblings
+    2
+  );
 
   dumpn("Expected = " + JSON.stringify(expected, null, 2));
   dumpn("Actual = " + JSON.stringify(actual, null, 2));

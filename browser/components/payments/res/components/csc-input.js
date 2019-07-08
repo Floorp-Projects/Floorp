@@ -23,10 +23,7 @@ export default class CscInput extends ObservedPropertiesMixin(HTMLElement) {
       "value",
     ];
   }
-  constructor({
-      useAlwaysVisiblePlaceholder,
-      inputId,
-    } = {}) {
+  constructor({ useAlwaysVisiblePlaceholder, inputId } = {}) {
     super();
 
     this.useAlwaysVisiblePlaceholder = useAlwaysVisiblePlaceholder;

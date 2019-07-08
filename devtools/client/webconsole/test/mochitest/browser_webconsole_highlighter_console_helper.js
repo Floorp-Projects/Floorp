@@ -28,7 +28,7 @@ add_task(async function() {
 
   info("Picker mode stopped, <h1> selected, now switching to the console");
   const hud = await openConsole();
-  const {jsterm} = hud;
+  const { jsterm } = hud;
 
   hud.ui.clearOutput();
 
@@ -45,7 +45,7 @@ add_task(async function() {
   await onAssignmentResult;
 
   ok(true, "correct output for $0 after setting $0.textContent");
-  const {textContent} = await testActor.getNodeInfo("h1");
+  const { textContent } = await testActor.getNodeInfo("h1");
   is(textContent, newH1Content, "node successfully updated");
 });
 
@@ -56,6 +56,8 @@ aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
 laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
 dolor in reprehenderit in voluptate velit esse cillum dolore eu
 fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`
-  .replace("\n", "");
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`.replace(
+    "\n",
+    ""
+  );
 }

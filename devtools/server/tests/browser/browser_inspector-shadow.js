@@ -24,8 +24,11 @@ add_task(async function() {
   const el = await walker.querySelector(walker.rootNode, "#one-child");
   const children = await walker.children(el);
 
-  is(children.nodes.length, 2, "#one-child has two children " +
-    "(shadow root + another child)");
+  is(
+    children.nodes.length,
+    2,
+    "#one-child has two children " + "(shadow root + another child)"
+  );
   ok(children.nodes[0].isShadowRoot, "First child is a shadow-root");
   is(children.nodes[1].displayName, "h1", "Second child is <h1>");
 });
@@ -38,8 +41,10 @@ add_task(async function() {
   ok(el.isShadowHost, "#shadow-children is a shadow host");
 
   const children = await walker.children(el);
-  ok(children.nodes.length === 1 && children.nodes[0].isShadowRoot,
-    "#shadow-children has only one child and it's a shadow-root");
+  ok(
+    children.nodes.length === 1 && children.nodes[0].isShadowRoot,
+    "#shadow-children has only one child and it's a shadow-root"
+  );
 
   const shadowRoot = children.nodes[0];
   const shadowChildren = await walker.children(shadowRoot);
@@ -61,16 +66,30 @@ add_task(async function() {
   ok(shadowRoot.isShadowRoot, "#named-slot has a shadow-root child");
 
   const slotted = children.nodes[1];
-  is(slotted.getAttribute("slot"), "slot1", "#named-slot as a child that is slotted");
+  is(
+    slotted.getAttribute("slot"),
+    "slot1",
+    "#named-slot as a child that is slotted"
+  );
 
   const shadowChildren = await walker.children(shadowRoot);
-  is(shadowChildren.nodes[0].displayName, "h1",
-    "shadow-root first child is a regular <h1> tag");
-  is(shadowChildren.nodes[1].displayName, "slot",
-    "shadow-root second child is a slot");
+  is(
+    shadowChildren.nodes[0].displayName,
+    "h1",
+    "shadow-root first child is a regular <h1> tag"
+  );
+  is(
+    shadowChildren.nodes[1].displayName,
+    "slot",
+    "shadow-root second child is a slot"
+  );
 
   const slottedChildren = await walker.children(shadowChildren.nodes[1]);
-  is(slottedChildren.nodes[0], slotted, "The slot has the slotted node as a child");
+  is(
+    slottedChildren.nodes[0],
+    slotted,
+    "The slot has the slotted node as a child"
+  );
 });
 
 add_task(async function() {
@@ -81,8 +100,14 @@ add_task(async function() {
   const children = await walker.children(el);
 
   ok(children.nodes[0].isShadowRoot, "#host-pseudo 1st child is a shadow root");
-  ok(children.nodes[1].isBeforePseudoElement, "#host-pseudo 2nd child is ::before");
-  ok(children.nodes[2].isAfterPseudoElement, "#host-pseudo 3rd child is ::after");
+  ok(
+    children.nodes[1].isBeforePseudoElement,
+    "#host-pseudo 2nd child is ::before"
+  );
+  ok(
+    children.nodes[2].isAfterPseudoElement,
+    "#host-pseudo 3rd child is ::after"
+  );
 });
 
 add_task(async function() {
@@ -110,10 +135,16 @@ add_task(async function() {
   const closedEl = await walker.querySelector(walker.rootNode, "#mode-closed");
   const closedShadowRoot = (await walker.children(closedEl)).nodes[0];
 
-  is(openShadowRoot.shadowRootMode, "open",
-    "#mode-open has a shadow root with open mode");
-  is(closedShadowRoot.shadowRootMode, "closed",
-    "#mode-closed has a shadow root with closed mode");
+  is(
+    openShadowRoot.shadowRootMode,
+    "open",
+    "#mode-open has a shadow root with open mode"
+  );
+  is(
+    closedShadowRoot.shadowRootMode,
+    "closed",
+    "#mode-closed has a shadow root with closed mode"
+  );
 });
 
 add_task(async function() {
@@ -123,7 +154,11 @@ add_task(async function() {
   const el = await walker.querySelector(walker.rootNode, "#slot-inline-text");
   const hostChildren = await walker.children(el);
   const originalSlot = hostChildren.nodes[1];
-  is(originalSlot.displayName, "#text", "Shadow host as a text node to be slotted");
+  is(
+    originalSlot.displayName,
+    "#text",
+    "Shadow host as a text node to be slotted"
+  );
 
   const shadowRoot = hostChildren.nodes[0];
   const shadowChildren = await walker.children(shadowRoot);
@@ -134,15 +169,18 @@ add_task(async function() {
   const slotChildren = await walker.children(slot);
   const slotted = slotChildren.nodes[0];
   is(slotted.displayName, "#text", "Slotted node is a text node");
-  is(slotted._form.nodeValue, originalSlot._form.nodeValue,
-    "Slotted content is the same as original's");
+  is(
+    slotted._form.nodeValue,
+    originalSlot._form.nodeValue,
+    "Slotted content is the same as original's"
+  );
 });
 
 add_task(async function() {
   info("Test UA widgets when showUserAgentShadowRoots is true");
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["devtools.inspector.showUserAgentShadowRoots", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["devtools.inspector.showUserAgentShadowRoots", true]],
+  });
 
   const { walker } = await initInspectorFront(URL);
 
@@ -152,16 +190,23 @@ add_task(async function() {
   const shadowRoot = hostChildren.nodes[0];
   ok(shadowRoot.isShadowRoot, "#video-controls has a shadow-root child");
 
-  el = await walker.querySelector(walker.rootNode, "#video-controls-with-children");
+  el = await walker.querySelector(
+    walker.rootNode,
+    "#video-controls-with-children"
+  );
   hostChildren = await walker.children(el);
-  is(hostChildren.nodes.length, 2, "#video-controls-with-children has two children");
+  is(
+    hostChildren.nodes.length,
+    2,
+    "#video-controls-with-children has two children"
+  );
 });
 
 add_task(async function() {
   info("Test UA widgets when showUserAgentShadowRoots is false");
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["devtools.inspector.showUserAgentShadowRoots", false],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["devtools.inspector.showUserAgentShadowRoots", false]],
+  });
 
   const { walker } = await initInspectorFront(URL);
 
@@ -169,7 +214,14 @@ add_task(async function() {
   let hostChildren = await walker.children(el);
   is(hostChildren.nodes.length, 0, "#video-controls tag has no children");
 
-  el = await walker.querySelector(walker.rootNode, "#video-controls-with-children");
+  el = await walker.querySelector(
+    walker.rootNode,
+    "#video-controls-with-children"
+  );
   hostChildren = await walker.children(el);
-  is(hostChildren.nodes.length, 1, "#video-controls-with-children has one child");
+  is(
+    hostChildren.nodes.length,
+    1,
+    "#video-controls-with-children has one child"
+  );
 });

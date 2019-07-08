@@ -57,14 +57,14 @@ function catchAndIgnore(fn) {
  *
  * @see `js/src/doc/Debugger/Debugger.Memory.md`
  */
-const censusDisplayModel = exports.censusDisplay = PropTypes.shape({
+const censusDisplayModel = (exports.censusDisplay = PropTypes.shape({
   displayName: PropTypes.string.isRequired,
   tooltip: PropTypes.string.isRequired,
   inverted: PropTypes.bool.isRequired,
   breakdown: PropTypes.shape({
     by: PropTypes.string.isRequired,
   }),
-});
+}));
 
 /**
  * How we want to label nodes in the dominator tree, and associated
@@ -73,32 +73,32 @@ const censusDisplayModel = exports.censusDisplay = PropTypes.shape({
  *
  * @see `js/src/doc/Debugger/Debugger.Memory.md`
  */
-const labelDisplayModel = exports.labelDisplay = PropTypes.shape({
+const labelDisplayModel = (exports.labelDisplay = PropTypes.shape({
   displayName: PropTypes.string.isRequired,
   tooltip: PropTypes.string.isRequired,
   breakdown: PropTypes.shape({
     by: PropTypes.string.isRequired,
   }),
-});
+}));
 
 /**
  * The data describing the tree map's shape, and its associated metadata.
  *
  * @see `js/src/doc/Debugger/Debugger.Memory.md`
  */
-const treeMapDisplayModel = exports.treeMapDisplay = PropTypes.shape({
+const treeMapDisplayModel = (exports.treeMapDisplay = PropTypes.shape({
   displayName: PropTypes.string.isRequired,
   tooltip: PropTypes.string.isRequired,
   inverted: PropTypes.bool.isRequired,
   breakdown: PropTypes.shape({
     by: PropTypes.string.isRequired,
   }),
-});
+}));
 
 /**
  * Tree map model.
  */
-const treeMapModel = exports.treeMapModel = PropTypes.shape({
+const treeMapModel = (exports.treeMapModel = PropTypes.shape({
   // The current census report data.
   report: PropTypes.object,
   // The display data used to generate the current census.
@@ -124,9 +124,9 @@ const treeMapModel = exports.treeMapModel = PropTypes.shape({
         assert(false, `Unexpected treeMap state: ${treeMap.state}`);
     }
   }),
-});
+}));
 
-const censusModel = exports.censusModel = PropTypes.shape({
+const censusModel = (exports.censusModel = PropTypes.shape({
   // The current census report data.
   report: PropTypes.object,
   // The parent map for the report.
@@ -140,8 +140,10 @@ const censusModel = exports.censusModel = PropTypes.shape({
   // tree.
   expanded: catchAndIgnore(function(census) {
     if (census.report) {
-      assert(census.expanded,
-             "If we have a report, we should also have the set of expanded nodes");
+      assert(
+        census.expanded,
+        "If we have a report, we should also have the set of expanded nodes"
+      );
     }
   }),
   // If a node is currently focused in the report tree, then this is it.
@@ -172,12 +174,12 @@ const censusModel = exports.censusModel = PropTypes.shape({
         assert(false, `Unexpected census state: ${census.state}`);
     }
   }),
-});
+}));
 
 /**
  * Dominator tree model.
  */
-const dominatorTreeModel = exports.dominatorTreeModel = PropTypes.shape({
+const dominatorTreeModel = (exports.dominatorTreeModel = PropTypes.shape({
   // The id of this dominator tree.
   dominatorTreeId: PropTypes.number,
 
@@ -192,10 +194,7 @@ const dominatorTreeModel = exports.dominatorTreeModel = PropTypes.shape({
 
   // If an error was thrown while getting this dominator tree, the `Error`
   // instance (or an error string message) is attached here.
-  error: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.object,
-  ]),
+  error: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
 
   // The display used to generate descriptive labels of nodes in this dominator
   // tree.
@@ -209,40 +208,43 @@ const dominatorTreeModel = exports.dominatorTreeModel = PropTypes.shape({
   state: catchAndIgnore(function(dominatorTree) {
     switch (dominatorTree.state) {
       case dominatorTreeState.COMPUTING:
-        assert(dominatorTree.dominatorTreeId == null,
-                "Should not have a dominator tree id yet");
-        assert(!dominatorTree.root,
-               "Should not have the root of the tree yet");
-        assert(!dominatorTree.error,
-               "Should not have an error");
+        assert(
+          dominatorTree.dominatorTreeId == null,
+          "Should not have a dominator tree id yet"
+        );
+        assert(!dominatorTree.root, "Should not have the root of the tree yet");
+        assert(!dominatorTree.error, "Should not have an error");
         break;
 
       case dominatorTreeState.COMPUTED:
       case dominatorTreeState.FETCHING:
-        assert(dominatorTree.dominatorTreeId != null,
-               "Should have a dominator tree id");
-        assert(!dominatorTree.root,
-               "Should not have the root of the tree yet");
-        assert(!dominatorTree.error,
-               "Should not have an error");
+        assert(
+          dominatorTree.dominatorTreeId != null,
+          "Should have a dominator tree id"
+        );
+        assert(!dominatorTree.root, "Should not have the root of the tree yet");
+        assert(!dominatorTree.error, "Should not have an error");
         break;
 
       case dominatorTreeState.INCREMENTAL_FETCHING:
-        assert(typeof dominatorTree.activeFetchRequestCount === "number",
-               "The active fetch request count is a number when we are in the " +
-               "INCREMENTAL_FETCHING state");
-        assert(dominatorTree.activeFetchRequestCount > 0,
-               "We are keeping track of how many active requests are in flight.");
-        // Fall through...
+        assert(
+          typeof dominatorTree.activeFetchRequestCount === "number",
+          "The active fetch request count is a number when we are in the " +
+            "INCREMENTAL_FETCHING state"
+        );
+        assert(
+          dominatorTree.activeFetchRequestCount > 0,
+          "We are keeping track of how many active requests are in flight."
+        );
+      // Fall through...
       case dominatorTreeState.LOADED:
-        assert(dominatorTree.dominatorTreeId != null,
-               "Should have a dominator tree id");
-        assert(dominatorTree.root,
-               "Should have the root of the tree");
-        assert(dominatorTree.expanded,
-               "Should have an expanded set");
-        assert(!dominatorTree.error,
-               "Should not have an error");
+        assert(
+          dominatorTree.dominatorTreeId != null,
+          "Should have a dominator tree id"
+        );
+        assert(dominatorTree.root, "Should have the root of the tree");
+        assert(dominatorTree.expanded, "Should have an expanded set");
+        assert(!dominatorTree.error, "Should not have an error");
         break;
 
       case dominatorTreeState.ERROR:
@@ -250,18 +252,20 @@ const dominatorTreeModel = exports.dominatorTreeModel = PropTypes.shape({
         break;
 
       default:
-        assert(false,
-               `Unexpected dominator tree state: ${dominatorTree.state}`);
+        assert(
+          false,
+          `Unexpected dominator tree state: ${dominatorTree.state}`
+        );
     }
   }),
-});
+}));
 
 /**
  * Snapshot model.
  */
 const stateKeys = Object.keys(states).map(state => states[state]);
 const snapshotId = PropTypes.number;
-const snapshotModel = exports.snapshot = PropTypes.shape({
+const snapshotModel = (exports.snapshot = PropTypes.shape({
   // Unique ID for a snapshot
   id: snapshotId.isRequired,
   // Whether or not this snapshot is currently selected.
@@ -294,31 +298,36 @@ const snapshotModel = exports.snapshot = PropTypes.shape({
       throw new Error(`Snapshot state must be one of ${stateKeys}.`);
     }
     if (shouldHavePath.includes(current) && !snapshot.path) {
-      throw new Error(`Snapshots in state ${current} must have a snapshot path.`);
+      throw new Error(
+        `Snapshots in state ${current} must have a snapshot path.`
+      );
     }
     if (shouldHaveCreationTime.includes(current) && !snapshot.creationTime) {
-      throw new Error(`Snapshots in state ${current} must have a creation time.`);
+      throw new Error(
+        `Snapshots in state ${current} must have a creation time.`
+      );
     }
   }),
-});
+}));
 
-const allocationsModel = exports.allocations = PropTypes.shape({
+const allocationsModel = (exports.allocations = PropTypes.shape({
   // True iff we are recording allocation stacks right now.
   recording: PropTypes.bool.isRequired,
   // True iff we are in the process of toggling the recording of allocation
   // stacks on or off right now.
   togglingInProgress: PropTypes.bool.isRequired,
-});
+}));
 
-const diffingModel = exports.diffingModel = PropTypes.shape({
+const diffingModel = (exports.diffingModel = PropTypes.shape({
   // The id of the first snapshot to diff.
   firstSnapshotId: snapshotId,
 
   // The id of the second snapshot to diff.
   secondSnapshotId: catchAndIgnore(function(diffing, propName) {
     if (diffing.secondSnapshotId && !diffing.firstSnapshotId) {
-      throw new Error("Cannot have second snapshot without already having " +
-                      "first snapshot");
+      throw new Error(
+        "Cannot have second snapshot without already having " + "first snapshot"
+      );
     }
     return snapshotId(diffing, propName);
   }),
@@ -336,7 +345,7 @@ const diffingModel = exports.diffingModel = PropTypes.shape({
     switch (diffing.state) {
       case diffingState.TOOK_DIFF:
         assert(diffing.census, "If we took a diff, we should have a census");
-        // Fall through...
+      // Fall through...
       case diffingState.TAKING_DIFF:
         assert(diffing.firstSnapshotId, "Should have first snapshot");
         assert(diffing.secondSnapshotId, "Should have second snapshot");
@@ -353,20 +362,26 @@ const diffingModel = exports.diffingModel = PropTypes.shape({
         assert(false, `Bad diffing state: ${diffing.state}`);
     }
   }),
-});
+}));
 
-const previousViewModel = exports.previousView = PropTypes.shape({
+const previousViewModel = (exports.previousView = PropTypes.shape({
   state: catchAndIgnore(function(previous) {
     switch (previous.state) {
       case viewState.DIFFING:
         assert(previous.diffing, "Should have previous diffing state.");
-        assert(!previous.selected, "Should not have a previously selected snapshot.");
+        assert(
+          !previous.selected,
+          "Should not have a previously selected snapshot."
+        );
         break;
 
       case viewState.CENSUS:
       case viewState.DOMINATOR_TREE:
       case viewState.TREE_MAP:
-        assert(previous.selected, "Should have a previously selected snapshot.");
+        assert(
+          previous.selected,
+          "Should have a previously selected snapshot."
+        );
         break;
 
       case viewState.INDIVIDUALS:
@@ -380,7 +395,7 @@ const previousViewModel = exports.previousView = PropTypes.shape({
 
   // The previously selected snapshot, if any.
   selected: snapshotId,
-});
+}));
 
 exports.view = PropTypes.shape({
   // The current view state.
@@ -402,7 +417,7 @@ exports.view = PropTypes.shape({
   previous: previousViewModel,
 });
 
-const individualsModel = exports.individuals = PropTypes.shape({
+const individualsModel = (exports.individuals = PropTypes.shape({
   error: PropTypes.object,
 
   nodes: PropTypes.arrayOf(PropTypes.object),
@@ -426,7 +441,10 @@ const individualsModel = exports.individuals = PropTypes.shape({
         assert(!individuals.nodes, "Should not have individual nodes");
         assert(!individuals.dominatorTree, "Should not have dominator tree");
         assert(!individuals.id, "Should not have an id");
-        assert(!individuals.censusBreakdown, "Should not have a censusBreakdown");
+        assert(
+          !individuals.censusBreakdown,
+          "Should not have a censusBreakdown"
+        );
         assert(!individuals.indices, "Should not have indices");
         assert(!individuals.labelDisplay, "Should not have a labelDisplay");
         break;
@@ -449,7 +467,7 @@ const individualsModel = exports.individuals = PropTypes.shape({
         break;
     }
   }),
-});
+}));
 
 exports.app = {
   // {MemoryFront} Used to communicate with platform

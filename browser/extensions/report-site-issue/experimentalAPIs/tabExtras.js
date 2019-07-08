@@ -11,7 +11,9 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 function getInfoFrameScript(messageName) {
   /* eslint-env mozilla/frame-script */
 
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
 
   function getInnerWindowId(window) {
     return window.windowUtils.currentInnerWindowID;
@@ -32,50 +34,56 @@ function getInfoFrameScript(messageName) {
 
   function getLoggedMessages(window, includePrivate = false) {
     const ids = getInnerWindowIDsForAllFrames(window);
-    return getConsoleMessages(ids).concat(getScriptErrors(ids, includePrivate))
-                                  .sort((a, b) => a.timeStamp - b.timeStamp)
-                                  .map(m => m.message);
+    return getConsoleMessages(ids)
+      .concat(getScriptErrors(ids, includePrivate))
+      .sort((a, b) => a.timeStamp - b.timeStamp)
+      .map(m => m.message);
   }
 
   function getConsoleMessages(windowIds) {
-    const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
-                              .getService(Ci.nsIConsoleAPIStorage);
+    const ConsoleAPIStorage = Cc[
+      "@mozilla.org/consoleAPI-storage;1"
+    ].getService(Ci.nsIConsoleAPIStorage);
     let messages = [];
     for (const id of windowIds) {
       messages = messages.concat(ConsoleAPIStorage.getEvents(id) || []);
     }
     return messages.map(evt => {
-      const {columnNumber, filename, level, lineNumber, timeStamp} = evt;
-      const args = evt.arguments.map(arg => {
-        return "" + arg;
-      }).join(", ");
+      const { columnNumber, filename, level, lineNumber, timeStamp } = evt;
+      const args = evt.arguments
+        .map(arg => {
+          return "" + arg;
+        })
+        .join(", ");
       const message = `[console.${level}(${args}) ${filename}:${lineNumber}:${columnNumber}]`;
-      return {timeStamp, message};
+      return { timeStamp, message };
     });
   }
 
   function getScriptErrors(windowIds, includePrivate = false) {
     const messages = Services.console.getMessageArray() || [];
-    return messages.filter(message => {
-      if (message instanceof Ci.nsIScriptError) {
-        if (!includePrivate && message.isFromPrivateWindow) {
-          return false;
+    return messages
+      .filter(message => {
+        if (message instanceof Ci.nsIScriptError) {
+          if (!includePrivate && message.isFromPrivateWindow) {
+            return false;
+          }
+
+          if (windowIds && !windowIds.includes(message.innerWindowID)) {
+            return false;
+          }
+
+          return true;
         }
 
-        if (windowIds && !windowIds.includes(message.innerWindowID)) {
-          return false;
-        }
-
-        return true;
-      }
-
-      // If this is not an nsIScriptError and we need to do window-based
-      // filtering we skip this message.
-      return false;
-    }).map(error => {
-      const {timeStamp, message} = error;
-      return {timeStamp, message};
-    });
+        // If this is not an nsIScriptError and we need to do window-based
+        // filtering we skip this message.
+        return false;
+      })
+      .map(error => {
+        const { timeStamp, message } = error;
+        return { timeStamp, message };
+      });
   }
 
   sendAsyncMessage(messageName, {
@@ -88,15 +96,25 @@ function getInfoFrameScript(messageName) {
 
 this.tabExtras = class extends ExtensionAPI {
   getAPI(context) {
-    const {tabManager} = context.extension;
-    const {Management: {global: {windowTracker}}} =
-                ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+    const { tabManager } = context.extension;
+    const {
+      Management: {
+        global: { windowTracker },
+      },
+    } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    const { Services } = ChromeUtils.import(
+      "resource://gre/modules/Services.jsm"
+    );
 
     return {
       tabExtras: {
-        async loadURIWithPostData(tabId, url, postDataString, postDataContentType) {
+        async loadURIWithPostData(
+          tabId,
+          url,
+          postDataString,
+          postDataContentType
+        ) {
           const tab = tabManager.get(tabId);
           if (!tab || !tab.browser) {
             return Promise.reject("Invalid tab");
@@ -108,25 +126,40 @@ this.tabExtras = class extends ExtensionAPI {
             return Promise.reject("Invalid url");
           }
 
-          if (typeof postDataString !== "string" && !(postDataString instanceof String)) {
+          if (
+            typeof postDataString !== "string" &&
+            !(postDataString instanceof String)
+          ) {
             return Promise.reject("postDataString must be a string");
           }
 
-          const stringStream = Cc["@mozilla.org/io/string-input-stream;1"]
-                               .createInstance(Ci.nsIStringInputStream);
+          const stringStream = Cc[
+            "@mozilla.org/io/string-input-stream;1"
+          ].createInstance(Ci.nsIStringInputStream);
           stringStream.data = postDataString;
-          const postData = Cc["@mozilla.org/network/mime-input-stream;1"]
-                           .createInstance(Ci.nsIMIMEInputStream);
-          postData.addHeader("Content-Type", postDataContentType ||
-                                             "application/x-www-form-urlencoded");
+          const postData = Cc[
+            "@mozilla.org/network/mime-input-stream;1"
+          ].createInstance(Ci.nsIMIMEInputStream);
+          postData.addHeader(
+            "Content-Type",
+            postDataContentType || "application/x-www-form-urlencoded"
+          );
           postData.setData(stringStream);
 
           return new Promise(resolve => {
             const listener = {
-              onLocationChange(browser, webProgress, request, locationURI, flags) {
-                if (webProgress.isTopLevel &&
-                    browser === tab.browser &&
-                    locationURI.spec === url) {
+              onLocationChange(
+                browser,
+                webProgress,
+                request,
+                locationURI,
+                flags
+              ) {
+                if (
+                  webProgress.isTopLevel &&
+                  browser === tab.browser &&
+                  locationURI.spec === url
+                ) {
                   windowTracker.removeListener("progress", listener);
                   resolve();
                 }
@@ -135,7 +168,9 @@ this.tabExtras = class extends ExtensionAPI {
             windowTracker.addListener("progress", listener);
 
             let loadURIOptions = {
-              triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+              triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
+                {}
+              ),
               postData,
             };
             tab.browser.webNavigation.loadURI(url, loadURIOptions);

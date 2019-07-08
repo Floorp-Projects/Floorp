@@ -6,12 +6,12 @@
 
 // Tests that the spectrum color picker works correctly
 
-const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
+const { Spectrum } = require("devtools/client/shared/widgets/Spectrum");
 
 const TEST_URI = CHROME_URL_ROOT + "doc_spectrum.html";
 
 add_task(async function() {
-  const [host,, doc] = await createHost("bottom", TEST_URI);
+  const [host, , doc] = await createHost("bottom", TEST_URI);
 
   const container = doc.getElementById("spectrum-container");
 
@@ -40,29 +40,42 @@ function extractRgbaOverlayString(linearGradientStr) {
   return linearGradientStr.substring(start + 1, end + 1);
 }
 
-function testColorPreviewDisplay(spectrum, expectedRgbCssString, expectedBorderColor) {
+function testColorPreviewDisplay(
+  spectrum,
+  expectedRgbCssString,
+  expectedBorderColor
+) {
   const { colorPreview } = spectrum;
   const colorPreviewStyle = window.getComputedStyle(colorPreview);
-  expectedBorderColor = expectedBorderColor === "transparent" ?
-                          "rgba(0, 0, 0, 0)"
-                          :
-                          expectedBorderColor;
+  expectedBorderColor =
+    expectedBorderColor === "transparent"
+      ? "rgba(0, 0, 0, 0)"
+      : expectedBorderColor;
 
   spectrum.updateUI();
 
   // Extract the first rgba value from the linear gradient
-  const linearGradientStr = colorPreviewStyle.getPropertyValue("background-image");
+  const linearGradientStr = colorPreviewStyle.getPropertyValue(
+    "background-image"
+  );
   const colorPreviewValue = extractRgbaOverlayString(linearGradientStr);
 
-  is(colorPreviewValue, expectedRgbCssString,
-    `Color preview should be ${expectedRgbCssString}`);
+  is(
+    colorPreviewValue,
+    expectedRgbCssString,
+    `Color preview should be ${expectedRgbCssString}`
+  );
 
   info("Test if color preview has a border or not.");
   // Since border-color is a shorthand CSS property, using getComputedStyle will return
   // an empty string. Instead, use one of the border sides to find the border-color value
   // since they will all be the same.
   const borderColorTop = colorPreviewStyle.getPropertyValue("border-top-color");
-  is(borderColorTop, expectedBorderColor, "Color preview border color is correct.");
+  is(
+    borderColorTop,
+    expectedBorderColor,
+    "Color preview border color is correct."
+  );
 }
 
 function testCreateAndDestroyShouldAppendAndRemoveElements(container) {
@@ -134,26 +147,46 @@ function testChangingColorShouldEmitEvents(container) {
 function testSettingColorShoudUpdateTheUI(container) {
   const s = new Spectrum(container, [255, 255, 255, 1]);
   s.show();
-  const dragHelperOriginalPos = [s.dragHelper.style.top, s.dragHelper.style.left];
+  const dragHelperOriginalPos = [
+    s.dragHelper.style.top,
+    s.dragHelper.style.left,
+  ];
   const alphaHelperOriginalPos = s.alphaSliderHelper.style.left;
   let hueHelperOriginalPos = s.hueSliderHelper.style.left;
 
-  s.rgb = [50, 240, 234, .2];
+  s.rgb = [50, 240, 234, 0.2];
   s.updateUI();
 
-  ok(s.alphaSliderHelper.style.left != alphaHelperOriginalPos, "Alpha helper has moved");
-  ok(s.dragHelper.style.top !== dragHelperOriginalPos[0], "Drag helper has moved");
-  ok(s.dragHelper.style.left !== dragHelperOriginalPos[1], "Drag helper has moved");
-  ok(s.hueSliderHelper.style.left !== hueHelperOriginalPos, "Hue helper has moved");
+  ok(
+    s.alphaSliderHelper.style.left != alphaHelperOriginalPos,
+    "Alpha helper has moved"
+  );
+  ok(
+    s.dragHelper.style.top !== dragHelperOriginalPos[0],
+    "Drag helper has moved"
+  );
+  ok(
+    s.dragHelper.style.left !== dragHelperOriginalPos[1],
+    "Drag helper has moved"
+  );
+  ok(
+    s.hueSliderHelper.style.left !== hueHelperOriginalPos,
+    "Hue helper has moved"
+  );
 
   hueHelperOriginalPos = s.hueSliderHelper.style.left;
 
   s.rgb = [240, 32, 124, 0];
   s.updateUI();
-  is(s.alphaSliderHelper.style.left, -(s.alphaSliderHelper.offsetWidth / 2) + "px",
-    "Alpha range UI has been updated again");
-  ok(hueHelperOriginalPos !== s.hueSliderHelper.style.left,
-    "Hue Helper slider should have move again");
+  is(
+    s.alphaSliderHelper.style.left,
+    -(s.alphaSliderHelper.offsetWidth / 2) + "px",
+    "Alpha range UI has been updated again"
+  );
+  ok(
+    hueHelperOriginalPos !== s.hueSliderHelper.style.left,
+    "Hue Helper slider should have move again"
+  );
 
   s.destroy();
 }

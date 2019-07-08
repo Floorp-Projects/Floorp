@@ -1,24 +1,30 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-  * License, v. 2.0. If a copy of the MPL was not distributed with this
-  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "TabModalPrompt",
-];
+var EXPORTED_SYMBOLS = ["TabModalPrompt"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 var TabModalPrompt = class {
   constructor(win) {
     this.win = win;
-    let newPrompt = this.element = win.document.createXULElement("tabmodalprompt");
+    let newPrompt = (this.element = win.document.createXULElement(
+      "tabmodalprompt"
+    ));
     newPrompt.setAttribute("role", "dialog");
-    let randomIdSuffix = Math.random().toString(32).substr(2);
+    let randomIdSuffix = Math.random()
+      .toString(32)
+      .substr(2);
     newPrompt.setAttribute("aria-describedby", `infoBody-${randomIdSuffix}`);
-    newPrompt.appendChild(win.MozXULElement.parseXULToFragment(`
+    newPrompt.appendChild(
+      win.MozXULElement.parseXULToFragment(
+        `
       <spacer flex="1"/>
         <hbox pack="center">
           <vbox class="tabmodalprompt-mainContainer">
@@ -62,7 +68,13 @@ var TabModalPrompt = class {
           </vbox>
       </hbox>
       <spacer flex="2"/>
-    `, ["chrome://global/locale/commonDialog.dtd", "chrome://global/locale/dialogOverlay.dtd"]));
+    `,
+        [
+          "chrome://global/locale/commonDialog.dtd",
+          "chrome://global/locale/dialogOverlay.dtd",
+        ]
+      )
+    );
 
     this.ui = {
       prompt: this,
@@ -71,8 +83,12 @@ var TabModalPrompt = class {
       loginContainer: newPrompt.querySelector(".tabmodalprompt-loginContainer"),
       loginTextbox: newPrompt.querySelector(".tabmodalprompt-loginTextbox"),
       loginLabel: newPrompt.querySelector(".tabmodalprompt-loginLabel"),
-      password1Container: newPrompt.querySelector(".tabmodalprompt-password1Container"),
-      password1Textbox: newPrompt.querySelector(".tabmodalprompt-password1Textbox"),
+      password1Container: newPrompt.querySelector(
+        ".tabmodalprompt-password1Container"
+      ),
+      password1Textbox: newPrompt.querySelector(
+        ".tabmodalprompt-password1Textbox"
+      ),
       password1Label: newPrompt.querySelector(".tabmodalprompt-password1Label"),
       infoContainer: newPrompt.querySelector(".tabmodalprompt-infoContainer"),
       infoBody: newPrompt.querySelector(".tabmodalprompt-infoBody"),
@@ -80,7 +96,9 @@ var TabModalPrompt = class {
       infoIcon: null,
       rows: newPrompt.querySelector(".tabmodalprompt-rows"),
       checkbox: newPrompt.querySelector(".tabmodalprompt-checkbox"),
-      checkboxContainer: newPrompt.querySelector(".tabmodalprompt-checkboxContainer"),
+      checkboxContainer: newPrompt.querySelector(
+        ".tabmodalprompt-checkboxContainer"
+      ),
       button3: newPrompt.querySelector(".tabmodalprompt-button3"),
       button2: newPrompt.querySelector(".tabmodalprompt-button2"),
       button1: newPrompt.querySelector(".tabmodalprompt-button1"),
@@ -90,63 +108,94 @@ var TabModalPrompt = class {
 
     if (AppConstants.XP_UNIX) {
       // Reorder buttons on Linux
-      let buttonContainer = newPrompt.querySelector(".tabmodalprompt-buttonContainer");
+      let buttonContainer = newPrompt.querySelector(
+        ".tabmodalprompt-buttonContainer"
+      );
       buttonContainer.appendChild(this.ui.button3);
       buttonContainer.appendChild(this.ui.button2);
-      buttonContainer.appendChild(newPrompt.querySelector(".tabmodalprompt-buttonSpacer"));
+      buttonContainer.appendChild(
+        newPrompt.querySelector(".tabmodalprompt-buttonSpacer")
+      );
       buttonContainer.appendChild(this.ui.button1);
       buttonContainer.appendChild(this.ui.button0);
     }
 
-    this.ui.button0.addEventListener("command", this.onButtonClick.bind(this, 0));
-    this.ui.button1.addEventListener("command", this.onButtonClick.bind(this, 1));
-    this.ui.button2.addEventListener("command", this.onButtonClick.bind(this, 2));
-    this.ui.button3.addEventListener("command", this.onButtonClick.bind(this, 3));
+    this.ui.button0.addEventListener(
+      "command",
+      this.onButtonClick.bind(this, 0)
+    );
+    this.ui.button1.addEventListener(
+      "command",
+      this.onButtonClick.bind(this, 1)
+    );
+    this.ui.button2.addEventListener(
+      "command",
+      this.onButtonClick.bind(this, 2)
+    );
+    this.ui.button3.addEventListener(
+      "command",
+      this.onButtonClick.bind(this, 3)
+    );
     // Anonymous wrapper used here because |Dialog| doesn't exist until init() is called!
-    this.ui.checkbox.addEventListener("command", () => { this.Dialog.onCheckbox(); });
+    this.ui.checkbox.addEventListener("command", () => {
+      this.Dialog.onCheckbox();
+    });
 
     /**
      * Based on dialog.xml handlers
      */
-    this.element.addEventListener("keypress", (event) => {
-      switch (event.keyCode) {
-        case KeyEvent.DOM_VK_RETURN:
-          this.onKeyAction("default", event);
-          break;
+    this.element.addEventListener(
+      "keypress",
+      event => {
+        switch (event.keyCode) {
+          case KeyEvent.DOM_VK_RETURN:
+            this.onKeyAction("default", event);
+            break;
 
-        case KeyEvent.DOM_VK_ESCAPE:
-          this.onKeyAction("cancel", event);
-          break;
-
-        default:
-          if (AppConstants.platform == "macosx" && event.key == "." && event.metaKey) {
+          case KeyEvent.DOM_VK_ESCAPE:
             this.onKeyAction("cancel", event);
-          }
-          break;
-      }
-    }, { mozSystemGroup: true });
+            break;
 
-    this.element.addEventListener("focus", (event) => {
-      let bnum = this.args.defaultButtonNum || 0;
-      let defaultButton = this.ui["button" + bnum];
-
-      if (AppConstants.platform == "macosx") {
-        // On OS X, the default button always stays marked as such (until
-        // the entire prompt blurs).
-        defaultButton.setAttribute("default", "true");
-      } else {
-        // On other platforms, the default button is only marked as such
-        // when no other button has focus. XUL buttons on not-OSX will
-        // react to pressing enter as a command, so you can't trigger the
-        // default without tabbing to it or something that isn't a button.
-        let focusedDefault = (event.originalTarget == defaultButton);
-        let someButtonFocused = event.originalTarget.localName == "button" ||
-          event.originalTarget.localName == "toolbarbutton";
-        if (focusedDefault || !someButtonFocused) {
-          defaultButton.setAttribute("default", "true");
+          default:
+            if (
+              AppConstants.platform == "macosx" &&
+              event.key == "." &&
+              event.metaKey
+            ) {
+              this.onKeyAction("cancel", event);
+            }
+            break;
         }
-      }
-    }, true);
+      },
+      { mozSystemGroup: true }
+    );
+
+    this.element.addEventListener(
+      "focus",
+      event => {
+        let bnum = this.args.defaultButtonNum || 0;
+        let defaultButton = this.ui["button" + bnum];
+
+        if (AppConstants.platform == "macosx") {
+          // On OS X, the default button always stays marked as such (until
+          // the entire prompt blurs).
+          defaultButton.setAttribute("default", "true");
+        } else {
+          // On other platforms, the default button is only marked as such
+          // when no other button has focus. XUL buttons on not-OSX will
+          // react to pressing enter as a command, so you can't trigger the
+          // default without tabbing to it or something that isn't a button.
+          let focusedDefault = event.originalTarget == defaultButton;
+          let someButtonFocused =
+            event.originalTarget.localName == "button" ||
+            event.originalTarget.localName == "toolbarbutton";
+          if (focusedDefault || !someButtonFocused) {
+            defaultButton.setAttribute("default", "true");
+          }
+        }
+      },
+      true
+    );
 
     this.element.addEventListener("blur", () => {
       // If focus shifted to somewhere else in the browser, don't make
@@ -162,8 +211,11 @@ var TabModalPrompt = class {
     this.linkedTab = linkedTab;
     this.onCloseCallback = onCloseCallback;
 
-    if (args.enableDelay)
-      throw new Error("BUTTON_DELAY_ENABLE not yet supported for tab-modal prompts");
+    if (args.enableDelay) {
+      throw new Error(
+        "BUTTON_DELAY_ENABLE not yet supported for tab-modal prompts"
+      );
+    }
 
     // We need to remove the prompt when the tab or browser window is closed or
     // the page navigates, else we never unwind the event loop and that's sad times.
@@ -185,8 +237,9 @@ var TabModalPrompt = class {
 
     // Display the tabprompt title that shows the prompt origin when
     // the prompt origin is not the same as that of the top window.
-    if (!args.showAlertOrigin)
+    if (!args.showAlertOrigin) {
       this.ui.infoTitle.removeAttribute("hidden");
+    }
 
     // TODO: should unhide buttonSpacer on Windows when there are 4 buttons.
     //       Better yet, just drop support for 4-button dialogs. (bug 609510)
@@ -247,8 +300,9 @@ var TabModalPrompt = class {
   onResize() {
     let availWidth = this.element.clientWidth;
     let availHeight = this.element.clientHeight;
-    if (availWidth == this.availWidth && availHeight == this.availHeight)
+    if (availWidth == this.availWidth && availHeight == this.availHeight) {
       return;
+    }
     this.availWidth = availWidth;
     this.availHeight = availHeight;
 
@@ -257,14 +311,20 @@ var TabModalPrompt = class {
     let body = this.ui.infoBody;
 
     // cap prompt dimensions at 60% width and 60% height of content area
-    if (!this.minWidth)
+    if (!this.minWidth) {
       this.minWidth = parseInt(this.win.getComputedStyle(main).minWidth);
-    if (!this.minHeight)
+    }
+    if (!this.minHeight) {
       this.minHeight = parseInt(this.win.getComputedStyle(main).minHeight);
-    let maxWidth = Math.max(Math.floor(availWidth * 0.6), this.minWidth) +
-      info.clientWidth - main.clientWidth;
-    let maxHeight = Math.max(Math.floor(availHeight * 0.6), this.minHeight) +
-      info.clientHeight - main.clientHeight;
+    }
+    let maxWidth =
+      Math.max(Math.floor(availWidth * 0.6), this.minWidth) +
+      info.clientWidth -
+      main.clientWidth;
+    let maxHeight =
+      Math.max(Math.floor(availHeight * 0.6), this.minHeight) +
+      info.clientHeight -
+      main.clientHeight;
     body.style.maxWidth = maxWidth + "px";
     info.style.overflow = info.style.width = info.style.height = "";
 
@@ -297,14 +357,16 @@ var TabModalPrompt = class {
   }
 
   onKeyAction(action, event) {
-    if (event.defaultPrevented)
+    if (event.defaultPrevented) {
       return;
+    }
 
     event.stopPropagation();
     if (action == "default") {
       let bnum = this.args.defaultButtonNum || 0;
       this.onButtonClick(bnum);
-    } else { // action == "cancel"
+    } else {
+      // action == "cancel"
       this.onButtonClick(1); // Cancel button
     }
   }

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- /* import-globals-from timekeeper.js */
- /* import-globals-from spinner.js */
+/* import-globals-from timekeeper.js */
+/* import-globals-from spinner.js */
 
 "use strict";
 
@@ -14,7 +14,7 @@ function TimePicker(context) {
 
 {
   const DAY_PERIOD_IN_HOURS = 12,
-        DAY_IN_MS = 86400000;
+    DAY_IN_MS = 86400000;
 
   TimePicker.prototype = {
     /**
@@ -67,8 +67,8 @@ function TimePicker(context) {
       const { locale, format } = this.props;
       const { timeKeeper } = this.state;
 
-      const wrapSetValueFn = (setTimeFunction) => {
-        return (value) => {
+      const wrapSetValueFn = setTimeFunction => {
+        return value => {
           setTimeFunction(value);
           this._setComponentStates();
           this._dispatchState();
@@ -77,28 +77,33 @@ function TimePicker(context) {
       const numberFormat = new Intl.NumberFormat(locale).format;
 
       this.components = {
-        hour: new Spinner({
-          setValue: wrapSetValueFn(value => {
-            timeKeeper.setHour(value);
-            this.state.isHourSet = true;
-          }),
-          getDisplayString: hour => {
-            if (format == "24") {
-              return numberFormat(hour);
-            }
-            // Hour 0 in 12 hour format is displayed as 12.
-            const hourIn12 = hour % DAY_PERIOD_IN_HOURS;
-            return hourIn12 == 0 ? numberFormat(12)
-              : numberFormat(hourIn12);
+        hour: new Spinner(
+          {
+            setValue: wrapSetValueFn(value => {
+              timeKeeper.setHour(value);
+              this.state.isHourSet = true;
+            }),
+            getDisplayString: hour => {
+              if (format == "24") {
+                return numberFormat(hour);
+              }
+              // Hour 0 in 12 hour format is displayed as 12.
+              const hourIn12 = hour % DAY_PERIOD_IN_HOURS;
+              return hourIn12 == 0 ? numberFormat(12) : numberFormat(hourIn12);
+            },
           },
-        }, this.context),
-        minute: new Spinner({
-          setValue: wrapSetValueFn(value => {
-            timeKeeper.setMinute(value);
-            this.state.isMinuteSet = true;
-          }),
-          getDisplayString: minute => numberFormat(minute),
-        }, this.context),
+          this.context
+        ),
+        minute: new Spinner(
+          {
+            setValue: wrapSetValueFn(value => {
+              timeKeeper.setMinute(value);
+              this.state.isMinuteSet = true;
+            }),
+            getDisplayString: minute => numberFormat(minute),
+          },
+          this.context
+        ),
       };
 
       this._insertLayoutElement({
@@ -111,14 +116,17 @@ function TimePicker(context) {
       // The AM/PM spinner is only available in 12hr mode
       // TODO: Replace AM & PM string with localized string
       if (format == "12") {
-        this.components.dayPeriod = new Spinner({
-          setValue: wrapSetValueFn(value => {
-            timeKeeper.setDayPeriod(value);
-            this.state.isDayPeriodSet = true;
-          }),
-          getDisplayString: dayPeriod => dayPeriod == 0 ? "AM" : "PM",
-          hideButtons: true,
-        }, this.context);
+        this.components.dayPeriod = new Spinner(
+          {
+            setValue: wrapSetValueFn(value => {
+              timeKeeper.setDayPeriod(value);
+              this.state.isDayPeriodSet = true;
+            }),
+            getDisplayString: dayPeriod => (dayPeriod == 0 ? "AM" : "PM"),
+            hideButtons: true,
+          },
+          this.context
+        );
 
         this._insertLayoutElement({
           tag: "div",
@@ -153,10 +161,13 @@ function TimePicker(context) {
       const { timeKeeper, isHourSet, isMinuteSet, isDayPeriodSet } = this.state;
       const isInvalid = timeKeeper.state.isInvalid;
       // Value is set to min if it's first opened and time state is invalid
-      const setToMinValue = !isHourSet && !isMinuteSet && !isDayPeriodSet && isInvalid;
+      const setToMinValue =
+        !isHourSet && !isMinuteSet && !isDayPeriodSet && isInvalid;
 
       this.components.hour.setState({
-        value: setToMinValue ? timeKeeper.ranges.hours[0].value : timeKeeper.hour,
+        value: setToMinValue
+          ? timeKeeper.ranges.hours[0].value
+          : timeKeeper.hour,
         items: timeKeeper.ranges.hours,
         isInfiniteScroll: true,
         isValueSet: isHourSet,
@@ -164,7 +175,9 @@ function TimePicker(context) {
       });
 
       this.components.minute.setState({
-        value: setToMinValue ? timeKeeper.ranges.minutes[0].value : timeKeeper.minute,
+        value: setToMinValue
+          ? timeKeeper.ranges.minutes[0].value
+          : timeKeeper.minute,
         items: timeKeeper.ranges.minutes,
         isInfiniteScroll: true,
         isValueSet: isMinuteSet,
@@ -174,7 +187,9 @@ function TimePicker(context) {
       // The AM/PM spinner is only available in 12hr mode
       if (this.props.format == "12") {
         this.components.dayPeriod.setState({
-          value: setToMinValue ? timeKeeper.ranges.dayPeriod[0].value : timeKeeper.dayPeriod,
+          value: setToMinValue
+            ? timeKeeper.ranges.dayPeriod[0].value
+            : timeKeeper.dayPeriod,
           items: timeKeeper.ranges.dayPeriod,
           isInfiniteScroll: false,
           isValueSet: isDayPeriodSet,
@@ -191,16 +206,19 @@ function TimePicker(context) {
       const { isHourSet, isMinuteSet, isDayPeriodSet } = this.state;
       // The panel is listening to window for postMessage event, so we
       // do postMessage to itself to send data to input boxes.
-      window.postMessage({
-        name: "PickerPopupChanged",
-        detail: {
-          hour,
-          minute,
-          isHourSet,
-          isMinuteSet,
-          isDayPeriodSet,
+      window.postMessage(
+        {
+          name: "PickerPopupChanged",
+          detail: {
+            hour,
+            minute,
+            isHourSet,
+            isMinuteSet,
+            isDayPeriodSet,
+          },
         },
-      }, "*");
+        "*"
+      );
     },
     _attachEventListeners() {
       window.addEventListener("message", this);

@@ -9,8 +9,8 @@
 
 add_task(async function test_policy_preferences() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "Preferences": {
+    policies: {
+      Preferences: {
         "network.IDN_show_punycode": true,
         "app.update.log": true,
       },
@@ -18,5 +18,9 @@ add_task(async function test_policy_preferences() {
   });
 
   checkLockedPref("network.IDN_show_punycode", true);
-  equal(Services.prefs.getBoolPref("app.update.log"), false, "Disallowed pref was not been changed");
- });
+  equal(
+    Services.prefs.getBoolPref("app.update.log"),
+    false,
+    "Disallowed pref was not been changed"
+  );
+});

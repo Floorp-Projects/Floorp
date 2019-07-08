@@ -1,21 +1,19 @@
-
 var WebVRHelpers = (function() {
-"use strict";
+  "use strict";
 
-var RequestPresentOnVRDisplay = function(vrDisplay, vrLayers, callback) {
-  if (callback) {
-    callback();
-  }
+  var RequestPresentOnVRDisplay = function(vrDisplay, vrLayers, callback) {
+    if (callback) {
+      callback();
+    }
 
-  return vrDisplay.requestPresent(vrLayers);
-};
+    return vrDisplay.requestPresent(vrLayers);
+  };
 
-var API = {
-  RequestPresentOnVRDisplay: RequestPresentOnVRDisplay,
+  var API = {
+    RequestPresentOnVRDisplay: RequestPresentOnVRDisplay,
 
-  none: false
-};
+    none: false,
+  };
 
-return API;
-
-}());
+  return API;
+})();

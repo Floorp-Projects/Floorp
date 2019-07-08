@@ -7,12 +7,14 @@
  * Test that reattaching to a previously detached thread works.
  */
 
-add_task(threadClientTest(async ({ threadClient, debuggee, client, targetFront }) => {
-  await threadClient.detach();
-  Assert.equal(threadClient.state, "detached");
-  const [, newThreadClient] = await targetFront.attachThread({});
-  Assert.notEqual(threadClient, newThreadClient);
-  Assert.equal(newThreadClient.state, "paused");
-  Assert.equal(targetFront.threadClient, newThreadClient);
-  await newThreadClient.resume();
-}));
+add_task(
+  threadClientTest(async ({ threadClient, debuggee, client, targetFront }) => {
+    await threadClient.detach();
+    Assert.equal(threadClient.state, "detached");
+    const [, newThreadClient] = await targetFront.attachThread({});
+    Assert.notEqual(threadClient, newThreadClient);
+    Assert.equal(newThreadClient.state, "paused");
+    Assert.equal(targetFront.threadClient, newThreadClient);
+    await newThreadClient.resume();
+  })
+);

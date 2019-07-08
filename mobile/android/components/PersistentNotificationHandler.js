@@ -4,20 +4,30 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Services", // jshint ignore:line
-                               "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "notificationStorage",
-                                   "@mozilla.org/notificationStorage;1",
-                                   "nsINotificationStorage");
-XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
-                                   "@mozilla.org/serviceworkers/manager;1",
-                                   "nsIServiceWorkerManager");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services", // jshint ignore:line
+  "resource://gre/modules/Services.jsm"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "notificationStorage",
+  "@mozilla.org/notificationStorage;1",
+  "nsINotificationStorage"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "serviceWorkerManager",
+  "@mozilla.org/serviceworkers/manager;1",
+  "nsIServiceWorkerManager"
+);
 
-function PersistentNotificationHandler() {
-}
+function PersistentNotificationHandler() {}
 
 PersistentNotificationHandler.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
@@ -31,7 +41,18 @@ PersistentNotificationHandler.prototype = {
 
     if (topic === "persistent-notification-click") {
       notificationStorage.getByID(persistentInfo.origin, persistentInfo.id, {
-        handle(id, title, dir, lang, body, tag, icon, data, behavior, serviceWorkerRegistrationScope) {
+        handle(
+          id,
+          title,
+          dir,
+          lang,
+          body,
+          tag,
+          icon,
+          data,
+          behavior,
+          serviceWorkerRegistrationScope
+        ) {
           serviceWorkerManager.sendNotificationClickEvent(
             persistentInfo.originSuffix,
             serviceWorkerRegistrationScope,
@@ -50,7 +71,18 @@ PersistentNotificationHandler.prototype = {
       });
     } else if (topic === "persistent-notification-close") {
       notificationStorage.getByID(persistentInfo.origin, persistentInfo.id, {
-        handle(id, title, dir, lang, body, tag, icon, data, behavior, serviceWorkerRegistrationScope) {
+        handle(
+          id,
+          title,
+          dir,
+          lang,
+          body,
+          tag,
+          icon,
+          data,
+          behavior,
+          serviceWorkerRegistrationScope
+        ) {
           serviceWorkerManager.sendNotificationCloseEvent(
             persistentInfo.originSuffix,
             serviceWorkerRegistrationScope,

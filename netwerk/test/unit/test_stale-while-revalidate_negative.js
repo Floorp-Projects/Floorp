@@ -18,7 +18,7 @@ request past the reval window.
 
 "use strict";
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 let max_age;
 let version;
@@ -27,22 +27,30 @@ let generate_response = ver => `response version=${ver}`;
 function test_handler(metadata, response) {
   const originalBody = generate_response(version);
   response.setHeader("Content-Type", "text/html", false);
-  response.setHeader("Cache-control", `max-age=${max_age}, stale-while-revalidate=1`, false);
+  response.setHeader(
+    "Cache-control",
+    `max-age=${max_age}, stale-while-revalidate=1`,
+    false
+  );
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.bodyOutputStream.write(originalBody, originalBody.length);
 }
 
 function make_channel(url) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
-                .QueryInterface(Ci.nsIHttpChannel);
+  return NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+  }).QueryInterface(Ci.nsIHttpChannel);
 }
 
 async function get_response(channel, fromCache) {
   return new Promise(resolve => {
-    channel.asyncOpen(new ChannelListener((request, buffer, ctx, isFromCache) => {
-      ok(fromCache == isFromCache, `got response from cache = ${fromCache}`);
-      resolve(buffer);
-    }));
+    channel.asyncOpen(
+      new ChannelListener((request, buffer, ctx, isFromCache) => {
+        ok(fromCache == isFromCache, `got response from cache = ${fromCache}`);
+        resolve(buffer);
+      })
+    );
   });
 }
 

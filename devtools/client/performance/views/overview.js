@@ -71,8 +71,14 @@ const OverviewView = {
     // based off of prefs.
     PerformanceController.on(EVENTS.PREF_CHANGED, this._onPrefChanged);
     PerformanceController.on(EVENTS.THEME_CHANGED, this._onThemeChanged);
-    PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
-    PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
+    PerformanceController.on(
+      EVENTS.RECORDING_STATE_CHANGE,
+      this._onRecordingStateChange
+    );
+    PerformanceController.on(
+      EVENTS.RECORDING_SELECTED,
+      this._onRecordingSelected
+    );
     this.graphs.on("selecting", this._onGraphSelecting);
     this.graphs.on("rendered", this._onGraphRendered);
   },
@@ -83,9 +89,14 @@ const OverviewView = {
   async destroy() {
     PerformanceController.off(EVENTS.PREF_CHANGED, this._onPrefChanged);
     PerformanceController.off(EVENTS.THEME_CHANGED, this._onThemeChanged);
-    PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE,
-                              this._onRecordingStateChange);
-    PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
+    PerformanceController.off(
+      EVENTS.RECORDING_STATE_CHANGE,
+      this._onRecordingStateChange
+    );
+    PerformanceController.off(
+      EVENTS.RECORDING_SELECTED,
+      this._onRecordingSelected
+    );
     this.graphs.off("selecting", this._onGraphSelecting);
     this.graphs.off("rendered", this._onGraphRendered);
     await this.graphs.destroy();
@@ -130,7 +141,9 @@ const OverviewView = {
   setTimeInterval: function(interval, options = {}) {
     const recording = PerformanceController.getCurrentRecording();
     if (recording == null) {
-      throw new Error("A recording should be available in order to set the selection.");
+      throw new Error(
+        "A recording should be available in order to set the selection."
+      );
     }
     if (this.isDisabled()) {
       return;
@@ -152,7 +165,9 @@ const OverviewView = {
   getTimeInterval: function() {
     const recording = PerformanceController.getCurrentRecording();
     if (recording == null) {
-      throw new Error("A recording should be available in order to get the selection.");
+      throw new Error(
+        "A recording should be available in order to get the selection."
+      );
     }
     if (this.isDisabled()) {
       return { startTime: 0, endTime: recording.getDuration() };
@@ -164,7 +179,7 @@ const OverviewView = {
     // yet, so act as if we have no selection (the full recording). Also
     // if the selection range distance is tiny, assume the range was cleared or just
     // clicked, and we do not have a range.
-    if (!selection || (selection.max - selection.min) < 1) {
+    if (!selection || selection.max - selection.min < 1) {
       return { startTime: 0, endTime: recording.getDuration() };
     }
     return { startTime: selection.min, endTime: selection.max };
@@ -205,14 +220,20 @@ const OverviewView = {
     // Check here to see if there's still a _timeoutId, incase
     // `stop` was called before the _prepareNextTick call was executed.
     if (this.isRendering()) {
-      this._timeoutId = setTimeout(this._onRecordingTick, this.OVERVIEW_UPDATE_INTERVAL);
+      this._timeoutId = setTimeout(
+        this._onRecordingTick,
+        this.OVERVIEW_UPDATE_INTERVAL
+      );
     }
   },
 
   /**
    * Called when recording state changes.
    */
-  _onRecordingStateChange: OverviewViewOnStateChange(async function(state, recording) {
+  _onRecordingStateChange: OverviewViewOnStateChange(async function(
+    state,
+    recording
+  ) {
     if (state !== "recording-stopped") {
       return;
     }
@@ -246,7 +267,10 @@ const OverviewView = {
    * Start the polling for rendering the overview graph.
    */
   _startPolling: function() {
-    this._timeoutId = setTimeout(this._onRecordingTick, this.OVERVIEW_UPDATE_INTERVAL);
+    this._timeoutId = setTimeout(
+      this._onRecordingTick,
+      this.OVERVIEW_UPDATE_INTERVAL
+    );
   },
 
   /**
@@ -320,9 +344,13 @@ const OverviewView = {
   },
 
   _setGraphVisibilityFromRecordingFeatures: function(recording) {
-    for (const [graphName, requirements] of Object.entries(GRAPH_REQUIREMENTS)) {
-      this.graphs.enable(graphName,
-                         PerformanceController.isFeatureSupported(requirements.features));
+    for (const [graphName, requirements] of Object.entries(
+      GRAPH_REQUIREMENTS
+    )) {
+      this.graphs.enable(
+        graphName,
+        PerformanceController.isFeatureSupported(requirements.features)
+      );
     }
   },
 
@@ -425,4 +453,3 @@ function OverviewViewOnStateChange(fn) {
 EventEmitter.decorate(OverviewView);
 
 exports.OverviewView = OverviewView;
-

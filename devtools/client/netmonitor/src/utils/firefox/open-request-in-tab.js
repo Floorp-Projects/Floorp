@@ -28,15 +28,20 @@ function openRequestInTab(url, requestHeaders, requestPostData) {
 
   if (rawData && rawData.text) {
     const stringStream = getInputStreamFromString(rawData.text);
-    postData = Cc["@mozilla.org/network/mime-input-stream;1"]
-      .createInstance(Ci.nsIMIMEInputStream);
+    postData = Cc["@mozilla.org/network/mime-input-stream;1"].createInstance(
+      Ci.nsIMIMEInputStream
+    );
 
     const contentTypeHeader = requestHeaders.headers.find(e => {
       return e.name.toLowerCase() === "content-type";
     });
 
-    postData.addHeader("Content-Type", contentTypeHeader ?
-      contentTypeHeader.value : "application/x-www-form-urlencoded");
+    postData.addHeader(
+      "Content-Type",
+      contentTypeHeader
+        ? contentTypeHeader.value
+        : "application/x-www-form-urlencoded"
+    );
     postData.setData(stringStream);
   }
   const userContextId = win.gBrowser.contentPrincipal.userContextId;
@@ -51,8 +56,9 @@ function openRequestInTab(url, requestHeaders, requestPostData) {
 }
 
 function getInputStreamFromString(data) {
-  const stringStream = Cc["@mozilla.org/io/string-input-stream;1"]
-    .createInstance(Ci.nsIStringInputStream);
+  const stringStream = Cc[
+    "@mozilla.org/io/string-input-stream;1"
+  ].createInstance(Ci.nsIStringInputStream);
   stringStream.data = data;
   return stringStream;
 }

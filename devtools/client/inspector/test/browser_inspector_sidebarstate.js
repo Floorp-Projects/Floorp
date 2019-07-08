@@ -3,7 +3,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const TEST_URI = "data:text/html;charset=UTF-8," +
+const TEST_URI =
+  "data:text/html;charset=UTF-8," +
   "<h1>browser_inspector_sidebarstate.js</h1>";
 const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
 
@@ -53,14 +54,20 @@ add_task(async function() {
   info("Selecting font inspector.");
   inspector.sidebar.select("fontinspector");
 
-  is(inspector.sidebar.getCurrentTabID(), "fontinspector",
-    "Font Inspector is selected");
+  is(
+    inspector.sidebar.getCurrentTabID(),
+    "fontinspector",
+    "Font Inspector is selected"
+  );
 
   info("Selecting computed view.");
   inspector.sidebar.select("computedview");
 
-  is(inspector.sidebar.getCurrentTabID(), "computedview",
-    "Computed View is selected");
+  is(
+    inspector.sidebar.getCurrentTabID(),
+    "computedview",
+    "Computed View is selected"
+  );
 
   info("Closing inspector.");
   await toolbox.destroy();
@@ -73,20 +80,23 @@ add_task(async function() {
     await inspector.sidebar.once("select");
   }
 
-  is(inspector.sidebar.getCurrentTabID(), "computedview",
-     "Computed view is selected by default.");
+  is(
+    inspector.sidebar.getCurrentTabID(),
+    "computedview",
+    "Computed view is selected by default."
+  );
 
   checkTelemetryResults();
 });
 
 function checkTelemetryResults() {
   const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
-  const events = snapshot.parent.filter(event => event[1] === "devtools.main" &&
-                                                 event[2] === "tool_timer"
+  const events = snapshot.parent.filter(
+    event => event[1] === "devtools.main" && event[2] === "tool_timer"
   );
 
   for (const i in TELEMETRY_DATA) {
-    const [ timestamp, category, method, object, value, extra ] = events[i];
+    const [timestamp, category, method, object, value, extra] = events[i];
     const expected = TELEMETRY_DATA[i];
 
     // ignore timestamp

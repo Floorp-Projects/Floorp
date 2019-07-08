@@ -15,26 +15,37 @@
 
 var EXPORTED_SYMBOLS = ["ManifestMessagesChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "ManifestObtainer",
-                               "resource://gre/modules/ManifestObtainer.jsm");
-ChromeUtils.defineModuleGetter(this, "ManifestFinder",
-                               "resource://gre/modules/ManifestFinder.jsm");
-ChromeUtils.defineModuleGetter(this, "ManifestIcons",
-                               "resource://gre/modules/ManifestIcons.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ManifestObtainer",
+  "resource://gre/modules/ManifestObtainer.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ManifestFinder",
+  "resource://gre/modules/ManifestFinder.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ManifestIcons",
+  "resource://gre/modules/ManifestIcons.jsm"
+);
 
 class ManifestMessagesChild extends ActorChild {
   receiveMessage(message) {
     switch (message.name) {
-    case "DOM:WebManifest:hasManifestLink":
-      return this.hasManifestLink(message);
-    case "DOM:ManifestObtainer:Obtain":
-      return this.obtainManifest(message);
-    case "DOM:Manifest:FireAppInstalledEvent":
-      return this.fireAppInstalledEvent(message);
-    case "DOM:WebManifest:fetchIcon":
-      return this.fetchIcon(message);
+      case "DOM:WebManifest:hasManifestLink":
+        return this.hasManifestLink(message);
+      case "DOM:ManifestObtainer:Obtain":
+        return this.obtainManifest(message);
+      case "DOM:Manifest:FireAppInstalledEvent":
+        return this.fireAppInstalledEvent(message);
+      case "DOM:WebManifest:fetchIcon":
+        return this.fetchIcon(message);
     }
     return undefined;
   }
@@ -44,7 +55,7 @@ class ManifestMessagesChild extends ActorChild {
    * @param {Object} aMsg The IPC message, which is destructured to just
    *                      get the id.
    */
-  hasManifestLink({data: {id}}) {
+  hasManifestLink({ data: { id } }) {
     const response = makeMsgResponse(id);
     response.result = ManifestFinder.contentHasManifestLink(this.mm.content);
     response.success = true;
@@ -57,10 +68,12 @@ class ManifestMessagesChild extends ActorChild {
    * @param {Object} aMsg The IPC message, which is destructured to just
    *                      get the id.
    */
-  async obtainManifest({data: {id}}) {
+  async obtainManifest({ data: { id } }) {
     const response = makeMsgResponse(id);
     try {
-      response.result = await ManifestObtainer.contentObtainManifest(this.mm.content);
+      response.result = await ManifestObtainer.contentObtainManifest(
+        this.mm.content
+      );
       response.success = true;
     } catch (err) {
       response.result = serializeError(err);
@@ -68,11 +81,12 @@ class ManifestMessagesChild extends ActorChild {
     this.mm.sendAsyncMessage("DOM:ManifestObtainer:Obtain", response);
   }
 
-  fireAppInstalledEvent({data: {id}}) {
+  fireAppInstalledEvent({ data: { id } }) {
     const ev = new Event("appinstalled");
     const response = makeMsgResponse(id);
     if (!this.mm.content || this.mm.content.top !== this.mm.content) {
-      const msg = "Can only dispatch install event on top-level browsing contexts.";
+      const msg =
+        "Can only dispatch install event on top-level browsing contexts.";
       response.result = serializeError(new Error(msg));
     } else {
       response.success = true;
@@ -85,11 +99,14 @@ class ManifestMessagesChild extends ActorChild {
    * Given a manifest and an expected icon size, ask ManifestIcons
    * to fetch the appropriate icon and send along result
    */
-  async fetchIcon({data: {id, manifest, iconSize}}) {
+  async fetchIcon({ data: { id, manifest, iconSize } }) {
     const response = makeMsgResponse(id);
     try {
-      response.result =
-        await ManifestIcons.contentFetchIcon(this.mm.content, manifest, iconSize);
+      response.result = await ManifestIcons.contentFetchIcon(
+        this.mm.content,
+        manifest,
+        iconSize
+      );
       response.success = true;
     } catch (err) {
       response.result = serializeError(err);
@@ -107,12 +124,12 @@ class ManifestMessagesChild extends ActorChild {
  */
 function serializeError(aError) {
   const clone = {
-    "fileName": aError.fileName,
-    "lineNumber": aError.lineNumber,
-    "columnNumber": aError.columnNumber,
-    "stack": aError.stack,
-    "message": aError.message,
-    "name": aError.name,
+    fileName: aError.fileName,
+    lineNumber: aError.lineNumber,
+    columnNumber: aError.columnNumber,
+    stack: aError.stack,
+    message: aError.message,
+    name: aError.name,
   };
   return clone;
 }

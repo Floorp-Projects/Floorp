@@ -1,6 +1,6 @@
 /* globals assert, beforeEach, describe, it */
-import {_PerfService} from "common/PerfService.jsm";
-import {FakePerformance} from "test/unit/utils.js";
+import { _PerfService } from "common/PerfService.jsm";
+import { FakePerformance } from "test/unit/utils.js";
 
 let perfService;
 
@@ -11,7 +11,7 @@ describe("_PerfService", () => {
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     fakePerfObj = new FakePerformance();
-    perfService = new _PerfService({performanceObj: fakePerfObj});
+    perfService = new _PerfService({ performanceObj: fakePerfObj });
   });
 
   afterEach(() => {
@@ -26,8 +26,7 @@ describe("_PerfService", () => {
     });
   });
   describe("#getEntriesByName", () => {
-    it("should call getEntriesByName on the appropriate Window.performance",
-    () => {
+    it("should call getEntriesByName on the appropriate Window.performance", () => {
       sandbox.spy(fakePerfObj, "getEntriesByName");
 
       perfService.getEntriesByName("monkey", "mark");
@@ -58,18 +57,17 @@ describe("_PerfService", () => {
       assert.throws(bogusGet, Error, /No marks with the name/);
     });
 
-    it("should return the Number from the most recent mark with the given name + the time origin",
-      () => {
-        perfService.mark("dog");
-        perfService.mark("dog");
+    it("should return the Number from the most recent mark with the given name + the time origin", () => {
+      perfService.mark("dog");
+      perfService.mark("dog");
 
-        let absMarkStart = perfService.getMostRecentAbsMarkStartByName("dog");
+      let absMarkStart = perfService.getMostRecentAbsMarkStartByName("dog");
 
-        // 2 because we want the result of the 2nd call to mark, and an instance
-        // of FakePerformance just returns the number of time mark has been
-        // called.
-        assert.equal(absMarkStart - perfService.timeOrigin, 2);
-      });
+      // 2 because we want the result of the 2nd call to mark, and an instance
+      // of FakePerformance just returns the number of time mark has been
+      // called.
+      assert.equal(absMarkStart - perfService.timeOrigin, 2);
+    });
   });
 
   describe("#mark", () => {

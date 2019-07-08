@@ -1,13 +1,12 @@
 /* global ChromeUtils */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 try {
   // We might be running without privileges, in which case it's up to the
   // harness to give us the 'ctypes' object.
-  var {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-} catch (e) {
-}
+  var { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+} catch (e) {}
 
 function open_ctypes_test_lib() {
   return ctypes.open(do_get_file(ctypes.libraryName("jsctypes-test")).path);
@@ -44,7 +43,7 @@ ResourceCleaner.prototype = {
  */
 function ResourceTester(start, stop) {
   this._start = start;
-  this._stop  = stop;
+  this._stop = stop;
 }
 ResourceTester.prototype = {
   launch(size, test, args) {
@@ -74,8 +73,7 @@ function structural_check_eq(a, b) {
     asource = a.toSource();
     bsource = b.toSource();
     finished = true;
-  } catch (x) {
-  }
+  } catch (x) {}
   if (finished) {
     Assert.equal(asource, bsource);
     return;
@@ -102,13 +100,11 @@ function structural_check_eq_aux(a, b) {
     }
     return;
   }
-  ak.forEach(
-    function(k) {
-      let av = a[k];
-      let bv = b[k];
-      structural_check_eq_aux(av, bv);
-    }
-  );
+  ak.forEach(function(k) {
+    let av = a[k];
+    let bv = b[k];
+    structural_check_eq_aux(av, bv);
+  });
 }
 
 function trigger_gc() {

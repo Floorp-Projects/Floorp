@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["RemoteAgent", "RemoteAgentFactory"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   FatalError: "chrome://remote/content/Error.jsm",
@@ -36,7 +38,9 @@ class RemoteAgentClass {
       throw new Error("Remote agent is disabled by its preference");
     }
     if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
-      throw new Error("Remote agent can only be instantiated from the parent process");
+      throw new Error(
+        "Remote agent can only be instantiated from the parent process"
+      );
     }
 
     if (this.server) {
@@ -48,7 +52,7 @@ class RemoteAgentClass {
 
     this.server.registerPrefixHandler("/json/", new JSONHandler(this));
 
-    this.tabs = new TabObserver({registerExisting: true});
+    this.tabs = new TabObserver({ registerExisting: true });
     this.tabs.on("open", (eventName, tab) => {
       this.targets.connect(tab.linkedBrowser);
     });
@@ -78,7 +82,7 @@ class RemoteAgentClass {
       throw new TypeError(`Expected nsIURI: ${address}`);
     }
 
-    let {host, port} = address;
+    let { host, port } = address;
     if (Preferences.get(FORCE_LOCAL) && !LOOPBACKS.includes(host)) {
       throw new Error("Restricted to loopback devices");
     }
@@ -167,7 +171,9 @@ class RemoteAgentClass {
     const remoteDebuggingPort = flag("remote-debugging-port");
 
     if (remoteDebugger && remoteDebuggingPort) {
-      log.fatal("Conflicting flags --remote-debugger and --remote-debugging-port");
+      log.fatal(
+        "Conflicting flags --remote-debugger and --remote-debugging-port"
+      );
       cmdLine.preventDefault = true;
       return;
     }
@@ -185,9 +191,14 @@ class RemoteAgentClass {
 
     let addr;
     try {
-      addr = NetUtil.newURI(`http://${host || DEFAULT_HOST}:${port || DEFAULT_PORT}/`);
+      addr = NetUtil.newURI(
+        `http://${host || DEFAULT_HOST}:${port || DEFAULT_PORT}/`
+      );
     } catch (e) {
-      log.fatal(`Expected address syntax [<host>]:<port>: ${remoteDebugger || remoteDebuggingPort}`);
+      log.fatal(
+        `Expected address syntax [<host>]:<port>: ${remoteDebugger ||
+          remoteDebuggingPort}`
+      );
       cmdLine.preventDefault = true;
       return;
     }
@@ -200,15 +211,20 @@ class RemoteAgentClass {
       this.listen(addr);
     } catch (e) {
       this.close();
-      throw new FatalError(`Unable to start remote agent on ${addr.spec}: ${e.message}`, e);
-     }
+      throw new FatalError(
+        `Unable to start remote agent on ${addr.spec}: ${e.message}`,
+        e
+      );
+    }
   }
 
   get helpInfo() {
-    return "  --remote-debugger [<host>][:<port>]\n" +
-           "  --remote-debugging-port <port> Start the Firefox remote agent, which is \n" +
-           "                     a low-level debugging interface based on the CDP protocol.\n" +
-           "                     Defaults to listen on localhost:9222.\n";
+    return (
+      "  --remote-debugger [<host>][:<port>]\n" +
+      "  --remote-debugging-port <port> Start the Firefox remote agent, which is \n" +
+      "                     a low-level debugging interface based on the CDP protocol.\n" +
+      "                     Defaults to listen on localhost:9222.\n"
+    );
   }
 
   // XPCOM

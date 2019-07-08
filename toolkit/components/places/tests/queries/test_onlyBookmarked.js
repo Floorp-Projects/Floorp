@@ -18,28 +18,33 @@
 
 var testData = [
   // Add a bookmark that should be in the results
-  { isBookmark: true,
+  {
+    isBookmark: true,
     uri: "http://bookmarked.com/",
     title: "",
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-    isInQuery: true },
+    isInQuery: true,
+  },
 
   // Add a bookmark that should not be in the results
-  { isBookmark: true,
+  {
+    isBookmark: true,
     uri: "http://bookmarked-elsewhere.com/",
     title: "",
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-    isInQuery: false },
+    isInQuery: false,
+  },
 
   // Add an un-bookmarked visit
-  { isVisit: true,
+  {
+    isVisit: true,
     uri: "http://notbookmarked.com/",
     title: "",
-    isInQuery: false },
+    isInQuery: false,
+  },
 ];
-
 
 add_task(async function test_onlyBookmarked() {
   // This function in head_queries.js creates our database with the above data
@@ -69,20 +74,24 @@ add_task(async function test_onlyBookmarked() {
   // Test live-update
   var liveUpdateTestData = [
     // Add a bookmark that should show up
-    { isBookmark: true,
+    {
+      isBookmark: true,
       uri: "http://bookmarked2.com/",
       title: "",
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
       index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-      isInQuery: true },
+      isInQuery: true,
+    },
 
     // Add a bookmark that should not show up
-    { isBookmark: true,
+    {
+      isBookmark: true,
       uri: "http://bookmarked-elsewhere2.com/",
       title: "",
       parentGuid: PlacesUtils.bookmarks.menuGuid,
       index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-      isInQuery: false },
+      isInQuery: false,
+    },
   ];
 
   await task_populateDB(liveUpdateTestData); // add to the db

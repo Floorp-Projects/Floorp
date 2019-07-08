@@ -24,7 +24,6 @@ function runTest() {
     });
   });
 
-
   document.body.appendChild(iframe);
 
   // file_browserElement_CloseFromOpener opens a new window and then calls

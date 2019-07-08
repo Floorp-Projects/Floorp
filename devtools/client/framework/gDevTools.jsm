@@ -13,7 +13,7 @@
  * - devtools/client/framework/devtools-browser for gDevToolsBrowser
  */
 
-this.EXPORTED_SYMBOLS = [ "gDevTools", "gDevToolsBrowser" ];
+this.EXPORTED_SYMBOLS = ["gDevTools", "gDevToolsBrowser"];
 
 /**
  * Do not directly map to the commonjs modules so that callsites of
@@ -23,7 +23,9 @@ this.EXPORTED_SYMBOLS = [ "gDevTools", "gDevToolsBrowser" ];
  */
 Object.defineProperty(this, "require", {
   get() {
-    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+    const { require } = ChromeUtils.import(
+      "resource://devtools/shared/Loader.jsm"
+    );
     return require;
   },
 });
@@ -34,7 +36,8 @@ Object.defineProperty(this, "devtools", {
 });
 Object.defineProperty(this, "browser", {
   get() {
-    return require("devtools/client/framework/devtools-browser").gDevToolsBrowser;
+    return require("devtools/client/framework/devtools-browser")
+      .gDevToolsBrowser;
   },
 });
 

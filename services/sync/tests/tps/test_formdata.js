@@ -8,50 +8,31 @@
  */
 EnableEngines(["forms"]);
 
-var phases = { "phase1": "profile1",
-               "phase2": "profile2",
-               "phase3": "profile1",
-               "phase4": "profile2" };
+var phases = {
+  phase1: "profile1",
+  phase2: "profile2",
+  phase3: "profile1",
+  phase4: "profile2",
+};
 
 /*
  * Form data asset lists: these define form values that are used in the tests.
  */
 
 var formdata1 = [
-  { fieldname: "testing",
-    value: "success",
-    date: -1,
-  },
-  { fieldname: "testing",
-    value: "failure",
-    date: -2,
-  },
-  { fieldname: "username",
-    value: "joe",
-  },
+  { fieldname: "testing", value: "success", date: -1 },
+  { fieldname: "testing", value: "failure", date: -2 },
+  { fieldname: "username", value: "joe" },
 ];
 
 var formdata2 = [
-  { fieldname: "testing",
-    value: "success",
-    date: -1,
-  },
-  { fieldname: "username",
-    value: "joe",
-  },
+  { fieldname: "testing", value: "success", date: -1 },
+  { fieldname: "username", value: "joe" },
 ];
 
-var formdata_delete = [
-  { fieldname: "testing",
-    value: "failure",
-  },
-];
+var formdata_delete = [{ fieldname: "testing", value: "failure" }];
 
-var formdata_new = [
-  { fieldname: "new-field",
-    value: "new-value",
-  },
-];
+var formdata_new = [{ fieldname: "new-field", value: "new-value" }];
 /*
  * Test phases
  */
@@ -62,10 +43,7 @@ Phase("phase1", [
   [Sync],
 ]);
 
-Phase("phase2", [
-  [Sync],
-  [Formdata.verify, formdata1],
-]);
+Phase("phase2", [[Sync], [Formdata.verify, formdata1]]);
 
 Phase("phase3", [
   [Sync],
@@ -83,5 +61,3 @@ Phase("phase4", [
   [Formdata.verify, formdata_new],
   [Formdata.verifyNot, formdata_delete],
 ]);
-
-

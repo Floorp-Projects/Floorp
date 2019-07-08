@@ -21,11 +21,14 @@ add_task(async function() {
     constructor: "PreInitGlobalActor",
     type: { global: true },
   });
-  ActorRegistry.registerModule("resource://test/pre_init_target_scoped_actors.js", {
-    prefix: "preInitTargetScoped",
-    constructor: "PreInitTargetScopedActor",
-    type: { target: true },
-  });
+  ActorRegistry.registerModule(
+    "resource://test/pre_init_target_scoped_actors.js",
+    {
+      prefix: "preInitTargetScoped",
+      constructor: "PreInitTargetScopedActor",
+      type: { target: true },
+    }
+  );
 
   const client = await startTestDebuggerServer("example tab");
 
@@ -34,11 +37,14 @@ add_task(async function() {
     constructor: "PostInitGlobalActor",
     type: { global: true },
   });
-  ActorRegistry.registerModule("resource://test/post_init_target_scoped_actors.js", {
-    prefix: "postInitTargetScoped",
-    constructor: "PostInitTargetScopedActor",
-    type: { target: true },
-  });
+  ActorRegistry.registerModule(
+    "resource://test/post_init_target_scoped_actors.js",
+    {
+      prefix: "postInitTargetScoped",
+      constructor: "PostInitTargetScopedActor",
+      type: { target: true },
+    }
+  );
 
   let actors = await client.mainRoot.rootForm;
   const tabs = await client.mainRoot.listTabs();
@@ -70,13 +76,23 @@ add_task(async function() {
 
   // Consider that there is only one connection, and the first one is ours
   const connID = Object.keys(DebuggerServer._connections)[0];
-  const postInitGlobalActor = getActorInstance(connID, actors.postInitGlobalActor);
-  const preInitGlobalActor = getActorInstance(connID, actors.preInitGlobalActor);
+  const postInitGlobalActor = getActorInstance(
+    connID,
+    actors.postInitGlobalActor
+  );
+  const preInitGlobalActor = getActorInstance(
+    connID,
+    actors.preInitGlobalActor
+  );
   actors = await client.mainRoot.getRoot();
-  Assert.equal(postInitGlobalActor,
-    getActorInstance(connID, actors.postInitGlobalActor));
-  Assert.equal(preInitGlobalActor,
-    getActorInstance(connID, actors.preInitGlobalActor));
+  Assert.equal(
+    postInitGlobalActor,
+    getActorInstance(connID, actors.postInitGlobalActor)
+  );
+  Assert.equal(
+    preInitGlobalActor,
+    getActorInstance(connID, actors.preInitGlobalActor)
+  );
 
   await client.close();
 });

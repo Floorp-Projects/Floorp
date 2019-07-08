@@ -119,7 +119,6 @@ static Tuple<gfxPoint, gfxPoint> ComputeLinearGradientLine(
       gfxPoint start(startX, startY);
       gfxPoint end = gfxPoint(aBoxSize.width, aBoxSize.height) - start;
       return MakeTuple(start, end);
-
     }
     default:
       break;

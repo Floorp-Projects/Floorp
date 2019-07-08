@@ -7,8 +7,9 @@
 // Test for Bug 777674
 
 add_task(async function() {
-  const { walker } =
-    await initInspectorFront(MAIN_DOMAIN + "inspector-traversal-data.html");
+  const { walker } = await initInspectorFront(
+    MAIN_DOMAIN + "inspector-traversal-data.html"
+  );
 
   await testXBLAnonymousInHTMLDocument(walker);
   await testNativeAnonymous(walker);
@@ -22,12 +23,19 @@ add_task(async function() {
 async function testXBLAnonymousInHTMLDocument(walker) {
   info("Testing XBL anonymous in an HTML document.");
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    const rawToolbarbutton = content.document.createElementNS(XUL_NS, "toolbarbutton");
+    const XUL_NS =
+      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    const rawToolbarbutton = content.document.createElementNS(
+      XUL_NS,
+      "toolbarbutton"
+    );
     content.document.documentElement.appendChild(rawToolbarbutton);
   });
 
-  const toolbarbutton = await walker.querySelector(walker.rootNode, "toolbarbutton");
+  const toolbarbutton = await walker.querySelector(
+    walker.rootNode,
+    "toolbarbutton"
+  );
   const children = await walker.children(toolbarbutton);
 
   is(toolbarbutton.numChildren, 0, "XBL content is not visible in HTML doc");
@@ -47,15 +55,19 @@ async function testNativeAnonymous(walker) {
 async function testNativeAnonymousStartingNode(walker) {
   info("Tests attaching an element that a walker can't see.");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, [walker.actorID],
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    [walker.actorID],
     async function(actorID) {
-      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+      const { require } = ChromeUtils.import(
+        "resource://devtools/shared/Loader.jsm"
+      );
       const { DebuggerServer } = require("devtools/server/main");
 
-      const {DocumentWalker} =
-        require("devtools/server/actors/inspector/document-walker");
-      const nodeFilterConstants =
-        require("devtools/shared/dom-node-filter-constants");
+      const {
+        DocumentWalker,
+      } = require("devtools/server/actors/inspector/document-walker");
+      const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
 
       const docwalker = new DocumentWalker(
         content.document.querySelector("select"),
@@ -78,9 +90,13 @@ async function testNativeAnonymousStartingNode(walker) {
 
       ok(node, "A response has arrived");
       ok(node.node, "A node is in the response");
-      is(node.node.rawNode.tagName, "SELECT",
-        "The node has changed to a parent that the walker recognizes");
-    });
+      is(
+        node.node.rawNode.tagName,
+        "SELECT",
+        "The node has changed to a parent that the walker recognizes"
+      );
+    }
+  );
 }
 
 async function testPseudoElements(walker) {
@@ -90,7 +106,11 @@ async function testPseudoElements(walker) {
   const pseudo = await walker.querySelector(walker.rootNode, "#pseudo");
   const children = await walker.children(pseudo);
 
-  is(pseudo.numChildren, 1, "::before/::after are not counted if there is a child");
+  is(
+    pseudo.numChildren,
+    1,
+    "::before/::after are not counted if there is a child"
+  );
   is(children.nodes.length, 3, "Correct number of children");
 
   const before = children.nodes[0];
@@ -116,8 +136,11 @@ async function testEmptyWithPseudo(walker) {
   const pseudo = await walker.querySelector(walker.rootNode, "#pseudo-empty");
   const children = await walker.children(pseudo);
 
-  is(pseudo.numChildren, 1,
-     "::before/::after are is counted if there are no other children");
+  is(
+    pseudo.numChildren,
+    1,
+    "::before/::after are is counted if there are no other children"
+  );
   is(children.nodes.length, 1, "Correct number of children");
 
   const before = children.nodes[0];

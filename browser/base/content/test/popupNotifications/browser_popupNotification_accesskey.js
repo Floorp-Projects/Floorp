@@ -19,7 +19,8 @@ function commandTriggered() {
 
 var tests = [
   // This test ensures that the accesskey closes the popup.
-  { id: "Test#1",
+  {
+    id: "Test#1",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       showNotification(this.notifyObj);
@@ -40,4 +41,4 @@ var tests = [
       ok(buttonPressed, "button pressed");
     },
   },
- ];
+];

@@ -4,15 +4,15 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "TabManager",
-  "TabObserver",
-  "WindowObserver",
-];
+var EXPORTED_SYMBOLS = ["TabManager", "TabObserver", "WindowObserver"];
 
-const {DOMContentLoadedPromise} = ChromeUtils.import("chrome://remote/content/Sync.jsm");
-const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { DOMContentLoadedPromise } = ChromeUtils.import(
+  "chrome://remote/content/Sync.jsm"
+);
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * The WindowManager provides tooling for application-agnostic
@@ -40,7 +40,7 @@ class WindowObserver {
    *     Events will be despatched for the ChromeWindows that exist
    *     at the time the observer is started.
    */
-  constructor({registerExisting = false} = {}) {
+  constructor({ registerExisting = false } = {}) {
     this.registerExisting = registerExisting;
     EventEmitter.decorate(this);
   }
@@ -63,16 +63,16 @@ class WindowObserver {
 
   async onOpenWindow(xulWindow) {
     const window = xulWindow
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindow);
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindow);
     await new DOMContentLoadedPromise(window);
     this.emit("open", window);
   }
 
   onCloseWindow(xulWindow) {
     const window = xulWindow
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindow);
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindow);
     this.emit("close", window);
   }
 
@@ -95,8 +95,8 @@ class TabObserver {
    *     Events will be fired for ChromeWIndows and their respective tabs
    *     at the time when the observer is started.
    */
-  constructor({registerExisting = false} = {}) {
-    this.windows = new WindowObserver({registerExisting});
+  constructor({ registerExisting = false } = {}) {
+    this.windows = new WindowObserver({ registerExisting });
     EventEmitter.decorate(this);
   }
 
@@ -136,8 +136,10 @@ class TabObserver {
       this.onTabOpen(tab);
     }
 
-    window.addEventListener("TabOpen", ({target}) => this.onTabOpen(target));
-    window.addEventListener("TabClose", ({target}) => this.onTabClose(target));
+    window.addEventListener("TabOpen", ({ target }) => this.onTabOpen(target));
+    window.addEventListener("TabClose", ({ target }) =>
+      this.onTabClose(target)
+    );
   }
 
   onWindowClose(window) {

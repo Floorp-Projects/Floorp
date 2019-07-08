@@ -31,10 +31,7 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {
-    jsterm,
-    ui,
-  } = hud;
+  const { jsterm, ui } = hud;
 
   const { autocompletePopup: popup } = jsterm;
 
@@ -56,8 +53,11 @@ async function performTests() {
   await onPopUpClose;
 
   ok(!popup.isOpen, "popup is not open after KEY_Enter");
-  is(getInputValue(hud), "window.testBugA",
-    "input was completed with the first item of the popup");
+  is(
+    getInputValue(hud),
+    "window.testBugA",
+    "input was completed with the first item of the popup"
+  );
   ok(!getInputCompletionValue(hud), "completeNode is empty");
 
   EventUtils.synthesizeKey("KEY_Enter");
@@ -65,5 +65,9 @@ async function performTests() {
 
   const state = ui.wrapper.getStore().getState();
   const entries = getHistoryEntries(state);
-  is(entries[entries.length - 1], "window.testBugA", "jsterm history is correct");
+  is(
+    entries[entries.length - 1],
+    "window.testBugA",
+    "jsterm history is correct"
+  );
 }

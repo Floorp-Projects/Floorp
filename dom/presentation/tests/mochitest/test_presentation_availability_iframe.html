@@ -40,14 +40,14 @@ function testSetup() {
 function testInitialUnavailable() {
   request = new PresentationRequest("https://example.com");
 
-  return request.getAvailability().then(function(aAvailability) {
+  return request.getAvailability().then(async function(aAvailability) {
     is(aAvailability.value, false, "Should have no available device after setup");
     aAvailability.onchange = function() {
       aAvailability.onchange = null;
       ok(aAvailability.value, "Device should be available.");
     };
     availability = aAvailability;
-    gScript.sendAsyncMessage("trigger-device-add", testDevice);
+    await gScript.sendQuery("trigger-device-add", testDevice);
   }).catch(function(aError) {
     ok(false, "Error occurred when getting availability: " + aError);
     teardown();

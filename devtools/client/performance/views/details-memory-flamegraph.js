@@ -4,7 +4,10 @@
 /* globals $, $$, PerformanceController, OverviewView */
 "use strict";
 
-const { FlameGraph, FlameGraphUtils } = require("devtools/client/shared/widgets/FlameGraph");
+const {
+  FlameGraph,
+  FlameGraphUtils,
+} = require("devtools/client/shared/widgets/FlameGraph");
 const { extend } = require("devtools/shared/extend");
 const RecordingUtils = require("devtools/shared/performance/recording-utils");
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -18,7 +21,6 @@ const { L10N } = require("../modules/global");
  * sites, controlled by DetailsView.
  */
 const MemoryFlameGraphView = extend(DetailsSubview, {
-
   shouldUpdateWhileMouseIsActive: true,
 
   rerenderPrefs: [
@@ -71,9 +73,12 @@ const MemoryFlameGraphView = extend(DetailsSubview, {
     const thread = RecordingUtils.getProfileThreadFromAllocations(allocations);
     const data = FlameGraphUtils.createFlameGraphDataFromThread(thread, {
       invertStack: PerformanceController.getOption("invert-flame-graph"),
-      flattenRecursion: PerformanceController.getOption("flatten-tree-recursion"),
-      showIdleBlocks: PerformanceController.getOption("show-idle-blocks")
-                      && L10N.getStr("table.idle"),
+      flattenRecursion: PerformanceController.getOption(
+        "flatten-tree-recursion"
+      ),
+      showIdleBlocks:
+        PerformanceController.getOption("show-idle-blocks") &&
+        L10N.getStr("table.idle"),
     });
 
     this.graph.setData({

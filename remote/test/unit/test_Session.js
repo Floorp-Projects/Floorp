@@ -3,7 +3,9 @@
 
 "use strict";
 
-const {Session} = ChromeUtils.import("chrome://remote/content/sessions/Session.jsm");
+const { Session } = ChromeUtils.import(
+  "chrome://remote/content/sessions/Session.jsm"
+);
 
 const connection = {
   registerSession: () => {},
@@ -13,11 +15,10 @@ const connection = {
 };
 
 class MockTarget {
-  constructor() {
-  }
+  constructor() {}
 
   get browsingContext() {
-    return {id: 42};
+    return { id: 42 };
   }
 
   get mm() {

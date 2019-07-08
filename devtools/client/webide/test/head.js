@@ -4,7 +4,9 @@
 "use strict";
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
 const { gDevTools } = require("devtools/client/framework/devtools");
 var Services = require("Services");
@@ -14,7 +16,8 @@ const { DebuggerServer } = require("devtools/server/main");
 
 var TEST_BASE;
 if (window.location === AppConstants.BROWSER_CHROME_URL) {
-  TEST_BASE = "chrome://mochitests/content/browser/devtools/client/webide/test/";
+  TEST_BASE =
+    "chrome://mochitests/content/browser/devtools/client/webide/test/";
 } else {
   TEST_BASE = "chrome://mochitests/content/chrome/devtools/client/webide/test/";
 }
@@ -22,12 +25,21 @@ if (window.location === AppConstants.BROWSER_CHROME_URL) {
 Services.prefs.setBoolPref("devtools.webide.enabled", true);
 Services.prefs.setBoolPref("devtools.webide.enableLocalRuntime", true);
 
-Services.prefs.setCharPref("devtools.remote.adb.extensionURL", TEST_BASE + "addons/adb-extension-#OS#.xpi");
-Services.prefs.setCharPref("devtools.webide.templatesURL", TEST_BASE + "templates.json");
-Services.prefs.setCharPref("devtools.devices.url", TEST_BASE + "browser_devices.json");
+Services.prefs.setCharPref(
+  "devtools.remote.adb.extensionURL",
+  TEST_BASE + "addons/adb-extension-#OS#.xpi"
+);
+Services.prefs.setCharPref(
+  "devtools.webide.templatesURL",
+  TEST_BASE + "templates.json"
+);
+Services.prefs.setCharPref(
+  "devtools.devices.url",
+  TEST_BASE + "browser_devices.json"
+);
 
-var registerCleanupFunction = registerCleanupFunction ||
-                              SimpleTest.registerCleanupFunction;
+var registerCleanupFunction =
+  registerCleanupFunction || SimpleTest.registerCleanupFunction;
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webide.enabled");
   Services.prefs.clearUserPref("devtools.webide.enableLocalRuntime");
@@ -41,17 +53,32 @@ registerCleanupFunction(() => {
 var openWebIDE = async function({ autoInstallAddons, newAboutDebugging } = {}) {
   info("opening WebIDE");
 
-  Services.prefs.setBoolPref("devtools.webide.autoinstallADBExtension", !!autoInstallAddons);
-  Services.prefs.setBoolPref("devtools.aboutdebugging.new-enabled", !!newAboutDebugging);
+  Services.prefs.setBoolPref(
+    "devtools.webide.autoinstallADBExtension",
+    !!autoInstallAddons
+  );
+  Services.prefs.setBoolPref(
+    "devtools.aboutdebugging.new-enabled",
+    !!newAboutDebugging
+  );
 
-  const win = Services.ww.openWindow(null, "chrome://webide/content/", "webide",
-                                   "chrome,centerscreen,resizable", null);
+  const win = Services.ww.openWindow(
+    null,
+    "chrome://webide/content/",
+    "webide",
+    "chrome,centerscreen,resizable",
+    null
+  );
 
   await new Promise(resolve => {
-    win.addEventListener("load", function() {
-      SimpleTest.requestCompleteLog();
-      SimpleTest.executeSoon(resolve);
-    }, {once: true});
+    win.addEventListener(
+      "load",
+      function() {
+        SimpleTest.requestCompleteLog();
+        SimpleTest.executeSoon(resolve);
+      },
+      { once: true }
+    );
   });
 
   info("WebIDE open");
@@ -63,10 +90,14 @@ function closeWebIDE(win) {
   info("Closing WebIDE");
 
   return new Promise(resolve => {
-    win.addEventListener("unload", function() {
-      info("WebIDE closed");
-      SimpleTest.executeSoon(resolve);
-    }, {once: true});
+    win.addEventListener(
+      "unload",
+      function() {
+        info("WebIDE closed");
+        SimpleTest.executeSoon(resolve);
+      },
+      { once: true }
+    );
 
     win.close();
   });
@@ -127,9 +158,13 @@ function documentIsLoaded(doc) {
 
 function lazyIframeIsLoaded(iframe) {
   return new Promise(resolve => {
-    iframe.addEventListener("load", function() {
-      resolve(nextTick());
-    }, {capture: true, once: true});
+    iframe.addEventListener(
+      "load",
+      function() {
+        resolve(nextTick());
+      },
+      { capture: true, once: true }
+    );
   });
 }
 
@@ -141,7 +176,7 @@ function addTab(aUrl, aWindow) {
     const targetBrowser = targetWindow.gBrowser;
 
     targetWindow.focus();
-    const tab = targetBrowser.selectedTab = targetBrowser.addTab(aUrl);
+    const tab = (targetBrowser.selectedTab = targetBrowser.addTab(aUrl));
     const linkedBrowser = tab.linkedBrowser;
 
     BrowserTestUtils.browserLoaded(linkedBrowser).then(function() {
@@ -159,29 +194,37 @@ function removeTab(aTab, aWindow) {
     const targetBrowser = targetWindow.gBrowser;
     const tabContainer = targetBrowser.tabContainer;
 
-    tabContainer.addEventListener("TabClose", function(aEvent) {
-      info("Tab removed and finished closing.");
-      resolve();
-    }, {once: true});
+    tabContainer.addEventListener(
+      "TabClose",
+      function(aEvent) {
+        info("Tab removed and finished closing.");
+        resolve();
+      },
+      { once: true }
+    );
 
     targetBrowser.removeTab(aTab);
   });
 }
 
 function getRuntimeDocument(win) {
-  return win.document.querySelector("#runtime-listing-panel-details").contentDocument;
+  return win.document.querySelector("#runtime-listing-panel-details")
+    .contentDocument;
 }
 
 function getProjectDocument(win) {
-  return win.document.querySelector("#project-listing-panel-details").contentDocument;
+  return win.document.querySelector("#project-listing-panel-details")
+    .contentDocument;
 }
 
 function getRuntimeWindow(win) {
-  return win.document.querySelector("#runtime-listing-panel-details").contentWindow;
+  return win.document.querySelector("#runtime-listing-panel-details")
+    .contentWindow;
 }
 
 function getProjectWindow(win) {
-  return win.document.querySelector("#project-listing-panel-details").contentWindow;
+  return win.document.querySelector("#project-listing-panel-details")
+    .contentWindow;
 }
 
 function getAddonsDocument(win) {

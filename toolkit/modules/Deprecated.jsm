@@ -4,19 +4,22 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "Deprecated" ];
+var EXPORTED_SYMBOLS = ["Deprecated"];
 
 const PREF_DEPRECATION_WARNINGS = "devtools.errorconsole.deprecation_warnings";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // A flag that indicates whether deprecation warnings should be logged.
 var logWarnings = Services.prefs.getBoolPref(PREF_DEPRECATION_WARNINGS);
 
-Services.prefs.addObserver(PREF_DEPRECATION_WARNINGS,
-  function(aSubject, aTopic, aData) {
-    logWarnings = Services.prefs.getBoolPref(PREF_DEPRECATION_WARNINGS);
-  });
+Services.prefs.addObserver(PREF_DEPRECATION_WARNINGS, function(
+  aSubject,
+  aTopic,
+  aData
+) {
+  logWarnings = Services.prefs.getBoolPref(PREF_DEPRECATION_WARNINGS);
+});
 
 /**
  * Build a callstack log message.
@@ -34,8 +37,7 @@ function stringifyCallstack(aStack) {
   let msg = "";
   // Get every frame in the callstack.
   while (frame) {
-    msg += frame.filename + " " + frame.lineNumber +
-      " " + frame.name + "\n";
+    msg += frame.filename + " " + frame.lineNumber + " " + frame.name + "\n";
     frame = frame.caller;
   }
   return msg;
@@ -62,14 +64,19 @@ var Deprecated = {
 
     // If URL is not provided, report an error.
     if (!aUrl) {
-      Cu.reportError("Error in Deprecated.warning: warnings must " +
-        "provide a URL documenting this deprecation.");
+      Cu.reportError(
+        "Error in Deprecated.warning: warnings must " +
+          "provide a URL documenting this deprecation."
+      );
       return;
     }
 
-    let textMessage = "DEPRECATION WARNING: " + aText +
+    let textMessage =
+      "DEPRECATION WARNING: " +
+      aText +
       "\nYou may find more details about this deprecation at: " +
-      aUrl + "\n" +
+      aUrl +
+      "\n" +
       // Append a callstack part to the deprecation message.
       stringifyCallstack(aStack);
 

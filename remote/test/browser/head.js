@@ -3,8 +3,12 @@
 
 "use strict";
 
-const {RemoteAgent} = ChromeUtils.import("chrome://remote/content/RemoteAgent.jsm");
-const {RemoteAgentError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
+const { RemoteAgent } = ChromeUtils.import(
+  "chrome://remote/content/RemoteAgent.jsm"
+);
+const { RemoteAgentError } = ChromeUtils.import(
+  "chrome://remote/content/Error.jsm"
+);
 
 /**
  * Override `add_task` in order to translate chrome-remote-interface exceptions
@@ -27,7 +31,8 @@ this.add_task = function(test) {
   });
 };
 
-const CRI_URI = "http://example.com/browser/remote/test/browser/chrome-remote-interface.js";
+const CRI_URI =
+  "http://example.com/browser/remote/test/browser/chrome-remote-interface.js";
 
 /**
  * Create a test document in an invisible window.
@@ -59,7 +64,7 @@ async function getCDP() {
   script.setAttribute("src", CRI_URI);
   document.documentElement.appendChild(script);
   await new Promise(resolve => {
-    script.addEventListener("load", resolve, {once: true});
+    script.addEventListener("load", resolve, { once: true });
   });
 
   const window = document.defaultView.wrappedJSObject;
@@ -68,7 +73,7 @@ async function getCDP() {
   // library in order to do the cross-domain http request, which,
   // in a regular Web page, is impossible.
   window.criRequest = (options, callback) => {
-    const {host, port, path} = options;
+    const { host, port, path } = options;
     const url = `http://${host}:${port}${path}`;
     const xhr = new XMLHttpRequest();
     xhr.open("GET", url, true);

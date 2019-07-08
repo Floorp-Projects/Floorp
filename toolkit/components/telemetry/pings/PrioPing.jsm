@@ -9,9 +9,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "TelemetryPrioPing",
-];
+var EXPORTED_SYMBOLS = ["TelemetryPrioPing"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
@@ -24,8 +22,10 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   Telemetry: ["@mozilla.org/base/telemetry;1", "nsITelemetry"],
 });
 
-const {TelemetryUtils} = ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TelemetryUtils } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const Utils = TelemetryUtils;
 
@@ -38,14 +38,16 @@ const PRIO_LIMIT_REACHED_TOPIC = "origin-telemetry-storage-limit-reached";
 const PRIO_PING_VERSION = "1";
 
 var Policy = {
-  sendPing: (type, payload, options) => TelemetryController.submitExternalPing(type, payload, options),
-  getEncodedOriginSnapshot: async (aClear) => Telemetry.getEncodedOriginSnapshot(aClear),
+  sendPing: (type, payload, options) =>
+    TelemetryController.submitExternalPing(type, payload, options),
+  getEncodedOriginSnapshot: async aClear =>
+    Telemetry.getEncodedOriginSnapshot(aClear),
 };
 
 var TelemetryPrioPing = {
   Reason: Object.freeze({
     PERIODIC: "periodic", // Sent the ping containing Origin Telemetry from the past periodic interval (default 24h).
-    MAX: "max",           // Sent the ping containing at least the maximum number (default 10) of prioData elements, earlier than the periodic interval.
+    MAX: "max", // Sent the ping containing at least the maximum number (default 10) of prioData elements, earlier than the periodic interval.
     SHUTDOWN: "shutdown", // Recorded data was sent on shutdown.
   }),
 
@@ -61,7 +63,10 @@ var TelemetryPrioPing = {
       return;
     }
 
-    if (!this._testing && !Services.prefs.getBoolPref(Utils.Preferences.PrioPingEnabled, true)) {
+    if (
+      !this._testing &&
+      !Services.prefs.getBoolPref(Utils.Preferences.PrioPingEnabled, true)
+    ) {
       this._log.trace("Prio ping disabled by pref.");
       return;
     }
@@ -105,7 +110,9 @@ var TelemetryPrioPing = {
     let snapshot = await Policy.getEncodedOriginSnapshot(true /* clear */);
 
     if (!this._testing) {
-      snapshot = snapshot.filter(({encoding}) => !encoding.startsWith("telemetry.test"));
+      snapshot = snapshot.filter(
+        ({ encoding }) => !encoding.startsWith("telemetry.test")
+      );
     }
 
     if (snapshot.length === 0) {
@@ -138,7 +145,10 @@ var TelemetryPrioPing = {
 
   get _log() {
     if (!this._logger) {
-      this._logger = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX + "::");
+      this._logger = Log.repository.getLoggerWithMessagePrefix(
+        LOGGER_NAME,
+        LOGGER_PREFIX + "::"
+      );
     }
 
     return this._logger;

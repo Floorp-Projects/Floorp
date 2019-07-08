@@ -106,6 +106,15 @@ bool TreeWalker::Seek(nsIContent* aChildNode) {
                      ? childNode->GetParentNode()
                      : childNode->GetFlattenedTreeParent();
 
+    // Handle the special case of XBL binding child under a shadow root.
+    if (parentNode && parentNode->IsShadowRoot()) {
+      parentNode = childNode->GetFlattenedTreeParent();
+      if (parentNode == mAnchorNode) {
+        return true;
+      }
+      continue;
+    }
+
     if (!parentNode || !parentNode->IsElement()) {
       return false;
     }

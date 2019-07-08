@@ -21,7 +21,7 @@ async function performTests() {
 
   let openedLinks = 0;
   const oldOpenLink = hud.openLink;
-  hud.openLink = (url) => {
+  hud.openLink = url => {
     if (url == HELP_URL) {
       openedLinks++;
     }
@@ -33,8 +33,10 @@ async function performTests() {
   await jsterm.execute("?");
 
   const messages = Array.from(jsterm.outputNode.querySelectorAll(".message"));
-  ok(messages.every(msg => msg.classList.contains("command")),
-    "There is no results shown for the help commands");
+  ok(
+    messages.every(msg => msg.classList.contains("command")),
+    "There is no results shown for the help commands"
+  );
   is(openedLinks, 3, "correct number of pages opened by the help calls");
   hud.openLink = oldOpenLink;
 }

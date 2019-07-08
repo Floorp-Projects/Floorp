@@ -28,13 +28,28 @@ add_task(async () => {
 
   let service = getProfileService();
   Assert.ok(didCreate, "Should have created a new profile.");
-  Assert.equal(profile.name, DEDICATED_NAME, "Should have created the right profile");
-  Assert.ok(!service.createdAlternateProfile, "Should not have created an alternate profile.");
+  Assert.equal(
+    profile.name,
+    DEDICATED_NAME,
+    "Should have created the right profile"
+  );
+  Assert.ok(
+    !service.createdAlternateProfile,
+    "Should not have created an alternate profile."
+  );
 
   let profilesData = readProfilesIni();
-  Assert.equal(Object.keys(profilesData.installs).length, 1, "Should be only one known install");
+  Assert.equal(
+    Object.keys(profilesData.installs).length,
+    1,
+    "Should be only one known install"
+  );
   Assert.ok(hash in profilesData.installs, "Should be the expected install.");
-  Assert.notEqual(profilesData.installs[hash].default, "Path2", "Didn't import the previous data.");
+  Assert.notEqual(
+    profilesData.installs[hash].default,
+    "Path2",
+    "Didn't import the previous data."
+  );
 
   checkProfileService(profilesData);
 });

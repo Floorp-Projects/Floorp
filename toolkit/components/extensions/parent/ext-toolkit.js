@@ -13,12 +13,17 @@
           isDefaultCookieStoreId: false, isPrivateCookieStoreId:false,
           EventManager: false */
 
-ChromeUtils.defineModuleGetter(this, "ContextualIdentityService",
-                               "resource://gre/modules/ContextualIdentityService.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContextualIdentityService",
+  "resource://gre/modules/ContextualIdentityService.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-var {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+var { ExtensionCommon } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionCommon.jsm"
+);
 
 global.EventEmitter = ExtensionCommon.EventEmitter;
 global.EventManager = ExtensionCommon.EventManager;
@@ -83,7 +88,9 @@ global.getContainerForCookieStoreId = function(storeId) {
 };
 
 global.isValidCookieStoreId = function(storeId) {
-  return isDefaultCookieStoreId(storeId) ||
-         isPrivateCookieStoreId(storeId) ||
-         isContainerCookieStoreId(storeId);
+  return (
+    isDefaultCookieStoreId(storeId) ||
+    isPrivateCookieStoreId(storeId) ||
+    isContainerCookieStoreId(storeId)
+  );
 };

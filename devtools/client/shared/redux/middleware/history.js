@@ -12,9 +12,11 @@ const flags = require("devtools/shared/flags");
  */
 exports.history = (log = []) => ({ dispatch, getState }) => {
   if (!flags.testing) {
-    console.warn("Using history middleware stores all actions in state for " +
-                 "testing and devtools is not currently running in test " +
-                 "mode. Be sure this is intentional.");
+    console.warn(
+      "Using history middleware stores all actions in state for " +
+        "testing and devtools is not currently running in test " +
+        "mode. Be sure this is intentional."
+    );
   }
   return next => action => {
     log.push(action);

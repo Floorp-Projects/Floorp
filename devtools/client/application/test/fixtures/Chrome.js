@@ -5,7 +5,7 @@
 "use strict";
 
 module.exports = {
- Cc: {},
- Ci: {},
- Cu: {},
+  Cc: {},
+  Ci: {},
+  Cu: {},
 };

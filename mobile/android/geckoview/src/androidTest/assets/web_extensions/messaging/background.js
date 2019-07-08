@@ -4,8 +4,10 @@ browser.runtime
   .catch(runTest);
 
 async function runTest() {
-  const response = await browser.runtime
-    .sendNativeMessage("browser", "testBackgroundBrowserMessage");
+  const response = await browser.runtime.sendNativeMessage(
+    "browser",
+    "testBackgroundBrowserMessage"
+  );
 
   browser.runtime.sendNativeMessage("browser", `response: ${response}`);
 
@@ -20,7 +22,8 @@ async function runTest() {
   });
 
   port.onDisconnect.addListener(() =>
-      browser.runtime.sendNativeMessage("browser", {type: "portDisconnected"}));
+    browser.runtime.sendNativeMessage("browser", { type: "portDisconnected" })
+  );
 
   port.postMessage("testBackgroundPortMessage");
 }

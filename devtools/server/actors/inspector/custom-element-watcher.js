@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Cu} = require("chrome");
+const { Cu } = require("chrome");
 const InspectorUtils = require("InspectorUtils");
 const EventEmitter = require("devtools/shared/event-emitter");
 
@@ -23,8 +23,10 @@ class CustomElementWatcher extends EventEmitter {
 
     this.chromeEventHandler = chromeEventHandler;
     this._onCustomElementDefined = this._onCustomElementDefined.bind(this);
-    this.chromeEventHandler.addEventListener("customelementdefined",
-      this._onCustomElementDefined);
+    this.chromeEventHandler.addEventListener(
+      "customelementdefined",
+      this._onCustomElementDefined
+    );
 
     /**
      * Each window keeps its own custom element registry, all of them are watched
@@ -41,8 +43,10 @@ class CustomElementWatcher extends EventEmitter {
 
   destroy() {
     this.watchedRegistries = null;
-    this.chromeEventHandler.removeEventListener("customelementdefined",
-      this._onCustomElementDefined);
+    this.chromeEventHandler.removeEventListener(
+      "customelementdefined",
+      this._onCustomElementDefined
+    );
   }
 
   /**
@@ -131,10 +135,12 @@ class CustomElementWatcher extends EventEmitter {
    */
   _isValidNode(nodeActor) {
     const node = nodeActor.rawNode;
-    return !Cu.isDeadWrapper(node) &&
-           node.ownerGlobal &&
-           node.ownerDocument &&
-           node.ownerDocument.documentElement;
+    return (
+      !Cu.isDeadWrapper(node) &&
+      node.ownerGlobal &&
+      node.ownerDocument &&
+      node.ownerDocument.documentElement
+    );
   }
 }
 

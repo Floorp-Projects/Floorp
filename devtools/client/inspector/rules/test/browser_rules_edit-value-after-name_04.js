@@ -18,22 +18,25 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   info("Test click on background-image url while editing property name");
 
   await selectNode("#testid", inspector);
   const ruleEditor = getRuleViewRuleEditor(view, 1);
   const propEditor = ruleEditor.rule.textProps[0].editor;
-  const anchor =
-    propEditor.valueSpan.querySelector(".ruleview-propertyvalue .theme-link");
+  const anchor = propEditor.valueSpan.querySelector(
+    ".ruleview-propertyvalue .theme-link"
+  );
 
   info("Focus the background name span");
   await focusEditableField(view, propEditor.nameSpan);
   const editor = inplaceEditor(propEditor.doc.activeElement);
 
-  info("Modify the property to background to trigger the " +
-    "property-value-updated event");
+  info(
+    "Modify the property to background to trigger the " +
+      "property-value-updated event"
+  );
   editor.input.value = "background-image";
 
   const onRuleViewChanged = view.once("ruleview-changed");
@@ -44,9 +47,17 @@ add_task(async function() {
   // The url can be wrapped across multiple lines, and so we click the lower left corner
   // of the anchor to make sure to target the link.
   const rect = anchor.getBoundingClientRect();
-  EventUtils.synthesizeMouse(anchor, 2, rect.height - 2, {}, propEditor.doc.defaultView);
+  EventUtils.synthesizeMouse(
+    anchor,
+    2,
+    rect.height - 2,
+    {},
+    propEditor.doc.defaultView
+  );
 
-  info("wait for ruleview-changed event to be triggered to prevent pending requests");
+  info(
+    "wait for ruleview-changed event to be triggered to prevent pending requests"
+  );
   await onRuleViewChanged;
 
   info("wait for the property value to be updated");
@@ -56,8 +67,11 @@ add_task(async function() {
   const tab = await onTabOpened;
   ok(true, "A new tab opened");
 
-  is(tab.linkedBrowser.currentURI.spec, anchor.href,
-    "The URL for the new tab is correct");
+  is(
+    tab.linkedBrowser.currentURI.spec,
+    anchor.href,
+    "The URL for the new tab is correct"
+  );
 
   gBrowser.removeTab(tab);
 });

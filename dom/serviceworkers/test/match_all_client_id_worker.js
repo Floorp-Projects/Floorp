@@ -25,4 +25,4 @@ onmessage = function(e) {
       }
     });
   }
-}
+};

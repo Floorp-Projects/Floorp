@@ -1,13 +1,23 @@
 /**
  * Import common SimpleTest methods so that they're usable in this window.
  */
-var imports = [ "SimpleTest", "is", "isnot", "ok", "onerror", "todo",
-  "todo_is", "todo_isnot" ];
+var imports = [
+  "SimpleTest",
+  "is",
+  "isnot",
+  "ok",
+  "onerror",
+  "todo",
+  "todo_is",
+  "todo_isnot",
+];
 for (var name of imports) {
   window[name] = window.opener.wrappedJSObject[name];
 }
-const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { BrowserTestUtils } = ChromeUtils.import(
+  "resource://testing-common/BrowserTestUtils.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Some functions assume chrome-harness.js has been loaded.
 /* import-globals-from ../../../testing/mochitest/chrome-harness.js */
@@ -22,16 +32,15 @@ const NAV_URI = 3;
 const NAV_RELOAD = 4;
 
 var gExpectedEvents; // an array of events which are expected to
-                              // be triggered by this navigation
+// be triggered by this navigation
 var gUnexpectedEvents; // an array of event names which are NOT expected
-                              // to be triggered by this navigation
+// to be triggered by this navigation
 var gFinalEvent; // true if the last expected event has fired
 var gUrisNotInBFCache = []; // an array of uri's which shouldn't be stored
-                              // in the bfcache
+// in the bfcache
 var gNavType = NAV_NONE; // defines the most recent navigation type
-                              // executed by doPageNavigation
-var gOrigMaxTotalViewers =    // original value of max_total_viewers,
-  undefined; // to be restored at end of test
+// executed by doPageNavigation
+var gOrigMaxTotalViewers = undefined; // original value of max_total_viewers, // to be restored at end of test
 
 var gExtractedPath = null; // used to cache file path for extracting files from a .jar file
 
@@ -99,57 +108,87 @@ function doPageNavigation(params) {
   let forward = params.forward ? params.forward : false;
   let reload = params.reload ? params.reload : false;
   let uri = params.uri ? params.uri : false;
-  let eventsToListenFor = typeof(params.eventsToListenFor) != "undefined" ?
-    params.eventsToListenFor : ["pageshow"];
-  gExpectedEvents = typeof(params.eventsToListenFor) == "undefined" ||
-    eventsToListenFor.length == 0 ? undefined : params.expectedEvents;
-  gUnexpectedEvents = typeof(params.eventsToListenFor) == "undefined" ||
-    eventsToListenFor.length == 0 ? undefined : params.unexpectedEvents;
-  let preventBFCache = (typeof[params.preventBFCache] == "undefined") ?
-    false : params.preventBFCache;
-  let waitOnly = (typeof(params.waitForEventsOnly) == "boolean"
-    && params.waitForEventsOnly);
+  let eventsToListenFor =
+    typeof params.eventsToListenFor != "undefined"
+      ? params.eventsToListenFor
+      : ["pageshow"];
+  gExpectedEvents =
+    typeof params.eventsToListenFor == "undefined" ||
+    eventsToListenFor.length == 0
+      ? undefined
+      : params.expectedEvents;
+  gUnexpectedEvents =
+    typeof params.eventsToListenFor == "undefined" ||
+    eventsToListenFor.length == 0
+      ? undefined
+      : params.unexpectedEvents;
+  let preventBFCache =
+    typeof [params.preventBFCache] == "undefined"
+      ? false
+      : params.preventBFCache;
+  let waitOnly =
+    typeof params.waitForEventsOnly == "boolean" && params.waitForEventsOnly;
 
   // Do some sanity checking on arguments.
-  if (back && forward)
+  if (back && forward) {
     throw new Error("Can't specify both back and forward");
-  if (back && uri)
+  }
+  if (back && uri) {
     throw new Error("Can't specify both back and a uri");
-  if (forward && uri)
+  }
+  if (forward && uri) {
     throw new Error("Can't specify both forward and a uri");
-  if (reload && (forward || back || uri))
+  }
+  if (reload && (forward || back || uri)) {
     throw new Error("Can't specify reload and another navigation type");
-  if (!back && !forward && !uri && !reload && !waitOnly)
+  }
+  if (!back && !forward && !uri && !reload && !waitOnly) {
     throw new Error("Must specify back or foward or reload or uri");
-  if (params.onNavComplete && eventsToListenFor.length == 0)
+  }
+  if (params.onNavComplete && eventsToListenFor.length == 0) {
     throw new Error("Can't use onNavComplete when eventsToListenFor == []");
-  if (params.preventBFCache && eventsToListenFor.length == 0)
+  }
+  if (params.preventBFCache && eventsToListenFor.length == 0) {
     throw new Error("Can't use preventBFCache when eventsToListenFor == []");
-  if (params.preventBFCache && waitOnly)
+  }
+  if (params.preventBFCache && waitOnly) {
     throw new Error("Can't prevent bfcaching when only waiting for events");
-  if (waitOnly && typeof(params.onNavComplete) == "undefined")
-    throw new Error("Must specify onNavComplete when specifying waitForEventsOnly");
-  if (waitOnly && (back || forward || reload || uri))
-    throw new Error("Can't specify a navigation type when using waitForEventsOnly");
+  }
+  if (waitOnly && typeof params.onNavComplete == "undefined") {
+    throw new Error(
+      "Must specify onNavComplete when specifying waitForEventsOnly"
+    );
+  }
+  if (waitOnly && (back || forward || reload || uri)) {
+    throw new Error(
+      "Can't specify a navigation type when using waitForEventsOnly"
+    );
+  }
   for (let anEventType of eventsToListenFor) {
     let eventFound = false;
-    if ( (anEventType == "pageshow") && (!gExpectedEvents) )
+    if (anEventType == "pageshow" && !gExpectedEvents) {
       eventFound = true;
+    }
     if (gExpectedEvents) {
       for (let anExpectedEvent of gExpectedEvents) {
-        if (anExpectedEvent.type == anEventType)
+        if (anExpectedEvent.type == anEventType) {
           eventFound = true;
+        }
       }
     }
     if (gUnexpectedEvents) {
       for (let anExpectedEventType of gUnexpectedEvents) {
-        if (anExpectedEventType == anEventType)
+        if (anExpectedEventType == anEventType) {
           eventFound = true;
+        }
       }
     }
-    if (!eventFound)
-      throw new Error(`Event type ${anEventType} is specified in ` +
-                      "eventsToListenFor, but not in expectedEvents");
+    if (!eventFound) {
+      throw new Error(
+        `Event type ${anEventType} is specified in ` +
+          "eventsToListenFor, but not in expectedEvents"
+      );
+    }
   }
 
   // If the test explicitly sets .eventsToListenFor to [], don't wait for any
@@ -160,8 +199,11 @@ function doPageNavigation(params) {
   // property of the input parameters.
   for (let eventType of eventsToListenFor) {
     dump("TEST: registering a listener for " + eventType + " events\n");
-    TestWindow.getBrowser().addEventListener(eventType, pageEventListener,
-      true);
+    TestWindow.getBrowser().addEventListener(
+      eventType,
+      pageEventListener,
+      true
+    );
   }
 
   // Perform the specified navigation.
@@ -187,11 +229,17 @@ function doPageNavigation(params) {
   // wait for all events to occur, and then call doPageNavigation_complete().
   if (eventsToListenFor.length > 0 && params.onNavComplete) {
     waitForTrue(
-      function() { return gFinalEvent; },
       function() {
-        doPageNavigation_complete(eventsToListenFor, params.onNavComplete,
-          preventBFCache);
-      } );
+        return gFinalEvent;
+      },
+      function() {
+        doPageNavigation_complete(
+          eventsToListenFor,
+          params.onNavComplete,
+          preventBFCache
+        );
+      }
+    );
   }
 }
 
@@ -201,23 +249,35 @@ function doPageNavigation(params) {
  * function is called after all the expected events for this navigation have
  * occurred.
  */
-function doPageNavigation_complete(eventsToListenFor, onNavComplete,
-  preventBFCache) {
+function doPageNavigation_complete(
+  eventsToListenFor,
+  onNavComplete,
+  preventBFCache
+) {
   // Unregister our event listeners.
   dump("TEST: removing event listeners\n");
   for (let eventType of eventsToListenFor) {
-    TestWindow.getBrowser().removeEventListener(eventType, pageEventListener,
-      true);
+    TestWindow.getBrowser().removeEventListener(
+      eventType,
+      pageEventListener,
+      true
+    );
   }
 
   // If the .preventBFCache property was set, add an empty unload handler to
   // prevent the page from being bfcached.
   let uri = TestWindow.getBrowser().currentURI.spec;
   if (preventBFCache) {
-    TestWindow.getWindow().addEventListener("unload", function() {
-        dump("TEST: Called dummy unload function to prevent page from " +
-          "being bfcached.\n");
-      }, true);
+    TestWindow.getWindow().addEventListener(
+      "unload",
+      function() {
+        dump(
+          "TEST: Called dummy unload function to prevent page from " +
+            "being bfcached.\n"
+        );
+      },
+      true
+    );
 
     // Save the current uri in an array of uri's which shouldn't be
     // stored in the bfcache, for later verification.
@@ -227,12 +287,11 @@ function doPageNavigation_complete(eventsToListenFor, onNavComplete,
   } else if (gNavType == NAV_URI) {
     // If we're navigating to a uri and .preventBFCache was not
     // specified, splice it out of gUrisNotInBFCache if it's there.
-    gUrisNotInBFCache.forEach(
-      function(element, index, array) {
-        if (element == uri) {
-          array.splice(index, 1);
-        }
-      }, this);
+    gUrisNotInBFCache.forEach(function(element, index, array) {
+      if (element == uri) {
+        array.splice(index, 1);
+      }
+    }, this);
   }
 
   // Notify the callback now that we're done.
@@ -254,8 +313,15 @@ function waitForPageEvents(params) {
  */
 function pageEventListener(event) {
   try {
-    dump("TEST: eventListener received a " + event.type + " event for page " +
-      event.originalTarget.title + ", persisted=" + event.persisted + "\n");
+    dump(
+      "TEST: eventListener received a " +
+        event.type +
+        " event for page " +
+        event.originalTarget.title +
+        ", persisted=" +
+        event.persisted +
+        "\n"
+    );
   } catch (e) {
     // Ignore any exception.
   }
@@ -264,25 +330,35 @@ function pageEventListener(event) {
   // loaded with .preventBFCache, make sure that its pageshow event
   // has .persisted = false, even if the test doesn't explicitly test
   // for .persisted.
-  if ( (event.type == "pageshow") &&
-    (gNavType == NAV_BACK || gNavType == NAV_FORWARD) ) {
+  if (
+    event.type == "pageshow" &&
+    (gNavType == NAV_BACK || gNavType == NAV_FORWARD)
+  ) {
     let uri = TestWindow.getBrowser().currentURI.spec;
     if (uri in gUrisNotInBFCache) {
-      ok(!event.persisted, "pageshow event has .persisted = false, even " +
-       "though it was loaded with .preventBFCache previously\n");
+      ok(
+        !event.persisted,
+        "pageshow event has .persisted = false, even " +
+          "though it was loaded with .preventBFCache previously\n"
+      );
     }
   }
 
-  if (typeof(gUnexpectedEvents) != "undefined") {
-    is(gUnexpectedEvents.indexOf(event.type), -1,
-       "Should not get unexpected event " + event.type);
+  if (typeof gUnexpectedEvents != "undefined") {
+    is(
+      gUnexpectedEvents.indexOf(event.type),
+      -1,
+      "Should not get unexpected event " + event.type
+    );
   }
 
   // If no expected events were specified, mark the final event as having been
   // triggered when a pageshow event is fired; this will allow
   // doPageNavigation() to return.
-  if ((typeof(gExpectedEvents) == "undefined") && event.type == "pageshow") {
-    waitForNextPaint(function() { gFinalEvent = true; });
+  if (typeof gExpectedEvents == "undefined" && event.type == "pageshow") {
+    waitForNextPaint(function() {
+      gFinalEvent = true;
+    });
     return;
   }
 
@@ -297,41 +373,71 @@ function pageEventListener(event) {
   // actual event.
   let expected = gExpectedEvents.shift();
 
-  is(event.type, expected.type,
-    "A " + expected.type + " event was expected, but a " +
-    event.type + " event occurred");
+  is(
+    event.type,
+    expected.type,
+    "A " +
+      expected.type +
+      " event was expected, but a " +
+      event.type +
+      " event occurred"
+  );
 
-  if (typeof(expected.title) != "undefined") {
-    ok(event.originalTarget instanceof HTMLDocument,
-       "originalTarget for last " + event.type +
-       " event not an HTMLDocument");
-    is(event.originalTarget.title, expected.title,
-      "A " + event.type + " event was expected for page " +
-      expected.title + ", but was fired for page " +
-      event.originalTarget.title);
+  if (typeof expected.title != "undefined") {
+    ok(
+      event.originalTarget instanceof HTMLDocument,
+      "originalTarget for last " + event.type + " event not an HTMLDocument"
+    );
+    is(
+      event.originalTarget.title,
+      expected.title,
+      "A " +
+        event.type +
+        " event was expected for page " +
+        expected.title +
+        ", but was fired for page " +
+        event.originalTarget.title
+    );
   }
 
-  if (typeof(expected.persisted) != "undefined") {
-    is(event.persisted, expected.persisted,
-      "The persisted property of the " + event.type + " event on page " +
-      event.originalTarget.location + " had an unexpected value");
+  if (typeof expected.persisted != "undefined") {
+    is(
+      event.persisted,
+      expected.persisted,
+      "The persisted property of the " +
+        event.type +
+        " event on page " +
+        event.originalTarget.location +
+        " had an unexpected value"
+    );
   }
 
   if ("visibilityState" in expected) {
-    is(event.originalTarget.visibilityState, expected.visibilityState,
-       "The visibilityState property of the document on page " +
-       event.originalTarget.location + " had an unexpected value");
+    is(
+      event.originalTarget.visibilityState,
+      expected.visibilityState,
+      "The visibilityState property of the document on page " +
+        event.originalTarget.location +
+        " had an unexpected value"
+    );
   }
 
   if ("hidden" in expected) {
-    is(event.originalTarget.hidden, expected.hidden,
-       "The hidden property of the document on page " +
-       event.originalTarget.location + " had an unexpected value");
+    is(
+      event.originalTarget.hidden,
+      expected.hidden,
+      "The hidden property of the document on page " +
+        event.originalTarget.location +
+        " had an unexpected value"
+    );
   }
 
   // If we're out of expected events, let doPageNavigation() return.
-  if (gExpectedEvents.length == 0)
-    waitForNextPaint(function() { gFinalEvent = true; });
+  if (gExpectedEvents.length == 0) {
+    waitForNextPaint(function() {
+      gFinalEvent = true;
+    });
+  }
 }
 
 /**
@@ -344,9 +450,11 @@ function finish() {
 
   // If the test changed the value of max_total_viewers via a call to
   // enableBFCache(), then restore it now.
-  if (typeof(gOrigMaxTotalViewers) != "undefined") {
-    Services.prefs.setIntPref("browser.sessionhistory.max_total_viewers",
-      gOrigMaxTotalViewers);
+  if (typeof gOrigMaxTotalViewers != "undefined") {
+    Services.prefs.setIntPref(
+      "browser.sessionhistory.max_total_viewers",
+      gOrigMaxTotalViewers
+    );
   }
 
   // Close the test window and signal the framework that the test is done.
@@ -383,33 +491,31 @@ function finish() {
  */
 function waitForTrue(fn, onWaitComplete, timeout) {
   var start = new Date().valueOf();
-  if (typeof(timeout) != "undefined") {
+  if (typeof timeout != "undefined") {
     // If timeoutWait is less than 500, assume it represents seconds, and
     // convert to ms.
-    if (timeout < 500)
+    if (timeout < 500) {
       timeout *= 1000;
+    }
   }
 
   // Loop until the test function returns true, or until a timeout occurs,
   // if a timeout is defined.
   var intervalid;
-  intervalid =
-    setInterval(
-      function() {
-        var timeoutHit = false;
-        if (typeof(timeout) != "undefined") {
-          timeoutHit = new Date().valueOf() - start >=
-            timeout;
-          if (timeoutHit) {
-            ok(false, "Timed out waiting for condition");
-          }
-        }
-        if (timeoutHit || fn.call()) {
-          // Stop calling the test function and notify the callback.
-          clearInterval(intervalid);
-          onWaitComplete.call();
-        }
-      }, 20);
+  intervalid = setInterval(function() {
+    var timeoutHit = false;
+    if (typeof timeout != "undefined") {
+      timeoutHit = new Date().valueOf() - start >= timeout;
+      if (timeoutHit) {
+        ok(false, "Timed out waiting for condition");
+      }
+    }
+    if (timeoutHit || fn.call()) {
+      // Stop calling the test function and notify the callback.
+      clearInterval(intervalid);
+      onWaitComplete.call();
+    }
+  }, 20);
 }
 
 function waitForNextPaint(cb) {
@@ -428,18 +534,23 @@ function enableBFCache(enable) {
   // If this is the first time the test called enableBFCache(),
   // store the original value of max_total_viewers, so it can
   // be restored at the end of the test.
-  if (typeof(gOrigMaxTotalViewers) == "undefined") {
-    gOrigMaxTotalViewers =
-      Services.prefs.getIntPref("browser.sessionhistory.max_total_viewers");
+  if (typeof gOrigMaxTotalViewers == "undefined") {
+    gOrigMaxTotalViewers = Services.prefs.getIntPref(
+      "browser.sessionhistory.max_total_viewers"
+    );
   }
 
-  if (typeof(enable) == "boolean") {
-    if (enable)
+  if (typeof enable == "boolean") {
+    if (enable) {
       Services.prefs.setIntPref("browser.sessionhistory.max_total_viewers", -1);
-    else
+    } else {
       Services.prefs.setIntPref("browser.sessionhistory.max_total_viewers", 0);
-  } else if (typeof(enable) == "number") {
-    Services.prefs.setIntPref("browser.sessionhistory.max_total_viewers", enable);
+    }
+  } else if (typeof enable == "number") {
+    Services.prefs.setIntPref(
+      "browser.sessionhistory.max_total_viewers",
+      enable
+    );
   }
 }
 

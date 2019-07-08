@@ -4,7 +4,9 @@
 
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 
-const {MockRegistrar} = ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+const { MockRegistrar } = ChromeUtils.import(
+  "resource://testing-common/MockRegistrar.jsm"
+);
 
 let idleService = {
   _observers: new Set(),
@@ -38,18 +40,45 @@ let idleService = {
 };
 
 function checkActivity(expectedActivity) {
-  let {expectedAdd, expectedRemove, expectedFires} = expectedActivity;
-  let {addCalls, removeCalls, observerFires} = idleService._activity;
-  equal(expectedAdd.length, addCalls.length, "idleService.addIdleObserver was called the expected number of times");
-  equal(expectedRemove.length, removeCalls.length, "idleService.removeIdleObserver was called the expected number of times");
-  equal(expectedFires.length, observerFires.length, "idle observer was fired the expected number of times");
-  deepEqual(addCalls, expectedAdd, "expected interval passed to idleService.addIdleObserver");
-  deepEqual(removeCalls, expectedRemove, "expected interval passed to idleService.removeIdleObserver");
-  deepEqual(observerFires, expectedFires, "expected topic passed to idle observer");
+  let { expectedAdd, expectedRemove, expectedFires } = expectedActivity;
+  let { addCalls, removeCalls, observerFires } = idleService._activity;
+  equal(
+    expectedAdd.length,
+    addCalls.length,
+    "idleService.addIdleObserver was called the expected number of times"
+  );
+  equal(
+    expectedRemove.length,
+    removeCalls.length,
+    "idleService.removeIdleObserver was called the expected number of times"
+  );
+  equal(
+    expectedFires.length,
+    observerFires.length,
+    "idle observer was fired the expected number of times"
+  );
+  deepEqual(
+    addCalls,
+    expectedAdd,
+    "expected interval passed to idleService.addIdleObserver"
+  );
+  deepEqual(
+    removeCalls,
+    expectedRemove,
+    "expected interval passed to idleService.removeIdleObserver"
+  );
+  deepEqual(
+    observerFires,
+    expectedFires,
+    "expected topic passed to idle observer"
+  );
 }
 
 add_task(async function setup() {
-  let fakeIdleService = MockRegistrar.register("@mozilla.org/widget/idleservice;1", idleService);
+  let fakeIdleService = MockRegistrar.register(
+    "@mozilla.org/widget/idleservice;1",
+    idleService
+  );
   registerCleanupFunction(() => {
     MockRegistrar.unregister(fakeIdleService);
   });
@@ -65,7 +94,8 @@ add_task(async function testQueryStateActive() {
       err => {
         browser.test.fail(`Error: ${err} :: ${err.stack}`);
         browser.test.notifyFail("idle");
-      });
+      }
+    );
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -90,7 +120,8 @@ add_task(async function testQueryStateIdle() {
       err => {
         browser.test.fail(`Error: ${err} :: ${err.stack}`);
         browser.test.notifyFail("idle");
-      });
+      }
+    );
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -122,7 +153,7 @@ add_task(async function testOnlySetDetectionInterval() {
   await extension.startup();
   await extension.awaitMessage("detectionIntervalSet");
   idleService._fireObservers("idle");
-  checkActivity({expectedAdd: [], expectedRemove: [], expectedFires: []});
+  checkActivity({ expectedAdd: [], expectedRemove: [], expectedFires: [] });
   await extension.unload();
 });
 
@@ -130,7 +161,11 @@ add_task(async function testSetDetectionIntervalBeforeAddingListener() {
   function background() {
     browser.idle.setDetectionInterval(99);
     browser.idle.onStateChanged.addListener(newState => {
-      browser.test.assertEq("idle", newState, "listener fired with the expected state");
+      browser.test.assertEq(
+        "idle",
+        newState,
+        "listener fired with the expected state"
+      );
       browser.test.sendMessage("listenerFired");
     });
     browser.test.sendMessage("listenerAdded");
@@ -148,7 +183,11 @@ add_task(async function testSetDetectionIntervalBeforeAddingListener() {
   await extension.awaitMessage("listenerAdded");
   idleService._fireObservers("idle");
   await extension.awaitMessage("listenerFired");
-  checkActivity({expectedAdd: [99], expectedRemove: [], expectedFires: ["idle"]});
+  checkActivity({
+    expectedAdd: [99],
+    expectedRemove: [],
+    expectedFires: ["idle"],
+  });
   // Defer unloading the extension so the asynchronous event listener
   // reply finishes.
   await new Promise(resolve => setTimeout(resolve, 0));
@@ -158,7 +197,11 @@ add_task(async function testSetDetectionIntervalBeforeAddingListener() {
 add_task(async function testSetDetectionIntervalAfterAddingListener() {
   function background() {
     browser.idle.onStateChanged.addListener(newState => {
-      browser.test.assertEq("idle", newState, "listener fired with the expected state");
+      browser.test.assertEq(
+        "idle",
+        newState,
+        "listener fired with the expected state"
+      );
       browser.test.sendMessage("listenerFired");
     });
     browser.idle.setDetectionInterval(99);
@@ -177,7 +220,11 @@ add_task(async function testSetDetectionIntervalAfterAddingListener() {
   await extension.awaitMessage("detectionIntervalSet");
   idleService._fireObservers("idle");
   await extension.awaitMessage("listenerFired");
-  checkActivity({expectedAdd: [60, 99], expectedRemove: [60], expectedFires: ["idle"]});
+  checkActivity({
+    expectedAdd: [60, 99],
+    expectedRemove: [60],
+    expectedFires: ["idle"],
+  });
 
   // Defer unloading the extension so the asynchronous event listener
   // reply finishes.
@@ -188,7 +235,11 @@ add_task(async function testSetDetectionIntervalAfterAddingListener() {
 add_task(async function testOnlyAddingListener() {
   function background() {
     browser.idle.onStateChanged.addListener(newState => {
-      browser.test.assertEq("active", newState, "listener fired with the expected state");
+      browser.test.assertEq(
+        "active",
+        newState,
+        "listener fired with the expected state"
+      );
       browser.test.sendMessage("listenerFired");
     });
     browser.test.sendMessage("listenerAdded");
@@ -208,7 +259,11 @@ add_task(async function testOnlyAddingListener() {
   await extension.awaitMessage("listenerFired");
   // check that "idle-daily" topic does not cause a listener to fire
   idleService._fireObservers("idle-daily");
-  checkActivity({expectedAdd: [60], expectedRemove: [], expectedFires: ["active", "idle-daily"]});
+  checkActivity({
+    expectedAdd: [60],
+    expectedRemove: [],
+    expectedFires: ["active", "idle-daily"],
+  });
 
   // Defer unloading the extension so the asynchronous event listener
   // reply finishes.

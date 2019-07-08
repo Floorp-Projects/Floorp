@@ -2,10 +2,16 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "FormHistory",
-                               "resource://gre/modules/FormHistory.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormHistory",
+  "resource://gre/modules/FormHistory.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 
 const REFERENCE_DATE = Date.now();
 
@@ -19,7 +25,7 @@ function countEntries(fieldname, message, expected) {
       handleError: reject,
     };
 
-    FormHistory.count({fieldname}, callback);
+    FormHistory.count({ fieldname }, callback);
   });
 }
 
@@ -47,38 +53,53 @@ async function setupFormHistory() {
 
   // Make sure we've got a clean DB to start with, then add the entries we'll be testing.
   await update([
-    {op: "remove"},
+    { op: "remove" },
     {
       op: "add",
       fieldname: "reference",
       value: "reference",
-    }, {
+    },
+    {
       op: "add",
       fieldname: "10secondsAgo",
       value: "10s",
-    }, {
+    },
+    {
       op: "add",
       fieldname: "10minutesAgo",
       value: "10m",
-    }]);
+    },
+  ]);
 
   // Age the entries to the proper vintage.
   let timestamp = PlacesUtils.toPRTime(REFERENCE_DATE);
-  let result = await searchEntries(["guid"], {fieldname: "reference"});
-  await update({op: "update", firstUsed: timestamp, guid: result.guid});
+  let result = await searchEntries(["guid"], { fieldname: "reference" });
+  await update({ op: "update", firstUsed: timestamp, guid: result.guid });
 
   timestamp = PlacesUtils.toPRTime(REFERENCE_DATE - 10000);
-  result = await searchEntries(["guid"], {fieldname: "10secondsAgo"});
-  await update({op: "update", firstUsed: timestamp, guid: result.guid});
+  result = await searchEntries(["guid"], { fieldname: "10secondsAgo" });
+  await update({ op: "update", firstUsed: timestamp, guid: result.guid });
 
   timestamp = PlacesUtils.toPRTime(REFERENCE_DATE - 10000 * 60);
-  result = await searchEntries(["guid"], {fieldname: "10minutesAgo"});
-  await update({op: "update", firstUsed: timestamp, guid: result.guid});
+  result = await searchEntries(["guid"], { fieldname: "10minutesAgo" });
+  await update({ op: "update", firstUsed: timestamp, guid: result.guid });
 
   // Sanity check.
-  await countEntries("reference", "Checking for 10minutes form history entry creation", 1);
-  await countEntries("10secondsAgo", "Checking for 1hour form history entry creation", 1);
-  await countEntries("10minutesAgo", "Checking for 1hour10minutes form history entry creation", 1);
+  await countEntries(
+    "reference",
+    "Checking for 10minutes form history entry creation",
+    1
+  );
+  await countEntries(
+    "10secondsAgo",
+    "Checking for 1hour form history entry creation",
+    1
+  );
+  await countEntries(
+    "10minutesAgo",
+    "Checking for 1hour10minutes form history entry creation",
+    1
+  );
 }
 
 add_task(async function testFormData() {
@@ -87,7 +108,7 @@ add_task(async function testFormData() {
       if (msg == "removeFormData") {
         await browser.browsingData.removeFormData(options);
       } else {
-        await browser.browsingData.remove(options, {formData: true});
+        await browser.browsingData.remove(options, { formData: true });
       }
       browser.test.sendMessage("formDataRemoved");
     });
@@ -106,27 +127,63 @@ add_task(async function testFormData() {
     extension.sendMessage(method, {});
     await extension.awaitMessage("formDataRemoved");
 
-    await countEntries("reference", "reference form entry should be deleted.", 0);
-    await countEntries("10secondsAgo", "10secondsAgo form entry should be deleted.", 0);
-    await countEntries("10minutesAgo", "10minutesAgo form entry should be deleted.", 0);
+    await countEntries(
+      "reference",
+      "reference form entry should be deleted.",
+      0
+    );
+    await countEntries(
+      "10secondsAgo",
+      "10secondsAgo form entry should be deleted.",
+      0
+    );
+    await countEntries(
+      "10minutesAgo",
+      "10minutesAgo form entry should be deleted.",
+      0
+    );
 
     // Clear form data with recent since value.
     await setupFormHistory();
-    extension.sendMessage(method, {since: REFERENCE_DATE});
+    extension.sendMessage(method, { since: REFERENCE_DATE });
     await extension.awaitMessage("formDataRemoved");
 
-    await countEntries("reference", "reference form entry should be deleted.", 0);
-    await countEntries("10secondsAgo", "10secondsAgo form entry should still exist.", 1);
-    await countEntries("10minutesAgo", "10minutesAgo form entry should still exist.", 1);
+    await countEntries(
+      "reference",
+      "reference form entry should be deleted.",
+      0
+    );
+    await countEntries(
+      "10secondsAgo",
+      "10secondsAgo form entry should still exist.",
+      1
+    );
+    await countEntries(
+      "10minutesAgo",
+      "10minutesAgo form entry should still exist.",
+      1
+    );
 
     // Clear form data with old since value.
     await setupFormHistory();
-    extension.sendMessage(method, {since: REFERENCE_DATE - 1000000});
+    extension.sendMessage(method, { since: REFERENCE_DATE - 1000000 });
     await extension.awaitMessage("formDataRemoved");
 
-    await countEntries("reference", "reference form entry should be deleted.", 0);
-    await countEntries("10secondsAgo", "10secondsAgo form entry should be deleted.", 0);
-    await countEntries("10minutesAgo", "10minutesAgo form entry should be deleted.", 0);
+    await countEntries(
+      "reference",
+      "reference form entry should be deleted.",
+      0
+    );
+    await countEntries(
+      "10secondsAgo",
+      "10secondsAgo form entry should be deleted.",
+      0
+    );
+    await countEntries(
+      "10minutesAgo",
+      "10minutesAgo form entry should be deleted.",
+      0
+    );
   }
 
   await extension.startup();

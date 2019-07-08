@@ -1,9 +1,10 @@
-
 "use strict";
 
 var EXPORTED_SYMBOLS = ["MockRegistry"];
 
-const {MockRegistrar} = ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+const { MockRegistrar } = ChromeUtils.import(
+  "resource://testing-common/MockRegistrar.jsm"
+);
 
 class MockRegistry {
   constructor() {
@@ -27,7 +28,7 @@ class MockRegistry {
      * subset of the interface used in tests.  In particular, only values
      * of type string are supported.
      */
-    function MockWindowsRegKey() { }
+    function MockWindowsRegKey() {}
     MockWindowsRegKey.prototype = {
       values: null,
 
@@ -48,8 +49,9 @@ class MockRegistry {
       },
 
       get valueCount() {
-        if (!this.values)
+        if (!this.values) {
           throw Cr.NS_ERROR_FAILURE;
+        }
         return this.values.size;
       },
 
@@ -65,8 +67,9 @@ class MockRegistry {
       },
 
       getValueName(index) {
-        if (!this.values || index >= this.values.size)
+        if (!this.values || index >= this.values.size) {
           throw Cr.NS_ERROR_FAILURE;
+        }
         let names = Array.from(this.values.keys());
         return names[index];
       },
@@ -79,7 +82,10 @@ class MockRegistry {
       },
     };
 
-    this.cid = MockRegistrar.register("@mozilla.org/windows-registry-key;1", MockWindowsRegKey);
+    this.cid = MockRegistrar.register(
+      "@mozilla.org/windows-registry-key;1",
+      MockWindowsRegKey
+    );
   }
 
   shutdown() {

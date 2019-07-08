@@ -32,7 +32,9 @@ function getExtension(incognitoOverride) {
 }
 
 async function openAndCloseWindow(url = "http://example.com", privateWin) {
-  let win = await BrowserTestUtils.openNewBrowserWindow({private: privateWin});
+  let win = await BrowserTestUtils.openNewBrowserWindow({
+    private: privateWin,
+  });
   let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
   let sessionUpdatePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
   await BrowserTestUtils.closeWindow(win);
@@ -55,30 +57,47 @@ add_task(async function test_sessions_forget_closed_window() {
   await extension.awaitMessage("forgot-window");
   extension.sendMessage("check-sessions");
   let remainingClosed = await extension.awaitMessage("recentlyClosed");
-  is(remainingClosed.length, recentlyClosed.length - 1,
-     "One window was forgotten.");
-  is(remainingClosed[0].window.sessionId, recentlyClosed[1].window.sessionId,
-     "The correct window was forgotten.");
+  is(
+    remainingClosed.length,
+    recentlyClosed.length - 1,
+    "One window was forgotten."
+  );
+  is(
+    remainingClosed[0].window.sessionId,
+    recentlyClosed[1].window.sessionId,
+    "The correct window was forgotten."
+  );
 
   // Check that re-forgetting the same window fails properly
   extension.sendMessage("forget-window", recentlyClosedWindow.sessionId);
   let errMsg = await extension.awaitMessage("forget-reject");
-  is(errMsg, `Could not find closed window using sessionId ${recentlyClosedWindow.sessionId}.`);
+  is(
+    errMsg,
+    `Could not find closed window using sessionId ${
+      recentlyClosedWindow.sessionId
+    }.`
+  );
 
   extension.sendMessage("check-sessions");
   remainingClosed = await extension.awaitMessage("recentlyClosed");
-  is(remainingClosed.length, recentlyClosed.length - 1,
-     "No extra window was forgotten.");
-  is(remainingClosed[0].window.sessionId, recentlyClosed[1].window.sessionId,
-     "The correct window remains.");
+  is(
+    remainingClosed.length,
+    recentlyClosed.length - 1,
+    "No extra window was forgotten."
+  );
+  is(
+    remainingClosed[0].window.sessionId,
+    recentlyClosed[1].window.sessionId,
+    "The correct window remains."
+  );
 
   await extension.unload();
 });
 
 add_task(async function test_sessions_forget_closed_window_private() {
-  SpecialPowers.pushPrefEnv({set: [
-    ["extensions.allowPrivateBrowsingByDefault", false],
-  ]});
+  SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
 
   let pb_extension = getExtension("spanning");
   await pb_extension.startup();
@@ -96,8 +115,11 @@ add_task(async function test_sessions_forget_closed_window_private() {
   await extension.awaitMessage("forgot-window");
   extension.sendMessage("check-sessions");
   let remainingClosed = await extension.awaitMessage("recentlyClosed");
-  is(remainingClosed.length, recentlyClosed.length - 1,
-     "One window was forgotten.");
+  is(
+    remainingClosed.length,
+    recentlyClosed.length - 1,
+    "One window was forgotten."
+  );
   ok(!recentlyClosedWindow.incognito, "not an incognito window");
 
   await extension.unload();

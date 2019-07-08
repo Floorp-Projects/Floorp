@@ -7,7 +7,10 @@
  */
 
 function check_unchanged(service) {
-  Assert.ok(!service.isListOutdated, "Should not have detected a modification.");
+  Assert.ok(
+    !service.isListOutdated,
+    "Should not have detected a modification."
+  );
   try {
     service.flush();
     Assert.ok(true, "Should have flushed.");
@@ -22,7 +25,11 @@ function check_outdated(service) {
     service.flush();
     Assert.ok(false, "Should have failed to flush.");
   } catch (e) {
-    Assert.equal(e.result, Cr.NS_ERROR_DATABASE_CHANGED, "Should have refused to flush.");
+    Assert.equal(
+      e.result,
+      Cr.NS_ERROR_DATABASE_CHANGED,
+      "Should have refused to flush."
+    );
   }
 }
 

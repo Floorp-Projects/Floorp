@@ -7,9 +7,12 @@
  */
 "use strict";
 
-const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_video.html";
-const PAGE2 = "https://example.com/browser/toolkit/content/tests/browser/file_videoWithoutAudioTrack.html";
-const PAGE3 = "https://example.com/browser/toolkit/content/tests/browser/file_mediaPlayback2.html";
+const PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_video.html";
+const PAGE2 =
+  "https://example.com/browser/toolkit/content/tests/browser/file_videoWithoutAudioTrack.html";
+const PAGE3 =
+  "https://example.com/browser/toolkit/content/tests/browser/file_mediaPlayback2.html";
 
 const powerManagerService = Cc["@mozilla.org/power/powermanagerservice;1"];
 const powerManager = powerManagerService.getService(Ci.nsIPowerManagerService);
@@ -32,7 +35,10 @@ function wakeLockObserved(observeTopic, checkFn) {
 
 function getWakeLockState(topic, needLock, isTabInForeground) {
   const tabState = isTabInForeground ? "foreground" : "background";
-  const promise = wakeLockObserved(topic, (state) => state == `locked-${tabState}`);
+  const promise = wakeLockObserved(
+    topic,
+    state => state == `locked-${tabState}`
+  );
   return {
     check: async () => {
       if (needLock) {
@@ -47,7 +53,7 @@ function getWakeLockState(topic, needLock, isTabInForeground) {
   };
 }
 
-async function waitUntilVideoStarted({muted, volume} = {}) {
+async function waitUntilVideoStarted({ muted, volume } = {}) {
   const video = content.document.getElementById("v");
   if (!video) {
     ok(false, "can't get media element!");
@@ -59,11 +65,19 @@ async function waitUntilVideoStarted({muted, volume} = {}) {
   if (volume !== undefined) {
     video.volume = volume;
   }
-  ok(await video.play().then(() => true, () => false),
-     `video started playing.`);
+  ok(
+    await video.play().then(() => true, () => false),
+    `video started playing.`
+  );
 }
 
-async function test_media_wakelock({description, url, videoAttsParams, lockAudio, lockVideo}) {
+async function test_media_wakelock({
+  description,
+  url,
+  videoAttsParams,
+  lockAudio,
+  lockVideo,
+}) {
   info(`- start a new test for '${description}' -`);
   info(`- open new foreground tab -`);
   const tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, url);
@@ -80,8 +94,10 @@ async function test_media_wakelock({description, url, videoAttsParams, lockAudio
   info(`- switch tab to background -`);
   audioWakeLock = getWakeLockState("audio-playing", lockAudio, false);
   videoWakeLock = getWakeLockState("video-playing", lockVideo, false);
-  const tab2 = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
-                                                           "about:blank");
+  const tab2 = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "about:blank"
+  );
   await audioWakeLock.check();
   await videoWakeLock.check();
 

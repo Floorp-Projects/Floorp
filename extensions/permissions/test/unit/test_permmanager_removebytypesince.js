@@ -5,7 +5,9 @@ add_task(async function test() {
   Services.prefs.setCharPref("permissions.manager.defaultsUrl", "");
 
   // initialize the permission manager service
-  let pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
+  let pm = Cc["@mozilla.org/permissionmanager;1"].getService(
+    Ci.nsIPermissionManager
+  );
 
   Assert.equal(perm_count(), 0);
 
@@ -48,7 +50,7 @@ add_task(async function test() {
   Assert.equal(pm.testPermission(uri, "apple"), 3);
   Assert.equal(pm.testPermission(uri2, "apple"), 0);
   Assert.equal(pm.testPermission(uri3, "apple"), 0);
- 
+
   Assert.equal(pm.testPermission(uri, "cucumber"), 1);
   Assert.equal(pm.testPermission(uri3, "cucumber"), 3);
 
@@ -57,24 +59,24 @@ add_task(async function test() {
 
   Assert.equal(pm.testPermission(uri, "pear"), 1);
   Assert.equal(pm.testPermission(uri2, "pear"), 2);
-  
+
   Assert.equal(pm.testPermission(uri, "apple"), 3);
   Assert.equal(pm.testPermission(uri2, "apple"), 0);
   Assert.equal(pm.testPermission(uri3, "apple"), 0);
-  
+
   Assert.equal(pm.testPermission(uri, "cucumber"), 1);
   Assert.equal(pm.testPermission(uri3, "cucumber"), 0);
-  
+
   pm.removeByTypeSince("pear", since);
   Assert.equal(perm_count(), 3);
-  
+
   Assert.equal(pm.testPermission(uri, "pear"), 1);
   Assert.equal(pm.testPermission(uri2, "pear"), 0);
-  
+
   Assert.equal(pm.testPermission(uri, "apple"), 3);
   Assert.equal(pm.testPermission(uri2, "apple"), 0);
   Assert.equal(pm.testPermission(uri3, "apple"), 0);
-  
+
   Assert.equal(pm.testPermission(uri, "cucumber"), 1);
   Assert.equal(pm.testPermission(uri3, "cucumber"), 0);
 

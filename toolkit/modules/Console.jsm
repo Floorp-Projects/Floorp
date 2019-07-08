@@ -20,10 +20,13 @@
  *   implementation isn't always required (or even well defined)
  */
 
-var EXPORTED_SYMBOLS = [ "console", "ConsoleAPI" ];
+var EXPORTED_SYMBOLS = ["console", "ConsoleAPI"];
 
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 var gTimerRegistry = new Map();
 
@@ -60,16 +63,16 @@ function fmt(aStr, aMaxLen, aMinLen, aOptions) {
     if (aOptions && aOptions.truncate == "start") {
       return "_" + aStr.substring(aStr.length - aMaxLen + 1);
     } else if (aOptions && aOptions.truncate == "center") {
-      let start = aStr.substring(0, (aMaxLen / 2));
+      let start = aStr.substring(0, aMaxLen / 2);
 
-      let end = aStr.substring((aStr.length - (aMaxLen / 2)) + 1);
+      let end = aStr.substring(aStr.length - aMaxLen / 2 + 1);
       return start + "_" + end;
     }
     return aStr.substring(0, aMaxLen - 1) + "_";
   }
   if (aStr.length < aMinLen) {
     let padding = Array(aMinLen - aStr.length + 1).join(" ");
-    aStr = (aOptions.align === "end") ? padding + aStr : aStr + padding;
+    aStr = aOptions.align === "end" ? padding + aStr : aStr + padding;
   }
   return aStr;
 }
@@ -107,10 +110,11 @@ function getCtorName(aObj) {
           Is this object an error?
  */
 function isError(aThing) {
-  return aThing && (
-           (typeof aThing.name == "string" &&
-            aThing.name.startsWith("NS_ERROR_")) ||
-           getCtorName(aThing).endsWith("Error"));
+  return (
+    aThing &&
+    ((typeof aThing.name == "string" && aThing.name.startsWith("NS_ERROR_")) ||
+      getCtorName(aThing).endsWith("Error"))
+  );
 }
 
 /**
@@ -141,7 +145,7 @@ function stringify(aThing, aAllowNewLines) {
     if (Element.isInstance(aThing)) {
       return debugElement(aThing);
     }
-    type = (type == "Object" ? "" : type + " ");
+    type = type == "Object" ? "" : type + " ";
     let json;
     try {
       json = JSON.stringify(aThing);
@@ -172,12 +176,15 @@ function stringify(aThing, aAllowNewLines) {
  *        A simple single line representation of aElement
  */
 function debugElement(aElement) {
-  return "<" + aElement.tagName +
-      (aElement.id ? "#" + aElement.id : "") +
-      (aElement.className && aElement.className.split ?
-          "." + aElement.className.split(" ").join(" .") :
-          "") +
-      ">";
+  return (
+    "<" +
+    aElement.tagName +
+    (aElement.id ? "#" + aElement.id : "") +
+    (aElement.className && aElement.className.split
+      ? "." + aElement.className.split(" ").join(" .")
+      : "") +
+    ">"
+  );
 }
 
 /**
@@ -282,24 +289,24 @@ function logProperty(aProp, aValue) {
 }
 
 const LOG_LEVELS = {
-  "all": Number.MIN_VALUE,
-  "debug": 2,
-  "log": 3,
-  "info": 3,
-  "clear": 3,
-  "trace": 3,
-  "timeEnd": 3,
-  "time": 3,
-  "assert": 3,
-  "group": 3,
-  "groupEnd": 3,
-  "profile": 3,
-  "profileEnd": 3,
-  "dir": 3,
-  "dirxml": 3,
-  "warn": 4,
-  "error": 5,
-  "off": Number.MAX_VALUE,
+  all: Number.MIN_VALUE,
+  debug: 2,
+  log: 3,
+  info: 3,
+  clear: 3,
+  trace: 3,
+  timeEnd: 3,
+  time: 3,
+  assert: 3,
+  group: 3,
+  groupEnd: 3,
+  profile: 3,
+  profileEnd: 3,
+  dir: 3,
+  dirxml: 3,
+  warn: 4,
+  error: 5,
+  off: Number.MAX_VALUE,
 };
 
 /**
@@ -390,9 +397,13 @@ function getStack(aFrame, aMaxDepth = 0) {
 function formatTrace(aTrace) {
   let reply = "";
   aTrace.forEach(function(frame) {
-    reply += fmt(frame.filename, 20, 20, { truncate: "start" }) + " " +
-             fmt(frame.lineNumber, 5, 5) + " " +
-             fmt(frame.functionName, 75, 0, { truncate: "center" }) + "\n";
+    reply +=
+      fmt(frame.filename, 20, 20, { truncate: "start" }) +
+      " " +
+      fmt(frame.lineNumber, 5, 5) +
+      " " +
+      fmt(frame.functionName, 75, 0, { truncate: "center" }) +
+      "\n";
   });
   return reply;
 }
@@ -449,9 +460,12 @@ function stopTimer(aName, aTimestamp) {
  */
 function dumpMessage(aConsole, aLevel, aMessage) {
   aConsole.dump(
-    "console." + aLevel + ": " +
-    (aConsole.prefix ? aConsole.prefix + ": " : "") +
-    aMessage + "\n"
+    "console." +
+      aLevel +
+      ": " +
+      (aConsole.prefix ? aConsole.prefix + ": " : "") +
+      aMessage +
+      "\n"
   );
 }
 
@@ -566,8 +580,9 @@ function sendConsoleAPIMessage(aConsole, aLevel, aFrame, aArgs, aOptions = {}) {
       break;
   }
 
-  let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
-                            .getService(Ci.nsIConsoleAPIStorage);
+  let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
+    Ci.nsIConsoleAPIStorage
+  );
   if (ConsoleAPIStorage) {
     ConsoleAPIStorage.recordEvent("jsm", null, consoleEvent);
   }
@@ -612,8 +627,13 @@ function ConsoleAPI(aConsoleOptions = {}) {
 
   // Setup maxLogLevelPref watching
   let updateMaxLogLevel = () => {
-    if (Services.prefs.getPrefType(aConsoleOptions.maxLogLevelPref) == Services.prefs.PREF_STRING) {
-      this._maxLogLevel = Services.prefs.getCharPref(aConsoleOptions.maxLogLevelPref).toLowerCase();
+    if (
+      Services.prefs.getPrefType(aConsoleOptions.maxLogLevelPref) ==
+      Services.prefs.PREF_STRING
+    ) {
+      this._maxLogLevel = Services.prefs
+        .getCharPref(aConsoleOptions.maxLogLevelPref)
+        .toLowerCase();
     } else {
       this._maxLogLevel = this._maxExplicitLogLevel;
     }
@@ -621,12 +641,15 @@ function ConsoleAPI(aConsoleOptions = {}) {
 
   if (aConsoleOptions.maxLogLevelPref) {
     updateMaxLogLevel();
-    Services.prefs.addObserver(aConsoleOptions.maxLogLevelPref, updateMaxLogLevel);
+    Services.prefs.addObserver(
+      aConsoleOptions.maxLogLevelPref,
+      updateMaxLogLevel
+    );
   }
 
   // Bind all the functions to this object.
   for (let prop in this) {
-    if (typeof(this[prop]) === "function") {
+    if (typeof this[prop] === "function") {
       this[prop] = this[prop].bind(this);
     }
   }
@@ -656,8 +679,7 @@ ConsoleAPI.prototype = {
     }
     let args = Array.prototype.slice.call(arguments, 0);
     let trace = getStack(Components.stack.caller);
-    sendConsoleAPIMessage(this, "trace", trace[0], args,
-                          { stacktrace: trace });
+    sendConsoleAPIMessage(this, "trace", trace[0], args, { stacktrace: trace });
     dumpMessage(this, "trace", "\n" + formatTrace(trace));
   },
   clear: function Console_clear() {},
@@ -675,8 +697,7 @@ ConsoleAPI.prototype = {
     let frame = getStack(Components.stack.caller, 1)[0];
     let timer = startTimer(args[0]);
     sendConsoleAPIMessage(this, "time", frame, args, { timer });
-    dumpMessage(this, "time",
-                "'" + timer.name + "' @ " + (new Date()));
+    dumpMessage(this, "time", "'" + timer.name + "' @ " + new Date());
   },
 
   timeEnd: function Console_timeEnd() {
@@ -687,21 +708,27 @@ ConsoleAPI.prototype = {
     let frame = getStack(Components.stack.caller, 1)[0];
     let timer = stopTimer(args[0]);
     sendConsoleAPIMessage(this, "timeEnd", frame, args, { timer });
-    dumpMessage(this, "timeEnd",
-                "'" + timer.name + "' " + timer.duration + "ms");
+    dumpMessage(
+      this,
+      "timeEnd",
+      "'" + timer.name + "' " + timer.duration + "ms"
+    );
   },
 
   profile(profileName) {
     if (!shouldLog("profile", this.maxLogLevel)) {
       return;
     }
-    Services.obs.notifyObservers({
-      wrappedJSObject: {
-        action: "profile",
-        arguments: [ profileName ],
-        chromeContext: true,
+    Services.obs.notifyObservers(
+      {
+        wrappedJSObject: {
+          action: "profile",
+          arguments: [profileName],
+          chromeContext: true,
+        },
       },
-    }, "console-api-profiler");
+      "console-api-profiler"
+    );
     dumpMessage(this, "profile", `'${profileName}'`);
   },
 
@@ -709,13 +736,16 @@ ConsoleAPI.prototype = {
     if (!shouldLog("profileEnd", this.maxLogLevel)) {
       return;
     }
-    Services.obs.notifyObservers({
-      wrappedJSObject: {
-        action: "profileEnd",
-        arguments: [ profileName ],
-        chromeContext: true,
+    Services.obs.notifyObservers(
+      {
+        wrappedJSObject: {
+          action: "profileEnd",
+          arguments: [profileName],
+          chromeContext: true,
+        },
       },
-    }, "console-api-profiler");
+      "console-api-profiler"
+    );
     dumpMessage(this, "profileEnd", `'${profileName}'`);
   },
 

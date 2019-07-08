@@ -10,7 +10,7 @@ requestLongerTimeout(2);
 const TEST_URL = URL_ROOT + "doc_markup_anonymous_xul.xul";
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   const boundNode = await getNodeFront("#xbl-host", inspector);
   const children = await inspector.walker.children(boundNode);

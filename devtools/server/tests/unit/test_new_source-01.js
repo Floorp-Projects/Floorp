@@ -16,11 +16,14 @@ function run_test() {
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_simple_new_source();
-                           });
+    attachTestTabAndResume(gClient, "test-stack", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_simple_new_source();
+    });
   });
   do_test_pending();
 }
@@ -33,7 +36,10 @@ function test_simple_new_source() {
     finishClient(gClient);
   });
 
-  Cu.evalInSandbox(function inc(n) {
-    return n + 1;
-  }.toString(), gDebuggee);
+  Cu.evalInSandbox(
+    function inc(n) {
+      return n + 1;
+    }.toString(),
+    gDebuggee
+  );
 }

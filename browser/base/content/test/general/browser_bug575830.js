@@ -5,7 +5,8 @@
 
 function test() {
   let tab1, tab2;
-  const TEST_IMAGE = "http://example.org/browser/browser/base/content/test/general/moz.png";
+  const TEST_IMAGE =
+    "http://example.org/browser/browser/base/content/test/general/moz.png";
 
   waitForExplicitFinish();
 
@@ -25,7 +26,11 @@ function test() {
     is(ZoomManager.zoom, 1, "initial zoom level for second tab should be 1");
 
     await FullZoomHelper.selectTabAndWaitForLocationChange(tab1);
-    is(ZoomManager.zoom, zoom, "zoom level for first tab should not have changed");
+    is(
+      ZoomManager.zoom,
+      zoom,
+      "zoom level for first tab should not have changed"
+    );
 
     await FullZoomHelper.removeTabAndWaitForLocationChange(tab1);
     await FullZoomHelper.removeTabAndWaitForLocationChange(tab2);

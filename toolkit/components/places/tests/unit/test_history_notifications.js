@@ -19,13 +19,19 @@ add_task(async function locked() {
   // It should be possible to create the service, but any method using the
   // database will fail.
   let resolved = false;
-  let promiseComplete = promiseTopicObserved(NS_PLACES_INIT_COMPLETE_TOPIC)
-                          .then(() => resolved = true);
-  let history = Cc["@mozilla.org/browser/nav-history-service;1"]
-                  .createInstance(Ci.nsINavHistoryService);
+  let promiseComplete = promiseTopicObserved(
+    NS_PLACES_INIT_COMPLETE_TOPIC
+  ).then(() => (resolved = true));
+  let history = Cc["@mozilla.org/browser/nav-history-service;1"].createInstance(
+    Ci.nsINavHistoryService
+  );
   // The notification shouldn't happen until something tries to use the database.
   await new Promise(resolve => do_timeout(100, resolve));
-  Assert.equal(resolved, false, "The notification should not have been fired yet");
+  Assert.equal(
+    resolved,
+    false,
+    "The notification should not have been fired yet"
+  );
   // This will initialize the database.
   Assert.equal(history.databaseStatus, history.DATABASE_STATUS_LOCKED);
   await promiseComplete;

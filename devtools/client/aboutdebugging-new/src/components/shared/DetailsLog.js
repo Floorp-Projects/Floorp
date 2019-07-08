@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -45,13 +48,11 @@ class DetailsLog extends PureComponent {
       {
         className: "details--log",
       },
-      Localized({
+      Localized(
+        {
           id: this.getLocalizationString(),
-      },
-        dom.summary(
-          {},
-          this.getLocalizationString()
-        )
+        },
+        dom.summary({}, this.getLocalizationString())
       ),
       children
     );

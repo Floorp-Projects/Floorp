@@ -21,7 +21,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   // Mock the highlighter front to get the reference of the NodeFront
   const HighlighterFront = {
@@ -47,18 +47,25 @@ add_task(async function() {
 
   let icon = await getRuleViewSelectorHighlighterIcon(view, "element");
   await clickSelectorIcon(icon, view);
-  is(HighlighterFront.options.selector,
-     "body > div:nth-child(1) > div:nth-child(1) > a:nth-child(1)",
-     "The right selector option is passed to the highlighter (1)");
+  is(
+    HighlighterFront.options.selector,
+    "body > div:nth-child(1) > div:nth-child(1) > a:nth-child(1)",
+    "The right selector option is passed to the highlighter (1)"
+  );
 
   icon = await getRuleViewSelectorHighlighterIcon(view, "element", 1);
   await clickSelectorIcon(icon, view);
-  is(HighlighterFront.options.selector,
-     "body > div:nth-child(1) > div:nth-child(1)",
-     "The right selector option is passed to the highlighter (1)");
+  is(
+    HighlighterFront.options.selector,
+    "body > div:nth-child(1) > div:nth-child(1)",
+    "The right selector option is passed to the highlighter (1)"
+  );
 
   icon = await getRuleViewSelectorHighlighterIcon(view, "element", 2);
   await clickSelectorIcon(icon, view);
-  is(HighlighterFront.options.selector, "body > div:nth-child(1)",
-     "The right selector option is passed to the highlighter (1)");
+  is(
+    HighlighterFront.options.selector,
+    "body > div:nth-child(1)",
+    "The right selector option is passed to the highlighter (1)"
+  );
 });

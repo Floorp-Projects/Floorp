@@ -1,10 +1,16 @@
-let {ForgetAboutSite} = ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm");
+let { ForgetAboutSite } = ChromeUtils.import(
+  "resource://gre/modules/ForgetAboutSite.jsm"
+);
 
 function checkCookie(host, originAttributes) {
   for (let cookie of Services.cookies.enumerator) {
-    if (ChromeUtils.isOriginAttributesEqual(originAttributes,
-                                            cookie.originAttributes) &&
-        cookie.host.includes(host)) {
+    if (
+      ChromeUtils.isOriginAttributesEqual(
+        originAttributes,
+        cookie.originAttributes
+      ) &&
+      cookie.host.includes(host)
+    ) {
       return true;
     }
   }
@@ -20,9 +26,18 @@ add_task(async _ => {
   });
 
   // A cookie domain
-  Services.cookies.add(".example.com", "/test", "foo", "bar",
-    false, false, false, Date.now() + 24000 * 60 * 60, {},
-    Ci.nsICookie.SAMESITE_NONE);
+  Services.cookies.add(
+    ".example.com",
+    "/test",
+    "foo",
+    "bar",
+    false,
+    false,
+    false,
+    Date.now() + 24000 * 60 * 60,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
 
   // Cleaning up.
   await ForgetAboutSite.removeDataFromDomain("example.com");
@@ -31,5 +46,5 @@ add_task(async _ => {
   ok(!checkCookie("example.com", {}), "No cookies");
 
   // Clean up.
-  await Sanitizer.sanitize([ "cookies", "offlineApps" ]);
+  await Sanitizer.sanitize(["cookies", "offlineApps"]);
 });

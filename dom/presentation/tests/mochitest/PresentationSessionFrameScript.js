@@ -14,11 +14,9 @@ function loadPrivilegedScriptTest() {
    */
   function sendMessage(type, data) {
     if (typeof port == "undefined") {
-      sendAsyncMessage(type, {"data": data});
+      sendAsyncMessage(type, { data });
     } else {
-      port.postMessage({"type": type,
-                        "data": data,
-                       });
+      port.postMessage({ type, data });
     }
   }
 
@@ -27,7 +25,7 @@ function loadPrivilegedScriptTest() {
      * When the script is loaded by |loadPrivilegedScript|, these APIs
      * are exposed to this script.
      */
-    port.onmessage = (e) => {
+    port.onmessage = e => {
       var type = e.data.type;
       if (!handlers.hasOwnProperty(type)) {
         return;
@@ -64,13 +62,17 @@ function loadPrivilegedScriptTest() {
       const interfaces = [Ci.nsIPresentationChannelDescription];
 
       if (!interfaces.some(v => iid.equals(v))) {
-          throw Cr.NS_ERROR_NO_INTERFACE;
+        throw Cr.NS_ERROR_NO_INTERFACE;
       }
       return this;
     },
     get type() {
       /* global Services */
-      if (Services.prefs.getBoolPref("dom.presentation.session_transport.data_channel.enable")) {
+      if (
+        Services.prefs.getBoolPref(
+          "dom.presentation.session_transport.data_channel.enable"
+        )
+      ) {
         return Ci.nsIPresentationChannelDescription.TYPE_DATACHANNEL;
       }
       return Ci.nsIPresentationChannelDescription.TYPE_TCP;
@@ -82,23 +84,27 @@ function loadPrivilegedScriptTest() {
 
   function setTimeout(callback, delay) {
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    timer.initWithCallback({ notify: callback },
-                           delay,
-                           Ci.nsITimer.TYPE_ONE_SHOT);
+    timer.initWithCallback(
+      { notify: callback },
+      delay,
+      Ci.nsITimer.TYPE_ONE_SHOT
+    );
     return timer;
   }
 
   const mockedSessionTransport = {
     /* eslint-disable-next-line mozilla/use-chromeutils-generateqi */
     QueryInterface(iid) {
-        const interfaces = [Ci.nsIPresentationSessionTransport,
-                            Ci.nsIPresentationDataChannelSessionTransportBuilder,
-                            Ci.nsIFactory];
+      const interfaces = [
+        Ci.nsIPresentationSessionTransport,
+        Ci.nsIPresentationDataChannelSessionTransportBuilder,
+        Ci.nsIFactory,
+      ];
 
-        if (!interfaces.some(v => iid.equals(v))) {
-            throw Cr.NS_ERROR_NO_INTERFACE;
-        }
-        return this;
+      if (!interfaces.some(v => iid.equals(v))) {
+        throw Cr.NS_ERROR_NO_INTERFACE;
+      }
+      return this;
     },
     createInstance(aOuter, aIID) {
       if (aOuter) {
@@ -118,7 +124,9 @@ function loadPrivilegedScriptTest() {
       this._listener = listener;
       this._role = role;
 
-      var hasNavigator = window ? (typeof window.navigator != "undefined") : false;
+      var hasNavigator = window
+        ? typeof window.navigator != "undefined"
+        : false;
       sendMessage("check-navigator", hasNavigator);
 
       if (this._role == Ci.nsIPresentationService.ROLE_CONTROLLER) {
@@ -134,14 +142,20 @@ function loadPrivilegedScriptTest() {
     },
     close(reason) {
       sendMessage("data-transport-closed", reason);
-      this._callback.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyTransportClosed(reason);
+      this._callback
+        .QueryInterface(Ci.nsIPresentationSessionTransportCallback)
+        .notifyTransportClosed(reason);
       this._callback = null;
     },
     simulateTransportReady() {
-      this._callback.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyTransportReady();
+      this._callback
+        .QueryInterface(Ci.nsIPresentationSessionTransportCallback)
+        .notifyTransportReady();
     },
     simulateIncomingMessage(message) {
-      this._callback.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyData(message, false);
+      this._callback
+        .QueryInterface(Ci.nsIPresentationSessionTransportCallback)
+        .notifyData(message, false);
     },
     onOffer(aOffer) {
       this._listener.sendAnswer(mockedChannelDescription);
@@ -159,19 +173,21 @@ function loadPrivilegedScriptTest() {
     },
   };
 
-
   function tearDown() {
     mockedSessionTransport.callback = null;
 
     /* Register original factories. */
     for (var data of originalFactoryData) {
-      registerOriginalFactory(data.contractId, data.mockedClassId,
-                              data.mockedFactory, data.originalClassId,
-                              data.originalFactory);
+      registerOriginalFactory(
+        data.contractId,
+        data.mockedClassId,
+        data.mockedFactory,
+        data.originalClassId,
+        data.originalFactory
+      );
     }
     sendMessage("teardown-complete");
   }
-
 
   function registerMockedFactory(contractId, mockedClassId, mockedFactory) {
     var originalClassId, originalFactory;
@@ -188,14 +204,22 @@ function loadPrivilegedScriptTest() {
       registrar.registerFactory(mockedClassId, "", contractId, mockedFactory);
     }
 
-    return { contractId,
-             mockedClassId,
-             mockedFactory,
-             originalClassId,
-             originalFactory };
+    return {
+      contractId,
+      mockedClassId,
+      mockedFactory,
+      originalClassId,
+      originalFactory,
+    };
   }
 
-  function registerOriginalFactory(contractId, mockedClassId, mockedFactory, originalClassId, originalFactory) {
+  function registerOriginalFactory(
+    contractId,
+    mockedClassId,
+    mockedFactory,
+    originalClassId,
+    originalFactory
+  ) {
     if (originalFactory) {
       var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
       registrar.unregisterFactory(mockedClassId, mockedFactory);
@@ -205,11 +229,16 @@ function loadPrivilegedScriptTest() {
 
   /* Register mocked factories. */
   const originalFactoryData = [];
-  const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
-                        .getService(Ci.nsIUUIDGenerator);
-  originalFactoryData.push(registerMockedFactory("@mozilla.org/presentation/datachanneltransportbuilder;1",
-                                                 uuidGenerator.generateUUID(),
-                                                 mockedSessionTransport));
+  const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+    Ci.nsIUUIDGenerator
+  );
+  originalFactoryData.push(
+    registerMockedFactory(
+      "@mozilla.org/presentation/datachanneltransportbuilder;1",
+      uuidGenerator.generateUUID(),
+      mockedSessionTransport
+    )
+  );
 
   addMessageListener("trigger-incoming-message", function(event) {
     mockedSessionTransport.simulateIncomingMessage(event.data.data);
@@ -237,24 +266,24 @@ var contentScript = {
     }
   },
   sendAsyncMessage(message, data) {
-    port.postMessage({"type": message,
-                      "data": data,
-                     });
+    port.postMessage({ type: message, data });
   },
 };
 
 if (!SpecialPowers.isMainProcess()) {
   var port;
   try {
-    port = SpecialPowers.loadPrivilegedScript(loadPrivilegedScriptTest.toSource());
+    port = SpecialPowers.loadPrivilegedScript(
+      loadPrivilegedScriptTest.toSource()
+    );
   } catch (e) {
     ok(false, "loadPrivilegedScript shoulde not throw" + e);
   }
 
-  port.onmessage = (e) => {
+  port.onmessage = e => {
     var type = e.data.type;
     if (!contentScript.handlers.hasOwnProperty(type)) {
-    return;
+      return;
     }
     var args = [e.data.data];
     contentScript.handlers[type].forEach(handler => handler.apply(null, args));

@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-collapsibilities.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-collapsibilities.js",
+  this
+);
 
 const MAIN_PROCESS_NAME = "Main Process";
 const RUNTIME_ID = "test-runtime-id";
@@ -35,18 +38,25 @@ add_task(async function() {
   info("Check debug target item of the main process");
   const mainProcessItem = findDebugTargetByText(MAIN_PROCESS_NAME, document);
   ok(mainProcessItem, "Debug target item of the main process should display");
-  ok(mainProcessItem.textContent.includes("Main Process for the target browser"),
-     "Debug target item of the main process should contains the description");
+  ok(
+    mainProcessItem.textContent.includes("Main Process for the target browser"),
+    "Debug target item of the main process should contains the description"
+  );
 
   info("Inspect main process");
-  const { devtoolsTab, devtoolsWindow } =
-    await openAboutDevtoolsToolbox(document, tab, window, MAIN_PROCESS_NAME, false);
+  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
+    document,
+    tab,
+    window,
+    MAIN_PROCESS_NAME,
+    false
+  );
 
   const url = new window.URL(devtoolsWindow.location.href);
   const processID = url.searchParams.get("id");
   is(processID, "0", "Correct process id");
   const remoteID = url.searchParams.get("remoteId");
-  is(remoteID, `${ RUNTIME_ID }-usb`, "Correct remote runtime id");
+  is(remoteID, `${RUNTIME_ID}-usb`, "Correct remote runtime id");
 
   info("Remove USB runtime");
   mocks.removeUSBRuntime(RUNTIME_ID);

@@ -16,7 +16,7 @@ add_task(async function testWindowCreate() {
 
       let getWindowSize = () => {
         return new Promise(resolve => {
-          _checkWindowPromise = {resolve};
+          _checkWindowPromise = { resolve };
           browser.test.sendMessage("check-window");
         });
       };
@@ -24,7 +24,11 @@ add_task(async function testWindowCreate() {
       const KEYS = ["left", "top", "width", "height"];
       function checkGeom(expected, actual) {
         for (let key of KEYS) {
-          browser.test.assertEq(expected[key], actual[key], `Expected '${key}' value`);
+          browser.test.assertEq(
+            expected[key],
+            actual[key],
+            `Expected '${key}' value`
+          );
         }
       }
 
@@ -33,8 +37,11 @@ add_task(async function testWindowCreate() {
         let geom = await getWindowSize();
 
         if (retries && KEYS.some(key => expected[key] != geom[key])) {
-          browser.test.log(`Got mismatched size (${JSON.stringify(expected)} != ${JSON.stringify(geom)}). ` +
-                           `Retrying after a short delay.`);
+          browser.test.log(
+            `Got mismatched size (${JSON.stringify(
+              expected
+            )} != ${JSON.stringify(geom)}). Retrying after a short delay.`
+          );
 
           await new Promise(resolve => setTimeout(resolve, 200));
 
@@ -52,30 +59,30 @@ add_task(async function testWindowCreate() {
       }
 
       try {
-        let geom = {left: 100, top: 100, width: 500, height: 300};
+        let geom = { left: 100, top: 100, width: 500, height: 300 };
 
         let window = await browser.windows.create(geom);
         windowId = window.id;
 
         await checkWindow(geom);
 
-        let update = {left: 150, width: 600};
+        let update = { left: 150, width: 600 };
         Object.assign(geom, update);
         await browser.windows.update(windowId, update);
         await checkWindow(geom);
 
-        update = {top: 150, height: 400};
+        update = { top: 150, height: 400 };
         Object.assign(geom, update);
         await browser.windows.update(windowId, update);
         await checkWindow(geom);
 
-        geom = {left: 200, top: 200, width: 800, height: 600};
+        geom = { left: 200, top: 200, width: 800, height: 600 };
         await browser.windows.update(windowId, geom);
         await checkWindow(geom);
 
         let platformInfo = await browser.runtime.getPlatformInfo();
         if (platformInfo.os != "linux") {
-          geom = {left: -50, top: -50, width: 800, height: 600};
+          geom = { left: -50, top: -50, width: 800, height: 600 };
           await browser.windows.update(windowId, geom);
           await checkWindow(geom);
         }

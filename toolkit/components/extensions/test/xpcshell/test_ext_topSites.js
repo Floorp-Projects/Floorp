@@ -1,13 +1,21 @@
 "use strict";
 
-const {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-const {NewTabUtils} = ChromeUtils.import("resource://gre/modules/NewTabUtils.jsm");
-const {PlacesTestUtils} = ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
+const { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+const { NewTabUtils } = ChromeUtils.import(
+  "resource://gre/modules/NewTabUtils.jsm"
+);
+const { PlacesTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 
-const SEARCH_SHORTCUTS_EXPERIMENT_PREF = "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts";
+const SEARCH_SHORTCUTS_EXPERIMENT_PREF =
+  "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts";
 
 // A small 1x1 test png
-const IMAGE_1x1 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
+const IMAGE_1x1 =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
 
 add_task(async function test_topSites() {
   Services.prefs.setBoolPref(SEARCH_SHORTCUTS_EXPERIMENT_PREF, false);
@@ -18,7 +26,7 @@ add_task(async function test_topSites() {
   function setVisit(visit) {
     for (let j = 0; j < numVisits; ++j) {
       visitDate -= 1000;
-      visit.visits.push({date: new Date(visitDate)});
+      visit.visits.push({ date: new Date(visitDate) });
     }
     visits.push(visit);
   }
@@ -44,19 +52,26 @@ add_task(async function test_topSites() {
   await PlacesTestUtils.addFavicons(faviconData);
 
   // Ensure our links show up in activityStream.
-  let links = await NewTabUtils.activityStreamLinks.getTopSites({onePerDomain: false, topsiteFrecency: 1});
+  let links = await NewTabUtils.activityStreamLinks.getTopSites({
+    onePerDomain: false,
+    topsiteFrecency: 1,
+  });
 
-  equal(links.length, visits.length, "Top sites has been successfully initialized");
+  equal(
+    links.length,
+    visits.length,
+    "Top sites has been successfully initialized"
+  );
 
   // Drop the visits.visits for later testing.
-  visits = visits.map(v => { return {url: v.url, title: v.title, favicon: undefined, type: "url"}; });
+  visits = visits.map(v => {
+    return { url: v.url, title: v.title, favicon: undefined, type: "url" };
+  });
 
   // Test that results from all providers are returned by default.
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": [
-        "topSites",
-      ],
+      permissions: ["topSites"],
     },
     background() {
       browser.test.onMessage.addListener(async options => {
@@ -78,28 +93,43 @@ add_task(async function test_topSites() {
     return extension.awaitMessage("sites");
   }
 
-  Assert.deepEqual([visits[0], visits[2]],
-                   await getSites(),
-                   "got topSites default");
-  Assert.deepEqual(visits,
-                   await getSites({onePerDomain: false}),
-                   "got topSites all links");
+  Assert.deepEqual(
+    [visits[0], visits[2]],
+    await getSites(),
+    "got topSites default"
+  );
+  Assert.deepEqual(
+    visits,
+    await getSites({ onePerDomain: false }),
+    "got topSites all links"
+  );
 
   NewTabUtils.activityStreamLinks.blockURL(visits[0]);
-  ok(NewTabUtils.blockedLinks.isBlocked(visits[0]), `link ${visits[0].url} is blocked`);
+  ok(
+    NewTabUtils.blockedLinks.isBlocked(visits[0]),
+    `link ${visits[0].url} is blocked`
+  );
 
-  Assert.deepEqual([visits[2], visits[1]],
-                   await getSites(),
-                   "got topSites with blocked links filtered out");
-  Assert.deepEqual([visits[0], visits[2]],
-                   await getSites({includeBlocked: true}),
-                   "got topSites with blocked links included");
+  Assert.deepEqual(
+    [visits[2], visits[1]],
+    await getSites(),
+    "got topSites with blocked links filtered out"
+  );
+  Assert.deepEqual(
+    [visits[0], visits[2]],
+    await getSites({ includeBlocked: true }),
+    "got topSites with blocked links included"
+  );
 
   // Test favicon result
-  let topSites = await getSites({includeBlocked: true, includeFavicon: true});
+  let topSites = await getSites({ includeBlocked: true, includeFavicon: true });
   equal(topSites[0].favicon, IMAGE_1x1, "received favicon");
 
-  equal(1, (await getSites({limit: 1, includeBlocked: true})).length, "limit 1 topSite");
+  equal(
+    1,
+    (await getSites({ limit: 1, includeBlocked: true })).length,
+    "limit 1 topSite"
+  );
 
   NewTabUtils.uninit();
   await extension.unload();
@@ -167,19 +197,21 @@ add_task(async function test_topSites_complete() {
     // Insert a favicon to show that favicons are not returned by default.
     await PlacesTestUtils.addFavicons(new Map([[entry.url, IMAGE_1x1]]));
     if (entry.pinned !== undefined) {
-      let info = entry.type == "search" ?
-        {url: entry.url, label: entry.title, searchTopSite: true} :
-        {url: entry.url, title: entry.title};
+      let info =
+        entry.type == "search"
+          ? { url: entry.url, label: entry.title, searchTopSite: true }
+          : { url: entry.url, title: entry.title };
       NewTabUtils.pinnedLinks.pin(info, entry.pinned);
     }
     if (entry.type == "blocked") {
-      NewTabUtils.activityStreamLinks.blockURL({url: entry.url});
+      NewTabUtils.activityStreamLinks.blockURL({ url: entry.url });
     }
   }
 
   // Some transformation is necessary to match output data.
-  let expectedResults =
-    entries.filter(e => e.type != "blocked").map(e => {
+  let expectedResults = entries
+    .filter(e => e.type != "blocked")
+    .map(e => {
       e.favicon = undefined;
       delete e.visitDate;
       delete e.pinned;
@@ -188,9 +220,7 @@ add_task(async function test_topSites_complete() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": [
-        "topSites",
-      ],
+      permissions: ["topSites"],
     },
     background() {
       browser.test.onMessage.addListener(async options => {
@@ -213,36 +243,52 @@ add_task(async function test_topSites_complete() {
     return extension.awaitMessage("sites");
   }
 
-  Assert.deepEqual(expectedResults,
-                   await getSites({includePinned: true,
-                                   includeSearchShortcuts: true}),
-                   "got topSites all links");
+  Assert.deepEqual(
+    expectedResults,
+    await getSites({ includePinned: true, includeSearchShortcuts: true }),
+    "got topSites all links"
+  );
 
   // Test no shortcuts.
-  dump(JSON.stringify(await getSites({includePinned: true})) + "\n");
-  Assert.ok(!(await getSites({includePinned: true})).some(link => link.type == "search"),
-            "should get no shortcuts");
+  dump(JSON.stringify(await getSites({ includePinned: true })) + "\n");
+  Assert.ok(
+    !(await getSites({ includePinned: true })).some(
+      link => link.type == "search"
+    ),
+    "should get no shortcuts"
+  );
 
   // Test favicons.
-  let topSites = await getSites({includePinned: true,
-                                 includeSearchShortcuts: true,
-                                 includeFavicon: true});
+  let topSites = await getSites({
+    includePinned: true,
+    includeSearchShortcuts: true,
+    includeFavicon: true,
+  });
   Assert.ok(topSites.every(f => f.favicon == IMAGE_1x1), "favicon is correct");
 
   // Test options.limit.
-  Assert.equal(1, (await getSites({includePinned: true,
-                                   includeSearchShortcuts: true,
-                                   limit: 1})).length,
-               "limit to 1 topSite");
+  Assert.equal(
+    1,
+    (await getSites({
+      includePinned: true,
+      includeSearchShortcuts: true,
+      limit: 1,
+    })).length,
+    "limit to 1 topSite"
+  );
 
   // Clear history for a pinned entry, then check results.
   await PlacesUtils.history.remove("http://pinned1.com/");
-  let links = await getSites({includePinned: true});
-  Assert.ok(links.find(link => link.url == "http://pinned1.com/"),
-            "Check unvisited pinned links are returned.");
+  let links = await getSites({ includePinned: true });
+  Assert.ok(
+    links.find(link => link.url == "http://pinned1.com/"),
+    "Check unvisited pinned links are returned."
+  );
   links = await getSites();
-  Assert.ok(!links.find(link => link.url == "http://pinned1.com/"),
-            "Check unvisited pinned links are not returned.");
+  Assert.ok(
+    !links.find(link => link.url == "http://pinned1.com/"),
+    "Check unvisited pinned links are not returned."
+  );
 
   await extension.unload();
   NewTabUtils.uninit();

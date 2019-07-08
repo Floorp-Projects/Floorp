@@ -10,7 +10,7 @@ const TEST_URI = URL_ROOT + "doc_pseudoelement.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  const {inspector, view} = await openComputedView();
+  const { inspector, view } = await openComputedView();
   await testTopLeft(inspector, view);
 });
 

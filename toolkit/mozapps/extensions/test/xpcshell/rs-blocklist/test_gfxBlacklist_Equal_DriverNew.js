@@ -65,16 +65,24 @@ async function run_test() {
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_11_ANGLE);
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_HARDWARE_VIDEO_DECODING);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_HARDWARE_VIDEO_DECODING
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_DECODE);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_DECODE
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_ENCODE);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_ENCODE
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBGL_MSAA);
@@ -83,7 +91,9 @@ async function run_test() {
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBGL_ANGLE);
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_CANVAS2D_ACCELERATION);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_CANVAS2D_ACCELERATION
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
     do_test_finished();

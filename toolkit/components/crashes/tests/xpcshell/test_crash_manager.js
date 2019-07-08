@@ -3,13 +3,19 @@
 
 "use strict";
 
-var {CrashStore, CrashManager} = ChromeUtils.import("resource://gre/modules/CrashManager.jsm", null);
+var { CrashStore, CrashManager } = ChromeUtils.import(
+  "resource://gre/modules/CrashManager.jsm",
+  null
+);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
 
 ChromeUtils.import("resource://testing-common/CrashManagerTest.jsm", this);
-ChromeUtils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
+ChromeUtils.import(
+  "resource://testing-common/TelemetryArchiveTesting.jsm",
+  this
+);
 
 const DUMMY_DATE = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
 DUMMY_DATE.setMilliseconds(0);
@@ -36,7 +42,7 @@ add_task(async function test_constructor_ok() {
 
 add_task(async function test_constructor_invalid() {
   Assert.throws(() => {
-    new CrashManager({foo: true});
+    new CrashManager({ foo: true });
   }, /Unknown property in options/);
 });
 
@@ -64,7 +70,7 @@ add_task(async function test_pending_dumps() {
   Assert.equal(entries.length, COUNT, "proper number detected.");
 
   for (let entry of entries) {
-    Assert.equal(typeof(entry), "object", "entry is an object");
+    Assert.equal(typeof entry, "object", "entry is an object");
     Assert.ok("id" in entry, "id in entry");
     Assert.ok("path" in entry, "path in entry");
     Assert.ok("date" in entry, "date in entry");
@@ -197,7 +203,9 @@ add_task(async function test_schedule_maintenance() {
   let m = await getManager();
   await m.createEventsFile("1", "crash.main.2", DUMMY_DATE, "id1");
 
-  let oldDate = new Date(Date.now() - m.PURGE_OLDER_THAN_DAYS * 2 * 24 * 60 * 60 * 1000);
+  let oldDate = new Date(
+    Date.now() - m.PURGE_OLDER_THAN_DAYS * 2 * 24 * 60 * 60 * 1000
+  );
   await m.createEventsFile("2", "crash.main.2", oldDate, "id2");
 
   await m.scheduleMaintenance(25);
@@ -212,7 +220,7 @@ const productName = "Firefox";
 const productId = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 const sha256Hash =
   "f8410c3ac4496cfa9191a1240f0e365101aef40c7bf34fc5bcb8ec511832ed79";
-const stackTraces = "{\"status\":\"OK\"}";
+const stackTraces = '{"status":"OK"}';
 
 add_task(async function test_main_crash_event_file() {
   let ac = new TelemetryArchiveTesting.Checker();
@@ -222,16 +230,30 @@ add_task(async function test_main_crash_event_file() {
 
   // To test proper escaping, add data to the environment with an embedded
   // double-quote
-  theEnvironment.testValue = "MyValue\"";
+  theEnvironment.testValue = 'MyValue"';
 
   let m = await getManager();
-  const fileContent = crashId + "\n" +
-    "ProductName=" + productName + "\n" +
-    "ProductID=" + productId + "\n" +
-    "TelemetryEnvironment=" + JSON.stringify(theEnvironment) + "\n" +
-    "TelemetrySessionId=" + sessionId + "\n" +
-    "MinidumpSha256Hash=" + sha256Hash + "\n" +
-    "StackTraces=" + stackTraces + "\n" +
+  const fileContent =
+    crashId +
+    "\n" +
+    "ProductName=" +
+    productName +
+    "\n" +
+    "ProductID=" +
+    productId +
+    "\n" +
+    "TelemetryEnvironment=" +
+    JSON.stringify(theEnvironment) +
+    "\n" +
+    "TelemetrySessionId=" +
+    sessionId +
+    "\n" +
+    "MinidumpSha256Hash=" +
+    sha256Hash +
+    "\n" +
+    "StackTraces=" +
+    stackTraces +
+    "\n" +
     "ThisShouldNot=end-up-in-the-ping\n";
 
   await m.createEventsFile(crashId, "crash.main.2", DUMMY_DATE, fileContent);
@@ -260,10 +282,16 @@ add_task(async function test_main_crash_event_file() {
     [["payload", "sessionId"], sessionId],
   ]);
   Assert.ok(found, "Telemetry ping submitted for found crash");
-  Assert.deepEqual(found.environment, theEnvironment,
-                   "The saved environment should be present");
-  Assert.equal(found.payload.metadata.ThisShouldNot, undefined,
-               "Non-whitelisted fields should be filtered out");
+  Assert.deepEqual(
+    found.environment,
+    theEnvironment,
+    "The saved environment should be present"
+  );
+  Assert.equal(
+    found.payload.metadata.ThisShouldNot,
+    undefined,
+    "Non-whitelisted fields should be filtered out"
+  );
 
   count = await m.aggregateEventsFiles();
   Assert.equal(count, 0);
@@ -272,9 +300,15 @@ add_task(async function test_main_crash_event_file() {
 add_task(async function test_main_crash_event_file_noenv() {
   let ac = new TelemetryArchiveTesting.Checker();
   await ac.promiseInit();
-  const fileContent = crashId + "\n" +
-    "ProductName=" + productName + "\n" +
-    "ProductID=" + productId + "\n";
+  const fileContent =
+    crashId +
+    "\n" +
+    "ProductName=" +
+    productName +
+    "\n" +
+    "ProductID=" +
+    productId +
+    "\n";
 
   let m = await getManager();
   await m.createEventsFile(crashId, "crash.main.2", DUMMY_DATE, fileContent);
@@ -306,14 +340,22 @@ add_task(async function test_main_crash_event_file_noenv() {
 add_task(async function test_crash_submission_event_file() {
   let m = await getManager();
   await m.createEventsFile("1", "crash.main.2", DUMMY_DATE, "crash1");
-  await m.createEventsFile("1-submission", "crash.submission.1", DUMMY_DATE_2,
-                           "crash1\nfalse\n");
+  await m.createEventsFile(
+    "1-submission",
+    "crash.submission.1",
+    DUMMY_DATE_2,
+    "crash1\nfalse\n"
+  );
 
   // The line below has been intentionally commented out to make sure that
   // the crash record is created when one does not exist.
   // yield m.createEventsFile("2", "crash.main.1", DUMMY_DATE, "crash2");
-  await m.createEventsFile("2-submission", "crash.submission.1", DUMMY_DATE_2,
-                           "crash2\ntrue\nbp-2");
+  await m.createEventsFile(
+    "2-submission",
+    "crash.submission.1",
+    DUMMY_DATE_2,
+    "crash2\ntrue\nbp-2"
+  );
   let count = await m.aggregateEventsFiles();
   Assert.equal(count, 3);
 
@@ -378,33 +420,85 @@ add_task(async function test_addCrash() {
   let crashes = await m.getCrashes();
   Assert.equal(crashes.length, 0);
 
-  await m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH,
-                   "main-crash", DUMMY_DATE);
-  await m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_HANG,
-                   "main-hang", DUMMY_DATE);
-  await m.addCrash(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_CRASH,
-                   "content-crash", DUMMY_DATE);
-  await m.addCrash(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_HANG,
-                   "content-hang", DUMMY_DATE);
-  await m.addCrash(m.PROCESS_TYPE_PLUGIN, m.CRASH_TYPE_CRASH,
-                   "plugin-crash", DUMMY_DATE);
-  await m.addCrash(m.PROCESS_TYPE_PLUGIN, m.CRASH_TYPE_HANG,
-                   "plugin-hang", DUMMY_DATE);
-  await m.addCrash(m.PROCESS_TYPE_GMPLUGIN, m.CRASH_TYPE_CRASH,
-                   "gmplugin-crash", DUMMY_DATE);
-  await m.addCrash(m.PROCESS_TYPE_GPU, m.CRASH_TYPE_CRASH,
-                   "gpu-crash", DUMMY_DATE);
-  await m.addCrash(m.PROCESS_TYPE_VR, m.CRASH_TYPE_CRASH,
-                   "vr-crash", DUMMY_DATE);
-  await m.addCrash(m.PROCESS_TYPE_RDD, m.CRASH_TYPE_CRASH,
-                   "rdd-crash", DUMMY_DATE);
-  await m.addCrash(m.PROCESS_TYPE_SOCKET, m.CRASH_TYPE_CRASH,
-                   "socket-crash", DUMMY_DATE);
+  await m.addCrash(
+    m.PROCESS_TYPE_MAIN,
+    m.CRASH_TYPE_CRASH,
+    "main-crash",
+    DUMMY_DATE
+  );
+  await m.addCrash(
+    m.PROCESS_TYPE_MAIN,
+    m.CRASH_TYPE_HANG,
+    "main-hang",
+    DUMMY_DATE
+  );
+  await m.addCrash(
+    m.PROCESS_TYPE_CONTENT,
+    m.CRASH_TYPE_CRASH,
+    "content-crash",
+    DUMMY_DATE
+  );
+  await m.addCrash(
+    m.PROCESS_TYPE_CONTENT,
+    m.CRASH_TYPE_HANG,
+    "content-hang",
+    DUMMY_DATE
+  );
+  await m.addCrash(
+    m.PROCESS_TYPE_PLUGIN,
+    m.CRASH_TYPE_CRASH,
+    "plugin-crash",
+    DUMMY_DATE
+  );
+  await m.addCrash(
+    m.PROCESS_TYPE_PLUGIN,
+    m.CRASH_TYPE_HANG,
+    "plugin-hang",
+    DUMMY_DATE
+  );
+  await m.addCrash(
+    m.PROCESS_TYPE_GMPLUGIN,
+    m.CRASH_TYPE_CRASH,
+    "gmplugin-crash",
+    DUMMY_DATE
+  );
+  await m.addCrash(
+    m.PROCESS_TYPE_GPU,
+    m.CRASH_TYPE_CRASH,
+    "gpu-crash",
+    DUMMY_DATE
+  );
+  await m.addCrash(
+    m.PROCESS_TYPE_VR,
+    m.CRASH_TYPE_CRASH,
+    "vr-crash",
+    DUMMY_DATE
+  );
+  await m.addCrash(
+    m.PROCESS_TYPE_RDD,
+    m.CRASH_TYPE_CRASH,
+    "rdd-crash",
+    DUMMY_DATE
+  );
+  await m.addCrash(
+    m.PROCESS_TYPE_SOCKET,
+    m.CRASH_TYPE_CRASH,
+    "socket-crash",
+    DUMMY_DATE
+  );
 
-  await m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH,
-                   "changing-item", DUMMY_DATE);
-  await m.addCrash(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_HANG,
-                   "changing-item", DUMMY_DATE_2);
+  await m.addCrash(
+    m.PROCESS_TYPE_MAIN,
+    m.CRASH_TYPE_CRASH,
+    "changing-item",
+    DUMMY_DATE
+  );
+  await m.addCrash(
+    m.PROCESS_TYPE_CONTENT,
+    m.CRASH_TYPE_HANG,
+    "changing-item",
+    DUMMY_DATE_2
+  );
 
   crashes = await m.getCrashes();
   Assert.equal(crashes.length, 12);
@@ -507,7 +601,7 @@ add_task(async function test_child_process_crash_ping() {
   // Add a child-process crash for each allowed process type.
   for (let p of EXPECTED_PROCESSES) {
     // Generate a ping.
-    const remoteType = (p === m.PROCESS_TYPE_CONTENT) ? "web" : undefined;
+    const remoteType = p === m.PROCESS_TYPE_CONTENT ? "web" : undefined;
     let id = await m.createDummyDump();
     await m.addCrash(p, m.CRASH_TYPE_CRASH, id, DUMMY_DATE, {
       RemoteType: remoteType,
@@ -529,14 +623,26 @@ add_task(async function test_child_process_crash_ping() {
     let hoursOnly = new Date(DUMMY_DATE);
     hoursOnly.setSeconds(0);
     hoursOnly.setMinutes(0);
-    Assert.equal(new Date(found.payload.crashTime).getTime(), hoursOnly.getTime());
+    Assert.equal(
+      new Date(found.payload.crashTime).getTime(),
+      hoursOnly.getTime()
+    );
 
-    Assert.equal(found.payload.metadata.ThisShouldNot, undefined,
-                 "Non-whitelisted fields should be filtered out");
-    Assert.equal(found.payload.metadata.RemoteType, remoteType,
-                 "RemoteType should be whitelisted for content crashes");
-    Assert.equal(found.payload.metadata.ipc_channel_error, "ShutDownKill",
-                 "ipc_channel_error should be whitelisted for content crashes");
+    Assert.equal(
+      found.payload.metadata.ThisShouldNot,
+      undefined,
+      "Non-whitelisted fields should be filtered out"
+    );
+    Assert.equal(
+      found.payload.metadata.RemoteType,
+      remoteType,
+      "RemoteType should be whitelisted for content crashes"
+    );
+    Assert.equal(
+      found.payload.metadata.ipc_channel_error,
+      "ShutDownKill",
+      "ipc_channel_error should be whitelisted for content crashes"
+    );
   }
 
   // Check that we don't generate a crash ping for invalid/unexpected process
@@ -554,15 +660,17 @@ add_task(async function test_child_process_crash_ping() {
     let found = await ac.promiseFindPing("crash", [
       [["payload", "crashId"], id],
     ]);
-    Assert.ok(!found, "No telemetry ping must be submitted for invalid process types");
+    Assert.ok(
+      !found,
+      "No telemetry ping must be submitted for invalid process types"
+    );
   }
 });
 
 add_task(async function test_generateSubmissionID() {
   let m = await getManager();
 
-  const SUBMISSION_ID_REGEX =
-    /^(sub-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+  const SUBMISSION_ID_REGEX = /^(sub-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
   let id = m.generateSubmissionID();
   Assert.ok(SUBMISSION_ID_REGEX.test(id));
 });
@@ -573,11 +681,19 @@ add_task(async function test_addSubmissionAttemptAndResult() {
   let crashes = await m.getCrashes();
   Assert.equal(crashes.length, 0);
 
-  await m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH,
-                   "main-crash", DUMMY_DATE);
+  await m.addCrash(
+    m.PROCESS_TYPE_MAIN,
+    m.CRASH_TYPE_CRASH,
+    "main-crash",
+    DUMMY_DATE
+  );
   await m.addSubmissionAttempt("main-crash", "submission", DUMMY_DATE);
-  await m.addSubmissionResult("main-crash", "submission", DUMMY_DATE_2,
-                              m.SUBMISSION_RESULT_OK);
+  await m.addSubmissionResult(
+    "main-crash",
+    "submission",
+    DUMMY_DATE_2,
+    m.SUBMISSION_RESULT_OK
+  );
 
   crashes = await m.getCrashes();
   Assert.equal(crashes.length, 1);
@@ -598,15 +714,26 @@ add_task(async function test_addSubmissionAttemptEarlyCall() {
   let crashes = await m.getCrashes();
   Assert.equal(crashes.length, 0);
 
-  let p = m.ensureCrashIsPresent("main-crash").then(() => {
-    return m.addSubmissionAttempt("main-crash", "submission", DUMMY_DATE);
-  }).then(() => {
-    return m.addSubmissionResult("main-crash", "submission", DUMMY_DATE_2,
-                                 m.SUBMISSION_RESULT_OK);
-  });
+  let p = m
+    .ensureCrashIsPresent("main-crash")
+    .then(() => {
+      return m.addSubmissionAttempt("main-crash", "submission", DUMMY_DATE);
+    })
+    .then(() => {
+      return m.addSubmissionResult(
+        "main-crash",
+        "submission",
+        DUMMY_DATE_2,
+        m.SUBMISSION_RESULT_OK
+      );
+    });
 
-  await m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH,
-                   "main-crash", DUMMY_DATE);
+  await m.addCrash(
+    m.PROCESS_TYPE_MAIN,
+    m.CRASH_TYPE_CRASH,
+    "main-crash",
+    DUMMY_DATE
+  );
 
   crashes = await m.getCrashes();
   Assert.equal(crashes.length, 1);
@@ -625,8 +752,12 @@ add_task(async function test_addSubmissionAttemptEarlyCall() {
 add_task(async function test_setCrashClassifications() {
   let m = await getManager();
 
-  await m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH,
-                   "main-crash", DUMMY_DATE);
+  await m.addCrash(
+    m.PROCESS_TYPE_MAIN,
+    m.CRASH_TYPE_CRASH,
+    "main-crash",
+    DUMMY_DATE
+  );
   await m.setCrashClassifications("main-crash", ["a"]);
   let classifications = (await m.getCrashes())[0].classifications;
   Assert.ok(classifications.includes("a"));
@@ -635,8 +766,12 @@ add_task(async function test_setCrashClassifications() {
 add_task(async function test_setRemoteCrashID() {
   let m = await getManager();
 
-  await m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH,
-                   "main-crash", DUMMY_DATE);
+  await m.addCrash(
+    m.PROCESS_TYPE_MAIN,
+    m.CRASH_TYPE_CRASH,
+    "main-crash",
+    DUMMY_DATE
+  );
   await m.setRemoteCrashID("main-crash", "bp-1");
   Assert.equal((await m.getCrashes())[0].remoteID, "bp-1");
 });
@@ -675,8 +810,14 @@ add_task(async function test_telemetryHistogram() {
 
   // Check that we have the expected keys.
   let snap = h.snapshot();
-  Assert.equal(Object.keys(snap).length, keysCount,
-    "Some crash types have not been recorded, see the list in Histograms.json");
-  Assert.deepEqual(Object.keys(snap).sort(), keys.sort(),
-    "Some crash types do not match");
+  Assert.equal(
+    Object.keys(snap).length,
+    keysCount,
+    "Some crash types have not been recorded, see the list in Histograms.json"
+  );
+  Assert.deepEqual(
+    Object.keys(snap).sort(),
+    keys.sort(),
+    "Some crash types do not match"
+  );
 });

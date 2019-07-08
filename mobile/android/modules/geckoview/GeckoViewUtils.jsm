@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AndroidLog: "resource://gre/modules/AndroidLog.jsm",
@@ -35,13 +37,13 @@ class AndroidAppender extends Log.Appender {
 
     // Map log level to AndroidLog.foo method.
     this._mapping = {
-      [Log.Level.Fatal]:  "e",
-      [Log.Level.Error]:  "e",
-      [Log.Level.Warn]:   "w",
-      [Log.Level.Info]:   "i",
+      [Log.Level.Fatal]: "e",
+      [Log.Level.Error]: "e",
+      [Log.Level.Warn]: "w",
+      [Log.Level.Info]: "i",
       [Log.Level.Config]: "d",
-      [Log.Level.Debug]:  "d",
-      [Log.Level.Trace]:  "v",
+      [Log.Level.Debug]: "d",
+      [Log.Level.Trace]: "v",
     };
   }
 
@@ -78,8 +80,11 @@ var GeckoViewUtils = {
    * @param once      if true, only listen to the specified
    *                  events/messages/notifications once.
    */
-  addLazyGetter: function(scope, name, {service, module, handler,
-                                        observers, ppmm, mm, ged, init, once}) {
+  addLazyGetter: function(
+    scope,
+    name,
+    { service, module, handler, observers, ppmm, mm, ged, init, once }
+  ) {
     XPCOMUtils.defineLazyGetter(scope, name, _ => {
       let ret = undefined;
       if (module) {
@@ -149,7 +154,8 @@ var GeckoViewUtils = {
 
   _addLazyListeners: function(events, handler, scope, name, addFn, handleFn) {
     if (!handler) {
-      handler = (_ => Array.isArray(name) ? name.map(n => scope[n]) : scope[name]);
+      handler = _ =>
+        Array.isArray(name) ? name.map(n => scope[n]) : scope[name];
     }
     const listener = (...args) => {
       let handlers = handler(...args);
@@ -182,20 +188,31 @@ var GeckoViewUtils = {
    * @param name    See handler.
    * @param options Options for addEventListener.
    */
-  addLazyEventListener: function(target, events, {handler, scope, name, options}) {
+  addLazyEventListener: function(
+    target,
+    events,
+    { handler, scope, name, options }
+  ) {
     this._addLazyListeners(
-      events, handler, scope, name,
+      events,
+      handler,
+      scope,
+      name,
       (events, listener) => {
-        events.forEach(event => target.addEventListener(event, listener, options));
+        events.forEach(event =>
+          target.addEventListener(event, listener, options)
+        );
       },
       (handlers, listener, args) => {
         if (!options || !options.once) {
           target.removeEventListener(args[0].type, listener, options);
           handlers.forEach(handler =>
-            target.addEventListener(args[0].type, handler, options));
+            target.addEventListener(args[0].type, handler, options)
+          );
         }
         handlers.forEach(handler => handler.handleEvent(args[0]));
-      });
+      }
+    );
   },
 
   /**
@@ -212,12 +229,18 @@ var GeckoViewUtils = {
    * @param name    See handler.
    * @param once    If true, only listen to the specified events once.
    */
-  registerLazyWindowEventListener: function(window, events,
-                                            {handler, scope, name, once}) {
+  registerLazyWindowEventListener: function(
+    window,
+    events,
+    { handler, scope, name, once }
+  ) {
     const dispatcher = this.getDispatcherForWindow(window);
 
     this._addLazyListeners(
-      events, handler, scope, name,
+      events,
+      handler,
+      scope,
+      name,
       (events, listener) => {
         dispatcher.registerListener(listener, events);
       },
@@ -225,10 +248,12 @@ var GeckoViewUtils = {
         if (!once) {
           dispatcher.unregisterListener(listener, args[0]);
           handlers.forEach(handler =>
-            dispatcher.registerListener(handler, args[0]));
+            dispatcher.registerListener(handler, args[0])
+          );
         }
         handlers.forEach(handler => handler.onEvent(...args));
-      });
+      }
+    );
   },
 
   /**
@@ -247,9 +272,12 @@ var GeckoViewUtils = {
    * @param name    See handler.
    * @param once    If true, only observe the specified prefs once.
    */
-  addLazyPrefObserver: function(aPrefs, {handler, scope, name, once}) {
+  addLazyPrefObserver: function(aPrefs, { handler, scope, name, once }) {
     this._addLazyListeners(
-      aPrefs, handler, scope, name,
+      aPrefs,
+      handler,
+      scope,
+      name,
       (prefs, observer) => {
         prefs.forEach(pref => Services.prefs.addObserver(pref.name, observer));
         prefs.forEach(pref => {
@@ -278,10 +306,12 @@ var GeckoViewUtils = {
         if (!once) {
           Services.prefs.removeObserver(args[2], observer);
           handlers.forEach(handler =>
-            Services.prefs.addObserver(args[2], observer));
+            Services.prefs.addObserver(args[2], observer)
+          );
         }
         handlers.forEach(handler => handler.observe(...args));
-      });
+      }
+    );
   },
 
   getRootDocShell: function(aWin) {
@@ -294,8 +324,7 @@ var GeckoViewUtils = {
     } catch (e) {
       docShell = aWin.docShell;
     }
-    return docShell.rootTreeItem
-                   .QueryInterface(Ci.nsIInterfaceRequestor);
+    return docShell.rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor);
   },
 
   /**
@@ -336,8 +365,7 @@ var GeckoViewUtils = {
       if (!win.closed) {
         return win.WindowEventDispatcher || EventDispatcher.for(win);
       }
-    } catch (e) {
-    }
+    } catch (e) {}
     return null;
   },
 
@@ -412,10 +440,12 @@ var GeckoViewUtils = {
 
   _log: function(aLogger, aLevel, aStrings, aExprs) {
     if (!Array.isArray(aStrings)) {
-      const [, file, line] =
-          (new Error()).stack.match(/.*\n.*\n.*@(.*):(\d+):/);
-      throw Error(`Expecting template literal: ${aLevel} \`foo \${bar}\``,
-                  file, +line);
+      const [, file, line] = new Error().stack.match(/.*\n.*\n.*@(.*):(\d+):/);
+      throw Error(
+        `Expecting template literal: ${aLevel} \`foo \${bar}\``,
+        file,
+        +line
+      );
     }
 
     if (aLogger.level > Log.Level.Numbers[aLevel]) {
@@ -460,5 +490,8 @@ var GeckoViewUtils = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(GeckoViewUtils, "IS_PARENT_PROCESS", _ =>
-  Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT);
+XPCOMUtils.defineLazyGetter(
+  GeckoViewUtils,
+  "IS_PARENT_PROCESS",
+  _ => Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT
+);

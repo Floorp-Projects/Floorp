@@ -4,8 +4,9 @@
 
 "use strict";
 
-const BAD_LISTENER = "The event listener must be a function, or an object that has " +
-                     "`EventEmitter.handler` Symbol.";
+const BAD_LISTENER =
+  "The event listener must be a function, or an object that has " +
+  "`EventEmitter.handler` Symbol.";
 
 const eventListeners = Symbol("EventEmitter/listeners");
 const onceOriginalListener = Symbol("EventEmitter/once-original-listener");
@@ -85,7 +86,10 @@ class EventEmitter {
         // So we iterate all the listeners to check if any of them is a wrapper to
         // the `listener` given.
         for (const value of listenersForType.values()) {
-          if (onceOriginalListener in value && value[onceOriginalListener] === listener) {
+          if (
+            onceOriginalListener in value &&
+            value[onceOriginalListener] === listener
+          ) {
             listenersForType.delete(value);
             break;
           }
@@ -270,7 +274,7 @@ class EventEmitter {
 
 module.exports = EventEmitter;
 
-const isEventHandler = (listener) =>
+const isEventHandler = listener =>
   listener && handler in listener && typeof listener[handler] === "function";
 
 const Services = require("Services");
@@ -299,8 +303,7 @@ function serialize(target) {
   }
 
   // Number / String
-  if (typeof target === "string" ||
-      typeof target === "number") {
+  if (typeof target === "string" || typeof target === "number") {
     return truncate(target, MAXLEN);
   }
 
@@ -329,9 +332,11 @@ function serialize(target) {
   }
 
   // Window
-  if (target.constructor &&
-      target.constructor.name &&
-      target.constructor.name === "Window") {
+  if (
+    target.constructor &&
+    target.constructor.name &&
+    target.constructor.name === "Window"
+  ) {
     return `window (${target.location.origin})`;
   }
 

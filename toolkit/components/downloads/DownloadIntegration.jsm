@@ -9,76 +9,138 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "DownloadIntegration",
-];
+var EXPORTED_SYMBOLS = ["DownloadIntegration"];
 
-const {Integration} = ChromeUtils.import("resource://gre/modules/Integration.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Integration } = ChromeUtils.import(
+  "resource://gre/modules/Integration.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
-                               "resource://gre/modules/AsyncShutdown.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-                               "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "DeferredTask",
-                               "resource://gre/modules/DeferredTask.jsm");
-ChromeUtils.defineModuleGetter(this, "Downloads",
-                               "resource://gre/modules/Downloads.jsm");
-ChromeUtils.defineModuleGetter(this, "DownloadStore",
-                               "resource://gre/modules/DownloadStore.jsm");
-ChromeUtils.defineModuleGetter(this, "DownloadUIHelper",
-                               "resource://gre/modules/DownloadUIHelper.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
-ChromeUtils.defineModuleGetter(this, "CloudStorage",
-                               "resource://gre/modules/CloudStorage.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AsyncShutdown",
+  "resource://gre/modules/AsyncShutdown.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "DeferredTask",
+  "resource://gre/modules/DeferredTask.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Downloads",
+  "resource://gre/modules/Downloads.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "DownloadStore",
+  "resource://gre/modules/DownloadStore.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "DownloadUIHelper",
+  "resource://gre/modules/DownloadUIHelper.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "CloudStorage",
+  "resource://gre/modules/CloudStorage.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "gDownloadPlatform",
-                                   "@mozilla.org/toolkit/download-platform;1",
-                                   "mozIDownloadPlatform");
-XPCOMUtils.defineLazyServiceGetter(this, "gEnvironment",
-                                   "@mozilla.org/process/environment;1",
-                                   "nsIEnvironment");
-XPCOMUtils.defineLazyServiceGetter(this, "gMIMEService",
-                                   "@mozilla.org/mime;1",
-                                   "nsIMIMEService");
-XPCOMUtils.defineLazyServiceGetter(this, "gExternalProtocolService",
-                                   "@mozilla.org/uriloader/external-protocol-service;1",
-                                   "nsIExternalProtocolService");
-ChromeUtils.defineModuleGetter(this, "RuntimePermissions",
-                               "resource://gre/modules/RuntimePermissions.jsm");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gDownloadPlatform",
+  "@mozilla.org/toolkit/download-platform;1",
+  "mozIDownloadPlatform"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gEnvironment",
+  "@mozilla.org/process/environment;1",
+  "nsIEnvironment"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gMIMEService",
+  "@mozilla.org/mime;1",
+  "nsIMIMEService"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gExternalProtocolService",
+  "@mozilla.org/uriloader/external-protocol-service;1",
+  "nsIExternalProtocolService"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "RuntimePermissions",
+  "resource://gre/modules/RuntimePermissions.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "gParentalControlsService", function() {
   if ("@mozilla.org/parental-controls-service;1" in Cc) {
-    return Cc["@mozilla.org/parental-controls-service;1"]
-      .createInstance(Ci.nsIParentalControlsService);
+    return Cc["@mozilla.org/parental-controls-service;1"].createInstance(
+      Ci.nsIParentalControlsService
+    );
   }
   return null;
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "gApplicationReputationService",
-           "@mozilla.org/reputationservice/application-reputation-service;1",
-           Ci.nsIApplicationReputationService);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gApplicationReputationService",
+  "@mozilla.org/reputationservice/application-reputation-service;1",
+  Ci.nsIApplicationReputationService
+);
 
 // We have to use the gCombinedDownloadIntegration identifier because, in this
 // module only, the DownloadIntegration identifier refers to the base version.
 /* global gCombinedDownloadIntegration:false */
-Integration.downloads.defineModuleGetter(this, "gCombinedDownloadIntegration",
-            "resource://gre/modules/DownloadIntegration.jsm",
-            "DownloadIntegration");
+Integration.downloads.defineModuleGetter(
+  this,
+  "gCombinedDownloadIntegration",
+  "resource://gre/modules/DownloadIntegration.jsm",
+  "DownloadIntegration"
+);
 
-const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer",
-                                     "initWithCallback");
+const Timer = Components.Constructor(
+  "@mozilla.org/timer;1",
+  "nsITimer",
+  "initWithCallback"
+);
 
 /**
  * Indicates the delay between a change to the downloads data and the related
@@ -112,13 +174,13 @@ const kObserverTopics = [
  */
 const kVerdictMap = {
   [Ci.nsIApplicationReputationService.VERDICT_DANGEROUS]:
-                Downloads.Error.BLOCK_VERDICT_MALWARE,
+    Downloads.Error.BLOCK_VERDICT_MALWARE,
   [Ci.nsIApplicationReputationService.VERDICT_UNCOMMON]:
-                Downloads.Error.BLOCK_VERDICT_UNCOMMON,
+    Downloads.Error.BLOCK_VERDICT_UNCOMMON,
   [Ci.nsIApplicationReputationService.VERDICT_POTENTIALLY_UNWANTED]:
-                Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED,
+    Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED,
   [Ci.nsIApplicationReputationService.VERDICT_DANGEROUS_HOST]:
-                Downloads.Error.BLOCK_VERDICT_MALWARE,
+    Downloads.Error.BLOCK_VERDICT_MALWARE,
 };
 
 /**
@@ -200,9 +262,10 @@ var DownloadIntegration = {
       throw new Error("Initialization may be performed only once.");
     }
 
-    this._store = new DownloadStore(list, OS.Path.join(
-                                             OS.Constants.Path.profileDir,
-                                             "downloads.json"));
+    this._store = new DownloadStore(
+      list,
+      OS.Path.join(OS.Constants.Path.profileDir, "downloads.json")
+    );
     this._store.onsaveitem = this.shouldPersistDownload.bind(this);
 
     try {
@@ -243,8 +306,12 @@ var DownloadIntegration = {
     // On Android we store all history; on Desktop, stopped downloads for which
     // we don't need to track the presence of a ".part" file are only retained
     // in the browser history.
-    return !aDownload.stopped || aDownload.hasPartialData ||
-           aDownload.hasBlockedData || AppConstants.platform == "android";
+    return (
+      !aDownload.stopped ||
+      aDownload.hasPartialData ||
+      aDownload.hasBlockedData ||
+      AppConstants.platform == "android"
+    );
   },
 
   /**
@@ -263,8 +330,10 @@ var DownloadIntegration = {
       // write access to /data/data/org.mozilla.{$APP} and /sdcard
       this._downloadsDirectory = gEnvironment.get("DOWNLOADS_DIRECTORY");
       if (!this._downloadsDirectory) {
-        throw new Components.Exception("DOWNLOADS_DIRECTORY is not set.",
-                                       Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH);
+        throw new Components.Exception(
+          "DOWNLOADS_DIRECTORY is not set.",
+          Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH
+        );
       }
     } else {
       try {
@@ -297,8 +366,10 @@ var DownloadIntegration = {
         break;
       case 2: // Custom
         try {
-          let directory = Services.prefs.getComplexValue("browser.download.dir",
-                                                         Ci.nsIFile);
+          let directory = Services.prefs.getComplexValue(
+            "browser.download.dir",
+            Ci.nsIFile
+          );
           directoryPath = directory.path;
           await OS.File.makeDir(directoryPath, { ignoreExisting: true });
         } catch (ex) {
@@ -348,16 +419,20 @@ var DownloadIntegration = {
    * @resolves The boolean indicates to block downloads or not.
    */
   shouldBlockForParentalControls(aDownload) {
-    let isEnabled = gParentalControlsService &&
-                    gParentalControlsService.parentalControlsEnabled;
-    let shouldBlock = isEnabled &&
-                      gParentalControlsService.blockFileDownloadsEnabled;
+    let isEnabled =
+      gParentalControlsService &&
+      gParentalControlsService.parentalControlsEnabled;
+    let shouldBlock =
+      isEnabled && gParentalControlsService.blockFileDownloadsEnabled;
 
     // Log the event if required by parental controls settings.
     if (isEnabled && gParentalControlsService.loggingEnabled) {
-      gParentalControlsService.log(gParentalControlsService.ePCLog_FileDownload,
-                                   shouldBlock,
-                                   NetUtil.newURI(aDownload.source.url), null);
+      gParentalControlsService.log(
+        gParentalControlsService.ePCLog_FileDownload,
+        shouldBlock,
+        NetUtil.newURI(aDownload.source.url),
+        null
+      );
     }
 
     return Promise.resolve(shouldBlock);
@@ -370,9 +445,12 @@ var DownloadIntegration = {
    * @resolves The boolean indicates to block downloads or not.
    */
   async shouldBlockForRuntimePermissions() {
-    return AppConstants.platform == "android" &&
-           !(await RuntimePermissions.waitForPermissions(
-                                      RuntimePermissions.WRITE_EXTERNAL_STORAGE));
+    return (
+      AppConstants.platform == "android" &&
+      !(await RuntimePermissions.waitForPermissions(
+        RuntimePermissions.WRITE_EXTERNAL_STORAGE
+      ))
+    );
   },
 
   /**
@@ -417,20 +495,23 @@ var DownloadIntegration = {
       if (aDownload.source.referrer) {
         aReferrer = NetUtil.newURI(aDownload.source.referrer);
       }
-      gApplicationReputationService.queryReputation({
-        sourceURI: NetUtil.newURI(aDownload.source.url),
-        referrerURI: aReferrer,
-        fileSize: aDownload.currentBytes,
-        sha256Hash: hash,
-        suggestedFileName: OS.Path.basename(aDownload.target.path),
-        signatureInfo: sigInfo,
-        redirects: channelRedirects },
+      gApplicationReputationService.queryReputation(
+        {
+          sourceURI: NetUtil.newURI(aDownload.source.url),
+          referrerURI: aReferrer,
+          fileSize: aDownload.currentBytes,
+          sha256Hash: hash,
+          suggestedFileName: OS.Path.basename(aDownload.target.path),
+          signatureInfo: sigInfo,
+          redirects: channelRedirects,
+        },
         function onComplete(aShouldBlock, aRv, aVerdict) {
           resolve({
             shouldBlock: aShouldBlock,
             verdict: (aShouldBlock && kVerdictMap[aVerdict]) || "",
           });
-        });
+        }
+      );
     });
   },
 
@@ -441,12 +522,15 @@ var DownloadIntegration = {
    * @return true if files should be marked
    */
   _shouldSaveZoneInformation() {
-    let key = Cc["@mozilla.org/windows-registry-key;1"]
-                .createInstance(Ci.nsIWindowsRegKey);
+    let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+      Ci.nsIWindowsRegKey
+    );
     try {
-      key.open(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-               "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Attachments",
-               Ci.nsIWindowsRegKey.ACCESS_QUERY_VALUE);
+      key.open(
+        Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+        "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Attachments",
+        Ci.nsIWindowsRegKey.ACCESS_QUERY_VALUE
+      );
       try {
         return key.readIntValue("SaveZoneInformation") != 1;
       } finally {
@@ -481,7 +565,10 @@ var DownloadIntegration = {
       let url;
       const uri = NetUtil.newURI(aUrl);
       if (["http", "https", "ftp"].includes(uri.scheme)) {
-        url = uri.mutate().setUserPass("").finalize().spec;
+        url = uri
+          .mutate()
+          .setUserPass("")
+          .finalize().spec;
       } else if (aFallback) {
         url = aFallback;
       } else {
@@ -536,7 +623,11 @@ var DownloadIntegration = {
             if (!aDownload.source.isPrivate) {
               zoneId +=
                 this._zoneIdKey("ReferrerUrl", aDownload.source.referrer) +
-                this._zoneIdKey("HostUrl", aDownload.source.url, "about:internet");
+                this._zoneIdKey(
+                  "HostUrl",
+                  aDownload.source.url,
+                  "about:internet"
+                );
             }
             await stream.write(new TextEncoder().encode(zoneId));
           } finally {
@@ -566,14 +657,17 @@ var DownloadIntegration = {
       // downloads to be opened with external applications are preserved in
       // the "Downloads" folder like normal downloads.
       let isTemporaryDownload =
-        aDownload.launchWhenSucceeded && (aDownload.source.isPrivate ||
-        Services.prefs.getBoolPref("browser.helperApps.deleteTempFileOnExit"));
+        aDownload.launchWhenSucceeded &&
+        (aDownload.source.isPrivate ||
+          Services.prefs.getBoolPref(
+            "browser.helperApps.deleteTempFileOnExit"
+          ));
       // Permanently downloaded files are made accessible by other users on
       // this system, while temporary downloads are marked as read-only.
       let options = {};
       if (isTemporaryDownload) {
         options.unixMode = 0o400;
-        options.winAttributes = {readOnly: true};
+        options.winAttributes = { readOnly: true };
       } else {
         options.unixMode = 0o666;
       }
@@ -586,7 +680,10 @@ var DownloadIntegration = {
       // The setPermissions API error EPERM is expected to occur when working
       // on a file system that does not support file permissions, like FAT32,
       // thus we don't report this error.
-      if (!(ex instanceof OS.File.Error) || ex.unixErrno != OS.Constants.libc.EPERM) {
+      if (
+        !(ex instanceof OS.File.Error) ||
+        ex.unixErrno != OS.Constants.libc.EPERM
+      ) {
         Cu.reportError(ex);
       }
     }
@@ -631,14 +728,17 @@ var DownloadIntegration = {
     // In case of a double extension, like ".tar.gz", we only
     // consider the last one, because the MIME service cannot
     // handle multiple extensions.
-    let fileExtension = null, mimeInfo = null;
+    let fileExtension = null,
+      mimeInfo = null;
     let match = file.leafName.match(/\.([^.]+)$/);
     if (match) {
       fileExtension = match[1];
     }
 
-    let isWindowsExe = AppConstants.platform == "win" &&
-      fileExtension && fileExtension.toLowerCase() == "exe";
+    let isWindowsExe =
+      AppConstants.platform == "win" &&
+      fileExtension &&
+      fileExtension.toLowerCase() == "exe";
 
     // Ask for confirmation if the file is executable, except for .exe on
     // Windows where the operating system will show the prompt based on the
@@ -647,8 +747,11 @@ var DownloadIntegration = {
     // first is because of its security nature, so that add-ons cannot forget
     // to do this check.  The second is that the system-level security prompt
     // would be displayed at launch time in any case.
-    if (file.isExecutable() && !isWindowsExe &&
-        !(await this.confirmLaunchExecutable(file.path))) {
+    if (
+      file.isExecutable() &&
+      !isWindowsExe &&
+      !(await this.confirmLaunchExecutable(file.path))
+    ) {
       return;
     }
 
@@ -656,9 +759,11 @@ var DownloadIntegration = {
       // The MIME service might throw if contentType == "" and it can't find
       // a MIME type for the given extension, so we'll treat this case as
       // an unknown mimetype.
-      mimeInfo = gMIMEService.getFromTypeAndExtension(aDownload.contentType,
-                                                      fileExtension);
-    } catch (e) { }
+      mimeInfo = gMIMEService.getFromTypeAndExtension(
+        aDownload.contentType,
+        fileExtension
+      );
+    } catch (e) {}
 
     if (aDownload.launcherPath) {
       if (!mimeInfo) {
@@ -666,12 +771,14 @@ var DownloadIntegration = {
         // is only set when we had an instance of nsIMIMEInfo to retrieve
         // the custom application chosen by the user.
         throw new Error(
-          "Unable to create nsIMIMEInfo to launch a custom application");
+          "Unable to create nsIMIMEInfo to launch a custom application"
+        );
       }
 
       // Custom application chosen
-      let localHandlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"]
-                              .createInstance(Ci.nsILocalHandlerApp);
+      let localHandlerApp = Cc[
+        "@mozilla.org/uriloader/local-handler-app;1"
+      ].createInstance(Ci.nsILocalHandlerApp);
       localHandlerApp.executable = new FileUtils.File(aDownload.launcherPath);
 
       mimeInfo.preferredApplicationHandler = localHandlerApp;
@@ -689,7 +796,7 @@ var DownloadIntegration = {
       try {
         this.launchFile(file, mimeInfo);
         return;
-      } catch (ex) { }
+      } catch (ex) {}
     }
 
     // If it didn't work or if there was no MIME info available,
@@ -697,7 +804,7 @@ var DownloadIntegration = {
     try {
       this.launchFile(file);
       return;
-    } catch (ex) { }
+    } catch (ex) {}
 
     // If our previous attempts failed, try sending it through
     // the system's external "file:" URL handler.
@@ -748,21 +855,22 @@ var DownloadIntegration = {
       // Show the directory containing the file and select the file.
       file.reveal();
       return;
-    } catch (ex) { }
+    } catch (ex) {}
 
     // If reveal fails for some reason (e.g., it's not implemented on unix
     // or the file doesn't exist), try using the parent if we have it.
     let parent = file.parent;
     if (!parent) {
       throw new Error(
-        "Unexpected reference to a top-level directory instead of a file");
+        "Unexpected reference to a top-level directory instead of a file"
+      );
     }
 
     try {
       // Open the parent directory to show where the file should be.
       parent.launch();
       return;
-    } catch (ex) { }
+    } catch (ex) {}
 
     // If launch also fails (probably because it's not implemented), let
     // the OS handler try to open the parent.
@@ -780,12 +888,15 @@ var DownloadIntegration = {
     // We read the name of the directory from the list of translated strings
     // that is kept by the UI helper module, even if this string is not strictly
     // displayed in the user interface.
-    let directoryPath = OS.Path.join(this._getDirectory(aName),
-                                     DownloadUIHelper.strings.downloadsFolder);
+    let directoryPath = OS.Path.join(
+      this._getDirectory(aName),
+      DownloadUIHelper.strings.downloadsFolder
+    );
 
     // Create the Downloads folder and ignore if it already exists.
-    return OS.File.makeDir(directoryPath, { ignoreExisting: true })
-                  .then(() => directoryPath);
+    return OS.File.makeDir(directoryPath, { ignoreExisting: true }).then(
+      () => directoryPath
+    );
   },
 
   /**
@@ -879,8 +990,9 @@ var DownloadObserver = {
    *        True if the list is private, false otherwise.
    */
   registerView: function DO_registerView(aList, aIsPrivate) {
-    let downloadsSet = aIsPrivate ? this._privateInProgressDownloads
-                                  : this._publicInProgressDownloads;
+    let downloadsSet = aIsPrivate
+      ? this._privateInProgressDownloads
+      : this._publicInProgressDownloads;
     let downloadsView = {
       onDownloadAdded: aDownload => {
         if (!aDownload.stopped) {
@@ -920,7 +1032,10 @@ var DownloadObserver = {
    *        The type of prompt notification depending on the observer.
    */
   _confirmCancelDownloads: function DO_confirmCancelDownload(
-    aCancel, aDownloadsCount, aPromptType) {
+    aCancel,
+    aDownloadsCount,
+    aPromptType
+  ) {
     // Handle test mode
     if (gCombinedDownloadIntegration._testPromptDownloads) {
       gCombinedDownloadIntegration._testPromptDownloads = aDownloadsCount;
@@ -932,13 +1047,15 @@ var DownloadObserver = {
     }
 
     // If user has already dismissed the request, then do nothing.
-    if ((aCancel instanceof Ci.nsISupportsPRBool) && aCancel.data) {
+    if (aCancel instanceof Ci.nsISupportsPRBool && aCancel.data) {
       return;
     }
 
     let prompter = DownloadUIHelper.getPrompter();
-    aCancel.data = prompter.confirmCancelDownloads(aDownloadsCount,
-                                                   prompter[aPromptType]);
+    aCancel.data = prompter.confirmCancelDownloads(
+      aDownloadsCount,
+      prompter[aPromptType]
+    );
   },
 
   /**
@@ -958,19 +1075,24 @@ var DownloadObserver = {
     let downloadsCount;
     switch (aTopic) {
       case "quit-application-requested":
-        downloadsCount = this._publicInProgressDownloads.size +
-                         this._privateInProgressDownloads.size;
+        downloadsCount =
+          this._publicInProgressDownloads.size +
+          this._privateInProgressDownloads.size;
         this._confirmCancelDownloads(aSubject, downloadsCount, "ON_QUIT");
         break;
       case "offline-requested":
-        downloadsCount = this._publicInProgressDownloads.size +
-                         this._privateInProgressDownloads.size;
+        downloadsCount =
+          this._publicInProgressDownloads.size +
+          this._privateInProgressDownloads.size;
         this._confirmCancelDownloads(aSubject, downloadsCount, "ON_OFFLINE");
         break;
       case "last-pb-context-exiting":
         downloadsCount = this._privateInProgressDownloads.size;
-        this._confirmCancelDownloads(aSubject, downloadsCount,
-                                     "ON_LEAVE_PRIVATE_BROWSING");
+        this._confirmCancelDownloads(
+          aSubject,
+          downloadsCount,
+          "ON_LEAVE_PRIVATE_BROWSING"
+        );
         break;
       case "last-pb-context-exited":
         let promise = (async function() {
@@ -1004,12 +1126,17 @@ var DownloadObserver = {
         break;
       case "wake_notification":
       case "resume_process_notification":
-        let wakeDelay =
-          Services.prefs.getIntPref("browser.download.manager.resumeOnWakeDelay", 10000);
+        let wakeDelay = Services.prefs.getIntPref(
+          "browser.download.manager.resumeOnWakeDelay",
+          10000
+        );
 
         if (wakeDelay >= 0) {
-          this._wakeTimer = new Timer(this._resumeOfflineDownloads.bind(this), wakeDelay,
-                                      Ci.nsITimer.TYPE_ONE_SHOT);
+          this._wakeTimer = new Timer(
+            this._resumeOfflineDownloads.bind(this),
+            wakeDelay,
+            Ci.nsITimer.TYPE_ONE_SHOT
+          );
         }
         break;
       case "network:offline-status-changed":
@@ -1059,8 +1186,9 @@ this.DownloadHistoryObserver.prototype = {
 
   // nsINavHistoryObserver
   onDeleteURI: function DL_onDeleteURI(aURI, aGUID) {
-    this._list.removeFinished(download => aURI.equals(NetUtil.newURI(
-                                                      download.source.url)));
+    this._list.removeFinished(download =>
+      aURI.equals(NetUtil.newURI(download.source.url))
+    );
   },
 
   // nsINavHistoryObserver
@@ -1094,8 +1222,10 @@ var DownloadAutoSaveView = function(aList, aStore) {
   this._store = aStore;
   this._downloadsMap = new Map();
   this._writer = new DeferredTask(() => this._store.save(), kSaveDelayMs);
-  AsyncShutdown.profileBeforeChange.addBlocker("DownloadAutoSaveView: writing data",
-                                               () => this._writer.finalize());
+  AsyncShutdown.profileBeforeChange.addBlocker(
+    "DownloadAutoSaveView: writing data",
+    () => this._writer.finalize()
+  );
 };
 
 this.DownloadAutoSaveView.prototype = {
@@ -1124,7 +1254,7 @@ this.DownloadAutoSaveView.prototype = {
   initialize() {
     // We set _initialized to true after adding the view, so that
     // onDownloadAdded doesn't cause a save to occur.
-    return this._list.addView(this).then(() => this._initialized = true);
+    return this._list.addView(this).then(() => (this._initialized = true));
   },
 
   /**

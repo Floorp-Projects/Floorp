@@ -9,11 +9,15 @@ const sinon = require("sinon");
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const serviceContainer = require("devtools/client/webconsole/test/fixtures/serviceContainer");
 
-let { MessageContainer } = require("devtools/client/webconsole/components/Output/MessageContainer");
+let {
+  MessageContainer,
+} = require("devtools/client/webconsole/components/Output/MessageContainer");
 MessageContainer = createFactory(MessageContainer);
 
 // Test fakes.
-const { stubPreparedMessages } = require("devtools/client/webconsole/test/fixtures/stubs/index");
+const {
+  stubPreparedMessages,
+} = require("devtools/client/webconsole/test/fixtures/stubs/index");
 
 describe("Message - location element", () => {
   it("Calls onViewSourceInDebugger when clicked", () => {
@@ -21,13 +25,15 @@ describe("Message - location element", () => {
     const onViewSource = sinon.spy();
 
     const message = stubPreparedMessages.get("console.log('foobar', 'test')");
-    const wrapper = mount(MessageContainer({
-      getMessage: () => message,
-      serviceContainer: Object.assign({}, serviceContainer, {
-        onViewSourceInDebugger,
-        onViewSource,
-      }),
-    }));
+    const wrapper = mount(
+      MessageContainer({
+        getMessage: () => message,
+        serviceContainer: Object.assign({}, serviceContainer, {
+          onViewSourceInDebugger,
+          onViewSource,
+        }),
+      })
+    );
 
     // There should be the location
     const locationLink = wrapper.find(`.message-location a`);
@@ -45,13 +51,15 @@ describe("Message - location element", () => {
 
     const message = stubPreparedMessages.get("console.log('foobar', 'test')");
 
-    const wrapper = mount(MessageContainer({
-      getMessage: () => message,
-      serviceContainer: Object.assign({}, serviceContainer, {
-        onViewSource,
-        onViewSourceInDebugger: undefined,
-      }),
-    }));
+    const wrapper = mount(
+      MessageContainer({
+        getMessage: () => message,
+        serviceContainer: Object.assign({}, serviceContainer, {
+          onViewSource,
+          onViewSourceInDebugger: undefined,
+        }),
+      })
+    );
 
     // There should be the location
     const locationLink = wrapper.find(`.message-location a`);

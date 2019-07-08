@@ -292,13 +292,29 @@ class DER {
     let tag = this._peekByte();
     if (!tagList.includes(tag)) {
       throw new Error(
-        `unexpected tag: found ${tag} instead of one of ${tagList}`);
+        `unexpected tag: found ${tag} instead of one of ${tagList}`
+      );
     }
     return this._readExpectedTLV(tag);
   }
 }
 
-this.DER = { UNIVERSAL, CONSTRUCTED, CONTEXT_SPECIFIC, INTEGER, BIT_STRING,
-             NULL, OBJECT_IDENTIFIER, PrintableString, TeletexString, IA5String,
-             UTCTime, GeneralizedTime, UTF8String, SEQUENCE, SET, DER };
+this.DER = {
+  UNIVERSAL,
+  CONSTRUCTED,
+  CONTEXT_SPECIFIC,
+  INTEGER,
+  BIT_STRING,
+  NULL,
+  OBJECT_IDENTIFIER,
+  PrintableString,
+  TeletexString,
+  IA5String,
+  UTCTime,
+  GeneralizedTime,
+  UTF8String,
+  SEQUENCE,
+  SET,
+  DER,
+};
 this.EXPORTED_SYMBOLS = ["DER"];

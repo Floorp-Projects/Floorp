@@ -18,7 +18,8 @@ const UPDATED_SRC_SIZE = "22" + " \u00D7 " + "23";
 
 add_task(async function() {
   const { inspector } = await openInspectorForURL(
-    "data:text/html,<p>markup view tooltip test</p><img>");
+    "data:text/html,<p>markup view tooltip test</p><img>"
+  );
 
   info("Retrieving NodeFront for the <img> element.");
   const img = await getNodeFront("img", inspector);
@@ -32,8 +33,9 @@ add_task(async function() {
   const container = getContainerForNodeFront(img, inspector);
   ok(container, "Found markup container for the image.");
 
-  let target = container.editor.getAttributeElement("src")
-                               .querySelector(".link");
+  let target = container.editor
+    .getAttributeElement("src")
+    .querySelector(".link");
   ok(target, "Found the src attribute in the markup view.");
 
   info("Showing tooltip on the src link.");
@@ -41,7 +43,10 @@ add_task(async function() {
 
   checkImageTooltip(INITIAL_SRC_SIZE, inspector);
 
-  await assertTooltipHiddenOnMouseOut(inspector.markup.imagePreviewTooltip, target);
+  await assertTooltipHiddenOnMouseOut(
+    inspector.markup.imagePreviewTooltip,
+    target
+  );
 
   info("Updating the image src.");
   await updateImageSrc(img, UPDATED_SRC, inspector);
@@ -55,7 +60,10 @@ add_task(async function() {
   info("Checking that the new image was shown.");
   checkImageTooltip(UPDATED_SRC_SIZE, inspector);
 
-  await assertTooltipHiddenOnMouseOut(inspector.markup.imagePreviewTooltip, target);
+  await assertTooltipHiddenOnMouseOut(
+    inspector.markup.imagePreviewTooltip,
+    target
+  );
 });
 
 /**
@@ -63,10 +71,12 @@ add_task(async function() {
  */
 function updateImageSrc(img, newSrc, inspector) {
   const onMutated = inspector.once("markupmutation");
-  const onModified = img.modifyAttributes([{
-    attributeName: "src",
-    newValue: newSrc,
-  }]);
+  const onModified = img.modifyAttributes([
+    {
+      attributeName: "src",
+      newValue: newSrc,
+    },
+  ]);
 
   return Promise.all([onMutated, onModified]);
 }
@@ -75,7 +85,7 @@ function updateImageSrc(img, newSrc, inspector) {
  * Checks that the markup view tooltip contains an image element with the given
  * size.
  */
-function checkImageTooltip(size, {markup}) {
+function checkImageTooltip(size, { markup }) {
   const panel = markup.imagePreviewTooltip.panel;
   const images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");

@@ -1,31 +1,31 @@
-import {GlobalOverrider} from "test/unit/utils";
+import { GlobalOverrider } from "test/unit/utils";
 import injector from "inject!lib/PersonalityProvider.jsm";
 
 const TIME_SEGMENTS = [
-  {"id": "hour", "startTime": 3600, "endTime": 0, "weightPosition": 1},
-  {"id": "day", "startTime": 86400, "endTime": 3600, "weightPosition": 0.75},
-  {"id": "week", "startTime": 604800, "endTime": 86400, "weightPosition": 0.5},
-  {"id": "weekPlus", "startTime": null, "endTime": 604800, "weightPosition": 0.25},
+  { id: "hour", startTime: 3600, endTime: 0, weightPosition: 1 },
+  { id: "day", startTime: 86400, endTime: 3600, weightPosition: 0.75 },
+  { id: "week", startTime: 604800, endTime: 86400, weightPosition: 0.5 },
+  { id: "weekPlus", startTime: null, endTime: 604800, weightPosition: 0.25 },
 ];
 
 const PARAMETER_SETS = {
-  "paramSet1": {
-    "recencyFactor": 0.5,
-    "frequencyFactor": 0.5,
-    "combinedDomainFactor": 0.5,
-    "perfectFrequencyVisits": 10,
-    "perfectCombinedDomainScore": 2,
-    "multiDomainBoost": 0.1,
-    "itemScoreFactor": 0,
+  paramSet1: {
+    recencyFactor: 0.5,
+    frequencyFactor: 0.5,
+    combinedDomainFactor: 0.5,
+    perfectFrequencyVisits: 10,
+    perfectCombinedDomainScore: 2,
+    multiDomainBoost: 0.1,
+    itemScoreFactor: 0,
   },
-  "paramSet2": {
-    "recencyFactor": 1,
-    "frequencyFactor": 0.7,
-    "combinedDomainFactor": 0.8,
-    "perfectFrequencyVisits": 10,
-    "perfectCombinedDomainScore": 2,
-    "multiDomainBoost": 0.1,
-    "itemScoreFactor": 0,
+  paramSet2: {
+    recencyFactor: 1,
+    frequencyFactor: 0.7,
+    combinedDomainFactor: 0.8,
+    perfectFrequencyVisits: 10,
+    perfectCombinedDomainScore: 2,
+    multiDomainBoost: 0.1,
+    itemScoreFactor: 0,
   },
 };
 
@@ -42,11 +42,22 @@ describe("Personality Provider", () => {
     globals = new GlobalOverrider();
 
     const testUrl = "www.somedomain.com";
-    globals.sandbox.stub(global.Services.io, "newURI").returns({host: testUrl});
+    globals.sandbox
+      .stub(global.Services.io, "newURI")
+      .returns({ host: testUrl });
 
-    globals.sandbox.stub(global.PlacesUtils.history, "executeQuery").returns({root: {childCount: 1, getChild: index => ({uri: testUrl, accessCount: 1})}});
-    globals.sandbox.stub(global.PlacesUtils.history, "getNewQuery").returns({"TIME_RELATIVE_NOW": 1});
-    globals.sandbox.stub(global.PlacesUtils.history, "getNewQueryOptions").returns({});
+    globals.sandbox.stub(global.PlacesUtils.history, "executeQuery").returns({
+      root: {
+        childCount: 1,
+        getChild: index => ({ uri: testUrl, accessCount: 1 }),
+      },
+    });
+    globals.sandbox
+      .stub(global.PlacesUtils.history, "getNewQuery")
+      .returns({ TIME_RELATIVE_NOW: 1 });
+    globals.sandbox
+      .stub(global.PlacesUtils.history, "getNewQueryOptions")
+      .returns({});
 
     NaiveBayesTextTaggerStub = globals.sandbox.stub();
     NmfTextTaggerStub = globals.sandbox.stub();
@@ -58,17 +69,21 @@ describe("Personality Provider", () => {
       ok: true,
       json: async () => {
         if (server === "services.settings.server/") {
-          return {capabilities: {attachments: {base_url: baseURLStub}}};
+          return { capabilities: { attachments: { base_url: baseURLStub } } };
         }
         return {};
       },
     });
-    globals.sandbox.stub(global.Services.prefs, "getCharPref").callsFake(pref => pref);
+    globals.sandbox
+      .stub(global.Services.prefs, "getCharPref")
+      .callsFake(pref => pref);
 
-    ({PersonalityProvider} = injector({
-      "lib/NaiveBayesTextTagger.jsm": {NaiveBayesTextTagger: NaiveBayesTextTaggerStub},
-      "lib/NmfTextTagger.jsm": {NmfTextTagger: NmfTextTaggerStub},
-      "lib/RecipeExecutor.jsm": {RecipeExecutor: RecipeExecutorStub},
+    ({ PersonalityProvider } = injector({
+      "lib/NaiveBayesTextTagger.jsm": {
+        NaiveBayesTextTagger: NaiveBayesTextTaggerStub,
+      },
+      "lib/NmfTextTagger.jsm": { NmfTextTagger: NmfTextTaggerStub },
+      "lib/RecipeExecutor.jsm": { RecipeExecutor: RecipeExecutorStub },
     }));
 
     instance = new PersonalityProvider(TIME_SEGMENTS, PARAMETER_SETS);
@@ -89,25 +104,44 @@ describe("Personality Provider", () => {
           if (item.title === "fail") {
             return null;
           }
-          return {title: item.title, score: item.frecency, type: "history_item"};
+          return {
+            title: item.title,
+            score: item.frecency,
+            type: "history_item",
+          };
         } else if (recipe === "interest_finalizer") {
-          return {title: item.title, score: item.score * 100, type: "interest_vector"};
+          return {
+            title: item.title,
+            score: item.score * 100,
+            type: "interest_vector",
+          };
         } else if (recipe === "item_to_rank_builder") {
           if (item.title === "fail") {
             return null;
           }
-          return {item_title: item.title, item_score: item.score, type: "item_to_rank"};
+          return {
+            item_title: item.title,
+            item_score: item.score,
+            type: "item_to_rank",
+          };
         } else if (recipe === "item_ranker") {
-          if ((item.title === "fail") || (item.item_title === "fail")) {
+          if (item.title === "fail" || item.item_title === "fail") {
             return null;
           }
-          return {title: item.title, score: item.item_score * item.score, type: "ranked_item"};
+          return {
+            title: item.title,
+            score: item.item_score * item.score,
+            type: "ranked_item",
+          };
         }
         return null;
       },
       executeCombinerRecipe: (item1, item2, recipe) => {
         if (recipe === "interest_combiner") {
-          if ((item1.title === "combiner_fail") || (item2.title === "combiner_fail")) {
+          if (
+            item1.title === "combiner_fail" ||
+            item2.title === "combiner_fail"
+          ) {
             return null;
           }
           if (item1.type === undefined) {
@@ -116,7 +150,7 @@ describe("Personality Provider", () => {
           if (item1.score === undefined) {
             item1.score = 0;
           }
-          return {type: item1.type, score: item1.score + item2.score};
+          return { type: item1.type, score: item1.score + item2.score };
         }
         return null;
       },
@@ -152,7 +186,9 @@ describe("Personality Provider", () => {
       instance.interestConfig = undefined;
       const callback = globals.sandbox.stub();
       instance.createInterestVector = async () => ({});
-      sinon.stub(instance, "generateRecipeExecutor").returns(Promise.resolve(true));
+      sinon
+        .stub(instance, "generateRecipeExecutor")
+        .returns(Promise.resolve(true));
       await instance.init(callback);
       assert.calledOnce(instance.getRecipe);
       assert.calledOnce(instance.generateRecipeExecutor);
@@ -171,8 +207,10 @@ describe("Personality Provider", () => {
     it("should return early and not initialize if createInterestVector fails", async () => {
       sinon.stub(instance, "getRecipe").returns(Promise.resolve(true));
       instance.interestConfig = undefined;
-      sinon.stub(instance, "generateRecipeExecutor").returns(Promise.resolve(true));
-      instance.createInterestVector = async () => (null);
+      sinon
+        .stub(instance, "generateRecipeExecutor")
+        .returns(Promise.resolve(true));
+      instance.createInterestVector = async () => null;
       await instance.init();
       assert.calledOnce(instance.getRecipe);
       assert.calledOnce(instance.generateRecipeExecutor);
@@ -182,7 +220,9 @@ describe("Personality Provider", () => {
       sinon.stub(instance, "getRecipe").returns(Promise.resolve(true));
       instance.interestConfig = undefined;
       instance.createInterestVector = async () => ({});
-      sinon.stub(instance, "generateRecipeExecutor").returns(Promise.resolve(true));
+      sinon
+        .stub(instance, "generateRecipeExecutor")
+        .returns(Promise.resolve(true));
       await instance.init();
       assert.calledOnce(instance.getRecipe);
       assert.calledOnce(instance.generateRecipeExecutor);
@@ -204,11 +244,11 @@ describe("Personality Provider", () => {
     it("should not generate taggers if already available", async () => {
       instance.taggers = {
         nbTaggers: ["first"],
-        nmfTaggers: {first: "first"},
+        nmfTaggers: { first: "first" },
       };
       await instance.generateRecipeExecutor();
       assert.calledOnce(RecipeExecutorStub);
-      const {args} = RecipeExecutorStub.firstCall;
+      const { args } = RecipeExecutorStub.firstCall;
       assert.equal(args[0].length, 1);
       assert.equal(args[0], "first");
       assert.equal(args[1].first, "first");
@@ -217,8 +257,12 @@ describe("Personality Provider", () => {
       instance.modelKeys = ["nb_model_sports", "nmf_model_sports"];
 
       instance.getFromRemoteSettings = async name => [
-        {recordKey: "nb_model_sports", model_type: "nb"},
-        {recordKey: "nmf_model_sports", model_type: "nmf", parent_tag: "nmf_sports_parent_tag"},
+        { recordKey: "nb_model_sports", model_type: "nb" },
+        {
+          recordKey: "nmf_model_sports",
+          model_type: "nmf",
+          parent_tag: "nmf_sports_parent_tag",
+        },
       ];
 
       await instance.generateRecipeExecutor();
@@ -226,7 +270,7 @@ describe("Personality Provider", () => {
       assert.calledOnce(NaiveBayesTextTaggerStub);
       assert.calledOnce(NmfTextTaggerStub);
 
-      const {args} = RecipeExecutorStub.firstCall;
+      const { args } = RecipeExecutorStub.firstCall;
       assert.equal(args[0].length, 1);
       assert.isDefined(args[1].nmf_sports_parent_tag);
     });
@@ -234,8 +278,12 @@ describe("Personality Provider", () => {
       instance.modelKeys = ["nb_model_sports"];
 
       instance.getFromRemoteSettings = async name => [
-        {recordKey: "nb_model_sports", model_type: "nb"},
-        {recordKey: "nmf_model_sports", model_type: "nmf", parent_tag: "nmf_sports_parent_tag"},
+        { recordKey: "nb_model_sports", model_type: "nb" },
+        {
+          recordKey: "nmf_model_sports",
+          model_type: "nmf",
+          parent_tag: "nmf_sports_parent_tag",
+        },
       ];
 
       await instance.generateRecipeExecutor();
@@ -243,7 +291,7 @@ describe("Personality Provider", () => {
       assert.calledOnce(NaiveBayesTextTaggerStub);
       assert.notCalled(NmfTextTaggerStub);
 
-      const {args} = RecipeExecutorStub.firstCall;
+      const { args } = RecipeExecutorStub.firstCall;
       assert.equal(args[0].length, 1);
       assert.equal(Object.keys(args[1]).length, 0);
     });
@@ -251,27 +299,34 @@ describe("Personality Provider", () => {
       instance.modelKeys = ["nb_model_sports", "nmf_model_sports"];
 
       instance.getFromRemoteSettings = async name => [
-        {recordKey: "nb_model_sports", model_type: "nb"},
+        { recordKey: "nb_model_sports", model_type: "nb" },
       ];
       await instance.generateRecipeExecutor();
       assert.calledOnce(RecipeExecutorStub);
       assert.calledOnce(NaiveBayesTextTaggerStub);
       assert.notCalled(NmfTextTaggerStub);
 
-      const {args} = RecipeExecutorStub.firstCall;
+      const { args } = RecipeExecutorStub.firstCall;
       assert.equal(args[0].length, 1);
       assert.equal(Object.keys(args[1]).length, 0);
     });
   });
   describe("#recipe", () => {
     it("should get and fetch a new recipe on first getRecipe", async () => {
-      sinon.stub(instance, "getFromRemoteSettings").returns(Promise.resolve([]));
+      sinon
+        .stub(instance, "getFromRemoteSettings")
+        .returns(Promise.resolve([]));
       await instance.getRecipe();
       assert.calledOnce(instance.getFromRemoteSettings);
-      assert.calledWith(instance.getFromRemoteSettings, "personality-provider-recipe");
+      assert.calledWith(
+        instance.getFromRemoteSettings,
+        "personality-provider-recipe"
+      );
     });
     it("should not fetch a recipe on getRecipe if cached", async () => {
-      sinon.stub(instance, "getFromRemoteSettings").returns(Promise.resolve([]));
+      sinon
+        .stub(instance, "getFromRemoteSettings")
+        .returns(Promise.resolve([]));
       instance.recipes = ["blah"];
       await instance.getRecipe();
       assert.notCalled(instance.getFromRemoteSettings);
@@ -307,12 +362,12 @@ describe("Personality Provider", () => {
       globals.restore();
     });
     it("should gracefully handle history entries that fail", async () => {
-      mockHistory.push({title: "fail"});
+      mockHistory.push({ title: "fail" });
       assert.isNotNull(await instance.createInterestVector());
     });
 
     it("should fail if the combiner fails", async () => {
-      mockHistory.push({title: "combiner_fail", frecency: 111});
+      mockHistory.push({ title: "combiner_fail", frecency: 111 });
       let actual = await instance.createInterestVector();
       assert.isNull(actual);
     });
@@ -326,7 +381,7 @@ describe("Personality Provider", () => {
   describe("#calculateItemRelevanceScore", () => {
     it("it should return score for uninitialized provider", () => {
       instance.initialized = false;
-      assert.equal(instance.calculateItemRelevanceScore({item_score: 2}), 2);
+      assert.equal(instance.calculateItemRelevanceScore({ item_score: 2 }), 2);
     });
     it("it should return 1 for uninitialized provider and no score", () => {
       instance.initialized = false;
@@ -334,24 +389,30 @@ describe("Personality Provider", () => {
     });
     it("it should return -1 for busted item", () => {
       instance.initialized = true;
-      assert.equal(instance.calculateItemRelevanceScore({title: "fail"}), -1);
+      assert.equal(instance.calculateItemRelevanceScore({ title: "fail" }), -1);
     });
     it("it should return -1 for a busted ranking", () => {
       instance.initialized = true;
-      instance.interestVector = {title: "fail", score: 10};
-      assert.equal(instance.calculateItemRelevanceScore({title: "some item", score: 6}), -1);
+      instance.interestVector = { title: "fail", score: 10 };
+      assert.equal(
+        instance.calculateItemRelevanceScore({ title: "some item", score: 6 }),
+        -1
+      );
     });
     it("it should return a score, and not change with interestVector", () => {
-      instance.interestVector = {score: 10};
+      instance.interestVector = { score: 10 };
       instance.initialized = true;
-      assert.equal(instance.calculateItemRelevanceScore({score: 2}), 20);
-      assert.deepEqual(instance.interestVector, {score: 10});
+      assert.equal(instance.calculateItemRelevanceScore({ score: 2 }), 20);
+      assert.deepEqual(instance.interestVector, { score: 10 });
     });
   });
   describe("#fetchHistory", () => {
     it("should return a history object for fetchHistory", async () => {
       const history = await instance.fetchHistory(["requiredColumn"], 1, 1);
-      assert.equal(history.sql, `SELECT url, title, visit_count, frecency, last_visit_date, description\n    FROM moz_places\n    WHERE last_visit_date >= 1000000\n    AND last_visit_date < 1000000 AND IFNULL(requiredColumn, "") <> "" LIMIT 30000`);
+      assert.equal(
+        history.sql,
+        `SELECT url, title, visit_count, frecency, last_visit_date, description\n    FROM moz_places\n    WHERE last_visit_date >= 1000000\n    AND last_visit_date < 1000000 AND IFNULL(requiredColumn, "") <> "" LIMIT 30000`
+      );
       assert.equal(history.options.columns.length, 1);
       assert.equal(Object.keys(history.options.params).length, 0);
     });
@@ -359,14 +420,16 @@ describe("Personality Provider", () => {
   describe("#attachments", () => {
     it("should sync remote settings collection from onSync", async () => {
       sinon.stub(instance, "deleteAttachment").returns(Promise.resolve({}));
-      sinon.stub(instance, "maybeDownloadAttachment").returns(Promise.resolve({}));
+      sinon
+        .stub(instance, "maybeDownloadAttachment")
+        .returns(Promise.resolve({}));
 
       await instance.onSync({
         data: {
           created: ["create-1", "create-2"],
           updated: [
-            {old: "update-old-1", new: "update-new-1"},
-            {old: "update-old-2", new: "update-new-2"},
+            { old: "update-old-1", new: "update-new-1" },
+            { old: "update-old-2", new: "update-new-2" },
           ],
           deleted: ["delete-2", "delete-1"],
         },
@@ -374,8 +437,12 @@ describe("Personality Provider", () => {
 
       assert(instance.maybeDownloadAttachment.withArgs("create-1").calledOnce);
       assert(instance.maybeDownloadAttachment.withArgs("create-2").calledOnce);
-      assert(instance.maybeDownloadAttachment.withArgs("update-new-1").calledOnce);
-      assert(instance.maybeDownloadAttachment.withArgs("update-new-2").calledOnce);
+      assert(
+        instance.maybeDownloadAttachment.withArgs("update-new-1").calledOnce
+      );
+      assert(
+        instance.maybeDownloadAttachment.withArgs("update-new-2").calledOnce
+      );
 
       assert(instance.deleteAttachment.withArgs("delete-1").calledOnce);
       assert(instance.deleteAttachment.withArgs("delete-2").calledOnce);
@@ -389,12 +456,18 @@ describe("Personality Provider", () => {
       });
       baseURLStub = "/";
 
-      const writeAtomicStub = globals.sandbox.stub(global.OS.File, "writeAtomic").resolves(Promise.resolve());
-      globals.sandbox.stub(global.OS.Path, "join").callsFake((first, second) => first + second);
+      const writeAtomicStub = globals.sandbox
+        .stub(global.OS.File, "writeAtomic")
+        .resolves(Promise.resolve());
+      globals.sandbox
+        .stub(global.OS.Path, "join")
+        .callsFake((first, second) => first + second);
 
       globals.set("Uint8Array", class Uint8Array {});
 
-      await instance._downloadAttachment({attachment: {location: "location", filename: "filename"}});
+      await instance._downloadAttachment({
+        attachment: { location: "location", filename: "filename" },
+      });
 
       const fetchArgs = fetchStub.firstCall.args;
       assert.equal(fetchArgs[0], "/location");
@@ -403,11 +476,13 @@ describe("Personality Provider", () => {
       assert.equal(writeArgs[2].tmpPath, "/filename.tmp");
     });
     it("should call reportError from _downloadAttachment if not valid response", async () => {
-      globals.sandbox.stub(global, "fetch").resolves({ok: false});
+      globals.sandbox.stub(global, "fetch").resolves({ ok: false });
       globals.sandbox.spy(global.Cu, "reportError");
       baseURLStub = "/";
 
-      await instance._downloadAttachment({attachment: {location: "location", filename: "filename"}});
+      await instance._downloadAttachment({
+        attachment: { location: "location", filename: "filename" },
+      });
       assert.calledWith(Cu.reportError, "Failed to fetch /location: undefined");
     });
     it("should attempt _downloadAttachment three times for maybeDownloadAttachment", async () => {
@@ -416,11 +491,19 @@ describe("Personality Provider", () => {
       let attachmentStub;
       sinon.stub(instance, "_downloadAttachment").returns(Promise.resolve());
       sinon.stub(instance, "_getFileStr").returns(Promise.resolve("1"));
-      const makeDirStub = globals.sandbox.stub(global.OS.File, "makeDir").returns(Promise.resolve());
-      globals.sandbox.stub(global.OS.Path, "join").callsFake((first, second) => first + second);
+      const makeDirStub = globals.sandbox
+        .stub(global.OS.File, "makeDir")
+        .returns(Promise.resolve());
+      globals.sandbox
+        .stub(global.OS.Path, "join")
+        .callsFake((first, second) => first + second);
 
-      existsStub = globals.sandbox.stub(global.OS.File, "exists").returns(Promise.resolve(true));
-      statStub = globals.sandbox.stub(global.OS.File, "stat").returns(Promise.resolve({size: "1"}));
+      existsStub = globals.sandbox
+        .stub(global.OS.File, "exists")
+        .returns(Promise.resolve(true));
+      statStub = globals.sandbox
+        .stub(global.OS.File, "stat")
+        .returns(Promise.resolve({ size: "1" }));
 
       attachmentStub = {
         attachment: {
@@ -456,22 +539,34 @@ describe("Personality Provider", () => {
       assert.calledThrice(instance._downloadAttachment);
     });
     it("should remove attachments when calling deleteAttachment", async () => {
-      const makeDirStub = globals.sandbox.stub(global.OS.File, "makeDir").returns(Promise.resolve());
-      const removeStub = globals.sandbox.stub(global.OS.File, "remove").returns(Promise.resolve());
-      const removeEmptyDirStub = globals.sandbox.stub(global.OS.File, "removeEmptyDir").returns(Promise.resolve());
-      globals.sandbox.stub(global.OS.Path, "join").callsFake((first, second) => first + second);
-      await instance.deleteAttachment({attachment: {filename: "filename"}});
+      const makeDirStub = globals.sandbox
+        .stub(global.OS.File, "makeDir")
+        .returns(Promise.resolve());
+      const removeStub = globals.sandbox
+        .stub(global.OS.File, "remove")
+        .returns(Promise.resolve());
+      const removeEmptyDirStub = globals.sandbox
+        .stub(global.OS.File, "removeEmptyDir")
+        .returns(Promise.resolve());
+      globals.sandbox
+        .stub(global.OS.Path, "join")
+        .callsFake((first, second) => first + second);
+      await instance.deleteAttachment({ attachment: { filename: "filename" } });
       assert.calledOnce(makeDirStub);
       assert.calledOnce(removeStub);
       assert.calledOnce(removeEmptyDirStub);
-      assert.calledWith(removeStub, "/filename", {ignoreAbsent: true});
+      assert.calledWith(removeStub, "/filename", { ignoreAbsent: true });
     });
     it("should return JSON when calling getAttachment", async () => {
-      sinon.stub(instance, "maybeDownloadAttachment").returns(Promise.resolve());
+      sinon
+        .stub(instance, "maybeDownloadAttachment")
+        .returns(Promise.resolve());
       sinon.stub(instance, "_getFileStr").returns(Promise.resolve("{}"));
       const reportErrorStub = globals.sandbox.stub(global.Cu, "reportError");
-      globals.sandbox.stub(global.OS.Path, "join").callsFake((first, second) => first + second);
-      const record = {attachment: {filename: "filename"}};
+      globals.sandbox
+        .stub(global.OS.Path, "join")
+        .callsFake((first, second) => first + second);
+      const record = { attachment: { filename: "filename" } };
       let returnValue = await instance.getAttachment(record);
 
       assert.notCalled(reportErrorStub);
@@ -485,7 +580,10 @@ describe("Personality Provider", () => {
       sinon.stub(instance, "_getFileStr").returns(Promise.resolve({}));
       returnValue = await instance.getAttachment(record);
       assert.calledOnce(reportErrorStub);
-      assert.calledWith(reportErrorStub, "Failed to load /filename: JSON.parse: unexpected character at line 1 column 2 of the JSON data");
+      assert.calledWith(
+        reportErrorStub,
+        "Failed to load /filename: JSON.parse: unexpected character at line 1 column 2 of the JSON data"
+      );
       assert.deepEqual(returnValue, {});
     });
     it("should read and decode a file with _getFileStr", async () => {

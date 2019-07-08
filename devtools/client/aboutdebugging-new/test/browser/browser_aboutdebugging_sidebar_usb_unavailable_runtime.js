@@ -25,10 +25,14 @@ add_task(async function() {
 
   const usbRuntimeSidebarItem = findSidebarItemByText(DEVICE_NAME, document);
 
-  ok(usbRuntimeSidebarItem.querySelector(".qa-runtime-item-waiting-for-browser"),
-    "Sidebar item shows as `Waiting for browser`");
+  ok(
+    usbRuntimeSidebarItem.querySelector(".qa-runtime-item-waiting-for-browser"),
+    "Sidebar item shows as `Waiting for browser`"
+  );
 
-  const hasConnectButton = usbRuntimeSidebarItem.querySelector(".qa-connect-button");
+  const hasConnectButton = usbRuntimeSidebarItem.querySelector(
+    ".qa-connect-button"
+  );
   ok(!hasConnectButton, "Connect button is not displayed");
 
   const hasLink = usbRuntimeSidebarItem.querySelector(".qa-sidebar-link");
@@ -47,11 +51,16 @@ add_task(async function() {
   let updatedSidebarItem = null;
   await waitUntil(() => {
     updatedSidebarItem = findSidebarItemByText(DEVICE_NAME, document);
-    return updatedSidebarItem && updatedSidebarItem.querySelector(".qa-connect-button");
+    return (
+      updatedSidebarItem &&
+      updatedSidebarItem.querySelector(".qa-connect-button")
+    );
   });
 
-  ok(updatedSidebarItem.querySelector(".qa-runtime-item-standard"),
-    "Sidebar item for the USB runtime is now a standard sidebar item");
+  ok(
+    updatedSidebarItem.querySelector(".qa-runtime-item-standard"),
+    "Sidebar item for the USB runtime is now a standard sidebar item"
+  );
 
   await removeTab(tab);
 });

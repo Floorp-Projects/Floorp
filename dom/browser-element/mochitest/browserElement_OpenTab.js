@@ -29,8 +29,8 @@ function runTest() {
 
   let sendCtrlClick = () => {
     let nsIDOMWindowUtils = SpecialPowers.Ci.nsIDOMWindowUtils;
-    let mod = nsIDOMWindowUtils.MODIFIER_META |
-              nsIDOMWindowUtils.MODIFIER_CONTROL;
+    let mod =
+      nsIDOMWindowUtils.MODIFIER_META | nsIDOMWindowUtils.MODIFIER_CONTROL;
     iframe.sendMouseEvent("mousedown", x, y, 0, 1, mod);
     iframe.sendMouseEvent("mouseup", x, y, 0, 1, mod);
   };
@@ -58,8 +58,8 @@ function runTest() {
     sendCtrlClick();
   });
 
-
-  iframe.src = 'data:text/html,<body style="margin:0"><a href="http://example.com"><span>click here</span></a></body>';
+  iframe.src =
+    'data:text/html,<body style="margin:0"><a href="http://example.com"><span>click here</span></a></body>';
 }
 
 addEventListener("testready", runTest);

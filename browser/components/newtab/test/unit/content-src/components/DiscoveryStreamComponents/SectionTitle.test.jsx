@@ -1,6 +1,6 @@
 import React from "react";
-import {SectionTitle} from "content-src/components/DiscoveryStreamComponents/SectionTitle/SectionTitle";
-import {shallow} from "enzyme";
+import { SectionTitle } from "content-src/components/DiscoveryStreamComponents/SectionTitle/SectionTitle";
+import { shallow } from "enzyme";
 
 describe("<SectionTitle>", () => {
   let wrapper;
@@ -15,7 +15,7 @@ describe("<SectionTitle>", () => {
   });
 
   it("should render a subtitle", () => {
-    wrapper.setProps({header: {title: "Foo", subtitle: "Bar"}});
+    wrapper.setProps({ header: { title: "Foo", subtitle: "Bar" } });
 
     assert.equal(wrapper.find(".subtitle").text(), "Bar");
   });

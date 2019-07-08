@@ -5,11 +5,13 @@
 "use strict";
 
 const { Ci } = require("chrome");
-const { accessibility: {
-  AUDIT_TYPE: { TEXT_LABEL },
-  ISSUE_TYPE,
-  SCORES: { BEST_PRACTICES, FAIL, WARNING },
-}} = require("devtools/shared/constants");
+const {
+  accessibility: {
+    AUDIT_TYPE: { TEXT_LABEL },
+    ISSUE_TYPE,
+    SCORES: { BEST_PRACTICES, FAIL, WARNING },
+  },
+} = require("devtools/shared/constants");
 
 const {
   AREA_NO_NAME_FROM_ALT,
@@ -21,7 +23,6 @@ const {
   FORM_FIELDSET_NO_NAME_FROM_LEGEND,
   FORM_NO_NAME,
   FORM_NO_VISIBLE_NAME,
-  FORM_OPTGROUP_NO_NAME,
   FORM_OPTGROUP_NO_NAME_FROM_LABEL,
   FRAME_NO_NAME,
   HEADING_NO_CONTENT,
@@ -58,7 +59,8 @@ function isVisible(accessible) {
  */
 function getLabels(accessible) {
   const relation = accessible.getRelationByType(
-    Ci.nsIAccessibleRelation.RELATION_LABELLED_BY);
+    Ci.nsIAccessibleRelation.RELATION_LABELLED_BY
+  );
   return [...relation.getTargets().enumerate(Ci.nsIAccessible)];
 }
 
@@ -109,7 +111,10 @@ const shouldHaveNonEmptyNameRule = function(issue, accessible) {
  *          Failure audit report if interactive accessible object has no or
  *          empty name, null otherwise.
  */
-const interactiveRule = mustHaveNonEmptyNameRule.bind(null, INTERACTIVE_NO_NAME);
+const interactiveRule = mustHaveNonEmptyNameRule.bind(
+  null,
+  INTERACTIVE_NO_NAME
+);
 
 /**
  * A text label rule for accessible objects that correspond to dialogs and thus
@@ -153,8 +158,9 @@ const formRule = function(accessible) {
   const labels = getLabels(accessible);
   const hasNameFromVisibleLabel = labels.some(label => isVisible(label));
 
-  return hasNameFromVisibleLabel ? null :
-    { score: WARNING, issue: FORM_NO_VISIBLE_NAME };
+  return hasNameFromVisibleLabel
+    ? null
+    : { score: WARNING, issue: FORM_NO_VISIBLE_NAME };
 };
 
 /**
@@ -175,29 +181,32 @@ const formGroupingRule = function(accessible) {
 
   switch (DOMNode.nodeName) {
     case "OPTGROUP":
-      if (!name) {
-        return { score: FAIL, issue: FORM_OPTGROUP_NO_NAME };
-      }
-
-      return DOMNode.label && DOMNode.label.trim() === name ? null : {
-        score: FAIL,
-        issue: FORM_OPTGROUP_NO_NAME_FROM_LABEL,
-      };
+      return name && DOMNode.label && DOMNode.label.trim() === name
+        ? null
+        : {
+            score: FAIL,
+            issue: FORM_OPTGROUP_NO_NAME_FROM_LABEL,
+          };
     case "FIELDSET":
       if (!name) {
         return { score: FAIL, issue: FORM_FIELDSET_NO_NAME };
       }
 
       const labels = getLabels(accessible);
-      const hasNameFromLegend = labels.some(label =>
-        label.DOMNode.nodeName === "LEGEND" &&
-        label.name && label.name.trim() === name &&
-        isVisible(label));
+      const hasNameFromLegend = labels.some(
+        label =>
+          label.DOMNode.nodeName === "LEGEND" &&
+          label.name &&
+          label.name.trim() === name &&
+          isVisible(label)
+      );
 
-      return hasNameFromLegend ? null : {
-        score: FAIL,
-        issue: FORM_FIELDSET_NO_NAME_FROM_LEGEND,
-      };
+      return hasNameFromLegend
+        ? null
+        : {
+            score: WARNING,
+            issue: FORM_FIELDSET_NO_NAME_FROM_LEGEND,
+          };
     default:
       return null;
   }
@@ -249,8 +258,9 @@ const internalFrameRule = function(accessible) {
       const name = getAccessibleName(accessible);
       const title = DOMNode.title && DOMNode.title.trim();
 
-      return title && title === name ?
-        null : { score: FAIL, issue: IFRAME_NO_NAME_FROM_TITLE };
+      return title && title === name
+        ? null
+        : { score: FAIL, issue: IFRAME_NO_NAME_FROM_TITLE };
     case "OBJECT":
       const type = DOMNode.getAttribute("type");
       if (!type || !type.startsWith("image/")) {
@@ -292,8 +302,9 @@ const headingRule = function(accessible) {
     return { score: FAIL, issue: HEADING_NO_NAME };
   }
 
-  const content = accessible.DOMNode.textContent && accessible.DOMNode.textContent.trim();
-  return content ? null : { score: FAIL, issue: HEADING_NO_CONTENT };
+  const content =
+    accessible.DOMNode.textContent && accessible.DOMNode.textContent.trim();
+  return content ? null : { score: WARNING, issue: HEADING_NO_CONTENT };
 };
 
 /**
@@ -305,10 +316,13 @@ const headingRule = function(accessible) {
  *          toolbar in the document and has no or empty title, null otherwise.
  */
 const toolbarRule = function(accessible) {
-  const toolbars = accessible.DOMNode.ownerDocument.querySelectorAll(`[role="toolbar"]`);
+  const toolbars = accessible.DOMNode.ownerDocument.querySelectorAll(
+    `[role="toolbar"]`
+  );
 
-  return toolbars.length > 1 ?
-    mustHaveNonEmptyNameRule(TOOLBAR_NO_NAME, accessible) : null;
+  return toolbars.length > 1
+    ? mustHaveNonEmptyNameRule(TOOLBAR_NO_NAME, accessible)
+    : null;
 };
 
 /**
@@ -325,8 +339,9 @@ const linkRule = function(accessible) {
   if (DOMNode.nodeName === "AREA" && DOMNode.hasAttribute("href")) {
     const alt = DOMNode.getAttribute("alt");
     const name = getAccessibleName(accessible);
-    return alt && alt.trim() === name ?
-      null : { score: FAIL, issue: AREA_NO_NAME_FROM_ALT };
+    return alt && alt.trim() === name
+      ? null
+      : { score: FAIL, issue: AREA_NO_NAME_FROM_ALT };
   }
 
   return interactiveRule(accessible);
@@ -349,8 +364,9 @@ const mathmlGlyphRule = function(accessible) {
 
   const { DOMNode } = accessible;
   const alt = DOMNode.getAttribute("alt");
-  return alt && alt.trim() ?
-    null : { score: FAIL, issue: MATHML_GLYPH_NO_NAME };
+  return alt && alt.trim()
+    ? null
+    : { score: FAIL, issue: MATHML_GLYPH_NO_NAME };
 };
 
 const RULES = {
@@ -367,8 +383,10 @@ const RULES = {
   [Ci.nsIAccessibleRole.ROLE_DOCUMENT]: documentRule,
   [Ci.nsIAccessibleRole.ROLE_EDITCOMBOBOX]: formRule,
   [Ci.nsIAccessibleRole.ROLE_ENTRY]: formRule,
-  [Ci.nsIAccessibleRole.ROLE_FIGURE]:
-    shouldHaveNonEmptyNameRule.bind(null, FIGURE_NO_NAME),
+  [Ci.nsIAccessibleRole.ROLE_FIGURE]: shouldHaveNonEmptyNameRule.bind(
+    null,
+    FIGURE_NO_NAME
+  ),
   [Ci.nsIAccessibleRole.ROLE_GRAPHIC]: imageRule,
   [Ci.nsIAccessibleRole.ROLE_GROUPING]: formGroupingRule,
   [Ci.nsIAccessibleRole.ROLE_HEADING]: headingRule,

@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["ContentProcessDomains"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const ContentProcessDomains = {};
 

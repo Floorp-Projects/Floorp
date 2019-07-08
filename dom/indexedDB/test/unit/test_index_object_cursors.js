@@ -5,18 +5,17 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const objectStoreData = [
     { name: "", options: { keyPath: "id", autoIncrement: true } },
     { name: null, options: { keyPath: "ss" } },
-    { name: undefined, options: { } },
+    { name: undefined, options: {} },
     { name: "4", options: { autoIncrement: true } },
   ];
 
   const indexData = [
     { name: "", keyPath: "name", options: { unique: true } },
-    { name: null, keyPath: "height", options: { } },
+    { name: null, keyPath: "height", options: {} },
   ];
 
   const data = [
@@ -24,7 +23,10 @@ function* testSteps()
     { ss: "237-23-7733", name: "Bob", height: 65 },
   ];
 
-  let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
+  let request = indexedDB.open(
+    this.window ? window.location.pathname : "Splendid Test",
+    1
+  );
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield undefined;
@@ -36,13 +38,17 @@ function* testSteps()
 
   for (let objectStoreIndex in objectStoreData) {
     const objectStoreInfo = objectStoreData[objectStoreIndex];
-    let objectStore = db.createObjectStore(objectStoreInfo.name,
-                                           objectStoreInfo.options);
+    let objectStore = db.createObjectStore(
+      objectStoreInfo.name,
+      objectStoreInfo.options
+    );
     for (let indexIndex in indexData) {
       const indexInfo = indexData[indexIndex];
-      objectStore.createIndex(indexInfo.name,
-                              indexInfo.keyPath,
-                              indexInfo.options);
+      objectStore.createIndex(
+        indexInfo.name,
+        indexInfo.keyPath,
+        indexInfo.options
+      );
     }
   }
   yield undefined;
@@ -56,9 +62,9 @@ function* testSteps()
       const objectStoreName = objectStoreData[objectStoreIndex].name;
       const indexName = indexData[indexIndex].name;
 
-      let objectStore =
-        db.transaction(objectStoreName, "readwrite")
-          .objectStore(objectStoreName);
+      let objectStore = db
+        .transaction(objectStoreName, "readwrite")
+        .objectStore(objectStoreName);
       ok(true, "Got objectStore " + objectStoreName);
 
       for (let dataIndex in data) {
@@ -82,8 +88,11 @@ function* testSteps()
           return;
         }
 
-        is(cursor.key, data[keyIndex][indexData[indexIndex].keyPath],
-           "Good key");
+        is(
+          cursor.key,
+          data[keyIndex][indexData[indexIndex].keyPath],
+          "Good key"
+        );
         is(cursor.value.ss, data[keyIndex].ss, "Correct ss");
         is(cursor.value.name, data[keyIndex].name, "Correct name");
         is(cursor.value.height, data[keyIndex].height, "Correct height");
@@ -112,9 +121,10 @@ function* testSteps()
 
       keyIndex = 0;
 
-      db.transaction(objectStoreName).objectStore(objectStoreName)
-                                     .openCursor()
-                                     .onsuccess = function(event) {
+      db
+        .transaction(objectStoreName)
+        .objectStore(objectStoreName)
+        .openCursor().onsuccess = function(event) {
         let cursor = event.target.result;
         if (!cursor) {
           continueToNextStep();
@@ -133,9 +143,10 @@ function* testSteps()
 
       is(keyIndex, 1, "Saw all the items");
 
-      db.transaction(objectStoreName, "readwrite")
-        .objectStore(objectStoreName).clear()
-        .onsuccess = continueToNextStep;
+      db
+        .transaction(objectStoreName, "readwrite")
+        .objectStore(objectStoreName)
+        .clear().onsuccess = continueToNextStep;
       yield undefined;
 
       objectStore = index = null; // Bug 943409 workaround.

@@ -7,22 +7,19 @@ onmessage = function(event) {
     var res;
     try {
       res = eval("40+2");
-    }
-    catch(ex) {
-      res = ex+"";
+    } catch (ex) {
+      res = ex + "";
     }
     postMessage(res);
-  }
-  else if (event.data.do == "nest") {
+  } else if (event.data.do == "nest") {
     var worker = new Worker(event.data.uri);
     if (--event.data.level) {
       worker.postMessage(event.data);
-    }
-    else {
+    } else {
       worker.postMessage({ do: "eval" });
     }
-    worker.onmessage = (e) => {
+    worker.onmessage = e => {
       postMessage(e.data);
-    }
+    };
   }
-}
+};

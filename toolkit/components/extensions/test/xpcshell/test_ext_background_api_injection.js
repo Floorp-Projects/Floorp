@@ -1,13 +1,14 @@
 "use strict";
 
-const server = createHttpServer({hosts: ["example.com"]});
+const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));
 
 add_task(async function testBackgroundWindow() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       browser.test.log("background script executed");
-      window.location = "http://example.com/data/file_privilege_escalation.html";
+      window.location =
+        "http://example.com/data/file_privilege_escalation.html";
     },
   });
 
@@ -23,8 +24,12 @@ add_task(async function testBackgroundWindow() {
   await extension.startup();
 
   let message = await awaitConsole;
-  ok(message.message.includes("WebExt Privilege Escalation: typeof(browser) = undefined"),
-     "Document does not have `browser` APIs.");
+  ok(
+    message.message.includes(
+      "WebExt Privilege Escalation: typeof(browser) = undefined"
+    ),
+    "Document does not have `browser` APIs."
+  );
 
   await extension.unload();
 });

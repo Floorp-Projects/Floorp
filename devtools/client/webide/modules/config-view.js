@@ -4,7 +4,9 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
-const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
+const Strings = Services.strings.createBundle(
+  "chrome://devtools/locale/webide.properties"
+);
 
 var ConfigView;
 
@@ -74,7 +76,9 @@ ConfigView.prototype = {
         }
       }
     } else {
-      const trs = this._doc.getElementById("device-fields").querySelectorAll("tr");
+      const trs = this._doc
+        .getElementById("device-fields")
+        .querySelectorAll("tr");
 
       for (let i = 0; i < trs.length; i++) {
         trs[i].classList.remove("hide");
@@ -219,9 +223,11 @@ ConfigView.prototype = {
       const inputType = event.target.getAttribute("data-type");
       let inputValue = event.target.checked || event.target.value;
 
-      if (event.target.nodeName == "input" &&
-          event.target.validity.valid &&
-          event.target.classList.contains("editable")) {
+      if (
+        event.target.nodeName == "input" &&
+        event.target.validity.valid &&
+        event.target.classList.contains("editable")
+      ) {
         const id = event.target.id;
         if (inputType === "boolean") {
           if (event.target.checked) {
@@ -249,36 +255,48 @@ ConfigView.prototype = {
     switch (dataType) {
       case "boolean":
         this._defaultField = this._getCallType("Bool", name);
-        this._defaultField.then(boolean => {
-          input.checked = boolean;
-        }, () => {
-          input.checked = false;
-          tr.remove();
-        });
+        this._defaultField.then(
+          boolean => {
+            input.checked = boolean;
+          },
+          () => {
+            input.checked = false;
+            tr.remove();
+          }
+        );
         break;
       case "number":
         this._defaultField = this._getCallType("Int", name);
-        this._defaultField.then(number => {
-          input.value = number;
-        }, () => {
-          tr.remove();
-        });
+        this._defaultField.then(
+          number => {
+            input.value = number;
+          },
+          () => {
+            tr.remove();
+          }
+        );
         break;
       case "object":
         this._defaultField = this._getCallType("Object", name);
-        this._defaultField.then(object => {
-          input.value = JSON.stringify(object);
-        }, () => {
-          tr.remove();
-        });
+        this._defaultField.then(
+          object => {
+            input.value = JSON.stringify(object);
+          },
+          () => {
+            tr.remove();
+          }
+        );
         break;
       default:
         this._defaultField = this._getCallType("Char", name);
-        this._defaultField.then(string => {
-          input.value = string;
-        }, () => {
-          tr.remove();
-        });
+        this._defaultField.then(
+          string => {
+            input.value = string;
+          },
+          () => {
+            tr.remove();
+          }
+        );
         break;
     }
 
@@ -348,8 +366,17 @@ ConfigView.prototype = {
         customText = customTextEl.checked;
       }
 
-      const customTextName = customTextNameEl.value.replace(/[^A-Za-z0-9\.\-_]/gi, "");
-      this.generateField(customTextName, customText, true, customValueType, customRow);
+      const customTextName = customTextNameEl.value.replace(
+        /[^A-Za-z0-9\.\-_]/gi,
+        ""
+      );
+      this.generateField(
+        customTextName,
+        customText,
+        true,
+        customValueType,
+        customRow
+      );
       this._saveByType({
         id: customTextName,
         type: customValueType,

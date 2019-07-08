@@ -33,17 +33,26 @@ function run_test() {
     return objChain.slice(-clsChain.length) === clsChain;
   }
 
-  assert.ok(indirectInstanceOf(ns.Assert.AssertionError.prototype, Error),
-            "Assert.AssertionError instanceof Error");
+  assert.ok(
+    indirectInstanceOf(ns.Assert.AssertionError.prototype, Error),
+    "Assert.AssertionError instanceof Error"
+  );
 
-  assert.throws(makeBlock(assert.ok, false),
-                ns.Assert.AssertionError, "ok(false)");
+  assert.throws(
+    makeBlock(assert.ok, false),
+    ns.Assert.AssertionError,
+    "ok(false)"
+  );
 
   assert.ok(true, "ok(true)");
 
   assert.ok("test", "ok('test')");
 
-  assert.throws(makeBlock(assert.equal, true, false), ns.Assert.AssertionError, "equal");
+  assert.throws(
+    makeBlock(assert.equal, true, false),
+    ns.Assert.AssertionError,
+    "equal"
+  );
 
   assert.equal(null, null, "equal");
 
@@ -55,57 +64,94 @@ function run_test() {
 
   assert.notEqual(true, false, "notEqual");
 
-  assert.throws(makeBlock(assert.notEqual, true, true),
-                ns.Assert.AssertionError, "notEqual");
+  assert.throws(
+    makeBlock(assert.notEqual, true, true),
+    ns.Assert.AssertionError,
+    "notEqual"
+  );
 
-  assert.throws(makeBlock(assert.strictEqual, 2, "2"),
-                ns.Assert.AssertionError, "strictEqual");
+  assert.throws(
+    makeBlock(assert.strictEqual, 2, "2"),
+    ns.Assert.AssertionError,
+    "strictEqual"
+  );
 
-  assert.throws(makeBlock(assert.strictEqual, null, undefined),
-                ns.Assert.AssertionError, "strictEqual");
+  assert.throws(
+    makeBlock(assert.strictEqual, null, undefined),
+    ns.Assert.AssertionError,
+    "strictEqual"
+  );
 
   assert.notStrictEqual(2, "2", "notStrictEqual");
 
   // deepEquals joy!
   // 7.2
-  assert.deepEqual(new Date(2000, 3, 14), new Date(2000, 3, 14), "deepEqual date");
+  assert.deepEqual(
+    new Date(2000, 3, 14),
+    new Date(2000, 3, 14),
+    "deepEqual date"
+  );
   assert.deepEqual(new Date(NaN), new Date(NaN), "deepEqual invalid dates");
 
-  assert.throws(makeBlock(assert.deepEqual, new Date(), new Date(2000, 3, 14)),
-                ns.Assert.AssertionError,
-                "deepEqual date");
+  assert.throws(
+    makeBlock(assert.deepEqual, new Date(), new Date(2000, 3, 14)),
+    ns.Assert.AssertionError,
+    "deepEqual date"
+  );
 
   // 7.3
   assert.deepEqual(/a/, /a/);
   assert.deepEqual(/a/g, /a/g);
   assert.deepEqual(/a/i, /a/i);
   assert.deepEqual(/a/m, /a/m);
-  assert.deepEqual(/a/igm, /a/igm);
-  assert.throws(makeBlock(assert.deepEqual, /ab/, /a/), ns.Assert.AssertionError);
-  assert.throws(makeBlock(assert.deepEqual, /a/g, /a/), ns.Assert.AssertionError);
-  assert.throws(makeBlock(assert.deepEqual, /a/i, /a/), ns.Assert.AssertionError);
-  assert.throws(makeBlock(assert.deepEqual, /a/m, /a/), ns.Assert.AssertionError);
-  assert.throws(makeBlock(assert.deepEqual, /a/igm, /a/im), ns.Assert.AssertionError);
+  assert.deepEqual(/a/gim, /a/gim);
+  assert.throws(
+    makeBlock(assert.deepEqual, /ab/, /a/),
+    ns.Assert.AssertionError
+  );
+  assert.throws(
+    makeBlock(assert.deepEqual, /a/g, /a/),
+    ns.Assert.AssertionError
+  );
+  assert.throws(
+    makeBlock(assert.deepEqual, /a/i, /a/),
+    ns.Assert.AssertionError
+  );
+  assert.throws(
+    makeBlock(assert.deepEqual, /a/m, /a/),
+    ns.Assert.AssertionError
+  );
+  assert.throws(
+    makeBlock(assert.deepEqual, /a/gim, /a/im),
+    ns.Assert.AssertionError
+  );
 
   let re1 = /a/;
   re1.lastIndex = 3;
-  assert.throws(makeBlock(assert.deepEqual, re1, /a/), ns.Assert.AssertionError);
+  assert.throws(
+    makeBlock(assert.deepEqual, re1, /a/),
+    ns.Assert.AssertionError
+  );
 
   // 7.4
   assert.deepEqual(4, "4", "deepEqual == check");
   assert.deepEqual(true, 1, "deepEqual == check");
-  assert.throws(makeBlock(assert.deepEqual, 4, "5"),
-                ns.Assert.AssertionError,
-                "deepEqual == check");
+  assert.throws(
+    makeBlock(assert.deepEqual, 4, "5"),
+    ns.Assert.AssertionError,
+    "deepEqual == check"
+  );
 
   // 7.5
   // having the same number of owned properties && the same set of keys
-  assert.deepEqual({a: 4}, {a: 4});
-  assert.deepEqual({a: 4, b: "2"}, {a: 4, b: "2"});
+  assert.deepEqual({ a: 4 }, { a: 4 });
+  assert.deepEqual({ a: 4, b: "2" }, { a: 4, b: "2" });
   assert.deepEqual([4], ["4"]);
-  assert.throws(makeBlock(assert.deepEqual, {a: 4}, {a: 4, b: true}),
-                ns.Assert.AssertionError);
-  assert.deepEqual(["a"], {0: "a"});
+  assert.throws(
+    makeBlock(assert.deepEqual, { a: 4 }, { a: 4, b: true }),
+    ns.Assert.AssertionError
+  );
+  assert.deepEqual(["a"], { 0: "a" });
 
   let a1 = [1, 2, 3];
   let a2 = [1, 2, 3];
@@ -113,12 +159,16 @@ function run_test() {
   a1.b = true;
   a2.b = true;
   a2.a = "test";
-  assert.throws(makeBlock(assert.deepEqual, Object.keys(a1), Object.keys(a2)),
-                ns.Assert.AssertionError);
+  assert.throws(
+    makeBlock(assert.deepEqual, Object.keys(a1), Object.keys(a2)),
+    ns.Assert.AssertionError
+  );
   assert.deepEqual(a1, a2);
 
   let nbRoot = {
-    toString() { return this.first + " " + this.last; },
+    toString() {
+      return this.first + " " + this.last;
+    },
   };
 
   function nameBuilder(first, last) {
@@ -142,7 +192,10 @@ function run_test() {
 
   nameBuilder2.prototype = Object;
   nb2 = new nameBuilder2("Ryan", "Dahl");
-  assert.throws(makeBlock(assert.deepEqual, nb1, nb2), ns.Assert.AssertionError);
+  assert.throws(
+    makeBlock(assert.deepEqual, nb1, nb2),
+    ns.Assert.AssertionError
+  );
 
   // String literal + object
   assert.throws(makeBlock(assert.deepEqual, "a", {}), ns.Assert.AssertionError);
@@ -155,10 +208,19 @@ function run_test() {
   makeBlock(thrower, ns.Assert.AssertionError);
 
   // the basic calls work
-  assert.throws(makeBlock(thrower, ns.Assert.AssertionError),
-                ns.Assert.AssertionError, "message");
-  assert.throws(makeBlock(thrower, ns.Assert.AssertionError), ns.Assert.AssertionError);
-  assert.throws(makeBlock(thrower, ns.Assert.AssertionError), ns.Assert.AssertionError);
+  assert.throws(
+    makeBlock(thrower, ns.Assert.AssertionError),
+    ns.Assert.AssertionError,
+    "message"
+  );
+  assert.throws(
+    makeBlock(thrower, ns.Assert.AssertionError),
+    ns.Assert.AssertionError
+  );
+  assert.throws(
+    makeBlock(thrower, ns.Assert.AssertionError),
+    ns.Assert.AssertionError
+  );
 
   // if not passing an error, catch all.
   assert.throws(makeBlock(thrower, TypeError), TypeError);
@@ -171,9 +233,12 @@ function run_test() {
     threw = true;
     assert.ok(e instanceof TypeError, "type");
   }
-  assert.equal(true, threw,
-               "Assert.throws with an explicit error is eating extra errors",
-               ns.Assert.AssertionError);
+  assert.equal(
+    true,
+    threw,
+    "Assert.throws with an explicit error is eating extra errors",
+    ns.Assert.AssertionError
+  );
   threw = false;
 
   function ifError(err) {
@@ -188,12 +253,9 @@ function run_test() {
   // make sure that validating using constructor really works
   threw = false;
   try {
-    assert.throws(
-      function() {
-        throw new Error({});
-      },
-      Array
-    );
+    assert.throws(function() {
+      throw new Error({});
+    }, Array);
   } catch (e) {
     threw = true;
   }
@@ -204,14 +266,14 @@ function run_test() {
 
   // use a fn to validate error object
   assert.throws(makeBlock(thrower, TypeError), function(err) {
-    if ((err instanceof TypeError) && /test/.test(err)) {
+    if (err instanceof TypeError && /test/.test(err)) {
       return true;
     }
     return false;
   });
   // do the same with an arrow function
   assert.throws(makeBlock(thrower, TypeError), err => {
-    if ((err instanceof TypeError) && /test/.test(err)) {
+    if (err instanceof TypeError && /test/.test(err)) {
       return true;
     }
     return false;
@@ -221,8 +283,10 @@ function run_test() {
     try {
       assert.equal(actual, "");
     } catch (e) {
-      assert.equal(e.toString(),
-          ["AssertionError:", expected, "==", '""'].join(" "));
+      assert.equal(
+        e.toString(),
+        ["AssertionError:", expected, "==", '""'].join(" ")
+      );
     }
   }
   testAssertionMessage(undefined, '"undefined"');
@@ -242,9 +306,11 @@ function run_test() {
   testAssertionMessage(/abc/gim, '"/abc/gim"');
   testAssertionMessage(function f() {}, '"function f() {}"');
   testAssertionMessage({}, "{}");
-  testAssertionMessage({a: undefined, b: null}, '{"a":"undefined","b":null}');
-  testAssertionMessage({a: NaN, b: Infinity, c: -Infinity},
-      '{"a":"NaN","b":"Infinity","c":"-Infinity"}');
+  testAssertionMessage({ a: undefined, b: null }, '{"a":"undefined","b":null}');
+  testAssertionMessage(
+    { a: NaN, b: Infinity, c: -Infinity },
+    '{"a":"NaN","b":"Infinity","c":"-Infinity"}'
+  );
 
   // https://github.com/joyent/node/issues/2893
   try {
@@ -253,7 +319,10 @@ function run_test() {
     });
   } catch (e) {
     threw = true;
-    assert.equal(e.message, "Error: The 'expected' argument was not supplied to Assert.throws() - false == true");
+    assert.equal(
+      e.message,
+      "Error: The 'expected' argument was not supplied to Assert.throws() - false == true"
+    );
   }
   assert.ok(threw);
 
@@ -285,20 +354,27 @@ function run_test() {
   // Test XPCShell-test integration:
   ok(true, "OK, this went well");
   deepEqual(/a/g, /a/g, "deep equal should work on RegExp");
-  deepEqual(/a/igm, /a/igm, "deep equal should work on RegExp");
-  deepEqual({a: 4, b: "1"}, {b: "1", a: 4}, "deep equal should work on regular Object");
+  deepEqual(/a/gim, /a/gim, "deep equal should work on RegExp");
+  deepEqual(
+    { a: 4, b: "1" },
+    { b: "1", a: 4 },
+    "deep equal should work on regular Object"
+  );
   deepEqual(a1, a2, "deep equal should work on Array with Object properties");
 
   // Test robustness of reporting:
-  equal(new ns.Assert.AssertionError({
-    actual: {
-      toJSON() {
-        throw new Error("bam!");
+  equal(
+    new ns.Assert.AssertionError({
+      actual: {
+        toJSON() {
+          throw new Error("bam!");
+        },
       },
-    },
-    expected: "foo",
-    operator: "=",
-  }).message, "[object Object] = \"foo\"");
+      expected: "foo",
+      operator: "=",
+    }).message,
+    '[object Object] = "foo"'
+  );
 
   let message;
   assert.greater(3, 2);

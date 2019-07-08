@@ -2,8 +2,11 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "PromiseUtils",
-                               "resource://gre/modules/PromiseUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PromiseUtils",
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
 const getBrowserWindow = window => {
   return window.docShell.rootTreeItem.domWindow;
@@ -24,7 +27,7 @@ let tabListener = {
 
   onLocationChange(browser, webProgress, request, locationURI, flags) {
     if (webProgress.isTopLevel) {
-      let {BrowserApp} = browser.ownerGlobal;
+      let { BrowserApp } = browser.ownerGlobal;
       let nativeTab = BrowserApp.getTabForBrowser(browser);
 
       // Now we are certain that the first page in the tab was loaded.
@@ -52,9 +55,11 @@ let tabListener = {
     let deferred = this.tabReadyPromises.get(nativeTab);
     if (!deferred) {
       deferred = PromiseUtils.defer();
-      if (!this.initializingTabs.has(nativeTab) &&
-          (nativeTab.browser.innerWindowID ||
-           nativeTab.browser.currentURI.spec === "about:blank")) {
+      if (
+        !this.initializingTabs.has(nativeTab) &&
+        (nativeTab.browser.innerWindowID ||
+          nativeTab.browser.currentURI.spec === "about:blank")
+      ) {
         deferred.resolve(nativeTab);
       } else {
         this.initTabReady();
@@ -67,9 +72,9 @@ let tabListener = {
 
 this.tabs = class extends ExtensionAPI {
   getAPI(context) {
-    let {extension} = context;
+    let { extension } = context;
 
-    let {tabManager} = extension;
+    let { tabManager } = extension;
 
     function getTabOrActive(tabId) {
       if (tabId !== null) {
@@ -86,8 +91,9 @@ this.tabs = class extends ExtensionAPI {
         tab = tabManager.getWrapper(tabTracker.activeTab);
       }
       if (!tab) {
-        throw new ExtensionError(tabId == null ?
-          "Cannot access activeTab" : `Invalid tab ID: ${tabId}`);
+        throw new ExtensionError(
+          tabId == null ? "Cannot access activeTab" : `Invalid tab ID: ${tabId}`
+        );
       }
 
       await tabListener.awaitTabReady(tab.nativeTab);
@@ -97,15 +103,20 @@ this.tabs = class extends ExtensionAPI {
 
     let self = {
       tabs: {
-        onActivated: makeGlobalEvent(context, "tabs.onActivated", "Tab:Selected", (fire, data) => {
-          let tab = tabManager.get(data.id);
+        onActivated: makeGlobalEvent(
+          context,
+          "tabs.onActivated",
+          "Tab:Selected",
+          (fire, data) => {
+            let tab = tabManager.get(data.id);
 
-          fire.async({
-            tabId: tab.id,
-            previousTabId: data.previousTabId,
-            windowId: tab.windowId,
-          });
-        }),
+            fire.async({
+              tabId: tab.id,
+              previousTabId: data.previousTabId,
+              windowId: tab.windowId,
+            });
+          }
+        ),
 
         onCreated: new EventManager({
           context,
@@ -127,23 +138,32 @@ this.tabs = class extends ExtensionAPI {
          * essentially acts an alias for self.tabs.onActivated but returns
          * the tabId in an array to match the API.
          * @see  https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/Tabs/onHighlighted
-        */
-        onHighlighted: makeGlobalEvent(context, "tabs.onHighlighted", "Tab:Selected", (fire, data) => {
-          let tab = tabManager.get(data.id);
+         */
+        onHighlighted: makeGlobalEvent(
+          context,
+          "tabs.onHighlighted",
+          "Tab:Selected",
+          (fire, data) => {
+            let tab = tabManager.get(data.id);
 
-          fire.async({tabIds: [tab.id], windowId: tab.windowId});
-        }),
+            fire.async({ tabIds: [tab.id], windowId: tab.windowId });
+          }
+        ),
 
         onAttached: new EventManager({
           context,
           name: "tabs.onAttached",
-          register: fire => { return () => {}; },
+          register: fire => {
+            return () => {};
+          },
         }).api(),
 
         onDetached: new EventManager({
           context,
           name: "tabs.onDetached",
-          register: fire => { return () => {}; },
+          register: fire => {
+            return () => {};
+          },
         }).api(),
 
         onRemoved: new EventManager({
@@ -151,7 +171,10 @@ this.tabs = class extends ExtensionAPI {
           name: "tabs.onRemoved",
           register: fire => {
             let listener = (eventName, event) => {
-              fire.async(event.tabId, {windowId: event.windowId, isWindowClosing: event.isWindowClosing});
+              fire.async(event.tabId, {
+                windowId: event.windowId,
+                isWindowClosing: event.isWindowClosing,
+              });
             };
 
             tabTracker.on("tab-removed", listener);
@@ -164,13 +187,17 @@ this.tabs = class extends ExtensionAPI {
         onReplaced: new EventManager({
           context,
           name: "tabs.onReplaced",
-          register: fire => { return () => {}; },
+          register: fire => {
+            return () => {};
+          },
         }).api(),
 
         onMoved: new EventManager({
           context,
           name: "tabs.onMoved",
-          register: fire => { return () => {}; },
+          register: fire => {
+            return () => {};
+          },
         }).api(),
 
         onUpdated: new EventManager({
@@ -183,7 +210,10 @@ this.tabs = class extends ExtensionAPI {
               let result = {};
               let nonempty = false;
               for (let prop in changeInfo) {
-                if (extension.hasPermission("tabs") || !restricted.includes(prop)) {
+                if (
+                  extension.hasPermission("tabs") ||
+                  !restricted.includes(prop)
+                ) {
                   nonempty = true;
                   result[prop] = changeInfo[prop];
                 }
@@ -203,16 +233,20 @@ this.tabs = class extends ExtensionAPI {
               let nativeTab;
               switch (event.type) {
                 case "DOMTitleChanged": {
-                  let {BrowserApp} = getBrowserWindow(event.target.ownerGlobal);
+                  let { BrowserApp } = getBrowserWindow(
+                    event.target.ownerGlobal
+                  );
 
-                  nativeTab = BrowserApp.getTabForWindow(event.target.ownerGlobal);
+                  nativeTab = BrowserApp.getTabForWindow(
+                    event.target.ownerGlobal
+                  );
                   needed.push("title");
                   break;
                 }
 
                 case "DOMAudioPlaybackStarted":
                 case "DOMAudioPlaybackStopped": {
-                  let {BrowserApp} = event.target.ownerGlobal;
+                  let { BrowserApp } = event.target.ownerGlobal;
                   nativeTab = BrowserApp.getTabForBrowser(event.originalTarget);
                   needed.push("audible");
                   break;
@@ -232,11 +266,11 @@ this.tabs = class extends ExtensionAPI {
               fireForTab(tab, changeInfo);
             };
 
-            let statusListener = ({browser, status, url}) => {
-              let {BrowserApp} = browser.ownerGlobal;
+            let statusListener = ({ browser, status, url }) => {
+              let { BrowserApp } = browser.ownerGlobal;
               let nativeTab = BrowserApp.getTabForBrowser(browser);
               if (nativeTab) {
-                let changed = {status};
+                let changed = { status };
                 if (url) {
                   changed.url = url;
                 }
@@ -256,18 +290,19 @@ this.tabs = class extends ExtensionAPI {
 
         async create(createProperties) {
           let principal = context.principal;
-          let window = createProperties.windowId !== null ?
-            windowTracker.getWindow(createProperties.windowId, context) :
-            windowTracker.topWindow;
+          let window =
+            createProperties.windowId !== null
+              ? windowTracker.getWindow(createProperties.windowId, context)
+              : windowTracker.topWindow;
 
-          let {BrowserApp} = window;
+          let { BrowserApp } = window;
           let url;
 
           if (createProperties.url !== null) {
             url = context.uri.resolve(createProperties.url);
 
-            if (!context.checkLoadURL(url, {dontReportErrors: true})) {
-              return Promise.reject({message: `Illegal URL: ${url}`});
+            if (!context.checkLoadURL(url, { dontReportErrors: true })) {
+              return Promise.reject({ message: `Illegal URL: ${url}` });
             }
           } else {
             // Falling back to system here as about:newtab requires it, however is safe.
@@ -321,13 +356,13 @@ this.tabs = class extends ExtensionAPI {
         async update(tabId, updateProperties) {
           let nativeTab = getTabOrActive(tabId);
 
-          let {BrowserApp} = nativeTab.browser.ownerGlobal;
+          let { BrowserApp } = nativeTab.browser.ownerGlobal;
 
           if (updateProperties.url !== null) {
             let url = context.uri.resolve(updateProperties.url);
 
-            if (!context.checkLoadURL(url, {dontReportErrors: true})) {
-              return Promise.reject({message: `Illegal URL: ${url}`});
+            if (!context.checkLoadURL(url, { dontReportErrors: true })) {
+              return Promise.reject({ message: `Illegal URL: ${url}` });
             }
 
             let options = {
@@ -371,7 +406,10 @@ this.tabs = class extends ExtensionAPI {
         async query(queryInfo) {
           if (!extension.hasPermission("tabs")) {
             if (queryInfo.url !== null || queryInfo.title !== null) {
-              return Promise.reject({message: 'The "tabs" permission is required to use the query API with the "url" or "title" parameters'});
+              return Promise.reject({
+                message:
+                  'The "tabs" permission is required to use the query API with the "url" or "title" parameters',
+              });
             }
           }
 
@@ -384,14 +422,16 @@ this.tabs = class extends ExtensionAPI {
             queryInfo.title = new MatchGlob(queryInfo.title);
           }
 
-          return Array.from(tabManager.query(queryInfo, context),
-                            tab => tab.convert());
+          return Array.from(tabManager.query(queryInfo, context), tab =>
+            tab.convert()
+          );
         },
 
         async captureVisibleTab(windowId, options) {
-          let window = windowId == null ?
-            windowTracker.topWindow :
-            windowTracker.getWindow(windowId, context);
+          let window =
+            windowId == null
+              ? windowTracker.topWindow
+              : windowTracker.getWindow(windowId, context);
 
           let tab = tabManager.wrapTab(window.BrowserApp.selectedTab);
           await tabListener.awaitTabReady(tab.nativeTab);

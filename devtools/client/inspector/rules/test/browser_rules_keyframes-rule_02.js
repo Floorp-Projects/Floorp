@@ -11,7 +11,7 @@ const TEST_URI = URL_ROOT + "doc_keyframeanimation.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await testPacman(inspector, view);
   await testBoxy(inspector, view);
 });
@@ -23,7 +23,8 @@ async function testPacman(inspector, view) {
 
   info("Test text properties for Keyframes #pacman");
 
-  is(convertTextPropsToString(rules.keyframeRules[0].textProps),
+  is(
+    convertTextPropsToString(rules.keyframeRules[0].textProps),
     "left: 750px",
     "Keyframe pacman (100%) property is correct"
   );
@@ -59,17 +60,20 @@ async function testBoxy(inspector, view) {
 
   info("Test text properties for Keyframes #boxy");
 
-  is(convertTextPropsToString(rules.keyframeRules[0].textProps),
+  is(
+    convertTextPropsToString(rules.keyframeRules[0].textProps),
     "background-color: blue",
     "Keyframe boxy (10%) property is correct"
   );
 
-  is(convertTextPropsToString(rules.keyframeRules[1].textProps),
+  is(
+    convertTextPropsToString(rules.keyframeRules[1].textProps),
     "background-color: green",
     "Keyframe boxy (20%) property is correct"
   );
 
-  is(convertTextPropsToString(rules.keyframeRules[2].textProps),
+  is(
+    convertTextPropsToString(rules.keyframeRules[2].textProps),
     "opacity: 0",
     "Keyframe boxy (100%) property is correct"
   );

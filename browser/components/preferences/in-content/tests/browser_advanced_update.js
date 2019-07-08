@@ -5,7 +5,9 @@
 
 const Cm = Components.manager;
 
-const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+  Ci.nsIUUIDGenerator
+);
 
 const mockUpdateManager = {
   contractId: "@mozilla.org/updates/update-manager;1",
@@ -27,7 +29,12 @@ const mockUpdateManager = {
     let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
     if (!registrar.isCIDRegistered(this._mockClassId)) {
       this._originalClassId = registrar.contractIDToCID(this.contractId);
-      registrar.registerFactory(this._mockClassId, "Unregister after testing", this.contractId, this);
+      registrar.registerFactory(
+        this._mockClassId,
+        "Unregister after testing",
+        this.contractId,
+        this
+      );
     }
   },
 
@@ -76,8 +83,14 @@ function resetPreferences() {
 
 function formatInstallDate(sec) {
   var date = new Date(sec);
-  const dtOptions = { year: "numeric", month: "long", day: "numeric",
-                      hour: "numeric", minute: "numeric", second: "numeric" };
+  const dtOptions = {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+  };
   return date.toLocaleString(undefined, dtOptions);
 }
 
@@ -90,7 +103,10 @@ add_task(async function() {
 
   let doc = gBrowser.selectedBrowser.contentDocument;
   let enableSearchUpdate = doc.getElementById("enableSearchUpdate");
-  is_element_visible(enableSearchUpdate, "Check search update preference is visible");
+  is_element_visible(
+    enableSearchUpdate,
+    "Check search update preference is visible"
+  );
 
   // Ensure that the update pref dialog reflects the actual pref value.
   ok(!enableSearchUpdate.checked, "Ensure search updates are disabled");
@@ -116,7 +132,9 @@ add_task(async function() {
 
   // Test the dialog window opens
   is(dialogOverlay.style.visibility, "", "The dialog should be invisible");
-  let promiseSubDialogLoaded = promiseLoadSubDialog("chrome://mozapps/content/update/history.xul");
+  let promiseSubDialogLoaded = promiseLoadSubDialog(
+    "chrome://mozapps/content/update/history.xul"
+  );
   showBtn.doCommand();
   await promiseSubDialogLoaded;
   is(dialogOverlay.style.visibility, "visible", "The dialog should be visible");
@@ -126,7 +144,11 @@ add_task(async function() {
   let updates = frameDoc.querySelectorAll("richlistitem.update");
 
   // Test the update history numbers are correct
-  is(updates.length, mockUpdateManager.updateCount, "The update count is incorrect.");
+  is(
+    updates.length,
+    mockUpdateManager.updateCount,
+    "The update count is incorrect."
+  );
 
   // Test the updates are displayed correctly
   let update = null;
@@ -153,18 +175,25 @@ add_task(async function() {
       },
     ];
 
-    for (let {selector, id, args} of testcases) {
+    for (let { selector, id, args } of testcases) {
       const element = update.querySelector(selector);
       const l10nAttrs = frameDoc.l10n.getAttributes(element);
-      Assert.deepEqual(l10nAttrs, {
-        id,
-        args,
-      }, "Wrong " + id);
+      Assert.deepEqual(
+        l10nAttrs,
+        {
+          id,
+          args,
+        },
+        "Wrong " + id
+      );
     }
 
     if (update.detailsURL) {
-      is(update.detailsURL, update.querySelector(".text-link").href,
-         "Wrong detailsURL");
+      is(
+        update.detailsURL,
+        update.querySelector(".text-link").href,
+        "Wrong detailsURL"
+      );
     }
   }
 

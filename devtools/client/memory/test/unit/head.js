@@ -29,14 +29,18 @@ var HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClien
 var { addDebuggerToGlobal } = require("resource://gre/modules/jsdebugger.jsm");
 var Store = require("devtools/client/memory/store");
 var { L10N } = require("devtools/client/memory/utils");
-var SYSTEM_PRINCIPAL =
-  Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
+var SYSTEM_PRINCIPAL = Cc["@mozilla.org/systemprincipal;1"].createInstance(
+  Ci.nsIPrincipal
+);
 
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 
 registerCleanupFunction(function() {
-  equal(DevToolsUtils.assertionFailureCount, EXPECTED_DTU_ASSERT_FAILURE_COUNT,
-        "Should have had the expected number of DevToolsUtils.assert() failures.");
+  equal(
+    DevToolsUtils.assertionFailureCount,
+    EXPECTED_DTU_ASSERT_FAILURE_COUNT,
+    "Should have had the expected number of DevToolsUtils.assert() failures."
+  );
 });
 
 function dumpn(msg) {
@@ -63,27 +67,38 @@ StubbedMemoryFront.prototype.detach = async function() {
   this.state = "detached";
 };
 
-StubbedMemoryFront.prototype.saveHeapSnapshot = expectState("attached",
+StubbedMemoryFront.prototype.saveHeapSnapshot = expectState(
+  "attached",
   async function() {
     return ChromeUtils.saveHeapSnapshot({ runtime: true });
-  }, "saveHeapSnapshot");
+  },
+  "saveHeapSnapshot"
+);
 
-StubbedMemoryFront.prototype.startRecordingAllocations = expectState("attached",
+StubbedMemoryFront.prototype.startRecordingAllocations = expectState(
+  "attached",
   async function() {
     this.recordingAllocations = true;
-  });
+  }
+);
 
-StubbedMemoryFront.prototype.stopRecordingAllocations = expectState("attached",
+StubbedMemoryFront.prototype.stopRecordingAllocations = expectState(
+  "attached",
   async function() {
     this.recordingAllocations = false;
-  });
+  }
+);
 
 function waitUntilSnapshotState(store, expected) {
   const predicate = () => {
     const snapshots = store.getState().snapshots;
     info(snapshots.map(x => x.state));
-    return snapshots.length === expected.length &&
-           expected.every((state, i) => state === "*" || snapshots[i].state === state);
+    return (
+      snapshots.length === expected.length &&
+      expected.every(
+        (state, i) => state === "*" || snapshots[i].state === state
+      )
+    );
   };
   info(`Waiting for snapshots to be of state: ${expected}`);
   return waitUntilState(store, predicate);
@@ -110,16 +125,22 @@ function waitUntilCensusState(store, getCensus, expected) {
   const predicate = () => {
     const snapshots = store.getState().snapshots;
 
-    info("Current census state:" +
-         snapshots.map(x => getCensus(x) ? getCensus(x).state : null));
+    info(
+      "Current census state:" +
+        snapshots.map(x => (getCensus(x) ? getCensus(x).state : null))
+    );
 
-    return snapshots.length === expected.length &&
-           expected.every((state, i) => {
-             const census = getCensus(snapshots[i]);
-             return (state === "*") ||
-                    (!census && !state) ||
-                    (census && census.state === state);
-           });
+    return (
+      snapshots.length === expected.length &&
+      expected.every((state, i) => {
+        const census = getCensus(snapshots[i]);
+        return (
+          state === "*" ||
+          (!census && !state) ||
+          (census && census.state === state)
+        );
+      })
+    );
   };
   info(`Waiting for snapshots' censuses to be of state: ${expected}`);
   return waitUntilState(store, predicate);

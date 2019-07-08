@@ -11,17 +11,26 @@
 
 var EXPORTED_SYMBOLS = ["FormAutofillDoorhanger"];
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {FormAutofill} = ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
-const {FormAutofillUtils} = ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { FormAutofill } = ChromeUtils.import(
+  "resource://formautofill/FormAutofill.jsm"
+);
+const { FormAutofillUtils } = ChromeUtils.import(
+  "resource://formautofill/FormAutofillUtils.jsm"
+);
 
 this.log = null;
 FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 const GetStringFromName = FormAutofillUtils.stringBundle.GetStringFromName;
-const formatStringFromName = FormAutofillUtils.stringBundle.formatStringFromName;
-const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
+const formatStringFromName =
+  FormAutofillUtils.stringBundle.formatStringFromName;
+const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName(
+  "brandShortName"
+);
 let changeAutofillOptsKey = "changeAutofillOptions";
 let autofillOptsKey = "autofillOptionsLink";
 let autofillSecurityOptionsKey = "autofillSecurityOptionsLink";
@@ -55,8 +64,9 @@ const CONTENT = {
         },
         get label() {
           // If sync account is not set, return null label to hide checkbox
-          return Services.prefs.prefHasUserValue("services.sync.username") ?
-            GetStringFromName("addressesSyncCheckbox") : null;
+          return Services.prefs.prefHasUserValue("services.sync.username")
+            ? GetStringFromName("addressesSyncCheckbox")
+            : null;
         },
         callback(event) {
           let checked = event.target.checked;
@@ -84,11 +94,13 @@ const CONTENT = {
       accessKey: GetStringFromName("updateAddressAccessKey"),
       callbackState: "update",
     },
-    secondaryActions: [{
-      label: GetStringFromName("createAddressLabel"),
-      accessKey: GetStringFromName("createAddressAccessKey"),
-      callbackState: "create",
-    }],
+    secondaryActions: [
+      {
+        label: GetStringFromName("createAddressLabel"),
+        accessKey: GetStringFromName("createAddressAccessKey"),
+        callbackState: "create",
+      },
+    ],
     options: {
       persistWhileVisible: true,
       popupIconURL: "chrome://formautofill/content/icon-address-update.svg",
@@ -112,15 +124,18 @@ const CONTENT = {
       accessKey: GetStringFromName("saveCreditCardAccessKey"),
       callbackState: "save",
     },
-    secondaryActions: [{
-      label: GetStringFromName("cancelCreditCardLabel"),
-      accessKey: GetStringFromName("cancelCreditCardAccessKey"),
-      callbackState: "cancel",
-    }, {
-      label: GetStringFromName("neverSaveCreditCardLabel"),
-      accessKey: GetStringFromName("neverSaveCreditCardAccessKey"),
-      callbackState: "disable",
-    }],
+    secondaryActions: [
+      {
+        label: GetStringFromName("cancelCreditCardLabel"),
+        accessKey: GetStringFromName("cancelCreditCardAccessKey"),
+        callbackState: "cancel",
+      },
+      {
+        label: GetStringFromName("neverSaveCreditCardLabel"),
+        accessKey: GetStringFromName("neverSaveCreditCardAccessKey"),
+        callbackState: "disable",
+      },
+    ],
     options: {
       persistWhileVisible: true,
       popupIconURL: "chrome://formautofill/content/icon-credit-card.svg",
@@ -137,13 +152,22 @@ const CONTENT = {
           // otherwise return null label to hide checkbox.
           return Services.prefs.prefHasUserValue("services.sync.username") &&
             !Services.prefs.getBoolPref("services.sync.engine.creditcards") &&
-            Services.prefs.getBoolPref("services.sync.engine.creditcards.available") ?
-            GetStringFromName("creditCardsSyncCheckbox") : null;
+            Services.prefs.getBoolPref(
+              "services.sync.engine.creditcards.available"
+            )
+            ? GetStringFromName("creditCardsSyncCheckbox")
+            : null;
         },
         callback(event) {
-          let {secondaryButton, menubutton} = event.target.parentNode.parentNode.parentNode;
+          let {
+            secondaryButton,
+            menubutton,
+          } = event.target.parentNode.parentNode.parentNode;
           let checked = event.target.checked;
-          Services.prefs.setBoolPref("services.sync.engine.creditcards", checked);
+          Services.prefs.setBoolPref(
+            "services.sync.engine.creditcards",
+            checked
+          );
           secondaryButton.disabled = checked;
           menubutton.disabled = checked;
           log.debug("Set creditCard sync to", checked);
@@ -168,11 +192,13 @@ const CONTENT = {
       accessKey: GetStringFromName("updateCreditCardAccessKey"),
       callbackState: "update",
     },
-    secondaryActions: [{
-      label: GetStringFromName("createCreditCardLabel"),
-      accessKey: GetStringFromName("createCreditCardAccessKey"),
-      callbackState: "create",
-    }],
+    secondaryActions: [
+      {
+        label: GetStringFromName("createCreditCardLabel"),
+        accessKey: GetStringFromName("createCreditCardAccessKey"),
+        callbackState: "create",
+      },
+    ],
     options: {
       persistWhileVisible: true,
       popupIconURL: "chrome://formautofill/content/icon-credit-card.svg",
@@ -200,9 +226,14 @@ let FormAutofillDoorhanger = {
       return [null, null];
     }
 
-    let {label, accessKey, disableHighlight, callbackState} = mainActionParams;
+    let {
+      label,
+      accessKey,
+      disableHighlight,
+      callbackState,
+    } = mainActionParams;
     let callback = resolve.bind(null, callbackState);
-    let mainAction = {label, accessKey, callback, disableHighlight};
+    let mainAction = { label, accessKey, callback, disableHighlight };
 
     if (!secondaryActionParams) {
       return [mainAction, null];
@@ -236,9 +267,14 @@ let FormAutofillDoorhanger = {
    */
   _appendPrivacyPanelLink(content, message, link) {
     let chromeDoc = content.ownerDocument;
-    let privacyLinkElement = chromeDoc.createXULElement("label", {is: "text-link"});
+    let privacyLinkElement = chromeDoc.createXULElement("label", {
+      is: "text-link",
+    });
     privacyLinkElement.setAttribute("useoriginprincipal", true);
-    privacyLinkElement.setAttribute("href", link || "about:preferences#privacy-form-autofill");
+    privacyLinkElement.setAttribute(
+      "href",
+      link || "about:preferences#privacy-form-autofill"
+    );
     privacyLinkElement.setAttribute("value", message);
     content.appendChild(privacyLinkElement);
   },
@@ -294,11 +330,12 @@ let FormAutofillDoorhanger = {
    */
   _setAnchor(browser, anchor) {
     let chromeDoc = browser.ownerDocument;
-    let {id, URL, tooltiptext} = anchor;
+    let { id, URL, tooltiptext } = anchor;
     let anchorEt = chromeDoc.getElementById(id);
     if (!anchorEt) {
-      let notificationPopupBox =
-        chromeDoc.getElementById("notification-popup-box");
+      let notificationPopupBox = chromeDoc.getElementById(
+        "notification-popup-box"
+      );
       // Icon shown on URL bar
       let anchorElement = chromeDoc.createXULElement("image");
       anchorElement.id = id;
@@ -309,21 +346,21 @@ let FormAutofillDoorhanger = {
       notificationPopupBox.appendChild(anchorElement);
     }
   },
-  _addCheckboxListener(browser, {notificationId, options}) {
+  _addCheckboxListener(browser, { notificationId, options }) {
     if (!options.checkbox) {
       return;
     }
-    let {checkbox} = this._getNotificationElm(browser, notificationId);
+    let { checkbox } = this._getNotificationElm(browser, notificationId);
 
     if (checkbox && !checkbox.hidden) {
       checkbox.addEventListener("command", options.checkbox.callback);
     }
   },
-  _removeCheckboxListener(browser, {notificationId, options}) {
+  _removeCheckboxListener(browser, { notificationId, options }) {
     if (!options.checkbox) {
       return;
     }
-    let {checkbox} = this._getNotificationElm(browser, notificationId);
+    let { checkbox } = this._getNotificationElm(browser, notificationId);
 
     if (checkbox && !checkbox.hidden) {
       checkbox.removeEventListener("command", options.checkbox.callback);
@@ -342,7 +379,7 @@ let FormAutofillDoorhanger = {
    */
   async show(browser, type, description) {
     log.debug("show doorhanger with type:", type);
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       let {
         notificationId,
         message,
@@ -356,15 +393,12 @@ let FormAutofillDoorhanger = {
         options,
       } = CONTENT[type];
 
-      const {
-        ownerGlobal: chromeWin,
-        ownerDocument: chromeDoc,
-      } = browser;
-      options.eventCallback = (topic) => {
+      const { ownerGlobal: chromeWin, ownerDocument: chromeDoc } = browser;
+      options.eventCallback = topic => {
         log.debug("eventCallback:", topic);
 
         if (topic == "removed" || topic == "dismissed") {
-          this._removeCheckboxListener(browser, {notificationId, options});
+          this._removeCheckboxListener(browser, { notificationId, options });
           return;
         }
 
@@ -372,7 +406,7 @@ let FormAutofillDoorhanger = {
         if (topic != "shown") {
           return;
         }
-        this._addCheckboxListener(browser, {notificationId, options});
+        this._addCheckboxListener(browser, { notificationId, options });
 
         // There's no preferences link or other customization in first time use doorhanger.
         if (type == "firstTimeUse") {
@@ -381,12 +415,21 @@ let FormAutofillDoorhanger = {
 
         const notificationElementId = notificationId + "-notification";
         const notification = chromeDoc.getElementById(notificationElementId);
-        const notificationContent = notification.querySelector("popupnotificationcontent") ||
-                                    chromeDoc.createXULElement("popupnotificationcontent");
+        const notificationContent =
+          notification.querySelector("popupnotificationcontent") ||
+          chromeDoc.createXULElement("popupnotificationcontent");
         if (!notification.contains(notificationContent)) {
           notificationContent.setAttribute("orient", "vertical");
-          this._appendDescription(notificationContent, descriptionLabel, descriptionIcon);
-          this._appendPrivacyPanelLink(notificationContent, linkMessage, spotlightURL);
+          this._appendDescription(
+            notificationContent,
+            descriptionLabel,
+            descriptionIcon
+          );
+          this._appendPrivacyPanelLink(
+            notificationContent,
+            linkMessage,
+            spotlightURL
+          );
           notification.appendNotificationContent(notificationContent);
         }
         this._updateDescription(notificationContent, description);
@@ -398,7 +441,7 @@ let FormAutofillDoorhanger = {
         message,
         anchor.id,
         ...this._createActions(mainAction, secondaryActions, resolve),
-        options,
+        options
       );
     });
   },

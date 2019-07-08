@@ -24,9 +24,7 @@ var resultObserver = {
   newAccessCount: 0,
   newTime: 0,
   nodeChangedByHistoryDetails: null,
-  nodeHistoryDetailsChanged(node,
-                            oldVisitDate,
-                            oldVisitCount) {
+  nodeHistoryDetailsChanged(node, oldVisitDate, oldVisitCount) {
     this.nodeChangedByHistoryDetails = node;
     this.newTime = node.time;
     this.newAccessCount = node.accessCount;
@@ -185,7 +183,10 @@ add_task(async function check_bookmarks_query() {
   // nsINavHistoryResultObserver.sortingChanged
   resultObserver.invalidatedContainer = null;
   result.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING;
-  Assert.equal(resultObserver.sortingMode, Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING);
+  Assert.equal(
+    resultObserver.sortingMode,
+    Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING
+  );
   Assert.equal(resultObserver.invalidatedContainer, result.root);
 
   root.containerOpen = false;

@@ -12,16 +12,24 @@ const Provider = createFactory(require("react-redux").Provider);
 
 const actions = require("devtools/client/webconsole/actions/index");
 const FilterButton = require("devtools/client/webconsole/components/FilterBar/FilterButton");
-const FilterBar = createFactory(require("devtools/client/webconsole/components/FilterBar/FilterBar"));
+const FilterBar = createFactory(
+  require("devtools/client/webconsole/components/FilterBar/FilterBar")
+);
 const { getAllUi } = require("devtools/client/webconsole/selectors/ui");
-const { FILTERBAR_DISPLAY_MODES } = require("devtools/client/webconsole/constants");
+const {
+  FILTERBAR_DISPLAY_MODES,
+} = require("devtools/client/webconsole/constants");
 const {
   MESSAGES_CLEAR,
   FILTERS,
   PREFS,
 } = require("devtools/client/webconsole/constants");
 
-const { setupStore, prefsService, clearPrefs } = require("devtools/client/webconsole/test/helpers");
+const {
+  setupStore,
+  prefsService,
+  clearPrefs,
+} = require("devtools/client/webconsole/test/helpers");
 const serviceContainer = require("devtools/client/webconsole/test/fixtures/serviceContainer");
 
 function getFilterBar(overrides = {}) {
@@ -41,16 +49,25 @@ describe("FilterBar component:", () => {
   it("initial render", () => {
     const store = setupStore();
 
-    const wrapper = render(Provider({store}, getFilterBar()));
-    const toolbar = wrapper.find(".devtools-toolbar.webconsole-filterbar-primary");
+    const wrapper = render(Provider({ store }, getFilterBar()));
+    const toolbar = wrapper.find(
+      ".devtools-toolbar.webconsole-filterbar-primary"
+    );
 
     // Clear button
     const clearButton = toolbar.children().eq(0);
-    expect(clearButton.attr("class")).toBe("devtools-button devtools-clear-icon");
+    expect(clearButton.attr("class")).toBe(
+      "devtools-button devtools-clear-icon"
+    );
     expect(clearButton.attr("title")).toBe("Clear the Web Console output");
 
     // Separator
-    expect(toolbar.children().eq(1).attr("class")).toBe("devtools-separator");
+    expect(
+      toolbar
+        .children()
+        .eq(1)
+        .attr("class")
+    ).toBe("devtools-separator");
 
     // Text filter
     const textInput = toolbar.children().eq(2);
@@ -65,7 +82,9 @@ describe("FilterBar component:", () => {
 
     // Text filter input clear button
     const textFilterClearButton = textInput.children().eq(1);
-    expect(textFilterClearButton.attr("class")).toBe("devtools-searchinput-clear");
+    expect(textFilterClearButton.attr("class")).toBe(
+      "devtools-searchinput-clear"
+    );
 
     // "Persist logs" checkbox
     expect(wrapper.find(".filter-checkbox input").length).toBe(1);
@@ -81,7 +100,7 @@ describe("FilterBar component:", () => {
     ]);
     store.dispatch(actions.filterTextSet("qwerty"));
 
-    const wrapper = mount(Provider({store}, getFilterBar()));
+    const wrapper = mount(Provider({ store }, getFilterBar()));
 
     const message = wrapper.find(".devtools-searchinput-summary");
     expect(message.text()).toBe("5 hidden");
@@ -95,7 +114,7 @@ describe("FilterBar component:", () => {
     ]);
     store.dispatch(actions.filterTextSet("foobar"));
 
-    const wrapper = mount(Provider({store}, getFilterBar()));
+    const wrapper = mount(Provider({ store }, getFilterBar()));
 
     const message = wrapper.find(".devtools-searchinput-summary");
     expect(message.text()).toBe("1 hidden");
@@ -114,7 +133,7 @@ describe("FilterBar component:", () => {
     store.dispatch(actions.filterToggle(FILTERS.ERROR));
     store.dispatch(actions.filterToggle(FILTERS.INFO));
 
-    const wrapper = mount(Provider({store}, getFilterBar()));
+    const wrapper = mount(Provider({ store }, getFilterBar()));
 
     const message = wrapper.find(".devtools-searchinput-summary");
     expect(message.text()).toBe("3 hidden");
@@ -124,7 +143,7 @@ describe("FilterBar component:", () => {
   it("does not display the number of hidden messages when there are no messages", () => {
     const store = setupStore();
     store.dispatch(actions.filterTextSet("qwerty"));
-    const wrapper = mount(Provider({store}, getFilterBar()));
+    const wrapper = mount(Provider({ store }, getFilterBar()));
 
     const toolbar = wrapper.find(".devtools-searchinput-summary");
     expect(toolbar.exists()).toBeFalsy();
@@ -133,20 +152,30 @@ describe("FilterBar component:", () => {
   it("Displays a filter buttons bar on its own element in narrow displayMode", () => {
     const store = setupStore();
 
-    const wrapper = mount(Provider({store}, getFilterBar({
-      displayMode: FILTERBAR_DISPLAY_MODES.NARROW,
-    })));
+    const wrapper = mount(
+      Provider(
+        { store },
+        getFilterBar({
+          displayMode: FILTERBAR_DISPLAY_MODES.NARROW,
+        })
+      )
+    );
 
     const secondaryBar = wrapper.find(".webconsole-filterbar-secondary");
     expect(secondaryBar.length).toBe(1);
 
     // Buttons are displayed
-    const filterBtn = props => FilterButton(
-      Object.assign({}, {
-        active: true,
-        dispatch: store.dispatch,
-      }, props)
-    );
+    const filterBtn = props =>
+      FilterButton(
+        Object.assign(
+          {},
+          {
+            active: true,
+            dispatch: store.dispatch,
+          },
+          props
+        )
+      );
 
     const buttons = [
       filterBtn({ label: "Errors", filterKey: FILTERS.ERROR }),
@@ -171,7 +200,7 @@ describe("FilterBar component:", () => {
     const store = setupStore();
     store.dispatch = sinon.spy();
 
-    const wrapper = mount(Provider({store}, getFilterBar()));
+    const wrapper = mount(Provider({ store }, getFilterBar()));
     wrapper.find(".devtools-clear-icon").simulate("click");
     const call = store.dispatch.getCall(0);
     expect(call.args[0]).toEqual({
@@ -182,7 +211,7 @@ describe("FilterBar component:", () => {
   it("sets filter text when text is typed", () => {
     const store = setupStore();
 
-    const wrapper = mount(Provider({store}, getFilterBar()));
+    const wrapper = mount(Provider({ store }, getFilterBar()));
     const input = wrapper.find(".devtools-filterinput");
     input.simulate("change", { target: { value: "a" } });
     expect(store.getState().filters.text).toBe("a");
@@ -194,7 +223,7 @@ describe("FilterBar component:", () => {
     expect(getAllUi(store.getState()).persistLogs).toBe(false);
     expect(prefsService.getBoolPref(PREFS.UI.PERSIST), false);
 
-    const wrapper = mount(Provider({store}, getFilterBar()));
+    const wrapper = mount(Provider({ store }, getFilterBar()));
     wrapper.find(".filter-checkbox input").simulate("change");
 
     expect(getAllUi(store.getState()).persistLogs).toBe(true);
@@ -204,9 +233,14 @@ describe("FilterBar component:", () => {
   it(`doesn't render "Persist logs" input when "hidePersistLogsCheckbox" is true`, () => {
     const store = setupStore();
 
-    const wrapper = render(Provider({store}, getFilterBar({
-      hidePersistLogsCheckbox: true,
-    })));
+    const wrapper = render(
+      Provider(
+        { store },
+        getFilterBar({
+          hidePersistLogsCheckbox: true,
+        })
+      )
+    );
     expect(wrapper.find(".filter-checkbox input").length).toBe(0);
   });
 });

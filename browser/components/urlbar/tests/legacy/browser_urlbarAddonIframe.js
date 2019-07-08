@@ -54,8 +54,7 @@ add_task(async function() {
   let iframe = gURLBar.popup._addonIframe;
   Assert.ok(!!iframe, "iframe should not be null");
 
-  gMsgMan =
-    iframe.frameLoader.messageManager;
+  gMsgMan = iframe.frameLoader.messageManager;
   gMsgMan.loadFrameScript(contentScriptURL, false);
 
   await promiseIframeLoad();
@@ -73,7 +72,7 @@ add_task(async function() {
 
   // urlbar.getMaxResults
   let maxResults = gURLBar.popup.maxResults;
-  Assert.equal(typeof(maxResults), "number", "Sanity check");
+  Assert.equal(typeof maxResults, "number", "Sanity check");
   let readMaxResults = await promiseUrlbarFunctionCall("getMaxResults");
   Assert.equal(readMaxResults, maxResults, "getMaxResults");
 
@@ -90,8 +89,11 @@ add_task(async function() {
   await promiseUrlbarFunctionCall("enter");
   let browser = gBrowser.selectedBrowser;
   await BrowserTestUtils.browserLoaded(browser);
-  Assert.equal(browser.currentURI.spec, value,
-               "enter should have loaded the URL");
+  Assert.equal(
+    browser.currentURI.spec,
+    value,
+    "enter should have loaded the URL"
+  );
 
   // input, reset, and result events.  There should always be at least one
   // result, the heuristic result.
@@ -121,9 +123,12 @@ add_task(async function() {
   Assert.ok("action" in result, "result.action");
   Assert.equal(result.action.type, "searchengine", "result.action.type");
   Assert.ok("params" in result.action, "result.action.params");
-  Assert.equal(result.action.params.engineName, engineName,
-               "result.action.params.engineName");
-  Assert.equal(typeof(result.image), "string", "result.image");
+  Assert.equal(
+    result.action.params.engineName,
+    engineName,
+    "result.action.params.engineName"
+  );
+  Assert.equal(typeof result.image, "string", "result.image");
   Assert.equal(result.title, engineName, "result.title");
   Assert.equal(result.type, "action searchengine heuristic", "result.type");
   Assert.equal(result.text, value, "result.text");
@@ -133,7 +138,7 @@ add_task(async function() {
   // the message and adds its event listener before synthesizing the key.
   let keydownPromises = promiseEvent("keydown");
   await keydownPromises[0];
-  EventUtils.synthesizeKey("KEY_ArrowDown", {type: "keydown"});
+  EventUtils.synthesizeKey("KEY_ArrowDown", { type: "keydown" });
   await keydownPromises[1];
 
   // urlbar.getPanelHeight
@@ -149,7 +154,10 @@ add_task(async function() {
     () => Math.round(iframe.getBoundingClientRect().height) == newHeight,
     "Wait for panel height change after setPanelHeight"
   ).catch(ex => {
-    info("Last detected height: " + Math.round(iframe.getBoundingClientRect().height));
+    info(
+      "Last detected height: " +
+        Math.round(iframe.getBoundingClientRect().height)
+    );
     throw ex;
   });
 });
@@ -210,30 +218,38 @@ function promiseMessage(type, data, numExpectedAcks = 1) {
   let ackPromises = [];
   for (let i = 0; i < numExpectedAcks; i++) {
     let ackIndex = i;
-    ackPromises.push(new Promise(resolve => {
-      info("Waiting for message ack: " + JSON.stringify({
-        type,
-        msgID,
-        ackIndex,
-      }));
-      gMsgMan.addMessageListener(ackMsgName, function onMsg(msg) {
-        // Messages have IDs so that an ack can be correctly paired with the
-        // initial message it's replying to.  It's not an error if the ack's ID
-        // isn't equal to msgID here.  That will happen when multiple messages
-        // have been sent in a single turn of the event loop so that they're all
-        // waiting on acks.  Same goes for ackIndex.
-        if (msg.data.messageID != msgID || msg.data.ackIndex != ackIndex) {
-          return;
-        }
-        info("Received message ack: " + JSON.stringify({
-          type,
-          msgID: msg.data.messageID,
-          ackIndex,
-        }));
-        gMsgMan.removeMessageListener(ackMsgName, onMsg);
-        resolve(msg.data.data);
-      });
-    }));
+    ackPromises.push(
+      new Promise(resolve => {
+        info(
+          "Waiting for message ack: " +
+            JSON.stringify({
+              type,
+              msgID,
+              ackIndex,
+            })
+        );
+        gMsgMan.addMessageListener(ackMsgName, function onMsg(msg) {
+          // Messages have IDs so that an ack can be correctly paired with the
+          // initial message it's replying to.  It's not an error if the ack's ID
+          // isn't equal to msgID here.  That will happen when multiple messages
+          // have been sent in a single turn of the event loop so that they're all
+          // waiting on acks.  Same goes for ackIndex.
+          if (msg.data.messageID != msgID || msg.data.ackIndex != ackIndex) {
+            return;
+          }
+          info(
+            "Received message ack: " +
+              JSON.stringify({
+                type,
+                msgID: msg.data.messageID,
+                ackIndex,
+              })
+          );
+          gMsgMan.removeMessageListener(ackMsgName, onMsg);
+          resolve(msg.data.data);
+        });
+      })
+    );
   }
   return ackPromises;
 }

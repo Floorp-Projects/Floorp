@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const DEFAULT_PROCESS_COUNT = Services.prefs.getDefaultBranch(null).getIntPref("dom.ipc.processCount");
+const DEFAULT_PROCESS_COUNT = Services.prefs
+  .getDefaultBranch(null)
+  .getIntPref("dom.ipc.processCount");
 
 /**
  * A test that checks whether any preference getter from the given list
@@ -22,9 +24,9 @@ const DEFAULT_PROCESS_COUNT = Services.prefs.getDefaultBranch(null).getIntPref("
  *                 }
  */
 function checkPrefGetters(stats, max, whitelist = {}) {
-  let getterStats = Object
-    .entries(stats)
-    .sort(([, val1], [, val2]) => val2 - val1);
+  let getterStats = Object.entries(stats).sort(
+    ([, val1], [, val2]) => val2 - val1
+  );
 
   // Clone the whitelist to be able to delete entries to check if we
   // forgot any later on.
@@ -33,20 +35,36 @@ function checkPrefGetters(stats, max, whitelist = {}) {
   for (let [pref, count] of getterStats) {
     let whitelistItem = whitelist[pref];
     if (!whitelistItem) {
-      Assert.lessOrEqual(count, max, `${pref} should not be accessed more than ${max} times.`);
+      Assert.lessOrEqual(
+        count,
+        max,
+        `${pref} should not be accessed more than ${max} times.`
+      );
     } else {
       // Still record how much this pref was accessed even if we don't do any real assertions.
       if (!whitelistItem.min && !whitelistItem.max) {
-        info(`${pref} should not be accessed more than ${max} times and was accessed ${count} times.`);
+        info(
+          `${pref} should not be accessed more than ${max} times and was accessed ${count} times.`
+        );
       }
 
       if (whitelistItem.min) {
-        Assert.lessOrEqual(whitelistItem.min, count,
-          `Whitelist item ${pref} should be accessed at least ${whitelistItem.min} times.`);
+        Assert.lessOrEqual(
+          whitelistItem.min,
+          count,
+          `Whitelist item ${pref} should be accessed at least ${
+            whitelistItem.min
+          } times.`
+        );
       }
       if (whitelistItem.max) {
-        Assert.lessOrEqual(count, whitelistItem.max,
-          `Whitelist item ${pref} should be accessed at most ${whitelistItem.max} times.`);
+        Assert.lessOrEqual(
+          count,
+          whitelistItem.max,
+          `Whitelist item ${pref} should be accessed at most ${
+            whitelistItem.max
+          } times.`
+        );
       }
       delete whitelist[pref];
     }
@@ -60,7 +78,11 @@ function checkPrefGetters(stats, max, whitelist = {}) {
   }
 
   let remainingWhitelist = Object.keys(whitelist);
-  is(remainingWhitelist.length, 0, `Should have checked all whitelist items. Remaining: ${remainingWhitelist}`);
+  is(
+    remainingWhitelist.length,
+    0,
+    `Should have checked all whitelist items. Remaining: ${remainingWhitelist}`
+  );
 }
 
 /**
@@ -69,7 +91,7 @@ function checkPrefGetters(stats, max, whitelist = {}) {
  */
 function getPreferenceStats() {
   let stats = {};
-  Services.prefs.readStats((key, value) => stats[key] = value);
+  Services.prefs.readStats((key, value) => (stats[key] = value));
   return stats;
 }
 
@@ -103,7 +125,8 @@ add_task(async function startup() {
     },
   };
 
-  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
+  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()
+    .wrappedJSObject;
   await startupRecorder.done;
 
   ok(startupRecorder.data.prefStats, "startupRecorder has prefStats");
@@ -145,7 +168,14 @@ add_task(async function open_10_tabs() {
 
   let tabs = [];
   while (tabs.length < 10) {
-    tabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com", true, true));
+    tabs.push(
+      await BrowserTestUtils.openNewForegroundTab(
+        gBrowser,
+        "http://example.com",
+        true,
+        true
+      )
+    );
   }
 
   for (let tab of tabs) {
@@ -175,9 +205,19 @@ add_task(async function navigate_around() {
 
   Services.prefs.resetStats();
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com", true, true);
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.com",
+    true,
+    true
+  );
 
-  let urls = ["http://example.com", "https://example.com", "http://example.org", "https://example.org"];
+  let urls = [
+    "http://example.com",
+    "https://example.com",
+    "http://example.org",
+    "https://example.org",
+  ];
 
   for (let i = 0; i < 50; i++) {
     let url = urls[i % urls.length];

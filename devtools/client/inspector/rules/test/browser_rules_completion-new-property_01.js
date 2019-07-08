@@ -14,7 +14,8 @@
 //    is the popup open,
 //    is a suggestion selected in the popup,
 //  ]
-const OPEN = true, SELECTED = true;
+const OPEN = true,
+  SELECTED = true;
 var testData = [
   ["d", "display", OPEN, SELECTED],
   ["VK_DOWN", "dominant-baseline", OPEN, SELECTED],
@@ -39,7 +40,7 @@ const TEST_URI = "<h1 style='border: 1px solid red'>Header</h1>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {toolbox, inspector, view, testActor} = await openRuleView();
+  const { toolbox, inspector, view, testActor } = await openRuleView();
 
   info("Test autocompletion after 1st page load");
   await runAutocompletionTest(toolbox, inspector, view);
@@ -63,7 +64,11 @@ async function runAutocompletionTest(toolbox, inspector, view) {
   }
 }
 
-async function testCompletion([key, completion, open, isSelected], editor, view) {
+async function testCompletion(
+  [key, completion, open, isSelected],
+  editor,
+  view
+) {
   info("Pressing key " + key);
   info("Expecting " + completion);
   info("Is popup opened: " + open);
@@ -71,7 +76,7 @@ async function testCompletion([key, completion, open, isSelected], editor, view)
 
   let onSuggest;
 
-  if (/(right|back_space|escape)/ig.test(key)) {
+  if (/(right|back_space|escape)/gi.test(key)) {
     info("Adding event listener for right|back_space|escape keys");
     onSuggest = once(editor.input, "keypress");
   } else {
@@ -81,9 +86,8 @@ async function testCompletion([key, completion, open, isSelected], editor, view)
 
   // Also listening for popup opened/closed events if needed.
   const popupEvent = open ? "popup-opened" : "popup-closed";
-  const onPopupEvent = editor.popup.isOpen !== open
-    ? once(editor.popup, popupEvent)
-    : null;
+  const onPopupEvent =
+    editor.popup.isOpen !== open ? once(editor.popup, popupEvent) : null;
 
   info("Synthesizing key " + key);
   EventUtils.synthesizeKey(key, {}, view.styleWindow);

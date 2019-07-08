@@ -10,8 +10,8 @@
 const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
 
 add_task(async function testCDP() {
-  const {client} = await setupTestForUri(TEST_URI);
-  const {Page, Runtime} = client;
+  const { client } = await setupTestForUri(TEST_URI);
+  const { Page, Runtime } = client;
 
   const events = [];
   function assertReceivedEvents(expected, message) {
@@ -43,49 +43,84 @@ add_task(async function testCDP() {
   ok(context.auxData.isDefault, "The execution context is the default one");
   ok(!!context.auxData.frameId, "The execution context has a frame id set");
 
-  assertReceivedEvents(["executionContextCreated"], "Received only executionContextCreated event after Runtime.enable call");
+  assertReceivedEvents(
+    ["executionContextCreated"],
+    "Received only executionContextCreated event after Runtime.enable call"
+  );
 
   const { frameTree } = await Page.getFrameTree();
   ok(!!frameTree.frame, "getFrameTree exposes one frame");
   is(frameTree.childFrames.length, 0, "getFrameTree reports no child frame");
   ok(!!frameTree.frame.id, "getFrameTree's frame has an id");
   is(frameTree.frame.url, TEST_URI, "getFrameTree's frame has the right url");
-  is(frameTree.frame.id, context.auxData.frameId, "getFrameTree and executionContextCreated refers about the same frame Id");
+  is(
+    frameTree.frame.id,
+    context.auxData.frameId,
+    "getFrameTree and executionContextCreated refers about the same frame Id"
+  );
 
   const onFrameNavigated = Page.frameNavigated();
   const onExecutionContextDestroyed = Runtime.executionContextDestroyed();
   const onExecutionContextCreated2 = Runtime.executionContextCreated();
   const url = "data:text/html;charset=utf-8,test-page";
-  const { frameId } = await Page.navigate({ url  });
+  const { frameId } = await Page.navigate({ url });
   ok(true, "A new page has been loaded");
   ok(frameId, "Page.navigate returned a frameId");
-  is(frameId, frameTree.frame.id, "The Page.navigate's frameId is the same than " +
-    "getFrameTree's one");
+  is(
+    frameId,
+    frameTree.frame.id,
+    "The Page.navigate's frameId is the same than getFrameTree's one"
+  );
 
   const frameNavigated = await onFrameNavigated;
-  ok(!frameNavigated.frame.parentId, "frameNavigated is for the top level document and" +
-    " has a null parentId");
-  is(frameNavigated.frame.id, frameId, "frameNavigated id is the same than the one " +
-    "returned by Page.navigate");
-  is(frameNavigated.frame.name, undefined, "frameNavigated name isn't implemented yet");
-  is(frameNavigated.frame.url, url, "frameNavigated url is the same being given to " +
-    "Page.navigate");
+  ok(
+    !frameNavigated.frame.parentId,
+    "frameNavigated is for the top level document and has a null parentId"
+  );
+  is(
+    frameNavigated.frame.id,
+    frameId,
+    "frameNavigated id is the same than the one returned by Page.navigate"
+  );
+  is(
+    frameNavigated.frame.name,
+    undefined,
+    "frameNavigated name isn't implemented yet"
+  );
+  is(
+    frameNavigated.frame.url,
+    url,
+    "frameNavigated url is the same being given to Page.navigate"
+  );
 
   const { executionContextId } = await onExecutionContextDestroyed;
   ok(executionContextId, "The destroyed event reports an id");
-  is(executionContextId, context.id, "The destroyed event is for the first reported execution context");
+  is(
+    executionContextId,
+    context.id,
+    "The destroyed event is for the first reported execution context"
+  );
 
   ({ context } = await onExecutionContextCreated2);
   ok(!!context.id, "The execution context has an id");
   ok(context.auxData.isDefault, "The execution context is the default one");
-  is(context.auxData.frameId, frameId, "The execution context frame id is the same " +
-    "the one returned by Page.navigate");
+  is(
+    context.auxData.frameId,
+    frameId,
+    "The execution context frame id is the same " +
+      "the one returned by Page.navigate"
+  );
 
-  isnot(executionContextId, context.id, "The destroyed id is different from the " +
-    "created one");
+  isnot(
+    executionContextId,
+    context.id,
+    "The destroyed id is different from the created one"
+  );
 
-  assertReceivedEvents(["executionContextDestroyed", "frameNavigated", "executionContextCreated"],
-    "Received frameNavigated between the two execution context events during navigation to another URL");
+  assertReceivedEvents(
+    ["executionContextDestroyed", "frameNavigated", "executionContextCreated"],
+    "Received frameNavigated between the two execution context events during navigation to another URL"
+  );
 
   await client.close();
   ok(true, "The client is closed");

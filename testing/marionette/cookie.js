@@ -4,14 +4,13 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const {assert} = ChromeUtils.import("chrome://marionette/content/assert.js");
-const {
-  InvalidCookieDomainError,
-  UnableToSetCookieError,
-} = ChromeUtils.import("chrome://marionette/content/error.js");
-const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js");
+const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
+const { InvalidCookieDomainError, UnableToSetCookieError } = ChromeUtils.import(
+  "chrome://marionette/content/error.js"
+);
+const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
 
 this.EXPORTED_SYMBOLS = ["cookie"];
 
@@ -61,16 +60,28 @@ cookie.fromJSON = function(json) {
     newCookie.path = assert.string(json.path, "Cookie path must be string");
   }
   if (typeof json.domain != "undefined") {
-    newCookie.domain = assert.string(json.domain, "Cookie domain must be string");
+    newCookie.domain = assert.string(
+      json.domain,
+      "Cookie domain must be string"
+    );
   }
   if (typeof json.secure != "undefined") {
-    newCookie.secure = assert.boolean(json.secure, "Cookie secure flag must be boolean");
+    newCookie.secure = assert.boolean(
+      json.secure,
+      "Cookie secure flag must be boolean"
+    );
   }
   if (typeof json.httpOnly != "undefined") {
-    newCookie.httpOnly = assert.boolean(json.httpOnly, "Cookie httpOnly flag must be boolean");
+    newCookie.httpOnly = assert.boolean(
+      json.httpOnly,
+      "Cookie httpOnly flag must be boolean"
+    );
   }
   if (typeof json.expiry != "undefined") {
-    newCookie.expiry = assert.positiveInteger(json.expiry, "Cookie expiry must be a positive integer");
+    newCookie.expiry = assert.positiveInteger(
+      json.expiry,
+      "Cookie expiry must be a positive integer"
+    );
   }
 
   return newCookie;
@@ -93,7 +104,7 @@ cookie.fromJSON = function(json) {
  * @throws {UnableToSetCookieError}
  *     If an error occurred while trying to save the cookie.
  */
-cookie.add = function(newCookie, {restrictToHost = null} = {}) {
+cookie.add = function(newCookie, { restrictToHost = null } = {}) {
   assert.string(newCookie.name, "Cookie name must be string");
   assert.string(newCookie.value, "Cookie value must be string");
 
@@ -145,11 +156,15 @@ cookie.add = function(newCookie, {restrictToHost = null} = {}) {
   }
 
   if (restrictToHost) {
-    if (!restrictToHost.endsWith(newCookie.domain) &&
-        ("." + restrictToHost) !== newCookie.domain &&
-        restrictToHost !== newCookie.domain) {
-      throw new InvalidCookieDomainError(`Cookies may only be set ` +
-          `for the current domain (${restrictToHost})`);
+    if (
+      !restrictToHost.endsWith(newCookie.domain) &&
+      "." + restrictToHost !== newCookie.domain &&
+      restrictToHost !== newCookie.domain
+    ) {
+      throw new InvalidCookieDomainError(
+        `Cookies may only be set ` +
+          `for the current domain (${restrictToHost})`
+      );
     }
   }
 
@@ -160,16 +175,17 @@ cookie.add = function(newCookie, {restrictToHost = null} = {}) {
 
   try {
     cookie.manager.add(
-        newCookie.domain,
-        newCookie.path,
-        newCookie.name,
-        newCookie.value,
-        newCookie.secure,
-        newCookie.httpOnly,
-        newCookie.session,
-        newCookie.expiry,
-        {} /* origin attributes */,
-        Ci.nsICookie.SAMESITE_NONE);
+      newCookie.domain,
+      newCookie.path,
+      newCookie.name,
+      newCookie.value,
+      newCookie.secure,
+      newCookie.httpOnly,
+      newCookie.session,
+      newCookie.expiry,
+      {} /* origin attributes */,
+      Ci.nsICookie.SAMESITE_NONE
+    );
   } catch (e) {
     throw new UnableToSetCookieError(e);
   }
@@ -183,11 +199,12 @@ cookie.add = function(newCookie, {restrictToHost = null} = {}) {
  */
 cookie.remove = function(toDelete) {
   cookie.manager.remove(
-      toDelete.domain,
-      toDelete.name,
-      toDelete.path,
-      false,
-      {} /* originAttributes */);
+    toDelete.domain,
+    toDelete.name,
+    toDelete.path,
+    false,
+    {} /* originAttributes */
+  );
 };
 
 /**
@@ -204,7 +221,7 @@ cookie.remove = function(toDelete) {
  * @return {Iterable.<Cookie>}
  *     Iterator.
  */
-cookie.iter = function* (host, currentPath = "/") {
+cookie.iter = function*(host, currentPath = "/") {
   assert.string(host, "host must be string");
   assert.string(currentPath, "currentPath must be string");
 
@@ -215,15 +232,17 @@ cookie.iter = function* (host, currentPath = "/") {
     // take the hostname and progressively shorten
     let hostname = host;
     do {
-      if ((cookie.host == "." + hostname || cookie.host == hostname) &&
-          isForCurrentPath(cookie.path)) {
+      if (
+        (cookie.host == "." + hostname || cookie.host == hostname) &&
+        isForCurrentPath(cookie.path)
+      ) {
         let data = {
-          "name": cookie.name,
-          "value": cookie.value,
-          "path": cookie.path,
-          "domain": cookie.host,
-          "secure": cookie.isSecure,
-          "httpOnly": cookie.isHttpOnly,
+          name: cookie.name,
+          value: cookie.value,
+          path: cookie.path,
+          domain: cookie.host,
+          secure: cookie.isSecure,
+          httpOnly: cookie.isHttpOnly,
         };
 
         if (!cookie.isSession) {

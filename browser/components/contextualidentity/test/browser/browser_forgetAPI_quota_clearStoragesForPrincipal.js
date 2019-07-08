@@ -5,12 +5,12 @@
 const CC = Components.Constructor;
 
 const TEST_HOST = "example.com";
-const TEST_URL = "http://" + TEST_HOST + "/browser/browser/components/contextualidentity/test/browser/";
+const TEST_URL =
+  "http://" +
+  TEST_HOST +
+  "/browser/browser/components/contextualidentity/test/browser/";
 
-const USER_CONTEXTS = [
-  "default",
-  "personal",
-];
+const USER_CONTEXTS = ["default", "personal"];
 
 //
 // Support functions.
@@ -18,7 +18,7 @@ const USER_CONTEXTS = [
 
 async function openTabInUserContext(uri, userContextId) {
   // Open the tab in the correct userContextId.
-  let tab = BrowserTestUtils.addTab(gBrowser, uri, {userContextId});
+  let tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
 
   // Select tab and make sure its browser is focused.
   gBrowser.selectedTab = tab;
@@ -26,12 +26,14 @@ async function openTabInUserContext(uri, userContextId) {
 
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
-  return {tab, browser};
+  return { tab, browser };
 }
 
 // Setup an entry for the indexedDB.
 async function setupIndexedDB(browser) {
-  await ContentTask.spawn(browser, { input: "TestForgetAPIs" }, async function(arg) {
+  await ContentTask.spawn(browser, { input: "TestForgetAPIs" }, async function(
+    arg
+  ) {
     let request = content.indexedDB.open("idb", 1);
 
     request.onerror = function() {
@@ -53,7 +55,7 @@ async function setupIndexedDB(browser) {
     // Add an entry into the indexedDB.
     let transaction = db.transaction(["obj"], "readwrite");
     let store = transaction.objectStore("obj");
-    store.add({id: 1, userContext: arg.input});
+    store.add({ id: 1, userContext: arg.input });
 
     await new Promise(resolve => {
       transaction.oncomplete = () => {
@@ -105,9 +107,9 @@ async function checkIndexedDB(browser) {
 
 add_task(async function setup() {
   // Make sure userContext is enabled.
-  await SpecialPowers.pushPrefEnv({"set": [
-      [ "privacy.userContext.enabled", true ],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.userContext.enabled", true]],
+  });
 });
 
 add_task(async function test_quota_clearStoragesForPrincipal() {
@@ -115,7 +117,10 @@ add_task(async function test_quota_clearStoragesForPrincipal() {
 
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
     // Open our tab in the given user context.
-    tabs[userContextId] = await openTabInUserContext(TEST_URL + "empty_file.html", userContextId);
+    tabs[userContextId] = await openTabInUserContext(
+      TEST_URL + "empty_file.html",
+      userContextId
+    );
 
     // Setup an entry for the indexedDB.
     await setupIndexedDB(tabs[userContextId].browser);
@@ -126,12 +131,21 @@ add_task(async function test_quota_clearStoragesForPrincipal() {
 
   // Using quota manager to clear all indexed DB for a given domain.
   let caUtils = {};
-  Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js",
-                                      caUtils);
+  Services.scriptloader.loadSubScript(
+    "chrome://global/content/contentAreaUtils.js",
+    caUtils
+  );
   let httpURI = caUtils.makeURI("http://" + TEST_HOST);
-  let httpPrincipal = Services.scriptSecurityManager
-                              .createCodebasePrincipal(httpURI, {});
-  let clearRequest = Services.qms.clearStoragesForPrincipal(httpPrincipal, null, null, true);
+  let httpPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+    httpURI,
+    {}
+  );
+  let clearRequest = Services.qms.clearStoragesForPrincipal(
+    httpPrincipal,
+    null,
+    null,
+    true
+  );
   await new Promise(resolve => {
     clearRequest.callback = () => {
       resolve();
@@ -140,7 +154,10 @@ add_task(async function test_quota_clearStoragesForPrincipal() {
 
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
     // Open our tab in the given user context.
-    tabs[userContextId] = await openTabInUserContext(TEST_URL + "empty_file.html", userContextId);
+    tabs[userContextId] = await openTabInUserContext(
+      TEST_URL + "empty_file.html",
+      userContextId
+    );
 
     // Check whether indexed DB has been cleared.
     await checkIndexedDB(tabs[userContextId].browser);

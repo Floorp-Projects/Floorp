@@ -6,8 +6,13 @@
 
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { TargetFactory } = require("devtools/client/framework/target");
-const { addTab, removeTab } = require("devtools/client/performance/test/helpers/tab-utils");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  addTab,
+  removeTab,
+} = require("devtools/client/performance/test/helpers/tab-utils");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
 
 /**
  * Initializes a toolbox panel in a new tab.

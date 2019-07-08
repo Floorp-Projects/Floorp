@@ -56,8 +56,14 @@
 const PREF_ACTIVE = "security.mixed_content.block_active_content";
 const PREF_DISPLAY = "security.mixed_content.block_display_content";
 const PREF_DISPLAY_UPGRADE = "security.mixed_content.upgrade_display_content";
-const HTTPS_TEST_ROOT = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com");
-const HTTP_TEST_ROOT = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
+const HTTPS_TEST_ROOT = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  "https://example.com"
+);
+const HTTP_TEST_ROOT = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  "http://example.com"
+);
 const PREF_INSECURE_ICON = "security.insecure_connection_icon.enabled";
 
 var origBlockActive;
@@ -91,7 +97,9 @@ function test1() {
   Services.prefs.setBoolPref(PREF_INSECURE_ICON, false);
 
   var url = HTTPS_TEST_ROOT + "test_mcb_redirect.html";
-  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkUIForTest1);
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
+    checkUIForTest1
+  );
   BrowserTestUtils.loadURI(gTestBrowser, url);
 }
 
@@ -99,18 +107,25 @@ function testInsecure1() {
   Services.prefs.setBoolPref(PREF_INSECURE_ICON, true);
 
   var url = HTTPS_TEST_ROOT + "test_mcb_redirect.html";
-  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkUIForTest1);
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
+    checkUIForTest1
+  );
   BrowserTestUtils.loadURI(gTestBrowser, url);
 }
 
 async function checkUIForTest1() {
-  await assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
+  await assertMixedContentBlockingState(gTestBrowser, {
+    activeLoaded: false,
+    activeBlocked: true,
+    passiveLoaded: false,
+  });
 
   ContentTask.spawn(gTestBrowser, null, async function() {
     var expected = "script blocked";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
-      "OK: Expected result in innerHTML for Test1!");
+      "OK: Expected result in innerHTML for Test1!"
+    );
   }).then(test2);
 }
 
@@ -118,18 +133,25 @@ async function checkUIForTest1() {
 
 function test2() {
   var url = HTTP_TEST_ROOT + "test_mcb_redirect.html";
-  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkUIForTest2);
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
+    checkUIForTest2
+  );
   BrowserTestUtils.loadURI(gTestBrowser, url);
 }
 
 async function checkUIForTest2() {
-  await assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: false, passiveLoaded: false});
+  await assertMixedContentBlockingState(gTestBrowser, {
+    activeLoaded: false,
+    activeBlocked: false,
+    passiveLoaded: false,
+  });
 
   ContentTask.spawn(gTestBrowser, null, async function() {
     var expected = "script executed";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
-      "OK: Expected result in innerHTML for Test2!");
+      "OK: Expected result in innerHTML for Test2!"
+    );
   }).then(test3);
 }
 
@@ -138,7 +160,9 @@ async function checkUIForTest2() {
 function test3() {
   info("test3");
   var url = HTTPS_TEST_ROOT + "test_mcb_redirect_image.html";
-  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkLoadEventForTest3);
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
+    checkLoadEventForTest3
+  );
   BrowserTestUtils.loadURI(gTestBrowser, url);
 }
 
@@ -147,7 +171,8 @@ function checkLoadEventForTest3() {
     var expected = "image blocked";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
-      "OK: Expected result in innerHTML for Test3!");
+      "OK: Expected result in innerHTML for Test3!"
+    );
   }).then(test4);
 }
 
@@ -156,7 +181,9 @@ function checkLoadEventForTest3() {
 function test4() {
   info("test4");
   var url = HTTP_TEST_ROOT + "test_mcb_redirect_image.html";
-  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkLoadEventForTest4);
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
+    checkLoadEventForTest4
+  );
   BrowserTestUtils.loadURI(gTestBrowser, url);
 }
 
@@ -165,7 +192,8 @@ function checkLoadEventForTest4() {
     var expected = "image loaded";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
-      "OK: Expected result in innerHTML for Test4!");
+      "OK: Expected result in innerHTML for Test4!"
+    );
   }).then(test5);
 }
 
@@ -179,7 +207,9 @@ function test5() {
   info("test5");
   Services.io.offline = true;
   var url = HTTP_TEST_ROOT + "test_mcb_redirect_image.html";
-  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkLoadEventForTest5);
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
+    checkLoadEventForTest5
+  );
   BrowserTestUtils.loadURI(gTestBrowser, url);
 }
 
@@ -188,7 +218,8 @@ function checkLoadEventForTest5() {
     var expected = "image loaded";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
-      "OK: Expected result in innerHTML for Test5!");
+      "OK: Expected result in innerHTML for Test5!"
+    );
   }).then(() => {
     // Go back online
     Services.io.offline = false;
@@ -206,7 +237,9 @@ function test6() {
   info("test6");
   Services.io.offline = true;
   var url = HTTPS_TEST_ROOT + "test_mcb_redirect_image.html";
-  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkLoadEventForTest6);
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
+    checkLoadEventForTest6
+  );
   BrowserTestUtils.loadURI(gTestBrowser, url);
 }
 
@@ -215,7 +248,8 @@ function checkLoadEventForTest6() {
     var expected = "image blocked";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
-      "OK: Expected result in innerHTML for Test6!");
+      "OK: Expected result in innerHTML for Test6!"
+    );
   }).then(() => {
     // Go back online
     Services.io.offline = false;
@@ -227,7 +261,9 @@ function checkLoadEventForTest6() {
 // HTTP page loading insecure image that went through a double redirect
 function test7() {
   var url = HTTP_TEST_ROOT + "test_mcb_double_redirect_image.html";
-  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkLoadEventForTest7);
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
+    checkLoadEventForTest7
+  );
   BrowserTestUtils.loadURI(gTestBrowser, url);
 }
 
@@ -236,7 +272,8 @@ function checkLoadEventForTest7() {
     var expected = "image loaded";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
-      "OK: Expected result in innerHTML for Test7!");
+      "OK: Expected result in innerHTML for Test7!"
+    );
   }).then(test8);
 }
 
@@ -249,7 +286,9 @@ function test8() {
   // Go into offline mode
   Services.io.offline = true;
   var url = HTTP_TEST_ROOT + "test_mcb_double_redirect_image.html";
-  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkLoadEventForTest8);
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
+    checkLoadEventForTest8
+  );
   BrowserTestUtils.loadURI(gTestBrowser, url);
 }
 
@@ -258,7 +297,8 @@ function checkLoadEventForTest8() {
     var expected = "image loaded";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
-      "OK: Expected result in innerHTML for Test8!");
+      "OK: Expected result in innerHTML for Test8!"
+    );
   }).then(() => {
     // Go back online
     Services.io.offline = false;
@@ -275,7 +315,9 @@ function test9() {
   // Go into offline mode
   Services.io.offline = true;
   var url = HTTPS_TEST_ROOT + "test_mcb_double_redirect_image.html";
-  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkLoadEventForTest9);
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
+    checkLoadEventForTest9
+  );
   BrowserTestUtils.loadURI(gTestBrowser, url);
 }
 
@@ -284,7 +326,8 @@ function checkLoadEventForTest9() {
     var expected = "image blocked";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
-      "OK: Expected result in innerHTML for Test9!");
+      "OK: Expected result in innerHTML for Test9!"
+    );
   }).then(() => {
     // Go back online
     Services.io.offline = false;

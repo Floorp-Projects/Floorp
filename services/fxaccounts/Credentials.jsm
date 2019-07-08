@@ -13,10 +13,14 @@
 
 var EXPORTED_SYMBOLS = ["Credentials"];
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {CryptoUtils} = ChromeUtils.import("resource://services-crypto/utils.js");
-const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { CryptoUtils } = ChromeUtils.import(
+  "resource://services-crypto/utils.js"
+);
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
 
 const PROTOCOL_VERSION = "identity.mozilla.com/picl/v1/";
 const PBKDF2_ROUNDS = 1000;
@@ -30,8 +34,9 @@ const HKDF_LENGTH = 32;
 const PREF_LOG_LEVEL = "identity.fxaccounts.loglevel";
 try {
   this.LOG_LEVEL =
-    Services.prefs.getPrefType(PREF_LOG_LEVEL) == Ci.nsIPrefBranch.PREF_STRING
-    && Services.prefs.getCharPref(PREF_LOG_LEVEL);
+    Services.prefs.getPrefType(PREF_LOG_LEVEL) ==
+      Ci.nsIPrefBranch.PREF_STRING &&
+    Services.prefs.getCharPref(PREF_LOG_LEVEL);
 } catch (e) {
   this.LOG_LEVEL = Log.Level.Error;
 }
@@ -92,7 +97,8 @@ var Credentials = Object.freeze({
 
       let hkdfSalt = options.hkdfSalt || HKDF_SALT;
       let hkdfLength = options.hkdfLength || HKDF_LENGTH;
-      let stretchedPWLength = options.stretchedPassLength || STRETCHED_PW_LENGTH_BYTES;
+      let stretchedPWLength =
+        options.stretchedPassLength || STRETCHED_PW_LENGTH_BYTES;
       let pbkdf2Rounds = options.pbkdf2Rounds || PBKDF2_ROUNDS;
 
       let result = {};
@@ -103,15 +109,27 @@ var Credentials = Object.freeze({
       let runnable = async () => {
         let start = Date.now();
         let quickStretchedPW = await CryptoUtils.pbkdf2Generate(
-            password, salt, pbkdf2Rounds, stretchedPWLength);
+          password,
+          salt,
+          pbkdf2Rounds,
+          stretchedPWLength
+        );
 
         result.quickStretchedPW = quickStretchedPW;
 
-        result.authPW =
-          await CryptoUtils.hkdfLegacy(quickStretchedPW, hkdfSalt, this.keyWord("authPW"), hkdfLength);
+        result.authPW = await CryptoUtils.hkdfLegacy(
+          quickStretchedPW,
+          hkdfSalt,
+          this.keyWord("authPW"),
+          hkdfLength
+        );
 
-        result.unwrapBKey =
-          await CryptoUtils.hkdfLegacy(quickStretchedPW, hkdfSalt, this.keyWord("unwrapBkey"), hkdfLength);
+        result.unwrapBKey = await CryptoUtils.hkdfLegacy(
+          quickStretchedPW,
+          hkdfSalt,
+          this.keyWord("unwrapBkey"),
+          hkdfLength
+        );
 
         log.debug("Credentials set up after " + (Date.now() - start) + " ms");
         resolve(result);
@@ -122,4 +140,3 @@ var Credentials = Object.freeze({
     });
   },
 });
-

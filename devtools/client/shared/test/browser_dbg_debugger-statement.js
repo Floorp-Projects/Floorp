@@ -13,7 +13,8 @@
 /* import-globals-from helper_workers.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/helper_workers.js",
-  this);
+  this
+);
 
 const TAB_URL = TEST_URI_ROOT + "doc_inline-debugger-statement.html";
 
@@ -54,7 +55,7 @@ async function testEarlyDebuggerStatement(client, tab, targetFront) {
 
 async function testDebuggerStatement(client, tab, threadClient) {
   const onPaused = new Promise(resolve => {
-    threadClient.on("paused", async (packet) => {
+    threadClient.on("paused", async packet => {
       await threadClient.resume();
       ok(true, "The pause handler was triggered on a debugger statement.");
       resolve();

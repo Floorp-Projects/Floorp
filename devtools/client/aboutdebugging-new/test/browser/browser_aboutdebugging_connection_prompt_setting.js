@@ -30,28 +30,40 @@ add_task(async function() {
   await selectRuntime(USB_DEVICE_NAME, USB_APP_NAME, document);
 
   info("Check whether connection prompt toggle button exists");
-  let connectionPromptToggleButton =
-    document.querySelector(".qa-connection-prompt-toggle-button");
+  let connectionPromptToggleButton = document.querySelector(
+    ".qa-connection-prompt-toggle-button"
+  );
   ok(connectionPromptToggleButton, "Toggle button existed");
-  ok(connectionPromptToggleButton.textContent.includes("Disable"),
-    "Toggle button shows 'Disable'");
+  ok(
+    connectionPromptToggleButton.textContent.includes("Disable"),
+    "Toggle button shows 'Disable'"
+  );
 
   info("Click on the toggle button");
-  connectionPromptToggleButton =
-    document.querySelector(".qa-connection-prompt-toggle-button");
+  connectionPromptToggleButton = document.querySelector(
+    ".qa-connection-prompt-toggle-button"
+  );
   connectionPromptToggleButton.click();
   info("Wait until the toggle button text is updated");
-  await waitUntil(() => connectionPromptToggleButton.textContent.includes("Enable"));
+  await waitUntil(() =>
+    connectionPromptToggleButton.textContent.includes("Enable")
+  );
   info("Check the preference");
-  const disabledPref = runtime.getPreference("devtools.debugger.prompt-connection");
+  const disabledPref = runtime.getPreference(
+    "devtools.debugger.prompt-connection"
+  );
   is(disabledPref, false, "The preference should be updated");
 
   info("Click on the toggle button again");
   connectionPromptToggleButton.click();
   info("Wait until the toggle button text is updated");
-  await waitUntil(() => connectionPromptToggleButton.textContent.includes("Disable"));
+  await waitUntil(() =>
+    connectionPromptToggleButton.textContent.includes("Disable")
+  );
   info("Check the preference");
-  const enabledPref = runtime.getPreference("devtools.debugger.prompt-connection");
+  const enabledPref = runtime.getPreference(
+    "devtools.debugger.prompt-connection"
+  );
   is(enabledPref, true, "The preference should be updated");
 
   await removeTab(tab);

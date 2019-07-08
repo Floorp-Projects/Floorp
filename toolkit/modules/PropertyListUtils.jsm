@@ -57,14 +57,22 @@
 
 var EXPORTED_SYMBOLS = ["PropertyListUtils"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser", "File", "FileReader"]);
 
-ChromeUtils.defineModuleGetter(this, "ctypes",
-                               "resource://gre/modules/ctypes.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ctypes",
+  "resource://gre/modules/ctypes.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 var PropertyListUtils = Object.freeze({
   /**
@@ -80,10 +88,12 @@ var PropertyListUtils = Object.freeze({
    *        The reaon for failure is reported to the Error Console.
    */
   read: function PLU_read(aFile, aCallback) {
-    if (!(aFile instanceof Ci.nsIFile || aFile instanceof File))
+    if (!(aFile instanceof Ci.nsIFile || aFile instanceof File)) {
       throw new Error("aFile is not a file object");
-    if (typeof(aCallback) != "function")
+    }
+    if (typeof aCallback != "function") {
       throw new Error("Invalid value for aCallback");
+    }
 
     // We guarantee not to throw directly for any other exceptions, and always
     // call aCallback.
@@ -95,8 +105,11 @@ var PropertyListUtils = Object.freeze({
           let root = null;
           try {
             fileReader.removeEventListener("loadend", onLoadEnd);
-            if (fileReader.readyState != fileReader.DONE)
-              throw new Error("Could not read file contents: " + fileReader.error);
+            if (fileReader.readyState != fileReader.DONE) {
+              throw new Error(
+                "Could not read file contents: " + fileReader.error
+              );
+            }
 
             root = self._readFromArrayBufferSync(fileReader.result);
           } finally {
@@ -132,8 +145,9 @@ var PropertyListUtils = Object.freeze({
    * Synchronously read an ArrayBuffer contents as a property list.
    */
   _readFromArrayBufferSync: function PLU__readFromArrayBufferSync(aBuffer) {
-    if (BinaryPropertyListReader.prototype.canProcess(aBuffer))
+    if (BinaryPropertyListReader.prototype.canProcess(aBuffer)) {
       return new BinaryPropertyListReader(aBuffer).root;
+    }
 
     // Convert the buffer into an XML tree.
     let domParser = new DOMParser();
@@ -146,12 +160,12 @@ var PropertyListUtils = Object.freeze({
     }
   },
 
-  TYPE_PRIMITIVE:    0,
-  TYPE_DATE:         1,
-  TYPE_UINT8_ARRAY:  2,
-  TYPE_ARRAY:        3,
-  TYPE_DICTIONARY:   4,
-  TYPE_INT64:        5,
+  TYPE_PRIMITIVE: 0,
+  TYPE_DATE: 1,
+  TYPE_UINT8_ARRAY: 2,
+  TYPE_ARRAY: 3,
+  TYPE_DICTIONARY: 4,
+  TYPE_INT64: 5,
 
   /**
    * Get the type in which the given property list object is represented.
@@ -163,8 +177,9 @@ var PropertyListUtils = Object.freeze({
    * that aObject is indeed a property list object created by this module.
    */
   getObjectType: function PLU_getObjectType(aObject) {
-    if (aObject === null || typeof(aObject) != "object")
+    if (aObject === null || typeof aObject != "object") {
       return this.TYPE_PRIMITIVE;
+    }
 
     // Given current usage, we could assume that aObject was created in the
     // scope of this module, but in future, this util may be used as part of
@@ -172,16 +187,21 @@ var PropertyListUtils = Object.freeze({
     // would most likely be created in the caller's scope.
     let global = Cu.getGlobalForObject(aObject);
 
-    if (aObject instanceof global.Map)
+    if (aObject instanceof global.Map) {
       return this.TYPE_DICTIONARY;
-    if (Array.isArray(aObject))
+    }
+    if (Array.isArray(aObject)) {
       return this.TYPE_ARRAY;
-    if (aObject instanceof global.Date)
+    }
+    if (aObject instanceof global.Date) {
       return this.TYPE_DATE;
-    if (aObject instanceof global.Uint8Array)
+    }
+    if (aObject instanceof global.Uint8Array) {
       return this.TYPE_UINT8_ARRAY;
-    if (aObject instanceof global.String && "__INT_64_WRAPPER__" in aObject)
+    }
+    if (aObject instanceof global.String && "__INT_64_WRAPPER__" in aObject) {
       return this.TYPE_INT64;
+    }
 
     throw new Error("aObject is not as a property list object.");
   },
@@ -195,8 +215,9 @@ var PropertyListUtils = Object.freeze({
    * as holding 64-bit number using getObjectType.
    */
   wrapInt64: function PLU_wrapInt64(aPrimitive) {
-    if (typeof(aPrimitive) != "string" && typeof(aPrimitive) != "number")
+    if (typeof aPrimitive != "string" && typeof aPrimitive != "number") {
       throw new Error("aPrimitive should be a string primitive");
+    }
 
     // The function converts string or number to object
     // So eslint rule is disabled
@@ -259,8 +280,11 @@ BinaryPropertyListReader.prototype = {
    * It can be called on the prototype.
    */
   canProcess: function BPLR_canProcess(aBuffer) {
-    return Array.from(new Uint8Array(aBuffer, 0, 8)).map(c => String.fromCharCode(c)).
-           join("") == "bplist00";
+    return (
+      Array.from(new Uint8Array(aBuffer, 0, 8))
+        .map(c => String.fromCharCode(c))
+        .join("") == "bplist00"
+    );
   },
 
   get root() {
@@ -270,61 +294,73 @@ BinaryPropertyListReader.prototype = {
   _readTrailerInfo: function BPLR__readTrailer() {
     // The first 6 bytes of the 32-bytes trailer are unused
     let trailerOffset = this._dataView.byteLength - 26;
-    [this._offsetTableIntegerSize, this._objectRefSize] =
-      this._readUnsignedInts(trailerOffset, 1, 2);
+    [
+      this._offsetTableIntegerSize,
+      this._objectRefSize,
+    ] = this._readUnsignedInts(trailerOffset, 1, 2);
 
-    [this._numberOfObjects, this._rootObjectIndex, this._offsetTableOffset] =
-      this._readUnsignedInts(trailerOffset + 2, 8, 3);
+    [
+      this._numberOfObjects,
+      this._rootObjectIndex,
+      this._offsetTableOffset,
+    ] = this._readUnsignedInts(trailerOffset + 2, 8, 3);
   },
 
   _readObjectsOffsets: function BPLR__readObjectsOffsets() {
-    this._offsetTable = this._readUnsignedInts(this._offsetTableOffset,
-                                               this._offsetTableIntegerSize,
-                                               this._numberOfObjects);
+    this._offsetTable = this._readUnsignedInts(
+      this._offsetTableOffset,
+      this._offsetTableIntegerSize,
+      this._numberOfObjects
+    );
   },
 
   _readSignedInt64: function BPLR__readSignedInt64(aByteOffset) {
     let lo = this._dataView.getUint32(aByteOffset + 4);
     let hi = this._dataView.getInt32(aByteOffset);
     let int64 = ctypes.Int64.join(hi, lo);
-    if (ctypes.Int64.compare(int64, this._JS_MAX_INT_SIGNED) == 1 ||
-        ctypes.Int64.compare(int64, this._JS_MIN_INT) == -1)
+    if (
+      ctypes.Int64.compare(int64, this._JS_MAX_INT_SIGNED) == 1 ||
+      ctypes.Int64.compare(int64, this._JS_MIN_INT) == -1
+    ) {
       return PropertyListUtils.wrapInt64(int64.toString());
+    }
 
     return parseInt(int64.toString(), 10);
   },
 
   _readReal: function BPLR__readReal(aByteOffset, aRealSize) {
-    if (aRealSize == 4)
+    if (aRealSize == 4) {
       return this._dataView.getFloat32(aByteOffset);
-    if (aRealSize == 8)
+    }
+    if (aRealSize == 8) {
       return this._dataView.getFloat64(aByteOffset);
+    }
 
     throw new Error("Unsupported real size: " + aRealSize);
   },
 
   OBJECT_TYPE_BITS: {
-    SIMPLE:                  parseInt("0000", 2),
-    INTEGER:                 parseInt("0001", 2),
-    REAL:                    parseInt("0010", 2),
-    DATE:                    parseInt("0011", 2),
-    DATA:                    parseInt("0100", 2),
-    ASCII_STRING:            parseInt("0101", 2),
-    UNICODE_STRING:          parseInt("0110", 2),
-    UID:                     parseInt("1000", 2),
-    ARRAY:                   parseInt("1010", 2),
-    SET:                     parseInt("1100", 2),
-    DICTIONARY:              parseInt("1101", 2),
+    SIMPLE: parseInt("0000", 2),
+    INTEGER: parseInt("0001", 2),
+    REAL: parseInt("0010", 2),
+    DATE: parseInt("0011", 2),
+    DATA: parseInt("0100", 2),
+    ASCII_STRING: parseInt("0101", 2),
+    UNICODE_STRING: parseInt("0110", 2),
+    UID: parseInt("1000", 2),
+    ARRAY: parseInt("1010", 2),
+    SET: parseInt("1100", 2),
+    DICTIONARY: parseInt("1101", 2),
   },
 
   ADDITIONAL_INFO_BITS: {
     // Applies to OBJECT_TYPE_BITS.SIMPLE
-    NULL:                    parseInt("0000", 2),
-    FALSE:                   parseInt("1000", 2),
-    TRUE:                    parseInt("1001", 2),
-    FILL_BYTE:               parseInt("1111", 2),
+    NULL: parseInt("0000", 2),
+    FALSE: parseInt("1000", 2),
+    TRUE: parseInt("1001", 2),
+    FILL_BYTE: parseInt("1111", 2),
     // Applies to OBJECT_TYPE_BITS.DATE
-    DATE:                    parseInt("0011", 2),
+    DATE: parseInt("0011", 2),
     // Applies to OBJECT_TYPE_BITS.DATA, ASCII_STRING, UNICODE_STRING, ARRAY,
     // SET and DICTIONARY.
     LENGTH_INT_SIZE_FOLLOWS: parseInt("1111", 2),
@@ -343,7 +379,7 @@ BinaryPropertyListReader.prototype = {
     // The first four bits hold the object type.  For some types, additional
     // info is held in the other 4 bits.
     let byte = this._readUnsignedInts(aByteOffset, 1, 1)[0];
-    return [(byte & 0xF0) >> 4, byte & 0x0F];
+    return [(byte & 0xf0) >> 4, byte & 0x0f];
   },
 
   _readDate: function BPLR__readDate(aByteOffset) {
@@ -372,10 +408,16 @@ BinaryPropertyListReader.prototype = {
    * pairs are read from the buffer in the form of two integers, as required
    * by String.fromCharCode.
    */
-  _readString:
-  function BPLR__readString(aByteOffset, aNumberOfChars, aUnicode) {
-    let codes = this._readUnsignedInts(aByteOffset, aUnicode ? 2 : 1,
-                                       aNumberOfChars);
+  _readString: function BPLR__readString(
+    aByteOffset,
+    aNumberOfChars,
+    aUnicode
+  ) {
+    let codes = this._readUnsignedInts(
+      aByteOffset,
+      aUnicode ? 2 : 1,
+      aNumberOfChars
+    );
     return codes.map(c => String.fromCharCode(c)).join("");
   },
 
@@ -397,12 +439,18 @@ BinaryPropertyListReader.prototype = {
    * @throws if aBigIntAllowed is false and one of the integers in the array
    * cannot be represented by a primitive js number.
    */
-  _readUnsignedInts:
-  function BPLR__readUnsignedInts(aByteOffset, aIntSize, aLength, aBigIntAllowed) {
+  _readUnsignedInts: function BPLR__readUnsignedInts(
+    aByteOffset,
+    aIntSize,
+    aLength,
+    aBigIntAllowed
+  ) {
     let uints = [];
-    for (let offset = aByteOffset;
-         offset < aByteOffset + aIntSize * aLength;
-         offset += aIntSize) {
+    for (
+      let offset = aByteOffset;
+      offset < aByteOffset + aIntSize * aLength;
+      offset += aIntSize
+    ) {
       if (aIntSize == 1) {
         uints.push(this._dataView.getUint8(offset));
       } else if (aIntSize == 2) {
@@ -421,10 +469,11 @@ BinaryPropertyListReader.prototype = {
         let hi = this._dataView.getUint32(offset);
         let uint64 = ctypes.UInt64.join(hi, lo);
         if (ctypes.UInt64.compare(uint64, this._JS_MAX_INT_UNSIGNED) == 1) {
-          if (aBigIntAllowed === true)
+          if (aBigIntAllowed === true) {
             uints.push(PropertyListUtils.wrapInt64(uint64.toString()));
-          else
+          } else {
             throw new Error("Integer too big to be read as float 64");
+          }
         } else {
           uints.push(parseInt(uint64, 10));
         }
@@ -445,8 +494,9 @@ BinaryPropertyListReader.prototype = {
    * @return [offset, count] - the offset in the buffer at which the first
    * object in data starts, and the number of objects.
    */
-  _readDataOffsetAndCount:
-  function BPLR__readDataOffsetAndCount(aObjectOffset) {
+  _readDataOffsetAndCount: function BPLR__readDataOffsetAndCount(
+    aObjectOffset
+  ) {
     // The length of some objects in the data can be stored in two ways:
     // * If it is small enough, it is stored in the second four bits of the
     //   object descriptors.
@@ -454,8 +504,9 @@ BinaryPropertyListReader.prototype = {
     //   consists of the integer size of the data-length (also stored in the form
     //   of an object descriptor).  The length follows this byte.
     let [, maybeLength] = this._readObjectDescriptor(aObjectOffset);
-    if (maybeLength != this.ADDITIONAL_INFO_BITS.LENGTH_INT_SIZE_FOLLOWS)
+    if (maybeLength != this.ADDITIONAL_INFO_BITS.LENGTH_INT_SIZE_FOLLOWS) {
       return [aObjectOffset + 1, maybeLength];
+    }
 
     let [, intSizeInfo] = this._readObjectDescriptor(aObjectOffset + 1);
 
@@ -474,24 +525,30 @@ BinaryPropertyListReader.prototype = {
    * @return a js array.
    */
   _wrapArray: function BPLR__wrapArray(aObjectOffset, aNumberOfObjects) {
-    let refs = this._readUnsignedInts(aObjectOffset,
-                                      this._objectRefSize,
-                                      aNumberOfObjects);
+    let refs = this._readUnsignedInts(
+      aObjectOffset,
+      this._objectRefSize,
+      aNumberOfObjects
+    );
 
     let array = new Array(aNumberOfObjects);
     let readObjectBound = this._readObject.bind(this);
 
     // Each index in the returned array is a lazy getter for its object.
-    Array.prototype.forEach.call(refs, function(ref, objIndex) {
-      Object.defineProperty(array, objIndex, {
-        get() {
-          delete array[objIndex];
-          return array[objIndex] = readObjectBound(ref);
-        },
-        configurable: true,
-        enumerable: true,
-      });
-    }, this);
+    Array.prototype.forEach.call(
+      refs,
+      function(ref, objIndex) {
+        Object.defineProperty(array, objIndex, {
+          get() {
+            delete array[objIndex];
+            return (array[objIndex] = readObjectBound(ref));
+          },
+          configurable: true,
+          enumerable: true,
+        });
+      },
+      this
+    );
     return array;
   },
 
@@ -508,14 +565,20 @@ BinaryPropertyListReader.prototype = {
     // key-objects, followed by a list of references to the value-objects for
     // those keys. The size of each list is aNumberOfObjects * this._objectRefSize.
     let dict = new Proxy(new Map(), LazyMapProxyHandler());
-    if (aNumberOfObjects == 0)
+    if (aNumberOfObjects == 0) {
       return dict;
+    }
 
-    let keyObjsRefs = this._readUnsignedInts(aObjectOffset, this._objectRefSize,
-                                             aNumberOfObjects);
-    let valObjsRefs =
-      this._readUnsignedInts(aObjectOffset + aNumberOfObjects * this._objectRefSize,
-                             this._objectRefSize, aNumberOfObjects);
+    let keyObjsRefs = this._readUnsignedInts(
+      aObjectOffset,
+      this._objectRefSize,
+      aNumberOfObjects
+    );
+    let valObjsRefs = this._readUnsignedInts(
+      aObjectOffset + aNumberOfObjects * this._objectRefSize,
+      this._objectRefSize,
+      aNumberOfObjects
+    );
     for (let i = 0; i < aNumberOfObjects; i++) {
       let key = this._readObject(keyObjsRefs[i]);
       let readBound = this._readObject.bind(this, valObjsRefs[i]);
@@ -533,8 +596,9 @@ BinaryPropertyListReader.prototype = {
    */
   _readObject: function BPLR__readObject(aObjectIndex) {
     // If the object was previously read, return the cached object.
-    if (this._objects[aObjectIndex] !== undefined)
+    if (this._objects[aObjectIndex] !== undefined) {
       return this._objects[aObjectIndex];
+    }
 
     let objOffset = this._offsetTable[aObjectIndex];
     let [objType, additionalInfo] = this._readObjectDescriptor(objOffset);
@@ -566,10 +630,11 @@ BinaryPropertyListReader.prototype = {
 
         // For objects, 64-bit integers are always signed.  Negative integers
         // are always represented by a 64-bit integer.
-        if (intSize == 8)
+        if (intSize == 8) {
           value = this._readSignedInt64(objOffset + 1);
-        else
+        } else {
           value = this._readUnsignedInts(objOffset + 1, intSize, 1, true)[0];
+        }
         break;
       }
 
@@ -580,8 +645,9 @@ BinaryPropertyListReader.prototype = {
       }
 
       case this.OBJECT_TYPE_BITS.DATE: {
-        if (additionalInfo != this.ADDITIONAL_INFO_BITS.DATE)
+        if (additionalInfo != this.ADDITIONAL_INFO_BITS.DATE) {
           throw new Error("Unexpected value");
+        }
 
         value = this._readDate(objOffset + 1);
         break;
@@ -633,7 +699,7 @@ BinaryPropertyListReader.prototype = {
       }
     }
 
-    return this._objects[aObjectIndex] = value;
+    return (this._objects[aObjectIndex] = value);
   },
 };
 
@@ -645,8 +711,9 @@ BinaryPropertyListReader.prototype = {
  */
 function XMLPropertyListReader(aDOMDoc) {
   let docElt = aDOMDoc.documentElement;
-  if (!docElt || docElt.localName != "plist" || !docElt.firstElementChild)
+  if (!docElt || docElt.localName != "plist" || !docElt.firstElementChild) {
     throw new Error("aDoc is not a property list document");
+  }
 
   this._plistRootElement = docElt.firstElementChild;
 }
@@ -675,8 +742,9 @@ XMLPropertyListReader.prototype = {
         return this._readInteger(aDOMElt);
       case "real": {
         let number = parseFloat(aDOMElt.textContent.trim());
-        if (isNaN(number))
+        if (isNaN(number)) {
           throw new Error("Could not parse float value");
+        }
         return number;
       }
       case "date":
@@ -701,11 +769,13 @@ XMLPropertyListReader.prototype = {
     // In case of an outbound, we fallback to return the number as a string.
     let numberAsString = aDOMElt.textContent.toString();
     let parsedNumber = parseInt(numberAsString, 10);
-    if (isNaN(parsedNumber))
+    if (isNaN(parsedNumber)) {
       throw new Error("Could not parse integer value");
+    }
 
-    if (parsedNumber.toString() == numberAsString)
+    if (parsedNumber.toString() == numberAsString) {
       return parsedNumber;
+    }
 
     return PropertyListUtils.wrapInt64(numberAsString);
   },
@@ -717,15 +787,17 @@ XMLPropertyListReader.prototype = {
     //   <key>my string key</key>
     //   <string>My String Key</string>
     // </dict>
-    if (aDOMElt.children.length % 2 != 0)
+    if (aDOMElt.children.length % 2 != 0) {
       throw new Error("Invalid dictionary");
+    }
     let dict = new Proxy(new Map(), LazyMapProxyHandler());
     for (let i = 0; i < aDOMElt.children.length; i += 2) {
       let keyElem = aDOMElt.children[i];
       let valElem = aDOMElt.children[i + 1];
 
-      if (keyElem.localName != "key")
+      if (keyElem.localName != "key") {
         throw new Error("Invalid dictionary");
+      }
 
       let keyName = this._readObject(keyElem);
       let readBound = this._readObject.bind(this, valElem);
@@ -751,7 +823,7 @@ XMLPropertyListReader.prototype = {
       Object.defineProperty(array, elemIndex, {
         get() {
           delete array[elemIndex];
-          return array[elemIndex] = readObjectBound(elem);
+          return (array[elemIndex] = readObjectBound(elem));
         },
         configurable: true,
         enumerable: true,
@@ -762,24 +834,24 @@ XMLPropertyListReader.prototype = {
 };
 
 /**
-   * Simple handler method to proxy calls to dict/Map objects to implement the
-   * setAsLazyGetter API. With this, a value can be set as a function that will
-   * evaluate its value and only be called when it's first retrieved.
-   * @member _lazyGetters
-   *         Set() object to hold keys invoking LazyGetter.
-   * @method get
-   *         Trap for getting property values. Ensures that if a lazyGetter is present
-   *         as value for key, then the function is evaluated, the value is cached,
-   *         and its value will be returned.
-   * @param  target
-   *         Target object. (dict/Map)
-   * @param  name
-   *         Name of operation to be invoked on target.
-   * @param  key
-   *         Key to be set, retrieved or deleted. Keys are checked for laziness.
-   * @return Returns value of "name" property of target by default. Otherwise returns
-   *         updated target.
-   */
+ * Simple handler method to proxy calls to dict/Map objects to implement the
+ * setAsLazyGetter API. With this, a value can be set as a function that will
+ * evaluate its value and only be called when it's first retrieved.
+ * @member _lazyGetters
+ *         Set() object to hold keys invoking LazyGetter.
+ * @method get
+ *         Trap for getting property values. Ensures that if a lazyGetter is present
+ *         as value for key, then the function is evaluated, the value is cached,
+ *         and its value will be returned.
+ * @param  target
+ *         Target object. (dict/Map)
+ * @param  name
+ *         Name of operation to be invoked on target.
+ * @param  key
+ *         Key to be set, retrieved or deleted. Keys are checked for laziness.
+ * @return Returns value of "name" property of target by default. Otherwise returns
+ *         updated target.
+ */
 function LazyMapProxyHandler() {
   return {
     _lazyGetters: new Set(),

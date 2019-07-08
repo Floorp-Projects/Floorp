@@ -4,14 +4,24 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {LogManager} = ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { LogManager } = ChromeUtils.import(
+  "resource://normandy/lib/LogManager.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
-  this, "CanonicalJSON", "resource://gre/modules/CanonicalJSON.jsm");
+  this,
+  "CanonicalJSON",
+  "resource://gre/modules/CanonicalJSON.jsm"
+);
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch", "URL"]); /* globals fetch, URL */
+XPCOMUtils.defineLazyGlobalGetters(this, [
+  "fetch",
+  "URL",
+]); /* globals fetch, URL */
 
 var EXPORTED_SYMBOLS = ["NormandyApi"];
 
@@ -42,8 +52,8 @@ var NormandyApi = {
       }
     }
 
-    const headers = {"Accept": "application/json"};
-    return fetch(url.href, {method, body, headers, credentials: "omit"});
+    const headers = { Accept: "application/json" };
+    return fetch(url.href, { method, body, headers, credentials: "omit" });
   },
 
   get(endpoint, data) {
@@ -89,7 +99,7 @@ var NormandyApi = {
     const objectsWithSigs = JSON.parse(rawText);
 
     return Promise.all(
-      objectsWithSigs.map(async (item) => {
+      objectsWithSigs.map(async item => {
         // Check that the rawtext (the object and the signature)
         // includes the CanonicalJSON version of the object. This isn't
         // strictly needed, but it is a great benefit for debugging
@@ -99,7 +109,8 @@ var NormandyApi = {
         if (!rawText.includes(serialized)) {
           log.debug(rawText, serialized);
           throw new NormandyApi.InvalidSignatureError(
-            `Canonical ${type} serialization does not match!`);
+            `Canonical ${type} serialization does not match!`
+          );
         }
         // Verify content signature using cryptography (will throw if fails).
         await this.verifyObjectSignature(serialized, item.signature, type);
@@ -127,10 +138,12 @@ var NormandyApi = {
     const certChain = await certChainResponse.text();
     const builtSignature = `p384ecdsa=${signature}`;
 
-    const serialized = typeof data == "string" ? data : CanonicalJSON.stringify(data);
+    const serialized =
+      typeof data == "string" ? data : CanonicalJSON.stringify(data);
 
-    const verifier = Cc["@mozilla.org/security/contentsignatureverifier;1"]
-      .createInstance(Ci.nsIContentSignatureVerifier);
+    const verifier = Cc[
+      "@mozilla.org/security/contentsignatureverifier;1"
+    ].createInstance(Ci.nsIContentSignatureVerifier);
 
     let valid;
     try {
@@ -141,11 +154,15 @@ var NormandyApi = {
         "normandy.content-signature.mozilla.org"
       );
     } catch (err) {
-      throw new NormandyApi.InvalidSignatureError(`${type} signature validation failed: ${err}`);
+      throw new NormandyApi.InvalidSignatureError(
+        `${type} signature validation failed: ${err}`
+      );
     }
 
     if (!valid) {
-      throw new NormandyApi.InvalidSignatureError(`${type} signature is not valid`);
+      throw new NormandyApi.InvalidSignatureError(
+        `${type} signature is not valid`
+      );
     }
   },
 
@@ -168,7 +185,7 @@ var NormandyApi = {
    * recipes. Default true.
    * @resolves {Array}
    */
-  async fetchRecipes(filters = {enabled: true}) {
+  async fetchRecipes(filters = { enabled: true }) {
     return this.fetchSignedObjects("recipe", filters);
   },
 

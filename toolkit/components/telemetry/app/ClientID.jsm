@@ -6,23 +6,33 @@
 
 var EXPORTED_SYMBOLS = ["ClientID"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "ClientID::";
 // Must match ID in TelemetryUtils
 const CANARY_CLIENT_ID = "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0";
 
-ChromeUtils.defineModuleGetter(this, "CommonUtils",
-                               "resource://services-common/utils.js");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "CommonUtils",
+  "resource://services-common/utils.js"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
-  return Components.Constructor("@mozilla.org/security/hash;1", "nsICryptoHash", "initWithString");
+  return Components.Constructor(
+    "@mozilla.org/security/hash;1",
+    "nsICryptoHash",
+    "initWithString"
+  );
 });
 
 XPCOMUtils.defineLazyGetter(this, "gDatareportingPath", () => {
@@ -139,7 +149,7 @@ var ClientIDImpl = {
     }
 
     this._loadClientIdTask = this._doLoadClientID();
-    let clear = () => this._loadClientIdTask = null;
+    let clear = () => (this._loadClientIdTask = null);
     this._loadClientIdTask.then(clear, clear);
     return this._loadClientIdTask;
   },
@@ -233,9 +243,14 @@ var ClientIDImpl = {
     // reset the pref. We need to do this before |getStringPref| since
     // it will just return |null| in that case and we won't be able
     // to distinguish between the missing pref and wrong type cases.
-    if (Services.prefs.prefHasUserValue(PREF_CACHED_CLIENTID) &&
-        Services.prefs.getPrefType(PREF_CACHED_CLIENTID) != Ci.nsIPrefBranch.PREF_STRING) {
-      this._log.error("getCachedClientID - invalid client id type in preferences, resetting");
+    if (
+      Services.prefs.prefHasUserValue(PREF_CACHED_CLIENTID) &&
+      Services.prefs.getPrefType(PREF_CACHED_CLIENTID) !=
+        Ci.nsIPrefBranch.PREF_STRING
+    ) {
+      this._log.error(
+        "getCachedClientID - invalid client id type in preferences, resetting"
+      );
       Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
     }
 
@@ -245,7 +260,10 @@ var ClientIDImpl = {
       return null;
     }
     if (!isValidClientID(id)) {
-      this._log.error("getCachedClientID - invalid client id in preferences, resetting", id);
+      this._log.error(
+        "getCachedClientID - invalid client id in preferences, resetting",
+        id
+      );
       Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
       return null;
     }
@@ -291,7 +309,7 @@ var ClientIDImpl = {
     Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
 
     // Remove the client id from disk
-    await OS.File.remove(gStateFilePath, {ignoreAbsent: true});
+    await OS.File.remove(gStateFilePath, { ignoreAbsent: true });
   },
 
   async resetClientID() {
@@ -300,13 +318,13 @@ var ClientIDImpl = {
     // Wait for the removal.
     // Asynchronous calls to getClientID will also be blocked on this.
     this._removeClientIdTask = this._doRemoveClientID();
-    let clear = () => this._removeClientIdTask = null;
+    let clear = () => (this._removeClientIdTask = null);
     this._removeClientIdTask.then(clear, clear);
 
     await this._removeClientIdTask;
 
     // On Android we detect resets after a canary client ID.
-    if (AppConstants.platform == "android" ) {
+    if (AppConstants.platform == "android") {
       this._wasCanary = oldClientId == CANARY_CLIENT_ID;
     }
 
@@ -339,7 +357,10 @@ var ClientIDImpl = {
    */
   get _log() {
     if (!this._logger) {
-      this._logger = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
+      this._logger = Log.repository.getLoggerWithMessagePrefix(
+        LOGGER_NAME,
+        LOGGER_PREFIX
+      );
     }
 
     return this._logger;

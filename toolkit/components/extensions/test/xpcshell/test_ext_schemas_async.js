@@ -1,77 +1,99 @@
 "use strict";
 
-const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-const {Schemas} = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
+const { ExtensionCommon } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionCommon.jsm"
+);
+const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
 
-let {BaseContext, LocalAPIImplementation} = ExtensionCommon;
+let { BaseContext, LocalAPIImplementation } = ExtensionCommon;
 
 let schemaJson = [
   {
     namespace: "testnamespace",
-    types: [{
-      id: "Widget",
-      type: "object",
-      properties: {
-        size: {type: "integer"},
-        colour: {type: "string", optional: true},
+    types: [
+      {
+        id: "Widget",
+        type: "object",
+        properties: {
+          size: { type: "integer" },
+          colour: { type: "string", optional: true },
+        },
       },
-    }],
-    functions: [{
-      name: "one_required",
-      type: "function",
-      parameters: [{
-        name: "first",
+    ],
+    functions: [
+      {
+        name: "one_required",
         type: "function",
-        parameters: [],
-      }],
-    }, {
-      name: "one_optional",
-      type: "function",
-      parameters: [{
-        name: "first",
+        parameters: [
+          {
+            name: "first",
+            type: "function",
+            parameters: [],
+          },
+        ],
+      },
+      {
+        name: "one_optional",
         type: "function",
-        parameters: [],
-        optional: true,
-      }],
-    }, {
-      name: "async_required",
-      type: "function",
-      async: "first",
-      parameters: [{
-        name: "first",
+        parameters: [
+          {
+            name: "first",
+            type: "function",
+            parameters: [],
+            optional: true,
+          },
+        ],
+      },
+      {
+        name: "async_required",
         type: "function",
-        parameters: [],
-      }],
-    }, {
-      name: "async_optional",
-      type: "function",
-      async: "first",
-      parameters: [{
-        name: "first",
+        async: "first",
+        parameters: [
+          {
+            name: "first",
+            type: "function",
+            parameters: [],
+          },
+        ],
+      },
+      {
+        name: "async_optional",
         type: "function",
-        parameters: [],
-        optional: true,
-      }],
-    }, {
-      name: "async_result",
-      type: "function",
-      async: "callback",
-      parameters: [{
-        name: "callback",
+        async: "first",
+        parameters: [
+          {
+            name: "first",
+            type: "function",
+            parameters: [],
+            optional: true,
+          },
+        ],
+      },
+      {
+        name: "async_result",
         type: "function",
-        parameters: [{
-          name: "widget",
-          $ref: "Widget",
-        }],
-      }],
-    }],
+        async: "callback",
+        parameters: [
+          {
+            name: "callback",
+            type: "function",
+            parameters: [
+              {
+                name: "widget",
+                $ref: "Widget",
+              },
+            ],
+          },
+        ],
+      },
+    ],
   },
 ];
 
 const global = this;
 class StubContext extends BaseContext {
   constructor() {
-    let fakeExtension = {id: "test@web.extension"};
+    let fakeExtension = { id: "test@web.extension" };
     super("testEnv", fakeExtension);
     this.sandbox = Cu.Sandbox(global);
   }
@@ -110,15 +132,21 @@ add_task(async function testParameterValidation() {
 
   let testnamespace;
   function assertThrows(name, ...args) {
-    Assert.throws(() => testnamespace[name](...args),
-                  /Incorrect argument types/,
-                  `Expected testnamespace.${name}(${args.map(String).join(", ")}) to throw.`);
+    Assert.throws(
+      () => testnamespace[name](...args),
+      /Incorrect argument types/,
+      `Expected testnamespace.${name}(${args.map(String).join(", ")}) to throw.`
+    );
   }
   function assertNoThrows(name, ...args) {
     try {
       testnamespace[name](...args);
     } catch (e) {
-      info(`testnamespace.${name}(${args.map(String).join(", ")}) unexpectedly threw.`);
+      info(
+        `testnamespace.${name}(${args
+          .map(String)
+          .join(", ")}) unexpectedly threw.`
+      );
       throw new Error(e);
     }
   }
@@ -126,14 +154,17 @@ add_task(async function testParameterValidation() {
 
   for (let isChromeCompat of [true, false]) {
     info(`Testing API validation with isChromeCompat=${isChromeCompat}`);
-    testnamespace = generateAPIs({
-      isChromeCompat,
-    }, {
-      one_required() {},
-      one_optional() {},
-      async_required() {},
-      async_optional() {},
-    });
+    testnamespace = generateAPIs(
+      {
+        isChromeCompat,
+      },
+      {
+        one_required() {},
+        one_optional() {},
+        async_required() {},
+        async_optional() {},
+      }
+    );
 
     assertThrows("one_required");
     assertThrows("one_required", null);
@@ -170,31 +201,47 @@ add_task(async function testParameterValidation() {
 add_task(async function testCheckAsyncResults() {
   await Schemas.load("data:," + JSON.stringify(schemaJson));
 
-  const complete = generateAPIs({}, {
-    async_result: async () => ({size: 5, colour: "green"}),
-  });
+  const complete = generateAPIs(
+    {},
+    {
+      async_result: async () => ({ size: 5, colour: "green" }),
+    }
+  );
 
-  const optional = generateAPIs({}, {
-    async_result: async () => ({size: 6}),
-  });
+  const optional = generateAPIs(
+    {},
+    {
+      async_result: async () => ({ size: 6 }),
+    }
+  );
 
-  const invalid = generateAPIs({}, {
-    async_result: async () => ({}),
-  });
+  const invalid = generateAPIs(
+    {},
+    {
+      async_result: async () => ({}),
+    }
+  );
 
-  deepEqual(await complete.async_result(), {size: 5, colour: "green"});
+  deepEqual(await complete.async_result(), { size: 5, colour: "green" });
 
-  deepEqual(await optional.async_result(), {size: 6},
-            "Missing optional properties is allowed");
+  deepEqual(
+    await optional.async_result(),
+    { size: 6 },
+    "Missing optional properties is allowed"
+  );
 
   if (AppConstants.DEBUG) {
     await Assert.rejects(
       invalid.async_result(),
       /Type error for widget value \(Property "size" is required\)/,
-      "Should throw for invalid callback argument in DEBUG builds");
+      "Should throw for invalid callback argument in DEBUG builds"
+    );
   } else {
-    deepEqual(await invalid.async_result(), {},
-              "Invalid callback argument doesn't throw in release builds");
+    deepEqual(
+      await invalid.async_result(),
+      {},
+      "Invalid callback argument doesn't throw in release builds"
+    );
   }
 });
 
@@ -227,19 +274,23 @@ add_task(async function testAsyncResults() {
 
   for (let isChromeCompat of [true, false]) {
     info(`Testing API invocation with isChromeCompat=${isChromeCompat}`);
-    let testnamespace = generateAPIs({
-      isChromeCompat,
-    }, {
-      async_required(cb) {
-        Assert.equal(cb, undefined);
-        return Promise.resolve(1);
+    let testnamespace = generateAPIs(
+      {
+        isChromeCompat,
       },
-      async_optional(cb) {
-        Assert.equal(cb, undefined);
-        return Promise.resolve(2);
-      },
-    });
-    if (!isChromeCompat) { // No promises for chrome.
+      {
+        async_required(cb) {
+          Assert.equal(cb, undefined);
+          return Promise.resolve(1);
+        },
+        async_optional(cb) {
+          Assert.equal(cb, undefined);
+          return Promise.resolve(2);
+        },
+      }
+    );
+    if (!isChromeCompat) {
+      // No promises for chrome.
       info("testnamespace.async_required should be a Promise");
       let promise = testnamespace.async_required();
       Assert.ok(promise instanceof context.cloneScope.Promise);
@@ -256,27 +307,42 @@ add_task(async function testAsyncResults() {
 
     let otherSandbox = Cu.Sandbox(null, {});
     let errorFactories = [
-      msg => { throw new context.cloneScope.Error(msg); },
-      msg => context.cloneScope.Promise.reject({message: msg}),
+      msg => {
+        throw new context.cloneScope.Error(msg);
+      },
+      msg => context.cloneScope.Promise.reject({ message: msg }),
       msg => Cu.evalInSandbox(`throw new Error("${msg}")`, otherSandbox),
-      msg => Cu.evalInSandbox(`Promise.reject({message: "${msg}"})`, otherSandbox),
+      msg =>
+        Cu.evalInSandbox(`Promise.reject({message: "${msg}"})`, otherSandbox),
     ];
     for (let makeError of errorFactories) {
       info(`Testing callback/promise with error caused by: ${makeError}`);
-      testnamespace = generateAPIs({
-        isChromeCompat,
-      }, {
-        async_required() { return makeError("ONE"); },
-        async_optional() { return makeError("TWO"); },
-      });
+      testnamespace = generateAPIs(
+        {
+          isChromeCompat,
+        },
+        {
+          async_required() {
+            return makeError("ONE");
+          },
+          async_optional() {
+            return makeError("TWO");
+          },
+        }
+      );
 
-      if (!isChromeCompat) { // No promises for chrome.
+      if (!isChromeCompat) {
+        // No promises for chrome.
         await Assert.rejects(
-          testnamespace.async_required(), /ONE/,
-          "should reject testnamespace.async_required()");
+          testnamespace.async_required(),
+          /ONE/,
+          "should reject testnamespace.async_required()"
+        );
         await Assert.rejects(
-          testnamespace.async_optional(), /TWO/,
-          "should reject testnamespace.async_optional()");
+          testnamespace.async_optional(),
+          /TWO/,
+          "should reject testnamespace.async_optional()"
+        );
       }
 
       Assert.equal(await runFailCallback(testnamespace.async_required), "ONE");

@@ -11,8 +11,9 @@ class InfoItem extends HTMLElement {
   connectedCallback() {
     let infoItemTemplate = document.getElementById("info-item-template");
 
-    this.attachShadow({mode: "open"})
-        .appendChild(infoItemTemplate.content.cloneNode(true));
+    this.attachShadow({ mode: "open" }).appendChild(
+      infoItemTemplate.content.cloneNode(true)
+    );
     this.render();
   }
 

@@ -8,18 +8,37 @@ const { Cu } = require("chrome");
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
-loader.lazyRequireGetter(this, "Memory",
-  "devtools/server/performance/memory", true);
-loader.lazyRequireGetter(this, "Timeline",
-  "devtools/server/performance/timeline", true);
-loader.lazyRequireGetter(this, "Profiler",
-  "devtools/server/performance/profiler", true);
-loader.lazyRequireGetter(this, "PerformanceRecordingActor",
-  "devtools/server/actors/performance-recording", true);
-loader.lazyRequireGetter(this, "mapRecordingOptions",
-  "devtools/shared/performance/recording-utils", true);
-loader.lazyRequireGetter(this, "getSystemInfo",
-  "devtools/shared/system", true);
+loader.lazyRequireGetter(
+  this,
+  "Memory",
+  "devtools/server/performance/memory",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "Timeline",
+  "devtools/server/performance/timeline",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "Profiler",
+  "devtools/server/performance/profiler",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "PerformanceRecordingActor",
+  "devtools/server/actors/performance-recording",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "mapRecordingOptions",
+  "devtools/shared/performance/recording-utils",
+  true
+);
+loader.lazyRequireGetter(this, "getSystemInfo", "devtools/shared/system", true);
 
 const PROFILER_EVENTS = [
   "console-api-profiler",
@@ -170,10 +189,12 @@ PerformanceRecorder.prototype = {
     // expecting a recording very soon.
     this.emit("console-profile-start");
 
-    await this.startRecording(Object.assign({}, getPerformanceRecordingPrefs(), {
-      console: true,
-      label: profileLabel,
-    }));
+    await this.startRecording(
+      Object.assign({}, getPerformanceRecordingPrefs(), {
+        console: true,
+        label: profileLabel,
+      })
+    );
   },
 
   /**
@@ -193,7 +214,9 @@ PerformanceRecorder.prototype = {
     }
     const { profileLabel } = data;
 
-    const pending = this._recordings.filter(r => r.isConsole() && r.isRecording());
+    const pending = this._recordings.filter(
+      r => r.isConsole() && r.isRecording()
+    );
     if (pending.length === 0) {
       return;
     }
@@ -212,16 +235,17 @@ PerformanceRecorder.prototype = {
     // sessions, abort.
     if (!model) {
       Cu.reportError(
-        "console.profileEnd() called with label that does not match a recording.");
+        "console.profileEnd() called with label that does not match a recording."
+      );
       return;
     }
 
     await this.stopRecording(model);
   },
 
- /**
-  * TODO handle bug 1144438
-  */
+  /**
+   * TODO handle bug 1144438
+   */
   _onProfilerUnexpectedlyStopped: function() {
     Cu.reportError("Profiler unexpectedly stopped.", arguments);
   },
@@ -308,7 +332,7 @@ PerformanceRecorder.prototype = {
   async startRecording(options) {
     let timelineStart, memoryStart;
 
-    const profilerStart = (async function() {
+    const profilerStart = async function() {
       const data = await this._profiler.isActive();
       if (data.isActive) {
         return data;
@@ -324,27 +348,34 @@ PerformanceRecorder.prototype = {
         startData.currentTime = 0;
       }
       return startData;
-    }.bind(this))();
+    }.bind(this)();
 
     // Timeline will almost always be on if using the DevTools, but using component
     // independently could result in no timeline.
     if (options.withMarkers || options.withTicks || options.withMemory) {
-      timelineStart = this._timeline.start(mapRecordingOptions("timeline", options));
+      timelineStart = this._timeline.start(
+        mapRecordingOptions("timeline", options)
+      );
     }
 
     if (options.withAllocations) {
       if (this._memory.getState() === "detached") {
         this._memory.attach();
       }
-      const recordingOptions = Object.assign(mapRecordingOptions("memory", options), {
-        drainAllocationsTimeout: DRAIN_ALLOCATIONS_TIMEOUT,
-      });
+      const recordingOptions = Object.assign(
+        mapRecordingOptions("memory", options),
+        {
+          drainAllocationsTimeout: DRAIN_ALLOCATIONS_TIMEOUT,
+        }
+      );
       memoryStart = this._memory.startRecordingAllocations(recordingOptions);
     }
 
-    const [profilerStartData, timelineStartData, memoryStartData] = await Promise.all([
-      profilerStart, timelineStart, memoryStart,
-    ]);
+    const [
+      profilerStartData,
+      timelineStartData,
+      memoryStartData,
+    ] = await Promise.all([profilerStart, timelineStart, memoryStart]);
 
     const data = Object.create(null);
     // Filter out start times that are not actually used (0 or undefined), and
@@ -467,7 +498,11 @@ PerformanceRecorder.prototype = {
       allocationSettings = this._memory.getAllocationsSettings();
     }
 
-    return Object.assign({}, allocationSettings, this._profiler.getStartOptions());
+    return Object.assign(
+      {},
+      allocationSettings,
+      this._profiler.getStartOptions()
+    );
   },
 
   toString: () => "[object PerformanceRecorder]",
@@ -480,14 +515,21 @@ PerformanceRecorder.prototype = {
 function getPerformanceRecordingPrefs() {
   return {
     withMarkers: true,
-    withMemory: Services.prefs.getBoolPref("devtools.performance.ui.enable-memory"),
-    withTicks: Services.prefs.getBoolPref("devtools.performance.ui.enable-framerate"),
-    withAllocations:
-      Services.prefs.getBoolPref("devtools.performance.ui.enable-allocations"),
-    allocationsSampleProbability:
-      +Services.prefs.getCharPref("devtools.performance.memory.sample-probability"),
-    allocationsMaxLogLength:
-      Services.prefs.getIntPref("devtools.performance.memory.max-log-length"),
+    withMemory: Services.prefs.getBoolPref(
+      "devtools.performance.ui.enable-memory"
+    ),
+    withTicks: Services.prefs.getBoolPref(
+      "devtools.performance.ui.enable-framerate"
+    ),
+    withAllocations: Services.prefs.getBoolPref(
+      "devtools.performance.ui.enable-allocations"
+    ),
+    allocationsSampleProbability: +Services.prefs.getCharPref(
+      "devtools.performance.memory.sample-probability"
+    ),
+    allocationsMaxLogLength: Services.prefs.getIntPref(
+      "devtools.performance.memory.max-log-length"
+    ),
   };
 }
 

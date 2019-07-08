@@ -25,61 +25,134 @@
 
 const { Toolbox } = require("devtools/client/framework/toolbox");
 
-const TEST_STARTING_ORDER = ["inspector", "webconsole", "jsdebugger", "styleeditor",
-                             "performance", "memory", "netmonitor", "storage",
-                             "accessibility"];
+const TEST_STARTING_ORDER = [
+  "inspector",
+  "webconsole",
+  "jsdebugger",
+  "styleeditor",
+  "performance",
+  "memory",
+  "netmonitor",
+  "storage",
+  "accessibility",
+];
 const TEST_DATA = [
   {
     description: "DragAndDrop the target component to back",
     dragTarget: "webconsole",
     dropTarget: "jsdebugger",
-    expectedOrder: ["inspector", "jsdebugger", "webconsole", "styleeditor",
-                    "performance", "memory", "netmonitor", "storage", "accessibility"],
+    expectedOrder: [
+      "inspector",
+      "jsdebugger",
+      "webconsole",
+      "styleeditor",
+      "performance",
+      "memory",
+      "netmonitor",
+      "storage",
+      "accessibility",
+    ],
   },
   {
     description: "DragAndDrop the target component to front",
     dragTarget: "webconsole",
     dropTarget: "inspector",
-    expectedOrder: ["webconsole", "inspector", "jsdebugger", "styleeditor",
-                    "performance", "memory", "netmonitor", "storage", "accessibility"],
+    expectedOrder: [
+      "webconsole",
+      "inspector",
+      "jsdebugger",
+      "styleeditor",
+      "performance",
+      "memory",
+      "netmonitor",
+      "storage",
+      "accessibility",
+    ],
   },
   {
-    description: "DragAndDrop the target component over the starting of the tab",
+    description:
+      "DragAndDrop the target component over the starting of the tab",
     dragTarget: "netmonitor",
-    passedTargets: ["memory", "performance", "styleeditor",
-                    "jsdebugger", "webconsole", "inspector"],
+    passedTargets: [
+      "memory",
+      "performance",
+      "styleeditor",
+      "jsdebugger",
+      "webconsole",
+      "inspector",
+    ],
     dropTarget: "#toolbox-buttons-start",
-    expectedOrder: ["netmonitor", "inspector", "webconsole", "jsdebugger",
-                    "styleeditor", "performance", "memory", "storage", "accessibility"],
+    expectedOrder: [
+      "netmonitor",
+      "inspector",
+      "webconsole",
+      "jsdebugger",
+      "styleeditor",
+      "performance",
+      "memory",
+      "storage",
+      "accessibility",
+    ],
   },
   {
     description: "DragAndDrop the target component over the ending of the tab",
     dragTarget: "webconsole",
-    passedTargets: ["jsdebugger", "styleeditor", "performance",
-                    "memory", "netmonitor", "storage"],
+    passedTargets: [
+      "jsdebugger",
+      "styleeditor",
+      "performance",
+      "memory",
+      "netmonitor",
+      "storage",
+    ],
     dropTarget: "#toolbox-buttons-end",
-    expectedOrder: ["inspector", "jsdebugger", "styleeditor", "performance",
-                    "memory", "netmonitor", "storage", "accessibility", "webconsole"],
+    expectedOrder: [
+      "inspector",
+      "jsdebugger",
+      "styleeditor",
+      "performance",
+      "memory",
+      "netmonitor",
+      "storage",
+      "accessibility",
+      "webconsole",
+    ],
   },
 ];
 
 add_task(async function() {
   const tab = await addTab("about:blank");
-  const toolbox = await openToolboxForTab(tab, "inspector", Toolbox.HostType.BOTTOM);
+  const toolbox = await openToolboxForTab(
+    tab,
+    "inspector",
+    Toolbox.HostType.BOTTOM
+  );
 
-  const originalPreference = Services.prefs.getCharPref("devtools.toolbox.tabsOrder");
+  const originalPreference = Services.prefs.getCharPref(
+    "devtools.toolbox.tabsOrder"
+  );
   const win = getWindow(toolbox);
-  const { outerWidth: originalWindowWidth, outerHeight: originalWindowHeight } = win;
+  const {
+    outerWidth: originalWindowWidth,
+    outerHeight: originalWindowHeight,
+  } = win;
   registerCleanupFunction(() => {
-    Services.prefs.setCharPref("devtools.toolbox.tabsOrder", originalPreference);
+    Services.prefs.setCharPref(
+      "devtools.toolbox.tabsOrder",
+      originalPreference
+    );
     win.resizeTo(originalWindowWidth, originalWindowHeight);
   });
 
   for (const testData of TEST_DATA) {
-    info(`Test for '${ testData.description }'`);
+    info(`Test for '${testData.description}'`);
     prepareToolTabReorderTest(toolbox, TEST_STARTING_ORDER);
-    await dndToolTab(toolbox, testData.dragTarget,
-                     testData.dropTarget, testData.passedTargets);
+    await dndToolTab(
+      toolbox,
+      testData.dragTarget,
+      testData.dropTarget,
+      testData.passedTargets
+    );
     assertToolTabOrder(toolbox, testData.expectedOrder);
     assertToolTabSelected(toolbox, testData.dragTarget);
     assertToolTabPreferenceOrder(testData.expectedOrder);
@@ -91,9 +164,17 @@ add_task(async function() {
   await toolbox.selectTool("storage");
   const dragTarget = "storage";
   const dropTarget = "inspector";
-  const expectedOrder = ["storage", "inspector", "webconsole", "jsdebugger",
-                         "styleeditor", "performance", "memory", "netmonitor",
-                         "accessibility"];
+  const expectedOrder = [
+    "storage",
+    "inspector",
+    "webconsole",
+    "jsdebugger",
+    "styleeditor",
+    "performance",
+    "memory",
+    "netmonitor",
+    "accessibility",
+  ];
   await dndToolTab(toolbox, dragTarget, dropTarget);
   assertToolTabSelected(toolbox, dragTarget);
   assertToolTabPreferenceOrder(expectedOrder);

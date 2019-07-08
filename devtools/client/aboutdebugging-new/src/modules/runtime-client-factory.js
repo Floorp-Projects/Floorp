@@ -8,8 +8,9 @@ const { prepareTCPConnection } = require("devtools/shared/adb/commands/index");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/main");
 const { ClientWrapper } = require("./client-wrapper");
-const { remoteClientManager } =
-  require("devtools/client/shared/remote-debugging/remote-client-manager");
+const {
+  remoteClientManager,
+} = require("devtools/client/shared/remote-debugging/remote-client-manager");
 
 const { RUNTIMES } = require("../constants");
 

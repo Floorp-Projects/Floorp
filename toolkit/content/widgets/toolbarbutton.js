@@ -7,23 +7,34 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
-  const KEEP_CHILDREN = new Set(["observes", "template", "menupopup", "panel", "tooltip"]);
+  const KEEP_CHILDREN = new Set([
+    "observes",
+    "template",
+    "menupopup",
+    "panel",
+    "tooltip",
+  ]);
 
-  window.addEventListener("popupshowing", (e) => {
-    if (e.originalTarget.ownerDocument != document) {
-      return;
-    }
+  window.addEventListener(
+    "popupshowing",
+    e => {
+      if (e.originalTarget.ownerDocument != document) {
+        return;
+      }
 
-    e.originalTarget.setAttribute("hasbeenopened", "true");
-    for (let el of e.originalTarget.querySelectorAll("toolbarbutton")) {
-      el.render();
-    }
-  }, {capture: true});
+      e.originalTarget.setAttribute("hasbeenopened", "true");
+      for (let el of e.originalTarget.querySelectorAll("toolbarbutton")) {
+        el.render();
+      }
+    },
+    { capture: true }
+  );
 
   class MozToolbarbutton extends MozElements.ButtonBase {
     static get inheritedAttributes() {
       return {
-        ".toolbarbutton-icon": "validate,src=image,label,type,consumeanchor,triggeringprincipal=iconloadingprincipal",
+        ".toolbarbutton-icon":
+          "validate,src=image,label,type,consumeanchor,triggeringprincipal=iconloadingprincipal",
         ".toolbarbutton-text": "value=label,accesskey,crop,dragover-top,wrap",
         ".toolbarbutton-multiline-text": "text=label,accesskey,wrap",
         ".toolbarbutton-menu-dropmarker": "disabled,label",
@@ -33,17 +44,21 @@
     }
 
     static get fragment() {
-      let frag = document.importNode(MozXULElement.parseXULToFragment(`
+      let frag = document.importNode(
+        MozXULElement.parseXULToFragment(`
         <image class="toolbarbutton-icon"></image>
         <label class="toolbarbutton-text" crop="right" flex="1"></label>
         <label class="toolbarbutton-multiline-text" flex="1"></label>
-        <dropmarker type="menu" class="toolbarbutton-menu-dropmarker"></dropmarker>`), true);
-      Object.defineProperty(this, "fragment", {value: frag});
+        <dropmarker type="menu" class="toolbarbutton-menu-dropmarker"></dropmarker>`),
+        true
+      );
+      Object.defineProperty(this, "fragment", { value: frag });
       return frag;
     }
 
     static get badgedFragment() {
-      let frag = document.importNode(MozXULElement.parseXULToFragment(`
+      let frag = document.importNode(
+        MozXULElement.parseXULToFragment(`
         <stack class="toolbarbutton-badge-stack">
           <image class="toolbarbutton-icon"/>
           <label class="toolbarbutton-badge" top="0" end="0" crop="none"/>
@@ -51,13 +66,15 @@
         <label class="toolbarbutton-text" crop="right" flex="1"/>
         <label class="toolbarbutton-multiline-text" flex="1"/>
         <dropmarker anonid="dropmarker" type="menu"
-                    class="toolbarbutton-menu-dropmarker"/>`), true);
-      Object.defineProperty(this, "badgedFragment", {value: frag});
+                    class="toolbarbutton-menu-dropmarker"/>`),
+        true
+      );
+      Object.defineProperty(this, "badgedFragment", { value: frag });
       return frag;
     }
 
     get _hasRendered() {
-      return (this.querySelector(":scope > .toolbarbutton-text") != null);
+      return this.querySelector(":scope > .toolbarbutton-text") != null;
     }
 
     connectedCallback() {
@@ -80,7 +97,7 @@
         return;
       }
 
-      let badged = (this.getAttribute("badged") == "true");
+      let badged = this.getAttribute("badged") == "true";
 
       if (badged) {
         let moveChildren = [];
@@ -93,7 +110,7 @@
         this.appendChild(this.constructor.badgedFragment.cloneNode(true));
 
         if (moveChildren.length > 0) {
-          let {badgeStack, icon} = this;
+          let { badgeStack, icon } = this;
           for (let child of moveChildren) {
             badgeStack.insertBefore(child, icon);
           }

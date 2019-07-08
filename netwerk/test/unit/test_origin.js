@@ -1,4 +1,3 @@
-
 var h2Port;
 var prefs;
 var spdypref;
@@ -7,7 +6,9 @@ var extpref;
 var loadGroup;
 
 function run_test() {
-  var env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+  var env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   h2Port = env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
@@ -23,12 +24,16 @@ function run_test() {
   prefs.setBoolPref("network.http.spdy.enabled", true);
   prefs.setBoolPref("network.http.spdy.enabled.http2", true);
   prefs.setBoolPref("network.http.originextension", true);
-  prefs.setCharPref("network.dns.localDomains", "foo.example.com, alt1.example.com");
+  prefs.setCharPref(
+    "network.dns.localDomains",
+    "foo.example.com, alt1.example.com"
+  );
 
   // The moz-http2 cert is for {foo, alt1, alt2}.example.com and is signed by http2-ca.pem
   // so add that cert to the trust list as a signing cert.
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                  .getService(Ci.nsIX509CertDB);
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
   doTest1();
@@ -44,7 +49,7 @@ function resetPrefs() {
 function makeChan(origin) {
   return NetUtil.newChannel({
     uri: origin,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   }).QueryInterface(Ci.nsIHttpChannel);
 }
 
@@ -74,14 +79,14 @@ Listener.prototype = {
   onStopRequest: function testOnStopRequest(request, status) {
     Assert.ok(Components.isSuccessCode(status));
     if (nextPortExpectedToBeSame) {
-     Assert.equal(currentPort, this.clientPort);
+      Assert.equal(currentPort, this.clientPort);
     } else {
-     Assert.notEqual(currentPort, this.clientPort);
+      Assert.notEqual(currentPort, this.clientPort);
     }
     currentPort = this.clientPort;
     nextTest();
     do_test_finished();
-  }
+  },
 };
 
 var FailListener = function() {};
@@ -97,17 +102,15 @@ FailListener.prototype = {
     Assert.ok(!Components.isSuccessCode(request.status));
     nextTest();
     do_test_finished();
-  }
+  },
 };
 
-function testsDone()
-{
+function testsDone() {
   dump("testsDone\n");
   resetPrefs();
 }
 
-function doTest()
-{
+function doTest() {
   dump("execute doTest " + origin + "\n");
   var chan = makeChan(origin);
   var listener;
@@ -121,15 +124,15 @@ function doTest()
   if (!forceReload) {
     chan.loadFlags = Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
   } else {
-    chan.loadFlags = Ci.nsIRequest.LOAD_FRESH_CONNECTION |
-                     Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
+    chan.loadFlags =
+      Ci.nsIRequest.LOAD_FRESH_CONNECTION |
+      Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
   }
   forceReload = false;
   chan.asyncOpen(listener);
 }
 
-function doTest1()
-{
+function doTest1() {
   dump("doTest1()\n");
   origin = "https://foo.example.com:" + h2Port + "/origin-1";
   nextTest = doTest2;
@@ -138,8 +141,7 @@ function doTest1()
   doTest();
 }
 
-function doTest2()
-{
+function doTest2() {
   // plain connection reuse
   dump("doTest2()\n");
   origin = "https://foo.example.com:" + h2Port + "/origin-2";
@@ -149,8 +151,7 @@ function doTest2()
   doTest();
 }
 
-function doTest3()
-{
+function doTest3() {
   // 7540 style coalescing
   dump("doTest3()\n");
   origin = "https://alt1.example.com:" + h2Port + "/origin-3";
@@ -160,8 +161,7 @@ function doTest3()
   doTest();
 }
 
-function doTest4()
-{
+function doTest4() {
   // forces an empty origin frame to be omitted
   dump("doTest4()\n");
   origin = "https://foo.example.com:" + h2Port + "/origin-4";
@@ -171,8 +171,7 @@ function doTest4()
   doTest();
 }
 
-function doTest5()
-{
+function doTest5() {
   // 7540 style coalescing should not work due to empty origin set
   dump("doTest5()\n");
   origin = "https://alt1.example.com:" + h2Port + "/origin-5";
@@ -182,8 +181,7 @@ function doTest5()
   doTest();
 }
 
-function doTest6()
-{
+function doTest6() {
   // get a fresh connection with alt1 and alt2 in origin set
   // note that there is no dns for alt2
   dump("doTest6()\n");
@@ -195,8 +193,7 @@ function doTest6()
   doTest();
 }
 
-function doTest7()
-{
+function doTest7() {
   // check conn reuse to ensure sni is implicit in origin set
   dump("doTest7()\n");
   origin = "https://foo.example.com:" + h2Port + "/origin-7";
@@ -206,8 +203,7 @@ function doTest7()
   doTest();
 }
 
-function doTest8()
-{
+function doTest8() {
   // alt1 is in origin set (and is 7540 eligible)
   dump("doTest8()\n");
   origin = "https://alt1.example.com:" + h2Port + "/origin-8";
@@ -217,8 +213,7 @@ function doTest8()
   doTest();
 }
 
-function doTest9()
-{
+function doTest9() {
   // alt2 is in origin set but does not have dns
   dump("doTest9()\n");
   origin = "https://alt2.example.com:" + h2Port + "/origin-9";
@@ -228,8 +223,7 @@ function doTest9()
   doTest();
 }
 
-function doTest10()
-{
+function doTest10() {
   // bar is in origin set but does not have dns like alt2
   // but the cert is not valid for bar. so expect a failure
   dump("doTest10()\n");
@@ -244,26 +238,43 @@ function doTest10()
 var Http2PushApiListener = function() {};
 
 Http2PushApiListener.prototype = {
-  fooOK : false,
-  alt1OK : false,
+  fooOK: false,
+  alt1OK: false,
 
   getInterface(aIID) {
     return this.QueryInterface(aIID);
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsIHttpPushListener", "nsIStreamListener"]),
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIHttpPushListener",
+    "nsIStreamListener",
+  ]),
 
   // nsIHttpPushListener
   onPush: function onPush(associatedChannel, pushChannel) {
-    dump("push api onpush " + pushChannel.originalURI.spec +
-         " associated to " + associatedChannel.originalURI.spec + "\n");
+    dump(
+      "push api onpush " +
+        pushChannel.originalURI.spec +
+        " associated to " +
+        associatedChannel.originalURI.spec +
+        "\n"
+    );
 
-    Assert.equal(associatedChannel.originalURI.spec, "https://foo.example.com:" + h2Port + "/origin-11-a");
+    Assert.equal(
+      associatedChannel.originalURI.spec,
+      "https://foo.example.com:" + h2Port + "/origin-11-a"
+    );
     Assert.equal(pushChannel.getRequestHeader("x-pushed-request"), "true");
 
-    if (pushChannel.originalURI.spec === "https://foo.example.com:" + h2Port + "/origin-11-b") {
+    if (
+      pushChannel.originalURI.spec ===
+      "https://foo.example.com:" + h2Port + "/origin-11-b"
+    ) {
       this.fooOK = true;
-    } else if (pushChannel.originalURI.spec === "https://alt1.example.com:" + h2Port + "/origin-11-e") {
+    } else if (
+      pushChannel.originalURI.spec ===
+      "https://alt1.example.com:" + h2Port + "/origin-11-e"
+    ) {
       this.alt1OK = true;
     } else {
       // any push of bar or madeup should not end up in onPush()
@@ -272,12 +283,17 @@ Http2PushApiListener.prototype = {
     pushChannel.cancel(Cr.NS_ERROR_ABORT);
   },
 
- // normal Channel listeners
+  // normal Channel listeners
   onStartRequest: function pushAPIOnStart(request) {
     dump("push api onstart " + request.originalURI.spec + "\n");
   },
 
-  onDataAvailable: function pushAPIOnDataAvailable(request, stream, offset, cnt) {
+  onDataAvailable: function pushAPIOnDataAvailable(
+    request,
+    stream,
+    offset,
+    cnt
+  ) {
     var data = read_stream(stream, cnt);
   },
 
@@ -287,12 +303,10 @@ Http2PushApiListener.prototype = {
     Assert.ok(this.alt1OK);
     nextTest();
     do_test_finished();
-  }
+  },
 };
 
-
-function doTest11()
-{
+function doTest11() {
   // we are connected with an SNI of foo from test6
   // but the origin set is alt1, alt2, bar - foo is implied
   // and bar is not actually covered by the cert
@@ -301,7 +315,9 @@ function doTest11()
 
   dump("doTest11()\n");
   do_test_pending();
-  loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(Ci.nsILoadGroup);
+  loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(
+    Ci.nsILoadGroup
+  );
   var chan = makeChan("https://foo.example.com:" + h2Port + "/origin-11-a");
   chan.loadGroup = loadGroup;
   var listener = new Http2PushApiListener();

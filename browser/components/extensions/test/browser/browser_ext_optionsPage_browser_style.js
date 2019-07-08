@@ -11,46 +11,67 @@ async function testOptionsBrowserStyle(optionsUI, assertMessage) {
         browser.test.notifyFail("options-ui-browser_style");
       }
 
-      let browserStyle = !("browser_style" in optionsUI) || optionsUI.browser_style;
+      let browserStyle =
+        !("browser_style" in optionsUI) || optionsUI.browser_style;
 
       function verifyButton(buttonElement, expected) {
         let buttonStyle = window.getComputedStyle(buttonElement);
         let buttonBackgroundColor = buttonStyle.backgroundColor;
         if (browserStyle && expected.hasBrowserStyleClass) {
-          browser.test.assertEq("rgb(9, 150, 248)", buttonBackgroundColor, assertMessage);
+          browser.test.assertEq(
+            "rgb(9, 150, 248)",
+            buttonBackgroundColor,
+            assertMessage
+          );
         } else {
-          browser.test.assertTrue(buttonBackgroundColor !== "rgb(9, 150, 248)", assertMessage);
+          browser.test.assertTrue(
+            buttonBackgroundColor !== "rgb(9, 150, 248)",
+            assertMessage
+          );
         }
       }
 
       function verifyCheckboxOrRadio(element, expected) {
         let style = window.getComputedStyle(element);
-        let styledBackground = element.checked ? "rgb(9, 150, 248)" : "rgb(255, 255, 255)";
+        let styledBackground = element.checked
+          ? "rgb(9, 150, 248)"
+          : "rgb(255, 255, 255)";
         if (browserStyle && expected.hasBrowserStyleClass) {
-          browser.test.assertEq(styledBackground, style.backgroundColor, assertMessage);
+          browser.test.assertEq(
+            styledBackground,
+            style.backgroundColor,
+            assertMessage
+          );
         } else {
-          browser.test.assertTrue(style.backgroundColor != styledBackground, assertMessage);
+          browser.test.assertTrue(
+            style.backgroundColor != styledBackground,
+            assertMessage
+          );
         }
       }
 
       let normalButton = document.getElementById("normalButton");
       let browserStyleButton = document.getElementById("browserStyleButton");
-      verifyButton(normalButton, {hasBrowserStyleClass: false});
-      verifyButton(browserStyleButton, {hasBrowserStyleClass: true});
+      verifyButton(normalButton, { hasBrowserStyleClass: false });
+      verifyButton(browserStyleButton, { hasBrowserStyleClass: true });
 
       let normalCheckbox1 = document.getElementById("normalCheckbox1");
       let normalCheckbox2 = document.getElementById("normalCheckbox2");
-      let browserStyleCheckbox = document.getElementById("browserStyleCheckbox");
-      verifyCheckboxOrRadio(normalCheckbox1, {hasBrowserStyleClass: false});
-      verifyCheckboxOrRadio(normalCheckbox2, {hasBrowserStyleClass: false});
-      verifyCheckboxOrRadio(browserStyleCheckbox, {hasBrowserStyleClass: true});
+      let browserStyleCheckbox = document.getElementById(
+        "browserStyleCheckbox"
+      );
+      verifyCheckboxOrRadio(normalCheckbox1, { hasBrowserStyleClass: false });
+      verifyCheckboxOrRadio(normalCheckbox2, { hasBrowserStyleClass: false });
+      verifyCheckboxOrRadio(browserStyleCheckbox, {
+        hasBrowserStyleClass: true,
+      });
 
       let normalRadio1 = document.getElementById("normalRadio1");
       let normalRadio2 = document.getElementById("normalRadio2");
       let browserStyleRadio = document.getElementById("browserStyleRadio");
-      verifyCheckboxOrRadio(normalRadio1, {hasBrowserStyleClass: false});
-      verifyCheckboxOrRadio(normalRadio2, {hasBrowserStyleClass: false});
-      verifyCheckboxOrRadio(browserStyleRadio, {hasBrowserStyleClass: true});
+      verifyCheckboxOrRadio(normalRadio1, { hasBrowserStyleClass: false });
+      verifyCheckboxOrRadio(normalRadio2, { hasBrowserStyleClass: false });
+      verifyCheckboxOrRadio(browserStyleRadio, { hasBrowserStyleClass: true });
 
       browser.test.notifyPass("options-ui-browser_style");
     });
@@ -61,8 +82,8 @@ async function testOptionsBrowserStyle(optionsUI, assertMessage) {
     useAddonManager: "temporary",
 
     manifest: {
-      "permissions": ["tabs"],
-      "options_ui": optionsUI,
+      permissions: ["tabs"],
+      options_ui: optionsUI,
     },
     files: {
       "options.html": `
@@ -105,21 +126,30 @@ async function testOptionsBrowserStyle(optionsUI, assertMessage) {
 }
 
 add_task(async function test_options_without_setting_browser_style() {
-  await testOptionsBrowserStyle({
-    "page": "options.html",
-  }, "Expected correct style when browser_style is excluded");
+  await testOptionsBrowserStyle(
+    {
+      page: "options.html",
+    },
+    "Expected correct style when browser_style is excluded"
+  );
 });
 
 add_task(async function test_options_with_browser_style_set_to_true() {
-  await testOptionsBrowserStyle({
-    "page": "options.html",
-    "browser_style": true,
-  }, "Expected correct style when browser_style is set to `true`");
+  await testOptionsBrowserStyle(
+    {
+      page: "options.html",
+      browser_style: true,
+    },
+    "Expected correct style when browser_style is set to `true`"
+  );
 });
 
 add_task(async function test_options_with_browser_style_set_to_false() {
-  await testOptionsBrowserStyle({
-    "page": "options.html",
-    "browser_style": false,
-  }, "Expected no style when browser_style is set to `false`");
+  await testOptionsBrowserStyle(
+    {
+      page: "options.html",
+      browser_style: false,
+    },
+    "Expected no style when browser_style is set to `false`"
+  );
 });

@@ -1,4 +1,4 @@
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const providerCID = Components.ID("{14aa4b81-e266-45cb-88f8-89595dece114}");
 const providerContract = "@mozilla.org/geolocation/provider;1";
@@ -6,21 +6,22 @@ const providerContract = "@mozilla.org/geolocation/provider;1";
 const categoryName = "geolocation-provider";
 
 var provider = {
-  QueryInterface: ChromeUtils.generateQI(["nsIFactory", "nsIGeolocationProvider"]),
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIFactory",
+    "nsIGeolocationProvider",
+  ]),
   createInstance: function eventsink_ci(outer, iid) {
-    if (outer)
+    if (outer) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
+    }
     return this.QueryInterface(iid);
   },
   lockFactory: function eventsink_lockf(lock) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
-  startup() {
-  },
-  watch() {
-  },
-  shutdown() {
-  },
+  startup() {},
+  watch() {},
+  shutdown() {},
   setHighAccuracy(enable) {
     this._isHigh = enable;
     if (enable) {
@@ -52,11 +53,20 @@ function run_test() {
     // needs a place where it can store databases.
     do_get_profile();
 
-    Components.manager.nsIComponentRegistrar.registerFactory(providerCID,
-      "Unit test geo provider", providerContract, provider);
+    Components.manager.nsIComponentRegistrar.registerFactory(
+      providerCID,
+      "Unit test geo provider",
+      providerContract,
+      provider
+    );
 
-    Services.catMan.nsICategoryManager.addCategoryEntry(categoryName, "unit test",
-                                                        providerContract, false, true);
+    Services.catMan.nsICategoryManager.addCategoryEntry(
+      categoryName,
+      "unit test",
+      providerContract,
+      false,
+      true
+    );
 
     Services.prefs.setBoolPref("dom.testing.ignore_ipc_principal", true);
     Services.prefs.setBoolPref("geo.wifi.scan", false);
@@ -66,8 +76,9 @@ function run_test() {
 
   geolocation = Cc["@mozilla.org/geolocation;1"].createInstance(Ci.nsISupports);
   geolocation.watchPosition(successCallback, errorCallback);
-  watchID2 = geolocation.watchPosition(successCallback, errorCallback,
-                                       {enableHighAccuracy: true});
+  watchID2 = geolocation.watchPosition(successCallback, errorCallback, {
+    enableHighAccuracy: true,
+  });
 
   if (!runningInParent) {
     do_await_remote_message("high_acc_enabled", stop_high_accuracy_watch);
@@ -75,9 +86,9 @@ function run_test() {
 }
 
 function stop_high_accuracy_watch() {
-    geolocation.clearWatch(watchID2);
-    check_results();
-    do_test_finished();
+  geolocation.clearWatch(watchID2);
+  check_results();
+  do_test_finished();
 }
 
 function check_results() {

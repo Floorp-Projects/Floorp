@@ -40,33 +40,58 @@ add_task(async function() {
 
   is(rows.length, 2, "There should be 1 table chart row and 1 header created.");
 
-  ok(rows[1].querySelector(".table-chart-row-box.chart-colored-blob"),
-    "A colored blob exists for the first row.");
-  is(rows[1].querySelectorAll("span")[0].getAttribute("name"), "size",
-    "The first column of the first row exists.");
-  is(rows[1].querySelectorAll("span")[1].getAttribute("name"), "label",
-    "The second column of the first row exists.");
-  is(rows[1].querySelectorAll("span")[0].textContent, "",
-    "The first column of the first row displays the correct text.");
-  is(rows[1].querySelectorAll("span")[1].textContent,
+  ok(
+    rows[1].querySelector(".table-chart-row-box.chart-colored-blob"),
+    "A colored blob exists for the first row."
+  );
+  is(
+    rows[1].querySelectorAll("span")[0].getAttribute("name"),
+    "size",
+    "The first column of the first row exists."
+  );
+  is(
+    rows[1].querySelectorAll("span")[1].getAttribute("name"),
+    "label",
+    "The second column of the first row exists."
+  );
+  is(
+    rows[1].querySelectorAll("span")[0].textContent,
+    "",
+    "The first column of the first row displays the correct text."
+  );
+  is(
+    rows[1].querySelectorAll("span")[1].textContent,
     L10N.getStr("tableChart.unavailable"),
-    "The second column of the first row displays the correct text.");
+    "The second column of the first row displays the correct text."
+  );
 
   is(sums.length, 2, "There should be 2 total summaries created.");
 
-  is(totals.querySelectorAll(".table-chart-summary-label")[0].getAttribute("name"),
+  is(
+    totals
+      .querySelectorAll(".table-chart-summary-label")[0]
+      .getAttribute("name"),
     "label1",
-    "The first sum's type is correct.");
-  is(totals.querySelectorAll(".table-chart-summary-label")[0].textContent,
+    "The first sum's type is correct."
+  );
+  is(
+    totals.querySelectorAll(".table-chart-summary-label")[0].textContent,
     "Hello 0",
-    "The first sum's value is correct.");
+    "The first sum's value is correct."
+  );
 
-  is(totals.querySelectorAll(".table-chart-summary-label")[1].getAttribute("name"),
+  is(
+    totals
+      .querySelectorAll(".table-chart-summary-label")[1]
+      .getAttribute("name"),
     "label2",
-    "The second sum's type is correct.");
-  is(totals.querySelectorAll(".table-chart-summary-label")[1].textContent,
+    "The second sum's type is correct."
+  );
+  is(
+    totals.querySelectorAll(".table-chart-summary-label")[1].textContent,
     "World 0",
-    "The second sum's value is correct.");
+    "The second sum's value is correct."
+  );
 
   await teardown(monitor);
 });

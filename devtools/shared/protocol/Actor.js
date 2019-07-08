@@ -55,8 +55,10 @@ class Actor extends Pool {
 
   _sendEvent(name, request, ...args) {
     if (!this.actorID) {
-      console.error(`Tried to send a '${name}' event on an already destroyed actor` +
-                    ` '${this.typeName}'`);
+      console.error(
+        `Tried to send a '${name}' event on an already destroyed actor` +
+          ` '${this.typeName}'`
+      );
       return;
     }
     let packet;
@@ -86,8 +88,10 @@ class Actor extends Pool {
   }
 
   writeError(error, typeName, method) {
-    console.error(`Error while calling actor '${typeName}'s method '${method}'`,
-                  error.message);
+    console.error(
+      `Error while calling actor '${typeName}'s method '${method}'`,
+      error.message
+    );
     if (error.stack) {
       console.error(error.stack);
     }

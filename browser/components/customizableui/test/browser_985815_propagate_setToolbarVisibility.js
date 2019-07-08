@@ -6,9 +6,11 @@
 
 add_task(async function() {
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
-  this.otherWin = await openAndLoadWindow({private: true}, true);
+  this.otherWin = await openAndLoadWindow({ private: true }, true);
   await startCustomizing(this.otherWin);
-  let resetButton = this.otherWin.document.getElementById("customization-reset-button");
+  let resetButton = this.otherWin.document.getElementById(
+    "customization-reset-button"
+  );
   ok(resetButton.disabled, "Reset button should be disabled");
 
   if (typeof CustomizableUI.setToolbarVisibility == "function") {
@@ -17,15 +19,26 @@ add_task(async function() {
     setToolbarVisibility(document.getElementById("PersonalToolbar"), true);
   }
 
-  let otherPersonalToolbar = this.otherWin.document.getElementById("PersonalToolbar");
+  let otherPersonalToolbar = this.otherWin.document.getElementById(
+    "PersonalToolbar"
+  );
   let personalToolbar = document.getElementById("PersonalToolbar");
-  ok(!otherPersonalToolbar.collapsed, "Toolbar should be uncollapsed in private window");
-  ok(!personalToolbar.collapsed, "Toolbar should be uncollapsed in normal window");
+  ok(
+    !otherPersonalToolbar.collapsed,
+    "Toolbar should be uncollapsed in private window"
+  );
+  ok(
+    !personalToolbar.collapsed,
+    "Toolbar should be uncollapsed in normal window"
+  );
   ok(!resetButton.disabled, "Reset button should be enabled");
 
   await this.otherWin.gCustomizeMode.reset();
 
-  ok(otherPersonalToolbar.collapsed, "Toolbar should be collapsed in private window");
+  ok(
+    otherPersonalToolbar.collapsed,
+    "Toolbar should be collapsed in private window"
+  );
   ok(personalToolbar.collapsed, "Toolbar should be collapsed in normal window");
   ok(resetButton.disabled, "Reset button should be disabled");
 
@@ -33,7 +46,6 @@ add_task(async function() {
 
   await promiseWindowClosed(this.otherWin);
 });
-
 
 add_task(async function asyncCleanup() {
   if (this.otherWin && !this.otherWin.closed) {

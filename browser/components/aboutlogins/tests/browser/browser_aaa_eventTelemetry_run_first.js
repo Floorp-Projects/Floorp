@@ -8,17 +8,30 @@ ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm", this);
 function waitForTelemetryEventCount(count) {
   return TestUtils.waitForCondition(() => {
     let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, false).content;
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      false
+    ).content;
     return events && events.length == count;
   }, "waiting for telemetry event count of: " + count);
 }
 
 add_task(async function setup() {
-  let storageChangedPromised = TestUtils.topicObserved("passwordmgr-storage-changed",
-                                                       (_, data) => data == "addLogin");
+  let storageChangedPromised = TestUtils.topicObserved(
+    "passwordmgr-storage-changed",
+    (_, data) => data == "addLogin"
+  );
   TEST_LOGIN1 = Services.logins.addLogin(TEST_LOGIN1);
   await storageChangedPromised;
-  await BrowserTestUtils.openNewForegroundTab({gBrowser, url: "about:logins"});
+  storageChangedPromised = TestUtils.topicObserved(
+    "passwordmgr-storage-changed",
+    (_, data) => data == "addLogin"
+  );
+  TEST_LOGIN2 = Services.logins.addLogin(TEST_LOGIN2);
+  await storageChangedPromised;
+  await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url: "about:logins",
+  });
   registerCleanupFunction(() => {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
     Services.logins.removeAllLogins();
@@ -29,35 +42,48 @@ add_task(async function test_telemetry_events() {
   await TestUtils.waitForCondition(() => {
     Services.telemetry.clearEvents();
     let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true).content;
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      true
+    ).content;
     return !events || !events.length;
   }, "Waiting for telemetry events to get cleared");
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginList = content.document.querySelector("login-list");
-    let loginListItem = loginList.shadowRoot.querySelector("login-list-item[data-guid]");
+    let loginListItem = loginList.shadowRoot.querySelector(
+      "login-list-item:nth-child(2)"
+    );
     loginListItem.click();
   });
   await waitForTelemetryEventCount(1);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
-    let copyButton = loginItem.shadowRoot.querySelector(".copy-username-button");
+    let copyButton = loginItem.shadowRoot.querySelector(
+      ".copy-username-button"
+    );
     copyButton.click();
   });
   await waitForTelemetryEventCount(2);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
-    let copyButton = loginItem.shadowRoot.querySelector(".copy-password-button");
+    let copyButton = loginItem.shadowRoot.querySelector(
+      ".copy-password-button"
+    );
     copyButton.click();
   });
   await waitForTelemetryEventCount(3);
 
-  let promiseNewTab = BrowserTestUtils.waitForNewTab(gBrowser, TEST_LOGIN1.origin);
+  let promiseNewTab = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    TEST_LOGIN1.origin
+  );
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
-    let openSiteButton = loginItem.shadowRoot.querySelector(".open-site-button");
+    let openSiteButton = loginItem.shadowRoot.querySelector(
+      ".open-site-button"
+    );
     openSiteButton.click();
   });
   let newTab = await promiseNewTab;
@@ -74,7 +100,9 @@ add_task(async function test_telemetry_events() {
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
-    let originField = loginItem.shadowRoot.querySelector('input[name="origin"]');
+    let originField = loginItem.shadowRoot.querySelector(
+      'input[name="origin"]'
+    );
     originField.value = "https://www.example.com";
 
     let saveButton = loginItem.shadowRoot.querySelector(".save-changes-button");
@@ -97,7 +125,9 @@ add_task(async function test_telemetry_events() {
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginList = content.document.querySelector("login-list");
-    let loginListItem = loginList.shadowRoot.querySelector("login-list-item[data-guid]");
+    let loginListItem = loginList.shadowRoot.querySelector(
+      "login-list-item[data-guid]"
+    );
     loginListItem.click();
   });
   await waitForTelemetryEventCount(9);
@@ -106,8 +136,12 @@ add_task(async function test_telemetry_events() {
     let loginItem = content.document.querySelector("login-item");
     let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
     deleteButton.click();
-    let confirmDeleteDialog = content.document.querySelector("confirm-delete-dialog");
-    let confirmDeleteButton = confirmDeleteDialog.shadowRoot.querySelector(".confirm-button");
+    let confirmDeleteDialog = content.document.querySelector(
+      "confirm-delete-dialog"
+    );
+    let confirmDeleteButton = confirmDeleteDialog.shadowRoot.querySelector(
+      ".confirm-button"
+    );
     confirmDeleteButton.click();
   });
   await waitForTelemetryEventCount(10);
@@ -135,6 +169,7 @@ add_task(async function test_telemetry_events() {
 
   TelemetryTestUtils.assertEvents(
     expectedEvents,
-    {category: "pwmgr"},
-    {process: "content"});
+    { category: "pwmgr" },
+    { process: "content" }
+  );
 });

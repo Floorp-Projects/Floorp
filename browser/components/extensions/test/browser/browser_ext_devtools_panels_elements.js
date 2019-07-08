@@ -5,21 +5,29 @@
 loadTestSubscript("head_devtools.js");
 
 add_task(async function test_devtools_panels_elements_onSelectionChanged() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888/"
+  );
 
   function devtools_page() {
-    browser.devtools.panels.elements.onSelectionChanged.addListener(async () => {
-      const [
-        evalResult, exceptionInfo,
-      ] = await browser.devtools.inspectedWindow.eval("$0 && $0.tagName");
+    browser.devtools.panels.elements.onSelectionChanged.addListener(
+      async () => {
+        const [
+          evalResult,
+          exceptionInfo,
+        ] = await browser.devtools.inspectedWindow.eval("$0 && $0.tagName");
 
-      if (exceptionInfo) {
-        browser.test.fail("Unexpected exceptionInfo on inspectedWindow.eval: " +
-                          JSON.stringify(exceptionInfo));
+        if (exceptionInfo) {
+          browser.test.fail(
+            "Unexpected exceptionInfo on inspectedWindow.eval: " +
+              JSON.stringify(exceptionInfo)
+          );
+        }
+
+        browser.test.sendMessage("devtools_eval_result", evalResult);
       }
-
-      browser.test.sendMessage("devtools_eval_result", evalResult);
-    });
+    );
 
     browser.test.onMessage.addListener(msg => {
       switch (msg) {
@@ -59,7 +67,7 @@ add_task(async function test_devtools_panels_elements_onSelectionChanged() {
 
   await extension.startup();
 
-  const {toolbox} = await openToolboxForTab(tab);
+  const { toolbox } = await openToolboxForTab(tab);
 
   await extension.awaitMessage("devtools_page_loaded");
 
@@ -67,10 +75,16 @@ add_task(async function test_devtools_panels_elements_onSelectionChanged() {
 
   const inspector = toolbox.getPanel("inspector");
 
-  info("Waiting for the first onSelectionChanged event to be fired once the inspector is open");
+  info(
+    "Waiting for the first onSelectionChanged event to be fired once the inspector is open"
+  );
 
   const evalResult = await extension.awaitMessage("devtools_eval_result");
-  is(evalResult, "BODY", "Got the expected onSelectionChanged once the inspector is selected");
+  is(
+    evalResult,
+    "BODY",
+    "Got the expected onSelectionChanged once the inspector is selected"
+  );
 
   // Reload the inspected tab and wait for the inspector markup view to have been
   // fully reloaded.
@@ -78,19 +92,31 @@ add_task(async function test_devtools_panels_elements_onSelectionChanged() {
   extension.sendMessage("inspectedWindow_reload");
   await onceMarkupReloaded;
 
-  info("Waiting for the two onSelectionChanged events fired before and after the navigation");
+  info(
+    "Waiting for the two onSelectionChanged events fired before and after the navigation"
+  );
 
   // Expect the eval result to be undefined on the first onSelectionChanged event
   // (fired when the page is navigating away, and so the current selection is undefined).
-  const evalResultNavigating = await extension.awaitMessage("devtools_eval_result");
-  is(evalResultNavigating, undefined,
-     "Got the expected onSelectionChanged once the tab is navigating");
+  const evalResultNavigating = await extension.awaitMessage(
+    "devtools_eval_result"
+  );
+  is(
+    evalResultNavigating,
+    undefined,
+    "Got the expected onSelectionChanged once the tab is navigating"
+  );
 
   // Expect the eval result to be related to the body element on the second onSelectionChanged
   // event (fired when the page have been navigated to the new page).
-  const evalResultOnceMarkupReloaded = await extension.awaitMessage("devtools_eval_result");
-  is(evalResultOnceMarkupReloaded, "BODY",
-     "Got the expected onSelectionChanged once the tab has been completely reloaded");
+  const evalResultOnceMarkupReloaded = await extension.awaitMessage(
+    "devtools_eval_result"
+  );
+  is(
+    evalResultOnceMarkupReloaded,
+    "BODY",
+    "Got the expected onSelectionChanged once the tab has been completely reloaded"
+  );
 
   await closeToolboxForTab(tab);
 

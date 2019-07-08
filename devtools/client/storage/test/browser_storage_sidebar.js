@@ -77,7 +77,12 @@ const testCases = [
   },
 
   {
-    location: ["indexedDB", "http://test1.example.org", "idb2 (default)", "obj3"],
+    location: [
+      "indexedDB",
+      "http://test1.example.org",
+      "idb2 (default)",
+      "obj3",
+    ],
     sidebarHidden: true,
   },
 
@@ -91,7 +96,8 @@ const testCases = [
   },
   {
     sendEscape: true,
-  }, {
+  },
+  {
     location: "obj-s2",
     sidebarHidden: true,
   },
@@ -114,8 +120,11 @@ add_task(async function() {
     if (sendEscape) {
       EventUtils.sendKey("ESCAPE", gPanelWindow);
     } else {
-      is(gUI.sidebar.hidden, sidebarHidden,
-        "correct visibility state of sidebar.");
+      is(
+        gUI.sidebar.hidden,
+        sidebarHidden,
+        "correct visibility state of sidebar."
+      );
     }
 
     info("-".repeat(80));

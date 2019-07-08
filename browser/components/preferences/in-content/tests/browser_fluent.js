@@ -1,4 +1,3 @@
-
 function whenMainPaneLoadedFinished() {
   return new Promise(function(resolve, reject) {
     const topic = "main-pane-loaded";
@@ -19,24 +18,21 @@ add_task(async function() {
   }
 
   await Promise.all([
-    openPreferencesViaOpenPreferencesAPI("general", {leaveOpen: true}),
+    openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true }),
     whenMainPaneLoadedFinished(),
   ]);
 
   let doc = gBrowser.contentDocument;
   await doc.l10n.ready;
 
-  let [ msg ] = await doc.l10n.formatMessages([
-    {id: "category-general"},
-  ]);
+  let [msg] = await doc.l10n.formatMessages([{ id: "category-general" }]);
 
-  let elem = doc.querySelector(
-    `#category-general`);
+  let elem = doc.querySelector(`#category-general`);
 
   Assert.deepEqual(msg, {
     value: null,
     attributes: [
-      {name: "tooltiptext", value: elem.getAttribute("tooltiptext")},
+      { name: "tooltiptext", value: elem.getAttribute("tooltiptext") },
     ],
   });
 

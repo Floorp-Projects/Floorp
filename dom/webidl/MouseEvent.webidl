@@ -5,6 +5,7 @@
  *
  * For more information on this interface please see
  * http://dev.w3.org/2006/webapi/DOM-Level-3-Events/html/DOM3-Events.html
+ * https://drafts.csswg.org/cssom-view/#extensions-to-the-mouseevent-interface
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -16,6 +17,8 @@ interface MouseEvent : UIEvent {
   readonly attribute long           screenX;
   [NeedsCallerType]
   readonly attribute long           screenY;
+  readonly attribute long           pageX;
+  readonly attribute long           pageY;
   readonly attribute long           clientX;
   readonly attribute long           clientY;
   [BinaryName="clientX"]

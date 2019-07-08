@@ -11,6 +11,13 @@ add_task(async function capture() {
     return;
   }
 
-  let sets = ["TabsInTitlebar", "Tabs", "WindowSize", "Toolbars", "LightweightThemes", "UIDensities"];
+  let sets = [
+    "TabsInTitlebar",
+    "Tabs",
+    "WindowSize",
+    "Toolbars",
+    "LightweightThemes",
+    "UIDensities",
+  ];
   await TestRunner.start(sets, "primaryUI");
 });

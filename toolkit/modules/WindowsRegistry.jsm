@@ -25,8 +25,9 @@ var WindowsRegistry = {
   readRegKey(aRoot, aPath, aKey, aRegistryNode = 0) {
     const kRegMultiSz = 7;
     const kMode = Ci.nsIWindowsRegKey.ACCESS_READ | aRegistryNode;
-    let registry = Cc["@mozilla.org/windows-registry-key;1"].
-                   createInstance(Ci.nsIWindowsRegKey);
+    let registry = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+      Ci.nsIWindowsRegKey
+    );
     try {
       registry.open(aRoot, aPath, kMode);
       if (registry.hasValue(aKey)) {
@@ -66,13 +67,15 @@ var WindowsRegistry = {
    * @return True if the key was removed or never existed, false otherwise.
    */
   removeRegKey(aRoot, aPath, aKey, aRegistryNode = 0) {
-    let registry = Cc["@mozilla.org/windows-registry-key;1"].
-                   createInstance(Ci.nsIWindowsRegKey);
+    let registry = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+      Ci.nsIWindowsRegKey
+    );
     let result = false;
     try {
-      let mode = Ci.nsIWindowsRegKey.ACCESS_QUERY_VALUE |
-                 Ci.nsIWindowsRegKey.ACCESS_SET_VALUE |
-                 aRegistryNode;
+      let mode =
+        Ci.nsIWindowsRegKey.ACCESS_QUERY_VALUE |
+        Ci.nsIWindowsRegKey.ACCESS_SET_VALUE |
+        aRegistryNode;
       registry.open(aRoot, aPath, mode);
       if (registry.hasValue(aKey)) {
         registry.removeValue(aKey);

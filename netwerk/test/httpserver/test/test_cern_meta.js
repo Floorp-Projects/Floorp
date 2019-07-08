@@ -13,16 +13,26 @@ XPCOMUtils.defineLazyGetter(this, "PREFIX", function() {
 
 XPCOMUtils.defineLazyGetter(this, "tests", function() {
   return [
-     new Test(PREFIX + "/test_both.html",
-              null, start_testBoth, null),
-     new Test(PREFIX + "/test_ctype_override.txt",
-              null, start_test_ctype_override_txt, null),
-     new Test(PREFIX + "/test_status_override.html",
-              null, start_test_status_override_html, null),
-     new Test(PREFIX + "/test_status_override_nodesc.txt",
-              null, start_test_status_override_nodesc_txt, null),
-     new Test(PREFIX + "/caret_test.txt^",
-              null, start_caret_test_txt_, null),
+    new Test(PREFIX + "/test_both.html", null, start_testBoth, null),
+    new Test(
+      PREFIX + "/test_ctype_override.txt",
+      null,
+      start_test_ctype_override_txt,
+      null
+    ),
+    new Test(
+      PREFIX + "/test_status_override.html",
+      null,
+      start_test_status_override_html,
+      null
+    ),
+    new Test(
+      PREFIX + "/test_status_override_nodesc.txt",
+      null,
+      start_test_status_override_nodesc_txt,
+      null
+    ),
+    new Test(PREFIX + "/caret_test.txt^", null, start_caret_test_txt_, null),
   ];
 });
 
@@ -36,7 +46,6 @@ function run_test() {
 
   runHttpTests(tests, testComplete(srv));
 }
-
 
 // TEST DATA
 

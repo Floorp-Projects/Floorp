@@ -2,21 +2,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // nsIProcess unit test
-const TEST_ARGS = ["mozilla", "firefox", "thunderbird", "seamonkey", "foo",
-                   "bar", "argument with spaces", "\"argument with quotes\""];
+const TEST_ARGS = [
+  "mozilla",
+  "firefox",
+  "thunderbird",
+  "seamonkey",
+  "foo",
+  "bar",
+  "argument with spaces",
+  '"argument with quotes"',
+];
 
-const TEST_UNICODE_ARGS = ["M\u00F8z\u00EEll\u00E5",
-                           "\u041C\u043E\u0437\u0438\u043B\u043B\u0430",
-                           "\u09AE\u09CB\u099C\u09BF\u09B2\u09BE",
-                           "\uD808\uDE2C\uD808\uDF63\uD808\uDDB7"];
+const TEST_UNICODE_ARGS = [
+  "M\u00F8z\u00EEll\u00E5",
+  "\u041C\u043E\u0437\u0438\u043B\u043B\u0430",
+  "\u09AE\u09CB\u099C\u09BF\u09B2\u09BE",
+  "\uD808\uDE2C\uD808\uDF63\uD808\uDDB7",
+];
 
 // test if a process can be started, polled for its running status
 // and then killed
 function test_kill() {
   var file = get_test_program("TestBlockingProcess");
 
-  var process = Cc["@mozilla.org/process/util;1"]
-                  .createInstance(Ci.nsIProcess);
+  var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
   process.init(file);
 
   Assert.ok(!process.isRunning);
@@ -24,7 +33,7 @@ function test_kill() {
   try {
     process.kill();
     do_throw("Attempting to kill a not-running process should throw");
-  } catch (e) { }
+  } catch (e) {}
 
   process.run(false, [], 0);
 
@@ -37,7 +46,7 @@ function test_kill() {
   try {
     process.kill();
     do_throw("Attempting to kill a not-running process should throw");
-  } catch (e) { }
+  } catch (e) {}
 }
 
 // test if we can get an exit value from an application that is
@@ -45,8 +54,7 @@ function test_kill() {
 function test_quick() {
   var file = get_test_program("TestQuickReturn");
 
-  var process = Cc["@mozilla.org/process/util;1"]
-                  .createInstance(Ci.nsIProcess);
+  var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
   process.init(file);
 
   // to get an exit value it must be a blocking process
@@ -56,14 +64,14 @@ function test_quick() {
 }
 
 function test_args(file, args, argsAreASCII) {
-  var process = Cc["@mozilla.org/process/util;1"]
-                  .createInstance(Ci.nsIProcess);
+  var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
   process.init(file);
 
-  if (argsAreASCII)
+  if (argsAreASCII) {
     process.run(true, args, args.length);
-  else
+  } else {
     process.runw(true, args, args.length);
+  }
 
   Assert.equal(process.exitValue, 0);
 }
@@ -95,23 +103,28 @@ function rename_and_test(asciiName, unicodeName, args, argsAreASCII) {
 
 // test passing ASCII and Unicode arguments to an application with a Unicode name
 function test_unicode_app() {
-  rename_and_test("TestArguments",
-                  // "Unicode" in Tamil
-                  "\u0BAF\u0BC1\u0BA9\u0BBF\u0B95\u0BCB\u0B9F\u0BCD",
-                  TEST_ARGS, true);
+  rename_and_test(
+    "TestArguments",
+    // "Unicode" in Tamil
+    "\u0BAF\u0BC1\u0BA9\u0BBF\u0B95\u0BCB\u0B9F\u0BCD",
+    TEST_ARGS,
+    true
+  );
 
-  rename_and_test("TestUnicodeArguments",
-                  // "Unicode" in Thai
-                  "\u0E22\u0E39\u0E19\u0E34\u0E42\u0E04\u0E14",
-                  TEST_UNICODE_ARGS, false);
+  rename_and_test(
+    "TestUnicodeArguments",
+    // "Unicode" in Thai
+    "\u0E22\u0E39\u0E19\u0E34\u0E42\u0E04\u0E14",
+    TEST_UNICODE_ARGS,
+    false
+  );
 }
 
 // test if we get notified about a blocking process
 function test_notify_blocking() {
   var file = get_test_program("TestQuickReturn");
 
-  var process = Cc["@mozilla.org/process/util;1"]
-                  .createInstance(Ci.nsIProcess);
+  var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
   process.init(file);
 
   process.runAsync([], 0, {
@@ -128,8 +141,7 @@ function test_notify_blocking() {
 function test_notify_nonblocking() {
   var file = get_test_program("TestArguments");
 
-  var process = Cc["@mozilla.org/process/util;1"]
-                  .createInstance(Ci.nsIProcess);
+  var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
   process.init(file);
 
   process.runAsync(TEST_ARGS, TEST_ARGS.length, {
@@ -146,8 +158,7 @@ function test_notify_nonblocking() {
 function test_notify_killed() {
   var file = get_test_program("TestBlockingProcess");
 
-  var process = Cc["@mozilla.org/process/util;1"]
-                  .createInstance(Ci.nsIProcess);
+  var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
   process.init(file);
 
   process.runAsync([], 0, {

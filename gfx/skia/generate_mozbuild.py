@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import locale
 import subprocess
 from collections import defaultdict
@@ -428,7 +429,7 @@ def write_mozbuild(sources):
 
   f.close()
 
-  print 'Wrote ' + filename
+  print('Wrote ' + filename)
 
 def main():
   platform_sources = generate_platform_sources()

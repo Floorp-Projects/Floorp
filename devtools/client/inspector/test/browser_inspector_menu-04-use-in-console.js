@@ -31,8 +31,11 @@ add_task(async function() {
     is(hud.getInputValue(), "temp0", "first console variable is named temp0");
 
     let result = await jsterm.execute();
-    isnot(result.textContent.indexOf('<p id="console-var">'), -1,
-          "variable temp0 references correct node");
+    isnot(
+      result.textContent.indexOf('<p id="console-var">'),
+      -1,
+      "variable temp0 references correct node"
+    );
 
     await selectNode("#console-var-multi", inspector);
     menuItem.click();
@@ -41,8 +44,11 @@ add_task(async function() {
     is(hud.getInputValue(), "temp1", "second console variable is named temp1");
 
     result = await jsterm.execute();
-    isnot(result.textContent.indexOf('<p id="console-var-multi">'), -1,
-          "variable temp1 references correct node");
+    isnot(
+      result.textContent.indexOf('<p id="console-var-multi">'),
+      -1,
+      "variable temp1 references correct node"
+    );
 
     hud.ui.wrapper.dispatchClearHistory();
   }

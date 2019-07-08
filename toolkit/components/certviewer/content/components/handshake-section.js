@@ -13,8 +13,7 @@ class HandshakeSection extends HTMLElement {
     let template = document.getElementById("handshake-section-template");
     let templateHtml = template.content.cloneNode(true);
 
-    this.attachShadow({mode: "open"})
-        .appendChild(templateHtml);
+    this.attachShadow({ mode: "open" }).appendChild(templateHtml);
 
     this.render();
   }

@@ -4,10 +4,11 @@
 "use strict";
 
 var Feedback = {
-
   get _feedbackURL() {
     delete this._feedbackURL;
-    return this._feedbackURL = Services.urlFormatter.formatURLPref("app.feedbackURL");
+    return (this._feedbackURL = Services.urlFormatter.formatURLPref(
+      "app.feedbackURL"
+    ));
   },
 
   onEvent: function(event, data, callback) {
@@ -22,7 +23,9 @@ var Feedback = {
     } catch (e) {}
 
     let url = this._feedbackURL;
-    let browser = BrowserApp.selectOrAddTab(url, { parentId: BrowserApp.selectedTab.id }).browser;
+    let browser = BrowserApp.selectOrAddTab(url, {
+      parentId: BrowserApp.selectedTab.id,
+    }).browser;
 
     browser.addEventListener("FeedbackClose", this, false, true);
     browser.addEventListener("FeedbackMaybeLater", this, false, true);
@@ -32,7 +35,9 @@ var Feedback = {
     // instead of by the user visiting the page, e.g. through browser history.
     function loadListener(event) {
       browser.removeEventListener("DOMContentLoaded", loadListener);
-      browser.contentDocument.dispatchEvent(new CustomEvent("FeedbackPrompted"));
+      browser.contentDocument.dispatchEvent(
+        new CustomEvent("FeedbackPrompted")
+      );
     }
     browser.addEventListener("DOMContentLoaded", loadListener);
   },

@@ -4,18 +4,21 @@ add_task(async function() {
   info("Starting test");
 
   await SpecialPowers.flushPrefEnv();
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.trackingprotection.enabled", true],
-    // prevent the content blocking on-boarding UI to start mid-way through the test!
-    [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.trackingprotection.enabled", true],
+      // prevent the content blocking on-boarding UI to start mid-way through the test!
+      [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
+    ],
+  });
 
   await UrlClassifierTestUtils.addTestTrackers();
 
   let extension = ExtensionTestUtils.loadExtension({
-    manifest: {permissions: ["https://tracking.example.com/"]},
+    manifest: { permissions: ["https://tracking.example.com/"] },
     files: {
-      "page.html": '<html><head></head><body><iframe src="https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/container.html"></iframe></body></html>',
+      "page.html":
+        '<html><head></head><body><iframe src="https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/container.html"></iframe></body></html>',
     },
     async background() {
       browser.test.sendMessage("ready", browser.runtime.getURL("page.html"));
@@ -29,9 +32,7 @@ add_task(async function() {
   let browser = tab.linkedBrowser;
 
   info("Verify the number of script nodes found");
-  await ContentTask.spawn(browser,
-                          {},
-                          async function(obj) {
+  await ContentTask.spawn(browser, {}, async function(obj) {
     let doc = content.document.querySelector("iframe").contentDocument;
     doc = doc.querySelector("iframe").contentDocument;
     let scripts = doc.querySelectorAll("script");

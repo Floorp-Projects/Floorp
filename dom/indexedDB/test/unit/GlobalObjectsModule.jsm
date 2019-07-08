@@ -5,12 +5,9 @@
 
 Cu.importGlobalProperties(["indexedDB"]);
 
-var EXPORTED_SYMBOLS = [
-  "GlobalObjectsModule",
-];
+var EXPORTED_SYMBOLS = ["GlobalObjectsModule"];
 
-function GlobalObjectsModule() {
-}
+function GlobalObjectsModule() {}
 
 GlobalObjectsModule.prototype = {
   runTest() {

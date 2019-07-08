@@ -31,13 +31,21 @@ function runTest() {
 
   // Wait for the initial load to finish, then navigate the page, then wait
   // for that load to finish, then start test1.
-  iframe.addEventListener("mozbrowserloadend", function() {
-    iframe.src = browserElementTestHelpers.emptyPage1;
+  iframe.addEventListener(
+    "mozbrowserloadend",
+    function() {
+      iframe.src = browserElementTestHelpers.emptyPage1;
 
-    iframe.addEventListener("mozbrowserloadend", function() {
-      SimpleTest.executeSoon(test1);
-    }, {once: true});
-  }, {once: true});
+      iframe.addEventListener(
+        "mozbrowserloadend",
+        function() {
+          SimpleTest.executeSoon(test1);
+        },
+        { once: true }
+      );
+    },
+    { once: true }
+  );
 }
 
 function test1() {
@@ -45,7 +53,8 @@ function test1() {
 
   // Do window.alert within the iframe, then modify the global |testState|
   // after the alert.
-  var script = 'data:,\
+  var script =
+    'data:,\
     this.testState = 0; \
     content.alert("Hello, world!"); \
     this.testState = 1; \
@@ -63,13 +72,16 @@ function test2(e) {
   is(e.detail.message, "Hello, world!");
   e.preventDefault(); // cause the alert to block.
 
-  SimpleTest.executeSoon(function() { test2a(e); });
+  SimpleTest.executeSoon(function() {
+    test2a(e);
+  });
 }
 
 function test2a(e) {
   // The iframe should be blocked on the alert call at the moment, so testState
   // should still be 0.
-  var script = 'data:,\
+  var script =
+    'data:,\
     if (this.testState === 0) { \
       sendAsyncMessage("test-success", "1: Correct testState"); \
     } \
@@ -80,14 +92,17 @@ function test2a(e) {
   mm.loadFrameScript(script, /* allowDelayedLoad = */ false);
   numPendingChildTests++;
 
-  waitForPendingTests(function() { test3(e); });
+  waitForPendingTests(function() {
+    test3(e);
+  });
 }
 
 function test3(e) {
   // Now unblock the iframe and check that the script completed.
   e.detail.unblock();
 
-  var script2 = 'data:,\
+  var script2 =
+    'data:,\
     if (this.testState === 1) { \
       sendAsyncMessage("test-success", "2: Correct testState"); \
     } \
@@ -149,7 +164,8 @@ var promptBlockers = [];
 function test6() {
   iframe.addEventListener("mozbrowsershowmodalprompt", test6a);
 
-  var script = "data:,\
+  var script =
+    "data:,\
     this.testState = 0; \
     content.alert(1); \
     this.testState = 3; \
@@ -168,7 +184,8 @@ function test6a(e) {
 }
 
 function test6b() {
-  var script = 'data:,\
+  var script =
+    'data:,\
     if (this.testState === 0) { \
       sendAsyncMessage("test-success", "1: Correct testState"); \
     } \
@@ -184,7 +201,8 @@ function test6b() {
 function test6c() {
   iframe.addEventListener("mozbrowsershowmodalprompt", test6d);
 
-  var script = "data:,\
+  var script =
+    "data:,\
     this.testState = 1; \
     content.alert(2); \
     this.testState = 2; \
@@ -203,7 +221,8 @@ function test6d(e) {
 }
 
 function test6e() {
-  var script = 'data:,\
+  var script =
+    'data:,\
     if (this.testState === 1) { \
       sendAsyncMessage("test-success", "2: Correct testState"); \
     } \
@@ -221,7 +240,8 @@ function test6f() {
   // Now unblock the iframe and check that the script completed.
   e.detail.unblock();
 
-  var script2 = 'data:,\
+  var script2 =
+    'data:,\
     if (this.testState === 2) { \
       sendAsyncMessage("test-success", "3: Correct testState"); \
     } \
@@ -253,7 +273,8 @@ function test6g() {
   // Now unblock the iframe and check that the script completed.
   e.detail.unblock();
 
-  var script2 = 'data:,\
+  var script2 =
+    'data:,\
     if (this.testState === 3) { \
       sendAsyncMessage("test-success", "4: Correct testState"); \
     } \
@@ -292,7 +313,9 @@ function waitForPendingTests(next) {
   }
 
   if (numPendingChildTests > 0) {
-    SimpleTest.executeSoon(function() { waitForPendingTests(next); });
+    SimpleTest.executeSoon(function() {
+      waitForPendingTests(next);
+    });
     return;
   }
 

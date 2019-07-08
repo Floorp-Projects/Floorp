@@ -18,24 +18,119 @@
 //  The test has one handler for each case and run_tests() fires one request
 //  for each. None of the handlers should see a Range-header.
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var httpserver = null;
 
 const clearTextBody = "This is a slightly longer test\n";
-const encodedBody = [0x1f, 0x8b, 0x08, 0x08, 0xef, 0x70, 0xe6, 0x4c, 0x00, 0x03, 0x74, 0x65, 0x78, 0x74, 0x66, 0x69,
-                     0x6c, 0x65, 0x2e, 0x74, 0x78, 0x74, 0x00, 0x0b, 0xc9, 0xc8, 0x2c, 0x56, 0x00, 0xa2, 0x44, 0x85,
-                     0xe2, 0x9c, 0xcc, 0xf4, 0x8c, 0x92, 0x9c, 0x4a, 0x85, 0x9c, 0xfc, 0xbc, 0xf4, 0xd4, 0x22, 0x85,
-                     0x92, 0xd4, 0xe2, 0x12, 0x2e, 0x2e, 0x00, 0x00, 0xe5, 0xe6, 0xf0, 0x20, 0x00, 0x00, 0x00];
-const decodedBody = [0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x61, 0x20, 0x73, 0x6c, 0x69, 0x67, 0x68, 0x74,
-                     0x6c, 0x79, 0x20, 0x6c, 0x6f, 0x6e, 0x67, 0x65, 0x72, 0x20, 0x74, 0x65, 0x73, 0x74, 0x0a, 0x0a];
+const encodedBody = [
+  0x1f,
+  0x8b,
+  0x08,
+  0x08,
+  0xef,
+  0x70,
+  0xe6,
+  0x4c,
+  0x00,
+  0x03,
+  0x74,
+  0x65,
+  0x78,
+  0x74,
+  0x66,
+  0x69,
+  0x6c,
+  0x65,
+  0x2e,
+  0x74,
+  0x78,
+  0x74,
+  0x00,
+  0x0b,
+  0xc9,
+  0xc8,
+  0x2c,
+  0x56,
+  0x00,
+  0xa2,
+  0x44,
+  0x85,
+  0xe2,
+  0x9c,
+  0xcc,
+  0xf4,
+  0x8c,
+  0x92,
+  0x9c,
+  0x4a,
+  0x85,
+  0x9c,
+  0xfc,
+  0xbc,
+  0xf4,
+  0xd4,
+  0x22,
+  0x85,
+  0x92,
+  0xd4,
+  0xe2,
+  0x12,
+  0x2e,
+  0x2e,
+  0x00,
+  0x00,
+  0xe5,
+  0xe6,
+  0xf0,
+  0x20,
+  0x00,
+  0x00,
+  0x00,
+];
+const decodedBody = [
+  0x54,
+  0x68,
+  0x69,
+  0x73,
+  0x20,
+  0x69,
+  0x73,
+  0x20,
+  0x61,
+  0x20,
+  0x73,
+  0x6c,
+  0x69,
+  0x67,
+  0x68,
+  0x74,
+  0x6c,
+  0x79,
+  0x20,
+  0x6c,
+  0x6f,
+  0x6e,
+  0x67,
+  0x65,
+  0x72,
+  0x20,
+  0x74,
+  0x65,
+  0x73,
+  0x74,
+  0x0a,
+  0x0a,
+];
 
 const partial_data_length = 4;
 var port = null; // set in run_test
 
 function make_channel(url, callback, ctx) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
-                .QueryInterface(Ci.nsIHttpChannel);
+  return NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+  }).QueryInterface(Ci.nsIHttpChannel);
 }
 
 // StreamListener which cancels its request on first data available
@@ -43,17 +138,19 @@ function Canceler(continueFn) {
   this.continueFn = continueFn;
 }
 Canceler.prototype = {
-  QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
-  onStartRequest(request) { },
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIStreamListener",
+    "nsIRequestObserver",
+  ]),
+  onStartRequest(request) {},
 
   onDataAvailable(request, stream, offset, count) {
-    request.QueryInterface(Ci.nsIChannel)
-           .cancel(Cr.NS_BINDING_ABORTED);
+    request.QueryInterface(Ci.nsIChannel).cancel(Cr.NS_BINDING_ABORTED);
   },
   onStopRequest(request, status) {
     Assert.equal(status, Cr.NS_BINDING_ABORTED);
     this.continueFn(request, null);
-  }
+  },
 };
 // Simple StreamListener which performs no validations
 function MyListener(continueFn) {
@@ -61,15 +158,20 @@ function MyListener(continueFn) {
   this._buffer = null;
 }
 MyListener.prototype = {
-  QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
-  onStartRequest(request) { this._buffer = ""; },
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIStreamListener",
+    "nsIRequestObserver",
+  ]),
+  onStartRequest(request) {
+    this._buffer = "";
+  },
 
   onDataAvailable(request, stream, offset, count) {
     this._buffer = this._buffer.concat(read_stream(stream, count));
   },
   onStopRequest(request, status) {
     this.continueFn(request, this._buffer);
-  }
+  },
 };
 
 var case_8_range_request = false;
@@ -77,16 +179,20 @@ function FailedChannelListener(continueFn) {
   this.continueFn = continueFn;
 }
 FailedChannelListener.prototype = {
-  QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
-  onStartRequest(request) { },
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIStreamListener",
+    "nsIRequestObserver",
+  ]),
+  onStartRequest(request) {},
 
-  onDataAvailable(request, stream, offset, count) { },
+  onDataAvailable(request, stream, offset, count) {},
 
   onStopRequest(request, status) {
-    if (case_8_range_request)
+    if (case_8_range_request) {
       Assert.equal(status, Cr.NS_ERROR_CORRUPTED_CONTENT);
+    }
     this.continueFn(request, null);
-  }
+  },
 };
 
 function received_cleartext(request, data) {
@@ -150,9 +256,10 @@ function handler_4(metadata, response) {
       setStdHeaders(response, body.length);
       response.setHeader("Content-Encoding", "gzip", false);
       body = body.slice(0, partial_data_length);
-	  var bos = Cc["@mozilla.org/binaryoutputstream;1"]
-	              .createInstance(Ci.nsIBinaryOutputStream);
-	  bos.setOutputStream(response.bodyOutputStream);
+      var bos = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
+        Ci.nsIBinaryOutputStream
+      );
+      bos.setOutputStream(response.bodyOutputStream);
       response.processAsync();
       bos.writeByteArray(body, body.length);
       response.finish();
@@ -168,8 +275,8 @@ function handler_4(metadata, response) {
   case_4_request_no++;
 }
 function received_partial_4(request, data) {
-// checking length does not work with encoded data
-//  do_check_eq(partial_data_length, data.length);
+  // checking length does not work with encoded data
+  //  do_check_eq(partial_data_length, data.length);
   var chan = make_channel("http://localhost:" + port + "/test_4");
   chan.asyncOpen(new MyListener(received_cleartext));
 }
@@ -226,7 +333,7 @@ function handler_6(metadata, response) {
   case_6_request_no++;
 }
 function received_partial_6(request, data) {
-// would like to verify that the response does not have Accept-Ranges
+  // would like to verify that the response does not have Accept-Ranges
   Assert.equal(partial_data_length, data.length);
   var chan = make_channel("http://localhost:" + port + "/test_6");
   chan.asyncOpen(new ChannelListener(received_cleartext, null));
@@ -257,14 +364,14 @@ function handler_7(metadata, response) {
       response.setHeader("Content-Type", "text/plain", false);
       response.setHeader("ETag", "test7Etag");
       if (metadata.hasHeader("Range")) {
-	  Assert.ok(metadata.hasHeader("If-Range"));
-	  response.setStatusLine(metadata.httpVersion, 206, "Partial Content");
-	  response.setHeader("Content-Range", "4-9/10");
-	  response.setHeader("Content-Length", "6");
-	  response.bodyOutputStream.write(simpleBody.slice(4), 6);
+        Assert.ok(metadata.hasHeader("If-Range"));
+        response.setStatusLine(metadata.httpVersion, 206, "Partial Content");
+        response.setHeader("Content-Range", "4-9/10");
+        response.setHeader("Content-Length", "6");
+        response.bodyOutputStream.write(simpleBody.slice(4), 6);
       } else {
-	  response.setHeader("Content-Length", "10");
-	  response.bodyOutputStream.write(simpleBody, 10);
+        response.setHeader("Content-Length", "10");
+        response.bodyOutputStream.write(simpleBody, 10);
       }
       break;
     default:
@@ -296,8 +403,8 @@ function handler_8(metadata, response) {
       break;
     case 1:
       if (metadata.hasHeader("Range")) {
-	  Assert.ok(metadata.hasHeader("If-Range"));
-	  case_8_range_request = true;
+        Assert.ok(metadata.hasHeader("If-Range"));
+        case_8_range_request = true;
       }
       response.setStatusLine(metadata.httpVersion, 206, "Partial Content");
       response.setHeader("Content-Type", "text/plain", false);
@@ -316,7 +423,9 @@ function received_partial_8(request, data) {
   Assert.equal(4, data.length);
   // do it again to get the rest
   var chan = make_channel("http://localhost:" + port + "/test_8");
-  chan.asyncOpen(new FailedChannelListener(testFinished, null, CL_EXPECT_LATE_FAILURE));
+  chan.asyncOpen(
+    new FailedChannelListener(testFinished, null, CL_EXPECT_LATE_FAILURE)
+  );
 }
 
 var case_9_request_no = 0;
@@ -358,8 +467,9 @@ function received_partial_9(request, data) {
 // Simple mechanism to keep track of tests and stop the server
 var numTestsFinished = 0;
 function testFinished() {
-  if (++numTestsFinished == 7)
+  if (++numTestsFinished == 7) {
     httpserver.stop(do_test_finished);
+  }
 }
 
 function run_test() {

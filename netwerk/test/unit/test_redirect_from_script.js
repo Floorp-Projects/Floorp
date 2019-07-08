@@ -23,7 +23,7 @@
  *
  */
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 
@@ -31,7 +31,8 @@ Cu.importGlobalProperties(["XMLHttpRequest"]);
 // work for some purposes.
 redirectHook = "http-on-modify-request";
 
-var httpServer = null, httpServer2 = null;
+var httpServer = null,
+  httpServer2 = null;
 
 XPCOMUtils.defineLazyGetter(this, "port1", function() {
   return httpServer.identity.primaryPort;
@@ -80,72 +81,76 @@ XPCOMUtils.defineLazyGetter(this, "bait4URI", function() {
   return "http://localhost:" + port1 + bait4Path;
 });
 
-var testHeaderName = "X-Redirected-By-Script"
+var testHeaderName = "X-Redirected-By-Script";
 var testHeaderVal = "Success";
 var testHeaderVal2 = "Success on server 2";
 
 function make_channel(url, callback, ctx) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
-function baitHandler(metadata, response)
-{
+function baitHandler(metadata, response) {
   // Content-Type required: https://bugzilla.mozilla.org/show_bug.cgi?id=748117
   response.setHeader("Content-Type", "text/html", false);
   response.bodyOutputStream.write(baitText, baitText.length);
 }
 
-function redirectedHandler(metadata, response)
-{
+function redirectedHandler(metadata, response) {
   response.setHeader("Content-Type", "text/html", false);
   response.bodyOutputStream.write(redirectedText, redirectedText.length);
   response.setHeader(testHeaderName, testHeaderVal);
 }
 
-function redirected2Handler(metadata, response)
-{
+function redirected2Handler(metadata, response) {
   response.setHeader("Content-Type", "text/html", false);
   response.bodyOutputStream.write(redirectedText, redirectedText.length);
   response.setHeader(testHeaderName, testHeaderVal2);
 }
 
-function bait3Handler(metadata, response)
-{
+function bait3Handler(metadata, response) {
   response.setHeader("Content-Type", "text/html", false);
   response.setStatusLine(metadata.httpVersion, 302, "Found");
   response.setHeader("Location", baitURI);
 }
 
-function Redirector()
-{
+function Redirector() {
   this.register();
 }
 
 Redirector.prototype = {
   // This class observes an event and uses that to
   // trigger a redirectTo(uri) redirect using the new API
-  register()
-  {
-    Cc["@mozilla.org/observer-service;1"].
-      getService(Ci.nsIObserverService).
-      addObserver(this, redirectHook, true);
+  register() {
+    Cc["@mozilla.org/observer-service;1"]
+      .getService(Ci.nsIObserverService)
+      .addObserver(this, redirectHook, true);
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsIObserver", "nsISupportsWeakReference"]),
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIObserver",
+    "nsISupportsWeakReference",
+  ]),
 
-  observe(subject, topic, data)
-  {
+  observe(subject, topic, data) {
     if (topic == redirectHook) {
-      if (!(subject instanceof Ci.nsIHttpChannel))
+      if (!(subject instanceof Ci.nsIHttpChannel)) {
         do_throw(redirectHook + " observed a non-HTTP channel");
+      }
       var channel = subject.QueryInterface(Ci.nsIHttpChannel);
-      var ioservice = Cc["@mozilla.org/network/io-service;1"].
-                        getService(Ci.nsIIOService);
+      var ioservice = Cc["@mozilla.org/network/io-service;1"].getService(
+        Ci.nsIIOService
+      );
       var target = null;
-      if (channel.URI.spec == baitURI)  target = redirectedURI;
-      if (channel.URI.spec == bait2URI) target = redirected2URI;
-      if (channel.URI.spec == bait4URI) target = baitURI;
-       // if we have a target, redirect there
+      if (channel.URI.spec == baitURI) {
+        target = redirectedURI;
+      }
+      if (channel.URI.spec == bait2URI) {
+        target = redirected2URI;
+      }
+      if (channel.URI.spec == bait4URI) {
+        target = baitURI;
+      }
+      // if we have a target, redirect there
       if (target) {
         var tURI = ioservice.newURI(target);
         try {
@@ -155,19 +160,18 @@ Redirector.prototype = {
         }
       }
     }
-  }
-}
+  },
+};
 
-function makeAsyncTest(uri, headerValue, nextTask)
-{
+function makeAsyncTest(uri, headerValue, nextTask) {
   // Make a test to check a redirect that is created with channel.asyncOpen()
 
   // Produce a callback function which checks for the presence of headerValue,
   // and then continues to the next async test task
-  var verifier = function(req, buffer)
-  {
-    if (!(req instanceof Ci.nsIHttpChannel))
+  var verifier = function(req, buffer) {
+    if (!(req instanceof Ci.nsIHttpChannel)) {
       do_throw(req + " is not an nsIHttpChannel, catastrophe imminent!");
+    }
 
     var httpChannel = req.QueryInterface(Ci.nsIHttpChannel);
     Assert.equal(httpChannel.getResponseHeader(testHeaderName), headerValue);
@@ -176,8 +180,7 @@ function makeAsyncTest(uri, headerValue, nextTask)
   };
 
   // Produce a function to run an asyncOpen test using the above verifier
-  var test = function()
-  {
+  var test = function() {
     var chan = make_channel(uri);
     chan.asyncOpen(new ChannelListener(verifier));
   };
@@ -189,18 +192,16 @@ function makeAsyncTest(uri, headerValue, nextTask)
 var testViaAsyncOpen4 = null;
 var testViaAsyncOpen3 = null;
 var testViaAsyncOpen2 = null;
-var testViaAsyncOpen  = null;
+var testViaAsyncOpen = null;
 
-function testViaXHR()
-{
-  runXHRTest(baitURI,  testHeaderVal);
+function testViaXHR() {
+  runXHRTest(baitURI, testHeaderVal);
   runXHRTest(bait2URI, testHeaderVal2);
   runXHRTest(bait3URI, testHeaderVal);
   runXHRTest(bait4URI, testHeaderVal);
 }
 
-function runXHRTest(uri, headerValue)
-{
+function runXHRTest(uri, headerValue) {
   // Check that making an XHR request for uri winds up redirecting to a result with the
   // appropriate headerValue
   var req = new XMLHttpRequest();
@@ -210,20 +211,15 @@ function runXHRTest(uri, headerValue)
   Assert.equal(req.response, redirectedText);
 }
 
-function done()
-{
-  httpServer.stop(
-    function ()
-    {
-      httpServer2.stop(do_test_finished);
-    }
-  );
+function done() {
+  httpServer.stop(function() {
+    httpServer2.stop(do_test_finished);
+  });
 }
 
 var redirector = new Redirector();
 
-function run_test()
-{
+function run_test() {
   httpServer = new HttpServer();
   httpServer.registerPathHandler(baitPath, baitHandler);
   httpServer.registerPathHandler(bait2Path, baitHandler);
@@ -240,11 +236,15 @@ function run_test()
   // stanza backwards!
   testViaAsyncOpen4 = makeAsyncTest(bait4URI, testHeaderVal, done);
   testViaAsyncOpen3 = makeAsyncTest(bait3URI, testHeaderVal, testViaAsyncOpen4);
-  testViaAsyncOpen2 = makeAsyncTest(bait2URI, testHeaderVal2, testViaAsyncOpen3);
-  testViaAsyncOpen  = makeAsyncTest(baitURI,  testHeaderVal, testViaAsyncOpen2);
+  testViaAsyncOpen2 = makeAsyncTest(
+    bait2URI,
+    testHeaderVal2,
+    testViaAsyncOpen3
+  );
+  testViaAsyncOpen = makeAsyncTest(baitURI, testHeaderVal, testViaAsyncOpen2);
 
   testViaXHR();
-  testViaAsyncOpen();  // will call done() asynchronously for cleanup
+  testViaAsyncOpen(); // will call done() asynchronously for cleanup
 
   do_test_pending();
 }

@@ -7,8 +7,10 @@
 // This file tests the functions of mozIStorageStatementWrapper
 
 function setup() {
-  getOpenedDatabase().createTable("test", "id INTEGER PRIMARY KEY, val NONE," +
-                                          "alt_val NONE");
+  getOpenedDatabase().createTable(
+    "test",
+    "id INTEGER PRIMARY KEY, val NONE,alt_val NONE"
+  );
 }
 
 /**
@@ -32,7 +34,9 @@ function setup() {
  *        the value retrieved from the database
  */
 function checkVal(aActualVal, aReturnedVal) {
-  if (aActualVal instanceof Date) aActualVal = aActualVal.valueOf() * 1000.0;
+  if (aActualVal instanceof Date) {
+    aActualVal = aActualVal.valueOf() * 1000.0;
+  }
   Assert.equal(aActualVal, aReturnedVal);
 }
 
@@ -98,8 +102,9 @@ function insertAndCheckSingleParam(aVal) {
 function insertAndCheckMultipleParams(aVal) {
   clearTable();
 
-  var stmt = createStatement("INSERT INTO test (val, alt_val) " +
-                             "VALUES (:val, :val)");
+  var stmt = createStatement(
+    "INSERT INTO test (val, alt_val) VALUES (:val, :val)"
+  );
   stmt.params.val = aVal;
   stmt.execute();
   stmt.finalize();
@@ -127,8 +132,11 @@ function printValDesc(aVal) {
   } catch (ex) {
     toSource = "";
   }
-  print("Testing value: toString=" + aVal +
-        (toSource ? " toSource=" + toSource : ""));
+  print(
+    "Testing value: toString=" +
+      aVal +
+      (toSource ? " toSource=" + toSource : "")
+  );
 }
 
 function run_test() {
@@ -138,11 +146,11 @@ function run_test() {
   // storage/mozStorageStatementParams.cpp tells us that the following types
   // and only the following types are valid as statement parameters:
   var vals = [
-    1337,       // int
-    3.1337,     // double
-    "foo",      // string
-    true,       // boolean
-    null,       // null
+    1337, // int
+    3.1337, // double
+    "foo", // string
+    true, // boolean
+    null, // null
     new Date(), // Date object
   ];
 

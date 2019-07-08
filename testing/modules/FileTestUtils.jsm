@@ -8,9 +8,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "FileTestUtils",
-];
+var EXPORTED_SYMBOLS = ["FileTestUtils"];
 
 ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm", this);
 ChromeUtils.import("resource://gre/modules/DownloadPaths.jsm", this);
@@ -91,8 +89,10 @@ var FileTestUtils = {
       // error if the file existed before, and was recently deleted. There is no
       // way to distinguish this from an access list issue because checking for
       // the file existence would also result in the same error.
-      if (!(ex instanceof OS.File.Error) ||
-          !(ex.becauseNoSuchFile || ex.becauseAccessDenied)) {
+      if (
+        !(ex instanceof OS.File.Error) ||
+        !(ex.becauseNoSuchFile || ex.becauseAccessDenied)
+      ) {
         throw ex;
       }
     }
@@ -103,7 +103,9 @@ var FileTestUtils = {
  * Returns a reference to a global temporary directory that will be deleted
  * when all tests terminate.
  */
-XPCOMUtils.defineLazyGetter(FileTestUtils, "_globalTemporaryDirectory",
+XPCOMUtils.defineLazyGetter(
+  FileTestUtils,
+  "_globalTemporaryDirectory",
   function() {
     // While previous test runs should have deleted their temporary directories,
     // on Windows they might still be pending deletion on the physical file
@@ -112,7 +114,8 @@ XPCOMUtils.defineLazyGetter(FileTestUtils, "_globalTemporaryDirectory",
     let randomNumber = Math.floor(Math.random() * 1000000);
     let dir = FileUtils.getFile("TmpD", ["testdir-" + randomNumber]);
     dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-    AsyncShutdown.profileBeforeChange.addBlocker("Removing test files",
+    AsyncShutdown.profileBeforeChange.addBlocker(
+      "Removing test files",
       async () => {
         // Remove the files we know about first.
         for (let path of gPathsToRemove) {
@@ -126,13 +129,16 @@ XPCOMUtils.defineLazyGetter(FileTestUtils, "_globalTemporaryDirectory",
         // Detect any extra files, like the ".part" files of downloads.
         let iterator = new OS.File.DirectoryIterator(dir.path);
         try {
-          await iterator.forEach(entry => this.tolerantRemove(entry.path,
-                                                              entry.isDir));
+          await iterator.forEach(entry =>
+            this.tolerantRemove(entry.path, entry.isDir)
+          );
         } finally {
           iterator.close();
         }
         // This will fail if any test leaves inaccessible files behind.
         await OS.File.removeEmptyDir(dir.path);
-      });
+      }
+    );
     return dir;
-  });
+  }
+);

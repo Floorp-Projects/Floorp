@@ -23,7 +23,10 @@ function frameScript() {
       if (name != "SessionStore:update") {
         return original(name, ...args);
       }
-      throw new Components.Exception("Simulated OOM", Cr.NS_ERROR_OUT_OF_MEMORY);
+      throw new Components.Exception(
+        "Simulated OOM",
+        Cr.NS_ERROR_OUT_OF_MEMORY
+      );
     };
   };
 
@@ -40,14 +43,13 @@ add_task(async function() {
   let browser = newTab.linkedBrowser;
   await ContentTask.spawn(browser, null, frameScript);
 
-
   let promiseReported = new Promise(resolve => {
     browser.messageManager.addMessageListener("SessionStore:error", resolve);
   });
 
   // Attempt to flush. This should fail.
   let promiseFlushed = TabStateFlusher.flush(browser);
-  promiseFlushed.then((success) => {
+  promiseFlushed.then(success => {
     if (success) {
       throw new Error("Flush should have failed");
     }
@@ -60,7 +62,9 @@ add_task(async function() {
   await new Promise(resolve => setTimeout(resolve, 10));
 
   // By now, Telemetry should have been updated.
-  let snapshot2 = Services.telemetry.getHistogramById(HISTOGRAM_NAME).snapshot();
+  let snapshot2 = Services.telemetry
+    .getHistogramById(HISTOGRAM_NAME)
+    .snapshot();
   gBrowser.removeTab(newTab);
 
   Assert.ok(snapshot2.sum > snapshot.sum);

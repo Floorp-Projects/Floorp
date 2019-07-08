@@ -2,7 +2,7 @@
  * This test is used to make sure we won't show the sound indicator for silent
  * web audio.
  */
- /* eslint-disable mozilla/no-arbitrary-setTimeout */
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
 function createAudioContext() {
@@ -23,10 +23,10 @@ function createAudioContext() {
 async function waitUntilAudioContextStarts() {
   const ac = content.ac;
   if (ac.state == "running") {
-   return;
+    return;
   }
 
-  await new Promise((resolve) => {
+  await new Promise(resolve => {
     ac.onstatechange = () => {
       if (ac.state == "running") {
         ac.onstatechange = null;
@@ -38,8 +38,10 @@ async function waitUntilAudioContextStarts() {
 
 add_task(async function testSilentAudioContext() {
   info(`- create new tab -`);
-  const tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
-                                                          "about:blank");
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "about:blank"
+  );
   const browser = tab.linkedBrowser;
 
   info(`- create audio context -`);

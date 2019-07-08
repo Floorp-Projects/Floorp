@@ -12,8 +12,9 @@ function observeOnce(topic) {
 }
 
 add_task(async function setPrefs() {
-  await SpecialPowers.pushPrefEnv({"set": [["fission.oopif.attribute", true],
-                                           ["dom.ipc.processCount", 10000]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.oopif.attribute", true], ["dom.ipc.processCount", 10000]],
+  });
 });
 
 add_task(async function runTest() {
@@ -25,13 +26,21 @@ add_task(async function runTest() {
   is(chromeBC.parent, null, "chrome has no parent");
 
   // Open a new tab, and check that basic frames work out.
-  let tab = await BrowserTestUtils.openNewForegroundTab({gBrowser});
+  let tab = await BrowserTestUtils.openNewForegroundTab({ gBrowser });
 
   info(`root, parent`);
   let rootBC = tab.linkedBrowser.browsingContext;
   ok(rootBC.currentWindowGlobal, "[parent] root has a window global");
-  is(rootBC.embedderWindowGlobal, chromeBC.currentWindowGlobal, "[parent] root has chrome as embedder global");
-  is(rootBC.embedderElement, tab.linkedBrowser, "[parent] root has browser as embedder element");
+  is(
+    rootBC.embedderWindowGlobal,
+    chromeBC.currentWindowGlobal,
+    "[parent] root has chrome as embedder global"
+  );
+  is(
+    rootBC.embedderElement,
+    tab.linkedBrowser,
+    "[parent] root has browser as embedder element"
+  );
   is(rootBC.parent, null, "[parent] root has no parent");
 
   // Test with an in-process frame
@@ -55,7 +64,11 @@ add_task(async function runTest() {
   info(`frame, parent`);
   let frameBC = BrowsingContext.get(frameId);
   ok(frameBC.currentWindowGlobal, "[parent] frame has a window global");
-  is(frameBC.embedderWindowGlobal, rootBC.currentWindowGlobal, "[parent] frame has root as embedder global");
+  is(
+    frameBC.embedderWindowGlobal,
+    rootBC.currentWindowGlobal,
+    "[parent] frame has root as embedder global"
+  );
   is(frameBC.embedderElement, null, "[parent] frame has no embedder element");
   is(frameBC.parent, rootBC, "[parent] frame has root as parent");
 
@@ -86,20 +99,32 @@ add_task(async function runTest() {
     info(`oop frame, child`);
     let oopBC = oop.frameLoader.browsingContext;
     is(oopBC.embedderElement, oop, "[child] oop frame embedded within iframe");
-    is(oopBC.parent, content.docShell.browsingContext, "[child] frame has root as parent");
+    is(
+      oopBC.parent,
+      content.docShell.browsingContext,
+      "[child] frame has root as parent"
+    );
 
     return oopBC.id;
   });
 
   info(`oop frame, parent`);
   let oopBC = BrowsingContext.get(oopID);
-  is(oopBC.embedderWindowGlobal, rootBC.currentWindowGlobal, "[parent] oop frame has root as embedder global");
+  is(
+    oopBC.embedderWindowGlobal,
+    rootBC.currentWindowGlobal,
+    "[parent] oop frame has root as embedder global"
+  );
   is(oopBC.embedderElement, null, "[parent] oop frame has no embedder element");
   is(oopBC.parent, rootBC, "[parent] oop frame has root as parent");
 
   info(`waiting for oop window global`);
   let oopWindowGlobal = await oopWindowGlobalPromise;
-  is(oopBC.currentWindowGlobal, oopWindowGlobal, "[parent] oop frame has a window global");
+  is(
+    oopBC.currentWindowGlobal,
+    oopWindowGlobal,
+    "[parent] oop frame has a window global"
+  );
 
   // Open a new window, and adopt |tab| into it.
 
@@ -108,7 +133,11 @@ add_task(async function runTest() {
   info(`new chrome, parent`);
   let newChromeBC = newWindow.docShell.browsingContext;
   ok(newChromeBC.currentWindowGlobal, "Should have a current WindowGlobal");
-  is(newChromeBC.embedderWindowGlobal, null, "new chrome has no embedder global");
+  is(
+    newChromeBC.embedderWindowGlobal,
+    null,
+    "new chrome has no embedder global"
+  );
   is(newChromeBC.embedderElement, null, "new chrome has no embedder element");
   is(newChromeBC.parent, null, "new chrome has no parent");
 
@@ -117,9 +146,21 @@ add_task(async function runTest() {
   info(`adopting tab`);
   let newTab = newWindow.gBrowser.adoptTab(tab);
 
-  is(newTab.linkedBrowser.browsingContext, rootBC, "[parent] root browsing context survived");
-  is(rootBC.embedderWindowGlobal, newChromeBC.currentWindowGlobal, "[parent] embedder window global updated");
-  is(rootBC.embedderElement, newTab.linkedBrowser, "[parent] embedder element updated");
+  is(
+    newTab.linkedBrowser.browsingContext,
+    rootBC,
+    "[parent] root browsing context survived"
+  );
+  is(
+    rootBC.embedderWindowGlobal,
+    newChromeBC.currentWindowGlobal,
+    "[parent] embedder window global updated"
+  );
+  is(
+    rootBC.embedderElement,
+    newTab.linkedBrowser,
+    "[parent] embedder element updated"
+  );
   is(rootBC.parent, null, "[parent] root has no parent");
 
   info(`closing window`);

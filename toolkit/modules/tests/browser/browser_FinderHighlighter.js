@@ -6,46 +6,63 @@ const kPrefHighlightAll = "findbar.highlightAll";
 const kPrefModalHighlight = "findbar.modalHighlight";
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({ set: [
-    [kPrefHighlightAll, true],
-    [kPrefModalHighlight, true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [[kPrefHighlightAll, true], [kPrefModalHighlight, true]],
+  });
 });
 
 // Test the results of modal highlighting, which is on by default.
 add_task(async function testModalResults() {
   let tests = new Map([
-    ["Roland", {
-      rectCount: 2,
-      insertCalls: [2, 4],
-      removeCalls: [0, 1],
-      animationCalls: [1, 2],
-    }],
-    ["their law might propagate their kind", {
-      rectCount: 2,
-      insertCalls: [5, 6],
-      removeCalls: [4, 5],
-      // eslint-disable-next-line object-shorthand
-      extraTest: function(maskNode, outlineNode, rects) {
-        Assert.equal(outlineNode.getElementsByTagName("div").length, 2,
-          "There should be multiple rects drawn");
+    [
+      "Roland",
+      {
+        rectCount: 2,
+        insertCalls: [2, 4],
+        removeCalls: [0, 1],
+        animationCalls: [1, 2],
       },
-    }],
-    ["ro", {
-      rectCount: 41,
-      insertCalls: [1, 4],
-      removeCalls: [0, 2],
-    }],
-    ["new", {
-      rectCount: 2,
-      insertCalls: [1, 4],
-      removeCalls: [0, 2],
-    }],
-    ["o", {
-      rectCount: 492,
-      insertCalls: [1, 4],
-      removeCalls: [0, 2],
-    }],
+    ],
+    [
+      "their law might propagate their kind",
+      {
+        rectCount: 2,
+        insertCalls: [5, 6],
+        removeCalls: [4, 5],
+        // eslint-disable-next-line object-shorthand
+        extraTest: function(maskNode, outlineNode, rects) {
+          Assert.equal(
+            outlineNode.getElementsByTagName("div").length,
+            2,
+            "There should be multiple rects drawn"
+          );
+        },
+      },
+    ],
+    [
+      "ro",
+      {
+        rectCount: 41,
+        insertCalls: [1, 4],
+        removeCalls: [0, 2],
+      },
+    ],
+    [
+      "new",
+      {
+        rectCount: 2,
+        insertCalls: [1, 4],
+        removeCalls: [0, 2],
+      },
+    ],
+    [
+      "o",
+      {
+        rectCount: 492,
+        insertCalls: [1, 4],
+        removeCalls: [0, 2],
+      },
+    ],
   ]);
   let url = kFixtureBaseURL + "file_FinderSample.html";
   await BrowserTestUtils.withNewTab(url, async function(browser) {
@@ -56,13 +73,18 @@ add_task(async function testModalResults() {
       Assert.ok(!findbar.hidden, "Findbar should be open now.");
 
       let timeout = kIteratorTimeout;
-      if (word.length == 1)
+      if (word.length == 1) {
         timeout *= 4;
-      else if (word.length == 2)
+      } else if (word.length == 2) {
         timeout *= 2;
+      }
       await new Promise(resolve => setTimeout(resolve, timeout));
-      let promise = promiseTestHighlighterOutput(browser, word, expectedResult,
-        expectedResult.extraTest);
+      let promise = promiseTestHighlighterOutput(
+        browser,
+        word,
+        expectedResult,
+        expectedResult.extraTest
+      );
       await promiseEnterStringIntoFindField(findbar, word);
       await promise;
 
@@ -91,7 +113,7 @@ add_task(async function testModalSwitching() {
     await promiseEnterStringIntoFindField(findbar, word);
     await promise;
 
-    await SpecialPowers.pushPrefEnv({ "set": [[ kPrefModalHighlight, false ]] });
+    await SpecialPowers.pushPrefEnv({ set: [[kPrefModalHighlight, false]] });
 
     expectedResult = {
       rectCount: 0,
@@ -106,7 +128,7 @@ add_task(async function testModalSwitching() {
     findbar.close(true);
   });
 
-  await SpecialPowers.pushPrefEnv({ "set": [[ kPrefModalHighlight, true ]] });
+  await SpecialPowers.pushPrefEnv({ set: [[kPrefModalHighlight, true]] });
 });
 
 // Test if highlighting a dark page is detected properly.
@@ -123,10 +145,17 @@ add_task(async function testDarkPageDetection() {
       insertCalls: [1, 3],
       removeCalls: [0, 1],
     };
-    let promise = promiseTestHighlighterOutput(browser, word, expectedResult, function(node) {
-      Assert.ok(node.style.background.startsWith("rgba(0, 0, 0"),
-        "White HTML page should have a black background color set for the mask");
-    });
+    let promise = promiseTestHighlighterOutput(
+      browser,
+      word,
+      expectedResult,
+      function(node) {
+        Assert.ok(
+          node.style.background.startsWith("rgba(0, 0, 0"),
+          "White HTML page should have a black background color set for the mask"
+        );
+      }
+    );
     await promiseEnterStringIntoFindField(findbar, word);
     await promise;
 
@@ -147,7 +176,9 @@ add_task(async function testDarkPageDetection() {
 
     await ContentTask.spawn(browser, null, async function() {
       let dwu = content.windowUtils;
-      let uri = "data:text/css;charset=utf-8," + encodeURIComponent(`
+      let uri =
+        "data:text/css;charset=utf-8," +
+        encodeURIComponent(`
         body {
           background: maroon radial-gradient(circle, #a01010 0%, #800000 80%) center center / cover no-repeat;
           color: white;
@@ -157,10 +188,17 @@ add_task(async function testDarkPageDetection() {
       } catch (e) {}
     });
 
-    let promise = promiseTestHighlighterOutput(browser, word, expectedResult, node => {
-      Assert.ok(node.style.background.startsWith("rgba(255, 255, 255"),
-        "Dark HTML page should have a white background color set for the mask");
-    });
+    let promise = promiseTestHighlighterOutput(
+      browser,
+      word,
+      expectedResult,
+      node => {
+        Assert.ok(
+          node.style.background.startsWith("rgba(255, 255, 255"),
+          "Dark HTML page should have a white background color set for the mask"
+        );
+      }
+    );
     await promiseEnterStringIntoFindField(findbar, word);
     await promise;
 
@@ -193,7 +231,7 @@ add_task(async function testHighlightAllToggle() {
       removeCalls: [1, 2],
     };
     promise = promiseTestHighlighterOutput(browser, word, expectedResult);
-    await SpecialPowers.pushPrefEnv({ "set": [[ kPrefHighlightAll, false ]] });
+    await SpecialPowers.pushPrefEnv({ set: [[kPrefHighlightAll, false]] });
     await promise;
 
     // For posterity, let's switch back.
@@ -203,13 +241,15 @@ add_task(async function testHighlightAllToggle() {
       removeCalls: [0, 1],
     };
     promise = promiseTestHighlighterOutput(browser, word, expectedResult);
-    await SpecialPowers.pushPrefEnv({ "set": [[ kPrefHighlightAll, true ]] });
+    await SpecialPowers.pushPrefEnv({ set: [[kPrefHighlightAll, true]] });
     await promise;
   });
 });
 
 add_task(async function testXMLDocument() {
-  let url = "data:text/xml;charset=utf-8," + encodeURIComponent(`<?xml version="1.0"?>
+  let url =
+    "data:text/xml;charset=utf-8," +
+    encodeURIComponent(`<?xml version="1.0"?>
 <result>
   <Title>Example</Title>
   <Error>Error</Error>
@@ -293,10 +333,13 @@ add_task(async function testHideOnClear() {
 });
 
 add_task(async function testRectsAndTexts() {
-  let url = "data:text/html;charset=utf-8," +
-    encodeURIComponent("<div style=\"width: 150px; border: 1px solid black\">" +
-    "Here are a lot of words Please use find to highlight some words that wrap" +
-    " across a line boundary and see what happens.</div>");
+  let url =
+    "data:text/html;charset=utf-8," +
+    encodeURIComponent(
+      '<div style="width: 150px; border: 1px solid black">' +
+        "Here are a lot of words Please use find to highlight some words that wrap" +
+        " across a line boundary and see what happens.</div>"
+    );
   await BrowserTestUtils.withNewTab(url, async function(browser) {
     let findbar = await gBrowser.getFindBar();
     await promiseOpenFindbar(findbar);
@@ -307,12 +350,29 @@ add_task(async function testRectsAndTexts() {
       insertCalls: [2, 4],
       removeCalls: [0, 2],
     };
-    let promise = promiseTestHighlighterOutput(browser, word, expectedResult, (maskNode, outlineNode) => {
-      let boxes = outlineNode.getElementsByTagName("span");
-      Assert.equal(boxes.length, 2, "There should be two outline boxes containing text");
-      Assert.equal(boxes[0].textContent.trim(), "words", "First text should match");
-      Assert.equal(boxes[1].textContent.trim(), "Please use find to", "Second word should match");
-    });
+    let promise = promiseTestHighlighterOutput(
+      browser,
+      word,
+      expectedResult,
+      (maskNode, outlineNode) => {
+        let boxes = outlineNode.getElementsByTagName("span");
+        Assert.equal(
+          boxes.length,
+          2,
+          "There should be two outline boxes containing text"
+        );
+        Assert.equal(
+          boxes[0].textContent.trim(),
+          "words",
+          "First text should match"
+        );
+        Assert.equal(
+          boxes[1].textContent.trim(),
+          "Please use find to",
+          "Second word should match"
+        );
+      }
+    );
     await promiseEnterStringIntoFindField(findbar, word);
     await promise;
   });
@@ -326,7 +386,9 @@ add_task(async function testTooLargeToggle() {
 
     await ContentTask.spawn(browser, null, async function() {
       let dwu = content.windowUtils;
-      let uri = "data:text/css;charset=utf-8," + encodeURIComponent(`
+      let uri =
+        "data:text/css;charset=utf-8," +
+        encodeURIComponent(`
         body {
           min-height: 1234567px;
         }`);

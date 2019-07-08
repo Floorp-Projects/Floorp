@@ -23,41 +23,66 @@ add_task(async function() {
   await selectNode("#grid", inspector);
   const gridContainer = await getContainerForSelector("#grid", inspector);
   const gridDisplayBadge = gridContainer.elt.querySelector(
-    ".inspector-badge.interactive[data-display]");
-  ok(!gridDisplayBadge.classList.contains("active"), "grid display badge is not active.");
-  ok(gridDisplayBadge.classList.contains("interactive"),
-    "grid display badge is interactive.");
+    ".inspector-badge.interactive[data-display]"
+  );
+  ok(
+    !gridDisplayBadge.classList.contains("active"),
+    "grid display badge is not active."
+  );
+  ok(
+    gridDisplayBadge.classList.contains("interactive"),
+    "grid display badge is interactive."
+  );
 
   info("Check the initial state of the grid highlighter.");
-  ok(!highlighters.gridHighlighters.size,
-    "No CSS grid highlighter exists in the highlighters overlay.");
+  ok(
+    !highlighters.gridHighlighters.size,
+    "No CSS grid highlighter exists in the highlighters overlay."
+  );
 
   info("Toggling ON the CSS grid highlighter from the grid display badge.");
   const onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  let onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length === 1 &&
-    state.grids[0].highlighted);
+  let onCheckboxChange = waitUntilState(
+    store,
+    state => state.grids.length === 1 && state.grids[0].highlighted
+  );
   gridDisplayBadge.click();
   await onHighlighterShown;
   await onCheckboxChange;
 
-  info("Check that the CSS grid highlighter is created and the display badge state.");
-  is(highlighters.gridHighlighters.size, 1,
-    "CSS grid highlighter is created in the highlighters overlay.");
-  ok(gridDisplayBadge.classList.contains("active"), "grid display badge is active.");
-  ok(gridDisplayBadge.classList.contains("interactive"),
-   "grid display badge is interactive.");
+  info(
+    "Check that the CSS grid highlighter is created and the display badge state."
+  );
+  is(
+    highlighters.gridHighlighters.size,
+    1,
+    "CSS grid highlighter is created in the highlighters overlay."
+  );
+  ok(
+    gridDisplayBadge.classList.contains("active"),
+    "grid display badge is active."
+  );
+  ok(
+    gridDisplayBadge.classList.contains("interactive"),
+    "grid display badge is interactive."
+  );
 
   info("Toggling OFF the CSS grid highlighter from the grid display badge.");
   const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
-  onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 1 &&
-    !state.grids[0].highlighted);
+  onCheckboxChange = waitUntilState(
+    store,
+    state => state.grids.length == 1 && !state.grids[0].highlighted
+  );
   gridDisplayBadge.click();
   await onHighlighterHidden;
   await onCheckboxChange;
 
-  ok(!gridDisplayBadge.classList.contains("active"), "grid display badge is not active.");
-  ok(gridDisplayBadge.classList.contains("interactive"),
-    "grid display badge is interactive.");
+  ok(
+    !gridDisplayBadge.classList.contains("active"),
+    "grid display badge is not active."
+  );
+  ok(
+    gridDisplayBadge.classList.contains("interactive"),
+    "grid display badge is interactive."
+  );
 });

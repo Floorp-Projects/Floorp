@@ -11,9 +11,9 @@ const TEST_URI_NOT_REPLACED =
   "data:text/html;charset=utf8,<script>console.log('foo')</script>";
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["devtools.webconsole.persistlog", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["devtools.webconsole.persistlog", true]],
+  });
 
   let hud = await openNewTabAndConsole(TEST_URI_NOT_REPLACED);
 
@@ -31,7 +31,9 @@ async function testWarningNotPresent(hud) {
   ok(!findMessage(hud, "logging API"), "no warning displayed");
 
   // Bug 862024: make sure the warning doesn't show after page reload.
-  info("wait for the page to refresh and make sure the warning still isn't there");
+  info(
+    "wait for the page to refresh and make sure the warning still isn't there"
+  );
   await refreshTab();
   await waitFor(() => {
     // We need to wait for 3 messages because there are two logs, plus the

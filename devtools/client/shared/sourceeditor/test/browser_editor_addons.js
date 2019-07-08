@@ -6,7 +6,7 @@
 async function test() {
   waitForExplicitFinish();
 
-  const {ed, win} = await setup();
+  const { ed, win } = await setup();
   const doc = win.document.querySelector("iframe").contentWindow.document;
 
   // trailingspace.js

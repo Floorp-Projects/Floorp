@@ -3,13 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = [ "FileUtils" ];
+var EXPORTED_SYMBOLS = ["FileUtils"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "gDirService",
-                                   "@mozilla.org/file/directory_service;1",
-                                   "nsIProperties");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gDirService",
+  "@mozilla.org/file/directory_service;1",
+  "nsIProperties"
+);
 
 var FileUtils = {
   MODE_RDONLY: 0x01,
@@ -35,8 +40,12 @@ var FileUtils = {
    *          the way are if pathArray has more than one item.
    */
   getFile: function FileUtils_getFile(key, pathArray, followLinks) {
-    var file = this.getDir(key, pathArray.slice(0, -1), pathArray.length > 1,
-                           followLinks);
+    var file = this.getDir(
+      key,
+      pathArray.slice(0, -1),
+      pathArray.length > 1,
+      followLinks
+    );
     file.append(pathArray[pathArray.length - 1]);
     return file;
   },
@@ -73,8 +82,9 @@ var FileUtils = {
       }
     }
 
-    if (!followLinks)
+    if (!followLinks) {
       dir.followLinks = false;
+    }
     return dir;
   },
 
@@ -88,9 +98,13 @@ var FileUtils = {
    * @note The stream is initialized with the DEFER_OPEN behavior flag.
    *       See nsIFileOutputStream.
    */
-  openFileOutputStream: function FileUtils_openFileOutputStream(file, modeFlags) {
-    var fos = Cc["@mozilla.org/network/file-output-stream;1"].
-              createInstance(Ci.nsIFileOutputStream);
+  openFileOutputStream: function FileUtils_openFileOutputStream(
+    file,
+    modeFlags
+  ) {
+    var fos = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+      Ci.nsIFileOutputStream
+    );
     return this._initFileOutputStream(fos, file, modeFlags);
   },
 
@@ -106,9 +120,13 @@ var FileUtils = {
    *       OpeanAtomicFileOutputStream is generally better than openSafeFileOutputStream
    *       baecause flushing is not needed in most of the issues.
    */
-  openAtomicFileOutputStream: function FileUtils_openAtomicFileOutputStream(file, modeFlags) {
-    var fos = Cc["@mozilla.org/network/atomic-file-output-stream;1"].
-              createInstance(Ci.nsIFileOutputStream);
+  openAtomicFileOutputStream: function FileUtils_openAtomicFileOutputStream(
+    file,
+    modeFlags
+  ) {
+    var fos = Cc[
+      "@mozilla.org/network/atomic-file-output-stream;1"
+    ].createInstance(Ci.nsIFileOutputStream);
     return this._initFileOutputStream(fos, file, modeFlags);
   },
 
@@ -122,15 +140,24 @@ var FileUtils = {
    * @note The stream is initialized with the DEFER_OPEN behavior flag.
    *       See nsIFileOutputStream.
    */
-  openSafeFileOutputStream: function FileUtils_openSafeFileOutputStream(file, modeFlags) {
-    var fos = Cc["@mozilla.org/network/safe-file-output-stream;1"].
-              createInstance(Ci.nsIFileOutputStream);
+  openSafeFileOutputStream: function FileUtils_openSafeFileOutputStream(
+    file,
+    modeFlags
+  ) {
+    var fos = Cc[
+      "@mozilla.org/network/safe-file-output-stream;1"
+    ].createInstance(Ci.nsIFileOutputStream);
     return this._initFileOutputStream(fos, file, modeFlags);
   },
 
- _initFileOutputStream: function FileUtils__initFileOutputStream(fos, file, modeFlags) {
-    if (modeFlags === undefined)
+  _initFileOutputStream: function FileUtils__initFileOutputStream(
+    fos,
+    file,
+    modeFlags
+  ) {
+    if (modeFlags === undefined) {
       modeFlags = this.MODE_WRONLY | this.MODE_CREATE | this.MODE_TRUNCATE;
+    }
     fos.init(file, modeFlags, this.PERMS_FILE, fos.DEFER_OPEN);
     return fos;
   },
@@ -140,13 +167,14 @@ var FileUtils = {
    * @param   stream
    *          The stream to close.
    */
-  closeAtomicFileOutputStream: function FileUtils_closeAtomicFileOutputStream(stream) {
+  closeAtomicFileOutputStream: function FileUtils_closeAtomicFileOutputStream(
+    stream
+  ) {
     if (stream instanceof Ci.nsISafeOutputStream) {
       try {
         stream.finish();
         return;
-      } catch (e) {
-      }
+      } catch (e) {}
     }
     stream.close();
   },
@@ -156,16 +184,21 @@ var FileUtils = {
    * @param   stream
    *          The stream to close.
    */
-  closeSafeFileOutputStream: function FileUtils_closeSafeFileOutputStream(stream) {
+  closeSafeFileOutputStream: function FileUtils_closeSafeFileOutputStream(
+    stream
+  ) {
     if (stream instanceof Ci.nsISafeOutputStream) {
       try {
         stream.finish();
         return;
-      } catch (e) {
-      }
+      } catch (e) {}
     }
     stream.close();
   },
 
-  File: Components.Constructor("@mozilla.org/file/local;1", Ci.nsIFile, "initWithPath"),
+  File: Components.Constructor(
+    "@mozilla.org/file/local;1",
+    Ci.nsIFile,
+    "initWithPath"
+  ),
 };

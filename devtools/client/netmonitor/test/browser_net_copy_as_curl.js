@@ -12,7 +12,7 @@ add_task(async function() {
   info("Starting test... ");
 
   // Different quote chars are used for Windows and POSIX
-  const QUOTE = Services.appinfo.OS == "WINNT" ? "\"" : "'";
+  const QUOTE = Services.appinfo.OS == "WINNT" ? '"' : "'";
 
   // Quote a string, escape the quotes inside the string
   function quote(str) {
@@ -25,12 +25,8 @@ add_task(async function() {
   }
 
   // Construct the expected command
-  const SIMPLE_BASE = [
-    "curl " + quote(SIMPLE_SJS),
-  ];
-  const SLOW_BASE = [
-    "curl " + quote(SLOW_SJS),
-  ];
+  const SIMPLE_BASE = ["curl " + quote(SIMPLE_SJS)];
+  const SLOW_BASE = ["curl " + quote(SLOW_SJS)];
   const BASE_RESULT = [
     "--compressed",
     header("User-Agent: " + navigator.userAgent),
@@ -45,9 +41,7 @@ add_task(async function() {
     header("Cache-Control: no-cache"),
   ];
 
-  const COOKIE_PARTIAL_RESULT = [
-    header("Cookie: bob=true; tom=cool"),
-  ];
+  const COOKIE_PARTIAL_RESULT = [header("Cookie: bob=true; tom=cool")];
 
   const POST_PAYLOAD = "Plaintext value as a payload";
   const POST_PARTIAL_RESULT = [
@@ -55,22 +49,14 @@ add_task(async function() {
     header("Content-Type: text/plain;charset=UTF-8"),
   ];
 
-  const HEAD_PARTIAL_RESULT = [
-    "-I",
-  ];
+  const HEAD_PARTIAL_RESULT = ["-I"];
 
   // GET request, no cookies (first request)
   await performRequest("GET");
-  await testClipboardContent([
-    ...SIMPLE_BASE,
-    ...BASE_RESULT,
-  ]);
+  await testClipboardContent([...SIMPLE_BASE, ...BASE_RESULT]);
   // Check to make sure it is still OK after we view the response (bug#1452442)
   await selectIndexAndWaitForSourceEditor(monitor, 0);
-  await testClipboardContent([
-    ...SIMPLE_BASE,
-    ...BASE_RESULT,
-  ]);
+  await testClipboardContent([...SIMPLE_BASE, ...BASE_RESULT]);
 
   // GET request, cookies set by previous response
   await performRequest("GET");
@@ -114,13 +100,17 @@ add_task(async function() {
 
   async function performRequest(method, payload) {
     const waitRequest = waitForNetworkEvents(monitor, 1);
-    await ContentTask.spawn(tab.linkedBrowser, {
-      url: SIMPLE_SJS,
-      method_: method,
-      payload_: payload,
-    }, async function({url, method_, payload_}) {
-      content.wrappedJSObject.performRequest(url, method_, payload_);
-    });
+    await ContentTask.spawn(
+      tab.linkedBrowser,
+      {
+        url: SIMPLE_SJS,
+        method_: method,
+        payload_: payload,
+      },
+      async function({ url, method_, payload_ }) {
+        content.wrappedJSObject.performRequest(url, method_, payload_);
+      }
+    );
     await waitRequest;
   }
 
@@ -129,41 +119,53 @@ add_task(async function() {
 
     const items = document.querySelectorAll(".request-list-item");
     EventUtils.sendMouseEvent({ type: "mousedown" }, items[items.length - 1]);
-    EventUtils.sendMouseEvent({ type: "contextmenu" },
-      document.querySelectorAll(".request-list-item")[0]);
+    EventUtils.sendMouseEvent(
+      { type: "contextmenu" },
+      document.querySelectorAll(".request-list-item")[0]
+    );
 
     /* Ensure that the copy as cURL option is always visible */
-    const copyUrlParamsNode = getContextMenuItem(monitor,
-      "request-list-context-copy-as-curl");
-    is(!!copyUrlParamsNode, true,
-      "The \"Copy as cURL\" context menu item should not be hidden.");
+    const copyUrlParamsNode = getContextMenuItem(
+      monitor,
+      "request-list-context-copy-as-curl"
+    );
+    is(
+      !!copyUrlParamsNode,
+      true,
+      'The "Copy as cURL" context menu item should not be hidden.'
+    );
 
-    await waitForClipboardPromise(function setup() {
-      copyUrlParamsNode.click();
-    }, function validate(result) {
-      if (typeof result !== "string") {
-        return false;
+    await waitForClipboardPromise(
+      function setup() {
+        copyUrlParamsNode.click();
+      },
+      function validate(result) {
+        if (typeof result !== "string") {
+          return false;
+        }
+
+        // Different setups may produce the same command, but with the
+        // parameters in a different order in the commandline (which is fine).
+        // Here we confirm that the commands are the same even in that case.
+
+        // This monster regexp parses the command line into an array of arguments,
+        // recognizing quoted args with matching quotes and escaped quotes inside:
+        // [ "curl 'url'", "--standalone-arg", "-arg-with-quoted-string 'value\'s'" ]
+        const matchRe = /[-A-Za-z1-9]+(?: ([\"'])(?:\\\1|.)*?\1)?/g;
+
+        const actual = result.match(matchRe);
+        // Must begin with the same "curl 'URL'" segment
+        if (!actual || expectedResult[0] != actual[0]) {
+          return false;
+        }
+
+        // Must match each of the params in the middle (headers and --compressed)
+        return (
+          expectedResult.length === actual.length &&
+          expectedResult.every(param => actual.includes(param))
+        );
       }
-
-      // Different setups may produce the same command, but with the
-      // parameters in a different order in the commandline (which is fine).
-      // Here we confirm that the commands are the same even in that case.
-
-      // This monster regexp parses the command line into an array of arguments,
-      // recognizing quoted args with matching quotes and escaped quotes inside:
-      // [ "curl 'url'", "--standalone-arg", "-arg-with-quoted-string 'value\'s'" ]
-      const matchRe = /[-A-Za-z1-9]+(?: ([\"'])(?:\\\1|.)*?\1)?/g;
-
-      const actual = result.match(matchRe);
-      // Must begin with the same "curl 'URL'" segment
-      if (!actual || expectedResult[0] != actual[0]) {
-        return false;
-      }
-
-      // Must match each of the params in the middle (headers and --compressed)
-      return expectedResult.length === actual.length &&
-        expectedResult.every(param => actual.includes(param));
-    });
+    );
 
     info("Clipboard contains a cURL command for item " + (items.length - 1));
   }

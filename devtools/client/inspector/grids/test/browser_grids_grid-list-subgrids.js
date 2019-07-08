@@ -20,67 +20,110 @@ add_task(async function() {
   const mainSubgridListEl = containerSubgridListEl.querySelector("ul");
 
   info("Checking the initial state of the Grid Inspector.");
-  is(getGridItemElements(gridListEl).length, 1, "One grid container is listed.");
-  is(getGridItemElements(containerSubgridListEl).length, 2,
-    "Got the correct number of subgrids in div.container");
-  is(getGridItemElements(mainSubgridListEl).length, 2,
-    "Got the correct number of subgrids in main.subgrid");
-  ok(!highlighters.gridHighlighters.size && !highlighters.parentGridHighlighters.size,
-    "No CSS grid highlighter is shown.");
+  is(
+    getGridItemElements(gridListEl).length,
+    1,
+    "One grid container is listed."
+  );
+  is(
+    getGridItemElements(containerSubgridListEl).length,
+    2,
+    "Got the correct number of subgrids in div.container"
+  );
+  is(
+    getGridItemElements(mainSubgridListEl).length,
+    2,
+    "Got the correct number of subgrids in main.subgrid"
+  );
+  ok(
+    !highlighters.gridHighlighters.size &&
+      !highlighters.parentGridHighlighters.size,
+    "No CSS grid highlighter is shown."
+  );
 
   info("Toggling ON the CSS grid highlighter for header.");
   let onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  let onCheckboxChange = waitUntilState(store, state => state.grids[1].highlighted);
+  let onCheckboxChange = waitUntilState(
+    store,
+    state => state.grids[1].highlighted
+  );
   let checkbox = containerSubgridListEl.children[0].querySelector("input");
   checkbox.click();
   await onHighlighterShown;
   await onCheckboxChange;
 
-  info("Checking the CSS grid highlighter and parent grid highlighter are created.");
+  info(
+    "Checking the CSS grid highlighter and parent grid highlighter are created."
+  );
   is(highlighters.gridHighlighters.size, 1, "CSS grid highlighter is shown.");
-  is(highlighters.parentGridHighlighters.size, 1,
-    "CSS grid highlighter for parent grid container is shown.");
+  is(
+    highlighters.parentGridHighlighters.size,
+    1,
+    "CSS grid highlighter for parent grid container is shown."
+  );
 
   info("Toggling ON the CSS grid highlighter for main.");
   onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  onCheckboxChange = waitUntilState(store, state =>
-    state.grids[1].highlighted && state.grids[2].highlighted);
+  onCheckboxChange = waitUntilState(
+    store,
+    state => state.grids[1].highlighted && state.grids[2].highlighted
+  );
   checkbox = containerSubgridListEl.children[1].querySelector("input");
   checkbox.click();
   await onHighlighterShown;
   await onCheckboxChange;
 
   info("Checking the number of CSS grid highlighters present.");
-  is(highlighters.gridHighlighters.size, 2,
-    "Got the correct number of CSS grid highlighter shown.");
-  is(highlighters.parentGridHighlighters.size, 1,
-    "Only 1 parent grid highlighter should be shown for the same subgrid parent.");
+  is(
+    highlighters.gridHighlighters.size,
+    2,
+    "Got the correct number of CSS grid highlighter shown."
+  );
+  is(
+    highlighters.parentGridHighlighters.size,
+    1,
+    "Only 1 parent grid highlighter should be shown for the same subgrid parent."
+  );
 
   info("Toggling OFF the CSS grid highlighter for main.");
   let onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
-  onCheckboxChange = waitUntilState(store, state =>
-    state.grids[1].highlighted && !state.grids[2].highlighted);
+  onCheckboxChange = waitUntilState(
+    store,
+    state => state.grids[1].highlighted && !state.grids[2].highlighted
+  );
   checkbox.click();
   await onHighlighterHidden;
   await onCheckboxChange;
 
   info("Checking the number of CSS grid highlighters present.");
-  is(highlighters.gridHighlighters.size, 1,
-    "Got the correct number of CSS grid highlighter shown.");
-  is(highlighters.parentGridHighlighters.size, 1,
-    "Got the correct number of CSS grid parent highlighter shown.");
+  is(
+    highlighters.gridHighlighters.size,
+    1,
+    "Got the correct number of CSS grid highlighter shown."
+  );
+  is(
+    highlighters.parentGridHighlighters.size,
+    1,
+    "Got the correct number of CSS grid parent highlighter shown."
+  );
 
   info("Toggling OFF the CSS grid highlighter for header.");
   onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
-  onCheckboxChange = waitUntilState(store, state => !state.grids[1].highlighted);
+  onCheckboxChange = waitUntilState(
+    store,
+    state => !state.grids[1].highlighted
+  );
   checkbox = containerSubgridListEl.children[0].querySelector("input");
   checkbox.click();
   await onHighlighterHidden;
   await onCheckboxChange;
 
   info("Checking the CSS grid highlighter is not shown.");
-  ok(!highlighters.gridHighlighters.size && !highlighters.parentGridHighlighters.size,
-    "No CSS grid highlighter is shown.");
+  ok(
+    !highlighters.gridHighlighters.size &&
+      !highlighters.parentGridHighlighters.size,
+    "No CSS grid highlighter is shown."
+  );
 });
 
 /**

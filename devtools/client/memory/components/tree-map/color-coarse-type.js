@@ -8,7 +8,7 @@
  * Color the boxes in the treemap
  */
 
-const TYPES = [ "objects", "other", "strings", "scripts", "domNode" ];
+const TYPES = ["objects", "other", "strings", "scripts", "domNode"];
 
 // The factors determine how much the hue shifts
 const TYPE_FACTOR = TYPES.length * 3;

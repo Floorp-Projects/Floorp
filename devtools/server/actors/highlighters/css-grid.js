@@ -33,7 +33,9 @@ const {
   getWindowDimensions,
   setIgnoreLayoutChanges,
 } = require("devtools/shared/layout/utils");
-const { stringifyGridFragments } = require("devtools/server/actors/utils/css-grid-utils");
+const {
+  stringifyGridFragments,
+} = require("devtools/server/actors/utils/css-grid-utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const STRINGS_URI = "devtools/shared/locales/highlighters.properties";
@@ -47,19 +49,19 @@ const GRID_FONT_FAMILY = "sans-serif";
 const GRID_AREA_NAME_FONT_SIZE = "20";
 
 const GRID_LINES_PROPERTIES = {
-  "edge": {
+  edge: {
     lineDash: [0, 0],
     alpha: 1,
   },
-  "explicit": {
+  explicit: {
     lineDash: [5, 3],
     alpha: 0.75,
   },
-  "implicit": {
+  implicit: {
     lineDash: [2, 2],
     alpha: 0.5,
   },
-  "areaEdge": {
+  areaEdge: {
     lineDash: [0, 0],
     alpha: 1,
     lineWidth: 3,
@@ -85,11 +87,16 @@ const FLIP_ARROW_INSIDE_FACTOR = 2.5;
  */
 function rotateEdgeRight(edge) {
   switch (edge) {
-    case "top": return "right";
-    case "right": return "bottom";
-    case "bottom": return "left";
-    case "left": return "top";
-    default: return edge;
+    case "top":
+      return "right";
+    case "right":
+      return "bottom";
+    case "bottom":
+      return "left";
+    case "left":
+      return "top";
+    default:
+      return edge;
   }
 }
 
@@ -98,11 +105,16 @@ function rotateEdgeRight(edge) {
  */
 function rotateEdgeLeft(edge) {
   switch (edge) {
-    case "top": return "left";
-    case "right": return "top";
-    case "bottom": return "right";
-    case "left": return "bottom";
-    default: return edge;
+    case "top":
+      return "left";
+    case "right":
+      return "top";
+    case "bottom":
+      return "right";
+    case "left":
+      return "bottom";
+    default:
+      return edge;
   }
 }
 
@@ -111,11 +123,16 @@ function rotateEdgeLeft(edge) {
  */
 function reflectEdge(edge) {
   switch (edge) {
-    case "top": return "bottom";
-    case "right": return "left";
-    case "bottom": return "top";
-    case "left": return "right";
-    default: return edge;
+    case "top":
+      return "bottom";
+    case "right":
+      return "left";
+    case "bottom":
+      return "top";
+    case "left":
+      return "right";
+    default:
+      return edge;
   }
 }
 
@@ -211,8 +228,10 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     this.ID_CLASS_PREFIX = "css-grid-";
 
-    this.markup = new CanvasFrameAnonymousContentHelper(this.highlighterEnv,
-      this._buildMarkup.bind(this));
+    this.markup = new CanvasFrameAnonymousContentHelper(
+      this.highlighterEnv,
+      this._buildMarkup.bind(this)
+    );
 
     this.onPageHide = this.onPageHide.bind(this);
     this.onWillNavigate = this.onWillNavigate.bind(this);
@@ -230,22 +249,26 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     // Calling `updateCanvasPosition` anyway since the highlighter could be initialized
     // on a page that has scrolled already.
-    updateCanvasPosition(this._canvasPosition, this._scroll, this.win,
-      this._winDimensions);
+    updateCanvasPosition(
+      this._canvasPosition,
+      this._scroll,
+      this.win,
+      this._winDimensions
+    );
   }
 
   _buildMarkup() {
     const container = createNode(this.win, {
       attributes: {
-        "class": "highlighter-container",
+        class: "highlighter-container",
       },
     });
 
     const root = createNode(this.win, {
       parent: container,
       attributes: {
-        "id": "root",
-        "class": "root",
+        id: "root",
+        class: "root",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -257,11 +280,11 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       parent: root,
       nodeType: "canvas",
       attributes: {
-        "id": "canvas",
-        "class": "canvas",
-        "hidden": "true",
-        "width": CANVAS_SIZE,
-        "height": CANVAS_SIZE,
+        id: "canvas",
+        class: "canvas",
+        hidden: "true",
+        width: CANVAS_SIZE,
+        height: CANVAS_SIZE,
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -271,10 +294,10 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       nodeType: "svg",
       parent: root,
       attributes: {
-        "id": "elements",
-        "width": "100%",
-        "height": "100%",
-        "hidden": "true",
+        id: "elements",
+        width: "100%",
+        height: "100%",
+        hidden: "true",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -283,7 +306,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       nodeType: "g",
       parent: svg,
       attributes: {
-        "class": "regions",
+        class: "regions",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -292,8 +315,8 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       nodeType: "path",
       parent: regions,
       attributes: {
-        "class": "areas",
-        "id": "areas",
+        class: "areas",
+        id: "areas",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -302,8 +325,8 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       nodeType: "path",
       parent: regions,
       attributes: {
-        "class": "cells",
-        "id": "cells",
+        class: "cells",
+        id: "cells",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -312,10 +335,10 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const areaInfobarContainer = createNode(this.win, {
       parent: container,
       attributes: {
-        "class": "area-infobar-container",
-        "id": "area-infobar-container",
-        "position": "top",
-        "hidden": "true",
+        class: "area-infobar-container",
+        id: "area-infobar-container",
+        position: "top",
+        hidden: "true",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -323,7 +346,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const areaInfobar = createNode(this.win, {
       parent: areaInfobarContainer,
       attributes: {
-        "class": "infobar",
+        class: "infobar",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -331,7 +354,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const areaTextbox = createNode(this.win, {
       parent: areaInfobar,
       attributes: {
-        "class": "infobar-text",
+        class: "infobar-text",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -339,8 +362,8 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       nodeType: "span",
       parent: areaTextbox,
       attributes: {
-        "class": "area-infobar-name",
-        "id": "area-infobar-name",
+        class: "area-infobar-name",
+        id: "area-infobar-name",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -348,8 +371,8 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       nodeType: "span",
       parent: areaTextbox,
       attributes: {
-        "class": "area-infobar-dimensions",
-        "id": "area-infobar-dimensions",
+        class: "area-infobar-dimensions",
+        id: "area-infobar-dimensions",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -358,10 +381,10 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const cellInfobarContainer = createNode(this.win, {
       parent: container,
       attributes: {
-        "class": "cell-infobar-container",
-        "id": "cell-infobar-container",
-        "position": "top",
-        "hidden": "true",
+        class: "cell-infobar-container",
+        id: "cell-infobar-container",
+        position: "top",
+        hidden: "true",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -369,7 +392,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const cellInfobar = createNode(this.win, {
       parent: cellInfobarContainer,
       attributes: {
-        "class": "infobar",
+        class: "infobar",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -377,7 +400,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const cellTextbox = createNode(this.win, {
       parent: cellInfobar,
       attributes: {
-        "class": "infobar-text",
+        class: "infobar-text",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -385,8 +408,8 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       nodeType: "span",
       parent: cellTextbox,
       attributes: {
-        "class": "cell-infobar-position",
-        "id": "cell-infobar-position",
+        class: "cell-infobar-position",
+        id: "cell-infobar-position",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -394,8 +417,8 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       nodeType: "span",
       parent: cellTextbox,
       attributes: {
-        "class": "cell-infobar-dimensions",
-        "id": "cell-infobar-dimensions",
+        class: "cell-infobar-dimensions",
+        id: "cell-infobar-dimensions",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -404,10 +427,10 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const lineInfobarContainer = createNode(this.win, {
       parent: container,
       attributes: {
-        "class": "line-infobar-container",
-        "id": "line-infobar-container",
-        "position": "top",
-        "hidden": "true",
+        class: "line-infobar-container",
+        id: "line-infobar-container",
+        position: "top",
+        hidden: "true",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -415,7 +438,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const lineInfobar = createNode(this.win, {
       parent: lineInfobarContainer,
       attributes: {
-        "class": "infobar",
+        class: "infobar",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -423,7 +446,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const lineTextbox = createNode(this.win, {
       parent: lineInfobar,
       attributes: {
-        "class": "infobar-text",
+        class: "infobar-text",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -431,8 +454,8 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       nodeType: "span",
       parent: lineTextbox,
       attributes: {
-        "class": "line-infobar-number",
-        "id": "line-infobar-number",
+        class: "line-infobar-number",
+        id: "line-infobar-number",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -440,8 +463,8 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       nodeType: "span",
       parent: lineTextbox,
       attributes: {
-        "class": "line-infobar-names",
-        "id": "line-infobar-names",
+        class: "line-infobar-names",
+        id: "line-infobar-names",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -539,14 +562,14 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     // Create the diagonal lines pattern for the rendering the grid gaps.
     const canvas = createNode(this.win, { nodeType: "canvas" });
-    const width = canvas.width = GRID_GAP_PATTERN_WIDTH * devicePixelRatio;
-    const height = canvas.height = GRID_GAP_PATTERN_HEIGHT * devicePixelRatio;
+    const width = (canvas.width = GRID_GAP_PATTERN_WIDTH * devicePixelRatio);
+    const height = (canvas.height = GRID_GAP_PATTERN_HEIGHT * devicePixelRatio);
 
     const ctx = canvas.getContext("2d");
     ctx.save();
     ctx.setLineDash(GRID_GAP_PATTERN_LINE_DASH);
     ctx.beginPath();
-    ctx.translate(.5, .5);
+    ctx.translate(0.5, 0.5);
 
     if (dimension === COLUMNS) {
       ctx.moveTo(0, 0);
@@ -671,8 +694,12 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    * to give the illusion that it always covers the viewport.
    */
   _scrollUpdate() {
-    const hasUpdated = updateCanvasPosition(this._canvasPosition, this._scroll, this.win,
-      this._winDimensions);
+    const hasUpdated = updateCanvasPosition(
+      this._canvasPosition,
+      this._scroll,
+      this.win,
+      this._winDimensions
+    );
 
     if (hasUpdated) {
       this._update();
@@ -787,10 +814,18 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       return;
     }
 
-    this.renderLines(fragment.cols, COLUMNS, this.getFirstRowLinePos(fragment),
-      this.getLastRowLinePos(fragment));
-    this.renderLines(fragment.rows, ROWS, this.getFirstColLinePos(fragment),
-      this.getLastColLinePos(fragment));
+    this.renderLines(
+      fragment.cols,
+      COLUMNS,
+      this.getFirstRowLinePos(fragment),
+      this.getLastRowLinePos(fragment)
+    );
+    this.renderLines(
+      fragment.rows,
+      ROWS,
+      this.getFirstColLinePos(fragment),
+      this.getLastColLinePos(fragment)
+    );
 
     if (this.options.showGridAreasOverlay) {
       this.renderGridAreaOverlay();
@@ -798,12 +833,26 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     // Line numbers are rendered in a 2nd step to avoid overlapping with existing lines.
     if (this.options.showGridLineNumbers) {
-      this.renderLineNumbers(fragment.cols, COLUMNS, this.getFirstRowLinePos(fragment));
-      this.renderLineNumbers(fragment.rows, ROWS, this.getFirstColLinePos(fragment));
-      this.renderNegativeLineNumbers(fragment.cols, COLUMNS,
-        this.getLastRowLinePos(fragment));
-      this.renderNegativeLineNumbers(fragment.rows, ROWS,
-        this.getLastColLinePos(fragment));
+      this.renderLineNumbers(
+        fragment.cols,
+        COLUMNS,
+        this.getFirstRowLinePos(fragment)
+      );
+      this.renderLineNumbers(
+        fragment.rows,
+        ROWS,
+        this.getFirstColLinePos(fragment)
+      );
+      this.renderNegativeLineNumbers(
+        fragment.cols,
+        COLUMNS,
+        this.getLastRowLinePos(fragment)
+      );
+      this.renderNegativeLineNumbers(
+        fragment.rows,
+        ROWS,
+        this.getLastColLinePos(fragment)
+      );
     }
   }
 
@@ -837,7 +886,13 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         const x2 = columnEnd.start;
         const y2 = rowEnd.start;
 
-        const points = getPointsFromDiagonal(x1, y1, x2, y2, this.currentMatrix);
+        const points = getPointsFromDiagonal(
+          x1,
+          y1,
+          x2,
+          y2,
+          this.currentMatrix
+        );
 
         // Scale down by `devicePixelRatio` since SVG element already take them into
         // account.
@@ -848,10 +903,12 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
         // Scale down by `displayPixelRatio` since infobar's HTML elements already take it
         // into account; and the zoom scaling is handled by `moveInfobar`.
-        const bounds = getBoundsFromPoints(points.map(point => ({
-          x: Math.round(point.x / displayPixelRatio),
-          y: Math.round(point.y / displayPixelRatio),
-        })));
+        const bounds = getBoundsFromPoints(
+          points.map(point => ({
+            x: Math.round(point.x / displayPixelRatio),
+            y: Math.round(point.y / displayPixelRatio),
+          }))
+        );
 
         paths.push(getPathDescriptionFromPoints(svgPoints));
 
@@ -894,14 +951,20 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     // Draw the text for the grid area name.
     for (let rowNumber = rowStart; rowNumber < rowEnd; rowNumber++) {
-      for (let columnNumber = columnStart; columnNumber < columnEnd; columnNumber++) {
+      for (
+        let columnNumber = columnStart;
+        columnNumber < columnEnd;
+        columnNumber++
+      ) {
         const row = fragment.rows.tracks[rowNumber - 1];
         const column = fragment.cols.tracks[columnNumber - 1];
 
         // If the font size exceeds the bounds of the containing grid cell, size it its
         // row or column dimension, whichever is smallest.
-        if (fontSize > (column.breadth * displayPixelRatio) ||
-            fontSize > (row.breadth * displayPixelRatio)) {
+        if (
+          fontSize > column.breadth * displayPixelRatio ||
+          fontSize > row.breadth * displayPixelRatio
+        ) {
           fontSize = Math.min([column.breadth, row.breadth]);
           this.ctx.font = fontSize + "px " + GRID_FONT_FAMILY;
         }
@@ -929,7 +992,14 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         this.ctx.strokeStyle = this.color;
         this.ctx.fillStyle = "white";
         const radius = 2 * displayPixelRatio;
-        drawRoundedRect(this.ctx, rectXPos, rectYPos, boxWidth, boxHeight, radius);
+        drawRoundedRect(
+          this.ctx,
+          rectXPos,
+          rectYPos,
+          boxWidth,
+          boxHeight,
+          radius
+        );
 
         this.ctx.fillStyle = this.color;
         this.ctx.fillText(area.name, x, y + padding);
@@ -965,15 +1035,35 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         const areaColStartLinePos = areaColStart.start + areaColStart.breadth;
         const areaRowStartLinePos = areaRowStart.start + areaRowStart.breadth;
 
-        this.renderLine(areaColStartLinePos + padding, areaRowStartLinePos,
-          areaRowEnd.start, COLUMNS, "areaEdge");
-        this.renderLine(areaColEnd.start - padding, areaRowStartLinePos,
-          areaRowEnd.start, COLUMNS, "areaEdge");
+        this.renderLine(
+          areaColStartLinePos + padding,
+          areaRowStartLinePos,
+          areaRowEnd.start,
+          COLUMNS,
+          "areaEdge"
+        );
+        this.renderLine(
+          areaColEnd.start - padding,
+          areaRowStartLinePos,
+          areaRowEnd.start,
+          COLUMNS,
+          "areaEdge"
+        );
 
-        this.renderLine(areaRowStartLinePos + padding, areaColStartLinePos,
-          areaColEnd.start, ROWS, "areaEdge");
-        this.renderLine(areaRowEnd.start - padding, areaColStartLinePos, areaColEnd.start,
-          ROWS, "areaEdge");
+        this.renderLine(
+          areaRowStartLinePos + padding,
+          areaColStartLinePos,
+          areaColEnd.start,
+          ROWS,
+          "areaEdge"
+        );
+        this.renderLine(
+          areaRowEnd.start - padding,
+          areaColStartLinePos,
+          areaColEnd.start,
+          ROWS,
+          "areaEdge"
+        );
 
         this.renderGridAreaName(fragment, area);
       }
@@ -1022,10 +1112,12 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     // Scale down by `displayPixelRatio` since infobar's HTML elements already take it
     // into account, and the zoom scaling is handled by `moveInfobar`.
-    const bounds = getBoundsFromPoints(points.map(point => ({
-      x: Math.round(point.x / displayPixelRatio),
-      y: Math.round(point.y / displayPixelRatio),
-    })));
+    const bounds = getBoundsFromPoints(
+      points.map(point => ({
+        x: Math.round(point.x / displayPixelRatio),
+        y: Math.round(point.y / displayPixelRatio),
+      }))
+    );
 
     const cells = this.getElement("cells");
     cells.setAttribute("d", getPathDescriptionFromPoints(svgPoints));
@@ -1061,7 +1153,10 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     breadth = Math.round(breadth);
 
     this.ctx.save();
-    this.ctx.fillStyle = this.getGridGapPattern(devicePixelRatio, dimensionType);
+    this.ctx.fillStyle = this.getGridGapPattern(
+      devicePixelRatio,
+      dimensionType
+    );
     this.ctx.translate(offset - canvasX, offset - canvasY);
 
     if (dimensionType === COLUMNS) {
@@ -1071,8 +1166,14 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         endPos = this._winDimensions.height;
         startPos = -endPos;
       }
-      drawRect(this.ctx, linePos, startPos, linePos + breadth, endPos,
-        this.currentMatrix);
+      drawRect(
+        this.ctx,
+        linePos,
+        startPos,
+        linePos + breadth,
+        endPos,
+        this.currentMatrix
+      );
     } else {
       if (isFinite(endPos)) {
         endPos = Math.round(endPos);
@@ -1080,8 +1181,14 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         endPos = this._winDimensions.width;
         startPos = -endPos;
       }
-      drawRect(this.ctx, startPos, linePos, endPos, linePos + breadth,
-        this.currentMatrix);
+      drawRect(
+        this.ctx,
+        startPos,
+        linePos,
+        endPos,
+        linePos + breadth,
+        this.currentMatrix
+      );
     }
 
     // Find current angle of grid by measuring the angle of two arbitrary points,
@@ -1132,13 +1239,15 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const rowYPosition = fragment.rows.lines[0];
     const colXPosition = fragment.rows.lines[0];
 
-    const x = dimensionType === COLUMNS
-      ? linePos.start + (bounds.left / currentZoom)
-      : colXPosition.start + (bounds.left / currentZoom);
+    const x =
+      dimensionType === COLUMNS
+        ? linePos.start + bounds.left / currentZoom
+        : colXPosition.start + bounds.left / currentZoom;
 
-    const y = dimensionType === ROWS
-      ? linePos.start + (bounds.top / currentZoom)
-      : rowYPosition.start + (bounds.top / currentZoom);
+    const y =
+      dimensionType === ROWS
+        ? linePos.start + bounds.top / currentZoom
+        : rowYPosition.start + bounds.top / currentZoom;
 
     this._showGridLineInfoBar();
     this._updateGridLineInfobar(names.join(", "), lineNumber, x, y);
@@ -1162,8 +1271,14 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    *         Boolean indicating if the line is stacked.
    */
   /* eslint-disable complexity */
-  renderGridLineNumber(lineNumber, linePos, startPos, breadth, dimensionType,
-    isStackedLine) {
+  renderGridLineNumber(
+    lineNumber,
+    linePos,
+    startPos,
+    breadth,
+    dimensionType,
+    isStackedLine
+  ) {
     const displayPixelRatio = getDisplayPixelRatio(this.win);
     const { devicePixelRatio } = this.win;
     const offset = (displayPixelRatio / 2) % 1;
@@ -1188,7 +1303,10 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     // and height. If line number's text width is greater, then use the grid box's text
     // width instead.
     const textHeight = this.ctx.measureText("m").width;
-    const textWidth = Math.max(textHeight, this.ctx.measureText(lineNumber).width);
+    const textWidth = Math.max(
+      textHeight,
+      this.ctx.measureText(lineNumber).width
+    );
 
     // Padding in pixels for the line number text inside of the line number container.
     const padding = 3 * devicePixelRatio;
@@ -1204,10 +1322,12 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     if (dimensionType === COLUMNS) {
       x = linePos + breadth / 2;
-      y = lineNumber > 0 ? startPos - offsetFromEdge : startPos + offsetFromEdge;
+      y =
+        lineNumber > 0 ? startPos - offsetFromEdge : startPos + offsetFromEdge;
     } else if (dimensionType === ROWS) {
       y = linePos + breadth / 2;
-      x = lineNumber > 0 ? startPos - offsetFromEdge : startPos + offsetFromEdge;
+      x =
+        lineNumber > 0 ? startPos - offsetFromEdge : startPos + offsetFromEdge;
     }
 
     [x, y] = apply(this.currentMatrix, [x, y]);
@@ -1237,8 +1357,10 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     height *= displayPixelRatio;
 
     // Don't draw if the line is out of the viewport.
-    if ((dimensionType === ROWS && (y < 0 || y > height)) ||
-        (dimensionType === COLUMNS && (x < 0 || x > width))) {
+    if (
+      (dimensionType === ROWS && (y < 0 || y > height)) ||
+      (dimensionType === COLUMNS && (x < 0 || x > width))
+    ) {
       this.ctx.restore();
       return;
     }
@@ -1253,7 +1375,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         }
         break;
       case "right":
-        if ((width - x) < minOffsetFromEdge) {
+        if (width - x < minOffsetFromEdge) {
           x -= FLIP_ARROW_INSIDE_FACTOR * boxWidth;
         }
         break;
@@ -1263,7 +1385,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         }
         break;
       case "bottom":
-        if ((height - y) < minOffsetFromEdge) {
+        if (height - y < minOffsetFromEdge) {
           y -= FLIP_ARROW_INSIDE_FACTOR * boxHeight;
         }
         break;
@@ -1308,22 +1430,31 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     }
 
     // Draw the arrow box itself
-    drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
-                   boxEdge);
+    drawBubbleRect(
+      this.ctx,
+      x,
+      y,
+      boxWidth,
+      boxHeight,
+      radius,
+      margin,
+      arrowSize,
+      boxEdge
+    );
 
     // Determine the text position for it to be centered nicely inside the arrow box.
     switch (boxEdge) {
       case "left":
-        x -= (boxWidth + arrowSize + radius) - boxWidth / 2;
+        x -= boxWidth + arrowSize + radius - boxWidth / 2;
         break;
       case "right":
-        x += (boxWidth + arrowSize + radius) - boxWidth / 2;
+        x += boxWidth + arrowSize + radius - boxWidth / 2;
         break;
       case "top":
-        y -= (boxHeight + arrowSize + radius) - boxHeight / 2;
+        y -= boxHeight + arrowSize + radius - boxHeight / 2;
         break;
       case "bottom":
-        y += (boxHeight + arrowSize + radius) - boxHeight / 2;
+        y += boxHeight + arrowSize + radius - boxHeight / 2;
         break;
     }
 
@@ -1332,11 +1463,17 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     if (grewBox) {
       if (dimensionType === ROWS && y <= boxHeightBeforeGrowth / 2) {
         y = boxHeightBeforeGrowth / 2;
-      } else if (dimensionType === ROWS && y >= height - boxHeightBeforeGrowth / 2) {
+      } else if (
+        dimensionType === ROWS &&
+        y >= height - boxHeightBeforeGrowth / 2
+      ) {
         y = height - boxHeightBeforeGrowth / 2;
       } else if (dimensionType === COLUMNS && x <= boxWidthBeforeGrowth / 2) {
         x = boxWidthBeforeGrowth / 2;
-      } else if (dimensionType === COLUMNS && x >= width - boxWidthBeforeGrowth / 2) {
+      } else if (
+        dimensionType === COLUMNS &&
+        x >= width - boxWidthBeforeGrowth / 2
+      ) {
         x = width - boxWidthBeforeGrowth / 2;
       }
     }
@@ -1447,8 +1584,12 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     };
 
     if (this.options.showInfiniteLines) {
-      lineOptions.extendToBoundaries = [canvasX, canvasY, canvasX + CANVAS_SIZE,
-                                        canvasY + CANVAS_SIZE];
+      lineOptions.extendToBoundaries = [
+        canvasX,
+        canvasY,
+        canvasX + CANVAS_SIZE,
+        canvasY + CANVAS_SIZE,
+      ];
     }
 
     if (dimensionType === COLUMNS) {
@@ -1458,10 +1599,12 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     }
 
     this.ctx.strokeStyle = this.color;
-    this.ctx.globalAlpha = GRID_LINES_PROPERTIES[lineType].alpha * this.globalAlpha;
+    this.ctx.globalAlpha =
+      GRID_LINES_PROPERTIES[lineType].alpha * this.globalAlpha;
 
     if (GRID_LINES_PROPERTIES[lineType].lineWidth) {
-      this.ctx.lineWidth = GRID_LINES_PROPERTIES[lineType].lineWidth * devicePixelRatio;
+      this.ctx.lineWidth =
+        GRID_LINES_PROPERTIES[lineType].lineWidth * devicePixelRatio;
     } else {
       this.ctx.lineWidth = lineWidth;
     }
@@ -1498,14 +1641,31 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       if (i == 0 || i == lastEdgeLineIndex) {
         this.renderLine(linePos, startPos, endPos, dimensionType, "edge");
       } else {
-        this.renderLine(linePos, startPos, endPos, dimensionType, tracks[i - 1].type);
+        this.renderLine(
+          linePos,
+          startPos,
+          endPos,
+          dimensionType,
+          tracks[i - 1].type
+        );
       }
 
       // Render a second line to illustrate the gutter for non-zero breadth.
       if (line.breadth > 0) {
-        this.renderGridGap(linePos, startPos, endPos, line.breadth, dimensionType);
-        this.renderLine(linePos + line.breadth, startPos, endPos, dimensionType,
-          tracks[i].type);
+        this.renderGridGap(
+          linePos,
+          startPos,
+          endPos,
+          line.breadth,
+          dimensionType
+        );
+        this.renderLine(
+          linePos + line.breadth,
+          startPos,
+          endPos,
+          dimensionType,
+          tracks[i].type
+        );
       }
     }
   }
@@ -1525,7 +1685,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
   renderLineNumbers(gridDimension, dimensionType, startPos) {
     const { lines, tracks } = gridDimension;
 
-    for (let i = 0, line; (line = lines[i++]);) {
+    for (let i = 0, line; (line = lines[i++]); ) {
       // If you place something using negative numbers, you can trigger some implicit
       // grid creation above and to the left of the explicit grid (assuming a
       // horizontal-tb writing mode).
@@ -1545,17 +1705,28 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       const gridTrack = tracks[i - 1];
 
       if (gridTrack) {
-        const { breadth }  = gridTrack;
+        const { breadth } = gridTrack;
 
         if (breadth === 0) {
-          this.renderGridLineNumber(line.number, line.start, startPos, line.breadth,
-            dimensionType, true);
+          this.renderGridLineNumber(
+            line.number,
+            line.start,
+            startPos,
+            line.breadth,
+            dimensionType,
+            true
+          );
           continue;
         }
       }
 
-      this.renderGridLineNumber(line.number, line.start, startPos, line.breadth,
-        dimensionType);
+      this.renderGridLineNumber(
+        line.number,
+        line.start,
+        startPos,
+        line.breadth,
+        dimensionType
+      );
     }
   }
 
@@ -1574,7 +1745,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
   renderNegativeLineNumbers(gridDimension, dimensionType, startPos) {
     const { lines, tracks } = gridDimension;
 
-    for (let i = 0, line; (line = lines[i++]);) {
+    for (let i = 0, line; (line = lines[i++]); ) {
       const linePos = line.start;
       const negativeLineNumber = line.negativeNumber;
 
@@ -1592,14 +1763,25 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
         // Ensure "-1" is always visible, since it is always the largest number.
         if (breadth === 0 && negativeLineNumber != -1) {
-          this.renderGridLineNumber(negativeLineNumber, linePos, startPos,
-            line.breadth, dimensionType, true);
+          this.renderGridLineNumber(
+            negativeLineNumber,
+            linePos,
+            startPos,
+            line.breadth,
+            dimensionType,
+            true
+          );
           continue;
         }
       }
 
-      this.renderGridLineNumber(negativeLineNumber, linePos, startPos, line.breadth,
-        dimensionType);
+      this.renderGridLineNumber(
+        negativeLineNumber,
+        linePos,
+        startPos,
+        line.breadth,
+        dimensionType
+      );
     }
   }
 
@@ -1628,15 +1810,21 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     // Updates the <canvas> element's position and size.
     // It also clear the <canvas>'s drawing context.
-    updateCanvasElement(this.canvas, this._canvasPosition, this.win.devicePixelRatio);
+    updateCanvasElement(
+      this.canvas,
+      this._canvasPosition,
+      this.win.devicePixelRatio
+    );
 
     // Clear the grid area highlights.
     this.clearGridAreas();
     this.clearGridCell();
 
     // Update the current matrix used in our canvas' rendering.
-    const { currentMatrix, hasNodeTransformations } =
-      getCurrentMatrix(this.currentNode, this.win);
+    const { currentMatrix, hasNodeTransformations } = getCurrentMatrix(
+      this.currentNode,
+      this.win
+    );
     this.currentMatrix = currentMatrix;
     this.hasNodeTransformations = hasNodeTransformations;
 
@@ -1665,8 +1853,10 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this._showGrid();
     this._showGridElements();
 
-    root.setAttribute("style",
-      `position: absolute; width: ${width}px; height: ${height}px; overflow: hidden`);
+    root.setAttribute(
+      "style",
+      `position: absolute; width: ${width}px; height: ${height}px; overflow: hidden`
+    );
 
     setIgnoreLayoutChanges(false, this.highlighterEnv.document.documentElement);
     return true;
@@ -1682,9 +1872,10 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    */
   _updateGridAreaInfobar(area, bounds) {
     const { width, height } = bounds;
-    const dim = parseFloat(width.toPrecision(6)) +
-              " \u00D7 " +
-              parseFloat(height.toPrecision(6));
+    const dim =
+      parseFloat(width.toPrecision(6)) +
+      " \u00D7 " +
+      parseFloat(height.toPrecision(6));
 
     this.getElement("area-infobar-name").setTextContent(area.name);
     this.getElement("area-infobar-dimensions").setTextContent(dim);
@@ -1708,11 +1899,15 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    */
   _updateGridCellInfobar(rowNumber, columnNumber, bounds) {
     const { width, height } = bounds;
-    const dim = parseFloat(width.toPrecision(6)) +
-              " \u00D7 " +
-              parseFloat(height.toPrecision(6));
-    const position = L10N.getFormatStr("grid.rowColumnPositions", rowNumber,
-      columnNumber);
+    const dim =
+      parseFloat(width.toPrecision(6)) +
+      " \u00D7 " +
+      parseFloat(height.toPrecision(6));
+    const position = L10N.getFormatStr(
+      "grid.rowColumnPositions",
+      rowNumber,
+      columnNumber
+    );
 
     this.getElement("cell-infobar-position").setTextContent(position);
     this.getElement("cell-infobar-dimensions").setTextContent(dim);
@@ -1741,8 +1936,11 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this.getElement("line-infobar-names").setTextContent(gridLineNames);
 
     const container = this.getElement("line-infobar-container");
-    moveInfobar(container, getBoundsFromPoints([{x, y}, {x, y}, {x, y}, {x, y}]),
-      this.win);
+    moveInfobar(
+      container,
+      getBoundsFromPoints([{ x, y }, { x, y }, { x, y }, { x, y }]),
+      this.win
+    );
   }
 }
 

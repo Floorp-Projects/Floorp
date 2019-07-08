@@ -38,151 +38,152 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 const ATTRIBUTE_TYPES = new Map([
-  ["action", [
-    {namespaceURI: HTML_NS, tagName: "form", type: TYPE_URI},
-  ]],
-  ["background", [
-    {namespaceURI: HTML_NS,  tagName: "body", type: TYPE_URI},
-  ]],
-  ["cite", [
-    {namespaceURI: HTML_NS, tagName: "blockquote", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "q", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "del", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "ins", type: TYPE_URI},
-  ]],
-  ["classid", [
-    {namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI},
-  ]],
-  ["codebase", [
-    {namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "applet", type: TYPE_URI},
-  ]],
-  ["command", [
-    {namespaceURI: HTML_NS, tagName: "menuitem", type: TYPE_IDREF},
-    {namespaceURI: XUL_NS, tagName: "key", type: TYPE_IDREF},
-  ]],
-  ["contextmenu", [
-    {namespaceURI: "*", tagName: "*", type: TYPE_IDREF},
-  ]],
-  ["data", [
-    {namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI},
-  ]],
-  ["for", [
-    {namespaceURI: HTML_NS, tagName: "label", type: TYPE_IDREF},
-    {namespaceURI: HTML_NS, tagName: "output", type: TYPE_IDREF_LIST},
-  ]],
-  ["form", [
-    {namespaceURI: HTML_NS, tagName: "button", type: TYPE_IDREF},
-    {namespaceURI: HTML_NS, tagName: "fieldset", type: TYPE_IDREF},
-    {namespaceURI: HTML_NS, tagName: "input", type: TYPE_IDREF},
-    {namespaceURI: HTML_NS, tagName: "keygen", type: TYPE_IDREF},
-    {namespaceURI: HTML_NS, tagName: "label", type: TYPE_IDREF},
-    {namespaceURI: HTML_NS, tagName: "object", type: TYPE_IDREF},
-    {namespaceURI: HTML_NS, tagName: "output", type: TYPE_IDREF},
-    {namespaceURI: HTML_NS, tagName: "select", type: TYPE_IDREF},
-    {namespaceURI: HTML_NS, tagName: "textarea", type: TYPE_IDREF},
-  ]],
-  ["formaction", [
-    {namespaceURI: HTML_NS, tagName: "button", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI},
-  ]],
-  ["headers", [
-    {namespaceURI: HTML_NS, tagName: "td", type: TYPE_IDREF_LIST},
-    {namespaceURI: HTML_NS, tagName: "th", type: TYPE_IDREF_LIST},
-  ]],
-  ["href", [
-    {namespaceURI: HTML_NS, tagName: "a", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "area", type: TYPE_URI},
-    {namespaceURI: "*", tagName: "link", type: TYPE_CSS_RESOURCE_URI,
-     isValid: (namespaceURI, tagName, attributes) => {
-       return getAttribute(attributes, "rel") === "stylesheet";
-     }},
-    {namespaceURI: "*", tagName: "link", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "base", type: TYPE_URI},
-  ]],
-  ["icon", [
-    {namespaceURI: HTML_NS, tagName: "menuitem", type: TYPE_URI},
-  ]],
-  ["list", [
-    {namespaceURI: HTML_NS, tagName: "input", type: TYPE_IDREF},
-  ]],
-  ["longdesc", [
-    {namespaceURI: HTML_NS, tagName: "img", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "frame", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "iframe", type: TYPE_URI},
-  ]],
-  ["manifest", [
-    {namespaceURI: HTML_NS, tagName: "html", type: TYPE_URI},
-  ]],
-  ["menu", [
-    {namespaceURI: HTML_NS, tagName: "button", type: TYPE_IDREF},
-    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ]],
-  ["ping", [
-    {namespaceURI: HTML_NS, tagName: "a", type: TYPE_URI_LIST},
-    {namespaceURI: HTML_NS, tagName: "area", type: TYPE_URI_LIST},
-  ]],
-  ["poster", [
-    {namespaceURI: HTML_NS, tagName: "video", type: TYPE_URI},
-  ]],
-  ["profile", [
-    {namespaceURI: HTML_NS, tagName: "head", type: TYPE_URI},
-  ]],
-  ["src", [
-    {namespaceURI: "*", tagName: "script", type: TYPE_JS_RESOURCE_URI},
-    {namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "frame", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "iframe", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "img", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "audio", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "embed", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "source", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "track", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "video", type: TYPE_URI},
-    {namespaceURI: XUL_NS, tagName: "stringbundle", type: TYPE_URI},
-  ]],
-  ["usemap", [
-    {namespaceURI: HTML_NS, tagName: "img", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI},
-    {namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI},
-
-  ]],
-  ["xmlns", [
-    {namespaceURI: "*", tagName: "*", type: TYPE_URI},
-  ]],
-  ["containment", [
-    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_URI},
-  ]],
-  ["context", [
-    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ]],
-  ["datasources", [
-    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_URI_LIST},
-  ]],
-  ["insertafter", [
-    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ]],
-  ["insertbefore", [
-    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ]],
-  ["observes", [
-    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ]],
-  ["popup", [
-    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ]],
-  ["ref", [
-    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_URI},
-  ]],
-  ["removeelement", [
-    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ]],
-  ["template", [
-    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ]],
-  ["tooltip", [
-    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ]],
+  ["action", [{ namespaceURI: HTML_NS, tagName: "form", type: TYPE_URI }]],
+  ["background", [{ namespaceURI: HTML_NS, tagName: "body", type: TYPE_URI }]],
+  [
+    "cite",
+    [
+      { namespaceURI: HTML_NS, tagName: "blockquote", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "q", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "del", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "ins", type: TYPE_URI },
+    ],
+  ],
+  ["classid", [{ namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI }]],
+  [
+    "codebase",
+    [
+      { namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "applet", type: TYPE_URI },
+    ],
+  ],
+  [
+    "command",
+    [
+      { namespaceURI: HTML_NS, tagName: "menuitem", type: TYPE_IDREF },
+      { namespaceURI: XUL_NS, tagName: "key", type: TYPE_IDREF },
+    ],
+  ],
+  ["contextmenu", [{ namespaceURI: "*", tagName: "*", type: TYPE_IDREF }]],
+  ["data", [{ namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI }]],
+  [
+    "for",
+    [
+      { namespaceURI: HTML_NS, tagName: "label", type: TYPE_IDREF },
+      { namespaceURI: HTML_NS, tagName: "output", type: TYPE_IDREF_LIST },
+    ],
+  ],
+  [
+    "form",
+    [
+      { namespaceURI: HTML_NS, tagName: "button", type: TYPE_IDREF },
+      { namespaceURI: HTML_NS, tagName: "fieldset", type: TYPE_IDREF },
+      { namespaceURI: HTML_NS, tagName: "input", type: TYPE_IDREF },
+      { namespaceURI: HTML_NS, tagName: "keygen", type: TYPE_IDREF },
+      { namespaceURI: HTML_NS, tagName: "label", type: TYPE_IDREF },
+      { namespaceURI: HTML_NS, tagName: "object", type: TYPE_IDREF },
+      { namespaceURI: HTML_NS, tagName: "output", type: TYPE_IDREF },
+      { namespaceURI: HTML_NS, tagName: "select", type: TYPE_IDREF },
+      { namespaceURI: HTML_NS, tagName: "textarea", type: TYPE_IDREF },
+    ],
+  ],
+  [
+    "formaction",
+    [
+      { namespaceURI: HTML_NS, tagName: "button", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI },
+    ],
+  ],
+  [
+    "headers",
+    [
+      { namespaceURI: HTML_NS, tagName: "td", type: TYPE_IDREF_LIST },
+      { namespaceURI: HTML_NS, tagName: "th", type: TYPE_IDREF_LIST },
+    ],
+  ],
+  [
+    "href",
+    [
+      { namespaceURI: HTML_NS, tagName: "a", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "area", type: TYPE_URI },
+      {
+        namespaceURI: "*",
+        tagName: "link",
+        type: TYPE_CSS_RESOURCE_URI,
+        isValid: (namespaceURI, tagName, attributes) => {
+          return getAttribute(attributes, "rel") === "stylesheet";
+        },
+      },
+      { namespaceURI: "*", tagName: "link", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "base", type: TYPE_URI },
+    ],
+  ],
+  ["icon", [{ namespaceURI: HTML_NS, tagName: "menuitem", type: TYPE_URI }]],
+  ["list", [{ namespaceURI: HTML_NS, tagName: "input", type: TYPE_IDREF }]],
+  [
+    "longdesc",
+    [
+      { namespaceURI: HTML_NS, tagName: "img", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "frame", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "iframe", type: TYPE_URI },
+    ],
+  ],
+  ["manifest", [{ namespaceURI: HTML_NS, tagName: "html", type: TYPE_URI }]],
+  [
+    "menu",
+    [
+      { namespaceURI: HTML_NS, tagName: "button", type: TYPE_IDREF },
+      { namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF },
+    ],
+  ],
+  [
+    "ping",
+    [
+      { namespaceURI: HTML_NS, tagName: "a", type: TYPE_URI_LIST },
+      { namespaceURI: HTML_NS, tagName: "area", type: TYPE_URI_LIST },
+    ],
+  ],
+  ["poster", [{ namespaceURI: HTML_NS, tagName: "video", type: TYPE_URI }]],
+  ["profile", [{ namespaceURI: HTML_NS, tagName: "head", type: TYPE_URI }]],
+  [
+    "src",
+    [
+      { namespaceURI: "*", tagName: "script", type: TYPE_JS_RESOURCE_URI },
+      { namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "frame", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "iframe", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "img", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "audio", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "embed", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "source", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "track", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "video", type: TYPE_URI },
+      { namespaceURI: XUL_NS, tagName: "stringbundle", type: TYPE_URI },
+    ],
+  ],
+  [
+    "usemap",
+    [
+      { namespaceURI: HTML_NS, tagName: "img", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI },
+      { namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI },
+    ],
+  ],
+  ["xmlns", [{ namespaceURI: "*", tagName: "*", type: TYPE_URI }]],
+  ["containment", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_URI }]],
+  ["context", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
+  [
+    "datasources",
+    [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_URI_LIST }],
+  ],
+  ["insertafter", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
+  ["insertbefore", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
+  ["observes", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
+  ["popup", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
+  ["ref", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_URI }]],
+  ["removeelement", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
+  ["template", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
+  ["tooltip", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
   // SVG links aren't handled yet, see bug 1158831.
   // ["fill", [
   //   {namespaceURI: SVG_NS, tagName: "*", type: },
@@ -206,10 +207,12 @@ const ATTRIBUTE_TYPES = new Map([
 
 var parsers = {
   [TYPE_URI]: function(attributeValue) {
-    return [{
-      type: TYPE_URI,
-      value: attributeValue,
-    }];
+    return [
+      {
+        type: TYPE_URI,
+        value: attributeValue,
+      },
+    ];
   },
   [TYPE_URI_LIST]: function(attributeValue) {
     const data = splitBy(attributeValue, " ");
@@ -221,22 +224,28 @@ var parsers = {
     return data;
   },
   [TYPE_JS_RESOURCE_URI]: function(attributeValue) {
-    return [{
-      type: TYPE_JS_RESOURCE_URI,
-      value: attributeValue,
-    }];
+    return [
+      {
+        type: TYPE_JS_RESOURCE_URI,
+        value: attributeValue,
+      },
+    ];
   },
   [TYPE_CSS_RESOURCE_URI]: function(attributeValue) {
-    return [{
-      type: TYPE_CSS_RESOURCE_URI,
-      value: attributeValue,
-    }];
+    return [
+      {
+        type: TYPE_CSS_RESOURCE_URI,
+        value: attributeValue,
+      },
+    ];
   },
   [TYPE_IDREF]: function(attributeValue) {
-    return [{
-      type: TYPE_IDREF,
-      value: attributeValue,
-    }];
+    return [
+      {
+        type: TYPE_IDREF,
+        value: attributeValue,
+      },
+    ];
   },
   [TYPE_IDREF_LIST]: function(attributeValue) {
     const data = splitBy(attributeValue, " ");
@@ -268,16 +277,19 @@ var parsers = {
  */
 function parseAttribute(namespaceURI, tagName, attributes, attributeName) {
   if (!hasAttribute(attributes, attributeName)) {
-    throw new Error(`Attribute ${attributeName} isn't part of the ` +
-                    "provided attributes");
+    throw new Error(
+      `Attribute ${attributeName} isn't part of the ` + "provided attributes"
+    );
   }
 
   const type = getType(namespaceURI, tagName, attributes, attributeName);
   if (!type) {
-    return [{
-      type: TYPE_STRING,
-      value: getAttribute(attributes, attributeName),
-    }];
+    return [
+      {
+        type: TYPE_STRING,
+        value: getAttribute(attributes, attributeName),
+      },
+    ];
   }
 
   return parsers[type](getAttribute(attributes, attributeName));
@@ -299,12 +311,13 @@ function getType(namespaceURI, tagName, attributes, attributeName) {
   }
 
   for (const typeData of ATTRIBUTE_TYPES.get(attributeName)) {
-    const hasNamespace = namespaceURI === typeData.namespaceURI ||
-                       typeData.namespaceURI === "*";
-    const hasTagName = tagName.toLowerCase() === typeData.tagName ||
-                     typeData.tagName === "*";
-    const isValid = typeData.isValid ?
-      typeData.isValid(namespaceURI, tagName, attributes, attributeName) : true;
+    const hasNamespace =
+      namespaceURI === typeData.namespaceURI || typeData.namespaceURI === "*";
+    const hasTagName =
+      tagName.toLowerCase() === typeData.tagName || typeData.tagName === "*";
+    const isValid = typeData.isValid
+      ? typeData.isValid(namespaceURI, tagName, attributes, attributeName)
+      : true;
 
     if (hasNamespace && hasTagName && isValid) {
       return typeData.type;
@@ -315,7 +328,7 @@ function getType(namespaceURI, tagName, attributes, attributeName) {
 }
 
 function getAttribute(attributes, attributeName) {
-  for (const {name, value} of attributes) {
+  for (const { name, value } of attributes) {
     if (name === attributeName) {
       return value;
     }
@@ -324,7 +337,7 @@ function getAttribute(attributes, attributeName) {
 }
 
 function hasAttribute(attributes, attributeName) {
-  for (const {name} of attributes) {
+  for (const { name } of attributes) {
     if (name === attributeName) {
       return true;
     }
@@ -343,14 +356,15 @@ function hasAttribute(attributes, attributeName) {
 function splitBy(value, splitChar) {
   const data = [];
 
-  let i = 0, buffer = "";
+  let i = 0,
+    buffer = "";
   while (i <= value.length) {
     if (i === value.length && buffer) {
-      data.push({value: buffer});
+      data.push({ value: buffer });
     }
     if (value[i] === splitChar) {
       if (buffer) {
-        data.push({value: buffer});
+        data.push({ value: buffer });
       }
       data.push({
         type: TYPE_STRING,

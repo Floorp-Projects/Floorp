@@ -3,14 +3,15 @@
 
 function run_test() {
   // Try crashing with an uncaught exception.
-  do_crash(function() {
-             crashType = CrashTestUtils.CRASH_UNCAUGHT_EXCEPTION;
-             crashReporter.annotateCrashReport("TestKey", "TestValue");
-           },
-           function(mdump, extra) {
-             Assert.equal(extra.TestKey, "TestValue");
-           },
-          // process will exit with a zero exit status
-          true);
+  do_crash(
+    function() {
+      crashType = CrashTestUtils.CRASH_UNCAUGHT_EXCEPTION;
+      crashReporter.annotateCrashReport("TestKey", "TestValue");
+    },
+    function(mdump, extra) {
+      Assert.equal(extra.TestKey, "TestValue");
+    },
+    // process will exit with a zero exit status
+    true
+  );
 }
-

@@ -9,13 +9,17 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
 });
 
-add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
-  debuggee.eval(function stopMe(arg1) {
-    debugger;
-  }.toString());
+add_task(
+  threadClientTest(async ({ threadClient, debuggee, client }) => {
+    debuggee.eval(
+      function stopMe(arg1) {
+        debugger;
+      }.toString()
+    );
 
-  await test_object_grip(debuggee, threadClient);
-}));
+    await test_object_grip(debuggee, threadClient);
+  })
+);
 
 async function test_object_grip(debuggee, threadClient) {
   await assert_object_argument(
@@ -103,7 +107,7 @@ async function test_object_grip(debuggee, threadClient) {
 
         assert_completion(value, expected);
       }
-    },
+    }
   );
 }
 

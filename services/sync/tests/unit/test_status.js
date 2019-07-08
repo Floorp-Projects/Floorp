@@ -1,4 +1,4 @@
-const {Status} = ChromeUtils.import("resource://services-sync/status.js");
+const { Status } = ChromeUtils.import("resource://services-sync/status.js");
 
 function run_test() {
   // Check initial states
@@ -14,10 +14,8 @@ function run_test() {
   }
   Assert.equal(Status.partial, false);
 
-
   // Check login status
-  for (let code of [LOGIN_FAILED_NO_USERNAME,
-                    LOGIN_FAILED_NO_PASSPHRASE]) {
+  for (let code of [LOGIN_FAILED_NO_USERNAME, LOGIN_FAILED_NO_PASSPHRASE]) {
     Status.login = code;
     Assert.equal(Status.login, code);
     Assert.equal(Status.service, CLIENT_NOT_CONFIGURED);
@@ -34,7 +32,6 @@ function run_test() {
   Assert.equal(Status.service, STATUS_OK);
   Status.resetSync();
 
-
   // Check sync status
   Status.sync = SYNC_FAILED;
   Assert.equal(Status.sync, SYNC_FAILED);
@@ -45,7 +42,6 @@ function run_test() {
   Assert.equal(Status.service, STATUS_OK);
 
   Status.resetSync();
-
 
   // Check engine status
   Status.engines = ["testEng1", ENGINE_SUCCEEDED];
@@ -63,7 +59,6 @@ function run_test() {
   Assert.equal(Status.engines.testEng3, ENGINE_SUCCEEDED);
   Assert.equal(Status.service, SYNC_FAILED_PARTIAL);
 
-
   // Check resetSync
   Status.sync = SYNC_FAILED;
   Status.resetSync();
@@ -73,7 +68,6 @@ function run_test() {
   if (Status.engines.length) {
     do_throw("Status.engines should be empty.");
   }
-
 
   // Check resetBackoff
   Status.enforceBackoff = true;

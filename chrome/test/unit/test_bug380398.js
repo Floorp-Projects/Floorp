@@ -3,10 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-
-var MANIFESTS = [
-  do_get_file("data/test_bug380398.manifest"),
-];
+var MANIFESTS = [do_get_file("data/test_bug380398.manifest")];
 
 registerManifests(MANIFESTS);
 
@@ -18,8 +15,9 @@ updateAppInfo({
   platformVersion: "1.9",
 });
 
-var chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
-                 .getService(Ci.nsIChromeRegistry);
+var chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+  Ci.nsIChromeRegistry
+);
 chromeReg.checkForNewChrome();
 
 var target = Services.io.newFileURI(do_get_file("data"));
@@ -40,8 +38,7 @@ function test_failed_mapping(namespace) {
   try {
     chromeReg.convertChromeURL(uri);
     do_throw(namespace);
-  } catch (ex) {
-  }
+  } catch (ex) {}
 }
 
 function run_test() {
