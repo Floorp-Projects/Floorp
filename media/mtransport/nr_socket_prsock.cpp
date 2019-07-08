@@ -865,7 +865,10 @@ int NrSocket::connect(nr_transport_addr* addr) {
   connect_invoked_ = true;
   connect_status = PR_Connect(fd_, &naddr, PR_INTERVAL_NO_WAIT);
   if (connect_status != PR_SUCCESS) {
-    if (PR_GetError() != PR_IN_PROGRESS_ERROR) ABORT(R_IO_ERROR);
+    if (PR_GetError() != PR_IN_PROGRESS_ERROR) {
+      r_log(LOG_GENERIC, LOG_CRIT, "PR_Connect failed: %d", PR_GetError());
+      ABORT(R_IO_ERROR);
+    }
   }
 
   // If our local address is wildcard, then fill in the
