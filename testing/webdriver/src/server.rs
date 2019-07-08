@@ -242,9 +242,10 @@ fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(method: Metho
     // Finally, tell warp that the path is complete
     subroute
         .and(warp::path::end())
+        .and(warp::path::full())
         .and(warp::method())
         .and(warp::body::concat())
-        .map(move |params, method, body: warp::body::FullBody| {
+        .map(move |params, full_path: warp::path::FullPath, method, body: warp::body::FullBody| {
             if method == Method::HEAD {
                 return warp::reply::with_status("".into(), StatusCode::OK)
             }
@@ -252,12 +253,13 @@ fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(method: Metho
             if body.is_err() {
                 return warp::reply::with_status("The body wasn't valid UTF-8".to_string(), StatusCode::BAD_REQUEST)
             }
+            let body = body.unwrap();
 
-            debug!("-> {} {} {:?}", method, path, body);
+            debug!("-> {} {} {}", method, full_path.as_str(), body);
             let msg_result = WebDriverMessage::from_http(
                 route.clone(),
                 &params,
-                &body.unwrap(),
+                &body,
                 method == Method::POST,
             );
 
