@@ -50,7 +50,6 @@
 #include "nsISizeOfEventTarget.h"
 #include "nsDOMJSUtils.h"
 #include "nsArrayUtils.h"
-#include "nsDOMWindowList.h"
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "nsIContentSecurityPolicy.h"
@@ -2708,11 +2707,7 @@ bool nsGlobalWindowInner::GetClosed(ErrorResult& aError) {
   FORWARD_TO_OUTER(GetClosedOuter, (), true);
 }
 
-nsDOMWindowList* nsGlobalWindowInner::GetFrames() {
-  FORWARD_TO_OUTER(GetFrames, (), nullptr);
-}
-
-already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowInner::IndexedGetter(
+Nullable<WindowProxyHolder> nsGlobalWindowInner::IndexedGetter(
     uint32_t aIndex) {
   FORWARD_TO_OUTER(IndexedGetterOuter, (aIndex), nullptr);
 }

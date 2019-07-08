@@ -17,7 +17,7 @@ var xhrItem = "untouched";
 var fetchItem = "untouched";
 var mediaItem1 = "untouched";
 
-function checkLoads() {
+async function checkLoads() {
   window.parent.is(scriptItem1, "spoiled", "Should not block tracking js 1");
   window.parent.is(scriptItem2, "spoiled", "Should not block tracking js 2");
   window.parent.is(imageItem1, "spoiled", "Should not block tracking img 1");
@@ -31,7 +31,7 @@ function checkLoads() {
     "No elements should be blocked");
 
   // End (parent) test.
-  window.parent.clearPermissions();
+  await window.parent.clearPermissions();
   window.parent.SimpleTest.finish();
 }
 
