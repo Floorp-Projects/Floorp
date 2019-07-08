@@ -31,6 +31,9 @@ permalink: /changelog/
 * **feature-downloads**
   * Added `FetchDownloadManager`, an alternate download manager that uses a fetch `Client` instead of the native Android `DownloadManager`.
 
+* **support-ktx**
+  * Added `putCompoundDrawablesRelative` and `putCompoundDrawablesRelativeWithIntrinsicBounds`, aliases of `setCompoundDrawablesRelative` that use Kotlin named and default arguments.
+
 # 2.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v1.0.0...v2.0.0)
