@@ -676,8 +676,10 @@ nscoord nsTableCellFrame::GetCellBaseline() const {
   nsIFrame* inner = mFrames.FirstChild();
   nscoord borderPadding = GetUsedBorderAndPadding().top;
   nscoord result;
-  if (nsLayoutUtils::GetFirstLineBaseline(GetWritingMode(), inner, &result))
+  if (!StyleDisplay()->IsContainLayout() &&
+      nsLayoutUtils::GetFirstLineBaseline(GetWritingMode(), inner, &result)) {
     return result + borderPadding;
+  }
   return inner->GetContentRectRelativeToSelf().YMost() + borderPadding;
 }
 
