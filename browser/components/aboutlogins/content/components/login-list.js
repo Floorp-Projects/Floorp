@@ -42,7 +42,6 @@ export default class LoginList extends HTMLElement {
       .addEventListener("change", this);
     window.addEventListener("AboutLoginsClearSelection", this);
     window.addEventListener("AboutLoginsCreateLogin", this);
-    window.addEventListener("AboutLoginsInitialLoginSelected", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
     window.addEventListener("AboutLoginsFilterLogins", this);
     this.addEventListener("keydown", this);
@@ -65,7 +64,7 @@ export default class LoginList extends HTMLElement {
         "aria-activedescendant",
         this._blankLoginListItem.id
       );
-      this._list.append(this._blankLoginListItem);
+      this._list.appendChild(this._blankLoginListItem);
     }
 
     if (!this._logins.length) {
@@ -75,15 +74,15 @@ export default class LoginList extends HTMLElement {
       return;
     }
 
+    let fragment = document.createDocumentFragment();
     for (let login of this._logins) {
       let listItem = new LoginListItem(login);
       if (login.guid == this._selectedGuid) {
-        listItem.classList.add("selected");
-        listItem.setAttribute("aria-selected", "true");
-        this._list.setAttribute("aria-activedescendant", listItem.id);
+        this._setListItemAsSelected(listItem);
       }
-      this._list.append(listItem);
+      fragment.appendChild(listItem);
     }
+    this._list.appendChild(fragment);
 
     let visibleLoginCount = this._applyFilter();
     document.l10n.setAttributes(this._count, "login-list-count", {
@@ -125,14 +124,19 @@ export default class LoginList extends HTMLElement {
         this.render();
         break;
       }
-      case "AboutLoginsInitialLoginSelected":
       case "AboutLoginsLoginSelected": {
         if (this._selectedGuid == event.detail.guid) {
           return;
         }
 
-        this._selectedGuid = event.detail.guid;
-        this.render();
+        let listItem = this._list.querySelector(
+          `login-list-item[data-guid="${event.detail.guid}"]`
+        );
+        if (listItem) {
+          this._setListItemAsSelected(listItem);
+        } else {
+          this.render();
+        }
         break;
       }
       case "keydown": {
@@ -157,13 +161,15 @@ export default class LoginList extends HTMLElement {
       !this._logins.findIndex(login => login.guid == this._selectedGuid) != -1
     ) {
       // Select the first visible login after any possible filter is applied.
-      let firstVisibleLogin = this._list.querySelector(
+      let firstVisibleListItem = this._list.querySelector(
         "login-list-item[data-guid]:not([hidden])"
       );
-      if (firstVisibleLogin) {
+      if (firstVisibleListItem) {
+        this._selectedGuid = firstVisibleListItem.dataset.guid;
+        this._setListItemAsSelected(firstVisibleListItem);
         window.dispatchEvent(
           new CustomEvent("AboutLoginsInitialLoginSelected", {
-            detail: firstVisibleLogin._login,
+            detail: firstVisibleListItem._login,
           })
         );
       }
@@ -317,6 +323,18 @@ export default class LoginList extends HTMLElement {
     activeDescendant.classList.remove("keyboard-selected");
     newlyFocusedItem.classList.add("keyboard-selected");
     newlyFocusedItem.scrollIntoView(false);
+  }
+
+  _setListItemAsSelected(listItem) {
+    let oldSelectedItem = this._list.querySelector(".selected");
+    if (oldSelectedItem) {
+      oldSelectedItem.classList.remove("selected");
+      oldSelectedItem.removeAttribute("aria-selected");
+    }
+    listItem.classList.add("selected");
+    listItem.setAttribute("aria-selected", "true");
+    this._list.setAttribute("aria-activedescendant", listItem.id);
+    this._selectedGuid = listItem.dataset.guid;
   }
 }
 customElements.define("login-list", LoginList);
