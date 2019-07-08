@@ -21,9 +21,17 @@ import pprint
 import subprocess
 import sys
 
+from mozilla_version.gecko import (
+    FirefoxVersion,
+    FennecVersion,
+    GeckoVersion,
+    ThunderbirdVersion,
+)
+
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
 from mozharness.base.errors import HgErrorList
+from mozharness.base.log import FATAL
 from mozharness.base.python import VirtualenvMixin, virtualenv_config_options
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.automation import AutomationMixin
@@ -427,19 +435,50 @@ class GeckoMigration(MercurialScript, VirtualenvMixin,
         """Bump second digit.
 
          ESR need only the second digit bumped as a part of merge day."""
+
         dirs = self.query_abs_dirs()
-        version = self.get_version(dirs['abs_to_dir'])
-        curr_version = ".".join(version)
-        next_version = list(version)
-        # bump the second digit
-        next_version[1] = str(int(next_version[1]) + 1)
-        # Take major+minor and append '0' accordng to Firefox version schema.
-        # 52.0 will become 52.1.0, not 52.1
-        next_version = ".".join(next_version[:2] + ['0'])
-        for f in self.config["version_files"]:
-            self.replace(os.path.join(dirs['abs_to_dir'], f["file"]),
-                         curr_version, next_version + f["suffix"])
+
+        for f in self.config['version_files']:
+            file_path = f['file']
+
+            VersionClass = _find_what_version_parser_to_use(file_path)
+            asb_file_path = os.path.join(dirs['abs_to_dir'], file_path)
+            version_string = self._extract_version_number_from_file(asb_file_path)
+            curr_version = VersionClass.parse(version_string)
+            next_version_args = {
+                'major_number': curr_version.major_number,
+                'minor_number': curr_version.minor_number + 1,
+                'is_nightly': curr_version.is_nightly,
+                'is_aurora_or_devedition': curr_version.is_aurora_or_devedition,
+                'is_esr': curr_version.is_esr,
+            }
+
+            must_have_patch_number = (
+                curr_version.patch_number is not None or
+                all(folder_name not in file_path for folder_name in ('beta/', 'nightly/'))
+            )
+            if must_have_patch_number:
+                # Take major+minor and append '0' accordng to Firefox version schema.
+                # 52.0 will become 52.1.0, not 52.1
+                next_version_args['patch_number'] = 0
+
+            if curr_version.is_beta:
+                next_version_args['beta_number'] = 1
+
+            next_version = VersionClass(**next_version_args)
+
+            self.replace(
+                asb_file_path,
+                str(curr_version),
+                '{}{}'.format(next_version, f['suffix'])
+            )
+
         self.touch_clobber_file(dirs['abs_to_dir'])
+
+    def _extract_version_number_from_file(self, file_path):
+        contents = self.read_from_file(file_path, error_level=FATAL)
+        lines = [l for l in contents.splitlines() if l and not l.startswith("#")]
+        return lines[-1]
 
     def pull(self):
         """Clone the gecko repos"""
@@ -489,6 +528,29 @@ class GeckoMigration(MercurialScript, VirtualenvMixin,
         getattr(self, self.config['migration_behavior'])(end_tag=end_tag)
         self.info("Verify the diff, and apply any manual changes, such as disabling features, "
                   "and --commit-changes")
+
+
+_VERSION_CLASS_PER_BEGINNING_OF_PATH = {
+    'browser/': FirefoxVersion,
+    'config/milestone.txt': GeckoVersion,
+    'mobile/android/': FennecVersion,
+    'mail/': ThunderbirdVersion,
+}
+
+
+def _find_what_version_parser_to_use(file_path):
+    VersionClasses = [
+        VersionClass
+        for start_string, VersionClass in _VERSION_CLASS_PER_BEGINNING_OF_PATH.items()
+        if file_path.startswith(start_string)
+    ]
+
+    if len(VersionClasses) != 1:
+        raise ValueError(
+            'File "{}" does not match one class. Got: {}'.format(file_path, VersionClasses)
+        )
+
+    return VersionClasses[0]
 
 
 # __main__ {{{1
