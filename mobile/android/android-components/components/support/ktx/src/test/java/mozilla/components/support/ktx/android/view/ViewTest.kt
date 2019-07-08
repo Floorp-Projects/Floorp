@@ -35,6 +35,7 @@ class ViewTest {
         assertTrue(view.hasFocus())
     }
 
+    @Suppress("Deprecation")
     @Test
     fun `visibility helper methods`() {
         val view = TextView(testContext)

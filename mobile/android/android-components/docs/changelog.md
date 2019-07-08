@@ -33,6 +33,7 @@ permalink: /changelog/
 
 * **support-ktx**
   * Deprecated `String.toUri()` in favour of Android Core KTX.
+  * Deprecated `View.isGone` and `View.isInvisible` in favour of Android Core KTX.
   * Added `putCompoundDrawablesRelative` and `putCompoundDrawablesRelativeWithIntrinsicBounds`, aliases of `setCompoundDrawablesRelative` that use Kotlin named and default arguments.
 
 * **feature-prompts**

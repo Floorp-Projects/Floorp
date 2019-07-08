@@ -30,8 +30,8 @@ val View.isLTR: Boolean
 
 /**
  * Returns true if this view's visibility is set to View.VISIBLE.
- * @deprecated Use Android KTX instead.
  */
+@Deprecated("Use Android KTX instead", ReplaceWith("isVisible", "androidx.core.view.isVisible"))
 fun View.isVisible(): Boolean {
     return visibility == View.VISIBLE
 }
@@ -39,6 +39,7 @@ fun View.isVisible(): Boolean {
 /**
  * Returns true if this view's visibility is set to View.GONE.
  */
+@Deprecated("Use Android KTX instead", ReplaceWith("isGone", "androidx.core.view.isGone"))
 fun View.isGone(): Boolean {
     return visibility == View.GONE
 }
@@ -46,6 +47,7 @@ fun View.isGone(): Boolean {
 /**
  * Returns true if this view's visibility is set to View.INVISIBLE.
  */
+@Deprecated("Use Android KTX instead", ReplaceWith("isInvisible", "androidx.core.view.isInvisible"))
 fun View.isInvisible(): Boolean {
     return visibility == View.INVISIBLE
 }

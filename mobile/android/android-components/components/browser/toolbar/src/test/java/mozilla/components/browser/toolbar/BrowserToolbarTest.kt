@@ -15,6 +15,7 @@ import android.view.accessibility.AccessibilityManager
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.core.view.inputmethod.EditorInfoCompat
+import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenuBuilder
@@ -24,7 +25,6 @@ import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 import mozilla.components.support.base.android.Padding
-import mozilla.components.support.ktx.android.view.isGone
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -302,13 +302,13 @@ class BrowserToolbarTest {
         toolbar.setOnUrlCommitListener { true }
         toolbar.editMode()
 
-        assertTrue(toolbar.displayToolbar.isGone())
+        assertTrue(toolbar.displayToolbar.isGone)
         assertTrue(toolbar.editToolbar.isVisible)
 
         toolbar.onUrlEntered("https://www.mozilla.org")
 
         assertTrue(toolbar.displayToolbar.isVisible)
-        assertTrue(toolbar.editToolbar.isGone())
+        assertTrue(toolbar.editToolbar.isGone)
     }
 
     @Test
@@ -317,12 +317,12 @@ class BrowserToolbarTest {
         toolbar.setOnUrlCommitListener { false }
         toolbar.editMode()
 
-        assertTrue(toolbar.displayToolbar.isGone())
+        assertTrue(toolbar.displayToolbar.isGone)
         assertTrue(toolbar.editToolbar.isVisible)
 
         toolbar.onUrlEntered("https://www.mozilla.org")
 
-        assertTrue(toolbar.displayToolbar.isGone())
+        assertTrue(toolbar.displayToolbar.isGone)
         assertTrue(toolbar.editToolbar.isVisible)
     }
 
