@@ -159,7 +159,7 @@ function checkContent(aExpectedText, aMessage, aID)
   if (!aID) {
     aID = "";
   }
-  var textContent = synthesizeQueryTextContent(0, 100);
+  let textContent = synthesizeQueryTextContent(0, 100);
   if (!checkQueryContentResult(textContent, aMessage +
                                ": synthesizeQueryTextContent " + aID)) {
     return false;
@@ -175,7 +175,7 @@ function checkContentRelativeToSelection(aRelativeOffset, aLength, aExpectedOffs
     aID = "";
   }
   aMessage += " (aRelativeOffset=" + aRelativeOffset + "): "
-  var textContent = synthesizeQueryTextContent(aRelativeOffset, aLength, true);
+  let textContent = synthesizeQueryTextContent(aRelativeOffset, aLength, true);
   if (!checkQueryContentResult(textContent, aMessage +
                                "synthesizeQueryTextContent " + aID)) {
     return false;
@@ -193,7 +193,7 @@ function checkSelection(aExpectedOffset, aExpectedText, aMessage, aID)
   if (!aID) {
     aID = "";
   }
-  var selectedText = synthesizeQuerySelectedText();
+  let selectedText = synthesizeQuerySelectedText();
   if (!checkQueryContentResult(selectedText, aMessage +
                                ": synthesizeQuerySelectedText " + aID)) {
     return false;
@@ -212,7 +212,7 @@ function checkIMESelection(aSelectionType, aExpectedFound, aExpectedOffset, aExp
     aID = "";
   }
   aMessage += " (" + aSelectionType + ")";
-  var selectionType = 0;
+  let selectionType = 0;
   switch (aSelectionType) {
     case "RawClause":
       selectionType = QUERY_CONTENT_FLAG_SELECTION_IME_RAWINPUT;
@@ -230,7 +230,7 @@ function checkIMESelection(aSelectionType, aExpectedFound, aExpectedOffset, aExp
       ok(false, aMessage + ": invalid selection type, " + aSelectionType);
   }
   isnot(selectionType, 0, aMessage + ": wrong value");
-  var selectedText = synthesizeQuerySelectedText(selectionType);
+  let selectedText = synthesizeQuerySelectedText(selectionType);
   if (!checkQueryContentResult(selectedText, aMessage +
                                ": synthesizeQuerySelectedText " + aID)) {
     return false;
@@ -263,8 +263,8 @@ function checkRect(aRect, aExpectedRect, aMessage)
 
 function checkRectArray(aQueryTextRectArrayResult, aExpectedTextRectArray, aMessage)
 {
-  for (var i = 1; i < aExpectedTextRectArray.length; ++i) {
-    var rect = { left: {}, top: {}, width: {}, height: {} };
+  for (let i = 1; i < aExpectedTextRectArray.length; ++i) {
+    let rect = { left: {}, top: {}, width: {}, height: {} };
     try {
       aQueryTextRectArrayResult.getCharacterRect(i, rect.left, rect.top, rect.width, rect.height);
     } catch (e) {
@@ -284,12 +284,12 @@ function checkRectArray(aQueryTextRectArrayResult, aExpectedTextRectArray, aMess
 
 function checkRectContainsRect(aRect, aContainer, aMessage)
 {
-  var container = { left: Math.ceil(aContainer.left),
+  let container = { left: Math.ceil(aContainer.left),
                     top:  Math.ceil(aContainer.top),
                     width: Math.floor(aContainer.width),
                     height: Math.floor(aContainer.height) };
 
-  var ret = container.left <= aRect.left &&
+  let ret = container.left <= aRect.left &&
             container.top <= aRect.top &&
             container.left + container.width >= aRect.left + aRect.width &&
             container.top + container.height >= aRect.top + aRect.height;
@@ -489,7 +489,7 @@ function runUndoRedoTest()
 
   synthesizeKey("KEY_Backspace", {repeat: 12});
 
-  var i = 0;
+  let i = 0;
   if (!checkContent("\u732B\u5A18 means \"cat-girl\".",
                     "runUndoRedoTest", "#" + ++i) ||
       !checkSelection(20, "", "runUndoRedoTest", "#" + i)) {
@@ -660,7 +660,7 @@ function runCompositionCommitAsIsTest()
 {
   textarea.focus();
 
-  var result = [];
+  let result = [];
   function clearResult()
   {
     result = [];
@@ -796,7 +796,7 @@ function runCompositionCommitTest()
 {
   textarea.focus();
 
-  var result = [];
+  let result = [];
   function clearResult()
   {
     result = [];
@@ -1130,9 +1130,9 @@ function runCompositionTest()
 {
   textarea.value = "";
   textarea.focus();
-  var caretRects = [];
+  let caretRects = [];
 
-  var caretRect = synthesizeQueryCaretRect(0);
+  let caretRect = synthesizeQueryCaretRect(0);
   if (!checkQueryContentResult(caretRect,
         "runCompositionTest: synthesizeQueryCaretRect #0")) {
     return false;
@@ -1492,8 +1492,8 @@ function runCompositionTest()
   }
 
 
-  var textRect1 = synthesizeQueryTextRect(0, 1);
-  var textRect2 = synthesizeQueryTextRect(1, 1);
+  let textRect1 = synthesizeQueryTextRect(0, 1);
+  let textRect2 = synthesizeQueryTextRect(1, 1);
   if (!checkQueryContentResult(textRect1,
         "runCompositionTest: synthesizeQueryTextRect #1-12-1") ||
       !checkQueryContentResult(textRect2,
@@ -1510,8 +1510,8 @@ function runCompositionTest()
     return;
   }
 
-  var textRect3 = synthesizeQueryTextRect(0, 1);
-  var textRect4 = synthesizeQueryTextRect(1, 1);
+  let textRect3 = synthesizeQueryTextRect(0, 1);
+  let textRect4 = synthesizeQueryTextRect(1, 1);
 
   if (!checkQueryContentResult(textRect3,
         "runCompositionTest: synthesizeQueryTextRect #1-13-1") ||
@@ -1606,7 +1606,7 @@ function runCompositionTest()
   }
 
   // set selection
-  var selectionSetTest = synthesizeSelectionSet(4, 7, false);
+  let selectionSetTest = synthesizeSelectionSet(4, 7, false);
   ok(selectionSetTest, "runCompositionTest: selectionSetTest failed");
 
   if (!checkSelection(4, "\u3055\u884C\u3053\u3046\u3058\u3087\u3046", "runCompositionTest", "#3-1")) {
@@ -1885,14 +1885,14 @@ function runCompositionEventTest()
   input.value = "";
   input.focus();
 
-  var windowEventCounts = [], windowEventData = [], windowEventLocale = [];
-  var inputEventCounts = [], inputEventData = [], inputEventLocale = [];
-  var preventDefault = false;
-  var stopPropagation = false;
+  let windowEventCounts = [], windowEventData = [], windowEventLocale = [];
+  let inputEventCounts = [], inputEventData = [], inputEventLocale = [];
+  let preventDefault = false;
+  let stopPropagation = false;
 
   function initResults()
   {
-    for (var i = 0; i < kEvents.length; i++) {
+    for (let i = 0; i < kEvents.length; i++) {
       windowEventCounts[kEvents[i]] = 0;
       windowEventData[kEvents[i]] = "";
       windowEventLocale[kEvents[i]] = "";
@@ -2294,7 +2294,7 @@ function runCompositionEventTest()
   input.value = "value of input";
   synthesizeKey("a", { accelKey: true }); // Select All
 
-  var compositionstart = document.createEvent("CompositionEvent");
+  let compositionstart = document.createEvent("CompositionEvent");
   compositionstart.initCompositionEvent("compositionstart",
                                         true, true, document.defaultView,
                                         "start data", "start locale");
@@ -2325,7 +2325,7 @@ function runCompositionEventTest()
   is(input.value, "value of input",
      kDescription + "input value was changed #7");
 
-  var compositionupdate1 = document.createEvent("compositionevent");
+  let compositionupdate1 = document.createEvent("compositionevent");
   compositionupdate1.initCompositionEvent("compositionupdate",
                                           true, false, document.defaultView,
                                           "composing string", "composing locale");
@@ -2356,7 +2356,7 @@ function runCompositionEventTest()
   is(input.value, "value of input",
      kDescription + "input value was changed #8");
 
-  var compositionupdate2 = document.createEvent("compositionEvent");
+  let compositionupdate2 = document.createEvent("compositionEvent");
   compositionupdate2.initCompositionEvent("compositionupdate",
                                           true, false, document.defaultView,
                                           "commit string", "commit locale");
@@ -2387,7 +2387,7 @@ function runCompositionEventTest()
   is(input.value, "value of input",
      kDescription + "input value was changed #9");
 
-  var compositionend = document.createEvent("Compositionevent");
+  let compositionend = document.createEvent("Compositionevent");
   compositionend.initCompositionEvent("compositionend",
                                       true, false, document.defaultView,
                                       "end data", "end locale");
@@ -2445,16 +2445,16 @@ function runQueryTextRectInContentEditableTest()
                       // \n    0  123    4  567
                       // \r\n  01 234    56 789
 
-  var description = "runTextRectInContentEditableTest: \"" + contenteditable.innerHTML + "\", ";
+  let description = "runTextRectInContentEditableTest: \"" + contenteditable.innerHTML + "\", ";
 
   // "a"
-  var a = synthesizeQueryTextRect(kLFLen, 1);
+  let a = synthesizeQueryTextRect(kLFLen, 1);
   if (!checkQueryContentResult(a, description + "rect for 'a'")) {
     return;
   }
 
   // "b"
-  var b = synthesizeQueryTextRect(kLFLen + 1, 1);
+  let b = synthesizeQueryTextRect(kLFLen + 1, 1);
   if (!checkQueryContentResult(b, description + "rect for 'b'")) {
     return;
   }
@@ -2464,7 +2464,7 @@ function runQueryTextRectInContentEditableTest()
   is(b.height, a.height, description + "'a' and 'b' should be same height");
 
   // "c"
-  var c = synthesizeQueryTextRect(kLFLen + 2, 1);
+  let c = synthesizeQueryTextRect(kLFLen + 2, 1);
   if (!checkQueryContentResult(c, description + "rect for 'c'")) {
     return;
   }
@@ -2474,14 +2474,14 @@ function runQueryTextRectInContentEditableTest()
   is(c.height, b.height, description + "'b' and 'c' should be same height");
 
   // "abc" as array
-  var abcAsArray = synthesizeQueryTextRectArray(kLFLen, 3);
+  let abcAsArray = synthesizeQueryTextRectArray(kLFLen, 3);
   if (!checkQueryContentResult(abcAsArray, description + "rect array for 'abc'") ||
       !checkRectArray(abcAsArray, [a, b, c], description + "query text rect array result of 'abc' should match with each query text rect result")) {
     return;
   }
 
   // 2nd <p> (can be computed with the rect of 'c')
-  var p2 = synthesizeQueryTextRect(kLFLen + 3, 1);
+  let p2 = synthesizeQueryTextRect(kLFLen + 3, 1);
   if (!checkQueryContentResult(p2, description + "rect for 2nd <p>")) {
     return;
   }
@@ -2491,7 +2491,7 @@ function runQueryTextRectInContentEditableTest()
   is(p2.height, c.height, description + "'c' and a line breaker caused by 2nd <p> should be same height");
 
   // 2nd <p> as array
-  var p2AsArray = synthesizeQueryTextRectArray(kLFLen + 3, 1);
+  let p2AsArray = synthesizeQueryTextRectArray(kLFLen + 3, 1);
   if (!checkQueryContentResult(p2AsArray, description + "2nd <p>'s line breaker as array") ||
       !checkRectArray(p2AsArray, [p2], description + "query text rect array result of 2nd <p> should match with each query text rect result")) {
     return;
@@ -2499,7 +2499,7 @@ function runQueryTextRectInContentEditableTest()
 
   if (kLFLen > 1) {
     // \n of \r\n
-    var p2_2 = synthesizeQueryTextRect(kLFLen + 4, 1);
+    let p2_2 = synthesizeQueryTextRect(kLFLen + 4, 1);
     if (!checkQueryContentResult(p2_2, description + "rect for \\n of \\r\\n caused by 2nd <p>")) {
       return;
     }
@@ -2510,7 +2510,7 @@ function runQueryTextRectInContentEditableTest()
     is(p2_2.width, p2.width, description + "'\\r' and '\\n' should be same width");
 
     // \n of \r\n as array
-    var p2_2AsArray = synthesizeQueryTextRectArray(kLFLen + 4, 1);
+    let p2_2AsArray = synthesizeQueryTextRectArray(kLFLen + 4, 1);
     if (!checkQueryContentResult(p2_2AsArray, description + "rect array for \\n of \\r\\n caused by 2nd <p>") ||
         !checkRectArray(p2_2AsArray, [p2_2], description + "query text rect array result of \\n of \\r\\n caused by 2nd <p> should match with each query text rect result")) {
       return;
@@ -2518,7 +2518,7 @@ function runQueryTextRectInContentEditableTest()
   }
 
   // "d"
-  var d = synthesizeQueryTextRect(kLFLen * 2 + 3, 1);
+  let d = synthesizeQueryTextRect(kLFLen * 2 + 3, 1);
   if (!checkQueryContentResult(d, description + "rect for 'd'")) {
     return;
   }
@@ -2528,7 +2528,7 @@ function runQueryTextRectInContentEditableTest()
   is(d.height, a.height, description + "'a' and 'd' should be same height");
 
   // "e"
-  var e = synthesizeQueryTextRect(kLFLen * 2 + 4, 1);
+  let e = synthesizeQueryTextRect(kLFLen * 2 + 4, 1);
   if (!checkQueryContentResult(e, description + "rect for 'e'")) {
     return;
   }
@@ -2538,7 +2538,7 @@ function runQueryTextRectInContentEditableTest()
   is(e.height, d.height, description + "'d' and 'e' should be same height");
 
   // "f"
-  var f = synthesizeQueryTextRect(kLFLen * 2 + 5, 1);
+  let f = synthesizeQueryTextRect(kLFLen * 2 + 5, 1);
   if (!checkQueryContentResult(f, description + "rect for 'f'")) {
     return;
   }
@@ -2548,14 +2548,14 @@ function runQueryTextRectInContentEditableTest()
   is(f.height, e.height, description + "'e' and 'f' should be same height");
 
   // "def" as array
-  var defAsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 3, 3);
+  let defAsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 3, 3);
   if (!checkQueryContentResult(defAsArray, description + "rect array for 'def'") ||
       !checkRectArray(defAsArray, [d, e, f], description + "query text rect array result of 'def' should match with each query text rect result")) {
     return;
   }
 
   // next of "f" (can be computed with rect of 'f')
-  var next_f = synthesizeQueryTextRect(kLFLen * 2 + 6, 1);
+  let next_f = synthesizeQueryTextRect(kLFLen * 2 + 6, 1);
   if (!checkQueryContentResult(next_f, description + "rect for next of 'f'")) {
     return;
   }
@@ -2565,14 +2565,14 @@ function runQueryTextRectInContentEditableTest()
   is(next_f.height, d.height, description + "'f' and next of 'f' should be same height");
 
   // next of "f" as array
-  var next_fAsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 6, 1);
+  let next_fAsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 6, 1);
   if (!checkQueryContentResult(next_fAsArray, description + "rect array for next of 'f'") ||
       !checkRectArray(next_fAsArray, [next_f], description + "query text rect array result of next of 'f' should match with each query text rect result")) {
     return;
   }
 
   // too big offset for the editor
-  var tooBigOffset = synthesizeQueryTextRect(kLFLen * 2 + 7, 1);
+  let tooBigOffset = synthesizeQueryTextRect(kLFLen * 2 + 7, 1);
   if (!checkQueryContentResult(tooBigOffset, description + "rect for too big offset")) {
     return;
   }
@@ -2583,7 +2583,7 @@ function runQueryTextRectInContentEditableTest()
   is(tooBigOffset.width, next_f.width, description + "too big offset and next of 'f' should be same width");
 
   // too big offset for the editors as array
-  var tooBigOffsetAsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 7, 1);
+  let tooBigOffsetAsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 7, 1);
   if (!checkQueryContentResult(tooBigOffsetAsArray, description + "rect array for too big offset") ||
       !checkRectArray(tooBigOffsetAsArray, [tooBigOffset], description + "query text rect array result with too big offset should match with each query text rect result")) {
     return;
@@ -2606,7 +2606,7 @@ function runQueryTextRectInContentEditableTest()
   isSimilarTo(f.left, e.left + e.width, 2, description + "left of 'f' should be at similar to right of 'e'");
 
   // 3rd <p> (can be computed with rect of 'f')
-  var p3 = synthesizeQueryTextRect(kLFLen * 2 + 6, 1);
+  let p3 = synthesizeQueryTextRect(kLFLen * 2 + 6, 1);
   if (!checkQueryContentResult(p3, description + "rect for 3rd <p>")) {
     return;
   }
@@ -2616,7 +2616,7 @@ function runQueryTextRectInContentEditableTest()
   isSimilarTo(p3.left, f.left + f.width, 2, description + "left of a line breaker caused by 3rd <p> should be similar to right of 'f'");
 
   // 3rd <p> as array
-  var p3AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 6, 1);
+  let p3AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 6, 1);
   if (!checkQueryContentResult(p3AsArray, description + "3rd <p>'s line breaker as array") ||
       !checkRectArray(p3AsArray, [p3], description + "query text rect array result of 3rd <p> should match with each query text rect result")) {
     return;
@@ -2624,7 +2624,7 @@ function runQueryTextRectInContentEditableTest()
 
   if (kLFLen > 1) {
     // \n of \r\n
-    var p3_2 = synthesizeQueryTextRect(kLFLen * 2 + 7, 1);
+    let p3_2 = synthesizeQueryTextRect(kLFLen * 2 + 7, 1);
     if (!checkQueryContentResult(p3_2, description + "rect for \\n of \\r\\n caused by 3rd <p>")) {
       return;
     }
@@ -2635,7 +2635,7 @@ function runQueryTextRectInContentEditableTest()
     is(p3_2.width, p3.width, description + "'\\r' and '\\n' should be same width");
 
     // \n of \r\n as array
-    var p3_2AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 7, 1);
+    let p3_2AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 7, 1);
     if (!checkQueryContentResult(p3_2AsArray, description + "rect array for \\n of \\r\\n caused by 3rd <p>") ||
         !checkRectArray(p3_2AsArray, [p3_2], description + "query text rect array result of \\n of \\r\\n caused by 3rd <p> should match with each query text rect result")) {
       return;
@@ -2643,7 +2643,7 @@ function runQueryTextRectInContentEditableTest()
   }
 
   // <br> in 3rd <p>
-  var br = synthesizeQueryTextRect(kLFLen * 3 + 6, 1);
+  let br = synthesizeQueryTextRect(kLFLen * 3 + 6, 1);
   if (!checkQueryContentResult(br, description + "rect for <br> in 3rd <p>")) {
     return;
   }
@@ -2653,7 +2653,7 @@ function runQueryTextRectInContentEditableTest()
   is(br.left, d.left, description + "left of a line breaker caused by <br> in 3rd <p> should be same left of 'd'");
 
   // <br> in 3rd <p> as array
-  var brAsArray = synthesizeQueryTextRectArray(kLFLen * 3 + 6, 1);
+  let brAsArray = synthesizeQueryTextRectArray(kLFLen * 3 + 6, 1);
   if (!checkQueryContentResult(brAsArray, description + "<br> in 3rd <p> as array") ||
       !checkRectArray(brAsArray, [br], description + "query text rect array result of <br> in 3rd <p> should match with each query text rect result")) {
     return;
@@ -2661,7 +2661,7 @@ function runQueryTextRectInContentEditableTest()
 
   if (kLFLen > 1) {
     // \n of \r\n
-    var br_2 = synthesizeQueryTextRect(kLFLen * 3 + 7, 1);
+    let br_2 = synthesizeQueryTextRect(kLFLen * 3 + 7, 1);
     if (!checkQueryContentResult(br_2, description + "rect for \\n of \\r\\n caused by <br> in 3rd <p>")) {
       return;
     }
@@ -2672,7 +2672,7 @@ function runQueryTextRectInContentEditableTest()
     is(br_2.width, br.width, description + "'\\r' and '\\n' should be same width");
 
     // \n of \r\n as array
-    var br_2AsArray = synthesizeQueryTextRectArray(kLFLen * 3 + 7, 1);
+    let br_2AsArray = synthesizeQueryTextRectArray(kLFLen * 3 + 7, 1);
     if (!checkQueryContentResult(br_2AsArray, description + "rect array for \\n of \\r\\n caused by <br> in 3rd <p>") ||
         !checkRectArray(br_2AsArray, [br_2], description + "query text rect array result of \\n of \\r\\n caused by <br> in 3rd <p> should match with each query text rect result")) {
       return;
@@ -2680,7 +2680,7 @@ function runQueryTextRectInContentEditableTest()
   }
 
   // next of <br> in 3rd <p>
-  var next_br = synthesizeQueryTextRect(kLFLen * 4 + 6, 1);
+  let next_br = synthesizeQueryTextRect(kLFLen * 4 + 6, 1);
   if (!checkQueryContentResult(next_br, description + "rect for next of <br> in 3rd <p>")) {
     return;
   }
@@ -2691,7 +2691,7 @@ function runQueryTextRectInContentEditableTest()
   is(next_br.width, br.width, description + "next of <br> and <br> should be same width");
 
   // next of <br> in 3rd <p> as array
-  var next_brAsArray = synthesizeQueryTextRectArray(kLFLen * 4 + 6, 1);
+  let next_brAsArray = synthesizeQueryTextRectArray(kLFLen * 4 + 6, 1);
   if (!checkQueryContentResult(next_brAsArray, description + "rect array for next of <br> in 3rd <p>") ||
       !checkRectArray(next_brAsArray, [next_br], description + "query text rect array result of next of <br> in 3rd <p> should match with each query text rect result")) {
     return;
@@ -2769,7 +2769,7 @@ function runQueryTextRectInContentEditableTest()
   }
 
   // next of 3rd <p>
-  var next_p3 = synthesizeQueryTextRect(kLFLen * 3 + 6, 1);
+  let next_p3 = synthesizeQueryTextRect(kLFLen * 3 + 6, 1);
   if (!checkQueryContentResult(next_p3, description + "rect for next of 3rd <p>")) {
     return;
   }
@@ -2779,7 +2779,7 @@ function runQueryTextRectInContentEditableTest()
   isSimilarTo(next_p3.height, d.height, 2, description + "next of 3rd <p> and 'd' should be similar height");
 
   // next of 3rd <p> as array
-  var next_p3AsArray = synthesizeQueryTextRectArray(kLFLen * 3 + 6, 1);
+  let next_p3AsArray = synthesizeQueryTextRectArray(kLFLen * 3 + 6, 1);
   if (!checkQueryContentResult(next_p3AsArray, description + "next of 3rd <p> as array") ||
       !checkRectArray(next_p3AsArray, [next_p3], description + "query text rect array result of next of 3rd <p> should match with each query text rect result")) {
     return;
@@ -2861,7 +2861,7 @@ function runQueryTextRectInContentEditableTest()
 
   if (kLFLen > 1) {
     // \n of \r\n
-    var br_2 = synthesizeQueryTextRect(4, 1);
+    let br_2 = synthesizeQueryTextRect(4, 1);
     if (!checkQueryContentResult(br_2, description + "rect for \n of \r\n caused by <br>")) {
       return;
     }
@@ -2872,7 +2872,7 @@ function runQueryTextRectInContentEditableTest()
     is(br_2.width, br.width, description + "'\\r' and '\\n' should be same width");
 
     // \n of \r\n as array
-    var br_2AsArray = synthesizeQueryTextRectArray(4, 1);
+    let br_2AsArray = synthesizeQueryTextRectArray(4, 1);
     if (!checkQueryContentResult(br_2AsArray, description + "rect array for \\n of \\r\\n caused by <br>") ||
         !checkRectArray(br_2AsArray, [br_2], description + "query text rect array result of \\n of \\r\\n caused by <br> should match with each query text rect result")) {
       return;
@@ -2969,7 +2969,7 @@ function runQueryTextRectInContentEditableTest()
   isSimilarTo(f.left, e.left + e.width, 2, description + "left of 'f' should be at similar to right of 'e'");
 
   // 2nd <br> (can be computed with rect of 'f')
-  var br2 = synthesizeQueryTextRect(kLFLen + 6, 1);
+  let br2 = synthesizeQueryTextRect(kLFLen + 6, 1);
   if (!checkQueryContentResult(br2, description + "rect for 2nd <br>")) {
     return;
   }
@@ -2979,7 +2979,7 @@ function runQueryTextRectInContentEditableTest()
   isSimilarTo(br2.left, f.left + f.width, 2, description + "left of a line breaker caused by 2nd <br> should be similar to right of 'f'");
 
   // 2nd <br> as array
-  var br2AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 6, 1);
+  let br2AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 6, 1);
   if (!checkQueryContentResult(br2AsArray, description + "2nd <br>'s line breaker as array") ||
       !checkRectArray(br2AsArray, [br2], description + "query text rect array result of 2nd <br> should match with each query text rect result")) {
     return;
@@ -2987,7 +2987,7 @@ function runQueryTextRectInContentEditableTest()
 
   if (kLFLen > 1) {
     // \n of \r\n
-    var br2_2 = synthesizeQueryTextRect(kLFLen + 7, 1);
+    let br2_2 = synthesizeQueryTextRect(kLFLen + 7, 1);
     if (!checkQueryContentResult(br2_2, description + "rect for \\n of \\r\\n caused by 2nd <br>")) {
       return;
     }
@@ -2998,7 +2998,7 @@ function runQueryTextRectInContentEditableTest()
     is(br2_2.width, br2.width, description + "'\\r' and '\\n' should be same width");
 
     // \n of \r\n as array
-    var br2_2AsArray = synthesizeQueryTextRectArray(kLFLen + 7, 1);
+    let br2_2AsArray = synthesizeQueryTextRectArray(kLFLen + 7, 1);
     if (!checkQueryContentResult(br2_2AsArray, description + "rect array for \\n of \\r\\n caused by 2nd <br>") ||
         !checkRectArray(br2_2AsArray, [br2_2], description + "query text rect array result of \\n of \\r\\n caused by 2nd <br> should match with each query text rect result")) {
       return;
@@ -3006,7 +3006,7 @@ function runQueryTextRectInContentEditableTest()
   }
 
   // next of 2nd <br>
-  var next_br2 = synthesizeQueryTextRect(kLFLen * 2 + 6, 1);
+  let next_br2 = synthesizeQueryTextRect(kLFLen * 2 + 6, 1);
   if (!checkQueryContentResult(next_br2, description + "rect for next of 2nd <br>")) {
     return;
   }
@@ -3017,7 +3017,7 @@ function runQueryTextRectInContentEditableTest()
   is(next_br2.width, br2.width, description + "2nd <br> and next of 2nd <br> should be same width");
 
   // next of 2nd <br> as array
-  var next_br2AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 6, 1);
+  let next_br2AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 6, 1);
   if (!checkQueryContentResult(next_br2AsArray, description + "rect array for next of 2nd <br>") ||
       !checkRectArray(next_br2AsArray, [next_br2], description + "query text rect array result of next of 2nd <br> should match with each query text rect result")) {
     return;
@@ -3087,7 +3087,7 @@ function runQueryTextRectInContentEditableTest()
     is(br2_2.width, br2.width, description + "'\\r' and '\\n' should be same width");
 
     // \n of \r\n as array
-    var br2_2AsArray = synthesizeQueryTextRectArray(kLFLen + 7, 1);
+    let br2_2AsArray = synthesizeQueryTextRectArray(kLFLen + 7, 1);
     if (!checkQueryContentResult(br2_2AsArray, description + "rect array for \\n of \\r\\n caused by 2nd <br>") ||
         !checkRectArray(br2_2AsArray, [br2_2], description + "query text rect array result of \\n of \\r\\n caused by 2nd <br> should match with each query text rect result")) {
       return;
@@ -3095,7 +3095,7 @@ function runQueryTextRectInContentEditableTest()
   }
 
   // 3rd <br>
-  var br3 = synthesizeQueryTextRect(kLFLen * 2 + 7, 1);
+  let br3 = synthesizeQueryTextRect(kLFLen * 2 + 7, 1);
   if (!checkQueryContentResult(br3, description + "rect for next of 3rd <br>")) {
     return;
   }
@@ -3105,7 +3105,7 @@ function runQueryTextRectInContentEditableTest()
   isSimilarTo(br3.height, d.height, 2, description + "next of 3rd <br> and 'd' should be similar height");
 
   // 3rd <br> as array
-  var br3AsArray = synthesizeQueryTextRectArray(kLFLen + 6, 1);
+  let br3AsArray = synthesizeQueryTextRectArray(kLFLen + 6, 1);
   if (!checkQueryContentResult(br3AsArray, description + "3rd <br>'s line breaker as array") ||
       !checkRectArray(br3AsArray, [br3], description + "query text rect array result of 3rd <br> should match with each query text rect result")) {
     return;
@@ -3113,7 +3113,7 @@ function runQueryTextRectInContentEditableTest()
 
   if (kLFLen > 1) {
     // \n of \r\n
-    var br3_2 = synthesizeQueryTextRect(kLFLen * 2 + 7, 1);
+    let br3_2 = synthesizeQueryTextRect(kLFLen * 2 + 7, 1);
     if (!checkQueryContentResult(br3_2, description + "rect for \\n of \\r\\n caused by 3rd <br>")) {
       return;
     }
@@ -3124,7 +3124,7 @@ function runQueryTextRectInContentEditableTest()
     is(br3_2.width, br3.width, description + "'\\r' and '\\n' should be same width");
 
     // \n of \r\n as array
-    var br2_2AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 7, 1);
+    let br2_2AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 7, 1);
     if (!checkQueryContentResult(br2_2AsArray, description + "rect array for \\n of \\r\\n caused by 3rd <br>") ||
         !checkRectArray(br2_2AsArray, [br2_2], description + "query text rect array result of \\n of \\r\\n caused by 3rd <br> should match with each query text rect result")) {
       return;
@@ -3132,7 +3132,7 @@ function runQueryTextRectInContentEditableTest()
   }
 
   // next of 3rd <br>
-  var next_br3 = synthesizeQueryTextRect(kLFLen * 3 + 6, 1);
+  let next_br3 = synthesizeQueryTextRect(kLFLen * 3 + 6, 1);
   if (!checkQueryContentResult(next_br3, description + "rect for next of 3rd <br>")) {
     return;
   }
@@ -3143,7 +3143,7 @@ function runQueryTextRectInContentEditableTest()
   is(next_br3.width, br3.width, description + "3rd <br> and next of 3rd <br> should be same width");
 
   // next of 3rd <br> as array
-  var next_br3AsArray = synthesizeQueryTextRectArray(kLFLen * 3 + 6, 1);
+  let next_br3AsArray = synthesizeQueryTextRectArray(kLFLen * 3 + 6, 1);
   if (!checkQueryContentResult(next_br3AsArray, description + "rect array for next of 3rd <br>") ||
       !checkRectArray(next_br3AsArray, [next_br3], description + "query text rect array result of next of 3rd <br> should match with each query text rect result")) {
     return;
@@ -3183,14 +3183,14 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
   const kLeftTentativeCaretOffset  = [     0, 10,    20, 21 + kLFLen, 34 + kLFLen];
   const kRightTentativeCaretOffset = [     1, 11,    21, 22 + kLFLen, 35 + kLFLen];
 
-  var editorRect = synthesizeQueryEditorRect();
+  let editorRect = synthesizeQueryEditorRect();
   if (!checkQueryContentResult(editorRect,
         "runCharAtPointTest (" + aTargetName + "): editorRect")) {
     return;
   }
 
-  for (var i = 0; i < kTestingOffset.length; i++) {
-    var textRect = synthesizeQueryTextRect(kTestingOffset[i], 1);
+  for (let i = 0; i < kTestingOffset.length; i++) {
+    let textRect = synthesizeQueryTextRect(kTestingOffset[i], 1);
     if (!checkQueryContentResult(textRect,
           "runCharAtPointTest (" + aTargetName + "): textRect: i=" + i)) {
       continue;
@@ -3201,7 +3201,7 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
       "): the text rect isn't in the editor");
 
     // Test #1, getting same character rect by the point near the top-left.
-    var charAtPt1 = synthesizeCharAtPoint(textRect.left + 1,
+    let charAtPt1 = synthesizeCharAtPoint(textRect.left + 1,
                                           textRect.top + 1);
     if (checkQueryContentResult(charAtPt1,
           "runCharAtPointTest (" + aTargetName + "): charAtPt1: i=" + i)) {
@@ -3222,7 +3222,7 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
     }
 
     // Test #2, getting same character rect by the point near the bottom-right.
-    var charAtPt2 = synthesizeCharAtPoint(textRect.left + textRect.width - 2,
+    let charAtPt2 = synthesizeCharAtPoint(textRect.left + textRect.width - 2,
                                           textRect.top + textRect.height - 2);
     if (checkQueryContentResult(charAtPt2,
           "runCharAtPointTest (" + aTargetName + "): charAtPt2: i=" + i)) {
@@ -3243,7 +3243,7 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
     }
 
     // Test #3, getting left character offset.
-    var charAtPt3 = synthesizeCharAtPoint(textRect.left - 2,
+    let charAtPt3 = synthesizeCharAtPoint(textRect.left - 2,
                                           textRect.top + 1);
     if (checkQueryContentResult(charAtPt3,
           "runCharAtPointTest (" + aTargetName + "): charAtPt3: i=" + i)) {
@@ -3270,7 +3270,7 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
     }
 
     // Test #4, getting right character offset.
-    var charAtPt4 = synthesizeCharAtPoint(textRect.left + textRect.width + 1,
+    let charAtPt4 = synthesizeCharAtPoint(textRect.left + textRect.width + 1,
                                           textRect.top + textRect.height - 2);
     if (checkQueryContentResult(charAtPt4,
           "runCharAtPointTest (" + aTargetName + "): charAtPt4: i=" + i)) {
@@ -3296,13 +3296,13 @@ function runCharAtPointAtOutsideTest()
 {
   textarea.focus();
   textarea.value = "some text";
-  var editorRect = synthesizeQueryEditorRect();
+  let editorRect = synthesizeQueryEditorRect();
   if (!checkQueryContentResult(editorRect,
         "runCharAtPointAtOutsideTest: editorRect")) {
     return;
   }
   // Check on a text node which is at the outside of editor.
-  var charAtPt = synthesizeCharAtPoint(editorRect.left + 20,
+  let charAtPt = synthesizeCharAtPoint(editorRect.left + 20,
                                        editorRect.top - 10);
   if (checkQueryContentResult(charAtPt,
         "runCharAtPointAtOutsideTest: charAtPt")) {
@@ -3317,7 +3317,7 @@ function runSetSelectionEventTest()
 {
   contenteditable.focus();
 
-  var selection = windowOfContenteditable.getSelection();
+  let selection = windowOfContenteditable.getSelection();
 
   // #1
   contenteditable.innerHTML = "abc<br>def";
@@ -4246,7 +4246,7 @@ function runQueryTextContentEventTest()
 {
   contenteditable.focus();
 
-  var result;
+  let result;
 
   // #1
   contenteditable.innerHTML = "abc<br>def";
@@ -4448,7 +4448,7 @@ function runQuerySelectionEventTest()
 {
   contenteditable.focus();
 
-  var selection = windowOfContenteditable.getSelection();
+  let selection = windowOfContenteditable.getSelection();
 
   // #1
   contenteditable.innerHTML = "<br/>a";
@@ -4470,7 +4470,7 @@ function runQueryIMESelectionTest()
 {
   textarea.focus();
   textarea.value = "before  after";
-  var startoffset = textarea.selectionStart = textarea.selectionEnd = "before ".length;
+  let startoffset = textarea.selectionStart = textarea.selectionEnd = "before ".length;
 
   if (!checkIMESelection("RawClause", false, 0, "", "runQueryIMESelectionTest: before starting composition") ||
       !checkIMESelection("SelectedRawClause", false, 0, "", "runQueryIMESelectionTest: before starting composition") ||
@@ -4605,7 +4605,7 @@ function runQueryContentEventRelativeToInsertionPoint()
   textarea.focus();
   textarea.value = "0123456789";
 
-  var startoffset = textarea.selectionStart = textarea.selectionEnd = 0;
+  let startoffset = textarea.selectionStart = textarea.selectionEnd = 0;
 
   if (!checkContentRelativeToSelection(0, 1, 0, "0", "runQueryContentEventRelativeToInsertionPoint[0-0]", "#1") ||
       !checkContentRelativeToSelection(-1, 1, 0, "0", "runQueryContentEventRelativeToInsertionPoint[0-0]", "#2") ||
@@ -4695,7 +4695,7 @@ function runBug1375825Test()
   // #1
   contenteditable.innerHTML = "abc<span contenteditable=\"false\">defgh</span>";
 
-  var ret = synthesizeQueryTextRect(2, 1);
+  let ret = synthesizeQueryTextRect(2, 1);
   if (!checkQueryContentResult(ret, "runBug1375825Test #1 (2, 1), \"" + contenteditable.innerHTML + "\"")) {
     return;
   }
@@ -4803,27 +4803,27 @@ function runCSSTransformTest()
   textarea.focus();
   textarea.value = "some text";
   textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-  var editorRect = synthesizeQueryEditorRect();
+  let editorRect = synthesizeQueryEditorRect();
   if (!checkQueryContentResult(editorRect,
         "runCSSTransformTest: editorRect")) {
     return;
   }
-  var firstCharRect = synthesizeQueryTextRect(0, 1);
+  let firstCharRect = synthesizeQueryTextRect(0, 1);
   if (!checkQueryContentResult(firstCharRect,
         "runCSSTransformTest: firstCharRect")) {
     return;
   }
-  var lastCharRect = synthesizeQueryTextRect(textarea.value.length - 1, textarea.value.length);
+  let lastCharRect = synthesizeQueryTextRect(textarea.value.length - 1, textarea.value.length);
   if (!checkQueryContentResult(lastCharRect,
         "runCSSTransformTest: lastCharRect")) {
     return;
   }
-  var caretRect = synthesizeQueryCaretRect(textarea.selectionStart);
+  let caretRect = synthesizeQueryCaretRect(textarea.selectionStart);
   if (!checkQueryContentResult(caretRect,
         "runCSSTransformTest: caretRect")) {
     return;
   }
-  var caretRectBeforeFirstChar = synthesizeQueryCaretRect(0);
+  let caretRectBeforeFirstChar = synthesizeQueryCaretRect(0);
   if (!checkQueryContentResult(caretRectBeforeFirstChar,
         "runCSSTransformTest: caretRectBeforeFirstChar")) {
     return;
@@ -4836,47 +4836,47 @@ function runCSSTransformTest()
       return { left: aRect.left + aX, top: aRect.top + aY, width: aRect.width, height: aRect.height }
     }
 
-    var editorRectTranslated = synthesizeQueryEditorRect();
+    let editorRectTranslated = synthesizeQueryEditorRect();
     if (!checkQueryContentResult(editorRectTranslated,
           "runCSSTransformTest: editorRectTranslated, " + textarea.style.transform) ||
         !checkRect(editorRectTranslated, movedRect(editorRect, 10, 15),
           "runCSSTransformTest: editorRectTranslated, " + textarea.style.transform)) {
       return;
     }
-    var firstCharRectTranslated = synthesizeQueryTextRect(0, 1);
+    let firstCharRectTranslated = synthesizeQueryTextRect(0, 1);
     if (!checkQueryContentResult(firstCharRectTranslated,
           "runCSSTransformTest: firstCharRectTranslated, " + textarea.style.transform) ||
         !checkRect(firstCharRectTranslated, movedRect(firstCharRect, 10, 15),
           "runCSSTransformTest: firstCharRectTranslated, " + textarea.style.transform)) {
       return;
     }
-    var lastCharRectTranslated = synthesizeQueryTextRect(textarea.value.length - 1, textarea.value.length);
+    let lastCharRectTranslated = synthesizeQueryTextRect(textarea.value.length - 1, textarea.value.length);
     if (!checkQueryContentResult(lastCharRectTranslated,
           "runCSSTransformTest: lastCharRectTranslated, " + textarea.style.transform) ||
         !checkRect(lastCharRectTranslated, movedRect(lastCharRect, 10, 15),
           "runCSSTransformTest: lastCharRectTranslated, " + textarea.style.transform)) {
       return;
     }
-    var caretRectTranslated = synthesizeQueryCaretRect(textarea.selectionStart);
+    let caretRectTranslated = synthesizeQueryCaretRect(textarea.selectionStart);
     if (!checkQueryContentResult(caretRectTranslated,
           "runCSSTransformTest: caretRectTranslated, " + textarea.style.transform) ||
         !checkRect(caretRectTranslated, movedRect(caretRect, 10, 15),
           "runCSSTransformTest: caretRectTranslated, " + textarea.style.transform)) {
       return;
     }
-    var caretRectBeforeFirstCharTranslated = synthesizeQueryCaretRect(0);
+    let caretRectBeforeFirstCharTranslated = synthesizeQueryCaretRect(0);
     if (!checkQueryContentResult(caretRectBeforeFirstCharTranslated,
           "runCSSTransformTest: caretRectBeforeFirstCharTranslated, " + textarea.style.transform) ||
         !checkRect(caretRectBeforeFirstCharTranslated, movedRect(caretRectBeforeFirstChar, 10, 15),
           "runCSSTransformTest: caretRectBeforeFirstCharTranslated, " + textarea.style.transform)) {
       return;
     }
-    var firstCharRectTranslatedAsArray = synthesizeQueryTextRectArray(0, 1);
+    let firstCharRectTranslatedAsArray = synthesizeQueryTextRectArray(0, 1);
     if (!checkQueryContentResult(firstCharRectTranslatedAsArray, "runCSSTransformTest: firstCharRectTranslatedAsArray, " + textarea.style.transform) ||
         !checkRectArray(firstCharRectTranslatedAsArray, [firstCharRectTranslated], "runCSSTransformTest: firstCharRectTranslatedAsArray, " + textarea.style.transform)) {
       return;
     }
-    var lastCharRectTranslatedAsArray = synthesizeQueryTextRectArray(textarea.value.length - 1, textarea.value.length);
+    let lastCharRectTranslatedAsArray = synthesizeQueryTextRectArray(textarea.value.length - 1, textarea.value.length);
     if (!checkQueryContentResult(lastCharRectTranslatedAsArray, "runCSSTransformTest: lastCharRectTranslatedAsArray, " + textarea.style.transform) ||
         !checkRectArray(lastCharRectTranslatedAsArray, [lastCharRectTranslated], "runCSSTransformTest: lastCharRectTranslatedAsArray, " + textarea.style.transform)) {
       return;
@@ -4939,19 +4939,19 @@ function runBug722639Test()
   textarea.value += textarea.value;
   textarea.value += textarea.value; // 80 characters
 
-  var firstLine = synthesizeQueryTextRect(0, 1);
+  let firstLine = synthesizeQueryTextRect(0, 1);
   if (!checkQueryContentResult(firstLine,
         "runBug722639Test: firstLine")) {
     return;
   }
   ok(true, "runBug722639Test: 1st line, top=" + firstLine.top + ", left=" + firstLine.left);
-  var firstLineAsArray = synthesizeQueryTextRectArray(0, 1);
+  let firstLineAsArray = synthesizeQueryTextRectArray(0, 1);
   if (!checkQueryContentResult(firstLineAsArray, "runBug722639Test: 1st line as array") ||
       !checkRectArray(firstLineAsArray, [firstLine], "runBug722639Test: 1st line as array should match with text rect result")) {
     return;
   }
   if (kLFLen > 1) {
-    var firstLineLF = synthesizeQueryTextRect(1, 1);
+    let firstLineLF = synthesizeQueryTextRect(1, 1);
     if (!checkQueryContentResult(firstLineLF,
           "runBug722639Test: firstLineLF")) {
       return;
@@ -4960,25 +4960,25 @@ function runBug722639Test()
     is(firstLineLF.left, firstLine.left, "runBug722639Test: 1st line's \\n rect should be same as 1st line's \\r rect");
     is(firstLineLF.height, firstLine.height, "runBug722639Test: 1st line's \\n rect should be same as 1st line's \\r rect");
     is(firstLineLF.width, firstLine.width, "runBug722639Test: 1st line's \\n rect should be same as 1st line's \\r rect");
-    var firstLineLFAsArray = synthesizeQueryTextRectArray(1, 1);
+    let firstLineLFAsArray = synthesizeQueryTextRectArray(1, 1);
     if (!checkQueryContentResult(firstLineLFAsArray, "runBug722639Test: 1st line's \\n rect as array") ||
         !checkRectArray(firstLineLFAsArray, [firstLineLF], "runBug722639Test: 1st line's rect as array should match with text rect result")) {
       return;
     }
   }
-  var secondLine = synthesizeQueryTextRect(kLFLen, 1);
+  let secondLine = synthesizeQueryTextRect(kLFLen, 1);
   if (!checkQueryContentResult(secondLine,
         "runBug722639Test: secondLine")) {
     return;
   }
   ok(true, "runBug722639Test: 2nd line, top=" + secondLine.top + ", left=" + secondLine.left);
-  var secondLineAsArray = synthesizeQueryTextRectArray(kLFLen, 1);
+  let secondLineAsArray = synthesizeQueryTextRectArray(kLFLen, 1);
   if (!checkQueryContentResult(secondLineAsArray, "runBug722639Test: 2nd line as array") ||
       !checkRectArray(secondLineAsArray, [secondLine], "runBug722639Test: 2nd line as array should match with text rect result")) {
     return;
   }
   if (kLFLen > 1) {
-    var secondLineLF = synthesizeQueryTextRect(kLFLen + 1, 1);
+    let secondLineLF = synthesizeQueryTextRect(kLFLen + 1, 1);
     if (!checkQueryContentResult(secondLineLF,
           "runBug722639Test: secondLineLF")) {
       return;
@@ -4987,28 +4987,28 @@ function runBug722639Test()
     is(secondLineLF.left, secondLine.left, "runBug722639Test: 2nd line's \\n rect should be same as 2nd line's \\r rect");
     is(secondLineLF.height, secondLine.height, "runBug722639Test: 2nd line's \\n rect should be same as 2nd line's \\r rect");
     is(secondLineLF.width, secondLine.width, "runBug722639Test: 2nd line's \\n rect should be same as 2nd line's \\r rect");
-    var secondLineLFAsArray = synthesizeQueryTextRectArray(kLFLen + 1, 1);
+    let secondLineLFAsArray = synthesizeQueryTextRectArray(kLFLen + 1, 1);
     if (!checkQueryContentResult(secondLineLFAsArray, "runBug722639Test: 2nd line's \\n rect as array") ||
         !checkRectArray(secondLineLFAsArray, [secondLineLF], "runBug722639Test: 2nd line's rect as array should match with text rect result")) {
       return;
     }
   }
-  var lineHeight = secondLine.top -  firstLine.top;
+  let lineHeight = secondLine.top -  firstLine.top;
   ok(lineHeight > 0,
      "runBug722639Test: lineHeight must be positive");
   is(secondLine.left, firstLine.left,
      "runBug722639Test: the left value must be always same value");
   is(secondLine.height, firstLine.height,
      "runBug722639Test: the height must be always same value");
-  var previousTop = secondLine.top;
-  for (var i = 3; i <= textarea.value.length + 1; i++) {
-    var currentLine = synthesizeQueryTextRect(kLFLen * (i - 1), 1);
+  let previousTop = secondLine.top;
+  for (let i = 3; i <= textarea.value.length + 1; i++) {
+    let currentLine = synthesizeQueryTextRect(kLFLen * (i - 1), 1);
     if (!checkQueryContentResult(currentLine,
            "runBug722639Test: " + i + "th currentLine")) {
       return;
     }
     ok(true, "runBug722639Test: " + i + "th line, top=" + currentLine.top + ", left=" + currentLine.left);
-    var currentLineAsArray = synthesizeQueryTextRectArray(kLFLen * (i - 1), 1);
+    let currentLineAsArray = synthesizeQueryTextRectArray(kLFLen * (i - 1), 1);
     if (!checkQueryContentResult(currentLineAsArray, "runBug722639Test: " + i + "th line as array") ||
         !checkRectArray(currentLineAsArray, [currentLine], "runBug722639Test: " + i + "th line as array should match with text rect result")) {
       return;
@@ -5026,7 +5026,7 @@ function runBug722639Test()
     is(currentLine.height, firstLine.height,
        "runBug722639Test: " + i + "th line's height is unexpected");
     if (kLFLen > 1) {
-      var currentLineLF = synthesizeQueryTextRect(kLFLen * (i - 1) + 1, 1);
+      let currentLineLF = synthesizeQueryTextRect(kLFLen * (i - 1) + 1, 1);
       if (!checkQueryContentResult(currentLineLF,
             "runBug722639Test: " + i + "th currentLineLF")) {
         return;
@@ -5035,7 +5035,7 @@ function runBug722639Test()
       is(currentLineLF.left, currentLine.left, "runBug722639Test: " + i + "th line's \\n rect should be same as same line's \\r rect");
       is(currentLineLF.height, currentLine.height, "runBug722639Test: " + i + "th line's \\n rect should be same as same line's \\r rect");
       is(currentLineLF.width, currentLine.width, "runBug722639Test: " + i + "th line's \\n rect should be same as same line's \\r rect");
-      var currentLineLFAsArray = synthesizeQueryTextRectArray(kLFLen * (i - 1) + 1, 1);
+      let currentLineLFAsArray = synthesizeQueryTextRectArray(kLFLen * (i - 1) + 1, 1);
       if (!checkQueryContentResult(currentLineLFAsArray, "runBug722639Test: " + i + "th line's \\n rect as array") ||
           !checkRectArray(currentLineLFAsArray, [currentLineLF], "runBug722639Test: " + i + "th line's rect as array should match with text rect result")) {
         return;
@@ -5047,7 +5047,7 @@ function runBug722639Test()
 
 function runForceCommitTest()
 {
-  var events;
+  let events;
   function eventHandler(aEvent)
   {
     events.push(aEvent);
@@ -5342,7 +5342,7 @@ function runForceCommitTest()
   textarea.focus();
   textarea.value = "";
   iframe2.contentDocument.body.innerHTML = "Text in the Body";
-  var iframe2BodyInnerHTML = iframe2.contentDocument.body.innerHTML;
+  let iframe2BodyInnerHTML = iframe2.contentDocument.body.innerHTML;
 
   synthesizeCompositionChange(
     { "composition":
@@ -5702,8 +5702,8 @@ function runForceCommitTest()
 
 function runNestedSettingValue()
 {
-  var isTesting = false;
-  var events = [];
+  let isTesting = false;
+  let events = [];
   function eventHandler(aEvent)
   {
     events.push(aEvent);
@@ -5895,7 +5895,7 @@ function runNestedSettingValue()
 
 function runAsyncForceCommitTest()
 {
-  var events;
+  let events;
   function eventHandler(aEvent)
   {
     events.push(aEvent);
@@ -5906,7 +5906,7 @@ function runAsyncForceCommitTest()
   // composition should be committed synchronously.  Therefore, in this case,
   // a click during composition should cause committing composition
   // synchronously and delayed commit shouldn't cause composition events.
-  var commitRequested = false;
+  let commitRequested = false;
   function callback(aTIP, aNotification)
   {
     ok(true, aNotification.type);
@@ -6002,7 +6002,7 @@ function runBug811755Test()
   iframe2.contentDocument.body.innerHTML = "<div>content<br/></div>";
   iframe2.contentWindow.focus();
   // Query everything
-  var textContent = synthesizeQueryTextContent(0, 10);
+  let textContent = synthesizeQueryTextContent(0, 10);
   if (!checkQueryContentResult(textContent, "runBug811755Test: synthesizeQueryTextContent #1")) {
     return false;
   }
@@ -6010,7 +6010,7 @@ function runBug811755Test()
   // If PreContentIterator is used, the next node after <br> is the node after </div>.
   // If ContentIterator is used, the next node is the <div> node itself. In this case, the end
   // node ends up being before the start node, and an empty string is returned.
-  var queryContent = synthesizeQueryTextContent(0, textContent.text.length);
+  let queryContent = synthesizeQueryTextContent(0, textContent.text.length);
   if (!checkQueryContentResult(queryContent, "runBug811755Test: synthesizeQueryTextContent #2")) {
     return false;
   }
@@ -6020,9 +6020,9 @@ function runBug811755Test()
 
 function runIsComposingTest()
 {
-  var expectedIsComposing = false;
-  var descriptionBase = "runIsComposingTest: ";
-  var description = "";
+  let expectedIsComposing = false;
+  let descriptionBase = "runIsComposingTest: ";
+  let description = "";
 
   function eventHandler(aEvent)
   {
@@ -6106,7 +6106,7 @@ function runRedundantChangeTest()
 {
   textarea.focus();
 
-  var result = [];
+  let result = [];
   function clearResult()
   {
     result = [];
@@ -6215,7 +6215,7 @@ function runNotRedundantChangeTest()
 {
   textarea.focus();
 
-  var result = [];
+  let result = [];
   function clearResult()
   {
     result = [];
@@ -6377,7 +6377,7 @@ function runNativeLineBreakerTest()
 {
   textarea.focus();
 
-  var result = {};
+  let result = {};
   function clearResult()
   {
     result = { compositionupdate: null, compositionend: null };
@@ -6396,8 +6396,8 @@ function runNativeLineBreakerTest()
   // '\n' in composition string shouldn't be changed.
   clearResult();
   textarea.value = "";
-  var clauses = [ "abc\n", "def\n\ng", "hi\n", "\njkl" ];
-  var caret = clauses[0] + clauses[1] + clauses[2];
+  let clauses = [ "abc\n", "def\n\ng", "hi\n", "\njkl" ];
+  let caret = clauses[0] + clauses[1] + clauses[2];
   synthesizeCompositionChange(
     { "composition":
       { "string": clauses.join(''),
@@ -6511,7 +6511,7 @@ function runControlCharTest()
 {
   textarea.focus();
 
-  var result = {};
+  let result = {};
   function clearResult()
   {
     result = { compositionupdate: null, compositionend: null };
@@ -6527,14 +6527,14 @@ function runControlCharTest()
 
   textarea.value = "";
 
-  var controlChars = String.fromCharCode.apply(null, Object.keys(Array.from({length:0x20}))) + "\x7F";
-  var allowedChars = "\t\n\n";
+  let controlChars = String.fromCharCode.apply(null, Object.keys(Array.from({length:0x20}))) + "\x7F";
+  let allowedChars = "\t\n\n";
 
-  var data = "AB" + controlChars + "CD" + controlChars + "EF";
-  var removedData = "AB" + allowedChars + "CD" + allowedChars + "EF";
+  let data = "AB" + controlChars + "CD" + controlChars + "EF";
+  let removedData = "AB" + allowedChars + "CD" + allowedChars + "EF";
 
-  var DIndex = data.indexOf("D");
-  var removedDIndex = removedData.indexOf("D");
+  let DIndex = data.indexOf("D");
+  let removedDIndex = removedData.indexOf("D");
 
   // input string contains control characters
   clearResult();
@@ -6602,7 +6602,7 @@ function runControlCharTest()
 
 function runRemoveContentTest()
 {
-  var events = [];
+  let events = [];
   function eventHandler(aEvent)
   {
     events.push(aEvent);
@@ -6627,8 +6627,8 @@ function runRemoveContentTest()
       "caret": { "start": 1, "length": 0 }
     });
 
-  var nextSibling = textarea.nextSibling;
-  var parent = textarea.parentElement;
+  let nextSibling = textarea.nextSibling;
+  let parent = textarea.parentElement;
 
   events = [];
   parent.removeChild(textarea);
@@ -6707,13 +6707,13 @@ function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
   // so flush our own layout here so the positions are correct.
   document.documentElement.getBoundingClientRect();
 
-  var editorRect = synthesizeQueryEditorRect();
+  let editorRect = synthesizeQueryEditorRect();
   if (!checkQueryContentResult(editorRect, aTestName + ": editorRect")) {
     return;
   }
 
-  var r = aPanelOrFrame.getBoundingClientRect();
-  var parentRect = { "left": r.left, "top": r.top, "width": r.right - r.left,
+  let r = aPanelOrFrame.getBoundingClientRect();
+  let parentRect = { "left": r.left, "top": r.top, "width": r.right - r.left,
                      "height": r.bottom - r.top };
   checkRectContainsRect(editorRect, parentRect, aTestName +
                         ": the editor rect coordinates are wrong");
@@ -6784,8 +6784,8 @@ function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
     return;
   }
 
-  var textRect = synthesizeQueryTextRect(0, 1);
-  var caretRect = synthesizeQueryCaretRect(2);
+  let textRect = synthesizeQueryTextRect(0, 1);
+  let caretRect = synthesizeQueryCaretRect(2);
   if (!checkQueryContentResult(textRect,
                                aTestName + ": synthesizeQueryTextRect") ||
       !checkQueryContentResult(caretRect,
@@ -6803,8 +6803,8 @@ function runFrameTest()
   runCharAtPointTest(textareaInFrame, "textarea in the iframe");
 }
 
-var gPanelShown = false;
-var gPanelFocused = false;
+let gPanelShown = false;
+let gPanelFocused = false;
 function onPanelShown(aEvent)
 {
   gPanelShown = true;
@@ -6818,8 +6818,8 @@ function onFocusPanelTextbox(aEvent)
   setTimeout(doPanelTest, 0);
 }
 
-var gIsPanelHiding = false;
-var gIsRunPanelTestInternal = false;
+let gIsPanelHiding = false;
+let gIsRunPanelTestInternal = false;
 function doPanelTest()
 {
   if (!gPanelFocused || !gPanelShown) {
@@ -6854,7 +6854,7 @@ function runMaxLengthTest()
   input.value = "";
   input.focus();
 
-  var kDesc ="runMaxLengthTest";
+  let kDesc ="runMaxLengthTest";
 
   // input first character
   synthesizeCompositionChange(
@@ -7174,9 +7174,9 @@ function* runEditorReframeTests()
         aEditor.innerHTML.replace("<br>", "") : aEditor.value;
     }
 
-    var description = "runEditorReframeTest(" + aEditor.id + ", \"" + aEventType + "\"): ";
+    let description = "runEditorReframeTest(" + aEditor.id + ", \"" + aEventType + "\"): ";
 
-    var tests = [
+    let tests = [
       { test: function () {
           synthesizeCompositionChange(
             { "composition":
@@ -7426,7 +7426,7 @@ function* runEditorReframeTests()
       },
     ];
 
-    var index = 0;
+    let index = 0;
     function doReframe(aEvent)
     {
       aEvent.target.style.overflow =
@@ -7469,8 +7469,8 @@ function* runEditorReframeTests()
 
 function* runIMEContentObserverTest()
 {
-  var notifications = [];
-  var callContinueTest = false;
+  let notifications = [];
+  let callContinueTest = false;
   function callback(aTIP, aNotification)
   {
     if (aNotification.type != "notify-end-input-transaction") {
@@ -7496,7 +7496,7 @@ function* runIMEContentObserverTest()
     if (notifications.length <= aExpectedCount) {
       return;
     }
-    for (var i = aExpectedCount; i < notifications.length; i++) {
+    for (let i = aExpectedCount; i < notifications.length; i++) {
       ok(false,
          aDescription + " caused unexpected notification: " + notifications[i].type);
     }
@@ -7615,13 +7615,13 @@ function* runIMEContentObserverTest()
   {
     aElement.value = "";
     aElement.blur();
-    var doc = aElement.ownerDocument;
-    var win = doc.defaultView;
+    let doc = aElement.ownerDocument;
+    let win = doc.defaultView;
     aElement.focus();
     yield flushNotifications();
 
     // "a[]"
-    var description = aDescription + "typing 'a'";
+    let description = aDescription + "typing 'a'";
     notifications = [];
     synthesizeKey("a", {}, win, callback);
     yield waitUntilNotificationsReceived();
@@ -7911,13 +7911,13 @@ function* runIMEContentObserverTest()
 
   function* testWithHTMLEditor(aDescription, aElement, aDefaultParagraphSeparator)
   {
-    var doc = aElement.ownerDocument;
-    var win = doc.defaultView;
-    var sel = doc.getSelection();
-    var inDesignMode = doc.designMode == "on";
-    var offsetAtStart = 0;
-    var offsetAtContainer = 0;
-    var isDefaultParagraphSeparatorBlock = aDefaultParagraphSeparator != "br";
+    let doc = aElement.ownerDocument;
+    let win = doc.defaultView;
+    let sel = doc.getSelection();
+    let inDesignMode = doc.designMode == "on";
+    let offsetAtStart = 0;
+    let offsetAtContainer = 0;
+    let isDefaultParagraphSeparatorBlock = aDefaultParagraphSeparator != "br";
     doc.execCommand("defaultParagraphSeparator", false, aDefaultParagraphSeparator);
 
     // "[]", "<p>[]</p>" or "<div>[]</div>"
@@ -7945,7 +7945,7 @@ function* runIMEContentObserverTest()
     yield flushNotifications();
 
     // "a[]"
-    var description = aDescription + "typing 'a'";
+    let description = aDescription + "typing 'a'";
     notifications = [];
     synthesizeKey("a", {}, win, callback);
     yield waitUntilNotificationsReceived();
@@ -8398,7 +8398,7 @@ function continueTest()
   if (!gTestContinuation) {
     gTestContinuation = testBody();
   }
-  var ret = gTestContinuation.next();
+  let ret = gTestContinuation.next();
   if (ret.done) {
     finish();
   }
