@@ -85,7 +85,7 @@ static JitExecStatus EnterBaseline(JSContext* cx, EnterJitData& data) {
   nogc.emplace(cx);
 #endif
 
-  MOZ_ASSERT(jit::IsBaselineEnabled(cx));
+  MOZ_ASSERT(IsBaselineInterpreterOrJitEnabled(cx));
   MOZ_ASSERT(CheckFrame(data.osrFrame));
 
   EnterJitCode enter = cx->runtime()->jitRuntime()->enterJit();
@@ -240,11 +240,14 @@ MethodStatus jit::BaselineCompile(JSContext* cx, JSScript* script,
 
 static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
                                         AbstractFramePtr osrSourceFrame) {
-  MOZ_ASSERT(jit::IsBaselineEnabled(cx));
-
   // Skip if the script has been disabled.
   if (!script->canBaselineCompile()) {
     return Method_Skipped;
+  }
+
+  if (!IsBaselineEnabled(cx)) {
+    script->setBaselineScript(cx->runtime(), BASELINE_DISABLED_SCRIPT);
+    return Method_CantCompile;
   }
 
   // This check is needed in the following corner case. Consider a function h,
@@ -273,10 +276,12 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
   }
 
   if (script->length() > BaselineMaxScriptLength) {
+    script->setBaselineScript(cx->runtime(), BASELINE_DISABLED_SCRIPT);
     return Method_CantCompile;
   }
 
   if (script->nslots() > BaselineMaxScriptSlots) {
+    script->setBaselineScript(cx->runtime(), BASELINE_DISABLED_SCRIPT);
     return Method_CantCompile;
   }
 
@@ -300,6 +305,7 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
   }
 
   if (script->hasForceInterpreterOp()) {
+    script->setBaselineScript(cx->runtime(), BASELINE_DISABLED_SCRIPT);
     return Method_CantCompile;
   }
 
@@ -313,7 +319,6 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
 
 static MethodStatus CanEnterBaselineInterpreter(JSContext* cx,
                                                 HandleScript script) {
-  MOZ_ASSERT(jit::IsBaselineEnabled(cx));
   MOZ_ASSERT(JitOptions.baselineInterpreter);
 
   if (script->jitScript()) {
