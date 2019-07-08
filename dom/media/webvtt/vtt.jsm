@@ -508,9 +508,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
     return val === 0 ? 0 : val + unit;
   };
 
-  XPCOMUtils.defineLazyPreferenceGetter(StyleBox.prototype, "supportPseudo",
-                                        "media.webvtt.pseudo.enabled", false);
-
   // TODO(alwu): remove StyleBox and change other style box to class-based.
   class StyleBoxBase {
     applyStyles(styles, div) {
