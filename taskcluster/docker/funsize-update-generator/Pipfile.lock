@@ -74,11 +74,11 @@
         },
         "awscli": {
             "hashes": [
-                "sha256:7c44d68553a0d3d176e15ded469f9257654c511b69c6fc9fc390600d554a769a",
-                "sha256:df62bd3ad1dd0b0c6209c9c2526f936ee1eb6a0d1e3c54098f61ee47c33f4f63"
+                "sha256:8c877ddc380197b72407f57f8c1ead911dd86c02a2c291af66c96e8d6842f0f1",
+                "sha256:b15d5f05d65a73119fbb1e0fedaa9436faeb77c7a65119cc9babd1bfbfcb6ddd"
             ],
             "index": "pypi",
-            "version": "==1.16.190"
+            "version": "==1.16.193"
         },
         "backports.lzma": {
             "hashes": [
@@ -88,10 +88,10 @@
         },
         "botocore": {
             "hashes": [
-                "sha256:a2ceaa00724228a961ef6f97da60ab09f3161a76e2f3ae82a49be396ca1083fc",
-                "sha256:f049dbfe83423f5cf350a861861e7f904967dea5e142ec1a17c70c07f9fdb117"
+                "sha256:2943d87d6844813fff9b0b4e9d9fef223d5e211bd69235b650b2d65137f816b0",
+                "sha256:d4b280e7c312ffecda0f2519d8e41b69860eb5d72e8d737e7e3814a5153190c6"
             ],
-            "version": "==1.12.180"
+            "version": "==1.12.183"
         },
         "certifi": {
             "hashes": [
@@ -329,9 +329,9 @@
         },
         "pyrsistent": {
             "hashes": [
-                "sha256:16692ee739d42cf5e39cef8d27649a8c1fdb7aa99887098f1460057c5eb75c3a"
+                "sha256:50cffebc87ca91b9d4be2dcc2e479272bcb466b5a0487b6c271f7ddea6917e14"
             ],
-            "version": "==0.15.2"
+            "version": "==0.15.3"
         },
         "python-dateutil": {
             "hashes": [
@@ -390,11 +390,11 @@
         },
         "scriptworker": {
             "hashes": [
-                "sha256:9aa1903cdc273b672907626df1e378be2305a93afe1f74582dccba4debf33ed4",
-                "sha256:eee7f3260eb9722a310180a8857d2a8f561ad3630f373a8f89887efdfbe400df"
+                "sha256:828f85a4a5ae7bdd5547601cde6587042719d7d51fa14da2949a632d1fe966cf",
+                "sha256:f65edc42500d301638fe978dd8802cfaa039e13b7241772ffc1628afae418f12"
             ],
             "index": "pypi",
-            "version": "==23.3.0"
+            "version": "==23.3.2"
         },
         "sh": {
             "hashes": [
