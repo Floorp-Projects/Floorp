@@ -13,19 +13,15 @@ _ARTIFACT_ID_PER_PLATFORM = {
     'android-geckoview-fat-aar-nightly': 'geckoview{update_channel}',
 }
 
-_MOZ_UPDATE_CHANNEL_PER_PROJECT = {
-    'mozilla-release': '',
-    'mozilla-beta': '-beta',
-    'mozilla-central': '-nightly',
-    'try': '-nightly-try',
-    'maple': '-nightly-maple',
-}
-
 
 def get_geckoview_upstream_artifacts(config, job):
     upstream_artifacts = generate_beetmover_upstream_artifacts(
         config, job, platform='',
-        **get_geckoview_template_vars(config, job['attributes']['build_platform'])
+        **get_geckoview_template_vars(
+            config,
+            job['attributes']['build_platform'],
+            job['attributes'].get('update-channel'),
+        )
     )
     return [{
         key: value for key, value in upstream_artifact.items()
@@ -33,19 +29,21 @@ def get_geckoview_upstream_artifacts(config, job):
     } for upstream_artifact in upstream_artifacts]
 
 
-def get_geckoview_template_vars(config, platform):
+def get_geckoview_template_vars(config, platform, update_channel):
     version_groups = re.match(r'(\d+).(\d+).*', config.params['version'])
     if version_groups:
         major_version, minor_version = version_groups.groups()
 
     return {
-        'artifact_id': get_geckoview_artifact_id(platform, config.params['project']),
+        'artifact_id': get_geckoview_artifact_id(
+            platform, update_channel
+        ),
         'build_date': config.params['moz_build_date'],
         'major_version': major_version,
         'minor_version': minor_version,
     }
 
 
-def get_geckoview_artifact_id(platform, project):
-    update_channel = _MOZ_UPDATE_CHANNEL_PER_PROJECT.get(project, '-UNKNOWN_MOZ_UPDATE_CHANNEL')
+def get_geckoview_artifact_id(platform, update_channel=None):
+    update_channel = '' if update_channel in (None, 'release') else '-{}'.format(update_channel)
     return _ARTIFACT_ID_PER_PLATFORM[platform].format(update_channel=update_channel)
