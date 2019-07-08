@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyServiceGetter(
 
 class Connection {
   /**
-   * @param WebSocketTransport transport
+   * @param WebSocketDebuggerTransport transport
    * @param httpd.js's Connection httpdConnection
    */
   constructor(transport, httpdConnection) {
