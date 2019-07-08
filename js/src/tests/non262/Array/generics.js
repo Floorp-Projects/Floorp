@@ -1,3 +1,4 @@
+// |reftest| skip-if(!Array.hasOwnProperty("slice"))
 var BUGNUMBER = 1263558;
 var summary = "Self-host all Array generics.";
 
