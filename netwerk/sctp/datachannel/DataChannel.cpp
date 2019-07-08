@@ -1753,9 +1753,14 @@ void DataChannelConnection::HandleAssociationChangeEvent(
         mSocket = mMasterSocket;
         mState = OPEN;
 
-        // Check for older Firefox by looking at the amount of incoming streams
         LOG(("Negotiated number of incoming streams: %" PRIu16,
              sac->sac_inbound_streams));
+        LOG(("Negotiated number of outgoing streams: %" PRIu16,
+             sac->sac_outbound_streams));
+        mNegotiatedIdLimit =
+            std::max(mNegotiatedIdLimit,
+                     static_cast<size_t>(std::max(sac->sac_outbound_streams,
+                                                  sac->sac_inbound_streams)));
 
         Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
             DataChannelOnMessageAvailable::ON_CONNECTION, this)));
@@ -2313,7 +2318,6 @@ already_AddRefed<DataChannel> DataChannelConnection::OpenFinish(
   // Normally 1 reference if called from ::Open(), or 2 if called from
   // ProcessQueuedOpens() unless the DOMDataChannel was gc'd
   const uint16_t stream = channel->mStream;
-  bool queue = false;
 
   mLock.AssertCurrentThreadOwns();
 
@@ -2341,9 +2345,9 @@ already_AddRefed<DataChannel> DataChannelConnection::OpenFinish(
   // Not Open cases are simply queue for non-negotiated, and
   // either change the initial ask or possibly renegotiate after open.
 
-  if (mState == OPEN) {
-    MOZ_ASSERT(stream != INVALID_STREAM);
-    if (stream >= mNegotiatedIdLimit) {
+  if (mState != OPEN || stream >= mNegotiatedIdLimit) {
+    if (mState == OPEN) {
+      MOZ_ASSERT(stream != INVALID_STREAM);
       // RequestMoreStreams() limits to MAX_NUM_STREAMS -- allocate extra
       // streams to avoid going back immediately for more if the ask to N, N+1,
       // etc
@@ -2352,39 +2356,7 @@ already_AddRefed<DataChannel> DataChannelConnection::OpenFinish(
         // Something bad happened... we're done
         goto request_error_cleanup;
       }
-      queue = true;
     }
-  } else {
-    // not OPEN
-    if (stream != INVALID_STREAM && stream >= mNegotiatedIdLimit &&
-        mState == CLOSED) {
-      // Update number of streams for init message
-      struct sctp_initmsg initmsg;
-      socklen_t len = sizeof(initmsg);
-      uint16_t total_needed =
-          (stream < UINT16_MAX - 16) ? stream + 16 : UINT16_MAX;
-
-      memset(&initmsg, 0, sizeof(initmsg));
-      if (usrsctp_getsockopt(mMasterSocket, IPPROTO_SCTP, SCTP_INITMSG,
-                             &initmsg, &len) < 0) {
-        LOG(("*** failed getsockopt SCTP_INITMSG"));
-        goto request_error_cleanup;
-      }
-      LOG(("Setting number of SCTP streams to %u, was %u/%u", total_needed,
-           initmsg.sinit_num_ostreams, initmsg.sinit_max_instreams));
-      initmsg.sinit_num_ostreams = total_needed;
-      initmsg.sinit_max_instreams = MAX_NUM_STREAMS;
-      if (usrsctp_setsockopt(mMasterSocket, IPPROTO_SCTP, SCTP_INITMSG,
-                             &initmsg, (socklen_t)sizeof(initmsg)) < 0) {
-        LOG(("*** failed setsockopt SCTP_INITMSG, errno %d", errno));
-        goto request_error_cleanup;
-      }
-    }
-    // else if state is CONNECTING, we'll just re-negotiate when OpenFinish
-    // is called, if needed
-    queue = true;
-  }
-  if (queue) {
     LOG(("Queuing channel %p (%u) to finish open", channel.get(), stream));
     // Also serves to mark we told the app
     channel->mFlags |= DATA_CHANNEL_FLAGS_FINISH_OPEN;
