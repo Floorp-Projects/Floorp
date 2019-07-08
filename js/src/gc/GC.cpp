@@ -6129,8 +6129,7 @@ static bool SweepArenaList(Arena** arenasToSweep, SliceBudget& sliceBudget) {
 }
 
 IncrementalProgress GCRuntime::sweepTypeInformation(FreeOp* fop,
-                                                    SliceBudget& budget,
-                                                    Zone* zone) {
+                                                    SliceBudget& budget) {
   // Sweep dead type information stored in scripts and object groups, but
   // don't finalize them yet. We have to sweep dead information from both live
   // and dead scripts and object groups, so that no dead references remain in
@@ -6142,9 +6141,9 @@ IncrementalProgress GCRuntime::sweepTypeInformation(FreeOp* fop,
   gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP_COMPARTMENTS);
   gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::SWEEP_TYPES);
 
-  ArenaLists& al = zone->arenas;
+  ArenaLists& al = sweepZone->arenas;
 
-  AutoClearTypeInferenceStateOnOOM oom(zone);
+  AutoClearTypeInferenceStateOnOOM oom(sweepZone);
 
   if (!SweepArenaList<JSScript>(&al.gcScriptArenasToUpdate.ref(), budget)) {
     return NotFinished;
@@ -6158,7 +6157,7 @@ IncrementalProgress GCRuntime::sweepTypeInformation(FreeOp* fop,
   // Finish sweeping type information in the zone.
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_TYPES_END);
-    zone->types.endSweep(rt);
+    sweepZone->types.endSweep(rt);
   }
 
   return Finished;
@@ -6345,14 +6344,14 @@ IncrementalProgress GCRuntime::sweepWeakCaches(FreeOp* fop,
 }
 
 IncrementalProgress GCRuntime::finalizeAllocKind(FreeOp* fop,
-                                                 SliceBudget& budget,
-                                                 Zone* zone, AllocKind kind) {
+                                                 SliceBudget& budget) {
   // Set the number of things per arena for this AllocKind.
-  size_t thingsPerArena = Arena::thingsPerArena(kind);
+  size_t thingsPerArena = Arena::thingsPerArena(sweepAllocKind);
   auto& sweepList = incrementalSweepList.ref();
   sweepList.setThingsPerArena(thingsPerArena);
 
-  if (!zone->arenas.foregroundFinalize(fop, kind, budget, sweepList)) {
+  if (!sweepZone->arenas.foregroundFinalize(fop, sweepAllocKind, budget,
+                                            sweepList)) {
     return NotFinished;
   }
 
@@ -6362,13 +6361,13 @@ IncrementalProgress GCRuntime::finalizeAllocKind(FreeOp* fop,
   return Finished;
 }
 
-IncrementalProgress GCRuntime::sweepShapeTree(FreeOp* fop, SliceBudget& budget,
-                                              Zone* zone) {
+IncrementalProgress GCRuntime::sweepShapeTree(FreeOp* fop,
+                                              SliceBudget& budget) {
   // Remove dead shapes from the shape tree, but don't finalize them yet.
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_SHAPE);
 
-  ArenaLists& al = zone->arenas;
+  ArenaLists& al = sweepZone->arenas;
 
   if (!SweepArenaList<Shape>(&al.gcShapeArenasToUpdate.ref(), budget)) {
     return NotFinished;
@@ -6556,20 +6555,24 @@ class SweepActionSequence final : public SweepAction<Args...> {
 template <typename Iter, typename Init, typename... Args>
 class SweepActionForEach final : public SweepAction<Args...> {
   using Elem = decltype(mozilla::DeclVal<Iter>().get());
-  using Action = SweepAction<Args..., Elem>;
+  using Action = SweepAction<Args...>;
   using IncrIter = IncrementalIter<Iter>;
 
   Init iterInit;
+  Elem* elemOut;
   UniquePtr<Action> action;
   typename IncrIter::State iterState;
 
  public:
-  SweepActionForEach(const Init& init, UniquePtr<Action> action)
-      : iterInit(init), action(std::move(action)) {}
+  SweepActionForEach(const Init& init, Elem* elemOut, UniquePtr<Action> action)
+      : iterInit(init), elemOut(elemOut), action(std::move(action)) {}
 
   IncrementalProgress run(Args... args) override {
+    MOZ_ASSERT(*elemOut == Elem());
+    auto clearElem = mozilla::MakeScopeExit([&] { *elemOut = Elem(); });
     for (IncrIter iter(iterState, iterInit); !iter.done(); iter.next()) {
-      if (action->run(args..., iter.get()) == NotFinished) {
+      *elemOut = iter.get();
+      if (action->run(args...) == NotFinished) {
         return NotFinished;
       }
     }
@@ -6611,40 +6614,6 @@ class SweepActionRepeatFor final : public SweepAction<Args...> {
   }
 };
 
-// Helper class to remove the last template parameter from the instantiation of
-// a variadic template. For example:
-//
-//   RemoveLastTemplateParameter<Foo<X, Y, Z>>::Type ==> Foo<X, Y>
-//
-// This works by recursively instantiating the Impl template with the contents
-// of the parameter pack so long as there are at least two parameters. The
-// specialization that matches when only one parameter remains discards it and
-// instantiates the target template with parameters previously processed.
-template <typename T>
-class RemoveLastTemplateParameter {};
-
-template <template <typename...> class Target, typename... Args>
-class RemoveLastTemplateParameter<Target<Args...>> {
-  template <typename... Ts>
-  struct List {};
-
-  template <typename R, typename... Ts>
-  struct Impl {};
-
-  template <typename... Rs, typename T>
-  struct Impl<List<Rs...>, T> {
-    using Type = Target<Rs...>;
-  };
-
-  template <typename... Rs, typename H, typename T, typename... Ts>
-  struct Impl<List<Rs...>, H, T, Ts...> {
-    using Type = typename Impl<List<Rs..., H>, T, Ts...>::Type;
-  };
-
- public:
-  using Type = typename Impl<List<>, Args...>::Type;
-};
-
 template <typename... Args>
 static UniquePtr<SweepAction<GCRuntime*, Args...>> Call(
     IncrementalProgress (GCRuntime::*method)(Args...)) {
@@ -6654,12 +6623,6 @@ static UniquePtr<SweepAction<GCRuntime*, Args...>> Call(
 static UniquePtr<SweepAction<GCRuntime*, FreeOp*, SliceBudget&>> MaybeYield(
     ZealMode zealMode) {
   return js::MakeUnique<SweepActionMaybeYield<FreeOp*, SliceBudget&>>(zealMode);
-}
-
-static UniquePtr<SweepAction<GCRuntime*, FreeOp*, SliceBudget&, Zone*>>
-MaybeYieldInZoneLoop(ZealMode zealMode) {
-  return js::MakeUnique<SweepActionMaybeYield<FreeOp*, SliceBudget&, Zone*>>(
-      zealMode);
 }
 
 template <typename... Args, typename... Rest>
@@ -6687,29 +6650,27 @@ static UniquePtr<SweepAction<Args...>> RepeatForSweepGroup(
 }
 
 template <typename... Args>
-static UniquePtr<
-    typename RemoveLastTemplateParameter<SweepAction<Args...>>::Type>
-ForEachZoneInSweepGroup(JSRuntime* rt, UniquePtr<SweepAction<Args...>> action) {
+static UniquePtr<SweepAction<Args...>> ForEachZoneInSweepGroup(
+    JSRuntime* rt, Zone** zoneOut, UniquePtr<SweepAction<Args...>> action) {
   if (!action) {
     return nullptr;
   }
 
-  using Action = typename RemoveLastTemplateParameter<
-      SweepActionForEach<SweepGroupZonesIter, JSRuntime*, Args...>>::Type;
-  return js::MakeUnique<Action>(rt, std::move(action));
+  using Action = SweepActionForEach<SweepGroupZonesIter, JSRuntime*, Args...>;
+  return js::MakeUnique<Action>(rt, zoneOut, std::move(action));
 }
 
 template <typename... Args>
-static UniquePtr<
-    typename RemoveLastTemplateParameter<SweepAction<Args...>>::Type>
-ForEachAllocKind(AllocKinds kinds, UniquePtr<SweepAction<Args...>> action) {
+static UniquePtr<SweepAction<Args...>> ForEachAllocKind(
+    AllocKinds kinds, AllocKind* kindOut,
+    UniquePtr<SweepAction<Args...>> action) {
   if (!action) {
     return nullptr;
   }
 
-  using Action = typename RemoveLastTemplateParameter<
-      SweepActionForEach<ContainerIter<AllocKinds>, AllocKinds, Args...>>::Type;
-  return js::MakeUnique<Action>(kinds, std::move(action));
+  using Action =
+      SweepActionForEach<ContainerIter<AllocKinds>, AllocKinds, Args...>;
+  return js::MakeUnique<Action>(kinds, kindOut, std::move(action));
 }
 
 }  // namespace sweepaction
@@ -6730,18 +6691,19 @@ bool GCRuntime::initSweepActions() {
           MaybeYield(ZealMode::YieldBeforeSweepingCaches),
           Call(&GCRuntime::sweepWeakCaches),
           ForEachZoneInSweepGroup(
-              rt,
-              Sequence(
-                  MaybeYieldInZoneLoop(ZealMode::YieldBeforeSweepingTypes),
-                  Call(&GCRuntime::sweepTypeInformation),
-                  MaybeYieldInZoneLoop(ZealMode::YieldBeforeSweepingObjects),
-                  ForEachAllocKind(ForegroundObjectFinalizePhase.kinds,
-                                   Call(&GCRuntime::finalizeAllocKind)),
-                  MaybeYieldInZoneLoop(ZealMode::YieldBeforeSweepingNonObjects),
-                  ForEachAllocKind(ForegroundNonObjectFinalizePhase.kinds,
-                                   Call(&GCRuntime::finalizeAllocKind)),
-                  MaybeYieldInZoneLoop(ZealMode::YieldBeforeSweepingShapeTrees),
-                  Call(&GCRuntime::sweepShapeTree))),
+              rt, &sweepZone.ref(),
+              Sequence(MaybeYield(ZealMode::YieldBeforeSweepingTypes),
+                       Call(&GCRuntime::sweepTypeInformation),
+                       MaybeYield(ZealMode::YieldBeforeSweepingObjects),
+                       ForEachAllocKind(ForegroundObjectFinalizePhase.kinds,
+                                        &sweepAllocKind.ref(),
+                                        Call(&GCRuntime::finalizeAllocKind)),
+                       MaybeYield(ZealMode::YieldBeforeSweepingNonObjects),
+                       ForEachAllocKind(ForegroundNonObjectFinalizePhase.kinds,
+                                        &sweepAllocKind.ref(),
+                                        Call(&GCRuntime::finalizeAllocKind)),
+                       MaybeYield(ZealMode::YieldBeforeSweepingShapeTrees),
+                       Call(&GCRuntime::sweepShapeTree))),
           Call(&GCRuntime::releaseSweptEmptyArenas),
           Call(&GCRuntime::endSweepingSweepGroup)));
 
