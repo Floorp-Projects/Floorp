@@ -90,11 +90,17 @@ var WebConsoleUtils = {
    * Gets the ID of the inner window of this DOM window.
    *
    * @param nsIDOMWindow window
-   * @return integer
-   *         Inner ID for the given window.
+   * @return integer|null
+   *         Inner ID for the given window, null if we can't access it.
    */
   getInnerWindowId: function(window) {
-    return window.windowUtils.currentInnerWindowID;
+    // Might throw with SecurityError: Permission denied to access property "windowUtils"
+    // on cross-origin object.
+    try {
+      return window.windowUtils.currentInnerWindowID;
+    } catch (e) {
+      return null;
+    }
   },
 
   /**
@@ -107,6 +113,10 @@ var WebConsoleUtils = {
    */
   getInnerWindowIDsForFrames: function(window) {
     const innerWindowID = this.getInnerWindowId(window);
+    if (innerWindowID === null) {
+      return [];
+    }
+
     let ids = [innerWindowID];
 
     if (window.frames) {
