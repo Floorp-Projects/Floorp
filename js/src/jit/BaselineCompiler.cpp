@@ -7094,6 +7094,8 @@ void BaselineInterpreterGenerator::emitOutOfLineCodeCoverageInstrumentation() {
   masm.pushReturnAddress();
 #endif
 
+  saveInterpreterPCReg();
+
   masm.Push(BaselineFrameReg);
   masm.setupUnalignedABICall(R0.scratchReg());
   masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
@@ -7102,6 +7104,7 @@ void BaselineInterpreterGenerator::emitOutOfLineCodeCoverageInstrumentation() {
       JS_FUNC_TO_DATA_PTR(void*, jit::HandleCodeCoverageAtPrologue));
   masm.Pop(BaselineFrameReg);
 
+  restoreInterpreterPCReg();
   masm.ret();
 
   masm.bind(handler.codeCoverageAtPCLabel());
