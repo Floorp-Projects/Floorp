@@ -11,62 +11,38 @@ function restore_prefs() {
 registerCleanupFunction(restore_prefs);
 
 async function assert_flash_locked_status(win, locked, expectedLabelText) {
-  if (win.useHtmlViews) {
-    // Tests while running on HTML about:addons page.
-    let addonCard = await BrowserTestUtils.waitForCondition(async () => {
-      let doc = win.getHtmlBrowser().contentDocument;
-      await win.htmlBrowserLoaded;
-      return doc.querySelector(`addon-card[addon-id*="Shockwave Flash"]`);
-    }, "Get HTML about:addons card for flash plugin");
+  let addonCard = await BrowserTestUtils.waitForCondition(async () => {
+    let doc = win.getHtmlBrowser().contentDocument;
+    await win.htmlBrowserLoaded;
+    return doc.querySelector(`addon-card[addon-id*="Shockwave Flash"]`);
+  }, "Get HTML about:addons card for flash plugin");
 
-    const pluginOptions = addonCard.querySelector("plugin-options");
-    const pluginAction = pluginOptions.querySelector("panel-item[checked]");
-    ok(
-      pluginAction.textContent.includes(expectedLabelText),
-      `Got plugin action "${expectedLabelText}"`
-    );
+  const pluginOptions = addonCard.querySelector("plugin-options");
+  const pluginAction = pluginOptions.querySelector("panel-item[checked]");
+  ok(
+    pluginAction.textContent.includes(expectedLabelText),
+    `Got plugin action "${expectedLabelText}"`
+  );
 
-    // All other buttons (besides the checked one and the expand action)
-    // are expected to be disabled if locked is true.
-    for (const item of pluginOptions.querySelectorAll("panel-item")) {
-      const actionName = item.getAttribute("action");
-      if (actionName.includes("always")) {
-        ok(item.hidden, `Plugin action "${actionName}" should be hidden.`);
-      } else if (
-        !item.hasAttribute("checked") &&
-        actionName !== "expand" &&
-        actionName !== "preferences"
-      ) {
-        is(
-          item.shadowRoot.querySelector("button").disabled,
-          locked,
-          `Plugin action "${actionName}" should be ${
-            locked ? "disabled" : "enabled"
-          }`
-        );
-      }
+  // All other buttons (besides the checked one and the expand action)
+  // are expected to be disabled if locked is true.
+  for (const item of pluginOptions.querySelectorAll("panel-item")) {
+    const actionName = item.getAttribute("action");
+    if (actionName.includes("always")) {
+      ok(item.hidden, `Plugin action "${actionName}" should be hidden.`);
+    } else if (
+      !item.hasAttribute("checked") &&
+      actionName !== "expand" &&
+      actionName !== "preferences"
+    ) {
+      is(
+        item.shadowRoot.querySelector("button").disabled,
+        locked,
+        `Plugin action "${actionName}" should be ${
+          locked ? "disabled" : "enabled"
+        }`
+      );
     }
-  } else {
-    // Tests while running on XUL about:addons page.
-    let list = win.document.getElementById("addon-list");
-    let flashEntry = await BrowserTestUtils.waitForCondition(() => {
-      return list.getElementsByAttribute("name", "Shockwave Flash")[0];
-    }, "Get XUL about:addons entry for flash plugin");
-    let dropDown = win.document.getAnonymousElementByAttribute(
-      flashEntry,
-      "anonid",
-      "state-menulist"
-    );
-    is(
-      dropDown.label,
-      expectedLabelText,
-      "Flash setting text should match the expected value"
-    );
-    is(
-      dropDown.disabled,
-      locked,
-      "Flash controls disabled state should match policy locked state"
-    );
   }
 }
 
@@ -94,13 +70,10 @@ add_task(async function test_enabled() {
     },
   });
 
-  const testCase = () =>
-    test_flash_status({
-      expectedLabelText: labelTextAskToActivate,
-      locked: false,
-    });
-  await testOnAboutAddonsType("XUL", testCase);
-  await testOnAboutAddonsType("HTML", testCase);
+  await test_flash_status({
+    expectedLabelText: labelTextAskToActivate,
+    locked: false,
+  });
 
   restore_prefs();
 });
@@ -115,13 +88,10 @@ add_task(async function test_enabled_locked() {
     },
   });
 
-  const testCase = () =>
-    test_flash_status({
-      expectedLabelText: labelTextAskToActivate,
-      locked: true,
-    });
-  await testOnAboutAddonsType("XUL", testCase);
-  await testOnAboutAddonsType("HTML", testCase);
+  await test_flash_status({
+    expectedLabelText: labelTextAskToActivate,
+    locked: true,
+  });
 
   restore_prefs();
 });
@@ -135,13 +105,10 @@ add_task(async function test_disabled() {
     },
   });
 
-  const testCase = () =>
-    test_flash_status({
-      expectedLabelText: labelTextNeverActivate,
-      locked: false,
-    });
-  await testOnAboutAddonsType("XUL", testCase);
-  await testOnAboutAddonsType("HTML", testCase);
+  await test_flash_status({
+    expectedLabelText: labelTextNeverActivate,
+    locked: false,
+  });
 
   restore_prefs();
 });
@@ -156,13 +123,10 @@ add_task(async function test_disabled_locked() {
     },
   });
 
-  const testCase = () =>
-    test_flash_status({
-      expectedLabelText: labelTextNeverActivate,
-      locked: true,
-    });
-  await testOnAboutAddonsType("XUL", testCase);
-  await testOnAboutAddonsType("HTML", testCase);
+  await test_flash_status({
+    expectedLabelText: labelTextNeverActivate,
+    locked: true,
+  });
 
   restore_prefs();
 });
@@ -174,13 +138,10 @@ add_task(async function test_ask() {
     },
   });
 
-  const testCase = () =>
-    test_flash_status({
-      expectedLabelText: labelTextAskToActivate,
-      locked: false,
-    });
-  await testOnAboutAddonsType("XUL", testCase);
-  await testOnAboutAddonsType("HTML", testCase);
+  await test_flash_status({
+    expectedLabelText: labelTextAskToActivate,
+    locked: false,
+  });
 
   restore_prefs();
 });
@@ -194,13 +155,10 @@ add_task(async function test_ask_locked() {
     },
   });
 
-  const testCase = () =>
-    test_flash_status({
-      expectedLabelText: labelTextAskToActivate,
-      locked: true,
-    });
-  await testOnAboutAddonsType("XUL", testCase);
-  await testOnAboutAddonsType("HTML", testCase);
+  await test_flash_status({
+    expectedLabelText: labelTextAskToActivate,
+    locked: true,
+  });
 
   restore_prefs();
 });
