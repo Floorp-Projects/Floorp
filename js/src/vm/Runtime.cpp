@@ -151,7 +151,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       wellKnownSymbols(nullptr),
       jitSupportsFloatingPoint(false),
       jitSupportsUnalignedAccesses(false),
-      jitSupportsSimd(false),
       offthreadIonCompilationEnabled_(true),
       parallelParsingEnabled_(true),
 #ifdef DEBUG
@@ -231,7 +230,6 @@ bool JSRuntime::init(JSContext* cx, uint32_t maxbytes,
 
   jitSupportsFloatingPoint = js::jit::JitSupportsFloatingPoint();
   jitSupportsUnalignedAccesses = js::jit::JitSupportsUnalignedAccesses();
-  jitSupportsSimd = js::jit::JitSupportsSimd();
 
   if (!parentRuntime) {
     sharedImmutableStrings_ = js::SharedImmutableStringsCache::Create();
