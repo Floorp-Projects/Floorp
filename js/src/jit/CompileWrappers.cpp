@@ -38,10 +38,6 @@ GeckoProfilerRuntime& CompileRuntime::geckoProfiler() {
   return runtime()->geckoProfiler();
 }
 
-bool CompileRuntime::jitSupportsFloatingPoint() {
-  return runtime()->jitSupportsFloatingPoint;
-}
-
 bool CompileRuntime::hadOutOfMemory() { return runtime()->hadOutOfMemory; }
 
 bool CompileRuntime::profilingScripts() { return runtime()->profilingScripts; }

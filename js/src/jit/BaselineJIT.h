@@ -536,7 +536,7 @@ inline bool IsBaselineEnabled(JSContext* cx) {
 #ifdef JS_CODEGEN_NONE
   return false;
 #else
-  return cx->options().baseline() && cx->runtime()->jitSupportsFloatingPoint;
+  return cx->options().baseline() && JitOptions.supportsFloatingPoint;
 #endif
 }
 
