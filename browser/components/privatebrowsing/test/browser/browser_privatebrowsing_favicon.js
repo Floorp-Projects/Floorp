@@ -54,7 +54,7 @@ function observeFavicon(aIsPrivate, aExpectedCookie, aPageURI) {
     attr.privateBrowsingId = 1;
   }
 
-  let expectedPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let expectedPrincipal = Services.scriptSecurityManager.createContentPrincipal(
     aPageURI,
     attr
   );

@@ -261,7 +261,7 @@ function getPrincipal(url, attrs) {
   if (!attrs) {
     attrs = {};
   }
-  return Services.scriptSecurityManager.createCodebasePrincipal(uri, attrs);
+  return Services.scriptSecurityManager.createContentPrincipal(uri, attrs);
 }
 
 function getCurrentPrincipal() {

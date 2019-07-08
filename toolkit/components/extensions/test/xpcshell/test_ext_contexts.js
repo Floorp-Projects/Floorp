@@ -127,10 +127,10 @@ class Context extends BaseContext {
 }
 
 let ssm = Services.scriptSecurityManager;
-const PRINCIPAL1 = ssm.createCodebasePrincipalFromOrigin(
+const PRINCIPAL1 = ssm.createContentPrincipalFromOrigin(
   "http://www.example.org"
 );
-const PRINCIPAL2 = ssm.createCodebasePrincipalFromOrigin(
+const PRINCIPAL2 = ssm.createContentPrincipalFromOrigin(
   "http://www.somethingelse.org"
 );
 

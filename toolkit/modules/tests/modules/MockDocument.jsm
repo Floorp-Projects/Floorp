@@ -67,7 +67,7 @@ const MockDocument = {
 
   mockNodePrincipalProperty(aElement, aURL) {
     Object.defineProperty(aElement, "nodePrincipal", {
-      value: Services.scriptSecurityManager.createCodebasePrincipal(
+      value: Services.scriptSecurityManager.createContentPrincipal(
         Services.io.newURI(aURL),
         {}
       ),

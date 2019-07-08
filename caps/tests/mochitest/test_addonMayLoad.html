@@ -53,9 +53,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1180921
     return p;
   }
 
-  let addonA = new Cu.Sandbox(ssm.createCodebasePrincipal(Services.io.newURI("moz-extension://addonA/"), {}),
+  let addonA = new Cu.Sandbox(ssm.createContentPrincipal(Services.io.newURI("moz-extension://addonA/"), {}),
                               {wantGlobalProperties: ["XMLHttpRequest"]});
-  let addonB = new Cu.Sandbox(ssm.createCodebasePrincipal(Services.io.newURI("moz-extension://addonB/"), {}),
+  let addonB = new Cu.Sandbox(ssm.createContentPrincipal(Services.io.newURI("moz-extension://addonB/"), {}),
                               {wantGlobalProperties: ["XMLHttpRequest"]});
 
   function uriForDomain(d) { return d + "/tests/caps/tests/mochitest/file_data.txt"; }

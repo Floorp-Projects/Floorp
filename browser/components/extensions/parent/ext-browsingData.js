@@ -113,7 +113,7 @@ const clearIndexedDB = async function(options) {
       }
 
       for (let item of request.result) {
-        let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+        let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
           item.origin
         );
         let scheme = principal.URI.scheme;
@@ -182,7 +182,7 @@ const clearLocalStorage = async function(options) {
         }
 
         for (let item of request.result) {
-          let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+          let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
             item.origin
           );
           let host = principal.URI.hostPort;

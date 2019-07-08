@@ -75,7 +75,7 @@ add_task(async _ => {
   });
 
   const uri = Services.io.newURI(TEST_DOMAIN);
-  const principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  const principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );
@@ -138,7 +138,7 @@ add_task(async _ => {
   });
 
   const uri = Services.io.newURI(TEST_DOMAIN);
-  const principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  const principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );
@@ -356,7 +356,7 @@ add_task(async _ => {
   });
 
   const uri = Services.io.newURI(TEST_DOMAIN);
-  const principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  const principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );

@@ -97,7 +97,7 @@ function* testSteps() {
     let request;
     if ("url" in params) {
       let uri = Services.io.newURI(params.url);
-      let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+      let principal = Services.scriptSecurityManager.createContentPrincipal(
         uri,
         {}
       );

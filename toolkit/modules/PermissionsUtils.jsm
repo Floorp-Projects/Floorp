@@ -24,7 +24,7 @@ function importPrefBranch(aPrefBranch, aPermission, aAction) {
       let principals = [];
       try {
         principals = [
-          Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+          Services.scriptSecurityManager.createContentPrincipalFromOrigin(
             origin
           ),
         ];
@@ -37,11 +37,8 @@ function importPrefBranch(aPrefBranch, aPermission, aAction) {
           let httpsURI = Services.io.newURI("https://" + origin);
 
           principals = [
-            Services.scriptSecurityManager.createCodebasePrincipal(httpURI, {}),
-            Services.scriptSecurityManager.createCodebasePrincipal(
-              httpsURI,
-              {}
-            ),
+            Services.scriptSecurityManager.createContentPrincipal(httpURI, {}),
+            Services.scriptSecurityManager.createContentPrincipal(httpsURI, {}),
           ];
         } catch (e2) {}
       }

@@ -102,7 +102,7 @@ bool FeaturePolicy::AllowsFeature(const nsAString& aFeatureName,
     if (NS_FAILED(rv)) {
       return false;
     }
-    origin = BasePrincipal::CreateCodebasePrincipal(
+    origin = BasePrincipal::CreateContentPrincipal(
         uri, BasePrincipal::Cast(mDefaultOrigin)->OriginAttributesRef());
   } else {
     origin = mDefaultOrigin;

@@ -47,7 +47,7 @@ add_task(async function test_doAutocompleteSearch_generated_noLogins() {
     .callsFake(() => {
       return {
         currentWindowGlobal: {
-          documentPrincipal: Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+          documentPrincipal: Services.scriptSecurityManager.createContentPrincipalFromOrigin(
             "https://www.example.com^userContextId=1"
           ),
         },

@@ -14,7 +14,7 @@ function onLoad() {
   var quotaManagerService = Cc[
     "@mozilla.org/dom/quota-manager-service;1"
   ].getService(nsIQuotaManagerService);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     gURI,
     {}
   );

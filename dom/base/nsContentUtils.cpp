@@ -8991,7 +8991,7 @@ bool nsContentUtils::HttpsStateIsModern(Document* aDocument) {
     return false;
   }
 
-  MOZ_ASSERT(principal->GetIsCodebasePrincipal());
+  MOZ_ASSERT(principal->GetIsContentPrincipal());
 
   nsCOMPtr<nsIContentSecurityManager> csm =
       do_GetService(NS_CONTENTSECURITYMANAGER_CONTRACTID);

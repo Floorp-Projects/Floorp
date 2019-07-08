@@ -14,7 +14,7 @@ const TEST_URI_HTML = TEST_URL_ROOT + "doc_content_stylesheet.html";
 const TEST_URI_AUTHOR = TEST_URL_ROOT + "doc_author-sheet.html";
 const TEST_URI_XUL = TEST_URL_ROOT + "doc_content_stylesheet.xul";
 const XUL_URI = Services.io.newURI(TEST_URI_XUL);
-const XUL_PRINCIPAL = Services.scriptSecurityManager.createCodebasePrincipal(
+const XUL_PRINCIPAL = Services.scriptSecurityManager.createContentPrincipal(
   XUL_URI,
   {}
 );

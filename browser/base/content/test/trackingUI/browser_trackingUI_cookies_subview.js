@@ -290,7 +290,7 @@ add_task(async function testCookiesSubViewAllowed() {
     TPC_PREF,
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
   );
-  let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
     "http://trackertest.org/"
   );
   Services.perms.addFromPrincipal(
@@ -374,12 +374,12 @@ add_task(async function testCookiesSubViewAllowedHeuristic() {
     TPC_PREF,
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
   );
-  let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
     "http://not-tracking.example.com/"
   );
 
   // Pretend that the tracker has already been interacted with
-  let trackerPrincipal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+  let trackerPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
     "http://trackertest.org/"
   );
   Services.perms.addFromPrincipal(

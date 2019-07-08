@@ -7,7 +7,7 @@ const ReferrerInfo = Components.Constructor(
 function getTestReferrer(server_uri, referer_uri, isPrivate = false) {
   var uri = NetUtil.newURI(server_uri);
   let referrer = NetUtil.newURI(referer_uri);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     referrer,
     { privateBrowsingId: isPrivate ? 1 : 0 }
   );

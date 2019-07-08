@@ -239,7 +239,7 @@ HTMLIFrameElement::GetFeaturePolicyDefaultOrigin() const {
 
   nsCOMPtr<nsIURI> nodeURI;
   if (GetURIAttr(nsGkAtoms::src, nullptr, getter_AddRefs(nodeURI)) && nodeURI) {
-    principal = BasePrincipal::CreateCodebasePrincipal(
+    principal = BasePrincipal::CreateContentPrincipal(
         nodeURI, BasePrincipal::Cast(NodePrincipal())->OriginAttributesRef());
   }
 

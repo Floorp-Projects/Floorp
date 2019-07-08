@@ -47,7 +47,7 @@ class MOZ_STACK_CLASS DocInfo final {
   nsIPrincipal* Principal() const;
 
   // Returns the URL of the document's principal. Note that this must *only*
-  // be called for codebase principals.
+  // be called for content principals.
   const URLInfo& PrincipalURL() const;
 
   bool IsTopLevel() const;

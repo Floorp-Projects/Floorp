@@ -8773,7 +8773,7 @@ bool PrincipalVerifier::IsPrincipalInfoValid(
       }
 
       nsCOMPtr<nsIPrincipal> principal =
-          BasePrincipal::CreateCodebasePrincipal(uri, info.attrs());
+          BasePrincipal::CreateContentPrincipal(uri, info.attrs());
       if (NS_WARN_IF(!principal)) {
         return false;
       }

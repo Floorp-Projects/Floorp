@@ -58,36 +58,36 @@ function run_test() {
   let uri4 = NetUtil.newURI("https://hangouts.google.com/#!/hangout");
   let uri5 = NetUtil.newURI("http://google.com:8096/");
 
-  let uri0_n = secMan.createCodebasePrincipal(uri0, {});
-  let uri1_n = secMan.createCodebasePrincipal(uri1, {});
-  let uri2_n = secMan.createCodebasePrincipal(uri2, {});
-  let uri3_n = secMan.createCodebasePrincipal(uri3, {});
-  let uri4_n = secMan.createCodebasePrincipal(uri4, {});
-  let uri5_n = secMan.createCodebasePrincipal(uri5, {});
+  let uri0_n = secMan.createContentPrincipal(uri0, {});
+  let uri1_n = secMan.createContentPrincipal(uri1, {});
+  let uri2_n = secMan.createContentPrincipal(uri2, {});
+  let uri3_n = secMan.createContentPrincipal(uri3, {});
+  let uri4_n = secMan.createContentPrincipal(uri4, {});
+  let uri5_n = secMan.createContentPrincipal(uri5, {});
 
   attrs = { inIsolatedMozBrowser: true };
-  let uri0_y_ = secMan.createCodebasePrincipal(uri0, attrs);
-  let uri1_y_ = secMan.createCodebasePrincipal(uri1, attrs);
-  let uri2_y_ = secMan.createCodebasePrincipal(uri2, attrs);
-  let uri3_y_ = secMan.createCodebasePrincipal(uri3, attrs);
-  let uri4_y_ = secMan.createCodebasePrincipal(uri4, attrs);
-  let uri5_y_ = secMan.createCodebasePrincipal(uri5, attrs);
+  let uri0_y_ = secMan.createContentPrincipal(uri0, attrs);
+  let uri1_y_ = secMan.createContentPrincipal(uri1, attrs);
+  let uri2_y_ = secMan.createContentPrincipal(uri2, attrs);
+  let uri3_y_ = secMan.createContentPrincipal(uri3, attrs);
+  let uri4_y_ = secMan.createContentPrincipal(uri4, attrs);
+  let uri5_y_ = secMan.createContentPrincipal(uri5, attrs);
 
   attrs = { userContextId: 1 };
-  let uri0_1 = secMan.createCodebasePrincipal(uri0, attrs);
-  let uri1_1 = secMan.createCodebasePrincipal(uri1, attrs);
-  let uri2_1 = secMan.createCodebasePrincipal(uri2, attrs);
-  let uri3_1 = secMan.createCodebasePrincipal(uri3, attrs);
-  let uri4_1 = secMan.createCodebasePrincipal(uri4, attrs);
-  let uri5_1 = secMan.createCodebasePrincipal(uri5, attrs);
+  let uri0_1 = secMan.createContentPrincipal(uri0, attrs);
+  let uri1_1 = secMan.createContentPrincipal(uri1, attrs);
+  let uri2_1 = secMan.createContentPrincipal(uri2, attrs);
+  let uri3_1 = secMan.createContentPrincipal(uri3, attrs);
+  let uri4_1 = secMan.createContentPrincipal(uri4, attrs);
+  let uri5_1 = secMan.createContentPrincipal(uri5, attrs);
 
   attrs = { firstPartyDomain: "cnn.com" };
-  let uri0_cnn = secMan.createCodebasePrincipal(uri0, attrs);
-  let uri1_cnn = secMan.createCodebasePrincipal(uri1, attrs);
-  let uri2_cnn = secMan.createCodebasePrincipal(uri2, attrs);
-  let uri3_cnn = secMan.createCodebasePrincipal(uri3, attrs);
-  let uri4_cnn = secMan.createCodebasePrincipal(uri4, attrs);
-  let uri5_cnn = secMan.createCodebasePrincipal(uri5, attrs);
+  let uri0_cnn = secMan.createContentPrincipal(uri0, attrs);
+  let uri1_cnn = secMan.createContentPrincipal(uri1, attrs);
+  let uri2_cnn = secMan.createContentPrincipal(uri2, attrs);
+  let uri3_cnn = secMan.createContentPrincipal(uri3, attrs);
+  let uri4_cnn = secMan.createContentPrincipal(uri4, attrs);
+  let uri5_cnn = secMan.createContentPrincipal(uri5, attrs);
 
   pm.addFromPrincipal(uri0_n, "test/matches", pm.ALLOW_ACTION);
   let perm_n = pm.getPermissionObject(uri0_n, "test/matches", true);

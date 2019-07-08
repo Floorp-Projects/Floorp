@@ -292,7 +292,7 @@ var SitePermissions = {
     }
 
     let principal = uri
-      ? Services.scriptSecurityManager.createCodebasePrincipal(uri, {})
+      ? Services.scriptSecurityManager.createContentPrincipal(uri, {})
       : null;
     return this.getAllByPrincipal(principal);
   },
@@ -572,7 +572,7 @@ var SitePermissions = {
     }
 
     let principal = uri
-      ? Services.scriptSecurityManager.createCodebasePrincipal(uri, {})
+      ? Services.scriptSecurityManager.createContentPrincipal(uri, {})
       : null;
     return this.getForPrincipal(principal, permissionID, browser);
   },
@@ -669,7 +669,7 @@ var SitePermissions = {
     }
 
     let principal = uri
-      ? Services.scriptSecurityManager.createCodebasePrincipal(uri, {})
+      ? Services.scriptSecurityManager.createContentPrincipal(uri, {})
       : null;
     return this.setForPrincipal(principal, permissionID, state, scope, browser);
   },
@@ -788,7 +788,7 @@ var SitePermissions = {
     }
 
     let principal = uri
-      ? Services.scriptSecurityManager.createCodebasePrincipal(uri, {})
+      ? Services.scriptSecurityManager.createContentPrincipal(uri, {})
       : null;
     return this.removeFromPrincipal(principal, permissionID, browser);
   },

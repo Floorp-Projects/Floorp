@@ -395,7 +395,7 @@ AddonContentPolicy::ValidateAddonCSP(const nsAString& aPolicyString,
   }
 
   RefPtr<BasePrincipal> principal =
-      BasePrincipal::CreateCodebasePrincipal(NS_ConvertUTF16toUTF8(url));
+      BasePrincipal::CreateContentPrincipal(NS_ConvertUTF16toUTF8(url));
 
   nsCOMPtr<nsIURI> selfURI;
   principal->GetURI(getter_AddRefs(selfURI));

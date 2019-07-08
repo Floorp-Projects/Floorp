@@ -26,7 +26,7 @@ TEST(PrincipalSerialization, ReusedJSONArgument)
   nsAutoCString spec("https://mozilla.com");
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv =
-      ssm->CreateCodebasePrincipalFromOrigin(spec, getter_AddRefs(principal));
+      ssm->CreateContentPrincipalFromOrigin(spec, getter_AddRefs(principal));
   ASSERT_EQ(rv, NS_OK);
 
   nsAutoCString JSON;
@@ -36,8 +36,7 @@ TEST(PrincipalSerialization, ReusedJSONArgument)
 
   nsAutoCString spec2("https://example.com");
   nsCOMPtr<nsIPrincipal> principal2;
-  rv =
-      ssm->CreateCodebasePrincipalFromOrigin(spec2, getter_AddRefs(principal2));
+  rv = ssm->CreateContentPrincipalFromOrigin(spec2, getter_AddRefs(principal2));
   ASSERT_EQ(rv, NS_OK);
 
   // Reuse JSON without truncation to check the code is doing this
@@ -82,7 +81,7 @@ TEST(PrincipalSerialization, TwoKeys)
   nsCOMPtr<nsIPrincipal> contentPrincipal = BasePrincipal::FromJSON(
       NS_LITERAL_CSTRING("{\"1\":{\"0\":\"https://mozilla.com\"}}"));
   ASSERT_EQ(BasePrincipal::Cast(contentPrincipal)->Kind(),
-            BasePrincipal::eCodebasePrincipal);
+            BasePrincipal::eContentPrincipal);
 
   // Check both combined don't return a principal
   nsCOMPtr<nsIPrincipal> combinedPrincipal = BasePrincipal::FromJSON(
@@ -105,19 +104,19 @@ TEST(PrincipalSerialization, ExpandedPrincipal)
   nsAutoCString spec("https://mozilla.com");
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv =
-      ssm->CreateCodebasePrincipalFromOrigin(spec, getter_AddRefs(principal));
+      ssm->CreateContentPrincipalFromOrigin(spec, getter_AddRefs(principal));
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(BasePrincipal::Cast(principal)->Kind(),
-            BasePrincipal::eCodebasePrincipal);
+            BasePrincipal::eContentPrincipal);
   allowedDomains[0] = principal;
 
   nsAutoCString spec2("https://mozilla.org");
   nsCOMPtr<nsIPrincipal> principal2;
   rv =
-      ssm->CreateCodebasePrincipalFromOrigin(spec2, getter_AddRefs(principal2));
+      ssm->CreateContentPrincipalFromOrigin(spec2, getter_AddRefs(principal2));
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(BasePrincipal::Cast(principal2)->Kind(),
-            BasePrincipal::eCodebasePrincipal);
+            BasePrincipal::eContentPrincipal);
   allowedDomains[1] = principal2;
 
   OriginAttributes attrs;
@@ -142,11 +141,11 @@ TEST(PrincipalSerialization, ExpandedPrincipal)
 
   nsAutoCString specDev("https://mozilla.dev");
   nsCOMPtr<nsIPrincipal> principalDev;
-  rv = ssm->CreateCodebasePrincipalFromOrigin(specDev,
+  rv = ssm->CreateContentPrincipalFromOrigin(specDev,
                                               getter_AddRefs(principalDev));
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(BasePrincipal::Cast(principalDev)->Kind(),
-            BasePrincipal::eCodebasePrincipal);
+            BasePrincipal::eContentPrincipal);
 
   ASSERT_FALSE(outPrincipal->FastSubsumesIgnoringFPD(principalDev));
 }
@@ -164,19 +163,19 @@ TEST(PrincipalSerialization, ExpandedPrincipalOA)
   nsAutoCString spec("https://mozilla.com");
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv =
-      ssm->CreateCodebasePrincipalFromOrigin(spec, getter_AddRefs(principal));
+      ssm->CreateContentPrincipalFromOrigin(spec, getter_AddRefs(principal));
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(BasePrincipal::Cast(principal)->Kind(),
-            BasePrincipal::eCodebasePrincipal);
+            BasePrincipal::eContentPrincipal);
   allowedDomains[0] = principal;
 
   nsAutoCString spec2("https://mozilla.org");
   nsCOMPtr<nsIPrincipal> principal2;
   rv =
-      ssm->CreateCodebasePrincipalFromOrigin(spec2, getter_AddRefs(principal2));
+      ssm->CreateContentPrincipalFromOrigin(spec2, getter_AddRefs(principal2));
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(BasePrincipal::Cast(principal2)->Kind(),
-            BasePrincipal::eCodebasePrincipal);
+            BasePrincipal::eContentPrincipal);
   allowedDomains[1] = principal2;
 
   OriginAttributes attrs;
@@ -206,11 +205,11 @@ TEST(PrincipalSerialization, ExpandedPrincipalOA)
 
   nsAutoCString specDev("https://mozilla.dev");
   nsCOMPtr<nsIPrincipal> principalDev;
-  rv = ssm->CreateCodebasePrincipalFromOrigin(specDev,
+  rv = ssm->CreateContentPrincipalFromOrigin(specDev,
                                               getter_AddRefs(principalDev));
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(BasePrincipal::Cast(principalDev)->Kind(),
-            BasePrincipal::eCodebasePrincipal);
+            BasePrincipal::eContentPrincipal);
 
   ASSERT_FALSE(outPrincipal->FastSubsumesIgnoringFPD(principalDev));
 }

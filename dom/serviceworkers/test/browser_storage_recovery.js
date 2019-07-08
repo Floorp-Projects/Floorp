@@ -28,7 +28,7 @@ async function checkForUpdate(browser) {
 // QuotaManager APIs
 async function wipeStorage(u) {
   let uri = Services.io.newURI(u);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );
