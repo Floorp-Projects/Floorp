@@ -100,6 +100,7 @@ class SessionLifecycleTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
     }
 
+    @Ignore //Disable test for frequent failures Bug 1532186
     @Test(expected = IllegalStateException::class)
     fun readFromParcel_throwOnAlreadyOpen() {
         //disable readFromParcel_throwOnAlreadyOpen for frequent failures Bug 1532186
