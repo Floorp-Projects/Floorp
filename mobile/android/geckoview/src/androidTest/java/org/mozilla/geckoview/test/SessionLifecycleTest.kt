@@ -83,8 +83,7 @@ class SessionLifecycleTest : BaseSessionTest() {
         val session = sessionRule.createOpenSession()
 
         session.toParcel { parcel ->
-            val newSession = sessionRule.createClosedSession()
-            newSession.readFromParcel(parcel)
+            val newSession = sessionRule.createFromParcel(parcel)
 
             assertThat("New session has same settings",
                        newSession.settings, equalTo(session.settings))
@@ -110,22 +109,21 @@ class SessionLifecycleTest : BaseSessionTest() {
     }
 
     @Test fun readFromParcel_canLoadPageAfterRead() {
-        val newSession = sessionRule.createClosedSession()
+        var newSession: GeckoSession? = null
 
         sessionRule.session.toParcel { parcel ->
-            newSession.readFromParcel(parcel)
+            newSession = sessionRule.createFromParcel(parcel)
         }
 
-        newSession.reload()
-        newSession.waitForPageStop()
+        newSession!!.reload()
+        newSession!!.waitForPageStop()
     }
 
     @Test fun readFromParcel_closedSession() {
         val session = sessionRule.createClosedSession()
 
         session.toParcel { parcel ->
-            val newSession = sessionRule.createClosedSession()
-            newSession.readFromParcel(parcel)
+            val newSession = sessionRule.createFromParcel(parcel)
             assertThat("New session should not be open",
                        newSession.isOpen, equalTo(false))
         }
@@ -141,8 +139,7 @@ class SessionLifecycleTest : BaseSessionTest() {
             assertThat("Session is still open", session.isOpen, equalTo(true))
             session.close()
 
-            val newSession = sessionRule.createClosedSession()
-            newSession.readFromParcel(parcel)
+            val newSession = sessionRule.createFromParcel(parcel)
             assertThat("New session should not be open",
                        newSession.isOpen, equalTo(false))
         }
@@ -158,8 +155,7 @@ class SessionLifecycleTest : BaseSessionTest() {
 
         session.toParcel { parcel ->
             assertThat("Session is still open", session.isOpen, equalTo(true))
-            val newSession = sessionRule.createClosedSession()
-            newSession.readFromParcel(parcel)
+            val newSession = sessionRule.createFromParcel(parcel)
             assertThat("New session should be open",
                     newSession.isOpen, equalTo(true))
             assertThat("Old session should be closed",
@@ -171,17 +167,17 @@ class SessionLifecycleTest : BaseSessionTest() {
     }
 
     @Test fun readFromParcel_closeOpenAndLoad() {
-        val newSession = sessionRule.createClosedSession()
+        var newSession: GeckoSession? = null
 
         sessionRule.session.toParcel { parcel ->
-            newSession.readFromParcel(parcel)
+            newSession = sessionRule.createFromParcel(parcel)
         }
 
-        newSession.close()
-        newSession.open()
+        newSession!!.close()
+        newSession!!.open()
 
-        newSession.reload()
-        newSession.waitForPageStop()
+        newSession!!.reload()
+        newSession!!.waitForPageStop()
     }
 
     @Test fun readFromParcel_allowCallsBeforeUnparceling() {
@@ -197,22 +193,22 @@ class SessionLifecycleTest : BaseSessionTest() {
     }
 
     @Test fun readFromParcel_chained() {
-        val session1 = sessionRule.createClosedSession()
-        val session2 = sessionRule.createClosedSession()
-        val session3 = sessionRule.createClosedSession()
+        var session1: GeckoSession? = null
+        var session2: GeckoSession? = null
+        var session3: GeckoSession? = null
 
         sessionRule.session.toParcel { parcel ->
-            session1.readFromParcel(parcel)
+            session1 = sessionRule.createFromParcel(parcel)
         }
-        session1.toParcel { parcel ->
-            session2.readFromParcel(parcel)
+        session1!!.toParcel { parcel ->
+            session2 = sessionRule.createFromParcel(parcel)
         }
-        session2.toParcel { parcel ->
-            session3.readFromParcel(parcel)
+        session2!!.toParcel { parcel ->
+            session3 = sessionRule.createFromParcel(parcel)
         }
 
-        session3.reload()
-        session3.waitForPageStop()
+        session3!!.reload()
+        session3!!.waitForPageStop()
     }
 
     @NullDelegate(GeckoSession.NavigationDelegate::class)
@@ -260,13 +256,13 @@ class SessionLifecycleTest : BaseSessionTest() {
             }
         })
 
-        val newSession = sessionRule.createClosedSession()
+        var newSession: GeckoSession? = null
         mainSession.toParcel { parcel ->
-            newSession.readFromParcel(parcel)
+            newSession = sessionRule.createFromParcel(parcel)
         }
 
         // We generate an extra focus event during transfer.
-        newSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
+        newSession!!.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1)
             override fun restartInput(session: GeckoSession, reason: Int) {
                 assertThat("Reason should be correct",
@@ -274,8 +270,8 @@ class SessionLifecycleTest : BaseSessionTest() {
             }
         })
 
-        newSession.evaluateJS("document.querySelector('#input').blur()")
-        newSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
+        newSession!!.evaluateJS("document.querySelector('#input').blur()")
+        newSession!!.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1)
             override fun restartInput(session: GeckoSession, reason: Int) {
                 // We generate an extra focus event during transfer.

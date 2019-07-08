@@ -44,6 +44,7 @@ import android.app.Instrumentation;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.net.LocalSocketAddress;
+import android.os.Parcel;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -2047,6 +2048,12 @@ public class GeckoSessionTestRule implements TestRule {
             openSession(session);
         }
         return session;
+    }
+
+    public GeckoSession createFromParcel(Parcel source) {
+        final GeckoSession session = new GeckoSession(mMainSession.getSettings());
+        session.readFromParcel(source);
+        return wrapSession(session);
     }
 
     /**
