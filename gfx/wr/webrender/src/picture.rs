@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{MixBlendMode, PipelineId, PremultipliedColorF};
+use api::{MixBlendMode, PipelineId, PremultipliedColorF, FilterPrimitiveKind};
 use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, FontRenderMode};
 use api::{DebugFlags, RasterSpace, ImageKey, ColorF};
 use api::units::*;
@@ -14,6 +14,7 @@ use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX,
 use crate::debug_colors;
 use euclid::{vec3, TypedPoint2D, TypedScale, TypedSize2D, Vector2D, TypedRect};
 use euclid::approxeq::ApproxEq;
+use crate::filterdata::SFilterData;
 use crate::frame_builder::{FrameVisibilityContext, FrameVisibilityState};
 use crate::intern::ItemUid;
 use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, Filter};
@@ -1574,7 +1575,65 @@ pub enum PictureCompositeMode {
     TileCache {
     },
     /// Apply an SVG filter
-    SvgFilter(Vec<FilterPrimitive>),
+    SvgFilter(Vec<FilterPrimitive>, Vec<SFilterData>),
+}
+
+impl PictureCompositeMode {
+    pub fn inflate_picture_rect(&self, picture_rect: PictureRect, inflation_factor: f32) -> PictureRect {
+        let mut result_rect = picture_rect;
+        match self {
+            PictureCompositeMode::Filter(filter) => match filter {
+                Filter::Blur(_) => {
+                    result_rect = picture_rect.inflate(inflation_factor, inflation_factor);
+                },
+                Filter::DropShadows(shadows) => {
+                    let mut max_inflation: f32 = 0.0;
+                    for shadow in shadows {
+                        let inflation_factor = shadow.blur_radius.round() * BLUR_SAMPLE_SCALE;
+                        max_inflation = max_inflation.max(inflation_factor);
+                    }
+                    result_rect = picture_rect.inflate(max_inflation, max_inflation);
+                },
+                _ => {}
+            }
+            PictureCompositeMode::SvgFilter(primitives, _) => {
+                let mut output_rects = Vec::with_capacity(primitives.len());
+                for (cur_index, primitive) in primitives.iter().enumerate() {
+                    let output_rect = match primitive.kind {
+                        FilterPrimitiveKind::Blur(ref primitive) => {
+                            let input = primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect);
+                            let inflation_factor = primitive.radius.round() * BLUR_SAMPLE_SCALE;
+                            input.inflate(inflation_factor, inflation_factor)
+                        }
+                        FilterPrimitiveKind::DropShadow(ref primitive) => {
+                            let inflation_factor = primitive.shadow.blur_radius.round() * BLUR_SAMPLE_SCALE;
+                            let input = primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect);
+                            let shadow_rect = input.inflate(inflation_factor, inflation_factor);
+                            input.union(&shadow_rect.translate(&(primitive.shadow.offset * TypedScale::new(1.0))))
+                        }
+                        FilterPrimitiveKind::Blend(ref primitive) => {
+                            primitive.input1.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect)
+                                .union(&primitive.input2.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect))
+                        }
+                        FilterPrimitiveKind::Identity(ref primitive) =>
+                            primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect),
+                        FilterPrimitiveKind::Opacity(ref primitive) =>
+                            primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect),
+                        FilterPrimitiveKind::ColorMatrix(ref primitive) =>
+                            primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect),
+                        FilterPrimitiveKind::ComponentTransfer(ref primitive) =>
+                            primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect),
+
+                        FilterPrimitiveKind::Flood(..) => picture_rect,
+                    };
+                    output_rects.push(output_rect);
+                    result_rect = result_rect.union(&output_rect);
+                }
+            }
+            _ => {},
+        }
+        result_rect
+    }
 }
 
 /// Enum value describing the place of a picture in a 3D context.
@@ -2445,7 +2504,7 @@ impl PicturePrimitive {
 
                         Some((render_task_id, render_task_id))
                     }
-                    PictureCompositeMode::SvgFilter(..) => {
+                    PictureCompositeMode::SvgFilter(ref primitives, ref filter_datas) => {
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -2460,14 +2519,24 @@ impl PicturePrimitive {
                             pic_index,
                             clipped.origin,
                             uv_rect_kind,
-                            raster_spatial_node_index,
                             surface_spatial_node_index,
+                            device_pixel_scale,
+                            PrimitiveVisibilityMask::all(),
+                        );
+
+                        let picture_task_id = frame_state.render_tasks.add(picture_task);
+
+                        let filter_task_id = RenderTask::new_svg_filter(
+                            primitives,
+                            filter_datas,
+                            &mut frame_state.render_tasks,
+                            clipped.size,
+                            uv_rect_kind,
+                            picture_task_id,
                             device_pixel_scale,
                         );
 
-                        let render_task_id = frame_state.render_tasks.add(picture_task);
-
-                        (render_task_id, render_task_id)
+                        Some((filter_task_id, picture_task_id))
                     }
                 };
 
@@ -2522,7 +2591,8 @@ impl PicturePrimitive {
                     PictureCompositeMode::Blit(..) |
                     PictureCompositeMode::ComponentTransferFilter(..) |
                     PictureCompositeMode::Filter(..) |
-                    PictureCompositeMode::MixBlend(..) => {
+                    PictureCompositeMode::MixBlend(..) |
+                    PictureCompositeMode::SvgFilter(..) => {
                         // TODO(gw): We can take advantage of the same logic that
                         //           exists in the opaque rect detection for tile
                         //           caches, to allow subpixel text on other surfaces
@@ -2768,14 +2838,30 @@ impl PicturePrimitive {
                         0.0
                     }
                 }
+                PictureCompositeMode::SvgFilter(ref primitives, _) if self.options.inflate_if_required => {
+                    let mut max = 0.0;
+                    for primitive in primitives {
+                        if let FilterPrimitiveKind::Blur(ref blur) = primitive.kind {
+                            max = f32::max(max, blur.radius * BLUR_SAMPLE_SCALE);
+                        }
+                    }
+                    max
+                }
                 _ => {
                     0.0
                 }
             };
 
-            // Check if there is perspective, and thus whether a new
+            // Filters must be applied before transforms, to do this, we can mark this picture as establishing a raster root.
+            let has_svg_filter = if let PictureCompositeMode::SvgFilter(..) = composite_mode {
+                true
+            } else {
+                false
+            };
+
+            // Check if there is perspective or if an SVG filter is applied, and thus whether a new
             // rasterization root should be established.
-            let establishes_raster_root = frame_context.clip_scroll_tree
+            let establishes_raster_root = has_svg_filter || frame_context.clip_scroll_tree
                 .get_relative_transform(surface_spatial_node_index, parent_raster_node_index)
                 .is_perspective();
 
@@ -2862,26 +2948,12 @@ impl PicturePrimitive {
         // rect into the parent surface coordinate space, and propagate that up
         // to the parent.
         if let Some(ref mut raster_config) = self.raster_config {
-            let mut surface_rect = {
-                let surface = state.current_surface_mut();
-                // Inflate the local bounding rect if required by the filter effect.
-                // This inflaction factor is to be applied to the surface itsefl.
-                // TODO: in prepare_for_render we round before multiplying with the
-                // blur sample scale. Should we do this here as well?
-                let inflation_size = match raster_config.composite_mode {
-                    PictureCompositeMode::Filter(Filter::Blur(_)) => surface.inflation_factor,
-                    PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
-                        let mut max = 0.0;
-                        for shadow in shadows {
-                            max = f32::max(max, shadow.blur_radius * BLUR_SAMPLE_SCALE);
-                        }
-                        max.ceil()
-                    }
-                    _ => 0.0,
-                };
-                surface.rect = surface.rect.inflate(inflation_size, inflation_size);
-                surface.rect * TypedScale::new(1.0)
-            };
+            let surface = state.current_surface_mut();
+            // Inflate the local bounding rect if required by the filter effect.
+            // This inflaction factor is to be applied to the surface itself.
+            surface.rect = raster_config.composite_mode.inflate_picture_rect(surface.rect, surface.inflation_factor);
+
+            let mut surface_rect = surface.rect * TypedScale::new(1.0);
 
             // Pop this surface from the stack
             let surface_index = state.pop_surface();
@@ -3018,7 +3090,7 @@ impl PicturePrimitive {
             }
             PictureCompositeMode::MixBlend(..) |
             PictureCompositeMode::Blit(_) |
-            PictureCompositeMode::SvgFilter(_) => {}
+            PictureCompositeMode::SvgFilter(..) => {}
         }
 
         true

@@ -63,7 +63,7 @@ use crate::gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 #[cfg(feature = "pathfinder")]
 use crate::gpu_glyph_renderer::GpuGlyphRenderer;
-use crate::gpu_types::{PrimitiveHeaderI, PrimitiveHeaderF, ScalingInstance, TransformData, ResolveInstanceData};
+use crate::gpu_types::{PrimitiveHeaderI, PrimitiveHeaderF, ScalingInstance, SvgFilterInstance, TransformData, ResolveInstanceData};
 use crate::internal_types::{TextureSource, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
 use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, LayerIndex, RenderedDocument, ResultMsg};
 use crate::internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
@@ -219,6 +219,10 @@ const GPU_SAMPLER_TAG_OPAQUE: GpuProfileTag = GpuProfileTag {
 const GPU_SAMPLER_TAG_TRANSPARENT: GpuProfileTag = GpuProfileTag {
     label: "Transparent Pass",
     color: debug_colors::BLACK,
+};
+const GPU_TAG_SVG_FILTER: GpuProfileTag = GpuProfileTag {
+    label: "SvgFilter",
+    color: debug_colors::LEMONCHIFFON,
 };
 
 /// The clear color used for the texture cache when the debug display is enabled.
@@ -662,6 +666,53 @@ pub(crate) mod desc {
         ],
     };
 
+    pub const SVG_FILTER: VertexDescriptor = VertexDescriptor {
+        vertex_attributes: &[
+            VertexAttribute {
+                name: "aPosition",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+        ],
+        instance_attributes: &[
+            VertexAttribute {
+                name: "aFilterRenderTaskAddress",
+                count: 1,
+                kind: VertexAttributeKind::U16,
+            },
+            VertexAttribute {
+                name: "aFilterInput1TaskAddress",
+                count: 1,
+                kind: VertexAttributeKind::U16,
+            },
+            VertexAttribute {
+                name: "aFilterInput2TaskAddress",
+                count: 1,
+                kind: VertexAttributeKind::U16,
+            },
+            VertexAttribute {
+                name: "aFilterKind",
+                count: 1,
+                kind: VertexAttributeKind::U16,
+            },
+            VertexAttribute {
+                name: "aFilterInputCount",
+                count: 1,
+                kind: VertexAttributeKind::U16,
+            },
+            VertexAttribute {
+                name: "aFilterGenericInt",
+                count: 1,
+                kind: VertexAttributeKind::U16,
+            },
+            VertexAttribute {
+                name: "aFilterExtraDataAddress",
+                count: 2,
+                kind: VertexAttributeKind::U16,
+            },
+        ],
+    };
+
     pub const VECTOR_STENCIL: VertexDescriptor = VertexDescriptor {
         vertex_attributes: &[
             VertexAttribute {
@@ -759,6 +810,7 @@ pub(crate) enum VertexArrayKind {
     LineDecoration,
     Gradient,
     Resolve,
+    SvgFilter,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -1052,8 +1104,25 @@ impl TextureResolver {
                 device.bind_texture(sampler, texture);
             }
             TextureSource::RenderTaskCache(saved_index) => {
-                let texture = &self.saved_targets[saved_index.0];
-                device.bind_texture(sampler, texture)
+                if saved_index.0 < self.saved_targets.len() {
+                    let texture = &self.saved_targets[saved_index.0];
+                    device.bind_texture(sampler, texture)
+                } else {
+                    // Check if this saved index is referring to a the prev pass
+                    if Some(saved_index) == self.prev_pass_color.as_ref().and_then(|at| at.saved_index) {
+                        let texture = match self.prev_pass_color {
+                            Some(ref at) => &at.texture,
+                            None => &self.dummy_cache_texture,
+                        };
+                        device.bind_texture(sampler, texture);
+                    } else if Some(saved_index) == self.prev_pass_color.as_ref().and_then(|at| at.saved_index) {
+                        let texture = match self.prev_pass_alpha {
+                            Some(ref at) => &at.texture,
+                            None => &self.dummy_cache_texture,
+                        };
+                        device.bind_texture(sampler, texture);
+                    }
+                }
             }
         }
     }
@@ -1592,6 +1661,7 @@ pub struct RendererVAOs {
     scale_vao: VAO,
     gradient_vao: VAO,
     resolve_vao: VAO,
+    svg_filter_vao: VAO,
 }
 
 
@@ -1939,6 +2009,7 @@ impl Renderer {
         let line_vao = device.create_vao_with_new_instances(&desc::LINE, &prim_vao);
         let gradient_vao = device.create_vao_with_new_instances(&desc::GRADIENT, &prim_vao);
         let resolve_vao = device.create_vao_with_new_instances(&desc::RESOLVE, &prim_vao);
+        let svg_filter_vao = device.create_vao_with_new_instances(&desc::SVG_FILTER, &prim_vao);
         let texture_cache_upload_pbo = device.create_pbo();
 
         let texture_resolver = TextureResolver::new(&mut device);
@@ -2169,6 +2240,7 @@ impl Renderer {
                 gradient_vao,
                 resolve_vao,
                 line_vao,
+                svg_filter_vao,
             },
             transforms_texture,
             prim_header_i_texture,
@@ -2510,6 +2582,11 @@ impl Renderer {
             debug_server::BatchKind::Cache,
             "Horizontal Blur",
             target.horizontal_blurs.len(),
+        );
+        debug_target.add(
+            debug_server::BatchKind::Cache,
+            "SVG Filters",
+            target.svg_filters.iter().map(|(_, batch)| batch.len()).sum(),
         );
 
         for alpha_batch_container in &target.alpha_batch_containers {
@@ -3375,6 +3452,33 @@ impl Renderer {
         );
     }
 
+    fn handle_svg_filters(
+        &mut self,
+        textures: &BatchTextures,
+        svg_filters: &[SvgFilterInstance],
+        projection: &Transform3D<f32>,
+        stats: &mut RendererStats,
+    ) {
+        if svg_filters.is_empty() {
+            return;
+        }
+
+        let _timer = self.gpu_profile.start_timer(GPU_TAG_SVG_FILTER);
+
+        self.shaders.borrow_mut().cs_svg_filter.bind(
+            &mut self.device,
+            &projection,
+            &mut self.renderer_errors
+        );
+
+        self.draw_instanced_batch(
+            &svg_filters,
+            VertexArrayKind::SvgFilter,
+            textures,
+            stats,
+        );
+    }
+
     fn draw_picture_cache_target(
         &mut self,
         target: &PictureCacheTarget,
@@ -3742,6 +3846,15 @@ impl Renderer {
             projection,
             stats,
         );
+
+        for (ref textures, ref filters) in &target.svg_filters {
+            self.handle_svg_filters(
+                textures,
+                filters,
+                projection,
+                stats,
+            );
+        }
 
         for alpha_batch_container in &target.alpha_batch_containers {
             self.draw_alpha_batch_container(
@@ -5114,6 +5227,7 @@ impl Renderer {
         self.device.delete_vao(self.vaos.line_vao);
         self.device.delete_vao(self.vaos.border_vao);
         self.device.delete_vao(self.vaos.scale_vao);
+        self.device.delete_vao(self.vaos.svg_filter_vao);
 
         self.debug.deinit(&mut self.device);
 
@@ -5937,6 +6051,7 @@ fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
         VertexArrayKind::LineDecoration => &vaos.line_vao,
         VertexArrayKind::Gradient => &vaos.gradient_vao,
         VertexArrayKind::Resolve => &vaos.resolve_vao,
+        VertexArrayKind::SvgFilter => &vaos.svg_filter_vao,
     }
 }
 
@@ -5955,6 +6070,7 @@ fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
         VertexArrayKind::LineDecoration => &vaos.line_vao,
         VertexArrayKind::Gradient => &vaos.gradient_vao,
         VertexArrayKind::Resolve => &vaos.resolve_vao,
+        VertexArrayKind::SvgFilter => &vaos.svg_filter_vao,
     }
 }
 #[derive(Clone, Copy, PartialEq)]
