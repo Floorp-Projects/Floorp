@@ -120,6 +120,12 @@ public class SwitchLocaleTest {
     private UiObject frenchGeneralHeading = TestHelper.mDevice.findObject(new UiSelector()
             .text("Général")
             .resourceId("android:id/title"));
+    private UiObject englishMozillaHeading = TestHelper.mDevice.findObject(new UiSelector()
+            .text("Mozilla")
+            .resourceId("android:id/title"));
+    private UiObject showHomeScreenTips = TestHelper.mDevice.findObject(new UiSelector()
+            .className("android.widget.Switch")
+            .instance(0));
 
     @Test
     public void EnglishSystemLocaleTest() throws UiObjectNotFoundException {
@@ -137,6 +143,14 @@ public class SwitchLocaleTest {
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
 
         openSettings();
+
+        /* Disable home screen tips */
+        englishMozillaHeading.waitForExists(waitingTime);
+        englishMozillaHeading.click();
+        showHomeScreenTips.waitForExists(waitingTime);
+        showHomeScreenTips.click();
+
+        TestHelper.pressBackKey();
 
         // Open General Settings
         englishGeneralHeading.waitForExists(waitingTime);
@@ -197,9 +211,22 @@ public class SwitchLocaleTest {
                 .text("Automatic private browsing.\nBrowse. Erase. Repeat."));
         englishTitle.waitForExists(waitingTime);
         Assert.assertTrue(englishTitle.exists());
+
+        openSettings();
+
+        /* Enable home screen tips */
+        englishMozillaHeading.waitForExists(waitingTime);
+        englishMozillaHeading.click();
+        showHomeScreenTips.waitForExists(waitingTime);
+        showHomeScreenTips.click();
+
+        TestHelper.pressBackKey();
+        TestHelper.pressBackKey();
+
         TestHelper.menuButton.perform(click());
         Assert.assertEquals(TestHelper.settingsMenuItem.getText(), "Settings");
         Assert.assertEquals(TestHelper.HelpItem.getText(), "Help");
+
         mDevice.pressBack();
     }
 
