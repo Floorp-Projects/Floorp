@@ -13,7 +13,7 @@ function* testSteps() {
 
   function openDatabase() {
     let uri = Services.io.newURI(url);
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
       uri,
       {}
     );

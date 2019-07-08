@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1429432
   // Add an allow permission for the mochitest origin to test this.
   let script = SpecialPowers.loadChromeScript(function() {
     let {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin("http://mochi.test:8888");
+    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin("http://mochi.test:8888");
     Services.perms.addFromPrincipal(principal, "desktop-notification", Services.perms.ALLOW_ACTION);
     /* global addMessageListener */
     addMessageListener("destroy", function() {

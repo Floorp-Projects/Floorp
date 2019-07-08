@@ -142,7 +142,7 @@ function removePermission(url, permission) {
   let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
     Ci.nsIScriptSecurityManager
   );
-  let principal = ssm.createCodebasePrincipal(uri, {});
+  let principal = ssm.createContentPrincipal(uri, {});
 
   Cc["@mozilla.org/permissionmanager;1"]
     .getService(Ci.nsIPermissionManager)
@@ -156,7 +156,7 @@ function getPermission(url, permission) {
   let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
     Ci.nsIScriptSecurityManager
   );
-  let principal = ssm.createCodebasePrincipal(uri, {});
+  let principal = ssm.createContentPrincipal(uri, {});
 
   return Cc["@mozilla.org/permissionmanager;1"]
     .getService(Ci.nsIPermissionManager)

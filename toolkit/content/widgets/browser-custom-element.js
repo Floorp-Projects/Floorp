@@ -1228,7 +1228,7 @@
         );
         let aboutBlank = Services.io.newURI("about:blank");
         let ssm = Services.scriptSecurityManager;
-        this._contentPrincipal = ssm.getLoadContextCodebasePrincipal(
+        this._contentPrincipal = ssm.getLoadContextContentPrincipal(
           aboutBlank,
           this.loadContext
         );

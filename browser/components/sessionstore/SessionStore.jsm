@@ -5814,10 +5814,10 @@ var SessionStoreInternal = {
           let { frameLoader } = browser;
           if (frameLoader.remoteTab) {
             let attrs = browser.contentPrincipal.originAttributes;
-            let dataPrincipal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+            let dataPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
               origin
             );
-            let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+            let principal = Services.scriptSecurityManager.createContentPrincipal(
               dataPrincipal.URI,
               attrs
             );

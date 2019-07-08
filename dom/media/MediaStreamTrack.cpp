@@ -402,7 +402,7 @@ void MediaStreamTrack::SetPrincipal(nsIPrincipal* aPrincipal) {
       ("MediaStreamTrack %p principal changed to %p. Now: "
        "null=%d, codebase=%d, expanded=%d, system=%d",
        this, mPrincipal.get(), mPrincipal->GetIsNullPrincipal(),
-       mPrincipal->GetIsCodebasePrincipal(),
+       mPrincipal->GetIsContentPrincipal(),
        mPrincipal->GetIsExpandedPrincipal(), mPrincipal->IsSystemPrincipal()));
   for (PrincipalChangeObserver<MediaStreamTrack>* observer :
        mPrincipalChangeObservers) {

@@ -421,7 +421,7 @@ class ScriptLoader final : public nsISupports {
   /**
    * Helper function to determine whether an about: page loads a chrome: URI.
    * Please note that this function only returns true if:
-   *   * the about: page uses a CodeBasePrincipal with scheme about:
+   *   * the about: page uses a ContentPrincipal with scheme about:
    *   * the about: page is not linkable from content
    *     (e.g. the function will return false for about:blank or about:srcdoc)
    */

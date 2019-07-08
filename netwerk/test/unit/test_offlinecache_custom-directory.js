@@ -104,7 +104,7 @@ function run_test() {
     Ci.nsIScriptSecurityManager
   );
   var uri = make_uri("http://localhost:4444");
-  var principal = ssm.createCodebasePrincipal(uri, {});
+  var principal = ssm.createContentPrincipal(uri, {});
 
   if (pm.testPermissionFromPrincipal(principal, "offline-app") != 0) {
     dump(

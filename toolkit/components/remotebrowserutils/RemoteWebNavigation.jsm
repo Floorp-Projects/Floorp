@@ -119,7 +119,7 @@ RemoteWebNavigation.prototype = {
               ? 1
               : 0,
           };
-          principal = Services.scriptSecurityManager.createCodebasePrincipal(
+          principal = Services.scriptSecurityManager.createContentPrincipal(
             uri,
             attrs
           );

@@ -1681,9 +1681,9 @@ bool nsGlobalWindowOuter::ComputeIsSecureContext(Document* aDocument,
     // it doesn't actually matter what we use here, but reusing the document
     // principal's attributes is convenient.
     const OriginAttributes& attrs = principal->OriginAttributesRef();
-    // CreateCodebasePrincipal correctly gets a useful principal for blob: and
+    // CreateContentPrincipal correctly gets a useful principal for blob: and
     // other URI_INHERITS_SECURITY_CONTEXT URIs.
-    principal = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+    principal = BasePrincipal::CreateContentPrincipal(uri, attrs);
     if (NS_WARN_IF(!principal)) {
       return false;
     }
@@ -5973,7 +5973,7 @@ bool nsGlobalWindowOuter::GetPrincipalForPostMessage(
     // Create a nsIPrincipal inheriting the app/browser attributes from the
     // caller.
     providedPrincipal =
-        BasePrincipal::CreateCodebasePrincipal(aTargetOriginURI, attrs);
+        BasePrincipal::CreateContentPrincipal(aTargetOriginURI, attrs);
     if (NS_WARN_IF(!providedPrincipal)) {
       return false;
     }
@@ -7291,7 +7291,7 @@ void nsGlobalWindowOuter::MaybeAllowStorageForOpenedWindow(nsIURI* aURI) {
   if (!doc) {
     return;
   }
-  nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateCodebasePrincipal(
+  nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateContentPrincipal(
       aURI, doc->NodePrincipal()->OriginAttributesRef());
 
   // We don't care when the asynchronous work finishes here.

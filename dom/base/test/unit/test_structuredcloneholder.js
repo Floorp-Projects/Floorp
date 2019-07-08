@@ -3,7 +3,7 @@
 const global = this;
 
 add_task(async function test_structuredCloneHolder() {
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     Services.io.newURI("http://example.com/"),
     {}
   );
@@ -113,7 +113,7 @@ add_task(async function test_structuredCloneHolder() {
 // Test that X-rays passed to an exported function are serialized
 // through their exported wrappers.
 add_task(async function test_structuredCloneHolder_xray() {
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     Services.io.newURI("http://example.com/"),
     {}
   );

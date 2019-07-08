@@ -142,7 +142,7 @@ var SiteDataManager = {
               // An non-persistent-storage site with 0 byte quota usage is redundant for us so skip it.
               continue;
             }
-            let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+            let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
               item.origin
             );
             let uri = principal.URI;
@@ -212,7 +212,7 @@ var SiteDataManager = {
         // A site with 0 byte appcache usage is redundant for us so skip it.
         continue;
       }
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+      let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
         group
       );
       let uri = principal.URI;
@@ -309,7 +309,7 @@ var SiteDataManager = {
         new Promise(resolve => {
           // We are clearing *All* across OAs so need to ensure a principal without suffix here,
           // or the call of `clearStoragesForPrincipal` would fail.
-          principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+          principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
             originNoSuffix
           );
           let request = this._qms.clearStoragesForPrincipal(

@@ -5410,7 +5410,7 @@ nsresult ContentParent::AboutToLoadHttpFtpDocumentForChild(
     return NS_OK;
   }
 
-  if (principal->GetIsCodebasePrincipal()) {
+  if (principal->GetIsContentPrincipal()) {
     nsCOMPtr<nsILocalStorageManager> lsm =
         do_GetService("@mozilla.org/dom/localStorage-manager;1");
     if (NS_WARN_IF(!lsm)) {

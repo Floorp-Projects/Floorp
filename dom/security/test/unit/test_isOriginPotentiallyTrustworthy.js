@@ -48,7 +48,7 @@ add_task(async function test_isOriginPotentiallyTrustworthy() {
     ["http://1234567890abcdef.onion/", false],
   ]) {
     let uri = NetUtil.newURI(uriSpec);
-    let principal = gScriptSecurityManager.createCodebasePrincipal(uri, {});
+    let principal = gScriptSecurityManager.createContentPrincipal(uri, {});
     Assert.equal(
       gContentSecurityManager.isOriginPotentiallyTrustworthy(principal),
       expectedResult
@@ -58,7 +58,7 @@ add_task(async function test_isOriginPotentiallyTrustworthy() {
   // whitelisted, see bug 1382359.
   Services.prefs.setBoolPref("dom.securecontext.whitelist_onions", true);
   let uri = NetUtil.newURI("http://1234567890abcdef.onion/");
-  let principal = gScriptSecurityManager.createCodebasePrincipal(uri, {});
+  let principal = gScriptSecurityManager.createContentPrincipal(uri, {});
   Assert.equal(
     gContentSecurityManager.isOriginPotentiallyTrustworthy(principal),
     true

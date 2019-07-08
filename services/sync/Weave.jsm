@@ -169,7 +169,7 @@ AboutWeaveLog.prototype = {
     // view. That way links to files can be opened. make sure we use the correct
     // origin attributes when creating the principal for accessing the
     // about:sync-log data.
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
       uri,
       aLoadInfo.originAttributes
     );

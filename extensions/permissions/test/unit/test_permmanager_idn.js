@@ -6,7 +6,7 @@ function getPrincipalFromDomain(aDomain) {
     Ci.nsIScriptSecurityManager
   );
   let uri = NetUtil.newURI("http://" + aDomain);
-  return ssm.createCodebasePrincipal(uri, {});
+  return ssm.createContentPrincipal(uri, {});
 }
 
 function run_test() {
