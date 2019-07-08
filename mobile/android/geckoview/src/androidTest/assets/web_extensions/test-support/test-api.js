@@ -100,6 +100,10 @@ this.test = class extends ExtensionAPI {
             );
           });
         },
+
+        async getRequestedLocales() {
+          return Services.locale.requestedLocales;
+        },
       },
     };
   }

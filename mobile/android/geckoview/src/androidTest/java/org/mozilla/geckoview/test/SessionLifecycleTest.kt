@@ -11,7 +11,6 @@ import org.mozilla.geckoview.GeckoView
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.test.util.UiThreadUtils
 import org.junit.Ignore
@@ -241,7 +240,6 @@ class SessionLifecycleTest : BaseSessionTest() {
                    onLocationCount, equalTo(1))
     }
 
-    @WithDevToolsAPI
     @Test fun readFromParcel_focusedInput() {
         // When an input is focused, make sure SessionTextInput is still active after transferring.
         mainSession.loadTestPath(INPUTS_PATH)

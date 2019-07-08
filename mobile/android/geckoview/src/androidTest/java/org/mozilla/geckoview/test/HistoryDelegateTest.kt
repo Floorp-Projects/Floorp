@@ -7,7 +7,6 @@ package org.mozilla.geckoview.test
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 
 
 import android.support.test.filters.MediumTest
@@ -27,7 +26,6 @@ class HistoryDelegateTest : BaseSessionTest() {
         const val VISITED_COLOR = "rgb(255, 0, 0)"
     }
 
-    @WithDevToolsAPI
     @Test fun getVisited() {
         val testUri = createTestUrl(LINKS_HTML_PATH)
         sessionRule.delegateDuringNextWait(object : GeckoSession.HistoryDelegate {

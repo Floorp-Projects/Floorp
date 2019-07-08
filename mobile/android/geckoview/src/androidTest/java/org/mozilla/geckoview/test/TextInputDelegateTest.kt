@@ -8,7 +8,6 @@ import android.os.SystemClock
 import android.support.test.InstrumentationRegistry
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
@@ -31,7 +30,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 @MediumTest
 @RunWith(Parameterized::class)
-@WithDevToolsAPI
 class TextInputDelegateTest : BaseSessionTest() {
     // "parameters" needs to be a static field, so it has to be in a companion object.
     companion object {
@@ -78,7 +76,7 @@ class TextInputDelegateTest : BaseSessionTest() {
     }
 
     private fun processParentEvents() {
-        sessionRule.waitForChromeJS("")
+        sessionRule.requestedLocales
     }
 
     private fun processChildEvents() {
@@ -86,13 +84,13 @@ class TextInputDelegateTest : BaseSessionTest() {
     }
 
     private fun setComposingText(ic: InputConnection, text: CharSequence, newCursorPosition: Int) {
-        val promise = mainSession.evaluateJS(
+        val promise = mainSession.evaluatePromiseJS(
                 when (id) {
                     "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('compositionupdate', r, { once: true }))"
                     else -> "new Promise(r => document.querySelector('$id').addEventListener('compositionupdate', r, { once: true }))"
                 })
         ic.setComposingText(text, newCursorPosition)
-        promise.asJSPromise().value
+        promise.value
     }
 
     private fun pressKey(keyCode: Int) {

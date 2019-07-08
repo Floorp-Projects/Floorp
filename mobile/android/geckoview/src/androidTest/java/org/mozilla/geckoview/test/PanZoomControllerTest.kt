@@ -1,7 +1,6 @@
 package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.ScreenLength
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 
 import android.support.test.filters.MediumTest
@@ -38,7 +37,7 @@ class PanZoomControllerTest : BaseSessionTest() {
              }
              window.requestAnimationFrame(step);
            });
-        """.trimIndent()).asJSPromise().value
+        """.trimIndent())
     }
 
     private fun waitForHorizontalScroll(offset: Double, timeout: Double) {
@@ -71,28 +70,24 @@ class PanZoomControllerTest : BaseSessionTest() {
         assertThat("scrollBy should have scrolled along x axis one viewport", scrollX, closeTo(vw, errorEpsilon))
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 100, height = 100)
     @Test
     fun scrollByHorizontalSmooth() {
         scrollByHorizontal(PanZoomController.SCROLL_BEHAVIOR_SMOOTH)
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 100, height = 100)
     @Test
     fun scrollByHorizontalAuto() {
         scrollByHorizontal(PanZoomController.SCROLL_BEHAVIOR_AUTO)
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 100, height = 100)
     @Test
     fun scrollByVerticalSmooth() {
         scrollByVertical(PanZoomController.SCROLL_BEHAVIOR_SMOOTH)
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 100, height = 100)
     @Test
     fun scrollByVerticalAuto() {
@@ -111,14 +106,12 @@ class PanZoomControllerTest : BaseSessionTest() {
         assertThat("scrollBy should have scrolled along y axis one viewport", scrollY, closeTo(vh * 2.0, errorEpsilon))
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 100, height = 100)
     @Test
     fun scrollByVerticalTwiceSmooth() {
         scrollByVerticalTwice(PanZoomController.SCROLL_BEHAVIOR_SMOOTH)
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 100, height = 100)
     @Test
     fun scrollByVerticalTwiceAuto() {
@@ -146,28 +139,24 @@ class PanZoomControllerTest : BaseSessionTest() {
         assertThat("scrollBy should have scrolled along x axis one viewport", scrollX, closeTo(vw, errorEpsilon))
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 100, height = 100)
     @Test
     fun scrollToHorizontalSmooth() {
         scrollToHorizontal(PanZoomController.SCROLL_BEHAVIOR_SMOOTH)
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 100, height = 100)
     @Test
     fun scrollToHorizontalAuto() {
         scrollToHorizontal(PanZoomController.SCROLL_BEHAVIOR_AUTO)
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 100, height = 100)
     @Test
     fun scrollToVerticalSmooth() {
         scrollToVertical(PanZoomController.SCROLL_BEHAVIOR_SMOOTH)
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 100, height = 100)
     @Test
     fun scrollToVerticalAuto() {
@@ -186,14 +175,12 @@ class PanZoomControllerTest : BaseSessionTest() {
         assertThat("scrollBy should have scrolled along y axis one viewport", scrollY, closeTo(vh, errorEpsilon))
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 100, height = 100)
     @Test
     fun scrollToVerticalTwiceSmooth() {
         scrollToVerticalTwice(PanZoomController.SCROLL_BEHAVIOR_SMOOTH)
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 100, height = 100)
     @Test
     fun scrollToVerticalTwiceAuto() {

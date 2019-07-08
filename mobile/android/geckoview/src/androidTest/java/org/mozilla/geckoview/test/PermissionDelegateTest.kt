@@ -7,7 +7,6 @@ package org.mozilla.geckoview.test
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.RejectedPromiseException
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.util.Callbacks
 
 import android.Manifest
@@ -40,7 +39,6 @@ class PermissionDelegateTest : BaseSessionTest() {
         return "generic".equals(Build.DEVICE) || Build.DEVICE.startsWith("generic_")
     }
 
-    @WithDevToolsAPI
     @Test fun media() {
         assertInAutomationThat("Should have camera permission",
                 hasPermission(Manifest.permission.CAMERA), equalTo(true))
@@ -48,10 +46,6 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertInAutomationThat("Should have microphone permission",
                 hasPermission(Manifest.permission.RECORD_AUDIO),
                 equalTo(true))
-
-        // Media test is relatively resource-intensive. Clean up resources from previous tests
-        // first to improve the stability of this test.
-        sessionRule.forceGarbageCollection()
 
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
@@ -149,7 +143,6 @@ class PermissionDelegateTest : BaseSessionTest() {
         }
     }
 
-    @WithDevToolsAPI
     @Test fun geolocation() {
         assertInAutomationThat("Should have location permission",
                 hasPermission(Manifest.permission.ACCESS_FINE_LOCATION),
@@ -196,7 +189,6 @@ class PermissionDelegateTest : BaseSessionTest() {
         }
     }
 
-    @WithDevToolsAPI
     @Test fun geolocation_reject() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
@@ -225,7 +217,6 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat("Request should fail", errorCode as Double, equalTo(1.0))
     }
 
-    @WithDevToolsAPI
     @Test fun notification() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
@@ -248,7 +239,6 @@ class PermissionDelegateTest : BaseSessionTest() {
                 result as String, equalTo("granted"))
     }
 
-    @WithDevToolsAPI
     @Test fun notification_reject() {
         //Disable for frequent failures Bug 1542525
         assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
@@ -270,7 +260,6 @@ class PermissionDelegateTest : BaseSessionTest() {
                 result as String, equalTo("default"))
     }
 
-    // @WithDevToolsAPI
     // @Test fun persistentStorage() {
     //     mainSession.loadTestPath(HELLO_HTML_PATH)
     //     mainSession.waitForPageStop()

@@ -9,7 +9,6 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.*
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
@@ -31,7 +30,6 @@ import org.junit.runners.Parameterized.Parameters
 
 @MediumTest
 @RunWith(Parameterized::class)
-@WithDevToolsAPI
 @WithDisplay(width = 100, height = 100)
 class SelectionActionDelegateTest : BaseSessionTest() {
     enum class ContentType {
