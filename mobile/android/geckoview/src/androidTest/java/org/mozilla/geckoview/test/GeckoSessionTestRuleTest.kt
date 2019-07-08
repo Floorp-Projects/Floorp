@@ -19,9 +19,7 @@ import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.Assert.fail
 import org.junit.Assume.assumeThat
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -1251,7 +1249,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.session.waitForPageStop()
     }
 
-    @WithDevToolsAPI
     @Test fun evaluateJS() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH);
         sessionRule.session.waitForPageStop();
@@ -1281,7 +1278,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                    equalTo("BODY"))
     }
 
-    @WithDevToolsAPI
     @Test fun evaluateJS_windowObject() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.waitForPageStop()
@@ -1303,12 +1299,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         newSession.loadTestPath(HELLO_HTML_PATH)
         newSession.waitForPageStop()
 
-        val result = newSession.evaluateJS("this.foo");
+        val result = newSession.evaluateJS("this.foo")
         assertThat("New session should have separate JS context",
                    result, nullValue())
     }
 
-    @WithDevToolsAPI
     @Test fun evaluateJS_supportPromises() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.waitForPageStop()
@@ -1327,7 +1322,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                 promise.value as String, equalTo("bar"))
     }
 
-    @WithDevToolsAPI
     @Test(expected = RejectedPromiseException::class)
     fun evaluateJS_throwOnRejectedPromise() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
@@ -1335,7 +1329,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.session.evaluatePromiseJS("Promise.reject('foo')").value
     }
 
-    @WithDevToolsAPI
     @Test fun evaluateJS_notBlockMainThread() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.waitForPageStop()
@@ -1346,7 +1339,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                    equalTo("foo"))
     }
 
-    @WithDevToolsAPI
     @TimeoutMillis(1000)
     @Test(expected = UiThreadUtils.TimeoutException::class)
     fun evaluateJS_canTimeout() {
@@ -1382,30 +1374,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.session.evaluateJS("ChromeUtils")
     }
 
-    @WithDevToolsAPI
-    @Test fun evaluateChromeJS() {
-        assertThat("Should be able to access ChromeUtils",
-                   sessionRule.evaluateChromeJS("ChromeUtils"), notNullValue())
-
-        // We rely on Preferences.jsm for pref support.
-        assertThat("Should be able to access Preferences.jsm",
-                   sessionRule.evaluateChromeJS("""
-                       ChromeUtils.import('resource://gre/modules/Preferences.jsm',
-                                          {}).Preferences"""), notNullValue())
-    }
-
-    @Test(expected = AssertionError::class)
-    fun evaluateChromeJS_throwOnNotWithDevTools() {
-        sessionRule.evaluateChromeJS("0")
-    }
-
-    @WithDevToolsAPI
     @Test fun getPrefs_undefinedPrefReturnsNull() {
         assertThat("Undefined pref should have null value",
                    sessionRule.getPrefs("invalid.pref")[0], equalTo(JSONObject.NULL))
     }
 
-    @WithDevToolsAPI
     @Test fun setPrefsUntilTestEnd() {
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "test.pref.bool" to true,
@@ -1439,7 +1412,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         assertThat("New prefs should be set", prefs[3] as String, equalTo("baz"))
     }
 
-    @WithDevToolsAPI
     @Test fun setPrefsDuringNextWait() {
         sessionRule.setPrefsDuringNextWait(mapOf(
                 "test.pref.bool" to true,
@@ -1468,7 +1440,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         assertThat("Prefs should be cleared after wait", prefs[2], equalTo(JSONObject.NULL))
     }
 
-    @WithDevToolsAPI
     @Test fun setPrefsDuringNextWait_hasPrecedence() {
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "test.pref.int" to 1,
@@ -1500,7 +1471,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         assertThat("Overriden prefs should be restored", prefs[2], equalTo(JSONObject.NULL))
     }
 
-    @WithDevToolsAPI
     @Test fun waitForJS() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
@@ -1517,7 +1487,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         })
     }
 
-    @WithDevToolsAPI
     @Test fun waitForJS_resolvePromise() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
@@ -1526,7 +1495,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                    equalTo("foo"))
     }
 
-    @WithDevToolsAPI
     @Test fun waitForJS_delegateDuringWait() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
@@ -1546,51 +1514,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         // The delegate set through delegateDuringNextWait
         // should have been cleared after the first wait.
         assertThat("Delegate should only run once", count, equalTo(1))
-    }
-
-    @WithDevToolsAPI
-    @Test fun waitForChromeJS() {
-        assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
-        sessionRule.session.reload()
-        sessionRule.session.waitForPageStop()
-
-        assertThat("waitForChromeJS should return correct result",
-                   sessionRule.waitForChromeJS("1+1") as Double, equalTo(2.0))
-
-        // Because waitForChromeJS() counts as a wait event,
-        // the previous onPageStop call is not included.
-        sessionRule.session.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count = 0)
-            override fun onPageStop(session: GeckoSession, success: Boolean) {
-            }
-        })
-    }
-
-    @WithDevToolsAPI
-    @Test fun waitForChromeJS_rejectionCountsAsWait() {
-        sessionRule.session.reload()
-        sessionRule.session.waitForPageStop()
-
-        try {
-            sessionRule.waitForChromeJS("Promise.reject('foo')")
-            fail("Rejected promise should have thrown")
-        } catch (e: RejectedPromiseException) {
-            // Ignore
-        }
-
-        // A rejected Promise throws, but the wait should still count as a wait.
-        sessionRule.session.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count = 0)
-            override fun onPageStop(session: GeckoSession, success: Boolean) {
-            }
-        })
-    }
-
-    @WithDevToolsAPI
-    @Test fun forceGarbageCollection() {
-        sessionRule.forceGarbageCollection()
-        sessionRule.session.reload()
-        sessionRule.session.waitForPageStop()
     }
 
     private interface TestDelegate {

@@ -18,7 +18,6 @@ import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
@@ -422,7 +421,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 userAgent, equalTo(GeckoSession.getDefaultUserAgent()))
     }
 
-    @WithDevToolsAPI
     @Test fun desktopMode() {
         sessionRule.session.loadUri("https://example.com")
         sessionRule.waitForPageStop()
@@ -481,7 +479,6 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     }
 
-    @WithDevToolsAPI
     @Test fun uaOverride() {
         sessionRule.session.loadUri("https://example.com")
         sessionRule.waitForPageStop()
@@ -552,7 +549,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 userAgent, containsString(vrSubStr))
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 600, height = 200)
     @Test fun viewportMode() {
         sessionRule.session.loadTestPath(VIEWPORT_PATH)
@@ -961,7 +957,6 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
-    @WithDevToolsAPI
     @Test fun onNewSession_calledForWindowOpen() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
@@ -992,7 +987,6 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
-    @WithDevToolsAPI
     @Test fun onNewSession_calledForTargetBlankLink() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
@@ -1038,7 +1032,6 @@ class NavigationDelegateTest : BaseSessionTest() {
         return newSession
     }
 
-    @WithDevToolsAPI
     @Test fun onNewSession_childShouldLoad() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
@@ -1066,7 +1059,6 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
-    @WithDevToolsAPI
     @Test fun onNewSession_setWindowOpener() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
@@ -1084,7 +1076,6 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Setting(key = Setting.Key.USE_MULTIPROCESS, value = "false")
-    @WithDevToolsAPI
     @Test fun onNewSession_openRemoteFromNonRemote() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
@@ -1110,7 +1101,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                    equalTo(true))
     }
 
-    @WithDevToolsAPI
     @Test fun onNewSession_supportNoOpener() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
@@ -1127,7 +1117,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                    equalTo(JSONObject.NULL))
     }
 
-    @WithDevToolsAPI
     @Test fun onNewSession_notCalledForHandledLoads() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
@@ -1173,7 +1162,6 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
-    @WithDevToolsAPI
     @Test fun loadUriReferrer() {
         val uri = "https://example.com"
         val referrer = "https://foo.org/"
@@ -1186,7 +1174,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                    equalTo(referrer))
     }
 
-    @WithDevToolsAPI
     @Test(expected = GeckoResult.UncaughtException::class)
     fun onNewSession_doesNotAllowOpened() {
         // Disable popup blocker.

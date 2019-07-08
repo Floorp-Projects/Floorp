@@ -16,7 +16,6 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
@@ -736,14 +735,12 @@ class ContentDelegateTest : BaseSessionTest() {
         })
     }
 
-    @WithDevToolsAPI
     @Test fun fullscreen() {
         goFullscreen()
         mainSession.evaluateJS("document.exitFullscreen(); true")
         waitForFullscreenExit()
     }
 
-    @WithDevToolsAPI
     @Test fun sessionExitFullscreen() {
         goFullscreen()
         mainSession.exitFullScreen()

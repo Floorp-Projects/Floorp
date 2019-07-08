@@ -45,6 +45,13 @@ port.onMessage.addListener(async message => {
         sendResponse(id, browser.test.getLinkColor(uri, selector));
       }
       break;
+
+    case "GetRequestedLocales":
+      {
+        const { id } = message;
+        sendResponse(id, browser.test.getRequestedLocales());
+      }
+      break;
   }
 });
 

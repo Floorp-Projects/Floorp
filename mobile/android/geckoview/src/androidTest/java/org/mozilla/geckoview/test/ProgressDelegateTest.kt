@@ -6,7 +6,6 @@ package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
@@ -308,7 +307,6 @@ class ProgressDelegateTest : BaseSessionTest() {
         waitForScroll(offset, timeout, "pageTop")
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 400, height = 400)
     @Test fun saveAndRestoreState() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.visualviewport.enabled" to true))
@@ -362,7 +360,6 @@ class ProgressDelegateTest : BaseSessionTest() {
 
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 400, height = 400)
     @Test fun flushSessionState() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.visualviewport.enabled" to true))
