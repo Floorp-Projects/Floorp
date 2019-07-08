@@ -13,6 +13,16 @@
   "background": {
     "scripts": ["background.js"]
   },
+  "experiment_apis": {
+    "test": {
+      "schema": "test-schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "test-api.js",
+        "paths": [["test"]]
+      }
+    }
+  },
   "permissions": [
     "geckoViewAddons",
     "nativeMessaging"

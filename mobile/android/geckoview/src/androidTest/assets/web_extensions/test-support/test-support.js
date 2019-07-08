@@ -30,8 +30,8 @@ window.addEventListener("pageshow", () => {
   function sendSyncResponse(id, response, exception) {
     port.postMessage({
       id,
-      evalResponse: JSON.stringify(response),
-      evalException: exception && exception.toString(),
+      response: JSON.stringify(response),
+      exception: exception && exception.toString(),
     });
   }
 });

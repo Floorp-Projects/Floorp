@@ -5,9 +5,11 @@
 
 package org.mozilla.geckoview.test.rule;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONTokener;
 import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.GeckoDisplay;
@@ -610,7 +612,7 @@ public class GeckoSessionTestRule implements TestRule {
         private final Map<Pair<GeckoSession, Method>, MethodCall> mDelegates = new HashMap<>();
         private final List<ExternalDelegate<?>> mExternalDelegates = new ArrayList<>();
         private int mOrder;
-        private String mOldPrefs;
+        private JSONObject mOldPrefs;
 
         public void delegate(final @Nullable GeckoSession session,
                              final @NonNull Object callback) {
@@ -676,48 +678,28 @@ public class GeckoSessionTestRule implements TestRule {
 
         /** Generate a JS function to set new prefs and return a set of saved prefs. */
         public void setPrefs(final @NonNull Map<String, ?> prefs) {
-            final String existingPrefs;
-            if (mOldPrefs == null) {
-                existingPrefs = "{}";
-            } else {
-                existingPrefs = String.format("JSON.parse(%s)", JSONObject.quote(mOldPrefs));
-            }
+            try {
+                final JSONObject existingPrefs = mOldPrefs != null ? mOldPrefs : new JSONObject();
 
-            final StringBuilder newPrefs = new StringBuilder();
-            for (final Map.Entry<String, ?> pref : prefs.entrySet()) {
-                final String name = JSONObject.quote(pref.getKey());
-                final Object value = pref.getValue();
-                final String jsValue;
-                if (value instanceof Boolean) {
-                    jsValue = value.toString();
-                } else if (value instanceof Number) {
-                    jsValue = String.valueOf(((Number) value).intValue());
-                } else if (value instanceof CharSequence) {
-                    jsValue = JSONObject.quote(value.toString());
-                } else {
-                    throw new IllegalArgumentException("Unsupported pref value: " + value);
+                final JSONObject newPrefs = new JSONObject();
+                for (final Map.Entry<String, ?> pref : prefs.entrySet()) {
+                    final Object value = pref.getValue();
+                    if (value instanceof Boolean || value instanceof Number ||
+                            value instanceof CharSequence) {
+                        newPrefs.put(pref.getKey(), value);
+                    } else {
+                        throw new IllegalArgumentException("Unsupported pref value: " + value);
+                    }
                 }
-                newPrefs.append(String.format("%s: %s,", name, jsValue));
+
+                final JSONObject args = new JSONObject();
+                args.put("oldPrefs", existingPrefs);
+                args.put("newPrefs", newPrefs);
+
+                mOldPrefs = (JSONObject) webExtensionApiCall("SetPrefs", args);
+            } catch (JSONException ex) {
+                throw new RuntimeException(ex);
             }
-
-            final String prefSetter = String.format(
-                    "(function() {" +
-                    "  const prefs = ChromeUtils.import('resource://gre/modules/Preferences.jsm'," +
-                    "                                   {}).Preferences;" +
-                    "  const oldPrefs = %1$s;" +
-                    "  const newPrefs = {%2$s};" +
-                    "  Object.assign(oldPrefs," +
-                    "                ...Object.keys(newPrefs)" + // Save old prefs.
-                    "                         .filter(key => !(key in oldPrefs))" +
-                    "                         .map(key => ({[key]: prefs.get(key, null)})));" +
-                    "  prefs.set(newPrefs);" + // Set new prefs.
-                    "  return JSON.stringify(oldPrefs);" +
-                    "})()", existingPrefs, newPrefs.toString());
-
-            final Object oldPrefs = evaluateChromeJS(prefSetter);
-            assertThat("Old prefs should be JSON string",
-                       oldPrefs, instanceOf(String.class));
-            mOldPrefs = (String) oldPrefs;
         }
 
         /** Generate a JS function to set new prefs and reset a set of saved prefs. */
@@ -726,20 +708,15 @@ public class GeckoSessionTestRule implements TestRule {
                 return;
             }
 
-            evaluateChromeJS(String.format(
-                    "(function() {" +
-                    "  const prefs = ChromeUtils.import('resource://gre/modules/Preferences.jsm'," +
-                    "                                   {}).Preferences;" +
-                    "  const oldPrefs = JSON.parse(%1$s);" +
-                    "  for (let [name, value] of Object.entries(oldPrefs)) {" +
-                    "    if (value === null) {" +
-                    "      prefs.reset(name);" +
-                    "    } else {" +
-                    "      prefs.set(name, value);" +
-                    "    }" +
-                    "  }" +
-                    "})()", JSONObject.quote(mOldPrefs)));
-            mOldPrefs = null;
+            try {
+                final JSONObject args = new JSONObject();
+                args.put("oldPrefs", mOldPrefs);
+                webExtensionApiCall("RestorePrefs", args);
+
+                mOldPrefs = null;
+            } catch (JSONException ex) {
+                throw new RuntimeException(ex);
+            }
         }
 
         public void clear() {
@@ -1392,6 +1369,8 @@ public class GeckoSessionTestRule implements TestRule {
                     try {
                         httpBin.start();
 
+                        RuntimeCreator.setPortDelegate(mPortDelegate);
+
                         getRuntime();
 
                         long timeout = env.getDefaultTimeoutMillis() + System.currentTimeMillis();
@@ -1931,14 +1910,14 @@ public class GeckoSessionTestRule implements TestRule {
                 id = response.getString("id");
                 EvalJSResult result = new EvalJSResult();
 
-                final Object exception = response.get("evalException");
+                final Object exception = response.get("exception");
                 if (exception != JSONObject.NULL) {
                     result.exception = exception;
                 }
 
-                final Object evalResponse = response.get("evalResponse");
-                if (evalResponse != JSONObject.NULL){
-                    result.value = evalResponse;
+                final Object value = response.get("response");
+                if (value != JSONObject.NULL){
+                    result.value = value;
                 }
 
                 mPendingMessages.put(id, result);
@@ -1998,8 +1977,13 @@ public class GeckoSessionTestRule implements TestRule {
 
         mPorts.get(session).postMessage(message);
 
+        return waitForMessage(id);
+    }
+
+    private Object waitForMessage(String id) {
         UiThreadUtils.waitForCondition(() -> mPendingMessages.containsKey(id),
                 env.getDefaultTimeoutMillis());
+
         final EvalJSResult result = mPendingMessages.get(id);
         mPendingMessages.remove(id);
 
@@ -2237,20 +2221,31 @@ public class GeckoSessionTestRule implements TestRule {
      * @param prefs List of pref names.
      * @return Pref values as a list of values.
      */
-    public List<?> getPrefs(final @NonNull String... prefs) {
-        assertThat("Must enable RDP using @WithDevToolsAPI",
-                   mWithDevTools, equalTo(true));
+    public JSONArray getPrefs(final @NonNull String... prefs) {
+        try {
+            final JSONObject args = new JSONObject();
+            args.put("prefs", new JSONArray(Arrays.asList(prefs)));
 
-        final StringBuilder prefsList = new StringBuilder();
-        for (final String pref : prefs) {
-            prefsList.append(JSONObject.quote(pref)).append(',');
+            return (JSONArray) webExtensionApiCall("GetPrefs", args);
+        } catch (JSONException ex) {
+            throw new RuntimeException(ex);
         }
+    }
 
-        return (List<?>) evaluateChromeJS(String.format(
-                "(function() {" +
-                "  return ChromeUtils.import('resource://gre/modules/Preferences.jsm', {})" +
-                "                    .Preferences.get([%1$s]);" +
-                "})()", prefsList.toString()));
+    private Object webExtensionApiCall(final String apiName, JSONObject args) throws JSONException {
+        // Ensure background script is connected
+        UiThreadUtils.waitForCondition(() -> RuntimeCreator.backgroundPort() != null,
+                env.getDefaultTimeoutMillis());
+
+        final String id = UUID.randomUUID().toString();
+
+        final JSONObject message = new JSONObject();
+        message.put("id", id);
+        message.put("type", apiName);
+        message.put("args", args);
+
+        RuntimeCreator.backgroundPort().postMessage(message);
+        return waitForMessage(id);
     }
 
     /**
@@ -2262,8 +2257,6 @@ public class GeckoSessionTestRule implements TestRule {
      * @see #setPrefsDuringNextWait
      */
     public void setPrefsUntilTestEnd(final @NonNull Map<String, ?> prefs) {
-        assertThat("Must enable RDP using @WithDevToolsAPI",
-                   mWithDevTools, equalTo(true));
         mTestScopeDelegates.setPrefs(prefs);
     }
 
@@ -2276,8 +2269,6 @@ public class GeckoSessionTestRule implements TestRule {
      * @see #setPrefsUntilTestEnd
      */
     public void setPrefsDuringNextWait(final @NonNull Map<String, ?> prefs) {
-        assertThat("Must enable RDP using @WithDevToolsAPI",
-                   mWithDevTools, equalTo(true));
         mWaitScopeDelegates.setPrefs(prefs);
     }
 
