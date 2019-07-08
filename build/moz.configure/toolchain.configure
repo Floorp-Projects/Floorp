@@ -420,11 +420,9 @@ def get_compiler_info(compiler, language):
     # the feature check, so that an unsupported version of clang would have
     # no version number.
     check = dedent('''\
-        #if defined(_MSC_VER)
-        #if defined(__clang__)
+        #if defined(_MSC_VER) && defined(__clang__) && defined(_MT)
         %COMPILER "clang-cl"
         %VERSION __clang_major__.__clang_minor__.__clang_patchlevel__
-        #endif
         #elif defined(__clang__)
         %COMPILER "clang"
         #  if __has_attribute(diagnose_if)
@@ -582,8 +580,7 @@ def check_compiler(compiler, language, target):
         elif (info.cpu, target.cpu) in same_arch:
             flags.append('-m64')
         elif info.type == 'clang-cl' and target.cpu == 'aarch64':
-            # clang-cl uses a different name for this target
-            flags.append('--target=aarch64-windows-msvc')
+            flags.append('--target=%s' % target.toolchain)
         elif info.type == 'clang':
             flags.append('--target=%s' % target.toolchain)
 
