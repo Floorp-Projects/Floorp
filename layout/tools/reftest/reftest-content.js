@@ -532,7 +532,11 @@ function FlushRendering(aFlushMode) {
         }
 
         for (var i = 0; i < win.frames.length; ++i) {
-            flushWindow(win.frames[i]);
+            try {
+                flushWindow(win.frames[i]);
+            } catch (e) {
+                Cu.reportError(e);
+            }
         }
     }
 
@@ -541,7 +545,6 @@ function FlushRendering(aFlushMode) {
     if (anyPendingPaintsGeneratedInDescendants &&
         !windowUtils().isMozAfterPaintPending) {
         LogWarning("Internal error: descendant frame generated a MozAfterPaint event, but the root document doesn't have one!");
-
     }
 }
 

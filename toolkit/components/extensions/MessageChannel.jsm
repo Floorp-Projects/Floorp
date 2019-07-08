@@ -404,7 +404,7 @@ class ResponseManager extends FilteringMessageManager {
    */
   removeHandler(messageName, handler) {
     if (DEBUG && this.handlers.get(messageName) !== handler) {
-      throw new Error(
+      Cu.reportError(
         `Attempting to remove unexpected response handler for ${messageName}`
       );
     }

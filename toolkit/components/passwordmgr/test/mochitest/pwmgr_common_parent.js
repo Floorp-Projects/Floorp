@@ -123,6 +123,12 @@ function onPrompt(subject, topic, data) {
 Services.obs.addObserver(onPrompt, "passwordmgr-prompt-change");
 Services.obs.addObserver(onPrompt, "passwordmgr-prompt-save");
 
+addMessageListener("cleanup", () => {
+  Services.obs.removeObserver(onStorageChanged, "passwordmgr-storage-changed");
+  Services.obs.removeObserver(onPrompt, "passwordmgr-prompt-change");
+  Services.obs.removeObserver(onPrompt, "passwordmgr-prompt-save");
+});
+
 // Begin message listeners
 
 addMessageListener(
@@ -212,9 +218,14 @@ addMessageListener("setMasterPassword", ({ enable }) => {
   }
 });
 
-Services.mm.addMessageListener(
-  "PasswordManager:onFormSubmit",
-  function onFormSubmit(message) {
-    sendAsyncMessage("formSubmissionProcessed", message.data, message.objects);
-  }
-);
+function onFormSubmit(message) {
+  sendAsyncMessage("formSubmissionProcessed", message.data, message.objects);
+}
+
+Services.mm.addMessageListener("PasswordManager:onFormSubmit", onFormSubmit);
+addMessageListener("cleanup", () => {
+  Services.mm.removeMessageListener(
+    "PasswordManager:onFormSubmit",
+    onFormSubmit
+  );
+});
