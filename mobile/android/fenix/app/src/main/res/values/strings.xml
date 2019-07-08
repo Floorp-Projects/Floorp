@@ -212,8 +212,6 @@
     <string name="preferences_sync_pair">Scan pairing code in desktop Firefox</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Sign in</string>
-    <!-- Preference for account creation -->
-    <string name="preferences_sync_create_account">Create an account</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Sign in to reconnect</string>
     <!-- Preference for removing FxA account -->

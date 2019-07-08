@@ -51,12 +51,9 @@ class TurnOnSyncFragment : PreferenceFragmentCompat(), AccountObserver {
 
         val preferenceSignIn =
             findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_sign_in))
-        val preferenceNewAccount =
-            findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_create_account))
         val preferencePairSignIn =
             findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_pair))
         preferenceSignIn?.onPreferenceClickListener = getClickListenerForSignIn()
-        preferenceNewAccount?.onPreferenceClickListener = getClickListenerForCreateAccount()
         preferencePairSignIn?.onPreferenceClickListener = getClickListenerForPairing()
         preferencePairSignIn?.isVisible = context?.hasCamera() ?: true
 
@@ -75,15 +72,6 @@ class TurnOnSyncFragment : PreferenceFragmentCompat(), AccountObserver {
             // We could auto-close this tab once we get to the end of the authentication process?
             // Via an interceptor, perhaps.
             requireComponents.analytics.metrics.track(Event.SyncAuthSignIn)
-            true
-        }
-    }
-
-    private fun getClickListenerForCreateAccount(): Preference.OnPreferenceClickListener {
-        // Currently the same as sign in, as FxA handles this, however we want to emit a different telemetry event
-        return Preference.OnPreferenceClickListener {
-            requireComponents.services.accountsAuthFeature.beginAuthentication(requireContext())
-            requireComponents.analytics.metrics.track(Event.SyncAuthCreateAccount)
             true
         }
     }
