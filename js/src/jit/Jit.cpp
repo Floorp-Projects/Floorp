@@ -25,7 +25,7 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
   MOZ_ASSERT(code);
   MOZ_ASSERT(code != cx->runtime()->jitRuntime()->interpreterStub().value);
 
-  MOZ_ASSERT(IsBaselineEnabled(cx));
+  MOZ_ASSERT(IsBaselineInterpreterOrJitEnabled(cx));
 
   if (!CheckRecursionLimit(cx)) {
     return EnterJitStatus::Error;
@@ -175,17 +175,18 @@ EnterJitStatus js::jit::MaybeEnterJit(JSContext* cx, RunState& state) {
         code = script->jitCodeRaw();
         break;
       }
+    }
 
-      if (JitOptions.baselineInterpreter) {
-        jit::MethodStatus status =
-            jit::CanEnterBaselineMethod<BaselineTier::Interpreter>(cx, state);
-        if (status == jit::Method_Error) {
-          return EnterJitStatus::Error;
-        }
-        if (status == jit::Method_Compiled) {
-          code = script->jitCodeRaw();
-          break;
-        }
+    // Try to enter the Baseline Interpreter.
+    if (JitOptions.baselineInterpreter) {
+      jit::MethodStatus status =
+          jit::CanEnterBaselineMethod<BaselineTier::Interpreter>(cx, state);
+      if (status == jit::Method_Error) {
+        return EnterJitStatus::Error;
+      }
+      if (status == jit::Method_Compiled) {
+        code = script->jitCodeRaw();
+        break;
       }
     }
 
