@@ -71,64 +71,21 @@ class HistoryDelegateTest : BaseSessionTest() {
         sessionRule.session.waitUntilCalled(GeckoSession.HistoryDelegate::class,
                                             "onVisited", "getVisited")
 
-        // Inject a frame script to query the `:visited` style of a link, using
-        // a special chrome-only method. Note that we can't use the current
-        // browsers s
-        val frameScriptDataUri = GeckoSession.createDataUri(String.format("""
-            addMessageListener("HistoryDelegateTest:GetLinkColor", function onMessage(message) {
-                if (content.document.documentURI != "%s") {
-                    return;
-                }
-                let { selector } = message.data;
-                let element = content.document.querySelector(selector);
-                if (!element) {
-                    sendAsyncMessage("HistoryDelegateTest:GetLinkColor", {
-                        ok: false,
-                        error: "No element for " + selector,
-                    });
-                    return;
-                }
-                let color = content.windowUtils.getVisitedDependentComputedStyle(element, "", "color");
-                sendAsyncMessage("HistoryDelegateTest:GetLinkColor", { ok: true, color });
-            });
-        """, testUri).toByteArray(), null)
-
-        // Note that we can't send the message directly to the current browser,
-        // because `gBrowser` might not refer to the correct window. Instead,
-        // we broadcast the message using the global message manager, and have
-        // the frame script check the document URI.
-        sessionRule.evaluateChromeJS(String.format("""
-            Services.mm.loadFrameScript("%s", true);
-            function getLinkColor(selector) {
-                return new Promise((resolve, reject) => {
-                    Services.mm.addMessageListener("HistoryDelegateTest:GetLinkColor", function onMessage(message) {
-                        Services.mm.removeMessageListener("HistoryDelegateTest:GetLinkColor", onMessage);
-                        if (message.data.ok) {
-                            resolve(message.data.color);
-                        } else {
-                            reject(message.data.error);
-                        }
-                    });
-                    Services.mm.broadcastAsyncMessage('HistoryDelegateTest:GetLinkColor', { selector });
-                });
-            }
-        """, frameScriptDataUri))
-
         assertThat(
             "Mozilla should be visited",
-            sessionRule.waitForChromeJS("getLinkColor('#mozilla')") as String,
+            sessionRule.getLinkColor(testUri, "#mozilla"),
             equalTo(VISITED_COLOR)
         )
 
         assertThat(
             "Test Pilot should be visited",
-            sessionRule.waitForChromeJS("getLinkColor('#testpilot')") as String,
+            sessionRule.getLinkColor(testUri, "#testpilot"),
             equalTo(VISITED_COLOR)
         )
 
         assertThat(
             "Bugzilla should be unvisited",
-            sessionRule.waitForChromeJS("getLinkColor('#bugzilla')") as String,
+            sessionRule.getLinkColor(testUri, "#bugzilla"),
             equalTo(UNVISITED_COLOR)
         )
     }

@@ -49,6 +49,22 @@
             }
           }
         ]
+      },
+      {
+        "name": "getLinkColor",
+        "type": "function",
+        "async": true,
+        "description": "Get resolved color for link for a given page and selector.",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "uri"
+          },
+          {
+            "type": "string",
+            "name": "selector"
+          }
+        ]
       }
     ]
   }
