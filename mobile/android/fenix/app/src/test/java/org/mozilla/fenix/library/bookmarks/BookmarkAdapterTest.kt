@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
+import io.mockk.verifyOrder
 import io.mockk.verifySequence
 import io.reactivex.Observer
 import io.reactivex.observers.TestObserver
@@ -16,8 +17,14 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.TestUtils.setRxSchedulers
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(application = TestApplication::class)
 internal class BookmarkAdapterTest {
 
     private lateinit var bookmarkAdapter: BookmarkAdapter
@@ -26,7 +33,7 @@ internal class BookmarkAdapterTest {
     @Before
     fun setup() {
         setRxSchedulers()
-        emitter = TestObserver<BookmarkAction>()
+        emitter = TestObserver()
         bookmarkAdapter = spyk(
             BookmarkAdapter(mockk(), emitter), recordPrivateCalls = true
         )
@@ -51,11 +58,11 @@ internal class BookmarkAdapterTest {
             )
         )
         bookmarkAdapter.updateData(tree, BookmarkState.Mode.Normal)
-        verifySequence {
+        verifyOrder {
             bookmarkAdapter.updateData(tree, BookmarkState.Mode.Normal)
             bookmarkAdapter setProperty "tree" value tree.children
             bookmarkAdapter setProperty "mode" value BookmarkState.Mode.Normal
-            bookmarkAdapter.notifyDataSetChanged()
+            bookmarkAdapter.notifyItemRangeInserted(0, 3)
         }
     }
 
@@ -66,7 +73,6 @@ internal class BookmarkAdapterTest {
             bookmarkAdapter.updateData(null, BookmarkState.Mode.Normal)
             bookmarkAdapter setProperty "tree" value listOf<BookmarkNode?>()
             bookmarkAdapter setProperty "mode" value BookmarkState.Mode.Normal
-            bookmarkAdapter.notifyDataSetChanged()
         }
     }
 }

@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.extensions.LayoutContainer
@@ -39,13 +40,46 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
     private var isFirstRun = true
 
     fun updateData(tree: BookmarkNode?, mode: BookmarkState.Mode) {
+        val diffUtil = DiffUtil.calculateDiff(
+            BookmarkDiffUtil(
+                this.tree,
+                tree?.children ?: listOf(),
+                this.mode,
+                mode
+            )
+        )
+
         this.tree = tree?.children ?: listOf()
         isFirstRun = if (isFirstRun) false else {
             emptyView.visibility = if (this.tree.isEmpty()) View.VISIBLE else View.GONE
             false
         }
         this.mode = mode
-        notifyDataSetChanged()
+
+        diffUtil.dispatchUpdatesTo(this)
+    }
+
+    private class BookmarkDiffUtil(
+        val old: List<BookmarkNode>,
+        val new: List<BookmarkNode>,
+        val oldMode: BookmarkState.Mode,
+        val newMode: BookmarkState.Mode
+    ) : DiffUtil.Callback() {
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+            old[oldItemPosition].guid == new[newItemPosition].guid
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            val oldSelected = (oldMode as? BookmarkState.Mode.Selecting)?.selectedItems ?: setOf()
+            val newSelected = (newMode as? BookmarkState.Mode.Selecting)?.selectedItems ?: setOf()
+            val modesEqual = oldMode::class == newMode::class
+            val selectedEqual =
+                ((oldSelected.contains(old[oldItemPosition]) && newSelected.contains(new[newItemPosition])) ||
+                        (!oldSelected.contains(old[oldItemPosition]) && !newSelected.contains(new[newItemPosition])))
+            return modesEqual && selectedEqual
+        }
+
+        override fun getOldListSize(): Int = old.size
+        override fun getNewListSize(): Int = new.size
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookmarkNodeViewHolder {
