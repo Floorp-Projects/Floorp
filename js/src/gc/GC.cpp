@@ -6567,15 +6567,15 @@ class SweepActionForEach final : public SweepAction {
   typename IncrIter::State iterState;
 
  public:
-  SweepActionForEach(const Init& init, Elem* elemOut,
+  SweepActionForEach(const Init& init, Elem* maybeElemOut,
                      UniquePtr<SweepAction> action)
-      : iterInit(init), elemOut(elemOut), action(std::move(action)) {}
+      : iterInit(init), elemOut(maybeElemOut), action(std::move(action)) {}
 
   IncrementalProgress run(Args& args) override {
-    MOZ_ASSERT(*elemOut == Elem());
-    auto clearElem = mozilla::MakeScopeExit([&] { *elemOut = Elem(); });
+    MOZ_ASSERT_IF(elemOut, *elemOut == Elem());
+    auto clearElem = mozilla::MakeScopeExit([&] { setElem(Elem()); });
     for (IncrIter iter(iterState, iterInit); !iter.done(); iter.next()) {
-      *elemOut = iter.get();
+      setElem(iter.get());
       if (action->run(args) == NotFinished) {
         return NotFinished;
       }
@@ -6585,35 +6585,15 @@ class SweepActionForEach final : public SweepAction {
 
   void assertFinished() const override {
     MOZ_ASSERT(iterState.isNothing());
+    MOZ_ASSERT_IF(elemOut, *elemOut == Elem());
     action->assertFinished();
   }
-};
 
-template <typename Iter, typename Init>
-class SweepActionRepeatFor final : public SweepAction {
- protected:
-  using IncrIter = IncrementalIter<Iter>;
-
-  Init iterInit;
-  UniquePtr<SweepAction> action;
-  typename IncrIter::State iterState;
-
- public:
-  SweepActionRepeatFor(const Init& init, UniquePtr<SweepAction> action)
-      : iterInit(init), action(std::move(action)) {}
-
-  IncrementalProgress run(Args& args) override {
-    for (IncrIter iter(iterState, iterInit); !iter.done(); iter.next()) {
-      if (action->run(args) == NotFinished) {
-        return NotFinished;
-      }
+ private:
+  void setElem(const Elem& value) {
+    if (elemOut) {
+      *elemOut = value;
     }
-    return Finished;
-  }
-
-  void assertFinished() const override {
-    MOZ_ASSERT(iterState.isNothing());
-    action->assertFinished();
   }
 };
 
@@ -6644,8 +6624,8 @@ static UniquePtr<SweepAction> RepeatForSweepGroup(
     return nullptr;
   }
 
-  using Action = SweepActionRepeatFor<SweepGroupsIter, JSRuntime*>;
-  return js::MakeUnique<Action>(rt, std::move(action));
+  using Action = SweepActionForEach<SweepGroupsIter, JSRuntime*>;
+  return js::MakeUnique<Action>(rt, nullptr, std::move(action));
 }
 
 static UniquePtr<SweepAction> ForEachZoneInSweepGroup(
