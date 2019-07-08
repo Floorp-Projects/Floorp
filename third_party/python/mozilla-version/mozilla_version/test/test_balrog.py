@@ -164,3 +164,9 @@ def test_balrog_release_implements_remaining_comparision_operators():
     assert not BalrogReleaseName.parse('firefox-32.0-build1') < BalrogReleaseName.parse('firefox-32.0-build1')
 
     assert BalrogReleaseName.parse('firefox-33.0-build1') != BalrogReleaseName.parse('firefox-32.0-build1')
+
+def test_balrog_release_hashable():
+    """
+    It is possible to hash `BalrogReleaseNmae`.
+    """
+    hash(BalrogReleaseName.parse('firefox-63.0-build1'))
