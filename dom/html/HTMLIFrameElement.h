@@ -154,7 +154,7 @@ class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
   bool FullscreenFlag() const { return mFullscreenFlag; }
   void SetFullscreenFlag(bool aValue) { mFullscreenFlag = aValue; }
 
-  mozilla::dom::FeaturePolicy* FeaturePolicy() const;
+  FeaturePolicy* Policy() const;
 
  protected:
   virtual ~HTMLIFrameElement();
