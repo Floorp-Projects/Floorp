@@ -757,6 +757,8 @@ def split_triplet(triplet, allow_unknown=False):
 
     if os.startswith('darwin'):
         toolchain = '%s-apple-%s' % (cpu, os)
+    elif canonical_cpu == 'aarch64' and canonical_os == 'WINNT':
+        toolchain = 'aarch64-windows-msvc'
     else:
         toolchain = '%s-%s' % (cpu, os)
 
