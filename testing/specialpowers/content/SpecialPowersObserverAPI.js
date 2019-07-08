@@ -321,7 +321,7 @@ SpecialPowersObserverAPI.prototype = {
    * This will get requests from our API in the window and process them in chrome for it
    **/
   // eslint-disable-next-line complexity
-  receiveMessage(aMessage) {
+  _receiveMessage(aMessage) {
     // We explicitly return values in the below code so that this function
     // doesn't trigger a flurry of warnings about "does not always return
     // a value".
