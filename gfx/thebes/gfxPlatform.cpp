@@ -21,6 +21,7 @@
 #include "mozilla/gfx/GraphicsMessages.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
