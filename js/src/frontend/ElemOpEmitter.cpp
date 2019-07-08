@@ -70,17 +70,7 @@ bool ElemOpEmitter::emitGet() {
   }
   if (isIncDec() || isCompoundAssignment()) {
     if (isSuper()) {
-      // There's no such thing as JSOP_DUP3, so we have to be creative.
-      // Note that pushing things again is no fewer JSOps.
-      if (!bce_->emitDupAt(2)) {
-        //          [stack] THIS KEY SUPERBASE THIS
-        return false;
-      }
-      if (!bce_->emitDupAt(2)) {
-        //          [stack] THIS KEY SUPERBASE THIS KEY
-        return false;
-      }
-      if (!bce_->emitDupAt(2)) {
+      if (!bce_->emitDupAt(2, 3)) {
         //          [stack] THIS KEY SUPERBASE THIS KEY SUPERBASE
         return false;
       }
