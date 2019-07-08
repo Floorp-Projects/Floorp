@@ -64,6 +64,7 @@ jobs:
         shipping-product: fennec
         worker:
             bump-files:
+                - mobile/android/config/version-files/release/version.txt
                 - mobile/android/config/version-files/release/version_display.txt
 
     firefox:
