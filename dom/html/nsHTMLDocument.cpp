@@ -717,14 +717,6 @@ void nsHTMLDocument::RemovedForm() { --mNumForms; }
 
 int32_t nsHTMLDocument::GetNumFormsSynchronous() { return mNumForms; }
 
-void nsHTMLDocument::CaptureEvents() {
-  WarnOnceAbout(Document::eUseOfCaptureEvents);
-}
-
-void nsHTMLDocument::ReleaseEvents() {
-  WarnOnceAbout(Document::eUseOfReleaseEvents);
-}
-
 bool nsHTMLDocument::ResolveName(JSContext* aCx, const nsAString& aName,
                                  JS::MutableHandle<JS::Value> aRetval,
                                  ErrorResult& aError) {

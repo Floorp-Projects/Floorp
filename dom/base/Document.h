@@ -3573,6 +3573,11 @@ class Document : public nsINode,
   void SetAlinkColor(const nsAString& aAlinkColor);
   void GetBgColor(nsAString& aBgColor);
   void SetBgColor(const nsAString& aBgColor);
+  void Clear() const {
+    // Deprecated
+  }
+  void CaptureEvents();
+  void ReleaseEvents();
 
   static bool IsUnprefixedFullscreenEnabled(JSContext* aCx, JSObject* aObject);
   static bool DocumentSupportsL10n(JSContext* aCx, JSObject* aObject);
