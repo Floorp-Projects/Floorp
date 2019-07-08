@@ -143,6 +143,8 @@ nsresult nsAboutCacheEntry::Channel::GetContentStream(nsIURI* uri,
       "<!DOCTYPE html>\n"
       "<html>\n"
       "<head>\n"
+      "  <meta http-equiv=\"Content-Security-Policy\" content=\"default-src "
+      "chrome:\" />\n"
       "  <title>Cache entry information</title>\n"
       "  <link rel=\"stylesheet\" "
       "href=\"chrome://global/skin/about.css\" type=\"text/css\"/>\n"
