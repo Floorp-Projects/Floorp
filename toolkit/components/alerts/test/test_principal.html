@@ -42,11 +42,11 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
 function notify(alertName, principal) {
   return new Promise((resolve, reject) => {
     var source;
-    function observe(subject, topic, data) {
+    async function observe(subject, topic, data) {
       if (topic == "alertclickcallback") {
         reject(new Error("Alerts should not be clicked during test"));
       } else if (topic == "alertshow") {
-        source = chromeScript.sendSyncMessage("getAlertSource")[0][0];
+        source = await chromeScript.sendQuery("getAlertSource");
         notifier.closeAlert(alertName);
       } else {
         is(topic, "alertfinished", "Should hide alert");
@@ -107,8 +107,10 @@ function runTest() {
 
   // sendSyncMessage returns an array of arrays. See the comments in
   // test_alerts_noobserve.html and test_SpecialPowersLoadChromeScript.html.
-  var [[alertsVisible]] = chromeScript.sendSyncMessage("anyXULAlertsVisible");
-  ok(!alertsVisible, "Alerts should not be present at the start of the test.");
+  add_task(async () => {
+    var alertsVisible = await chromeScript.sendQuery("anyXULAlertsVisible");
+    ok(!alertsVisible, "Alerts should not be present at the start of the test.");
+  });
 
   add_task(testNoPrincipal);
   add_task(testSystemPrincipal);

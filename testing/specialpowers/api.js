@@ -8,6 +8,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -25,16 +28,27 @@ this.specialpowers = class extends ExtensionAPI {
       resProto.ALLOW_CONTENT_ACCESS
     );
 
-    const { SpecialPowersObserver } = ChromeUtils.import(
-      "resource://specialpowers/SpecialPowersObserver.jsm"
-    );
-    this.observer = new SpecialPowersObserver();
-    this.observer.init();
+    // Register special testing modules.
+    Components.manager
+      .QueryInterface(Ci.nsIComponentRegistrar)
+      .autoRegister(FileUtils.getFile("ProfD", ["tests.manifest"]));
+
+    ChromeUtils.registerWindowActor("SpecialPowers", {
+      allFrames: true,
+      child: {
+        moduleURI: "resource://specialpowers/SpecialPowersChild.jsm",
+        events: {
+          DOMWindowCreated: {},
+        },
+      },
+      parent: {
+        moduleURI: "resource://specialpowers/SpecialPowersParent.jsm",
+      },
+    });
   }
 
   onShutdown() {
-    this.observer.uninit();
-    this.observer = null;
+    ChromeUtils.unregisterWindowActor("SpecialPowers");
     resProto.setSubstitution("specialpowers", null);
   }
 };

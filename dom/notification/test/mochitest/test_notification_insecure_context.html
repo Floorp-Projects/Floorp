@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1429432
     response = await Notification.requestPermission();
     is(response, "granted", "Granted permission in insecure context with pref set");
 
-    script.sendSyncMessage("destroy");
+    script.sendAsyncMessage("destroy");
     script.destroy();
 
     SimpleTest.finish();

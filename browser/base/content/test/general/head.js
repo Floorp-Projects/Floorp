@@ -191,15 +191,11 @@ function setTestPluginEnabledState(newEnabledState, pluginName) {
 }
 
 function pushPrefs(...aPrefs) {
-  return new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({ set: aPrefs }, resolve);
-  });
+  return SpecialPowers.pushPrefEnv({ set: aPrefs });
 }
 
 function popPrefs() {
-  return new Promise(resolve => {
-    SpecialPowers.popPrefEnv(resolve);
-  });
+  return SpecialPowers.popPrefEnv();
 }
 
 function updateBlocklist(aCallback) {
