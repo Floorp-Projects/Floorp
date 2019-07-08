@@ -46,8 +46,6 @@
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTest, window);
-
 function ok(aCondition, aMessage)
 {
   window.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
@@ -7467,10 +7465,10 @@ function* runEditorReframeTests()
   yield runEditorReframeTest(contenteditable, windowOfContenteditable, "compositionupdate");
 }
 
-function* runIMEContentObserverTest()
+async function runIMEContentObserverTest()
 {
   let notifications = [];
-  let callContinueTest = false;
+  let onReceiveNotifications = null;
   function callback(aTIP, aNotification)
   {
     if (aNotification.type != "notify-end-input-transaction") {
@@ -7484,9 +7482,12 @@ function* runIMEContentObserverTest()
         aTIP.cancelComposition();
         break;
     }
-    if (callContinueTest) {
-      callContinueTest = false;
-      SimpleTest.executeSoon(continueTest);
+    if (onReceiveNotifications) {
+      let resolve = onReceiveNotifications;
+      onReceiveNotifications = null;
+      SimpleTest.executeSoon(() => {
+        resolve();
+      });
     }
     return true;
   }
@@ -7502,23 +7503,24 @@ function* runIMEContentObserverTest()
     }
   }
 
-  function waitUntilNotificationsReceived()
+  function promiseReceiveNotifications()
   {
-    if (notifications.length > 0) {
-      SimpleTest.executeSoon(continueTest);
-    } else {
-      callContinueTest = true;
-    }
+    notifications = [];
+    return new Promise(resolve => {
+      onReceiveNotifications = resolve;
+    });
   }
 
   function flushNotifications()
   {
-    // FYI: Dispatching non-op keyboard events causes forcibly flushing pending
-    //      notifications.
-    synthesizeKey("KEY_Unidentified", { code: "" });
-    SimpleTest.executeSoon(()=>{
-      notifications = [];
-      continueTest();
+    return new Promise(resolve => {
+      // FYI: Dispatching non-op keyboard events causes forcibly flushing pending
+      //      notifications.
+      synthesizeKey("KEY_Unidentified", { code: "" });
+      SimpleTest.executeSoon(()=>{
+        notifications = [];
+        resolve();
+      });
     });
   }
 
@@ -7611,20 +7613,20 @@ function* runIMEContentObserverTest()
     return aElement.innerHTML;
   }
 
-  function* testWithPlaintextEditor(aDescription, aElement, aTestLineBreaker)
+  async function testWithPlaintextEditor(aDescription, aElement, aTestLineBreaker)
   {
     aElement.value = "";
     aElement.blur();
     let doc = aElement.ownerDocument;
     let win = doc.defaultView;
     aElement.focus();
-    yield flushNotifications();
+    await flushNotifications();
 
     // "a[]"
     let description = aDescription + "typing 'a'";
-    notifications = [];
+    let waitNotifications = promiseReceiveNotifications();
     synthesizeKey("a", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: 0, addedLength: 1 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 1, text: "" });
@@ -7634,9 +7636,9 @@ function* runIMEContentObserverTest()
 
     // "ab[]"
     description = aDescription + "typing 'b'";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("b", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1, removedLength: 0, addedLength: 1 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 2, text: "" });
@@ -7646,9 +7648,9 @@ function* runIMEContentObserverTest()
 
     // "abc[]"
     description = aDescription + "typing 'c'";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("c", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 2, removedLength: 0, addedLength: 1 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 3, text: "" });
@@ -7658,9 +7660,9 @@ function* runIMEContentObserverTest()
 
     // "ab[c]"
     description = aDescription + "selecting 'c' with pressing Shift+ArrowLeft";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 2, text: "c", reversed: true });
     ensureToRemovePostPositionChangeNotification(description, 1);
@@ -7668,9 +7670,9 @@ function* runIMEContentObserverTest()
 
     // "a[bc]"
     description = aDescription + "selecting 'bc' with pressing Shift+ArrowLeft";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 1, text: "bc", reversed: true });
     ensureToRemovePostPositionChangeNotification(description, 1);
@@ -7678,9 +7680,9 @@ function* runIMEContentObserverTest()
 
     // "[abc]"
     description = aDescription + "selecting 'bc' with pressing Shift+ArrowLeft";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0, text: "abc", reversed: true });
     ensureToRemovePostPositionChangeNotification(description, 1);
@@ -7688,9 +7690,9 @@ function* runIMEContentObserverTest()
 
     // "[]abc"
     description = aDescription + "collapsing selection to the left-most with pressing ArrowLeft";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_ArrowLeft", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0, text: "" });
     ensureToRemovePostPositionChangeNotification(description, 1);
@@ -7698,9 +7700,9 @@ function* runIMEContentObserverTest()
 
     // "[a]bc"
     description = aDescription + "selecting 'a' with pressing Shift+ArrowRight";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_ArrowRight", {shiftKey: true}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0, text: "a" });
     ensureToRemovePostPositionChangeNotification(description, 1);
@@ -7708,9 +7710,9 @@ function* runIMEContentObserverTest()
 
     // "[ab]c"
     description = aDescription + "selecting 'ab' with pressing Shift+ArrowRight";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_ArrowRight", {shiftKey: true}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0, text: "ab" });
     ensureToRemovePostPositionChangeNotification(description, 1);
@@ -7718,9 +7720,9 @@ function* runIMEContentObserverTest()
 
     // "[]c"
     description = aDescription + "deleting 'ab' with pressing Delete";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Delete", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: 2, addedLength: 0 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 0, text: "" });
@@ -7730,9 +7732,9 @@ function* runIMEContentObserverTest()
 
     // "[]"
     description = aDescription + "deleting following 'c' with pressing Delete";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Delete", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: 1, addedLength: 0 });
     checkPositionChangeNotification(notifications[1], description);
@@ -7743,13 +7745,13 @@ function* runIMEContentObserverTest()
     synthesizeKey("a", {}, win, callback);
     synthesizeKey("b", {}, win, callback);
     synthesizeKey("c", {}, win, callback);
-    yield flushNotifications();
+    await flushNotifications();
 
     // "ab[]"
     description = aDescription + "deleting 'c' with pressing Backspace";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Backspace", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 2, removedLength: 1, addedLength: 0 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 2, text: "" });
@@ -7760,13 +7762,13 @@ function* runIMEContentObserverTest()
     // "[ab]"
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield flushNotifications();
+    await flushNotifications();
 
     // "[]"
     description = aDescription + "deleting 'ab' with pressing Backspace";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Backspace", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: 2, addedLength: 0 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 0, text: "" });
@@ -7779,19 +7781,19 @@ function* runIMEContentObserverTest()
     synthesizeKey("b", {}, win, callback);
     synthesizeKey("c", {}, win, callback);
     synthesizeKey("d", {}, win, callback);
-    yield flushNotifications();
+    await flushNotifications();
 
     // "a[bc]d"
     synthesizeKey("KEY_ArrowLeft", {}, win, callback);
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield flushNotifications();
+    await flushNotifications();
 
     // "a[]d"
     description = aDescription + "deleting 'bc' with pressing Backspace";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Backspace", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1, removedLength: 2, addedLength: 0 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 1, text: "" });
@@ -7804,13 +7806,13 @@ function* runIMEContentObserverTest()
     synthesizeKey("c", {}, win, callback);
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield flushNotifications();
+    await flushNotifications();
 
     // "aB[]d"
     description = aDescription + "replacing 'bc' with 'B' with pressing Shift+B";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("B", {shiftKey: true}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1, removedLength: 2, addedLength: 1 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 2, text: "" });
@@ -7824,9 +7826,9 @@ function* runIMEContentObserverTest()
 
     // "aB\n[]d"
     description = aDescription + "inserting a line break after 'B' with pressing Enter";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Enter", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 2, removedLength: 0, addedLength: kLFLen });
     checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("aB\n").length, text: "" });
@@ -7836,9 +7838,9 @@ function* runIMEContentObserverTest()
 
     // "aB[]d"
     description = aDescription + "removing a line break after 'B' with pressing Backspace";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Backspace", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 2, removedLength: kLFLen, addedLength: 0 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 2, text: "" });
@@ -7848,13 +7850,13 @@ function* runIMEContentObserverTest()
 
     // "a[B]d"
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield flushNotifications();
+    await flushNotifications();
 
     // "a\n[]d"
     description = aDescription + "replacing 'B' with a line break with pressing Enter";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Enter", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1, removedLength: 1, addedLength: kLFLen });
     checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("a\n").length, text: "" });
@@ -7864,9 +7866,9 @@ function* runIMEContentObserverTest()
 
     // "a[\n]d"
     description = aDescription + "selecting '\n' with pressing Shift+ArrowLeft";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 1, text: kLF, reversed: true });
     ensureToRemovePostPositionChangeNotification(description, 1);
@@ -7874,9 +7876,9 @@ function* runIMEContentObserverTest()
 
     // "a[]d"
     description = aDescription + "removing selected '\n' with pressing Delete";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Delete", {shiftKey: true}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1, removedLength: kLFLen, addedLength: 0 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 1, text: "" });
@@ -7886,9 +7888,9 @@ function* runIMEContentObserverTest()
 
     // ab\ncd\nef\ngh\n[]
     description = aDescription + "setting the value property to 'ab\ncd\nef\ngh\n'";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     aElement.value = "ab\ncd\nef\ngh\n";
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: 2, addedLength: getNativeText("ab\ncd\nef\ngh\n").length });
     checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("ab\ncd\nef\ngh\n").length, text: "" });
@@ -7898,9 +7900,9 @@ function* runIMEContentObserverTest()
 
     // []
     description = aDescription + "setting the value property to ''";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     aElement.value = "";
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: getNativeText("ab\ncd\nef\ngh\n").length, addedLength: 0 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 0, text: "" });
@@ -7909,7 +7911,7 @@ function* runIMEContentObserverTest()
     dumpUnexpectedNotifications(description, 3);
   }
 
-  function* testWithHTMLEditor(aDescription, aElement, aDefaultParagraphSeparator)
+  async function testWithHTMLEditor(aDescription, aElement, aDefaultParagraphSeparator)
   {
     let doc = aElement.ownerDocument;
     let win = doc.defaultView;
@@ -7933,7 +7935,7 @@ function* runIMEContentObserverTest()
         break;
       default:
         ok(false, aDescription + "aDefaultParagraphSeparator is illegal value");
-        yield flushPendingNotifications();
+        await flushNotifications();
         return;
     }
 
@@ -7942,13 +7944,13 @@ function* runIMEContentObserverTest()
     } else {
       aElement.focus();
     }
-    yield flushNotifications();
+    await flushNotifications();
 
     // "a[]"
     let description = aDescription + "typing 'a'";
-    notifications = [];
+    let waitNotifications = promiseReceiveNotifications();
     synthesizeKey("a", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 0, addedLength: 1 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 1 + offsetAtContainer, text: "" });
@@ -7957,9 +7959,9 @@ function* runIMEContentObserverTest()
 
     // "ab[]"
     description = aDescription + "typing 'b'";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("b", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, removedLength: 0, addedLength: 1 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 2 + offsetAtContainer, text: "" });
@@ -7968,9 +7970,9 @@ function* runIMEContentObserverTest()
 
     // "abc[]"
     description = aDescription + "typing 'c'";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("c", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 2 + offsetAtContainer, removedLength: 0, addedLength: 1 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 3 + offsetAtContainer, text: "" });
@@ -7979,63 +7981,63 @@ function* runIMEContentObserverTest()
 
     // "ab[c]"
     description = aDescription + "selecting 'c' with pressing Shift+ArrowLeft";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 2 + offsetAtContainer, text: "c", reversed: true });
     dumpUnexpectedNotifications(description, 1);
 
     // "a[bc]"
     description = aDescription + "selecting 'bc' with pressing Shift+ArrowLeft";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, text: "bc", reversed: true });
     dumpUnexpectedNotifications(description, 1);
 
     // "[abc]"
     description = aDescription + "selecting 'bc' with pressing Shift+ArrowLeft";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, text: "abc", reversed: true });
     dumpUnexpectedNotifications(description, 1);
 
     // "[]abc"
     description = aDescription + "collapsing selection to the left-most with pressing ArrowLeft";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_ArrowLeft", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, text: "" });
     dumpUnexpectedNotifications(description, 1);
 
     // "[a]bc"
     description = aDescription + "selecting 'a' with pressing Shift+ArrowRight";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_ArrowRight", {shiftKey: true}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, text: "a" });
     dumpUnexpectedNotifications(description, 1);
 
     // "[ab]c"
     description = aDescription + "selecting 'ab' with pressing Shift+ArrowRight";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_ArrowRight", {shiftKey: true}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, text: "ab" });
     dumpUnexpectedNotifications(description, 1);
 
     // "[]c"
     description = aDescription + "deleting 'ab' with pressing Delete";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Delete", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 2, addedLength: 0 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 0 + offsetAtContainer, text: "" });
@@ -8044,9 +8046,9 @@ function* runIMEContentObserverTest()
 
     // "[]"
     description = aDescription + "deleting following 'c' with pressing Delete";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Delete", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 1, addedLength: kLFLen });
     checkPositionChangeNotification(notifications[1], description);
@@ -8056,13 +8058,13 @@ function* runIMEContentObserverTest()
     synthesizeKey("a", {}, win, callback);
     synthesizeKey("b", {}, win, callback);
     synthesizeKey("c", {}, win, callback);
-    yield flushNotifications();
+    await flushNotifications();
 
     // "ab[]"
     description = aDescription + "deleting 'c' with pressing Backspace";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Backspace", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 2 + offsetAtContainer, removedLength: 1, addedLength: 0 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 2 + offsetAtContainer, text: "" });
@@ -8072,13 +8074,13 @@ function* runIMEContentObserverTest()
     // "[ab]"
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield flushNotifications();
+    await flushNotifications();
 
     // "[]"
     description = aDescription + "deleting 'ab' with pressing Backspace";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Backspace", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 2, addedLength: 0 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 0 + offsetAtContainer, text: "" });
@@ -8090,19 +8092,19 @@ function* runIMEContentObserverTest()
     synthesizeKey("b", {}, win, callback);
     synthesizeKey("c", {}, win, callback);
     synthesizeKey("d", {}, win, callback);
-    yield flushNotifications();
+    await flushNotifications();
 
     // "a[bc]d"
     synthesizeKey("KEY_ArrowLeft", {}, win, callback);
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield flushNotifications();
+    await flushNotifications();
 
     // "a[]d"
     description = aDescription + "deleting 'bc' with pressing Backspace";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Backspace", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, removedLength: 2, addedLength: 0 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 1 + offsetAtContainer, text: "" });
@@ -8114,13 +8116,13 @@ function* runIMEContentObserverTest()
     synthesizeKey("c", {}, win, callback);
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield flushNotifications();
+    await flushNotifications();
 
     // "aB[]d"
     description = aDescription + "replacing 'bc' with 'B' with pressing Shift+B";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("B", {shiftKey: true}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, removedLength: 2, addedLength: 1 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 2 + offsetAtContainer, text: "" });
@@ -8129,9 +8131,9 @@ function* runIMEContentObserverTest()
 
     // "aB<br>[]d" or "<block>ab</block><block>[]d</block>"
     description = aDescription + "inserting a line break after 'B' with pressing Enter";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Enter", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     if (isDefaultParagraphSeparatorBlock) {
       // Splitting current block causes removing "<block>aB" and inserting "<block>aB</block><block>".
@@ -8146,9 +8148,9 @@ function* runIMEContentObserverTest()
 
     // "aB[]d"
     description = aDescription + "removing a line break after 'B' with pressing Backspace";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Backspace", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     if (isDefaultParagraphSeparatorBlock) {
       // Joining two blocks causes removing both block elements and inserting new block element.
@@ -8165,13 +8167,13 @@ function* runIMEContentObserverTest()
 
     // "a[B]d"
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield flushNotifications();
+    await flushNotifications();
 
     // "a<br>[]d" or "<block>a</block><block>[]d</block>"
     description = aDescription + "replacing 'B' with a line break with pressing Enter";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Enter", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     if (isDefaultParagraphSeparatorBlock) {
       // Splitting current block causes removing "<block>aB" and inserting "<block>aB</block><block>".
@@ -8185,18 +8187,18 @@ function* runIMEContentObserverTest()
 
     // "a[<br>]d" or "<block>a[</block><block>]d</block>"
     description = aDescription + "selecting '\\n' with pressing Shift+ArrowLeft";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, text: kLF, reversed: true });
     dumpUnexpectedNotifications(description, 1);
 
     // "a[]d"
     description = aDescription + "removing selected '\\n' with pressing Delete";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Delete", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     if (isDefaultParagraphSeparatorBlock) {
       // Joining the blocks causes removing "<block>a</block><block>d</block>" and inserting "<block>ad</block>".
@@ -8210,9 +8212,9 @@ function* runIMEContentObserverTest()
 
     // aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5</div>"
     description = aDescription + "inserting HTML which has nested block elements";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5</div>";
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     // There is <br> after the end of the line.  Therefore, removed length includes a line breaker length.
     if (isDefaultParagraphSeparatorBlock) {
@@ -8226,11 +8228,11 @@ function* runIMEContentObserverTest()
 
     // "<div>1[<div>2<div>3</div>4</div>]5</div>" and removing selection
     sel.setBaseAndExtent(aElement.firstChild.firstChild, 1, aElement.firstChild.childNodes.item(2), 0);
-    yield flushNotifications();
+    await flushNotifications();
     description = aDescription + "deleting child nodes with pressing Delete key";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Delete", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>15</div>", description + " should remove '<div>2<div>3</div>4</div>'");
     checkTextChangeNotification(notifications[0], description, { offset: getNativeText("\n1").length + offsetAtStart, removedLength: getNativeText("\n2\n34").length, addedLength: 0 });
@@ -8241,11 +8243,11 @@ function* runIMEContentObserverTest()
     // "<div>1[<div>2<div>3</div>]4</div>5</div>" and removing selection
     aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5</div>";
     sel.setBaseAndExtent(aElement.firstChild.firstChild, 1, aElement.firstChild.childNodes.item(1).childNodes.item(2), 0);
-    yield flushNotifications();
+    await flushNotifications();
     description = aDescription + "deleting child nodes (partially #1) with pressing Delete key";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Delete", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>145</div>", description + " should remove '<div>2<div>3</div></div>'");
     // It causes removing '<div>2<div>3</div>4</div>' and inserting '4'.
@@ -8257,11 +8259,11 @@ function* runIMEContentObserverTest()
     // "<div>1[<div>2<div>]3</div>4</div>5</div>" and removing selection
     aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5</div>";
     sel.setBaseAndExtent(aElement.firstChild.firstChild, 1, aElement.firstChild.childNodes.item(1).childNodes.item(1).firstChild, 0);
-    yield flushNotifications();
+    await flushNotifications();
     description = aDescription + "deleting child nodes (partially #2) with pressing Delete key";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Delete", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>13<div>4</div>5</div>", description + " should remove '<div>2</div>'");
     // It causes removing '1<div>2<div>3</div></div>' and inserting '13<div>'.
@@ -8273,11 +8275,11 @@ function* runIMEContentObserverTest()
     // "<div>1<div>2<div>3[</div>4</div>]5</div>" and removing selection
     aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5</div>";
     sel.setBaseAndExtent(aElement.firstChild.childNodes.item(1).childNodes.item(1).firstChild, 1, aElement.firstChild.childNodes.item(2), 0);
-    yield flushNotifications();
+    await flushNotifications();
     description = aDescription + "deleting child nodes (partially #3) with pressing Delete key";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Delete", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>1<div>2<div>35</div></div></div>", description + " should remove '4'");
     // It causes removing '45' and inserting '5'.
@@ -8288,9 +8290,9 @@ function* runIMEContentObserverTest()
 
     // aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5<div>6<div>7</div>8</div>9</div>"
     description = aDescription + "inserting HTML which has a pair of nested block elements";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5<div>6<div>7</div>8</div>9</div>";
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtStart, removedLength: getNativeText("\n1\n2\n35").length, addedLength: getNativeText("\n1\n2\n345\n6\n789").length });
     checkSelectionChangeNotification(notifications[1], description, { offset: 0 + offsetAtStart, text: "" });
@@ -8299,11 +8301,11 @@ function* runIMEContentObserverTest()
 
     // "<div>1<div>2<div>3[</div>4</div>5<div>6<div>]7</div>8</div>9</div>" and removing selection
     sel.setBaseAndExtent(aElement.firstChild.childNodes.item(1).childNodes.item(1).firstChild, 1, aElement.firstChild.childNodes.item(3).childNodes.item(1).firstChild, 0);
-    yield flushNotifications();
+    await flushNotifications();
     description = aDescription + "deleting child nodes (between same level descendants) with pressing Delete key";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Delete", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>1<div>2<div>37</div></div><div>8</div>9</div>", description + " should remove '456<div>7'");
     // It causes removing '<div>3</div>4</div>5<div>6<div>7</div>' and inserting '<div>37</div><div>'.
@@ -8315,11 +8317,11 @@ function* runIMEContentObserverTest()
     // "<div>1<div>2[<div>3</div>4</div>5<div>6<div>]7</div>8</div>9</div>" and removing selection
     aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5<div>6<div>7</div>8</div>9</div>";
     sel.setBaseAndExtent(aElement.firstChild.childNodes.item(1).firstChild, 1, aElement.firstChild.childNodes.item(3).childNodes.item(1).firstChild, 0);
-    yield flushNotifications();
+    await flushNotifications();
     description = aDescription + "deleting child nodes (between different level descendants #1) with pressing Delete key";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Delete", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>1<div>27</div><div>8</div>9</div>", description + " should remove '<div>2<div>3</div>4</div>5<div>6<div>7</div>'");
     // It causes removing '<div>2<div>3</div>4</div>5<div>6<div>7</div>' and inserting '<div>27</div>'.
@@ -8331,11 +8333,11 @@ function* runIMEContentObserverTest()
     // "<div>1<div>2[<div>3</div>4</div>5<div>6<div>7</div>8</div>]9</div>" and removing selection
     aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5<div>6<div>7</div>8</div>9</div>";
     sel.setBaseAndExtent(aElement.firstChild.childNodes.item(1).firstChild, 1, aElement.firstChild.childNodes.item(4), 0);
-    yield flushNotifications();
+    await flushNotifications();
     description = aDescription + "deleting child nodes (between different level descendants #2) with pressing Delete key";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Delete", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>1<div>29</div></div>", description + " should remove '<div>3</div>4</div>5<div>6<div>7</div>8</div>'");
     // It causes removing '<div>3</div>4</div>5</div>6<div>7</div>8</div>9' and inserting '9</div>'.
@@ -8347,11 +8349,11 @@ function* runIMEContentObserverTest()
     // "<div>1<div>2<div>3[</div>4</div>5<div>]6<div>7</div>8</div>9</div>" and removing selection
     aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5<div>6<div>7</div>8</div>9</div>";
     sel.setBaseAndExtent(aElement.firstChild.childNodes.item(1).childNodes.item(1).firstChild, 1, aElement.firstChild.childNodes.item(3).firstChild, 0);
-    yield flushNotifications();
+    await flushNotifications();
     description = aDescription + "deleting child nodes (between different level descendants #3) with pressing Delete key";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Delete", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>1<div>2<div>36<div>7</div>8</div></div>9</div>", description + " should remove '<div>36<div>7</div>8</div>'");
     // It causes removing '<div>3</div>4</div>5<div>6<div>7</div>8</div>' and inserting '<div>36<div>7</div>8</div>'.
@@ -8363,11 +8365,11 @@ function* runIMEContentObserverTest()
     // "<div>1<div>2<div>3[</div>4</div>5<div>6<div>7</div>8</div>]9</div>" and removing selection
     aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5<div>6<div>7</div>8</div>9</div>";
     sel.setBaseAndExtent(aElement.firstChild.childNodes.item(1).childNodes.item(1).firstChild, 1, aElement.firstChild.childNodes.item(4), 0);
-    yield flushNotifications();
+    await flushNotifications();
     description = aDescription + "deleting child nodes (between different level descendants #4) with pressing Delete key";
-    notifications = [];
+    waitNotifications = promiseReceiveNotifications();
     synthesizeKey("KEY_Delete", {}, win, callback);
-    yield waitUntilNotificationsReceived();
+    await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>1<div>2<div>39</div></div></div>", description + " should remove '</div>4</div>5<div>6<div>7</div>8</div>'");
     // It causes removing '</div>4</div>5<div>6<div>7</div>8</div>' and inserting '<div>36<div>7</div>8</div>'.
@@ -8377,18 +8379,18 @@ function* runIMEContentObserverTest()
     dumpUnexpectedNotifications(description, 3);
   }
 
-  yield* testWithPlaintextEditor("runIMEContentObserverTest with input element: ", input, false);
-  yield* testWithPlaintextEditor("runIMEContentObserverTest with textarea element: ", textarea, true);
-  yield* testWithHTMLEditor("runIMEContentObserverTest with contenteditable (defaultParagraphSeparator is br): ", contenteditable, "br");
-  yield* testWithHTMLEditor("runIMEContentObserverTest with contenteditable (defaultParagraphSeparator is p): ", contenteditable, "p");
-  yield* testWithHTMLEditor("runIMEContentObserverTest with contenteditable (defaultParagraphSeparator is div): ", contenteditable, "div");
+  await testWithPlaintextEditor("runIMEContentObserverTest with input element: ", input, false);
+  await testWithPlaintextEditor("runIMEContentObserverTest with textarea element: ", textarea, true);
+  await testWithHTMLEditor("runIMEContentObserverTest with contenteditable (defaultParagraphSeparator is br): ", contenteditable, "br");
+  await testWithHTMLEditor("runIMEContentObserverTest with contenteditable (defaultParagraphSeparator is p): ", contenteditable, "p");
+  await testWithHTMLEditor("runIMEContentObserverTest with contenteditable (defaultParagraphSeparator is div): ", contenteditable, "div");
   // XXX Due to the difference of HTML editor behavior between designMode and contenteditable,
   //     testWithHTMLEditor() gets some unexpected behavior.  However, IMEContentObserveri is
   //     not depend on editor's detail.  So, we should investigate this issue later.  It's not
   //     so important for now.
-  // yield* testWithHTMLEditor("runIMEContentObserverTest in designMode (defaultParagraphSeparator is br): ", iframe2.contentDocument.body, "br");
-  // yield* testWithHTMLEditor("runIMEContentObserverTest in designMode (defaultParagraphSeparator is p): ", iframe2.contentDocument.body, "p");
-  // yield* testWithHTMLEditor("runIMEContentObserverTest in designMode (defaultParagraphSeparator is div): ", iframe2.contentDocument.body, "div");
+  // await testWithHTMLEditor("runIMEContentObserverTest in designMode (defaultParagraphSeparator is br): ", iframe2.contentDocument.body, "br");
+  // await testWithHTMLEditor("runIMEContentObserverTest in designMode (defaultParagraphSeparator is p): ", iframe2.contentDocument.body, "p");
+  // await testWithHTMLEditor("runIMEContentObserverTest in designMode (defaultParagraphSeparator is div): ", iframe2.contentDocument.body, "div");
 }
 
 var gTestContinuation = null;
@@ -8419,7 +8421,6 @@ function* testBody()
   runQuerySelectionEventTest();
   runQueryIMESelectionTest();
   runQueryContentEventRelativeToInsertionPoint();
-  yield* runIMEContentObserverTest();
   runCSSTransformTest();
   runBug722639Test();
   runBug1375825Test();
@@ -8440,13 +8441,18 @@ function* testBody()
   runMaxLengthTest();
 }
 
-function runTest()
+async function runTest()
 {
   contenteditable = document.getElementById("iframe4").contentDocument.getElementById("contenteditable");
   windowOfContenteditable = document.getElementById("iframe4").contentWindow;
   textareaInFrame = iframe.contentDocument.getElementById("textarea");
+
+  await runIMEContentObserverTest();
+
   continueTest();
 }
+
+window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTest, window);
 
 ]]>
 </script>
