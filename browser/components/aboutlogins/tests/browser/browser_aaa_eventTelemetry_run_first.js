@@ -111,7 +111,9 @@ add_task(async function test_telemetry_events() {
   await waitForTelemetryEventCount(6);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
-    let newLoginButton = content.document.querySelector("#create-login-button");
+    let newLoginButton = content.document
+      .querySelector("login-list")
+      .shadowRoot.querySelector(".create-login-button");
     newLoginButton.click();
   });
   await waitForTelemetryEventCount(7);
