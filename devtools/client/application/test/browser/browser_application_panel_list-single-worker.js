@@ -3,7 +3,8 @@
 
 "use strict";
 
-const TAB_URL = URL_ROOT + "service-workers/dynamic-registration.html";
+const TAB_URL =
+  URL_ROOT + "resources/service-workers/dynamic-registration.html";
 
 add_task(async function() {
   await enableApplicationPanel();
@@ -30,7 +31,7 @@ add_task(async function() {
   const scopeEl = workerContainer.querySelector(".js-sw-scope");
   const expectedScope =
     "example.com/browser/devtools/client/application/test/" +
-    "service-workers/";
+    "browser/resources/service-workers/";
   ok(
     scopeEl.textContent.startsWith(expectedScope),
     "Service worker has the expected scope"

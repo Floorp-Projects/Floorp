@@ -8,9 +8,9 @@
  * current domain.
  */
 
-const SIMPLE_URL = URL_ROOT + "service-workers/simple.html";
+const SIMPLE_URL = URL_ROOT + "resources/service-workers/simple.html";
 const OTHER_URL = SIMPLE_URL.replace("example.com", "test1.example.com");
-const EMPTY_URL = (URL_ROOT + "service-workers/empty.html").replace(
+const EMPTY_URL = (URL_ROOT + "resources/service-workers/empty.html").replace(
   "example.com",
   "test2.example.com"
 );

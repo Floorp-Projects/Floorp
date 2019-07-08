@@ -3,19 +3,19 @@
 
 "use strict";
 
-/* import-globals-from ../../debugger/test/mochitest/helpers.js */
+/* import-globals-from ../../../debugger/test/mochitest/helpers.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers.js",
   this
 );
 
-/* import-globals-from ../../debugger/test/mochitest/helpers/context.js */
+/* import-globals-from ../../../debugger/test/mochitest/helpers/context.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers/context.js",
   this
 );
 
-const TAB_URL = URL_ROOT + "service-workers/debug.html";
+const TAB_URL = URL_ROOT + "resources/service-workers/debug.html";
 
 add_task(async function() {
   await enableApplicationPanel();
