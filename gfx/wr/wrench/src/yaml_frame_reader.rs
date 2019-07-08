@@ -1881,6 +1881,7 @@ impl YamlFrameReader {
 
         let filters = yaml["filters"].as_vec_filter_op().unwrap_or(vec![]);
         let filter_datas = yaml["filter-datas"].as_vec_filter_data().unwrap_or(vec![]);
+        let filter_primitives = yaml["filter-primitives"].as_vec_filter_primitive().unwrap_or(vec![]);
 
         dl.push_stacking_context(
             bounds.origin,
@@ -1891,6 +1892,7 @@ impl YamlFrameReader {
             mix_blend_mode,
             &filters,
             &filter_datas,
+            &filter_primitives,
             raster_space,
             cache_tiles,
         );

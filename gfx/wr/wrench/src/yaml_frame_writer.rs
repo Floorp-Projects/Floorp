@@ -72,6 +72,14 @@ fn color_to_string(value: ColorF) -> String {
     }
 }
 
+fn filter_input_to_string(input: FilterPrimitiveInput) -> String {
+    match input {
+        FilterPrimitiveInput::Original => "original".into(),
+        FilterPrimitiveInput::Previous => "previous".into(),
+        FilterPrimitiveInput::OutputOfPrimitiveIndex(index) => index.to_string(),
+    }
+}
+
 fn color_node(parent: &mut Table, key: &str, value: ColorF) {
     yaml_node(parent, key, Yaml::String(color_to_string(value)));
 }
@@ -253,6 +261,7 @@ fn write_stacking_context(
     properties: &SceneProperties,
     filter_iter: impl IntoIterator<Item = FilterOp>,
     filter_data_iter: &[TempFilterData],
+    filter_primitive_iter: impl IntoIterator<Item = FilterPrimitive>,
 ) {
     enum_node(parent, "transform-style", sc.transform_style);
 
@@ -349,6 +358,23 @@ fn write_stacking_context(
     }
 
     yaml_node(parent, "filter-datas", Yaml::Array(filter_datas));
+
+    // filter primitives
+    let mut filter_primitives = vec![];
+    for filter_primitive in filter_primitive_iter {
+        let mut table = new_table();
+        match filter_primitive {
+            FilterPrimitive::Blend(blend_primitive) => {
+                yaml_node(&mut table, "type", Yaml::String("blend".into()));
+                yaml_node(&mut table, "in1", Yaml::String(filter_input_to_string(blend_primitive.input1)));
+                yaml_node(&mut table, "in2", Yaml::String(filter_input_to_string(blend_primitive.input2)));
+                enum_node(&mut table, "mode", blend_primitive.mode);
+            }
+        }
+        filter_primitives.push(Yaml::Hash(table));
+    }
+
+    yaml_node(parent, "filter-primitives", Yaml::Array(filter_primitives));
 }
 
 #[cfg(target_os = "macos")]
@@ -1165,6 +1191,7 @@ impl YamlFrameWriter {
                         &scene.properties,
                         base.filters(),
                         base.filter_datas(),
+                        base.filter_primitives(),
                     );
 
                     let mut sub_iter = base.sub_iter();
@@ -1277,9 +1304,11 @@ impl YamlFrameWriter {
                 DisplayItem::PopReferenceFrame |
                 DisplayItem::PopStackingContext => return,
 
-                DisplayItem::SetGradientStops => panic!("dummy item yielded?"),
-                DisplayItem::SetFilterOps => panic!("dummy item yielded?"),
-                DisplayItem::SetFilterData => panic!("dummy item yielded?"),
+                DisplayItem::SetGradientStops |
+                DisplayItem::SetFilterOps |
+                DisplayItem::SetFilterData |
+                DisplayItem::SetFilterPrimitives => panic!("dummy item yielded?"),
+
                 DisplayItem::PushShadow(item) => {
                     str_node(&mut v, "type", "shadow");
                     vector_node(&mut v, "offset", &item.shadow.offset);

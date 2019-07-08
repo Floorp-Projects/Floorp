@@ -5,7 +5,7 @@
 use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter};
 use api::{ClipId, ColorF, CommonItemProperties, ComplexClipRegion, RasterSpace};
 use api::{DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId};
-use api::{FilterOp, FontInstanceKey, GlyphInstance, GlyphOptions, GradientStop};
+use api::{FilterOp, FilterPrimitive, FontInstanceKey, GlyphInstance, GlyphOptions, GradientStop};
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId};
 use api::{PropertyBinding, ReferenceFrame, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
@@ -796,6 +796,7 @@ impl<'a> DisplayListFlattener<'a> {
         origin: LayoutPoint,
         filters: ItemRange<FilterOp>,
         filter_datas: &[TempFilterData],
+        filter_primitives: ItemRange<FilterPrimitive>,
         is_backface_visible: bool,
         apply_pipeline_clip: bool,
     ) {
@@ -809,6 +810,7 @@ impl<'a> DisplayListFlattener<'a> {
             CompositeOps::new(
                 stacking_context.filter_ops_for_compositing(filters),
                 stacking_context.filter_datas_for_compositing(filter_datas),
+                stacking_context.filter_primitives_for_compositing(filter_primitives),
                 stacking_context.mix_blend_mode_for_compositing(),
             )
         };
@@ -1180,6 +1182,7 @@ impl<'a> DisplayListFlattener<'a> {
                     info.origin,
                     item.filters(),
                     item.filter_datas(),
+                    item.filter_primitives(),
                     info.is_backface_visible,
                     apply_pipeline_clip,
                 );
@@ -1309,9 +1312,10 @@ impl<'a> DisplayListFlattener<'a> {
             }
 
             // Do nothing; these are dummy items for the display list parser
-            DisplayItem::SetGradientStops => {}
-            DisplayItem::SetFilterOps => {}
-            DisplayItem::SetFilterData => {}
+            DisplayItem::SetGradientStops |
+            DisplayItem::SetFilterOps |
+            DisplayItem::SetFilterData |
+            DisplayItem::SetFilterPrimitives => {}
 
             DisplayItem::PopReferenceFrame |
             DisplayItem::PopStackingContext => {
