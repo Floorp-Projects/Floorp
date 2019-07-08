@@ -5307,13 +5307,13 @@ static void SetOffsetIfLength(const LengthOrAuto& aOffset,
     // use the default line thickness to set the offset behind (closer to the
     // text) than the automatic offset, then set the user's defined offset
     aParams.offset += aParams.defaultLineThickness;
-    aParams.offset += aOffset.AsLength().ToAppUnits() / aAppUnitsPerDevPixel;
+    aParams.offset -= aOffset.AsLength().ToAppUnits() / aAppUnitsPerDevPixel;
   } else if (aRightUnderline) {
     // handles right underline (generally japanese/korean text)
     aParams.offset -= aParams.defaultLineThickness;
-    aParams.offset -= aOffset.AsLength().ToAppUnits() / aAppUnitsPerDevPixel;
+    aParams.offset += aOffset.AsLength().ToAppUnits() / aAppUnitsPerDevPixel;
   } else {
-    aParams.offset = aOffset.AsLength().ToAppUnits() / aAppUnitsPerDevPixel;
+    aParams.offset = -aOffset.AsLength().ToAppUnits() / aAppUnitsPerDevPixel;
   }
 }
 
@@ -5353,10 +5353,10 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
 
     if (textUnderlineOffset.IsLength()) {
       if (verticalRun) {
-        underlineOffset +=
-            textUnderlineOffset.AsLength().ToAppUnits() + underlineSize;
+        underlineOffset += underlineSize;
+        underlineOffset -= textUnderlineOffset.AsLength().ToAppUnits();
       } else {
-        underlineOffset = textUnderlineOffset.AsLength().ToAppUnits();
+        underlineOffset = -textUnderlineOffset.AsLength().ToAppUnits();
       }
     }
 
