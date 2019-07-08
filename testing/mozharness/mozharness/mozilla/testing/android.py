@@ -343,8 +343,8 @@ class AndroidMixin(object):
             self.info('Failed to install %s on %s: %s %s' %
                       (apk, self.device_name,
                        type(e).__name__, e))
-            self.fatal('INFRA-ERROR: Failed to install %s' %
-                       os.path.basename(apk),
+            self.fatal('INFRA-ERROR: %s Failed to install %s' %
+                       (type(e).__name__, os.path.basename(apk)),
                        EXIT_STATUS_DICT[TBPL_RETRY])
 
     def is_boot_completed(self):
