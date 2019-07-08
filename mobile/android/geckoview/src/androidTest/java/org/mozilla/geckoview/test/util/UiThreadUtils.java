@@ -108,20 +108,12 @@ public class UiThreadUtils {
         public boolean isComplete;
 
         public ResultHolder(GeckoResult<T> result) {
-            result.then(new GeckoResult.OnValueListener<T, Void>() {
-                @Override
-                public GeckoResult<Void> onValue(T value) {
-                    ResultHolder.this.value = value;
-                    isComplete = true;
-                    return null;
-                }
-            }, new GeckoResult.OnExceptionListener<Void>() {
-                @Override
-                public GeckoResult<Void> onException(Throwable error) {
-                    ResultHolder.this.error = error;
-                    isComplete = true;
-                    return null;
-                }
+            result.accept(value -> {
+                ResultHolder.this.value = value;
+                isComplete = true;
+            }, error -> {
+                ResultHolder.this.error = error;
+                isComplete = true;
             });
         }
     }
