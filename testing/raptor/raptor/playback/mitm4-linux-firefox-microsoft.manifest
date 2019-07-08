@@ -1,0 +1,10 @@
+[
+  {
+    "size": 2886896,
+    "visibility": "public",
+    "digest": "af40b89006f6e457f0c6afa7e20fe176181de8ddf0c11c76dc4b5b1c8bbfb74a2bd0214a76c5d5f6a73b74637641bb01ff77e6abdb5fba6833b2d6af225a83c2",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-microsoft.zip",
+    "unpack": true
+  }
+]
