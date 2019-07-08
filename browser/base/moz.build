@@ -36,7 +36,6 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/performance/browser.ini',
     'content/test/performance/hidpi/browser.ini',
     'content/test/performance/io/browser.ini',
-    'content/test/performance/legacyurlbar/browser.ini',
     'content/test/performance/lowdpi/browser.ini',
     'content/test/permissions/browser.ini',
     'content/test/plugins/browser-rs-blocklist.ini',

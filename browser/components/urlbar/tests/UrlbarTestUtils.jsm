@@ -13,7 +13,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserTestUtils: "resource://testing-common/BrowserTestUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -296,7 +295,7 @@ class UrlbarAbstraction {
       throw new Error("Must provide a browser window");
     }
     this.urlbar = win.gURLBar;
-    this.quantumbar = UrlbarPrefs.get("quantumbar");
+    this.quantumbar = true;
     this.window = win;
     this.window.addEventListener(
       "unload",
