@@ -74,13 +74,12 @@ add_task(async function test_empty_list() {
 add_task(async function test_keyboard_navigation() {
   gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2, TEST_LOGIN_3]);
 
-  while (document.activeElement != gLoginList) {
+  while (document.activeElement != gLoginList &&
+         gLoginList.shadowRoot.querySelector("#login-sort") != gLoginList.shadowRoot.activeElement) {
     sendKey("TAB");
     await new Promise(resolve => requestAnimationFrame(resolve));
   }
 
-  sendKey("TAB");
-  sendKey("TAB");
   let loginSort = gLoginList.shadowRoot.querySelector("#login-sort");
   await SimpleTest.promiseWaitForCondition(() => loginSort == gLoginList.shadowRoot.activeElement,
     "waiting for login-sort to get focus");
