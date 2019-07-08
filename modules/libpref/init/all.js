@@ -7,11 +7,12 @@
  * embedding situations. Application-specific preferences belong somewhere else,
  * such as browser/app/profile/firefox.js or mobile/android/app/mobile.js.
  *
+ * NOTE: Not all prefs should be defined in this (or any other) data file.
+ * Static prefs, especially VarCache prefs, are defined in StaticPrefList.h.
+ * Those prefs should *not* appear in this file.
+ *
  * For the syntax used by this file, consult the comments at the top of
  * modules/libpref/parser/src/lib.rs.
- *
- * Some prefs, especially VarCache prefs, are defined in StaticPrefList.h
- * rather than this (or any other) data file.
  */
 
 pref("keyword.enabled", false);
