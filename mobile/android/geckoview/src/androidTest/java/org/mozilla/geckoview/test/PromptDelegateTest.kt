@@ -1,6 +1,5 @@
 package org.mozilla.geckoview.test
 
-import android.support.test.InstrumentationRegistry
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
@@ -15,17 +14,11 @@ import org.hamcrest.Matchers.*
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.geckoview.test.util.HttpBin
-import java.net.URI
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 @WithDevToolsAPI
 class PromptDelegateTest : BaseSessionTest() {
-    companion object {
-        val TEST_ENDPOINT: String = "http://localhost:4243"
-    }
-
     @Ignore("disable test for frequently failing Bug 1535423")
     @Test fun popupTest() {
         // Ensure popup blocking is enabled for this test.
@@ -118,22 +111,14 @@ class PromptDelegateTest : BaseSessionTest() {
     }
 
     @Test fun authTest() {
-        val httpBin = HttpBin(InstrumentationRegistry.getTargetContext(), URI.create(TEST_ENDPOINT))
+        sessionRule.session.loadTestPath("/basic-auth/foo/bar")
 
-        try {
-            httpBin.start()
-
-            sessionRule.session.loadUri("$TEST_ENDPOINT/basic-auth/foo/bar")
-
-            sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
-                @AssertCalled(count = 1)
-                override fun onAuthPrompt(session: GeckoSession, title: String?, msg: String?, options: GeckoSession.PromptDelegate.AuthOptions, callback: GeckoSession.PromptDelegate.AuthCallback) {
-                    //TODO: Figure out some better testing here.
-                }
-            })
-        } finally {
-            httpBin.stop()
-        }
+        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onAuthPrompt(session: GeckoSession, title: String?, msg: String?, options: GeckoSession.PromptDelegate.AuthOptions, callback: GeckoSession.PromptDelegate.AuthCallback) {
+                //TODO: Figure out some better testing here.
+            }
+        })
     }
 
     @Ignore // TODO: Reenable when 1501574 is fixed.
@@ -164,7 +149,10 @@ class PromptDelegateTest : BaseSessionTest() {
     }
 
     @Test fun textTest() {
-        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onTextPrompt(session: GeckoSession, title: String?, msg: String?, value: String?, callback: GeckoSession.PromptDelegate.TextCallback) {
                 assertThat("Message should match", "Prompt:", equalTo(msg))
@@ -209,14 +197,22 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         sessionRule.session.evaluateJS("""
-            let c = document.getElementById('colorexample');
-            let p = new Promise((resolve, reject) => {
-                c.addEventListener('change', (event) => resolve(event.target.value), false);
-            });
-            c.click();""".trimIndent())
+            this.c = document.getElementById('colorexample');
+        """.trimIndent())
+
+        val promise = sessionRule.session.evaluatePromiseJS("""
+            new Promise((resolve, reject) => {
+                this.c.addEventListener(
+                    'change',
+                    event => resolve(event.target.value),
+                    false
+                );
+            })""".trimIndent())
+
+        sessionRule.session.evaluateJS("this.c.click();")
 
         assertThat("Value should match",
-                sessionRule.session.waitForJS("p") as String,
+                promise.value as String,
                 equalTo("#123456"))
     }
 
