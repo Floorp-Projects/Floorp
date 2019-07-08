@@ -42,8 +42,8 @@ UniquePtr<Sdp> SipccSdpParser::Parse(const std::string& sdpText) {
   sdp_transport_supported(sipcc_config, SDP_TRANSPORT_RTPSAVPF, true);
   sdp_transport_supported(sipcc_config, SDP_TRANSPORT_UDPTLSRTPSAVP, true);
   sdp_transport_supported(sipcc_config, SDP_TRANSPORT_UDPTLSRTPSAVPF, true);
-  sdp_transport_supported(sipcc_config, SDP_TRANSPORT_TCPTLSRTPSAVP, true);
-  sdp_transport_supported(sipcc_config, SDP_TRANSPORT_TCPTLSRTPSAVPF, true);
+  sdp_transport_supported(sipcc_config, SDP_TRANSPORT_TCPDTLSRTPSAVP, true);
+  sdp_transport_supported(sipcc_config, SDP_TRANSPORT_TCPDTLSRTPSAVPF, true);
   sdp_transport_supported(sipcc_config, SDP_TRANSPORT_DTLSSCTP, true);
   sdp_transport_supported(sipcc_config, SDP_TRANSPORT_UDPDTLSSCTP, true);
   sdp_transport_supported(sipcc_config, SDP_TRANSPORT_TCPDTLSSCTP, true);
