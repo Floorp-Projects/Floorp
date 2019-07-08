@@ -296,20 +296,9 @@ public class GeckoSession implements Parcelable {
                         return;
                     }
 
-                    result.then(new GeckoResult.OnValueListener<Boolean, Void>() {
-                        @Override
-                        public GeckoResult<Void> onValue(final Boolean visited) throws Throwable {
-                            callback.sendSuccess(visited.booleanValue());
-                            return null;
-                        }
-                    }, new GeckoResult.OnExceptionListener<Void>() {
-                        @Override
-                        public GeckoResult<Void> onException(final Throwable exception)
-                                 throws Throwable {
-                            callback.sendSuccess(false);
-                            return null;
-                        }
-                    });
+                    result.accept(
+                        visited -> callback.sendSuccess(visited.booleanValue()),
+                        exception -> callback.sendSuccess(false));
                 } else if ("GeckoView:GetVisited".equals(event)) {
                     final String[] urls = message.getStringArray("urls");
 
@@ -321,20 +310,9 @@ public class GeckoSession implements Parcelable {
                         return;
                     }
 
-                    result.then(new GeckoResult.OnValueListener<boolean[], Void>() {
-                        @Override
-                        public GeckoResult<Void> onValue(final boolean[] visited) throws Throwable {
-                            callback.sendSuccess(visited);
-                            return null;
-                        }
-                    }, new GeckoResult.OnExceptionListener<Void>() {
-                        @Override
-                        public GeckoResult<Void> onException(final Throwable exception)
-                                throws Throwable {
-                            callback.sendError("Failed to fetch visited statuses for URIs");
-                            return null;
-                        }
-                    });
+                    result.accept(
+                        visited -> callback.sendSuccess(visited),
+                        exception -> callback.sendError("Failed to fetch visited statuses for URIs"));
                 }
             }
         };
@@ -548,27 +526,16 @@ public class GeckoSession implements Parcelable {
                         return;
                     }
 
-                    result.then(new GeckoResult.OnValueListener<AllowOrDeny, Void>() {
-                        @Override
-                        public GeckoResult<Void> onValue(final AllowOrDeny value) throws Throwable {
-                            ThreadUtils.assertOnUiThread();
-                            if (value == AllowOrDeny.ALLOW) {
-                                callback.sendSuccess(false);
-                            } else  if (value == AllowOrDeny.DENY) {
-                                callback.sendSuccess(true);
-                            } else {
-                                callback.sendError("Invalid response");
-                            }
-                            return null;
+                    result.accept(value -> {
+                        ThreadUtils.assertOnUiThread();
+                        if (value == AllowOrDeny.ALLOW) {
+                            callback.sendSuccess(false);
+                        } else  if (value == AllowOrDeny.DENY) {
+                            callback.sendSuccess(true);
+                        } else {
+                            callback.sendError("Invalid response");
                         }
-                    }, new GeckoResult.OnExceptionListener<Void>() {
-                        @Override
-                        public GeckoResult<Void> onException(final Throwable exception)
-                                throws Throwable {
-                            callback.sendError(exception.getMessage());
-                            return null;
-                        }
-                    });
+                    }, exception -> callback.sendError(exception.getMessage()));
                 } else if ("GeckoView:OnLoadError".equals(event)) {
                     final String uri = message.getString("uri");
                     final long errorCode = message.getLong("error");
@@ -587,28 +554,17 @@ public class GeckoSession implements Parcelable {
                         return;
                     }
 
-                    result.then(new GeckoResult.OnValueListener<String, Void>() {
-                        @Override
-                        public GeckoResult<Void> onValue(final @Nullable String url)
-                                throws Throwable {
-                            if (url == null) {
-                                if (GeckoAppShell.isFennec()) {
-                                    callback.sendSuccess(null);
-                                } else {
-                                    callback.sendError("abort");
-                                }
+                    result.accept(url -> {
+                        if (url == null) {
+                            if (GeckoAppShell.isFennec()) {
+                                callback.sendSuccess(null);
                             } else {
-                                callback.sendSuccess(url);
+                                callback.sendError("abort");
                             }
-                            return null;
+                        } else {
+                            callback.sendSuccess(url);
                         }
-                    }, new GeckoResult.OnExceptionListener<Void>() {
-                        @Override
-                        public GeckoResult<Void> onException(final @NonNull Throwable exception) throws Throwable {
-                            callback.sendError(exception.getMessage());
-                            return null;
-                        }
-                    });
+                    }, exception -> callback.sendError(exception.getMessage()));
                 } else if ("GeckoView:OnNewSession".equals(event)) {
                     final String uri = message.getString("uri");
                     final GeckoResult<GeckoSession> result = delegate.onNewSession(GeckoSession.this, uri);
@@ -617,37 +573,24 @@ public class GeckoSession implements Parcelable {
                         return;
                     }
 
-                    result.then(new GeckoResult.OnValueListener<GeckoSession, Void>() {
-                        @Override
-                        public GeckoResult<Void> onValue(final GeckoSession session)
-                                throws Throwable {
-                            ThreadUtils.assertOnUiThread();
-                            if (session == null) {
-                                callback.sendSuccess(null);
-                                return null;
-                            }
-
-                            if (session.isOpen()) {
-                                throw new IllegalArgumentException("Must use an unopened GeckoSession instance");
-                            }
-
-                            if (GeckoSession.this.mWindow == null) {
-                                callback.sendError("Session is not attached to a window");
-                            } else {
-                                session.open(GeckoSession.this.mWindow.runtime);
-                                callback.sendSuccess(session.getId());
-                            }
-
-                            return null;
+                    result.accept(session -> {
+                        ThreadUtils.assertOnUiThread();
+                        if (session == null) {
+                            callback.sendSuccess(null);
+                            return;
                         }
-                    }, new GeckoResult.OnExceptionListener<Void>() {
-                        @Override
-                        public GeckoResult<Void> onException(final Throwable exception)
-                                throws Throwable {
-                            callback.sendError(exception.getMessage());
-                            return null;
+
+                        if (session.isOpen()) {
+                            throw new IllegalArgumentException("Must use an unopened GeckoSession instance");
                         }
-                    });
+
+                        if (GeckoSession.this.mWindow == null) {
+                            callback.sendError("Session is not attached to a window");
+                        } else {
+                            session.open(GeckoSession.this.mWindow.runtime);
+                            callback.sendSuccess(session.getId());
+                        }
+                    }, exception -> callback.sendError(exception.getMessage()));
                 }
             }
         };
@@ -2756,26 +2699,16 @@ public class GeckoSession implements Parcelable {
                     return;
                 }
 
-                res.then(new GeckoResult.OnValueListener<AllowOrDeny, Void>() {
-                    @Override
-                    public GeckoResult<Void> onValue(final AllowOrDeny value) throws Throwable {
-                        if (value == AllowOrDeny.ALLOW) {
-                            callback.sendSuccess(true);
-                        } else if (value == AllowOrDeny.DENY) {
-                            callback.sendSuccess(false);
-                        } else {
-                            callback.sendError("Invalid response");
-                        }
-                        return null;
+                res.accept(value -> {
+                    if (value == AllowOrDeny.ALLOW) {
+                        callback.sendSuccess(true);
+                    } else if (value == AllowOrDeny.DENY) {
+                        callback.sendSuccess(false);
+                    } else {
+                        callback.sendError("Invalid response");
                     }
-                }, new GeckoResult.OnExceptionListener<Void>() {
-                    @Override
-                    public GeckoResult<Void> onException(final Throwable exception)
-                            throws Throwable {
-                        callback.sendError("Failed to get popup-blocking decision");
-                        return null;
-                    }
-                });
+                }, exception ->
+                        callback.sendError("Failed to get popup-blocking decision"));
                 break;
             }
             default: {
