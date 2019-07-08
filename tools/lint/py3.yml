@@ -7,6 +7,7 @@ py3:
         - build
         - client.py
         - dom/bindings
+        - dom/canvas/test
         - dom/media/test
         - gfx
         - ipc/ipdl
