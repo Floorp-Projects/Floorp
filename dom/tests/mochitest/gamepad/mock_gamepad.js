@@ -3,15 +3,14 @@
 
 var GamepadService;
 
-function setGamepadPreferenceAndCreateIframe(iframeSrc) {
-  SpecialPowers.pushPrefEnv(
-    { set: [["dom.gamepad.test.enabled", true]] },
-    () => {
-      let iframe = document.createElement("iframe");
-      iframe.src = iframeSrc;
-      document.body.appendChild(iframe);
-    }
-  );
+async function setGamepadPreferenceAndCreateIframe(iframeSrc) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.gamepad.test.enabled", true]],
+  });
+
+  let iframe = document.createElement("iframe");
+  iframe.src = iframeSrc;
+  document.body.appendChild(iframe);
 }
 
 function runGamepadTest(callback) {

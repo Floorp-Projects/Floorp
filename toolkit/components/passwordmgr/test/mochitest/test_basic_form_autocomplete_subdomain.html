@@ -107,7 +107,7 @@ add_task(async function test_form1_menu_shows_two_logins_same_usernames_for_diff
 
   // The logins are added "today" and since they are duplicates, the date that they were last
   // changed will be appended.
-  let dateString = setupScript.sendSyncMessage("getDateString");
+  let dateString = await setupScript.sendQuery("getDateString");
   let username = `dsdu1 (${dateString})`;
 
   checkAutoCompleteResults(results, [username, username], "example.com", "Check all menuitems are displayed correctly.");

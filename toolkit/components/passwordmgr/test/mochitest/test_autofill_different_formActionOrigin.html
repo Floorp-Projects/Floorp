@@ -30,14 +30,14 @@ let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@moz
 let iframe = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]);
 
 async function prepareLoginsAndProcessForm(url, logins = []) {
-  LoginManager.removeAllLogins();
+  await LoginManager.removeAllLogins();
 
   let dates = Date.now();
   for (let login of logins) {
     SpecialPowers.do_QueryInterface(login, SpecialPowers.Ci.nsILoginMetaInfo);
     // Force all dates to be the same so they don't affect things like deduping.
     login.timeCreated = login.timePasswordChanged = login.timeLastUsed = dates;
-    LoginManager.addLogin(login);
+    await LoginManager.addLogin(login);
   }
 
   iframe.src = url;

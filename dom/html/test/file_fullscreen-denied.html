@@ -152,6 +152,7 @@ async function testFullscreenMouseBtn(event, button, next) {
   // Restore the pref environment we changed before
   // entering testNonTrustContext.
   await SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
   finish();
 }
 

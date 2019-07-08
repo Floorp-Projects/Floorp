@@ -100,8 +100,8 @@ function getTestPlugin(pluginName) {
   return null;
 }
 
-function setTestPluginEnabledState(newEnabledState, pluginName) {
-  var oldEnabledState = SpecialPowers.setTestPluginEnabledState(
+async function setTestPluginEnabledState(newEnabledState, pluginName) {
+  var oldEnabledState = await SpecialPowers.setTestPluginEnabledState(
     newEnabledState,
     pluginName
   );
@@ -115,7 +115,7 @@ function setTestPluginEnabledState(newEnabledState, pluginName) {
     return plugin.enabledState == newEnabledState;
   });
   SimpleTest.registerCleanupFunction(function() {
-    SpecialPowers.setTestPluginEnabledState(oldEnabledState, pluginName);
+    return SpecialPowers.setTestPluginEnabledState(oldEnabledState, pluginName);
   });
 }
 
