@@ -29,6 +29,7 @@ const STATE_NORMAL = Symbol("STATE_NORMAL");
 const STATE_QUOTE = Symbol("STATE_QUOTE");
 const STATE_DQUOTE = Symbol("STATE_DQUOTE");
 const STATE_TEMPLATE_LITERAL = Symbol("STATE_TEMPLATE_LITERAL");
+const STATE_ESCAPE = Symbol("STATE_ESCAPE");
 
 const OPEN_BODY = "{[(".split("");
 const CLOSE_BODY = "}])".split("");
@@ -68,36 +69,18 @@ function hasArrayIndex(str) {
  */
 /* eslint-disable complexity */
 function analyzeInputString(str) {
+  // work variables.
   const bodyStack = [];
-
   let state = STATE_NORMAL;
-  let start = 0;
-  let c;
-
-  // Use an array in order to handle character with a length > 2 (e.g. 😎).
-  const characters = Array.from(str);
-
-  const buildReturnObject = () => {
-    let isElementAccess = false;
-    if (bodyStack.length === 1 && bodyStack[0].token === "[") {
-      start = bodyStack[0].start;
-      isElementAccess = true;
-      if ([STATE_DQUOTE, STATE_QUOTE, STATE_TEMPLATE_LITERAL].includes(state)) {
-        state = STATE_NORMAL;
-      }
-    }
-
-    return {
-      state,
-      lastStatement: characters.slice(start).join(""),
-      isElementAccess,
-    };
-  };
+  let previousNonWhitespaceChar;
+  let lastStatement = "";
+  let pendingWhitespaceChars = "";
 
   const TIMEOUT = 2500;
   const startingTime = Date.now();
 
-  for (let i = 0; i < characters.length; i++) {
+  // Use a string iterator in order to handle character with a length >= 2 (e.g. 😎).
+  for (const c of str) {
     // We are possibly dealing with a very large string that would take a long time to
     // analyze (and freeze the process). If the function has been running for more than
     // a given time, we stop the analysis (this isn't too bad because the only
@@ -108,10 +91,24 @@ function analyzeInputString(str) {
       };
     }
 
-    c = characters[i];
+    let resetLastStatement = false;
+    const isWhitespaceChar = c.trim() === "";
+
     switch (state) {
       // Normal JS state.
       case STATE_NORMAL:
+        // If the last characters were spaces, and the current one is not.
+        if (pendingWhitespaceChars && !isWhitespaceChar) {
+          // If we have a legitimate property/element access, we append the spaces.
+          if (c === "[" || c === ".") {
+            lastStatement = lastStatement + pendingWhitespaceChars;
+          } else {
+            // if not, we can be sure the statement was over, and we can start a new one.
+            lastStatement = "";
+          }
+          pendingWhitespaceChars = "";
+        }
+
         if (c == '"') {
           state = STATE_DQUOTE;
         } else if (c == "'") {
@@ -119,49 +116,29 @@ function analyzeInputString(str) {
         } else if (c == "`") {
           state = STATE_TEMPLATE_LITERAL;
         } else if (OPERATOR_CHARS_SET.has(c)) {
-          // If the character is an operator, we need to update the start position.
-          start = i + 1;
-        } else if (c == " ") {
-          const currentLastStatement = characters.slice(start, i).join("");
-          const before = characters.slice(0, i);
-          const after = characters.slice(i + 1);
-          const trimmedBefore = Array.from(before.join("").trimRight());
-          const trimmedAfter = Array.from(after.join("").trimLeft());
-
-          const nextNonSpaceChar = trimmedAfter[0];
-          const nextNonSpaceCharIndex = after.indexOf(nextNonSpaceChar);
-          const previousNonSpaceChar = trimmedBefore[trimmedBefore.length - 1];
-
-          // If the previous char isn't a dot or opening bracket, and the next one isn't
-          // one either, and the current computed statement is not a
-          // variable/function/class declaration, update the start position.
+          // If the character is an operator, we can update the current statement.
+          resetLastStatement = true;
+        } else if (isWhitespaceChar) {
+          // If the previous char isn't a dot or opening bracket, and the current computed
+          // statement is not a variable/function/class declaration, we track the number
+          // of consecutive spaces, so we can re-use them at some point (or drop them).
           if (
-            previousNonSpaceChar !== "." &&
-            nextNonSpaceChar !== "." &&
-            previousNonSpaceChar !== "[" &&
-            nextNonSpaceChar !== "[" &&
-            !NO_AUTOCOMPLETE_PREFIXES.includes(currentLastStatement)
+            previousNonWhitespaceChar !== "." &&
+            previousNonWhitespaceChar !== "[" &&
+            !NO_AUTOCOMPLETE_PREFIXES.includes(lastStatement)
           ) {
-            start =
-              i +
-              (nextNonSpaceCharIndex >= 0
-                ? nextNonSpaceCharIndex
-                : after.length + 1);
+            pendingWhitespaceChars += c;
+            continue;
           }
-
-          // There's only spaces after that, so we can return.
-          if (!nextNonSpaceChar) {
-            return buildReturnObject();
-          }
-
-          // Let's jump to handle the next non-space char.
-          i = i + nextNonSpaceCharIndex;
         } else if (OPEN_BODY.includes(c)) {
+          // When opening a bracket or a parens, we store the current statement, in order
+          // to be able to retrieve it later.
           bodyStack.push({
             token: c,
-            start,
+            lastStatement,
           });
-          start = i + 1;
+          // And we compute a new statement.
+          resetLastStatement = true;
         } else if (CLOSE_BODY.includes(c)) {
           const last = bodyStack.pop();
           if (!last || OPEN_CLOSE_BODY[last.token] != c) {
@@ -170,17 +147,22 @@ function analyzeInputString(str) {
             };
           }
           if (c == "}") {
-            start = i + 1;
+            resetLastStatement = true;
           } else {
-            start = last.start;
+            lastStatement = last.lastStatement;
           }
         }
+        break;
+
+      // Escaped quote
+      case STATE_ESCAPE:
+        state = STATE_NORMAL;
         break;
 
       // Double quote state > " <
       case STATE_DQUOTE:
         if (c == "\\") {
-          i++;
+          state = STATE_ESCAPE;
         } else if (c == "\n") {
           return {
             err: "unterminated string literal",
@@ -193,7 +175,7 @@ function analyzeInputString(str) {
       // Template literal state > ` <
       case STATE_TEMPLATE_LITERAL:
         if (c == "\\") {
-          i++;
+          state = STATE_ESCAPE;
         } else if (c == "`") {
           state = STATE_NORMAL;
         }
@@ -202,7 +184,7 @@ function analyzeInputString(str) {
       // Single quote state > ' <
       case STATE_QUOTE:
         if (c == "\\") {
-          i++;
+          state = STATE_ESCAPE;
         } else if (c == "\n") {
           return {
             err: "unterminated string literal",
@@ -212,9 +194,46 @@ function analyzeInputString(str) {
         }
         break;
     }
+
+    if (!isWhitespaceChar) {
+      previousNonWhitespaceChar = c;
+    }
+
+    if (resetLastStatement) {
+      lastStatement = "";
+    } else {
+      lastStatement = lastStatement + c;
+    }
+
+    // We update all the open stacks lastStatement so they are up-to-date.
+    bodyStack.forEach(stack => {
+      if (stack.token !== "}") {
+        stack.lastStatement = stack.lastStatement + c;
+      }
+    });
   }
 
-  return buildReturnObject();
+  let isElementAccess = false;
+  if (bodyStack.length === 1 && bodyStack[0].token === "[") {
+    lastStatement = bodyStack[0].lastStatement;
+    isElementAccess = true;
+    if (
+      state === STATE_DQUOTE ||
+      state === STATE_QUOTE ||
+      state === STATE_TEMPLATE_LITERAL ||
+      state === STATE_ESCAPE
+    ) {
+      state = STATE_NORMAL;
+    }
+  } else if (pendingWhitespaceChars) {
+    lastStatement = "";
+  }
+
+  return {
+    state,
+    lastStatement,
+    isElementAccess,
+  };
 }
 /* eslint-enable complexity */
 
