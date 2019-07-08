@@ -9,7 +9,6 @@
 #include "nsIContentPolicy.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/dom/HTMLAllCollection.h"
 #include "nsCommandManager.h"
 #include "nsCOMPtr.h"
 #include "nsGlobalWindow.h"
@@ -157,10 +156,6 @@ nsHTMLDocument::nsHTMLDocument()
 }
 
 nsHTMLDocument::~nsHTMLDocument() {}
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(nsHTMLDocument, Document, mAll)
-
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(nsHTMLDocument, Document)
 
 JSObject* nsHTMLDocument::WrapNode(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
@@ -778,13 +773,6 @@ void nsHTMLDocument::GetSupportedNames(nsTArray<nsString>& aNames) {
 bool nsHTMLDocument::MatchFormControls(Element* aElement, int32_t aNamespaceID,
                                        nsAtom* aAtom, void* aData) {
   return aElement->IsNodeOfType(nsIContent::eHTML_FORM_CONTROL);
-}
-
-HTMLAllCollection* nsHTMLDocument::All() {
-  if (!mAll) {
-    mAll = new HTMLAllCollection(this);
-  }
-  return mAll;
 }
 
 nsresult nsHTMLDocument::Clone(dom::NodeInfo* aNodeInfo,
