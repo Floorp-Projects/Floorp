@@ -44,4 +44,14 @@ skip_on(android) == filter-mix-blend-mode.yaml filter-mix-blend-mode-ref.yaml  #
 != filter-drop-shadow-huge.yaml blank.yaml
 == filter-blur-scaled.yaml filter-blur-scaled-ref.yaml
 skip_on(android) == filter-blur-scaled-xonly.yaml filter-blur-scaled-xonly.png  # fails on Android emulator and Pixel2
-== filter-flood.yaml filter-flood-ref.yaml
+skip_on(android,emulator) == svg-filter-component-transfer.yaml filter-component-transfer-ref.yaml  # fails on Android emulator
+== svg-filter-flood.yaml svg-filter-flood-ref.yaml
+skip_on(android) == svg-filter-blend.yaml svg-filter-blend-ref.yaml
+skip_on(android,device) == svg-filter-color-matrix.yaml filter-color-matrix-ref.yaml  # fails on Pixel2
+platform(linux,mac) == draw_calls(8) color_targets(8) alpha_targets(0) svg-filter-blur.yaml filter-blur.png # Extra draw call is due to render task graph workaround
+platform(linux,mac) == svg-filter-drop-shadow.yaml svg-filter-drop-shadow.png
+== fuzzy(1,10000) svg-srgb-to-linear.yaml srgb-to-linear-ref.yaml
+platform(linux,mac) == fuzzy(4,28250) svg-filter-drop-shadow-rotate.yaml svg-filter-drop-shadow-rotate-ref.yaml
+platform(linux,mac) == svg-filter-blur-transforms.yaml svg-filter-blur-transforms.png
+platform(linux,mac) == svg-filter-drop-shadow-on-viewport-edge.yaml svg-filter-drop-shadow-on-viewport-edge.png
+platform(linux,mac) == svg-filter-drop-shadow-perspective.yaml svg-filter-drop-shadow-perspective.png
