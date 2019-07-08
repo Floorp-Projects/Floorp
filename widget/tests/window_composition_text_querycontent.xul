@@ -7162,9 +7162,9 @@ function runMaxLengthTest()
   }
 }
 
-function* runEditorReframeTests()
+async function runEditorReframeTests()
 {
-  function runEditorReframeTest(aEditor, aWindow, aEventType)
+  async function runEditorReframeTest(aEditor, aWindow, aEventType)
   {
     function getValue()
     {
@@ -7424,7 +7424,6 @@ function* runEditorReframeTests()
       },
     ];
 
-    let index = 0;
     function doReframe(aEvent)
     {
       aEvent.target.style.overflow =
@@ -7433,36 +7432,35 @@ function* runEditorReframeTests()
     aEditor.focus();
     aEditor.addEventListener(aEventType, doReframe);
 
-    function doNext()
-    {
-      if (tests.length <= index) {
-        aEditor.style.overflow = "auto";
-        aEditor.removeEventListener(aEventType, doReframe);
-        requestAnimationFrame(function() { SimpleTest.executeSoon(continueTest); });
-        return;
-      }
-      tests[index].test();
-      hitEventLoop(function () {
-        tests[index].check();
-        index++;
-        SimpleTest.executeSoon(doNext);
-      }, 20);
+    for (const currentTest of tests) {
+      currentTest.test();
+      await new Promise(resolve => {
+        hitEventLoop(() => {
+          currentTest.check();
+          SimpleTest.executeSoon(resolve);
+        }, 20);
+      });
     }
-    doNext();
+
+    await new Promise(resolve => {
+      aEditor.style.overflow = "auto";
+      aEditor.removeEventListener(aEventType, doReframe);
+      requestAnimationFrame(() => { SimpleTest.executeSoon(resolve); });
+    });
   }
 
   input.value = "";
-  yield runEditorReframeTest(input, window, "input");
+  await runEditorReframeTest(input, window, "input");
   input.value = "";
-  yield runEditorReframeTest(input, window, "compositionupdate");
+  await runEditorReframeTest(input, window, "compositionupdate");
   textarea.value = "";
-  yield runEditorReframeTest(textarea, window, "input");
+  await runEditorReframeTest(textarea, window, "input");
   textarea.value = "";
-  yield runEditorReframeTest(textarea, window, "compositionupdate");
+  await runEditorReframeTest(textarea, window, "compositionupdate");
   contenteditable.innerHTML = "";
-  yield runEditorReframeTest(contenteditable, windowOfContenteditable, "input");
+  await runEditorReframeTest(contenteditable, windowOfContenteditable, "input");
   contenteditable.innerHTML = "";
-  yield runEditorReframeTest(contenteditable, windowOfContenteditable, "compositionupdate");
+  await runEditorReframeTest(contenteditable, windowOfContenteditable, "compositionupdate");
 }
 
 async function runIMEContentObserverTest()
@@ -8433,7 +8431,6 @@ function* testBody()
   runNotRedundantChangeTest();
   runNativeLineBreakerTest();
   runControlCharTest();
-  yield* runEditorReframeTests();
   yield runAsyncForceCommitTest();
   yield runRemoveContentTest();
   runFrameTest();
@@ -8448,6 +8445,7 @@ async function runTest()
   textareaInFrame = iframe.contentDocument.getElementById("textarea");
 
   await runIMEContentObserverTest();
+  await runEditorReframeTests();
 
   continueTest();
 }
