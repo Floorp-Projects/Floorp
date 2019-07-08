@@ -542,7 +542,7 @@ nsChangeHint nsStyleOutline::CalcDifference(
 //
 nsStyleList::nsStyleList(const Document& aDocument)
     : mListStylePosition(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE),
-      mQuotes(StyleQuotes::Auto()),
+      mQuotes{StyleArcSlice<StyleQuotePair>(Servo_Quotes_GetInitialValue())},
       mMozListReversed(StyleMozListReversed::False) {
   MOZ_COUNT_CTOR(nsStyleList);
   MOZ_ASSERT(NS_IsMainThread());
