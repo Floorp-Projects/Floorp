@@ -3002,15 +3002,11 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
     }
 
     if (!tryCatch->emitCatch()) {
-      //            [stack] ... RET ITER RESULT
+      //            [stack] ... RET ITER RESULT EXC
       return false;
     }
 
     // Just ignore the exception thrown by call and await.
-    if (!emit1(JSOP_EXCEPTION)) {
-      //            [stack] ... RET ITER RESULT EXC
-      return false;
-    }
     if (!emit1(JSOP_POP)) {
       //            [stack] ... RET ITER RESULT
       return false;
@@ -4588,11 +4584,6 @@ bool BytecodeEmitter::emitCallSiteObject(CallSiteNode* callSiteObj) {
 bool BytecodeEmitter::emitCatch(BinaryNode* catchClause) {
   // We must be nested under a try-finally statement.
   MOZ_ASSERT(innermostNestableControl->is<TryFinallyControl>());
-
-  /* Pick up the pending exception and bind it to the catch variable. */
-  if (!emit1(JSOP_EXCEPTION)) {
-    return false;
-  }
 
   ParseNode* param = catchClause->left();
   if (!param) {
@@ -6311,16 +6302,13 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
   }
 
   if (!tryCatch.emitCatch()) {
-    //              [stack] NEXT ITER RESULT
-    return false;
-  }
-
-  MOZ_ASSERT(bytecodeSection().stackDepth() == startDepth);
-
-  if (!emit1(JSOP_EXCEPTION)) {
     //              [stack] NEXT ITER RESULT EXCEPTION
     return false;
   }
+
+  // The exception was already pushed by emitCatch().
+  MOZ_ASSERT(bytecodeSection().stackDepth() == startDepth + 1);
+
   if (!emitDupAt(2)) {
     //              [stack] NEXT ITER RESULT EXCEPTION ITER
     return false;
