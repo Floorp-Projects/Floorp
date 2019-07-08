@@ -173,7 +173,6 @@ class ContentDelegateTest : BaseSessionTest() {
 
     // TextInputDelegateTest is parameterized, so we put this test under ContentDelegateTest.
     @SdkSuppress(minSdkVersion = 23)
-    @WithDevToolsAPI
     @Test fun autofill() {
         // Test parts of the Oreo auto-fill API; there is another autofill test in
         // SessionAccessibility for a11y auto-fill support.
@@ -306,8 +305,10 @@ class ContentDelegateTest : BaseSessionTest() {
 
     // TextInputDelegateTest is parameterized, so we put this test under ContentDelegateTest.
     @SdkSuppress(minSdkVersion = 23)
-    @WithDevToolsAPI
-    @WithDisplay(width = 100, height = 100)
+    // The small screen is so that the page is forced to scroll to show the input
+    // and firing the autofill event.
+    // XXX(agi): This shouldn't be necessary though? What if the page doesn't scroll?
+    @WithDisplay(width = 10, height = 10)
     @Test fun autoFill_navigation() {
         fun countAutoFillNodes(cond: (MockViewNode) -> Boolean =
                                        { it.className == "android.widget.EditText" },
@@ -366,7 +367,7 @@ class ContentDelegateTest : BaseSessionTest() {
         assertThat("Should not have focused field",
                    countAutoFillNodes({ it.isFocused }), equalTo(0))
 
-        mainSession.evaluateJS("document.querySelector('#pass1').focus()")
+        mainSession.evaluateJS("document.querySelector('#pass2').focus()")
         sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1)
             override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
@@ -383,7 +384,7 @@ class ContentDelegateTest : BaseSessionTest() {
                    countAutoFillNodes({ node -> node.width > 0 && node.height > 0 }),
                    equalTo(7))
 
-        mainSession.evaluateJS("document.querySelector('#pass1').blur()")
+        mainSession.evaluateJS("document.querySelector('#pass2').blur()")
         sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1)
             override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
@@ -398,7 +399,6 @@ class ContentDelegateTest : BaseSessionTest() {
     }
 
     @WithDisplay(height = 100, width = 100)
-    @WithDevToolsAPI
     @Test fun autofill_userpass() {
         if (Build.VERSION.SDK_INT < 26) {
             return
