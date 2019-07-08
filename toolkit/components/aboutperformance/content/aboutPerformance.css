@@ -227,3 +227,11 @@ td {
 #dispatch-thead > tr > td.clickable:active {
   background-color: var(--in-content-button-background-active);
 }
+
+.energy-impact {
+  --bar-width: 0;
+  background: linear-gradient(to right, rgb(182, 211, 252) calc(var(--bar-width) * 1%), transparent calc(var(--bar-width) * 1%));
+}
+.energy-impact:dir(rtl) {
+  background: linear-gradient(to left, rgb(182, 211, 252) calc(var(--bar-width) * 1%), transparent calc(var(--bar-width) * 1%));
+}
