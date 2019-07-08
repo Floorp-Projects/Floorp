@@ -2,16 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BufferReader.h"
 #include "Index.h"
-#include "MP4Interval.h"
-#include "MP4Metadata.h"
-#include "SinfParser.h"
-#include "nsAutoPtr.h"
-#include "mozilla/RefPtr.h"
 
 #include <algorithm>
 #include <limits>
+
+#include "BufferReader.h"
+#include "mozilla/RefPtr.h"
+#include "MP4Interval.h"
+#include "MP4Metadata.h"
+#include "nsAutoPtr.h"
+#include "SinfParser.h"
 
 using namespace mozilla::media;
 
@@ -118,37 +119,6 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
     return sample.forget();
   }
 
-  SampleDescriptionEntry* sampleDescriptionEntry = GetSampleDescriptionEntry();
-  if (!sampleDescriptionEntry) {
-    // For the file to be valid the tfhd must reference a sample description
-    // entry.
-    return nullptr;
-  }
-
-  // Match scheme type box to enum representation.
-  CryptoScheme cryptoScheme = CryptoScheme::None;
-  // If a fragment references a sample description without crypto info them we
-  // treat it as unencrypted, even if other fragments may be encrypted.
-  if (sampleDescriptionEntry->mIsEncryptedEntry) {
-    if (!moofParser->mSinf.IsValid()) {
-      // The sample description entry says this sample is encrypted, but we
-      // don't have a relevant sinf box, this shouldn't happen, so bail.
-      return nullptr;
-    }
-    if (moofParser->mSinf.mDefaultEncryptionType == AtomType("cenc")) {
-      cryptoScheme = CryptoScheme::Cenc;
-      writer->mCrypto.mCryptoScheme = CryptoScheme::Cenc;
-    } else if (moofParser->mSinf.mDefaultEncryptionType == AtomType("cbcs")) {
-      cryptoScheme = CryptoScheme::Cbcs;
-      writer->mCrypto.mCryptoScheme = CryptoScheme::Cbcs;
-    } else {
-      MOZ_ASSERT_UNREACHABLE(
-          "Sample description entry reports sample is encrypted, but no "
-          "scheme, or an unsupported shceme is in use!");
-      return nullptr;
-    }
-  }
-
   // We need to check if this moof has init data the CDM expects us to surface.
   // This should happen when handling the first sample, even if that sample
   // isn't encrypted (samples later in the moof may be).
@@ -164,82 +134,90 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
     }
   }
 
-  if (sampleDescriptionEntry->mIsEncryptedEntry) {
-    writer->mCrypto.mCryptoScheme = cryptoScheme;
+  auto cryptoSchemeResult = GetEncryptionScheme();
+  if (cryptoSchemeResult.isErr()) {
+    // Log the error here in future.
+    return nullptr;
+  }
+  CryptoScheme cryptoScheme = cryptoSchemeResult.unwrap();
+  if (cryptoScheme == CryptoScheme::None) {
+    // No crypto to handle, early return.
+    Next();
+    return sample.forget();
+  }
 
-    MOZ_ASSERT(writer->mCrypto.mKeyId.IsEmpty(),
-               "Sample should not already have a key ID");
-    MOZ_ASSERT(writer->mCrypto.mConstantIV.IsEmpty(),
-               "Sample should not already have a constant IV");
-    CencSampleEncryptionInfoEntry* sampleInfo = GetSampleEncryptionEntry();
-    if (sampleInfo) {
-      // Use sample group information if present, this supersedes track level
-      // information.
-      writer->mCrypto.mKeyId.AppendElements(sampleInfo->mKeyId);
-      writer->mCrypto.mIVSize = sampleInfo->mIVSize;
-      writer->mCrypto.mCryptByteBlock = sampleInfo->mCryptByteBlock;
-      writer->mCrypto.mSkipByteBlock = sampleInfo->mSkipByteBlock;
-      writer->mCrypto.mConstantIV.AppendElements(sampleInfo->mConsantIV);
-    } else {
-      // Use the crypto info from track metadata
-      writer->mCrypto.mKeyId.AppendElements(moofParser->mSinf.mDefaultKeyID,
-                                            16);
-      writer->mCrypto.mIVSize = moofParser->mSinf.mDefaultIVSize;
-      writer->mCrypto.mCryptByteBlock =
-          moofParser->mSinf.mDefaultCryptByteBlock;
-      writer->mCrypto.mSkipByteBlock = moofParser->mSinf.mDefaultSkipByteBlock;
-      writer->mCrypto.mConstantIV.AppendElements(
-          moofParser->mSinf.mDefaultConstantIV);
-    }
+  writer->mCrypto.mCryptoScheme = cryptoScheme;
+  MOZ_ASSERT(writer->mCrypto.mCryptoScheme != CryptoScheme::None,
+             "Should have early returned if we don't have a crypto scheme!");
+  MOZ_ASSERT(writer->mCrypto.mKeyId.IsEmpty(),
+             "Sample should not already have a key ID");
+  MOZ_ASSERT(writer->mCrypto.mConstantIV.IsEmpty(),
+             "Sample should not already have a constant IV");
+  CencSampleEncryptionInfoEntry* sampleInfo = GetSampleEncryptionEntry();
+  if (sampleInfo) {
+    // Use sample group information if present, this supersedes track level
+    // information.
+    writer->mCrypto.mKeyId.AppendElements(sampleInfo->mKeyId);
+    writer->mCrypto.mIVSize = sampleInfo->mIVSize;
+    writer->mCrypto.mCryptByteBlock = sampleInfo->mCryptByteBlock;
+    writer->mCrypto.mSkipByteBlock = sampleInfo->mSkipByteBlock;
+    writer->mCrypto.mConstantIV.AppendElements(sampleInfo->mConsantIV);
+  } else {
+    // Use the crypto info from track metadata
+    writer->mCrypto.mKeyId.AppendElements(moofParser->mSinf.mDefaultKeyID, 16);
+    writer->mCrypto.mIVSize = moofParser->mSinf.mDefaultIVSize;
+    writer->mCrypto.mCryptByteBlock = moofParser->mSinf.mDefaultCryptByteBlock;
+    writer->mCrypto.mSkipByteBlock = moofParser->mSinf.mDefaultSkipByteBlock;
+    writer->mCrypto.mConstantIV.AppendElements(
+        moofParser->mSinf.mDefaultConstantIV);
+  }
 
-    if ((writer->mCrypto.mIVSize == 0 &&
-         writer->mCrypto.mConstantIV.IsEmpty()) ||
-        (writer->mCrypto.mIVSize != 0 && s->mCencRange.IsEmpty())) {
-      // If mIVSize == 0, this indicates that a constant IV is in use, thus we
-      // should have a non empty constant IV. Alternatively if IV size is non
-      // zero, we should have an IV for this sample, which we need to look up
-      // in mCencRange (which must then be non empty). If neither of these are
-      // true we have bad crypto data, so bail.
+  if ((writer->mCrypto.mIVSize == 0 && writer->mCrypto.mConstantIV.IsEmpty()) ||
+      (writer->mCrypto.mIVSize != 0 && s->mCencRange.IsEmpty())) {
+    // If mIVSize == 0, this indicates that a constant IV is in use, thus we
+    // should have a non empty constant IV. Alternatively if IV size is non
+    // zero, we should have an IV for this sample, which we need to look up
+    // in mCencRange (which must then be non empty). If neither of these are
+    // true we have bad crypto data, so bail.
+    return nullptr;
+  }
+  // Parse auxiliary information if present
+  if (!s->mCencRange.IsEmpty()) {
+    // The size comes from an 8 bit field
+    AutoTArray<uint8_t, 256> cencAuxInfo;
+    cencAuxInfo.SetLength(s->mCencRange.Length());
+    if (!mIndex->mSource->ReadAt(s->mCencRange.mStart, cencAuxInfo.Elements(),
+                                 cencAuxInfo.Length(), &bytesRead) ||
+        bytesRead != cencAuxInfo.Length()) {
       return nullptr;
     }
-    // Parse auxiliary information if present
-    if (!s->mCencRange.IsEmpty()) {
-      // The size comes from an 8 bit field
-      AutoTArray<uint8_t, 256> cencAuxInfo;
-      cencAuxInfo.SetLength(s->mCencRange.Length());
-      if (!mIndex->mSource->ReadAt(s->mCencRange.mStart, cencAuxInfo.Elements(),
-                                   cencAuxInfo.Length(), &bytesRead) ||
-          bytesRead != cencAuxInfo.Length()) {
-        return nullptr;
-      }
-      BufferReader reader(cencAuxInfo);
-      if (!reader.ReadArray(writer->mCrypto.mIV, writer->mCrypto.mIVSize)) {
+    BufferReader reader(cencAuxInfo);
+    if (!reader.ReadArray(writer->mCrypto.mIV, writer->mCrypto.mIVSize)) {
+      return nullptr;
+    }
+
+    // Parse the auxiliary information for subsample information
+    auto res = reader.ReadU16();
+    if (res.isOk() && res.unwrap() > 0) {
+      uint16_t count = res.unwrap();
+
+      if (reader.Remaining() < count * 6) {
         return nullptr;
       }
 
-      // Parse the auxiliary information for subsample information
-      auto res = reader.ReadU16();
-      if (res.isOk() && res.unwrap() > 0) {
-        uint16_t count = res.unwrap();
-
-        if (reader.Remaining() < count * 6) {
+      for (size_t i = 0; i < count; i++) {
+        auto res_16 = reader.ReadU16();
+        auto res_32 = reader.ReadU32();
+        if (res_16.isErr() || res_32.isErr()) {
           return nullptr;
         }
-
-        for (size_t i = 0; i < count; i++) {
-          auto res_16 = reader.ReadU16();
-          auto res_32 = reader.ReadU32();
-          if (res_16.isErr() || res_32.isErr()) {
-            return nullptr;
-          }
-          writer->mCrypto.mPlainSizes.AppendElement(res_16.unwrap());
-          writer->mCrypto.mEncryptedSizes.AppendElement(res_32.unwrap());
-        }
-      } else {
-        // No subsample information means the entire sample is encrypted.
-        writer->mCrypto.mPlainSizes.AppendElement(0);
-        writer->mCrypto.mEncryptedSizes.AppendElement(sample->Size());
+        writer->mCrypto.mPlainSizes.AppendElement(res_16.unwrap());
+        writer->mCrypto.mEncryptedSizes.AppendElement(res_32.unwrap());
       }
+    } else {
+      // No subsample information means the entire sample is encrypted.
+      writer->mCrypto.mPlainSizes.AppendElement(0);
+      writer->mCrypto.mEncryptedSizes.AppendElement(sample->Size());
     }
   }
 
@@ -319,6 +297,59 @@ CencSampleEncryptionInfoEntry* SampleIterator::GetSampleEncryptionEntry() {
   // The group_index is one based.
   return groupIndex > entries->Length() ? nullptr
                                         : &entries->ElementAt(groupIndex - 1);
+}
+
+Result<CryptoScheme, const nsCString> SampleIterator::GetEncryptionScheme() {
+  // See ISO/IEC 23001-7 for information on the metadata being checked.
+  MoofParser* moofParser = mIndex->mMoofParser.get();
+  if (!moofParser) {
+    // This mp4 isn't fragmented so it can't be encrypted.
+    return CryptoScheme::None;
+  }
+
+  SampleDescriptionEntry* sampleDescriptionEntry = GetSampleDescriptionEntry();
+  if (!sampleDescriptionEntry) {
+    // For the file to be valid the tfhd must reference a sample description
+    // entry.
+    // If we encounter this error often, we may consider using the first
+    // sample description entry if the index is out of bounds.
+    return mozilla::Err(NS_LITERAL_CSTRING(
+        "Could not determine encryption scheme due to bad index for sample "
+        "description entry."));
+  }
+
+  if (!sampleDescriptionEntry->mIsEncryptedEntry) {
+    return CryptoScheme::None;
+  }
+
+  if (!moofParser->mSinf.IsValid()) {
+    // The sample description entry says this sample is encrypted, but we
+    // don't have a valid sinf box. This shouldn't happen as the sinf box is
+    // part of the sample description entry. Suggests a malformed file, bail.
+    return mozilla::Err(NS_LITERAL_CSTRING(
+        "Could not determine encryption scheme. Sample description entry "
+        "indicates encryption, but could not find associated sinf box."));
+  }
+
+  CencSampleEncryptionInfoEntry* sampleInfo = GetSampleEncryptionEntry();
+  if (sampleInfo && !sampleInfo->mIsEncrypted) {
+    // May not have sample encryption info, but if we do, it should match other
+    // metadata.
+    return mozilla::Err(NS_LITERAL_CSTRING(
+        "Could not determine encryption scheme. Sample description entry "
+        "indicates encryption, but sample encryption entry indicates sample is "
+        "not encrypted. These should be consistent."));
+  }
+
+  if (moofParser->mSinf.mDefaultEncryptionType == AtomType("cenc")) {
+    return CryptoScheme::Cenc;
+  } else if (moofParser->mSinf.mDefaultEncryptionType == AtomType("cbcs")) {
+    return CryptoScheme::Cbcs;
+  }
+  return mozilla::Err(NS_LITERAL_CSTRING(
+      "Could not determine encryption scheme. Sample description entry "
+      "reports sample is encrypted, but no scheme, or an unsupported scheme "
+      "is in use."));
 }
 
 Sample* SampleIterator::Get() {
