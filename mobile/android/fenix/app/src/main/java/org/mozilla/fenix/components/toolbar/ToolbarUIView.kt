@@ -14,7 +14,8 @@ import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.support.ktx.android.content.res.pxToDp
+import mozilla.components.support.ktx.android.util.dpToFloat
+import mozilla.components.support.ktx.android.util.dpToPx
 import org.jetbrains.anko.backgroundDrawable
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customtabs.CustomTabToolbarMenu
@@ -53,7 +54,7 @@ class ToolbarUIView(
                 editMode()
             }
 
-            elevation = resources.pxToDp(TOOLBAR_ELEVATION).toFloat()
+            elevation = TOOLBAR_ELEVATION.dpToFloat(resources.displayMetrics)
 
             setOnUrlCommitListener {
                 actionEmitter.onNext(SearchAction.UrlCommitted(it, sessionId, state?.engine))
@@ -64,7 +65,7 @@ class ToolbarUIView(
                 false
             }
 
-            browserActionMargin = resources.pxToDp(browserActionMarginDp)
+            browserActionMargin = browserActionMarginDp.dpToPx(resources.displayMetrics)
 
             val isCustomTabSession = (session?.isCustomTabSession() == true)
 

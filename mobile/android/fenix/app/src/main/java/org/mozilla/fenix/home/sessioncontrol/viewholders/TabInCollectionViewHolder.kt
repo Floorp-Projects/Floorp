@@ -17,7 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.icons.IconRequest
-import mozilla.components.support.ktx.android.content.res.pxToDp
+import mozilla.components.support.ktx.android.util.dpToFloat
 import org.jetbrains.anko.backgroundColor
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -50,13 +50,13 @@ class TabInCollectionViewHolder(
     init {
         collection_tab_icon.clipToOutline = true
         collection_tab_icon.outlineProvider = object : ViewOutlineProvider() {
-            override fun getOutline(view: View?, outline: Outline?) {
+            override fun getOutline(view: View, outline: Outline?) {
                 outline?.setRoundRect(
                     0,
                     0,
-                    view!!.width,
+                    view.width,
                     view.height,
-                    view.context.resources.pxToDp(TabViewHolder.favIconBorderRadiusInPx).toFloat()
+                    TabViewHolder.favIconBorderRadiusInPx.dpToFloat(view.context.resources.displayMetrics)
                 )
             }
         }

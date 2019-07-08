@@ -14,7 +14,7 @@ import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.bookmark_row.*
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
-import mozilla.components.support.ktx.android.content.res.pxToDp
+import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getColorIntFromAttr
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
@@ -110,8 +110,8 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
             bookmark_layout.setOnClickListener {
                 selectionInterface.itemSelected(folder.node)
             }
-            val padding =
-                containerView.resources.pxToDp(dpsToIndent) * (if (folder.depth > maxDepth) maxDepth else folder.depth)
+            val pxToIndent = dpsToIndent.dpToPx(containerView.resources.displayMetrics)
+            val padding = pxToIndent * if (folder.depth > maxDepth) maxDepth else folder.depth
             bookmark_layout.setPadding(padding, 0, 0, 0)
         }
 

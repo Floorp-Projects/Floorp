@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
-import mozilla.components.support.ktx.android.content.res.pxToDp
+import mozilla.components.support.ktx.android.util.dpToFloat
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
@@ -76,7 +76,7 @@ class TabViewHolder(
                     0,
                     view!!.width,
                     view.height,
-                    view.context.resources.pxToDp(favIconBorderRadiusInPx).toFloat()
+                    favIconBorderRadiusInPx.dpToFloat(view.context.resources.displayMetrics)
                 )
             }
         }
