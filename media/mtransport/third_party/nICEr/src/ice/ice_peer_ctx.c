@@ -533,6 +533,12 @@ int nr_ice_peer_ctx_start_checks2(nr_ice_peer_ctx *pctx, int allow_non_first)
     nr_ice_media_stream *stream;
     int started = 0;
 
+    /* Ensure that any existing grace period timers are cancelled */
+    if(pctx->trickle_grace_period_timer) {
+      NR_async_timer_cancel(pctx->trickle_grace_period_timer);
+      pctx->trickle_grace_period_timer=0;
+    }
+
     /* Might have added some streams */
     pctx->reported_connected = 0;
     NR_async_timer_cancel(pctx->connected_cb_timer);
@@ -736,6 +742,12 @@ void nr_ice_peer_ctx_check_if_connected(nr_ice_peer_ctx *pctx)
 
     /* OK, we're finished, one way or another */
     r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s): all checks completed success=%d fail=%d",pctx->label,succeeded,failed);
+
+    /* Make sure grace period timer is cancelled */
+    if(pctx->trickle_grace_period_timer) {
+      NR_async_timer_cancel(pctx->trickle_grace_period_timer);
+      pctx->trickle_grace_period_timer=0;
+    }
 
     /* Schedule a connected notification for the first connected event.
        IMPORTANT: This is done in a callback because we expect destructors
