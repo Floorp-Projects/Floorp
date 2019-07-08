@@ -12,13 +12,11 @@ import org.hamcrest.Matchers.*
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import kotlin.math.roundToInt
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
-@ReuseSession(false)
 class RuntimeSettingsTest : BaseSessionTest() {
 
     @Ignore("disable test for frequently failing Bug 1538430")

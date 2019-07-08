@@ -6,7 +6,6 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.util.Callbacks
 
@@ -21,7 +20,6 @@ import java.net.URI
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
-@ReuseSession(false)
 @WithDevToolsAPI
 class PromptDelegateTest : BaseSessionTest() {
     companion object {

@@ -1707,7 +1707,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @IgnoreCrash
-    @ReuseSession(false)
     @Test fun contentCrashIgnored() {
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
         // Cannot test x86 debug builds due to Gecko's "ah_crap_handler"
@@ -1723,7 +1722,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @Test(expected = ChildCrashedException::class)
-    @ReuseSession(false)
     fun contentCrashFails() {
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
         assumeThat(sessionRule.env.shouldShutdownOnCrash(), equalTo(false))
