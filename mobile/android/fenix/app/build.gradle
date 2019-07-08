@@ -306,7 +306,9 @@ dependencies {
     implementation Deps.mozilla_feature_downloads
     implementation Deps.mozilla_browser_domains
     implementation Deps.mozilla_browser_icons
+    implementation Deps.mozilla_browser_menu
     implementation Deps.mozilla_browser_engine_gecko_beta
+    implementation Deps.mozilla_browser_search
     implementation Deps.mozilla_browser_session
     implementation Deps.mozilla_browser_storage_sync
     implementation Deps.mozilla_browser_toolbar
@@ -321,6 +323,7 @@ dependencies {
     implementation Deps.mozilla_feature_media
     implementation Deps.mozilla_feature_prompts
     implementation Deps.mozilla_feature_qr
+    implementation Deps.mozilla_feature_search
     implementation Deps.mozilla_feature_session
     implementation Deps.mozilla_feature_sync
     implementation Deps.mozilla_feature_toolbar
@@ -336,9 +339,11 @@ dependencies {
 
     implementation Deps.mozilla_support_ktx
     implementation Deps.mozilla_support_rustlog
+    implementation Deps.mozilla_support_utils
 
     implementation Deps.mozilla_ui_colors
     implementation Deps.mozilla_ui_icons
+    implementation Deps.mozilla_ui_publicsuffixlist
 
     implementation Deps.mozilla_lib_crash
     debugImplementation Deps.leakcanary
@@ -352,6 +357,7 @@ dependencies {
     x86_64Implementation Gecko.geckoview_beta_x86_64
 
     implementation Deps.androidx_legacy
+    implementation Deps.androidx_paging
     implementation Deps.androidx_preference
     implementation Deps.androidx_fragment
     implementation Deps.androidx_navigation_fragment
@@ -363,6 +369,7 @@ dependencies {
     implementation Deps.androidx_core
     implementation Deps.androidx_core_ktx
     implementation Deps.androidx_transition
+    implementation Deps.androidx_work_ktx
     implementation Deps.google_material
 
     implementation Deps.autodispose
