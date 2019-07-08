@@ -1402,12 +1402,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     @WithDevToolsAPI
     @Test fun getPrefs_undefinedPrefReturnsNull() {
         assertThat("Undefined pref should have null value",
-                   sessionRule.getPrefs("invalid.pref").asJSList(), equalTo(listOf(null)))
-    }
-
-    @Test(expected = AssertionError::class)
-    fun getPrefs_throwOnNotWithDevTools() {
-        sessionRule.getPrefs("invalid.pref")
+                   sessionRule.getPrefs("invalid.pref")[0], equalTo(JSONObject.NULL))
     }
 
     @WithDevToolsAPI
@@ -1417,30 +1412,31 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                 "test.pref.int" to 1,
                 "test.pref.foo" to "foo"))
 
-        assertThat("Prefs should be set",
-                   sessionRule.getPrefs(
-                           "test.pref.bool",
-                           "test.pref.int",
-                           "test.pref.foo",
-                           "test.pref.bar").asJSList(),
-                   equalTo(listOf(true, 1.0, "foo", null)))
+        var prefs = sessionRule.getPrefs(
+                "test.pref.bool",
+                "test.pref.int",
+                "test.pref.foo",
+                "test.pref.bar")
+
+        assertThat("Prefs should be set", prefs[0] as Boolean, equalTo(true))
+        assertThat("Prefs should be set", prefs[1] as Int, equalTo(1))
+        assertThat("Prefs should be set", prefs[2] as String, equalTo("foo"))
+        assertThat("Prefs should be set", prefs[3], equalTo(JSONObject.NULL))
 
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "test.pref.foo" to "bar",
                 "test.pref.bar" to "baz"))
 
-        assertThat("New prefs should be set",
-                   sessionRule.getPrefs(
-                           "test.pref.bool",
-                           "test.pref.int",
-                           "test.pref.foo",
-                           "test.pref.bar").asJSList(),
-                   equalTo(listOf(true, 1.0, "bar", "baz")))
-    }
+        prefs = sessionRule.getPrefs(
+                        "test.pref.bool",
+                        "test.pref.int",
+                        "test.pref.foo",
+                        "test.pref.bar")
 
-    @Test(expected = AssertionError::class)
-    fun setPrefsUntilTestEnd_throwOnNotWithDevTools() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("invalid.pref" to true))
+        assertThat("New prefs should be set", prefs[0] as Boolean, equalTo(true))
+        assertThat("New prefs should be set", prefs[1] as Int, equalTo(1))
+        assertThat("New prefs should be set", prefs[2] as String, equalTo("bar"))
+        assertThat("New prefs should be set", prefs[3] as String, equalTo("baz"))
     }
 
     @WithDevToolsAPI
@@ -1450,22 +1446,26 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                 "test.pref.int" to 1,
                 "test.pref.foo" to "foo"))
 
-        assertThat("Prefs should be set before wait",
-                   sessionRule.getPrefs(
-                           "test.pref.bool",
-                           "test.pref.int",
-                           "test.pref.foo").asJSList(),
-                   equalTo(listOf(true, 1.0, "foo")))
+        var prefs = sessionRule.getPrefs(
+                        "test.pref.bool",
+                        "test.pref.int",
+                        "test.pref.foo")
+
+        assertThat("Prefs should be set before wait", prefs[0] as Boolean, equalTo(true))
+        assertThat("Prefs should be set before wait", prefs[1] as Int, equalTo(1))
+        assertThat("Prefs should be set before wait", prefs[2] as String, equalTo("foo"))
 
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
 
-        assertThat("Prefs should be cleared after wait",
-                   sessionRule.getPrefs(
-                           "test.pref.bool",
-                           "test.pref.int",
-                           "test.pref.foo").asJSList(),
-                   equalTo(listOf(null, null, null)))
+        prefs = sessionRule.getPrefs(
+                "test.pref.bool",
+                "test.pref.int",
+                "test.pref.foo")
+
+        assertThat("Prefs should be cleared after wait", prefs[0], equalTo(JSONObject.NULL))
+        assertThat("Prefs should be cleared after wait", prefs[1], equalTo(JSONObject.NULL))
+        assertThat("Prefs should be cleared after wait", prefs[2], equalTo(JSONObject.NULL))
     }
 
     @WithDevToolsAPI
@@ -1478,27 +1478,26 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                 "test.pref.foo" to "bar",
                 "test.pref.bar" to "baz"))
 
-        assertThat("Prefs should be overridden",
-                   sessionRule.getPrefs(
-                           "test.pref.int",
-                           "test.pref.foo",
-                           "test.pref.bar").asJSList(),
-                   equalTo(listOf(1.0, "bar", "baz")))
+        var prefs = sessionRule.getPrefs(
+                "test.pref.int",
+                "test.pref.foo",
+                "test.pref.bar")
+
+        assertThat("Prefs should be overridden", prefs[0] as Int, equalTo(1))
+        assertThat("Prefs should be overridden", prefs[1] as String, equalTo("bar"))
+        assertThat("Prefs should be overridden", prefs[2] as String, equalTo("baz"))
 
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
 
-        assertThat("Overridden prefs should be restored",
-                   sessionRule.getPrefs(
-                           "test.pref.int",
-                           "test.pref.foo",
-                           "test.pref.bar").asJSList(),
-                   equalTo(listOf(1.0, "foo", null)))
-    }
+        prefs = sessionRule.getPrefs(
+                        "test.pref.int",
+                        "test.pref.foo",
+                        "test.pref.bar")
 
-    @Test(expected = AssertionError::class)
-    fun setPrefsDuringNextWait_throwOnNotWithDevTools() {
-        sessionRule.setPrefsDuringNextWait(mapOf("invalid.pref" to true))
+        assertThat("Overriden prefs should be restored", prefs[0] as Int, equalTo(1))
+        assertThat("Overriden prefs should be restored", prefs[1] as String, equalTo("foo"))
+        assertThat("Overriden prefs should be restored", prefs[2], equalTo(JSONObject.NULL))
     }
 
     @WithDevToolsAPI

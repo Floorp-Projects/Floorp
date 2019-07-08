@@ -7,6 +7,8 @@ import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.test.TestCrashHandler;
 
 import android.os.Process;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.support.test.InstrumentationRegistry;
 import android.util.Log;
@@ -17,22 +19,55 @@ public class RuntimeCreator {
     public static final int TEST_SUPPORT_INITIAL = 0;
     public static final int TEST_SUPPORT_OK = 1;
     public static final int TEST_SUPPORT_ERROR = 2;
-
-    private static GeckoRuntime sRuntime;
     private static final String LOGTAG = "RuntimeCreator";
 
-    public static AtomicInteger sTestSupport = new AtomicInteger(TEST_SUPPORT_INITIAL);
-    public static WebExtension sTestSupportWebExtension;
+    private static GeckoRuntime sRuntime;
+    public static AtomicInteger sTestSupport = new AtomicInteger(0);
+    public static final WebExtension TEST_SUPPORT_WEB_EXTENSION =
+            new WebExtension("resource://android/assets/web_extensions/test-support/",
+                    "test-support@mozilla.com",
+                    WebExtension.Flags.ALLOW_CONTENT_MESSAGING);
+
+    private static WebExtension.Port sBackgroundPort;
+
+    private static WebExtension.PortDelegate sPortDelegate;
+
+    private static WebExtension.MessageDelegate sMessageDelegate
+            = new WebExtension.MessageDelegate() {
+        @Nullable
+        @Override
+        public void onConnect(@NonNull WebExtension.Port port) {
+            sBackgroundPort = port;
+            port.setDelegate(sWrapperPortDelegate);
+        }
+    };
+
+    private static WebExtension.PortDelegate sWrapperPortDelegate = new WebExtension.PortDelegate() {
+        @Override
+        public void onPortMessage(@NonNull Object message, @NonNull WebExtension.Port port) {
+            if (sPortDelegate != null) {
+                sPortDelegate.onPortMessage(message, port);
+            }
+        }
+    };
+
+    public static WebExtension.Port backgroundPort() {
+        return sBackgroundPort;
+    }
 
     public static void registerTestSupport() {
         sTestSupport.set(0);
-        sRuntime.registerWebExtension(sTestSupportWebExtension)
+        sRuntime.registerWebExtension(TEST_SUPPORT_WEB_EXTENSION)
                 .accept(value -> {
                     sTestSupport.set(TEST_SUPPORT_OK);
                 }, exception -> {
                     Log.e(LOGTAG, "Could not register TestSupport", exception);
                     sTestSupport.set(TEST_SUPPORT_ERROR);
                 });
+    }
+
+    public static void setPortDelegate(WebExtension.PortDelegate portDelegate) {
+        sPortDelegate = portDelegate;
     }
 
     @UiThread
@@ -52,14 +87,11 @@ public class RuntimeCreator {
             runtimeSettingsBuilder.crashHandler(TestCrashHandler.class);
         }
 
+        TEST_SUPPORT_WEB_EXTENSION.setMessageDelegate(sMessageDelegate, "browser");
+
         sRuntime = GeckoRuntime.create(
                 InstrumentationRegistry.getTargetContext(),
                 runtimeSettingsBuilder.build());
-
-        sTestSupportWebExtension =
-                new WebExtension("resource://android/assets/web_extensions/test-support/",
-                        "test-support@mozilla.com",
-                        WebExtension.Flags.ALLOW_CONTENT_MESSAGING);
 
         registerTestSupport();
 
