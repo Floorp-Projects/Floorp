@@ -2,7 +2,7 @@
 
 set -e
 
-BASE_URL=https://raw.githubusercontent.com/freebsd/freebsd/master/lib/msun/src
+BASE_URL=https://raw.githubusercontent.com/freebsd/freebsd/"${1}"/lib/msun/src
 
 download_source() {
     REMOTE_FILENAME=$1
