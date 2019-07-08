@@ -75,6 +75,7 @@ class L10n(BaseLib):
                 value = self.marionette.execute_script("""
                     Cu.importGlobalProperties(["DOMParser"]);
                     var parser = new DOMParser();
+                    parser.forceEnableDTD();
                     var doc = parser.parseFromString(arguments[0], "text/xml");
                     var node = doc.querySelector("elem[id='entity']");
 
