@@ -516,7 +516,7 @@ JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(JSContext* cx,
   if (frameScript()->hasBaselineScript()) {
     resumePCinCurrentFrame_ = frameScript()->baselineScript()->method()->raw();
   } else {
-    MOZ_ASSERT(JitOptions.baselineInterpreter);
+    MOZ_ASSERT(IsBaselineInterpreterEnabled());
     resumePCinCurrentFrame_ =
         cx->runtime()->jitRuntime()->baselineInterpreter().codeRaw();
   }

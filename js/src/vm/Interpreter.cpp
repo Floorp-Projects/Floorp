@@ -1976,7 +1976,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         script->incWarmUpCounter();
 
         using Tier = jit::BaselineTier;
-        bool tryBaselineInterpreter = (jit::JitOptions.baselineInterpreter &&
+        bool tryBaselineInterpreter = (jit::IsBaselineInterpreterEnabled() &&
                                        !script->hasBaselineScript());
         jit::MethodStatus status =
             tryBaselineInterpreter

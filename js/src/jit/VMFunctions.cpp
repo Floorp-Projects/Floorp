@@ -1022,7 +1022,7 @@ bool GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame,
   // Initialize interpreter frame fields if needed. Doing this here is
   // simpler than doing it in JIT code.
   if (!script->hasBaselineScript()) {
-    MOZ_ASSERT(jit::JitOptions.baselineInterpreter);
+    MOZ_ASSERT(IsBaselineInterpreterEnabled());
     MOZ_ASSERT(!frame->runningInInterpreter());
     frame->initInterpFieldsForGeneratorThrowOrReturn(script, pc);
   }
