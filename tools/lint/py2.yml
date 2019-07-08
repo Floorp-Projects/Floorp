@@ -6,7 +6,6 @@ py2:
         - build
         - client.py
         - config
-        - configure.py
         - dom
         - editor
         - gfx
