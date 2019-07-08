@@ -411,9 +411,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Emit three bytecodes, an opcode with two bytes of immediate operands.
   MOZ_MUST_USE bool emit3(JSOp op, jsbytecode op1, jsbytecode op2);
 
-  // Helper to emit JSOP_DUPAT. The argument is the value's depth on the
-  // JS stack, as measured from the top.
-  MOZ_MUST_USE bool emitDupAt(unsigned slotFromTop);
+  // Helper to duplicate one or more stack values. |slotFromTop| is the value's
+  // depth on the JS stack, as measured from the top. |count| is the number of
+  // values to duplicate, in theiro original order.
+  MOZ_MUST_USE bool emitDupAt(unsigned slotFromTop, unsigned count = 1);
 
   // Helper to emit JSOP_POP or JSOP_POPN.
   MOZ_MUST_USE bool emitPopN(unsigned n);
