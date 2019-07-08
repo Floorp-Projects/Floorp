@@ -451,6 +451,7 @@ TEST_F(TelemetryGeckoViewFixture, PersistHistograms) {
 /**
  * Test GeckoView timer telemetry is correctly recorded.
  */
+/*
 TEST_F(TelemetryGeckoViewFixture, TimerHitCountProbe) {
   AutoJSContextWithGlobal cx(mCleanGlobal);
 
@@ -476,6 +477,7 @@ TEST_F(TelemetryGeckoViewFixture, TimerHitCountProbe) {
   // Cleanup/remove the files.
   RemovePersistenceFile();
 }
+*/
 
 TEST_F(TelemetryGeckoViewFixture, EmptyPendingOperations) {
   AutoJSContextWithGlobal cx(mCleanGlobal);
