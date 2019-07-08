@@ -20,12 +20,16 @@ var relativeTimeFormatInternalProperties = {
         addSpecialMissingLanguageTags(locales);
         return (this._availableLocales = locales);
     },
-    relevantExtensionKeys: [],
+    relevantExtensionKeys: ["nu"],
 };
 
 function relativeTimeFormatLocaleData() {
-    // RelativeTimeFormat doesn't support any extension keys.
-    return {};
+    return {
+        nu: getNumberingSystems,
+        default: {
+            nu: intl_numberingSystem,
+        },
+    };
 }
 
 /**
@@ -49,16 +53,17 @@ function resolveRelativeTimeFormatInternals(lazyRelativeTimeFormatData) {
     internalProps.locale = r.locale;
 
     // Step 11.
-    assert(r.locale === r.dataLocale,
-           "resolved locale matches the resolved data-locale when no extension-keys are present");
+    internalProps.numberingSystem = r.nu;
 
-    // Step 13.
+    // Step 12 (Not relevant in our implementation).
+
+    // Step 14.
     internalProps.style = lazyRelativeTimeFormatData.style;
 
-    // Step 15.
+    // Step 16.
     internalProps.numeric = lazyRelativeTimeFormatData.numeric;
 
-    // Steps 16-20 (Not relevant in our implementation).
+    // Steps 17-21 (Not relevant in our implementation).
 
     return internalProps;
 }
@@ -137,11 +142,11 @@ function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
 
     lazyRelativeTimeFormatData.opt = opt;
 
-    // Steps 12-13.
+    // Steps 13-14.
     const style = GetOption(options, "style", "string", ["long", "short", "narrow"], "long");
     lazyRelativeTimeFormatData.style = style;
 
-    // Steps 14-15.
+    // Steps 15-16.
     const numeric = GetOption(options, "numeric", "string", ["always", "auto"], "always");
     lazyRelativeTimeFormatData.numeric = numeric;
 
@@ -252,6 +257,7 @@ function Intl_RelativeTimeFormat_resolvedOptions() {
         locale: internals.locale,
         style: internals.style,
         numeric: internals.numeric,
+        numberingSystem: internals.numberingSystem,
     };
 
     // Step 6.
