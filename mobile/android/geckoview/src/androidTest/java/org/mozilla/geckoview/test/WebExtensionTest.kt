@@ -42,7 +42,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         // First let's check that the color of the border is empty before loading
         // the WebExtension
-        val colorBefore = sessionRule.evaluateJS(mainSession, "document.body.style.borderColor")
+        val colorBefore = mainSession.evaluateJS("document.body.style.borderColor")
         assertThat("The border color should be empty when loading without extensions.",
                 colorBefore as String, equalTo(""))
 
@@ -55,7 +55,7 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         // Check that the WebExtension was applied by checking the border color
-        val color = sessionRule.evaluateJS(mainSession, "document.body.style.borderColor")
+        val color = mainSession.evaluateJS("document.body.style.borderColor")
         assertThat("Content script should have been applied",
                 color as String, equalTo("red"))
 
@@ -66,7 +66,7 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         // Check that the WebExtension was not applied after being unregistered
-        val colorAfter = sessionRule.evaluateJS(mainSession, "document.body.style.borderColor")
+        val colorAfter = mainSession.evaluateJS("document.body.style.borderColor")
         assertThat("Content script should have been applied",
                 colorAfter as String, equalTo(""))
     }

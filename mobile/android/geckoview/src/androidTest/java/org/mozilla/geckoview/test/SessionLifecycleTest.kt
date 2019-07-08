@@ -251,7 +251,7 @@ class SessionLifecycleTest : BaseSessionTest() {
         mainSession.loadTestPath(INPUTS_PATH)
         mainSession.waitForPageStop()
 
-        mainSession.evaluateJS("$('#input').focus()")
+        mainSession.evaluateJS("document.querySelector('#input').focus()")
         mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1)
             override fun restartInput(session: GeckoSession, reason: Int) {
@@ -274,7 +274,7 @@ class SessionLifecycleTest : BaseSessionTest() {
             }
         })
 
-        newSession.evaluateJS("$('#input').blur()")
+        newSession.evaluateJS("document.querySelector('#input').blur()")
         newSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1)
             override fun restartInput(session: GeckoSession, reason: Int) {

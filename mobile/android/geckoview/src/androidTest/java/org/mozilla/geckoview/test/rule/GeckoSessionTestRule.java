@@ -5,6 +5,8 @@
 
 package org.mozilla.geckoview.test.rule;
 
+import org.json.JSONException;
+import org.json.JSONTokener;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.ContentBlocking;
@@ -14,6 +16,8 @@ import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.SessionTextInput;
+import org.mozilla.geckoview.WebExtension;
+import org.mozilla.geckoview.test.util.HttpBin;
 import org.mozilla.geckoview.test.util.RuntimeCreator;
 import org.mozilla.geckoview.test.util.Environment;
 import org.mozilla.geckoview.test.util.UiThreadUtils;
@@ -61,6 +65,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -69,6 +74,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
@@ -84,8 +90,7 @@ import kotlin.reflect.KClass;
  */
 public class GeckoSessionTestRule implements TestRule {
     private static final String LOGTAG = "GeckoSessionTestRule";
-
-    public static final String APK_URI_PREFIX = "resource://android/";
+    public static final String TEST_ENDPOINT = "http://localhost:4245";
 
     private static final Method sOnPageStart;
     private static final Method sOnPageStop;
@@ -402,6 +407,7 @@ public class GeckoSessionTestRule implements TestRule {
             if (mPromise.isRejected()) {
                 throw new RejectedPromiseException(mPromise.getReason());
             }
+
             return mPromise.getValue();
         }
     }
@@ -1192,10 +1198,17 @@ public class GeckoSessionTestRule implements TestRule {
 
         if (!mClosedSession) {
             openSession(mMainSession);
+            UiThreadUtils.waitForCondition(() ->
+                            RuntimeCreator.sTestSupport.get() != RuntimeCreator.TEST_SUPPORT_INITIAL,
+                    env.getDefaultTimeoutMillis());
+            if (RuntimeCreator.sTestSupport.get() != RuntimeCreator.TEST_SUPPORT_OK) {
+                throw new RuntimeException("Could not register TestSupport, see logs for error.");
+            }
         }
     }
 
     protected void prepareSession(final GeckoSession session) {
+        session.setMessageDelegate(mMessageDelegate, "browser");
         for (final Class<?> cls : DEFAULT_DELEGATES) {
             try {
                 setDelegate(cls, session, mNullDelegates.contains(cls) ? null : mCallbackProxy);
@@ -1371,8 +1384,13 @@ public class GeckoSessionTestRule implements TestRule {
             public void evaluate() throws Throwable {
                 final AtomicReference<Throwable> exceptionRef = new AtomicReference<>();
 
+                HttpBin httpBin = new HttpBin(InstrumentationRegistry.getTargetContext(),
+                        URI.create(TEST_ENDPOINT));
+
                 mInstrumentation.runOnMainSync(() -> {
                     try {
+                        httpBin.start();
+
                         getRuntime();
 
                         long timeout = env.getDefaultTimeoutMillis() + System.currentTimeMillis();
@@ -1402,6 +1420,7 @@ public class GeckoSessionTestRule implements TestRule {
                         exceptionRef.set(t);
                     } finally {
                         try {
+                            httpBin.stop();
                             cleanupStatement();
                         } catch (Throwable t) {
                             exceptionRef.compareAndSet(null, t);
@@ -1889,6 +1908,119 @@ public class GeckoSessionTestRule implements TestRule {
         session.getPanZoomController().onTouchEvent(up);
     }
 
+    Map<GeckoSession, WebExtension.Port> mPorts = new HashMap<>();
+
+    private WebExtension.MessageDelegate mMessageDelegate = new WebExtension.MessageDelegate() {
+        @Override
+        public void onConnect(final @NonNull WebExtension.Port port) {
+            mPorts.put(port.sender.session, port);
+            port.setDelegate(mPortDelegate);
+        }
+    };
+
+    private WebExtension.PortDelegate mPortDelegate = new WebExtension.PortDelegate() {
+        @Override
+        public void onPortMessage(@NonNull Object message, @NonNull WebExtension.Port port) {
+            JSONObject response = (JSONObject) message;
+
+            final String id;
+            try {
+                id = response.getString("id");
+                EvalJSResult result = new EvalJSResult();
+
+                final Object exception = response.get("evalException");
+                if (exception != JSONObject.NULL) {
+                    result.exception = exception;
+                }
+
+                final Object evalResponse = response.get("evalResponse");
+                if (evalResponse != JSONObject.NULL){
+                    result.value = evalResponse;
+                }
+
+                mPendingMessages.put(id, result);
+            } catch (JSONException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        @Override
+        public void onDisconnect(final @NonNull WebExtension.Port port) {
+            mPorts.remove(port.sender.session);
+        }
+    };
+
+    private static class EvalJSResult {
+        Object value;
+        Object exception;
+    }
+
+    Map<String, EvalJSResult> mPendingMessages = new HashMap<>();
+
+    public class ExtensionPromise {
+        private UUID mUuid;
+        private GeckoSession mSession;
+
+        protected ExtensionPromise(final UUID uuid, final GeckoSession session, final String js) {
+            mUuid = uuid;
+            mSession = session;
+            evaluateExtJS(
+                    session, "this['" + uuid + "'] = " + js + "; true"
+            );
+        }
+
+        public Object getValue() {
+            return evaluateExtJS(mSession, "this['" + mUuid + "']");
+        }
+    }
+
+    public ExtensionPromise evaluatePromiseJS(final @NonNull GeckoSession session,
+                                              final @NonNull String js) {
+        return new ExtensionPromise(UUID.randomUUID(), session, js);
+    }
+
+    public Object evaluateExtJS(final @NonNull GeckoSession session, final @NonNull String js) {
+        // Let's make sure we have the port already
+        UiThreadUtils.waitForCondition(() -> mPorts.containsKey(session),
+                env.getDefaultTimeoutMillis());
+
+        final JSONObject message = new JSONObject();
+        final String id = UUID.randomUUID().toString();
+        try {
+            message.put("id", id);
+            message.put("eval", js);
+        } catch (JSONException ex) {
+            throw new RuntimeException(ex);
+        }
+
+        mPorts.get(session).postMessage(message);
+
+        UiThreadUtils.waitForCondition(() -> mPendingMessages.containsKey(id),
+                env.getDefaultTimeoutMillis());
+        final EvalJSResult result = mPendingMessages.get(id);
+        mPendingMessages.remove(id);
+
+        if (result.exception != null) {
+            throw new RejectedPromiseException(result.exception);
+        }
+
+        if (result.value == null) {
+            return null;
+        }
+
+        Object value;
+        try {
+            value = new JSONTokener((String) result.value).nextValue();
+        } catch (JSONException ex) {
+            value = result.value;
+        }
+
+        if (value instanceof Integer) {
+            return ((Integer) value).doubleValue();
+        }
+        return value;
+    }
+
     /**
      * Initialize and keep track of the specified session within the test rule. The
      * session is automatically cleaned up at the end of the test.
@@ -2056,7 +2188,7 @@ public class GeckoSessionTestRule implements TestRule {
     public @Nullable Object waitForJS(final @NonNull GeckoSession session, final @NonNull String js) {
         try {
             beforeWait();
-            return resolvePromise(evaluateJS(session, js));
+            return evaluateExtJS(session, js);
         } finally {
             afterWait(mCallRecords.size());
         }

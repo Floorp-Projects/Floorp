@@ -9,6 +9,7 @@ import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import android.util.Log
 import org.hamcrest.Matchers
+import org.json.JSONObject
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.Assume.assumeThat
@@ -79,63 +80,66 @@ class MediaDelegateTest : BaseSessionTest() {
             }
         })
 
-
         var code: String?
         if (allowAudio && allowCamera) {
-            code = """window.navigator.mediaDevices.getUserMedia({
+            code = """this.stream = window.navigator.mediaDevices.getUserMedia({
                        video: { width: 320, height: 240, frameRate: 10 },
                        audio: true
-                   })"""
+                   });"""
         } else if (allowAudio) {
-            code = """window.navigator.mediaDevices.getUserMedia({
+            code = """this.stream = window.navigator.mediaDevices.getUserMedia({
                        audio: true,
-                   })"""
+                   });"""
         } else if (allowCamera) {
-            code = """window.navigator.mediaDevices.getUserMedia({
+            code = """this.stream = window.navigator.mediaDevices.getUserMedia({
                        video: { width: 320, height: 240, frameRate: 10 },
-                   })"""
+                   });"""
         } else {
             return
         }
 
-        val stream = mainSession.waitForJS(code)
+        // Stop the stream and check active flag and id
+        val isActive = mainSession.waitForJS(
+                """$code
+                   this.stream.then(stream => {
+                     if (!stream.active || stream.id == '') {
+                       return false;
+                     }
 
-        assertThat("Stream should be active", stream.asJSMap(),
-                Matchers.hasEntry("active", true))
-        assertThat("Stream should have ID", stream.asJSMap(),
-                Matchers.hasEntry(Matchers.equalTo("id"), Matchers.not(Matchers.isEmptyString())))
+                     return true;
+                   })
+                """.trimMargin()) as Boolean
 
-
+        assertThat("Stream should be active and id should not be empty.", isActive,
+                Matchers.equalTo(true))
     }
 
-    @GeckoSessionTestRule.WithDevToolsAPI
     @Test fun testDeviceRecordingEventAudio() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 
         val devices = mainSession.waitForJS(
-                "window.navigator.mediaDevices.enumerateDevices()").asJSList<Map<String, String>>()
-        val audioDevice = devices.find { map -> map["kind"] == "audioinput" }
+                "window.navigator.mediaDevices.enumerateDevices()").asJSList<JSONObject>()
+        val audioDevice = devices.find { map -> map.getString("kind") == "audioinput" }
         if (audioDevice != null) {
             requestRecordingPermission(allowAudio = true, allowCamera = false);
         }
     }
 
-    @GeckoSessionTestRule.WithDevToolsAPI
     @Test fun testDeviceRecordingEventVideo() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 
         val devices = mainSession.waitForJS(
-                "window.navigator.mediaDevices.enumerateDevices()").asJSList<Map<String, String>>()
-        val videoDevice = devices.find { map -> map["kind"] == "videoinput" }
+                "window.navigator.mediaDevices.enumerateDevices()").asJSList<JSONObject>()
+
+        val videoDevice = devices.find { map -> map.getString("kind") == "videoinput" }
         if (videoDevice != null) {
-            requestRecordingPermission(allowAudio = false, allowCamera = true);
+            requestRecordingPermission(allowAudio = false, allowCamera = true)
         }
 
     }
 
-    @GeckoSessionTestRule.WithDevToolsAPI
     @Test fun testDeviceRecordingEventAudioAndVideo() {
         // disabled test on debug builds Bug 1554189
         assumeThat(sessionRule.env.isDebugBuild, Matchers.equalTo(false))
@@ -143,10 +147,10 @@ class MediaDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         val devices = mainSession.waitForJS(
-                "window.navigator.mediaDevices.enumerateDevices()").asJSList<Map<String, String>>()
-        val audioDevice = devices.find { map -> map["kind"] == "audioinput" }
-        val videoDevice = devices.find { map -> map["kind"] == "videoinput" }
-        if(audioDevice != null && videoDevice != null) {
+                "window.navigator.mediaDevices.enumerateDevices()").asJSList<JSONObject>()
+        val audioDevice = devices.find { map -> map.getString("kind") == "audioinput" }
+        val videoDevice = devices.find { map -> map.getString("kind") == "videoinput" }
+        if (audioDevice != null && videoDevice != null) {
             requestRecordingPermission(allowAudio = true, allowCamera = true);
         }
     }

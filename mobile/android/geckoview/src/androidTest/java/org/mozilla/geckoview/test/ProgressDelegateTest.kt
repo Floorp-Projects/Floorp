@@ -287,7 +287,7 @@ class ProgressDelegateTest : BaseSessionTest() {
     val errorEpsilon = 0.1
 
     private fun waitForScroll(offset: Double, timeout: Double, param: String) {
-        sessionRule.evaluateJS(mainSession, """
+        mainSession.evaluateJS("""
            new Promise((resolve, reject) => {
              const start = Date.now();
              function step() {
@@ -301,7 +301,7 @@ class ProgressDelegateTest : BaseSessionTest() {
              }
              window.requestAnimationFrame(step);
            });
-        """.trimIndent()).asJSPromise().value
+        """.trimIndent())
     }
 
     private fun waitForVerticalScroll(offset: Double, timeout: Double) {
@@ -317,8 +317,8 @@ class ProgressDelegateTest : BaseSessionTest() {
         mainSession.loadUri(startUri)
         sessionRule.waitForPageStop()
 
-        mainSession.evaluateJS("$('#name').value = 'the name';")
-        mainSession.evaluateJS("$('#name').dispatchEvent(new Event('input'));")
+        mainSession.evaluateJS("document.querySelector('#name').value = 'the name';")
+        mainSession.evaluateJS("document.querySelector('#name').dispatchEvent(new Event('input'));")
 
         mainSession.evaluateJS("window.scrollBy(0, 100);")
         waitForVerticalScroll(100.0, sessionRule.env.defaultTimeoutMillis.toDouble())

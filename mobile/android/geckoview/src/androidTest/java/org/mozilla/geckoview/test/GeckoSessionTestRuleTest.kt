@@ -17,6 +17,8 @@ import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 
 import org.hamcrest.Matchers.*
+import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.Assert.fail
 import org.junit.Assume.assumeThat
 import org.junit.Ignore
@@ -1251,6 +1253,9 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @WithDevToolsAPI
     @Test fun evaluateJS() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH);
+        sessionRule.session.waitForPageStop();
+
         assertThat("JS string result should be correct",
                    sessionRule.session.evaluateJS("'foo'") as String, equalTo("foo"))
 
@@ -1260,21 +1265,20 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         assertThat("JS boolean result should be correct",
                    sessionRule.session.evaluateJS("!0") as Boolean, equalTo(true))
 
-        assertThat("JS object result should be correct",
-                   sessionRule.session.evaluateJS("({foo:'bar',bar:42,baz:true})").asJSMap(),
-                   equalTo(mapOf("foo" to "bar", "bar" to 42.0, "baz" to true)))
+        val expected = JSONObject("{bar:42,baz:true,foo:'bar'}")
+        val actual = sessionRule.session.evaluateJS("({foo:'bar',bar:42,baz:true})") as JSONObject
+        for (key in expected.keys()) {
+            assertThat("JS object result should be correct",
+                    actual.get(key), equalTo(expected.get(key)))
+        }
 
         assertThat("JS array result should be correct",
-                   sessionRule.session.evaluateJS("[1,2,3]").asJSList(),
-                   equalTo(listOf(1.0, 2.0, 3.0)))
+                   sessionRule.session.evaluateJS("[1,2,3]") as JSONArray,
+                   equalTo(JSONArray("[1,2,3]")))
 
         assertThat("JS DOM object result should be correct",
-                   sessionRule.session.evaluateJS("document.body").asJSMap(),
-                   hasEntry("tagName", "BODY"))
-
-        assertThat("JS DOM array result should be correct",
-                   sessionRule.session.evaluateJS("document.childNodes").asJSList<Any>(),
-                   not(empty()))
+                   sessionRule.session.evaluateJS("document.body.tagName") as String,
+                   equalTo("BODY"))
     }
 
     @WithDevToolsAPI
@@ -1282,96 +1286,59 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.waitForPageStop()
 
-        // Make sure we can access large objects like "window", which can strain our RDP connection.
-        // Also make sure we can dynamically access sub-objects like Location.
         assertThat("JS DOM window result should be correct",
-                   (sessionRule.session.evaluateJS("window")
-                           dot "location"
-                           dot "pathname") as String,
+                   (sessionRule.session.evaluateJS("window.location.pathname")) as String,
                    equalTo(HELLO_HTML_PATH))
     }
 
-    @WithDevToolsAPI
     @Test fun evaluateJS_multipleSessions() {
-        val newSession = sessionRule.createOpenSession()
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.waitForPageStop()
 
         sessionRule.session.evaluateJS("this.foo = 42")
         assertThat("Variable should be set",
                    sessionRule.session.evaluateJS("this.foo") as Double, equalTo(42.0))
 
+        val newSession = sessionRule.createOpenSession()
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        newSession.waitForPageStop()
+
+        val result = newSession.evaluateJS("this.foo");
         assertThat("New session should have separate JS context",
-                   newSession.evaluateJS("this.foo"), nullValue())
-    }
-
-    @WithDevToolsAPI
-    @Test fun evaluateJS_jsToString() {
-        val obj = sessionRule.session.evaluateJS("({foo:'bar'})")
-        assertThat("JS object toString should follow lazy evaluation",
-                   obj.toString(), equalTo("[Object]"))
-
-        assertThat("JS object should be correct",
-                   (obj dot "foo") as String, equalTo("bar"))
-        assertThat("JS object toString should be expanded after evaluation",
-                   obj.toString(), equalTo("[Object]{foo=bar}"))
-
-        val array = sessionRule.session.evaluateJS("['foo','bar']")
-        assertThat("JS array toString should follow lazy evaluation",
-                   array.toString(), equalTo("[Array(2)]"))
-
-        assertThat("JS array should be correct",
-                   (array dot 0) as String, equalTo("foo"))
-        assertThat("JS array toString should be expanded after evaluation",
-                   array.toString(), equalTo("[Array(2)][foo, bar]"))
-
-        assertThat("JS user function toString should be correct",
-                   sessionRule.session.evaluateJS("(function foo(){})").toString(),
-                   equalTo("[Function(foo)]"))
-
-        assertThat("JS window function toString should be correct",
-                   sessionRule.session.evaluateJS("window.alert").toString(),
-                   equalTo("[Function(alert)]"))
-
-        assertThat("JS pending promise toString should be correct",
-                   sessionRule.session.evaluateJS("new Promise(_=>{})").toString(),
-                   equalTo("[Promise(pending)]"))
-
-        assertThat("JS fulfilled promise toString should be correct",
-                   sessionRule.session.evaluateJS("Promise.resolve('foo')").toString(),
-                   equalTo("[Promise(fulfilled)](foo)"))
-
-        assertThat("JS rejected promise toString should be correct",
-                   sessionRule.session.evaluateJS("Promise.reject('bar')").toString(),
-                   equalTo("[Promise(rejected)](bar)"))
+                   result, nullValue())
     }
 
     @WithDevToolsAPI
     @Test fun evaluateJS_supportPromises() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.waitForPageStop()
+
         assertThat("Can get resolved promise",
-                   sessionRule.session.evaluateJS(
-                           "Promise.resolve('foo')").asJSPromise().value as String,
-                   equalTo("foo"))
+            sessionRule.session.evaluatePromiseJS(
+                    "new Promise(resolve => resolve('foo'))").value as String,
+            equalTo("foo"));
 
-        val promise = sessionRule.session.evaluateJS(
-                "let resolve; new Promise(r => resolve = r)").asJSPromise()
-        assertThat("Promise is initially pending",
-                   promise.isPending, equalTo(true))
+        val promise = sessionRule.session.evaluatePromiseJS(
+                "new Promise(r => window.resolve = r)")
 
-        sessionRule.session.evaluateJS("resolve('bar')")
+        sessionRule.session.evaluateJS("window.resolve('bar')")
 
         assertThat("Can wait for promise to resolve",
-                   promise.value as String, equalTo("bar"))
-        assertThat("Resolved promise is no longer pending",
-                   promise.isPending, equalTo(false))
+                promise.value as String, equalTo("bar"))
     }
 
     @WithDevToolsAPI
     @Test(expected = RejectedPromiseException::class)
     fun evaluateJS_throwOnRejectedPromise() {
-        sessionRule.session.evaluateJS("Promise.reject('foo')").asJSPromise().value
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.waitForPageStop()
+        sessionRule.session.evaluatePromiseJS("Promise.reject('foo')").value
     }
 
     @WithDevToolsAPI
     @Test fun evaluateJS_notBlockMainThread() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.waitForPageStop()
         // Test that we can still receive delegate callbacks during evaluateJS,
         // by calling alert(), which blocks until prompt delegate is called.
         assertThat("JS blocking result should be correct",
@@ -1383,6 +1350,8 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     @TimeoutMillis(1000)
     @Test(expected = UiThreadUtils.TimeoutException::class)
     fun evaluateJS_canTimeout() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.waitForPageStop()
         sessionRule.session.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
             override fun onAlert(session: GeckoSession, title: String?, msg: String?,
                                  callback: GeckoSession.PromptDelegate.AlertCallback) {
@@ -1392,26 +1361,24 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.session.evaluateJS("alert()")
     }
 
-    @Test(expected = AssertionError::class)
-    fun evaluateJS_throwOnNotWithDevTools() {
-        sessionRule.session.evaluateJS("0")
-    }
-
-    @WithDevToolsAPI
     @Test(expected = RuntimeException::class)
     fun evaluateJS_throwOnJSException() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.waitForPageStop()
         sessionRule.session.evaluateJS("throw Error()")
     }
 
-    @WithDevToolsAPI
     @Test(expected = RuntimeException::class)
     fun evaluateJS_throwOnSyntaxError() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.waitForPageStop()
         sessionRule.session.evaluateJS("<{[")
     }
 
-    @WithDevToolsAPI
     @Test(expected = RuntimeException::class)
     fun evaluateJS_throwOnChromeAccess() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.waitForPageStop()
         sessionRule.session.evaluateJS("ChromeUtils")
     }
 
@@ -1536,6 +1503,9 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @WithDevToolsAPI
     @Test fun waitForJS() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStop()
+
         assertThat("waitForJS should return correct result",
                    sessionRule.session.waitForJS("alert(), 'foo'") as String,
                    equalTo("foo"))
@@ -1550,6 +1520,8 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @WithDevToolsAPI
     @Test fun waitForJS_resolvePromise() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStop()
         assertThat("waitForJS should wait for promises",
                    sessionRule.session.waitForJS("Promise.resolve('foo')") as String,
                    equalTo("foo"))
@@ -1557,6 +1529,9 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @WithDevToolsAPI
     @Test fun waitForJS_delegateDuringWait() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStop()
+
         var count = 0
         sessionRule.session.delegateDuringNextWait(object : Callbacks.PromptDelegate {
             override fun onAlert(session: GeckoSession, title: String?, msg: String?,
