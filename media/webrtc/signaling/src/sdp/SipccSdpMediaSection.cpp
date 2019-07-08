@@ -135,14 +135,8 @@ bool SipccSdpMediaSection::LoadProtocol(sdp_t* sdp, uint16_t level,
     case SDP_TRANSPORT_UDPTLSRTPSAVPF:
       mProtocol = kUdpTlsRtpSavpf;
       break;
-    case SDP_TRANSPORT_TCPTLSRTPSAVP:
-      mProtocol = kTcpTlsRtpSavp;
-      break;
     case SDP_TRANSPORT_TCPDTLSRTPSAVP:
       mProtocol = kTcpDtlsRtpSavp;
-      break;
-    case SDP_TRANSPORT_TCPTLSRTPSAVPF:
-      mProtocol = kTcpTlsRtpSavpf;
       break;
     case SDP_TRANSPORT_TCPDTLSRTPSAVPF:
       mProtocol = kTcpDtlsRtpSavpf;
