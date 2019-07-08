@@ -5,7 +5,6 @@ py2:
     exclude:
         - build
         - client.py
-        - config
         - dom
         - editor
         - gfx
