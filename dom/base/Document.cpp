@@ -5627,6 +5627,10 @@ void Document::SetFgColor(const nsAString& aFgColor) {
   }
 }
 
+void Document::CaptureEvents() { WarnOnceAbout(Document::eUseOfCaptureEvents); }
+
+void Document::ReleaseEvents() { WarnOnceAbout(Document::eUseOfReleaseEvents); }
+
 nsresult Document::GetSrcdocData(nsAString& aSrcdocData) {
   if (mIsSrcdocDocument) {
     nsCOMPtr<nsIInputStreamChannel> inStrmChan = do_QueryInterface(mChannel);

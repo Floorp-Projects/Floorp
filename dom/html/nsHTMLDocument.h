@@ -124,11 +124,6 @@ class nsHTMLDocument : public mozilla::dom::Document {
     }
   }
   void GetSupportedNames(nsTArray<nsString>& aNames);
-  void Clear() const {
-    // Deprecated
-  }
-  void CaptureEvents();
-  void ReleaseEvents();
   // We're picking up GetLocation from Document
   already_AddRefed<mozilla::dom::Location> GetLocation() const {
     return Document::GetLocation();
