@@ -12,6 +12,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "nsPrintfCString.h"
 
 namespace mozilla {
