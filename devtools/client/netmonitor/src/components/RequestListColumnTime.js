@@ -31,13 +31,8 @@ class RequestListColumnTime extends Component {
       connector: PropTypes.object.isRequired,
       firstRequestStartedMillis: PropTypes.number.isRequired,
       item: PropTypes.object.isRequired,
-      type: PropTypes.oneOf([
-        "start",
-        "end",
-        "response",
-        "duration",
-        "latency",
-      ]).isRequired,
+      type: PropTypes.oneOf(["start", "end", "response", "duration", "latency"])
+        .isRequired,
     };
   }
 
@@ -56,11 +51,7 @@ class RequestListColumnTime extends Component {
   }
 
   getTime(props) {
-    const {
-      firstRequestStartedMillis,
-      item,
-      type,
-    } = props;
+    const { firstRequestStartedMillis, item, type } = props;
 
     switch (type) {
       case "start":
@@ -82,13 +73,12 @@ class RequestListColumnTime extends Component {
     const { type } = this.props;
     const time = getFormattedTime(this.getTime(this.props));
 
-    return (
-      dom.td({
+    return dom.td(
+      {
         className: "requests-list-column requests-list-" + type + "-time",
         title: time,
       },
-        time
-      )
+      time
     );
   }
 }

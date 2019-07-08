@@ -3,9 +3,13 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
+const paymentSrv = Cc[
+  "@mozilla.org/dom/payments/payment-request-service;1"
+].getService(Ci.nsIPaymentRequestService);
 
 function emitTestFail(message) {
   sendAsyncMessage("test-fail", message);
@@ -15,19 +19,25 @@ function emitTestPass(message) {
 }
 
 function rejectPayment(requestId) {
-  const responseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
-                          createInstance(Ci.nsIGeneralResponseData);
+  const responseData = Cc[
+    "@mozilla.org/dom/payments/general-response-data;1"
+  ].createInstance(Ci.nsIGeneralResponseData);
   responseData.initData({});
-  const showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
-                          createInstance(Ci.nsIPaymentShowActionResponse);
-  showResponse.init(requestId,
-                    Ci.nsIPaymentActionResponse.PAYMENT_REJECTED,
-                    "",                 // payment method
-                    responseData,       // payment method data
-                    "",                 // payer name
-                    "",                 // payer email
-                    "");                // payer phone
-  paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+  const showResponse = Cc[
+    "@mozilla.org/dom/payments/payment-show-action-response;1"
+  ].createInstance(Ci.nsIPaymentShowActionResponse);
+  showResponse.init(
+    requestId,
+    Ci.nsIPaymentActionResponse.PAYMENT_REJECTED,
+    "", // payment method
+    responseData, // payment method data
+    "", // payer name
+    "", // payer email
+    ""
+  ); // payer phone
+  paymentSrv.respondPayment(
+    showResponse.QueryInterface(Ci.nsIPaymentActionResponse)
+  );
 }
 
 const DummyUIService = {
@@ -35,7 +45,7 @@ const DummyUIService = {
   requestId: "",
   showPayment(requestId) {
     this.requestId = requestId;
-    sendAsyncMessage("showing-payment", {data:"successful"});
+    sendAsyncMessage("showing-payment", { data: "successful" });
   },
   abortPayment(requestId) {
     this.requestId = requestId;
@@ -52,7 +62,9 @@ const DummyUIService = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
-paymentSrv.setTestingUIService(DummyUIService.QueryInterface(Ci.nsIPaymentUIService));
+paymentSrv.setTestingUIService(
+  DummyUIService.QueryInterface(Ci.nsIPaymentUIService)
+);
 
 addMessageListener("reject-payment", function() {
   rejectPayment(DummyUIService.requestId);
@@ -71,5 +83,5 @@ addMessageListener("finish-test", function() {
 
 addMessageListener("teardown", function() {
   paymentSrv.setTestingUIService(null);
-  sendAsyncMessage('teardown-complete');
+  sendAsyncMessage("teardown-complete");
 });

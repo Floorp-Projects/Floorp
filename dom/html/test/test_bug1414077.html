@@ -12,32 +12,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1414077
 
 /** Test for Bug 1414077 **/
 
-SimpleTest.waitForExplicitFinish();
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-SpecialPowers.pushPrefEnv({"set":[["browser.enable_automatic_image_resizing", true]]}, function() {
-  var testWin = document.querySelector("iframe");
-  testWin.height = 0;
-  testWin.width = 0;
-  testWin.src = "image.png";
-  testWin.onload = function() {
-    var testDoc = testWin.contentDocument;
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({"set": [["browser.enable_automatic_image_resizing", true]]});
 
-    // testDoc should be a image document.
-    ok(testDoc.imageIsOverflowing, "image is overflowing");
-    ok(testDoc.imageIsResized, "image is resized to fit visible area by default");
+  return new Promise(resolve => {
+    var testWin = document.querySelector("iframe");
+    testWin.src = "image.png";
+    testWin.onload = function() {
+      var testDoc = testWin.contentDocument;
 
-    // Restore image to original size.
-    testDoc.restoreImage();
-    ok(testDoc.imageIsOverflowing, "image is overflowing");
-    ok(!testDoc.imageIsResized, "image is restored to original size");
+      // testDoc should be a image document.
+      ok(testDoc.imageIsOverflowing, "image is overflowing");
+      ok(testDoc.imageIsResized, "image is resized to fit visible area by default");
 
-    // Resize the image to fit visible area
-    testDoc.shrinkToFit();
-    ok(testDoc.imageIsOverflowing, "image is overflowing");
-    ok(testDoc.imageIsResized, "image is resized to fit visible area");
+      // Restore image to original size.
+      testDoc.restoreImage();
+      ok(testDoc.imageIsOverflowing, "image is overflowing");
+      ok(!testDoc.imageIsResized, "image is restored to original size");
 
-    SimpleTest.finish();
-  };
+      // Resize the image to fit visible area
+      testDoc.shrinkToFit();
+      ok(testDoc.imageIsOverflowing, "image is overflowing");
+      ok(testDoc.imageIsResized, "image is resized to fit visible area");
+
+      resolve();
+    };
+  })
 });
 
 </script>
@@ -45,6 +47,6 @@ SpecialPowers.pushPrefEnv({"set":[["browser.enable_automatic_image_resizing", tr
 
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1414077">Mozilla Bug 1414077</a>
-<iframe></iframe>
+<iframe width="0" height="0"></iframe>
 </body>
 </html>

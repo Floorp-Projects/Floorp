@@ -1,13 +1,18 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-_("Test that node reassignment responses are respected on all kinds of " +
-  "requests.");
+_(
+  "Test that node reassignment responses are respected on all kinds of " +
+    "requests."
+);
 
-const {RESTRequest} = ChromeUtils.import("resource://services-common/rest.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
-const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-
+const { RESTRequest } = ChromeUtils.import(
+  "resource://services-common/rest.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
 add_task(async function setup() {
   validate_all_future_pings();
@@ -23,7 +28,7 @@ add_task(async function setup() {
  *                     '"server request: node reassignment"', "");
  * }
  */
-const reassignBody = "\"server request: node reassignment\"";
+const reassignBody = '"server request: node reassignment"';
 
 // API-compatible with SyncServer handler. Bind `handler` to something to use
 // as a ServerCollection handler.
@@ -38,7 +43,7 @@ async function prepareServer() {
   server.registerUser("johndoe");
   server.start();
   syncTestLogging();
-  await configureIdentity({username: "johndoe"}, server);
+  await configureIdentity({ username: "johndoe" }, server);
   return server;
 }
 
@@ -47,8 +52,9 @@ function getReassigned() {
     return Services.prefs.getBoolPref("services.sync.lastSyncReassigned");
   } catch (ex) {
     if (ex.result != Cr.NS_ERROR_UNEXPECTED) {
-      do_throw("Got exception retrieving lastSyncReassigned: " +
-               Log.exceptionStr(ex));
+      do_throw(
+        "Got exception retrieving lastSyncReassigned: " + Log.exceptionStr(ex)
+      );
     }
   }
   return false;
@@ -60,15 +66,21 @@ function getReassigned() {
  * Runs `between` between the two. This can be used to undo deliberate failure
  * setup, detach observers, etc.
  */
-async function syncAndExpectNodeReassignment(server, firstNotification, between,
-                                       secondNotification, url) {
+async function syncAndExpectNodeReassignment(
+  server,
+  firstNotification,
+  between,
+  secondNotification,
+  url
+) {
   let deferred = PromiseUtils.defer();
 
   let getTokenCount = 0;
-  let mockTSC = { // TokenServerClient
+  let mockTSC = {
+    // TokenServerClient
     async getTokenFromBrowserIDAssertion(uri, assertion) {
       getTokenCount++;
-      return {endpoint: server.baseURI + "1.1/johndoe/"};
+      return { endpoint: server.baseURI + "1.1/johndoe/" };
     },
   };
   Service.identity._tokenServerClient = mockTSC;
@@ -115,16 +127,18 @@ add_task(async function test_momentary_401_engine() {
 
   _("Test a failure for engine URLs that's resolved by reassignment.");
   let server = await prepareServer();
-  let john   = server.user("johndoe");
+  let john = server.user("johndoe");
 
   _("Enabling the Rotary engine.");
   let { engine, syncID, tracker } = await registerRotaryEngine();
 
   // We need the server to be correctly set up prior to experimenting. Do this
   // through a sync.
-  let global = {syncID: Service.syncID,
-                storageVersion: STORAGE_VERSION,
-                rotary: {version: engine.version, syncID}};
+  let global = {
+    syncID: Service.syncID,
+    storageVersion: STORAGE_VERSION,
+    rotary: { version: engine.version, syncID },
+  };
   john.createCollection("meta").insert("global", global);
 
   _("First sync to prepare server contents.");
@@ -154,11 +168,13 @@ add_task(async function test_momentary_401_engine() {
     Svc.Obs.add("weave:service:login:start", onLoginStart);
   }
 
-  await syncAndExpectNodeReassignment(server,
-                                      "weave:service:sync:finish",
-                                      between,
-                                      "weave:service:sync:finish",
-                                      Service.storageURL + "rotary");
+  await syncAndExpectNodeReassignment(
+    server,
+    "weave:service:sync:finish",
+    between,
+    "weave:service:sync:finish",
+    Service.storageURL + "rotary"
+  );
 
   await tracker.clearChangedIDs();
   await Service.engineManager.unregister(engine);
@@ -183,18 +199,22 @@ add_task(async function test_momentary_401_info_collections() {
     server.toplevelHandlers.info = oldHandler;
   }
 
-  await syncAndExpectNodeReassignment(server,
-                                      "weave:service:sync:error",
-                                      undo,
-                                      "weave:service:sync:finish",
-                                      Service.infoURL);
+  await syncAndExpectNodeReassignment(
+    server,
+    "weave:service:sync:error",
+    undo,
+    "weave:service:sync:finish",
+    Service.infoURL
+  );
 });
 
 add_task(async function test_momentary_401_storage_loggedin() {
   enableValidationPrefs();
 
-  _("Test a failure for any storage URL, not just engine parts. " +
-    "Resolved by reassignment.");
+  _(
+    "Test a failure for any storage URL, not just engine parts. " +
+      "Resolved by reassignment."
+  );
   let server = await prepareServer();
 
   _("Performing initial sync to ensure we are logged in.");
@@ -210,18 +230,22 @@ add_task(async function test_momentary_401_storage_loggedin() {
   }
 
   Assert.ok(Service.isLoggedIn, "already logged in");
-  await syncAndExpectNodeReassignment(server,
-                                      "weave:service:sync:error",
-                                      undo,
-                                      "weave:service:sync:finish",
-                                      Service.storageURL + "meta/global");
+  await syncAndExpectNodeReassignment(
+    server,
+    "weave:service:sync:error",
+    undo,
+    "weave:service:sync:finish",
+    Service.storageURL + "meta/global"
+  );
 });
 
 add_task(async function test_momentary_401_storage_loggedout() {
   enableValidationPrefs();
 
-  _("Test a failure for any storage URL, not just engine parts. " +
-    "Resolved by reassignment.");
+  _(
+    "Test a failure for any storage URL, not just engine parts. " +
+      "Resolved by reassignment."
+  );
   let server = await prepareServer();
 
   // Return a 401 for all storage requests.
@@ -234,18 +258,22 @@ add_task(async function test_momentary_401_storage_loggedout() {
   }
 
   Assert.ok(!Service.isLoggedIn, "not already logged in");
-  await syncAndExpectNodeReassignment(server,
-                                      "weave:service:login:error",
-                                      undo,
-                                      "weave:service:sync:finish",
-                                      Service.storageURL + "meta/global");
+  await syncAndExpectNodeReassignment(
+    server,
+    "weave:service:login:error",
+    undo,
+    "weave:service:sync:finish",
+    Service.storageURL + "meta/global"
+  );
 });
 
 add_task(async function test_loop_avoidance_storage() {
   enableValidationPrefs();
 
-  _("Test that a repeated failure doesn't result in a sync loop " +
-    "if node reassignment cannot resolve the failure.");
+  _(
+    "Test that a repeated failure doesn't result in a sync loop " +
+      "if node reassignment cannot resolve the failure."
+  );
 
   let server = await prepareServer();
 
@@ -253,17 +281,18 @@ add_task(async function test_loop_avoidance_storage() {
   let oldHandler = server.toplevelHandlers.storage;
   server.toplevelHandlers.storage = handleReassign;
 
-  let firstNotification  = "weave:service:login:error";
+  let firstNotification = "weave:service:login:error";
   let secondNotification = "weave:service:login:error";
-  let thirdNotification  = "weave:service:sync:finish";
+  let thirdNotification = "weave:service:sync:finish";
 
   let deferred = PromiseUtils.defer();
 
   let getTokenCount = 0;
-  let mockTSC = { // TokenServerClient
+  let mockTSC = {
+    // TokenServerClient
     async getTokenFromBrowserIDAssertion(uri, assertion) {
       getTokenCount++;
-      return {endpoint: server.baseURI + "1.1/johndoe/"};
+      return { endpoint: server.baseURI + "1.1/johndoe/" };
     },
   };
   Service.identity._tokenServerClient = mockTSC;
@@ -302,7 +331,8 @@ add_task(async function test_loop_avoidance_storage() {
     // The timer will be set for some distant time.
     // We store nextSync in prefs, which offers us only limited resolution.
     // Include that logic here.
-    let expectedNextSync = 1000 * Math.floor((now + MINIMUM_BACKOFF_INTERVAL) / 1000);
+    let expectedNextSync =
+      1000 * Math.floor((now + MINIMUM_BACKOFF_INTERVAL) / 1000);
     _("Next sync scheduled for " + Service.scheduler.nextSync);
     _("Expected to be slightly greater than " + expectedNextSync);
 
@@ -344,29 +374,34 @@ add_task(async function test_loop_avoidance_storage() {
 add_task(async function test_loop_avoidance_engine() {
   enableValidationPrefs();
 
-  _("Test that a repeated 401 in an engine doesn't result in a sync loop " +
-    "if node reassignment cannot resolve the failure.");
+  _(
+    "Test that a repeated 401 in an engine doesn't result in a sync loop " +
+      "if node reassignment cannot resolve the failure."
+  );
   let server = await prepareServer();
-  let john   = server.user("johndoe");
+  let john = server.user("johndoe");
 
   _("Enabling the Rotary engine.");
   let { engine, syncID, tracker } = await registerRotaryEngine();
   let deferred = PromiseUtils.defer();
 
   let getTokenCount = 0;
-  let mockTSC = { // TokenServerClient
+  let mockTSC = {
+    // TokenServerClient
     getTokenFromBrowserIDAssertion(uri, assertion) {
       getTokenCount++;
-      return {endpoint: server.baseURI + "1.1/johndoe/"};
+      return { endpoint: server.baseURI + "1.1/johndoe/" };
     },
   };
   Service.identity._tokenServerClient = mockTSC;
 
   // We need the server to be correctly set up prior to experimenting. Do this
   // through a sync.
-  let global = {syncID: Service.syncID,
-                storageVersion: STORAGE_VERSION,
-                rotary: {version: engine.version, syncID}};
+  let global = {
+    syncID: Service.syncID,
+    storageVersion: STORAGE_VERSION,
+    rotary: { version: engine.version, syncID },
+  };
   john.createCollection("meta").insert("global", global);
 
   _("First sync to prepare server contents.");
@@ -391,9 +426,9 @@ add_task(async function test_loop_avoidance_engine() {
     rotary.collectionHandler = oldHandler;
   }
 
-  let firstNotification  = "weave:service:sync:finish";
+  let firstNotification = "weave:service:sync:finish";
   let secondNotification = "weave:service:sync:finish";
-  let thirdNotification  = "weave:service:sync:finish";
+  let thirdNotification = "weave:service:sync:finish";
 
   // Track the time. We want to make sure the duration between the first and
   // second sync is small, and then that the duration between second and third
@@ -432,7 +467,8 @@ add_task(async function test_loop_avoidance_engine() {
     // The timer will be set for some distant time.
     // We store nextSync in prefs, which offers us only limited resolution.
     // Include that logic here.
-    let expectedNextSync = 1000 * Math.floor((now + MINIMUM_BACKOFF_INTERVAL) / 1000);
+    let expectedNextSync =
+      1000 * Math.floor((now + MINIMUM_BACKOFF_INTERVAL) / 1000);
     _("Next sync scheduled for " + Service.scheduler.nextSync);
     _("Expected to be slightly greater than " + expectedNextSync);
 

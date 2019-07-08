@@ -10,13 +10,17 @@
 */
 
 function serverOwnershipTree(walkerArg) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, [walkerArg.actorID],
+  return ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    [walkerArg.actorID],
     function(actorID) {
-      const { require } =
-        ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+      const { require } = ChromeUtils.import(
+        "resource://devtools/shared/Loader.jsm"
+      );
       const { DebuggerServer } = require("devtools/server/main");
-      const { DocumentWalker } =
-        require("devtools/server/actors/inspector/document-walker");
+      const {
+        DocumentWalker,
+      } = require("devtools/server/actors/inspector/document-walker");
 
       // Convert actorID to current compartment string otherwise
       // searchAllConnectionsForActor is confused and won't find the actor.
@@ -50,12 +54,15 @@ function serverOwnershipTree(walkerArg) {
       }
       return {
         root: serverOwnershipSubtree(serverWalker, serverWalker.rootDoc),
-        orphaned: [...serverWalker._orphaned]
-                  .map(o => serverOwnershipSubtree(serverWalker, o.rawNode)),
-        retained: [...serverWalker._retainedOrphans]
-                  .map(o => serverOwnershipSubtree(serverWalker, o.rawNode)),
+        orphaned: [...serverWalker._orphaned].map(o =>
+          serverOwnershipSubtree(serverWalker, o.rawNode)
+        ),
+        retained: [...serverWalker._retainedOrphans].map(o =>
+          serverOwnershipSubtree(serverWalker, o.rawNode)
+        ),
       };
-    });
+    }
+  );
 }
 
 function sortOwnershipChildren(children) {
@@ -65,8 +72,9 @@ function sortOwnershipChildren(children) {
 function clientOwnershipSubtree(node) {
   return {
     name: node.actorID,
-    children: sortOwnershipChildren(node.treeChildren()
-              .map(child => clientOwnershipSubtree(child))),
+    children: sortOwnershipChildren(
+      node.treeChildren().map(child => clientOwnershipSubtree(child))
+    ),
   };
 }
 
@@ -89,26 +97,38 @@ function ownershipTreeSize(tree) {
 async function assertOwnershipTrees(walker) {
   const serverTree = await serverOwnershipTree(walker);
   const clientTree = clientOwnershipTree(walker);
-  is(JSON.stringify(clientTree, null, " "), JSON.stringify(serverTree, null, " "),
-     "Server and client ownership trees should match.");
+  is(
+    JSON.stringify(clientTree, null, " "),
+    JSON.stringify(serverTree, null, " "),
+    "Server and client ownership trees should match."
+  );
 
   return ownershipTreeSize(clientTree.root);
 }
 
 // Verify that an actorID is inaccessible both from the client library and the server.
-function checkMissing({client}, actorID) {
+function checkMissing({ client }, actorID) {
   return new Promise(resolve => {
     const front = client.getActor(actorID);
-    ok(!front, "Front shouldn't be accessible from the client for actorID: " + actorID);
+    ok(
+      !front,
+      "Front shouldn't be accessible from the client for actorID: " + actorID
+    );
 
-    client.request({
-      to: actorID,
-      type: "request",
-    }, response => {
-      is(response.error, "noSuchActor",
-        "node list actor should no longer be contactable.");
-      resolve(undefined);
-    });
+    client.request(
+      {
+        to: actorID,
+        type: "request",
+      },
+      response => {
+        is(
+          response.error,
+          "noSuchActor",
+          "node list actor should no longer be contactable."
+        );
+        resolve(undefined);
+      }
+    );
   });
 }
 
@@ -123,10 +143,11 @@ function waitForMutation(walker, test, mutations = []) {
     }
 
     walker.once("mutations", newMutations => {
-      waitForMutation(walker, test, mutations.concat(newMutations))
-        .then(finalMutations => {
+      waitForMutation(walker, test, mutations.concat(newMutations)).then(
+        finalMutations => {
           resolve(finalMutations);
-        });
+        }
+      );
     });
   });
 }
@@ -134,7 +155,7 @@ function waitForMutation(walker, test, mutations = []) {
 function assertAndStrip(mutations, message, test) {
   const size = mutations.length;
   mutations = mutations.filter(test);
-  ok((mutations.size != size), message);
+  ok(mutations.size != size, message);
   return mutations;
 }
 
@@ -165,24 +186,39 @@ function isNewRoot(change) {
 // Make sure an iframe's src attribute changed and then
 // strip that mutation out of the list.
 function assertSrcChange(mutations) {
-  return assertAndStrip(mutations, "Should have had an iframe source change.",
-                        isSrcChange);
+  return assertAndStrip(
+    mutations,
+    "Should have had an iframe source change.",
+    isSrcChange
+  );
 }
 
 // Make sure there's an unload in the mutation list and strip
 // that mutation out of the list
 function assertUnload(mutations) {
-  return assertAndStrip(mutations, "Should have had a document unload change.", isUnload);
+  return assertAndStrip(
+    mutations,
+    "Should have had a document unload change.",
+    isUnload
+  );
 }
 
 // Make sure there's a frame load in the mutation list and strip
 // that mutation out of the list
 function assertFrameLoad(mutations) {
-  return assertAndStrip(mutations, "Should have had a frame load change.", isFrameLoad);
+  return assertAndStrip(
+    mutations,
+    "Should have had a frame load change.",
+    isFrameLoad
+  );
 }
 
 // Make sure there's a childList change in the mutation list and strip
 // that mutation out of the list
 function assertChildList(mutations) {
-  return assertAndStrip(mutations, "Should have had a frame load change.", isChildList);
+  return assertAndStrip(
+    mutations,
+    "Should have had a frame load change.",
+    isChildList
+  );
 }

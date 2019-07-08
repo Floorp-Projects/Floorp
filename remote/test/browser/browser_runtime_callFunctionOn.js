@@ -9,7 +9,7 @@
 const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
 
 add_task(async function() {
-  const {client} = await setupTestForUri(TEST_URI);
+  const { client } = await setupTestForUri(TEST_URI);
 
   const firstContext = await testRuntimeEnable(client);
   const contextId = firstContext.id;
@@ -43,7 +43,10 @@ async function testRuntimeEnable({ Runtime }) {
 
 async function testObjectReferences({ Runtime }, contextId) {
   // First create a JS object remotely via Runtime.evaluate
-  const { result } = await Runtime.evaluate({ contextId, expression: "({ foo: 1 })" });
+  const { result } = await Runtime.evaluate({
+    contextId,
+    expression: "({ foo: 1 })",
+  });
   is(result.type, "object", "The type is correct");
   is(result.subtype, null, "The subtype is null for objects");
   ok(!!result.objectId, "Got an object id");
@@ -57,7 +60,11 @@ async function testObjectReferences({ Runtime }, contextId) {
   });
   is(result2.type, "number", "The type is correct");
   is(result2.subtype, null, "The subtype is null for numbers");
-  is(result2.value, 2, "Updated the existing object and returned the incremented value");
+  is(
+    result2.value,
+    2,
+    "Updated the existing object and returned the incremented value"
+  );
 
   // Finally, try to pass this JS object and get it back. Ensure that it returns
   // the same object id. Also increment the attribute again.
@@ -83,7 +90,11 @@ async function testObjectReferences({ Runtime }, contextId) {
   });
   is(result4.type, "number", "The type is correct");
   is(result4.subtype, null, "The subtype is null for numbers");
-  is(result4.value, 3, "Updated the existing object and returned the incremented value");
+  is(
+    result4.value,
+    3,
+    "Updated the existing object and returned the incremented value"
+  );
 }
 
 async function testExceptions({ Runtime }, executionContextId) {
@@ -92,28 +103,36 @@ async function testExceptions({ Runtime }, executionContextId) {
     executionContextId,
     functionDeclaration: "doesNotExists()",
   });
-  is(exceptionDetails.text, "doesNotExists is not defined", "Exception message is passed to the client");
+  is(
+    exceptionDetails.text,
+    "doesNotExists is not defined",
+    "Exception message is passed to the client"
+  );
 
   // Test error when calling the function
   ({ exceptionDetails } = await Runtime.callFunctionOn({
     executionContextId,
     functionDeclaration: "() => doesNotExists()",
   }));
-  is(exceptionDetails.text, "doesNotExists is not defined", "Exception message is passed to the client");
+  is(
+    exceptionDetails.text,
+    "doesNotExists is not defined",
+    "Exception message is passed to the client"
+  );
 }
 
 async function testReturnByValue({ Runtime }, executionContextId) {
   const values = [
     42,
     "42",
-    42.00,
+    42.0,
     true,
     false,
     null,
     { foo: true },
     { foo: { bar: 42, str: "str", array: [1, 2, 3] } },
-    [ 42, "42", true ],
-    [ { foo: true } ],
+    [42, "42", true],
+    [{ foo: true }],
   ];
   for (const value of values) {
     const { result } = await Runtime.callFunctionOn({
@@ -121,7 +140,11 @@ async function testReturnByValue({ Runtime }, executionContextId) {
       functionDeclaration: "() => (" + JSON.stringify(value) + ")",
       returnByValue: true,
     });
-    Assert.deepEqual(result.value, value, "The returned value is the same than the input value");
+    Assert.deepEqual(
+      result.value,
+      value,
+      "The returned value is the same than the input value"
+    );
   }
 
   // Test undefined individually as JSON.stringify doesn't return a string
@@ -150,7 +173,11 @@ async function testAwaitPromise({ Runtime }, executionContextId) {
     functionDeclaration: "() => Promise.reject(42)",
     awaitPromise: true,
   });
-  is(exceptionDetails.exception.value, 42, "The result is the promise's rejection");
+  is(
+    exceptionDetails.exception.value,
+    42,
+    "The result is the promise's rejection"
+  );
 
   // Then check delayed promise resolution
   ({ result } = await Runtime.callFunctionOn({
@@ -165,10 +192,15 @@ async function testAwaitPromise({ Runtime }, executionContextId) {
   // And delayed promise rejection
   ({ exceptionDetails } = await Runtime.callFunctionOn({
     executionContextId,
-    functionDeclaration: "() => new Promise((_,r) => setTimeout(() => r(42), 0))",
+    functionDeclaration:
+      "() => new Promise((_,r) => setTimeout(() => r(42), 0))",
     awaitPromise: true,
   }));
-  is(exceptionDetails.exception.value, 42, "The result is the promise's rejection");
+  is(
+    exceptionDetails.exception.value,
+    42,
+    "The result is the promise's rejection"
+  );
 
   // Finally assert promise resolution without awaitPromise
   ({ result } = await Runtime.callFunctionOn({
@@ -195,7 +227,10 @@ async function testAwaitPromise({ Runtime }, executionContextId) {
 
 async function testObjectId({ Runtime }, contextId) {
   // First create an object via Runtime.evaluate
-  const { result } = await Runtime.evaluate({ contextId, expression: "({ foo: 42 })" });
+  const { result } = await Runtime.evaluate({
+    contextId,
+    expression: "({ foo: 42 })",
+  });
   is(result.type, "object", "The type is correct");
   is(result.subtype, null, "The subtype is null for objects");
   ok(!!result.objectId, "Got an object id");
@@ -208,5 +243,9 @@ async function testObjectId({ Runtime }, contextId) {
   });
   is(result2.type, "number", "The type is correct");
   is(result2.subtype, null, "The subtype is null for numbers");
-  is(result2.value, 42, "We have a good proof that the function was ran against the target object");
+  is(
+    result2.value,
+    42,
+    "We have a good proof that the function was ran against the target object"
+  );
 }

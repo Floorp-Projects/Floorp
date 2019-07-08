@@ -17,7 +17,9 @@
 //    expect ruleview-changed,
 //  ]
 
-const OPEN = true, SELECTED = true, CHANGE = true;
+const OPEN = true,
+  SELECTED = true,
+  CHANGE = true;
 var testData = [
   ["b", {}, "beige", OPEN, SELECTED, CHANGE],
   ["l", {}, "black", OPEN, SELECTED, CHANGE],
@@ -29,7 +31,7 @@ var testData = [
   ["VK_BACK_SPACE", {}, "blue !", !OPEN, !SELECTED, CHANGE],
   ["VK_BACK_SPACE", {}, "blue ", !OPEN, !SELECTED, CHANGE],
   ["VK_BACK_SPACE", {}, "blue", !OPEN, !SELECTED, CHANGE],
-  ["VK_TAB", {shiftKey: true}, "color", !OPEN, !SELECTED, CHANGE],
+  ["VK_TAB", { shiftKey: true }, "color", !OPEN, !SELECTED, CHANGE],
   ["VK_BACK_SPACE", {}, "", !OPEN, !SELECTED, !CHANGE],
   ["d", {}, "display", OPEN, SELECTED, !CHANGE],
   ["VK_TAB", {}, "blue", !OPEN, !SELECTED, CHANGE],
@@ -41,7 +43,7 @@ const TEST_URI = "<h1 style='color: red'>Header</h1>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {toolbox, inspector, view, testActor} = await openRuleView();
+  const { toolbox, inspector, view, testActor } = await openRuleView();
 
   info("Test autocompletion after 1st page load");
   await runAutocompletionTest(toolbox, inspector, view);
@@ -70,8 +72,11 @@ async function runAutocompletionTest(toolbox, inspector, view) {
   }
 }
 
-async function testCompletion([key, modifiers, completion, open, selected, change],
-                         editor, view) {
+async function testCompletion(
+  [key, modifiers, completion, open, selected, change],
+  editor,
+  view
+) {
   info("Pressing key " + key);
   info("Expecting " + completion);
   info("Is popup opened: " + open);
@@ -86,18 +91,18 @@ async function testCompletion([key, modifiers, completion, open, selected, chang
   } else {
     // Otherwise, expect an after-suggest event (except if the popup gets
     // closed).
-    onDone = key !== "VK_RIGHT" && key !== "VK_BACK_SPACE"
-             ? editor.once("after-suggest")
-             : null;
+    onDone =
+      key !== "VK_RIGHT" && key !== "VK_BACK_SPACE"
+        ? editor.once("after-suggest")
+        : null;
   }
 
   info("Synthesizing key " + key + ", modifiers: " + Object.keys(modifiers));
 
   // Also listening for popup opened/closed events if needed.
   const popupEvent = open ? "popup-opened" : "popup-closed";
-  const onPopupEvent = editor.popup.isOpen !== open
-    ? once(editor.popup, popupEvent)
-    : null;
+  const onPopupEvent =
+    editor.popup.isOpen !== open ? once(editor.popup, popupEvent) : null;
 
   EventUtils.synthesizeKey(key, modifiers, view.styleWindow);
 

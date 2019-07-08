@@ -29,7 +29,7 @@ from mach.main import Mach
 from mozbuild.base import MachCommandBase
 
 from mozbuild.build_commands import Build
-from mozbuild.artifact_commands import PackageFrontend
+from mozbuild.nodeutil import find_node_executable
 
 import mozpack.path as mozpath
 
@@ -1328,6 +1328,33 @@ class StaticAnalysis(MachCommandBase):
             print(' '*4 + checker)
         return 0
 
+    @Command('prettier-format',  category='misc', description='Run prettier on current changes')
+    @CommandArgument('--path', '-p', nargs=1, required=True,
+                     help='Specify the path to reformat to stdout.')
+    @CommandArgument('--assume-filename', '-a', nargs=1, required=True,
+                     help='This option is usually used in the context of hg-formatsource.'
+                          'When reading from stdin, Prettier assumes this '
+                          'filename to decide which style and parser to use.')
+    def prettier_format(self, path, assume_filename):
+        # With assume_filename we want to have stdout clean since the result of the
+        # format will be redirected to stdout.
+
+        binary, _ = find_node_executable()
+        prettier = os.path.join(self.topsrcdir, "node_modules", "prettier", "bin-prettier.js")
+        path = os.path.join(self.topsrcdir, path[0])
+
+        # We use --stdin-filepath in order to better determine the path for
+        # the prettier formatter when it is ran outside of the repo, for example
+        # by the extension hg-formatsource.
+        args = [binary, prettier, '--stdin-filepath', assume_filename[0]]
+
+        process = subprocess.Popen(args, stdin=subprocess.PIPE)
+        with open(path, 'r') as fin:
+            process.stdin.write(fin.read())
+            process.stdin.close()
+            process.wait()
+            return process.returncode
+
     @Command('clang-format',  category='misc', description='Run clang-format on current changes')
     @CommandArgument('--show', '-s', action='store_const', const='stdout', dest='output_path',
                      help='Show diff output on stdout instead of applying changes')
@@ -1676,6 +1703,8 @@ class StaticAnalysis(MachCommandBase):
         if source:
             return self._get_clang_tools_from_source(source)
 
+        from mozbuild.artifact_commands import PackageFrontend
+
         self._artifact_manager = PackageFrontend(self._mach_context)
 
         if not download_if_needed:
@@ -1783,6 +1812,7 @@ class StaticAnalysis(MachCommandBase):
                                    verbose=verbose,
                                    download_if_needed=download_if_needed)
         os.mkdir(infer_path)
+        from mozbuild.artifact_commands import PackageFrontend
         self._artifact_manager = PackageFrontend(self._mach_context)
         if not download_if_needed:
             return 0

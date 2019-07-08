@@ -6,8 +6,15 @@
 const expect = require("expect");
 
 const actions = require("devtools/client/webconsole/actions/index");
-const { setupStore, getFirstMessage, getLastMessage } = require("devtools/client/webconsole/test/helpers");
-const { stubPackets, stubPreparedMessages } = require("devtools/client/webconsole/test/fixtures/stubs/index");
+const {
+  setupStore,
+  getFirstMessage,
+  getLastMessage,
+} = require("devtools/client/webconsole/test/helpers");
+const {
+  stubPackets,
+  stubPreparedMessages,
+} = require("devtools/client/webconsole/test/fixtures/stubs/index");
 
 describe("Testing UI", () => {
   let store;
@@ -99,10 +106,14 @@ describe("Testing UI", () => {
 
       const newActorId = newMessage.parameters[0].actor;
       const newMessageId = getLastMessage(store.getState()).id;
-      store.dispatch(actions.showMessageObjectInSidebar(newActorId, newMessageId));
+      store.dispatch(
+        actions.showMessageObjectInSidebar(newActorId, newMessageId)
+      );
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
-      expect(store.getState().ui.gripInSidebar).toEqual(newMessage.parameters[0]);
+      expect(store.getState().ui.gripInSidebar).toEqual(
+        newMessage.parameters[0]
+      );
     });
   });
 });

@@ -4,11 +4,12 @@
 
 var EXPORTED_SYMBOLS = ["CommonUtils"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 var CommonUtils = {
   /*
@@ -94,7 +95,9 @@ var CommonUtils = {
    *        to true for historical reasons.
    */
   encodeBase64URL: function encodeBase64URL(bytes, pad = true) {
-    let s = btoa(bytes).replace(/\+/g, "-").replace(/\//g, "_");
+    let s = btoa(bytes)
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_");
 
     if (!pad) {
       return s.replace(/=+$/, "");
@@ -107,8 +110,9 @@ var CommonUtils = {
    * Create a nsIURI instance from a string.
    */
   makeURI: function makeURI(URIString) {
-    if (!URIString)
+    if (!URIString) {
       return null;
+    }
     try {
       return Services.io.newURI(URIString);
     } catch (e) {
@@ -141,7 +145,8 @@ var CommonUtils = {
   namedTimer: function namedTimer(callback, wait, thisObj, name) {
     if (!thisObj || !name) {
       throw new Error(
-          "You must provide both an object and a property name for the timer!");
+        "You must provide both an object and a property name for the timer!"
+      );
     }
 
     // Delay an existing timer if it exists
@@ -151,7 +156,9 @@ var CommonUtils = {
     }
 
     // Create a special timer that we can add extra properties
-    let timer = Object.create(Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer));
+    let timer = Object.create(
+      Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer)
+    );
 
     // Provide an easy way to clear out the timer
     timer.clear = function() {
@@ -160,15 +167,19 @@ var CommonUtils = {
     };
 
     // Initialize the timer with a smart callback
-    timer.initWithCallback({
-      notify: function notify() {
-        // Clear out the timer once it's been triggered
-        timer.clear();
-        callback.call(thisObj, timer);
+    timer.initWithCallback(
+      {
+        notify: function notify() {
+          // Clear out the timer once it's been triggered
+          timer.clear();
+          callback.call(thisObj, timer);
+        },
       },
-    }, wait, timer.TYPE_ONE_SHOT);
+      wait,
+      timer.TYPE_ONE_SHOT
+    );
 
-    return thisObj[name] = timer;
+    return (thisObj[name] = timer);
   },
 
   encodeUTF8: function encodeUTF8(str) {
@@ -216,7 +227,9 @@ var CommonUtils = {
   },
 
   bufferToHex(buffer) {
-    return Array.prototype.map.call(buffer, (x) => ("00" + x.toString(16)).slice(-2)).join("");
+    return Array.prototype.map
+      .call(buffer, x => ("00" + x.toString(16)).slice(-2))
+      .join("");
   },
 
   bytesAsHex: function bytesAsHex(bytes) {
@@ -265,23 +278,27 @@ var CommonUtils = {
 
     // Pad the last quantum with zeros so the length is a multiple of 5.
     if (leftover) {
-      for (let i = leftover; i < 5; i++)
+      for (let i = leftover; i < 5; i++) {
         bytes += "\0";
+      }
     }
 
     // Chop the string into quanta of 5 bytes (40 bits). Each quantum
     // is turned into 8 characters from the 32 character base.
     let ret = "";
     for (let i = 0; i < bytes.length; i += 5) {
-      let c = Array.prototype.slice.call(bytes.slice(i, i + 5)).map(byte => byte.charCodeAt(0));
-      ret += key[c[0] >> 3]
-           + key[((c[0] << 2) & 0x1f) | (c[1] >> 6)]
-           + key[(c[1] >> 1) & 0x1f]
-           + key[((c[1] << 4) & 0x1f) | (c[2] >> 4)]
-           + key[((c[2] << 1) & 0x1f) | (c[3] >> 7)]
-           + key[(c[3] >> 2) & 0x1f]
-           + key[((c[3] << 3) & 0x1f) | (c[4] >> 5)]
-           + key[c[4] & 0x1f];
+      let c = Array.prototype.slice
+        .call(bytes.slice(i, i + 5))
+        .map(byte => byte.charCodeAt(0));
+      ret +=
+        key[c[0] >> 3] +
+        key[((c[0] << 2) & 0x1f) | (c[1] >> 6)] +
+        key[(c[1] >> 1) & 0x1f] +
+        key[((c[1] << 4) & 0x1f) | (c[2] >> 4)] +
+        key[((c[2] << 1) & 0x1f) | (c[3] >> 7)] +
+        key[(c[3] >> 2) & 0x1f] +
+        key[((c[3] << 3) & 0x1f) | (c[4] >> 5)] +
+        key[c[4] & 0x1f];
     }
 
     switch (leftover) {
@@ -305,8 +322,8 @@ var CommonUtils = {
     const key = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
     let padChar = str.indexOf("=");
-    let chars = (padChar == -1) ? str.length : padChar;
-    let bytes = Math.floor(chars * 5 / 8);
+    let chars = padChar == -1 ? str.length : padChar;
+    let bytes = Math.floor((chars * 5) / 8);
     let blocks = Math.ceil(chars / 8);
 
     // Process a chunk of 5 bytes / 8 characters.
@@ -322,12 +339,15 @@ var CommonUtils = {
       }
 
       function advance() {
-        c  = str[cOffset++];
-        if (!c || c == "" || c == "=") // Easier than range checking.
-          throw new Error("Done"); // Will be caught far away.
+        c = str[cOffset++];
+        if (!c || c == "" || c == "=") {
+          // Easier than range checking.
+          throw new Error("Done");
+        } // Will be caught far away.
         val = key.indexOf(c);
-        if (val == -1)
+        if (val == -1) {
           throw new Error(`Unknown character in base32: ${c}`);
+        }
       }
 
       // Handle a left shift, restricted to bytes.
@@ -363,8 +383,8 @@ var CommonUtils = {
     }
 
     // Our output. Define to be explicit (and maybe the compiler will be smart).
-    let ret  = new Array(bytes);
-    let i    = 0;
+    let ret = new Array(bytes);
+    let i = 0;
     let cOff = 0;
     let rOff = 0;
 
@@ -373,8 +393,9 @@ var CommonUtils = {
         processBlock(ret, cOff, rOff);
       } catch (ex) {
         // Handle the detection of padding.
-        if (ex.message == "Done")
+        if (ex.message == "Done") {
           break;
+        }
         throw ex;
       }
       cOff += 8;
@@ -403,7 +424,7 @@ var CommonUtils = {
    * @return a promise that resolves to the JSON contents of the named file.
    */
   readJSON(path) {
-    return OS.File.read(path, { encoding: "utf-8" }).then((data) => {
+    return OS.File.read(path, { encoding: "utf-8" }).then(data => {
       return JSON.parse(data);
     });
   },
@@ -417,9 +438,11 @@ var CommonUtils = {
    */
   writeJSON(contents, path) {
     let data = JSON.stringify(contents);
-    return OS.File.writeAtomic(path, data, {encoding: "utf-8", tmpPath: path + ".tmp"});
+    return OS.File.writeAtomic(path, data, {
+      encoding: "utf-8",
+      tmpPath: path + ".tmp",
+    });
   },
-
 
   /**
    * Ensure that the specified value is defined in integer milliseconds since
@@ -445,7 +468,7 @@ var CommonUtils = {
     let intValue = parseInt(value, 10);
 
     if (!intValue) {
-       return;
+      return;
     }
 
     // Catch what looks like seconds, not milliseconds.
@@ -465,9 +488,10 @@ var CommonUtils = {
    */
   readBytesFromInputStream: function readBytesFromInputStream(stream, count) {
     let BinaryInputStream = Components.Constructor(
-        "@mozilla.org/binaryinputstream;1",
-        "nsIBinaryInputStream",
-        "setInputStream");
+      "@mozilla.org/binaryinputstream;1",
+      "nsIBinaryInputStream",
+      "setInputStream"
+    );
     if (!count) {
       count = stream.available();
     }
@@ -484,9 +508,9 @@ var CommonUtils = {
    */
   generateUUID: function generateUUID() {
     let uuid = Cc["@mozilla.org/uuid-generator;1"]
-                 .getService(Ci.nsIUUIDGenerator)
-                 .generateUUID()
-                 .toString();
+      .getService(Ci.nsIUUIDGenerator)
+      .generateUUID()
+      .toString();
 
     return uuid.substring(1, uuid.length - 1);
   },
@@ -525,8 +549,14 @@ var CommonUtils = {
       let valueInt = parseInt(valueStr, 10);
       if (Number.isNaN(valueInt)) {
         if (log) {
-          log.warn("Preference value is not an integer. Using default. " +
-                   pref + "=" + valueStr + " -> " + def);
+          log.warn(
+            "Preference value is not an integer. Using default. " +
+              pref +
+              "=" +
+              valueStr +
+              " -> " +
+              def
+          );
         }
 
         return def;
@@ -559,8 +589,13 @@ var CommonUtils = {
    * @param oldestYear
    *        (Number) Oldest year to accept in read values.
    */
-  getDatePref: function getDatePref(branch, pref, def = 0, log = null,
-                                    oldestYear = 2010) {
+  getDatePref: function getDatePref(
+    branch,
+    pref,
+    def = 0,
+    log = null,
+    oldestYear = 2010
+  ) {
     let valueInt = this.getEpochPref(branch, pref, def, log);
     let date = new Date(valueInt);
 
@@ -569,8 +604,14 @@ var CommonUtils = {
     }
 
     if (log) {
-      log.warn("Unexpected old date seen in pref. Returning default: " +
-               pref + "=" + date + " -> " + def);
+      log.warn(
+        "Unexpected old date seen in pref. Returning default: " +
+          pref +
+          "=" +
+          date +
+          " -> " +
+          def
+      );
     }
 
     return new Date(def);
@@ -595,9 +636,15 @@ var CommonUtils = {
    */
   setDatePref: function setDatePref(branch, pref, date, oldestYear = 2010) {
     if (date.getFullYear() < oldestYear) {
-      throw new Error("Trying to set " + pref + " to a very old time: " +
-                      date + ". The current time is " + new Date() +
-                      ". Is the system clock wrong?");
+      throw new Error(
+        "Trying to set " +
+          pref +
+          " to a very old time: " +
+          date +
+          ". The current time is " +
+          new Date() +
+          ". Is the system clock wrong?"
+      );
     }
 
     branch.set(pref, "" + date.getTime());
@@ -627,24 +674,35 @@ var CommonUtils = {
       throw new Error("Input string must be defined.");
     }
 
-    let is = Cc["@mozilla.org/io/string-input-stream;1"]
-               .createInstance(Ci.nsIStringInputStream);
+    let is = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+      Ci.nsIStringInputStream
+    );
     is.setData(s, s.length);
 
-    let listener = Cc["@mozilla.org/network/stream-loader;1"]
-                     .createInstance(Ci.nsIStreamLoader);
+    let listener = Cc["@mozilla.org/network/stream-loader;1"].createInstance(
+      Ci.nsIStreamLoader
+    );
 
     let result;
 
     listener.init({
-      onStreamComplete: function onStreamComplete(loader, context, status,
-                                                  length, data) {
+      onStreamComplete: function onStreamComplete(
+        loader,
+        context,
+        status,
+        length,
+        data
+      ) {
         result = String.fromCharCode.apply(this, data);
       },
     });
 
-    let converter = this._converterService.asyncConvertData(source, dest,
-                                                            listener, null);
+    let converter = this._converterService.asyncConvertData(
+      source,
+      dest,
+      listener,
+      null
+    );
     converter.onStartRequest(null, null);
     converter.onDataAvailable(null, is, 0, s.length);
     converter.onStopRequest(null, null, null);
@@ -654,13 +712,15 @@ var CommonUtils = {
 };
 
 XPCOMUtils.defineLazyGetter(CommonUtils, "_utf8Converter", function() {
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  let converter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
   return converter;
 });
 
 XPCOMUtils.defineLazyGetter(CommonUtils, "_converterService", function() {
-  return Cc["@mozilla.org/streamConverters;1"]
-           .getService(Ci.nsIStreamConverterService);
+  return Cc["@mozilla.org/streamConverters;1"].getService(
+    Ci.nsIStreamConverterService
+  );
 });

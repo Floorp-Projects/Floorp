@@ -10,8 +10,7 @@
  * missing.
  */
 
-async function testSteps()
-{
+async function testSteps() {
   const originDirPath = "storage/default/https+++foo.example.com";
   const metadataFileName = ".metadata-v2";
 
@@ -25,8 +24,10 @@ async function testSteps()
   let request = initTemporaryStorage();
   await requestFinished(request);
 
-  info("Verifying directory metadata was restored after calling " +
-       "initTemporaryStorage()");
+  info(
+    "Verifying directory metadata was restored after calling " +
+      "initTemporaryStorage()"
+  );
 
   let metadataFile = originDir.clone();
   metadataFile.append(metadataFileName);

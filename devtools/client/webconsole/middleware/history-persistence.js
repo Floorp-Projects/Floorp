@@ -19,23 +19,23 @@ loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
  */
 function historyPersistenceMiddleware(store) {
   let historyLoaded = false;
-  asyncStorage.getItem("webConsoleHistory").then(value => {
-    if (Array.isArray(value)) {
-      store.dispatch(historyActions.historyLoaded(value));
+  asyncStorage.getItem("webConsoleHistory").then(
+    value => {
+      if (Array.isArray(value)) {
+        store.dispatch(historyActions.historyLoaded(value));
+      }
+      historyLoaded = true;
+    },
+    err => {
+      historyLoaded = true;
+      console.error(err);
     }
-    historyLoaded = true;
-  }, err => {
-    historyLoaded = true;
-    console.error(err);
-  });
+  );
 
   return next => action => {
     const res = next(action);
 
-    const triggerStoreActions = [
-      APPEND_TO_HISTORY,
-      CLEAR_HISTORY,
-    ];
+    const triggerStoreActions = [APPEND_TO_HISTORY, CLEAR_HISTORY];
 
     // Save the current history entries when modified, but wait till
     // entries from the previous session are loaded.

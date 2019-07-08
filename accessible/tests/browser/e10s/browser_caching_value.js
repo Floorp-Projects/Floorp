@@ -18,102 +18,130 @@ loadScripts({ name: "value.js", dir: MOCHITESTS_DIR });
  *   waitFor   {?Number}           an optional value change event to wait for
  * }
  */
-const valueTests = [{
-  desc: "Initially value is set to 1st element of select",
-  id: "select",
-  expected: "1st"
-}, {
-  desc: "Value should update to 3rd when 3 is pressed",
-  id: "select",
-  async action(browser) {
-    await invokeFocus(browser, "select");
-    await BrowserTestUtils.synthesizeKey("3", {}, browser);
+const valueTests = [
+  {
+    desc: "Initially value is set to 1st element of select",
+    id: "select",
+    expected: "1st",
   },
-  waitFor: EVENT_TEXT_VALUE_CHANGE,
-  expected: "3rd"
-}, {
-  desc: "Initially value is set to @aria-valuenow for slider",
-  id: "slider",
-  expected: ["5", 5, 0, 7, 0]
-}, {
-  desc: "Value should change when @aria-valuenow is updated",
-  id: "slider",
-  attrs: [{
-    attr: "aria-valuenow",
-    value: "6"
-  }],
-  waitFor: EVENT_VALUE_CHANGE,
-  expected: ["6", 6, 0, 7, 0]
-}, {
-  desc: "Value should change when @aria-valuetext is set",
-  id: "slider",
-  attrs: [{
-    attr: "aria-valuetext",
-    value: "plain"
-  }],
-  waitFor: EVENT_TEXT_VALUE_CHANGE,
-  expected: ["plain", 6, 0, 7, 0]
-}, {
-  desc: "Value should change when @aria-valuetext is updated",
-  id: "slider",
-  attrs: [{
-    attr: "aria-valuetext",
-    value: "hey!"
-  }],
-  waitFor: EVENT_TEXT_VALUE_CHANGE,
-  expected: ["hey!", 6, 0, 7, 0]
-}, {
-  desc: "Value should change to @aria-valuetext when @aria-valuenow is removed",
-  id: "slider",
-  attrs: [{
-    attr: "aria-valuenow"
-  }],
-  expected: ["hey!", 0, 0, 7, 0]
-}, {
-  desc: "Initially value is not set for combobox",
-  id: "combobox",
-  expected: ""
-}, {
-  desc: "Value should change when @value attribute is updated",
-  id: "combobox",
-  attrs: [{
-    attr: "value",
-    value: "hello"
-  }],
-  waitFor: EVENT_TEXT_VALUE_CHANGE,
-  expected: "hello"
-}, {
-  desc: "Initially value corresponds to @value attribute for progress",
-  id: "progress",
-  expected: "22%"
-}, {
-  desc: "Value should change when @value attribute is updated",
-  id: "progress",
-  attrs: [{
-    attr: "value",
-    value: "50"
-  }],
-  waitFor: EVENT_VALUE_CHANGE,
-  expected: "50%"
-}, {
-  desc: "Initially value corresponds to @value attribute for range",
-  id: "range",
-  expected: "6"
-}, {
-  desc: "Value should change when slider is moved",
-  id: "range",
-  async action(browser) {
-    await invokeFocus(browser, "range");
-    await BrowserTestUtils.synthesizeKey("VK_LEFT", {}, browser);
+  {
+    desc: "Value should update to 3rd when 3 is pressed",
+    id: "select",
+    async action(browser) {
+      await invokeFocus(browser, "select");
+      await BrowserTestUtils.synthesizeKey("3", {}, browser);
+    },
+    waitFor: EVENT_TEXT_VALUE_CHANGE,
+    expected: "3rd",
   },
-  waitFor: EVENT_VALUE_CHANGE,
-  expected: "5"
-}];
+  {
+    desc: "Initially value is set to @aria-valuenow for slider",
+    id: "slider",
+    expected: ["5", 5, 0, 7, 0],
+  },
+  {
+    desc: "Value should change when @aria-valuenow is updated",
+    id: "slider",
+    attrs: [
+      {
+        attr: "aria-valuenow",
+        value: "6",
+      },
+    ],
+    waitFor: EVENT_VALUE_CHANGE,
+    expected: ["6", 6, 0, 7, 0],
+  },
+  {
+    desc: "Value should change when @aria-valuetext is set",
+    id: "slider",
+    attrs: [
+      {
+        attr: "aria-valuetext",
+        value: "plain",
+      },
+    ],
+    waitFor: EVENT_TEXT_VALUE_CHANGE,
+    expected: ["plain", 6, 0, 7, 0],
+  },
+  {
+    desc: "Value should change when @aria-valuetext is updated",
+    id: "slider",
+    attrs: [
+      {
+        attr: "aria-valuetext",
+        value: "hey!",
+      },
+    ],
+    waitFor: EVENT_TEXT_VALUE_CHANGE,
+    expected: ["hey!", 6, 0, 7, 0],
+  },
+  {
+    desc:
+      "Value should change to @aria-valuetext when @aria-valuenow is removed",
+    id: "slider",
+    attrs: [
+      {
+        attr: "aria-valuenow",
+      },
+    ],
+    expected: ["hey!", 0, 0, 7, 0],
+  },
+  {
+    desc: "Initially value is not set for combobox",
+    id: "combobox",
+    expected: "",
+  },
+  {
+    desc: "Value should change when @value attribute is updated",
+    id: "combobox",
+    attrs: [
+      {
+        attr: "value",
+        value: "hello",
+      },
+    ],
+    waitFor: EVENT_TEXT_VALUE_CHANGE,
+    expected: "hello",
+  },
+  {
+    desc: "Initially value corresponds to @value attribute for progress",
+    id: "progress",
+    expected: "22%",
+  },
+  {
+    desc: "Value should change when @value attribute is updated",
+    id: "progress",
+    attrs: [
+      {
+        attr: "value",
+        value: "50",
+      },
+    ],
+    waitFor: EVENT_VALUE_CHANGE,
+    expected: "50%",
+  },
+  {
+    desc: "Initially value corresponds to @value attribute for range",
+    id: "range",
+    expected: "6",
+  },
+  {
+    desc: "Value should change when slider is moved",
+    id: "range",
+    async action(browser) {
+      await invokeFocus(browser, "range");
+      await BrowserTestUtils.synthesizeKey("VK_LEFT", {}, browser);
+    },
+    waitFor: EVENT_VALUE_CHANGE,
+    expected: "5",
+  },
+];
 
 /**
  * Test caching of accessible object values
  */
-addAccessibleTask(`
+addAccessibleTask(
+  `
   <div id="slider" role="slider" aria-valuenow="5"
        aria-valuemin="0" aria-valuemax="7">slider</div>
   <select id="select">

@@ -28,22 +28,31 @@ add_task(async function() {
 
   info("Checking unchanged animated property item");
   const itemEls = panel.querySelectorAll(".animated-property-item");
-  is(itemEls.length, TEST_DATA.length,
-    `Count of animated property item should be ${ TEST_DATA.length }`);
+  is(
+    itemEls.length,
+    TEST_DATA.length,
+    `Count of animated property item should be ${TEST_DATA.length}`
+  );
 
   for (let i = 0; i < TEST_DATA.length; i++) {
     const { property, isUnchanged } = TEST_DATA[i];
     const itemEl = itemEls[i];
 
-    ok(itemEl.querySelector(`.keyframes-graph.${ property }`),
-      `Item of ${ property } should display at here`);
+    ok(
+      itemEl.querySelector(`.keyframes-graph.${property}`),
+      `Item of ${property} should display at here`
+    );
 
     if (isUnchanged) {
-      ok(itemEl.classList.contains("unchanged"),
-        "Animated property item should have 'unchanged' class");
+      ok(
+        itemEl.classList.contains("unchanged"),
+        "Animated property item should have 'unchanged' class"
+      );
     } else {
-      ok(!itemEl.classList.contains("unchanged"),
-        "Animated property item should not have 'unchanged' class");
+      ok(
+        !itemEl.classList.contains("unchanged"),
+        "Animated property item should not have 'unchanged' class"
+      );
     }
   }
 });

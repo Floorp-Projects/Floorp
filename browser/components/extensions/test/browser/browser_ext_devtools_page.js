@@ -11,7 +11,10 @@ loadTestSubscript("head_devtools.js");
  * - the devtools_page can exchange messages with the background page
  */
 add_task(async function test_devtools_page_runtime_api_messaging() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888/"
+  );
 
   function background() {
     browser.runtime.onMessage.addListener((msg, sender) => {
@@ -20,7 +23,7 @@ add_task(async function test_devtools_page_runtime_api_messaging() {
       }
     });
 
-    browser.runtime.onConnect.addListener((port) => {
+    browser.runtime.onConnect.addListener(port => {
       if (port.sender.tab) {
         browser.test.sendMessage("content_script_port_received");
         return;
@@ -29,15 +32,20 @@ add_task(async function test_devtools_page_runtime_api_messaging() {
       let portMessageReceived = false;
 
       port.onDisconnect.addListener(() => {
-        browser.test.assertTrue(portMessageReceived,
-                                "Got a port message before the port disconnect event");
+        browser.test.assertTrue(
+          portMessageReceived,
+          "Got a port message before the port disconnect event"
+        );
         browser.test.sendMessage("devtools_page_connect.done");
       });
 
-      port.onMessage.addListener((msg) => {
+      port.onMessage.addListener(msg => {
         portMessageReceived = true;
-        browser.test.assertEq("devtools -> background port message", msg,
-                              "Got the expected message from the devtools page");
+        browser.test.assertEq(
+          "devtools -> background port message",
+          msg,
+          "Got the expected message from the devtools page"
+        );
         port.postMessage("background -> devtools port message");
       });
     });
@@ -47,21 +55,28 @@ add_task(async function test_devtools_page_runtime_api_messaging() {
     browser.runtime.onConnect.addListener(port => {
       // Fail if a content script port has been received by the devtools page (Bug 1383310).
       if (port.sender.tab) {
-        browser.test.fail(`A DevTools page should not receive ports from content scripts`);
+        browser.test.fail(
+          `A DevTools page should not receive ports from content scripts`
+        );
       }
     });
 
     browser.runtime.onMessage.addListener((msg, sender) => {
       // Fail if a content script message has been received by the devtools page (Bug 1383310).
       if (sender.tab) {
-        browser.test.fail(`A DevTools page should not receive messages from content scripts`);
+        browser.test.fail(
+          `A DevTools page should not receive messages from content scripts`
+        );
       }
     });
 
     const port = browser.runtime.connect();
-    port.onMessage.addListener((msg) => {
-      browser.test.assertEq("background -> devtools port message", msg,
-                            "Got the expected message from the background page");
+    port.onMessage.addListener(msg => {
+      browser.test.assertEq(
+        "background -> devtools port message",
+        msg,
+        "Got the expected message from the background page"
+      );
       port.disconnect();
     });
     port.postMessage("devtools -> background port message");
@@ -80,7 +95,9 @@ add_task(async function test_devtools_page_runtime_api_messaging() {
           port.disconnect();
           break;
         default:
-          browser.test.fail(`Unexpected message ${msg} received by content script`);
+          browser.test.fail(
+            `Unexpected message ${msg} received by content script`
+          );
       }
     });
 
@@ -130,7 +147,9 @@ add_task(async function test_devtools_page_runtime_api_messaging() {
   // Send a message from the content script and expect it to be received from
   // the background page (repeated twice to be sure that the devtools_page had
   // the chance to receive the message and fail as expected).
-  info("Wait for 2 content script messages to be received from the background page");
+  info(
+    "Wait for 2 content script messages to be received from the background page"
+  );
   extension.sendMessage("content_script.send_message");
   await extension.awaitMessage("content_script_message_received");
   extension.sendMessage("content_script.send_message");
@@ -139,7 +158,9 @@ add_task(async function test_devtools_page_runtime_api_messaging() {
   // Create a port from the content script and expect a port to be received from
   // the background page (repeated twice to be sure that the devtools_page had
   // the chance to receive the message and fail as expected).
-  info("Wait for 2 content script ports to be received from the background page");
+  info(
+    "Wait for 2 content script ports to be received from the background page"
+  );
   extension.sendMessage("content_script.connect_port");
   await extension.awaitMessage("content_script_port_received");
   extension.sendMessage("content_script.connect_port");
@@ -159,7 +180,10 @@ add_task(async function test_devtools_page_runtime_api_messaging() {
  */
 
 add_task(async function test_devtools_page_and_extension_tab_messaging() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888/"
+  );
 
   function background() {
     browser.runtime.onMessage.addListener((msg, sender) => {
@@ -168,13 +192,13 @@ add_task(async function test_devtools_page_and_extension_tab_messaging() {
       }
     });
 
-    browser.runtime.onConnect.addListener((port) => {
+    browser.runtime.onConnect.addListener(port => {
       if (port.sender.tab) {
         browser.test.sendMessage("extension_tab_port_received");
       }
     });
 
-    browser.tabs.create({url: browser.runtime.getURL("extension_tab.html")});
+    browser.tabs.create({ url: browser.runtime.getURL("extension_tab.html") });
   }
 
   function devtools_page() {
@@ -200,7 +224,9 @@ add_task(async function test_devtools_page_and_extension_tab_messaging() {
           port.disconnect();
           break;
         default:
-          browser.test.fail(`Unexpected message ${msg} received by content script`);
+          browser.test.fail(
+            `Unexpected message ${msg} received by content script`
+          );
       }
     });
 
@@ -250,10 +276,14 @@ add_task(async function test_devtools_page_and_extension_tab_messaging() {
 
   extension.sendMessage("extension_tab.send_message");
 
-  info("Wait for an extension tab message to be received from the devtools page");
+  info(
+    "Wait for an extension tab message to be received from the devtools page"
+  );
   await extension.awaitMessage("devtools_page_onmessage");
 
-  info("Wait for an extension tab message to be received from the background page");
+  info(
+    "Wait for an extension tab message to be received from the background page"
+  );
   await extension.awaitMessage("extension_tab_message_received");
 
   extension.sendMessage("extension_tab.connect_port");
@@ -261,7 +291,9 @@ add_task(async function test_devtools_page_and_extension_tab_messaging() {
   info("Wait for an extension tab port to be received from the devtools page");
   await extension.awaitMessage("devtools_page_onconnect");
 
-  info("Wait for an extension tab port to be received from the background page");
+  info(
+    "Wait for an extension tab port to be received from the background page"
+  );
   await extension.awaitMessage("extension_tab_port_received");
 
   await closeToolboxForTab(tab);

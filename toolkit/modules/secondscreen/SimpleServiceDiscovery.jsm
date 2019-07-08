@@ -7,15 +7,19 @@
 
 var EXPORTED_SYMBOLS = ["SimpleServiceDiscovery"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 var log = Cu.reportError;
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 XPCOMUtils.defineLazyGetter(this, "converter", function() {
-  let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
+  let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(
+    Ci.nsIScriptableUnicodeConverter
+  );
   conv.charset = "utf8";
   return conv;
 });
@@ -28,8 +32,12 @@ const SSDP_ADDRESS = "239.255.255.250";
 
 const SSDP_DISCOVER_PACKET =
   "M-SEARCH * HTTP/1.1\r\n" +
-  "HOST: " + SSDP_ADDRESS + ":" + SSDP_PORT + "\r\n" +
-  "MAN: \"ssdp:discover\"\r\n" +
+  "HOST: " +
+  SSDP_ADDRESS +
+  ":" +
+  SSDP_PORT +
+  "\r\n" +
+  'MAN: "ssdp:discover"\r\n' +
   "MX: 2\r\n" +
   "ST: %SEARCH_TARGET%\r\n\r\n";
 
@@ -46,8 +54,12 @@ const EVENT_SERVICE_LOST = "ssdp-service-lost";
  * broadcast to locate available services on the local network.
  */
 var SimpleServiceDiscovery = {
-  get EVENT_SERVICE_FOUND() { return EVENT_SERVICE_FOUND; },
-  get EVENT_SERVICE_LOST() { return EVENT_SERVICE_LOST; },
+  get EVENT_SERVICE_FOUND() {
+    return EVENT_SERVICE_FOUND;
+  },
+  get EVENT_SERVICE_LOST() {
+    return EVENT_SERVICE_LOST;
+  },
 
   _devices: new Map(),
   _services: new Map(),
@@ -106,7 +118,11 @@ var SimpleServiceDiscovery = {
     let existingSearchInterval = this._searchInterval;
     if (aInterval > 0) {
       this._searchInterval = aInterval || 0;
-      this._searchRepeat.initWithCallback(this._search.bind(this), this._searchInterval, Ci.nsITimer.TYPE_REPEATING_SLACK);
+      this._searchRepeat.initWithCallback(
+        this._search.bind(this),
+        this._searchInterval,
+        Ci.nsITimer.TYPE_REPEATING_SLACK
+      );
     }
     this._search();
     return existingSearchInterval;
@@ -118,10 +134,14 @@ var SimpleServiceDiscovery = {
   },
 
   _usingLAN() {
-    let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
-    return (network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_WIFI ||
-            network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_ETHERNET ||
-            network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN);
+    let network = Cc["@mozilla.org/network/network-link-service;1"].getService(
+      Ci.nsINetworkLinkService
+    );
+    return (
+      network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_WIFI ||
+      network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_ETHERNET ||
+      network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN
+    );
   },
 
   _search: function _search() {
@@ -145,9 +165,15 @@ var SimpleServiceDiscovery = {
     this._startExternalDiscovery();
 
     // Perform a UDP broadcast to search for SSDP devices
-    let socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(Ci.nsIUDPSocket);
+    let socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(
+      Ci.nsIUDPSocket
+    );
     try {
-      socket.init(SSDP_PORT, false, Services.scriptSecurityManager.getSystemPrincipal());
+      socket.init(
+        SSDP_PORT,
+        false,
+        Services.scriptSecurityManager.getSystemPrincipal()
+      );
       socket.joinMulticast(SSDP_ADDRESS);
       socket.asyncListen(this);
     } catch (e) {
@@ -158,9 +184,17 @@ var SimpleServiceDiscovery = {
     }
 
     // Make the timeout SSDP_DISCOVER_TIMEOUT_MULTIPLIER times as long as the time needed to send out the discovery packets.
-    const SSDP_DISCOVER_TIMEOUT = this._devices.size * SSDP_DISCOVER_ATTEMPTS * SSDP_TRANSMISSION_INTERVAL * SSDP_DISCOVER_TIMEOUT_MULTIPLIER;
+    const SSDP_DISCOVER_TIMEOUT =
+      this._devices.size *
+      SSDP_DISCOVER_ATTEMPTS *
+      SSDP_TRANSMISSION_INTERVAL *
+      SSDP_DISCOVER_TIMEOUT_MULTIPLIER;
     this._searchSocket = socket;
-    this._searchTimeout.initWithCallback(this._searchShutdown.bind(this), SSDP_DISCOVER_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
+    this._searchTimeout.initWithCallback(
+      this._searchShutdown.bind(this),
+      SSDP_DISCOVER_TIMEOUT,
+      Ci.nsITimer.TYPE_ONE_SHOT
+    );
 
     let data = SSDP_DISCOVER_PACKET;
 
@@ -168,7 +202,7 @@ var SimpleServiceDiscovery = {
     // to allow for packet loss on noisy networks.
     let timeout = SSDP_DISCOVER_DELAY;
     for (let attempts = 0; attempts < SSDP_DISCOVER_ATTEMPTS; attempts++) {
-      for (let [/* key */, device] of this._devices) {
+      for (let [, /* key */ device] of this._devices) {
         let target = device.target;
         setTimeout(function() {
           let msgData = data.replace("%SEARCH_TARGET%", target);
@@ -185,7 +219,10 @@ var SimpleServiceDiscovery = {
   },
 
   _searchFixedDevices: function _searchFixedDevices() {
-    let fixedDevices = Services.prefs.getCharPref("browser.casting.fixedDevices", "");
+    let fixedDevices = Services.prefs.getCharPref(
+      "browser.casting.fixedDevices",
+      ""
+    );
 
     if (!fixedDevices) {
       return;
@@ -220,7 +257,7 @@ var SimpleServiceDiscovery = {
       this._searchSocket.close();
 
       // Clean out any stale services
-      for (let [/* key */, service] of this._services) {
+      for (let [, /* key */ service] of this._services) {
         if (service.lastPing != this._searchTimestamp) {
           this.removeService(service.uuid);
         }
@@ -233,8 +270,8 @@ var SimpleServiceDiscovery = {
   getSupportedExtensions() {
     let extensions = [];
     this.services.forEach(function(service) {
-        extensions = extensions.concat(service.extensions);
-      }, this);
+      extensions = extensions.concat(service.extensions);
+    }, this);
     return extensions.filter(function(extension, pos) {
       return extensions.indexOf(extension) == pos;
     });
@@ -243,8 +280,8 @@ var SimpleServiceDiscovery = {
   getSupportedMimeTypes() {
     let types = [];
     this.services.forEach(function(service) {
-        types = types.concat(service.types);
-      }, this);
+      types = types.concat(service.types);
+    }, this);
     return types.filter(function(type, pos) {
       return types.indexOf(type) == pos;
     });
@@ -252,7 +289,11 @@ var SimpleServiceDiscovery = {
 
   registerDevice: function registerDevice(aDevice) {
     // We must have "id", "target" and "factory" defined
-    if (!("id" in aDevice) || !("target" in aDevice) || !("factory" in aDevice)) {
+    if (
+      !("id" in aDevice) ||
+      !("target" in aDevice) ||
+      !("factory" in aDevice)
+    ) {
       // Fatal for registration
       throw new Error("Registration requires an id, a target and a location");
     }
@@ -267,7 +308,11 @@ var SimpleServiceDiscovery = {
 
   unregisterDevice: function unregisterDevice(aDevice) {
     // We must have "id", "target" and "factory" defined
-    if (!("id" in aDevice) || !("target" in aDevice) || !("factory" in aDevice)) {
+    if (
+      !("id" in aDevice) ||
+      !("target" in aDevice) ||
+      !("factory" in aDevice)
+    ) {
       return;
     }
 
@@ -301,7 +346,7 @@ var SimpleServiceDiscovery = {
   // Returns an array copy of the active services
   get services() {
     let array = [];
-    for (let [/* key */, service] of this._services) {
+    for (let [, /* key */ service] of this._services) {
       let target = this._devices.get(service.deviceID);
       service.extensions = target.extensions;
       service.types = target.types;
@@ -313,7 +358,7 @@ var SimpleServiceDiscovery = {
   // Returns false if the service does not match the device's filters
   _filterService: function _filterService(aService) {
     // Loop over all the devices, looking for one that matches the service
-    for (let [/* key */, device] of this._devices) {
+    for (let [, /* key */ device] of this._devices) {
       // First level of match is on the target itself
       if (device.target != aService.target) {
         continue;
@@ -356,8 +401,9 @@ var SimpleServiceDiscovery = {
       if (xhr.status == 200) {
         let doc = xhr.responseXML;
         aService.appsURL = xhr.getResponseHeader("Application-URL");
-        if (aService.appsURL && !aService.appsURL.endsWith("/"))
+        if (aService.appsURL && !aService.appsURL.endsWith("/")) {
           aService.appsURL += "/";
+        }
         aService.friendlyName = doc.querySelector("friendlyName").textContent;
         aService.uuid = doc.querySelector("UDN").textContent;
         aService.manufacturer = doc.querySelector("manufacturer").textContent;

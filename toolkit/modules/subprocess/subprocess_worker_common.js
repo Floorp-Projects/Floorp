@@ -12,7 +12,7 @@
 /* exported BasePipe, BaseProcess, debug */
 
 function debug(message) {
-  self.postMessage({msg: "debug", message});
+  self.postMessage({ msg: "debug", message });
 }
 
 class BasePipe {
@@ -107,19 +107,19 @@ let requests = {
   init(details) {
     io.init(details);
 
-    return {data: {}};
+    return { data: {} };
   },
 
   shutdown() {
     io.shutdown();
 
-    return {data: {}};
+    return { data: {} };
   },
 
   close(pipeId, force = false) {
     let pipe = io.getPipe(pipeId);
 
-    return pipe.close(force).then(() => ({data: {}}));
+    return pipe.close(force).then(() => ({ data: {} }));
   },
 
   spawn(options) {
@@ -130,7 +130,7 @@ let requests = {
 
     let fds = process.pipes.map(pipe => pipe.id);
 
-    return {data: {processId, fds, pid: process.pid}};
+    return { data: { processId, fds, pid: process.pid } };
   },
 
   kill(processId, force = false) {
@@ -138,7 +138,7 @@ let requests = {
 
     process.kill(force ? 9 : 15);
 
-    return {data: {}};
+    return { data: {} };
   },
 
   wait(processId) {
@@ -151,7 +151,7 @@ let requests = {
     });
 
     return process.exitPromise.then(exitCode => {
-      return {data: {exitCode}};
+      return { data: { exitCode } };
     });
   },
 
@@ -159,7 +159,7 @@ let requests = {
     let pipe = io.getPipe(pipeId);
 
     return pipe.read(count).then(buffer => {
-      return {data: {buffer}};
+      return { data: { buffer } };
     });
   },
 
@@ -167,66 +167,72 @@ let requests = {
     let pipe = io.getPipe(pipeId);
 
     return pipe.write(buffer).then(bytesWritten => {
-      return {data: {bytesWritten}};
+      return { data: { bytesWritten } };
     });
   },
 
   getOpenFiles() {
-    return {data: new Set(io.pipes.keys())};
+    return { data: new Set(io.pipes.keys()) };
   },
 
   getProcesses() {
-    let data = new Map(Array.from(io.processes.values())
-                            .filter(proc => proc.exitCode == null)
-                            .map(proc => [proc.id, proc.pid]));
-    return {data};
+    let data = new Map(
+      Array.from(io.processes.values())
+        .filter(proc => proc.exitCode == null)
+        .map(proc => [proc.id, proc.pid])
+    );
+    return { data };
   },
 
   waitForNoProcesses() {
-    return Promise.all(Array.from(io.processes.values(),
-                                  proc => proc.awaitFinished()));
+    return Promise.all(
+      Array.from(io.processes.values(), proc => proc.awaitFinished())
+    );
   },
 };
 
 onmessage = event => {
   io.messageCount--;
 
-  let {msg, msgId, args} = event.data;
+  let { msg, msgId, args } = event.data;
 
   new Promise(resolve => {
     resolve(requests[msg](...args));
-  }).then(result => {
-    let response = {
-      msg: "success",
-      msgId,
-      data: result.data,
-    };
-
-    self.postMessage(response, result.transfer || []);
-  }).catch(error => {
-    if (error instanceof Error) {
-      error = {
-        message: error.message,
-        fileName: error.fileName,
-        lineNumber: error.lineNumber,
-        column: error.column,
-        stack: error.stack,
-        errorCode: error.errorCode,
+  })
+    .then(result => {
+      let response = {
+        msg: "success",
+        msgId,
+        data: result.data,
       };
-    }
 
-    self.postMessage({
-      msg: "failure",
-      msgId,
-      error,
-    });
-  }).catch(error => {
-    console.error(error);
+      self.postMessage(response, result.transfer || []);
+    })
+    .catch(error => {
+      if (error instanceof Error) {
+        error = {
+          message: error.message,
+          fileName: error.fileName,
+          lineNumber: error.lineNumber,
+          column: error.column,
+          stack: error.stack,
+          errorCode: error.errorCode,
+        };
+      }
 
-    self.postMessage({
-      msg: "failure",
-      msgId,
-      error: {},
+      self.postMessage({
+        msg: "failure",
+        msgId,
+        error,
+      });
+    })
+    .catch(error => {
+      console.error(error);
+
+      self.postMessage({
+        msg: "failure",
+        msgId,
+        error: {},
+      });
     });
-  });
 };

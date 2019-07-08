@@ -2,9 +2,13 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {TelemetryController} = ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
-const {ContentTaskUtils} = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TelemetryController } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryController.jsm"
+);
+const { ContentTaskUtils } = ChromeUtils.import(
+  "resource://testing-common/ContentTaskUtils.jsm"
+);
 
 const SOCKET_ONLY_UINT_SCALAR = "telemetry.test.socket_only_uint";
 
@@ -21,7 +25,10 @@ async function waitForSocketScalars() {
 
 add_task(async function() {
   if (!Services.prefs.getBoolPref("network.process.enabled")) {
-    Assert.ok(true, "Test finished: no point to test telemetry from socket process with lanuching the process");
+    Assert.ok(
+      true,
+      "Test finished: no point to test telemetry from socket process with lanuching the process"
+    );
     return;
   }
 
@@ -37,10 +44,12 @@ add_task(async function() {
   // and batch send the data back to the parent process.
   await waitForSocketScalars();
 
-  Assert.equal(Telemetry.getSnapshotForScalars("main", false)
-                   .socket[SOCKET_ONLY_UINT_SCALAR],
-               42,
-               `${SOCKET_ONLY_UINT_SCALAR} must have the correct value (socket process).`);
+  Assert.equal(
+    Telemetry.getSnapshotForScalars("main", false).socket[
+      SOCKET_ONLY_UINT_SCALAR
+    ],
+    42,
+    `${SOCKET_ONLY_UINT_SCALAR} must have the correct value (socket process).`
+  );
   do_test_finished();
 });
-

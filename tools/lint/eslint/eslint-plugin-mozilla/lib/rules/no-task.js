@@ -19,12 +19,14 @@ module.exports = function(context) {
   //  --------------------------------------------------------------------------
 
   return {
-    "CallExpression": function(node) {
+    CallExpression(node) {
       let callee = node.callee;
-      if (callee.type === "MemberExpression" &&
-          callee.object.type === "Identifier" &&
-          callee.object.name === "Task") {
-        context.report({node, message: "Task.jsm is deprecated."});
+      if (
+        callee.type === "MemberExpression" &&
+        callee.object.type === "Identifier" &&
+        callee.object.name === "Task"
+      ) {
+        context.report({ node, message: "Task.jsm is deprecated." });
       }
     },
   };

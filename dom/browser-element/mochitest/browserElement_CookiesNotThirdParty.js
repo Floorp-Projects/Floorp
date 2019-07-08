@@ -12,7 +12,8 @@ browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
 function runTest() {
-  const innerPage = "http://example.com/tests/dom/browser-element/mochitest/file_browserElement_CookiesNotThirdParty.html";
+  const innerPage =
+    "http://example.com/tests/dom/browser-element/mochitest/file_browserElement_CookiesNotThirdParty.html";
 
   var iframe = document.createElement("iframe");
   iframe.setAttribute("mozbrowser", "true");
@@ -49,5 +50,8 @@ function runTest() {
 
 // Disable third-party cookies for this test.
 addEventListener("testready", function() {
-  SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 1]]}, runTest);
+  SpecialPowers.pushPrefEnv(
+    { set: [["network.cookie.cookieBehavior", 1]] },
+    runTest
+  );
 });

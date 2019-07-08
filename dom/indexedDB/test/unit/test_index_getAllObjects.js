@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const objectStoreName = "People";
 
@@ -47,8 +46,7 @@ function* testSteps()
   // First, add all our data to the object store.
   let addedData = 0;
   for (let i in objectStoreData) {
-    request = objectStore.add(objectStoreData[i].value,
-                              objectStoreData[i].key);
+    request = objectStore.add(objectStoreData[i].value, objectStoreData[i].key);
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       if (++addedData == objectStoreData.length) {
@@ -60,15 +58,17 @@ function* testSteps()
 
   // Now create the indexes.
   for (let i in indexData) {
-    objectStore.createIndex(indexData[i].name, indexData[i].keyPath,
-                            indexData[i].options);
+    objectStore.createIndex(
+      indexData[i].name,
+      indexData[i].keyPath,
+      indexData[i].options
+    );
   }
 
   is(objectStore.indexNames.length, indexData.length, "Good index count");
   yield undefined;
 
-  objectStore = db.transaction(objectStoreName)
-                  .objectStore(objectStoreName);
+  objectStore = db.transaction(objectStoreName).objectStore(objectStoreName);
 
   request = objectStore.index("height").mozGetAll(65);
   request.onerror = errorHandler;
@@ -156,8 +156,11 @@ function* testSteps()
   event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array object");
-  is(event.target.result.length, objectStoreDataHeightSort.length,
-     "Correct length");
+  is(
+    event.target.result.length,
+    objectStoreDataHeightSort.length,
+    "Correct length"
+  );
 
   for (let i in event.target.result) {
     let result = event.target.result[i];

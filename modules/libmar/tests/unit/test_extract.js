@@ -93,8 +93,11 @@ function run_test() {
     },
     // Test extracting a MAR file with multiple files inside of it.
     test_multiple_file: function _test_multiple_file() {
-      return extract_and_compare("multiple_file.mar",
-                          ["0_sized_file", "1_byte_file", "binary_data_file"]);
+      return extract_and_compare("multiple_file.mar", [
+        "0_sized_file",
+        "1_byte_file",
+        "binary_data_file",
+      ]);
     },
     // Test collision detection where file A + B are the same offset
     test_collision_same_offset: function test_collision_same_offset() {

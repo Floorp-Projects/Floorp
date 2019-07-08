@@ -10,7 +10,7 @@
  * - again we receive the data from the server.
  */
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort + "/content";
@@ -19,21 +19,24 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 var httpServer = null;
 
 // needs to be rooted
-var cacheFlushObserver = cacheFlushObserver = { observe() {
-  cacheFlushObserver = null;
-  readServerContentAgain();
-}};
+var cacheFlushObserver = (cacheFlushObserver = {
+  observe() {
+    cacheFlushObserver = null;
+    readServerContentAgain();
+  },
+});
 
 var currentThread = null;
 
 function make_channel(url, callback, ctx) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
 function inChildProcess() {
-  return Cc["@mozilla.org/xre/app-info;1"]
-           .getService(Ci.nsIXULRuntime)
-           .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+  return (
+    Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
+      .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
+  );
 }
 
 const responseContent = "response body";
@@ -46,15 +49,14 @@ var shouldPassRevalidation = true;
 
 var cache_storage = null;
 
-function contentHandler(metadata, response)
-{
+function contentHandler(metadata, response) {
   response.setHeader("Content-Type", "text/plain");
   response.setHeader("Cache-Control", "no-cache");
   response.setHeader("ETag", "test-etag1");
 
   try {
     var etag = metadata.getHeader("If-None-Match");
-  } catch(ex) {
+  } catch (ex) {
     var etag = "";
   }
 
@@ -67,8 +69,7 @@ function contentHandler(metadata, response)
   }
 }
 
-function check_has_alt_data_in_index(aHasAltData)
-{
+function check_has_alt_data_in_index(aHasAltData) {
   if (inChildProcess()) {
     return;
   }
@@ -77,8 +78,7 @@ function check_has_alt_data_in_index(aHasAltData)
   Assert.equal(hasAltData.value, aHasAltData);
 }
 
-function run_test()
-{
+function run_test() {
   do_get_profile();
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/content", contentHandler);
@@ -86,15 +86,14 @@ function run_test()
   do_test_pending();
 
   if (!inChildProcess()) {
-    cache_storage = getCacheStorage("disk") ;
+    cache_storage = getCacheStorage("disk");
     wait_for_cache_index(asyncOpen);
   } else {
     asyncOpen();
   }
 }
 
-function asyncOpen()
-{
+function asyncOpen() {
   var chan = make_channel(URL);
 
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
@@ -103,8 +102,7 @@ function asyncOpen()
   chan.asyncOpen(new ChannelListener(readServerContent, null));
 }
 
-function readServerContent(request, buffer)
-{
+function readServerContent(request, buffer) {
   var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
   Assert.equal(buffer, responseContent);
@@ -119,23 +117,29 @@ function readServerContent(request, buffer)
     var os = cc.openAlternativeOutputStream(altContentType, altContent.length);
 
     var aos = os.QueryInterface(Ci.nsIAsyncOutputStream);
-    aos.asyncWait(_ => {
-      os.write(altContent, altContent.length);
-      aos.closeWithStatus(Cr.NS_ERROR_FAILURE);
-      executeSoon(flushAndReadServerContentAgain);
-    }, 0, 0, currentThread);
+    aos.asyncWait(
+      _ => {
+        os.write(altContent, altContent.length);
+        aos.closeWithStatus(Cr.NS_ERROR_FAILURE);
+        executeSoon(flushAndReadServerContentAgain);
+      },
+      0,
+      0,
+      currentThread
+    );
   });
 }
 
-function flushAndReadServerContentAgain()
-{
+function flushAndReadServerContentAgain() {
   // We need to do a GC pass to ensure the cache entry has been freed.
   gc();
   if (!inChildProcess()) {
-    Services.cache2.QueryInterface(Ci.nsICacheTesting).flush(cacheFlushObserver);
+    Services.cache2
+      .QueryInterface(Ci.nsICacheTesting)
+      .flush(cacheFlushObserver);
   } else {
-    do_send_remote_message('flush');
-    do_await_remote_message('flushed').then(() => {
+    do_send_remote_message("flush");
+    do_await_remote_message("flushed").then(() => {
       readServerContentAgain();
     });
   }
@@ -151,8 +155,7 @@ function readServerContentAgain() {
   chan.asyncOpen(new ChannelListener(readServerContentAgainCB, null));
 }
 
-function readServerContentAgainCB(request, buffer)
-{
+function readServerContentAgainCB(request, buffer) {
   var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
   Assert.equal(buffer, responseContent);

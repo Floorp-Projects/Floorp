@@ -37,6 +37,11 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
+  float Value() {
+    return AudioParamTimeline::GetValueAtTime<double>(
+        GetParentObject()->CurrentTime());
+  }
+
   // We override SetValueCurveAtTime to convert the Float32Array to the wrapper
   // object.
   AudioParam* SetValueCurveAtTime(const nsTArray<float>& aValues,

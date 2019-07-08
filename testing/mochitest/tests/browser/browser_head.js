@@ -2,7 +2,11 @@ var testVar;
 
 registerCleanupFunction(function() {
   ok(true, "I'm a cleanup function in test file");
-  is(this.testVar, "I'm a var in test file", "Test cleanup function scope is correct");
+  is(
+    this.testVar,
+    "I'm a var in test file",
+    "Test cleanup function scope is correct"
+  );
 });
 
 function test() {

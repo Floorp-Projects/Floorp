@@ -10,7 +10,7 @@ const { L10N } = require("../utils");
 
 class DominatorTreeHeader extends Component {
   static get propTypes() {
-    return { };
+    return {};
   }
 
   render() {

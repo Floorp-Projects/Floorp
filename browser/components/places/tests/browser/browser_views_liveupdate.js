@@ -15,9 +15,23 @@ var wasCollapsed = toolbar.collapsed;
  */
 function fakeOpenPopup(aPopup) {
   var popupEvent = document.createEvent("MouseEvent");
-  popupEvent.initMouseEvent("popupshowing", true, true, window, 0,
-                            0, 0, 0, 0, false, false, false, false,
-                            0, null);
+  popupEvent.initMouseEvent(
+    "popupshowing",
+    true,
+    true,
+    window,
+    0,
+    0,
+    0,
+    0,
+    0,
+    false,
+    false,
+    false,
+    false,
+    0,
+    null
+  );
   aPopup.dispatchEvent(popupEvent);
 }
 
@@ -97,22 +111,33 @@ add_task(async function test() {
   // Open bookmarks sidebar.
   await withSidebarTree("bookmarks", async () => {
     // Add observers.
-    bookmarksObserver.handlePlacesEvents = bookmarksObserver.handlePlacesEvents.bind(bookmarksObserver);
+    bookmarksObserver.handlePlacesEvents = bookmarksObserver.handlePlacesEvents.bind(
+      bookmarksObserver
+    );
     PlacesUtils.bookmarks.addObserver(bookmarksObserver);
-    PlacesUtils.observers.addListener(["bookmark-added"], bookmarksObserver.handlePlacesEvents);
+    PlacesUtils.observers.addListener(
+      ["bookmark-added"],
+      bookmarksObserver.handlePlacesEvents
+    );
     var addedBookmarks = [];
 
     // MENU
     info("*** Acting on menu bookmarks");
-    addedBookmarks = addedBookmarks.concat(await testInFolder(PlacesUtils.bookmarks.menuGuid, "bm"));
+    addedBookmarks = addedBookmarks.concat(
+      await testInFolder(PlacesUtils.bookmarks.menuGuid, "bm")
+    );
 
     // TOOLBAR
     info("*** Acting on toolbar bookmarks");
-    addedBookmarks = addedBookmarks.concat(await testInFolder(PlacesUtils.bookmarks.toolbarGuid, "tb"));
+    addedBookmarks = addedBookmarks.concat(
+      await testInFolder(PlacesUtils.bookmarks.toolbarGuid, "tb")
+    );
 
     // UNSORTED
     info("*** Acting on unsorted bookmarks");
-    addedBookmarks = addedBookmarks.concat(await testInFolder(PlacesUtils.bookmarks.unfiledGuid, "ub"));
+    addedBookmarks = addedBookmarks.concat(
+      await testInFolder(PlacesUtils.bookmarks.unfiledGuid, "ub")
+    );
 
     // Remove all added bookmarks.
     for (let bm of addedBookmarks) {
@@ -126,7 +151,10 @@ add_task(async function test() {
 
     // Remove observers.
     PlacesUtils.bookmarks.removeObserver(bookmarksObserver);
-    PlacesUtils.observers.removeListener(["bookmark-added"], bookmarksObserver.handlePlacesEvents);
+    PlacesUtils.observers.removeListener(
+      ["bookmark-added"],
+      bookmarksObserver.handlePlacesEvents
+    );
   });
 
   // Collapse the personal toolbar if needed.
@@ -142,12 +170,10 @@ add_task(async function test() {
 var bookmarksObserver = {
   _notifications: [],
 
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsINavBookmarkObserver,
-  ]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsINavBookmarkObserver]),
 
   handlePlacesEvents(events) {
-    for (let {parentGuid, guid, index} of events) {
+    for (let { parentGuid, guid, index } of events) {
       this._notifications.push(["assertItemAdded", parentGuid, guid, index]);
     }
   },
@@ -156,19 +182,43 @@ var bookmarksObserver = {
     this._notifications.push(["assertItemRemoved", parentGuid, guid]);
   },
 
-  onItemMoved(itemId, oldFolderId, oldIndex, newFolderId, newIndex, itemType, guid,
-              oldParentGuid, newParentGuid) {
-    this._notifications.push(["assertItemMoved", newParentGuid, guid, newIndex]);
+  onItemMoved(
+    itemId,
+    oldFolderId,
+    oldIndex,
+    newFolderId,
+    newIndex,
+    itemType,
+    guid,
+    oldParentGuid,
+    newParentGuid
+  ) {
+    this._notifications.push([
+      "assertItemMoved",
+      newParentGuid,
+      guid,
+      newIndex,
+    ]);
   },
 
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
   onItemVisited() {},
 
-  onItemChanged(itemId, property, annoProperty, newValue, lastModified, itemType,
-                parentId, guid, parentGuid) {
-    if (property !== "title")
+  onItemChanged(
+    itemId,
+    property,
+    annoProperty,
+    newValue,
+    lastModified,
+    itemType,
+    parentId,
+    guid,
+    parentGuid
+  ) {
+    if (property !== "title") {
       return;
+    }
 
     this._notifications.push(["assertItemChanged", parentGuid, guid, newValue]);
   },
@@ -178,7 +228,11 @@ var bookmarksObserver = {
       let assertFunction = notification.shift();
 
       let views = await getViewsForFolder(notification.shift());
-      Assert.greater(views.length, 0, "Should have found one or more views for the parent folder.");
+      Assert.greater(
+        views.length,
+        0,
+        "Should have found one or more views for the parent folder."
+      );
 
       await this[assertFunction](views, ...notification);
     }
@@ -190,13 +244,17 @@ var bookmarksObserver = {
     for (let i = 0; i < views.length; i++) {
       let [node, index] = searchItemInView(guid, views[i]);
       Assert.notEqual(node, null, "Should have found the view in " + views[i]);
-      Assert.equal(index, expectedIndex, "Should have found the node at the expected index");
+      Assert.equal(
+        index,
+        expectedIndex,
+        "Should have found the node at the expected index"
+      );
     }
   },
 
   async assertItemRemoved(views, guid) {
     for (let i = 0; i < views.length; i++) {
-      let [node ] = searchItemInView(guid, views[i]);
+      let [node] = searchItemInView(guid, views[i]);
       Assert.equal(node, null, "Should not have found the node");
     }
   },
@@ -206,23 +264,39 @@ var bookmarksObserver = {
     for (let i = 0; i < views.length; i++) {
       let [node, index] = searchItemInView(guid, views[i]);
       Assert.notEqual(node, null, "Should have found the view in " + views[i]);
-      Assert.equal(index, newIndex, "Should have found the node at the expected index");
+      Assert.equal(
+        index,
+        newIndex,
+        "Should have found the node at the expected index"
+      );
     }
   },
 
   async assertItemChanged(views, guid, newValue) {
     let validator = function(aElementOrTreeIndex) {
-      if (typeof(aElementOrTreeIndex) == "number") {
+      if (typeof aElementOrTreeIndex == "number") {
         let sidebar = document.getElementById("sidebar");
         let tree = sidebar.contentDocument.getElementById("bookmarks-view");
-        let cellText = tree.view.getCellText(aElementOrTreeIndex,
-                                             tree.columns.getColumnAt(0));
-        if (!newValue)
-          return cellText == PlacesUIUtils.getBestTitle(tree.view.nodeForTreeIndex(aElementOrTreeIndex), true);
+        let cellText = tree.view.getCellText(
+          aElementOrTreeIndex,
+          tree.columns.getColumnAt(0)
+        );
+        if (!newValue) {
+          return (
+            cellText ==
+            PlacesUIUtils.getBestTitle(
+              tree.view.nodeForTreeIndex(aElementOrTreeIndex),
+              true
+            )
+          );
+        }
         return cellText == newValue;
       }
       if (!newValue && aElementOrTreeIndex.localName != "toolbarbutton") {
-        return aElementOrTreeIndex.getAttribute("label") == PlacesUIUtils.getBestTitle(aElementOrTreeIndex._placesNode);
+        return (
+          aElementOrTreeIndex.getAttribute("label") ==
+          PlacesUIUtils.getBestTitle(aElementOrTreeIndex._placesNode)
+        );
       }
       return aElementOrTreeIndex.getAttribute("label") == newValue;
     };
@@ -230,7 +304,11 @@ var bookmarksObserver = {
     for (let i = 0; i < views.length; i++) {
       let [node, , valid] = searchItemInView(guid, views[i], validator);
       Assert.notEqual(node, null, "Should have found the view in " + views[i]);
-      Assert.equal(node.title, newValue, "Node should have the correct new title");
+      Assert.equal(
+        node.title,
+        newValue,
+        "Node should have the correct new title"
+      );
       Assert.ok(valid, "Node element should have the correct label");
     }
   },
@@ -249,12 +327,12 @@ var bookmarksObserver = {
  */
 function searchItemInView(itemGuid, view, validator) {
   switch (view) {
-  case "toolbar":
-    return getNodeForToolbarItem(itemGuid, validator);
-  case "menu":
-    return getNodeForMenuItem(itemGuid, validator);
-  case "sidebar":
-    return getNodeForSidebarItem(itemGuid, validator);
+    case "toolbar":
+      return getNodeForToolbarItem(itemGuid, validator);
+    case "menu":
+      return getNodeForMenuItem(itemGuid, validator);
+    case "sidebar":
+      return getNodeForSidebarItem(itemGuid, validator);
   }
 
   return [null, null, false];
@@ -293,8 +371,9 @@ function getNodeForToolbarItem(itemGuid, validator) {
         popup.openPopup();
         var foundNode = findNode(popup);
         popup.hidePopup();
-        if (foundNode[0] != null)
+        if (foundNode[0] != null) {
           return foundNode;
+        }
       }
     }
     return [null, null];
@@ -337,8 +416,9 @@ function getNodeForMenuItem(itemGuid, validator) {
         var foundNode = findNode(popup);
 
         child.open = false;
-        if (foundNode[0] != null)
+        if (foundNode[0] != null) {
           return foundNode;
+        }
       }
     }
     return [null, null, false];
@@ -359,8 +439,9 @@ function getNodeForSidebarItem(itemGuid, validator) {
   var tree = sidebar.contentDocument.getElementById("bookmarks-view");
 
   function findNode(aContainerIndex) {
-    if (tree.view.isContainerEmpty(aContainerIndex))
+    if (tree.view.isContainerEmpty(aContainerIndex)) {
       return [null, null, false];
+    }
 
     // The rowCount limit is just for sanity, but we will end looping when
     // we have checked the last child of this container or we have found node.
@@ -381,13 +462,15 @@ function getNodeForSidebarItem(itemGuid, validator) {
         // Close container.
         tree.view.toggleOpenState(i);
         // Return node if found.
-        if (foundNode[0] != null)
+        if (foundNode[0] != null) {
           return foundNode;
+        }
       }
 
       // We have finished walking this container.
-      if (!tree.view.hasNextSibling(aContainerIndex + 1, i))
+      if (!tree.view.hasNextSibling(aContainerIndex + 1, i)) {
         break;
+      }
     }
     return [null, null, false];
   }
@@ -401,8 +484,9 @@ function getNodeForSidebarItem(itemGuid, validator) {
     // Close container.
     tree.view.toggleOpenState(i);
     // Return node if found.
-    if (foundNode[0] != null)
+    if (foundNode[0] != null) {
       return foundNode;
+    }
   }
   return [null, null, false];
 }

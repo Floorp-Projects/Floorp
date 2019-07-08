@@ -3,10 +3,7 @@ const PREF_ANIMATIONS_ENABLED = "toolkit.cosmeticAnimations.enabled";
 
 add_task(async function setPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [PREF_MULTISELECT_TABS, true],
-      [PREF_ANIMATIONS_ENABLED, false],
-    ],
+    set: [[PREF_MULTISELECT_TABS, true], [PREF_ANIMATIONS_ENABLED, false]],
   });
 });
 
@@ -34,16 +31,22 @@ add_task(async function test() {
   // waiting for tab2 to close ensure that the newWindow is created,
   // thus newWindow.gBrowser used in the second waitForCondition
   // will not be undefined.
-  await TestUtils.waitForCondition(() => tab2.closing, "Wait for tab2 to close");
-  await TestUtils.waitForCondition(() => newWindow.gBrowser.visibleTabs.length == 2,
-    "Wait for all two tabs to get moved to the new window");
+  await TestUtils.waitForCondition(
+    () => tab2.closing,
+    "Wait for tab2 to close"
+  );
+  await TestUtils.waitForCondition(
+    () => newWindow.gBrowser.visibleTabs.length == 2,
+    "Wait for all two tabs to get moved to the new window"
+  );
 
   let gBrowser2 = newWindow.gBrowser;
   tab1 = gBrowser2.visibleTabs[0];
   tab2 = gBrowser2.visibleTabs[1];
 
-  if (gBrowser.selectedTab != tab3)
+  if (gBrowser.selectedTab != tab3) {
     await BrowserTestUtils.switchTab(gBrowser, tab3);
+  }
 
   await triggerClickOn(tab5, { ctrlKey: true });
 
@@ -55,14 +58,20 @@ add_task(async function test() {
 
   await dragAndDrop(tab3, tab1, false, newWindow);
 
-  await TestUtils.waitForCondition(() => gBrowser2.visibleTabs.length == 4,
-    "Moved tab3 and tab5 to second window");
+  await TestUtils.waitForCondition(
+    () => gBrowser2.visibleTabs.length == 4,
+    "Moved tab3 and tab5 to second window"
+  );
 
   tab3 = gBrowser2.visibleTabs[1];
   tab5 = gBrowser2.visibleTabs[2];
 
-  await BrowserTestUtils.waitForCondition(() => getUrl(tab3) == "http://mochi.test:8888/3");
-  await BrowserTestUtils.waitForCondition(() => getUrl(tab5) == "http://mochi.test:8888/5");
+  await BrowserTestUtils.waitForCondition(
+    () => getUrl(tab3) == "http://mochi.test:8888/3"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => getUrl(tab5) == "http://mochi.test:8888/5"
+  );
 
   ok(true, "Tab3 and tab5 are duplicated succesfully");
 

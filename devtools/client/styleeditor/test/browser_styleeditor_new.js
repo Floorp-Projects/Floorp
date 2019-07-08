@@ -35,8 +35,9 @@ function createNew(ui, panelWindow) {
 
     waitForFocus(function() {
       // create a new style sheet
-      const newButton = panelWindow.document
-        .querySelector(".style-editor-newButton");
+      const newButton = panelWindow.document.querySelector(
+        ".style-editor-newButton"
+      );
       ok(newButton, "'new' button exists");
 
       EventUtils.synthesizeMouseAtCenter(newButton, {}, panelWindow);
@@ -79,8 +80,11 @@ async function testInitialState(editor) {
     selector: "body",
     name: "background-color",
   });
-  is(color, "rgb(255, 255, 255)",
-     "content's background color is initially white");
+  is(
+    color,
+    "rgb(255, 255, 255)",
+    "content's background color is initially white"
+  );
 }
 
 function typeInEditor(editor, panelWindow) {
@@ -99,14 +103,15 @@ function typeInEditor(editor, panelWindow) {
 function testUpdated(editor, originalHref) {
   info("Testing the state of the new editor after editing it");
 
-  is(editor.sourceEditor.getText(), TESTCASE_CSS_SOURCE + "}",
-     "rule bracket has been auto-closed");
+  is(
+    editor.sourceEditor.getText(),
+    TESTCASE_CSS_SOURCE + "}",
+    "rule bracket has been auto-closed"
+  );
 
   const ruleCount = editor.summary.querySelector(".stylesheet-rule-count")
     .textContent;
-  is(parseInt(ruleCount, 10), 1,
-     "new editor shows 1 rule after modification");
+  is(parseInt(ruleCount, 10), 1, "new editor shows 1 rule after modification");
 
-  is(editor.styleSheet.href, originalHref,
-     "style sheet href did not change");
+  is(editor.styleSheet.href, originalHref, "style sheet href did not change");
 }

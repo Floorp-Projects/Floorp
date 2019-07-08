@@ -22,16 +22,16 @@ var servicesASTParser = {
   identifiers: {},
   // These interfaces are difficult/not possible to get via processing.
   result: {
-    "nsIPrefBranch": "prefs",
-    "nsIPrefService": "prefs",
-    "nsIXULRuntime": "appinfo",
-    "nsIXULAppInfo": "appinfo",
-    "nsIDirectoryService": "dirsvc",
-    "nsIProperties": "dirsvc",
-    "nsIIOService": "io",
-    "nsISpeculativeConnect": "io",
-    "nsICookieManager": "cookies",
-    "nsIBlocklistService": "blocklist",
+    nsIPrefBranch: "prefs",
+    nsIPrefService: "prefs",
+    nsIXULRuntime: "appinfo",
+    nsIXULAppInfo: "appinfo",
+    nsIDirectoryService: "dirsvc",
+    nsIProperties: "dirsvc",
+    nsIIOService: "io",
+    nsISpeculativeConnect: "io",
+    nsICookieManager: "cookies",
+    nsIBlocklistService: "blocklist",
   },
 
   /**
@@ -39,10 +39,12 @@ var servicesASTParser = {
    * with objects, and records the assumed interface definitions.
    */
   VariableDeclaration(node, parents) {
-    if (node.declarations.length === 1 &&
-        node.declarations[0].id &&
-        helpers.getIsGlobalScope(parents) &&
-        node.declarations[0].init.type === "ObjectExpression") {
+    if (
+      node.declarations.length === 1 &&
+      node.declarations[0].id &&
+      helpers.getIsGlobalScope(parents) &&
+      node.declarations[0].init.type === "ObjectExpression"
+    ) {
       let name = node.declarations[0].id.name;
       let interfaces = {};
 
@@ -61,13 +63,16 @@ var servicesASTParser = {
    * them to the identifier tables created by the VariableDeclaration calls.
    */
   AssignmentExpression(node, parents) {
-    if (node.left.type === "MemberExpression" &&
-        node.right.type === "ArrayExpression" &&
-        helpers.getIsGlobalScope(parents)) {
+    if (
+      node.left.type === "MemberExpression" &&
+      node.right.type === "ArrayExpression" &&
+      helpers.getIsGlobalScope(parents)
+    ) {
       let variableName = node.left.object.name;
       if (variableName in this.identifiers) {
         let servicesPropName = node.left.property.name;
-        this.identifiers[variableName][servicesPropName] = node.right.elements[1].value;
+        this.identifiers[variableName][servicesPropName] =
+          node.right.elements[1].value;
       }
     }
   },
@@ -78,11 +83,13 @@ var servicesASTParser = {
    * Services.jsm is caching.
    */
   CallExpression(node) {
-    if (node.callee.object &&
-        node.callee.object.name === "XPCOMUtils" &&
-        node.callee.property &&
-        node.callee.property.name === "defineLazyServiceGetters" &&
-        node.arguments.length >= 2) {
+    if (
+      node.callee.object &&
+      node.callee.object.name === "XPCOMUtils" &&
+      node.callee.property &&
+      node.callee.property.name === "defineLazyServiceGetters" &&
+      node.arguments.length >= 2
+    ) {
       // The second argument has the getters name.
       let gettersVarName = node.arguments[1].name;
       if (!(gettersVarName in this.identifiers)) {
@@ -97,7 +104,12 @@ var servicesASTParser = {
 };
 
 function getInterfacesFromServicesFile() {
-  let filePath = path.join(helpers.rootDir, "toolkit", "modules", "Services.jsm");
+  let filePath = path.join(
+    helpers.rootDir,
+    "toolkit",
+    "modules",
+    "Services.jsm"
+  );
 
   let content = fs.readFileSync(filePath, "utf8");
 
@@ -120,9 +132,9 @@ function getInterfacesFromServicesFile() {
   return servicesASTParser.result;
 }
 
-let getServicesInterfaceMap = helpers.isMozillaCentralBased() ?
-  getInterfacesFromServicesFile() :
-  helpers.getSavedRuleData("use-services.js");
+let getServicesInterfaceMap = helpers.isMozillaCentralBased()
+  ? getInterfacesFromServicesFile()
+  : helpers.getSavedRuleData("use-services.js");
 
 // -----------------------------------------------------------------------------
 // Rule Definition
@@ -141,22 +153,27 @@ module.exports = function(context) {
     },
 
     CallExpression(node) {
-      if (!node.callee ||
-          !node.callee.property ||
-          node.callee.property.type != "Identifier" ||
-          node.callee.property.name != "getService" ||
-          node.arguments.length != 1 ||
-          !node.arguments[0].property ||
-          node.arguments[0].property.type != "Identifier" ||
-          !node.arguments[0].property.name ||
-          !(node.arguments[0].property.name in getServicesInterfaceMap)) {
+      if (
+        !node.callee ||
+        !node.callee.property ||
+        node.callee.property.type != "Identifier" ||
+        node.callee.property.name != "getService" ||
+        node.arguments.length != 1 ||
+        !node.arguments[0].property ||
+        node.arguments[0].property.type != "Identifier" ||
+        !node.arguments[0].property.name ||
+        !(node.arguments[0].property.name in getServicesInterfaceMap)
+      ) {
         return;
       }
 
-      let serviceName = getServicesInterfaceMap[node.arguments[0].property.name];
+      let serviceName =
+        getServicesInterfaceMap[node.arguments[0].property.name];
 
-      context.report(node,
-                     `Use Services.${serviceName} rather than getService().`);
+      context.report(
+        node,
+        `Use Services.${serviceName} rather than getService().`
+      );
     },
   };
 };

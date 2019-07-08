@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
   const objectStoreData = [
@@ -28,8 +27,7 @@ function* testSteps()
   // First, add all our data to the object store.
   let addedData = 0;
   for (let i in objectStoreData) {
-    request = objectStore.add(objectStoreData[i].value,
-                              objectStoreData[i].key);
+    request = objectStore.add(objectStoreData[i].value, objectStoreData[i].key);
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       if (++addedData == objectStoreData.length) {

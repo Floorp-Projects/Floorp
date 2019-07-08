@@ -12,7 +12,7 @@ add_task(async function enableHtmlViews() {
 
 const DEFAULT_SECTION_NAMES = ["one", "two", "three"];
 
-function makeButton({doc, name, deckId}) {
+function makeButton({ doc, name, deckId }) {
   let button = doc.createElement("named-deck-button");
   button.setAttribute("name", name);
   button.deckId = deckId;
@@ -20,23 +20,23 @@ function makeButton({doc, name, deckId}) {
   return button;
 }
 
-function makeSection({doc, name}) {
+function makeSection({ doc, name }) {
   let view = doc.createElement("section");
   view.setAttribute("name", name);
   view.textContent = name + name;
   return view;
 }
 
-function addSection({name, deck, buttons}) {
+function addSection({ name, deck, buttons }) {
   let doc = deck.ownerDocument;
-  let button = makeButton({doc, name, deckId: deck.id});
+  let button = makeButton({ doc, name, deckId: deck.id });
   buttons.appendChild(button);
-  let view = makeSection({doc, name});
+  let view = makeSection({ doc, name });
   deck.appendChild(view);
-  return {button, view};
+  return { button, view };
 }
 
-async function runTests({deck, buttons}) {
+async function runTests({ deck, buttons }) {
   const selectedSlot = deck.shadowRoot.querySelector('slot[name="selected"]');
   const getButtonByName = name => buttons.querySelector(`[name="${name}"]`);
 
@@ -50,8 +50,11 @@ async function runTests({deck, buttons}) {
       is(slottedEls.length, 0, "The deck is empty");
     } else {
       is(slottedEls.length, 1, "There's one visible view");
-      is(slottedEls[0].getAttribute("name"), name,
-        "The correct view is in the slot");
+      is(
+        slottedEls[0].getAttribute("name"),
+        name,
+        "The correct view is in the slot"
+      );
     }
 
     // Check that the hidden properties are set.
@@ -71,8 +74,11 @@ async function runTests({deck, buttons}) {
     for (let button of buttons.children) {
       let buttonName = button.getAttribute("name");
       let selected = buttonName == name;
-      is(button.hasAttribute("selected"), selected,
-         `${buttonName} is ${selected ? "selected" : "not selected"}`);
+      is(
+        button.hasAttribute("selected"),
+        selected,
+        `${buttonName} is ${selected ? "selected" : "not selected"}`
+      );
     }
   }
 
@@ -86,7 +92,7 @@ async function runTests({deck, buttons}) {
 
   // Add a new section, nothing changes.
   info("Add section last");
-  let last = addSection({name: "last", deck, buttons});
+  let last = addSection({ name: "last", deck, buttons });
   checkState("three", 4);
 
   // We can switch to the new section.
@@ -125,27 +131,29 @@ async function runTests({deck, buttons}) {
   info("Add the missing view, it should be shown");
   shown = BrowserTestUtils.waitForEvent(selectedSlot, "slotchange");
   let viewChangedEvent = false;
-  let viewChangedFn = () => { viewChangedEvent = true; };
+  let viewChangedFn = () => {
+    viewChangedEvent = true;
+  };
   deck.addEventListener("view-changed", viewChangedFn);
-  addSection({name: "missing", deck, buttons});
+  addSection({ name: "missing", deck, buttons });
   await shown;
   deck.removeEventListener("view-changed", viewChangedFn);
   ok(!viewChangedEvent, "The view-changed event didn't fire");
   checkState("missing", 4);
 }
 
-async function setup({doc, beAsync, first}) {
+async function setup({ doc, beAsync, first }) {
   const deckId = `${first}-first-${beAsync}`;
 
   // Make the deck and buttons.
   const deck = doc.createElement("named-deck");
   deck.id = deckId;
   for (let name of DEFAULT_SECTION_NAMES) {
-    deck.appendChild(makeSection({doc, name}));
+    deck.appendChild(makeSection({ doc, name }));
   }
   const buttons = doc.createElement("div");
   for (let name of DEFAULT_SECTION_NAMES) {
-    buttons.appendChild(makeButton({doc, name, deckId}));
+    buttons.appendChild(makeButton({ doc, name, deckId }));
   }
 
   let ordered;
@@ -164,7 +172,7 @@ async function setup({doc, beAsync, first}) {
   }
   doc.body.appendChild(ordered.shift());
 
-  return {deck, buttons};
+  return { deck, buttons };
 }
 
 add_task(async function testNamedDeckAndButtons() {
@@ -173,15 +181,15 @@ add_task(async function testNamedDeckAndButtons() {
 
   // Check adding the deck first.
   dump("Running deck first tests synchronously");
-  await runTests(await setup({doc, beAsync: false, first: "deck"}));
+  await runTests(await setup({ doc, beAsync: false, first: "deck" }));
   dump("Running deck first tests asynchronously");
-  await runTests(await setup({doc, beAsync: true, first: "deck"}));
+  await runTests(await setup({ doc, beAsync: true, first: "deck" }));
 
   // Check adding the buttons first.
   dump("Running buttons first tests synchronously");
-  await runTests(await setup({doc, beAsync: false, first: "buttons"}));
+  await runTests(await setup({ doc, beAsync: false, first: "buttons" }));
   dump("Running buttons first tests asynchronously");
-  await runTests(await setup({doc, beAsync: true, first: "buttons"}));
+  await runTests(await setup({ doc, beAsync: true, first: "buttons" }));
 
   await closeView(win);
 });

@@ -4,14 +4,18 @@
 
 "use strict";
 
-const chromeRegistry =
-  Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
-const DEBUGGER_CHROME_URL = "chrome://mochitests/content/browser/devtools/client/shared/test/";
+const chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+  Ci.nsIChromeRegistry
+);
+const DEBUGGER_CHROME_URL =
+  "chrome://mochitests/content/browser/devtools/client/shared/test/";
 const DEBUGGER_CHROME_URI = Services.io.newURI(DEBUGGER_CHROME_URL);
 
 const EventEmitter = require("devtools/shared/event-emitter");
 
-var { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+var { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
 
 /**
  * Returns a thenable promise
@@ -25,7 +29,9 @@ function getDeferredPromise() {
 
 function getAddonURIFromPath(path) {
   const chromeURI = Services.io.newURI(path, null, DEBUGGER_CHROME_URI);
-  return chromeRegistry.convertChromeURL(chromeURI).QueryInterface(Ci.nsIFileURL);
+  return chromeRegistry
+    .convertChromeURL(chromeURI)
+    .QueryInterface(Ci.nsIFileURL);
 }
 
 function addTemporaryAddon(path) {

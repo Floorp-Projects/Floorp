@@ -9,11 +9,11 @@
 
 function runCodeMirrorTest(browser) {
   let mm = browser.messageManager;
-  mm.addMessageListener("setStatus", function listener({data}) {
-    const {statusMsg, type, customMsg} = data;
+  mm.addMessageListener("setStatus", function listener({ data }) {
+    const { statusMsg, type, customMsg } = data;
     codemirrorSetStatus(statusMsg, type, customMsg);
   });
-  mm.addMessageListener("done", function listener({data}) {
+  mm.addMessageListener("done", function listener({ data }) {
     ok(!data.failed, "CodeMirror tests all passed");
     while (gBrowser.tabs.length > 1) {
       gBrowser.removeCurrentTab();
@@ -27,17 +27,19 @@ function runCodeMirrorTest(browser) {
   //  2) Detecting when it finishes by checking the DOM and
   //     setting a timeout to check again if not.
   /* eslint-disable max-len */
-  mm.loadFrameScript("data:," +
-    "ChromeUtils.import('resource://gre/modules/Timer.jsm');" +
-    "content.wrappedJSObject.mozilla_setStatus = function(statusMsg, type, customMsg) {" +
-    "  sendSyncMessage('setStatus', {statusMsg: statusMsg, type: type, customMsg: customMsg});" +
-    "};" +
-    "function check() { " +
-    "  var doc = content.document; var out = doc.getElementById('status'); " +
-    "  if (!out || !out.classList.contains('done')) { return setTimeout(check, 100); }" +
-    "  sendAsyncMessage('done', { failed: content.wrappedJSObject.failed });" +
-    "}" +
-    "check();"
-  , true);
+  mm.loadFrameScript(
+    "data:," +
+      "ChromeUtils.import('resource://gre/modules/Timer.jsm');" +
+      "content.wrappedJSObject.mozilla_setStatus = function(statusMsg, type, customMsg) {" +
+      "  sendSyncMessage('setStatus', {statusMsg: statusMsg, type: type, customMsg: customMsg});" +
+      "};" +
+      "function check() { " +
+      "  var doc = content.document; var out = doc.getElementById('status'); " +
+      "  if (!out || !out.classList.contains('done')) { return setTimeout(check, 100); }" +
+      "  sendAsyncMessage('done', { failed: content.wrappedJSObject.failed });" +
+      "}" +
+      "check();",
+    true
+  );
   /* eslint-enable max-len */
 }

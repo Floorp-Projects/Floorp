@@ -20,7 +20,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {view} = await openRuleView();
+  const { view } = await openRuleView();
 
   const propertiesToTest = ["color", "background-color", "border"];
 
@@ -44,8 +44,10 @@ async function testColorPickerAppearsOnColorSwatchClick(view, swatch) {
   await onColorPickerReady;
 
   ok(true, "The color picker was shown on click of the color swatch");
-  ok(!inplaceEditor(swatch.parentNode),
-    "The inplace editor wasn't shown as a result of the color swatch click");
+  ok(
+    !inplaceEditor(swatch.parentNode),
+    "The inplace editor wasn't shown as a result of the color swatch click"
+  );
 
   await hideTooltipAndWaitForRuleViewChanged(cPicker, view);
 }

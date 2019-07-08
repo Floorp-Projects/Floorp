@@ -36,18 +36,38 @@
  *   Date when the study was ended.
  */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "IndexedDB", "resource://gre/modules/IndexedDB.jsm");
-ChromeUtils.defineModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(
-  this, "CleanupManager", "resource://normandy/lib/CleanupManager.jsm"
+  this,
+  "IndexedDB",
+  "resource://gre/modules/IndexedDB.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "LogManager", "resource://normandy/lib/LogManager.jsm");
 ChromeUtils.defineModuleGetter(
-  this, "TelemetryEnvironment", "resource://gre/modules/TelemetryEnvironment.jsm"
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "TelemetryEvents", "resource://normandy/lib/TelemetryEvents.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "CleanupManager",
+  "resource://normandy/lib/CleanupManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "LogManager",
+  "resource://normandy/lib/LogManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryEnvironment",
+  "resource://gre/modules/TelemetryEnvironment.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryEvents",
+  "resource://normandy/lib/TelemetryEvents.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["AddonStudies"];
 
@@ -161,7 +181,9 @@ var AddonStudies = {
 
   async migrations() {
     const db = await getDatabase();
-    const oldVersion = await db.objectStore(VERSION_STORE_NAME, "readonly").get("version") || 0;
+    const oldVersion =
+      (await db.objectStore(VERSION_STORE_NAME, "readonly").get("version")) ||
+      0;
 
     if (oldVersion < 2) {
       log.debug(`Running data migrations from ${oldVersion} to 2`);
@@ -207,7 +229,9 @@ var AddonStudies = {
    */
   async onUninstalled(addon) {
     const activeStudies = (await this.getAll()).filter(study => study.active);
-    const matchingStudy = activeStudies.find(study => study.addonId === addon.id);
+    const matchingStudy = activeStudies.find(
+      study => study.addonId === addon.id
+    );
     if (matchingStudy) {
       await this.markAsEnded(matchingStudy, "uninstalled");
     }
@@ -255,9 +279,13 @@ var AddonStudies = {
     let results = await getStore(db, "readonly").getAll();
 
     if (branched == AddonStudies.FILTER_BRANCHED_ONLY) {
-      results = results.filter(study => study.branch != AddonStudies.NO_BRANCHES_MARKER);
+      results = results.filter(
+        study => study.branch != AddonStudies.NO_BRANCHES_MARKER
+      );
     } else if (branched == AddonStudies.FILTER_NOT_BRANCHED) {
-      results = results.filter(study => study.branch == AddonStudies.NO_BRANCHES_MARKER);
+      results = results.filter(
+        study => study.branch == AddonStudies.NO_BRANCHES_MARKER
+      );
     }
     return results;
   },

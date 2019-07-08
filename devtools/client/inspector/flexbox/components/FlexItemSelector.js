@@ -18,7 +18,12 @@ const ElementNode = REPS.ElementNode;
 
 const Types = require("../types");
 
-loader.lazyRequireGetter(this, "showMenu", "devtools/client/shared/components/menu/utils", true);
+loader.lazyRequireGetter(
+  this,
+  "showMenu",
+  "devtools/client/shared/components/menu/utils",
+  true
+);
 
 class FlexItemSelector extends PureComponent {
   static get propTypes() {
@@ -37,11 +42,7 @@ class FlexItemSelector extends PureComponent {
   onShowFlexItemMenu(event) {
     event.stopPropagation();
 
-    const {
-      flexItem,
-      flexItems,
-      setSelectedNode,
-    } = this.props;
+    const { flexItem, flexItems, setSelectedNode } = this.props;
     const menuItems = [];
 
     for (const item of flexItems) {
@@ -62,19 +63,17 @@ class FlexItemSelector extends PureComponent {
   render() {
     const { flexItem } = this.props;
 
-    return (
-      dom.button(
-        {
-          id: "flex-item-selector",
-          className: "devtools-button devtools-dropdown-button",
-          onClick: this.onShowFlexItemMenu,
-        },
-        Rep({
-          defaultRep: ElementNode,
-          mode: MODE.TINY,
-          object: translateNodeFrontToGrip(flexItem.nodeFront),
-        })
-      )
+    return dom.button(
+      {
+        id: "flex-item-selector",
+        className: "devtools-button devtools-dropdown-button",
+        onClick: this.onShowFlexItemMenu,
+      },
+      Rep({
+        defaultRep: ElementNode,
+        mode: MODE.TINY,
+        object: translateNodeFrontToGrip(flexItem.nodeFront),
+      })
     );
   }
 }

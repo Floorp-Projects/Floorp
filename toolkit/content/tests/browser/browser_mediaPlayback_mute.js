@@ -1,9 +1,15 @@
-const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_mediaPlayback2.html";
-const FRAME = "https://example.com/browser/toolkit/content/tests/browser/file_mediaPlaybackFrame2.html";
+const PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_mediaPlayback2.html";
+const FRAME =
+  "https://example.com/browser/toolkit/content/tests/browser/file_mediaPlaybackFrame2.html";
 
 function wait_for_event(browser, event) {
-  return BrowserTestUtils.waitForEvent(browser, event, false, (event) => {
-    is(event.originalTarget, browser, "Event must be dispatched to correct browser.");
+  return BrowserTestUtils.waitForEvent(browser, event, false, event => {
+    is(
+      event.originalTarget,
+      browser,
+      "Event must be dispatched to correct browser."
+    );
     return true;
   });
 }
@@ -58,10 +64,13 @@ async function test_visibility(url, browser) {
   is(result.computedVolume, 1, "Audio volume is 1");
   is(result.computedMuted, false, "Audio is not muted");
 
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "about:blank",
-  }, function() {});
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:blank",
+    },
+    function() {}
+  );
 
   ok(!browser.audioMuted, "Audio should not be muted by default");
   browser.mute();
@@ -75,28 +84,37 @@ async function test_visibility(url, browser) {
 }
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["media.useAudioChannelService.testing", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["media.useAudioChannelService.testing", true]],
+  });
 });
 
 add_task(async function test_page() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "about:blank",
-  }, test_on_browser.bind(undefined, PAGE));
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:blank",
+    },
+    test_on_browser.bind(undefined, PAGE)
+  );
 });
 
 add_task(async function test_frame() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "about:blank",
-  }, test_on_browser.bind(undefined, FRAME));
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:blank",
+    },
+    test_on_browser.bind(undefined, FRAME)
+  );
 });
 
 add_task(async function test_frame() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "about:blank",
-  }, test_visibility.bind(undefined, PAGE));
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:blank",
+    },
+    test_visibility.bind(undefined, PAGE)
+  );
 });

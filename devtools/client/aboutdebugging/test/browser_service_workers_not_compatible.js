@@ -14,9 +14,7 @@ var imgClass = ".service-worker-disabled .warning";
 add_task(async function() {
   await new Promise(done => {
     info("disable service workers");
-    const options = {"set": [
-      ["dom.serviceWorkers.enabled", false],
-    ]};
+    const options = { set: [["dom.serviceWorkers.enabled", false]] };
     SpecialPowers.pushPrefEnv(options, done);
   });
 
@@ -31,9 +29,7 @@ add_task(async function() {
 add_task(async function() {
   await new Promise(done => {
     info("set private browsing mode as default");
-    const options = {"set": [
-      ["browser.privatebrowsing.autostart", true],
-    ]};
+    const options = { set: [["browser.privatebrowsing.autostart", true]] };
     SpecialPowers.pushPrefEnv(options, done);
   });
 
@@ -47,7 +43,7 @@ add_task(async function() {
 
 add_task(async function() {
   info("Opening a new private window");
-  const win = OpenBrowserWindow({private: true});
+  const win = OpenBrowserWindow({ private: true });
   await waitForDelayedStartupFinished(win);
 
   const { tab, document } = await openAboutDebugging("workers", win);

@@ -1,6 +1,7 @@
 "use strict";
 
-const CC_URL = "https://example.org/browser/browser/extensions/formautofill/test/browser/creditCard/autocomplete_creditcard_basic.html";
+const CC_URL =
+  "https://example.org/browser/browser/extensions/formautofill/test/browser/creditCard/autocomplete_creditcard_basic.html";
 
 add_task(async function setup_storage() {
   await saveCreditCard(TEST_CREDIT_CARD_1);
@@ -11,7 +12,10 @@ add_task(async function setup_storage() {
 async function reopenPopupWithResizedInput(browser, selector, newSize) {
   await closePopup(browser);
   /* eslint no-shadow: ["error", { "allow": ["selector", "newSize"] }] */
-  await ContentTask.spawn(browser, {selector, newSize}, async function({selector, newSize}) {
+  await ContentTask.spawn(browser, { selector, newSize }, async function({
+    selector,
+    newSize,
+  }) {
     const input = content.document.querySelector(selector);
 
     input.style.boxSizing = "border-box";
@@ -21,7 +25,9 @@ async function reopenPopupWithResizedInput(browser, selector, newSize) {
 }
 
 add_task(async function test_credit_card_dropdown() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: CC_URL}, async function(browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: CC_URL }, async function(
+    browser
+  ) {
     const focusInput = "#cc-number";
     await openPopupOn(browser, focusInput);
     const firstItem = getDisplayedPopupItems(browser)[0];
@@ -30,7 +36,11 @@ add_task(async function test_credit_card_dropdown() {
 
     // The breakpoint of two-lines layout is 185px
     await reopenPopupWithResizedInput(browser, focusInput, 175);
-    is(firstItem._itemBox.getAttribute("size"), "small", "Show two-lines layout");
+    is(
+      firstItem._itemBox.getAttribute("size"),
+      "small",
+      "Show two-lines layout"
+    );
     await reopenPopupWithResizedInput(browser, focusInput, 195);
     is(firstItem._itemBox.hasAttribute("size"), false, "Show one-line layout");
 

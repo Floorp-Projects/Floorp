@@ -223,11 +223,6 @@ class AudioEventTimeline {
     return mValue;
   }
 
-  float Value() const {
-    // TODO: Return the current value based on the timeline of the AudioContext
-    return mValue;
-  }
-
   void SetValue(float aValue) {
     // Silently don't change anything if there are any events
     if (mEvents.IsEmpty()) {

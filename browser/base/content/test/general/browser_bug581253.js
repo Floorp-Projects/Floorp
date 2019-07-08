@@ -22,17 +22,24 @@ add_task(async function test_remove_bookmark_with_tag_via_edit_bookmark() {
     url: testURL,
   });
 
-  Assert.ok(await PlacesUtils.bookmarks.fetch({url: testURL}), "the test url is bookmarked");
+  Assert.ok(
+    await PlacesUtils.bookmarks.fetch({ url: testURL }),
+    "the test url is bookmarked"
+  );
 
   BrowserTestUtils.loadURI(gBrowser, testURL);
 
   await BrowserTestUtils.waitForCondition(
     () => BookmarkingUI.status == BookmarkingUI.STATUS_STARRED,
-    "star button indicates that the page is bookmarked");
+    "star button indicates that the page is bookmarked"
+  );
 
   PlacesUtils.tagging.tagURI(makeURI(testURL), [testTag]);
 
-  let popupShownPromise = BrowserTestUtils.waitForEvent(StarUI.panel, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    StarUI.panel,
+    "popupshown"
+  );
 
   BookmarkingUI.star.click();
 
@@ -42,10 +49,15 @@ add_task(async function test_remove_bookmark_with_tag_via_edit_bookmark() {
   Assert.ok(tagsField.value == testTag, "tags field value was set");
   tagsField.focus();
 
-  let popupHiddenPromise = BrowserTestUtils.waitForEvent(StarUI.panel, "popuphidden");
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    StarUI.panel,
+    "popuphidden"
+  );
 
-  let removeNotification = PlacesTestUtils.waitForNotification("onItemRemoved",
-     (id, parentId, index, type, itemUrl) => testURL == unescape(itemUrl.spec));
+  let removeNotification = PlacesTestUtils.waitForNotification(
+    "onItemRemoved",
+    (id, parentId, index, type, itemUrl) => testURL == unescape(itemUrl.spec)
+  );
 
   let removeButton = document.getElementById("editBookmarkPanelRemoveButton");
   removeButton.click();
@@ -54,6 +66,9 @@ add_task(async function test_remove_bookmark_with_tag_via_edit_bookmark() {
 
   await removeNotification;
 
-  is(BookmarkingUI.status, BookmarkingUI.STATUS_UNSTARRED,
-     "star button indicates that the bookmark has been removed");
+  is(
+    BookmarkingUI.status,
+    BookmarkingUI.STATUS_UNSTARRED,
+    "star button indicates that the bookmark has been removed"
+  );
 });

@@ -7,12 +7,19 @@
 add_task(async function basic() {
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {
     let queryContext = await clickDropmarker();
-    is(queryContext.searchString, "",
-       "Clicking the history dropmarker should initiate an empty search instead of searching for the loaded URL");
-    is(gURLBar.value, "http://example.com/",
-       "Clicking the history dropmarker should not change the input value");
-    await UrlbarTestUtils.promisePopupClose(window,
-      () => EventUtils.synthesizeKey("KEY_Escape"));
+    is(
+      queryContext.searchString,
+      "",
+      "Clicking the history dropmarker should initiate an empty search instead of searching for the loaded URL"
+    );
+    is(
+      gURLBar.value,
+      "http://example.com/",
+      "Clicking the history dropmarker should not change the input value"
+    );
+    await UrlbarTestUtils.promisePopupClose(window, () =>
+      EventUtils.synthesizeKey("KEY_Escape")
+    );
   });
 });
 
@@ -23,8 +30,9 @@ add_task(async function proxyState() {
       // Click the dropmarker on the second tab and switch back to the first
       // tab.
       await clickDropmarker();
-      await UrlbarTestUtils.promisePopupClose(window,
-        () => EventUtils.synthesizeKey("KEY_Escape"));
+      await UrlbarTestUtils.promisePopupClose(window, () =>
+        EventUtils.synthesizeKey("KEY_Escape")
+      );
       await BrowserTestUtils.switchTab(
         gBrowser,
         gBrowser.getTabForBrowser(browser1)
@@ -42,9 +50,11 @@ add_task(async function proxyState() {
 
 async function clickDropmarker() {
   await UrlbarTestUtils.promisePopupOpen(window, () => {
-    let historyDropMarker =
-      window.document.getAnonymousElementByAttribute(gURLBar.textbox, "anonid",
-                                                     "historydropmarker");
+    let historyDropMarker = window.document.getAnonymousElementByAttribute(
+      gURLBar.textbox,
+      "anonid",
+      "historydropmarker"
+    );
     EventUtils.synthesizeMouseAtCenter(historyDropMarker, {}, window);
   });
   let queryContext = await gURLBar.lastQueryContextPromise;

@@ -13,27 +13,34 @@ add_task(async () => {
   for (let videoID of ["with-controls", "no-controls"]) {
     info(`Testing ${videoID} case.`);
 
-    await BrowserTestUtils.withNewTab({
-      url: TEST_PAGE,
-      gBrowser,
-    }, async browser => {
-      let pipWin = await triggerPictureInPicture(browser, videoID);
-      ok(pipWin, "Got Picture-in-Picture window.");
+    await BrowserTestUtils.withNewTab(
+      {
+        url: TEST_PAGE,
+        gBrowser,
+      },
+      async browser => {
+        let pipWin = await triggerPictureInPicture(browser, videoID);
+        ok(pipWin, "Got Picture-in-Picture window.");
 
-      try {
-        await assertShowingMessage(browser, videoID, true);
-      } finally {
-        let uaWidgetUpdate = BrowserTestUtils.waitForContentEvent(browser, "UAWidgetSetupOrChange");
-        await BrowserTestUtils.closeWindow(pipWin);
-        await uaWidgetUpdate;
-      }
+        try {
+          await assertShowingMessage(browser, videoID, true);
+        } finally {
+          let uaWidgetUpdate = BrowserTestUtils.waitForContentEvent(
+            browser,
+            "UAWidgetSetupOrChange",
+            true /* capture */
+          );
+          await BrowserTestUtils.closeWindow(pipWin);
+          await uaWidgetUpdate;
+        }
 
-      // no-controls case is disabled until we ensure that there's a UAWidget for
-      // the no-controls case on Desktop (which should be fixed as part of
-      // bug 1535354).
-      if (videoID !== "no-controls") {
-        await assertShowingMessage(browser, videoID, false);
+        // no-controls case is disabled until we ensure that there's a UAWidget for
+        // the no-controls case on Desktop (which should be fixed as part of
+        // bug 1535354).
+        if (videoID !== "no-controls") {
+          await assertShowingMessage(browser, videoID, false);
+        }
       }
-    });
+    );
   }
 });

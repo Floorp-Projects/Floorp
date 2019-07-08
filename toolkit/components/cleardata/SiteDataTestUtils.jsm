@@ -4,18 +4,25 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "SiteDataTestUtils",
-];
+var EXPORTED_SYMBOLS = ["SiteDataTestUtils"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
-const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ContentTask } = ChromeUtils.import(
+  "resource://testing-common/ContentTask.jsm"
+);
+const { BrowserTestUtils } = ChromeUtils.import(
+  "resource://testing-common/BrowserTestUtils.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "swm",
-                                   "@mozilla.org/serviceworkers/manager;1",
-                                   "nsIServiceWorkerManager");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "swm",
+  "@mozilla.org/serviceworkers/manager;1",
+  "nsIServiceWorkerManager"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["indexedDB", "Blob"]);
 
@@ -27,7 +34,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["indexedDB", "Blob"]);
  * example using SiteDataTestUtils.clear().
  */
 var SiteDataTestUtils = {
-
   /**
    * Makes an origin have persistent data storage.
    *
@@ -37,7 +43,9 @@ var SiteDataTestUtils = {
    */
   persist(origin, value = Services.perms.ALLOW_ACTION) {
     return new Promise(resolve => {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
+      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+        origin
+      );
       Services.perms.addFromPrincipal(principal, "persistent-storage", value);
       Services.qms.persist(principal).callback = () => resolve();
     });
@@ -53,7 +61,9 @@ var SiteDataTestUtils = {
    */
   addToIndexedDB(origin, size = 1024) {
     return new Promise(resolve => {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
+      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+        origin
+      );
       let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
       request.onupgradeneeded = function(e) {
         let db = e.target.result;
@@ -80,10 +90,21 @@ var SiteDataTestUtils = {
    * @param {String} value [optional] - the cookie value
    */
   addToCookies(origin, name = "foo", value = "bar") {
-    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
-    Services.cookies.add(principal.URI.host, principal.URI.pathQueryRef, name, value,
-      false, false, false, Date.now() + 24000 * 60 * 60, {},
-      Ci.nsICookie.SAMESITE_NONE);
+    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+      origin
+    );
+    Services.cookies.add(
+      principal.URI.host,
+      principal.URI.pathQueryRef,
+      name,
+      value,
+      false,
+      false,
+      false,
+      Date.now() + 24000 * 60 * 60,
+      {},
+      Ci.nsICookie.SAMESITE_NONE
+    );
   },
 
   /**
@@ -98,7 +119,7 @@ var SiteDataTestUtils = {
     let uri = Services.io.newURI(path);
     // Register a dummy ServiceWorker.
     return BrowserTestUtils.withNewTab(uri.prePath, async function(browser) {
-      return ContentTask.spawn(browser, {path}, async ({path: p}) => {
+      return ContentTask.spawn(browser, { path }, async ({ path: p }) => {
         // eslint-disable-next-line no-undef
         let r = await content.navigator.serviceWorker.register(p);
         return new Promise(resolve => {
@@ -119,10 +140,14 @@ var SiteDataTestUtils = {
 
   _getCacheStorage(where, lci) {
     switch (where) {
-      case "disk": return Services.cache2.diskCacheStorage(lci, false);
-      case "memory": return Services.cache2.memoryCacheStorage(lci);
-      case "appcache": return Services.cache2.appCacheStorage(lci, null);
-      case "pin": return Services.cache2.pinningCacheStorage(lci);
+      case "disk":
+        return Services.cache2.diskCacheStorage(lci, false);
+      case "memory":
+        return Services.cache2.memoryCacheStorage(lci);
+      case "appcache":
+        return Services.cache2.appCacheStorage(lci, null);
+      case "pin":
+        return Services.cache2.pinningCacheStorage(lci);
     }
     return null;
   },
@@ -134,7 +159,7 @@ var SiteDataTestUtils = {
 
   addCacheEntry(path, where, lci = Services.loadContextInfo.default) {
     return new Promise(resolve => {
-      function CacheListener() { }
+      function CacheListener() {}
       CacheListener.prototype = {
         QueryInterface: ChromeUtils.generateQI(["nsICacheEntryOpenCallback"]),
 
@@ -148,7 +173,12 @@ var SiteDataTestUtils = {
       };
 
       let storage = this._getCacheStorage(where, lci);
-      storage.asyncOpenURI(Services.io.newURI(path), "", Ci.nsICacheStorage.OPEN_NORMALLY, new CacheListener());
+      storage.asyncOpenURI(
+        Services.io.newURI(path),
+        "",
+        Ci.nsICacheStorage.OPEN_NORMALLY,
+        new CacheListener()
+      );
     });
   },
 
@@ -162,7 +192,10 @@ var SiteDataTestUtils = {
   hasServiceWorkers(origin) {
     let serviceWorkers = swm.getAllRegistrations();
     for (let i = 0; i < serviceWorkers.length; i++) {
-      let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
+      let sw = serviceWorkers.queryElementAt(
+        i,
+        Ci.nsIServiceWorkerRegistrationInfo
+      );
       if (sw.principal.origin == origin) {
         return true;
       }
@@ -232,8 +265,12 @@ var SiteDataTestUtils = {
    */
   getQuotaUsage(origin) {
     return new Promise(resolve => {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
-      Services.qms.getUsageForPrincipal(principal, request => resolve(request.result.usage));
+      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+        origin
+      );
+      Services.qms.getUsageForPrincipal(principal, request =>
+        resolve(request.result.usage)
+      );
     });
   },
 
@@ -244,13 +281,15 @@ var SiteDataTestUtils = {
     return new Promise(resolve => {
       Services.clearData.deleteData(
         Ci.nsIClearDataService.CLEAR_COOKIES |
-        Ci.nsIClearDataService.CLEAR_ALL_CACHES |
-        Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES |
-        Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-        Ci.nsIClearDataService.CLEAR_PREDICTOR_NETWORK_DATA |
-        Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
-        Ci.nsIClearDataService.CLEAR_EME |
-        Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS, resolve);
+          Ci.nsIClearDataService.CLEAR_ALL_CACHES |
+          Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES |
+          Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
+          Ci.nsIClearDataService.CLEAR_PREDICTOR_NETWORK_DATA |
+          Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
+          Ci.nsIClearDataService.CLEAR_EME |
+          Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS,
+        resolve
+      );
     });
   },
 };

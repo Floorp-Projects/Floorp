@@ -2,14 +2,14 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Verify that we wipe the server if we have to regenerate keys.
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 add_task(async function test_missing_crypto_collection() {
   enableValidationPrefs();
 
   let johnHelper = track_collections_helper();
-  let johnU      = johnHelper.with_updated_collection;
-  let johnColls  = johnHelper.collections;
+  let johnU = johnHelper.with_updated_collection;
+  let johnColls = johnHelper.collections;
 
   let empty = false;
   function maybe_empty(handler) {
@@ -26,24 +26,39 @@ add_task(async function test_missing_crypto_collection() {
 
   let handlers = {
     "/1.1/johndoe/info/collections": maybe_empty(johnHelper.handler),
-    "/1.1/johndoe/storage/crypto/keys": johnU("crypto", new ServerWBO("keys").handler()),
-    "/1.1/johndoe/storage/meta/global": johnU("meta", new ServerWBO("global").handler()),
+    "/1.1/johndoe/storage/crypto/keys": johnU(
+      "crypto",
+      new ServerWBO("keys").handler()
+    ),
+    "/1.1/johndoe/storage/meta/global": johnU(
+      "meta",
+      new ServerWBO("global").handler()
+    ),
   };
-  let collections = ["clients", "bookmarks", "forms", "history",
-                     "passwords", "prefs", "tabs"];
+  let collections = [
+    "clients",
+    "bookmarks",
+    "forms",
+    "history",
+    "passwords",
+    "prefs",
+    "tabs",
+  ];
   // Disable addon sync because AddonManager won't be initialized here.
   await Service.engineManager.unregister("addons");
 
   for (let coll of collections) {
-    handlers["/1.1/johndoe/storage/" + coll] =
-      johnU(coll, new ServerCollection({}, true).handler());
+    handlers["/1.1/johndoe/storage/" + coll] = johnU(
+      coll,
+      new ServerCollection({}, true).handler()
+    );
   }
   let server = httpd_setup(handlers);
-  await configureIdentity({username: "johndoe"}, server);
+  await configureIdentity({ username: "johndoe" }, server);
 
   try {
     let fresh = 0;
-    let orig  = Service._freshStart;
+    let orig = Service._freshStart;
     Service._freshStart = async function() {
       _("Called _freshStart.");
       await orig.call(Service);

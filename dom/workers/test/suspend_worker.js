@@ -10,4 +10,4 @@ var interval = setInterval(function() {
 
 onmessage = function(event) {
   clearInterval(interval);
-}
+};

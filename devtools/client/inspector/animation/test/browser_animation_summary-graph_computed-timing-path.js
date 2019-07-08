@@ -17,7 +17,7 @@ const TEST_DATA = [
       [
         { x: 0, y: 0 },
         { x: 250000, y: 40.851 },
-        { x: 500000, y: 80.24},
+        { x: 500000, y: 80.24 },
         { x: 750000, y: 96.05 },
         { x: 1000000, y: 100 },
         { x: 1000000, y: 0 },
@@ -39,10 +39,7 @@ const TEST_DATA = [
   },
   {
     targetClass: "delay-positive",
-    expectedDelayPath: [
-      { x: 0, y: 0 },
-      { x: 500000, y: 0 },
-    ],
+    expectedDelayPath: [{ x: 0, y: 0 }, { x: 500000, y: 0 }],
     expectedIterationPathList: [
       [
         { x: 500000, y: 0 },
@@ -78,10 +75,7 @@ const TEST_DATA = [
         { x: 1000000, y: 0 },
       ],
     ],
-    expectedEndDelayPath: [
-      { x: 1000000, y: 0 },
-      { x: 1500000, y: 0 },
-    ],
+    expectedEndDelayPath: [{ x: 1000000, y: 0 }, { x: 1500000, y: 0 }],
   },
   {
     targetClass: "enddelay-negative",
@@ -112,10 +106,7 @@ const TEST_DATA = [
       { x: 1500000, y: 100 },
       { x: 1500000, y: 0 },
     ],
-    expectedForwardsPath: [
-      { x: 1500000, y: 0 },
-      { x: 1500000, y: 100 },
-    ],
+    expectedForwardsPath: [{ x: 1500000, y: 0 }, { x: 1500000, y: 100 }],
   },
   {
     targetClass: "enddelay-with-iterations-infinity",
@@ -128,11 +119,7 @@ const TEST_DATA = [
         { x: 1000000, y: 100 },
         { x: 1000000, y: 0 },
       ],
-      [
-        { x: 1000000, y: 0 },
-        { x: 1250000, y: 25 },
-        { x: 1500000, y: 50 },
-      ],
+      [{ x: 1000000, y: 0 }, { x: 1250000, y: 25 }, { x: 1500000, y: 50 }],
     ],
     isInfinity: true,
   },
@@ -167,11 +154,7 @@ const TEST_DATA = [
         { x: 750000, y: 25 },
         { x: 1000000, y: 0 },
       ],
-      [
-        { x: 1000000, y: 0 },
-        { x: 1250000, y: 25 },
-        { x: 1500000, y: 50 },
-      ],
+      [{ x: 1000000, y: 0 }, { x: 1250000, y: 25 }, { x: 1500000, y: 50 }],
     ],
     isInfinity: true,
   },
@@ -272,10 +255,7 @@ const TEST_DATA = [
         { x: 1500000, y: 0 },
       ],
     ],
-    expectedForwardsPath: [
-      { x: 1500000, y: 0 },
-      { x: 1500000, y: 50 },
-    ],
+    expectedForwardsPath: [{ x: 1500000, y: 0 }, { x: 1500000, y: 50 }],
   },
   {
     targetClass: "fill-forwards",
@@ -367,7 +347,7 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
-  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
+  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${t.targetClass}`));
   const { panel } = await openAnimationInspector();
 
   for (const testData of TEST_DATA) {
@@ -380,17 +360,24 @@ add_task(async function() {
       targetClass,
     } = testData;
 
-    const animationItemEl =
-      findAnimationItemElementsByTargetSelector(panel, `.${ targetClass }`);
+    const animationItemEl = findAnimationItemElementsByTargetSelector(
+      panel,
+      `.${targetClass}`
+    );
 
-    info(`Checking computed timing path existance for ${ targetClass }`);
-    const computedTimingPathEl =
-      animationItemEl.querySelector(".animation-computed-timing-path");
-    ok(computedTimingPathEl,
-       "The computed timing path element should be in each animation item element");
+    info(`Checking computed timing path existance for ${targetClass}`);
+    const computedTimingPathEl = animationItemEl.querySelector(
+      ".animation-computed-timing-path"
+    );
+    ok(
+      computedTimingPathEl,
+      "The computed timing path element should be in each animation item element"
+    );
 
-    info(`Checking delay path for ${ targetClass }`);
-    const delayPathEl = computedTimingPathEl.querySelector(".animation-delay-path");
+    info(`Checking delay path for ${targetClass}`);
+    const delayPathEl = computedTimingPathEl.querySelector(
+      ".animation-delay-path"
+    );
 
     if (expectedDelayPath) {
       ok(delayPathEl, "delay path should be existance");
@@ -399,27 +386,37 @@ add_task(async function() {
       ok(!delayPathEl, "delay path should not be existance");
     }
 
-    info(`Checking iteration path list for ${ targetClass }`);
-    const iterationPathEls =
-      computedTimingPathEl.querySelectorAll(".animation-iteration-path");
-    is(iterationPathEls.length, expectedIterationPathList.length,
-       `Number of iteration path should be ${ expectedIterationPathList.length }`);
+    info(`Checking iteration path list for ${targetClass}`);
+    const iterationPathEls = computedTimingPathEl.querySelectorAll(
+      ".animation-iteration-path"
+    );
+    is(
+      iterationPathEls.length,
+      expectedIterationPathList.length,
+      `Number of iteration path should be ${expectedIterationPathList.length}`
+    );
 
     for (const [j, iterationPathEl] of iterationPathEls.entries()) {
       assertPathSegments(iterationPathEl, true, expectedIterationPathList[j]);
 
-      info(`Checking infinity ${ targetClass }`);
+      info(`Checking infinity ${targetClass}`);
       if (isInfinity && j >= 1) {
-        ok(iterationPathEl.classList.contains("infinity"),
-           "iteration path should have 'infinity' class");
+        ok(
+          iterationPathEl.classList.contains("infinity"),
+          "iteration path should have 'infinity' class"
+        );
       } else {
-        ok(!iterationPathEl.classList.contains("infinity"),
-           "iteration path should not have 'infinity' class");
+        ok(
+          !iterationPathEl.classList.contains("infinity"),
+          "iteration path should not have 'infinity' class"
+        );
       }
     }
 
-    info(`Checking endDelay path for ${ targetClass }`);
-    const endDelayPathEl = computedTimingPathEl.querySelector(".animation-enddelay-path");
+    info(`Checking endDelay path for ${targetClass}`);
+    const endDelayPathEl = computedTimingPathEl.querySelector(
+      ".animation-enddelay-path"
+    );
 
     if (expectedEndDelayPath) {
       ok(endDelayPathEl, "endDelay path should be existance");
@@ -428,9 +425,10 @@ add_task(async function() {
       ok(!endDelayPathEl, "endDelay path should not be existance");
     }
 
-    info(`Checking forwards fill path for ${ targetClass }`);
-    const forwardsPathEl =
-      computedTimingPathEl.querySelector(".animation-fill-forwards-path");
+    info(`Checking forwards fill path for ${targetClass}`);
+    const forwardsPathEl = computedTimingPathEl.querySelector(
+      ".animation-fill-forwards-path"
+    );
 
     if (expectedForwardsPath) {
       ok(forwardsPathEl, "forwards path should be existance");

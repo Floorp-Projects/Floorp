@@ -21,39 +21,71 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
-  ok(document.querySelector(".request-list-empty-notice"),
-    "An empty notice should be displayed when the frontend is opened.");
-  is(store.getState().requests.requests.size, 0,
-    "The requests menu should be empty when the frontend is opened.");
-  is(!!document.querySelector(".network-details-panel"), false,
-    "The network details panel should be hidden when the frontend is opened.");
+  ok(
+    document.querySelector(".request-list-empty-notice"),
+    "An empty notice should be displayed when the frontend is opened."
+  );
+  is(
+    store.getState().requests.requests.size,
+    0,
+    "The requests menu should be empty when the frontend is opened."
+  );
+  is(
+    !!document.querySelector(".network-details-panel"),
+    false,
+    "The network details panel should be hidden when the frontend is opened."
+  );
 
   await reloadAndWait();
 
-  ok(!document.querySelector(".request-list-empty-notice"),
-    "The empty notice should be hidden after the first request.");
-  is(store.getState().requests.requests.size, 1,
-    "The requests menu should not be empty after the first request.");
-  is(!!document.querySelector(".network-details-panel"), false,
-    "The network details panel should still be hidden after the first request.");
+  ok(
+    !document.querySelector(".request-list-empty-notice"),
+    "The empty notice should be hidden after the first request."
+  );
+  is(
+    store.getState().requests.requests.size,
+    1,
+    "The requests menu should not be empty after the first request."
+  );
+  is(
+    !!document.querySelector(".network-details-panel"),
+    false,
+    "The network details panel should still be hidden after the first request."
+  );
 
   await reloadAndWait();
 
-  ok(!document.querySelector(".request-list-empty-notice"),
-    "The empty notice should be still hidden after a reload.");
-  is(store.getState().requests.requests.size, 1,
-    "The requests menu should not be empty after a reload.");
-  is(!!document.querySelector(".network-details-panel"), false,
-    "The network details panel should still be hidden after a reload.");
+  ok(
+    !document.querySelector(".request-list-empty-notice"),
+    "The empty notice should be still hidden after a reload."
+  );
+  is(
+    store.getState().requests.requests.size,
+    1,
+    "The requests menu should not be empty after a reload."
+  );
+  is(
+    !!document.querySelector(".network-details-panel"),
+    false,
+    "The network details panel should still be hidden after a reload."
+  );
 
   store.dispatch(Actions.clearRequests());
 
-  ok(document.querySelector(".request-list-empty-notice"),
-    "An empty notice should be displayed again after clear.");
-  is(store.getState().requests.requests.size, 0,
-    "The requests menu should be empty after clear.");
-  is(!!document.querySelector(".network-details-panel"), false,
-    "The network details panel should still be hidden after clear.");
+  ok(
+    document.querySelector(".request-list-empty-notice"),
+    "An empty notice should be displayed again after clear."
+  );
+  is(
+    store.getState().requests.requests.size,
+    0,
+    "The requests menu should be empty after clear."
+  );
+  is(
+    !!document.querySelector(".network-details-panel"),
+    false,
+    "The network details panel should still be hidden after clear."
+  );
 
   return teardown(monitor);
 

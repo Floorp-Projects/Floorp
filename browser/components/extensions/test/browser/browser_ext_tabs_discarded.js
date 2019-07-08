@@ -3,35 +3,58 @@
 /* global gBrowser SessionStore */
 "use strict";
 
-const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
+const { E10SUtils } = ChromeUtils.import(
+  "resource://gre/modules/E10SUtils.jsm"
+);
 const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
 
-let lazyTabState = {entries: [{url: "http://example.com/", triggeringPrincipal_base64, title: "Example Domain"}]};
+let lazyTabState = {
+  entries: [
+    {
+      url: "http://example.com/",
+      triggeringPrincipal_base64,
+      title: "Example Domain",
+    },
+  ],
+};
 
 add_task(async function test_discarded() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs", "webNavigation"],
+      permissions: ["tabs", "webNavigation"],
     },
 
     background: async function() {
-      browser.webNavigation.onCompleted.addListener(async (details) => {
-        browser.test.log(`webNav onCompleted received for ${details.tabId}`);
-        let updatedTab = await browser.tabs.get(details.tabId);
-        browser.test.assertEq(false, updatedTab.discarded, "lazy to non-lazy update discard property");
-        browser.test.notifyPass("test-finished");
-      }, {url: [{hostContains: "example.com"}]});
+      browser.webNavigation.onCompleted.addListener(
+        async details => {
+          browser.test.log(`webNav onCompleted received for ${details.tabId}`);
+          let updatedTab = await browser.tabs.get(details.tabId);
+          browser.test.assertEq(
+            false,
+            updatedTab.discarded,
+            "lazy to non-lazy update discard property"
+          );
+          browser.test.notifyPass("test-finished");
+        },
+        { url: [{ hostContains: "example.com" }] }
+      );
 
       browser.tabs.onCreated.addListener(function(tab) {
-        browser.test.assertEq(true, tab.discarded, "non-lazy tab onCreated discard property");
-        browser.tabs.update(tab.id, {active: true});
+        browser.test.assertEq(
+          true,
+          tab.discarded,
+          "non-lazy tab onCreated discard property"
+        );
+        browser.tabs.update(tab.id, { active: true });
       });
     },
   });
 
   await extension.startup();
 
-  let testTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {createLazyBrowser: true});
+  let testTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
+    createLazyBrowser: true,
+  });
   SessionStore.setTabState(testTab, lazyTabState);
 
   await extension.awaitFinish("test-finished");
@@ -47,7 +70,7 @@ add_task(async function test_discarded() {
 add_task(async function test_create_then_discard() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs", "webNavigation"],
+      permissions: ["tabs", "webNavigation"],
     },
 
     background: async function() {
@@ -58,19 +81,37 @@ add_task(async function test_create_then_discard() {
           return;
         }
 
-        browser.webNavigation.onCompleted.addListener(async (details) => {
-          browser.test.assertEq(createdTab.id, details.tabId, "created tab navigation is completed");
-          let activeTab = await browser.tabs.get(details.tabId);
-          browser.test.assertEq("http://example.com/", details.url, "created tab url is correct");
-          browser.test.assertEq("http://example.com/", activeTab.url, "created tab url is correct");
-          browser.tabs.remove(details.tabId);
-          browser.test.notifyPass("test-finished");
-        }, {url: [{hostContains: "example.com"}]});
+        browser.webNavigation.onCompleted.addListener(
+          async details => {
+            browser.test.assertEq(
+              createdTab.id,
+              details.tabId,
+              "created tab navigation is completed"
+            );
+            let activeTab = await browser.tabs.get(details.tabId);
+            browser.test.assertEq(
+              "http://example.com/",
+              details.url,
+              "created tab url is correct"
+            );
+            browser.test.assertEq(
+              "http://example.com/",
+              activeTab.url,
+              "created tab url is correct"
+            );
+            browser.tabs.remove(details.tabId);
+            browser.test.notifyPass("test-finished");
+          },
+          { url: [{ hostContains: "example.com" }] }
+        );
 
-        browser.tabs.update(tabId, {active: true});
+        browser.tabs.update(tabId, { active: true });
       });
 
-      createdTab = await browser.tabs.create({url: "http://example.com/", active: false});
+      createdTab = await browser.tabs.create({
+        url: "http://example.com/",
+        active: false,
+      });
       browser.tabs.discard(createdTab.id);
     },
   });
@@ -82,7 +123,7 @@ add_task(async function test_create_then_discard() {
 add_task(async function test_create_discarded() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs", "webNavigation"],
+      permissions: ["tabs", "webNavigation"],
     },
 
     background: async function() {
@@ -93,20 +134,43 @@ add_task(async function test_create_discarded() {
         title: "discarded tab",
       };
 
-      browser.webNavigation.onCompleted.addListener(async (details) => {
-        let activeTab = await browser.tabs.get(details.tabId);
-        browser.test.assertEq(tabOpts.url, activeTab.url, "restored tab url matches active tab url");
-        browser.test.assertEq("mochitest index /", activeTab.title, "restored tab title is correct");
-        browser.tabs.remove(details.tabId);
-        browser.test.notifyPass("test-finished");
-      }, {url: [{hostContains: "example.com"}]});
+      browser.webNavigation.onCompleted.addListener(
+        async details => {
+          let activeTab = await browser.tabs.get(details.tabId);
+          browser.test.assertEq(
+            tabOpts.url,
+            activeTab.url,
+            "restored tab url matches active tab url"
+          );
+          browser.test.assertEq(
+            "mochitest index /",
+            activeTab.title,
+            "restored tab title is correct"
+          );
+          browser.tabs.remove(details.tabId);
+          browser.test.notifyPass("test-finished");
+        },
+        { url: [{ hostContains: "example.com" }] }
+      );
 
       browser.tabs.onCreated.addListener(tab => {
-        browser.test.assertEq(tabOpts.active, tab.active, "lazy tab is not active");
-        browser.test.assertEq(tabOpts.discarded, tab.discarded, "lazy tab is discarded");
+        browser.test.assertEq(
+          tabOpts.active,
+          tab.active,
+          "lazy tab is not active"
+        );
+        browser.test.assertEq(
+          tabOpts.discarded,
+          tab.discarded,
+          "lazy tab is discarded"
+        );
         browser.test.assertEq(tabOpts.url, tab.url, "lazy tab url is correct");
-        browser.test.assertEq(tabOpts.title, tab.title, "lazy tab title is correct");
-        browser.tabs.update(tab.id, {active: true});
+        browser.test.assertEq(
+          tabOpts.title,
+          tab.title,
+          "lazy tab title is correct"
+        );
+        browser.tabs.update(tab.id, { active: true });
       });
 
       browser.tabs.create(tabOpts);

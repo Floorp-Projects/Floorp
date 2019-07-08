@@ -5,8 +5,7 @@
 
 "use strict";
 
-const TEST_URI =
-  `data:text/html;charset=utf-8,Web Console test top-level await when debugger paused`;
+const TEST_URI = `data:text/html;charset=utf-8,Web Console test top-level await when debugger paused`;
 
 add_task(async function() {
   // Enable await mapping.
@@ -24,7 +23,7 @@ async function performTests() {
   // Force the split console to be closed.
   await pushPref("devtools.toolbox.splitconsoleEnabled", false);
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
+  const { jsterm } = hud;
 
   const pauseExpression = `(() => {
     var foo = ["bar"];
@@ -48,7 +47,11 @@ async function performTests() {
     setTimeout(() => res(["res", ...foo]), 1000);
   })`;
 
-  const onAwaitResultMessage = waitForMessage(hud, `[ "res", "bar" ]`, ".message.result");
+  const onAwaitResultMessage = waitForMessage(
+    hud,
+    `[ "res", "bar" ]`,
+    ".message.result"
+  );
   jsterm.execute(awaitExpression);
   // We send an evaluation just after the await one to ensure the await evaluation was
   // done. We can't await on the previous execution because it waits for the result to
@@ -62,7 +65,9 @@ async function performTests() {
   await resume(dbg);
 
   await onAwaitResultMessage;
-  const messages = hud.ui.outputNode.querySelectorAll(".message.result .message-body");
+  const messages = hud.ui.outputNode.querySelectorAll(
+    ".message.result .message-body"
+  );
   const messagesText = Array.from(messages).map(n => n.textContent);
   const expectedMessages = [
     // Result of "smoke"
@@ -72,6 +77,9 @@ async function performTests() {
     // Result of await
     `Array [ "res", "bar" ]`,
   ];
-  is(JSON.stringify(messagesText, null, 2), JSON.stringify(expectedMessages, null, 2),
-    "The output contains the the expected messages, in the expected order");
+  is(
+    JSON.stringify(messagesText, null, 2),
+    JSON.stringify(expectedMessages, null, 2),
+    "The output contains the the expected messages, in the expected order"
+  );
 }

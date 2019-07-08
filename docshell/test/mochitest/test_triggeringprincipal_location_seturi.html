@@ -44,18 +44,20 @@ function checkLoadFrame1() {
   myFrame1.src = CROSS_ORIGIN_URI;
 }
 
-function checkNavFrame1() {
+async function checkNavFrame1() {
   myFrame1.removeEventListener("load", checkNavFrame1);
-  is(SpecialPowers.wrap(myFrame1.contentWindow).location.href, CROSS_ORIGIN_URI,
+  is(await SpecialPowers.spawn(myFrame1, [], () => this.content.location.href),
+     CROSS_ORIGIN_URI,
     "cross origin dummy loaded into frame1");
 
   myFrame1.addEventListener("load", checkBackNavFrame1);
   myFrame1.src = SAME_ORIGIN_URI + "#bar";
 }
 
-function checkBackNavFrame1() {
+async function checkBackNavFrame1() {
   myFrame1.removeEventListener("load", checkBackNavFrame1);
-  is(SpecialPowers.wrap(myFrame1.contentWindow).location.href, SAME_ORIGIN_URI + "#bar",
+  is(await SpecialPowers.spawn(myFrame1, [], () => this.content.location.href),
+     SAME_ORIGIN_URI + "#bar",
     "navagiating back to same origin dummy for frame1");
   checkFinish();
 }

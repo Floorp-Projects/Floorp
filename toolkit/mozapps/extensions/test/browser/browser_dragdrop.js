@@ -12,20 +12,33 @@
 // we only need EventUtils.js for a few files which is why we are using loadSubScript.
 var gManagerWindow;
 var EventUtils = {};
-Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+Services.scriptloader.loadSubScript(
+  "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
+  EventUtils
+);
 
 async function checkInstallConfirmation(...names) {
   let notificationCount = 0;
   let observer = {
     observe(aSubject, aTopic, aData) {
       let installInfo = aSubject.wrappedJSObject;
-      isnot(installInfo.browser, null, "Notification should have non-null browser");
+      isnot(
+        installInfo.browser,
+        null,
+        "Notification should have non-null browser"
+      );
 
-      is(installInfo.installs.length, 1, "Got one AddonInstall instance as expected");
+      is(
+        installInfo.installs.length,
+        1,
+        "Got one AddonInstall instance as expected"
+      );
 
-      Assert.deepEqual(installInfo.installs[0].installTelemetryInfo,
-                       {source: "about:addons", method: "drag-and-drop"},
-                       "Got the expected installTelemetryInfo");
+      Assert.deepEqual(
+        installInfo.installs[0].installTelemetryInfo,
+        { source: "about:addons", method: "drag-and-drop" },
+        "Got the expected installTelemetryInfo"
+      );
 
       notificationCount++;
     },
@@ -42,7 +55,9 @@ async function checkInstallConfirmation(...names) {
 
     info(`Saw install for ${name}`);
     if (results.length < names.length) {
-      info(`Waiting for installs for ${names.filter(n => !results.includes(n))}`);
+      info(
+        `Waiting for installs for ${names.filter(n => !results.includes(n))}`
+      );
 
       promise = promisePopupNotificationShown("addon-webext-permissions");
     }
@@ -51,7 +66,11 @@ async function checkInstallConfirmation(...names) {
 
   Assert.deepEqual(results.sort(), names.sort(), "Got expected installs");
 
-  is(notificationCount, names.length, `Saw ${names.length} addon-install-started notification`);
+  is(
+    notificationCount,
+    names.length,
+    `Saw ${names.length} addon-install-started notification`
+  );
   Services.obs.removeObserver(observer, "addon-install-started");
 }
 
@@ -68,9 +87,13 @@ add_task(async function test_drop_url() {
   gManagerWindow = await open_manager("addons://list/extension");
   let promise = checkInstallConfirmation("Drag Drop test 1");
   let viewContainer = getViewContainer(gManagerWindow);
-  let effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
-                                         [[{type: "text/x-moz-url", data: url}]],
-                                         "copy", gManagerWindow);
+  let effect = EventUtils.synthesizeDrop(
+    viewContainer,
+    viewContainer,
+    [[{ type: "text/x-moz-url", data: url }]],
+    "copy",
+    gManagerWindow
+  );
   is(effect, "copy", "Drag should be accepted");
   await promise;
   await close_manager(gManagerWindow);
@@ -83,9 +106,13 @@ add_task(async function test_drop_file() {
   await wait_for_view_load(gManagerWindow);
   let promise = checkInstallConfirmation("Drag Drop test 1");
   let viewContainer = getViewContainer(gManagerWindow);
-  let effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
-                                         [[{type: "application/x-moz-file", data: fileurl.file}]],
-                                         "copy", gManagerWindow);
+  let effect = EventUtils.synthesizeDrop(
+    viewContainer,
+    viewContainer,
+    [[{ type: "application/x-moz-file", data: fileurl.file }]],
+    "copy",
+    gManagerWindow
+  );
   is(effect, "copy", "Drag should be accepted");
   await promise;
   await close_manager(gManagerWindow);
@@ -97,12 +124,21 @@ add_task(async function test_drop_multiple_urls() {
   let url2 = TESTROOT2 + "addons/browser_dragdrop2.xpi";
   gManagerWindow = await open_manager("addons://list/extension");
   await wait_for_view_load(gManagerWindow);
-  let promise = checkInstallConfirmation("Drag Drop test 1", "Drag Drop test 2");
+  let promise = checkInstallConfirmation(
+    "Drag Drop test 1",
+    "Drag Drop test 2"
+  );
   let viewContainer = getViewContainer(gManagerWindow);
-  let effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
-                                         [[{type: "text/x-moz-url", data: url1}],
-                                           [{type: "text/x-moz-url", data: url2}]],
-                                         "copy", gManagerWindow);
+  let effect = EventUtils.synthesizeDrop(
+    viewContainer,
+    viewContainer,
+    [
+      [{ type: "text/x-moz-url", data: url1 }],
+      [{ type: "text/x-moz-url", data: url2 }],
+    ],
+    "copy",
+    gManagerWindow
+  );
   is(effect, "copy", "Drag should be accepted");
   await promise;
   await close_manager(gManagerWindow);
@@ -114,12 +150,21 @@ add_task(async function test_drop_multiple_files() {
   let fileurl2 = get_addon_file_url("browser_dragdrop2.xpi");
   gManagerWindow = await open_manager("addons://list/extension");
   await wait_for_view_load(gManagerWindow);
-  let promise = checkInstallConfirmation("Drag Drop test 1", "Drag Drop test 2");
+  let promise = checkInstallConfirmation(
+    "Drag Drop test 1",
+    "Drag Drop test 2"
+  );
   let viewContainer = getViewContainer(gManagerWindow);
-  let effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
-                                         [[{type: "application/x-moz-file", data: fileurl1.file}],
-                                           [{type: "application/x-moz-file", data: fileurl2.file}]],
-                                         "copy", gManagerWindow);
+  let effect = EventUtils.synthesizeDrop(
+    viewContainer,
+    viewContainer,
+    [
+      [{ type: "application/x-moz-file", data: fileurl1.file }],
+      [{ type: "application/x-moz-file", data: fileurl2.file }],
+    ],
+    "copy",
+    gManagerWindow
+  );
   is(effect, "copy", "Drag should be accepted");
   await promise;
   await close_manager(gManagerWindow);
@@ -131,12 +176,21 @@ add_task(async function test_drop_file_and_url() {
   let fileurl = get_addon_file_url("browser_dragdrop2.xpi");
   gManagerWindow = await open_manager("addons://list/extension");
   await wait_for_view_load(gManagerWindow);
-  let promise = checkInstallConfirmation("Drag Drop test 1", "Drag Drop test 2");
+  let promise = checkInstallConfirmation(
+    "Drag Drop test 1",
+    "Drag Drop test 2"
+  );
   let viewContainer = getViewContainer(gManagerWindow);
-  let effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
-                                         [[{type: "text/x-moz-url", data: url}],
-                                           [{type: "application/x-moz-file", data: fileurl.file}]],
-                                         "copy", gManagerWindow);
+  let effect = EventUtils.synthesizeDrop(
+    viewContainer,
+    viewContainer,
+    [
+      [{ type: "text/x-moz-url", data: url }],
+      [{ type: "application/x-moz-file", data: fileurl.file }],
+    ],
+    "copy",
+    gManagerWindow
+  );
   is(effect, "copy", "Drag should be accepted");
   await promise;
   await close_manager(gManagerWindow);
@@ -152,9 +206,13 @@ add_task(async function test_drop_incompat_file() {
 
   let url = `${TESTROOT}/addons/browser_dragdrop_incompat.xpi`;
   let viewContainer = getViewContainer(gManagerWindow);
-  EventUtils.synthesizeDrop(viewContainer, viewContainer,
-                            [[{type: "text/x-moz-url", data: url}]],
-                            "copy", gManagerWindow);
+  EventUtils.synthesizeDrop(
+    viewContainer,
+    viewContainer,
+    [[{ type: "text/x-moz-url", data: url }]],
+    "copy",
+    gManagerWindow
+  );
 
   await errorPromise;
   ok(true, "Got addon-install-failed event");

@@ -5,11 +5,13 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const dataCount = 30;
 
-  let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
+  let request = indexedDB.open(
+    this.window ? window.location.pathname : "Splendid Test",
+    1
+  );
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield undefined;
@@ -32,7 +34,10 @@ function* testSteps()
   }
 
   function getIndex() {
-    return db.transaction("").objectStore("").index("");
+    return db
+      .transaction("")
+      .objectStore("")
+      .index("");
   }
 
   let count = 0;
@@ -42,8 +47,7 @@ function* testSteps()
     if (cursor) {
       count++;
       cursor.continue();
-    }
-    else {
+    } else {
       continueToNextStep();
     }
   };
@@ -60,13 +64,11 @@ function* testSteps()
       if (count) {
         count++;
         cursor.continue();
-      }
-      else {
+      } else {
         count = 10;
         cursor.advance(10);
       }
-    }
-    else {
+    } else {
       continueToNextStep();
     }
   };
@@ -83,13 +85,11 @@ function* testSteps()
       if (count) {
         count++;
         cursor.continue();
-      }
-      else {
+      } else {
         count = 10;
         cursor.advance(10);
       }
-    }
-    else {
+    } else {
       continueToNextStep();
     }
   };
@@ -106,13 +106,11 @@ function* testSteps()
       if (count) {
         count++;
         cursor.continue();
-      }
-      else {
+      } else {
         count = 10;
         cursor.advance(10);
       }
-    }
-    else {
+    } else {
       continueToNextStep();
     }
   };
@@ -128,13 +126,11 @@ function* testSteps()
       is(cursor.primaryKey, count, "Got correct object");
       if (count == 0) {
         cursor.advance(dataCount + 1);
-      }
-      else {
+      } else {
         ok(false, "Should never get here!");
         cursor.continue();
       }
-    }
-    else {
+    } else {
       continueToNextStep();
     }
   };
@@ -152,12 +148,10 @@ function* testSteps()
       if (count == dataCount - 2) {
         cursor.advance(10);
         count -= 9;
-      }
-      else {
+      } else {
         cursor.continue();
       }
-    }
-    else {
+    } else {
       continueToNextStep();
     }
   };
@@ -173,13 +167,11 @@ function* testSteps()
       is(cursor.primaryKey, count, "Got correct object");
       if (count == dataCount - 1) {
         cursor.advance(dataCount + 1);
-      }
-      else {
+      } else {
         ok(false, "Should never get here!");
         cursor.continue();
       }
-    }
-    else {
+    } else {
       continueToNextStep();
     }
   };

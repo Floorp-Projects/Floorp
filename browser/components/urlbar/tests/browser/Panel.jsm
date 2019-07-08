@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = [
-  "Panel",
-];
+var EXPORTED_SYMBOLS = ["Panel"];
 
-const {clearInterval, setInterval, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { clearInterval, setInterval, setTimeout } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 
 var Panel = function(panelElt, iframeURL) {
   this.p = panelElt;
@@ -18,7 +18,6 @@ var Panel = function(panelElt, iframeURL) {
 };
 
 this.Panel.prototype = {
-
   get document() {
     return this.p.ownerDocument;
   },
@@ -209,7 +208,6 @@ this.Panel.prototype = {
   },
 };
 
-
 // This is the consumer API that's cloned into the iframe window.  Be careful of
 // defining static values on this, or even getters and setters (that aren't real
 // functions).  The cloning process means that such values are copied by value,
@@ -217,7 +215,6 @@ this.Panel.prototype = {
 // of these are functions even though it'd be nicer if they were getters and
 // setters.
 let iframeAPIPrototype = {
-
   getPanelHeight() {
     return this._panel.height;
   },

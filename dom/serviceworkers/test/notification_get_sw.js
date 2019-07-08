@@ -1,7 +1,9 @@
 function postAll(data) {
   self.clients.matchAll().then(function(clients) {
     if (clients.length == 0) {
-      dump("***************** NO CLIENTS FOUND! Test messages are being lost *******************\n");
+      dump(
+        "***************** NO CLIENTS FOUND! Test messages are being lost *******************\n"
+      );
     }
     clients.forEach(function(client) {
       client.postMessage(data);
@@ -10,30 +12,34 @@ function postAll(data) {
 }
 
 function ok(a, msg) {
-  postAll({type: 'status', status: !!a, msg: a + ": " + msg });
+  postAll({ type: "status", status: !!a, msg: a + ": " + msg });
 }
 
 function is(a, b, msg) {
-  postAll({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
+  postAll({
+    type: "status",
+    status: a === b,
+    msg: a + " === " + b + ": " + msg,
+  });
 }
 
 function done() {
-  postAll({type: 'finish'});
+  postAll({ type: "finish" });
 }
 
 onmessage = function(e) {
-dump("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MESSAGE " + e.data + "\n");
+  dump("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MESSAGE " + e.data + "\n");
   var start;
-  if (e.data == 'create') {
+  if (e.data == "create") {
     start = registration.showNotification("This is a title");
   } else {
     start = Promise.resolve();
   }
 
   start.then(function() {
-  dump("CALLING getNotification\n");
+    dump("CALLING getNotification\n");
     registration.getNotifications().then(function(notifications) {
-  dump("RECD getNotification\n");
+      dump("RECD getNotification\n");
       is(notifications.length, 1, "There should be one stored notification");
       var notification = notifications[0];
       if (!notification) {
@@ -46,4 +52,4 @@ dump("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MESSAGE " + e.data + "\n");
       done();
     });
   });
-}
+};

@@ -14,10 +14,7 @@ add_task(async function() {
   ok(gUI.sidebar.hidden, "Sidebar is initially hidden");
 
   await checkState([
-    [
-      ["sessionStorage", "http://test1.example.org"],
-      ["ss1", "ss2", "ss3"],
-    ],
+    [["sessionStorage", "http://test1.example.org"], ["ss1", "ss2", "ss3"]],
   ]);
 
   await setSessionStorageItem("ss4", "new-item");
@@ -42,10 +39,7 @@ add_task(async function() {
   await gUI.once("store-objects-edit");
 
   await checkState([
-    [
-      ["sessionStorage", "http://test1.example.org"],
-      ["ss2", "ss4"],
-    ],
+    [["sessionStorage", "http://test1.example.org"], ["ss2", "ss4"]],
   ]);
 
   await selectTableItem("ss2");
@@ -53,7 +47,7 @@ add_task(async function() {
   ok(!gUI.sidebar.hidden, "sidebar is visible");
 
   // Checking for correct value in sidebar before update
-  await findVariableViewProperties([{name: "ss2", value: "foobar"}]);
+  await findVariableViewProperties([{ name: "ss2", value: "foobar" }]);
 
   await setSessionStorageItem("ss2", "changed=ss2");
 
@@ -61,7 +55,7 @@ add_task(async function() {
 
   checkCell("ss2", "value", "changed=ss2");
 
-  await findVariableViewProperties([{name: "ss2", value: "changed=ss2"}]);
+  await findVariableViewProperties([{ name: "ss2", value: "changed=ss2" }]);
 
   // Clearing items.
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
@@ -70,18 +64,15 @@ add_task(async function() {
 
   await gUI.once("store-objects-cleared");
 
-  await checkState([
-    [
-      ["sessionStorage", "http://test1.example.org"],
-      [ ],
-    ],
-  ]);
+  await checkState([[["sessionStorage", "http://test1.example.org"], []]]);
 
   await finishTests();
 });
 
 async function setSessionStorageItem(key, value) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, [key, value],
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    [key, value],
     ([innerKey, innerValue]) => {
       content.wrappedJSObject.sessionStorage.setItem(innerKey, innerValue);
     }
@@ -89,9 +80,7 @@ async function setSessionStorageItem(key, value) {
 }
 
 async function removeSessionStorageItem(key) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, key,
-    innerKey => {
-      content.wrappedJSObject.sessionStorage.removeItem(innerKey);
-    }
-  );
+  await ContentTask.spawn(gBrowser.selectedBrowser, key, innerKey => {
+    content.wrappedJSObject.sessionStorage.removeItem(innerKey);
+  });
 }

@@ -1,4 +1,4 @@
-import {PanelTestProvider} from "lib/PanelTestProvider.jsm";
+import { PanelTestProvider } from "lib/PanelTestProvider.jsm";
 import schema from "content-src/asrouter/schemas/panel/cfr-fxa-bookmark.schema.json";
 const messages = PanelTestProvider.getMessages();
 

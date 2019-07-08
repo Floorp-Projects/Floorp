@@ -13,7 +13,11 @@ const {
 } = require("devtools/shared/specs/styles");
 const promise = require("promise");
 
-loader.lazyRequireGetter(this, "RuleRewriter", "devtools/shared/fronts/inspector/rule-rewriter");
+loader.lazyRequireGetter(
+  this,
+  "RuleRewriter",
+  "devtools/shared/fronts/inspector/rule-rewriter"
+);
 
 /**
  * PageStyleFront, the front object for the PageStyleActor
@@ -133,7 +137,7 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
     return this._form.cssText;
   }
   get authoredText() {
-    return (typeof this._form.authoredText === "string")
+    return typeof this._form.authoredText === "string"
       ? this._form.authoredText
       : this._form.cssText;
   }
@@ -215,7 +219,8 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
       // Inline styles do not have any mediaText so we can return early.
       return promise.resolve(this.location);
     }
-    return parentSheet.getOriginalLocation(this.line, this.column)
+    return parentSheet
+      .getOriginalLocation(this.line, this.column)
       .then(({ fromSourceMap, source, line, column }) => {
         const location = {
           href: source,
@@ -235,7 +240,11 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
   }
 
   async modifySelector(node, value) {
-    const response = await super.modifySelector(node, value, this.canSetRuleText);
+    const response = await super.modifySelector(
+      node,
+      value,
+      this.canSetRuleText
+    );
 
     if (response.ruleProps) {
       response.ruleProps = response.ruleProps.entries[0];

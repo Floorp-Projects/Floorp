@@ -3,9 +3,13 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
+const paymentSrv = Cc[
+  "@mozilla.org/dom/payments/payment-request-service;1"
+].getService(Ci.nsIPaymentRequestService);
 
 function emitTestFail(message) {
   sendAsyncMessage("test-fail", message);
@@ -19,25 +23,35 @@ let expectedUpdatedOption = null;
 let changeShippingOption = null;
 
 function showResponse(requestId) {
-  const showResponseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
-                              createInstance(Ci.nsIGeneralResponseData);
+  const showResponseData = Cc[
+    "@mozilla.org/dom/payments/general-response-data;1"
+  ].createInstance(Ci.nsIGeneralResponseData);
   showResponseData.initData({});
-  const showActionResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
-                          createInstance(Ci.nsIPaymentShowActionResponse);
-  showActionResponse.init(requestId,
-                    Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
-                    "testing-payment-method",   // payment method
-                    showResponseData,           // payment method data
-                    "Bill A. Pacheco",          // payer name
-                    "",                         // payer email
-                    "");                        // payer phone
-  paymentSrv.respondPayment(showActionResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+  const showActionResponse = Cc[
+    "@mozilla.org/dom/payments/payment-show-action-response;1"
+  ].createInstance(Ci.nsIPaymentShowActionResponse);
+  showActionResponse.init(
+    requestId,
+    Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
+    "testing-payment-method", // payment method
+    showResponseData, // payment method data
+    "Bill A. Pacheco", // payer name
+    "", // payer email
+    ""
+  ); // payer phone
+  paymentSrv.respondPayment(
+    showActionResponse.QueryInterface(Ci.nsIPaymentActionResponse)
+  );
 }
 
 function showRequest(requestId) {
   let request = paymentSrv.getPaymentRequestById(requestId);
-  const message = "request.shippingOption should be " + expectedRequestOption +
-                  " when calling show(), but got " + request.shippingOption + ".";
+  const message =
+    "request.shippingOption should be " +
+    expectedRequestOption +
+    " when calling show(), but got " +
+    request.shippingOption +
+    ".";
   if (request.shippingOption != expectedRequestOption) {
     emitTestFail(message);
   } else {
@@ -52,8 +66,12 @@ function showRequest(requestId) {
 
 function updateRequest(requestId) {
   let request = paymentSrv.getPaymentRequestById(requestId);
-  const message = "request.shippingOption should be " + expectedUpdatedOption +
-                  " when calling updateWith(), but got " + request.shippingOption + ".";
+  const message =
+    "request.shippingOption should be " +
+    expectedUpdatedOption +
+    " when calling updateWith(), but got " +
+    request.shippingOption +
+    ".";
   if (request.shippingOption != expectedUpdatedOption) {
     emitTestFail(message);
   } else {
@@ -64,22 +82,28 @@ function updateRequest(requestId) {
 
 const TestingUIService = {
   showPayment: showRequest,
-  abortPayment: function(requestId) {
-  },
+  abortPayment: function(requestId) {},
   completePayment: function(requestId) {
     let request = paymentSrv.getPaymentRequestById(requestId);
-    let completeResponse = Cc["@mozilla.org/dom/payments/payment-complete-action-response;1"].
-                           createInstance(Ci.nsIPaymentCompleteActionResponse);
-    completeResponse.init(requestId, Ci.nsIPaymentActionResponse.COMPLETE_SUCCEEDED);
-    paymentSrv.respondPayment(completeResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+    let completeResponse = Cc[
+      "@mozilla.org/dom/payments/payment-complete-action-response;1"
+    ].createInstance(Ci.nsIPaymentCompleteActionResponse);
+    completeResponse.init(
+      requestId,
+      Ci.nsIPaymentActionResponse.COMPLETE_SUCCEEDED
+    );
+    paymentSrv.respondPayment(
+      completeResponse.QueryInterface(Ci.nsIPaymentActionResponse)
+    );
   },
   updatePayment: updateRequest,
-  closePayment: function(requestId) {
-  },
+  closePayment: function(requestId) {},
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
-paymentSrv.setTestingUIService(TestingUIService.QueryInterface(Ci.nsIPaymentUIService));
+paymentSrv.setTestingUIService(
+  TestingUIService.QueryInterface(Ci.nsIPaymentUIService)
+);
 
 addMessageListener("set-expected-results", function(results) {
   expectedRequestOption = results.requestResult;
@@ -89,5 +113,5 @@ addMessageListener("set-expected-results", function(results) {
 
 addMessageListener("teardown", function() {
   paymentSrv.setTestingUIService(null);
-  sendAsyncMessage('teardown-complete');
+  sendAsyncMessage("teardown-complete");
 });

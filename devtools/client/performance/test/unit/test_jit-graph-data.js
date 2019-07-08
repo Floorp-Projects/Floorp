@@ -16,31 +16,46 @@ const TIME_PER_SAMPLE = 5;
 const TIME_OFFSET = 5;
 
 add_task(function test() {
-  const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
-  const { createTierGraphDataFromFrameNode } = require("devtools/client/performance/modules/logic/jit");
+  const {
+    ThreadNode,
+  } = require("devtools/client/performance/modules/logic/tree-model");
+  const {
+    createTierGraphDataFromFrameNode,
+  } = require("devtools/client/performance/modules/logic/jit");
 
   // Select the second half of the set of samples
-  const startTime = (SAMPLE_COUNT / 2 * TIME_PER_SAMPLE) - TIME_OFFSET;
-  const endTime = (SAMPLE_COUNT * TIME_PER_SAMPLE) - TIME_OFFSET;
+  const startTime = (SAMPLE_COUNT / 2) * TIME_PER_SAMPLE - TIME_OFFSET;
+  const endTime = SAMPLE_COUNT * TIME_PER_SAMPLE - TIME_OFFSET;
   const invertTree = true;
 
   const root = new ThreadNode(gThread, { invertTree, startTime, endTime });
 
-  equal(root.samples, SAMPLE_COUNT / 2,
-    "root has correct amount of samples");
-  equal(root.sampleTimes.length, SAMPLE_COUNT / 2,
-    "root has correct amount of sample times");
+  equal(root.samples, SAMPLE_COUNT / 2, "root has correct amount of samples");
+  equal(
+    root.sampleTimes.length,
+    SAMPLE_COUNT / 2,
+    "root has correct amount of sample times"
+  );
   // Add time offset since the first sample begins TIME_OFFSET after startTime
-  equal(root.sampleTimes[0], startTime + TIME_OFFSET,
-    "root recorded first sample time in scope");
-  equal(root.sampleTimes[root.sampleTimes.length - 1], endTime,
-    "root recorded last sample time in scope");
+  equal(
+    root.sampleTimes[0],
+    startTime + TIME_OFFSET,
+    "root recorded first sample time in scope"
+  );
+  equal(
+    root.sampleTimes[root.sampleTimes.length - 1],
+    endTime,
+    "root recorded last sample time in scope"
+  );
 
   const frame = getFrameNodePath(root, "X");
-  let data = createTierGraphDataFromFrameNode(frame, root.sampleTimes,
-    (endTime - startTime) / RESOLUTION);
+  let data = createTierGraphDataFromFrameNode(
+    frame,
+    root.sampleTimes,
+    (endTime - startTime) / RESOLUTION
+  );
 
-  const TIME_PER_WINDOW = SAMPLE_COUNT / 2 / RESOLUTION * TIME_PER_SAMPLE;
+  const TIME_PER_WINDOW = (SAMPLE_COUNT / 2 / RESOLUTION) * TIME_PER_SAMPLE;
 
   // Filter out the dupes created with the same delta so the graph
   // can render correctly.
@@ -53,8 +68,11 @@ add_task(function test() {
   data = filteredData;
 
   for (let i = 0; i < 11; i++) {
-    equal(data[i].delta, startTime + TIME_OFFSET + (TIME_PER_WINDOW * i),
-          "first window has correct x");
+    equal(
+      data[i].delta,
+      startTime + TIME_OFFSET + TIME_PER_WINDOW * i,
+      "first window has correct x"
+    );
     equal(data[i].values[0], 0.2, "first window has 2 frames in interpreter");
     equal(data[i].values[1], 0.2, "first window has 2 frames in baseline");
     equal(data[i].values[2], 0.2, "first window has 2 frames in ion");
@@ -62,8 +80,11 @@ add_task(function test() {
   // Start on 11, since i===10 is where the values change, and the new value (0,0,0)
   // is removed in `filteredData`
   for (let i = 11; i < 20; i++) {
-    equal(data[i].delta, startTime + TIME_OFFSET + (TIME_PER_WINDOW * i),
-          "second window has correct x");
+    equal(
+      data[i].delta,
+      startTime + TIME_OFFSET + TIME_PER_WINDOW * i,
+      "second window has correct x"
+    );
     equal(data[i].values[0], 0, "second window observed no optimizations");
     equal(data[i].values[1], 0, "second window observed no optimizations");
     equal(data[i].values[2], 0, "second window observed no optimizations");
@@ -71,8 +92,11 @@ add_task(function test() {
   // Start on 21, since i===20 is where the values change, and the new value (0.3,0,0)
   // is removed in `filteredData`
   for (let i = 21; i < 30; i++) {
-    equal(data[i].delta, startTime + TIME_OFFSET + (TIME_PER_WINDOW * i),
-          "third window has correct x");
+    equal(
+      data[i].delta,
+      startTime + TIME_OFFSET + TIME_PER_WINDOW * i,
+      "third window has correct x"
+    );
     equal(data[i].values[0], 0.3, "third window has 3 frames in interpreter");
     equal(data[i].values[1], 0, "third window has 0 frames in baseline");
     equal(data[i].values[2], 0, "third window has 0 frames in ion");
@@ -123,7 +147,9 @@ function createSample(i, frames) {
     return sample;
   }
   if (frames) {
-    frames.split(" -> ").forEach(frame => sample.frames.push({ location: frame }));
+    frames
+      .split(" -> ")
+      .forEach(frame => sample.frames.push({ location: frame }));
   }
   return sample;
 }
@@ -131,7 +157,7 @@ function createSample(i, frames) {
 var SAMPLES = (function() {
   const samples = [];
 
-  for (let i = 0; i < SAMPLE_COUNT;) {
+  for (let i = 0; i < SAMPLE_COUNT; ) {
     const pattern = TIER_PATTERNS[Math.floor(i / 100)];
     for (let j = 0; j < pattern.length; j++) {
       samples.push(createSample(i + j, pattern[j]));
@@ -142,24 +168,31 @@ var SAMPLES = (function() {
   return samples;
 })();
 
-var gThread = RecordingUtils.deflateThread({ samples: SAMPLES, markers: [] },
-                                           gUniqueStacks);
+var gThread = RecordingUtils.deflateThread(
+  { samples: SAMPLES, markers: [] },
+  gUniqueStacks
+);
 
 var gRawSite1 = {
   line: 12,
   column: 2,
-  types: [{
-    mirType: uniqStr("Object"),
-    site: uniqStr("B (http://foo/bar:10)"),
-    typeset: [{
-      keyedBy: uniqStr("constructor"),
-      name: uniqStr("Foo"),
-      location: uniqStr("B (http://foo/bar:10)"),
-    }, {
-      keyedBy: uniqStr("primitive"),
-      location: uniqStr("self-hosted"),
-    }],
-  }],
+  types: [
+    {
+      mirType: uniqStr("Object"),
+      site: uniqStr("B (http://foo/bar:10)"),
+      typeset: [
+        {
+          keyedBy: uniqStr("constructor"),
+          name: uniqStr("Foo"),
+          location: uniqStr("B (http://foo/bar:10)"),
+        },
+        {
+          keyedBy: uniqStr("primitive"),
+          location: uniqStr("self-hosted"),
+        },
+      ],
+    },
+  ],
   attempts: {
     schema: {
       outcome: 0,
@@ -177,15 +210,15 @@ function serialize(x) {
   return JSON.parse(JSON.stringify(x));
 }
 
-gThread.frameTable.data.forEach((frame) => {
+gThread.frameTable.data.forEach(frame => {
   const LOCATION_SLOT = gThread.frameTable.schema.location;
   const OPTIMIZATIONS_SLOT = gThread.frameTable.schema.optimizations;
   const IMPLEMENTATION_SLOT = gThread.frameTable.schema.implementation;
 
   const l = gThread.stringTable[frame[LOCATION_SLOT]];
   switch (l) {
-  // Rename some of the location sites so we can register different
-  // frames with different opt sites
+    // Rename some of the location sites so we can register different
+    // frames with different opt sites
     case "X_0":
       frame[LOCATION_SLOT] = uniqStr("X");
       frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);

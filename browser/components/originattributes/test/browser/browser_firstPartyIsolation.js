@@ -1,4 +1,5 @@
-const BASE_URL = "http://mochi.test:8888/browser/browser/components/originattributes/test/browser/";
+const BASE_URL =
+  "http://mochi.test:8888/browser/browser/components/originattributes/test/browser/";
 const EXAMPLE_BASE_URL = BASE_URL.replace("mochi.test:8888", "example.com");
 const BASE_DOMAIN = "mochi.test";
 
@@ -16,27 +17,49 @@ add_task(async function setup() {
  * firstPartyDomain attribute.
  */
 add_task(async function principal_test() {
-  let tab = BrowserTestUtils.addTab(gBrowser, BASE_URL + "test_firstParty.html");
+  let tab = BrowserTestUtils.addTab(
+    gBrowser,
+    BASE_URL + "test_firstParty.html"
+  );
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser, true, function(url) {
     return url == BASE_URL + "test_firstParty.html";
   });
 
-  await ContentTask.spawn(tab.linkedBrowser, { firstPartyDomain: BASE_DOMAIN }, async function(attrs) {
-    info("document principal: " + content.document.nodePrincipal.origin);
-    Assert.equal(docShell.getOriginAttributes().firstPartyDomain, "",
-                 "top-level docShell shouldn't have firstPartyDomain attribute.");
-    Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
-                 attrs.firstPartyDomain, "The document should have firstPartyDomain");
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    { firstPartyDomain: BASE_DOMAIN },
+    async function(attrs) {
+      info("document principal: " + content.document.nodePrincipal.origin);
+      Assert.equal(
+        docShell.getOriginAttributes().firstPartyDomain,
+        "",
+        "top-level docShell shouldn't have firstPartyDomain attribute."
+      );
+      Assert.equal(
+        content.document.nodePrincipal.originAttributes.firstPartyDomain,
+        attrs.firstPartyDomain,
+        "The document should have firstPartyDomain"
+      );
 
-    for (let i = 1; i < 4; i++) {
-      let iframe = content.document.getElementById("iframe" + i);
-      info("iframe principal: " + iframe.contentDocument.nodePrincipal.origin);
-      Assert.equal(iframe.frameLoader.docShell.getOriginAttributes().firstPartyDomain,
-                   attrs.firstPartyDomain, "iframe's docshell should have firstPartyDomain");
-      Assert.equal(iframe.contentDocument.nodePrincipal.originAttributes.firstPartyDomain,
-                   attrs.firstPartyDomain, "iframe should have firstPartyDomain");
+      for (let i = 1; i < 4; i++) {
+        let iframe = content.document.getElementById("iframe" + i);
+        info(
+          "iframe principal: " + iframe.contentDocument.nodePrincipal.origin
+        );
+        Assert.equal(
+          iframe.frameLoader.docShell.getOriginAttributes().firstPartyDomain,
+          attrs.firstPartyDomain,
+          "iframe's docshell should have firstPartyDomain"
+        );
+        Assert.equal(
+          iframe.contentDocument.nodePrincipal.originAttributes
+            .firstPartyDomain,
+          attrs.firstPartyDomain,
+          "iframe should have firstPartyDomain"
+        );
+      }
     }
-  });
+  );
 
   gBrowser.removeTab(tab);
 });
@@ -46,14 +69,21 @@ add_task(async function principal_test() {
  * isolated by firstPartyDomain.
  */
 add_task(async function cookie_test() {
-  let tab = BrowserTestUtils.addTab(gBrowser, BASE_URL + "test_firstParty_cookie.html");
+  let tab = BrowserTestUtils.addTab(
+    gBrowser,
+    BASE_URL + "test_firstParty_cookie.html"
+  );
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser, true);
 
   let count = 0;
   for (let cookie of Services.cookies.enumerator) {
     count++;
     Assert.equal(cookie.value, "foo", "Cookie value should be foo");
-    Assert.equal(cookie.originAttributes.firstPartyDomain, BASE_DOMAIN, "Cookie's origin attributes should be " + BASE_DOMAIN);
+    Assert.equal(
+      cookie.originAttributes.firstPartyDomain,
+      BASE_DOMAIN,
+      "Cookie's origin attributes should be " + BASE_DOMAIN
+    );
   }
 
   // one cookie is from requesting test.js from top-level doc, and the other from
@@ -69,51 +99,97 @@ add_task(async function cookie_test() {
  * should remain the same.
  */
 add_task(async function redirect_test() {
-  let tab = BrowserTestUtils.addTab(gBrowser, BASE_URL + "test_firstParty_http_redirect.html");
+  let tab = BrowserTestUtils.addTab(
+    gBrowser,
+    BASE_URL + "test_firstParty_http_redirect.html"
+  );
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await ContentTask.spawn(tab.linkedBrowser, { firstPartyDomain: "example.com" }, async function(attrs) {
-    info("document principal: " + content.document.nodePrincipal.origin);
-    info("document uri: " + content.document.documentURI);
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    { firstPartyDomain: "example.com" },
+    async function(attrs) {
+      info("document principal: " + content.document.nodePrincipal.origin);
+      info("document uri: " + content.document.documentURI);
 
-    Assert.equal(content.document.documentURI, "http://example.com/browser/browser/components/originattributes/test/browser/dummy.html",
-                 "The page should have been redirected to http://example.com/browser/browser/components/originattributes/test/browser/dummy.html");
-    Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
-                 attrs.firstPartyDomain, "The document should have firstPartyDomain");
-  });
+      Assert.equal(
+        content.document.documentURI,
+        "http://example.com/browser/browser/components/originattributes/test/browser/dummy.html",
+        "The page should have been redirected to http://example.com/browser/browser/components/originattributes/test/browser/dummy.html"
+      );
+      Assert.equal(
+        content.document.nodePrincipal.originAttributes.firstPartyDomain,
+        attrs.firstPartyDomain,
+        "The document should have firstPartyDomain"
+      );
+    }
+  );
 
   // Since this is a HTML redirect, we wait until the final page is loaded.
-  let tab2 = BrowserTestUtils.addTab(gBrowser, BASE_URL + "test_firstParty_html_redirect.html");
-  await BrowserTestUtils.browserLoaded(tab2.linkedBrowser, false, function(url) {
+  let tab2 = BrowserTestUtils.addTab(
+    gBrowser,
+    BASE_URL + "test_firstParty_html_redirect.html"
+  );
+  await BrowserTestUtils.browserLoaded(tab2.linkedBrowser, false, function(
+    url
+  ) {
     return url == "http://example.com/";
   });
 
-  await ContentTask.spawn(tab2.linkedBrowser, { firstPartyDomain: "example.com" }, async function(attrs) {
-    info("2nd tab document principal: " + content.document.nodePrincipal.origin);
-    info("2nd tab document uri: " + content.document.documentURI);
-    Assert.equal(content.document.documentURI, "http://example.com/",
-                 "The page should have been redirected to http://example.com");
-    Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
-                 attrs.firstPartyDomain, "The document should have firstPartyDomain");
-  });
+  await ContentTask.spawn(
+    tab2.linkedBrowser,
+    { firstPartyDomain: "example.com" },
+    async function(attrs) {
+      info(
+        "2nd tab document principal: " + content.document.nodePrincipal.origin
+      );
+      info("2nd tab document uri: " + content.document.documentURI);
+      Assert.equal(
+        content.document.documentURI,
+        "http://example.com/",
+        "The page should have been redirected to http://example.com"
+      );
+      Assert.equal(
+        content.document.nodePrincipal.originAttributes.firstPartyDomain,
+        attrs.firstPartyDomain,
+        "The document should have firstPartyDomain"
+      );
+    }
+  );
 
-  let tab3 = BrowserTestUtils.addTab(gBrowser, BASE_URL + "test_firstParty_iframe_http_redirect.html");
+  let tab3 = BrowserTestUtils.addTab(
+    gBrowser,
+    BASE_URL + "test_firstParty_iframe_http_redirect.html"
+  );
   await BrowserTestUtils.browserLoaded(tab3.linkedBrowser, true, function(url) {
-    return url == (BASE_URL + "test_firstParty_iframe_http_redirect.html");
+    return url == BASE_URL + "test_firstParty_iframe_http_redirect.html";
   });
 
   // This redirect happens on the iframe, so unlike the two redirect tests above,
   // the firstPartyDomain should still stick to the current top-level document,
   // which is mochi.test.
-  await ContentTask.spawn(tab3.linkedBrowser, { firstPartyDomain: "mochi.test" }, async function(attrs) {
-    let iframe = content.document.getElementById("iframe1");
-    info("iframe document principal: " + iframe.contentDocument.nodePrincipal.origin);
-    info("iframe document uri: " + iframe.contentDocument.documentURI);
+  await ContentTask.spawn(
+    tab3.linkedBrowser,
+    { firstPartyDomain: "mochi.test" },
+    async function(attrs) {
+      let iframe = content.document.getElementById("iframe1");
+      info(
+        "iframe document principal: " +
+          iframe.contentDocument.nodePrincipal.origin
+      );
+      info("iframe document uri: " + iframe.contentDocument.documentURI);
 
-    Assert.equal(iframe.contentDocument.documentURI, "http://example.com/browser/browser/components/originattributes/test/browser/dummy.html",
-                 "The page should have been redirected to http://example.com/browser/browser/components/originattributes/test/browser/dummy.html");
-    Assert.equal(iframe.contentDocument.nodePrincipal.originAttributes.firstPartyDomain,
-                 attrs.firstPartyDomain, "The iframe should have firstPartyDomain: " + attrs.firstPartyDomain);
-  });
+      Assert.equal(
+        iframe.contentDocument.documentURI,
+        "http://example.com/browser/browser/components/originattributes/test/browser/dummy.html",
+        "The page should have been redirected to http://example.com/browser/browser/components/originattributes/test/browser/dummy.html"
+      );
+      Assert.equal(
+        iframe.contentDocument.nodePrincipal.originAttributes.firstPartyDomain,
+        attrs.firstPartyDomain,
+        "The iframe should have firstPartyDomain: " + attrs.firstPartyDomain
+      );
+    }
+  );
 
   gBrowser.removeTab(tab);
   gBrowser.removeTab(tab2);
@@ -124,7 +200,10 @@ add_task(async function redirect_test() {
  * Test for postMessage between document and iframe.
  */
 add_task(async function postMessage_test() {
-  let tab = BrowserTestUtils.addTab(gBrowser, BASE_URL + "test_firstParty_postMessage.html");
+  let tab = BrowserTestUtils.addTab(
+    gBrowser,
+    BASE_URL + "test_firstParty_postMessage.html"
+  );
 
   // The top-level page will post a message to its child iframe, and wait for
   // another message from the iframe, once it receives the message, it will
@@ -156,18 +235,34 @@ add_task(async function openWindow_test() {
   let tab = BrowserTestUtils.addTab(gBrowser, BASE_URL + "window.html");
   let win = await BrowserTestUtils.waitForNewWindow();
 
-  await ContentTask.spawn(win.gBrowser.selectedBrowser, { firstPartyDomain: "mochi.test" }, async function(attrs) {
-    Assert.equal(docShell.getOriginAttributes().firstPartyDomain, attrs.firstPartyDomain,
-                 "window.open() should have firstPartyDomain attribute");
-    Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
-                 attrs.firstPartyDomain, "The document should have firstPartyDomain");
+  await ContentTask.spawn(
+    win.gBrowser.selectedBrowser,
+    { firstPartyDomain: "mochi.test" },
+    async function(attrs) {
+      Assert.equal(
+        docShell.getOriginAttributes().firstPartyDomain,
+        attrs.firstPartyDomain,
+        "window.open() should have firstPartyDomain attribute"
+      );
+      Assert.equal(
+        content.document.nodePrincipal.originAttributes.firstPartyDomain,
+        attrs.firstPartyDomain,
+        "The document should have firstPartyDomain"
+      );
 
-    let iframe = content.document.getElementById("iframe1");
-    Assert.equal(iframe.frameLoader.docShell.getOriginAttributes().firstPartyDomain,
-                 attrs.firstPartyDomain, "iframe's docshell should have firstPartyDomain");
-    Assert.equal(iframe.contentDocument.nodePrincipal.originAttributes.firstPartyDomain,
-                 attrs.firstPartyDomain, "iframe should have firstPartyDomain");
-  });
+      let iframe = content.document.getElementById("iframe1");
+      Assert.equal(
+        iframe.frameLoader.docShell.getOriginAttributes().firstPartyDomain,
+        attrs.firstPartyDomain,
+        "iframe's docshell should have firstPartyDomain"
+      );
+      Assert.equal(
+        iframe.contentDocument.nodePrincipal.originAttributes.firstPartyDomain,
+        attrs.firstPartyDomain,
+        "iframe should have firstPartyDomain"
+      );
+    }
+  );
 
   gBrowser.removeTab(tab);
   await BrowserTestUtils.closeWindow(win);
@@ -183,15 +278,30 @@ add_task(async function window_open_redirect_test() {
     Services.prefs.clearUserPref("browser.link.open_newwindow");
   });
 
-  let tab = BrowserTestUtils.addTab(gBrowser, BASE_URL + "window_redirect.html");
-  let win = await BrowserTestUtils.waitForNewWindow({url: BASE_URL + "dummy.html"});
-
-  await ContentTask.spawn(win.gBrowser.selectedBrowser, { firstPartyDomain: "mochi.test" }, async function(attrs) {
-    Assert.equal(docShell.getOriginAttributes().firstPartyDomain, attrs.firstPartyDomain,
-                 "window.open() should have firstPartyDomain attribute");
-    Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
-                 attrs.firstPartyDomain, "The document should have firstPartyDomain");
+  let tab = BrowserTestUtils.addTab(
+    gBrowser,
+    BASE_URL + "window_redirect.html"
+  );
+  let win = await BrowserTestUtils.waitForNewWindow({
+    url: BASE_URL + "dummy.html",
   });
+
+  await ContentTask.spawn(
+    win.gBrowser.selectedBrowser,
+    { firstPartyDomain: "mochi.test" },
+    async function(attrs) {
+      Assert.equal(
+        docShell.getOriginAttributes().firstPartyDomain,
+        attrs.firstPartyDomain,
+        "window.open() should have firstPartyDomain attribute"
+      );
+      Assert.equal(
+        content.document.nodePrincipal.originAttributes.firstPartyDomain,
+        attrs.firstPartyDomain,
+        "The document should have firstPartyDomain"
+      );
+    }
+  );
 
   gBrowser.removeTab(tab);
   await BrowserTestUtils.closeWindow(win);
@@ -212,23 +322,39 @@ add_task(async function window_open_iframe_test() {
   let tab = BrowserTestUtils.addTab(gBrowser, BASE_URL + "window2.html");
   let url = EXAMPLE_BASE_URL + "test_firstParty.html";
   info("Waiting for window with url " + url);
-  let win = await BrowserTestUtils.waitForNewWindow({url});
+  let win = await BrowserTestUtils.waitForNewWindow({ url });
 
-  await ContentTask.spawn(win.gBrowser.selectedBrowser, { firstPartyDomain: "mochi.test" }, async function(attrs) {
-    Assert.equal(docShell.getOriginAttributes().firstPartyDomain, attrs.firstPartyDomain,
-                 "window.open() should have firstPartyDomain attribute");
+  await ContentTask.spawn(
+    win.gBrowser.selectedBrowser,
+    { firstPartyDomain: "mochi.test" },
+    async function(attrs) {
+      Assert.equal(
+        docShell.getOriginAttributes().firstPartyDomain,
+        attrs.firstPartyDomain,
+        "window.open() should have firstPartyDomain attribute"
+      );
 
-    // The document is http://example.com/browser/browser/components/originattributes/test/browser/test_firstParty.html
-    // so the firstPartyDomain will be overriden to 'example.com'.
-    Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
-                 "example.com", "The document should have firstPartyDomain");
+      // The document is http://example.com/browser/browser/components/originattributes/test/browser/test_firstParty.html
+      // so the firstPartyDomain will be overriden to 'example.com'.
+      Assert.equal(
+        content.document.nodePrincipal.originAttributes.firstPartyDomain,
+        "example.com",
+        "The document should have firstPartyDomain"
+      );
 
-    let iframe = content.document.getElementById("iframe1");
-    Assert.equal(iframe.frameLoader.docShell.getOriginAttributes().firstPartyDomain,
-                 "example.com", "iframe's docshell should have firstPartyDomain");
-    Assert.equal(iframe.contentDocument.nodePrincipal.originAttributes.firstPartyDomain,
-                 "example.com", "iframe should have firstPartyDomain");
-  });
+      let iframe = content.document.getElementById("iframe1");
+      Assert.equal(
+        iframe.frameLoader.docShell.getOriginAttributes().firstPartyDomain,
+        "example.com",
+        "iframe's docshell should have firstPartyDomain"
+      );
+      Assert.equal(
+        iframe.contentDocument.nodePrincipal.originAttributes.firstPartyDomain,
+        "example.com",
+        "iframe should have firstPartyDomain"
+      );
+    }
+  );
 
   gBrowser.removeTab(tab);
   await BrowserTestUtils.closeWindow(win);
@@ -241,13 +367,20 @@ add_task(async function form_test() {
   let tab = BrowserTestUtils.addTab(gBrowser, BASE_URL + "test_form.html");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  await ContentTask.spawn(tab.linkedBrowser, { firstPartyDomain: "mochi.test" }, async function(attrs) {
-    Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
-                 attrs.firstPartyDomain, "The document should have firstPartyDomain");
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    { firstPartyDomain: "mochi.test" },
+    async function(attrs) {
+      Assert.equal(
+        content.document.nodePrincipal.originAttributes.firstPartyDomain,
+        attrs.firstPartyDomain,
+        "The document should have firstPartyDomain"
+      );
 
-    let submit = content.document.getElementById("submit");
-    submit.click();
-  });
+      let submit = content.document.getElementById("submit");
+      submit.click();
+    }
+  );
 
   gBrowser.removeTab(tab);
 });
@@ -264,17 +397,27 @@ add_task(async function window_open_form_test() {
   let tab = BrowserTestUtils.addTab(gBrowser, BASE_URL + "window3.html");
   let url = EXAMPLE_BASE_URL + "test_form.html";
   info("Waiting for window with url " + url);
-  let win = await BrowserTestUtils.waitForNewWindow({url});
+  let win = await BrowserTestUtils.waitForNewWindow({ url });
 
-  await ContentTask.spawn(win.gBrowser.selectedBrowser, { firstPartyDomain: "mochi.test" }, async function(attrs) {
-    Assert.equal(docShell.getOriginAttributes().firstPartyDomain, attrs.firstPartyDomain,
-                 "window.open() should have firstPartyDomain attribute");
-    Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
-                 "example.com", "The document should have firstPartyDomain");
+  await ContentTask.spawn(
+    win.gBrowser.selectedBrowser,
+    { firstPartyDomain: "mochi.test" },
+    async function(attrs) {
+      Assert.equal(
+        docShell.getOriginAttributes().firstPartyDomain,
+        attrs.firstPartyDomain,
+        "window.open() should have firstPartyDomain attribute"
+      );
+      Assert.equal(
+        content.document.nodePrincipal.originAttributes.firstPartyDomain,
+        "example.com",
+        "The document should have firstPartyDomain"
+      );
 
-    let submit = content.document.getElementById("submit");
-    submit.click();
-  });
+      let submit = content.document.getElementById("submit");
+      submit.click();
+    }
+  );
 
   gBrowser.removeTab(tab);
   await BrowserTestUtils.closeWindow(win);
@@ -295,11 +438,18 @@ add_task(async function ip_address_test() {
   let tab = BrowserTestUtils.addTab(gBrowser, ipHost + "test_firstParty.html");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser, true);
 
-  await ContentTask.spawn(tab.linkedBrowser, { firstPartyDomain: ipAddr }, async function(attrs) {
-    info("document principal: " + content.document.nodePrincipal.origin);
-    Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
-                   attrs.firstPartyDomain, "The firstPartyDomain should be set properly for the IP address");
-  });
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    { firstPartyDomain: ipAddr },
+    async function(attrs) {
+      info("document principal: " + content.document.nodePrincipal.origin);
+      Assert.equal(
+        content.document.nodePrincipal.originAttributes.firstPartyDomain,
+        attrs.firstPartyDomain,
+        "The firstPartyDomain should be set properly for the IP address"
+      );
+    }
+  );
 
   gBrowser.removeTab(tab);
 });

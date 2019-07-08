@@ -22,7 +22,9 @@ EventUtils.navigator = content.navigator;
 EventUtils.KeyboardEvent = content.KeyboardEvent;
 
 Services.scriptloader.loadSubScript(
-  "chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+  "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
+  EventUtils
+);
 
 /**
  * When the ready state of the JSON View app changes, it triggers custom event
@@ -45,37 +47,37 @@ content.document.addEventListener("readystatechange", () => {
  */
 new content.MutationObserver(function(mutations, observer) {
   sendAsyncMessage("Test:JsonView:NewDataReceived");
-}).observe(content.wrappedJSObject.JSONView.json, {characterData: true});
+}).observe(content.wrappedJSObject.JSONView.json, { characterData: true });
 
 addMessageListener("Test:JsonView:GetElementCount", function(msg) {
-  const {selector} = msg.data;
+  const { selector } = msg.data;
   const nodeList = content.document.querySelectorAll(selector);
-  sendAsyncMessage(msg.name, {count: nodeList.length});
+  sendAsyncMessage(msg.name, { count: nodeList.length });
 });
 
 addMessageListener("Test:JsonView:GetElementText", function(msg) {
-  const {selector} = msg.data;
+  const { selector } = msg.data;
   const element = content.document.querySelector(selector);
   const text = element ? element.textContent : null;
-  sendAsyncMessage(msg.name, {text: text});
+  sendAsyncMessage(msg.name, { text: text });
 });
 
 addMessageListener("Test:JsonView:GetElementVisibleText", function(msg) {
-  const {selector} = msg.data;
+  const { selector } = msg.data;
   const element = content.document.querySelector(selector);
   const text = element ? element.innerText : null;
-  sendAsyncMessage(msg.name, {text: text});
+  sendAsyncMessage(msg.name, { text: text });
 });
 
 addMessageListener("Test:JsonView:GetElementAttr", function(msg) {
-  const {selector, attr} = msg.data;
+  const { selector, attr } = msg.data;
   const element = content.document.querySelector(selector);
   const text = element ? element.getAttribute(attr) : null;
-  sendAsyncMessage(msg.name, {text: text});
+  sendAsyncMessage(msg.name, { text: text });
 });
 
 addMessageListener("Test:JsonView:FocusElement", function(msg) {
-  const {selector} = msg.data;
+  const { selector } = msg.data;
   const element = content.document.querySelector(selector);
   if (element) {
     element.focus();
@@ -84,7 +86,7 @@ addMessageListener("Test:JsonView:FocusElement", function(msg) {
 });
 
 addMessageListener("Test:JsonView:SendString", function(msg) {
-  const {selector, str} = msg.data;
+  const { selector, str } = msg.data;
   if (selector) {
     const element = content.document.querySelector(selector);
     if (element) {
@@ -99,7 +101,8 @@ addMessageListener("Test:JsonView:SendString", function(msg) {
 
 addMessageListener("Test:JsonView:WaitForFilter", function(msg) {
   const firstRow = content.document.querySelector(
-    ".jsonPanelBox .treeTable .treeRow");
+    ".jsonPanelBox .treeTable .treeRow"
+  );
 
   // Check if the filter is already set.
   if (firstRow.classList.contains("hidden")) {

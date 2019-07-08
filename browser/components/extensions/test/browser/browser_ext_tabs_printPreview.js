@@ -7,7 +7,7 @@ add_task(async function testPrintPreview() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
 
     background: async function() {
@@ -21,9 +21,9 @@ add_task(async function testPrintPreview() {
   await extension.awaitFinish("tabs.printPreview");
   await extension.unload();
 
-  let ppTab = PrintUtils.shouldSimplify ?
-      PrintPreviewListener._simplifiedPrintPreviewTab :
-      PrintPreviewListener._printPreviewTab;
+  let ppTab = PrintUtils.shouldSimplify
+    ? PrintPreviewListener._simplifiedPrintPreviewTab
+    : PrintPreviewListener._printPreviewTab;
 
   let ppToolbar = document.getElementById("print-preview-toolbar");
 
@@ -34,7 +34,11 @@ add_task(async function testPrintPreview() {
   isnot(ppToolbar, null, "print preview toolbar created");
 
   is(ppTab, gBrowser.selectedTab, "print preview tab selected");
-  is(ppTab.linkedBrowser.currentURI.spec, "about:printpreview", "print preview browser url correct");
+  is(
+    ppTab.linkedBrowser.currentURI.spec,
+    "about:printpreview",
+    "print preview browser url correct"
+  );
 
   PrintUtils.exitPrintPreview();
   await BrowserTestUtils.waitForCondition(() => !window.gInPrintPreviewMode);

@@ -7,8 +7,11 @@ var EXPORTED_SYMBOLS = ["AutoCompletePopup"];
 
 /* eslint no-unused-vars: ["error", {args: "none"}] */
 
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
+);
 
 const MESSAGES = [
   "FormAutoComplete:HandleEnter",
@@ -16,7 +19,6 @@ const MESSAGES = [
   "FormAutoComplete:PopupOpened",
   "FormAutoComplete:RequestFocus",
 ];
-
 
 class AutoCompletePopup {
   constructor(mm) {
@@ -35,8 +37,9 @@ class AutoCompletePopup {
       case "FormAutoComplete:HandleEnter": {
         this.selectedIndex = message.data.selectedIndex;
 
-        let controller = Cc["@mozilla.org/autocomplete/controller;1"]
-                           .getService(Ci.nsIAutoCompleteController);
+        let controller = Cc[
+          "@mozilla.org/autocomplete/controller;1"
+        ].getService(Ci.nsIAutoCompleteController);
         controller.handleEnter(message.data.isPopupSelection);
         break;
       }
@@ -60,8 +63,12 @@ class AutoCompletePopup {
     }
   }
 
-  get input() { return this._input; }
-  get overrideValue() { return null; }
+  get input() {
+    return this._input;
+  }
+  get overrideValue() {
+    return null;
+  }
   set selectedIndex(index) {
     this.mm.sendAsyncMessage("FormAutoComplete:SetSelectedIndex", { index });
   }
@@ -88,8 +95,11 @@ class AutoCompletePopup {
     let dir = window.getComputedStyle(element).direction;
     let results = this.getResultsFromController(input);
 
-    this.mm.sendAsyncMessage("FormAutoComplete:MaybeOpenPopup",
-                             { results, rect, dir });
+    this.mm.sendAsyncMessage("FormAutoComplete:MaybeOpenPopup", {
+      results,
+      rect,
+      dir,
+    });
     this._input = input;
   }
 

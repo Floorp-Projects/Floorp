@@ -7,9 +7,13 @@
 
 var EXPORTED_SYMBOLS = ["Home"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {SharedPreferences} = ChromeUtils.import("resource://gre/modules/SharedPreferences.jsm");
-const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { SharedPreferences } = ChromeUtils.import(
+  "resource://gre/modules/SharedPreferences.jsm"
+);
+const { EventDispatcher } = ChromeUtils.import(
+  "resource://gre/modules/Messaging.jsm"
+);
 
 // Keep this in sync with the constant defined in PanelAuthCache.java
 const PREFS_PANEL_AUTH_PREFIX = "home_panels_auth_";
@@ -19,37 +23,49 @@ const DEFAULT_WEIGHT = 100;
 
 // See bug 915424
 function resolveGeckoURI(aURI) {
-  if (!aURI)
+  if (!aURI) {
     throw new Error("Can't resolve an empty uri");
+  }
 
   if (aURI.startsWith("chrome://")) {
-    let registry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
+    let registry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+      Ci.nsIChromeRegistry
+    );
     return registry.convertChromeURL(Services.io.newURI(aURI)).spec;
   } else if (aURI.startsWith("resource://")) {
-    let handler = Services.io.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
+    let handler = Services.io
+      .getProtocolHandler("resource")
+      .QueryInterface(Ci.nsIResProtocolHandler);
     return handler.resolveURI(Services.io.newURI(aURI));
   }
   return aURI;
 }
 
 function BannerMessage(options) {
-  let uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+  let uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(
+    Ci.nsIUUIDGenerator
+  );
   this.id = uuidgen.generateUUID().toString();
 
-  if ("text" in options && options.text != null)
+  if ("text" in options && options.text != null) {
     this.text = options.text;
+  }
 
-  if ("icon" in options && options.icon != null)
+  if ("icon" in options && options.icon != null) {
     this.iconURI = resolveGeckoURI(options.icon);
+  }
 
-  if ("onshown" in options && typeof options.onshown === "function")
+  if ("onshown" in options && typeof options.onshown === "function") {
     this.onshown = options.onshown;
+  }
 
-  if ("onclick" in options && typeof options.onclick === "function")
+  if ("onclick" in options && typeof options.onclick === "function") {
     this.onclick = options.onclick;
+  }
 
-  if ("ondismiss" in options && typeof options.ondismiss === "function")
+  if ("ondismiss" in options && typeof options.ondismiss === "function") {
     this.ondismiss = options.ondismiss;
+  }
 
   let weight = parseInt(options.weight, 10);
   this.weight = weight > 0 ? weight : DEFAULT_WEIGHT;
@@ -92,12 +108,14 @@ var HomeBanner = (function() {
     for (let key in _messages) {
       let message = _messages[key];
       if (threshold < message.totalWeight) {
-        EventDispatcher.instance.sendRequestForResult({
-          type: "HomeBanner:Data",
-          id: message.id,
-          text: message.text,
-          iconURI: message.iconURI,
-        }).then(id => _handleShown(id));
+        EventDispatcher.instance
+          .sendRequestForResult({
+            type: "HomeBanner:Data",
+            id: message.id,
+            text: message.text,
+            iconURI: message.iconURI,
+          })
+          .then(id => _handleShown(id));
         return;
       }
     }
@@ -105,20 +123,23 @@ var HomeBanner = (function() {
 
   let _handleShown = function(id) {
     let message = _messages[id];
-    if (message.onshown)
+    if (message.onshown) {
       message.onshown();
+    }
   };
 
   let _handleClick = function(id) {
     let message = _messages[id];
-    if (message.onclick)
+    if (message.onclick) {
       message.onclick();
+    }
   };
 
   let _handleDismiss = function(id) {
     let message = _messages[id];
-    if (message.ondismiss)
+    if (message.ondismiss) {
       message.ondismiss();
+    }
   };
 
   return Object.freeze({
@@ -168,7 +189,9 @@ var HomeBanner = (function() {
      */
     remove: function(id) {
       if (!(id in _messages)) {
-        throw new Error("Home.banner: Can't remove message that doesn't exist: id = " + id);
+        throw new Error(
+          "Home.banner: Can't remove message that doesn't exist: id = " + id
+        );
       }
 
       delete _messages[id];
@@ -191,7 +214,6 @@ var HomePanelsMessageHandlers;
 var HomePanels = (function() {
   // Functions used to handle messages sent from Java.
   HomePanelsMessageHandlers = {
-
     "HomePanels:Get": function handlePanelsGet(data) {
       let requestId = data.requestId;
       let ids = data.ids || null;
@@ -203,7 +225,9 @@ var HomePanels = (function() {
           try {
             panels.push(_generatePanel(id));
           } catch (e) {
-            Cu.reportError("Home.panels: Invalid options, panel.id = " + id + ": " + e);
+            Cu.reportError(
+              "Home.panels: Invalid options, panel.id = " + id + ": " + e
+            );
           }
         }
       }
@@ -222,8 +246,14 @@ var HomePanels = (function() {
       if (!options.auth) {
         throw new Error("Home.panels: Invalid auth for panel.id = " + id);
       }
-      if (!options.auth.authenticate || typeof options.auth.authenticate !== "function") {
-        throw new Error("Home.panels: Invalid auth authenticate function: panel.id = " + this.id);
+      if (
+        !options.auth.authenticate ||
+        typeof options.auth.authenticate !== "function"
+      ) {
+        throw new Error(
+          "Home.panels: Invalid auth authenticate function: panel.id = " +
+            this.id
+        );
       }
       options.auth.authenticate();
     },
@@ -233,13 +263,17 @@ var HomePanels = (function() {
       let view = options.views[data.viewIndex];
 
       if (!view) {
-        throw new Error("Home.panels: Invalid view for panel.id = " +
-          `${data.panelId}, view.index = ${data.viewIndex}`);
+        throw new Error(
+          "Home.panels: Invalid view for panel.id = " +
+            `${data.panelId}, view.index = ${data.viewIndex}`
+        );
       }
 
       if (!view.onrefresh || typeof view.onrefresh !== "function") {
-        throw new Error("Home.panels: Invalid onrefresh for panel.id = " +
-          `${data.panelId}, view.index = ${data.viewIndex}`);
+        throw new Error(
+          "Home.panels: Invalid onrefresh for panel.id = " +
+            `${data.panelId}, view.index = ${data.viewIndex}`
+        );
       }
 
       view.onrefresh();
@@ -254,7 +288,9 @@ var HomePanels = (function() {
         return;
       }
       if (typeof options.oninstall !== "function") {
-        throw new Error("Home.panels: Invalid oninstall function: panel.id = " + this.id);
+        throw new Error(
+          "Home.panels: Invalid oninstall function: panel.id = " + this.id
+        );
       }
       options.oninstall();
     },
@@ -268,7 +304,9 @@ var HomePanels = (function() {
         return;
       }
       if (typeof options.onuninstall !== "function") {
-        throw new Error("Home.panels: Invalid onuninstall function: panel.id = " + this.id);
+        throw new Error(
+          "Home.panels: Invalid onuninstall function: panel.id = " + this.id
+        );
       }
       options.onuninstall();
     },
@@ -314,21 +352,27 @@ var HomePanels = (function() {
     this.default = !!options.default;
 
     if (!this.id || !this.title) {
-      throw new Error("Home.panels: Can't create a home panel without an id and title!");
+      throw new Error(
+        "Home.panels: Can't create a home panel without an id and title!"
+      );
     }
 
     if (!this.layout) {
       // Use FRAME layout by default
       this.layout = Layout.FRAME;
     } else if (!_valueExists(Layout, this.layout)) {
-      throw new Error("Home.panels: Invalid layout for panel: panel.id = " +
-          `${this.id}, panel.layout =${this.layout}`);
+      throw new Error(
+        "Home.panels: Invalid layout for panel: panel.id = " +
+          `${this.id}, panel.layout =${this.layout}`
+      );
     }
 
     for (let view of this.views) {
       if (!_valueExists(View, view.type)) {
-        throw new Error("Home.panels: Invalid view type: panel.id = " +
-          `${this.id}, view.type = ${view.type}`);
+        throw new Error(
+          "Home.panels: Invalid view type: panel.id = " +
+            `${this.id}, view.type = ${view.type}`
+        );
       }
 
       if (!view.itemType) {
@@ -340,21 +384,27 @@ var HomePanels = (function() {
           view.itemType = Item.IMAGE;
         }
       } else if (!_valueExists(Item, view.itemType)) {
-        throw new Error("Home.panels: Invalid item type: panel.id = " +
-          `${this.id}, view.itemType = ${view.itemType}`);
+        throw new Error(
+          "Home.panels: Invalid item type: panel.id = " +
+            `${this.id}, view.itemType = ${view.itemType}`
+        );
       }
 
       if (!view.itemHandler) {
         // Use BROWSER item handler by default
         view.itemHandler = ItemHandler.BROWSER;
       } else if (!_valueExists(ItemHandler, view.itemHandler)) {
-        throw new Error("Home.panels: Invalid item handler: panel.id = " +
-          `${this.id}, view.itemHandler = ${view.itemHandler}`);
+        throw new Error(
+          "Home.panels: Invalid item handler: panel.id = " +
+            `${this.id}, view.itemHandler = ${view.itemHandler}`
+        );
       }
 
       if (!view.dataset) {
-        throw new Error("Home.panels: No dataset provided for view: panel.id = " +
-          `${this.id}, view.type = ${view.type}`);
+        throw new Error(
+          "Home.panels: No dataset provided for view: panel.id = " +
+            `${this.id}, view.type = ${view.type}`
+        );
       }
 
       if (view.onrefresh) {
@@ -364,10 +414,14 @@ var HomePanels = (function() {
 
     if (options.auth) {
       if (!options.auth.messageText) {
-        throw new Error("Home.panels: Invalid auth messageText: panel.id = " + this.id);
+        throw new Error(
+          "Home.panels: Invalid auth messageText: panel.id = " + this.id
+        );
       }
       if (!options.auth.buttonText) {
-        throw new Error("Home.panels: Invalid auth buttonText: panel.id = " + this.id);
+        throw new Error(
+          "Home.panels: Invalid auth buttonText: panel.id = " + this.id
+        );
       }
 
       this.authConfig = {
@@ -420,7 +474,9 @@ var HomePanels = (function() {
       }
 
       if (!optionsCallback || typeof optionsCallback !== "function") {
-        throw new Error("Home.panels: Panel callback must be a function: id = " + id);
+        throw new Error(
+          "Home.panels: Panel callback must be a function: id = " + id
+        );
       }
 
       _registeredPanels[id] = optionsCallback;
@@ -481,7 +537,9 @@ var Home = Object.freeze({
     } else if (event in HomePanelsMessageHandlers) {
       HomePanelsMessageHandlers[event](data);
     } else {
-      Cu.reportError("Home.observe: message handler not found for event: " + event);
+      Cu.reportError(
+        "Home.observe: message handler not found for event: " + event
+      );
     }
   },
 });

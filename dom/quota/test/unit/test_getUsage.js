@@ -5,52 +5,51 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const origins = [
     {
       origin: "http://example.com",
       persisted: false,
-      usage: 49152
+      usage: 49152,
     },
 
     {
       origin: "http://localhost",
       persisted: false,
-      usage: 147456
+      usage: 147456,
     },
 
     {
       origin: "http://www.mozilla.org",
       persisted: true,
-      usage: 98304
-    }
+      usage: 98304,
+    },
   ];
 
   const allOrigins = [
     {
       origin: "chrome",
       persisted: false,
-      usage: 147456
+      usage: 147456,
     },
 
     {
       origin: "http://example.com",
       persisted: false,
-      usage: 49152
+      usage: 49152,
     },
 
     {
       origin: "http://localhost",
       persisted: false,
-      usage: 147456
+      usage: 147456,
     },
 
     {
       origin: "http://www.mozilla.org",
       persisted: true,
-      usage: 98304
-    }
+      usage: 98304,
+    },
   ];
 
   function verifyResult(result, expectedOrigins) {
@@ -60,8 +59,8 @@ function* testSteps()
     info("Sorting elements");
 
     result.sort(function(a, b) {
-      let originA = a.origin
-      let originB = b.origin
+      let originA = a.origin;
+      let originB = b.origin;
 
       if (originA < originB) {
         return -1;

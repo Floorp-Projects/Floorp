@@ -8,7 +8,8 @@
 // Import the inspector's head.js first (which itself imports shared-head.js).
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js",
-  this);
+  this
+);
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.defaultColorUnit");
@@ -36,12 +37,13 @@ function fireCopyEvent(element) {
 function getComputedViewProperty(view, name) {
   let prop;
   for (const property of view.styleDocument.querySelectorAll(
-      "#computed-container .computed-property-view")) {
+    "#computed-container .computed-property-view"
+  )) {
     const nameSpan = property.querySelector(".computed-property-name");
     const valueSpan = property.querySelector(".computed-property-value");
 
     if (nameSpan.firstChild.textContent === name) {
-      prop = {nameSpan: nameSpan, valueSpan: valueSpan};
+      prop = { nameSpan: nameSpan, valueSpan: valueSpan };
       break;
     }
   }
@@ -87,7 +89,8 @@ var getComputedViewMatchedRules = async function(view, name) {
   let expander;
   let propertyContent;
   for (const property of view.styleDocument.querySelectorAll(
-      "#computed-container .computed-property-view")) {
+    "#computed-container .computed-property-view"
+  )) {
     const nameSpan = property.querySelector(".computed-property-name");
     if (nameSpan.firstChild.textContent === name) {
       expander = property.querySelector(".computed-expandable");
@@ -117,8 +120,8 @@ var getComputedViewMatchedRules = async function(view, name) {
  * @return {String} The property value
  */
 function getComputedViewPropertyValue(view, name, propertyName) {
-  return getComputedViewProperty(view, name, propertyName)
-    .valueSpan.textContent;
+  return getComputedViewProperty(view, name, propertyName).valueSpan
+    .textContent;
 }
 
 /**
@@ -154,7 +157,9 @@ function expandComputedViewPropertyByIndex(view, index) {
  * @return {DOMNode} The link at the given index, if one exists, null otherwise
  */
 function getComputedViewLinkByIndex(view, index) {
-  const links = view.styleDocument.querySelectorAll(".rule-link .computed-link");
+  const links = view.styleDocument.querySelectorAll(
+    ".rule-link .computed-link"
+  );
   return links[index];
 }
 
@@ -180,12 +185,16 @@ function selectAllText(view) {
 async function copyAllAndCheckClipboard(view, expectedPattern) {
   selectAllText(view);
   const contentDoc = view.styleDocument;
-  const prop = contentDoc.querySelector("#computed-container .computed-property-view");
+  const prop = contentDoc.querySelector(
+    "#computed-container .computed-property-view"
+  );
 
   try {
     info("Trigger a copy event and wait for the clipboard content");
-    await waitForClipboardPromise(() => fireCopyEvent(prop),
-                                  () => checkClipboard(expectedPattern));
+    await waitForClipboardPromise(
+      () => fireCopyEvent(prop),
+      () => checkClipboard(expectedPattern)
+    );
   } catch (e) {
     failClipboardCheck(expectedPattern);
   }
@@ -208,7 +217,8 @@ async function copySomeTextAndCheckClipboard(view, positions, expectedPattern) {
 
   const contentDocument = view.styleDocument;
   const props = contentDocument.querySelectorAll(
-    "#computed-container .computed-property-view");
+    "#computed-container .computed-property-view"
+  );
 
   info("Create the text selection range");
   const range = contentDocument.createRange();
@@ -218,8 +228,10 @@ async function copySomeTextAndCheckClipboard(view, positions, expectedPattern) {
 
   try {
     info("Trigger a copy event and wait for the clipboard content");
-    await waitForClipboardPromise(() => fireCopyEvent(props[0]),
-                                  () => checkClipboard(expectedPattern));
+    await waitForClipboardPromise(
+      () => fireCopyEvent(props[0]),
+      () => checkClipboard(expectedPattern)
+    );
   } catch (e) {
     failClipboardCheck(expectedPattern);
   }
@@ -245,8 +257,10 @@ function failClipboardCheck(expectedPattern) {
   expectedPattern = expectedPattern.trimRight();
   actual = actual.trimRight();
 
-  dump("TEST-UNEXPECTED-FAIL | Clipboard text does not match expected ... " +
-    "results (escaped for accurate comparison):\n");
+  dump(
+    "TEST-UNEXPECTED-FAIL | Clipboard text does not match expected ... " +
+      "results (escaped for accurate comparison):\n"
+  );
   info("Actual: " + escape(actual));
   info("Expected: " + escape(expectedPattern));
 }

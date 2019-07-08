@@ -4,15 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const bmsvc    = PlacesUtils.bookmarks;
-const obsvc    = PlacesUtils.observers;
-const tagssvc  = PlacesUtils.tagging;
-const PT       = PlacesTransactions;
+const bmsvc = PlacesUtils.bookmarks;
+const obsvc = PlacesUtils.observers;
+const tagssvc = PlacesUtils.tagging;
+const PT = PlacesTransactions;
 const menuGuid = PlacesUtils.bookmarks.menuGuid;
 
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
-
+ChromeUtils.defineModuleGetter(
+  this,
+  "Preferences",
+  "resource://gre/modules/Preferences.jsm"
+);
 
 // Create and add bookmarks observer.
 var observer = {
@@ -37,12 +39,14 @@ var observer = {
         return;
       }
 
-      this.itemsAdded.set(event.guid, { itemId:         event.id,
-                                        parentGuid:     event.parentGuid,
-                                        index:          event.index,
-                                        itemType:       event.itemType,
-                                        title:          event.title,
-                                        url:            event.url });
+      this.itemsAdded.set(event.guid, {
+        itemId: event.id,
+        parentGuid: event.parentGuid,
+        index: event.index,
+        itemType: event.itemType,
+        title: event.title,
+        url: event.url,
+      });
     }
   },
 
@@ -54,41 +58,75 @@ var observer = {
     this.endUpdateBatch = true;
   },
 
-  onItemRemoved(aItemId, aParentId, aIndex, aItemType, aURI, aGuid, aParentGuid) {
-    if (this.tagRelatedGuids.has(aGuid))
+  onItemRemoved(
+    aItemId,
+    aParentId,
+    aIndex,
+    aItemType,
+    aURI,
+    aGuid,
+    aParentGuid
+  ) {
+    if (this.tagRelatedGuids.has(aGuid)) {
       return;
+    }
 
-    this.itemsRemoved.set(aGuid, { parentGuid: aParentGuid,
-                                   index:      aIndex,
-                                   itemType:   aItemType });
+    this.itemsRemoved.set(aGuid, {
+      parentGuid: aParentGuid,
+      index: aIndex,
+      itemType: aItemType,
+    });
   },
 
-  onItemChanged(aItemId, aProperty, aIsAnnoProperty, aNewValue, aLastModified,
-           aItemType, aParentId, aGuid, aParentGuid) {
-    if (this.tagRelatedGuids.has(aGuid))
+  onItemChanged(
+    aItemId,
+    aProperty,
+    aIsAnnoProperty,
+    aNewValue,
+    aLastModified,
+    aItemType,
+    aParentId,
+    aGuid,
+    aParentGuid
+  ) {
+    if (this.tagRelatedGuids.has(aGuid)) {
       return;
+    }
 
     let changesForGuid = this.itemsChanged.get(aGuid);
     if (changesForGuid === undefined) {
       changesForGuid = new Map();
       this.itemsChanged.set(aGuid, changesForGuid);
     }
-    let change = { isAnnoProperty: aIsAnnoProperty,
-                   newValue: aNewValue,
-                   lastModified: aLastModified,
-                   itemType: aItemType };
+    let change = {
+      isAnnoProperty: aIsAnnoProperty,
+      newValue: aNewValue,
+      lastModified: aLastModified,
+      itemType: aItemType,
+    };
     changesForGuid.set(aProperty, change);
   },
 
   onItemVisited: () => {},
 
-  onItemMoved(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex, aItemType,
-           aGuid, aOldParentGuid, aNewParentGuid) {
-    this.itemsMoved.set(aGuid, { oldParentGuid: aOldParentGuid,
-                                 oldIndex:      aOldIndex,
-                                 newParentGuid: aNewParentGuid,
-                                 newIndex:      aNewIndex,
-                                 itemType:      aItemType });
+  onItemMoved(
+    aItemId,
+    aOldParent,
+    aOldIndex,
+    aNewParent,
+    aNewIndex,
+    aItemType,
+    aGuid,
+    aOldParentGuid,
+    aNewParentGuid
+  ) {
+    this.itemsMoved.set(aGuid, {
+      oldParentGuid: aOldParentGuid,
+      oldIndex: aOldIndex,
+      newParentGuid: aNewParentGuid,
+      newIndex: aNewIndex,
+      itemType: aItemType,
+    });
   },
 };
 observer.reset();
@@ -117,18 +155,20 @@ function sanityCheckTransactionHistory() {
       do_throw("PT.entry should throw for invalid input");
     } catch (ex) {}
   };
-  check_entry_throws( () => PT.entry(-1) );
-  check_entry_throws( () => PT.entry({}) );
-  check_entry_throws( () => PT.entry(PT.length) );
+  check_entry_throws(() => PT.entry(-1));
+  check_entry_throws(() => PT.entry({}));
+  check_entry_throws(() => PT.entry(PT.length));
 
-  if (PT.undoPosition < PT.length)
+  if (PT.undoPosition < PT.length) {
     Assert.equal(PT.topUndoEntry, PT.entry(PT.undoPosition));
-  else
+  } else {
     Assert.equal(null, PT.topUndoEntry);
-  if (PT.undoPosition > 0)
+  }
+  if (PT.undoPosition > 0) {
     Assert.equal(PT.topRedoEntry, PT.entry(PT.undoPosition - 1));
-  else
+  } else {
     Assert.equal(null, PT.topRedoEntry);
+  }
 }
 
 function getTransactionsHistoryState() {
@@ -151,9 +191,9 @@ function ensureUndoState(aExpectedEntries = [], aExpectedUndoPosition = 0) {
 
   function checkEqualEntries(aExpectedEntry, aActualEntry) {
     Assert.equal(aExpectedEntry.length, aActualEntry.length);
-    aExpectedEntry.forEach( (t, i) => Assert.equal(t, aActualEntry[i]) );
+    aExpectedEntry.forEach((t, i) => Assert.equal(t, aActualEntry[i]));
   }
-  aExpectedEntries.forEach( (e, i) => checkEqualEntries(e, actualEntries[i]) );
+  aExpectedEntries.forEach((e, i) => checkEqualEntries(e, actualEntries[i]));
 }
 
 function ensureItemsAdded(...items) {
@@ -163,22 +203,34 @@ function ensureItemsAdded(...items) {
     if ("children" in item) {
       expectedResultsCount += item.children.length;
     }
-    Assert.ok(observer.itemsAdded.has(item.guid),
-      `Should have the expected guid ${item.guid}`);
+    Assert.ok(
+      observer.itemsAdded.has(item.guid),
+      `Should have the expected guid ${item.guid}`
+    );
     let info = observer.itemsAdded.get(item.guid);
-    Assert.equal(info.parentGuid, item.parentGuid,
-      "Should have notified the correct parentGuid");
+    Assert.equal(
+      info.parentGuid,
+      item.parentGuid,
+      "Should have notified the correct parentGuid"
+    );
     for (let propName of ["title", "index", "itemType"]) {
-      if (propName in item)
+      if (propName in item) {
         Assert.equal(info[propName], item[propName]);
+      }
     }
-    if ("url" in item)
-      Assert.ok(Services.io.newURI(info.url).equals(Services.io.newURI(item.url)),
-        "Should have the correct url");
+    if ("url" in item) {
+      Assert.ok(
+        Services.io.newURI(info.url).equals(Services.io.newURI(item.url)),
+        "Should have the correct url"
+      );
+    }
   }
 
-  Assert.equal(observer.itemsAdded.size, expectedResultsCount,
-    "Should have added the correct number of items");
+  Assert.equal(
+    observer.itemsAdded.size,
+    expectedResultsCount,
+    "Should have added the correct number of items"
+  );
 }
 
 function ensureItemsRemoved(...items) {
@@ -186,26 +238,37 @@ function ensureItemsRemoved(...items) {
 
   for (let item of items) {
     // We accept both guids and full info object here.
-    if (typeof(item) == "string") {
-      Assert.ok(observer.itemsRemoved.has(item),
-        `Should have removed the expected guid ${item}`);
+    if (typeof item == "string") {
+      Assert.ok(
+        observer.itemsRemoved.has(item),
+        `Should have removed the expected guid ${item}`
+      );
     } else {
       if ("children" in item) {
         expectedResultsCount += item.children.length;
       }
 
-      Assert.ok(observer.itemsRemoved.has(item.guid),
-        `Should have removed expected guid ${item.guid}`);
+      Assert.ok(
+        observer.itemsRemoved.has(item.guid),
+        `Should have removed expected guid ${item.guid}`
+      );
       let info = observer.itemsRemoved.get(item.guid);
-      Assert.equal(info.parentGuid, item.parentGuid,
-        "Should have notified the correct parentGuid");
-      if ("index" in item)
+      Assert.equal(
+        info.parentGuid,
+        item.parentGuid,
+        "Should have notified the correct parentGuid"
+      );
+      if ("index" in item) {
         Assert.equal(info.index, item.index);
+      }
     }
   }
 
-  Assert.equal(observer.itemsRemoved.size, expectedResultsCount,
-    "Should have removed the correct number of items");
+  Assert.equal(
+    observer.itemsRemoved.size,
+    expectedResultsCount,
+    "Should have removed the correct number of items"
+  );
 }
 
 function ensureItemsChanged(...items) {
@@ -216,45 +279,67 @@ function ensureItemsChanged(...items) {
     let info = changes.get(item.property);
     Assert.ok(!info.isAnnoProperty);
     Assert.equal(info.newValue, item.newValue);
-    if ("url" in item)
+    if ("url" in item) {
       Assert.ok(item.url.equals(info.url));
+    }
   }
 }
 
 function ensureItemsMoved(...items) {
-  Assert.equal(observer.itemsMoved.size, items.length,
-    "Should have received the correct number of moved notifications");
+  Assert.equal(
+    observer.itemsMoved.size,
+    items.length,
+    "Should have received the correct number of moved notifications"
+  );
   for (let item of items) {
-    Assert.ok(observer.itemsMoved.has(item.guid),
-      `Observer should have a move for ${item.guid}`);
+    Assert.ok(
+      observer.itemsMoved.has(item.guid),
+      `Observer should have a move for ${item.guid}`
+    );
     let info = observer.itemsMoved.get(item.guid);
-    Assert.equal(info.oldParentGuid, item.oldParentGuid,
-      "Should have the correct old parent guid");
-    Assert.equal(info.oldIndex, item.oldIndex,
-      "Should have the correct old index");
-    Assert.equal(info.newParentGuid, item.newParentGuid,
-      "Should have the correct new parent guid");
-    Assert.equal(info.newIndex, item.newIndex,
-      "Should have the correct new index");
+    Assert.equal(
+      info.oldParentGuid,
+      item.oldParentGuid,
+      "Should have the correct old parent guid"
+    );
+    Assert.equal(
+      info.oldIndex,
+      item.oldIndex,
+      "Should have the correct old index"
+    );
+    Assert.equal(
+      info.newParentGuid,
+      item.newParentGuid,
+      "Should have the correct new parent guid"
+    );
+    Assert.equal(
+      info.newIndex,
+      item.newIndex,
+      "Should have the correct new index"
+    );
   }
 }
 
 function ensureTimestampsUpdated(aGuid, aCheckDateAdded = false) {
   Assert.ok(observer.itemsChanged.has(aGuid));
   let changes = observer.itemsChanged.get(aGuid);
-  if (aCheckDateAdded)
+  if (aCheckDateAdded) {
     Assert.ok(changes.has("dateAdded"));
+  }
   Assert.ok(changes.has("lastModified"));
 }
 
 function ensureTagsForURI(aURI, aTags) {
   let tagsSet = tagssvc.getTagsForURI(Services.io.newURI(aURI));
   Assert.equal(tagsSet.length, aTags.length);
-  Assert.ok(aTags.every( t => tagsSet.includes(t)));
+  Assert.ok(aTags.every(t => tagsSet.includes(t)));
 }
 
-function createTestFolderInfo(title = "Test Folder", parentGuid = menuGuid,
-                              children = undefined) {
+function createTestFolderInfo(
+  title = "Test Folder",
+  parentGuid = menuGuid,
+  children = undefined
+) {
   let info = { parentGuid, title };
   if (children) {
     info.children = children;
@@ -282,11 +367,13 @@ function removeAllDatesInTree(tree) {
 // Checks if two bookmark trees (as returned by promiseBookmarksTree) are the
 // same.
 // false value for aCheckParentAndPosition is ignored if aIsRestoredItem is set.
-async function ensureEqualBookmarksTrees(aOriginal,
-                                         aNew,
-                                         aIsRestoredItem = true,
-                                         aCheckParentAndPosition = false,
-                                         aIgnoreAllDates = false) {
+async function ensureEqualBookmarksTrees(
+  aOriginal,
+  aNew,
+  aIsRestoredItem = true,
+  aCheckParentAndPosition = false,
+  aIgnoreAllDates = false
+) {
   // Note "id" is not-enumerable, and is therefore skipped by Object.keys (both
   // ours and the one at deepEqual). This is fine for us because ids are not
   // restored by Redo.
@@ -306,11 +393,13 @@ async function ensureEqualBookmarksTrees(aOriginal,
     if (property == "children") {
       Assert.equal(aOriginal.children.length, aNew.children.length);
       for (let i = 0; i < aOriginal.children.length; i++) {
-        await ensureEqualBookmarksTrees(aOriginal.children[i],
-                                        aNew.children[i],
-                                        false,
-                                        true,
-                                        aIgnoreAllDates);
+        await ensureEqualBookmarksTrees(
+          aOriginal.children[i],
+          aNew.children[i],
+          false,
+          true,
+          aIgnoreAllDates
+        );
       }
     } else if (property == "guid") {
       // guid shouldn't be copied if the item was not restored.
@@ -320,36 +409,51 @@ async function ensureEqualBookmarksTrees(aOriginal,
       Assert.ok(is_time_ordered(aOriginal.dateAdded, aNew.dateAdded));
     } else if (property == "lastModified") {
       // same same, except for the never-changed case
-      if (!aOriginal.lastModified)
+      if (!aOriginal.lastModified) {
         Assert.ok(!aNew.lastModified);
-      else
+      } else {
         Assert.ok(is_time_ordered(aOriginal.lastModified, aNew.lastModified));
-    } else if (aCheckParentAndPosition ||
-             (property != "parentGuid" && property != "index")) {
+      }
+    } else if (
+      aCheckParentAndPosition ||
+      (property != "parentGuid" && property != "index")
+    ) {
       Assert.deepEqual(aOriginal[property], aNew[property]);
     }
   }
 }
 
-async function ensureBookmarksTreeRestoredCorrectly(...aOriginalBookmarksTrees) {
+async function ensureBookmarksTreeRestoredCorrectly(
+  ...aOriginalBookmarksTrees
+) {
   for (let originalTree of aOriginalBookmarksTrees) {
-    let restoredTree =
-      await PlacesUtils.promiseBookmarksTree(originalTree.guid);
+    let restoredTree = await PlacesUtils.promiseBookmarksTree(
+      originalTree.guid
+    );
     await ensureEqualBookmarksTrees(originalTree, restoredTree);
   }
 }
 
-async function ensureBookmarksTreeRestoredCorrectlyExceptDates(...aOriginalBookmarksTrees) {
+async function ensureBookmarksTreeRestoredCorrectlyExceptDates(
+  ...aOriginalBookmarksTrees
+) {
   for (let originalTree of aOriginalBookmarksTrees) {
-    let restoredTree =
-      await PlacesUtils.promiseBookmarksTree(originalTree.guid);
-    await ensureEqualBookmarksTrees(originalTree, restoredTree, true, false, true);
+    let restoredTree = await PlacesUtils.promiseBookmarksTree(
+      originalTree.guid
+    );
+    await ensureEqualBookmarksTrees(
+      originalTree,
+      restoredTree,
+      true,
+      false,
+      true
+    );
   }
 }
 
 async function ensureNonExistent(...aGuids) {
   for (let guid of aGuids) {
-    Assert.strictEqual((await PlacesUtils.promiseBookmarksTree(guid)), null);
+    Assert.strictEqual(await PlacesUtils.promiseBookmarksTree(guid), null);
   }
 }
 
@@ -359,7 +463,7 @@ add_task(async function test_recycled_transactions() {
     try {
       await aTransaction.transact();
       do_throw("Shouldn't be able to use the same transaction twice");
-    } catch (ex) { }
+    } catch (ex) {}
     ensureUndoState(txns, undoPosition);
   }
 
@@ -381,7 +485,7 @@ add_task(async function test_recycled_transactions() {
     try {
       await txn_a.transact();
       do_throw("Shouldn't be able to use the same transaction twice");
-    } catch (ex) { }
+    } catch (ex) {}
     ensureUndoState();
     await txn_b.transact();
   });
@@ -398,10 +502,16 @@ add_task(async function test_recycled_transactions() {
 });
 
 add_task(async function test_new_folder_with_children() {
-  let folder_info = createTestFolderInfo("Test folder", PlacesUtils.bookmarks.menuGuid, [{
-    url: "http://test_create_item.com",
-    title: "Test creating an item",
-  }]);
+  let folder_info = createTestFolderInfo(
+    "Test folder",
+    PlacesUtils.bookmarks.menuGuid,
+    [
+      {
+        url: "http://test_create_item.com",
+        title: "Test creating an item",
+      },
+    ]
+  );
   ensureUndoState();
   let txn = PT.NewFolder(folder_info);
   folder_info.guid = await txn.transact();
@@ -423,10 +533,12 @@ add_task(async function test_new_folder_with_children() {
       guid: folder_info.guid,
       parentGuid: folder_info.parentGuid,
       index: bmStartIndex,
-      children: [{
-        title: "Test creating an item",
-        url: "http://test_create_item.com",
-      }],
+      children: [
+        {
+          title: "Test creating an item",
+          url: "http://test_create_item.com",
+        },
+      ],
     });
     observer.reset();
   };
@@ -443,10 +555,12 @@ add_task(async function test_new_folder_with_children() {
 });
 
 add_task(async function test_new_bookmark() {
-  let bm_info = { parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                  url:        "http://test_create_item.com",
-                  index:      bmStartIndex,
-                  title:      "Test creating an item" };
+  let bm_info = {
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://test_create_item.com",
+    index: bmStartIndex,
+    title: "Test creating an item",
+  };
 
   ensureUndoState();
   let txn = PT.NewBookmark(bm_info);
@@ -456,15 +570,18 @@ add_task(async function test_new_bookmark() {
   let ensureDo = async function(aRedo = false) {
     ensureUndoState([[txn]], 0);
     await ensureItemsAdded(bm_info);
-    if (aRedo)
+    if (aRedo) {
       await ensureBookmarksTreeRestoredCorrectly(originalInfo);
+    }
     observer.reset();
   };
   let ensureUndo = () => {
     ensureUndoState([[txn]], 1);
-    ensureItemsRemoved({ guid:       bm_info.guid,
-                         parentGuid: bm_info.parentGuid,
-                         index:      bmStartIndex });
+    ensureItemsRemoved({
+      guid: bm_info.guid,
+      parentGuid: bm_info.parentGuid,
+      index: bmStartIndex,
+    });
     observer.reset();
   };
 
@@ -482,9 +599,11 @@ add_task(async function test_new_bookmark() {
 
 add_task(async function test_merge_create_folder_and_item() {
   let folder_info = createTestFolderInfo();
-  let bm_info = { url: "http://test_create_item_to_folder.com",
-                  title: "Test Bookmark",
-                  index: bmStartIndex };
+  let bm_info = {
+    url: "http://test_create_item_to_folder.com",
+    title: "Test Bookmark",
+    index: bmStartIndex,
+  };
 
   let [folderTxnResult, bkmTxnResult] = await PT.batch(async function() {
     let folderTxn = PT.NewFolder(folder_info);
@@ -520,17 +639,18 @@ add_task(async function test_merge_create_folder_and_item() {
 
 add_task(async function test_move_items_to_folder() {
   let folder_a_info = createTestFolderInfo("Folder A");
-  let bkm_a_info = { url: "http://test_move_items.com",
-                     title: "Bookmark A" };
-  let bkm_b_info = { url: "http://test_move_items.com",
-                     title: "Bookmark B" };
+  let bkm_a_info = { url: "http://test_move_items.com", title: "Bookmark A" };
+  let bkm_b_info = { url: "http://test_move_items.com", title: "Bookmark B" };
 
   // Test moving items within the same folder.
-  let [folder_a_txn_result, bkm_a_txn_result, bkm_b_txn_result] = await PT.batch(async function() {
+  let [
+    folder_a_txn_result,
+    bkm_a_txn_result,
+    bkm_b_txn_result,
+  ] = await PT.batch(async function() {
     let folder_a_txn = PT.NewFolder(folder_a_info);
 
-    folder_a_info.guid = bkm_a_info.parentGuid = bkm_b_info.parentGuid =
-      await folder_a_txn.transact();
+    folder_a_info.guid = bkm_a_info.parentGuid = bkm_b_info.parentGuid = await folder_a_txn.transact();
     let bkm_a_txn = PT.NewBookmark(bkm_a_info);
     bkm_a_info.guid = await bkm_a_txn.transact();
     let bkm_b_txn = PT.NewBookmark(bkm_b_info);
@@ -538,28 +658,43 @@ add_task(async function test_move_items_to_folder() {
     return [folder_a_txn, bkm_a_txn, bkm_b_txn];
   });
 
-  ensureUndoState([[bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 0);
+  ensureUndoState(
+    [[bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]],
+    0
+  );
 
-  let moveTxn = PT.Move({ guid:          bkm_a_info.guid,
-                          newParentGuid: folder_a_info.guid });
+  let moveTxn = PT.Move({
+    guid: bkm_a_info.guid,
+    newParentGuid: folder_a_info.guid,
+  });
   await moveTxn.transact();
 
   let ensureDo = () => {
-    ensureUndoState([[moveTxn], [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 0);
-    ensureItemsMoved({ guid:          bkm_a_info.guid,
-                       oldParentGuid: folder_a_info.guid,
-                       newParentGuid: folder_a_info.guid,
-                       oldIndex:      0,
-                       newIndex:      1 });
+    ensureUndoState(
+      [[moveTxn], [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]],
+      0
+    );
+    ensureItemsMoved({
+      guid: bkm_a_info.guid,
+      oldParentGuid: folder_a_info.guid,
+      newParentGuid: folder_a_info.guid,
+      oldIndex: 0,
+      newIndex: 1,
+    });
     observer.reset();
   };
   let ensureUndo = () => {
-    ensureUndoState([[moveTxn], [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 1);
-    ensureItemsMoved({ guid:          bkm_a_info.guid,
-                       oldParentGuid: folder_a_info.guid,
-                       newParentGuid: folder_a_info.guid,
-                       oldIndex:      1,
-                       newIndex:      0 });
+    ensureUndoState(
+      [[moveTxn], [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]],
+      1
+    );
+    ensureItemsMoved({
+      guid: bkm_a_info.guid,
+      oldParentGuid: folder_a_info.guid,
+      newParentGuid: folder_a_info.guid,
+      oldIndex: 1,
+      newIndex: 0,
+    });
     observer.reset();
   };
 
@@ -572,40 +707,61 @@ add_task(async function test_move_items_to_folder() {
   ensureUndo();
 
   await PT.clearTransactionsHistory(false, true);
-  ensureUndoState([[bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 0);
+  ensureUndoState(
+    [[bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]],
+    0
+  );
 
   // Test moving items between folders.
   let folder_b_info = createTestFolderInfo("Folder B");
   let folder_b_txn = PT.NewFolder(folder_b_info);
   folder_b_info.guid = await folder_b_txn.transact();
-  ensureUndoState([ [folder_b_txn],
-                    [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 0);
+  ensureUndoState(
+    [[folder_b_txn], [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]],
+    0
+  );
 
-  moveTxn = PT.Move({ guid:          bkm_a_info.guid,
-                      newParentGuid: folder_b_info.guid,
-                      newIndex:      bmsvc.DEFAULT_INDEX });
+  moveTxn = PT.Move({
+    guid: bkm_a_info.guid,
+    newParentGuid: folder_b_info.guid,
+    newIndex: bmsvc.DEFAULT_INDEX,
+  });
   await moveTxn.transact();
 
   ensureDo = () => {
-    ensureUndoState([ [moveTxn],
-                      [folder_b_txn],
-                      [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 0);
-    ensureItemsMoved({ guid:          bkm_a_info.guid,
-                       oldParentGuid: folder_a_info.guid,
-                       newParentGuid: folder_b_info.guid,
-                       oldIndex:      0,
-                       newIndex:      0 });
+    ensureUndoState(
+      [
+        [moveTxn],
+        [folder_b_txn],
+        [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result],
+      ],
+      0
+    );
+    ensureItemsMoved({
+      guid: bkm_a_info.guid,
+      oldParentGuid: folder_a_info.guid,
+      newParentGuid: folder_b_info.guid,
+      oldIndex: 0,
+      newIndex: 0,
+    });
     observer.reset();
   };
   ensureUndo = () => {
-    ensureUndoState([ [moveTxn],
-                      [folder_b_txn],
-                      [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 1);
-    ensureItemsMoved({ guid:          bkm_a_info.guid,
-                       oldParentGuid: folder_b_info.guid,
-                       newParentGuid: folder_a_info.guid,
-                       oldIndex:      0,
-                       newIndex:      0 });
+    ensureUndoState(
+      [
+        [moveTxn],
+        [folder_b_txn],
+        [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result],
+      ],
+      1
+    );
+    ensureItemsMoved({
+      guid: bkm_a_info.guid,
+      oldParentGuid: folder_b_info.guid,
+      newParentGuid: folder_a_info.guid,
+      oldIndex: 0,
+      newIndex: 0,
+    });
     observer.reset();
   };
 
@@ -621,31 +777,34 @@ add_task(async function test_move_items_to_folder() {
   await PT.undo(); // folder_b_txn
   await PT.undo(); // folder_a_txn + the bookmarks;
   Assert.equal(observer.itemsRemoved.size, 4);
-  ensureUndoState([ [moveTxn],
-                    [folder_b_txn],
-                    [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 3);
+  ensureUndoState(
+    [
+      [moveTxn],
+      [folder_b_txn],
+      [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result],
+    ],
+    3
+  );
   await PT.clearTransactionsHistory();
   ensureUndoState();
 });
 
 add_task(async function test_move_multiple_items_to_folder() {
   let folder_a_info = createTestFolderInfo("Folder A");
-  let bkm_a_info = { url: "http://test_move_items.com",
-                     title: "Bookmark A" };
-  let bkm_b_info = { url: "http://test_move_items.com",
-                     title: "Bookmark B" };
-  let bkm_c_info = { url: "http://test_move_items.com",
-                    title: "Bookmark C" };
+  let bkm_a_info = { url: "http://test_move_items.com", title: "Bookmark A" };
+  let bkm_b_info = { url: "http://test_move_items.com", title: "Bookmark B" };
+  let bkm_c_info = { url: "http://test_move_items.com", title: "Bookmark C" };
 
   // Test moving items within the same folder.
-  let [folder_a_txn_result,
-       bkm_a_txn_result,
-       bkm_b_txn_result,
-       bkm_c_txn_result] = await PT.batch(async function() {
+  let [
+    folder_a_txn_result,
+    bkm_a_txn_result,
+    bkm_b_txn_result,
+    bkm_c_txn_result,
+  ] = await PT.batch(async function() {
     let folder_a_txn = PT.NewFolder(folder_a_info);
 
-    folder_a_info.guid = bkm_a_info.parentGuid = bkm_b_info.parentGuid =
-      bkm_c_info.parentGuid = await folder_a_txn.transact();
+    folder_a_info.guid = bkm_a_info.parentGuid = bkm_b_info.parentGuid = bkm_c_info.parentGuid = await folder_a_txn.transact();
     let bkm_a_txn = PT.NewBookmark(bkm_a_info);
     bkm_a_info.guid = await bkm_a_txn.transact();
     let bkm_b_txn = PT.NewBookmark(bkm_b_info);
@@ -655,44 +814,84 @@ add_task(async function test_move_multiple_items_to_folder() {
     return [folder_a_txn, bkm_a_txn, bkm_b_txn, bkm_c_txn];
   });
 
-  ensureUndoState([[bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 0);
+  ensureUndoState(
+    [
+      [
+        bkm_c_txn_result,
+        bkm_b_txn_result,
+        bkm_a_txn_result,
+        folder_a_txn_result,
+      ],
+    ],
+    0
+  );
 
-  let moveTxn = PT.Move({ guids: [bkm_a_info.guid, bkm_b_info.guid],
-                          newParentGuid: folder_a_info.guid });
+  let moveTxn = PT.Move({
+    guids: [bkm_a_info.guid, bkm_b_info.guid],
+    newParentGuid: folder_a_info.guid,
+  });
   await moveTxn.transact();
 
   let ensureDo = () => {
-    ensureUndoState([[moveTxn], [bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 0);
-    ensureItemsMoved({
-      guid: bkm_a_info.guid,
-      oldParentGuid: folder_a_info.guid,
-      newParentGuid: folder_a_info.guid,
-      oldIndex: 0,
-      newIndex: 2,
-    }, {
-      guid: bkm_b_info.guid,
-      oldParentGuid: folder_a_info.guid,
-      newParentGuid: folder_a_info.guid,
-      oldIndex: 1,
-      newIndex: 2,
-    });
+    ensureUndoState(
+      [
+        [moveTxn],
+        [
+          bkm_c_txn_result,
+          bkm_b_txn_result,
+          bkm_a_txn_result,
+          folder_a_txn_result,
+        ],
+      ],
+      0
+    );
+    ensureItemsMoved(
+      {
+        guid: bkm_a_info.guid,
+        oldParentGuid: folder_a_info.guid,
+        newParentGuid: folder_a_info.guid,
+        oldIndex: 0,
+        newIndex: 2,
+      },
+      {
+        guid: bkm_b_info.guid,
+        oldParentGuid: folder_a_info.guid,
+        newParentGuid: folder_a_info.guid,
+        oldIndex: 1,
+        newIndex: 2,
+      }
+    );
     observer.reset();
   };
   let ensureUndo = () => {
-    ensureUndoState([[moveTxn], [bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 1);
-    ensureItemsMoved({
-      guid: bkm_a_info.guid,
-      oldParentGuid: folder_a_info.guid,
-      newParentGuid: folder_a_info.guid,
-      oldIndex: 1,
-      newIndex: 0,
-    }, {
-      guid: bkm_b_info.guid,
-      oldParentGuid: folder_a_info.guid,
-      newParentGuid: folder_a_info.guid,
-      oldIndex: 2,
-      newIndex: 1,
-    });
+    ensureUndoState(
+      [
+        [moveTxn],
+        [
+          bkm_c_txn_result,
+          bkm_b_txn_result,
+          bkm_a_txn_result,
+          folder_a_txn_result,
+        ],
+      ],
+      1
+    );
+    ensureItemsMoved(
+      {
+        guid: bkm_a_info.guid,
+        oldParentGuid: folder_a_info.guid,
+        newParentGuid: folder_a_info.guid,
+        oldIndex: 1,
+        newIndex: 0,
+      },
+      {
+        guid: bkm_b_info.guid,
+        oldParentGuid: folder_a_info.guid,
+        newParentGuid: folder_a_info.guid,
+        oldIndex: 2,
+        newIndex: 1,
+      }
+    );
     observer.reset();
   };
 
@@ -705,40 +904,86 @@ add_task(async function test_move_multiple_items_to_folder() {
   ensureUndo();
 
   await PT.clearTransactionsHistory(false, true);
-  ensureUndoState([[bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 0);
+  ensureUndoState(
+    [
+      [
+        bkm_c_txn_result,
+        bkm_b_txn_result,
+        bkm_a_txn_result,
+        folder_a_txn_result,
+      ],
+    ],
+    0
+  );
 
   // Test moving items between folders.
   let folder_b_info = createTestFolderInfo("Folder B");
   let folder_b_txn = PT.NewFolder(folder_b_info);
   folder_b_info.guid = await folder_b_txn.transact();
-  ensureUndoState([ [folder_b_txn],
-                    [bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 0);
+  ensureUndoState(
+    [
+      [folder_b_txn],
+      [
+        bkm_c_txn_result,
+        bkm_b_txn_result,
+        bkm_a_txn_result,
+        folder_a_txn_result,
+      ],
+    ],
+    0
+  );
 
-  moveTxn = PT.Move({ guid:          bkm_a_info.guid,
-                      newParentGuid: folder_b_info.guid,
-                      newIndex:      bmsvc.DEFAULT_INDEX });
+  moveTxn = PT.Move({
+    guid: bkm_a_info.guid,
+    newParentGuid: folder_b_info.guid,
+    newIndex: bmsvc.DEFAULT_INDEX,
+  });
   await moveTxn.transact();
 
   ensureDo = () => {
-    ensureUndoState([ [moveTxn],
-                      [folder_b_txn],
-                      [bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 0);
-    ensureItemsMoved({ guid:          bkm_a_info.guid,
-                       oldParentGuid: folder_a_info.guid,
-                       newParentGuid: folder_b_info.guid,
-                       oldIndex:      0,
-                       newIndex:      0 });
+    ensureUndoState(
+      [
+        [moveTxn],
+        [folder_b_txn],
+        [
+          bkm_c_txn_result,
+          bkm_b_txn_result,
+          bkm_a_txn_result,
+          folder_a_txn_result,
+        ],
+      ],
+      0
+    );
+    ensureItemsMoved({
+      guid: bkm_a_info.guid,
+      oldParentGuid: folder_a_info.guid,
+      newParentGuid: folder_b_info.guid,
+      oldIndex: 0,
+      newIndex: 0,
+    });
     observer.reset();
   };
   ensureUndo = () => {
-    ensureUndoState([ [moveTxn],
-                      [folder_b_txn],
-                      [bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 1);
-    ensureItemsMoved({ guid:          bkm_a_info.guid,
-                       oldParentGuid: folder_b_info.guid,
-                       newParentGuid: folder_a_info.guid,
-                       oldIndex:      0,
-                       newIndex:      0 });
+    ensureUndoState(
+      [
+        [moveTxn],
+        [folder_b_txn],
+        [
+          bkm_c_txn_result,
+          bkm_b_txn_result,
+          bkm_a_txn_result,
+          folder_a_txn_result,
+        ],
+      ],
+      1
+    );
+    ensureItemsMoved({
+      guid: bkm_a_info.guid,
+      oldParentGuid: folder_b_info.guid,
+      newParentGuid: folder_a_info.guid,
+      oldIndex: 0,
+      newIndex: 0,
+    });
     observer.reset();
   };
 
@@ -754,9 +999,19 @@ add_task(async function test_move_multiple_items_to_folder() {
   await PT.undo(); // folder_b_txn
   await PT.undo(); // folder_a_txn + the bookmarks;
   Assert.equal(observer.itemsRemoved.size, 5);
-  ensureUndoState([ [moveTxn],
-                    [folder_b_txn],
-                    [bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 3);
+  ensureUndoState(
+    [
+      [moveTxn],
+      [folder_b_txn],
+      [
+        bkm_c_txn_result,
+        bkm_b_txn_result,
+        bkm_a_txn_result,
+        folder_a_txn_result,
+      ],
+    ],
+    3
+  );
   await PT.clearTransactionsHistory();
   ensureUndoState();
 });
@@ -764,21 +1019,24 @@ add_task(async function test_move_multiple_items_to_folder() {
 add_task(async function test_remove_folder() {
   let folder_level_1_info = createTestFolderInfo("Folder Level 1");
   let folder_level_2_info = { title: "Folder Level 2" };
-  let [folder_level_1_txn_result,
-       folder_level_2_txn_result] = await PT.batch(async function() {
-    let folder_level_1_txn  = PT.NewFolder(folder_level_1_info);
-    folder_level_1_info.guid = await folder_level_1_txn.transact();
-    folder_level_2_info.parentGuid = folder_level_1_info.guid;
-    let folder_level_2_txn = PT.NewFolder(folder_level_2_info);
-    folder_level_2_info.guid = await folder_level_2_txn.transact();
-    return [folder_level_1_txn, folder_level_2_txn];
-  });
+  let [folder_level_1_txn_result, folder_level_2_txn_result] = await PT.batch(
+    async function() {
+      let folder_level_1_txn = PT.NewFolder(folder_level_1_info);
+      folder_level_1_info.guid = await folder_level_1_txn.transact();
+      folder_level_2_info.parentGuid = folder_level_1_info.guid;
+      let folder_level_2_txn = PT.NewFolder(folder_level_2_info);
+      folder_level_2_info.guid = await folder_level_2_txn.transact();
+      return [folder_level_1_txn, folder_level_2_txn];
+    }
+  );
 
-  let original_folder_level_1_tree =
-    await PlacesUtils.promiseBookmarksTree(folder_level_1_info.guid);
-  let original_folder_level_2_tree =
-    Object.assign({ parentGuid: original_folder_level_1_tree.guid },
-                  original_folder_level_1_tree.children[0]);
+  let original_folder_level_1_tree = await PlacesUtils.promiseBookmarksTree(
+    folder_level_1_info.guid
+  );
+  let original_folder_level_2_tree = Object.assign(
+    { parentGuid: original_folder_level_1_tree.guid },
+    original_folder_level_1_tree.children[0]
+  );
 
   ensureUndoState([[folder_level_2_txn_result, folder_level_1_txn_result]]);
   await ensureItemsAdded(folder_level_1_info, folder_level_2_info);
@@ -787,65 +1045,103 @@ add_task(async function test_remove_folder() {
   let remove_folder_2_txn = PT.Remove(folder_level_2_info);
   await remove_folder_2_txn.transact();
 
-  ensureUndoState([ [remove_folder_2_txn],
-                    [folder_level_2_txn_result, folder_level_1_txn_result] ]);
+  ensureUndoState([
+    [remove_folder_2_txn],
+    [folder_level_2_txn_result, folder_level_1_txn_result],
+  ]);
   await ensureItemsRemoved(folder_level_2_info);
 
   // Undo Remove "Folder Level 2"
   await PT.undo();
-  ensureUndoState([ [remove_folder_2_txn],
-                    [folder_level_2_txn_result, folder_level_1_txn_result] ], 1);
+  ensureUndoState(
+    [
+      [remove_folder_2_txn],
+      [folder_level_2_txn_result, folder_level_1_txn_result],
+    ],
+    1
+  );
   await ensureItemsAdded(folder_level_2_info);
   await ensureBookmarksTreeRestoredCorrectly(original_folder_level_2_tree);
   observer.reset();
 
   // Redo Remove "Folder Level 2"
   await PT.redo();
-  ensureUndoState([ [remove_folder_2_txn],
-                    [folder_level_2_txn_result, folder_level_1_txn_result] ]);
+  ensureUndoState([
+    [remove_folder_2_txn],
+    [folder_level_2_txn_result, folder_level_1_txn_result],
+  ]);
   await ensureItemsRemoved(folder_level_2_info);
   observer.reset();
 
   // Undo it again
   await PT.undo();
-  ensureUndoState([ [remove_folder_2_txn],
-                    [folder_level_2_txn_result, folder_level_1_txn_result] ], 1);
+  ensureUndoState(
+    [
+      [remove_folder_2_txn],
+      [folder_level_2_txn_result, folder_level_1_txn_result],
+    ],
+    1
+  );
   await ensureItemsAdded(folder_level_2_info);
   await ensureBookmarksTreeRestoredCorrectly(original_folder_level_2_tree);
   observer.reset();
 
   // Undo the creation of both folders
   await PT.undo();
-  ensureUndoState([ [remove_folder_2_txn],
-                    [folder_level_2_txn_result, folder_level_1_txn_result] ], 2);
+  ensureUndoState(
+    [
+      [remove_folder_2_txn],
+      [folder_level_2_txn_result, folder_level_1_txn_result],
+    ],
+    2
+  );
   await ensureItemsRemoved(folder_level_2_info, folder_level_1_info);
   observer.reset();
 
   // Redo the creation of both folders
   await PT.redo();
-  ensureUndoState([ [remove_folder_2_txn],
-                    [folder_level_2_txn_result, folder_level_1_txn_result] ], 1);
+  ensureUndoState(
+    [
+      [remove_folder_2_txn],
+      [folder_level_2_txn_result, folder_level_1_txn_result],
+    ],
+    1
+  );
   await ensureItemsAdded(folder_level_1_info, folder_level_2_info);
-  await ensureBookmarksTreeRestoredCorrectlyExceptDates(original_folder_level_1_tree);
+  await ensureBookmarksTreeRestoredCorrectlyExceptDates(
+    original_folder_level_1_tree
+  );
   observer.reset();
 
   // Redo Remove "Folder Level 2"
   await PT.redo();
-  ensureUndoState([ [remove_folder_2_txn],
-                    [folder_level_2_txn_result, folder_level_1_txn_result] ]);
+  ensureUndoState([
+    [remove_folder_2_txn],
+    [folder_level_2_txn_result, folder_level_1_txn_result],
+  ]);
   await ensureItemsRemoved(folder_level_2_info);
   observer.reset();
 
   // Undo everything one last time
   await PT.undo();
-  ensureUndoState([ [remove_folder_2_txn],
-                    [folder_level_2_txn_result, folder_level_1_txn_result] ], 1);
+  ensureUndoState(
+    [
+      [remove_folder_2_txn],
+      [folder_level_2_txn_result, folder_level_1_txn_result],
+    ],
+    1
+  );
   await ensureItemsAdded(folder_level_2_info);
   observer.reset();
 
   await PT.undo();
-  ensureUndoState([ [remove_folder_2_txn],
-                    [folder_level_2_txn_result, folder_level_1_txn_result] ], 2);
+  ensureUndoState(
+    [
+      [remove_folder_2_txn],
+      [folder_level_2_txn_result, folder_level_1_txn_result],
+    ],
+    2
+  );
   await ensureItemsRemoved(folder_level_2_info, folder_level_2_info);
   observer.reset();
 
@@ -897,9 +1193,11 @@ add_task(async function test_add_and_remove_bookmarks_with_additional_info() {
   // * Check that no-op tagging (the uri is already tagged with TAG_1) is
   //   also a no-op on undo.
   observer.reset();
-  let b2_info = { parentGuid:  folder_info.guid,
-                  url:         testURI,
-                  tags:        [TAG_1, TAG_2] };
+  let b2_info = {
+    parentGuid: folder_info.guid,
+    url: testURI,
+    tags: [TAG_1, TAG_2],
+  };
   b2_info.guid = await PT.NewBookmark(b2_info).transact();
   ensureTags([TAG_1, TAG_2]);
 
@@ -1030,9 +1328,11 @@ add_task(async function test_edit_title() {
   };
 
   function ensureTitleChange(aCurrentTitle) {
-    ensureItemsChanged({ guid: bm_info.guid,
-                         property: "title",
-                         newValue: aCurrentTitle});
+    ensureItemsChanged({
+      guid: bm_info.guid,
+      property: "title",
+      newValue: aCurrentTitle,
+    });
   }
 
   bm_info.guid = await PT.NewBookmark(bm_info).transact();
@@ -1063,11 +1363,21 @@ add_task(async function test_edit_title() {
 add_task(async function test_edit_url() {
   let oldURI = "http://old.test_editing_item_uri.com/";
   let newURI = "http://new.test_editing_item_uri.com/";
-  let bm_info = { parentGuid: PlacesUtils.bookmarks.unfiledGuid, url: oldURI, tags: ["TestTag"] };
-  function ensureURIAndTags(aPreChangeURI, aPostChangeURI, aOLdURITagsPreserved) {
-    ensureItemsChanged({ guid: bm_info.guid,
-                         property: "uri",
-                         newValue: aPostChangeURI });
+  let bm_info = {
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: oldURI,
+    tags: ["TestTag"],
+  };
+  function ensureURIAndTags(
+    aPreChangeURI,
+    aPostChangeURI,
+    aOLdURITagsPreserved
+  ) {
+    ensureItemsChanged({
+      guid: bm_info.guid,
+      property: "uri",
+      newValue: aPostChangeURI,
+    });
     ensureTagsForURI(aPostChangeURI, bm_info.tags);
     ensureTagsForURI(aPreChangeURI, aOLdURITagsPreserved ? bm_info.tags : []);
   }
@@ -1125,20 +1435,28 @@ add_task(async function test_edit_url() {
 });
 
 add_task(async function test_edit_keyword() {
-  let bm_info = { parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                  url: "http://test.edit.keyword/" };
+  let bm_info = {
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://test.edit.keyword/",
+  };
   const KEYWORD = "test_keyword";
   bm_info.guid = await PT.NewBookmark(bm_info).transact();
   function ensureKeywordChange(aCurrentKeyword = "") {
-    ensureItemsChanged({ guid: bm_info.guid,
-                         property: "keyword",
-                         newValue: aCurrentKeyword });
+    ensureItemsChanged({
+      guid: bm_info.guid,
+      property: "keyword",
+      newValue: aCurrentKeyword,
+    });
   }
 
   bm_info.guid = await PT.NewBookmark(bm_info).transact();
 
   observer.reset();
-  await PT.EditKeyword({ guid: bm_info.guid, keyword: KEYWORD, postData: "postData" }).transact();
+  await PT.EditKeyword({
+    guid: bm_info.guid,
+    keyword: KEYWORD,
+    postData: "postData",
+  }).transact();
   ensureKeywordChange(KEYWORD);
   let entry = await PlacesUtils.keywords.fetch(KEYWORD);
   Assert.equal(entry.url.href, bm_info.url);
@@ -1169,20 +1487,28 @@ add_task(async function test_edit_keyword() {
 });
 
 add_task(async function test_edit_keyword_null_postData() {
-  let bm_info = { parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                  url: "http://test.edit.keyword/" };
+  let bm_info = {
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://test.edit.keyword/",
+  };
   const KEYWORD = "test_keyword";
   bm_info.guid = await PT.NewBookmark(bm_info).transact();
   function ensureKeywordChange(aCurrentKeyword = "") {
-    ensureItemsChanged({ guid: bm_info.guid,
-                         property: "keyword",
-                         newValue: aCurrentKeyword });
+    ensureItemsChanged({
+      guid: bm_info.guid,
+      property: "keyword",
+      newValue: aCurrentKeyword,
+    });
   }
 
   bm_info.guid = await PT.NewBookmark(bm_info).transact();
 
   observer.reset();
-  await PT.EditKeyword({ guid: bm_info.guid, keyword: KEYWORD, postData: null }).transact();
+  await PT.EditKeyword({
+    guid: bm_info.guid,
+    keyword: KEYWORD,
+    postData: null,
+  }).transact();
   ensureKeywordChange(KEYWORD);
   let entry = await PlacesUtils.keywords.fetch(KEYWORD);
   Assert.equal(entry.url.href, bm_info.url);
@@ -1213,14 +1539,17 @@ add_task(async function test_edit_keyword_null_postData() {
 });
 
 add_task(async function test_edit_specific_keyword() {
-  let bm_info = { parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                  url: "http://test.edit.keyword/" };
+  let bm_info = {
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://test.edit.keyword/",
+  };
   bm_info.guid = await PT.NewBookmark(bm_info).transact();
   function ensureKeywordChange(aCurrentKeyword = "", aPreviousKeyword = "") {
-    ensureItemsChanged({ guid: bm_info.guid,
-                         property: "keyword",
-                         newValue: aCurrentKeyword,
-                       });
+    ensureItemsChanged({
+      guid: bm_info.guid,
+      property: "keyword",
+      newValue: aCurrentKeyword,
+    });
   }
 
   await PlacesUtils.keywords.insert({
@@ -1236,7 +1565,11 @@ add_task(async function test_edit_specific_keyword() {
   bm_info.guid = await PT.NewBookmark(bm_info).transact();
 
   observer.reset();
-  await PT.EditKeyword({ guid: bm_info.guid, keyword: "keyword", oldKeyword: "kw2" }).transact();
+  await PT.EditKeyword({
+    guid: bm_info.guid,
+    keyword: "keyword",
+    oldKeyword: "kw2",
+  }).transact();
   ensureKeywordChange("keyword", "kw2");
   let entry = await PlacesUtils.keywords.fetch("kw1");
   Assert.equal(entry.url.href, bm_info.url);
@@ -1284,10 +1617,14 @@ add_task(async function test_edit_specific_keyword() {
 
 add_task(async function test_tag_uri() {
   // This also tests passing uri specs.
-  let bm_info_a = { url: "http://bookmarked.uri",
-                    parentGuid: PlacesUtils.bookmarks.unfiledGuid };
-  let bm_info_b = { url: "http://bookmarked2.uri",
-                    parentGuid: PlacesUtils.bookmarks.unfiledGuid };
+  let bm_info_a = {
+    url: "http://bookmarked.uri",
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  };
+  let bm_info_b = {
+    url: "http://bookmarked2.uri",
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  };
   let unbookmarked_uri = "http://un.bookmarked.uri";
 
   await PT.batch(async function() {
@@ -1315,10 +1652,11 @@ add_task(async function test_tag_uri() {
     async function ensureTagsUnset() {
       for (let url of urls) {
         ensureTagsForURI(url, []);
-        if (tagWillAlsoBookmark.has(url))
+        if (tagWillAlsoBookmark.has(url)) {
           Assert.ok(!(await bmsvc.fetch({ url })));
-        else
+        } else {
           Assert.ok(await bmsvc.fetch({ url }));
+        }
       }
     }
 
@@ -1337,7 +1675,10 @@ add_task(async function test_tag_uri() {
   await doTest({ urls: [bm_info_a.url, bm_info_b.url], tags: ["A, B"] });
   await doTest({ urls: [bm_info_a.url, unbookmarked_uri], tag: "C" });
   // Duplicate URLs listed.
-  await doTest({ urls: [bm_info_a.url, bm_info_b.url, bm_info_a.url], tag: "D" });
+  await doTest({
+    urls: [bm_info_a.url, bm_info_b.url, bm_info_a.url],
+    tag: "D",
+  });
 
   // Cleanup
   observer.reset();
@@ -1349,12 +1690,16 @@ add_task(async function test_tag_uri() {
 });
 
 add_task(async function test_untag_uri() {
-  let bm_info_a = { url: "http://bookmarked.uri",
-                    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                    tags: ["A", "B"] };
-  let bm_info_b = { url: "http://bookmarked2.uri",
-                    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                    tag: "B" };
+  let bm_info_a = {
+    url: "http://bookmarked.uri",
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    tags: ["A", "B"],
+  };
+  let bm_info_b = {
+    url: "http://bookmarked2.uri",
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    tag: "B",
+  };
 
   await PT.batch(async function() {
     bm_info_a.guid = await PT.NewBookmark(bm_info_a).transact();
@@ -1365,7 +1710,7 @@ add_task(async function test_untag_uri() {
 
   async function doTest(aInfo) {
     let urls, tagsRemoved;
-    if (typeof(aInfo) == "string") {
+    if (typeof aInfo == "string") {
       urls = [aInfo];
       tagsRemoved = [];
     } else if (Array.isArray(aInfo)) {
@@ -1388,8 +1733,10 @@ add_task(async function test_untag_uri() {
     }
     function ensureTagsUnset() {
       for (let url of urls) {
-        let expectedTags = tagsRemoved.length == 0 ?
-           [] : preRemovalTags.get(url).filter(tag => !tagsRemoved.includes(tag));
+        let expectedTags =
+          tagsRemoved.length == 0
+            ? []
+            : preRemovalTags.get(url).filter(tag => !tagsRemoved.includes(tag));
         ensureTagsForURI(url, expectedTags);
       }
     }
@@ -1427,20 +1774,22 @@ add_task(async function test_sort_folder_by_name() {
   let folder_info = createTestFolderInfo();
 
   let url = "http://sort.by.name/";
-  let preSep =  ["3", "2", "1"].map(i => ({ title: i, url }));
+  let preSep = ["3", "2", "1"].map(i => ({ title: i, url }));
   let sep = {};
   let postSep = ["c", "b", "a"].map(l => ({ title: l, url }));
   let originalOrder = [...preSep, sep, ...postSep];
-  let sortedOrder = [...preSep.slice(0).reverse(),
-                     sep,
-                     ...postSep.slice(0).reverse()];
+  let sortedOrder = [
+    ...preSep.slice(0).reverse(),
+    sep,
+    ...postSep.slice(0).reverse(),
+  ];
   await PT.batch(async function() {
     folder_info.guid = await PT.NewFolder(folder_info).transact();
     for (let info of originalOrder) {
       info.parentGuid = folder_info.guid;
-      info.guid = await (info == sep ?
-                    PT.NewSeparator(info).transact() :
-                    PT.NewBookmark(info).transact());
+      info.guid = await (info == sep
+        ? PT.NewSeparator(info).transact()
+        : PT.NewBookmark(info).transact());
     }
   });
 
@@ -1470,7 +1819,8 @@ add_task(async function test_sort_folder_by_name() {
 add_task(async function test_copy() {
   async function duplicate_and_test(aOriginalGuid) {
     let txn = PT.Copy({
-      guid: aOriginalGuid, newParentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      guid: aOriginalGuid,
+      newParentGuid: PlacesUtils.bookmarks.unfiledGuid,
     });
     let duplicateGuid = await txn.transact();
     let originalInfo = await PlacesUtils.promiseBookmarksTree(aOriginalGuid);
@@ -1509,9 +1859,11 @@ add_task(async function test_copy() {
   });
 
   // Test duplicating leafs (bookmark, separator, empty folder)
-  PT.NewBookmark({ url: "http://test.item.duplicate",
-                   parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                   annos: [{ name: "Anno", value: "AnnoValue"}] });
+  PT.NewBookmark({
+    url: "http://test.item.duplicate",
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    annos: [{ name: "Anno", value: "AnnoValue" }],
+  });
   let sepTxn = PT.NewSeparator({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     index: 1,
@@ -1526,17 +1878,22 @@ add_task(async function test_copy() {
   // Test duplicating a folder having some contents.
   let filledFolderGuid = await PT.batch(async function() {
     let folderGuid = await PT.NewFolder(createTestFolderInfo()).transact();
-    let nestedFolderGuid =
-      await PT.NewFolder({ parentGuid: folderGuid,
-                           title: "Nested Folder" }).transact();
+    let nestedFolderGuid = await PT.NewFolder({
+      parentGuid: folderGuid,
+      title: "Nested Folder",
+    }).transact();
     // Insert a bookmark under the nested folder.
-    await PT.NewBookmark({ url: "http://nested.nested.bookmark",
-                           parentGuid: nestedFolderGuid }).transact();
+    await PT.NewBookmark({
+      url: "http://nested.nested.bookmark",
+      parentGuid: nestedFolderGuid,
+    }).transact();
     // Insert a separator below the nested folder
     await PT.NewSeparator({ parentGuid: folderGuid }).transact();
     // And another bookmark.
-    await PT.NewBookmark({ url: "http://nested.bookmark",
-                           parentGuid: folderGuid }).transact();
+    await PT.NewBookmark({
+      url: "http://nested.bookmark",
+      parentGuid: folderGuid,
+    }).transact();
     return folderGuid;
   });
 
@@ -1557,10 +1914,11 @@ add_task(async function test_array_input_for_batch() {
 
   let ensureChildCount = async function(count) {
     let tree = await PlacesUtils.promiseBookmarksTree(folderGuid);
-    if (count == 0)
+    if (count == 0) {
       Assert.ok(!("children" in tree));
-    else
+    } else {
       Assert.equal(tree.children.length, count);
+    }
   };
 
   await ensureChildCount(2);
@@ -1572,43 +1930,51 @@ add_task(async function test_array_input_for_batch() {
   await ensureChildCount(0);
 
   await PT.undo();
-  Assert.equal((await PlacesUtils.promiseBookmarksTree(folderGuid)), null);
+  Assert.equal(await PlacesUtils.promiseBookmarksTree(folderGuid), null);
 
   // Cleanup
   await PT.clearTransactionsHistory();
 });
 
 add_task(async function test_invalid_uri_spec_throws() {
-  Assert.throws(() =>
-    PT.NewBookmark({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                     url:        "invalid uri spec",
-                     title:      "test bookmark"}),
-                    /invalid uri spec is not a valid URL/);
-  Assert.throws(() =>
-    PT.Tag({ tag: "TheTag",
-             urls: ["invalid uri spec"] }),
-           /TypeError: invalid uri spec is not a valid URL/);
-  Assert.throws(() =>
-    PT.Tag({ tag: "TheTag",
-             urls: ["about:blank", "invalid uri spec"] }),
-           /TypeError: invalid uri spec is not a valid URL/);
+  Assert.throws(
+    () =>
+      PT.NewBookmark({
+        parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+        url: "invalid uri spec",
+        title: "test bookmark",
+      }),
+    /invalid uri spec is not a valid URL/
+  );
+  Assert.throws(
+    () => PT.Tag({ tag: "TheTag", urls: ["invalid uri spec"] }),
+    /TypeError: invalid uri spec is not a valid URL/
+  );
+  Assert.throws(
+    () => PT.Tag({ tag: "TheTag", urls: ["about:blank", "invalid uri spec"] }),
+    /TypeError: invalid uri spec is not a valid URL/
+  );
 });
 
 add_task(async function test_remove_multiple() {
   let guids = [];
   await PT.batch(async function() {
-    let folderGuid = await PT.NewFolder({ title: "Test Folder",
-                                          parentGuid: menuGuid }).transact();
-    let nestedFolderGuid =
-      await PT.NewFolder({ title: "Nested Test Folder",
-                           parentGuid: folderGuid }).transact();
+    let folderGuid = await PT.NewFolder({
+      title: "Test Folder",
+      parentGuid: menuGuid,
+    }).transact();
+    let nestedFolderGuid = await PT.NewFolder({
+      title: "Nested Test Folder",
+      parentGuid: folderGuid,
+    }).transact();
     await PT.NewSeparator(nestedFolderGuid).transact();
 
     guids.push(folderGuid);
 
-    let bmGuid =
-      await PT.NewBookmark({ url: "http://test.bookmark.removed",
-                             parentGuid: menuGuid }).transact();
+    let bmGuid = await PT.NewBookmark({
+      url: "http://test.bookmark.removed",
+      parentGuid: menuGuid,
+    }).transact();
     guids.push(bmGuid);
   });
 
@@ -1665,39 +2031,75 @@ add_task(async function test_renameTag() {
 
   await PT.RenameTag({ oldTag: "t2", tag: "t3" }).transact();
   ensureTagsForURI(url, ["t1", "t3"]);
-  Assert.equal((await PlacesUtils.bookmarks.fetch(bm1.guid)).url.href, "place:tag=t3",
-               "The fitst bookmark has been updated");
-  Assert.equal((await PlacesUtils.bookmarks.fetch(bm2.guid)).url.href, "place:tag=t3&sort=1",
-               "The second bookmark has been updated");
-  Assert.equal((await PlacesUtils.bookmarks.fetch(bm3.guid)).url.href, "place:tag=t3&tag=t1",
-               "The third bookmark has been updated");
+  Assert.equal(
+    (await PlacesUtils.bookmarks.fetch(bm1.guid)).url.href,
+    "place:tag=t3",
+    "The fitst bookmark has been updated"
+  );
+  Assert.equal(
+    (await PlacesUtils.bookmarks.fetch(bm2.guid)).url.href,
+    "place:tag=t3&sort=1",
+    "The second bookmark has been updated"
+  );
+  Assert.equal(
+    (await PlacesUtils.bookmarks.fetch(bm3.guid)).url.href,
+    "place:tag=t3&tag=t1",
+    "The third bookmark has been updated"
+  );
 
   await PT.undo();
   ensureTagsForURI(url, ["t1", "t2"]);
-  Assert.equal((await PlacesUtils.bookmarks.fetch(bm1.guid)).url.href, "place:tag=t2",
-               "The fitst bookmark has been restored");
-  Assert.equal((await PlacesUtils.bookmarks.fetch(bm2.guid)).url.href, "place:tag=t2&sort=1",
-               "The second bookmark has been restored");
-  Assert.equal((await PlacesUtils.bookmarks.fetch(bm3.guid)).url.href, "place:tag=t2&tag=t1",
-               "The third bookmark has been restored");
+  Assert.equal(
+    (await PlacesUtils.bookmarks.fetch(bm1.guid)).url.href,
+    "place:tag=t2",
+    "The fitst bookmark has been restored"
+  );
+  Assert.equal(
+    (await PlacesUtils.bookmarks.fetch(bm2.guid)).url.href,
+    "place:tag=t2&sort=1",
+    "The second bookmark has been restored"
+  );
+  Assert.equal(
+    (await PlacesUtils.bookmarks.fetch(bm3.guid)).url.href,
+    "place:tag=t2&tag=t1",
+    "The third bookmark has been restored"
+  );
 
   await PT.redo();
   ensureTagsForURI(url, ["t1", "t3"]);
-  Assert.equal((await PlacesUtils.bookmarks.fetch(bm1.guid)).url.href, "place:tag=t3",
-               "The fitst bookmark has been updated");
-  Assert.equal((await PlacesUtils.bookmarks.fetch(bm2.guid)).url.href, "place:tag=t3&sort=1",
-               "The second bookmark has been updated");
-  Assert.equal((await PlacesUtils.bookmarks.fetch(bm3.guid)).url.href, "place:tag=t3&tag=t1",
-               "The third bookmark has been updated");
+  Assert.equal(
+    (await PlacesUtils.bookmarks.fetch(bm1.guid)).url.href,
+    "place:tag=t3",
+    "The fitst bookmark has been updated"
+  );
+  Assert.equal(
+    (await PlacesUtils.bookmarks.fetch(bm2.guid)).url.href,
+    "place:tag=t3&sort=1",
+    "The second bookmark has been updated"
+  );
+  Assert.equal(
+    (await PlacesUtils.bookmarks.fetch(bm3.guid)).url.href,
+    "place:tag=t3&tag=t1",
+    "The third bookmark has been updated"
+  );
 
   await PT.undo();
   ensureTagsForURI(url, ["t1", "t2"]);
-  Assert.equal((await PlacesUtils.bookmarks.fetch(bm1.guid)).url.href, "place:tag=t2",
-               "The fitst bookmark has been restored");
-  Assert.equal((await PlacesUtils.bookmarks.fetch(bm2.guid)).url.href, "place:tag=t2&sort=1",
-               "The second bookmark has been restored");
-  Assert.equal((await PlacesUtils.bookmarks.fetch(bm3.guid)).url.href, "place:tag=t2&tag=t1",
-               "The third bookmark has been restored");
+  Assert.equal(
+    (await PlacesUtils.bookmarks.fetch(bm1.guid)).url.href,
+    "place:tag=t2",
+    "The fitst bookmark has been restored"
+  );
+  Assert.equal(
+    (await PlacesUtils.bookmarks.fetch(bm2.guid)).url.href,
+    "place:tag=t2&sort=1",
+    "The second bookmark has been restored"
+  );
+  Assert.equal(
+    (await PlacesUtils.bookmarks.fetch(bm3.guid)).url.href,
+    "place:tag=t2&tag=t1",
+    "The third bookmark has been restored"
+  );
 
   await PT.undo();
   ensureTagsForURI(url, []);
@@ -1708,17 +2110,22 @@ add_task(async function test_renameTag() {
 });
 
 add_task(async function test_remove_invalid_url() {
-  let folderGuid = await PT.NewFolder({ title: "Test Folder",
-                                        parentGuid: menuGuid }).transact();
+  let folderGuid = await PT.NewFolder({
+    title: "Test Folder",
+    parentGuid: menuGuid,
+  }).transact();
 
   let guid = "invalid_____";
   let folderedGuid = "invalid____2";
   let url = "invalid-uri";
   await PlacesUtils.withConnectionWrapper("test_bookmarks_remove", async db => {
-    await db.execute(`
+    await db.execute(
+      `
       INSERT INTO moz_places(url, url_hash, title, rev_host, guid)
       VALUES (:url, hash(:url), 'Invalid URI', '.', GENERATE_GUID())
-    `, {url});
+    `,
+      { url }
+    );
     await db.execute(
       `INSERT INTO moz_bookmarks (type, fk, parent, position, guid)
         VALUES (:type,
@@ -1726,12 +2133,14 @@ add_task(async function test_remove_invalid_url() {
                 (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid),
                 (SELECT MAX(position) + 1 FROM moz_bookmarks WHERE parent = (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid)),
                 :guid)
-      `, {
-      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      url,
-      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-      guid,
-    });
+      `,
+      {
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        url,
+        parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+        guid,
+      }
+    );
     await db.execute(
       `INSERT INTO moz_bookmarks (type, fk, parent, position, guid)
         VALUES (:type,
@@ -1739,12 +2148,14 @@ add_task(async function test_remove_invalid_url() {
                 (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid),
                 (SELECT MAX(position) + 1 FROM moz_bookmarks WHERE parent = (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid)),
                 :guid)
-      `, {
-      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      url,
-      parentGuid: folderGuid,
-      guid: folderedGuid,
-    });
+      `,
+      {
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        url,
+        parentGuid: folderGuid,
+        guid: folderedGuid,
+      }
+    );
   });
 
   let guids = [folderGuid, guid];
@@ -1753,8 +2164,10 @@ add_task(async function test_remove_invalid_url() {
   // Shouldn't throw, should restore the folder but not the bookmarks.
   await PT.undo();
   await ensureNonExistent(guid, folderedGuid);
-  Assert.ok(await PlacesUtils.bookmarks.fetch(folderGuid),
-            "The folder should have been re-created");
+  Assert.ok(
+    await PlacesUtils.bookmarks.fetch(folderGuid),
+    "The folder should have been re-created"
+  );
   await PT.redo();
   await ensureNonExistent(guids, folderedGuid);
   // Cleanup

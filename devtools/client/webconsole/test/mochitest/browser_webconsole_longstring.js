@@ -7,8 +7,9 @@
 
 const TEST_URI = "data:text/html,<meta charset=utf8>Test LongString hang";
 
-const LONGSTRING =
-  `foobar${"a".repeat(9000)}foobaz${"abbababazomglolztest".repeat(100)}boom!`;
+const LONGSTRING = `foobar${"a".repeat(
+  9000
+)}foobaz${"abbababazomglolztest".repeat(100)}boom!`;
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -19,12 +20,14 @@ add_task(async function() {
     content.console.log(str);
   });
 
-  const {node} = await onMessage;
+  const { node } = await onMessage;
   const arrow = node.querySelector(".arrow");
   ok(arrow, "longString expand arrow is shown");
 
   info("wait for long string expansion");
-  const onLongStringFullTextDisplayed = waitFor(() => findMessage(hud, LONGSTRING));
+  const onLongStringFullTextDisplayed = waitFor(() =>
+    findMessage(hud, LONGSTRING)
+  );
   arrow.click();
   await onLongStringFullTextDisplayed;
 

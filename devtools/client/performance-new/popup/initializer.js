@@ -8,8 +8,9 @@
  * Initialize the require function through a BrowserLoader. This loader ensures
  * that the popup can use require and has access to the window object.
  */
-const { BrowserLoader } =
-  ChromeUtils.import("resource://devtools/client/shared/browser-loader.js");
+const { BrowserLoader } = ChromeUtils.import(
+  "resource://devtools/client/shared/browser-loader.js"
+);
 const { require } = BrowserLoader({
   baseURI: "resource://devtools/client/performance-new/popup/",
   window,

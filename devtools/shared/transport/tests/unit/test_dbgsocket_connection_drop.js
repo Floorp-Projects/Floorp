@@ -62,7 +62,7 @@ var test_helper = async function(payload) {
     host: "127.0.0.1",
     port: listener.port,
   });
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     transport.hooks = {
       onPacket: function(packet) {
         this.onPacket = function() {

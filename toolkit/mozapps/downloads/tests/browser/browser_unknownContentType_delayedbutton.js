@@ -5,9 +5,11 @@
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", this);
 
 const UCT_URI = "chrome://mozapps/content/downloads/unknownContentType.xul";
-const LOAD_URI = "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.txt";
+const LOAD_URI =
+  "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.txt";
 
-const DIALOG_DELAY = Services.prefs.getIntPref("security.dialog_enable_delay") + 200;
+const DIALOG_DELAY =
+  Services.prefs.getIntPref("security.dialog_enable_delay") + 200;
 
 let UCTObserver = {
   opened: PromiseUtils.defer(),
@@ -18,12 +20,16 @@ let UCTObserver = {
 
     switch (aTopic) {
       case "domwindowopened":
-        win.addEventListener("load", function onLoad(event) {
-          // Let the dialog initialize
-          SimpleTest.executeSoon(function() {
-          UCTObserver.opened.resolve(win);
-          });
-        }, {once: true});
+        win.addEventListener(
+          "load",
+          function onLoad(event) {
+            // Let the dialog initialize
+            SimpleTest.executeSoon(function() {
+              UCTObserver.opened.resolve(win);
+            });
+          },
+          { once: true }
+        );
         break;
 
       case "domwindowclosed":
@@ -45,39 +51,42 @@ function waitDelay(delay) {
 add_task(async function test_unknownContentType_delayedbutton() {
   Services.ww.registerNotification(UCTObserver);
 
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: LOAD_URI,
-  }, async function() {
-    let uctWindow = await UCTObserver.opened.promise;
-    let ok = uctWindow.document.documentElement.getButton("accept");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: LOAD_URI,
+    },
+    async function() {
+      let uctWindow = await UCTObserver.opened.promise;
+      let ok = uctWindow.document.documentElement.getButton("accept");
 
-    SimpleTest.is(ok.disabled, true, "button started disabled");
+      SimpleTest.is(ok.disabled, true, "button started disabled");
 
-    await waitDelay(DIALOG_DELAY);
+      await waitDelay(DIALOG_DELAY);
 
-    SimpleTest.is(ok.disabled, false, "button was enabled");
+      SimpleTest.is(ok.disabled, false, "button was enabled");
 
-    let focusOutOfDialog = SimpleTest.promiseFocus(window);
-    window.focus();
-    await focusOutOfDialog;
+      let focusOutOfDialog = SimpleTest.promiseFocus(window);
+      window.focus();
+      await focusOutOfDialog;
 
-    SimpleTest.is(ok.disabled, true, "button was disabled");
+      SimpleTest.is(ok.disabled, true, "button was disabled");
 
-    let focusOnDialog = SimpleTest.promiseFocus(uctWindow);
-    uctWindow.focus();
-    await focusOnDialog;
+      let focusOnDialog = SimpleTest.promiseFocus(uctWindow);
+      uctWindow.focus();
+      await focusOnDialog;
 
-    SimpleTest.is(ok.disabled, true, "button remained disabled");
+      SimpleTest.is(ok.disabled, true, "button remained disabled");
 
-    await waitDelay(DIALOG_DELAY);
-    SimpleTest.is(ok.disabled, false, "button re-enabled after delay");
+      await waitDelay(DIALOG_DELAY);
+      SimpleTest.is(ok.disabled, false, "button re-enabled after delay");
 
-    uctWindow.document.documentElement.cancelDialog();
-    await UCTObserver.closed.promise;
+      uctWindow.document.documentElement.cancelDialog();
+      await UCTObserver.closed.promise;
 
-    Services.ww.unregisterNotification(UCTObserver);
-    uctWindow = null;
-    UCTObserver = null;
-  });
+      Services.ww.unregisterNotification(UCTObserver);
+      uctWindow = null;
+      UCTObserver = null;
+    }
+  );
 });

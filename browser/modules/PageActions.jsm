@@ -14,16 +14,28 @@ var EXPORTED_SYMBOLS = [
   // PageActions.ACTION_ID_TRANSIENT_SEPARATOR
 ];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-  "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
-  "resource://gre/modules/AsyncShutdown.jsm");
-ChromeUtils.defineModuleGetter(this, "BinarySearch",
-  "resource://gre/modules/BinarySearch.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AsyncShutdown",
+  "resource://gre/modules/AsyncShutdown.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "BinarySearch",
+  "resource://gre/modules/BinarySearch.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 const ACTION_ID_BOOKMARK = "bookmark";
 const ACTION_ID_PIN_TAB = "pinTab";
@@ -79,7 +91,7 @@ var PageActions = {
     // downgraded extensions, for example.
     AsyncShutdown.profileBeforeChange.addBlocker(
       "PageActions: purging unregistered actions from cache",
-      () => this._purgeUnregisteredPersistedActions(),
+      () => this._purgeUnregisteredPersistedActions()
     );
   },
 
@@ -117,20 +129,24 @@ var PageActions = {
     let nonBuiltInActions = this._nonBuiltInActions.filter(filter);
     if (nonBuiltInActions.length) {
       if (actions.length) {
-        actions.push(new Action({
-          id: ACTION_ID_BUILT_IN_SEPARATOR,
-          _isSeparator: true,
-        }));
+        actions.push(
+          new Action({
+            id: ACTION_ID_BUILT_IN_SEPARATOR,
+            _isSeparator: true,
+          })
+        );
       }
       actions.push(...nonBuiltInActions);
     }
     let transientActions = this._transientActions.filter(filter);
     if (transientActions.length) {
       if (actions.length) {
-        actions.push(new Action({
-          id: ACTION_ID_TRANSIENT_SEPARATOR,
-          _isSeparator: true,
-        }));
+        actions.push(
+          new Action({
+            id: ACTION_ID_TRANSIENT_SEPARATOR,
+            _isSeparator: true,
+          })
+        );
       }
       actions.push(...transientActions);
     }
@@ -213,11 +229,11 @@ var PageActions = {
       // A "semi-built-in" action, probably an action from an extension
       // bundled with the browser.  Right now we simply assume that no other
       // consumers will use _insertBeforeActionID.
-      let index =
-        !action.__insertBeforeActionID ? -1 :
-        this._builtInActions.findIndex(a => {
-          return a.id == action.__insertBeforeActionID;
-        });
+      let index = !action.__insertBeforeActionID
+        ? -1
+        : this._builtInActions.findIndex(a => {
+            return a.id == action.__insertBeforeActionID;
+          });
       if (index < 0) {
         // Append the action (excluding transient actions).
         index = this._builtInActions.filter(a => !a.__transient).length;
@@ -234,9 +250,13 @@ var PageActions = {
     } else {
       // A non-built-in action, like a non-bundled extension potentially.
       // Keep this list sorted by title.
-      let index = BinarySearch.insertionIndexOf((a1, a2) => {
-        return a1.getTitle().localeCompare(a2.getTitle());
-      }, this._nonBuiltInActions, action);
+      let index = BinarySearch.insertionIndexOf(
+        (a1, a2) => {
+          return a1.getTitle().localeCompare(a2.getTitle());
+        },
+        this._nonBuiltInActions,
+        action
+      );
       this._nonBuiltInActions.splice(index, 0, action);
     }
 
@@ -245,8 +265,9 @@ var PageActions = {
       // with the persisted value.  Set the private version of that property
       // so that onActionToggledPinnedToUrlbar isn't called, which happens when
       // the public version is set.
-      action._pinnedToUrlbar =
-        this._persistedActions.idsInUrlbar.includes(action.id);
+      action._pinnedToUrlbar = this._persistedActions.idsInUrlbar.includes(
+        action.id
+      );
     } else {
       // The action is new.  Store it in the persisted actions.
       this._persistedActions.ids.push(action.id);
@@ -258,8 +279,10 @@ var PageActions = {
     let index = this._persistedActions.idsInUrlbar.indexOf(action.id);
     if (action.pinnedToUrlbar) {
       if (index < 0) {
-        index = action.id == ACTION_ID_BOOKMARK ? -1 :
-                this._persistedActions.idsInUrlbar.indexOf(ACTION_ID_BOOKMARK);
+        index =
+          action.id == ACTION_ID_BOOKMARK
+            ? -1
+            : this._persistedActions.idsInUrlbar.indexOf(ACTION_ID_BOOKMARK);
         if (index < 0) {
           index = this._persistedActions.idsInUrlbar.length;
         }
@@ -328,8 +351,9 @@ var PageActions = {
   logTelemetry(type, action, node = null) {
     if (type == "used") {
       type =
-        node && node.closest("#urlbar-container") ? "urlbar_used" :
-        "panel_used";
+        node && node.closest("#urlbar-container")
+          ? "urlbar_used"
+          : "panel_used";
     }
     let histogramID = "FX_PAGE_ACTION_" + type.toUpperCase();
     try {
@@ -379,9 +403,11 @@ var PageActions = {
   _migratePersistedActions(actions) {
     // Start with actions.version and migrate one version at a time, all the way
     // up to the current version.
-    for (let version = actions.version || 0;
-         version < PERSISTED_ACTIONS_CURRENT_VERSION;
-         version++) {
+    for (
+      let version = actions.version || 0;
+      version < PERSISTED_ACTIONS_CURRENT_VERSION;
+      version++
+    ) {
       let methodName = `_migratePersistedActionsTo${version + 1}`;
       actions = this[methodName](actions);
       actions.version = version + 1;
@@ -420,7 +446,6 @@ var PageActions = {
     idsInUrlbar: [],
   },
 };
-
 
 /**
  * A single page action.
@@ -643,8 +668,10 @@ Action.prototype = {
         return false;
       }
     }
-    return !(this.disablePrivateBrowsing &&
-             PrivateBrowsingUtils.isWindowPrivate(browserWindow));
+    return !(
+      this.disablePrivateBrowsing &&
+      PrivateBrowsingUtils.isWindowPrivate(browserWindow)
+    );
   },
 
   /**
@@ -701,8 +728,12 @@ Action.prototype = {
       let props = this._iconProperties.get(urls);
       if (!props) {
         props = Object.freeze({
-          "--pageAction-image-16px": escapeCSSURL(this._iconURLForSize(urls, 16)),
-          "--pageAction-image-32px": escapeCSSURL(this._iconURLForSize(urls, 32)),
+          "--pageAction-image-16px": escapeCSSURL(
+            this._iconURLForSize(urls, 16)
+          ),
+          "--pageAction-image-32px": escapeCSSURL(
+            this._iconURLForSize(urls, 32)
+          ),
         });
         this._iconProperties.set(urls, props);
       }
@@ -828,8 +859,10 @@ Action.prototype = {
     // The histogram label value has a length limit of 20 and restricted to a
     // pattern. See MAX_LABEL_LENGTH and CPP_IDENTIFIER_PATTERN in
     // toolkit/components/telemetry/parse_histograms.py
-    return this._labelForHistogram
-      || this._id.replace(/_\w{1}/g, match => match[1].toUpperCase()).substr(0, 20);
+    return (
+      this._labelForHistogram ||
+      this._id.replace(/_\w{1}/g, match => match[1].toUpperCase()).substr(0, 20)
+    );
   },
 
   /**
@@ -859,9 +892,10 @@ Action.prototype = {
       bestSize = 2 * preferredSize;
     } else {
       let sizes = Object.keys(urls)
-                        .map(key => parseInt(key, 10))
-                        .sort((a, b) => a - b);
-      bestSize = sizes.find(candidate => candidate > preferredSize) || sizes.pop();
+        .map(key => parseInt(key, 10))
+        .sort((a, b) => a - b);
+      bestSize =
+        sizes.find(candidate => candidate > preferredSize) || sizes.pop();
     }
     return urls[bestSize];
   },
@@ -1054,8 +1088,10 @@ Action.prototype = {
    *         disabled.
    */
   shouldShowInPanel(browserWindow) {
-    return (!this.__transient || !this.getDisabled(browserWindow)) &&
-            this.canShowInWindow(browserWindow);
+    return (
+      (!this.__transient || !this.getDisabled(browserWindow)) &&
+      this.canShowInWindow(browserWindow)
+    );
   },
 
   /**
@@ -1067,15 +1103,17 @@ Action.prototype = {
    *         should be shown if it's both pinned and not disabled.
    */
   shouldShowInUrlbar(browserWindow) {
-    return (this.pinnedToUrlbar && !this.getDisabled(browserWindow)) &&
-            this.canShowInWindow(browserWindow);
+    return (
+      this.pinnedToUrlbar &&
+      !this.getDisabled(browserWindow) &&
+      this.canShowInWindow(browserWindow)
+    );
   },
 
   get _isBuiltIn() {
-    let builtInIDs = [
-      "pocket",
-      "screenshots_mozilla_org",
-    ].concat(gBuiltInActions.filter(a => !a.__isSeparator).map(a => a.id));
+    let builtInIDs = ["pocket", "screenshots_mozilla_org"].concat(
+      gBuiltInActions.filter(a => !a.__isSeparator).map(a => a.id)
+    );
     return builtInIDs.includes(this.id);
   },
 
@@ -1095,7 +1133,6 @@ this.PageActions.ACTION_ID_PIN_TAB = ACTION_ID_PIN_TAB;
 this.PageActions.ACTION_ID_BOOKMARK_SEPARATOR = ACTION_ID_BOOKMARK_SEPARATOR;
 this.PageActions.PREF_PERSISTED_ACTIONS = PREF_PERSISTED_ACTIONS;
 
-
 // Sorted in the order in which they should appear in the page action panel.
 // Does not include the page actions of extensions bundled with the browser.
 // They're added by the relevant extension code.
@@ -1103,7 +1140,6 @@ this.PageActions.PREF_PERSISTED_ACTIONS = PREF_PERSISTED_ACTIONS;
 // want to keep track of), make sure to also update Histograms.json for the
 // new actions.
 var gBuiltInActions = [
-
   // bookmark
   {
     id: ACTION_ID_BOOKMARK,
@@ -1139,7 +1175,9 @@ var gBuiltInActions = [
       for (let event of ["TabPinned", "TabUnpinned"]) {
         browserWindow.addEventListener(event, handlePinEvent);
       }
-      browserWindow.addEventListener("unload", handleWindowUnload, {once: true});
+      browserWindow.addEventListener("unload", handleWindowUnload, {
+        once: true,
+      });
     },
     onPlacedInPanel(buttonNode) {
       browserPageActions(buttonNode).pinTab.updateState();
@@ -1166,8 +1204,9 @@ var gBuiltInActions = [
     id: "copyURL",
     title: "copyURL-title",
     onBeforePlacedInWindow(browserWindow) {
-      browserPageActions(browserWindow).copyURL
-        .onBeforePlacedInWindow(browserWindow);
+      browserPageActions(browserWindow).copyURL.onBeforePlacedInWindow(
+        browserWindow
+      );
     },
     onCommand(event, buttonNode) {
       browserPageActions(buttonNode).copyURL.onCommand(event, buttonNode);
@@ -1179,8 +1218,9 @@ var gBuiltInActions = [
     id: "emailLink",
     title: "emailLink-title",
     onBeforePlacedInWindow(browserWindow) {
-      browserPageActions(browserWindow).emailLink
-        .onBeforePlacedInWindow(browserWindow);
+      browserPageActions(browserWindow).emailLink.onBeforePlacedInWindow(
+        browserWindow
+      );
     },
     onCommand(event, buttonNode) {
       browserPageActions(buttonNode).emailLink.onCommand(event, buttonNode);
@@ -1198,77 +1238,86 @@ var gBuiltInActions = [
       browserPageActions(buttonNode).addSearchEngine.onShowingInPanel();
     },
     onCommand(event, buttonNode) {
-      browserPageActions(buttonNode).addSearchEngine
-        .onCommand(event, buttonNode);
+      browserPageActions(buttonNode).addSearchEngine.onCommand(
+        event,
+        buttonNode
+      );
     },
     onSubviewShowing(panelViewNode) {
-      browserPageActions(panelViewNode).addSearchEngine
-        .onSubviewShowing(panelViewNode);
+      browserPageActions(panelViewNode).addSearchEngine.onSubviewShowing(
+        panelViewNode
+      );
     },
   },
 ];
 
 // send to device
 if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
-  gBuiltInActions.push(
-  {
+  gBuiltInActions.push({
     id: "sendToDevice",
     // The actual title is set by each window, per window, and depends on the
     // number of tabs that are selected.
     title: "sendToDevice",
     onBeforePlacedInWindow(browserWindow) {
-      browserPageActions(browserWindow).sendToDevice
-        .onBeforePlacedInWindow(browserWindow);
+      browserPageActions(browserWindow).sendToDevice.onBeforePlacedInWindow(
+        browserWindow
+      );
     },
     onLocationChange(browserWindow) {
       browserPageActions(browserWindow).sendToDevice.onLocationChange();
     },
     wantsSubview: true,
     onSubviewPlaced(panelViewNode) {
-      browserPageActions(panelViewNode).sendToDevice
-        .onSubviewPlaced(panelViewNode);
+      browserPageActions(panelViewNode).sendToDevice.onSubviewPlaced(
+        panelViewNode
+      );
     },
     onSubviewShowing(panelViewNode) {
-      browserPageActions(panelViewNode).sendToDevice
-        .onShowingSubview(panelViewNode);
+      browserPageActions(panelViewNode).sendToDevice.onShowingSubview(
+        panelViewNode
+      );
     },
   });
 }
 
 // share URL
 if (AppConstants.platform == "macosx") {
-  gBuiltInActions.push(
-  {
+  gBuiltInActions.push({
     id: "shareURL",
     title: "shareURL-title",
     onShowingInPanel(buttonNode) {
       browserPageActions(buttonNode).shareURL.onShowingInPanel(buttonNode);
     },
     onBeforePlacedInWindow(browserWindow) {
-      browserPageActions(browserWindow).shareURL
-        .onBeforePlacedInWindow(browserWindow);
+      browserPageActions(browserWindow).shareURL.onBeforePlacedInWindow(
+        browserWindow
+      );
     },
     wantsSubview: true,
     onSubviewShowing(panelViewNode) {
-        browserPageActions(panelViewNode).shareURL
-          .onShowingSubview(panelViewNode);
+      browserPageActions(panelViewNode).shareURL.onShowingSubview(
+        panelViewNode
+      );
     },
   });
 }
 
 if (AppConstants.isPlatformAndVersionAtLeast("win", "6.4")) {
   gBuiltInActions.push(
-  // Share URL
-  {
-    id: "shareURL",
-    title: "shareURL-title",
-    onBeforePlacedInWindow(buttonNode) {
-      browserPageActions(buttonNode).shareURL.onBeforePlacedInWindow(buttonNode);
-    },
-    onCommand(event, buttonNode) {
-      browserPageActions(buttonNode).shareURL.onCommand(event, buttonNode);
-    },
-  });
+    // Share URL
+    {
+      id: "shareURL",
+      title: "shareURL-title",
+      onBeforePlacedInWindow(buttonNode) {
+        browserPageActions(buttonNode).shareURL.onBeforePlacedInWindow(
+          buttonNode
+        );
+      },
+      onCommand(event, buttonNode) {
+        browserPageActions(buttonNode).shareURL.onCommand(event, buttonNode);
+      },
+    }
+  );
 }
 
 /**

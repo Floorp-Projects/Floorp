@@ -1,6 +1,6 @@
 // Tests bug 304414
 
-const PR_RDONLY = 0x1;  // see prio.h
+const PR_RDONLY = 0x1; // see prio.h
 
 // Does some sanity checks on the stream and returns the number of bytes read
 // when the checks passed.
@@ -10,15 +10,18 @@ function test_stream(stream) {
   Assert.equal(stream.isNonBlocking(), false);
 
   // Check that the stream is not buffered
-  Assert.equal(Cc["@mozilla.org/io-util;1"]
-                 .getService(Ci.nsIIOUtil)
-                 .inputStreamIsBuffered(stream),
-               false);
-  
+  Assert.equal(
+    Cc["@mozilla.org/io-util;1"]
+      .getService(Ci.nsIIOUtil)
+      .inputStreamIsBuffered(stream),
+    false
+  );
+
   // Wrap it in a binary stream (to avoid wrong results that
   // scriptablestream would produce with binary content)
-  var binstream = Cc['@mozilla.org/binaryinputstream;1']
-                    .createInstance(Ci.nsIBinaryInputStream);
+  var binstream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+    Ci.nsIBinaryInputStream
+  );
   binstream.setInputStream(stream);
 
   var numread = 0;
@@ -42,8 +45,9 @@ function test_stream(stream) {
       } catch (e) {
         // We expect the exception, so do nothing here
       }
-      if (could_read)
+      if (could_read) {
         do_throw("Data readable when available indicated EOF!");
+      }
       return numread;
     }
 
@@ -58,19 +62,19 @@ function test_stream(stream) {
 }
 
 function stream_for_file(file) {
-  var str = Cc["@mozilla.org/network/file-input-stream;1"]
-              .createInstance(Ci.nsIFileInputStream);
+  var str = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   str.init(file, PR_RDONLY, 0, 0);
   return str;
 }
 
 function stream_from_channel(file) {
-  var ios = Cc["@mozilla.org/network/io-service;1"]
-              .getService(Ci.nsIIOService);
+  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   var uri = ios.newFileURI(file);
   return NetUtil.newChannel({
     uri,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   }).open();
 }
 
@@ -83,4 +87,3 @@ function run_test() {
   var dir = file.parent;
   test_stream(stream_from_channel(dir)); // Can't do size checking
 }
-

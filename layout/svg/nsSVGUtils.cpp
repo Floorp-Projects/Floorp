@@ -1331,29 +1331,27 @@ gfxRect nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
 
 /* static */
 nscolor nsSVGUtils::GetFallbackOrPaintColor(
-    ComputedStyle* aComputedStyle, nsStyleSVGPaint nsStyleSVG::*aFillOrStroke) {
-  const nsStyleSVGPaint& paint = aComputedStyle->StyleSVG()->*aFillOrStroke;
-  ComputedStyle* styleIfVisited = aComputedStyle->GetStyleIfVisited();
+    const ComputedStyle& aStyle, StyleSVGPaint nsStyleSVG::*aFillOrStroke) {
+  const auto& paint = aStyle.StyleSVG()->*aFillOrStroke;
   nscolor color;
-  switch (paint.Type()) {
-    case eStyleSVGPaintType_Server:
-    case eStyleSVGPaintType_ContextStroke:
-      color = paint.GetFallbackType() == eStyleSVGFallbackType_Color
-                  ? paint.GetFallbackColor(aComputedStyle)
+  switch (paint.kind.tag) {
+    case StyleSVGPaintKind::Tag::PaintServer:
+    case StyleSVGPaintKind::Tag::ContextStroke:
+      color = paint.fallback.IsColor()
+                  ? paint.fallback.AsColor().CalcColor(aStyle)
                   : NS_RGBA(0, 0, 0, 0);
       break;
-    case eStyleSVGPaintType_ContextFill:
-      color = paint.GetFallbackType() == eStyleSVGFallbackType_Color
-                  ? paint.GetFallbackColor(aComputedStyle)
+    case StyleSVGPaintKind::Tag::ContextFill:
+      color = paint.fallback.IsColor()
+                  ? paint.fallback.AsColor().CalcColor(aStyle)
                   : NS_RGB(0, 0, 0);
       break;
     default:
-      color = paint.GetColor(aComputedStyle);
+      color = paint.kind.AsColor().CalcColor(aStyle);
       break;
   }
-  if (styleIfVisited) {
-    const nsStyleSVGPaint& paintIfVisited =
-        styleIfVisited->StyleSVG()->*aFillOrStroke;
+  if (const auto* styleIfVisited = aStyle.GetStyleIfVisited()) {
+    const auto& paintIfVisited = styleIfVisited->StyleSVG()->*aFillOrStroke;
     // To prevent Web content from detecting if a user has visited a URL
     // (via URL loading triggered by paint servers or performance
     // differences between paint servers or between a paint server and a
@@ -1361,11 +1359,11 @@ nscolor nsSVGUtils::GetFallbackOrPaintColor(
     // paint server is used or switch between paint servers and simple
     // colors.  A :visited style may only override a simple color with
     // another simple color.
-    if (paintIfVisited.Type() == eStyleSVGPaintType_Color &&
-        paint.Type() == eStyleSVGPaintType_Color) {
-      nscolor colors[2] = {color, paintIfVisited.GetColor(styleIfVisited)};
-      return ComputedStyle::CombineVisitedColors(
-          colors, aComputedStyle->RelevantLinkVisited());
+    if (paintIfVisited.kind.IsColor() && paint.kind.IsColor()) {
+      nscolor colors[2] = {
+          color, paintIfVisited.kind.AsColor().CalcColor(*styleIfVisited)};
+      return ComputedStyle::CombineVisitedColors(colors,
+                                                 aStyle.RelevantLinkVisited());
     }
   }
   return color;
@@ -1377,7 +1375,7 @@ void nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame, gfxContext* aContext,
                                     imgDrawingParams& aImgParams,
                                     SVGContextPaint* aContextPaint) {
   const nsStyleSVG* style = aFrame->StyleSVG();
-  if (style->mFill.Type() == eStyleSVGPaintType_None) {
+  if (style->mFill.kind.IsNone()) {
     return;
   }
 
@@ -1409,12 +1407,12 @@ void nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame, gfxContext* aContext,
 
   if (aContextPaint) {
     RefPtr<gfxPattern> pattern;
-    switch (style->mFill.Type()) {
-      case eStyleSVGPaintType_ContextFill:
+    switch (style->mFill.kind.tag) {
+      case StyleSVGPaintKind::Tag::ContextFill:
         pattern = aContextPaint->GetFillPattern(
             dt, fillOpacity, aContext->CurrentMatrixDouble(), aImgParams);
         break;
-      case eStyleSVGPaintType_ContextStroke:
+      case StyleSVGPaintKind::Tag::ContextStroke:
         pattern = aContextPaint->GetStrokePattern(
             dt, fillOpacity, aContext->CurrentMatrixDouble(), aImgParams);
         break;
@@ -1426,7 +1424,7 @@ void nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame, gfxContext* aContext,
     }
   }
 
-  if (style->mFill.GetFallbackType() == eStyleSVGFallbackType_None) {
+  if (style->mFill.fallback.IsNone()) {
     return;
   }
 
@@ -1434,7 +1432,7 @@ void nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame, gfxContext* aContext,
   // objectBoundingBox where the width or height of the object is zero.
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
   Color color(Color::FromABGR(
-      GetFallbackOrPaintColor(aFrame->Style(), &nsStyleSVG::mFill)));
+      GetFallbackOrPaintColor(*aFrame->Style(), &nsStyleSVG::mFill)));
   color.a *= fillOpacity;
   aOutPattern->InitColorPattern(ToDeviceColor(color));
 }
@@ -1445,7 +1443,7 @@ void nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame, gfxContext* aContext,
                                       imgDrawingParams& aImgParams,
                                       SVGContextPaint* aContextPaint) {
   const nsStyleSVG* style = aFrame->StyleSVG();
-  if (style->mStroke.Type() == eStyleSVGPaintType_None) {
+  if (style->mStroke.kind.IsNone()) {
     return;
   }
 
@@ -1477,12 +1475,12 @@ void nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame, gfxContext* aContext,
 
   if (aContextPaint) {
     RefPtr<gfxPattern> pattern;
-    switch (style->mStroke.Type()) {
-      case eStyleSVGPaintType_ContextFill:
+    switch (style->mStroke.kind.tag) {
+      case StyleSVGPaintKind::Tag::ContextFill:
         pattern = aContextPaint->GetFillPattern(
             dt, strokeOpacity, aContext->CurrentMatrixDouble(), aImgParams);
         break;
-      case eStyleSVGPaintType_ContextStroke:
+      case StyleSVGPaintKind::Tag::ContextStroke:
         pattern = aContextPaint->GetStrokePattern(
             dt, strokeOpacity, aContext->CurrentMatrixDouble(), aImgParams);
         break;
@@ -1494,7 +1492,7 @@ void nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame, gfxContext* aContext,
     }
   }
 
-  if (style->mStroke.GetFallbackType() == eStyleSVGFallbackType_None) {
+  if (style->mStroke.fallback.IsNone()) {
     return;
   }
 
@@ -1502,7 +1500,7 @@ void nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame, gfxContext* aContext,
   // objectBoundingBox where the width or height of the object is zero.
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
   Color color(Color::FromABGR(
-      GetFallbackOrPaintColor(aFrame->Style(), &nsStyleSVG::mStroke)));
+      GetFallbackOrPaintColor(*aFrame->Style(), &nsStyleSVG::mStroke)));
   color.a *= strokeOpacity;
   aOutPattern->InitColorPattern(ToDeviceColor(color));
 }
@@ -1590,9 +1588,9 @@ uint16_t nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame) {
     case NS_STYLE_POINTER_EVENTS_AUTO:
     case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
       if (aFrame->StyleVisibility()->IsVisible()) {
-        if (aFrame->StyleSVG()->mFill.Type() != eStyleSVGPaintType_None)
+        if (!aFrame->StyleSVG()->mFill.kind.IsNone())
           flags |= SVG_HIT_TEST_FILL;
-        if (aFrame->StyleSVG()->mStroke.Type() != eStyleSVGPaintType_None)
+        if (!aFrame->StyleSVG()->mStroke.kind.IsNone())
           flags |= SVG_HIT_TEST_STROKE;
         if (aFrame->StyleSVG()->mStrokeOpacity > 0)
           flags |= SVG_HIT_TEST_CHECK_MRECT;
@@ -1614,9 +1612,8 @@ uint16_t nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame) {
       }
       break;
     case NS_STYLE_POINTER_EVENTS_PAINTED:
-      if (aFrame->StyleSVG()->mFill.Type() != eStyleSVGPaintType_None)
-        flags |= SVG_HIT_TEST_FILL;
-      if (aFrame->StyleSVG()->mStroke.Type() != eStyleSVGPaintType_None)
+      if (!aFrame->StyleSVG()->mFill.kind.IsNone()) flags |= SVG_HIT_TEST_FILL;
+      if (!aFrame->StyleSVG()->mStroke.kind.IsNone())
         flags |= SVG_HIT_TEST_STROKE;
       if (aFrame->StyleSVG()->mStrokeOpacity) flags |= SVG_HIT_TEST_CHECK_MRECT;
       break;

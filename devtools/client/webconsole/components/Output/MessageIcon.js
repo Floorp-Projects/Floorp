@@ -8,22 +8,25 @@
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const {l10n} = require("devtools/client/webconsole/utils/messages");
+const { l10n } = require("devtools/client/webconsole/utils/messages");
 
 const l10nLevels = {
-  "error": "level.error",
-  "warn": "level.warn",
-  "info": "level.info",
-  "log": "level.log",
-  "debug": "level.debug",
+  error: "level.error",
+  warn: "level.warn",
+  info: "level.info",
+  log: "level.log",
+  debug: "level.debug",
 };
 
 // Store common icons so they can be used without recreating the element
 // during render.
-const CONSTANT_ICONS = Object.entries(l10nLevels).reduce((acc, [key, l10nLabel]) => {
-  acc[key] = getIconElement(l10nLabel);
-  return acc;
-}, {});
+const CONSTANT_ICONS = Object.entries(l10nLevels).reduce(
+  (acc, [key, l10nLabel]) => {
+    acc[key] = getIconElement(l10nLabel);
+    return acc;
+  },
+  {}
+);
 
 function getIconElement(level, onRewindClick, type) {
   let title = l10n.getStr(l10nLevels[level] || level);
@@ -39,12 +42,14 @@ function getIconElement(level, onRewindClick, type) {
     classnames.push("logpoint");
   }
 
-  { return dom.span({
-    className: classnames.join(" "),
-    onClick: onRewindClick,
-    title,
-    "aria-live": "off",
-  }); }
+  {
+    return dom.span({
+      className: classnames.join(" "),
+      onClick: onRewindClick,
+      title,
+      "aria-live": "off",
+    });
+  }
 }
 
 MessageIcon.displayName = "MessageIcon";

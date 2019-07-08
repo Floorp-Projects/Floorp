@@ -11,7 +11,6 @@ const {
 } = require("./index");
 
 module.exports = {
-
   /**
    * Disables all the pseudo class checkboxes because the current selection is not an
    * element node.
@@ -48,5 +47,4 @@ module.exports = {
       pseudoClass,
     };
   },
-
 };

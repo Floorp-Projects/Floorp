@@ -25,12 +25,31 @@ add_task(async function test_no_leak_closing_library_with_history_selected() {
   let organizer = await promiseLibrary();
 
   let contentTree = organizer.document.getElementById("placeContent");
-  Assert.notEqual(contentTree, null, "Sanity check: placeContent tree should exist");
-  Assert.notEqual(organizer.PlacesOrganizer, null, "Sanity check: PlacesOrganizer should exist");
-  Assert.notEqual(organizer.gEditItemOverlay, null, "Sanity check: gEditItemOverlay should exist");
+  Assert.notEqual(
+    contentTree,
+    null,
+    "Sanity check: placeContent tree should exist"
+  );
+  Assert.notEqual(
+    organizer.PlacesOrganizer,
+    null,
+    "Sanity check: PlacesOrganizer should exist"
+  );
+  Assert.notEqual(
+    organizer.gEditItemOverlay,
+    null,
+    "Sanity check: gEditItemOverlay should exist"
+  );
 
-  Assert.ok(organizer.gEditItemOverlay.initialized, "gEditItemOverlay is initialized");
-  Assert.notEqual(organizer.gEditItemOverlay._paneInfo.itemGuid, "", "Editing a bookmark");
+  Assert.ok(
+    organizer.gEditItemOverlay.initialized,
+    "gEditItemOverlay is initialized"
+  );
+  Assert.notEqual(
+    organizer.gEditItemOverlay._paneInfo.itemGuid,
+    "",
+    "Editing a bookmark"
+  );
 
   // Select History in the left pane.
   organizer.PlacesOrganizer.selectLeftPaneBuiltIn("History");
@@ -39,7 +58,11 @@ add_task(async function test_no_leak_closing_library_with_history_selected() {
   selection.clearSelection();
   selection.rangedSelect(0, 0, true);
   // Check the panel is editing the history entry.
-  Assert.equal(organizer.gEditItemOverlay._paneInfo.itemGuid, "", "Editing an history entry");
+  Assert.equal(
+    organizer.gEditItemOverlay._paneInfo.itemGuid,
+    "",
+    "Editing an history entry"
+  );
   // Close Library window.
   organizer.close();
 

@@ -7,8 +7,9 @@
 // change inside a private window.
 
 add_task(async function test() {
-  const TEST_URL = "http://mochi.test:8888/browser/browser/components/" +
-                   "privatebrowsing/test/browser/title.sjs";
+  const TEST_URL =
+    "http://mochi.test:8888/browser/browser/components/" +
+    "privatebrowsing/test/browser/title.sjs";
   let cm = Services.cookies;
 
   function cleanup() {
@@ -27,7 +28,10 @@ add_task(async function test() {
   });
 
   let promiseTitleChanged = PlacesTestUtils.waitForNotification(
-    "onTitleChanged", (uri, title) => uri.spec == TEST_URL, "history");
+    "onTitleChanged",
+    (uri, title) => uri.spec == TEST_URL,
+    "history"
+  );
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
   await promiseTitleChanged;
   await BrowserTestUtils.waitForCondition(async function() {
@@ -36,7 +40,10 @@ add_task(async function test() {
   }, "The page should be loaded without any cookie for the first time");
 
   promiseTitleChanged = PlacesTestUtils.waitForNotification(
-    "onTitleChanged", (uri, title) => uri.spec == TEST_URL, "history");
+    "onTitleChanged",
+    (uri, title) => uri.spec == TEST_URL,
+    "history"
+  );
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
   await promiseTitleChanged;
   await BrowserTestUtils.waitForCondition(async function() {
@@ -47,7 +54,10 @@ add_task(async function test() {
   await cleanup();
 
   promiseTitleChanged = PlacesTestUtils.waitForNotification(
-    "onTitleChanged", (uri, title) => uri.spec == TEST_URL, "history");
+    "onTitleChanged",
+    (uri, title) => uri.spec == TEST_URL,
+    "history"
+  );
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
   await promiseTitleChanged;
   await BrowserTestUtils.waitForCondition(async function() {
@@ -57,7 +67,7 @@ add_task(async function test() {
 
   // Reopen the page in a private browser window, it should not notify a title
   // change.
-  let win2 = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let win2 = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   registerCleanupFunction(async () => {
     let promisePBExit = TestUtils.topicObserved("last-pb-context-exited");
     await BrowserTestUtils.closeWindow(win2);
@@ -67,6 +77,9 @@ add_task(async function test() {
   await BrowserTestUtils.openNewForegroundTab(win2.gBrowser, TEST_URL);
   // Wait long enough to be sure history didn't set a title.
   await new Promise(resolve => setTimeout(resolve, 1000));
-  is((await PlacesUtils.history.fetch(TEST_URL)).title, "No Cookie",
-     "The title remains the same after visiting in private window");
+  is(
+    (await PlacesUtils.history.fetch(TEST_URL)).title,
+    "No Cookie",
+    "The title remains the same after visiting in private window"
+  );
 });

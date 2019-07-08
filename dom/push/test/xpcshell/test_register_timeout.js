@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
+const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
 
 const userAgentID = "a4be0df9-b16d-4b5f-8f58-0f93b6f1e23d";
 const channelID = "e1944e0b-48df-45e7-bdc0-d1fbaa7986d3";
@@ -20,11 +20,13 @@ function run_test() {
 add_task(async function test_register_timeout() {
   let handshakes = 0;
   let timeoutDone;
-  let timeoutPromise = new Promise(resolve => timeoutDone = resolve);
+  let timeoutPromise = new Promise(resolve => (timeoutDone = resolve));
   let registers = 0;
 
   let db = PushServiceWebSocket.newPushDB();
-  registerCleanupFunction(() => { return db.drop().then(_ => db.close()); });
+  registerCleanupFunction(() => {
+    return db.drop().then(_ => db.close());
+  });
 
   PushServiceWebSocket._generateID = () => channelID;
   PushService.init({
@@ -38,31 +40,41 @@ add_task(async function test_register_timeout() {
           } else if (handshakes === 1) {
             // Should use the previously-issued device ID when reconnecting,
             // but should not include the timed-out channel ID.
-            equal(request.uaid, userAgentID,
-              "Should include device ID on reconnect");
+            equal(
+              request.uaid,
+              userAgentID,
+              "Should include device ID on reconnect"
+            );
           } else {
             ok(false, "Unexpected reconnect attempt " + handshakes);
           }
           handshakes++;
-          this.serverSendMsg(JSON.stringify({
-            messageType: "hello",
-            status: 200,
-            uaid: userAgentID,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "hello",
+              status: 200,
+              uaid: userAgentID,
+            })
+          );
         },
         onRegister(request) {
-          equal(request.channelID, channelID,
-            "Wrong channel ID in register request");
+          equal(
+            request.channelID,
+            channelID,
+            "Wrong channel ID in register request"
+          );
           // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
           setTimeout(() => {
             // Should ignore replies for timed-out requests.
-            this.serverSendMsg(JSON.stringify({
-              messageType: "register",
-              status: 200,
-              channelID,
-              uaid: userAgentID,
-              pushEndpoint: "https://example.com/update/timeout",
-            }));
+            this.serverSendMsg(
+              JSON.stringify({
+                messageType: "register",
+                status: 200,
+                channelID,
+                uaid: userAgentID,
+                pushEndpoint: "https://example.com/update/timeout",
+              })
+            );
             timeoutDone();
           }, 2000);
           registers++;
@@ -74,8 +86,9 @@ add_task(async function test_register_timeout() {
   await Assert.rejects(
     PushService.register({
       scope: "https://example.net/page/timeout",
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        { inIsolatedMozBrowser: false }),
+      originAttributes: ChromeUtils.originAttributesToSuffix({
+        inIsolatedMozBrowser: false,
+      }),
     }),
     /Registration error/,
     "Expected error for request timeout"

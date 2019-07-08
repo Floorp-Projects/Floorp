@@ -5,26 +5,33 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "ContentPrefServiceParent" ];
+var EXPORTED_SYMBOLS = ["ContentPrefServiceParent"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "_methodsCallableFromChild",
-                               "resource://gre/modules/ContentPrefUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "_methodsCallableFromChild",
+  "resource://gre/modules/ContentPrefUtils.jsm"
+);
 
 let loadContext = Cu.createLoadContext();
 let privateLoadContext = Cu.createPrivateLoadContext();
 
 function contextArg(context) {
-  return (context && context.usePrivateBrowsing) ?
-           privateLoadContext :
-           loadContext;
+  return context && context.usePrivateBrowsing
+    ? privateLoadContext
+    : loadContext;
 }
 
 var ContentPrefServiceParent = {
   // Called on all platforms.
   alwaysInit() {
-    let globalMM = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
+    let globalMM = Cc[
+      "@mozilla.org/parentprocessmessagemanager;1"
+    ].getService();
 
     globalMM.addMessageListener("child-process-shutdown", this);
   },
@@ -32,7 +39,9 @@ var ContentPrefServiceParent = {
   // Only called on Android. Listeners are added in BrowserGlue.jsm on other
   // platforms.
   init() {
-    let globalMM = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
+    let globalMM = Cc[
+      "@mozilla.org/parentprocessmessagemanager;1"
+    ].getService();
 
     // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN nsBrowserGlue
     globalMM.addMessageListener("ContentPrefs:FunctionCall", this);
@@ -51,8 +60,9 @@ var ContentPrefServiceParent = {
     if (msg.name === "child-process-shutdown") {
       // If we didn't have any observers for this child process, don't do
       // anything.
-      if (!observer)
+      if (!observer) {
         return;
+      }
 
       for (let i of observer._names) {
         this._cps2.removeObserverForName(i, observer);
@@ -69,15 +79,19 @@ var ContentPrefServiceParent = {
       if (!observer) {
         observer = {
           onContentPrefSet(group, name, value, isPrivate) {
-            msg.target.sendAsyncMessage("ContentPrefs:NotifyObservers",
-                                        { name, callback: "onContentPrefSet",
-                                          args: [ group, name, value, isPrivate ] });
+            msg.target.sendAsyncMessage("ContentPrefs:NotifyObservers", {
+              name,
+              callback: "onContentPrefSet",
+              args: [group, name, value, isPrivate],
+            });
           },
 
           onContentPrefRemoved(group, name, isPrivate) {
-            msg.target.sendAsyncMessage("ContentPrefs:NotifyObservers",
-                                        { name, callback: "onContentPrefRemoved",
-                                          args: [ group, name, isPrivate ] });
+            msg.target.sendAsyncMessage("ContentPrefs:NotifyObservers", {
+              name,
+              callback: "onContentPrefRemoved",
+              args: [group, name, isPrivate],
+            });
           },
 
           // The names we're using this observer object for, used to keep track
@@ -116,13 +130,15 @@ var ContentPrefServiceParent = {
     let data = msg.data;
     let signature;
 
-    if (!_methodsCallableFromChild.some(([method, args]) => {
-       if (method == data.call) {
-         signature = args;
-         return true;
-       }
-       return false;
-     })) {
+    if (
+      !_methodsCallableFromChild.some(([method, args]) => {
+        if (method == data.call) {
+          signature = args;
+          return true;
+        }
+        return false;
+      })
+    ) {
       throw new Error(`Can't call ${data.call} from child!`);
     }
 
@@ -131,25 +147,27 @@ var ContentPrefServiceParent = {
 
     let listener = {
       handleResult(pref) {
-        msg.target.sendAsyncMessage("ContentPrefs:HandleResult",
-                                    { requestId,
-                                      contentPref: {
-                                        domain: pref.domain,
-                                        name: pref.name,
-                                        value: pref.value,
-                                      },
-                                    });
+        msg.target.sendAsyncMessage("ContentPrefs:HandleResult", {
+          requestId,
+          contentPref: {
+            domain: pref.domain,
+            name: pref.name,
+            value: pref.value,
+          },
+        });
       },
 
       handleError(error) {
-        msg.target.sendAsyncMessage("ContentPrefs:HandleError",
-                                    { requestId,
-                                      error });
+        msg.target.sendAsyncMessage("ContentPrefs:HandleError", {
+          requestId,
+          error,
+        });
       },
       handleCompletion(reason) {
-        msg.target.sendAsyncMessage("ContentPrefs:HandleCompletion",
-                                    { requestId,
-                                      reason });
+        msg.target.sendAsyncMessage("ContentPrefs:HandleCompletion", {
+          requestId,
+          reason,
+        });
       },
     };
 
@@ -167,6 +185,9 @@ var ContentPrefServiceParent = {
   },
 };
 
-XPCOMUtils.defineLazyServiceGetter(ContentPrefServiceParent, "_cps2",
-                                   "@mozilla.org/content-pref/service;1",
-                                   "nsIContentPrefService2");
+XPCOMUtils.defineLazyServiceGetter(
+  ContentPrefServiceParent,
+  "_cps2",
+  "@mozilla.org/content-pref/service;1",
+  "nsIContentPrefService2"
+);

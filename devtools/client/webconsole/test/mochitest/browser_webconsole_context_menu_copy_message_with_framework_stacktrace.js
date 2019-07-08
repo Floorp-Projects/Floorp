@@ -58,12 +58,21 @@ add_task(async function() {
   let lines = clipboardText.split(newLineString);
   is(lines.length, 5, "Correct number of lines in the copied text");
   is(lines[lines.length - 1], "", "The last line is an empty new line");
-  is(lines[0], `console.trace() wrapperTrace test.js:3:35`,
-    "Message first line has the expected text");
-  is(lines[1], `    wrapper ${TEST_URI}test.js:3`,
-    "Stacktrace first line has the expected text");
-  is(lines[2], `    myFunc ${TEST_URI}test.js:2`,
-    "Stacktrace second line has the expected text");
+  is(
+    lines[0],
+    `console.trace() wrapperTrace test.js:3:35`,
+    "Message first line has the expected text"
+  );
+  is(
+    lines[1],
+    `    wrapper ${TEST_URI}test.js:3`,
+    "Stacktrace first line has the expected text"
+  );
+  is(
+    lines[2],
+    `    myFunc ${TEST_URI}test.js:2`,
+    "Stacktrace second line has the expected text"
+  );
   is(lines[3], `    React 2`, "Stacktrace third line has the expected text");
 
   info("Expand the React group");
@@ -76,18 +85,33 @@ add_task(async function() {
   clipboardText = await copyMessageContent(hud, messageEl);
   ok(true, "Clipboard text was found and saved");
 
-  info("Check copied text for the console.trace message with expanded React frames");
+  info(
+    "Check copied text for the console.trace message with expanded React frames"
+  );
   lines = clipboardText.split(newLineString);
   is(lines.length, 7, "Correct number of lines in the copied text");
   is(lines[lines.length - 1], "", "The last line is an empty new line");
-  is(lines[0], `console.trace() wrapperTrace test.js:3:35`,
-    "Message first line has the expected text");
-  is(lines[1], `    wrapper ${TEST_URI}test.js:3`,
-    "Stacktrace first line has the expected text");
-  is(lines[2], `    myFunc ${TEST_URI}test.js:2`,
-    "Stacktrace second line has the expected text");
+  is(
+    lines[0],
+    `console.trace() wrapperTrace test.js:3:35`,
+    "Message first line has the expected text"
+  );
+  is(
+    lines[1],
+    `    wrapper ${TEST_URI}test.js:3`,
+    "Stacktrace first line has the expected text"
+  );
+  is(
+    lines[2],
+    `    myFunc ${TEST_URI}test.js:2`,
+    "Stacktrace second line has the expected text"
+  );
   is(lines[3], `    React 2`, "Stacktrace third line has the expected text");
-  is(lines[4], `        renderFinal`, "Stacktrace fourth line has the expected text");
+  is(
+    lines[4],
+    `        renderFinal`,
+    "Stacktrace fourth line has the expected text"
+  );
   is(lines[5], `        render`, "Stacktrace fifth line has the expected text");
 });
 

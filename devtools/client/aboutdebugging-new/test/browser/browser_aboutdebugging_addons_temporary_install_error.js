@@ -11,7 +11,8 @@ Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-addons.js", this);
  * extensions.
  */
 
-const INVALID_JSON_EXTENSION_PATH = "resources/bad-extensions/invalid-json/manifest.json";
+const INVALID_JSON_EXTENSION_PATH =
+  "resources/bad-extensions/invalid-json/manifest.json";
 const INVALID_PROP_EXTENSION_PATH =
   "resources/bad-extensions/invalid-property/manifest.json";
 const EXTENSION_PATH = "resources/test-temporary-extension/manifest.json";
@@ -23,15 +24,22 @@ add_task(async function testInvalidJsonExtension() {
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
-  const installError = await installBadExtension(INVALID_JSON_EXTENSION_PATH, document);
-  ok(installError.textContent.includes("JSON.parse: unexpected keyword"),
-    "The expected installation error is displayed: " + installError.textContent);
+  const installError = await installBadExtension(
+    INVALID_JSON_EXTENSION_PATH,
+    document
+  );
+  ok(
+    installError.textContent.includes("JSON.parse: unexpected keyword"),
+    "The expected installation error is displayed: " + installError.textContent
+  );
 
   info("Install a valid extension to make the message disappear");
   await installTemporaryExtension(EXTENSION_PATH, EXTENSION_NAME, document);
 
   info("Wait until the error message disappears");
-  await waitUntil(() => !document.querySelector(".qa-tmp-extension-install-error"));
+  await waitUntil(
+    () => !document.querySelector(".qa-tmp-extension-install-error")
+  );
 
   info("Wait for the temporary addon to be displayed as a debug target");
   await waitUntil(() => findDebugTargetByText(EXTENSION_NAME, document));
@@ -47,13 +55,22 @@ add_task(async function testInvalidPropertyExtension() {
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
-  const installError = await installBadExtension(INVALID_PROP_EXTENSION_PATH, document);
+  const installError = await installBadExtension(
+    INVALID_PROP_EXTENSION_PATH,
+    document
+  );
 
-  ok(installError.textContent.includes("Extension is invalid"),
-    "The basic installation error is displayed: " + installError.textContent);
-  ok(installError.textContent.includes(
-    "Reading manifest: Error processing content_scripts.0.matches"),
-    "The detailed installation error is also displayed: " + installError.textContent);
+  ok(
+    installError.textContent.includes("Extension is invalid"),
+    "The basic installation error is displayed: " + installError.textContent
+  );
+  ok(
+    installError.textContent.includes(
+      "Reading manifest: Error processing content_scripts.0.matches"
+    ),
+    "The detailed installation error is also displayed: " +
+      installError.textContent
+  );
 
   await removeTab(tab);
 });
@@ -65,6 +82,8 @@ async function installBadExtension(path, document) {
   document.querySelector(".qa-temporary-extension-install-button").click();
 
   info("Wait until the install error message appears");
-  await waitUntil(() => document.querySelector(".qa-tmp-extension-install-error"));
+  await waitUntil(() =>
+    document.querySelector(".qa-tmp-extension-install-error")
+  );
   return document.querySelector(".qa-tmp-extension-install-error");
 }

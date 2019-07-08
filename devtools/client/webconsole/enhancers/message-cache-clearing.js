@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  MESSAGES_CLEAR,
-} = require("devtools/client/webconsole/constants");
+const { MESSAGES_CLEAR } = require("devtools/client/webconsole/constants");
 
 /**
  * This enhancer is responsible for clearing the messages caches using the

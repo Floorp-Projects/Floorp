@@ -112,20 +112,16 @@ add_task(async function test_edit_login() {
 });
 
 add_task(async function test_edit_login_cancel() {
-  for (let login of [{}, TEST_LOGIN_1]) {
-    let isNewLogin = !login.username;
-    info("Testing with" + (isNewLogin ? "out" : "") + " a login");
-    gLoginItem.setLogin(login);
-    gLoginItem.shadowRoot.querySelector(".edit-button").click();
+  gLoginItem.setLogin(TEST_LOGIN_1);
+  gLoginItem.shadowRoot.querySelector(".edit-button").click();
 
-    ok(gLoginItem.dataset.editing, "loginItem should be in 'edit' mode");
-    is(!!gLoginItem.dataset.isNewLogin, isNewLogin,
-       "loginItem should " + (isNewLogin ? "" : "not ") + "be in 'isNewLogin' mode");
+  ok(gLoginItem.dataset.editing, "loginItem should be in 'edit' mode");
+  is(!!gLoginItem.dataset.isNewLogin, false,
+     "loginItem should not be in 'isNewLogin' mode");
 
-    gLoginItem.shadowRoot.querySelector(".cancel-button").click();
-    ok(!gLoginItem.dataset.editing, "loginItem should not be in 'edit' mode");
-    ok(!gLoginItem.dataset.isNewLogin, "loginItem should not be in 'isNewLogin' mode");
-  }
+  gLoginItem.shadowRoot.querySelector(".cancel-button").click();
+  ok(!gLoginItem.dataset.editing, "loginItem should not be in 'edit' mode");
+  ok(!gLoginItem.dataset.isNewLogin, "loginItem should not be in 'isNewLogin' mode");
 });
 
 add_task(async function test_reveal_password_change_selected_login() {

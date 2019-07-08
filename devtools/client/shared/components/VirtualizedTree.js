@@ -4,13 +4,23 @@
 /* eslint-env browser */
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { scrollIntoView } = require("devtools/client/shared/scroll");
-const { preventDefaultAndStopPropagation } = require("devtools/client/shared/events");
+const {
+  preventDefaultAndStopPropagation,
+} = require("devtools/client/shared/events");
 
-loader.lazyRequireGetter(this, "focusableSelector", "devtools/client/shared/focus", true);
+loader.lazyRequireGetter(
+  this,
+  "focusableSelector",
+  "devtools/client/shared/focus",
+  true
+);
 
 const AUTO_EXPAND_DEPTH = 0;
 const NUMBER_OF_OFFSCREEN_ITEMS = 1;
@@ -261,8 +271,12 @@ class Tree extends Component {
     this._onScroll = oncePerAnimationFrame(this._onScroll).bind(this);
     this._focusPrevNode = oncePerAnimationFrame(this._focusPrevNode).bind(this);
     this._focusNextNode = oncePerAnimationFrame(this._focusNextNode).bind(this);
-    this._focusParentNode = oncePerAnimationFrame(this._focusParentNode).bind(this);
-    this._focusFirstNode = oncePerAnimationFrame(this._focusFirstNode).bind(this);
+    this._focusParentNode = oncePerAnimationFrame(this._focusParentNode).bind(
+      this
+    );
+    this._focusFirstNode = oncePerAnimationFrame(this._focusFirstNode).bind(
+      this
+    );
     this._focusLastNode = oncePerAnimationFrame(this._focusLastNode).bind(this);
 
     this._autoExpand = this._autoExpand.bind(this);
@@ -291,10 +305,12 @@ class Tree extends Component {
   shouldComponentUpdate(nextProps, nextState) {
     const { scroll, height, seen, mouseDown } = this.state;
 
-    return scroll !== nextState.scroll ||
-           height !== nextState.height ||
-           seen !== nextState.seen ||
-           mouseDown === nextState.mouseDown;
+    return (
+      scroll !== nextState.scroll ||
+      height !== nextState.height ||
+      seen !== nextState.seen ||
+      mouseDown === nextState.mouseDown
+    );
   }
 
   componentDidUpdate() {
@@ -323,8 +339,10 @@ class Tree extends Component {
     // not use the usual DFS infrastructure because we don't want to ignore
     // collapsed nodes.
     const autoExpand = (item, currentDepth) => {
-      if (currentDepth >= this.props.autoExpandDepth ||
-          this.state.seen.has(item)) {
+      if (
+        currentDepth >= this.props.autoExpandDepth ||
+        this.state.seen.has(item)
+      ) {
         return;
       }
 
@@ -576,8 +594,10 @@ class Tree extends Component {
         break;
 
       case "ArrowLeft":
-        if (this.props.isExpanded(this.props.focused)
-            && this.props.getChildren(this.props.focused).length) {
+        if (
+          this.props.isExpanded(this.props.focused) &&
+          this.props.getChildren(this.props.focused).length
+        ) {
           this._onCollapse(this.props.focused);
         } else {
           this._focusParentNode();
@@ -585,8 +605,10 @@ class Tree extends Component {
         break;
 
       case "ArrowRight":
-        if (this.props.getChildren(this.props.focused).length &&
-            !this.props.isExpanded(this.props.focused)) {
+        if (
+          this.props.getChildren(this.props.focused).length &&
+          !this.props.isExpanded(this.props.focused)
+        ) {
           this._onExpand(this.props.focused);
         } else if (!this.props.preventNavigationOnArrowRight) {
           this._focusNextNode();
@@ -729,8 +751,12 @@ class Tree extends Component {
     // gaps when scrolling quickly.
     const { itemHeight, active, focused } = this.props;
     const { scroll, height } = this.state;
-    const begin = Math.max(((scroll / itemHeight) | 0) - NUMBER_OF_OFFSCREEN_ITEMS, 0);
-    const end = Math.ceil((scroll + height) / itemHeight) + NUMBER_OF_OFFSCREEN_ITEMS;
+    const begin = Math.max(
+      ((scroll / itemHeight) | 0) - NUMBER_OF_OFFSCREEN_ITEMS,
+      0
+    );
+    const end =
+      Math.ceil((scroll + height) / itemHeight) + NUMBER_OF_OFFSCREEN_ITEMS;
     const toRender = traversal.slice(begin, end);
     const topSpacerHeight = begin * itemHeight;
     const bottomSpacerHeight = Math.max(traversal.length - end, 0) * itemHeight;
@@ -753,39 +779,44 @@ class Tree extends Component {
       const last = index == traversal.length - 1;
       const { item, depth } = toRender[i];
       const key = this.props.getKey(item);
-      nodes.push(TreeNode({
-        // We make a key unique depending on whether the tree node is in active or
-        // inactive state to make sure that it is actually replaced and the tabbable
-        // state is reset.
-        key: `${key}-${active === item ? "active" : "inactive"}`,
-        index,
-        first,
-        last,
-        item,
-        depth,
-        id: key,
-        renderItem: this.props.renderItem,
-        focused: focused === item,
-        active: active === item,
-        expanded: this.props.isExpanded(item),
-        hasChildren: !!this.props.getChildren(item).length,
-        onExpand: this._onExpand,
-        onCollapse: this._onCollapse,
-        // Since the user just clicked the node, there's no need to check if
-        // it should be scrolled into view.
-        onClick: () => this._focus(begin + i, item, { preventAutoScroll: true }),
-      }));
+      nodes.push(
+        TreeNode({
+          // We make a key unique depending on whether the tree node is in active or
+          // inactive state to make sure that it is actually replaced and the tabbable
+          // state is reset.
+          key: `${key}-${active === item ? "active" : "inactive"}`,
+          index,
+          first,
+          last,
+          item,
+          depth,
+          id: key,
+          renderItem: this.props.renderItem,
+          focused: focused === item,
+          active: active === item,
+          expanded: this.props.isExpanded(item),
+          hasChildren: !!this.props.getChildren(item).length,
+          onExpand: this._onExpand,
+          onCollapse: this._onCollapse,
+          // Since the user just clicked the node, there's no need to check if
+          // it should be scrolled into view.
+          onClick: () =>
+            this._focus(begin + i, item, { preventAutoScroll: true }),
+        })
+      );
     }
 
-    nodes.push(dom.div({
-      key: "bottom-spacer",
-      role: "presentation",
-      style: {
-        padding: 0,
-        margin: 0,
-        height: bottomSpacerHeight + "px",
-      },
-    }));
+    nodes.push(
+      dom.div({
+        key: "bottom-spacer",
+        role: "presentation",
+        style: {
+          padding: 0,
+          margin: 0,
+          height: bottomSpacerHeight + "px",
+        },
+      })
+    );
 
     return dom.div(
       {
@@ -850,9 +881,11 @@ class ArrowExpanderClass extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    return this.props.item !== nextProps.item
-      || this.props.visible !== nextProps.visible
-      || this.props.expanded !== nextProps.expanded;
+    return (
+      this.props.item !== nextProps.item ||
+      this.props.visible !== nextProps.visible ||
+      this.props.expanded !== nextProps.expanded
+    );
   }
 
   render() {
@@ -988,7 +1021,7 @@ class TreeNodeClass extends Component {
       onCollapse: this.props.onCollapse,
     });
 
-    const classList = [ "tree-node", "div" ];
+    const classList = ["tree-node", "div"];
     if (this.props.index % 2) {
       classList.push("tree-node-odd");
     }
@@ -1028,11 +1061,13 @@ class TreeNodeClass extends Component {
         },
       },
 
-      this.props.renderItem(this.props.item,
-                            this.props.depth,
-                            this.props.focused,
-                            arrow,
-                            this.props.expanded),
+      this.props.renderItem(
+        this.props.item,
+        this.props.depth,
+        this.props.focused,
+        arrow,
+        this.props.expanded
+      )
     );
   }
 }

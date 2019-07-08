@@ -18,10 +18,13 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {view} = await openRuleView();
+  const { view } = await openRuleView();
 
-  const swatch = getRuleViewProperty(view, "body", "border").valueSpan
-    .querySelector(".ruleview-colorswatch");
+  const swatch = getRuleViewProperty(
+    view,
+    "body",
+    "border"
+  ).valueSpan.querySelector(".ruleview-colorswatch");
   await testPressingEnterCommitsChanges(swatch, view);
 });
 
@@ -32,17 +35,22 @@ async function testPressingEnterCommitsChanges(swatch, ruleView) {
   swatch.click();
   await onColorPickerReady;
 
-  await simulateColorPickerChange(ruleView, cPicker, [0, 255, 0, .5], {
+  await simulateColorPickerChange(ruleView, cPicker, [0, 255, 0, 0.5], {
     selector: "body",
     name: "border-left-color",
     value: "rgba(0, 255, 0, 0.5)",
   });
 
-  is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
-    "The color swatch's background was updated");
-  is(getRuleViewProperty(ruleView, "body", "border").valueSpan.textContent,
+  is(
+    swatch.style.backgroundColor,
+    "rgba(0, 255, 0, 0.5)",
+    "The color swatch's background was updated"
+  );
+  is(
+    getRuleViewProperty(ruleView, "body", "border").valueSpan.textContent,
     "2em solid rgba(0, 255, 0, 0.5)",
-    "The text of the border css property was updated");
+    "The text of the border css property was updated"
+  );
 
   const onModified = ruleView.once("ruleview-changed");
   const spectrum = cPicker.spectrum;
@@ -51,11 +59,19 @@ async function testPressingEnterCommitsChanges(swatch, ruleView) {
   await onHidden;
   await onModified;
 
-  is((await getComputedStyleProperty("body", null, "border-left-color")),
-    "rgba(0, 255, 0, 0.5)", "The element's border was kept after RETURN");
-  is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
-    "The color swatch's background was kept after RETURN");
-  is(getRuleViewProperty(ruleView, "body", "border").valueSpan.textContent,
+  is(
+    await getComputedStyleProperty("body", null, "border-left-color"),
+    "rgba(0, 255, 0, 0.5)",
+    "The element's border was kept after RETURN"
+  );
+  is(
+    swatch.style.backgroundColor,
+    "rgba(0, 255, 0, 0.5)",
+    "The color swatch's background was kept after RETURN"
+  );
+  is(
+    getRuleViewProperty(ruleView, "body", "border").valueSpan.textContent,
     "2em solid rgba(0, 255, 0, 0.5)",
-    "The text of the border css property was kept after RETURN");
+    "The text of the border css property was kept after RETURN"
+  );
 }

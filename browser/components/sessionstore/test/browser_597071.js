@@ -11,15 +11,15 @@ add_task(async function test_close_last_nonpopup_window() {
 
   let oldState = ss.getWindowState(window);
 
-  let popupState = {windows: [
-    {tabs: [{entries: []}], isPopup: true, hidden: "toolbar"},
-  ]};
+  let popupState = {
+    windows: [{ tabs: [{ entries: [] }], isPopup: true, hidden: "toolbar" }],
+  };
 
   // Set this window to be a popup.
   ss.setWindowState(window, JSON.stringify(popupState), true);
 
   // Open a new window with a tab.
-  let win = await BrowserTestUtils.openNewBrowserWindow({private: false});
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: false });
   let tab = BrowserTestUtils.addTab(win.gBrowser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 

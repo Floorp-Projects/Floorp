@@ -23,6 +23,6 @@ g.eval(`
 
 assertDeepEq([... g.f()], [3]);
 Pattern([
-  EXACT({ return: new DebuggerObjectPattern("Object") }),
-  EXACT({ return: new DebuggerObjectPattern("Object") }),
+  EXACT({ return: new DebuggerObjectPattern("Object", { value: 3, done: false }), yield: true }),
+  EXACT({ return: new DebuggerObjectPattern("Object", { value: "ok", done: true }) }),
 ]).assert(log);

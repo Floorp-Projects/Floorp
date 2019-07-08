@@ -3,13 +3,15 @@
 
 function run_test() {
   // Try crashing with an abort().
-  do_crash(function() {
-             crashType = CrashTestUtils.CRASH_ABORT;
-             crashReporter.annotateCrashReport("TestKey", "TestValue");
-           },
-           function(mdump, extra) {
-             Assert.equal(extra.TestKey, "TestValue");
-           },
-          // process will exit with a zero exit status
-          true);
+  do_crash(
+    function() {
+      crashType = CrashTestUtils.CRASH_ABORT;
+      crashReporter.annotateCrashReport("TestKey", "TestValue");
+    },
+    function(mdump, extra) {
+      Assert.equal(extra.TestKey, "TestValue");
+    },
+    // process will exit with a zero exit status
+    true
+  );
 }

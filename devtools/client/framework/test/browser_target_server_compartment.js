@@ -8,7 +8,8 @@
 // to chrome scripts as debugger actor's module and the chrome script will be in the same
 // compartment. Debugger and debuggee can't be running in the same compartment.
 
-const CHROME_PAGE = "chrome://mochitests/content/browser/devtools/client/framework/" +
+const CHROME_PAGE =
+  "chrome://mochitests/content/browser/devtools/client/framework/" +
   "test/test_chrome_page.html";
 
 add_task(async function() {
@@ -21,8 +22,10 @@ async function testChromeTab() {
   const tab = await addTab(CHROME_PAGE);
   const browser = tab.linkedBrowser;
   ok(!browser.isRemoteBrowser, "chrome page is not remote");
-  ok(browser.contentWindow.document.nodePrincipal.isSystemPrincipal,
-    "chrome page is a privileged document");
+  ok(
+    browser.contentWindow.document.nodePrincipal.isSystemPrincipal,
+    "chrome page is a privileged document"
+  );
 
   const onThreadActorInstantiated = new Promise(resolve => {
     const observe = function(subject, topic, data) {
@@ -42,13 +45,18 @@ async function testChromeTab() {
   await threadClient.resume();
 
   const { sources } = await threadClient.getSources();
-  ok(sources.find(s => s.url == CHROME_PAGE),
-    "The thread actor is able to attach to the chrome page and its sources");
+  ok(
+    sources.find(s => s.url == CHROME_PAGE),
+    "The thread actor is able to attach to the chrome page and its sources"
+  );
 
   const threadActor = await onThreadActorInstantiated;
   const serverGlobal = Cu.getGlobalForObject(threadActor);
-  isnot(loader.id, serverGlobal.loader.id,
-    "The actors are loaded in a distinct loader in order for the actors to use its very own compartment");
+  isnot(
+    loader.id,
+    serverGlobal.loader.id,
+    "The actors are loaded in a distinct loader in order for the actors to use its very own compartment"
+  );
 
   const onDedicatedLoaderDestroy = new Promise(resolve => {
     const observe = function(subject, topic, data) {
@@ -69,8 +77,10 @@ async function testChromeTab() {
 
 // Test that Main process Target can debug chrome scripts
 async function testMainProcess() {
-  const { DevToolsLoader } =
-    ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+  const { DevToolsLoader } = ChromeUtils.import(
+    "resource://devtools/shared/Loader.jsm",
+    {}
+  );
   const customLoader = new DevToolsLoader();
   customLoader.invisibleToDebugger = true;
   const { DebuggerServer } = customLoader.require("devtools/server/main");
@@ -100,13 +110,20 @@ async function testMainProcess() {
   const [, threadClient] = await target.attachThread();
   await threadClient.resume();
   const { sources } = await threadClient.getSources();
-  ok(sources.find(s => s.url == "resource://devtools/client/framework/devtools.js"),
-    "The thread actor is able to attach to the chrome script, like client modules");
+  ok(
+    sources.find(
+      s => s.url == "resource://devtools/client/framework/devtools.js"
+    ),
+    "The thread actor is able to attach to the chrome script, like client modules"
+  );
 
   const threadActor = await onThreadActorInstantiated;
   const serverGlobal = Cu.getGlobalForObject(threadActor);
-  isnot(loader.id, serverGlobal.loader.id,
-    "The actors are loaded in a distinct loader in order for the actors to use its very own compartment");
+  isnot(
+    loader.id,
+    serverGlobal.loader.id,
+    "The actors are loaded in a distinct loader in order for the actors to use its very own compartment"
+  );
 
   await target.destroy();
 

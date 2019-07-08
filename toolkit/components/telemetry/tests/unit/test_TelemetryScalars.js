@@ -2,8 +2,11 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-ChromeUtils.defineModuleGetter(this, "TelemetryTestUtils",
-                             "resource://testing-common/TelemetryTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryTestUtils",
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
 const UINT_SCALAR = "telemetry.test.unsigned_int_kind";
 const STRING_SCALAR = "telemetry.test.string_kind";
@@ -12,9 +15,9 @@ const KEYED_UINT_SCALAR = "telemetry.test.keyed_unsigned_int";
 const KEYED_EXCEED_SCALAR = "telemetry.keyed_scalars_exceed_limit";
 
 function getProcessScalars(aProcessName, aKeyed = false, aClear = false) {
-  const scalars = aKeyed ?
-    Telemetry.getSnapshotForKeyedScalars("main", aClear)[aProcessName] :
-    Telemetry.getSnapshotForScalars("main", aClear)[aProcessName];
+  const scalars = aKeyed
+    ? Telemetry.getSnapshotForKeyedScalars("main", aClear)[aProcessName]
+    : Telemetry.getSnapshotForScalars("main", aClear)[aProcessName];
   return scalars || {};
 }
 
@@ -33,22 +36,44 @@ add_task(async function test_serializationFormat() {
   const scalars = TelemetryTestUtils.getProcessScalars("parent");
 
   // Check that they are serialized to the correct format.
-  Assert.equal(typeof(scalars[UINT_SCALAR]), "number",
-               UINT_SCALAR + " must be serialized to the correct format.");
-  Assert.ok(Number.isInteger(scalars[UINT_SCALAR]),
-               UINT_SCALAR + " must be a finite integer.");
-  Assert.equal(scalars[UINT_SCALAR], expectedUint,
-               UINT_SCALAR + " must have the correct value.");
-  Assert.equal(typeof(scalars[STRING_SCALAR]), "string",
-               STRING_SCALAR + " must be serialized to the correct format.");
-  Assert.equal(scalars[STRING_SCALAR], expectedString,
-               STRING_SCALAR + " must have the correct value.");
-  Assert.equal(typeof(scalars[BOOLEAN_SCALAR]), "boolean",
-               BOOLEAN_SCALAR + " must be serialized to the correct format.");
-  Assert.equal(scalars[BOOLEAN_SCALAR], true,
-               BOOLEAN_SCALAR + " must have the correct value.");
-  Assert.ok(!(KEYED_UINT_SCALAR in scalars),
-            "Keyed scalars must be reported in a separate section.");
+  Assert.equal(
+    typeof scalars[UINT_SCALAR],
+    "number",
+    UINT_SCALAR + " must be serialized to the correct format."
+  );
+  Assert.ok(
+    Number.isInteger(scalars[UINT_SCALAR]),
+    UINT_SCALAR + " must be a finite integer."
+  );
+  Assert.equal(
+    scalars[UINT_SCALAR],
+    expectedUint,
+    UINT_SCALAR + " must have the correct value."
+  );
+  Assert.equal(
+    typeof scalars[STRING_SCALAR],
+    "string",
+    STRING_SCALAR + " must be serialized to the correct format."
+  );
+  Assert.equal(
+    scalars[STRING_SCALAR],
+    expectedString,
+    STRING_SCALAR + " must have the correct value."
+  );
+  Assert.equal(
+    typeof scalars[BOOLEAN_SCALAR],
+    "boolean",
+    BOOLEAN_SCALAR + " must be serialized to the correct format."
+  );
+  Assert.equal(
+    scalars[BOOLEAN_SCALAR],
+    true,
+    BOOLEAN_SCALAR + " must have the correct value."
+  );
+  Assert.ok(
+    !(KEYED_UINT_SCALAR in scalars),
+    "Keyed scalars must be reported in a separate section."
+  );
 });
 
 add_task(async function test_keyedSerializationFormat() {
@@ -61,27 +86,50 @@ add_task(async function test_keyedSerializationFormat() {
 
   Telemetry.scalarSet(UINT_SCALAR, expectedUint);
   Telemetry.keyedScalarSet(KEYED_UINT_SCALAR, expectedKey, expectedUint);
-  Telemetry.keyedScalarSet(KEYED_UINT_SCALAR, expectedOtherKey, expectedOtherValue);
+  Telemetry.keyedScalarSet(
+    KEYED_UINT_SCALAR,
+    expectedOtherKey,
+    expectedOtherValue
+  );
 
   // Get a snapshot of the scalars.
   const keyedScalars = TelemetryTestUtils.getProcessScalars("parent", true);
 
-  Assert.ok(!(UINT_SCALAR in keyedScalars),
-            UINT_SCALAR + " must not be serialized with the keyed scalars.");
-  Assert.ok(KEYED_UINT_SCALAR in keyedScalars,
-            KEYED_UINT_SCALAR + " must be serialized with the keyed scalars.");
-  Assert.equal(Object.keys(keyedScalars[KEYED_UINT_SCALAR]).length, 2,
-               "The keyed scalar must contain exactly 2 keys.");
-  Assert.ok(expectedKey in keyedScalars[KEYED_UINT_SCALAR],
-            KEYED_UINT_SCALAR + " must contain the expected keys.");
-  Assert.ok(expectedOtherKey in keyedScalars[KEYED_UINT_SCALAR],
-            KEYED_UINT_SCALAR + " must contain the expected keys.");
-  Assert.ok(Number.isInteger(keyedScalars[KEYED_UINT_SCALAR][expectedKey]),
-               KEYED_UINT_SCALAR + "." + expectedKey + " must be a finite integer.");
-  Assert.equal(keyedScalars[KEYED_UINT_SCALAR][expectedKey], expectedUint,
-               KEYED_UINT_SCALAR + "." + expectedKey + " must have the correct value.");
-  Assert.equal(keyedScalars[KEYED_UINT_SCALAR][expectedOtherKey], expectedOtherValue,
-               KEYED_UINT_SCALAR + "." + expectedOtherKey + " must have the correct value.");
+  Assert.ok(
+    !(UINT_SCALAR in keyedScalars),
+    UINT_SCALAR + " must not be serialized with the keyed scalars."
+  );
+  Assert.ok(
+    KEYED_UINT_SCALAR in keyedScalars,
+    KEYED_UINT_SCALAR + " must be serialized with the keyed scalars."
+  );
+  Assert.equal(
+    Object.keys(keyedScalars[KEYED_UINT_SCALAR]).length,
+    2,
+    "The keyed scalar must contain exactly 2 keys."
+  );
+  Assert.ok(
+    expectedKey in keyedScalars[KEYED_UINT_SCALAR],
+    KEYED_UINT_SCALAR + " must contain the expected keys."
+  );
+  Assert.ok(
+    expectedOtherKey in keyedScalars[KEYED_UINT_SCALAR],
+    KEYED_UINT_SCALAR + " must contain the expected keys."
+  );
+  Assert.ok(
+    Number.isInteger(keyedScalars[KEYED_UINT_SCALAR][expectedKey]),
+    KEYED_UINT_SCALAR + "." + expectedKey + " must be a finite integer."
+  );
+  Assert.equal(
+    keyedScalars[KEYED_UINT_SCALAR][expectedKey],
+    expectedUint,
+    KEYED_UINT_SCALAR + "." + expectedKey + " must have the correct value."
+  );
+  Assert.equal(
+    keyedScalars[KEYED_UINT_SCALAR][expectedOtherKey],
+    expectedOtherValue,
+    KEYED_UINT_SCALAR + "." + expectedOtherKey + " must have the correct value."
+  );
 });
 
 add_task(async function test_nonexistingScalar() {
@@ -103,12 +151,17 @@ add_task(async function test_nonexistingScalar() {
   // Get a snapshot of the scalars.
   const scalars = TelemetryTestUtils.getProcessScalars("parent");
 
-  Assert.ok(!(NON_EXISTING_SCALAR in scalars), "The non existing scalar must not be persisted.");
+  Assert.ok(
+    !(NON_EXISTING_SCALAR in scalars),
+    "The non existing scalar must not be persisted."
+  );
 
   const keyedScalars = TelemetryTestUtils.getProcessScalars("parent", true);
 
-  Assert.ok(!(NON_EXISTING_SCALAR in keyedScalars),
-            "The non existing keyed scalar must not be persisted.");
+  Assert.ok(
+    !(NON_EXISTING_SCALAR in keyedScalars),
+    "The non existing keyed scalar must not be persisted."
+  );
 });
 
 add_task(async function test_expiredScalar() {
@@ -135,18 +188,29 @@ add_task(async function test_expiredScalar() {
   const scalars = TelemetryTestUtils.getProcessScalars("parent");
   const keyedScalars = TelemetryTestUtils.getProcessScalars("parent");
 
-  Assert.ok(!(EXPIRED_SCALAR in scalars), "The expired scalar must not be persisted.");
-  Assert.equal(scalars[UNEXPIRED_SCALAR], expectedValue,
-               "The unexpired scalar must be persisted with the correct value.");
-  Assert.ok(!(EXPIRED_KEYED_SCALAR in keyedScalars),
-            "The expired keyed scalar must not be persisted.");
+  Assert.ok(
+    !(EXPIRED_SCALAR in scalars),
+    "The expired scalar must not be persisted."
+  );
+  Assert.equal(
+    scalars[UNEXPIRED_SCALAR],
+    expectedValue,
+    "The unexpired scalar must be persisted with the correct value."
+  );
+  Assert.ok(
+    !(EXPIRED_KEYED_SCALAR in keyedScalars),
+    "The expired keyed scalar must not be persisted."
+  );
 });
 
 add_task(async function test_unsignedIntScalar() {
-  let checkScalar = (expectedValue) => {
+  let checkScalar = expectedValue => {
     const scalars = TelemetryTestUtils.getProcessScalars("parent");
-    Assert.equal(scalars[UINT_SCALAR], expectedValue,
-                 UINT_SCALAR + " must contain the expected value.");
+    Assert.equal(
+      scalars[UINT_SCALAR],
+      expectedValue,
+      UINT_SCALAR + " must contain the expected value."
+    );
   };
 
   Telemetry.clearScalars();
@@ -195,10 +259,13 @@ add_task(async function test_unsignedIntScalar() {
 });
 
 add_task(async function test_stringScalar() {
-  let checkExpectedString = (expectedString) => {
+  let checkExpectedString = expectedString => {
     const scalars = TelemetryTestUtils.getProcessScalars("parent");
-    Assert.equal(scalars[STRING_SCALAR], expectedString,
-                 STRING_SCALAR + " must contain the expected string value.");
+    Assert.equal(
+      scalars[STRING_SCALAR],
+      expectedString,
+      STRING_SCALAR + " must contain the expected string value."
+    );
   };
 
   Telemetry.clearScalars();
@@ -219,16 +286,20 @@ add_task(async function test_stringScalar() {
   Telemetry.scalarSet(STRING_SCALAR, 1);
 
   // Try to set the scalar to a string longer than the maximum length limit.
-  const LONG_STRING = "browser.qaxfiuosnzmhlg.rpvxicawolhtvmbkpnludhedobxvkjwqyeyvmv";
+  const LONG_STRING =
+    "browser.qaxfiuosnzmhlg.rpvxicawolhtvmbkpnludhedobxvkjwqyeyvmv";
   Telemetry.scalarSet(STRING_SCALAR, LONG_STRING);
   checkExpectedString(LONG_STRING.substr(0, 50));
 });
 
 add_task(async function test_booleanScalar() {
-  let checkExpectedBool = (expectedBoolean) => {
+  let checkExpectedBool = expectedBoolean => {
     const scalars = TelemetryTestUtils.getProcessScalars("parent");
-    Assert.equal(scalars[BOOLEAN_SCALAR], expectedBoolean,
-                 BOOLEAN_SCALAR + " must contain the expected boolean value.");
+    Assert.equal(
+      scalars[BOOLEAN_SCALAR],
+      expectedBoolean,
+      BOOLEAN_SCALAR + " must contain the expected boolean value."
+    );
   };
 
   Telemetry.clearScalars();
@@ -265,11 +336,14 @@ add_task(async function test_scalarRecording() {
 
   let checkValue = (scalarName, expectedValue) => {
     const scalars = TelemetryTestUtils.getProcessScalars("parent");
-    Assert.equal(scalars[scalarName], expectedValue,
-                 scalarName + " must contain the expected value.");
+    Assert.equal(
+      scalars[scalarName],
+      expectedValue,
+      scalarName + " must contain the expected value."
+    );
   };
 
-  let checkNotSerialized = (scalarName) => {
+  let checkNotSerialized = scalarName => {
     const scalars = TelemetryTestUtils.getProcessScalars("parent");
     Assert.ok(!(scalarName in scalars), scalarName + " was not recorded.");
   };
@@ -306,11 +380,14 @@ add_task(async function test_keyedScalarRecording() {
 
   let checkValue = (scalarName, expectedValue) => {
     const scalars = TelemetryTestUtils.getProcessScalars("parent", true);
-    Assert.equal(scalars[scalarName][testKey], expectedValue,
-                 scalarName + " must contain the expected value.");
+    Assert.equal(
+      scalars[scalarName][testKey],
+      expectedValue,
+      scalarName + " must contain the expected value."
+    );
   };
 
-  let checkNotSerialized = (scalarName) => {
+  let checkNotSerialized = scalarName => {
     const scalars = TelemetryTestUtils.getProcessScalars("parent", true);
     Assert.ok(!(scalarName in scalars), scalarName + " was not recorded.");
   };
@@ -353,31 +430,55 @@ add_task(async function test_subsession() {
   let scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
   let keyedScalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
 
-  Assert.equal(scalars[UINT_SCALAR], 3785,
-               UINT_SCALAR + " must contain the expected value.");
-  Assert.equal(scalars[STRING_SCALAR], "some value",
-               STRING_SCALAR + " must contain the expected value.");
-  Assert.equal(scalars[BOOLEAN_SCALAR], false,
-               BOOLEAN_SCALAR + " must contain the expected value.");
-  Assert.equal(keyedScalars[KEYED_UINT_SCALAR].some_random_key, 12,
-               KEYED_UINT_SCALAR + " must contain the expected value.");
+  Assert.equal(
+    scalars[UINT_SCALAR],
+    3785,
+    UINT_SCALAR + " must contain the expected value."
+  );
+  Assert.equal(
+    scalars[STRING_SCALAR],
+    "some value",
+    STRING_SCALAR + " must contain the expected value."
+  );
+  Assert.equal(
+    scalars[BOOLEAN_SCALAR],
+    false,
+    BOOLEAN_SCALAR + " must contain the expected value."
+  );
+  Assert.equal(
+    keyedScalars[KEYED_UINT_SCALAR].some_random_key,
+    12,
+    KEYED_UINT_SCALAR + " must contain the expected value."
+  );
 
   // Get a new snapshot and reset the subsession again. Since no new value
   // was set, the scalars should not be reported.
   scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
   keyedScalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
 
-  Assert.ok(!(UINT_SCALAR in scalars), UINT_SCALAR + " must be empty and not reported.");
-  Assert.ok(!(STRING_SCALAR in scalars), STRING_SCALAR + " must be empty and not reported.");
-  Assert.ok(!(BOOLEAN_SCALAR in scalars), BOOLEAN_SCALAR + " must be empty and not reported.");
-  Assert.ok(!(KEYED_UINT_SCALAR in keyedScalars), KEYED_UINT_SCALAR + " must be empty and not reported.");
+  Assert.ok(
+    !(UINT_SCALAR in scalars),
+    UINT_SCALAR + " must be empty and not reported."
+  );
+  Assert.ok(
+    !(STRING_SCALAR in scalars),
+    STRING_SCALAR + " must be empty and not reported."
+  );
+  Assert.ok(
+    !(BOOLEAN_SCALAR in scalars),
+    BOOLEAN_SCALAR + " must be empty and not reported."
+  );
+  Assert.ok(
+    !(KEYED_UINT_SCALAR in keyedScalars),
+    KEYED_UINT_SCALAR + " must be empty and not reported."
+  );
 });
 
 add_task(async function test_keyed_uint() {
   Telemetry.clearScalars();
 
-  const KEYS = [ "a_key", "another_key", "third_key" ];
-  let expectedValues = [ 1, 1, 1 ];
+  const KEYS = ["a_key", "another_key", "third_key"];
+  let expectedValues = [1, 1, 1];
 
   // Set all the keys to a baseline value.
   for (let key of KEYS) {
@@ -398,8 +499,11 @@ add_task(async function test_keyed_uint() {
 
   for (let k = 0; k < 3; k++) {
     const keyName = KEYS[k];
-    Assert.equal(keyedScalars[KEYED_UINT_SCALAR][keyName], expectedValues[k],
-                 KEYED_UINT_SCALAR + "." + keyName + " must contain the correct value.");
+    Assert.equal(
+      keyedScalars[KEYED_UINT_SCALAR][keyName],
+      expectedValues[k],
+      KEYED_UINT_SCALAR + "." + keyName + " must contain the correct value."
+    );
   }
 
   // Do not throw when doing unsupported things on uint keyed scalars.
@@ -422,20 +526,32 @@ add_task(async function test_keyed_boolean() {
   // Get a snapshot of the scalars and make sure the keys contain
   // the correct values.
   let keyedScalars = TelemetryTestUtils.getProcessScalars("parent", true);
-  Assert.equal(keyedScalars[KEYED_BOOLEAN_TYPE][first_key], true,
-               "The key must contain the expected value.");
-  Assert.equal(keyedScalars[KEYED_BOOLEAN_TYPE][second_key], false,
-               "The key must contain the expected value.");
+  Assert.equal(
+    keyedScalars[KEYED_BOOLEAN_TYPE][first_key],
+    true,
+    "The key must contain the expected value."
+  );
+  Assert.equal(
+    keyedScalars[KEYED_BOOLEAN_TYPE][second_key],
+    false,
+    "The key must contain the expected value."
+  );
 
   // Now flip the values and make sure we get the expected values back.
   Telemetry.keyedScalarSet(KEYED_BOOLEAN_TYPE, first_key, false);
   Telemetry.keyedScalarSet(KEYED_BOOLEAN_TYPE, second_key, true);
 
   keyedScalars = TelemetryTestUtils.getProcessScalars("parent", true);
-  Assert.equal(keyedScalars[KEYED_BOOLEAN_TYPE][first_key], false,
-               "The key must contain the expected value.");
-  Assert.equal(keyedScalars[KEYED_BOOLEAN_TYPE][second_key], true,
-               "The key must contain the expected value.");
+  Assert.equal(
+    keyedScalars[KEYED_BOOLEAN_TYPE][first_key],
+    false,
+    "The key must contain the expected value."
+  );
+  Assert.equal(
+    keyedScalars[KEYED_BOOLEAN_TYPE][second_key],
+    true,
+    "The key must contain the expected value."
+  );
 
   // Do not throw when doing unsupported things on a boolean keyed scalars.
   // Just test one single unsupported operation, the other are covered in the plain
@@ -463,16 +579,28 @@ add_task(async function test_keyed_keys_length() {
 
   // Make sure the key with the right length contains the expected value.
   let keyedScalars = TelemetryTestUtils.getProcessScalars("parent", true);
-  Assert.equal(Object.keys(keyedScalars[KEYED_UINT_SCALAR]).length, 1,
-               "The keyed scalar must contain exactly 1 key.");
-  Assert.ok(NORMAL_KEY in keyedScalars[KEYED_UINT_SCALAR],
-            "The keyed scalar must contain the expected key.");
-  Assert.equal(keyedScalars[KEYED_UINT_SCALAR][NORMAL_KEY], 1,
-               "The key must contain the expected value.");
-  Assert.ok(!(LONG_KEY_STRING in keyedScalars[KEYED_UINT_SCALAR]),
-            "The data for the long key should not have been recorded.");
-  Assert.ok(!("" in keyedScalars[KEYED_UINT_SCALAR]),
-            "The data for the empty key should not have been recorded.");
+  Assert.equal(
+    Object.keys(keyedScalars[KEYED_UINT_SCALAR]).length,
+    1,
+    "The keyed scalar must contain exactly 1 key."
+  );
+  Assert.ok(
+    NORMAL_KEY in keyedScalars[KEYED_UINT_SCALAR],
+    "The keyed scalar must contain the expected key."
+  );
+  Assert.equal(
+    keyedScalars[KEYED_UINT_SCALAR][NORMAL_KEY],
+    1,
+    "The key must contain the expected value."
+  );
+  Assert.ok(
+    !(LONG_KEY_STRING in keyedScalars[KEYED_UINT_SCALAR]),
+    "The data for the long key should not have been recorded."
+  );
+  Assert.ok(
+    !("" in keyedScalars[KEYED_UINT_SCALAR]),
+    "The data for the empty key should not have been recorded."
+  );
 });
 
 add_task(async function test_keyed_max_keys() {
@@ -503,20 +631,27 @@ add_task(async function test_keyed_max_keys() {
 
   // Check that the keyed scalar only contain the first 100 keys.
   const reportedKeysSet = new Set(Object.keys(keyedScalars[KEYED_UINT_SCALAR]));
-  Assert.ok([...keyNamesSet].filter(x => reportedKeysSet.has(x)) &&
-            [...reportedKeysSet].filter(x => keyNamesSet.has(x)),
-            "The keyed scalar must contain all the 100 keys, and drop the others.");
+  Assert.ok(
+    [...keyNamesSet].filter(x => reportedKeysSet.has(x)) &&
+      [...reportedKeysSet].filter(x => keyNamesSet.has(x)),
+    "The keyed scalar must contain all the 100 keys, and drop the others."
+  );
 
   // Check that all the keys recorded the expected values.
   let expectedValue = 0;
   keyNamesSet.forEach(keyName => {
-    Assert.equal(keyedScalars[KEYED_UINT_SCALAR][keyName], expectedValue++,
-                 "The key must contain the expected value.");
+    Assert.equal(
+      keyedScalars[KEYED_UINT_SCALAR][keyName],
+      expectedValue++,
+      "The key must contain the expected value."
+    );
   });
 
   // Check that KEYED_EXCEED_SCALAR is in keyedScalars
-  Assert.ok((KEYED_EXCEED_SCALAR in keyedScalars),
-            "We have exceeded maximum number of Keys.");
+  Assert.ok(
+    KEYED_EXCEED_SCALAR in keyedScalars,
+    "We have exceeded maximum number of Keys."
+  );
 
   // Generate the names for the exceeded keys
   let keyNamesSet2 = new Set();
@@ -532,12 +667,22 @@ add_task(async function test_keyed_max_keys() {
 
   // Check that there are exactly 100 keys in KEYED_EXCEED_SCALAR
   let snapshot = Telemetry.getSnapshotForKeyedScalars("main", false);
-  Assert.equal(100, Object.keys(snapshot.parent[KEYED_UINT_SCALAR]).length,
-             "The keyed scalar must contain all the 100 keys.");
+  Assert.equal(
+    100,
+    Object.keys(snapshot.parent[KEYED_UINT_SCALAR]).length,
+    "The keyed scalar must contain all the 100 keys."
+  );
 
   // Check that KEYED_UINT_SCALAR is in keyedScalars and its value equals 3
-  Assert.ok((KEYED_UINT_SCALAR in keyedScalars[KEYED_EXCEED_SCALAR]), "The keyed Scalar is in the keyed exceeded scalar");
-  Assert.equal(keyedScalars[KEYED_EXCEED_SCALAR][KEYED_UINT_SCALAR], 3, "We have exactly 3 keys over the limit");
+  Assert.ok(
+    KEYED_UINT_SCALAR in keyedScalars[KEYED_EXCEED_SCALAR],
+    "The keyed Scalar is in the keyed exceeded scalar"
+  );
+  Assert.equal(
+    keyedScalars[KEYED_EXCEED_SCALAR][KEYED_UINT_SCALAR],
+    3,
+    "We have exactly 3 keys over the limit"
+  );
 });
 
 add_task(async function test_dynamicScalars_registration() {
@@ -545,104 +690,110 @@ add_task(async function test_dynamicScalars_registration() {
 
   const TEST_CASES = [
     {
-      "category": "telemetry.test",
-      "data": {
-        "missing_kind": {
+      category: "telemetry.test",
+      data: {
+        missing_kind: {
           keyed: false,
           record_on_release: true,
         },
       },
-      "evaluation": /missing 'kind'/,
-      "description": "Registration must fail if required fields are missing",
+      evaluation: /missing 'kind'/,
+      description: "Registration must fail if required fields are missing",
     },
     {
-      "category": "telemetry.test",
-      "data": {
-        "invalid_collection": {
+      category: "telemetry.test",
+      data: {
+        invalid_collection: {
           kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
           record_on_release: "opt-in",
         },
       },
-      "evaluation": /Invalid 'record_on_release'/,
-      "description": "Registration must fail if 'record_on_release' is of the wrong type",
+      evaluation: /Invalid 'record_on_release'/,
+      description:
+        "Registration must fail if 'record_on_release' is of the wrong type",
     },
     {
-      "category": "telemetry.test",
-      "data": {
-        "invalid_kind": {
+      category: "telemetry.test",
+      data: {
+        invalid_kind: {
           kind: "12",
         },
       },
-      "evaluation": /Invalid or missing 'kind'/,
-      "description": "Registration must fail if 'kind' is of the wrong type",
+      evaluation: /Invalid or missing 'kind'/,
+      description: "Registration must fail if 'kind' is of the wrong type",
     },
     {
-      "category": "telemetry.test",
-      "data": {
-        "invalid_expired": {
+      category: "telemetry.test",
+      data: {
+        invalid_expired: {
           kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
           expired: "never",
         },
       },
-      "evaluation": /Invalid 'expired'/,
-      "description": "Registration must fail if 'expired' is of the wrong type",
+      evaluation: /Invalid 'expired'/,
+      description: "Registration must fail if 'expired' is of the wrong type",
     },
     {
-      "category": "telemetry.test",
-      "data": {
-        "valid_scalar": {
+      category: "telemetry.test",
+      data: {
+        valid_scalar: {
           kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
           keyed: false,
           record_on_release: true,
         },
-        "invalid_scalar": {
+        invalid_scalar: {
           expired: false,
         },
       },
-      "evaluation": /Invalid or missing 'kind'/,
-      "description": "No scalar must be registered if the batch contains an invalid one",
+      evaluation: /Invalid or missing 'kind'/,
+      description:
+        "No scalar must be registered if the batch contains an invalid one",
     },
     {
-      "category": "telemetry.test",
-      "data": {
-        "invalid_stores": {
+      category: "telemetry.test",
+      data: {
+        invalid_stores: {
           kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
           keyed: false,
           stores: true,
         },
       },
-      "evaluation": /Invalid 'stores'/,
-      "description": "Registration must fail if 'stores' is of the wrong type",
+      evaluation: /Invalid 'stores'/,
+      description: "Registration must fail if 'stores' is of the wrong type",
     },
     {
-      "category": "telemetry.test",
-      "data": {
-        "invalid_stores": {
+      category: "telemetry.test",
+      data: {
+        invalid_stores: {
           kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
           keyed: false,
           stores: {},
         },
       },
-      "evaluation": /Invalid 'stores'/,
-      "description": "Registration must fail if 'stores' is of the wrong type",
+      evaluation: /Invalid 'stores'/,
+      description: "Registration must fail if 'stores' is of the wrong type",
     },
     {
-      "category": "telemetry.test",
-      "data": {
-        "invalid_stores": {
+      category: "telemetry.test",
+      data: {
+        invalid_stores: {
           kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
           keyed: false,
           stores: [{}],
         },
       },
-      "evaluation": /'stores' array isn't a string./,
-      "description": "Registration must fail if element in 'stores' is of the wrong type",
+      evaluation: /'stores' array isn't a string./,
+      description:
+        "Registration must fail if element in 'stores' is of the wrong type",
     },
   ];
 
   for (let testCase of TEST_CASES) {
-    Assert.throws(() => Telemetry.registerScalars(testCase.category, testCase.data),
-                  testCase.evaluation, testCase.description);
+    Assert.throws(
+      () => Telemetry.registerScalars(testCase.category, testCase.data),
+      testCase.evaluation,
+      testCase.description
+    );
   }
 });
 
@@ -651,7 +802,7 @@ add_task(async function test_dynamicScalars_doubleRegistration() {
 
   // Register a test scalar.
   Telemetry.registerScalars("telemetry.test.dynamic", {
-    "double_registration_1": {
+    double_registration_1: {
       kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
       record_on_release: true,
     },
@@ -663,11 +814,11 @@ add_task(async function test_dynamicScalars_doubleRegistration() {
   // Register the same scalar again, along with a second scalar.
   // This must not throw.
   Telemetry.registerScalars("telemetry.test.dynamic", {
-    "double_registration_1": {
+    double_registration_1: {
       kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
       record_on_release: true,
     },
-    "double_registration_2": {
+    double_registration_2: {
       kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
       record_on_release: true,
     },
@@ -680,15 +831,21 @@ add_task(async function test_dynamicScalars_doubleRegistration() {
   // Get a snapshot of the scalars and check that the dynamic ones were correctly set.
   let scalars = getProcessScalars("dynamic", false, false);
 
-  Assert.equal(scalars["telemetry.test.dynamic.double_registration_1"], 2,
-               "The recorded scalar must contain the right value.");
-  Assert.equal(scalars["telemetry.test.dynamic.double_registration_2"], 3,
-               "The recorded scalar must contain the right value.");
+  Assert.equal(
+    scalars["telemetry.test.dynamic.double_registration_1"],
+    2,
+    "The recorded scalar must contain the right value."
+  );
+  Assert.equal(
+    scalars["telemetry.test.dynamic.double_registration_2"],
+    3,
+    "The recorded scalar must contain the right value."
+  );
 
   // Register an existing scalar again, only change the definition
   // to make it expire.
   Telemetry.registerScalars("telemetry.test.dynamic", {
-    "double_registration_2": {
+    double_registration_2: {
       kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
       record_on_release: true,
       expired: true,
@@ -698,8 +855,11 @@ add_task(async function test_dynamicScalars_doubleRegistration() {
   // Attempt to record and make sure that no recording happens.
   Telemetry.scalarAdd("telemetry.test.dynamic.double_registration_2", 1);
   scalars = getProcessScalars("dynamic", false, false);
-  Assert.equal(scalars["telemetry.test.dynamic.double_registration_2"], 3,
-               "The recorded scalar must contain the right value.");
+  Assert.equal(
+    scalars["telemetry.test.dynamic.double_registration_2"],
+    3,
+    "The recorded scalar must contain the right value."
+  );
 });
 
 add_task(async function test_dynamicScalars_recording() {
@@ -710,20 +870,20 @@ add_task(async function test_dynamicScalars_recording() {
 
   // Register some test scalars.
   Telemetry.registerScalars("telemetry.test.dynamic", {
-    "record_optout": {
+    record_optout: {
       kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
       record_on_release: true,
     },
-    "record_keyed": {
+    record_keyed: {
       kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
       keyed: true,
       record_on_release: true,
     },
-    "record_optin": {
+    record_optin: {
       kind: Ci.nsITelemetry.SCALAR_TYPE_BOOLEAN,
       record_on_release: false,
     },
-    "record_expired": {
+    record_expired: {
       kind: Ci.nsITelemetry.SCALAR_TYPE_STRING,
       expired: true,
       record_on_release: true,
@@ -740,18 +900,32 @@ add_task(async function test_dynamicScalars_recording() {
   let scalars = getProcessScalars("dynamic", false, false);
   let keyedScalars = getProcessScalars("dynamic", true, true);
 
-  Assert.ok(!("telemetry.test.dynamic.record_optin" in scalars),
-            "Dynamic opt-in scalars must not be recorded.");
-  Assert.ok("telemetry.test.dynamic.record_keyed" in keyedScalars,
-            "Dynamic opt-out keyed scalars must be recorded.");
-  Assert.ok(!("telemetry.test.dynamic.record_expired" in scalars),
-            "Dynamic expired scalars must not be recorded.");
-  Assert.ok("telemetry.test.dynamic.record_optout" in scalars,
-            "Dynamic opt-out scalars must be recorded.");
-  Assert.equal(scalars["telemetry.test.dynamic.record_optout"], 1,
-               "The recorded scalar must contain the right value.");
-  Assert.equal(keyedScalars["telemetry.test.dynamic.record_keyed"].someKey, 5,
-               "The recorded keyed scalar must contain the right value.");
+  Assert.ok(
+    !("telemetry.test.dynamic.record_optin" in scalars),
+    "Dynamic opt-in scalars must not be recorded."
+  );
+  Assert.ok(
+    "telemetry.test.dynamic.record_keyed" in keyedScalars,
+    "Dynamic opt-out keyed scalars must be recorded."
+  );
+  Assert.ok(
+    !("telemetry.test.dynamic.record_expired" in scalars),
+    "Dynamic expired scalars must not be recorded."
+  );
+  Assert.ok(
+    "telemetry.test.dynamic.record_optout" in scalars,
+    "Dynamic opt-out scalars must be recorded."
+  );
+  Assert.equal(
+    scalars["telemetry.test.dynamic.record_optout"],
+    1,
+    "The recorded scalar must contain the right value."
+  );
+  Assert.equal(
+    keyedScalars["telemetry.test.dynamic.record_keyed"].someKey,
+    5,
+    "The recorded keyed scalar must contain the right value."
+  );
 
   // Enable extended recording.
   Telemetry.canRecordExtended = true;
@@ -763,136 +937,218 @@ add_task(async function test_dynamicScalars_recording() {
   // Get a snapshot of the scalars and check that the dynamic ones were correctly set.
   scalars = getProcessScalars("dynamic", false, true);
 
-  Assert.ok(!("telemetry.test.dynamic.record_expired" in scalars),
-            "Dynamic expired scalars must not be recorded.");
-  Assert.ok("telemetry.test.dynamic.record_optin" in scalars,
-            "Dynamic opt-in scalars must be recorded.");
-  Assert.equal(scalars["telemetry.test.dynamic.record_optin"], true,
-               "The recorded scalar must contain the right value.");
+  Assert.ok(
+    !("telemetry.test.dynamic.record_expired" in scalars),
+    "Dynamic expired scalars must not be recorded."
+  );
+  Assert.ok(
+    "telemetry.test.dynamic.record_optin" in scalars,
+    "Dynamic opt-in scalars must be recorded."
+  );
+  Assert.equal(
+    scalars["telemetry.test.dynamic.record_optin"],
+    true,
+    "The recorded scalar must contain the right value."
+  );
 });
 
-add_task({
-  skip_if: () => gIsAndroid,
-},
-async function test_productSpecificScalar() {
-  const DEFAULT_PRODUCT_SCALAR = "telemetry.test.default_products";
-  const DESKTOP_ONLY_SCALAR = "telemetry.test.desktop_only";
-  const MULTIPRODUCT_SCALAR = "telemetry.test.multiproduct";
-  const MOBILE_ONLY_SCALAR = "telemetry.test.mobile_only";
-  const MOBILE_ONLY_KEYED_SCALAR = "telemetry.test.keyed_mobile_only";
+add_task(
+  {
+    skip_if: () => gIsAndroid,
+  },
+  async function test_productSpecificScalar() {
+    const DEFAULT_PRODUCT_SCALAR = "telemetry.test.default_products";
+    const DESKTOP_ONLY_SCALAR = "telemetry.test.desktop_only";
+    const MULTIPRODUCT_SCALAR = "telemetry.test.multiproduct";
+    const MOBILE_ONLY_SCALAR = "telemetry.test.mobile_only";
+    const MOBILE_ONLY_KEYED_SCALAR = "telemetry.test.keyed_mobile_only";
 
-  Telemetry.clearScalars();
+    Telemetry.clearScalars();
 
-  // Try to set the desktop scalars
-  let expectedValue = 11714;
-  Telemetry.scalarAdd(DEFAULT_PRODUCT_SCALAR, expectedValue);
-  Telemetry.scalarAdd(DESKTOP_ONLY_SCALAR, expectedValue);
-  Telemetry.scalarAdd(MULTIPRODUCT_SCALAR, expectedValue);
+    // Try to set the desktop scalars
+    let expectedValue = 11714;
+    Telemetry.scalarAdd(DEFAULT_PRODUCT_SCALAR, expectedValue);
+    Telemetry.scalarAdd(DESKTOP_ONLY_SCALAR, expectedValue);
+    Telemetry.scalarAdd(MULTIPRODUCT_SCALAR, expectedValue);
 
-  // Try to set the mobile-only scalar to some value. We will not be recording the value,
-  // but we shouldn't throw.
-  let expectedKey = "some_key";
-  Telemetry.scalarSet(MOBILE_ONLY_SCALAR, 11715);
-  Telemetry.scalarSetMaximum(MOBILE_ONLY_SCALAR, 11715);
-  Telemetry.keyedScalarAdd(MOBILE_ONLY_KEYED_SCALAR, expectedKey, 11715);
-  Telemetry.keyedScalarSet(MOBILE_ONLY_KEYED_SCALAR, expectedKey, 11715);
-  Telemetry.keyedScalarSetMaximum(MOBILE_ONLY_KEYED_SCALAR, expectedKey, 11715);
+    // Try to set the mobile-only scalar to some value. We will not be recording the value,
+    // but we shouldn't throw.
+    let expectedKey = "some_key";
+    Telemetry.scalarSet(MOBILE_ONLY_SCALAR, 11715);
+    Telemetry.scalarSetMaximum(MOBILE_ONLY_SCALAR, 11715);
+    Telemetry.keyedScalarAdd(MOBILE_ONLY_KEYED_SCALAR, expectedKey, 11715);
+    Telemetry.keyedScalarSet(MOBILE_ONLY_KEYED_SCALAR, expectedKey, 11715);
+    Telemetry.keyedScalarSetMaximum(
+      MOBILE_ONLY_KEYED_SCALAR,
+      expectedKey,
+      11715
+    );
 
-  // Get a snapshot of the scalars.
-  const scalars = TelemetryTestUtils.getProcessScalars("parent");
-  const keyedScalars = TelemetryTestUtils.getProcessScalars("parent");
+    // Get a snapshot of the scalars.
+    const scalars = TelemetryTestUtils.getProcessScalars("parent");
+    const keyedScalars = TelemetryTestUtils.getProcessScalars("parent");
 
-  Assert.equal(scalars[DEFAULT_PRODUCT_SCALAR], expectedValue, "The default platfomrs scalar must contain the right value");
-  Assert.equal(scalars[DESKTOP_ONLY_SCALAR], expectedValue, "The desktop-only scalar must contain the right value");
-  Assert.equal(scalars[MULTIPRODUCT_SCALAR], expectedValue, "The multiproduct scalar must contain the right value");
+    Assert.equal(
+      scalars[DEFAULT_PRODUCT_SCALAR],
+      expectedValue,
+      "The default platfomrs scalar must contain the right value"
+    );
+    Assert.equal(
+      scalars[DESKTOP_ONLY_SCALAR],
+      expectedValue,
+      "The desktop-only scalar must contain the right value"
+    );
+    Assert.equal(
+      scalars[MULTIPRODUCT_SCALAR],
+      expectedValue,
+      "The multiproduct scalar must contain the right value"
+    );
 
-  Assert.ok(!(MOBILE_ONLY_SCALAR in scalars), "The mobile-only scalar must not be persisted.");
-  Assert.ok(!(MOBILE_ONLY_KEYED_SCALAR in keyedScalars),
-            "The mobile-only keyed scalar must not be persisted.");
-});
+    Assert.ok(
+      !(MOBILE_ONLY_SCALAR in scalars),
+      "The mobile-only scalar must not be persisted."
+    );
+    Assert.ok(
+      !(MOBILE_ONLY_KEYED_SCALAR in keyedScalars),
+      "The mobile-only keyed scalar must not be persisted."
+    );
+  }
+);
 
-add_task({
-  skip_if: () => !gIsAndroid,
-},
-async function test_mobileSpecificScalar() {
-  const DEFAULT_PRODUCT_SCALAR = "telemetry.test.default_products";
-  const DESKTOP_ONLY_SCALAR = "telemetry.test.desktop_only";
-  const DESKTOP_ONLY_KEYED_SCALAR = "telemetry.test.keyed_desktop_only";
-  const MULTIPRODUCT_SCALAR = "telemetry.test.multiproduct";
-  const MOBILE_ONLY_SCALAR = "telemetry.test.mobile_only";
-  const MOBILE_ONLY_KEYED_SCALAR = "telemetry.test.keyed_mobile_only";
+add_task(
+  {
+    skip_if: () => !gIsAndroid,
+  },
+  async function test_mobileSpecificScalar() {
+    const DEFAULT_PRODUCT_SCALAR = "telemetry.test.default_products";
+    const DESKTOP_ONLY_SCALAR = "telemetry.test.desktop_only";
+    const DESKTOP_ONLY_KEYED_SCALAR = "telemetry.test.keyed_desktop_only";
+    const MULTIPRODUCT_SCALAR = "telemetry.test.multiproduct";
+    const MOBILE_ONLY_SCALAR = "telemetry.test.mobile_only";
+    const MOBILE_ONLY_KEYED_SCALAR = "telemetry.test.keyed_mobile_only";
 
-  Telemetry.clearScalars();
+    Telemetry.clearScalars();
 
-  // Try to set the mobile and multiproduct scalars
-  let expectedValue = 11714;
-  let expectedKey = "some_key";
-  Telemetry.scalarAdd(DEFAULT_PRODUCT_SCALAR, expectedValue);
-  Telemetry.scalarAdd(MOBILE_ONLY_SCALAR, expectedValue);
-  Telemetry.keyedScalarSet(MOBILE_ONLY_KEYED_SCALAR, expectedKey, expectedValue);
-  Telemetry.scalarAdd(MULTIPRODUCT_SCALAR, expectedValue);
+    // Try to set the mobile and multiproduct scalars
+    let expectedValue = 11714;
+    let expectedKey = "some_key";
+    Telemetry.scalarAdd(DEFAULT_PRODUCT_SCALAR, expectedValue);
+    Telemetry.scalarAdd(MOBILE_ONLY_SCALAR, expectedValue);
+    Telemetry.keyedScalarSet(
+      MOBILE_ONLY_KEYED_SCALAR,
+      expectedKey,
+      expectedValue
+    );
+    Telemetry.scalarAdd(MULTIPRODUCT_SCALAR, expectedValue);
 
-  // Try to set the desktop-only scalar to some value. We will not be recording the value,
-  // but we shouldn't throw.
-  Telemetry.scalarSet(DESKTOP_ONLY_SCALAR, 11715);
-  Telemetry.scalarSetMaximum(DESKTOP_ONLY_SCALAR, 11715);
-  Telemetry.keyedScalarAdd(DESKTOP_ONLY_KEYED_SCALAR, expectedKey, 11715);
-  Telemetry.keyedScalarSet(DESKTOP_ONLY_KEYED_SCALAR, expectedKey, 11715);
-  Telemetry.keyedScalarSetMaximum(DESKTOP_ONLY_KEYED_SCALAR, expectedKey, 11715);
+    // Try to set the desktop-only scalar to some value. We will not be recording the value,
+    // but we shouldn't throw.
+    Telemetry.scalarSet(DESKTOP_ONLY_SCALAR, 11715);
+    Telemetry.scalarSetMaximum(DESKTOP_ONLY_SCALAR, 11715);
+    Telemetry.keyedScalarAdd(DESKTOP_ONLY_KEYED_SCALAR, expectedKey, 11715);
+    Telemetry.keyedScalarSet(DESKTOP_ONLY_KEYED_SCALAR, expectedKey, 11715);
+    Telemetry.keyedScalarSetMaximum(
+      DESKTOP_ONLY_KEYED_SCALAR,
+      expectedKey,
+      11715
+    );
 
-  // Get a snapshot of the scalars.
-  const scalars = TelemetryTestUtils.getProcessScalars("parent");
-  const keyedScalars = TelemetryTestUtils.getProcessScalars("parent", true);
+    // Get a snapshot of the scalars.
+    const scalars = TelemetryTestUtils.getProcessScalars("parent");
+    const keyedScalars = TelemetryTestUtils.getProcessScalars("parent", true);
 
-  Assert.equal(scalars[DEFAULT_PRODUCT_SCALAR], expectedValue, "The default products scalar must contain the right value");
-  Assert.equal(scalars[MOBILE_ONLY_SCALAR], expectedValue, "The mobile-only scalar must contain the right value");
-  Assert.equal(keyedScalars[MOBILE_ONLY_KEYED_SCALAR][expectedKey], expectedValue, "The mobile-only keyed scalar must contain the right value");
-  Assert.equal(scalars[MULTIPRODUCT_SCALAR], expectedValue, "The multiproduct scalar must contain the right value");
+    Assert.equal(
+      scalars[DEFAULT_PRODUCT_SCALAR],
+      expectedValue,
+      "The default products scalar must contain the right value"
+    );
+    Assert.equal(
+      scalars[MOBILE_ONLY_SCALAR],
+      expectedValue,
+      "The mobile-only scalar must contain the right value"
+    );
+    Assert.equal(
+      keyedScalars[MOBILE_ONLY_KEYED_SCALAR][expectedKey],
+      expectedValue,
+      "The mobile-only keyed scalar must contain the right value"
+    );
+    Assert.equal(
+      scalars[MULTIPRODUCT_SCALAR],
+      expectedValue,
+      "The multiproduct scalar must contain the right value"
+    );
 
-  Assert.ok(!(DESKTOP_ONLY_SCALAR in scalars), "The desktop-only scalar must not be persisted.");
-  Assert.ok(!(DESKTOP_ONLY_KEYED_SCALAR in keyedScalars),
-            "The desktop-only keyed scalar must not be persisted.");
-});
+    Assert.ok(
+      !(DESKTOP_ONLY_SCALAR in scalars),
+      "The desktop-only scalar must not be persisted."
+    );
+    Assert.ok(
+      !(DESKTOP_ONLY_KEYED_SCALAR in keyedScalars),
+      "The desktop-only keyed scalar must not be persisted."
+    );
+  }
+);
 
-add_task({
-  skip_if: () => !gIsAndroid,
-},
-async function test_geckoviewSpecificScalar() {
-  const DEFAULT_PRODUCT_SCALAR = "telemetry.test.default_products";
-  const DESKTOP_ONLY_SCALAR = "telemetry.test.desktop_only";
-  const MULTIPRODUCT_SCALAR = "telemetry.test.multiproduct";
-  const MOBILE_ONLY_SCALAR = "telemetry.test.mobile_only";
-  const GECKOVIEW_ONLY_SCALAR = "telemetry.test.geckoview_only";
+add_task(
+  {
+    skip_if: () => !gIsAndroid,
+  },
+  async function test_geckoviewSpecificScalar() {
+    const DEFAULT_PRODUCT_SCALAR = "telemetry.test.default_products";
+    const DESKTOP_ONLY_SCALAR = "telemetry.test.desktop_only";
+    const MULTIPRODUCT_SCALAR = "telemetry.test.multiproduct";
+    const MOBILE_ONLY_SCALAR = "telemetry.test.mobile_only";
+    const GECKOVIEW_ONLY_SCALAR = "telemetry.test.geckoview_only";
 
-  Telemetry.clearScalars();
+    Telemetry.clearScalars();
 
-  // Fake a geckoview-like environment
-  Services.prefs.setBoolPref("toolkit.telemetry.isGeckoViewMode", true);
-  Telemetry.resetCurrentProduct();
+    // Fake a geckoview-like environment
+    Services.prefs.setBoolPref("toolkit.telemetry.isGeckoViewMode", true);
+    Telemetry.resetCurrentProduct();
 
-  // Try to set the mobile and multiproduct scalars
-  let expectedValue = 11714;
-  Telemetry.scalarAdd(GECKOVIEW_ONLY_SCALAR, expectedValue);
-  Telemetry.scalarAdd(MOBILE_ONLY_SCALAR, expectedValue);
-  Telemetry.scalarAdd(MULTIPRODUCT_SCALAR, expectedValue);
-  Telemetry.scalarSet(DEFAULT_PRODUCT_SCALAR, expectedValue);
+    // Try to set the mobile and multiproduct scalars
+    let expectedValue = 11714;
+    Telemetry.scalarAdd(GECKOVIEW_ONLY_SCALAR, expectedValue);
+    Telemetry.scalarAdd(MOBILE_ONLY_SCALAR, expectedValue);
+    Telemetry.scalarAdd(MULTIPRODUCT_SCALAR, expectedValue);
+    Telemetry.scalarSet(DEFAULT_PRODUCT_SCALAR, expectedValue);
 
-  // Try to set the desktop-only scalar to some value. We will not be recording the value,
-  // but we shouldn't throw.
-  Telemetry.scalarSet(DESKTOP_ONLY_SCALAR, 11715);
-  Telemetry.scalarSetMaximum(DESKTOP_ONLY_SCALAR, 11715);
+    // Try to set the desktop-only scalar to some value. We will not be recording the value,
+    // but we shouldn't throw.
+    Telemetry.scalarSet(DESKTOP_ONLY_SCALAR, 11715);
+    Telemetry.scalarSetMaximum(DESKTOP_ONLY_SCALAR, 11715);
 
-  // Get a snapshot of the scalars.
-  const scalars = TelemetryTestUtils.getProcessScalars("parent");
+    // Get a snapshot of the scalars.
+    const scalars = TelemetryTestUtils.getProcessScalars("parent");
 
-  Assert.equal(scalars[GECKOVIEW_ONLY_SCALAR], expectedValue, "The geckoview-only scalar must contain the right value");
-  Assert.equal(scalars[MOBILE_ONLY_SCALAR], expectedValue, "The mobile-only scalar must contain the right value");
-  Assert.equal(scalars[MULTIPRODUCT_SCALAR], expectedValue, "The multiproduct scalar must contain the right value");
-  Assert.equal(scalars[DEFAULT_PRODUCT_SCALAR], expectedValue, "The default products scalar must contain the right value");
+    Assert.equal(
+      scalars[GECKOVIEW_ONLY_SCALAR],
+      expectedValue,
+      "The geckoview-only scalar must contain the right value"
+    );
+    Assert.equal(
+      scalars[MOBILE_ONLY_SCALAR],
+      expectedValue,
+      "The mobile-only scalar must contain the right value"
+    );
+    Assert.equal(
+      scalars[MULTIPRODUCT_SCALAR],
+      expectedValue,
+      "The multiproduct scalar must contain the right value"
+    );
+    Assert.equal(
+      scalars[DEFAULT_PRODUCT_SCALAR],
+      expectedValue,
+      "The default products scalar must contain the right value"
+    );
 
-  Assert.ok(!(DESKTOP_ONLY_SCALAR in scalars), "The desktop-only scalar must not be persisted.");
+    Assert.ok(
+      !(DESKTOP_ONLY_SCALAR in scalars),
+      "The desktop-only scalar must not be persisted."
+    );
 
-  // Reset to original environment
-  Services.prefs.clearUserPref("toolkit.telemetry.isGeckoViewMode");
-  Telemetry.resetCurrentProduct();
-});
+    // Reset to original environment
+    Services.prefs.clearUserPref("toolkit.telemetry.isGeckoViewMode");
+    Telemetry.resetCurrentProduct();
+  }
+);

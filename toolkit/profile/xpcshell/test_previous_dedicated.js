@@ -14,11 +14,13 @@ add_task(async () => {
   writeCompatibilityIni(defaultProfile);
 
   writeProfilesIni({
-    profiles: [{
-      name: "default",
-      path: defaultProfile.leafName,
-      default: true,
-    }],
+    profiles: [
+      {
+        name: "default",
+        path: defaultProfile.leafName,
+        default: true,
+      },
+    ],
     installs: {
       [hash]: {
         default: "foobar",
@@ -31,17 +33,35 @@ add_task(async () => {
 
   let profileData = readProfilesIni();
 
-  Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
-  Assert.equal(profileData.profiles.length, 1, "Should have the right number of profiles.");
-  Assert.ok(!service.createdAlternateProfile, "Should not have created an alternate profile.");
+  Assert.ok(
+    profileData.options.startWithLastProfile,
+    "Should be set to start with the last profile."
+  );
+  Assert.equal(
+    profileData.profiles.length,
+    1,
+    "Should have the right number of profiles."
+  );
+  Assert.ok(
+    !service.createdAlternateProfile,
+    "Should not have created an alternate profile."
+  );
 
   let profile = profileData.profiles[0];
   Assert.equal(profile.name, "default", "Should have the right name.");
-  Assert.equal(profile.path, defaultProfile.leafName, "Should be the original default profile.");
+  Assert.equal(
+    profile.path,
+    defaultProfile.leafName,
+    "Should be the original default profile."
+  );
   Assert.ok(profile.default, "Should be marked as the old-style default.");
 
   // We keep the data here so we don't steal on the next reboot...
-  Assert.equal(Object.keys(profileData.installs).length, 1, "Still list the broken reference.");
+  Assert.equal(
+    Object.keys(profileData.installs).length,
+    1,
+    "Still list the broken reference."
+  );
 
   checkProfileService(profileData);
 });

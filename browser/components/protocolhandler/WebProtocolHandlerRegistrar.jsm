@@ -5,18 +5,17 @@
 
 var EXPORTED_SYMBOLS = ["WebProtocolHandlerRegistrar"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const STRING_BUNDLE_URI = "chrome://browser/locale/feeds/subscribe.properties";
 
-function WebProtocolHandlerRegistrar() {
-}
+function WebProtocolHandlerRegistrar() {}
 
 WebProtocolHandlerRegistrar.prototype = {
   get stringBundle() {
     let sb = Services.strings.createBundle(STRING_BUNDLE_URI);
     delete WebProtocolHandlerRegistrar.prototype.stringBundle;
-    return WebProtocolHandlerRegistrar.prototype.stringBundle = sb;
+    return (WebProtocolHandlerRegistrar.prototype.stringBundle = sb);
   },
 
   _getFormattedString(key, params) {
@@ -31,21 +30,26 @@ WebProtocolHandlerRegistrar.prototype = {
    * See nsIWebProtocolHandlerRegistrar
    */
   removeProtocolHandler(aProtocol, aURITemplate) {
-    let eps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].
-              getService(Ci.nsIExternalProtocolService);
+    let eps = Cc[
+      "@mozilla.org/uriloader/external-protocol-service;1"
+    ].getService(Ci.nsIExternalProtocolService);
     let handlerInfo = eps.getProtocolHandlerInfo(aProtocol);
-    let handlers =  handlerInfo.possibleApplicationHandlers;
+    let handlers = handlerInfo.possibleApplicationHandlers;
     for (let i = 0; i < handlers.length; i++) {
-      try { // We only want to test web handlers
+      try {
+        // We only want to test web handlers
         let handler = handlers.queryElementAt(i, Ci.nsIWebHandlerApp);
         if (handler.uriTemplate == aURITemplate) {
           handlers.removeElementAt(i);
-          let hs = Cc["@mozilla.org/uriloader/handler-service;1"].
-                   getService(Ci.nsIHandlerService);
+          let hs = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
+            Ci.nsIHandlerService
+          );
           hs.store(handlerInfo);
           return;
         }
-      } catch (e) { /* it wasn't a web handler */ }
+      } catch (e) {
+        /* it wasn't a web handler */
+      }
     }
   },
 
@@ -59,17 +63,21 @@ WebProtocolHandlerRegistrar.prototype = {
    * @return true if it is already registered, false otherwise.
    */
   _protocolHandlerRegistered(aProtocol, aURITemplate) {
-    let eps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].
-              getService(Ci.nsIExternalProtocolService);
+    let eps = Cc[
+      "@mozilla.org/uriloader/external-protocol-service;1"
+    ].getService(Ci.nsIExternalProtocolService);
     let handlerInfo = eps.getProtocolHandlerInfo(aProtocol);
-    let handlers =  handlerInfo.possibleApplicationHandlers;
+    let handlers = handlerInfo.possibleApplicationHandlers;
     for (let i = 0; i < handlers.length; i++) {
-      try { // We only want to test web handlers
+      try {
+        // We only want to test web handlers
         let handler = handlers.queryElementAt(i, Ci.nsIWebHandlerApp);
         if (handler.uriTemplate == aURITemplate) {
           return true;
         }
-      } catch (e) { /* it wasn't a web handler */ }
+      } catch (e) {
+        /* it wasn't a web handler */
+      }
     }
     return false;
   },
@@ -77,7 +85,13 @@ WebProtocolHandlerRegistrar.prototype = {
   /**
    * See nsIWebProtocolHandlerRegistrar
    */
-  registerProtocolHandler(aProtocol, aURI, aTitle, aDocumentURI, aBrowserOrWindow) {
+  registerProtocolHandler(
+    aProtocol,
+    aURI,
+    aTitle,
+    aDocumentURI,
+    aBrowserOrWindow
+  ) {
     aProtocol = (aProtocol || "").toLowerCase();
     if (!aURI || !aDocumentURI) {
       return;
@@ -92,7 +106,11 @@ WebProtocolHandlerRegistrar.prototype = {
 
     let browserWindow = browser.ownerGlobal;
     try {
-      browserWindow.navigator.checkProtocolHandlerAllowed(aProtocol, aURI, aDocumentURI);
+      browserWindow.navigator.checkProtocolHandlerAllowed(
+        aProtocol,
+        aURI,
+        aDocumentURI
+      );
     } catch (ex) {
       // We should have already shown the user an error.
       return;
@@ -104,8 +122,10 @@ WebProtocolHandlerRegistrar.prototype = {
     }
 
     // Now Ask the user and provide the proper callback
-    let message = this._getFormattedString("addProtocolHandlerMessage",
-                                           [aURI.host, aProtocol]);
+    let message = this._getFormattedString("addProtocolHandlerMessage", [
+      aURI.host,
+      aProtocol,
+    ]);
 
     let notificationIcon = aURI.prePath + "/favicon.ico";
     let notificationValue = "Protocol Registration: " + aProtocol;
@@ -116,15 +136,17 @@ WebProtocolHandlerRegistrar.prototype = {
 
       callback(aNotification, aButtonInfo) {
         let protocol = aButtonInfo.protocolInfo.protocol;
-        let name     = aButtonInfo.protocolInfo.name;
+        let name = aButtonInfo.protocolInfo.name;
 
-        let handler = Cc["@mozilla.org/uriloader/web-handler-app;1"].
-          createInstance(Ci.nsIWebHandlerApp);
+        let handler = Cc[
+          "@mozilla.org/uriloader/web-handler-app;1"
+        ].createInstance(Ci.nsIWebHandlerApp);
         handler.name = name;
         handler.uriTemplate = aButtonInfo.protocolInfo.uri;
 
-        let eps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].
-          getService(Ci.nsIExternalProtocolService);
+        let eps = Cc[
+          "@mozilla.org/uriloader/external-protocol-service;1"
+        ].getService(Ci.nsIExternalProtocolService);
         let handlerInfo = eps.getProtocolHandlerInfo(protocol);
         handlerInfo.possibleApplicationHandlers.appendElement(handler);
 
@@ -134,17 +156,20 @@ WebProtocolHandlerRegistrar.prototype = {
         // use.
         handlerInfo.alwaysAskBeforeHandling = true;
 
-        let hs = Cc["@mozilla.org/uriloader/handler-service;1"].
-          getService(Ci.nsIHandlerService);
+        let hs = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
+          Ci.nsIHandlerService
+        );
         hs.store(handlerInfo);
       },
     };
     let notificationBox = browser.getTabBrowser().getNotificationBox(browser);
-    notificationBox.appendNotification(message,
-                                       notificationValue,
-                                       notificationIcon,
-                                       notificationBox.PRIORITY_INFO_LOW,
-                                       [addButton]);
+    notificationBox.appendNotification(
+      message,
+      notificationValue,
+      notificationIcon,
+      notificationBox.PRIORITY_INFO_LOW,
+      [addButton]
+    );
   },
 
   /**

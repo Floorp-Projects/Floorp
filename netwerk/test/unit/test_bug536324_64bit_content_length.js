@@ -1,7 +1,7 @@
 /* Test to ensure our 64-bit content length implementation works, at least for
    a simple HTTP case */
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 // This C-L is significantly larger than (U)INT32_MAX, to make sure we do
 // 64-bit properly.
@@ -10,19 +10,18 @@ const CONTENT_LENGTH = "1152921504606846975";
 var httpServer = null;
 
 var listener = {
-  onStartRequest (req) {
-  },
+  onStartRequest(req) {},
 
-  onDataAvailable (req, stream, off, count) {
+  onDataAvailable(req, stream, off, count) {
     Assert.equal(req.getResponseHeader("Content-Length"), CONTENT_LENGTH);
 
     // We're done here, cancel the channel
     req.cancel(NS_BINDING_ABORT);
   },
 
-  onStopRequest (req, stat) {
+  onStopRequest(req, stat) {
     httpServer.stop(do_test_finished);
-  }
+  },
 };
 
 function hugeContentLength(metadata, response) {
@@ -48,7 +47,7 @@ function hugeContentLength(metadata, response) {
 function test_hugeContentLength() {
   var chan = NetUtil.newChannel({
     uri: "http://localhost:" + httpServer.identity.primaryPort + "/",
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   }).QueryInterface(Ci.nsIHttpChannel);
   chan.asyncOpen(listener);
 }

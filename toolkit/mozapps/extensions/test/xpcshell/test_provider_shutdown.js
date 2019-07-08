@@ -39,7 +39,7 @@ function mockAddonProvider(aName) {
 
 // Helper to find a particular shutdown blocker's status in the JSON blob
 function findInStatus(aStatus, aName) {
-  for (let {name, state} of aStatus.state) {
+  for (let { name, state } of aStatus.state) {
     if (name == aName) {
       return state;
     }
@@ -63,7 +63,9 @@ add_task(async function blockRepoShutdown() {
   await promiseStartupManager();
   AddonManagerPrivate.registerProvider(mockProvider);
 
-  let {fetchState} = MockAsyncShutdown.profileBeforeChange.blockers[0].options;
+  let {
+    fetchState,
+  } = MockAsyncShutdown.profileBeforeChange.blockers[0].options;
 
   // Start shutting the manager down
   let managerDown = promiseShutdownManager();

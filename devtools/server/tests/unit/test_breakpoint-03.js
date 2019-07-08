@@ -20,47 +20,48 @@ var test_no_skip_breakpoint = async function(source, location, debuggee) {
   await bpClient.remove();
 };
 
-add_task(threadClientTest(({ threadClient, debuggee }) => {
-  return new Promise(resolve => {
-    threadClient.once("paused", async function(packet) {
-      const location = { line: debuggee.line0 + 3 };
-      const source = await getSourceById(
-        threadClient,
-        packet.frame.where.actor
-      );
-      // First, make sure that we can disable sliding with the
-      // `noSliding` option.
-      await test_no_skip_breakpoint(source, location, debuggee);
+add_task(
+  threadClientTest(({ threadClient, debuggee }) => {
+    return new Promise(resolve => {
+      threadClient.once("paused", async function(packet) {
+        const location = { line: debuggee.line0 + 3 };
+        const source = await getSourceById(
+          threadClient,
+          packet.frame.where.actor
+        );
+        // First, make sure that we can disable sliding with the
+        // `noSliding` option.
+        await test_no_skip_breakpoint(source, location, debuggee);
 
-      // Now make sure that the breakpoint properly slides forward one line.
-      const [response, bpClient] = await source.setBreakpoint(location);
-      Assert.ok(!!response.actualLocation);
-      Assert.equal(response.actualLocation.source.actor, source.actor);
-      Assert.equal(response.actualLocation.line, location.line + 1);
+        // Now make sure that the breakpoint properly slides forward one line.
+        const [response, bpClient] = await source.setBreakpoint(location);
+        Assert.ok(!!response.actualLocation);
+        Assert.equal(response.actualLocation.source.actor, source.actor);
+        Assert.equal(response.actualLocation.line, location.line + 1);
 
-      threadClient.once("paused", function(packet) {
-        // Check the return value.
-        Assert.equal(packet.type, "paused");
-        Assert.equal(packet.frame.where.actor, source.actor);
-        Assert.equal(packet.frame.where.line, location.line + 1);
-        Assert.equal(packet.why.type, "breakpoint");
-        Assert.equal(packet.why.actors[0], bpClient.actor);
-        // Check that the breakpoint worked.
-        Assert.equal(debuggee.a, 1);
-        Assert.equal(debuggee.b, undefined);
+        threadClient.once("paused", function(packet) {
+          // Check the return value.
+          Assert.equal(packet.type, "paused");
+          Assert.equal(packet.frame.where.actor, source.actor);
+          Assert.equal(packet.frame.where.line, location.line + 1);
+          Assert.equal(packet.why.type, "breakpoint");
+          Assert.equal(packet.why.actors[0], bpClient.actor);
+          // Check that the breakpoint worked.
+          Assert.equal(debuggee.a, 1);
+          Assert.equal(debuggee.b, undefined);
 
-        // Remove the breakpoint.
-        bpClient.remove(function(response) {
-          threadClient.resume().then(resolve);
+          // Remove the breakpoint.
+          bpClient.remove(function(response) {
+            threadClient.resume().then(resolve);
+          });
         });
+
+        threadClient.resume();
       });
 
-      threadClient.resume();
-    });
-
-    // Use `evalInSandbox` to make the debugger treat it as normal
-    // globally-scoped code, where breakpoint sliding rules apply.
-    /* eslint-disable */
+      // Use `evalInSandbox` to make the debugger treat it as normal
+      // globally-scoped code, where breakpoint sliding rules apply.
+      /* eslint-disable */
     Cu.evalInSandbox(
       "var line0 = Error().lineNumber;\n" +
       "debugger;\n" +      // line0 + 1
@@ -69,6 +70,7 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
       "var b = 2;",        // line0 + 4
       debuggee
     );
-    /* eslint-enable */
-  });
-}));
+      /* eslint-enable */
+    });
+  })
+);

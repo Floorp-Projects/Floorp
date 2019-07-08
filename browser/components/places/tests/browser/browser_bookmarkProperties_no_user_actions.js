@@ -37,16 +37,18 @@ add_task(async function test_change_title_from_BookmarkStar() {
   let folderTree = document.getElementById("editBMPanel_folderTree");
 
   // canDrop should always return false.
-  let bookmarkWithId = JSON.stringify(Object.assign({
-    url: "http://example.com",
-    title: "Fake BM",
-  }));
+  let bookmarkWithId = JSON.stringify(
+    Object.assign({
+      url: "http://example.com",
+      title: "Fake BM",
+    })
+  );
 
   let dt = {
     dropEffect: "move",
     mozCursor: "auto",
     mozItemCount: 1,
-    types: [ PlacesUtils.TYPE_X_MOZ_PLACE ],
+    types: [PlacesUtils.TYPE_X_MOZ_PLACE],
     mozTypesAt(i) {
       return this.types;
     },
@@ -55,8 +57,10 @@ add_task(async function test_change_title_from_BookmarkStar() {
     },
   };
 
-  Assert.ok(!folderTree.view.canDrop(1, Ci.nsITreeView.DROP_BEFORE, dt),
-    "Should not be able to drop a bookmark");
+  Assert.ok(
+    !folderTree.view.canDrop(1, Ci.nsITreeView.DROP_BEFORE, dt),
+    "Should not be able to drop a bookmark"
+  );
 
   // User Actions should be disabled.
   const userActions = [
@@ -71,8 +75,10 @@ add_task(async function test_change_title_from_BookmarkStar() {
     "placesCmd_",
   ];
   for (let action of userActions) {
-    Assert.ok(!folderTree.view._controller.supportsCommand(action),
-      `${action} should be disabled for the folder tree in bookmarks properties`);
+    Assert.ok(
+      !folderTree.view._controller.supportsCommand(action),
+      `${action} should be disabled for the folder tree in bookmarks properties`
+    );
   }
 
   let hiddenPromise = promisePopupHidden(bookmarkPanel);

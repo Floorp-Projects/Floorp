@@ -8,15 +8,21 @@
 "use strict";
 
 // shared-head.js handles imports, constants, and utility functions
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js", this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
+  this
+);
 
-const {DOMHelpers} = ChromeUtils.import("resource://devtools/client/shared/DOMHelpers.jsm");
-const {Hosts} = require("devtools/client/framework/toolbox-hosts");
+const { DOMHelpers } = ChromeUtils.import(
+  "resource://devtools/client/shared/DOMHelpers.jsm"
+);
+const { Hosts } = require("devtools/client/framework/toolbox-hosts");
 
 const TEST_URI_ROOT = "http://example.com/browser/devtools/client/shared/test/";
 const OPTIONS_VIEW_URL = TEST_URI_ROOT + "doc_options-view.xul";
 
-const EXAMPLE_URL = "chrome://mochitests/content/browser/devtools/client/shared/test/";
+const EXAMPLE_URL =
+  "chrome://mochitests/content/browser/devtools/client/shared/test/";
 
 function catchFail(func) {
   return function() {
@@ -66,21 +72,19 @@ function waitForValue(options) {
   let lastValue;
 
   function wait(validatorFn, successFn, failureFn) {
-    if ((Date.now() - start) > timeout) {
+    if (Date.now() - start > timeout) {
       // Log the failure.
       ok(false, "Timed out while waiting for: " + options.name);
-      const expected = "value" in options ?
-                     "'" + options.value + "'" :
-                     "a trueish value";
+      const expected =
+        "value" in options ? "'" + options.value + "'" : "a trueish value";
       info("timeout info :: got '" + lastValue + "', expected " + expected);
       failureFn(options, lastValue);
       return;
     }
 
     lastValue = validatorFn(options, lastValue);
-    const successful = "value" in options ?
-                      lastValue == options.value :
-                      lastValue;
+    const successful =
+      "value" in options ? lastValue == options.value : lastValue;
     if (successful) {
       ok(true, options.name);
       successFn(options, lastValue);
@@ -95,7 +99,7 @@ function waitForValue(options) {
 }
 
 function oneTimeObserve(name, callback) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const func = function() {
       Services.obs.removeObserver(func, name);
       if (callback) {
@@ -107,8 +111,10 @@ function oneTimeObserve(name, callback) {
   });
 }
 
-const createHost =
-async function(type = "bottom", src = CHROME_URL_ROOT + "dummy.html") {
+const createHost = async function(
+  type = "bottom",
+  src = CHROME_URL_ROOT + "dummy.html"
+) {
   const host = new Hosts[type](gBrowser.selectedTab);
   const iframe = await host.create();
 
@@ -154,10 +160,13 @@ function synthesizeProfileForTest(samples) {
   });
 
   const uniqueStacks = new RecordingUtils.UniqueStacks();
-  return RecordingUtils.deflateThread({
-    samples: samples,
-    markers: [],
-  }, uniqueStacks);
+  return RecordingUtils.deflateThread(
+    {
+      samples: samples,
+      markers: [],
+    },
+    uniqueStacks
+  );
 }
 
 /**
@@ -197,8 +206,11 @@ function showFilterPopupPresets(widget) {
  * @param  {string} value
  * @return {Promise}
  */
-const showFilterPopupPresetsAndCreatePreset =
-async function(widget, name, value) {
+const showFilterPopupPresetsAndCreatePreset = async function(
+  widget,
+  name,
+  value
+) {
   await showFilterPopupPresets(widget);
 
   let onRender = widget.once("render");

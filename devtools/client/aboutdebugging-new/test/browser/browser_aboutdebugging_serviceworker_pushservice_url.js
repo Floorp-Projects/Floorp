@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-serviceworker.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-serviceworker.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-serviceworker.js",
+  this
+);
 
 const SERVICE_WORKER = URL_ROOT + "resources/service-workers/push-sw.js";
 const TAB_URL = URL_ROOT + "resources/service-workers/push-sw.html";
@@ -19,8 +22,9 @@ add_task(async function() {
   info("Mock the push service");
   mockPushService(FAKE_ENDPOINT);
 
-  const { document, tab, window } =
-    await openAboutDebugging({ enableWorkerUpdates: true });
+  const { document, tab, window } = await openAboutDebugging({
+    enableWorkerUpdates: true,
+  });
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   // Open a tab that registers a push service worker.
@@ -29,11 +33,16 @@ add_task(async function() {
   info("Forward service worker messages to the test");
   await forwardServiceWorkerMessage(swTab);
 
-  info("Wait for the service worker to claim the test window before proceeding.");
+  info(
+    "Wait for the service worker to claim the test window before proceeding."
+  );
   await onTabMessage(swTab, "sw-claimed");
 
   info("Wait until the service worker appears and is running");
-  const targetElement = await waitForServiceWorkerRunning(SERVICE_WORKER, document);
+  const targetElement = await waitForServiceWorkerRunning(
+    SERVICE_WORKER,
+    document
+  );
 
   info("Subscribe from the push service");
   ContentTask.spawn(swTab.linkedBrowser, {}, () => {
@@ -41,7 +50,9 @@ add_task(async function() {
   });
 
   info("Wait until the push service appears");
-  await waitUntil(() => targetElement.querySelector(".qa-worker-push-service-value"));
+  await waitUntil(() =>
+    targetElement.querySelector(".qa-worker-push-service-value")
+  );
   const pushUrl = targetElement.querySelector(".qa-worker-push-service-value");
 
   ok(!!pushUrl, "Push URL is displayed for the serviceworker");
@@ -53,7 +64,9 @@ add_task(async function() {
   });
 
   info("Wait until the push service disappears");
-  await waitUntil(() => !targetElement.querySelector(".qa-worker-push-service-value"));
+  await waitUntil(
+    () => !targetElement.querySelector(".qa-worker-push-service-value")
+  );
 
   info("Unregister the service worker");
   await unregisterServiceWorker(swTab);
@@ -68,8 +81,9 @@ add_task(async function() {
 });
 
 function mockPushService(endpoint) {
-  const PushService = Cc["@mozilla.org/push/Service;1"]
-    .getService(Ci.nsIPushService).wrappedJSObject;
+  const PushService = Cc["@mozilla.org/push/Service;1"].getService(
+    Ci.nsIPushService
+  ).wrappedJSObject;
 
   PushService.service = {
     _registrations: new Map(),
@@ -77,7 +91,8 @@ function mockPushService(endpoint) {
       Services.obs.notifyObservers(
         null,
         PushService.subscriptionModifiedTopic,
-        scope);
+        scope
+      );
     },
     init() {},
     register(pageRecord) {

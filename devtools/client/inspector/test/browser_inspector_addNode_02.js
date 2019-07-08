@@ -10,40 +10,54 @@
 const TEST_URL = URL_ROOT + "doc_inspector_add_node.html";
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Select the DOCTYPE element");
-  let {nodes} = await inspector.walker.children(inspector.walker.rootNode);
+  let { nodes } = await inspector.walker.children(inspector.walker.rootNode);
   await selectNode(nodes[0], inspector);
-  assertState(false, inspector,
-    "The button and item are disabled on DOCTYPE");
+  assertState(false, inspector, "The button and item are disabled on DOCTYPE");
 
   info("Select the ::before pseudo-element");
   const body = await getNodeFront("body", inspector);
-  ({nodes} = await inspector.walker.children(body));
+  ({ nodes } = await inspector.walker.children(body));
   await selectNode(nodes[0], inspector);
-  assertState(false, inspector,
-    "The button and item are disabled on a pseudo-element");
+  assertState(
+    false,
+    inspector,
+    "The button and item are disabled on a pseudo-element"
+  );
 
   info("Select the svg element");
   await selectNode("svg", inspector);
-  assertState(false, inspector,
-    "The button and item are disabled on a SVG element");
+  assertState(
+    false,
+    inspector,
+    "The button and item are disabled on a SVG element"
+  );
 
   info("Select the div#foo element");
   await selectNode("#foo", inspector);
-  assertState(true, inspector,
-    "The button and item are enabled on a DIV element");
+  assertState(
+    true,
+    inspector,
+    "The button and item are enabled on a DIV element"
+  );
 
   info("Select the documentElement element (html)");
   await selectNode("html", inspector);
-  assertState(false, inspector,
-    "The button and item are disabled on the documentElement");
+  assertState(
+    false,
+    inspector,
+    "The button and item are disabled on the documentElement"
+  );
 
   info("Select the iframe element");
   await selectNode("iframe", inspector);
-  assertState(false, inspector,
-    "The button and item are disabled on an IFRAME element");
+  assertState(
+    false,
+    inspector,
+    "The button and item are disabled on an IFRAME element"
+  );
 });
 
 function assertState(isEnabled, inspector, desc) {

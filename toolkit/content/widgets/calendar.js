@@ -41,7 +41,6 @@ function Calendar(options, context) {
 }
 
 Calendar.prototype = {
-
   /**
    * Set new properties and render them.
    *
@@ -65,14 +64,16 @@ Calendar.prototype = {
   setProps(props) {
     if (props.isVisible) {
       // Transform the days and weekHeaders array for rendering
-      const days = props.days.map(({ dateObj, content, classNames, enabled }) => {
-        return {
-          dateObj,
-          textContent: this.state.getDayString(content),
-          className: classNames.join(" "),
-          enabled,
-        };
-      });
+      const days = props.days.map(
+        ({ dateObj, content, classNames, enabled }) => {
+          return {
+            dateObj,
+            textContent: this.state.getDayString(content),
+            className: classNames.join(" "),
+            enabled,
+          };
+        }
+      );
       const weekHeaders = props.weekHeaders.map(({ content, classNames }) => {
         return {
           textContent: this.state.getWeekHeaderString(content),

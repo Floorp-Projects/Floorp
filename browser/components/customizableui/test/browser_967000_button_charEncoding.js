@@ -4,14 +4,17 @@
 
 "use strict";
 
-const TEST_PAGE = "http://mochi.test:8888/browser/browser/components/customizableui/test/support/test_967000_charEncoding_page.html";
+const TEST_PAGE =
+  "http://mochi.test:8888/browser/browser/components/customizableui/test/support/test_967000_charEncoding_page.html";
 
 add_task(async function() {
   info("Check Character Encoding button functionality");
 
   // add the Character Encoding button to the panel
-  CustomizableUI.addWidgetToArea("characterencoding-button",
-                                  CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "characterencoding-button",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
 
   await waitForOverflowButtonShown();
   registerCleanupFunction(() => CustomizableUI.reset());
@@ -19,37 +22,74 @@ add_task(async function() {
   await document.getElementById("nav-bar").overflowable.show();
 
   let charEncodingButton = document.getElementById("characterencoding-button");
-  ok(charEncodingButton, "The Character Encoding button was added to the Panel Menu");
-  is(charEncodingButton.getAttribute("disabled"), "true",
-     "The Character encoding button is initially disabled");
+  ok(
+    charEncodingButton,
+    "The Character Encoding button was added to the Panel Menu"
+  );
+  is(
+    charEncodingButton.getAttribute("disabled"),
+    "true",
+    "The Character encoding button is initially disabled"
+  );
 
   let panelHidePromise = promiseOverflowHidden(window);
   document.getElementById("nav-bar").overflowable._panel.hidePopup();
   await panelHidePromise;
   info("Panel hidden");
 
-  let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE, true, true);
+  let newTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    TEST_PAGE,
+    true,
+    true
+  );
 
   await document.getElementById("nav-bar").overflowable.show();
-  ok(!charEncodingButton.hasAttribute("disabled"), "The Character encoding button gets enabled");
-  let characterEncodingView = document.getElementById("PanelUI-characterEncodingView");
+  ok(
+    !charEncodingButton.hasAttribute("disabled"),
+    "The Character encoding button gets enabled"
+  );
+  let characterEncodingView = document.getElementById(
+    "PanelUI-characterEncodingView"
+  );
   let subviewShownPromise = subviewShown(characterEncodingView);
   charEncodingButton.click();
   await subviewShownPromise;
 
-  ok(characterEncodingView.hasAttribute("visible"), "The Character encoding panel is displayed");
+  ok(
+    characterEncodingView.hasAttribute("visible"),
+    "The Character encoding panel is displayed"
+  );
 
-  let pinnedEncodings = document.getElementById("PanelUI-characterEncodingView-pinned");
-  let charsetsList = document.getElementById("PanelUI-characterEncodingView-charsets");
+  let pinnedEncodings = document.getElementById(
+    "PanelUI-characterEncodingView-pinned"
+  );
+  let charsetsList = document.getElementById(
+    "PanelUI-characterEncodingView-charsets"
+  );
   ok(pinnedEncodings, "Pinned charsets are available");
   ok(charsetsList, "Charsets list is available");
 
-  let checkedButtons = characterEncodingView.querySelectorAll("toolbarbutton[checked='true']");
-  is(checkedButtons.length, 2, "There should be 2 checked items (1 charset, 1 detector).");
-  is(checkedButtons[0].getAttribute("label"), "Western", "The western encoding is correctly selected");
-  is(characterEncodingView.querySelectorAll("#PanelUI-characterEncodingView-autodetect toolbarbutton[checked='true']").length,
-     1,
-     "There should be 1 checked detector.");
+  let checkedButtons = characterEncodingView.querySelectorAll(
+    "toolbarbutton[checked='true']"
+  );
+  is(
+    checkedButtons.length,
+    2,
+    "There should be 2 checked items (1 charset, 1 detector)."
+  );
+  is(
+    checkedButtons[0].getAttribute("label"),
+    "Western",
+    "The western encoding is correctly selected"
+  );
+  is(
+    characterEncodingView.querySelectorAll(
+      "#PanelUI-characterEncodingView-autodetect toolbarbutton[checked='true']"
+    ).length,
+    1,
+    "There should be 1 checked detector."
+  );
 
   panelHidePromise = promiseOverflowHidden(window);
   document.getElementById("nav-bar").overflowable._panel.hidePopup();

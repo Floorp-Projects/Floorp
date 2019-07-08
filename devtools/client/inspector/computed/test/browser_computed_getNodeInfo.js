@@ -95,7 +95,7 @@ const TEST_DATA = [
   {
     desc: "Testing an image url",
     getHoveredNode: function(view) {
-      const {valueSpan} = getComputedViewProperty(view, "background-image");
+      const { valueSpan } = getComputedViewProperty(view, "background-image");
       return valueSpan.querySelector(".theme-link");
     },
     assertNodeInfo: function(nodeInfo) {
@@ -103,8 +103,10 @@ const TEST_DATA = [
       ok("property" in nodeInfo.value);
       ok("value" in nodeInfo.value);
       is(nodeInfo.value.property, "background-image");
-      is(nodeInfo.value.value,
-         "url(\"chrome://global/skin/icons/warning-64.png\")");
+      is(
+        nodeInfo.value.value,
+        'url("chrome://global/skin/icons/warning-64.png")'
+      );
       is(nodeInfo.value.url, "chrome://global/skin/icons/warning-64.png");
     },
   },
@@ -167,10 +169,10 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openComputedView();
+  const { inspector, view } = await openComputedView();
   await selectNode("#testElement", inspector);
 
-  for (const {desc, getHoveredNode, assertNodeInfo} of TEST_DATA) {
+  for (const { desc, getHoveredNode, assertNodeInfo } of TEST_DATA) {
     info(desc);
     const nodeInfo = view.getNodeInfo(await getHoveredNode(view));
     assertNodeInfo(nodeInfo);

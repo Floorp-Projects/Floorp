@@ -7,8 +7,14 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({

@@ -28,14 +28,15 @@ add_task(async function() {
   const transport = DebuggerServer.connectPipe();
   const client = new DebuggerClient(transport);
   const [type] = await client.connect();
-  is(type, "browser",
-    "Root actor should identify itself as a browser.");
+  is(type, "browser", "Root actor should identify itself as a browser.");
 
   let response = await client.mainRoot.rootForm;
   const globalActor = response.testOneActor;
   ok(globalActor, "Found the test global actor.");
-  ok(globalActor.includes("testOne"),
-    "testGlobalActor1's actorPrefix should be used.");
+  ok(
+    globalActor.includes("testOne"),
+    "testGlobalActor1's actorPrefix should be used."
+  );
 
   response = await client.request({ to: globalActor, type: "ping" });
   is(response.pong, "pong", "Actor should respond to requests.");
@@ -46,7 +47,9 @@ add_task(async function() {
 
   // Make sure that lazily-created actors are created only once.
   let count = 0;
-  for (const connID of Object.getOwnPropertyNames(DebuggerServer._connections)) {
+  for (const connID of Object.getOwnPropertyNames(
+    DebuggerServer._connections
+  )) {
     const conn = DebuggerServer._connections[connID];
     const actorPrefix = conn._prefix + "testOne";
     for (const pool of conn._extraPools) {
@@ -58,8 +61,7 @@ add_task(async function() {
     }
   }
 
-  is(count, 1,
-    "Only one actor exists in all pools. One global actor.");
+  is(count, 1, "Only one actor exists in all pools. One global actor.");
 
   await client.close();
 });

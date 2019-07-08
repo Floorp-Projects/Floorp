@@ -22,15 +22,19 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view, testActor} = await openRuleView();
+  const { inspector, view, testActor } = await openRuleView();
   await selectNode("#testid", inspector);
 
-  info("Checking that the rule-view has the element, #testid and " +
-    ".testclass selectors");
+  info(
+    "Checking that the rule-view has the element, #testid and " +
+      ".testclass selectors"
+  );
   checkRuleViewContent(view, ["element", "#testid", ".testclass"]);
 
-  info("Changing the node's ID attribute and waiting for the " +
-    "rule-view refresh");
+  info(
+    "Changing the node's ID attribute and waiting for the " +
+      "rule-view refresh"
+  );
   let ruleViewRefreshed = inspector.once("rule-view-refreshed");
   await testActor.setAttribute("#testid", "id", "differentid");
   await ruleViewRefreshed;
@@ -48,14 +52,21 @@ add_task(async function() {
 });
 
 function checkRuleViewContent(view, expectedSelectors) {
-  const selectors = view.styleDocument
-    .querySelectorAll(".ruleview-selectorcontainer");
+  const selectors = view.styleDocument.querySelectorAll(
+    ".ruleview-selectorcontainer"
+  );
 
-  is(selectors.length, expectedSelectors.length,
-    expectedSelectors.length + " selectors are displayed");
+  is(
+    selectors.length,
+    expectedSelectors.length,
+    expectedSelectors.length + " selectors are displayed"
+  );
 
   for (let i = 0; i < expectedSelectors.length; i++) {
-    is(selectors[i].textContent.indexOf(expectedSelectors[i]), 0,
-      "Selector " + (i + 1) + " is " + expectedSelectors[i]);
+    is(
+      selectors[i].textContent.indexOf(expectedSelectors[i]),
+      0,
+      "Selector " + (i + 1) + " is " + expectedSelectors[i]
+    );
   }
 }

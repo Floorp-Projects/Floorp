@@ -10,12 +10,14 @@
 // Load the shared-head file first.
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
-  this);
+  this
+);
 
 // Load the shared Redux helpers into this compartment.
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
-  this);
+  this
+);
 
 /* import-globals-from helper-mocks.js */
 Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
@@ -31,8 +33,9 @@ registerCleanupFunction(async function() {
   const { adbProcess } = require("devtools/shared/adb/adb-process");
   await adbProcess.kill();
 
-  const { remoteClientManager } =
-    require("devtools/client/shared/remote-debugging/remote-client-manager");
+  const {
+    remoteClientManager,
+  } = require("devtools/client/shared/remote-debugging/remote-client-manager");
   await remoteClientManager.removeAllClients();
 });
 
@@ -43,14 +46,20 @@ async function enableNewAboutDebugging() {
   await pushPref("devtools.aboutdebugging.new-enabled", true);
 }
 
-async function openAboutDebugging({ enableWorkerUpdates, enableLocalTabs = true } = {}) {
+async function openAboutDebugging({
+  enableWorkerUpdates,
+  enableLocalTabs = true,
+} = {}) {
   if (!enableWorkerUpdates) {
     silenceWorkerUpdates();
   }
 
   // This preference changes value depending on the build type, tests need to use a
   // consistent value regarless of the build used.
-  await pushPref("devtools.aboutdebugging.local-tab-debugging", enableLocalTabs);
+  await pushPref(
+    "devtools.aboutdebugging.local-tab-debugging",
+    enableLocalTabs
+  );
 
   await enableNewAboutDebugging();
 
@@ -67,18 +76,25 @@ async function openAboutDebugging({ enableWorkerUpdates, enableLocalTabs = true 
   return { tab, document, window };
 }
 
-async function openAboutDevtoolsToolbox(doc, tab, win, targetText = "about:debugging",
-                                        shouldWaitToolboxReady = true) {
+async function openAboutDevtoolsToolbox(
+  doc,
+  tab,
+  win,
+  targetText = "about:debugging",
+  shouldWaitToolboxReady = true
+) {
   info("Open about:devtools-toolbox page");
   const target = findDebugTargetByText(targetText, doc);
-  ok(target, `${ targetText } tab target appeared`);
+  ok(target, `${targetText} tab target appeared`);
   const inspectButton = target.querySelector(".qa-debug-target-inspect-button");
-  ok(inspectButton, `Inspect button for ${ targetText } appeared`);
+  ok(inspectButton, `Inspect button for ${targetText} appeared`);
   inspectButton.click();
   await Promise.all([
     waitUntil(() => tab.nextElementSibling),
     waitForRequestsToSettle(win.AboutDebugging.store),
-    shouldWaitToolboxReady ? gDevTools.once("toolbox-ready") : Promise.resolve(),
+    shouldWaitToolboxReady
+      ? gDevTools.once("toolbox-ready")
+      : Promise.resolve(),
   ]);
 
   info("Wait for about:devtools-toolbox tab will be selected");
@@ -86,12 +102,16 @@ async function openAboutDevtoolsToolbox(doc, tab, win, targetText = "about:debug
   await waitUntil(() => gBrowser.selectedTab === devtoolsTab);
   const devtoolsBrowser = gBrowser.selectedBrowser;
   await waitUntil(() =>
-    devtoolsBrowser.contentWindow.location.href.startsWith("about:devtools-toolbox?"));
+    devtoolsBrowser.contentWindow.location.href.startsWith(
+      "about:devtools-toolbox?"
+    )
+  );
 
   if (!shouldWaitToolboxReady) {
     // Wait for show error page.
     await waitUntil(() =>
-      devtoolsBrowser.contentDocument.querySelector(".qa-error-page"));
+      devtoolsBrowser.contentDocument.querySelector(".qa-error-page")
+    );
   }
 
   return {
@@ -102,7 +122,11 @@ async function openAboutDevtoolsToolbox(doc, tab, win, targetText = "about:debug
   };
 }
 
-async function closeAboutDevtoolsToolbox(aboutDebuggingDocument, devtoolsTab, win) {
+async function closeAboutDevtoolsToolbox(
+  aboutDebuggingDocument,
+  devtoolsTab,
+  win
+) {
   info("Close about:devtools-toolbox page");
   const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
 
@@ -119,7 +143,9 @@ async function closeAboutDevtoolsToolbox(aboutDebuggingDocument, devtoolsTab, wi
 
   // Wait for removing about:devtools-toolbox tab info from about:debugging.
   info("Wait until about:devtools-toolbox is removed from debug targets");
-  await waitUntil(() => !findDebugTargetByText("Toolbox - ", aboutDebuggingDocument));
+  await waitUntil(
+    () => !findDebugTargetByText("Toolbox - ", aboutDebuggingDocument)
+  );
 
   await waitForRequestsToSettle(win.AboutDebugging.store);
 }
@@ -230,12 +256,14 @@ async function selectConnectPage(doc) {
 
 function getDebugTargetPane(title, document) {
   // removes the suffix "(<NUMBER>)" in debug target pane's title, if needed
-  const sanitizeTitle = (x) => {
+  const sanitizeTitle = x => {
     return x.replace(/\s+\(\d+\)$/, "");
   };
 
   const targetTitle = sanitizeTitle(title);
-  for (const titleEl of document.querySelectorAll(".qa-debug-target-pane-title")) {
+  for (const titleEl of document.querySelectorAll(
+    ".qa-debug-target-pane-title"
+  )) {
     if (sanitizeTitle(titleEl.textContent) !== targetTitle) {
       continue;
     }
@@ -270,7 +298,10 @@ async function connectToRuntime(deviceName, document) {
   await waitUntil(() => findSidebarItemByText(deviceName, document));
   const sidebarItem = findSidebarItemByText(deviceName, document);
   const connectButton = sidebarItem.querySelector(".qa-connect-button");
-  ok(connectButton, `Connect button is displayed for the runtime ${deviceName}`);
+  ok(
+    connectButton,
+    `Connect button is displayed for the runtime ${deviceName}`
+  );
 
   info("Click on the connect button and wait until it disappears");
   connectButton.click();
@@ -304,7 +335,9 @@ async function openProfilerDialog(client, doc) {
   const profileButton = doc.querySelector(".qa-profile-runtime-button");
   profileButton.click();
 
-  info("Wait for the loadPerformanceProfiler callback to be executed on client-wrapper");
+  info(
+    "Wait for the loadPerformanceProfiler callback to be executed on client-wrapper"
+  );
   return onProfilerLoaded;
 }
 
@@ -314,14 +347,19 @@ async function openProfilerDialog(client, doc) {
  */
 function getThisFirefoxString(aboutDebuggingWindow) {
   const loader = aboutDebuggingWindow.getBrowserLoaderForWindow();
-  const { l10n } = loader.require("devtools/client/aboutdebugging-new/src/modules/l10n");
+  const { l10n } = loader.require(
+    "devtools/client/aboutdebugging-new/src/modules/l10n"
+  );
   return l10n.getString("about-debugging-this-firefox-runtime-name");
 }
 
 function waitUntilUsbDeviceIsUnplugged(deviceName, aboutDebuggingDocument) {
   info("Wait until the USB sidebar item appears as unplugged");
   return waitUntil(() => {
-    const sidebarItem = findSidebarItemByText(deviceName, aboutDebuggingDocument);
+    const sidebarItem = findSidebarItemByText(
+      deviceName,
+      aboutDebuggingDocument
+    );
     return !!sidebarItem.querySelector(".qa-runtime-item-unplugged");
   });
 }

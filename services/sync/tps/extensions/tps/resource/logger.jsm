@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- /* This is a JavaScript module (JSM) to be imported via
+/* This is a JavaScript module (JSM) to be imported via
     Components.utils.import() and acts as a singleton.
     Only the following listed symbols will exposed on import, and only when
     and where imported. */
 
 var EXPORTED_SYMBOLS = ["Logger"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var Logger = {
   _foStream: null,
@@ -28,27 +28,27 @@ var Logger = {
       path = Services.prefs.getCharPref("tps.logfile");
     }
 
-    this._file = Cc["@mozilla.org/file/local;1"]
-                 .createInstance(Ci.nsIFile);
+    this._file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     this._file.initWithPath(path);
     var exists = this._file.exists();
 
     // Make a file output stream and converter to handle it.
-    this._foStream = Cc["@mozilla.org/network/file-output-stream;1"]
-                     .createInstance(Ci.nsIFileOutputStream);
+    this._foStream = Cc[
+      "@mozilla.org/network/file-output-stream;1"
+    ].createInstance(Ci.nsIFileOutputStream);
     // If the file already exists, append it, otherwise create it.
     var fileflags = exists ? 0x02 | 0x08 | 0x10 : 0x02 | 0x08 | 0x20;
 
     this._foStream.init(this._file, fileflags, 0o666, 0);
-    this._converter = Cc["@mozilla.org/intl/converter-output-stream;1"]
-                      .createInstance(Ci.nsIConverterOutputStream);
+    this._converter = Cc[
+      "@mozilla.org/intl/converter-output-stream;1"
+    ].createInstance(Ci.nsIConverterOutputStream);
     this._converter.init(this._foStream, "UTF-8");
   },
 
   write(data) {
     if (this._converter == null) {
-      Cu.reportError(
-          "TPS Logger.write called with _converter == null!");
+      Cu.reportError("TPS Logger.write called with _converter == null!");
       return;
     }
     this._converter.writeString(data);
@@ -80,8 +80,14 @@ var Logger = {
 
   AssertEqual(val1, val2, msg) {
     if (val1 != val2) {
-      throw new Error("ASSERTION FAILED! " + msg + "; expected " +
-            JSON.stringify(val2) + ", got " + JSON.stringify(val1));
+      throw new Error(
+        "ASSERTION FAILED! " +
+          msg +
+          "; expected " +
+          JSON.stringify(val2) +
+          ", got " +
+          JSON.stringify(val1)
+      );
     }
   },
 
@@ -96,17 +102,32 @@ var Logger = {
       }
 
       let now = new Date();
-      let year    = pad(now.getFullYear(), 4);
-      let month   = pad(now.getMonth() + 1, 2);
-      let day     = pad(now.getDate(), 2);
-      let hour    = pad(now.getHours(), 2);
+      let year = pad(now.getFullYear(), 4);
+      let month = pad(now.getMonth() + 1, 2);
+      let day = pad(now.getDate(), 2);
+      let hour = pad(now.getHours(), 2);
       let minutes = pad(now.getMinutes(), 2);
       let seconds = pad(now.getSeconds(), 2);
-      let ms      = pad(now.getMilliseconds(), 3);
+      let ms = pad(now.getMilliseconds(), 3);
 
-      this.write(year + "-" + month + "-" + day + " " +
-                 hour + ":" + minutes + ":" + seconds + "." + ms + " " +
-                 msg + "\n");
+      this.write(
+        year +
+          "-" +
+          month +
+          "-" +
+          day +
+          " " +
+          hour +
+          ":" +
+          minutes +
+          ":" +
+          seconds +
+          "." +
+          ms +
+          " " +
+          msg +
+          "\n"
+      );
     }
   },
 

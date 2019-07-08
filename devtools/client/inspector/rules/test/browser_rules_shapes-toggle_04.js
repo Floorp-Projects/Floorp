@@ -20,7 +20,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   const highlighters = view.highlighters;
 
   info("Select a node with a shape value");
@@ -40,7 +40,9 @@ add_task(async function() {
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   await onDone;
 
-  info("Check the shape highlighter and shape toggle button are still visible.");
+  info(
+    "Check the shape highlighter and shape toggle button are still visible."
+  );
   shapeToggle = container.querySelector(".ruleview-shapeswatch");
   ok(shapeToggle, "Shape highlighter toggle is visible.");
   ok(highlighters.shapesHighlighterShown, "CSS shape highlighter is shown.");

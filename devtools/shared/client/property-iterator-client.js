@@ -4,7 +4,10 @@
 
 "use strict";
 
-const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
+const {
+  arg,
+  DebuggerClient,
+} = require("devtools/shared/client/debugger-client");
 
 /**
  * A PropertyIteratorClient provides a way to access to property names and
@@ -46,10 +49,13 @@ PropertyIteratorClient.prototype = {
    * @param callback Function
    *        The function called when we receive the property names.
    */
-  names: DebuggerClient.requester({
-    type: "names",
-    indexes: arg(0),
-  }, {}),
+  names: DebuggerClient.requester(
+    {
+      type: "names",
+      indexes: arg(0),
+    },
+    {}
+  ),
 
   /**
    * Get a set of following property value(s).
@@ -61,11 +67,14 @@ PropertyIteratorClient.prototype = {
    * @param callback Function
    *        The function called when we receive the property values.
    */
-  slice: DebuggerClient.requester({
-    type: "slice",
-    start: arg(0),
-    count: arg(1),
-  }, {}),
+  slice: DebuggerClient.requester(
+    {
+      type: "slice",
+      start: arg(0),
+      count: arg(1),
+    },
+    {}
+  ),
 
   /**
    * Get all the property values.
@@ -73,9 +82,12 @@ PropertyIteratorClient.prototype = {
    * @param callback Function
    *        The function called when we receive the property values.
    */
-  all: DebuggerClient.requester({
-    type: "all",
-  }, {}),
+  all: DebuggerClient.requester(
+    {
+      type: "all",
+    },
+    {}
+  ),
 };
 
 module.exports = PropertyIteratorClient;

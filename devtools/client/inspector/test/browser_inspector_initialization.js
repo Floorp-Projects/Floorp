@@ -91,8 +91,11 @@ async function testMarkupView(selector, inspector) {
   }
   const nodeFront = await getNodeFront(selector, inspector);
   try {
-    is(inspector.selection.nodeFront, nodeFront,
-       "Right node is selected in the markup view");
+    is(
+      inspector.selection.nodeFront,
+      nodeFront,
+      "Right node is selected in the markup view"
+    );
   } catch (ex) {
     ok(false, "Got exception while resolving selected node of markup view.");
     console.error(ex);
@@ -109,6 +112,9 @@ async function testBreadcrumbs(selector, inspector) {
   const expectedText = b.prettyPrintNodeAsText(nodeFront);
   const button = b.container.querySelector("button[checked=true]");
   ok(button, "A crumbs is checked=true");
-  is(button.getAttribute("title"), expectedText,
-     "Crumb refers to the right node");
+  is(
+    button.getAttribute("title"),
+    expectedText,
+    "Crumb refers to the right node"
+  );
 }

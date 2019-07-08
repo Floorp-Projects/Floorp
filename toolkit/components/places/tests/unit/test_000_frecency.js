@@ -16,18 +16,19 @@ Autocomplete Frecency Tests
 */
 
 try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
+  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(
+    Ci.nsINavHistoryService
+  );
 } catch (ex) {
   do_throw("Could not get services\n");
 }
 
 var bucketPrefs = [
-  [ "firstBucketCutoff", "firstBucketWeight"],
-  [ "secondBucketCutoff", "secondBucketWeight"],
-  [ "thirdBucketCutoff", "thirdBucketWeight"],
-  [ "fourthBucketCutoff", "fourthBucketWeight"],
-  [ null, "defaultBucketWeight"],
+  ["firstBucketCutoff", "firstBucketWeight"],
+  ["secondBucketCutoff", "secondBucketWeight"],
+  ["thirdBucketCutoff", "thirdBucketWeight"],
+  ["fourthBucketCutoff", "fourthBucketWeight"],
+  [null, "defaultBucketWeight"],
 ];
 
 var bonusPrefs = {
@@ -53,11 +54,12 @@ async function task_initializeBucket(bucket) {
   // get pref values
   var weight = Services.prefs.getIntPref(prefPrefix + weightName, 0);
   var cutoff = Services.prefs.getIntPref(prefPrefix + cutoffName, 0);
-  if (cutoff < 1)
+  if (cutoff < 1) {
     return;
+  }
 
   // generate a date within the cutoff period
-  var dateInPeriod = (now - ((cutoff - 1) * 86400 * 1000)) * 1000;
+  var dateInPeriod = (now - (cutoff - 1) * 86400 * 1000) * 1000;
 
   for (let [bonusName, visitType] of Object.entries(bonusPrefs)) {
     var frecency = -1;
@@ -65,14 +67,28 @@ async function task_initializeBucket(bucket) {
     var matchTitle = "";
     var bonusValue = Services.prefs.getIntPref(prefPrefix + bonusName);
     // unvisited (only for first cutoff date bucket)
-    if (bonusName == "unvisitedBookmarkBonus" || bonusName == "unvisitedTypedBonus") {
+    if (
+      bonusName == "unvisitedBookmarkBonus" ||
+      bonusName == "unvisitedTypedBonus"
+    ) {
       if (cutoffName == "firstBucketCutoff") {
-        let points = Math.ceil(bonusValue / parseFloat(100.0) * weight);
+        let points = Math.ceil((bonusValue / parseFloat(100.0)) * weight);
         var visitCount = 1; // bonusName == "unvisitedBookmarkBonus" ? 1 : 0;
         frecency = Math.ceil(visitCount * points);
-        calculatedURI = uri("http://" + searchTerm + ".com/" +
-          bonusName + ":" + bonusValue + "/cutoff:" + cutoff +
-          "/weight:" + weight + "/frecency:" + frecency);
+        calculatedURI = uri(
+          "http://" +
+            searchTerm +
+            ".com/" +
+            bonusName +
+            ":" +
+            bonusValue +
+            "/cutoff:" +
+            cutoff +
+            "/weight:" +
+            weight +
+            "/frecency:" +
+            frecency
+        );
         if (bonusName == "unvisitedBookmarkBonus") {
           matchTitle = searchTerm + "UnvisitedBookmark";
           await PlacesUtils.bookmarks.insert({
@@ -94,25 +110,42 @@ async function task_initializeBucket(bucket) {
     } else {
       // visited
       // visited bookmarks get the visited bookmark bonus twice
-      if (visitType == Ci.nsINavHistoryService.TRANSITION_BOOKMARK)
+      if (visitType == Ci.nsINavHistoryService.TRANSITION_BOOKMARK) {
         bonusValue = bonusValue * 2;
+      }
 
-      let points = Math.ceil(1 * ((bonusValue / parseFloat(100.000000)).toFixed(6) * weight) / 1);
+      let points = Math.ceil(
+        (1 * ((bonusValue / parseFloat(100.0)).toFixed(6) * weight)) / 1
+      );
       if (!points) {
-        if (visitType == Ci.nsINavHistoryService.TRANSITION_EMBED ||
-            visitType == Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK ||
-            visitType == Ci.nsINavHistoryService.TRANSITION_DOWNLOAD ||
-            visitType == Ci.nsINavHistoryService.TRANSITION_RELOAD ||
-            bonusName == "defaultVisitBonus")
+        if (
+          visitType == Ci.nsINavHistoryService.TRANSITION_EMBED ||
+          visitType == Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK ||
+          visitType == Ci.nsINavHistoryService.TRANSITION_DOWNLOAD ||
+          visitType == Ci.nsINavHistoryService.TRANSITION_RELOAD ||
+          bonusName == "defaultVisitBonus"
+        ) {
           frecency = 0;
-        else
+        } else {
           frecency = -1;
+        }
       } else {
         frecency = points;
       }
-      calculatedURI = uri("http://" + searchTerm + ".com/" +
-        bonusName + ":" + bonusValue + "/cutoff:" + cutoff +
-        "/weight:" + weight + "/frecency:" + frecency);
+      calculatedURI = uri(
+        "http://" +
+          searchTerm +
+          ".com/" +
+          bonusName +
+          ":" +
+          bonusValue +
+          "/cutoff:" +
+          cutoff +
+          "/weight:" +
+          weight +
+          "/frecency:" +
+          frecency
+      );
       if (visitType == Ci.nsINavHistoryService.TRANSITION_BOOKMARK) {
         matchTitle = searchTerm + "Bookmarked";
         await PlacesUtils.bookmarks.insert({
@@ -121,7 +154,9 @@ async function task_initializeBucket(bucket) {
           title: matchTitle,
         });
       } else {
-        matchTitle = calculatedURI.spec.substr(calculatedURI.spec.lastIndexOf("/") + 1);
+        matchTitle = calculatedURI.spec.substr(
+          calculatedURI.spec.lastIndexOf("/") + 1
+        );
       }
       await PlacesTestUtils.addVisits({
         uri: calculatedURI,
@@ -185,7 +220,9 @@ AutoCompleteInput.prototype = {
 add_task(async function test_frecency() {
   // Disable autoFill for this test.
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
-  registerCleanupFunction(() => Services.prefs.clearUserPref("browser.urlbar.autoFill"));
+  registerCleanupFunction(() =>
+    Services.prefs.clearUserPref("browser.urlbar.autoFill")
+  );
   for (let bucket of bucketPrefs) {
     await task_initializeBucket(bucket);
   }
@@ -200,8 +237,9 @@ add_task(async function test_frecency() {
 
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  var controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);
+  var controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
+    Ci.nsIAutoCompleteController
+  );
 
   // Make an AutoCompleteInput that uses our searches
   // and confirms results on search complete
@@ -222,8 +260,10 @@ add_task(async function test_frecency() {
   await new Promise(resolve => {
     input.onSearchComplete = function() {
       Assert.equal(numSearchesStarted, 1);
-      Assert.equal(controller.searchStatus,
-                   Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
+      Assert.equal(
+        controller.searchStatus,
+        Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH
+      );
 
       // test that all records with non-zero frecency were matched
       Assert.equal(controller.matchCount, results.length);
@@ -241,8 +281,13 @@ add_task(async function test_frecency() {
           // undefined), so check if frecency matches. This is okay because we
           // can still ensure the correct number of expected frecencies.
           let getFrecency = aURL => aURL.match(/frecency:(-?\d+)$/)[1];
-          print("### checking for same frecency between '" + searchURL +
-                "' and '" + expectURL + "'");
+          print(
+            "### checking for same frecency between '" +
+              searchURL +
+              "' and '" +
+              expectURL +
+              "'"
+          );
           Assert.equal(getFrecency(searchURL), getFrecency(expectURL));
         }
       }

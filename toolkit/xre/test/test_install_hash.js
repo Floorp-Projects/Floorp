@@ -7,9 +7,13 @@
  */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { Subprocess } = ChromeUtils.import("resource://gre/modules/Subprocess.jsm");
+const { Subprocess } = ChromeUtils.import(
+  "resource://gre/modules/Subprocess.jsm"
+);
 
-const XRE = Cc["@mozilla.org/xre/directory-provider;1"].getService(Ci.nsIXREDirProvider);
+const XRE = Cc["@mozilla.org/xre/directory-provider;1"].getService(
+  Ci.nsIXREDirProvider
+);
 const HASH = XRE.getInstallHash(false);
 const EXE = Services.dirsvc.get("XREExeF", Ci.nsIFile);
 const SCRIPT = do_get_file("show_hash.js", false);
@@ -66,7 +70,11 @@ function countParts(path) {
 add_task(async function testSameBinary() {
   // Running with the same binary path should definitely work and give the same
   // hash.
-  Assert.equal(await getHash(EXE), HASH, "Should have the same hash when running the same binary.");
+  Assert.equal(
+    await getHash(EXE),
+    HASH,
+    "Should have the same hash when running the same binary."
+  );
 });
 
 add_task(async function testUpperCase() {
@@ -75,7 +83,11 @@ add_task(async function testUpperCase() {
 
   // We may not get a hash if any part of the filesystem is case sensitive.
   if (hash) {
-    Assert.equal(hash, HASH, `Should have seen the same hash from ${upper.path}.`);
+    Assert.equal(
+      hash,
+      HASH,
+      `Should have seen the same hash from ${upper.path}.`
+    );
   }
 });
 
@@ -85,7 +97,11 @@ add_task(async function testLowerCase() {
 
   // We may not get a hash if any part of the filesystem is case sensitive.
   if (hash) {
-    Assert.equal(hash, HASH, `Should have seen the same hash from ${lower.path}.`);
+    Assert.equal(
+      hash,
+      HASH,
+      `Should have seen the same hash from ${lower.path}.`
+    );
   }
 });
 
@@ -95,17 +111,29 @@ add_task(async function testEachPart() {
 
   let count = countParts(EXE);
   for (let i = 0; i < count; i++) {
-    let upper = mutatePath(EXE, (p, index) => index == i ? p.toLocaleUpperCase() : p);
-    let lower = mutatePath(EXE, (p, index) => index == i ? p.toLocaleLowerCase() : p);
+    let upper = mutatePath(EXE, (p, index) =>
+      index == i ? p.toLocaleUpperCase() : p
+    );
+    let lower = mutatePath(EXE, (p, index) =>
+      index == i ? p.toLocaleLowerCase() : p
+    );
 
     let upperHash = await getHash(upper);
     if (upperHash) {
-      Assert.equal(upperHash, HASH, `Should have seen the same hash from ${upper.path}.`);
+      Assert.equal(
+        upperHash,
+        HASH,
+        `Should have seen the same hash from ${upper.path}.`
+      );
     }
 
     let lowerHash = await getHash(lower);
     if (lowerHash) {
-      Assert.equal(lowerHash, HASH, `Should have seen the same hash from ${lower.path}.`);
+      Assert.equal(
+        lowerHash,
+        HASH,
+        `Should have seen the same hash from ${lower.path}.`
+      );
     }
   }
 });

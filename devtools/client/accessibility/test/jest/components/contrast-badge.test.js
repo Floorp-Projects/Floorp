@@ -8,8 +8,12 @@ const { shallow, mount } = require("enzyme");
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
 
-const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
-const { setupStore } = require("devtools/client/accessibility/test/jest/helpers");
+const Provider = createFactory(
+  require("devtools/client/shared/vendor/react-redux").Provider
+);
+const {
+  setupStore,
+} = require("devtools/client/accessibility/test/jest/helpers");
 
 const Badge = require("devtools/client/accessibility/components/Badge");
 const ContrastBadgeClass = require("devtools/client/accessibility/components/ContrastBadge");
@@ -25,42 +29,53 @@ describe("ContrastBadge component:", () => {
   });
 
   it("success render", () => {
-    const wrapper = shallow(ContrastBadge({
-      value: 5.11,
-      isLargeText: false,
-      score: "AA",
-    }));
+    const wrapper = shallow(
+      ContrastBadge({
+        value: 5.11,
+        isLargeText: false,
+        score: "AA",
+      })
+    );
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.isEmptyRender()).toBe(true);
   });
 
   it("success range render", () => {
-    const wrapper = shallow(ContrastBadge({
-      min: 5.11,
-      max: 6.25,
-      isLargeText: false,
-      score: "AA",
-    }));
+    const wrapper = shallow(
+      ContrastBadge({
+        min: 5.11,
+        max: 6.25,
+        isLargeText: false,
+        score: "AA",
+      })
+    );
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.isEmptyRender()).toBe(true);
   });
 
   it("success large text render", () => {
-    const wrapper = shallow(ContrastBadge({
-      value: 3.77,
-      isLargeText: true,
-      score: "AA",
-    }));
+    const wrapper = shallow(
+      ContrastBadge({
+        value: 3.77,
+        isLargeText: true,
+        score: "AA",
+      })
+    );
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.isEmptyRender()).toBe(true);
   });
 
   it("fail render", () => {
-    const wrapper = mount(Provider({ store }, ContrastBadge({
-      value: 3.77,
-      isLargeText: false,
-      score: "fail",
-    })));
+    const wrapper = mount(
+      Provider(
+        { store },
+        ContrastBadge({
+          value: 3.77,
+          isLargeText: false,
+          score: "fail",
+        })
+      )
+    );
 
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.children().length).toBe(1);

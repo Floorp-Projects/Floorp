@@ -4,15 +4,20 @@
 // Listen for messages from the test.
 addEventListener("TestEvent", event => {
   let type = event.detail.type;
-  dump("urlbarAddonIframe.js got TestEvent, type=" + type +
-       " messageID=" + event.detail.messageID + "\n");
+  dump(
+    "urlbarAddonIframe.js got TestEvent, type=" +
+      type +
+      " messageID=" +
+      event.detail.messageID +
+      "\n"
+  );
   switch (type) {
-  case "function":
-    callUrlbarFunction(event.detail);
-    break;
-  case "event":
-    expectEvent(event.detail);
-    break;
+    case "function":
+      callUrlbarFunction(event.detail);
+      break;
+    case "event":
+      expectEvent(event.detail);
+      break;
   }
 });
 
@@ -45,11 +50,13 @@ function expectEvent(detail) {
 
 // Sends an ack to the test.
 function ack(originalEventDetail, ackData = null, ackIndex = 0) {
-  dispatchEvent(new CustomEvent("TestEventAck", {
-    detail: {
-      messageID: originalEventDetail.messageID,
-      ackIndex,
-      data: ackData,
-    },
-  }));
+  dispatchEvent(
+    new CustomEvent("TestEventAck", {
+      detail: {
+        messageID: originalEventDetail.messageID,
+        ackIndex,
+        data: ackData,
+      },
+    })
+  );
 }

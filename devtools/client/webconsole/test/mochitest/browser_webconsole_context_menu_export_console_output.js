@@ -40,7 +40,7 @@ const { MockFilePicker } = SpecialPowers;
 MockFilePicker.init(window);
 MockFilePicker.returnValue = MockFilePicker.returnOK;
 
-var {Cu} = require("chrome");
+var { Cu } = require("chrome");
 var FileUtils = Cu.import("resource://gre/modules/FileUtils.jsm").FileUtils;
 
 // Test the export visible messages to clipboard of the webconsole copies the expected
@@ -59,7 +59,9 @@ add_task(async function testExportToClipboard() {
   // Let's wait until we have all the logged messages.
   await waitFor(() => findMessages(hud, "").length === 5);
   // And also until the stacktraces are rendered (there should be 2)
-  await waitFor(() => hud.ui.outputNode.querySelectorAll(".frames").length === 2);
+  await waitFor(
+    () => hud.ui.outputNode.querySelectorAll(".frames").length === 2
+  );
 
   const message = findMessage(hud, "hello");
   const clipboardText = await exportAllToClipboard(hud, message);
@@ -81,7 +83,9 @@ add_task(async function testExportToFile() {
   // Let's wait until we have all the logged messages.
   await waitFor(() => findMessages(hud, "").length === 5);
   // And also until the stacktraces are rendered (there should be 2)
-  await waitFor(() => hud.ui.outputNode.querySelectorAll(".frames").length === 2);
+  await waitFor(
+    () => hud.ui.outputNode.querySelectorAll(".frames").length === 2
+  );
 
   const message = findMessage(hud, "hello");
   const text = await exportAllToFile(hud, message);
@@ -146,7 +150,9 @@ async function exportAllToFile(hud, message) {
   const exportFile = menuPopup.querySelector("#console-menu-export-file");
   ok(exportFile, "copy menu item is enabled");
 
-  const nsiFile = FileUtils.getFile("TmpD", [`export_console_${Date.now()}.log`]);
+  const nsiFile = FileUtils.getFile("TmpD", [
+    `export_console_${Date.now()}.log`,
+  ]);
   MockFilePicker.setFiles([nsiFile]);
   exportFile.click();
 
@@ -162,7 +168,9 @@ async function exportAllToFile(hud, message) {
  */
 async function exportAllToClipboard(hud, message) {
   const menuPopup = await openContextMenuExportSubMenu(hud, message);
-  const exportClipboard = menuPopup.querySelector("#console-menu-export-clipboard");
+  const exportClipboard = menuPopup.querySelector(
+    "#console-menu-export-clipboard"
+  );
   ok(exportClipboard, "copy menu item is enabled");
 
   let clipboardText;
@@ -181,6 +189,6 @@ async function openContextMenuExportSubMenu(hud, message) {
   const exportMenu = menuPopup.querySelector("#console-menu-export");
 
   const view = exportMenu.ownerDocument.defaultView;
-  EventUtils.synthesizeMouseAtCenter(exportMenu, {type: "mousemove"}, view);
+  EventUtils.synthesizeMouseAtCenter(exportMenu, { type: "mousemove" }, view);
   return menuPopup;
 }

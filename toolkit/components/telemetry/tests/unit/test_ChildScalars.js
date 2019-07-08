@@ -20,7 +20,8 @@ const KEYED_UINT_SCALAR = "telemetry.test.keyed_unsigned_int";
 const KEYED_BOOL_SCALAR = "telemetry.test.keyed_boolean_kind";
 const CONTENT_ONLY_UINT_SCALAR = "telemetry.test.content_only_uint";
 const ALL_PROCESSES_UINT_SCALAR = "telemetry.test.all_processes_uint";
-const ALL_CHILD_PROCESSES_STRING_SCALAR = "telemetry.test.all_child_processes_string";
+const ALL_CHILD_PROCESSES_STRING_SCALAR =
+  "telemetry.test.all_child_processes_string";
 
 function run_child_test() {
   // Attempt to set some scalar values from the "content" process.
@@ -56,28 +57,52 @@ function checkParentScalars(processData) {
   const keyedScalars = processData.keyedScalars;
 
   // Check the plain scalars, make sure we're only recording what we expect.
-  Assert.ok(!(CONTENT_ONLY_UINT_SCALAR in scalars),
-            "Scalars must not be recorded in other processes unless allowed.");
-  Assert.ok(!(ALL_CHILD_PROCESSES_STRING_SCALAR in scalars),
-            "Scalars must not be recorded in other processes unless allowed.");
-  Assert.ok(UINT_SCALAR in scalars,
-            `${UINT_SCALAR} must be recorded in the parent process.`);
-  Assert.equal(scalars[UINT_SCALAR], 15,
-               `${UINT_SCALAR} must have the correct value (parent process).`);
-  Assert.ok(ALL_PROCESSES_UINT_SCALAR in scalars,
-            `${ALL_PROCESSES_UINT_SCALAR} must be recorded in the parent process.`);
-  Assert.equal(scalars[ALL_PROCESSES_UINT_SCALAR], 37,
-               `${ALL_PROCESSES_UINT_SCALAR} must have the correct value (parent process).`);
+  Assert.ok(
+    !(CONTENT_ONLY_UINT_SCALAR in scalars),
+    "Scalars must not be recorded in other processes unless allowed."
+  );
+  Assert.ok(
+    !(ALL_CHILD_PROCESSES_STRING_SCALAR in scalars),
+    "Scalars must not be recorded in other processes unless allowed."
+  );
+  Assert.ok(
+    UINT_SCALAR in scalars,
+    `${UINT_SCALAR} must be recorded in the parent process.`
+  );
+  Assert.equal(
+    scalars[UINT_SCALAR],
+    15,
+    `${UINT_SCALAR} must have the correct value (parent process).`
+  );
+  Assert.ok(
+    ALL_PROCESSES_UINT_SCALAR in scalars,
+    `${ALL_PROCESSES_UINT_SCALAR} must be recorded in the parent process.`
+  );
+  Assert.equal(
+    scalars[ALL_PROCESSES_UINT_SCALAR],
+    37,
+    `${ALL_PROCESSES_UINT_SCALAR} must have the correct value (parent process).`
+  );
 
   // Now check the keyed scalars.
-  Assert.ok(KEYED_BOOL_SCALAR in keyedScalars,
-            `${KEYED_BOOL_SCALAR} must be recorded in the parent process.`);
-  Assert.ok("parent-key" in keyedScalars[KEYED_BOOL_SCALAR],
-            `${KEYED_BOOL_SCALAR} must be recorded in the parent process.`);
-  Assert.equal(Object.keys(keyedScalars[KEYED_BOOL_SCALAR]).length, 1,
-            `${KEYED_BOOL_SCALAR} must only contain the expected key in parent process.`);
-  Assert.equal(keyedScalars[KEYED_BOOL_SCALAR]["parent-key"], false,
-            `${KEYED_BOOL_SCALAR} must have the correct value (parent process).`);
+  Assert.ok(
+    KEYED_BOOL_SCALAR in keyedScalars,
+    `${KEYED_BOOL_SCALAR} must be recorded in the parent process.`
+  );
+  Assert.ok(
+    "parent-key" in keyedScalars[KEYED_BOOL_SCALAR],
+    `${KEYED_BOOL_SCALAR} must be recorded in the parent process.`
+  );
+  Assert.equal(
+    Object.keys(keyedScalars[KEYED_BOOL_SCALAR]).length,
+    1,
+    `${KEYED_BOOL_SCALAR} must only contain the expected key in parent process.`
+  );
+  Assert.equal(
+    keyedScalars[KEYED_BOOL_SCALAR]["parent-key"],
+    false,
+    `${KEYED_BOOL_SCALAR} must have the correct value (parent process).`
+  );
 }
 
 function checkContentScalars(processData) {
@@ -85,36 +110,70 @@ function checkContentScalars(processData) {
   const keyedScalars = processData.keyedScalars;
 
   // Check the plain scalars for the content process.
-  Assert.ok(!(UINT_SCALAR in scalars),
-            "Scalars must not be recorded in other processes unless allowed.");
-  Assert.ok(!(KEYED_UINT_SCALAR in keyedScalars),
-            "Keyed scalars must not be recorded in other processes unless allowed.");
-  Assert.ok(CONTENT_ONLY_UINT_SCALAR in scalars,
-            `${CONTENT_ONLY_UINT_SCALAR} must be recorded in the content process.`);
-  Assert.equal(scalars[CONTENT_ONLY_UINT_SCALAR], 37,
-            `${CONTENT_ONLY_UINT_SCALAR} must have the correct value (content process).`);
-  Assert.ok(ALL_CHILD_PROCESSES_STRING_SCALAR in scalars,
-            `${ALL_CHILD_PROCESSES_STRING_SCALAR} must be recorded in the content process.`);
-  Assert.equal(scalars[ALL_CHILD_PROCESSES_STRING_SCALAR], "all-child-processes",
-            `${ALL_CHILD_PROCESSES_STRING_SCALAR} must have the correct value (content process).`);
-  Assert.ok(ALL_PROCESSES_UINT_SCALAR in scalars,
-            `${ALL_PROCESSES_UINT_SCALAR} must be recorded in the content process.`);
-  Assert.equal(scalars[ALL_PROCESSES_UINT_SCALAR], 37,
-            `${ALL_PROCESSES_UINT_SCALAR} must have the correct value (content process).`);
+  Assert.ok(
+    !(UINT_SCALAR in scalars),
+    "Scalars must not be recorded in other processes unless allowed."
+  );
+  Assert.ok(
+    !(KEYED_UINT_SCALAR in keyedScalars),
+    "Keyed scalars must not be recorded in other processes unless allowed."
+  );
+  Assert.ok(
+    CONTENT_ONLY_UINT_SCALAR in scalars,
+    `${CONTENT_ONLY_UINT_SCALAR} must be recorded in the content process.`
+  );
+  Assert.equal(
+    scalars[CONTENT_ONLY_UINT_SCALAR],
+    37,
+    `${CONTENT_ONLY_UINT_SCALAR} must have the correct value (content process).`
+  );
+  Assert.ok(
+    ALL_CHILD_PROCESSES_STRING_SCALAR in scalars,
+    `${ALL_CHILD_PROCESSES_STRING_SCALAR} must be recorded in the content process.`
+  );
+  Assert.equal(
+    scalars[ALL_CHILD_PROCESSES_STRING_SCALAR],
+    "all-child-processes",
+    `${ALL_CHILD_PROCESSES_STRING_SCALAR} must have the correct value (content process).`
+  );
+  Assert.ok(
+    ALL_PROCESSES_UINT_SCALAR in scalars,
+    `${ALL_PROCESSES_UINT_SCALAR} must be recorded in the content process.`
+  );
+  Assert.equal(
+    scalars[ALL_PROCESSES_UINT_SCALAR],
+    37,
+    `${ALL_PROCESSES_UINT_SCALAR} must have the correct value (content process).`
+  );
 
   // Check the keyed scalars.
-  Assert.ok(KEYED_BOOL_SCALAR in keyedScalars,
-            `${KEYED_BOOL_SCALAR} must be recorded in the content process.`);
-  Assert.ok("content-key" in keyedScalars[KEYED_BOOL_SCALAR],
-            `${KEYED_BOOL_SCALAR} must be recorded in the content process.`);
-  Assert.ok("content-key2" in keyedScalars[KEYED_BOOL_SCALAR],
-            `${KEYED_BOOL_SCALAR} must be recorded in the content process.`);
-  Assert.equal(keyedScalars[KEYED_BOOL_SCALAR]["content-key"], true,
-            `${KEYED_BOOL_SCALAR} must have the correct value (content process).`);
-  Assert.equal(keyedScalars[KEYED_BOOL_SCALAR]["content-key2"], false,
-            `${KEYED_BOOL_SCALAR} must have the correct value (content process).`);
-  Assert.equal(Object.keys(keyedScalars[KEYED_BOOL_SCALAR]).length, 2,
-            `${KEYED_BOOL_SCALAR} must contain the expected keys in content process.`);
+  Assert.ok(
+    KEYED_BOOL_SCALAR in keyedScalars,
+    `${KEYED_BOOL_SCALAR} must be recorded in the content process.`
+  );
+  Assert.ok(
+    "content-key" in keyedScalars[KEYED_BOOL_SCALAR],
+    `${KEYED_BOOL_SCALAR} must be recorded in the content process.`
+  );
+  Assert.ok(
+    "content-key2" in keyedScalars[KEYED_BOOL_SCALAR],
+    `${KEYED_BOOL_SCALAR} must be recorded in the content process.`
+  );
+  Assert.equal(
+    keyedScalars[KEYED_BOOL_SCALAR]["content-key"],
+    true,
+    `${KEYED_BOOL_SCALAR} must have the correct value (content process).`
+  );
+  Assert.equal(
+    keyedScalars[KEYED_BOOL_SCALAR]["content-key2"],
+    false,
+    `${KEYED_BOOL_SCALAR} must have the correct value (content process).`
+  );
+  Assert.equal(
+    Object.keys(keyedScalars[KEYED_BOOL_SCALAR]).length,
+    2,
+    `${KEYED_BOOL_SCALAR} must contain the expected keys in content process.`
+  );
 }
 
 /**
@@ -164,9 +223,18 @@ add_task(async function() {
 
   // Validate the scalar data.
   Assert.ok("processes" in payload, "Should have processes section");
-  Assert.ok("content" in payload.processes, "Should have child process section");
-  Assert.ok("scalars" in payload.processes.content, "Child process section should have scalars.");
-  Assert.ok("keyedScalars" in payload.processes.content, "Child process section should have keyed scalars.");
+  Assert.ok(
+    "content" in payload.processes,
+    "Should have child process section"
+  );
+  Assert.ok(
+    "scalars" in payload.processes.content,
+    "Child process section should have scalars."
+  );
+  Assert.ok(
+    "keyedScalars" in payload.processes.content,
+    "Child process section should have keyed scalars."
+  );
   checkParentScalars(payload.processes.parent);
   checkContentScalars(payload.processes.content);
 

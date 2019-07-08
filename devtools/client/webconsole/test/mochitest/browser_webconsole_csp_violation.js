@@ -9,11 +9,13 @@
 "use strict";
 
 const TEST_URI = "data:text/html;charset=utf8,Web Console CSP violation test";
-const TEST_VIOLATION = "https://example.com/browser/devtools/client/webconsole/" +
-                       "test/mochitest/test-csp-violation.html";
-const CSP_VIOLATION_MSG = "Content Security Policy: The page\u2019s settings " +
-                          "blocked the loading of a resource at " +
-                          "http://some.example.com/test.png (\u201cimg-src\u201d).";
+const TEST_VIOLATION =
+  "https://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-csp-violation.html";
+const CSP_VIOLATION_MSG =
+  "Content Security Policy: The page\u2019s settings " +
+  "blocked the loading of a resource at " +
+  "http://some.example.com/test.png (\u201cimg-src\u201d).";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

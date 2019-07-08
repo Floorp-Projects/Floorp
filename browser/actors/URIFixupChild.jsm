@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["URIFixupChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
 
 class URIFixupChild extends ActorChild {
   observe(subject) {
@@ -16,14 +18,17 @@ class URIFixupChild extends ActorChild {
     }
 
     // Ignore info from other docshells
-    let parent = fixupInfo.consumer.QueryInterface(Ci.nsIDocShellTreeItem).sameTypeRootTreeItem;
-    if (parent != this.mm.docShell)
+    let parent = fixupInfo.consumer.QueryInterface(Ci.nsIDocShellTreeItem)
+      .sameTypeRootTreeItem;
+    if (parent != this.mm.docShell) {
       return;
+    }
 
     let data = {};
     for (let f of Object.keys(fixupInfo)) {
-      if (f == "consumer" || typeof fixupInfo[f] == "function")
+      if (f == "consumer" || typeof fixupInfo[f] == "function") {
         continue;
+      }
 
       if (fixupInfo[f] && fixupInfo[f] instanceof Ci.nsIURI) {
         data[f] = fixupInfo[f].spec;

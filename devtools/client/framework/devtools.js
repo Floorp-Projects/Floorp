@@ -4,23 +4,54 @@
 
 "use strict";
 
-const {Cu} = require("chrome");
+const { Cu } = require("chrome");
 const Services = require("Services");
 
-const {DevToolsShim} = require("chrome://devtools-startup/content/DevToolsShim.jsm");
+const {
+  DevToolsShim,
+} = require("chrome://devtools-startup/content/DevToolsShim.jsm");
 
-loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
-loader.lazyRequireGetter(this, "ToolboxHostManager", "devtools/client/framework/toolbox-host-manager", true);
-loader.lazyRequireGetter(this, "HUDService", "devtools/client/webconsole/hudservice", true);
+loader.lazyRequireGetter(
+  this,
+  "TargetFactory",
+  "devtools/client/framework/target",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "ToolboxHostManager",
+  "devtools/client/framework/toolbox-host-manager",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "HUDService",
+  "devtools/client/webconsole/hudservice",
+  true
+);
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
-loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scratchpad/scratchpad-manager.jsm");
-loader.lazyImporter(this, "BrowserToolboxProcess", "resource://devtools/client/framework/ToolboxProcess.jsm");
+loader.lazyImporter(
+  this,
+  "ScratchpadManager",
+  "resource://devtools/client/scratchpad/scratchpad-manager.jsm"
+);
+loader.lazyImporter(
+  this,
+  "BrowserToolboxProcess",
+  "resource://devtools/client/framework/ToolboxProcess.jsm"
+);
 
-const {defaultTools: DefaultTools, defaultThemes: DefaultThemes} =
-  require("devtools/client/definitions");
+const {
+  defaultTools: DefaultTools,
+  defaultThemes: DefaultThemes,
+} = require("devtools/client/definitions");
 const EventEmitter = require("devtools/shared/event-emitter");
-const {getTheme, setTheme, addThemeObserver, removeThemeObserver} =
-  require("devtools/client/shared/theme");
+const {
+  getTheme,
+  setTheme,
+  addThemeObserver,
+  removeThemeObserver,
+} = require("devtools/client/shared/theme");
 
 const FORBIDDEN_IDS = new Set(["toolbox", ""]);
 const MAX_ORDINAL = 99;
@@ -63,7 +94,9 @@ DevTools.prototype = {
     // Ensure registering items in the sorted order (getDefault* functions
     // return sorted lists)
     this.getDefaultTools().forEach(definition => this.registerTool(definition));
-    this.getDefaultThemes().forEach(definition => this.registerTheme(definition));
+    this.getDefaultThemes().forEach(definition =>
+      this.registerTheme(definition)
+    );
   },
 
   unregisterDefaults() {
@@ -138,10 +171,12 @@ DevTools.prototype = {
       toolId = tool;
       tool = this._tools.get(tool);
     } else {
-      const {Deprecated} = require("resource://gre/modules/Deprecated.jsm");
-      Deprecated.warning("Deprecation WARNING: gDevTools.unregisterTool(tool) is " +
-        "deprecated. You should unregister a tool using its toolId: " +
-        "gDevTools.unregisterTool(toolId).");
+      const { Deprecated } = require("resource://gre/modules/Deprecated.jsm");
+      Deprecated.warning(
+        "Deprecation WARNING: gDevTools.unregisterTool(tool) is " +
+          "deprecated. You should unregister a tool using its toolId: " +
+          "gDevTools.unregisterTool(toolId)."
+      );
       toolId = tool.id;
     }
     this._tools.delete(toolId);
@@ -155,8 +190,8 @@ DevTools.prototype = {
    * Sorting function used for sorting tools based on their ordinals.
    */
   ordinalSort(d1, d2) {
-    const o1 = (typeof d1.ordinal == "number") ? d1.ordinal : MAX_ORDINAL;
-    const o2 = (typeof d2.ordinal == "number") ? d2.ordinal : MAX_ORDINAL;
+    const o1 = typeof d1.ordinal == "number" ? d1.ordinal : MAX_ORDINAL;
+    const o2 = typeof d2.ordinal == "number" ? d2.ordinal : MAX_ORDINAL;
     return o1 - o2;
   },
 
@@ -320,9 +355,11 @@ DevTools.prototype = {
     // Reset the theme if an extension theme that's currently applied
     // is being removed.
     // Ignore shutdown since addons get disabled during that time.
-    if (!Services.startup.shuttingDown &&
-        !isCoreTheme &&
-        theme.id == currTheme) {
+    if (
+      !Services.startup.shuttingDown &&
+      !isCoreTheme &&
+      theme.id == currTheme
+    ) {
       setTheme("light");
 
       this.emit("theme-unregistered", theme);
@@ -396,7 +433,11 @@ DevTools.prototype = {
 
     // Check if the module is loaded to avoid loading ScratchpadManager for no reason.
     state.scratchpads = [];
-    if (Cu.isModuleLoaded("resource://devtools/client/scratchpad/scratchpad-manager.jsm")) {
+    if (
+      Cu.isModuleLoaded(
+        "resource://devtools/client/scratchpad/scratchpad-manager.jsm"
+      )
+    ) {
       state.scratchpads = ScratchpadManager.getSessionState();
     }
   },
@@ -404,7 +445,11 @@ DevTools.prototype = {
   /**
    * Restore the devtools session state as provided by SessionStore.
    */
-  restoreDevToolsSession: function({scratchpads, browserConsole, browserToolbox}) {
+  restoreDevToolsSession: function({
+    scratchpads,
+    browserConsole,
+    browserToolbox,
+  }) {
     if (scratchpads) {
       ScratchpadManager.restoreSession(scratchpads);
     }
@@ -449,7 +494,14 @@ DevTools.prototype = {
    * @return {Toolbox} toolbox
    *        The toolbox that was opened
    */
-  async showToolbox(target, toolId, hostType, hostOptions, startTime, reason = "toolbox_show") {
+  async showToolbox(
+    target,
+    toolId,
+    hostType,
+    hostOptions,
+    startTime,
+    reason = "toolbox_show"
+  ) {
     let toolbox = this._toolboxes.get(target);
 
     if (toolbox) {
@@ -472,7 +524,12 @@ DevTools.prototype = {
       if (promise) {
         return promise;
       }
-      const toolboxPromise = this.createToolbox(target, toolId, hostType, hostOptions);
+      const toolboxPromise = this.createToolbox(
+        target,
+        toolId,
+        hostType,
+        hostOptions
+      );
       this._creatingToolboxes.set(target, toolboxPromise);
       toolbox = await toolboxPromise;
       this._creatingToolboxes.delete(target);
@@ -486,8 +543,17 @@ DevTools.prototype = {
     // We send the "enter" width here to ensure it is always sent *after*
     // the "open" event.
     const width = Math.ceil(toolbox.win.outerWidth / 50) * 50;
-    const panelName = this.makeToolIdHumanReadable(toolId || toolbox.defaultToolId);
-    this._telemetry.addEventProperty(toolbox, "enter", panelName, null, "width", width);
+    const panelName = this.makeToolIdHumanReadable(
+      toolId || toolbox.defaultToolId
+    );
+    this._telemetry.addEventProperty(
+      toolbox,
+      "enter",
+      panelName,
+      null,
+      "width",
+      width
+    );
 
     return toolbox;
   },
@@ -510,13 +576,19 @@ DevTools.prototype = {
     const delay = Cu.now() - startTime;
     const panelName = this.makeToolIdHumanReadable(toolId);
 
-    const telemetryKey = this._firstShowToolbox ?
-      "DEVTOOLS_COLD_TOOLBOX_OPEN_DELAY_MS" : "DEVTOOLS_WARM_TOOLBOX_OPEN_DELAY_MS";
+    const telemetryKey = this._firstShowToolbox
+      ? "DEVTOOLS_COLD_TOOLBOX_OPEN_DELAY_MS"
+      : "DEVTOOLS_WARM_TOOLBOX_OPEN_DELAY_MS";
     this._telemetry.getKeyedHistogramById(telemetryKey).add(toolId, delay);
 
     const browserWin = toolbox.win.top;
     this._telemetry.addEventProperty(
-      browserWin, "open", "tools", null, "first_panel", panelName
+      browserWin,
+      "open",
+      "tools",
+      null,
+      "first_panel",
+      panelName
     );
   },
 
@@ -633,7 +705,7 @@ DevTools.prototype = {
    * toolkit/components/extensions/ext-c-toolkit.js
    */
   openBrowserConsole: function() {
-    const {HUDService} = require("devtools/client/webconsole/hudservice");
+    const { HUDService } = require("devtools/client/webconsole/hudservice");
     HUDService.openBrowserConsoleOrFocus();
   },
 
@@ -662,8 +734,10 @@ DevTools.prototype = {
         // select the first one available.
         nodeFront = nodes.find(node => {
           const { nodeType } = node;
-          return nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
-                 nodeType === Node.DOCUMENT_NODE;
+          return (
+            nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
+            nodeType === Node.DOCUMENT_NODE
+          );
         });
       }
       return querySelectors(nodeFront);
@@ -691,8 +765,14 @@ DevTools.prototype = {
   async inspectNode(tab, nodeSelectors, startTime) {
     const target = await TargetFactory.forTab(tab);
 
-    const toolbox = await gDevTools.showToolbox(target, "inspector", null, null,
-                                                startTime, "inspect_dom");
+    const toolbox = await gDevTools.showToolbox(
+      target,
+      "inspector",
+      null,
+      null,
+      startTime,
+      "inspect_dom"
+    );
     const inspector = toolbox.getCurrentPanel();
 
     // If the toolbox has been switched into a nested frame, we should first remove
@@ -705,7 +785,9 @@ DevTools.prototype = {
 
     const nodeFront = await this.findNodeFront(inspector.walker, nodeSelectors);
     // Select the final node
-    inspector.selection.setNodeFront(nodeFront, { reason: "browser-context-menu" });
+    inspector.selection.setNodeFront(nodeFront, {
+      reason: "browser-context-menu",
+    });
 
     await onNewNode;
     // Now that the node has been selected, wait until the inspector is
@@ -732,7 +814,12 @@ DevTools.prototype = {
     const target = await TargetFactory.forTab(tab);
 
     const toolbox = await gDevTools.showToolbox(
-      target, "accessibility", null, null, startTime);
+      target,
+      "accessibility",
+      null,
+      null,
+      startTime
+    );
     const nodeFront = await this.findNodeFront(toolbox.walker, nodeSelectors);
     // Select the accessible object in the panel and wait for the event that
     // tells us it has been done.
@@ -757,7 +844,7 @@ DevTools.prototype = {
       }
     }
 
-    for (const [key ] of this.getToolDefinitionMap()) {
+    for (const [key] of this.getToolDefinitionMap()) {
       this.unregisterTool(key, true);
     }
 
@@ -790,4 +877,4 @@ DevTools.prototype = {
   },
 };
 
-const gDevTools = exports.gDevTools = new DevTools();
+const gDevTools = (exports.gDevTools = new DevTools());

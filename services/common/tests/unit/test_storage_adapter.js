@@ -1,18 +1,20 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Sqlite} = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
-const {FirefoxAdapter} = ChromeUtils.import("resource://services-common/kinto-storage-adapter.js");
+const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+const { FirefoxAdapter } = ChromeUtils.import(
+  "resource://services-common/kinto-storage-adapter.js"
+);
 
 // set up what we need to make storage adapters
 const kintoFilename = "kinto.sqlite";
 
 function do_get_kinto_connection() {
-  return FirefoxAdapter.openConnection({path: kintoFilename});
+  return FirefoxAdapter.openConnection({ path: kintoFilename });
 }
 
 function do_get_kinto_adapter(sqliteHandle) {
-  return new FirefoxAdapter("test", {sqliteHandle});
+  return new FirefoxAdapter("test", { sqliteHandle });
 }
 
 function do_get_kinto_db() {
@@ -43,8 +45,8 @@ function test_collection_operations() {
   add_task(async function test_kinto_create_new_get_existing() {
     let sqliteHandle = await do_get_kinto_connection();
     let adapter = do_get_kinto_adapter(sqliteHandle);
-    let record = {id: "test-id", foo: "bar"};
-    await adapter.execute((transaction) => transaction.create(record));
+    let record = { id: "test-id", foo: "bar" };
+    await adapter.execute(transaction => transaction.create(record));
     let newRecord = await adapter.get("test-id");
     // ensure the record is the same as when it was added
     deepEqual(record, newRecord);
@@ -56,12 +58,12 @@ function test_collection_operations() {
     let sqliteHandle = await do_get_kinto_connection();
     let adapter = do_get_kinto_adapter(sqliteHandle);
     // create a second record
-    let record = {id: "test-id-2", foo: "baz"};
-    await adapter.execute((transaction) => transaction.create(record));
+    let record = { id: "test-id-2", foo: "baz" };
+    await adapter.execute(transaction => transaction.create(record));
     let newRecord = await adapter.get("test-id-2");
     deepEqual(record, newRecord);
     // delete the record
-    await adapter.execute((transaction) => transaction.delete(record.id));
+    await adapter.execute(transaction => transaction.delete(record.id));
     newRecord = await adapter.get(record.id);
     // ... and ensure it's no longer there
     Assert.equal(newRecord, undefined);
@@ -86,11 +88,11 @@ function test_collection_operations() {
   add_task(async function test_kinto_update_get_existing() {
     let sqliteHandle = await do_get_kinto_connection();
     let adapter = do_get_kinto_adapter(sqliteHandle);
-    let originalRecord = {id: "test-id", foo: "bar"};
-    let updatedRecord = {id: "test-id", foo: "baz"};
+    let originalRecord = { id: "test-id", foo: "bar" };
+    let updatedRecord = { id: "test-id", foo: "baz" };
     await adapter.clear();
-    await adapter.execute((transaction) => transaction.create(originalRecord));
-    await adapter.execute((transaction) => transaction.update(updatedRecord));
+    await adapter.execute(transaction => transaction.create(originalRecord));
+    await adapter.execute(transaction => transaction.update(updatedRecord));
     // ensure the record exists
     let newRecord = await adapter.get("test-id");
     // ensure the record is the same as when it was added
@@ -102,10 +104,10 @@ function test_collection_operations() {
   add_task(async function test_kinto_list() {
     let sqliteHandle = await do_get_kinto_connection();
     let adapter = do_get_kinto_adapter(sqliteHandle);
-    let originalRecord = {id: "test-id-1", foo: "bar"};
+    let originalRecord = { id: "test-id-1", foo: "bar" };
     let records = await adapter.list();
     Assert.equal(records.length, 1);
-    await adapter.execute((transaction) => transaction.create(originalRecord));
+    await adapter.execute(transaction => transaction.create(originalRecord));
     records = await adapter.list();
     Assert.equal(records.length, 2);
     await sqliteHandle.close();
@@ -116,10 +118,10 @@ function test_collection_operations() {
     let sqliteHandle = await do_get_kinto_connection();
     let adapter = do_get_kinto_adapter(sqliteHandle);
     await adapter.clear();
-    let record = {id: 1, foo: "bar"};
+    let record = { id: 1, foo: "bar" };
     let error = null;
     try {
-      await adapter.execute((transaction) => {
+      await adapter.execute(transaction => {
         transaction.create(record);
         throw new Error("unexpected");
       });
@@ -160,11 +162,9 @@ function test_collection_operations() {
   add_task(async function test_kinto_import_records() {
     let sqliteHandle = await do_get_kinto_connection();
     let adapter = do_get_kinto_adapter(sqliteHandle);
-    let record1 = {id: 1, foo: "bar"};
-    let record2 = {id: 2, foo: "baz"};
-    let impactedRecords = await adapter.loadDump([
-      record1, record2,
-    ]);
+    let record1 = { id: 1, foo: "bar" };
+    let record2 = { id: 2, foo: "baz" };
+    let impactedRecords = await adapter.loadDump([record1, record2]);
     Assert.equal(impactedRecords.length, 2);
     let newRecord1 = await adapter.get("1");
     // ensure the record is the same as when it was added
@@ -182,14 +182,11 @@ function test_collection_operations() {
     let records = await adapter.list();
     Assert.equal(records.length, 0);
     let impactedRecords = await adapter.loadDump([
-      {id: 1, foo: "bar"},
-      {id: 2, foo: "baz"},
+      { id: 1, foo: "bar" },
+      { id: 2, foo: "baz" },
     ]);
     Assert.equal(impactedRecords.length, 2);
-    await adapter.loadDump([
-      {id: 1, foo: "baz"},
-      {id: 3, foo: "bab"},
-    ]);
+    await adapter.loadDump([{ id: 1, foo: "baz" }, { id: 3, foo: "bab" }]);
     records = await adapter.list();
     Assert.equal(records.length, 3);
     let newRecord1 = await adapter.get("1");
@@ -201,8 +198,8 @@ function test_collection_operations() {
     let sqliteHandle = await do_get_kinto_connection();
     let adapter = do_get_kinto_adapter(sqliteHandle);
     await adapter.loadDump([
-      {id: 1, foo: "bar", last_modified: 1457896541},
-      {id: 2, foo: "baz", last_modified: 1458796542},
+      { id: 1, foo: "bar", last_modified: 1457896541 },
+      { id: 2, foo: "baz", last_modified: 1458796542 },
     ]);
     let lastModified = await adapter.getLastModified();
     Assert.equal(lastModified, 1458796542);
@@ -215,8 +212,8 @@ function test_collection_operations() {
     await adapter.saveLastModified(1458796543);
 
     await adapter.loadDump([
-      {id: 1, foo: "bar", last_modified: 1457896541},
-      {id: 2, foo: "baz", last_modified: 1458796542},
+      { id: 1, foo: "bar", last_modified: 1457896541 },
+      { id: 2, foo: "baz", last_modified: 1458796542 },
     ]);
     let lastModified = await adapter.getLastModified();
     Assert.equal(lastModified, 1458796543);
@@ -229,7 +226,7 @@ function test_collection_operations() {
     let adapter = do_get_kinto_adapter(sqliteHandle);
     await adapter.saveLastModified(42);
 
-    await adapter.saveMetadata({id: "col"});
+    await adapter.saveMetadata({ id: "col" });
 
     let lastModified = await adapter.getLastModified();
     Assert.equal(lastModified, 42);

@@ -43,5 +43,8 @@ async function performTests() {
 async function testAutocomplete(hud, inputString) {
   await setInputValueForAutocompletion(hud, inputString);
   const popup = hud.jsterm.autocompletePopup;
-  ok(popup.itemCount > 0, `There's ${popup.itemCount} suggestions for '${inputString}'`);
+  ok(
+    popup.itemCount > 0,
+    `There's ${popup.itemCount} suggestions for '${inputString}'`
+  );
 }

@@ -2,9 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {DeferredTask} = ChromeUtils.import("resource://gre/modules/DeferredTask.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const { DeferredTask } = ChromeUtils.import(
+  "resource://gre/modules/DeferredTask.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 const SEARCH_TIMEOUT_MS = 100;
 const SEARCH_AUTO_MIN_CRARACTERS = 3;
@@ -22,7 +26,11 @@ const STRINGS_ADD_BY_TYPE = {
 };
 
 let gDefaultBranch = Services.prefs.getDefaultBranch("");
-let gFilterPrefsTask = new DeferredTask(() => filterPrefs(), SEARCH_TIMEOUT_MS, 0);
+let gFilterPrefsTask = new DeferredTask(
+  () => filterPrefs(),
+  SEARCH_TIMEOUT_MS,
+  0
+);
 
 /**
  * Maps the name of each preference in the back-end to its PrefRow object,
@@ -108,8 +116,10 @@ class PrefRow {
         // We don't know which preferences should be read using getComplexValue,
         // so we use a heuristic to determine if this is a localized preference.
         // This can throw if there is no value in the localized files.
-        this.value = Services.prefs.getComplexValue(this.name,
-          Ci.nsIPrefLocalizedString).data;
+        this.value = Services.prefs.getComplexValue(
+          this.name,
+          Ci.nsIPrefLocalizedString
+        ).data;
       }
     } catch (ex) {
       this.value = "";
@@ -125,9 +135,11 @@ class PrefRow {
   }
 
   get matchesFilter() {
-    return gFilterShowAll ||
-           (gFilterPattern && gFilterPattern.test(this.name)) ||
-           (gFilterString && this.name.toLowerCase().includes(gFilterString));
+    return (
+      gFilterShowAll ||
+      (gFilterPattern && gFilterPattern.test(this.name)) ||
+      (gFilterString && this.name.toLowerCase().includes(gFilterString))
+    );
   }
 
   /**
@@ -145,12 +157,12 @@ class PrefRow {
     let nameCell = document.createElement("th");
     this._element.append(
       nameCell,
-      this.valueCell = document.createElement("td"),
-      this.editCell = document.createElement("td"),
-      this.resetCell = document.createElement("td")
+      (this.valueCell = document.createElement("td")),
+      (this.editCell = document.createElement("td")),
+      (this.resetCell = document.createElement("td"))
     );
     this.editCell.appendChild(
-      this.editButton = document.createElement("button")
+      (this.editButton = document.createElement("button"))
     );
     delete this.resetButton;
 
@@ -187,15 +199,19 @@ class PrefRow {
       span.setAttribute("aria-hidden", "true");
       let outerSpan = document.createElement("span");
       let spanL10nId = this.hasUserValue
-                       ? "about-config-pref-accessible-value-custom"
-                       : "about-config-pref-accessible-value-default";
-      document.l10n.setAttributes(outerSpan, spanL10nId,
-                                  { value: "" + this.value });
+        ? "about-config-pref-accessible-value-custom"
+        : "about-config-pref-accessible-value-default";
+      document.l10n.setAttributes(outerSpan, spanL10nId, {
+        value: "" + this.value,
+      });
       outerSpan.appendChild(span);
       this.valueCell.textContent = "";
       this.valueCell.append(outerSpan);
       if (this.type == "Boolean") {
-        document.l10n.setAttributes(this.editButton, "about-config-pref-toggle");
+        document.l10n.setAttributes(
+          this.editButton,
+          "about-config-pref-toggle"
+        );
         this.editButton.className = "button-toggle";
       } else {
         document.l10n.setAttributes(this.editButton, "about-config-pref-edit");
@@ -265,12 +281,16 @@ class PrefRow {
         this.resetCell.appendChild(this.resetButton);
       }
       if (!this.hasDefaultValue) {
-        document.l10n.setAttributes(this.resetButton,
-                                    "about-config-pref-delete");
+        document.l10n.setAttributes(
+          this.resetButton,
+          "about-config-pref-delete"
+        );
         this.resetButton.className = "";
       } else {
-        document.l10n.setAttributes(this.resetButton,
-                                    "about-config-pref-reset");
+        document.l10n.setAttributes(
+          this.resetButton,
+          "about-config-pref-reset"
+        );
         this.resetButton.className = "button-reset";
       }
     } else if (this.resetButton) {
@@ -291,10 +311,11 @@ class PrefRow {
     if (this.hidden) {
       className = "hidden";
     } else {
-      className = (this.hasUserValue ? "has-user-value " : "") +
-                  (this.isLocked ? "locked " : "") +
-                  (this.exists ? "" : "deleted ") +
-                  (this.odd ? "odd " : "");
+      className =
+        (this.hasUserValue ? "has-user-value " : "") +
+        (this.isLocked ? "locked " : "") +
+        (this.exists ? "" : "deleted ") +
+        (this.odd ? "odd " : "");
     }
 
     if (this._lastClassName !== className) {
@@ -357,16 +378,22 @@ if (!Preferences.get("browser.aboutConfig.showWarning")) {
   // immediately to prevent flickering, but wait to filter the preferences until
   // the value of the textbox has been restored from previous sessions.
   document.addEventListener("DOMContentLoaded", loadPrefs, { once: true });
-  window.addEventListener("load", () => {
-    if (document.getElementById("about-config-search").value) {
-      filterPrefs();
-    }
-  }, { once: true });
+  window.addEventListener(
+    "load",
+    () => {
+      if (document.getElementById("about-config-search").value) {
+        filterPrefs();
+      }
+    },
+    { once: true }
+  );
 }
 
 function onWarningButtonClick() {
-  Services.prefs.setBoolPref("browser.aboutConfig.showWarning",
-    document.getElementById("showWarningNextTime").checked);
+  Services.prefs.setBoolPref(
+    "browser.aboutConfig.showWarning",
+    document.getElementById("showWarningNextTime").checked
+  );
   loadPrefs();
 }
 
@@ -378,8 +405,8 @@ function loadPrefs() {
   document.body.textContent = "";
   document.body.appendChild(content);
 
-  let search = gSearchInput = document.getElementById("about-config-search");
-  let prefs = gPrefsTable = document.getElementById("prefs");
+  let search = (gSearchInput = document.getElementById("about-config-search"));
+  let prefs = (gPrefsTable = document.getElementById("prefs"));
   let showAll = document.getElementById("show-all");
   search.focus();
 
@@ -539,7 +566,7 @@ function filterPrefs(options = {}) {
   }
 
   if (searchName && !gExistingPrefs.has(searchName)) {
-    gPrefsTable.appendChild((new PrefRow(searchName)).getElement());
+    gPrefsTable.appendChild(new PrefRow(searchName).getElement());
   }
 
   // We only start observing preference changes after the first search is done,
@@ -547,11 +574,17 @@ function filterPrefs(options = {}) {
   if (!gPrefObserverRegistered) {
     gPrefObserverRegistered = true;
     Services.prefs.addObserver("", gPrefObserver);
-    window.addEventListener("unload", () => {
-      Services.prefs.removeObserver("", gPrefObserver);
-    }, { once: true });
+    window.addEventListener(
+      "unload",
+      () => {
+        Services.prefs.removeObserver("", gPrefObserver);
+      },
+      { once: true }
+    );
   }
 
-  document.body.classList.toggle("config-warning",
-    location.href.split(":").every(l => gFilterString.includes(l)));
+  document.body.classList.toggle(
+    "config-warning",
+    location.href.split(":").every(l => gFilterString.includes(l))
+  );
 }

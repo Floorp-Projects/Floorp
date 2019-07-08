@@ -38,22 +38,31 @@ function expectRejectedPromise(that, func, exceptionName) {
 
   ok(promise instanceof Promise, "Expect a Promise");
 
-  promise.then(function(res) {
-    ok(false, "Promise resolved when it should have been rejected.");
-  }).catch(function(err) {
-    is(err.name, exceptionName, "Promise correctly reject with " + exceptionName);
-  });
+  promise
+    .then(function(res) {
+      ok(false, "Promise resolved when it should have been rejected.");
+    })
+    .catch(function(err) {
+      is(
+        err.name,
+        exceptionName,
+        "Promise correctly reject with " + exceptionName
+      );
+    });
 }
 
 function fuzzyCompare(a, b) {
   return Math.abs(a - b) < 9e-3;
 }
 
-function compareChannels(buf1, buf2,
-                        /*optional*/ length,
-                        /*optional*/ sourceOffset,
-                        /*optional*/ destOffset,
-                        /*optional*/ skipLengthCheck) {
+function compareChannels(
+  buf1,
+  buf2,
+  /*optional*/ length,
+  /*optional*/ sourceOffset,
+  /*optional*/ destOffset,
+  /*optional*/ skipLengthCheck
+) {
   if (!skipLengthCheck) {
     is(buf1.length, buf2.length, "Channels must have the same length");
   }
@@ -68,40 +77,62 @@ function compareChannels(buf1, buf2,
   for (var i = 0; i < length; ++i) {
     if (!fuzzyCompare(buf1[i + sourceOffset], buf2[i + destOffset])) {
       difference++;
-      maxDifference = Math.max(maxDifference, Math.abs(buf1[i + sourceOffset] - buf2[i + destOffset]));
+      maxDifference = Math.max(
+        maxDifference,
+        Math.abs(buf1[i + sourceOffset] - buf2[i + destOffset])
+      );
       if (firstBadIndex == -1) {
         firstBadIndex = i;
       }
     }
-  };
+  }
 
-  is(difference, 0, "maxDifference: " + maxDifference +
-     ", first bad index: " + firstBadIndex +
-     " with test-data offset " + sourceOffset + " and expected-data offset " +
-     destOffset + "; corresponding values " + buf1[firstBadIndex + sourceOffset] +
-     " and " + buf2[firstBadIndex + destOffset] + " --- differences");
+  is(
+    difference,
+    0,
+    "maxDifference: " +
+      maxDifference +
+      ", first bad index: " +
+      firstBadIndex +
+      " with test-data offset " +
+      sourceOffset +
+      " and expected-data offset " +
+      destOffset +
+      "; corresponding values " +
+      buf1[firstBadIndex + sourceOffset] +
+      " and " +
+      buf2[firstBadIndex + destOffset] +
+      " --- differences"
+  );
 }
 
 function compareBuffers(got, expected) {
   if (got.numberOfChannels != expected.numberOfChannels) {
-    is(got.numberOfChannels, expected.numberOfChannels,
-       "Correct number of buffer channels");
+    is(
+      got.numberOfChannels,
+      expected.numberOfChannels,
+      "Correct number of buffer channels"
+    );
     return;
   }
   if (got.length != expected.length) {
-    is(got.length, expected.length,
-       "Correct buffer length");
+    is(got.length, expected.length, "Correct buffer length");
     return;
   }
   if (got.sampleRate != expected.sampleRate) {
-    is(got.sampleRate, expected.sampleRate,
-       "Correct sample rate");
+    is(got.sampleRate, expected.sampleRate, "Correct sample rate");
     return;
   }
 
   for (var i = 0; i < got.numberOfChannels; ++i) {
-    compareChannels(got.getChannelData(i), expected.getChannelData(i),
-                    got.length, 0, 0, true);
+    compareChannels(
+      got.getChannelData(i),
+      expected.getChannelData(i),
+      got.length,
+      0,
+      0,
+      true
+    );
   }
 }
 
@@ -113,7 +144,7 @@ function compareBuffers(got, expected) {
  * This is useful to detect that a buffer is noisy or silent.
  */
 function rms(audiobuffer, channel = 0, start = 0, end = audiobuffer.length) {
-  var buffer= audiobuffer.getChannelData(channel);
+  var buffer = audiobuffer.getChannelData(channel);
   var rms = 0;
   for (var i = start; i < end; i++) {
     rms += buffer[i] * buffer[i];
@@ -125,7 +156,11 @@ function rms(audiobuffer, channel = 0, start = 0, end = audiobuffer.length) {
 }
 
 function getEmptyBuffer(context, length) {
-  return context.createBuffer(gTest.numberOfChannels, length, context.sampleRate);
+  return context.createBuffer(
+    gTest.numberOfChannels,
+    length,
+    context.sampleRate
+  );
 }
 
 /**
@@ -160,14 +195,13 @@ function getEmptyBuffer(context, length) {
  * + skipOfflineContextTests: optional. when true, skips running tests on an offline
  *                            context by circumventing testOnOfflineContext.
  */
-function runTest()
-{
+function runTest() {
   function done() {
     SimpleTest.finish();
   }
 
   SimpleTest.waitForExplicitFinish();
-  function runTestFunction () {
+  function runTestFunction() {
     if (!gTest.numberOfChannels) {
       gTest.numberOfChannels = 2; // default
     }
@@ -186,8 +220,11 @@ function runTest()
       }
       var expectedFrames = 0;
       for (var i = 0; i < expectedBuffers.length; ++i) {
-        is(expectedBuffers[i].numberOfChannels, gTest.numberOfChannels,
-           "Correct number of channels for expected buffer " + i);
+        is(
+          expectedBuffers[i].numberOfChannels,
+          gTest.numberOfChannels,
+          "Correct number of channels for expected buffer " + i
+        );
         expectedFrames += expectedBuffers[i].length;
       }
       if (gTest.length && gTest.createExpectedBuffers) {
@@ -206,7 +243,11 @@ function runTest()
     function testOnNormalContext(callback) {
       function testOutput(nodeToInspect, expectedBuffers, callback) {
         testLength = 0;
-        var sp = context.createScriptProcessor(expectedBuffers[0].length, gTest.numberOfChannels, 0);
+        var sp = context.createScriptProcessor(
+          expectedBuffers[0].length,
+          gTest.numberOfChannels,
+          0
+        );
         nodeToInspect.connect(sp);
         sp.onaudioprocess = function(e) {
           var expectedBuffer = expectedBuffers.shift();
@@ -229,15 +270,20 @@ function runTest()
           var samplesSeen = 0;
           while (expectedBuffers.length) {
             var expectedBuffer = expectedBuffers.shift();
-            is(e.renderedBuffer.numberOfChannels, expectedBuffer.numberOfChannels,
-               "Correct number of input buffer channels");
+            is(
+              e.renderedBuffer.numberOfChannels,
+              expectedBuffer.numberOfChannels,
+              "Correct number of input buffer channels"
+            );
             for (var i = 0; i < e.renderedBuffer.numberOfChannels; ++i) {
-              compareChannels(e.renderedBuffer.getChannelData(i),
-                             expectedBuffer.getChannelData(i),
-                             expectedBuffer.length,
-                             samplesSeen,
-                             undefined,
-                             true);
+              compareChannels(
+                e.renderedBuffer.getChannelData(i),
+                expectedBuffer.getChannelData(i),
+                expectedBuffer.length,
+                samplesSeen,
+                undefined,
+                true
+              );
             }
             samplesSeen += expectedBuffer.length;
           }
@@ -246,7 +292,11 @@ function runTest()
         context.startRendering();
       }
 
-      var context = new OfflineAudioContext(gTest.numberOfChannels, testLength, sampleRate);
+      var context = new OfflineAudioContext(
+        gTest.numberOfChannels,
+        testLength,
+        sampleRate
+      );
       runTestOnContext(context, callback, testOutput);
     }
 
@@ -259,9 +309,9 @@ function runTest()
         done();
       }
     });
-  };
+  }
 
-  if (document.readyState !== 'complete') {
+  if (document.readyState !== "complete") {
     addLoadEvent(runTestFunction);
   } else {
     runTestFunction();

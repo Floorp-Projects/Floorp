@@ -25,7 +25,7 @@ var propsToCheck = [
   "clearInterval",
   "dump",
   "atob",
-  "btoa"
+  "btoa",
 ];
 
 for (var index = 0; index < propsToCheck.length; index++) {
@@ -55,15 +55,19 @@ onconnect = function(event) {
     throw new Error("'connect' event doesn't have a 'ports' property!");
   }
   if (event.ports.length != 1) {
-    throw new Error("'connect' event has a 'ports' property with length '" +
-                    event.ports.length + "'!");
+    throw new Error(
+      "'connect' event has a 'ports' property with length '" +
+        event.ports.length +
+        "'!"
+    );
   }
   if (!event.ports[0]) {
     throw new Error("'connect' event has a null 'ports[0]' property!");
   }
   if (!(event.ports[0] instanceof MessagePort)) {
-    throw new Error("'connect' event has a 'ports[0]' property that isn't a " +
-                    "MessagePort!");
+    throw new Error(
+      "'connect' event has a 'ports[0]' property that isn't a " + "MessagePort!"
+    );
   }
   if (!(event.ports[0] == event.source)) {
     throw new Error("'connect' event source property is incorrect!");
@@ -74,7 +78,10 @@ onconnect = function(event) {
 
   // Statement after return should trigger a warning, but NOT fire error events
   // at us.
-  (function() { return; 1; });
+  (function() {
+    return;
+    1;
+  });
 
   event.ports[0].onmessage = function(msg) {
     if (!(msg instanceof MessageEvent)) {

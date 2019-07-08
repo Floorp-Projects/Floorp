@@ -1,15 +1,24 @@
 "use strict";
 
-import {ImpressionStats, INTERSECTION_RATIO} from "content-src/components/DiscoveryStreamImpressionStats/ImpressionStats";
-import {actionTypes as at} from "common/Actions.jsm";
+import {
+  ImpressionStats,
+  INTERSECTION_RATIO,
+} from "content-src/components/DiscoveryStreamImpressionStats/ImpressionStats";
+import { actionTypes as at } from "common/Actions.jsm";
 import React from "react";
-import {shallow} from "enzyme";
+import { shallow } from "enzyme";
 
 describe("<ImpressionStats>", () => {
   const SOURCE = "TEST_SOURCE";
-  const FullIntersectEntries = [{isIntersecting: true, intersectionRatio: INTERSECTION_RATIO}];
-  const ZeroIntersectEntries = [{isIntersecting: false, intersectionRatio: 0}];
-  const PartialIntersectEntries = [{isIntersecting: true, intersectionRatio: INTERSECTION_RATIO / 2}];
+  const FullIntersectEntries = [
+    { isIntersecting: true, intersectionRatio: INTERSECTION_RATIO },
+  ];
+  const ZeroIntersectEntries = [
+    { isIntersecting: false, intersectionRatio: 0 },
+  ];
+  const PartialIntersectEntries = [
+    { isIntersecting: true, intersectionRatio: INTERSECTION_RATIO / 2 },
+  ];
 
   // Build IntersectionObserver class with the arg `entries` for the intersect callback.
   function buildIntersectionObserver(entries) {
@@ -27,7 +36,7 @@ describe("<ImpressionStats>", () => {
   }
 
   const DEFAULT_PROPS = {
-    rows: [{id: 1, pos: 0}, {id: 2, pos: 1}, {id: 3, pos: 2}],
+    rows: [{ id: 1, pos: 0 }, { id: 2, pos: 1 }, { id: 3, pos: 2 }],
     source: SOURCE,
     IntersectionObserver: buildIntersectionObserver(FullIntersectEntries),
     document: {
@@ -37,12 +46,14 @@ describe("<ImpressionStats>", () => {
     },
   };
 
-  const InnerEl = () => (<div>Inner Element</div>);
+  const InnerEl = () => <div>Inner Element</div>;
 
   function renderImpressionStats(props = {}) {
-    return shallow(<ImpressionStats {...DEFAULT_PROPS} {...props}>
+    return shallow(
+      <ImpressionStats {...DEFAULT_PROPS} {...props}>
         <InnerEl />
-      </ImpressionStats>);
+      </ImpressionStats>
+    );
   }
 
   it("should render props.children", () => {
@@ -65,7 +76,10 @@ describe("<ImpressionStats>", () => {
   });
   it("should noly send loaded content but not impression when the wrapped item is not visbible", () => {
     const dispatch = sinon.spy();
-    const props = {dispatch, IntersectionObserver: buildIntersectionObserver(ZeroIntersectEntries)};
+    const props = {
+      dispatch,
+      IntersectionObserver: buildIntersectionObserver(ZeroIntersectEntries),
+    };
     renderImpressionStats(props);
 
     // This one is for loaded content.
@@ -73,12 +87,18 @@ describe("<ImpressionStats>", () => {
     const [action] = dispatch.firstCall.args;
     assert.equal(action.type, at.DISCOVERY_STREAM_LOADED_CONTENT);
     assert.equal(action.data.source, SOURCE);
-    assert.deepEqual(action.data.tiles,
-      [{id: 1, pos: 0}, {id: 2, pos: 1}, {id: 3, pos: 2}]);
+    assert.deepEqual(action.data.tiles, [
+      { id: 1, pos: 0 },
+      { id: 2, pos: 1 },
+      { id: 3, pos: 2 },
+    ]);
   });
   it("should not send impression when the wrapped item is visbible but below the ratio", () => {
     const dispatch = sinon.spy();
-    const props = {dispatch, IntersectionObserver: buildIntersectionObserver(PartialIntersectEntries)};
+    const props = {
+      dispatch,
+      IntersectionObserver: buildIntersectionObserver(PartialIntersectEntries),
+    };
     renderImpressionStats(props);
 
     // This one is for loaded content.
@@ -86,7 +106,10 @@ describe("<ImpressionStats>", () => {
   });
   it("should send a loaded content and an impression when the page is visible and the wrapped item meets the visibility ratio", () => {
     const dispatch = sinon.spy();
-    const props = {dispatch, IntersectionObserver: buildIntersectionObserver(FullIntersectEntries)};
+    const props = {
+      dispatch,
+      IntersectionObserver: buildIntersectionObserver(FullIntersectEntries),
+    };
     renderImpressionStats(props);
 
     assert.calledTwice(dispatch);
@@ -94,19 +117,29 @@ describe("<ImpressionStats>", () => {
     let [action] = dispatch.firstCall.args;
     assert.equal(action.type, at.DISCOVERY_STREAM_LOADED_CONTENT);
     assert.equal(action.data.source, SOURCE);
-    assert.deepEqual(action.data.tiles,
-      [{id: 1, pos: 0}, {id: 2, pos: 1}, {id: 3, pos: 2}]);
+    assert.deepEqual(action.data.tiles, [
+      { id: 1, pos: 0 },
+      { id: 2, pos: 1 },
+      { id: 3, pos: 2 },
+    ]);
 
     [action] = dispatch.secondCall.args;
     assert.equal(action.type, at.DISCOVERY_STREAM_IMPRESSION_STATS);
     assert.equal(action.data.source, SOURCE);
-    assert.deepEqual(action.data.tiles,
-      [{id: 1, pos: 0}, {id: 2, pos: 1}, {id: 3, pos: 2}]);
+    assert.deepEqual(action.data.tiles, [
+      { id: 1, pos: 0 },
+      { id: 2, pos: 1 },
+      { id: 3, pos: 2 },
+    ]);
   });
   it("should send a DISCOVERY_STREAM_SPOC_IMPRESSION when the wrapped item has a campaignId", () => {
     const dispatch = sinon.spy();
     const campaignId = "a_campaign_id";
-    const props = {dispatch, campaignId, IntersectionObserver: buildIntersectionObserver(FullIntersectEntries)};
+    const props = {
+      dispatch,
+      campaignId,
+      IntersectionObserver: buildIntersectionObserver(FullIntersectEntries),
+    };
     renderImpressionStats(props);
 
     // Loaded content + DISCOVERY_STREAM_SPOC_IMPRESSION + impression
@@ -114,11 +147,17 @@ describe("<ImpressionStats>", () => {
 
     const [action] = dispatch.secondCall.args;
     assert.equal(action.type, at.DISCOVERY_STREAM_SPOC_IMPRESSION);
-    assert.deepEqual(action.data, {campaignId});
+    assert.deepEqual(action.data, { campaignId });
   });
   it("should send an impression when the wrapped item transiting from invisible to visible", () => {
     const dispatch = sinon.spy();
-    const props = {dispatch, IntersectionObserver: buildIntersectionObserver(ZeroIntersectEntries, false)};
+    const props = {
+      dispatch,
+      IntersectionObserver: buildIntersectionObserver(
+        ZeroIntersectEntries,
+        false
+      ),
+    };
     const wrapper = renderImpressionStats(props);
 
     // For the loaded content
@@ -127,16 +166,21 @@ describe("<ImpressionStats>", () => {
     let [action] = dispatch.firstCall.args;
     assert.equal(action.type, at.DISCOVERY_STREAM_LOADED_CONTENT);
     assert.equal(action.data.source, SOURCE);
-    assert.deepEqual(action.data.tiles,
-      [{id: 1, pos: 0}, {id: 2, pos: 1}, {id: 3, pos: 2}]);
+    assert.deepEqual(action.data.tiles, [
+      { id: 1, pos: 0 },
+      { id: 2, pos: 1 },
+      { id: 3, pos: 2 },
+    ]);
 
     dispatch.resetHistory();
 
     // Simulating the full intersection change with a row change
     wrapper.setProps({
       ...props,
-      ...{rows: [{id: 1, pos: 0}, {id: 2, pos: 1}, {id: 3, pos: 2}]},
-      ...{IntersectionObserver: buildIntersectionObserver(FullIntersectEntries)},
+      ...{ rows: [{ id: 1, pos: 0 }, { id: 2, pos: 1 }, { id: 3, pos: 2 }] },
+      ...{
+        IntersectionObserver: buildIntersectionObserver(FullIntersectEntries),
+      },
     });
 
     // For the impression
@@ -144,21 +188,24 @@ describe("<ImpressionStats>", () => {
 
     [action] = dispatch.firstCall.args;
     assert.equal(action.type, at.DISCOVERY_STREAM_IMPRESSION_STATS);
-    assert.deepEqual(action.data.tiles,
-      [{id: 1, pos: 0}, {id: 2, pos: 1}, {id: 3, pos: 2}]);
+    assert.deepEqual(action.data.tiles, [
+      { id: 1, pos: 0 },
+      { id: 2, pos: 1 },
+      { id: 3, pos: 2 },
+    ]);
   });
   it("should send a loaded content and an impression if props are updated and props.rows are different", () => {
-    const props = {dispatch: sinon.spy()};
+    const props = { dispatch: sinon.spy() };
     const wrapper = renderImpressionStats(props);
     props.dispatch.resetHistory();
 
     // New rows
-    wrapper.setProps({...DEFAULT_PROPS, ...{rows: [{id: 4, pos: 3}]}});
+    wrapper.setProps({ ...DEFAULT_PROPS, ...{ rows: [{ id: 4, pos: 3 }] } });
 
     assert.calledTwice(props.dispatch);
   });
   it("should not send any ping if props are updated but IDs are the same", () => {
-    const props = {dispatch: sinon.spy()};
+    const props = { dispatch: sinon.spy() };
     const wrapper = renderImpressionStats(props);
     props.dispatch.resetHistory();
 
@@ -182,12 +229,18 @@ describe("<ImpressionStats>", () => {
     const [, listener] = props.document.addEventListener.firstCall.args;
 
     wrapper.unmount();
-    assert.calledWith(props.document.removeEventListener, "visibilitychange", listener);
+    assert.calledWith(
+      props.document.removeEventListener,
+      "visibilitychange",
+      listener
+    );
   });
   it("should unobserve the intersection observer when the wrapper is removed", () => {
-    const IntersectionObserver = buildIntersectionObserver(ZeroIntersectEntries);
+    const IntersectionObserver = buildIntersectionObserver(
+      ZeroIntersectEntries
+    );
     const spy = sinon.spy(IntersectionObserver.prototype, "unobserve");
-    const props = {dispatch: sinon.spy(), IntersectionObserver};
+    const props = { dispatch: sinon.spy(), IntersectionObserver };
 
     const wrapper = renderImpressionStats(props);
     wrapper.unmount();
@@ -208,8 +261,8 @@ describe("<ImpressionStats>", () => {
     const wrapper = renderImpressionStats(props);
 
     // Update twice
-    wrapper.setProps({...props, ...{rows: [{id: 123, pos: 4}]}});
-    wrapper.setProps({...props, ...{rows: [{id: 2432, pos: 5}]}});
+    wrapper.setProps({ ...props, ...{ rows: [{ id: 123, pos: 4 }] } });
+    wrapper.setProps({ ...props, ...{ rows: [{ id: 2432, pos: 5 }] } });
 
     assert.notCalled(props.dispatch);
 
@@ -220,6 +273,6 @@ describe("<ImpressionStats>", () => {
     // Make sure we only sent the latest event
     assert.calledTwice(props.dispatch);
     const [action] = props.dispatch.firstCall.args;
-    assert.deepEqual(action.data.tiles, [{id: 2432, pos: 5}]);
+    assert.deepEqual(action.data.tiles, [{ id: 2432, pos: 5 }]);
   });
 });

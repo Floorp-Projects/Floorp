@@ -15,7 +15,7 @@ add_task(async function() {
 });
 
 async function performTest() {
-  const [host,, doc] = await createHost();
+  const [host, , doc] = await createHost();
   const graph = new LineGraphWidget(doc.body, "fps");
 
   await testGraph(graph);
@@ -27,12 +27,12 @@ async function performTest() {
 async function testGraph(graph) {
   await graph.setDataWhenReady(TEST_DATA);
 
-  is(graph._gutter.hidden, true,
-    "The gutter should be hidden, since there's no data available.");
-  is(graph._maxTooltip.hidden, true,
-    "The max tooltip should be hidden.");
-  is(graph._avgTooltip.hidden, true,
-    "The avg tooltip should be hidden.");
-  is(graph._minTooltip.hidden, true,
-    "The min tooltip should be hidden.");
+  is(
+    graph._gutter.hidden,
+    true,
+    "The gutter should be hidden, since there's no data available."
+  );
+  is(graph._maxTooltip.hidden, true, "The max tooltip should be hidden.");
+  is(graph._avgTooltip.hidden, true, "The avg tooltip should be hidden.");
+  is(graph._minTooltip.hidden, true, "The min tooltip should be hidden.");
 }

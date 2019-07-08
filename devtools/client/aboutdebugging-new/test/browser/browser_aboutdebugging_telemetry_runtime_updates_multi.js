@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-telemetry.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-telemetry.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-telemetry.js",
+  this
+);
 
 const DEVICE_A = "Device A";
 const USB_RUNTIME_1 = {
@@ -22,20 +25,20 @@ const USB_RUNTIME_2 = {
 };
 
 const DEVICE_A_EXTRAS = {
-  "connection_type": "usb",
-  "device_name": DEVICE_A,
+  connection_type: "usb",
+  device_name: DEVICE_A,
 };
 
 const RUNTIME_1_EXTRAS = {
-  "connection_type": "usb",
-  "device_name": USB_RUNTIME_1.deviceName,
-  "runtime_name": USB_RUNTIME_1.shortName,
+  connection_type: "usb",
+  device_name: USB_RUNTIME_1.deviceName,
+  runtime_name: USB_RUNTIME_1.shortName,
 };
 
 const RUNTIME_2_EXTRAS = {
-  "connection_type": "usb",
-  "device_name": USB_RUNTIME_2.deviceName,
-  "runtime_name": USB_RUNTIME_2.shortName,
+  connection_type: "usb",
+  device_name: USB_RUNTIME_2.deviceName,
+  runtime_name: USB_RUNTIME_2.shortName,
 };
 
 /**
@@ -64,29 +67,45 @@ add_task(async function() {
     shortName: USB_RUNTIME_2.shortName,
   });
   mocks.emitUSBUpdate();
-  await waitUntil(() => findSidebarItemByText(USB_RUNTIME_1.shortName, document));
-  await waitUntil(() => findSidebarItemByText(USB_RUNTIME_2.shortName, document));
+  await waitUntil(() =>
+    findSidebarItemByText(USB_RUNTIME_1.shortName, document)
+  );
+  await waitUntil(() =>
+    findSidebarItemByText(USB_RUNTIME_2.shortName, document)
+  );
 
-  checkTelemetryEvents([
-    { method: "device_added", extras: DEVICE_A_EXTRAS },
-    { method: "runtime_added", extras: RUNTIME_1_EXTRAS },
-    { method: "runtime_added", extras: RUNTIME_2_EXTRAS },
-  ], sessionId);
+  checkTelemetryEvents(
+    [
+      { method: "device_added", extras: DEVICE_A_EXTRAS },
+      { method: "runtime_added", extras: RUNTIME_1_EXTRAS },
+      { method: "runtime_added", extras: RUNTIME_2_EXTRAS },
+    ],
+    sessionId
+  );
 
   info("Remove both runtimes at once to simulate a device disconnection");
   mocks.removeRuntime(USB_RUNTIME_1.id);
   mocks.removeRuntime(USB_RUNTIME_2.id);
   mocks.emitUSBUpdate();
-  await waitUntil(() => !findSidebarItemByText(USB_RUNTIME_1.name, document) &&
-                        !findSidebarItemByText(USB_RUNTIME_1.shortName, document));
-  await waitUntil(() => !findSidebarItemByText(USB_RUNTIME_2.name, document) &&
-                        !findSidebarItemByText(USB_RUNTIME_2.shortName, document));
+  await waitUntil(
+    () =>
+      !findSidebarItemByText(USB_RUNTIME_1.name, document) &&
+      !findSidebarItemByText(USB_RUNTIME_1.shortName, document)
+  );
+  await waitUntil(
+    () =>
+      !findSidebarItemByText(USB_RUNTIME_2.name, document) &&
+      !findSidebarItemByText(USB_RUNTIME_2.shortName, document)
+  );
 
-  checkTelemetryEvents([
-    { method: "runtime_removed", extras: RUNTIME_1_EXTRAS },
-    { method: "runtime_removed", extras: RUNTIME_2_EXTRAS },
-    { method: "device_removed", extras: DEVICE_A_EXTRAS },
-  ], sessionId);
+  checkTelemetryEvents(
+    [
+      { method: "runtime_removed", extras: RUNTIME_1_EXTRAS },
+      { method: "runtime_removed", extras: RUNTIME_2_EXTRAS },
+      { method: "device_removed", extras: DEVICE_A_EXTRAS },
+    ],
+    sessionId
+  );
 
   await removeTab(tab);
 });

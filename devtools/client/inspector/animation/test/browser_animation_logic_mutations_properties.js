@@ -39,9 +39,9 @@ add_task(async function() {
 
 async function setCSSAnimationProperties(animationInspector) {
   const properties = {
-    animationDelay: `${ TEST_EFFECT_TIMING.delay }ms`,
+    animationDelay: `${TEST_EFFECT_TIMING.delay}ms`,
     animationDirection: TEST_EFFECT_TIMING.direction,
-    animationDuration: `${ TEST_EFFECT_TIMING.duration }ms`,
+    animationDuration: `${TEST_EFFECT_TIMING.duration}ms`,
     animationFillMode: TEST_EFFECT_TIMING.fill,
     animationIterationCount: TEST_EFFECT_TIMING.iterations,
     animationTimingFunction: TEST_EFFECT_TIMING.easing,
@@ -51,31 +51,62 @@ async function setCSSAnimationProperties(animationInspector) {
 }
 
 async function setScriptAnimationProperties(animationInspector) {
-  await setEffectTimingAndPlayback(animationInspector, ".end-delay",
-                                   TEST_EFFECT_TIMING, TEST_PLAYBACK_RATE);
+  await setEffectTimingAndPlayback(
+    animationInspector,
+    ".end-delay",
+    TEST_EFFECT_TIMING,
+    TEST_PLAYBACK_RATE
+  );
 }
 
 function assertProperties(animation, isScriptAnimation) {
-  is(animation.state.delay, TEST_EFFECT_TIMING.delay,
-     `Delay should be ${ TEST_EFFECT_TIMING.delay }`);
-  is(animation.state.direction, TEST_EFFECT_TIMING.direction,
-     `Direction should be ${ TEST_EFFECT_TIMING.direction }`);
-  is(animation.state.duration, TEST_EFFECT_TIMING.duration,
-     `Duration should be ${ TEST_EFFECT_TIMING.duration }`);
-  is(animation.state.fill, TEST_EFFECT_TIMING.fill,
-     `Fill should be ${ TEST_EFFECT_TIMING.fill }`);
-  is(animation.state.iterationCount, TEST_EFFECT_TIMING.iterations,
-     `Iterations should be ${ TEST_EFFECT_TIMING.iterations }`);
+  is(
+    animation.state.delay,
+    TEST_EFFECT_TIMING.delay,
+    `Delay should be ${TEST_EFFECT_TIMING.delay}`
+  );
+  is(
+    animation.state.direction,
+    TEST_EFFECT_TIMING.direction,
+    `Direction should be ${TEST_EFFECT_TIMING.direction}`
+  );
+  is(
+    animation.state.duration,
+    TEST_EFFECT_TIMING.duration,
+    `Duration should be ${TEST_EFFECT_TIMING.duration}`
+  );
+  is(
+    animation.state.fill,
+    TEST_EFFECT_TIMING.fill,
+    `Fill should be ${TEST_EFFECT_TIMING.fill}`
+  );
+  is(
+    animation.state.iterationCount,
+    TEST_EFFECT_TIMING.iterations,
+    `Iterations should be ${TEST_EFFECT_TIMING.iterations}`
+  );
 
   if (isScriptAnimation) {
-    is(animation.state.easing, TEST_EFFECT_TIMING.easing,
-       `Easing should be ${ TEST_EFFECT_TIMING.easing }`);
-    is(animation.state.iterationStart, TEST_EFFECT_TIMING.iterationStart,
-       `IterationStart should be ${ TEST_EFFECT_TIMING.iterationStart }`);
-    is(animation.state.playbackRate, TEST_PLAYBACK_RATE,
-       `PlaybackRate should be ${ TEST_PLAYBACK_RATE }`);
+    is(
+      animation.state.easing,
+      TEST_EFFECT_TIMING.easing,
+      `Easing should be ${TEST_EFFECT_TIMING.easing}`
+    );
+    is(
+      animation.state.iterationStart,
+      TEST_EFFECT_TIMING.iterationStart,
+      `IterationStart should be ${TEST_EFFECT_TIMING.iterationStart}`
+    );
+    is(
+      animation.state.playbackRate,
+      TEST_PLAYBACK_RATE,
+      `PlaybackRate should be ${TEST_PLAYBACK_RATE}`
+    );
   } else {
-    is(animation.state.animationTimingFunction, TEST_EFFECT_TIMING.easing,
-       `AnimationTimingFunction should be ${ TEST_EFFECT_TIMING.easing }`);
+    is(
+      animation.state.animationTimingFunction,
+      TEST_EFFECT_TIMING.easing,
+      `AnimationTimingFunction should be ${TEST_EFFECT_TIMING.easing}`
+    );
   }
 }

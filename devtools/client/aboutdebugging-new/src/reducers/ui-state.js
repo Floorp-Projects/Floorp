@@ -18,8 +18,11 @@ const {
   USB_RUNTIMES_SCAN_SUCCESS,
 } = require("../constants");
 
-function UiState(locations = [], debugTargetCollapsibilities = {},
-                 showHiddenAddons = false) {
+function UiState(
+  locations = [],
+  debugTargetCollapsibilities = {},
+  showHiddenAddons = false
+) {
   return {
     adbAddonStatus: null,
     debugTargetCollapsibilities,
@@ -47,7 +50,9 @@ function uiReducer(state = UiState(), action) {
 
     case DEBUG_TARGET_COLLAPSIBILITY_UPDATED: {
       const { isCollapsed, key } = action;
-      const debugTargetCollapsibilities = new Map(state.debugTargetCollapsibilities);
+      const debugTargetCollapsibilities = new Map(
+        state.debugTargetCollapsibilities
+      );
       debugTargetCollapsibilities.set(key, isCollapsed);
       return Object.assign({}, state, { debugTargetCollapsibilities });
     }

@@ -1,10 +1,14 @@
 /* eslint max-len: ["error", 80] */
 
-const {AddonTestUtils} =
-  ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", {});
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm",
+  {}
+);
 
-const {ExtensionPermissions} =
-  ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm", {});
+const { ExtensionPermissions } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPermissions.jsm",
+  {}
+);
 
 let gProvider;
 let promptService;
@@ -16,8 +20,9 @@ function getAddonCard(doc, addonId) {
 }
 
 function getDetailRows(card) {
-  return Array.from(card.querySelectorAll(
-    '[name="details"] .addon-detail-row:not([hidden])'));
+  return Array.from(
+    card.querySelectorAll('[name="details"] .addon-detail-row:not([hidden])')
+  );
 }
 
 function checkLabel(row, name) {
@@ -28,8 +33,11 @@ function checkLabel(row, name) {
   } else {
     id = `addon-detail-${name}-label`;
   }
-  is(row.ownerDocument.l10n.getAttributes(row.querySelector("label")).id,
-    id, `The ${name} label is set`);
+  is(
+    row.ownerDocument.l10n.getAttributes(row.querySelector("label")).id,
+    id,
+    `The ${name} label is set`
+  );
 }
 
 function checkLink(link, url, text = url) {
@@ -39,7 +47,9 @@ function checkLink(link, url, text = url) {
     // Check the fluent data.
     Assert.deepEqual(
       link.ownerDocument.l10n.getAttributes(link),
-      text, "The fluent data is set correctly");
+      text,
+      "The fluent data is set correctly"
+    );
   } else {
     // Just check text.
     is(link.textContent, text, "The text is set");
@@ -61,8 +71,10 @@ function checkOptions(doc, options, expectedOptions) {
     is(input.value, expected.value, "The value is right");
     is(input.checked, expected.checked, "The checked property is correct");
     Assert.deepEqual(
-      doc.l10n.getAttributes(text), {id: expected.label, args: null},
-      "The label has the right text");
+      doc.l10n.getAttributes(text),
+      { id: expected.label, args: null },
+      "The label has the right text"
+    );
   }
 }
 
@@ -75,8 +87,10 @@ function assertDeckHeadingHidden(group) {
 
 function assertDeckHeadingButtons(group, visibleButtons) {
   ok(!group.hidden, "The tab group is shown");
-  ok(group.children.length >= visibleButtons.length,
-     `There should be at least ${visibleButtons.length} buttons`);
+  ok(
+    group.children.length >= visibleButtons.length,
+    `There should be at least ${visibleButtons.length} buttons`
+  );
   for (let button of group.children) {
     if (visibleButtons.includes(button.name)) {
       ok(!button.hidden, `The ${button.name} is shown`);
@@ -93,56 +107,65 @@ async function hasPrivateAllowed(id) {
 
 add_task(async function enableHtmlViews() {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", true],
-          ["extensions.allowPrivateBrowsingByDefault", false]],
+    set: [
+      ["extensions.htmlaboutaddons.enabled", true],
+      ["extensions.allowPrivateBrowsingByDefault", false],
+    ],
   });
 
   gProvider = new MockProvider();
-  gProvider.createAddons([{
-    id: "addon1@mochi.test",
-    name: "Test add-on 1",
-    creator: {name: "The creator", url: "http://example.com/me"},
-    version: "3.1",
-    description: "Short description",
-    fullDescription: "Longer description\nWith brs!",
-    type: "extension",
-    contributionURL: "http://localhost/contribute",
-    averageRating: 4.279,
-    userPermissions: {
-      origins: ["<all_urls>", "file://*/*"],
-      permissions: ["alarms", "contextMenus", "tabs", "webNavigation"],
+  gProvider.createAddons([
+    {
+      id: "addon1@mochi.test",
+      name: "Test add-on 1",
+      creator: { name: "The creator", url: "http://example.com/me" },
+      version: "3.1",
+      description: "Short description",
+      fullDescription: "Longer description\nWith brs!",
+      type: "extension",
+      contributionURL: "http://localhost/contribute",
+      averageRating: 4.279,
+      userPermissions: {
+        origins: ["<all_urls>", "file://*/*"],
+        permissions: ["alarms", "contextMenus", "tabs", "webNavigation"],
+      },
+      reviewCount: 5,
+      reviewURL: "http://example.com/reviews",
+      homepageURL: "http://example.com/addon1",
+      updateDate: new Date("2019-03-07T01:00:00"),
+      applyBackgroundUpdates: AddonManager.AUTOUPDATE_ENABLE,
     },
-    reviewCount: 5,
-    reviewURL: "http://example.com/reviews",
-    homepageURL: "http://example.com/addon1",
-    updateDate: new Date("2019-03-07T01:00:00"),
-    applyBackgroundUpdates: AddonManager.AUTOUPDATE_ENABLE,
-  }, {
-    id: "addon2@mochi.test",
-    name: "Test add-on 2",
-    creator: {name: "I made it"},
-    description: "Short description",
-    userPermissions: {
-      origins: [],
-      permissions: ["alarms", "contextMenus"],
+    {
+      id: "addon2@mochi.test",
+      name: "Test add-on 2",
+      creator: { name: "I made it" },
+      description: "Short description",
+      userPermissions: {
+        origins: [],
+        permissions: ["alarms", "contextMenus"],
+      },
+      type: "extension",
     },
-    type: "extension",
-  }, {
-    id: "theme1@mochi.test",
-    name: "Test theme",
-    creator: {name: "Artist", url: "http://example.com/artist"},
-    description: "A nice tree",
-    type: "theme",
-    screenshots: [{
-      url: "http://example.com/preview-wide.png",
-      width: 760,
-      height: 92,
-    }, {
-      url: "http://example.com/preview.png",
-      width: 680,
-      height: 92,
-    }],
-  }]);
+    {
+      id: "theme1@mochi.test",
+      name: "Test theme",
+      creator: { name: "Artist", url: "http://example.com/artist" },
+      description: "A nice tree",
+      type: "theme",
+      screenshots: [
+        {
+          url: "http://example.com/preview-wide.png",
+          width: 760,
+          height: 92,
+        },
+        {
+          url: "http://example.com/preview.png",
+          width: 680,
+          height: 92,
+        },
+      ],
+    },
+  ]);
 
   promptService = mockPromptService();
 });
@@ -153,7 +176,7 @@ add_task(async function testOpenDetailView() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test",
-      applications: {gecko: {id}},
+      applications: { gecko: { id } },
     },
     useAddonManager: "temporary",
   });
@@ -161,7 +184,7 @@ add_task(async function testOpenDetailView() {
   let extension2 = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test",
-      applications: {gecko: {id: id2}},
+      applications: { gecko: { id: id2 } },
     },
     useAddonManager: "temporary",
   });
@@ -182,7 +205,7 @@ add_task(async function testOpenDetailView() {
   let card = getAddonCard(doc, id);
   ok(!card.querySelector("addon-details"), "The card doesn't have details");
   let loaded = waitForViewLoad(win);
-  EventUtils.synthesizeMouseAtCenter(card, {clickCount: 1}, win);
+  EventUtils.synthesizeMouseAtCenter(card, { clickCount: 1 }, win);
   await loaded;
 
   card = getAddonCard(doc, id);
@@ -211,15 +234,30 @@ add_task(async function testOpenDetailView() {
   await extension2.unload();
 
   assertAboutAddonsTelemetryEvents([
-    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
-    ["addonsManager", "view", "aboutAddons", "detail",
-     {type: "extension", addonId: id}],
-    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
-    ["addonsManager", "view", "aboutAddons", "detail",
-     {type: "extension", addonId: id}],
-    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
-    ["addonsManager", "view", "aboutAddons", "detail",
-     {type: "extension", addonId: id2}],
+    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
+    [
+      "addonsManager",
+      "view",
+      "aboutAddons",
+      "detail",
+      { type: "extension", addonId: id },
+    ],
+    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
+    [
+      "addonsManager",
+      "view",
+      "aboutAddons",
+      "detail",
+      { type: "extension", addonId: id },
+    ],
+    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
+    [
+      "addonsManager",
+      "view",
+      "aboutAddons",
+      "detail",
+      { type: "extension", addonId: id2 },
+    ],
   ]);
 });
 
@@ -229,7 +267,7 @@ add_task(async function testDetailOperations() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test",
-      applications: {gecko: {id}},
+      applications: { gecko: { id } },
     },
     useAddonManager: "temporary",
   });
@@ -242,7 +280,7 @@ add_task(async function testDetailOperations() {
   let card = getAddonCard(doc, id);
   ok(!card.querySelector("addon-details"), "The card doesn't have details");
   let loaded = waitForViewLoad(win);
-  EventUtils.synthesizeMouseAtCenter(card, {clickCount: 1}, win);
+  EventUtils.synthesizeMouseAtCenter(card, { clickCount: 1 }, win);
   await loaded;
 
   card = getAddonCard(doc, id);
@@ -274,8 +312,9 @@ add_task(async function testDetailOperations() {
   // The (disabled) text should be shown now.
   Assert.deepEqual(
     doc.l10n.getAttributes(name),
-    {id: "addon-name-disabled", args: {name: "Test"}},
-    "The name is updated to the disabled text");
+    { id: "addon-name-disabled", args: { name: "Test" } },
+    "The name is updated to the disabled text"
+  );
 
   // Enable the add-on.
   let extensionStarted = AddonTestUtils.promiseWebExtensionStartup(id);
@@ -302,11 +341,12 @@ add_task(async function testDetailOperations() {
   // We're on the list view now and there's no card for this extension.
   const addonList = doc.querySelector("addon-list");
   ok(addonList, "There's an addon-list now");
-  ok(!getAddonCard(doc, id),
-     "The extension no longer has a card");
+  ok(!getAddonCard(doc, id), "The extension no longer has a card");
   let addon = await AddonManager.getAddonByID(id);
-  ok(addon && !!(addon.pendingOperations & AddonManager.PENDING_UNINSTALL),
-     "The addon is pending uninstall");
+  ok(
+    addon && !!(addon.pendingOperations & AddonManager.PENDING_UNINSTALL),
+    "The addon is pending uninstall"
+  );
 
   // Ensure that a pending uninstall bar has been created for the
   // pending uninstall extension, and pressing the undo button will
@@ -326,20 +366,50 @@ add_task(async function testDetailOperations() {
   await extension.unload();
 
   assertAboutAddonsTelemetryEvents([
-    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
-    ["addonsManager", "view", "aboutAddons", "detail",
-     {type: "extension", addonId: id}],
-    ["addonsManager", "action", "aboutAddons", null,
-     {type: "extension", addonId: id, action: "disable", view: "detail"}],
-    ["addonsManager", "action", "aboutAddons", null,
-     {type: "extension", addonId: id, action: "enable"}],
-    ["addonsManager", "action", "aboutAddons", "cancelled",
-     {type: "extension", addonId: id, action: "uninstall", view: "detail"}],
-    ["addonsManager", "action", "aboutAddons", "accepted",
-     {type: "extension", addonId: id, action: "uninstall", view: "detail"}],
-    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
-    ["addonsManager", "action", "aboutAddons", null,
-     {type: "extension", addonId: id, action: "undo", view: "list"}],
+    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
+    [
+      "addonsManager",
+      "view",
+      "aboutAddons",
+      "detail",
+      { type: "extension", addonId: id },
+    ],
+    [
+      "addonsManager",
+      "action",
+      "aboutAddons",
+      null,
+      { type: "extension", addonId: id, action: "disable", view: "detail" },
+    ],
+    [
+      "addonsManager",
+      "action",
+      "aboutAddons",
+      null,
+      { type: "extension", addonId: id, action: "enable" },
+    ],
+    [
+      "addonsManager",
+      "action",
+      "aboutAddons",
+      "cancelled",
+      { type: "extension", addonId: id, action: "uninstall", view: "detail" },
+    ],
+    [
+      "addonsManager",
+      "action",
+      "aboutAddons",
+      "accepted",
+      { type: "extension", addonId: id, action: "uninstall", view: "detail" },
+    ],
+    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
+    [
+      "addonsManager",
+      "action",
+      "aboutAddons",
+      null,
+      { type: "extension", addonId: id, action: "undo", view: "list" },
+    ],
   ]);
 });
 
@@ -377,14 +447,19 @@ add_task(async function testFullDetails() {
   assertDeckHeadingButtons(details.tabGroup, ["details", "permissions"]);
 
   let desc = details.querySelector(".addon-detail-description");
-  is(desc.innerHTML, "Longer description<br>With brs!",
-     "The full description replaces newlines with <br>");
+  is(
+    desc.innerHTML,
+    "Longer description<br>With brs!",
+    "The full description replaces newlines with <br>"
+  );
 
   let contrib = details.querySelector(".addon-detail-contribute");
   ok(contrib, "The contribution section is visible");
 
   let waitForTab = BrowserTestUtils.waitForNewTab(
-    gBrowser, "http://localhost/contribute");
+    gBrowser,
+    "http://localhost/contribute"
+  );
   contrib.querySelector("button").click();
   BrowserTestUtils.removeTab(await waitForTab);
 
@@ -394,9 +469,9 @@ add_task(async function testFullDetails() {
   let row = rows.shift();
   checkLabel(row, "updates");
   let expectedOptions = [
-    {value: "1", label: "addon-detail-updates-radio-default", checked: false},
-    {value: "2", label: "addon-detail-updates-radio-on", checked: true},
-    {value: "0", label: "addon-detail-updates-radio-off", checked: false},
+    { value: "1", label: "addon-detail-updates-radio-default", checked: false },
+    { value: "2", label: "addon-detail-updates-radio-on", checked: true },
+    { value: "0", label: "addon-detail-updates-radio-off", checked: false },
   ];
   let options = row.lastElementChild.querySelectorAll("label");
   checkOptions(doc, options, expectedOptions);
@@ -409,8 +484,11 @@ add_task(async function testFullDetails() {
   row = rows.shift();
   ok(row.classList.contains("addon-detail-help-row"), "There's a help row");
   ok(!row.hidden, "The help row is shown");
-  is(doc.l10n.getAttributes(row).id, "addon-detail-private-browsing-help",
-     "The help row is for private browsing");
+  is(
+    doc.l10n.getAttributes(row).id,
+    "addon-detail-private-browsing-help",
+    "The help row is for private browsing"
+  );
 
   // Author.
   row = rows.shift();
@@ -449,30 +527,36 @@ add_task(async function testFullDetails() {
   link = rating.querySelector("a");
   checkLink(link, "http://example.com/reviews", {
     id: "addon-detail-reviews-link",
-    args: {numberOfReviews: 5},
+    args: { numberOfReviews: 5 },
   });
 
   // While we are here, let's test edge cases of star ratings.
   async function testRating(rating, ratingRounded, expectation) {
     starsElem.rating = rating;
     await starsElem.ownerDocument.l10n.translateElements([starsElem]);
-    is(starsElem.ratingBuckets.join(","), expectation,
-       `Rendering of rating ${rating}`);
+    is(
+      starsElem.ratingBuckets.join(","),
+      expectation,
+      `Rendering of rating ${rating}`
+    );
 
-    is(starsElem.title, `Rated ${ratingRounded} out of 5`,
-       "Rendered title must contain at most one fractional digit");
+    is(
+      starsElem.title,
+      `Rated ${ratingRounded} out of 5`,
+      "Rendered title must contain at most one fractional digit"
+    );
   }
-  await testRating(0.000, "0", "empty,empty,empty,empty,empty");
+  await testRating(0.0, "0", "empty,empty,empty,empty,empty");
   await testRating(0.123, "0.1", "empty,empty,empty,empty,empty");
   await testRating(0.249, "0.2", "empty,empty,empty,empty,empty");
-  await testRating(0.250, "0.3", "half,empty,empty,empty,empty");
+  await testRating(0.25, "0.3", "half,empty,empty,empty,empty");
   await testRating(0.749, "0.7", "half,empty,empty,empty,empty");
-  await testRating(0.750, "0.8", "full,empty,empty,empty,empty");
-  await testRating(1.000, "1", "full,empty,empty,empty,empty");
+  await testRating(0.75, "0.8", "full,empty,empty,empty,empty");
+  await testRating(1.0, "1", "full,empty,empty,empty,empty");
   await testRating(4.249, "4.2", "full,full,full,full,empty");
-  await testRating(4.250, "4.3", "full,full,full,full,half");
+  await testRating(4.25, "4.3", "full,full,full,full,half");
   await testRating(4.749, "4.7", "full,full,full,full,half");
-  await testRating(5.000, "5", "full,full,full,full,full");
+  await testRating(5.0, "5", "full,full,full,full,full");
 
   // That should've been all the rows.
   is(rows.length, 0, "There are no more rows left");
@@ -480,11 +564,21 @@ add_task(async function testFullDetails() {
   await closeView(win);
 
   assertAboutAddonsTelemetryEvents([
-    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
-    ["addonsManager", "view", "aboutAddons", "detail",
-     {type: "extension", addonId: id}],
-    ["addonsManager", "action", "aboutAddons", null,
-     {type: "extension", addonId: id, action: "contribute", view: "detail"}],
+    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
+    [
+      "addonsManager",
+      "view",
+      "aboutAddons",
+      "detail",
+      { type: "extension", addonId: id },
+    ],
+    [
+      "addonsManager",
+      "action",
+      "aboutAddons",
+      null,
+      { type: "extension", addonId: id, action: "contribute", view: "detail" },
+    ],
   ]);
 });
 
@@ -524,8 +618,11 @@ add_task(async function testMinimalExtension() {
   row = rows.shift();
   ok(row.classList.contains("addon-detail-help-row"), "There's a help row");
   ok(!row.hidden, "The help row is shown");
-  is(doc.l10n.getAttributes(row).id, "addon-detail-private-browsing-help",
-     "The help row is for private browsing");
+  is(
+    doc.l10n.getAttributes(row).id,
+    "addon-detail-private-browsing-help",
+    "The help row is for private browsing"
+  );
 
   // Author.
   row = rows.shift();
@@ -645,7 +742,7 @@ add_task(async function testPrivateBrowsingExtension() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "My PB extension",
-      applications: {gecko: {id}},
+      applications: { gecko: { id } },
     },
     useAddonManager: "permanent",
   });
@@ -659,7 +756,7 @@ add_task(async function testPrivateBrowsingExtension() {
   let card = getAddonCard(doc, id);
   let badge = card.querySelector(".addon-badge-private-browsing-allowed");
   ok(badge.hidden, "The PB badge is hidden initially");
-  ok(!await hasPrivateAllowed(id), "PB is not allowed");
+  ok(!(await hasPrivateAllowed(id)), "PB is not allowed");
 
   // Load the detail view.
   let loaded = waitForViewLoad(win);
@@ -670,7 +767,7 @@ add_task(async function testPrivateBrowsingExtension() {
   card = getAddonCard(doc, id);
   badge = card.querySelector(".addon-badge-private-browsing-allowed");
   ok(badge.hidden, "The PB badge is hidden on the detail view");
-  ok(!await hasPrivateAllowed(id), "PB is not allowed");
+  ok(!(await hasPrivateAllowed(id)), "PB is not allowed");
 
   let pbRow = card.querySelector(".addon-detail-row-private-browsing");
 
@@ -697,7 +794,7 @@ add_task(async function testPrivateBrowsingExtension() {
   await updated;
 
   ok(badge.hidden, "The PB badge is hidden");
-  ok(!await hasPrivateAllowed(id), "PB is disallowed");
+  ok(!(await hasPrivateAllowed(id)), "PB is disallowed");
 
   // Allow PB.
   updated = BrowserTestUtils.waitForEvent(card, "update");
@@ -711,28 +808,68 @@ add_task(async function testPrivateBrowsingExtension() {
   await extension.unload();
 
   assertAboutAddonsTelemetryEvents([
-    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
-    ["addonsManager", "view", "aboutAddons", "detail",
-     {type: "extension", addonId: id}],
-    ["addonsManager", "action", "aboutAddons", "on",
-     {type: "extension", addonId: id, action: "privateBrowsingAllowed",
-      view: "detail"}],
-    ["addonsManager", "action", "aboutAddons", null,
-     {type: "extension", addonId: id, action: "disable"}],
-    ["addonsManager", "action", "aboutAddons", "off",
-     {type: "extension", addonId: id, action: "privateBrowsingAllowed",
-      view: "detail"}],
-    ["addonsManager", "action", "aboutAddons", "on",
-     {type: "extension", addonId: id, action: "privateBrowsingAllowed",
-      view: "detail"}],
+    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
+    [
+      "addonsManager",
+      "view",
+      "aboutAddons",
+      "detail",
+      { type: "extension", addonId: id },
+    ],
+    [
+      "addonsManager",
+      "action",
+      "aboutAddons",
+      "on",
+      {
+        type: "extension",
+        addonId: id,
+        action: "privateBrowsingAllowed",
+        view: "detail",
+      },
+    ],
+    [
+      "addonsManager",
+      "action",
+      "aboutAddons",
+      null,
+      { type: "extension", addonId: id, action: "disable" },
+    ],
+    [
+      "addonsManager",
+      "action",
+      "aboutAddons",
+      "off",
+      {
+        type: "extension",
+        addonId: id,
+        action: "privateBrowsingAllowed",
+        view: "detail",
+      },
+    ],
+    [
+      "addonsManager",
+      "action",
+      "aboutAddons",
+      "on",
+      {
+        type: "extension",
+        addonId: id,
+        action: "privateBrowsingAllowed",
+        view: "detail",
+      },
+    ],
   ]);
 });
 
 add_task(async function testInvalidExtension() {
   let win = await open_manager("addons://detail/foo");
   let categoryUtils = new CategoryUtilities(win);
-  is(categoryUtils.selectedCategory, "discover",
-     "Should fall back to the discovery pane");
+  is(
+    categoryUtils.selectedCategory,
+    "discover",
+    "Should fall back to the discovery pane"
+  );
 
   ok(!gBrowser.canGoBack, "The view has been replaced");
 
@@ -746,8 +883,11 @@ add_task(async function testInvalidExtensionNoDiscover() {
 
   let win = await open_manager("addons://detail/foo");
   let categoryUtils = new CategoryUtilities(win);
-  is(categoryUtils.selectedCategory, "extension",
-     "Should fall back to the extension list if discover is disabled");
+  is(
+    categoryUtils.selectedCategory,
+    "extension",
+    "Should fall back to the extension list if discover is disabled"
+  );
 
   ok(!gBrowser.canGoBack, "The view has been replaced");
 
@@ -760,7 +900,7 @@ add_task(async function testExternalUninstall() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Remove me",
-      applications: {gecko: {id}},
+      applications: { gecko: { id } },
     },
     useAddonManager: "temporary",
   });
@@ -795,7 +935,7 @@ add_task(async function testExternalThemeUninstall() {
   let id = "remove-theme@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {gecko: {id}},
+      applications: { gecko: { id } },
       name: "Remove theme",
       theme: {},
     },
@@ -832,13 +972,13 @@ add_task(async function testPrivateBrowsingAllowedListView() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Allowed PB extension",
-      applications: {gecko: {id: "allowed@mochi.test"}},
+      applications: { gecko: { id: "allowed@mochi.test" } },
     },
     useAddonManager: "permanent",
   });
 
   await extension.startup();
-  let perms = {permissions: ["internal:privateBrowsingAllowed"], origins: []};
+  let perms = { permissions: ["internal:privateBrowsingAllowed"], origins: [] };
   await ExtensionPermissions.add("allowed@mochi.test", perms);
   let addon = await AddonManager.getAddonByID("allowed@mochi.test");
   await addon.reload();
@@ -867,7 +1007,7 @@ add_task(async function testPermissions() {
     await loaded;
 
     card = getAddonCard(doc, id);
-    let {deck, tabGroup} = card.details;
+    let { deck, tabGroup } = card.details;
 
     // Check all the deck buttons are hidden.
     assertDeckHeadingButtons(tabGroup, ["details", "permissions"]);
@@ -885,13 +1025,18 @@ add_task(async function testPermissions() {
       for (let name in permissions) {
         // Check the permission-info class to make sure it's for a permission.
         let row = rows.shift();
-        ok(row.classList.contains("permission-info"),
-           `There's a row for ${name}`);
+        ok(
+          row.classList.contains("permission-info"),
+          `There's a row for ${name}`
+        );
       }
     } else {
       let row = rows.shift();
-      is(doc.l10n.getAttributes(row).id, "addon-permissions-empty",
-        "There's a message when no permissions are shown");
+      is(
+        doc.l10n.getAttributes(row).id,
+        "addon-permissions-empty",
+        "There's a message when no permissions are shown"
+      );
     }
 
     info("Check learn more link");
@@ -927,7 +1072,9 @@ add_task(async function testGoBackButton() {
 
   let loadDetailView = () => {
     let loaded = waitForViewLoad(win);
-    getAddonCard(doc, id).querySelector("[action=expand]").click();
+    getAddonCard(doc, id)
+      .querySelector("[action=expand]")
+      .click();
     return loaded;
   };
 

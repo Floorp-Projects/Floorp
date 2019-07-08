@@ -7,36 +7,43 @@
 const CC = Components.Constructor;
 
 const ServerSocket = CC(
-    "@mozilla.org/network/server-socket;1",
-    "nsIServerSocket",
-    "initSpecialConnection");
+  "@mozilla.org/network/server-socket;1",
+  "nsIServerSocket",
+  "initSpecialConnection"
+);
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const {assert} = ChromeUtils.import("chrome://marionette/content/assert.js");
-const {GeckoDriver} = ChromeUtils.import("chrome://marionette/content/driver.js");
-const {WebElement} = ChromeUtils.import("chrome://marionette/content/element.js");
-const {
-  error,
-  UnknownCommandError,
-} = ChromeUtils.import("chrome://marionette/content/error.js");
-const {
-  Command,
-  Message,
-  Response,
-} = ChromeUtils.import("chrome://marionette/content/message.js");
-const {Log} = ChromeUtils.import("chrome://marionette/content/log.js");
-const {MarionettePrefs} = ChromeUtils.import("chrome://marionette/content/prefs.js", null);
-const {DebuggerTransport} = ChromeUtils.import("chrome://marionette/content/transport.js", null);
+const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
+const { GeckoDriver } = ChromeUtils.import(
+  "chrome://marionette/content/driver.js"
+);
+const { WebElement } = ChromeUtils.import(
+  "chrome://marionette/content/element.js"
+);
+const { error, UnknownCommandError } = ChromeUtils.import(
+  "chrome://marionette/content/error.js"
+);
+const { Command, Message, Response } = ChromeUtils.import(
+  "chrome://marionette/content/message.js"
+);
+const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
+const { MarionettePrefs } = ChromeUtils.import(
+  "chrome://marionette/content/prefs.js",
+  null
+);
+const { DebuggerTransport } = ChromeUtils.import(
+  "chrome://marionette/content/transport.js",
+  null
+);
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
-const {KeepWhenOffline, LoopbackOnly} = Ci.nsIServerSocket;
+const { KeepWhenOffline, LoopbackOnly } = Ci.nsIServerSocket;
 
-this.EXPORTED_SYMBOLS = [
-  "TCPConnection",
-  "TCPListener",
-];
+this.EXPORTED_SYMBOLS = ["TCPConnection", "TCPListener"];
 
 /** @namespace */
 this.server = {};
@@ -135,12 +142,17 @@ class TCPListener {
     let transport = new DebuggerTransport(input, output);
 
     let conn = new TCPConnection(
-        this.nextConnID++, transport, this.driverFactory.bind(this));
+      this.nextConnID++,
+      transport,
+      this.driverFactory.bind(this)
+    );
     conn.onclose = this.onConnectionClosed.bind(this);
     this.conns.add(conn);
 
-    logger.debug(`Accepted connection ${conn.id} ` +
-        `from ${clientSocket.host}:${clientSocket.port}`);
+    logger.debug(
+      `Accepted connection ${conn.id} ` +
+        `from ${clientSocket.host}:${clientSocket.port}`
+    );
     conn.sayHello();
     transport.ready();
   }
@@ -212,7 +224,8 @@ class TCPConnection {
     // unable to determine how to respond
     if (!Array.isArray(data)) {
       let e = new TypeError(
-          "Unable to unmarshal packet data: " + JSON.stringify(data));
+        "Unable to unmarshal packet data: " + JSON.stringify(data)
+      );
       error.report(e);
       return;
     }
@@ -260,7 +273,8 @@ class TCPConnection {
     let sendError = resp.sendError.bind(resp);
 
     await this.despatch(cmd, resp)
-        .then(sendResponse, sendError).catch(error.report);
+      .then(sendResponse, sendError)
+      .catch(error.report);
   }
 
   /**
@@ -282,15 +296,17 @@ class TCPConnection {
     }
 
     if (cmd.name != "WebDriver:NewSession") {
-      assert.session(this.driver,
-          "Tried to run command without establishing a connection");
+      assert.session(
+        this.driver,
+        "Tried to run command without establishing a connection"
+      );
     }
 
     let rv = await fn.bind(this.driver)(cmd);
 
     if (rv != null) {
       if (rv instanceof WebElement || typeof rv != "object") {
-        resp.body = {value: rv};
+        resp.body = { value: rv };
       } else {
         resp.body = rv;
       }
@@ -392,7 +408,7 @@ class TCPConnection {
   }
 
   log_(msg) {
-    let dir = (msg.origin == Message.Origin.Client ? "->" : "<-");
+    let dir = msg.origin == Message.Origin.Client ? "->" : "<-";
     logger.debug(`${this.id} ${dir} ${msg}`);
   }
 

@@ -39,7 +39,10 @@ add_task(async function() {
   testVal("https://[fe80::222:19ff:fe11:8c76]/file.ext");
   testVal("http://[fe80::222:19ff:fe11:8c76]/", "[fe80::222:19ff:fe11:8c76]");
   testVal("https://user:pass@[fe80::222:19ff:fe11:8c76]:666/file.ext");
-  testVal("http://user:pass@[fe80::222:19ff:fe11:8c76]:666/file.ext", "user:pass@[fe80::222:19ff:fe11:8c76]:666/file.ext");
+  testVal(
+    "http://user:pass@[fe80::222:19ff:fe11:8c76]:666/file.ext",
+    "user:pass@[fe80::222:19ff:fe11:8c76]:666/file.ext"
+  );
 
   testVal("mailto:admin@mozilla.org");
   testVal("gopher://mozilla.org/");
@@ -59,7 +62,10 @@ add_task(async function() {
 
   testVal("http://someotherhostwithnodots");
   testVal("http://localhost/ foo bar baz");
-  testVal("http://localhost.localdomain/ foo bar baz", "localhost.localdomain/ foo bar baz");
+  testVal(
+    "http://localhost.localdomain/ foo bar baz",
+    "localhost.localdomain/ foo bar baz"
+  );
 
   Services.prefs.setBoolPref(PREF_TRIMURLS, false);
 
@@ -67,8 +73,11 @@ add_task(async function() {
 
   Services.prefs.setBoolPref(PREF_TRIMURLS, true);
 
-  let promiseLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
-                                                     false, "http://example.com/");
+  let promiseLoaded = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    "http://example.com/"
+  );
   BrowserTestUtils.loadURI(gBrowser, "http://example.com/");
   await promiseLoaded;
 
@@ -87,12 +96,17 @@ function testVal(originalValue, targetValue) {
 
 function testCopy(originalValue, targetValue) {
   return new Promise((resolve, reject) => {
-    waitForClipboard(targetValue, function() {
-      is(gURLBar.textValue, originalValue, "url bar copy value set");
+    waitForClipboard(
+      targetValue,
+      function() {
+        is(gURLBar.textValue, originalValue, "url bar copy value set");
 
-      gURLBar.focus();
-      gURLBar.select();
-      goDoCommand("cmd_copy");
-    }, resolve, reject);
+        gURLBar.focus();
+        gURLBar.select();
+        goDoCommand("cmd_copy");
+      },
+      resolve,
+      reject
+    );
   });
 }

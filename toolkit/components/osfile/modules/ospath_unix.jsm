@@ -113,23 +113,24 @@ var normalize = function(path) {
   }
   path.split("/").forEach(function(v) {
     switch (v) {
-    case "": case ".":// fallthrough
-      break;
-    case "..":
-      if (stack.length == 0) {
-        if (absolute) {
-          throw new Error("Path is ill-formed: attempting to go past root");
-        } else {
-          stack.push("..");
-        }
-      } else if (stack[stack.length - 1] == "..") {
+      case "":
+      case ".": // fallthrough
+        break;
+      case "..":
+        if (stack.length == 0) {
+          if (absolute) {
+            throw new Error("Path is ill-formed: attempting to go past root");
+          } else {
+            stack.push("..");
+          }
+        } else if (stack[stack.length - 1] == "..") {
           stack.push("..");
         } else {
           stack.pop();
         }
-      break;
-    default:
-      stack.push(v);
+        break;
+      default:
+        stack.push(v);
     }
   });
   let string = stack.join("/");
@@ -160,12 +161,14 @@ exports.split = split;
  * Returns the file:// URI file path of the given local file path.
  */
 // The case of %3b is designed to match Services.io, but fundamentally doesn't matter.
-var toFileURIExtraEncodings = {";": "%3b", "?": "%3F", "#": "%23"};
+var toFileURIExtraEncodings = { ";": "%3b", "?": "%3F", "#": "%23" };
 var toFileURI = function toFileURI(path) {
   // Per https://url.spec.whatwg.org we should not encode [] in the path
-  let dontNeedEscaping = {"%5B": "[", "%5D": "]"};
-  let uri = encodeURI(this.normalize(path)).replace(/%(5B|5D)/gi,
-    match => dontNeedEscaping[match]);
+  let dontNeedEscaping = { "%5B": "[", "%5D": "]" };
+  let uri = encodeURI(this.normalize(path)).replace(
+    /%(5B|5D)/gi,
+    match => dontNeedEscaping[match]
+  );
 
   // add a prefix, and encodeURI doesn't escape a few characters that we do
   // want to escape, so fix that up
@@ -188,7 +191,6 @@ var fromFileURI = function fromFileURI(uri) {
   return path;
 };
 exports.fromFileURI = fromFileURI;
-
 
 // ////////// Boilerplate
 if (typeof Components != "undefined") {

@@ -6,7 +6,9 @@
 
 var FormAutofillNameUtils;
 add_task(async function setup() {
-  ({FormAutofillNameUtils} = ChromeUtils.import("resource://formautofill/FormAutofillNameUtils.jsm"));
+  ({ FormAutofillNameUtils } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillNameUtils.jsm"
+  ));
 });
 
 // Test cases is initially copied from

@@ -11,8 +11,9 @@ function goUpdateGlobalEditMenuItems(force) {
   // cut, copy, and paste buttons been added to the toolbars) for performance.
   // This only works in applications/on platforms that set the gEditUIVisible
   // flag, so we check to see if that flag is defined before using it.
-  if (!force && (typeof gEditUIVisible != "undefined" && !gEditUIVisible))
+  if (!force && (typeof gEditUIVisible != "undefined" && !gEditUIVisible)) {
     return;
+  }
 
   goUpdateCommand("cmd_undo");
   goUpdateCommand("cmd_redo");
@@ -36,9 +37,13 @@ function goUpdatePasteMenuItems() {
 }
 
 // Inject the commandset here instead of relying on preprocessor to share this across documents.
-window.addEventListener("DOMContentLoaded", () => {
-  let container = document.querySelector("commandset") || document.documentElement;
-  container.appendChild(MozXULElement.parseXULToFragment(`
+window.addEventListener(
+  "DOMContentLoaded",
+  () => {
+    let container =
+      document.querySelector("commandset") || document.documentElement;
+    container.appendChild(
+      MozXULElement.parseXULToFragment(`
     <commandset id="editMenuCommands">
       <commandset id="editMenuCommandSetAll" commandupdater="true" events="focus,select"
                   oncommandupdate="goUpdateGlobalEditMenuItems()"/>
@@ -55,18 +60,23 @@ window.addEventListener("DOMContentLoaded", () => {
       <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')"/>
       <command id="cmd_switchTextDirection" oncommand="goDoCommand('cmd_switchTextDirection');"/>
     </commandset>
-  `));
-}, { once: true });
+  `)
+    );
+  },
+  { once: true }
+);
 
 // Support context menus on html textareas in the parent process:
-window.addEventListener("contextmenu", (e) => {
+window.addEventListener("contextmenu", e => {
   const HTML_NS = "http://www.w3.org/1999/xhtml";
   // Note that there's not a risk of e.target being XBL anonymous content for <textbox> (which manages
   // its own context menu), because e.target will be the XBL binding parent in that case.
-  let needsContextMenu = e.target.ownerDocument == document && !e.defaultPrevented && (
-    (["textarea", "input"].includes(e.target.localName) && e.target.namespaceURI == HTML_NS)
-    || e.target.closest("textbox[is='search-textbox']")
-  );
+  let needsContextMenu =
+    e.target.ownerDocument == document &&
+    !e.defaultPrevented &&
+    ((["textarea", "input"].includes(e.target.localName) &&
+      e.target.namespaceURI == HTML_NS) ||
+      e.target.closest("textbox[is='search-textbox']"));
 
   if (!needsContextMenu) {
     return;
@@ -75,7 +85,8 @@ window.addEventListener("contextmenu", (e) => {
   let popup = document.getElementById("textbox-contextmenu");
   if (!popup) {
     MozXULElement.insertFTLIfNeeded("toolkit/main-window/editmenu.ftl");
-    document.documentElement.appendChild(MozXULElement.parseXULToFragment(`
+    document.documentElement.appendChild(
+      MozXULElement.parseXULToFragment(`
       <menupopup id="textbox-contextmenu" class="textbox-contextmenu">
         <menuitem data-l10n-id="editmenu-undo" command="cmd_undo"></menuitem>
         <menuseparator></menuseparator>
@@ -86,7 +97,8 @@ window.addEventListener("contextmenu", (e) => {
         <menuseparator></menuseparator>
         <menuitem data-l10n-id="editmenu-select-all" command="cmd_selectAll"></menuitem>
       </menupopup>
-    `));
+    `)
+    );
     popup = document.documentElement.lastElementChild;
   }
 

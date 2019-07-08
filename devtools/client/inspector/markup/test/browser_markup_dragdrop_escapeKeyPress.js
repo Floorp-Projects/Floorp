@@ -9,8 +9,8 @@
 const TEST_URL = URL_ROOT + "doc_markup_dragdrop.html";
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
-  const {markup} = inspector;
+  const { inspector } = await openInspectorForURL(TEST_URL);
+  const { markup } = inspector;
 
   info("Get a test container");
   await selectNode("#test", inspector);
@@ -19,16 +19,21 @@ add_task(async function() {
   info("Simulate a drag/drop on this container");
   await simulateNodeDrag(inspector, "#test");
 
-  ok(container.isDragging && markup.isDragging,
-     "The container is being dragged");
-  ok(markup.doc.body.classList.contains("dragging"),
-     "The dragging css class was added");
+  ok(
+    container.isDragging && markup.isDragging,
+    "The container is being dragged"
+  );
+  ok(
+    markup.doc.body.classList.contains("dragging"),
+    "The dragging css class was added"
+  );
 
   info("Simulate ESCAPE keypress");
   EventUtils.sendKey("escape", inspector.panelWin);
 
-  ok(!container.isDragging && !markup.isDragging,
-     "The dragging has stopped");
-  ok(!markup.doc.body.classList.contains("dragging"),
-     "The dragging css class was removed");
+  ok(!container.isDragging && !markup.isDragging, "The dragging has stopped");
+  ok(
+    !markup.doc.body.classList.contains("dragging"),
+    "The dragging css class was removed"
+  );
 });

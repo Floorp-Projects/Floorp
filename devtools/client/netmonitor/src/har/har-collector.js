@@ -8,8 +8,7 @@ const Services = require("Services");
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {
-  log: function(...args) {
-  },
+  log: function(...args) {},
 };
 
 /**
@@ -38,14 +37,12 @@ HarCollector.prototype = {
 
   start: function() {
     this.debuggerClient.on("serverNetworkEvent", this.onNetworkEvent);
-    this.debuggerClient.on("networkEventUpdate",
-      this.onNetworkEventUpdate);
+    this.debuggerClient.on("networkEventUpdate", this.onNetworkEventUpdate);
   },
 
   stop: function() {
     this.debuggerClient.off("serverNetworkEvent", this.onNetworkEvent);
-    this.debuggerClient.off("networkEventUpdate",
-      this.onNetworkEventUpdate);
+    this.debuggerClient.off("networkEventUpdate", this.onNetworkEventUpdate);
   },
 
   clear: function() {
@@ -62,7 +59,7 @@ HarCollector.prototype = {
     // There should be yet another timeout e.g.:
     // 'devtools.netmonitor.har.pageLoadTimeout'
     // that should force export even if page isn't fully loaded.
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this.waitForResponses().then(() => {
         trace.log("HarCollector.waitForHarLoad; DONE HAR loaded!");
         resolve(this);
@@ -85,14 +82,19 @@ HarCollector.prototype = {
       // If some new requests appears in the meantime the promise will
       // be rejected and we need to wait for responses all over again.
 
-      this.pageLoadDeferred = this.waitForTimeout().then(() => {
-        // Page loaded!
-      }, () => {
-        trace.log("HarCollector.waitForResponses; NEW requests " +
-          "appeared during page timeout!");
-        // New requests executed, let's wait again.
-        return this.waitForResponses();
-      });
+      this.pageLoadDeferred = this.waitForTimeout().then(
+        () => {
+          // Page loaded!
+        },
+        () => {
+          trace.log(
+            "HarCollector.waitForResponses; NEW requests " +
+              "appeared during page timeout!"
+          );
+          // New requests executed, let's wait again.
+          return this.waitForResponses();
+        }
+      );
       return this.pageLoadDeferred;
     });
   },
@@ -109,7 +111,8 @@ HarCollector.prototype = {
     // This is useful in cases where the export is done manually through
     // API exposed to the content.
     const timeout = Services.prefs.getIntPref(
-      "devtools.netmonitor.har.pageLoadedTimeout");
+      "devtools.netmonitor.har.pageLoadedTimeout"
+    );
 
     trace.log("HarCollector.waitForTimeout; " + timeout);
 
@@ -174,8 +177,9 @@ HarCollector.prototype = {
 
     let file = this.getFile(actor);
     if (file) {
-      console.error("HarCollector.onNetworkEvent; ERROR " +
-                    "existing file conflict!");
+      console.error(
+        "HarCollector.onNetworkEvent; ERROR " + "existing file conflict!"
+      );
       return;
     }
 
@@ -205,33 +209,51 @@ HarCollector.prototype = {
       return;
     }
 
-    trace.log("HarCollector.onNetworkEventUpdate; " +
-      packet.updateType, packet);
+    trace.log(
+      "HarCollector.onNetworkEventUpdate; " + packet.updateType,
+      packet
+    );
 
     const includeResponseBodies = Services.prefs.getBoolPref(
-      "devtools.netmonitor.har.includeResponseBodies");
+      "devtools.netmonitor.har.includeResponseBodies"
+    );
 
     let request;
     switch (packet.updateType) {
       case "requestHeaders":
-        request = this.getData(actor, "getRequestHeaders",
-          this.onRequestHeaders);
+        request = this.getData(
+          actor,
+          "getRequestHeaders",
+          this.onRequestHeaders
+        );
         break;
       case "requestCookies":
-        request = this.getData(actor, "getRequestCookies",
-          this.onRequestCookies);
+        request = this.getData(
+          actor,
+          "getRequestCookies",
+          this.onRequestCookies
+        );
         break;
       case "requestPostData":
-        request = this.getData(actor, "getRequestPostData",
-          this.onRequestPostData);
+        request = this.getData(
+          actor,
+          "getRequestPostData",
+          this.onRequestPostData
+        );
         break;
       case "responseHeaders":
-        request = this.getData(actor, "getResponseHeaders",
-          this.onResponseHeaders);
+        request = this.getData(
+          actor,
+          "getResponseHeaders",
+          this.onResponseHeaders
+        );
         break;
       case "responseCookies":
-        request = this.getData(actor, "getResponseCookies",
-          this.onResponseCookies);
+        request = this.getData(
+          actor,
+          "getResponseCookies",
+          this.onResponseCookies
+        );
         break;
       case "responseStart":
         file.httpVersion = packet.response.httpVersion;
@@ -244,13 +266,15 @@ HarCollector.prototype = {
         file.transferredSize = packet.transferredSize;
 
         if (includeResponseBodies) {
-          request = this.getData(actor, "getResponseContent",
-            this.onResponseContent);
+          request = this.getData(
+            actor,
+            "getResponseContent",
+            this.onResponseContent
+          );
         }
         break;
       case "eventTimings":
-        request = this.getData(actor, "getEventTimings",
-          this.onEventTimings);
+        request = this.getData(actor, "getEventTimings", this.onEventTimings);
         break;
     }
 
@@ -262,7 +286,7 @@ HarCollector.prototype = {
   },
 
   getData: function(actor, method, callback) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       if (!this.webConsoleClient[method]) {
         console.error("HarCollector.getData: ERROR Unknown method!");
         resolve();
@@ -270,12 +294,16 @@ HarCollector.prototype = {
 
       const file = this.getFile(actor);
 
-      trace.log("HarCollector.getData; REQUEST " + method +
-        ", " + file.url, file);
+      trace.log(
+        "HarCollector.getData; REQUEST " + method + ", " + file.url,
+        file
+      );
 
       this.webConsoleClient[method](actor, response => {
-        trace.log("HarCollector.getData; RESPONSE " + method +
-          ", " + file.url, response);
+        trace.log(
+          "HarCollector.getData; RESPONSE " + method + ", " + file.url,
+          response
+        );
         callback(response);
         resolve(response);
       });

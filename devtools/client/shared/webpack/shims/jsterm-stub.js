@@ -21,7 +21,7 @@ JSTerm.prototype = {
     return this.hud.webConsoleClient;
   },
 
-  openVariablesView() { },
+  openVariablesView() {},
 
   init() {
     this.doc = this.hud.window.document;
@@ -32,7 +32,7 @@ JSTerm.prototype = {
     this.root.appendChild(this.inputNode);
     this.doc.querySelector("#app-wrapper").appendChild(this.root);
 
-    this.inputNode.onkeypress = (e) => {
+    this.inputNode.onkeypress = e => {
       if (e.key === "Enter") {
         this.execute();
       }
@@ -80,10 +80,11 @@ JSTerm.prototype = {
         selectedNodeActor = inspectorSelection.nodeFront.actorID;
       }
 
-      const onResult = (response) => {
+      const onResult = response => {
         if (response.error) {
-          console.error("Evaluation error " + response.error + ": " +
-                        response.message);
+          console.error(
+            "Evaluation error " + response.error + ": " + response.message
+          );
           return;
         }
         this.ui.wrapper.dispatchMessageAdd(response, true).then(resolve);

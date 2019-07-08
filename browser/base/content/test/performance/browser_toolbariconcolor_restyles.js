@@ -5,8 +5,8 @@
  */
 add_task(async function test_toolbar_element_restyles_on_activation() {
   let restyles = {
-    win1:  {},
-    win2:  {},
+    win1: {},
+    win2: {},
   };
 
   // create a window and snapshot the elementsStyled
@@ -49,10 +49,16 @@ add_task(async function test_toolbar_element_restyles_on_activation() {
   restyles.win2.activate = utils2.restyleGeneration;
   restyles.win1.deactivate = utils1.restyleGeneration;
 
-  is(restyles.win1.activate - restyles.win1.deactivate, 0,
-      "No elements restyled when re-activating/deactivating a window");
-  is(restyles.win2.activate - restyles.win2.deactivate, 0,
-      "No elements restyled when re-activating/deactivating a window");
+  is(
+    restyles.win1.activate - restyles.win1.deactivate,
+    0,
+    "No elements restyled when re-activating/deactivating a window"
+  );
+  is(
+    restyles.win2.activate - restyles.win2.deactivate,
+    0,
+    "No elements restyled when re-activating/deactivating a window"
+  );
 
   await BrowserTestUtils.closeWindow(win1);
   await BrowserTestUtils.closeWindow(win2);

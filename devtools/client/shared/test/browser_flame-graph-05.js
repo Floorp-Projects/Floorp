@@ -16,9 +16,7 @@ const TEST_DATA = [
   },
   {
     color: "#00f",
-    blocks: [
-      { x: 0, y: 30, width: 30, height: 20, text: "BAZ" },
-    ],
+    blocks: [{ x: 0, y: 30, width: 30, height: 20, text: "BAZ" }],
   },
 ];
 const TEST_BOUNDS = { startTime: 0, endTime: 150 };
@@ -28,7 +26,7 @@ const KEY_CODE_UP = 38;
 const KEY_CODE_LEFT = 37;
 const KEY_CODE_RIGHT = 39;
 
-var {FlameGraph} = require("devtools/client/shared/widgets/FlameGraph");
+var { FlameGraph } = require("devtools/client/shared/widgets/FlameGraph");
 
 add_task(async function() {
   await addTab("about:blank");
@@ -37,9 +35,11 @@ add_task(async function() {
 });
 
 async function performTest() {
-  const [host,, doc] = await createHost();
-  doc.body.setAttribute("style",
-                        "position: fixed; width: 100%; height: 100%; margin: 0;");
+  const [host, , doc] = await createHost();
+  doc.body.setAttribute(
+    "style",
+    "position: fixed; width: 100%; height: 100%; margin: 0;"
+  );
 
   const graph = new FlameGraph(doc.body, TEST_DPI_DENSITIY);
   await graph.ready();
@@ -53,17 +53,28 @@ async function performTest() {
 async function testGraph(host, graph) {
   graph.setData({ data: TEST_DATA, bounds: TEST_BOUNDS });
 
-  is(graph._selection.start, 0,
-    "The graph's selection start value is initially correct.");
-  is(graph._selection.end, TEST_BOUNDS.endTime * TEST_DPI_DENSITIY,
-    "The graph's selection end value is initially correct.");
+  is(
+    graph._selection.start,
+    0,
+    "The graph's selection start value is initially correct."
+  );
+  is(
+    graph._selection.end,
+    TEST_BOUNDS.endTime * TEST_DPI_DENSITIY,
+    "The graph's selection end value is initially correct."
+  );
 
   await pressKeyForTime(graph, KEY_CODE_LEFT, 1000);
 
-  is(graph._selection.start, 0,
-    "The graph's selection start value is correct after pressing LEFT.");
-  ok(graph._selection.end < TEST_BOUNDS.endTime * TEST_DPI_DENSITIY,
-    "The graph's selection end value is correct after pressing LEFT.");
+  is(
+    graph._selection.start,
+    0,
+    "The graph's selection start value is correct after pressing LEFT."
+  );
+  ok(
+    graph._selection.end < TEST_BOUNDS.endTime * TEST_DPI_DENSITIY,
+    "The graph's selection end value is correct after pressing LEFT."
+  );
 
   graph._selection.start = 0;
   graph._selection.end = TEST_BOUNDS.endTime * TEST_DPI_DENSITIY;
@@ -71,10 +82,15 @@ async function testGraph(host, graph) {
 
   await pressKeyForTime(graph, KEY_CODE_RIGHT, 1000);
 
-  ok(graph._selection.start > 0,
-    "The graph's selection start value is correct after pressing RIGHT.");
-  is(graph._selection.end, TEST_BOUNDS.endTime * TEST_DPI_DENSITIY,
-    "The graph's selection end value is correct after pressing RIGHT.");
+  ok(
+    graph._selection.start > 0,
+    "The graph's selection start value is correct after pressing RIGHT."
+  );
+  is(
+    graph._selection.end,
+    TEST_BOUNDS.endTime * TEST_DPI_DENSITIY,
+    "The graph's selection end value is correct after pressing RIGHT."
+  );
 
   graph._selection.start = 0;
   graph._selection.end = TEST_BOUNDS.endTime * TEST_DPI_DENSITIY;
@@ -82,16 +98,23 @@ async function testGraph(host, graph) {
 
   await pressKeyForTime(graph, KEY_CODE_UP, 1000);
 
-  ok(graph._selection.start > 0,
-    "The graph's selection start value is correct after pressing UP.");
-  ok(graph._selection.end < TEST_BOUNDS.endTime * TEST_DPI_DENSITIY,
-    "The graph's selection end value is correct after pressing UP.");
+  ok(
+    graph._selection.start > 0,
+    "The graph's selection start value is correct after pressing UP."
+  );
+  ok(
+    graph._selection.end < TEST_BOUNDS.endTime * TEST_DPI_DENSITIY,
+    "The graph's selection end value is correct after pressing UP."
+  );
 
   const distanceLeft = graph._selection.start;
-  const distanceRight = TEST_BOUNDS.endTime * TEST_DPI_DENSITIY - graph._selection.end;
+  const distanceRight =
+    TEST_BOUNDS.endTime * TEST_DPI_DENSITIY - graph._selection.end;
 
-  ok(Math.abs(distanceRight - distanceLeft) < 0.1,
-    "The graph zoomed correctly towards the center point.");
+  ok(
+    Math.abs(distanceRight - distanceLeft) < 0.1,
+    "The graph zoomed correctly towards the center point."
+  );
 }
 
 function pressKeyForTime(graph, keyCode, ms) {

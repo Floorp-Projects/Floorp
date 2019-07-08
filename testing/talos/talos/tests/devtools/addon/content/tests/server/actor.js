@@ -21,4 +21,3 @@ exports.DampTestActor = protocol.ActorClassWithSpec(dampTestSpec, {
     return arg;
   },
 });
-

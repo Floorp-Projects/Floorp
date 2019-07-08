@@ -18,21 +18,21 @@ function run_test() {
   gDebuggee = addTestGlobal("test-conditional-breakpoint");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-conditional-breakpoint",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_simple_breakpoint();
-                           });
+    attachTestTabAndResume(gClient, "test-conditional-breakpoint", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_simple_breakpoint();
+    });
   });
   do_test_pending();
 }
 
 function test_simple_breakpoint() {
   gThreadClient.once("paused", async function(packet) {
-    const source = await getSourceById(
-      gThreadClient,
-      packet.frame.where.actor
-    );
+    const source = await getSourceById(gThreadClient, packet.frame.where.actor);
 
     gThreadClient.pauseOnExceptions(true, false);
     const location = { sourceUrl: source.url, line: 3 };

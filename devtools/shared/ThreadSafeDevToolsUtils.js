@@ -81,7 +81,9 @@ exports.isCPOW = function() {
  * Report that |who| threw an exception, |exception|.
  */
 exports.reportException = function reportException(who, exception) {
-  const msg = `${who} threw an exception: ${exports.safeErrorString(exception)}`;
+  const msg = `${who} threw an exception: ${exports.safeErrorString(
+    exception
+  )}`;
   dump(msg + "\n");
 
   if (typeof console !== "undefined" && console && console.error) {
@@ -142,8 +144,12 @@ exports.safeErrorString = function(error) {
 
       // Append additional line and column number information to the output,
       // since it might not be part of the stringified error.
-      if (typeof error.lineNumber == "number" && typeof error.columnNumber == "number") {
-        errorString += "Line: " + error.lineNumber + ", column: " + error.columnNumber;
+      if (
+        typeof error.lineNumber == "number" &&
+        typeof error.columnNumber == "number"
+      ) {
+        errorString +=
+          "Line: " + error.lineNumber + ", column: " + error.columnNumber;
       }
 
       return errorString;
@@ -174,9 +180,11 @@ exports.zip = function(a, b) {
     return b;
   }
   const pairs = [];
-  for (let i = 0, aLength = a.length, bLength = b.length;
-       i < aLength || i < bLength;
-       i++) {
+  for (
+    let i = 0, aLength = a.length, bLength = b.length;
+    i < aLength || i < bLength;
+    i++
+  ) {
     pairs.push([a[i], b[i]]);
   }
   return pairs;
@@ -219,8 +227,7 @@ exports.compose = function compose(...funcs) {
   return (...args) => {
     const initialValue = funcs[funcs.length - 1](...args);
     const leftFuncs = funcs.slice(0, -1);
-    return leftFuncs.reduceRight((composed, f) => f(composed),
-                                 initialValue);
+    return leftFuncs.reduceRight((composed, f) => f(composed), initialValue);
   };
 };
 
@@ -311,7 +318,7 @@ exports.flatten = function(lists) {
  *         promise in the list of given promises to be rejected.
  */
 exports.settleAll = values => {
-  if (values === null || typeof (values[Symbol.iterator]) != "function") {
+  if (values === null || typeof values[Symbol.iterator] != "function") {
     throw new Error("settleAll() expects an iterable.");
   }
 
@@ -353,7 +360,7 @@ exports.settleAll = values => {
         checkForCompletion();
       };
 
-      if (value && typeof (value.then) == "function") {
+      if (value && typeof value.then == "function") {
         value.then(resolver, rejecter);
       } else {
         // Given value is not a promise, forward it as a resolution value.

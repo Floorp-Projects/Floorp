@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
@@ -57,35 +60,35 @@ class BoxModelMain extends PureComponent {
     const isContentBox = this.getContextBox();
 
     this.layouts = {
-      "position": new Map([
+      position: new Map([
         [KeyCodes.DOM_VK_ESCAPE, this.positionLayout],
         [KeyCodes.DOM_VK_DOWN, this.marginLayout],
         [KeyCodes.DOM_VK_RETURN, this.positionEditable],
         [KeyCodes.DOM_VK_UP, null],
         ["click", this.positionLayout],
       ]),
-      "margin": new Map([
+      margin: new Map([
         [KeyCodes.DOM_VK_ESCAPE, this.marginLayout],
         [KeyCodes.DOM_VK_DOWN, this.borderLayout],
         [KeyCodes.DOM_VK_RETURN, this.marginEditable],
         [KeyCodes.DOM_VK_UP, displayPosition ? this.positionLayout : null],
         ["click", this.marginLayout],
       ]),
-      "border": new Map([
+      border: new Map([
         [KeyCodes.DOM_VK_ESCAPE, this.borderLayout],
         [KeyCodes.DOM_VK_DOWN, this.paddingLayout],
         [KeyCodes.DOM_VK_RETURN, this.borderEditable],
         [KeyCodes.DOM_VK_UP, this.marginLayout],
         ["click", this.borderLayout],
       ]),
-      "padding": new Map([
+      padding: new Map([
         [KeyCodes.DOM_VK_ESCAPE, this.paddingLayout],
         [KeyCodes.DOM_VK_DOWN, isContentBox ? this.contentLayout : null],
         [KeyCodes.DOM_VK_RETURN, this.paddingEditable],
         [KeyCodes.DOM_VK_UP, this.borderLayout],
         ["click", this.paddingLayout],
       ]),
-      "content": new Map([
+      content: new Map([
         [KeyCodes.DOM_VK_ESCAPE, this.contentLayout],
         [KeyCodes.DOM_VK_DOWN, null],
         [KeyCodes.DOM_VK_RETURN, this.contentEditable],
@@ -100,7 +103,9 @@ class BoxModelMain extends PureComponent {
 
     if (!activeDescendant) {
       const displayPosition = this.getDisplayPosition();
-      const nextLayout = displayPosition ? this.positionLayout : this.marginLayout;
+      const nextLayout = displayPosition
+        ? this.positionLayout
+        : this.marginLayout;
       activeDescendant = nextLayout.getAttribute("data-box");
       this.setAriaActive(nextLayout);
     }
@@ -136,10 +141,11 @@ class BoxModelMain extends PureComponent {
 
     const { layout } = this.props.boxModel;
 
-    property -= parseFloat(layout["border-top-width"]) +
-                parseFloat(layout["border-bottom-width"]) +
-                parseFloat(layout["padding-top"]) +
-                parseFloat(layout["padding-bottom"]);
+    property -=
+      parseFloat(layout["border-top-width"]) +
+      parseFloat(layout["border-bottom-width"]) +
+      parseFloat(layout["padding-top"]) +
+      parseFloat(layout["padding-bottom"]);
     property = parseFloat(property.toPrecision(6));
 
     return property;
@@ -195,10 +201,11 @@ class BoxModelMain extends PureComponent {
 
     const { layout } = this.props.boxModel;
 
-    property -= parseFloat(layout["border-left-width"]) +
-                parseFloat(layout["border-right-width"]) +
-                parseFloat(layout["padding-left"]) +
-                parseFloat(layout["padding-right"]);
+    property -=
+      parseFloat(layout["border-left-width"]) +
+      parseFloat(layout["border-right-width"]) +
+      parseFloat(layout["padding-left"]) +
+      parseFloat(layout["padding-right"]);
     property = parseFloat(property.toPrecision(6));
 
     return property;
@@ -216,12 +223,15 @@ class BoxModelMain extends PureComponent {
    */
   moveFocus({ target, shiftKey }, level) {
     const editBoxes = [
-      ...this.positionLayout.querySelectorAll(`[data-box="${level}"].boxmodel-editable`),
+      ...this.positionLayout.querySelectorAll(
+        `[data-box="${level}"].boxmodel-editable`
+      ),
     ];
     const editingMode = target.tagName === "input";
     // target.nextSibling is input field
-    let position = editingMode ? editBoxes.indexOf(target.nextSibling)
-                               : editBoxes.indexOf(target);
+    let position = editingMode
+      ? editBoxes.indexOf(target.nextSibling)
+      : editBoxes.indexOf(target);
 
     if (position === editBoxes.length - 1 && !shiftKey) {
       position = 0;
@@ -369,12 +379,16 @@ class BoxModelMain extends PureComponent {
 
     // Avoid switching the aria active descendant to the position or content layout
     // if those are not editable.
-    if ((!displayPosition && target == this.positionLayout) ||
-        (!isContentBox && target == this.contentLayout)) {
+    if (
+      (!displayPosition && target == this.positionLayout) ||
+      (!isContentBox && target == this.contentLayout)
+    ) {
       return;
     }
 
-    const nextLayout = this.layouts[target.getAttribute("data-box")].get("click");
+    const nextLayout = this.layouts[target.getAttribute("data-box")].get(
+      "click"
+    );
     this.setAriaActive(nextLayout);
 
     if (target && target._editable) {
@@ -416,53 +430,55 @@ class BoxModelMain extends PureComponent {
     height = this.getHeightValue(height);
     width = this.getWidthValue(width);
 
-    const contentBox = layout["box-sizing"] == "content-box" ?
-      dom.div({ className: "boxmodel-size" },
-        BoxModelEditable({
-          box: "content",
-          focusable,
-          level,
-          property: "width",
-          ref: editable => {
-            this.contentEditable = editable;
-          },
-          textContent: width,
-          onShowBoxModelEditor,
-          onShowRulePreviewTooltip,
-        }),
-        dom.span({}, "\u00D7"),
-        BoxModelEditable({
-          box: "content",
-          focusable,
-          level,
-          property: "height",
-          textContent: height,
-          onShowBoxModelEditor,
-          onShowRulePreviewTooltip,
-        })
-      )
-      :
-      dom.p({ className: "boxmodel-size" },
-        dom.span({ title: "content" },
-          SHARED_L10N.getFormatStr("dimensions", width, height)
-        )
-      );
+    const contentBox =
+      layout["box-sizing"] == "content-box"
+        ? dom.div(
+            { className: "boxmodel-size" },
+            BoxModelEditable({
+              box: "content",
+              focusable,
+              level,
+              property: "width",
+              ref: editable => {
+                this.contentEditable = editable;
+              },
+              textContent: width,
+              onShowBoxModelEditor,
+              onShowRulePreviewTooltip,
+            }),
+            dom.span({}, "\u00D7"),
+            BoxModelEditable({
+              box: "content",
+              focusable,
+              level,
+              property: "height",
+              textContent: height,
+              onShowBoxModelEditor,
+              onShowRulePreviewTooltip,
+            })
+          )
+        : dom.p(
+            { className: "boxmodel-size" },
+            dom.span(
+              { title: "content" },
+              SHARED_L10N.getFormatStr("dimensions", width, height)
+            )
+          );
 
-    return (
-      dom.div(
-        {
-          className: "boxmodel-main devtools-monospace",
-          "data-box": "position",
-          ref: div => {
-            this.positionLayout = div;
-          },
-          onClick: this.onLevelClick,
-          onKeyDown: this.onKeyDown,
-          onMouseOver: this.onHighlightMouseOver,
-          onMouseOut: this.props.onHideBoxModelHighlighter,
+    return dom.div(
+      {
+        className: "boxmodel-main devtools-monospace",
+        "data-box": "position",
+        ref: div => {
+          this.positionLayout = div;
         },
-        displayPosition ?
-          dom.span(
+        onClick: this.onLevelClick,
+        onKeyDown: this.onKeyDown,
+        onMouseOver: this.onHighlightMouseOver,
+        onMouseOut: this.props.onHideBoxModelHighlighter,
+      },
+      displayPosition
+        ? dom.span(
             {
               className: "boxmodel-legend",
               "data-box": "position",
@@ -470,74 +486,74 @@ class BoxModelMain extends PureComponent {
             },
             "position"
           )
-          :
-          null,
-        dom.div({ className: "boxmodel-box" },
+        : null,
+      dom.div(
+        { className: "boxmodel-box" },
+        dom.span(
+          {
+            className: "boxmodel-legend",
+            "data-box": "margin",
+            title: "margin",
+          },
+          "margin"
+        ),
+        dom.div(
+          {
+            className: "boxmodel-margins",
+            "data-box": "margin",
+            title: "margin",
+            ref: div => {
+              this.marginLayout = div;
+            },
+          },
           dom.span(
             {
               className: "boxmodel-legend",
-              "data-box": "margin",
-              title: "margin",
+              "data-box": "border",
+              title: "border",
             },
-            "margin"
+            "border"
           ),
           dom.div(
             {
-              className: "boxmodel-margins",
-              "data-box": "margin",
-              title: "margin",
+              className: "boxmodel-borders",
+              "data-box": "border",
+              title: "border",
               ref: div => {
-                this.marginLayout = div;
+                this.borderLayout = div;
               },
             },
             dom.span(
               {
                 className: "boxmodel-legend",
-                "data-box": "border",
-                title: "border",
+                "data-box": "padding",
+                title: "padding",
               },
-              "border"
+              "padding"
             ),
             dom.div(
               {
-                className: "boxmodel-borders",
-                "data-box": "border",
-                title: "border",
+                className: "boxmodel-paddings",
+                "data-box": "padding",
+                title: "padding",
                 ref: div => {
-                  this.borderLayout = div;
+                  this.paddingLayout = div;
                 },
               },
-              dom.span(
-                {
-                  className: "boxmodel-legend",
-                  "data-box": "padding",
-                  title: "padding",
+              dom.div({
+                className: "boxmodel-contents",
+                "data-box": "content",
+                title: "content",
+                ref: div => {
+                  this.contentLayout = div;
                 },
-                "padding"
-              ),
-              dom.div(
-                {
-                  className: "boxmodel-paddings",
-                  "data-box": "padding",
-                  title: "padding",
-                  ref: div => {
-                    this.paddingLayout = div;
-                  },
-                },
-                dom.div({
-                  className: "boxmodel-contents",
-                  "data-box": "content",
-                  title: "content",
-                  ref: div => {
-                    this.contentLayout = div;
-                  },
-                })
-              )
+              })
             )
           )
-        ),
-        displayPosition ?
-          BoxModelEditable({
+        )
+      ),
+      displayPosition
+        ? BoxModelEditable({
             box: "position",
             direction: "top",
             focusable,
@@ -550,10 +566,9 @@ class BoxModelMain extends PureComponent {
             onShowBoxModelEditor,
             onShowRulePreviewTooltip,
           })
-          :
-          null,
-        displayPosition ?
-          BoxModelEditable({
+        : null,
+      displayPosition
+        ? BoxModelEditable({
             box: "position",
             direction: "right",
             focusable,
@@ -563,10 +578,9 @@ class BoxModelMain extends PureComponent {
             onShowBoxModelEditor,
             onShowRulePreviewTooltip,
           })
-          :
-          null,
-        displayPosition ?
-          BoxModelEditable({
+        : null,
+      displayPosition
+        ? BoxModelEditable({
             box: "position",
             direction: "bottom",
             focusable,
@@ -576,10 +590,9 @@ class BoxModelMain extends PureComponent {
             onShowBoxModelEditor,
             onShowRulePreviewTooltip,
           })
-          :
-          null,
-        displayPosition ?
-          BoxModelEditable({
+        : null,
+      displayPosition
+        ? BoxModelEditable({
             box: "position",
             direction: "left",
             focusable,
@@ -589,139 +602,137 @@ class BoxModelMain extends PureComponent {
             onShowBoxModelEditor,
             onShowRulePreviewTooltip,
           })
-          :
-          null,
-        BoxModelEditable({
-          box: "margin",
-          direction: "top",
-          focusable,
-          level,
-          property: "margin-top",
-          ref: editable => {
-            this.marginEditable = editable;
-          },
-          textContent: marginTop,
-          onShowBoxModelEditor,
-          onShowRulePreviewTooltip,
-        }),
-        BoxModelEditable({
-          box: "margin",
-          direction: "right",
-          focusable,
-          level,
-          property: "margin-right",
-          textContent: marginRight,
-          onShowBoxModelEditor,
-          onShowRulePreviewTooltip,
-        }),
-        BoxModelEditable({
-          box: "margin",
-          direction: "bottom",
-          focusable,
-          level,
-          property: "margin-bottom",
-          textContent: marginBottom,
-          onShowBoxModelEditor,
-          onShowRulePreviewTooltip,
-        }),
-        BoxModelEditable({
-          box: "margin",
-          direction: "left",
-          focusable,
-          level,
-          property: "margin-left",
-          textContent: marginLeft,
-          onShowBoxModelEditor,
-          onShowRulePreviewTooltip,
-        }),
-        BoxModelEditable({
-          box: "border",
-          direction: "top",
-          focusable,
-          level,
-          property: "border-top-width",
-          ref: editable => {
-            this.borderEditable = editable;
-          },
-          textContent: borderTop,
-          onShowBoxModelEditor,
-          onShowRulePreviewTooltip,
-        }),
-        BoxModelEditable({
-          box: "border",
-          direction: "right",
-          focusable,
-          level,
-          property: "border-right-width",
-          textContent: borderRight,
-          onShowBoxModelEditor,
-          onShowRulePreviewTooltip,
-        }),
-        BoxModelEditable({
-          box: "border",
-          direction: "bottom",
-          focusable,
-          level,
-          property: "border-bottom-width",
-          textContent: borderBottom,
-          onShowBoxModelEditor,
-          onShowRulePreviewTooltip,
-        }),
-        BoxModelEditable({
-          box: "border",
-          direction: "left",
-          focusable,
-          level,
-          property: "border-left-width",
-          textContent: borderLeft,
-          onShowBoxModelEditor,
-          onShowRulePreviewTooltip,
-        }),
-        BoxModelEditable({
-          box: "padding",
-          direction: "top",
-          focusable,
-          level,
-          property: "padding-top",
-          ref: editable => {
-            this.paddingEditable = editable;
-          },
-          textContent: paddingTop,
-          onShowBoxModelEditor,
-          onShowRulePreviewTooltip,
-        }),
-        BoxModelEditable({
-          box: "padding",
-          direction: "right",
-          focusable,
-          level,
-          property: "padding-right",
-          textContent: paddingRight,
-          onShowBoxModelEditor,
-          onShowRulePreviewTooltip,
-        }),
-        BoxModelEditable({
-          box: "padding",
-          direction: "bottom",
-          focusable,
-          level,
-          property: "padding-bottom",
-          textContent: paddingBottom,
-          onShowBoxModelEditor,
-          onShowRulePreviewTooltip,
-        }),
-        BoxModelEditable({
-          box: "padding",
-          direction: "left",
-          focusable,
-          level,
-          property: "padding-left",
-          textContent: paddingLeft,
-          onShowBoxModelEditor,
-          onShowRulePreviewTooltip,
-        }),
-        contentBox
-      )
+        : null,
+      BoxModelEditable({
+        box: "margin",
+        direction: "top",
+        focusable,
+        level,
+        property: "margin-top",
+        ref: editable => {
+          this.marginEditable = editable;
+        },
+        textContent: marginTop,
+        onShowBoxModelEditor,
+        onShowRulePreviewTooltip,
+      }),
+      BoxModelEditable({
+        box: "margin",
+        direction: "right",
+        focusable,
+        level,
+        property: "margin-right",
+        textContent: marginRight,
+        onShowBoxModelEditor,
+        onShowRulePreviewTooltip,
+      }),
+      BoxModelEditable({
+        box: "margin",
+        direction: "bottom",
+        focusable,
+        level,
+        property: "margin-bottom",
+        textContent: marginBottom,
+        onShowBoxModelEditor,
+        onShowRulePreviewTooltip,
+      }),
+      BoxModelEditable({
+        box: "margin",
+        direction: "left",
+        focusable,
+        level,
+        property: "margin-left",
+        textContent: marginLeft,
+        onShowBoxModelEditor,
+        onShowRulePreviewTooltip,
+      }),
+      BoxModelEditable({
+        box: "border",
+        direction: "top",
+        focusable,
+        level,
+        property: "border-top-width",
+        ref: editable => {
+          this.borderEditable = editable;
+        },
+        textContent: borderTop,
+        onShowBoxModelEditor,
+        onShowRulePreviewTooltip,
+      }),
+      BoxModelEditable({
+        box: "border",
+        direction: "right",
+        focusable,
+        level,
+        property: "border-right-width",
+        textContent: borderRight,
+        onShowBoxModelEditor,
+        onShowRulePreviewTooltip,
+      }),
+      BoxModelEditable({
+        box: "border",
+        direction: "bottom",
+        focusable,
+        level,
+        property: "border-bottom-width",
+        textContent: borderBottom,
+        onShowBoxModelEditor,
+        onShowRulePreviewTooltip,
+      }),
+      BoxModelEditable({
+        box: "border",
+        direction: "left",
+        focusable,
+        level,
+        property: "border-left-width",
+        textContent: borderLeft,
+        onShowBoxModelEditor,
+        onShowRulePreviewTooltip,
+      }),
+      BoxModelEditable({
+        box: "padding",
+        direction: "top",
+        focusable,
+        level,
+        property: "padding-top",
+        ref: editable => {
+          this.paddingEditable = editable;
+        },
+        textContent: paddingTop,
+        onShowBoxModelEditor,
+        onShowRulePreviewTooltip,
+      }),
+      BoxModelEditable({
+        box: "padding",
+        direction: "right",
+        focusable,
+        level,
+        property: "padding-right",
+        textContent: paddingRight,
+        onShowBoxModelEditor,
+        onShowRulePreviewTooltip,
+      }),
+      BoxModelEditable({
+        box: "padding",
+        direction: "bottom",
+        focusable,
+        level,
+        property: "padding-bottom",
+        textContent: paddingBottom,
+        onShowBoxModelEditor,
+        onShowRulePreviewTooltip,
+      }),
+      BoxModelEditable({
+        box: "padding",
+        direction: "left",
+        focusable,
+        level,
+        property: "padding-left",
+        textContent: paddingLeft,
+        onShowBoxModelEditor,
+        onShowRulePreviewTooltip,
+      }),
+      contentBox
     );
   }
 }

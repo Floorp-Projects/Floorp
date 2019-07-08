@@ -56,8 +56,7 @@ function hasFastClickPageScript() {
       if (proto && proto.needsClick) {
         return true;
       }
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   return false;
@@ -74,8 +73,9 @@ function hasMarfeelPageScript() {
 }
 
 function checkForFrameworks(tabId) {
-  return browser.tabs.executeScript(tabId, {
-    code: `
+  return browser.tabs
+    .executeScript(tabId, {
+      code: `
       (function() {
         ${hasFastClickPageScript};
         ${hasMobifyPageScript};
@@ -90,11 +90,13 @@ function checkForFrameworks(tabId) {
         return result;
       })();
     `,
-  }).then(([results]) => results).catch(() => false);
+    })
+    .then(([results]) => results)
+    .catch(() => false);
 }
 
 function getWebCompatInfoForTab(tab) {
-  const {id, url} = tab;
+  const { id, url } = tab;
   return Promise.all([
     browser.browserInfo.getBlockList(),
     browser.browserInfo.getBuildID(),
@@ -107,33 +109,46 @@ function getWebCompatInfoForTab(tab) {
       console.error("WebCompat Reporter: getting a screenshot failed", e);
       return Promise.resolve(undefined);
     }),
-  ]).then(([blockList, buildID, graphicsPrefs, channel, hasTouchScreen,
-            frameInfo, frameworks, screenshot]) => {
-    if (channel !== "linux") {
-      delete graphicsPrefs["layers.acceleration.force-enabled"];
-    }
-
-    const consoleLog = frameInfo.log;
-    delete frameInfo.log;
-
-    return Object.assign(frameInfo, {
-      tabId: id,
+  ]).then(
+    ([
       blockList,
-      details: Object.assign(graphicsPrefs, {
-        buildID,
-        channel,
-        consoleLog,
-        frameworks,
-        hasTouchScreen,
-        "mixed active content blocked": frameInfo.hasMixedActiveContentBlocked,
-        "mixed passive content blocked": frameInfo.hasMixedDisplayContentBlocked,
-        "tracking content blocked": frameInfo.hasTrackingContentBlocked ?
-                                    `true (${blockList})` : "false",
-      }),
+      buildID,
+      graphicsPrefs,
+      channel,
+      hasTouchScreen,
+      frameInfo,
+      frameworks,
       screenshot,
-      url,
-    });
-  });
+    ]) => {
+      if (channel !== "linux") {
+        delete graphicsPrefs["layers.acceleration.force-enabled"];
+      }
+
+      const consoleLog = frameInfo.log;
+      delete frameInfo.log;
+
+      return Object.assign(frameInfo, {
+        tabId: id,
+        blockList,
+        details: Object.assign(graphicsPrefs, {
+          buildID,
+          channel,
+          consoleLog,
+          frameworks,
+          hasTouchScreen,
+          "mixed active content blocked":
+            frameInfo.hasMixedActiveContentBlocked,
+          "mixed passive content blocked":
+            frameInfo.hasMixedDisplayContentBlocked,
+          "tracking content blocked": frameInfo.hasTrackingContentBlocked
+            ? `true (${blockList})`
+            : "false",
+        }),
+        screenshot,
+        url,
+      });
+    }
+  );
 }
 
 function stripNonASCIIChars(str) {
@@ -141,15 +156,17 @@ function stripNonASCIIChars(str) {
   return str.replace(/[^\x00-\x7F]/g, "");
 }
 
-browser.l10n.getMessage("wc-reporter.label2").then(
-  browser.pageActionExtras.setDefaultTitle, () => {});
+browser.l10n
+  .getMessage("wc-reporter.label2")
+  .then(browser.pageActionExtras.setDefaultTitle, () => {});
 
-browser.l10n.getMessage("wc-reporter.tooltip").then(
-  browser.pageActionExtras.setTooltipText, () => {});
+browser.l10n
+  .getMessage("wc-reporter.tooltip")
+  .then(browser.pageActionExtras.setTooltipText, () => {});
 
 async function openWebCompatTab(compatInfo) {
   const url = new URL(Config.newIssueEndpoint);
-  const {details} = compatInfo;
+  const { details } = compatInfo;
   const params = {
     url: `${compatInfo.url}`,
     utm_source: "desktop-reporter",
@@ -162,7 +179,9 @@ async function openWebCompatTab(compatInfo) {
   for (let framework of FRAMEWORK_KEYS) {
     if (details.frameworks[framework]) {
       params.details[framework] = true;
-      params.extra_labels.push(framework.replace(/^has/, "type-").toLowerCase());
+      params.extra_labels.push(
+        framework.replace(/^has/, "type-").toLowerCase()
+      );
     }
   }
   delete details.frameworks;
@@ -171,13 +190,19 @@ async function openWebCompatTab(compatInfo) {
     params.extra_labels.push("type-webrender-enabled");
   }
   if (compatInfo.hasTrackingContentBlocked) {
-    params.extra_labels.push(`type-tracking-protection-${compatInfo.blockList}`);
+    params.extra_labels.push(
+      `type-tracking-protection-${compatInfo.blockList}`
+    );
   }
 
-  const tab = await browser.tabs.create({url: "about:blank"});
+  const tab = await browser.tabs.create({ url: "about:blank" });
   const json = stripNonASCIIChars(JSON.stringify(params));
-  await browser.tabExtras.loadURIWithPostData(tab.id, url.href, json,
-                                              "application/json");
+  await browser.tabExtras.loadURIWithPostData(
+    tab.id,
+    url.href,
+    json,
+    "application/json"
+  );
   await browser.tabs.executeScript(tab.id, {
     runAt: "document_end",
     code: `(function() {

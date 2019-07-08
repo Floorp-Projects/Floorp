@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -13,7 +16,12 @@ const DelaySign = createFactory(require("./DelaySign"));
 const EndDelaySign = createFactory(require("./EndDelaySign"));
 const SummaryGraphPath = createFactory(require("./SummaryGraphPath"));
 
-const { getFormattedTitle, getFormatStr, getStr, numberWithDecimals } = require("../../utils/l10n");
+const {
+  getFormattedTitle,
+  getFormatStr,
+  getStr,
+  numberWithDecimals,
+} = require("../../utils/l10n");
 
 class SummaryGraph extends PureComponent {
   static get propTypes() {
@@ -39,10 +47,10 @@ class SummaryGraph extends PureComponent {
   }
 
   getTitleText(state) {
-    const getTime =
-      time => getFormatStr("player.timeLabel", numberWithDecimals(time / 1000, 2));
-    const getTimeOrInfinity =
-      time => time === Infinity ? getStr("player.infiniteDurationText") : getTime(time);
+    const getTime = time =>
+      getFormatStr("player.timeLabel", numberWithDecimals(time / 1000, 2));
+    const getTimeOrInfinity = time =>
+      time === Infinity ? getStr("player.infiniteDurationText") : getTime(time);
 
     let text = "";
 
@@ -72,15 +80,18 @@ class SummaryGraph extends PureComponent {
     // Adding the iteration count (the infinite symbol, or an integer).
     if (state.iterationCount !== 1) {
       text += getStr("player.animationIterationCountLabel") + " ";
-      text += state.iterationCount || getStr("player.infiniteIterationCountText");
+      text +=
+        state.iterationCount || getStr("player.infiniteIterationCountText");
       text += "\n";
     }
 
     // Adding the iteration start.
     if (state.iterationStart !== 0) {
-      text += getFormatStr("player.animationIterationStartLabel2",
-                           state.iterationStart,
-                           getTimeOrInfinity(state.iterationStart * state.duration));
+      text += getFormatStr(
+        "player.animationIterationStartLabel2",
+        state.iterationStart,
+        getTimeOrInfinity(state.iterationStart * state.duration)
+      );
       text += "\n";
     }
 
@@ -114,7 +125,10 @@ class SummaryGraph extends PureComponent {
 
     // Adding the animation-timing-function
     // if it is not "ease" which is default value for CSS Animations.
-    if (state.animationTimingFunction && state.animationTimingFunction !== "ease") {
+    if (
+      state.animationTimingFunction &&
+      state.animationTimingFunction !== "ease"
+    ) {
       text += getStr("player.animationTimingFunctionLabel") + " ";
       text += state.animationTimingFunction;
       text += "\n";
@@ -123,9 +137,13 @@ class SummaryGraph extends PureComponent {
     // Adding a note that the animation is running on the compositor thread if
     // needed.
     if (state.propertyState) {
-      if (state.propertyState.every(propState => propState.runningOnCompositor)) {
+      if (
+        state.propertyState.every(propState => propState.runningOnCompositor)
+      ) {
         text += getStr("player.allPropertiesOnCompositorTooltip");
-      } else if (state.propertyState.some(propState => propState.runningOnCompositor)) {
+      } else if (
+        state.propertyState.some(propState => propState.runningOnCompositor)
+      ) {
         text += getStr("player.somePropertiesOnCompositorTooltip");
       }
     } else if (state.isRunningOnCompositor) {
@@ -149,46 +167,36 @@ class SummaryGraph extends PureComponent {
 
     return dom.div(
       {
-        className: "animation-summary-graph" +
-                   (animation.state.isRunningOnCompositor ? " compositor" : ""),
+        className:
+          "animation-summary-graph" +
+          (animation.state.isRunningOnCompositor ? " compositor" : ""),
         onClick: this.onClick,
         title: this.getTitleText(animation.state),
       },
-      SummaryGraphPath(
-        {
-          animation,
-          emitEventForTest,
-          getAnimatedPropertyMap,
-          simulateAnimation,
-          timeScale,
-        }
-      ),
-      delay ?
-        DelaySign(
-          {
+      SummaryGraphPath({
+        animation,
+        emitEventForTest,
+        getAnimatedPropertyMap,
+        simulateAnimation,
+        timeScale,
+      }),
+      delay
+        ? DelaySign({
             animation,
             timeScale,
-          }
-        )
-      :
-      null,
-      iterationCount && endDelay ?
-        EndDelaySign(
-          {
+          })
+        : null,
+      iterationCount && endDelay
+        ? EndDelaySign({
             animation,
             timeScale,
-          }
-        )
-      :
-      null,
-      animation.state.name ?
-        AnimationName(
-          {
+          })
+        : null,
+      animation.state.name
+        ? AnimationName({
             animation,
-          }
-        )
-      :
-      null
+          })
+        : null
     );
   }
 }

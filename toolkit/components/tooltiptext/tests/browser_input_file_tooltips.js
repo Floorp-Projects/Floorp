@@ -2,7 +2,7 @@
 
 let tempFile;
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({"set": [["ui.tooltipDelay", 0]]});
+  await SpecialPowers.pushPrefEnv({ set: [["ui.tooltipDelay", 0]] });
   tempFile = createTempFile();
   registerCleanupFunction(function() {
     tempFile.remove(true);
@@ -10,23 +10,23 @@ add_task(async function setup() {
 });
 
 add_task(async function test_singlefile_selected() {
-  await do_test({value: true, result: "testfile_bug1251809"});
+  await do_test({ value: true, result: "testfile_bug1251809" });
 });
 
 add_task(async function test_title_set() {
-  await do_test({title: "foo", result: "foo"});
+  await do_test({ title: "foo", result: "foo" });
 });
 
 add_task(async function test_nofile_selected() {
-  await do_test({result: "No file selected."});
+  await do_test({ result: "No file selected." });
 });
 
 add_task(async function test_multipleset_nofile_selected() {
-  await do_test({multiple: true, result: "No files selected."});
+  await do_test({ multiple: true, result: "No files selected." });
 });
 
 add_task(async function test_requiredset() {
-  await do_test({required: true, result: "Please select a file."});
+  await do_test({ required: true, result: "Please select a file." });
 });
 
 async function do_test(test) {
@@ -35,7 +35,11 @@ async function do_test(test) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   info("Moving mouse out of the way.");
-  await EventUtils.synthesizeAndWaitNativeMouseMove(tab.linkedBrowser, 300, 300);
+  await EventUtils.synthesizeAndWaitNativeMouseMove(
+    tab.linkedBrowser,
+    300,
+    300
+  );
 
   info("creating input field");
   await ContentTask.spawn(tab.linkedBrowser, test, async function(test) {
@@ -68,12 +72,18 @@ async function do_test(test) {
     try {
       // Open the File Picker dialog (MockFilePicker) to select
       // the files for the test.
-      await BrowserTestUtils.synthesizeMouseAtCenter("#test_input", {}, tab.linkedBrowser);
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        "#test_input",
+        {},
+        tab.linkedBrowser
+      );
       info("Waiting for the input to have the requisite files");
       await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
         let input = content.document.querySelector("#test_input");
-        await ContentTaskUtils.waitForCondition(() => input.files.length,
-          "The input should have at least one file selected");
+        await ContentTaskUtils.waitForCondition(
+          () => input.files.length,
+          "The input should have at least one file selected"
+        );
         info(`The input has ${input.files.length} file(s) selected.`);
       });
     } catch (e) {}
@@ -82,13 +92,17 @@ async function do_test(test) {
   }
 
   let awaitTooltipOpen = new Promise(resolve => {
-    let tooltipId = Services.appinfo.browserTabsRemoteAutostart ?
-                      "remoteBrowserTooltip" :
-                      "aHTMLTooltip";
+    let tooltipId = Services.appinfo.browserTabsRemoteAutostart
+      ? "remoteBrowserTooltip"
+      : "aHTMLTooltip";
     let tooltip = document.getElementById(tooltipId);
-    tooltip.addEventListener("popupshown", function(event) {
-      resolve(event.target);
-    }, {once: true});
+    tooltip.addEventListener(
+      "popupshown",
+      function(event) {
+        resolve(event.target);
+      },
+      { once: true }
+    );
   });
   info("Initial mouse move");
   await EventUtils.synthesizeAndWaitNativeMouseMove(tab.linkedBrowser, 50, 5);
@@ -99,7 +113,11 @@ async function do_test(test) {
   info("Waiting for tooltip to open");
   let tooltip = await awaitTooltipOpen;
 
-  is(tooltip.getAttribute("label"), test.result, "tooltip label should match expectation");
+  is(
+    tooltip.getAttribute("label"),
+    test.result,
+    "tooltip label should match expectation"
+  );
 
   info("Closing tab");
   BrowserTestUtils.removeTab(tab);

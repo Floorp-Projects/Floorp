@@ -13,7 +13,7 @@ add_task(async function test_shutdown_barriers() {
 
   let xpi = await createTempWebExtensionFile({
     manifest: {
-      applications: {gecko: {id: ID}},
+      applications: { gecko: { id: ID } },
       version: VERSION,
     },
   });
@@ -63,5 +63,9 @@ add_task(async function test_shutdown_barriers() {
   });
 
   await promiseShutdownManager();
-  equal(blockersComplete, 2, "Both shutdown blockers ran before manager shutdown completed");
+  equal(
+    blockersComplete,
+    2,
+    "Both shutdown blockers ran before manager shutdown completed"
+  );
 });

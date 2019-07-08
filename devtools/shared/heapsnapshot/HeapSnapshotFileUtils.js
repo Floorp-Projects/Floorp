@@ -23,8 +23,12 @@
 "use strict";
 
 const { Ci } = require("chrome");
-loader.lazyRequireGetter(this, "FileUtils",
-                         "resource://gre/modules/FileUtils.jsm", true);
+loader.lazyRequireGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm",
+  true
+);
 loader.lazyRequireGetter(this, "OS", "resource://gre/modules/osfile.jsm", true);
 
 function getHeapSnapshotFileTemplate() {
@@ -78,6 +82,5 @@ exports.haveHeapSnapshotTempFile = function(snapshotId) {
     return Promise.resolve(false);
   }
 
-  return OS.File.stat(path).then(() => true,
-                                 () => false);
+  return OS.File.stat(path).then(() => true, () => false);
 };

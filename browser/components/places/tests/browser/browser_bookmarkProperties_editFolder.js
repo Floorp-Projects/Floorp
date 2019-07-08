@@ -22,11 +22,15 @@ add_task(async function() {
     tree.selectItems([bm.guid]);
     let folder = tree.selectedNode;
     Assert.equal(folder.title, "folder", "Folder title is correct");
-    Assert.ok(tree.controller.isCommandEnabled("placesCmd_show:info"),
-              "'placesCmd_show:info' on folder is enabled");
+    Assert.ok(
+      tree.controller.isCommandEnabled("placesCmd_show:info"),
+      "'placesCmd_show:info' on folder is enabled"
+    );
 
     let promiseTitleResetNotification = PlacesTestUtils.waitForNotification(
-      "onItemChanged", (id, prop, anno, val) => prop == "title" && val == "folder");
+      "onItemChanged",
+      (id, prop, anno, val) => prop == "title" && val == "folder"
+    );
 
     await withBookmarksDialog(
       true,
@@ -35,21 +39,36 @@ add_task(async function() {
       },
       async function test(dialogWin) {
         // Check that the dialog is not read-only.
-        Assert.ok(!dialogWin.gEditItemOverlay.readOnly, "Dialog should not be read-only");
+        Assert.ok(
+          !dialogWin.gEditItemOverlay.readOnly,
+          "Dialog should not be read-only"
+        );
 
         // Check that name picker is not read only
-        let namepicker = dialogWin.document.getElementById("editBMPanel_namePicker");
+        let namepicker = dialogWin.document.getElementById(
+          "editBMPanel_namePicker"
+        );
         Assert.ok(!namepicker.readOnly, "Name field should not be read-only");
         Assert.equal(namepicker.value, "folder", "Node title is correct");
         let promiseTitleChangeNotification = PlacesTestUtils.waitForNotification(
-          "onItemChanged", (id, prop, anno, val) => prop == "title" && val == "newname");
+          "onItemChanged",
+          (id, prop, anno, val) => prop == "title" && val == "newname"
+        );
 
         fillBookmarkTextField("editBMPanel_namePicker", "newname", dialogWin);
 
         await promiseTitleChangeNotification;
 
-        Assert.equal(namepicker.value, "newname", "The title field has been changed");
-        Assert.equal(tree.selectedNode.title, "newname", "The node has the correct title");
+        Assert.equal(
+          namepicker.value,
+          "newname",
+          "The title field has been changed"
+        );
+        Assert.equal(
+          tree.selectedNode.title,
+          "newname",
+          "The node has the correct title"
+        );
 
         // Ensure that the edit is finished before we hit cancel.
         await PlacesTestUtils.promiseAsyncUpdates();

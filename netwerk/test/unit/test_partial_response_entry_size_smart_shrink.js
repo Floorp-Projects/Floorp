@@ -7,7 +7,7 @@
 
 */
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort;
@@ -16,15 +16,16 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 var httpServer = null;
 
 function make_channel(url, callback, ctx) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
 // Have 2kb response (8 * 2 ^ 8)
 var responseBody = "response";
-for (var i = 0; i < 8; ++i) responseBody += responseBody;
+for (var i = 0; i < 8; ++i) {
+  responseBody += responseBody;
+}
 
-function contentHandler(metadata, response)
-{
+function contentHandler(metadata, response) {
   response.setHeader("Content-Type", "text/plain", false);
   response.setHeader("ETag", "range");
   response.setHeader("Accept-Ranges", "bytes");
@@ -39,10 +40,14 @@ function contentHandler(metadata, response)
   } else {
     var slice = responseBody.slice(100);
     response.setStatusLine(metadata.httpVersion, 206, "Partial Content");
-    response.setHeader("Content-Range",
-      (responseBody.length - slice.length).toString() + "-" +
-      (responseBody.length - 1).toString() + "/" +
-      (responseBody.length).toString());
+    response.setHeader(
+      "Content-Range",
+      (responseBody.length - slice.length).toString() +
+        "-" +
+        (responseBody.length - 1).toString() +
+        "/" +
+        responseBody.length.toString()
+    );
 
     response.setHeader("Content-Length", slice.length + "");
     response.bodyOutputStream.write(slice, slice.length);
@@ -51,13 +56,19 @@ function contentHandler(metadata, response)
 
 var enforcePref;
 
-function run_test()
-{
-  enforceSoftPref = Services.prefs.getBoolPref("network.http.enforce-framing.soft");
+function run_test() {
+  enforceSoftPref = Services.prefs.getBoolPref(
+    "network.http.enforce-framing.soft"
+  );
   Services.prefs.setBoolPref("network.http.enforce-framing.soft", false);
 
-  enforceStrictChunkedPref = Services.prefs.getBoolPref("network.http.enforce-framing.strict_chunked_encoding");
-  Services.prefs.setBoolPref("network.http.enforce-framing.strict_chunked_encoding", false);
+  enforceStrictChunkedPref = Services.prefs.getBoolPref(
+    "network.http.enforce-framing.strict_chunked_encoding"
+  );
+  Services.prefs.setBoolPref(
+    "network.http.enforce-framing.strict_chunked_encoding",
+    false
+  );
 
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/content", contentHandler);
@@ -68,8 +79,7 @@ function run_test()
   do_test_pending();
 }
 
-function firstTimeThrough(request, buffer)
-{
+function firstTimeThrough(request, buffer) {
   // Change single cache entry limit to 1 kb.  This emulates smart size change.
   Services.prefs.setIntPref("browser.cache.disk.max_entry_size", 1);
 
@@ -77,10 +87,15 @@ function firstTimeThrough(request, buffer)
   chan.asyncOpen(new ChannelListener(finish_test, null));
 }
 
-function finish_test(request, buffer)
-{
+function finish_test(request, buffer) {
   Assert.equal(buffer, responseBody);
-  Services.prefs.setBoolPref("network.http.enforce-framing.soft", enforceSoftPref);
-  Services.prefs.setBoolPref("network.http.enforce-framing.strict_chunked_encoding", enforceStrictChunkedPref);
+  Services.prefs.setBoolPref(
+    "network.http.enforce-framing.soft",
+    enforceSoftPref
+  );
+  Services.prefs.setBoolPref(
+    "network.http.enforce-framing.strict_chunked_encoding",
+    enforceStrictChunkedPref
+  );
   httpServer.stop(do_test_finished);
 }

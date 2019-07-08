@@ -9,8 +9,7 @@ const { Property } = require("./reducers/grips");
 
 // Implementation
 
-function DomDecorator() {
-}
+function DomDecorator() {}
 
 /**
  * Decorator for DOM panel tree component. It's responsible for
@@ -42,8 +41,7 @@ DomDecorator.prototype = {
    * Return custom React template for specified object. The template
    * might depend on specified column.
    */
-  getValueRep: function(value, colId) {
-  },
+  getValueRep: function(value, colId) {},
 };
 
 // Exports from this module

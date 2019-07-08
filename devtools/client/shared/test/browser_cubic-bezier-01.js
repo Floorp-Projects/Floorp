@@ -6,26 +6,27 @@
 
 // Tests that the CubicBezierWidget generates content in a given parent node
 
-const {CubicBezierWidget} =
-  require("devtools/client/shared/widgets/CubicBezierWidget");
+const {
+  CubicBezierWidget,
+} = require("devtools/client/shared/widgets/CubicBezierWidget");
 
 const TEST_URI = CHROME_URL_ROOT + "doc_cubic-bezier-01.html";
 
 add_task(async function() {
-  const [host,, doc] = await createHost("bottom", TEST_URI);
+  const [host, , doc] = await createHost("bottom", TEST_URI);
 
   info("Checking that the graph markup is created in the parent");
   const container = doc.querySelector("#cubic-bezier-container");
   const w = new CubicBezierWidget(container);
 
-  ok(container.querySelector(".display-wrap"),
-    "The display has been added");
+  ok(container.querySelector(".display-wrap"), "The display has been added");
 
-  ok(container.querySelector(".coordinate-plane"),
-    "The coordinate plane has been added");
+  ok(
+    container.querySelector(".coordinate-plane"),
+    "The coordinate plane has been added"
+  );
   const buttons = container.querySelectorAll("button");
-  is(buttons.length, 2,
-    "The 2 control points have been added");
+  is(buttons.length, 2, "The 2 control points have been added");
   is(buttons[0].className, "control-point");
   is(buttons[1].className, "control-point");
   ok(container.querySelector("canvas"), "The curve canvas has been added");

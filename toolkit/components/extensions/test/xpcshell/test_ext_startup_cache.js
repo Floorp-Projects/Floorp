@@ -2,14 +2,24 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "42"
+);
 
-Services.prefs.setBoolPref("extensions.webextensions.background-delayed-startup", false);
+Services.prefs.setBoolPref(
+  "extensions.webextensions.background-delayed-startup",
+  false
+);
 
 const ADDON_ID = "test-startup-cache@xpcshell.mozilla.org";
 
@@ -18,12 +28,12 @@ function makeExtension(opts) {
     useAddonManager: "permanent",
 
     manifest: {
-      "version": opts.version,
-      "applications": {"gecko": {"id": ADDON_ID}},
+      version: opts.version,
+      applications: { gecko: { id: ADDON_ID } },
 
-      "name": "__MSG_name__",
+      name: "__MSG_name__",
 
-      "default_locale": "en_US",
+      default_locale: "en_US",
     },
 
     files: {
@@ -56,7 +66,8 @@ add_task(async function() {
   await AddonTestUtils.promiseStartupManager();
 
   let extension = ExtensionTestUtils.loadExtension(
-    makeExtension({version: "1.0"}));
+    makeExtension({ version: "1.0" })
+  );
 
   function getManifest() {
     extension.sendMessage("get-manifest");
@@ -77,7 +88,6 @@ add_task(async function() {
   let manifest = await getManifest();
   equal(manifest.name, "en-US 1.0", "Got expected manifest name");
 
-
   info("Restart and re-check");
   await AddonTestUtils.promiseRestartManager();
   await extension.awaitStartup();
@@ -85,7 +95,6 @@ add_task(async function() {
   equal(extension.version, "1.0", "Expected extension version");
   manifest = await getManifest();
   equal(manifest.name, "en-US 1.0", "Got expected manifest name");
-
 
   info("Change locale to 'fr' and restart");
   Services.locale.requestedLocales = ["fr"];
@@ -96,14 +105,12 @@ add_task(async function() {
   manifest = await getManifest();
   equal(manifest.name, "fr 1.0", "Got expected manifest name");
 
-
   info("Update to version 1.1");
-  await extension.upgrade(makeExtension({version: "1.1"}));
+  await extension.upgrade(makeExtension({ version: "1.1" }));
 
   equal(extension.version, "1.1", "Expected extension version");
   manifest = await getManifest();
   equal(manifest.name, "fr 1.1", "Got expected manifest name");
-
 
   info("Change locale to 'en-US' and restart");
   Services.locale.requestedLocales = ["en-US"];
@@ -113,7 +120,6 @@ add_task(async function() {
   equal(extension.version, "1.1", "Expected extension version");
   manifest = await getManifest();
   equal(manifest.name, "en-US 1.1", "Got expected manifest name");
-
 
   await extension.unload();
 });

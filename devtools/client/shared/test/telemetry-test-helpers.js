@@ -71,8 +71,9 @@ class TelemetryHelpers {
 
     if (checkType === "array" || checkType === "hasentries") {
       if (key) {
-        const keyedHistogram =
-          Services.telemetry.getKeyedHistogramById(histId).snapshot();
+        const keyedHistogram = Services.telemetry
+          .getKeyedHistogramById(histId)
+          .snapshot();
         const result = keyedHistogram[key];
 
         if (result) {
@@ -100,14 +101,16 @@ class TelemetryHelpers {
         }
         break;
       case "scalar":
-        const scalars =
-          Services.telemetry.getSnapshotForScalars("main", false).parent;
+        const scalars = Services.telemetry.getSnapshotForScalars("main", false)
+          .parent;
 
         is(scalars[histId], expected, `${histId} correct`);
         break;
       case "keyedscalar":
-        const keyedScalars =
-          Services.telemetry.getSnapshotForKeyedScalars("main", false).parent;
+        const keyedScalars = Services.telemetry.getSnapshotForKeyedScalars(
+          "main",
+          false
+        ).parent;
         const value = keyedScalars[histId][key];
 
         msg = key ? `${histId}["${key}"] correct.` : `${histId} correct.`;
@@ -126,22 +129,29 @@ class TelemetryHelpers {
    */
   generateTelemetryTests(prefix = "") {
     // Get all histograms and scalars
-    const histograms =
-      Services.telemetry.getSnapshotForHistograms("main", true).parent;
-    const keyedHistograms =
-      Services.telemetry.getSnapshotForKeyedHistograms("main", true).parent;
-    const scalars =
-      Services.telemetry.getSnapshotForScalars("main", false).parent;
-    const keyedScalars =
-      Services.telemetry.getSnapshotForKeyedScalars("main", false).parent;
-    const allHistograms = Object.assign({},
-                                        histograms,
-                                        keyedHistograms,
-                                        scalars,
-                                        keyedScalars);
+    const histograms = Services.telemetry.getSnapshotForHistograms("main", true)
+      .parent;
+    const keyedHistograms = Services.telemetry.getSnapshotForKeyedHistograms(
+      "main",
+      true
+    ).parent;
+    const scalars = Services.telemetry.getSnapshotForScalars("main", false)
+      .parent;
+    const keyedScalars = Services.telemetry.getSnapshotForKeyedScalars(
+      "main",
+      false
+    ).parent;
+    const allHistograms = Object.assign(
+      {},
+      histograms,
+      keyedHistograms,
+      scalars,
+      keyedScalars
+    );
     // Get all keys
-    const histIds = Object.keys(allHistograms)
-                          .filter(histId => histId.startsWith(prefix));
+    const histIds = Object.keys(allHistograms).filter(histId =>
+      histId.startsWith(prefix)
+    );
 
     dump("=".repeat(80) + "\n");
     for (const histId of histIds) {
@@ -155,14 +165,18 @@ class TelemetryHelpers {
           for (const key of keys) {
             const value = snapshot[key];
 
-            dump(`checkTelemetry("${histId}", "${key}", ${value}, "keyedscalar");\n`);
+            dump(
+              `checkTelemetry("${histId}", "${key}", ${value}, "keyedscalar");\n`
+            );
           }
         } else {
           // Scalar
           dump(`checkTelemetry("${histId}", "", ${snapshot}, "scalar");\n`);
         }
-      } else if (typeof snapshot.histogram_type !== "undefined" &&
-                typeof snapshot.values !== "undefined") {
+      } else if (
+        typeof snapshot.histogram_type !== "undefined" &&
+        typeof snapshot.values !== "undefined"
+      ) {
         // Histogram
         const actual = snapshot.values;
 

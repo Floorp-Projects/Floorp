@@ -15,21 +15,29 @@ add_task(async function testNarratePref() {
   setup();
 
   await spawnInNewReaderTab(TEST_ARTICLE, function() {
-    is(content.document.querySelectorAll(NarrateTestUtils.TOGGLE).length, 1,
-      "narrate is inserted by default");
+    is(
+      content.document.querySelectorAll(NarrateTestUtils.TOGGLE).length,
+      1,
+      "narrate is inserted by default"
+    );
   });
 
   setBoolPref(ENABLE_PREF, false);
 
   await spawnInNewReaderTab(TEST_ARTICLE, function() {
-    ok(!content.document.querySelector(NarrateTestUtils.TOGGLE),
-      "narrate is disabled and is not in reader mode");
+    ok(
+      !content.document.querySelector(NarrateTestUtils.TOGGLE),
+      "narrate is disabled and is not in reader mode"
+    );
   });
 
   setBoolPref(ENABLE_PREF, true);
 
   await spawnInNewReaderTab(TEST_ARTICLE, function() {
-    is(content.document.querySelectorAll(NarrateTestUtils.TOGGLE).length, 1,
-      "narrate is re-enabled and appears only once");
+    is(
+      content.document.querySelectorAll(NarrateTestUtils.TOGGLE).length,
+      1,
+      "narrate is re-enabled and appears only once"
+    );
   });
 });

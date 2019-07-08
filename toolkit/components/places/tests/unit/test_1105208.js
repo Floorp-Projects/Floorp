@@ -13,8 +13,9 @@ add_task(async function() {
     url: `place:parent=${folder.guid}`,
   });
 
-  let unfiledRoot =
-    PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid).root;
+  let unfiledRoot = PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.unfiledGuid
+  ).root;
   let shortcutNode = unfiledRoot.getChild(unfiledRoot.childCount - 1);
   Assert.equal(shortcutNode.bookmarkGuid, shortcutInfo.guid);
 

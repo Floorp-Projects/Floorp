@@ -4,7 +4,12 @@
 
 "use strict";
 
-const { BATCH_ACTIONS, BATCH_ENABLE, BATCH_RESET, BATCH_FLUSH } = require("../constants");
+const {
+  BATCH_ACTIONS,
+  BATCH_ENABLE,
+  BATCH_RESET,
+  BATCH_FLUSH,
+} = require("../constants");
 
 const REQUESTS_REFRESH_RATE = 50; // ms
 
@@ -95,7 +100,7 @@ function batchingMiddleware(store) {
  */
 function DelayedTask(taskFn, delay) {
   this._promise = new Promise((resolve, reject) => {
-    this.runTask = (cancel) => {
+    this.runTask = cancel => {
       if (cancel) {
         reject("Task cancelled");
       } else {

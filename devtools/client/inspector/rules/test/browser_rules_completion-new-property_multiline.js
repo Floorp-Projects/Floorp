@@ -19,8 +19,7 @@ const LONG_CSS_VALUE =
 
 const EXPECTED_CSS_VALUE = LONG_CSS_VALUE.replace("95%", "95%, red");
 
-const TEST_URI =
-  `<style>
+const TEST_URI = `<style>
     .title {
       background: ${LONG_CSS_VALUE};
     }
@@ -29,7 +28,7 @@ const TEST_URI =
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   info("Selecting the test node");
   await selectNode("h1", inspector);
@@ -55,8 +54,11 @@ add_task(async function() {
   info("Moving the caret next to a number");
   let pos = editor.input.value.indexOf("0deg") + 1;
   editor.input.setSelectionRange(pos, pos);
-  is(editor.input.value[editor.input.selectionStart - 1], "0",
-    "Input caret is after a 0");
+  is(
+    editor.input.value[editor.input.selectionStart - 1],
+    "0",
+    "Input caret is after a 0"
+  );
 
   info("Check that UP/DOWN navigates in the input, even when next to a number");
   EventUtils.synthesizeKey("VK_DOWN", {}, view.styleWindow);
@@ -67,19 +69,25 @@ add_task(async function() {
   pos = editor.input.value.indexOf("95%") + 3;
   editor.input.setSelectionRange(pos, pos);
 
-  info("Sending \", re\" to the editable field.");
+  info('Sending ", re" to the editable field.');
   for (const key of ", re") {
     await synthesizeKeyForAutocomplete(key, editor, view.styleWindow);
   }
 
   info("Check the autocomplete can still be displayed.");
   ok(editor.popup && editor.popup.isOpen, "Autocomplete popup is displayed.");
-  is(editor.popup.selectedIndex, 0,
-    "Autocomplete has an item selected by default");
+  is(
+    editor.popup.selectedIndex,
+    0,
+    "Autocomplete has an item selected by default"
+  );
 
   let item = editor.popup.getItemAtIndex(editor.popup.selectedIndex);
-  is(item.label, "rebeccapurple",
-    "Check autocomplete displays expected value.");
+  is(
+    item.label,
+    "rebeccapurple",
+    "Check autocomplete displays expected value."
+  );
 
   info("Check autocomplete suggestions can be cycled using UP/DOWN arrows.");
 
@@ -103,8 +111,11 @@ add_task(async function() {
   await onSuggest;
   await onRuleviewChanged;
 
-  is(editor.input.value, EXPECTED_CSS_VALUE,
-    "Input value correctly autocompleted");
+  is(
+    editor.input.value,
+    EXPECTED_CSS_VALUE,
+    "Input value correctly autocompleted"
+  );
 
   info("Press ESCAPE to leave the input.");
   onRuleviewChanged = view.once("ruleview-changed");

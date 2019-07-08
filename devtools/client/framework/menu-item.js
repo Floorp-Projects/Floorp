@@ -49,19 +49,19 @@
  *      If false, the menu item will be entirely hidden.
  */
 function MenuItem({
-    accelerator = null,
-    accesskey = null,
-    l10nID = null,
-    checked = false,
-    click = () => {},
-    disabled = false,
-    hover = () => {},
-    id = null,
-    label = "",
-    submenu = null,
-    type = "normal",
-    visible = true,
-} = { }) {
+  accelerator = null,
+  accesskey = null,
+  l10nID = null,
+  checked = false,
+  click = () => {},
+  disabled = false,
+  hover = () => {},
+  id = null,
+  label = "",
+  submenu = null,
+  type = "normal",
+  visible = true,
+} = {}) {
   this.accelerator = accelerator;
   this.accesskey = accesskey;
   this.l10nID = l10nID;

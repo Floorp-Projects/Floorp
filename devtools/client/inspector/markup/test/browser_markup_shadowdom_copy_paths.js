@@ -28,8 +28,8 @@ const TEST_URL = `data:text/html;charset=utf-8,
   </script>`;
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
-  const {markup} = inspector;
+  const { inspector } = await openInspectorForURL(TEST_URL);
+  const { markup } = inspector;
 
   info("Find and expand the test-component shadow DOM host.");
   const hostFront = await getNodeFront("test-component", inspector);
@@ -45,12 +45,18 @@ add_task(async function() {
   await selectNode(divContainer.node, inspector);
 
   info("Check the copied values for the various copy*Path helpers");
-  await waitForClipboardPromise(() => inspector.markup.contextMenu._copyXPath(),
-    '//*[@id="el1"]');
-  await waitForClipboardPromise(() => inspector.markup.contextMenu._copyCssPath(),
-    "div#el1");
-  await waitForClipboardPromise(() => inspector.markup.contextMenu._copyUniqueSelector(),
-    "#el1");
+  await waitForClipboardPromise(
+    () => inspector.markup.contextMenu._copyXPath(),
+    '//*[@id="el1"]'
+  );
+  await waitForClipboardPromise(
+    () => inspector.markup.contextMenu._copyCssPath(),
+    "div#el1"
+  );
+  await waitForClipboardPromise(
+    () => inspector.markup.contextMenu._copyUniqueSelector(),
+    "#el1"
+  );
 
   info("Expand the div");
   await expandContainer(inspector, divContainer);
@@ -60,10 +66,16 @@ add_task(async function() {
   await selectNode(spanContainer.node, inspector);
 
   info("Check the copied values for the various copy*Path helpers");
-  await waitForClipboardPromise(() => inspector.markup.contextMenu._copyXPath(),
-    "/div/span[3]");
-  await waitForClipboardPromise(() => inspector.markup.contextMenu._copyCssPath(),
-    "div#el1 span");
-  await waitForClipboardPromise(() => inspector.markup.contextMenu._copyUniqueSelector(),
-    "#el1 > span:nth-child(3)");
+  await waitForClipboardPromise(
+    () => inspector.markup.contextMenu._copyXPath(),
+    "/div/span[3]"
+  );
+  await waitForClipboardPromise(
+    () => inspector.markup.contextMenu._copyCssPath(),
+    "div#el1 span"
+  );
+  await waitForClipboardPromise(
+    () => inspector.markup.contextMenu._copyUniqueSelector(),
+    "#el1 > span:nth-child(3)"
+  );
 });

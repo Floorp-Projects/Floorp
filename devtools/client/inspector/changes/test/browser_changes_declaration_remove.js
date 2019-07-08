@@ -32,6 +32,14 @@ add_task(async function() {
 
   const removeDecl = getRemovedDeclarations(doc);
   is(removeDecl.length, 1, "One declaration was tracked as removed");
-  is(removeDecl[0].property, "color", "Correct declaration name was tracked as removed");
-  is(removeDecl[0].value, "red", "Correct declaration value was tracked as removed");
+  is(
+    removeDecl[0].property,
+    "color",
+    "Correct declaration name was tracked as removed"
+  );
+  is(
+    removeDecl[0].value,
+    "red",
+    "Correct declaration value was tracked as removed"
+  );
 });

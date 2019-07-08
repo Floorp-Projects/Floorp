@@ -26,8 +26,10 @@ add_task(async function mainTest() {
 
     // Items are listed in newest-to-oldest order, so e.g. the first item's
     // verdict is the last element in the verdicts array.
-    Assert.ok(DownloadsBlockedSubview.subview.getAttribute("verdict"),
-              verdicts[verdicts.count - i - 1]);
+    Assert.ok(
+      DownloadsBlockedSubview.subview.getAttribute("verdict"),
+      verdicts[verdicts.count - i - 1]
+    );
 
     // Go back to the main view.
     viewPromise = promiseViewShown(DownloadsBlockedSubview.mainView);
@@ -44,8 +46,13 @@ add_task(async function mainTest() {
     // should also be closed as a result, so wait for that too.
     let unblockOpenPromise = promiseUnblockAndOpenDownloadCalled(item);
     let hidePromise = promisePanelHidden();
-    EventUtils.synthesizeMouse(DownloadsBlockedSubview.elements.openButton,
-                               10, 10, {}, window);
+    EventUtils.synthesizeMouse(
+      DownloadsBlockedSubview.elements.openButton,
+      10,
+      10,
+      {},
+      window
+    );
     await unblockOpenPromise;
     await hidePromise;
 
@@ -62,8 +69,13 @@ add_task(async function mainTest() {
     // Click the Remove button.  The panel should close and the item should be
     // removed from it.
     hidePromise = promisePanelHidden();
-    EventUtils.synthesizeMouse(DownloadsBlockedSubview.elements.deleteButton,
-                               10, 10, {}, window);
+    EventUtils.synthesizeMouse(
+      DownloadsBlockedSubview.elements.deleteButton,
+      10,
+      10,
+      {},
+      window
+    );
     await hidePromise;
 
     await openPanel();
@@ -116,17 +128,17 @@ async function openPanel() {
           resolve();
         }
       } else if (iBackoff < backoff) {
-          // Keep backing off before trying again.
-          iBackoff++;
+        // Keep backing off before trying again.
+        iBackoff++;
       } else {
-          // Try (or retry) opening the panel.
-          verifyCount = 5;
-          backoff = Math.max(1, 2 * backoff);
-          iBackoff = 0;
-          if (DownloadsPanel._state != DownloadsPanel.kStateUninitialized) {
-              DownloadsPanel._state = DownloadsPanel.kStateHidden;
-          }
-          DownloadsPanel.showPanel();
+        // Try (or retry) opening the panel.
+        verifyCount = 5;
+        backoff = Math.max(1, 2 * backoff);
+        iBackoff = 0;
+        if (DownloadsPanel._state != DownloadsPanel.kStateUninitialized) {
+          DownloadsPanel._state = DownloadsPanel.kStateHidden;
+        }
+        DownloadsPanel.showPanel();
       }
     }, 100);
   });
@@ -145,7 +157,7 @@ function makeDownload(verdict) {
       message: "Download blocked.",
       becauseBlocked: true,
       becauseBlockedByReputationCheck: true,
-      reputationCheckVerdict:  verdict,
+      reputationCheckVerdict: verdict,
     },
   };
 }

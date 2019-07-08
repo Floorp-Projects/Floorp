@@ -4,9 +4,11 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Async",
-                               "resource://services-common/async.js");
-
+ChromeUtils.defineModuleGetter(
+  this,
+  "Async",
+  "resource://services-common/async.js"
+);
 
 var EXPORTED_SYMBOLS = ["CollectionValidator", "CollectionProblemData"];
 
@@ -70,7 +72,9 @@ class CollectionValidator {
 
   async getServerItems(engine) {
     let collection = engine.itemSource();
-    let collectionKey = engine.service.collectionKeys.keyForCollection(engine.name);
+    let collectionKey = engine.service.collectionKeys.keyForCollection(
+      engine.name
+    );
     collection.full = true;
     let result = await collection.getBatched();
     if (!result.response.success) {
@@ -78,7 +82,7 @@ class CollectionValidator {
     }
     let cleartexts = [];
 
-    await Async.yieldingForEach(result.records, async (record) => {
+    await Async.yieldingForEach(result.records, async record => {
       await record.decrypt(collectionKey);
       cleartexts.push(record.cleartext);
     });
@@ -148,14 +152,22 @@ class CollectionValidator {
 
     const clientRecords = [];
 
-    await Async.yieldingForEach(clientItems, item => {
-      clientRecords.push(this.normalizeClientItem(item));
-    }, yieldState);
+    await Async.yieldingForEach(
+      clientItems,
+      item => {
+        clientRecords.push(this.normalizeClientItem(item));
+      },
+      yieldState
+    );
 
     const serverRecords = [];
-    await Async.yieldingForEach(serverItems, async (item) => {
-      serverRecords.push((await this.normalizeServerItem(item)));
-    }, yieldState);
+    await Async.yieldingForEach(
+      serverItems,
+      async item => {
+        serverRecords.push(await this.normalizeServerItem(item));
+      },
+      yieldState
+    );
 
     let problems = this.emptyProblemData();
     let seenServer = new Map();

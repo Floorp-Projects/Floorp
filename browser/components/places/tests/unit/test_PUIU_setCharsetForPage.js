@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {PrivateBrowsingUtils} =
-  ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+const { PrivateBrowsingUtils } = ChromeUtils.import(
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 const UTF8 = "UTF-8";
 const UTF16 = "UTF-16";
@@ -45,27 +46,52 @@ add_task(async function test_simple_add() {
   // set charset on bookmarked page
   await PlacesUIUtils.setCharsetForPage(TEST_BOOKMARKED_URI, UTF16, {});
 
-  let pageInfo = await PlacesUtils.history.fetch(TEST_URI, {includeAnnotations: true});
-  Assert.equal(pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO), UTF16,
-    "Should return correct charset for a not-bookmarked page");
+  let pageInfo = await PlacesUtils.history.fetch(TEST_URI, {
+    includeAnnotations: true,
+  });
+  Assert.equal(
+    pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO),
+    UTF16,
+    "Should return correct charset for a not-bookmarked page"
+  );
 
-  pageInfo = await PlacesUtils.history.fetch(TEST_BOOKMARKED_URI, {includeAnnotations: true});
-  Assert.equal(pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO), UTF16,
-    "Should return correct charset for a bookmarked page");
+  pageInfo = await PlacesUtils.history.fetch(TEST_BOOKMARKED_URI, {
+    includeAnnotations: true,
+  });
+  Assert.equal(
+    pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO),
+    UTF16,
+    "Should return correct charset for a bookmarked page"
+  );
 
   await PlacesUtils.history.clear();
 
-  pageInfo = await PlacesUtils.history.fetch(TEST_URI, {includeAnnotations: true});
-  Assert.ok(!pageInfo, "Should not return pageInfo for a page after history cleared");
+  pageInfo = await PlacesUtils.history.fetch(TEST_URI, {
+    includeAnnotations: true,
+  });
+  Assert.ok(
+    !pageInfo,
+    "Should not return pageInfo for a page after history cleared"
+  );
 
-  pageInfo = await PlacesUtils.history.fetch(TEST_BOOKMARKED_URI, {includeAnnotations: true});
-  Assert.equal(pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO), UTF16,
-    "Charset should still be set for a bookmarked page after history clear");
+  pageInfo = await PlacesUtils.history.fetch(TEST_BOOKMARKED_URI, {
+    includeAnnotations: true,
+  });
+  Assert.equal(
+    pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO),
+    UTF16,
+    "Charset should still be set for a bookmarked page after history clear"
+  );
 
   await PlacesUIUtils.setCharsetForPage(TEST_BOOKMARKED_URI, "");
-  pageInfo = await PlacesUtils.history.fetch(TEST_BOOKMARKED_URI, {includeAnnotations: true});
-  Assert.strictEqual(pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO), undefined,
-    "Should not have a charset after it has been removed from the page");
+  pageInfo = await PlacesUtils.history.fetch(TEST_BOOKMARKED_URI, {
+    includeAnnotations: true,
+  });
+  Assert.strictEqual(
+    pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO),
+    undefined,
+    "Should not have a charset after it has been removed from the page"
+  );
 });
 
 add_task(async function test_utf8_clears_saved_anno() {
@@ -75,16 +101,26 @@ add_task(async function test_utf8_clears_saved_anno() {
   // set charset on bookmarked page
   await PlacesUIUtils.setCharsetForPage(TEST_URI, UTF16, {});
 
-  let pageInfo = await PlacesUtils.history.fetch(TEST_URI, {includeAnnotations: true});
-  Assert.equal(pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO), UTF16,
-    "Should return correct charset for a not-bookmarked page");
+  let pageInfo = await PlacesUtils.history.fetch(TEST_URI, {
+    includeAnnotations: true,
+  });
+  Assert.equal(
+    pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO),
+    UTF16,
+    "Should return correct charset for a not-bookmarked page"
+  );
 
   // Now set the bookmark to a UTF-8 charset.
   await PlacesUIUtils.setCharsetForPage(TEST_URI, UTF8, {});
 
-  pageInfo = await PlacesUtils.history.fetch(TEST_URI, {includeAnnotations: true});
-  Assert.strictEqual(pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO), undefined,
-    "Should have removed the charset for a UTF-8 page.");
+  pageInfo = await PlacesUtils.history.fetch(TEST_URI, {
+    includeAnnotations: true,
+  });
+  Assert.strictEqual(
+    pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO),
+    undefined,
+    "Should have removed the charset for a UTF-8 page."
+  );
 });
 
 add_task(async function test_private_browsing_not_saved() {
@@ -95,7 +131,12 @@ add_task(async function test_private_browsing_not_saved() {
   PrivateBrowsingUtils.isWindowPrivate = () => true;
   await PlacesUIUtils.setCharsetForPage(TEST_URI, UTF16, {});
 
-  let pageInfo = await PlacesUtils.history.fetch(TEST_URI, {includeAnnotations: true});
-  Assert.strictEqual(pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO), undefined,
-    "Should not have set the charset in a private browsing window.");
+  let pageInfo = await PlacesUtils.history.fetch(TEST_URI, {
+    includeAnnotations: true,
+  });
+  Assert.strictEqual(
+    pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO),
+    undefined,
+    "Should not have set the charset in a private browsing window."
+  );
 });

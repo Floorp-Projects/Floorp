@@ -5,13 +5,16 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,Test that the web console " +
-                 "displays requests that have been recorded in the " +
-                 "netmonitor, even if the console hadn't opened yet.";
+const TEST_URI =
+  "data:text/html;charset=utf8,Test that the web console " +
+  "displays requests that have been recorded in the " +
+  "netmonitor, even if the console hadn't opened yet.";
 
 const TEST_FILE = "test-network-request.html";
-const TEST_PATH = "http://example.com/browser/devtools/client/webconsole/" +
-                  "test/mochitest/" + TEST_FILE;
+const TEST_PATH =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/" +
+  TEST_FILE;
 
 const NET_PREF = "devtools.webconsole.filter.net";
 Services.prefs.setBoolPref(NET_PREF, true);
@@ -43,14 +46,17 @@ add_task(async function() {
 async function testNetmonitor(toolbox) {
   const monitor = toolbox.getCurrentPanel();
   const { store, windowRequire } = monitor.panelWin;
-  const {
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   await waitUntil(() => store.getState().requests.requests.size > 0);
 
-  is(store.getState().requests.requests.size, 1,
-    "Network request appears in the network panel");
+  is(
+    store.getState().requests.requests.size,
+    1,
+    "Network request appears in the network panel"
+  );
 
   const item = getSortedRequests(store.getState()).get(0);
   is(item.method, "GET", "The request method is correct.");

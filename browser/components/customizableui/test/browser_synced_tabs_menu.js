@@ -6,11 +6,19 @@
 
 requestLongerTimeout(2);
 
-const {FxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-let {SyncedTabs} = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm");
-let {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm");
+const { FxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
+let { SyncedTabs } = ChromeUtils.import(
+  "resource://services-sync/SyncedTabs.jsm"
+);
+let { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
-ChromeUtils.defineModuleGetter(this, "UITour", "resource:///modules/UITour.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "UITour",
+  "resource:///modules/UITour.jsm"
+);
 
 // These are available on the widget implementation, but it seems impossible
 // to grab that impl at runtime.
@@ -27,7 +35,9 @@ var newTab = null;
 // A helper to notify there are new tabs. Returns a promise that is resolved
 // once the UI has been updated.
 function updateTabsPanel() {
-  let promiseTabsUpdated = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");
+  let promiseTabsUpdated = promiseObserverNotified(
+    "synced-tabs-menu:test:tabs-updated"
+  );
   Services.obs.notifyObservers(null, SyncedTabs.TOPIC_TABS_CHANGED);
   return promiseTabsUpdated;
 }
@@ -35,17 +45,26 @@ function updateTabsPanel() {
 // This is the mock we use for SyncedTabs.jsm - tests may override various
 // functions.
 let mockedInternal = {
-  get isConfiguredToSyncTabs() { return true; },
-  getTabClients() { return Promise.resolve([]); },
-  syncTabs() { return Promise.resolve(); },
+  get isConfiguredToSyncTabs() {
+    return true;
+  },
+  getTabClients() {
+    return Promise.resolve([]);
+  },
+  syncTabs() {
+    return Promise.resolve();
+  },
   hasSyncedThisSession: false,
 };
 
-
 add_task(async function setup() {
   const getSignedInUser = FxAccounts.config.getSignedInUser;
-  FxAccounts.config.getSignedInUser = async () => Promise.resolve({uid: "uid", email: "foo@bar.com"});
-  Services.prefs.setCharPref("identity.fxaccounts.remote.root", "https://example.com/");
+  FxAccounts.config.getSignedInUser = async () =>
+    Promise.resolve({ uid: "uid", email: "foo@bar.com" });
+  Services.prefs.setCharPref(
+    "identity.fxaccounts.remote.root",
+    "https://example.com/"
+  );
 
   let oldInternal = SyncedTabs._internal;
   SyncedTabs._internal = mockedInternal;
@@ -68,7 +87,10 @@ add_task(async function setup() {
 // The test expects the about:preferences#sync page to open in the current tab
 async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   info("Check Sync button functionality");
-  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "sync-button",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
 
   await waitForOverflowButtonShown();
 
@@ -83,7 +105,9 @@ async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   let syncButton = document.getElementById("sync-button");
   ok(syncButton, "The Sync button was added to the Panel Menu");
 
-  let tabsUpdatedPromise = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");
+  let tabsUpdatedPromise = promiseObserverNotified(
+    "synced-tabs-menu:test:tabs-updated"
+  );
   let syncPanel = document.getElementById("PanelUI-remotetabs");
   let viewShownPromise = BrowserTestUtils.waitForEvent(syncPanel, "ViewShown");
   syncButton.click();
@@ -99,9 +123,11 @@ async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   setupButton.click();
 
   await new Promise(resolve => {
-    let handler = async (e) => {
-      if (e.originalTarget != gBrowser.selectedBrowser.contentDocument ||
-          e.target.location.href == "about:blank") {
+    let handler = async e => {
+      if (
+        e.originalTarget != gBrowser.selectedBrowser.contentDocument ||
+        e.target.location.href == "about:blank"
+      ) {
         info("Skipping spurious 'load' event for " + e.target.location.href);
         return;
       }
@@ -112,8 +138,11 @@ async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   });
   newTab = gBrowser.selectedTab;
 
-  is(gBrowser.currentURI.spec, "about:preferences?entrypoint=" + entryPoint + "#sync",
-    "Firefox Sync preference page opened with `menupanel` entrypoint");
+  is(
+    gBrowser.currentURI.spec,
+    "about:preferences?entrypoint=" + entryPoint + "#sync",
+    "Firefox Sync preference page opened with `menupanel` entrypoint"
+  );
   ok(!isOverflowOpen(), "The panel closed");
 
   if (isOverflowOpen()) {
@@ -147,28 +176,40 @@ add_task(asyncCleanup);
 
 // When Sync is configured in an unverified state.
 add_task(async function() {
-  gSync.updateAllUI({ status: UIState.STATUS_NOT_VERIFIED, email: "foo@bar.com" });
+  gSync.updateAllUI({
+    status: UIState.STATUS_NOT_VERIFIED,
+    email: "foo@bar.com",
+  });
   await openPrefsFromMenuPanel("PanelUI-remotetabs-unverified", "synced-tabs");
 });
 add_task(asyncCleanup);
 
 // When Sync is configured in a "needs reauthentication" state.
 add_task(async function() {
-  gSync.updateAllUI({ status: UIState.STATUS_LOGIN_FAILED, email: "foo@bar.com" });
+  gSync.updateAllUI({
+    status: UIState.STATUS_LOGIN_FAILED,
+    email: "foo@bar.com",
+  });
   await openPrefsFromMenuPanel("PanelUI-remotetabs-reauthsync", "synced-tabs");
 });
 
 // Test the Connect Another Device button
 add_task(async function() {
-  gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, email: "foo@bar.com",
-                      lastSync: new Date() });
+  gSync.updateAllUI({
+    status: UIState.STATUS_SIGNED_IN,
+    email: "foo@bar.com",
+    lastSync: new Date(),
+  });
 
-  let button = document.getElementById("PanelUI-remotetabs-connect-device-button");
+  let button = document.getElementById(
+    "PanelUI-remotetabs-connect-device-button"
+  );
   ok(button, "found the button");
 
   await document.getElementById("nav-bar").overflowable.show();
-  let expectedUrl = "https://example.com/connect_another_device?service=sync&context=" +
-                    "fx_desktop_v3&entrypoint=synced-tabs&uid=uid&email=foo%40bar.com";
+  let expectedUrl =
+    "https://example.com/connect_another_device?service=sync&context=" +
+    "fx_desktop_v3&entrypoint=synced-tabs&uid=uid&email=foo%40bar.com";
   let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, expectedUrl);
   button.click();
   // the panel should have been closed.
@@ -180,11 +221,16 @@ add_task(async function() {
 
 // Test the "Sync Now" button
 add_task(async function() {
-  gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, email: "foo@bar.com",
-                      lastSync: new Date() });
+  gSync.updateAllUI({
+    status: UIState.STATUS_SIGNED_IN,
+    email: "foo@bar.com",
+    lastSync: new Date(),
+  });
 
   await document.getElementById("nav-bar").overflowable.show();
-  let tabsUpdatedPromise = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");
+  let tabsUpdatedPromise = promiseObserverNotified(
+    "synced-tabs-menu:test:tabs-updated"
+  );
   let syncPanel = document.getElementById("PanelUI-remotetabs");
   let viewShownPromise = BrowserTestUtils.waitForEvent(syncPanel, "ViewShown");
   let syncButton = document.getElementById("sync-button");
@@ -207,7 +253,11 @@ add_task(async function() {
   mockedInternal.hasSyncedThisSession = true;
   await updateTabsPanel();
   // The UI should be showing the "no clients" pane.
-  is(deck.selectedIndex, DECKINDEX_NOCLIENTS, "no-clients deck entry is visible");
+  is(
+    deck.selectedIndex,
+    DECKINDEX_NOCLIENTS,
+    "no-clients deck entry is visible"
+  );
 
   // Tell the widget there are tabs available - we have 3 clients, one with no
   // tabs.
@@ -330,7 +380,7 @@ add_task(async function() {
         type: "client",
         name: "My Desktop",
         lastModified: 1492201200,
-        tabs: function() {
+        tabs: (function() {
           let allTabsDesktop = [];
           // We choose 77 tabs, because TABS_PER_PAGE is 25, which means
           // on the second to last page we should have 22 items shown
@@ -339,17 +389,21 @@ add_task(async function() {
             allTabsDesktop.push({ title: "Tab #" + i, url: SAMPLE_TAB_URL });
           }
           return allTabsDesktop;
-        }(),
+        })(),
       },
     ]);
   };
 
-
-  gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, lastSync: new Date(),
-                      email: "foo@bar.com" });
+  gSync.updateAllUI({
+    status: UIState.STATUS_SIGNED_IN,
+    lastSync: new Date(),
+    email: "foo@bar.com",
+  });
 
   await document.getElementById("nav-bar").overflowable.show();
-  let tabsUpdatedPromise = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");
+  let tabsUpdatedPromise = promiseObserverNotified(
+    "synced-tabs-menu:test:tabs-updated"
+  );
   let syncPanel = document.getElementById("PanelUI-remotetabs");
   let viewShownPromise = BrowserTestUtils.waitForEvent(syncPanel, "ViewShown");
   let syncButton = document.getElementById("sync-button");
@@ -371,13 +425,25 @@ add_task(async function() {
     for (let i = 0; i < tabsShownCount; i++) {
       node = node.nextElementSibling;
       is(node.getAttribute("itemtype"), "tab", "node is a tab");
-      is(node.getAttribute("label"), "Tab #" + (i + 1), "the tab is the correct one");
-      is(node.getAttribute("targetURI"), SAMPLE_TAB_URL, "url is the correct one");
+      is(
+        node.getAttribute("label"),
+        "Tab #" + (i + 1),
+        "the tab is the correct one"
+      );
+      is(
+        node.getAttribute("targetURI"),
+        SAMPLE_TAB_URL,
+        "url is the correct one"
+      );
     }
     let showMoreButton;
     if (showMoreLabel) {
       node = showMoreButton = node.nextElementSibling;
-      is(node.getAttribute("itemtype"), "showmorebutton", "node is a show more button");
+      is(
+        node.getAttribute("itemtype"),
+        "showmorebutton",
+        "node is a show more button"
+      );
       is(node.getAttribute("label"), showMoreLabel);
     }
     node = node.nextElementSibling;
@@ -389,7 +455,10 @@ add_task(async function() {
   async function checkCanOpenURL() {
     let tabList = document.getElementById("PanelUI-remotetabs-tabslist");
     let node = tabList.firstElementChild.nextElementSibling;
-    let promiseTabOpened = BrowserTestUtils.waitForLocationChange(gBrowser, SAMPLE_TAB_URL);
+    let promiseTabOpened = BrowserTestUtils.waitForLocationChange(
+      gBrowser,
+      SAMPLE_TAB_URL
+    );
     node.click();
     await promiseTabOpened;
   }

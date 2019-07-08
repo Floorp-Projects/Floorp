@@ -46,15 +46,17 @@ AutoCompleteInput.prototype = {
 
 // Get tagging service
 try {
-  var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
-                getService(Ci.nsITaggingService);
+  var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].getService(
+    Ci.nsITaggingService
+  );
 } catch (ex) {
   do_throw("Could not get tagging service\n");
 }
 
 function ensure_tag_results(uris, searchTerm) {
-  var controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);
+  var controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
+    Ci.nsIAutoCompleteController
+  );
 
   // Make an AutoCompleteInput that uses our searches
   // and confirms results on search complete
@@ -71,8 +73,10 @@ function ensure_tag_results(uris, searchTerm) {
 
     input.onSearchComplete = function() {
       Assert.equal(numSearchesStarted, 1);
-      Assert.equal(controller.searchStatus,
-                   Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
+      Assert.equal(
+        controller.searchStatus,
+        Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH
+      );
       Assert.equal(controller.matchCount, uris.length);
       let vals = [];
       for (let i = 0; i < controller.matchCount; i++) {

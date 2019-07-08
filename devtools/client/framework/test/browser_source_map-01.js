@@ -11,7 +11,9 @@
 
 // There are shutdown issues for which multiple rejections are left uncaught.
 // See bug 1018184 for resolving these issues.
-const { PromiseTestUtils } = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
 PromiseTestUtils.whitelistRejectionsGlobally(/this\.worker is null/);
 PromiseTestUtils.whitelistRejectionsGlobally(/Component not initialized/);
 
@@ -34,7 +36,11 @@ add_task(async function() {
   checkLoc1(loc1, newLoc1);
 
   const loc2 = { url: JS_URL, line: 8, column: 3 };
-  const newLoc2 = await service.originalPositionFor(loc2.url, loc2.line, loc2.column);
+  const newLoc2 = await service.originalPositionFor(
+    loc2.url,
+    loc2.line,
+    loc2.column
+  );
   checkLoc2(loc2, newLoc2);
 
   await toolbox.destroy();
@@ -47,7 +53,11 @@ function checkLoc1(oldLoc, newLoc) {
   is(oldLoc.column, null, "Correct column for JS:6");
   is(oldLoc.url, JS_URL, "Correct url for JS:6");
   is(newLoc.line, 4, "Correct line for JS:6 -> COFFEE");
-  is(newLoc.column, 2, "Correct column for JS:6 -> COFFEE -- handles falsy column entries");
+  is(
+    newLoc.column,
+    2,
+    "Correct column for JS:6 -> COFFEE -- handles falsy column entries"
+  );
   is(newLoc.sourceUrl, COFFEE_URL, "Correct url for JS:6 -> COFFEE");
 }
 

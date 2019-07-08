@@ -10,8 +10,10 @@
 
 const SIMPLE_URL = URL_ROOT + "service-workers/simple.html";
 const OTHER_URL = SIMPLE_URL.replace("example.com", "test1.example.com");
-const EMPTY_URL = (URL_ROOT + "service-workers/empty.html")
-  .replace("example.com", "test2.example.com");
+const EMPTY_URL = (URL_ROOT + "service-workers/empty.html").replace(
+  "example.com",
+  "test2.example.com"
+);
 
 add_task(async function() {
   await enableApplicationPanel();
@@ -23,27 +25,36 @@ add_task(async function() {
   await waitUntil(() => getWorkerContainers(doc).length === 1);
 
   let scopeEl = getWorkerContainers(doc)[0].querySelector(".js-sw-scope");
-  ok(scopeEl.textContent.startsWith("example.com"),
-    "First service worker registration is displayed for the correct domain");
+  ok(
+    scopeEl.textContent.startsWith("example.com"),
+    "First service worker registration is displayed for the correct domain"
+  );
 
   info(
-    "Navigate to another page for a different domain with no service worker");
+    "Navigate to another page for a different domain with no service worker"
+  );
 
   await navigate(target, EMPTY_URL);
   info("Wait until the service worker list is updated");
   await waitUntil(() => doc.querySelector(".worker-list-empty") !== null);
-  ok(true, "No service workers are shown for an empty page in a different domain.");
+  ok(
+    true,
+    "No service workers are shown for an empty page in a different domain."
+  );
 
   info(
-    "Navigate to another page for a different domain with another service worker");
+    "Navigate to another page for a different domain with another service worker"
+  );
   await navigate(target, OTHER_URL);
 
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 1);
 
   scopeEl = getWorkerContainers(doc)[0].querySelector(".js-sw-scope");
-  ok(scopeEl.textContent.startsWith("test1.example.com"),
-    "Second service worker registration is displayed for the correct domain");
+  ok(
+    scopeEl.textContent.startsWith("test1.example.com"),
+    "Second service worker registration is displayed for the correct domain"
+  );
 
   await unregisterAllWorkers(target.client);
 });

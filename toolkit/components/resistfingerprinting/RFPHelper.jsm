@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["RFPHelper"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const kPrefResistFingerprinting = "privacy.resistFingerprinting";
 const kPrefSpoofEnglish = "privacy.spoof_english";
@@ -50,10 +52,20 @@ class _RFPHelper {
     // Add unconditional observers
     Services.prefs.addObserver(kPrefResistFingerprinting, this);
     Services.prefs.addObserver(kPrefLetterboxing, this);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "_letterboxingDimensions",
-      kPrefLetterboxingDimensions, "", null, this._parseLetterboxingDimensions);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "_isLetterboxingTesting",
-      kPrefLetterboxingTesting, false);
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_letterboxingDimensions",
+      kPrefLetterboxingDimensions,
+      "",
+      null,
+      this._parseLetterboxingDimensions
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_isLetterboxingTesting",
+      kPrefLetterboxingTesting,
+      false
+    );
 
     // Add RFP and Letterboxing observers if prefs are enabled
     this._handleResistFingerprintingChanged();
@@ -94,8 +106,7 @@ class _RFPHelper {
 
   handleEvent(aMessage) {
     switch (aMessage.type) {
-      case "TabOpen":
-      {
+      case "TabOpen": {
         let tab = aMessage.target;
         this._addOrClearContentMargin(tab.linkedBrowser);
         break;
@@ -166,10 +177,12 @@ class _RFPHelper {
   _handleSpoofEnglishChanged() {
     switch (Services.prefs.getIntPref(kPrefSpoofEnglish)) {
       case 0: // will prompt
-        // This should only happen when turning privacy.resistFingerprinting off.
-        // Works like disabling accept-language spoofing.
+      // This should only happen when turning privacy.resistFingerprinting off.
+      // Works like disabling accept-language spoofing.
       case 1: // don't spoof
-        if (Services.prefs.prefHasUserValue("javascript.use_us_english_locale")) {
+        if (
+          Services.prefs.prefHasUserValue("javascript.use_us_english_locale")
+        ) {
           Services.prefs.clearUserPref("javascript.use_us_english_locale");
         }
         // We don't reset intl.accept_languages. Instead, setting
@@ -186,8 +199,10 @@ class _RFPHelper {
   }
 
   _shouldPromptForLanguagePref() {
-    return (Services.locale.appLocaleAsLangTag.substr(0, 2) !== "en")
-      && (Services.prefs.getIntPref(kPrefSpoofEnglish) === 0);
+    return (
+      Services.locale.appLocaleAsLangTag.substr(0, 2) !== "en" &&
+      Services.prefs.getIntPref(kPrefSpoofEnglish) === 0
+    );
   }
 
   _handleHttpOnModifyRequest(subject, data) {
@@ -242,28 +257,42 @@ class _RFPHelper {
     // Display two buttons, both with string titles.
     let flags = Services.prompt.STD_YES_NO_BUTTONS;
     let brandBundle = Services.strings.createBundle(
-      "chrome://branding/locale/brand.properties");
+      "chrome://branding/locale/brand.properties"
+    );
     let brandShortName = brandBundle.GetStringFromName("brandShortName");
     let navigatorBundle = Services.strings.createBundle(
-      "chrome://browser/locale/browser.properties");
+      "chrome://browser/locale/browser.properties"
+    );
     let message = navigatorBundle.formatStringFromName(
-      "privacy.spoof_english", [brandShortName]);
+      "privacy.spoof_english",
+      [brandShortName]
+    );
     let response = Services.prompt.confirmEx(
-      null, "", message, flags, null, null, null, null, {value: false});
+      null,
+      "",
+      message,
+      flags,
+      null,
+      null,
+      null,
+      null,
+      { value: false }
+    );
 
     // Update preferences to reflect their response and to prevent the prompt
     // from being displayed again.
-    Services.prefs.setIntPref(kPrefSpoofEnglish, (response == 0) ? 2 : 1);
+    Services.prefs.setIntPref(kPrefSpoofEnglish, response == 0 ? 2 : 1);
   }
 
   _getCurrentAcceptLanguageValue(uri) {
     let channel = Services.io.newChannelFromURI(
-        uri,
-        null, // aLoadingNode
-        Services.scriptSecurityManager.getSystemPrincipal(),
-        null, // aTriggeringPrincipal
-        Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-        Ci.nsIContentPolicy.TYPE_OTHER);
+      uri,
+      null, // aLoadingNode
+      Services.scriptSecurityManager.getSystemPrincipal(),
+      null, // aTriggeringPrincipal
+      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      Ci.nsIContentPolicy.TYPE_OTHER
+    );
     let httpChannel;
     try {
       httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
@@ -301,7 +330,9 @@ class _RFPHelper {
   _parseLetterboxingDimensions(aPrefValue) {
     if (!aPrefValue || !aPrefValue.match(/^(?:\d+x\d+,\s*)*(?:\d+x\d+)$/)) {
       if (aPrefValue) {
-        Cu.reportError(`Invalid pref value for ${kPrefLetterboxingDimensions}: ${aPrefValue}`);
+        Cu.reportError(
+          `Invalid pref value for ${kPrefLetterboxingDimensions}: ${aPrefValue}`
+        );
       }
       return [];
     }
@@ -317,8 +348,7 @@ class _RFPHelper {
   }
 
   _addOrClearContentMargin(aBrowser) {
-    let tab = aBrowser.getTabBrowser()
-                      .getTabForBrowser(aBrowser);
+    let tab = aBrowser.getTabBrowser().getTabForBrowser(aBrowser);
 
     // We won't do anything for lazy browsers.
     if (!aBrowser.isConnected) {
@@ -360,39 +390,66 @@ class _RFPHelper {
     let logId = Math.random();
     log("_roundContentView[" + logId + "]");
     let win = aBrowser.ownerGlobal;
-    let browserContainer = aBrowser.getTabBrowser()
-                                   .getBrowserContainer(aBrowser);
+    let browserContainer = aBrowser
+      .getTabBrowser()
+      .getBrowserContainer(aBrowser);
 
-    let {contentWidth, contentHeight, containerWidth, containerHeight} =
-      await win.promiseDocumentFlushed(() => {
-        let contentWidth = aBrowser.clientWidth;
-        let contentHeight = aBrowser.clientHeight;
-        let containerWidth = browserContainer.clientWidth;
-        let containerHeight = browserContainer.clientHeight;
+    let {
+      contentWidth,
+      contentHeight,
+      containerWidth,
+      containerHeight,
+    } = await win.promiseDocumentFlushed(() => {
+      let contentWidth = aBrowser.clientWidth;
+      let contentHeight = aBrowser.clientHeight;
+      let containerWidth = browserContainer.clientWidth;
+      let containerHeight = browserContainer.clientHeight;
 
-        // If the findbar or devtools are out, we need to subtract their height (plus 1
-        // for the separator) from the container height, because we need to adjust our
-        // letterboxing to account for it; however it is not included in that dimension
-        // (but rather is subtracted from the content height.)
-        let findBar = win.gFindBarInitialized ? win.gFindBar : undefined;
-        let findBarOffset = (findBar && !findBar.hidden) ? findBar.clientHeight + 1 : 0;
-        let devtools = browserContainer.getElementsByClassName("devtools-toolbox-bottom-iframe");
-        let devtoolsOffset = devtools.length ? devtools[0].clientHeight : 0;
+      // If the findbar or devtools are out, we need to subtract their height (plus 1
+      // for the separator) from the container height, because we need to adjust our
+      // letterboxing to account for it; however it is not included in that dimension
+      // (but rather is subtracted from the content height.)
+      let findBar = win.gFindBarInitialized ? win.gFindBar : undefined;
+      let findBarOffset =
+        findBar && !findBar.hidden ? findBar.clientHeight + 1 : 0;
+      let devtools = browserContainer.getElementsByClassName(
+        "devtools-toolbox-bottom-iframe"
+      );
+      let devtoolsOffset = devtools.length ? devtools[0].clientHeight : 0;
 
-        return {
-          contentWidth,
-          contentHeight,
-          containerWidth,
-          containerHeight: containerHeight - findBarOffset - devtoolsOffset,
-        };
-      });
+      return {
+        contentWidth,
+        contentHeight,
+        containerWidth,
+        containerHeight: containerHeight - findBarOffset - devtoolsOffset,
+      };
+    });
 
-    log("_roundContentView[" + logId + "] contentWidth=" + contentWidth + " contentHeight=" + contentHeight +
-      " containerWidth=" + containerWidth + " containerHeight=" + containerHeight + " ");
+    log(
+      "_roundContentView[" +
+        logId +
+        "] contentWidth=" +
+        contentWidth +
+        " contentHeight=" +
+        contentHeight +
+        " containerWidth=" +
+        containerWidth +
+        " containerHeight=" +
+        containerHeight +
+        " "
+    );
 
     let calcMargins = (aWidth, aHeight) => {
       let result;
-      log("_roundContentView[" + logId + "] calcMargins(" + aWidth + ", " + aHeight + ")");
+      log(
+        "_roundContentView[" +
+          logId +
+          "] calcMargins(" +
+          aWidth +
+          ", " +
+          aHeight +
+          ")"
+      );
       // If the set is empty, we will round the content with the default
       // stepping size.
       if (!this._letterboxingDimensions.length) {
@@ -400,7 +457,18 @@ class _RFPHelper {
           width: this.steppedRange(aWidth),
           height: this.steppedRange(aHeight),
         };
-        log("_roundContentView[" + logId + "] calcMargins(" + aWidth + ", " + aHeight + ") = " + result.width + " x " + result.height);
+        log(
+          "_roundContentView[" +
+            logId +
+            "] calcMargins(" +
+            aWidth +
+            ", " +
+            aHeight +
+            ") = " +
+            result.width +
+            " x " +
+            result.height
+        );
         return result;
       }
 
@@ -439,7 +507,18 @@ class _RFPHelper {
         };
       }
 
-      log("_roundContentView[" + logId + "] calcMargins(" + aWidth + ", " + aHeight + ") = " + result.width + " x " + result.height);
+      log(
+        "_roundContentView[" +
+          logId +
+          "] calcMargins(" +
+          aWidth +
+          ", " +
+          aHeight +
+          ") = " +
+          result.width +
+          " x " +
+          result.height
+      );
       return result;
     };
 
@@ -452,14 +531,28 @@ class _RFPHelper {
     if (aBrowser.style.margin == `${margins.height}px ${margins.width}px`) {
       log("_roundContentView[" + logId + "] is_rounded == true");
       if (this._isLetterboxingTesting) {
-        log("_roundContentView[" + logId + "] is_rounded == true test:letterboxing:update-margin-finish");
-        Services.obs.notifyObservers(null, "test:letterboxing:update-margin-finish");
+        log(
+          "_roundContentView[" +
+            logId +
+            "] is_rounded == true test:letterboxing:update-margin-finish"
+        );
+        Services.obs.notifyObservers(
+          null,
+          "test:letterboxing:update-margin-finish"
+        );
       }
       return;
     }
 
     win.requestAnimationFrame(() => {
-      log("_roundContentView[" + logId + "] setting margins to " + margins.width + " x " + margins.height);
+      log(
+        "_roundContentView[" +
+          logId +
+          "] setting margins to " +
+          margins.width +
+          " x " +
+          margins.height
+      );
       // One cannot (easily) control the color of a margin unfortunately.
       // An initial attempt to use a border instead of a margin resulted
       // in offset event dispatching; so for now we use a colorless margin.
@@ -483,11 +576,12 @@ class _RFPHelper {
   }
 
   _attachWindow(aWindow) {
-    aWindow.gBrowser
-           .addTabsProgressListener(this);
+    aWindow.gBrowser.addTabsProgressListener(this);
     aWindow.addEventListener("TabOpen", this);
-    aWindow.messageManager
-           .addMessageListener(kEventLetterboxingSizeUpdate, this);
+    aWindow.messageManager.addMessageListener(
+      kEventLetterboxingSizeUpdate,
+      this
+    );
 
     // Rounding the content viewport.
     this._updateMarginsForTabsInWindow(aWindow);
@@ -511,8 +605,10 @@ class _RFPHelper {
     let tabBrowser = aWindow.gBrowser;
     tabBrowser.removeTabsProgressListener(this);
     aWindow.removeEventListener("TabOpen", this);
-    aWindow.messageManager
-           .removeMessageListener(kEventLetterboxingSizeUpdate, this);
+    aWindow.messageManager.removeMessageListener(
+      kEventLetterboxingSizeUpdate,
+      this
+    );
 
     // Clear all margins and tooltip for all browsers.
     for (let tab of tabBrowser.tabs) {
@@ -539,16 +635,21 @@ class _RFPHelper {
     let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
     let self = this;
 
-    win.addEventListener("load", () => {
-      // We attach to the new window when it has been loaded if the new loaded
-      // window is a browsing window.
-      if (win.document
-             .documentElement
-             .getAttribute("windowtype") !== "navigator:browser") {
-        return;
-      }
-      self._attachWindow(win);
-    }, {once: true});
+    win.addEventListener(
+      "load",
+      () => {
+        // We attach to the new window when it has been loaded if the new loaded
+        // window is a browsing window.
+        if (
+          win.document.documentElement.getAttribute("windowtype") !==
+          "navigator:browser"
+        ) {
+          return;
+        }
+        self._attachWindow(win);
+      },
+      { once: true }
+    );
   }
 }
 

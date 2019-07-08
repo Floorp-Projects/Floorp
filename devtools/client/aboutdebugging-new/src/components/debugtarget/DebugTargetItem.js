@@ -30,7 +30,7 @@ class DebugTargetItem extends PureComponent {
       {
         className: "debug-target-item__action",
       },
-      actionComponent({ dispatch, target }),
+      actionComponent({ dispatch, target })
     );
   }
 
@@ -45,7 +45,7 @@ class DebugTargetItem extends PureComponent {
       {
         className: "debug-target-item__additional_actions",
       },
-      additionalActionsComponent({ dispatch, target }),
+      additionalActionsComponent({ dispatch, target })
     );
   }
 
@@ -67,7 +67,7 @@ class DebugTargetItem extends PureComponent {
         className: "debug-target-item__name ellipsis-text",
         title: this.props.target.name,
       },
-      this.props.target.name,
+      this.props.target.name
     );
   }
 
@@ -80,7 +80,7 @@ class DebugTargetItem extends PureComponent {
       this.renderName(),
       this.renderAction(),
       this.renderDetail(),
-      this.renderAdditionalActions(),
+      this.renderAdditionalActions()
     );
   }
 }

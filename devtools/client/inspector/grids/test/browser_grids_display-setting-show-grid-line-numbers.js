@@ -30,26 +30,36 @@ add_task(async function() {
   const checkbox = doc.getElementById("grid-setting-show-grid-line-numbers");
 
   info("Checking the initial state of the CSS grid highlighter setting.");
-  ok(!Services.prefs.getBoolPref(SHOW_GRID_LINE_NUMBERS),
-    "'Display numbers on lines' is pref off by default.");
+  ok(
+    !Services.prefs.getBoolPref(SHOW_GRID_LINE_NUMBERS),
+    "'Display numbers on lines' is pref off by default."
+  );
 
   info("Toggling ON the 'Display numbers on lines' setting.");
-  let onCheckboxChange = waitUntilState(store, state =>
-    state.highlighterSettings.showGridLineNumbers);
+  let onCheckboxChange = waitUntilState(
+    store,
+    state => state.highlighterSettings.showGridLineNumbers
+  );
   checkbox.click();
   await onCheckboxChange;
 
-  ok(Services.prefs.getBoolPref(SHOW_GRID_LINE_NUMBERS),
-    "'Display numbers on lines' is pref on.");
+  ok(
+    Services.prefs.getBoolPref(SHOW_GRID_LINE_NUMBERS),
+    "'Display numbers on lines' is pref on."
+  );
 
   info("Toggling OFF the 'Display numbers on lines' setting.");
-  onCheckboxChange = waitUntilState(store, state =>
-    !state.highlighterSettings.showGridLineNumbers);
+  onCheckboxChange = waitUntilState(
+    store,
+    state => !state.highlighterSettings.showGridLineNumbers
+  );
   checkbox.click();
   await onCheckboxChange;
 
-  ok(!Services.prefs.getBoolPref(SHOW_GRID_LINE_NUMBERS),
-    "'Display numbers on lines' is pref off.");
+  ok(
+    !Services.prefs.getBoolPref(SHOW_GRID_LINE_NUMBERS),
+    "'Display numbers on lines' is pref off."
+  );
 
   Services.prefs.clearUserPref(SHOW_GRID_LINE_NUMBERS);
 });

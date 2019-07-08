@@ -18,19 +18,31 @@ add_task(async function test_createBasicCardResponseData_basic() {
     expiryYear: "2017",
     cardSecurityCode: "0123",
   };
-  let actual = dialogGlobal.paymentDialogWrapper.createBasicCardResponseData(expected);
-  Assert.equal(actual.cardholderName, expected.cardholderName, "Check cardholderName");
+  let actual = dialogGlobal.paymentDialogWrapper.createBasicCardResponseData(
+    expected
+  );
+  Assert.equal(
+    actual.cardholderName,
+    expected.cardholderName,
+    "Check cardholderName"
+  );
   Assert.equal(actual.cardNumber, expected.cardNumber, "Check cardNumber");
   Assert.equal(actual.expiryMonth, expected.expiryMonth, "Check expiryMonth");
   Assert.equal(actual.expiryYear, expected.expiryYear, "Check expiryYear");
-  Assert.equal(actual.cardSecurityCode, expected.cardSecurityCode, "Check cardSecurityCode");
+  Assert.equal(
+    actual.cardSecurityCode,
+    expected.cardSecurityCode,
+    "Check cardSecurityCode"
+  );
 });
 
 add_task(async function test_createBasicCardResponseData_minimal() {
   let expected = {
     cardNumber: "1234567890",
   };
-  let actual = dialogGlobal.paymentDialogWrapper.createBasicCardResponseData(expected);
+  let actual = dialogGlobal.paymentDialogWrapper.createBasicCardResponseData(
+    expected
+  );
   info(actual.cardNumber);
   Assert.equal(actual.cardNumber, expected.cardNumber, "Check cardNumber");
 });
@@ -42,19 +54,28 @@ add_task(async function test_createBasicCardResponseData_withoutNumber() {
     expiryYear: "2017",
     cardSecurityCode: "0123",
   };
-  Assert.throws(() => dialogGlobal.paymentDialogWrapper.createBasicCardResponseData(data),
-                /NS_ERROR_FAILURE/,
-                "Check cardNumber is required");
+  Assert.throws(
+    () => dialogGlobal.paymentDialogWrapper.createBasicCardResponseData(data),
+    /NS_ERROR_FAILURE/,
+    "Check cardNumber is required"
+  );
 });
 
 function checkAddress(actual, expected) {
   for (let [propName, propVal] of Object.entries(expected)) {
     if (propName == "addressLines") {
       // Note the singular vs. plural here.
-      Assert.equal(actual.addressLine.length, propVal.length, "Check number of address lines");
+      Assert.equal(
+        actual.addressLine.length,
+        propVal.length,
+        "Check number of address lines"
+      );
       for (let [i, line] of expected.addressLines.entries()) {
-        Assert.equal(actual.addressLine.queryElementAt(i, Ci.nsISupportsString).data, line,
-                     `Check ${propName} line ${i}`);
+        Assert.equal(
+          actual.addressLine.queryElementAt(i, Ci.nsISupportsString).data,
+          line,
+          `Check ${propName} line ${i}`
+        );
       }
       continue;
     }
@@ -73,10 +94,7 @@ add_task(async function test_createPaymentAddress_minimal() {
 add_task(async function test_createPaymentAddress_basic() {
   let data = {
     country: "CA",
-    addressLines: [
-      "123 Sesame Street",
-      "P.O. Box ABC",
-    ],
+    addressLines: ["123 Sesame Street", "P.O. Box ABC"],
     region: "ON",
     city: "Delhi",
     dependentLocality: "N/A",
@@ -103,7 +121,9 @@ add_task(async function test_createShowResponse_basic() {
     expiryYear: "2099",
     cardSecurityCode: "0123",
   };
-  let methodData = dialogGlobal.paymentDialogWrapper.createBasicCardResponseData(cardData);
+  let methodData = dialogGlobal.paymentDialogWrapper.createBasicCardResponseData(
+    cardData
+  );
 
   let responseData = {
     acceptStatus: Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
@@ -113,9 +133,11 @@ add_task(async function test_createShowResponse_basic() {
     payerEmail: "my.email@example.com",
     payerPhone: "+15195555555",
   };
-  let actual = dialogGlobal.paymentDialogWrapper.createShowResponse(responseData);
+  let actual = dialogGlobal.paymentDialogWrapper.createShowResponse(
+    responseData
+  );
   for (let [propName, propVal] of Object.entries(actual)) {
-    if (typeof(propVal) != "string") {
+    if (typeof propVal != "string") {
       continue;
     }
     if (propName == "requestId") {

@@ -3358,24 +3358,19 @@ impl Renderer {
 
         let _timer = self.gpu_profile.start_timer(GPU_TAG_SCALE);
 
-        match source {
-            TextureSource::PrevPassColor => {
-                self.shaders.borrow_mut().cs_scale_rgba8.bind(&mut self.device,
-                                                              &projection,
-                                                              &mut self.renderer_errors);
-            }
-            TextureSource::PrevPassAlpha => {
-                self.shaders.borrow_mut().cs_scale_a8.bind(&mut self.device,
-                                                           &projection,
-                                                           &mut self.renderer_errors);
-            }
-            _ => unreachable!(),
-        }
+        self.shaders
+            .borrow_mut()
+            .cs_scale
+            .bind(
+                &mut self.device,
+                &projection,
+                &mut self.renderer_errors,
+            );
 
         self.draw_instanced_batch(
             &scalings,
             VertexArrayKind::Scale,
-            &BatchTextures::no_texture(),
+            &BatchTextures::color(source),
             stats,
         );
     }
@@ -4397,6 +4392,8 @@ impl Renderer {
         stats: &mut RendererStats,
         clear_framebuffer: bool,
     ) {
+        // These markers seem to crash a lot on Android, see bug 1559834
+        #[cfg(not(target_os = "android"))]
         let _gm = self.gpu_profile.start_marker("tile frame draw");
 
         if frame.passes.is_empty() {
@@ -4410,8 +4407,9 @@ impl Renderer {
 
         self.bind_frame_data(frame);
 
-        for (pass_index, pass) in frame.passes.iter_mut().enumerate() {
-            let _gm = self.gpu_profile.start_marker(&format!("pass {}", pass_index));
+        for (_pass_index, pass) in frame.passes.iter_mut().enumerate() {
+            #[cfg(not(target_os = "android"))]
+            let _gm = self.gpu_profile.start_marker(&format!("pass {}", _pass_index));
 
             self.texture_resolver.bind(
                 &TextureSource::PrevPassAlpha,

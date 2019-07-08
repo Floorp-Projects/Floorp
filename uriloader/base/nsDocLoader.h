@@ -125,9 +125,9 @@ class nsDocLoader : public nsIDocumentLoader,
 
   bool TreatAsBackgroundLoad();
 
-  void SetFakeOnLoadDispatched(){ mHasFakeOnLoadDispatched = true; };
+  void SetFakeOnLoadDispatched() { mHasFakeOnLoadDispatched = true; };
 
-  bool HasFakeOnLoadDispatched(){ return mHasFakeOnLoadDispatched; };
+  bool HasFakeOnLoadDispatched() { return mHasFakeOnLoadDispatched; };
 
   void ResetToFirstLoad() {
     mHasFakeOnLoadDispatched = false;
@@ -223,6 +223,7 @@ class nsDocLoader : public nsIDocumentLoader,
   // loadgroup has no active requests before checking for "real" emptiness if
   // aFlushLayout is true.
   void DocLoaderIsEmpty(bool aFlushLayout);
+
  protected:
   struct nsStatusInfo : public mozilla::LinkedListElement<nsStatusInfo> {
     nsString mStatusMessage;

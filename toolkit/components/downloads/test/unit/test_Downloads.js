@@ -111,8 +111,7 @@ add_task(async function test_fetch_string_arguments() {
   await promiseVerifyContents(targetPath, TEST_DATA_SHORT);
 
   targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
-  await Downloads.fetch(httpUrl("source.txt"),
-                        targetPath);
+  await Downloads.fetch(httpUrl("source.txt"), targetPath);
   await promiseVerifyContents(targetPath, TEST_DATA_SHORT);
 });
 

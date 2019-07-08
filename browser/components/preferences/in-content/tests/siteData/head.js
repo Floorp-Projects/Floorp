@@ -5,22 +5,49 @@
 
 const TEST_QUOTA_USAGE_HOST = "example.com";
 const TEST_QUOTA_USAGE_ORIGIN = "https://" + TEST_QUOTA_USAGE_HOST;
-const TEST_QUOTA_USAGE_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", TEST_QUOTA_USAGE_ORIGIN) + "/site_data_test.html";
+const TEST_QUOTA_USAGE_URL =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    TEST_QUOTA_USAGE_ORIGIN
+  ) + "/site_data_test.html";
 const TEST_OFFLINE_HOST = "example.org";
 const TEST_OFFLINE_ORIGIN = "https://" + TEST_OFFLINE_HOST;
-const TEST_OFFLINE_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", TEST_OFFLINE_ORIGIN) + "/offline/offline.html";
-const TEST_SERVICE_WORKER_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", TEST_OFFLINE_ORIGIN) + "/service_worker_test.html";
+const TEST_OFFLINE_URL =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    TEST_OFFLINE_ORIGIN
+  ) + "/offline/offline.html";
+const TEST_SERVICE_WORKER_URL =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    TEST_OFFLINE_ORIGIN
+  ) + "/service_worker_test.html";
 
-const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
+const REMOVE_DIALOG_URL =
+  "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
 
-const { DownloadUtils } = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
-const { SiteDataManager } = ChromeUtils.import("resource:///modules/SiteDataManager.jsm");
-const { OfflineAppCacheHelper } = ChromeUtils.import("resource://gre/modules/offlineAppCache.jsm");
+const { DownloadUtils } = ChromeUtils.import(
+  "resource://gre/modules/DownloadUtils.jsm"
+);
+const { SiteDataManager } = ChromeUtils.import(
+  "resource:///modules/SiteDataManager.jsm"
+);
+const { OfflineAppCacheHelper } = ChromeUtils.import(
+  "resource://gre/modules/offlineAppCache.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "SiteDataTestUtils",
-                               "resource://testing-common/SiteDataTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "SiteDataTestUtils",
+  "resource://testing-common/SiteDataTestUtils.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager", "@mozilla.org/serviceworkers/manager;1", "nsIServiceWorkerManager");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "serviceWorkerManager",
+  "@mozilla.org/serviceworkers/manager;1",
+  "nsIServiceWorkerManager"
+);
 
 function promiseSiteDataManagerSitesUpdated() {
   return TestUtils.topicObserved("sitedatamanager:sites-updated", () => true);
@@ -38,52 +65,83 @@ function is_element_hidden(aElement, aMsg) {
 
 function promiseLoadSubDialog(aURL) {
   return new Promise((resolve, reject) => {
-    content.gSubDialog._dialogStack.addEventListener("dialogopen", function dialogopen(aEvent) {
-      if (aEvent.detail.dialog._frame.contentWindow.location == "about:blank")
-        return;
-      content.gSubDialog._dialogStack.removeEventListener("dialogopen", dialogopen);
-
-      is(aEvent.detail.dialog._frame.contentWindow.location.toString(), aURL,
-        "Check the proper URL is loaded");
-
-      // Check visibility
-      is_element_visible(aEvent.detail.dialog._overlay, "Overlay is visible");
-
-      // Check that stylesheets were injected
-      let expectedStyleSheetURLs = aEvent.detail.dialog._injectedStyleSheets.slice(0);
-      for (let styleSheet of aEvent.detail.dialog._frame.contentDocument.styleSheets) {
-        let i = expectedStyleSheetURLs.indexOf(styleSheet.href);
-        if (i >= 0) {
-          info("found " + styleSheet.href);
-          expectedStyleSheetURLs.splice(i, 1);
+    content.gSubDialog._dialogStack.addEventListener(
+      "dialogopen",
+      function dialogopen(aEvent) {
+        if (
+          aEvent.detail.dialog._frame.contentWindow.location == "about:blank"
+        ) {
+          return;
         }
-      }
-      is(expectedStyleSheetURLs.length, 0, "All expectedStyleSheetURLs should have been found");
+        content.gSubDialog._dialogStack.removeEventListener(
+          "dialogopen",
+          dialogopen
+        );
 
-      // Wait for the next event tick to make sure the remaining part of the
-      // testcase runs after the dialog gets ready for input.
-      executeSoon(() => resolve(aEvent.detail.dialog._frame.contentWindow));
-    });
+        is(
+          aEvent.detail.dialog._frame.contentWindow.location.toString(),
+          aURL,
+          "Check the proper URL is loaded"
+        );
+
+        // Check visibility
+        is_element_visible(aEvent.detail.dialog._overlay, "Overlay is visible");
+
+        // Check that stylesheets were injected
+        let expectedStyleSheetURLs = aEvent.detail.dialog._injectedStyleSheets.slice(
+          0
+        );
+        for (let styleSheet of aEvent.detail.dialog._frame.contentDocument
+          .styleSheets) {
+          let i = expectedStyleSheetURLs.indexOf(styleSheet.href);
+          if (i >= 0) {
+            info("found " + styleSheet.href);
+            expectedStyleSheetURLs.splice(i, 1);
+          }
+        }
+        is(
+          expectedStyleSheetURLs.length,
+          0,
+          "All expectedStyleSheetURLs should have been found"
+        );
+
+        // Wait for the next event tick to make sure the remaining part of the
+        // testcase runs after the dialog gets ready for input.
+        executeSoon(() => resolve(aEvent.detail.dialog._frame.contentWindow));
+      }
+    );
   });
 }
 
 function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
   return new Promise(resolve => {
-    let finalPrefPaneLoaded = TestUtils.topicObserved("sync-pane-loaded", () => true);
+    let finalPrefPaneLoaded = TestUtils.topicObserved(
+      "sync-pane-loaded",
+      () => true
+    );
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
     openPreferences(aPane);
     let newTabBrowser = gBrowser.selectedBrowser;
 
-    newTabBrowser.addEventListener("Initialized", function() {
-      newTabBrowser.contentWindow.addEventListener("load", async function() {
-        let win = gBrowser.contentWindow;
-        let selectedPane = win.history.state;
-        await finalPrefPaneLoaded;
-        if (!aOptions || !aOptions.leaveOpen)
-          gBrowser.removeCurrentTab();
-        resolve({ selectedPane });
-      }, { once: true });
-    }, { capture: true, once: true });
+    newTabBrowser.addEventListener(
+      "Initialized",
+      function() {
+        newTabBrowser.contentWindow.addEventListener(
+          "load",
+          async function() {
+            let win = gBrowser.contentWindow;
+            let selectedPane = win.history.state;
+            await finalPrefPaneLoaded;
+            if (!aOptions || !aOptions.leaveOpen) {
+              gBrowser.removeCurrentTab();
+            }
+            resolve({ selectedPane });
+          },
+          { once: true }
+        );
+      },
+      { capture: true, once: true }
+    );
   });
 }
 
@@ -91,10 +149,22 @@ function openSiteDataSettingsDialog() {
   let doc = gBrowser.selectedBrowser.contentDocument;
   let settingsBtn = doc.getElementById("siteDataSettings");
   let dialogOverlay = content.gSubDialog._preloadDialog._overlay;
-  let dialogLoadPromise = promiseLoadSubDialog("chrome://browser/content/preferences/siteDataSettings.xul");
-  let dialogInitPromise = TestUtils.topicObserved("sitedata-settings-init", () => true);
-  let fullyLoadPromise = Promise.all([dialogLoadPromise, dialogInitPromise]).then(() => {
-    is(dialogOverlay.style.visibility, "visible", "The Settings dialog should be visible");
+  let dialogLoadPromise = promiseLoadSubDialog(
+    "chrome://browser/content/preferences/siteDataSettings.xul"
+  );
+  let dialogInitPromise = TestUtils.topicObserved(
+    "sitedata-settings-init",
+    () => true
+  );
+  let fullyLoadPromise = Promise.all([
+    dialogLoadPromise,
+    dialogInitPromise,
+  ]).then(() => {
+    is(
+      dialogOverlay.style.visibility,
+      "visible",
+      "The Settings dialog should be visible"
+    );
   });
   settingsBtn.doCommand();
   return fullyLoadPromise;
@@ -105,12 +175,23 @@ function promiseSettingsDialogClose() {
     let win = gBrowser.selectedBrowser.contentWindow;
     let dialogOverlay = win.gSubDialog._topDialog._overlay;
     let dialogWin = win.gSubDialog._topDialog._frame.contentWindow;
-    dialogWin.addEventListener("unload", function unload() {
-      if (dialogWin.document.documentURI === "chrome://browser/content/preferences/siteDataSettings.xul") {
-        isnot(dialogOverlay.style.visibility, "visible", "The Settings dialog should be hidden");
-        resolve();
-      }
-    }, { once: true });
+    dialogWin.addEventListener(
+      "unload",
+      function unload() {
+        if (
+          dialogWin.document.documentURI ===
+          "chrome://browser/content/preferences/siteDataSettings.xul"
+        ) {
+          isnot(
+            dialogOverlay.style.visibility,
+            "visible",
+            "The Settings dialog should be hidden"
+          );
+          resolve();
+        }
+      },
+      { once: true }
+    );
   });
 }
 
@@ -131,7 +212,11 @@ async function addTestData(data) {
   let hosts = [];
 
   for (let site of data) {
-    is(typeof site.origin, "string", "Passed an origin string into addTestData.");
+    is(
+      typeof site.origin,
+      "string",
+      "Passed an origin string into addTestData."
+    );
     if (site.persisted) {
       await SiteDataTestUtils.persist(site.origin);
     }
@@ -144,7 +229,9 @@ async function addTestData(data) {
       SiteDataTestUtils.addToCookies(site.origin, Cu.now());
     }
 
-    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(site.origin);
+    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+      site.origin
+    );
     hosts.push(principal.URI.host);
   }
 
@@ -160,8 +247,14 @@ function promiseCookiesCleared() {
 async function loadServiceWorkerTestPage(url) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   await BrowserTestUtils.waitForCondition(() => {
-    return ContentTask.spawn(tab.linkedBrowser, {}, () =>
-      content.document.body.getAttribute("data-test-service-worker-registered") === "true");
+    return ContentTask.spawn(
+      tab.linkedBrowser,
+      {},
+      () =>
+        content.document.body.getAttribute(
+          "data-test-service-worker-registered"
+        ) === "true"
+    );
   }, `Fail to load service worker test ${url}`);
   BrowserTestUtils.removeTab(tab);
 }
@@ -180,8 +273,13 @@ function promiseServiceWorkersCleared() {
 function promiseServiceWorkerRegisteredFor(url) {
   return BrowserTestUtils.waitForCondition(() => {
     try {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(url);
-      let sw = serviceWorkerManager.getRegistrationByPrincipal(principal, principal.URI.spec);
+      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+        url
+      );
+      let sw = serviceWorkerManager.getRegistrationByPrincipal(
+        principal,
+        principal.URI.spec
+      );
       if (sw) {
         ok(true, `Found the service worker registered for ${url}`);
         return true;
@@ -190,4 +288,3 @@ function promiseServiceWorkerRegisteredFor(url) {
     return false;
   }, `Should register service worker for ${url}`);
 }
-

@@ -1,8 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
-const {CollectionKeyManager, CryptoWrapper} = ChromeUtils.import("resource://services-sync/record.js");
+const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
+const { CollectionKeyManager, CryptoWrapper } = ChromeUtils.import(
+  "resource://services-sync/record.js"
+);
 
 var collectionKeys = new CollectionKeyManager();
 
@@ -135,8 +137,8 @@ add_task(async function test_ensureLoggedIn() {
   let bookmarks_hmac64 = await Weave.Crypto.generateRandomKey();
 
   storage_keys.cleartext = {
-    "default": [default_key64, default_hmac64],
-    "collections": {"bookmarks": [bookmarks_key64, bookmarks_hmac64]},
+    default: [default_key64, default_hmac64],
+    collections: { bookmarks: [bookmarks_key64, bookmarks_hmac64] },
   };
   storage_keys.modified = Date.now() / 1000;
   storage_keys.id = "keys";
@@ -172,14 +174,20 @@ add_task(async function test_ensureLoggedIn() {
   Assert.equal(collectionKeys.lastModified, storage_keys.modified);
   Assert.ok(!!wbo.cleartext.default);
   do_check_keypair_eq(payload.default, wbo.cleartext.default);
-  do_check_keypair_eq(payload.collections.bookmarks, wbo.cleartext.collections.bookmarks);
+  do_check_keypair_eq(
+    payload.collections.bookmarks,
+    wbo.cleartext.collections.bookmarks
+  );
 
   Assert.ok("bookmarks" in collectionKeys._collections);
   Assert.equal(false, "tabs" in collectionKeys._collections);
 
   _("Updating contents twice with the same data doesn't proceed.");
   await storage_keys.encrypt(keyBundle);
-  Assert.equal(false, await collectionKeys.updateContents(keyBundle, storage_keys));
+  Assert.equal(
+    false,
+    await collectionKeys.updateContents(keyBundle, storage_keys)
+  );
 
   /*
    * Test that we get the right keys out when we ask for
@@ -210,7 +218,7 @@ add_task(async function test_ensureLoggedIn() {
   Assert.ok(collectionKeys.updateNeeded(info_collections));
   info_collections.crypto = 5000;
   Assert.ok(!collectionKeys.updateNeeded(info_collections));
-  info_collections.crypto = 1 + (Date.now() / 1000); // Add one in case computers are fast!
+  info_collections.crypto = 1 + Date.now() / 1000; // Add one in case computers are fast!
   Assert.ok(collectionKeys.updateNeeded(info_collections));
 
   collectionKeys.lastModified = null;
@@ -229,11 +237,11 @@ add_task(async function test_ensureLoggedIn() {
   let k3 = await newBundle("k3");
   let k4 = await newBundle("k4");
   let k5 = await newBundle("k5");
-  let coll1 = {"foo": k1, "bar": k2};
-  let coll2 = {"foo": k1, "bar": k2};
-  let coll3 = {"foo": k1, "bar": k3};
-  let coll4 = {"foo": k4};
-  let coll5 = {"baz": k5, "bar": k2};
+  let coll1 = { foo: k1, bar: k2 };
+  let coll2 = { foo: k1, bar: k2 };
+  let coll3 = { foo: k1, bar: k3 };
+  let coll4 = { foo: k4 };
+  let coll5 = { baz: k5, bar: k2 };
   let coll6 = {};
 
   let d1 = collectionKeys._compareKeyBundleCollections(coll1, coll2); // []

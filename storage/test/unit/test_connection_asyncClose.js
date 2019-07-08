@@ -23,7 +23,6 @@
  *   - test_double_asyncClose_throws
  */
 
-
 /**
  * Sanity check that our close indeed happens after asynchronously executed
  * statements scheduled during the same turn of the event loop.  Note that we
@@ -41,8 +40,10 @@ add_task(async function test_asyncClose_does_not_complete_before_statements() {
   // Issue the close.  (And now the order of yielding doesn't matter.)
   // Branch coverage: (asyncThread && mDBConn)
   await asyncClose(db);
-  equal((await asyncStatementPromise),
-        Ci.mozIStorageStatementCallback.REASON_FINISHED);
+  equal(
+    await asyncStatementPromise,
+    Ci.mozIStorageStatementCallback.REASON_FINISHED
+  );
 });
 
 /**

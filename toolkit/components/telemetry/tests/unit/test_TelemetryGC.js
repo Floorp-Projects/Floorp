@@ -7,7 +7,7 @@
 ChromeUtils.import("resource://gre/modules/GCTelemetry.jsm", this);
 
 function do_register_cleanup() {
-    GCTelemetry.shutdown();
+  GCTelemetry.shutdown();
 }
 
 /*
@@ -45,7 +45,7 @@ function run_test() {
   // Test too many fields
   let my_big_gc = make_gc();
   for (let i = 0; i < 100; i++) {
-      my_big_gc["new_property_" + i] = "Data";
+    my_big_gc["new_property_" + i] = "Data";
   }
   GCTelemetry.observeRaw(my_big_gc);
   // Assert that it was recorded but has only 7 fields.
@@ -57,7 +57,7 @@ function run_test() {
   Assert.equal(make_gc_fields, Object.keys(my_gc_exact).length);
 
   for (let i = 0; i < limit - make_gc_fields; i++) {
-      my_gc_exact["new_property_" + i] = "Data";
+    my_gc_exact["new_property_" + i] = "Data";
   }
   GCTelemetry.observeRaw(my_gc_exact);
   // Assert that it was recorded has all the fields.
@@ -68,7 +68,7 @@ function run_test() {
   // Exactly too many fields.
   let my_gc_too_many = make_gc();
   for (let i = 0; i < limit - make_gc_fields + 1; i++) {
-      my_gc_too_many["new_property_" + i] = "Data";
+    my_gc_too_many["new_property_" + i] = "Data";
   }
   GCTelemetry.observeRaw(my_gc_too_many);
   // Assert that it was recorded but has only 7 fields.
@@ -105,67 +105,66 @@ function make_gc() {
   let timestamp = Math.random() * 1000000;
 
   let gc = {
-    "status": "completed",
-    "timestamp": timestamp,
+    status: "completed",
+    timestamp,
     // All durations are in milliseconds.
-    "max_pause": Math.random() * 95 + 5,
-    "total_time": Math.random() * 500 + 500, // Sum of all slice times.
-    "zones_collected": 9,
-    "total_zones": 9,
-    "total_compartments": 309,
-    "minor_gcs": 44,
-    "store_buffer_overflows": 19,
-    "mmu_20ms": 0,
-    "mmu_50ms": 0,
-    "nonincremental_reason": "GCBytesTrigger",
-    "allocated_bytes": 38853696, // in bytes
-    "added_chunks": 54,
-    "removed_chunks": 12,
-    "slices": 15,
-    "slice_number": 218, // The first slice number for this GC event.
-    "slices_list": [
+    max_pause: Math.random() * 95 + 5,
+    total_time: Math.random() * 500 + 500, // Sum of all slice times.
+    zones_collected: 9,
+    total_zones: 9,
+    total_compartments: 309,
+    minor_gcs: 44,
+    store_buffer_overflows: 19,
+    mmu_20ms: 0,
+    mmu_50ms: 0,
+    nonincremental_reason: "GCBytesTrigger",
+    allocated_bytes: 38853696, // in bytes
+    added_chunks: 54,
+    removed_chunks: 12,
+    slices: 15,
+    slice_number: 218, // The first slice number for this GC event.
+    slices_list: [
       {
-        "slice": 218,  // The global index of this slice.
-        "pause": Math.random() * 2 + 28,
-        "reason": "SET_NEW_DOCUMENT",
-        "initial_state": "NotActive",
-        "final_state": "Mark",
-        "budget": "10ms",
-        "page_faults": 1,
-        "start_timestamp": timestamp + Math.random() * 50000,
-        "times": {
-          "wait_background_thread": 0.012,
-          "mark_discard_code": 2.845,
-          "purge": 0.723,
-          "mark": 9.831,
-          "mark_roots": 0.102,
-          "buffer_gray_roots": 3.095,
-          "mark_cross_compartment_wrappers": 0.039,
-          "mark_c_and_js_stacks": 0.005,
-          "mark_runtime_wide_data": 2.313,
-          "mark_embedding": 0.117,
-          "mark_compartments": 2.27,
-          "unmark": 1.063,
-          "minor_gcs_to_evict_nursery": 8.701,
+        slice: 218, // The global index of this slice.
+        pause: Math.random() * 2 + 28,
+        reason: "SET_NEW_DOCUMENT",
+        initial_state: "NotActive",
+        final_state: "Mark",
+        budget: "10ms",
+        page_faults: 1,
+        start_timestamp: timestamp + Math.random() * 50000,
+        times: {
+          wait_background_thread: 0.012,
+          mark_discard_code: 2.845,
+          purge: 0.723,
+          mark: 9.831,
+          mark_roots: 0.102,
+          buffer_gray_roots: 3.095,
+          mark_cross_compartment_wrappers: 0.039,
+          mark_c_and_js_stacks: 0.005,
+          mark_runtime_wide_data: 2.313,
+          mark_embedding: 0.117,
+          mark_compartments: 2.27,
+          unmark: 1.063,
+          minor_gcs_to_evict_nursery: 8.701,
         },
       },
     ],
-    "totals": {
-      "wait_background_thread": 0.012,
-      "mark_discard_code": 2.845,
-      "purge": 0.723,
-      "mark": 9.831,
-      "mark_roots": 0.102,
-      "buffer_gray_roots": 3.095,
-      "mark_cross_compartment_wrappers": 0.039,
-      "mark_c_and_js_stacks": 0.005,
-      "mark_runtime_wide_data": 2.313,
-      "mark_embedding": 0.117,
-      "mark_compartments": 2.27,
-      "unmark": 1.063,
-      "minor_gcs_to_evict_nursery": 8.701,
+    totals: {
+      wait_background_thread: 0.012,
+      mark_discard_code: 2.845,
+      purge: 0.723,
+      mark: 9.831,
+      mark_roots: 0.102,
+      buffer_gray_roots: 3.095,
+      mark_cross_compartment_wrappers: 0.039,
+      mark_c_and_js_stacks: 0.005,
+      mark_runtime_wide_data: 2.313,
+      mark_embedding: 0.117,
+      mark_compartments: 2.27,
+      unmark: 1.063,
+      minor_gcs_to_evict_nursery: 8.701,
     },
   };
   return gc;
 }
-

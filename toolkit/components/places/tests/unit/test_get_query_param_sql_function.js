@@ -1,7 +1,9 @@
 add_task(async function test_get_query_param_sql_function() {
   let db = await PlacesUtils.promiseDBConnection();
-  await Assert.rejects(db.execute(`SELECT get_query_param()`),
-                       /wrong number of arguments/);
+  await Assert.rejects(
+    db.execute(`SELECT get_query_param()`),
+    /wrong number of arguments/
+  );
   let rows = await db.execute(`SELECT
     get_query_param('a=b&c=d', 'a'),
     get_query_param('a=b&c=d', 'c'),

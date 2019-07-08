@@ -5,7 +5,8 @@
 add_task(async function test() {
   /** Test for Bug 339445 **/
 
-  let testURL = "http://mochi.test:8888/browser/" +
+  let testURL =
+    "http://mochi.test:8888/browser/" +
     "browser/components/sessionstore/test/browser_339445_sample.html";
 
   let tab = BrowserTestUtils.addTab(gBrowser, testURL);
@@ -13,8 +14,11 @@ add_task(async function test() {
 
   await ContentTask.spawn(tab.linkedBrowser, null, function() {
     let doc = content.document;
-    is(doc.getElementById("storageTestItem").textContent, "PENDING",
-       "sessionStorage value has been set");
+    is(
+      doc.getElementById("storageTestItem").textContent,
+      "PENDING",
+      "sessionStorage value has been set"
+    );
   });
 
   let tab2 = gBrowser.duplicateTab(tab);
@@ -22,8 +26,11 @@ add_task(async function test() {
 
   await ContentTask.spawn(tab2.linkedBrowser, null, function() {
     let doc2 = content.document;
-    is(doc2.getElementById("storageTestItem").textContent, "SUCCESS",
-       "sessionStorage value has been duplicated");
+    is(
+      doc2.getElementById("storageTestItem").textContent,
+      "SUCCESS",
+      "sessionStorage value has been duplicated"
+    );
   });
 
   // clean up

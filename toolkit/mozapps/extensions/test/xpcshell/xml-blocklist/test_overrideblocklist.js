@@ -2,11 +2,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const KEY_PROFILEDIR                  = "ProfD";
-const KEY_APPDIR                      = "XCurProcD";
-const FILE_BLOCKLIST                  = "blocklist.xml";
+const KEY_PROFILEDIR = "ProfD";
+const KEY_APPDIR = "XCurProcD";
+const FILE_BLOCKLIST = "blocklist.xml";
 
-const PREF_BLOCKLIST_ENABLED          = "extensions.blocklist.enabled";
+const PREF_BLOCKLIST_ENABLED = "extensions.blocklist.enabled";
 
 const OLD = do_get_file("../data/test_overrideblocklist/old.xml");
 const NEW = do_get_file("../data/test_overrideblocklist/new.xml");
@@ -37,15 +37,20 @@ function incrementAppVersion() {
 
 function clearBlocklists() {
   let blocklist = FileUtils.getFile(KEY_APPDIR, [FILE_BLOCKLIST]);
-  if (blocklist.exists())
+  if (blocklist.exists()) {
     blocklist.remove(true);
+  }
 
   blocklist = FileUtils.getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]);
-  if (blocklist.exists())
+  if (blocklist.exists()) {
     blocklist.remove(true);
+  }
 }
 
-let jsmInternalObj = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
+let jsmInternalObj = ChromeUtils.import(
+  "resource://gre/modules/Blocklist.jsm",
+  null
+);
 
 async function reloadBlocklist() {
   Services.prefs.setBoolPref(PREF_BLOCKLIST_ENABLED, false);

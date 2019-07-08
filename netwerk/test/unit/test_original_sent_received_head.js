@@ -13,7 +13,7 @@
 
 // Note: sets Cc and Ci variables
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
@@ -23,11 +23,12 @@ var httpserver = new HttpServer();
 var testpath = "/simple";
 var httpbody = "0123456789";
 
-var dbg=1
+var dbg = 1;
 
 function run_test() {
-
-  if (dbg) { print("============== START =========="); }
+  if (dbg) {
+    print("============== START ==========");
+  }
 
   httpserver.registerPathHandler(testpath, serverHandler);
   httpserver.start(-1);
@@ -35,7 +36,9 @@ function run_test() {
 }
 
 add_test(function test_headerChange() {
-  if (dbg) { print("============== test_headerChange setup: in"); }
+  if (dbg) {
+    print("============== test_headerChange setup: in");
+  }
 
   var channel1 = setupChannel(testpath);
   channel1.loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
@@ -43,11 +46,15 @@ add_test(function test_headerChange() {
   // ChannelListener defined in head_channels.js
   channel1.asyncOpen(new ChannelListener(checkResponse, null));
 
-  if (dbg) { print("============== test_headerChange setup: out"); }
+  if (dbg) {
+    print("============== test_headerChange setup: out");
+  }
 });
 
 add_test(function test_fromCache() {
-  if (dbg) { print("============== test_fromCache setup: in"); }
+  if (dbg) {
+    print("============== test_fromCache setup: in");
+  }
 
   var channel2 = setupChannel(testpath);
   channel2.loadFlags = Ci.nsIRequest.LOAD_FROM_CACHE;
@@ -55,33 +62,41 @@ add_test(function test_fromCache() {
   // ChannelListener defined in head_channels.js
   channel2.asyncOpen(new ChannelListener(checkResponse, null));
 
-  if (dbg) { print("============== test_fromCache setup: out"); }
+  if (dbg) {
+    print("============== test_fromCache setup: out");
+  }
 });
 
 add_test(function finish() {
-  if (dbg) { print("============== STOP =========="); }
+  if (dbg) {
+    print("============== STOP ==========");
+  }
   httpserver.stop(do_test_finished);
 });
 
 function setupChannel(path) {
-  var chan = NetUtil.newChannel ({
+  var chan = NetUtil.newChannel({
     uri: URL + path,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   }).QueryInterface(Ci.nsIHttpChannel);
   chan.requestMethod = "GET";
   return chan;
 }
 
 function serverHandler(metadata, response) {
-  if (dbg) { print("============== serverHandler: in"); }
+  if (dbg) {
+    print("============== serverHandler: in");
+  }
 
   try {
     var etag = metadata.getHeader("If-None-Match");
-  } catch(ex) {
+  } catch (ex) {
     var etag = "";
   }
   if (etag == "testtag") {
-    if (dbg) { print("============== 304 answerr: in"); }
+    if (dbg) {
+      print("============== 304 answerr: in");
+    }
     response.setStatusLine("1.1", 304, "Not Modified");
   } else {
     response.setHeader("Content-Type", "text/plain", false);
@@ -97,11 +112,15 @@ function serverHandler(metadata, response) {
     response.setHeader("ETag", "testtag", false);
     response.bodyOutputStream.write(httpbody, httpbody.length);
   }
-  if (dbg) { print("============== serverHandler: out"); }
+  if (dbg) {
+    print("============== serverHandler: out");
+  }
 }
 
 function checkResponse(request, data, context) {
-  if (dbg) { print("============== checkResponse: in"); }
+  if (dbg) {
+    print("============== checkResponse: in");
+  }
 
   request.QueryInterface(Ci.nsIHttpChannel);
   Assert.equal(request.responseStatus, 200);
@@ -121,7 +140,7 @@ function checkResponse(request, data, context) {
         locationHeaderFound++;
         Assert.equal(aValue, "loc");
       }
-    }
+    },
   });
   Assert.equal(linkHeaderFound, 1);
   Assert.equal(locationHeaderFound, 1);
@@ -134,7 +153,7 @@ function checkResponse(request, data, context) {
       if (aName == "link") {
         if (linkOrgHeaderFound == 0) {
           Assert.equal(aValue, "");
-        } else if (linkOrgHeaderFound == 1 ) {
+        } else if (linkOrgHeaderFound == 1) {
           Assert.equal(aValue, "value1");
         } else {
           Assert.equal(aValue, "value2");
@@ -142,15 +161,17 @@ function checkResponse(request, data, context) {
         linkOrgHeaderFound++;
       }
       if (aName == "location") {
-          locationOrgHeaderFound++;
-          Assert.equal(aValue, "loc");
+        locationOrgHeaderFound++;
+        Assert.equal(aValue, "loc");
       }
-    }
+    },
   });
   Assert.equal(linkOrgHeaderFound, 3);
   Assert.equal(locationOrgHeaderFound, 1);
 
-  if (dbg) { print("============== Remove headers"); }
+  if (dbg) {
+    print("============== Remove headers");
+  }
   // Remove header.
   request.setResponseHeader("Link", "", false);
   request.setResponseHeader("Location", "", false);
@@ -165,7 +186,7 @@ function checkResponse(request, data, context) {
       if (aName == "Location") {
         locationHeaderFound2 = true;
       }
-    }
+    },
   });
   Assert.ok(!linkHeaderFound2, "There should be no link header");
   Assert.ok(!locationHeaderFound2, "There should be no location headers.");
@@ -178,7 +199,7 @@ function checkResponse(request, data, context) {
       if (aName == "link") {
         if (linkOrgHeaderFound2 == 0) {
           Assert.equal(aValue, "");
-        } else if (linkOrgHeaderFound2 == 1 ) {
+        } else if (linkOrgHeaderFound2 == 1) {
           Assert.equal(aValue, "value1");
         } else {
           Assert.equal(aValue, "value2");
@@ -189,31 +210,35 @@ function checkResponse(request, data, context) {
         locationOrgHeaderFound2++;
         Assert.equal(aValue, "loc");
       }
-    }
+    },
   });
-  Assert.ok(linkOrgHeaderFound2 == 3,
-            "Original link header still here.");
-  Assert.ok(locationOrgHeaderFound2 == 1,
-            "Original location header still here.");
+  Assert.ok(linkOrgHeaderFound2 == 3, "Original link header still here.");
+  Assert.ok(
+    locationOrgHeaderFound2 == 1,
+    "Original location header still here."
+  );
 
-  if (dbg) { print("============== Test GetResponseHeader"); }
+  if (dbg) {
+    print("============== Test GetResponseHeader");
+  }
   var linkOrgHeaderFound3 = 0;
-  request.getOriginalResponseHeader("link",{
+  request.getOriginalResponseHeader("link", {
     visitHeader: function visitOrg(aName, aValue) {
       if (linkOrgHeaderFound3 == 0) {
         Assert.equal(aValue, "");
-      } else if (linkOrgHeaderFound3 == 1 ) {
+      } else if (linkOrgHeaderFound3 == 1) {
         Assert.equal(aValue, "value1");
       } else {
         Assert.equal(aValue, "value2");
       }
       linkOrgHeaderFound3++;
-    }
+    },
   });
-  Assert.ok(linkOrgHeaderFound2 == 3, 
-            "Original link header still here.");
+  Assert.ok(linkOrgHeaderFound2 == 3, "Original link header still here.");
 
-  if (dbg) { print("============== checkResponse: out"); }
+  if (dbg) {
+    print("============== checkResponse: out");
+  }
 
   run_next_test();
 }

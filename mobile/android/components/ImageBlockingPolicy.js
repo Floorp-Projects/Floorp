@@ -4,9 +4,11 @@
 
 const Cm = Components.manager;
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
@@ -29,7 +31,6 @@ const OPTION_NEVER = 0;
 const OPTION_ALWAYS = 1;
 const OPTION_WIFI_ONLY = 2;
 
-
 /**
  * Content policy for blocking images
  */
@@ -42,7 +43,7 @@ ImageBlockingPolicy.prototype = {
   classDescription: "Click-To-Play Image",
   classID: Components.ID("{f55f77f9-d33d-4759-82fc-60db3ee0bb91}"),
   contractID: "@mozilla.org/browser/blockimages-policy;1",
-  xpcom_categories: [{category: "content-policy", service: true}],
+  xpcom_categories: [{ category: "content-policy", service: true }],
 
   // nsIContentPolicy interface implementation
   shouldLoad: function(contentLocation, loadInfo, mimeTypeGuess) {
@@ -50,10 +51,19 @@ ImageBlockingPolicy.prototype = {
     let node = loadInfo.loadingContext;
 
     // When enabled or when on cellular, and option for cellular-only is selected
-    if (this._enabled() == OPTION_NEVER || (this._enabled() == OPTION_WIFI_ONLY && this._usingCellular())) {
-      if (contentType === Ci.nsIContentPolicy.TYPE_IMAGE || contentType === Ci.nsIContentPolicy.TYPE_IMAGESET) {
+    if (
+      this._enabled() == OPTION_NEVER ||
+      (this._enabled() == OPTION_WIFI_ONLY && this._usingCellular())
+    ) {
+      if (
+        contentType === Ci.nsIContentPolicy.TYPE_IMAGE ||
+        contentType === Ci.nsIContentPolicy.TYPE_IMAGESET
+      ) {
         // Accept any non-http(s) image URLs
-        if (!contentLocation.schemeIs("http") && !contentLocation.schemeIs("https")) {
+        if (
+          !contentLocation.schemeIs("http") &&
+          !contentLocation.schemeIs("https")
+        ) {
           return Ci.nsIContentPolicy.ACCEPT;
         }
 
@@ -89,11 +99,15 @@ ImageBlockingPolicy.prototype = {
   },
 
   _usingCellular: function() {
-    let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
-    return !(network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN ||
-        network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_ETHERNET ||
-        network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_USB ||
-        network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_WIFI);
+    let network = Cc["@mozilla.org/network/network-link-service;1"].getService(
+      Ci.nsINetworkLinkService
+    );
+    return !(
+      network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN ||
+      network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_ETHERNET ||
+      network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_USB ||
+      network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_WIFI
+    );
   },
 
   _enabled: function() {
@@ -102,7 +116,9 @@ ImageBlockingPolicy.prototype = {
 
   observe: function(subject, topic, data) {
     if (topic == TOPIC_GATHER_TELEMETRY) {
-      Services.telemetry.getHistogramById(TELEMETRY_TAP_TO_LOAD_ENABLED).add(this._enabled());
+      Services.telemetry
+        .getHistogramById(TELEMETRY_TAP_TO_LOAD_ENABLED)
+        .add(this._enabled());
     }
   },
 };
@@ -122,7 +138,9 @@ function sendImageSizeTelemetry(imageURL) {
       return;
     }
     let imageSize = contentLength / 1024;
-    Services.telemetry.getHistogramById(TELEMETRY_SHOW_IMAGE_SIZE).add(imageSize);
+    Services.telemetry
+      .getHistogramById(TELEMETRY_SHOW_IMAGE_SIZE)
+      .add(imageSize);
   };
   xhr.send(null);
 }

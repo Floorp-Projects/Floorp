@@ -12,8 +12,10 @@ registerCleanupFunction(function() {
 add_task(setup_UITourTest);
 
 add_task(async function setup() {
-  Services.prefs.setCharPref("identity.fxaccounts.remote.root",
-                             "https://example.com");
+  Services.prefs.setCharPref(
+    "identity.fxaccounts.remote.root",
+    "https://example.com"
+  );
 });
 
 add_UITour_task(async function test_checkSyncSetup_disabled() {
@@ -22,7 +24,10 @@ add_UITour_task(async function test_checkSyncSetup_disabled() {
 });
 
 add_UITour_task(async function test_checkSyncSetup_enabled() {
-  Services.prefs.setCharPref("services.sync.username", "uitour@tests.mozilla.org");
+  Services.prefs.setCharPref(
+    "services.sync.username",
+    "uitour@tests.mozilla.org"
+  );
   let result = await getConfigurationPromise("sync");
   is(result.setup, true, "Sync should be setup");
 });
@@ -59,23 +64,31 @@ add_UITour_task(async function test_checkSyncCounts() {
 add_UITour_task(async function test_firefoxAccountsNoParams() {
   info("Load https://accounts.firefox.com");
   await gContentAPI.showFirefoxAccounts();
-  await BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser, false,
-                                       "https://example.com/signup?service=sync&context=fx_desktop_v3&entrypoint=uitour");
+  await BrowserTestUtils.browserLoaded(
+    gTestTab.linkedBrowser,
+    false,
+    "https://example.com/signup?service=sync&context=fx_desktop_v3&entrypoint=uitour"
+  );
 });
-
 
 add_UITour_task(async function test_firefoxAccountsValidParams() {
   info("Load https://accounts.firefox.com");
   await gContentAPI.showFirefoxAccounts({ utm_foo: "foo", utm_bar: "bar" });
-  await BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser, false,
-                                       "https://example.com/signup?service=sync&context=fx_desktop_v3&entrypoint=uitour&utm_foo=foo&utm_bar=bar");
+  await BrowserTestUtils.browserLoaded(
+    gTestTab.linkedBrowser,
+    false,
+    "https://example.com/signup?service=sync&context=fx_desktop_v3&entrypoint=uitour&utm_foo=foo&utm_bar=bar"
+  );
 });
 
 add_UITour_task(async function test_firefoxAccountsWithEmail() {
   info("Load https://accounts.firefox.com");
   await gContentAPI.showFirefoxAccounts(null, "foo@bar.com");
-  await BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser, false,
-                                       "https://example.com/?service=sync&context=fx_desktop_v3&entrypoint=uitour&email=foo%40bar.com");
+  await BrowserTestUtils.browserLoaded(
+    gTestTab.linkedBrowser,
+    false,
+    "https://example.com/?service=sync&context=fx_desktop_v3&entrypoint=uitour&email=foo%40bar.com"
+  );
 });
 
 add_UITour_task(async function test_firefoxAccountsNonAlphaValue() {
@@ -87,15 +100,21 @@ add_UITour_task(async function test_firefoxAccountsNonAlphaValue() {
   let expected = encodeURIComponent(value).replace(/%20/g, "+");
   info("Load https://accounts.firefox.com");
   await gContentAPI.showFirefoxAccounts({ utm_foo: value });
-  await BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser, false,
-                                       "https://example.com/signup?service=sync&context=fx_desktop_v3&entrypoint=uitour&utm_foo=" + expected);
+  await BrowserTestUtils.browserLoaded(
+    gTestTab.linkedBrowser,
+    false,
+    "https://example.com/signup?service=sync&context=fx_desktop_v3&entrypoint=uitour&utm_foo=" +
+      expected
+  );
 });
 
 // A helper to check the request was ignored due to invalid params.
 async function checkFxANotLoaded() {
   try {
     await waitForConditionPromise(() => {
-      return gBrowser.selectedBrowser.currentURI.spec.startsWith("https://example.com");
+      return gBrowser.selectedBrowser.currentURI.spec.startsWith(
+        "https://example.com"
+      );
     }, "Check if FxA opened");
     ok(false, "No FxA tab should have opened");
   } catch (ex) {

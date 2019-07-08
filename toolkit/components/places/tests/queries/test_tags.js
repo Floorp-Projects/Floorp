@@ -16,8 +16,7 @@ add_task(async function tags_getter_setter() {
   var [query] = makeQuery();
   Assert.equal(query.tags.length, 0);
 
-  info("Setting tags to an empty array, tags getter should return " +
-       "empty array");
+  info("Setting tags to an empty array, tags getter should return empty array");
   [query] = makeQuery([]);
   Assert.equal(query.tags.length, 0);
 
@@ -52,8 +51,7 @@ add_task(async function invalid_setter_calls() {
 
   try {
     makeQuery([undefined]);
-    do_throw("Passing one-element array with undefined to SetTags " +
-             "should fail");
+    do_throw("Passing one-element array with undefined to SetTags should fail");
   } catch (exc) {}
 
   try {
@@ -63,8 +61,7 @@ add_task(async function invalid_setter_calls() {
 
   try {
     makeQuery(["foo", undefined, "bar"]);
-    do_throw("Passing mixture of tags and undefined to SetTags " +
-             "should fail");
+    do_throw("Passing mixture of tags and undefined to SetTags should fail");
   } catch (exc) {}
 
   try {
@@ -116,31 +113,40 @@ add_task(async function set_tags() {
 });
 
 add_task(async function no_tags_tagsAreNot() {
-  info("Not setting tags at all but setting tagsAreNot should " +
-       "affect query URI");
+  info(
+    "Not setting tags at all but setting tagsAreNot should " +
+      "affect query URI"
+  );
   checkQueryURI(null, true);
 });
 
 add_task(async function empty_array_tags_tagsAreNot() {
-  info("Setting tags with an empty array and setting tagsAreNot " +
-       "should affect query URI");
+  info(
+    "Setting tags with an empty array and setting tagsAreNot " +
+      "should affect query URI"
+  );
   checkQueryURI([], true);
 });
 
 add_task(async function() {
-  info("Setting some tags and setting tagsAreNot should result in " +
-       "correct query URI");
-  checkQueryURI([
-    "foo",
-    "七難",
-    "",
-    "いっぱいおっぱい",
-    "Abracadabra",
-    "１２３",
-    "Here's a pretty long tag name with some = signs and 1 2 3s and spaces oh jeez will it work I hope so!",
-    "アスキーでございません",
-    "あいうえお",
-  ], true);
+  info(
+    "Setting some tags and setting tagsAreNot should result in " +
+      "correct query URI"
+  );
+  checkQueryURI(
+    [
+      "foo",
+      "七難",
+      "",
+      "いっぱいおっぱい",
+      "Abracadabra",
+      "１２３",
+      "Here's a pretty long tag name with some = signs and 1 2 3s and spaces oh jeez will it work I hope so!",
+      "アスキーでございません",
+      "あいうえお",
+    ],
+    true
+  );
 });
 
 add_task(async function tag() {
@@ -180,8 +186,10 @@ add_task(async function repeated_tag() {
 });
 
 add_task(async function many_tags_no_bookmark() {
-  info("Querying on many tags associated with a URI and tags not associated " +
-       "with that URI should not return that URI");
+  info(
+    "Querying on many tags associated with a URI and tags not associated " +
+      "with that URI should not return that URI"
+  );
   await task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo", "bogus"]);
     executeAndCheckQueryResults(query, opts, []);
@@ -214,57 +222,68 @@ add_task(async function tagsAreNot() {
   for (let [pURI, tags] of Object.entries(urisAndTags)) {
     let nsiuri = uri(pURI);
     await addBookmark(nsiuri);
-    if (tags)
+    if (tags) {
       PlacesUtils.tagging.tagURI(nsiuri, tags);
+    }
   }
 
   info('  Querying for "foo" should match only /2 and /3');
   var [query, opts] = makeQuery(["foo"], true);
-  queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
-                  ["http://example.com/2", "http://example.com/3"]);
+  queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [
+    "http://example.com/2",
+    "http://example.com/3",
+  ]);
 
   info('  Querying for "foo" and "bar" should match only /2 and /3');
   [query, opts] = makeQuery(["foo", "bar"], true);
-  queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
-                  ["http://example.com/2", "http://example.com/3"]);
+  queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [
+    "http://example.com/2",
+    "http://example.com/3",
+  ]);
 
   info('  Querying for "foo" and "bogus" should match only /2 and /3');
   [query, opts] = makeQuery(["foo", "bogus"], true);
-  queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
-                  ["http://example.com/2", "http://example.com/3"]);
+  queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [
+    "http://example.com/2",
+    "http://example.com/3",
+  ]);
 
   info('  Querying for "foo" and "baz" should match only /3');
   [query, opts] = makeQuery(["foo", "baz"], true);
-  queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
-                  ["http://example.com/3"]);
+  queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [
+    "http://example.com/3",
+  ]);
 
   info('  Querying for "bogus" should match all');
   [query, opts] = makeQuery(["bogus"], true);
-  queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
-                  ["http://example.com/1",
-                   "http://example.com/2",
-                   "http://example.com/3"]);
+  queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [
+    "http://example.com/1",
+    "http://example.com/2",
+    "http://example.com/3",
+  ]);
 
   // Clean up.
   for (let [pURI, tags] of Object.entries(urisAndTags)) {
     let nsiuri = uri(pURI);
-    if (tags)
+    if (tags) {
       PlacesUtils.tagging.untagURI(nsiuri, tags);
+    }
   }
   await task_cleanDatabase();
 });
 
 add_task(async function duplicate_tags() {
-  info("Duplicate existing tags (i.e., multiple tag folders with " +
-       "same name) should not throw off query results");
+  info(
+    "Duplicate existing tags (i.e., multiple tag folders with " +
+      "same name) should not throw off query results"
+  );
   var tagName = "foo";
 
   info("Add bookmark and tag it normally");
   await addBookmark(TEST_URI);
   PlacesUtils.tagging.tagURI(TEST_URI, [tagName]);
 
-  info("Manually create tag folder with same name as tag and insert " +
-       "bookmark");
+  info("Manually create tag folder with same name as tag and insert bookmark");
   let dupTag = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.tagsGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -279,15 +298,19 @@ add_task(async function duplicate_tags() {
 
   info("Querying for tag should match URI");
   var [query, opts] = makeQuery([tagName]);
-  queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [TEST_URI.spec]);
+  queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [
+    TEST_URI.spec,
+  ]);
 
   PlacesUtils.tagging.untagURI(TEST_URI, [tagName]);
   await task_cleanDatabase();
 });
 
 add_task(async function folder_named_as_tag() {
-  info("Regular folders with the same name as tag should not throw " +
-       "off query results");
+  info(
+    "Regular folders with the same name as tag should not throw " +
+      "off query results"
+  );
   var tagName = "foo";
 
   info("Add bookmark and tag it");
@@ -303,7 +326,9 @@ add_task(async function folder_named_as_tag() {
 
   info("Querying for tag should match URI");
   var [query, opts] = makeQuery([tagName]);
-  queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [TEST_URI.spec]);
+  queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [
+    TEST_URI.spec,
+  ]);
 
   PlacesUtils.tagging.untagURI(TEST_URI, [tagName]);
   await task_cleanDatabase();
@@ -327,22 +352,26 @@ add_task(async function ORed_queries() {
   for (let [pURI, tags] of Object.entries(urisAndTags)) {
     let nsiuri = uri(pURI);
     await addBookmark(nsiuri);
-    if (tags)
+    if (tags) {
       PlacesUtils.tagging.tagURI(nsiuri, tags);
+    }
   }
 
   // Clean up.
   for (let [pURI, tags] of Object.entries(urisAndTags)) {
     let nsiuri = uri(pURI);
-    if (tags)
+    if (tags) {
       PlacesUtils.tagging.untagURI(nsiuri, tags);
+    }
   }
   await task_cleanDatabase();
 });
 
 add_task(async function tag_casing() {
-  info("Querying on associated tags should return " +
-       "correct results irrespective of casing of tags.");
+  info(
+    "Querying on associated tags should return " +
+      "correct results irrespective of casing of tags."
+  );
   await task_doWithBookmark(["fOo", "bAr"], function(aURI) {
     let [query, opts] = makeQuery(["Foo"]);
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
@@ -356,8 +385,10 @@ add_task(async function tag_casing() {
 });
 
 add_task(async function tag_casing_l10n() {
-  info("Querying on associated tags should return " +
-       "correct results irrespective of casing of tags with international strings.");
+  info(
+    "Querying on associated tags should return " +
+      "correct results irrespective of casing of tags with international strings."
+  );
   // \u041F is a lowercase \u043F
   await task_doWithBookmark(["\u041F\u0442\u0438\u0446\u044B"], function(aURI) {
     let [query, opts] = makeQuery(["\u041F\u0442\u0438\u0446\u044B"]);
@@ -374,8 +405,10 @@ add_task(async function tag_casing_l10n() {
 });
 
 add_task(async function tag_special_char() {
-  info("Querying on associated tags should return " +
-       "correct results even if tags contain special characters.");
+  info(
+    "Querying on associated tags should return " +
+      "correct results even if tags contain special characters."
+  );
   await task_doWithBookmark(["Space ☺️ Between"], function(aURI) {
     let [query, opts] = makeQuery(["Space ☺️ Between"]);
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
@@ -388,7 +421,7 @@ add_task(async function tag_special_char() {
 
 // The tag keys in query URIs, i.e., "place:tag=foo&!tags=1"
 //                                          ---     -----
-const QUERY_KEY_TAG      = "tag";
+const QUERY_KEY_TAG = "tag";
 const QUERY_KEY_NOT_TAGS = "!tags";
 
 const TEST_URI = uri("http://example.com/");
@@ -426,8 +459,9 @@ async function task_cleanDatabase(aCallback) {
  */
 function checkQueryURI(aTags, aTagsAreNot) {
   var pairs = (aTags || []).sort().map(t => QUERY_KEY_TAG + "=" + encodeTag(t));
-  if (aTagsAreNot)
+  if (aTagsAreNot) {
     pairs.push(QUERY_KEY_NOT_TAGS + "=1");
+  }
   var expURI = "place:" + pairs.join("&");
   var [query, opts] = makeQuery(aTags, aTagsAreNot);
   var actualURI = queryURI(query, opts);
@@ -464,9 +498,10 @@ async function task_doWithBookmark(aTags, aCallback) {
  * @return A UTF-8 escaped string suitable for inclusion in a query URI
  */
 function encodeTag(aTag) {
-  return encodeURIComponent(aTag).
-         replace(/[-_.!~*'()]/g, // '
-                 s => "%" + s.charCodeAt(0).toString(16));
+  return encodeURIComponent(aTag).replace(
+    /[-_.!~*'()]/g, // '
+    s => "%" + s.charCodeAt(0).toString(16)
+  );
 }
 
 /**
@@ -500,27 +535,31 @@ function executeAndCheckQueryResults(aQuery, aQueryOpts, aExpectedURIs) {
  */
 function makeQuery(aTags, aTagsAreNot) {
   aTagsAreNot = !!aTagsAreNot;
-  info("Making a query " +
-        (aTags ?
-         "with tags " + aTags.toSource() :
-         "without calling setTags() at all") +
-        " and with tagsAreNot=" +
-        aTagsAreNot);
+  info(
+    "Making a query " +
+      (aTags
+        ? "with tags " + aTags.toSource()
+        : "without calling setTags() at all") +
+      " and with tagsAreNot=" +
+      aTagsAreNot
+  );
   var query = PlacesUtils.history.getNewQuery();
   query.tagsAreNot = aTagsAreNot;
   if (aTags) {
     query.tags = aTags;
     var uniqueTags = [];
     aTags.forEach(function(t) {
-      if (typeof(t) === "string" && !uniqueTags.includes(t))
+      if (typeof t === "string" && !uniqueTags.includes(t)) {
         uniqueTags.push(t);
+      }
     });
     uniqueTags.sort();
   }
 
   info("Made query should be correct for tags and tagsAreNot");
-  if (uniqueTags)
+  if (uniqueTags) {
     setsAreEqual(query.tags, uniqueTags, true);
+  }
   var expCount = uniqueTags ? uniqueTags.length : 0;
   Assert.equal(query.tags.length, expCount);
   Assert.equal(query.tagsAreNot, aTagsAreNot);
@@ -538,15 +577,17 @@ function makeQuery(aTags, aTagsAreNot) {
  */
 function queryResultsAre(aResultRoot, aExpectedURIs) {
   var rootWasOpen = aResultRoot.containerOpen;
-  if (!rootWasOpen)
+  if (!rootWasOpen) {
     aResultRoot.containerOpen = true;
+  }
   var actualURIs = [];
   for (let i = 0; i < aResultRoot.childCount; i++) {
     actualURIs.push(aResultRoot.getChild(i).uri);
   }
   setsAreEqual(actualURIs, aExpectedURIs);
-  if (!rootWasOpen)
+  if (!rootWasOpen) {
     aResultRoot.containerOpen = false;
+  }
 }
 
 /**

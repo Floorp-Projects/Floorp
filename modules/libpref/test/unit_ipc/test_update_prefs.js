@@ -1,4 +1,4 @@
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function isParentProcess() {
   return Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
@@ -24,12 +24,13 @@ function testPrefClear() {
   pb.clearUserPref("Test.IPC.bool.new");
 
   sendCommand(
-'var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);\n' +
-'pb.prefHasUserValue("Test.IPC.bool.new");\n',
-    checkWasCleared);
+    'var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);\n' +
+      'pb.prefHasUserValue("Test.IPC.bool.new");\n',
+    checkWasCleared
+  );
 }
 
 function checkWasCleared(existsStr) {
-    Assert.equal(existsStr, "false");
-    do_test_finished();
+  Assert.equal(existsStr, "false");
+  do_test_finished();
 }

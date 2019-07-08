@@ -22,15 +22,13 @@ loader.lazyGetter(this, "RequestListEmptyNotice", function() {
 /**
  * Request panel component
  */
-function RequestList({
-  connector,
-  isEmpty,
-}) {
-  return (
-    div({ className: "request-list-container" },
-      isEmpty ? RequestListEmptyNotice({ connector }) : RequestListContent({ connector }),
-      StatusBar({ connector }),
-    )
+function RequestList({ connector, isEmpty }) {
+  return div(
+    { className: "request-list-container" },
+    isEmpty
+      ? RequestListEmptyNotice({ connector })
+      : RequestListContent({ connector }),
+    StatusBar({ connector })
   );
 }
 

@@ -28,7 +28,7 @@ async function requestFlowMetrics() {
   let requestURL = new URL(await endpoint);
   requestURL.pathname = "metrics-flow";
   appendParams(requestURL, {
-    "form_type": "email",
+    form_type: "email",
   });
 
   let response = await fetch(requestURL, { credentials: "omit" });
@@ -49,11 +49,11 @@ async function submitForm(event) {
 
   let requestURL = new URL(await endpoint);
   appendParams(requestURL, {
-    "action": "email",
-    "utm_campaign": CAMPAIGN,
-    "email": input.value,
-    "flow_id": flowId,
-    "flow_begin_time": flowBeginTime,
+    action: "email",
+    utm_campaign: CAMPAIGN,
+    email: input.value,
+    flow_id: flowId,
+    flow_begin_time: flowBeginTime,
   });
 
   window.open(requestURL, "_blank", "noopener");
@@ -65,6 +65,10 @@ const endpoint = RPMGetFxAccountsEndpoint(ENTRYPOINT);
 // This must come before the CSP is set or it will be blocked.
 const metrics = requestFlowMetrics();
 
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("sync").addEventListener("submit", submitForm);
-}, { once: true });
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+    document.getElementById("sync").addEventListener("submit", submitForm);
+  },
+  { once: true }
+);

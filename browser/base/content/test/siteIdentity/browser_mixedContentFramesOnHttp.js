@@ -10,19 +10,27 @@
  * the HTTP top level page to broken HTTPS.
  */
 
-const TEST_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com") + "file_mixedContentFramesOnHttp.html";
+const TEST_URL =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "http://example.com"
+  ) + "file_mixedContentFramesOnHttp.html";
 
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
+    set: [
       ["security.mixed_content.block_active_content", true],
       ["security.mixed_content.block_display_content", false],
       ["security.mixed_content.upgrade_display_content", false],
-    ]});
+    ],
+  });
 
   await BrowserTestUtils.withNewTab(TEST_URL, async function(browser) {
     isSecurityState(browser, "insecure");
-    await assertMixedContentBlockingState(browser, {activeLoaded: false, activeBlocked: false, passiveLoaded: true});
+    await assertMixedContentBlockingState(browser, {
+      activeLoaded: false,
+      activeBlocked: false,
+      passiveLoaded: true,
+    });
   });
 });
-

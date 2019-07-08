@@ -1,4 +1,4 @@
-if (typeof(classifierHelper) == "undefined") {
+if (typeof classifierHelper == "undefined") {
   var classifierHelper = {};
 }
 
@@ -36,21 +36,21 @@ classifierHelper.waitForInit = function() {
 // some lists like "test-malware-simple" is default disabled to ask for complete.
 // "list" is the db we would like to allow it
 // "url" is the completion server
-classifierHelper.allowCompletion = function(lists, url) {
+classifierHelper.allowCompletion = async function(lists, url) {
   for (var list of lists) {
     // Add test db to provider
-    var pref = SpecialPowers.getCharPref(PREFS.PROVIDER_LISTS);
+    var pref = await SpecialPowers.getParentCharPref(PREFS.PROVIDER_LISTS);
     pref += "," + list;
-    SpecialPowers.setCharPref(PREFS.PROVIDER_LISTS, pref);
+    await SpecialPowers.setCharPref(PREFS.PROVIDER_LISTS, pref);
 
     // Rename test db so we will not disallow it from completions
-    pref = SpecialPowers.getCharPref(PREFS.DISALLOW_COMPLETIONS);
+    pref = await SpecialPowers.getParentCharPref(PREFS.DISALLOW_COMPLETIONS);
     pref = pref.replace(list, list + "-backup");
-    SpecialPowers.setCharPref(PREFS.DISALLOW_COMPLETIONS, pref);
+    await SpecialPowers.setCharPref(PREFS.DISALLOW_COMPLETIONS, pref);
   }
 
   // Set get hash url
-  SpecialPowers.setCharPref(PREFS.PROVIDER_GETHASHURL, url);
+  await SpecialPowers.setCharPref(PREFS.PROVIDER_GETHASHURL, url);
 };
 
 // Pass { url: ..., db: ... } to add url to database,
@@ -70,9 +70,17 @@ classifierHelper.addUrlToDB = function(updateData) {
       classifierHelper._updatesToCleanup.push(update);
       testUpdate +=
         "n:1000\n" +
-        "i:" + LISTNAME + "\n" +
+        "i:" +
+        LISTNAME +
+        "\n" +
         "ad:1\n" +
-        "a:" + update.addChunk + ":" + HASHLEN + ":" + CHUNKLEN + "\n" +
+        "a:" +
+        update.addChunk +
+        ":" +
+        HASHLEN +
+        ":" +
+        CHUNKLEN +
+        "\n" +
         CHUNKDATA;
     }
 
@@ -88,9 +96,7 @@ classifierHelper.resetDatabase = function() {
       var testUpdate = "";
       for (var update of classifierHelper._updatesToCleanup) {
         testUpdate +=
-          "n:1000\n" +
-          "i:" + update.db + "\n" +
-          "ad:" + update.addChunk + "\n";
+          "n:1000\ni:" + update.db + "\nad:" + update.addChunk + "\n";
       }
 
       classifierHelper._update(testUpdate, resolve, reject);
@@ -117,9 +123,11 @@ classifierHelper.reloadDatabase = function() {
 
 classifierHelper._update = function(testUpdate, onsuccess, onerror) {
   // Queue the task if there is still an on-going update
-  classifierHelper._updates.push({"data": testUpdate,
-                                  "onsuccess": onsuccess,
-                                  "onerror": onerror});
+  classifierHelper._updates.push({
+    data: testUpdate,
+    onsuccess,
+    onerror,
+  });
   if (classifierHelper._updates.length != 1) {
     return;
   }

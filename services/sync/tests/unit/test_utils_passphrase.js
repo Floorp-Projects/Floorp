@@ -7,10 +7,22 @@ function run_test() {
   Assert.equal(Utils.normalizePassphrase(hyphenated), pp);
 
   _("Skip whitespace.");
-  Assert.equal("aaaaaaaaaaaaaaaaaaaaaaaaaa", Utils.normalizePassphrase("aaaaaaaaaaaaaaaaaaaaaaaaaa  "));
-  Assert.equal("aaaaaaaaaaaaaaaaaaaaaaaaaa", Utils.normalizePassphrase("	 aaaaaaaaaaaaaaaaaaaaaaaaaa"));
-  Assert.equal("aaaaaaaaaaaaaaaaaaaaaaaaaa", Utils.normalizePassphrase("    aaaaaaaaaaaaaaaaaaaaaaaaaa  "));
-  Assert.equal("aaaaaaaaaaaaaaaaaaaaaaaaaa", Utils.normalizePassphrase("    a-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa  "));
+  Assert.equal(
+    "aaaaaaaaaaaaaaaaaaaaaaaaaa",
+    Utils.normalizePassphrase("aaaaaaaaaaaaaaaaaaaaaaaaaa  ")
+  );
+  Assert.equal(
+    "aaaaaaaaaaaaaaaaaaaaaaaaaa",
+    Utils.normalizePassphrase("	 aaaaaaaaaaaaaaaaaaaaaaaaaa")
+  );
+  Assert.equal(
+    "aaaaaaaaaaaaaaaaaaaaaaaaaa",
+    Utils.normalizePassphrase("    aaaaaaaaaaaaaaaaaaaaaaaaaa  ")
+  );
+  Assert.equal(
+    "aaaaaaaaaaaaaaaaaaaaaaaaaa",
+    Utils.normalizePassphrase("    a-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa  ")
+  );
   Assert.ok(Utils.isPassphrase("aaaaaaaaaaaaaaaaaaaaaaaaaa  "));
   Assert.ok(Utils.isPassphrase("	 aaaaaaaaaaaaaaaaaaaaaaaaaa"));
   Assert.ok(Utils.isPassphrase("    aaaaaaaaaaaaaaaaaaaaaaaaaa  "));
@@ -18,10 +30,16 @@ function run_test() {
   Assert.ok(!Utils.isPassphrase("    -aaaaa-aaaaa-aaaaa-aaaaa-aaaaa  "));
 
   _("Normalizing 20-char passphrases.");
-  Assert.equal(Utils.normalizePassphrase("abcde-abcde-abcde-abcde"),
-               "abcdeabcdeabcdeabcde");
-  Assert.equal(Utils.normalizePassphrase("a-bcde-abcde-abcde-abcde"),
-               "a-bcde-abcde-abcde-abcde");
-  Assert.equal(Utils.normalizePassphrase(" abcde-abcde-abcde-abcde "),
-               "abcdeabcdeabcdeabcde");
+  Assert.equal(
+    Utils.normalizePassphrase("abcde-abcde-abcde-abcde"),
+    "abcdeabcdeabcdeabcde"
+  );
+  Assert.equal(
+    Utils.normalizePassphrase("a-bcde-abcde-abcde-abcde"),
+    "a-bcde-abcde-abcde-abcde"
+  );
+  Assert.equal(
+    Utils.normalizePassphrase(" abcde-abcde-abcde-abcde "),
+    "abcdeabcdeabcdeabcde"
+  );
 }

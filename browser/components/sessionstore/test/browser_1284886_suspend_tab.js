@@ -3,9 +3,7 @@
 
 add_task(async function test() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
-      ["dom.require_user_interaction_for_beforeunload", false],
-    ],
+    set: [["dom.require_user_interaction_for_beforeunload", false]],
   });
 
   let url = "about:robots";
@@ -30,28 +28,39 @@ add_task(async function test() {
   gBrowser._endRemoveTab(tab1);
 
   // Open tab containing a page which has a beforeunload handler which shows a prompt.
-  url = "http://example.com/browser/browser/components/sessionstore/test/browser_1284886_suspend_tab.html";
+  url =
+    "http://example.com/browser/browser/components/sessionstore/test/browser_1284886_suspend_tab.html";
   tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   await BrowserTestUtils.switchTab(gBrowser, tab0);
 
   // Test that tab with beforeunload handler which would show a prompt cannot be suspended.
   gBrowser.discardBrowser(tab1);
-  ok(tab1.linkedPanel, "cannot suspend a tab with beforeunload handler which would show a prompt");
+  ok(
+    tab1.linkedPanel,
+    "cannot suspend a tab with beforeunload handler which would show a prompt"
+  );
 
   // Test that tab with beforeunload handler which would show a prompt will be suspended if forced.
   gBrowser.discardBrowser(tab1, true);
-  ok(!tab1.linkedPanel, "force suspending a tab with beforeunload handler which would show a prompt");
+  ok(
+    !tab1.linkedPanel,
+    "force suspending a tab with beforeunload handler which would show a prompt"
+  );
 
   BrowserTestUtils.removeTab(tab1);
 
   // Open tab containing a page which has a beforeunload handler which does not show a prompt.
-  url = "http://example.com/browser/browser/components/sessionstore/test/browser_1284886_suspend_tab_2.html";
+  url =
+    "http://example.com/browser/browser/components/sessionstore/test/browser_1284886_suspend_tab_2.html";
   tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   await BrowserTestUtils.switchTab(gBrowser, tab0);
 
   // Test that tab with beforeunload handler which would not show a prompt can be suspended.
   gBrowser.discardBrowser(tab1);
-  ok(!tab1.linkedPanel, "can suspend a tab with beforeunload handler which would not show a prompt");
+  ok(
+    !tab1.linkedPanel,
+    "can suspend a tab with beforeunload handler which would not show a prompt"
+  );
 
   BrowserTestUtils.removeTab(tab1);
 
@@ -67,4 +76,3 @@ add_task(async function test() {
 
   BrowserTestUtils.removeTab(tab1);
 });
-

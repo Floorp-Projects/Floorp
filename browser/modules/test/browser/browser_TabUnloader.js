@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {TabUnloader} = ChromeUtils.import("resource:///modules/TabUnloader.jsm");
+const { TabUnloader } = ChromeUtils.import(
+  "resource:///modules/TabUnloader.jsm"
+);
 
 const BASE_URL = "http://example.com/browser/browser/modules/test/browser/";
 
@@ -56,23 +58,38 @@ add_task(async function test() {
   // Checks the tabs are in the state we expect them to be
   ok(pinnedTab.pinned, "tab is pinned");
   ok(pinnedSoundTab.soundPlaying, "tab is playing sound");
-  ok(pinnedSoundTab.pinned && pinnedSoundTab.soundPlaying,
-     "tab is pinned and playing sound");
+  ok(
+    pinnedSoundTab.pinned && pinnedSoundTab.soundPlaying,
+    "tab is pinned and playing sound"
+  );
 
   // Check that the tabs are present
-  ok(tab1.linkedPanel && tab2.linkedPanel && pinnedTab.linkedPanel &&
-     soundTab.linkedPanel && pinnedSoundTab.linkedPanel, "tabs are present");
+  ok(
+    tab1.linkedPanel &&
+      tab2.linkedPanel &&
+      pinnedTab.linkedPanel &&
+      soundTab.linkedPanel &&
+      pinnedSoundTab.linkedPanel,
+    "tabs are present"
+  );
 
   // Check that heap-minimize memory-pressure events do not unload tabs
   TabUnloader.observe(null, "memory-pressure", "heap-minimize");
-  ok(tab1.linkedPanel && tab2.linkedPanel && pinnedTab.linkedPanel &&
-     soundTab.linkedPanel && pinnedSoundTab.linkedPanel,
-     "heap-minimize memory-pressure notification did not unload a tab");
+  ok(
+    tab1.linkedPanel &&
+      tab2.linkedPanel &&
+      pinnedTab.linkedPanel &&
+      soundTab.linkedPanel &&
+      pinnedSoundTab.linkedPanel,
+    "heap-minimize memory-pressure notification did not unload a tab"
+  );
 
   // Check that low-memory memory-pressure events unload tabs
   TabUnloader.observe(null, "memory-pressure", "low-memory");
-  ok(!tab1.linkedPanel,
-     "low-memory memory-pressure notification unloaded the LRU tab");
+  ok(
+    !tab1.linkedPanel,
+    "low-memory memory-pressure notification unloaded the LRU tab"
+  );
 
   // If no normal tab is available unload pinned tabs
   TabUnloader.observe(null, "memory-pressure", "low-memory");
@@ -93,8 +110,10 @@ add_task(async function test() {
   await BrowserTestUtils.switchTab(gBrowser, tab1);
   await BrowserTestUtils.switchTab(gBrowser, tab0);
   TabUnloader.observe(null, "memory-pressure", "low-memory-ongoing");
-  ok(!tab1.linkedPanel,
-     "low-memory memory-pressure notification unloaded the LRU tab");
+  ok(
+    !tab1.linkedPanel,
+    "low-memory memory-pressure notification unloaded the LRU tab"
+  );
 
   // Cleanup
   BrowserTestUtils.removeTab(tab1);
@@ -103,4 +122,3 @@ add_task(async function test() {
   BrowserTestUtils.removeTab(soundTab);
   BrowserTestUtils.removeTab(pinnedSoundTab);
 });
-

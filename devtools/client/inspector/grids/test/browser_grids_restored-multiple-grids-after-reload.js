@@ -46,61 +46,113 @@ add_task(async function() {
 
   info("Toggling ON the CSS grid highlighter for #grid1.");
   let onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  let onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 4 &&
-    state.grids[0].highlighted && !state.grids[0].disabled &&
-    !state.grids[1].highlighted && !state.grids[1].disabled &&
-    !state.grids[2].highlighted && !state.grids[2].disabled &&
-    !state.grids[3].highlighted && !state.grids[3].disabled);
+  let onCheckboxChange = waitUntilState(
+    store,
+    state =>
+      state.grids.length == 4 &&
+      state.grids[0].highlighted &&
+      !state.grids[0].disabled &&
+      !state.grids[1].highlighted &&
+      !state.grids[1].disabled &&
+      !state.grids[2].highlighted &&
+      !state.grids[2].disabled &&
+      !state.grids[3].highlighted &&
+      !state.grids[3].disabled
+  );
   checkbox1.click();
   await onHighlighterShown;
   await onCheckboxChange;
 
   info("Toggling ON the CSS grid highlighter for #grid2.");
   onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 4 &&
-    state.grids[0].highlighted && !state.grids[0].disabled &&
-    state.grids[1].highlighted && !state.grids[1].disabled &&
-    !state.grids[2].highlighted && !state.grids[2].disabled &&
-    !state.grids[3].highlighted && !state.grids[3].disabled);
+  onCheckboxChange = waitUntilState(
+    store,
+    state =>
+      state.grids.length == 4 &&
+      state.grids[0].highlighted &&
+      !state.grids[0].disabled &&
+      state.grids[1].highlighted &&
+      !state.grids[1].disabled &&
+      !state.grids[2].highlighted &&
+      !state.grids[2].disabled &&
+      !state.grids[3].highlighted &&
+      !state.grids[3].disabled
+  );
   checkbox2.click();
   await onHighlighterShown;
   await onCheckboxChange;
 
   info("Toggling ON the CSS grid highlighter for #grid3.");
   onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 4 &&
-    state.grids[0].highlighted && !state.grids[0].disabled &&
-    state.grids[1].highlighted && !state.grids[1].disabled &&
-    state.grids[2].highlighted && !state.grids[2].disabled &&
-    !state.grids[3].highlighted && state.grids[3].disabled);
+  onCheckboxChange = waitUntilState(
+    store,
+    state =>
+      state.grids.length == 4 &&
+      state.grids[0].highlighted &&
+      !state.grids[0].disabled &&
+      state.grids[1].highlighted &&
+      !state.grids[1].disabled &&
+      state.grids[2].highlighted &&
+      !state.grids[2].disabled &&
+      !state.grids[3].highlighted &&
+      state.grids[3].disabled
+  );
   checkbox3.click();
   await onHighlighterShown;
   await onCheckboxChange;
 
-  info("Check that the CSS grid highlighters are created and the saved grid state.");
-  is(highlighters.gridHighlighters.size, 3,
-    "Got expected number of grid highlighters shown.");
-  is(highlighters.state.grids.size, 3, "Got expected number of grids in the saved state");
+  info(
+    "Check that the CSS grid highlighters are created and the saved grid state."
+  );
+  is(
+    highlighters.gridHighlighters.size,
+    3,
+    "Got expected number of grid highlighters shown."
+  );
+  is(
+    highlighters.state.grids.size,
+    3,
+    "Got expected number of grids in the saved state"
+  );
 
-  info("Reload the page, expect the highlighters to be displayed once again and " +
-    "grids are checked");
-  const onStateRestored = waitForNEvents(highlighters, "grid-state-restored", 3);
-  const onGridListRestored = waitUntilState(store, state =>
-    state.grids.length == 4 &&
-    state.grids[0].highlighted && !state.grids[0].disabled &&
-    state.grids[1].highlighted && !state.grids[1].disabled &&
-    state.grids[2].highlighted && !state.grids[2].disabled &&
-    !state.grids[3].highlighted && state.grids[3].disabled);
+  info(
+    "Reload the page, expect the highlighters to be displayed once again and " +
+      "grids are checked"
+  );
+  const onStateRestored = waitForNEvents(
+    highlighters,
+    "grid-state-restored",
+    3
+  );
+  const onGridListRestored = waitUntilState(
+    store,
+    state =>
+      state.grids.length == 4 &&
+      state.grids[0].highlighted &&
+      !state.grids[0].disabled &&
+      state.grids[1].highlighted &&
+      !state.grids[1].disabled &&
+      state.grids[2].highlighted &&
+      !state.grids[2].disabled &&
+      !state.grids[3].highlighted &&
+      state.grids[3].disabled
+  );
   await refreshTab();
   const { restored } = await onStateRestored;
   await onGridListRestored;
 
-  info("Check that the grid highlighters can be displayed after reloading the page");
+  info(
+    "Check that the grid highlighters can be displayed after reloading the page"
+  );
   ok(restored, "The highlighter state was restored");
-  is(highlighters.gridHighlighters.size, 3,
-    "Got expected number of grid highlighters shown.");
-  is(highlighters.state.grids.size, 3, "Got expected number of grids in the saved state");
+  is(
+    highlighters.gridHighlighters.size,
+    3,
+    "Got expected number of grid highlighters shown."
+  );
+  is(
+    highlighters.state.grids.size,
+    3,
+    "Got expected number of grids in the saved state"
+  );
 });

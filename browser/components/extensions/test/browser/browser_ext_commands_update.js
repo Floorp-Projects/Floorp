@@ -2,10 +2,16 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
-                               "resource://gre/modules/ExtensionSettingsStore.jsm");
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionSettingsStore",
+  "resource://gre/modules/ExtensionSettingsStore.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
 
 function enableAddon(addon) {
   return new Promise(resolve => {
@@ -49,7 +55,9 @@ add_task(async function test_update_defined_command() {
 
     // Check that ESS is cleaned up on uninstall.
     let storedCommands = ExtensionSettingsStore.getAllForExtension(
-      extension.id, "commands");
+      extension.id,
+      "commands"
+    );
     is(storedCommands.length, 0, "There are no stored commands after unload");
   });
 
@@ -57,7 +65,7 @@ add_task(async function test_update_defined_command() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {gecko: {id: "commands@mochi.test"}},
+      applications: { gecko: { id: "commands@mochi.test" } },
       commands: {
         foo: {
           suggested_key: {
@@ -83,30 +91,60 @@ add_task(async function test_update_defined_command() {
         browser.test.assertEq(1, commands.length, "There is 1 command");
         let command = commands[0];
         browser.test.assertEq("foo", command.name, "The name is right");
-        browser.test.assertEq("The foo command", command.description, "The description is right");
-        browser.test.assertEq("Ctrl+Shift+I", command.shortcut, "The shortcut is right");
+        browser.test.assertEq(
+          "The foo command",
+          command.description,
+          "The description is right"
+        );
+        browser.test.assertEq(
+          "Ctrl+Shift+I",
+          command.shortcut,
+          "The shortcut is right"
+        );
 
         // Update the shortcut.
-        await browser.commands.update({name: "foo", shortcut: "Ctrl+Shift+L"});
+        await browser.commands.update({
+          name: "foo",
+          shortcut: "Ctrl+Shift+L",
+        });
 
         // Test the updated shortcut.
         commands = await browser.commands.getAll();
         browser.test.assertEq(1, commands.length, "There is still 1 command");
         command = commands[0];
         browser.test.assertEq("foo", command.name, "The name is unchanged");
-        browser.test.assertEq("The foo command", command.description, "The description is unchanged");
-        browser.test.assertEq("Ctrl+Shift+L", command.shortcut, "The shortcut is updated");
+        browser.test.assertEq(
+          "The foo command",
+          command.description,
+          "The description is unchanged"
+        );
+        browser.test.assertEq(
+          "Ctrl+Shift+L",
+          command.shortcut,
+          "The shortcut is updated"
+        );
 
         // Update the description.
-        await browser.commands.update({name: "foo", description: "The only command"});
+        await browser.commands.update({
+          name: "foo",
+          description: "The only command",
+        });
 
         // Test the updated shortcut.
         commands = await browser.commands.getAll();
         browser.test.assertEq(1, commands.length, "There is still 1 command");
         command = commands[0];
         browser.test.assertEq("foo", command.name, "The name is unchanged");
-        browser.test.assertEq("The only command", command.description, "The description is updated");
-        browser.test.assertEq("Ctrl+Shift+L", command.shortcut, "The shortcut is unchanged");
+        browser.test.assertEq(
+          "The only command",
+          command.description,
+          "The description is updated"
+        );
+        browser.test.assertEq(
+          "Ctrl+Shift+L",
+          command.shortcut,
+          "The shortcut is unchanged"
+        );
 
         // Update the description and shortcut.
         await browser.commands.update({
@@ -120,20 +158,31 @@ add_task(async function test_update_defined_command() {
         browser.test.assertEq(1, commands.length, "There is still 1 command");
         command = commands[0];
         browser.test.assertEq("foo", command.name, "The name is unchanged");
-        browser.test.assertEq("The new command", command.description, "The description is updated");
-        browser.test.assertEq("Alt+Shift+9", command.shortcut, "The shortcut is updated");
+        browser.test.assertEq(
+          "The new command",
+          command.description,
+          "The description is updated"
+        );
+        browser.test.assertEq(
+          "Alt+Shift+9",
+          command.shortcut,
+          "The shortcut is updated"
+        );
 
         // Test a bad shortcut update.
         browser.test.assertThrows(
-          () => browser.commands.update({name: "foo", shortcut: "Ctl+Shift+L"}),
+          () =>
+            browser.commands.update({ name: "foo", shortcut: "Ctl+Shift+L" }),
           /Type error for parameter detail/,
-          "It rejects for a bad shortcut");
+          "It rejects for a bad shortcut"
+        );
 
         // Try to update a command that doesn't exist.
         await browser.test.assertRejects(
-          browser.commands.update({name: "bar", shortcut: "Ctrl+Shift+L"}),
+          browser.commands.update({ name: "bar", shortcut: "Ctrl+Shift+L" }),
           'Unknown command "bar"',
-          "It rejects for an unknown command");
+          "It rejects for an unknown command"
+        );
 
         browser.test.notifyPass("commands");
       });
@@ -144,7 +193,9 @@ add_task(async function test_update_defined_command() {
   await extension.startup();
 
   function extensionKeyset(extensionId) {
-    return document.getElementById(makeWidgetId(`ext-keyset-id-${extensionId}`));
+    return document.getElementById(
+      makeWidgetId(`ext-keyset-id-${extensionId}`)
+    );
   }
 
   function checkKey(extensionId, shortcutKey, modifiers) {
@@ -157,14 +208,34 @@ add_task(async function test_update_defined_command() {
 
   function checkNumericKey(extensionId, key, modifiers) {
     let keyset = extensionKeyset(extensionId);
-    is(keyset.children.length, 2, "There are 2 keys in the keyset now, 1 of which contains a keycode.");
+    is(
+      keyset.children.length,
+      2,
+      "There are 2 keys in the keyset now, 1 of which contains a keycode."
+    );
     let numpadKey = keyset.children[0];
-    is(numpadKey.getAttribute("keycode"), `VK_NUMPAD${key}`, "The numpad keycode is correct.");
-    is(numpadKey.getAttribute("modifiers"), modifiers, "The modifiers are correct");
+    is(
+      numpadKey.getAttribute("keycode"),
+      `VK_NUMPAD${key}`,
+      "The numpad keycode is correct."
+    );
+    is(
+      numpadKey.getAttribute("modifiers"),
+      modifiers,
+      "The modifiers are correct"
+    );
 
     let originalNumericKey = keyset.children[1];
-    is(originalNumericKey.getAttribute("keycode"), `VK_${key}`, "The original key is correct.");
-    is(originalNumericKey.getAttribute("modifiers"), modifiers, "The modifiers are correct");
+    is(
+      originalNumericKey.getAttribute("keycode"),
+      `VK_${key}`,
+      "The original key is correct."
+    );
+    is(
+      originalNumericKey.getAttribute("modifiers"),
+      modifiers,
+      "The modifiers are correct"
+    );
   }
 
   // Check that the <key> is set for the original shortcut.
@@ -179,28 +250,46 @@ add_task(async function test_update_defined_command() {
 
   // Check that the updated command is stored in ExtensionSettingsStore.
   let storedCommands = ExtensionSettingsStore.getAllForExtension(
-    extension.id, "commands");
+    extension.id,
+    "commands"
+  );
   is(storedCommands.length, 1, "There is only one stored command");
-  let command = ExtensionSettingsStore.getSetting("commands", "foo", extension.id).value;
+  let command = ExtensionSettingsStore.getSetting(
+    "commands",
+    "foo",
+    extension.id
+  ).value;
   is(command.description, "The new command", "The description is stored");
   is(command.shortcut, "Alt+Shift+9", "The shortcut is stored");
 
   // Check that the key is updated immediately.
-  extension.sendMessage("update", {name: "foo", shortcut: "Ctrl+Shift+M"});
+  extension.sendMessage("update", { name: "foo", shortcut: "Ctrl+Shift+M" });
   await extension.awaitMessage("updateDone");
   checkKey(extension.id, "M", "accel,shift");
 
   // Ensure all successive updates are stored.
   // Force the command to only have a description saved.
-  await ExtensionSettingsStore.addSetting(
-    extension.id, "commands", "foo", {description: "description only"});
+  await ExtensionSettingsStore.addSetting(extension.id, "commands", "foo", {
+    description: "description only",
+  });
   // This command now only has a description set in storage, also update the shortcut.
-  extension.sendMessage("update", {name: "foo", shortcut: "Alt+Shift+9"});
+  extension.sendMessage("update", { name: "foo", shortcut: "Alt+Shift+9" });
   await extension.awaitMessage("updateDone");
   let storedCommand = await ExtensionSettingsStore.getSetting(
-    "commands", "foo", extension.id);
-  is(storedCommand.value.shortcut, "Alt+Shift+9", "The shortcut is saved correctly");
-  is(storedCommand.value.description, "description only", "The description is saved correctly");
+    "commands",
+    "foo",
+    extension.id
+  );
+  is(
+    storedCommand.value.shortcut,
+    "Alt+Shift+9",
+    "The shortcut is saved correctly"
+  );
+  is(
+    storedCommand.value.description,
+    "description only",
+    "The description is saved correctly"
+  );
 
   // Calling browser.commands.reset("foo") should reset to manifest version.
   extension.sendMessage("reset", "foo");
@@ -214,11 +303,16 @@ add_task(async function test_update_defined_command() {
   let keyset = extensionKeyset(extension.id);
   is(keyset, null, "The extension keyset is removed when disabled");
   // Add some commands to storage, only "foo" should get loaded.
-  await ExtensionSettingsStore.addSetting(
-    extension.id, "commands", "foo", {shortcut: "Alt+Shift+9"});
-  await ExtensionSettingsStore.addSetting(
-    extension.id, "commands", "unknown", {shortcut: "Ctrl+Shift+P"});
-  storedCommands = ExtensionSettingsStore.getAllForExtension(extension.id, "commands");
+  await ExtensionSettingsStore.addSetting(extension.id, "commands", "foo", {
+    shortcut: "Alt+Shift+9",
+  });
+  await ExtensionSettingsStore.addSetting(extension.id, "commands", "unknown", {
+    shortcut: "Ctrl+Shift+P",
+  });
+  storedCommands = ExtensionSettingsStore.getAllForExtension(
+    extension.id,
+    "commands"
+  );
   is(storedCommands.length, 2, "There are now 2 commands stored");
   await enableAddon(addon);
   // Wait for the keyset to appear (it's async on enable).
@@ -231,7 +325,7 @@ add_task(async function test_update_defined_command() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {gecko: {id: "commands@mochi.test"}},
+      applications: { gecko: { id: "commands@mochi.test" } },
       commands: {
         foo: {
           suggested_key: {
@@ -308,8 +402,10 @@ add_task(async function updateSidebarCommand() {
   let shortcut = button.getAttribute("shortcut");
   ok(shortcut.endsWith("E"), "The button has the shortcut set");
 
-  extension.sendMessage(
-    "updateShortcut", {name: "_execute_sidebar_action", shortcut: "Ctrl+Shift+M"});
+  extension.sendMessage("updateShortcut", {
+    name: "_execute_sidebar_action",
+    shortcut: "Ctrl+Shift+M",
+  });
   await extension.awaitMessage("done");
 
   shortcut = button.getAttribute("shortcut");

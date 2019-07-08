@@ -331,6 +331,8 @@ with modules["NETWORK"]:
     errors["NS_ERROR_PROXY_CONNECTION_REFUSED"] = FAILURE(72)
     # The proxy requires authentication; used when we can't easily propagate 407s.
     errors["NS_ERROR_PROXY_AUTHENTICATION_FAILED"] = FAILURE(407)
+    # Indicates that we have sent too many requests in a given amount of time.
+    errors["NS_ERROR_TOO_MANY_REQUESTS"] = FAILURE(429)
     # The proxy failed to connect the remote server.
     errors["NS_ERROR_PROXY_BAD_GATEWAY"] = FAILURE(502)
     # The proxy did get any response from the remote server in time.

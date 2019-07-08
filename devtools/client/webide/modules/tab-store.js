@@ -35,14 +35,16 @@ module.exports = TabStore = function(connection) {
 };
 
 TabStore.prototype = {
-
   destroy: function() {
     if (this._connection) {
       // While this.destroy is bound using .once() above, that event may not
       // have occurred when the TabStore client calls destroy, so we
       // manually remove it here.
       this._connection.off(Connection.Events.DESTROYED, this.destroy);
-      this._connection.off(Connection.Events.STATUS_CHANGED, this._onStatusChanged);
+      this._connection.off(
+        Connection.Events.STATUS_CHANGED,
+        this._onStatusChanged
+      );
       _knownTabStores.delete(this._connection);
       this._connection = null;
     }
@@ -57,21 +59,26 @@ TabStore.prototype = {
   _onStatusChanged: function() {
     if (this._connection.status == Connection.Status.CONNECTED) {
       // Watch for changes to remote browser tabs
-      this._connection.client.mainRoot.on("tabListChanged",
-                                          this._onTabListChanged);
+      this._connection.client.mainRoot.on(
+        "tabListChanged",
+        this._onTabListChanged
+      );
       this.listTabs();
     } else {
       if (this._connection.client) {
-        this._connection.client.mainRoot.off("tabListChanged",
-                                             this._onTabListChanged);
+        this._connection.client.mainRoot.off(
+          "tabListChanged",
+          this._onTabListChanged
+        );
       }
       this._resetStore();
     }
   },
 
   _onTabListChanged: function() {
-    this.listTabs().then(() => this.emit("tab-list"))
-                   .catch(console.error);
+    this.listTabs()
+      .then(() => this.emit("tab-list"))
+      .catch(console.error);
   },
 
   _onTabNavigated: function(e, { from, title, url }) {
@@ -89,21 +96,25 @@ TabStore.prototype = {
     }
 
     return new Promise((resolve, reject) => {
-      this._connection.client.mainRoot.listTabs().then(tabs => {
-        // To avoid refactoring WebIDE while switching from form to Target Front for
-        // listTabs. Convert front to form list here.
-        tabs = tabs.map(tab => tab.targetForm);
-        const tabsChanged = JSON.stringify(this.tabs) !== JSON.stringify(tabs);
-        this.tabs = tabs;
-        this._checkSelectedTab();
-        if (tabsChanged) {
-          this.emit("tab-list");
+      this._connection.client.mainRoot.listTabs().then(
+        tabs => {
+          // To avoid refactoring WebIDE while switching from form to Target Front for
+          // listTabs. Convert front to form list here.
+          tabs = tabs.map(tab => tab.targetForm);
+          const tabsChanged =
+            JSON.stringify(this.tabs) !== JSON.stringify(tabs);
+          this.tabs = tabs;
+          this._checkSelectedTab();
+          if (tabsChanged) {
+            this.emit("tab-list");
+          }
+          resolve(tabs);
+        },
+        error => {
+          this._connection.disconnect();
+          reject(error);
         }
-        resolve(tabs);
-      }, error => {
-        this._connection.disconnect();
-        reject(error);
-      });
+      );
     });
   },
 
@@ -163,5 +174,4 @@ TabStore.prototype = {
     });
     return this._selectedTabTargetPromise;
   },
-
 };

@@ -8,10 +8,21 @@
 
 const { Constants } = require("devtools/client/performance/modules/constants");
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { waitForRecordingStartedEvents, waitForRecordingStoppedEvents } = require("devtools/client/performance/test/helpers/actions");
-const { times } = require("devtools/client/performance/test/helpers/event-utils");
-const { getSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
+const {
+  initPerformanceInTab,
+  initConsoleInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  waitForRecordingStartedEvents,
+  waitForRecordingStoppedEvents,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  times,
+} = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  getSelectedRecording,
+} = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
   const { target, console } = await initConsoleInNewTab({
@@ -31,8 +42,11 @@ add_task(async function() {
 
   let recordings = PerformanceController.getRecordings();
   is(recordings.length, 1, "A recording found in the performance panel.");
-  is(getSelectedRecording(panel), recordings[0],
-    "The first console recording should be selected.");
+  is(
+    getSelectedRecording(panel),
+    recordings[0],
+    "The first console recording should be selected."
+  );
 
   // Ensure overview is still rendering.
   await times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
@@ -53,8 +67,11 @@ add_task(async function() {
 
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 2, "Two recordings found in the performance panel.");
-  is(getSelectedRecording(panel), recordings[0],
-    "The first console recording should still be selected.");
+  is(
+    getSelectedRecording(panel),
+    recordings[0],
+    "The first console recording should still be selected."
+  );
 
   // Ensure overview is still rendering.
   await times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
@@ -70,10 +87,16 @@ add_task(async function() {
 
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 2, "Two recordings found in the performance panel.");
-  is(getSelectedRecording(panel), recordings[0],
-    "The first console recording should still be selected.");
-  is(recordings[0].isRecording(), false,
-    "The first console recording should no longer be recording.");
+  is(
+    getSelectedRecording(panel),
+    recordings[0],
+    "The first console recording should still be selected."
+  );
+  is(
+    recordings[0].isRecording(),
+    false,
+    "The first console recording should no longer be recording."
+  );
 
   stopped = waitForRecordingStoppedEvents(panel, {
     // only emitted for manual recordings
@@ -87,10 +110,16 @@ add_task(async function() {
 
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 2, "Two recordings found in the performance panel.");
-  is(getSelectedRecording(panel), recordings[0],
-    "The first console recording should still be selected.");
-  is(recordings[1].isRecording(), false,
-    "The second console recording should no longer be recording.");
+  is(
+    getSelectedRecording(panel),
+    recordings[0],
+    "The first console recording should still be selected."
+  );
+  is(
+    recordings[1].isRecording(),
+    false,
+    "The second console recording should no longer be recording."
+  );
 
   await teardownToolboxAndRemoveTab(panel);
 });

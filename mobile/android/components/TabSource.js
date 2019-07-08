@@ -6,17 +6,24 @@
 
 const Cm = Components.manager;
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "Prompt",
-                               "resource://gre/modules/Prompt.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Prompt",
+  "resource://gre/modules/Prompt.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "EventDispatcher",
-                               "resource://gre/modules/Messaging.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "EventDispatcher",
+  "resource://gre/modules/Messaging.jsm"
+);
 
-function TabSource() {
-}
+function TabSource() {}
 
 TabSource.prototype = {
   classID: Components.ID("{5850c76e-b916-4218-b99a-31f004e0a7e7}"),
@@ -33,23 +40,27 @@ TabSource.prototype = {
       return null;
     }
 
-    let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+    let bundle = Services.strings.createBundle(
+      "chrome://browser/locale/browser.properties"
+    );
     let title = bundle.GetStringFromName("tabshare.title");
 
     let prompt = new Prompt({
       window: win,
       title: title,
-    }).setSingleChoiceItems(tabs.map(function(tab) {
-      let label;
-      if (tab.browser.contentTitle)
-        label = tab.browser.contentTitle;
-      else if (tab.browser.contentURI)
-        label = tab.browser.contentURI.displaySpec;
-      else
-        label = tab.originalURI.displaySpec;
-      return { label: label,
-               icon: "thumbnail:" + tab.id };
-    }));
+    }).setSingleChoiceItems(
+      tabs.map(function(tab) {
+        let label;
+        if (tab.browser.contentTitle) {
+          label = tab.browser.contentTitle;
+        } else if (tab.browser.contentURI) {
+          label = tab.browser.contentURI.displaySpec;
+        } else {
+          label = tab.originalURI.displaySpec;
+        }
+        return { label: label, icon: "thumbnail:" + tab.id };
+      })
+    );
 
     let result = null;
     prompt.show(function(data) {

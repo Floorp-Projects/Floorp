@@ -1,9 +1,11 @@
 "use strict";
 
-const {Schemas} = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
-const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
+const { ExtensionCommon } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionCommon.jsm"
+);
 
-let {LocalAPIImplementation, SchemaAPIInterface} = ExtensionCommon;
+let { LocalAPIImplementation, SchemaAPIInterface } = ExtensionCommon;
 
 const global = this;
 
@@ -12,8 +14,8 @@ let json = [
     namespace: "testing",
 
     properties: {
-      PROP1: {value: 20},
-      prop2: {type: "string"},
+      PROP1: { value: 20 },
+      prop2: { type: "string" },
       prop3: {
         $ref: "submodule",
       },
@@ -27,15 +29,15 @@ let json = [
       {
         id: "type1",
         type: "string",
-        "enum": ["value1", "value2", "value3"],
+        enum: ["value1", "value2", "value3"],
       },
 
       {
         id: "type2",
         type: "object",
         properties: {
-          prop1: {type: "integer"},
-          prop2: {type: "array", items: {"$ref": "type1"}},
+          prop1: { type: "integer" },
+          prop2: { type: "array", items: { $ref: "type1" } },
         },
       },
 
@@ -43,36 +45,32 @@ let json = [
         id: "basetype1",
         type: "object",
         properties: {
-          prop1: {type: "string"},
+          prop1: { type: "string" },
         },
       },
 
       {
         id: "basetype2",
-        choices: [
-          {type: "integer"},
-        ],
+        choices: [{ type: "integer" }],
       },
 
       {
         $extend: "basetype1",
         properties: {
-          prop2: {type: "string"},
+          prop2: { type: "string" },
         },
       },
 
       {
         $extend: "basetype2",
-        choices: [
-          {type: "string"},
-        ],
+        choices: [{ type: "string" }],
       },
 
       {
         id: "basetype3",
         type: "object",
         properties: {
-          baseprop: {type: "string"},
+          baseprop: { type: "string" },
         },
       },
 
@@ -81,7 +79,7 @@ let json = [
         type: "object",
         $import: "basetype3",
         properties: {
-          derivedprop: {type: "string"},
+          derivedprop: { type: "string" },
         },
       },
 
@@ -90,7 +88,7 @@ let json = [
         type: "object",
         $import: "basetype3",
         properties: {
-          derivedprop: {type: "integer"},
+          derivedprop: { type: "integer" },
         },
       },
 
@@ -102,7 +100,7 @@ let json = [
             name: "sub_foo",
             type: "function",
             parameters: [],
-            returns: {type: "integer"},
+            returns: { type: "integer" },
           },
         ],
       },
@@ -113,8 +111,8 @@ let json = [
         name: "foo",
         type: "function",
         parameters: [
-          {name: "arg1", type: "integer", optional: true, default: 99},
-          {name: "arg2", type: "boolean", optional: true},
+          { name: "arg1", type: "integer", optional: true, default: 99 },
+          { name: "arg2", type: "boolean", optional: true },
         ],
       },
 
@@ -122,8 +120,8 @@ let json = [
         name: "bar",
         type: "function",
         parameters: [
-          {name: "arg1", type: "integer", optional: true},
-          {name: "arg2", type: "boolean"},
+          { name: "arg1", type: "integer", optional: true },
+          { name: "arg2", type: "boolean" },
         ],
       },
 
@@ -131,44 +129,42 @@ let json = [
         name: "baz",
         type: "function",
         parameters: [
-          {name: "arg1", type: "object", properties: {
-            prop1: {type: "string"},
-            prop2: {type: "integer", optional: true},
-            prop3: {type: "integer", unsupported: true},
-          }},
+          {
+            name: "arg1",
+            type: "object",
+            properties: {
+              prop1: { type: "string" },
+              prop2: { type: "integer", optional: true },
+              prop3: { type: "integer", unsupported: true },
+            },
+          },
         ],
       },
 
       {
         name: "qux",
         type: "function",
-        parameters: [
-          {name: "arg1", "$ref": "type1"},
-        ],
+        parameters: [{ name: "arg1", $ref: "type1" }],
       },
 
       {
         name: "quack",
         type: "function",
-        parameters: [
-          {name: "arg1", "$ref": "type2"},
-        ],
+        parameters: [{ name: "arg1", $ref: "type2" }],
       },
 
       {
         name: "quora",
         type: "function",
-        parameters: [
-          {name: "arg1", type: "function"},
-        ],
+        parameters: [{ name: "arg1", type: "function" }],
       },
 
       {
         name: "quileute",
         type: "function",
         parameters: [
-          {name: "arg1", type: "integer", optional: true},
-          {name: "arg2", type: "integer"},
+          { name: "arg1", type: "integer", optional: true },
+          { name: "arg2", type: "integer" },
         ],
       },
 
@@ -183,7 +179,12 @@ let json = [
         name: "quintuplets",
         type: "function",
         parameters: [
-          {name: "obj", type: "object", properties: [], additionalProperties: {type: "integer"}},
+          {
+            name: "obj",
+            type: "object",
+            properties: [],
+            additionalProperties: { type: "integer" },
+          },
         ],
       },
 
@@ -191,11 +192,16 @@ let json = [
         name: "quasar",
         type: "function",
         parameters: [
-          {name: "abc", type: "object", properties: {
-            func: {type: "function", parameters: [
-              {name: "x", type: "integer"},
-            ]},
-          }},
+          {
+            name: "abc",
+            type: "object",
+            properties: {
+              func: {
+                type: "function",
+                parameters: [{ name: "x", type: "integer" }],
+              },
+            },
+          },
         ],
       },
 
@@ -203,7 +209,11 @@ let json = [
         name: "quosimodo",
         type: "function",
         parameters: [
-          {name: "xyz", type: "object", additionalProperties: {type: "any"}},
+          {
+            name: "xyz",
+            type: "object",
+            additionalProperties: { type: "any" },
+          },
         ],
       },
 
@@ -214,10 +224,10 @@ let json = [
           {
             name: "obj",
             type: "object",
-            properties: {"prop1": {type: "string", pattern: "^\\d+$"}},
+            properties: { prop1: { type: "string", pattern: "^\\d+$" } },
             patternProperties: {
-              "(?i)^prop\\d+$": {type: "string"},
-              "^foo\\d+$": {type: "string"},
+              "(?i)^prop\\d+$": { type: "string" },
+              "^foo\\d+$": { type: "string" },
             },
           },
         ],
@@ -227,7 +237,7 @@ let json = [
         name: "pattern",
         type: "function",
         parameters: [
-          {name: "arg", type: "string", pattern: "(?i)^[0-9a-f]+$"},
+          { name: "arg", type: "string", pattern: "(?i)^[0-9a-f]+$" },
         ],
       },
 
@@ -239,11 +249,23 @@ let json = [
             name: "arg",
             type: "object",
             properties: {
-              hostname: {type: "string", "format": "hostname", "optional": true},
-              url: {type: "string", "format": "url", "optional": true},
-              relativeUrl: {type: "string", "format": "relativeUrl", "optional": true},
-              strictRelativeUrl: {type: "string", "format": "strictRelativeUrl", "optional": true},
-              imageDataOrStrictRelativeUrl: {type: "string", "format": "imageDataOrStrictRelativeUrl", "optional": true},
+              hostname: { type: "string", format: "hostname", optional: true },
+              url: { type: "string", format: "url", optional: true },
+              relativeUrl: {
+                type: "string",
+                format: "relativeUrl",
+                optional: true,
+              },
+              strictRelativeUrl: {
+                type: "string",
+                format: "strictRelativeUrl",
+                optional: true,
+              },
+              imageDataOrStrictRelativeUrl: {
+                type: "string",
+                format: "imageDataOrStrictRelativeUrl",
+                optional: true,
+              },
             },
           },
         ],
@@ -257,7 +279,7 @@ let json = [
             name: "arg",
             type: "object",
             properties: {
-              date: {type: "string", format: "date", optional: true},
+              date: { type: "string", format: "date", optional: true },
             },
           },
         ],
@@ -282,8 +304,8 @@ let json = [
                         baz: {
                           type: "object",
                           properties: {
-                            required: {type: "integer"},
-                            optional: {type: "string", optional: true},
+                            required: { type: "integer" },
+                            optional: { type: "string", optional: true },
                           },
                         },
                       },
@@ -334,9 +356,14 @@ let json = [
             name: "arg",
             type: "object",
             properties: {
-              foo: {type: "string", "preprocess": "localize", "optional": true},
-              bar: {type: "string", "optional": true},
-              url: {type: "string", "preprocess": "localize", "format": "url", "optional": true},
+              foo: { type: "string", preprocess: "localize", optional: true },
+              bar: { type: "string", optional: true },
+              url: {
+                type: "string",
+                preprocess: "localize",
+                format: "url",
+                optional: true,
+              },
             },
           },
         ],
@@ -345,33 +372,25 @@ let json = [
       {
         name: "extended1",
         type: "function",
-        parameters: [
-          {name: "val", $ref: "basetype1"},
-        ],
+        parameters: [{ name: "val", $ref: "basetype1" }],
       },
 
       {
         name: "extended2",
         type: "function",
-        parameters: [
-          {name: "val", $ref: "basetype2"},
-        ],
+        parameters: [{ name: "val", $ref: "basetype2" }],
       },
 
       {
         name: "callderived1",
         type: "function",
-        parameters: [
-          {name: "value", $ref: "derivedtype1"},
-        ],
+        parameters: [{ name: "value", $ref: "derivedtype1" }],
       },
 
       {
         name: "callderived2",
         type: "function",
-        parameters: [
-          {name: "value", $ref: "derivedtype2"},
-        ],
+        parameters: [{ name: "value", $ref: "derivedtype2" }],
       },
     ],
 
@@ -384,31 +403,33 @@ let json = [
       {
         name: "onBar",
         type: "function",
-        extraParameters: [{
-          name: "filter",
-          type: "integer",
-          optional: true,
-          default: 1,
-        }],
+        extraParameters: [
+          {
+            name: "filter",
+            type: "integer",
+            optional: true,
+            default: 1,
+          },
+        ],
       },
     ],
   },
   {
     namespace: "foreign",
     properties: {
-      foreignRef: {$ref: "testing.submodule"},
+      foreignRef: { $ref: "testing.submodule" },
     },
   },
   {
     namespace: "inject",
     properties: {
-      PROP1: {value: "should inject"},
+      PROP1: { value: "should inject" },
     },
   },
   {
     namespace: "do-not-inject",
     properties: {
-      PROP1: {value: "should not inject"},
+      PROP1: { value: "should not inject" },
     },
   },
 ];
@@ -427,10 +448,18 @@ function verify(...args) {
 let talliedErrors = [];
 
 function checkErrors(errors) {
-  Assert.equal(talliedErrors.length, errors.length, "Got expected number of errors");
+  Assert.equal(
+    talliedErrors.length,
+    errors.length,
+    "Got expected number of errors"
+  );
   for (let [i, error] of errors.entries()) {
-    Assert.ok(i in talliedErrors && String(talliedErrors[i]).includes(error),
-              `${JSON.stringify(error)} is a substring of error ${JSON.stringify(talliedErrors[i])}`);
+    Assert.ok(
+      i in talliedErrors && String(talliedErrors[i]).includes(error),
+      `${JSON.stringify(error)} is a substring of error ${JSON.stringify(
+        talliedErrors[i]
+      )}`
+    );
   }
 
   talliedErrors.length = 0;
@@ -524,7 +553,11 @@ add_task(async function() {
   Assert.equal(root.testing.type1.VALUE2, "value2", "enum type");
 
   Assert.equal("inject" in root, true, "namespace 'inject' should be injected");
-  Assert.equal(root["do-not-inject"], undefined, "namespace 'do-not-inject' should not be injected");
+  Assert.equal(
+    root["do-not-inject"],
+    undefined,
+    "namespace 'do-not-inject' should not be injected"
+  );
 
   root.testing.foo(11, true);
   verify("call", "testing", "foo", [11, true]);
@@ -541,206 +574,302 @@ add_task(async function() {
   root.testing.foo(11);
   verify("call", "testing", "foo", [11, null]);
 
-  Assert.throws(() => root.testing.bar(11),
-                /Incorrect argument types/,
-                "should throw without required arg");
+  Assert.throws(
+    () => root.testing.bar(11),
+    /Incorrect argument types/,
+    "should throw without required arg"
+  );
 
-  Assert.throws(() => root.testing.bar(11, true, 10),
-                /Incorrect argument types/,
-                "should throw with too many arguments");
+  Assert.throws(
+    () => root.testing.bar(11, true, 10),
+    /Incorrect argument types/,
+    "should throw with too many arguments"
+  );
 
   root.testing.bar(true);
   verify("call", "testing", "bar", [null, true]);
 
-  root.testing.baz({prop1: "hello", prop2: 22});
-  verify("call", "testing", "baz", [{prop1: "hello", prop2: 22}]);
+  root.testing.baz({ prop1: "hello", prop2: 22 });
+  verify("call", "testing", "baz", [{ prop1: "hello", prop2: 22 }]);
 
-  root.testing.baz({prop1: "hello"});
-  verify("call", "testing", "baz", [{prop1: "hello", prop2: null}]);
+  root.testing.baz({ prop1: "hello" });
+  verify("call", "testing", "baz", [{ prop1: "hello", prop2: null }]);
 
-  root.testing.baz({prop1: "hello", prop2: null});
-  verify("call", "testing", "baz", [{prop1: "hello", prop2: null}]);
+  root.testing.baz({ prop1: "hello", prop2: null });
+  verify("call", "testing", "baz", [{ prop1: "hello", prop2: null }]);
 
-  Assert.throws(() => root.testing.baz({prop2: 12}),
-                /Property "prop1" is required/,
-                "should throw without required property");
+  Assert.throws(
+    () => root.testing.baz({ prop2: 12 }),
+    /Property "prop1" is required/,
+    "should throw without required property"
+  );
 
-  Assert.throws(() => root.testing.baz({prop1: "hi", prop3: 12}),
-                /Property "prop3" is unsupported by Firefox/,
-                "should throw with unsupported property");
+  Assert.throws(
+    () => root.testing.baz({ prop1: "hi", prop3: 12 }),
+    /Property "prop3" is unsupported by Firefox/,
+    "should throw with unsupported property"
+  );
 
-  Assert.throws(() => root.testing.baz({prop1: "hi", prop4: 12}),
-                /Unexpected property "prop4"/,
-                "should throw with unexpected property");
+  Assert.throws(
+    () => root.testing.baz({ prop1: "hi", prop4: 12 }),
+    /Unexpected property "prop4"/,
+    "should throw with unexpected property"
+  );
 
-  Assert.throws(() => root.testing.baz({prop1: 12}),
-                /Expected string instead of 12/,
-                "should throw with wrong type");
+  Assert.throws(
+    () => root.testing.baz({ prop1: 12 }),
+    /Expected string instead of 12/,
+    "should throw with wrong type"
+  );
 
   root.testing.qux("value2");
   verify("call", "testing", "qux", ["value2"]);
 
-  Assert.throws(() => root.testing.qux("value4"),
-                /Invalid enumeration value "value4"/,
-                "should throw for invalid enum value");
+  Assert.throws(
+    () => root.testing.qux("value4"),
+    /Invalid enumeration value "value4"/,
+    "should throw for invalid enum value"
+  );
 
-  root.testing.quack({prop1: 12, prop2: ["value1", "value3"]});
-  verify("call", "testing", "quack", [{prop1: 12, prop2: ["value1", "value3"]}]);
+  root.testing.quack({ prop1: 12, prop2: ["value1", "value3"] });
+  verify("call", "testing", "quack", [
+    { prop1: 12, prop2: ["value1", "value3"] },
+  ]);
 
-  Assert.throws(() => root.testing.quack({prop1: 12, prop2: ["value1", "value3", "value4"]}),
-                /Invalid enumeration value "value4"/,
-                "should throw for invalid array type");
+  Assert.throws(
+    () =>
+      root.testing.quack({ prop1: 12, prop2: ["value1", "value3", "value4"] }),
+    /Invalid enumeration value "value4"/,
+    "should throw for invalid array type"
+  );
 
   function f() {}
   root.testing.quora(f);
-  Assert.equal(JSON.stringify(tallied.slice(0, -1)), JSON.stringify(["call", "testing", "quora"]));
+  Assert.equal(
+    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(["call", "testing", "quora"])
+  );
   Assert.equal(tallied[3][0], f);
   tallied = null;
 
   let g = () => 0;
   root.testing.quora(g);
-  Assert.equal(JSON.stringify(tallied.slice(0, -1)), JSON.stringify(["call", "testing", "quora"]));
+  Assert.equal(
+    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(["call", "testing", "quora"])
+  );
   Assert.equal(tallied[3][0], g);
   tallied = null;
 
   root.testing.quileute(10);
   verify("call", "testing", "quileute", [null, 10]);
 
-  Assert.throws(() => root.testing.queets(),
-                /queets is not a function/,
-                "should throw for unsupported functions");
+  Assert.throws(
+    () => root.testing.queets(),
+    /queets is not a function/,
+    "should throw for unsupported functions"
+  );
 
-  root.testing.quintuplets({a: 10, b: 20, c: 30});
-  verify("call", "testing", "quintuplets", [{a: 10, b: 20, c: 30}]);
+  root.testing.quintuplets({ a: 10, b: 20, c: 30 });
+  verify("call", "testing", "quintuplets", [{ a: 10, b: 20, c: 30 }]);
 
-  Assert.throws(() => root.testing.quintuplets({a: 10, b: 20, c: 30, d: "hi"}),
-                /Expected integer instead of "hi"/,
-                "should throw for wrong additionalProperties type");
+  Assert.throws(
+    () => root.testing.quintuplets({ a: 10, b: 20, c: 30, d: "hi" }),
+    /Expected integer instead of "hi"/,
+    "should throw for wrong additionalProperties type"
+  );
 
-  root.testing.quasar({func: f});
-  Assert.equal(JSON.stringify(tallied.slice(0, -1)), JSON.stringify(["call", "testing", "quasar"]));
+  root.testing.quasar({ func: f });
+  Assert.equal(
+    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(["call", "testing", "quasar"])
+  );
   Assert.equal(tallied[3][0].func, f);
   tallied = null;
 
-  root.testing.quosimodo({a: 10, b: 20, c: 30});
-  verify("call", "testing", "quosimodo", [{a: 10, b: 20, c: 30}]);
+  root.testing.quosimodo({ a: 10, b: 20, c: 30 });
+  verify("call", "testing", "quosimodo", [{ a: 10, b: 20, c: 30 }]);
   tallied = null;
 
-  Assert.throws(() => root.testing.quosimodo(10),
-                /Incorrect argument types/,
-                "should throw for wrong type");
+  Assert.throws(
+    () => root.testing.quosimodo(10),
+    /Incorrect argument types/,
+    "should throw for wrong type"
+  );
 
-  root.testing.patternprop({prop1: "12", prop2: "42", Prop3: "43", foo1: "x"});
-  verify("call", "testing", "patternprop", [{prop1: "12", prop2: "42", Prop3: "43", foo1: "x"}]);
+  root.testing.patternprop({
+    prop1: "12",
+    prop2: "42",
+    Prop3: "43",
+    foo1: "x",
+  });
+  verify("call", "testing", "patternprop", [
+    { prop1: "12", prop2: "42", Prop3: "43", foo1: "x" },
+  ]);
   tallied = null;
 
-  root.testing.patternprop({prop1: "12"});
-  verify("call", "testing", "patternprop", [{prop1: "12"}]);
+  root.testing.patternprop({ prop1: "12" });
+  verify("call", "testing", "patternprop", [{ prop1: "12" }]);
   tallied = null;
 
-  Assert.throws(() => root.testing.patternprop({prop1: "12", foo1: null}),
-                /Expected string instead of null/,
-                "should throw for wrong property type");
+  Assert.throws(
+    () => root.testing.patternprop({ prop1: "12", foo1: null }),
+    /Expected string instead of null/,
+    "should throw for wrong property type"
+  );
 
-  Assert.throws(() => root.testing.patternprop({prop1: "xx", prop2: "yy"}),
-                /String "xx" must match \/\^\\d\+\$\//,
-                "should throw for wrong property type");
+  Assert.throws(
+    () => root.testing.patternprop({ prop1: "xx", prop2: "yy" }),
+    /String "xx" must match \/\^\\d\+\$\//,
+    "should throw for wrong property type"
+  );
 
-  Assert.throws(() => root.testing.patternprop({prop1: "12", prop2: 42}),
-                /Expected string instead of 42/,
-                "should throw for wrong property type");
+  Assert.throws(
+    () => root.testing.patternprop({ prop1: "12", prop2: 42 }),
+    /Expected string instead of 42/,
+    "should throw for wrong property type"
+  );
 
-  Assert.throws(() => root.testing.patternprop({prop1: "12", prop2: null}),
-                /Expected string instead of null/,
-                "should throw for wrong property type");
+  Assert.throws(
+    () => root.testing.patternprop({ prop1: "12", prop2: null }),
+    /Expected string instead of null/,
+    "should throw for wrong property type"
+  );
 
-  Assert.throws(() => root.testing.patternprop({prop1: "12", propx: "42"}),
-                /Unexpected property "propx"/,
-                "should throw for unexpected property");
+  Assert.throws(
+    () => root.testing.patternprop({ prop1: "12", propx: "42" }),
+    /Unexpected property "propx"/,
+    "should throw for unexpected property"
+  );
 
-  Assert.throws(() => root.testing.patternprop({prop1: "12", Foo1: "x"}),
-                /Unexpected property "Foo1"/,
-                "should throw for unexpected property");
+  Assert.throws(
+    () => root.testing.patternprop({ prop1: "12", Foo1: "x" }),
+    /Unexpected property "Foo1"/,
+    "should throw for unexpected property"
+  );
 
   root.testing.pattern("DEADbeef");
   verify("call", "testing", "pattern", ["DEADbeef"]);
   tallied = null;
 
-  Assert.throws(() => root.testing.pattern("DEADcow"),
-                /String "DEADcow" must match \/\^\[0-9a-f\]\+\$\/i/,
-                "should throw for non-match");
+  Assert.throws(
+    () => root.testing.pattern("DEADcow"),
+    /String "DEADcow" must match \/\^\[0-9a-f\]\+\$\/i/,
+    "should throw for non-match"
+  );
 
-  root.testing.format({hostname: "foo"});
-  verify("call", "testing", "format", [{hostname: "foo",
-                                        imageDataOrStrictRelativeUrl: null,
-                                        relativeUrl: null,
-                                        strictRelativeUrl: null,
-                                        url: null}]);
+  root.testing.format({ hostname: "foo" });
+  verify("call", "testing", "format", [
+    {
+      hostname: "foo",
+      imageDataOrStrictRelativeUrl: null,
+      relativeUrl: null,
+      strictRelativeUrl: null,
+      url: null,
+    },
+  ]);
   tallied = null;
 
   for (let invalid of ["", " ", "http://foo", "foo/bar", "foo.com/", "foo?"]) {
-    Assert.throws(() => root.testing.format({hostname: invalid}),
-                  /Invalid hostname/,
-                  "should throw for invalid hostname");
+    Assert.throws(
+      () => root.testing.format({ hostname: invalid }),
+      /Invalid hostname/,
+      "should throw for invalid hostname"
+    );
   }
 
-  root.testing.format({url: "http://foo/bar",
-                       relativeUrl: "http://foo/bar"});
-  verify("call", "testing", "format", [{hostname: null,
-                                        imageDataOrStrictRelativeUrl: null,
-                                        relativeUrl: "http://foo/bar",
-                                        strictRelativeUrl: null,
-                                        url: "http://foo/bar"}]);
+  root.testing.format({ url: "http://foo/bar", relativeUrl: "http://foo/bar" });
+  verify("call", "testing", "format", [
+    {
+      hostname: null,
+      imageDataOrStrictRelativeUrl: null,
+      relativeUrl: "http://foo/bar",
+      strictRelativeUrl: null,
+      url: "http://foo/bar",
+    },
+  ]);
   tallied = null;
 
-  root.testing.format({relativeUrl: "foo.html", strictRelativeUrl: "foo.html"});
-  verify("call", "testing", "format", [{hostname: null,
-                                        imageDataOrStrictRelativeUrl: null,
-                                        relativeUrl: `${wrapper.url}foo.html`,
-                                        strictRelativeUrl: `${wrapper.url}foo.html`,
-                                        url: null}]);
+  root.testing.format({
+    relativeUrl: "foo.html",
+    strictRelativeUrl: "foo.html",
+  });
+  verify("call", "testing", "format", [
+    {
+      hostname: null,
+      imageDataOrStrictRelativeUrl: null,
+      relativeUrl: `${wrapper.url}foo.html`,
+      strictRelativeUrl: `${wrapper.url}foo.html`,
+      url: null,
+    },
+  ]);
   tallied = null;
 
-  root.testing.format({imageDataOrStrictRelativeUrl: "data:image/png;base64,A"});
-  verify("call", "testing", "format", [{hostname: null,
-                                        imageDataOrStrictRelativeUrl: "data:image/png;base64,A",
-                                        relativeUrl: null,
-                                        strictRelativeUrl: null,
-                                        url: null}]);
+  root.testing.format({
+    imageDataOrStrictRelativeUrl: "data:image/png;base64,A",
+  });
+  verify("call", "testing", "format", [
+    {
+      hostname: null,
+      imageDataOrStrictRelativeUrl: "data:image/png;base64,A",
+      relativeUrl: null,
+      strictRelativeUrl: null,
+      url: null,
+    },
+  ]);
   tallied = null;
 
-  root.testing.format({imageDataOrStrictRelativeUrl: "data:image/jpeg;base64,A"});
-  verify("call", "testing", "format", [{hostname: null,
-                                        imageDataOrStrictRelativeUrl: "data:image/jpeg;base64,A",
-                                        relativeUrl: null,
-                                        strictRelativeUrl: null,
-                                        url: null}]);
+  root.testing.format({
+    imageDataOrStrictRelativeUrl: "data:image/jpeg;base64,A",
+  });
+  verify("call", "testing", "format", [
+    {
+      hostname: null,
+      imageDataOrStrictRelativeUrl: "data:image/jpeg;base64,A",
+      relativeUrl: null,
+      strictRelativeUrl: null,
+      url: null,
+    },
+  ]);
   tallied = null;
 
-  root.testing.format({imageDataOrStrictRelativeUrl: "foo.html"});
-  verify("call", "testing", "format", [{hostname: null,
-                                        imageDataOrStrictRelativeUrl: `${wrapper.url}foo.html`,
-                                        relativeUrl: null,
-                                        strictRelativeUrl: null,
-                                        url: null}]);
+  root.testing.format({ imageDataOrStrictRelativeUrl: "foo.html" });
+  verify("call", "testing", "format", [
+    {
+      hostname: null,
+      imageDataOrStrictRelativeUrl: `${wrapper.url}foo.html`,
+      relativeUrl: null,
+      strictRelativeUrl: null,
+      url: null,
+    },
+  ]);
 
   tallied = null;
 
   for (let format of ["url", "relativeUrl"]) {
-    Assert.throws(() => root.testing.format({[format]: "chrome://foo/content/"}),
-                  /Access denied/,
-                  "should throw for access denied");
+    Assert.throws(
+      () => root.testing.format({ [format]: "chrome://foo/content/" }),
+      /Access denied/,
+      "should throw for access denied"
+    );
   }
 
   for (let urlString of ["//foo.html", "http://foo/bar.html"]) {
-    Assert.throws(() => root.testing.format({strictRelativeUrl: urlString}),
-                  /must be a relative URL/,
-                  "should throw for non-relative URL");
+    Assert.throws(
+      () => root.testing.format({ strictRelativeUrl: urlString }),
+      /must be a relative URL/,
+      "should throw for non-relative URL"
+    );
   }
 
-  Assert.throws(() => root.testing.format({imageDataOrStrictRelativeUrl: "data:image/svg+xml;utf8,A"}),
-                /must be a relative or PNG or JPG data:image URL/,
-                "should throw for non-relative or non PNG/JPG data URL");
+  Assert.throws(
+    () =>
+      root.testing.format({
+        imageDataOrStrictRelativeUrl: "data:image/svg+xml;utf8,A",
+      }),
+    /must be a relative or PNG or JPG data:image URL/,
+    "should throw for non-relative or non PNG/JPG data URL"
+  );
 
   const dates = [
     "2016-03-04",
@@ -754,18 +883,22 @@ add_task(async function() {
     "2016-03-04T08:00:00-0800",
   ];
   dates.forEach(str => {
-    root.testing.formatDate({date: str});
-    verify("call", "testing", "formatDate", [{date: str}]);
+    root.testing.formatDate({ date: str });
+    verify("call", "testing", "formatDate", [{ date: str }]);
   });
 
   // Make sure that a trivial change to a valid date invalidates it.
   dates.forEach(str => {
-    Assert.throws(() => root.testing.formatDate({date: "0" + str}),
-                  /Invalid date string/,
-                  "should throw for invalid iso date string");
-    Assert.throws(() => root.testing.formatDate({date: str + "0"}),
-                  /Invalid date string/,
-                  "should throw for invalid iso date string");
+    Assert.throws(
+      () => root.testing.formatDate({ date: "0" + str }),
+      /Invalid date string/,
+      "should throw for invalid iso date string"
+    );
+    Assert.throws(
+      () => root.testing.formatDate({ date: str + "0" }),
+      /Invalid date string/,
+      "should throw for invalid iso date string"
+    );
   });
 
   const badDates = [
@@ -774,119 +907,167 @@ add_task(async function() {
     "2016-03-04T25:00:00Z",
   ];
   badDates.forEach(str => {
-    Assert.throws(() => root.testing.formatDate({date: str}),
-                  /Invalid date string/,
-                  "should throw for invalid iso date string");
+    Assert.throws(
+      () => root.testing.formatDate({ date: str }),
+      /Invalid date string/,
+      "should throw for invalid iso date string"
+    );
   });
 
-  root.testing.deep({foo: {bar: [{baz: {required: 12, optional: "42"}}]}});
-  verify("call", "testing", "deep", [{foo: {bar: [{baz: {optional: "42", required: 12}}]}}]);
+  root.testing.deep({
+    foo: { bar: [{ baz: { required: 12, optional: "42" } }] },
+  });
+  verify("call", "testing", "deep", [
+    { foo: { bar: [{ baz: { optional: "42", required: 12 } }] } },
+  ]);
   tallied = null;
 
-  Assert.throws(() => root.testing.deep({foo: {bar: [{baz: {optional: "42"}}]}}),
-                /Type error for parameter arg \(Error processing foo\.bar\.0\.baz: Property "required" is required\) for testing\.deep/,
-                "should throw with the correct object path");
+  Assert.throws(
+    () => root.testing.deep({ foo: { bar: [{ baz: { optional: "42" } }] } }),
+    /Type error for parameter arg \(Error processing foo\.bar\.0\.baz: Property "required" is required\) for testing\.deep/,
+    "should throw with the correct object path"
+  );
 
-  Assert.throws(() => root.testing.deep({foo: {bar: [{baz: {optional: 42, required: 12}}]}}),
-                /Type error for parameter arg \(Error processing foo\.bar\.0\.baz\.optional: Expected string instead of 42\) for testing\.deep/,
-                "should throw with the correct object path");
-
+  Assert.throws(
+    () =>
+      root.testing.deep({
+        foo: { bar: [{ baz: { optional: 42, required: 12 } }] },
+      }),
+    /Type error for parameter arg \(Error processing foo\.bar\.0\.baz\.optional: Expected string instead of 42\) for testing\.deep/,
+    "should throw with the correct object path"
+  );
 
   talliedErrors.length = 0;
 
-  root.testing.errors({default: "0123", ignore: "0123", warn: "0123"});
-  verify("call", "testing", "errors", [{default: "0123", ignore: "0123", warn: "0123"}]);
-  checkErrors([]);
-
-  root.testing.errors({default: "0123", ignore: "x123", warn: "0123"});
-  verify("call", "testing", "errors", [{default: "0123", ignore: null,  warn: "0123"}]);
-  checkErrors([]);
-
-  root.testing.errors({default: "0123", ignore: "0123", warn: "x123"});
-  verify("call", "testing", "errors", [{default: "0123", ignore: "0123", warn: null}]);
-  checkErrors([
-    'String "x123" must match /^\\d+$/',
+  root.testing.errors({ default: "0123", ignore: "0123", warn: "0123" });
+  verify("call", "testing", "errors", [
+    { default: "0123", ignore: "0123", warn: "0123" },
   ]);
+  checkErrors([]);
 
+  root.testing.errors({ default: "0123", ignore: "x123", warn: "0123" });
+  verify("call", "testing", "errors", [
+    { default: "0123", ignore: null, warn: "0123" },
+  ]);
+  checkErrors([]);
+
+  root.testing.errors({ default: "0123", ignore: "0123", warn: "x123" });
+  verify("call", "testing", "errors", [
+    { default: "0123", ignore: "0123", warn: null },
+  ]);
+  checkErrors(['String "x123" must match /^\\d+$/']);
 
   root.testing.onFoo.addListener(f);
-  Assert.equal(JSON.stringify(tallied.slice(0, -1)), JSON.stringify(["addListener", "testing", "onFoo"]));
+  Assert.equal(
+    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(["addListener", "testing", "onFoo"])
+  );
   Assert.equal(tallied[3][0], f);
   Assert.equal(JSON.stringify(tallied[3][1]), JSON.stringify([]));
   tallied = null;
 
   root.testing.onFoo.removeListener(f);
-  Assert.equal(JSON.stringify(tallied.slice(0, -1)), JSON.stringify(["removeListener", "testing", "onFoo"]));
+  Assert.equal(
+    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(["removeListener", "testing", "onFoo"])
+  );
   Assert.equal(tallied[3][0], f);
   tallied = null;
 
   root.testing.onFoo.hasListener(f);
-  Assert.equal(JSON.stringify(tallied.slice(0, -1)), JSON.stringify(["hasListener", "testing", "onFoo"]));
+  Assert.equal(
+    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(["hasListener", "testing", "onFoo"])
+  );
   Assert.equal(tallied[3][0], f);
   tallied = null;
 
-  Assert.throws(() => root.testing.onFoo.addListener(10),
-                /Invalid listener/,
-                "addListener with non-function should throw");
+  Assert.throws(
+    () => root.testing.onFoo.addListener(10),
+    /Invalid listener/,
+    "addListener with non-function should throw"
+  );
 
   root.testing.onBar.addListener(f, 10);
-  Assert.equal(JSON.stringify(tallied.slice(0, -1)), JSON.stringify(["addListener", "testing", "onBar"]));
+  Assert.equal(
+    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(["addListener", "testing", "onBar"])
+  );
   Assert.equal(tallied[3][0], f);
   Assert.equal(JSON.stringify(tallied[3][1]), JSON.stringify([10]));
   tallied = null;
 
   root.testing.onBar.addListener(f);
-  Assert.equal(JSON.stringify(tallied.slice(0, -1)), JSON.stringify(["addListener", "testing", "onBar"]));
+  Assert.equal(
+    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(["addListener", "testing", "onBar"])
+  );
   Assert.equal(tallied[3][0], f);
   Assert.equal(JSON.stringify(tallied[3][1]), JSON.stringify([1]));
   tallied = null;
 
-  Assert.throws(() => root.testing.onBar.addListener(f, "hi"),
-                /Incorrect argument types/,
-                "addListener with wrong extra parameter should throw");
+  Assert.throws(
+    () => root.testing.onBar.addListener(f, "hi"),
+    /Incorrect argument types/,
+    "addListener with wrong extra parameter should throw"
+  );
 
-  let target = {prop1: 12, prop2: ["value1", "value3"]};
+  let target = { prop1: 12, prop2: ["value1", "value3"] };
   let proxy = new Proxy(target, {});
-  Assert.throws(() => root.testing.quack(proxy),
-                /Expected a plain JavaScript object, got a Proxy/,
-                "should throw when passing a Proxy");
+  Assert.throws(
+    () => root.testing.quack(proxy),
+    /Expected a plain JavaScript object, got a Proxy/,
+    "should throw when passing a Proxy"
+  );
 
   if (Symbol.toStringTag) {
-    let stringTarget = {prop1: 12, prop2: ["value1", "value3"]};
+    let stringTarget = { prop1: 12, prop2: ["value1", "value3"] };
     stringTarget[Symbol.toStringTag] = () => "[object Object]";
     let stringProxy = new Proxy(stringTarget, {});
-    Assert.throws(() => root.testing.quack(stringProxy),
-                  /Expected a plain JavaScript object, got a Proxy/,
-                  "should throw when passing a Proxy");
+    Assert.throws(
+      () => root.testing.quack(stringProxy),
+      /Expected a plain JavaScript object, got a Proxy/,
+      "should throw when passing a Proxy"
+    );
   }
 
-
-  root.testing.localize({foo: "__MSG_foo__", bar: "__MSG_foo__", url: "__MSG_http://example.com/__"});
-  verify("call", "testing", "localize", [{bar: "__MSG_foo__", foo: "FOO", url: "http://example.com/"}]);
+  root.testing.localize({
+    foo: "__MSG_foo__",
+    bar: "__MSG_foo__",
+    url: "__MSG_http://example.com/__",
+  });
+  verify("call", "testing", "localize", [
+    { bar: "__MSG_foo__", foo: "FOO", url: "http://example.com/" },
+  ]);
   tallied = null;
 
+  Assert.throws(
+    () => root.testing.localize({ url: "__MSG_/foo/bar__" }),
+    /\/FOO\/BAR is not a valid URL\./,
+    "should throw for invalid URL"
+  );
 
-  Assert.throws(() => root.testing.localize({url: "__MSG_/foo/bar__"}),
-                /\/FOO\/BAR is not a valid URL\./,
-                "should throw for invalid URL");
-
-
-  root.testing.extended1({prop1: "foo", prop2: "bar"});
-  verify("call", "testing", "extended1", [{prop1: "foo", prop2: "bar"}]);
+  root.testing.extended1({ prop1: "foo", prop2: "bar" });
+  verify("call", "testing", "extended1", [{ prop1: "foo", prop2: "bar" }]);
   tallied = null;
 
-  Assert.throws(() => root.testing.extended1({prop1: "foo", prop2: 12}),
-                /Expected string instead of 12/,
-                "should throw for wrong property type");
+  Assert.throws(
+    () => root.testing.extended1({ prop1: "foo", prop2: 12 }),
+    /Expected string instead of 12/,
+    "should throw for wrong property type"
+  );
 
-  Assert.throws(() => root.testing.extended1({prop1: "foo"}),
-                /Property "prop2" is required/,
-                "should throw for missing property");
+  Assert.throws(
+    () => root.testing.extended1({ prop1: "foo" }),
+    /Property "prop2" is required/,
+    "should throw for missing property"
+  );
 
-  Assert.throws(() => root.testing.extended1({prop1: "foo", prop2: "bar", prop3: "xxx"}),
-                /Unexpected property "prop3"/,
-                "should throw for extra property");
-
+  Assert.throws(
+    () => root.testing.extended1({ prop1: "foo", prop2: "bar", prop3: "xxx" }),
+    /Unexpected property "prop3"/,
+    "should throw for extra property"
+  );
 
   root.testing.extended2("foo");
   verify("call", "testing", "extended2", ["foo"]);
@@ -896,51 +1077,69 @@ add_task(async function() {
   verify("call", "testing", "extended2", [12]);
   tallied = null;
 
-  Assert.throws(() => root.testing.extended2(true),
-                /Incorrect argument types/,
-                "should throw for wrong argument type");
+  Assert.throws(
+    () => root.testing.extended2(true),
+    /Incorrect argument types/,
+    "should throw for wrong argument type"
+  );
 
   root.testing.prop3.sub_foo();
   verify("call", "testing.prop3", "sub_foo", []);
   tallied = null;
 
-  Assert.throws(() => root.testing.prop4.sub_foo(),
-                /root.testing.prop4 is undefined/,
-                "should throw for unsupported submodule");
+  Assert.throws(
+    () => root.testing.prop4.sub_foo(),
+    /root.testing.prop4 is undefined/,
+    "should throw for unsupported submodule"
+  );
 
   root.foreign.foreignRef.sub_foo();
   verify("call", "foreign.foreignRef", "sub_foo", []);
   tallied = null;
 
-  root.testing.callderived1({baseprop: "s1", derivedprop: "s2"});
-  verify("call", "testing", "callderived1",
-         [{baseprop: "s1", derivedprop: "s2"}]);
+  root.testing.callderived1({ baseprop: "s1", derivedprop: "s2" });
+  verify("call", "testing", "callderived1", [
+    { baseprop: "s1", derivedprop: "s2" },
+  ]);
   tallied = null;
 
-  Assert.throws(() => root.testing.callderived1({baseprop: "s1", derivedprop: 42}),
-                /Error processing derivedprop: Expected string/,
-                "Two different objects may $import the same base object");
-  Assert.throws(() => root.testing.callderived1({baseprop: "s1"}),
-                /Property "derivedprop" is required/,
-                "Object using $import has its local properites");
-  Assert.throws(() => root.testing.callderived1({derivedprop: "s2"}),
-                /Property "baseprop" is required/,
-                "Object using $import has imported properites");
+  Assert.throws(
+    () => root.testing.callderived1({ baseprop: "s1", derivedprop: 42 }),
+    /Error processing derivedprop: Expected string/,
+    "Two different objects may $import the same base object"
+  );
+  Assert.throws(
+    () => root.testing.callderived1({ baseprop: "s1" }),
+    /Property "derivedprop" is required/,
+    "Object using $import has its local properites"
+  );
+  Assert.throws(
+    () => root.testing.callderived1({ derivedprop: "s2" }),
+    /Property "baseprop" is required/,
+    "Object using $import has imported properites"
+  );
 
-  root.testing.callderived2({baseprop: "s1", derivedprop: 42});
-  verify("call", "testing", "callderived2",
-         [{baseprop: "s1", derivedprop: 42}]);
+  root.testing.callderived2({ baseprop: "s1", derivedprop: 42 });
+  verify("call", "testing", "callderived2", [
+    { baseprop: "s1", derivedprop: 42 },
+  ]);
   tallied = null;
 
-  Assert.throws(() => root.testing.callderived2({baseprop: "s1", derivedprop: "s2"}),
-                /Error processing derivedprop: Expected integer/,
-                "Two different objects may $import the same base object");
-  Assert.throws(() => root.testing.callderived2({baseprop: "s1"}),
-                /Property "derivedprop" is required/,
-                "Object using $import has its local properites");
-  Assert.throws(() => root.testing.callderived2({derivedprop: 42}),
-                /Property "baseprop" is required/,
-                "Object using $import has imported properites");
+  Assert.throws(
+    () => root.testing.callderived2({ baseprop: "s1", derivedprop: "s2" }),
+    /Error processing derivedprop: Expected integer/,
+    "Two different objects may $import the same base object"
+  );
+  Assert.throws(
+    () => root.testing.callderived2({ baseprop: "s1" }),
+    /Property "derivedprop" is required/,
+    "Object using $import has its local properites"
+  );
+  Assert.throws(
+    () => root.testing.callderived2({ derivedprop: 42 }),
+    /Property "baseprop" is required/,
+    "Object using $import has imported properites"
+  );
 });
 
 let deprecatedJson = [
@@ -957,8 +1156,8 @@ let deprecatedJson = [
 
     types: [
       {
-        "id": "Type",
-        "type": "string",
+        id: "Type",
+        type: "string",
       },
     ],
 
@@ -1038,8 +1237,7 @@ let deprecatedJson = [
         name: "method",
         type: "function",
         deprecated: "Do not call this method",
-        parameters: [
-        ],
+        parameters: [],
       },
     ],
 
@@ -1063,9 +1261,10 @@ add_task(async function testDeprecation() {
 
   talliedErrors.length = 0;
 
-
-  root.deprecated.property({foo: "bar", xxx: "any", yyy: "property"});
-  verify("call", "deprecated", "property", [{foo: "bar", xxx: "any", yyy: "property"}]);
+  root.deprecated.property({ foo: "bar", xxx: "any", yyy: "property" });
+  verify("call", "deprecated", "property", [
+    { foo: "bar", xxx: "any", yyy: "property" },
+  ]);
   checkErrors([
     "Error processing xxx: Unknown property",
     "Error processing yyy: Unknown property",
@@ -1077,7 +1276,7 @@ add_task(async function testDeprecation() {
 
   root.deprecated.value("12");
   verify("call", "deprecated", "value", ["12"]);
-  checkErrors(["Please use an integer, not \"12\""]);
+  checkErrors(['Please use an integer, not "12"']);
 
   root.deprecated.choices(12);
   verify("call", "deprecated", "choices", [12]);
@@ -1091,7 +1290,6 @@ add_task(async function testDeprecation() {
   verify("call", "deprecated", "method", []);
   checkErrors(["Do not call this method"]);
 
-
   void root.deprecated.accessor;
   verify("get", "deprecated", "accessor", null);
   checkErrors(["This is not the property you are looking for"]);
@@ -1099,7 +1297,6 @@ add_task(async function testDeprecation() {
   root.deprecated.accessor = "x";
   verify("set", "deprecated", "accessor", "x");
   checkErrors(["This is not the property you are looking for"]);
-
 
   root.deprecated.onDeprecated.addListener(() => {});
   checkErrors(["This event does not work"]);
@@ -1111,13 +1308,11 @@ add_task(async function testDeprecation() {
   checkErrors(["This event does not work"]);
 });
 
-
 let choicesJson = [
   {
     namespace: "choices",
 
-    types: [
-    ],
+    types: [],
 
     functions: [
       {
@@ -1220,39 +1415,56 @@ add_task(async function testChoices() {
 
   talliedErrors.length = 0;
 
-  Assert.throws(() => root.choices.meh("frog"),
-                /Value "frog" must either: be one of \["foo", "bar", "baz"\], match the pattern \/florg\.\*meh\/, or be an integer value/);
+  Assert.throws(
+    () => root.choices.meh("frog"),
+    /Value "frog" must either: be one of \["foo", "bar", "baz"\], match the pattern \/florg\.\*meh\/, or be an integer value/
+  );
 
-  Assert.throws(() => root.choices.meh(4),
-                /be a string value, or be at least 12/);
+  Assert.throws(
+    () => root.choices.meh(4),
+    /be a string value, or be at least 12/
+  );
 
-  Assert.throws(() => root.choices.meh(43),
-                /be a string value, or be no greater than 42/);
+  Assert.throws(
+    () => root.choices.meh(43),
+    /be a string value, or be no greater than 42/
+  );
 
+  Assert.throws(
+    () => root.choices.foo([]),
+    /be an object value, be a string value, or have at least 2 items/
+  );
 
-  Assert.throws(() => root.choices.foo([]),
-                /be an object value, be a string value, or have at least 2 items/);
+  Assert.throws(
+    () => root.choices.foo([1, 2, 3, 4]),
+    /be an object value, be a string value, or have at most 3 items/
+  );
 
-  Assert.throws(() => root.choices.foo([1, 2, 3, 4]),
-                /be an object value, be a string value, or have at most 3 items/);
+  Assert.throws(
+    () => root.choices.foo({ foo: 12 }),
+    /.foo must be a string value, be a string value, or be an array value/
+  );
 
-  Assert.throws(() => root.choices.foo({foo: 12}),
-                /.foo must be a string value, be a string value, or be an array value/);
+  Assert.throws(
+    () => root.choices.foo({ blurg: "foo" }),
+    /not contain an unsupported "blurg" property, be a string value, or be an array value/
+  );
 
-  Assert.throws(() => root.choices.foo({blurg: "foo"}),
-                /not contain an unsupported "blurg" property, be a string value, or be an array value/);
+  Assert.throws(
+    () => root.choices.bar({}),
+    /contain the required "baz" property, or be an array value/
+  );
 
+  Assert.throws(
+    () => root.choices.bar({ baz: "x", quux: "y" }),
+    /not contain an unexpected "quux" property, or be an array value/
+  );
 
-  Assert.throws(() => root.choices.bar({}),
-                /contain the required "baz" property, or be an array value/);
-
-  Assert.throws(() => root.choices.bar({baz: "x", quux: "y"}),
-                /not contain an unexpected "quux" property, or be an array value/);
-
-  Assert.throws(() => root.choices.bar({baz: "x", quux: "y", foo: "z"}),
-                /not contain the unexpected properties \[foo, quux\], or be an array value/);
+  Assert.throws(
+    () => root.choices.bar({ baz: "x", quux: "y", foo: "z" }),
+    /not contain the unexpected properties \[foo, quux\], or be an array value/
+  );
 });
-
 
 let permissionsJson = [
   {
@@ -1309,12 +1521,19 @@ add_task(async function testPermissions() {
   Schemas.inject(root, wrapper);
 
   equal(typeof root.noPerms, "object", "noPerms namespace should exist");
-  equal(typeof root.noPerms.noPerms, "function", "noPerms.noPerms method should exist");
+  equal(
+    typeof root.noPerms.noPerms,
+    "function",
+    "noPerms.noPerms method should exist"
+  );
 
-  equal(root.noPerms.fooPerm, undefined, "noPerms.fooPerm should not method exist");
+  equal(
+    root.noPerms.fooPerm,
+    undefined,
+    "noPerms.fooPerm should not method exist"
+  );
 
   equal(root.fooPerm, undefined, "fooPerm namespace should not exist");
-
 
   info('Add "foo" permission');
   permissions.add("foo");
@@ -1323,14 +1542,29 @@ add_task(async function testPermissions() {
   Schemas.inject(root, wrapper);
 
   equal(typeof root.noPerms, "object", "noPerms namespace should exist");
-  equal(typeof root.noPerms.noPerms, "function", "noPerms.noPerms method should exist");
-  equal(typeof root.noPerms.fooPerm, "function", "noPerms.fooPerm method should exist");
+  equal(
+    typeof root.noPerms.noPerms,
+    "function",
+    "noPerms.noPerms method should exist"
+  );
+  equal(
+    typeof root.noPerms.fooPerm,
+    "function",
+    "noPerms.fooPerm method should exist"
+  );
 
   equal(typeof root.fooPerm, "object", "fooPerm namespace should exist");
-  equal(typeof root.fooPerm.noPerms, "function", "noPerms.noPerms method should exist");
+  equal(
+    typeof root.fooPerm.noPerms,
+    "function",
+    "noPerms.noPerms method should exist"
+  );
 
-  equal(root.fooPerm.fooBarPerm, undefined, "fooPerm.fooBarPerm method should not exist");
-
+  equal(
+    root.fooPerm.fooBarPerm,
+    undefined,
+    "fooPerm.fooBarPerm method should not exist"
+  );
 
   info('Add "foo.bar" permission');
   permissions.add("foo.bar");
@@ -1339,59 +1573,75 @@ add_task(async function testPermissions() {
   Schemas.inject(root, wrapper);
 
   equal(typeof root.noPerms, "object", "noPerms namespace should exist");
-  equal(typeof root.noPerms.noPerms, "function", "noPerms.noPerms method should exist");
-  equal(typeof root.noPerms.fooPerm, "function", "noPerms.fooPerm method should exist");
+  equal(
+    typeof root.noPerms.noPerms,
+    "function",
+    "noPerms.noPerms method should exist"
+  );
+  equal(
+    typeof root.noPerms.fooPerm,
+    "function",
+    "noPerms.fooPerm method should exist"
+  );
 
   equal(typeof root.fooPerm, "object", "fooPerm namespace should exist");
-  equal(typeof root.fooPerm.noPerms, "function", "noPerms.noPerms method should exist");
-  equal(typeof root.fooPerm.fooBarPerm, "function", "noPerms.fooBarPerm method should exist");
+  equal(
+    typeof root.fooPerm.noPerms,
+    "function",
+    "noPerms.noPerms method should exist"
+  );
+  equal(
+    typeof root.fooPerm.fooBarPerm,
+    "function",
+    "noPerms.fooBarPerm method should exist"
+  );
 });
 
 let nestedNamespaceJson = [
   {
-    "namespace": "nested.namespace",
-    "types": [
+    namespace: "nested.namespace",
+    types: [
       {
-        "id": "CustomType",
-        "type": "object",
-        "events": [
+        id: "CustomType",
+        type: "object",
+        events: [
           {
-            "name": "onEvent",
-            "type": "function",
+            name: "onEvent",
+            type: "function",
           },
         ],
-        "properties": {
-          "url": {
-            "type": "string",
+        properties: {
+          url: {
+            type: "string",
           },
         },
-        "functions": [
+        functions: [
           {
-            "name": "functionOnCustomType",
-            "type": "function",
-            "parameters": [
+            name: "functionOnCustomType",
+            type: "function",
+            parameters: [
               {
-                "name": "title",
-                "type": "string",
+                name: "title",
+                type: "string",
               },
             ],
           },
         ],
       },
     ],
-    "properties": {
-      "instanceOfCustomType": {
-        "$ref": "CustomType",
+    properties: {
+      instanceOfCustomType: {
+        $ref: "CustomType",
       },
     },
-    "functions": [
+    functions: [
       {
-        "name": "create",
-        "type": "function",
-        "parameters": [
+        name: "create",
+        type: "function",
+        parameters: [
           {
-            "name": "title",
-            "type": "string",
+            name: "title",
+            type: "string",
           },
         ],
       },
@@ -1411,34 +1661,56 @@ add_task(async function testNestedNamespace() {
   talliedErrors.length = 0;
 
   ok(root.nested, "The root object contains the first namespace level");
-  ok(root.nested.namespace, "The first level object contains the second namespace level");
+  ok(
+    root.nested.namespace,
+    "The first level object contains the second namespace level"
+  );
 
-  ok(root.nested.namespace.create, "Got the expected function in the nested namespace");
-  equal(typeof root.nested.namespace.create, "function",
-        "The property is a function as expected");
+  ok(
+    root.nested.namespace.create,
+    "Got the expected function in the nested namespace"
+  );
+  equal(
+    typeof root.nested.namespace.create,
+    "function",
+    "The property is a function as expected"
+  );
 
-  let {instanceOfCustomType} = root.nested.namespace;
+  let { instanceOfCustomType } = root.nested.namespace;
 
-  ok(instanceOfCustomType,
-     "Got the expected instance of the CustomType defined in the schema");
-  ok(instanceOfCustomType.functionOnCustomType,
-     "Got the expected method in the CustomType instance");
-  ok(instanceOfCustomType.onEvent &&
-     instanceOfCustomType.onEvent.addListener &&
-     typeof instanceOfCustomType.onEvent.addListener == "function",
-     "Got the expected event defined in the CustomType instance");
+  ok(
+    instanceOfCustomType,
+    "Got the expected instance of the CustomType defined in the schema"
+  );
+  ok(
+    instanceOfCustomType.functionOnCustomType,
+    "Got the expected method in the CustomType instance"
+  );
+  ok(
+    instanceOfCustomType.onEvent &&
+      instanceOfCustomType.onEvent.addListener &&
+      typeof instanceOfCustomType.onEvent.addListener == "function",
+    "Got the expected event defined in the CustomType instance"
+  );
 
   instanceOfCustomType.functionOnCustomType("param_value");
-  verify("call", "nested.namespace.instanceOfCustomType",
-         "functionOnCustomType", ["param_value"]);
+  verify(
+    "call",
+    "nested.namespace.instanceOfCustomType",
+    "functionOnCustomType",
+    ["param_value"]
+  );
 
   let fakeListener = () => {};
   instanceOfCustomType.onEvent.addListener(fakeListener);
-  verify("addListener", "nested.namespace.instanceOfCustomType",
-         "onEvent", [fakeListener, []]);
+  verify("addListener", "nested.namespace.instanceOfCustomType", "onEvent", [
+    fakeListener,
+    [],
+  ]);
   instanceOfCustomType.onEvent.removeListener(fakeListener);
-  verify("removeListener", "nested.namespace.instanceOfCustomType",
-         "onEvent", [fakeListener]);
+  verify("removeListener", "nested.namespace.instanceOfCustomType", "onEvent", [
+    fakeListener,
+  ]);
 
   // TODO: test support properties in a SubModuleType defined in the schema,
   // once implemented, e.g.:
@@ -1454,8 +1726,8 @@ let $importJson = [
   {
     namespace: "future",
     properties: {
-      PROP1: {value: "original value"},
-      PROP2: {value: "second original"},
+      PROP1: { value: "original value" },
+      PROP2: { value: "second original" },
     },
     types: [
       {
@@ -1468,9 +1740,7 @@ let $importJson = [
       {
         name: "dye",
         type: "function",
-        parameters: [
-          {name: "arg", $ref: "Colour"},
-        ],
+        parameters: [{ name: "arg", $ref: "Colour" }],
       },
     ],
   },
@@ -1478,7 +1748,7 @@ let $importJson = [
     namespace: "embrace",
     $import: "future",
     properties: {
-      PROP2: {value: "overridden value"},
+      PROP2: { value: "overridden value" },
     },
     types: [
       {
@@ -1508,9 +1778,11 @@ add_task(async function test_$import() {
   root.from_the.dye("white");
   verify("call", "from_the", "dye", ["white"]);
 
-  Assert.throws(() => root.from_the.dye("orange"),
-                /Invalid enumeration value/,
-                "original imported argument type Colour doesn't include 'orange'");
+  Assert.throws(
+    () => root.from_the.dye("orange"),
+    /Invalid enumeration value/,
+    "original imported argument type Colour doesn't include 'orange'"
+  );
 
   equal(root.embrace.PROP1, "original value", "imported property");
   equal(root.embrace.PROP2, "overridden value", "overridden property");
@@ -1520,9 +1792,11 @@ add_task(async function test_$import() {
   root.embrace.dye("orange");
   verify("call", "embrace", "dye", ["orange"]);
 
-  Assert.throws(() => root.embrace.dye("white"),
-                /Invalid enumeration value/,
-                "overridden argument type Colour doesn't include 'white'");
+  Assert.throws(
+    () => root.embrace.dye("white"),
+    /Invalid enumeration value/,
+    "overridden argument type Colour doesn't include 'white'"
+  );
 });
 
 add_task(async function testLocalAPIImplementation() {
@@ -1596,14 +1870,19 @@ add_task(async function testLocalAPIImplementation() {
   Assert.equal(countProp3, 2);
   Assert.equal(countProp3SubFoo, 2);
 
-  root.testing.prop3.sub_foo = () => { return "overwritten"; };
+  root.testing.prop3.sub_foo = () => {
+    return "overwritten";
+  };
   Assert.equal(root.testing.prop3.sub_foo(), "overwritten");
 
-  root.testing.prop3 = {sub_foo() { return "overwritten again"; }};
+  root.testing.prop3 = {
+    sub_foo() {
+      return "overwritten again";
+    },
+  };
   Assert.equal(root.testing.prop3.sub_foo(), "overwritten again");
   Assert.equal(countProp3SubFoo, 2);
 });
-
 
 let defaultsJson = [
   {
@@ -1616,9 +1895,15 @@ let defaultsJson = [
         name: "defaultFoo",
         type: "function",
         parameters: [
-          {name: "arg", type: "object", optional: true, properties: {
-            prop1: {type: "integer", optional: true},
-          }, default: {prop1: 1}},
+          {
+            name: "arg",
+            type: "object",
+            optional: true,
+            properties: {
+              prop1: { type: "integer", optional: true },
+            },
+            default: { prop1: 1 },
+          },
         ],
         returns: {
           type: "object",
@@ -1637,7 +1922,11 @@ add_task(async function testDefaults() {
   let testingApiObj = {
     defaultFoo: function(arg) {
       if (Object.keys(arg) != "prop1") {
-        throw new Error(`Received the expected default object, default: ${JSON.stringify(arg)}`);
+        throw new Error(
+          `Received the expected default object, default: ${JSON.stringify(
+            arg
+          )}`
+        );
       }
       arg.newProp = 1;
       return arg;
@@ -1657,44 +1946,49 @@ add_task(async function testDefaults() {
   let root = {};
   Schemas.inject(root, localWrapper);
 
-  deepEqual(root.defaultsJson.defaultFoo(), {prop1: 1, newProp: 1});
-  deepEqual(root.defaultsJson.defaultFoo({prop1: 2}), {prop1: 2, newProp: 1});
-  deepEqual(root.defaultsJson.defaultFoo(), {prop1: 1, newProp: 1});
+  deepEqual(root.defaultsJson.defaultFoo(), { prop1: 1, newProp: 1 });
+  deepEqual(root.defaultsJson.defaultFoo({ prop1: 2 }), {
+    prop1: 2,
+    newProp: 1,
+  });
+  deepEqual(root.defaultsJson.defaultFoo(), { prop1: 1, newProp: 1 });
 });
 
-let returnsJson = [{
-  namespace: "returns",
-  types: [
-    {
-      id: "Widget",
-      type: "object",
-      properties: {
-        size: {type: "integer"},
-        colour: {type: "string", optional: true},
+let returnsJson = [
+  {
+    namespace: "returns",
+    types: [
+      {
+        id: "Widget",
+        type: "object",
+        properties: {
+          size: { type: "integer" },
+          colour: { type: "string", optional: true },
+        },
       },
-    },
-  ],
-  functions: [
-    {
-      name: "complete",
-      type: "function",
-      returns: {$ref: "Widget"},
-      parameters: [],
-    },
-    {
-      name: "optional",
-      type: "function",
-      returns: {$ref: "Widget"},
-      parameters: [],
-    },
-    {
-      name: "invalid",
-      type: "function",
-      returns: {$ref: "Widget"},
-      parameters: [],
-    },
-  ],
-}];
+    ],
+    functions: [
+      {
+        name: "complete",
+        type: "function",
+        returns: { $ref: "Widget" },
+        parameters: [],
+      },
+      {
+        name: "optional",
+        type: "function",
+        returns: { $ref: "Widget" },
+        parameters: [],
+      },
+      {
+        name: "invalid",
+        type: "function",
+        returns: { $ref: "Widget" },
+        parameters: [],
+      },
+    ],
+  },
+];
 
 add_task(async function testReturns() {
   const url = "data:," + JSON.stringify(returnsJson);
@@ -1703,10 +1997,10 @@ add_task(async function testReturns() {
 
   const apiObject = {
     complete() {
-      return {size: 3, colour: "orange"};
+      return { size: 3, colour: "orange" };
     },
     optional() {
-      return {size: 4};
+      return { size: 4 };
     },
     invalid() {
       return {};
@@ -1726,40 +2020,48 @@ add_task(async function testReturns() {
   const root = {};
   Schemas.inject(root, localWrapper);
 
-  deepEqual(root.returns.complete(), {size: 3, colour: "orange"});
-  deepEqual(root.returns.optional(), {size: 4},
-            "Missing optional properties is allowed");
+  deepEqual(root.returns.complete(), { size: 3, colour: "orange" });
+  deepEqual(
+    root.returns.optional(),
+    { size: 4 },
+    "Missing optional properties is allowed"
+  );
 
   if (AppConstants.DEBUG) {
-    Assert.throws(() => root.returns.invalid(),
-                  /Type error for result value \(Property "size" is required\)/,
-                  "Should throw for invalid result in DEBUG builds");
+    Assert.throws(
+      () => root.returns.invalid(),
+      /Type error for result value \(Property "size" is required\)/,
+      "Should throw for invalid result in DEBUG builds"
+    );
   } else {
-    deepEqual(root.returns.invalid(), {},
-              "Doesn't throw for invalid result value in release builds");
+    deepEqual(
+      root.returns.invalid(),
+      {},
+      "Doesn't throw for invalid result value in release builds"
+    );
   }
 });
 
-let booleanEnumJson = [{
-  namespace: "booleanEnum",
+let booleanEnumJson = [
+  {
+    namespace: "booleanEnum",
 
-  types: [
-    {
-      "id": "enumTrue",
-      "type": "boolean",
-      "enum": [true],
-    },
-  ],
-  functions: [
-    {
-      name: "paramMustBeTrue",
-      type: "function",
-      parameters: [
-        {name: "arg", "$ref": "enumTrue"},
-      ],
-    },
-  ],
-}];
+    types: [
+      {
+        id: "enumTrue",
+        type: "boolean",
+        enum: [true],
+      },
+    ],
+    functions: [
+      {
+        name: "paramMustBeTrue",
+        type: "function",
+        parameters: [{ name: "arg", $ref: "enumTrue" }],
+      },
+    ],
+  },
+];
 
 add_task(async function testBooleanEnum() {
   let url = "data:," + JSON.stringify(booleanEnumJson);
@@ -1774,7 +2076,9 @@ add_task(async function testBooleanEnum() {
   ok(root.booleanEnum, "namespace exists");
   root.booleanEnum.paramMustBeTrue(true);
   verify("call", "booleanEnum", "paramMustBeTrue", [true]);
-  Assert.throws(() => root.booleanEnum.paramMustBeTrue(false),
-                /Type error for parameter arg \(Invalid value false\) for booleanEnum\.paramMustBeTrue\./,
-                "should throw because enum of the type restricts parameter to true");
+  Assert.throws(
+    () => root.booleanEnum.paramMustBeTrue(false),
+    /Type error for parameter arg \(Invalid value false\) for booleanEnum\.paramMustBeTrue\./,
+    "should throw because enum of the type restricts parameter to true"
+  );
 });

@@ -6,17 +6,34 @@
 /* exported ExtensionShortcuts */
 const EXPORTED_SYMBOLS = ["ExtensionShortcuts"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
-const {ShortcutUtils} = ChromeUtils.import("resource://gre/modules/ShortcutUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { ExtensionCommon } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionCommon.jsm"
+);
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
+const { ShortcutUtils } = ChromeUtils.import(
+  "resource://gre/modules/ShortcutUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "ExtensionParent",
-                               "resource://gre/modules/ExtensionParent.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
-                               "resource://gre/modules/ExtensionSettingsStore.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionParent",
+  "resource://gre/modules/ExtensionParent.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionSettingsStore",
+  "resource://gre/modules/ExtensionSettingsStore.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "windowTracker", () => {
   return ExtensionParent.apiManager.global.windowTracker;
@@ -31,8 +48,8 @@ XPCOMUtils.defineLazyGetter(this, "sidebarActionFor", () => {
   return ExtensionParent.apiManager.global.sidebarActionFor;
 });
 
-const {ExtensionError} = ExtensionUtils;
-const {makeWidgetId} = ExtensionCommon;
+const { ExtensionError } = ExtensionUtils;
+const { makeWidgetId } = ExtensionCommon;
 
 const EXECUTE_PAGE_ACTION = "_execute_page_action";
 const EXECUTE_BROWSER_ACTION = "_execute_browser_action";
@@ -58,14 +75,14 @@ class ExtensionShortcuts {
     // handle that we need to make sure ExtensionSettingsStore is initialized
     // before we clean it up.
     await ExtensionSettingsStore.initialize();
-    ExtensionSettingsStore
-      .getAllForExtension(extensionId, "commands")
-      .forEach(key => {
+    ExtensionSettingsStore.getAllForExtension(extensionId, "commands").forEach(
+      key => {
         ExtensionSettingsStore.removeSetting(extensionId, "commands", key);
-      });
+      }
+    );
   }
 
-  constructor({extension, onCommand}) {
+  constructor({ extension, onCommand }) {
     this.keysetsMap = new WeakMap();
     this.windowOpenListener = null;
     this.extension = extension;
@@ -76,16 +93,16 @@ class ExtensionShortcuts {
   async allCommands() {
     let commands = await this.commands;
     return Array.from(commands, ([name, command]) => {
-      return ({
+      return {
         name,
         description: command.description,
         shortcut: command.shortcut,
-      });
+      };
     });
   }
 
-  async updateCommand({name, description, shortcut}) {
-    let {extension} = this;
+  async updateCommand({ name, description, shortcut }) {
+    let { extension } = this;
     let commands = await this.commands;
     let command = commands.get(name);
 
@@ -96,7 +113,10 @@ class ExtensionShortcuts {
     // Only store the updates so manifest changes can take precedence
     // later.
     let previousUpdates = await ExtensionSettingsStore.getSetting(
-      "commands", name, extension.id);
+      "commands",
+      name,
+      extension.id
+    );
     let commandUpdates = (previousUpdates && previousUpdates.value) || {};
 
     if (description && description != command.description) {
@@ -111,13 +131,17 @@ class ExtensionShortcuts {
     }
 
     await ExtensionSettingsStore.addSetting(
-      extension.id, "commands", name, commandUpdates);
+      extension.id,
+      "commands",
+      name,
+      commandUpdates
+    );
 
     this.registerKeys(commands);
   }
 
   async resetCommand(name) {
-    let {extension, manifestCommands} = this;
+    let { extension, manifestCommands } = this;
     let commands = await this.commands;
     let command = commands.get(name);
 
@@ -126,27 +150,30 @@ class ExtensionShortcuts {
     }
 
     let storedCommand = ExtensionSettingsStore.getSetting(
-      "commands", name, extension.id);
+      "commands",
+      name,
+      extension.id
+    );
 
     if (storedCommand && storedCommand.value) {
-      commands.set(name, {...manifestCommands.get(name)});
+      commands.set(name, { ...manifestCommands.get(name) });
       ExtensionSettingsStore.removeSetting(extension.id, "commands", name);
       this.registerKeys(commands);
     }
   }
 
   loadCommands() {
-    let {extension} = this;
+    let { extension } = this;
 
     // Map[{String} commandName -> {Object} commandProperties]
     this.manifestCommands = this.loadCommandsFromManifest(extension.manifest);
 
-    this.commands = new Promise(async (resolve) => {
+    this.commands = new Promise(async resolve => {
       // Deep copy the manifest commands to commands so we can keep the original
       // manifest commands and update commands as needed.
       let commands = new Map();
       this.manifestCommands.forEach((command, name) => {
-        commands.set(name, {...command});
+        commands.set(name, { ...command });
       });
 
       // Update the manifest commands with the persisted updates from
@@ -178,7 +205,7 @@ class ExtensionShortcuts {
     let commands = await this.commands;
     this.registerKeys(commands);
 
-    this.windowOpenListener = (window) => {
+    this.windowOpenListener = window => {
       if (!this.keysetsMap.has(window)) {
         this.registerKeysToDocument(window, commands);
       }
@@ -211,11 +238,13 @@ class ExtensionShortcuts {
     let commands = new Map();
     // For Windows, chrome.runtime expects 'win' while chrome.commands
     // expects 'windows'.  We can special case this for now.
-    let {PlatformInfo} = ExtensionParent;
+    let { PlatformInfo } = ExtensionParent;
     let os = PlatformInfo.os == "win" ? "windows" : PlatformInfo.os;
     for (let [name, command] of Object.entries(manifest.commands)) {
       let suggested_key = command.suggested_key || {};
-      let shortcut = normalizeShortcut(suggested_key[os] || suggested_key.default);
+      let shortcut = normalizeShortcut(
+        suggested_key[os] || suggested_key.default
+      );
       commands.set(name, {
         description: command.description,
         shortcut,
@@ -226,10 +255,16 @@ class ExtensionShortcuts {
 
   async loadCommandsFromStorage(extensionId) {
     await ExtensionSettingsStore.initialize();
-    let names = ExtensionSettingsStore.getAllForExtension(extensionId, "commands");
+    let names = ExtensionSettingsStore.getAllForExtension(
+      extensionId,
+      "commands"
+    );
     return names.reduce((map, name) => {
       let command = ExtensionSettingsStore.getSetting(
-        "commands", name, extensionId).value;
+        "commands",
+        name,
+        extensionId
+      ).value;
       return map.set(name, command);
     }, new Map());
   }
@@ -240,8 +275,10 @@ class ExtensionShortcuts {
    * @param {Map} commands The commands to be set.
    */
   registerKeysToDocument(window, commands) {
-    if (!this.extension.privateBrowsingAllowed &&
-        PrivateBrowsingUtils.isWindowPrivate(window)) {
+    if (
+      !this.extension.privateBrowsingAllowed &&
+      PrivateBrowsingUtils.isWindowPrivate(window)
+    ) {
       return;
     }
 
@@ -260,7 +297,10 @@ class ExtensionShortcuts {
         let key = parts.pop();
 
         if (/^[0-9]$/.test(key)) {
-          let shortcutWithNumpad = command.shortcut.replace(/[0-9]$/, "Numpad$&");
+          let shortcutWithNumpad = command.shortcut.replace(
+            /[0-9]$/,
+            "Numpad$&"
+          );
           let numpadKeyElement = this.buildKey(doc, name, shortcutWithNumpad);
           keyset.appendChild(numpadKeyElement);
         }
@@ -274,7 +314,7 @@ class ExtensionShortcuts {
     });
     doc.documentElement.appendChild(keyset);
     if (sidebarKey) {
-      window.SidebarUI.updateShortcut({key: sidebarKey});
+      window.SidebarUI.updateShortcut({ key: sidebarKey });
     }
     this.keysetsMap.set(window, keyset);
   }
@@ -300,7 +340,7 @@ class ExtensionShortcuts {
     /* eslint-disable mozilla/balanced-listeners */
     // We remove all references to the key elements when the extension is shutdown,
     // therefore the listeners for these elements will be garbage collected.
-    keyElement.addEventListener("command", (event) => {
+    keyElement.addEventListener("command", event => {
       let action;
       if (name == EXECUTE_PAGE_ACTION) {
         action = pageActionFor(this.extension);
@@ -309,8 +349,7 @@ class ExtensionShortcuts {
       } else if (name == EXECUTE_SIDEBAR_ACTION) {
         action = sidebarActionFor(this.extension);
       } else {
-        this.extension.tabManager
-            .addActiveTabPermission();
+        this.extension.tabManager.addActiveTabPermission();
         this.onCommand(name);
         return;
       }
@@ -343,7 +382,10 @@ class ExtensionShortcuts {
     let chromeKey = parts.pop();
 
     // The modifiers are the remaining elements.
-    keyElement.setAttribute("modifiers", ShortcutUtils.getModifiersAttribute(parts));
+    keyElement.setAttribute(
+      "modifiers",
+      ShortcutUtils.getModifiersAttribute(parts)
+    );
 
     // A keyElement with key "NumpadX" is created above and isn't from the
     // manifest. The id will be set on the keyElement with key "X" only.

@@ -9,8 +9,11 @@ const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-ChromeUtils.defineModuleGetter(this,
-  "Reflect", "resource://gre/modules/reflect.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Reflect",
+  "resource://gre/modules/reflect.jsm"
+);
 
 this.EXPORTED_SYMBOLS = ["Parser", "ParserHelpers", "SyntaxTreeVisitor"];
 
@@ -141,8 +144,13 @@ SyntaxTreesPool.prototype = {
    * @see SyntaxTree.prototype.getIdentifierAt
    */
   getIdentifierAt({ line, column, scriptIndex, ignoreLiterals }) {
-    return this._call("getIdentifierAt",
-      scriptIndex, line, column, ignoreLiterals)[0];
+    return this._call(
+      "getIdentifierAt",
+      scriptIndex,
+      line,
+      column,
+      ignoreLiterals
+    )[0];
   },
 
   /**
@@ -232,7 +240,9 @@ SyntaxTreesPool.prototype = {
         // Language features may be added, in which case the recursive methods
         // need to be updated. If an exception is thrown here, file a bug.
         DevToolsUtils.reportException(
-          `Syntax tree visitor for ${this._url}`, e);
+          `Syntax tree visitor for ${this._url}`,
+          e
+        );
       }
     }
     this._cache.set(requestId, results);
@@ -442,8 +452,10 @@ var ParserHelpers = {
     const { loc: parentLocation, type: parentType } = node._parent;
     const { loc: nodeLocation } = node;
     if (!nodeLocation) {
-      if (parentType == "FunctionDeclaration" ||
-          parentType == "FunctionExpression") {
+      if (
+        parentType == "FunctionDeclaration" ||
+        parentType == "FunctionExpression"
+      ) {
         // e.g. "function foo() {}" or "{ bar: function foo() {} }"
         // The location is unavailable for the identifier node "foo".
         const loc = Cu.cloneInto(parentLocation, {});
@@ -516,8 +528,12 @@ var ParserHelpers = {
    */
   nodeContainsPoint(node, line, column) {
     const { start: s, end: e } = this.getNodeLocation(node);
-    return s.line == line && e.line == line &&
-           s.column <= column && e.column >= column;
+    return (
+      s.line == line &&
+      e.line == line &&
+      s.column <= column &&
+      e.column >= column
+    );
   },
 
   /**
@@ -708,8 +724,9 @@ var ParserHelpers = {
         // directly as an evaluation string. Otherwise, construct the property
         // access chain, since the value might have changed.
         if (!this._getObjectExpressionPropertyKeyForValue(node)) {
-          const propertyChain =
-            this._getObjectExpressionPropertyChain(node._parent);
+          const propertyChain = this._getObjectExpressionPropertyChain(
+            node._parent
+          );
           const propertyLeaf = node.name;
           return [...propertyChain, propertyLeaf].join(".");
         }

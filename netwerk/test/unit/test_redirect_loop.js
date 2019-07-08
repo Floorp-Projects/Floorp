@@ -1,4 +1,4 @@
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 /*
  * This xpcshell test checks whether we detect infinite HTTP redirect loops.
@@ -11,10 +11,10 @@ var httpServer = new HttpServer();
 httpServer.start(-1);
 const PORT = httpServer.identity.primaryPort;
 
-var fullLoopPath = "/fullLoop"; 
+var fullLoopPath = "/fullLoop";
 var fullLoopURI = "http://localhost:" + PORT + fullLoopPath;
 
-var relativeLoopPath = "/relativeLoop"; 
+var relativeLoopPath = "/relativeLoop";
 var relativeLoopURI = "http://localhost:" + PORT + relativeLoopPath;
 
 // must use directory-style URI, so empty Location redirects back to self
@@ -22,23 +22,24 @@ var emptyLoopPath = "/empty/";
 var emptyLoopURI = "http://localhost:" + PORT + emptyLoopPath;
 
 function make_channel(url, callback, ctx) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
-function fullLoopHandler(metadata, response)
-{
+function fullLoopHandler(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 301, "Moved");
-  response.setHeader("Location", "http://localhost:" + PORT + "/fullLoop", false);
+  response.setHeader(
+    "Location",
+    "http://localhost:" + PORT + "/fullLoop",
+    false
+  );
 }
 
-function relativeLoopHandler(metadata, response)
-{
+function relativeLoopHandler(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 301, "Moved");
   response.setHeader("Location", "relativeLoop", false);
 }
 
-function emptyLoopHandler(metadata, response)
-{
+function emptyLoopHandler(metadata, response) {
   // Comrades!  We must seize power from the petty-bourgeois running dogs of
   // httpd.js in order to reply with a blank Location header!
   response.seizePower();
@@ -50,31 +51,29 @@ function emptyLoopHandler(metadata, response)
   response.finish();
 }
 
-function testFullLoop(request, buffer)
-{
+function testFullLoop(request, buffer) {
   Assert.equal(request.status, Cr.NS_ERROR_REDIRECT_LOOP);
 
   var chan = make_channel(relativeLoopURI);
-  chan.asyncOpen(new ChannelListener(testRelativeLoop, null, CL_EXPECT_FAILURE));
+  chan.asyncOpen(
+    new ChannelListener(testRelativeLoop, null, CL_EXPECT_FAILURE)
+  );
 }
 
-function testRelativeLoop(request, buffer)
-{
+function testRelativeLoop(request, buffer) {
   Assert.equal(request.status, Cr.NS_ERROR_REDIRECT_LOOP);
 
   var chan = make_channel(emptyLoopURI);
   chan.asyncOpen(new ChannelListener(testEmptyLoop, null, CL_EXPECT_FAILURE));
 }
 
-function testEmptyLoop(request, buffer)
-{
+function testEmptyLoop(request, buffer) {
   Assert.equal(request.status, Cr.NS_ERROR_REDIRECT_LOOP);
 
   httpServer.stop(do_test_finished);
 }
 
-function run_test()
-{
+function run_test() {
   httpServer.registerPathHandler(fullLoopPath, fullLoopHandler);
   httpServer.registerPathHandler(relativeLoopPath, relativeLoopHandler);
   httpServer.registerPathHandler(emptyLoopPath, emptyLoopHandler);

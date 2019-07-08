@@ -4,7 +4,10 @@
 const CC = Components.Constructor;
 
 const TEST_HOST = "example.com";
-const TEST_URL = "http://" + TEST_HOST + "/browser/browser/components/contextualidentity/test/browser/";
+const TEST_URL =
+  "http://" +
+  TEST_HOST +
+  "/browser/browser/components/contextualidentity/test/browser/";
 
 const TESTKEY = {
   initDataType: "keyids",
@@ -19,7 +22,7 @@ const USER_ID_PERSONAL = 1;
 
 async function openTabInUserContext(uri, userContextId) {
   // Open the tab in the correct userContextId.
-  let tab = BrowserTestUtils.addTab(gBrowser, uri, {userContextId});
+  let tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
 
   // Select tab and make sure its browser is focused.
   gBrowser.selectedTab = tab;
@@ -27,7 +30,7 @@ async function openTabInUserContext(uri, userContextId) {
 
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
-  return {tab, browser};
+  return { tab, browser };
 }
 
 function HexToBase64(hex) {
@@ -35,7 +38,11 @@ function HexToBase64(hex) {
   for (var i = 0; i < hex.length; i += 2) {
     bin += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
   }
-  return window.btoa(bin).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+  return window
+    .btoa(bin)
+    .replace(/=/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
 }
 
 function Base64ToHex(str) {
@@ -65,9 +72,11 @@ function generateKeyObject(aKid, aKey) {
     k: HexToBase64(aKey),
   };
 
-  return new TextEncoder().encode(JSON.stringify({
-    keys: [keyObj],
-  }));
+  return new TextEncoder().encode(
+    JSON.stringify({
+      keys: [keyObj],
+    })
+  );
 }
 
 function generateKeyInfo(aData) {
@@ -83,83 +92,110 @@ function generateKeyInfo(aData) {
 
 add_task(async function setup() {
   // Make sure userContext is enabled.
-  await SpecialPowers.pushPrefEnv({"set": [
-    [ "privacy.userContext.enabled", true ],
-    [ "media.mediasource.enabled", true ],
-    [ "media.mediasource.webm.enabled", true ],
-    [ "media.clearkey.persistent-license.enabled", true ],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.userContext.enabled", true],
+      ["media.mediasource.enabled", true],
+      ["media.mediasource.webm.enabled", true],
+      ["media.clearkey.persistent-license.enabled", true],
+    ],
+  });
 });
 
 add_task(async function test() {
   // Open a tab with the default container.
-  let defaultContainer = await openTabInUserContext(TEST_URL + "empty_file.html", USER_ID_DEFAULT);
+  let defaultContainer = await openTabInUserContext(
+    TEST_URL + "empty_file.html",
+    USER_ID_DEFAULT
+  );
 
   // Generate the key info for the default container.
   let keyInfo = generateKeyInfo(TESTKEY);
 
   // Update the media key for the default container.
-  let result = await ContentTask.spawn(defaultContainer.browser, keyInfo, async function(aKeyInfo) {
-    let access = await content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
-                                                                     [{
-                                                                       initDataTypes: [aKeyInfo.initDataType],
-                                                                       videoCapabilities: [{contentType: "video/webm"}],
-                                                                       sessionTypes: ["persistent-license"],
-                                                                       persistentState: "required",
-                                                                     }]);
-    let mediaKeys = await access.createMediaKeys();
-    let session = mediaKeys.createSession(aKeyInfo.sessionType);
-    let res = {};
+  let result = await ContentTask.spawn(
+    defaultContainer.browser,
+    keyInfo,
+    async function(aKeyInfo) {
+      let access = await content.navigator.requestMediaKeySystemAccess(
+        "org.w3.clearkey",
+        [
+          {
+            initDataTypes: [aKeyInfo.initDataType],
+            videoCapabilities: [{ contentType: "video/webm" }],
+            sessionTypes: ["persistent-license"],
+            persistentState: "required",
+          },
+        ]
+      );
+      let mediaKeys = await access.createMediaKeys();
+      let session = mediaKeys.createSession(aKeyInfo.sessionType);
+      let res = {};
 
-    // Insert the media key.
-    await new Promise(resolve => {
-      session.addEventListener("message", function(event) {
-        session.update(aKeyInfo.keyObj).then(
-          () => { resolve(); }
-        ).catch(
-          () => {
-            ok(false, "Update the media key fail.");
-            resolve();
-          }
-        );
+      // Insert the media key.
+      await new Promise(resolve => {
+        session.addEventListener("message", function(event) {
+          session
+            .update(aKeyInfo.keyObj)
+            .then(() => {
+              resolve();
+            })
+            .catch(() => {
+              ok(false, "Update the media key fail.");
+              resolve();
+            });
+        });
+
+        session.generateRequest(aKeyInfo.initDataType, aKeyInfo.initData);
       });
 
-      session.generateRequest(aKeyInfo.initDataType, aKeyInfo.initData);
-    });
+      let map = session.keyStatuses;
 
-    let map = session.keyStatuses;
+      is(map.size, 1, "One media key has been added.");
 
-    is(map.size, 1, "One media key has been added.");
+      if (map.size === 1) {
+        res.keyId = map.keys().next().value;
+        res.sessionId = session.sessionId;
+      }
 
-    if (map.size === 1) {
-      res.keyId = map.keys().next().value;
-      res.sessionId = session.sessionId;
+      // Close the session.
+      session.close();
+      await session.closed;
+
+      return res;
     }
-
-    // Close the session.
-    session.close();
-    await session.closed;
-
-    return res;
-  });
+  );
 
   // Check the media key ID.
-  is(ByteArrayToHex(result.keyId), Base64ToHex(TESTKEY.kid), "The key Id of the default container is correct.");
+  is(
+    ByteArrayToHex(result.keyId),
+    Base64ToHex(TESTKEY.kid),
+    "The key Id of the default container is correct."
+  );
 
   // Store the sessionId for the further checking.
   keyInfo.sessionId = result.sessionId;
 
   // Open a tab with personal container.
-  let personalContainer = await openTabInUserContext(TEST_URL + "empty_file.html", USER_ID_PERSONAL);
+  let personalContainer = await openTabInUserContext(
+    TEST_URL + "empty_file.html",
+    USER_ID_PERSONAL
+  );
 
-  await ContentTask.spawn(personalContainer.browser, keyInfo, async function(aKeyInfo) {
-    let access = await content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
-                                                                     [{
-                                                                       initDataTypes: [aKeyInfo.initDataType],
-                                                                       videoCapabilities: [{contentType: "video/webm"}],
-                                                                       sessionTypes: ["persistent-license"],
-                                                                       persistentState: "required",
-                                                                     }]);
+  await ContentTask.spawn(personalContainer.browser, keyInfo, async function(
+    aKeyInfo
+  ) {
+    let access = await content.navigator.requestMediaKeySystemAccess(
+      "org.w3.clearkey",
+      [
+        {
+          initDataTypes: [aKeyInfo.initDataType],
+          videoCapabilities: [{ contentType: "video/webm" }],
+          sessionTypes: ["persistent-license"],
+          persistentState: "required",
+        },
+      ]
+    );
     let mediaKeys = await access.createMediaKeys();
     let session = mediaKeys.createSession(aKeyInfo.sessionType);
 

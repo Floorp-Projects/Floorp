@@ -28,13 +28,12 @@ class RequestListColumnType extends Component {
       abbrevType = getAbbreviatedMimeType(mimeType);
     }
 
-    return (
-      dom.td({
+    return dom.td(
+      {
         className: "requests-list-column requests-list-type",
         title: mimeType,
       },
-        abbrevType
-      )
+      abbrevType
     );
   }
 }

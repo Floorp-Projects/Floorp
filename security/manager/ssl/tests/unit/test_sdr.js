@@ -22,8 +22,9 @@ const gTokenPasswordDialogs = {
 };
 
 add_task(function testEncryptString() {
-  let sdr = Cc["@mozilla.org/security/sdr;1"]
-              .getService(Ci.nsISecretDecoderRing);
+  let sdr = Cc["@mozilla.org/security/sdr;1"].getService(
+    Ci.nsISecretDecoderRing
+  );
 
   // Test valid inputs for encryptString() and decryptString().
   let inputs = [
@@ -35,8 +36,9 @@ add_task(function testEncryptString() {
     "aaa 一二三", // Includes Unicode with code points outside [0, 255].
   ];
   for (let input of inputs) {
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                      .createInstance(Ci.nsIScriptableUnicodeConverter);
+    let converter = Cc[
+      "@mozilla.org/intl/scriptableunicodeconverter"
+    ].createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
 
     let convertedInput = converter.ConvertFromUnicode(input);
@@ -44,8 +46,11 @@ add_task(function testEncryptString() {
 
     let encrypted = sdr.encryptString(convertedInput);
 
-    notEqual(convertedInput, encrypted,
-             "Encrypted input should not just be the input itself");
+    notEqual(
+      convertedInput,
+      encrypted,
+      "Encrypted input should not just be the input itself"
+    );
 
     try {
       atob(encrypted);
@@ -53,36 +58,50 @@ add_task(function testEncryptString() {
       ok(false, `encryptString() should have returned Base64: ${e}`);
     }
 
-    equal(convertedInput, sdr.decryptString(encrypted),
-          "decryptString(encryptString(input)) should return input");
+    equal(
+      convertedInput,
+      sdr.decryptString(encrypted),
+      "decryptString(encryptString(input)) should return input"
+    );
   }
 
   // Test invalid inputs for decryptString().
-  throws(() => sdr.decryptString("*"), /NS_ERROR_ILLEGAL_VALUE/,
-         "decryptString() should throw if given non-Base64 input");
+  throws(
+    () => sdr.decryptString("*"),
+    /NS_ERROR_ILLEGAL_VALUE/,
+    "decryptString() should throw if given non-Base64 input"
+  );
 
   // Test calling changePassword() pops up the appropriate dialog.
   // Note: On Android, nsITokenPasswordDialogs is apparently not implemented,
   //       which also seems to prevent us from mocking out the interface.
   if (AppConstants.platform != "android") {
-    let tokenPasswordDialogsCID =
-      MockRegistrar.register("@mozilla.org/nsTokenPasswordDialogs;1",
-                             gTokenPasswordDialogs);
+    let tokenPasswordDialogsCID = MockRegistrar.register(
+      "@mozilla.org/nsTokenPasswordDialogs;1",
+      gTokenPasswordDialogs
+    );
     registerCleanupFunction(() => {
       MockRegistrar.unregister(tokenPasswordDialogsCID);
     });
 
-    equal(gSetPasswordShownCount, 0,
-          "changePassword() dialog should have been shown zero times");
+    equal(
+      gSetPasswordShownCount,
+      0,
+      "changePassword() dialog should have been shown zero times"
+    );
     sdr.changePassword();
-    equal(gSetPasswordShownCount, 1,
-          "changePassword() dialog should have been shown exactly once");
+    equal(
+      gSetPasswordShownCount,
+      1,
+      "changePassword() dialog should have been shown exactly once"
+    );
   }
 });
 
 add_task(async function testAsyncEncryptStrings() {
-  let sdr = Cc["@mozilla.org/security/sdr;1"]
-              .getService(Ci.nsISecretDecoderRing);
+  let sdr = Cc["@mozilla.org/security/sdr;1"].getService(
+    Ci.nsISecretDecoderRing
+  );
 
   // Test valid inputs for encryptString() and decryptString().
   let inputs = [
@@ -98,14 +117,18 @@ add_task(async function testAsyncEncryptStrings() {
   for (let i = 0; i < inputs.length; i++) {
     let encrypted = encrypteds[i];
     let input = inputs[i];
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                      .createInstance(Ci.nsIScriptableUnicodeConverter);
+    let converter = Cc[
+      "@mozilla.org/intl/scriptableunicodeconverter"
+    ].createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
 
     let convertedInput = converter.ConvertFromUnicode(input);
     convertedInput += converter.Finish();
-    notEqual(convertedInput, encrypted,
-             "Encrypted input should not just be the input itself");
+    notEqual(
+      convertedInput,
+      encrypted,
+      "Encrypted input should not just be the input itself"
+    );
 
     try {
       atob(encrypted);
@@ -113,14 +136,18 @@ add_task(async function testAsyncEncryptStrings() {
       ok(false, `encryptString() should have returned Base64: ${e}`);
     }
 
-    equal(convertedInput, sdr.decryptString(encrypted),
-          "decryptString(encryptString(input)) should return input");
+    equal(
+      convertedInput,
+      sdr.decryptString(encrypted),
+      "decryptString(encryptString(input)) should return input"
+    );
   }
 });
 
 add_task(async function testAsyncDecryptStrings() {
-  let sdr = Cc["@mozilla.org/security/sdr;1"]
-              .getService(Ci.nsISecretDecoderRing);
+  let sdr = Cc["@mozilla.org/security/sdr;1"].getService(
+    Ci.nsISecretDecoderRing
+  );
 
   // Test valid inputs for encryptString() and decryptString().
   let testCases = [
@@ -133,8 +160,9 @@ add_task(async function testAsyncDecryptStrings() {
   ];
 
   let convertedTestCases = testCases.map(tc => {
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-      .createInstance(Ci.nsIScriptableUnicodeConverter);
+    let converter = Cc[
+      "@mozilla.org/intl/scriptableunicodeconverter"
+    ].createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
 
     let convertedInput = converter.ConvertFromUnicode(tc);
@@ -148,9 +176,15 @@ add_task(async function testAsyncDecryptStrings() {
     let decrypted = decrypteds[i];
     let expectedDecryptedString = convertedTestCases[i];
 
-    equal(decrypted, expectedDecryptedString,
-          "decrypted string should match expected value");
-    equal(sdr.decryptString(encryptedStrings[i]), decrypted,
-          "decryptString(encryptString(input)) should return the initial decrypted string value");
+    equal(
+      decrypted,
+      expectedDecryptedString,
+      "decrypted string should match expected value"
+    );
+    equal(
+      sdr.decryptString(encryptedStrings[i]),
+      decrypted,
+      "decryptString(encryptString(input)) should return the initial decrypted string value"
+    );
   }
 });

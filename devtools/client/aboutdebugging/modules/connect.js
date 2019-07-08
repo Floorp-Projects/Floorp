@@ -42,7 +42,7 @@ function createDescriptorFromURL(url) {
   if (host && port) {
     descriptor = {
       type: TYPE.REMOTE,
-      params: {host, port},
+      params: { host, port },
     };
   } else {
     descriptor = {
@@ -71,5 +71,5 @@ exports.createClient = async function() {
 
   DebuggerServer.allowChromeProcess = true;
 
-  return {client, connect};
+  return { client, connect };
 };

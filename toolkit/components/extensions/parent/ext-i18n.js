@@ -1,16 +1,20 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "LanguageDetector",
-                               "resource:///modules/translation/LanguageDetector.jsm");
-
+ChromeUtils.defineModuleGetter(
+  this,
+  "LanguageDetector",
+  "resource:///modules/translation/LanguageDetector.jsm"
+);
 
 this.i18n = class extends ExtensionAPI {
   getAPI(context) {
-    let {extension} = context;
+    let { extension } = context;
     return {
       i18n: {
         getMessage: function(messageName, substitutions) {
-          return extension.localizeMessage(messageName, substitutions, {cloneScope: context.cloneScope});
+          return extension.localizeMessage(messageName, substitutions, {
+            cloneScope: context.cloneScope,
+          });
         },
 
         getAcceptLanguages: function() {

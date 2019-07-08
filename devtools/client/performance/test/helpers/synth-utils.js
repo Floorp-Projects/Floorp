@@ -6,46 +6,91 @@
  * Generates a generalized profile with some samples.
  */
 exports.synthesizeProfile = () => {
-  const { CATEGORY_INDEX } = require("devtools/client/performance/modules/categories");
+  const {
+    CATEGORY_INDEX,
+  } = require("devtools/client/performance/modules/categories");
   const RecordingUtils = require("devtools/shared/performance/recording-utils");
 
   return RecordingUtils.deflateProfile({
     meta: { version: 2 },
-    threads: [{
-      samples: [{
-        time: 1,
-        frames: [
-          { category: CATEGORY_INDEX("other"), location: "(root)" },
-          { category: CATEGORY_INDEX("other"), location: "A (http://foo/bar/baz:12)" },
-          { category: CATEGORY_INDEX("layout"), location: "B (http://foo/bar/baz:34)" },
-          { category: CATEGORY_INDEX("js"), location: "C (http://foo/bar/baz:56)" },
+    threads: [
+      {
+        samples: [
+          {
+            time: 1,
+            frames: [
+              { category: CATEGORY_INDEX("other"), location: "(root)" },
+              {
+                category: CATEGORY_INDEX("other"),
+                location: "A (http://foo/bar/baz:12)",
+              },
+              {
+                category: CATEGORY_INDEX("layout"),
+                location: "B (http://foo/bar/baz:34)",
+              },
+              {
+                category: CATEGORY_INDEX("js"),
+                location: "C (http://foo/bar/baz:56)",
+              },
+            ],
+          },
+          {
+            time: 1 + 1,
+            frames: [
+              { category: CATEGORY_INDEX("other"), location: "(root)" },
+              {
+                category: CATEGORY_INDEX("other"),
+                location: "A (http://foo/bar/baz:12)",
+              },
+              {
+                category: CATEGORY_INDEX("layout"),
+                location: "B (http://foo/bar/baz:34)",
+              },
+              {
+                category: CATEGORY_INDEX("gc"),
+                location: "D (http://foo/bar/baz:78:9)",
+              },
+            ],
+          },
+          {
+            time: 1 + 1 + 2,
+            frames: [
+              { category: CATEGORY_INDEX("other"), location: "(root)" },
+              {
+                category: CATEGORY_INDEX("other"),
+                location: "A (http://foo/bar/baz:12)",
+              },
+              {
+                category: CATEGORY_INDEX("layout"),
+                location: "B (http://foo/bar/baz:34)",
+              },
+              {
+                category: CATEGORY_INDEX("gc"),
+                location: "D (http://foo/bar/baz:78:9)",
+              },
+            ],
+          },
+          {
+            time: 1 + 1 + 2 + 3,
+            frames: [
+              { category: CATEGORY_INDEX("other"), location: "(root)" },
+              {
+                category: CATEGORY_INDEX("other"),
+                location: "A (http://foo/bar/baz:12)",
+              },
+              {
+                category: CATEGORY_INDEX("gc"),
+                location: "E (http://foo/bar/baz:90)",
+              },
+              {
+                category: CATEGORY_INDEX("network"),
+                location: "F (http://foo/bar/baz:99)",
+              },
+            ],
+          },
         ],
-      }, {
-        time: 1 + 1,
-        frames: [
-          { category: CATEGORY_INDEX("other"), location: "(root)" },
-          { category: CATEGORY_INDEX("other"), location: "A (http://foo/bar/baz:12)" },
-          { category: CATEGORY_INDEX("layout"), location: "B (http://foo/bar/baz:34)" },
-          { category: CATEGORY_INDEX("gc"), location: "D (http://foo/bar/baz:78:9)" },
-        ],
-      }, {
-        time: 1 + 1 + 2,
-        frames: [
-          { category: CATEGORY_INDEX("other"), location: "(root)" },
-          { category: CATEGORY_INDEX("other"), location: "A (http://foo/bar/baz:12)" },
-          { category: CATEGORY_INDEX("layout"), location: "B (http://foo/bar/baz:34)" },
-          { category: CATEGORY_INDEX("gc"), location: "D (http://foo/bar/baz:78:9)" },
-        ],
-      }, {
-        time: 1 + 1 + 2 + 3,
-        frames: [
-          { category: CATEGORY_INDEX("other"), location: "(root)" },
-          { category: CATEGORY_INDEX("other"), location: "A (http://foo/bar/baz:12)" },
-          { category: CATEGORY_INDEX("gc"), location: "E (http://foo/bar/baz:90)" },
-          { category: CATEGORY_INDEX("network"), location: "F (http://foo/bar/baz:99)" },
-        ],
-      }],
-    }],
+      },
+    ],
   });
 };
 
@@ -53,7 +98,9 @@ exports.synthesizeProfile = () => {
  * Generates a simple implementation for a tree class.
  */
 exports.synthesizeCustomTreeClass = () => {
-  const { AbstractTreeItem } = require("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm");
+  const {
+    AbstractTreeItem,
+  } = require("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm");
   const { extend } = require("devtools/shared/extend");
 
   function MyCustomTreeItem(dataSrc, properties) {
@@ -64,7 +111,7 @@ exports.synthesizeCustomTreeClass = () => {
   MyCustomTreeItem.prototype = extend(AbstractTreeItem.prototype, {
     _displaySelf: function(document, arrowNode) {
       const node = document.createXULElement("hbox");
-      node.style.marginInlineStart = (this.level * 10) + "px";
+      node.style.marginInlineStart = this.level * 10 + "px";
       node.appendChild(arrowNode);
       node.appendChild(document.createTextNode(this.itemDataSrc.label));
       return node;
@@ -72,26 +119,33 @@ exports.synthesizeCustomTreeClass = () => {
 
     _populateSelf: function(children) {
       for (const childDataSrc of this.itemDataSrc.children) {
-        children.push(new MyCustomTreeItem(childDataSrc, {
-          parent: this,
-          level: this.level + 1,
-        }));
+        children.push(
+          new MyCustomTreeItem(childDataSrc, {
+            parent: this,
+            level: this.level + 1,
+          })
+        );
       }
     },
   });
 
   const myDataSrc = {
     label: "root",
-    children: [{
-      label: "foo",
-      children: [],
-    }, {
-      label: "bar",
-      children: [{
-        label: "baz",
+    children: [
+      {
+        label: "foo",
         children: [],
-      }],
-    }],
+      },
+      {
+        label: "bar",
+        children: [
+          {
+            label: "baz",
+            children: [],
+          },
+        ],
+      },
+    ],
   };
 
   return { MyCustomTreeItem, myDataSrc };

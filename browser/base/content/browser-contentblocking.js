@@ -2,8 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.defineModuleGetter(this, "ContentBlockingAllowList",
-                               "resource://gre/modules/ContentBlockingAllowList.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContentBlockingAllowList",
+  "resource://gre/modules/ContentBlockingAllowList.jsm"
+);
 
 var Fingerprinting = {
   PREF_ENABLED: "privacy.trackingprotection.fingerprinting.enabled",
@@ -13,50 +16,74 @@ var Fingerprinting = {
   strings: {
     get subViewBlocked() {
       delete this.subViewBlocked;
-      return this.subViewBlocked =
-        gNavigatorBundle.getString("contentBlocking.fingerprintersView.blocked.label");
+      return (this.subViewBlocked = gNavigatorBundle.getString(
+        "contentBlocking.fingerprintersView.blocked.label"
+      ));
     },
   },
 
   init() {
-    XPCOMUtils.defineLazyPreferenceGetter(this, "enabled", this.PREF_ENABLED, false,
-      () => this.updateCategoryLabel());
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "enabled",
+      this.PREF_ENABLED,
+      false,
+      () => this.updateCategoryLabel()
+    );
     this.updateCategoryLabel();
   },
 
   get categoryItem() {
     delete this.categoryItem;
-    return this.categoryItem =
-      document.getElementById("identity-popup-content-blocking-category-fingerprinters");
+    return (this.categoryItem = document.getElementById(
+      "identity-popup-content-blocking-category-fingerprinters"
+    ));
   },
 
   get categoryLabel() {
     delete this.categoryLabel;
-    return this.categoryLabel =
-      document.getElementById("identity-popup-content-blocking-fingerprinters-state-label");
+    return (this.categoryLabel = document.getElementById(
+      "identity-popup-content-blocking-fingerprinters-state-label"
+    ));
   },
 
   get subViewList() {
     delete this.subViewList;
-    return this.subViewList = document.getElementById("identity-popup-fingerprintersView-list");
+    return (this.subViewList = document.getElementById(
+      "identity-popup-fingerprintersView-list"
+    ));
   },
 
   updateCategoryLabel() {
     let label;
     if (this.enabled) {
-      label = ContentBlocking.showBlockedLabels ? "contentBlocking.fingerprinters.blocking.label" : null;
+      label = ContentBlocking.showBlockedLabels
+        ? "contentBlocking.fingerprinters.blocking.label"
+        : null;
     } else {
-      label = ContentBlocking.showAllowedLabels ? "contentBlocking.fingerprinters.allowed.label" : null;
+      label = ContentBlocking.showAllowedLabels
+        ? "contentBlocking.fingerprinters.allowed.label"
+        : null;
     }
-    this.categoryLabel.textContent = label ? gNavigatorBundle.getString(label) : "";
+    this.categoryLabel.textContent = label
+      ? gNavigatorBundle.getString(label)
+      : "";
   },
 
   isBlocking(state) {
-    return (state & Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT) != 0;
+    return (
+      (state &
+        Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT) !=
+      0
+    );
   },
 
   isAllowing(state) {
-    return this.enabled && (state & Ci.nsIWebProgressListener.STATE_LOADED_FINGERPRINTING_CONTENT) != 0;
+    return (
+      this.enabled &&
+      (state & Ci.nsIWebProgressListener.STATE_LOADED_FINGERPRINTING_CONTENT) !=
+        0
+    );
   },
 
   isDetected(state) {
@@ -81,7 +108,8 @@ var Fingerprinting = {
 
   _createListItem(origin, actions) {
     let isAllowed = actions.some(([state]) => this.isAllowing(state));
-    let isDetected = isAllowed || actions.some(([state]) => this.isBlocking(state));
+    let isDetected =
+      isAllowed || actions.some(([state]) => this.isBlocking(state));
 
     if (!isDetected) {
       return null;
@@ -126,50 +154,72 @@ var Cryptomining = {
   strings: {
     get subViewBlocked() {
       delete this.subViewBlocked;
-      return this.subViewBlocked =
-        gNavigatorBundle.getString("contentBlocking.cryptominersView.blocked.label");
+      return (this.subViewBlocked = gNavigatorBundle.getString(
+        "contentBlocking.cryptominersView.blocked.label"
+      ));
     },
   },
 
   init() {
-    XPCOMUtils.defineLazyPreferenceGetter(this, "enabled", this.PREF_ENABLED, false,
-      () => this.updateCategoryLabel());
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "enabled",
+      this.PREF_ENABLED,
+      false,
+      () => this.updateCategoryLabel()
+    );
     this.updateCategoryLabel();
   },
 
   get categoryItem() {
     delete this.categoryItem;
-    return this.categoryItem =
-      document.getElementById("identity-popup-content-blocking-category-cryptominers");
+    return (this.categoryItem = document.getElementById(
+      "identity-popup-content-blocking-category-cryptominers"
+    ));
   },
 
   get categoryLabel() {
     delete this.categoryLabel;
-    return this.categoryLabel =
-      document.getElementById("identity-popup-content-blocking-cryptominers-state-label");
+    return (this.categoryLabel = document.getElementById(
+      "identity-popup-content-blocking-cryptominers-state-label"
+    ));
   },
 
   get subViewList() {
     delete this.subViewList;
-    return this.subViewList = document.getElementById("identity-popup-cryptominersView-list");
+    return (this.subViewList = document.getElementById(
+      "identity-popup-cryptominersView-list"
+    ));
   },
 
   updateCategoryLabel() {
     let label;
     if (this.enabled) {
-      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cryptominers.blocking.label" : null;
+      label = ContentBlocking.showBlockedLabels
+        ? "contentBlocking.cryptominers.blocking.label"
+        : null;
     } else {
-      label = ContentBlocking.showAllowedLabels ? "contentBlocking.cryptominers.allowed.label" : null;
+      label = ContentBlocking.showAllowedLabels
+        ? "contentBlocking.cryptominers.allowed.label"
+        : null;
     }
-    this.categoryLabel.textContent = label ? gNavigatorBundle.getString(label) : "";
+    this.categoryLabel.textContent = label
+      ? gNavigatorBundle.getString(label)
+      : "";
   },
 
   isBlocking(state) {
-    return (state & Ci.nsIWebProgressListener.STATE_BLOCKED_CRYPTOMINING_CONTENT) != 0;
+    return (
+      (state & Ci.nsIWebProgressListener.STATE_BLOCKED_CRYPTOMINING_CONTENT) !=
+      0
+    );
   },
 
   isAllowing(state) {
-    return this.enabled && (state & Ci.nsIWebProgressListener.STATE_LOADED_CRYPTOMINING_CONTENT) != 0;
+    return (
+      this.enabled &&
+      (state & Ci.nsIWebProgressListener.STATE_LOADED_CRYPTOMINING_CONTENT) != 0
+    );
   },
 
   isDetected(state) {
@@ -194,7 +244,8 @@ var Cryptomining = {
 
   _createListItem(origin, actions) {
     let isAllowed = actions.some(([state]) => this.isAllowing(state));
-    let isDetected = isAllowed || actions.some(([state]) => this.isBlocking(state));
+    let isDetected =
+      isAllowed || actions.some(([state]) => this.isBlocking(state));
 
     if (!isDetected) {
       return null;
@@ -243,31 +294,38 @@ var TrackingProtection = {
 
   get categoryItem() {
     delete this.categoryItem;
-    return this.categoryItem =
-      document.getElementById("identity-popup-content-blocking-category-tracking-protection");
+    return (this.categoryItem = document.getElementById(
+      "identity-popup-content-blocking-category-tracking-protection"
+    ));
   },
 
   get categoryLabel() {
     delete this.categoryLabel;
-    return this.categoryLabel =
-      document.getElementById("identity-popup-content-blocking-tracking-protection-state-label");
+    return (this.categoryLabel = document.getElementById(
+      "identity-popup-content-blocking-tracking-protection-state-label"
+    ));
   },
 
   get subViewList() {
     delete this.subViewList;
-    return this.subViewList = document.getElementById("identity-popup-trackersView-list");
+    return (this.subViewList = document.getElementById(
+      "identity-popup-trackersView-list"
+    ));
   },
 
   get strictInfo() {
     delete this.strictInfo;
-    return this.strictInfo = document.getElementById("identity-popup-trackersView-strict-info");
+    return (this.strictInfo = document.getElementById(
+      "identity-popup-trackersView-strict-info"
+    ));
   },
 
   strings: {
     get subViewBlocked() {
       delete this.subViewBlocked;
-      return this.subViewBlocked =
-        gNavigatorBundle.getString("contentBlocking.trackersView.blocked.label");
+      return (this.subViewBlocked = gNavigatorBundle.getString(
+        "contentBlocking.trackersView.blocked.label"
+      ));
     },
   },
 
@@ -277,8 +335,18 @@ var TrackingProtection = {
     Services.prefs.addObserver(this.PREF_ENABLED_GLOBALLY, this);
     Services.prefs.addObserver(this.PREF_ENABLED_IN_PRIVATE_WINDOWS, this);
 
-    XPCOMUtils.defineLazyPreferenceGetter(this, "trackingTable", this.PREF_TRACKING_TABLE, false);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "trackingAnnotationTable", this.PREF_TRACKING_ANNOTATION_TABLE, false);
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "trackingTable",
+      this.PREF_TRACKING_TABLE,
+      false
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "trackingAnnotationTable",
+      this.PREF_TRACKING_ANNOTATION_TABLE,
+      false
+    );
   },
 
   uninit() {
@@ -291,35 +359,49 @@ var TrackingProtection = {
   },
 
   get enabled() {
-    return this.enabledGlobally ||
-           (this.enabledInPrivateWindows &&
-            PrivateBrowsingUtils.isWindowPrivate(window));
+    return (
+      this.enabledGlobally ||
+      (this.enabledInPrivateWindows &&
+        PrivateBrowsingUtils.isWindowPrivate(window))
+    );
   },
 
   updateEnabled() {
-    this.enabledGlobally =
-      Services.prefs.getBoolPref(this.PREF_ENABLED_GLOBALLY);
-    this.enabledInPrivateWindows =
-      Services.prefs.getBoolPref(this.PREF_ENABLED_IN_PRIVATE_WINDOWS);
+    this.enabledGlobally = Services.prefs.getBoolPref(
+      this.PREF_ENABLED_GLOBALLY
+    );
+    this.enabledInPrivateWindows = Services.prefs.getBoolPref(
+      this.PREF_ENABLED_IN_PRIVATE_WINDOWS
+    );
     this.updateCategoryLabel();
   },
 
   updateCategoryLabel() {
     let label;
     if (this.enabled) {
-      label = ContentBlocking.showBlockedLabels ? "contentBlocking.trackers.blocking.label" : null;
+      label = ContentBlocking.showBlockedLabels
+        ? "contentBlocking.trackers.blocking.label"
+        : null;
     } else {
-      label = ContentBlocking.showAllowedLabels ? "contentBlocking.trackers.allowed.label" : null;
+      label = ContentBlocking.showAllowedLabels
+        ? "contentBlocking.trackers.allowed.label"
+        : null;
     }
-    this.categoryLabel.textContent = label ? gNavigatorBundle.getString(label) : "";
+    this.categoryLabel.textContent = label
+      ? gNavigatorBundle.getString(label)
+      : "";
   },
 
   isBlocking(state) {
-    return (state & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) != 0;
+    return (
+      (state & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) != 0
+    );
   },
 
   isAllowing(state) {
-    return (state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) != 0;
+    return (
+      (state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) != 0
+    );
   },
 
   isDetected(state) {
@@ -353,12 +435,16 @@ var TrackingProtection = {
     if (fragment.childNodes.length == 0) {
       let emptyBox = document.createXULElement("vbox");
       let emptyImage = document.createXULElement("image");
-      emptyImage.classList.add("identity-popup-content-blocking-trackersView-empty-image");
+      emptyImage.classList.add(
+        "identity-popup-content-blocking-trackersView-empty-image"
+      );
       emptyImage.classList.add("tracking-protection-icon");
 
       let emptyLabel = document.createXULElement("label");
       emptyLabel.classList.add("identity-popup-content-blocking-empty-label");
-      emptyLabel.textContent = gNavigatorBundle.getString("contentBlocking.trackersView.empty.label");
+      emptyLabel.textContent = gNavigatorBundle.getString(
+        "contentBlocking.trackersView.empty.label"
+      );
 
       emptyBox.appendChild(emptyImage);
       emptyBox.appendChild(emptyLabel);
@@ -370,8 +456,10 @@ var TrackingProtection = {
     }
 
     // This might have taken a while. Only update the list if we're still on the same page.
-    if (previousURI == gBrowser.currentURI.spec &&
-        previousWindow == gBrowser.selectedBrowser.innerWindowID) {
+    if (
+      previousURI == gBrowser.currentURI.spec &&
+      previousWindow == gBrowser.selectedBrowser.innerWindowID
+    ) {
       this.subViewList.textContent = "";
       this.subViewList.append(fragment);
     }
@@ -390,16 +478,20 @@ var TrackingProtection = {
     }
 
     return new Promise(resolve => {
-      classifierService.asyncClassifyLocalWithFeatures(uri, [feature],
+      classifierService.asyncClassifyLocalWithFeatures(
+        uri,
+        [feature],
         Ci.nsIUrlClassifierFeature.blacklist,
-        list => resolve(!!list.length));
+        list => resolve(!!list.length)
+      );
     });
   },
 
   async _createListItem(origin, actions) {
     // Figure out if this list entry was actually detected by TP or something else.
     let isAllowed = actions.some(([state]) => this.isAllowing(state));
-    let isDetected = isAllowed || actions.some(([state]) => this.isBlocking(state));
+    let isDetected =
+      isAllowed || actions.some(([state]) => this.isBlocking(state));
 
     if (!isDetected) {
       return null;
@@ -447,95 +539,127 @@ var TrackingProtection = {
 var ThirdPartyCookies = {
   telemetryIdentifier: "cr",
   PREF_ENABLED: "network.cookie.cookieBehavior",
-  PREF_REPORT_BREAKAGE_ENABLED: "browser.contentblocking.rejecttrackers.reportBreakage.enabled",
+  PREF_REPORT_BREAKAGE_ENABLED:
+    "browser.contentblocking.rejecttrackers.reportBreakage.enabled",
   PREF_ENABLED_VALUES: [
     // These values match the ones exposed under the Content Blocking section
     // of the Preferences UI.
-    Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,  // Block all third-party cookies
-    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,  // Block third-party cookies from trackers
+    Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN, // Block all third-party cookies
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER, // Block third-party cookies from trackers
   ],
 
   get categoryItem() {
     delete this.categoryItem;
-    return this.categoryItem =
-      document.getElementById("identity-popup-content-blocking-category-cookies");
+    return (this.categoryItem = document.getElementById(
+      "identity-popup-content-blocking-category-cookies"
+    ));
   },
 
   get categoryLabel() {
     delete this.categoryLabel;
-    return this.categoryLabel =
-      document.getElementById("identity-popup-content-blocking-cookies-state-label");
+    return (this.categoryLabel = document.getElementById(
+      "identity-popup-content-blocking-cookies-state-label"
+    ));
   },
 
   get subViewList() {
     delete this.subViewList;
-    return this.subViewList = document.getElementById("identity-popup-cookiesView-list");
+    return (this.subViewList = document.getElementById(
+      "identity-popup-cookiesView-list"
+    ));
   },
 
   strings: {
     get subViewAllowed() {
       delete this.subViewAllowed;
-      return this.subViewAllowed =
-        gNavigatorBundle.getString("contentBlocking.cookiesView.allowed.label");
+      return (this.subViewAllowed = gNavigatorBundle.getString(
+        "contentBlocking.cookiesView.allowed.label"
+      ));
     },
 
     get subViewBlocked() {
       delete this.subViewBlocked;
-      return this.subViewBlocked =
-        gNavigatorBundle.getString("contentBlocking.cookiesView.blocked.label");
+      return (this.subViewBlocked = gNavigatorBundle.getString(
+        "contentBlocking.cookiesView.blocked.label"
+      ));
     },
   },
 
   get reportBreakageLabel() {
     switch (this.behaviorPref) {
-    case Ci.nsICookieService.BEHAVIOR_ACCEPT:
-      return "nocookiesblocked";
-    case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
-      return "allthirdpartycookiesblocked";
-    case Ci.nsICookieService.BEHAVIOR_REJECT:
-      return "allcookiesblocked";
-    case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
-      return "cookiesfromunvisitedsitesblocked";
-    default:
-      Cu.reportError(`Error: Unknown cookieBehavior pref observed: ${this.behaviorPref}`);
+      case Ci.nsICookieService.BEHAVIOR_ACCEPT:
+        return "nocookiesblocked";
+      case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
+        return "allthirdpartycookiesblocked";
+      case Ci.nsICookieService.BEHAVIOR_REJECT:
+        return "allcookiesblocked";
+      case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
+        return "cookiesfromunvisitedsitesblocked";
+      default:
+        Cu.reportError(
+          `Error: Unknown cookieBehavior pref observed: ${this.behaviorPref}`
+        );
       // fall through
-    case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
-      return "cookierestrictions";
-    case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
-      return "cookierestrictionsforeignpartitioned";
+      case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+        return "cookierestrictions";
+      case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
+        return "cookierestrictionsforeignpartitioned";
     }
   },
 
   updateCategoryLabel() {
     let label;
     switch (this.behaviorPref) {
-    case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
-      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cookies.blocking3rdParty.label" : null;
-      break;
-    case Ci.nsICookieService.BEHAVIOR_REJECT:
-      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cookies.blockingAll.label" : null;
-      break;
-    case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
-      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cookies.blockingUnvisited.label" : null;
-      break;
-    case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
-      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cookies.blockingTrackers.label" : null;
-      break;
-    default:
-      Cu.reportError(`Error: Unknown cookieBehavior pref observed: ${this.behaviorPref}`);
+      case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
+        label = ContentBlocking.showBlockedLabels
+          ? "contentBlocking.cookies.blocking3rdParty.label"
+          : null;
+        break;
+      case Ci.nsICookieService.BEHAVIOR_REJECT:
+        label = ContentBlocking.showBlockedLabels
+          ? "contentBlocking.cookies.blockingAll.label"
+          : null;
+        break;
+      case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
+        label = ContentBlocking.showBlockedLabels
+          ? "contentBlocking.cookies.blockingUnvisited.label"
+          : null;
+        break;
+      case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+        label = ContentBlocking.showBlockedLabels
+          ? "contentBlocking.cookies.blockingTrackers.label"
+          : null;
+        break;
+      default:
+        Cu.reportError(
+          `Error: Unknown cookieBehavior pref observed: ${this.behaviorPref}`
+        );
       // fall through
-    case Ci.nsICookieService.BEHAVIOR_ACCEPT:
-      label = ContentBlocking.showAllowedLabels ? "contentBlocking.cookies.allowed.label" : null;
-      break;
+      case Ci.nsICookieService.BEHAVIOR_ACCEPT:
+        label = ContentBlocking.showAllowedLabels
+          ? "contentBlocking.cookies.allowed.label"
+          : null;
+        break;
     }
-    this.categoryLabel.textContent = label ? gNavigatorBundle.getString(label) : "";
+    this.categoryLabel.textContent = label
+      ? gNavigatorBundle.getString(label)
+      : "";
   },
 
   init() {
-    XPCOMUtils.defineLazyPreferenceGetter(this, "behaviorPref", this.PREF_ENABLED,
-      Ci.nsICookieService.BEHAVIOR_ACCEPT, this.updateCategoryLabel.bind(this));
-    XPCOMUtils.defineLazyPreferenceGetter(this, "reportBreakageEnabled",
-      this.PREF_REPORT_BREAKAGE_ENABLED, false);
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "behaviorPref",
+      this.PREF_ENABLED,
+      Ci.nsICookieService.BEHAVIOR_ACCEPT,
+      this.updateCategoryLabel.bind(this)
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "reportBreakageEnabled",
+      this.PREF_REPORT_BREAKAGE_ENABLED,
+      false
+    );
     this.updateCategoryLabel();
   },
 
@@ -544,10 +668,13 @@ var ThirdPartyCookies = {
   },
 
   isBlocking(state) {
-    return (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER) != 0 ||
-           (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_ALL) != 0 ||
-           (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_BY_PERMISSION) != 0 ||
-           (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_FOREIGN) != 0;
+    return (
+      (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER) != 0 ||
+      (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_ALL) != 0 ||
+      (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_BY_PERMISSION) !=
+        0 ||
+      (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_FOREIGN) != 0
+    );
   },
 
   isDetected(state) {
@@ -566,7 +693,9 @@ var ThirdPartyCookies = {
       let box = document.createXULElement("vbox");
       let label = document.createXULElement("label");
       label.className = "identity-popup-cookiesView-list-header";
-      label.textContent = gNavigatorBundle.getString(`contentBlocking.cookiesView.${category}.label`);
+      label.textContent = gNavigatorBundle.getString(
+        `contentBlocking.cookiesView.${category}.label`
+      );
       box.appendChild(label);
 
       for (let info of categories[category]) {
@@ -577,8 +706,9 @@ var ThirdPartyCookies = {
       if (categories[category].length == 0) {
         let emptyLabel = document.createXULElement("label");
         emptyLabel.classList.add("identity-popup-content-blocking-empty-label");
-        emptyLabel.textContent =
-          gNavigatorBundle.getString(`contentBlocking.cookiesView.${category}.empty.label`);
+        emptyLabel.textContent = gNavigatorBundle.getString(
+          `contentBlocking.cookiesView.${category}.empty.label`
+        );
         box.appendChild(emptyLabel);
       }
 
@@ -587,21 +717,36 @@ var ThirdPartyCookies = {
   },
 
   _hasException(origin) {
-    for (let perm of Services.perms.getAllForPrincipal(gBrowser.contentPrincipal)) {
-      if (perm.type == "3rdPartyStorage^" + origin || perm.type.startsWith("3rdPartyStorage^" + origin + "^")) {
+    for (let perm of Services.perms.getAllForPrincipal(
+      gBrowser.contentPrincipal
+    )) {
+      if (
+        perm.type == "3rdPartyStorage^" + origin ||
+        perm.type.startsWith("3rdPartyStorage^" + origin + "^")
+      ) {
         return true;
       }
     }
 
-    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
+    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+      origin
+    );
     // Cookie exceptions get "inherited" from parent- to sub-domain, so we need to
     // make sure to include parent domains in the permission check for "cookies".
-    return Services.perms.testPermissionFromPrincipal(principal, "cookie") != Services.perms.UNKNOWN_ACTION;
+    return (
+      Services.perms.testPermissionFromPrincipal(principal, "cookie") !=
+      Services.perms.UNKNOWN_ACTION
+    );
   },
 
   _clearException(origin) {
-    for (let perm of Services.perms.getAllForPrincipal(gBrowser.contentPrincipal)) {
-      if (perm.type == "3rdPartyStorage^" + origin || perm.type.startsWith("3rdPartyStorage^" + origin + "^")) {
+    for (let perm of Services.perms.getAllForPrincipal(
+      gBrowser.contentPrincipal
+    )) {
+      if (
+        perm.type == "3rdPartyStorage^" + origin ||
+        perm.type.startsWith("3rdPartyStorage^" + origin + "^")
+      ) {
         Services.perms.removePermission(perm);
       }
     }
@@ -612,8 +757,10 @@ var ThirdPartyCookies = {
     // Cookie exceptions get "inherited" from parent- to sub-domain, so we need to
     // clear any cookie permissions from parent domains as well.
     for (let perm of Services.perms.enumerator) {
-      if (perm.type == "cookie" &&
-          Services.eTLD.hasRootDomain(host, perm.principal.URI.host)) {
+      if (
+        perm.type == "cookie" &&
+        Services.eTLD.hasRootDomain(host, perm.principal.URI.host)
+      ) {
         Services.perms.removePermission(perm);
       }
     }
@@ -634,8 +781,10 @@ var ThirdPartyCookies = {
     } catch (e) {
       // There are nasty edge cases here where someone is trying to set a cookie
       // on a public suffix or an IP address. Just categorize those as third party...
-      if (e.result != Cr.NS_ERROR_HOST_IS_IP_ADDRESS &&
-          e.result != Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+      if (
+        e.result != Cr.NS_ERROR_HOST_IS_IP_ADDRESS &&
+        e.result != Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS
+      ) {
         throw e;
       }
     }
@@ -645,7 +794,11 @@ var ThirdPartyCookies = {
         continue;
       }
 
-      let info = {origin, isAllowed: true, hasException: this._hasException(origin)};
+      let info = {
+        origin,
+        isAllowed: true,
+        hasException: this._hasException(origin),
+      };
       let hasCookie = false;
       let isTracker = false;
 
@@ -677,8 +830,10 @@ var ThirdPartyCookies = {
         let uri = Services.io.newURI(origin);
         isFirstParty = Services.eTLD.getBaseDomain(uri) == firstPartyDomain;
       } catch (e) {
-        if (e.result != Cr.NS_ERROR_HOST_IS_IP_ADDRESS &&
-            e.result != Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+        if (
+          e.result != Cr.NS_ERROR_HOST_IS_IP_ADDRESS &&
+          e.result != Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS
+        ) {
           throw e;
         }
       }
@@ -695,7 +850,7 @@ var ThirdPartyCookies = {
     return newLog;
   },
 
-  _createListItem({origin, isAllowed, hasException}) {
+  _createListItem({ origin, isAllowed, hasException }) {
     let listItem = document.createXULElement("hbox");
     listItem.className = "identity-popup-content-blocking-list-item";
     listItem.classList.toggle("allowed", isAllowed);
@@ -731,11 +886,15 @@ var ThirdPartyCookies = {
       let removeException = document.createXULElement("button");
       removeException.className = "identity-popup-permission-remove-button";
       removeException.tooltipText = gNavigatorBundle.getFormattedString(
-        "contentBlocking.cookiesView.removeButton.tooltip", [origin]);
+        "contentBlocking.cookiesView.removeButton.tooltip",
+        [origin]
+      );
       removeException.addEventListener("click", () => {
         this._clearException(origin);
         // Just flip the display based on what state we had previously.
-        stateLabel.value = isAllowed ? this.strings.subViewBlocked : this.strings.subViewAllowed;
+        stateLabel.value = isAllowed
+          ? this.strings.subViewBlocked
+          : this.strings.subViewAllowed;
         listItem.classList.toggle("allowed", !isAllowed);
         image.classList.toggle("allowed", !isAllowed);
         removeException.hidden = true;
@@ -747,17 +906,21 @@ var ThirdPartyCookies = {
   },
 };
 
-
 var ContentBlocking = {
   // If the user ignores the doorhanger, we stop showing it after some time.
-  MAX_INTROS: Services.prefs.getIntPref("browser.contentblocking.maxIntroCount"),
+  MAX_INTROS: Services.prefs.getIntPref(
+    "browser.contentblocking.maxIntroCount"
+  ),
   PREF_ANIMATIONS_ENABLED: "toolkit.cosmeticAnimations.enabled",
-  PREF_REPORT_BREAKAGE_ENABLED: "browser.contentblocking.reportBreakage.enabled",
+  PREF_REPORT_BREAKAGE_ENABLED:
+    "browser.contentblocking.reportBreakage.enabled",
   PREF_REPORT_BREAKAGE_URL: "browser.contentblocking.reportBreakage.url",
   PREF_INTRO_COUNT_CB: "browser.contentblocking.introCount",
   PREF_CB_CATEGORY: "browser.contentblocking.category",
-  PREF_SHOW_ALLOWED_LABELS: "browser.contentblocking.control-center.ui.showAllowedLabels",
-  PREF_SHOW_BLOCKED_LABELS: "browser.contentblocking.control-center.ui.showBlockedLabels",
+  PREF_SHOW_ALLOWED_LABELS:
+    "browser.contentblocking.control-center.ui.showAllowedLabels",
+  PREF_SHOW_BLOCKED_LABELS:
+    "browser.contentblocking.control-center.ui.showBlockedLabels",
 
   get prefIntroCount() {
     return this.PREF_INTRO_COUNT_CB;
@@ -765,92 +928,107 @@ var ContentBlocking = {
 
   get content() {
     delete this.content;
-    return this.content =
-      document.getElementById("identity-popup-content-blocking-content");
+    return (this.content = document.getElementById(
+      "identity-popup-content-blocking-content"
+    ));
   },
 
   get icon() {
     delete this.icon;
-    return this.icon = document.getElementById("tracking-protection-icon");
+    return (this.icon = document.getElementById("tracking-protection-icon"));
   },
 
   get iconBox() {
     delete this.iconBox;
-    return this.iconBox = document.getElementById("tracking-protection-icon-box");
+    return (this.iconBox = document.getElementById(
+      "tracking-protection-icon-box"
+    ));
   },
 
   get animatedIcon() {
     delete this.animatedIcon;
-    return this.animatedIcon =
-      document.getElementById("tracking-protection-icon-animatable-image");
+    return (this.animatedIcon = document.getElementById(
+      "tracking-protection-icon-animatable-image"
+    ));
   },
 
   get identityPopupMultiView() {
     delete this.identityPopupMultiView;
-    return this.identityPopupMultiView =
-      document.getElementById("identity-popup-multiView");
+    return (this.identityPopupMultiView = document.getElementById(
+      "identity-popup-multiView"
+    ));
   },
 
   get reportBreakageButton() {
     delete this.reportBreakageButton;
-    return this.reportBreakageButton =
-      document.getElementById("identity-popup-content-blocking-report-breakage");
+    return (this.reportBreakageButton = document.getElementById(
+      "identity-popup-content-blocking-report-breakage"
+    ));
   },
 
   get reportBreakageURL() {
     delete this.reportBreakageURL;
-    return this.reportBreakageURL =
-      document.getElementById("identity-popup-breakageReportView-collection-url");
+    return (this.reportBreakageURL = document.getElementById(
+      "identity-popup-breakageReportView-collection-url"
+    ));
   },
 
   get reportBreakageLearnMore() {
     delete this.reportBreakageLearnMore;
-    return this.reportBreakageLearnMore =
-      document.getElementById("identity-popup-breakageReportView-learn-more");
+    return (this.reportBreakageLearnMore = document.getElementById(
+      "identity-popup-breakageReportView-learn-more"
+    ));
   },
 
   get appMenuLabel() {
     delete this.appMenuLabel;
-    return this.appMenuLabel = document.getElementById("appMenu-tp-label");
+    return (this.appMenuLabel = document.getElementById("appMenu-tp-label"));
   },
 
   get identityPopup() {
     delete this.identityPopup;
-    return this.identityPopup = document.getElementById("identity-popup");
+    return (this.identityPopup = document.getElementById("identity-popup"));
   },
 
   get protectionsPopup() {
     delete this.protectionsPopup;
-    return this.protectionsPopup = document.getElementById("protections-popup");
+    return (this.protectionsPopup = document.getElementById(
+      "protections-popup"
+    ));
   },
 
   strings: {
     get appMenuTitle() {
       delete this.appMenuTitle;
-      return this.appMenuTitle =
-        gNavigatorBundle.getString("contentBlocking.title");
+      return (this.appMenuTitle = gNavigatorBundle.getString(
+        "contentBlocking.title"
+      ));
     },
 
     get appMenuTooltip() {
       delete this.appMenuTooltip;
       if (AppConstants.platform == "win") {
-        return this.appMenuTooltip =
-          gNavigatorBundle.getString("contentBlocking.tooltipWin");
+        return (this.appMenuTooltip = gNavigatorBundle.getString(
+          "contentBlocking.tooltipWin"
+        ));
       }
-      return this.appMenuTooltip =
-        gNavigatorBundle.getString("contentBlocking.tooltipOther");
+      return (this.appMenuTooltip = gNavigatorBundle.getString(
+        "contentBlocking.tooltipOther"
+      ));
     },
 
     get activeTooltipText() {
       delete this.activeTooltipText;
-      return this.activeTooltipText =
-        gNavigatorBundle.getString("trackingProtection.icon.activeTooltip");
+      return (this.activeTooltipText = gNavigatorBundle.getString(
+        "trackingProtection.icon.activeTooltip"
+      ));
     },
 
     get disabledTooltipText() {
       delete this.disabledTooltipText;
-      return this.disabledTooltipText =
-        gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip");
+      return (this.disabledTooltipText = gNavigatorBundle.getString(
+        "trackingProtection.icon.disabledTooltip"
+      ));
     },
   },
 
@@ -864,14 +1042,21 @@ var ContentBlocking = {
   //
   // It may also contain an init() and uninit() function, which will be called
   // on ContentBlocking.init() and ContentBlocking.uninit().
-  blockers: [TrackingProtection, ThirdPartyCookies, Fingerprinting, Cryptomining],
+  blockers: [
+    TrackingProtection,
+    ThirdPartyCookies,
+    Fingerprinting,
+    Cryptomining,
+  ],
 
   get _baseURIForChannelClassifier() {
     // Convert document URI into the format used by
     // nsChannelClassifier::ShouldEnableTrackingProtection.
     // Any scheme turned into https is correct.
     try {
-      return Services.io.newURI("https://" + gBrowser.selectedBrowser.currentURI.hostPort);
+      return Services.io.newURI(
+        "https://" + gBrowser.selectedBrowser.currentURI.hostPort
+      );
     } catch (e) {
       // Getting the hostPort for about: and file: URIs fails, but TP doesn't work with
       // these URIs anyway, so just return null here.
@@ -880,30 +1065,48 @@ var ContentBlocking = {
   },
 
   init() {
-    this.animatedIcon.addEventListener("animationend", () => this.iconBox.removeAttribute("animate"));
+    this.animatedIcon.addEventListener("animationend", () =>
+      this.iconBox.removeAttribute("animate")
+    );
 
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     this.reportBreakageLearnMore.href = baseURL + "blocking-breakage";
 
     this.updateAnimationsEnabled = () => {
-      this.iconBox.toggleAttribute("animationsenabled",
-        Services.prefs.getBoolPref(this.PREF_ANIMATIONS_ENABLED, false));
+      this.iconBox.toggleAttribute(
+        "animationsenabled",
+        Services.prefs.getBoolPref(this.PREF_ANIMATIONS_ENABLED, false)
+      );
     };
 
-    XPCOMUtils.defineLazyPreferenceGetter(this, "showBlockedLabels",
-      this.PREF_SHOW_BLOCKED_LABELS, false, () => {
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "showBlockedLabels",
+      this.PREF_SHOW_BLOCKED_LABELS,
+      false,
+      () => {
         for (let blocker of this.blockers) {
           blocker.updateCategoryLabel();
         }
-    });
-    XPCOMUtils.defineLazyPreferenceGetter(this, "showAllowedLabels",
-      this.PREF_SHOW_ALLOWED_LABELS, false, () => {
+      }
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "showAllowedLabels",
+      this.PREF_SHOW_ALLOWED_LABELS,
+      false,
+      () => {
         for (let blocker of this.blockers) {
           blocker.updateCategoryLabel();
         }
-    });
-    XPCOMUtils.defineLazyPreferenceGetter(this, "reportBreakageEnabled",
-      this.PREF_REPORT_BREAKAGE_ENABLED, false);
+      }
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "reportBreakageEnabled",
+      this.PREF_REPORT_BREAKAGE_ENABLED,
+      false
+    );
 
     for (let blocker of this.blockers) {
       if (blocker.init) {
@@ -913,14 +1116,20 @@ var ContentBlocking = {
 
     this.updateAnimationsEnabled();
 
-    Services.prefs.addObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
+    Services.prefs.addObserver(
+      this.PREF_ANIMATIONS_ENABLED,
+      this.updateAnimationsEnabled
+    );
 
     this.appMenuLabel.setAttribute("value", this.strings.appMenuTitle);
     this.appMenuLabel.setAttribute("tooltiptext", this.strings.appMenuTooltip);
 
     this.updateCBCategoryLabel = this.updateCBCategoryLabel.bind(this);
     this.updateCBCategoryLabel();
-    Services.prefs.addObserver(this.PREF_CB_CATEGORY, this.updateCBCategoryLabel);
+    Services.prefs.addObserver(
+      this.PREF_CB_CATEGORY,
+      this.updateCBCategoryLabel
+    );
   },
 
   uninit() {
@@ -930,8 +1139,14 @@ var ContentBlocking = {
       }
     }
 
-    Services.prefs.removeObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
-    Services.prefs.removeObserver(this.PREF_CB_CATEGORY, this.updateCBCategoryLabel);
+    Services.prefs.removeObserver(
+      this.PREF_ANIMATIONS_ENABLED,
+      this.updateAnimationsEnabled
+    );
+    Services.prefs.removeObserver(
+      this.PREF_CB_CATEGORY,
+      this.updateCBCategoryLabel
+    );
   },
 
   updateCBCategoryLabel() {
@@ -939,20 +1154,22 @@ var ContentBlocking = {
       // Fallback to not setting a label, it's preferable to not set a label than to set an incorrect one.
       return;
     }
-    let button = document.getElementById("tracking-protection-preferences-button");
+    let button = document.getElementById(
+      "tracking-protection-preferences-button"
+    );
     let appMenuCategoryLabel = document.getElementById("appMenu-tp-category");
     let label;
     let category = Services.prefs.getStringPref(this.PREF_CB_CATEGORY);
     switch (category) {
-    case ("standard"):
-      label = gNavigatorBundle.getString("contentBlocking.category.standard");
-      break;
-    case ("strict"):
-      label = gNavigatorBundle.getString("contentBlocking.category.strict");
-      break;
-    case ("custom"):
-      label = gNavigatorBundle.getString("contentBlocking.category.custom");
-      break;
+      case "standard":
+        label = gNavigatorBundle.getString("contentBlocking.category.standard");
+        break;
+      case "strict":
+        label = gNavigatorBundle.getString("contentBlocking.category.strict");
+        break;
+      case "custom":
+        label = gNavigatorBundle.getString("contentBlocking.category.custom");
+        break;
     }
     appMenuCategoryLabel.value = label;
     button.label = label;
@@ -975,12 +1192,15 @@ var ContentBlocking = {
     this.identityPopup.hidePopup();
 
     let comments = document.getElementById(
-      "identity-popup-breakageReportView-collection-comments");
+      "identity-popup-breakageReportView-collection-comments"
+    );
     this.submitBreakageReport(this.reportURI, comments);
   },
 
   submitBreakageReport(uri, commentsTextarea) {
-    let reportEndpoint = Services.prefs.getStringPref(this.PREF_REPORT_BREAKAGE_URL);
+    let reportEndpoint = Services.prefs.getStringPref(
+      this.PREF_REPORT_BREAKAGE_URL
+    );
     if (!reportEndpoint) {
       return;
     }
@@ -994,17 +1214,43 @@ var ContentBlocking = {
     body += `userAgent: ${navigator.userAgent}\n`;
 
     body += "\n**Preferences**\n";
-    body += `${TrackingProtection.PREF_ENABLED_GLOBALLY}: ${Services.prefs.getBoolPref(TrackingProtection.PREF_ENABLED_GLOBALLY)}\n`;
-    body += `${TrackingProtection.PREF_ENABLED_IN_PRIVATE_WINDOWS}: ${Services.prefs.getBoolPref(TrackingProtection.PREF_ENABLED_IN_PRIVATE_WINDOWS)}\n`;
-    body += `urlclassifier.trackingTable: ${Services.prefs.getStringPref("urlclassifier.trackingTable")}\n`;
-    body += `network.http.referer.defaultPolicy: ${Services.prefs.getIntPref("network.http.referer.defaultPolicy")}\n`;
-    body += `network.http.referer.defaultPolicy.pbmode: ${Services.prefs.getIntPref("network.http.referer.defaultPolicy.pbmode")}\n`;
-    body += `${ThirdPartyCookies.PREF_ENABLED}: ${Services.prefs.getIntPref(ThirdPartyCookies.PREF_ENABLED)}\n`;
-    body += `network.cookie.lifetimePolicy: ${Services.prefs.getIntPref("network.cookie.lifetimePolicy")}\n`;
-    body += `privacy.annotate_channels.strict_list.enabled: ${Services.prefs.getBoolPref("privacy.annotate_channels.strict_list.enabled")}\n`;
-    body += `privacy.restrict3rdpartystorage.expiration: ${Services.prefs.getIntPref("privacy.restrict3rdpartystorage.expiration")}\n`;
-    body += `${Fingerprinting.PREF_ENABLED}: ${Services.prefs.getBoolPref(Fingerprinting.PREF_ENABLED)}\n`;
-    body += `${Cryptomining.PREF_ENABLED}: ${Services.prefs.getBoolPref(Cryptomining.PREF_ENABLED)}\n`;
+    body += `${
+      TrackingProtection.PREF_ENABLED_GLOBALLY
+    }: ${Services.prefs.getBoolPref(
+      TrackingProtection.PREF_ENABLED_GLOBALLY
+    )}\n`;
+    body += `${
+      TrackingProtection.PREF_ENABLED_IN_PRIVATE_WINDOWS
+    }: ${Services.prefs.getBoolPref(
+      TrackingProtection.PREF_ENABLED_IN_PRIVATE_WINDOWS
+    )}\n`;
+    body += `urlclassifier.trackingTable: ${Services.prefs.getStringPref(
+      "urlclassifier.trackingTable"
+    )}\n`;
+    body += `network.http.referer.defaultPolicy: ${Services.prefs.getIntPref(
+      "network.http.referer.defaultPolicy"
+    )}\n`;
+    body += `network.http.referer.defaultPolicy.pbmode: ${Services.prefs.getIntPref(
+      "network.http.referer.defaultPolicy.pbmode"
+    )}\n`;
+    body += `${ThirdPartyCookies.PREF_ENABLED}: ${Services.prefs.getIntPref(
+      ThirdPartyCookies.PREF_ENABLED
+    )}\n`;
+    body += `network.cookie.lifetimePolicy: ${Services.prefs.getIntPref(
+      "network.cookie.lifetimePolicy"
+    )}\n`;
+    body += `privacy.annotate_channels.strict_list.enabled: ${Services.prefs.getBoolPref(
+      "privacy.annotate_channels.strict_list.enabled"
+    )}\n`;
+    body += `privacy.restrict3rdpartystorage.expiration: ${Services.prefs.getIntPref(
+      "privacy.restrict3rdpartystorage.expiration"
+    )}\n`;
+    body += `${Fingerprinting.PREF_ENABLED}: ${Services.prefs.getBoolPref(
+      Fingerprinting.PREF_ENABLED
+    )}\n`;
+    body += `${Cryptomining.PREF_ENABLED}: ${Services.prefs.getBoolPref(
+      Cryptomining.PREF_ENABLED
+    )}\n`;
 
     body += "\n**Comments**\n" + commentsTextarea.value;
 
@@ -1025,23 +1271,31 @@ var ContentBlocking = {
       method: "POST",
       credentials: "omit",
       body: formData,
-    }).then(function(response) {
-      if (!response.ok) {
-        Cu.reportError(`Content Blocking report to ${reportEndpoint} failed with status ${response.status}`);
-      } else {
-        // Clear the textarea value when the report is submitted
-        commentsTextarea.value = "";
-      }
-    }).catch(Cu.reportError);
+    })
+      .then(function(response) {
+        if (!response.ok) {
+          Cu.reportError(
+            `Content Blocking report to ${reportEndpoint} failed with status ${
+              response.status
+            }`
+          );
+        } else {
+          // Clear the textarea value when the report is submitted
+          commentsTextarea.value = "";
+        }
+      })
+      .catch(Cu.reportError);
   },
 
   toggleReportBreakageButton() {
     // For release (due to the large volume) we only want to receive reports
     // for breakage that is directly related to third party cookie blocking.
-    if (this.reportBreakageEnabled ||
-        (ThirdPartyCookies.reportBreakageEnabled &&
-         ThirdPartyCookies.activated &&
-         !TrackingProtection.activated)) {
+    if (
+      this.reportBreakageEnabled ||
+      (ThirdPartyCookies.reportBreakageEnabled &&
+        ThirdPartyCookies.activated &&
+        !TrackingProtection.activated)
+    ) {
       this.reportBreakageButton.removeAttribute("hidden");
     } else {
       this.reportBreakageButton.setAttribute("hidden", "true");
@@ -1052,9 +1306,14 @@ var ContentBlocking = {
     // Save this URI to make sure that the user really only submits the location
     // they see in the report breakage dialog.
     this.reportURI = gBrowser.currentURI;
-    let urlWithoutQuery = this.reportURI.asciiSpec.replace("?" + this.reportURI.query, "");
+    let urlWithoutQuery = this.reportURI.asciiSpec.replace(
+      "?" + this.reportURI.query,
+      ""
+    );
     this.reportBreakageURL.value = urlWithoutQuery;
-    this.identityPopupMultiView.showSubView("identity-popup-breakageReportView");
+    this.identityPopupMultiView.showSubView(
+      "identity-popup-breakageReportView"
+    );
   },
 
   async showTrackersSubview() {
@@ -1069,7 +1328,9 @@ var ContentBlocking = {
 
   async showFingerprintersSubview() {
     await Fingerprinting.updateSubView();
-    this.identityPopupMultiView.showSubView("identity-popup-fingerprintersView");
+    this.identityPopupMultiView.showSubView(
+      "identity-popup-fingerprintersView"
+    );
   },
 
   async showCryptominersSubview() {
@@ -1081,15 +1342,21 @@ var ContentBlocking = {
     if (PrivateBrowsingUtils.isWindowPrivate(window)) {
       return;
     }
-    Services.telemetry.getHistogramById("TRACKING_PROTECTION_SHIELD").add(value);
+    Services.telemetry
+      .getHistogramById("TRACKING_PROTECTION_SHIELD")
+      .add(value);
   },
 
   cryptominersHistogramAdd(value) {
-    Services.telemetry.getHistogramById("CRYPTOMINERS_BLOCKED_COUNT").add(value);
+    Services.telemetry
+      .getHistogramById("CRYPTOMINERS_BLOCKED_COUNT")
+      .add(value);
   },
 
   fingerprintersHistogramAdd(value) {
-    Services.telemetry.getHistogramById("FINGERPRINTERS_BLOCKED_COUNT").add(value);
+    Services.telemetry
+      .getHistogramById("FINGERPRINTERS_BLOCKED_COUNT")
+      .add(value);
   },
 
   // This triggers from top level location changes.
@@ -1103,8 +1370,9 @@ var ContentBlocking = {
     }
 
     // Check whether the user has added an exception for this site.
-    let hasException =
-      ContentBlockingAllowList.includes(gBrowser.selectedBrowser);
+    let hasException = ContentBlockingAllowList.includes(
+      gBrowser.selectedBrowser
+    );
 
     this.content.toggleAttribute("hasException", hasException);
     this.protectionsPopup.toggleAttribute("hasException", hasException);
@@ -1144,27 +1412,38 @@ var ContentBlocking = {
     }
 
     // Check whether the user has added an exception for this site.
-    let hasException =
-      ContentBlockingAllowList.includes(gBrowser.selectedBrowser);
+    let hasException = ContentBlockingAllowList.includes(
+      gBrowser.selectedBrowser
+    );
 
     // Reset the animation in case the user is switching tabs or if no blockers were detected
     // (this is most likely happening because the user navigated on to a different site). This
     // allows us to play it from the start without choppiness next time.
     if (isSimulated || !anyBlocking) {
       this.iconBox.removeAttribute("animate");
-    // Only play the animation when the shield is not already shown on the page (the visibility
-    // of the shield based on this onSecurityChange be determined afterwards).
+      // Only play the animation when the shield is not already shown on the page (the visibility
+      // of the shield based on this onSecurityChange be determined afterwards).
     } else if (anyBlocking && !this.iconBox.hasAttribute("active")) {
       this.iconBox.setAttribute("animate", "true");
 
-      let isBrowserPrivate = PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser);
+      let isBrowserPrivate = PrivateBrowsingUtils.isBrowserPrivate(
+        gBrowser.selectedBrowser
+      );
       if (!isBrowserPrivate) {
         let introCount = Services.prefs.getIntPref(this.prefIntroCount);
         let installStamp = Services.prefs.getIntPref(
-          "browser.laterrun.bookkeeping.profileCreationTime", Date.now() / 1000);
-        let delayLength = Services.prefs.getIntPref("browser.contentblocking.introDelaySeconds");
-        let delayFulfilled = delayLength < (Date.now() / 1000 - installStamp);
-        if (introCount < this.MAX_INTROS && !this.anyOtherWindowHasTour() && delayFulfilled) {
+          "browser.laterrun.bookkeeping.profileCreationTime",
+          Date.now() / 1000
+        );
+        let delayLength = Services.prefs.getIntPref(
+          "browser.contentblocking.introDelaySeconds"
+        );
+        let delayFulfilled = delayLength < Date.now() / 1000 - installStamp;
+        if (
+          introCount < this.MAX_INTROS &&
+          !this.anyOtherWindowHasTour() &&
+          delayFulfilled
+        ) {
           Services.prefs.setIntPref(this.prefIntroCount, ++introCount);
           Services.prefs.savePrefFile(null);
           this.showIntroPanel();
@@ -1186,7 +1465,10 @@ var ContentBlocking = {
     this.iconBox.toggleAttribute("hasException", hasException);
 
     if (hasException) {
-      this.iconBox.setAttribute("tooltiptext", this.strings.disabledTooltipText);
+      this.iconBox.setAttribute(
+        "tooltiptext",
+        this.strings.disabledTooltipText
+      );
       if (!this.hadShieldState && !isSimulated) {
         this.hadShieldState = true;
         this.shieldHistogramAdd(1);
@@ -1203,10 +1485,16 @@ var ContentBlocking = {
 
     // We report up to one instance of fingerprinting and cryptomining
     // blocking and/or allowing per page load.
-    let fingerprintingBlocking = Fingerprinting.isBlocking(event) && !Fingerprinting.isBlocking(previousState);
-    let fingerprintingAllowing = Fingerprinting.isAllowing(event) && !Fingerprinting.isAllowing(previousState);
-    let cryptominingBlocking = Cryptomining.isBlocking(event) && !Cryptomining.isBlocking(previousState);
-    let cryptominingAllowing = Cryptomining.isAllowing(event) && !Cryptomining.isAllowing(previousState);
+    let fingerprintingBlocking =
+      Fingerprinting.isBlocking(event) &&
+      !Fingerprinting.isBlocking(previousState);
+    let fingerprintingAllowing =
+      Fingerprinting.isAllowing(event) &&
+      !Fingerprinting.isAllowing(previousState);
+    let cryptominingBlocking =
+      Cryptomining.isBlocking(event) && !Cryptomining.isBlocking(previousState);
+    let cryptominingAllowing =
+      Cryptomining.isAllowing(event) && !Cryptomining.isAllowing(previousState);
 
     if (fingerprintingBlocking) {
       this.fingerprintersHistogramAdd("blocked");
@@ -1254,9 +1542,10 @@ var ContentBlocking = {
     let brandBundle = document.getElementById("bundle_brand");
     let brandShortName = brandBundle.getString("brandShortName");
 
-
-    let introTitle = gNavigatorBundle.getFormattedString("contentBlocking.intro.title",
-                                                         [brandShortName]);
+    let introTitle = gNavigatorBundle.getFormattedString(
+      "contentBlocking.intro.title",
+      [brandShortName]
+    );
     let introDescription;
     // This will be sent to the onboarding website to let them know which
     // UI variation we're showing.
@@ -1264,11 +1553,15 @@ var ContentBlocking = {
     // We show a different UI tour variation for users that already have TP
     // enabled globally.
     if (TrackingProtection.enabledGlobally) {
-      introDescription = gNavigatorBundle.getString("contentBlocking.intro.v2.description");
+      introDescription = gNavigatorBundle.getString(
+        "contentBlocking.intro.v2.description"
+      );
       variation = 2;
     } else {
-      introDescription = gNavigatorBundle.getFormattedString("contentBlocking.intro.v1.description",
-                                                             [brandShortName]);
+      introDescription = gNavigatorBundle.getFormattedString(
+        "contentBlocking.intro.v1.description",
+        [brandShortName]
+      );
       variation = 1;
     }
 
@@ -1277,8 +1570,10 @@ var ContentBlocking = {
       // the user doesn't need to see the intro anymore.
       this.dontShowIntroPanelAgain();
 
-      let nextURL = Services.urlFormatter.formatURLPref("privacy.trackingprotection.introURL") +
-                    `?step=2&newtab=true&variation=${variation}`;
+      let nextURL =
+        Services.urlFormatter.formatURLPref(
+          "privacy.trackingprotection.introURL"
+        ) + `?step=2&newtab=true&variation=${variation}`;
       switchToTabHavingURI(nextURL, true, {
         // Ignore the fragment in case the intro is shown on the tour page
         // (e.g. if the user manually visited the tour or clicked the link from
@@ -1295,14 +1590,23 @@ var ContentBlocking = {
       },
       {
         callback: openStep2,
-        label: gNavigatorBundle.getString("trackingProtection.intro.nextButton.label"),
+        label: gNavigatorBundle.getString(
+          "trackingProtection.intro.nextButton.label"
+        ),
         style: "primary",
       },
     ];
 
     let panelTarget = await UITour.getTarget(window, "trackingProtection");
     UITour.initForBrowser(gBrowser.selectedBrowser, window);
-    UITour.showInfo(window, panelTarget, introTitle, introDescription, undefined, buttons,
-                    { closeButtonCallback: () => this.dontShowIntroPanelAgain() });
+    UITour.showInfo(
+      window,
+      panelTarget,
+      introTitle,
+      introDescription,
+      undefined,
+      buttons,
+      { closeButtonCallback: () => this.dontShowIntroPanelAgain() }
+    );
   },
 };

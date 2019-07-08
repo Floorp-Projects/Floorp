@@ -51,16 +51,14 @@ async function performTests() {
   ok(popup.isOpen, "popup is open");
 
   const popupItems = popup.getItems().map(e => e.label);
-  const expectedPopupItems = [
-    "item00",
-    "item1",
-    "item2",
-    "item3",
-  ];
+  const expectedPopupItems = ["item00", "item1", "item2", "item3"];
 
   is(popup.itemCount, expectedPopupItems.length, "popup.itemCount is correct");
-  is(popupItems.join("-"), expectedPopupItems.join("-"),
-    "getItems returns the items we expect");
+  is(
+    popupItems.join("-"),
+    expectedPopupItems.join("-"),
+    "getItems returns the items we expect"
+  );
   is(popup.selectedIndex, 0, "Index of the first item is selected.");
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
@@ -68,34 +66,56 @@ async function performTests() {
   let prefix = getInputValue(hud).replace(/[\S]/g, " ");
   is(popup.selectedIndex, 3, "index 3 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
-  checkInputCompletionValue(hud, prefix + "item3", "completeNode.value holds item3");
+  checkInputCompletionValue(
+    hud,
+    prefix + "item3",
+    "completeNode.value holds item3"
+  );
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
 
   is(popup.selectedIndex, 2, "index 2 is selected");
   is(popup.selectedItem.label, "item2", "item2 is selected");
-  checkInputCompletionValue(hud, prefix + "item2", "completeNode.value holds item2");
+  checkInputCompletionValue(
+    hud,
+    prefix + "item2",
+    "completeNode.value holds item2"
+  );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
 
   is(popup.selectedIndex, 3, "index 3 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
-  checkInputCompletionValue(hud, prefix + "item3", "completeNode.value holds item3");
+  checkInputCompletionValue(
+    hud,
+    prefix + "item3",
+    "completeNode.value holds item3"
+  );
 
   let currentSelectionIndex = popup.selectedIndex;
 
   EventUtils.synthesizeKey("KEY_PageUp");
-  ok(popup.selectedIndex < currentSelectionIndex, "Index is less after Page UP");
+  ok(
+    popup.selectedIndex < currentSelectionIndex,
+    "Index is less after Page UP"
+  );
 
   currentSelectionIndex = popup.selectedIndex;
   EventUtils.synthesizeKey("KEY_PageDown");
-  ok(popup.selectedIndex > currentSelectionIndex, "Index is greater after PGDN");
+  ok(
+    popup.selectedIndex > currentSelectionIndex,
+    "Index is greater after PGDN"
+  );
 
   EventUtils.synthesizeKey("KEY_Home");
   is(popup.selectedIndex, 0, "index is first after Home");
 
   EventUtils.synthesizeKey("KEY_End");
-  is(popup.selectedIndex, expectedPopupItems.length - 1, "index is last after End");
+  is(
+    popup.selectedIndex,
+    expectedPopupItems.length - 1,
+    "index is last after End"
+  );
 
   info("press Tab and wait for popup to hide");
   const onPopupClose = popup.once("popup-closed");
@@ -105,25 +125,48 @@ async function performTests() {
 
   // At this point the completion suggestion should be accepted.
   ok(!popup.isOpen, "popup is not open");
-  is(getInputValue(hud), "window.foo.item3",
-     "completion was successful after KEY_Tab");
+  is(
+    getInputValue(hud),
+    "window.foo.item3",
+    "completion was successful after KEY_Tab"
+  );
   ok(!getInputCompletionValue(hud), "completeNode is empty");
 
-  info("Check that hitting Home hides the completion text when the popup is hidden");
+  info(
+    "Check that hitting Home hides the completion text when the popup is hidden"
+  );
   await setInputValueForAutocompletion(hud, "window.foo.item0");
   prefix = getInputValue(hud).replace(/[\S]/g, " ");
-  checkInputCompletionValue(hud, prefix + "0", "completeNode has expected value");
+  checkInputCompletionValue(
+    hud,
+    prefix + "0",
+    "completeNode has expected value"
+  );
   if (Services.appinfo.OS == "Darwin") {
-    EventUtils.synthesizeKey("a", {ctrlKey: true});
+    EventUtils.synthesizeKey("a", { ctrlKey: true });
   } else {
     EventUtils.synthesizeKey("KEY_Home");
   }
-  checkInputCompletionValue(hud, "", "completeNode was cleared after hitting Home");
+  checkInputCompletionValue(
+    hud,
+    "",
+    "completeNode was cleared after hitting Home"
+  );
 
-  info("Check that hitting End hides the completion text when the popup is hidden");
+  info(
+    "Check that hitting End hides the completion text when the popup is hidden"
+  );
   await setInputValueForAutocompletion(hud, "window.foo.item0");
   prefix = getInputValue(hud).replace(/[\S]/g, " ");
-  checkInputCompletionValue(hud, prefix + "0", "completeNode has expected value");
+  checkInputCompletionValue(
+    hud,
+    prefix + "0",
+    "completeNode has expected value"
+  );
   EventUtils.synthesizeKey("KEY_End");
-  checkInputCompletionValue(hud, "", "completeNode was cleared after hitting End");
+  checkInputCompletionValue(
+    hud,
+    "",
+    "completeNode was cleared after hitting End"
+  );
 }

@@ -7,7 +7,7 @@
 let syncService = {};
 ChromeUtils.import("resource://services-sync/service.js", syncService);
 const service = syncService.Service;
-const {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm");
+const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
 let getState;
 let originalSync;
@@ -23,7 +23,10 @@ add_task(async function testSyncRemoteTabsButtonFunctionality() {
   Services.obs.notifyObservers(null, UIState.ON_UPDATE);
 
   // add the sync remote tabs button to the panel
-  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "sync-button",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
 
   await waitForOverflowButtonShown();
 
@@ -34,7 +37,10 @@ add_task(async function testSyncRemoteTabsButtonFunctionality() {
   let syncRemoteTabsBtn = document.getElementById("sync-button");
   let remoteTabsPanel = document.getElementById("PanelUI-remotetabs");
   let viewShown = BrowserTestUtils.waitForEvent(remoteTabsPanel, "ViewShown");
-  ok(syncRemoteTabsBtn, "The sync remote tabs button was added to the Panel Menu");
+  ok(
+    syncRemoteTabsBtn,
+    "The sync remote tabs button was added to the Panel Menu"
+  );
   // click the button - the panel should open.
   syncRemoteTabsBtn.click();
   await viewShown;

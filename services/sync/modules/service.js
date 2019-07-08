@@ -13,33 +13,82 @@ const PBKDF2_KEY_BYTES = 16;
 const CRYPTO_COLLECTION = "crypto";
 const KEYS_WBO = "keys";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {Async} = ChromeUtils.import("resource://services-common/async.js");
-const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
-const {CLIENT_NOT_CONFIGURED, CREDENTIALS_CHANGED, HMAC_EVENT_INTERVAL, LOGIN_FAILED, LOGIN_FAILED_INVALID_PASSPHRASE, LOGIN_FAILED_NETWORK_ERROR, LOGIN_FAILED_NO_PASSPHRASE, LOGIN_FAILED_NO_USERNAME, LOGIN_FAILED_SERVER_ERROR, LOGIN_SUCCEEDED, MASTER_PASSWORD_LOCKED, METARECORD_DOWNLOAD_FAIL, NO_SYNC_NODE_FOUND, PREFS_BRANCH, STATUS_DISABLED, STATUS_OK, STORAGE_VERSION, VERSION_OUT_OF_DATE, WEAVE_VERSION, kFirefoxShuttingDown, kFirstSyncChoiceNotMade, kSyncBackoffNotMet, kSyncMasterPasswordLocked, kSyncNetworkOffline, kSyncNotConfigured, kSyncWeaveDisabled} = ChromeUtils.import("resource://services-sync/constants.js");
-const {EngineManager} = ChromeUtils.import("resource://services-sync/engines.js");
-const {ClientEngine} = ChromeUtils.import("resource://services-sync/engines/clients.js");
-const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
-const {ErrorHandler, SyncScheduler} = ChromeUtils.import("resource://services-sync/policies.js");
-const {CollectionKeyManager, CryptoWrapper, RecordManager, WBORecord} = ChromeUtils.import("resource://services-sync/record.js");
-const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
-const {EngineSynchronizer} = ChromeUtils.import("resource://services-sync/stages/enginesync.js");
-const {DeclinedEngines} = ChromeUtils.import("resource://services-sync/stages/declined.js");
-const {Status} = ChromeUtils.import("resource://services-sync/status.js");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Async } = ChromeUtils.import("resource://services-common/async.js");
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
+const {
+  CLIENT_NOT_CONFIGURED,
+  CREDENTIALS_CHANGED,
+  HMAC_EVENT_INTERVAL,
+  LOGIN_FAILED,
+  LOGIN_FAILED_INVALID_PASSPHRASE,
+  LOGIN_FAILED_NETWORK_ERROR,
+  LOGIN_FAILED_NO_PASSPHRASE,
+  LOGIN_FAILED_NO_USERNAME,
+  LOGIN_FAILED_SERVER_ERROR,
+  LOGIN_SUCCEEDED,
+  MASTER_PASSWORD_LOCKED,
+  METARECORD_DOWNLOAD_FAIL,
+  NO_SYNC_NODE_FOUND,
+  PREFS_BRANCH,
+  STATUS_DISABLED,
+  STATUS_OK,
+  STORAGE_VERSION,
+  VERSION_OUT_OF_DATE,
+  WEAVE_VERSION,
+  kFirefoxShuttingDown,
+  kFirstSyncChoiceNotMade,
+  kSyncBackoffNotMet,
+  kSyncMasterPasswordLocked,
+  kSyncNetworkOffline,
+  kSyncNotConfigured,
+  kSyncWeaveDisabled,
+} = ChromeUtils.import("resource://services-sync/constants.js");
+const { EngineManager } = ChromeUtils.import(
+  "resource://services-sync/engines.js"
+);
+const { ClientEngine } = ChromeUtils.import(
+  "resource://services-sync/engines/clients.js"
+);
+const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
+const { ErrorHandler, SyncScheduler } = ChromeUtils.import(
+  "resource://services-sync/policies.js"
+);
+const {
+  CollectionKeyManager,
+  CryptoWrapper,
+  RecordManager,
+  WBORecord,
+} = ChromeUtils.import("resource://services-sync/record.js");
+const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
+const { EngineSynchronizer } = ChromeUtils.import(
+  "resource://services-sync/stages/enginesync.js"
+);
+const { DeclinedEngines } = ChromeUtils.import(
+  "resource://services-sync/stages/declined.js"
+);
+const { Status } = ChromeUtils.import("resource://services-sync/status.js");
 ChromeUtils.import("resource://services-sync/telemetry.js");
-const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
+const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
 
 function getEngineModules() {
   let result = {
-    Addons: {module: "addons.js", symbol: "AddonsEngine"},
-    Form: {module: "forms.js", symbol: "FormEngine"},
-    History: {module: "history.js", symbol: "HistoryEngine"},
-    Password: {module: "passwords.js", symbol: "PasswordEngine"},
-    Prefs: {module: "prefs.js", symbol: "PrefsEngine"},
-    Tab: {module: "tabs.js", symbol: "TabEngine"},
-    ExtensionStorage: {module: "extension-storage.js", symbol: "ExtensionStorageEngine"},
+    Addons: { module: "addons.js", symbol: "AddonsEngine" },
+    Form: { module: "forms.js", symbol: "FormEngine" },
+    History: { module: "history.js", symbol: "HistoryEngine" },
+    Password: { module: "passwords.js", symbol: "PasswordEngine" },
+    Prefs: { module: "prefs.js", symbol: "PrefsEngine" },
+    Tab: { module: "tabs.js", symbol: "TabEngine" },
+    ExtensionStorage: {
+      module: "extension-storage.js",
+      symbol: "ExtensionStorageEngine",
+    },
   };
   if (Svc.Prefs.get("engine.addresses.available", false)) {
     result.Addresses = {
@@ -72,7 +121,6 @@ function Sync11Service() {
   Utils.defineLazyIDProperty(this, "syncID", "services.sync.client.syncID");
 }
 Sync11Service.prototype = {
-
   _lock: Utils.lock,
   _locked: false,
   _loggedIn: false,
@@ -90,15 +138,19 @@ Sync11Service.prototype = {
   },
   set clusterURL(value) {
     if (value != null && typeof value != "string") {
-      throw new Error("cluster must be a string, got " + (typeof value));
+      throw new Error("cluster must be a string, got " + typeof value);
     }
     this._clusterURL = value;
     this._updateCachedURLs();
   },
 
-  get isLoggedIn() { return this._loggedIn; },
+  get isLoggedIn() {
+    return this._loggedIn;
+  },
 
-  get locked() { return this._locked; },
+  get locked() {
+    return this._locked;
+  },
   lock: function lock() {
     if (this._locked) {
       return false;
@@ -142,7 +194,9 @@ Sync11Service.prototype = {
       return;
     }
 
-    this._log.debug("Caching URLs under storage user base: " + this.userBaseURL);
+    this._log.debug(
+      "Caching URLs under storage user base: " + this.userBaseURL
+    );
 
     // Generate and cache various URLs under the storage API for this user
     this.infoURL = this.userBaseURL + "info/collections";
@@ -197,12 +251,14 @@ Sync11Service.prototype = {
 
     // Leave a sizable delay between HMAC recovery attempts. This gives us
     // time for another client to fix themselves if we touch the record.
-    if ((now - this.lastHMACEvent) < HMAC_EVENT_INTERVAL) {
+    if (now - this.lastHMACEvent < HMAC_EVENT_INTERVAL) {
       return false;
     }
 
-    this._log.info("Bad HMAC event detected. Attempting recovery " +
-                   "or signaling to other clients.");
+    this._log.info(
+      "Bad HMAC event detected. Attempting recovery " +
+        "or signaling to other clients."
+    );
 
     // Set the last handled time so that we don't act again.
     this.lastHMACEvent = now;
@@ -210,7 +266,9 @@ Sync11Service.prototype = {
     // Fetch keys.
     let cryptoKeys = new CryptoWrapper(CRYPTO_COLLECTION, KEYS_WBO);
     try {
-      let cryptoResp = (await cryptoKeys.fetch(this.resource(this.cryptoKeysURL))).response;
+      let cryptoResp = (await cryptoKeys.fetch(
+        this.resource(this.cryptoKeysURL)
+      )).response;
 
       // Save out the ciphertext for when we reupload. If there's a bug in
       // CollectionKeyManager, this will prevent us from uploading junk.
@@ -221,8 +279,11 @@ Sync11Service.prototype = {
         return false;
       }
 
-      let keysChanged = await this.handleFetchedKeys(this.identity.syncKeyBundle,
-                                                     cryptoKeys, true);
+      let keysChanged = await this.handleFetchedKeys(
+        this.identity.syncKeyBundle,
+        cryptoKeys,
+        true
+      );
       if (keysChanged) {
         // Did they change? If so, carry on.
         this._log.info("Suggesting retry.");
@@ -231,20 +292,28 @@ Sync11Service.prototype = {
 
       // If not, reupload them and continue the current sync.
       cryptoKeys.ciphertext = cipherText;
-      cryptoKeys.cleartext  = null;
+      cryptoKeys.cleartext = null;
 
-      let uploadResp = await this._uploadCryptoKeys(cryptoKeys, cryptoResp.obj.modified);
+      let uploadResp = await this._uploadCryptoKeys(
+        cryptoKeys,
+        cryptoResp.obj.modified
+      );
       if (uploadResp.success) {
         this._log.info("Successfully re-uploaded keys. Continuing sync.");
       } else {
-        this._log.warn("Got error response re-uploading keys. " +
-                       "Continuing sync; let's try again later.");
+        this._log.warn(
+          "Got error response re-uploading keys. " +
+            "Continuing sync; let's try again later."
+        );
       }
 
       return false; // Don't try again: same keys.
     } catch (ex) {
-      this._log.warn("Got exception fetching and handling crypto keys. " +
-                     "Will try again later.", ex);
+      this._log.warn(
+        "Got exception fetching and handling crypto keys. " +
+          "Will try again later.",
+        ex
+      );
       return false;
     }
   },
@@ -252,7 +321,10 @@ Sync11Service.prototype = {
   async handleFetchedKeys(syncKey, cryptoKeys, skipReset) {
     // Don't want to wipe if we're just starting up!
     let wasBlank = this.collectionKeys.isClear;
-    let keysChanged = await this.collectionKeys.updateContents(syncKey, cryptoKeys);
+    let keysChanged = await this.collectionKeys.updateContents(
+      syncKey,
+      cryptoKeys
+    );
 
     if (keysChanged && !wasBlank) {
       this._log.debug("Keys changed: " + JSON.stringify(keysChanged));
@@ -297,14 +369,17 @@ Sync11Service.prototype = {
 
     await this._registerEngines();
 
-    let ua = Cc["@mozilla.org/network/protocol;1?name=http"].
-      getService(Ci.nsIHttpProtocolHandler).userAgent;
+    let ua = Cc["@mozilla.org/network/protocol;1?name=http"].getService(
+      Ci.nsIHttpProtocolHandler
+    ).userAgent;
     this._log.info(ua);
 
     if (!this._checkCrypto()) {
       this.enabled = false;
-      this._log.info("Could not load the Weave crypto component. Disabling " +
-                      "Weave, since it will not work correctly.");
+      this._log.info(
+        "Could not load the Weave crypto component. Disabling " +
+          "Weave, since it will not work correctly."
+      );
     }
 
     Svc.Obs.add("weave:service:setup-complete", this);
@@ -331,9 +406,8 @@ Sync11Service.prototype = {
 
       // UI code uses the flag on the XPCOM service so it doesn't have
       // to load a bunch of modules.
-      let xps = Cc["@mozilla.org/weave/service;1"]
-                  .getService(Ci.nsISupports)
-                  .wrappedJSObject;
+      let xps = Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
+        .wrappedJSObject;
       xps.ready = true;
 
       Svc.Obs.notify("weave:service:ready");
@@ -342,7 +416,7 @@ Sync11Service.prototype = {
 
   _checkSetup: function _checkSetup() {
     if (!this.enabled) {
-      return this.status.service = STATUS_DISABLED;
+      return (this.status.service = STATUS_DISABLED);
     }
     return this.status.checkSetup();
   },
@@ -393,21 +467,27 @@ Sync11Service.prototype = {
         if (modInfo.symbol) {
           let symbol = modInfo.symbol;
           if (!(symbol in ns)) {
-            this._log.warn("Could not find exported engine instance: " + symbol);
+            this._log.warn(
+              "Could not find exported engine instance: " + symbol
+            );
             continue;
           }
           await this.engineManager.register(ns[symbol]);
         } else {
-          let {whenTrue, whenFalse, controllingPref} = modInfo;
+          let { whenTrue, whenFalse, controllingPref } = modInfo;
           if (!(whenTrue in ns) || !(whenFalse in ns)) {
-            this._log.warn("Could not find all exported engine instances",
-                           { whenTrue, whenFalse });
+            this._log.warn("Could not find all exported engine instances", {
+              whenTrue,
+              whenFalse,
+            });
             continue;
           }
-          await this.engineManager.registerAlternatives(name.toLowerCase(),
-                                                        controllingPref,
-                                                        ns[whenTrue],
-                                                        ns[whenFalse]);
+          await this.engineManager.registerAlternatives(
+            name.toLowerCase(),
+            controllingPref,
+            ns[whenTrue],
+            ns[whenFalse]
+          );
         }
       } catch (ex) {
         this._log.warn("Could not register engine " + name, ex);
@@ -417,8 +497,10 @@ Sync11Service.prototype = {
     this.engineManager.setDeclined(declined);
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   observe(subject, topic, data) {
     switch (topic) {
@@ -432,7 +514,7 @@ Sync11Service.prototype = {
           // Sync in the background (it's fine not to wait on the returned promise
           // because sync() has a lock).
           // [] = clients collection only
-          this.sync({why: "collection_changed", engines: []}).catch(e => {
+          this.sync({ why: "collection_changed", engines: [] }).catch(e => {
             this._log.error(e);
           });
         }
@@ -539,7 +621,9 @@ Sync11Service.prototype = {
   },
 
   async verifyAndFetchSymmetricKeys(infoResponse) {
-    this._log.debug("Fetching and verifying -- or generating -- symmetric keys.");
+    this._log.debug(
+      "Fetching and verifying -- or generating -- symmetric keys."
+    );
 
     let syncKeyBundle = this.identity.syncKeyBundle;
     if (!syncKeyBundle) {
@@ -555,7 +639,9 @@ Sync11Service.prototype = {
 
       // This only applies when the server is already at version 4.
       if (infoResponse.status != 200) {
-        this._log.warn("info/collections returned non-200 response. Failing key fetch.");
+        this._log.warn(
+          "info/collections returned non-200 response. Failing key fetch."
+        );
         this.status.login = LOGIN_FAILED_SERVER_ERROR;
         this.errorHandler.checkServerError(infoResponse);
         return false;
@@ -563,7 +649,9 @@ Sync11Service.prototype = {
 
       let infoCollections = infoResponse.obj;
 
-      this._log.info("Testing info/collections: " + JSON.stringify(infoCollections));
+      this._log.info(
+        "Testing info/collections: " + JSON.stringify(infoCollections)
+      );
 
       if (this.collectionKeys.updateNeeded(infoCollections)) {
         this._log.info("collection keys reports that a key update is needed.");
@@ -573,10 +661,12 @@ Sync11Service.prototype = {
         // Fetch storage/crypto/keys.
         let cryptoKeys;
 
-        if (infoCollections && (CRYPTO_COLLECTION in infoCollections)) {
+        if (infoCollections && CRYPTO_COLLECTION in infoCollections) {
           try {
             cryptoKeys = new CryptoWrapper(CRYPTO_COLLECTION, KEYS_WBO);
-            let cryptoResp = (await cryptoKeys.fetch(this.resource(this.cryptoKeysURL))).response;
+            let cryptoResp = (await cryptoKeys.fetch(
+              this.resource(this.cryptoKeysURL)
+            )).response;
 
             if (cryptoResp.success) {
               await this.handleFetchedKeys(syncKeyBundle, cryptoKeys);
@@ -584,13 +674,17 @@ Sync11Service.prototype = {
             } else if (cryptoResp.status == 404) {
               // On failure, ask to generate new keys and upload them.
               // Fall through to the behavior below.
-              this._log.warn("Got 404 for crypto/keys, but 'crypto' in info/collections. Regenerating.");
+              this._log.warn(
+                "Got 404 for crypto/keys, but 'crypto' in info/collections. Regenerating."
+              );
               cryptoKeys = null;
             } else {
               // Some other problem.
               this.status.login = LOGIN_FAILED_SERVER_ERROR;
               this.errorHandler.checkServerError(cryptoResp);
-              this._log.warn("Got status " + cryptoResp.status + " fetching crypto keys.");
+              this._log.warn(
+                "Got status " + cryptoResp.status + " fetching crypto keys."
+              );
               return false;
             }
           } catch (ex) {
@@ -609,7 +703,9 @@ Sync11Service.prototype = {
             return false;
           }
         } else {
-          this._log.info("... 'crypto' is not a reported collection. Generating new keys.");
+          this._log.info(
+            "... 'crypto' is not a reported collection. Generating new keys."
+          );
         }
 
         if (!cryptoKeys) {
@@ -639,8 +735,10 @@ Sync11Service.prototype = {
   getMaxRecordPayloadSize() {
     let config = this.serverConfiguration;
     if (!config || !config.max_record_payload_bytes) {
-      this._log.warn("No config or incomplete config in getMaxRecordPayloadSize."
-                     + " Are we running tests?");
+      this._log.warn(
+        "No config or incomplete config in getMaxRecordPayloadSize." +
+          " Are we running tests?"
+      );
       return 256 * 1024;
     }
     let payloadMax = config.max_record_payload_bytes;
@@ -669,7 +767,9 @@ Sync11Service.prototype = {
     // master password (ie, this call is expected to prompt for MP unlock
     // if necessary) while we still have control.
     this.status.login = await this.identity.unlockAndVerifyAuthState();
-    this._log.debug("Fetching unlocked auth state returned " + this.status.login);
+    this._log.debug(
+      "Fetching unlocked auth state returned " + this.status.login
+    );
     if (this.status.login != STATUS_OK) {
       return false;
     }
@@ -701,7 +801,7 @@ Sync11Service.prototype = {
 
           // Go ahead and do remote setup, so that we can determine
           // conclusively that our passphrase is correct.
-          if ((await this._remoteSetup(test))) {
+          if (await this._remoteSetup(test)) {
             // Username/password verified.
             this.status.login = LOGIN_SUCCEEDED;
             return true;
@@ -713,7 +813,7 @@ Sync11Service.prototype = {
 
         case 401:
           this._log.warn("401: login failed.");
-          // Fall through to the 404 case.
+        // Fall through to the 404 case.
 
         case 404:
           // Check that we're verifying with the correct cluster
@@ -749,7 +849,11 @@ Sync11Service.prototype = {
 
     let uploadRes = await this._uploadCryptoKeys(wbo, 0);
     if (uploadRes.status != 200) {
-      this._log.warn("Got status " + uploadRes.status + " uploading new keys. What to do? Throw!");
+      this._log.warn(
+        "Got status " +
+          uploadRes.status +
+          " uploading new keys. What to do? Throw!"
+      );
       this.errorHandler.checkServerError(uploadRes);
       throw new Error("Unable to upload symmetric keys.");
     }
@@ -769,15 +873,19 @@ Sync11Service.prototype = {
 
     info = info.obj;
     if (!(CRYPTO_COLLECTION in info)) {
-      this._log.error("Consistency failure: info/collections excludes " +
-                      "crypto after successful upload.");
+      this._log.error(
+        "Consistency failure: info/collections excludes " +
+          "crypto after successful upload."
+      );
       throw new Error("Symmetric key upload failed.");
     }
 
     // Can't check against local modified: clock drift.
     if (info[CRYPTO_COLLECTION] < serverModified) {
-      this._log.error("Consistency failure: info/collections crypto entry " +
-                      "is stale after successful upload.");
+      this._log.error(
+        "Consistency failure: info/collections crypto entry " +
+          "is stale after successful upload."
+      );
       throw new Error("Symmetric key upload failed.");
     }
 
@@ -785,13 +893,17 @@ Sync11Service.prototype = {
 
     // Download and install them.
     let cryptoKeys = new CryptoWrapper(CRYPTO_COLLECTION, KEYS_WBO);
-    let cryptoResp = (await cryptoKeys.fetch(this.resource(this.cryptoKeysURL))).response;
+    let cryptoResp = (await cryptoKeys.fetch(this.resource(this.cryptoKeysURL)))
+      .response;
     if (cryptoResp.status != 200) {
       this._log.warn("Failed to download keys.");
       throw new Error("Symmetric key download failed.");
     }
-    let keysChanged = await this.handleFetchedKeys(this.identity.syncKeyBundle,
-                                                   cryptoKeys, true);
+    let keysChanged = await this.handleFetchedKeys(
+      this.identity.syncKeyBundle,
+      cryptoKeys,
+      true
+    );
     if (keysChanged) {
       this._log.info("Downloaded keys differed, as expected.");
     }
@@ -848,7 +960,10 @@ Sync11Service.prototype = {
       this.identity = Status._authManager;
       Svc.Obs.notify("weave:service:start-over:finish");
     } catch (err) {
-      this._log.error("startOver failed to re-initialize the identity manager", err);
+      this._log.error(
+        "startOver failed to re-initialize the identity manager",
+        err
+      );
       // Still send the observer notification so the current state is
       // reflected in the UI.
       Svc.Obs.notify("weave:service:start-over:finish");
@@ -910,15 +1025,24 @@ Sync11Service.prototype = {
 
     if (configResponse.status == 404) {
       // This server doesn't support the URL yet - that's OK.
-      this._log.debug("info/configuration returned 404 - using default upload semantics");
+      this._log.debug(
+        "info/configuration returned 404 - using default upload semantics"
+      );
     } else if (configResponse.status != 200) {
-      this._log.warn(`info/configuration returned ${configResponse.status} - using default configuration`);
+      this._log.warn(
+        `info/configuration returned ${
+          configResponse.status
+        } - using default configuration`
+      );
       this.errorHandler.checkServerError(configResponse);
       return false;
     } else {
       this.serverConfiguration = configResponse.obj;
     }
-    this._log.trace("info/configuration for this server", this.serverConfiguration);
+    this._log.trace(
+      "info/configuration for this server",
+      this.serverConfiguration
+    );
     return true;
   },
 
@@ -933,13 +1057,18 @@ Sync11Service.prototype = {
     let meta = await this.recordManager.get(this.metaURL);
 
     // Checking modified time of the meta record.
-    if (infoResponse &&
-        (infoResponse.obj.meta != this.metaModified) &&
-        (!meta || !meta.isNew)) {
+    if (
+      infoResponse &&
+      infoResponse.obj.meta != this.metaModified &&
+      (!meta || !meta.isNew)
+    ) {
       // Delete the cached meta record...
-      this._log.debug("Clearing cached meta record. metaModified is " +
-          JSON.stringify(this.metaModified) + ", setting to " +
-          JSON.stringify(infoResponse.obj.meta));
+      this._log.debug(
+        "Clearing cached meta record. metaModified is " +
+          JSON.stringify(this.metaModified) +
+          ", setting to " +
+          JSON.stringify(infoResponse.obj.meta)
+      );
 
       this.recordManager.del(this.metaURL);
 
@@ -949,7 +1078,9 @@ Sync11Service.prototype = {
       // If we got a 401, we do not want to create a new meta/global - we
       // should be able to get the existing meta after we get a new node.
       if (this.recordManager.response.status == 401) {
-        this._log.debug("Fetching meta/global record on the server returned 401.");
+        this._log.debug(
+          "Fetching meta/global record on the server returned 401."
+        );
         this.errorHandler.checkServerError(this.recordManager.response);
         return false;
       }
@@ -959,7 +1090,9 @@ Sync11Service.prototype = {
         try {
           await this._uploadNewMetaGlobal();
         } catch (uploadRes) {
-          this._log.warn("Unable to upload new meta/global. Failing remote setup.");
+          this._log.warn(
+            "Unable to upload new meta/global. Failing remote setup."
+          );
           this.errorHandler.checkServerError(uploadRes);
           return false;
         }
@@ -969,34 +1102,49 @@ Sync11Service.prototype = {
         return false;
       } else {
         // If newMeta, then it stands to reason that meta != null.
-        newMeta.isNew   = meta.isNew;
+        newMeta.isNew = meta.isNew;
         newMeta.changed = meta.changed;
       }
 
       // Switch in the new meta object and record the new time.
-      meta              = newMeta;
+      meta = newMeta;
       this.metaModified = infoResponse.obj.meta;
     }
 
-    let remoteVersion = (meta && meta.payload.storageVersion) ?
-      meta.payload.storageVersion : "";
+    let remoteVersion =
+      meta && meta.payload.storageVersion ? meta.payload.storageVersion : "";
 
-    this._log.debug(["Weave Version:", WEAVE_VERSION, "Local Storage:",
-      STORAGE_VERSION, "Remote Storage:", remoteVersion].join(" "));
+    this._log.debug(
+      [
+        "Weave Version:",
+        WEAVE_VERSION,
+        "Local Storage:",
+        STORAGE_VERSION,
+        "Remote Storage:",
+        remoteVersion,
+      ].join(" ")
+    );
 
     // Check for cases that require a fresh start. When comparing remoteVersion,
     // we need to convert it to a number as older clients used it as a string.
-    if (!meta || !meta.payload.storageVersion || !meta.payload.syncID ||
-        STORAGE_VERSION > parseFloat(remoteVersion)) {
-      this._log.info("One of: no meta, no meta storageVersion, or no meta syncID. Fresh start needed.");
+    if (
+      !meta ||
+      !meta.payload.storageVersion ||
+      !meta.payload.syncID ||
+      STORAGE_VERSION > parseFloat(remoteVersion)
+    ) {
+      this._log.info(
+        "One of: no meta, no meta storageVersion, or no meta syncID. Fresh start needed."
+      );
 
       // abort the server wipe if the GET status was anything other than 404 or 200
       let status = this.recordManager.response.status;
       if (status != 200 && status != 404) {
         this.status.sync = METARECORD_DOWNLOAD_FAIL;
         this.errorHandler.checkServerError(this.recordManager.response);
-        this._log.warn("Unknown error while downloading metadata record. " +
-                       "Aborting sync.");
+        this._log.warn(
+          "Unknown error while downloading metadata record. Aborting sync."
+        );
         return false;
       }
 
@@ -1011,9 +1159,12 @@ Sync11Service.prototype = {
       await this._freshStart();
 
       if (status == 404) {
-        this._log.info("Metadata record not found, server was wiped to ensure " +
-                       "consistency.");
-      } else { // 200
+        this._log.info(
+          "Metadata record not found, server was wiped to ensure " +
+            "consistency."
+        );
+      } else {
+        // 200
         this._log.info("Wiped server; incompatible metadata: " + remoteVersion);
       }
       return true;
@@ -1022,7 +1173,12 @@ Sync11Service.prototype = {
       this._log.warn("Upgrade required to access newer storage version.");
       return false;
     } else if (meta.payload.syncID != this.syncID) {
-      this._log.info("Sync IDs differ. Local is " + this.syncID + ", remote is " + meta.payload.syncID);
+      this._log.info(
+        "Sync IDs differ. Local is " +
+          this.syncID +
+          ", remote is " +
+          meta.payload.syncID
+      );
       await this.resetClient();
       this.collectionKeys.clear();
       this.syncID = meta.payload.syncID;
@@ -1036,7 +1192,9 @@ Sync11Service.prototype = {
       // bug 545725 - re-verify creds and fail sanely
       if (!(await this.verifyLogin())) {
         this.status.sync = CREDENTIALS_CHANGED;
-        this._log.info("Credentials have changed, aborting sync and forcing re-login.");
+        this._log.info(
+          "Credentials have changed, aborting sync and forcing re-login."
+        );
         return false;
       }
 
@@ -1058,10 +1216,12 @@ Sync11Service.prototype = {
    * any necessary login took place.
    */
   _shouldLogin: function _shouldLogin() {
-    return this.enabled &&
-           !this.scheduler.offline &&
-           !this.isLoggedIn &&
-           Async.isAppReady();
+    return (
+      this.enabled &&
+      !this.scheduler.offline &&
+      !this.isLoggedIn &&
+      Async.isAppReady()
+    );
   },
 
   /**
@@ -1083,8 +1243,10 @@ Sync11Service.prototype = {
       reason = kSyncNetworkOffline;
     } else if (this.status.minimumNextSync > Date.now()) {
       reason = kSyncBackoffNotMet;
-    } else if ((this.status.login == MASTER_PASSWORD_LOCKED) &&
-             Utils.mpLocked()) {
+    } else if (
+      this.status.login == MASTER_PASSWORD_LOCKED &&
+      Utils.mpLocked()
+    ) {
       reason = kSyncMasterPasswordLocked;
     } else if (Svc.Prefs.get("firstSync") == "notReady") {
       reason = kFirstSyncChoiceNotMade;
@@ -1099,11 +1261,13 @@ Sync11Service.prototype = {
     return reason;
   },
 
-  async sync({engines, why} = {}) {
+  async sync({ engines, why } = {}) {
     let dateStr = Utils.formatTimestamp(new Date());
     this._log.debug("User-Agent: " + Utils.userAgent);
     await this.promiseInitialized;
-    this._log.info(`Starting sync at ${dateStr} in browser session ${browserSessionID}`);
+    this._log.info(
+      `Starting sync at ${dateStr} in browser session ${browserSessionID}`
+    );
     return this._catch(async function() {
       // Make sure we're logged in.
       if (this._shouldLogin()) {
@@ -1123,45 +1287,56 @@ Sync11Service.prototype = {
    * Sync up engines with the server.
    */
   async _lockedSync(engineNamesToSync, why) {
-    return this._lock("service.js: sync",
-                      this._notify("sync", JSON.stringify({why}), async function onNotify() {
-      let histogram = Services.telemetry.getHistogramById("WEAVE_START_COUNT");
-      histogram.add(1);
+    return this._lock(
+      "service.js: sync",
+      this._notify("sync", JSON.stringify({ why }), async function onNotify() {
+        let histogram = Services.telemetry.getHistogramById(
+          "WEAVE_START_COUNT"
+        );
+        histogram.add(1);
 
-      let synchronizer = new EngineSynchronizer(this);
-      await synchronizer.sync(engineNamesToSync, why); // Might throw!
+        let synchronizer = new EngineSynchronizer(this);
+        await synchronizer.sync(engineNamesToSync, why); // Might throw!
 
-      histogram = Services.telemetry.getHistogramById("WEAVE_COMPLETE_SUCCESS_COUNT");
-      histogram.add(1);
+        histogram = Services.telemetry.getHistogramById(
+          "WEAVE_COMPLETE_SUCCESS_COUNT"
+        );
+        histogram.add(1);
 
-      // We successfully synchronized.
-      // Check if the identity wants to pre-fetch a migration sentinel from
-      // the server.
-      // If we have no clusterURL, we are probably doing a node reassignment
-      // so don't attempt to get it in that case.
-      if (this.clusterURL) {
-        this.identity.prefetchMigrationSentinel(this);
-      }
-
-      // Now let's update our declined engines (but only if we have a metaURL;
-      // if Sync failed due to no node we will not have one)
-      if (this.metaURL) {
-        let meta = await this.recordManager.get(this.metaURL);
-        if (!meta) {
-          this._log.warn("No meta/global; can't update declined state.");
-          return;
+        // We successfully synchronized.
+        // Check if the identity wants to pre-fetch a migration sentinel from
+        // the server.
+        // If we have no clusterURL, we are probably doing a node reassignment
+        // so don't attempt to get it in that case.
+        if (this.clusterURL) {
+          this.identity.prefetchMigrationSentinel(this);
         }
 
-        let declinedEngines = new DeclinedEngines(this);
-        let didChange = declinedEngines.updateDeclined(meta, this.engineManager);
-        if (!didChange) {
-          this._log.info("No change to declined engines. Not reuploading meta/global.");
-          return;
-        }
+        // Now let's update our declined engines (but only if we have a metaURL;
+        // if Sync failed due to no node we will not have one)
+        if (this.metaURL) {
+          let meta = await this.recordManager.get(this.metaURL);
+          if (!meta) {
+            this._log.warn("No meta/global; can't update declined state.");
+            return;
+          }
 
-        await this.uploadMetaGlobal(meta);
-      }
-    }))();
+          let declinedEngines = new DeclinedEngines(this);
+          let didChange = declinedEngines.updateDeclined(
+            meta,
+            this.engineManager
+          );
+          if (!didChange) {
+            this._log.info(
+              "No change to declined engines. Not reuploading meta/global."
+            );
+            return;
+          }
+
+          await this.uploadMetaGlobal(meta);
+        }
+      })
+    )();
   },
 
   /**
@@ -1245,7 +1420,9 @@ Sync11Service.prototype = {
    */
   async wipeServer(collections) {
     let response;
-    let histogram = Services.telemetry.getHistogramById("WEAVE_WIPE_SERVER_SUCCEEDED");
+    let histogram = Services.telemetry.getHistogramById(
+      "WEAVE_WIPE_SERVER_SUCCEEDED"
+    );
     if (!collections) {
       // Strip the trailing slash.
       let res = this.resource(this.storageURL.slice(0, -1));
@@ -1258,8 +1435,12 @@ Sync11Service.prototype = {
         throw ex;
       }
       if (response.status != 200 && response.status != 404) {
-        this._log.debug("Aborting wipeServer. Server responded with " +
-                        response.status + " response for " + this.storageURL);
+        this._log.debug(
+          "Aborting wipeServer. Server responded with " +
+            response.status +
+            " response for " +
+            this.storageURL
+        );
         histogram.add(false);
         throw response;
       }
@@ -1279,8 +1460,12 @@ Sync11Service.prototype = {
       }
 
       if (response.status != 200 && response.status != 404) {
-        this._log.debug("Aborting wipeServer. Server responded with " +
-                        response.status + " response for " + url);
+        this._log.debug(
+          "Aborting wipeServer. Server responded with " +
+            response.status +
+            " response for " +
+            url
+        );
         histogram.add(false);
         throw response;
       }
@@ -1313,7 +1498,7 @@ Sync11Service.prototype = {
 
     // Fully wipe each engine if it's able to decrypt data
     for (let engine of engines) {
-      if ((await engine.canDecrypt())) {
+      if (await engine.canDecrypt()) {
         await engine.wipeClient();
       }
     }

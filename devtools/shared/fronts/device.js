@@ -3,9 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Cu} = require("chrome");
-const {deviceSpec} = require("devtools/shared/specs/device");
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const { Cu } = require("chrome");
+const { deviceSpec } = require("devtools/shared/specs/device");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
 const defer = require("devtools/shared/defer");
 
 class DeviceFront extends FrontClassWithSpec(deviceSpec) {

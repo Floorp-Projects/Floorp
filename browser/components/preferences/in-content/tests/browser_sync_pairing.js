@@ -3,11 +3,17 @@
 
 "use strict";
 
-const {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm", {});
-const {FxAccountsPairingFlow} = ChromeUtils.import("resource://gre/modules/FxAccountsPairing.jsm", {});
+const { UIState } = ChromeUtils.import(
+  "resource://services-sync/UIState.jsm",
+  {}
+);
+const { FxAccountsPairingFlow } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsPairing.jsm",
+  {}
+);
 
 // Use sinon for mocking.
-const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 let flowCounter = 0;
 
@@ -18,10 +24,12 @@ add_task(async function setup() {
   UIState._internal.notifyStateUpdated = () => {};
 
   const origGet = UIState.get;
-  UIState.get = () => { return { status: UIState.STATUS_SIGNED_IN, email: "foo@bar.com" }; };
+  UIState.get = () => {
+    return { status: UIState.STATUS_SIGNED_IN, email: "foo@bar.com" };
+  };
 
   const origStart = FxAccountsPairingFlow.start;
-  FxAccountsPairingFlow.start = ({emitter: e}) => {
+  FxAccountsPairingFlow.start = ({ emitter: e }) => {
     return `https://foo.bar/${flowCounter++}`;
   };
 
@@ -33,15 +41,21 @@ add_task(async function setup() {
 });
 
 add_task(async function testShowsQRCode() {
-  await runWithPairingDialog(async (win) => {
+  await runWithPairingDialog(async win => {
     let doc = win.document;
     let qrContainer = doc.getElementById("qrContainer");
     let qrWrapper = doc.getElementById("qrWrapper");
 
-    await TestUtils.waitForCondition(() => qrWrapper.getAttribute("pairing-status") == "ready");
+    await TestUtils.waitForCondition(
+      () => qrWrapper.getAttribute("pairing-status") == "ready"
+    );
 
     // Verify that a QRcode is being shown.
-    Assert.ok(qrContainer.style.backgroundImage.startsWith(`url("data:image/gif;base64,R0lGODdhOgA6AIAAAAAAAP///ywAAAAAOgA6AAAC/4yPqcvtD6OctNqLs968+w+G4gKU5nkiJYO2JuW6KsDGKEw3a7AbPZ+r4Ry7nzFIQkKKN6Avlzowo78`));
+    Assert.ok(
+      qrContainer.style.backgroundImage.startsWith(
+        `url("data:image/gif;base64,R0lGODdhOgA6AIAAAAAAAP///ywAAAAAOgA6AAAC/4yPqcvtD6OctNqLs968+w+G4gKU5nkiJYO2JuW6KsDGKEw3a7AbPZ+r4Ry7nzFIQkKKN6Avlzowo78`
+      )
+    );
 
     // Close the dialog.
     let promiseUnloaded = BrowserTestUtils.waitForEvent(win, "unload");
@@ -54,12 +68,16 @@ add_task(async function testShowsQRCode() {
 
 add_task(async function testCantShowQrCode() {
   const origStart = FxAccountsPairingFlow.start;
-  FxAccountsPairingFlow.start = async () => { throw new Error("boom"); };
-  await runWithPairingDialog(async (win) => {
+  FxAccountsPairingFlow.start = async () => {
+    throw new Error("boom");
+  };
+  await runWithPairingDialog(async win => {
     let doc = win.document;
     let qrWrapper = doc.getElementById("qrWrapper");
 
-    await TestUtils.waitForCondition(() => qrWrapper.getAttribute("pairing-status") == "error");
+    await TestUtils.waitForCondition(
+      () => qrWrapper.getAttribute("pairing-status") == "error"
+    );
 
     // Close the dialog.
     let promiseUnloaded = BrowserTestUtils.waitForEvent(win, "unload");
@@ -72,11 +90,13 @@ add_task(async function testCantShowQrCode() {
 });
 
 add_task(async function testSwitchToWebContent() {
-  await runWithPairingDialog(async (win) => {
+  await runWithPairingDialog(async win => {
     let doc = win.document;
     let qrWrapper = doc.getElementById("qrWrapper");
 
-    await TestUtils.waitForCondition(() => qrWrapper.getAttribute("pairing-status") == "ready");
+    await TestUtils.waitForCondition(
+      () => qrWrapper.getAttribute("pairing-status") == "ready"
+    );
 
     const spySwitchURL = sinon.spy(win.gFxaPairDeviceDialog, "_switchToUrl");
     const emitter = win.gFxaPairDeviceDialog._emitter;
@@ -87,16 +107,20 @@ add_task(async function testSwitchToWebContent() {
 });
 
 add_task(async function testError() {
-  await runWithPairingDialog(async (win) => {
+  await runWithPairingDialog(async win => {
     let doc = win.document;
     let qrWrapper = doc.getElementById("qrWrapper");
 
-    await TestUtils.waitForCondition(() => qrWrapper.getAttribute("pairing-status") == "ready");
+    await TestUtils.waitForCondition(
+      () => qrWrapper.getAttribute("pairing-status") == "ready"
+    );
 
     const emitter = win.gFxaPairDeviceDialog._emitter;
     emitter.emit("view:Error");
 
-    await TestUtils.waitForCondition(() => qrWrapper.getAttribute("pairing-status") == "error");
+    await TestUtils.waitForCondition(
+      () => qrWrapper.getAttribute("pairing-status") == "error"
+    );
 
     // Close the dialog.
     let promiseUnloaded = BrowserTestUtils.waitForEvent(win, "unload");
@@ -108,10 +132,11 @@ add_task(async function testError() {
 });
 
 async function runWithPairingDialog(test) {
-  await openPreferencesViaOpenPreferencesAPI("paneSync", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("paneSync", { leaveOpen: true });
 
-  let promiseSubDialogLoaded =
-      promiseLoadSubDialog("chrome://browser/content/preferences/in-content/fxaPairDevice.xul");
+  let promiseSubDialogLoaded = promiseLoadSubDialog(
+    "chrome://browser/content/preferences/in-content/fxaPairDevice.xul"
+  );
   gBrowser.contentWindow.gSyncPane.pairAnotherDevice();
 
   let win = await promiseSubDialogLoaded;

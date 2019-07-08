@@ -1,15 +1,16 @@
 // This file tests bug 250375
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserv.identity.primaryPort + "/";
 });
 
 function inChildProcess() {
-  return Cc["@mozilla.org/xre/app-info;1"]
-           .getService(Ci.nsIXULRuntime)
-           .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;  
+  return (
+    Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
+      .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
+  );
 }
 
 function check_request_header(chan, name, value) {
@@ -17,7 +18,12 @@ function check_request_header(chan, name, value) {
   try {
     chanValue = chan.getRequestHeader(name);
   } catch (e) {
-    do_throw("Expected to find header '" + name + "' but didn't find it, got exception: " + e);
+    do_throw(
+      "Expected to find header '" +
+        name +
+        "' but didn't find it, got exception: " +
+        e
+    );
   }
   dump("Value for header '" + name + "' is '" + chanValue + "'\n");
   Assert.equal(chanValue, value);
@@ -51,12 +57,14 @@ var listener = {
     do_test_finished();
   },
 
-  _iteration: 1
+  _iteration: 1,
 };
 
 function makeChan() {
-  return NetUtil.newChannel({uri: URL, loadUsingSystemPrincipal: true})
-                .QueryInterface(Ci.nsIHttpChannel);
+  return NetUtil.newChannel({
+    uri: URL,
+    loadUsingSystemPrincipal: true,
+  }).QueryInterface(Ci.nsIHttpChannel);
 }
 
 var httpserv = null;
@@ -65,7 +73,10 @@ function run_test() {
   // Allow all cookies if the pref service is available in this process.
   if (!inChildProcess()) {
     Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
-    Services.prefs.setBoolPref("network.cookieSettings.unblocked_for_testing", true);
+    Services.prefs.setBoolPref(
+      "network.cookieSettings.unblocked_for_testing",
+      true
+    );
   }
 
   httpserv = new HttpServer();
@@ -83,8 +94,9 @@ function run_test() {
 function run_test_continued() {
   var chan = makeChan();
 
-  var cookServ = Cc["@mozilla.org/cookieService;1"]
-                   .getService(Ci.nsICookieService);
+  var cookServ = Cc["@mozilla.org/cookieService;1"].getService(
+    Ci.nsICookieService
+  );
   var cookie2 = "C2=V2";
   cookServ.setCookieString(chan.URI, null, cookie2, chan);
   chan.setRequestHeader("Cookie", cookieVal, false);

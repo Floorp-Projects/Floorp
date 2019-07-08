@@ -6,7 +6,7 @@
 // Functions that are automatically loaded as frame scripts for
 // timeline tests.
 
-const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 // Functions that look like mochitest functions but forward to the
 // browser process.
@@ -14,7 +14,8 @@ const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 this.ok = function(value, message) {
   sendAsyncMessage("browser:test:ok", {
     value: !!value,
-    message});
+    message,
+  });
 };
 
 this.is = function(v1, v2, message) {
@@ -22,7 +23,7 @@ this.is = function(v1, v2, message) {
 };
 
 this.info = function(message) {
-  sendAsyncMessage("browser:test:info", {message});
+  sendAsyncMessage("browser:test:info", { message });
 };
 
 this.finish = function() {
@@ -54,7 +55,7 @@ this.timelineContentTest = function(tests) {
     info("Start recording");
     docShell.recordProfileTimelineMarkers = true;
 
-    for (let {desc, searchFor, setup, check} of tests) {
+    for (let { desc, searchFor, setup, check } of tests) {
       info("Running test: " + desc);
 
       info("Flushing the previous markers if any");
@@ -81,7 +82,7 @@ this.timelineContentTest = function(tests) {
 };
 
 function timelineWaitForMarkers(docshell, searchFor) {
-  if (typeof(searchFor) == "string") {
+  if (typeof searchFor == "string") {
     let searchForString = searchFor;
     let f = function(markers) {
       return markers.some(m => m.name == searchForString);

@@ -47,17 +47,26 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
-  const {autocompletePopup} = jsterm;
+  const { jsterm } = hud;
+  const { autocompletePopup } = jsterm;
 
   for (const helper of HELPERS) {
     await setInputValueForAutocompletion(hud, helper);
-    const autocompleteItems = getPopupLabels(autocompletePopup).filter(l => l === helper);
-    is(autocompleteItems.length, 1,
-      `There's no duplicated "${helper}" item in the autocomplete popup`);
+    const autocompleteItems = getPopupLabels(autocompletePopup).filter(
+      l => l === helper
+    );
+    is(
+      autocompleteItems.length,
+      1,
+      `There's no duplicated "${helper}" item in the autocomplete popup`
+    );
 
     await executeAndWaitForMessage(
-      hud, `${helper}()`, `"${PREFIX + helper}"`, ".result");
+      hud,
+      `${helper}()`,
+      `"${PREFIX + helper}"`,
+      ".result"
+    );
     ok(true, `output is correct for ${helper}()`);
   }
 }

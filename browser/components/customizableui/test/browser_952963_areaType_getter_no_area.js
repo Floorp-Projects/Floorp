@@ -22,7 +22,9 @@ function checkAreaType(widget) {
 add_task(async function() {
   // Using the ID before it's been created will imply a XUL wrapper; we'll test
   // an API-based wrapper below
-  let toolbarNode = createToolbarWithPlacements(kToolbarName, [kUnregisterAreaTestWidget]);
+  let toolbarNode = createToolbarWithPlacements(kToolbarName, [
+    kUnregisterAreaTestWidget,
+  ]);
   CustomizableUI.unregisterArea(kToolbarName);
   toolbarNode.remove();
 
@@ -32,10 +34,17 @@ add_task(async function() {
   w = CustomizableUI.getWidget(kTestWidget);
   checkAreaType(w);
 
-  let spec = {id: kUnregisterAreaTestWidget, type: "button", removable: true,
-              label: "areaType test", tooltiptext: "areaType test"};
+  let spec = {
+    id: kUnregisterAreaTestWidget,
+    type: "button",
+    removable: true,
+    label: "areaType test",
+    tooltiptext: "areaType test",
+  };
   CustomizableUI.createWidget(spec);
-  toolbarNode = createToolbarWithPlacements(kToolbarName, [kUnregisterAreaTestWidget]);
+  toolbarNode = createToolbarWithPlacements(kToolbarName, [
+    kUnregisterAreaTestWidget,
+  ]);
   CustomizableUI.unregisterArea(kToolbarName);
   toolbarNode.remove();
   w = CustomizableUI.getWidget(spec.id);
@@ -49,4 +58,3 @@ add_task(async function() {
 add_task(async function asyncCleanup() {
   await resetCustomization();
 });
-

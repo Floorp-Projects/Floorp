@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 function PetrolEngine() {}
 PetrolEngine.prototype.name = "petrol";
@@ -28,7 +28,7 @@ add_task(async function test_basics() {
 
   let engines = await manager.getAll();
   Assert.equal(engines.length, 0);
-  Assert.equal((await manager.get("dummy")), undefined);
+  Assert.equal(await manager.get("dummy"), undefined);
 
   _("Register an engine");
   await manager.register(DummyEngine);
@@ -41,7 +41,7 @@ add_task(async function test_basics() {
 
   _("Register an already registered engine is ignored");
   await manager.register(DummyEngine);
-  Assert.equal((await manager.get("dummy")), dummy);
+  Assert.equal(await manager.get("dummy"), dummy);
 
   _("Register multiple engines in one go");
   await manager.register([PetrolEngine, DieselEngine]);
@@ -94,7 +94,7 @@ add_task(async function test_basics() {
 
   _("Unregister an engine by name");
   await manager.unregister("dummy");
-  Assert.equal((await manager.get("dummy")), undefined);
+  Assert.equal(await manager.get("dummy"), undefined);
   engines = await manager.getAll();
   Assert.equal(engines.length, 2);
   Assert.equal(engines.indexOf(dummy), -1);
@@ -107,7 +107,7 @@ add_task(async function test_basics() {
   Assert.ok(actual instanceof SyncEngine);
 
   await manager.unregister(actual);
-  Assert.equal((await manager.get("actual")), undefined);
+  Assert.equal(await manager.get("actual"), undefined);
 });
 
 class AutoEngine {
@@ -138,11 +138,15 @@ class AutoEngine {
 }
 
 class GasolineEngine extends AutoEngine {
-  constructor() { super("gasoline"); }
+  constructor() {
+    super("gasoline");
+  }
 }
 
 class ElectricEngine extends AutoEngine {
-  constructor() { super("electric"); }
+  constructor() {
+    super("electric");
+  }
 }
 
 add_task(async function test_alternates() {
@@ -153,10 +157,12 @@ add_task(async function test_alternates() {
   const prefName = "services.sync.engines.automobile.electric";
   Services.prefs.clearUserPref(prefName);
 
-  await manager.registerAlternatives("automobile",
-                                     prefName,
-                                     ElectricEngine,
-                                     GasolineEngine);
+  await manager.registerAlternatives(
+    "automobile",
+    prefName,
+    ElectricEngine,
+    GasolineEngine
+  );
 
   let gasEngine = manager.get("automobile");
   Assert.equal(gasEngine.type, "gasoline");
@@ -222,4 +228,3 @@ add_task(async function test_alternates() {
   Assert.ok(newGasEngine.finalizeCalled);
   Assert.deepEqual(Object.keys(manager._altEngineInfo), []);
 });
-

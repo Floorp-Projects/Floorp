@@ -10,16 +10,20 @@
 add_task(async function() {
   let bms = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
-    children: [{
-      title: "bookmark",
-      url: "http://mozilla.org",
-    }, {
-      title: "f2",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    }, {
-      title: "f1",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    }],
+    children: [
+      {
+        title: "bookmark",
+        url: "http://mozilla.org",
+      },
+      {
+        title: "f2",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      },
+      {
+        title: "f1",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      },
+    ],
   });
 
   let bookmark = bms[0];
@@ -36,11 +40,14 @@ add_task(async function() {
 
   // Remove the bookmarks, then restore the backup.
   await PlacesUtils.bookmarks.remove(folder1);
-  await BookmarkJSONUtils.importFromFile((await PlacesBackups.getMostRecentBackup()),
-                                         { replace: true });
+  await BookmarkJSONUtils.importFromFile(
+    await PlacesBackups.getMostRecentBackup(),
+    { replace: true }
+  );
 
   info("Checking first level");
-  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid).root;
+  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid)
+    .root;
   let level1 = root.getChild(0);
   Assert.equal(level1.title, "f1");
   info("Checking second level");

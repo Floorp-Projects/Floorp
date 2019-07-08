@@ -50,14 +50,20 @@ async function search(aFolderGuid, aSearchStr) {
   // content tree properly.
   if (aFolderGuid) {
     folderTree.selectItems([aFolderGuid]);
-    Assert.notEqual(folderTree.selectedNode, null,
-       "Sanity check: left pane tree should have selection after selecting!");
+    Assert.notEqual(
+      folderTree.selectedNode,
+      null,
+      "Sanity check: left pane tree should have selection after selecting!"
+    );
 
     // The downloads folder never quite matches the url of the contentTree,
     // probably due to the way downloads are loaded.
     if (aFolderGuid !== PlacesUtils.virtualDownloadsGuid) {
-      Assert.equal(folderTree.selectedNode.uri, contentTree.place,
-         "Content tree's folder should be what was selected in the left pane");
+      Assert.equal(
+        folderTree.selectedNode.uri,
+        contentTree.place,
+        "Content tree's folder should be what was selected in the left pane"
+      );
     }
   }
 
@@ -67,24 +73,40 @@ async function search(aFolderGuid, aSearchStr) {
   searchBox.value = aSearchStr;
   gLibrary.PlacesSearchBox.search(searchBox.value);
   let query = {};
-  PlacesUtils.history.queryStringToQuery(contentTree.result.root.uri, query, {});
+  PlacesUtils.history.queryStringToQuery(
+    contentTree.result.root.uri,
+    query,
+    {}
+  );
   if (aSearchStr) {
-    Assert.equal(query.value.searchTerms, aSearchStr,
-      "Content tree's searchTerms should be text in search box");
+    Assert.equal(
+      query.value.searchTerms,
+      aSearchStr,
+      "Content tree's searchTerms should be text in search box"
+    );
   } else {
-    Assert.equal(query.value.hasSearchTerms, false,
-      "Content tree's searchTerms should not exist after search reset");
+    Assert.equal(
+      query.value.hasSearchTerms,
+      false,
+      "Content tree's searchTerms should not exist after search reset"
+    );
   }
 }
 
 add_task(async function test() {
   // Add visits, a bookmark and a tag.
-  await PlacesTestUtils.addVisits(
-    [{ uri: Services.io.newURI(TEST_URL), visitDate: Date.now() * 1000,
-       transition: PlacesUtils.history.TRANSITION_TYPED },
-     { uri: Services.io.newURI(TEST_DOWNLOAD_URL), visitDate: Date.now() * 1000,
-       transition: PlacesUtils.history.TRANSITION_DOWNLOAD }]
-    );
+  await PlacesTestUtils.addVisits([
+    {
+      uri: Services.io.newURI(TEST_URL),
+      visitDate: Date.now() * 1000,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
+    },
+    {
+      uri: Services.io.newURI(TEST_DOWNLOAD_URL),
+      visitDate: Date.now() * 1000,
+      transition: PlacesUtils.history.TRANSITION_DOWNLOAD,
+    },
+  ]);
 
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,

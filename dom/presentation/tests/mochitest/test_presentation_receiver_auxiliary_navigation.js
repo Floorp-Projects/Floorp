@@ -1,7 +1,11 @@
 "use strict";
 
-var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("PresentationSessionChromeScript.js"));
-var receiverUrl = SimpleTest.getTestFileURL("file_presentation_receiver_auxiliary_navigation.html");
+var gScript = SpecialPowers.loadChromeScript(
+  SimpleTest.getTestFileURL("PresentationSessionChromeScript.js")
+);
+var receiverUrl = SimpleTest.getTestFileURL(
+  "file_presentation_receiver_auxiliary_navigation.html"
+);
 
 var obs = SpecialPowers.Services.obs;
 
@@ -16,7 +20,9 @@ function setup() {
   iframe.setAttribute("src", receiverUrl);
 
   // This event is triggered when the iframe calls "postMessage".
-  iframe.addEventListener("mozbrowsershowmodalprompt", function listener(aEvent) {
+  iframe.addEventListener("mozbrowsershowmodalprompt", function listener(
+    aEvent
+  ) {
     var message = aEvent.detail.message;
     if (/^OK /.exec(message)) {
       ok(true, "Message from iframe: " + message);
@@ -44,11 +50,17 @@ function setup() {
 }
 
 function teardown() {
-  gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
-    gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
-    gScript.destroy();
-    SimpleTest.finish();
-  });
+  gScript.addMessageListener(
+    "teardown-complete",
+    function teardownCompleteHandler() {
+      gScript.removeMessageListener(
+        "teardown-complete",
+        teardownCompleteHandler
+      );
+      gScript.destroy();
+      SimpleTest.finish();
+    }
+  );
 
   gScript.sendAsyncMessage("teardown");
 }
@@ -58,15 +70,24 @@ function runTests() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPermissions([
-  {type: "presentation-device-manage", allow: false, context: document},
-  {type: "browser", allow: true, context: document},
-], function() {
-  SpecialPowers.pushPrefEnv({ "set": [["dom.presentation.enabled", true],
-                                      ["dom.presentation.controller.enabled", true],
-                                      ["dom.presentation.receiver.enabled", true],
-                                      ["dom.mozBrowserFramesEnabled", true],
-                                      ["network.disable.ipc.security", true],
-                                      ["dom.presentation.session_transport.data_channel.enable", false]]},
-                            runTests);
-});
+SpecialPowers.pushPermissions(
+  [
+    { type: "presentation-device-manage", allow: false, context: document },
+    { type: "browser", allow: true, context: document },
+  ],
+  function() {
+    SpecialPowers.pushPrefEnv(
+      {
+        set: [
+          ["dom.presentation.enabled", true],
+          ["dom.presentation.controller.enabled", true],
+          ["dom.presentation.receiver.enabled", true],
+          ["dom.mozBrowserFramesEnabled", true],
+          ["network.disable.ipc.security", true],
+          ["dom.presentation.session_transport.data_channel.enable", false],
+        ],
+      },
+      runTests
+    );
+  }
+);

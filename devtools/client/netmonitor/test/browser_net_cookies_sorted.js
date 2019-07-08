@@ -21,24 +21,48 @@ add_task(async function() {
   await wait;
 
   wait = waitForDOM(document, ".headers-overview");
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
   await wait;
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#cookies-tab"));
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#cookies-tab")
+  );
 
   info("Check if Request-Cookies and Response-Cookies are sorted");
-  const expectedLabelValues = ["Response cookies", "bob", "httpOnly", "value",
-                               "foo", "httpOnly", "value", "tom", "httpOnly", "value",
-                               "Request cookies", "bob", "foo", "tom"];
+  const expectedLabelValues = [
+    "Response cookies",
+    "bob",
+    "httpOnly",
+    "value",
+    "foo",
+    "httpOnly",
+    "value",
+    "tom",
+    "httpOnly",
+    "value",
+    "Request cookies",
+    "bob",
+    "foo",
+    "tom",
+  ];
   const labelCells = document.querySelectorAll(".treeLabelCell");
   labelCells.forEach(function(val, index) {
-    is(val.innerText, expectedLabelValues[index],
-    "Actual label value " + val.innerText + " not equal to expected label value "
-    + expectedLabelValues[index]);
+    is(
+      val.innerText,
+      expectedLabelValues[index],
+      "Actual label value " +
+        val.innerText +
+        " not equal to expected label value " +
+        expectedLabelValues[index]
+    );
   });
   await teardown(monitor);
 });

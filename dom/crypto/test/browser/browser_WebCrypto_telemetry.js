@@ -8,21 +8,30 @@
 
 const WEBCRYPTO_ALG_PROBE = "WEBCRYPTO_ALG";
 
-ChromeUtils.defineModuleGetter(this, "TelemetryTestUtils",
-  "resource://testing-common/TelemetryTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryTestUtils",
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
 add_task(async function ecdh_key() {
   let hist = TelemetryTestUtils.getAndClearHistogram(WEBCRYPTO_ALG_PROBE);
 
   let alg = { name: "ECDH", namedCurve: "P-256" };
 
-  let x = await crypto.subtle.generateKey(alg, false, ["deriveKey", "deriveBits"]);
-  let data = await crypto.subtle.deriveBits({ name: "ECDH", public: x.publicKey }, x.privateKey, 128);
+  let x = await crypto.subtle.generateKey(alg, false, [
+    "deriveKey",
+    "deriveBits",
+  ]);
+  let data = await crypto.subtle.deriveBits(
+    { name: "ECDH", public: x.publicKey },
+    x.privateKey,
+    128
+  );
   is(data.byteLength, 128 / 8, "Should be 16 bytes derived");
 
   TelemetryTestUtils.assertHistogram(hist, 20, 1);
 });
-
 
 add_task(async function dh_key() {
   let hist = TelemetryTestUtils.getAndClearHistogram(WEBCRYPTO_ALG_PROBE);
@@ -33,8 +42,15 @@ add_task(async function dh_key() {
     generator: new Uint8Array([0x02]),
   };
 
-  let x = await crypto.subtle.generateKey(alg, false, ["deriveKey", "deriveBits"]);
-  let data = await crypto.subtle.deriveBits({ name: "DH", public: x.publicKey }, x.privateKey, 128);
+  let x = await crypto.subtle.generateKey(alg, false, [
+    "deriveKey",
+    "deriveBits",
+  ]);
+  let data = await crypto.subtle.deriveBits(
+    { name: "DH", public: x.publicKey },
+    x.privateKey,
+    128
+  );
   is(data.byteLength, 128 / 8, "Should be 16 bytes derived");
 
   TelemetryTestUtils.assertHistogram(hist, 24, 1);

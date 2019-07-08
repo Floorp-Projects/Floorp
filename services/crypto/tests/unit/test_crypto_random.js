@@ -34,17 +34,17 @@ add_task(async function test_crypto_random() {
   salt = cryptoSvc.generateRandomBytes(16);
   Assert.equal(salt.length, 24);
 
-
   // Test random key generation
   var keydata, keydata2, iv;
 
-  keydata  = await cryptoSvc.generateRandomKey();
+  keydata = await cryptoSvc.generateRandomKey();
   Assert.equal(keydata.length, 44);
   keydata2 = await cryptoSvc.generateRandomKey();
   Assert.notEqual(keydata, keydata2); // sanity check for randomness
   iv = cryptoSvc.generateRandomIV();
   Assert.equal(iv.length, 24);
 
-  if (this.gczeal)
+  if (this.gczeal) {
     gczeal(0);
+  }
 });

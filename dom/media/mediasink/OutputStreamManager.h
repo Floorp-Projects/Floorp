@@ -52,7 +52,7 @@ class OutputStreamData {
   const RefPtr<OutputStreamManager> mManager;
   const RefPtr<AbstractThread> mAbstractMainThread;
   // The DOMMediaStream we add tracks to and represent.
-  const RefPtr<DOMMediaStream> mDOMStream;
+  const WeakPtr<DOMMediaStream> mDOMStream;
   // The input stream of mDOMStream.
   const RefPtr<ProcessedMediaStream> mInputStream;
 
@@ -61,7 +61,7 @@ class OutputStreamData {
   const RefPtr<MediaInputPort> mPort;
 
   // Tracks that have been added and not yet removed.
-  nsTArray<RefPtr<dom::MediaStreamTrack>> mTracks;
+  nsTArray<WeakPtr<dom::MediaStreamTrack>> mTracks;
 };
 
 class OutputStreamManager {
@@ -144,6 +144,9 @@ class OutputStreamManager {
              aLiveTrack.second() == aOther.second();
     }
   };
+
+  // Goes through mStreams and removes any entries that have been destroyed.
+  void AutoRemoveDestroyedStreams();
 
   // Remove aTrackID from all output streams.
   void RemoveTrack(TrackID aTrackID);

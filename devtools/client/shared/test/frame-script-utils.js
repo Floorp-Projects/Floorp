@@ -5,7 +5,7 @@
 /* eslint-env browser */
 /* global addMessageListener, sendAsyncMessage, content */
 "use strict";
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const Services = require("Services");
 
 addMessageListener("devtools:test:history", function({ data }) {
@@ -56,9 +56,13 @@ function promiseXHR(data) {
       url += "?devtools-cachebust=" + Math.random();
     }
 
-    xhr.addEventListener("loadend", function(event) {
-      resolve({ status: xhr.status, response: xhr.response });
-    }, {once: true});
+    xhr.addEventListener(
+      "loadend",
+      function(event) {
+        resolve({ status: xhr.status, response: xhr.response });
+      },
+      { once: true }
+    );
 
     xhr.open(method, url);
 
@@ -99,7 +103,7 @@ function promiseWS(data) {
     const socket = new content.WebSocket(url);
 
     /* Since we only use HTTP server to mock websocket, so just ignore the error */
-    socket.onclose = (e) => {
+    socket.onclose = e => {
       socket.close();
       resolve({
         status: 101,
@@ -107,7 +111,7 @@ function promiseWS(data) {
       });
     };
 
-    socket.onerror = (e) => {
+    socket.onerror = e => {
       socket.close();
       resolve({
         status: 101,
@@ -178,9 +182,13 @@ addMessageListener("devtools:test:eval", function({ data }) {
   });
 });
 
-addEventListener("load", function() {
-  sendAsyncMessage("devtools:test:load");
-}, true);
+addEventListener(
+  "load",
+  function() {
+    sendAsyncMessage("devtools:test:load");
+  },
+  true
+);
 
 /**
  * Set a given style property value on a node.
@@ -191,7 +199,7 @@ addEventListener("load", function() {
  * - {String} propertyValue The value for the property.
  */
 addMessageListener("devtools:test:setStyle", function(msg) {
-  const {selector, propertyName, propertyValue} = msg.data;
+  const { selector, propertyName, propertyValue } = msg.data;
   const node = superQuerySelector(selector);
   if (!node) {
     return;
@@ -215,7 +223,7 @@ addMessageListener("devtools:test:setStyle", function(msg) {
  *            }
  */
 addMessageListener("devtools:test:setMultipleStyles", function(msg) {
-  const {selector, properties} = msg.data;
+  const { selector, properties } = msg.data;
   const node = superQuerySelector(selector);
   if (!node) {
     return;
@@ -238,7 +246,7 @@ addMessageListener("devtools:test:setMultipleStyles", function(msg) {
  * - {String} attributeValue The value for the attribute.
  */
 addMessageListener("devtools:test:setAttribute", function(msg) {
-  const {selector, attributeName, attributeValue} = msg.data;
+  const { selector, attributeName, attributeValue } = msg.data;
   const node = superQuerySelector(selector);
   if (!node) {
     return;

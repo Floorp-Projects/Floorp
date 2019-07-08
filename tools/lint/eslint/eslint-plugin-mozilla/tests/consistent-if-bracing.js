@@ -17,7 +17,7 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 8 } });
 // ------------------------------------------------------------------------------
 
 function invalidCode(code) {
-  return {code, errors: [{messageId: "consistentIfBracing"}]};
+  return { code, errors: [{ messageId: "consistentIfBracing" }] };
 }
 
 ruleTester.run("consistent-if-bracing", rule, {

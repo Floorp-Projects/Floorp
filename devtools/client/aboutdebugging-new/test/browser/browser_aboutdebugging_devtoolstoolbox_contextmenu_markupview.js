@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-collapsibilities.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-collapsibilities.js",
+  this
+);
 
 /**
  * Test context menu of markup view on about:devtools-toolbox page.
@@ -15,8 +18,11 @@ add_task(async function() {
 
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
-  const { devtoolsTab, devtoolsWindow } =
-    await openAboutDevtoolsToolbox(document, tab, window);
+  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
+    document,
+    tab,
+    window
+  );
 
   info("Select inspector tool");
   const toolbox = getToolbox(devtoolsWindow);
@@ -24,9 +30,11 @@ add_task(async function() {
 
   info("Show context menu of markup view");
   const markupDocument = toolbox.getPanel("inspector").markup.doc;
-  EventUtils.synthesizeMouseAtCenter(markupDocument.body,
-                                     { type: "contextmenu" },
-                                     markupDocument.ownerGlobal);
+  EventUtils.synthesizeMouseAtCenter(
+    markupDocument.body,
+    { type: "contextmenu" },
+    markupDocument.ownerGlobal
+  );
 
   info("Check whether proper context menu of markup view will be shown");
   await waitUntil(() => toolbox.topDoc.querySelector("#node-menu-edithtml"));

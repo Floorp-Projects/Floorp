@@ -1,4 +1,4 @@
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 var httpserver = new HttpServer();
 
 var ios;
@@ -16,120 +16,132 @@ var ios;
 // the third time the right data is returned.
 
 var listener_3 = {
-    // this listener is used to process the the request made after
-    // the cache invalidation. it expects to see the 'right data'
+  // this listener is used to process the the request made after
+  // the cache invalidation. it expects to see the 'right data'
 
-    QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIStreamListener",
+    "nsIRequestObserver",
+  ]),
 
-    onStartRequest: function test_onStartR(request) {},
-    
-    onDataAvailable: function test_ODA(request, inputStream,
-                                       offset, count) {
-	var data = new BinaryInputStream(inputStream).readByteArray(count);
-      
-	Assert.equal(data[0], "B".charCodeAt(0));
-    },
+  onStartRequest: function test_onStartR(request) {},
 
-    onStopRequest: function test_onStopR(request, status) {
-	httpserver.stop(do_test_finished);
-    }
+  onDataAvailable: function test_ODA(request, inputStream, offset, count) {
+    var data = new BinaryInputStream(inputStream).readByteArray(count);
+
+    Assert.equal(data[0], "B".charCodeAt(0));
+  },
+
+  onStopRequest: function test_onStopR(request, status) {
+    httpserver.stop(do_test_finished);
+  },
 };
 
 XPCOMUtils.defineLazyGetter(this, "listener_2", function() {
-    return {
+  return {
     // this listener is used to process the revalidation of the
     // corrupted cache entry. its revalidation prompts it to be cleaned
 
-    QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
+    QueryInterface: ChromeUtils.generateQI([
+      "nsIStreamListener",
+      "nsIRequestObserver",
+    ]),
 
     onStartRequest: function test_onStartR(request) {},
-    
-    onDataAvailable: function test_ODA(request, inputStream,
-                                       offset, count) {
-	var data = new BinaryInputStream(inputStream).readByteArray(count);
-      
-	// This is 'A' from a cache revalidation, but that reval will clean the cache
-	// because of mismatched last-modified response headers
-	
-	Assert.equal(data[0], "A".charCodeAt(0));
+
+    onDataAvailable: function test_ODA(request, inputStream, offset, count) {
+      var data = new BinaryInputStream(inputStream).readByteArray(count);
+
+      // This is 'A' from a cache revalidation, but that reval will clean the cache
+      // because of mismatched last-modified response headers
+
+      Assert.equal(data[0], "A".charCodeAt(0));
     },
 
     onStopRequest: function test_onStopR(request, status) {
-    var channel = request.QueryInterface(Ci.nsIHttpChannel);
-    var chan = NetUtil.newChannel({
-      uri: "http://localhost:" + httpserver.identity.primaryPort + "/test1",
-      loadUsingSystemPrincipal: true
-    });
-    chan.asyncOpen(listener_3);
-    }
-};
+      var channel = request.QueryInterface(Ci.nsIHttpChannel);
+      var chan = NetUtil.newChannel({
+        uri: "http://localhost:" + httpserver.identity.primaryPort + "/test1",
+        loadUsingSystemPrincipal: true,
+      });
+      chan.asyncOpen(listener_3);
+    },
+  };
 });
 
 XPCOMUtils.defineLazyGetter(this, "listener_1", function() {
-    return {
+  return {
     // this listener processes the initial request from a empty cache.
     // the server responds with the wrong data ('A')
 
-    QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
+    QueryInterface: ChromeUtils.generateQI([
+      "nsIStreamListener",
+      "nsIRequestObserver",
+    ]),
 
     onStartRequest: function test_onStartR(request) {},
-    
-    onDataAvailable: function test_ODA(request, inputStream,
-                                       offset, count) {
-	var data = new BinaryInputStream(inputStream).readByteArray(count);
-	Assert.equal(data[0], "A".charCodeAt(0));
+
+    onDataAvailable: function test_ODA(request, inputStream, offset, count) {
+      var data = new BinaryInputStream(inputStream).readByteArray(count);
+      Assert.equal(data[0], "A".charCodeAt(0));
     },
 
     onStopRequest: function test_onStopR(request, status) {
-    var channel = request.QueryInterface(Ci.nsIHttpChannel);
-    var chan = NetUtil.newChannel({
-      uri: "http://localhost:" + httpserver.identity.primaryPort + "/test1",
-      loadUsingSystemPrincipal: true
-    });
-	  chan.asyncOpen(listener_2);
-    }
-};
+      var channel = request.QueryInterface(Ci.nsIHttpChannel);
+      var chan = NetUtil.newChannel({
+        uri: "http://localhost:" + httpserver.identity.primaryPort + "/test1",
+        loadUsingSystemPrincipal: true,
+      });
+      chan.asyncOpen(listener_2);
+    },
+  };
 });
 
 function run_test() {
-    do_get_profile();
-    ios = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService);
+  do_get_profile();
+  ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
-    evict_cache_entries();
+  evict_cache_entries();
 
-    httpserver.registerPathHandler("/test1", handler);
-    httpserver.start(-1);
+  httpserver.registerPathHandler("/test1", handler);
+  httpserver.start(-1);
 
-    var port = httpserver.identity.primaryPort;
-    var chan = NetUtil.newChannel({
-      uri: "http://localhost:" + port + "/test1",
-      loadUsingSystemPrincipal: true
-    });
-    chan.asyncOpen(listener_1);
+  var port = httpserver.identity.primaryPort;
+  var chan = NetUtil.newChannel({
+    uri: "http://localhost:" + port + "/test1",
+    loadUsingSystemPrincipal: true,
+  });
+  chan.asyncOpen(listener_1);
 
-    do_test_pending();
+  do_test_pending();
 }
 
-var iter=0;
+var iter = 0;
 function handler(metadata, response) {
-    iter++;
-    if (metadata.hasHeader("If-Modified-Since")) {
-	response.setStatusLine(metadata.httpVersion, 304, "Not Modified");
-	response.setHeader("Last-Modified", "Tue, 15 Nov 1994 12:45:26 GMT", false);
-    }    
-    else {
-	response.setStatusLine(metadata.httpVersion, 200, "OK");
-	response.setHeader("Cache-Control", "max-age=0", false)
-	if (iter == 1) {
-	    // simulated wrong response
-	    response.setHeader("Last-Modified", "Wed, 16 Nov 1994 00:00:00 GMT", false);
-	    response.bodyOutputStream.write("A", 1);
-	}
-	if (iter == 3) {
-	    // 'correct' response
-	    response.setHeader("Last-Modified", "Tue, 15 Nov 1994 12:45:26 GMT", false);
-	    response.bodyOutputStream.write("B", 1);
-	}
+  iter++;
+  if (metadata.hasHeader("If-Modified-Since")) {
+    response.setStatusLine(metadata.httpVersion, 304, "Not Modified");
+    response.setHeader("Last-Modified", "Tue, 15 Nov 1994 12:45:26 GMT", false);
+  } else {
+    response.setStatusLine(metadata.httpVersion, 200, "OK");
+    response.setHeader("Cache-Control", "max-age=0", false);
+    if (iter == 1) {
+      // simulated wrong response
+      response.setHeader(
+        "Last-Modified",
+        "Wed, 16 Nov 1994 00:00:00 GMT",
+        false
+      );
+      response.bodyOutputStream.write("A", 1);
     }
+    if (iter == 3) {
+      // 'correct' response
+      response.setHeader(
+        "Last-Modified",
+        "Tue, 15 Nov 1994 12:45:26 GMT",
+        false
+      );
+      response.bodyOutputStream.write("B", 1);
+    }
+  }
 }

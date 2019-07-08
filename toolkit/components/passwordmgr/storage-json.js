@@ -8,21 +8,34 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "LoginHelper",
-                               "resource://gre/modules/LoginHelper.jsm");
-ChromeUtils.defineModuleGetter(this, "LoginImport",
-                               "resource://gre/modules/LoginImport.jsm");
-ChromeUtils.defineModuleGetter(this, "LoginStore",
-                               "resource://gre/modules/LoginStore.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginHelper",
+  "resource://gre/modules/LoginHelper.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginImport",
+  "resource://gre/modules/LoginImport.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginStore",
+  "resource://gre/modules/LoginStore.jsm"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
-                                   "@mozilla.org/uuid-generator;1",
-                                   "nsIUUIDGenerator");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gUUIDGenerator",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
 this.LoginManagerStorage_json = function() {};
 
@@ -30,13 +43,16 @@ this.LoginManagerStorage_json.prototype = {
   classID: Components.ID("{c00c432d-a0c9-46d7-bef6-9c45b4d07341}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsILoginManagerStorage]),
 
-  _xpcom_factory: XPCOMUtils.generateSingletonFactory(this.LoginManagerStorage_json),
+  _xpcom_factory: XPCOMUtils.generateSingletonFactory(
+    this.LoginManagerStorage_json
+  ),
 
-  __crypto: null,  // nsILoginManagerCrypto service
+  __crypto: null, // nsILoginManagerCrypto service
   get _crypto() {
     if (!this.__crypto) {
-      this.__crypto = Cc["@mozilla.org/login-manager/crypto/SDR;1"].
-                      getService(Ci.nsILoginManagerCrypto);
+      this.__crypto = Cc["@mozilla.org/login-manager/crypto/SDR;1"].getService(
+        Ci.nsILoginManagerCrypto
+      );
     }
     return this.__crypto;
   },
@@ -48,8 +64,7 @@ this.LoginManagerStorage_json.prototype = {
       this._crypto;
 
       // Set the reference to LoginStore synchronously.
-      let jsonPath = OS.Path.join(OS.Constants.Path.profileDir,
-                                  "logins.json");
+      let jsonPath = OS.Path.join(OS.Constants.Path.profileDir, "logins.json");
       this._store = new LoginStore(jsonPath);
 
       return (async () => {
@@ -70,8 +85,10 @@ this.LoginManagerStorage_json.prototype = {
         }
 
         // Import only happens asynchronously.
-        let sqlitePath = OS.Path.join(OS.Constants.Path.profileDir,
-                                      "signons.sqlite");
+        let sqlitePath = OS.Path.join(
+          OS.Constants.Path.profileDir,
+          "signons.sqlite"
+        );
         if (await OS.File.exists(sqlitePath)) {
           let loginImport = new LoginImport(this._store, sqlitePath);
           // Failures during import, for example due to a corrupt
@@ -106,9 +123,9 @@ this.LoginManagerStorage_json.prototype = {
     // Throws if there are bogus values.
     LoginHelper.checkLoginValues(login);
 
-    let [encUsername, encPassword, encType] = preEncrypted ?
-      [login.username, login.password, this._crypto.defaultEncType] :
-      this._encryptLogin(login);
+    let [encUsername, encPassword, encType] = preEncrypted
+      ? [login.username, login.password, this._crypto.defaultEncType]
+      : this._encryptLogin(login);
 
     // Clone the login, so we don't modify the caller's object.
     let loginClone = login.clone();
@@ -121,7 +138,7 @@ this.LoginManagerStorage_json.prototype = {
         // We have an existing GUID, but it's possible that entry is unable
         // to be decrypted - if that's the case we remove the existing one
         // and allow this one to be added.
-        let existing = this._searchLogins({guid})[0];
+        let existing = this._searchLogins({ guid })[0];
         if (this._decryptLogins(existing).length) {
           // Existing item is good, so it's an error to try and re-add it.
           throw new Error("specified GUID already exists");
@@ -153,20 +170,20 @@ this.LoginManagerStorage_json.prototype = {
     }
 
     this._store.data.logins.push({
-      id:                  this._store.data.nextId++,
-      hostname:            loginClone.origin,
-      httpRealm:           loginClone.httpRealm,
-      formSubmitURL:       loginClone.formActionOrigin,
-      usernameField:       loginClone.usernameField,
-      passwordField:       loginClone.passwordField,
-      encryptedUsername:   encUsername,
-      encryptedPassword:   encPassword,
-      guid:                loginClone.guid,
+      id: this._store.data.nextId++,
+      hostname: loginClone.origin,
+      httpRealm: loginClone.httpRealm,
+      formSubmitURL: loginClone.formActionOrigin,
+      usernameField: loginClone.usernameField,
+      passwordField: loginClone.passwordField,
+      encryptedUsername: encUsername,
+      encryptedPassword: encPassword,
+      guid: loginClone.guid,
       encType,
-      timeCreated:         loginClone.timeCreated,
-      timeLastUsed:        loginClone.timeLastUsed,
+      timeCreated: loginClone.timeCreated,
+      timeLastUsed: loginClone.timeLastUsed,
       timePasswordChanged: loginClone.timePasswordChanged,
-      timesUsed:           loginClone.timesUsed,
+      timesUsed: loginClone.timesUsed,
     });
     this._store.saveSoon();
 
@@ -203,16 +220,20 @@ this.LoginManagerStorage_json.prototype = {
     let newLogin = LoginHelper.buildModifiedLogin(oldStoredLogin, newLoginData);
 
     // Check if the new GUID is duplicate.
-    if (newLogin.guid != oldStoredLogin.guid &&
-        !this._isGuidUnique(newLogin.guid)) {
+    if (
+      newLogin.guid != oldStoredLogin.guid &&
+      !this._isGuidUnique(newLogin.guid)
+    ) {
       throw new Error("specified GUID already exists");
     }
 
     // Look for an existing entry in case key properties changed.
     if (!newLogin.matches(oldLogin, true)) {
-      let logins = this.findLogins(newLogin.origin,
-                                   newLogin.formActionOrigin,
-                                   newLogin.httpRealm);
+      let logins = this.findLogins(
+        newLogin.origin,
+        newLogin.formActionOrigin,
+        newLogin.httpRealm
+      );
 
       if (logins.some(login => newLogin.matches(login, true))) {
         throw new Error("This login already exists.");
@@ -268,7 +289,9 @@ this.LoginManagerStorage_json.prototype = {
     if (!logins.length) {
       return [];
     }
-    let ciphertexts = logins.map(l => l.username).concat(logins.map(l => l.password));
+    let ciphertexts = logins
+      .map(l => l.username)
+      .concat(logins.map(l => l.password));
     let plaintexts = await this._crypto.decryptMany(ciphertexts);
     let usernames = plaintexts.slice(0, logins.length);
     let passwords = plaintexts.slice(logins.length);
@@ -324,16 +347,24 @@ this.LoginManagerStorage_json.prototype = {
    * is an array of encrypted nsLoginInfo and ids is an array of associated
    * ids in the database.
    */
-  _searchLogins(matchData, aOptions = {
-    schemeUpgrades: false,
-    acceptDifferentSubdomains: false,
-  }) {
+  _searchLogins(
+    matchData,
+    aOptions = {
+      schemeUpgrades: false,
+      acceptDifferentSubdomains: false,
+    }
+  ) {
     this._store.ensureDataReady();
 
-    if ("formActionOrigin" in matchData && matchData.formActionOrigin === ""
-        // Carve an exception out for a unit test in test_legacy_empty_formSubmitURL.js
-        && Object.keys(matchData).length != 1) {
-      throw new Error("Searching with an empty `formActionOrigin` doesn't do a wildcard search");
+    if (
+      "formActionOrigin" in matchData &&
+      matchData.formActionOrigin === "" &&
+      // Carve an exception out for a unit test in test_legacy_empty_formSubmitURL.js
+      Object.keys(matchData).length != 1
+    ) {
+      throw new Error(
+        "Searching with an empty `formActionOrigin` doesn't do a wildcard search"
+      );
     }
 
     function match(aLoginItem) {
@@ -361,20 +392,33 @@ this.LoginManagerStorage_json.prototype = {
               if (aLoginItem.formSubmitURL == "") {
                 break;
               }
-              if (!LoginHelper.isOriginMatching(aLoginItem[storageFieldName], wantedValue, aOptions)) {
+              if (
+                !LoginHelper.isOriginMatching(
+                  aLoginItem[storageFieldName],
+                  wantedValue,
+                  aOptions
+                )
+              ) {
                 return false;
               }
               break;
             }
-            // fall through
+          // fall through
           case "origin":
-            if (wantedValue != null) { // needed for formActionOrigin fall through
-              if (!LoginHelper.isOriginMatching(aLoginItem[storageFieldName], wantedValue, aOptions)) {
+            if (wantedValue != null) {
+              // needed for formActionOrigin fall through
+              if (
+                !LoginHelper.isOriginMatching(
+                  aLoginItem[storageFieldName],
+                  wantedValue,
+                  aOptions
+                )
+              ) {
                 return false;
               }
               break;
             }
-            // fall through
+          // fall through
           // Normal cases.
           case "httpRealm":
           case "id":
@@ -402,16 +446,23 @@ this.LoginManagerStorage_json.prototype = {
       return true;
     }
 
-    let foundLogins = [], foundIds = [];
+    let foundLogins = [],
+      foundIds = [];
     for (let loginItem of this._store.data.logins) {
       if (match(loginItem)) {
         // Create the new nsLoginInfo object, push to array
-        let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                    createInstance(Ci.nsILoginInfo);
-        login.init(loginItem.hostname, loginItem.formSubmitURL,
-                   loginItem.httpRealm, loginItem.encryptedUsername,
-                   loginItem.encryptedPassword, loginItem.usernameField,
-                   loginItem.passwordField);
+        let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
+          Ci.nsILoginInfo
+        );
+        login.init(
+          loginItem.hostname,
+          loginItem.formSubmitURL,
+          loginItem.httpRealm,
+          loginItem.encryptedUsername,
+          loginItem.encryptedPassword,
+          loginItem.usernameField,
+          loginItem.passwordField
+        );
         // set nsILoginMetaInfo values
         login.QueryInterface(Ci.nsILoginMetaInfo);
         login.guid = loginItem.guid;
@@ -424,8 +475,14 @@ this.LoginManagerStorage_json.prototype = {
       }
     }
 
-    this.log("_searchLogins: returning", foundLogins.length, "logins for", matchData,
-             "with options", aOptions);
+    this.log(
+      "_searchLogins: returning",
+      foundLogins.length,
+      "logins for",
+      matchData,
+      "with options",
+      aOptions
+    );
     return [foundLogins, foundIds];
   },
 
@@ -448,7 +505,7 @@ this.LoginManagerStorage_json.prototype = {
       formActionOrigin,
       httpRealm,
     };
-    let matchData = { };
+    let matchData = {};
     for (let field of ["origin", "formActionOrigin", "httpRealm"]) {
       if (loginData[field] != "") {
         matchData[field] = loginData[field];
@@ -469,7 +526,7 @@ this.LoginManagerStorage_json.prototype = {
       formActionOrigin,
       httpRealm,
     };
-    let matchData = { };
+    let matchData = {};
     for (let field of ["origin", "formActionOrigin", "httpRealm"]) {
       if (loginData[field] != "") {
         matchData[field] = loginData[field];
@@ -495,7 +552,7 @@ this.LoginManagerStorage_json.prototype = {
    * stored login (useful for looking at the actual nsILoginMetaInfo values).
    */
   _getIdForLogin(login) {
-    let matchData = { };
+    let matchData = {};
     for (let field of ["origin", "formActionOrigin", "httpRealm"]) {
       if (login[field] != "") {
         matchData[field] = login[field];
@@ -542,7 +599,7 @@ this.LoginManagerStorage_json.prototype = {
   _encryptLogin(login) {
     let encUsername = this._crypto.encrypt(login.username);
     let encPassword = this._crypto.encrypt(login.password);
-    let encType     = this._crypto.defaultEncType;
+    let encType = this._crypto.defaultEncType;
 
     return [encUsername, encPassword, encType];
   },
@@ -580,9 +637,13 @@ this.LoginManagerStorage_json.prototype = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(this.LoginManagerStorage_json.prototype, "log", () => {
-  let logger = LoginHelper.createLogger("Login storage");
-  return logger.log.bind(logger);
-});
+XPCOMUtils.defineLazyGetter(
+  this.LoginManagerStorage_json.prototype,
+  "log",
+  () => {
+    let logger = LoginHelper.createLogger("Login storage");
+    return logger.log.bind(logger);
+  }
+);
 
 const EXPORTED_SYMBOLS = ["LoginManagerStorage_json"];

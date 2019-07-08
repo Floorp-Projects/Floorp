@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-  * License, v. 2.0. If a copy of the MPL was not distributed with this
-  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
@@ -17,7 +17,8 @@ this.PluginProblemWidget = class {
 
   onsetup() {
     const parser = new this.window.DOMParser();
-    let parserDoc = parser.parseFromString(`
+    let parserDoc = parser.parseFromString(
+      `
       <!DOCTYPE bindings [
         <!ENTITY % pluginproblemDTD SYSTEM "chrome://pluginproblem/locale/pluginproblem.dtd">
         <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
@@ -70,13 +71,20 @@ this.PluginProblemWidget = class {
       </div>
       <button class="closeIcon" id="closeIcon" title="&hidePluginBtn.label;"/>
     </div>
-    `, "application/xml");
-    this.shadowRoot.importNodeAndAppendChildAt(this.shadowRoot,
-                                               parserDoc.documentElement, true);
+    `,
+      "application/xml"
+    );
+    this.shadowRoot.importNodeAndAppendChildAt(
+      this.shadowRoot,
+      parserDoc.documentElement,
+      true
+    );
 
     // Notify browser-plugins.js that we were attached, on a delay because
     // this binding doesn't complete layout until the constructor
     // completes.
-    this.element.dispatchEvent(new this.window.CustomEvent("PluginBindingAttached"));
+    this.element.dispatchEvent(
+      new this.window.CustomEvent("PluginBindingAttached")
+    );
   }
 };

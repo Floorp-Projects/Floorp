@@ -19,11 +19,7 @@ class RecordingButton extends Component {
   }
 
   render() {
-    const {
-      onRecordButtonClick,
-      isRecording,
-      isLocked,
-    } = this.props;
+    const { onRecordButtonClick, isRecording, isLocked } = this.props;
 
     const classList = ["devtools-button", "record-button"];
 
@@ -39,7 +35,9 @@ class RecordingButton extends Component {
         "data-text-only": "true",
         disabled: isLocked,
       },
-      isRecording ? L10N.getStr("recordings.stop") : L10N.getStr("recordings.start")
+      isRecording
+        ? L10N.getStr("recordings.stop")
+        : L10N.getStr("recordings.start")
     );
   }
 }

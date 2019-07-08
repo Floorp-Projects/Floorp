@@ -12,7 +12,9 @@
 
 /* globals exportFunction */
 
-console.info("window.sidebar has been shimmed for compatibility reasons. See https://webcompat.com/issues/11622 for details.");
+console.info(
+  "window.sidebar has been shimmed for compatibility reasons. See https://webcompat.com/issues/11622 for details."
+);
 
 Object.defineProperty(window.wrappedJSObject, "sidebar", {
   get: exportFunction(function() {

@@ -20,14 +20,23 @@ async function run_test() {
   await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   // If execv is used the updater process will turn into the callback process
   // and the updater's return code will be that of the callback process.
-  runUpdate(STATE_FAILED_UPDATE_SETTINGS_FILE_CHANNEL,
-            false, (USE_EXECV ? 0 : 1), false);
+  runUpdate(
+    STATE_FAILED_UPDATE_SETTINGS_FILE_CHANNEL,
+    false,
+    USE_EXECV ? 0 : 1,
+    false
+  );
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(STATE_FAILED_UPDATE_SETTINGS_FILE_CHANNEL);
   await waitForUpdateXMLFiles();
-  checkUpdateManager(STATE_NONE, false, STATE_FAILED,
-                     UPDATE_SETTINGS_FILE_CHANNEL, 1);
+  checkUpdateManager(
+    STATE_NONE,
+    false,
+    STATE_FAILED,
+    UPDATE_SETTINGS_FILE_CHANNEL,
+    1
+  );
   waitForFilesInUse();
 }

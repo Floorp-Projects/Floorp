@@ -3,7 +3,7 @@
 
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 function getProfileFile(name) {
   let file = do_get_profile();
@@ -105,8 +105,10 @@ add_task(async function test_retry_on_busy() {
 
   info("Attach second writer to new database");
   let attachStmt = db2.createAsyncStatement(`ATTACH :path AS newDB`);
-  attachStmt.bindByName("path",
-    getProfileFile("retry-on-busy-attach.sqlite").path);
+  attachStmt.bindByName(
+    "path",
+    getProfileFile("retry-on-busy-attach.sqlite").path
+  );
   await promiseExecuteStatement(attachStmt);
 
   info("Create triggers on second writer");
@@ -126,7 +128,9 @@ add_task(async function test_retry_on_busy() {
   let begin2Stmt = db2.createAsyncStatement("BEGIN IMMEDIATE");
   await promiseExecuteStatement(begin2Stmt);
 
-  info("Begin transaction on first writer; should busy-wait until second writer is done");
+  info(
+    "Begin transaction on first writer; should busy-wait until second writer is done"
+  );
   let begin1Stmt = db1.createAsyncStatement("BEGIN IMMEDIATE");
   let promise1Began = promiseExecuteStatement(begin1Stmt);
   let update1Stmt = db1.createAsyncStatement(`UPDATE a SET b = 3 WHERE b = 1`);
@@ -158,13 +162,25 @@ add_task(async function test_retry_on_busy() {
   deepEqual(rows.map(row => row.getResultByName("b")), [2, 3]);
 
   info("Clean up");
-  for (let stmt of [walStmt, createAStmt, createPrevAStmt, createATriggerStmt,
-                    attachStmt, createCStmt, createCTriggerStmt,
-                    begin2Stmt, begin1Stmt, insertIntoA2Stmt,
-                    insertIntoC2Stmt, deleteFromC2Stmt,
+  for (let stmt of [
+    walStmt,
+    createAStmt,
+    createPrevAStmt,
+    createATriggerStmt,
+    attachStmt,
+    createCStmt,
+    createCTriggerStmt,
+    begin2Stmt,
+    begin1Stmt,
+    insertIntoA2Stmt,
+    insertIntoC2Stmt,
+    deleteFromC2Stmt,
 
-                     commit2Stmt,
-                    update1Stmt, commit1Stmt, select1Stmt]) {
+    commit2Stmt,
+    update1Stmt,
+    commit1Stmt,
+    select1Stmt,
+  ]) {
     stmt.finalize();
   }
   await promiseClose(db1);

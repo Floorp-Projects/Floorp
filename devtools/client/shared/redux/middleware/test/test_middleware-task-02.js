@@ -9,7 +9,10 @@
  * additional sync and async actions.
  */
 
-const { createStore, applyMiddleware } = require("devtools/client/shared/vendor/redux");
+const {
+  createStore,
+  applyMiddleware,
+} = require("devtools/client/shared/vendor/redux");
 const { task } = require("devtools/client/shared/redux/middleware/task");
 
 function run_test() {
@@ -22,18 +25,36 @@ add_task(async function() {
   store.dispatch(comboAction());
   await waitUntilState(store, () => store.getState().length === 4);
 
-  equal(store.getState()[0].type, "fetchAsync-start",
-        "Async dispatched actions in a generator task are fired");
-  equal(store.getState()[1].type, "fetchAsync-end",
-        "Async dispatched actions in a generator task are fired");
-  equal(store.getState()[2].type, "fetchSync",
-        "Return values of yielded sync dispatched actions are correct");
-  equal(store.getState()[3].type, "fetch-done",
-        "Return values of yielded async dispatched actions are correct");
-  equal(store.getState()[3].data.sync.data, "sync",
-        "Return values of dispatched sync values are correct");
-  equal(store.getState()[3].data.async, "async",
-        "Return values of dispatched async values are correct");
+  equal(
+    store.getState()[0].type,
+    "fetchAsync-start",
+    "Async dispatched actions in a generator task are fired"
+  );
+  equal(
+    store.getState()[1].type,
+    "fetchAsync-end",
+    "Async dispatched actions in a generator task are fired"
+  );
+  equal(
+    store.getState()[2].type,
+    "fetchSync",
+    "Return values of yielded sync dispatched actions are correct"
+  );
+  equal(
+    store.getState()[3].type,
+    "fetch-done",
+    "Return values of yielded async dispatched actions are correct"
+  );
+  equal(
+    store.getState()[3].data.sync.data,
+    "sync",
+    "Return values of dispatched sync values are correct"
+  );
+  equal(
+    store.getState()[3].data.async,
+    "async",
+    "Return values of dispatched async values are correct"
+  );
 });
 
 function comboAction() {

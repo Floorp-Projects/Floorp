@@ -1,15 +1,14 @@
-function OnMessage(e)
-{
+function OnMessage(e) {
   if (e.data.msg == "whoareyou") {
     if ("ServiceWorker" in self) {
       self.clients.matchAll().then(function(clients) {
-        clients[0].postMessage({result: "serviceworker"});
+        clients[0].postMessage({ result: "serviceworker" });
       });
     } else {
-      port.postMessage({result: "sharedworker"});
+      port.postMessage({ result: "sharedworker" });
     }
   }
-};
+}
 
 var port;
 onconnect = function(e) {

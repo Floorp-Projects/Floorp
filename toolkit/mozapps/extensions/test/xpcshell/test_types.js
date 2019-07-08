@@ -13,8 +13,7 @@ add_task(async function setup() {
   let types = AddonManager.addonTypes;
 
   // The dumbest provider possible
-  var provider = {
-  };
+  var provider = {};
 
   var expectedAdd = "test";
   var expectedRemove = null;
@@ -31,15 +30,18 @@ add_task(async function setup() {
     },
   });
 
-  AddonManagerPrivate.registerProvider(provider, [{
-    id: "test",
-    name: "Test",
-    uiPriority: 1,
-  }, {
-    id: "t$e%st",
-    name: "Test",
-    uiPriority: 1,
-  }]);
+  AddonManagerPrivate.registerProvider(provider, [
+    {
+      id: "test",
+      name: "Test",
+      uiPriority: 1,
+    },
+    {
+      id: "t$e%st",
+      name: "Test",
+      uiPriority: 1,
+    },
+  ]);
 
   Assert.equal(expectedAdd, null);
 

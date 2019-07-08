@@ -17,7 +17,11 @@ async function test() {
     aWindow = await open_manager(null);
     utils = new CategoryUtilities(aWindow);
 
-    is(utils.selectedCategory, "plugin", "Should have shown the plugins category");
+    is(
+      utils.selectedCategory,
+      "plugin",
+      "Should have shown the plugins category"
+    );
 
     // Open the extensions category
     utils.openType("extension", async function() {
@@ -26,7 +30,11 @@ async function test() {
       aWindow = await open_manager(null);
       utils = new CategoryUtilities(aWindow);
 
-      is(utils.selectedCategory, "extension", "Should have shown the extensions category");
+      is(
+        utils.selectedCategory,
+        "extension",
+        "Should have shown the extensions category"
+      );
       close_manager(aWindow, finish);
     });
   });

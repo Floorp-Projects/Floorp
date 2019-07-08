@@ -1,7 +1,11 @@
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {SessionWorker} = ChromeUtils.import("resource:///modules/sessionstore/SessionWorker.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { SessionWorker } = ChromeUtils.import(
+  "resource:///modules/sessionstore/SessionWorker.jsm"
+);
 
 var Paths;
 var SessionFile;
@@ -17,9 +21,13 @@ updateAppInfo({
 
 function promise_check_exist(path, shouldExist) {
   return (async function() {
-    info("Ensuring that " + path + (shouldExist ? " exists" : " does not exist"));
+    info(
+      "Ensuring that " + path + (shouldExist ? " exists" : " does not exist")
+    );
     if ((await OS.File.exists(path)) != shouldExist) {
-      throw new Error("File " + path + " should " + (shouldExist ? "exist" : "not exist"));
+      throw new Error(
+        "File " + path + " should " + (shouldExist ? "exist" : "not exist")
+      );
     }
   })();
 }
@@ -27,28 +35,41 @@ function promise_check_exist(path, shouldExist) {
 function promise_check_contents(path, expect) {
   return (async function() {
     info("Checking whether " + path + " has the right contents");
-    let actual = await OS.File.read(path, { encoding: "utf-8", compression: "lz4" });
-    Assert.deepEqual(JSON.parse(actual), expect, `File ${path} contains the expected data.`);
+    let actual = await OS.File.read(path, {
+      encoding: "utf-8",
+      compression: "lz4",
+    });
+    Assert.deepEqual(
+      JSON.parse(actual),
+      expect,
+      `File ${path} contains the expected data.`
+    );
   })();
 }
 
 function generateFileContents(id) {
   let url = `http://example.com/test_backup_once#${id}_${Math.random()}`;
-  return {windows: [{tabs: [{entries: [{url}], index: 1}]}]};
+  return { windows: [{ tabs: [{ entries: [{ url }], index: 1 }] }] };
 }
 
 // Check whether the migration from .js to .jslz4 is correct.
 add_task(async function test_migration() {
   // Make sure that we have a profile before initializing SessionFile.
   let profd = do_get_profile();
-  SessionFile = ChromeUtils.import("resource:///modules/sessionstore/SessionFile.jsm", {}).SessionFile;
+  SessionFile = ChromeUtils.import(
+    "resource:///modules/sessionstore/SessionFile.jsm",
+    {}
+  ).SessionFile;
   Paths = SessionFile.Paths;
 
   let source = do_get_file("data/sessionstore_valid.js");
   source.copyTo(profd, "sessionstore.js");
 
   // Read the content of the session store file.
-  let sessionStoreUncompressed = await OS.File.read(Paths.clean.replace("jsonlz4", "js"), {encoding: "utf-8"});
+  let sessionStoreUncompressed = await OS.File.read(
+    Paths.clean.replace("jsonlz4", "js"),
+    { encoding: "utf-8" }
+  );
   let parsed = JSON.parse(sessionStoreUncompressed);
 
   // Read the session file with .js extension.
@@ -57,7 +78,11 @@ add_task(async function test_migration() {
   // Check whether the result is what we wanted.
   equal(result.origin, "clean");
   equal(result.useOldExtension, true);
-  Assert.deepEqual(result.parsed, parsed, "result.parsed contains expected data");
+  Assert.deepEqual(
+    result.parsed,
+    parsed,
+    "result.parsed contains expected data"
+  );
 
   // Initiate a write to ensure we write the compressed version.
   await SessionFile.write(parsed);
@@ -74,16 +99,22 @@ add_task(async function test_migration() {
 });
 
 add_task(async function test_startup_with_compressed_clean() {
-  let state = {windows: []};
+  let state = { windows: [] };
   let stateString = JSON.stringify(state);
 
   // Mare sure we have an empty profile dir.
   await SessionFile.wipe();
 
   // Populate session files to profile dir.
-  await OS.File.writeAtomic(Paths.clean, stateString, {encoding: "utf-8", compression: "lz4"});
+  await OS.File.writeAtomic(Paths.clean, stateString, {
+    encoding: "utf-8",
+    compression: "lz4",
+  });
   await OS.File.makeDir(Paths.backups);
-  await OS.File.writeAtomic(Paths.cleanBackup, stateString, {encoding: "utf-8", compression: "lz4"});
+  await OS.File.writeAtomic(Paths.cleanBackup, stateString, {
+    encoding: "utf-8",
+    compression: "lz4",
+  });
 
   // Initiate a read.
   let result = await SessionFile.read();
@@ -91,7 +122,11 @@ add_task(async function test_startup_with_compressed_clean() {
   // Make sure we read correct session file and its content.
   equal(result.origin, "clean");
   equal(result.useOldExtension, false);
-  Assert.deepEqual(state, result.parsed, "result.parsed contains expected data");
+  Assert.deepEqual(
+    state,
+    result.parsed,
+    "result.parsed contains expected data"
+  );
 });
 
 add_task(async function test_empty_profile_dir() {
@@ -107,8 +142,14 @@ add_task(async function test_empty_profile_dir() {
   await promise_check_exist(Paths.clean.replace("jsonlz4", "js"), false);
   await promise_check_exist(Paths.cleanBackup.replace("lz4", ""), false);
   await promise_check_exist(Paths.recovery.replace("jsonlz4", "js"), false);
-  await promise_check_exist(Paths.recoveryBackup.replace("jsonlz4", "js"), false);
-  await promise_check_exist(Paths.nextUpgradeBackup.replace("jsonlz4", "js"), false);
+  await promise_check_exist(
+    Paths.recoveryBackup.replace("jsonlz4", "js"),
+    false
+  );
+  await promise_check_exist(
+    Paths.nextUpgradeBackup.replace("jsonlz4", "js"),
+    false
+  );
 
   // Initiate a read and make sure that we are in empty state.
   let result = await SessionFile.read();
@@ -116,8 +157,8 @@ add_task(async function test_empty_profile_dir() {
   equal(result.noFilesFound, true);
 
   // Create a state to store.
-  let state = {windows: []};
-  await SessionWorker.post("write", [state, {isFinalWrite: true}]);
+  let state = { windows: [] };
+  await SessionWorker.post("write", [state, { isFinalWrite: true }]);
 
   // Check session files are created, but not deprecated ones.
   await promise_check_exist(Paths.clean, true);

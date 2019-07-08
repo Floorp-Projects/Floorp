@@ -7,11 +7,23 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { UI_SHOW_PLATFORM_DATA_PREF } = require("devtools/client/performance/test/helpers/prefs");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { busyWait } = require("devtools/client/performance/test/helpers/wait-utils");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  UI_SHOW_PLATFORM_DATA_PREF,
+} = require("devtools/client/performance/test/helpers/prefs");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  busyWait,
+} = require("devtools/client/performance/test/helpers/wait-utils");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
@@ -33,17 +45,20 @@ add_task(async function() {
   await DetailsView.selectView("js-calltree");
   await rendered;
 
-  ok(DetailsView.isViewSelected(JsCallTreeView), "The call tree is now selected.");
+  ok(
+    DetailsView.isViewSelected(JsCallTreeView),
+    "The call tree is now selected."
+  );
 
   testCells($, $$, {
-    "duration": true,
-    "percentage": true,
-    "allocations": false,
+    duration: true,
+    percentage: true,
+    allocations: false,
     "self-duration": true,
     "self-percentage": true,
     "self-allocations": false,
-    "samples": true,
-    "function": true,
+    samples: true,
+    function: true,
   });
 
   await teardownToolboxAndRemoveTab(panel);
@@ -52,15 +67,21 @@ add_task(async function() {
 function testCells($, $$, visibleCells) {
   for (const cell in visibleCells) {
     if (visibleCells[cell]) {
-      ok($(`.call-tree-cell[type=${cell}]`),
-        `At least one ${cell} column was visible in the tree.`);
+      ok(
+        $(`.call-tree-cell[type=${cell}]`),
+        `At least one ${cell} column was visible in the tree.`
+      );
     } else {
-      ok(!$(`.call-tree-cell[type=${cell}]`),
-        `No ${cell} columns were visible in the tree.`);
+      ok(
+        !$(`.call-tree-cell[type=${cell}]`),
+        `No ${cell} columns were visible in the tree.`
+      );
     }
   }
 
-  is($$(".call-tree-cell", $(".call-tree-item")).length,
+  is(
+    $$(".call-tree-cell", $(".call-tree-item")).length,
     Object.keys(visibleCells).filter(e => visibleCells[e]).length,
-    "The correct number of cells were found in the tree.");
+    "The correct number of cells were found in the tree."
+  );
 }

@@ -18,7 +18,9 @@ class AuditController extends React.Component {
   constructor(props) {
     super(props);
 
-    const { accessible: { checks } } = props;
+    const {
+      accessible: { checks },
+    } = props;
     this.state = {
       checks,
     };

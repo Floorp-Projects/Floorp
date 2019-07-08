@@ -79,7 +79,21 @@ def check_working_directory(push=True):
         sys.exit(1)
 
 
-def push_to_try(method, msg, labels=None, templates=None, try_task_config=None,
+def generate_try_task_config(method, labels, try_config=None):
+    try_task_config = try_config or {}
+
+    templates = try_task_config.setdefault('templates', {})
+    templates.setdefault('env', {}).update({'TRY_SELECTOR': method})
+
+    try_task_config.update({
+        'version': 1,
+        'tasks': sorted(labels),
+    })
+
+    return try_task_config
+
+
+def push_to_try(method, msg, try_task_config=None,
                 push=True, closed_tree=False, files_to_change=None):
     check_working_directory(push)
 
@@ -88,22 +102,11 @@ def push_to_try(method, msg, labels=None, templates=None, try_task_config=None,
     commit_message = ('%s%s\n\nPushed via `mach try %s`' %
                       (msg, closed_tree_string, method))
 
-    if templates is not None:
-        templates.setdefault('env', {}).update({'TRY_SELECTOR': method})
-
-    if labels or labels == []:
-        try_task_config = {
-            'version': 1,
-            'tasks': sorted(labels),
-        }
-        if templates:
-            try_task_config['templates'] = templates
-        if push:
-            write_task_config_history(msg, try_task_config)
-
     config_path = None
     changed_files = []
     if try_task_config:
+        if push and method != 'again':
+            write_task_config_history(msg, try_task_config)
         config_path = write_task_config(try_task_config)
         changed_files.append(config_path)
 

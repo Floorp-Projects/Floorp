@@ -21,8 +21,10 @@ add_task(async function test_click_link_within_view_source() {
   await BrowserTestUtils.withNewTab(TEST_FILE_URI, async function(aBrowser) {
     let tabSpec = gBrowser.selectedBrowser.currentURI.spec;
     info("loading: " + tabSpec);
-    ok(tabSpec.startsWith("file://") && tabSpec.endsWith(TEST_FILE),
-       "sanity check to make sure html loaded");
+    ok(
+      tabSpec.startsWith("file://") && tabSpec.endsWith(TEST_FILE),
+      "sanity check to make sure html loaded"
+    );
 
     info("click view-source of html");
     let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
@@ -31,19 +33,33 @@ add_task(async function test_click_link_within_view_source() {
     let tab = await tabPromise;
     tabSpec = gBrowser.selectedBrowser.currentURI.spec;
     info("loading: " + tabSpec);
-    ok(tabSpec.startsWith("view-source:file://") && tabSpec.endsWith(TEST_FILE),
-       "loading view-source of html succeeded");
+    ok(
+      tabSpec.startsWith("view-source:file://") && tabSpec.endsWith(TEST_FILE),
+      "loading view-source of html succeeded"
+    );
 
     info("click testlink within view-source page");
-    let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, url => url.endsWith("dummy_page.html"));
+    let loadPromise = BrowserTestUtils.browserLoaded(
+      tab.linkedBrowser,
+      false,
+      url => url.endsWith("dummy_page.html")
+    );
     await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
       if (content.document.readyState != "complete") {
-        await ContentTaskUtils.waitForEvent(content.document, "readystatechange", false, () =>
-          content.document.readyState == "complete");
+        await ContentTaskUtils.waitForEvent(
+          content.document,
+          "readystatechange",
+          false,
+          () => content.document.readyState == "complete"
+        );
       }
       // document.getElementById() does not work on a view-source page, hence we use document.links
       let linksOnPage = content.document.links;
-      is(linksOnPage.length, 1, "sanity check: make sure only one link is present on page");
+      is(
+        linksOnPage.length,
+        1,
+        "sanity check: make sure only one link is present on page"
+      );
       let myLink = content.document.links[0];
       myLink.click();
     });
@@ -52,8 +68,10 @@ add_task(async function test_click_link_within_view_source() {
 
     tabSpec = gBrowser.selectedBrowser.currentURI.spec;
     info("loading: " + tabSpec);
-    ok(tabSpec.startsWith("view-source:file://") && tabSpec.endsWith(DUMMY_FILE),
-       "loading view-source of html succeeded");
+    ok(
+      tabSpec.startsWith("view-source:file://") && tabSpec.endsWith(DUMMY_FILE),
+      "loading view-source of html succeeded"
+    );
 
     BrowserTestUtils.removeTab(tab);
   });

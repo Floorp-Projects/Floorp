@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
   var request = indexedDB.open(name, 1);
@@ -20,13 +19,14 @@ function* testSteps()
   var test = {
     name: "inline key; key generator",
     autoIncrement: true,
-    storedObject: {name: "Lincoln"},
+    storedObject: { name: "Lincoln" },
     keyName: "id",
   };
 
-  let objectStore = db.createObjectStore(test.name,
-                                         { keyPath: test.keyName,
-                                           autoIncrement: test.autoIncrement });
+  let objectStore = db.createObjectStore(test.name, {
+    keyPath: test.keyName,
+    autoIncrement: test.autoIncrement,
+  });
 
   request = objectStore.add(test.storedObject);
   request.onerror = errorHandler;
@@ -40,8 +40,11 @@ function* testSteps()
   event = yield undefined;
 
   // Sanity check!
-  is(event.target.result.name, test.storedObject.name,
-     "The correct object was stored.");
+  is(
+    event.target.result.name,
+    test.storedObject.name,
+    "The correct object was stored."
+  );
 
   // Ensure that the id was also stored on the object.
   is(event.target.result.id, id, "The object had the id stored on it.");
@@ -51,4 +54,3 @@ function* testSteps()
 
   finishTest();
 }
-

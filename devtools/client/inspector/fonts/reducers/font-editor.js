@@ -42,7 +42,6 @@ const INITIAL_STATE = {
 };
 
 const reducers = {
-
   // Update font editor with the axes and values defined by a font variation instance.
   [APPLY_FONT_VARIATION_INSTANCE](state, { name, values }) {
     const newState = { ...state };
@@ -90,7 +89,10 @@ const reducers = {
     // If not defined in font-variation-settings, setup "wght" axis with the value of
     // "font-weight" if it is numeric and not a keyword.
     const weight = properties["font-weight"];
-    if (axes.wght === undefined && parseFloat(weight).toString() === weight.toString()) {
+    if (
+      axes.wght === undefined &&
+      parseFloat(weight).toString() === weight.toString()
+    ) {
       axes.wght = parseFloat(weight);
     }
 
@@ -116,7 +118,6 @@ const reducers = {
   [UPDATE_WARNING_MESSAGE](state, { warning }) {
     return { ...state, warning };
   },
-
 };
 
 module.exports = function(state = INITIAL_STATE, action) {

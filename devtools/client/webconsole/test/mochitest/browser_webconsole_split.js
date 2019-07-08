@@ -6,9 +6,10 @@
 "use strict";
 
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for splitting";
-const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N =
-  new LocalizationHelper("devtools/client/locales/toolbox.properties");
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/toolbox.properties"
+);
 
 // Test is slow on Linux EC2 instances - Bug 962931
 requestLongerTimeout(4);
@@ -55,7 +56,10 @@ async function performTests() {
     const webconsoleReady = toolbox.once("webconsole-ready");
     await toolbox.toggleSplitConsole();
     await webconsoleReady;
-    ok(true, "Webconsole has been triggered as loaded while another tool is active");
+    ok(
+      true,
+      "Webconsole has been triggered as loaded while another tool is active"
+    );
   }
 
   async function testKeyboardShortcuts() {
@@ -108,26 +112,35 @@ async function performTests() {
       const button = toolbox.doc.getElementById("toolbox-meatball-menu-button");
       EventUtils.sendMouseEvent({ type: "click" }, button);
 
-      toolbox.doc.addEventListener("popupshown", () => {
-        const menuItem =
-          toolbox.doc.getElementById("toolbox-meatball-menu-splitconsole");
+      toolbox.doc.addEventListener(
+        "popupshown",
+        () => {
+          const menuItem = toolbox.doc.getElementById(
+            "toolbox-meatball-menu-splitconsole"
+          );
 
-        // Return undefined if the menu item is not available
-        let label;
-        if (menuItem && menuItem.querySelector(".label")) {
-          label =
-            menuItem.querySelector(".label").textContent ===
-            L10N.getStr("toolbox.meatballMenu.hideconsole.label")
-              ? "hide"
-              : "split";
-        }
+          // Return undefined if the menu item is not available
+          let label;
+          if (menuItem && menuItem.querySelector(".label")) {
+            label =
+              menuItem.querySelector(".label").textContent ===
+              L10N.getStr("toolbox.meatballMenu.hideconsole.label")
+                ? "hide"
+                : "split";
+          }
 
-        // Wait for menu to close
-        toolbox.doc.addEventListener("popuphidden", () => {
-          resolve(label);
-        }, { once: true });
-        EventUtils.sendKey("ESCAPE", toolbox.win);
-      }, { once: true });
+          // Wait for menu to close
+          toolbox.doc.addEventListener(
+            "popuphidden",
+            () => {
+              resolve(label);
+            },
+            { once: true }
+          );
+          EventUtils.sendKey("ESCAPE", toolbox.win);
+        },
+        { once: true }
+      );
     });
   }
 
@@ -139,60 +152,108 @@ async function performTests() {
 
     let currentUIState = await getCurrentUIState();
 
-    ok(currentUIState.splitterVisibility,
-       "Splitter is visible when console is split");
-    ok(currentUIState.deckHeight > 0,
-       "Deck has a height > 0 when console is split");
-    ok(currentUIState.webconsoleHeight > 0,
-       "Web console has a height > 0 when console is split");
-    ok(!currentUIState.openedConsolePanel,
-       "The console panel is not the current tool");
-    is(currentUIState.menuLabel, "hide",
-       "The menu item indicates the console is split");
+    ok(
+      currentUIState.splitterVisibility,
+      "Splitter is visible when console is split"
+    );
+    ok(
+      currentUIState.deckHeight > 0,
+      "Deck has a height > 0 when console is split"
+    );
+    ok(
+      currentUIState.webconsoleHeight > 0,
+      "Web console has a height > 0 when console is split"
+    );
+    ok(
+      !currentUIState.openedConsolePanel,
+      "The console panel is not the current tool"
+    );
+    is(
+      currentUIState.menuLabel,
+      "hide",
+      "The menu item indicates the console is split"
+    );
 
     await openPanel("webconsole");
     currentUIState = await getCurrentUIState();
 
-    ok(!currentUIState.splitterVisibility,
-       "Splitter is hidden when console is opened.");
-    is(currentUIState.deckHeight, 0,
-       "Deck has a height == 0 when console is opened.");
-    is(currentUIState.webconsoleHeight, currentUIState.containerHeight,
-       "Web console is full height.");
-    ok(currentUIState.openedConsolePanel,
-       "The console panel is the current tool");
-    is(currentUIState.menuLabel, undefined,
-       "The menu item is hidden when console is opened");
+    ok(
+      !currentUIState.splitterVisibility,
+      "Splitter is hidden when console is opened."
+    );
+    is(
+      currentUIState.deckHeight,
+      0,
+      "Deck has a height == 0 when console is opened."
+    );
+    is(
+      currentUIState.webconsoleHeight,
+      currentUIState.containerHeight,
+      "Web console is full height."
+    );
+    ok(
+      currentUIState.openedConsolePanel,
+      "The console panel is the current tool"
+    );
+    is(
+      currentUIState.menuLabel,
+      undefined,
+      "The menu item is hidden when console is opened"
+    );
 
     // Make sure splitting console does nothing while webconsole is opened
     await toolbox.toggleSplitConsole();
 
     currentUIState = await getCurrentUIState();
 
-    ok(!currentUIState.splitterVisibility,
-       "Splitter is hidden when console is opened.");
-    is(currentUIState.deckHeight, 0,
-       "Deck has a height == 0 when console is opened.");
-    is(currentUIState.webconsoleHeight, currentUIState.containerHeight,
-       "Web console is full height.");
-    ok(currentUIState.openedConsolePanel,
-       "The console panel is the current tool");
-    is(currentUIState.menuLabel, undefined,
-       "The menu item is hidden when console is opened");
+    ok(
+      !currentUIState.splitterVisibility,
+      "Splitter is hidden when console is opened."
+    );
+    is(
+      currentUIState.deckHeight,
+      0,
+      "Deck has a height == 0 when console is opened."
+    );
+    is(
+      currentUIState.webconsoleHeight,
+      currentUIState.containerHeight,
+      "Web console is full height."
+    );
+    ok(
+      currentUIState.openedConsolePanel,
+      "The console panel is the current tool"
+    );
+    is(
+      currentUIState.menuLabel,
+      undefined,
+      "The menu item is hidden when console is opened"
+    );
 
     // Make sure that split state is saved after opening another panel
     await openPanel("inspector");
     currentUIState = await getCurrentUIState();
-    ok(currentUIState.splitterVisibility,
-       "Splitter is visible when console is split");
-    ok(currentUIState.deckHeight > 0,
-       "Deck has a height > 0 when console is split");
-    ok(currentUIState.webconsoleHeight > 0,
-       "Web console has a height > 0 when console is split");
-    ok(!currentUIState.openedConsolePanel,
-       "The console panel is not the current tool");
-    is(currentUIState.menuLabel, "hide",
-       "The menu item still indicates the console is split");
+    ok(
+      currentUIState.splitterVisibility,
+      "Splitter is visible when console is split"
+    );
+    ok(
+      currentUIState.deckHeight > 0,
+      "Deck has a height > 0 when console is split"
+    );
+    ok(
+      currentUIState.webconsoleHeight > 0,
+      "Web console has a height > 0 when console is split"
+    );
+    ok(
+      !currentUIState.openedConsolePanel,
+      "The console panel is not the current tool"
+    );
+    is(
+      currentUIState.menuLabel,
+      "hide",
+      "The menu item still indicates the console is split"
+    );
 
     await toolbox.toggleSplitConsole();
   }
@@ -201,48 +262,85 @@ async function performTests() {
     let currentUIState = await getCurrentUIState();
 
     ok(!currentUIState.splitterVisibility, "Splitter is hidden by default");
-    is(currentUIState.deckHeight, currentUIState.containerHeight,
-       "Deck has a height > 0 by default");
-    is(currentUIState.webconsoleHeight, 0,
-       "Web console is collapsed by default");
-    ok(!currentUIState.openedConsolePanel,
-       "The console panel is not the current tool");
-    is(currentUIState.menuLabel, "split",
-       "The menu item indicates the console is not split");
+    is(
+      currentUIState.deckHeight,
+      currentUIState.containerHeight,
+      "Deck has a height > 0 by default"
+    );
+    is(
+      currentUIState.webconsoleHeight,
+      0,
+      "Web console is collapsed by default"
+    );
+    ok(
+      !currentUIState.openedConsolePanel,
+      "The console panel is not the current tool"
+    );
+    is(
+      currentUIState.menuLabel,
+      "split",
+      "The menu item indicates the console is not split"
+    );
 
     await toolbox.toggleSplitConsole();
 
     currentUIState = await getCurrentUIState();
 
-    ok(currentUIState.splitterVisibility,
-       "Splitter is visible when console is split");
-    ok(currentUIState.deckHeight > 0,
-       "Deck has a height > 0 when console is split");
-    ok(currentUIState.webconsoleHeight > 0,
-       "Web console has a height > 0 when console is split");
-    is(Math.round(currentUIState.deckHeight +
-                  currentUIState.webconsoleHeight +
-                  currentUIState.splitterHeight),
-       currentUIState.containerHeight,
-       "Everything adds up to container height");
-    ok(!currentUIState.openedConsolePanel,
-       "The console panel is not the current tool");
-    is(currentUIState.menuLabel, "hide",
-       "The menu item indicates the console is split");
+    ok(
+      currentUIState.splitterVisibility,
+      "Splitter is visible when console is split"
+    );
+    ok(
+      currentUIState.deckHeight > 0,
+      "Deck has a height > 0 when console is split"
+    );
+    ok(
+      currentUIState.webconsoleHeight > 0,
+      "Web console has a height > 0 when console is split"
+    );
+    is(
+      Math.round(
+        currentUIState.deckHeight +
+          currentUIState.webconsoleHeight +
+          currentUIState.splitterHeight
+      ),
+      currentUIState.containerHeight,
+      "Everything adds up to container height"
+    );
+    ok(
+      !currentUIState.openedConsolePanel,
+      "The console panel is not the current tool"
+    );
+    is(
+      currentUIState.menuLabel,
+      "hide",
+      "The menu item indicates the console is split"
+    );
 
     await toolbox.toggleSplitConsole();
 
     currentUIState = await getCurrentUIState();
 
     ok(!currentUIState.splitterVisibility, "Splitter is hidden after toggling");
-    is(currentUIState.deckHeight, currentUIState.containerHeight,
-       "Deck has a height > 0 after toggling");
-    is(currentUIState.webconsoleHeight, 0,
-       "Web console is collapsed after toggling");
-    ok(!currentUIState.openedConsolePanel,
-       "The console panel is not the current tool");
-    is(currentUIState.menuLabel, "split",
-       "The menu item indicates the console is not split");
+    is(
+      currentUIState.deckHeight,
+      currentUIState.containerHeight,
+      "Deck has a height > 0 after toggling"
+    );
+    is(
+      currentUIState.webconsoleHeight,
+      0,
+      "Web console is collapsed after toggling"
+    );
+    ok(
+      !currentUIState.openedConsolePanel,
+      "The console panel is not the current tool"
+    );
+    is(
+      currentUIState.menuLabel,
+      "split",
+      "The menu item indicates the console is not split"
+    );
   }
 
   async function openPanel(toolId) {

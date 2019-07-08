@@ -3,24 +3,32 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 const POPUP_NOTIFICATION_ID = "contextual-feature-recommendation";
 const ANIMATION_BUTTON_ID = "cfr-notification-footer-animation-button";
 const ANIMATION_LABEL_ID = "cfr-notification-footer-animation-label";
-const SUMO_BASE_URL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-const ADDONS_API_URL = "https://services.addons.mozilla.org/api/v3/addons/addon";
+const SUMO_BASE_URL = Services.urlFormatter.formatURLPref(
+  "app.support.baseURL"
+);
+const ADDONS_API_URL =
+  "https://services.addons.mozilla.org/api/v3/addons/addon";
 const ANIMATIONS_ENABLED_PREF = "toolkit.cosmeticAnimations.enabled";
 
 const DELAY_BEFORE_EXPAND_MS = 1000;
 const CATEGORY_ICONS = {
-  "cfrAddons": "webextensions-icon",
-  "cfrFeatures": "recommendations-icon",
+  cfrAddons: "webextensions-icon",
+  cfrFeatures: "recommendations-icon",
 };
 
 /**
@@ -45,7 +53,9 @@ class PageAction {
   constructor(win, dispatchToASRouter) {
     this.window = win;
     this.urlbar = win.document.getElementById("urlbar");
-    this.container = win.document.getElementById("contextual-feature-recommendation");
+    this.container = win.document.getElementById(
+      "contextual-feature-recommendation"
+    );
     this.button = win.document.getElementById("cfr-button");
     this.label = win.document.getElementById("cfr-label");
 
@@ -58,9 +68,7 @@ class PageAction {
     this._showPopupOnClick = this._showPopupOnClick.bind(this);
     this.dispatchUserAction = this.dispatchUserAction.bind(this);
 
-    this._l10n = new DOMLocalization([
-      "browser/newtab/asrouter.ftl",
-    ]);
+    this._l10n = new DOMLocalization(["browser/newtab/asrouter.ftl"]);
 
     // Saved timeout IDs for scheduled state changes, so they can be cancelled
     this.stateTransitionTimeoutIDs = [];
@@ -69,13 +77,20 @@ class PageAction {
   async showAddressBarNotifier(recommendation, shouldExpand = false) {
     this.container.hidden = false;
 
-    this.label.value = await this.getStrings(recommendation.content.notification_text);
-    this.button.setAttribute("data-cfr-icon", CATEGORY_ICONS[recommendation.content.category]);
+    this.label.value = await this.getStrings(
+      recommendation.content.notification_text
+    );
+    this.button.setAttribute(
+      "data-cfr-icon",
+      CATEGORY_ICONS[recommendation.content.category]
+    );
 
     // Wait for layout to flush to avoid a synchronous reflow then calculate the
     // label width. We can safely get the width even though the recommendation is
     // collapsed; the label itself remains full width (with its overflow hidden)
-    let [{width}] = await this.window.promiseDocumentFlushed(() => this.label.getClientRects());
+    let [{ width }] = await this.window.promiseDocumentFlushed(() =>
+      this.label.getClientRects()
+    );
     this.urlbar.style.setProperty("--cfr-label-width", `${width}px`);
 
     this.container.addEventListener("click", this._showPopupOnClick);
@@ -95,7 +110,11 @@ class PageAction {
       // page (both `bucket_id` and `id` will be set as null), we don't want to send
       // the impression ping in that case.
       if (!!recommendation.id && !!recommendation.content.bucket_id) {
-        this._sendTelemetry({message_id: recommendation.id, bucket_id: recommendation.content.bucket_id, event: "IMPRESSION"});
+        this._sendTelemetry({
+          message_id: recommendation.id,
+          bucket_id: recommendation.content.bucket_id,
+          event: "IMPRESSION",
+        });
       }
     }
   }
@@ -114,9 +133,11 @@ class PageAction {
 
   _expand(delay) {
     if (delay > 0) {
-      this.stateTransitionTimeoutIDs.push(this.window.setTimeout(() => {
-        this.urlbar.setAttribute("cfr-recommendation-state", "expanded");
-      }, delay));
+      this.stateTransitionTimeoutIDs.push(
+        this.window.setTimeout(() => {
+          this.urlbar.setAttribute("cfr-recommendation-state", "expanded");
+        }, delay)
+      );
     } else {
       // Non-delayed state change overrides any scheduled state changes
       this._clearScheduledStateChanges();
@@ -126,11 +147,15 @@ class PageAction {
 
   _collapse(delay) {
     if (delay > 0) {
-      this.stateTransitionTimeoutIDs.push(this.window.setTimeout(() => {
-        if (this.urlbar.getAttribute("cfr-recommendation-state") === "expanded") {
-          this.urlbar.setAttribute("cfr-recommendation-state", "collapsed");
-        }
-      }, delay));
+      this.stateTransitionTimeoutIDs.push(
+        this.window.setTimeout(() => {
+          if (
+            this.urlbar.getAttribute("cfr-recommendation-state") === "expanded"
+          ) {
+            this.urlbar.setAttribute("cfr-recommendation-state", "collapsed");
+          }
+        }, delay)
+      );
     } else {
       // Non-delayed state change overrides any scheduled state changes
       this._clearScheduledStateChanges();
@@ -142,7 +167,9 @@ class PageAction {
     // TODO: FIXME: find a nicer way of cleaning this up. Maybe listening to "popuphidden"?
     // Remove click listener on pause button;
     if (this.onAnimationButtonClick) {
-      this.window.document.getElementById(ANIMATION_BUTTON_ID).removeEventListener("click", this.onAnimationButtonClick);
+      this.window.document
+        .getElementById(ANIMATION_BUTTON_ID)
+        .removeEventListener("click", this.onAnimationButtonClick);
       delete this.onAnimationButtonClick;
     }
   }
@@ -168,26 +195,27 @@ class PageAction {
 
   dispatchUserAction(action) {
     this._dispatchToASRouter(
-      {type: "USER_ACTION", data: action},
-      {browser: this.window.gBrowser.selectedBrowser}
+      { type: "USER_ACTION", data: action },
+      { browser: this.window.gBrowser.selectedBrowser }
     );
   }
 
   _dispatchImpression(message) {
-    this._dispatchToASRouter({type: "IMPRESSION", data: message});
+    this._dispatchToASRouter({ type: "IMPRESSION", data: message });
   }
 
   _sendTelemetry(ping) {
     this._dispatchToASRouter({
       type: "DOORHANGER_TELEMETRY",
-      data: {action: "cfr_user_event", source: "CFR", ...ping},
+      data: { action: "cfr_user_event", source: "CFR", ...ping },
     });
   }
 
   _blockMessage(messageID) {
-    this._dispatchToASRouter(
-      {type: "BLOCK_MESSAGE_BY_ID", data: {id: messageID}}
-    );
+    this._dispatchToASRouter({
+      type: "BLOCK_MESSAGE_BY_ID",
+      data: { id: messageID },
+    });
   }
 
   /**
@@ -205,7 +233,9 @@ class PageAction {
           return string.attributes[subAttribute];
         }
 
-        Cu.reportError(`String ${string.value} does not contain any attributes`);
+        Cu.reportError(
+          `String ${string.value} does not contain any attributes`
+        );
         return subAttribute;
       }
 
@@ -218,10 +248,12 @@ class PageAction {
       return string;
     }
 
-    const [localeStrings] = await this._l10n.formatMessages([{
-      id: string.string_id,
-      args: string.args,
-    }]);
+    const [localeStrings] = await this._l10n.formatMessages([
+      {
+        id: string.string_id,
+        args: string.args,
+      },
+    ]);
 
     const mainString = new String(localeStrings.value); // eslint-disable-line no-new-wrappers
     if (localeStrings.attributes) {
@@ -236,29 +268,42 @@ class PageAction {
   }
 
   async _setAddonAuthorAndRating(document, content) {
-    const author = this.window.document.getElementById("cfr-notification-author");
-    const footerFilledStars = this.window.document.getElementById("cfr-notification-footer-filled-stars");
-    const footerEmptyStars = this.window.document.getElementById("cfr-notification-footer-empty-stars");
-    const footerUsers = this.window.document.getElementById("cfr-notification-footer-users");
-    const footerSpacer = this.window.document.getElementById("cfr-notification-footer-spacer");
+    const author = this.window.document.getElementById(
+      "cfr-notification-author"
+    );
+    const footerFilledStars = this.window.document.getElementById(
+      "cfr-notification-footer-filled-stars"
+    );
+    const footerEmptyStars = this.window.document.getElementById(
+      "cfr-notification-footer-empty-stars"
+    );
+    const footerUsers = this.window.document.getElementById(
+      "cfr-notification-footer-users"
+    );
+    const footerSpacer = this.window.document.getElementById(
+      "cfr-notification-footer-spacer"
+    );
 
     author.textContent = await this.getStrings({
       string_id: "cfr-doorhanger-extension-author",
-      args: {name: content.addon.author},
+      args: { name: content.addon.author },
     });
 
-    const {rating} = content.addon;
+    const { rating } = content.addon;
     if (rating) {
       const MAX_RATING = 5;
       const STARS_WIDTH = 17 * MAX_RATING;
-      const calcWidth = stars => `${stars / MAX_RATING * STARS_WIDTH}px`;
+      const calcWidth = stars => `${(stars / MAX_RATING) * STARS_WIDTH}px`;
       footerFilledStars.style.width = calcWidth(rating);
       footerEmptyStars.style.width = calcWidth(MAX_RATING - rating);
 
-      const ratingString = await this.getStrings({
-        string_id: "cfr-doorhanger-extension-rating",
-        args: {total: rating},
-      }, "tooltiptext");
+      const ratingString = await this.getStrings(
+        {
+          string_id: "cfr-doorhanger-extension-rating",
+          args: { total: rating },
+        },
+        "tooltiptext"
+      );
       footerFilledStars.setAttribute("tooltiptext", ratingString);
       footerEmptyStars.setAttribute("tooltiptext", ratingString);
     } else {
@@ -268,12 +313,15 @@ class PageAction {
       footerEmptyStars.removeAttribute("tooltiptext");
     }
 
-    const {users} = content.addon;
+    const { users } = content.addon;
     if (users) {
-      footerUsers.setAttribute("value", await this.getStrings({
-        string_id: "cfr-doorhanger-extension-total-users",
-        args: {total: users},
-      }));
+      footerUsers.setAttribute(
+        "value",
+        await this.getStrings({
+          string_id: "cfr-doorhanger-extension-total-users",
+          args: { total: users },
+        })
+      );
       footerUsers.removeAttribute("hidden");
     } else {
       // Prevent whitespace around empty label from affecting other spacing
@@ -289,7 +337,7 @@ class PageAction {
     }
   }
 
-  _createElementAndAppend({type, id}, parent) {
+  _createElementAndAppend({ type, id }, parent) {
     let element = this.window.document.createXULElement(type);
     if (id) {
       element.setAttribute("id", id);
@@ -299,38 +347,71 @@ class PageAction {
   }
 
   async _renderPinTabAnimation() {
-    const ANIMATION_CONTAINER_ID = "cfr-notification-footer-pintab-animation-container";
-    const footer = this.window.document.getElementById("cfr-notification-footer");
-    let animationContainer = this.window.document.getElementById(ANIMATION_CONTAINER_ID);
+    const ANIMATION_CONTAINER_ID =
+      "cfr-notification-footer-pintab-animation-container";
+    const footer = this.window.document.getElementById(
+      "cfr-notification-footer"
+    );
+    let animationContainer = this.window.document.getElementById(
+      ANIMATION_CONTAINER_ID
+    );
     if (!animationContainer) {
-      animationContainer = this._createElementAndAppend({type: "vbox", id: ANIMATION_CONTAINER_ID}, footer);
+      animationContainer = this._createElementAndAppend(
+        { type: "vbox", id: ANIMATION_CONTAINER_ID },
+        footer
+      );
 
       let controlsContainer = this._createElementAndAppend(
-        {type: "hbox", id: "cfr-notification-footer-animation-controls"}, animationContainer);
+        { type: "hbox", id: "cfr-notification-footer-animation-controls" },
+        animationContainer
+      );
 
       // spacer
-      this._createElementAndAppend({type: "vbox"}, controlsContainer).setAttribute("flex", 1);
+      this._createElementAndAppend(
+        { type: "vbox" },
+        controlsContainer
+      ).setAttribute("flex", 1);
 
-      let animationButton = this._createElementAndAppend({type: "hbox", id: ANIMATION_BUTTON_ID}, controlsContainer);
+      let animationButton = this._createElementAndAppend(
+        { type: "hbox", id: ANIMATION_BUTTON_ID },
+        controlsContainer
+      );
 
       // animation button label
-      this._createElementAndAppend({type: "label", id: ANIMATION_LABEL_ID}, animationButton);
+      this._createElementAndAppend(
+        { type: "label", id: ANIMATION_LABEL_ID },
+        animationButton
+      );
     }
 
-    animationContainer.toggleAttribute("animate", Services.prefs.getBoolPref(ANIMATIONS_ENABLED_PREF, true));
+    animationContainer.toggleAttribute(
+      "animate",
+      Services.prefs.getBoolPref(ANIMATIONS_ENABLED_PREF, true)
+    );
     animationContainer.removeAttribute("paused");
 
-    this.window.document.getElementById(ANIMATION_LABEL_ID).textContent = await this.getStrings(
-      {"string_id": "cfr-doorhanger-pintab-animation-pause"});
+    this.window.document.getElementById(
+      ANIMATION_LABEL_ID
+    ).textContent = await this.getStrings({
+      string_id: "cfr-doorhanger-pintab-animation-pause",
+    });
 
     if (!this.onAnimationButtonClick) {
-      let animationButton = this.window.document.getElementById(ANIMATION_BUTTON_ID);
+      let animationButton = this.window.document.getElementById(
+        ANIMATION_BUTTON_ID
+      );
       this.onAnimationButtonClick = async () => {
-        let animationLabel = this.window.document.getElementById(ANIMATION_LABEL_ID);
+        let animationLabel = this.window.document.getElementById(
+          ANIMATION_LABEL_ID
+        );
         if (animationContainer.toggleAttribute("paused")) {
-          animationLabel.textContent = await this.getStrings({"string_id": "cfr-doorhanger-pintab-animation-resume"});
+          animationLabel.textContent = await this.getStrings({
+            string_id: "cfr-doorhanger-pintab-animation-resume",
+          });
         } else {
-          animationLabel.textContent = await this.getStrings({"string_id": "cfr-doorhanger-pintab-animation-pause"});
+          animationLabel.textContent = await this.getStrings({
+            string_id: "cfr-doorhanger-pintab-animation-pause",
+          });
         }
       };
       animationButton.addEventListener("click", this.onAnimationButtonClick);
@@ -338,62 +419,104 @@ class PageAction {
   }
 
   async _renderPopup(message, browser) {
-    const {id, content} = message;
+    const { id, content } = message;
 
-    const headerLabel = this.window.document.getElementById("cfr-notification-header-label");
-    const headerLink = this.window.document.getElementById("cfr-notification-header-link");
-    const headerImage = this.window.document.getElementById("cfr-notification-header-image");
-    const footerText = this.window.document.getElementById("cfr-notification-footer-text");
-    const footerLink = this.window.document.getElementById("cfr-notification-footer-learn-more-link");
-    const {primary, secondary} = content.buttons;
+    const headerLabel = this.window.document.getElementById(
+      "cfr-notification-header-label"
+    );
+    const headerLink = this.window.document.getElementById(
+      "cfr-notification-header-link"
+    );
+    const headerImage = this.window.document.getElementById(
+      "cfr-notification-header-image"
+    );
+    const footerText = this.window.document.getElementById(
+      "cfr-notification-footer-text"
+    );
+    const footerLink = this.window.document.getElementById(
+      "cfr-notification-footer-learn-more-link"
+    );
+    const { primary, secondary } = content.buttons;
     let primaryActionCallback;
     let options = {};
     let panelTitle;
 
     // Use the message category as a CSS selector to hide different parts of the
     // notification template markup
-    this.window.document.getElementById("contextual-feature-recommendation-notification")
+    this.window.document
+      .getElementById("contextual-feature-recommendation-notification")
       .setAttribute("data-notification-category", message.content.category);
 
     headerLabel.value = await this.getStrings(content.heading_text);
-    headerLink.setAttribute("href", SUMO_BASE_URL + content.info_icon.sumo_path);
+    headerLink.setAttribute(
+      "href",
+      SUMO_BASE_URL + content.info_icon.sumo_path
+    );
     headerLink.setAttribute(this.window.RTL_UI ? "left" : "right", 0);
-    headerImage.setAttribute("tooltiptext", await this.getStrings(content.info_icon.label, "tooltiptext"));
-    headerLink.onclick = () => this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "RATIONALE"});
+    headerImage.setAttribute(
+      "tooltiptext",
+      await this.getStrings(content.info_icon.label, "tooltiptext")
+    );
+    headerLink.onclick = () =>
+      this._sendTelemetry({
+        message_id: id,
+        bucket_id: content.bucket_id,
+        event: "RATIONALE",
+      });
 
     footerText.textContent = await this.getStrings(content.text);
 
     if (content.addon) {
       await this._setAddonAuthorAndRating(this.window.document, content);
       panelTitle = await this.getStrings(content.addon.title);
-      options = {popupIconURL: content.addon.icon};
+      options = { popupIconURL: content.addon.icon };
 
-      footerLink.value = await this.getStrings({string_id: "cfr-doorhanger-extension-learn-more-link"});
+      footerLink.value = await this.getStrings({
+        string_id: "cfr-doorhanger-extension-learn-more-link",
+      });
       footerLink.setAttribute("href", content.addon.amo_url);
-      footerLink.onclick = () => this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "LEARN_MORE"});
+      footerLink.onclick = () =>
+        this._sendTelemetry({
+          message_id: id,
+          bucket_id: content.bucket_id,
+          event: "LEARN_MORE",
+        });
 
       primaryActionCallback = async () => {
         // eslint-disable-next-line no-use-before-define
-        primary.action.data.url = await CFRPageActions._fetchLatestAddonVersion(content.addon.id);
+        primary.action.data.url = await CFRPageActions._fetchLatestAddonVersion(
+          content.addon.id
+        );
         this._blockMessage(id);
         this.dispatchUserAction(primary.action);
         this.hideAddressBarNotifier();
-        this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "INSTALL"});
+        this._sendTelemetry({
+          message_id: id,
+          bucket_id: content.bucket_id,
+          event: "INSTALL",
+        });
         RecommendationMap.delete(browser);
       };
     } else {
       const stepsContainerId = "cfr-notification-feature-steps";
-      let stepsContainer = this.window.document.getElementById(stepsContainerId);
+      let stepsContainer = this.window.document.getElementById(
+        stepsContainerId
+      );
       primaryActionCallback = () => {
         this._blockMessage(id);
         this.dispatchUserAction(primary.action);
         this.hideAddressBarNotifier();
-        this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "PIN"});
+        this._sendTelemetry({
+          message_id: id,
+          bucket_id: content.bucket_id,
+          event: "PIN",
+        });
         RecommendationMap.delete(browser);
       };
       panelTitle = await this.getStrings(content.heading_text);
 
-      if (stepsContainer) { // If it exists we need to empty it
+      if (stepsContainer) {
+        // If it exists we need to empty it
         stepsContainer.remove();
         stepsContainer = stepsContainer.cloneNode(false);
       } else {
@@ -423,32 +546,48 @@ class PageAction {
     const secondaryBtnStrings = [];
     for (let button of secondary) {
       let label = await this.getStrings(button.label);
-      secondaryBtnStrings.push({label, attributes: label.attributes});
+      secondaryBtnStrings.push({ label, attributes: label.attributes });
     }
-    const secondaryActions = [{
-      label: secondaryBtnStrings[0].label,
-      accessKey: secondaryBtnStrings[0].attributes.accesskey,
-      callback: () => {
-        this.dispatchUserAction(secondary[0].action);
-        this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "DISMISS"});
+    const secondaryActions = [
+      {
+        label: secondaryBtnStrings[0].label,
+        accessKey: secondaryBtnStrings[0].attributes.accesskey,
+        callback: () => {
+          this.dispatchUserAction(secondary[0].action);
+          this._sendTelemetry({
+            message_id: id,
+            bucket_id: content.bucket_id,
+            event: "DISMISS",
+          });
+        },
       },
-    }, {
-      label: secondaryBtnStrings[1].label,
-      accessKey: secondaryBtnStrings[1].attributes.accesskey,
-      callback: () => {
-        this._blockMessage(id);
-        this.hideAddressBarNotifier();
-        this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "BLOCK"});
-        RecommendationMap.delete(browser);
+      {
+        label: secondaryBtnStrings[1].label,
+        accessKey: secondaryBtnStrings[1].attributes.accesskey,
+        callback: () => {
+          this._blockMessage(id);
+          this.hideAddressBarNotifier();
+          this._sendTelemetry({
+            message_id: id,
+            bucket_id: content.bucket_id,
+            event: "BLOCK",
+          });
+          RecommendationMap.delete(browser);
+        },
       },
-    }, {
-      label: secondaryBtnStrings[2].label,
-      accessKey: secondaryBtnStrings[2].attributes.accesskey,
-      callback: () => {
-        this.dispatchUserAction(secondary[2].action);
-        this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "MANAGE"});
+      {
+        label: secondaryBtnStrings[2].label,
+        accessKey: secondaryBtnStrings[2].attributes.accesskey,
+        callback: () => {
+          this.dispatchUserAction(secondary[2].action);
+          this._sendTelemetry({
+            message_id: id,
+            bucket_id: content.bucket_id,
+            event: "MANAGE",
+          });
+        },
       },
-    }];
+    ];
 
     // Actually show the notification
     this.currentNotification = this.window.PopupNotifications.show(
@@ -479,7 +618,7 @@ class PageAction {
       return;
     }
     const message = RecommendationMap.get(browser);
-    const {id, content} = message;
+    const { id, content } = message;
 
     // The recommendation should remain either collapsed or expanded while the
     // doorhanger is showing
@@ -489,14 +628,20 @@ class PageAction {
     // See https://searchfox.org/mozilla-central/rev/847b64cc28b74b44c379f9bff4f415b97da1c6d7/toolkit/modules/PopupNotifications.jsm#42
     browser.cfrpopupnotificationanchor = this.container;
 
-    this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "CLICK_DOORHANGER"});
+    this._sendTelemetry({
+      message_id: id,
+      bucket_id: content.bucket_id,
+      event: "CLICK_DOORHANGER",
+    });
     await this._renderPopup(message, browser);
   }
 }
 
 function isHostMatch(browser, host) {
-  return (browser.documentURI.scheme.startsWith("http") &&
-    browser.documentURI.host === host);
+  return (
+    browser.documentURI.scheme.startsWith("http") &&
+    browser.documentURI.host === host
+  );
 }
 
 const CFRPageActions = {
@@ -545,13 +690,17 @@ const CFRPageActions = {
   async _fetchLatestAddonVersion(id) {
     let url = null;
     try {
-      const response = await fetch(`${ADDONS_API_URL}/${id}/`, {credentials: "omit"});
+      const response = await fetch(`${ADDONS_API_URL}/${id}/`, {
+        credentials: "omit",
+      });
       if (response.status !== 204 && response.ok) {
         const json = await response.json();
         url = json.current_version.files[0].url;
       }
     } catch (e) {
-      Cu.reportError("Failed to get the latest add-on version for this recommendation");
+      Cu.reportError(
+        "Failed to get the latest add-on version for this recommendation"
+      );
     }
     return url;
   },
@@ -566,8 +715,8 @@ const CFRPageActions = {
   async forceRecommendation(browser, recommendation, dispatchToASRouter) {
     // If we are forcing via the Admin page, the browser comes in a different format
     const win = browser.browser.ownerGlobal;
-    const {id, content} = recommendation;
-    RecommendationMap.set(browser.browser, {id, retain: true, content});
+    const { id, content } = recommendation;
+    RecommendationMap.set(browser.browser, { id, retain: true, content });
     if (!PageActionMap.has(win)) {
       PageActionMap.set(win, new PageAction(win, dispatchToASRouter));
     }
@@ -588,15 +737,18 @@ const CFRPageActions = {
     if (PrivateBrowsingUtils.isWindowPrivate(win)) {
       return false;
     }
-    if (browser !== win.gBrowser.selectedBrowser || !isHostMatch(browser, host)) {
+    if (
+      browser !== win.gBrowser.selectedBrowser ||
+      !isHostMatch(browser, host)
+    ) {
       return false;
     }
     if (RecommendationMap.has(browser)) {
       // Don't replace an existing message
       return false;
     }
-    const {id, content} = recommendation;
-    RecommendationMap.set(browser, {id, host, retain: true, content});
+    const { id, content } = recommendation;
+    RecommendationMap.set(browser, { id, host, retain: true, content });
     if (!PageActionMap.has(win)) {
       PageActionMap.set(win, new PageAction(win, dispatchToASRouter));
     }

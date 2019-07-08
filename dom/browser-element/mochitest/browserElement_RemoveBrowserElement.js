@@ -26,8 +26,9 @@ function runTest() {
     });
   });
 
-  iframe.src = "data:text/html,<html><body><script>alert(\"test\")</script>" +
-               "</body></html>";
+  iframe.src =
+    'data:text/html,<html><body><script>alert("test")</script>' +
+    "</body></html>";
 }
 
 addEventListener("testready", runTest);

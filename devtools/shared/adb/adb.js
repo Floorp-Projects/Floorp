@@ -4,15 +4,25 @@
 
 "use strict";
 
-const { clearInterval, setInterval } = require("resource://gre/modules/Timer.jsm");
+const {
+  clearInterval,
+  setInterval,
+} = require("resource://gre/modules/Timer.jsm");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const { adbProcess } = require("devtools/shared/adb/adb-process");
 const { adbAddon } = require("devtools/shared/adb/adb-addon");
 const AdbDevice = require("devtools/shared/adb/adb-device");
 const { AdbRuntime } = require("devtools/shared/adb/adb-runtime");
-const { TrackDevicesCommand } = require("devtools/shared/adb/commands/track-devices");
-loader.lazyRequireGetter(this, "check", "devtools/shared/adb/adb-running-checker", true);
+const {
+  TrackDevicesCommand,
+} = require("devtools/shared/adb/commands/track-devices");
+loader.lazyRequireGetter(
+  this,
+  "check",
+  "devtools/shared/adb/adb-running-checker",
+  true
+);
 
 // Duration in milliseconds of the runtime polling. We resort to polling here because we
 // have no event to know when a runtime started on an already discovered ADB device.
@@ -37,8 +47,14 @@ class Adb extends EventEmitter {
     this._onNoDevicesDetected = this._onNoDevicesDetected.bind(this);
 
     this._trackDevicesCommand.on("device-connected", this._onDeviceConnected);
-    this._trackDevicesCommand.on("device-disconnected", this._onDeviceDisconnected);
-    this._trackDevicesCommand.on("no-devices-detected", this._onNoDevicesDetected);
+    this._trackDevicesCommand.on(
+      "device-disconnected",
+      this._onDeviceDisconnected
+    );
+    this._trackDevicesCommand.on(
+      "no-devices-detected",
+      this._onNoDevicesDetected
+    );
     adbAddon.on("update", this._updateAdbProcess);
   }
 
@@ -87,7 +103,10 @@ class Adb extends EventEmitter {
 
     // Device runtimes are detected by running a shell command and checking for
     // "firefox-debugger-socket" in the list of currently running processes.
-    this._timer = setInterval(this.updateRuntimes.bind(this), UPDATE_RUNTIMES_INTERVAL);
+    this._timer = setInterval(
+      this.updateRuntimes.bind(this),
+      UPDATE_RUNTIMES_INTERVAL
+    );
   }
 
   async _stopTracking() {
@@ -138,7 +157,7 @@ class Adb extends EventEmitter {
   }
 
   async _getDeviceRuntimes(device) {
-    const socketPaths = [...await device.getRuntimeSocketPaths()];
+    const socketPaths = [...(await device.getRuntimeSocketPaths())];
     const runtimes = [];
     for (const socketPath of socketPaths) {
       const runtime = new AdbRuntime(device, socketPath);

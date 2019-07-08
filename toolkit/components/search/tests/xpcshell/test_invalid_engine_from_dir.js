@@ -15,7 +15,10 @@ add_task(async function test_invalid_engine_from_dir() {
   let engineFile = do_get_profile().clone();
   engineFile.append("searchplugins");
   engineFile.append("test-search-engine.xml");
-  engineFile.parent.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  engineFile.parent.create(
+    Ci.nsIFile.DIRECTORY_TYPE,
+    FileUtils.PERMS_DIRECTORY
+  );
 
   // Copy the invalid engine to the test profile.
   let engineTemplateFile = do_get_file("data/invalid-engine.xml");

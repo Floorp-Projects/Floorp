@@ -40,7 +40,7 @@ const ADDONS = {
   },
 };
 
-var testserver = createHttpServer({hosts: ["example.com"]});
+var testserver = createHttpServer({ hosts: ["example.com"] });
 testserver.registerDirectory("/data/", do_get_file("data"));
 
 const XPIS = {};
@@ -55,7 +55,7 @@ add_task(async function setup() {
       manifest: {
         name: info.name,
         version: info.version,
-        applications: {gecko: {id: info.id}},
+        applications: { gecko: { id: info.id } },
       },
     });
     testserver.registerFile(`/addons/${name}.xpi`, XPIS[name]);
@@ -94,27 +94,31 @@ add_task(async function test_apply_update() {
     {
       addonEvents: {
         "addon1@tests.mozilla.org": [
-          {event: "onPropertyChanged",
-           properties: ["applyBackgroundUpdates"]},
+          {
+            event: "onPropertyChanged",
+            properties: ["applyBackgroundUpdates"],
+          },
         ],
       },
     },
     async () => {
       a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
-    });
+    }
+  );
 
   a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
 
   let install;
   await expectEvents(
     {
-      installEvents: [
-        {event: "onNewInstall"},
-      ],
+      installEvents: [{ event: "onNewInstall" }],
     },
     async () => {
-      ({updateAvailable: install} = await AddonTestUtils.promiseFindAddonUpdates(a1));
-    });
+      ({
+        updateAvailable: install,
+      } = await AddonTestUtils.promiseFindAddonUpdates(a1));
+    }
+  );
 
   let installs = await AddonManager.getAllInstalls();
   equal(installs.length, 1);
@@ -127,7 +131,9 @@ add_task(async function test_apply_update() {
   equal(install.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
 
   // Verify that another update check returns the same AddonInstall
-  let {updateAvailable: install2} = await AddonTestUtils.promiseFindAddonUpdates(a1);
+  let {
+    updateAvailable: install2,
+  } = await AddonTestUtils.promiseFindAddonUpdates(a1);
 
   installs = await AddonManager.getAllInstalls();
   equal(installs.length, 1);
@@ -137,21 +143,27 @@ add_task(async function test_apply_update() {
   await expectEvents(
     {
       installEvents: [
-        {event: "onDownloadStarted"},
-        {event: "onDownloadEnded", returnValue: false},
+        { event: "onDownloadStarted" },
+        { event: "onDownloadEnded", returnValue: false },
       ],
     },
     () => {
       install.install();
-    });
+    }
+  );
 
   equal(install.state, AddonManager.STATE_DOWNLOADED);
 
   // Continue installing the update.
   // Verify that another update check returns no new update
-  let {updateAvailable} = await AddonTestUtils.promiseFindAddonUpdates(install.existingAddon);
+  let { updateAvailable } = await AddonTestUtils.promiseFindAddonUpdates(
+    install.existingAddon
+  );
 
-  ok(!updateAvailable, "Should find no available updates when one is already downloading");
+  ok(
+    !updateAvailable,
+    "Should find no available updates when one is already downloading"
+  );
 
   installs = await AddonManager.getAllInstalls();
   equal(installs.length, 1);
@@ -161,18 +173,19 @@ add_task(async function test_apply_update() {
     {
       addonEvents: {
         "addon1@tests.mozilla.org": [
-          {event: "onInstalling"},
-          {event: "onInstalled"},
+          { event: "onInstalling" },
+          { event: "onInstalled" },
         ],
       },
       installEvents: [
-        {event: "onInstallStarted"},
-        {event: "onInstallEnded"},
+        { event: "onInstallStarted" },
+        { event: "onInstallEnded" },
       ],
     },
     () => {
       install.install();
-    });
+    }
+  );
 
   await AddonTestUtils.loadAddonsList(true);
 
@@ -269,7 +282,10 @@ add_task(async function test_no_compat() {
   ok(!a3.isCompatibleWith("2", "2"));
 
   let result = await AddonTestUtils.promiseFindAddonUpdates(a3);
-  ok(!result.compatibilityUpdate, "Should not have seen a compatibility update");
+  ok(
+    !result.compatibilityUpdate,
+    "Should not have seen a compatibility update"
+  );
   ok(!result.updateAvailable, "Should not have seen a version update");
 });
 
@@ -284,7 +300,12 @@ add_task(async function test_future_compat() {
   ok(a3.isCompatibleWith("5", "5"));
   ok(!a3.isCompatibleWith("2", "2"));
 
-  let result = await AddonTestUtils.promiseFindAddonUpdates(a3, undefined, "3.0", "3.0");
+  let result = await AddonTestUtils.promiseFindAddonUpdates(
+    a3,
+    undefined,
+    "3.0",
+    "3.0"
+  );
   ok(result.compatibilityUpdate, "Should have seen a compatibility update");
   ok(!result.updateAvailable, "Should not have seen a version update");
 
@@ -329,22 +350,22 @@ add_task(async function test_background_update() {
     {
       addonEvents: {
         "addon1@tests.mozilla.org": [
-          {event: "onInstalling"},
-          {event: "onInstalled"},
+          { event: "onInstalling" },
+          { event: "onInstalled" },
         ],
       },
       installEvents: [
-        {event: "onNewInstall"},
-        {event: "onDownloadStarted"},
-        {event: "onDownloadEnded",
-         callback: checkInstall},
-        {event: "onInstallStarted"},
-        {event: "onInstallEnded"},
+        { event: "onNewInstall" },
+        { event: "onDownloadStarted" },
+        { event: "onDownloadEnded", callback: checkInstall },
+        { event: "onInstallStarted" },
+        { event: "onInstallEnded" },
       ],
     },
     () => {
       AddonManagerInternal.backgroundUpdateCheck();
-    });
+    }
+  );
 
   let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   notEqual(a1, null);
@@ -354,20 +375,22 @@ add_task(async function test_background_update() {
   await a1.uninstall();
 });
 
-const PARAMS = "?" + [
-  "req_version=%REQ_VERSION%",
-  "item_id=%ITEM_ID%",
-  "item_version=%ITEM_VERSION%",
-  "item_maxappversion=%ITEM_MAXAPPVERSION%",
-  "item_status=%ITEM_STATUS%",
-  "app_id=%APP_ID%",
-  "app_version=%APP_VERSION%",
-  "current_app_version=%CURRENT_APP_VERSION%",
-  "app_os=%APP_OS%",
-  "app_abi=%APP_ABI%",
-  "app_locale=%APP_LOCALE%",
-  "update_type=%UPDATE_TYPE%",
-].join("&");
+const PARAMS =
+  "?" +
+  [
+    "req_version=%REQ_VERSION%",
+    "item_id=%ITEM_ID%",
+    "item_version=%ITEM_VERSION%",
+    "item_maxappversion=%ITEM_MAXAPPVERSION%",
+    "item_status=%ITEM_STATUS%",
+    "app_id=%APP_ID%",
+    "app_version=%APP_VERSION%",
+    "current_app_version=%CURRENT_APP_VERSION%",
+    "app_os=%APP_OS%",
+    "app_abi=%APP_ABI%",
+    "app_locale=%APP_LOCALE%",
+    "update_type=%UPDATE_TYPE%",
+  ].join("&");
 
 const PARAM_ADDONS = {
   "addon1@tests.mozilla.org": {
@@ -572,7 +595,7 @@ add_task(async function test_params() {
   let mockBlocklist = await AddonTestUtils.overrideBlocklist(blocklistAddons);
 
   for (let [id, options] of Object.entries(PARAM_ADDONS)) {
-    await promiseInstallWebExtension({manifest: options.manifest});
+    await promiseInstallWebExtension({ manifest: options.manifest });
 
     if (options.initialState) {
       let addon = await AddonManager.getAddonByID(id);
@@ -583,10 +606,16 @@ add_task(async function test_params() {
   let resultsPromise = new Promise(resolve => {
     let results = new Map();
 
-    testserver.registerPathHandler("/data/param_test.json", function(request, response) {
+    testserver.registerPathHandler("/data/param_test.json", function(
+      request,
+      response
+    ) {
       let params = new URLSearchParams(request.queryString);
       let itemId = params.get("item_id");
-      ok(!results.has(itemId), `Should not see a duplicate request for item ${itemId}`);
+      ok(
+        !results.has(itemId),
+        `Should not see a duplicate request for item ${itemId}`
+      );
 
       results.set(itemId, params);
 
@@ -602,7 +631,7 @@ add_task(async function test_params() {
   for (let [id, options] of Object.entries(PARAM_ADDONS)) {
     // Having an onUpdateAvailable callback in the listener automagically adds
     // UPDATE_TYPE_NEWVERSION to the update type flags in the request.
-    let listener = options.compatOnly ? {} : {onUpdateAvailable() {}};
+    let listener = options.compatOnly ? {} : { onUpdateAvailable() {} };
 
     addons.get(id).findUpdates(listener, ...options.updateType);
   }
@@ -660,12 +689,16 @@ add_task(async function test_manifest_compat() {
   // Test that a normal update check won't decrease a targetApplication's
   // maxVersion but an update check for a new application will.
   await AddonTestUtils.promiseFindAddonUpdates(
-    a4, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+    a4,
+    AddonManager.UPDATE_WHEN_PERIODIC_UPDATE
+  );
   ok(a4.isActive, "addon4 is active");
   ok(a4.isCompatible, "addon4 is compatible");
 
   await AddonTestUtils.promiseFindAddonUpdates(
-    a4, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
+    a4,
+    AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED
+  );
   ok(!a4.isActive, "addon4 is not active");
   ok(!a4.isCompatible, "addon4 is not compatible");
 
@@ -712,8 +745,10 @@ add_task(async function test_no_auto_update() {
     listener = {
       onNewInstall(aInstall) {
         let id = aInstall.existingAddon.id;
-        ok((id == "addon1@tests.mozilla.org" || id == "addon8@tests.mozilla.org"),
-           "Saw unexpected onNewInstall for " + id);
+        ok(
+          id == "addon1@tests.mozilla.org" || id == "addon8@tests.mozilla.org",
+          "Saw unexpected onNewInstall for " + id
+        );
       },
 
       onDownloadStarted(aInstall) {
@@ -756,8 +791,10 @@ add_task(async function test_no_auto_update() {
   AddonManager.removeInstallListener(listener);
 
   let a1;
-  [a1, a8] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                "addon8@tests.mozilla.org"]);
+  [a1, a8] = await AddonManager.getAddonsByIDs([
+    "addon1@tests.mozilla.org",
+    "addon8@tests.mozilla.org",
+  ]);
   notEqual(a1, null);
   equal(a1.version, "2.0");
   await a1.uninstall();
@@ -790,7 +827,7 @@ add_task(async function run_test_locked_install() {
   });
   xpi.copyTo(lockedDir, "addon13@tests.mozilla.org.xpi");
 
-  let validAddons = { "system": ["addon13@tests.mozilla.org"] };
+  let validAddons = { system: ["addon13@tests.mozilla.org"] };
   await overrideBuiltIns(validAddons);
 
   await promiseStartupManager();
@@ -799,7 +836,10 @@ add_task(async function run_test_locked_install() {
   notEqual(a13, null);
 
   let result = await AddonTestUtils.promiseFindAddonUpdates(a13);
-  ok(!result.compatibilityUpdate, "Should not have seen a compatibility update");
+  ok(
+    !result.compatibilityUpdate,
+    "Should not have seen a compatibility update"
+  );
   ok(!result.updateAvailable, "Should not have seen a version update");
 
   let installs = await AddonManager.getAllInstalls();

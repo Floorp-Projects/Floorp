@@ -37,7 +37,11 @@ add_task(async function test() {
 
   tabs = await client.mainRoot.listTabs();
   const newFront = tabs.find(a => a.url == TAB1_URL);
-  is(newFront.actorID, previousActorID, "Should have the same actor for the same tab");
+  is(
+    newFront.actorID,
+    previousActorID,
+    "Should have the same actor for the same tab"
+  );
   isnot(newFront, tabFront, "But the front should be a new one");
 
   await newFront.attach();

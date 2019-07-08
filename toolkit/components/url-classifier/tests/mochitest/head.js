@@ -4,7 +4,7 @@ function addCompletionToServer(list, url, mochitestUrl) {
     var listParam = "list=" + list;
     var fullhashParam = "fullhash=" + hash(url);
 
-    var xhr = new XMLHttpRequest;
+    var xhr = new XMLHttpRequest();
     xhr.open("PUT", mochitestUrl + "?" + listParam + "&" + fullhashParam, true);
     xhr.setRequestHeader("Content-Type", "text/plain");
     xhr.onreadystatechange = function() {
@@ -18,15 +18,16 @@ function addCompletionToServer(list, url, mochitestUrl) {
 
 function hash(str) {
   function bytesFromString(str1) {
-    var converter =
-      SpecialPowers.Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                       .createInstance(SpecialPowers.Ci.nsIScriptableUnicodeConverter);
+    var converter = SpecialPowers.Cc[
+      "@mozilla.org/intl/scriptableunicodeconverter"
+    ].createInstance(SpecialPowers.Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
     return converter.convertToByteArray(str1);
   }
 
-  var hasher = SpecialPowers.Cc["@mozilla.org/security/hash;1"]
-                               .createInstance(SpecialPowers.Ci.nsICryptoHash);
+  var hasher = SpecialPowers.Cc["@mozilla.org/security/hash;1"].createInstance(
+    SpecialPowers.Ci.nsICryptoHash
+  );
 
   var data = bytesFromString(str);
   hasher.init(hasher.SHA256);
@@ -35,7 +36,7 @@ function hash(str) {
   return hasher.finish(true);
 }
 
-var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
+var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({ set: p });
 
 function whenDelayedStartupFinished(aWindow, aCallback) {
   Services.obs.addObserver(function observer(aSubject, aTopic) {
@@ -45,5 +46,3 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
     }
   }, "browser-delayed-startup-finished");
 }
-
-

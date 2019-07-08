@@ -3,10 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createElement } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createElement,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { connect } = require("devtools/client/shared/redux/visibility-handler-connect");
-const {initialize} = require("devtools/client/webconsole/actions/ui");
+const {
+  connect,
+} = require("devtools/client/shared/redux/visibility-handler-connect");
+const { initialize } = require("devtools/client/webconsole/actions/ui");
 
 const {
   getAllMessagesById,
@@ -20,13 +25,24 @@ const {
   isMessageInWarningGroup,
 } = require("devtools/client/webconsole/selectors/messages");
 
-loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
-loader.lazyRequireGetter(this, "MessageContainer", "devtools/client/webconsole/components/Output/MessageContainer", true);
-ChromeUtils.defineModuleGetter(this, "pointPrecedes", "resource://devtools/shared/execution-point-utils.js");
+loader.lazyRequireGetter(
+  this,
+  "PropTypes",
+  "devtools/client/shared/vendor/react-prop-types"
+);
+loader.lazyRequireGetter(
+  this,
+  "MessageContainer",
+  "devtools/client/webconsole/components/Output/MessageContainer",
+  true
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "pointPrecedes",
+  "resource://devtools/shared/execution-point-utils.js"
+);
 
-const {
-  MESSAGE_TYPE,
-} = require("devtools/client/webconsole/constants");
+const { MESSAGE_TYPE } = require("devtools/client/webconsole/constants");
 const {
   getInitialMessageCountForViewport,
 } = require("devtools/client/webconsole/utils/messages.js");
@@ -38,16 +54,20 @@ function getClosestMessage(visibleMessages, messages, executionPoint) {
 
   const messageList = visibleMessages.map(id => messages.get(id));
   const precedingMessages = messageList.filter(m => {
-    return m && m.executionPoint && pointPrecedes(m.executionPoint, executionPoint);
+    return (
+      m && m.executionPoint && pointPrecedes(m.executionPoint, executionPoint)
+    );
   });
   if (precedingMessages.length != 0) {
     return precedingMessages.sort((a, b) => {
       return pointPrecedes(a.executionPoint, b.executionPoint);
     })[0];
   }
-  return messageList.filter(m => m && m.executionPoint).sort((a, b) => {
-    return pointPrecedes(b.executionPoint, a.executionPoint);
-  })[0];
+  return messageList
+    .filter(m => m && m.executionPoint)
+    .sort((a, b) => {
+      return pointPrecedes(b.executionPoint, a.executionPoint);
+    })[0];
 }
 
 class ConsoleOutput extends Component {
@@ -85,25 +105,20 @@ class ConsoleOutput extends Component {
       scrollToBottom(this.outputNode);
     }
 
-    const {
-      serviceContainer,
-      onFirstMeaningfulPaint,
-      dispatch,
-    } = this.props;
+    const { serviceContainer, onFirstMeaningfulPaint, dispatch } = this.props;
     serviceContainer.attachRefToWebConsoleUI("outputScroller", this.outputNode);
 
     // Waiting for the next paint.
-    new Promise(res => requestAnimationFrame(res))
-      .then(() => {
-        if (onFirstMeaningfulPaint) {
-          onFirstMeaningfulPaint();
-        }
+    new Promise(res => requestAnimationFrame(res)).then(() => {
+      if (onFirstMeaningfulPaint) {
+        onFirstMeaningfulPaint();
+      }
 
-        // Dispatching on next tick so we don't block on action execution.
-        setTimeout(() => {
-          dispatch(initialize());
-        }, 0);
-      });
+      // Dispatching on next tick so we don't block on action execution.
+      setTimeout(() => {
+        dispatch(initialize());
+      }, 0);
+    });
   }
 
   componentWillUpdate(nextProps, nextState) {
@@ -126,33 +141,32 @@ class ConsoleOutput extends Component {
     const lastChild = outputNode.lastChild;
     const visibleMessagesDelta =
       nextProps.visibleMessages.length - this.props.visibleMessages.length;
-    const messagesDelta =
-      nextProps.messages.size - this.props.messages.size;
-    const isNewMessageEvaluationResult = messagesDelta > 0 &&
-      [...nextProps.messages.values()][nextProps.messages.size - 1].type
-        === MESSAGE_TYPE.RESULT;
+    const messagesDelta = nextProps.messages.size - this.props.messages.size;
+    const isNewMessageEvaluationResult =
+      messagesDelta > 0 &&
+      [...nextProps.messages.values()][nextProps.messages.size - 1].type ===
+        MESSAGE_TYPE.RESULT;
 
     const messagesUiDelta =
       nextProps.messagesUi.length - this.props.messagesUi.length;
-    const isOpeningGroup = messagesUiDelta > 0 &&
-      nextProps.messagesUi.some(id =>
-        !this.props.messagesUi.includes(id) &&
-        nextProps.messagesUi.includes(id) &&
-        this.props.visibleMessages.includes(id) &&
-        nextProps.visibleMessages.includes(id));
+    const isOpeningGroup =
+      messagesUiDelta > 0 &&
+      nextProps.messagesUi.some(
+        id =>
+          !this.props.messagesUi.includes(id) &&
+          nextProps.messagesUi.includes(id) &&
+          this.props.visibleMessages.includes(id) &&
+          nextProps.visibleMessages.includes(id)
+      );
 
     this.shouldScrollBottom =
-      (
-        !this.props.initialized &&
+      (!this.props.initialized &&
         nextProps.initialized &&
-        isScrolledToBottom(lastChild, outputNode)
-      ) ||
-      (isNewMessageEvaluationResult) ||
-      (
-        isScrolledToBottom(lastChild, outputNode) &&
+        isScrolledToBottom(lastChild, outputNode)) ||
+      isNewMessageEvaluationResult ||
+      (isScrolledToBottom(lastChild, outputNode) &&
         visibleMessagesDelta > 0 &&
-        !isOpeningGroup
-      );
+        !isOpeningGroup);
   }
 
   componentDidUpdate() {
@@ -189,17 +203,23 @@ class ConsoleOutput extends Component {
     } = this.props;
 
     if (!initialized) {
-      const numberMessagesFitViewport = getInitialMessageCountForViewport(window);
+      const numberMessagesFitViewport = getInitialMessageCountForViewport(
+        window
+      );
       if (numberMessagesFitViewport < visibleMessages.length) {
         visibleMessages = visibleMessages.slice(
-          visibleMessages.length - numberMessagesFitViewport);
+          visibleMessages.length - numberMessagesFitViewport
+        );
       }
     }
 
     const pausedMessage = getClosestMessage(
-      visibleMessages, messages, pausedExecutionPoint);
+      visibleMessages,
+      messages,
+      pausedExecutionPoint
+    );
 
-    const messageNodes = visibleMessages.map((messageId) =>
+    const messageNodes = visibleMessages.map(messageId =>
       createElement(MessageContainer, {
         dispatch,
         key: messageId,
@@ -209,28 +229,32 @@ class ConsoleOutput extends Component {
         payload: messagesPayload.get(messageId),
         timestampsVisible,
         repeat: messagesRepeat[messageId],
-        badge: warningGroups.has(messageId) ? warningGroups.get(messageId).length : null,
-        inWarningGroup: warningGroups && warningGroups.size > 0
-          ? isMessageInWarningGroup(messages.get(messageId), visibleMessages)
-          : false,
+        badge: warningGroups.has(messageId)
+          ? warningGroups.get(messageId).length
+          : null,
+        inWarningGroup:
+          warningGroups && warningGroups.size > 0
+            ? isMessageInWarningGroup(messages.get(messageId), visibleMessages)
+            : false,
         networkMessageUpdate: networkMessagesUpdate[messageId],
         networkMessageActiveTabId,
         pausedExecutionPoint,
         getMessage: () => messages.get(messageId),
         isPaused: !!pausedMessage && pausedMessage.id == messageId,
         maybeScrollToBottom: this.maybeScrollToBottom,
-      }));
+      })
+    );
 
-    return (
-      dom.div({
+    return dom.div(
+      {
         className: "webconsole-output",
         role: "main",
         onContextMenu: this.onContextMenu,
         ref: node => {
           this.outputNode = node;
         },
-      }, messageNodes
-      )
+      },
+      messageNodes
     );
   }
 }
@@ -242,10 +266,13 @@ function scrollToBottom(node) {
 }
 
 function isScrolledToBottom(outputNode, scrollNode) {
-  const lastNodeHeight = outputNode.lastChild ?
-                       outputNode.lastChild.clientHeight : 0;
-  return scrollNode.scrollTop + scrollNode.clientHeight >=
-         scrollNode.scrollHeight - lastNodeHeight / 2;
+  const lastNodeHeight = outputNode.lastChild
+    ? outputNode.lastChild.clientHeight
+    : 0;
+  return (
+    scrollNode.scrollTop + scrollNode.clientHeight >=
+    scrollNode.scrollHeight - lastNodeHeight / 2
+  );
 }
 
 function mapStateToProps(state, props) {

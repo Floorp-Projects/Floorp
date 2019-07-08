@@ -60,11 +60,11 @@ GripProvider.prototype = {
         const preview = value.preview;
         const k = preview.kind;
         const objectsWithProps = ["DOMNode", "ObjectWithURL"];
-        hasChildren = hasChildren || (objectsWithProps.includes(k));
+        hasChildren = hasChildren || objectsWithProps.includes(k);
         hasChildren = hasChildren || (k == "ArrayLike" && preview.length > 0);
       }
 
-      return (value.type == "object" && hasChildren);
+      return value.type == "object" && hasChildren;
     }
 
     return null;
@@ -73,19 +73,20 @@ GripProvider.prototype = {
   getValue: function(object) {
     if (object instanceof Property) {
       const value = object.value;
-      return (typeof value.value != "undefined") ? value.value :
-        value.getterValue;
+      return typeof value.value != "undefined"
+        ? value.value
+        : value.getterValue;
     }
 
     return object;
   },
 
   getLabel: function(object) {
-    return (object instanceof Property) ? object.name : null;
+    return object instanceof Property ? object.name : null;
   },
 
   getKey: function(object) {
-    return (object instanceof Property) ? object.key : null;
+    return object instanceof Property ? object.key : null;
   },
 
   getType: function(object) {

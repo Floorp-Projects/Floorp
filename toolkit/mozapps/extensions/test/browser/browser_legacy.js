@@ -5,7 +5,9 @@ SpecialPowers.pushPrefEnv({
 });
 
 add_task(async function() {
-  const INFO_URL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "webextensions";
+  const INFO_URL =
+    Services.urlFormatter.formatURLPref("app.support.baseURL") +
+    "webextensions";
 
   // The mochitest framework installs a bunch of legacy extensions.
   // Fortunately, the extensions.legacy.exceptions preference exists to
@@ -17,7 +19,7 @@ add_task(async function() {
   ];
 
   let exceptions = Services.prefs.getCharPref("extensions.legacy.exceptions");
-  exceptions = [ exceptions, ...IGNORE ].join(",");
+  exceptions = [exceptions, ...IGNORE].join(",");
 
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -100,12 +102,18 @@ add_task(async function() {
   // Initially, we have two good extensions (a webextension and a
   // "Mozilla Extensions"-signed extension).
   await catUtils.openType("extension");
-  checkList("addon-list",
-            ["webextension@tests.mozilla.org", "mozilla@tests.mozilla.org"]);
+  checkList("addon-list", [
+    "webextension@tests.mozilla.org",
+    "mozilla@tests.mozilla.org",
+  ]);
 
   let banner = mgrWin.document.getElementById("legacy-extensions-notice");
   is_element_hidden(banner, "Warning about legacy extensions should be hidden");
-  is(mgrWin.gLegacyView._categoryItem.disabled, true, "Legacy category is hidden");
+  is(
+    mgrWin.gLegacyView._categoryItem.disabled,
+    true,
+    "Legacy category is hidden"
+  );
 
   // Now add a legacy extension
   provider.createAddons(disabledAddon);
@@ -120,28 +128,43 @@ add_task(async function() {
   await catUtils.openType("plugin");
   await catUtils.openType("extension");
 
-  checkList("addon-list",
-            ["webextension@tests.mozilla.org", "mozilla@tests.mozilla.org"]);
+  checkList("addon-list", [
+    "webextension@tests.mozilla.org",
+    "mozilla@tests.mozilla.org",
+  ]);
 
   // But now the legacy banner and category should be visible
   banner = mgrWin.document.getElementById("legacy-extensions-notice");
-  is_element_visible(banner, "Warning about legacy extensions should be visible");
+  is_element_visible(
+    banner,
+    "Warning about legacy extensions should be visible"
+  );
 
   let catItem = mgrWin.gLegacyView._categoryItem;
   is(catItem.disabled, false, "Legacy category is visible");
-  is(catItem.getAttribute("name"), get_string("type.legacy.name"),
-     "Category label with no unsigned extensions is correct");
+  is(
+    catItem.getAttribute("name"),
+    get_string("type.legacy.name"),
+    "Category label with no unsigned extensions is correct"
+  );
 
   // Follow the link to the legacy extensions page
-  let legacyLink = mgrWin.document.getElementById("legacy-extensions-learnmore-link");
+  let legacyLink = mgrWin.document.getElementById(
+    "legacy-extensions-learnmore-link"
+  );
   is_element_visible(legacyLink, "Link to legacy extension is visible");
 
-  let loadPromise = new Promise(resolve => wait_for_view_load(mgrWin, resolve, true));
+  let loadPromise = new Promise(resolve =>
+    wait_for_view_load(mgrWin, resolve, true)
+  );
   legacyLink.click();
   await loadPromise;
 
-  is(mgrWin.gViewController.currentViewId, "addons://legacy/",
-     "Legacy extensions link leads to the correct view");
+  is(
+    mgrWin.gViewController.currentViewId,
+    "addons://legacy/",
+    "Legacy extensions link leads to the correct view"
+  );
 
   let link = mgrWin.document.getElementById("legacy-learnmore");
   is(link.href, INFO_URL, "Learn more link points to the right place");
@@ -152,25 +175,31 @@ add_task(async function() {
   // Now add some unsigned addons and flip the signing preference
   provider.createAddons(unsignedAddons);
   SpecialPowers.pushPrefEnv({
-    set: [
-      ["xpinstall.signatures.required", true],
-    ],
+    set: [["xpinstall.signatures.required", true]],
   });
 
   // The entry on the left side should now read "Unsupported"
   await mgrWin.gLegacyView.refreshVisibility();
   is(catItem.disabled, false, "Legacy category is visible");
-  is(catItem.getAttribute("name"), get_string("type.unsupported.name"),
-     "Category label with unsigned extensions is correct");
+  is(
+    catItem.getAttribute("name"),
+    get_string("type.unsupported.name"),
+    "Category label with unsigned extensions is correct"
+  );
 
   // The main extensions list should still have the original two
   // good extensions and the legacy banner.
   await catUtils.openType("extension");
-  checkList("addon-list",
-            ["webextension@tests.mozilla.org", "mozilla@tests.mozilla.org"]);
+  checkList("addon-list", [
+    "webextension@tests.mozilla.org",
+    "mozilla@tests.mozilla.org",
+  ]);
 
   banner = mgrWin.document.getElementById("legacy-extensions-notice");
-  is_element_visible(banner, "Warning about legacy extensions should be visible");
+  is_element_visible(
+    banner,
+    "Warning about legacy extensions should be visible"
+  );
 
   // And the legacy pane should show both legacy and unsigned extensions
   await catUtils.openType("legacy");
@@ -182,9 +211,7 @@ add_task(async function() {
 
   // Disable unsigned extensions
   SpecialPowers.pushPrefEnv({
-    set: [
-      ["xpinstall.signatures.required", false],
-    ],
+    set: [["xpinstall.signatures.required", false]],
   });
 
   await new Promise(executeSoon);
@@ -192,8 +219,11 @@ add_task(async function() {
   // The name of the pane should go back to "Legacy Extensions"
   await mgrWin.gLegacyView.refreshVisibility();
   is(catItem.disabled, false, "Legacy category is visible");
-  is(catItem.getAttribute("name"), get_string("type.legacy.name"),
-     "Category label with no unsigned extensions is correct");
+  is(
+    catItem.getAttribute("name"),
+    get_string("type.legacy.name"),
+    "Category label with no unsigned extensions is correct"
+  );
 
   // The unsigned extension should be present in the main extensions pane
   await catUtils.openType("extension");
@@ -217,13 +247,14 @@ add_task(async function() {
   // now that legacy extensions are enabled, we should jump to the
   // regular Extensions list.
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["extensions.legacy.enabled", true],
-    ],
+    set: [["extensions.legacy.enabled", true]],
   });
 
   mgrWin = await open_manager(null);
-  is(mgrWin.gViewController.currentViewId, "addons://list/extension",
-     "addons manager switched to extensions list");
+  is(
+    mgrWin.gViewController.currentViewId,
+    "addons://list/extension",
+    "addons manager switched to extensions list"
+  );
   await close_manager(mgrWin);
 });

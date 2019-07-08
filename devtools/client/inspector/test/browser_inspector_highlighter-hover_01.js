@@ -9,11 +9,11 @@
 // by clicking on it leaves the highlighter visible for as long as the mouse is
 // over the node
 
-const TEST_URL = "data:text/html;charset=utf-8," +
-                 "<p>It's going to be legen....</p>";
+const TEST_URL =
+  "data:text/html;charset=utf-8," + "<p>It's going to be legen....</p>";
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
 
   info("hovering over the <p> line in the markup-view");
   await hoverContainer("p", inspector);
@@ -24,8 +24,10 @@ add_task(async function() {
   await clickContainer("p", inspector);
 
   await testActor.setProperty("p", "textContent", "wait for it ....");
-  info("wait and see if the highlighter stays visible even after the node " +
-       "was selected");
+  info(
+    "wait and see if the highlighter stays visible even after the node " +
+      "was selected"
+  );
   await waitForTheBrieflyShowBoxModelTimeout();
 
   await testActor.setProperty("p", "textContent", "dary!!!!");

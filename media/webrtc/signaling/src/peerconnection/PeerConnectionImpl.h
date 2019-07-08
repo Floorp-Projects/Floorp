@@ -216,9 +216,7 @@ class PeerConnectionImpl final
   static void ConnectThread(void* aData);
 
   // Get the main thread
-  nsCOMPtr<nsIThread> GetMainThread() {
-    return mThread;
-  }
+  nsCOMPtr<nsIThread> GetMainThread() { return mThread; }
 
   // Get the STS thread
   nsIEventTarget* GetSTSThread() {

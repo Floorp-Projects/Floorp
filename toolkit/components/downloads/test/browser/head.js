@@ -11,20 +11,36 @@
 
 // Globals
 
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "DownloadPaths",
-                               "resource://gre/modules/DownloadPaths.jsm");
-ChromeUtils.defineModuleGetter(this, "Downloads",
-                               "resource://gre/modules/Downloads.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "HttpServer",
-                               "resource://testing-common/httpd.js");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "FileTestUtils",
-                               "resource://testing-common/FileTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "DownloadPaths",
+  "resource://gre/modules/DownloadPaths.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Downloads",
+  "resource://gre/modules/Downloads.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "HttpServer",
+  "resource://testing-common/httpd.js"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileTestUtils",
+  "resource://testing-common/FileTestUtils.jsm"
+);
 
 const TEST_TARGET_FILE_NAME_PDF = "test-download.pdf";
 
@@ -40,11 +56,15 @@ function getTempFile(leafName) {
 
 function promiseBrowserLoaded(browser) {
   return new Promise(resolve => {
-    browser.addEventListener("load", function onLoad(event) {
-      if (event.target == browser.contentDocument) {
-        browser.removeEventListener("load", onLoad, true);
-        resolve();
-      }
-    }, true);
+    browser.addEventListener(
+      "load",
+      function onLoad(event) {
+        if (event.target == browser.contentDocument) {
+          browser.removeEventListener("load", onLoad, true);
+          resolve();
+        }
+      },
+      true
+    );
   });
 }

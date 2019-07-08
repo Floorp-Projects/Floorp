@@ -13,11 +13,23 @@
  */
 
 const protocol = require("devtools/shared/protocol");
-const { webExtensionSpec } = require("devtools/shared/specs/addon/webextension");
-const { WebExtensionTargetActorProxy } = require("devtools/server/actors/targets/webextension-proxy");
+const {
+  webExtensionSpec,
+} = require("devtools/shared/specs/addon/webextension");
+const {
+  WebExtensionTargetActorProxy,
+} = require("devtools/server/actors/targets/webextension-proxy");
 
-loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
-loader.lazyImporter(this, "ExtensionParent", "resource://gre/modules/ExtensionParent.jsm");
+loader.lazyImporter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+loader.lazyImporter(
+  this,
+  "ExtensionParent",
+  "resource://gre/modules/ExtensionParent.jsm"
+);
 
 /**
  * Creates the actor that represents the addon in the parent process, which connects
@@ -84,7 +96,9 @@ const WebExtensionActor = protocol.ActorClassWithSpec(webExtensionSpec, {
       temporarilyInstalled: this.addon.temporarilyInstalled,
       type: this.addon.type,
       url: this.addon.sourceURI ? this.addon.sourceURI.spec : undefined,
-      warnings: ExtensionParent.DebugUtils.getExtensionManifestWarnings(this.addonId),
+      warnings: ExtensionParent.DebugUtils.getExtensionManifestWarnings(
+        this.addonId
+      ),
     };
   },
 
@@ -144,7 +158,7 @@ const WebExtensionActor = protocol.ActorClassWithSpec(webExtensionSpec, {
         reader.readAsDataURL(blob);
       });
     } catch (_) {
-      console.warn(`Failed to create data url from [${ this.addon.iconURL }]`);
+      console.warn(`Failed to create data url from [${this.addon.iconURL}]`);
       return null;
     }
   },

@@ -25,19 +25,13 @@ class FontName extends PureComponent {
   }
 
   onNameMouseOver() {
-    const {
-      font,
-      onToggleFontHighlight,
-    } = this.props;
+    const { font, onToggleFontHighlight } = this.props;
 
     onToggleFontHighlight(font, true);
   }
 
   onNameMouseOut() {
-    const {
-      font,
-      onToggleFontHighlight,
-    } = this.props;
+    const { font, onToggleFontHighlight } = this.props;
 
     onToggleFontHighlight(font, false);
   }

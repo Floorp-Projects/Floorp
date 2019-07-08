@@ -2799,6 +2799,12 @@ mozilla::ipc::IPCResult ContentParent::RecvGetClipboard(
       do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
   trans->Init(nullptr);
+  // The private flag is only used to prevent the data from being cached to the
+  // disk. The flag is not exported to the IPCDataTransfer object.
+  // The flag is set because we are not sure whether the clipboard data is used
+  // in a private browsing context. The transferable is only used in this scope,
+  // so the cache would not reduce memory consumption anyway.
+  trans->SetIsPrivateData(true);
 
   for (uint32_t t = 0; t < aTypes.Length(); t++) {
     trans->AddDataFlavor(aTypes[t].get());

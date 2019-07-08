@@ -40,7 +40,7 @@ const memorySpec = generateActorSpec({
 
     // Same data as the data from `getAllocations` -- only fired if
     // `autoDrain` set during `startRecordingAllocations`.
-    "allocations": {
+    allocations: {
       type: "allocations",
       data: Arg(0, "json"),
     },

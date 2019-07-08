@@ -31,7 +31,8 @@ const GA_PARAMETERS = [
   ["utm_medium", "onboarding"],
 ];
 
-const KEY_SHORTCUTS_STRINGS = "chrome://devtools-startup/locale/key-shortcuts.properties";
+const KEY_SHORTCUTS_STRINGS =
+  "chrome://devtools-startup/locale/key-shortcuts.properties";
 const keyShortcutsBundle = Services.strings.createBundle(KEY_SHORTCUTS_STRINGS);
 
 // URL constructor doesn't support about: scheme,
@@ -46,7 +47,9 @@ let isEnabledOnLoad;
 
 function getToolboxShortcut() {
   const modifier = Services.appinfo.OS == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+";
-  return modifier + keyShortcutsBundle.GetStringFromName("toggleToolbox.commandkey");
+  return (
+    modifier + keyShortcutsBundle.GetStringFromName("toggleToolbox.commandkey")
+  );
 }
 
 function onInstallButtonClick() {
@@ -86,47 +89,64 @@ function updatePage() {
  */
 const features = [
   {
-    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-inspector.svg",
+    icon:
+      "chrome://devtools-startup/content/aboutdevtools/images/feature-inspector.svg",
     title: "features-inspector-title",
     desc: "features-inspector-desc",
     link: "https://developer.mozilla.org/docs/Tools/Page_Inspector",
-  }, {
-    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-console.svg",
+  },
+  {
+    icon:
+      "chrome://devtools-startup/content/aboutdevtools/images/feature-console.svg",
     title: "features-console-title",
     desc: "features-console-desc",
     link: "https://developer.mozilla.org/docs/Tools/Web_Console",
-  }, {
-    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-debugger.svg",
+  },
+  {
+    icon:
+      "chrome://devtools-startup/content/aboutdevtools/images/feature-debugger.svg",
     title: "features-debugger-title",
     desc: "features-debugger-desc",
     link: "https://developer.mozilla.org/docs/Tools/Debugger",
-  }, {
-    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-network.svg",
+  },
+  {
+    icon:
+      "chrome://devtools-startup/content/aboutdevtools/images/feature-network.svg",
     title: "features-network-title",
     desc: "features-network-desc",
     link: "https://developer.mozilla.org/docs/Tools/Network_Monitor",
-  }, {
-    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-storage.svg",
+  },
+  {
+    icon:
+      "chrome://devtools-startup/content/aboutdevtools/images/feature-storage.svg",
     title: "features-storage-title",
     desc: "features-storage-desc",
     link: "https://developer.mozilla.org/docs/Tools/Storage_Inspector",
-  }, {
-    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-responsive.svg",
+  },
+  {
+    icon:
+      "chrome://devtools-startup/content/aboutdevtools/images/feature-responsive.svg",
     title: "features-responsive-title",
     desc: "features-responsive-desc",
     link: "https://developer.mozilla.org/docs/Tools/Responsive_Design_Mode",
-  }, {
-    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-visualediting.svg",
+  },
+  {
+    icon:
+      "chrome://devtools-startup/content/aboutdevtools/images/feature-visualediting.svg",
     title: "features-visual-editing-title",
     desc: "features-visual-editing-desc",
     link: "https://developer.mozilla.org/docs/Tools/Style_Editor",
-  }, {
-    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-performance.svg",
+  },
+  {
+    icon:
+      "chrome://devtools-startup/content/aboutdevtools/images/feature-performance.svg",
     title: "features-performance-title",
     desc: "features-performance-desc",
     link: "https://developer.mozilla.org/docs/Tools/Performance",
-  }, {
-    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-memory.svg",
+  },
+  {
+    icon:
+      "chrome://devtools-startup/content/aboutdevtools/images/feature-memory.svg",
     title: "features-memory-title",
     desc: "features-memory-desc",
     link: "https://developer.mozilla.org/docs/Tools/Memory",
@@ -140,10 +160,9 @@ function createFeatureEl(feature) {
   const li = document.createElement("li");
   li.classList.add("feature");
 
-  const {icon, link, title, desc} = feature;
+  const { icon, link, title, desc } = feature;
   // eslint-disable-next-line no-unsanitized/property
-  li.innerHTML =
-    `<a class="feature-link" href="${link}" target="_blank">
+  li.innerHTML = `<a class="feature-link" href="${link}" target="_blank">
        <img class="feature-icon" src="${icon}"/>
      </a>
      <h3 class="feature-name" data-l10n-id="${title}"></h3>
@@ -155,95 +174,118 @@ function createFeatureEl(feature) {
   return li;
 }
 
-window.addEventListener("load", function() {
-  const inspectorShortcut = getToolboxShortcut();
-  const welcomeMessage = document.getElementById("welcome-message");
+window.addEventListener(
+  "load",
+  function() {
+    const inspectorShortcut = getToolboxShortcut();
+    const welcomeMessage = document.getElementById("welcome-message");
 
-  // Set the welcome message content with the correct keyboard shortcut for the current
-  // platform.
-  document.l10n.setAttributes(welcomeMessage, "welcome-message",
-                             { shortcut: inspectorShortcut });
+    // Set the welcome message content with the correct keyboard shortcut for the current
+    // platform.
+    document.l10n.setAttributes(welcomeMessage, "welcome-message", {
+      shortcut: inspectorShortcut,
+    });
 
-  // Set the appropriate title message.
-  if (reason == "ContextMenu") {
-    document.getElementById("inspect-title").removeAttribute("hidden");
-  } else {
-    document.getElementById("common-title").removeAttribute("hidden");
-  }
-
-  // Display the message specific to the reason
-  const id = MESSAGES[reason];
-  if (id) {
-    const message = document.getElementById(id);
-    message.removeAttribute("hidden");
-  }
-
-  // Attach event listeners
-  document.getElementById("install").addEventListener("click", onInstallButtonClick);
-  document.getElementById("close").addEventListener("click", onCloseButtonClick);
-  Services.prefs.addObserver(DEVTOOLS_ENABLED_PREF, updatePage);
-
-  const featuresContainer = document.querySelector(".features-list");
-  for (const feature of features) {
-    featuresContainer.appendChild(createFeatureEl(feature));
-  }
-
-  // Add Google Analytics parameters to all the external links.
-  const externalLinks = [...document.querySelectorAll("a.external")];
-  for (const link of externalLinks) {
-    const linkUrl = new URL(link.getAttribute("href"));
-    GA_PARAMETERS.forEach(([key, value]) => linkUrl.searchParams.set(key, value));
-    link.setAttribute("href", linkUrl.href);
-  }
-
-  // Update the current page based on the current value of DEVTOOLS_ENABLED_PREF.
-  updatePage();
-
-  try {
-    if (reason) {
-      telemetry.getHistogramById(TELEMETRY_OPENED_REASON).add(reason);
+    // Set the appropriate title message.
+    if (reason == "ContextMenu") {
+      document.getElementById("inspect-title").removeAttribute("hidden");
+    } else {
+      document.getElementById("common-title").removeAttribute("hidden");
     }
 
-    if (keyid) {
-      telemetry.getHistogramById(TELEMETRY_OPENED_KEY).add(keyid);
+    // Display the message specific to the reason
+    const id = MESSAGES[reason];
+    if (id) {
+      const message = document.getElementById(id);
+      message.removeAttribute("hidden");
     }
 
-    telemetry.scalarAdd(TELEMETRY_OPENED, 1);
-  } catch (e) {
-    dump("about:devtools onload telemetry failed: " + e + "\n");
-  }
-}, { once: true });
+    // Attach event listeners
+    document
+      .getElementById("install")
+      .addEventListener("click", onInstallButtonClick);
+    document
+      .getElementById("close")
+      .addEventListener("click", onCloseButtonClick);
+    Services.prefs.addObserver(DEVTOOLS_ENABLED_PREF, updatePage);
 
-window.addEventListener("beforeunload", function() {
-  // Focus the tab that triggered the DevTools onboarding.
-  if (document.visibilityState != "visible") {
-    // Only try to focus the correct tab if the current tab is the about:devtools page.
-    return;
-  }
+    const featuresContainer = document.querySelector(".features-list");
+    for (const feature of features) {
+      featuresContainer.appendChild(createFeatureEl(feature));
+    }
 
-  // Retrieve the original tab if it is still available.
-  const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  const { gBrowser } = browserWindow;
-  const originalBrowser = gBrowser.getBrowserForOuterWindowID(tabid);
-  const originalTab = gBrowser.getTabForBrowser(originalBrowser);
+    // Add Google Analytics parameters to all the external links.
+    const externalLinks = [...document.querySelectorAll("a.external")];
+    for (const link of externalLinks) {
+      const linkUrl = new URL(link.getAttribute("href"));
+      GA_PARAMETERS.forEach(([key, value]) =>
+        linkUrl.searchParams.set(key, value)
+      );
+      link.setAttribute("href", linkUrl.href);
+    }
 
-  if (originalTab) {
-    // If the original tab was found, select it.
-    gBrowser.selectedTab = originalTab;
-  }
-}, {once: true});
+    // Update the current page based on the current value of DEVTOOLS_ENABLED_PREF.
+    updatePage();
 
-window.addEventListener("unload", function() {
-  document.getElementById("install").removeEventListener("click", onInstallButtonClick);
-  document.getElementById("close").removeEventListener("click", onCloseButtonClick);
-  Services.prefs.removeObserver(DEVTOOLS_ENABLED_PREF, updatePage);
-
-  const isEnabled = Services.prefs.getBoolPref("devtools.enabled");
-  if (!isEnabledOnLoad && !isEnabled) {
     try {
-      telemetry.scalarAdd(TELEMETRY_NOINSTALL_EXITS, 1);
+      if (reason) {
+        telemetry.getHistogramById(TELEMETRY_OPENED_REASON).add(reason);
+      }
+
+      if (keyid) {
+        telemetry.getHistogramById(TELEMETRY_OPENED_KEY).add(keyid);
+      }
+
+      telemetry.scalarAdd(TELEMETRY_OPENED, 1);
     } catch (e) {
-      dump("about:devtools onunload telemetry failed: " + e + "\n");
+      dump("about:devtools onload telemetry failed: " + e + "\n");
     }
-  }
-}, {once: true});
+  },
+  { once: true }
+);
+
+window.addEventListener(
+  "beforeunload",
+  function() {
+    // Focus the tab that triggered the DevTools onboarding.
+    if (document.visibilityState != "visible") {
+      // Only try to focus the correct tab if the current tab is the about:devtools page.
+      return;
+    }
+
+    // Retrieve the original tab if it is still available.
+    const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    const { gBrowser } = browserWindow;
+    const originalBrowser = gBrowser.getBrowserForOuterWindowID(tabid);
+    const originalTab = gBrowser.getTabForBrowser(originalBrowser);
+
+    if (originalTab) {
+      // If the original tab was found, select it.
+      gBrowser.selectedTab = originalTab;
+    }
+  },
+  { once: true }
+);
+
+window.addEventListener(
+  "unload",
+  function() {
+    document
+      .getElementById("install")
+      .removeEventListener("click", onInstallButtonClick);
+    document
+      .getElementById("close")
+      .removeEventListener("click", onCloseButtonClick);
+    Services.prefs.removeObserver(DEVTOOLS_ENABLED_PREF, updatePage);
+
+    const isEnabled = Services.prefs.getBoolPref("devtools.enabled");
+    if (!isEnabledOnLoad && !isEnabled) {
+      try {
+        telemetry.scalarAdd(TELEMETRY_NOINSTALL_EXITS, 1);
+      } catch (e) {
+        dump("about:devtools onunload telemetry failed: " + e + "\n");
+      }
+    }
+  },
+  { once: true }
+);

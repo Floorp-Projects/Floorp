@@ -8,8 +8,10 @@
 const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules-sourcemaps.html";
 const MAP_PREF = "devtools.source-map.client-service.enabled";
 
-const LABELS = ["screen and (max-width: 320px)",
-                "screen and (min-width: 1200px)"];
+const LABELS = [
+  "screen and (max-width: 320px)",
+  "screen and (min-width: 1200px)",
+];
 const LINE_NOS = [5, 8];
 
 waitForExplicitFinish();

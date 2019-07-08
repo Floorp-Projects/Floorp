@@ -5,37 +5,47 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(async function test_execute() {
-  let count_visited_URIs = ["http://www.test-link.com/",
-                            "http://www.test-typed.com/",
-                            "http://www.test-bookmark.com/",
-                            "http://www.test-redirect-permanent.com/",
-                            "http://www.test-redirect-temporary.com/"];
+  let count_visited_URIs = [
+    "http://www.test-link.com/",
+    "http://www.test-typed.com/",
+    "http://www.test-bookmark.com/",
+    "http://www.test-redirect-permanent.com/",
+    "http://www.test-redirect-temporary.com/",
+  ];
 
-  let notcount_visited_URIs = ["http://www.test-embed.com/",
-                               "http://www.test-download.com/",
-                               "http://www.test-framed.com/",
-                               "http://www.test-reload.com/"];
+  let notcount_visited_URIs = [
+    "http://www.test-embed.com/",
+    "http://www.test-download.com/",
+    "http://www.test-framed.com/",
+    "http://www.test-reload.com/",
+  ];
 
   // add visits, one for each transition type
   await PlacesTestUtils.addVisits([
-    { uri: uri("http://www.test-link.com/"),
-      transition: TRANSITION_LINK },
-    { uri: uri("http://www.test-typed.com/"),
-      transition: TRANSITION_TYPED },
-    { uri: uri("http://www.test-bookmark.com/"),
-      transition: TRANSITION_BOOKMARK },
-    { uri: uri("http://www.test-embed.com/"),
-      transition: TRANSITION_EMBED },
-    { uri: uri("http://www.test-framed.com/"),
-      transition: TRANSITION_FRAMED_LINK },
-    { uri: uri("http://www.test-redirect-permanent.com/"),
-      transition: TRANSITION_REDIRECT_PERMANENT },
-    { uri: uri("http://www.test-redirect-temporary.com/"),
-      transition: TRANSITION_REDIRECT_TEMPORARY },
-    { uri: uri("http://www.test-download.com/"),
-      transition: TRANSITION_DOWNLOAD },
-    { uri: uri("http://www.test-reload.com/"),
-      transition: TRANSITION_RELOAD },
+    { uri: uri("http://www.test-link.com/"), transition: TRANSITION_LINK },
+    { uri: uri("http://www.test-typed.com/"), transition: TRANSITION_TYPED },
+    {
+      uri: uri("http://www.test-bookmark.com/"),
+      transition: TRANSITION_BOOKMARK,
+    },
+    { uri: uri("http://www.test-embed.com/"), transition: TRANSITION_EMBED },
+    {
+      uri: uri("http://www.test-framed.com/"),
+      transition: TRANSITION_FRAMED_LINK,
+    },
+    {
+      uri: uri("http://www.test-redirect-permanent.com/"),
+      transition: TRANSITION_REDIRECT_PERMANENT,
+    },
+    {
+      uri: uri("http://www.test-redirect-temporary.com/"),
+      transition: TRANSITION_REDIRECT_TEMPORARY,
+    },
+    {
+      uri: uri("http://www.test-download.com/"),
+      transition: TRANSITION_DOWNLOAD,
+    },
+    { uri: uri("http://www.test-reload.com/"), transition: TRANSITION_RELOAD },
   ]);
 
   // check that all links are marked as visited

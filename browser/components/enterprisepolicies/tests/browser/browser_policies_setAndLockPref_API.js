@@ -3,11 +3,10 @@
 
 "use strict";
 
-let {
-  Policies,
-  setAndLockPref,
-  setDefaultPref,
-} = ChromeUtils.import("resource:///modules/policies/Policies.jsm", null);
+let { Policies, setAndLockPref, setDefaultPref } = ChromeUtils.import(
+  "resource:///modules/policies/Policies.jsm",
+  null
+);
 
 add_task(async function test_API_directly() {
   await setupPolicyEngineWithJson("");
@@ -76,32 +75,36 @@ add_task(async function test_API_through_policies() {
   await setupPolicyEngineWithJson(
     // policies.json
     {
-      "policies": {
-        "bool_policy": true,
-        "int_policy": 42,
-        "string_policy": "policies test 2",
+      policies: {
+        bool_policy: true,
+        int_policy: 42,
+        string_policy: "policies test 2",
       },
     },
 
     // custom schema
     {
       properties: {
-        "bool_policy": {
-          "type": "boolean",
+        bool_policy: {
+          type: "boolean",
         },
 
-        "int_policy": {
-          "type": "integer",
+        int_policy: {
+          type: "integer",
         },
 
-        "string_policy": {
-          "type": "string",
+        string_policy: {
+          type: "string",
         },
       },
     }
   );
 
-  is(Services.policies.status, Ci.nsIEnterprisePolicies.ACTIVE, "Engine is active");
+  is(
+    Services.policies.status,
+    Ci.nsIEnterprisePolicies.ACTIVE,
+    "Engine is active"
+  );
 
   // The expected values come from config_setAndLockPref.json
   checkLockedPref("policies.test2.boolPref", true);
@@ -130,11 +133,31 @@ add_task(async function test_pref_tracker() {
 
   PoliciesPrefTracker.restoreDefaultValues();
 
-  is(Services.prefs.getIntPref("test1.pref1"), 10, "Expected value for test1.pref1");
-  is(Services.prefs.getStringPref("test1.pref2"), "test", "Expected value for test1.pref2");
-  is(Services.prefs.prefIsLocked("test1.pref1"), false, "test1.pref1 got unlocked");
-  is(Services.prefs.getStringPref("test1.pref3", undefined), undefined, "test1.pref3 should have had its value unset");
-  is(Services.prefs.getIntPref("test1.pref4", -1), -1, "test1.pref4 should have had its value unset");
+  is(
+    Services.prefs.getIntPref("test1.pref1"),
+    10,
+    "Expected value for test1.pref1"
+  );
+  is(
+    Services.prefs.getStringPref("test1.pref2"),
+    "test",
+    "Expected value for test1.pref2"
+  );
+  is(
+    Services.prefs.prefIsLocked("test1.pref1"),
+    false,
+    "test1.pref1 got unlocked"
+  );
+  is(
+    Services.prefs.getStringPref("test1.pref3", undefined),
+    undefined,
+    "test1.pref3 should have had its value unset"
+  );
+  is(
+    Services.prefs.getIntPref("test1.pref4", -1),
+    -1,
+    "test1.pref4 should have had its value unset"
+  );
 
   // Test a pref that had a default value and a user value
   defaults.setIntPref("test2.pref1", 10);
@@ -146,5 +169,9 @@ add_task(async function test_pref_tracker() {
 
   is(Services.prefs.getIntPref("test2.pref1"), 20, "Correct user value");
   is(defaults.getIntPref("test2.pref1"), 10, "Correct default value");
-  is(Services.prefs.prefIsLocked("test2.pref1"), false, "felipe pref is not locked");
+  is(
+    Services.prefs.prefIsLocked("test2.pref1"),
+    false,
+    "felipe pref is not locked"
+  );
 });

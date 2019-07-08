@@ -20,10 +20,7 @@ const BLOCKLIST_DATA = [
         ],
       },
     ],
-    prefs: [
-      "test.blocklist.pref1",
-      "test.blocklist.pref2",
-    ],
+    prefs: ["test.blocklist.pref1", "test.blocklist.pref2"],
   },
   {
     guid: "block2@tests.mozilla.org",
@@ -39,10 +36,7 @@ const BLOCKLIST_DATA = [
         ],
       },
     ],
-    prefs: [
-      "test.blocklist.pref3",
-      "test.blocklist.pref4",
-    ],
+    prefs: ["test.blocklist.pref3", "test.blocklist.pref4"],
   },
 ];
 
@@ -56,14 +50,14 @@ add_task(async function setup() {
     manifest: {
       name: "Blocked add-on-1 with to-be-reset prefs",
       version: "1.0",
-      applications: {gecko: {id: "block1@tests.mozilla.org"}},
+      applications: { gecko: { id: "block1@tests.mozilla.org" } },
     },
   });
   await promiseInstallWebExtension({
     manifest: {
       name: "Blocked add-on-2 with to-be-reset prefs",
       version: "1.0",
-      applications: {gecko: {id: "block2@tests.mozilla.org"}},
+      applications: { gecko: { id: "block2@tests.mozilla.org" } },
     },
   });
 
@@ -73,10 +67,11 @@ add_task(async function setup() {
   Services.prefs.setBoolPref("test.blocklist.pref3", true);
   Services.prefs.setBoolPref("test.blocklist.pref4", true);
 
-
   // Before blocklist is loaded.
-  let [a1, a2] = await AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
-                                                    "block2@tests.mozilla.org"]);
+  let [a1, a2] = await AddonManager.getAddonsByIDs([
+    "block1@tests.mozilla.org",
+    "block2@tests.mozilla.org",
+  ]);
   Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   Assert.equal(a2.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
 
@@ -86,13 +81,14 @@ add_task(async function setup() {
   Assert.equal(Services.prefs.getBoolPref("test.blocklist.pref4"), true);
 });
 
-
 add_task(async function test_blocks() {
-  await AddonTestUtils.loadBlocklistRawData({extensions: BLOCKLIST_DATA});
+  await AddonTestUtils.loadBlocklistRawData({ extensions: BLOCKLIST_DATA });
 
   // Blocklist changes should have applied and the prefs must be reset.
-  let [a1, a2] = await AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
-                                                    "block2@tests.mozilla.org"]);
+  let [a1, a2] = await AddonManager.getAddonsByIDs([
+    "block1@tests.mozilla.org",
+    "block2@tests.mozilla.org",
+  ]);
   Assert.notEqual(a1, null);
   Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   Assert.notEqual(a2, null);

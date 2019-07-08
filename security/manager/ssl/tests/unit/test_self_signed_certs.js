@@ -29,7 +29,9 @@ add_task(async function run_test_no_overlong_path_building() {
   let srcCertDBFile = do_get_file(`test_self_signed_certs/${CERT_DB_NAME}`);
   srcCertDBFile.copyTo(profile, CERT_DB_NAME);
 
-  let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB);
+  let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   let certToVerify = null;
   for (let cert of certDB.getCerts().getEnumerator()) {
     if (cert.subjectName == "CN=self-signed cert") {
@@ -37,7 +39,11 @@ add_task(async function run_test_no_overlong_path_building() {
       break;
     }
   }
-  notEqual(certToVerify, null, "should have found one of the preloaded self-signed certs");
+  notEqual(
+    certToVerify,
+    null,
+    "should have found one of the preloaded self-signed certs"
+  );
   let timeBefore = Date.now();
   // As mentioned above, mozilla::pkix limits how much it will search for a trusted path, even if a
   // trust domain keeps providing potential issuers. So, if we only tried to verify a certificate
@@ -49,8 +55,13 @@ add_task(async function run_test_no_overlong_path_building() {
   // time out on slow hardware.
   for (let i = 0; i < 10; i++) {
     let date = new Date("2019-05-15T00:00:00.000Z");
-    await checkCertErrorGenericAtTime(certDB, certToVerify, SEC_ERROR_UNKNOWN_ISSUER,
-                                      certificateUsageSSLCA, date.getTime() / 1000);
+    await checkCertErrorGenericAtTime(
+      certDB,
+      certToVerify,
+      SEC_ERROR_UNKNOWN_ISSUER,
+      certificateUsageSSLCA,
+      date.getTime() / 1000
+    );
   }
   let timeAfter = Date.now();
   let secondsElapsed = (timeAfter - timeBefore) / 1000;

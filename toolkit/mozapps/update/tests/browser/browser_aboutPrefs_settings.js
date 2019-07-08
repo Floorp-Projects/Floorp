@@ -8,11 +8,15 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 // Changes, then verifies the value of app.update.auto via the about:preferences
 // UI. Requires a tab with about:preferences open to be passed in.
 async function changeAndVerifyPref(tab, newConfigValue) {
-  await ContentTask.spawn(tab.linkedBrowser, {newConfigValue}, async function({newConfigValue}) {
-    let radioId = newConfigValue ? "autoDesktop" : "manualDesktop";
-    let radioElement = content.document.getElementById(radioId);
-    radioElement.click();
-  });
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    { newConfigValue },
+    async function({ newConfigValue }) {
+      let radioId = newConfigValue ? "autoDesktop" : "manualDesktop";
+      let radioElement = content.document.getElementById(radioId);
+      radioElement.click();
+    }
+  );
 
   // On Windows, we really need to wait for the change to finish being
   // written to the disk before we go to verify anything. Unfortunately, it
@@ -23,8 +27,11 @@ async function changeAndVerifyPref(tab, newConfigValue) {
   // serializes reads and writes to the app update config file, so this will not
   // resolve until the file write is complete.
   let configValueRead = await UpdateUtils.getAppUpdateAutoEnabled();
-  is(configValueRead, newConfigValue,
-     "Value returned should have matched the expected value");
+  is(
+    configValueRead,
+    newConfigValue,
+    "Value returned should have matched the expected value"
+  );
 
   // Only Windows currently has the update configuration JSON file.
   if (AppConstants.platform == "win") {
@@ -32,19 +39,34 @@ async function changeAndVerifyPref(tab, newConfigValue) {
     let decoder = new TextDecoder();
     let fileContents = await OS.File.read(configFile.path);
     let saveObject = JSON.parse(decoder.decode(fileContents));
-    is(saveObject["app.update.auto"], newConfigValue,
-       "Value in file should match expected");
+    is(
+      saveObject["app.update.auto"],
+      newConfigValue,
+      "Value in file should match expected"
+    );
   }
 
-  await ContentTask.spawn(tab.linkedBrowser, {newConfigValue}, async function({newConfigValue}) {
-    let updateRadioGroup = content.document.getElementById("updateRadioGroup");
-    is(updateRadioGroup.value, `${newConfigValue}`,
-       "Update preference should match expected");
-  });
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    { newConfigValue },
+    async function({ newConfigValue }) {
+      let updateRadioGroup = content.document.getElementById(
+        "updateRadioGroup"
+      );
+      is(
+        updateRadioGroup.value,
+        `${newConfigValue}`,
+        "Update preference should match expected"
+      );
+    }
+  );
 }
 
 add_task(async function testUpdateAutoPrefUI() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:preferences"
+  );
 
   await changeAndVerifyPref(tab, true);
   ok(!gUpdateManager.activeUpdate, "There should not be an active update");
@@ -52,9 +74,9 @@ add_task(async function testUpdateAutoPrefUI() {
   await changeAndVerifyPref(tab, false);
   ok(!gUpdateManager.activeUpdate, "There should not be an active update");
 
-  let patchProps = {state: STATE_PENDING};
+  let patchProps = { state: STATE_PENDING };
   let patches = getLocalPatchString(patchProps);
-  let updateProps = {checkInterval: "1"};
+  let updateProps = { checkInterval: "1" };
   let updates = getLocalUpdateString(updateProps, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_PENDING);
@@ -65,7 +87,7 @@ add_task(async function testUpdateAutoPrefUI() {
   // when the prompt service is called when the value of app.update.auto is
   // changed to false.
   let discardUpdate = 0;
-  let {prompt} = Services;
+  let { prompt } = Services;
   let promptService = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService]),
     confirmEx(...args) {

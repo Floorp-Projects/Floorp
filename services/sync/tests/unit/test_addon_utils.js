@@ -3,30 +3,45 @@
 
 "use strict";
 
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-const {AddonUtils} = ChromeUtils.import("resource://services-sync/addonutils.js");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+const { AddonUtils } = ChromeUtils.import(
+  "resource://services-sync/addonutils.js"
+);
 
 const HTTP_PORT = 8888;
 const SERVER_ADDRESS = "http://127.0.0.1:8888";
 
 var prefs = new Preferences();
 
-prefs.set("extensions.getAddons.get.url",
-          SERVER_ADDRESS + "/search/guid:%IDS%");
+prefs.set(
+  "extensions.getAddons.get.url",
+  SERVER_ADDRESS + "/search/guid:%IDS%"
+);
 
 AddonTestUtils.init(this);
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "1.9.2"
+);
 AddonTestUtils.awaitPromise(AddonTestUtils.promiseStartupManager());
 
 function createAndStartHTTPServer(port = HTTP_PORT) {
   try {
     let server = new HttpServer();
 
-    server.registerFile("/search/guid:missing-sourceuri%40tests.mozilla.org",
-                        do_get_file("missing-sourceuri.json"));
+    server.registerFile(
+      "/search/guid:missing-sourceuri%40tests.mozilla.org",
+      do_get_file("missing-sourceuri.json")
+    );
 
-    server.registerFile("/search/guid:rewrite%40tests.mozilla.org",
-                        do_get_file("rewrite-search.json"));
+    server.registerFile(
+      "/search/guid:rewrite%40tests.mozilla.org",
+      do_get_file("rewrite-search.json")
+    );
 
     server.start(port);
 
@@ -52,7 +67,9 @@ add_task(async function test_handle_empty_source_uri() {
 
   const ID = "missing-sourceuri@tests.mozilla.org";
 
-  const result = await AddonUtils.installAddons([{id: ID, requireSecureURI: false}]);
+  const result = await AddonUtils.installAddons([
+    { id: ID, requireSecureURI: false },
+  ]);
 
   Assert.ok("installedIDs" in result);
   Assert.equal(0, result.installedIDs.length);
@@ -66,15 +83,17 @@ add_task(async function test_handle_empty_source_uri() {
 add_test(function test_ignore_untrusted_source_uris() {
   _("Ensures that source URIs from insecure schemes are rejected.");
 
-  const bad = ["http://example.com/foo.xpi",
-               "ftp://example.com/foo.xpi",
-               "silly://example.com/foo.xpi"];
+  const bad = [
+    "http://example.com/foo.xpi",
+    "ftp://example.com/foo.xpi",
+    "silly://example.com/foo.xpi",
+  ];
 
   const good = ["https://example.com/foo.xpi"];
 
   for (let s of bad) {
     let sourceURI = Services.io.newURI(s);
-    let addon = {sourceURI, name: "bad", id: "bad"};
+    let addon = { sourceURI, name: "bad", id: "bad" };
 
     let canInstall = AddonUtils.canInstallAddon(addon);
     Assert.ok(!canInstall, "Correctly rejected a bad URL");
@@ -82,7 +101,7 @@ add_test(function test_ignore_untrusted_source_uris() {
 
   for (let s of good) {
     let sourceURI = Services.io.newURI(s);
-    let addon = {sourceURI, name: "good", id: "good"};
+    let addon = { sourceURI, name: "good", id: "good" };
 
     let canInstall = AddonUtils.canInstallAddon(addon);
     Assert.ok(canInstall, "Correctly accepted a good URL");
@@ -100,20 +119,29 @@ add_task(async function test_source_uri_rewrite() {
   let oldFunction = AddonUtils.__proto__.installAddonFromSearchResult;
 
   let installCalled = false;
-  AddonUtils.__proto__.installAddonFromSearchResult =
-    async function testInstallAddon(addon, metadata) {
-    Assert.equal(SERVER_ADDRESS + "/require.xpi?src=sync",
-                 addon.sourceURI.spec);
+  AddonUtils.__proto__.installAddonFromSearchResult = async function testInstallAddon(
+    addon,
+    metadata
+  ) {
+    Assert.equal(
+      SERVER_ADDRESS + "/require.xpi?src=sync",
+      addon.sourceURI.spec
+    );
 
     installCalled = true;
 
     const install = await AddonUtils.getInstallFromSearchResult(addon);
-    Assert.equal(SERVER_ADDRESS + "/require.xpi?src=sync",
-                 install.sourceURI.spec);
-    Assert.deepEqual(install.installTelemetryInfo, {source: "sync"},
-                     "Got the expected installTelemetryInfo");
+    Assert.equal(
+      SERVER_ADDRESS + "/require.xpi?src=sync",
+      install.sourceURI.spec
+    );
+    Assert.deepEqual(
+      install.installTelemetryInfo,
+      { source: "sync" },
+      "Got the expected installTelemetryInfo"
+    );
 
-    return {id: addon.id, addon, install};
+    return { id: addon.id, addon, install };
   };
 
   let server = createAndStartHTTPServer();

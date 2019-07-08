@@ -6,11 +6,12 @@
  * Test that the reader mode button appears and works properly on
  * reader-able content.
  */
-const TEST_PREFS = [
-  ["reader.parse-on-load.enabled", true],
-];
+const TEST_PREFS = [["reader.parse-on-load.enabled", true]];
 
-const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
+const TEST_PATH = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  "http://example.com"
+);
 
 var readerButton = document.getElementById("reader-mode-button");
 
@@ -30,8 +31,11 @@ add_task(async function test_reader_button() {
     Services.prefs.setBoolPref(name, value);
   });
 
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  is_element_hidden(readerButton, "Reader mode button is not present on a new tab");
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
+  is_element_hidden(
+    readerButton,
+    "Reader mode button is not present on a new tab"
+  );
   // Point tab to a test page that is not reader-able due to hidden nodes.
   let url = TEST_PATH + "readerModeArticleHiddenNodes.html";
   let paintPromise = ContentTask.spawn(tab.linkedBrowser, "", function() {
@@ -48,5 +52,8 @@ add_task(async function test_reader_button() {
   BrowserTestUtils.loadURI(tab.linkedBrowser, url);
   await paintPromise;
 
-  is_element_hidden(readerButton, "Reader mode button is still not present on tab with unreadable content.");
+  is_element_hidden(
+    readerButton,
+    "Reader mode button is still not present on tab with unreadable content."
+  );
 });

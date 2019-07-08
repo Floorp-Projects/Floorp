@@ -11,11 +11,15 @@ const {
 } = require("devtools/client/memory/constants");
 const { changeView } = require("devtools/client/memory/actions/view");
 
-const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
+const TEST_URL =
+  "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
 function clickOnNodeArrow(node, panel) {
-  EventUtils.synthesizeMouseAtCenter(node.querySelector(".arrow"),
-                                     {}, panel.panelWin);
+  EventUtils.synthesizeMouseAtCenter(
+    node.querySelector(".arrow"),
+    {},
+    panel.panelWin
+  );
 }
 
 this.test = makeMemoryTest(TEST_URL, async function({ panel }) {
@@ -33,32 +37,43 @@ this.test = makeMemoryTest(TEST_URL, async function({ panel }) {
   EventUtils.synthesizeMouseAtCenter(takeSnapshotButton, {}, panel.panelWin);
 
   // Wait for the dominator tree to be computed and fetched.
-  await waitUntilState(store, state =>
-    state.snapshots[0] &&
-    state.snapshots[0].dominatorTree &&
-    state.snapshots[0].dominatorTree.state === dominatorTreeState.LOADED);
+  await waitUntilState(
+    store,
+    state =>
+      state.snapshots[0] &&
+      state.snapshots[0].dominatorTree &&
+      state.snapshots[0].dominatorTree.state === dominatorTreeState.LOADED
+  );
   ok(true, "Computed and fetched the dominator tree.");
 
   const root = getState().snapshots[0].dominatorTree.root;
-  ok(getState().snapshots[0].dominatorTree.expanded.has(root.nodeId),
-     "Root node is expanded by default");
+  ok(
+    getState().snapshots[0].dominatorTree.expanded.has(root.nodeId),
+    "Root node is expanded by default"
+  );
 
   // Click on root arrow to collapse the root element
   const rootNode = doc.querySelector(`.node-${root.nodeId}`);
   clickOnNodeArrow(rootNode, panel);
 
-  await waitUntilState(store, state =>
-    state.snapshots[0] &&
-    state.snapshots[0].dominatorTree &&
-    !state.snapshots[0].dominatorTree.expanded.has(root.nodeId));
+  await waitUntilState(
+    store,
+    state =>
+      state.snapshots[0] &&
+      state.snapshots[0].dominatorTree &&
+      !state.snapshots[0].dominatorTree.expanded.has(root.nodeId)
+  );
   ok(true, "Root node collapsed");
 
   // Click on root arrow to expand it again
   clickOnNodeArrow(rootNode, panel);
 
-  await waitUntilState(store, state =>
-    state.snapshots[0] &&
-    state.snapshots[0].dominatorTree &&
-    state.snapshots[0].dominatorTree.expanded.has(root.nodeId));
+  await waitUntilState(
+    store,
+    state =>
+      state.snapshots[0] &&
+      state.snapshots[0].dominatorTree &&
+      state.snapshots[0].dominatorTree.expanded.has(root.nodeId)
+  );
   ok(true, "Root node is expanded again");
 });

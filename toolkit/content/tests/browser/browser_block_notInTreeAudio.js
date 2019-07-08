@@ -1,5 +1,6 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
-const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_nonAutoplayAudio.html";
+const PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_nonAutoplayAudio.html";
 
 var SuspendedType = {
   NONE_SUSPENDED: 0,
@@ -14,8 +15,11 @@ function check_audio_suspended(suspendedType) {
     ok(false, "Can't get the audio element!");
   }
 
-  is(audio.computedSuspended, suspendedType,
-     "The suspeded state of audio is correct.");
+  is(
+    audio.computedSuspended,
+    suspendedType,
+    "The suspeded state of audio is correct."
+  );
 }
 
 function check_audio_pause_state(expectPause) {
@@ -24,8 +28,7 @@ function check_audio_pause_state(expectPause) {
     ok(false, "Can't get the audio element!");
   }
 
-  is(audio.paused, expectPause,
-    "The pause state of audio is corret.");
+  is(audio.paused, expectPause, "The pause state of audio is corret.");
 }
 
 function play_not_in_tree_audio() {
@@ -44,10 +47,12 @@ function play_not_in_tree_audio() {
 }
 
 add_task(async function setup_test_preference() {
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["media.useAudioChannelService.testing", true],
-    ["media.block-autoplay-until-in-foreground", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.useAudioChannelService.testing", true],
+      ["media.block-autoplay-until-in-foreground", true],
+    ],
+  });
 });
 
 add_task(async function block_not_in_tree_media() {
@@ -60,16 +65,17 @@ add_task(async function block_not_in_tree_media() {
   await waitForTabBlockEvent(tab, false);
 
   info("- check audio's suspend state -");
-  await ContentTask.spawn(tab.linkedBrowser, SuspendedType.NONE_SUSPENDED,
-                          check_audio_suspended);
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    SuspendedType.NONE_SUSPENDED,
+    check_audio_suspended
+  );
 
   info("- check audio's playing state -");
-  await ContentTask.spawn(tab.linkedBrowser, true,
-                          check_audio_pause_state);
+  await ContentTask.spawn(tab.linkedBrowser, true, check_audio_pause_state);
 
   info("- playing audio -");
-  await ContentTask.spawn(tab.linkedBrowser, null,
-                          play_not_in_tree_audio);
+  await ContentTask.spawn(tab.linkedBrowser, null, play_not_in_tree_audio);
 
   info("- tab should be blocked -");
   await waitForTabBlockEvent(tab, true);

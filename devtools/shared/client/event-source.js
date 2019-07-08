@@ -86,8 +86,9 @@ function eventSource(proto) {
     if (!listener) {
       this._listeners[name] = [];
     } else {
-      this._listeners[name] =
-        this._listeners[name].filter(l => l.key != listener);
+      this._listeners[name] = this._listeners[name].filter(
+        l => l.key != listener
+      );
     }
   };
 

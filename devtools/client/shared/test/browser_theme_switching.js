@@ -16,18 +16,25 @@ add_task(async function() {
 
   const theme = Services.prefs.getCharPref("devtools.theme");
   const className = "theme-" + theme;
-  ok(root.classList.contains(className),
-     ":root has " + className + " class (current theme)");
+  ok(
+    root.classList.contains(className),
+    ":root has " + className + " class (current theme)"
+  );
 
   // Convert the xpath result into an array of strings
   // like `href="{URL}" type="text/css"`
-  const sheetsIterator = doc.evaluate("processing-instruction('xml-stylesheet')",
-                       doc, null, XPathResult.ANY_TYPE, null);
+  const sheetsIterator = doc.evaluate(
+    "processing-instruction('xml-stylesheet')",
+    doc,
+    null,
+    XPathResult.ANY_TYPE,
+    null
+  );
   const sheetsInDOM = [];
 
   /* eslint-disable no-cond-assign */
   let sheet;
-  while (sheet = sheetsIterator.iterateNext()) {
+  while ((sheet = sheetsIterator.iterateNext())) {
     sheetsInDOM.push(sheet.data);
   }
   /* eslint-enable no-cond-assign */
@@ -35,15 +42,17 @@ add_task(async function() {
   const sheetsFromTheme = gDevTools.getThemeDefinition(theme).stylesheets;
   info("Checking for existence of " + sheetsInDOM.length + " sheets");
   for (const themeSheet of sheetsFromTheme) {
-    ok(sheetsInDOM.some(s => s.includes(themeSheet)),
-       "There is a stylesheet for " + themeSheet);
+    ok(
+      sheetsInDOM.some(s => s.includes(themeSheet)),
+      "There is a stylesheet for " + themeSheet
+    );
   }
 
   await toolbox.destroy();
 });
 
 function getPlatform() {
-  const {OS} = Services.appinfo;
+  const { OS } = Services.appinfo;
   if (OS == "WINNT") {
     return "win";
   } else if (OS == "Darwin") {

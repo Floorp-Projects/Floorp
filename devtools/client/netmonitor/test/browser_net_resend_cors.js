@@ -14,10 +14,9 @@ add_task(async function() {
 
   const { store, windowRequire, connector } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getRequestById,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getRequestById, getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -26,16 +25,26 @@ add_task(async function() {
   info("Waiting for OPTIONS, then POST");
   const wait = waitForNetworkEvents(monitor, 2);
   await ContentTask.spawn(tab.linkedBrowser, requestUrl, async function(url) {
-    content.wrappedJSObject.performRequests(url, "triggering/preflight", "post-data");
+    content.wrappedJSObject.performRequests(
+      url,
+      "triggering/preflight",
+      "post-data"
+    );
   });
   await wait;
 
   const METHODS = ["OPTIONS", "POST"];
-  const ITEMS = METHODS.map((val, i) => getSortedRequests(store.getState()).get(i));
+  const ITEMS = METHODS.map((val, i) =>
+    getSortedRequests(store.getState()).get(i)
+  );
 
   // Check the requests that were sent
   ITEMS.forEach((item, i) => {
-    is(item.method, METHODS[i], `The ${item.method} request has the right method`);
+    is(
+      item.method,
+      METHODS[i],
+      `The ${item.method} request has the right method`
+    );
     is(item.url, requestUrl, `The ${item.method} request has the right URL`);
   });
 
@@ -61,7 +70,9 @@ add_task(async function() {
     info("Sending the cloned request (without change)");
     store.dispatch(Actions.sendCustomRequest(connector));
 
-    await waitUntil(() => getSortedRequests(store.getState()).size === size + 1);
+    await waitUntil(
+      () => getSortedRequests(store.getState()).size === size + 1
+    );
   }
 
   info("Waiting for both resent requests");
@@ -70,12 +81,20 @@ add_task(async function() {
   // Check the resent requests
   for (let i = 0; i < ITEMS.length; i++) {
     let item = ITEMS[i];
-    is(item.method, METHODS[i], `The ${item.method} request has the right method`);
+    is(
+      item.method,
+      METHODS[i],
+      `The ${item.method} request has the right method`
+    );
     is(item.url, requestUrl, `The ${item.method} request has the right URL`);
     is(item.status, 200, `The ${item.method} response has the right status`);
 
     if (item.method === "POST") {
-      is(item.method, "POST", `The ${item.method} request has the right method`);
+      is(
+        item.method,
+        "POST",
+        `The ${item.method} request has the right method`
+      );
 
       // Trigger responseContent update requires to wait until
       // responseContentAvailable set true
@@ -91,10 +110,16 @@ add_task(async function() {
         return item.responseContent && item.requestPostData;
       });
 
-      is(item.requestPostData.postData.text, "post-data",
-        "The POST request has the right POST data");
-      is(item.responseContent.content.text, "Access-Control-Allow-Origin: *",
-        "The POST response has the right content");
+      is(
+        item.requestPostData.postData.text,
+        "post-data",
+        "The POST request has the right POST data"
+      );
+      is(
+        item.responseContent.content.text,
+        "Access-Control-Allow-Origin: *",
+        "The POST response has the right content"
+      );
     }
   }
 

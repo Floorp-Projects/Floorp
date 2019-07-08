@@ -1,17 +1,27 @@
 "use strict";
 
-const {ExtensionPermissions} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
+const { ExtensionPermissions } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "42"
+);
 
-Services.prefs.setBoolPref("extensions.webextensions.background-delayed-startup", false);
+Services.prefs.setBoolPref(
+  "extensions.webextensions.background-delayed-startup",
+  false
+);
 
 const observer = {
   observe(subject, topic, data) {
     if (topic == "webextension-optional-permission-prompt") {
-      let {resolve} = subject.wrappedJSObject;
+      let { resolve } = subject.wrappedJSObject;
       resolve(true);
     }
   },
@@ -21,10 +31,13 @@ const observer = {
 async function getCachedPermissions(extensionId) {
   const NotFound = Symbol("extension ID not found in permissions cache");
   try {
-    return await ExtensionParent.StartupCache.permissions.get(extensionId, () => {
-      // Throw error to prevent the key from being created.
-      throw NotFound;
-    });
+    return await ExtensionParent.StartupCache.permissions.get(
+      extensionId,
+      () => {
+        // Throw error to prevent the key from being created.
+        throw NotFound;
+      }
+    );
   } catch (e) {
     if (e === NotFound) {
       return null;
@@ -47,17 +60,27 @@ async function getStoredPermissions(extensionId) {
   }
   // Sanity check: The returned object should be empty.
   Assert.deepEqual(perms1, perms2, "Expected same permission values");
-  Assert.deepEqual(perms1, {origins: [], permissions: []}, "Expected empty permissions");
+  Assert.deepEqual(
+    perms1,
+    { origins: [], permissions: [] },
+    "Expected empty permissions"
+  );
   return null;
 }
 
 add_task(async function setup() {
-  Services.prefs.setBoolPref("extensions.webextOptionalPermissionPrompts", true);
+  Services.prefs.setBoolPref(
+    "extensions.webextOptionalPermissionPrompts",
+    true
+  );
   Services.obs.addObserver(observer, "webextension-optional-permission-prompt");
   await AddonTestUtils.promiseStartupManager();
   registerCleanupFunction(async () => {
     await AddonTestUtils.promiseShutdownManager();
-    Services.obs.removeObserver(observer, "webextension-optional-permission-prompt");
+    Services.obs.removeObserver(
+      observer,
+      "webextension-optional-permission-prompt"
+    );
     Services.prefs.clearUserPref("extensions.webextOptionalPermissionPrompts");
   });
 });
@@ -67,7 +90,7 @@ add_task(async function setup() {
 add_task(async function test_permissions_removed() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "optional_permissions": ["idle"],
+      optional_permissions: ["idle"],
     },
     background() {
       browser.test.onMessage.addListener(async (msg, arg) => {
@@ -87,7 +110,7 @@ add_task(async function test_permissions_removed() {
   await extension.startup();
 
   await withHandlingUserInput(extension, async () => {
-    extension.sendMessage("request", {permissions: ["idle"], origins: []});
+    extension.sendMessage("request", { permissions: ["idle"], origins: [] });
     let result = await extension.awaitMessage("request.result");
     equal(result, true, "request() for optional permissions succeeded");
   });
@@ -96,21 +119,37 @@ add_task(async function test_permissions_removed() {
   let perms = await ExtensionPermissions.get(id);
   equal(perms.permissions.length, 1, "optional permission added");
 
-  Assert.deepEqual(await getCachedPermissions(id), {
-    permissions: ["idle"],
-    origins: [],
-  }, "Optional permission added to cache");
-  Assert.deepEqual(await getStoredPermissions(id), {
-    permissions: ["idle"],
-    origins: [],
-  }, "Optional permission added to persistent file");
+  Assert.deepEqual(
+    await getCachedPermissions(id),
+    {
+      permissions: ["idle"],
+      origins: [],
+    },
+    "Optional permission added to cache"
+  );
+  Assert.deepEqual(
+    await getStoredPermissions(id),
+    {
+      permissions: ["idle"],
+      origins: [],
+    },
+    "Optional permission added to persistent file"
+  );
 
   await extension.unload();
 
   // Directly read from the internals instead of using ExtensionPermissions.get,
   // because the latter will lazily cache the extension ID.
-  Assert.deepEqual(await getCachedPermissions(id), null, "Cached permissions removed");
-  Assert.deepEqual(await getStoredPermissions(id), null, "Stored permissions removed");
+  Assert.deepEqual(
+    await getCachedPermissions(id),
+    null,
+    "Cached permissions removed"
+  );
+  Assert.deepEqual(
+    await getStoredPermissions(id),
+    null,
+    "Stored permissions removed"
+  );
 
   perms = await ExtensionPermissions.get(id);
   equal(perms.permissions.length, 0, "no permissions after uninstall");
@@ -122,5 +161,9 @@ add_task(async function test_permissions_removed() {
   // code is not likely to call ExtensionPermissions.get() for non-installed
   // extensions anyway.
   Assert.deepEqual(await getCachedPermissions(id), perms, "Permissions cached");
-  Assert.deepEqual(await getStoredPermissions(id), null, "Permissions not saved");
+  Assert.deepEqual(
+    await getStoredPermissions(id),
+    null,
+    "Permissions not saved"
+  );
 });

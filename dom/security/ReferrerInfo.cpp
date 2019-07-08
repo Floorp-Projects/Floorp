@@ -584,6 +584,13 @@ already_AddRefed<nsIReferrerInfo> ReferrerInfo::CloneWithNewPolicy(
   return copy.forget();
 }
 
+already_AddRefed<nsIReferrerInfo> ReferrerInfo::CloneWithNewSendReferrer(
+    bool aSendReferrer) const {
+  RefPtr<ReferrerInfo> copy(new ReferrerInfo(*this));
+  copy->mSendReferrer = aSendReferrer;
+  return copy.forget();
+}
+
 already_AddRefed<nsIReferrerInfo> ReferrerInfo::CloneWithNewOriginalReferrer(
     nsIURI* aOriginalReferrer) const {
   RefPtr<ReferrerInfo> copy(new ReferrerInfo(*this));

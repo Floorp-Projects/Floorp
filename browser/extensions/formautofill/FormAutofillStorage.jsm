@@ -128,34 +128,65 @@
 // constructor via a backstage pass.
 this.EXPORTED_SYMBOLS = ["formAutofillStorage"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-const {FormAutofill} = ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
+const { FormAutofill } = ChromeUtils.import(
+  "resource://formautofill/FormAutofill.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "CreditCard",
-                               "resource://gre/modules/CreditCard.jsm");
-ChromeUtils.defineModuleGetter(this, "JSONFile",
-                               "resource://gre/modules/JSONFile.jsm");
-ChromeUtils.defineModuleGetter(this, "FormAutofillNameUtils",
-                               "resource://formautofill/FormAutofillNameUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
-                               "resource://formautofill/FormAutofillUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "OSKeyStore",
-                               "resource://formautofill/OSKeyStore.jsm");
-ChromeUtils.defineModuleGetter(this, "PhoneNumber",
-                               "resource://formautofill/phonenumberutils/PhoneNumber.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "CreditCard",
+  "resource://gre/modules/CreditCard.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "JSONFile",
+  "resource://gre/modules/JSONFile.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormAutofillNameUtils",
+  "resource://formautofill/FormAutofillNameUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormAutofillUtils",
+  "resource://formautofill/FormAutofillUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "OSKeyStore",
+  "resource://formautofill/OSKeyStore.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PhoneNumber",
+  "resource://formautofill/phonenumberutils/PhoneNumber.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "cryptoSDR",
-                                   "@mozilla.org/login-manager/crypto/SDR;1",
-                                   Ci.nsILoginManagerCrypto);
-XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
-                                   "@mozilla.org/uuid-generator;1",
-                                   "nsIUUIDGenerator");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "cryptoSDR",
+  "@mozilla.org/login-manager/crypto/SDR;1",
+  Ci.nsILoginManagerCrypto
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gUUIDGenerator",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
-const CryptoHash = Components.Constructor("@mozilla.org/security/hash;1",
-                                          "nsICryptoHash", "initWithString");
+const CryptoHash = Components.Constructor(
+  "@mozilla.org/security/hash;1",
+  "nsICryptoHash",
+  "initWithString"
+);
 
 const PROFILE_JSON_FILE_NAME = "autofill-profiles.json";
 
@@ -193,10 +224,10 @@ const TEL_COMPONENTS = [
   "tel-local-suffix",
 ];
 
-const VALID_ADDRESS_COMPUTED_FIELDS = [
-  "name",
-  "country-name",
-].concat(STREET_ADDRESS_COMPONENTS, TEL_COMPONENTS);
+const VALID_ADDRESS_COMPUTED_FIELDS = ["name", "country-name"].concat(
+  STREET_ADDRESS_COMPONENTS,
+  TEL_COMPONENTS
+);
 
 const VALID_CREDIT_CARD_FIELDS = [
   "billingAddressGUID",
@@ -257,7 +288,13 @@ class AutofillRecords {
    * @param {number} schemaVersion
    *        The schema version for the new record.
    */
-  constructor(store, collectionName, validFields, validComputedFields, schemaVersion) {
+  constructor(
+    store,
+    collectionName,
+    validFields,
+    validComputedFields,
+    schemaVersion
+  ) {
     FormAutofill.defineLazyLogGetter(this, "AutofillRecords:" + collectionName);
 
     this.VALID_FIELDS = validFields;
@@ -267,14 +304,16 @@ class AutofillRecords {
     this._collectionName = collectionName;
     this._schemaVersion = schemaVersion;
 
-    this._initializePromise =
-      Promise.all(this._data.map(async (record, index) => this._migrateRecord(record, index)))
-        .then(hasChangesArr => {
-          let dataHasChanges = hasChangesArr.includes(true);
-          if (dataHasChanges) {
-            this._store.saveSoon();
-          }
-        });
+    this._initializePromise = Promise.all(
+      this._data.map(async (record, index) =>
+        this._migrateRecord(record, index)
+      )
+    ).then(hasChangesArr => {
+      let dataHasChanges = hasChangesArr.includes(true);
+      if (dataHasChanges) {
+        this._store.saveSoon();
+      }
+    });
   }
 
   /**
@@ -302,8 +341,9 @@ class AutofillRecords {
   // bump the schema version without a syncing strategy in place (bug 1377204).
   _ensureMatchingVersion(record) {
     if (record.version != this.version) {
-      throw new Error(`Got unknown record version ${
-        record.version}; want ${this.version}`);
+      throw new Error(
+        `Got unknown record version ${record.version}; want ${this.version}`
+      );
     }
   }
 
@@ -325,7 +365,7 @@ class AutofillRecords {
    * @returns {Promise<string>}
    *          The GUID of the newly added item..
    */
-  async add(record, {sourceSync = false} = {}) {
+  async add(record, { sourceSync = false } = {}) {
     this.log.debug("add:", record);
 
     let recordToSave = this._clone(record);
@@ -362,17 +402,17 @@ class AutofillRecords {
       recordToSave.timesUsed = 0;
     }
 
-    return this._saveRecord(recordToSave, {sourceSync});
+    return this._saveRecord(recordToSave, { sourceSync });
   }
 
-  async _saveRecord(record, {sourceSync = false} = {}) {
+  async _saveRecord(record, { sourceSync = false } = {}) {
     if (!record.guid) {
       throw new Error("Record missing GUID");
     }
 
     let recordToSave;
     if (record.deleted) {
-      if (this._findByGUID(record.guid, {includeDeleted: true})) {
+      if (this._findByGUID(record.guid, { includeDeleted: true })) {
         throw new Error("a record with this GUID already exists");
       }
       recordToSave = {
@@ -395,19 +435,28 @@ class AutofillRecords {
 
     this._store.saveSoon();
 
-    Services.obs.notifyObservers({wrappedJSObject: {
-      sourceSync,
-      guid: record.guid,
-      collectionName: this._collectionName,
-    }}, "formautofill-storage-changed", "add");
+    Services.obs.notifyObservers(
+      {
+        wrappedJSObject: {
+          sourceSync,
+          guid: record.guid,
+          collectionName: this._collectionName,
+        },
+      },
+      "formautofill-storage-changed",
+      "add"
+    );
     return recordToSave.guid;
   }
 
   _generateGUID() {
     let guid;
     while (!guid || this._findByGUID(guid)) {
-      guid = gUUIDGenerator.generateUUID().toString()
-                           .replace(/[{}-]/g, "").substring(0, 12);
+      guid = gUUIDGenerator
+        .generateUUID()
+        .toString()
+        .replace(/[{}-]/g, "")
+        .substring(0, 12);
     }
     return guid;
   }
@@ -479,10 +528,16 @@ class AutofillRecords {
 
     this._store.saveSoon();
 
-    Services.obs.notifyObservers({wrappedJSObject: {
-      guid,
-      collectionName: this._collectionName,
-    }}, "formautofill-storage-changed", "update");
+    Services.obs.notifyObservers(
+      {
+        wrappedJSObject: {
+          guid,
+          collectionName: this._collectionName,
+        },
+      },
+      "formautofill-storage-changed",
+      "update"
+    );
   }
 
   /**
@@ -505,10 +560,16 @@ class AutofillRecords {
     recordFound.timeLastUsed = Date.now();
 
     this._store.saveSoon();
-    Services.obs.notifyObservers({wrappedJSObject: {
-      guid,
-      collectionName: this._collectionName,
-    }}, "formautofill-storage-changed", "notifyUsed");
+    Services.obs.notifyObservers(
+      {
+        wrappedJSObject: {
+          guid,
+          collectionName: this._collectionName,
+        },
+      },
+      "formautofill-storage-changed",
+      "notifyUsed"
+    );
   }
 
   /**
@@ -519,13 +580,13 @@ class AutofillRecords {
    * @param  {boolean} [options.sourceSync = false]
    *         Did Sync generate this removal?
    */
-  remove(guid, {sourceSync = false} = {}) {
+  remove(guid, { sourceSync = false } = {}) {
     this.log.debug("remove:", guid);
 
     if (sourceSync) {
       this._removeSyncedRecord(guid);
     } else {
-      let index = this._findIndexByGUID(guid, {includeDeleted: false});
+      let index = this._findIndexByGUID(guid, { includeDeleted: false });
       if (index == -1) {
         this.log.warn("attempting to remove non-existing entry", guid);
         return;
@@ -553,11 +614,17 @@ class AutofillRecords {
     }
 
     this._store.saveSoon();
-    Services.obs.notifyObservers({wrappedJSObject: {
-      sourceSync,
-      guid,
-      collectionName: this._collectionName,
-    }}, "formautofill-storage-changed", "remove");
+    Services.obs.notifyObservers(
+      {
+        wrappedJSObject: {
+          sourceSync,
+          guid,
+          collectionName: this._collectionName,
+        },
+      },
+      "formautofill-storage-changed",
+      "remove"
+    );
   }
 
   /**
@@ -571,7 +638,7 @@ class AutofillRecords {
    * @returns {Promise<Object>}
    *          A clone of the record.
    */
-  async get(guid, {rawData = false} = {}) {
+  async get(guid, { rawData = false } = {}) {
     this.log.debug("get:", guid, rawData);
 
     let recordFound = this._findByGUID(guid);
@@ -599,19 +666,21 @@ class AutofillRecords {
    * @returns {Promise<Array.<Object>>}
    *          An array containing clones of all records.
    */
-  async getAll({rawData = false, includeDeleted = false} = {}) {
+  async getAll({ rawData = false, includeDeleted = false } = {}) {
     this.log.debug("getAll", rawData, includeDeleted);
 
     let records = this._data.filter(r => !r.deleted || includeDeleted);
     // Records are cloned to avoid accidental modifications from outside.
     let clonedRecords = records.map(r => this._cloneAndCleanUp(r));
-    await Promise.all(clonedRecords.map(async record => {
-      if (rawData) {
-        await this._stripComputedFields(record);
-      } else {
-        this._recordReadProcessor(record);
-      }
-    }));
+    await Promise.all(
+      clonedRecords.map(async record => {
+        if (rawData) {
+          await this._stripComputedFields(record);
+        } else {
+          this._recordReadProcessor(record);
+        }
+      })
+    );
     return clonedRecords;
   }
 
@@ -777,7 +846,11 @@ class AutofillRecords {
    *          the sync is interrupted after the record is merged, but before
    *          it's uploaded.
    */
-  async _replaceRecordAt(index, remoteRecord, {keepSyncMetadata = false} = {}) {
+  async _replaceRecordAt(
+    index,
+    remoteRecord,
+    { keepSyncMetadata = false } = {}
+  ) {
     let localRecord = this._data[index];
     let newRecord = this._clone(remoteRecord);
 
@@ -798,13 +871,17 @@ class AutofillRecords {
       sync.changeCounter = 0;
     }
 
-    if (!newRecord.timeCreated ||
-        localRecord.timeCreated < newRecord.timeCreated) {
+    if (
+      !newRecord.timeCreated ||
+      localRecord.timeCreated < newRecord.timeCreated
+    ) {
       newRecord.timeCreated = localRecord.timeCreated;
     }
 
-    if (!newRecord.timeLastModified ||
-        localRecord.timeLastModified > newRecord.timeLastModified) {
+    if (
+      !newRecord.timeLastModified ||
+      localRecord.timeLastModified > newRecord.timeLastModified
+    ) {
       newRecord.timeLastModified = localRecord.timeLastModified;
     }
 
@@ -883,7 +960,10 @@ class AutofillRecords {
       let strippedLocalRecord = this._clone(localRecord);
       await this._stripComputedFields(strippedLocalRecord);
 
-      let mergedRecord = this._mergeSyncedRecords(strippedLocalRecord, remoteRecord);
+      let mergedRecord = this._mergeSyncedRecords(
+        strippedLocalRecord,
+        remoteRecord
+      );
       if (mergedRecord) {
         // Local and remote modified, but we were able to merge. Replace the
         // local record with the merged record.
@@ -893,7 +973,9 @@ class AutofillRecords {
       } else {
         // Merge conflict. Fork the local record, then replace the original
         // with the merged record.
-        let forkedLocalRecord = await this._forkLocalRecord(strippedLocalRecord);
+        let forkedLocalRecord = await this._forkLocalRecord(
+          strippedLocalRecord
+        );
         forkedGUID = forkedLocalRecord.guid;
         await this._replaceRecordAt(localIndex, remoteRecord, {
           keepSyncMetadata: false,
@@ -902,18 +984,24 @@ class AutofillRecords {
     }
 
     this._store.saveSoon();
-    Services.obs.notifyObservers({wrappedJSObject: {
-      sourceSync: true,
-      guid: remoteRecord.guid,
-      forkedGUID,
-      collectionName: this._collectionName,
-    }}, "formautofill-storage-changed", "reconcile");
+    Services.obs.notifyObservers(
+      {
+        wrappedJSObject: {
+          sourceSync: true,
+          guid: remoteRecord.guid,
+          forkedGUID,
+          collectionName: this._collectionName,
+        },
+      },
+      "formautofill-storage-changed",
+      "reconcile"
+    );
 
-    return {forkedGUID};
+    return { forkedGUID };
   }
 
   _removeSyncedRecord(guid) {
-    let index = this._findIndexByGUID(guid, {includeDeleted: true});
+    let index = this._findIndexByGUID(guid, { includeDeleted: true });
     if (index == -1) {
       // Removing a record we don't know about. It may have been synced and
       // removed by another device before we saw it. Store the tombstone in
@@ -935,8 +1023,10 @@ class AutofillRecords {
     if (sync.changeCounter > 0) {
       // Deleting a record with unsynced local changes. To avoid potential
       // data loss, we ignore the deletion in favor of the changed record.
-      this.log.info("Ignoring deletion for record with local changes",
-                    existing);
+      this.log.info(
+        "Ignoring deletion for record with local changes",
+        existing
+      );
       return;
     }
 
@@ -999,11 +1089,11 @@ class AutofillRecords {
    *        The possibly modified object obtained via pullSyncChanges.
    */
   pushSyncChanges(changes) {
-    for (let [guid, {counter, synced}] of Object.entries(changes)) {
+    for (let [guid, { counter, synced }] of Object.entries(changes)) {
       if (!synced) {
         continue;
       }
-      let recordFound = this._findByGUID(guid, {includeDeleted: true});
+      let recordFound = this._findByGUID(guid, { includeDeleted: true });
       if (!recordFound) {
         this.log.warn("No profile found to persist changes for guid " + guid);
         continue;
@@ -1145,7 +1235,9 @@ class AutofillRecords {
         // For now, we ensure that both (or neither) records have the field
         // with matching values. This doesn't account for the version yet
         // (bug 1377204).
-        same = key in strippedLocalRecord == key in remoteRecord && strippedLocalRecord[key] == remoteRecord[key];
+        same =
+          key in strippedLocalRecord == key in remoteRecord &&
+          strippedLocalRecord[key] == remoteRecord[key];
         if (!same) {
           break;
         }
@@ -1177,12 +1269,12 @@ class AutofillRecords {
     return result;
   }
 
-  _findByGUID(guid, {includeDeleted = false} = {}) {
-    let found = this._findIndexByGUID(guid, {includeDeleted});
+  _findByGUID(guid, { includeDeleted = false } = {}) {
+    let found = this._findIndexByGUID(guid, { includeDeleted });
     return found < 0 ? undefined : this._data[found];
   }
 
-  _findIndexByGUID(guid, {includeDeleted = false} = {}) {
+  _findIndexByGUID(guid, { includeDeleted = false } = {}) {
     return this._data.findIndex(record => {
       return record.guid == guid && (!record.deleted || includeDeleted);
     });
@@ -1232,9 +1324,10 @@ class AutofillRecords {
       if (!this.VALID_FIELDS.includes(key)) {
         throw new Error(`"${key}" is not a valid field.`);
       }
-      if (typeof record[key] !== "string" &&
-          typeof record[key] !== "number") {
-        throw new Error(`"${key}" contains invalid data type: ${typeof record[key]}`);
+      if (typeof record[key] !== "string" && typeof record[key] !== "number") {
+        throw new Error(
+          `"${key}" contains invalid data type: ${typeof record[key]}`
+        );
       }
       if (!preserveEmptyFields && record[key] === "") {
         delete record[key];
@@ -1259,24 +1352,36 @@ class AutofillRecords {
   async mergeToStorage(targetRecord, strict = false) {
     let mergedGUIDs = [];
     for (let record of this._data) {
-      if (!record.deleted && await this.mergeIfPossible(record.guid, targetRecord, strict)) {
+      if (
+        !record.deleted &&
+        (await this.mergeIfPossible(record.guid, targetRecord, strict))
+      ) {
         mergedGUIDs.push(record.guid);
       }
     }
-    this.log.debug("Existing records matching and merging count is", mergedGUIDs.length);
+    this.log.debug(
+      "Existing records matching and merging count is",
+      mergedGUIDs.length
+    );
     return mergedGUIDs;
   }
 
   /**
    * Unconditionally remove all data and tombstones for this collection.
    */
-  removeAll({sourceSync = false} = {}) {
+  removeAll({ sourceSync = false } = {}) {
     this._store.data[this._collectionName] = [];
     this._store.saveSoon();
-    Services.obs.notifyObservers({wrappedJSObject: {
-      sourceSync,
-      collectionName: this._collectionName,
-    }}, "formautofill-storage-changed", "removeAll");
+    Services.obs.notifyObservers(
+      {
+        wrappedJSObject: {
+          sourceSync,
+          collectionName: this._collectionName,
+        },
+      },
+      "formautofill-storage-changed",
+      "removeAll"
+    );
   }
 
   /**
@@ -1308,15 +1413,15 @@ class AutofillRecords {
   async computeFields(record) {}
 
   /**
-  * An interface to be inherited to mutate the argument to normalize it.
-  *
-  * @param {object} partialRecord containing the record passed by the consumer of
-  *                               storage and in the case of `update` with
-  *                               `preserveOldProperties` will only include the
-  *                               properties that the user is changing so the
-  *                               lack of a field doesn't mean that the record
-  *                               won't have that field.
-  */
+   * An interface to be inherited to mutate the argument to normalize it.
+   *
+   * @param {object} partialRecord containing the record passed by the consumer of
+   *                               storage and in the case of `update` with
+   *                               `preserveOldProperties` will only include the
+   *                               properties that the user is changing so the
+   *                               lack of a field doesn't mean that the record
+   *                               won't have that field.
+   */
   _normalizeFields(partialRecord) {}
 
   /**
@@ -1336,7 +1441,13 @@ class AutofillRecords {
 
 class Addresses extends AutofillRecords {
   constructor(store) {
-    super(store, "addresses", VALID_ADDRESS_FIELDS, VALID_ADDRESS_COMPUTED_FIELDS, ADDRESS_SCHEMA_VERSION);
+    super(
+      store,
+      "addresses",
+      VALID_ADDRESS_FIELDS,
+      VALID_ADDRESS_COMPUTED_FIELDS,
+      ADDRESS_SCHEMA_VERSION
+    );
   }
 
   _recordReadProcessor(address) {
@@ -1375,7 +1486,9 @@ class Addresses extends AutofillRecords {
     if (!("address-line1" in address)) {
       let streetAddress = [];
       if (address["street-address"]) {
-        streetAddress = address["street-address"].split("\n").map(s => s.trim());
+        streetAddress = address["street-address"]
+          .split("\n")
+          .map(s => s.trim());
       }
       for (let i = 0; i < 3; i++) {
         address["address-line" + (i + 1)] = streetAddress[i] || "";
@@ -1392,7 +1505,10 @@ class Addresses extends AutofillRecords {
     if (!("country-name" in address)) {
       if (address.country) {
         try {
-          address["country-name"] = Services.intl.getRegionDisplayNames(undefined, [address.country]);
+          address["country-name"] = Services.intl.getRegionDisplayNames(
+            undefined,
+            [address.country]
+          );
         } catch (e) {
           address["country-name"] = "";
         }
@@ -1405,7 +1521,10 @@ class Addresses extends AutofillRecords {
     // Compute tel
     if (!("tel-national" in address)) {
       if (address.tel) {
-        let tel = PhoneNumber.Parse(address.tel, address.country || FormAutofill.DEFAULT_REGION);
+        let tel = PhoneNumber.Parse(
+          address.tel,
+          address.country || FormAutofill.DEFAULT_REGION
+        );
         if (tel) {
           if (tel.countryCode) {
             address["tel-country-code"] = tel.countryCode;
@@ -1419,7 +1538,9 @@ class Addresses extends AutofillRecords {
           // to figure out how to parse numbers from other regions when we support
           // new countries in the future.
           if (tel.nationalNumber && tel.countryCode == "+1") {
-            let telComponents = tel.nationalNumber.match(/(\d{3})((\d{3})(\d{4}))$/);
+            let telComponents = tel.nationalNumber.match(
+              /(\d{3})((\d{3})(\d{4}))$/
+            );
             if (telComponents) {
               address["tel-area-code"] = telComponents[1];
               address["tel-local"] = telComponents[2];
@@ -1468,15 +1589,22 @@ class Addresses extends AutofillRecords {
     if (STREET_ADDRESS_COMPONENTS.some(c => !!address[c])) {
       // Treat "street-address" as "address-line1" if it contains only one line
       // and "address-line1" is omitted.
-      if (!address["address-line1"] && address["street-address"] &&
-          !address["street-address"].includes("\n")) {
+      if (
+        !address["address-line1"] &&
+        address["street-address"] &&
+        !address["street-address"].includes("\n")
+      ) {
         address["address-line1"] = address["street-address"];
         delete address["street-address"];
       }
 
       // Concatenate "address-line*" if "street-address" is omitted.
       if (!address["street-address"]) {
-        address["street-address"] = STREET_ADDRESS_COMPONENTS.map(c => address[c]).join("\n").replace(/\n+$/, "");
+        address["street-address"] = STREET_ADDRESS_COMPONENTS.map(
+          c => address[c]
+        )
+          .join("\n")
+          .replace(/\n+$/, "");
       }
     }
     STREET_ADDRESS_COMPONENTS.forEach(c => delete address[c]);
@@ -1495,7 +1623,9 @@ class Addresses extends AutofillRecords {
     let hasLocalizedName = false;
     try {
       if (country) {
-        let localizedName = Services.intl.getRegionDisplayNames(undefined, [country]);
+        let localizedName = Services.intl.getRegionDisplayNames(undefined, [
+          country,
+        ]);
         hasLocalizedName = localizedName != country;
       }
     } catch (e) {}
@@ -1549,7 +1679,10 @@ class Addresses extends AutofillRecords {
     this._normalizeRecord(addressToMerge, strict);
     let hasMatchingField = false;
 
-    let country = addressFound.country || addressToMerge.country || FormAutofill.DEFAULT_REGION;
+    let country =
+      addressFound.country ||
+      addressToMerge.country ||
+      FormAutofill.DEFAULT_REGION;
     let collators = FormAutofillUtils.getSearchCollators(country);
     for (let field of this.VALID_FIELDS) {
       let existingField = addressFound[field];
@@ -1558,17 +1691,32 @@ class Addresses extends AutofillRecords {
         if (incomingField != existingField) {
           // Treat "street-address" as mergeable if their single-line versions
           // match each other.
-          if (field == "street-address" &&
-              FormAutofillUtils.compareStreetAddress(existingField, incomingField, collators)) {
+          if (
+            field == "street-address" &&
+            FormAutofillUtils.compareStreetAddress(
+              existingField,
+              incomingField,
+              collators
+            )
+          ) {
             // Keep the street-address in storage if its amount of lines is greater than
             // or equal to the incoming one.
-            if (existingField.split("\n").length >= incomingField.split("\n").length) {
+            if (
+              existingField.split("\n").length >=
+              incomingField.split("\n").length
+            ) {
               // Replace the incoming field with the one in storage so it will
               // be further merged back to storage.
               addressToMerge[field] = existingField;
             }
-          } else if (field != "street-address" &&
-                     FormAutofillUtils.strCompare(existingField, incomingField, collators)) {
+          } else if (
+            field != "street-address" &&
+            FormAutofillUtils.strCompare(
+              existingField,
+              incomingField,
+              collators
+            )
+          ) {
             addressToMerge[field] = existingField;
           } else {
             this.log.debug("Conflicts: field", field, "has different value.");
@@ -1586,7 +1734,7 @@ class Addresses extends AutofillRecords {
     }
 
     // Early return if the data is the same or subset.
-    let noNeedToUpdate = this.VALID_FIELDS.every((field) => {
+    let noNeedToUpdate = this.VALID_FIELDS.every(field => {
       // When addressFound doesn't contain a field, it's unnecessary to update
       // if the same field in addressToMerge is omitted or an empty string.
       if (addressFound[field] === undefined) {
@@ -1595,8 +1743,10 @@ class Addresses extends AutofillRecords {
 
       // When addressFound contains a field, it's unnecessary to update if
       // the same field in addressToMerge is omitted or a duplicate.
-      return (addressToMerge[field] === undefined) ||
-             (addressFound[field] === addressToMerge[field]);
+      return (
+        addressToMerge[field] === undefined ||
+        addressFound[field] === addressToMerge[field]
+      );
     });
     if (noNeedToUpdate) {
       return true;
@@ -1609,7 +1759,13 @@ class Addresses extends AutofillRecords {
 
 class CreditCards extends AutofillRecords {
   constructor(store) {
-    super(store, "creditCards", VALID_CREDIT_CARD_FIELDS, VALID_CREDIT_CARD_COMPUTED_FIELDS, CREDIT_CARD_SCHEMA_VERSION);
+    super(
+      store,
+      "creditCards",
+      VALID_CREDIT_CARD_FIELDS,
+      VALID_CREDIT_CARD_COMPUTED_FIELDS,
+      CREDIT_CARD_SCHEMA_VERSION
+    );
   }
 
   async computeFields(creditCard) {
@@ -1638,7 +1794,10 @@ class CreditCards extends AutofillRecords {
     // Compute credit card expiration date
     if (!("cc-exp" in creditCard)) {
       if (creditCard["cc-exp-month"] && creditCard["cc-exp-year"]) {
-        creditCard["cc-exp"] = String(creditCard["cc-exp-year"]) + "-" + String(creditCard["cc-exp-month"]).padStart(2, "0");
+        creditCard["cc-exp"] =
+          String(creditCard["cc-exp-year"]) +
+          "-" +
+          String(creditCard["cc-exp-month"]).padStart(2, "0");
       } else {
         creditCard["cc-exp"] = "";
       }
@@ -1677,7 +1836,10 @@ class CreditCards extends AutofillRecords {
               break;
             }
 
-            this.log.warn("Removing version 1 credit card record to migrate to new encryption:", creditCard.guid);
+            this.log.warn(
+              "Removing version 1 credit card record to migrate to new encryption:",
+              creditCard.guid
+            );
 
             // Replace the record with a tombstone record here,
             // regardless of existence of sync metadata.
@@ -1700,12 +1862,16 @@ class CreditCards extends AutofillRecords {
           // Decrypt the cc-number using version 1 encryption.
           let ccNumber = cryptoSDR.decrypt(creditCard["cc-number-encrypted"]);
           // Re-encrypt the cc-number with version 2 encryption.
-          creditCard["cc-number-encrypted"] = await OSKeyStore.encrypt(ccNumber);
+          creditCard["cc-number-encrypted"] = await OSKeyStore.encrypt(
+            ccNumber
+          );
           break;
         }
 
         default:
-          throw new Error("Unknown credit card version to migrate: " + creditCard.version);
+          throw new Error(
+            "Unknown credit card version to migrate: " + creditCard.version
+          );
       }
     }
     return super._computeMigratedRecord(creditCard);
@@ -1714,7 +1880,9 @@ class CreditCards extends AutofillRecords {
   async _stripComputedFields(creditCard) {
     if (creditCard["cc-number-encrypted"]) {
       try {
-        creditCard["cc-number"] = await OSKeyStore.decrypt(creditCard["cc-number-encrypted"]);
+        creditCard["cc-number"] = await OSKeyStore.decrypt(
+          creditCard["cc-number-encrypted"]
+        );
       } catch (ex) {
         if (ex.result == Cr.NS_ERROR_ABORT) {
           throw ex;
@@ -1734,7 +1902,11 @@ class CreditCards extends AutofillRecords {
   }
 
   _normalizeCCName(creditCard) {
-    if (creditCard["cc-given-name"] || creditCard["cc-additional-name"] || creditCard["cc-family-name"]) {
+    if (
+      creditCard["cc-given-name"] ||
+      creditCard["cc-additional-name"] ||
+      creditCard["cc-family-name"]
+    ) {
       if (!creditCard["cc-name"]) {
         creditCard["cc-name"] = FormAutofillNameUtils.joinNameParts({
           given: creditCard["cc-given-name"],
@@ -1756,7 +1928,7 @@ class CreditCards extends AutofillRecords {
       delete creditCard["cc-number"];
       return;
     }
-    let card = new CreditCard({number: creditCard["cc-number"]});
+    let card = new CreditCard({ number: creditCard["cc-number"] });
     creditCard["cc-number"] = card.number;
   }
 
@@ -1787,8 +1959,9 @@ class CreditCards extends AutofillRecords {
 
   _ensureMatchingVersion(record) {
     if (!record.version || isNaN(record.version) || record.version < 1) {
-      throw new Error(`Got invalid record version ${
-        record.version}; want ${this.version}`);
+      throw new Error(
+        `Got invalid record version ${record.version}; want ${this.version}`
+      );
     }
 
     if (record.version < this.version) {
@@ -1805,7 +1978,9 @@ class CreditCards extends AutofillRecords {
           }
           break;
         default:
-          throw new Error("Unknown credit card version to match: " + record.version);
+          throw new Error(
+            "Unknown credit card version to match: " + record.version
+          );
       }
     }
 
@@ -1823,17 +1998,22 @@ class CreditCards extends AutofillRecords {
     let clonedTargetCreditCard = this._clone(targetCreditCard);
     this._normalizeRecord(clonedTargetCreditCard);
     for (let creditCard of this._data) {
-      let isDuplicate = await Promise.all(this.VALID_FIELDS.map(async field => {
-        if (!clonedTargetCreditCard[field]) {
-          return !creditCard[field];
-        }
-        if (field == "cc-number" && creditCard[field]) {
-          // Compare the masked numbers instead when decryption requires a password
-          // because we don't want to leak the credit card number.
-          return CreditCard.getLongMaskedNumber(clonedTargetCreditCard[field]) == creditCard[field];
-        }
-        return clonedTargetCreditCard[field] == creditCard[field];
-      })).then(fieldResults => fieldResults.every(result => result));
+      let isDuplicate = await Promise.all(
+        this.VALID_FIELDS.map(async field => {
+          if (!clonedTargetCreditCard[field]) {
+            return !creditCard[field];
+          }
+          if (field == "cc-number" && creditCard[field]) {
+            // Compare the masked numbers instead when decryption requires a password
+            // because we don't want to leak the credit card number.
+            return (
+              CreditCard.getLongMaskedNumber(clonedTargetCreditCard[field]) ==
+              creditCard[field]
+            );
+          }
+          return clonedTargetCreditCard[field] == creditCard[field];
+        })
+      ).then(fieldResults => fieldResults.every(result => result));
       if (isDuplicate) {
         return creditCard.guid;
       }
@@ -1861,7 +2041,7 @@ class CreditCards extends AutofillRecords {
     }
 
     // Query raw data for comparing the decrypted credit card number
-    let creditCardFound = await this.get(guid, {rawData: true});
+    let creditCardFound = await this.get(guid, { rawData: true });
     if (!creditCardFound) {
       throw new Error("No matching credit card.");
     }
@@ -1873,11 +2053,14 @@ class CreditCards extends AutofillRecords {
       let existingField = creditCardFound[field];
 
       // Make sure credit card field is existed and have value
-      if (field == "cc-number" && (!existingField || !creditCardToMerge[field])) {
+      if (
+        field == "cc-number" &&
+        (!existingField || !creditCardToMerge[field])
+      ) {
         return false;
       }
 
-      if (!creditCardToMerge[field] && typeof(existingField) != "undefined") {
+      if (!creditCardToMerge[field] && typeof existingField != "undefined") {
         creditCardToMerge[field] = existingField;
       }
 
@@ -1891,8 +2074,8 @@ class CreditCards extends AutofillRecords {
     }
 
     // Early return if the data is the same.
-    let exactlyMatch = this.VALID_FIELDS.every((field) =>
-      creditCardFound[field] === creditCardToMerge[field]
+    let exactlyMatch = this.VALID_FIELDS.every(
+      field => creditCardFound[field] === creditCardToMerge[field]
     );
     if (exactlyMatch) {
       return true;
@@ -1943,23 +2126,24 @@ FormAutofillStorage.prototype = {
         path: this._path,
         dataPostProcessor: this._dataPostProcessor.bind(this),
       });
-      this._initializePromise = this._store.load()
-        .then(() => {
-          let initializeAutofillRecords = [this.addresses.initialize()];
-          if (FormAutofill.isAutofillCreditCardsAvailable) {
-            initializeAutofillRecords.push(this.creditCards.initialize());
-          } else {
-            // Make creditCards records unavailable to other modules
-            // because we never initialize it.
-            Object.defineProperty(this, "creditCards", {
-              get() {
-                throw new Error("CreditCards is not initialized. " +
-                                "Please restart if you flip the pref manually.");
-              },
-            });
-          }
-          return Promise.all(initializeAutofillRecords);
-        });
+      this._initializePromise = this._store.load().then(() => {
+        let initializeAutofillRecords = [this.addresses.initialize()];
+        if (FormAutofill.isAutofillCreditCardsAvailable) {
+          initializeAutofillRecords.push(this.creditCards.initialize());
+        } else {
+          // Make creditCards records unavailable to other modules
+          // because we never initialize it.
+          Object.defineProperty(this, "creditCards", {
+            get() {
+              throw new Error(
+                "CreditCards is not initialized. " +
+                  "Please restart if you flip the pref manually."
+              );
+            },
+          });
+        }
+        return Promise.all(initializeAutofillRecords);
+      });
     }
     return this._initializePromise;
   },
@@ -1987,4 +2171,5 @@ FormAutofillStorage.prototype = {
 
 // The singleton exposed by this module.
 this.formAutofillStorage = new FormAutofillStorage(
-  OS.Path.join(OS.Constants.Path.profileDir, PROFILE_JSON_FILE_NAME));
+  OS.Path.join(OS.Constants.Path.profileDir, PROFILE_JSON_FILE_NAME)
+);

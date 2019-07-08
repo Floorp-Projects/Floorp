@@ -10,17 +10,21 @@ add_task(async () => {
     options: {
       startWithLastProfile: true,
     },
-    profiles: [{
-      name: "Profile1",
-      path: "Path1",
-    }, {
-      name: "Profile2",
-      path: "Path2",
-      default: true,
-    }, {
-      name: "Profile3",
-      path: "Path3",
-    }],
+    profiles: [
+      {
+        name: "Profile1",
+        path: "Path1",
+      },
+      {
+        name: "Profile2",
+        path: "Path2",
+        default: true,
+      },
+      {
+        name: "Profile3",
+        path: "Path3",
+      },
+    ],
   };
 
   writeProfilesIni(profileData);
@@ -31,5 +35,9 @@ add_task(async () => {
   checkStartupReason("argument-p");
 
   Assert.ok(!didCreate, "Should not have created a new profile.");
-  Assert.equal(profile.name, "Profile1", "Should have chosen the right profile");
+  Assert.equal(
+    profile.name,
+    "Profile1",
+    "Should have chosen the right profile"
+  );
 });

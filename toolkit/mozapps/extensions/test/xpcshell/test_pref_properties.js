@@ -7,8 +7,11 @@
 var gManagerEventsListener = {
   seenEvents: [],
   init() {
-    let events = ["onCompatibilityModeChanged", "onCheckUpdateSecurityChanged",
-                  "onUpdateModeChanged"];
+    let events = [
+      "onCompatibilityModeChanged",
+      "onCheckUpdateSecurityChanged",
+      "onUpdateModeChanged",
+    ];
     events.forEach(function(aEvent) {
       this[aEvent] = function() {
         info("Saw event " + aEvent);
@@ -49,7 +52,6 @@ add_task(async function setup() {
 
   await promiseStartupManager();
   gManagerEventsListener.init();
-
 
   // AddonManager.updateEnabled
   gManagerEventsListener.expect(["onUpdateModeChanged"]);
@@ -126,12 +128,14 @@ add_task(async function setup() {
   Assert.ok(AddonManager.strictCompatibility);
   Assert.ok(Services.prefs.getBoolPref("extensions.strictCompatibility"));
 
-
   // AddonManager.checkCompatibility
   if (isNightlyChannel()) {
     var version = "nightly";
   } else {
-    version = Services.appinfo.version.replace(/^([^\.]+\.[0-9]+[a-z]*).*/gi, "$1");
+    version = Services.appinfo.version.replace(
+      /^([^\.]+\.[0-9]+[a-z]*).*/gi,
+      "$1"
+    );
   }
   const COMPATIBILITY_PREF = "extensions.checkCompatibility." + version;
 
@@ -159,43 +163,54 @@ add_task(async function setup() {
   Assert.ok(AddonManager.checkCompatibility);
   Assert.ok(!Services.prefs.prefHasUserValue(COMPATIBILITY_PREF));
 
-
   // AddonManager.checkUpdateSecurity
   gManagerEventsListener.expect(["onCheckUpdateSecurityChanged"]);
   AddonManager.checkUpdateSecurity = false;
   gManagerEventsListener.checkExpected();
   Assert.ok(!AddonManager.checkUpdateSecurity);
-  if (AddonManager.checkUpdateSecurityDefault)
+  if (AddonManager.checkUpdateSecurityDefault) {
     Assert.ok(!Services.prefs.getBoolPref("extensions.checkUpdateSecurity"));
-  else
-    Assert.ok(!Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity"));
+  } else {
+    Assert.ok(
+      !Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity")
+    );
+  }
 
   gManagerEventsListener.expect([]);
   AddonManager.checkUpdateSecurity = false;
   gManagerEventsListener.checkExpected();
   Assert.ok(!AddonManager.checkUpdateSecurity);
-  if (AddonManager.checkUpdateSecurityDefault)
+  if (AddonManager.checkUpdateSecurityDefault) {
     Assert.ok(!Services.prefs.getBoolPref("extensions.checkUpdateSecurity"));
-  else
-    Assert.ok(!Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity"));
+  } else {
+    Assert.ok(
+      !Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity")
+    );
+  }
 
   gManagerEventsListener.expect(["onCheckUpdateSecurityChanged"]);
   AddonManager.checkUpdateSecurity = true;
   gManagerEventsListener.checkExpected();
   Assert.ok(AddonManager.checkUpdateSecurity);
-  if (!AddonManager.checkUpdateSecurityDefault)
+  if (!AddonManager.checkUpdateSecurityDefault) {
     Assert.ok(Services.prefs.getBoolPref("extensions.checkUpdateSecurity"));
-  else
-    Assert.ok(!Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity"));
+  } else {
+    Assert.ok(
+      !Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity")
+    );
+  }
 
   gManagerEventsListener.expect([]);
   AddonManager.checkUpdateSecurity = true;
   gManagerEventsListener.checkExpected();
   Assert.ok(AddonManager.checkUpdateSecurity);
-  if (!AddonManager.checkUpdateSecurityDefault)
+  if (!AddonManager.checkUpdateSecurityDefault) {
     Assert.ok(Services.prefs.getBoolPref("extensions.checkUpdateSecurity"));
-  else
-    Assert.ok(!Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity"));
+  } else {
+    Assert.ok(
+      !Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity")
+    );
+  }
 
   gManagerEventsListener.shutdown();
 

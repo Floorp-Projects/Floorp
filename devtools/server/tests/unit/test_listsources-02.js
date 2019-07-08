@@ -23,13 +23,16 @@ function run_test() {
       }
       return origRequest.call(this, request, onResponse);
     };
-  }(gClient.request));
+  })(gClient.request);
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_listing_zero_sources();
-                           });
+    attachTestTabAndResume(gClient, "test-stack", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_listing_zero_sources();
+    });
   });
   do_test_pending();
 }
@@ -40,9 +43,11 @@ function test_listing_zero_sources() {
     Assert.ok(!!packet.sources);
     Assert.equal(packet.sources.length, 0);
 
-    Assert.ok(gNumTimesSourcesSent <= 1,
-              "Should only send one sources request at most, even though we"
-              + " might have had to send one to determine feature support.");
+    Assert.ok(
+      gNumTimesSourcesSent <= 1,
+      "Should only send one sources request at most, even though we" +
+        " might have had to send one to determine feature support."
+    );
 
     finishClient(gClient);
   });

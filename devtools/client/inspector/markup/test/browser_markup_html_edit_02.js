@@ -12,9 +12,9 @@ requestLongerTimeout(2);
 const TEST_DATA = [
   {
     selector: "#badMarkup1",
-    oldHTML: "<div id=\"badMarkup1\">badMarkup1</div>",
-    newHTML: "<div id=\"badMarkup1\">badMarkup1</div> hanging</div>",
-    validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
+    oldHTML: '<div id="badMarkup1">badMarkup1</div>',
+    newHTML: '<div id="badMarkup1">badMarkup1</div> hanging</div>',
+    validate: async function({ pageNodeFront, selectedNodeFront, testActor }) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
       const textNodeName = await testActor.eval(`
@@ -29,10 +29,11 @@ const TEST_DATA = [
   },
   {
     selector: "#badMarkup2",
-    oldHTML: "<div id=\"badMarkup2\">badMarkup2</div>",
-    newHTML: "<div id=\"badMarkup2\">badMarkup2</div> hanging<div></div>" +
-             "</div></div></body>",
-    validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
+    oldHTML: '<div id="badMarkup2">badMarkup2</div>',
+    newHTML:
+      '<div id="badMarkup2">badMarkup2</div> hanging<div></div>' +
+      "</div></div></body>",
+    validate: async function({ pageNodeFront, selectedNodeFront, testActor }) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
       const textNodeName = await testActor.eval(`
@@ -47,24 +48,30 @@ const TEST_DATA = [
   },
   {
     selector: "#badMarkup3",
-    oldHTML: "<div id=\"badMarkup3\">badMarkup3</div>",
-    newHTML: "<div id=\"badMarkup3\">badMarkup3 <em>Emphasized <strong> " +
-             "and strong</div>",
-    validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
+    oldHTML: '<div id="badMarkup3">badMarkup3</div>',
+    newHTML:
+      '<div id="badMarkup3">badMarkup3 <em>Emphasized <strong> ' +
+      "and strong</div>",
+    validate: async function({ pageNodeFront, selectedNodeFront, testActor }) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      const emText = await testActor.getProperty("#badMarkup3 em", "textContent");
-      const strongText = await testActor.getProperty("#badMarkup3 strong",
-                                                   "textContent");
+      const emText = await testActor.getProperty(
+        "#badMarkup3 em",
+        "textContent"
+      );
+      const strongText = await testActor.getProperty(
+        "#badMarkup3 strong",
+        "textContent"
+      );
       is(emText, "Emphasized  and strong", "<em> was auto created");
       is(strongText, " and strong", "<strong> was auto created");
     },
   },
   {
     selector: "#badMarkup4",
-    oldHTML: "<div id=\"badMarkup4\">badMarkup4</div>",
-    newHTML: "<div id=\"badMarkup4\">badMarkup4</p>",
-    validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
+    oldHTML: '<div id="badMarkup4">badMarkup4</div>',
+    newHTML: '<div id="badMarkup4">badMarkup4</p>',
+    validate: async function({ pageNodeFront, selectedNodeFront, testActor }) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
       const divText = await testActor.getProperty("#badMarkup4", "textContent");
@@ -81,9 +88,9 @@ const TEST_DATA = [
   },
   {
     selector: "#badMarkup5",
-    oldHTML: "<p id=\"badMarkup5\">badMarkup5</p>",
-    newHTML: "<p id=\"badMarkup5\">badMarkup5 <div>with a nested div</div></p>",
-    validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
+    oldHTML: '<p id="badMarkup5">badMarkup5</p>',
+    newHTML: '<p id="badMarkup5">badMarkup5 <div>with a nested div</div></p>',
+    validate: async function({ pageNodeFront, selectedNodeFront, testActor }) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
       const num = await testActor.getNumberOfElementMatches("#badMarkup5 div");
@@ -91,9 +98,14 @@ const TEST_DATA = [
       const pText = await testActor.getProperty("#badMarkup5", "textContent");
       const pTag = await testActor.getProperty("#badMarkup5", "tagName");
 
-      const divText = await testActor.getProperty("#badMarkup5 ~ div",
-                                                "textContent");
-      const divTag = await testActor.getProperty("#badMarkup5 ~ div", "tagName");
+      const divText = await testActor.getProperty(
+        "#badMarkup5 ~ div",
+        "textContent"
+      );
+      const divTag = await testActor.getProperty(
+        "#badMarkup5 ~ div",
+        "tagName"
+      );
 
       is(num, 0, "The invalid markup got created as a sibling");
       is(pText, "badMarkup5 ", "The p tag does not take in the div content");
@@ -104,7 +116,8 @@ const TEST_DATA = [
   },
 ];
 
-const TEST_URL = "data:text/html," +
+const TEST_URL =
+  "data:text/html," +
   "<!DOCTYPE html>" +
   "<head><meta charset='utf-8' /></head>" +
   "<body>" +
@@ -113,7 +126,7 @@ const TEST_URL = "data:text/html," +
   "</html>";
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
   inspector.markup._frame.focus();
   await runEditOuterHTMLTests(TEST_DATA, inspector, testActor);
 });

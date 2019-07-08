@@ -12,11 +12,13 @@ add_task(async () => {
   writeCompatibilityIni(defaultProfile);
 
   writeProfilesIni({
-    profiles: [{
-      name: "Foo",
-      path: defaultProfile.leafName,
-      default: true,
-    }],
+    profiles: [
+      {
+        name: "Foo",
+        path: defaultProfile.leafName,
+        default: true,
+      },
+    ],
     installs: {
       other: {
         default: defaultProfile.leafName,
@@ -29,17 +31,38 @@ add_task(async () => {
 
   let profileData = readProfilesIni();
 
-  Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
-  Assert.equal(profileData.profiles.length, 2, "Should have the right number of profiles.");
+  Assert.ok(
+    profileData.options.startWithLastProfile,
+    "Should be set to start with the last profile."
+  );
+  Assert.equal(
+    profileData.profiles.length,
+    2,
+    "Should have the right number of profiles."
+  );
 
   let hash = xreDirProvider.getInstallHash();
-  Assert.equal(Object.keys(profileData.installs).length, 2, "Should be two known installs.");
-  Assert.notEqual(profileData.installs[hash].default, defaultProfile.leafName, "Should not have marked the original default profile as the default for this install.");
-  Assert.ok(profileData.installs[hash].locked, "Should have locked as we created this profile for this install.");
+  Assert.equal(
+    Object.keys(profileData.installs).length,
+    2,
+    "Should be two known installs."
+  );
+  Assert.notEqual(
+    profileData.installs[hash].default,
+    defaultProfile.leafName,
+    "Should not have marked the original default profile as the default for this install."
+  );
+  Assert.ok(
+    profileData.installs[hash].locked,
+    "Should have locked as we created this profile for this install."
+  );
 
   checkProfileService(profileData);
 
   Assert.ok(didCreate, "Should have created a new profile.");
-  Assert.ok(!selectedProfile.rootDir.equals(defaultProfile), "Should be using a different directory.");
+  Assert.ok(
+    !selectedProfile.rootDir.equals(defaultProfile),
+    "Should be using a different directory."
+  );
   Assert.equal(selectedProfile.name, DEDICATED_NAME);
 });

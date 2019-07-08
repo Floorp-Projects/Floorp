@@ -21,11 +21,14 @@ function run_test() {
   gDebuggee = addTestGlobal("test-grips");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_thread_lifetime();
-                           });
+    attachTestTabAndResume(gClient, "test-grips", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_thread_lifetime();
+    });
   });
   do_test_pending();
 }
@@ -35,7 +38,9 @@ function test_thread_lifetime() {
     const pauseGrip = packet.frame.arguments[0];
 
     // Create a thread-lifetime actor for this object.
-    gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function(response) {
+    gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function(
+      response
+    ) {
       // Successful promotion won't return an error.
       Assert.equal(response.error, undefined);
       gThreadClient.once("paused", function(packet) {
@@ -44,23 +49,29 @@ function test_thread_lifetime() {
         // Now that we've resumed, release the thread-lifetime grip.
         gClient.release(pauseGrip.actor, function(response) {
           gClient.request(
-            {to: pauseGrip.actor, type: "bogusRequest"}, function(response) {
+            { to: pauseGrip.actor, type: "bogusRequest" },
+            function(response) {
               Assert.equal(response.error, "noSuchActor");
               gThreadClient.resume().then(function() {
                 finishClient(gClient);
               });
-            });
+            }
+          );
         });
       });
       gThreadClient.resume();
     });
   });
 
-  gDebuggee.eval("(" + function() {
-    function stopMe(arg1) {
-      debugger;
-      debugger;
-    }
-    stopMe({obj: true});
-  } + ")()");
+  gDebuggee.eval(
+    "(" +
+      function() {
+        function stopMe(arg1) {
+          debugger;
+          debugger;
+        }
+        stopMe({ obj: true });
+      } +
+      ")()"
+  );
 }

@@ -19,7 +19,7 @@ loader.lazyRequireGetter(this, "getRect", "devtools/shared/layout/utils", true);
  */
 function simulateCameraFlash(document) {
   const window = document.defaultView;
-  const frames = Cu.cloneInto({ opacity: [ 0, 1 ] }, window);
+  const frames = Cu.cloneInto({ opacity: [0, 1] }, window);
   document.documentElement.animate(frames, CONTAINER_FLASHING_DURATION);
 }
 
@@ -88,7 +88,10 @@ function createScreenshotDataURL(document, args) {
     height -= scrollbarHeight.value;
   }
 
-  const canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+  const canvas = document.createElementNS(
+    "http://www.w3.org/1999/xhtml",
+    "canvas"
+  );
   const ctx = canvas.getContext("2d");
   const ratio = args.dpr ? args.dpr : window.devicePixelRatio;
   canvas.width = width * ratio;
@@ -126,20 +129,24 @@ function getFilename(defaultName) {
   }
 
   const date = new Date();
-  let dateString = date.getFullYear() + "-" + (date.getMonth() + 1) +
-                  "-" + date.getDate();
-  dateString = dateString.split("-").map(function(part) {
-    if (part.length == 1) {
-      part = "0" + part;
-    }
-    return part;
-  }).join("-");
+  let dateString =
+    date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
+  dateString = dateString
+    .split("-")
+    .map(function(part) {
+      if (part.length == 1) {
+        part = "0" + part;
+      }
+      return part;
+    })
+    .join("-");
 
-  const timeString = date.toTimeString().replace(/:/g, ".").split(" ")[0];
-  return L10N.getFormatStr(
-    "screenshotGeneratedFilename",
-    dateString,
-    timeString
-  ) + ".png";
+  const timeString = date
+    .toTimeString()
+    .replace(/:/g, ".")
+    .split(" ")[0];
+  return (
+    L10N.getFormatStr("screenshotGeneratedFilename", dateString, timeString) +
+    ".png"
+  );
 }
-

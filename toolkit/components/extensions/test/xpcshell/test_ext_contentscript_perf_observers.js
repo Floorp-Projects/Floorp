@@ -1,18 +1,20 @@
 "use strict";
 
-const server = createHttpServer({hosts: ["a.example.com", "b.example.com", "c.example.com"]});
+const server = createHttpServer({
+  hosts: ["a.example.com", "b.example.com", "c.example.com"],
+});
 server.registerDirectory("/data/", do_get_file("data"));
 
 add_task(async function test_perf_observers_cors() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: [
-        "http://b.example.com/",
+      permissions: ["http://b.example.com/"],
+      content_scripts: [
+        {
+          matches: ["http://a.example.com/file_sample.html"],
+          js: ["cs.js"],
+        },
       ],
-      content_scripts: [{
-        matches: ["http://a.example.com/file_sample.html"],
-        js: ["cs.js"],
-      }],
     },
     files: {
       "cs.js"() {
@@ -25,7 +27,7 @@ add_task(async function test_perf_observers_cors() {
             });
           });
         });
-        obs.observe({entryTypes: ["resource"]});
+        obs.observe({ entryTypes: ["resource"] });
 
         let b = document.createElement("link");
         b.rel = "stylesheet";
@@ -44,7 +46,9 @@ add_task(async function test_perf_observers_cors() {
     },
   });
 
-  let page = await ExtensionTestUtils.loadContentPage("http://a.example.com/file_sample.html");
+  let page = await ExtensionTestUtils.loadContentPage(
+    "http://a.example.com/file_sample.html"
+  );
   await extension.startup();
 
   let b = await extension.awaitMessage("observed");

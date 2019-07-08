@@ -47,8 +47,9 @@ AutoCompleteInput.prototype = {
 };
 
 async function ensure_tag_results(results, searchTerm) {
-  var controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);
+  var controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
+    Ci.nsIAutoCompleteController
+  );
 
   // Make an AutoCompleteInput that uses our searches
   // and confirms results on search complete
@@ -65,12 +66,17 @@ async function ensure_tag_results(results, searchTerm) {
 
     input.onSearchComplete = function input_onSearchComplete() {
       Assert.equal(numSearchesStarted, 1);
-      if (results.length)
-        Assert.equal(controller.searchStatus,
-                     Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
-      else
-        Assert.equal(controller.searchStatus,
-                     Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
+      if (results.length) {
+        Assert.equal(
+          controller.searchStatus,
+          Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH
+        );
+      } else {
+        Assert.equal(
+          controller.searchStatus,
+          Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH
+        );
+      }
 
       Assert.equal(controller.matchCount, results.length);
       for (var i = 0; i < controller.matchCount; i++) {
@@ -94,8 +100,13 @@ var tests = [
   () => ensure_tag_results(["Baz"], "Baz"),
   () => ensure_tag_results([], "barb"),
   () => ensure_tag_results([], "foo"),
-  () => ensure_tag_results(["first tag, bar", "first tag, Baz"], "first tag, ba"),
-  () => ensure_tag_results(["first tag;  bar", "first tag;  Baz"], "first tag;  ba"),
+  () =>
+    ensure_tag_results(["first tag, bar", "first tag, Baz"], "first tag, ba"),
+  () =>
+    ensure_tag_results(
+      ["first tag;  bar", "first tag;  Baz"],
+      "first tag;  ba"
+    ),
 ];
 
 /**

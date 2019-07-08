@@ -30,21 +30,26 @@ function run_test() {
   runHttpTests(tests, testComplete(srv));
 }
 
-
 /** ***********
  * UTILITIES *
  *************/
 
-function checkStatusLine(channel, httpMaxVer, httpMinVer, httpCode, statusText) {
+function checkStatusLine(
+  channel,
+  httpMaxVer,
+  httpMinVer,
+  httpCode,
+  statusText
+) {
   Assert.equal(channel.responseStatus, httpCode);
   Assert.equal(channel.responseStatusText, statusText);
 
-  var respMaj = {}, respMin = {};
+  var respMaj = {},
+    respMin = {};
   channel.getResponseVersion(respMaj, respMin);
   Assert.equal(respMaj.value, httpMaxVer);
   Assert.equal(respMin.value, httpMinVer);
 }
-
 
 /** *******
  * TESTS *
@@ -63,17 +68,14 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
   ];
 });
 
-
 // /no/setstatusline
-function noSetstatusline(metadata, response) {
-}
+function noSetstatusline(metadata, response) {}
 function startNoSetStatusLine(ch) {
   checkStatusLine(ch, 1, 1, 200, "OK");
 }
 function stop(ch, status, data) {
   Assert.ok(Components.isSuccessCode(status));
 }
-
 
 // /http1_0
 function http1_0(metadata, response) {
@@ -83,7 +85,6 @@ function startHttp1_0(ch) {
   checkStatusLine(ch, 1, 0, 200, "OK");
 }
 
-
 // /http1_1
 function http1_1(metadata, response) {
   response.setStatusLine("1.1", 200, "OK");
@@ -91,7 +92,6 @@ function http1_1(metadata, response) {
 function startHttp1_1(ch) {
   checkStatusLine(ch, 1, 1, 200, "OK");
 }
-
 
 // /invalidVersion
 function invalidVersion(metadata, response) {
@@ -106,7 +106,6 @@ function startPassedTrue(ch) {
   Assert.equal(ch.getResponseHeader("Passed"), "true");
 }
 
-
 // /invalidStatus
 function invalidStatus(metadata, response) {
   try {
@@ -115,7 +114,6 @@ function invalidStatus(metadata, response) {
     response.setHeader("Passed", "true", false);
   }
 }
-
 
 // /invalidDescription
 function invalidDescription(metadata, response) {
@@ -126,7 +124,6 @@ function invalidDescription(metadata, response) {
   }
 }
 
-
 // /crazyCode
 function crazyCode(metadata, response) {
   response.setStatusLine("1.1", 617, "Crazy");
@@ -134,7 +131,6 @@ function crazyCode(metadata, response) {
 function startCrazy(ch) {
   checkStatusLine(ch, 1, 1, 617, "Crazy");
 }
-
 
 // /nullVersion
 function nullVersion(metadata, response) {

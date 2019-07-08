@@ -6,8 +6,11 @@ function countHistoryEntries(browser, expected) {
   return ContentTask.spawn(browser, { expected }, async function(args) {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory;
-    Assert.equal(history && history.count, args.expected,
-      "correct number of shistory entries");
+    Assert.equal(
+      history && history.count,
+      args.expected,
+      "correct number of shistory entries"
+    );
   });
 }
 
@@ -22,7 +25,9 @@ add_task(async function() {
   ok(browser.isRemoteBrowser, "browser is remote");
 
   // Get the maximum number of preceding entries to save.
-  const MAX_BACK = Services.prefs.getIntPref("browser.sessionstore.max_serialize_back");
+  const MAX_BACK = Services.prefs.getIntPref(
+    "browser.sessionstore.max_serialize_back"
+  );
   ok(MAX_BACK > -1, "check that the default has a value that caps data");
 
   // Load more pages than we would save to disk on a clean shutdown.

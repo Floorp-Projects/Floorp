@@ -1,5 +1,4 @@
-function run_test()
-{
+function run_test() {
   do_get_profile();
 
   var svc = get_cache_service();

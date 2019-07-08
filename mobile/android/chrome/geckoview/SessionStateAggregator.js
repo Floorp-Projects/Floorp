@@ -5,13 +5,21 @@
 
 "use strict";
 
-const {GeckoViewChildModule} = ChromeUtils.import("resource://gre/modules/GeckoViewChildModule.jsm");
+const { GeckoViewChildModule } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewChildModule.jsm"
+);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+const { Services } = ChromeUtils.import(
+  "resource://gre/modules/Services.jsm",
+  this
+);
 
-ChromeUtils.defineModuleGetter(this, "SessionHistory",
-  "resource://gre/modules/sessionstore/SessionHistory.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "SessionHistory",
+  "resource://gre/modules/sessionstore/SessionHistory.jsm"
+);
 
 const NO_INDEX = Number.MAX_SAFE_INTEGER;
 const LAST_INDEX = Number.MAX_SAFE_INTEGER - 1;
@@ -56,7 +64,10 @@ class StateChangeNotifier extends Handler {
     this._observers = new Set();
     const ifreq = this.mm.docShell.QueryInterface(Ci.nsIInterfaceRequestor);
     const webProgress = ifreq.getInterface(Ci.nsIWebProgress);
-    webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
+    webProgress.addProgressListener(
+      this,
+      Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
+    );
   }
 
   /**
@@ -108,9 +119,10 @@ class StateChangeNotifier extends Handler {
     }
   }
 }
-StateChangeNotifier.prototype.QueryInterface =
-  ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                          Ci.nsISupportsWeakReference]);
+StateChangeNotifier.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsIWebProgressListener,
+  Ci.nsISupportsWeakReference,
+]);
 
 /**
  * Listens for changes to the session history. Whenever the user navigates
@@ -128,7 +140,6 @@ class SessionHistoryListener extends Handler {
 
     this._fromIdx = NO_INDEX;
 
-
     // The state change observer is needed to handle initial subframe loads.
     // It will redundantly invalidate with the SHistoryListener in some cases
     // but these invalidations are very cheap.
@@ -139,7 +150,8 @@ class SessionHistoryListener extends Handler {
     // waiting to add the listener later because these notifications are cheap.
     // We will likely only collect once since we are batching collection on
     // a delay.
-    this.mm.docShell.QueryInterface(Ci.nsIWebNavigation)
+    this.mm.docShell
+      .QueryInterface(Ci.nsIWebNavigation)
       .sessionHistory.legacySHistory.addSHistoryListener(this);
 
     // Listen for page title changes.
@@ -147,7 +159,8 @@ class SessionHistoryListener extends Handler {
   }
 
   uninit() {
-    const sessionHistory = this.mm.docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
+    const sessionHistory = this.mm.docShell.QueryInterface(Ci.nsIWebNavigation)
+      .sessionHistory;
     if (sessionHistory) {
       sessionHistory.legacySHistory.removeSHistoryListener(this);
     }
@@ -231,9 +244,10 @@ class SessionHistoryListener extends Handler {
     this.collect();
   }
 }
-SessionHistoryListener.prototype.QueryInterface =
-  ChromeUtils.generateQI([Ci.nsISHistoryListener,
-                          Ci.nsISupportsWeakReference]);
+SessionHistoryListener.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsISHistoryListener,
+  Ci.nsISupportsWeakReference,
+]);
 
 /**
  * Listens for scroll position changes. Whenever the user scrolls the top-most
@@ -254,12 +268,20 @@ class ScrollPositionListener extends Handler {
     super(store);
 
     SessionStoreUtils.addDynamicFrameFilteredListener(
-      this.mm, "mozvisualscroll", this,
-      /* capture */ false, /* system group */ true);
+      this.mm,
+      "mozvisualscroll",
+      this,
+      /* capture */ false,
+      /* system group */ true
+    );
 
     SessionStoreUtils.addDynamicFrameFilteredListener(
-      this.mm, "mozvisualresize", this,
-      /* capture */ false, /* system group */ true);
+      this.mm,
+      "mozvisualresize",
+      this,
+      /* capture */ false,
+      /* system group */ true
+    );
 
     this.stateChangeNotifier.addObserver(this);
   }
@@ -280,7 +302,8 @@ class ScrollPositionListener extends Handler {
     // TODO: Keep an eye on bug 1525259; we may not have to manually store zoom
     // Save the current document resolution.
     let zoom = 1;
-    const scrolldata = SessionStoreUtils.collectScrollPosition(this.mm.content) || {};
+    const scrolldata =
+      SessionStoreUtils.collectScrollPosition(this.mm.content) || {};
     const domWindowUtils = this.mm.content.windowUtils;
     zoom = domWindowUtils.getResolution();
     scrolldata.zoom = {};
@@ -289,7 +312,8 @@ class ScrollPositionListener extends Handler {
     // Save some data that'll help in adjusting the zoom level
     // when restoring in a different screen orientation.
     const displaySize = {};
-    const width = {}, height = {};
+    const width = {},
+      height = {};
     domWindowUtils.getContentViewerSize(width, height);
 
     displaySize.width = width.value;
@@ -322,7 +346,12 @@ class FormDataListener extends Handler {
   constructor(store) {
     super(store);
 
-    SessionStoreUtils.addDynamicFrameFilteredListener(this.mm, "input", this, true);
+    SessionStoreUtils.addDynamicFrameFilteredListener(
+      this.mm,
+      "input",
+      this,
+      true
+    );
     this.stateChangeNotifier.addObserver(this);
   }
 
@@ -393,10 +422,14 @@ class MessageQueue extends Handler {
      */
     this._idleScheduled = false;
 
-    this.timeoutDisabled =
-      Services.prefs.getBoolPref(TIMEOUT_DISABLED_PREF, false);
-    this._timeoutWaitIdlePeriodMs =
-      Services.prefs.getIntPref(PREF_INTERVAL, DEFAULT_INTERVAL_MS);
+    this.timeoutDisabled = Services.prefs.getBoolPref(
+      TIMEOUT_DISABLED_PREF,
+      false
+    );
+    this._timeoutWaitIdlePeriodMs = Services.prefs.getIntPref(
+      PREF_INTERVAL,
+      DEFAULT_INTERVAL_MS
+    );
 
     Services.prefs.addObserver(TIMEOUT_DISABLED_PREF, this);
     Services.prefs.addObserver(PREF_INTERVAL, this);
@@ -444,15 +477,19 @@ class MessageQueue extends Handler {
     if (topic == "nsPref:changed") {
       switch (data) {
         case TIMEOUT_DISABLED_PREF:
-          this.timeoutDisabled =
-            Services.prefs.getBoolPref(TIMEOUT_DISABLED_PREF, false);
+          this.timeoutDisabled = Services.prefs.getBoolPref(
+            TIMEOUT_DISABLED_PREF,
+            false
+          );
           break;
         case PREF_INTERVAL:
-          this._timeoutWaitIdlePeriodMs =
-            Services.prefs.getIntPref(PREF_INTERVAL, DEFAULT_INTERVAL_MS);
+          this._timeoutWaitIdlePeriodMs = Services.prefs.getIntPref(
+            PREF_INTERVAL,
+            DEFAULT_INTERVAL_MS
+          );
           break;
         default:
-          debug `Received unknown message: ${data}`;
+          debug`Received unknown message: ${data}`;
           break;
       }
     }
@@ -475,7 +512,10 @@ class MessageQueue extends Handler {
     if (!this._timeout && !this._timeoutDisabled) {
       // Wait a little before sending the message to batch multiple changes.
       this._timeout = setTimeoutWithTarget(
-        () => this.sendWhenIdle(), this.BATCH_DELAY_MS, this.mm.tabEventTarget);
+        () => this.sendWhenIdle(),
+        this.BATCH_DELAY_MS,
+        this.mm.tabEventTarget
+      );
     }
   }
 
@@ -494,7 +534,10 @@ class MessageQueue extends Handler {
     }
 
     if (deadline) {
-      if (deadline.didTimeout || deadline.timeRemaining() > this.NEEDED_IDLE_PERIOD_MS) {
+      if (
+        deadline.didTimeout ||
+        deadline.timeRemaining() > this.NEEDED_IDLE_PERIOD_MS
+      ) {
         this.send();
         return;
       }
@@ -502,8 +545,9 @@ class MessageQueue extends Handler {
       // Bail out if there's a pending run.
       return;
     }
-    ChromeUtils.idleDispatch((deadline_) => this.sendWhenIdle(deadline_),
-                             {timeout: this._timeoutWaitIdlePeriodMs});
+    ChromeUtils.idleDispatch(deadline_ => this.sendWhenIdle(deadline_), {
+      timeout: this._timeoutWaitIdlePeriodMs,
+    });
     this._idleScheduled = true;
   }
 
@@ -544,7 +588,7 @@ class MessageQueue extends Handler {
       });
     } catch (ex) {
       if (ex && ex.result == Cr.NS_ERROR_OUT_OF_MEMORY) {
-        warn `Failed to save session state`;
+        warn`Failed to save session state`;
       }
     }
   }
@@ -570,7 +614,7 @@ class SessionStateAggregator extends GeckoViewChildModule {
   }
 
   receiveMessage(aMsg) {
-    debug `receiveMessage: ${aMsg.name}`;
+    debug`receiveMessage: ${aMsg.name}`;
 
     switch (aMsg.name) {
       case "GeckoView:FlushSessionState":
@@ -587,7 +631,7 @@ class SessionStateAggregator extends GeckoViewChildModule {
   onUnload() {
     // Upon frameLoader destruction, send a final update message to
     // the parent and flush all data currently held in the child.
-    this.messageQueue.send({isFinal: true});
+    this.messageQueue.send({ isFinal: true });
 
     for (let handler of this.handlers) {
       if (handler.uninit) {
@@ -600,5 +644,7 @@ class SessionStateAggregator extends GeckoViewChildModule {
   }
 }
 
-const {debug, warn} = SessionStateAggregator.initLogging("SessionStateAggregator"); // eslint-disable-line no-unused-vars
+const { debug, warn } = SessionStateAggregator.initLogging(
+  "SessionStateAggregator"
+); // eslint-disable-line no-unused-vars
 const module = SessionStateAggregator.create(this);

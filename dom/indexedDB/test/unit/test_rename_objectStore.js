@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const storeName_ToBeDeleted = "test store to be deleted";
   const storeName_v0 = "test store v0";
@@ -100,8 +99,11 @@ function* testSteps()
   ok(db.objectStoreNames.contains(storeName_ToBeDeleted), "Correct name");
   db.deleteObjectStore(storeName_ToBeDeleted);
   is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
-  ok(db.objectStoreNames.contains(storeName_v2) &&
-     !db.objectStoreNames.contains(storeName_ToBeDeleted), "Deleted correctly");
+  ok(
+    db.objectStoreNames.contains(storeName_v2) &&
+      !db.objectStoreNames.contains(storeName_ToBeDeleted),
+    "Deleted correctly"
+  );
 
   objectStore = txn.objectStore(storeName_v2);
   objectStore.name = storeName_v3;

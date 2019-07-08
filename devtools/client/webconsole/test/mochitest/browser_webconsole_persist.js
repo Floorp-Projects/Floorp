@@ -7,8 +7,9 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/test-console.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-console.html";
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webconsole.persistlog");
@@ -19,9 +20,13 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const INITIAL_LOGS_NUMBER = 5;
-  await ContentTask.spawn(gBrowser.selectedBrowser, INITIAL_LOGS_NUMBER, (count) => {
-    content.wrappedJSObject.doLogs(count);
-  });
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    INITIAL_LOGS_NUMBER,
+    count => {
+      content.wrappedJSObject.doLogs(count);
+    }
+  );
   await waitFor(() => findMessages(hud, "").length === INITIAL_LOGS_NUMBER);
   ok(true, "Messages showed up initially");
 
@@ -39,13 +44,18 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  hud.ui.outputNode.querySelector(".webconsole-filterbar-primary .filter-checkbox")
+  hud.ui.outputNode
+    .querySelector(".webconsole-filterbar-primary .filter-checkbox")
     .click();
 
   const INITIAL_LOGS_NUMBER = 5;
-  await ContentTask.spawn(gBrowser.selectedBrowser, INITIAL_LOGS_NUMBER, (count) => {
-    content.wrappedJSObject.doLogs(count);
-  });
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    INITIAL_LOGS_NUMBER,
+    count => {
+      content.wrappedJSObject.doLogs(count);
+    }
+  );
   await waitFor(() => findMessages(hud, "").length === INITIAL_LOGS_NUMBER);
   ok(true, "Messages showed up initially");
 
@@ -56,8 +66,11 @@ add_task(async function() {
   await onReloaded;
 
   ok(true, "Navigation message appeared as expected");
-  is(findMessages(hud, "").length, INITIAL_LOGS_NUMBER + 1,
-    "Messages logged before navigation are still visible");
+  is(
+    findMessages(hud, "").length,
+    INITIAL_LOGS_NUMBER + 1,
+    "Messages logged before navigation are still visible"
+  );
 
   const {
     visibleMessages,
@@ -67,8 +80,9 @@ add_task(async function() {
   const commandMessage = messagesById.get(commandId).timeStamp;
   const resultMessage = messagesById.get(resultId).timeStamp;
 
-  ok(resultMessage > commandMessage
-    && resultMessage < Date.now(),
-    "The result has a timestamp newer than the command and older than current time");
+  ok(
+    resultMessage > commandMessage && resultMessage < Date.now(),
+    "The result has a timestamp newer than the command and older than current time"
+  );
   await closeToolbox();
 });

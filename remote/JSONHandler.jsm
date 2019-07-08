@@ -6,10 +6,14 @@
 
 var EXPORTED_SYMBOLS = ["JSONHandler"];
 
-const {HTTP_404, HTTP_505} = ChromeUtils.import("chrome://remote/content/server/HTTPD.jsm");
-const {Log} = ChromeUtils.import("chrome://remote/content/Log.jsm");
-const {Protocol} = ChromeUtils.import("chrome://remote/content/Protocol.jsm");
-const {RemoteAgentError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
+const { HTTP_404, HTTP_505 } = ChromeUtils.import(
+  "chrome://remote/content/server/HTTPD.jsm"
+);
+const { Log } = ChromeUtils.import("chrome://remote/content/Log.jsm");
+const { Protocol } = ChromeUtils.import("chrome://remote/content/Protocol.jsm");
+const { RemoteAgentError } = ChromeUtils.import(
+  "chrome://remote/content/Error.jsm"
+);
 
 class JSONHandler {
   constructor(agent) {
@@ -24,12 +28,12 @@ class JSONHandler {
   getVersion() {
     const mainProcessTarget = this.agent.targets.getMainProcessTarget();
     return {
-      "Browser": "Firefox",
+      Browser: "Firefox",
       "Protocol-Version": "1.0",
       "User-Agent": "Mozilla",
       "V8-Version": "1.0",
       "WebKit-Version": "1.0",
-      "webSocketDebuggerUrl": mainProcessTarget.toJSON().webSocketDebuggerUrl,
+      webSocketDebuggerUrl: mainProcessTarget.toJSON().webSocketDebuggerUrl,
     };
   }
 
@@ -54,7 +58,11 @@ class JSONHandler {
 
     try {
       const body = this.routes[request.path]();
-      const payload = JSON.stringify(body, sanitise, Log.verbose ? "\t" : undefined);
+      const payload = JSON.stringify(
+        body,
+        sanitise,
+        Log.verbose ? "\t" : undefined
+      );
 
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json");

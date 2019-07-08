@@ -5,26 +5,34 @@
 
 "use strict";
 
-const {ELLIPSIS} = require("devtools/shared/l10n");
+const { ELLIPSIS } = require("devtools/shared/l10n");
 
 add_task(async function() {
   info("Test short URL linkification JSON started");
 
   const url = "http://example.com/";
-  const tab = await addJsonViewTab("data:application/json," + JSON.stringify([url]));
+  const tab = await addJsonViewTab(
+    "data:application/json," + JSON.stringify([url])
+  );
   await testLinkNavigation({ browser: tab.linkedBrowser, url });
 
   info("Switch back to the JSONViewer");
   await BrowserTestUtils.switchTab(gBrowser, tab);
 
-  await testLinkNavigation({ browser: tab.linkedBrowser, url, clickLabel: true });
+  await testLinkNavigation({
+    browser: tab.linkedBrowser,
+    url,
+    clickLabel: true,
+  });
 });
 
 add_task(async function() {
   info("Test long URL linkification JSON started");
 
   const url = "http://example.com/" + "a".repeat(100);
-  const tab = await addJsonViewTab("data:application/json," + JSON.stringify([url]));
+  const tab = await addJsonViewTab(
+    "data:application/json," + JSON.stringify([url])
+  );
 
   await testLinkNavigation({ browser: tab.linkedBrowser, url });
 
@@ -58,15 +66,17 @@ async function testLinkNavigation({
 }) {
   const onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, url);
 
-  ContentTask.spawn(browser, [urlText || url, url, clickLabel], (args) => {
+  ContentTask.spawn(browser, [urlText || url, url, clickLabel], args => {
     const [expectedURLText, expectedURL, shouldClickLabel] = args;
-    const {document} = content;
+    const { document } = content;
 
     if (shouldClickLabel === true) {
       document.querySelector(".jsonPanelBox .treeTable .treeLabel").click();
     }
 
-    const link = document.querySelector(".jsonPanelBox .treeTable .treeValueCell a");
+    const link = document.querySelector(
+      ".jsonPanelBox .treeTable .treeValueCell a"
+    );
     is(link.textContent, expectedURLText, "The expected URL is displayed.");
     is(link.href, expectedURL, "The URL was linkified.");
 

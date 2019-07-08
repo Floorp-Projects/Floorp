@@ -14,7 +14,6 @@ const {
 } = require("./index");
 
 module.exports = {
-
   /**
    * Updates whether or not the add new rule button should be enabled.
    *
@@ -95,5 +94,4 @@ module.exports = {
       sourceLink,
     };
   },
-
 };

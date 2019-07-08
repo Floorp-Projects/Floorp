@@ -18,7 +18,7 @@ function recurse2() {
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function() {
     xhr.open("GET", "nonexistent.file");
-  }
+  };
   xhr.open("GET", "nonexistent.file");
 }
 
@@ -43,4 +43,4 @@ onmessage = function(event) {
   }
 
   throw "Impossible to get here!";
-}
+};

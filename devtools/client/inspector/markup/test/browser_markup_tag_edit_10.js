@@ -9,7 +9,7 @@
 const TEST_URL = "data:text/html;charset=utf-8,<div></div>";
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
   await inspector.markup.expandAll();
 
   info("Updating the DIV tagname to an invalid value");
@@ -19,8 +19,11 @@ add_task(async function() {
   setEditableFieldValue(tagEditor, "<<<", inspector);
   await onCancelReselect;
   ok(true, "The markup-view emitted the canceledreselectonremoved event");
-  is(inspector.selection.nodeFront, container.node,
-     "The test DIV is still selected");
+  is(
+    inspector.selection.nodeFront,
+    container.node,
+    "The test DIV is still selected"
+  );
 
   info("Updating the DIV tagname to a valid value this time");
   const onReselect = inspector.markup.once("reselectedonremoved");
@@ -29,6 +32,9 @@ add_task(async function() {
   ok(true, "The markup-view emitted the reselectedonremoved event");
 
   const spanFront = await getNodeFront("span", inspector);
-  is(inspector.selection.nodeFront, spanFront,
-     "The selected node is now the SPAN");
+  is(
+    inspector.selection.nodeFront,
+    spanFront,
+    "The selected node is now the SPAN"
+  );
 });

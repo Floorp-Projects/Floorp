@@ -3,7 +3,10 @@
 
 "use strict";
 /* import-globals-from helper-telemetry.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-telemetry.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-telemetry.js",
+  this
+);
 
 /**
  * Check that telemetry events are recorded when navigating between different
@@ -35,11 +38,20 @@ add_task(async function() {
 });
 
 function checkSelectPageEvent(expectedType, expectedSessionId) {
-  const evts = readAboutDebuggingEvents().filter(e => e.method === "select_page");
+  const evts = readAboutDebuggingEvents().filter(
+    e => e.method === "select_page"
+  );
   is(evts.length, 1, "Exactly one select_page event recorded");
-  is(evts[0].extras.page_type, expectedType, "Select page event has the expected type");
-  is(evts[0].extras.session_id, expectedSessionId,
-    "Select page event has the expected session");
+  is(
+    evts[0].extras.page_type,
+    expectedType,
+    "Select page event has the expected type"
+  );
+  is(
+    evts[0].extras.session_id,
+    expectedSessionId,
+    "Select page event has the expected session"
+  );
 }
 
 async function navigateToUSBRuntime(mocks, doc) {

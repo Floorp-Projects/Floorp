@@ -21,9 +21,14 @@ add_task(async function() {
 
   info("Wait until the USB sidebar item appears");
   await waitUntil(() => findSidebarItemByText(RUNTIME_DEVICE_NAME, document));
-  const usbRuntimeSidebarItem = findSidebarItemByText(RUNTIME_DEVICE_NAME, document);
-  ok(usbRuntimeSidebarItem.textContent.includes(RUNTIME_SHORT_NAME),
-    "The short name of the usb runtime is visible");
+  const usbRuntimeSidebarItem = findSidebarItemByText(
+    RUNTIME_DEVICE_NAME,
+    document
+  );
+  ok(
+    usbRuntimeSidebarItem.textContent.includes(RUNTIME_SHORT_NAME),
+    "The short name of the usb runtime is visible"
+  );
 
   mocks.removeUSBRuntime(RUNTIME_ID);
   mocks.emitUSBUpdate();

@@ -62,8 +62,11 @@ add_test(function writtenOnceLoadedWithoutChange() {
   resetAndLoadAll();
   // reset and re-read what we just wrote - it should be written.
   saveAndReload();
-  Assert.strictEqual(ps.getBoolPref("testPref.sticky.bool"), false,
-                     "user_pref was written with default value");
+  Assert.strictEqual(
+    ps.getBoolPref("testPref.sticky.bool"),
+    false,
+    "user_pref was written with default value"
+  );
   run_next_test();
 });
 
@@ -75,8 +78,11 @@ add_test(function writtenOnceLoadedWithChangeNonDefault() {
   // Set a new val and check we wrote it.
   ps.setBoolPref("testPref.sticky.bool", false);
   saveAndReload();
-  Assert.strictEqual(ps.getBoolPref("testPref.sticky.bool"), false,
-                     "user_pref was written with custom value");
+  Assert.strictEqual(
+    ps.getBoolPref("testPref.sticky.bool"),
+    false,
+    "user_pref was written with custom value"
+  );
   run_next_test();
 });
 
@@ -88,8 +94,11 @@ add_test(function writtenOnceLoadedWithChangeNonDefault() {
   // Set a new val and check we wrote it.
   ps.setBoolPref("testPref.sticky.bool", true);
   saveAndReload();
-  Assert.strictEqual(ps.getBoolPref("testPref.sticky.bool"), true,
-                     "user_pref was written with custom value");
+  Assert.strictEqual(
+    ps.getBoolPref("testPref.sticky.bool"),
+    true,
+    "user_pref was written with custom value"
+  );
   run_next_test();
 });
 
@@ -102,27 +111,37 @@ add_test(function hasUserValue() {
   // sticky pref without user value.
   resetAndLoadDefaults();
   Assert.strictEqual(ps.getBoolPref("testPref.sticky.bool"), false);
-  Assert.ok(!ps.prefHasUserValue("testPref.sticky.bool"),
-            "should not initially reflect a user value");
+  Assert.ok(
+    !ps.prefHasUserValue("testPref.sticky.bool"),
+    "should not initially reflect a user value"
+  );
 
   ps.setBoolPref("testPref.sticky.bool", false);
-  Assert.ok(ps.prefHasUserValue("testPref.sticky.bool"),
-            "should reflect a user value after set to default");
+  Assert.ok(
+    ps.prefHasUserValue("testPref.sticky.bool"),
+    "should reflect a user value after set to default"
+  );
 
   ps.setBoolPref("testPref.sticky.bool", true);
-  Assert.ok(ps.prefHasUserValue("testPref.sticky.bool"),
-            "should reflect a user value after change to non-default");
+  Assert.ok(
+    ps.prefHasUserValue("testPref.sticky.bool"),
+    "should reflect a user value after change to non-default"
+  );
 
   ps.clearUserPref("testPref.sticky.bool");
-  Assert.ok(!ps.prefHasUserValue("testPref.sticky.bool"),
-            "should reset to no user value");
+  Assert.ok(
+    !ps.prefHasUserValue("testPref.sticky.bool"),
+    "should reset to no user value"
+  );
   ps.setBoolPref("testPref.sticky.bool", false, "expected default");
 
   // And make sure the pref immediately reflects a user value after load.
   resetAndLoadAll();
   Assert.strictEqual(ps.getBoolPref("testPref.sticky.bool"), false);
-  Assert.ok(ps.prefHasUserValue("testPref.sticky.bool"),
-            "should have a user value when loaded value is the default");
+  Assert.ok(
+    ps.prefHasUserValue("testPref.sticky.bool"),
+    "should have a user value when loaded value is the default"
+  );
   run_next_test();
 });
 
@@ -160,6 +179,9 @@ add_test(function observerFires() {
   }
   ps.addObserver("testPref.sticky.bool", observe);
 
-  ps.setBoolPref("testPref.sticky.bool", ps.getBoolPref("testPref.sticky.bool"));
+  ps.setBoolPref(
+    "testPref.sticky.bool",
+    ps.getBoolPref("testPref.sticky.bool")
+  );
   // and the observer will fire triggering the next text.
 });

@@ -6,8 +6,9 @@
  */
 
 // Set up an nsIWebHandlerApp instance that can be used in multiple tests.
-let webHandlerApp = Cc["@mozilla.org/uriloader/web-handler-app;1"]
-                      .createInstance(Ci.nsIWebHandlerApp);
+let webHandlerApp = Cc[
+  "@mozilla.org/uriloader/web-handler-app;1"
+].createInstance(Ci.nsIWebHandlerApp);
 webHandlerApp.name = "Web Handler";
 webHandlerApp.uriTemplate = "https://www.example.com/?url=%s";
 let expectedWebHandlerApp = {
@@ -18,8 +19,9 @@ let expectedWebHandlerApp = {
 // Set up an nsILocalHandlerApp instance that can be used in multiple tests. The
 // executable should exist, but it doesn't need to point to an actual file, so
 // we simply initialize it to the path of an existing directory.
-let localHandlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"]
-                        .createInstance(Ci.nsILocalHandlerApp);
+let localHandlerApp = Cc[
+  "@mozilla.org/uriloader/local-handler-app;1"
+].createInstance(Ci.nsILocalHandlerApp);
 localHandlerApp.name = "Local Handler";
 localHandlerApp.executable = FileUtils.getFile("TmpD", []);
 let expectedLocalHandlerApp = {
@@ -58,9 +60,7 @@ function assertAllHandlerInfosMatchTestData() {
     type: "example/type.handleinternally",
     preferredAction: Ci.nsIHandlerInfo.handleInternally,
     alwaysAskBeforeHandling: false,
-    fileExtensions: [
-      "example_one",
-    ],
+    fileExtensions: ["example_one"],
   });
 
   HandlerServiceTestUtils.assertHandlerInfoMatches(handlerInfos.shift(), {
@@ -71,14 +71,13 @@ function assertAllHandlerInfosMatchTestData() {
       name: "Example Default Handler",
       uriTemplate: "https://www.example.com/?url=%s",
     },
-    possibleApplicationHandlers: [{
-      name: "Example Default Handler",
-      uriTemplate: "https://www.example.com/?url=%s",
-    }],
-    fileExtensions: [
-      "example_two",
-      "example_three",
+    possibleApplicationHandlers: [
+      {
+        name: "Example Default Handler",
+        uriTemplate: "https://www.example.com/?url=%s",
+      },
     ],
+    fileExtensions: ["example_two", "example_three"],
   });
 
   HandlerServiceTestUtils.assertHandlerInfoMatches(handlerInfos.shift(), {
@@ -89,30 +88,33 @@ function assertAllHandlerInfosMatchTestData() {
       name: "Example Default Handler",
       uriTemplate: "https://www.example.com/?url=%s",
     },
-    possibleApplicationHandlers: [{
-      name: "Example Default Handler",
-      uriTemplate: "https://www.example.com/?url=%s",
-    }, {
-      name: "Example Possible Handler One",
-      uriTemplate: "http://www.example.com/?id=1&url=%s",
-    }, {
-      name: "Example Possible Handler Two",
-      uriTemplate: "http://www.example.com/?id=2&url=%s",
-    }],
-    fileExtensions: [
-      "example_two",
-      "example_three",
+    possibleApplicationHandlers: [
+      {
+        name: "Example Default Handler",
+        uriTemplate: "https://www.example.com/?url=%s",
+      },
+      {
+        name: "Example Possible Handler One",
+        uriTemplate: "http://www.example.com/?id=1&url=%s",
+      },
+      {
+        name: "Example Possible Handler Two",
+        uriTemplate: "http://www.example.com/?id=2&url=%s",
+      },
     ],
+    fileExtensions: ["example_two", "example_three"],
   });
 
   HandlerServiceTestUtils.assertHandlerInfoMatches(handlerInfos.shift(), {
     type: "example/type.usesystemdefault",
     preferredAction: Ci.nsIHandlerInfo.useSystemDefault,
     alwaysAskBeforeHandling: false,
-    possibleApplicationHandlers: [{
-      name: "Example Possible Handler",
-      uriTemplate: "http://www.example.com/?url=%s",
-    }],
+    possibleApplicationHandlers: [
+      {
+        name: "Example Possible Handler",
+        uriTemplate: "http://www.example.com/?url=%s",
+      },
+    ],
   });
 
   HandlerServiceTestUtils.assertHandlerInfoMatches(handlerInfos.shift(), {
@@ -123,26 +125,32 @@ function assertAllHandlerInfosMatchTestData() {
       name: "Example Default Handler",
       uriTemplate: "https://www.example.com/?url=%s",
     },
-    possibleApplicationHandlers: [{
-      name: "Example Default Handler",
-      uriTemplate: "https://www.example.com/?url=%s",
-    }, {
-      name: "Example Possible Handler One",
-      uriTemplate: "http://www.example.com/?id=1&url=%s",
-    }, {
-      name: "Example Possible Handler Two",
-      uriTemplate: "http://www.example.com/?id=2&url=%s",
-    }],
+    possibleApplicationHandlers: [
+      {
+        name: "Example Default Handler",
+        uriTemplate: "https://www.example.com/?url=%s",
+      },
+      {
+        name: "Example Possible Handler One",
+        uriTemplate: "http://www.example.com/?id=1&url=%s",
+      },
+      {
+        name: "Example Possible Handler Two",
+        uriTemplate: "http://www.example.com/?id=2&url=%s",
+      },
+    ],
   });
 
   HandlerServiceTestUtils.assertHandlerInfoMatches(handlerInfos.shift(), {
     type: "examplescheme.usesystemdefault",
     preferredAction: Ci.nsIHandlerInfo.useSystemDefault,
     alwaysAskBeforeHandling: false,
-    possibleApplicationHandlers: [{
-      name: "Example Possible Handler",
-      uriTemplate: "http://www.example.com/?url=%s",
-    }],
+    possibleApplicationHandlers: [
+      {
+        name: "Example Possible Handler",
+        uriTemplate: "http://www.example.com/?url=%s",
+      },
+    ],
   });
 
   Assert.equal(handlerInfos.length, 0);
@@ -181,8 +189,10 @@ add_task(async function test_store_fillHandlerInfo_predefined() {
  */
 add_task(async function test_store_remove_exists() {
   // Test both MIME types and protocols.
-  for (let type of ["example/type.usehelperapp",
-                    "examplescheme.usehelperapp"]) {
+  for (let type of [
+    "example/type.usehelperapp",
+    "examplescheme.usehelperapp",
+  ]) {
     // Create new nsIHandlerInfo instances before loading the test data.
     await deleteHandlerStore();
     let handlerInfoPresent = HandlerServiceTestUtils.getHandlerInfo(type);
@@ -207,7 +217,8 @@ add_task(async function test_store_remove_exists() {
 
     Assert.throws(
       () => gHandlerService.fillHandlerInfo(handlerInfoPresent, ""),
-      ex => ex.result == Cr.NS_ERROR_NOT_AVAILABLE);
+      ex => ex.result == Cr.NS_ERROR_NOT_AVAILABLE
+    );
 
     let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo(type + "2");
     HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
@@ -247,8 +258,9 @@ add_task(async function test_store_localHandlerApp_missing() {
     return;
   }
 
-  let missingHandlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"]
-                            .createInstance(Ci.nsILocalHandlerApp);
+  let missingHandlerApp = Cc[
+    "@mozilla.org/uriloader/local-handler-app;1"
+  ].createInstance(Ci.nsILocalHandlerApp);
   missingHandlerApp.name = "Non-existing Handler";
   missingHandlerApp.executable = FileUtils.getFile("TmpD", ["nonexisting"]);
 
@@ -281,8 +293,9 @@ add_task(async function test_store_dBusHandlerApp() {
   }
 
   // Set up an nsIDBusHandlerApp instance for testing.
-  let dBusHandlerApp = Cc["@mozilla.org/uriloader/dbus-handler-app;1"]
-                         .createInstance(Ci.nsIDBusHandlerApp);
+  let dBusHandlerApp = Cc[
+    "@mozilla.org/uriloader/dbus-handler-app;1"
+  ].createInstance(Ci.nsIDBusHandlerApp);
   dBusHandlerApp.name = "DBus Handler";
   dBusHandlerApp.service = "test.method.server";
   dBusHandlerApp.method = "Method";
@@ -320,24 +333,28 @@ add_task(async function test_store_dBusHandlerApp() {
  * "preferredApplicationHandler" and no "possibleApplicationHandlers", but the
  * former is always included in the latter list when reloading.
  */
-add_task(async function test_store_possibleApplicationHandlers_includes_preferred() {
-  await deleteHandlerStore();
+add_task(
+  async function test_store_possibleApplicationHandlers_includes_preferred() {
+    await deleteHandlerStore();
 
-  let handlerInfo = getKnownHandlerInfo("example/new");
-  handlerInfo.preferredApplicationHandler = localHandlerApp;
-  gHandlerService.store(handlerInfo);
+    let handlerInfo = getKnownHandlerInfo("example/new");
+    handlerInfo.preferredApplicationHandler = localHandlerApp;
+    gHandlerService.store(handlerInfo);
 
-  await unloadHandlerStore();
+    await unloadHandlerStore();
 
-  let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo("example/new");
-  HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
-    type: "example/new",
-    preferredAction: Ci.nsIHandlerInfo.saveToDisk,
-    alwaysAskBeforeHandling: false,
-    preferredApplicationHandler: expectedLocalHandlerApp,
-    possibleApplicationHandlers: [expectedLocalHandlerApp],
-  });
-});
+    let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo(
+      "example/new"
+    );
+    HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
+      type: "example/new",
+      preferredAction: Ci.nsIHandlerInfo.saveToDisk,
+      alwaysAskBeforeHandling: false,
+      preferredApplicationHandler: expectedLocalHandlerApp,
+      possibleApplicationHandlers: [expectedLocalHandlerApp],
+    });
+  }
+);
 
 /**
  * Tests that it is possible to save an nsIHandlerInfo instance with a
@@ -345,30 +362,34 @@ add_task(async function test_store_possibleApplicationHandlers_includes_preferre
  * "possibleApplicationHandlers", but the former is always included as the first
  * element of the latter list when reloading.
  */
-add_task(async function test_store_possibleApplicationHandlers_preferred_first() {
-  await deleteHandlerStore();
+add_task(
+  async function test_store_possibleApplicationHandlers_preferred_first() {
+    await deleteHandlerStore();
 
-  let handlerInfo = getKnownHandlerInfo("example/new");
-  handlerInfo.preferredApplicationHandler = webHandlerApp;
-  // The preferred handler is appended after the other one.
-  handlerInfo.possibleApplicationHandlers.appendElement(localHandlerApp);
-  handlerInfo.possibleApplicationHandlers.appendElement(webHandlerApp);
-  gHandlerService.store(handlerInfo);
+    let handlerInfo = getKnownHandlerInfo("example/new");
+    handlerInfo.preferredApplicationHandler = webHandlerApp;
+    // The preferred handler is appended after the other one.
+    handlerInfo.possibleApplicationHandlers.appendElement(localHandlerApp);
+    handlerInfo.possibleApplicationHandlers.appendElement(webHandlerApp);
+    gHandlerService.store(handlerInfo);
 
-  await unloadHandlerStore();
+    await unloadHandlerStore();
 
-  let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo("example/new");
-  HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
-    type: "example/new",
-    preferredAction: Ci.nsIHandlerInfo.saveToDisk,
-    alwaysAskBeforeHandling: false,
-    preferredApplicationHandler: expectedWebHandlerApp,
-    possibleApplicationHandlers: [
-      expectedWebHandlerApp,
-      expectedLocalHandlerApp,
-    ],
-  });
-});
+    let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo(
+      "example/new"
+    );
+    HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
+      type: "example/new",
+      preferredAction: Ci.nsIHandlerInfo.saveToDisk,
+      alwaysAskBeforeHandling: false,
+      preferredApplicationHandler: expectedWebHandlerApp,
+      possibleApplicationHandlers: [
+        expectedWebHandlerApp,
+        expectedLocalHandlerApp,
+      ],
+    });
+  }
+);
 
 /**
  * Tests that it is possible to save an nsIHandlerInfo instance with an
@@ -389,10 +410,7 @@ add_task(async function test_store_fileExtensions_lowercase() {
     type: "example/new",
     preferredAction: Ci.nsIHandlerInfo.saveToDisk,
     alwaysAskBeforeHandling: false,
-    fileExtensions: [
-      "extension_test1",
-      "extension_test2",
-    ],
+    fileExtensions: ["extension_test1", "extension_test2"],
   });
 });
 
@@ -427,10 +445,7 @@ add_task(async function test_store_no_duplicates() {
       expectedWebHandlerApp,
       expectedLocalHandlerApp,
     ],
-    fileExtensions: [
-      "extension_test1",
-      "extension_test2",
-    ],
+    fileExtensions: ["extension_test1", "extension_test2"],
   });
 });
 
@@ -446,8 +461,9 @@ add_task(async function test_store_deletes_properties_except_extensions() {
   // Prepare an nsIHandlerInfo instance with all the properties set to values
   // that will result in deletions. The preferredAction is also set to a defined
   // value so we can more easily verify it later.
-  let handlerInfo =
-      HandlerServiceTestUtils.getBlankHandlerInfo("example/type.savetodisk");
+  let handlerInfo = HandlerServiceTestUtils.getBlankHandlerInfo(
+    "example/type.savetodisk"
+  );
   handlerInfo.preferredAction = Ci.nsIHandlerInfo.saveToDisk;
   handlerInfo.alwaysAskBeforeHandling = false;
 
@@ -458,16 +474,14 @@ add_task(async function test_store_deletes_properties_except_extensions() {
 
   // Now we can reload the data and verify that no extra values have been kept.
   await unloadHandlerStore();
-  let actualHandlerInfo =
-      HandlerServiceTestUtils.getHandlerInfo("example/type.savetodisk");
+  let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo(
+    "example/type.savetodisk"
+  );
   HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
     type: "example/type.savetodisk",
     preferredAction: Ci.nsIHandlerInfo.saveToDisk,
     alwaysAskBeforeHandling: false,
-    fileExtensions: [
-      "example_two",
-      "example_three",
-    ],
+    fileExtensions: ["example_two", "example_three"],
   });
 });
 
@@ -476,8 +490,10 @@ add_task(async function test_store_deletes_properties_except_extensions() {
  */
 add_task(async function test_fillHandlerInfo_overrideType() {
   // Test both MIME types and protocols.
-  for (let type of ["example/type.usesystemdefault",
-                    "examplescheme.usesystemdefault"]) {
+  for (let type of [
+    "example/type.usesystemdefault",
+    "examplescheme.usesystemdefault",
+  ]) {
     await deleteHandlerStore();
 
     // Create new nsIHandlerInfo instances before loading the test data.
@@ -491,10 +507,12 @@ add_task(async function test_fillHandlerInfo_overrideType() {
       type: type + "2",
       preferredAction: Ci.nsIHandlerInfo.useSystemDefault,
       alwaysAskBeforeHandling: false,
-      possibleApplicationHandlers: [{
-        name: "Example Possible Handler",
-        uriTemplate: "http://www.example.com/?url=%s",
-      }],
+      possibleApplicationHandlers: [
+        {
+          name: "Example Possible Handler",
+          uriTemplate: "http://www.example.com/?url=%s",
+        },
+      ],
     });
   }
 });
@@ -507,10 +525,14 @@ add_task(async function test_getTypeFromExtension() {
 
   Assert.equal(gHandlerService.getTypeFromExtension(""), "");
   Assert.equal(gHandlerService.getTypeFromExtension("example_unknown"), "");
-  Assert.equal(gHandlerService.getTypeFromExtension("example_one"),
-               "example/type.handleinternally");
-  Assert.equal(gHandlerService.getTypeFromExtension("EXAMPLE_one"),
-               "example/type.handleinternally");
+  Assert.equal(
+    gHandlerService.getTypeFromExtension("example_one"),
+    "example/type.handleinternally"
+  );
+  Assert.equal(
+    gHandlerService.getTypeFromExtension("EXAMPLE_one"),
+    "example/type.handleinternally"
+  );
 });
 
 /**
@@ -524,23 +546,28 @@ function assertAllHandlerInfosMatchDefaultHandlers() {
     HandlerServiceTestUtils.assertHandlerInfoMatches(handlerInfos.shift(), {
       type,
       preferredActionOSDependent: true,
-      possibleApplicationHandlers: [{
-        name: "Mibbit",
-        uriTemplate: "https://www.mibbit.com/?url=%s",
-      }],
+      possibleApplicationHandlers: [
+        {
+          name: "Mibbit",
+          uriTemplate: "https://www.mibbit.com/?url=%s",
+        },
+      ],
     });
   }
 
   HandlerServiceTestUtils.assertHandlerInfoMatches(handlerInfos.shift(), {
     type: "mailto",
     preferredActionOSDependent: true,
-    possibleApplicationHandlers: [{
-      name: "Yahoo! Mail",
-      uriTemplate: "https://compose.mail.yahoo.com/?To=%s",
-    }, {
-      name: "Gmail",
-      uriTemplate: "https://mail.google.com/mail/?extsrc=mailto&url=%s",
-    }],
+    possibleApplicationHandlers: [
+      {
+        name: "Yahoo! Mail",
+        uriTemplate: "https://compose.mail.yahoo.com/?To=%s",
+      },
+      {
+        name: "Gmail",
+        uriTemplate: "https://mail.google.com/mail/?extsrc=mailto&url=%s",
+      },
+    ],
   });
 
   Assert.equal(handlerInfos.length, 0);
@@ -550,7 +577,9 @@ function assertAllHandlerInfosMatchDefaultHandlers() {
  * Tests the default protocol handlers imported from the locale-specific data.
  */
 add_task(async function test_default_protocol_handlers() {
-  if (!Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")) {
+  if (
+    !Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")
+  ) {
     info("This platform or locale does not have default handlers.");
     return;
   }
@@ -566,7 +595,9 @@ add_task(async function test_default_protocol_handlers() {
  * locale-specific data if they already exist.
  */
 add_task(async function test_default_protocol_handlers_no_duplicates() {
-  if (!Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")) {
+  if (
+    !Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")
+  ) {
     info("This platform or locale does not have default handlers.");
     return;
   }
@@ -579,11 +610,15 @@ add_task(async function test_default_protocol_handlers_no_duplicates() {
   gHandlerService.remove(ircHandlerInfo);
 
   let originalDefaultHandlersVersion = Services.prefs.getComplexValue(
-    "gecko.handlerService.defaultHandlersVersion", Ci.nsIPrefLocalizedString);
+    "gecko.handlerService.defaultHandlersVersion",
+    Ci.nsIPrefLocalizedString
+  );
 
   // Set the preference to an arbitrarily high number to force injecting again.
-  Services.prefs.setStringPref("gecko.handlerService.defaultHandlersVersion",
-                               "999");
+  Services.prefs.setStringPref(
+    "gecko.handlerService.defaultHandlersVersion",
+    "999"
+  );
 
   await unloadHandlerStore();
 
@@ -593,8 +628,10 @@ add_task(async function test_default_protocol_handlers_no_duplicates() {
   // There should be no duplicate handlers in the protocols.
   await assertAllHandlerInfosMatchDefaultHandlers();
 
-  Services.prefs.setStringPref("gecko.handlerService.defaultHandlersVersion",
-                               originalDefaultHandlersVersion);
+  Services.prefs.setStringPref(
+    "gecko.handlerService.defaultHandlersVersion",
+    originalDefaultHandlersVersion
+  );
 });
 
 /**
@@ -604,16 +641,19 @@ add_task(async function test_default_protocol_handlers_no_duplicates() {
 add_task(async function test_store_keeps_unknown_properties() {
   // Create a new nsIHandlerInfo instance before loading the test data.
   await deleteHandlerStore();
-  let handlerInfo =
-      HandlerServiceTestUtils.getHandlerInfo("example/type.handleinternally");
+  let handlerInfo = HandlerServiceTestUtils.getHandlerInfo(
+    "example/type.handleinternally"
+  );
 
   await copyTestDataToHandlerStore();
   gHandlerService.store(handlerInfo);
 
   await unloadHandlerStore();
   let data = JSON.parse(new TextDecoder().decode(await OS.File.read(jsonPath)));
-  Assert.equal(data.mimeTypes["example/type.handleinternally"].unknownProperty,
-               "preserved");
+  Assert.equal(
+    data.mimeTypes["example/type.handleinternally"].unknownProperty,
+    "preserved"
+  );
 });
 
 /**
@@ -665,12 +705,15 @@ add_task(async function test_store_gioHandlerApp() {
 
   // Create dummy exec file that following won't fail because file not found error
   let dummyHandlerFile = FileUtils.getFile("TmpD", ["dummyHandler"]);
-  dummyHandlerFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("777", 8));
+  dummyHandlerFile.createUnique(
+    Ci.nsIFile.NORMAL_FILE_TYPE,
+    parseInt("777", 8)
+  );
 
   // Set up an nsIGIOMimeApp instance for testing.
   let handlerApp = Cc["@mozilla.org/gio-service;1"]
-                     .getService(Ci.nsIGIOService)
-                     .createAppFromCommand(dummyHandlerFile.path, "Dummy GIO handler");
+    .getService(Ci.nsIGIOService)
+    .createAppFromCommand(dummyHandlerFile.path, "Dummy GIO handler");
   let expectedGIOMimeHandlerApp = {
     name: handlerApp.name,
     command: handlerApp.command,

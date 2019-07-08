@@ -3,10 +3,16 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
-                               "resource://gre/modules/ExtensionSettingsStore.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionSettingsStore",
+  "resource://gre/modules/ExtensionSettingsStore.jsm"
+);
 
 // Named this way so they correspond to the extensions
 const HOME_URI_2 = "http://example.com/";
@@ -39,13 +45,23 @@ add_task(async function test_multiple_extensions_overriding_home_page() {
           browser.test.sendMessage("homepage", homepage);
           break;
         case "trySet":
-          let setResult = await browser.browserSettings.homepageOverride.set({value: "foo"});
-          browser.test.assertFalse(setResult, "Calling homepageOverride.set returns false.");
+          let setResult = await browser.browserSettings.homepageOverride.set({
+            value: "foo",
+          });
+          browser.test.assertFalse(
+            setResult,
+            "Calling homepageOverride.set returns false."
+          );
           browser.test.sendMessage("homepageSet");
           break;
         case "tryClear":
-          let clearResult = await browser.browserSettings.homepageOverride.clear({});
-          browser.test.assertFalse(clearResult, "Calling homepageOverride.clear returns false.");
+          let clearResult = await browser.browserSettings.homepageOverride.clear(
+            {}
+          );
+          browser.test.assertFalse(
+            clearResult,
+            "Calling homepageOverride.clear returns false."
+          );
           browser.test.sendMessage("homepageCleared");
           break;
       }
@@ -54,7 +70,7 @@ add_task(async function test_multiple_extensions_overriding_home_page() {
 
   let extObj = {
     manifest: {
-      "chrome_settings_overrides": {},
+      chrome_settings_overrides: {},
       permissions: ["browserSettings"],
     },
     useAddonManager: "temporary",
@@ -63,31 +79,40 @@ add_task(async function test_multiple_extensions_overriding_home_page() {
 
   let ext1 = ExtensionTestUtils.loadExtension(extObj);
 
-  extObj.manifest.chrome_settings_overrides = {homepage: HOME_URI_2};
+  extObj.manifest.chrome_settings_overrides = { homepage: HOME_URI_2 };
   let ext2 = ExtensionTestUtils.loadExtension(extObj);
 
-  extObj.manifest.chrome_settings_overrides = {homepage: HOME_URI_3};
+  extObj.manifest.chrome_settings_overrides = { homepage: HOME_URI_3 };
   let ext3 = ExtensionTestUtils.loadExtension(extObj);
 
-  extObj.manifest.chrome_settings_overrides = {homepage: HOME_URI_4};
+  extObj.manifest.chrome_settings_overrides = { homepage: HOME_URI_4 };
   let ext4 = ExtensionTestUtils.loadExtension(extObj);
 
   extObj.manifest.chrome_settings_overrides = {};
   let ext5 = ExtensionTestUtils.loadExtension(extObj);
 
-  async function checkHomepageOverride(ext, expectedValue, expectedLevelOfControl) {
+  async function checkHomepageOverride(
+    ext,
+    expectedValue,
+    expectedLevelOfControl
+  ) {
     ext.sendMessage("checkHomepage");
     let homepage = await ext.awaitMessage("homepage");
-    is(homepage.value, expectedValue,
-       `homepageOverride setting returns the expected value: ${expectedValue}.`);
-    is(homepage.levelOfControl, expectedLevelOfControl,
-       `homepageOverride setting returns the expected levelOfControl: ${expectedLevelOfControl}.`);
+    is(
+      homepage.value,
+      expectedValue,
+      `homepageOverride setting returns the expected value: ${expectedValue}.`
+    );
+    is(
+      homepage.levelOfControl,
+      expectedLevelOfControl,
+      `homepageOverride setting returns the expected levelOfControl: ${expectedLevelOfControl}.`
+    );
   }
 
   await ext1.startup();
 
-  is(getHomePageURL(), defaultHomePage,
-     "Home url should be the default");
+  is(getHomePageURL(), defaultHomePage, "Home url should be the default");
   await checkHomepageOverride(ext1, getHomePageURL(), NOT_CONTROLLABLE);
 
   // Because we are expecting the pref to change when we start or unload, we
@@ -97,8 +122,10 @@ add_task(async function test_multiple_extensions_overriding_home_page() {
   await ext2.startup();
   await prefPromise;
 
-  ok(getHomePageURL().endsWith(HOME_URI_2),
-     "Home url should be overridden by the second extension.");
+  ok(
+    getHomePageURL().endsWith(HOME_URI_2),
+    "Home url should be overridden by the second extension."
+  );
 
   await checkHomepageOverride(ext1, HOME_URI_2, CONTROLLED_BY_OTHER);
 
@@ -116,23 +143,29 @@ add_task(async function test_multiple_extensions_overriding_home_page() {
 
   await checkHomepageOverride(ext2, HOME_URI_2, CONTROLLED_BY_THIS);
 
-  ok(getHomePageURL().endsWith(HOME_URI_2),
-     "Home url should be overridden by the second extension.");
+  ok(
+    getHomePageURL().endsWith(HOME_URI_2),
+    "Home url should be overridden by the second extension."
+  );
 
   prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
   await ext3.startup();
   await prefPromise;
 
-  ok(getHomePageURL().endsWith(HOME_URI_3),
-     "Home url should be overridden by the third extension.");
+  ok(
+    getHomePageURL().endsWith(HOME_URI_3),
+    "Home url should be overridden by the third extension."
+  );
 
   await checkHomepageOverride(ext3, HOME_URI_3, CONTROLLED_BY_THIS);
 
   // Because we are unloading an earlier extension, browser.startup.homepage won't change
   await ext2.unload();
 
-  ok(getHomePageURL().endsWith(HOME_URI_3),
-     "Home url should be overridden by the third extension.");
+  ok(
+    getHomePageURL().endsWith(HOME_URI_3),
+    "Home url should be overridden by the third extension."
+  );
 
   await checkHomepageOverride(ext3, HOME_URI_3, CONTROLLED_BY_THIS);
 
@@ -140,8 +173,10 @@ add_task(async function test_multiple_extensions_overriding_home_page() {
   await ext4.startup();
   await prefPromise;
 
-  ok(getHomePageURL().endsWith(HOME_URI_4),
-     "Home url should be overridden by the third extension.");
+  ok(
+    getHomePageURL().endsWith(HOME_URI_4),
+    "Home url should be overridden by the third extension."
+  );
 
   await checkHomepageOverride(ext3, HOME_URI_4, CONTROLLED_BY_OTHER);
 
@@ -149,8 +184,10 @@ add_task(async function test_multiple_extensions_overriding_home_page() {
   await ext4.unload();
   await prefPromise;
 
-  ok(getHomePageURL().endsWith(HOME_URI_3),
-     "Home url should be overridden by the third extension.");
+  ok(
+    getHomePageURL().endsWith(HOME_URI_3),
+    "Home url should be overridden by the third extension."
+  );
 
   await checkHomepageOverride(ext3, HOME_URI_3, CONTROLLED_BY_THIS);
 
@@ -158,8 +195,7 @@ add_task(async function test_multiple_extensions_overriding_home_page() {
   await ext3.unload();
   await prefPromise;
 
-  is(getHomePageURL(), defaultHomePage,
-     "Home url should be reset to default");
+  is(getHomePageURL(), defaultHomePage, "Home url should be reset to default");
 
   await ext5.startup();
   await checkHomepageOverride(ext5, defaultHomePage, NOT_CONTROLLABLE);
@@ -174,11 +210,10 @@ add_task(async function test_extension_setting_home_page_back() {
 
   Services.prefs.setStringPref(HOMEPAGE_URL_PREF, USER_URI);
 
-  is(getHomePageURL(), USER_URI,
-     "Home url should be the user set value");
+  is(getHomePageURL(), USER_URI, "Home url should be the user set value");
 
   let ext1 = ExtensionTestUtils.loadExtension({
-    manifest: {"chrome_settings_overrides": {homepage: HOME_URI_1}},
+    manifest: { chrome_settings_overrides: { homepage: HOME_URI_1 } },
     useAddonManager: "temporary",
   });
 
@@ -189,20 +224,20 @@ add_task(async function test_extension_setting_home_page_back() {
   await ext1.startup();
   await prefPromise;
 
-  ok(getHomePageURL().endsWith(HOME_URI_1),
-     "Home url should be overridden by the second extension.");
+  ok(
+    getHomePageURL().endsWith(HOME_URI_1),
+    "Home url should be overridden by the second extension."
+  );
 
   prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
   await ext1.unload();
   await prefPromise;
 
-  is(getHomePageURL(), USER_URI,
-     "Home url should be the user set value");
+  is(getHomePageURL(), USER_URI, "Home url should be the user set value");
 
   Services.prefs.clearUserPref(HOMEPAGE_URL_PREF);
 
-  is(getHomePageURL(), defaultHomePage,
-     "Home url should be the default");
+  is(getHomePageURL(), defaultHomePage, "Home url should be the default");
 });
 
 add_task(async function test_disable() {
@@ -216,7 +251,7 @@ add_task(async function test_disable() {
           id: ID,
         },
       },
-      "chrome_settings_overrides": {
+      chrome_settings_overrides: {
         homepage: HOME_URI_1,
       },
     },
@@ -227,8 +262,11 @@ add_task(async function test_disable() {
   await ext1.startup();
   await prefPromise;
 
-  is(getHomePageURL(), HOME_URI_1,
-     "Home url should be overridden by the extension.");
+  is(
+    getHomePageURL(),
+    HOME_URI_1,
+    "Home url should be overridden by the extension."
+  );
 
   let addon = await AddonManager.getAddonByID(ID);
   is(addon.id, ID, "Found the correct add-on.");
@@ -238,28 +276,29 @@ add_task(async function test_disable() {
   await addon.disable();
   await Promise.all([disabledPromise, prefPromise]);
 
-  is(getHomePageURL(), defaultHomePage,
-     "Home url should be the default");
+  is(getHomePageURL(), defaultHomePage, "Home url should be the default");
 
   let enabledPromise = awaitEvent("ready", ID);
   prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
   await addon.enable();
   await Promise.all([enabledPromise, prefPromise]);
 
-  is(getHomePageURL(), HOME_URI_1,
-     "Home url should be overridden by the extension.");
+  is(
+    getHomePageURL(),
+    HOME_URI_1,
+    "Home url should be overridden by the extension."
+  );
 
   prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
   await ext1.unload();
   await prefPromise;
 
-  is(getHomePageURL(), defaultHomePage,
-     "Home url should be the default");
+  is(getHomePageURL(), defaultHomePage, "Home url should be the default");
 });
 
 add_task(async function test_local() {
   let ext1 = ExtensionTestUtils.loadExtension({
-    manifest: {"chrome_settings_overrides": {"homepage": "home.html"}},
+    manifest: { chrome_settings_overrides: { homepage: "home.html" } },
     useAddonManager: "temporary",
   });
 
@@ -268,8 +307,10 @@ add_task(async function test_local() {
   await prefPromise;
 
   let homepage = getHomePageURL();
-  ok((homepage.startsWith("moz-extension") && homepage.endsWith("home.html")),
-     "Home url should be relative to extension.");
+  ok(
+    homepage.startsWith("moz-extension") && homepage.endsWith("home.html"),
+    "Home url should be relative to extension."
+  );
 
   await ext1.unload();
 });
@@ -278,7 +319,8 @@ add_task(async function test_multiple() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       chrome_settings_overrides: {
-        homepage: "https://mozilla.org/|https://developer.mozilla.org/|https://addons.mozilla.org/",
+        homepage:
+          "https://mozilla.org/|https://developer.mozilla.org/|https://addons.mozilla.org/",
       },
     },
     useAddonManager: "temporary",
@@ -288,9 +330,11 @@ add_task(async function test_multiple() {
   await extension.startup();
   await prefPromise;
 
-  is(getHomePageURL(),
-     "https://mozilla.org/%7Chttps://developer.mozilla.org/%7Chttps://addons.mozilla.org/",
-     "The homepage encodes | so only one homepage is allowed");
+  is(
+    getHomePageURL(),
+    "https://mozilla.org/%7Chttps://developer.mozilla.org/%7Chttps://addons.mozilla.org/",
+    "The homepage encodes | so only one homepage is allowed"
+  );
 
   await extension.unload();
 });
@@ -300,18 +344,20 @@ add_task(async function test_doorhanger_homepage_button() {
   // These extensions are temporarily loaded so that the AddonManager can see
   // them and the extension's shutdown handlers are called.
   let ext1 = ExtensionTestUtils.loadExtension({
-    manifest: {"chrome_settings_overrides": {"homepage": "ext1.html"}},
-    files: {"ext1.html": "<h1>1</h1>"},
+    manifest: { chrome_settings_overrides: { homepage: "ext1.html" } },
+    files: { "ext1.html": "<h1>1</h1>" },
     useAddonManager: "temporary",
   });
   let ext2 = ExtensionTestUtils.loadExtension({
-    manifest: {"chrome_settings_overrides": {"homepage": "ext2.html"}},
-    files: {"ext2.html": "<h1>2</h1>"},
+    manifest: { chrome_settings_overrides: { homepage: "ext2.html" } },
+    files: { "ext2.html": "<h1>2</h1>" },
     useAddonManager: "temporary",
   });
 
   let panel = document.getElementById("extension-notification-panel");
-  let popupnotification = document.getElementById("extension-homepage-notification");
+  let popupnotification = document.getElementById(
+    "extension-homepage-notification"
+  );
 
   await ext1.startup();
   await ext2.startup();
@@ -354,13 +400,13 @@ add_task(async function test_doorhanger_new_window() {
   let ext1Id = "ext1@mochi.test";
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
-      chrome_settings_overrides: {"homepage": "ext1.html"},
+      chrome_settings_overrides: { homepage: "ext1.html" },
       applications: {
-        gecko: {id: ext1Id},
+        gecko: { id: ext1Id },
       },
       name: "Ext1",
     },
-    files: {"ext1.html": "<h1>1</h1>"},
+    files: { "ext1.html": "<h1>1</h1>" },
     useAddonManager: "temporary",
   });
   let ext2 = ExtensionTestUtils.loadExtension({
@@ -368,10 +414,10 @@ add_task(async function test_doorhanger_new_window() {
       browser.test.sendMessage("url", browser.runtime.getURL("ext2.html"));
     },
     manifest: {
-      chrome_settings_overrides: {homepage: "ext2.html"},
+      chrome_settings_overrides: { homepage: "ext2.html" },
       name: "Ext2",
     },
-    files: {"ext2.html": "<h1>2</h1>"},
+    files: { "ext2.html": "<h1>2</h1>" },
     useAddonManager: "temporary",
   });
 
@@ -379,20 +425,24 @@ add_task(async function test_doorhanger_new_window() {
   await ext2.startup();
   let url = await ext2.awaitMessage("url");
 
-  await SpecialPowers.pushPrefEnv({set: [["browser.startup.page", 1]]});
+  await SpecialPowers.pushPrefEnv({ set: [["browser.startup.page", 1]] });
 
-  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow({url});
+  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow({ url });
   let win = OpenBrowserWindow();
   await windowOpenedPromise;
   let doc = win.document;
-  let description = doc.getElementById("extension-homepage-notification-description");
+  let description = doc.getElementById(
+    "extension-homepage-notification-description"
+  );
   let panel = doc.getElementById("extension-notification-panel");
   await promisePopupShown(panel);
 
   ok(win.gURLBar.value.endsWith("ext2.html"), "ext2 is in control");
-  is(description.textContent,
-     "An extension,  Ext2, changed what you see when you open your homepage and new windows.Learn more",
-     "The extension name is in the popup");
+  is(
+    description.textContent,
+    "An extension,  Ext2, changed what you see when you open your homepage and new windows.Learn more",
+    "The extension name is in the popup"
+  );
 
   // Click Restore Settings.
   let popupHidden = promisePopupHidden(panel);
@@ -406,9 +456,11 @@ add_task(async function test_doorhanger_new_window() {
   await promisePopupShown(panel);
 
   ok(win.gURLBar.value.endsWith("ext1.html"), "ext1 is in control");
-  is(description.textContent,
-     "An extension,  Ext1, changed what you see when you open your homepage and new windows.Learn more",
-     "The extension name is in the popup");
+  is(
+    description.textContent,
+    "An extension,  Ext1, changed what you see when you open your homepage and new windows.Learn more",
+    "The extension name is in the popup"
+  );
 
   // Click Keep Changes.
   popupnotification.button.click();
@@ -424,43 +476,53 @@ add_task(async function test_doorhanger_new_window() {
 });
 
 add_task(async function test_overriding_home_page_incognito_not_allowed() {
-  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      chrome_settings_overrides: {"homepage": "home.html"},
+      chrome_settings_overrides: { homepage: "home.html" },
       name: "extension",
     },
     background() {
       browser.test.sendMessage("url", browser.runtime.getURL("home.html"));
     },
-    files: {"home.html": "<h1>1</h1>"},
+    files: { "home.html": "<h1>1</h1>" },
     useAddonManager: "temporary",
   });
 
   await extension.startup();
   let url = await extension.awaitMessage("url");
 
-  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow({url});
+  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow({ url });
   let win = OpenBrowserWindow();
   await windowOpenedPromise;
   let doc = win.document;
-  let description = doc.getElementById("extension-homepage-notification-description");
+  let description = doc.getElementById(
+    "extension-homepage-notification-description"
+  );
   let panel = doc.getElementById("extension-notification-panel");
   await promisePopupShown(panel);
 
   let popupnotification = description.closest("popupnotification");
-  is(description.textContent,
-     "An extension,  extension, changed what you see when you open your homepage and new windows.Learn more",
-     "The extension name is in the popup");
-  is(popupnotification.hidden, false, "The expected popup notification is visible");
+  is(
+    description.textContent,
+    "An extension,  extension, changed what you see when you open your homepage and new windows.Learn more",
+    "The extension name is in the popup"
+  );
+  is(
+    popupnotification.hidden,
+    false,
+    "The expected popup notification is visible"
+  );
 
   ok(win.gURLBar.value.endsWith("home.html"), "extension is in control");
   await BrowserTestUtils.closeWindow(win);
 
   // Verify a private window does not open the extension page.
   windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
-  win = OpenBrowserWindow({private: true});
+  win = OpenBrowserWindow({ private: true });
   await windowOpenedPromise;
   win.BrowserHome();
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
@@ -472,17 +534,19 @@ add_task(async function test_overriding_home_page_incognito_not_allowed() {
 });
 
 add_task(async function test_overriding_home_page_incognito_spanning() {
-  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      chrome_settings_overrides: {"homepage": "home.html"},
+      chrome_settings_overrides: { homepage: "home.html" },
       name: "private extension",
       applications: {
-        gecko: {id: "@spanning-home"},
+        gecko: { id: "@spanning-home" },
       },
     },
-    files: {"home.html": "<h1>1</h1>"},
+    files: { "home.html": "<h1>1</h1>" },
     useAddonManager: "permanent",
     incognitoOverride: "spanning",
   });
@@ -490,7 +554,7 @@ add_task(async function test_overriding_home_page_incognito_spanning() {
   await extension.startup();
 
   let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
-  let win = OpenBrowserWindow({private: true});
+  let win = OpenBrowserWindow({ private: true });
   await windowOpenedPromise;
   let doc = win.document;
   let panel = doc.getElementById("extension-notification-panel");
@@ -501,7 +565,10 @@ add_task(async function test_overriding_home_page_incognito_spanning() {
   await popupShown;
 
   ok(getHomePageURL().endsWith("home.html"), "The homepage is set");
-  ok(win.gURLBar.value.endsWith("home.html"), "extension is in control in private window");
+  ok(
+    win.gURLBar.value.endsWith("home.html"),
+    "extension is in control in private window"
+  );
 
   let popupHidden = promisePopupHidden(panel);
   panel.hidePopup();
@@ -512,11 +579,13 @@ add_task(async function test_overriding_home_page_incognito_spanning() {
 });
 
 add_task(async function test_overriding_home_page_incognito_external() {
-  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      chrome_settings_overrides: {"homepage": "https://example.com/home.html"},
+      chrome_settings_overrides: { homepage: "https://example.com/home.html" },
       name: "extension",
     },
     useAddonManager: "temporary",
@@ -526,13 +595,17 @@ add_task(async function test_overriding_home_page_incognito_external() {
 
   // Verify a private window does not open the extension page.
   let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
-  let win = OpenBrowserWindow({private: true});
+  let win = OpenBrowserWindow({ private: true });
   await windowOpenedPromise;
   win.BrowserHome();
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
   is(win.gURLBar.value, "", "home page not used in private window");
-  is(gBrowser.selectedBrowser.currentURI.spec, "about:home", "home page not used in private window");
+  is(
+    gBrowser.selectedBrowser.currentURI.spec,
+    "about:home",
+    "home page not used in private window"
+  );
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(win);

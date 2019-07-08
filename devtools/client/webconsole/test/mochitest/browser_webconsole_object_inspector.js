@@ -14,16 +14,20 @@ add_task(async function() {
   logAllStoreChanges(hud);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    content.wrappedJSObject.console.log(
-      "oi-test",
-      [1, 2, {a: "a", b: "b"}],
-      {c: "c", d: [3, 4], length: 987}
-    );
+    content.wrappedJSObject.console.log("oi-test", [1, 2, { a: "a", b: "b" }], {
+      c: "c",
+      d: [3, 4],
+      length: 987,
+    });
   });
 
   const node = await waitFor(() => findMessage(hud, "oi-test"));
   const objectInspectors = [...node.querySelectorAll(".tree")];
-  is(objectInspectors.length, 2, "There is the expected number of object inspectors");
+  is(
+    objectInspectors.length,
+    2,
+    "There is the expected number of object inspectors"
+  );
 
   const [arrayOi, objectOi] = objectInspectors;
 
@@ -36,8 +40,10 @@ add_task(async function() {
   arrayOi.querySelector(".arrow").click();
   await onArrayOiMutation;
 
-  ok(arrayOi.querySelector(".arrow").classList.contains("expanded"),
-    "The arrow of the root node of the tree is expanded after clicking on it");
+  ok(
+    arrayOi.querySelector(".arrow").classList.contains("expanded"),
+    "The arrow of the root node of the tree is expanded after clicking on it"
+  );
 
   let arrayOiNodes = arrayOi.querySelectorAll(".node");
 
@@ -48,7 +54,11 @@ add_task(async function() {
   // |  ▶︎ 2: {a: "a", b: "b"}
   // |  length: 3
   // |  ▶︎ <prototype>
-  is(arrayOiNodes.length, 6, "There is the expected number of nodes in the tree");
+  is(
+    arrayOiNodes.length,
+    6,
+    "There is the expected number of nodes in the tree"
+  );
 
   info("Expanding a leaf of the array object inspector");
   let arrayOiNestedObject = arrayOiNodes[3];
@@ -59,8 +69,10 @@ add_task(async function() {
   arrayOiNestedObject.querySelector(".arrow").click();
   await onArrayOiMutation;
 
-  ok(arrayOiNestedObject.querySelector(".arrow").classList.contains("expanded"),
-    "The arrow of the root node of the tree is expanded after clicking on it");
+  ok(
+    arrayOiNestedObject.querySelector(".arrow").classList.contains("expanded"),
+    "The arrow of the root node of the tree is expanded after clicking on it"
+  );
 
   arrayOiNodes = arrayOi.querySelectorAll(".node");
 
@@ -74,7 +86,11 @@ add_task(async function() {
   // |  |  ▶︎ <prototype>
   // |  length: 3
   // |  ▶︎ <prototype>
-  is(arrayOiNodes.length, 9, "There is the expected number of nodes in the tree");
+  is(
+    arrayOiNodes.length,
+    9,
+    "There is the expected number of nodes in the tree"
+  );
 
   info("Collapsing the root");
   onArrayOiMutation = waitForNodeMutation(arrayOi, {
@@ -82,8 +98,11 @@ add_task(async function() {
   });
   arrayOi.querySelector(".arrow").click();
 
-  is(arrayOi.querySelector(".arrow").classList.contains("expanded"), false,
-    "The arrow of the root node of the tree is collapsed after clicking on it");
+  is(
+    arrayOi.querySelector(".arrow").classList.contains("expanded"),
+    false,
+    "The arrow of the root node of the tree is collapsed after clicking on it"
+  );
 
   arrayOiNodes = arrayOi.querySelectorAll(".node");
   is(arrayOiNodes.length, 1, "Only the root node is visible");
@@ -94,15 +113,23 @@ add_task(async function() {
   });
   arrayOi.querySelector(".arrow").click();
 
-  ok(arrayOi.querySelector(".arrow").classList.contains("expanded"),
-    "The arrow of the root node of the tree is expanded again after clicking on it");
+  ok(
+    arrayOi.querySelector(".arrow").classList.contains("expanded"),
+    "The arrow of the root node of the tree is expanded again after clicking on it"
+  );
 
   arrayOiNodes = arrayOi.querySelectorAll(".node");
   arrayOiNestedObject = arrayOiNodes[3];
-  ok(arrayOiNestedObject.querySelector(".arrow").classList.contains("expanded"),
-    "The object tree is still expanded");
+  ok(
+    arrayOiNestedObject.querySelector(".arrow").classList.contains("expanded"),
+    "The object tree is still expanded"
+  );
 
-  is(arrayOiNodes.length, 9, "There is the expected number of nodes in the tree");
+  is(
+    arrayOiNodes.length,
+    9,
+    "There is the expected number of nodes in the tree"
+  );
 
   const onObjectOiMutation = waitForNodeMutation(objectOi, {
     childList: true,
@@ -111,8 +138,10 @@ add_task(async function() {
   objectOi.querySelector(".arrow").click();
   await onObjectOiMutation;
 
-  ok(objectOi.querySelector(".arrow").classList.contains("expanded"),
-    "The arrow of the root node of the tree is expanded after clicking on it");
+  ok(
+    objectOi.querySelector(".arrow").classList.contains("expanded"),
+    "The arrow of the root node of the tree is expanded after clicking on it"
+  );
 
   const objectOiNodes = objectOi.querySelectorAll(".node");
   // The object inspector now looks like:
@@ -121,5 +150,9 @@ add_task(async function() {
   // |  ▶︎ d: [3, 4]
   // |  length: 987
   // |  ▶︎ <prototype>
-  is(objectOiNodes.length, 5, "There is the expected number of nodes in the tree");
+  is(
+    objectOiNodes.length,
+    5,
+    "There is the expected number of nodes in the tree"
+  );
 });

@@ -9,13 +9,17 @@
 
 "use strict";
 
-const PAGE_1 = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
-const PAGE_2 = "data:text/html,<html><body>Another%20regular,%20everyday,%20normal%20page.";
+const PAGE_1 =
+  "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
+const PAGE_2 =
+  "data:text/html,<html><body>Another%20regular,%20everyday,%20normal%20page.";
 
 add_task(async function setup() {
-  await pushPrefs(["dom.ipc.processCount", 1],
-                  ["toolkit.cosmeticAnimations.enabled", false],
-                  ["browser.sessionstore.restore_on_demand", false]);
+  await pushPrefs(
+    ["dom.ipc.processCount", 1],
+    ["toolkit.cosmeticAnimations.enabled", false],
+    ["browser.sessionstore.restore_on_demand", false]
+  );
 });
 
 add_task(async function test_revive_bg_tabs_on_demand() {

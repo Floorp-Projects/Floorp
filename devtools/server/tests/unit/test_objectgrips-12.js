@@ -21,17 +21,22 @@ registerCleanupFunction(() => {
 function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-grips");
-  gDebuggee.eval(function stopMe(arg1) {
-    debugger;
-  }.toString());
+  gDebuggee.eval(
+    function stopMe(arg1) {
+      debugger;
+    }.toString()
+  );
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_display_string();
-                           });
+    attachTestTabAndResume(gClient, "test-grips", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_display_string();
+    });
   });
   do_test_pending();
 }
@@ -71,11 +76,14 @@ function test_display_string() {
       output: "[object Object],[object Object]",
     },
     {
-      input: "(" + function() {
-        const arr = [1];
-        arr.push(arr);
-        return arr;
-      } + ")()",
+      input:
+        "(" +
+        function() {
+          const arr = [1];
+          arr.push(arr);
+          return arr;
+        } +
+        ")()",
       output: "1,",
     },
     {
@@ -99,11 +107,14 @@ function test_display_string() {
       output: "ReferenceError",
     },
     {
-      input: "(" + function() {
-        const err = new Error("bar");
-        err.name = "foo";
-        return err;
-      } + ")()",
+      input:
+        "(" +
+        function() {
+          const err = new Error("bar");
+          err.name = "foo";
+          return err;
+        } +
+        ")()",
       output: "foo: bar",
     },
     {

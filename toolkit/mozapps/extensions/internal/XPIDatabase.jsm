@@ -16,7 +16,9 @@
 
 var EXPORTED_SYMBOLS = ["AddonInternal", "XPIDatabase", "XPIDatabaseReconcile"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
@@ -39,10 +41,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   verifyBundleSignedState: "resource://gre/modules/addons/XPIInstall.jsm",
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "allowPrivateBrowsingByDefault",
-                                      "extensions.allowPrivateBrowsingByDefault", true);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "allowPrivateBrowsingByDefault",
+  "extensions.allowPrivateBrowsingByDefault",
+  true
+);
 
-const {nsIBlocklistService} = Ci;
+const { nsIBlocklistService } = Ci;
 
 // These are injected from XPIProvider.jsm
 /* globals
@@ -61,71 +67,108 @@ for (let sym of [
   XPCOMUtils.defineLazyGetter(this, sym, () => XPIInternal[sym]);
 }
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.xpi-utils";
 
-const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
-                                       "initWithPath");
+const nsIFile = Components.Constructor(
+  "@mozilla.org/file/local;1",
+  "nsIFile",
+  "initWithPath"
+);
 
 // Create a new logger for use by the Addons XPI Provider Utils
 // (Requires AddonManager.jsm)
 var logger = Log.repository.getLogger(LOGGER_ID);
 
-const KEY_PROFILEDIR                  = "ProfD";
-const FILE_JSON_DB                    = "extensions.json";
+const KEY_PROFILEDIR = "ProfD";
+const FILE_JSON_DB = "extensions.json";
 
-const PREF_DB_SCHEMA                  = "extensions.databaseSchema";
-const PREF_EM_AUTO_DISABLED_SCOPES    = "extensions.autoDisableScopes";
-const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
-const PREF_XPI_PERMISSIONS_BRANCH     = "xpinstall.";
-const PREF_XPI_SIGNATURES_DEV_ROOT    = "xpinstall.signatures.dev-root";
+const PREF_DB_SCHEMA = "extensions.databaseSchema";
+const PREF_EM_AUTO_DISABLED_SCOPES = "extensions.autoDisableScopes";
+const PREF_PENDING_OPERATIONS = "extensions.pendingOperations";
+const PREF_XPI_PERMISSIONS_BRANCH = "xpinstall.";
+const PREF_XPI_SIGNATURES_DEV_ROOT = "xpinstall.signatures.dev-root";
 
-const TOOLKIT_ID                      = "toolkit@mozilla.org";
+const TOOLKIT_ID = "toolkit@mozilla.org";
 
-const KEY_APP_SYSTEM_ADDONS           = "app-system-addons";
-const KEY_APP_SYSTEM_DEFAULTS         = "app-system-defaults";
-const KEY_APP_BUILTINS                = "app-builtin";
-const KEY_APP_SYSTEM_LOCAL            = "app-system-local";
-const KEY_APP_SYSTEM_SHARE            = "app-system-share";
-const KEY_APP_GLOBAL                  = "app-global";
-const KEY_APP_PROFILE                 = "app-profile";
-const KEY_APP_TEMPORARY               = "app-temporary";
+const KEY_APP_SYSTEM_ADDONS = "app-system-addons";
+const KEY_APP_SYSTEM_DEFAULTS = "app-system-defaults";
+const KEY_APP_BUILTINS = "app-builtin";
+const KEY_APP_SYSTEM_LOCAL = "app-system-local";
+const KEY_APP_SYSTEM_SHARE = "app-system-share";
+const KEY_APP_GLOBAL = "app-global";
+const KEY_APP_PROFILE = "app-profile";
+const KEY_APP_TEMPORARY = "app-temporary";
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 
 // Properties to cache and reload when an addon installation is pending
-const PENDING_INSTALL_METADATA =
-    ["syncGUID", "targetApplications", "userDisabled", "softDisabled",
-     "existingAddonID", "sourceURI", "releaseNotesURI", "installDate",
-     "updateDate", "applyBackgroundUpdates", "compatibilityOverrides",
-     "installTelemetryInfo"];
+const PENDING_INSTALL_METADATA = [
+  "syncGUID",
+  "targetApplications",
+  "userDisabled",
+  "softDisabled",
+  "existingAddonID",
+  "sourceURI",
+  "releaseNotesURI",
+  "installDate",
+  "updateDate",
+  "applyBackgroundUpdates",
+  "compatibilityOverrides",
+  "installTelemetryInfo",
+];
 
 // Properties to save in JSON file
-const PROP_JSON_FIELDS = ["id", "syncGUID", "version", "type",
-                          "loader", "updateURL", "optionsURL",
-                          "optionsType", "optionsBrowserStyle", "aboutURL",
-                          "defaultLocale", "visible", "active", "userDisabled",
-                          "appDisabled", "pendingUninstall", "installDate",
-                          "updateDate", "applyBackgroundUpdates", "path",
-                          "skinnable", "sourceURI", "releaseNotesURI",
-                          "softDisabled", "foreignInstall",
-                          "strictCompatibility", "locales", "targetApplications",
-                          "targetPlatforms", "signedState",
-                          "seen", "dependencies", "incognito",
-                          "userPermissions", "icons", "iconURL",
-                          "blocklistState", "blocklistURL", "startupData",
-                          "previewImage", "hidden", "installTelemetryInfo",
-                          "recommendationState", "rootURI"];
+const PROP_JSON_FIELDS = [
+  "id",
+  "syncGUID",
+  "version",
+  "type",
+  "loader",
+  "updateURL",
+  "optionsURL",
+  "optionsType",
+  "optionsBrowserStyle",
+  "aboutURL",
+  "defaultLocale",
+  "visible",
+  "active",
+  "userDisabled",
+  "appDisabled",
+  "pendingUninstall",
+  "installDate",
+  "updateDate",
+  "applyBackgroundUpdates",
+  "path",
+  "skinnable",
+  "sourceURI",
+  "releaseNotesURI",
+  "softDisabled",
+  "foreignInstall",
+  "strictCompatibility",
+  "locales",
+  "targetApplications",
+  "targetPlatforms",
+  "signedState",
+  "seen",
+  "dependencies",
+  "incognito",
+  "userPermissions",
+  "icons",
+  "iconURL",
+  "blocklistState",
+  "blocklistURL",
+  "startupData",
+  "previewImage",
+  "hidden",
+  "installTelemetryInfo",
+  "recommendationState",
+  "rootURI",
+];
 
-const LEGACY_TYPES = new Set([
-  "extension",
-]);
+const LEGACY_TYPES = new Set(["extension"]);
 
-const SIGNED_TYPES = new Set([
-  "extension",
-  "locale",
-  "theme",
-]);
+const SIGNED_TYPES = new Set(["extension", "locale", "theme"]);
 
 // Time to wait before async save of XPI JSON database, in milliseconds
 const ASYNC_SAVE_DELAY_MS = 20;
@@ -144,7 +187,7 @@ const LOCALE_BUNDLES = [
  * @returns {Promise<IdleDeadline>}
  */
 function promiseIdleSlice() {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     ChromeUtils.idleDispatch(resolve);
   });
 }
@@ -185,7 +228,9 @@ async function idleForEach(array, func, taskTimeMS = 5) {
  */
 async function getRepositoryAddon(aAddon) {
   if (aAddon) {
-    aAddon._repositoryAddon = await AddonRepository.getCachedAddonByID(aAddon.id);
+    aAddon._repositoryAddon = await AddonRepository.getCachedAddonByID(
+      aAddon.id
+    );
   }
   return aAddon;
 }
@@ -204,11 +249,13 @@ async function getRepositoryAddon(aAddon) {
  *        The object that the properties were copied onto
  */
 function copyProperties(aObject, aProperties, aTarget) {
-  if (!aTarget)
+  if (!aTarget) {
     aTarget = {};
+  }
   aProperties.forEach(function(aProp) {
-    if (aProp in aObject)
+    if (aProp in aObject) {
       aTarget[aProp] = aObject[aProp];
+    }
   });
   return aTarget;
 }
@@ -262,8 +309,9 @@ class AddonInternal {
       copyProperties(addonData, PROP_JSON_FIELDS, this);
       this.location = addonData.location;
 
-      if (!this.dependencies)
+      if (!this.dependencies) {
         this.dependencies = [];
+      }
       Object.freeze(this.dependencies);
 
       if (this.location) {
@@ -306,8 +354,9 @@ class AddonInternal {
   }
 
   get selectedLocale() {
-    if (this._selectedLocale)
+    if (this._selectedLocale) {
       return this._selectedLocale;
+    }
 
     /**
      * this.locales is a list of objects that have property `locales`.
@@ -348,7 +397,8 @@ class AddonInternal {
        * that has the best match in it's locales list.
        */
       this._selectedLocale = this.locales.find(loc =>
-        loc.locales.includes(bestLocale));
+        loc.locales.includes(bestLocale)
+      );
     }
 
     return this._selectedLocale;
@@ -375,13 +425,15 @@ class AddonInternal {
         // On UNIX platforms except OSX, an additional location for system
         // add-ons exists in /usr/{lib,share}/mozilla/extensions. Add-ons
         // installed there do not require signing.
-        if (Services.appinfo.OS != "Darwin")
+        if (Services.appinfo.OS != "Darwin") {
           return true;
+        }
         break;
     }
 
-    if (this.signedState === AddonManager.SIGNEDSTATE_NOT_REQUIRED)
+    if (this.signedState === AddonManager.SIGNEDSTATE_NOT_REQUIRED) {
       return true;
+    }
     return this.signedState > AddonManager.SIGNEDSTATE_MISSING;
   }
 
@@ -391,9 +443,11 @@ class AddonInternal {
 
   // This matches Extension.isPrivileged with the exception of temporarily installed extensions.
   get isPrivileged() {
-    return this.signedState === AddonManager.SIGNEDSTATE_PRIVILEGED ||
-           this.signedState === AddonManager.SIGNEDSTATE_SYSTEM ||
-           this.location.isBuiltin;
+    return (
+      this.signedState === AddonManager.SIGNEDSTATE_PRIVILEGED ||
+      this.signedState === AddonManager.SIGNEDSTATE_SYSTEM ||
+      this.location.isBuiltin
+    );
   }
 
   get hidden() {
@@ -405,12 +459,13 @@ class AddonInternal {
   }
 
   get disabled() {
-    return (this.userDisabled || this.appDisabled || this.softDisabled);
+    return this.userDisabled || this.appDisabled || this.softDisabled;
   }
 
   get isPlatformCompatible() {
-    if (this.targetPlatforms.length == 0)
+    if (this.targetPlatforms.length == 0) {
       return true;
+    }
 
     let matchedOS = false;
 
@@ -422,7 +477,7 @@ class AddonInternal {
     let abi = null;
     try {
       abi = Services.appinfo.XPCOMABI;
-    } catch (e) { }
+    } catch (e) {}
 
     // Something is causing errors in here
     try {
@@ -430,16 +485,20 @@ class AddonInternal {
         if (platform.os == Services.appinfo.OS) {
           if (platform.abi) {
             needsABI = true;
-            if (platform.abi === abi)
+            if (platform.abi === abi) {
               return true;
+            }
           } else {
             matchedOS = true;
           }
         }
       }
     } catch (e) {
-      let message = "Problem with addon " + this.id + " targetPlatforms "
-                    + JSON.stringify(this.targetPlatforms);
+      let message =
+        "Problem with addon " +
+        this.id +
+        " targetPlatforms " +
+        JSON.stringify(this.targetPlatforms);
       logger.error(message, e);
       AddonManagerPrivate.recordException("XPI", message, e);
       // don't trust this add-on
@@ -451,35 +510,43 @@ class AddonInternal {
 
   isCompatibleWith(aAppVersion, aPlatformVersion) {
     let app = this.matchingTargetApplication;
-    if (!app)
+    if (!app) {
       return false;
+    }
 
     // set reasonable defaults for minVersion and maxVersion
     let minVersion = app.minVersion || "0";
     let maxVersion = app.maxVersion || "*";
 
-    if (!aAppVersion)
+    if (!aAppVersion) {
       aAppVersion = Services.appinfo.version;
-    if (!aPlatformVersion)
+    }
+    if (!aPlatformVersion) {
       aPlatformVersion = Services.appinfo.platformVersion;
+    }
 
     let version;
-    if (app.id == Services.appinfo.ID)
+    if (app.id == Services.appinfo.ID) {
       version = aAppVersion;
-    else if (app.id == TOOLKIT_ID)
+    } else if (app.id == TOOLKIT_ID) {
       version = aPlatformVersion;
+    }
 
     // Only extensions and dictionaries can be compatible by default; themes
     // and language packs always use strict compatibility checking.
     // Dictionaries are compatible by default unless requested by the dictinary.
-    if (!this.strictCompatibility &&
-        (!AddonManager.strictCompatibility || this.type == "dictionary")) {
+    if (
+      !this.strictCompatibility &&
+      (!AddonManager.strictCompatibility || this.type == "dictionary")
+    ) {
       // The repository can specify compatibility overrides.
       // Note: For now, only blacklisting is supported by overrides.
       let overrides = AddonRepository.getCompatibilityOverridesSync(this.id);
       if (overrides) {
-        let override = AddonRepository.findMatchingCompatOverride(this.version,
-                                                                  overrides);
+        let override = AddonRepository.findMatchingCompatOverride(
+          this.version,
+          overrides
+        );
         if (override) {
           return false;
         }
@@ -488,17 +555,21 @@ class AddonInternal {
       return Services.vc.compare(version, minVersion) >= 0;
     }
 
-    return (Services.vc.compare(version, minVersion) >= 0) &&
-           (Services.vc.compare(version, maxVersion) <= 0);
+    return (
+      Services.vc.compare(version, minVersion) >= 0 &&
+      Services.vc.compare(version, maxVersion) <= 0
+    );
   }
 
   get matchingTargetApplication() {
     let app = null;
     for (let targetApp of this.targetApplications) {
-      if (targetApp.id == Services.appinfo.ID)
+      if (targetApp.id == Services.appinfo.ID) {
         return targetApp;
-      if (targetApp.id == TOOLKIT_ID)
+      }
+      if (targetApp.id == TOOLKIT_ID) {
         app = targetApp;
+      }
     }
     return app;
   }
@@ -508,7 +579,7 @@ class AddonInternal {
   }
 
   async updateBlocklistState(options = {}) {
-    let {applySoftBlock = true, updateDatabase = true} = options;
+    let { applySoftBlock = true, updateDatabase = true } = options;
 
     let oldState = this.blocklistState;
 
@@ -563,8 +634,9 @@ class AddonInternal {
     } else {
       this.userDisabled = val;
       // When enabling remove the softDisabled flag
-      if (!val)
+      if (!val) {
         this.softDisabled = false;
+      }
     }
   }
 
@@ -573,22 +645,28 @@ class AddonInternal {
 
     for (let targetApp of this.targetApplications) {
       for (let updateTarget of aUpdate.targetApplications) {
-        if (targetApp.id == updateTarget.id && (aSyncCompatibility ||
-            Services.vc.compare(targetApp.maxVersion, updateTarget.maxVersion) < 0)) {
+        if (
+          targetApp.id == updateTarget.id &&
+          (aSyncCompatibility ||
+            Services.vc.compare(targetApp.maxVersion, updateTarget.maxVersion) <
+              0)
+        ) {
           targetApp.minVersion = updateTarget.minVersion;
           targetApp.maxVersion = updateTarget.maxVersion;
 
-          if (this.inDatabase)
+          if (this.inDatabase) {
             XPIDatabase.saveChanges();
+          }
         }
       }
     }
 
     if (wasCompatible != this.isCompatible) {
-      if (this.inDatabase)
+      if (this.inDatabase) {
         XPIDatabase.updateAddonDisabledState(this);
-      else
+      } else {
         this.appDisabled = !XPIDatabase.isUsableAddon(this);
+      }
     }
   }
 
@@ -608,8 +686,9 @@ class AddonInternal {
    */
   importMetadata(aObj) {
     for (let prop of PENDING_INSTALL_METADATA) {
-      if (!(prop in aObj))
+      if (!(prop in aObj)) {
         continue;
+      }
 
       this[prop] = aObj[prop];
     }
@@ -622,8 +701,9 @@ class AddonInternal {
     let permissions = 0;
 
     // Add-ons that aren't installed cannot be modified in any way
-    if (!(this.inDatabase))
+    if (!this.inDatabase) {
       return permissions;
+    }
 
     if (!this.appDisabled) {
       if (this.userDisabled || this.softDisabled) {
@@ -652,11 +732,14 @@ class AddonInternal {
     // The permission to "toggle the private browsing access" is locked down
     // when the extension has opted out or it gets the permission automatically
     // on every extension startup (as system, privileged and builtin addons).
-    if (!allowPrivateBrowsingByDefault && this.type === "extension" &&
-        this.incognito !== "not_allowed" &&
-        this.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED &&
-        this.signedState !== AddonManager.SIGNEDSTATE_SYSTEM &&
-        !this.location.isBuiltin) {
+    if (
+      !allowPrivateBrowsingByDefault &&
+      this.type === "extension" &&
+      this.incognito !== "not_allowed" &&
+      this.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED &&
+      this.signedState !== AddonManager.SIGNEDSTATE_SYSTEM &&
+      !this.location.isBuiltin
+    ) {
       permissions |= AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS;
     }
 
@@ -710,11 +793,11 @@ AddonWrapper = class {
     const addon = addonFor(this);
     if (!addon.installTelemetryInfo && addon.location) {
       if (addon.location.isSystem) {
-        return {source: "system-addon"};
+        return { source: "system-addon" };
       }
 
       if (addon.location.isTemporary) {
-        return {source: "temporary-addon"};
+        return { source: "temporary-addon" };
       }
     }
 
@@ -755,17 +838,18 @@ AddonWrapper = class {
   }
 
   get optionsType() {
-    if (!this.isActive)
+    if (!this.isActive) {
       return null;
+    }
 
     let addon = addonFor(this);
     let hasOptionsURL = !!this.optionsURL;
 
     if (addon.optionsType) {
       switch (parseInt(addon.optionsType, 10)) {
-      case AddonManager.OPTIONS_TYPE_TAB:
-      case AddonManager.OPTIONS_TYPE_INLINE_BROWSER:
-        return hasOptionsURL ? addon.optionsType : null;
+        case AddonManager.OPTIONS_TYPE_TAB:
+        case AddonManager.OPTIONS_TYPE_INLINE_BROWSER:
+          return hasOptionsURL ? addon.optionsType : null;
       }
       return null;
     }
@@ -820,10 +904,11 @@ AddonWrapper = class {
   get screenshots() {
     let addon = addonFor(this);
     let repositoryAddon = addon._repositoryAddon;
-    if (repositoryAddon && ("screenshots" in repositoryAddon)) {
+    if (repositoryAddon && "screenshots" in repositoryAddon) {
       let repositoryScreenshots = repositoryAddon.screenshots;
-      if (repositoryScreenshots && repositoryScreenshots.length > 0)
+      if (repositoryScreenshots && repositoryScreenshots.length > 0) {
         return repositoryScreenshots;
+      }
     }
 
     if (addon.previewImage) {
@@ -837,10 +922,13 @@ AddonWrapper = class {
   get isRecommended() {
     let addon = addonFor(this);
     let state = addon.recommendationState;
-    if (state &&
-        state.validNotBefore < addon.updateDate &&
-        state.validNotAfter > addon.updateDate &&
-        addon.isCorrectlySigned && !this.temporarilyInstalled) {
+    if (
+      state &&
+      state.validNotBefore < addon.updateDate &&
+      state.validNotAfter > addon.updateDate &&
+      addon.isCorrectlySigned &&
+      !this.temporarilyInstalled
+    ) {
       return state.states.includes("recommended");
     }
     return false;
@@ -851,31 +939,39 @@ AddonWrapper = class {
   }
   set applyBackgroundUpdates(val) {
     let addon = addonFor(this);
-    if (val != AddonManager.AUTOUPDATE_DEFAULT &&
-        val != AddonManager.AUTOUPDATE_DISABLE &&
-        val != AddonManager.AUTOUPDATE_ENABLE) {
-      val = val ? AddonManager.AUTOUPDATE_DEFAULT :
-                  AddonManager.AUTOUPDATE_DISABLE;
+    if (
+      val != AddonManager.AUTOUPDATE_DEFAULT &&
+      val != AddonManager.AUTOUPDATE_DISABLE &&
+      val != AddonManager.AUTOUPDATE_ENABLE
+    ) {
+      val = val
+        ? AddonManager.AUTOUPDATE_DEFAULT
+        : AddonManager.AUTOUPDATE_DISABLE;
     }
 
-    if (val == addon.applyBackgroundUpdates)
+    if (val == addon.applyBackgroundUpdates) {
       return val;
+    }
 
     XPIDatabase.setAddonProperties(addon, {
       applyBackgroundUpdates: val,
     });
-    AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, ["applyBackgroundUpdates"]);
+    AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, [
+      "applyBackgroundUpdates",
+    ]);
 
     return val;
   }
 
   set syncGUID(val) {
     let addon = addonFor(this);
-    if (addon.syncGUID == val)
+    if (addon.syncGUID == val) {
       return val;
+    }
 
-    if (addon.inDatabase)
+    if (addon.inDatabase) {
       XPIDatabase.setAddonSyncGUID(addon, val);
+    }
 
     addon.syncGUID = val;
 
@@ -884,8 +980,9 @@ AddonWrapper = class {
 
   get install() {
     let addon = addonFor(this);
-    if (!("_install" in addon) || !addon._install)
+    if (!("_install" in addon) || !addon._install) {
       return null;
+    }
     return addon._install.wrapper;
   }
 
@@ -901,8 +998,9 @@ AddonWrapper = class {
 
   get scope() {
     let addon = addonFor(this);
-    if (addon.location)
+    if (addon.location) {
       return addon.location.scope;
+    }
 
     return AddonManager.SCOPE_PROFILE;
   }
@@ -910,27 +1008,33 @@ AddonWrapper = class {
   get pendingOperations() {
     let addon = addonFor(this);
     let pending = 0;
-    if (!(addon.inDatabase)) {
+    if (!addon.inDatabase) {
       // Add-on is pending install if there is no associated install (shouldn't
       // happen here) or if the install is in the process of or has successfully
       // completed the install. If an add-on is pending install then we ignore
       // any other pending operations.
-      if (!addon._install || addon._install.state == AddonManager.STATE_INSTALLING ||
-          addon._install.state == AddonManager.STATE_INSTALLED)
+      if (
+        !addon._install ||
+        addon._install.state == AddonManager.STATE_INSTALLING ||
+        addon._install.state == AddonManager.STATE_INSTALLED
+      ) {
         return AddonManager.PENDING_INSTALL;
+      }
     } else if (addon.pendingUninstall) {
       // If an add-on is pending uninstall then we ignore any other pending
       // operations
       return AddonManager.PENDING_UNINSTALL;
     }
 
-    if (addon.active && addon.disabled)
+    if (addon.active && addon.disabled) {
       pending |= AddonManager.PENDING_DISABLE;
-    else if (!addon.active && !addon.disabled)
+    } else if (!addon.active && !addon.disabled) {
       pending |= AddonManager.PENDING_ENABLE;
+    }
 
-    if (addon.pendingUpgrade)
+    if (addon.pendingUpgrade) {
       pending |= AddonManager.PENDING_UPGRADE;
+    }
 
     return pending;
   }
@@ -949,26 +1053,30 @@ AddonWrapper = class {
 
   get isActive() {
     let addon = addonFor(this);
-    if (!addon.active)
+    if (!addon.active) {
       return false;
-    if (!Services.appinfo.inSafeMode)
+    }
+    if (!Services.appinfo.inSafeMode) {
       return true;
+    }
     return XPIInternal.canRunInSafeMode(addon);
   }
 
   get startupPromise() {
     let addon = addonFor(this);
-    if (!this.isActive)
+    if (!this.isActive) {
       return null;
+    }
 
     let activeAddon = XPIProvider.activeAddons.get(addon.id);
-    if (activeAddon)
+    if (activeAddon) {
       return activeAddon.startupPromise || null;
+    }
     return null;
   }
 
   updateBlocklistState(applySoftBlock = true) {
-    return addonFor(this).updateBlocklistState({applySoftBlock});
+    return addonFor(this).updateBlocklistState({ applySoftBlock });
   }
 
   get userDisabled() {
@@ -977,25 +1085,27 @@ AddonWrapper = class {
   }
 
   enable(options = {}) {
-    const {allowSystemAddons = false} = options;
+    const { allowSystemAddons = false } = options;
     return addonFor(this).setUserDisabled(false, allowSystemAddons);
   }
 
   disable(options = {}) {
-    const {allowSystemAddons = false} = options;
+    const { allowSystemAddons = false } = options;
     return addonFor(this).setUserDisabled(true, allowSystemAddons);
   }
 
   set softDisabled(val) {
     let addon = addonFor(this);
-    if (val == addon.softDisabled)
+    if (val == addon.softDisabled) {
       return val;
+    }
 
     if (addon.inDatabase) {
       // When softDisabling a theme just enable the active theme
       if (addon.type === "theme" && val && !addon.userDisabled) {
-        if (addon.isWebExtension)
+        if (addon.isWebExtension) {
           XPIDatabase.updateAddonDisabledState(addon, undefined, val);
+        }
       } else {
         XPIDatabase.updateAddonDisabledState(addon, undefined, val);
       }
@@ -1028,7 +1138,7 @@ AddonWrapper = class {
   // in the profile install location are considered syncable.
   get isSyncable() {
     let addon = addonFor(this);
-    return (addon.location.name == KEY_APP_PROFILE);
+    return addon.location.name == KEY_APP_PROFILE;
   }
 
   get userPermissions() {
@@ -1050,7 +1160,13 @@ AddonWrapper = class {
   }
 
   findUpdates(aListener, aReason, aAppVersion, aPlatformVersion) {
-    new UpdateChecker(addonFor(this), aListener, aReason, aAppVersion, aPlatformVersion);
+    new UpdateChecker(
+      addonFor(this),
+      aListener,
+      aReason,
+      aAppVersion,
+      aPlatformVersion
+    );
   }
 
   // Returns true if there was an update in progress, false if there was no update to cancel
@@ -1112,8 +1228,11 @@ function chooseValue(aAddon, aObj, aProp) {
   let repositoryAddon = aAddon._repositoryAddon;
   let objValue = aObj[aProp];
 
-  if (repositoryAddon && aProp in repositoryAddon &&
-      (aProp === "creator" || objValue == null)) {
+  if (
+    repositoryAddon &&
+    aProp in repositoryAddon &&
+    (aProp === "creator" || objValue == null)
+  ) {
     return [repositoryAddon[aProp], true];
   }
 
@@ -1136,25 +1255,47 @@ function defineAddonWrapperProperty(name, getter) {
   });
 }
 
-["id", "syncGUID", "version", "type", "isWebExtension",
- "isCompatible", "isPlatformCompatible",
- "providesUpdatesSecurely", "blocklistState", "appDisabled",
- "softDisabled", "skinnable", "foreignInstall",
- "strictCompatibility", "updateURL", "dependencies",
- "signedState", "isCorrectlySigned"].forEach(function(aProp) {
-   defineAddonWrapperProperty(aProp, function() {
-     let addon = addonFor(this);
-     return (aProp in addon) ? addon[aProp] : undefined;
-   });
-});
-
-["fullDescription", "developerComments", "supportURL",
- "contributionURL", "averageRating", "reviewCount",
- "reviewURL", "weeklyDownloads"].forEach(function(aProp) {
+[
+  "id",
+  "syncGUID",
+  "version",
+  "type",
+  "isWebExtension",
+  "isCompatible",
+  "isPlatformCompatible",
+  "providesUpdatesSecurely",
+  "blocklistState",
+  "appDisabled",
+  "softDisabled",
+  "skinnable",
+  "foreignInstall",
+  "strictCompatibility",
+  "updateURL",
+  "dependencies",
+  "signedState",
+  "isCorrectlySigned",
+].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
-    if (addon._repositoryAddon)
+    return aProp in addon ? addon[aProp] : undefined;
+  });
+});
+
+[
+  "fullDescription",
+  "developerComments",
+  "supportURL",
+  "contributionURL",
+  "averageRating",
+  "reviewCount",
+  "reviewURL",
+  "weeklyDownloads",
+].forEach(function(aProp) {
+  defineAddonWrapperProperty(aProp, function() {
+    let addon = addonFor(this);
+    if (addon._repositoryAddon) {
       return addon._repositoryAddon[aProp];
+    }
 
     return null;
   });
@@ -1180,10 +1321,12 @@ function defineAddonWrapperProperty(name, getter) {
     }
 
     let [target, fromRepo] = chooseValue(addon, addon, aProp);
-    if (!target)
+    if (!target) {
       return null;
-    if (fromRepo)
+    }
+    if (fromRepo) {
       return target;
+    }
     return Services.io.newURI(target);
   });
 });
@@ -1192,7 +1335,11 @@ function defineAddonWrapperProperty(name, getter) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
 
-    let [result, usedRepository] = chooseValue(addon, addon.selectedLocale, aProp);
+    let [result, usedRepository] = chooseValue(
+      addon,
+      addon.selectedLocale,
+      aProp
+    );
 
     if (result == null) {
       // Legacy add-ons may be partially localized. Fall back to the default
@@ -1200,8 +1347,9 @@ function defineAddonWrapperProperty(name, getter) {
       [result, usedRepository] = chooseValue(addon, addon.defaultLocale, aProp);
     }
 
-    if (result && !usedRepository && aProp == "creator")
+    if (result && !usedRepository && aProp == "creator") {
       return new AddonManagerPrivate.AddonAuthor(result);
+    }
 
     return result;
   });
@@ -1211,7 +1359,11 @@ function defineAddonWrapperProperty(name, getter) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
 
-    let [results, usedRepository] = chooseValue(addon, addon.selectedLocale, aProp);
+    let [results, usedRepository] = chooseValue(
+      addon,
+      addon.selectedLocale,
+      aProp
+    );
 
     if (results && !usedRepository) {
       results = results.map(function(aResult) {
@@ -1283,10 +1435,12 @@ this.XPIDatabase = {
 
   // Error reported by our most recent attempt to read or write the database, if any
   get lastError() {
-    if (this._loadError)
+    if (this._loadError) {
       return this._loadError;
-    if (this._saveError)
+    }
+    if (this._saveError) {
       return this._saveError;
+    }
     return null;
   },
 
@@ -1294,12 +1448,15 @@ this.XPIDatabase = {
     try {
       let json = JSON.stringify(this);
       let path = this.jsonFile.path;
-      await OS.File.writeAtomic(path, json, {tmpPath: `${path}.tmp`});
+      await OS.File.writeAtomic(path, json, { tmpPath: `${path}.tmp` });
 
       if (!this._schemaVersionSet) {
         // Update the XPIDB schema version preference the first time we
         // successfully save the database.
-        logger.debug("XPI Database saved, setting schema version preference to " + DB_SCHEMA);
+        logger.debug(
+          "XPI Database saved, setting schema version preference to " +
+            DB_SCHEMA
+        );
         Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
         this._schemaVersionSet = true;
 
@@ -1325,12 +1482,17 @@ this.XPIDatabase = {
       // use an Error here so we get a stack trace.
       let err = new Error("XPI database modified after shutdown began");
       logger.warn(err);
-      AddonManagerPrivate.recordSimpleMeasure("XPIDB_late_stack", Log.stackTrace(err));
+      AddonManagerPrivate.recordSimpleMeasure(
+        "XPIDB_late_stack",
+        Log.stackTrace(err)
+      );
     }
 
     if (!this._saveTask) {
-      this._saveTask = new DeferredTask(() => this._saveNow(),
-                                        ASYNC_SAVE_DELAY_MS);
+      this._saveTask = new DeferredTask(
+        () => this._saveNow(),
+        ASYNC_SAVE_DELAY_MS
+      );
     }
 
     this._saveTask.arm();
@@ -1359,8 +1521,9 @@ this.XPIDatabase = {
 
     let toSave = {
       schemaVersion: DB_SCHEMA,
-      addons: Array.from(this.addonDB.values())
-                   .filter(addon => !addon.location.isTemporary),
+      addons: Array.from(this.addonDB.values()).filter(
+        addon => !addon.location.isTemporary
+      ),
     };
     return toSave;
   },
@@ -1378,7 +1541,10 @@ this.XPIDatabase = {
   syncLoadDB(aRebuildOnError) {
     let err = new Error("Synchronously loading the add-ons database");
     logger.debug(err);
-    AddonManagerPrivate.recordSimpleMeasure("XPIDB_sync_stack", Log.stackTrace(err));
+    AddonManagerPrivate.recordSimpleMeasure(
+      "XPIDB_sync_stack",
+      Log.stackTrace(err)
+    );
     try {
       this.syncLoadingDB = true;
       XPIInternal.awaitPromise(this.asyncLoadDB(aRebuildOnError));
@@ -1420,7 +1586,11 @@ this.XPIDatabase = {
         // mismatched schema version, though we throw away any fields we
         // don't know about (bug 902956)
         this._recordStartupError(`schemaMismatch-${inputAddons.schemaVersion}`);
-        logger.debug(`JSON schema mismatch: expected ${DB_SCHEMA}, actual ${inputAddons.schemaVersion}`);
+        logger.debug(
+          `JSON schema mismatch: expected ${DB_SCHEMA}, actual ${
+            inputAddons.schemaVersion
+          }`
+        );
       }
 
       let forEach = this.syncLoadingDB ? arrayForEach : idleForEach;
@@ -1435,7 +1605,10 @@ this.XPIDatabase = {
           } catch (e) {
             // We can fail here when the path is invalid, usually from the
             // wrong OS
-            logger.warn("Could not find source bundle for add-on " + loadedAddon.id, e);
+            logger.warn(
+              "Could not find source bundle for add-on " + loadedAddon.id,
+              e
+            );
           }
         }
         loadedAddon.location = XPIStates.getLocation(loadedAddon.location);
@@ -1461,8 +1634,10 @@ this.XPIDatabase = {
         this._recordStartupError("other");
       }
 
-      this.timeRebuildDatabase(e.rebuildReason || "XPIDB_rebuildReadFailed_MS",
-                               aRebuildOnError);
+      this.timeRebuildDatabase(
+        e.rebuildReason || "XPIDB_rebuildReadFailed_MS",
+        aRebuildOnError
+      );
     }
   },
 
@@ -1508,11 +1683,18 @@ this.XPIDatabase = {
             this._recordStartupError("dbMissing");
           }
         } else {
-          logger.warn(`Extensions database ${this.jsonFile.path} exists but is not readable; rebuilding`,
-                      error);
+          logger.warn(
+            `Extensions database ${
+              this.jsonFile.path
+            } exists but is not readable; rebuilding`,
+            error
+          );
           this._loadError = error;
         }
-        this.timeRebuildDatabase("XPIDB_rebuildUnreadableDB_MS", aRebuildOnError);
+        this.timeRebuildDatabase(
+          "XPIDB_rebuildUnreadableDB_MS",
+          aRebuildOnError
+        );
       }
       return this.addonDB;
     })();
@@ -1553,7 +1735,10 @@ this.XPIDatabase = {
       try {
         XPIDatabaseReconcile.processFileChanges({}, false);
       } catch (e) {
-        logger.error("Failed to rebuild XPI database from installed extensions", e);
+        logger.error(
+          "Failed to rebuild XPI database from installed extensions",
+          e
+        );
       }
       // Make sure to update the active add-ons and add-ons list on shutdown
       Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
@@ -1570,8 +1755,9 @@ this.XPIDatabase = {
     logger.debug("shutdown");
     if (this.initialized) {
       // If our last database I/O had an error, try one last time to save.
-      if (this.lastError)
+      if (this.lastError) {
         this.saveChanges();
+      }
 
       this.initialized = false;
 
@@ -1614,26 +1800,37 @@ this.XPIDatabase = {
 
       for (let addon of addons) {
         // The add-on might have vanished, we'll catch that on the next startup
-        if (!addon._sourceBundle || !addon._sourceBundle.exists())
+        if (!addon._sourceBundle || !addon._sourceBundle.exists()) {
           continue;
+        }
 
-        let signedState = await verifyBundleSignedState(addon._sourceBundle, addon);
+        let signedState = await verifyBundleSignedState(
+          addon._sourceBundle,
+          addon
+        );
 
         if (signedState != addon.signedState) {
           addon.signedState = signedState;
-          AddonManagerPrivate.callAddonListeners("onPropertyChanged",
-                                                 addon.wrapper,
-                                                 ["signedState"]);
+          AddonManagerPrivate.callAddonListeners(
+            "onPropertyChanged",
+            addon.wrapper,
+            ["signedState"]
+          );
         }
 
         let disabled = await this.updateAddonDisabledState(addon);
-        if (disabled !== undefined)
+        if (disabled !== undefined) {
           changes[disabled ? "disabled" : "enabled"].push(addon.id);
+        }
       }
 
       this.saveChanges();
 
-      Services.obs.notifyObservers(null, "xpi-signature-changed", JSON.stringify(changes));
+      Services.obs.notifyObservers(
+        null,
+        "xpi-signature-changed",
+        JSON.stringify(changes)
+      );
     } catch (err) {
       logger.error("XPI_verifySignature: " + err);
     }
@@ -1644,8 +1841,10 @@ this.XPIDatabase = {
    * manager for the user to change later.
    */
   importPermissions() {
-    PermissionsUtils.importFromPrefs(PREF_XPI_PERMISSIONS_BRANCH,
-                                     XPIInternal.XPI_PERMISSION);
+    PermissionsUtils.importFromPrefs(
+      PREF_XPI_PERMISSIONS_BRANCH,
+      XPIInternal.XPI_PERMISSION
+    );
   },
 
   /**
@@ -1659,10 +1858,14 @@ this.XPIDatabase = {
    */
   async addonChanged(aId, aType) {
     // We only care about themes in this provider
-    if (aType !== "theme")
+    if (aType !== "theme") {
       return;
+    }
 
-    Services.prefs.setCharPref("extensions.activeThemeID", aId || DEFAULT_THEME_ID);
+    Services.prefs.setCharPref(
+      "extensions.activeThemeID",
+      aId || DEFAULT_THEME_ID
+    );
 
     let enableTheme;
 
@@ -1699,7 +1902,9 @@ this.XPIDatabase = {
     try {
       let addonDB = await this.asyncLoadDB();
       let addonList = _filterDB(addonDB, aFilter);
-      let addons = await Promise.all(addonList.map(addon => getRepositoryAddon(addon)));
+      let addons = await Promise.all(
+        addonList.map(addon => getRepositoryAddon(addon))
+      );
       return addons;
     } catch (error) {
       logger.error("getAddonList failed", error);
@@ -1718,10 +1923,9 @@ this.XPIDatabase = {
   getAddon(aFilter) {
     return this.asyncLoadDB()
       .then(addonDB => getRepositoryAddon(_findAddon(addonDB, aFilter)))
-      .catch(
-        error => {
-          logger.error("getAddon failed", error);
-        });
+      .catch(error => {
+        logger.error("getAddon failed", error);
+      });
   },
 
   /**
@@ -1735,8 +1939,9 @@ this.XPIDatabase = {
    * @returns {Promise<AddonInternal?>}
    */
   getAddonInLocation(aId, aLocation) {
-    return this.asyncLoadDB().then(
-        addonDB => getRepositoryAddon(addonDB.get(aLocation + ":" + aId)));
+    return this.asyncLoadDB().then(addonDB =>
+      getRepositoryAddon(addonDB.get(aLocation + ":" + aId))
+    );
   },
 
   /**
@@ -1758,7 +1963,7 @@ this.XPIDatabase = {
    * @returns {Promise<AddonInternal?>}
    */
   getVisibleAddonForID(aId) {
-    return this.getAddon(aAddon => ((aAddon.id == aId) && aAddon.visible));
+    return this.getAddon(aAddon => aAddon.id == aId && aAddon.visible);
   },
 
   /**
@@ -1769,8 +1974,9 @@ this.XPIDatabase = {
    * @returns {Promise<Array<AddonInternal>>}
    */
   getVisibleAddons(aTypes) {
-    return this.getAddonList(aAddon => (aAddon.visible &&
-                                        (!aTypes || aTypes.has(aAddon.type))));
+    return this.getAddonList(
+      aAddon => aAddon.visible && (!aTypes || aTypes.has(aAddon.type))
+    );
   },
 
   /**
@@ -1785,9 +1991,11 @@ this.XPIDatabase = {
       // jank-tastic! Must synchronously load DB if the theme switches from
       // an XPI theme to a lightweight theme before the DB has loaded,
       // because we're called from sync XPIProvider.addonChanged
-      logger.warn(`Synchronous load of XPI database due to ` +
-                  `getAddonsByType([${aTypes.join(", ")}]) ` +
-                  `Stack: ${Error().stack}`);
+      logger.warn(
+        `Synchronous load of XPI database due to ` +
+          `getAddonsByType([${aTypes.join(", ")}]) ` +
+          `Stack: ${Error().stack}`
+      );
       this.syncLoadDB(true);
     }
 
@@ -1803,9 +2011,11 @@ this.XPIDatabase = {
    */
   getVisibleAddonsWithPendingOperations(aTypes) {
     return this.getAddonList(
-        aAddon => (aAddon.visible &&
-                   aAddon.pendingUninstall &&
-                   (!aTypes || aTypes.has(aAddon.type))));
+      aAddon =>
+        aAddon.visible &&
+        aAddon.pendingUninstall &&
+        (!aTypes || aTypes.has(aAddon.type))
+    );
   },
 
   /**
@@ -1867,8 +2077,9 @@ this.XPIDatabase = {
    * @returns {boolean}
    */
   mustSign(aType) {
-    if (!SIGNED_TYPES.has(aType))
+    if (!SIGNED_TYPES.has(aType)) {
       return false;
+    }
 
     if (aType == "locale") {
       return AddonSettings.LANGPACKS_REQUIRE_SIGNING;
@@ -1885,20 +2096,20 @@ this.XPIDatabase = {
    * @returns {boolean} Whether the addon should be disabled for being legacy
    */
   isDisabledLegacy(addon) {
-    return (!AddonSettings.ALLOW_LEGACY_EXTENSIONS &&
-            !addon.isWebExtension &&
-            LEGACY_TYPES.has(addon.type) &&
-
-            // Legacy add-ons are allowed in the system location.
-            !addon.location.isSystem &&
-
-            // Legacy extensions may be installed temporarily in
-            // non-release builds.
-            !(AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS &&
-              addon.location.isTemporary) &&
-
-            // Properly signed legacy extensions are allowed.
-            addon.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED);
+    return (
+      !AddonSettings.ALLOW_LEGACY_EXTENSIONS &&
+      !addon.isWebExtension &&
+      LEGACY_TYPES.has(addon.type) &&
+      // Legacy add-ons are allowed in the system location.
+      !addon.location.isSystem &&
+      // Legacy extensions may be installed temporarily in
+      // non-release builds.
+      !(
+        AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS && addon.location.isTemporary
+      ) &&
+      // Properly signed legacy extensions are allowed.
+      addon.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED
+    );
   },
 
   /**
@@ -1929,10 +2140,11 @@ this.XPIDatabase = {
     }
 
     if (AddonManager.checkUpdateSecurity && !aAddon.providesUpdatesSecurely) {
-      logger.warn(`Updates for add-on ${aAddon.id} must be provided over HTTPS.`);
+      logger.warn(
+        `Updates for add-on ${aAddon.id} must be provided over HTTPS.`
+      );
       return false;
     }
-
 
     if (!aAddon.isPlatformCompatible) {
       logger.warn(`Add-on ${aAddon.id} is not compatible with platform.`);
@@ -1945,8 +2157,9 @@ this.XPIDatabase = {
         return active && !active._pendingDisable;
       };
 
-      if (aAddon.dependencies.some(id => !isActive(id)))
+      if (aAddon.dependencies.some(id => !isActive(id))) {
         return false;
+      }
     }
 
     if (this.isDisabledLegacy(aAddon)) {
@@ -1956,13 +2169,17 @@ this.XPIDatabase = {
 
     if (AddonManager.checkCompatibility) {
       if (!aAddon.isCompatible) {
-        logger.warn(`Add-on ${aAddon.id} is not compatible with application version.`);
+        logger.warn(
+          `Add-on ${aAddon.id} is not compatible with application version.`
+        );
         return false;
       }
     } else {
       let app = aAddon.matchingTargetApplication;
       if (!app) {
-        logger.warn(`Add-on ${aAddon.id} is not compatible with target application.`);
+        logger.warn(
+          `Add-on ${aAddon.id} is not compatible with target application.`
+        );
         return false;
       }
     }
@@ -2020,7 +2237,8 @@ this.XPIDatabase = {
     aNewAddon.applyBackgroundUpdates = aOldAddon.applyBackgroundUpdates;
     aNewAddon.foreignInstall = aOldAddon.foreignInstall;
     aNewAddon.seen = aOldAddon.seen;
-    aNewAddon.active = (aNewAddon.visible && !aNewAddon.disabled && !aNewAddon.pendingUninstall);
+    aNewAddon.active =
+      aNewAddon.visible && !aNewAddon.disabled && !aNewAddon.pendingUninstall;
 
     return this.addToDatabase(aNewAddon, aPath);
   },
@@ -2054,7 +2272,7 @@ this.XPIDatabase = {
   makeAddonVisible(aAddon) {
     logger.debug("Make addon " + aAddon._key + " visible");
     for (let [, otherAddon] of this.addonDB) {
-      if ((otherAddon.id == aAddon.id) && (otherAddon._key != aAddon._key)) {
+      if (otherAddon.id == aAddon.id && otherAddon._key != aAddon._key) {
         logger.debug("Hide addon " + otherAddon._key);
         otherAddon.visible = false;
         otherAddon.active = false;
@@ -2130,12 +2348,18 @@ this.XPIDatabase = {
   setAddonSyncGUID(aAddon, aGUID) {
     // Need to make sure no other addon has this GUID
     function excludeSyncGUID(otherAddon) {
-      return (otherAddon._key != aAddon._key) && (otherAddon.syncGUID == aGUID);
+      return otherAddon._key != aAddon._key && otherAddon.syncGUID == aGUID;
     }
     let otherAddon = _findAddon(this.addonDB, excludeSyncGUID);
     if (otherAddon) {
-      throw new Error("Addon sync GUID conflict for addon " + aAddon._key +
-          ": " + otherAddon._key + " already has GUID " + aGUID);
+      throw new Error(
+        "Addon sync GUID conflict for addon " +
+          aAddon._key +
+          ": " +
+          otherAddon._key +
+          " already has GUID " +
+          aGUID
+      );
     }
     aAddon.syncGUID = aGUID;
     this.saveChanges();
@@ -2150,7 +2374,9 @@ this.XPIDatabase = {
    *        The new active state for the add-on.
    */
   updateAddonActive(aAddon, aActive) {
-    logger.debug("Updating active state for add-on " + aAddon.id + " to " + aActive);
+    logger.debug(
+      "Updating active state for add-on " + aAddon.id + " to " + aActive
+    );
 
     aAddon.active = aActive;
     this.saveChanges();
@@ -2162,7 +2388,8 @@ this.XPIDatabase = {
   updateActiveAddons() {
     logger.debug("Updating add-on states");
     for (let [, addon] of this.addonDB) {
-      let newActive = (addon.visible && !addon.disabled && !addon.pendingUninstall);
+      let newActive =
+        addon.visible && !addon.disabled && !addon.pendingUninstall;
       if (newActive != addon.active) {
         addon.active = newActive;
         this.saveChanges();
@@ -2195,12 +2422,19 @@ this.XPIDatabase = {
    *           - false: The add-on became enabled
    * @throws if addon is not a AddonInternal
    */
-  async updateAddonDisabledState(aAddon, aUserDisabled, aSoftDisabled, aBecauseSelecting) {
-    if (!(aAddon.inDatabase))
+  async updateAddonDisabledState(
+    aAddon,
+    aUserDisabled,
+    aSoftDisabled,
+    aBecauseSelecting
+  ) {
+    if (!aAddon.inDatabase) {
       throw new Error("Can only update addon states for installed addons.");
+    }
     if (aUserDisabled !== undefined && aSoftDisabled !== undefined) {
-      throw new Error("Cannot change userDisabled and softDisabled at the " +
-                      "same time");
+      throw new Error(
+        "Cannot change userDisabled and softDisabled at the same time"
+      );
     }
 
     if (aUserDisabled === undefined) {
@@ -2212,15 +2446,19 @@ this.XPIDatabase = {
 
     // If not changing softDisabled or the add-on is already userDisabled then
     // use the existing value for softDisabled
-    if (aSoftDisabled === undefined || aUserDisabled)
+    if (aSoftDisabled === undefined || aUserDisabled) {
       aSoftDisabled = aAddon.softDisabled;
+    }
 
     let appDisabled = !this.isUsableAddon(aAddon);
     // No change means nothing to do here
-    if (aAddon.userDisabled == aUserDisabled &&
-        aAddon.appDisabled == appDisabled &&
-        aAddon.softDisabled == aSoftDisabled)
+    if (
+      aAddon.userDisabled == aUserDisabled &&
+      aAddon.appDisabled == appDisabled &&
+      aAddon.softDisabled == aSoftDisabled
+    ) {
       return undefined;
+    }
 
     let wasDisabled = aAddon.disabled;
     let isDisabled = aUserDisabled || aSoftDisabled || appDisabled;
@@ -2239,15 +2477,16 @@ this.XPIDatabase = {
     let wrapper = aAddon.wrapper;
 
     if (appDisabledChanged) {
-      AddonManagerPrivate.callAddonListeners("onPropertyChanged",
-                                             wrapper,
-                                             ["appDisabled"]);
+      AddonManagerPrivate.callAddonListeners("onPropertyChanged", wrapper, [
+        "appDisabled",
+      ]);
     }
 
     // If the add-on is not visible or the add-on is not changing state then
     // there is no need to do anything else
-    if (!aAddon.visible || (wasDisabled == isDisabled))
+    if (!aAddon.visible || wasDisabled == isDisabled) {
       return undefined;
+    }
 
     // Flag that active states in the database need to be updated on shutdown
     Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
@@ -2303,16 +2542,24 @@ this.XPIDatabase = {
    */
   async updateAddonRepositoryData() {
     let addons = await this.getVisibleAddons(null);
-    logger.debug("updateAddonRepositoryData found " + addons.length + " visible add-ons");
+    logger.debug(
+      "updateAddonRepositoryData found " + addons.length + " visible add-ons"
+    );
 
-    await Promise.all(addons.map(addon =>
-      AddonRepository.getCachedAddonByID(addon.id).then(aRepoAddon => {
-        if (aRepoAddon || AddonRepository.getCompatibilityOverridesSync(addon.id)) {
-          logger.debug("updateAddonRepositoryData got info for " + addon.id);
-          addon._repositoryAddon = aRepoAddon;
-          this.updateAddonDisabledState(addon);
-        }
-      })));
+    await Promise.all(
+      addons.map(addon =>
+        AddonRepository.getCachedAddonByID(addon.id).then(aRepoAddon => {
+          if (
+            aRepoAddon ||
+            AddonRepository.getCompatibilityOverridesSync(addon.id)
+          ) {
+            logger.debug("updateAddonRepositoryData got info for " + addon.id);
+            addon._repositoryAddon = aRepoAddon;
+            this.updateAddonDisabledState(addon);
+          }
+        })
+      )
+    );
   },
 
   /**
@@ -2323,8 +2570,10 @@ this.XPIDatabase = {
    */
   recordAddonTelemetry(aAddon) {
     let locale = aAddon.defaultLocale;
-    XPIProvider.addTelemetry(aAddon.id, {name: locale.name,
-                                         creator: locale.creator});
+    XPIProvider.addTelemetry(aAddon.id, {
+      name: locale.name,
+      creator: locale.creator,
+    });
   },
 };
 
@@ -2343,16 +2592,19 @@ this.XPIDatabaseReconcile = {
     let map = new Map();
 
     for (let loc of XPIStates.locations()) {
-      if (loc.name == hideLocation)
+      if (loc.name == hideLocation) {
         continue;
+      }
 
       let locationMap = addonMap.get(loc.name);
-      if (!locationMap)
+      if (!locationMap) {
         continue;
+      }
 
       for (let [id, addon] of locationMap) {
-        if (!map.has(id))
+        if (!map.has(id)) {
           map.set(id, addon);
+        }
       }
     }
 
@@ -2371,11 +2623,15 @@ this.XPIDatabaseReconcile = {
 
     for (let addons of addonMap.values()) {
       for (let [id, addon] of addons) {
-        if (!addon.visible)
+        if (!addon.visible) {
           continue;
+        }
 
         if (map.has(id)) {
-          logger.warn("Previous database listed more than one visible add-on with id " + id);
+          logger.warn(
+            "Previous database listed more than one visible add-on with id " +
+              id
+          );
           continue;
         }
 
@@ -2412,8 +2668,14 @@ this.XPIDatabaseReconcile = {
    *        A boolean indicating if flushing caches is required to complete
    *        changing this add-on
    */
-  addMetadata(aLocation, aId, aAddonState, aNewAddon, aOldAppVersion,
-              aOldPlatformVersion) {
+  addMetadata(
+    aLocation,
+    aId,
+    aAddonState,
+    aNewAddon,
+    aOldAppVersion,
+    aOldPlatformVersion
+  ) {
     logger.debug(`New add-on ${aId} installed in ${aLocation.name}`);
 
     // We treat this is a new install if,
@@ -2433,9 +2695,14 @@ this.XPIDatabaseReconcile = {
     let unsigned;
     try {
       // Do not allow third party installs if xpinstall is disabled by policy
-      if (isDetectedInstall && Services.policies &&
-          !Services.policies.isAllowed("xpinstall")) {
-        throw new Error("Extension installs are disabled by enterprise policy.");
+      if (
+        isDetectedInstall &&
+        Services.policies &&
+        !Services.policies.isAllowed("xpinstall")
+      ) {
+        throw new Error(
+          "Extension installs are disabled by enterprise policy."
+        );
       }
 
       if (!aNewAddon) {
@@ -2444,26 +2711,34 @@ this.XPIDatabaseReconcile = {
       }
       // The add-on in the manifest should match the add-on ID.
       if (aNewAddon.id != aId) {
-        throw new Error(`Invalid addon ID: expected addon ID ${aId}, found ${aNewAddon.id} in manifest`);
+        throw new Error(
+          `Invalid addon ID: expected addon ID ${aId}, found ${
+            aNewAddon.id
+          } in manifest`
+        );
       }
 
-      unsigned = XPIDatabase.mustSign(aNewAddon.type) && !aNewAddon.isCorrectlySigned;
+      unsigned =
+        XPIDatabase.mustSign(aNewAddon.type) && !aNewAddon.isCorrectlySigned;
       if (unsigned) {
-          throw Error(`Extension ${aNewAddon.id} is not correctly signed`);
+        throw Error(`Extension ${aNewAddon.id} is not correctly signed`);
       }
     } catch (e) {
       logger.warn(`addMetadata: Add-on ${aId} is invalid`, e);
 
       // Remove the invalid add-on from the install location if the install
       // location isn't locked
-      if (aLocation.isLinkedAddon(aId))
+      if (aLocation.isLinkedAddon(aId)) {
         logger.warn("Not uninstalling invalid item because it is a proxy file");
-      else if (aLocation.locked)
-        logger.warn("Could not uninstall invalid item from locked install location");
-      else if (unsigned && !isNewInstall)
+      } else if (aLocation.locked) {
+        logger.warn(
+          "Could not uninstall invalid item from locked install location"
+        );
+      } else if (unsigned && !isNewInstall) {
         logger.warn("Not uninstalling existing unsigned add-on");
-      else
+      } else {
         aLocation.installer.uninstallAddon(aId);
+      }
       return null;
     }
 
@@ -2487,9 +2762,16 @@ this.XPIDatabaseReconcile = {
 
       // If the add-on is a foreign install and is in a scope where add-ons
       // that were dropped in should default to disabled then disable it
-      let disablingScopes = Services.prefs.getIntPref(PREF_EM_AUTO_DISABLED_SCOPES, 0);
+      let disablingScopes = Services.prefs.getIntPref(
+        PREF_EM_AUTO_DISABLED_SCOPES,
+        0
+      );
       if (aLocation.scope & disablingScopes) {
-        logger.warn(`Disabling foreign installed add-on ${aNewAddon.id} in ${aLocation.name}`);
+        logger.warn(
+          `Disabling foreign installed add-on ${aNewAddon.id} in ${
+            aLocation.name
+          }`
+        );
         aNewAddon.userDisabled = true;
         aNewAddon.seen = false;
       }
@@ -2507,7 +2789,9 @@ this.XPIDatabaseReconcile = {
    */
   removeMetadata(aOldAddon) {
     // This add-on has disappeared
-    logger.debug("Add-on " + aOldAddon.id + " removed from " + aOldAddon.location.name);
+    logger.debug(
+      "Add-on " + aOldAddon.id + " removed from " + aOldAddon.location.name
+    );
     XPIDatabase.removeAddonMetadata(aOldAddon);
   },
 
@@ -2534,25 +2818,35 @@ this.XPIDatabaseReconcile = {
     try {
       // If there isn't an updated install manifest for this add-on then load it.
       if (!aNewAddon) {
-        aNewAddon = XPIInstall.syncLoadManifest(aAddonState, aLocation, aOldAddon);
+        aNewAddon = XPIInstall.syncLoadManifest(
+          aAddonState,
+          aLocation,
+          aOldAddon
+        );
       } else {
         aNewAddon.rootURI = aOldAddon.rootURI;
       }
 
       // The ID in the manifest that was loaded must match the ID of the old
       // add-on.
-      if (aNewAddon.id != aOldAddon.id)
-        throw new Error(`Incorrect id in install manifest for existing add-on ${aOldAddon.id}`);
+      if (aNewAddon.id != aOldAddon.id) {
+        throw new Error(
+          `Incorrect id in install manifest for existing add-on ${aOldAddon.id}`
+        );
+      }
     } catch (e) {
       logger.warn(`updateMetadata: Add-on ${aOldAddon.id} is invalid`, e);
 
       XPIDatabase.removeAddonMetadata(aOldAddon);
       aOldAddon.location.removeAddon(aOldAddon.id);
 
-      if (!aLocation.locked)
+      if (!aLocation.locked) {
         aLocation.installer.uninstallAddon(aOldAddon.id);
-      else
-        logger.warn("Could not uninstall invalid item from locked install location");
+      } else {
+        logger.warn(
+          "Could not uninstall invalid item from locked install location"
+        );
+      }
 
       return null;
     }
@@ -2561,7 +2855,11 @@ this.XPIDatabaseReconcile = {
     aNewAddon.updateDate = aAddonState.mtime;
 
     // Update the database
-    return XPIDatabase.updateAddonMetadata(aOldAddon, aNewAddon, aAddonState.path);
+    return XPIDatabase.updateAddonMetadata(
+      aOldAddon,
+      aNewAddon,
+      aAddonState.path
+    );
   },
 
   /**
@@ -2581,7 +2879,10 @@ this.XPIDatabaseReconcile = {
     logger.debug(`Add-on ${aOldAddon.id} moved to ${aAddonState.path}`);
     aOldAddon.path = aAddonState.path;
     aOldAddon._sourceBundle = new nsIFile(aAddonState.path);
-    aOldAddon.rootURI = XPIInternal.getURIForResourceInFile(aOldAddon._sourceBundle, "").spec;
+    aOldAddon.rootURI = XPIInternal.getURIForResourceInFile(
+      aOldAddon._sourceBundle,
+      ""
+    ).spec;
 
     return aOldAddon;
   },
@@ -2604,10 +2905,12 @@ this.XPIDatabaseReconcile = {
    *        The new addon.
    */
   updateCompatibility(aLocation, aOldAddon, aAddonState, aReloadMetadata) {
-    logger.debug(`Updating compatibility for add-on ${aOldAddon.id} in ${aLocation.name}`);
+    logger.debug(
+      `Updating compatibility for add-on ${aOldAddon.id} in ${aLocation.name}`
+    );
 
-    let checkSigning = (aOldAddon.signedState === undefined &&
-                        SIGNED_TYPES.has(aOldAddon.type));
+    let checkSigning =
+      aOldAddon.signedState === undefined && SIGNED_TYPES.has(aOldAddon.type);
 
     let manifest = null;
     if (checkSigning || aReloadMetadata) {
@@ -2633,9 +2936,17 @@ this.XPIDatabaseReconcile = {
       // Avoid re-reading these properties from manifest,
       // use existing addon instead.
       // TODO - consider re-scanning for targetApplications.
-      let remove = ["syncGUID", "foreignInstall", "visible", "active",
-                    "userDisabled", "applyBackgroundUpdates", "sourceURI",
-                    "releaseNotesURI", "targetApplications"];
+      let remove = [
+        "syncGUID",
+        "foreignInstall",
+        "visible",
+        "active",
+        "userDisabled",
+        "applyBackgroundUpdates",
+        "sourceURI",
+        "releaseNotesURI",
+        "targetApplications",
+      ];
 
       let props = PROP_JSON_FIELDS.filter(a => !remove.includes(a));
       copyProperties(manifest, props, aOldAddon);
@@ -2657,9 +2968,11 @@ this.XPIDatabaseReconcile = {
    *        True if this location is part of the application bundle.
    */
   isAppBundledLocation(location) {
-    return (location.name == KEY_APP_GLOBAL ||
-            location.name == KEY_APP_SYSTEM_DEFAULTS ||
-            location.name == KEY_APP_BUILTINS);
+    return (
+      location.name == KEY_APP_GLOBAL ||
+      location.name == KEY_APP_SYSTEM_DEFAULTS ||
+      location.name == KEY_APP_BUILTINS
+    );
   },
 
   /**
@@ -2671,8 +2984,10 @@ this.XPIDatabaseReconcile = {
    *        True if this location contains system add-ons.
    */
   isSystemAddonLocation(location) {
-    return location.name === KEY_APP_SYSTEM_DEFAULTS ||
-           location.name === KEY_APP_SYSTEM_ADDONS;
+    return (
+      location.name === KEY_APP_SYSTEM_DEFAULTS ||
+      location.name === KEY_APP_SYSTEM_ADDONS
+    );
   },
 
   /**
@@ -2695,7 +3010,13 @@ this.XPIDatabaseReconcile = {
    *        The updated AddonInternal object for the add-on, if one
    *        could be created.
    */
-  updateExistingAddon(oldAddon, xpiState, newAddon, aUpdateCompatibility, aSchemaChange) {
+  updateExistingAddon(
+    oldAddon,
+    xpiState,
+    newAddon,
+    aUpdateCompatibility,
+    aSchemaChange
+  ) {
     XPIDatabase.recordAddonTelemetry(oldAddon);
 
     let installLocation = oldAddon.location;
@@ -2707,15 +3028,26 @@ this.XPIDatabaseReconcile = {
     //  c) The app has been updated since the last session, and the
     //     add-on is part of the application bundle (and has therefore
     //     likely been replaced in the update process).
-    if (newAddon ||
-        oldAddon.updateDate != xpiState.mtime ||
-        (aUpdateCompatibility && this.isAppBundledLocation(installLocation))) {
-      newAddon = this.updateMetadata(installLocation, oldAddon, xpiState, newAddon);
+    if (
+      newAddon ||
+      oldAddon.updateDate != xpiState.mtime ||
+      (aUpdateCompatibility && this.isAppBundledLocation(installLocation))
+    ) {
+      newAddon = this.updateMetadata(
+        installLocation,
+        oldAddon,
+        xpiState,
+        newAddon
+      );
     } else if (oldAddon.path != xpiState.path) {
       newAddon = this.updatePath(installLocation, oldAddon, xpiState);
     } else if (aUpdateCompatibility || aSchemaChange) {
-      newAddon = this.updateCompatibility(installLocation, oldAddon, xpiState,
-                                          aSchemaChange);
+      newAddon = this.updateCompatibility(
+        installLocation,
+        oldAddon,
+        xpiState,
+        aSchemaChange
+      );
     } else {
       newAddon = oldAddon;
     }
@@ -2751,11 +3083,15 @@ this.XPIDatabaseReconcile = {
    *        A boolean indicating if a change requiring flushing the caches was
    *        detected
    */
-  processFileChanges(aManifests, aUpdateCompatibility, aOldAppVersion, aOldPlatformVersion,
-                     aSchemaChange) {
+  processFileChanges(
+    aManifests,
+    aUpdateCompatibility,
+    aOldAppVersion,
+    aOldPlatformVersion,
+    aSchemaChange
+  ) {
     let findManifest = (loc, id) => {
-      return (aManifests[loc.name] &&
-              aManifests[loc.name][id]) || null;
+      return (aManifests[loc.name] && aManifests[loc.name][id]) || null;
     };
 
     let addonExists = addon => addon._sourceBundle.exists();
@@ -2786,9 +3122,13 @@ this.XPIDatabaseReconcile = {
         // Check if the add-on is still installed
         let xpiState = location.get(id);
         if (xpiState && !xpiState.missing) {
-          let newAddon = this.updateExistingAddon(oldAddon, xpiState,
-                                                  findManifest(location, id),
-                                                  aUpdateCompatibility, aSchemaChange);
+          let newAddon = this.updateExistingAddon(
+            oldAddon,
+            xpiState,
+            findManifest(location, id),
+            aUpdateCompatibility,
+            aSchemaChange
+          );
           if (newAddon) {
             locationAddons.set(newAddon.id, newAddon);
 
@@ -2803,11 +3143,18 @@ this.XPIDatabaseReconcile = {
       }
 
       for (let [id, xpiState] of location) {
-        if (locationAddons.has(id) || xpiState.missing)
+        if (locationAddons.has(id) || xpiState.missing) {
           continue;
+        }
         let newAddon = findManifest(location, id);
-        let addon = this.addMetadata(location, id, xpiState, newAddon,
-                                     aOldAppVersion, aOldPlatformVersion);
+        let addon = this.addMetadata(
+          location,
+          id,
+          xpiState,
+          newAddon,
+          aOldAppVersion,
+          aOldPlatformVersion
+        );
         if (addon) {
           locationAddons.set(addon.id, addon);
           addonStates.set(addon, xpiState);
@@ -2830,7 +3177,9 @@ this.XPIDatabaseReconcile = {
 
       if (!systemAddonLocation.installer.isValid(addons)) {
         // Hide the system add-on updates if any are invalid.
-        logger.info("One or more updated system add-ons invalid, falling back to defaults.");
+        logger.info(
+          "One or more updated system add-ons invalid, falling back to defaults."
+        );
         hideLocation = systemAddonLocation.name;
       }
     }
@@ -2850,10 +3199,12 @@ this.XPIDatabaseReconcile = {
     for (let [id, addon] of currentVisible) {
       // If we have a stored manifest for the add-on, it came from the
       // startup data cache, and supersedes any previous XPIStates entry.
-      let xpiState = (!findManifest(addon.location, id) &&
-                      addonStates.get(addon));
+      let xpiState =
+        !findManifest(addon.location, id) && addonStates.get(addon);
 
-      promises.push(this.applyStartupChange(addon, previousVisible.get(id), xpiState));
+      promises.push(
+        this.applyStartupChange(addon, previousVisible.get(id), xpiState)
+      );
       previousVisible.delete(id);
     }
 
@@ -2874,7 +3225,10 @@ this.XPIDatabaseReconcile = {
         addon.active = false;
       }
 
-      AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_UNINSTALLED, id);
+      AddonManagerPrivate.addStartupChange(
+        AddonManager.STARTUP_CHANGE_UNINSTALLED,
+        id
+      );
     }
 
     // Finally update XPIStates to match everything
@@ -2899,13 +3253,20 @@ this.XPIDatabaseReconcile = {
           // to complete.
           await Promise.resolve();
 
-          let addons = await AddonManager.getAddonsByIDs(addonsToCheckAgainstBlocklist);
-          await Promise.all(addons.map(addon => {
-            return addon && addon.updateBlocklistState({updateDatabase: false});
-          }));
+          let addons = await AddonManager.getAddonsByIDs(
+            addonsToCheckAgainstBlocklist
+          );
+          await Promise.all(
+            addons.map(addon => {
+              return (
+                addon && addon.updateBlocklistState({ updateDatabase: false })
+              );
+            })
+          );
 
           XPIDatabase.saveChanges();
-        })());
+        })()
+      );
     }
 
     return true;
@@ -2926,54 +3287,74 @@ this.XPIDatabaseReconcile = {
    */
   applyStartupChange(currentAddon, previousAddon, xpiState) {
     let promise;
-    let {id} = currentAddon;
+    let { id } = currentAddon;
 
     let isActive = !currentAddon.disabled;
     let wasActive = previousAddon ? previousAddon.active : currentAddon.active;
 
     if (previousAddon) {
       if (previousAddon !== currentAddon) {
-        AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_CHANGED, id);
+        AddonManagerPrivate.addStartupChange(
+          AddonManager.STARTUP_CHANGE_CHANGED,
+          id
+        );
 
-        if (previousAddon.location &&
-            (!previousAddon._sourceBundle ||
-             (previousAddon._sourceBundle.exists() &&
-              !previousAddon._sourceBundle.equals(currentAddon._sourceBundle)))) {
+        if (
+          previousAddon.location &&
+          (!previousAddon._sourceBundle ||
+            (previousAddon._sourceBundle.exists() &&
+              !previousAddon._sourceBundle.equals(currentAddon._sourceBundle)))
+        ) {
           promise = XPIInternal.BootstrapScope.get(previousAddon).update(
-            currentAddon);
-        } else if (this.isSystemAddonLocation(currentAddon.location) &&
-                   previousAddon.version == currentAddon.version &&
-                   previousAddon.userDisabled != currentAddon.userDisabled) {
+            currentAddon
+          );
+        } else if (
+          this.isSystemAddonLocation(currentAddon.location) &&
+          previousAddon.version == currentAddon.version &&
+          previousAddon.userDisabled != currentAddon.userDisabled
+        ) {
           // A system addon change, no need for install or update events.
         } else {
-          let reason = XPIInstall.newVersionReason(previousAddon.version, currentAddon.version);
-          XPIInternal.BootstrapScope.get(currentAddon).install(
-            reason, false, {oldVersion: previousAddon.version});
+          let reason = XPIInstall.newVersionReason(
+            previousAddon.version,
+            currentAddon.version
+          );
+          XPIInternal.BootstrapScope.get(currentAddon).install(reason, false, {
+            oldVersion: previousAddon.version,
+          });
         }
       }
 
       if (isActive != wasActive) {
-        let change = isActive ? AddonManager.STARTUP_CHANGE_ENABLED
-                              : AddonManager.STARTUP_CHANGE_DISABLED;
+        let change = isActive
+          ? AddonManager.STARTUP_CHANGE_ENABLED
+          : AddonManager.STARTUP_CHANGE_DISABLED;
         AddonManagerPrivate.addStartupChange(change, id);
       }
     } else if (xpiState && xpiState.wasRestored) {
       isActive = xpiState.enabled;
 
-      if (currentAddon.isWebExtension && currentAddon.type == "theme")
+      if (currentAddon.isWebExtension && currentAddon.type == "theme") {
         currentAddon.userDisabled = !isActive;
+      }
 
       // If the add-on wasn't active and it isn't already disabled in some way
       // then it was probably either softDisabled or userDisabled
       if (!isActive && !currentAddon.disabled) {
         // If the add-on is softblocked then assume it is softDisabled
-        if (currentAddon.blocklistState == Services.blocklist.STATE_SOFTBLOCKED)
+        if (
+          currentAddon.blocklistState == Services.blocklist.STATE_SOFTBLOCKED
+        ) {
           currentAddon.softDisabled = true;
-        else
+        } else {
           currentAddon.userDisabled = true;
+        }
       }
     } else {
-      AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_INSTALLED, id);
+      AddonManagerPrivate.addStartupChange(
+        AddonManager.STARTUP_CHANGE_INSTALLED,
+        id
+      );
       let scope = XPIInternal.BootstrapScope.get(currentAddon);
       scope.install();
     }

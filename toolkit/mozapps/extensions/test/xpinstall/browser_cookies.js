@@ -10,11 +10,17 @@ function test() {
   var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-  var triggers = encodeURIComponent(JSON.stringify({
-    "Cookie check": TESTROOT + "cookieRedirect.sjs?" + TESTROOT + "amosigned.xpi",
-  }));
+  var triggers = encodeURIComponent(
+    JSON.stringify({
+      "Cookie check":
+        TESTROOT + "cookieRedirect.sjs?" + TESTROOT + "amosigned.xpi",
+    })
+  );
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    TESTROOT + "installtrigger.html?" + triggers
+  );
 }
 
 function download_failed(install) {

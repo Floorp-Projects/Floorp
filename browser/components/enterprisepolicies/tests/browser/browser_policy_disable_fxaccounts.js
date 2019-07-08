@@ -7,8 +7,8 @@ add_task(async function test_policy_disable_fxaccounts() {
   is(gSync.SYNC_ENABLED, true, "Sync is enabled before setting the policy.");
 
   await setupPolicyEngineWithJson({
-    "policies": {
-      "DisableFirefoxAccounts": true,
+    policies: {
+      DisableFirefoxAccounts: true,
     },
   });
 

@@ -15,13 +15,20 @@ add_task(async function testBackgroundWindowProperties() {
       for (let k in window) {
         try {
           if (k in expectedValues) {
-            browser.test.assertEq(expectedValues[k], window[k],
-                                  `should return the expected value for window property: ${k}`);
+            browser.test.assertEq(
+              expectedValues[k],
+              window[k],
+              `should return the expected value for window property: ${k}`
+            );
           } else {
             void window[k];
           }
         } catch (e) {
-          browser.test.assertEq(null, e, `unexpected exception accessing window property: ${k}`);
+          browser.test.assertEq(
+            null,
+            e,
+            `unexpected exception accessing window property: ${k}`
+          );
         }
       }
 

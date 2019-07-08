@@ -4,12 +4,15 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "ContentBlockingAllowList" ];
+var EXPORTED_SYMBOLS = ["ContentBlockingAllowList"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 /**
  * A helper module to manage the Content Blocking Allow List.
@@ -24,7 +27,10 @@ const ContentBlockingAllowList = {
   _maybeSetupLastPBContextObserver() {
     if (!this._observingLastPBContext) {
       this._observer = {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+        QueryInterface: ChromeUtils.generateQI([
+          Ci.nsIObserver,
+          Ci.nsISupportsWeakReference,
+        ]),
 
         observe(subject, topic, data) {
           if (topic == "last-pb-context-exited") {
@@ -56,20 +62,22 @@ const ContentBlockingAllowList = {
       return null;
     }
     let attrs = browser.contentPrincipal.originAttributes;
-    return Services.scriptSecurityManager
-                   .createCodebasePrincipal(baseURI, attrs);
+    return Services.scriptSecurityManager.createCodebasePrincipal(
+      baseURI,
+      attrs
+    );
   },
 
   _permissionTypeFor(browser) {
-    return PrivateBrowsingUtils.isBrowserPrivate(browser) ?
-             "trackingprotection-pb" :
-             "trackingprotection";
+    return PrivateBrowsingUtils.isBrowserPrivate(browser)
+      ? "trackingprotection-pb"
+      : "trackingprotection";
   },
 
   _expiryFor(browser) {
-    return PrivateBrowsingUtils.isBrowserPrivate(browser) ?
-             Ci.nsIPermissionManager.EXPIRE_SESSION :
-             Ci.nsIPermissionManager.EXPIRE_NEVER;
+    return PrivateBrowsingUtils.isBrowserPrivate(browser)
+      ? Ci.nsIPermissionManager.EXPIRE_SESSION
+      : Ci.nsIPermissionManager.EXPIRE_NEVER;
   },
 
   /**
@@ -91,9 +99,12 @@ const ContentBlockingAllowList = {
     let prin = this._basePrincipalForAntiTrackingCommon(browser);
     let type = this._permissionTypeFor(browser);
     let expire = this._expiryFor(browser);
-    Services.perms.addFromPrincipal(prin, type,
-                                    Services.perms.ALLOW_ACTION,
-                                    expire);
+    Services.perms.addFromPrincipal(
+      prin,
+      type,
+      Services.perms.ALLOW_ACTION,
+      expire
+    );
   },
 
   /**
@@ -112,8 +123,9 @@ const ContentBlockingAllowList = {
   includes(browser) {
     let prin = this._basePrincipalForAntiTrackingCommon(browser);
     let type = this._permissionTypeFor(browser);
-    return Services.perms.testExactPermissionFromPrincipal(prin, type) ==
-      Services.perms.ALLOW_ACTION;
+    return (
+      Services.perms.testExactPermissionFromPrincipal(prin, type) ==
+      Services.perms.ALLOW_ACTION
+    );
   },
 };
-

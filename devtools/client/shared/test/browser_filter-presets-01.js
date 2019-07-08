@@ -5,13 +5,17 @@
 
 // Tests saving presets
 
-const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
-const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
+const {
+  CSSFilterEditorWidget,
+} = require("devtools/client/shared/widgets/FilterWidget");
+const {
+  getClientCssProperties,
+} = require("devtools/shared/fronts/css-properties");
 
 const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 
 add_task(async function() {
-  const [,, doc] = await createHost("bottom", TEST_URI);
+  const [, , doc] = await createHost("bottom", TEST_URI);
   const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const container = doc.querySelector("#filter-container");
@@ -25,19 +29,27 @@ add_task(async function() {
   await showFilterPopupPresetsAndCreatePreset(widget, NAME, VALUE);
 
   const preset = widget.el.querySelector(".preset");
-  is(preset.querySelector("label").textContent, NAME,
-     "Should show preset name correctly");
-  is(preset.querySelector("span").textContent, VALUE,
-     "Should show preset value preview correctly");
+  is(
+    preset.querySelector("label").textContent,
+    NAME,
+    "Should show preset name correctly"
+  );
+  is(
+    preset.querySelector("span").textContent,
+    VALUE,
+    "Should show preset value preview correctly"
+  );
 
   let list = await widget.getPresets();
   const input = widget.el.querySelector(".presets-list .footer input");
   let data = list[0];
 
-  is(data.name, NAME,
-     "Should add the preset to asyncStorage - name property");
-  is(data.value, VALUE,
-     "Should add the preset to asyncStorage - name property");
+  is(data.name, NAME, "Should add the preset to asyncStorage - name property");
+  is(
+    data.value,
+    VALUE,
+    "Should add the preset to asyncStorage - name property"
+  );
 
   info("Test overriding preset by using the same name");
 
@@ -47,19 +59,31 @@ add_task(async function() {
 
   await savePreset(widget);
 
-  is(widget.el.querySelectorAll(".preset").length, 1,
-     "Should override the preset with the same name - render");
+  is(
+    widget.el.querySelectorAll(".preset").length,
+    1,
+    "Should override the preset with the same name - render"
+  );
 
   list = await widget.getPresets();
   data = list[0];
 
-  is(list.length, 1,
-     "Should override the preset with the same name - asyncStorage");
+  is(
+    list.length,
+    1,
+    "Should override the preset with the same name - asyncStorage"
+  );
 
-  is(data.name, NAME,
-     "Should override the preset with the same name - prop name");
-  is(data.value, VALUE_2,
-     "Should override the preset with the same name - prop value");
+  is(
+    data.name,
+    NAME,
+    "Should override the preset with the same name - prop name"
+  );
+  is(
+    data.value,
+    VALUE_2,
+    "Should override the preset with the same name - prop value"
+  );
 
   await widget.setPresets([]);
 
@@ -69,8 +93,7 @@ add_task(async function() {
   await savePreset(widget, "preset-save-error");
 
   list = await widget.getPresets();
-  is(list.length, 0,
-     "Should not add a preset without name");
+  is(list.length, 0, "Should not add a preset without name");
 
   info("Test saving a preset without filters");
 
@@ -80,8 +103,7 @@ add_task(async function() {
   await savePreset(widget, "preset-save-error");
 
   list = await widget.getPresets();
-  is(list.length, 0,
-     "Should not add a preset without filters (value: none)");
+  is(list.length, 0, "Should not add a preset without filters (value: none)");
 });
 
 /**

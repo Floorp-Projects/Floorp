@@ -4,16 +4,31 @@
 
 /* globals ExtensionAPI, XPCOMUtils */
 
-ChromeUtils.defineModuleGetter(this, "EveryWindow",
-                               "resource:///modules/EveryWindow.jsm");
-ChromeUtils.defineModuleGetter(this, "PluralForm",
-                               "resource://gre/modules/PluralForm.jsm");
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
-ChromeUtils.defineModuleGetter(this, "RemoteSettings",
-                               "resource://services-settings/remote-settings.js");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "EveryWindow",
+  "resource:///modules/EveryWindow.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PluralForm",
+  "resource://gre/modules/PluralForm.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Preferences",
+  "resource://gre/modules/Preferences.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "RemoteSettings",
+  "resource://services-settings/remote-settings.js"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -124,7 +139,10 @@ this.FirefoxMonitor = {
     this.extension = aExtension;
 
     XPCOMUtils.defineLazyPreferenceGetter(
-      this, "enabled", this.kEnabledPref, true,
+      this,
+      "enabled",
+      this.kEnabledPref,
+      true,
       (pref, oldVal, newVal) => {
         if (newVal) {
           this.startObserving();
@@ -149,9 +167,12 @@ this.FirefoxMonitor = {
 
     this._delayedInited = true;
 
-    XPCOMUtils.defineLazyServiceGetter(this, "_contentPrefService",
+    XPCOMUtils.defineLazyServiceGetter(
+      this,
+      "_contentPrefService",
       "@mozilla.org/content-pref/service;1",
-      "nsIContentPrefService2");
+      "nsIContentPrefService2"
+    );
 
     this.migrateWarnedHostsIfNeeded();
 
@@ -162,7 +183,7 @@ this.FirefoxMonitor = {
     let expired = today.getTime() > telemetryExpiryDate.getTime();
 
     Services.telemetry.registerEvents("fxmonitor", {
-      "interaction": {
+      interaction: {
         methods: ["interaction"],
         objects: [
           "doorhanger_shown",
@@ -179,11 +200,19 @@ this.FirefoxMonitor = {
     let telemetryEnabled = !Preferences.get(this.kTelemetryDisabledPref);
     Services.telemetry.setEventRecordingEnabled("fxmonitor", telemetryEnabled);
 
-    XPCOMUtils.defineLazyPreferenceGetter(this, "FirefoxMonitorURL",
-      this.kFirefoxMonitorURLPref, this.kDefaultFirefoxMonitorURL);
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "FirefoxMonitorURL",
+      this.kFirefoxMonitorURLPref,
+      this.kDefaultFirefoxMonitorURL
+    );
 
-    XPCOMUtils.defineLazyPreferenceGetter(this, "firstAlertShown",
-      this.kFirstAlertShownPref, false);
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "firstAlertShown",
+      this.kFirstAlertShownPref,
+      false
+    );
 
     await this.loadStrings();
     await this.loadBreaches();
@@ -192,8 +221,9 @@ this.FirefoxMonitor = {
   loadStrings() {
     let l10nManifest;
     if (this.extension.rootURI instanceof Ci.nsIJARURI) {
-      l10nManifest = this.extension.rootURI.JARFile
-                            .QueryInterface(Ci.nsIFileURL).file;
+      l10nManifest = this.extension.rootURI.JARFile.QueryInterface(
+        Ci.nsIFileURL
+      ).file;
     } else if (this.extension.rootURI instanceof Ci.nsIFileURL) {
       l10nManifest = this.extension.rootURI.file;
     }
@@ -203,22 +233,35 @@ this.FirefoxMonitor = {
         Components.manager.addBootstrappedManifestLocation(l10nManifest);
 
         return Services.strings.createBundle(
-          "chrome://fxmonitor/locale/fxmonitor.properties");
+          "chrome://fxmonitor/locale/fxmonitor.properties"
+        );
       });
     } else {
       // Something is very strange if we reach this line, so we throw
       // in order to prevent init from completing and burst the stack.
-      throw new Error("Cannot find fxmonitor chrome.manifest for registering translated strings");
+      throw new Error(
+        "Cannot find fxmonitor chrome.manifest for registering translated strings"
+      );
     }
   },
 
   kRemoteSettingsKey: "fxmonitor-breaches",
   async loadBreaches() {
-    let populateSites = (data) => {
+    let populateSites = data => {
       this.domainMap.clear();
       data.forEach(site => {
-        if (!site.Domain || !site.Name || !site.PwnCount || !site.BreachDate || !site.AddedDate) {
-          Cu.reportError(`Firefox Monitor: malformed breach entry.\nSite:\n${JSON.stringify(site)}`);
+        if (
+          !site.Domain ||
+          !site.Name ||
+          !site.PwnCount ||
+          !site.BreachDate ||
+          !site.AddedDate
+        ) {
+          Cu.reportError(
+            `Firefox Monitor: malformed breach entry.\nSite:\n${JSON.stringify(
+              site
+            )}`
+          );
           return;
         }
 
@@ -226,17 +269,23 @@ this.FirefoxMonitor = {
           this.domainMap.set(site.Domain, {
             Name: site.Name,
             PwnCount: site.PwnCount,
-            Year: (new Date(site.BreachDate)).getFullYear(),
+            Year: new Date(site.BreachDate).getFullYear(),
             AddedDate: site.AddedDate.split("T")[0],
           });
         } catch (e) {
-          Cu.reportError(`Firefox Monitor: malformed breach entry.\nSite:\n${JSON.stringify(site)}\nError:\n${e}`);
+          Cu.reportError(
+            `Firefox Monitor: malformed breach entry.\nSite:\n${JSON.stringify(
+              site
+            )}\nError:\n${e}`
+          );
         }
       });
     };
 
-    RemoteSettings(this.kRemoteSettingsKey).on("sync", (event) => {
-      let { data: { current } } = event;
+    RemoteSettings(this.kRemoteSettingsKey).on("sync", event => {
+      let {
+        data: { current },
+      } = event;
       populateSites(current);
     });
 
@@ -248,9 +297,12 @@ this.FirefoxMonitor = {
 
   // nsIWebProgressListener implementation.
   onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
-    if (!(aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) ||
-        (!aWebProgress.isTopLevel || aWebProgress.isLoadingDocument ||
-         !Components.isSuccessCode(aStatus))) {
+    if (
+      !(aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) ||
+      (!aWebProgress.isTopLevel ||
+        aWebProgress.isLoadingDocument ||
+        !Components.isSuccessCode(aStatus))
+    ) {
       return;
     }
 
@@ -276,7 +328,7 @@ this.FirefoxMonitor = {
 
     EveryWindow.registerCallback(
       this.kNotificationID,
-      (win) => {
+      win => {
         if (this.notificationsByWindow.has(win)) {
           // We've already set up this window.
           return;
@@ -298,8 +350,10 @@ this.FirefoxMonitor = {
         }
 
         let DOMWindowUtils = win.windowUtils;
-        DOMWindowUtils.removeSheetUsingURIString(this.getURL("privileged/FirefoxMonitor.css"),
-                                                 DOMWindowUtils.AUTHOR_SHEET);
+        DOMWindowUtils.removeSheetUsingURIString(
+          this.getURL("privileged/FirefoxMonitor.css"),
+          DOMWindowUtils.AUTHOR_SHEET
+        );
 
         if (this.notificationsByWindow.has(win)) {
           this.notificationsByWindow.get(win).forEach(n => {
@@ -310,13 +364,15 @@ this.FirefoxMonitor = {
 
         if (this.panelUIsByWindow.has(win)) {
           let doc = win.document;
-          doc.getElementById(`${this.kNotificationID}-notification-anchor`).remove();
+          doc
+            .getElementById(`${this.kNotificationID}-notification-anchor`)
+            .remove();
           doc.getElementById(`${this.kNotificationID}-notification`).remove();
           this.panelUIsByWindow.delete(win);
         }
 
         win.gBrowser.removeTabsProgressListener(this);
-      },
+      }
     );
 
     this.observerAdded = true;
@@ -325,8 +381,10 @@ this.FirefoxMonitor = {
   setupPanelUI(win) {
     // Inject our stylesheet.
     let DOMWindowUtils = win.windowUtils;
-    DOMWindowUtils.loadSheetUsingURIString(this.getURL("privileged/FirefoxMonitor.css"),
-                                           DOMWindowUtils.AUTHOR_SHEET);
+    DOMWindowUtils.loadSheetUsingURIString(
+      this.getURL("privileged/FirefoxMonitor.css"),
+      DOMWindowUtils.AUTHOR_SHEET
+    );
 
     // Setup the popup notification stuff. First, the URL bar icon:
     let doc = win.document;
@@ -344,9 +402,12 @@ this.FirefoxMonitor = {
     img.style.listStyleImage = `url(${this.getURL("assets/monitor32.svg")})`;
     anchorBox.appendChild(img);
     notificationBox.appendChild(anchorBox);
-    img.setAttribute("tooltiptext",
-      this.getFormattedString("fxmonitor.anchorIcon.tooltiptext",
-                              [this.getString("fxmonitor.brandName")]));
+    img.setAttribute(
+      "tooltiptext",
+      this.getFormattedString("fxmonitor.anchorIcon.tooltiptext", [
+        this.getString("fxmonitor.brandName"),
+      ])
+    );
 
     // Now, the popupnotificationcontent:
     let parentElt = doc.defaultView.PopupNotifications.panel.parentNode;
@@ -380,8 +441,9 @@ this.FirefoxMonitor = {
         loadContext,
         {
           handleCompletion: () => resolve(false),
-          handleResult: (result) => resolve(result.value),
-        });
+          handleResult: result => resolve(result.value),
+        }
+      );
     });
   },
 
@@ -390,12 +452,16 @@ this.FirefoxMonitor = {
       host,
       "extensions.fxmonitor.hostAlreadyWarned",
       true,
-      loadContext);
+      loadContext
+    );
   },
 
   async warnIfNeeded(browser, host) {
-    if (!this.enabled || !this.domainMap.has(host) ||
-        await this.hostAlreadyWarned(browser.loadContext, host)) {
+    if (
+      !this.enabled ||
+      !this.domainMap.has(host) ||
+      (await this.hostAlreadyWarned(browser.loadContext, host))
+    ) {
       return;
     }
 
@@ -427,40 +493,58 @@ this.FirefoxMonitor = {
     }
 
     let animatedOnce = false;
-    let populatePanel = (event) => {
+    let populatePanel = event => {
       switch (event) {
         case "showing":
           panelUI.refresh(site);
           if (animatedOnce) {
             // If we've already animated once for this site, don't animate again.
-            doc.getElementById("notification-popup")
-               .setAttribute("fxmonitoranimationdone", "true");
-            doc.getElementById(`${this.kNotificationID}-notification-anchor`)
-               .setAttribute("fxmonitoranimationdone", "true");
+            doc
+              .getElementById("notification-popup")
+              .setAttribute("fxmonitoranimationdone", "true");
+            doc
+              .getElementById(`${this.kNotificationID}-notification-anchor`)
+              .setAttribute("fxmonitoranimationdone", "true");
             break;
           }
           // Make sure we animate if we're coming from another tab that has
           // this attribute set.
-          doc.getElementById("notification-popup")
-             .removeAttribute("fxmonitoranimationdone");
-          doc.getElementById(`${this.kNotificationID}-notification-anchor`)
-             .removeAttribute("fxmonitoranimationdone");
+          doc
+            .getElementById("notification-popup")
+            .removeAttribute("fxmonitoranimationdone");
+          doc
+            .getElementById(`${this.kNotificationID}-notification-anchor`)
+            .removeAttribute("fxmonitoranimationdone");
           break;
         case "shown":
           animatedOnce = true;
           break;
         case "removed":
-          this.notificationsByWindow.get(win).delete(
-            win.PopupNotifications.getNotification(this.kNotificationID, browser));
-          Services.telemetry.recordEvent("fxmonitor", "interaction", "doorhanger_removed");
+          this.notificationsByWindow
+            .get(win)
+            .delete(
+              win.PopupNotifications.getNotification(
+                this.kNotificationID,
+                browser
+              )
+            );
+          Services.telemetry.recordEvent(
+            "fxmonitor",
+            "interaction",
+            "doorhanger_removed"
+          );
           break;
       }
     };
 
     let n = win.PopupNotifications.show(
-      browser, this.kNotificationID, "",
+      browser,
+      this.kNotificationID,
+      "",
       `${this.kNotificationID}-notification-anchor`,
-      panelUI.primaryAction, panelUI.secondaryActions, {
+      panelUI.primaryAction,
+      panelUI.secondaryActions,
+      {
         persistent: true,
         hideClose: true,
         eventCallback: populatePanel,
@@ -468,7 +552,11 @@ this.FirefoxMonitor = {
       }
     );
 
-    Services.telemetry.recordEvent("fxmonitor", "interaction", "doorhanger_shown");
+    Services.telemetry.recordEvent(
+      "fxmonitor",
+      "interaction",
+      "doorhanger_shown"
+    );
 
     this.notificationsByWindow.get(win).add(n);
   },
@@ -505,50 +593,68 @@ PanelUI.prototype = {
     if (this._brandString) {
       return this._brandString;
     }
-    return this._brandString = this.getString("fxmonitor.brandName");
+    return (this._brandString = this.getString("fxmonitor.brandName"));
   },
 
-  getFirefoxMonitorURL: (aSiteName) => {
-    return `${FirefoxMonitor.FirefoxMonitorURL}/?breach=${encodeURIComponent(aSiteName)}&utm_source=firefox&utm_medium=popup`;
+  getFirefoxMonitorURL: aSiteName => {
+    return `${FirefoxMonitor.FirefoxMonitorURL}/?breach=${encodeURIComponent(
+      aSiteName
+    )}&utm_source=firefox&utm_medium=popup`;
   },
 
   get primaryAction() {
     if (this._primaryAction) {
       return this._primaryAction;
     }
-    return this._primaryAction = {
-      label: this.getFormattedString("fxmonitor.checkButton.label", [this.brandString]),
+    return (this._primaryAction = {
+      label: this.getFormattedString("fxmonitor.checkButton.label", [
+        this.brandString,
+      ]),
       accessKey: this.getString("fxmonitor.checkButton.accessKey"),
       callback: () => {
         let win = this.doc.defaultView;
         win.openTrustedLinkIn(
-          this.getFirefoxMonitorURL(this.site.Name), "tab", { });
+          this.getFirefoxMonitorURL(this.site.Name),
+          "tab",
+          {}
+        );
 
         Services.telemetry.recordEvent("fxmonitor", "interaction", "check_btn");
       },
-    };
+    });
   },
 
   get secondaryActions() {
     if (this._secondaryActions) {
       return this._secondaryActions;
     }
-    return this._secondaryActions = [
+    return (this._secondaryActions = [
       {
         label: this.getString("fxmonitor.dismissButton.label"),
         accessKey: this.getString("fxmonitor.dismissButton.accessKey"),
         callback: () => {
-          Services.telemetry.recordEvent("fxmonitor", "interaction", "dismiss_btn");
+          Services.telemetry.recordEvent(
+            "fxmonitor",
+            "interaction",
+            "dismiss_btn"
+          );
         },
-      }, {
-        label: this.getFormattedString("fxmonitor.neverShowButton.label", [this.brandString]),
+      },
+      {
+        label: this.getFormattedString("fxmonitor.neverShowButton.label", [
+          this.brandString,
+        ]),
         accessKey: this.getString("fxmonitor.neverShowButton.accessKey"),
         callback: () => {
           FirefoxMonitor.disable();
-          Services.telemetry.recordEvent("fxmonitor", "interaction", "never_show_btn");
+          Services.telemetry.recordEvent(
+            "fxmonitor",
+            "interaction",
+            "never_show_btn"
+          );
         },
       },
-    ];
+    ]);
   },
 
   refresh(site) {
@@ -575,11 +681,10 @@ PanelUI.prototype = {
       stringName = "fxmonitor.popupTextRounded";
     }
 
-    elt.textContent =
-      PluralForm.get(pwnCount, this.getString(stringName))
-                .replace("#1", pwnCount.toLocaleString())
-                .replace("#2", site.Name)
-                .replace("#3", site.Year)
-                .replace("#4", this.brandString);
+    elt.textContent = PluralForm.get(pwnCount, this.getString(stringName))
+      .replace("#1", pwnCount.toLocaleString())
+      .replace("#2", site.Name)
+      .replace("#3", site.Year)
+      .replace("#4", this.brandString);
   },
 };

@@ -4,7 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
@@ -25,63 +27,74 @@ function Prompt(aOptions) {
 
   if (this.window) {
     let window = GeckoViewUtils.getChromeWindow(this.window);
-    let tab = window &&
-              window.document.documentElement
-                    .getAttribute("windowtype") === "navigator:browser" &&
-              window.BrowserApp &&
-              window.BrowserApp.getTabForWindow(this.window);
+    let tab =
+      window &&
+      window.document.documentElement.getAttribute("windowtype") ===
+        "navigator:browser" &&
+      window.BrowserApp &&
+      window.BrowserApp.getTabForWindow(this.window);
     if (tab) {
       this.msg.tabId = tab.id;
     }
   }
 
-  if (aOptions.priority === 1)
+  if (aOptions.priority === 1) {
     this.msg.type = "Prompt:ShowTop";
-  else
+  } else {
     this.msg.type = "Prompt:Show";
+  }
 
-  if ("title" in aOptions && aOptions.title != null)
+  if ("title" in aOptions && aOptions.title != null) {
     this.msg.title = aOptions.title;
+  }
 
-  if ("message" in aOptions && aOptions.message != null)
+  if ("message" in aOptions && aOptions.message != null) {
     this.msg.text = aOptions.message;
+  }
 
-  if ("buttons" in aOptions && aOptions.buttons != null)
+  if ("buttons" in aOptions && aOptions.buttons != null) {
     this.msg.buttons = aOptions.buttons;
+  }
 
-  if ("doubleTapButton" in aOptions && aOptions.doubleTapButton != null)
+  if ("doubleTapButton" in aOptions && aOptions.doubleTapButton != null) {
     this.msg.doubleTapButton = aOptions.doubleTapButton;
+  }
 
-  if ("hint" in aOptions && aOptions.hint != null)
+  if ("hint" in aOptions && aOptions.hint != null) {
     this.msg.hint = aOptions.hint;
+  }
 }
 
 Prompt.prototype = {
   setHint: function(aHint) {
-    if (!aHint)
+    if (!aHint) {
       delete this.msg.hint;
-    else
+    } else {
       this.msg.hint = aHint;
+    }
     return this;
   },
 
   addButton: function(aOptions) {
-    if (!this.msg.buttons)
+    if (!this.msg.buttons) {
       this.msg.buttons = [];
+    }
     this.msg.buttons.push(aOptions.label);
     return this;
   },
 
   _addInput: function(aOptions) {
     let obj = aOptions;
-    if (this[aOptions.type + "_count"] === undefined)
+    if (this[aOptions.type + "_count"] === undefined) {
       this[aOptions.type + "_count"] = 0;
+    }
 
-    obj.id = aOptions.id || (aOptions.type + this[aOptions.type + "_count"]);
+    obj.id = aOptions.id || aOptions.type + this[aOptions.type + "_count"];
     this[aOptions.type + "_count"]++;
 
-    if (!this.msg.inputs)
+    if (!this.msg.inputs) {
       this.msg.inputs = [];
+    }
     this.msg.inputs.push(obj);
     return this;
   },
@@ -191,7 +204,7 @@ Prompt.prototype = {
       [dispatcher] = GeckoViewUtils.getActiveDispatcherAndWindow();
     }
 
-    dispatcher.sendRequestForResult(this.msg).then((data) => {
+    dispatcher.sendRequestForResult(this.msg).then(data => {
       if (this.callback) {
         this.callback(data);
       }
@@ -206,8 +219,9 @@ Prompt.prototype = {
 
       obj.label = item.label;
 
-      if (item.disabled)
+      if (item.disabled) {
         obj.disabled = true;
+      }
 
       if (item.selected) {
         if (!this.msg.choiceMode) {
@@ -216,20 +230,25 @@ Prompt.prototype = {
         obj.selected = item.selected;
       }
 
-      if (item.header)
+      if (item.header) {
         obj.isGroup = true;
+      }
 
-      if (item.menu)
+      if (item.menu) {
         obj.isParent = true;
+      }
 
-      if (item.child)
+      if (item.child) {
         obj.inGroup = true;
+      }
 
-      if (item.showAsActions)
+      if (item.showAsActions) {
         obj.showAsActions = item.showAsActions;
+      }
 
-      if (item.icon)
+      if (item.icon) {
         obj.icon = item.icon;
+      }
 
       this.msg.listitems.push(obj);
     }, this);
@@ -244,14 +263,13 @@ Prompt.prototype = {
     this.msg.choiceMode = "multiple";
     return this._setListItems(aItems);
   },
-
 };
 
 var DoorHanger = {
   _getTabId: function(aWindow, aBrowserApp) {
-      let tab = aBrowserApp.getTabForWindow(aWindow.top) ||
-                aBrowserApp.selectedTab;
-      return tab ? tab.id : -1;
+    let tab =
+      aBrowserApp.getTabForWindow(aWindow.top) || aBrowserApp.selectedTab;
+    return tab ? tab.id : -1;
   },
 
   show: function(aWindow, aMessage, aValue, aButtons, aOptions, aCategory) {
@@ -259,8 +277,13 @@ var DoorHanger = {
     if (chromeWin.NativeWindow && chromeWin.NativeWindow.doorhanger) {
       // We're dealing with browser.js.
       return chromeWin.NativeWindow.doorhanger.show(
-          aMessage, aValue, aButtons, this._getTabId(aWindow, chromeWin.BrowserApp),
-          aOptions, aCategory);
+        aMessage,
+        aValue,
+        aButtons,
+        this._getTabId(aWindow, chromeWin.BrowserApp),
+        aOptions,
+        aCategory
+      );
     }
 
     // We're dealing with GeckoView (e.g. custom tabs).
@@ -274,23 +297,25 @@ var DoorHanger = {
       return cb;
     });
 
-    EventDispatcher.for(chromeWin).sendRequestForResult({
-      type: "Doorhanger:Add",
-      message: aMessage,
-      value: aValue,
-      buttons: aButtons,
-      options: aOptions || {},
-      category: aCategory,
-      defaultCallback: (aOptions && aOptions.defaultCallback) ? -1 : undefined,
-    }).then(response => {
-      if (response.callback === -1) {
-        // Default case.
-        aOptions.defaultCallback(response.checked, response.inputs);
-        return;
-      }
-      // Pass the value of the optional checkbox to the callback
-      callbacks[response.callback](response.checked, response.inputs);
-    });
+    EventDispatcher.for(chromeWin)
+      .sendRequestForResult({
+        type: "Doorhanger:Add",
+        message: aMessage,
+        value: aValue,
+        buttons: aButtons,
+        options: aOptions || {},
+        category: aCategory,
+        defaultCallback: aOptions && aOptions.defaultCallback ? -1 : undefined,
+      })
+      .then(response => {
+        if (response.callback === -1) {
+          // Default case.
+          aOptions.defaultCallback(response.checked, response.inputs);
+          return;
+        }
+        // Pass the value of the optional checkbox to the callback
+        callbacks[response.callback](response.checked, response.inputs);
+      });
   },
 
   hide: function(aWindow, aValue) {
@@ -298,7 +323,9 @@ var DoorHanger = {
     if (chromeWin.NativeWindow && chromeWin.NativeWindow.doorhanger) {
       // We're dealing with browser.js.
       return chromeWin.NativeWindow.doorhanger.hide(
-          aValue, this._getTabId(aWindow, chromeWin.BrowserApp));
+        aValue,
+        this._getTabId(aWindow, chromeWin.BrowserApp)
+      );
     }
 
     EventDispatcher.for(chromeWin).sendRequest({

@@ -22,14 +22,19 @@ function runTest() {
 
     document.body.appendChild(e.detail.frameElement);
 
-    ok(/file_browserElement_Open2\.html$/.test(e.detail.url),
-       "Popup's URL (got " + e.detail.url + ")");
+    ok(
+      /file_browserElement_Open2\.html$/.test(e.detail.url),
+      "Popup's URL (got " + e.detail.url + ")"
+    );
     is(e.detail.name, "name");
     is(e.detail.features, "dialog=1");
   });
 
   iframe.addEventListener("mozbrowsershowmodalprompt", function(e) {
-    ok(gotPopup, "Got mozbrowseropenwindow event before showmodalprompt event.");
+    ok(
+      gotPopup,
+      "Got mozbrowseropenwindow event before showmodalprompt event."
+    );
     if (e.detail.message.indexOf("success:") == 0) {
       ok(true, e.detail.message);
     } else if (e.detail.message.indexOf("failure:") == 0) {

@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
 const {
   flexboxSpec,
   flexItemSpec,
@@ -132,8 +135,7 @@ class GridFront extends FrontClassWithSpec(gridSpec) {
   }
 }
 
-class LayoutFront extends FrontClassWithSpec(layoutSpec) {
-}
+class LayoutFront extends FrontClassWithSpec(layoutSpec) {}
 
 exports.FlexboxFront = FlexboxFront;
 registerFront(FlexboxFront);

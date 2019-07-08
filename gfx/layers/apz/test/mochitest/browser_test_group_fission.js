@@ -1,11 +1,14 @@
 add_task(async function test_main() {
   function httpURL(filename) {
     let chromeURL = getRootDirectory(gTestPath) + filename;
-    return chromeURL.replace("chrome://mochitests/content/", "http://mochi.test:8888/");
+    return chromeURL.replace(
+      "chrome://mochitests/content/",
+      "http://mochi.test:8888/"
+    );
   }
 
   var utils = SpecialPowers.getDOMWindowUtils(window);
-  var isWebRender = (utils.layerManagerType == "WebRender");
+  var isWebRender = utils.layerManagerType == "WebRender";
 
   // Each of these URLs will get opened in a new top-level browser window that
   // is fission-enabled.
@@ -21,12 +24,15 @@ add_task(async function test_main() {
     ]);
   }
 
-  let fissionWindow = await BrowserTestUtils.openNewBrowserWindow({fission: true});
+  let fissionWindow = await BrowserTestUtils.openNewBrowserWindow({
+    fission: true,
+  });
 
   // We import the JSM here so that we can install functions on the class
   // below.
-  const {FissionTestHelperParent} = ChromeUtils.import(
-    getRootDirectory(gTestPath) + "FissionTestHelperParent.jsm");
+  const { FissionTestHelperParent } = ChromeUtils.import(
+    getRootDirectory(gTestPath) + "FissionTestHelperParent.jsm"
+  );
   FissionTestHelperParent.SimpleTest = SimpleTest;
 
   ChromeUtils.registerWindowActor("FissionTestHelper", {
@@ -36,7 +42,7 @@ add_task(async function test_main() {
     child: {
       moduleURI: getRootDirectory(gTestPath) + "FissionTestHelperChild.jsm",
       events: {
-        "DOMWindowCreated": {},
+        DOMWindowCreated: {},
       },
     },
     allFrames: true,
@@ -49,13 +55,16 @@ add_task(async function test_main() {
       // Load the test URL and tell it to get started, and wait until it reports
       // completion.
       await BrowserTestUtils.withNewTab(
-        {gBrowser: fissionWindow.gBrowser, url},
-        async (browser) => {
-          let tabActor = browser.browsingContext.currentWindowGlobal.getActor("FissionTestHelper");
+        { gBrowser: fissionWindow.gBrowser, url },
+        async browser => {
+          let tabActor = browser.browsingContext.currentWindowGlobal.getActor(
+            "FissionTestHelper"
+          );
           let donePromise = tabActor.getTestCompletePromise();
           tabActor.startTest();
           await donePromise;
-        });
+        }
+      );
 
       dump(`Finished test ${url}\n`);
     }

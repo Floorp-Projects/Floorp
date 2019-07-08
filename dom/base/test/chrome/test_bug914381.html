@@ -34,7 +34,7 @@ function createFileWithData(fileData) {
 /** Test for Bug 914381. File's created in JS using an nsIFile should allow mozGetFullPathInternal calls to succeed **/
 var file = createFileWithData("Test bug 914381");
 
-SpecialPowers.pushPrefEnv({ set: [ "dom.file.createInChild" ]})
+SpecialPowers.pushPrefEnv({ set: [["dom.file.createInChild", true]]})
 .then(() => {
   return File.createFromNsIFile(file);
 })

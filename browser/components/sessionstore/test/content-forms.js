@@ -43,7 +43,7 @@ function dispatchUIEvent(input, type) {
 }
 
 function defineListener(type, cb) {
-  addMessageListener("ss-test:" + type, function({data}) {
+  addMessageListener("ss-test:" + type, function({ data }) {
     sendAsyncMessage("ss-test:" + type, cb(data));
   });
 }
@@ -88,13 +88,17 @@ defineListener("setSelectedIndex", function(data) {
 
 defineListener("getMultipleSelected", function(data) {
   let input = queryElement(data);
-  return Array.from(input.options, (opt, idx) => idx)
-              .filter(idx => input.options[idx].selected);
+  return Array.from(input.options, (opt, idx) => idx).filter(
+    idx => input.options[idx].selected
+  );
 });
 
 defineListener("setMultipleSelected", function(data) {
   let input = queryElement(data);
-  Array.prototype.forEach.call(input.options, (opt, idx) => opt.selected = data.indices.indexOf(idx) > -1);
+  Array.prototype.forEach.call(
+    input.options,
+    (opt, idx) => (opt.selected = data.indices.indexOf(idx) > -1)
+  );
   dispatchUIEvent(input, "input");
 });
 

@@ -33,45 +33,56 @@ function listener(callback) {
 /* eslint-env mozilla/frame-script */
 function chromeTouchEventCounter(operation) {
   function chromeProcessCounter() {
-    addMessageListener("start", function() {
-      const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-      var topWin = Services.wm.getMostRecentWindow("navigator:browser");
-      if (typeof topWin.eventCounts != "undefined") {
-        dump("Found pre-existing eventCounts object on the top window!\n");
-        return false;
-      }
-      topWin.eventCounts = { "touchstart": 0, "touchmove": 0, "touchend": 0 };
-      topWin.counter = function(e) {
-        topWin.eventCounts[e.type]++;
-      };
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-      topWin.addEventListener("touchstart", topWin.counter, { passive: true });
-      topWin.addEventListener("touchmove", topWin.counter, { passive: true });
-      topWin.addEventListener("touchend", topWin.counter, { passive: true });
+    const PREFIX = "apz:ctec:";
 
-      return true;
-    });
+    const LISTENERS = {
+      "start": function() {
+        var topWin = Services.wm.getMostRecentWindow("navigator:browser");
+        if (typeof topWin.eventCounts != "undefined") {
+          dump("Found pre-existing eventCounts object on the top window!\n");
+          return false;
+        }
+        topWin.eventCounts = { "touchstart": 0, "touchmove": 0, "touchend": 0 };
+        topWin.counter = function(e) {
+          topWin.eventCounts[e.type]++;
+        };
 
-    addMessageListener("report", function() {
-      const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-      var topWin = Services.wm.getMostRecentWindow("navigator:browser");
-      return JSON.stringify(topWin.eventCounts);
-    });
+        topWin.addEventListener("touchstart", topWin.counter, { passive: true });
+        topWin.addEventListener("touchmove", topWin.counter, { passive: true });
+        topWin.addEventListener("touchend", topWin.counter, { passive: true });
 
-    addMessageListener("end", function() {
-      const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-      var topWin = Services.wm.getMostRecentWindow("navigator:browser");
-      if (typeof topWin.eventCounts == "undefined") {
-        dump("The eventCounts object was not found on the top window!\n");
-        return false;
-      }
-      topWin.removeEventListener("touchstart", topWin.counter);
-      topWin.removeEventListener("touchmove", topWin.counter);
-      topWin.removeEventListener("touchend", topWin.counter);
-      delete topWin.counter;
-      delete topWin.eventCounts;
-      return true;
-    });
+        return true;
+      },
+
+      "report": function() {
+        var topWin = Services.wm.getMostRecentWindow("navigator:browser");
+        return JSON.stringify(topWin.eventCounts);
+      },
+
+      "end": function() {
+        for (let [msg, func] of Object.entries(LISTENERS)) {
+          Services.ppmm.removeMessageListener(PREFIX + msg, func);
+        }
+
+        var topWin = Services.wm.getMostRecentWindow("navigator:browser");
+        if (typeof topWin.eventCounts == "undefined") {
+          dump("The eventCounts object was not found on the top window!\n");
+          return false;
+        }
+        topWin.removeEventListener("touchstart", topWin.counter);
+        topWin.removeEventListener("touchmove", topWin.counter);
+        topWin.removeEventListener("touchend", topWin.counter);
+        delete topWin.counter;
+        delete topWin.eventCounts;
+        return true;
+      },
+    };
+
+    for (let [msg, func] of Object.entries(LISTENERS)) {
+      Services.ppmm.addMessageListener(PREFIX + msg, func);
+    }
   }
 
   if (typeof chromeTouchEventCounter.chromeHelper == "undefined") {
@@ -80,7 +91,7 @@ function chromeTouchEventCounter(operation) {
     ApzCleanup.register(function() { chromeTouchEventCounter.chromeHelper.destroy(); });
   }
 
-  return chromeTouchEventCounter.chromeHelper.sendSyncMessage(operation, "");
+  return SpecialPowers.Services.cpmm.sendSyncMessage(`apz:ctec:${operation}`, "")[0];
 }
 
 // Simple wrapper that waits until the chrome process has seen |count| instances

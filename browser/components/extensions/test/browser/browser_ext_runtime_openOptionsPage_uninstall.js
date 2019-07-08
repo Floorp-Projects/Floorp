@@ -6,9 +6,12 @@ async function loadExtension(options) {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
 
-    manifest: Object.assign({
-      "permissions": ["tabs"],
-    }, options.manifest),
+    manifest: Object.assign(
+      {
+        permissions: ["tabs"],
+      },
+      options.manifest
+    ),
 
     files: {
       "options.html": `<!DOCTYPE html>
@@ -38,23 +41,31 @@ async function loadExtension(options) {
 }
 
 add_task(async function test_inline_options_uninstall() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.com/"
+  );
 
   let extension = await loadExtension({
     manifest: {
-      applications: {gecko: {id: "inline_options_uninstall@tests.mozilla.org"}},
-      "options_ui": {
-        "page": "options.html",
+      applications: {
+        gecko: { id: "inline_options_uninstall@tests.mozilla.org" },
+      },
+      options_ui: {
+        page: "options.html",
       },
     },
 
     background: async function() {
       let _optionsPromise;
       let awaitOptions = () => {
-        browser.test.assertFalse(_optionsPromise, "Should not be awaiting options already");
+        browser.test.assertFalse(
+          _optionsPromise,
+          "Should not be awaiting options already"
+        );
 
         return new Promise(resolve => {
-          _optionsPromise = {resolve};
+          _optionsPromise = { resolve };
         });
       };
 
@@ -70,7 +81,10 @@ add_task(async function test_inline_options_uninstall() {
       });
 
       try {
-        let [firstTab] = await browser.tabs.query({currentWindow: true, active: true});
+        let [firstTab] = await browser.tabs.query({
+          currentWindow: true,
+          active: true,
+        });
 
         browser.test.log("Open options page. Expect fresh load.");
         let [, tab] = await Promise.all([
@@ -78,7 +92,11 @@ add_task(async function test_inline_options_uninstall() {
           awaitOptions(),
         ]);
 
-        browser.test.assertEq("about:addons", tab.url, "Tab contains AddonManager");
+        browser.test.assertEq(
+          "about:addons",
+          tab.url,
+          "Tab contains AddonManager"
+        );
         browser.test.assertTrue(tab.active, "Tab is active");
         browser.test.assertTrue(tab.id != firstTab.id, "Tab is a new tab");
 
@@ -92,8 +110,11 @@ add_task(async function test_inline_options_uninstall() {
   await extension.awaitMessage("options-ui-open");
   await extension.unload();
 
-  is(gBrowser.selectedBrowser.currentURI.spec, "about:addons",
-     "Add-on manager tab should still be open");
+  is(
+    gBrowser.selectedBrowser.currentURI.spec,
+    "about:addons",
+    "Add-on manager tab should still be open"
+  );
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 

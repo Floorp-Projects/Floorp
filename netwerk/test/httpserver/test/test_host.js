@@ -24,8 +24,10 @@ add_task(async function run_test1() {
 
   srv.registerPathHandler("/http/1.0-request", http10Request);
   srv.registerPathHandler("/http/1.1-good-host", http11goodHost);
-  srv.registerPathHandler("/http/1.1-good-host-wacky-port",
-                          http11goodHostWackyPort);
+  srv.registerPathHandler(
+    "/http/1.1-good-host-wacky-port",
+    http11goodHostWackyPort
+  );
   srv.registerPathHandler("/http/1.1-ip-host", http11ipHost);
 
   srv.start(FAKE_PORT_ONE);
@@ -180,12 +182,13 @@ add_task(async function run_test_3() {
 
   // Okay, finally done with identity testing.  Our primary location is the one
   // we want it to be, so we're off!
-  await new Promise(resolve => runRawTests(tests, resolve, (idx) => dump(`running test no ${idx}`)));
+  await new Promise(resolve =>
+    runRawTests(tests, resolve, idx => dump(`running test no ${idx}`))
+  );
 
   // Finally shut down the server.
   await new Promise(resolve => srv.stop(resolve));
 });
-
 
 /** *******************
  * UTILITY FUNCTIONS *
@@ -235,7 +238,6 @@ function check400(aData) {
   Assert.equal(firstLine.substring(0, HTTP_400_LEADER_LENGTH), HTTP_400_LEADER);
 }
 
-
 /** *************
  * BEGIN TESTS *
  ***************/
@@ -252,8 +254,7 @@ function http10Request(request, response) {
   writeDetails(request, response);
   response.setStatusLine("1.0", 200, "TEST PASSED");
 }
-data = "GET /http/1.0-request HTTP/1.0\r\n" +
-       "\r\n";
+data = "GET /http/1.0-request HTTP/1.0\r\n\r\n";
 function check10(aData) {
   let iter = LineIterator(aData);
 
@@ -263,84 +264,78 @@ function check10(aData) {
   skipHeaders(iter);
 
   // Okay, next line must be the data we expected to be written
-  let body =
-    [
-     "Method:  GET",
-     "Path:    /http/1.0-request",
-     "Query:   ",
-     "Version: 1.0",
-     "Scheme:  http",
-     "Host:    localhost",
-     "Port:    4444",
-    ];
+  let body = [
+    "Method:  GET",
+    "Path:    /http/1.0-request",
+    "Query:   ",
+    "Version: 1.0",
+    "Scheme:  http",
+    "Host:    localhost",
+    "Port:    4444",
+  ];
 
   expectLines(iter, body);
 }
 test = new RawTest("localhost", PORT, data, check10);
 tests.push(test);
 
-
 // HTTP/1.1 request, no Host header, expect a 400 response
 
-data = "GET /http/1.1-request HTTP/1.1\r\n" +
-       "\r\n";
+// eslint-disable-next-line no-useless-concat
+data = "GET /http/1.1-request HTTP/1.1\r\n" + "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
-
 
 // HTTP/1.1 request, wrong host, expect a 400 response
 
-data = "GET /http/1.1-request HTTP/1.1\r\n" +
-       "Host: not-localhost\r\n" +
-       "\r\n";
+data =
+  // eslint-disable-next-line no-useless-concat
+  "GET /http/1.1-request HTTP/1.1\r\n" + "Host: not-localhost\r\n" + "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
-
 
 // HTTP/1.1 request, wrong host/right port, expect a 400 response
 
-data = "GET /http/1.1-request HTTP/1.1\r\n" +
-       "Host: not-localhost:4444\r\n" +
-       "\r\n";
+data =
+  "GET /http/1.1-request HTTP/1.1\r\n" +
+  "Host: not-localhost:4444\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
-
 
 // HTTP/1.1 request, Host header has host but no port, expect a 400 response
 
-data = "GET /http/1.1-request HTTP/1.1\r\n" +
-       "Host: 127.0.0.1\r\n" +
-       "\r\n";
+// eslint-disable-next-line no-useless-concat
+data = "GET /http/1.1-request HTTP/1.1\r\n" + "Host: 127.0.0.1\r\n" + "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
-
 
 // HTTP/1.1 request, Request-URI has wrong port, expect a 400 response
 
-data = "GET http://127.0.0.1/http/1.1-request HTTP/1.1\r\n" +
-       "Host: 127.0.0.1\r\n" +
-       "\r\n";
+data =
+  "GET http://127.0.0.1/http/1.1-request HTTP/1.1\r\n" +
+  "Host: 127.0.0.1\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
-
 
 // HTTP/1.1 request, Request-URI has wrong port, expect a 400 response
 
-data = "GET http://localhost:31337/http/1.1-request HTTP/1.1\r\n" +
-       "Host: localhost:31337\r\n" +
-       "\r\n";
+data =
+  "GET http://localhost:31337/http/1.1-request HTTP/1.1\r\n" +
+  "Host: localhost:31337\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
-
 
 // HTTP/1.1 request, Request-URI has wrong scheme, expect a 400 response
 
-data = "GET https://localhost:4444/http/1.1-request HTTP/1.1\r\n" +
-       "Host: localhost:4444\r\n" +
-       "\r\n";
+data =
+  "GET https://localhost:4444/http/1.1-request HTTP/1.1\r\n" +
+  "Host: localhost:4444\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
-
 
 // HTTP/1.1 request, correct Host header, expect handler's response
 
@@ -348,9 +343,9 @@ function http11goodHost(request, response) {
   writeDetails(request, response);
   response.setStatusLine("1.1", 200, "TEST PASSED");
 }
-data = "GET /http/1.1-good-host HTTP/1.1\r\n" +
-       "Host: localhost:4444\r\n" +
-       "\r\n";
+data =
+  // eslint-disable-next-line no-useless-concat
+  "GET /http/1.1-good-host HTTP/1.1\r\n" + "Host: localhost:4444\r\n" + "\r\n";
 function check11goodHost(aData) {
   let iter = LineIterator(aData);
 
@@ -360,22 +355,20 @@ function check11goodHost(aData) {
   skipHeaders(iter);
 
   // Okay, next line must be the data we expected to be written
-  let body =
-    [
-     "Method:  GET",
-     "Path:    /http/1.1-good-host",
-     "Query:   ",
-     "Version: 1.1",
-     "Scheme:  http",
-     "Host:    localhost",
-     "Port:    4444",
-    ];
+  let body = [
+    "Method:  GET",
+    "Path:    /http/1.1-good-host",
+    "Query:   ",
+    "Version: 1.1",
+    "Scheme:  http",
+    "Host:    localhost",
+    "Port:    4444",
+  ];
 
   expectLines(iter, body);
 }
 test = new RawTest("localhost", PORT, data, check11goodHost);
 tests.push(test);
-
 
 // HTTP/1.1 request, Host header is secondary identity
 
@@ -383,9 +376,9 @@ function http11ipHost(request, response) {
   writeDetails(request, response);
   response.setStatusLine("1.1", 200, "TEST PASSED");
 }
-data = "GET /http/1.1-ip-host HTTP/1.1\r\n" +
-       "Host: 127.0.0.1:4444\r\n" +
-       "\r\n";
+data =
+  // eslint-disable-next-line no-useless-concat
+  "GET /http/1.1-ip-host HTTP/1.1\r\n" + "Host: 127.0.0.1:4444\r\n" + "\r\n";
 function check11ipHost(aData) {
   let iter = LineIterator(aData);
 
@@ -395,63 +388,62 @@ function check11ipHost(aData) {
   skipHeaders(iter);
 
   // Okay, next line must be the data we expected to be written
-  let body =
-    [
-     "Method:  GET",
-     "Path:    /http/1.1-ip-host",
-     "Query:   ",
-     "Version: 1.1",
-     "Scheme:  http",
-     "Host:    127.0.0.1",
-     "Port:    4444",
-    ];
+  let body = [
+    "Method:  GET",
+    "Path:    /http/1.1-ip-host",
+    "Query:   ",
+    "Version: 1.1",
+    "Scheme:  http",
+    "Host:    127.0.0.1",
+    "Port:    4444",
+  ];
 
   expectLines(iter, body);
 }
 test = new RawTest("localhost", PORT, data, check11ipHost);
 tests.push(test);
 
-
 // HTTP/1.1 request, absolute path, accurate Host header
 
 // reusing previous request handler so not defining a new one
 
-data = "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
-       "Host: localhost:4444\r\n" +
-       "\r\n";
+data =
+  "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
+  "Host: localhost:4444\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check11goodHost);
 tests.push(test);
-
 
 // HTTP/1.1 request, absolute path, inaccurate Host header
 
 // reusing previous request handler so not defining a new one
 
-data = "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
-       "Host: localhost:1234\r\n" +
-       "\r\n";
+data =
+  "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
+  "Host: localhost:1234\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check11goodHost);
 tests.push(test);
-
 
 // HTTP/1.1 request, absolute path, different inaccurate Host header
 
 // reusing previous request handler so not defining a new one
 
-data = "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
-       "Host: not-localhost:4444\r\n" +
-       "\r\n";
+data =
+  "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
+  "Host: not-localhost:4444\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check11goodHost);
 tests.push(test);
-
 
 // HTTP/1.1 request, absolute path, yet another inaccurate Host header
 
 // reusing previous request handler so not defining a new one
 
-data = "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
-       "Host: yippity-skippity\r\n" +
-       "\r\n";
+data =
+  "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
+  "Host: yippity-skippity\r\n" +
+  "\r\n";
 function checkInaccurate(aData) {
   check11goodHost(aData);
 
@@ -461,14 +453,14 @@ function checkInaccurate(aData) {
 test = new RawTest("localhost", PORT, data, checkInaccurate);
 tests.push(test);
 
-
 // HTTP/1.0 request, absolute path, different inaccurate Host header
 
 // reusing previous request handler so not defining a new one
 
-data = "GET /http/1.0-request HTTP/1.0\r\n" +
-       "Host: not-localhost:4444\r\n" +
-       "\r\n";
+data =
+  "GET /http/1.0-request HTTP/1.0\r\n" +
+  "Host: not-localhost:4444\r\n" +
+  "\r\n";
 function check10ip(aData) {
   let iter = LineIterator(aData);
 
@@ -478,22 +470,20 @@ function check10ip(aData) {
   skipHeaders(iter);
 
   // Okay, next line must be the data we expected to be written
-  let body =
-    [
-     "Method:  GET",
-     "Path:    /http/1.0-request",
-     "Query:   ",
-     "Version: 1.0",
-     "Scheme:  http",
-     "Host:    127.0.0.1",
-     "Port:    4444",
-    ];
+  let body = [
+    "Method:  GET",
+    "Path:    /http/1.0-request",
+    "Query:   ",
+    "Version: 1.0",
+    "Scheme:  http",
+    "Host:    127.0.0.1",
+    "Port:    4444",
+  ];
 
   expectLines(iter, body);
 }
 test = new RawTest("localhost", PORT, data, check10ip);
 tests.push(test);
-
 
 // HTTP/1.1 request, Host header with implied port
 
@@ -501,9 +491,10 @@ function http11goodHostWackyPort(request, response) {
   writeDetails(request, response);
   response.setStatusLine("1.1", 200, "TEST PASSED");
 }
-data = "GET /http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
-       "Host: localhost\r\n" +
-       "\r\n";
+data =
+  "GET /http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
+  "Host: localhost\r\n" +
+  "\r\n";
 function check11goodHostWackyPort(aData) {
   let iter = LineIterator(aData);
 
@@ -513,108 +504,105 @@ function check11goodHostWackyPort(aData) {
   skipHeaders(iter);
 
   // Okay, next line must be the data we expected to be written
-  let body =
-    [
-     "Method:  GET",
-     "Path:    /http/1.1-good-host-wacky-port",
-     "Query:   ",
-     "Version: 1.1",
-     "Scheme:  http",
-     "Host:    localhost",
-     "Port:    80",
-    ];
+  let body = [
+    "Method:  GET",
+    "Path:    /http/1.1-good-host-wacky-port",
+    "Query:   ",
+    "Version: 1.1",
+    "Scheme:  http",
+    "Host:    localhost",
+    "Port:    80",
+  ];
 
   expectLines(iter, body);
 }
 test = new RawTest("localhost", PORT, data, check11goodHostWackyPort);
 tests.push(test);
 
-
 // HTTP/1.1 request, Host header with wacky implied port
 
-data = "GET /http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
-       "Host: localhost:\r\n" +
-       "\r\n";
+data =
+  "GET /http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
+  "Host: localhost:\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check11goodHostWackyPort);
 tests.push(test);
-
 
 // HTTP/1.1 request, absolute URI with implied port
 
-data = "GET http://localhost/http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
-       "Host: localhost\r\n" +
-       "\r\n";
+data =
+  "GET http://localhost/http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
+  "Host: localhost\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check11goodHostWackyPort);
 tests.push(test);
-
 
 // HTTP/1.1 request, absolute URI with wacky implied port
 
-data = "GET http://localhost:/http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
-       "Host: localhost\r\n" +
-       "\r\n";
+data =
+  "GET http://localhost:/http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
+  "Host: localhost\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check11goodHostWackyPort);
 tests.push(test);
-
 
 // HTTP/1.1 request, absolute URI with explicit implied port, ignored Host
 
-data = "GET http://localhost:80/http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
-       "Host: who-cares\r\n" +
-       "\r\n";
+data =
+  "GET http://localhost:80/http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
+  "Host: who-cares\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check11goodHostWackyPort);
 tests.push(test);
 
-
 // HTTP/1.1 request, a malformed Request-URI
 
-data = "GET is-this-the-real-life-is-this-just-fantasy HTTP/1.1\r\n" +
-       "Host: localhost:4444\r\n" +
-       "\r\n";
+data =
+  "GET is-this-the-real-life-is-this-just-fantasy HTTP/1.1\r\n" +
+  "Host: localhost:4444\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
-
 
 // HTTP/1.1 request, a malformed Host header
 
-data = "GET /http/1.1-request HTTP/1.1\r\n" +
-       "Host: la la la\r\n" +
-       "\r\n";
+// eslint-disable-next-line no-useless-concat
+data = "GET /http/1.1-request HTTP/1.1\r\n" + "Host: la la la\r\n" + "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
-
 
 // HTTP/1.1 request, a malformed Host header but absolute URI, 5.2 sez fine
 
-data = "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
-       "Host: la la la\r\n" +
-       "\r\n";
+data =
+  "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
+  "Host: la la la\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check11goodHost);
 tests.push(test);
 
-
 // HTTP/1.0 request, absolute URI, but those aren't valid in HTTP/1.0
 
-data = "GET http://localhost:4444/http/1.1-request HTTP/1.0\r\n" +
-       "Host: localhost:4444\r\n" +
-       "\r\n";
+data =
+  "GET http://localhost:4444/http/1.1-request HTTP/1.0\r\n" +
+  "Host: localhost:4444\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
-
 
 // HTTP/1.1 request, absolute URI with unrecognized host
 
-data = "GET http://not-localhost:4444/http/1.1-request HTTP/1.1\r\n" +
-       "Host: not-localhost:4444\r\n" +
-       "\r\n";
+data =
+  "GET http://not-localhost:4444/http/1.1-request HTTP/1.1\r\n" +
+  "Host: not-localhost:4444\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
 
-
 // HTTP/1.1 request, absolute URI with unrecognized host (but not in Host)
 
-data = "GET http://not-localhost:4444/http/1.1-request HTTP/1.1\r\n" +
-       "Host: localhost:4444\r\n" +
-       "\r\n";
+data =
+  "GET http://not-localhost:4444/http/1.1-request HTTP/1.1\r\n" +
+  "Host: localhost:4444\r\n" +
+  "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);

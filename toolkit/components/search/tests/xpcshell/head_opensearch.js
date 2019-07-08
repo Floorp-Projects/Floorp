@@ -10,6 +10,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 /**
  * Fake the installation of an add-on in the profile, by creating the
  * directory and registering it with the directory service.
+ *
+ * @param {string} [name]
+ *   The engine name to install.
  */
 function installAddonEngine(name = "engine-addon") {
   const XRE_EXTENSIONS_DIR_LIST = "XREExtDL";
@@ -17,8 +20,9 @@ function installAddonEngine(name = "engine-addon") {
 
   let dir = profD.clone();
   dir.append("extensions");
-  if (!dir.exists())
+  if (!dir.exists()) {
     dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  }
 
   dir.append("search-engine@tests.mozilla.org");
   dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
@@ -30,8 +34,10 @@ function installAddonEngine(name = "engine-addon") {
   do_get_file("data/" + name + ".xml").copyTo(dir, "bug645970.xml");
 
   Services.dirsvc.registerProvider({
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDirectoryServiceProvider,
-                                            Ci.nsIDirectoryServiceProvider2]),
+    QueryInterface: ChromeUtils.generateQI([
+      Ci.nsIDirectoryServiceProvider,
+      Ci.nsIDirectoryServiceProvider2,
+    ]),
 
     getFile(prop, persistant) {
       throw Cr.NS_ERROR_FAILURE;
@@ -72,10 +78,10 @@ function installDistributionEngine() {
   Services.dirsvc.registerProvider({
     getFile(aProp, aPersistent) {
       aPersistent.value = true;
-      if (aProp == XRE_APP_DISTRIBUTION_DIR)
+      if (aProp == XRE_APP_DISTRIBUTION_DIR) {
         return distDir.clone();
+      }
       return null;
     },
   });
 }
-

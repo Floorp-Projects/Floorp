@@ -7,55 +7,72 @@
 // This is loaded into chrome windows with the subscript loader. Wrap in
 // a block to prevent accidentally leaking globals onto `window`.
 {
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
 
-class MozStringbundle extends MozXULElement {
-  get stringBundle() {
-    if (!this._bundle) {
+  class MozStringbundle extends MozXULElement {
+    get stringBundle() {
+      if (!this._bundle) {
+        try {
+          this._bundle = Services.strings.createBundle(this.src);
+        } catch (e) {
+          dump("Failed to get stringbundle:\n");
+          dump(e + "\n");
+        }
+      }
+      return this._bundle;
+    }
+
+    set src(val) {
+      this._bundle = null;
+      this.setAttribute("src", val);
+      return val;
+    }
+
+    get src() {
+      return this.getAttribute("src");
+    }
+
+    get strings() {
+      // Note: this is a sucky method name! Should be:
+      //       readonly attribute nsISimpleEnumerator strings;
+      return this.stringBundle.getSimpleEnumeration();
+    }
+
+    getString(aStringKey) {
       try {
-        this._bundle = Services.strings.createBundle(this.src);
+        return this.stringBundle.GetStringFromName(aStringKey);
       } catch (e) {
-        dump("Failed to get stringbundle:\n");
-        dump(e + "\n");
+        dump(
+          "*** Failed to get string " +
+            aStringKey +
+            " in bundle: " +
+            this.src +
+            "\n"
+        );
+        throw e;
       }
     }
-    return this._bundle;
-  }
 
-  set src(val) {
-    this._bundle = null;
-    this.setAttribute("src", val);
-    return val;
-  }
-
-  get src() {
-    return this.getAttribute("src");
-  }
-
-  get strings() {
-    // Note: this is a sucky method name! Should be:
-    //       readonly attribute nsISimpleEnumerator strings;
-    return this.stringBundle.getSimpleEnumeration();
-  }
-
-  getString(aStringKey) {
-    try {
-      return this.stringBundle.GetStringFromName(aStringKey);
-    } catch (e) {
-      dump("*** Failed to get string " + aStringKey + " in bundle: " + this.src + "\n");
-      throw e;
+    getFormattedString(aStringKey, aStringsArray) {
+      try {
+        return this.stringBundle.formatStringFromName(
+          aStringKey,
+          aStringsArray
+        );
+      } catch (e) {
+        dump(
+          "*** Failed to format string " +
+            aStringKey +
+            " in bundle: " +
+            this.src +
+            "\n"
+        );
+        throw e;
+      }
     }
   }
 
-  getFormattedString(aStringKey, aStringsArray) {
-    try {
-      return this.stringBundle.formatStringFromName(aStringKey, aStringsArray);
-    } catch (e) {
-      dump("*** Failed to format string " + aStringKey + " in bundle: " + this.src + "\n");
-      throw e;
-    }
-  }
-}
-
-customElements.define("stringbundle", MozStringbundle);
+  customElements.define("stringbundle", MozStringbundle);
 }

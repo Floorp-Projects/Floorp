@@ -7,8 +7,13 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
@@ -16,18 +21,30 @@ add_task(async function() {
     win: window,
   });
 
-  const { $, $$, EVENTS, PerformanceController, PerformanceView } = panel.panelWin;
+  const {
+    $,
+    $$,
+    EVENTS,
+    PerformanceController,
+    PerformanceView,
+  } = panel.panelWin;
 
   const recordButton = $("#main-record-button");
 
   checkRecordButtonsStates(false, false);
 
   const uiStartClick = once(PerformanceView, EVENTS.UI_START_RECORDING);
-  const recordingStarted = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: ["recording-started"],
-  });
-  const backendStartReady = once(PerformanceController,
-                               EVENTS.BACKEND_READY_AFTER_RECORDING_START);
+  const recordingStarted = once(
+    PerformanceController,
+    EVENTS.RECORDING_STATE_CHANGE,
+    {
+      expectedArgs: ["recording-started"],
+    }
+  );
+  const backendStartReady = once(
+    PerformanceController,
+    EVENTS.BACKEND_READY_AFTER_RECORDING_START
+  );
   const uiStateRecording = once(PerformanceView, EVENTS.UI_STATE_CHANGED, {
     expectedArgs: ["recording"],
   });
@@ -45,11 +62,17 @@ add_task(async function() {
   await uiStateRecording;
 
   const uiStopClick = once(PerformanceView, EVENTS.UI_STOP_RECORDING);
-  const recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: ["recording-stopped"],
-  });
-  const backendStopReady = once(PerformanceController,
-                               EVENTS.BACKEND_READY_AFTER_RECORDING_STOP);
+  const recordingStopped = once(
+    PerformanceController,
+    EVENTS.RECORDING_STATE_CHANGE,
+    {
+      expectedArgs: ["recording-stopped"],
+    }
+  );
+  const backendStopReady = once(
+    PerformanceController,
+    EVENTS.BACKEND_READY_AFTER_RECORDING_STOP
+  );
   const uiStateRecorded = once(PerformanceView, EVENTS.UI_STATE_CHANGED, {
     expectedArgs: ["recorded"],
   });
@@ -67,10 +90,16 @@ add_task(async function() {
 
   function checkRecordButtonsStates(checked, locked) {
     for (const button of $$(".record-button")) {
-      is(button.classList.contains("checked"), checked,
-         "The record button checked state should be " + checked);
-      is(button.disabled, locked,
-         "The record button locked state should be " + locked);
+      is(
+        button.classList.contains("checked"),
+        checked,
+        "The record button checked state should be " + checked
+      );
+      is(
+        button.disabled,
+        locked,
+        "The record button locked state should be " + locked
+      );
     }
   }
 });

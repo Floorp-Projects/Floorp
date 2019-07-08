@@ -7,9 +7,18 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording, reload } = require("devtools/client/performance/test/helpers/actions");
-const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+  reload,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  waitUntil,
+} = require("devtools/client/performance/test/helpers/wait-utils");
 
 add_task(async function() {
   const { panel, target } = await initPerformanceInNewTab({
@@ -25,8 +34,10 @@ add_task(async function() {
   const recording = PerformanceController.getCurrentRecording();
   const markersLength = recording.getAllData().markers.length;
 
-  ok(recording.isRecording(),
-    "RecordingModel should still be recording after reload");
+  ok(
+    recording.isRecording(),
+    "RecordingModel should still be recording after reload"
+  );
 
   await waitUntil(() => recording.getMarkers().length > markersLength);
   ok("Markers continue after reload.");

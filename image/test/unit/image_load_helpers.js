@@ -21,44 +21,37 @@ do_get_profile();
 
 // An implementation of imgIScriptedNotificationObserver with the ability to
 // call specified functions on onStartRequest and onStopRequest.
-function ImageListener(start_callback, stop_callback)
-{
-  this.sizeAvailable = function onSizeAvailable(aRequest)
-  {
+function ImageListener(start_callback, stop_callback) {
+  this.sizeAvailable = function onSizeAvailable(aRequest) {
     Assert.ok(!this.synchronous);
 
     this.state |= SIZE_AVAILABLE;
 
-    if (this.start_callback)
+    if (this.start_callback) {
       this.start_callback(this, aRequest);
-  }
-  this.frameComplete = function onFrameComplete(aRequest)
-  {
+    }
+  };
+  this.frameComplete = function onFrameComplete(aRequest) {
     Assert.ok(!this.synchronous);
 
     this.state |= FRAME_COMPLETE;
-  }
-  this.decodeComplete = function onDecodeComplete(aRequest)
-  {
+  };
+  this.decodeComplete = function onDecodeComplete(aRequest) {
     Assert.ok(!this.synchronous);
 
     this.state |= DECODE_COMPLETE;
-  }
-  this.loadComplete = function onLoadcomplete(aRequest)
-  {
+  };
+  this.loadComplete = function onLoadcomplete(aRequest) {
     Assert.ok(!this.synchronous);
 
     this.state |= LOAD_COMPLETE;
 
-    if (this.stop_callback)
+    if (this.stop_callback) {
       this.stop_callback(this, aRequest);
-  }
-  this.frameUpdate = function onFrameUpdate(aRequest)
-  {
-  }
-  this.isAnimated = function onIsAnimated()
-  {
-  }
+    }
+  };
+  this.frameUpdate = function onFrameUpdate(aRequest) {};
+  this.isAnimated = function onIsAnimated() {};
 
   // Initialize the synchronous flag to true to start. This must be set to
   // false before exiting to the event loop!
@@ -76,41 +69,50 @@ function ImageListener(start_callback, stop_callback)
   this.state = 0;
 }
 
-function NS_FAILED(val)
-{
+function NS_FAILED(val) {
   return !!(val & 0x80000000);
 }
 
-function ChannelListener()
-{
-  this.onStartRequest = function onStartRequest(aRequest)
-  {
-    if (this.outputListener)
+function ChannelListener() {
+  this.onStartRequest = function onStartRequest(aRequest) {
+    if (this.outputListener) {
       this.outputListener.onStartRequest(aRequest);
+    }
 
     this.requestStatus |= START_REQUEST;
-  }
+  };
 
-  this.onDataAvailable = function onDataAvailable(aRequest, aInputStream, aOffset, aCount)
-  {
-    if (this.outputListener)
-      this.outputListener.onDataAvailable(aRequest, aInputStream, aOffset, aCount);
+  this.onDataAvailable = function onDataAvailable(
+    aRequest,
+    aInputStream,
+    aOffset,
+    aCount
+  ) {
+    if (this.outputListener) {
+      this.outputListener.onDataAvailable(
+        aRequest,
+        aInputStream,
+        aOffset,
+        aCount
+      );
+    }
 
     this.requestStatus |= DATA_AVAILABLE;
-  }
+  };
 
-  this.onStopRequest = function onStopRequest(aRequest, aStatusCode)
-  {
-    if (this.outputListener)
+  this.onStopRequest = function onStopRequest(aRequest, aStatusCode) {
+    if (this.outputListener) {
       this.outputListener.onStopRequest(aRequest, aStatusCode);
+    }
 
     // If we failed (or were canceled - failure is implied if canceled),
     // there's no use tracking our state, since it's meaningless.
-    if (NS_FAILED(aStatusCode))
+    if (NS_FAILED(aStatusCode)) {
       this.requestStatus = 0;
-    else
+    } else {
       this.requestStatus |= STOP_REQUEST;
-  }
+    }
+  };
 
   // A listener to pass the notifications we get to.
   this.outputListener = null;

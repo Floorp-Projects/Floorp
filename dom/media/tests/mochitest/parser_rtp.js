@@ -9,8 +9,7 @@
  * @param buffer an ArrayBuffer that contains the packet
  * @return { type: "rtp", header: {...}, payload: a DataView }
  */
-var ParseRtpPacket = (buffer) => {
-
+var ParseRtpPacket = buffer => {
   // DataView.getFooInt returns big endian numbers by default
   let view = new DataView(buffer);
 
@@ -38,20 +37,20 @@ var ParseRtpPacket = (buffer) => {
   let byte = view.getUint8(offset);
   offset++;
   // Version            2 Bit
-  header.version = (0xC0 & byte) >> 6;
+  header.version = (0xc0 & byte) >> 6;
   // Padding            1 Bit
-  header.padding = (0x30 & byte) >> 5
+  header.padding = (0x30 & byte) >> 5;
   // Extension          1 Bit
-  header.extensionsPresent = ((0x10 & byte) >> 4) == 1;
+  header.extensionsPresent = (0x10 & byte) >> 4 == 1;
   // CSRC count         4 Bit
-  header.csrcCount = (0xF & byte);
+  header.csrcCount = 0xf & byte;
 
   byte = view.getUint8(offset);
   offset++;
   // Marker             1 Bit
-  header.marker =  (0x80 & byte) >> 7;
+  header.marker = (0x80 & byte) >> 7;
   // Payload Type       7 Bit
-  header.payloadType = (0x7F & byte);
+  header.payloadType = 0x7f & byte;
   // Sequence Number   16 Bit
   header.sequenceNumber = view.getUint16(offset);
   offset += 2;
@@ -73,7 +72,7 @@ var ParseRtpPacket = (buffer) => {
   header.extensions = [];
   header.extensionPaddingBytes = 0;
   header.extensionsTotalLength = 0;
-  if ( header.extensionsPresent ) {
+  if (header.extensionsPresent) {
     // https://tools.ietf.org/html/rfc3550#section-5.3.1
     //  0                   1                   2                   3
     //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -82,17 +81,18 @@ var ParseRtpPacket = (buffer) => {
     // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     // |                        header extension                       |
     // |                             ....                              |
-    let addExtension = (id, len) => header.extensions.push({
+    let addExtension = (id, len) =>
+      header.extensions.push({
         id: id,
         data: new DataView(buffer, offset, len),
-    });
+      });
     let extensionId = view.getUint16(offset);
     offset += 2;
     // len is in 32 bit units, not bytes
     header.extensionsTotalLength = view.getUint16(offset) * 4;
     offset += 2;
     // Check for https://tools.ietf.org/html/rfc5285
-    if (extensionId != 0xBEDE) {
+    if (extensionId != 0xbede) {
       // No rfc5285
       addExtension(extensionId, header.extensionsTotalLength);
       offset += header.extensionsTotalLength;
@@ -113,7 +113,7 @@ var ParseRtpPacket = (buffer) => {
           header.extensionPaddingBytes++;
           continue;
         }
-        let id = (byte & 0xF0) >> 4;
+        let id = (byte & 0xf0) >> 4;
         // Check for the FORBIDDEN id (15), dun dun dun
         if (id == 15) {
           // Ignore bytes until until the end of extensions
@@ -121,11 +121,11 @@ var ParseRtpPacket = (buffer) => {
           break;
         }
         // the length of the extention is len + 1
-        let len = (byte & 0x0F) + 1;
+        let len = (byte & 0x0f) + 1;
         addExtension(id, len);
         offset += len;
       }
     }
   }
   return { type: "rtp", header: header, payload: new DataView(buffer, offset) };
-}
+};

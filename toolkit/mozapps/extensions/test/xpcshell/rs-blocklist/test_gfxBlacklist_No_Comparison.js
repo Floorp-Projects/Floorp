@@ -49,7 +49,9 @@ async function run_test() {
       Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DEVICE);
 
       // Make sure unrelated features aren't affected
-      status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
+      status = gfxInfo.getFeatureStatus(
+        Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS
+      );
       Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
     }
     do_test_finished();

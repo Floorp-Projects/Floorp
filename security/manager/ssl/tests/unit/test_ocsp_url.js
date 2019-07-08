@@ -10,8 +10,9 @@
 // the caller.
 
 do_get_profile(); // must be called before getting nsIX509CertDB
-const certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
+const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
 
 const SERVER_PORT = 8888;
 
@@ -20,14 +21,23 @@ function failingOCSPResponder() {
 }
 
 function start_ocsp_responder(expectedCertNames, expectedPaths) {
-  return startOCSPResponder(SERVER_PORT, "www.example.com",
-                            "test_ocsp_url", expectedCertNames, expectedPaths);
+  return startOCSPResponder(
+    SERVER_PORT,
+    "www.example.com",
+    "test_ocsp_url",
+    expectedCertNames,
+    expectedPaths
+  );
 }
 
 function check_cert_err(cert_name, expected_error) {
   let cert = constructCertFromFile("test_ocsp_url/" + cert_name + ".pem");
-  return checkCertErrorGeneric(certdb, cert, expected_error,
-                               certificateUsageSSLServer);
+  return checkCertErrorGeneric(
+    certdb,
+    cert,
+    expected_error,
+    certificateUsageSSLServer
+  );
 }
 
 add_task(async function() {
@@ -37,8 +47,7 @@ add_task(async function() {
   // Enabled so that we can force ocsp failure responses.
   Services.prefs.setBoolPref("security.OCSP.require", true);
 
-  Services.prefs.setCharPref("network.dns.localDomains",
-                             "www.example.com");
+  Services.prefs.setCharPref("network.dns.localDomains", "www.example.com");
   Services.prefs.setIntPref("security.OCSP.enabled", 1);
 
   // Note: We don't test the case of a well-formed HTTP URL with an empty port
@@ -87,7 +96,10 @@ add_task(async function() {
 
   clearOCSPCache();
   ocspResponder = failingOCSPResponder();
-  await check_cert_err("no-scheme-host-port", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
+  await check_cert_err(
+    "no-scheme-host-port",
+    SEC_ERROR_CERT_BAD_ACCESS_LOCATION
+  );
   await stopOCSPResponder(ocspResponder);
 
   clearOCSPCache();

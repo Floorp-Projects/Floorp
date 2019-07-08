@@ -50,22 +50,24 @@ async function performTests() {
 
   ok(popup.isOpen, "popup is open");
 
-  const expectedPopupItems = [
-    "item0",
-    "item1",
-    "item2",
-    "item3",
-    "item33",
-  ];
+  const expectedPopupItems = ["item0", "item1", "item2", "item3", "item33"];
   is(popup.itemCount, expectedPopupItems.length, "popup.itemCount is correct");
   is(popup.selectedIndex, 0, "First index from top is selected");
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
 
-  is(popup.selectedIndex, expectedPopupItems.length - 1, "last index is selected");
+  is(
+    popup.selectedIndex,
+    expectedPopupItems.length - 1,
+    "last index is selected"
+  );
   is(popup.selectedItem.label, "item33", "item33 is selected");
   const prefix = getInputValue(hud).replace(/[\S]/g, " ");
-  checkInputCompletionValue(hud, prefix + "item33", "completeNode.value holds item33");
+  checkInputCompletionValue(
+    hud,
+    prefix + "item33",
+    "completeNode.value holds item33"
+  );
 
   info("press Return to accept suggestion. wait for popup to hide");
   let onPopupClose = popup.once("popup-closed");
@@ -74,11 +76,16 @@ async function performTests() {
   await onPopupClose;
 
   ok(!popup.isOpen, "popup is not open after KEY_Enter");
-  is(getInputValue(hud), "window.foobar.item33",
-    "completion was successful after KEY_Enter");
+  is(
+    getInputValue(hud),
+    "window.foobar.item33",
+    "completion was successful after KEY_Enter"
+  );
   ok(!getInputCompletionValue(hud), "completeNode is empty");
 
-  info("Test that hitting enter when the completeNode is empty closes the popup");
+  info(
+    "Test that hitting enter when the completeNode is empty closes the popup"
+  );
   onPopUpOpen = popup.once("popup-opened");
   info("wait for completion suggestions: window.foobar.item3");
   setInputValue(hud, "window.foobar.item");
@@ -93,6 +100,9 @@ async function performTests() {
   await onPopupClose;
 
   ok(!popup.isOpen, "popup is not open after KEY_Enter");
-  is(getInputValue(hud), "window.foobar.item3",
-    "completion was successful after KEY_Enter");
+  is(
+    getInputValue(hud),
+    "window.foobar.item3",
+    "completion was successful after KEY_Enter"
+  );
 }

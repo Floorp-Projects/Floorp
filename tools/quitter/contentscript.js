@@ -7,7 +7,11 @@
 /* eslint-env webextensions */
 
 const Quitter = {
-  quit() { browser.runtime.sendMessage("quit"); },
+  quit() {
+    browser.runtime.sendMessage("quit");
+  },
 };
 
-window.wrappedJSObject.Quitter = cloneInto(Quitter, window, {cloneFunctions: true});
+window.wrappedJSObject.Quitter = cloneInto(Quitter, window, {
+  cloneFunctions: true,
+});

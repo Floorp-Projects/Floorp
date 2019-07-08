@@ -7,14 +7,26 @@
  * correctly emits events when certain DOM nodes are clicked.
  */
 
-const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
-const { CallView } = require("devtools/client/performance/modules/widgets/tree-view");
-const { synthesizeProfile } = require("devtools/client/performance/test/helpers/synth-utils");
-const { idleWait, waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
+const {
+  ThreadNode,
+} = require("devtools/client/performance/modules/logic/tree-model");
+const {
+  CallView,
+} = require("devtools/client/performance/modules/widgets/tree-view");
+const {
+  synthesizeProfile,
+} = require("devtools/client/performance/test/helpers/synth-utils");
+const {
+  idleWait,
+  waitUntil,
+} = require("devtools/client/performance/test/helpers/wait-utils");
 
 add_task(async function() {
   const profile = synthesizeProfile();
-  const threadNode = new ThreadNode(profile.threads[0], { startTime: 0, endTime: 20 });
+  const threadNode = new ThreadNode(profile.threads[0], {
+    startTime: 0,
+    endTime: 20,
+  });
 
   // Don't display the synthesized (root) and the real (root) node twice.
   threadNode.calls = threadNode.calls[0].calls;
@@ -28,7 +40,7 @@ add_task(async function() {
   const D = B.getChild();
 
   let linkEvent = null;
-  const handler = (e) => {
+  const handler = e => {
     linkEvent = e;
   };
 

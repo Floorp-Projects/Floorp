@@ -9,8 +9,9 @@
 "use strict";
 
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 618078";
-const TEST_URI2 = "http://example.com/browser/devtools/client/webconsole/" +
-                  "test/mochitest/test-network-exceptions.html";
+const TEST_URI2 =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-network-exceptions.html";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

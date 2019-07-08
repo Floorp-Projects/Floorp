@@ -1,7 +1,10 @@
 "use strict";
 
 var rootDir = getRootDirectory(gTestPath);
-const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+const gTestRoot = rootDir.replace(
+  "chrome://mochitests/content/",
+  "http://127.0.0.1:8888/"
+);
 
 var gTestBrowser = null;
 
@@ -9,7 +12,10 @@ add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
-    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+    setTestPluginEnabledState(
+      Ci.nsIPluginTag.STATE_ENABLED,
+      "Second Test Plug-in"
+    );
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
     FullZoom.reset(); // must be called before closing the tab we zoomed!
     gBrowser.removeCurrentTab();
@@ -26,10 +32,19 @@ add_task(async function() {
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
 
-  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "Test 1, Should not have a click-to-play notification");
+  let popupNotification = PopupNotifications.getNotification(
+    "click-to-play-plugins",
+    gTestBrowser
+  );
+  ok(
+    !popupNotification,
+    "Test 1, Should not have a click-to-play notification"
+  );
 
-  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_zoom.html");
+  await promiseTabLoadEvent(
+    gBrowser.selectedTab,
+    gTestRoot + "plugin_zoom.html"
+  );
 
   // Work around for delayed PluginBindingAttached
   await promiseUpdatePluginBindings(gTestBrowser);
@@ -44,16 +59,19 @@ add_task(async function() {
     FullZoom.enlarge();
 
     // Reload the page
-    await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_zoom.html");
+    await promiseTabLoadEvent(
+      gBrowser.selectedTab,
+      gTestRoot + "plugin_zoom.html"
+    );
     await promiseUpdatePluginBindings(gTestBrowser);
     await ContentTask.spawn(gTestBrowser, { count }, async function(args) {
       let doc = content.document;
       let plugin = doc.getElementById("test");
       let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
-      Assert.ok(overlay && overlay.classList.contains("visible"),
-        "Overlay should be visible for zoom change count " + args.count);
+      Assert.ok(
+        overlay && overlay.classList.contains("visible"),
+        "Overlay should be visible for zoom change count " + args.count
+      );
     });
   }
 });
-
-

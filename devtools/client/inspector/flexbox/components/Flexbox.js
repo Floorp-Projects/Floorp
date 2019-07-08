@@ -63,18 +63,18 @@ class Flexbox extends PureComponent {
   }
 
   renderFlexItemSizing() {
-    const {
-      flexItems,
-      flexItemShown,
-      properties,
-    } = this.props.flexContainer;
+    const { flexItems, flexItemShown, properties } = this.props.flexContainer;
 
-    const flexItem = flexItems.find(item => item.nodeFront.actorID === flexItemShown);
+    const flexItem = flexItems.find(
+      item => item.nodeFront.actorID === flexItemShown
+    );
     if (!flexItem) {
       return null;
     }
 
-    return createElement(Fragment, null,
+    return createElement(
+      Fragment,
+      null,
       FlexItemSizingOutline({
         flexDirection: properties["flex-direction"],
         flexItem,
@@ -98,31 +98,27 @@ class Flexbox extends PureComponent {
     } = this.props;
 
     if (!flexContainer.actorID) {
-      return (
-        dom.div({ className: "devtools-sidepanel-no-result" },
-          getStr("flexbox.noFlexboxeOnThisPage")
-        )
+      return dom.div(
+        { className: "devtools-sidepanel-no-result" },
+        getStr("flexbox.noFlexboxeOnThisPage")
       );
     }
 
-    const {
-      flexItemShown,
-    } = flexContainer;
+    const { flexItemShown } = flexContainer;
 
-    return (
-      dom.div({ className: "layout-flexbox-wrapper" },
-        Header({
-          flexContainer,
-          getSwatchColorPickerTooltip,
-          onHideBoxModelHighlighter,
-          onSetFlexboxOverlayColor,
-          onShowBoxModelHighlighterForNode,
-          onToggleFlexboxHighlighter,
-          setSelectedNode,
-        }),
-        !flexItemShown ? this.renderFlexItemList() : null,
-        flexItemShown ? this.renderFlexItemSizing() : null,
-      )
+    return dom.div(
+      { className: "layout-flexbox-wrapper" },
+      Header({
+        flexContainer,
+        getSwatchColorPickerTooltip,
+        onHideBoxModelHighlighter,
+        onSetFlexboxOverlayColor,
+        onShowBoxModelHighlighterForNode,
+        onToggleFlexboxHighlighter,
+        setSelectedNode,
+      }),
+      !flexItemShown ? this.renderFlexItemList() : null,
+      flexItemShown ? this.renderFlexItemSizing() : null
     );
   }
 }

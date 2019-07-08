@@ -11,7 +11,7 @@ const TEST_URI = URL_ROOT + "doc_keyframeanimation.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await testPacman(inspector, view);
   await testBoxy(inspector, view);
   await testMoxy(inspector, view);
@@ -74,17 +74,27 @@ async function assertKeyframeRules(selector, inspector, view, expected) {
     keyframeRules: elementStyle.rules.filter(rule => rule.keyframes),
   };
 
-  is(rules.elementRules.length, expected.elementRulesNb, selector +
-    " has the correct number of non keyframe element rules");
-  is(rules.keyframeRules.length, expected.keyframeRulesNb, selector +
-    " has the correct number of keyframe rules");
+  is(
+    rules.elementRules.length,
+    expected.elementRulesNb,
+    selector + " has the correct number of non keyframe element rules"
+  );
+  is(
+    rules.keyframeRules.length,
+    expected.keyframeRulesNb,
+    selector + " has the correct number of keyframe rules"
+  );
 
   let i = 0;
   for (const keyframeRule of rules.keyframeRules) {
-    ok(keyframeRule.keyframes.name == expected.keyframesRules[i],
-      keyframeRule.keyframes.name + " has the correct keyframes name");
-    ok(keyframeRule.domRule.keyText == expected.keyframeRules[i],
-      keyframeRule.domRule.keyText + " selector heading is correct");
+    ok(
+      keyframeRule.keyframes.name == expected.keyframesRules[i],
+      keyframeRule.keyframes.name + " has the correct keyframes name"
+    );
+    ok(
+      keyframeRule.domRule.keyText == expected.keyframeRules[i],
+      keyframeRule.domRule.keyText + " selector heading is correct"
+    );
     i++;
   }
 }
@@ -92,13 +102,19 @@ async function assertKeyframeRules(selector, inspector, view, expected) {
 function assertGutters(view, expected) {
   const gutters = view.element.querySelectorAll(".ruleview-header");
 
-  is(gutters.length, expected.guttersNbs,
-    "There are " + gutters.length + " gutter headings");
+  is(
+    gutters.length,
+    expected.guttersNbs,
+    "There are " + gutters.length + " gutter headings"
+  );
 
   let i = 0;
   for (const gutter of gutters) {
-    is(gutter.textContent, expected.gutterHeading[i],
-      "Correct " + gutter.textContent + " gutter headings");
+    is(
+      gutter.textContent,
+      expected.gutterHeading[i],
+      "Correct " + gutter.textContent + " gutter headings"
+    );
     i++;
   }
 

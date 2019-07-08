@@ -1,5 +1,7 @@
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {MockRegistrar} = ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { MockRegistrar } = ChromeUtils.import(
+  "resource://testing-common/MockRegistrar.jsm"
+);
 
 var httpserv = null;
 
@@ -12,7 +14,7 @@ XPCOMUtils.defineLazyGetter(this, "systemSettings", function() {
     PACURI: "http://localhost:" + httpserv.identity.primaryPort + "/redirect",
     getProxyForURI(aURI) {
       throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-    }
+    },
   };
 });
 
@@ -23,8 +25,10 @@ function checkValue(request, data, ctx) {
 }
 
 function makeChan(url) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
-                .QueryInterface(Ci.nsIHttpChannel);
+  return NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+  }).QueryInterface(Ci.nsIHttpChannel);
 }
 
 function run_test() {
@@ -34,34 +38,40 @@ function run_test() {
   httpserv.registerPathHandler("/target", target);
   httpserv.start(-1);
 
-  MockRegistrar.register("@mozilla.org/system-proxy-settings;1",
-                         systemSettings);
+  MockRegistrar.register(
+    "@mozilla.org/system-proxy-settings;1",
+    systemSettings
+  );
 
   // Ensure we're using system-properties
-  const prefs = Cc["@mozilla.org/preferences-service;1"]
-                   .getService(Ci.nsIPrefBranch);
+  const prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
   prefs.setIntPref(
     "network.proxy.type",
-    Ci.nsIProtocolProxyService.PROXYCONFIG_SYSTEM);
+    Ci.nsIProtocolProxyService.PROXYCONFIG_SYSTEM
+  );
 
   // clear cache
   evict_cache_entries();
 
-  var chan = makeChan("http://localhost:" + httpserv.identity.primaryPort +
-                      "/target");
+  var chan = makeChan(
+    "http://localhost:" + httpserv.identity.primaryPort + "/target"
+  );
   chan.asyncOpen(new ChannelListener(checkValue, null));
 
   do_test_pending();
 }
 
-var called = false, failed = false;
+var called = false,
+  failed = false;
 function redirect(metadata, response) {
   // If called second time, just return the PAC but set failed-flag
   if (called) {
-      failed = true;
-      return pac(metadata, response);
-   }
-  
+    failed = true;
+    return pac(metadata, response);
+  }
+
   called = true;
   response.setStatusLine(metadata.httpVersion, 302, "Found");
   response.setHeader("Location", "/pac", false);
@@ -72,13 +82,19 @@ function redirect(metadata, response) {
 function pac(metadata, response) {
   var PAC = 'function FindProxyForURL(url, host) { return "DIRECT"; }';
   response.setStatusLine(metadata.httpVersion, 200, "Ok");
-  response.setHeader("Content-Type", "application/x-ns-proxy-autoconfig", false);
+  response.setHeader(
+    "Content-Type",
+    "application/x-ns-proxy-autoconfig",
+    false
+  );
   response.bodyOutputStream.write(PAC, PAC.length);
 }
 
 function target(metadata, response) {
   var retval = "ok";
-  if (failed) retval = "failed";
+  if (failed) {
+    retval = "failed";
+  }
 
   response.setStatusLine(metadata.httpVersion, 200, "Ok");
   response.setHeader("Content-Type", "text/plain", false);

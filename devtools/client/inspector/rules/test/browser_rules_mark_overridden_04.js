@@ -21,7 +21,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
   const idRule = getRuleViewRuleEditor(view, 1).rule;
@@ -31,6 +31,8 @@ add_task(async function() {
 
   const classRule = getRuleViewRuleEditor(view, 2).rule;
   const classProp = classRule.textProps[0];
-  ok(!classProp.overridden,
-    "Class prop should not be overridden after id prop was disabled.");
+  ok(
+    !classProp.overridden,
+    "Class prop should not be overridden after id prop was disabled."
+  );
 });

@@ -10,12 +10,14 @@
 // Import the inspector's head.js first (which itself imports shared-head.js).
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js",
-  this);
+  this
+);
 
 // Load the shared Redux helpers into this compartment.
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
-  this);
+  this
+);
 
 const asyncStorage = require("devtools/shared/async-storage");
 

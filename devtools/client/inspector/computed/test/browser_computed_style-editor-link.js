@@ -6,11 +6,13 @@
 
 // Tests the links from the computed view to the style editor.
 
-const STYLESHEET_URL = "data:text/css," + encodeURIComponent(
-  ".highlight {color: blue}");
+const STYLESHEET_URL =
+  "data:text/css," + encodeURIComponent(".highlight {color: blue}");
 
-const DOCUMENT_URL = "data:text/html;charset=utf-8," + encodeURIComponent(
-  `<html>
+const DOCUMENT_URL =
+  "data:text/html;charset=utf-8," +
+  encodeURIComponent(
+    `<html>
    <head>
    <title>Computed view style editor link test</title>
    <style type="text/css">
@@ -39,11 +41,12 @@ const DOCUMENT_URL = "data:text/html;charset=utf-8," + encodeURIComponent(
    <p>even more text</p>
    </div>
    </body>
-   </html>`);
+   </html>`
+  );
 
 add_task(async function() {
   await addTab(DOCUMENT_URL);
-  const {toolbox, inspector, view, testActor} = await openComputedView();
+  const { toolbox, inspector, view, testActor } = await openComputedView();
   await selectNode("span", inspector);
 
   await testInlineStyle(view);
@@ -98,8 +101,11 @@ async function testSecondInlineStyleSheet(view, toolbox, testActor) {
   clickLinkByIndex(view, 4);
   const editor = await onSelected;
 
-  is(toolbox.currentToolId, "styleeditor",
-    "The style editor is selected again");
+  is(
+    toolbox.currentToolId,
+    "styleeditor",
+    "The style editor is selected again"
+  );
   await validateStyleEditorSheet(editor, 1, testActor);
 }
 
@@ -117,8 +123,11 @@ async function testExternalStyleSheet(view, toolbox, testActor) {
   clickLinkByIndex(view, 1);
   const editor = await onSelected;
 
-  is(toolbox.currentToolId, "styleeditor",
-    "The style editor is selected again");
+  is(
+    toolbox.currentToolId,
+    "styleeditor",
+    "The style editor is selected again"
+  );
   await validateStyleEditorSheet(editor, 2, testActor);
 }
 
@@ -127,8 +136,11 @@ async function validateStyleEditorSheet(editor, expectedSheetIndex, testActor) {
   const expectedHref = await testActor.eval(`
     document.styleSheets[${expectedSheetIndex}].href;
   `);
-  is(editor.styleSheet.href, expectedHref,
-    "loaded stylesheet matches document stylesheet");
+  is(
+    editor.styleSheet.href,
+    expectedHref,
+    "loaded stylesheet matches document stylesheet"
+  );
 }
 
 function clickLinkByIndex(view, index) {

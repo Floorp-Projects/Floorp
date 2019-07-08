@@ -23,11 +23,13 @@ const TEST_CASES = [
     description: "weak cipher",
     input: wpl.STATE_IS_BROKEN | wpl.STATE_USES_WEAK_CRYPTO,
     expected: ["cipher"],
-  }, {
+  },
+  {
     description: "only STATE_IS_BROKEN flag",
     input: wpl.STATE_IS_BROKEN,
     expected: [],
-  }, {
+  },
+  {
     description: "only STATE_IS_SECURE flag",
     input: wpl.STATE_IS_SECURE,
     expected: [],
@@ -37,10 +39,13 @@ const TEST_CASES = [
 function run_test() {
   info("Testing NetworkHelper.getReasonsForWeakness.");
 
-  for (const {description, input, expected} of TEST_CASES) {
+  for (const { description, input, expected } of TEST_CASES) {
     info("Testing " + description);
 
-    deepEqual(NetworkHelper.getReasonsForWeakness(input), expected,
-      "Got the expected reasons for weakness.");
+    deepEqual(
+      NetworkHelper.getReasonsForWeakness(input),
+      expected,
+      "Got the expected reasons for weakness."
+    );
   }
 }

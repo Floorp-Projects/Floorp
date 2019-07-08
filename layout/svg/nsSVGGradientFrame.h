@@ -43,7 +43,7 @@ class nsSVGGradientFrame : public nsSVGPaintServerFrame {
   virtual already_AddRefed<gfxPattern> GetPaintServerPattern(
       nsIFrame* aSource, const DrawTarget* aDrawTarget,
       const gfxMatrix& aContextMatrix,
-      nsStyleSVGPaint nsStyleSVG::*aFillOrStroke, float aGraphicOpacity,
+      mozilla::StyleSVGPaint nsStyleSVG::*aFillOrStroke, float aGraphicOpacity,
       imgDrawingParams& aImgParams, const gfxRect* aOverrideBounds) override;
 
   // nsIFrame interface:

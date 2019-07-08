@@ -1,4 +1,4 @@
 == usercss.html usercss-ref.html
 == usercss-uppercase.html usercss-ref.html
 == usercss-xbl.html usercss-ref.html
-== usercss-moz-document.html usercss-moz-document-ref.html
+fails-if(geckoview&&webrender) == usercss-moz-document.html usercss-moz-document-ref.html

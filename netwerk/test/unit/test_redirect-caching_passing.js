@@ -1,4 +1,4 @@
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
@@ -13,40 +13,34 @@ XPCOMUtils.defineLazyGetter(this, "randomURI", function() {
 });
 
 function make_channel(url, callback, ctx) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
 const responseBody = "response body";
 
-function redirectHandler(metadata, response)
-{
+function redirectHandler(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 301, "Moved");
   response.setHeader("Location", URL + "/content", false);
-  
 }
 
-function contentHandler(metadata, response)
-{
+function contentHandler(metadata, response) {
   response.setHeader("Content-Type", "text/plain");
   response.bodyOutputStream.write(responseBody, responseBody.length);
 }
 
-function firstTimeThrough(request, buffer)
-{
+function firstTimeThrough(request, buffer) {
   Assert.equal(buffer, responseBody);
   var chan = make_channel(randomURI);
   chan.loadFlags |= Ci.nsIRequest.LOAD_FROM_CACHE;
   chan.asyncOpen(new ChannelListener(finish_test, null));
 }
 
-function finish_test(request, buffer)
-{
+function finish_test(request, buffer) {
   Assert.equal(buffer, responseBody);
   httpserver.stop(do_test_finished);
 }
 
-function run_test()
-{
+function run_test() {
   httpserver = new HttpServer();
   httpserver.registerPathHandler(randomPath, redirectHandler);
   httpserver.registerPathHandler("/content", contentHandler);

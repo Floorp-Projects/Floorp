@@ -9,8 +9,9 @@
 // Basic test for saving a recording and then replaying it in a new tab.
 add_task(async function() {
   const recordingFile = newRecordingFile();
-  const recordingTab = BrowserTestUtils.addTab(gBrowser, null,
-                                               { recordExecution: "*" });
+  const recordingTab = BrowserTestUtils.addTab(gBrowser, null, {
+    recordExecution: "*",
+  });
   gBrowser.selectedTab = recordingTab;
   openTrustedLinkIn(EXAMPLE_URL + "doc_rr_basic.html", "current");
   await once(Services.ppmm, "RecordingFinished");
@@ -20,8 +21,9 @@ add_task(async function() {
   ok(remoteTab.saveRecording(recordingFile), "Saved recording");
   await once(Services.ppmm, "SaveRecordingFinished");
 
-  const replayingTab = BrowserTestUtils.addTab(gBrowser, null,
-                                               { replayExecution: recordingFile });
+  const replayingTab = BrowserTestUtils.addTab(gBrowser, null, {
+    replayExecution: recordingFile,
+  });
   gBrowser.selectedTab = replayingTab;
   await once(Services.ppmm, "HitRecordingEndpoint");
 

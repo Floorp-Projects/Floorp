@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace gfx {
 
-#define NEXT_PARAMS(_type)                                         \
+#define NEXT_PARAMS(_type)                                        \
   const _type params = *reinterpret_cast<const _type*>(nextByte); \
   nextByte += sizeof(_type);
 

@@ -33,7 +33,8 @@ function getElementText(el) {
 
   // We store the current selected range and unselect everything.
   const selection = win.getSelection();
-  const currentSelectedRange = !selection.isCollapsed && selection.getRangeAt(0);
+  const currentSelectedRange =
+    !selection.isCollapsed && selection.getRangeAt(0);
   selection.removeAllRanges();
 
   // Then creates a range from `el`, and get the text content.

@@ -4,13 +4,13 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const manager = Cc["@mozilla.org/presentation-device/manager;1"]
-                  .getService(Ci.nsIPresentationDeviceManager);
+const manager = Cc["@mozilla.org/presentation-device/manager;1"].getService(
+  Ci.nsIPresentationDeviceManager
+);
 
 function TestPresentationDevice() {}
-
 
 function TestPresentationControlChannel() {}
 
@@ -29,12 +29,9 @@ TestPresentationControlChannel.prototype = {
 var testProvider = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceProvider]),
 
-  forceDiscovery() {
-  },
-  set listener(listener) {
-  },
-  get listener() {
-  },
+  forceDiscovery() {},
+  set listener(listener) {},
+  get listener() {},
 };
 
 const forbiddenRequestedUrl = "http://example.com";
@@ -56,7 +53,11 @@ function addProvider() {
   Object.defineProperty(testProvider, "listener", {
     configurable: true,
     set(listener) {
-      Assert.strictEqual(listener, manager, "listener setter is invoked by PresentationDeviceManager");
+      Assert.strictEqual(
+        listener,
+        manager,
+        "listener setter is invoked by PresentationDeviceManager"
+      );
       delete testProvider.listener;
       run_next_test();
     },
@@ -95,7 +96,9 @@ function addDevice() {
 
     run_next_test();
   }, "presentation-device-change");
-  manager.QueryInterface(Ci.nsIPresentationDeviceListener).addDevice(testDevice);
+  manager
+    .QueryInterface(Ci.nsIPresentationDeviceListener)
+    .addDevice(testDevice);
 }
 
 function updateDevice() {
@@ -115,18 +118,28 @@ function updateDevice() {
 
     let device = devices.queryElementAt(0, Ci.nsIPresentationDevice);
     Assert.equal(device.id, testDevice.id, "expected device id");
-    Assert.equal(device.name, testDevice.name, "expected name after device update");
+    Assert.equal(
+      device.name,
+      testDevice.name,
+      "expected name after device update"
+    );
     Assert.equal(device.type, testDevice.type, "expected device type");
 
     run_next_test();
   }, "presentation-device-change");
   testDevice.name = "updated-name";
-  manager.QueryInterface(Ci.nsIPresentationDeviceListener).updateDevice(testDevice);
+  manager
+    .QueryInterface(Ci.nsIPresentationDeviceListener)
+    .updateDevice(testDevice);
 }
 
 function filterDevice() {
-  let presentationUrls = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-  let url = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+  let presentationUrls = Cc["@mozilla.org/array;1"].createInstance(
+    Ci.nsIMutableArray
+  );
+  let url = Cc["@mozilla.org/supports-string;1"].createInstance(
+    Ci.nsISupportsString
+  );
   url.data = forbiddenRequestedUrl;
   presentationUrls.appendElement(url);
   let devices = manager.getAvailableDevices(presentationUrls);
@@ -145,12 +158,22 @@ function sessionRequest() {
 
     Assert.equal(request.device.id, testDevice.id, "expected device");
     Assert.equal(request.url, testUrl, "expected requesting URL");
-    Assert.equal(request.presentationId, testPresentationId, "expected presentation Id");
+    Assert.equal(
+      request.presentationId,
+      testPresentationId,
+      "expected presentation Id"
+    );
 
     run_next_test();
   }, "presentation-session-request");
-  manager.QueryInterface(Ci.nsIPresentationDeviceListener)
-         .onSessionRequest(testDevice, testUrl, testPresentationId, testControlChannel);
+  manager
+    .QueryInterface(Ci.nsIPresentationDeviceListener)
+    .onSessionRequest(
+      testDevice,
+      testUrl,
+      testPresentationId,
+      testControlChannel
+    );
 }
 
 function terminateRequest() {
@@ -163,14 +186,27 @@ function terminateRequest() {
     let request = subject.QueryInterface(Ci.nsIPresentationTerminateRequest);
 
     Assert.equal(request.device.id, testDevice.id, "expected device");
-    Assert.equal(request.presentationId, testPresentationId, "expected presentation Id");
-    Assert.equal(request.isFromReceiver, testIsFromReceiver, "expected isFromReceiver");
+    Assert.equal(
+      request.presentationId,
+      testPresentationId,
+      "expected presentation Id"
+    );
+    Assert.equal(
+      request.isFromReceiver,
+      testIsFromReceiver,
+      "expected isFromReceiver"
+    );
 
     run_next_test();
   }, "presentation-terminate-request");
-  manager.QueryInterface(Ci.nsIPresentationDeviceListener)
-         .onTerminateRequest(testDevice, testPresentationId,
-                             testControlChannel, testIsFromReceiver);
+  manager
+    .QueryInterface(Ci.nsIPresentationDeviceListener)
+    .onTerminateRequest(
+      testDevice,
+      testPresentationId,
+      testControlChannel,
+      testIsFromReceiver
+    );
 }
 
 function reconnectRequest() {
@@ -184,12 +220,22 @@ function reconnectRequest() {
 
     Assert.equal(request.device.id, testDevice.id, "expected device");
     Assert.equal(request.url, testUrl, "expected requesting URL");
-    Assert.equal(request.presentationId, testPresentationId, "expected presentation Id");
+    Assert.equal(
+      request.presentationId,
+      testPresentationId,
+      "expected presentation Id"
+    );
 
     run_next_test();
   }, "presentation-reconnect-request");
-  manager.QueryInterface(Ci.nsIPresentationDeviceListener)
-         .onReconnectRequest(testDevice, testUrl, testPresentationId, testControlChannel);
+  manager
+    .QueryInterface(Ci.nsIPresentationDeviceListener)
+    .onReconnectRequest(
+      testDevice,
+      testUrl,
+      testPresentationId,
+      testControlChannel
+    );
 }
 
 function removeDevice() {
@@ -209,14 +255,20 @@ function removeDevice() {
 
     run_next_test();
   }, "presentation-device-change");
-  manager.QueryInterface(Ci.nsIPresentationDeviceListener).removeDevice(testDevice);
+  manager
+    .QueryInterface(Ci.nsIPresentationDeviceListener)
+    .removeDevice(testDevice);
 }
 
 function removeProvider() {
   Object.defineProperty(testProvider, "listener", {
     configurable: true,
     set(listener) {
-      Assert.strictEqual(listener, null, "unsetListener is invoked by PresentationDeviceManager");
+      Assert.strictEqual(
+        listener,
+        null,
+        "unsetListener is invoked by PresentationDeviceManager"
+      );
       delete testProvider.listener;
       run_next_test();
     },

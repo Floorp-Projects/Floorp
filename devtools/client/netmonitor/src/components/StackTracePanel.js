@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
@@ -12,7 +15,9 @@ const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
 const { div } = dom;
 
 // Components
-const StackTrace = createFactory(require("devtools/client/shared/components/StackTrace"));
+const StackTrace = createFactory(
+  require("devtools/client/shared/components/StackTrace")
+);
 
 /**
  * This component represents a side panel responsible for
@@ -47,28 +52,20 @@ class StackTracePanel extends Component {
   }
 
   render() {
-    const {
-      connector,
-      openLink,
-      request,
-      sourceMapService,
-    } = this.props;
+    const { connector, openLink, request, sourceMapService } = this.props;
 
-    const {
-      stacktrace = [],
-    } = request;
+    const { stacktrace = [] } = request;
 
-    return (
-      div({ className: "panel-container" },
-        StackTrace({
-          stacktrace,
-          onViewSourceInDebugger: ({ url, line, column }) => {
-            return connector.viewSourceInDebugger(url, line, column);
-          },
-          sourceMapService,
-          openLink,
-        }),
-      )
+    return div(
+      { className: "panel-container" },
+      StackTrace({
+        stacktrace,
+        onViewSourceInDebugger: ({ url, line, column }) => {
+          return connector.viewSourceInDebugger(url, line, column);
+        },
+        sourceMapService,
+        openLink,
+      })
     );
   }
 }

@@ -6,14 +6,17 @@
 
 // Tests that coordinates can be changed programatically in the CubicBezierWidget
 
-const {CubicBezierWidget} =
-  require("devtools/client/shared/widgets/CubicBezierWidget");
-const {PREDEFINED} = require("devtools/client/shared/widgets/CubicBezierPresets");
+const {
+  CubicBezierWidget,
+} = require("devtools/client/shared/widgets/CubicBezierWidget");
+const {
+  PREDEFINED,
+} = require("devtools/client/shared/widgets/CubicBezierPresets");
 
 const TEST_URI = CHROME_URL_ROOT + "doc_cubic-bezier-01.html";
 
 add_task(async function() {
-  const [host,, doc] = await createHost("bottom", TEST_URI);
+  const [host, , doc] = await createHost("bottom", TEST_URI);
 
   const container = doc.querySelector("#cubic-bezier-container");
   const w = new CubicBezierWidget(container, PREDEFINED.linear);
@@ -61,8 +64,8 @@ async function coordinatesCanBeChangedByProvidingAValue(widget) {
   bezier = await onUpdated;
   ok(true, "The updated event was fired as a result of setting cssValue");
 
-  is(bezier.P1[0], .25, "The new P1 time coordinate is correct");
-  is(bezier.P1[1], -.5, "The new P1 progress coordinate is correct");
+  is(bezier.P1[0], 0.25, "The new P1 time coordinate is correct");
+  is(bezier.P1[1], -0.5, "The new P1 progress coordinate is correct");
   is(bezier.P2[0], 1, "The new P2 time coordinate is correct");
   is(bezier.P2[1], 1.25, "The new P2 progress coordinate is correct");
 }

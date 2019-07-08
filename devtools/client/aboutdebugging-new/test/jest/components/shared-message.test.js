@@ -8,59 +8,70 @@
  */
 
 /**
-* ============================================================
-* PLEASE NOTE:
-* This test is failing due to https://bugzilla.mozilla.org/show_bug.cgi?id=1546370
-* The fix described in 1546370 is depending on try supporting a Node version >=10
-* ============================================================
-*/
+ * ============================================================
+ * PLEASE NOTE:
+ * This test is failing due to https://bugzilla.mozilla.org/show_bug.cgi?id=1546370
+ * The fix described in 1546370 is depending on try supporting a Node version >=10
+ * ============================================================
+ */
 
 const { shallow } = require("enzyme");
 const React = require("react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-const { MESSAGE_LEVEL } = require("devtools/client/aboutdebugging-new/src/constants");
+const {
+  MESSAGE_LEVEL,
+} = require("devtools/client/aboutdebugging-new/src/constants");
 
-const Message = React.createFactory(require("devtools/client/aboutdebugging-new/src/components/shared/Message"));
+const Message = React.createFactory(
+  require("devtools/client/aboutdebugging-new/src/components/shared/Message")
+);
 
 describe("Message component", () => {
   it("renders the expected snapshot for INFO level", () => {
-    const message = shallow(Message({
-      children: dom.div({}, "Message content"),
-      className: "some-classname-1",
-      level: MESSAGE_LEVEL.INFO,
-    }));
+    const message = shallow(
+      Message({
+        children: dom.div({}, "Message content"),
+        className: "some-classname-1",
+        level: MESSAGE_LEVEL.INFO,
+      })
+    );
     expect(message).toMatchSnapshot();
   });
 
   it("renders the expected snapshot for WARNING level", () => {
-    const message = shallow(Message({
-      children: dom.div({}, "Message content"),
-      className: "some-classname-2",
-      level: MESSAGE_LEVEL.WARNING,
-    }));
+    const message = shallow(
+      Message({
+        children: dom.div({}, "Message content"),
+        className: "some-classname-2",
+        level: MESSAGE_LEVEL.WARNING,
+      })
+    );
     expect(message).toMatchSnapshot();
   });
 
   it("renders the expected snapshot for ERROR level", () => {
-    const message = shallow(Message({
-      children: dom.div({}, "Message content"),
-      className: "some-classname-3",
-      level: MESSAGE_LEVEL.ERROR,
-    }));
+    const message = shallow(
+      Message({
+        children: dom.div({}, "Message content"),
+        className: "some-classname-3",
+        level: MESSAGE_LEVEL.ERROR,
+      })
+    );
     expect(message).toMatchSnapshot();
   });
 });
 
 describe("Message component renders with closing button", () => {
   it("renders the expected snapshot for Message with closing button", () => {
-    const message = shallow(Message({
-      children: dom.div({}, "Message content"),
-      className: "some-classname-1",
-      level: MESSAGE_LEVEL.INFO,
-      isCloseable: true,
-    }));
+    const message = shallow(
+      Message({
+        children: dom.div({}, "Message content"),
+        className: "some-classname-1",
+        level: MESSAGE_LEVEL.INFO,
+        isCloseable: true,
+      })
+    );
     expect(message).toMatchSnapshot();
   });
 });
-

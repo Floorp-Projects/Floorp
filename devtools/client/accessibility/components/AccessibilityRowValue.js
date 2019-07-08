@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
@@ -28,20 +31,27 @@ class AccessibilityRowValue extends Component {
   }
 
   render() {
-    const { member, supports: { audit } } = this.props;
+    const {
+      member,
+      supports: { audit },
+    } = this.props;
 
-    return span({
-      role: "presentation",
-    },
+    return span(
+      {
+        role: "presentation",
+      },
       Rep({
         ...this.props,
         defaultRep: Grip,
         cropLimit: 50,
       }),
-      audit && AuditController({
-        accessible: member.object,
-      },
-        Badges()),
+      audit &&
+        AuditController(
+          {
+            accessible: member.object,
+          },
+          Badges()
+        )
     );
   }
 }

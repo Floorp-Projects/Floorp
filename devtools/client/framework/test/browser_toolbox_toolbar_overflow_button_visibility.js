@@ -11,12 +11,20 @@ const { Toolbox } = require("devtools/client/framework/toolbox");
 
 add_task(async function() {
   const tab = await addTab("about:blank");
-  const toolbox = await openToolboxForTab(tab, "options", Toolbox.HostType.BOTTOM);
-  const toolboxButtonPreferences =
-    toolbox.toolbarButtons.map(button => button.visibilityswitch);
+  const toolbox = await openToolboxForTab(
+    tab,
+    "options",
+    Toolbox.HostType.BOTTOM
+  );
+  const toolboxButtonPreferences = toolbox.toolbarButtons.map(
+    button => button.visibilityswitch
+  );
 
   const win = getWindow(toolbox);
-  const { outerWidth: originalWindowWidth, outerHeight: originalWindowHeight } = win;
+  const {
+    outerWidth: originalWindowWidth,
+    outerHeight: originalWindowHeight,
+  } = win;
   registerCleanupFunction(() => {
     for (const preference of toolboxButtonPreferences) {
       Services.prefs.clearUserPref(preference);
@@ -26,11 +34,13 @@ add_task(async function() {
   });
 
   const optionsTool = toolbox.getCurrentPanel();
-  const checkButtons =
-    optionsTool.panelWin.document
-               .querySelectorAll("#enabled-toolbox-buttons-box input[type=checkbox]");
+  const checkButtons = optionsTool.panelWin.document.querySelectorAll(
+    "#enabled-toolbox-buttons-box input[type=checkbox]"
+  );
 
-  info("Test the count of shown devtools tab after making all buttons to be visible");
+  info(
+    "Test the count of shown devtools tab after making all buttons to be visible"
+  );
   await resizeWindow(toolbox, 800);
   // Once, make all toolbox button to be invisible.
   setToolboxButtonsVisibility(checkButtons, false);
@@ -38,13 +48,20 @@ add_task(async function() {
   const initialTabCount = toolbox.doc.querySelectorAll(".devtools-tab").length;
   // Make all toolbox button to be visible.
   setToolboxButtonsVisibility(checkButtons, true);
-  ok(toolbox.doc.querySelectorAll(".devtools-tab").length < initialTabCount,
-     "Count of shown devtools tab should decreased");
+  ok(
+    toolbox.doc.querySelectorAll(".devtools-tab").length < initialTabCount,
+    "Count of shown devtools tab should decreased"
+  );
 
-  info("Test the count of shown devtools tab after making all buttons to be invisible");
+  info(
+    "Test the count of shown devtools tab after making all buttons to be invisible"
+  );
   setToolboxButtonsVisibility(checkButtons, false);
-  is(toolbox.doc.querySelectorAll(".devtools-tab").length, initialTabCount,
-     "Count of shown devtools tab should be same to 1st count");
+  is(
+    toolbox.doc.querySelectorAll(".devtools-tab").length,
+    initialTabCount,
+    "Count of shown devtools tab should be same to 1st count"
+  );
 });
 
 function setToolboxButtonsVisibility(checkButtons, doVisible) {

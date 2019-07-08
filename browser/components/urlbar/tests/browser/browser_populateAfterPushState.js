@@ -9,14 +9,24 @@
  * change takes place.
  */
 add_task(async function() {
-  await BrowserTestUtils.withNewTab(TEST_BASE_URL + "dummy_page.html", async function(browser) {
-    gURLBar.value = "";
+  await BrowserTestUtils.withNewTab(
+    TEST_BASE_URL + "dummy_page.html",
+    async function(browser) {
+      gURLBar.value = "";
 
-    let locationChangePromise = BrowserTestUtils.waitForLocationChange(gBrowser, TEST_BASE_URL + "dummy_page2.html");
-    await ContentTask.spawn(browser, null, function() {
-      content.history.pushState({}, "Page 2", "dummy_page2.html");
-    });
-    await locationChangePromise;
-    is(gURLBar.value, TEST_BASE_URL + "dummy_page2.html", "Should have updated the URL bar.");
-  });
+      let locationChangePromise = BrowserTestUtils.waitForLocationChange(
+        gBrowser,
+        TEST_BASE_URL + "dummy_page2.html"
+      );
+      await ContentTask.spawn(browser, null, function() {
+        content.history.pushState({}, "Page 2", "dummy_page2.html");
+      });
+      await locationChangePromise;
+      is(
+        gURLBar.value,
+        TEST_BASE_URL + "dummy_page2.html",
+        "Should have updated the URL bar."
+      );
+    }
+  );
 });

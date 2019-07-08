@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
   let request = indexedDB.open(name, 1);
@@ -20,10 +19,7 @@ function* testSteps()
   // Check default state.
   is(db.version, 1, "Correct default version for a new database.");
 
-  const versions = [
-    7,
-    42,
-  ];
+  const versions = [7, 42];
 
   for (let i = 0; i < versions.length; i++) {
     let version = versions[i];
@@ -47,4 +43,3 @@ function* testSteps()
 
   finishTest();
 }
-

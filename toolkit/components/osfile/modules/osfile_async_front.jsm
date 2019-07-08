@@ -22,9 +22,11 @@
 var EXPORTED_SYMBOLS = ["OS"];
 
 var SharedAll = {};
-ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
+ChromeUtils.import(
+  "resource://gre/modules/osfile/osfile_shared_allthreads.jsm",
+  SharedAll
+);
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
-
 
 // Boilerplate, to simplify the transition to require()
 var LOG = SharedAll.LOG.bind(SharedAll, "Controller");
@@ -33,9 +35,15 @@ var isTypedArray = SharedAll.isTypedArray;
 // The constructor for file errors.
 var SysAll = {};
 if (SharedAll.Constants.Win) {
-  ChromeUtils.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm", SysAll);
+  ChromeUtils.import(
+    "resource://gre/modules/osfile/osfile_win_allthreads.jsm",
+    SysAll
+  );
 } else if (SharedAll.Constants.libc) {
-  ChromeUtils.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm", SysAll);
+  ChromeUtils.import(
+    "resource://gre/modules/osfile/osfile_unix_allthreads.jsm",
+    SysAll
+  );
 } else {
   throw new Error("I am neither under Windows nor under a Posix system");
 }
@@ -46,15 +54,20 @@ var Path = {};
 ChromeUtils.import("resource://gre/modules/osfile/ospath.jsm", Path);
 
 // The library of promises.
-ChromeUtils.defineModuleGetter(this, "PromiseUtils",
-                               "resource://gre/modules/PromiseUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PromiseUtils",
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
 // The implementation of communications
 ChromeUtils.import("resource://gre/modules/PromiseWorker.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm", this);
-var Native = ChromeUtils.import("resource://gre/modules/osfile/osfile_native.jsm", null);
-
+var Native = ChromeUtils.import(
+  "resource://gre/modules/osfile/osfile_native.jsm",
+  null
+);
 
 // It's possible for osfile.jsm to get imported before the profile is
 // set up. In this case, some path constants aren't yet available.
@@ -86,13 +99,16 @@ for (let [constProp, dirKey] of [
   ["tmpDir", "TmpD"],
   ["homeDir", "Home"],
   ["macUserLibDir", "ULibDir"],
-  ]) {
+]) {
   if (constProp in SharedAll.Constants.Path) {
     continue;
   }
 
-  LOG("Installing lazy getter for OS.Constants.Path." + constProp +
-      " because it isn't defined and profile may not be loaded.");
+  LOG(
+    "Installing lazy getter for OS.Constants.Path." +
+      constProp +
+      " because it isn't defined and profile may not be loaded."
+  );
   Object.defineProperty(SharedAll.Constants.Path, constProp, {
     get: lazyPathGetter(constProp, dirKey),
   });
@@ -120,20 +136,20 @@ function summarizeObject(obj) {
   }
   if (typeof obj == "string") {
     if (obj.length > 1024) {
-      return {"Long string": obj.length};
+      return { "Long string": obj.length };
     }
     return obj;
   }
   if (typeof obj == "object") {
     if (Array.isArray(obj)) {
       if (obj.length > 32) {
-        return {"Long array": obj.length};
+        return { "Long array": obj.length };
       }
       return obj.map(summarizeObject);
     }
     if ("byteLength" in obj) {
       // Assume TypedArray or ArrayBuffer
-      return {"Binary Data": obj.byteLength};
+      return { "Binary Data": obj.byteLength };
     }
     let result = {};
     for (let k of Object.keys(obj)) {
@@ -147,8 +163,7 @@ function summarizeObject(obj) {
 // In order to expose Scheduler to the unfiltered Cu.import return value variant
 // on B2G we need to save it to `this`.  This does not make it public;
 // EXPORTED_SYMBOLS still controls that in all cases.
-var Scheduler = this.Scheduler = {
-
+var Scheduler = (this.Scheduler = {
   /**
    * |true| once we have sent at least one message to the worker.
    * This field is unaffected by resetting the worker.
@@ -231,22 +246,22 @@ var Scheduler = this.Scheduler = {
     if (!this._worker) {
       // Either the worker has never been created or it has been
       // reset.  In either case, it is time to instantiate the worker.
-      this._worker = new BasePromiseWorker("resource://gre/modules/osfile/osfile_async_worker.js");
+      this._worker = new BasePromiseWorker(
+        "resource://gre/modules/osfile/osfile_async_worker.js"
+      );
       this._worker.log = LOG;
       this._worker.ExceptionHandlers["OS.File.Error"] = OSError.fromMsg;
 
       let delay = Services.prefs.getIntPref("osfile.reset_worker_delay", 0);
       if (delay) {
-        this.resetTimer = setInterval(
-          () => {
-            if (this.hasRecentActivity) {
-              this.hasRecentActivity = false;
-              return;
-            }
-            clearInterval(this.resetTimer);
-            Scheduler.kill({reset: true, shutdown: false});
-          },
-          delay);
+        this.resetTimer = setInterval(() => {
+          if (this.hasRecentActivity) {
+            this.hasRecentActivity = false;
+            return;
+          }
+          clearInterval(this.resetTimer);
+          Scheduler.kill({ reset: true, shutdown: false });
+        }, delay);
       }
     }
     return this._worker;
@@ -271,7 +286,7 @@ var Scheduler = this.Scheduler = {
    *   would not cause leaks. Otherwise, assume that the worker will be shutdown
    *   through some other mean.
    */
-  kill({shutdown, reset}) {
+  kill({ shutdown, reset }) {
     // Grab the kill queue to make sure that we
     // cannot be interrupted by another call to `kill`.
     let killQueue = this._killQueue;
@@ -284,7 +299,7 @@ var Scheduler = this.Scheduler = {
     let savedQueue = this.queue;
     this.queue = deferred.promise;
 
-    return this._killQueue = (async () => {
+    return (this._killQueue = (async () => {
       await killQueue;
       // From this point, and until the end of the Task, we are the
       // only call to `kill`, regardless of any `yield`.
@@ -322,24 +337,31 @@ var Scheduler = this.Scheduler = {
           // It's most likely a programmer error, but we'll assume that
           // the worker has been shutdown, as it's less risky than the
           // opposite stance.
-          resources = {openedFiles: [], openedDirectoryIterators: [], killed: true};
+          resources = {
+            openedFiles: [],
+            openedDirectoryIterators: [],
+            killed: true,
+          };
 
           Scheduler.latestReceived = [Date.now(), message, ex];
         }
 
-        let {openedFiles, openedDirectoryIterators, killed} = resources;
-        if (!reset
-          && (openedFiles && openedFiles.length
-            || ( openedDirectoryIterators && openedDirectoryIterators.length))) {
+        let { openedFiles, openedDirectoryIterators, killed } = resources;
+        if (
+          !reset &&
+          ((openedFiles && openedFiles.length) ||
+            (openedDirectoryIterators && openedDirectoryIterators.length))
+        ) {
           // The worker still holds resources. Report them.
 
           let msg = "";
           if (openedFiles.length > 0) {
-            msg += "The following files are still open:\n" +
-              openedFiles.join("\n");
+            msg +=
+              "The following files are still open:\n" + openedFiles.join("\n");
           }
           if (openedDirectoryIterators.length > 0) {
-            msg += "The following directory iterators are still open:\n" +
+            msg +=
+              "The following directory iterators are still open:\n" +
               openedDirectoryIterators.join("\n");
           }
 
@@ -360,7 +382,7 @@ var Scheduler = this.Scheduler = {
         // pending/future request will spawn a new worker if necessary.
         deferred.resolve();
       }
-    })();
+    })());
   },
 
   /**
@@ -395,9 +417,14 @@ var Scheduler = this.Scheduler = {
    */
   post: function post(method, args = undefined, closure = undefined) {
     if (this.shutdown) {
-      LOG("OS.File is not available anymore. The following request has been rejected.",
-        method, args);
-      return Promise.reject(new Error("OS.File has been shut down. Rejecting post to " + method));
+      LOG(
+        "OS.File is not available anymore. The following request has been rejected.",
+        method,
+        args
+      );
+      return Promise.reject(
+        new Error("OS.File has been shut down. Rejecting post to " + method)
+      );
     }
     let firstLaunch = !this.launched;
     this.launched = true;
@@ -411,22 +438,35 @@ var Scheduler = this.Scheduler = {
     Scheduler.Debugging.messagesQueued++;
     return this.push(async () => {
       if (this.shutdown) {
-        LOG("OS.File is not available anymore. The following request has been rejected.",
-          method, args);
-        throw new Error("OS.File has been shut down. Rejecting request to " + method);
+        LOG(
+          "OS.File is not available anymore. The following request has been rejected.",
+          method,
+          args
+        );
+        throw new Error(
+          "OS.File has been shut down. Rejecting request to " + method
+        );
       }
 
       // Update debugging information. As |args| may be quite
       // expensive, we only keep a shortened version of it.
       Scheduler.Debugging.latestReceived = null;
-      Scheduler.Debugging.latestSent = [Date.now(), method, summarizeObject(args)];
+      Scheduler.Debugging.latestSent = [
+        Date.now(),
+        method,
+        summarizeObject(args),
+      ];
 
       // Don't kill the worker just yet
       Scheduler.restartTimer();
 
       // The last object inside the args may be an options object.
       let options = null;
-      if (args && args.length >= 1 && typeof args[args.length - 1] === "object") {
+      if (
+        args &&
+        args.length >= 1 &&
+        typeof args[args.length - 1] === "object"
+      ) {
         options = args[args.length - 1];
       }
 
@@ -434,16 +474,25 @@ var Scheduler = this.Scheduler = {
       try {
         try {
           Scheduler.Debugging.messagesSent++;
-          Scheduler.Debugging.latestSent = Scheduler.Debugging.latestSent.slice(0, 2);
+          Scheduler.Debugging.latestSent = Scheduler.Debugging.latestSent.slice(
+            0,
+            2
+          );
           let serializationStartTimeMs = Date.now();
           reply = await this.worker.post(method, args, closure);
           let serializationEndTimeMs = Date.now();
-          Scheduler.Debugging.latestReceived = [Date.now(), summarizeObject(reply)];
+          Scheduler.Debugging.latestReceived = [
+            Date.now(),
+            summarizeObject(reply),
+          ];
 
           // There were no options for recording the serialization duration.
           if (options && "outSerializationDuration" in options) {
             // The difference might be negative for very fast operations, since Date.now() may not be monotonic.
-            let serializationDurationMs = Math.max(0, serializationEndTimeMs - serializationStartTimeMs);
+            let serializationDurationMs = Math.max(
+              0,
+              serializationEndTimeMs - serializationStartTimeMs
+            );
 
             if (typeof options.outSerializationDuration === "number") {
               options.outSerializationDuration += serializationDurationMs;
@@ -456,7 +505,12 @@ var Scheduler = this.Scheduler = {
           Scheduler.Debugging.messagesReceived++;
         }
       } catch (error) {
-        Scheduler.Debugging.latestReceived = [Date.now(), error.message, error.fileName, error.lineNumber];
+        Scheduler.Debugging.latestReceived = [
+          Date.now(),
+          error.message,
+          error.fileName,
+          error.lineNumber,
+        ];
         throw error;
       } finally {
         if (firstLaunch) {
@@ -481,13 +535,21 @@ var Scheduler = this.Scheduler = {
       // let's not waste time attempting to extract telemetry from it.
       return;
     }
-    let HISTOGRAM_LAUNCH = Services.telemetry.getHistogramById("OSFILE_WORKER_LAUNCH_MS");
-    HISTOGRAM_LAUNCH.add(worker.workerTimeStamps.entered - worker.launchTimeStamp);
+    let HISTOGRAM_LAUNCH = Services.telemetry.getHistogramById(
+      "OSFILE_WORKER_LAUNCH_MS"
+    );
+    HISTOGRAM_LAUNCH.add(
+      worker.workerTimeStamps.entered - worker.launchTimeStamp
+    );
 
-    let HISTOGRAM_READY = Services.telemetry.getHistogramById("OSFILE_WORKER_READY_MS");
-    HISTOGRAM_READY.add(worker.workerTimeStamps.loaded - worker.launchTimeStamp);
+    let HISTOGRAM_READY = Services.telemetry.getHistogramById(
+      "OSFILE_WORKER_READY_MS"
+    );
+    HISTOGRAM_READY.add(
+      worker.workerTimeStamps.loaded - worker.launchTimeStamp
+    );
   },
-};
+});
 
 const PREF_OSFILE_LOG = "toolkit.osfile.log";
 const PREF_OSFILE_LOG_REDIRECT = "toolkit.osfile.log.redirect";
@@ -508,22 +570,33 @@ function readDebugPref(prefName, oldPref = false) {
  * Listen to PREF_OSFILE_LOG changes and update gShouldLog flag
  * appropriately.
  */
-Services.prefs.addObserver(PREF_OSFILE_LOG,
-  function prefObserver(aSubject, aTopic, aData) {
-    SharedAll.Config.DEBUG = readDebugPref(PREF_OSFILE_LOG, SharedAll.Config.DEBUG);
-    if (Scheduler.launched) {
-      // Don't start the worker just to set this preference.
-      Scheduler.post("SET_DEBUG", [SharedAll.Config.DEBUG]);
-    }
-  });
+Services.prefs.addObserver(PREF_OSFILE_LOG, function prefObserver(
+  aSubject,
+  aTopic,
+  aData
+) {
+  SharedAll.Config.DEBUG = readDebugPref(
+    PREF_OSFILE_LOG,
+    SharedAll.Config.DEBUG
+  );
+  if (Scheduler.launched) {
+    // Don't start the worker just to set this preference.
+    Scheduler.post("SET_DEBUG", [SharedAll.Config.DEBUG]);
+  }
+});
 SharedAll.Config.DEBUG = readDebugPref(PREF_OSFILE_LOG, false);
 
-Services.prefs.addObserver(PREF_OSFILE_LOG_REDIRECT,
-  function prefObserver(aSubject, aTopic, aData) {
-    SharedAll.Config.TEST = readDebugPref(PREF_OSFILE_LOG_REDIRECT, OS.Shared.TEST);
-  });
+Services.prefs.addObserver(PREF_OSFILE_LOG_REDIRECT, function prefObserver(
+  aSubject,
+  aTopic,
+  aData
+) {
+  SharedAll.Config.TEST = readDebugPref(
+    PREF_OSFILE_LOG_REDIRECT,
+    OS.Shared.TEST
+  );
+});
 SharedAll.Config.TEST = readDebugPref(PREF_OSFILE_LOG_REDIRECT, false);
-
 
 /**
  * If |true|, use the native implementaiton of OS.File methods
@@ -531,11 +604,16 @@ SharedAll.Config.TEST = readDebugPref(PREF_OSFILE_LOG_REDIRECT, false);
  */
 var nativeWheneverAvailable = true;
 const PREF_OSFILE_NATIVE = "toolkit.osfile.native";
-Services.prefs.addObserver(PREF_OSFILE_NATIVE,
-  function prefObserver(aSubject, aTopic, aData) {
-    nativeWheneverAvailable = readDebugPref(PREF_OSFILE_NATIVE, nativeWheneverAvailable);
-  });
-
+Services.prefs.addObserver(PREF_OSFILE_NATIVE, function prefObserver(
+  aSubject,
+  aTopic,
+  aData
+) {
+  nativeWheneverAvailable = readDebugPref(
+    PREF_OSFILE_NATIVE,
+    nativeWheneverAvailable
+  );
+});
 
 // Update worker's DEBUG flag if it's true.
 // Don't start the worker just for this, though.
@@ -551,10 +629,10 @@ AsyncShutdown.webWorkersShutdown.addBlocker(
   "OS.File: flush pending requests, warn about unclosed files, shut down service.",
   async function() {
     // Give clients a last chance to enqueue requests.
-    await Barriers.shutdown.wait({crashAfterMS: null});
+    await Barriers.shutdown.wait({ crashAfterMS: null });
 
     // Wait until all requests are complete and kill the worker.
-    await Scheduler.kill({reset: false, shutdown: true});
+    await Scheduler.kill({ reset: false, shutdown: true });
   },
   () => {
     let details = Barriers.getDetails();
@@ -563,17 +641,19 @@ AsyncShutdown.webWorkersShutdown.addBlocker(
   }
 );
 
-
 // Attaching an observer for PREF_OSFILE_TEST_SHUTDOWN_OBSERVER to enable or
 // disable the test shutdown event observer.
 // Note: By default the PREF_OSFILE_TEST_SHUTDOWN_OBSERVER is unset.
 // Note: This is meant to be used for testing purposes only.
-Services.prefs.addObserver(PREF_OSFILE_TEST_SHUTDOWN_OBSERVER,
+Services.prefs.addObserver(
+  PREF_OSFILE_TEST_SHUTDOWN_OBSERVER,
   function prefObserver() {
     // The temporary phase topic used to trigger the unclosed
     // phase warning.
-    let TOPIC = Services.prefs.getCharPref(PREF_OSFILE_TEST_SHUTDOWN_OBSERVER,
-                                           "");
+    let TOPIC = Services.prefs.getCharPref(
+      PREF_OSFILE_TEST_SHUTDOWN_OBSERVER,
+      ""
+    );
     if (TOPIC) {
       // Generate a phase, add a blocker.
       // Note that this can work only if AsyncShutdown itself has been
@@ -581,10 +661,11 @@ Services.prefs.addObserver(PREF_OSFILE_TEST_SHUTDOWN_OBSERVER,
       let phase = AsyncShutdown._getPhase(TOPIC);
       phase.addBlocker(
         "(for testing purposes) OS.File: warn about unclosed files",
-        () => Scheduler.kill({shutdown: false, reset: false})
+        () => Scheduler.kill({ shutdown: false, reset: false })
       );
     }
-  });
+  }
+);
 
 /**
  * Representation of a file, with asynchronous methods.
@@ -602,7 +683,6 @@ var File = function File(fdmsg) {
   this._closed = null;
 };
 
-
 File.prototype = {
   /**
    * Close a file asynchronously.
@@ -617,8 +697,11 @@ File.prototype = {
     if (this._fdmsg != null) {
       let msg = this._fdmsg;
       this._fdmsg = null;
-      return this._closeResult =
-        Scheduler.post("File_prototype_close", [msg], this);
+      return (this._closeResult = Scheduler.post(
+        "File_prototype_close",
+        [msg],
+        this
+      ));
     }
     return this._closeResult;
   },
@@ -662,14 +745,17 @@ File.prototype = {
     // the |in| operator.
     if (isTypedArray(buffer) && !(options && "bytes" in options)) {
       // Preserve reference to option |outExecutionDuration|, |outSerializationDuration|, if it is passed.
-      options = clone(options, ["outExecutionDuration", "outSerializationDuration"]);
+      options = clone(options, [
+        "outExecutionDuration",
+        "outSerializationDuration",
+      ]);
       options.bytes = buffer.byteLength;
     }
-    return Scheduler.post("File_prototype_write",
-      [this._fdmsg,
-       Type.void_t.in_ptr.toMsg(buffer),
-       options],
-       buffer/* Ensure that |buffer| is not gc-ed*/);
+    return Scheduler.post(
+      "File_prototype_write",
+      [this._fdmsg, Type.void_t.in_ptr.toMsg(buffer), options],
+      buffer /* Ensure that |buffer| is not gc-ed*/
+    );
   },
 
   /**
@@ -683,13 +769,14 @@ File.prototype = {
    * @resolves {Uint8Array} An array containing the bytes read.
    */
   read: function read(nbytes, options = {}) {
-    let promise = Scheduler.post("File_prototype_read",
-      [this._fdmsg,
-       nbytes, options]);
-    return promise.then(
-      function onSuccess(data) {
-        return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
-      });
+    let promise = Scheduler.post("File_prototype_read", [
+      this._fdmsg,
+      nbytes,
+      options,
+    ]);
+    return promise.then(function onSuccess(data) {
+      return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+    });
   },
 
   /**
@@ -700,8 +787,7 @@ File.prototype = {
    * as a number of bytes since the start of the file.
    */
   getPosition: function getPosition() {
-    return Scheduler.post("File_prototype_getPosition",
-      [this._fdmsg]);
+    return Scheduler.post("File_prototype_getPosition", [this._fdmsg]);
   },
 
   /**
@@ -716,8 +802,11 @@ File.prototype = {
    * @return {promise}
    */
   setPosition: function setPosition(pos, whence) {
-    return Scheduler.post("File_prototype_setPosition",
-      [this._fdmsg, pos, whence]);
+    return Scheduler.post("File_prototype_setPosition", [
+      this._fdmsg,
+      pos,
+      whence,
+    ]);
   },
 
   /**
@@ -732,8 +821,7 @@ File.prototype = {
    * @return {promise}
    */
   flush: function flush() {
-    return Scheduler.post("File_prototype_flush",
-      [this._fdmsg]);
+    return Scheduler.post("File_prototype_flush", [this._fdmsg]);
   },
 
   /**
@@ -757,14 +845,15 @@ File.prototype = {
    *  false, the exact value of |unixMode| will be applied.
    */
   setPermissions: function setPermissions(options = {}) {
-    return Scheduler.post("File_prototype_setPermissions",
-                          [this._fdmsg, options]);
+    return Scheduler.post("File_prototype_setPermissions", [
+      this._fdmsg,
+      options,
+    ]);
   },
 };
 
-
 if (SharedAll.Constants.Sys.Name != "Android") {
-   /**
+  /**
    * Set the last access and modification date of the file.
    * The time stamp resolution is 1 second at best, but might be worse
    * depending on the platform.
@@ -777,11 +866,13 @@ if (SharedAll.Constants.Sys.Name != "Android") {
    * @rejects {OS.File.Error}
    */
   File.prototype.setDates = function(accessDate, modificationDate) {
-    return Scheduler.post("File_prototype_setDates",
-      [this._fdmsg, accessDate, modificationDate], this);
+    return Scheduler.post(
+      "File_prototype_setDates",
+      [this._fdmsg, accessDate, modificationDate],
+      this
+    );
   };
 }
-
 
 /**
  * Open a file asynchronously.
@@ -792,13 +883,12 @@ if (SharedAll.Constants.Sys.Name != "Android") {
  */
 File.open = function open(path, mode, options) {
   return Scheduler.post(
-    "open", [Type.path.toMsg(path), mode, options],
+    "open",
+    [Type.path.toMsg(path), mode, options],
     path
-  ).then(
-    function onSuccess(msg) {
-      return new File(msg);
-    }
-  );
+  ).then(function onSuccess(msg) {
+    return new File(msg);
+  });
 };
 
 /**
@@ -818,16 +908,15 @@ File.open = function open(path, mode, options) {
  */
 File.openUnique = function openUnique(path, options) {
   return Scheduler.post(
-      "openUnique", [Type.path.toMsg(path), options],
-      path
-    ).then(
-    function onSuccess(msg) {
-      return {
-        path: msg.path,
-        file: new File(msg.file),
-      };
-    }
-  );
+    "openUnique",
+    [Type.path.toMsg(path), options],
+    path
+  ).then(function onSuccess(msg) {
+    return {
+      path: msg.path,
+      file: new File(msg.file),
+    };
+  });
 };
 
 /**
@@ -838,11 +927,10 @@ File.openUnique = function openUnique(path, options) {
  * @rejects {OS.Error}
  */
 File.stat = function stat(path, options) {
-  return Scheduler.post(
-    "stat", [Type.path.toMsg(path), options],
-    path).then(File.Info.fromMsg);
+  return Scheduler.post("stat", [Type.path.toMsg(path), options], path).then(
+    File.Info.fromMsg
+  );
 };
-
 
 /**
  * Set the last access and modification date of the file.
@@ -854,9 +942,11 @@ File.stat = function stat(path, options) {
  * @rejects {OS.File.Error}
  */
 File.setDates = function setDates(path, accessDate, modificationDate) {
-  return Scheduler.post("setDates",
-                        [Type.path.toMsg(path), accessDate, modificationDate],
-                        this);
+  return Scheduler.post(
+    "setDates",
+    [Type.path.toMsg(path), accessDate, modificationDate],
+    this
+  );
 };
 
 /**
@@ -881,8 +971,7 @@ File.setDates = function setDates(path, accessDate, modificationDate) {
  *  false, the exact value of |unixMode| will be applied.
  */
 File.setPermissions = function setPermissions(path, options = {}) {
-  return Scheduler.post("setPermissions",
-                        [Type.path.toMsg(path), options]);
+  return Scheduler.post("setPermissions", [Type.path.toMsg(path), options]);
 };
 
 /**
@@ -893,9 +982,7 @@ File.setPermissions = function setPermissions(path, options = {}) {
  * @rejects {OS.Error}
  */
 File.getCurrentDirectory = function getCurrentDirectory() {
-  return Scheduler.post(
-    "getCurrentDirectory"
-  ).then(Type.path.fromMsg);
+  return Scheduler.post("getCurrentDirectory").then(Type.path.fromMsg);
 };
 
 /**
@@ -910,9 +997,7 @@ File.getCurrentDirectory = function getCurrentDirectory() {
  * @rejects {OS.Error}
  */
 File.setCurrentDirectory = function setCurrentDirectory(path) {
-  return Scheduler.post(
-    "setCurrentDirectory", [Type.path.toMsg(path)], path
-  );
+  return Scheduler.post("setCurrentDirectory", [Type.path.toMsg(path)], path);
 };
 
 /**
@@ -937,10 +1022,13 @@ File.setCurrentDirectory = function setCurrentDirectory(path) {
  * General note: The behavior of this function with respect to metadata
  * is unspecified. Metadata may or may not be copied with the file. The
  * behavior may not be the same across all platforms.
-*/
+ */
 File.copy = function copy(sourcePath, destPath, options) {
-  return Scheduler.post("copy", [Type.path.toMsg(sourcePath),
-    Type.path.toMsg(destPath), options], [sourcePath, destPath]);
+  return Scheduler.post(
+    "copy",
+    [Type.path.toMsg(sourcePath), Type.path.toMsg(destPath), options],
+    [sourcePath, destPath]
+  );
 };
 
 /**
@@ -968,8 +1056,11 @@ File.copy = function copy(sourcePath, destPath, options) {
  * behavior may not be the same across all platforms.
  */
 File.move = function move(sourcePath, destPath, options) {
-  return Scheduler.post("move", [Type.path.toMsg(sourcePath),
-    Type.path.toMsg(destPath), options], [sourcePath, destPath]);
+  return Scheduler.post(
+    "move",
+    [Type.path.toMsg(sourcePath), Type.path.toMsg(destPath), options],
+    [sourcePath, destPath]
+  );
 };
 
 /**
@@ -985,8 +1076,11 @@ File.move = function move(sourcePath, destPath, options) {
  */
 if (!SharedAll.Constants.Win) {
   File.unixSymLink = function unixSymLink(sourcePath, destPath) {
-    return Scheduler.post("unixSymLink", [Type.path.toMsg(sourcePath),
-      Type.path.toMsg(destPath)], [sourcePath, destPath]);
+    return Scheduler.post(
+      "unixSymLink",
+      [Type.path.toMsg(sourcePath), Type.path.toMsg(destPath)],
+      [sourcePath, destPath]
+    );
   };
 }
 
@@ -999,8 +1093,11 @@ if (!SharedAll.Constants.Win) {
  *     directory does not exist yet.
  */
 File.removeEmptyDir = function removeEmptyDir(path, options) {
-  return Scheduler.post("removeEmptyDir",
-    [Type.path.toMsg(path), options], path);
+  return Scheduler.post(
+    "removeEmptyDir",
+    [Type.path.toMsg(path), options],
+    path
+  );
 };
 
 /**
@@ -1014,11 +1111,8 @@ File.removeEmptyDir = function removeEmptyDir(path, options) {
  * @throws {OS.File.Error} In case of I/O error.
  */
 File.remove = function remove(path, options) {
-  return Scheduler.post("remove",
-    [Type.path.toMsg(path), options], path);
+  return Scheduler.post("remove", [Type.path.toMsg(path), options], path);
 };
-
-
 
 /**
  * Create a directory and, optionally, its parent directories.
@@ -1047,8 +1141,7 @@ File.remove = function remove(path, options) {
  * does not support security descriptors.
  */
 File.makeDir = function makeDir(path, options) {
-  return Scheduler.post("makeDir",
-    [Type.path.toMsg(path), options], path);
+  return Scheduler.post("makeDir", [Type.path.toMsg(path), options], path);
 };
 
 /**
@@ -1076,7 +1169,10 @@ File.read = function read(path, bytes, options = {}) {
     // We should now be passing it as a field of |options|.
     options = bytes || {};
   } else {
-    options = clone(options, ["outExecutionDuration", "outSerializationDuration"]);
+    options = clone(options, [
+      "outExecutionDuration",
+      "outSerializationDuration",
+    ]);
     if (typeof bytes != "undefined") {
       options.bytes = bytes;
     }
@@ -1084,15 +1180,17 @@ File.read = function read(path, bytes, options = {}) {
 
   if (options.compression || !nativeWheneverAvailable) {
     // We need to use the JS implementation.
-    let promise = Scheduler.post("read",
-      [Type.path.toMsg(path), bytes, options], path);
-    return promise.then(
-      function onSuccess(data) {
-        if (typeof data == "string") {
-          return data;
-        }
-        return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
-      });
+    let promise = Scheduler.post(
+      "read",
+      [Type.path.toMsg(path), bytes, options],
+      path
+    );
+    return promise.then(function onSuccess(data) {
+      if (typeof data == "string") {
+        return data;
+      }
+      return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+    });
   }
 
   // Otherwise, use the native implementation.
@@ -1107,8 +1205,7 @@ File.read = function read(path, bytes, options = {}) {
  * @return {bool} true if the file exists, false otherwise.
  */
 File.exists = function exists(path) {
-  return Scheduler.post("exists",
-    [Type.path.toMsg(path)], path);
+  return Scheduler.post("exists", [Type.path.toMsg(path)], path);
 };
 
 /**
@@ -1156,18 +1253,22 @@ File.exists = function exists(path) {
  * @resolves {number} The number of bytes actually written.
  */
 File.writeAtomic = function writeAtomic(path, buffer, options = {}) {
-  const useNativeImplementation = nativeWheneverAvailable &&
-                                  !options.compression &&
-                                  !(isTypedArray(buffer) && "byteOffset" in buffer && buffer.byteOffset > 0);
+  const useNativeImplementation =
+    nativeWheneverAvailable &&
+    !options.compression &&
+    !(isTypedArray(buffer) && "byteOffset" in buffer && buffer.byteOffset > 0);
   // Copy |options| to avoid modifying the original object but preserve the
   // reference to |outExecutionDuration|, |outSerializationDuration| option if it is passed.
-  options = clone(options, ["outExecutionDuration", "outSerializationDuration"]);
+  options = clone(options, [
+    "outExecutionDuration",
+    "outSerializationDuration",
+  ]);
   // As options.tmpPath is a path, we need to encode it as |Type.path| message, but only
   // if we are not using the native implementation.
   if ("tmpPath" in options && !useNativeImplementation) {
     options.tmpPath = Type.path.toMsg(options.tmpPath);
   }
-  if (isTypedArray(buffer) && (!("bytes" in options))) {
+  if (isTypedArray(buffer) && !("bytes" in options)) {
     options.bytes = buffer.byteLength;
   }
   let refObj = {};
@@ -1176,18 +1277,18 @@ File.writeAtomic = function writeAtomic(path, buffer, options = {}) {
   if (useNativeImplementation) {
     promise = Scheduler.push(() => Native.writeAtomic(path, buffer, options));
   } else {
-  promise = Scheduler.post("writeAtomic",
-    [Type.path.toMsg(path),
-     Type.void_t.in_ptr.toMsg(buffer),
-     options], [options, buffer, path]);
+    promise = Scheduler.post(
+      "writeAtomic",
+      [Type.path.toMsg(path), Type.void_t.in_ptr.toMsg(buffer), options],
+      [options, buffer, path]
+    );
   }
   TelemetryStopwatch.finish("OSFILE_WRITEATOMIC_JANK_MS", refObj);
   return promise;
 };
 
 File.removeDir = function(path, options = {}) {
-  return Scheduler.post("removeDir",
-    [Type.path.toMsg(path), options], path);
+  return Scheduler.post("removeDir", [Type.path.toMsg(path), options], path);
 };
 
 /**
@@ -1201,18 +1302,25 @@ File.Info = function Info(value) {
   // prototype defines getters for all of these fields.
   for (let k in value) {
     if (k != "creationDate") {
-      Object.defineProperty(this, k, {value: value[k]});
+      Object.defineProperty(this, k, { value: value[k] });
     }
   }
-  Object.defineProperty(this, "_deprecatedCreationDate", {value: value.creationDate});
+  Object.defineProperty(this, "_deprecatedCreationDate", {
+    value: value.creationDate,
+  });
 };
 File.Info.prototype = SysAll.AbstractInfo.prototype;
 
 // Deprecated
 Object.defineProperty(File.Info.prototype, "creationDate", {
   get: function creationDate() {
-    let {Deprecated} = ChromeUtils.import("resource://gre/modules/Deprecated.jsm");
-    Deprecated.warning("Field 'creationDate' is deprecated.", "https://developer.mozilla.org/en-US/docs/JavaScript_OS.File/OS.File.Info#Cross-platform_Attributes");
+    let { Deprecated } = ChromeUtils.import(
+      "resource://gre/modules/Deprecated.jsm"
+    );
+    Deprecated.warning(
+      "Field 'creationDate' is deprecated.",
+      "https://developer.mozilla.org/en-US/docs/JavaScript_OS.File/OS.File.Info#Cross-platform_Attributes"
+    );
     return this._deprecatedCreationDate;
   },
 });
@@ -1243,7 +1351,8 @@ var DirectoryIterator = function DirectoryIterator(path, options) {
    * in the worker thread
    */
   this._itmsg = Scheduler.post(
-    "new_DirectoryIterator", [Type.path.toMsg(path), options],
+    "new_DirectoryIterator",
+    [Type.path.toMsg(path), options],
     path
   );
   this._isClosed = false;
@@ -1277,7 +1386,7 @@ DirectoryIterator.prototype = {
    */
   async next() {
     if (this._isClosed) {
-      return {value: undefined, done: true};
+      return { value: undefined, done: true };
     }
     return this._next(await this._itmsg);
   },
@@ -1294,7 +1403,10 @@ DirectoryIterator.prototype = {
       return [];
     }
     let iterator = await this._itmsg;
-    let array = await Scheduler.post("DirectoryIterator_prototype_nextBatch", [iterator, size]);
+    let array = await Scheduler.post("DirectoryIterator_prototype_nextBatch", [
+      iterator,
+      size,
+    ]);
     return array.map(DirectoryIterator.Entry.fromMsg);
   },
   /**
@@ -1322,7 +1434,7 @@ DirectoryIterator.prototype = {
       if (this._isClosed) {
         return undefined;
       }
-      let {value, done} = await this._next(iterator);
+      let { value, done } = await this._next(iterator);
       if (done) {
         return undefined;
       }
@@ -1337,14 +1449,17 @@ DirectoryIterator.prototype = {
    */
   async _next(iterator) {
     if (this._isClosed) {
-      return {value: undefined, done: true};
+      return { value: undefined, done: true };
     }
-    let {value, done} = await Scheduler.post("DirectoryIterator_prototype_next", [iterator]);
+    let { value, done } = await Scheduler.post(
+      "DirectoryIterator_prototype_next",
+      [iterator]
+    );
     if (done) {
       this.close();
-      return {value: undefined, done: true};
+      return { value: undefined, done: true };
     }
-    return {value: DirectoryIterator.Entry.fromMsg(value), done: false};
+    return { value: DirectoryIterator.Entry.fromMsg(value), done: false };
   },
   /**
    * Close the iterator
@@ -1363,7 +1478,9 @@ DirectoryIterator.prototype = {
 DirectoryIterator.Entry = function Entry(value) {
   return value;
 };
-DirectoryIterator.Entry.prototype = Object.create(SysAll.AbstractEntry.prototype);
+DirectoryIterator.Entry.prototype = Object.create(
+  SysAll.AbstractEntry.prototype
+);
 
 DirectoryIterator.Entry.fromMsg = function fromMsg(value) {
   return new DirectoryIterator.Entry(value);
@@ -1371,9 +1488,12 @@ DirectoryIterator.Entry.fromMsg = function fromMsg(value) {
 
 File.resetWorker = function() {
   return (async function() {
-    let resources = await Scheduler.kill({shutdown: false, reset: true});
+    let resources = await Scheduler.kill({ shutdown: false, reset: true });
     if (resources && !resources.killed) {
-        throw new Error("Could not reset worker, this would leak file descriptors: " + JSON.stringify(resources));
+      throw new Error(
+        "Could not reset worker, this would leak file descriptors: " +
+          JSON.stringify(resources)
+      );
     }
   })();
 };
@@ -1397,7 +1517,7 @@ this.OS.Shared = {
     return SharedAll.Config.DEBUG;
   },
   set DEBUG(x) {
-    return SharedAll.Config.DEBUG = x;
+    return (SharedAll.Config.DEBUG = x);
   },
 };
 Object.freeze(this.OS.Shared);
@@ -1414,14 +1534,18 @@ Object.defineProperty(OS.File, "queue", {
 // It would be nicer to go through `Services.appinfo`, but some tests need to be
 // able to replace that field with a custom implementation before it is first
 // called.
-// eslint-disable-next-line mozilla/use-services
-const isContent = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
+const isContent =
+  // eslint-disable-next-line mozilla/use-services
+  Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processType ==
+  Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
 
 /**
  * Shutdown barriers, to let clients register to be informed during shutdown.
  */
 var Barriers = {
-  shutdown: new AsyncShutdown.Barrier("OS.File: Waiting for clients before full shutdown"),
+  shutdown: new AsyncShutdown.Barrier(
+    "OS.File: Waiting for clients before full shutdown"
+  ),
   /**
    * Return the shutdown state of OS.File
    */
@@ -1449,7 +1573,9 @@ var Barriers = {
 };
 
 function setupShutdown(phaseName) {
-  Barriers[phaseName] = new AsyncShutdown.Barrier(`OS.File: Waiting for clients before ${phaseName}`);
+  Barriers[phaseName] = new AsyncShutdown.Barrier(
+    `OS.File: Waiting for clients before ${phaseName}`
+  );
   File[phaseName] = Barriers[phaseName].client;
 
   // Auto-flush OS.File during `phaseName`. This ensures that any I/O
@@ -1460,7 +1586,7 @@ function setupShutdown(phaseName) {
     `OS.File: flush I/O queued before ${phaseName}`,
     async function() {
       // Give clients a last chance to enqueue requests.
-      await Barriers[phaseName].wait({crashAfterMS: null});
+      await Barriers[phaseName].wait({ crashAfterMS: null });
 
       // Wait until all currently enqueued requests are completed.
       await Scheduler.queue;

@@ -6,8 +6,9 @@
 
 var tests = [
   {
-    desc: "nsNavHistoryFolderResultNode: Basic test, asynchronously open and " +
-          "close container with a single child",
+    desc:
+      "nsNavHistoryFolderResultNode: Basic test, asynchronously open and " +
+      "close container with a single child",
 
     loading(node, newState, oldState) {
       this.checkStateChanged("loading", 1);
@@ -35,8 +36,9 @@ var tests = [
   },
 
   {
-    desc: "nsNavHistoryFolderResultNode: After async open and no changes, " +
-          "second open should be synchronous",
+    desc:
+      "nsNavHistoryFolderResultNode: After async open and no changes, " +
+      "second open should be synchronous",
 
     loading(node, newState, oldState) {
       this.checkStateChanged("loading", 1);
@@ -61,19 +63,20 @@ var tests = [
       this.checkArgs("closed", node, oldState, node.STATE_OPENED);
 
       switch (cnt) {
-      case 1:
-        node.containerOpen = true;
-        break;
-      case 2:
-        this.success();
-        break;
+        case 1:
+          node.containerOpen = true;
+          break;
+        case 2:
+          this.success();
+          break;
       }
     },
   },
 
   {
-    desc: "nsNavHistoryFolderResultNode: After closing container in " +
-          "loading(), opened() should not be called",
+    desc:
+      "nsNavHistoryFolderResultNode: After closing container in " +
+      "loading(), opened() should not be called",
 
     loading(node, newState, oldState) {
       this.checkStateChanged("loading", 1);
@@ -94,7 +97,6 @@ var tests = [
     },
   },
 ];
-
 
 /**
  * Instances of this class become the prototypes of the test objects above.
@@ -143,8 +145,9 @@ Test.prototype = {
    */
   checkStateChanged(aState, aExpectedMin, aExpectedMax) {
     print(aState + " state change observed");
-    if (!this.stateCounts.hasOwnProperty(aState))
+    if (!this.stateCounts.hasOwnProperty(aState)) {
       this.stateCounts[aState] = 0;
+    }
     this.stateCounts[aState]++;
     return this.checkState(aState, aExpectedMin, aExpectedMax);
   },
@@ -165,15 +168,29 @@ Test.prototype = {
    */
   checkState(aState, aExpectedMin, aExpectedMax) {
     let cnt = this.stateCounts[aState] || 0;
-    if (aExpectedMax === undefined)
+    if (aExpectedMax === undefined) {
       aExpectedMax = aExpectedMin;
+    }
     if (aExpectedMin === aExpectedMax) {
-      print(aState + " should be observed only " + aExpectedMin +
-            " times (actual = " + cnt + ")");
+      print(
+        aState +
+          " should be observed only " +
+          aExpectedMin +
+          " times (actual = " +
+          cnt +
+          ")"
+      );
     } else {
-      print(aState + " should be observed at least " + aExpectedMin +
-            " times and at most " + aExpectedMax + " times (actual = " +
-            cnt + ")");
+      print(
+        aState +
+          " should be observed at least " +
+          aExpectedMin +
+          " times and at most " +
+          aExpectedMax +
+          " times (actual = " +
+          cnt +
+          ")"
+      );
     }
     Assert.ok(cnt >= aExpectedMin && cnt <= aExpectedMax);
     return cnt;
@@ -188,23 +205,25 @@ Test.prototype = {
     let self = this;
     this.observer = {
       containerStateChanged(container, oldState, newState) {
-        print("New state passed to containerStateChanged() should equal the " +
-              "container's current state");
+        print(
+          "New state passed to containerStateChanged() should equal the " +
+            "container's current state"
+        );
         Assert.equal(newState, container.state);
 
         try {
           switch (newState) {
-          case Ci.nsINavHistoryContainerResultNode.STATE_LOADING:
-            self.loading(container, newState, oldState);
-            break;
-          case Ci.nsINavHistoryContainerResultNode.STATE_OPENED:
-            self.opened(container, newState, oldState);
-            break;
-          case Ci.nsINavHistoryContainerResultNode.STATE_CLOSED:
-            self.closed(container, newState, oldState);
-            break;
-          default:
-            do_throw("Unexpected new state! " + newState);
+            case Ci.nsINavHistoryContainerResultNode.STATE_LOADING:
+              self.loading(container, newState, oldState);
+              break;
+            case Ci.nsINavHistoryContainerResultNode.STATE_OPENED:
+              self.opened(container, newState, oldState);
+              break;
+            case Ci.nsINavHistoryContainerResultNode.STATE_CLOSED:
+              self.closed(container, newState, oldState);
+              break;
+            default:
+              do_throw("Unexpected new state! " + newState);
           }
         } catch (err) {
           do_throw(err);
@@ -294,33 +313,33 @@ var DataHelper = {
       let type = dat.type;
       dat = self._makeDataWithDefaults(dat, self.defaults[type]);
       switch (type) {
-      case "bookmark":
-        return {
-          isBookmark: true,
-          uri: dat.uri,
-          parentGuid: dat.parentGuid,
-          index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-          title: dat.title,
-          isInQuery: true,
-        };
-      case "separator":
-        return {
-          isSeparator: true,
-          parentGuid: dat.parentGuid,
-          index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-          isInQuery: true,
-        };
-      case "folder":
-        return {
-          isFolder: true,
-          parentGuid: dat.parentGuid,
-          index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-          title: dat.title,
-          isInQuery: true,
-        };
-      default:
-        do_throw("Unknown data type when populating DB: " + type);
-        return undefined;
+        case "bookmark":
+          return {
+            isBookmark: true,
+            uri: dat.uri,
+            parentGuid: dat.parentGuid,
+            index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+            title: dat.title,
+            isInQuery: true,
+          };
+        case "separator":
+          return {
+            isSeparator: true,
+            parentGuid: dat.parentGuid,
+            index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+            isInQuery: true,
+          };
+        case "folder":
+          return {
+            isFolder: true,
+            parentGuid: dat.parentGuid,
+            index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+            title: dat.title,
+            isInQuery: true,
+          };
+        default:
+          do_throw("Unknown data type when populating DB: " + type);
+          return undefined;
       }
     });
   },

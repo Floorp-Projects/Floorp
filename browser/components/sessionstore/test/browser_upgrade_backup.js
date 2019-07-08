@@ -7,7 +7,8 @@ ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 
 const Paths = SessionFile.Paths;
 const PREF_UPGRADE = "browser.sessionstore.upgradeBackup.latestBuildID";
-const PREF_MAX_UPGRADE_BACKUPS = "browser.sessionstore.upgradeBackup.maxUpgradeBackups";
+const PREF_MAX_UPGRADE_BACKUPS =
+  "browser.sessionstore.upgradeBackup.maxUpgradeBackups";
 
 /**
  * Prepares tests by retrieving the current platform's build ID, clearing the
@@ -19,7 +20,9 @@ function prepareTest() {
 
   result.buildID = Services.appinfo.platformBuildID;
   Services.prefs.setCharPref(PREF_UPGRADE, "");
-  result.contents = JSON.stringify({"browser_upgrade_backup.js": Math.random()});
+  result.contents = JSON.stringify({
+    "browser_upgrade_backup.js": Math.random(),
+  });
 
   return result;
 }
@@ -61,24 +64,48 @@ add_task(async function test_upgrade_backup() {
   let test = prepareTest();
   info("Let's check if we create an upgrade backup");
   await SessionFile.wipe();
-  await OS.File.writeAtomic(Paths.clean, test.contents, {encoding: "utf-8", compression: "lz4"});
+  await OS.File.writeAtomic(Paths.clean, test.contents, {
+    encoding: "utf-8",
+    compression: "lz4",
+  });
   await SessionFile.read(); // First call to read() initializes the SessionWorker
   await SessionFile.write(""); // First call to write() triggers the backup
 
-  is(Services.prefs.getCharPref(PREF_UPGRADE), test.buildID, "upgrade backup should be set");
+  is(
+    Services.prefs.getCharPref(PREF_UPGRADE),
+    test.buildID,
+    "upgrade backup should be set"
+  );
 
-  is((await OS.File.exists(Paths.upgradeBackup)), true, "upgrade backup file has been created");
+  is(
+    await OS.File.exists(Paths.upgradeBackup),
+    true,
+    "upgrade backup file has been created"
+  );
 
-  let data = await OS.File.read(Paths.upgradeBackup, {compression: "lz4"});
-  is(test.contents, (new TextDecoder()).decode(data), "upgrade backup contains the expected contents");
+  let data = await OS.File.read(Paths.upgradeBackup, { compression: "lz4" });
+  is(
+    test.contents,
+    new TextDecoder().decode(data),
+    "upgrade backup contains the expected contents"
+  );
 
   info("Let's check that we don't overwrite this upgrade backup");
-  let newContents = JSON.stringify({"something else entirely": Math.random()});
-  await OS.File.writeAtomic(Paths.clean, newContents, {encoding: "utf-8", compression: "lz4"});
+  let newContents = JSON.stringify({
+    "something else entirely": Math.random(),
+  });
+  await OS.File.writeAtomic(Paths.clean, newContents, {
+    encoding: "utf-8",
+    compression: "lz4",
+  });
   await SessionFile.read(); // Reinitialize the SessionWorker
   await SessionFile.write(""); // Next call to write() shouldn't trigger the backup
-  data = await OS.File.read(Paths.upgradeBackup, {compression: "lz4"});
-  is(test.contents, (new TextDecoder()).decode(data), "upgrade backup hasn't changed");
+  data = await OS.File.read(Paths.upgradeBackup, { compression: "lz4" });
+  is(
+    test.contents,
+    new TextDecoder().decode(data),
+    "upgrade backup hasn't changed"
+  );
 });
 
 add_task(async function test_upgrade_backup_removal() {
@@ -87,7 +114,10 @@ add_task(async function test_upgrade_backup_removal() {
   info("Let's see if we remove backups if there are too many");
   await SessionFile.wipe();
   await OS.File.makeDir(Paths.backups);
-  await OS.File.writeAtomic(Paths.clean, test.contents, {encoding: "utf-8", compression: "lz4"});
+  await OS.File.writeAtomic(Paths.clean, test.contents, {
+    encoding: "utf-8",
+    compression: "lz4",
+  });
 
   // if the nextUpgradeBackup already exists (from another test), remove it
   if (OS.File.exists(Paths.nextUpgradeBackup)) {
@@ -95,12 +125,30 @@ add_task(async function test_upgrade_backup_removal() {
   }
 
   // create dummy backups
-  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20080101010101", "", {encoding: "utf-8", compression: "lz4"});
-  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20090101010101", "", {encoding: "utf-8", compression: "lz4"});
-  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20100101010101", "", {encoding: "utf-8", compression: "lz4"});
-  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20110101010101", "", {encoding: "utf-8", compression: "lz4"});
-  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20120101010101", "", {encoding: "utf-8", compression: "lz4"});
-  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20130101010101", "", {encoding: "utf-8", compression: "lz4"});
+  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20080101010101", "", {
+    encoding: "utf-8",
+    compression: "lz4",
+  });
+  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20090101010101", "", {
+    encoding: "utf-8",
+    compression: "lz4",
+  });
+  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20100101010101", "", {
+    encoding: "utf-8",
+    compression: "lz4",
+  });
+  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20110101010101", "", {
+    encoding: "utf-8",
+    compression: "lz4",
+  });
+  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20120101010101", "", {
+    encoding: "utf-8",
+    compression: "lz4",
+  });
+  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20130101010101", "", {
+    encoding: "utf-8",
+    compression: "lz4",
+  });
 
   // get currently existing backups
   let backups = await getUpgradeBackups();
@@ -110,12 +158,24 @@ add_task(async function test_upgrade_backup_removal() {
   await SessionFile.write(""); // First call to write() triggers the backup and the cleanup
 
   // a new backup should have been created (and still exist)
-  is(Services.prefs.getCharPref(PREF_UPGRADE), test.buildID, "upgrade backup should be set");
-  is((await OS.File.exists(Paths.upgradeBackup)), true, "upgrade backup file has been created");
+  is(
+    Services.prefs.getCharPref(PREF_UPGRADE),
+    test.buildID,
+    "upgrade backup should be set"
+  );
+  is(
+    await OS.File.exists(Paths.upgradeBackup),
+    true,
+    "upgrade backup file has been created"
+  );
 
   // get currently existing backups and check their count
   let newBackups = await getUpgradeBackups();
-  is(newBackups.length, maxUpgradeBackups, "expected number of backups are present after removing old backups");
+  is(
+    newBackups.length,
+    maxUpgradeBackups,
+    "expected number of backups are present after removing old backups"
+  );
 
   // find all backups that were created during the last call to `SessionFile.write("");`
   // ie, filter out all the backups that have already been present before the call
@@ -129,5 +189,9 @@ add_task(async function test_upgrade_backup_removal() {
   await SessionFile.write(""); // Second call to write() should not trigger anything
 
   backups = await getUpgradeBackups();
-  is(backups.length, maxUpgradeBackups, "second call to SessionFile.write() didn't create or remove more backups");
+  is(
+    backups.length,
+    maxUpgradeBackups,
+    "second call to SessionFile.write() didn't create or remove more backups"
+  );
 });

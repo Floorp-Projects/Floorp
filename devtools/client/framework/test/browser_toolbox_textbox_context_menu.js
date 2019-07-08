@@ -60,7 +60,9 @@ add_task(async function checkMenuEntryStates() {
 });
 
 add_task(async function automaticallyBindTexbox() {
-  info("Registering a tool with an input field and making sure the context menu works");
+  info(
+    "Registering a tool with an input field and making sure the context menu works"
+  );
   gDevTools.registerTool({
     id: textboxToolId,
     isTargetSupported: () => true,
@@ -88,9 +90,13 @@ async function checkNonTextInput(input, toolbox) {
   let textboxContextMenu = toolbox.getTextBoxContextMenu();
   ok(!textboxContextMenu, "The menu is closed");
 
-  info("Simulating context click on the non text input and expecting no menu to open");
+  info(
+    "Simulating context click on the non text input and expecting no menu to open"
+  );
   const eventBubbledUp = new Promise(resolve => {
-    input.ownerDocument.addEventListener("contextmenu", resolve, { once: true });
+    input.ownerDocument.addEventListener("contextmenu", resolve, {
+      once: true,
+    });
   });
   synthesizeContextMenuEvent(input);
   info("Waiting for event");
@@ -104,7 +110,9 @@ async function checkTextBox(textBox, toolbox) {
   let textboxContextMenu = toolbox.getTextBoxContextMenu();
   ok(!textboxContextMenu, "The menu is closed");
 
-  info("Simulating context click on the textbox and expecting the menu to open");
+  info(
+    "Simulating context click on the textbox and expecting the menu to open"
+  );
   const onContextMenu = toolbox.once("menu-open");
   synthesizeContextMenuEvent(textBox);
   await onContextMenu;

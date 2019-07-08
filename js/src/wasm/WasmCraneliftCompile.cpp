@@ -76,8 +76,8 @@ static void DisassembleCode(uint8_t* code, size_t codeLen) {
 #if defined(JS_CODEGEN_X64) && defined(JS_JITSPEW) && \
     defined(ENABLE_WASM_CRANELIFT)
   zydisDisassemble(code, codeLen, [](const char* text) {
-                                    JitSpew(JitSpew_Codegen, "%s", text);
-                                  });
+    JitSpew(JitSpew_Codegen, "%s", text);
+  });
 #else
   JitSpew(JitSpew_Codegen, "*** No disassembly available ***");
 #endif
@@ -441,21 +441,21 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
     uint32_t totalCodeSize = masm.currentOffset();
     uint8_t* codeBuf = (uint8_t*)js_malloc(totalCodeSize);
     if (codeBuf) {
-        masm.executableCopy(codeBuf, totalCodeSize);
+      masm.executableCopy(codeBuf, totalCodeSize);
 
-        for (const FuncCompileInput& func : inputs) {
-          JitSpew(JitSpew_Codegen, "# ========================================");
-          JitSpew(JitSpew_Codegen, "# Start of wasm cranelift code for index %d",
-                  (int)func.index);
+      for (const FuncCompileInput& func : inputs) {
+        JitSpew(JitSpew_Codegen, "# ========================================");
+        JitSpew(JitSpew_Codegen, "# Start of wasm cranelift code for index %d",
+                (int)func.index);
 
-          uint32_t codeStart = code->codeRanges[func.index].begin();
-          uint32_t codeEnd = code->codeRanges[func.index].end();
-          DisassembleCode(codeBuf + codeStart, codeEnd - codeStart);
+        uint32_t codeStart = code->codeRanges[func.index].begin();
+        uint32_t codeEnd = code->codeRanges[func.index].end();
+        DisassembleCode(codeBuf + codeStart, codeEnd - codeStart);
 
-          JitSpew(JitSpew_Codegen, "# End of wasm cranelift code for index %d",
-                  (int)func.index);
-        }
-        js_free(codeBuf);
+        JitSpew(JitSpew_Codegen, "# End of wasm cranelift code for index %d",
+                (int)func.index);
+      }
+      js_free(codeBuf);
     }
   }
 

@@ -12,16 +12,21 @@
 const CURRENT_SCHEMA = 4;
 const PR_HOURS = 60 * 60 * 1000000;
 
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {FormHistory} = ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { FormHistory } = ChromeUtils.import(
+  "resource://gre/modules/FormHistory.jsm"
+);
 
 do_get_profile();
 
 // Send the profile-after-change notification to the form history component to ensure
 // that it has been initialized.
-var formHistoryStartup = Cc["@mozilla.org/satchel/form-history-startup;1"]
-                         .getService(Ci.nsIObserver);
+var formHistoryStartup = Cc[
+  "@mozilla.org/satchel/form-history-startup;1"
+].getService(Ci.nsIObserver);
 formHistoryStartup.observe(null, "profile-after-change", null);
 
 function getDBVersion(dbfile) {
@@ -39,7 +44,6 @@ function getFormHistoryDBVersion() {
   dbFile.append("formhistory.sqlite");
   return getDBVersion(dbFile);
 }
-
 
 const isGUID = /[A-Za-z0-9\+\/]{16}/;
 
@@ -72,7 +76,7 @@ function countEntries(name, value, then) {
 
   let count = 0;
   FormHistory.count(obj, {
-    handleResult: result => count = result,
+    handleResult: result => (count = result),
     handleError(error) {
       do_throw("Error occurred searching form history: " + error);
     },
@@ -99,19 +103,25 @@ function updateEntry(op, name, value, then) {
 // Add a single form history entry with the current time and call then() when done.
 function addEntry(name, value, then) {
   let now = Date.now() * 1000;
-  updateFormHistory({
-    op: "add",
-    fieldname: name,
-    value,
-    timesUsed: 1,
-    firstUsed: now,
-    lastUsed: now,
-  }, then);
+  updateFormHistory(
+    {
+      op: "add",
+      fieldname: name,
+      value,
+      timesUsed: 1,
+      firstUsed: now,
+      lastUsed: now,
+    },
+    then
+  );
 }
 
 function promiseCountEntries(name, value, checkFn = () => {}) {
   return new Promise(resolve => {
-    countEntries(name, value, function(result) { checkFn(result); resolve(result); });
+    countEntries(name, value, function(result) {
+      checkFn(result);
+      resolve(result);
+    });
   });
 }
 

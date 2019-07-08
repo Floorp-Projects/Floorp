@@ -36,13 +36,17 @@ add_task(async function() {
     await onMediaListChanged;
   }
 
-  info("Resize the window to stop matching media queries, and trigger the UI updates");
+  info(
+    "Resize the window to stop matching media queries, and trigger the UI updates"
+  );
   const onMediaListChanged = waitForManyEvents(ui, win, EVENTS_DELAY);
   await resizeWindow(400, ui, win);
   const eventsCount = await onMediaListChanged;
 
-  ok(eventsCount < MAX_EVENTS,
-    `Too many events fired (expected less than ${MAX_EVENTS}, got ${eventsCount})`);
+  ok(
+    eventsCount < MAX_EVENTS,
+    `Too many events fired (expected less than ${MAX_EVENTS}, got ${eventsCount})`
+  );
 
   win.resizeTo(originalWidth, originalHeight);
 });

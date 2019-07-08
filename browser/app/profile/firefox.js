@@ -1742,8 +1742,11 @@ pref("signon.schemeUpgrades", true);
 pref("signon.privateBrowsingCapture.enabled", true);
 pref("signon.showAutoCompleteFooter", true);
 pref("signon.management.page.enabled", false);
+#ifdef NIGHTLY_BUILD
+// Bug 1563330 tracks shipping this by default.
 pref("signon.showAutoCompleteOrigins", true);
 pref("signon.includeOtherSubdomainsInLookup", true);
+#endif
 pref("signon.management.page.faqURL", "https://lockwise.firefox.com/faq.html");
 pref("signon.management.page.feedbackURL",
      "https://www.surveygizmo.com/s3/5036102/Lockwise-feedback?ver=%VERSION%");

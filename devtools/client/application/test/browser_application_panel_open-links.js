@@ -14,10 +14,7 @@ const TAB_URL = URL_ROOT + "service-workers/empty.html";
 add_task(async function() {
   await enableApplicationPanel();
 
-  const {
-    panel,
-    toolbox,
-  } = await openNewTabAndApplicationPanel(TAB_URL);
+  const { panel, toolbox } = await openNewTabAndApplicationPanel(TAB_URL);
 
   const doc = panel.panelWin.document;
 
@@ -25,8 +22,10 @@ add_task(async function() {
   await toolbox.switchHost(Toolbox.HostType.WINDOW);
 
   // click on the link and wait for the new tab to open
-  const onTabLoaded = BrowserTestUtils
-    .waitForNewTab(gBrowser, "about:debugging#workers");
+  const onTabLoaded = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "about:debugging#workers"
+  );
   doc.querySelector(".js-trusted-link").click();
   info("Opening link in a new tab.");
   const newTab = await onTabLoaded;

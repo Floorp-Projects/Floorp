@@ -4,19 +4,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Shared Places Import - change other consumers if you change this: */
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
-XPCOMUtils.defineLazyScriptGetter(this, "PlacesTreeView",
-                                  "chrome://browser/content/places/treeView.js");
-XPCOMUtils.defineLazyScriptGetter(this, ["PlacesInsertionPoint", "PlacesController",
-                                         "PlacesControllerDragHelper"],
-                                  "chrome://browser/content/places/controller.js");
+XPCOMUtils.defineLazyScriptGetter(
+  this,
+  "PlacesTreeView",
+  "chrome://browser/content/places/treeView.js"
+);
+XPCOMUtils.defineLazyScriptGetter(
+  this,
+  ["PlacesInsertionPoint", "PlacesController", "PlacesControllerDragHelper"],
+  "chrome://browser/content/places/controller.js"
+);
 /* End Shared Places Import */
 
 /**
@@ -37,7 +44,9 @@ var SelectBookmarkDialog = {
 
     // Initial update of the OK button.
     this.selectionChanged();
-    document.addEventListener("dialogaccept", function() { SelectBookmarkDialog.accept(); });
+    document.addEventListener("dialogaccept", function() {
+      SelectBookmarkDialog.accept();
+    });
   },
 
   /**
@@ -49,8 +58,9 @@ var SelectBookmarkDialog = {
     var bookmarks = document.getElementById("bookmarks");
     var disableAcceptButton = true;
     if (bookmarks.hasSelection) {
-      if (!PlacesUtils.nodeIsSeparator(bookmarks.selectedNode))
+      if (!PlacesUtils.nodeIsSeparator(bookmarks.selectedNode)) {
         disableAcceptButton = false;
+      }
     }
     accept.disabled = disableAcceptButton;
   },
@@ -73,8 +83,11 @@ var SelectBookmarkDialog = {
    */
   accept: function SBD_accept() {
     var bookmarks = document.getElementById("bookmarks");
-    if (!bookmarks.hasSelection)
-      throw new Error("Should not be able to accept dialog if there is no selected URL!");
+    if (!bookmarks.hasSelection) {
+      throw new Error(
+        "Should not be able to accept dialog if there is no selected URL!"
+      );
+    }
     var urls = [];
     var names = [];
     var selectedNode = bookmarks.selectedNode;

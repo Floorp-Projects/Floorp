@@ -44,13 +44,20 @@ async function testGetTimeToSettle(front, makePromises) {
     front.on("new-promises", promises => {
       for (const p of promises) {
         if (p.promiseState.state === "pending") {
-          ok(!p.promiseState.timeToSettle,
-            "Expect no time to settle for unsettled promise.");
+          ok(
+            !p.promiseState.timeToSettle,
+            "Expect no time to settle for unsettled promise."
+          );
         } else {
-          ok(p.promiseState.timeToSettle,
-            "Expect time to settle for settled promise.");
-          equal(typeof p.promiseState.timeToSettle, "number",
-            "Expect time to settle to be a number.");
+          ok(
+            p.promiseState.timeToSettle,
+            "Expect time to settle for settled promise."
+          );
+          equal(
+            typeof p.promiseState.timeToSettle,
+            "number",
+            "Expect time to settle to be a number."
+          );
         }
       }
       resolve();

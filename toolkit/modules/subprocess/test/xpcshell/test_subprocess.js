@@ -1,11 +1,14 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-
-const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+const env = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
 
 const MAX_ROUND_TRIP_TIME_MS = AppConstants.DEBUG || AppConstants.ASAN ? 18 : 9;
 const MAX_RETRIES = 5;
@@ -22,7 +25,6 @@ let read = pipe => {
   });
 };
 
-
 let readAll = async function(pipe) {
   let result = [];
   let string;
@@ -33,7 +35,6 @@ let readAll = async function(pipe) {
   return result.join("");
 };
 
-
 add_task(async function setup() {
   PYTHON = await Subprocess.pathSearch(env.get("PYTHON"));
 
@@ -41,51 +42,53 @@ add_task(async function setup() {
   PYTHON_DIR = OS.Path.dirname(PYTHON);
 });
 
-
 add_task(async function test_subprocess_io() {
   let proc = await Subprocess.call({
     command: PYTHON,
     arguments: ["-u", TEST_SCRIPT, "echo"],
   });
 
-  Assert.throws(() => { proc.stdout.read(-1); },
-                /non-negative integer/);
-  Assert.throws(() => { proc.stdout.read(1.1); },
-                /non-negative integer/);
+  Assert.throws(() => {
+    proc.stdout.read(-1);
+  }, /non-negative integer/);
+  Assert.throws(() => {
+    proc.stdout.read(1.1);
+  }, /non-negative integer/);
 
-  Assert.throws(() => { proc.stdout.read(Infinity); },
-                /non-negative integer/);
-  Assert.throws(() => { proc.stdout.read(NaN); },
-                /non-negative integer/);
+  Assert.throws(() => {
+    proc.stdout.read(Infinity);
+  }, /non-negative integer/);
+  Assert.throws(() => {
+    proc.stdout.read(NaN);
+  }, /non-negative integer/);
 
-  Assert.throws(() => { proc.stdout.readString(-1); },
-                /non-negative integer/);
-  Assert.throws(() => { proc.stdout.readString(1.1); },
-                /non-negative integer/);
+  Assert.throws(() => {
+    proc.stdout.readString(-1);
+  }, /non-negative integer/);
+  Assert.throws(() => {
+    proc.stdout.readString(1.1);
+  }, /non-negative integer/);
 
-  Assert.throws(() => { proc.stdout.readJSON(-1); },
-                /positive integer/);
-  Assert.throws(() => { proc.stdout.readJSON(0); },
-                /positive integer/);
-  Assert.throws(() => { proc.stdout.readJSON(1.1); },
-                /positive integer/);
-
+  Assert.throws(() => {
+    proc.stdout.readJSON(-1);
+  }, /positive integer/);
+  Assert.throws(() => {
+    proc.stdout.readJSON(0);
+  }, /positive integer/);
+  Assert.throws(() => {
+    proc.stdout.readJSON(1.1);
+  }, /positive integer/);
 
   const LINE1 = "I'm a leaf on the wind.\n";
   const LINE2 = "Watch how I soar.\n";
-
 
   let outputPromise = read(proc.stdout);
 
   await new Promise(resolve => setTimeout(resolve, 100));
 
-  let [output] = await Promise.all([
-    outputPromise,
-    proc.stdin.write(LINE1),
-  ]);
+  let [output] = await Promise.all([outputPromise, proc.stdin.write(LINE1)]);
 
   equal(output, LINE1, "Got expected output");
-
 
   // Make sure it succeeds whether the write comes before or after the
   // read.
@@ -93,15 +96,11 @@ add_task(async function test_subprocess_io() {
 
   await new Promise(resolve => setTimeout(resolve, 100));
 
-  [output] = await Promise.all([
-    read(proc.stdout),
-    inputPromise,
-  ]);
+  [output] = await Promise.all([read(proc.stdout), inputPromise]);
 
   equal(output, LINE2, "Got expected output");
 
-
-  let JSON_BLOB = {foo: {bar: "baz"}};
+  let JSON_BLOB = { foo: { bar: "baz" } };
 
   inputPromise = proc.stdin.write(JSON.stringify(JSON_BLOB) + "\n");
 
@@ -111,14 +110,12 @@ add_task(async function test_subprocess_io() {
 
   Assert.deepEqual(output, JSON_BLOB, "Got expected JSON output");
 
-
   await proc.stdin.close();
 
-  let {exitCode} = await proc.wait();
+  let { exitCode } = await proc.wait();
 
   equal(exitCode, 0, "Got expected exit code");
 });
-
 
 add_task(async function test_subprocess_large_io() {
   let proc = await Subprocess.call({
@@ -130,7 +127,10 @@ add_task(async function test_subprocess_large_io() {
   const BUFFER_SIZE = 4096;
 
   // Create a message that's ~3/4 the input buffer size.
-  let msg = Array(BUFFER_SIZE * .75 / 16 | 0).fill("0123456789abcdef").join("") + "\n";
+  let msg =
+    Array(((BUFFER_SIZE * 0.75) / 16) | 0)
+      .fill("0123456789abcdef")
+      .join("") + "\n";
 
   // This sequence of writes and reads crosses several buffer size
   // boundaries, and causes some branches of the read buffer code to be
@@ -150,12 +150,10 @@ add_task(async function test_subprocess_large_io() {
 
   proc.stdin.close();
 
-
-  let {exitCode} = await proc.wait();
+  let { exitCode } = await proc.wait();
 
   equal(exitCode, 0, "Got expected exit code");
 });
-
 
 add_task(async function test_subprocess_huge() {
   let proc = await Subprocess.call({
@@ -166,7 +164,10 @@ add_task(async function test_subprocess_huge() {
   // This should be large enough to fill most pipe input/output buffers.
   const MESSAGE_SIZE = 1024 * 16;
 
-  let msg = Array(MESSAGE_SIZE).fill("0123456789abcdef").join("") + "\n";
+  let msg =
+    Array(MESSAGE_SIZE)
+      .fill("0123456789abcdef")
+      .join("") + "\n";
 
   proc.stdin.write(msg);
 
@@ -175,52 +176,57 @@ add_task(async function test_subprocess_huge() {
 
   proc.stdin.close();
 
-
-  let {exitCode} = await proc.wait();
+  let { exitCode } = await proc.wait();
 
   equal(exitCode, 0, "Got expected exit code");
 });
 
+add_task(
+  { skip_if: () => mozinfo.ccov },
+  async function test_subprocess_round_trip_perf() {
+    let roundTripTime = Infinity;
+    for (
+      let i = 0;
+      i < MAX_RETRIES && roundTripTime > MAX_ROUND_TRIP_TIME_MS;
+      i++
+    ) {
+      let proc = await Subprocess.call({
+        command: PYTHON,
+        arguments: ["-u", TEST_SCRIPT, "echo"],
+      });
 
-add_task({skip_if: () => mozinfo.ccov}, async function test_subprocess_round_trip_perf() {
-  let roundTripTime = Infinity;
-  for (let i = 0; i < MAX_RETRIES && roundTripTime > MAX_ROUND_TRIP_TIME_MS; i++) {
-    let proc = await Subprocess.call({
-      command: PYTHON,
-      arguments: ["-u", TEST_SCRIPT, "echo"],
-    });
+      const LINE = "I'm a leaf on the wind.\n";
 
+      let now = Date.now();
+      const COUNT = 1000;
+      for (let j = 0; j < COUNT; j++) {
+        let [output] = await Promise.all([
+          read(proc.stdout),
+          proc.stdin.write(LINE),
+        ]);
 
-    const LINE = "I'm a leaf on the wind.\n";
-
-    let now = Date.now();
-    const COUNT = 1000;
-    for (let j = 0; j < COUNT; j++) {
-      let [output] = await Promise.all([
-        read(proc.stdout),
-        proc.stdin.write(LINE),
-      ]);
-
-      // We don't want to log this for every iteration, but we still need
-      // to fail if it goes wrong.
-      if (output !== LINE) {
-        equal(output, LINE, "Got expected output");
+        // We don't want to log this for every iteration, but we still need
+        // to fail if it goes wrong.
+        if (output !== LINE) {
+          equal(output, LINE, "Got expected output");
+        }
       }
+
+      roundTripTime = (Date.now() - now) / COUNT;
+
+      await proc.stdin.close();
+
+      let { exitCode } = await proc.wait();
+
+      equal(exitCode, 0, "Got expected exit code");
     }
 
-    roundTripTime = (Date.now() - now) / COUNT;
-
-    await proc.stdin.close();
-
-    let {exitCode} = await proc.wait();
-
-    equal(exitCode, 0, "Got expected exit code");
+    ok(
+      roundTripTime <= MAX_ROUND_TRIP_TIME_MS,
+      `Expected round trip time (${roundTripTime}ms) to be less than ${MAX_ROUND_TRIP_TIME_MS}ms`
+    );
   }
-
-  ok(roundTripTime <= MAX_ROUND_TRIP_TIME_MS,
-     `Expected round trip time (${roundTripTime}ms) to be less than ${MAX_ROUND_TRIP_TIME_MS}ms`);
-});
-
+);
 
 add_task(async function test_subprocess_stderr_default() {
   const LINE1 = "I'm a leaf on the wind.\n";
@@ -237,12 +243,10 @@ add_task(async function test_subprocess_stderr_default() {
 
   equal(stdout, LINE1, "Got the expected stdout output");
 
-
-  let {exitCode} = await proc.wait();
+  let { exitCode } = await proc.wait();
 
   equal(exitCode, 0, "Got expected exit code");
 });
-
 
 add_task(async function test_subprocess_stderr_pipe() {
   const LINE1 = "I'm a leaf on the wind.\n";
@@ -262,12 +266,10 @@ add_task(async function test_subprocess_stderr_pipe() {
   equal(stdout, LINE1, "Got the expected stdout output");
   equal(stderr, LINE2, "Got the expected stderr output");
 
-
-  let {exitCode} = await proc.wait();
+  let { exitCode } = await proc.wait();
 
   equal(exitCode, 0, "Got expected exit code");
 });
-
 
 add_task(async function test_subprocess_stderr_merged() {
   const LINE1 = "I'm a leaf on the wind.\n";
@@ -285,12 +287,10 @@ add_task(async function test_subprocess_stderr_merged() {
 
   equal(stdout, LINE1 + LINE2, "Got the expected merged stdout output");
 
-
-  let {exitCode} = await proc.wait();
+  let { exitCode } = await proc.wait();
 
   equal(exitCode, 0, "Got expected exit code");
 });
-
 
 add_task(async function test_subprocess_read_after_exit() {
   const LINE1 = "I'm a leaf on the wind.\n";
@@ -302,10 +302,8 @@ add_task(async function test_subprocess_read_after_exit() {
     stderr: "pipe",
   });
 
-
-  let {exitCode} = await proc.wait();
+  let { exitCode } = await proc.wait();
   equal(exitCode, 0, "Process exited with expected code");
-
 
   let [stdout, stderr] = await Promise.all([
     readAll(proc.stdout),
@@ -316,7 +314,6 @@ add_task(async function test_subprocess_read_after_exit() {
   equal(stderr, LINE2, "Got the expected stderr output");
 });
 
-
 add_task(async function test_subprocess_lazy_close_output() {
   let proc = await Subprocess.call({
     command: PYTHON,
@@ -326,12 +323,8 @@ add_task(async function test_subprocess_lazy_close_output() {
   const LINE1 = "I'm a leaf on the wind.\n";
   const LINE2 = "Watch how I soar.\n";
 
-  let writePromises = [
-    proc.stdin.write(LINE1),
-    proc.stdin.write(LINE2),
-  ];
+  let writePromises = [proc.stdin.write(LINE1), proc.stdin.write(LINE2)];
   let closedPromise = proc.stdin.close();
-
 
   let output1 = await read(proc.stdout);
   let output2 = await read(proc.stdout);
@@ -341,12 +334,10 @@ add_task(async function test_subprocess_lazy_close_output() {
   equal(output1, LINE1, "Got expected output");
   equal(output2, LINE2, "Got expected output");
 
-
-  let {exitCode} = await proc.wait();
+  let { exitCode } = await proc.wait();
 
   equal(exitCode, 0, "Got expected exit code");
 });
-
 
 add_task(async function test_subprocess_lazy_close_input() {
   let proc = await Subprocess.call({
@@ -356,7 +347,6 @@ add_task(async function test_subprocess_lazy_close_input() {
 
   let readPromise = proc.stdout.readUint32();
   let closedPromise = proc.stdout.close();
-
 
   const LINE = "I'm a leaf on the wind.\n";
 
@@ -368,13 +358,11 @@ add_task(async function test_subprocess_lazy_close_input() {
 
   await closedPromise;
 
-
   // Don't test for a successful exit here. The process may exit with a
   // write error if we close the pipe after it's written the message
   // size but before it's written the message.
   await proc.wait();
 });
-
 
 add_task(async function test_subprocess_force_close() {
   let proc = await Subprocess.call({
@@ -388,21 +376,23 @@ add_task(async function test_subprocess_force_close() {
   await Assert.rejects(
     readPromise,
     function(e) {
-      equal(e.errorCode, Subprocess.ERROR_END_OF_FILE,
-            "Got the expected error code");
+      equal(
+        e.errorCode,
+        Subprocess.ERROR_END_OF_FILE,
+        "Got the expected error code"
+      );
       return /File closed/.test(e.message);
     },
-    "Promise should be rejected when file is closed");
+    "Promise should be rejected when file is closed"
+  );
 
   await closedPromise;
   await proc.stdin.close();
 
-
-  let {exitCode} = await proc.wait();
+  let { exitCode } = await proc.wait();
 
   equal(exitCode, 0, "Got expected exit code");
 });
-
 
 add_task(async function test_subprocess_eof() {
   let proc = await Subprocess.call({
@@ -417,17 +407,20 @@ add_task(async function test_subprocess_eof() {
   await Assert.rejects(
     readPromise,
     function(e) {
-      equal(e.errorCode, Subprocess.ERROR_END_OF_FILE,
-            "Got the expected error code");
+      equal(
+        e.errorCode,
+        Subprocess.ERROR_END_OF_FILE,
+        "Got the expected error code"
+      );
       return /File closed/.test(e.message);
     },
-    "Promise should be rejected on EOF");
+    "Promise should be rejected on EOF"
+  );
 
-  let {exitCode} = await proc.wait();
+  let { exitCode } = await proc.wait();
 
   equal(exitCode, 0, "Got expected exit code");
 });
-
 
 add_task(async function test_subprocess_invalid_json() {
   let proc = await Subprocess.call({
@@ -446,22 +439,28 @@ add_task(async function test_subprocess_invalid_json() {
   await Assert.rejects(
     readPromise,
     function(e) {
-      equal(e.errorCode, Subprocess.ERROR_INVALID_JSON,
-            "Got the expected error code");
+      equal(
+        e.errorCode,
+        Subprocess.ERROR_INVALID_JSON,
+        "Got the expected error code"
+      );
       return /SyntaxError/.test(e);
     },
-    "Promise should be rejected on EOF");
+    "Promise should be rejected on EOF"
+  );
 
-  let {exitCode} = await proc.wait();
+  let { exitCode } = await proc.wait();
 
   equal(exitCode, 0, "Got expected exit code");
 });
 
-
 if (AppConstants.isPlatformAndVersionAtLeast("win", "6")) {
   add_task(async function test_subprocess_inherited_descriptors() {
-    let {libc, win32} = ChromeUtils.import("resource://gre/modules/subprocess/subprocess_win.jsm", null);
-    const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+    let { libc, win32 } = ChromeUtils.import(
+      "resource://gre/modules/subprocess/subprocess_win.jsm",
+      null
+    );
+    const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 
     let secAttr = new win32.SECURITY_ATTRIBUTES();
     secAttr.nLength = win32.SECURITY_ATTRIBUTES.size;
@@ -469,33 +468,38 @@ if (AppConstants.isPlatformAndVersionAtLeast("win", "6")) {
 
     let handles = win32.createPipe(secAttr, 0);
 
-
     let proc = await Subprocess.call({
       command: PYTHON,
       arguments: ["-u", TEST_SCRIPT, "echo"],
     });
-
 
     // Close the output end of the pipe.
     // Ours should be the only copy, so reads should fail after this.
     handles[1].dispose();
 
     let buffer = new ArrayBuffer(1);
-    let succeeded = libc.ReadFile(handles[0], buffer, buffer.byteLength,
-                                  null, null);
+    let succeeded = libc.ReadFile(
+      handles[0],
+      buffer,
+      buffer.byteLength,
+      null,
+      null
+    );
 
     ok(!succeeded, "ReadFile should fail on broken pipe");
-    equal(ctypes.winLastError, win32.ERROR_BROKEN_PIPE, "Read should fail with ERROR_BROKEN_PIPE");
-
+    equal(
+      ctypes.winLastError,
+      win32.ERROR_BROKEN_PIPE,
+      "Read should fail with ERROR_BROKEN_PIPE"
+    );
 
     proc.stdin.close();
 
-    let {exitCode} = await proc.wait();
+    let { exitCode } = await proc.wait();
 
     equal(exitCode, 0, "Got expected exit code");
   });
 }
-
 
 add_task(async function test_subprocess_wait() {
   let proc = await Subprocess.call({
@@ -503,11 +507,10 @@ add_task(async function test_subprocess_wait() {
     arguments: ["-u", TEST_SCRIPT, "exit", "42"],
   });
 
-  let {exitCode} = await proc.wait();
+  let { exitCode } = await proc.wait();
 
   equal(exitCode, 42, "Got expected exit code");
 });
-
 
 add_task(async function test_subprocess_pathSearch() {
   let promise = Subprocess.call({
@@ -523,45 +526,63 @@ add_task(async function test_subprocess_pathSearch() {
     function(error) {
       return error.errorCode == Subprocess.ERROR_BAD_EXECUTABLE;
     },
-    "Subprocess.call should fail for a bad executable");
+    "Subprocess.call should fail for a bad executable"
+  );
 });
-
 
 add_task(async function test_subprocess_workdir() {
   let procDir = await OS.File.getCurrentDirectory();
-  let tmpDirFile = Cc["@mozilla.org/file/local;1"]
-                     .createInstance(Ci.nsIFile);
+  let tmpDirFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   tmpDirFile.initWithPath(OS.Constants.Path.tmpDir);
   tmpDirFile.normalize();
   let tmpDir = tmpDirFile.path;
 
-  notEqual(procDir, tmpDir,
-           "Current process directory must not be the current temp directory");
+  notEqual(
+    procDir,
+    tmpDir,
+    "Current process directory must not be the current temp directory"
+  );
 
   async function pwd(options) {
-    let proc = await Subprocess.call(Object.assign({
-      command: PYTHON,
-      arguments: ["-u", TEST_SCRIPT, "pwd"],
-    }, options));
+    let proc = await Subprocess.call(
+      Object.assign(
+        {
+          command: PYTHON,
+          arguments: ["-u", TEST_SCRIPT, "pwd"],
+        },
+        options
+      )
+    );
 
     let pwdOutput = read(proc.stdout);
 
-    let {exitCode} = await proc.wait();
+    let { exitCode } = await proc.wait();
     equal(exitCode, 0, "Got expected exit code");
 
     return pwdOutput;
   }
 
   let dir = await pwd({});
-  equal(dir, procDir, "Process should normally launch in current process directory");
+  equal(
+    dir,
+    procDir,
+    "Process should normally launch in current process directory"
+  );
 
-  dir = await pwd({workdir: tmpDir});
-  equal(dir, tmpDir, "Process should launch in the directory specified in `workdir`");
+  dir = await pwd({ workdir: tmpDir });
+  equal(
+    dir,
+    tmpDir,
+    "Process should launch in the directory specified in `workdir`"
+  );
 
   dir = await OS.File.getCurrentDirectory();
-  equal(dir, procDir, "`workdir` should not change the working directory of the current process");
+  equal(
+    dir,
+    procDir,
+    "`workdir` should not change the working directory of the current process"
+  );
 });
-
 
 add_task(async function test_subprocess_term() {
   let proc = await Subprocess.call({
@@ -574,15 +595,14 @@ add_task(async function test_subprocess_term() {
   let retVal = AppConstants.platform == "win" ? -9 : -15;
 
   // Kill gracefully with the default timeout of 300ms.
-  let {exitCode} = await proc.kill();
+  let { exitCode } = await proc.kill();
 
   equal(exitCode, retVal, "Got expected exit code");
 
-  ({exitCode} = await proc.wait());
+  ({ exitCode } = await proc.wait());
 
   equal(exitCode, retVal, "Got expected exit code");
 });
-
 
 add_task(async function test_subprocess_kill() {
   let proc = await Subprocess.call({
@@ -591,15 +611,14 @@ add_task(async function test_subprocess_kill() {
   });
 
   // Force kill with no gracefull termination timeout.
-  let {exitCode} = await proc.kill(0);
+  let { exitCode } = await proc.kill(0);
 
   equal(exitCode, -9, "Got expected exit code");
 
-  ({exitCode} = await proc.wait());
+  ({ exitCode } = await proc.wait());
 
   equal(exitCode, -9, "Got expected exit code");
 });
-
 
 add_task(async function test_subprocess_kill_timeout() {
   let proc = await Subprocess.call({
@@ -617,22 +636,24 @@ add_task(async function test_subprocess_kill_timeout() {
   const TIMEOUT = 300;
   let startTime = Date.now();
 
-  let {exitCode} = await proc.kill(TIMEOUT);
+  let { exitCode } = await proc.kill(TIMEOUT);
 
   // Graceful termination is not supported on Windows, so don't bother
   // testing the timeout there.
   if (AppConstants.platform != "win") {
     let diff = Date.now() - startTime;
-    ok(diff >= TIMEOUT, `Process was killed after ${diff}ms (expected ~${TIMEOUT}ms)`);
+    ok(
+      diff >= TIMEOUT,
+      `Process was killed after ${diff}ms (expected ~${TIMEOUT}ms)`
+    );
   }
 
   equal(exitCode, -9, "Got expected exit code");
 
-  ({exitCode} = await proc.wait());
+  ({ exitCode } = await proc.wait());
 
   equal(exitCode, -9, "Got expected exit code");
 });
-
 
 add_task(async function test_subprocess_arguments() {
   let args = [
@@ -654,14 +675,13 @@ add_task(async function test_subprocess_arguments() {
     equal(val, arg, `Got correct value for args[${i}]`);
   }
 
-  let {exitCode} = await proc.wait();
+  let { exitCode } = await proc.wait();
 
   equal(exitCode, 0, "Got expected exit code");
 });
 
-
 add_task(async function test_subprocess_environment() {
-  let environment =  {
+  let environment = {
     FOO: "BAR",
   };
 
@@ -688,18 +708,23 @@ add_task(async function test_subprocess_environment() {
   equal(foo, "BAR", "Got expected $FOO value");
   equal(bar, "", "Got expected $BAR value");
 
-  let {exitCode} = await proc.wait();
+  let { exitCode } = await proc.wait();
 
   equal(exitCode, 0, "Got expected exit code");
 });
-
 
 add_task(async function test_subprocess_environmentAppend() {
   env.set("VALUE_FROM_BASE_ENV", "untouched");
 
   let proc = await Subprocess.call({
     command: PYTHON,
-    arguments: ["-u", TEST_SCRIPT, "env", "VALUE_FROM_BASE_ENV", "VALUE_APPENDED_ONCE"],
+    arguments: [
+      "-u",
+      TEST_SCRIPT,
+      "env",
+      "VALUE_FROM_BASE_ENV",
+      "VALUE_APPENDED_ONCE",
+    ],
     environmentAppend: true,
     environment: {
       VALUE_APPENDED_ONCE: "soon empty",
@@ -709,33 +734,54 @@ add_task(async function test_subprocess_environmentAppend() {
   let valueFromBaseEnv = await read(proc.stdout);
   let valueAppendedOnce = await read(proc.stdout);
 
-  equal(valueFromBaseEnv, "untouched", "Got expected $VALUE_FROM_BASE_ENV value");
-  equal(valueAppendedOnce, "soon empty", "Got expected $VALUE_APPENDED_ONCE value");
+  equal(
+    valueFromBaseEnv,
+    "untouched",
+    "Got expected $VALUE_FROM_BASE_ENV value"
+  );
+  equal(
+    valueAppendedOnce,
+    "soon empty",
+    "Got expected $VALUE_APPENDED_ONCE value"
+  );
 
-  let {exitCode} = await proc.wait();
+  let { exitCode } = await proc.wait();
 
   equal(exitCode, 0, "Got expected exit code");
 
   proc = await Subprocess.call({
     command: PYTHON,
-    arguments: ["-u", TEST_SCRIPT, "env", "VALUE_FROM_BASE_ENV", "VALUE_APPENDED_ONCE"],
+    arguments: [
+      "-u",
+      TEST_SCRIPT,
+      "env",
+      "VALUE_FROM_BASE_ENV",
+      "VALUE_APPENDED_ONCE",
+    ],
     environmentAppend: true,
   });
 
   valueFromBaseEnv = await read(proc.stdout);
   valueAppendedOnce = await read(proc.stdout);
 
-  equal(valueFromBaseEnv, "untouched", "Got expected $VALUE_FROM_BASE_ENV value");
+  equal(
+    valueFromBaseEnv,
+    "untouched",
+    "Got expected $VALUE_FROM_BASE_ENV value"
+  );
   equal(valueAppendedOnce, "", "Got expected $VALUE_APPENDED_ONCE value");
 
-  ({exitCode} = await proc.wait());
+  ({ exitCode } = await proc.wait());
 
   equal(exitCode, 0, "Got expected exit code");
 });
 
 if (AppConstants.platform !== "win") {
   add_task(async function test_subprocess_nonASCII() {
-    const {libc} = ChromeUtils.import("resource://gre/modules/subprocess/subprocess_unix.jsm", null);
+    const { libc } = ChromeUtils.import(
+      "resource://gre/modules/subprocess/subprocess_unix.jsm",
+      null
+    );
 
     // Use TextDecoder rather than a string with a \xff escape, since
     // the latter will automatically be normalized to valid UTF-8.
@@ -754,12 +800,11 @@ if (AppConstants.platform !== "win") {
 
     env.set("FOO", "");
 
-    let {exitCode} = await proc.wait();
+    let { exitCode } = await proc.wait();
 
     equal(exitCode, 0, "Got expected exit code");
   });
 }
-
 
 add_task(async function test_bad_executable() {
   // Test with a non-executable file.
@@ -779,7 +824,8 @@ add_task(async function test_bad_executable() {
       }
       return error.errorCode == Subprocess.ERROR_BAD_EXECUTABLE;
     },
-    "Subprocess.call should fail for a bad executable");
+    "Subprocess.call should fail for a bad executable"
+  );
 
   // Test with a nonexistent file.
   promise = Subprocess.call({
@@ -792,12 +838,15 @@ add_task(async function test_bad_executable() {
     function(error) {
       return error.errorCode == Subprocess.ERROR_BAD_EXECUTABLE;
     },
-    "Subprocess.call should fail for a bad executable");
+    "Subprocess.call should fail for a bad executable"
+  );
 });
 
-
 add_task(async function test_cleanup() {
-  let {SubprocessImpl} = ChromeUtils.import("resource://gre/modules/Subprocess.jsm", null);
+  let { SubprocessImpl } = ChromeUtils.import(
+    "resource://gre/modules/Subprocess.jsm",
+    null
+  );
 
   let worker = SubprocessImpl.Process.getWorker();
 

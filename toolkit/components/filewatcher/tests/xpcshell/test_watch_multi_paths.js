@@ -45,48 +45,53 @@ add_task(async function test_watch_multi_paths() {
 
   // Define the change callback function.
   let changeCallback = function(changed) {
-      info(changed + " has changed.");
+    info(changed + " has changed.");
 
-      detectedChanges += 1;
+    detectedChanges += 1;
 
-      // Resolve the promise if we get all the expected changes.
-      if (detectedChanges === resourcesToWatch) {
-        deferredChanges.resolve();
-      }
-    };
+    // Resolve the promise if we get all the expected changes.
+    if (detectedChanges === resourcesToWatch) {
+      deferredChanges.resolve();
+    }
+  };
 
   // Define the watch success callback function.
   let watchSuccessCallback = function(resourcePath) {
-      info(resourcePath + " is being watched.");
+    info(resourcePath + " is being watched.");
 
-      watchedResources += 1;
+    watchedResources += 1;
 
-      // Resolve the promise when all the resources are being
-      // watched.
-      if (watchedResources === resourcesToWatch) {
-        deferredSuccesses.resolve();
-      }
-    };
+    // Resolve the promise when all the resources are being
+    // watched.
+    if (watchedResources === resourcesToWatch) {
+      deferredSuccesses.resolve();
+    }
+  };
 
   // Define the watch success callback function.
   let unwatchSuccessCallback = function(resourcePath) {
-      info(resourcePath + " is being un-watched.");
+    info(resourcePath + " is being un-watched.");
 
-      unwatchedResources += 1;
+    unwatchedResources += 1;
 
-      // Resolve the promise when all the resources are being
-      // watched.
-      if (unwatchedResources === resourcesToWatch) {
-        deferredShutdown.resolve();
-      }
-    };
+    // Resolve the promise when all the resources are being
+    // watched.
+    if (unwatchedResources === resourcesToWatch) {
+      deferredShutdown.resolve();
+    }
+  };
 
   // Create the directories and add them to the watched resources list.
   for (let i = 0; i < resourcesToWatch; i++) {
     let tmpSubDirPath = OS.Path.join(watchedDir, tempDirNameBase + i);
     info("Creating the " + tmpSubDirPath + " directory.");
     await OS.File.makeDir(tmpSubDirPath);
-    watcher.addPath(tmpSubDirPath, changeCallback, deferredChanges.reject, watchSuccessCallback);
+    watcher.addPath(
+      tmpSubDirPath,
+      changeCallback,
+      deferredChanges.reject,
+      watchSuccessCallback
+    );
   }
 
   // Wait until the watcher informs us that all the desired resources
@@ -95,7 +100,11 @@ add_task(async function test_watch_multi_paths() {
 
   // Create a file within each watched directory.
   for (let i = 0; i < resourcesToWatch; i++) {
-    let tmpFilePath = OS.Path.join(watchedDir, tempDirNameBase + i, tempFileName);
+    let tmpFilePath = OS.Path.join(
+      watchedDir,
+      tempDirNameBase + i,
+      tempFileName
+    );
     await OS.File.writeAtomic(tmpFilePath, "test content");
   }
 
@@ -105,7 +114,12 @@ add_task(async function test_watch_multi_paths() {
   // Remove the directories we have created.
   for (let i = 0; i < resourcesToWatch; i++) {
     let tmpSubDirPath = OS.Path.join(watchedDir, tempDirNameBase + i);
-    watcher.removePath(tmpSubDirPath, changeCallback, deferredChanges.reject, unwatchSuccessCallback);
+    watcher.removePath(
+      tmpSubDirPath,
+      changeCallback,
+      deferredChanges.reject,
+      unwatchSuccessCallback
+    );
   }
 
   // Wait until the watcher un-watches the resources.

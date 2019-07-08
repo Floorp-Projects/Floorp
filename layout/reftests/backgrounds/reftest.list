@@ -169,7 +169,7 @@ fuzzy(0-50,0-500) fuzzy-if(skiaContent,0-51,0-320) == attachment-local-clipping-
 # The next three tests are fuzzy due to bug 1128229.
 fuzzy(0-16,0-69) fuzzy-if(skiaContent,0-95,0-2206) == attachment-local-clipping-image-4.html attachment-local-clipping-image-4-ref.html
 fuzzy(0-16,0-69) fuzzy-if(skiaContent,0-95,0-2206) == attachment-local-clipping-image-5.html attachment-local-clipping-image-4-ref.html
-fuzzy(0-80,0-500) fuzzy-if(skiaContent,0-109,0-908) == attachment-local-clipping-image-6.html attachment-local-clipping-image-6-ref.html
+fuzzy(0-80,0-500) fuzzy-if(skiaContent,0-109,0-908) fuzzy-if(geckoview&&webrender,64-64,2462-2830) == attachment-local-clipping-image-6.html attachment-local-clipping-image-6-ref.html
 
 fuzzy-if(skiaContent,0-1,0-8) fuzzy-if(webrender,0-1,0-84) == background-multiple-with-border-radius.html background-multiple-with-border-radius-ref.html
 fuzzy-if(webrender,10-93,49600-49600) == background-repeat-large-area.html background-repeat-large-area-ref.html

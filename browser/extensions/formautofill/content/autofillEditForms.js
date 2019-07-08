@@ -19,7 +19,7 @@ class EditAutofillForm {
   loadRecord(record = {}) {
     for (let field of this._elements.form.elements) {
       let value = record[field.id];
-      value = typeof(value) == "undefined" ? "" : value;
+      value = typeof value == "undefined" ? "" : value;
 
       if (record.guid) {
         field.value = value;
@@ -152,12 +152,20 @@ class EditAddress extends EditAutofillForm {
     super(elements);
 
     Object.assign(this, config);
-    let {form} = this._elements;
+    let { form } = this._elements;
     Object.assign(this._elements, {
-      addressLevel3Label: form.querySelector("#address-level3-container > .label-text"),
-      addressLevel2Label: form.querySelector("#address-level2-container > .label-text"),
-      addressLevel1Label: form.querySelector("#address-level1-container > .label-text"),
-      postalCodeLabel: form.querySelector("#postal-code-container > .label-text"),
+      addressLevel3Label: form.querySelector(
+        "#address-level3-container > .label-text"
+      ),
+      addressLevel2Label: form.querySelector(
+        "#address-level2-container > .label-text"
+      ),
+      addressLevel1Label: form.querySelector(
+        "#address-level1-container > .label-text"
+      ),
+      postalCodeLabel: form.querySelector(
+        "#postal-code-container > .label-text"
+      ),
       country: form.querySelector("#country"),
     });
 
@@ -178,7 +186,7 @@ class EditAddress extends EditAutofillForm {
       };
     }
 
-    let {addressLevel1Options} = this.getFormFormat(record.country);
+    let { addressLevel1Options } = this.getFormFormat(record.country);
     this.populateAddressLevel1(addressLevel1Options, record.country);
 
     super.loadRecord(record);
@@ -187,8 +195,14 @@ class EditAddress extends EditAutofillForm {
   }
 
   get hasMailingAddressFields() {
-    let {addressFields} = this._elements.form.dataset;
-    return !addressFields || addressFields.trim().split(/\s+/).includes("mailing-address");
+    let { addressFields } = this._elements.form.dataset;
+    return (
+      !addressFields ||
+      addressFields
+        .trim()
+        .split(/\s+/)
+        .includes("mailing-address")
+    );
   }
 
   /**
@@ -205,8 +219,11 @@ class EditAddress extends EditAutofillForm {
       if (requestedFieldClasses.includes("mailing-address")) {
         fieldClasses = fieldClasses.concat(mailingFieldsOrder);
         // `country` isn't part of the `mailingFieldsOrder` so add it when filling a mailing-address
-        requestedFieldClasses.splice(requestedFieldClasses.indexOf("mailing-address"), 1,
-                                     "country");
+        requestedFieldClasses.splice(
+          requestedFieldClasses.indexOf("mailing-address"),
+          1,
+          "country"
+        );
       }
 
       for (let fieldClassName of requestedFieldClasses) {
@@ -255,7 +272,10 @@ class EditAddress extends EditAutofillForm {
     this._elements.postalCodeLabel.dataset.localization = postalCodeLabel;
     let addressFields = this._elements.form.dataset.addressFields;
     let extraRequiredFields = this._elements.form.dataset.extraRequiredFields;
-    let fieldClasses = EditAddress.computeVisibleFields(mailingFieldsOrder, addressFields);
+    let fieldClasses = EditAddress.computeVisibleFields(
+      mailingFieldsOrder,
+      addressFields
+    );
     let requiredFields = new Set(countryRequiredFields);
     if (extraRequiredFields) {
       for (let extraRequiredField of extraRequiredFields.trim().split(/\s+/)) {
@@ -292,18 +312,23 @@ class EditAddress extends EditAutofillForm {
     ];
     let inputs = [];
     for (let i = 0; i < fieldsOrder.length; i++) {
-      let {fieldId, newLine} = fieldsOrder[i];
+      let { fieldId, newLine } = fieldsOrder[i];
 
-      let container = this._elements.form.querySelector(`#${fieldId}-container`);
-      let containerInputs = [...container.querySelectorAll("input, textarea, select")];
+      let container = this._elements.form.querySelector(
+        `#${fieldId}-container`
+      );
+      let containerInputs = [
+        ...container.querySelectorAll("input, textarea, select"),
+      ];
       containerInputs.forEach(function(input) {
         input.disabled = false;
         // libaddressinput doesn't list 'country' or 'name' as required.
         // The additional-name field should never get marked as required.
-        input.required = (fieldId == "country" ||
-                          fieldId == "name" ||
-                          requiredFields.has(fieldId)) &&
-                         input.id != "additional-name";
+        input.required =
+          (fieldId == "country" ||
+            fieldId == "name" ||
+            requiredFields.has(fieldId)) &&
+          input.id != "additional-name";
       });
       inputs.push(...containerInputs);
       container.style.display = "flex";
@@ -320,7 +345,9 @@ class EditAddress extends EditAutofillForm {
     for (let field of fields) {
       let container = this._elements.form.querySelector(`#${field}-container`);
       container.style.display = "none";
-      for (let input of [...container.querySelectorAll("input, textarea, select")]) {
+      for (let input of [
+        ...container.querySelectorAll("input, textarea, select"),
+      ]) {
         input.disabled = true;
       }
     }
@@ -349,18 +376,25 @@ class EditAddress extends EditAutofillForm {
       return;
     }
 
-    let matchedSelectOption = this.findAddressSelectOption(field, {
-      country,
-      "address-level1": addressLevel1Value,
-    }, "address-level1");
+    let matchedSelectOption = this.findAddressSelectOption(
+      field,
+      {
+        country,
+        "address-level1": addressLevel1Value,
+      },
+      "address-level1"
+    );
     if (matchedSelectOption && !matchedSelectOption.selected) {
       field.value = matchedSelectOption.value;
-      field.dispatchEvent(new Event("input", {bubbles: true}));
-      field.dispatchEvent(new Event("change", {bubbles: true}));
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+      field.dispatchEvent(new Event("change", { bubbles: true }));
     } else if (addressLevel1Value) {
       // If the option wasn't found, insert an option at the beginning of
       // the select that matches the stored value.
-      field.insertBefore(new Option(addressLevel1Value, addressLevel1Value, true, true), field.firstChild);
+      field.insertBefore(
+        new Option(addressLevel1Value, addressLevel1Value, true, true),
+        field.firstChild
+      );
     }
   }
 
@@ -417,7 +451,9 @@ class EditAddress extends EditAutofillForm {
   populateCountries() {
     let fragment = document.createDocumentFragment();
     // Sort countries by their visible names.
-    let countries = [...this.countries.entries()].sort((e1, e2) => e1[1].localeCompare(e2[1]));
+    let countries = [...this.countries.entries()].sort((e1, e2) =>
+      e1[1].localeCompare(e2[1])
+    );
     for (let country of countries) {
       let option = new Option();
       option.value = country[0];
@@ -456,12 +492,16 @@ class EditCreditCard extends EditAutofillForm {
     Object.assign(this, config);
     Object.assign(this._elements, {
       ccNumber: this._elements.form.querySelector("#cc-number"),
-      invalidCardNumberStringElement: this._elements.form.querySelector("#invalidCardNumberString"),
+      invalidCardNumberStringElement: this._elements.form.querySelector(
+        "#invalidCardNumberString"
+      ),
       month: this._elements.form.querySelector("#cc-exp-month"),
       year: this._elements.form.querySelector("#cc-exp-year"),
       ccType: this._elements.form.querySelector("#cc-type"),
       billingAddress: this._elements.form.querySelector("#billingAddressGUID"),
-      billingAddressRow: this._elements.form.querySelector(".billingAddressRow"),
+      billingAddressRow: this._elements.form.querySelector(
+        ".billingAddressRow"
+      ),
     });
 
     this.attachEventListeners();
@@ -494,7 +534,9 @@ class EditCreditCard extends EditAutofillForm {
     this._elements.month.appendChild(new Option());
 
     // Populate month list. Format: "month number - month name"
-    let dateFormat = new Intl.DateTimeFormat(navigator.language, {month: "long"}).format;
+    let dateFormat = new Intl.DateTimeFormat(navigator.language, {
+      month: "long",
+    }).format;
     for (let i = 0; i < count; i++) {
       let monthNumber = (i + 1).toString();
       let monthName = dateFormat(new Date(1970, i));
@@ -565,7 +607,12 @@ class EditCreditCard extends EditAutofillForm {
     for (let [guid, address] of Object.entries(this._addresses)) {
       hasAddresses = true;
       let selected = guid == billingAddressGUID;
-      let option = new Option(this.getAddressLabel(address), guid, selected, selected);
+      let option = new Option(
+        this.getAddressLabel(address),
+        guid,
+        selected,
+        selected
+      );
       this._elements.billingAddress.appendChild(option);
     }
 
@@ -579,8 +626,10 @@ class EditCreditCard extends EditAutofillForm {
 
   handleInput(event) {
     // Clear the error message if cc-number is valid
-    if (event.target == this._elements.ccNumber &&
-        this.isCCNumber(this._elements.ccNumber.value)) {
+    if (
+      event.target == this._elements.ccNumber &&
+      this.isCCNumber(this._elements.ccNumber.value)
+    ) {
       this._elements.ccNumber.setCustomValidity("");
     }
     super.handleInput(event);
@@ -590,9 +639,9 @@ class EditCreditCard extends EditAutofillForm {
     super.updateCustomValidity(field);
 
     // Mark the cc-number field as invalid if the number is empty or invalid.
-    if (field == this._elements.ccNumber &&
-        !this.isCCNumber(field.value)) {
-      let invalidCardNumberString = this._elements.invalidCardNumberStringElement.textContent;
+    if (field == this._elements.ccNumber && !this.isCCNumber(field.value)) {
+      let invalidCardNumberString = this._elements
+        .invalidCardNumberStringElement.textContent;
       field.setCustomValidity(invalidCardNumberString || " ");
     }
   }

@@ -2,11 +2,11 @@
 == blend-constant-background-color.html blend-constant-background-color-ref.html
 == blend-gradient-background-color.html blend-gradient-background-color-ref.html
 == blend-image.html blend-image-ref.html
-== blend-difference-stacking.html blend-difference-stacking-ref.html
+fuzzy-if(geckoview&&webrender,3-3,5-5) == blend-difference-stacking.html blend-difference-stacking-ref.html
 
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-10000) fuzzy-if(skiaContent,0-1,0-30000) == background-blending-alpha.html background-blending-alpha-ref.html
 == background-blending-gradient-color.html background-blending-gradient-color-ref.html
-fuzzy-if(azureSkiaGL,0-3,0-7597) fuzzy-if(cocoaWidget,0-3,0-7597) fuzzy-if(d2d,0-1,0-3800) fuzzy-if(d3d11,0-1,0-4200) fuzzy-if(skiaContent,0-2,0-9450) fuzzy-if(webrender,1-1,2400-6200) == background-blending-gradient-gradient.html background-blending-gradient-gradient-ref.html
+fuzzy-if(azureSkiaGL,0-3,0-7597) fuzzy-if(cocoaWidget,0-3,0-7597) fuzzy-if(d2d,0-1,0-3800) fuzzy-if(d3d11,0-1,0-4200) fuzzy-if(skiaContent,0-2,0-9450) fuzzy-if(webrender&&!geckoview,1-1,2400-6200) == background-blending-gradient-gradient.html background-blending-gradient-gradient-ref.html
 fuzzy-if(azureSkiaGL,0-2,0-7174) == background-blending-gradient-image.html background-blending-gradient-color-ref.html
 fuzzy-if(azureSkia||d2d||gtkWidget,0-1,0-10000) == background-blending-image-color-jpg.html background-blending-image-color-ref.html
 == background-blending-image-color-png.html background-blending-image-color-ref.html
@@ -25,7 +25,7 @@ fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(d2d,0-1,0-8000) == background
 == background-blending-difference.html background-blending-difference-ref.svg
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,0-1,0-1600) == background-blending-exclusion.html background-blending-exclusion-ref.svg
 fuzzy-if(cocoaWidget||d2d,0-1,0-1600) == background-blending-hard-light.html background-blending-hard-light-ref.svg
-fuzzy-if(d2d,0-1,0-9600) fuzzy-if(azureSkia||gtkWidget,0-1,0-11200) fuzzy-if(webrender,1-1,9600-11200) == background-blending-hue.html background-blending-hue-ref.svg
+fuzzy-if(d2d,0-1,0-9600) fuzzy-if(azureSkia||gtkWidget,0-1,0-11200) fuzzy-if(webrender&&!geckoview,1-1,9600-11240) == background-blending-hue.html background-blending-hue-ref.svg
 == background-blending-lighten.html background-blending-lighten-ref.svg
 fuzzy-if(d2d,0-1,0-8000) fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) == background-blending-luminosity.html background-blending-luminosity-ref.svg
 fuzzy-if(skiaContent,0-1,0-1600) == background-blending-multiply.html background-blending-multiply-ref.svg
@@ -38,17 +38,17 @@ fuzzy-if(d2d||azureSkia||gtkWidget,0-10,0-4800) == background-blending-soft-ligh
 fuzzy-if(azureSkia||d2d||gtkWidget,0-1,0-40000) == background-blending-image-color-959674.html background-blending-image-color-959674-ref.html
 
 #fuzzy due to inconsistencies in rounded rect cliping between parent and child; may be related to antialiasing. Between platforms, the max difference is the same, and the number of different pixels is either 36 or 37. (Win, Mac and Lin)
-fuzzy(0-65,0-53) == mix-blend-mode-952051.html mix-blend-mode-952051-ref.html
+fuzzy(0-65,0-53) fuzzy-if(geckoview&&webrender,64-64,163-163) == mix-blend-mode-952051.html mix-blend-mode-952051-ref.html
 
 fuzzy-if(d3d11,0-49,0-200) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter-ref.html
 fuzzy-if(d3d11,0-1,0-5) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg
 
-fuzzy(0-2,0-14400) == mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity-ref.html
+fuzzy(0-2,0-14400) fuzzy-if(geckoview&&webrender,3-3,700-700) == mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity-ref.html
 
 == mix-blend-mode-nested-976533.html mix-blend-mode-nested-976533-ref.html
 == mix-blend-mode-culling-1207041.html mix-blend-mode-culling-1207041-ref.html
 == mix-blend-mode-dest-alpha-1135271.html mix-blend-mode-dest-alpha-1135271-ref.html
-== clipped-mixblendmode-containing-unclipped-stuff.html clipped-mixblendmode-containing-unclipped-stuff-ref.html
+fuzzy-if(geckoview&&webrender,3-3,849-849) == clipped-mixblendmode-containing-unclipped-stuff.html clipped-mixblendmode-containing-unclipped-stuff-ref.html
 fuzzy(0-1,0-6800) == clipped-opacity-containing-unclipped-mixblendmode.html clipped-opacity-containing-unclipped-mixblendmode-ref.html
 
 # Test plan 5.3.1 Blending between the background layers and the background color for an element with background-blend-mode

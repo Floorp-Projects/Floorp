@@ -117,22 +117,34 @@ add_test(function test_send_two_get_one() {
     if (calls === 2) {
       addAndSend("Notification:GetAll", msgGetReply, msgGetHandler, {
         origin: systemNotification.origin,
-        requestID: (requestID + 2),
+        requestID: requestID + 2,
       });
     }
   };
 
-  addAndSend("Notification:Save", msgSaveReply, msgSaveHandler, {
-    origin: systemNotification.origin,
-    notification: systemNotification,
-    requestID,
-  }, false);
+  addAndSend(
+    "Notification:Save",
+    msgSaveReply,
+    msgSaveHandler,
+    {
+      origin: systemNotification.origin,
+      notification: systemNotification,
+      requestID,
+    },
+    false
+  );
 
-  addAndSend("Notification:Save", msgSaveReply, msgSaveHandler, {
-    origin: systemNotification.origin,
-    notification: systemNotification,
-    requestID: (requestID + 1),
-  }, false);
+  addAndSend(
+    "Notification:Save",
+    msgSaveReply,
+    msgSaveHandler,
+    {
+      origin: systemNotification.origin,
+      notification: systemNotification,
+      requestID: requestID + 1,
+    },
+    false
+  );
 });
 
 // Delete previous notification
@@ -155,10 +167,16 @@ add_test(function test_send_two_get_one() {
   let requestID = 10;
   let tag = "voicemail";
 
-  let systemNotification1 =
-    getNotificationObject("system", "{f271f9ee-3955-4c10-b1f2-af552fb270ee}", tag);
-  let systemNotification2 =
-    getNotificationObject("system", "{8ef9a628-f0f4-44b4-820d-c117573c33e3}", tag);
+  let systemNotification1 = getNotificationObject(
+    "system",
+    "{f271f9ee-3955-4c10-b1f2-af552fb270ee}",
+    tag
+  );
+  let systemNotification2 = getNotificationObject(
+    "system",
+    "{8ef9a628-f0f4-44b4-820d-c117573c33e3}",
+    tag
+  );
 
   let msgGetReply = "Notification:GetAll:Return:OK";
   let msgGetNotifHandler = {
@@ -190,17 +208,29 @@ add_test(function test_send_two_get_one() {
     }
   };
 
-  addAndSend("Notification:Save", msgSaveReply, msgSaveHandler, {
-    origin: systemNotification1.origin,
-    notification: systemNotification1,
-    requestID, // 10
-  }, false);
+  addAndSend(
+    "Notification:Save",
+    msgSaveReply,
+    msgSaveHandler,
+    {
+      origin: systemNotification1.origin,
+      notification: systemNotification1,
+      requestID, // 10
+    },
+    false
+  );
 
-  addAndSend("Notification:Save", msgSaveReply, msgSaveHandler, {
-    origin: systemNotification2.origin,
-    notification: systemNotification2,
-    requestID: (requestID + 1), // 11
-  }, false);
+  addAndSend(
+    "Notification:Save",
+    msgSaveReply,
+    msgSaveHandler,
+    {
+      origin: systemNotification2.origin,
+      notification: systemNotification2,
+      requestID: requestID + 1, // 11
+    },
+    false
+  );
 });
 
 // Delete previous notification
@@ -290,7 +320,7 @@ add_test(function test_send_two_get_two() {
   Services.cpmm.sendAsyncMessage("Notification:Save", {
     origin: calendarNotification2.origin,
     notification: calendarNotification2,
-    requestID: (requestID + 1), // 21
+    requestID: requestID + 1, // 21
   });
 });
 

@@ -1,7 +1,8 @@
 let cookieBehavior = BEHAVIOR_REJECT_TRACKER;
 let blockingByContentBlockingRTUI = false;
 let blockingByAllowList = true;
-let expectedBlockingNotifications = Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER;
+let expectedBlockingNotifications =
+  Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER;
 
 let rootDir = getRootDirectory(gTestPath);
 let jar = getJar(rootDir);
@@ -11,4 +12,3 @@ if (jar) {
 }
 /* import-globals-from imageCacheWorker.js */
 Services.scriptloader.loadSubScript(rootDir + "imageCacheWorker.js", this);
-

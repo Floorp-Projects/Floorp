@@ -15,59 +15,87 @@ ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
  * can be displayed. Does not test permission handling.
  */
 add_task(async function test_permission_prompt_for_request() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "http://example.com/",
-  }, async function(browser) {
-    const kTestNotificationID = "test-notification";
-    const kTestMessage = "Test message";
-    let mainAction = {
-      label: "Main",
-      accessKey: "M",
-    };
-    let secondaryAction = {
-      label: "Secondary",
-      accessKey: "S",
-    };
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "http://example.com/",
+    },
+    async function(browser) {
+      const kTestNotificationID = "test-notification";
+      const kTestMessage = "Test message";
+      let mainAction = {
+        label: "Main",
+        accessKey: "M",
+      };
+      let secondaryAction = {
+        label: "Secondary",
+        accessKey: "S",
+      };
 
-    let mockRequest = makeMockPermissionRequest(browser);
-    let TestPrompt = {
-      __proto__: PermissionUI.PermissionPromptForRequestPrototype,
-      request: mockRequest,
-      notificationID: kTestNotificationID,
-      message: kTestMessage,
-      promptActions: [mainAction, secondaryAction],
-    };
+      let mockRequest = makeMockPermissionRequest(browser);
+      let TestPrompt = {
+        __proto__: PermissionUI.PermissionPromptForRequestPrototype,
+        request: mockRequest,
+        notificationID: kTestNotificationID,
+        message: kTestMessage,
+        promptActions: [mainAction, secondaryAction],
+      };
 
-    let shownPromise =
-      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-    TestPrompt.prompt();
-    await shownPromise;
-    let notification =
-      PopupNotifications.getNotification(kTestNotificationID, browser);
-    Assert.ok(notification, "Should have gotten the notification");
+      let shownPromise = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      TestPrompt.prompt();
+      await shownPromise;
+      let notification = PopupNotifications.getNotification(
+        kTestNotificationID,
+        browser
+      );
+      Assert.ok(notification, "Should have gotten the notification");
 
-    Assert.equal(notification.message, kTestMessage,
-                 "Should be showing the right message");
-    Assert.equal(notification.mainAction.label, mainAction.label,
-                 "The main action should have the right label");
-    Assert.equal(notification.mainAction.accessKey, mainAction.accessKey,
-                 "The main action should have the right access key");
-    Assert.equal(notification.secondaryActions.length, 1,
-                 "There should only be 1 secondary action");
-    Assert.equal(notification.secondaryActions[0].label, secondaryAction.label,
-                 "The secondary action should have the right label");
-    Assert.equal(notification.secondaryActions[0].accessKey,
-                 secondaryAction.accessKey,
-                 "The secondary action should have the right access key");
-    Assert.ok(notification.options.displayURI.equals(mockRequest.principal.URI),
-              "Should be showing the URI of the requesting page");
+      Assert.equal(
+        notification.message,
+        kTestMessage,
+        "Should be showing the right message"
+      );
+      Assert.equal(
+        notification.mainAction.label,
+        mainAction.label,
+        "The main action should have the right label"
+      );
+      Assert.equal(
+        notification.mainAction.accessKey,
+        mainAction.accessKey,
+        "The main action should have the right access key"
+      );
+      Assert.equal(
+        notification.secondaryActions.length,
+        1,
+        "There should only be 1 secondary action"
+      );
+      Assert.equal(
+        notification.secondaryActions[0].label,
+        secondaryAction.label,
+        "The secondary action should have the right label"
+      );
+      Assert.equal(
+        notification.secondaryActions[0].accessKey,
+        secondaryAction.accessKey,
+        "The secondary action should have the right access key"
+      );
+      Assert.ok(
+        notification.options.displayURI.equals(mockRequest.principal.URI),
+        "Should be showing the URI of the requesting page"
+      );
 
-    let removePromise =
-      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
-    notification.remove();
-    await removePromise;
-  });
+      let removePromise = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuphidden"
+      );
+      notification.remove();
+      await removePromise;
+    }
+  );
 });
 
 /**
@@ -75,48 +103,59 @@ add_task(async function test_permission_prompt_for_request() {
  * then there is no URI shown on the popupnotification.
  */
 add_task(async function test_permission_prompt_for_popupOptions() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "http://example.com/",
-  }, async function(browser) {
-    const kTestNotificationID = "test-notification";
-    const kTestMessage = "Test message";
-    let mainAction = {
-      label: "Main",
-      accessKey: "M",
-    };
-    let secondaryAction = {
-      label: "Secondary",
-      accessKey: "S",
-    };
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "http://example.com/",
+    },
+    async function(browser) {
+      const kTestNotificationID = "test-notification";
+      const kTestMessage = "Test message";
+      let mainAction = {
+        label: "Main",
+        accessKey: "M",
+      };
+      let secondaryAction = {
+        label: "Secondary",
+        accessKey: "S",
+      };
 
-    let mockRequest = makeMockPermissionRequest(browser);
-    let TestPrompt = {
-      __proto__: PermissionUI.PermissionPromptForRequestPrototype,
-      request: mockRequest,
-      notificationID: kTestNotificationID,
-      message: kTestMessage,
-      promptActions: [mainAction, secondaryAction],
-      popupOptions: {
-        displayURI: false,
-      },
-    };
+      let mockRequest = makeMockPermissionRequest(browser);
+      let TestPrompt = {
+        __proto__: PermissionUI.PermissionPromptForRequestPrototype,
+        request: mockRequest,
+        notificationID: kTestNotificationID,
+        message: kTestMessage,
+        promptActions: [mainAction, secondaryAction],
+        popupOptions: {
+          displayURI: false,
+        },
+      };
 
-    let shownPromise =
-      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-    TestPrompt.prompt();
-    await shownPromise;
-    let notification =
-      PopupNotifications.getNotification(kTestNotificationID, browser);
+      let shownPromise = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      TestPrompt.prompt();
+      await shownPromise;
+      let notification = PopupNotifications.getNotification(
+        kTestNotificationID,
+        browser
+      );
 
-    Assert.ok(!notification.options.displayURI,
-              "Should not show the URI of the requesting page");
+      Assert.ok(
+        !notification.options.displayURI,
+        "Should not show the URI of the requesting page"
+      );
 
-    let removePromise =
-      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
-    notification.remove();
-    await removePromise;
-  });
+      let removePromise = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuphidden"
+      );
+      notification.remove();
+      await removePromise;
+    }
+  );
 });
 
 /**
@@ -125,145 +164,194 @@ add_task(async function test_permission_prompt_for_popupOptions() {
  * ensures that callbacks for promptActions are properly fired.
  */
 add_task(async function test_with_permission_key() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "http://example.com",
-  }, async function(browser) {
-    const kTestNotificationID = "test-notification";
-    const kTestMessage = "Test message";
-    const kTestPermissionKey = "test-permission-key";
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "http://example.com",
+    },
+    async function(browser) {
+      const kTestNotificationID = "test-notification";
+      const kTestMessage = "Test message";
+      const kTestPermissionKey = "test-permission-key";
 
-    let allowed = false;
-    let mainAction = {
-      label: "Allow",
-      accessKey: "M",
-      action: SitePermissions.ALLOW,
-      callback() {
-        allowed = true;
-      },
-    };
-
-    let denied = false;
-    let secondaryAction = {
-      label: "Deny",
-      accessKey: "D",
-      action: SitePermissions.BLOCK,
-      callback() {
-        denied = true;
-      },
-    };
-
-    let mockRequest = makeMockPermissionRequest(browser);
-    let principal = mockRequest.principal;
-    registerCleanupFunction(function() {
-      SitePermissions.remove(principal.URI, kTestPermissionKey);
-    });
-
-    let TestPrompt = {
-      __proto__: PermissionUI.PermissionPromptForRequestPrototype,
-      request: mockRequest,
-      notificationID: kTestNotificationID,
-      permissionKey: kTestPermissionKey,
-      message: kTestMessage,
-      promptActions: [mainAction, secondaryAction],
-      popupOptions: {
-        checkbox: {
-          label: "Remember this decision",
-          show: true,
-          checked: true,
+      let allowed = false;
+      let mainAction = {
+        label: "Allow",
+        accessKey: "M",
+        action: SitePermissions.ALLOW,
+        callback() {
+          allowed = true;
         },
-      },
-    };
+      };
 
-    let shownPromise =
-      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-    TestPrompt.prompt();
-    await shownPromise;
-    let notification =
-      PopupNotifications.getNotification(kTestNotificationID, browser);
-    Assert.ok(notification, "Should have gotten the notification");
+      let denied = false;
+      let secondaryAction = {
+        label: "Deny",
+        accessKey: "D",
+        action: SitePermissions.BLOCK,
+        callback() {
+          denied = true;
+        },
+      };
 
-    let curPerm = SitePermissions.get(principal.URI, kTestPermissionKey, browser);
-    Assert.equal(curPerm.state, SitePermissions.UNKNOWN,
-                 "Should be no permission set to begin with.");
+      let mockRequest = makeMockPermissionRequest(browser);
+      let principal = mockRequest.principal;
+      registerCleanupFunction(function() {
+        SitePermissions.remove(principal.URI, kTestPermissionKey);
+      });
 
-    // First test denying the permission request without the checkbox checked.
-    let popupNotification = getPopupNotificationNode();
-    popupNotification.checkbox.checked = false;
+      let TestPrompt = {
+        __proto__: PermissionUI.PermissionPromptForRequestPrototype,
+        request: mockRequest,
+        notificationID: kTestNotificationID,
+        permissionKey: kTestPermissionKey,
+        message: kTestMessage,
+        promptActions: [mainAction, secondaryAction],
+        popupOptions: {
+          checkbox: {
+            label: "Remember this decision",
+            show: true,
+            checked: true,
+          },
+        },
+      };
 
-    Assert.equal(notification.secondaryActions.length, 1,
-                 "There should only be 1 secondary action");
-    await clickSecondaryAction();
-    curPerm = SitePermissions.get(principal.URI, kTestPermissionKey, browser);
-    Assert.deepEqual(curPerm, {
-                       state: SitePermissions.BLOCK,
-                       scope: SitePermissions.SCOPE_TEMPORARY,
-                     }, "Should have denied the action temporarily");
-    // Try getting the permission without passing the browser object (should fail).
-    curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
-    Assert.deepEqual(curPerm, {
-                       state: SitePermissions.UNKNOWN,
-                       scope: SitePermissions.SCOPE_PERSISTENT,
-                     }, "Should have made no permanent permission entry");
-    Assert.ok(denied, "The secondaryAction callback should have fired");
-    Assert.ok(!allowed, "The mainAction callback should not have fired");
-    Assert.ok(mockRequest._cancelled,
-              "The request should have been cancelled");
-    Assert.ok(!mockRequest._allowed,
-              "The request should not have been allowed");
+      let shownPromise = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      TestPrompt.prompt();
+      await shownPromise;
+      let notification = PopupNotifications.getNotification(
+        kTestNotificationID,
+        browser
+      );
+      Assert.ok(notification, "Should have gotten the notification");
 
-    // Clear the permission and pretend we never denied
-    SitePermissions.remove(principal.URI, kTestPermissionKey, browser);
-    denied = false;
-    mockRequest._cancelled = false;
+      let curPerm = SitePermissions.get(
+        principal.URI,
+        kTestPermissionKey,
+        browser
+      );
+      Assert.equal(
+        curPerm.state,
+        SitePermissions.UNKNOWN,
+        "Should be no permission set to begin with."
+      );
 
-    // Bring the PopupNotification back up now...
-    shownPromise =
-      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-    TestPrompt.prompt();
-    await shownPromise;
+      // First test denying the permission request without the checkbox checked.
+      let popupNotification = getPopupNotificationNode();
+      popupNotification.checkbox.checked = false;
 
-    // Test denying the permission request.
-    Assert.equal(notification.secondaryActions.length, 1,
-                 "There should only be 1 secondary action");
-    await clickSecondaryAction();
-    curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
-    Assert.deepEqual(curPerm, {
-                       state: SitePermissions.BLOCK,
-                       scope: SitePermissions.SCOPE_PERSISTENT,
-                     }, "Should have denied the action");
-    Assert.ok(denied, "The secondaryAction callback should have fired");
-    Assert.ok(!allowed, "The mainAction callback should not have fired");
-    Assert.ok(mockRequest._cancelled,
-              "The request should have been cancelled");
-    Assert.ok(!mockRequest._allowed,
-              "The request should not have been allowed");
+      Assert.equal(
+        notification.secondaryActions.length,
+        1,
+        "There should only be 1 secondary action"
+      );
+      await clickSecondaryAction();
+      curPerm = SitePermissions.get(principal.URI, kTestPermissionKey, browser);
+      Assert.deepEqual(
+        curPerm,
+        {
+          state: SitePermissions.BLOCK,
+          scope: SitePermissions.SCOPE_TEMPORARY,
+        },
+        "Should have denied the action temporarily"
+      );
+      // Try getting the permission without passing the browser object (should fail).
+      curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
+      Assert.deepEqual(
+        curPerm,
+        {
+          state: SitePermissions.UNKNOWN,
+          scope: SitePermissions.SCOPE_PERSISTENT,
+        },
+        "Should have made no permanent permission entry"
+      );
+      Assert.ok(denied, "The secondaryAction callback should have fired");
+      Assert.ok(!allowed, "The mainAction callback should not have fired");
+      Assert.ok(
+        mockRequest._cancelled,
+        "The request should have been cancelled"
+      );
+      Assert.ok(
+        !mockRequest._allowed,
+        "The request should not have been allowed"
+      );
 
-    // Clear the permission and pretend we never denied
-    SitePermissions.remove(principal.URI, kTestPermissionKey);
-    denied = false;
-    mockRequest._cancelled = false;
+      // Clear the permission and pretend we never denied
+      SitePermissions.remove(principal.URI, kTestPermissionKey, browser);
+      denied = false;
+      mockRequest._cancelled = false;
 
-    // Bring the PopupNotification back up now...
-    shownPromise =
-      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-    TestPrompt.prompt();
-    await shownPromise;
+      // Bring the PopupNotification back up now...
+      shownPromise = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      TestPrompt.prompt();
+      await shownPromise;
 
-    // Test allowing the permission request.
-    await clickMainAction();
-    curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
-    Assert.deepEqual(curPerm, {
-                       state: SitePermissions.ALLOW,
-                       scope: SitePermissions.SCOPE_PERSISTENT,
-                     }, "Should have allowed the action");
-    Assert.ok(!denied, "The secondaryAction callback should not have fired");
-    Assert.ok(allowed, "The mainAction callback should have fired");
-    Assert.ok(!mockRequest._cancelled,
-              "The request should not have been cancelled");
-    Assert.ok(mockRequest._allowed,
-              "The request should have been allowed");
-  });
+      // Test denying the permission request.
+      Assert.equal(
+        notification.secondaryActions.length,
+        1,
+        "There should only be 1 secondary action"
+      );
+      await clickSecondaryAction();
+      curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
+      Assert.deepEqual(
+        curPerm,
+        {
+          state: SitePermissions.BLOCK,
+          scope: SitePermissions.SCOPE_PERSISTENT,
+        },
+        "Should have denied the action"
+      );
+      Assert.ok(denied, "The secondaryAction callback should have fired");
+      Assert.ok(!allowed, "The mainAction callback should not have fired");
+      Assert.ok(
+        mockRequest._cancelled,
+        "The request should have been cancelled"
+      );
+      Assert.ok(
+        !mockRequest._allowed,
+        "The request should not have been allowed"
+      );
+
+      // Clear the permission and pretend we never denied
+      SitePermissions.remove(principal.URI, kTestPermissionKey);
+      denied = false;
+      mockRequest._cancelled = false;
+
+      // Bring the PopupNotification back up now...
+      shownPromise = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      TestPrompt.prompt();
+      await shownPromise;
+
+      // Test allowing the permission request.
+      await clickMainAction();
+      curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
+      Assert.deepEqual(
+        curPerm,
+        {
+          state: SitePermissions.ALLOW,
+          scope: SitePermissions.SCOPE_PERSISTENT,
+        },
+        "Should have allowed the action"
+      );
+      Assert.ok(!denied, "The secondaryAction callback should not have fired");
+      Assert.ok(allowed, "The mainAction callback should have fired");
+      Assert.ok(
+        !mockRequest._cancelled,
+        "The request should not have been cancelled"
+      );
+      Assert.ok(mockRequest._allowed, "The request should have been allowed");
+    }
+  );
 });
 
 /**
@@ -271,46 +359,55 @@ add_task(async function test_with_permission_key() {
  * the popup appears.
  */
 add_task(async function test_on_before_show() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "http://example.com",
-  }, async function(browser) {
-    const kTestNotificationID = "test-notification";
-    const kTestMessage = "Test message";
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "http://example.com",
+    },
+    async function(browser) {
+      const kTestNotificationID = "test-notification";
+      const kTestMessage = "Test message";
 
-    let mainAction = {
-      label: "Test action",
-      accessKey: "T",
-    };
+      let mainAction = {
+        label: "Test action",
+        accessKey: "T",
+      };
 
-    let mockRequest = makeMockPermissionRequest(browser);
-    let beforeShown = false;
+      let mockRequest = makeMockPermissionRequest(browser);
+      let beforeShown = false;
 
-    let TestPrompt = {
-      __proto__: PermissionUI.PermissionPromptForRequestPrototype,
-      request: mockRequest,
-      notificationID: kTestNotificationID,
-      message: kTestMessage,
-      promptActions: [mainAction],
-      onBeforeShow() {
-        beforeShown = true;
-        return true;
-      },
-    };
+      let TestPrompt = {
+        __proto__: PermissionUI.PermissionPromptForRequestPrototype,
+        request: mockRequest,
+        notificationID: kTestNotificationID,
+        message: kTestMessage,
+        promptActions: [mainAction],
+        onBeforeShow() {
+          beforeShown = true;
+          return true;
+        },
+      };
 
-    let shownPromise =
-      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-    TestPrompt.prompt();
-    Assert.ok(beforeShown, "Should have called onBeforeShown");
-    await shownPromise;
-    let notification =
-      PopupNotifications.getNotification(kTestNotificationID, browser);
+      let shownPromise = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      TestPrompt.prompt();
+      Assert.ok(beforeShown, "Should have called onBeforeShown");
+      await shownPromise;
+      let notification = PopupNotifications.getNotification(
+        kTestNotificationID,
+        browser
+      );
 
-    let removePromise =
-      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
-    notification.remove();
-    await removePromise;
-  });
+      let removePromise = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuphidden"
+      );
+      notification.remove();
+      await removePromise;
+    }
+  );
 });
 
 /**
@@ -318,86 +415,117 @@ add_task(async function test_on_before_show() {
  * nsIContentPermissionRequest.
  */
 add_task(async function test_no_request() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "http://example.com",
-  }, async function(browser) {
-    const kTestNotificationID = "test-notification";
-    let allowed = false;
-    let mainAction = {
-      label: "Allow",
-      accessKey: "M",
-      callback() {
-        allowed = true;
-      },
-    };
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "http://example.com",
+    },
+    async function(browser) {
+      const kTestNotificationID = "test-notification";
+      let allowed = false;
+      let mainAction = {
+        label: "Allow",
+        accessKey: "M",
+        callback() {
+          allowed = true;
+        },
+      };
 
-    let denied = false;
-    let secondaryAction = {
-      label: "Deny",
-      accessKey: "D",
-      callback() {
-        denied = true;
-      },
-    };
+      let denied = false;
+      let secondaryAction = {
+        label: "Deny",
+        accessKey: "D",
+        callback() {
+          denied = true;
+        },
+      };
 
-    const kTestMessage = "Test message with no request";
-    let principal = browser.contentPrincipal;
-    let beforeShown = false;
+      const kTestMessage = "Test message with no request";
+      let principal = browser.contentPrincipal;
+      let beforeShown = false;
 
-    let TestPrompt = {
-      __proto__: PermissionUI.PermissionPromptPrototype,
-      notificationID: kTestNotificationID,
-      principal,
-      browser,
-      message: kTestMessage,
-      promptActions: [mainAction, secondaryAction],
-      onBeforeShow() {
-        beforeShown = true;
-        return true;
-      },
-    };
+      let TestPrompt = {
+        __proto__: PermissionUI.PermissionPromptPrototype,
+        notificationID: kTestNotificationID,
+        principal,
+        browser,
+        message: kTestMessage,
+        promptActions: [mainAction, secondaryAction],
+        onBeforeShow() {
+          beforeShown = true;
+          return true;
+        },
+      };
 
-    let shownPromise =
-      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-    TestPrompt.prompt();
-    Assert.ok(beforeShown, "Should have called onBeforeShown");
-    await shownPromise;
-    let notification =
-      PopupNotifications.getNotification(kTestNotificationID, browser);
+      let shownPromise = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      TestPrompt.prompt();
+      Assert.ok(beforeShown, "Should have called onBeforeShown");
+      await shownPromise;
+      let notification = PopupNotifications.getNotification(
+        kTestNotificationID,
+        browser
+      );
 
-    Assert.equal(notification.message, kTestMessage,
-                 "Should be showing the right message");
-    Assert.equal(notification.mainAction.label, mainAction.label,
-                 "The main action should have the right label");
-    Assert.equal(notification.mainAction.accessKey, mainAction.accessKey,
-                 "The main action should have the right access key");
-    Assert.equal(notification.secondaryActions.length, 1,
-                 "There should only be 1 secondary action");
-    Assert.equal(notification.secondaryActions[0].label, secondaryAction.label,
-                 "The secondary action should have the right label");
-    Assert.equal(notification.secondaryActions[0].accessKey,
-                 secondaryAction.accessKey,
-                 "The secondary action should have the right access key");
-    Assert.ok(notification.options.displayURI.equals(principal.URI),
-              "Should be showing the URI of the requesting page");
+      Assert.equal(
+        notification.message,
+        kTestMessage,
+        "Should be showing the right message"
+      );
+      Assert.equal(
+        notification.mainAction.label,
+        mainAction.label,
+        "The main action should have the right label"
+      );
+      Assert.equal(
+        notification.mainAction.accessKey,
+        mainAction.accessKey,
+        "The main action should have the right access key"
+      );
+      Assert.equal(
+        notification.secondaryActions.length,
+        1,
+        "There should only be 1 secondary action"
+      );
+      Assert.equal(
+        notification.secondaryActions[0].label,
+        secondaryAction.label,
+        "The secondary action should have the right label"
+      );
+      Assert.equal(
+        notification.secondaryActions[0].accessKey,
+        secondaryAction.accessKey,
+        "The secondary action should have the right access key"
+      );
+      Assert.ok(
+        notification.options.displayURI.equals(principal.URI),
+        "Should be showing the URI of the requesting page"
+      );
 
-    // First test denying the permission request.
-    Assert.equal(notification.secondaryActions.length, 1,
-                 "There should only be 1 secondary action");
-    await clickSecondaryAction();
-    Assert.ok(denied, "The secondaryAction callback should have fired");
-    Assert.ok(!allowed, "The mainAction callback should not have fired");
+      // First test denying the permission request.
+      Assert.equal(
+        notification.secondaryActions.length,
+        1,
+        "There should only be 1 secondary action"
+      );
+      await clickSecondaryAction();
+      Assert.ok(denied, "The secondaryAction callback should have fired");
+      Assert.ok(!allowed, "The mainAction callback should not have fired");
 
-    shownPromise =
-      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-    TestPrompt.prompt();
-    await shownPromise;
+      shownPromise = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      TestPrompt.prompt();
+      await shownPromise;
 
-    // Next test allowing the permission request.
-    await clickMainAction();
-    Assert.ok(allowed, "The mainAction callback should have fired");
-  });
+      // Next test allowing the permission request.
+      await clickMainAction();
+      Assert.ok(allowed, "The mainAction callback should have fired");
+    }
+  );
 });
 
 /**
@@ -405,69 +533,96 @@ add_task(async function test_no_request() {
  * is transferred to the new window.
  */
 add_task(async function test_window_swap() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "http://example.com",
-  }, async function(browser) {
-    const kTestNotificationID = "test-notification";
-    const kTestMessage = "Test message";
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "http://example.com",
+    },
+    async function(browser) {
+      const kTestNotificationID = "test-notification";
+      const kTestMessage = "Test message";
 
-    let mainAction = {
-      label: "Test action",
-      accessKey: "T",
-    };
-    let secondaryAction = {
-      label: "Secondary",
-      accessKey: "S",
-    };
+      let mainAction = {
+        label: "Test action",
+        accessKey: "T",
+      };
+      let secondaryAction = {
+        label: "Secondary",
+        accessKey: "S",
+      };
 
-    let mockRequest = makeMockPermissionRequest(browser);
+      let mockRequest = makeMockPermissionRequest(browser);
 
-    let TestPrompt = {
-      __proto__: PermissionUI.PermissionPromptForRequestPrototype,
-      request: mockRequest,
-      notificationID: kTestNotificationID,
-      message: kTestMessage,
-      promptActions: [mainAction, secondaryAction],
-    };
+      let TestPrompt = {
+        __proto__: PermissionUI.PermissionPromptForRequestPrototype,
+        request: mockRequest,
+        notificationID: kTestNotificationID,
+        message: kTestMessage,
+        promptActions: [mainAction, secondaryAction],
+      };
 
-    let shownPromise =
-      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-    TestPrompt.prompt();
-    await shownPromise;
-
-    let newWindowOpened = BrowserTestUtils.waitForNewWindow();
-    gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
-    let newWindow = await newWindowOpened;
-    // We may have already opened the panel, because it was open before we moved the tab.
-    if (newWindow.PopupNotifications.panel.state != "open") {
-      shownPromise =
-        BrowserTestUtils.waitForEvent(newWindow.PopupNotifications.panel, "popupshown");
+      let shownPromise = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
       TestPrompt.prompt();
       await shownPromise;
+
+      let newWindowOpened = BrowserTestUtils.waitForNewWindow();
+      gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
+      let newWindow = await newWindowOpened;
+      // We may have already opened the panel, because it was open before we moved the tab.
+      if (newWindow.PopupNotifications.panel.state != "open") {
+        shownPromise = BrowserTestUtils.waitForEvent(
+          newWindow.PopupNotifications.panel,
+          "popupshown"
+        );
+        TestPrompt.prompt();
+        await shownPromise;
+      }
+
+      let notification = newWindow.PopupNotifications.getNotification(
+        kTestNotificationID,
+        newWindow.gBrowser.selectedBrowser
+      );
+      Assert.ok(notification, "Should have gotten the notification");
+
+      Assert.equal(
+        notification.message,
+        kTestMessage,
+        "Should be showing the right message"
+      );
+      Assert.equal(
+        notification.mainAction.label,
+        mainAction.label,
+        "The main action should have the right label"
+      );
+      Assert.equal(
+        notification.mainAction.accessKey,
+        mainAction.accessKey,
+        "The main action should have the right access key"
+      );
+      Assert.equal(
+        notification.secondaryActions.length,
+        1,
+        "There should only be 1 secondary action"
+      );
+      Assert.equal(
+        notification.secondaryActions[0].label,
+        secondaryAction.label,
+        "The secondary action should have the right label"
+      );
+      Assert.equal(
+        notification.secondaryActions[0].accessKey,
+        secondaryAction.accessKey,
+        "The secondary action should have the right access key"
+      );
+      Assert.ok(
+        notification.options.displayURI.equals(mockRequest.principal.URI),
+        "Should be showing the URI of the requesting page"
+      );
+
+      await BrowserTestUtils.closeWindow(newWindow);
     }
-
-    let notification =
-      newWindow.PopupNotifications.getNotification(kTestNotificationID,
-                                                   newWindow.gBrowser.selectedBrowser);
-    Assert.ok(notification, "Should have gotten the notification");
-
-    Assert.equal(notification.message, kTestMessage,
-                 "Should be showing the right message");
-    Assert.equal(notification.mainAction.label, mainAction.label,
-                 "The main action should have the right label");
-    Assert.equal(notification.mainAction.accessKey, mainAction.accessKey,
-                 "The main action should have the right access key");
-    Assert.equal(notification.secondaryActions.length, 1,
-                 "There should only be 1 secondary action");
-    Assert.equal(notification.secondaryActions[0].label, secondaryAction.label,
-                 "The secondary action should have the right label");
-    Assert.equal(notification.secondaryActions[0].accessKey,
-                 secondaryAction.accessKey,
-                 "The secondary action should have the right access key");
-    Assert.ok(notification.options.displayURI.equals(mockRequest.principal.URI),
-              "Should be showing the URI of the requesting page");
-
-    await BrowserTestUtils.closeWindow(newWindow);
-  });
+  );
 });

@@ -29,7 +29,9 @@ async function test_1() {
 }
 
 async function test_2() {
-  let aInstall = await AddonManager.getInstallForURL(addon_url, {icons: icon32_url});
+  let aInstall = await AddonManager.getInstallForURL(addon_url, {
+    icons: icon32_url,
+  });
   Assert.equal(aInstall.iconURL, icon32_url);
   Assert.notEqual(aInstall.icons, null);
   Assert.equal(aInstall.icons[32], icon32_url);

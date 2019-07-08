@@ -4,8 +4,8 @@
 
 "use strict";
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 registerCleanupFunction(function() {
   Services.prefs.setBoolPref("toolkit.osfile.log", false);
@@ -30,12 +30,12 @@ add_task(async function() {
   let fileInSubDir = OS.Path.join(subDir, "file");
 
   // Sanity checking for the test
-  Assert.equal(false, (await OS.File.exists(dir)));
+  Assert.equal(false, await OS.File.exists(dir));
 
   // Remove non-existent directory
   let exception = null;
   try {
-    await OS.File.removeDir(dir, {ignoreAbsent: false});
+    await OS.File.removeDir(dir, { ignoreAbsent: false });
   } catch (ex) {
     exception = ex;
   }
@@ -44,14 +44,14 @@ add_task(async function() {
   Assert.ok(exception instanceof OS.File.Error);
 
   // Remove non-existent directory with ignoreAbsent
-  await OS.File.removeDir(dir, {ignoreAbsent: true});
+  await OS.File.removeDir(dir, { ignoreAbsent: true });
   await OS.File.removeDir(dir);
 
   // Remove file with ignoreAbsent: false
   await OS.File.writeAtomic(file, "content", { tmpPath: file + ".tmp" });
   exception = null;
   try {
-    await OS.File.removeDir(file, {ignoreAbsent: false});
+    await OS.File.removeDir(file, { ignoreAbsent: false });
   } catch (ex) {
     exception = ex;
   }
@@ -62,28 +62,30 @@ add_task(async function() {
   // Remove empty directory
   await OS.File.makeDir(dir);
   await OS.File.removeDir(dir);
-  Assert.equal(false, (await OS.File.exists(dir)));
+  Assert.equal(false, await OS.File.exists(dir));
 
   // Remove directory that contains one file
   await OS.File.makeDir(dir);
   await OS.File.writeAtomic(file1, "content", { tmpPath: file1 + ".tmp" });
   await OS.File.removeDir(dir);
-  Assert.equal(false, (await OS.File.exists(dir)));
+  Assert.equal(false, await OS.File.exists(dir));
 
   // Remove directory that contains multiple files
   await OS.File.makeDir(dir);
   await OS.File.writeAtomic(file1, "content", { tmpPath: file1 + ".tmp" });
   await OS.File.writeAtomic(file2, "content", { tmpPath: file2 + ".tmp" });
   await OS.File.removeDir(dir);
-  Assert.equal(false, (await OS.File.exists(dir)));
+  Assert.equal(false, await OS.File.exists(dir));
 
   // Remove directory that contains a file and a directory
   await OS.File.makeDir(dir);
   await OS.File.writeAtomic(file1, "content", { tmpPath: file1 + ".tmp" });
   await OS.File.makeDir(subDir);
-  await OS.File.writeAtomic(fileInSubDir, "content", { tmpPath: fileInSubDir + ".tmp" });
+  await OS.File.writeAtomic(fileInSubDir, "content", {
+    tmpPath: fileInSubDir + ".tmp",
+  });
   await OS.File.removeDir(dir);
-  Assert.equal(false, (await OS.File.exists(dir)));
+  Assert.equal(false, await OS.File.exists(dir));
 });
 
 add_task(async function test_unix_symlink() {
@@ -112,36 +114,36 @@ add_task(async function test_unix_symlink() {
   // <profileDir>/directory/link2 => ../directory3 (regular file)
 
   // Sanity checking for the test
-  Assert.equal(false, (await OS.File.exists(dir)));
+  Assert.equal(false, await OS.File.exists(dir));
 
   await OS.File.writeAtomic(file, "content", { tmpPath: file + ".tmp" });
-  Assert.ok((await OS.File.exists(file)));
-  let info = await OS.File.stat(file, {unixNoFollowingLinks: true});
+  Assert.ok(await OS.File.exists(file));
+  let info = await OS.File.stat(file, { unixNoFollowingLinks: true });
   Assert.ok(!info.isDir);
   Assert.ok(!info.isSymLink);
 
   await OS.File.unixSymLink(file, file + ".link");
-  Assert.ok((await OS.File.exists(file + ".link")));
-  info = await OS.File.stat(file + ".link", {unixNoFollowingLinks: true});
+  Assert.ok(await OS.File.exists(file + ".link"));
+  info = await OS.File.stat(file + ".link", { unixNoFollowingLinks: true });
   Assert.ok(!info.isDir);
   Assert.ok(info.isSymLink);
   info = await OS.File.stat(file + ".link");
   Assert.ok(!info.isDir);
   Assert.ok(!info.isSymLink);
   await OS.File.remove(file + ".link");
-  Assert.equal(false, (await OS.File.exists(file + ".link")));
+  Assert.equal(false, await OS.File.exists(file + ".link"));
 
   await OS.File.makeDir(dir);
-  Assert.ok((await OS.File.exists(dir)));
-  info = await OS.File.stat(dir, {unixNoFollowingLinks: true});
+  Assert.ok(await OS.File.exists(dir));
+  info = await OS.File.stat(dir, { unixNoFollowingLinks: true });
   Assert.ok(info.isDir);
   Assert.ok(!info.isSymLink);
 
   let link = OS.Path.join(OS.Constants.Path.profileDir, "linkdir");
 
   await OS.File.unixSymLink(dir, link);
-  Assert.ok((await OS.File.exists(link)));
-  info = await OS.File.stat(link, {unixNoFollowingLinks: true});
+  Assert.ok(await OS.File.exists(link));
+  info = await OS.File.stat(link, { unixNoFollowingLinks: true });
   Assert.ok(!info.isDir);
   Assert.ok(info.isSymLink);
   info = await OS.File.stat(link);
@@ -153,22 +155,22 @@ add_task(async function test_unix_symlink() {
   let link2 = OS.Path.join(dir, "link2");
 
   await OS.File.writeAtomic(file1, "content", { tmpPath: file1 + ".tmp" });
-  Assert.ok((await OS.File.exists(file1)));
+  Assert.ok(await OS.File.exists(file1));
   await OS.File.makeDir(dir3);
-  Assert.ok((await OS.File.exists(dir3)));
+  Assert.ok(await OS.File.exists(dir3));
   await OS.File.writeAtomic(file3, "content", { tmpPath: file3 + ".tmp" });
-  Assert.ok((await OS.File.exists(file3)));
+  Assert.ok(await OS.File.exists(file3));
   await OS.File.unixSymLink("../directory3", link2);
-  Assert.ok((await OS.File.exists(link2)));
+  Assert.ok(await OS.File.exists(link2));
 
   await OS.File.removeDir(link);
-  Assert.equal(false, (await OS.File.exists(link)));
-  Assert.ok((await OS.File.exists(file1)));
+  Assert.equal(false, await OS.File.exists(link));
+  Assert.ok(await OS.File.exists(file1));
   await OS.File.removeDir(dir);
-  Assert.equal(false, (await OS.File.exists(dir)));
-  Assert.ok((await OS.File.exists(file3)));
+  Assert.equal(false, await OS.File.exists(dir));
+  Assert.ok(await OS.File.exists(file3));
   await OS.File.removeDir(dir3);
-  Assert.equal(false, (await OS.File.exists(dir3)));
+  Assert.equal(false, await OS.File.exists(dir3));
 
   // This task will be executed only on Unix-like systems.
   // Please do not add tests independent to operating systems here

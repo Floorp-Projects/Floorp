@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function TooltipTextProvider() {}
 
@@ -10,19 +10,24 @@ TooltipTextProvider.prototype = {
   getNodeText(tipElement, textOut, directionOut) {
     // Don't show the tooltip if the tooltip node is a document or browser.
     // Caller should ensure the node is in (composed) document.
-    if (!tipElement || !tipElement.ownerDocument ||
-        tipElement.localName == "browser") {
+    if (
+      !tipElement ||
+      !tipElement.ownerDocument ||
+      tipElement.localName == "browser"
+    ) {
       return false;
     }
 
     var defView = tipElement.ownerGlobal;
     // XXX Work around bug 350679:
     // "Tooltips can be fired in documents with no view".
-    if (!defView)
+    if (!defView) {
       return false;
+    }
 
     const XLinkNS = "http://www.w3.org/1999/xlink";
-    const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    const XULNS =
+      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
     var titleText = null;
     var XLinkTitleText = null;
@@ -33,12 +38,14 @@ TooltipTextProvider.prototype = {
 
     // If the element is invalid per HTML5 Forms specifications and has no title,
     // show the constraint validation error message.
-    if ((tipElement instanceof defView.HTMLInputElement ||
-         tipElement instanceof defView.HTMLTextAreaElement ||
-         tipElement instanceof defView.HTMLSelectElement ||
-         tipElement instanceof defView.HTMLButtonElement) &&
-        !tipElement.hasAttribute("title") &&
-        (!tipElement.form || !tipElement.form.noValidate)) {
+    if (
+      (tipElement instanceof defView.HTMLInputElement ||
+        tipElement instanceof defView.HTMLTextAreaElement ||
+        tipElement instanceof defView.HTMLSelectElement ||
+        tipElement instanceof defView.HTMLButtonElement) &&
+      !tipElement.hasAttribute("title") &&
+      (!tipElement.form || !tipElement.form.noValidate)
+    ) {
       // If the element is barred from constraint validation or valid,
       // the validation message will be the empty string.
       titleText = tipElement.validationMessage || null;
@@ -46,15 +53,18 @@ TooltipTextProvider.prototype = {
 
     // If the element is an <input type='file'> without a title, we should show
     // the current file selection.
-    if (!titleText &&
-        tipElement instanceof defView.HTMLInputElement &&
-        tipElement.type == "file" &&
-        !tipElement.hasAttribute("title")) {
+    if (
+      !titleText &&
+      tipElement instanceof defView.HTMLInputElement &&
+      tipElement.type == "file" &&
+      !tipElement.hasAttribute("title")
+    ) {
       let files = tipElement.files;
 
       try {
-        var bundle =
-          Services.strings.createBundle("chrome://global/locale/layout/HtmlForm.properties");
+        var bundle = Services.strings.createBundle(
+          "chrome://global/locale/layout/HtmlForm.properties"
+        );
         if (files.length == 0) {
           if (tipElement.multiple) {
             titleText = bundle.GetStringFromName("NoFilesSelected");
@@ -78,7 +88,10 @@ TooltipTextProvider.prototype = {
             let xmoreNum = files.length - TRUNCATED_FILE_COUNT;
             let tmp = {};
             ChromeUtils.import("resource://gre/modules/PluralForm.jsm", tmp);
-            let andXMoreStr = tmp.PluralForm.get(xmoreNum, xmoreStr).replace("#1", xmoreNum);
+            let andXMoreStr = tmp.PluralForm.get(xmoreNum, xmoreStr).replace(
+              "#1",
+              xmoreNum
+            );
             titleText += "\n" + andXMoreStr;
           }
         }
@@ -88,24 +101,34 @@ TooltipTextProvider.prototype = {
     // Check texts against null so that title="" can be used to undefine a
     // title on a child element.
     let usedTipElement = null;
-    while (tipElement &&
-           (titleText == null) && (XLinkTitleText == null) &&
-           (SVGTitleText == null) && (XULtooltiptextText == null)) {
+    while (
+      tipElement &&
+      titleText == null &&
+      XLinkTitleText == null &&
+      SVGTitleText == null &&
+      XULtooltiptextText == null
+    ) {
       if (tipElement.nodeType == defView.Node.ELEMENT_NODE) {
-        if (tipElement.namespaceURI == XULNS)
+        if (tipElement.namespaceURI == XULNS) {
           XULtooltiptextText = tipElement.getAttribute("tooltiptext");
-        else if (!(tipElement instanceof defView.SVGElement))
+        } else if (!(tipElement instanceof defView.SVGElement)) {
           titleText = tipElement.getAttribute("title");
+        }
 
-        if ((tipElement instanceof defView.HTMLAnchorElement ||
-             tipElement instanceof defView.HTMLAreaElement ||
-             tipElement instanceof defView.HTMLLinkElement ||
-             tipElement instanceof defView.SVGAElement) && tipElement.href) {
+        if (
+          (tipElement instanceof defView.HTMLAnchorElement ||
+            tipElement instanceof defView.HTMLAreaElement ||
+            tipElement instanceof defView.HTMLLinkElement ||
+            tipElement instanceof defView.SVGAElement) &&
+          tipElement.href
+        ) {
           XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
         }
-        if (lookingForSVGTitle &&
-            (!(tipElement instanceof defView.SVGElement) ||
-             tipElement.parentNode.nodeType == defView.Node.DOCUMENT_NODE)) {
+        if (
+          lookingForSVGTitle &&
+          (!(tipElement instanceof defView.SVGElement) ||
+            tipElement.parentNode.nodeType == defView.Node.DOCUMENT_NODE)
+        ) {
           lookingForSVGTitle = false;
         }
         if (lookingForSVGTitle) {
@@ -123,22 +146,25 @@ TooltipTextProvider.prototype = {
       tipElement = tipElement.flattenedTreeParentNode;
     }
 
-    return [titleText, XLinkTitleText, SVGTitleText, XULtooltiptextText].some(function(t) {
-      if (t && /\S/.test(t)) {
-        // Make CRLF and CR render one line break each.
-        textOut.value = t.replace(/\r\n?/g, "\n");
+    return [titleText, XLinkTitleText, SVGTitleText, XULtooltiptextText].some(
+      function(t) {
+        if (t && /\S/.test(t)) {
+          // Make CRLF and CR render one line break each.
+          textOut.value = t.replace(/\r\n?/g, "\n");
 
-        if (usedTipElement) {
-          direction = defView.getComputedStyle(usedTipElement)
-                             .getPropertyValue("direction");
+          if (usedTipElement) {
+            direction = defView
+              .getComputedStyle(usedTipElement)
+              .getPropertyValue("direction");
+          }
+
+          directionOut.value = direction;
+          return true;
         }
 
-        directionOut.value = direction;
-        return true;
+        return false;
       }
-
-      return false;
-    });
+    );
   },
 
   classID: Components.ID("{f376627f-0bbc-47b8-887e-fc92574cc91f}"),

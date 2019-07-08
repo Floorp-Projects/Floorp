@@ -25,16 +25,20 @@ function run_test() {
     (function b() {
       (function c() {
         stack = saveStack(3);
-      }());
-    }());
-  }());
+      })();
+    })();
+  })();
 
   const REPORT = new Map([
-    [stack, { Foo: { bytes: 10, count: 1 },
-              Bar: { bytes: 20, count: 2 },
-              Baz: { bytes: 30, count: 3 },
-              other: { bytes: 40, count: 4 },
-    }],
+    [
+      stack,
+      {
+        Foo: { bytes: 10, count: 1 },
+        Bar: { bytes: 20, count: 2 },
+        Baz: { bytes: 30, count: 3 },
+        other: { bytes: 40, count: 4 },
+      },
+    ],
     ["noStack", { bytes: 50, count: 5 }],
   ]);
 

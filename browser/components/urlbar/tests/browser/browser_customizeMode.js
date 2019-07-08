@@ -52,8 +52,10 @@ add_task(async function test() {
 
 async function startCustomizing(win = window) {
   if (win.document.documentElement.getAttribute("customizing") != "true") {
-    let eventPromise =
-      BrowserTestUtils.waitForEvent(win.gNavToolbox, "customizationready");
+    let eventPromise = BrowserTestUtils.waitForEvent(
+      win.gNavToolbox,
+      "customizationready"
+    );
     win.gCustomizeMode.enter();
     await eventPromise;
   }
@@ -61,8 +63,10 @@ async function startCustomizing(win = window) {
 
 async function endCustomizing(win = window) {
   if (win.document.documentElement.getAttribute("customizing") == "true") {
-    let eventPromise =
-      BrowserTestUtils.waitForEvent(win.gNavToolbox, "aftercustomization");
+    let eventPromise = BrowserTestUtils.waitForEvent(
+      win.gNavToolbox,
+      "aftercustomization"
+    );
     win.gCustomizeMode.exit();
     await eventPromise;
   }

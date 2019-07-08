@@ -1,5 +1,5 @@
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function inChildProcess() {
   return Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
@@ -12,14 +12,16 @@ add_task(async _ => {
   dbFile.append("cookies.sqlite");
 
   let storage = Services.storage;
-  let properties = Cc["@mozilla.org/hash-property-bag;1"].
-                     createInstance(Ci.nsIWritablePropertyBag);
+  let properties = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+    Ci.nsIWritablePropertyBag
+  );
   properties.setProperty("shared", true);
   let conn = storage.openDatabase(dbFile);
 
   conn.schemaVersion = 9;
   conn.executeSimpleSQL("DROP TABLE IF EXISTS moz_cookies");
-  conn.executeSimpleSQL("CREATE TABLE moz_cookies (" +
+  conn.executeSimpleSQL(
+    "CREATE TABLE moz_cookies (" +
       "id INTEGER PRIMARY KEY, " +
       "baseDomain TEXT, " +
       "originAttributes TEXT NOT NULL DEFAULT '', " +
@@ -35,22 +37,32 @@ add_task(async _ => {
       "inBrowserElement INTEGER DEFAULT 0, " +
       "sameSite INTEGER DEFAULT 0, " +
       "CONSTRAINT moz_uniqueid UNIQUE (name, host, path, originAttributes)" +
-      ")");
+      ")"
+  );
   conn.close();
 
   // Allow all cookies if the pref service is available in this process.
   if (!inChildProcess()) {
     Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
-    Services.prefs.setBoolPref("network.cookieSettings.unblocked_for_testing", true);
+    Services.prefs.setBoolPref(
+      "network.cookieSettings.unblocked_for_testing",
+      true
+    );
     Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", true);
-    Services.prefs.setBoolPref("network.cookie.sameSite.noneRequiresSecure", true);
+    Services.prefs.setBoolPref(
+      "network.cookie.sameSite.noneRequiresSecure",
+      true
+    );
   }
 
   let cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
 
   let uri = NetUtil.newURI("http://example.org/");
 
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    uri,
+    {}
+  );
 
   let channel = NetUtil.newChannel({
     uri,
@@ -60,18 +72,17 @@ add_task(async _ => {
   });
 
   let tests = [
-    { cookie: "foo=b;max-age=3600, c=d;path=/; sameSite=strict",
+    {
+      cookie: "foo=b;max-age=3600, c=d;path=/; sameSite=strict",
       sameSite: 2,
       rawSameSite: 2,
     },
-    { cookie: "foo=b;max-age=3600, c=d;path=/; sameSite=lax",
+    {
+      cookie: "foo=b;max-age=3600, c=d;path=/; sameSite=lax",
       sameSite: 1,
       rawSameSite: 1,
     },
-    { cookie: "foo=b;max-age=3600, c=d;path=/",
-      sameSite: 1,
-      rawSameSite: 0,
-    },
+    { cookie: "foo=b;max-age=3600, c=d;path=/", sameSite: 1, rawSameSite: 0 },
   ];
 
   for (let i = 0; i < tests.length; ++i) {
@@ -93,7 +104,9 @@ add_task(async _ => {
     conn = storage.openDatabase(dbFile);
     Assert.equal(conn.schemaVersion, 10);
 
-    let stmt = conn.createStatement("SELECT sameSite, rawSameSite FROM moz_cookies");
+    let stmt = conn.createStatement(
+      "SELECT sameSite, rawSameSite FROM moz_cookies"
+    );
 
     let success = stmt.executeStep();
     Assert.ok(success);

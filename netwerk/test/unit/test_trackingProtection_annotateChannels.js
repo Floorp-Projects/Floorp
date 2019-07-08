@@ -1,6 +1,8 @@
-const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-var {Services} = ChromeUtils.import('resource://gre/modules/Services.jsm');
+const { UrlClassifierTestUtils } = ChromeUtils.import(
+  "resource://testing-common/UrlClassifierTestUtils.jsm"
+);
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // This test supports both e10s and non-e10s mode. In non-e10s mode, this test
 // drives itself by creating a profile directory, setting up the URL classifier
@@ -33,14 +35,25 @@ function listener(tracking, priority, throttleable, nextTest) {
 }
 listener.prototype = {
   onStartRequest(request) {
-    Assert.equal(request.QueryInterface(Ci.nsIHttpChannel).isTrackingResource(),
-                 this._tracking, "tracking flag");
-    Assert.equal(request.QueryInterface(Ci.nsISupportsPriority).priority,
-                 this._priority, "channel priority");
+    Assert.equal(
+      request.QueryInterface(Ci.nsIHttpChannel).isTrackingResource(),
+      this._tracking,
+      "tracking flag"
+    );
+    Assert.equal(
+      request.QueryInterface(Ci.nsISupportsPriority).priority,
+      this._priority,
+      "channel priority"
+    );
     if (runtime.processType == runtime.PROCESS_TYPE_DEFAULT && this._tracking) {
-      Assert.equal(!!(request.QueryInterface(Ci.nsIClassOfService).classFlags &
-                       Ci.nsIClassOfService.Throttleable),
-                   this._throttleable, "throttleable flag");
+      Assert.equal(
+        !!(
+          request.QueryInterface(Ci.nsIClassOfService).classFlags &
+          Ci.nsIClassOfService.Throttleable
+        ),
+        this._throttleable,
+        "throttleable flag"
+      );
     }
     request.cancel(Cr.NS_ERROR_ABORT);
     this._nextTest();
@@ -60,19 +73,35 @@ var currentTest;
 // only test the normal priority case.
 // In non-e10s mode, both of these will remain false and we adjust the prefs
 // ourselves and test both of the cases in one go.
-var skipNormalPriority = false, skipLowestPriority = false;
+var skipNormalPriority = false,
+  skipLowestPriority = false;
 
 function setup_test() {
   httpServer = new HttpServer();
   httpServer.start(-1);
-  httpServer.identity.setPrimary("http", "tracking.example.org", httpServer.identity.primaryPort);
-  httpServer.identity.add("http", "example.org", httpServer.identity.primaryPort);
+  httpServer.identity.setPrimary(
+    "http",
+    "tracking.example.org",
+    httpServer.identity.primaryPort
+  );
+  httpServer.identity.add(
+    "http",
+    "example.org",
+    httpServer.identity.primaryPort
+  );
   normalOrigin = "http://localhost:" + httpServer.identity.primaryPort;
-  trackingOrigin = "http://tracking.example.org:" + httpServer.identity.primaryPort;
+  trackingOrigin =
+    "http://tracking.example.org:" + httpServer.identity.primaryPort;
 
   if (runtime.processType == runtime.PROCESS_TYPE_CONTENT) {
-    if (Services.prefs.getBoolPref("privacy.trackingprotection.annotate_channels") &&
-        Services.prefs.getBoolPref("privacy.trackingprotection.lower_network_priority")) {
+    if (
+      Services.prefs.getBoolPref(
+        "privacy.trackingprotection.annotate_channels"
+      ) &&
+      Services.prefs.getBoolPref(
+        "privacy.trackingprotection.lower_network_priority"
+      )
+    ) {
       skipNormalPriority = true;
     } else {
       skipLowestPriority = true;
@@ -91,14 +120,25 @@ function doPriorityTest() {
   currentTest = testPriorityMap.shift();
 
   // Let's be explicit about what we're testing!
-  Assert.ok("loadingPrincipal" in currentTest, "check for incomplete test case");
+  Assert.ok(
+    "loadingPrincipal" in currentTest,
+    "check for incomplete test case"
+  );
   Assert.ok("topWindowURI" in currentTest, "check for incomplete test case");
 
-  var channel = makeChannel(currentTest.path, currentTest.loadingPrincipal, currentTest.topWindowURI);
-  channel.asyncOpen(new listener(currentTest.expectedTracking,
-                                  currentTest.expectedPriority,
-                                  currentTest.expectedThrottleable,
-                                  doPriorityTest));
+  var channel = makeChannel(
+    currentTest.path,
+    currentTest.loadingPrincipal,
+    currentTest.topWindowURI
+  );
+  channel.asyncOpen(
+    new listener(
+      currentTest.expectedTracking,
+      currentTest.expectedPriority,
+      currentTest.expectedThrottleable,
+      doPriorityTest
+    )
+  );
 }
 
 function makeChannel(path, loadingPrincipal, topWindowURI) {
@@ -120,7 +160,9 @@ function makeChannel(path, loadingPrincipal, topWindowURI) {
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.requestMethod = "GET";
   if (topWindowURI) {
-    chan.QueryInterface(Ci.nsIHttpChannelInternal).setTopWindowURIIfUnknown(topWindowURI);
+    chan
+      .QueryInterface(Ci.nsIHttpChannelInternal)
+      .setTopWindowURIIfUnknown(topWindowURI);
   }
   return chan;
 }
@@ -148,10 +190,18 @@ var tests = [
       return;
     }
     if (runtime.processType == runtime.PROCESS_TYPE_DEFAULT) {
-      Services.prefs.setBoolPref("privacy.trackingprotection.annotate_channels", false);
-      Services.prefs.setBoolPref("privacy.trackingprotection.lower_network_priority", false);
+      Services.prefs.setBoolPref(
+        "privacy.trackingprotection.annotate_channels",
+        false
+      );
+      Services.prefs.setBoolPref(
+        "privacy.trackingprotection.lower_network_priority",
+        false
+      );
     }
-    var principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(normalOrigin);
+    var principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+      normalOrigin
+    );
     testPriorityMap = [
       {
         path: normalOrigin + "/innocent.css",
@@ -200,10 +250,18 @@ var tests = [
       return;
     }
     if (runtime.processType == runtime.PROCESS_TYPE_DEFAULT) {
-      Services.prefs.setBoolPref("privacy.trackingprotection.annotate_channels", true);
-      Services.prefs.setBoolPref("privacy.trackingprotection.lower_network_priority", true);
+      Services.prefs.setBoolPref(
+        "privacy.trackingprotection.annotate_channels",
+        true
+      );
+      Services.prefs.setBoolPref(
+        "privacy.trackingprotection.lower_network_priority",
+        true
+      );
     }
-    var principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(normalOrigin);
+    var principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+      normalOrigin
+    );
     testPriorityMap = [
       {
         path: normalOrigin + "/innocent.css",
@@ -252,8 +310,14 @@ var tests = [
       return;
     }
     if (runtime.processType == runtime.PROCESS_TYPE_DEFAULT) {
-      Services.prefs.setBoolPref("privacy.trackingprotection.annotate_channels", true);
-      Services.prefs.setBoolPref("privacy.trackingprotection.lower_network_priority", true);
+      Services.prefs.setBoolPref(
+        "privacy.trackingprotection.annotate_channels",
+        true
+      );
+      Services.prefs.setBoolPref(
+        "privacy.trackingprotection.lower_network_priority",
+        true
+      );
     }
     testPriorityMap = [
       {
@@ -301,7 +365,7 @@ var tests = [
       UrlClassifierTestUtils.cleanupTestTrackers();
     }
     runTests();
-  }
+  },
 ];
 
 function runTests() {

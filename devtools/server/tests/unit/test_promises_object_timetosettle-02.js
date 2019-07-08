@@ -15,8 +15,10 @@ add_task(async function() {
 
   ok(Promise.toString().includes("native code"), "Expect native DOM Promise.");
 
-  await testGetTimeToSettle(promisesFront,
-    v => new Promise(resolve => setTimeout(() => resolve(v), 100)));
+  await testGetTimeToSettle(
+    promisesFront,
+    v => new Promise(resolve => setTimeout(() => resolve(v), 100))
+  );
 });
 
 add_task(async function() {
@@ -37,12 +39,19 @@ async function testGetTimeToSettle(front, makePromise) {
   const onNewPromise = new Promise(resolve => {
     front.on("promises-settled", promises => {
       for (const p of promises) {
-        if (p.promiseState.state === "fulfilled" &&
-            p.promiseState.value === resolution) {
-          const timeToSettle = Math.floor(p.promiseState.timeToSettle / 100) * 100;
-          ok(timeToSettle >= 100,
+        if (
+          p.promiseState.state === "fulfilled" &&
+          p.promiseState.value === resolution
+        ) {
+          const timeToSettle =
+            Math.floor(p.promiseState.timeToSettle / 100) * 100;
+          ok(
+            timeToSettle >= 100,
             "Expect time to settle for resolved promise to be " +
-            "at least 100ms, got " + timeToSettle + "ms.");
+              "at least 100ms, got " +
+              timeToSettle +
+              "ms."
+          );
           found = true;
           resolve();
         } else {

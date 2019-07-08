@@ -16,9 +16,9 @@ add_task(async function() {
   const monitor = toolbox.getPanel("netmonitor");
   const { store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -54,13 +54,22 @@ add_task(async function() {
     }
   }
 
-  is(shortRequests.length, 1,
-     "Got one request for doc_short_string.css after Style Editor was loaded.");
-  is(longRequests.length, 1,
-     "Got one request for doc_long_string.css after Style Editor was loaded.");
+  is(
+    shortRequests.length,
+    1,
+    "Got one request for doc_short_string.css after Style Editor was loaded."
+  );
+  is(
+    longRequests.length,
+    1,
+    "Got one request for doc_long_string.css after Style Editor was loaded."
+  );
 
   // Requests with a response body size greater than 1MB cannot be fetched from the
   // netmonitor, the style editor should perform a separate request.
-  is(hugeRequests.length, 2,
-     "Got two requests for sjs_huge-css-server.sjs after Style Editor was loaded.");
+  is(
+    hugeRequests.length,
+    2,
+    "Got two requests for sjs_huge-css-server.sjs after Style Editor was loaded."
+  );
 });

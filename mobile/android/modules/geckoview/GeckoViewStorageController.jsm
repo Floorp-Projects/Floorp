@@ -6,71 +6,76 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewStorageController"];
 
-const {GeckoViewUtils} = ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { GeckoViewUtils } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const {debug, warn} = GeckoViewUtils.initLogging("GeckoViewStorageController"); // eslint-disable-line no-unused-vars
+// eslint-disable-next-line no-unused-vars
+const { debug, warn } = GeckoViewUtils.initLogging(
+  "GeckoViewStorageController"
+);
 
 // Keep in sync with StorageController.ClearFlags and nsIClearDataService.idl.
 const ClearFlags = [
   [
     // COOKIES
-    (1 << 0),
+    1 << 0,
     Ci.nsIClearDataService.CLEAR_COOKIES |
-    Ci.nsIClearDataService.CLEAR_PLUGIN_DATA |
-    Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES,
+      Ci.nsIClearDataService.CLEAR_PLUGIN_DATA |
+      Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES,
   ],
   [
     // NETWORK_CACHE
-    (1 << 1),
+    1 << 1,
     Ci.nsIClearDataService.CLEAR_NETWORK_CACHE,
   ],
   [
     // IMAGE_CACHE
-    (1 << 2),
+    1 << 2,
     Ci.nsIClearDataService.CLEAR_IMAGE_CACHE,
   ],
   [
     // HISTORY
-    (1 << 3),
+    1 << 3,
     Ci.nsIClearDataService.CLEAR_HISTORY |
-    Ci.nsIClearDataService.CLEAR_SESSION_HISTORY |
-    Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS,
+      Ci.nsIClearDataService.CLEAR_SESSION_HISTORY |
+      Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS,
   ],
   [
     // DOM_STORAGES
-    (1 << 4),
+    1 << 4,
     Ci.nsIClearDataService.CLEAR_APPCACHE |
-    Ci.nsIClearDataService.CLEAR_DOM_QUOTA |
-    Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
-    Ci.nsIClearDataService.CLEAR_REPORTS,
+      Ci.nsIClearDataService.CLEAR_DOM_QUOTA |
+      Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
+      Ci.nsIClearDataService.CLEAR_REPORTS,
   ],
   [
     // AUTH_SESSIONS
-    (1 << 5),
+    1 << 5,
     Ci.nsIClearDataService.CLEAR_AUTH_TOKENS |
-    Ci.nsIClearDataService.CLEAR_AUTH_CACHE,
+      Ci.nsIClearDataService.CLEAR_AUTH_CACHE,
   ],
   [
     // PERMISSIONS
-    (1 << 6),
+    1 << 6,
     Ci.nsIClearDataService.CLEAR_PERMISSIONS,
   ],
   [
     // SITE_SETTINGS
-    (1 << 7),
+    1 << 7,
     Ci.nsIClearDataService.CLEAR_CONTENT_PREFERENCES |
-    Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
-    Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS,
+      Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
+      Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS,
   ],
   [
     // SITE_DATA
-    (1 << 8),
+    1 << 8,
     Ci.nsIClearDataService.CLEAR_EME,
   ],
   [
     // ALL
-    (1 << 9),
+    1 << 9,
     Ci.nsIClearDataService.CLEAR_ALL,
   ],
 ];
@@ -86,7 +91,7 @@ function convertFlags(aJavaFlags) {
 
 const GeckoViewStorageController = {
   onEvent(aEvent, aData, aCallback) {
-    debug `onEvent ${aEvent} ${aData}`;
+    debug`onEvent ${aEvent} ${aData}`;
 
     switch (aEvent) {
       case "GeckoView:ClearData": {
@@ -114,7 +119,8 @@ const GeckoViewStorageController = {
         aHost,
         /* isUserRequest */ true,
         convertFlags(aFlags),
-        resolve);
+        resolve
+      );
     }).then(resultFlags => {
       aCallback.onSuccess();
     });

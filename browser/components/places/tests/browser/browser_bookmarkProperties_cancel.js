@@ -1,6 +1,6 @@
 "use strict";
 
-const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 const sandbox = sinon.createSandbox();
 
@@ -15,13 +15,16 @@ let bookmarks; // Bookmarks added via insertTree.
 add_task(async function setup() {
   bookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
-    children: [{
-      title: "bm1",
-      url: "http://example.com",
-    }, {
-      title: "bm2",
-      url: "http://example.com/2",
-    }],
+    children: [
+      {
+        title: "bm1",
+        url: "http://example.com",
+      },
+      {
+        title: "bm2",
+        url: "http://example.com/2",
+      },
+    ],
   });
 
   // Undo is called asynchronously - and not waited for. Since we're not
@@ -32,7 +35,7 @@ add_task(async function setup() {
 // Tests for bug 1391393 - Ensures that if the user cancels the bookmark properties
 // dialog without having done any changes, then no undo is called.
 add_task(async function test_cancel_with_no_changes() {
-  await withSidebarTree("bookmarks", async (tree) => {
+  await withSidebarTree("bookmarks", async tree => {
     tree.selectItems([bookmarks[0].guid]);
 
     // Delete the bookmark to put something in the undo history.
@@ -50,25 +53,36 @@ add_task(async function test_cancel_with_no_changes() {
         tree.controller.doCommand("placesCmd_show:info");
       },
       async function test(dialogWin) {
-        let acceptButton = dialogWin.document.documentElement.getButton("accept");
-        await BrowserTestUtils.waitForCondition(() => !acceptButton.disabled,
-          "The accept button should be enabled");
+        let acceptButton = dialogWin.document.documentElement.getButton(
+          "accept"
+        );
+        await BrowserTestUtils.waitForCondition(
+          () => !acceptButton.disabled,
+          "The accept button should be enabled"
+        );
       }
     );
 
     // Check the bookmark is still removed.
-    Assert.ok(!(await PlacesUtils.bookmarks.fetch(bookmarks[0].guid)),
-      "The originally removed bookmark should not exist.");
+    Assert.ok(
+      !(await PlacesUtils.bookmarks.fetch(bookmarks[0].guid)),
+      "The originally removed bookmark should not exist."
+    );
 
-    Assert.ok(await PlacesUtils.bookmarks.fetch(bookmarks[1].guid),
-      "The second bookmark should still exist");
+    Assert.ok(
+      await PlacesUtils.bookmarks.fetch(bookmarks[1].guid),
+      "The second bookmark should still exist"
+    );
 
-    Assert.ok(PlacesTransactions.undo.notCalled, "undo should not have been called");
+    Assert.ok(
+      PlacesTransactions.undo.notCalled,
+      "undo should not have been called"
+    );
   });
 });
 
 add_task(async function test_cancel_with_changes() {
-  await withSidebarTree("bookmarks", async (tree) => {
+  await withSidebarTree("bookmarks", async tree => {
     tree.selectItems([bookmarks[1].guid]);
 
     // Now open the bookmarks dialog and cancel it.
@@ -78,12 +92,18 @@ add_task(async function test_cancel_with_changes() {
         tree.controller.doCommand("placesCmd_show:info");
       },
       async function test(dialogWin) {
-        let acceptButton = dialogWin.document.documentElement.getButton("accept");
-        await BrowserTestUtils.waitForCondition(() => !acceptButton.disabled,
-          "The accept button should be enabled");
+        let acceptButton = dialogWin.document.documentElement.getButton(
+          "accept"
+        );
+        await BrowserTestUtils.waitForCondition(
+          () => !acceptButton.disabled,
+          "The accept button should be enabled"
+        );
 
         let promiseTitleChangeNotification = PlacesTestUtils.waitForNotification(
-          "onItemChanged", (itemId, prop, isAnno, val) => prop == "title" && val == "n");
+          "onItemChanged",
+          (itemId, prop, isAnno, val) => prop == "title" && val == "n"
+        );
 
         fillBookmarkTextField("editBMPanel_namePicker", "n", dialogWin);
 
@@ -95,7 +115,9 @@ add_task(async function test_cancel_with_changes() {
       }
     );
 
-    await BrowserTestUtils.waitForCondition(() => PlacesTransactions.undo.calledOnce,
-      "undo should have been called once.");
+    await BrowserTestUtils.waitForCondition(
+      () => PlacesTransactions.undo.calledOnce,
+      "undo should have been called once."
+    );
   });
 });

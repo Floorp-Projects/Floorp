@@ -10,13 +10,17 @@
 
 async function performDelete(store, rowName, action) {
   const contextMenu = gPanelWindow.document.getElementById(
-    "storage-table-popup");
+    "storage-table-popup"
+  );
   const menuDeleteAllItem = contextMenu.querySelector(
-    "#storage-table-popup-delete-all");
+    "#storage-table-popup-delete-all"
+  );
   const menuDeleteAllSessionCookiesItem = contextMenu.querySelector(
-    "#storage-table-popup-delete-all-session-cookies");
+    "#storage-table-popup-delete-all-session-cookies"
+  );
   const menuDeleteAllFromItem = contextMenu.querySelector(
-    "#storage-table-popup-delete-all-from");
+    "#storage-table-popup-delete-all-from"
+  );
 
   const storeName = store.join(" > ");
 
@@ -37,8 +41,10 @@ async function performDelete(store, rowName, action) {
       case "deleteAllFrom":
         menuDeleteAllFromItem.click();
         const hostName = cells.host.value;
-        ok(menuDeleteAllFromItem.getAttribute("label").includes(hostName),
-        `Context menu item label contains '${hostName}'`);
+        ok(
+          menuDeleteAllFromItem.getAttribute("label").includes(hostName),
+          `Context menu item label contains '${hostName}'`
+        );
         break;
     }
   });
@@ -52,7 +58,8 @@ add_task(async function() {
   info("test state before delete");
   await checkState([
     [
-      ["cookies", "http://test1.example.org"], [
+      ["cookies", "http://test1.example.org"],
+      [
         getCookieId("c1", "test1.example.org", "/browser"),
         getCookieId("c3", "test1.example.org", "/"),
         getCookieId("cs2", ".example.org", "/"),
@@ -62,13 +69,20 @@ add_task(async function() {
       ],
     ],
     [
-      ["cookies", "https://sectest1.example.org"], [
+      ["cookies", "https://sectest1.example.org"],
+      [
         getCookieId("cs2", ".example.org", "/"),
         getCookieId("c4", ".example.org", "/"),
-        getCookieId("sc1", "sectest1.example.org",
-                    "/browser/devtools/client/storage/test"),
-        getCookieId("sc2", "sectest1.example.org",
-                    "/browser/devtools/client/storage/test"),
+        getCookieId(
+          "sc1",
+          "sectest1.example.org",
+          "/browser/devtools/client/storage/test"
+        ),
+        getCookieId(
+          "sc2",
+          "sectest1.example.org",
+          "/browser/devtools/client/storage/test"
+        ),
         getCookieId("uc1", ".example.org", "/"),
         getCookieId("uc2", ".example.org", "/"),
       ],
@@ -78,7 +92,11 @@ add_task(async function() {
   info("delete all from domain");
   // delete only cookies that match the host exactly
   let id = getCookieId("c1", "test1.example.org", "/browser");
-  await performDelete(["cookies", "http://test1.example.org"], id, "deleteAllFrom");
+  await performDelete(
+    ["cookies", "http://test1.example.org"],
+    id,
+    "deleteAllFrom"
+  );
 
   info("test state after delete all from domain");
   await checkState([
@@ -99,10 +117,16 @@ add_task(async function() {
         getCookieId("c4", ".example.org", "/"),
         getCookieId("uc1", ".example.org", "/"),
         getCookieId("uc2", ".example.org", "/"),
-        getCookieId("sc1", "sectest1.example.org",
-                    "/browser/devtools/client/storage/test"),
-        getCookieId("sc2", "sectest1.example.org",
-                    "/browser/devtools/client/storage/test"),
+        getCookieId(
+          "sc1",
+          "sectest1.example.org",
+          "/browser/devtools/client/storage/test"
+        ),
+        getCookieId(
+          "sc2",
+          "sectest1.example.org",
+          "/browser/devtools/client/storage/test"
+        ),
       ],
     ],
   ]);
@@ -110,8 +134,11 @@ add_task(async function() {
   info("delete all session cookies");
   // delete only session cookies
   id = getCookieId("cs2", ".example.org", "/");
-  await performDelete(["cookies", "http://sectest1.example.org"], id,
-    "deleteAllSessionCookies");
+  await performDelete(
+    ["cookies", "http://sectest1.example.org"],
+    id,
+    "deleteAllSessionCookies"
+  );
 
   info("test state after delete all session cookies");
   await checkState([
@@ -128,8 +155,11 @@ add_task(async function() {
       [
         getCookieId("c4", ".example.org", "/"),
         getCookieId("uc2", ".example.org", "/"),
-        getCookieId("sc2", "sectest1.example.org",
-        "/browser/devtools/client/storage/test"),
+        getCookieId(
+          "sc2",
+          "sectest1.example.org",
+          "/browser/devtools/client/storage/test"
+        ),
       ],
     ],
   ]);
@@ -137,7 +167,11 @@ add_task(async function() {
   info("delete all");
   // delete all cookies for host, including domain cookies
   id = getCookieId("uc2", ".example.org", "/");
-  await performDelete(["cookies", "http://sectest1.example.org"], id, "deleteAll");
+  await performDelete(
+    ["cookies", "http://sectest1.example.org"],
+    id,
+    "deleteAll"
+  );
 
   info("test state after delete all");
   await checkState([

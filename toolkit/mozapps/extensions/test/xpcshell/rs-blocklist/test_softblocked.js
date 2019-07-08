@@ -17,7 +17,8 @@ add_task(async function test_softblock() {
           id: "softblock1@tests.mozilla.org",
           strict_min_version: "2",
           strict_max_version: "3",
-        }},
+        },
+      },
     },
   });
   let s1 = await promiseAddonByID("softblock1@tests.mozilla.org");
@@ -29,16 +30,18 @@ add_task(async function test_softblock() {
   Assert.ok(s1.appDisabled);
   Assert.ok(!s1.isActive);
 
-  await AddonTestUtils.loadBlocklistRawData({extensions: [
-    {
-      "guid": "softblock1@tests.mozilla.org",
-      "versionRange": [
-        {
-          "severity": "1",
-        },
-      ],
-    },
-  ]});
+  await AddonTestUtils.loadBlocklistRawData({
+    extensions: [
+      {
+        guid: "softblock1@tests.mozilla.org",
+        versionRange: [
+          {
+            severity: "1",
+          },
+        ],
+      },
+    ],
+  });
 
   Assert.ok(s1.softDisabled);
   Assert.ok(s1.appDisabled);

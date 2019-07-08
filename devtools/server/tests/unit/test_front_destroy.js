@@ -19,13 +19,18 @@ add_task(async function test() {
   info("Get the device front and check calling getDescription() on it");
   const front = await client.mainRoot.getFront("device");
   const description = await front.getDescription();
-  ok(!!description, "Check that the getDescription() method returns a valid response.");
+  ok(
+    !!description,
+    "Check that the getDescription() method returns a valid response."
+  );
 
   info("Destroy the device front and try calling getDescription again");
   front.destroy();
-  Assert.throws(() => front.getDescription(),
+  Assert.throws(
+    () => front.getDescription(),
     /Can not send request because front 'device' is already destroyed\./,
-    "Check device front throws when getDescription() is called after destroy()");
+    "Check device front throws when getDescription() is called after destroy()"
+  );
 
   await client.close();
 });

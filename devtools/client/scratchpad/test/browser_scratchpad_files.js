@@ -19,46 +19,62 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<p>test file open and save in Scratchpad");
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    "data:text/html,<p>test file open and save in Scratchpad"
+  );
 }
 
 function runTests() {
   gScratchpad = gScratchpadWindow.Scratchpad;
 
-  createTempFile("fileForBug636725.tmp", gFileContent, function(aStatus, aFile) {
-    ok(Components.isSuccessCode(aStatus),
-      "The temporary file was saved successfully");
+  createTempFile("fileForBug636725.tmp", gFileContent, function(
+    aStatus,
+    aFile
+  ) {
+    ok(
+      Components.isSuccessCode(aStatus),
+      "The temporary file was saved successfully"
+    );
 
     gFile = aFile;
-    gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsIFile), true,
-        fileImported);
+    gScratchpad.importFromFile(
+      gFile.QueryInterface(Ci.nsIFile),
+      true,
+      fileImported
+    );
   });
 }
 
 function fileImported(aStatus, aFileContent) {
-  ok(Components.isSuccessCode(aStatus),
-     "the temporary file was imported successfully with Scratchpad");
+  ok(
+    Components.isSuccessCode(aStatus),
+    "the temporary file was imported successfully with Scratchpad"
+  );
 
-  is(aFileContent, gFileContent,
-     "received data is correct");
+  is(aFileContent, gFileContent, "received data is correct");
 
-  is(gScratchpad.getText(), gFileContent,
-     "the editor content is correct");
+  is(gScratchpad.getText(), gFileContent, "the editor content is correct");
 
-  is(gScratchpad.dirty, false,
-     "the editor marks imported file as saved");
+  is(gScratchpad.dirty, false, "the editor marks imported file as saved");
 
   // Save the file after changes.
   gFileContent += "// omg, saved!";
   gScratchpad.editor.setText(gFileContent);
 
-  gScratchpad.exportToFile(gFile.QueryInterface(Ci.nsIFile), true, true,
-                          fileExported);
+  gScratchpad.exportToFile(
+    gFile.QueryInterface(Ci.nsIFile),
+    true,
+    true,
+    fileExported
+  );
 }
 
 function fileExported(aStatus) {
-  ok(Components.isSuccessCode(aStatus),
-     "the temporary file was exported successfully with Scratchpad");
+  ok(
+    Components.isSuccessCode(aStatus),
+    "the temporary file was exported successfully with Scratchpad"
+  );
 
   const oldContent = gFileContent;
 
@@ -73,8 +89,12 @@ function fileExported(aStatus) {
     return false;
   };
 
-  gScratchpad.exportToFile(gFile.QueryInterface(Ci.nsIFile), false, true,
-                          fileExported2);
+  gScratchpad.exportToFile(
+    gFile.QueryInterface(Ci.nsIFile),
+    false,
+    true,
+    fileExported2
+  );
 
   gScratchpadWindow.confirm = oldConfirm;
 
@@ -84,7 +104,8 @@ function fileExported(aStatus) {
 
   const channel = NetUtil.newChannel({
     uri: NetUtil.newURI(gFile),
-    loadUsingSystemPrincipal: true});
+    loadUsingSystemPrincipal: true,
+  });
   channel.contentType = "application/javascript";
 
   // Read back the temporary file.
@@ -96,11 +117,15 @@ function fileExported2() {
 }
 
 function fileRead(aInputStream, aStatus) {
-  ok(Components.isSuccessCode(aStatus),
-     "the temporary file was read back successfully");
+  ok(
+    Components.isSuccessCode(aStatus),
+    "the temporary file was read back successfully"
+  );
 
-  const updatedContent =
-    NetUtil.readInputStreamToString(aInputStream, aInputStream.available());
+  const updatedContent = NetUtil.readInputStreamToString(
+    aInputStream,
+    aInputStream.available()
+  );
 
   is(updatedContent, gFileContent, "file properly updated");
 

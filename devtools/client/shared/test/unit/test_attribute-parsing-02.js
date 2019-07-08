@@ -5,118 +5,132 @@
 
 // Test parseAttribute from node-attribute-parser.js
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {parseAttribute} = require("devtools/client/shared/node-attribute-parser");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const {
+  parseAttribute,
+} = require("devtools/client/shared/node-attribute-parser");
 
-const TEST_DATA = [{
-  tagName: "body",
-  namespaceURI: "http://www.w3.org/1999/xhtml",
-  attributeName: "class",
-  attributeValue: "some css class names",
-  expected: [
-    {value: "some css class names", type: "string"},
-  ],
-}, {
-  tagName: "box",
-  namespaceURI: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-  attributeName: "datasources",
-  attributeValue: "/url/1?test=1#test http://mozilla.org/wow",
-  expected: [
-    {value: "/url/1?test=1#test", type: "uri"},
-    {value: " ", type: "string"},
-    {value: "http://mozilla.org/wow", type: "uri"},
-  ],
-}, {
-  tagName: "form",
-  namespaceURI: "http://www.w3.org/1999/xhtml",
-  attributeName: "action",
-  attributeValue: "/path/to/handler",
-  expected: [
-    {value: "/path/to/handler", type: "uri"},
-  ],
-}, {
-  tagName: "a",
-  namespaceURI: "http://www.w3.org/1999/xhtml",
-  attributeName: "ping",
-  attributeValue: "http://analytics.com/track?id=54 http://analytics.com/track?id=55",
-  expected: [
-    {value: "http://analytics.com/track?id=54", type: "uri"},
-    {value: " ", type: "string"},
-    {value: "http://analytics.com/track?id=55", type: "uri"},
-  ],
-}, {
-  tagName: "link",
-  namespaceURI: "http://www.w3.org/1999/xhtml",
-  attributeName: "href",
-  attributeValue: "styles.css",
-  otherAttributes: [{name: "rel", value: "stylesheet"}],
-  expected: [
-    {value: "styles.css", type: "cssresource"},
-  ],
-}, {
-  tagName: "link",
-  namespaceURI: "http://www.w3.org/1999/xhtml",
-  attributeName: "href",
-  attributeValue: "styles.css",
-  expected: [
-    {value: "styles.css", type: "uri"},
-  ],
-}, {
-  tagName: "output",
-  namespaceURI: "http://www.w3.org/1999/xhtml",
-  attributeName: "for",
-  attributeValue: "element-id something id",
-  expected: [
-    {value: "element-id", type: "idref"},
-    {value: " ", type: "string"},
-    {value: "something", type: "idref"},
-    {value: " ", type: "string"},
-    {value: "id", type: "idref"},
-  ],
-}, {
-  tagName: "img",
-  namespaceURI: "http://www.w3.org/1999/xhtml",
-  attributeName: "contextmenu",
-  attributeValue: "id-of-menu",
-  expected: [
-    {value: "id-of-menu", type: "idref"},
-  ],
-}, {
-  tagName: "img",
-  namespaceURI: "http://www.w3.org/1999/xhtml",
-  attributeName: "src",
-  attributeValue: "omg-thats-so-funny.gif",
-  expected: [
-    {value: "omg-thats-so-funny.gif", type: "uri"},
-  ],
-}, {
-  tagName: "key",
-  namespaceURI: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-  attributeName: "command",
-  attributeValue: "some_command_id",
-  expected: [
-    {value: "some_command_id", type: "idref"},
-  ],
-}, {
-  tagName: "script",
-  namespaceURI: "whatever",
-  attributeName: "src",
-  attributeValue: "script.js",
-  expected: [
-    {value: "script.js", type: "jsresource"},
-  ],
-}];
+const TEST_DATA = [
+  {
+    tagName: "body",
+    namespaceURI: "http://www.w3.org/1999/xhtml",
+    attributeName: "class",
+    attributeValue: "some css class names",
+    expected: [{ value: "some css class names", type: "string" }],
+  },
+  {
+    tagName: "box",
+    namespaceURI:
+      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+    attributeName: "datasources",
+    attributeValue: "/url/1?test=1#test http://mozilla.org/wow",
+    expected: [
+      { value: "/url/1?test=1#test", type: "uri" },
+      { value: " ", type: "string" },
+      { value: "http://mozilla.org/wow", type: "uri" },
+    ],
+  },
+  {
+    tagName: "form",
+    namespaceURI: "http://www.w3.org/1999/xhtml",
+    attributeName: "action",
+    attributeValue: "/path/to/handler",
+    expected: [{ value: "/path/to/handler", type: "uri" }],
+  },
+  {
+    tagName: "a",
+    namespaceURI: "http://www.w3.org/1999/xhtml",
+    attributeName: "ping",
+    attributeValue:
+      "http://analytics.com/track?id=54 http://analytics.com/track?id=55",
+    expected: [
+      { value: "http://analytics.com/track?id=54", type: "uri" },
+      { value: " ", type: "string" },
+      { value: "http://analytics.com/track?id=55", type: "uri" },
+    ],
+  },
+  {
+    tagName: "link",
+    namespaceURI: "http://www.w3.org/1999/xhtml",
+    attributeName: "href",
+    attributeValue: "styles.css",
+    otherAttributes: [{ name: "rel", value: "stylesheet" }],
+    expected: [{ value: "styles.css", type: "cssresource" }],
+  },
+  {
+    tagName: "link",
+    namespaceURI: "http://www.w3.org/1999/xhtml",
+    attributeName: "href",
+    attributeValue: "styles.css",
+    expected: [{ value: "styles.css", type: "uri" }],
+  },
+  {
+    tagName: "output",
+    namespaceURI: "http://www.w3.org/1999/xhtml",
+    attributeName: "for",
+    attributeValue: "element-id something id",
+    expected: [
+      { value: "element-id", type: "idref" },
+      { value: " ", type: "string" },
+      { value: "something", type: "idref" },
+      { value: " ", type: "string" },
+      { value: "id", type: "idref" },
+    ],
+  },
+  {
+    tagName: "img",
+    namespaceURI: "http://www.w3.org/1999/xhtml",
+    attributeName: "contextmenu",
+    attributeValue: "id-of-menu",
+    expected: [{ value: "id-of-menu", type: "idref" }],
+  },
+  {
+    tagName: "img",
+    namespaceURI: "http://www.w3.org/1999/xhtml",
+    attributeName: "src",
+    attributeValue: "omg-thats-so-funny.gif",
+    expected: [{ value: "omg-thats-so-funny.gif", type: "uri" }],
+  },
+  {
+    tagName: "key",
+    namespaceURI:
+      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+    attributeName: "command",
+    attributeValue: "some_command_id",
+    expected: [{ value: "some_command_id", type: "idref" }],
+  },
+  {
+    tagName: "script",
+    namespaceURI: "whatever",
+    attributeName: "src",
+    attributeValue: "script.js",
+    expected: [{ value: "script.js", type: "jsresource" }],
+  },
+];
 
 function run_test() {
-  for (const {tagName, namespaceURI, attributeName,
-            otherAttributes, attributeValue, expected} of TEST_DATA) {
-    info("Testing <" + tagName + " " + attributeName + "='" + attributeValue + "'>");
+  for (const {
+    tagName,
+    namespaceURI,
+    attributeName,
+    otherAttributes,
+    attributeValue,
+    expected,
+  } of TEST_DATA) {
+    info(
+      "Testing <" + tagName + " " + attributeName + "='" + attributeValue + "'>"
+    );
 
     const attributes = [
-      ...otherAttributes || [],
+      ...(otherAttributes || []),
       { name: attributeName, value: attributeValue },
     ];
-    const tokens = parseAttribute(namespaceURI, tagName, attributes, attributeName);
+    const tokens = parseAttribute(
+      namespaceURI,
+      tagName,
+      attributes,
+      attributeName
+    );
     if (!expected) {
       Assert.ok(!tokens);
       continue;

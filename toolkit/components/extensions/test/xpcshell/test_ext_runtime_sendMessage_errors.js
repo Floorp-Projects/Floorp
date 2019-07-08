@@ -9,14 +9,26 @@ add_task(async function test_sendMessage_error() {
     let testCases = [
       // [arguments, expected error string],
       [[], "runtime.sendMessage's message argument is missing"],
-      [[null, null, null, 42], "runtime.sendMessage's last argument is not a function"],
+      [
+        [null, null, null, 42],
+        "runtime.sendMessage's last argument is not a function",
+      ],
       [[null, null, 1], "runtime.sendMessage's options argument is invalid"],
-      [[1, null, null], "runtime.sendMessage's extensionId argument is invalid"],
-      [[null, null, null, null, null], "runtime.sendMessage received too many arguments"],
+      [
+        [1, null, null],
+        "runtime.sendMessage's extensionId argument is invalid",
+      ],
+      [
+        [null, null, null, null, null],
+        "runtime.sendMessage received too many arguments",
+      ],
 
       // Even when the parameters are accepted, we still expect an error
       // because there is no onMessage listener.
-      [[null, null, null], "Could not establish connection. Receiving end does not exist."],
+      [
+        [null, null, null],
+        "Could not establish connection. Receiving end does not exist.",
+      ],
 
       // Structured cloning doesn't work with DOM objects
       [[null, location, null], "The object could not be cloned."],
@@ -25,7 +37,7 @@ add_task(async function test_sendMessage_error() {
 
     // Repeat all tests with the undefined value instead of null.
     for (let [args, expectedError] of testCases.slice()) {
-      args = args.map(arg => arg === null ? undefined : arg);
+      args = args.map(arg => (arg === null ? undefined : arg));
       testCases.push([args, expectedError]);
     }
 
@@ -35,7 +47,8 @@ add_task(async function test_sendMessage_error() {
       await browser.test.assertRejects(
         browser.runtime.sendMessage(...args),
         expectedError,
-        `expected error message for ${description}`);
+        `expected error message for ${description}`
+      );
     }
 
     browser.test.notifyPass("sendMessage parameter validation");

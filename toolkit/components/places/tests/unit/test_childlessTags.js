@@ -9,13 +9,15 @@
  * contained in any regular, non-tag folders.  See bug 444849.
  */
 
- var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-               getService(Ci.nsINavHistoryService);
+var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(
+  Ci.nsINavHistoryService
+);
 
- var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
-               getService(Ci.nsITaggingService);
+var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].getService(
+  Ci.nsITaggingService
+);
 
- const BOOKMARK_URI = uri("http://example.com/");
+const BOOKMARK_URI = uri("http://example.com/");
 
 add_task(async function test_removing_tagged_bookmark_removes_tag() {
   print("  Make a bookmark.");
@@ -35,30 +37,32 @@ add_task(async function test_removing_tagged_bookmark_removes_tag() {
   ensureTagsExist([]);
 });
 
-add_task(async function test_removing_folder_containing_tagged_bookmark_removes_tag() {
-  print("  Make a folder.");
-  let folder = await PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    title: "test folder",
-    type: PlacesUtils.bookmarks.TYPE_FOLDER,
-  });
+add_task(
+  async function test_removing_folder_containing_tagged_bookmark_removes_tag() {
+    print("  Make a folder.");
+    let folder = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      title: "test folder",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    });
 
-  print("  Stick a bookmark in the folder.");
-  var bookmark = await PlacesUtils.bookmarks.insert({
-    parentGuid: folder.guid,
-    url: BOOKMARK_URI,
-    title: "test bookmark",
-  });
+    print("  Stick a bookmark in the folder.");
+    var bookmark = await PlacesUtils.bookmarks.insert({
+      parentGuid: folder.guid,
+      url: BOOKMARK_URI,
+      title: "test bookmark",
+    });
 
-  print("  Tag the bookmark.");
-  var tags = ["foo", "bar"];
-  tagssvc.tagURI(BOOKMARK_URI, tags);
-  ensureTagsExist(tags);
+    print("  Tag the bookmark.");
+    var tags = ["foo", "bar"];
+    tagssvc.tagURI(BOOKMARK_URI, tags);
+    ensureTagsExist(tags);
 
-  print("  Remove the folder.  The tags should no longer exist.");
-  await PlacesUtils.bookmarks.remove(bookmark.guid);
-  ensureTagsExist([]);
-});
+    print("  Remove the folder.  The tags should no longer exist.");
+    await PlacesUtils.bookmarks.remove(bookmark.guid);
+    ensureTagsExist([]);
+  }
+);
 
 /**
  * Runs a tag query and ensures that the tags returned are those and only those

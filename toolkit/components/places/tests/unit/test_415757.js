@@ -22,7 +22,7 @@ function uri_in_db(aURI) {
   root.containerOpen = true;
   var cc = root.childCount;
   root.containerOpen = false;
-  return (cc == 1);
+  return cc == 1;
 }
 
 const TOTAL_SITES = 20;
@@ -32,12 +32,12 @@ add_task(async function test_execute() {
   // add pages to global history
   for (let i = 0; i < TOTAL_SITES; i++) {
     let uri = "http://www.test-" + i + ".com/";
-    let when = Date.now() * 1000 + (i * TOTAL_SITES);
+    let when = Date.now() * 1000 + i * TOTAL_SITES;
     await PlacesTestUtils.addVisits({ uri, visitDate: when });
   }
   for (let i = 0; i < TOTAL_SITES; i++) {
     let uri = "http://www.test.com/" + i + "/";
-    let when = Date.now() * 1000 + (i * TOTAL_SITES);
+    let when = Date.now() * 1000 + i * TOTAL_SITES;
     await PlacesTestUtils.addVisits({ uri, visitDate: when });
   }
 
@@ -80,8 +80,13 @@ add_task(async function test_execute() {
   await assertNoOrphanPageAnnotations();
 
   // check that annotation on the NOT removed item still exists
-  let pageInfo = await PlacesUtils.history.fetch(testAnnoRetainedURI, {includeAnnotations: true});
+  let pageInfo = await PlacesUtils.history.fetch(testAnnoRetainedURI, {
+    includeAnnotations: true,
+  });
 
-  Assert.equal(pageInfo.annotations.get(testAnnoRetainedName), testAnnoRetainedValue,
-    "Should have kept the annotation for the non-removed items");
+  Assert.equal(
+    pageInfo.annotations.get(testAnnoRetainedName),
+    testAnnoRetainedValue,
+    "Should have kept the annotation for the non-removed items"
+  );
 });

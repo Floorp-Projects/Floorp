@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 /*
  * Tests for correct behavior of asynchronous responses.
  */
@@ -17,13 +16,13 @@ var srv;
 
 function run_test() {
   srv = createServer();
-  for (var path in handlers)
+  for (var path in handlers) {
     srv.registerPathHandler(path, handlers[path]);
+  }
   srv.start(-1);
 
   runHttpTests(tests, testComplete(srv));
 }
-
 
 /** *************
  * BEGIN TESTS *
@@ -32,12 +31,24 @@ function run_test() {
 XPCOMUtils.defineLazyGetter(this, "tests", function() {
   return [
     new Test(PREPATH + "/handleSync", null, start_handleSync, null),
-    new Test(PREPATH + "/handleAsync1", null, start_handleAsync1,
-             stop_handleAsync1),
-    new Test(PREPATH + "/handleAsync2", init_handleAsync2, start_handleAsync2,
-             stop_handleAsync2),
-    new Test(PREPATH + "/handleAsyncOrdering", null, null,
-             stop_handleAsyncOrdering),
+    new Test(
+      PREPATH + "/handleAsync1",
+      null,
+      start_handleAsync1,
+      stop_handleAsync1
+    ),
+    new Test(
+      PREPATH + "/handleAsync2",
+      init_handleAsync2,
+      start_handleAsync2,
+      stop_handleAsync2
+    ),
+    new Test(
+      PREPATH + "/handleAsyncOrdering",
+      null,
+      null,
+      stop_handleAsyncOrdering
+    ),
   ];
 });
 
@@ -171,14 +182,19 @@ handlers["/handleAsync2"] = handleAsync2;
 var startTime_handleAsync2;
 
 function init_handleAsync2(ch) {
-  var now = startTime_handleAsync2 = Date.now();
+  var now = (startTime_handleAsync2 = Date.now());
   dumpn("*** init_HandleAsync2: start time " + now);
 }
 
 function start_handleAsync2(ch) {
   var now = Date.now();
-  dumpn("*** start_handleAsync2: onStartRequest time " + now + ", " +
-        (now - startTime_handleAsync2) + "ms after start time");
+  dumpn(
+    "*** start_handleAsync2: onStartRequest time " +
+      now +
+      ", " +
+      (now - startTime_handleAsync2) +
+      "ms after start time"
+  );
   Assert.ok(now >= startTime_handleAsync2 + startToHeaderDelay);
 
   Assert.equal(ch.responseStatus, 200);
@@ -188,8 +204,13 @@ function start_handleAsync2(ch) {
 
 function stop_handleAsync2(ch, status, data) {
   var now = Date.now();
-  dumpn("*** stop_handleAsync2: onStopRequest time " + now + ", " +
-        (now - startTime_handleAsync2) + "ms after header time");
+  dumpn(
+    "*** stop_handleAsync2: onStopRequest time " +
+      now +
+      ", " +
+      (now - startTime_handleAsync2) +
+      "ms after header time"
+  );
   Assert.ok(now >= startTime_handleAsync2 + startToFinishedDelay);
 
   Assert.equal(String.fromCharCode.apply(null, data), "BODY");
@@ -206,30 +227,30 @@ function handleAsyncOrdering(request, response) {
   var out = new BinaryOutputStream(response.bodyOutputStream);
 
   var data = [];
-  for (var i = 0; i < 65536; i++)
+  for (var i = 0; i < 65536; i++) {
     data[i] = 0;
+  }
   var count = 20;
 
-  var writeData =
-    {
-      run() {
-        if (count-- === 0) {
-          response.finish();
-          return;
-        }
+  var writeData = {
+    run() {
+      if (count-- === 0) {
+        response.finish();
+        return;
+      }
 
+      try {
+        out.writeByteArray(data, data.length);
+        step();
+      } catch (e) {
         try {
-          out.writeByteArray(data, data.length);
-          step();
-        } catch (e) {
-          try {
-            do_throw("error writing data: " + e);
-          } finally {
-            response.finish();
-          }
+          do_throw("error writing data: " + e);
+        } finally {
+          response.finish();
         }
-      },
-    };
+      }
+    },
+  };
   function step() {
     // Use gThreadManager here because it's expedient, *not* because it's
     // intended for public use!  If you do this in client code, expect me to
@@ -244,7 +265,8 @@ handlers["/handleAsyncOrdering"] = handleAsyncOrdering;
 function stop_handleAsyncOrdering(ch, status, data) {
   Assert.equal(data.length, 20 * 65536);
   data.forEach(function(v, index) {
-    if (v !== 0)
+    if (v !== 0) {
       do_throw("value " + v + " at index " + index + " should be zero");
+    }
   });
 }

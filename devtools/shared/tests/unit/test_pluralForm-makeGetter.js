@@ -10,7 +10,7 @@
  * development), English.
  */
 
-const {PluralForm} = require("devtools/shared/plural-form");
+const { PluralForm } = require("devtools/shared/plural-form");
 
 function run_test() {
   // Irish is plural rule #11

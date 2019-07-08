@@ -37,8 +37,9 @@ function WebConsoleConnectionProxy(webConsoleUI, target) {
   this._onAttachConsole = this._onAttachConsole.bind(this);
   this._onCachedMessages = this._onCachedMessages.bind(this);
   this._connectionTimeout = this._connectionTimeout.bind(this);
-  this._onLastPrivateContextExited =
-    this._onLastPrivateContextExited.bind(this);
+  this._onLastPrivateContextExited = this._onLastPrivateContextExited.bind(
+    this
+  );
   this._clearLogpointMessages = this._clearLogpointMessages.bind(this);
 }
 
@@ -113,13 +114,16 @@ WebConsoleConnectionProxy.prototype = {
     this._connectTimer = setTimeout(this._connectionTimeout, timeout);
 
     const connPromise = this._connectDefer.promise;
-    connPromise.then(() => {
-      clearTimeout(this._connectTimer);
-      this._connectTimer = null;
-    }, () => {
-      clearTimeout(this._connectTimer);
-      this._connectTimer = null;
-    });
+    connPromise.then(
+      () => {
+        clearTimeout(this._connectTimer);
+        this._connectTimer = null;
+      },
+      () => {
+        clearTimeout(this._connectTimer);
+        this._connectTimer = null;
+      }
+    );
     this.client = this.target.client;
 
     this.target.on("will-navigate", this._onTabWillNavigate);
@@ -158,7 +162,8 @@ WebConsoleConnectionProxy.prototype = {
     if (this.target.chrome && !this.target.isAddon) {
       listeners.push("ContentProcessMessages");
     }
-    return this.webConsoleClient.startListeners(listeners)
+    return this.webConsoleClient
+      .startListeners(listeners)
       .then(this._onAttachConsole, error => {
         console.error("attachConsole failed: " + error);
         this._connectDefer.reject(error);
@@ -177,7 +182,8 @@ WebConsoleConnectionProxy.prototype = {
    */
   _onAttachConsole: async function(response) {
     let saveBodies = Services.prefs.getBoolPref(
-      "devtools.netmonitor.saveRequestAndResponseBodies");
+      "devtools.netmonitor.saveRequestAndResponseBodies"
+    );
 
     // There is no way to view response bodies from the Browser Console, so do
     // not waste the memory.
@@ -192,9 +198,14 @@ WebConsoleConnectionProxy.prototype = {
     this.webConsoleClient.on("logMessage", this._onLogMessage);
     this.webConsoleClient.on("pageError", this._onPageError);
     this.webConsoleClient.on("consoleAPICall", this._onConsoleAPICall);
-    this.webConsoleClient.on("lastPrivateContextExited",
-                             this._onLastPrivateContextExited);
-    this.webConsoleClient.on("clearLogpointMessages", this._clearLogpointMessages);
+    this.webConsoleClient.on(
+      "lastPrivateContextExited",
+      this._onLastPrivateContextExited
+    );
+    this.webConsoleClient.on(
+      "clearLogpointMessages",
+      this._clearLogpointMessages
+    );
 
     const msgs = ["PageError", "ConsoleAPI"];
     const cachedMessages = await this.webConsoleClient.getCachedMessages(msgs);
@@ -244,8 +255,12 @@ WebConsoleConnectionProxy.prototype = {
    */
   _onCachedMessages: async function(response) {
     if (response.error) {
-      console.error("Web Console getCachedMessages error: " + response.error +
-                    " " + response.message);
+      console.error(
+        "Web Console getCachedMessages error: " +
+          response.error +
+          " " +
+          response.message
+      );
       this._connectDefer.reject(response);
       return;
     }
@@ -256,8 +271,9 @@ WebConsoleConnectionProxy.prototype = {
       console.error("Web Console getCachedMessages error: invalid state.");
     }
 
-    const messages =
-      response.messages.concat(...this.webConsoleClient.getNetworkEvents());
+    const messages = response.messages.concat(
+      ...this.webConsoleClient.getNetworkEvents()
+    );
     messages.sort((a, b) => a.timeStamp - b.timeStamp);
 
     this.dispatchMessagesAdd(messages);
@@ -434,11 +450,16 @@ WebConsoleConnectionProxy.prototype = {
     this.webConsoleClient.off("logMessage", this._onLogMessage);
     this.webConsoleClient.off("pageError", this._onPageError);
     this.webConsoleClient.off("consoleAPICall", this._onConsoleAPICall);
-    this.webConsoleClient.off("lastPrivateContextExited",
-                               this._onLastPrivateContextExited);
+    this.webConsoleClient.off(
+      "lastPrivateContextExited",
+      this._onLastPrivateContextExited
+    );
     this.webConsoleClient.off("networkEvent", this._onNetworkEvent);
     this.webConsoleClient.off("networkEventUpdate", this._onNetworkEventUpdate);
-    this.webConsoleClient.off("clearLogpointMessages", this._clearLogpointMessages);
+    this.webConsoleClient.off(
+      "clearLogpointMessages",
+      this._clearLogpointMessages
+    );
     this.target.off("will-navigate", this._onTabWillNavigate);
     this.target.off("navigate", this._onTabNavigated);
 

@@ -12,14 +12,18 @@ add_test(function test_default_device_name() {
   // This is obviously tied to the implementation, but we want early warning
   // if any of these things fail.
   // We really want one of these 2 to provide a value.
-  let hostname = Services.sysinfo.get("device") ||
-                 Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService).myHostName;
+  let hostname =
+    Services.sysinfo.get("device") ||
+    Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService)
+      .myHostName;
   _("hostname is " + hostname);
   ok(hostname.length > 0);
   // the hostname should be in the default.
   ok(def.includes(hostname));
   // We expect the following to work as a fallback to the above.
-  let fallback = Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).oscpu;
+  let fallback = Cc["@mozilla.org/network/protocol;1?name=http"].getService(
+    Ci.nsIHttpProtocolHandler
+  ).oscpu;
   _("UA fallback is " + fallback);
   ok(fallback.length > 0);
   // the fallback should not be in the default

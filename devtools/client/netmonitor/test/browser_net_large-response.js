@@ -19,15 +19,16 @@ add_task(async function() {
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getDisplayedRequests,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getDisplayedRequests, getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, HTML_LONG_URL, async function(url) {
+  await ContentTask.spawn(tab.linkedBrowser, HTML_LONG_URL, async function(
+    url
+  ) {
     content.wrappedJSObject.performRequests(1, url);
   });
   await wait;
@@ -47,16 +48,21 @@ add_task(async function() {
     {
       status: 200,
       statusText: "OK",
-    });
+    }
+  );
 
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   store.dispatch(Actions.toggleNetworkDetails());
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#response-tab"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#response-tab")
+  );
   await wait;
 
-  ok(getCodeMirrorValue(monitor).match(/^<p>/),
-    "The text shown in the source editor is incorrect.");
+  ok(
+    getCodeMirrorValue(monitor).match(/^<p>/),
+    "The text shown in the source editor is incorrect."
+  );
 
   await teardown(monitor);
 

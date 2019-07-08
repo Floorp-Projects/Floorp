@@ -22,8 +22,11 @@ const RecordReplayControl = !isWorker && require("RecordReplayControl");
 const Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
 
-ChromeUtils.defineModuleGetter(this, "positionSubsumes",
-                               "resource://devtools/shared/execution-point-utils.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "positionSubsumes",
+  "resource://devtools/shared/execution-point-utils.js"
+);
 
 ///////////////////////////////////////////////////////////////////////////////
 // ReplayDebugger
@@ -91,7 +94,6 @@ function ReplayDebugger() {
 const NewestFrameIndex = -1;
 
 ReplayDebugger.prototype = {
-
   /////////////////////////////////////////////////////////
   // General methods
   /////////////////////////////////////////////////////////
@@ -121,7 +123,9 @@ ReplayDebugger.prototype = {
   },
 
   _processResponse(request, response, divergeResponse) {
-    dumpv(`SendRequest: ${JSON.stringify(request)} -> ${JSON.stringify(response)}`);
+    dumpv(
+      `SendRequest: ${JSON.stringify(request)} -> ${JSON.stringify(response)}`
+    );
     if (response.exception) {
       ThrowError(response.exception);
     }
@@ -168,7 +172,9 @@ ReplayDebugger.prototype = {
     }
   },
 
-  getDebuggees() { return []; },
+  getDebuggees() {
+    return [];
+  },
 
   /////////////////////////////////////////////////////////
   // Paused/running state
@@ -198,8 +204,12 @@ ReplayDebugger.prototype = {
     return !!this._control.pausePoint();
   },
 
-  replayResumeBackward() { this._resume(/* forward = */ false); },
-  replayResumeForward() { this._resume(/* forward = */ true); },
+  replayResumeBackward() {
+    this._resume(/* forward = */ false);
+  },
+  replayResumeForward() {
+    this._resume(/* forward = */ true);
+  },
 
   _resume(forward) {
     this._ensurePaused();
@@ -292,8 +302,12 @@ ReplayDebugger.prototype = {
     assert(!this._threadPauseCount);
     if (!this._resumeCallback) {
       switch (this._direction) {
-      case Direction.FORWARD: this.replayResumeForward(); break;
-      case Direction.BACKWARD: this.replayResumeBackward(); break;
+        case Direction.FORWARD:
+          this.replayResumeForward();
+          break;
+        case Direction.BACKWARD:
+          this.replayResumeBackward();
+          break;
       }
     }
   },
@@ -383,7 +397,7 @@ ReplayDebugger.prototype = {
       this._addScript(data);
     }
 
-    for (const { scriptId, offset, metadata} of pauseData.offsetMetadata) {
+    for (const { scriptId, offset, metadata } of pauseData.offsetMetadata) {
       if (this._scripts[scriptId]) {
         const script = this._getScript(scriptId);
         script._addOffsetMetadata(offset, metadata);
@@ -420,7 +434,7 @@ ReplayDebugger.prototype = {
   _setBreakpoint(handler, position, data) {
     dumpv("AddBreakpoint " + JSON.stringify(position));
     this._control.addBreakpoint(position);
-    this._breakpoints.push({handler, position, data});
+    this._breakpoints.push({ handler, position, data });
   },
 
   _clearMatchingBreakpoints(callback) {
@@ -448,8 +462,8 @@ ReplayDebugger.prototype = {
 
   // Getter for a breakpoint kind that has no script/offset/frameIndex.
   _breakpointKindGetter(kind) {
-    return this._searchBreakpoints(({position, data}) => {
-      return (position.kind == kind) ? data : null;
+    return this._searchBreakpoints(({ position, data }) => {
+      return position.kind == kind ? data : null;
     });
   },
 
@@ -458,14 +472,14 @@ ReplayDebugger.prototype = {
     if (handler) {
       this._setBreakpoint(callback, { kind }, handler);
     } else {
-      this._clearMatchingBreakpoints(({position}) => position.kind == kind);
+      this._clearMatchingBreakpoints(({ position }) => position.kind == kind);
     }
   },
 
   // Clear OnStep and OnPop hooks for all frames.
   replayClearSteppingHooks() {
     this._clearMatchingBreakpoints(
-      ({position}) => position.kind == "OnStep" || position.kind == "OnPop"
+      ({ position }) => position.kind == "OnStep" || position.kind == "OnPop"
     );
   },
 
@@ -515,7 +529,9 @@ ReplayDebugger.prototype = {
   },
 
   findAllConsoleMessages() {
-    const messages = this._sendRequestMainChild({ type: "findConsoleMessages" });
+    const messages = this._sendRequestMainChild({
+      type: "findConsoleMessages",
+    });
     return messages.map(this._convertConsoleMessage.bind(this));
   },
 
@@ -562,14 +578,14 @@ ReplayDebugger.prototype = {
 
   _addObject(data) {
     switch (data.kind) {
-    case "Object":
-      this._objects[data.id] = new ReplayDebuggerObject(this, data);
-      break;
-    case "Environment":
-      this._objects[data.id] = new ReplayDebuggerEnvironment(this, data);
-      break;
-    default:
-      ThrowError("Unknown object kind");
+      case "Object":
+        this._objects[data.id] = new ReplayDebuggerObject(this, data);
+        break;
+      case "Environment":
+        this._objects[data.id] = new ReplayDebuggerEnvironment(this, data);
+        break;
+      default:
+        ThrowError("Unknown object kind");
     }
   },
 
@@ -583,11 +599,16 @@ ReplayDebugger.prototype = {
         return new ReplayDebuggerObjectSnapshot(this, value.snapshot);
       }
       switch (value.special) {
-      case "undefined": return undefined;
-      case "Infinity": return Infinity;
-      case "-Infinity": return -Infinity;
-      case "NaN": return NaN;
-      case "0": return -0;
+        case "undefined":
+          return undefined;
+        case "Infinity":
+          return Infinity;
+        case "-Infinity":
+          return -Infinity;
+        case "NaN":
+          return NaN;
+        case "0":
+          return -0;
       }
     }
     return value;
@@ -609,11 +630,13 @@ ReplayDebugger.prototype = {
     if (isNonNullObject(value)) {
       assert(value instanceof ReplayDebuggerObject);
       return { object: value._data.id };
-    } else if (value === undefined ||
-               value == Infinity ||
-               value == -Infinity ||
-               Object.is(value, NaN) ||
-               Object.is(value, -0)) {
+    } else if (
+      value === undefined ||
+      value == Infinity ||
+      value == -Infinity ||
+      Object.is(value, NaN) ||
+      Object.is(value, -0)
+    ) {
       return { special: "" + value };
     }
     return value;
@@ -673,14 +696,16 @@ ReplayDebugger.prototype = {
   // Handlers
   /////////////////////////////////////////////////////////
 
-  get onEnterFrame() { return this._breakpointKindGetter("EnterFrame"); },
+  get onEnterFrame() {
+    return this._breakpointKindGetter("EnterFrame");
+  },
   set onEnterFrame(handler) {
-    this._breakpointKindSetter("EnterFrame", handler,
-                               () => { handler.call(this, this.getNewestFrame()); });
+    this._breakpointKindSetter("EnterFrame", handler, () => {
+      handler.call(this, this.getNewestFrame());
+    });
   },
 
   clearAllBreakpoints: NYI,
-
 }; // ReplayDebugger.prototype
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -694,24 +719,50 @@ function ReplayDebuggerScript(dbg, data) {
 }
 
 ReplayDebuggerScript.prototype = {
-  get displayName() { return this._data.displayName; },
-  get url() { return this._data.url; },
-  get startLine() { return this._data.startLine; },
-  get lineCount() { return this._data.lineCount; },
-  get source() { return this._dbg._getSource(this._data.sourceId); },
-  get sourceStart() { return this._data.sourceStart; },
-  get sourceLength() { return this._data.sourceLength; },
-  get format() { return this._data.format; },
+  get displayName() {
+    return this._data.displayName;
+  },
+  get url() {
+    return this._data.url;
+  },
+  get startLine() {
+    return this._data.startLine;
+  },
+  get lineCount() {
+    return this._data.lineCount;
+  },
+  get source() {
+    return this._dbg._getSource(this._data.sourceId);
+  },
+  get sourceStart() {
+    return this._data.sourceStart;
+  },
+  get sourceLength() {
+    return this._data.sourceLength;
+  },
+  get format() {
+    return this._data.format;
+  },
 
   _forward(type, value) {
     return this._dbg._sendRequestMainChild({ type, id: this._data.id, value });
   },
 
-  getLineOffsets(line) { return this._forward("getLineOffsets", line); },
-  getOffsetLocation(pc) { return this._forward("getOffsetLocation", pc); },
-  getSuccessorOffsets(pc) { return this._forward("getSuccessorOffsets", pc); },
-  getPredecessorOffsets(pc) { return this._forward("getPredecessorOffsets", pc); },
-  getAllColumnOffsets() { return this._forward("getAllColumnOffsets"); },
+  getLineOffsets(line) {
+    return this._forward("getLineOffsets", line);
+  },
+  getOffsetLocation(pc) {
+    return this._forward("getOffsetLocation", pc);
+  },
+  getSuccessorOffsets(pc) {
+    return this._forward("getSuccessorOffsets", pc);
+  },
+  getPredecessorOffsets(pc) {
+    return this._forward("getPredecessorOffsets", pc);
+  },
+  getAllColumnOffsets() {
+    return this._forward("getAllColumnOffsets");
+  },
   getPossibleBreakpoints(query) {
     return this._forward("getPossibleBreakpoints", query);
   },
@@ -731,25 +782,37 @@ ReplayDebuggerScript.prototype = {
   },
 
   setBreakpoint(offset, handler) {
-    this._dbg._setBreakpoint(() => {
-      this._dbg._capturePauseData();
-      handler.hit(this._dbg.getNewestFrame());
-    }, { kind: "Break", script: this._data.id, offset }, handler);
+    this._dbg._setBreakpoint(
+      () => {
+        this._dbg._capturePauseData();
+        handler.hit(this._dbg.getNewestFrame());
+      },
+      { kind: "Break", script: this._data.id, offset },
+      handler
+    );
   },
 
   clearBreakpoint(handler) {
-    this._dbg._clearMatchingBreakpoints(({position, data}) => {
+    this._dbg._clearMatchingBreakpoints(({ position, data }) => {
       return position.script == this._data.id && handler == data;
     });
   },
 
   replayVirtualConsoleLog(offset, text, condition, callback) {
-    this._dbg._virtualConsoleLog({ kind: "Break", script: this._data.id, offset },
-                                 text, condition, callback);
+    this._dbg._virtualConsoleLog(
+      { kind: "Break", script: this._data.id, offset },
+      text,
+      condition,
+      callback
+    );
   },
 
-  get isGeneratorFunction() { NYI(); },
-  get isAsyncFunction() { NYI(); },
+  get isGeneratorFunction() {
+    NYI();
+  },
+  get isAsyncFunction() {
+    NYI();
+  },
   getChildScripts: NYI,
   getAllOffsets: NYI,
   getBreakpoints: NYI,
@@ -767,20 +830,38 @@ function ReplayDebuggerScriptSource(dbg, data) {
 }
 
 ReplayDebuggerScriptSource.prototype = {
-  get text() { return this._data.text; },
-  get url() { return this._data.url; },
-  get displayURL() { return this._data.displayURL; },
-  get elementAttributeName() { return this._data.elementAttributeName; },
-  get introductionOffset() { return this._data.introductionOffset; },
-  get introductionType() { return this._data.introductionType; },
-  get sourceMapURL() { return this._data.sourceMapURL; },
-  get element() { return null; },
+  get text() {
+    return this._data.text;
+  },
+  get url() {
+    return this._data.url;
+  },
+  get displayURL() {
+    return this._data.displayURL;
+  },
+  get elementAttributeName() {
+    return this._data.elementAttributeName;
+  },
+  get introductionOffset() {
+    return this._data.introductionOffset;
+  },
+  get introductionType() {
+    return this._data.introductionType;
+  },
+  get sourceMapURL() {
+    return this._data.sourceMapURL;
+  },
+  get element() {
+    return null;
+  },
 
   get introductionScript() {
     return this._dbg._getScript(this._data.introductionScript);
   },
 
-  get binary() { NYI(); },
+  get binary() {
+    NYI();
+  },
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -791,8 +872,9 @@ function ReplayDebuggerFrame(dbg, data) {
   this._dbg = dbg;
   this._data = data;
   if (this._data.arguments) {
-    this._data.arguments =
-      this._data.arguments.map(a => this._dbg._convertValue(a));
+    this._data.arguments = this._data.arguments.map(a =>
+      this._dbg._convertValue(a)
+    );
   }
 }
 
@@ -801,35 +883,60 @@ ReplayDebuggerFrame.prototype = {
     this._data = null;
   },
 
-  get type() { return this._data.type; },
-  get callee() { return this._dbg._getObject(this._data.callee); },
-  get environment() { return this._dbg._getObject(this._data.environment); },
-  get generator() { return this._data.generator; },
-  get constructing() { return this._data.constructing; },
-  get this() { return this._dbg._convertValue(this._data.this); },
-  get script() { return this._dbg._getScript(this._data.script); },
-  get offset() { return this._data.offset; },
-  get arguments() { return this._data.arguments; },
-  get live() { return true; },
+  get type() {
+    return this._data.type;
+  },
+  get callee() {
+    return this._dbg._getObject(this._data.callee);
+  },
+  get environment() {
+    return this._dbg._getObject(this._data.environment);
+  },
+  get generator() {
+    return this._data.generator;
+  },
+  get constructing() {
+    return this._data.constructing;
+  },
+  get this() {
+    return this._dbg._convertValue(this._data.this);
+  },
+  get script() {
+    return this._dbg._getScript(this._data.script);
+  },
+  get offset() {
+    return this._data.offset;
+  },
+  get arguments() {
+    return this._data.arguments;
+  },
+  get live() {
+    return true;
+  },
 
   eval(text, options) {
-    const rv = this._dbg._sendRequestAllowDiverge({
-      type: "frameEvaluate",
-      index: this._data.index,
-      text,
-      options,
-    }, { throw: "Recording divergence in frameEvaluate" });
+    const rv = this._dbg._sendRequestAllowDiverge(
+      {
+        type: "frameEvaluate",
+        index: this._data.index,
+        text,
+        options,
+      },
+      { throw: "Recording divergence in frameEvaluate" }
+    );
     return this._dbg._convertCompletionValue(rv);
   },
 
   _positionMatches(position, kind) {
-    return position.kind == kind
-        && position.script == this._data.script
-        && position.frameIndex == this._data.index;
+    return (
+      position.kind == kind &&
+      position.script == this._data.script &&
+      position.frameIndex == this._data.index
+    );
   },
 
   get onStep() {
-    return this._dbg._searchBreakpoints(({position, data}) => {
+    return this._dbg._searchBreakpoints(({ position, data }) => {
       return this._positionMatches(position, "OnStep") ? data : null;
     });
   },
@@ -841,34 +948,46 @@ ReplayDebuggerFrame.prototype = {
 
   setReplayingOnStep(handler, offsets) {
     offsets.forEach(offset => {
-      this._dbg._setBreakpoint(() => {
-        this._dbg._capturePauseData();
-        handler.call(this._dbg.getNewestFrame());
-      }, {
-        kind: "OnStep",
-        script: this._data.script,
-        offset,
-        frameIndex: this._data.index,
-      }, handler);
+      this._dbg._setBreakpoint(
+        () => {
+          this._dbg._capturePauseData();
+          handler.call(this._dbg.getNewestFrame());
+        },
+        {
+          kind: "OnStep",
+          script: this._data.script,
+          offset,
+          frameIndex: this._data.index,
+        },
+        handler
+      );
     });
   },
 
   get onPop() {
-    return this._dbg._searchBreakpoints(({position, data}) => {
+    return this._dbg._searchBreakpoints(({ position, data }) => {
       return this._positionMatches(position, "OnPop") ? data : null;
     });
   },
 
   set onPop(handler) {
     if (handler) {
-      this._dbg._setBreakpoint(() => {
+      this._dbg._setBreakpoint(
+        () => {
           this._dbg._capturePauseData();
           const result = this._dbg._sendRequest({ type: "popFrameResult" });
-          handler.call(this._dbg.getNewestFrame(),
-                       this._dbg._convertCompletionValue(result));
+          handler.call(
+            this._dbg.getNewestFrame(),
+            this._dbg._convertCompletionValue(result)
+          );
         },
-        { kind: "OnPop", script: this._data.script, frameIndex: this._data.index },
-        handler);
+        {
+          kind: "OnPop",
+          script: this._data.script,
+          frameIndex: this._data.index,
+        },
+        handler
+      );
     } else {
       // Use replayClearSteppingHooks instead.
       NotAllowed();
@@ -883,7 +1002,9 @@ ReplayDebuggerFrame.prototype = {
     return this._dbg._getFrame(this._data.index - 1);
   },
 
-  get implementation() { NYI(); },
+  get implementation() {
+    NYI();
+  },
   evalWithBindings: NYI,
 };
 
@@ -905,23 +1026,55 @@ ReplayDebuggerObject.prototype = {
     this._properties = null;
   },
 
-  get callable() { return this._data.callable; },
-  get isBoundFunction() { return this._data.isBoundFunction; },
-  get isArrowFunction() { return this._data.isArrowFunction; },
-  get isGeneratorFunction() { return this._data.isGeneratorFunction; },
-  get isAsyncFunction() { return this._data.isAsyncFunction; },
-  get class() { return this._data.class; },
-  get name() { return this._data.name; },
-  get displayName() { return this._data.displayName; },
-  get parameterNames() { return this._data.parameterNames; },
-  get script() { return this._dbg._getScript(this._data.script); },
-  get environment() { return this._dbg._getObject(this._data.environment); },
-  get isProxy() { return this._data.isProxy; },
-  get proto() { return this._dbg._getObject(this._data.proto); },
+  get callable() {
+    return this._data.callable;
+  },
+  get isBoundFunction() {
+    return this._data.isBoundFunction;
+  },
+  get isArrowFunction() {
+    return this._data.isArrowFunction;
+  },
+  get isGeneratorFunction() {
+    return this._data.isGeneratorFunction;
+  },
+  get isAsyncFunction() {
+    return this._data.isAsyncFunction;
+  },
+  get class() {
+    return this._data.class;
+  },
+  get name() {
+    return this._data.name;
+  },
+  get displayName() {
+    return this._data.displayName;
+  },
+  get parameterNames() {
+    return this._data.parameterNames;
+  },
+  get script() {
+    return this._dbg._getScript(this._data.script);
+  },
+  get environment() {
+    return this._dbg._getObject(this._data.environment);
+  },
+  get isProxy() {
+    return this._data.isProxy;
+  },
+  get proto() {
+    return this._dbg._getObject(this._data.proto);
+  },
 
-  isExtensible() { return this._data.isExtensible; },
-  isSealed() { return this._data.isSealed; },
-  isFrozen() { return this._data.isFrozen; },
+  isExtensible() {
+    return this._data.isExtensible;
+  },
+  isSealed() {
+    return this._data.isSealed;
+  },
+  isFrozen() {
+    return this._data.isFrozen;
+  },
 
   unsafeDereference() {
     // Direct access to the referent is not currently available.
@@ -964,7 +1117,9 @@ ReplayDebuggerObject.prototype = {
         return this._convertPropertyDescriptor(this._preview.lengthProperty);
       }
       if (name == "displayName") {
-        return this._convertPropertyDescriptor(this._preview.displayNameProperty);
+        return this._convertPropertyDescriptor(
+          this._preview.displayNameProperty
+        );
       }
     }
     this._ensureProperties();
@@ -974,8 +1129,10 @@ ReplayDebuggerObject.prototype = {
   _ensureProperties() {
     if (!this._properties) {
       const id = this._data.id;
-      this._properties =
-        this._dbg._sendRequestAllowDiverge({ type: "getObjectProperties", id }, []);
+      this._properties = this._dbg._sendRequestAllowDiverge(
+        { type: "getObjectProperties", id },
+        []
+      );
     }
   },
 
@@ -1040,21 +1197,36 @@ ReplayDebuggerObject.prototype = {
     thisv = this._dbg._convertValueForChild(thisv);
     args = (args || []).map(v => this._dbg._convertValueForChild(v));
 
-    const rv = this._dbg._sendRequestAllowDiverge({
-      type: "objectApply",
-      id: this._data.id,
-      thisv,
-      args,
-    }, { throw: "Recording divergence in objectApply" });
+    const rv = this._dbg._sendRequestAllowDiverge(
+      {
+        type: "objectApply",
+        id: this._data.id,
+        thisv,
+        args,
+      },
+      { throw: "Recording divergence in objectApply" }
+    );
     return this._dbg._convertCompletionValue(rv);
   },
 
-  get allocationSite() { NYI(); },
-  get errorMessageName() { NYI(); },
-  get errorNotes() { NYI(); },
-  get errorLineNumber() { NYI(); },
-  get errorColumnNumber() { NYI(); },
-  get isPromise() { NYI(); },
+  get allocationSite() {
+    NYI();
+  },
+  get errorMessageName() {
+    NYI();
+  },
+  get errorNotes() {
+    NYI();
+  },
+  get errorLineNumber() {
+    NYI();
+  },
+  get errorColumnNumber() {
+    NYI();
+  },
+  get isPromise() {
+    NYI();
+  },
   asEnvironment: NYI,
   executeInGlobal: NYI,
   executeInGlobalWithBindings: NYI,
@@ -1083,7 +1255,9 @@ function ReplayDebuggerObjectSnapshot(dbg, data) {
   this._dbg = dbg;
   this._data = data;
   this._properties = Object.create(null);
-  data.properties.forEach(({name, desc}) => { this._properties[name] = desc; });
+  data.properties.forEach(({ name, desc }) => {
+    this._properties[name] = desc;
+  });
 }
 
 ReplayDebuggerObjectSnapshot.prototype = ReplayDebuggerObject.prototype;
@@ -1104,18 +1278,31 @@ ReplayDebuggerEnvironment.prototype = {
     this._names = null;
   },
 
-  get type() { return this._data.type; },
-  get parent() { return this._dbg._getObject(this._data.parent); },
-  get object() { return this._dbg._getObject(this._data.object); },
-  get callee() { return this._dbg._getObject(this._data.callee); },
-  get optimizedOut() { return this._data.optimizedOut; },
+  get type() {
+    return this._data.type;
+  },
+  get parent() {
+    return this._dbg._getObject(this._data.parent);
+  },
+  get object() {
+    return this._dbg._getObject(this._data.object);
+  },
+  get callee() {
+    return this._dbg._getObject(this._data.callee);
+  },
+  get optimizedOut() {
+    return this._data.optimizedOut;
+  },
 
   _ensureNames() {
     if (!this._names) {
-      const names = this._dbg._sendRequestAllowDiverge({
-        type: "getEnvironmentNames",
-        id: this._data.id,
-      }, []);
+      const names = this._dbg._sendRequestAllowDiverge(
+        {
+          type: "getEnvironmentNames",
+          id: this._data.id,
+        },
+        []
+      );
       this._names = {};
       names.forEach(({ name, value }) => {
         this._names[name] = this._dbg._convertValue(value);
@@ -1159,8 +1346,7 @@ function NotAllowed() {
   ThrowError("Not allowed");
 }
 
-function ThrowError(msg)
-{
+function ThrowError(msg) {
   const error = new Error(msg);
   dump("ReplayDebugger Server Error: " + msg + " Stack: " + error.stack + "\n");
   throw error;

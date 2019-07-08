@@ -12,44 +12,48 @@ function registerPopupEventHandler(eventName, callback, win) {
     win = window;
   }
   gActiveListeners[eventName] = function(event) {
-    if (event.target != win.PopupNotifications.panel)
+    if (event.target != win.PopupNotifications.panel) {
       return;
+    }
     win.PopupNotifications.panel.removeEventListener(
-                                                   eventName,
-                                                   gActiveListeners[eventName]);
+      eventName,
+      gActiveListeners[eventName]
+    );
     delete gActiveListeners[eventName];
 
     callback.call(win.PopupNotifications.panel);
   };
-  win.PopupNotifications.panel.addEventListener(eventName,
-                                                gActiveListeners[eventName]);
+  win.PopupNotifications.panel.addEventListener(
+    eventName,
+    gActiveListeners[eventName]
+  );
 }
 
-function unregisterPopupEventHandler(eventName, win)
-{
+function unregisterPopupEventHandler(eventName, win) {
   if (!win) {
     win = window;
   }
-  win.PopupNotifications.panel.removeEventListener(eventName,
-                                                   gActiveListeners[eventName]);
+  win.PopupNotifications.panel.removeEventListener(
+    eventName,
+    gActiveListeners[eventName]
+  );
   delete gActiveListeners[eventName];
 }
 
-function unregisterAllPopupEventHandlers(win)
-{
+function unregisterAllPopupEventHandlers(win) {
   if (!win) {
     win = window;
   }
   for (let eventName in gActiveListeners) {
     win.PopupNotifications.panel.removeEventListener(
-                                                   eventName,
-                                                   gActiveListeners[eventName]);
+      eventName,
+      gActiveListeners[eventName]
+    );
   }
   gActiveListeners = {};
 }
 
-function triggerMainCommand(popup)
-{
+function triggerMainCommand(popup) {
   info("triggering main command");
   let notifications = popup.childNodes;
   ok(notifications.length > 0, "at least one notification displayed");
@@ -59,8 +63,7 @@ function triggerMainCommand(popup)
   EventUtils.synthesizeMouseAtCenter(notification.button, {});
 }
 
-function triggerSecondaryCommand(popup)
-{
+function triggerSecondaryCommand(popup) {
   info("triggering secondary command");
   let notifications = popup.childNodes;
   ok(notifications.length > 0, "at least one notification displayed");
@@ -68,26 +71,28 @@ function triggerSecondaryCommand(popup)
   EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
 }
 
-function dismissNotification(popup)
-{
+function dismissNotification(popup) {
   info("dismissing notification");
   executeSoon(function() {
     EventUtils.synthesizeKey("KEY_Escape");
   });
 }
 
-function waitForMessage(aMessage, browser)
-{
+function waitForMessage(aMessage, browser) {
   return new Promise((resolve, reject) => {
     /* eslint-disable no-undef */
     // When contentScript runs, "this" is a ContentFrameMessageManager (so that's where
     // addEventListener will add the listener), but the non-bubbling "message" event is
     // sent to the Window involved, so we need a capturing listener.
     function contentScript() {
-      addEventListener("message", function(event) {
-        sendAsyncMessage("testLocal:message",
-          {message: event.data});
-      }, {once: true, capture: true}, true);
+      addEventListener(
+        "message",
+        function(event) {
+          sendAsyncMessage("testLocal:message", { message: event.data });
+        },
+        { once: true, capture: true },
+        true
+      );
     }
     /* eslint-enable no-undef */
 
@@ -110,35 +115,43 @@ function waitForMessage(aMessage, browser)
   });
 }
 
-function dispatchEvent(eventName)
-{
+function dispatchEvent(eventName) {
   info("dispatching event: " + eventName);
   let event = document.createEvent("Events");
   event.initEvent(eventName, false, false);
   gBrowser.selectedBrowser.contentWindow.dispatchEvent(event);
 }
 
-function setPermission(url, permission)
-{
+function setPermission(url, permission) {
   let uri = Services.io.newURI(url);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    uri,
+    {}
+  );
 
-  Services.perms.addFromPrincipal(principal, permission,
-                                  Ci.nsIPermissionManager.ALLOW_ACTION);
+  Services.perms.addFromPrincipal(
+    principal,
+    permission,
+    Ci.nsIPermissionManager.ALLOW_ACTION
+  );
 }
 
-function removePermission(url, permission)
-{
+function removePermission(url, permission) {
   let uri = Services.io.newURI(url);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    uri,
+    {}
+  );
 
   Services.perms.removeFromPrincipal(principal, permission);
 }
 
-function getPermission(url, permission)
-{
+function getPermission(url, permission) {
   let uri = Services.io.newURI(url);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    uri,
+    {}
+  );
 
   return Services.perms.testPermissionFromPrincipal(principal, permission);
 }

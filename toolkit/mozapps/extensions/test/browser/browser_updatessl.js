@@ -3,7 +3,10 @@
  */
 
 var tempScope = {};
-ChromeUtils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm", tempScope);
+ChromeUtils.import(
+  "resource://gre/modules/addons/AddonUpdateChecker.jsm",
+  tempScope
+);
 var AddonUpdateChecker = tempScope.AddonUpdateChecker;
 
 const updatejson = RELATIVE_DIR + "browser_updatessl.json";
@@ -25,12 +28,25 @@ var gStart = 0;
 var gLast = 0;
 
 var HTTPObserver = {
-  observeActivity(aChannel, aType, aSubtype, aTimestamp, aSizeData,
-                            aStringData) {
+  observeActivity(
+    aChannel,
+    aType,
+    aSubtype,
+    aTimestamp,
+    aSizeData,
+    aStringData
+  ) {
     aChannel.QueryInterface(Ci.nsIChannel);
 
-    dump("*** HTTP Activity 0x" + aType.toString(16) + " 0x" + aSubtype.toString(16) +
-         " " + aChannel.URI.spec + "\n");
+    dump(
+      "*** HTTP Activity 0x" +
+        aType.toString(16) +
+        " 0x" +
+        aSubtype.toString(16) +
+        " " +
+        aChannel.URI.spec +
+        "\n"
+    );
   },
 };
 
@@ -39,8 +55,9 @@ function test() {
   requestLongerTimeout(4);
   waitForExplicitFinish();
 
-  let observerService = Cc["@mozilla.org/network/http-activity-distributor;1"].
-                        getService(Ci.nsIHttpActivityDistributor);
+  let observerService = Cc[
+    "@mozilla.org/network/http-activity-distributor;1"
+  ].getService(Ci.nsIHttpActivityDistributor);
   observerService.addObserver(HTTPObserver);
 
   registerCleanupFunction(function() {
@@ -53,8 +70,9 @@ function test() {
 function end_test() {
   Services.prefs.clearUserPref(PREF_UPDATE_REQUIREBUILTINCERTS);
 
-  var cos = Cc["@mozilla.org/security/certoverride;1"].
-            getService(Ci.nsICertOverrideService);
+  var cos = Cc["@mozilla.org/security/certoverride;1"].getService(
+    Ci.nsICertOverrideService
+  );
   cos.clearValidityOverride("nocert.example.com", -1);
   cos.clearValidityOverride("self-signed.example.com", -1);
   cos.clearValidityOverride("untrusted.example.com", -1);
@@ -79,12 +97,15 @@ function run_update_tests(callback) {
     let [mainURL, redirectURL, expectedStatus] = gTests.shift();
     if (redirectURL) {
       var url = mainURL + redirect + redirectURL + updatejson;
-      var message = "Should have seen the right result for an update check redirected from " +
-                    mainURL + " to " + redirectURL;
+      var message =
+        "Should have seen the right result for an update check redirected from " +
+        mainURL +
+        " to " +
+        redirectURL;
     } else {
       url = mainURL + updatejson;
-      message = "Should have seen the right result for an update check from " +
-                mainURL;
+      message =
+        "Should have seen the right result for an update check from " + mainURL;
     }
 
     AddonUpdateChecker.checkForUpdates("addon1@tests.mozilla.org", url, {

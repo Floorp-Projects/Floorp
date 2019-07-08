@@ -50,13 +50,11 @@ class PathSkia : public Path {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathSkia, override)
 
-  PathSkia(SkPath& aPath,
-           FillRule aFillRule,
-           Point aCurrentPoint = Point(),
+  PathSkia(SkPath& aPath, FillRule aFillRule, Point aCurrentPoint = Point(),
            Point aBeginPoint = Point())
-  : mFillRule(aFillRule)
-  , mCurrentPoint(aCurrentPoint)
-  , mBeginPoint(aBeginPoint) {
+      : mFillRule(aFillRule),
+        mCurrentPoint(aCurrentPoint),
+        mBeginPoint(aBeginPoint) {
     mPath.swap(aPath);
   }
 

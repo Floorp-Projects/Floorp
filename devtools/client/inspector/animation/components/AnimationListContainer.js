@@ -4,8 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } =
-  require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
@@ -13,7 +15,9 @@ const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
 const AnimationList = createFactory(require("./AnimationList"));
 const CurrentTimeScrubber = createFactory(require("./CurrentTimeScrubber"));
-const ProgressInspectionPanel = createFactory(require("./ProgressInspectionPanel"));
+const ProgressInspectionPanel = createFactory(
+  require("./ProgressInspectionPanel")
+);
 
 const { findOptimalTimeInterval } = require("../utils/utils");
 const { getStr } = require("../utils/l10n");
@@ -57,14 +61,13 @@ class AnimationListContainer extends PureComponent {
   }
 
   componentDidUpdate(prevProps) {
-    const {
-      timeScale,
-      sidebarWidth,
-    } = this.props;
+    const { timeScale, sidebarWidth } = this.props;
 
-    if (timeScale.getDuration() !== prevProps.timeScale.getDuration() ||
-        timeScale.zeroPositionTime !== prevProps.timeScale.zeroPositionTime ||
-        sidebarWidth !== prevProps.sidebarWidth) {
+    if (
+      timeScale.getDuration() !== prevProps.timeScale.getDuration() ||
+      timeScale.zeroPositionTime !== prevProps.timeScale.zeroPositionTime ||
+      sidebarWidth !== prevProps.sidebarWidth
+    ) {
       this.updateState(this.props);
     }
   }
@@ -74,14 +77,16 @@ class AnimationListContainer extends PureComponent {
     const tickLinesEl = ReactDOM.findDOMNode(this).querySelector(".tick-lines");
     const width = tickLinesEl.offsetWidth;
     const animationDuration = timeScale.getDuration();
-    const minTimeInterval = TIME_GRADUATION_MIN_SPACING * animationDuration / width;
+    const minTimeInterval =
+      (TIME_GRADUATION_MIN_SPACING * animationDuration) / width;
     const intervalLength = findOptimalTimeInterval(minTimeInterval);
-    const intervalWidth = intervalLength * width / animationDuration;
+    const intervalWidth = (intervalLength * width) / animationDuration;
     const tickCount = parseInt(width / intervalWidth, 10);
-    const isAllDurationInfinity =
-          animations.every(animation => animation.state.duration === Infinity);
+    const isAllDurationInfinity = animations.every(
+      animation => animation.state.duration === Infinity
+    );
     const zeroBasePosition =
-          width * (timeScale.zeroPositionTime / animationDuration);
+      width * (timeScale.zeroPositionTime / animationDuration);
     const shiftWidth = zeroBasePosition % intervalWidth;
     const needToShift = zeroBasePosition !== 0 && shiftWidth !== 0;
 
@@ -93,11 +98,12 @@ class AnimationListContainer extends PureComponent {
     }
 
     for (let i = 0; i <= tickCount; i++) {
-      const position = ((i * intervalWidth) + shiftWidth) * 100 / width;
+      const position = ((i * intervalWidth + shiftWidth) * 100) / width;
       const distance = timeScale.distanceToRelativeTime(position);
-      const label = isAllDurationInfinity && i === tickCount
-                    ? getStr("player.infiniteTimeLabel")
-                    : timeScale.formatTime(distance);
+      const label =
+        isAllDurationInfinity && i === tickCount
+          ? getStr("player.infiniteTimeLabel")
+          : timeScale.formatTime(distance);
       ticks.push({ position, label, width: intervalWidth });
     }
 
@@ -128,42 +134,38 @@ class AnimationListContainer extends PureComponent {
       {
         className: "animation-list-container",
       },
-      ProgressInspectionPanel(
-        {
-          indicator: CurrentTimeScrubber(
-            {
-              addAnimationsCurrentTimeListener,
-              direction,
-              removeAnimationsCurrentTimeListener,
-              setAnimationsCurrentTime,
-              timeScale,
-            }
-          ),
-          list: AnimationList(
-            {
-              animations,
-              emitEventForTest,
-              getAnimatedPropertyMap,
-              getNodeFromActor,
-              onHideBoxModelHighlighter,
-              onShowBoxModelHighlighterForNode,
-              selectAnimation,
-              setHighlightedNode,
-              setSelectedNode,
-              simulateAnimation,
-              timeScale,
-            }
-          ),
-          ticks,
-        }
-      )
+      ProgressInspectionPanel({
+        indicator: CurrentTimeScrubber({
+          addAnimationsCurrentTimeListener,
+          direction,
+          removeAnimationsCurrentTimeListener,
+          setAnimationsCurrentTime,
+          timeScale,
+        }),
+        list: AnimationList({
+          animations,
+          emitEventForTest,
+          getAnimatedPropertyMap,
+          getNodeFromActor,
+          onHideBoxModelHighlighter,
+          onShowBoxModelHighlighterForNode,
+          selectAnimation,
+          setHighlightedNode,
+          setSelectedNode,
+          simulateAnimation,
+          timeScale,
+        }),
+        ticks,
+      })
     );
   }
 }
 
 const mapStateToProps = state => {
   return {
-    sidebarWidth: state.animations.sidebarSize ? state.animations.sidebarSize.width : 0,
+    sidebarWidth: state.animations.sidebarSize
+      ? state.animations.sidebarSize.width
+      : 0,
   };
 };
 

@@ -63,6 +63,8 @@ int32_t gXULModalLevel = 0;
 // also made app-modal.)  See nsCocoaWindow::SetModal().
 nsCocoaWindowList* gGeckoAppModalWindowList = NULL;
 
+BOOL sTouchBarIsInitialized = NO;
+
 // defined in nsMenuBarX.mm
 extern NSMenu* sApplicationMenu;  // Application menu shared by all menubars
 
@@ -2797,6 +2799,9 @@ static NSImage* GetMenuMaskImage() {
 
 - (NSTouchBar*)makeTouchBar {
   mTouchBar = [[nsTouchBar alloc] init];
+  if (mTouchBar) {
+    sTouchBarIsInitialized = YES;
+  }
   return mTouchBar;
 }
 

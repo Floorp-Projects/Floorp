@@ -16,7 +16,7 @@ add_task(async function run_tests() {
     manifest: {
       name: "Test Add-on",
       version: "1.0",
-      applications: {gecko: {id: ID}},
+      applications: { gecko: { id: ID } },
     },
   });
 
@@ -24,7 +24,7 @@ add_task(async function run_tests() {
     manifest: {
       name: "Test Add-on 2",
       version: "2.0",
-      applications: {gecko: {id: ID}},
+      applications: { gecko: { id: ID } },
     },
   });
 
@@ -39,7 +39,8 @@ add_task(async function run_tests() {
       },
     },
     {
-      what: "Application update with no schema change does not reload metadata.",
+      what:
+        "Application update with no schema change does not reload metadata.",
       expectedVersion: "1.0",
       action() {
         gAppInfo.version = "2";
@@ -63,8 +64,11 @@ add_task(async function run_tests() {
       expectedVersion: "2.0",
       async action() {
         let stat = await OS.File.stat(xpiPath);
-        await OS.File.setDates(xpiPath, stat.lastAccessDate,
-                               stat.lastModificationDate.valueOf() + 60 * 1000);
+        await OS.File.setDates(
+          xpiPath,
+          stat.lastAccessDate,
+          stat.lastModificationDate.valueOf() + 60 * 1000
+        );
       },
     },
   ];
@@ -86,7 +90,11 @@ add_task(async function run_tests() {
     xpi2.copyTo(profileDir, `${ID}.xpi`);
 
     // Make sure the timestamp is unchanged, so it is not re-scanned for that reason.
-    await OS.File.setDates(xpiPath, orig.lastAccessDate, orig.lastModificationDate);
+    await OS.File.setDates(
+      xpiPath,
+      orig.lastAccessDate,
+      orig.lastModificationDate
+    );
 
     await test.action();
 

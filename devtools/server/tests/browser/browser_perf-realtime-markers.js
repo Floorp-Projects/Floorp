@@ -29,9 +29,14 @@ add_task(async function() {
 
   front.on("timeline-data", handler);
 
-  const rec = await front.startRecording(
-    { withMarkers: true, withMemory: true, withTicks: true });
-  await Promise.all(Object.keys(deferreds).map(type => deferreds[type].promise));
+  const rec = await front.startRecording({
+    withMarkers: true,
+    withMemory: true,
+    withTicks: true,
+  });
+  await Promise.all(
+    Object.keys(deferreds).map(type => deferreds[type].promise)
+  );
   await front.stopRecording(rec);
   front.off("timeline-data", handler);
 
@@ -81,9 +86,11 @@ add_task(async function() {
       ok(false, `Received unknown event: ${name}`);
     }
 
-    if (name === "markers" && counters[name].length === 1 ||
-        name === "memory" && counters[name].length === 3 ||
-        name === "ticks" && counters[name].length === 3) {
+    if (
+      (name === "markers" && counters[name].length === 1) ||
+      (name === "memory" && counters[name].length === 3) ||
+      (name === "ticks" && counters[name].length === 3)
+    ) {
       deferreds[name].resolve();
     }
   }

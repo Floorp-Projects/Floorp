@@ -37,14 +37,12 @@ const TEST_URI = `
 add_task(async function() {
   info("Toolbox height should be small enough to force scrollbars to appear");
   await new Promise(done => {
-    const options = {"set": [
-      ["devtools.toolbox.footer.height", 200],
-    ]};
+    const options = { set: [["devtools.toolbox.footer.height", 200]] };
     SpecialPowers.pushPrefEnv(options, done);
   });
 
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode(".testclass", inspector);
 
   info("Check we have an overflow on the ruleview container.");
@@ -55,14 +53,20 @@ add_task(async function() {
   info("Focusing an existing selector name in the rule-view.");
   const ruleEditor = getRuleViewRuleEditor(view, 1);
   const editor = await focusEditableField(view, ruleEditor.selectorText);
-  is(inplaceEditor(ruleEditor.selectorText), editor,
-    "The selector editor is focused.");
+  is(
+    inplaceEditor(ruleEditor.selectorText),
+    editor,
+    "The selector editor is focused."
+  );
 
   info("Click on the scrollbar element.");
   await clickOnRuleviewScrollbar(view);
 
-  is(editor.input, view.styleDocument.activeElement,
-    "The editor input should still be focused.");
+  is(
+    editor.input,
+    view.styleDocument.activeElement,
+    "The editor input should still be focused."
+  );
 
   info("Check a new value can still be committed in the editable field");
   const newValue = ".testclass.a.b.c.d.e.f";
@@ -80,8 +84,13 @@ async function clickOnRuleviewScrollbar(view) {
   const onScroll = once(container, "scroll");
   const rect = container.getBoundingClientRect();
   // click 5 pixels before the bottom-right corner should hit the scrollbar
-  EventUtils.synthesizeMouse(container, rect.width - 5, rect.height - 5,
-    {}, view.styleWindow);
+  EventUtils.synthesizeMouse(
+    container,
+    rect.width - 5,
+    rect.height - 5,
+    {},
+    view.styleWindow
+  );
   await onScroll;
 
   ok(true, "The rule view container scrolled after clicking on the scrollbar.");

@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const PREF_INVALID = 0;
-const PREF_BOOL    = 128;
-const PREF_INT     = 64;
-const PREF_STRING  = 32;
+const PREF_BOOL = 128;
+const PREF_INT = 64;
+const PREF_STRING = 32;
 
 const MAX_PREF_LENGTH = 1 * 1024 * 1024;
 
@@ -25,59 +25,62 @@ function run_test() {
 
   do_check_throws(function() {
     ps.getPrefType(null);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     ps.getBoolPref(null);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     ps.setBoolPref(null, false);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     ps.getIntPref(null);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     ps.setIntPref(null, 0);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     ps.getCharPref(null);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     ps.setCharPref(null, null);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     ps.getStringPref(null);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     ps.setStringPref(null, null);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     ps.clearUserPref(null);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     ps.prefHasUserValue(null);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     ps.lockPref(null);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     ps.prefIsLocked(null);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     ps.unlockPref(null);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     ps.deleteBranch(null);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
   do_check_throws(function() {
     ps.getChildList(null);
-}, Cr.NS_ERROR_INVALID_ARG);
+  }, Cr.NS_ERROR_INVALID_ARG);
 
   //* *************************************************************************//
   // Nonexisting user preferences
 
   Assert.equal(ps.prefHasUserValue("UserPref.nonexistent.hasUserValue"), false);
   ps.clearUserPref("UserPref.nonexistent.clearUserPref"); // shouldn't throw
-  Assert.equal(ps.getPrefType("UserPref.nonexistent.getPrefType"), PREF_INVALID);
+  Assert.equal(
+    ps.getPrefType("UserPref.nonexistent.getPrefType"),
+    PREF_INVALID
+  );
   Assert.equal(ps.root, "");
 
   // bool...
@@ -328,8 +331,9 @@ function run_test() {
   savePrefFile.append("data");
   savePrefFile.append("savePref.js");
 
-  if (savePrefFile.exists())
+  if (savePrefFile.exists()) {
     savePrefFile.remove(false);
+  }
   savePrefFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   ps.savePrefFile(savePrefFile);
   ps.resetPrefs();
@@ -396,9 +400,9 @@ function run_test() {
     }
 
     QueryInterface(aIID) {
-      if (aIID.equals(Ci.nsIObserver) ||
-          aIID.equals(Ci.nsISupports))
+      if (aIID.equals(Ci.nsIObserver) || aIID.equals(Ci.nsISupports)) {
         return this;
+      }
       throw Cr.NS_NOINTERFACE;
     }
 

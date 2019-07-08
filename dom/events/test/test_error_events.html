@@ -55,14 +55,14 @@
     if (msg.data.type == "event") {
       eventFileTest.step(function() { assert_equals(msg.data.filename, workerLocation); });
       eventFileTest.done();
-      eventLineTest.step(function() { assert_equals(msg.data.lineno, 15); });
+      eventLineTest.step(function() { assert_equals(msg.data.lineno, 19); });
       eventLineTest.done();
       eventMessageTest.step(function() { assert_equals(msg.data.message, "Error: workerhello"); });
       eventMessageTest.done();
     } else {
       callbackFileTest.step(function() { assert_equals(msg.data.filename, workerLocation); });
       callbackFileTest.done();
-      callbackLineTest.step(function() { assert_equals(msg.data.lineno, 15); });
+      callbackLineTest.step(function() { assert_equals(msg.data.lineno, 19); });
       callbackLineTest.done();
       callbackMessageTest.step(function() { assert_equals(msg.data.message, "Error: workerhello"); });
       callbackMessageTest.done();

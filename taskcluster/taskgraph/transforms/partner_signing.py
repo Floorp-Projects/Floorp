@@ -26,6 +26,7 @@ def define_upstream_artifacts(config, jobs):
         dep_job = job['primary-dependency']
         repack_id = job['extra']['repack_id']
         artifacts_specifications = generate_specifications_of_artifacts_to_sign(
+            config,
             dep_job,
             keep_locale_template=True,
             kind=config.kind,

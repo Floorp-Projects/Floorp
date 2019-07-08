@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
  * Test bug 489872 to make sure passing nulls to nsNavHistory doesn't crash.
@@ -9,13 +9,26 @@
 // Make an array of services to test, each specifying a class id, interface
 // and an array of function names that don't throw when passed nulls
 var testServices = [
-  ["browser/nav-history-service;1",
+  [
+    "browser/nav-history-service;1",
     ["nsINavHistoryService"],
-    ["queryStringToQuery", "removePagesByTimeframe", "removePagesFromHost", "getObservers"],
+    [
+      "queryStringToQuery",
+      "removePagesByTimeframe",
+      "removePagesFromHost",
+      "getObservers",
+    ],
   ],
-  ["browser/nav-bookmarks-service;1",
+  [
+    "browser/nav-bookmarks-service;1",
     ["nsINavBookmarksService", "nsINavHistoryObserver"],
-    ["createFolder", "getObservers", "onFrecencyChanged", "onTitleChanged", "onDeleteURI"],
+    [
+      "createFolder",
+      "getObservers",
+      "onFrecencyChanged",
+      "onTitleChanged",
+      "onDeleteURI",
+    ],
   ],
   ["browser/favicon-service;1", ["nsIFaviconService"], []],
   ["browser/tagging-service;1", ["nsITaggingService"], []],
@@ -35,12 +48,13 @@ function run_test() {
       let func = s[name];
 
       let mesg = "";
-      if (typeof func != "function")
+      if (typeof func != "function") {
         mesg = "Not a function!";
-      else if (func.length == 0)
+      } else if (func.length == 0) {
         mesg = "No args needed!";
-      else if (name == "QueryInterface")
+      } else if (name == "QueryInterface") {
         mesg = "Ignore QI!";
+      }
 
       if (mesg) {
         info(`${mesg} Skipping: ${name}`);
@@ -51,7 +65,9 @@ function run_test() {
     };
 
     info(`Generating an array of functions to test service: ${s}`);
-    for (let n of Object.keys(s).filter(i => okName(i)).sort()) {
+    for (let n of Object.keys(s)
+      .filter(i => okName(i))
+      .sort()) {
       info(`\nTesting ${ifaces.join(", ")} function with null args: ${n}`);
 
       let func = s[n];
@@ -65,7 +81,9 @@ function run_test() {
           info(`Calling with args: ${JSON.stringify(args)}`);
           func.apply(s, args);
 
-          info(`The function did not throw! Is it one of the nothrow? ${nothrow}`);
+          info(
+            `The function did not throw! Is it one of the nothrow? ${nothrow}`
+          );
           Assert.notEqual(nothrow.indexOf(n), -1);
 
           info("Must have been an expected nothrow, so no need to try again");

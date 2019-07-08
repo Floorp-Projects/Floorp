@@ -11,13 +11,18 @@ const TEST_URL = `data:text/html;charset=utf-8,
   <video id="no-children" controls></video>`;
 
 add_task(async function() {
-  info("Test a <video> element with no children, showUserAgentShadowRoots=true");
+  info(
+    "Test a <video> element with no children, showUserAgentShadowRoots=true"
+  );
   const { inspector, markup } = await setup({ showUserAgentShadowRoots: true });
 
   info("Find the #no-children element.");
   const hostFront = await getNodeFront("#no-children", inspector);
   const hostContainer = markup.getContainer(hostFront);
-  ok(hostContainer.canExpand, "<video controls/> has children in the markup view");
+  ok(
+    hostContainer.canExpand,
+    "<video controls/> has children in the markup view"
+  );
 
   info("Expand the <video> element");
   await expandContainer(inspector, hostContainer);
@@ -34,7 +39,10 @@ add_task(async function() {
   info("Find the #with-children element.");
   const hostFront = await getNodeFront("#with-children", inspector);
   const hostContainer = markup.getContainer(hostFront);
-  ok(hostContainer.canExpand, "<video controls/> has children in the markup view");
+  ok(
+    hostContainer.canExpand,
+    "<video controls/> has children in the markup view"
+  );
 
   info("Expand the <video> element");
   await expandContainer(inspector, hostContainer);
@@ -48,24 +56,36 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  info("Test a <video> element with no children, showUserAgentShadowRoots=false");
-  const { inspector, markup } = await setup({ showUserAgentShadowRoots: false });
+  info(
+    "Test a <video> element with no children, showUserAgentShadowRoots=false"
+  );
+  const { inspector, markup } = await setup({
+    showUserAgentShadowRoots: false,
+  });
 
   info("Find the #no-children element.");
   const hostFront = await getNodeFront("#no-children", inspector);
   const hostContainer = markup.getContainer(hostFront);
   ok(!hostContainer.getChildContainers(), "video has no children");
-  ok(!hostContainer.canExpand, "<video controls/> shows no children in the markup view");
+  ok(
+    !hostContainer.canExpand,
+    "<video controls/> shows no children in the markup view"
+  );
 });
 
 add_task(async function() {
   info("Test a <video> element with children, showUserAgentShadowRoots=false");
-  const { inspector, markup } = await setup({ showUserAgentShadowRoots: false });
+  const { inspector, markup } = await setup({
+    showUserAgentShadowRoots: false,
+  });
 
   info("Find the #with-children element.");
   const hostFront = await getNodeFront("#with-children", inspector);
   const hostContainer = markup.getContainer(hostFront);
-  ok(hostContainer.canExpand, "<video controls/> has children in the markup view");
+  ok(
+    hostContainer.canExpand,
+    "<video controls/> has children in the markup view"
+  );
 
   info("Expand the <video> element");
   await expandContainer(inspector, hostContainer);
@@ -76,7 +96,10 @@ add_task(async function() {
 });
 
 async function setup({ showUserAgentShadowRoots }) {
-  await pushPref("devtools.inspector.showUserAgentShadowRoots", showUserAgentShadowRoots);
+  await pushPref(
+    "devtools.inspector.showUserAgentShadowRoots",
+    showUserAgentShadowRoots
+  );
 
   const { inspector } = await openInspectorForURL(TEST_URL);
   const { markup } = inspector;

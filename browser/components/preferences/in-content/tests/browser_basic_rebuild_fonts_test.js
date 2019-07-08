@@ -9,9 +9,15 @@ add_task(async function() {
   await gBrowser.contentWindow.gMainPane._selectDefaultLanguageGroupPromise;
   let doc = gBrowser.contentDocument;
   let contentWindow = gBrowser.contentWindow;
-  var langGroup = Services.prefs.getComplexValue("font.language.group", Ci.nsIPrefLocalizedString).data;
-  is(contentWindow.Preferences.get("font.language.group").value, langGroup,
-     "Language group should be set correctly.");
+  var langGroup = Services.prefs.getComplexValue(
+    "font.language.group",
+    Ci.nsIPrefLocalizedString
+  ).data;
+  is(
+    contentWindow.Preferences.get("font.language.group").value,
+    langGroup,
+    "Language group should be set correctly."
+  );
 
   let defaultFontType = Services.prefs.getCharPref("font.default." + langGroup);
   let fontFamilyPref = "font.name." + defaultFontType + "." + langGroup;
@@ -21,7 +27,19 @@ add_task(async function() {
 
   function dispatchMenuItemCommand(menuItem) {
     const cmdEvent = doc.createEvent("xulcommandevent");
-    cmdEvent.initCommandEvent("command", true, true, contentWindow, 0, false, false, false, false, null, 0);
+    cmdEvent.initCommandEvent(
+      "command",
+      true,
+      true,
+      contentWindow,
+      0,
+      false,
+      false,
+      false,
+      false,
+      null,
+      0
+    );
     menuItem.dispatchEvent(cmdEvent);
   }
 
@@ -62,17 +80,28 @@ add_task(async function() {
   is(fontFamilyField.value, fontFamily, "The font family has been updated.");
 
   dispatchMenuItemCommand(menuItems[0]);
-  ok(menuItems[0].selected, "The first (default) font menuitem is selected again.");
+  ok(
+    menuItems[0].selected,
+    "The first (default) font menuitem is selected again."
+  );
 
   await fontFamilyPrefChanged();
   fontFamily = Services.prefs.getCharPref(fontFamilyPref);
   is(fontFamilyField.value, fontFamily, "The font family has been updated.");
 
-  let defaultFontSize = Services.prefs.getIntPref("font.size.variable." + langGroup);
+  let defaultFontSize = Services.prefs.getIntPref(
+    "font.size.variable." + langGroup
+  );
   let fontSizeField = doc.getElementById("defaultFontSize");
-  is(fontSizeField.value, defaultFontSize, "Font size should be set correctly.");
+  is(
+    fontSizeField.value,
+    defaultFontSize,
+    "Font size should be set correctly."
+  );
 
-  let promiseSubDialogLoaded = promiseLoadSubDialog("chrome://browser/content/preferences/fonts.xul");
+  let promiseSubDialogLoaded = promiseLoadSubDialog(
+    "chrome://browser/content/preferences/fonts.xul"
+  );
   doc.getElementById("advancedFonts").click();
   let win = await promiseSubDialogLoaded;
   doc = win.document;
@@ -87,8 +116,12 @@ add_task(async function() {
     EnumerateAllFontsAsync() {
       return Promise.resolve(this._list);
     },
-    getDefaultFont() { return this._defaultFont; },
-    getStandardFamilyName(name) { return name; },
+    getDefaultFont() {
+      return this._defaultFont;
+    },
+    getStandardFamilyName(name) {
+      return name;
+    },
   };
   win.FontBuilder._allFonts = null;
   win.FontBuilder._langGroupSupported = false;
@@ -127,7 +160,11 @@ add_task(async function() {
   langGroupElement.value = armenian;
   await fontListsRebuilt();
   selectLangsField.value = armenian;
-  is(serifField.value, "", "Font family should still be empty for indicating using 'default' font.");
+  is(
+    serifField.value,
+    "",
+    "Font family should still be empty for indicating using 'default' font."
+  );
 
   langGroupElement.value = western;
   await fontListsRebuilt();
@@ -144,16 +181,28 @@ add_task(async function() {
   // Setting default font to "MockedFont3".  Then, when serifField.value is
   // empty, it should indicate using "MockedFont3" but it shouldn't be saved
   // to "MockedFont3" in the pref.  It should be resolved at runtime.
-  win.FontBuilder._enumerator._list = ["MockedFont1", "MockedFont2", "MockedFont3"];
+  win.FontBuilder._enumerator._list = [
+    "MockedFont1",
+    "MockedFont2",
+    "MockedFont3",
+  ];
   win.FontBuilder._enumerator._defaultFont = "MockedFont3";
   langGroupElement.value = armenian;
   await fontListsRebuilt();
   selectLangsField.value = armenian;
-  is(serifField.value, "", "Font family should be empty even if there is a default font.");
+  is(
+    serifField.value,
+    "",
+    "Font family should be empty even if there is a default font."
+  );
 
   armenianSerifElement.value = "MockedFont2";
   serifField.value = "MockedFont2";
-  is(serifField.value, "MockedFont2", "Font family should be \"MockedFont2\" for now.");
+  is(
+    serifField.value,
+    "MockedFont2",
+    'Font family should be "MockedFont2" for now.'
+  );
 
   langGroupElement.value = western;
   await fontListsRebuilt();
@@ -163,7 +212,11 @@ add_task(async function() {
   langGroupElement.value = armenian;
   await fontListsRebuilt();
   selectLangsField.value = armenian;
-  is(serifField.value, "MockedFont2", "Font family should not be changed even after switching the language.");
+  is(
+    serifField.value,
+    "MockedFont2",
+    "Font family should not be changed even after switching the language."
+  );
 
   // If MochedFont2 is removed from the system, the value should be treated
   // as empty (i.e., 'default' font) after rebuilding the font list.
@@ -173,7 +226,11 @@ add_task(async function() {
   langGroupElement.value = armenian;
   await fontListsRebuilt();
   selectLangsField.value = armenian;
-  is(serifField.value, "", "Font family should become empty due to the font uninstalled.");
+  is(
+    serifField.value,
+    "",
+    "Font family should become empty due to the font uninstalled."
+  );
 
   gBrowser.removeCurrentTab();
 });

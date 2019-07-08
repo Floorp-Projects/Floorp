@@ -8,16 +8,32 @@
 
 const promise = require("promise");
 const CssLogic = require("devtools/shared/inspector/css-logic");
-const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
+const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
 const TextProperty = require("devtools/client/inspector/rules/models/text-property");
 const Services = require("Services");
 
-loader.lazyRequireGetter(this, "updateSourceLink", "devtools/client/inspector/rules/actions/rules", true);
-loader.lazyRequireGetter(this, "promiseWarn", "devtools/client/inspector/shared/utils", true);
-loader.lazyRequireGetter(this, "parseNamedDeclarations", "devtools/shared/css/parsing-utils", true);
+loader.lazyRequireGetter(
+  this,
+  "updateSourceLink",
+  "devtools/client/inspector/rules/actions/rules",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "promiseWarn",
+  "devtools/client/inspector/shared/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "parseNamedDeclarations",
+  "devtools/shared/css/parsing-utils",
+  true
+);
 
-const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
-const {LocalizationHelper} = require("devtools/shared/l10n");
+const STYLE_INSPECTOR_PROPERTIES =
+  "devtools/shared/locales/styleinspector.properties";
+const { LocalizationHelper } = require("devtools/shared/l10n");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 
 /**
@@ -49,7 +65,8 @@ class Rule {
     this.inherited = options.inherited || null;
     this.keyframes = options.keyframes || null;
 
-    this.mediaText = this.domRule && this.domRule.mediaText ? this.domRule.mediaText : "";
+    this.mediaText =
+      this.domRule && this.domRule.mediaText ? this.domRule.mediaText : "";
     this.cssProperties = this.elementStyle.ruleView.cssProperties;
     this.inspector = this.elementStyle.ruleView.inspector;
     this.store = this.elementStyle.ruleView.store;
@@ -98,7 +115,9 @@ class Rule {
 
   get sourceLink() {
     return {
-      label: this.getSourceText(CssLogic.shortSource({ href: this.sourceLocation.url })),
+      label: this.getSourceText(
+        CssLogic.shortSource({ href: this.sourceLocation.url })
+      ),
       title: this.getSourceText(this.sourceLocation.url),
     };
   }
@@ -142,8 +161,10 @@ class Rule {
       if (this.inherited.id) {
         eltText += "#" + this.inherited.id;
       }
-      this._inheritedSource =
-        STYLE_INSPECTOR_L10N.getFormatStr("rule.inheritedFrom", eltText);
+      this._inheritedSource = STYLE_INSPECTOR_L10N.getFormatStr(
+        "rule.inheritedFrom",
+        eltText
+      );
     }
     return this._inheritedSource;
   }
@@ -154,8 +175,10 @@ class Rule {
     }
     this._keyframesName = "";
     if (this.keyframes) {
-      this._keyframesName =
-        STYLE_INSPECTOR_L10N.getFormatStr("rule.keyframe", this.keyframes.name);
+      this._keyframesName = STYLE_INSPECTOR_L10N.getFormatStr(
+        "rule.keyframe",
+        this.keyframes.name
+      );
     }
     return this._keyframesName;
   }
@@ -172,8 +195,9 @@ class Rule {
   }
 
   get selectorText() {
-    return this.domRule.selectors ? this.domRule.selectors.join(", ") :
-      CssLogic.l10n("rule.sourceElement");
+    return this.domRule.selectors
+      ? this.domRule.selectors.join(", ")
+      : CssLogic.l10n("rule.sourceElement");
   }
 
   /**
@@ -218,7 +242,9 @@ class Rule {
    */
   getSourceText(url) {
     if (this.isSystem) {
-      return `${STYLE_INSPECTOR_L10N.getStr("rule.userAgentStyles")} ${this.title}`;
+      return `${STYLE_INSPECTOR_L10N.getStr("rule.userAgentStyles")} ${
+        this.title
+      }`;
     }
 
     let sourceText = url;
@@ -292,7 +318,7 @@ class Rule {
       this.textProps.push(prop);
     }
 
-    this.applyProperties((modifications) => {
+    this.applyProperties(modifications => {
       modifications.createProperty(ind, name, value, priority, enabled);
       // Now that the rule has been updated, the server might have given us data
       // that changes the state of the property. Update it now.
@@ -346,8 +372,10 @@ class Rule {
       // Note that even though StyleRuleActors normally provide parsed
       // declarations already, _applyPropertiesNoAuthored is only used when
       // connected to older backend that do not provide them. So parse here.
-      for (const cssProp of parseNamedDeclarations(this.cssProperties.isKnown,
-                                                 this.domRule.authoredText)) {
+      for (const cssProp of parseNamedDeclarations(
+        this.cssProperties.isKnown,
+        this.domRule.authoredText
+      )) {
         cssProps[cssProp.name] = cssProp;
       }
 
@@ -409,23 +437,27 @@ class Rule {
   applyProperties(modifier) {
     // If there is already a pending modification, we have to wait
     // until it settles before applying the next modification.
-    const resultPromise =
-        promise.resolve(this._applyingModifications).then(() => {
-          const modifications = this.domRule.startModifyingProperties(
-            this.cssProperties);
-          modifier(modifications);
-          if (this.domRule.canSetRuleText) {
-            return this._applyPropertiesAuthored(modifications);
-          }
-          return this._applyPropertiesNoAuthored(modifications);
-        }).then(() => {
-          this.elementStyle.onRuleUpdated();
+    const resultPromise = promise
+      .resolve(this._applyingModifications)
+      .then(() => {
+        const modifications = this.domRule.startModifyingProperties(
+          this.cssProperties
+        );
+        modifier(modifications);
+        if (this.domRule.canSetRuleText) {
+          return this._applyPropertiesAuthored(modifications);
+        }
+        return this._applyPropertiesNoAuthored(modifications);
+      })
+      .then(() => {
+        this.elementStyle.onRuleUpdated();
 
-          if (resultPromise === this._applyingModifications) {
-            this._applyingModifications = null;
-            this.elementStyle._changed();
-          }
-        }).catch(promiseWarn);
+        if (resultPromise === this._applyingModifications) {
+          this._applyingModifications = null;
+          this.elementStyle._changed();
+        }
+      })
+      .catch(promiseWarn);
 
     this._applyingModifications = resultPromise;
     return resultPromise;
@@ -491,9 +523,15 @@ class Rule {
    **@return {Promise}
    */
   previewPropertyValue(property, value, priority) {
-    const modifications = this.domRule.startModifyingProperties(this.cssProperties);
-    modifications.setProperty(this.textProps.indexOf(property),
-                              property.name, value, priority);
+    const modifications = this.domRule.startModifyingProperties(
+      this.cssProperties
+    );
+    modifications.setProperty(
+      this.textProps.indexOf(property),
+      property.name,
+      value,
+      priority
+    );
     return modifications.apply().then(() => {
       // Ensure dispatching a ruleview-changed event
       // also for previews
@@ -514,7 +552,7 @@ class Rule {
     }
     property.enabled = !!value;
     const index = this.textProps.indexOf(property);
-    this.applyProperties((modifications) => {
+    this.applyProperties(modifications => {
       modifications.setPropertyEnabled(index, property.name, property.enabled);
     });
   }
@@ -531,7 +569,7 @@ class Rule {
     this.textProps.splice(index, 1);
     // Need to re-apply properties in case removing this TextProperty
     // exposes another one.
-    this.applyProperties((modifications) => {
+    this.applyProperties(modifications => {
       modifications.removeProperty(index, property.name);
     });
   }
@@ -550,8 +588,11 @@ class Rule {
       // If the authored text has an invalid property, it will show up
       // as nameless.  Skip these as we don't currently have a good
       // way to display them.
-      props = parseNamedDeclarations(this.cssProperties.isKnown,
-                                     this.domRule.authoredText, true);
+      props = parseNamedDeclarations(
+        this.cssProperties.isKnown,
+        this.domRule.authoredText,
+        true
+      );
     }
 
     for (const prop of props) {
@@ -561,11 +602,19 @@ class Rule {
       // rewriting to work properly.  So, compute the "invisible"
       // property here.
       const invisible = this.inherited && !this.cssProperties.isInherited(name);
-      const value = store.userProperties.getProperty(this.domRule, name,
-                                                   prop.value);
-      const textProp = new TextProperty(this, name, value, prop.priority,
-                                      !("commentOffsets" in prop),
-                                      invisible);
+      const value = store.userProperties.getProperty(
+        this.domRule,
+        name,
+        prop.value
+      );
+      const textProp = new TextProperty(
+        this,
+        name,
+        value,
+        prop.priority,
+        !("commentOffsets" in prop),
+        invisible
+      );
       textProps.push(textProp);
     }
 
@@ -587,8 +636,11 @@ class Rule {
     const textProps = [];
 
     for (const prop of disabledProps) {
-      const value = store.userProperties.getProperty(this.domRule, prop.name,
-                                                   prop.value);
+      const value = store.userProperties.getProperty(
+        this.domRule,
+        prop.name,
+        prop.value
+      );
       const textProp = new TextProperty(this, prop.name, value, prop.priority);
       textProp.enabled = false;
       textProps.push(textProp);
@@ -820,13 +872,17 @@ class Rule {
 
     if (url && !this.isSystem && this.domRule.type !== ELEMENT_STYLE) {
       // Subscribe returns an unsubscribe function that can be called on destroy.
-      this.unsubscribeSourceMap = this.sourceMapURLService.subscribe(url, line, column,
+      this.unsubscribeSourceMap = this.sourceMapURLService.subscribe(
+        url,
+        line,
+        column,
         (enabled, sourceUrl, sourceLine, sourceColumn) => {
           if (enabled) {
             // Only update the source location if source map is in use.
             this.updateSourceLocation(sourceUrl, sourceLine, sourceColumn);
           }
-        });
+        }
+      );
     }
 
     this.domRule.on("location-changed", this.onLocationChanged);
@@ -849,7 +905,9 @@ class Rule {
       line,
       url,
     };
-    this.store.dispatch(updateSourceLink(this.domRule.actorID, this.sourceLink));
+    this.store.dispatch(
+      updateSourceLink(this.domRule.actorID, this.sourceLink)
+    );
   }
 }
 

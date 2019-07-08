@@ -49,7 +49,7 @@ OptionsView.prototype = {
     // because the click handler is fired before the XUL menuitem updates its
     // checked status, which cascades incorrectly with the Preference observer.
     this.mutationObserver = new MutationObserver(this._onOptionChange);
-    const observerConfig = { attributes: true, attributeFilter: ["checked"]};
+    const observerConfig = { attributes: true, attributeFilter: ["checked"] };
 
     // Sets observers and default options for all options
     for (const $el of this.$$("menuitem", this.menupopup)) {

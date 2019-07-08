@@ -7,7 +7,9 @@
 
 var EXPORTED_SYMBOLS = ["ActionBarHandler"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
@@ -19,13 +21,18 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UITelemetry: "resource://gre/modules/UITelemetry.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "ParentalControls",
-  "@mozilla.org/parental-controls-service;1", "nsIParentalControlsService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "ParentalControls",
+  "@mozilla.org/parental-controls-service;1",
+  "nsIParentalControlsService"
+);
 
 var Strings = {};
 
 XPCOMUtils.defineLazyGetter(Strings, "browser", _ =>
-        Services.strings.createBundle("chrome://browser/locale/browser.properties"));
+  Services.strings.createBundle("chrome://browser/locale/browser.properties")
+);
 
 const PHONE_REGEX = /^\+?[0-9\s,-.\(\)*#pw]{1,30}$/; // Are we a phone #?
 
@@ -106,7 +113,8 @@ var ActionBarHandler = {
         } else {
           // Selection changes update boundingClientRect.
           this._boundingClientRect = e.boundingClientRect;
-          let forceUpdate = e.reason == "updateposition" || e.reason == "releasecaret";
+          let forceUpdate =
+            e.reason == "updateposition" || e.reason == "releasecaret";
           this._sendActionBarActions(forceUpdate);
         }
       } else {
@@ -212,16 +220,22 @@ var ActionBarHandler = {
    * editable element if present.
    */
   _getSelectionTargets: function() {
-    let [element, win] = [Services.focus.focusedElement, Services.focus.focusedWindow];
+    let [element, win] = [
+      Services.focus.focusedElement,
+      Services.focus.focusedWindow,
+    ];
     if (!element) {
       // No focused editable.
       return [null, win];
     }
 
     // Return focused editable text element and its window.
-    if (((ChromeUtils.getClassName(element) === "HTMLInputElement") && element.mozIsTextField(false)) ||
-        (ChromeUtils.getClassName(element) === "HTMLTextAreaElement") ||
-        element.isContentEditable) {
+    if (
+      (ChromeUtils.getClassName(element) === "HTMLInputElement" &&
+        element.mozIsTextField(false)) ||
+      ChromeUtils.getClassName(element) === "HTMLTextAreaElement" ||
+      element.isContentEditable
+    ) {
       return [element, win];
     }
 
@@ -235,9 +249,11 @@ var ActionBarHandler = {
    */
   _selectionHasChanged: function() {
     let [element, win] = this._getSelectionTargets();
-    return (this._targetElement !== element ||
-            this._contentWindow !== win ||
-            this._isInDesignMode(this._contentWindow) !== this._isInDesignMode(win));
+    return (
+      this._targetElement !== element ||
+      this._contentWindow !== win ||
+      this._isInDesignMode(this._contentWindow) !== this._isInDesignMode(win)
+    );
   },
 
   /**
@@ -279,7 +295,10 @@ var ActionBarHandler = {
    * we terminate selection state after before/after actionbar actions
    * (Cut, Copy, Paste, Search, Share, Call).
    */
-  _clearSelection: function(element = this._targetElement, win = this._contentWindow) {
+  _clearSelection: function(
+    element = this._targetElement,
+    win = this._contentWindow
+  ) {
     // Commit edit compositions, and clear focus from editables.
     if (element) {
       let editor = this._getEditor(element, win);
@@ -307,9 +326,11 @@ var ActionBarHandler = {
   _sendActionBarActions: function(sendAlways) {
     let actions = this._getActionBarActions();
 
-    let actionCountUnchanged = this._actionBarActions &&
+    let actionCountUnchanged =
+      this._actionBarActions &&
       actions.length === this._actionBarActions.length;
-    let actionsMatch = actionCountUnchanged &&
+    let actionsMatch =
+      actionCountUnchanged &&
       this._actionBarActions.every((e, i) => {
         return e.id === actions[i].id;
       });
@@ -338,7 +359,10 @@ var ActionBarHandler = {
   /**
    * Determine and return current ActionBar state.
    */
-  _getActionBarActions: function(element = this._targetElement, win = this._contentWindow) {
+  _getActionBarActions: function(
+    element = this._targetElement,
+    win = this._contentWindow
+  ) {
     let actions = [];
 
     for (let type in this.actions) {
@@ -347,10 +371,25 @@ var ActionBarHandler = {
         let a = {
           id: action.id,
           label: this._getActionValue(action, "label", "", element),
-          icon: this._getActionValue(action, "icon", "drawable://ic_status_logo", element),
+          icon: this._getActionValue(
+            action,
+            "icon",
+            "drawable://ic_status_logo",
+            element
+          ),
           order: this._getActionValue(action, "order", 0, element),
-          floatingOrder: this._getActionValue(action, "floatingOrder", 9, element),
-          showAsAction: this._getActionValue(action, "showAsAction", true, element),
+          floatingOrder: this._getActionValue(
+            action,
+            "floatingOrder",
+            9,
+            element
+          ),
+          showAsAction: this._getActionValue(
+            action,
+            "showAsAction",
+            true,
+            element
+          ),
         };
         actions.push(a);
       }
@@ -366,11 +405,13 @@ var ActionBarHandler = {
    * itself. If the value isn't defined for this action, will return a default.
    */
   _getActionValue: function(obj, name, defaultValue, element) {
-    if (!(name in obj))
+    if (!(name in obj)) {
       return defaultValue;
+    }
 
-    if (typeof obj[name] == "function")
+    if (typeof obj[name] == "function") {
       return obj[name](element);
+    }
 
     return obj[name];
   },
@@ -379,7 +420,6 @@ var ActionBarHandler = {
    * Actionbar callback methods.
    */
   actions: {
-
     SELECT_ALL: {
       id: "selectall_action",
       label: () => Strings.browser.GetStringFromName("contextmenu.selectAll"),
@@ -391,7 +431,7 @@ var ActionBarHandler = {
         matches: function(element, win) {
           // For editable, check its length. For default contentWindow, assume
           // true, else there'd been nothing to long-press to open ActionBar.
-          return (element) ? element.textLength != 0 : true;
+          return element ? element.textLength != 0 : true;
         },
       },
 
@@ -428,9 +468,11 @@ var ActionBarHandler = {
             return false;
           }
           // Don't allow "cut" from password fields.
-          if (element &&
-              ChromeUtils.getClassName(element) === "HTMLInputElement" &&
-              !element.mozIsTextField(true)) {
+          if (
+            element &&
+            ChromeUtils.getClassName(element) === "HTMLInputElement" &&
+            !element.mozIsTextField(true)
+          ) {
             return false;
           }
           // Don't allow "cut" from disabled/readonly fields.
@@ -438,14 +480,16 @@ var ActionBarHandler = {
             return false;
           }
           // Allow if selected text exists.
-          return (ActionBarHandler._getSelectedText().length > 0);
+          return ActionBarHandler._getSelectedText().length > 0;
         },
       },
 
       action: function(element, win) {
         ActionBarHandler._getEditor(element, win).cut();
 
-        let msg = Strings.browser.GetStringFromName("selectionHelper.textCopied");
+        let msg = Strings.browser.GetStringFromName(
+          "selectionHelper.textCopied"
+        );
         Snackbars.show(msg, Snackbars.LENGTH_LONG);
 
         ActionBarHandler._uninit();
@@ -463,20 +507,24 @@ var ActionBarHandler = {
       selector: {
         matches: function(element, win) {
           // Don't allow "copy" from password fields.
-          if (element &&
-              ChromeUtils.getClassName(element) === "HTMLInputElement" &&
-              !element.mozIsTextField(true)) {
+          if (
+            element &&
+            ChromeUtils.getClassName(element) === "HTMLInputElement" &&
+            !element.mozIsTextField(true)
+          ) {
             return false;
           }
           // Allow if selected text exists.
-          return (ActionBarHandler._getSelectedText().length > 0);
+          return ActionBarHandler._getSelectedText().length > 0;
         },
       },
 
       action: function(element, win) {
         ActionBarHandler._getDocShell(win).doCommand("cmd_copy");
 
-        let msg = Strings.browser.GetStringFromName("selectionHelper.textCopied");
+        let msg = Strings.browser.GetStringFromName(
+          "selectionHelper.textCopied"
+        );
         Snackbars.show(msg, Snackbars.LENGTH_LONG);
 
         ActionBarHandler._uninit();
@@ -503,15 +551,18 @@ var ActionBarHandler = {
           }
           // Can't paste if Clipboard empty.
           let flavors = ["text/unicode"];
-          return Services.clipboard.hasDataMatchingFlavors(flavors,
-            Ci.nsIClipboard.kGlobalClipboard);
+          return Services.clipboard.hasDataMatchingFlavors(
+            flavors,
+            Ci.nsIClipboard.kGlobalClipboard
+          );
         },
       },
 
       action: function(element, win) {
         // Paste the clipboard, then close the ActionBarHandler and ActionBar.
-        ActionBarHandler._getEditor(element, win).
-          paste(Ci.nsIClipboard.kGlobalClipboard);
+        ActionBarHandler._getEditor(element, win).paste(
+          Ci.nsIClipboard.kGlobalClipboard
+        );
         ActionBarHandler._uninit();
         UITelemetry.addEvent("action.1", "actionbar", null, "paste");
       },
@@ -526,7 +577,7 @@ var ActionBarHandler = {
 
       selector: {
         matches: function(element, win) {
-          return (ActionBarHandler._getSelectedPhoneNumber() != null);
+          return ActionBarHandler._getSelectedPhoneNumber() != null;
         },
       },
 
@@ -536,12 +587,16 @@ var ActionBarHandler = {
         if (chrome.BrowserApp && chrome.BrowserApp.loadURI) {
           chrome.BrowserApp.loadURI(uri);
         } else {
-          let bwin = chrome.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow;
+          let bwin = chrome.QueryInterface(Ci.nsIDOMChromeWindow)
+            .browserDOMWindow;
           if (bwin) {
-            bwin.openURI(Services.io.newURI(uri), win,
-                         Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
-                         Ci.nsIBrowserDOMWindow.OPEN_NEW,
-                         win.document.nodePrincipal);
+            bwin.openURI(
+              Services.io.newURI(uri),
+              win,
+              Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
+              Ci.nsIBrowserDOMWindow.OPEN_NEW,
+              win.document.nodePrincipal
+            );
           }
         }
 
@@ -552,8 +607,10 @@ var ActionBarHandler = {
 
     SEARCH: {
       id: "search_action",
-      label: () => Strings.browser.formatStringFromName("contextmenu.search",
-        [Services.search.defaultEngine.name]),
+      label: () =>
+        Strings.browser.formatStringFromName("contextmenu.search", [
+          Services.search.defaultEngine.name,
+        ]),
       icon: "drawable://ab_search",
       order: 1,
       floatingOrder: 6,
@@ -561,34 +618,45 @@ var ActionBarHandler = {
       selector: {
         matches: function(element, win) {
           // Allow if selected text exists.
-          return (ActionBarHandler._getSelectedText().length > 0);
+          return ActionBarHandler._getSelectedText().length > 0;
         },
       },
 
       action: function(element, win) {
-        let selectedText = BrowserUtils.trimSelection(ActionBarHandler._getSelectedText());
+        let selectedText = BrowserUtils.trimSelection(
+          ActionBarHandler._getSelectedText()
+        );
         ActionBarHandler._uninit();
 
         // Set current tab as parent of new tab,
         // and set new tab as private if the parent is.
-        let searchSubmission = Services.search.defaultEngine.getSubmission(selectedText);
+        let searchSubmission = Services.search.defaultEngine.getSubmission(
+          selectedText
+        );
         let chrome = GeckoViewUtils.getChromeWindow(win);
-        if (chrome.BrowserApp && chrome.BrowserApp.selectedTab && chrome.BrowserApp.addTab) {
+        if (
+          chrome.BrowserApp &&
+          chrome.BrowserApp.selectedTab &&
+          chrome.BrowserApp.addTab
+        ) {
           let parent = chrome.BrowserApp.selectedTab;
           let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(parent.browser);
-          chrome.BrowserApp.addTab(searchSubmission.uri.spec,
-            { parentId: parent.id,
-              selected: true,
-              isPrivate: isPrivate,
-            }
-          );
+          chrome.BrowserApp.addTab(searchSubmission.uri.spec, {
+            parentId: parent.id,
+            selected: true,
+            isPrivate: isPrivate,
+          });
         } else {
-          let bwin = chrome.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow;
+          let bwin = chrome.QueryInterface(Ci.nsIDOMChromeWindow)
+            .browserDOMWindow;
           if (bwin) {
-            bwin.openURI(searchSubmission.uri, win,
-                         Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
-                         Ci.nsIBrowserDOMWindow.OPEN_NEW,
-                         win.document.nodePrincipal);
+            bwin.openURI(
+              searchSubmission.uri,
+              win,
+              Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
+              Ci.nsIBrowserDOMWindow.OPEN_NEW,
+              win.document.nodePrincipal
+            );
           }
         }
 
@@ -598,7 +666,8 @@ var ActionBarHandler = {
 
     SEARCH_ADD: {
       id: "search_add_action",
-      label: () => Strings.browser.GetStringFromName("contextmenu.addSearchEngine3"),
+      label: () =>
+        Strings.browser.GetStringFromName("contextmenu.addSearchEngine3"),
       icon: "drawable://ab_add_search_engine",
       order: 0,
       floatingOrder: 8,
@@ -609,7 +678,10 @@ var ActionBarHandler = {
           if (!chrome.SearchEngines) {
             return false;
           }
-          if (!element || ChromeUtils.getClassName(element) !== "HTMLInputElement") {
+          if (
+            !element ||
+            ChromeUtils.getClassName(element) !== "HTMLInputElement"
+          ) {
             return false;
           }
           let form = element.form;
@@ -618,8 +690,11 @@ var ActionBarHandler = {
           }
 
           let method = form.method.toUpperCase();
-          let canAddEngine = (method == "GET") ||
-            (method == "POST" && (form.enctype != "text/plain" && form.enctype != "multipart/form-data"));
+          let canAddEngine =
+            method == "GET" ||
+            (method == "POST" &&
+              (form.enctype != "text/plain" &&
+                form.enctype != "multipart/form-data"));
           if (!canAddEngine) {
             return false;
           }
@@ -634,11 +709,16 @@ var ActionBarHandler = {
       },
 
       action: function(element, win) {
-        UITelemetry.addEvent("action.1", "actionbar", null, "add_search_engine");
+        UITelemetry.addEvent(
+          "action.1",
+          "actionbar",
+          null,
+          "add_search_engine"
+        );
 
         // Engines are added asynch. If required, update SelectionUI on callback.
         let chrome = GeckoViewUtils.getChromeWindow(win);
-        chrome.SearchEngines.addEngine(element, (result) => {
+        chrome.SearchEngines.addEngine(element, result => {
           if (result) {
             ActionBarHandler._sendActionBarActions(true);
           }
@@ -659,7 +739,7 @@ var ActionBarHandler = {
             return false;
           }
           // Allow if selected text exists.
-          return (ActionBarHandler._getSelectedText().length > 0);
+          return ActionBarHandler._getSelectedText().length > 0;
         },
       },
 
@@ -669,9 +749,10 @@ var ActionBarHandler = {
           let ellipsis = "\u2026";
           try {
             ellipsis = Services.prefs.getComplexValue(
-                "intl.ellipsis", Ci.nsIPrefLocalizedString).data;
-          } catch (e) {
-          }
+              "intl.ellipsis",
+              Ci.nsIPrefLocalizedString
+            ).data;
+          } catch (e) {}
           title = title.slice(0, 200) + ellipsis; // Add ellipsis.
         } else if (!title) {
           title = win.location.href;
@@ -693,8 +774,9 @@ var ActionBarHandler = {
    */
   get _idService() {
     delete this._idService;
-    return this._idService = Cc["@mozilla.org/uuid-generator;1"].
-      getService(Ci.nsIUUIDGenerator);
+    return (this._idService = Cc["@mozilla.org/uuid-generator;1"].getService(
+      Ci.nsIUUIDGenerator
+    ));
   },
 
   /**
@@ -702,8 +784,9 @@ var ActionBarHandler = {
    * selection or a caret.
    */
   get _targetElement() {
-    if (this._targetElementRef)
+    if (this._targetElementRef) {
       return this._targetElementRef.get();
+    }
     return null;
   },
 
@@ -716,8 +799,9 @@ var ActionBarHandler = {
    * if it's an editable.
    */
   get _contentWindow() {
-    if (this._contentWindowRef)
+    if (this._contentWindowRef) {
       return this._contentWindowRef.get();
+    }
     return null;
   },
 
@@ -729,7 +813,7 @@ var ActionBarHandler = {
    * If we have an active selection, is it part of a designMode document?
    */
   _isInDesignMode: function(win) {
-    return this._selectionID && (win.document.designMode === "on");
+    return this._selectionID && win.document.designMode === "on";
   },
 
   /**
@@ -753,9 +837,12 @@ var ActionBarHandler = {
     let selection = this._getSelection();
 
     // Textarea can contain LF, etc.
-    if (this._targetElement &&
-        ChromeUtils.getClassName(this._targetElement) === "HTMLTextAreaElement") {
-      let flags = Ci.nsIDocumentEncoder.OutputPreformatted |
+    if (
+      this._targetElement &&
+      ChromeUtils.getClassName(this._targetElement) === "HTMLTextAreaElement"
+    ) {
+      let flags =
+        Ci.nsIDocumentEncoder.OutputPreformatted |
         Ci.nsIDocumentEncoder.OutputRaw;
       return selection.toStringWithFormat("text/plain", flags, 0);
     }
@@ -772,24 +859,32 @@ var ActionBarHandler = {
       return false;
     }
     let elementClass = ChromeUtils.getClassName(element);
-    return elementClass === "HTMLInputElement" ||
-           elementClass === "HTMLTextAreaElement";
+    return (
+      elementClass === "HTMLInputElement" ||
+      elementClass === "HTMLTextAreaElement"
+    );
   },
 
   /**
    * Provides the Selection for either an editor, or from the
    * default window.
    */
-  _getSelection: function(element = this._targetElement, win = this._contentWindow) {
-    return this._isElementEditable(element) ?
-      this._getEditor(element).selection :
-      win.getSelection();
+  _getSelection: function(
+    element = this._targetElement,
+    win = this._contentWindow
+  ) {
+    return this._isElementEditable(element)
+      ? this._getEditor(element).selection
+      : win.getSelection();
   },
 
   /**
    * Returns an nsEditor or nsHTMLEditor.
    */
-  _getEditor: function(element = this._targetElement, win = this._contentWindow) {
+  _getEditor: function(
+    element = this._targetElement,
+    win = this._contentWindow
+  ) {
     if (this._isElementEditable(element)) {
       return element.editor;
     }
@@ -802,11 +897,10 @@ var ActionBarHandler = {
    */
   _getSelectedPhoneNumber: function() {
     let selectedText = this._getSelectedText().trim();
-    return this._isPhoneNumber(selectedText) ?
-      selectedText : null;
+    return this._isPhoneNumber(selectedText) ? selectedText : null;
   },
 
   _isPhoneNumber: function(selectedText) {
-    return (PHONE_REGEX.test(selectedText));
+    return PHONE_REGEX.test(selectedText);
   },
 };

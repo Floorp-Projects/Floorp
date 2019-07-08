@@ -1,8 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
-const {initializeIdentityWithTokenServerResponse} = ChromeUtils.import("resource://testing-common/services/sync/fxa_utils.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { initializeIdentityWithTokenServerResponse } = ChromeUtils.import(
+  "resource://testing-common/services/sync/fxa_utils.js"
+);
 
 add_task(async function test_findCluster() {
   _("Test FxA _findCluster()");
@@ -14,13 +16,15 @@ add_task(async function test_findCluster() {
     body: "",
   });
 
-  await Assert.rejects(Service.identity._findCluster(),
-    /TokenServerClientServerError/);
+  await Assert.rejects(
+    Service.identity._findCluster(),
+    /TokenServerClientServerError/
+  );
 
   _("_findCluster() returns null on authentication errors.");
   initializeIdentityWithTokenServerResponse({
     status: 401,
-    headers: {"content-type": "application/json"},
+    headers: { "content-type": "application/json" },
     body: "{}",
   });
 
@@ -31,15 +35,14 @@ add_task(async function test_findCluster() {
   let endpoint = "http://example.com/something";
   initializeIdentityWithTokenServerResponse({
     status: 200,
-    headers: {"content-type": "application/json"},
-    body:
-      JSON.stringify({
-        api_endpoint: endpoint,
-        duration: 300,
-        id: "id",
-        key: "key",
-        uid: "uid",
-      }),
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      api_endpoint: endpoint,
+      duration: 300,
+      id: "id",
+      key: "key",
+      uid: "uid",
+    }),
   });
 
   cluster = await Service.identity._findCluster();

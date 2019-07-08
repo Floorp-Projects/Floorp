@@ -1,6 +1,6 @@
 var active = true;
 onmessage = function(e) {
-  if (e.data == 'finish') {
+  if (e.data == "finish") {
     active = false;
     return;
   }
@@ -8,4 +8,4 @@ onmessage = function(e) {
   if (active) {
     postMessage(navigator.languages);
   }
-}
+};

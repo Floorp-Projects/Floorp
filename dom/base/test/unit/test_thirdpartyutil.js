@@ -18,8 +18,7 @@ function do_check_throws(f, result, stack) {
     try {
       // We might not have a 'Components' object.
       stack = Components.stack.caller;
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   try {
@@ -32,7 +31,9 @@ function do_check_throws(f, result, stack) {
 }
 
 function run_test() {
-  let util = Cc["@mozilla.org/thirdpartyutil;1"].getService(Ci.mozIThirdPartyUtil);
+  let util = Cc["@mozilla.org/thirdpartyutil;1"].getService(
+    Ci.mozIThirdPartyUtil
+  );
 
   // Create URIs and channels pointing to foo.com and bar.com.
   // We will use these to put foo.com into first and third party contexts.
@@ -41,16 +42,24 @@ function run_test() {
   let uri1 = NetUtil.newURI(spec1);
   let uri2 = NetUtil.newURI(spec2);
   const contentPolicyType = Ci.nsIContentPolicy.TYPE_DOCUMENT;
-  let channel1 = NetUtil.newChannel({uri: uri1, loadUsingSystemPrincipal: true, contentPolicyType});
-  NetUtil.newChannel({uri: uri2, loadUsingSystemPrincipal: true, contentPolicyType});
+  let channel1 = NetUtil.newChannel({
+    uri: uri1,
+    loadUsingSystemPrincipal: true,
+    contentPolicyType,
+  });
+  NetUtil.newChannel({
+    uri: uri2,
+    loadUsingSystemPrincipal: true,
+    contentPolicyType,
+  });
 
   // Create some file:// URIs.
   let filespec1 = "file://foo.txt";
   let filespec2 = "file://bar.txt";
   let fileuri1 = NetUtil.newURI(filespec1);
   let fileuri2 = NetUtil.newURI(filespec2);
-  NetUtil.newChannel({uri: fileuri1, loadUsingSystemPrincipal: true});
-  NetUtil.newChannel({uri: fileuri2, loadUsingSystemPrincipal: true});
+  NetUtil.newChannel({ uri: fileuri1, loadUsingSystemPrincipal: true });
+  NetUtil.newChannel({ uri: fileuri2, loadUsingSystemPrincipal: true });
 
   // Test isThirdPartyURI.
   Assert.ok(!util.isThirdPartyURI(uri1, uri1));
@@ -59,12 +68,15 @@ function run_test() {
   Assert.ok(!util.isThirdPartyURI(fileuri1, fileuri1));
   Assert.ok(!util.isThirdPartyURI(fileuri1, fileuri2));
   Assert.ok(util.isThirdPartyURI(uri1, fileuri1));
-  do_check_throws(function() { util.isThirdPartyURI(uri1, null); },
-    NS_ERROR_INVALID_ARG);
-  do_check_throws(function() { util.isThirdPartyURI(null, uri1); },
-    NS_ERROR_INVALID_ARG);
-  do_check_throws(function() { util.isThirdPartyURI(null, null); },
-    NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    util.isThirdPartyURI(uri1, null);
+  }, NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    util.isThirdPartyURI(null, uri1);
+  }, NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    util.isThirdPartyURI(null, null);
+  }, NS_ERROR_INVALID_ARG);
 
   // We can't test isThirdPartyWindow since we can't really set up a window
   // hierarchy. We leave that to mochitests.
@@ -72,8 +84,9 @@ function run_test() {
   // Test isThirdPartyChannel. As above, we can't test the bits that require
   // a load context or window heirarchy. Because of bug 1259873, we assume
   // that these are not third-party.
-  do_check_throws(function() { util.isThirdPartyChannel(null); },
-    NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    util.isThirdPartyChannel(null);
+  }, NS_ERROR_INVALID_ARG);
   Assert.ok(!util.isThirdPartyChannel(channel1));
   Assert.ok(!util.isThirdPartyChannel(channel1, uri1));
   Assert.ok(util.isThirdPartyChannel(channel1, uri2));
@@ -84,4 +97,3 @@ function run_test() {
   Assert.ok(!util.isThirdPartyChannel(channel1, uri1));
   Assert.ok(util.isThirdPartyChannel(channel1, uri2));
 }
-

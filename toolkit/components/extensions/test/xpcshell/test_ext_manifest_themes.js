@@ -3,17 +3,23 @@
 "use strict";
 
 async function test_theme_property(property) {
-  let normalized = await ExtensionTestUtils.normalizeManifest({
-    "theme": {
-      [property]: {
+  let normalized = await ExtensionTestUtils.normalizeManifest(
+    {
+      theme: {
+        [property]: {},
       },
     },
-  }, "manifest.ThemeManifest");
+    "manifest.ThemeManifest"
+  );
 
   if (property === "unrecognized_key") {
     const expectedWarning = `Error processing theme.${property}`;
-    ok(normalized.errors[0].includes(expectedWarning),
-       `The manifest warning ${JSON.stringify(normalized.errors[0])} must contain ${JSON.stringify(expectedWarning)}`);
+    ok(
+      normalized.errors[0].includes(expectedWarning),
+      `The manifest warning ${JSON.stringify(
+        normalized.errors[0]
+      )} must contain ${JSON.stringify(expectedWarning)}`
+    );
   } else {
     equal(normalized.errors.length, 0, "Should have a warning");
   }

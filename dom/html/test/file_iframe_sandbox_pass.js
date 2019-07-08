@@ -1,1 +1,4 @@
-ok(true, "documents sandboxed with allow-scripts should be able to run <script src=...>");
+ok(
+  true,
+  "documents sandboxed with allow-scripts should be able to run <script src=...>"
+);

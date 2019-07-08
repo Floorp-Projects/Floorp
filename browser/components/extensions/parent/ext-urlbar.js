@@ -5,15 +5,15 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProviderExtension: "resource:///modules/UrlbarProviderExtension.jsm",
 });
 
-var {ExtensionPreferencesManager} = ChromeUtils.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
-var {getSettingsAPI} = ExtensionPreferencesManager;
+var { ExtensionPreferencesManager } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPreferencesManager.jsm"
+);
+var { getSettingsAPI } = ExtensionPreferencesManager;
 
 ExtensionPreferencesManager.addSetting("openViewOnFocus", {
-  prefNames: [
-    "browser.urlbar.openViewOnFocus",
-  ],
+  prefNames: ["browser.urlbar.openViewOnFocus"],
   setCallback(value) {
-    return {[this.prefNames[0]]: value};
+    return { [this.prefNames[0]]: value };
   },
 });
 
@@ -26,14 +26,17 @@ this.urlbar = class extends ExtensionAPI {
           name: "urlbar.onBehaviorRequested",
           register: (fire, providerName) => {
             let provider = UrlbarProviderExtension.getOrCreate(providerName);
-            provider.setEventListener("behaviorRequested", async queryContext => {
-              if (queryContext.isPrivate && !context.privateBrowsingAllowed) {
-                return "inactive";
+            provider.setEventListener(
+              "behaviorRequested",
+              async queryContext => {
+                if (queryContext.isPrivate && !context.privateBrowsingAllowed) {
+                  return "inactive";
+                }
+                return fire.async(queryContext).catch(error => {
+                  throw context.normalizeError(error);
+                });
               }
-              return fire.async(queryContext).catch(error => {
-                throw context.normalizeError(error);
-              });
-            });
+            );
             return () => provider.setEventListener("behaviorRequested", null);
           },
         }).api(),
@@ -60,20 +63,24 @@ this.urlbar = class extends ExtensionAPI {
           name: "urlbar.onResultsRequested",
           register: (fire, providerName) => {
             let provider = UrlbarProviderExtension.getOrCreate(providerName);
-            provider.setEventListener("resultsRequested", async queryContext => {
-              if (queryContext.isPrivate && !context.privateBrowsingAllowed) {
-                return [];
+            provider.setEventListener(
+              "resultsRequested",
+              async queryContext => {
+                if (queryContext.isPrivate && !context.privateBrowsingAllowed) {
+                  return [];
+                }
+                return fire.async(queryContext).catch(error => {
+                  throw context.normalizeError(error);
+                });
               }
-              return fire.async(queryContext).catch(error => {
-                throw context.normalizeError(error);
-              });
-            });
+            );
             return () => provider.setEventListener("resultsRequested", null);
           },
         }).api(),
 
         openViewOnFocus: getSettingsAPI(
-          context.extension.id, "openViewOnFocus",
+          context.extension.id,
+          "openViewOnFocus",
           () => UrlbarPrefs.get("openViewOnFocus")
         ),
       },

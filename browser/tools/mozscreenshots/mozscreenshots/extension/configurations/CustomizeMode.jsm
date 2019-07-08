@@ -6,31 +6,41 @@
 
 var EXPORTED_SYMBOLS = ["CustomizeMode"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 var CustomizeMode = {
-
   init(libDir) {},
 
   configurations: {
     notCustomizing: {
       selectors: ["#navigator-toolbox"],
       applyConfig() {
-        return new Promise((resolve) => {
-          let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-          if (!browserWindow.document.documentElement.hasAttribute("customizing")) {
+        return new Promise(resolve => {
+          let browserWindow = Services.wm.getMostRecentWindow(
+            "navigator:browser"
+          );
+          if (
+            !browserWindow.document.documentElement.hasAttribute("customizing")
+          ) {
             resolve("notCustomizing: already not customizing");
             return;
           }
           function onCustomizationEnds() {
-            browserWindow.gNavToolbox.removeEventListener("aftercustomization",
-                                                          onCustomizationEnds);
+            browserWindow.gNavToolbox.removeEventListener(
+              "aftercustomization",
+              onCustomizationEnds
+            );
             // Wait for final changes
-            setTimeout(() => resolve("notCustomizing: onCustomizationEnds"), 500);
+            setTimeout(
+              () => resolve("notCustomizing: onCustomizationEnds"),
+              500
+            );
           }
-          browserWindow.gNavToolbox.addEventListener("aftercustomization",
-                                                     onCustomizationEnds);
+          browserWindow.gNavToolbox.addEventListener(
+            "aftercustomization",
+            onCustomizationEnds
+          );
           browserWindow.gCustomizeMode.exit();
         });
       },
@@ -39,20 +49,28 @@ var CustomizeMode = {
     customizing: {
       selectors: ["#navigator-toolbox", "#customization-container"],
       applyConfig() {
-        return new Promise((resolve) => {
-          let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-          if (browserWindow.document.documentElement.hasAttribute("customizing")) {
+        return new Promise(resolve => {
+          let browserWindow = Services.wm.getMostRecentWindow(
+            "navigator:browser"
+          );
+          if (
+            browserWindow.document.documentElement.hasAttribute("customizing")
+          ) {
             resolve("customizing: already customizing");
             return;
           }
           function onCustomizing() {
-            browserWindow.gNavToolbox.removeEventListener("customizationready",
-                                                          onCustomizing);
+            browserWindow.gNavToolbox.removeEventListener(
+              "customizationready",
+              onCustomizing
+            );
             // Wait for final changes
             setTimeout(() => resolve("customizing: onCustomizing"), 500);
           }
-          browserWindow.gNavToolbox.addEventListener("customizationready",
-                                                     onCustomizing);
+          browserWindow.gNavToolbox.addEventListener(
+            "customizationready",
+            onCustomizing
+          );
           browserWindow.gCustomizeMode.enter();
         });
       },

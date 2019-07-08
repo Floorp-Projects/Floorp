@@ -8,23 +8,37 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "Downloads",
-];
+var EXPORTED_SYMBOLS = ["Downloads"];
 
-const {Integration} = ChromeUtils.import("resource://gre/modules/Integration.jsm");
-const {Download, DownloadError} = ChromeUtils.import("resource://gre/modules/DownloadCore.jsm");
+const { Integration } = ChromeUtils.import(
+  "resource://gre/modules/Integration.jsm"
+);
+const { Download, DownloadError } = ChromeUtils.import(
+  "resource://gre/modules/DownloadCore.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "DownloadCombinedList",
-                               "resource://gre/modules/DownloadList.jsm");
-ChromeUtils.defineModuleGetter(this, "DownloadList",
-                               "resource://gre/modules/DownloadList.jsm");
-ChromeUtils.defineModuleGetter(this, "DownloadSummary",
-                               "resource://gre/modules/DownloadList.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "DownloadCombinedList",
+  "resource://gre/modules/DownloadList.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "DownloadList",
+  "resource://gre/modules/DownloadList.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "DownloadSummary",
+  "resource://gre/modules/DownloadList.jsm"
+);
 
 /* global DownloadIntegration */
-Integration.downloads.defineModuleGetter(this, "DownloadIntegration",
-            "resource://gre/modules/DownloadIntegration.jsm");
+Integration.downloads.defineModuleGetter(
+  this,
+  "DownloadIntegration",
+  "resource://gre/modules/DownloadIntegration.jsm"
+);
 
 /**
  * This object is exposed directly to the consumers of this JavaScript module,
@@ -127,7 +141,7 @@ var Downloads = {
       source: aSource,
       target: aTarget,
     }).then(function D_SD_onSuccess(aDownload) {
-      if (aOptions && ("isPrivate" in aOptions)) {
+      if (aOptions && "isPrivate" in aOptions) {
         aDownload.source.isPrivate = aOptions.isPrivate;
       }
       return aDownload.start();
@@ -215,8 +229,11 @@ var Downloads = {
    * @rejects JavaScript exception.
    */
   getSummary(aType) {
-    if (aType != Downloads.PUBLIC && aType != Downloads.PRIVATE &&
-        aType != Downloads.ALL) {
+    if (
+      aType != Downloads.PUBLIC &&
+      aType != Downloads.PRIVATE &&
+      aType != Downloads.ALL
+    ) {
       throw new Error("Invalid aType argument.");
     }
 

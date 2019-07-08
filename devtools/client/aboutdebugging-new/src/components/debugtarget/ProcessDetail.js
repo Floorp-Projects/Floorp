@@ -20,7 +20,10 @@ class ProcessDetail extends PureComponent {
 
   render() {
     const { description } = this.props.target.details;
-    return dom.p({ className: "debug-target-item__subname ellipsis-text" }, description);
+    return dom.p(
+      { className: "debug-target-item__subname ellipsis-text" },
+      description
+    );
   }
 }
 

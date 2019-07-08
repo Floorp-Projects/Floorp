@@ -10,13 +10,16 @@
 
 // There are shutdown issues for which multiple rejections are left uncaught.
 // See bug 1018184 for resolving these issues.
-const { PromiseTestUtils } = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
 PromiseTestUtils.whitelistRejectionsGlobally(/Component not initialized/);
 PromiseTestUtils.whitelistRejectionsGlobally(/this\.worker is null/);
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/" +
-                 "test-stacktrace-location-debugger-link.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/" +
+  "test-stacktrace-location-debugger-link.html";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -33,8 +36,11 @@ async function testOpenInDebugger(hud, toolbox, text) {
   const framesNode = await waitFor(() => messageNode.querySelector(".frames"));
 
   const frameNodes = framesNode.querySelectorAll(".frame");
-  is(frameNodes.length, 3,
-    "The message does have the expected number of frames in the stacktrace");
+  is(
+    frameNodes.length,
+    3,
+    "The message does have the expected number of frames in the stacktrace"
+  );
 
   for (const frameNode of frameNodes) {
     await checkClickOnNode(hud, toolbox, frameNode);
@@ -47,7 +53,10 @@ async function testOpenInDebugger(hud, toolbox, text) {
 async function checkClickOnNode(hud, toolbox, frameNode) {
   info("checking click on node location");
   const onSourceInDebuggerOpened = once(hud.ui, "source-in-debugger-opened");
-  EventUtils.sendMouseEvent({ type: "mousedown" }, frameNode.querySelector(".location"));
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    frameNode.querySelector(".location")
+  );
   await onSourceInDebuggerOpened;
 
   const url = frameNode.querySelector(".filename").textContent;

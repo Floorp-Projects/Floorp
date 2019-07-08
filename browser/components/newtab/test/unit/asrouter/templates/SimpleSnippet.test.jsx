@@ -1,9 +1,9 @@
-import {mount} from "enzyme";
+import { mount } from "enzyme";
 import React from "react";
 import schema from "content-src/asrouter/templates/SimpleSnippet/SimpleSnippet.schema.json";
-import {SimpleSnippet} from "content-src/asrouter/templates/SimpleSnippet/SimpleSnippet.jsx";
+import { SimpleSnippet } from "content-src/asrouter/templates/SimpleSnippet/SimpleSnippet.jsx";
 
-const DEFAULT_CONTENT = {text: "foo"};
+const DEFAULT_CONTENT = { text: "foo" };
 
 describe("SimpleSnippet", () => {
   let sandbox;
@@ -39,7 +39,7 @@ describe("SimpleSnippet", () => {
   });
 
   it("should render .text", () => {
-    const wrapper = mountAndCheckProps({text: "bar"});
+    const wrapper = mountAndCheckProps({ text: "bar" });
     assert.equal(wrapper.find(".body").text(), "bar");
   });
   it("should not render title element if no .title prop is supplied", () => {
@@ -47,20 +47,42 @@ describe("SimpleSnippet", () => {
     assert.lengthOf(wrapper.find(".title"), 0);
   });
   it("should render .title", () => {
-    const wrapper = mountAndCheckProps({title: "Foo"});
-    assert.equal(wrapper.find(".title").text().trim(), "Foo");
+    const wrapper = mountAndCheckProps({ title: "Foo" });
+    assert.equal(
+      wrapper
+        .find(".title")
+        .text()
+        .trim(),
+      "Foo"
+    );
   });
   it("should render a light theme variant .icon", () => {
-    const wrapper = mountAndCheckProps({icon: "data:image/gif;base64,R0lGODl"});
-    assert.equal(wrapper.find(".icon-light-theme").prop("src"), "data:image/gif;base64,R0lGODl");
+    const wrapper = mountAndCheckProps({
+      icon: "data:image/gif;base64,R0lGODl",
+    });
+    assert.equal(
+      wrapper.find(".icon-light-theme").prop("src"),
+      "data:image/gif;base64,R0lGODl"
+    );
   });
   it("should render a dark theme variant .icon", () => {
-    const wrapper = mountAndCheckProps({icon_dark_theme: "data:image/gif;base64,R0lGODl"});
-    assert.equal(wrapper.find(".icon-dark-theme").prop("src"), "data:image/gif;base64,R0lGODl");
+    const wrapper = mountAndCheckProps({
+      icon_dark_theme: "data:image/gif;base64,R0lGODl",
+    });
+    assert.equal(
+      wrapper.find(".icon-dark-theme").prop("src"),
+      "data:image/gif;base64,R0lGODl"
+    );
   });
   it("should render a light theme variant .icon as fallback", () => {
-    const wrapper = mountAndCheckProps({icon_dark_theme: "", icon: "data:image/gif;base64,R0lGODp"});
-    assert.equal(wrapper.find(".icon-dark-theme").prop("src"), "data:image/gif;base64,R0lGODp");
+    const wrapper = mountAndCheckProps({
+      icon_dark_theme: "",
+      icon: "data:image/gif;base64,R0lGODp",
+    });
+    assert.equal(
+      wrapper.find(".icon-dark-theme").prop("src"),
+      "data:image/gif;base64,R0lGODp"
+    );
   });
   it("should render .button_label and default className", () => {
     const wrapper = mountAndCheckProps({
@@ -75,10 +97,13 @@ describe("SimpleSnippet", () => {
     assert.equal(button.text(), "Click here");
     assert.equal(button.prop("className"), "ASRouterButton secondary");
     assert.calledOnce(wrapper.props().onAction);
-    assert.calledWithExactly(wrapper.props().onAction, {type: "OPEN_APPLICATIONS_MENU", data: {args: "appMenu"}});
+    assert.calledWithExactly(wrapper.props().onAction, {
+      type: "OPEN_APPLICATIONS_MENU",
+      data: { args: "appMenu" },
+    });
   });
   it("should not wrap the main content if a section header is not present", () => {
-    const wrapper = mountAndCheckProps({text: "bar"});
+    const wrapper = mountAndCheckProps({ text: "bar" });
     assert.lengthOf(wrapper.find(".innerContentWrapper"), 0);
   });
   it("should wrap the main content if a section header is present", () => {
@@ -95,8 +120,18 @@ describe("SimpleSnippet", () => {
       section_title_text: "Messages from Mozilla",
     });
 
-    assert.equal(wrapper.find(".section-title .icon-light-theme").prop("style").backgroundImage, 'url("data:image/gif;base64,R0lGODl")');
-    assert.equal(wrapper.find(".section-title-text").text().trim(), "Messages from Mozilla");
+    assert.equal(
+      wrapper.find(".section-title .icon-light-theme").prop("style")
+        .backgroundImage,
+      'url("data:image/gif;base64,R0lGODl")'
+    );
+    assert.equal(
+      wrapper
+        .find(".section-title-text")
+        .text()
+        .trim(),
+      "Messages from Mozilla"
+    );
     // ensure there is no <a> when a section_title_url is not specified
     assert.lengthOf(wrapper.find(".section-title a"), 0);
   });
@@ -107,8 +142,18 @@ describe("SimpleSnippet", () => {
       section_title_text: "Messages from Mozilla",
     });
 
-    assert.equal(wrapper.find(".section-title .icon-dark-theme").prop("style").backgroundImage, 'url("data:image/gif;base64,R0lGODl")');
-    assert.equal(wrapper.find(".section-title-text").text().trim(), "Messages from Mozilla");
+    assert.equal(
+      wrapper.find(".section-title .icon-dark-theme").prop("style")
+        .backgroundImage,
+      'url("data:image/gif;base64,R0lGODl")'
+    );
+    assert.equal(
+      wrapper
+        .find(".section-title-text")
+        .text()
+        .trim(),
+      "Messages from Mozilla"
+    );
     // ensure there is no <a> when a section_title_url is not specified
     assert.lengthOf(wrapper.find(".section-title a"), 0);
   });
@@ -119,7 +164,10 @@ describe("SimpleSnippet", () => {
       section_title_url: "https://www.mozilla.org",
     });
 
-    assert.equal(wrapper.find(".section-title a").prop("href"), "https://www.mozilla.org");
+    assert.equal(
+      wrapper.find(".section-title a").prop("href"),
+      "https://www.mozilla.org"
+    );
   });
   it("should send an OPEN_URL action when button_url is defined and button is clicked", () => {
     const wrapper = mountAndCheckProps({
@@ -131,10 +179,13 @@ describe("SimpleSnippet", () => {
     button.simulate("click");
 
     assert.calledOnce(wrapper.props().onAction);
-    assert.calledWithExactly(wrapper.props().onAction, {type: "OPEN_URL", data: {args: "https://mozilla.org"}});
+    assert.calledWithExactly(wrapper.props().onAction, {
+      type: "OPEN_URL",
+      data: { args: "https://mozilla.org" },
+    });
   });
   it("should call props.onBlock and sendUserActionTelemetry when CTA button is clicked", () => {
-    const wrapper = mountAndCheckProps({text: "bar"});
+    const wrapper = mountAndCheckProps({ text: "bar" });
 
     wrapper.instance().onButtonClick();
 
@@ -143,7 +194,7 @@ describe("SimpleSnippet", () => {
   });
 
   it("should not call props.onBlock if do_not_autoblock is true", () => {
-    const wrapper = mountAndCheckProps({text: "bar", do_not_autoblock: true});
+    const wrapper = mountAndCheckProps({ text: "bar", do_not_autoblock: true });
 
     wrapper.instance().onButtonClick();
 
@@ -151,7 +202,7 @@ describe("SimpleSnippet", () => {
   });
 
   it("should not call sendUserActionTelemetry for preview message when CTA button is clicked", () => {
-    const wrapper = mountAndCheckProps({text: "bar"}, "preview");
+    const wrapper = mountAndCheckProps({ text: "bar" }, "preview");
 
     wrapper.instance().onButtonClick();
 

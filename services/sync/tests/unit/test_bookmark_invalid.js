@@ -1,5 +1,7 @@
-const {BookmarksEngine} = ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { BookmarksEngine } = ChromeUtils.import(
+  "resource://services-sync/engines/bookmarks.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 let engine;
 let store;
@@ -22,13 +24,17 @@ add_task(async function test_ignore_invalid_uri() {
   });
 
   // Now update moz_places with an invalid url.
-  await PlacesUtils.withConnectionWrapper("test_ignore_invalid_uri", async function(db) {
-    await db.execute(
-      `UPDATE moz_places SET url = :url, url_hash = hash(:url)
+  await PlacesUtils.withConnectionWrapper(
+    "test_ignore_invalid_uri",
+    async function(db) {
+      await db.execute(
+        `UPDATE moz_places SET url = :url, url_hash = hash(:url)
        WHERE id = (SELECT b.fk FROM moz_bookmarks b
                    WHERE b.guid = :guid)`,
-      { guid: bmInfo.guid, url: "<invalid url>" });
-  });
+        { guid: bmInfo.guid, url: "<invalid url>" }
+      );
+    }
+  );
 
   // Ensure that this doesn't throw even though the DB is now in a bad state (a
   // bookmark has an illegal url).
@@ -36,7 +42,9 @@ add_task(async function test_ignore_invalid_uri() {
 });
 
 add_task(async function test_ignore_missing_uri() {
-  _("Ensure that we don't die with a bookmark referencing an invalid bookmark id.");
+  _(
+    "Ensure that we don't die with a bookmark referencing an invalid bookmark id."
+  );
 
   // First create a valid bookmark.
   let bmInfo = await PlacesUtils.bookmarks.insert({
@@ -46,12 +54,16 @@ add_task(async function test_ignore_missing_uri() {
   });
 
   // Now update moz_bookmarks to reference a non-existing places ID
-  await PlacesUtils.withConnectionWrapper("test_ignore_missing_uri", async function(db) {
-    await db.execute(
-      `UPDATE moz_bookmarks SET fk = 999999
-       WHERE guid = :guid`
-      , { guid: bmInfo.guid });
-  });
+  await PlacesUtils.withConnectionWrapper(
+    "test_ignore_missing_uri",
+    async function(db) {
+      await db.execute(
+        `UPDATE moz_bookmarks SET fk = 999999
+       WHERE guid = :guid`,
+        { guid: bmInfo.guid }
+      );
+    }
+  );
 
   // Ensure that this doesn't throw even though the DB is now in a bad state (a
   // bookmark has an illegal url).

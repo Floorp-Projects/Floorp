@@ -8,17 +8,17 @@ add_task(async function() {
   await createCorruptDb("places.sqlite");
 
   let count = Services.telemetry
-                      .getHistogramById("PLACES_DATABASE_CORRUPTION_HANDLING_STAGE")
-                      .snapshot()
-                      .values[3];
+    .getHistogramById("PLACES_DATABASE_CORRUPTION_HANDLING_STAGE")
+    .snapshot().values[3];
   Assert.equal(count, undefined, "There should be no telemetry");
 
-  Assert.equal(PlacesUtils.history.databaseStatus,
-               PlacesUtils.history.DATABASE_STATUS_CORRUPT);
+  Assert.equal(
+    PlacesUtils.history.databaseStatus,
+    PlacesUtils.history.DATABASE_STATUS_CORRUPT
+  );
 
   count = Services.telemetry
-                  .getHistogramById("PLACES_DATABASE_CORRUPTION_HANDLING_STAGE")
-                  .snapshot()
-                  .values[3];
+    .getHistogramById("PLACES_DATABASE_CORRUPTION_HANDLING_STAGE")
+    .snapshot().values[3];
   Assert.equal(count, 1, "Telemetry should have been added");
 });

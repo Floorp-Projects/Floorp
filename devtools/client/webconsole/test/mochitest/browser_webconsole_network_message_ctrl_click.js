@@ -3,8 +3,9 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-"test/mochitest/test-console.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-console.html";
 
 add_task(async function() {
   // Enable net messages in the console for this test.
@@ -27,10 +28,14 @@ add_task(async function() {
   info("Cmd/Ctrl click on the message");
   const urlObject = message.querySelector(".url");
 
-  EventUtils.sendMouseEvent({
-    type: "click",
-    [isMacOS ? "metaKey" : "ctrlKey"]: true,
-  }, urlObject, hud.ui.window);
+  EventUtils.sendMouseEvent(
+    {
+      type: "click",
+      [isMacOS ? "metaKey" : "ctrlKey"]: true,
+    },
+    urlObject,
+    hud.ui.window
+  );
 
   info("Opening the URL of the message on a new tab");
   const newTab = await tabLoaded;
@@ -41,17 +46,22 @@ add_task(async function() {
   info("Remove the new tab and select the previous tab back");
   gBrowser.removeTab(newTab);
   gBrowser.selectedTab = currentTab;
-}
-);
+});
 
 /**
  * Simple helper to wrap a tab load listener in a promise.
  */
 function listenToTabLoad() {
-  return new Promise((resolve) => {
-    gBrowser.tabContainer.addEventListener("TabOpen", function(evt) {
-      const newTab = evt.target;
-      BrowserTestUtils.browserLoaded(newTab.linkedBrowser).then(() => resolve(newTab));
-    }, {capture: true, once: true});
+  return new Promise(resolve => {
+    gBrowser.tabContainer.addEventListener(
+      "TabOpen",
+      function(evt) {
+        const newTab = evt.target;
+        BrowserTestUtils.browserLoaded(newTab.linkedBrowser).then(() =>
+          resolve(newTab)
+        );
+      },
+      { capture: true, once: true }
+    );
   });
 }

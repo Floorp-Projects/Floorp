@@ -14,17 +14,23 @@ const { Constructor: CC } = Components;
 
 // Print allocation count if DEBUG_DEVTOOLS_ALLOCATIONS is set to "normal",
 // and allocation sites if DEBUG_DEVTOOLS_ALLOCATIONS is set to "verbose".
-const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+const env = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
 const DEBUG_ALLOCATIONS = env.get("DEBUG_DEVTOOLS_ALLOCATIONS");
 if (DEBUG_ALLOCATIONS) {
   // Use a custom loader with `invisibleToDebugger` flag for the allocation tracker
   // as it instantiates custom Debugger API instances and has to be running in a distinct
   // compartments from DevTools and system scopes (JSMs, XPCOM,...)
-  const { DevToolsLoader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+  const { DevToolsLoader } = ChromeUtils.import(
+    "resource://devtools/shared/Loader.jsm"
+  );
   const loader = new DevToolsLoader();
   loader.invisibleToDebugger = true;
 
-  const { allocationTracker } = loader.require("devtools/shared/test-helpers/allocation-tracker");
+  const { allocationTracker } = loader.require(
+    "devtools/shared/test-helpers/allocation-tracker"
+  );
   const tracker = allocationTracker({ watchAllGlobals: true });
   registerCleanupFunction(() => {
     if (DEBUG_ALLOCATIONS == "normal") {
@@ -36,11 +42,15 @@ if (DEBUG_ALLOCATIONS) {
   });
 }
 
-const {ScratchpadManager} = ChromeUtils.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
-const {loader, require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { ScratchpadManager } = ChromeUtils.import(
+  "resource://devtools/client/scratchpad/scratchpad-manager.jsm"
+);
+const { loader, require } = ChromeUtils.import(
+  "resource://devtools/shared/Loader.jsm"
+);
 
-const {gDevTools} = require("devtools/client/framework/devtools");
-const {TargetFactory} = require("devtools/client/framework/target");
+const { gDevTools } = require("devtools/client/framework/devtools");
+const { TargetFactory } = require("devtools/client/framework/target");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 // This is overridden in files that load shared-head via loadSubScript.
@@ -51,19 +61,26 @@ const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 const CHROME_URL_ROOT = TEST_DIR + "/";
-const URL_ROOT = CHROME_URL_ROOT.replace("chrome://mochitests/content/",
-                                         "http://example.com/");
-const URL_ROOT_SSL = CHROME_URL_ROOT.replace("chrome://mochitests/content/",
-                                             "https://example.com/");
+const URL_ROOT = CHROME_URL_ROOT.replace(
+  "chrome://mochitests/content/",
+  "http://example.com/"
+);
+const URL_ROOT_SSL = CHROME_URL_ROOT.replace(
+  "chrome://mochitests/content/",
+  "https://example.com/"
+);
 
 try {
   Services.scriptloader.loadSubScript(
-    "chrome://mochitests/content/browser/devtools/client/shared/test/telemetry-test-helpers.js", this);
+    "chrome://mochitests/content/browser/devtools/client/shared/test/telemetry-test-helpers.js",
+    this
+  );
 } catch (e) {
-  ok(false,
+  ok(
+    false,
     "MISSING DEPENDENCY ON telemetry-test-helpers.js\n" +
-    "Please add the following line in browser.ini:\n" +
-    "  !/devtools/client/shared/test/telemetry-test-helpers.js\n"
+      "Please add the following line in browser.ini:\n" +
+      "  !/devtools/client/shared/test/telemetry-test-helpers.js\n"
   );
   throw e;
 }
@@ -77,12 +94,17 @@ waitForExplicitFinish();
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 
 registerCleanupFunction(function() {
-  if (DevToolsUtils.assertionFailureCount !==
-      EXPECTED_DTU_ASSERT_FAILURE_COUNT) {
-    ok(false,
-      "Should have had the expected number of DevToolsUtils.assert() failures."
-      + " Expected " + EXPECTED_DTU_ASSERT_FAILURE_COUNT
-      + ", got " + DevToolsUtils.assertionFailureCount);
+  if (
+    DevToolsUtils.assertionFailureCount !== EXPECTED_DTU_ASSERT_FAILURE_COUNT
+  ) {
+    ok(
+      false,
+      "Should have had the expected number of DevToolsUtils.assert() failures." +
+        " Expected " +
+        EXPECTED_DTU_ASSERT_FAILURE_COUNT +
+        ", got " +
+        DevToolsUtils.assertionFailureCount
+    );
   }
 });
 
@@ -113,7 +135,8 @@ var waitForTime = DevToolsUtils.waitForTime;
 
 function loadFrameScriptUtils(browser = gBrowser.selectedBrowser) {
   let mm = browser.messageManager;
-  const frameURL = "chrome://mochitests/content/browser/devtools/client/shared/test/frame-script-utils.js";
+  const frameURL =
+    "chrome://mochitests/content/browser/devtools/client/shared/test/frame-script-utils.js";
   info("Loading the helper frame script " + frameURL);
   mm.loadFrameScript(frameURL, false);
   SimpleTest.registerCleanupFunction(() => {
@@ -290,17 +313,21 @@ function waitForNEvents(target, eventName, numTimes, useCapture = false) {
       ["addListener", "removeListener"],
       ["addMessageListener", "removeMessageListener"],
     ]) {
-      if ((add in target) && (remove in target)) {
-        target[add](eventName, function onEvent(...args) {
-          if (typeof info === "function") {
-            info("Got event: '" + eventName + "' on " + target + ".");
-          }
+      if (add in target && remove in target) {
+        target[add](
+          eventName,
+          function onEvent(...args) {
+            if (typeof info === "function") {
+              info("Got event: '" + eventName + "' on " + target + ".");
+            }
 
-          if (++count == numTimes) {
-            target[remove](eventName, onEvent, useCapture);
-            resolve(...args);
-          }
-        }, useCapture);
+            if (++count == numTimes) {
+              target[remove](eventName, onEvent, useCapture);
+              resolve(...args);
+            }
+          },
+          useCapture
+        );
         break;
       }
     }
@@ -322,9 +349,9 @@ function waitForNEvents(target, eventName, numTimes, useCapture = false) {
  * @return A promise that resolves when the event has been handled
  */
 function waitForDOM(target, selector, expectedLength = 1) {
-  return new Promise((resolve) => {
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
+  return new Promise(resolve => {
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
         const elements = mutation.target.querySelectorAll(selector);
 
         if (elements.length === expectedLength) {
@@ -456,6 +483,8 @@ var closeTabAndToolbox = async function(tab = gBrowser.selectedTab) {
   }
 
   await removeTab(tab);
+
+  await new Promise(resolve => setTimeout(resolve, 0));
 };
 
 /**
@@ -571,8 +600,14 @@ function waitForContextMenu(popup, button, onShown, onHidden) {
 
 function synthesizeContextMenuEvent(el) {
   el.scrollIntoView();
-  const eventDetails = {type: "contextmenu", button: 2};
-  EventUtils.synthesizeMouse(el, 5, 2, eventDetails, el.ownerDocument.defaultView);
+  const eventDetails = { type: "contextmenu", button: 2 };
+  EventUtils.synthesizeMouse(
+    el,
+    5,
+    2,
+    eventDetails,
+    el.ownerDocument.defaultView
+  );
 }
 
 /**
@@ -596,10 +631,8 @@ function waitForClipboardPromise(setup, expected) {
  * @return {Promise} resolves when the preferences have been updated
  */
 function pushPref(preferenceName, value) {
-  return new Promise(resolve => {
-    const options = {"set": [[preferenceName, value]]};
-    SpecialPowers.pushPrefEnv(options, resolve);
-  });
+  const options = { set: [[preferenceName, value]] };
+  return SpecialPowers.pushPrefEnv(options);
 }
 
 /**
@@ -667,7 +700,9 @@ function waitForTitleChange(toolbox) {
  * @returns {HttpServer}
  */
 function createTestHTTPServer() {
-  const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+  const { HttpServer } = ChromeUtils.import(
+    "resource://testing-common/httpd.js"
+  );
   const server = new HttpServer();
 
   registerCleanupFunction(async function cleanup() {
@@ -694,7 +729,7 @@ async function injectEventUtilsInContentTask(browser) {
       return;
     }
 
-    const EventUtils = this.EventUtils = {};
+    const EventUtils = (this.EventUtils = {});
 
     EventUtils.window = {};
     EventUtils.parent = EventUtils.window;
@@ -706,19 +741,32 @@ async function injectEventUtilsInContentTask(browser) {
     EventUtils.navigator = content.navigator;
     EventUtils.KeyboardEvent = content.KeyboardEvent;
 
-    EventUtils.synthesizeClick = element => new Promise(resolve => {
-      element.addEventListener("click", function() {
-        resolve();
-      }, {once: true});
+    EventUtils.synthesizeClick = element =>
+      new Promise(resolve => {
+        element.addEventListener(
+          "click",
+          function() {
+            resolve();
+          },
+          { once: true }
+        );
 
-      EventUtils.synthesizeMouseAtCenter(element,
-        { type: "mousedown", isSynthesized: false }, content);
-      EventUtils.synthesizeMouseAtCenter(element,
-        { type: "mouseup", isSynthesized: false }, content);
-    });
+        EventUtils.synthesizeMouseAtCenter(
+          element,
+          { type: "mousedown", isSynthesized: false },
+          content
+        );
+        EventUtils.synthesizeMouseAtCenter(
+          element,
+          { type: "mouseup", isSynthesized: false },
+          content
+        );
+      });
 
     Services.scriptloader.loadSubScript(
-      "chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+      "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
+      EventUtils
+    );
   });
 }
 
@@ -737,16 +785,20 @@ async function injectEventUtilsInContentTask(browser) {
 async function registerActorInContentProcess(url, options) {
   function convertChromeToFile(uri) {
     return Cc["@mozilla.org/chrome/chrome-registry;1"]
-             .getService(Ci.nsIChromeRegistry)
-             .convertChromeURL(Services.io.newURI(uri)).spec;
+      .getService(Ci.nsIChromeRegistry)
+      .convertChromeURL(Services.io.newURI(uri)).spec;
   }
   // chrome://mochitests URI is registered only in the parent process, so convert these
   // URLs to file:// one in order to work in the content processes
   url = url.startsWith("chrome://mochitests") ? convertChromeToFile(url) : url;
   return ContentTask.spawn(gBrowser.selectedBrowser, { url, options }, args => {
     // eslint-disable-next-line no-shadow
-    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-    const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
+    const { require } = ChromeUtils.import(
+      "resource://devtools/shared/Loader.jsm"
+    );
+    const {
+      ActorRegistry,
+    } = require("devtools/server/actors/utils/actor-registry");
     ActorRegistry.registerModule(args.url, args.options);
   });
 }

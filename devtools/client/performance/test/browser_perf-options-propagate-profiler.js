@@ -8,9 +8,18 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { PROFILER_BUFFER_SIZE_PREF, PROFILER_SAMPLE_RATE_PREF } = require("devtools/client/performance/test/helpers/prefs");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
+const {
+  PROFILER_BUFFER_SIZE_PREF,
+  PROFILER_SAMPLE_RATE_PREF,
+} = require("devtools/client/performance/test/helpers/prefs");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
   const { panel, toolbox } = await initPerformanceInNewTab({

@@ -19,18 +19,20 @@ add_task(async function() {
   Services.prefs.setBoolPref(PREF, true);
 
   const jar = getJar(getRootDirectory(gTestPath));
-  const dir = jar ?
-            extractJarToTmp(jar) :
-            getChromeDir(getResolvedURI(gTestPath));
+  const dir = jar
+    ? extractJarToTmp(jar)
+    : getChromeDir(getResolvedURI(gTestPath));
 
   dir.append(TEST_FILE);
   const uri = Services.io.newFileURI(dir);
 
   // Open tab with correct remote type so we don't switch processes when we load
   // the file:// URI, otherwise we won't get the same web console.
-  const remoteType = E10SUtils.getRemoteTypeForURI(uri.spec,
-                                                   gMultiProcessBrowser,
-                                                   gFissionBrowser);
+  const remoteType = E10SUtils.getRemoteTypeForURI(
+    uri.spec,
+    gMultiProcessBrowser,
+    gFissionBrowser
+  );
   const { browser } = await loadTab("about:blank", remoteType);
 
   hud = await openConsole();
@@ -49,25 +51,27 @@ add_task(async function() {
 function testMessages() {
   return waitForMessages({
     webconsole: hud,
-    messages: [{
-      text: "running network console logging tests",
-      category: CATEGORY_WEBDEV,
-      severity: SEVERITY_LOG,
-    },
-    {
-      text: "test-network.html",
-      category: CATEGORY_NETWORK,
-      severity: SEVERITY_LOG,
-    },
-    {
-      text: "test-image.png",
-      category: CATEGORY_NETWORK,
-      severity: SEVERITY_LOG,
-    },
-    {
-      text: "testscript.js",
-      category: CATEGORY_NETWORK,
-      severity: SEVERITY_LOG,
-    }],
+    messages: [
+      {
+        text: "running network console logging tests",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+      },
+      {
+        text: "test-network.html",
+        category: CATEGORY_NETWORK,
+        severity: SEVERITY_LOG,
+      },
+      {
+        text: "test-image.png",
+        category: CATEGORY_NETWORK,
+        severity: SEVERITY_LOG,
+      },
+      {
+        text: "testscript.js",
+        category: CATEGORY_NETWORK,
+        severity: SEVERITY_LOG,
+      },
+    ],
   });
 }

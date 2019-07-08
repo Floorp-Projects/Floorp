@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Import common head.
 {
@@ -32,22 +32,25 @@ function expectNotifications(skipDescendants, checkAllArgs) {
       if (name.startsWith("onItem")) {
         return (...origArgs) => {
           let args = Array.from(origArgs, arg => {
-            if (arg && arg instanceof Ci.nsIURI)
+            if (arg && arg instanceof Ci.nsIURI) {
               return new URL(arg.spec);
-            if (arg && typeof(arg) == "number" && arg >= Date.now() * 1000)
+            }
+            if (arg && typeof arg == "number" && arg >= Date.now() * 1000) {
               return PlacesUtils.toDate(arg);
+            }
             return arg;
           });
           if (checkAllArgs) {
             notifications.push({ name, arguments: args });
           } else {
-            notifications.push({ name, arguments: { guid: args[5] }});
+            notifications.push({ name, arguments: { guid: args[5] } });
           }
         };
       }
 
-      if (name in target)
+      if (name in target) {
         return target[name];
+      }
       return undefined;
     },
   });
@@ -57,7 +60,7 @@ function expectNotifications(skipDescendants, checkAllArgs) {
 
 function expectPlacesObserverNotifications(types, checkAllArgs) {
   let notifications = [];
-  let listener = (events) => {
+  let listener = events => {
     for (let event of events) {
       notifications.push({
         type: event.type,

@@ -1,12 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-  * License, v. 2.0. If a copy of the MPL was not distributed with this
-  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
 add_task(async function() {
   info("Check private browsing button existence and functionality");
-  CustomizableUI.addWidgetToArea("privatebrowsing-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "privatebrowsing-button",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
   registerCleanupFunction(() => CustomizableUI.reset());
 
   await waitForOverflowButtonShown();
@@ -21,12 +24,22 @@ add_task(async function() {
     observe(aSubject, aTopic, aData) {
       if (aTopic == "domwindowopened") {
         privateWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
-        privateWindow.addEventListener("load", function() {
-          is(privateWindow.location.href, AppConstants.BROWSER_CHROME_URL,
-             "A new browser window was opened");
-          ok(PrivateBrowsingUtils.isWindowPrivate(privateWindow), "Window is private");
-          windowWasHandled = true;
-        }, {once: true});
+        privateWindow.addEventListener(
+          "load",
+          function() {
+            is(
+              privateWindow.location.href,
+              AppConstants.BROWSER_CHROME_URL,
+              "A new browser window was opened"
+            );
+            ok(
+              PrivateBrowsingUtils.isWindowPrivate(privateWindow),
+              "Window is private"
+            );
+            windowWasHandled = true;
+          },
+          { once: true }
+        );
       }
     },
   };

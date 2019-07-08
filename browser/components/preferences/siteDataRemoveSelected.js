@@ -6,7 +6,6 @@
 "use strict";
 
 let gSiteDataRemoveSelected = {
-
   init() {
     let hosts = window.arguments[0].hosts;
     hosts.sort();
@@ -20,8 +19,12 @@ let gSiteDataRemoveSelected = {
       fragment.appendChild(listItem);
     }
     list.appendChild(fragment);
-    document.addEventListener("dialogaccept", function() { gSiteDataRemoveSelected.ondialogaccept(); });
-    document.addEventListener("dialogcancel", function() { gSiteDataRemoveSelected.ondialogcancel(); });
+    document.addEventListener("dialogaccept", function() {
+      gSiteDataRemoveSelected.ondialogaccept();
+    });
+    document.addEventListener("dialogcancel", function() {
+      gSiteDataRemoveSelected.ondialogcancel();
+    });
   },
 
   ondialogaccept() {

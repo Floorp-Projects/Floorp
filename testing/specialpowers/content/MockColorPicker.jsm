@@ -14,12 +14,15 @@ Cu.forcePermissiveCOWs();
 
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID = "";
-var newClassID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID();
+var newClassID = Cc["@mozilla.org/uuid-generator;1"]
+  .getService(Ci.nsIUUIDGenerator)
+  .generateUUID();
 var newFactory = function(window) {
   return {
     createInstance(aOuter, aIID) {
-      if (aOuter)
+      if (aOuter) {
         throw Cr.NS_ERROR_NO_AGGREGATION;
+      }
       return new MockColorPickerInstance(window).QueryInterface(aIID);
     },
     lockFactory(aLock) {
@@ -38,8 +41,10 @@ var MockColorPicker = {
         oldClassID = registrar.contractIDToCID(CONTRACT_ID);
       } catch (ex) {
         oldClassID = "";
-        dump("TEST-INFO | can't get colorpicker registered component, " +
-             "assuming there is none");
+        dump(
+          "TEST-INFO | can't get colorpicker registered component, " +
+            "assuming there is none"
+        );
       }
       registrar.registerFactory(newClassID, "", CONTRACT_ID, this.factory);
     }
@@ -95,8 +100,12 @@ MockColorPickerInstance.prototype = {
           result = MockColorPicker.returnColor;
         }
       } catch (ex) {
-        dump("TEST-UNEXPECTED-FAIL | Exception in MockColorPicker.jsm open() " +
-             "method: " + ex + "\n");
+        dump(
+          "TEST-UNEXPECTED-FAIL | Exception in MockColorPicker.jsm open() " +
+            "method: " +
+            ex +
+            "\n"
+        );
       }
       if (aColorPickerShownCallback) {
         aColorPickerShownCallback.done(result);

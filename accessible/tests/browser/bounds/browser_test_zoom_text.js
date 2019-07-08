@@ -15,18 +15,33 @@ async function runTests(browser, accDoc) {
 
     let contentDPR = await getContentDPR(browser);
     let [x, y, width, height] = getBounds(textNode, contentDPR);
-    testTextBounds(hyperTextNode, 0, -1, [x, y, width, height],
-                   COORDTYPE_SCREEN_RELATIVE);
+    testTextBounds(
+      hyperTextNode,
+      0,
+      -1,
+      [x, y, width, height],
+      COORDTYPE_SCREEN_RELATIVE
+    );
   }
 
   async function testEmptyInputNode(id) {
     let inputNode = findAccessibleChildByID(accDoc, id);
 
     let [x, y, width, height] = getBounds(inputNode);
-    testTextBounds(inputNode, 0, -1, [x, y, width, height],
-                   COORDTYPE_SCREEN_RELATIVE);
-    testTextBounds(inputNode, 0, 0, [x, y, width, height],
-                   COORDTYPE_SCREEN_RELATIVE);
+    testTextBounds(
+      inputNode,
+      0,
+      -1,
+      [x, y, width, height],
+      COORDTYPE_SCREEN_RELATIVE
+    );
+    testTextBounds(
+      inputNode,
+      0,
+      0,
+      [x, y, width, height],
+      COORDTYPE_SCREEN_RELATIVE
+    );
   }
 
   loadFrameScripts(browser, { name: "layout.js", dir: MOCHITESTS_DIR });
@@ -49,8 +64,10 @@ async function runTests(browser, accDoc) {
 /**
  * Test the text range boundary when page is zoomed
  */
-addAccessibleTask(`
+addAccessibleTask(
+  `
   <p id='p1' style='font-family: monospace;'>Tilimilitryamdiya</p>
   <p id='p2'>ل</p>
-  <form><input id='i1' /></form>`, runTests
+  <form><input id='i1' /></form>`,
+  runTests
 );

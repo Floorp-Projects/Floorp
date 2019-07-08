@@ -6,10 +6,18 @@
 
 var EXPORTED_SYMBOLS = ["Target"];
 
-const {Domain} = ChromeUtils.import("chrome://remote/content/domains/Domain.jsm");
-const {TabManager} = ChromeUtils.import("chrome://remote/content/WindowManager.jsm");
-const {TabSession} = ChromeUtils.import("chrome://remote/content/sessions/TabSession.jsm");
-const {ContextualIdentityService} = ChromeUtils.import("resource://gre/modules/ContextualIdentityService.jsm");
+const { Domain } = ChromeUtils.import(
+  "chrome://remote/content/domains/Domain.jsm"
+);
+const { TabManager } = ChromeUtils.import(
+  "chrome://remote/content/WindowManager.jsm"
+);
+const { TabSession } = ChromeUtils.import(
+  "chrome://remote/content/sessions/TabSession.jsm"
+);
+const { ContextualIdentityService } = ChromeUtils.import(
+  "resource://gre/modules/ContextualIdentityService.jsm"
+);
 
 let sessionIds = 1;
 let browserContextIds = 1;
@@ -29,7 +37,9 @@ class Target extends Domain {
   }
 
   createBrowserContext() {
-    const identity = ContextualIdentityService.create("remote-agent-" + (browserContextIds++));
+    const identity = ContextualIdentityService.create(
+      "remote-agent-" + browserContextIds++
+    );
     return { browserContextId: identity.userContextId };
   }
 
@@ -75,9 +85,11 @@ class Target extends Domain {
     const tab = TabManager.addTab({ userContextId: browserContextId });
     const target = await onTarget;
     if (tab.linkedBrowser != target.browser) {
-      throw new Error("Unexpected tab opened: " + tab.linkedBrowser.currentURI.spec);
+      throw new Error(
+        "Unexpected tab opened: " + tab.linkedBrowser.currentURI.spec
+      );
     }
-    return {targetId: target.id};
+    return { targetId: target.id };
   }
 
   closeTarget({ targetId }) {
@@ -93,7 +105,12 @@ class Target extends Domain {
       return new Error(`Unable to find target with id '${targetId}'`);
     }
 
-    const session = new TabSession(this.session.connection, target, sessionIds++, this.session);
+    const session = new TabSession(
+      this.session.connection,
+      target,
+      sessionIds++,
+      this.session
+    );
     this.emit("Target.attachedToTarget", {
       targetInfo: {
         type: "page",

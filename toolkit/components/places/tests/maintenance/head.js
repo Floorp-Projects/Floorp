@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Import common head.
 {
@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 async function createCorruptDb(filename) {
   let path = OS.Path.join(OS.Constants.Path.profileDir, filename);
-  await OS.File.remove(path, {ignoreAbsent: true});
+  await OS.File.remove(path, { ignoreAbsent: true });
   // Create a corrupt database.
   let dir = await OS.File.getCurrentDirectory();
   let src = OS.Path.join(dir, "corruptDB.sqlite");
@@ -51,9 +51,18 @@ async function test_database_replacement(src, filename, shouldClone, dbStatus) {
 
   // Ensure that our databases don't exist yet.
   let dest = OS.Path.join(OS.Constants.Path.profileDir, filename);
-  Assert.ok(!await OS.File.exists(dest), `"${filename} should not exist initially`);
-  let corrupt = OS.Path.join(OS.Constants.Path.profileDir, `${filename}.corrupt`);
-  Assert.ok(!await OS.File.exists(corrupt), `${filename}.corrupt should not exist initially`);
+  Assert.ok(
+    !(await OS.File.exists(dest)),
+    `"${filename} should not exist initially`
+  );
+  let corrupt = OS.Path.join(
+    OS.Constants.Path.profileDir,
+    `${filename}.corrupt`
+  );
+  Assert.ok(
+    !(await OS.File.exists(corrupt)),
+    `${filename}.corrupt should not exist initially`
+  );
 
   let dir = await OS.File.getCurrentDirectory();
   src = OS.Path.join(dir, src);
@@ -67,7 +76,10 @@ async function test_database_replacement(src, filename, shouldClone, dbStatus) {
   await db.close();
 
   // Open the database with Places.
-  Services.prefs.setCharPref("places.database.replaceDatabaseOnStartup", filename);
+  Services.prefs.setCharPref(
+    "places.database.replaceDatabaseOnStartup",
+    filename
+  );
   Assert.equal(PlacesUtils.history.databaseStatus, dbStatus);
 
   Assert.ok(await OS.File.exists(dest), "The database should exist");
@@ -79,13 +91,18 @@ async function test_database_replacement(src, filename, shouldClone, dbStatus) {
   }
 
   // Check the new database is really a new one.
-  await Assert.rejects(db.execute(`DELETE FROM not_cloned`),
-                       /no such table/,
-                       "The database should have been replaced");
+  await Assert.rejects(
+    db.execute(`DELETE FROM not_cloned`),
+    /no such table/,
+    "The database should have been replaced"
+  );
   await db.close();
 
   if (willClone) {
-    Assert.ok(!await OS.File.exists(corrupt), "The corrupt db should not exist");
+    Assert.ok(
+      !(await OS.File.exists(corrupt)),
+      "The corrupt db should not exist"
+    );
   } else {
     Assert.ok(await OS.File.exists(corrupt), "The corrupt db should exist");
   }

@@ -6,7 +6,10 @@
 
 const Services = require("Services");
 const ElementStyle = require("devtools/client/inspector/rules/models/element-style");
-const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  createElement,
+} = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const EventEmitter = require("devtools/shared/event-emitter");
 
@@ -30,15 +33,39 @@ const {
 const RulesApp = createFactory(require("./components/RulesApp"));
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const INSPECTOR_L10N =
-  new LocalizationHelper("devtools/client/locales/inspector.properties");
+const INSPECTOR_L10N = new LocalizationHelper(
+  "devtools/client/locales/inspector.properties"
+);
 
 loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
-loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
-loader.lazyRequireGetter(this, "ClassList", "devtools/client/inspector/rules/models/class-list");
-loader.lazyRequireGetter(this, "advanceValidate", "devtools/client/inspector/shared/utils", true);
-loader.lazyRequireGetter(this, "AutocompletePopup", "devtools/client/shared/autocomplete-popup");
-loader.lazyRequireGetter(this, "InplaceEditor", "devtools/client/shared/inplace-editor", true);
+loader.lazyRequireGetter(
+  this,
+  "gDevTools",
+  "devtools/client/framework/devtools",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "ClassList",
+  "devtools/client/inspector/rules/models/class-list"
+);
+loader.lazyRequireGetter(
+  this,
+  "advanceValidate",
+  "devtools/client/inspector/shared/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "AutocompletePopup",
+  "devtools/client/shared/autocomplete-popup"
+);
+loader.lazyRequireGetter(
+  this,
+  "InplaceEditor",
+  "devtools/client/shared/inplace-editor",
+  true
+);
 
 const PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 
@@ -61,14 +88,20 @@ class RulesView {
     this.onOpenSourceLink = this.onOpenSourceLink.bind(this);
     this.onSelection = this.onSelection.bind(this);
     this.onSetClassState = this.onSetClassState.bind(this);
-    this.onToggleClassPanelExpanded = this.onToggleClassPanelExpanded.bind(this);
+    this.onToggleClassPanelExpanded = this.onToggleClassPanelExpanded.bind(
+      this
+    );
     this.onToggleDeclaration = this.onToggleDeclaration.bind(this);
     this.onTogglePrintSimulation = this.onTogglePrintSimulation.bind(this);
     this.onTogglePseudoClass = this.onTogglePseudoClass.bind(this);
     this.onToolChanged = this.onToolChanged.bind(this);
-    this.onToggleSelectorHighlighter = this.onToggleSelectorHighlighter.bind(this);
+    this.onToggleSelectorHighlighter = this.onToggleSelectorHighlighter.bind(
+      this
+    );
     this.showDeclarationNameEditor = this.showDeclarationNameEditor.bind(this);
-    this.showDeclarationValueEditor = this.showDeclarationValueEditor.bind(this);
+    this.showDeclarationValueEditor = this.showDeclarationValueEditor.bind(
+      this
+    );
     this.showNewDeclarationEditor = this.showNewDeclarationEditor.bind(this);
     this.showSelectorEditor = this.showSelectorEditor.bind(this);
     this.updateClassList = this.updateClassList.bind(this);
@@ -108,12 +141,16 @@ class RulesView {
 
     this.initPrintSimulation();
 
-    const provider = createElement(Provider, {
-      id: "ruleview",
-      key: "ruleview",
-      store: this.store,
-      title: INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
-    }, rulesApp);
+    const provider = createElement(
+      Provider,
+      {
+        id: "ruleview",
+        key: "ruleview",
+        store: this.store,
+        title: INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
+      },
+      rulesApp
+    );
 
     // Exposes the provider to let inspector.js use it in setupSidebar.
     this.provider = provider;
@@ -130,8 +167,13 @@ class RulesView {
     // Show the toggle button if:
     // - Print simulation is supported for the current target.
     // - Not debugging content document.
-    if (await target.actorHasMethod("emulation", "getIsPrintSimulationEnabled") &&
-        !target.chrome) {
+    if (
+      (await target.actorHasMethod(
+        "emulation",
+        "getIsPrintSimulationEnabled"
+      )) &&
+      !target.chrome
+    ) {
       this.store.dispatch(updatePrintSimulationHidden(false));
     } else {
       this.store.dispatch(updatePrintSimulationHidden(true));
@@ -248,7 +290,9 @@ class RulesView {
   async getGridlineNames() {
     const gridLineNames = { cols: [], rows: [] };
     const layoutInspector = await this.inspector.walker.getLayoutInspector();
-    const gridFront = await layoutInspector.getCurrentGrid(this.selection.nodeFront);
+    const gridFront = await layoutInspector.getCurrentGrid(
+      this.selection.nodeFront
+    );
 
     if (gridFront) {
       const gridFragments = gridFront.gridFragments;
@@ -285,7 +329,9 @@ class RulesView {
 
     try {
       const front = this.inspector.inspector;
-      this._selectorHighlighter = await front.getHighlighterByType("SelectorHighlighter");
+      this._selectorHighlighter = await front.getHighlighterByType(
+        "SelectorHighlighter"
+      );
       return this._selectorHighlighter;
     } catch (e) {
       // The SelectorHighlighter type could not be created in the
@@ -298,9 +344,13 @@ class RulesView {
    * Returns true if the rules panel is visible, and false otherwise.
    */
   isPanelVisible() {
-    return this.inspector && this.inspector.toolbox && this.inspector.sidebar &&
-           this.inspector.toolbox.currentToolId === "inspector" &&
-           this.inspector.sidebar.getCurrentTabID() === "newruleview";
+    return (
+      this.inspector &&
+      this.inspector.toolbox &&
+      this.inspector.sidebar &&
+      this.inspector.toolbox.currentToolId === "inspector" &&
+      this.inspector.sidebar.getCurrentTabID() === "newruleview"
+    );
   }
 
   /**
@@ -333,7 +383,10 @@ class RulesView {
       return;
     }
 
-    const toolbox = await gDevTools.showToolbox(this.inspector.target, "styleeditor");
+    const toolbox = await gDevTools.showToolbox(
+      this.inspector.target,
+      "styleeditor"
+    );
     const styleEditor = toolbox.getCurrentPanel();
     if (!styleEditor) {
       return;
@@ -353,8 +406,7 @@ class RulesView {
       return;
     }
 
-    if (!this.selection.isConnected() ||
-        !this.selection.isElementNode()) {
+    if (!this.selection.isConnected() || !this.selection.isElementNode()) {
       this.update();
       return;
     }
@@ -403,7 +455,7 @@ class RulesView {
   onToggleDeclaration(ruleId, declarationId) {
     this.elementStyle.toggleDeclaration(ruleId, declarationId);
     this.telemetry.recordEvent("edit_rule", "ruleview", null, {
-      "session_id": this.toolbox.sessionId,
+      session_id: this.toolbox.sessionId,
     });
   }
 
@@ -479,7 +531,8 @@ class RulesView {
    * Style Editor is registered because that's where source links point to.
    */
   onToolChanged() {
-    const prevIsSourceLinkEnabled = this.store.getState().rules.isSourceLinkEnabled;
+    const prevIsSourceLinkEnabled = this.store.getState().rules
+      .isSourceLinkEnabled;
     const isSourceLinkEnabled = this.toolbox.isToolRegistered("styleeditor");
 
     if (prevIsSourceLinkEnabled !== isSourceLinkEnabled) {
@@ -508,9 +561,13 @@ class RulesView {
           return;
         }
 
-        await this.elementStyle.modifyDeclarationName(ruleId, declarationId, name);
+        await this.elementStyle.modifyDeclarationName(
+          ruleId,
+          declarationId,
+          name
+        );
         this.telemetry.recordEvent("edit_rule", "ruleview", null, {
-          "session_id": this.toolbox.sessionId,
+          session_id: this.toolbox.sessionId,
         });
       },
       element,
@@ -551,9 +608,13 @@ class RulesView {
           return;
         }
 
-        await this.elementStyle.modifyDeclarationValue(ruleId, declarationId, value);
+        await this.elementStyle.modifyDeclarationValue(
+          ruleId,
+          declarationId,
+          value
+        );
         this.telemetry.recordEvent("edit_rule", "ruleview", null, {
-          "session_id": this.toolbox.sessionId,
+          session_id: this.toolbox.sessionId,
         });
       },
       element,
@@ -594,7 +655,7 @@ class RulesView {
 
         this.elementStyle.addNewDeclaration(ruleId, value);
         this.telemetry.recordEvent("edit_rule", "ruleview", null, {
-          "session_id": this.toolbox.sessionId,
+          session_id: this.toolbox.sessionId,
         });
       },
       element,
@@ -620,9 +681,13 @@ class RulesView {
 
         // Hide the selector highlighter if it matches the selector being edited.
         if (this.highlighters.selectorHighlighterShown) {
-          const selector = await this.elementStyle.getRule(ruleId).getUniqueSelector();
+          const selector = await this.elementStyle
+            .getRule(ruleId)
+            .getUniqueSelector();
           if (this.highlighters.selectorHighlighterShown === selector) {
-            this.onToggleSelectorHighlighter(this.highlighters.selectorHighlighterShown);
+            this.onToggleSelectorHighlighter(
+              this.highlighters.selectorHighlighterShown
+            );
           }
         }
 
@@ -652,8 +717,13 @@ class RulesView {
       return;
     }
 
-    this.elementStyle = new ElementStyle(element, this, {}, this.pageStyle,
-      this.showUserAgentStyles);
+    this.elementStyle = new ElementStyle(
+      element,
+      this,
+      {},
+      this.pageStyle,
+      this.showUserAgentStyles
+    );
     this.elementStyle.onChanged = this.updateRules;
 
     await this.updateElementStyle();
@@ -674,10 +744,12 @@ class RulesView {
   async updateElementStyle() {
     await this.elementStyle.populate();
 
-    const isAddRuleEnabled = this.selection.isElementNode() &&
-                             !this.selection.isAnonymousNode();
+    const isAddRuleEnabled =
+      this.selection.isElementNode() && !this.selection.isAnonymousNode();
     this.store.dispatch(updateAddRuleEnabled(isAddRuleEnabled));
-    this.store.dispatch(setPseudoClassLocks(this.elementStyle.element.pseudoClassLocks));
+    this.store.dispatch(
+      setPseudoClassLocks(this.elementStyle.element.pseudoClassLocks)
+    );
     this.updateClassList();
     this.updateRules();
   }

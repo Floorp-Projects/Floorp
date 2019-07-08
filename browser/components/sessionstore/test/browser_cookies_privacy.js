@@ -5,11 +5,18 @@ const MAX_EXPIRY = Math.pow(2, 62);
 
 function addCookie(scheme, secure = false) {
   let cookie = createTestCookie("http", secure);
-  Services.cookies.add(cookie.host, cookie.path, cookie.name, cookie.value,
-                       cookie.secure, /* isHttpOnly = */ false,
-                       /* isSession = */ true, MAX_EXPIRY,
-                       /* originAttributes = */ {},
-                       Ci.nsICookie.SAMESITE_NONE);
+  Services.cookies.add(
+    cookie.host,
+    cookie.path,
+    cookie.name,
+    cookie.value,
+    cookie.secure,
+    /* isHttpOnly = */ false,
+    /* isSession = */ true,
+    MAX_EXPIRY,
+    /* originAttributes = */ {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
   return cookie;
 }
 
@@ -86,7 +93,10 @@ add_task(async function test_level_encrypted() {
 
   // With level=encrypted, non-secure cookies will be stored,
   // even if sent by an HTTPS site.
-  ok(addCookie("https", true) && !getCookie(), "secure https cookie not stored");
+  ok(
+    addCookie("https", true) && !getCookie(),
+    "secure https cookie not stored"
+  );
   Services.cookies.removeAll();
 });
 
@@ -106,6 +116,9 @@ add_task(async function test_level_full() {
   Services.cookies.removeAll();
 
   // With level=full we must not store any cookies.
-  ok(addCookie("https", true) && !getCookie(), "secure https cookie not stored");
+  ok(
+    addCookie("https", true) && !getCookie(),
+    "secure https cookie not stored"
+  );
   Services.cookies.removeAll();
 });

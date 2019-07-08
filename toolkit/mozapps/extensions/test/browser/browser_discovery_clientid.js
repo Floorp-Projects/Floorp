@@ -1,6 +1,6 @@
 "use strict";
 
-const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 
 const MAIN_URL = "https://example.com/" + RELATIVE_DIR + "discovery.html";
 
@@ -36,18 +36,28 @@ function waitForHeader() {
 }
 
 add_task(async function setup() {
-  SpecialPowers.pushPrefEnv({"set": [
-    [PREF_DISCOVERURL, MAIN_URL],
-    ["datareporting.healthreport.uploadEnabled", true],
-    ["browser.discovery.enabled", true],
-  ]});
+  SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_DISCOVERURL, MAIN_URL],
+      ["datareporting.healthreport.uploadEnabled", true],
+      ["browser.discovery.enabled", true],
+    ],
+  });
 });
 
 add_task(async function test_no_private_clientid() {
-  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
   let [header, manager] = await Promise.all([
     waitForHeader(),
-    open_manager("addons://discover/", undefined, undefined, undefined, privateWindow),
+    open_manager(
+      "addons://discover/",
+      undefined,
+      undefined,
+      undefined,
+      privateWindow
+    ),
   ]);
   ok(PrivateBrowsingUtils.isContentWindowPrivate(manager), "window is private");
   is(header, null, "header was not set");

@@ -13,7 +13,7 @@ const TEST_URI = `data:text/html;charset=utf8,
       c: Array.from({length: 100}, (_, i) => i)
     });
   </script>`;
-const {ELLIPSIS} = require("devtools/shared/l10n");
+const { ELLIPSIS } = require("devtools/shared/l10n");
 
 add_task(async function() {
   // Should be removed when sidebar work is complete
@@ -25,7 +25,8 @@ add_task(async function() {
   const object = message.querySelector(".object-inspector .objectBox-object");
 
   const onSideBarVisible = waitFor(() =>
-    hud.ui.document.querySelector(".sidebar-contents"));
+    hud.ui.document.querySelector(".sidebar-contents")
+  );
 
   await openObjectInSidebar(hud, object);
   const sidebarContents = await onSideBarVisible;
@@ -37,12 +38,7 @@ add_task(async function() {
   await waitFor(() => objectInspector.querySelectorAll(".node").length === 5);
   objectInspector.focus();
 
-  const [
-    root,
-    a,
-    b,
-    c,
-  ] = objectInspector.querySelectorAll(".node");
+  const [root, a, b, c] = objectInspector.querySelectorAll(".node");
 
   ok(root.classList.contains("focused"), "The root node is focused");
 
@@ -76,24 +72,35 @@ add_task(async function() {
   });
 
   const arrayMessage = await onArrayMessage;
-  const array = arrayMessage.node.querySelector(".object-inspector .objectBox-array");
+  const array = arrayMessage.node.querySelector(
+    ".object-inspector .objectBox-array"
+  );
   await openObjectInSidebar(hud, array);
 
-  await waitFor(() => sidebarContents.querySelector(".tree-node")
-    .textContent.includes(`(3) [${ELLIPSIS}]`));
-  ok(sidebarContents.querySelector(".tree-node").classList.contains("focused"),
-    "The root node of the new object in the sidebar is focused");
+  await waitFor(() =>
+    sidebarContents
+      .querySelector(".tree-node")
+      .textContent.includes(`(3) [${ELLIPSIS}]`)
+  );
+  ok(
+    sidebarContents.querySelector(".tree-node").classList.contains("focused"),
+    "The root node of the new object in the sidebar is focused"
+  );
 });
 
 async function openObjectInSidebar(hud, objectNode) {
   const contextMenu = await openContextMenu(hud, objectNode);
-  const openInSidebarEntry = contextMenu.querySelector("#console-menu-open-sidebar");
+  const openInSidebarEntry = contextMenu.querySelector(
+    "#console-menu-open-sidebar"
+  );
   openInSidebarEntry.click();
   await hideContextMenu(hud);
 }
 
 function synthesizeKeyAndWaitForFocus(keyStr, elementToBeFocused) {
-  const onFocusChanged = waitFor(() => elementToBeFocused.classList.contains("focused"));
+  const onFocusChanged = waitFor(() =>
+    elementToBeFocused.classList.contains("focused")
+  );
   EventUtils.synthesizeKey(keyStr);
   return onFocusChanged;
 }

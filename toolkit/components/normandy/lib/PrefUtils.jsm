@@ -3,9 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "LogManager", "resource://normandy/lib/LogManager.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "LogManager",
+  "resource://normandy/lib/LogManager.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["PrefUtils"];
 
@@ -86,7 +92,9 @@ var PrefUtils = {
         break;
       }
       default: {
-        throw new TypeError(`Unexpected value type (${typeof value}) for ${pref}.`);
+        throw new TypeError(
+          `Unexpected value type (${typeof value}) for ${pref}.`
+        );
       }
     }
   },
@@ -100,7 +108,9 @@ var PrefUtils = {
     if (branchName === "user") {
       kPrefBranches.user.clearUserPref(pref);
     } else if (branchName === "default") {
-      log.warn(`Cannot not reset pref ${pref} on the default branch. Pref will be cleared at next restart.`);
+      log.warn(
+        `Cannot not reset pref ${pref} on the default branch. Pref will be cleared at next restart.`
+      );
     }
   },
 };

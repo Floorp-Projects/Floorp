@@ -7,16 +7,23 @@ function shouldNotOpen(e) {
 
 function shouldCloseCleanly(e) {
   var ws = e.target;
-  ok(e.wasClean, "the ws connection in test " + ws._testNumber + " should be closed cleanly");
+  ok(
+    e.wasClean,
+    "the ws connection in test " + ws._testNumber + " should be closed cleanly"
+  );
 }
 
 function shouldCloseNotCleanly(e) {
   var ws = e.target;
-  ok(!e.wasClean, "the ws connection in test " + ws._testNumber + " shouldn't be closed cleanly");
+  ok(
+    !e.wasClean,
+    "the ws connection in test " +
+      ws._testNumber +
+      " shouldn't be closed cleanly"
+  );
 }
 
-function ignoreError(e) {
-}
+function ignoreError(e) {}
 
 function CreateTestWS(ws_location, ws_protocol) {
   var ws;
@@ -29,12 +36,11 @@ function CreateTestWS(ws_location, ws_protocol) {
     }
 
     ws._testNumber = current_test;
-    ok(true, "Created websocket for test " + ws._testNumber +"\n");
+    ok(true, "Created websocket for test " + ws._testNumber + "\n");
 
     ws.onerror = function(e) {
       ok(false, "onerror called on test " + e.target._testNumber + "!");
-    }
-
+    };
   } catch (e) {
     throw e;
   }
@@ -48,7 +54,8 @@ function forcegc() {
 }
 
 function feedback() {
-  $("feedback").innerHTML = "executing test: " + (current_test+1) + " of " + tests.length + " tests.";
+  $("feedback").innerHTML =
+    "executing test: " + (current_test + 1) + " of " + tests.length + " tests.";
 }
 
 function finish() {

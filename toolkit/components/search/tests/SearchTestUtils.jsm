@@ -1,10 +1,8 @@
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = [
-  "SearchTestUtils",
-];
+var EXPORTED_SYMBOLS = ["SearchTestUtils"];
 
 var gTestGlobals;
 
@@ -28,7 +26,9 @@ var SearchTestUtils = Object.freeze({
    */
   async promiseNewSearchEngine(url) {
     let engine = await Services.search.addEngine(url, "", false);
-    gTestGlobals.registerCleanupFunction(async () => Services.search.removeEngine(engine));
+    gTestGlobals.registerCleanupFunction(async () =>
+      Services.search.removeEngine(engine)
+    );
     return engine;
   },
 
@@ -48,8 +48,9 @@ var SearchTestUtils = Object.freeze({
   promiseSearchNotification(expectedData, topic = "browser-search-service") {
     return new Promise(resolve => {
       Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
-        if (aData != expectedData)
+        if (aData != expectedData) {
           return;
+        }
 
         Services.obs.removeObserver(observer, topic);
         resolve(aSubject);

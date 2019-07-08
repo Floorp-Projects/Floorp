@@ -6,8 +6,12 @@
 
 var EXPORTED_SYMBOLS = ["TabSession"];
 
-const {Domains} = ChromeUtils.import("chrome://remote/content/domains/Domains.jsm");
-const {Session} = ChromeUtils.import("chrome://remote/content/sessions/Session.jsm");
+const { Domains } = ChromeUtils.import(
+  "chrome://remote/content/domains/Domains.jsm"
+);
+const { Session } = ChromeUtils.import(
+  "chrome://remote/content/sessions/Session.jsm"
+);
 
 /**
  * A session to communicate with a given tab
@@ -36,7 +40,10 @@ class TabSession extends Session {
     this.mm.addMessageListener("remote:result", this);
     this.mm.addMessageListener("remote:error", this);
 
-    this.mm.loadFrameScript("chrome://remote/content/sessions/frame-script.js", false);
+    this.mm.loadFrameScript(
+      "chrome://remote/content/sessions/frame-script.js",
+      false
+    );
   }
 
   destructor() {
@@ -51,7 +58,7 @@ class TabSession extends Session {
     this.mm.removeMessageListener("remote:error", this);
   }
 
-  async onMessage({id, method, params}) {
+  async onMessage({ id, method, params }) {
     try {
       if (typeof id == "undefined") {
         throw new TypeError("Message missing 'id' field");
@@ -60,7 +67,7 @@ class TabSession extends Session {
         throw new TypeError("Message missing 'method' field");
       }
 
-      const {domain, command} = Domains.splitMethod(method);
+      const { domain, command } = Domains.splitMethod(method);
       if (this.domains.domainSupportsMethod(domain, command)) {
         await this.execute(id, domain, command, params);
       } else {
@@ -74,7 +81,7 @@ class TabSession extends Session {
   executeInChild(id, domain, command, params) {
     this.mm.sendAsyncMessage("remote:request", {
       browsingContextId: this.browsingContext.id,
-      request: {id, domain, command, params},
+      request: { id, domain, command, params },
     });
   }
 
@@ -117,21 +124,21 @@ class TabSession extends Session {
 
   // nsIMessageListener
 
-  receiveMessage({name, data}) {
-    const {id, result, event, error} = data;
+  receiveMessage({ name, data }) {
+    const { id, result, event, error } = data;
 
     switch (name) {
-    case "remote:result":
-      this.onResult(id, result);
-      break;
+      case "remote:result":
+        this.onResult(id, result);
+        break;
 
-    case "remote:event":
-      this.onEvent(event.eventName, event.params);
-      break;
+      case "remote:event":
+        this.onEvent(event.eventName, event.params);
+        break;
 
-    case "remote:error":
-      this.onError(id, error);
-      break;
+      case "remote:error":
+        this.onError(id, error);
+        break;
     }
   }
 }

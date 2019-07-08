@@ -74,7 +74,8 @@ static uint32_t SiteAutoplayPerm(const Document* aDocument) {
   NS_ENSURE_TRUE(permMgr, nsIPermissionManager::DENY_ACTION);
 
   uint32_t perm;
-  nsresult rv = permMgr->TestExactPermissionFromPrincipal(principal, NS_LITERAL_CSTRING("autoplay-media"), &perm);
+  nsresult rv = permMgr->TestExactPermissionFromPrincipal(
+      principal, NS_LITERAL_CSTRING("autoplay-media"), &perm);
   NS_ENSURE_SUCCESS(rv, nsIPermissionManager::DENY_ACTION);
   return perm;
 }
@@ -187,9 +188,10 @@ static bool IsAllowedToPlayInternal(const HTMLMediaElement& aElement) {
   uint32_t defaultBehaviour = DefaultAutoplayBehaviour();
   uint32_t sitePermission = SiteAutoplayPerm(approver);
 
-  AUTOPLAY_LOG("IsAllowedToPlayInternal, isInaudible=%d,"
-    "isUsingAutoplayModel=%d, sitePermission=%d, defaultBehaviour=%d",
-    isInaudible, isUsingAutoplayModel, sitePermission, defaultBehaviour);
+  AUTOPLAY_LOG(
+      "IsAllowedToPlayInternal, isInaudible=%d,"
+      "isUsingAutoplayModel=%d, sitePermission=%d, defaultBehaviour=%d",
+      isInaudible, isUsingAutoplayModel, sitePermission, defaultBehaviour);
 
   // For site permissions we store permissionManager values except
   // for BLOCKED_ALL, for the default pref values we store

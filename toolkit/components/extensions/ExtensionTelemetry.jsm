@@ -7,22 +7,25 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionTelemetry", "getTrimmedString"];
 
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 // Map of the base histogram ids for the metrics recorded for the extensions.
 const histograms = {
-  "extensionStartup": "WEBEXT_EXTENSION_STARTUP_MS",
-  "backgroundPageLoad": "WEBEXT_BACKGROUND_PAGE_LOAD_MS",
-  "browserActionPopupOpen": "WEBEXT_BROWSERACTION_POPUP_OPEN_MS",
-  "browserActionPreloadResult": "WEBEXT_BROWSERACTION_POPUP_PRELOAD_RESULT_COUNT",
-  "contentScriptInjection": "WEBEXT_CONTENT_SCRIPT_INJECTION_MS",
-  "pageActionPopupOpen": "WEBEXT_PAGEACTION_POPUP_OPEN_MS",
-  "storageLocalGetJSON": "WEBEXT_STORAGE_LOCAL_GET_MS",
-  "storageLocalSetJSON": "WEBEXT_STORAGE_LOCAL_SET_MS",
-  "storageLocalGetIDB": "WEBEXT_STORAGE_LOCAL_IDB_GET_MS",
-  "storageLocalSetIDB": "WEBEXT_STORAGE_LOCAL_IDB_SET_MS",
-  "userScriptInjection": "WEBEXT_USER_SCRIPT_INJECTION_MS",
+  extensionStartup: "WEBEXT_EXTENSION_STARTUP_MS",
+  backgroundPageLoad: "WEBEXT_BACKGROUND_PAGE_LOAD_MS",
+  browserActionPopupOpen: "WEBEXT_BROWSERACTION_POPUP_OPEN_MS",
+  browserActionPreloadResult: "WEBEXT_BROWSERACTION_POPUP_PRELOAD_RESULT_COUNT",
+  contentScriptInjection: "WEBEXT_CONTENT_SCRIPT_INJECTION_MS",
+  pageActionPopupOpen: "WEBEXT_PAGEACTION_POPUP_OPEN_MS",
+  storageLocalGetJSON: "WEBEXT_STORAGE_LOCAL_GET_MS",
+  storageLocalSetJSON: "WEBEXT_STORAGE_LOCAL_SET_MS",
+  storageLocalGetIDB: "WEBEXT_STORAGE_LOCAL_IDB_GET_MS",
+  storageLocalSetIDB: "WEBEXT_STORAGE_LOCAL_IDB_SET_MS",
+  userScriptInjection: "WEBEXT_USER_SCRIPT_INJECTION_MS",
 };
 
 /**
@@ -107,7 +110,11 @@ class ExtensionTelemetryMetric {
 
     // Record metric in the histogram keyed by addon id.
     let extensionId = getTrimmedString(extension.id);
-    TelemetryStopwatch[`${method}Keyed`](`${baseId}_BY_ADDONID`, extensionId, obj);
+    TelemetryStopwatch[`${method}Keyed`](
+      `${baseId}_BY_ADDONID`,
+      extensionId,
+      obj
+    );
   }
 
   /**
@@ -123,7 +130,7 @@ class ExtensionTelemetryMetric {
    * @param {number | undefined}                  [options.value]
    *        An optional value to record.
    */
-  _histogramAdd(metric, {category, extension, value}) {
+  _histogramAdd(metric, { category, extension, value }) {
     if (!extension) {
       throw new Error(`Mandatory extension parameter is undefined`);
     }
@@ -140,7 +147,9 @@ class ExtensionTelemetryMetric {
       histogram.add(value);
     }
 
-    const keyedHistogram = Services.telemetry.getKeyedHistogramById(`${baseId}_BY_ADDONID`);
+    const keyedHistogram = Services.telemetry.getKeyedHistogramById(
+      `${baseId}_BY_ADDONID`
+    );
     const extensionId = getTrimmedString(extension.id);
 
     if (typeof category === "string") {

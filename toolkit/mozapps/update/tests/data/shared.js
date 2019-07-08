@@ -8,87 +8,100 @@
 /* global AppConstants, DATA_URI_SPEC, LOG_FUNCTION */
 /* global Services, URL_HOST */
 
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {TelemetryTestUtils} =
-  ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "ctypes",
-                               "resource://gre/modules/ctypes.jsm");
-ChromeUtils.defineModuleGetter(this, "UpdateUtils",
-                               "resource://gre/modules/UpdateUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ctypes",
+  "resource://gre/modules/ctypes.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "UpdateUtils",
+  "resource://gre/modules/UpdateUtils.jsm"
+);
 
-const PREF_APP_UPDATE_AUTO                 = "app.update.auto";
-const PREF_APP_UPDATE_BACKGROUNDERRORS     = "app.update.backgroundErrors";
-const PREF_APP_UPDATE_BACKGROUNDMAXERRORS  = "app.update.backgroundMaxErrors";
-const PREF_APP_UPDATE_BADGEWAITTIME        = "app.update.badgeWaitTime";
-const PREF_APP_UPDATE_BITS_ENABLED         = "app.update.BITS.enabled";
-const PREF_APP_UPDATE_CANCELATIONS         = "app.update.cancelations";
-const PREF_APP_UPDATE_CHANNEL              = "app.update.channel";
+const PREF_APP_UPDATE_AUTO = "app.update.auto";
+const PREF_APP_UPDATE_BACKGROUNDERRORS = "app.update.backgroundErrors";
+const PREF_APP_UPDATE_BACKGROUNDMAXERRORS = "app.update.backgroundMaxErrors";
+const PREF_APP_UPDATE_BADGEWAITTIME = "app.update.badgeWaitTime";
+const PREF_APP_UPDATE_BITS_ENABLED = "app.update.BITS.enabled";
+const PREF_APP_UPDATE_CANCELATIONS = "app.update.cancelations";
+const PREF_APP_UPDATE_CHANNEL = "app.update.channel";
 const PREF_APP_UPDATE_DOWNLOAD_MAXATTEMPTS = "app.update.download.maxAttempts";
-const PREF_APP_UPDATE_DOWNLOAD_ATTEMPTS    = "app.update.download.attempts";
-const PREF_APP_UPDATE_DISABLEDFORTESTING   = "app.update.disabledForTesting";
-const PREF_APP_UPDATE_INTERVAL             = "app.update.interval";
-const PREF_APP_UPDATE_LASTUPDATETIME       = "app.update.lastUpdateTime.background-update-timer";
-const PREF_APP_UPDATE_LOG                  = "app.update.log";
-const PREF_APP_UPDATE_PROMPTWAITTIME       = "app.update.promptWaitTime";
-const PREF_APP_UPDATE_RETRYTIMEOUT         = "app.update.socket.retryTimeout";
-const PREF_APP_UPDATE_SERVICE_ENABLED      = "app.update.service.enabled";
-const PREF_APP_UPDATE_SOCKET_MAXERRORS     = "app.update.socket.maxErrors";
-const PREF_APP_UPDATE_STAGING_ENABLED      = "app.update.staging.enabled";
-const PREF_APP_UPDATE_UNSUPPORTED_URL      = "app.update.unsupported.url";
-const PREF_APP_UPDATE_URL                  = "app.update.url";
-const PREF_APP_UPDATE_URL_DETAILS          = "app.update.url.details";
-const PREF_APP_UPDATE_URL_MANUAL           = "app.update.url.manual";
+const PREF_APP_UPDATE_DOWNLOAD_ATTEMPTS = "app.update.download.attempts";
+const PREF_APP_UPDATE_DISABLEDFORTESTING = "app.update.disabledForTesting";
+const PREF_APP_UPDATE_INTERVAL = "app.update.interval";
+const PREF_APP_UPDATE_LASTUPDATETIME =
+  "app.update.lastUpdateTime.background-update-timer";
+const PREF_APP_UPDATE_LOG = "app.update.log";
+const PREF_APP_UPDATE_PROMPTWAITTIME = "app.update.promptWaitTime";
+const PREF_APP_UPDATE_RETRYTIMEOUT = "app.update.socket.retryTimeout";
+const PREF_APP_UPDATE_SERVICE_ENABLED = "app.update.service.enabled";
+const PREF_APP_UPDATE_SOCKET_MAXERRORS = "app.update.socket.maxErrors";
+const PREF_APP_UPDATE_STAGING_ENABLED = "app.update.staging.enabled";
+const PREF_APP_UPDATE_UNSUPPORTED_URL = "app.update.unsupported.url";
+const PREF_APP_UPDATE_URL = "app.update.url";
+const PREF_APP_UPDATE_URL_DETAILS = "app.update.url.details";
+const PREF_APP_UPDATE_URL_MANUAL = "app.update.url.manual";
 
-const PREFBRANCH_APP_PARTNER         = "app.partner.";
-const PREF_DISTRIBUTION_ID           = "distribution.id";
-const PREF_DISTRIBUTION_VERSION      = "distribution.version";
+const PREFBRANCH_APP_PARTNER = "app.partner.";
+const PREF_DISTRIBUTION_ID = "distribution.id";
+const PREF_DISTRIBUTION_VERSION = "distribution.version";
 
-const CONFIG_APP_UPDATE_AUTO         = "app.update.auto";
+const CONFIG_APP_UPDATE_AUTO = "app.update.auto";
 
-const NS_APP_PROFILE_DIR_STARTUP   = "ProfDS";
-const NS_APP_USER_PROFILE_50_DIR   = "ProfD";
-const NS_GRE_BIN_DIR               = "GreBinD";
-const NS_GRE_DIR                   = "GreD";
+const NS_APP_PROFILE_DIR_STARTUP = "ProfDS";
+const NS_APP_USER_PROFILE_50_DIR = "ProfD";
+const NS_GRE_BIN_DIR = "GreBinD";
+const NS_GRE_DIR = "GreD";
 const NS_XPCOM_CURRENT_PROCESS_DIR = "XCurProcD";
-const XRE_EXECUTABLE_FILE          = "XREExeF";
-const XRE_OLD_UPDATE_ROOT_DIR      = "OldUpdRootD";
-const XRE_UPDATE_ROOT_DIR          = "UpdRootD";
+const XRE_EXECUTABLE_FILE = "XREExeF";
+const XRE_OLD_UPDATE_ROOT_DIR = "OldUpdRootD";
+const XRE_UPDATE_ROOT_DIR = "UpdRootD";
 
-const DIR_PATCH        = "0";
-const DIR_TOBEDELETED  = "tobedeleted";
-const DIR_UPDATES      = "updates";
-const DIR_UPDATED      = AppConstants.platform == "macosx" ? "Updated.app"
-                                                           : "updated";
+const DIR_PATCH = "0";
+const DIR_TOBEDELETED = "tobedeleted";
+const DIR_UPDATES = "updates";
+const DIR_UPDATED =
+  AppConstants.platform == "macosx" ? "Updated.app" : "updated";
 
-const FILE_ACTIVE_UPDATE_XML         = "active-update.xml";
-const FILE_ACTIVE_UPDATE_XML_TMP     = "active-update.xml.tmp";
-const FILE_APPLICATION_INI           = "application.ini";
-const FILE_BACKUP_UPDATE_LOG         = "backup-update.log";
-const FILE_BT_RESULT                 = "bt.result";
-const FILE_LAST_UPDATE_LOG           = "last-update.log";
-const FILE_PRECOMPLETE               = "precomplete";
-const FILE_PRECOMPLETE_BAK           = "precomplete.bak";
-const FILE_UPDATE_CONFIG_JSON        = "update-config.json";
-const FILE_UPDATE_LOG                = "update.log";
-const FILE_UPDATE_MAR                = "update.mar";
-const FILE_UPDATE_SETTINGS_INI       = "update-settings.ini";
-const FILE_UPDATE_SETTINGS_INI_BAK   = "update-settings.ini.bak";
-const FILE_UPDATE_STATUS             = "update.status";
-const FILE_UPDATE_TEST               = "update.test";
-const FILE_UPDATE_VERSION            = "update.version";
-const FILE_UPDATER_INI               = "updater.ini";
-const FILE_UPDATES_XML               = "updates.xml";
-const FILE_UPDATES_XML_TMP           = "updates.xml.tmp";
+const FILE_ACTIVE_UPDATE_XML = "active-update.xml";
+const FILE_ACTIVE_UPDATE_XML_TMP = "active-update.xml.tmp";
+const FILE_APPLICATION_INI = "application.ini";
+const FILE_BACKUP_UPDATE_LOG = "backup-update.log";
+const FILE_BT_RESULT = "bt.result";
+const FILE_LAST_UPDATE_LOG = "last-update.log";
+const FILE_PRECOMPLETE = "precomplete";
+const FILE_PRECOMPLETE_BAK = "precomplete.bak";
+const FILE_UPDATE_CONFIG_JSON = "update-config.json";
+const FILE_UPDATE_LOG = "update.log";
+const FILE_UPDATE_MAR = "update.mar";
+const FILE_UPDATE_SETTINGS_INI = "update-settings.ini";
+const FILE_UPDATE_SETTINGS_INI_BAK = "update-settings.ini.bak";
+const FILE_UPDATE_STATUS = "update.status";
+const FILE_UPDATE_TEST = "update.test";
+const FILE_UPDATE_VERSION = "update.version";
+const FILE_UPDATER_INI = "updater.ini";
+const FILE_UPDATES_XML = "updates.xml";
+const FILE_UPDATES_XML_TMP = "updates.xml.tmp";
 
-const UPDATE_SETTINGS_CONTENTS = "[Settings]\n" +
-                                 "ACCEPTED_MAR_CHANNEL_IDS=xpcshell-test\n";
-const PRECOMPLETE_CONTENTS = "rmdir \"nonexistent_dir/\"\n";
+const UPDATE_SETTINGS_CONTENTS =
+  // eslint-disable-next-line no-useless-concat
+  "[Settings]\n" + "ACCEPTED_MAR_CHANNEL_IDS=xpcshell-test\n";
+const PRECOMPLETE_CONTENTS = 'rmdir "nonexistent_dir/"\n';
 
-const PR_RDWR        = 0x04;
+const PR_RDWR = 0x04;
 const PR_CREATE_FILE = 0x08;
-const PR_TRUNCATE    = 0x20;
+const PR_TRUNCATE = 0x20;
 
 var gChannel;
 var gDebugTest = false;
@@ -96,37 +109,43 @@ var gDebugTest = false;
 /* import-globals-from sharedUpdateXML.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "sharedUpdateXML.js", this);
 
-const PERMS_FILE      = FileUtils.PERMS_FILE;
+const PERMS_FILE = FileUtils.PERMS_FILE;
 const PERMS_DIRECTORY = FileUtils.PERMS_DIRECTORY;
 
-const MODE_WRONLY   = FileUtils.MODE_WRONLY;
-const MODE_CREATE   = FileUtils.MODE_CREATE;
-const MODE_APPEND   = FileUtils.MODE_APPEND;
+const MODE_WRONLY = FileUtils.MODE_WRONLY;
+const MODE_CREATE = FileUtils.MODE_CREATE;
+const MODE_APPEND = FileUtils.MODE_APPEND;
 const MODE_TRUNCATE = FileUtils.MODE_TRUNCATE;
 
-const URI_UPDATES_PROPERTIES = "chrome://mozapps/locale/update/updates.properties";
+const URI_UPDATES_PROPERTIES =
+  "chrome://mozapps/locale/update/updates.properties";
 const gUpdateBundle = Services.strings.createBundle(URI_UPDATES_PROPERTIES);
 
 XPCOMUtils.defineLazyGetter(this, "gAUS", function test_gAUS() {
-  return Cc["@mozilla.org/updates/update-service;1"].
-         getService(Ci.nsIApplicationUpdateService).
-         QueryInterface(Ci.nsITimerCallback).
-         QueryInterface(Ci.nsIObserver).
-         QueryInterface(Ci.nsIUpdateCheckListener);
+  return Cc["@mozilla.org/updates/update-service;1"]
+    .getService(Ci.nsIApplicationUpdateService)
+    .QueryInterface(Ci.nsITimerCallback)
+    .QueryInterface(Ci.nsIObserver)
+    .QueryInterface(Ci.nsIUpdateCheckListener);
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "gUpdateManager",
-                                   "@mozilla.org/updates/update-manager;1",
-                                   "nsIUpdateManager");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gUpdateManager",
+  "@mozilla.org/updates/update-manager;1",
+  "nsIUpdateManager"
+);
 
 XPCOMUtils.defineLazyGetter(this, "gUpdateChecker", function test_gUC() {
-  return Cc["@mozilla.org/updates/update-checker;1"].
-         createInstance(Ci.nsIUpdateChecker);
+  return Cc["@mozilla.org/updates/update-checker;1"].createInstance(
+    Ci.nsIUpdateChecker
+  );
 });
 
 XPCOMUtils.defineLazyGetter(this, "gUP", function test_gUP() {
-  return Cc["@mozilla.org/updates/update-prompt;1"].
-         createInstance(Ci.nsIUpdatePrompt);
+  return Cc["@mozilla.org/updates/update-prompt;1"].createInstance(
+    Ci.nsIUpdatePrompt
+  );
 });
 
 XPCOMUtils.defineLazyGetter(this, "gDefaultPrefBranch", function test_gDPB() {
@@ -137,9 +156,12 @@ XPCOMUtils.defineLazyGetter(this, "gPrefRoot", function test_gPR() {
   return Services.prefs.getBranch(null);
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "gEnv",
-                                   "@mozilla.org/process/environment;1",
-                                   "nsIEnvironment");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gEnv",
+  "@mozilla.org/process/environment;1",
+  "nsIEnvironment"
+);
 
 /**
  * Waits for the specified topic and (optionally) status.
@@ -152,14 +174,19 @@ XPCOMUtils.defineLazyServiceGetter(this, "gEnv",
  *         specified topic, and (optionally) with the specified status.
  */
 function waitForEvent(topic, status = null) {
-  return new Promise(resolve => Services.obs.addObserver({
-    observe(subject, innerTopic, innerStatus) {
-      if (!status || status == innerStatus) {
-        Services.obs.removeObserver(this, topic);
-        resolve(innerStatus);
-      }
-    },
-  }, topic));
+  return new Promise(resolve =>
+    Services.obs.addObserver(
+      {
+        observe(subject, innerTopic, innerStatus) {
+          if (!status || status == innerStatus) {
+            Services.obs.removeObserver(this, topic);
+            resolve(innerStatus);
+          }
+        },
+      },
+      topic
+    )
+  );
 }
 
 /* Triggers post-update processing */
@@ -169,15 +196,17 @@ function testPostUpdateProcessing() {
 
 /* Initializes the update service stub */
 function initUpdateServiceStub() {
-  Cc["@mozilla.org/updates/update-service-stub;1"].
-  createInstance(Ci.nsISupports);
+  Cc["@mozilla.org/updates/update-service-stub;1"].createInstance(
+    Ci.nsISupports
+  );
 }
 
 /* Reloads the update metadata from disk */
 function reloadUpdateManagerData(skipFiles = false) {
   let observeData = skipFiles ? "skip-files" : "";
-  gUpdateManager.QueryInterface(Ci.nsIObserver).
-  observe(null, "um-reload-update-data", observeData);
+  gUpdateManager
+    .QueryInterface(Ci.nsIObserver)
+    .observe(null, "um-reload-update-data", observeData);
 }
 
 const observer = {
@@ -201,7 +230,9 @@ const observer = {
  */
 function setUpdateChannel(aChannel) {
   gChannel = aChannel;
-  debugDump("setting default pref " + PREF_APP_UPDATE_CHANNEL + " to " + gChannel);
+  debugDump(
+    "setting default pref " + PREF_APP_UPDATE_CHANNEL + " to " + gChannel
+  );
   gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_CHANNEL, gChannel);
   gPrefRoot.addObserver(PREF_APP_UPDATE_CHANNEL, observer);
 }
@@ -230,8 +261,9 @@ function setUpdateURL(aURL) {
  *         write to the updates.xml file.
  */
 function writeUpdatesToXMLFile(aContent, aIsActiveUpdate) {
-  let file = getUpdateDirFile(aIsActiveUpdate ? FILE_ACTIVE_UPDATE_XML
-                                              : FILE_UPDATES_XML);
+  let file = getUpdateDirFile(
+    aIsActiveUpdate ? FILE_ACTIVE_UPDATE_XML : FILE_UPDATES_XML
+  );
   writeFile(file, aContent);
 }
 
@@ -271,8 +303,9 @@ function writeVersionFile(aVersion) {
  *         replaced.
  */
 function writeFile(aFile, aText) {
-  let fos = Cc["@mozilla.org/network/file-output-stream;1"].
-            createInstance(Ci.nsIFileOutputStream);
+  let fos = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
   if (!aFile.exists()) {
     aFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
   }
@@ -335,16 +368,18 @@ function updateHasBinaryTransparencyErrorResult() {
  * @return The string of text read from the file.
  */
 function readFile(aFile) {
-  let fis = Cc["@mozilla.org/network/file-input-stream;1"].
-            createInstance(Ci.nsIFileInputStream);
+  let fis = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   if (!aFile.exists()) {
     return null;
   }
   // Specifying -1 for ioFlags will open the file with the default of PR_RDONLY.
   // Specifying -1 for perm will open the file with the default of 0.
   fis.init(aFile, -1, -1, Ci.nsIFileInputStream.CLOSE_ON_EOF);
-  let sis = Cc["@mozilla.org/scriptableinputstream;1"].
-            createInstance(Ci.nsIScriptableInputStream);
+  let sis = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+    Ci.nsIScriptableInputStream
+  );
   sis.init(fis);
   let text = sis.read(sis.available());
   sis.close();
@@ -360,8 +395,7 @@ function getStatusText(aErrCode) {
 function getString(aName) {
   try {
     return gUpdateBundle.GetStringFromName(aName);
-  } catch (e) {
-  }
+  } catch (e) {}
   return null;
 }
 
@@ -373,8 +407,7 @@ function getString(aName) {
  * @return The file extension.
  */
 function getFileExtension(aFile) {
-  return Services.io.newFileURI(aFile).QueryInterface(Ci.nsIURL).
-         fileExtension;
+  return Services.io.newFileURI(aFile).QueryInterface(Ci.nsIURL).fileExtension;
 }
 
 /**
@@ -416,8 +449,11 @@ function getUpdateDirFile(aLeafName) {
       return file;
   }
 
-  throw new Error("The leafName specified is not handled by this function, " +
-                  "leafName: " + aLeafName);
+  throw new Error(
+    "The leafName specified is not handled by this function, " +
+      "leafName: " +
+      aLeafName
+  );
 }
 
 /**
@@ -490,8 +526,9 @@ function removeUpdateFiles(aRemoveLogFiles) {
         file.remove(false);
       }
     } catch (e) {
-      logTestInfo("Unable to remove file. Path: " + file.path +
-                  ", Exception: " + e);
+      logTestInfo(
+        "Unable to remove file. Path: " + file.path + ", Exception: " + e
+      );
     }
   }
 
@@ -500,8 +537,12 @@ function removeUpdateFiles(aRemoveLogFiles) {
     try {
       removeDirRecursive(stageDir);
     } catch (e) {
-      logTestInfo("Unable to remove directory. Path: " + stageDir.path +
-                  ", Exception: " + e);
+      logTestInfo(
+        "Unable to remove directory. Path: " +
+          stageDir.path +
+          ", Exception: " +
+          e
+      );
     }
   }
 }
@@ -605,13 +646,15 @@ function getPerInstallationMutexName() {
     throw new Error("Windows only function called by a different platform!");
   }
 
-  let hasher = Cc["@mozilla.org/security/hash;1"].
-               createInstance(Ci.nsICryptoHash);
+  let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
+    Ci.nsICryptoHash
+  );
   hasher.init(hasher.SHA1);
 
   let exeFile = Services.dirsvc.get(XRE_EXECUTABLE_FILE, Ci.nsIFile);
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                  createInstance(Ci.nsIScriptableUnicodeConverter);
+  let converter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
   let data = converter.convertToByteArray(exeFile.path.toLowerCase());
 
@@ -632,10 +675,12 @@ function closeHandle(aHandle) {
   }
 
   let lib = ctypes.open("kernel32.dll");
-  let CloseHandle = lib.declare("CloseHandle",
-                                ctypes.winapi_abi,
-                                ctypes.int32_t, /* success */
-                                ctypes.void_t.ptr); /* handle */
+  let CloseHandle = lib.declare(
+    "CloseHandle",
+    ctypes.winapi_abi,
+    ctypes.int32_t /* success */,
+    ctypes.void_t.ptr
+  ); /* handle */
   CloseHandle(aHandle);
   lib.close();
 }
@@ -654,14 +699,16 @@ function createMutex(aName) {
   }
 
   const INITIAL_OWN = 1;
-  const ERROR_ALREADY_EXISTS = 0xB7;
+  const ERROR_ALREADY_EXISTS = 0xb7;
   let lib = ctypes.open("kernel32.dll");
-  let CreateMutexW = lib.declare("CreateMutexW",
-                                 ctypes.winapi_abi,
-                                 ctypes.void_t.ptr, /* return handle */
-                                 ctypes.void_t.ptr, /* security attributes */
-                                 ctypes.int32_t, /* initial owner */
-                                 ctypes.char16_t.ptr); /* name */
+  let CreateMutexW = lib.declare(
+    "CreateMutexW",
+    ctypes.winapi_abi,
+    ctypes.void_t.ptr /* return handle */,
+    ctypes.void_t.ptr /* security attributes */,
+    ctypes.int32_t /* initial owner */,
+    ctypes.char16_t.ptr
+  ); /* name */
 
   let handle = CreateMutexW(null, INITIAL_OWN, aName);
   lib.close();
@@ -700,8 +747,10 @@ function setAppUpdateAutoSync(aEnabled) {
         file.remove(false);
       }
     } else {
-      writeFile(file, "{\"" + CONFIG_APP_UPDATE_AUTO + "\":" +
-                      aEnabled.toString() + "}");
+      writeFile(
+        file,
+        '{"' + CONFIG_APP_UPDATE_AUTO + '":' + aEnabled.toString() + "}"
+      );
     }
   } else if (aEnabled === undefined || aEnabled === null) {
     if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_AUTO)) {
@@ -728,17 +777,29 @@ function logTestInfo(aText, aCaller) {
   let mm = now.getMinutes();
   let ss = now.getSeconds();
   let ms = now.getMilliseconds();
-  let time = (hh < 10 ? "0" + hh : hh) + ":" +
-             (mm < 10 ? "0" + mm : mm) + ":" +
-             (ss < 10 ? "0" + ss : ss) + ":";
+  let time =
+    (hh < 10 ? "0" + hh : hh) +
+    ":" +
+    (mm < 10 ? "0" + mm : mm) +
+    ":" +
+    (ss < 10 ? "0" + ss : ss) +
+    ":";
   if (ms < 10) {
     time += "00";
   } else if (ms < 100) {
     time += "0";
   }
   time += ms;
-  let msg = time + " | TEST-INFO | " + caller.filename + " | [" + caller.name +
-            " : " + caller.lineNumber + "] " + aText;
+  let msg =
+    time +
+    " | TEST-INFO | " +
+    caller.filename +
+    " | [" +
+    caller.name +
+    " : " +
+    caller.lineNumber +
+    "] " +
+    aText;
   LOG_FUNCTION(msg);
 }
 

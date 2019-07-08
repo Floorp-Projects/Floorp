@@ -2,12 +2,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {AsyncShutdown} = ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { AsyncShutdown } = ChromeUtils.import(
+  "resource://gre/modules/AsyncShutdown.jsm"
+);
 
-var asyncShutdownService = Cc["@mozilla.org/async-shutdown-service;1"].
-  getService(Ci.nsIAsyncShutdownService);
-
+var asyncShutdownService = Cc[
+  "@mozilla.org/async-shutdown-service;1"
+].getService(Ci.nsIAsyncShutdownService);
 
 Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
 
@@ -84,7 +86,7 @@ function makeLock(kind) {
           };
           makeLock.xpcomMap.set(condition, blocker);
         }
-        let {fileName, lineNumber, stack} = (new Error());
+        let { fileName, lineNumber, stack } = new Error();
         return barrier.client.addBlocker(blocker, fileName, lineNumber, stack);
       },
       removeBlocker(condition) {

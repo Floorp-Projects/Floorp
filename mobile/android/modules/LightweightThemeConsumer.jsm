@@ -4,12 +4,19 @@
 
 var EXPORTED_SYMBOLS = ["LightweightThemeConsumer"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { LightweightThemeManager } = ChromeUtils.import(
+  "resource://gre/modules/LightweightThemeManager.jsm"
+);
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "EventDispatcher",
-                               "resource://gre/modules/Messaging.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "EventDispatcher",
+  "resource://gre/modules/Messaging.jsm"
+);
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 
@@ -17,8 +24,9 @@ let RESOLVE_PROPERTIES = ["headerURL"];
 
 let handlers = new ExtensionUtils.DefaultMap(proto => {
   try {
-    return Cc[`@mozilla.org/network/protocol;1?name=${proto}`]
-      .getService(Ci.nsISubstitutingProtocolHandler);
+    return Cc[`@mozilla.org/network/protocol;1?name=${proto}`].getService(
+      Ci.nsISubstitutingProtocolHandler
+    );
   } catch (e) {
     return null;
   }
@@ -61,11 +69,12 @@ class LightweightThemeConsumer {
 
   _update(aData) {
     let active = aData && aData.id !== DEFAULT_THEME_ID;
-    let msg = { type: (active ? "LightweightTheme:Update"
-                              : "LightweightTheme:Disable") };
+    let msg = {
+      type: active ? "LightweightTheme:Update" : "LightweightTheme:Disable",
+    };
 
     if (active) {
-      msg.data = {...aData};
+      msg.data = { ...aData };
       for (let prop of RESOLVE_PROPERTIES) {
         if (msg.data[prop]) {
           msg.data[prop] = maybeResolveURL(msg.data[prop]);

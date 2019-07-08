@@ -12,7 +12,7 @@ const TEST_URL = "data:text/html;charset=utf-8,<div></div>";
 add_task(async function() {
   let isEditTagNameCalled = false;
 
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   // Overriding the editTagName walkerActor method here to check that it isn't
   // called when blurring the tagname field.

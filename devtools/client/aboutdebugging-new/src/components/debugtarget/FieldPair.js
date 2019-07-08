@@ -26,16 +26,20 @@ class FieldPair extends PureComponent {
       },
       dom.dt(
         {
-          className: "fieldpair__title " +
-                      (this.props.className ? this.props.className : ""),
+          className:
+            "fieldpair__title " +
+            (this.props.className ? this.props.className : ""),
         },
         label
       ),
-      value ? dom.dd(
-        {
-          className: "fieldpair__description ellipsis-text",
-        },
-        value) : null,
+      value
+        ? dom.dd(
+            {
+              className: "fieldpair__description ellipsis-text",
+            },
+            value
+          )
+        : null
     );
   }
 }

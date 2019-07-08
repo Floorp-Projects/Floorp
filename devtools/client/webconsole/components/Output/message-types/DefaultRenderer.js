@@ -11,9 +11,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 DefaultRenderer.displayName = "DefaultRenderer";
 
 function DefaultRenderer(props) {
-  return dom.div({},
-    "This message type is not supported yet."
-  );
+  return dom.div({}, "This message type is not supported yet.");
 }
 
 module.exports = DefaultRenderer;

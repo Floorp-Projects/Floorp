@@ -9,13 +9,13 @@
  * going to the function b's call-site.
  */
 
-async function testFinish({threadClient, debuggerClient}) {
+async function testFinish({ threadClient, debuggerClient }) {
   await close(debuggerClient);
 
   do_test_finished();
 }
 
-async function invokeAndPause({global, threadClient}, expression) {
+async function invokeAndPause({ global, threadClient }, expression) {
   return executeOnNextTickAndWaitForPause(
     () => Cu.evalInSandbox(expression, global),
     threadClient
@@ -27,8 +27,8 @@ async function step(threadClient, cmd) {
 }
 
 function getPauseLocation(packet) {
-  const {line, column} = packet.frame.where;
-  return {line, column};
+  const { line, column } = packet.frame.where;
+  return { line, column };
 }
 
 function getPauseReturn(packet) {
@@ -54,7 +54,11 @@ async function stepOutOfA(dbg, func, expectedLocation) {
   const packet = await stepOut(threadClient);
   dump(`>>> foo\n`);
 
-  deepEqual(getPauseLocation(packet), expectedLocation, `step out location in ${func}`);
+  deepEqual(
+    getPauseLocation(packet),
+    expectedLocation,
+    `step out location in ${func}`
+  );
 
   await threadClient.resume();
 }
@@ -69,7 +73,11 @@ async function stepOverInA(dbg, func, expectedLocation) {
   equal(getPauseReturn(packet).ownPropertyLength, 1, "a() is returning obj");
 
   packet = await stepOver(threadClient);
-  deepEqual(getPauseLocation(packet), expectedLocation, `step out location in ${func}`);
+  deepEqual(
+    getPauseLocation(packet),
+    expectedLocation,
+    `step out location in ${func}`
+  );
   await dbg.threadClient.resume();
 }
 
@@ -82,9 +90,9 @@ function run_test() {
   return (async function() {
     const dbg = await setupTestFromUrl("stepping.js");
 
-    await testStep(dbg, "arithmetic", {line: 17, column: 0});
-    await testStep(dbg, "composition", {line: 22, column: 0});
-    await testStep(dbg, "chaining", {line: 27, column: 0});
+    await testStep(dbg, "arithmetic", { line: 17, column: 0 });
+    await testStep(dbg, "composition", { line: 22, column: 0 });
+    await testStep(dbg, "chaining", { line: 27, column: 0 });
 
     await testFinish(dbg);
   })();

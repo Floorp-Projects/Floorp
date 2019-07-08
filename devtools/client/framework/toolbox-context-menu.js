@@ -44,61 +44,77 @@ function createEditContextMenu(win, id) {
   loadEditMenuStrings(win);
 
   const docshell = win.docShell;
-  const menu = new Menu({id});
-  menu.append(new MenuItem({
-    id: "editmenu-undo",
-    l10nID: "editmenu-undo",
-    disabled: !docshell.isCommandEnabled("cmd_undo"),
-    click: () => {
-      docshell.doCommand("cmd_undo");
-    },
-  }));
-  menu.append(new MenuItem({
-    type: "separator",
-  }));
-  menu.append(new MenuItem({
-    id: "editmenu-cut",
-    l10nID: "editmenu-cut",
-    disabled: !docshell.isCommandEnabled("cmd_cut"),
-    click: () => {
-      docshell.doCommand("cmd_cut");
-    },
-  }));
-  menu.append(new MenuItem({
-    id: "editmenu-copy",
-    l10nID: "editmenu-copy",
-    disabled: !docshell.isCommandEnabled("cmd_copy"),
-    click: () => {
-      docshell.doCommand("cmd_copy");
-    },
-  }));
-  menu.append(new MenuItem({
-    id: "editmenu-paste",
-    l10nID: "editmenu-paste",
-    disabled: !docshell.isCommandEnabled("cmd_paste"),
-    click: () => {
-      docshell.doCommand("cmd_paste");
-    },
-  }));
-  menu.append(new MenuItem({
-    id: "editmenu-delete",
-    l10nID: "editmenu-delete",
-    disabled: !docshell.isCommandEnabled("cmd_delete"),
-    click: () => {
-      docshell.doCommand("cmd_delete");
-    },
-  }));
-  menu.append(new MenuItem({
-    type: "separator",
-  }));
-  menu.append(new MenuItem({
-    id: "editmenu-selectAll",
-    l10nID: "editmenu-select-all",
-    disabled: !docshell.isCommandEnabled("cmd_selectAll"),
-    click: () => {
-      docshell.doCommand("cmd_selectAll");
-    },
-  }));
+  const menu = new Menu({ id });
+  menu.append(
+    new MenuItem({
+      id: "editmenu-undo",
+      l10nID: "editmenu-undo",
+      disabled: !docshell.isCommandEnabled("cmd_undo"),
+      click: () => {
+        docshell.doCommand("cmd_undo");
+      },
+    })
+  );
+  menu.append(
+    new MenuItem({
+      type: "separator",
+    })
+  );
+  menu.append(
+    new MenuItem({
+      id: "editmenu-cut",
+      l10nID: "editmenu-cut",
+      disabled: !docshell.isCommandEnabled("cmd_cut"),
+      click: () => {
+        docshell.doCommand("cmd_cut");
+      },
+    })
+  );
+  menu.append(
+    new MenuItem({
+      id: "editmenu-copy",
+      l10nID: "editmenu-copy",
+      disabled: !docshell.isCommandEnabled("cmd_copy"),
+      click: () => {
+        docshell.doCommand("cmd_copy");
+      },
+    })
+  );
+  menu.append(
+    new MenuItem({
+      id: "editmenu-paste",
+      l10nID: "editmenu-paste",
+      disabled: !docshell.isCommandEnabled("cmd_paste"),
+      click: () => {
+        docshell.doCommand("cmd_paste");
+      },
+    })
+  );
+  menu.append(
+    new MenuItem({
+      id: "editmenu-delete",
+      l10nID: "editmenu-delete",
+      disabled: !docshell.isCommandEnabled("cmd_delete"),
+      click: () => {
+        docshell.doCommand("cmd_delete");
+      },
+    })
+  );
+  menu.append(
+    new MenuItem({
+      type: "separator",
+    })
+  );
+  menu.append(
+    new MenuItem({
+      id: "editmenu-selectAll",
+      l10nID: "editmenu-select-all",
+      disabled: !docshell.isCommandEnabled("cmd_selectAll"),
+      click: () => {
+        docshell.doCommand("cmd_selectAll");
+      },
+    })
+  );
   return menu;
 }
 

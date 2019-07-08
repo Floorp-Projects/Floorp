@@ -61,7 +61,7 @@ UndoStack.prototype = {
 
     // Cut off the end of the undo stack at the current index,
     // and the beginning to prevent a stack larger than maxUndo.
-    const start = Math.max((this._index + 1) - this.maxUndo, 0);
+    const start = Math.max(this._index + 1 - this.maxUndo, 0);
     this._stack = this._stack.slice(start, this._index);
 
     const batch = this._batch;
@@ -174,23 +174,27 @@ UndoStack.prototype = {
   },
 
   supportsCommand: function(command) {
-    return (command == "cmd_undo" ||
-            command == "cmd_redo");
+    return command == "cmd_undo" || command == "cmd_redo";
   },
 
   isCommandEnabled: function(command) {
     switch (command) {
-      case "cmd_undo": return this.canUndo();
-      case "cmd_redo": return this.canRedo();
+      case "cmd_undo":
+        return this.canUndo();
+      case "cmd_redo":
+        return this.canRedo();
     }
     return false;
   },
 
   doCommand: function(command) {
     switch (command) {
-      case "cmd_undo": return this.undo();
-      case "cmd_redo": return this.redo();
-      default: return null;
+      case "cmd_undo":
+        return this.undo();
+      case "cmd_redo":
+        return this.redo();
+      default:
+        return null;
     }
   },
 

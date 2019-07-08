@@ -283,7 +283,7 @@ static inline double CanonicalizeNaN(double d) {
 // Some architectures (not to name names) generate NaNs with bit
 // patterns that don't conform to JS::Value's bit pattern
 // restrictions.
-#define JS_NONCANONICAL_HARDWARE_NAN
+#  define JS_NONCANONICAL_HARDWARE_NAN
 #endif
 
 /**

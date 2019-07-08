@@ -3,9 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 
 const TOPIC_SHUTDOWN = "places-shutdown";
 
@@ -17,7 +21,10 @@ function TaggingService() {
 
   // Observe bookmarks changes.
   PlacesUtils.bookmarks.addObserver(this);
-  PlacesUtils.observers.addListener(["bookmark-added"], this.handlePlacesEvents);
+  PlacesUtils.observers.addListener(
+    ["bookmark-added"],
+    this.handlePlacesEvents
+  );
 
   // Cleanup on shutdown.
   Services.obs.addObserver(this, TOPIC_SHUTDOWN);
@@ -35,8 +42,11 @@ TaggingService.prototype = {
    */
   _createTag: function TS__createTag(aTagName, aSource) {
     var newFolderId = PlacesUtils.bookmarks.createFolder(
-      PlacesUtils.tagsFolderId, aTagName, PlacesUtils.bookmarks.DEFAULT_INDEX,
-      /* aGuid */ null, aSource
+      PlacesUtils.tagsFolderId,
+      aTagName,
+      PlacesUtils.bookmarks.DEFAULT_INDEX,
+      /* aGuid */ null,
+      aSource
     );
     // Add the folder to our local cache, so we can avoid doing this in the
     // observer that would have to check itemType.
@@ -57,8 +67,9 @@ TaggingService.prototype = {
    */
   _getItemIdForTaggedURI: function TS__getItemIdForTaggedURI(aURI, aTagName) {
     var tagId = this._getItemIdForTag(aTagName);
-    if (tagId == -1)
+    if (tagId == -1) {
       return -1;
+    }
     // Using bookmarks service API for this would be a pain.
     // Until tags implementation becomes sane, go the query way.
     let db = PlacesUtils.history.DBConnection;
@@ -87,8 +98,9 @@ TaggingService.prototype = {
    */
   _getItemIdForTag: function TS_getItemIdForTag(aTagName) {
     for (var i in this._tagFolders) {
-      if (aTagName.toLowerCase() == this._tagFolders[i].toLowerCase())
+      if (aTagName.toLowerCase() == this._tagFolders[i].toLowerCase()) {
         return parseInt(i);
+      }
     }
     return -1;
   },
@@ -107,33 +119,43 @@ TaggingService.prototype = {
    */
   _convertInputMixedTagsArray(aTags, trim = false) {
     // Handle sparse array with a .filter.
-    return aTags.filter(tag => tag !== undefined)
-                .map(idOrName => {
-      let tag = {};
-      if (typeof(idOrName) == "number" && this._tagFolders[idOrName]) {
-        // This is a tag folder id.
-        tag.id = idOrName;
-        // We can't know the name at this point, since a previous tag could
-        // want to change it.
-        tag.__defineGetter__("name", () => this._tagFolders[tag.id]);
-      } else if (typeof(idOrName) == "string" && idOrName.length > 0 &&
-               idOrName.length <= PlacesUtils.bookmarks.MAX_TAG_LENGTH) {
-        // This is a tag name.
-        tag.name = trim ? idOrName.trim() : idOrName;
-        // We can't know the id at this point, since a previous tag could
-        // have created it.
-        tag.__defineGetter__("id", () => this._getItemIdForTag(tag.name));
-      } else {
-        throw Components.Exception("Invalid tag value", Cr.NS_ERROR_INVALID_ARG);
-      }
-      return tag;
-    });
+    return aTags
+      .filter(tag => tag !== undefined)
+      .map(idOrName => {
+        let tag = {};
+        if (typeof idOrName == "number" && this._tagFolders[idOrName]) {
+          // This is a tag folder id.
+          tag.id = idOrName;
+          // We can't know the name at this point, since a previous tag could
+          // want to change it.
+          tag.__defineGetter__("name", () => this._tagFolders[tag.id]);
+        } else if (
+          typeof idOrName == "string" &&
+          idOrName.length > 0 &&
+          idOrName.length <= PlacesUtils.bookmarks.MAX_TAG_LENGTH
+        ) {
+          // This is a tag name.
+          tag.name = trim ? idOrName.trim() : idOrName;
+          // We can't know the id at this point, since a previous tag could
+          // have created it.
+          tag.__defineGetter__("id", () => this._getItemIdForTag(tag.name));
+        } else {
+          throw Components.Exception(
+            "Invalid tag value",
+            Cr.NS_ERROR_INVALID_ARG
+          );
+        }
+        return tag;
+      });
   },
 
   // nsITaggingService
   tagURI: function TS_tagURI(aURI, aTags, aSource) {
     if (!aURI || !aTags || !Array.isArray(aTags) || aTags.length == 0) {
-      throw Components.Exception("Invalid value for tags", Cr.NS_ERROR_INVALID_ARG);
+      throw Components.Exception(
+        "Invalid value for tags",
+        Cr.NS_ERROR_INVALID_ARG
+      );
     }
 
     // This also does some input validation.
@@ -150,14 +172,21 @@ TaggingService.prototype = {
         // The provided URI is not yet tagged, add a tag for it.
         // Note that bookmarks under tag containers must have null titles.
         PlacesUtils.bookmarks.insertBookmark(
-          tag.id, aURI, PlacesUtils.bookmarks.DEFAULT_INDEX,
-          /* aTitle */ null, /* aGuid */ null, aSource
+          tag.id,
+          aURI,
+          PlacesUtils.bookmarks.DEFAULT_INDEX,
+          /* aTitle */ null,
+          /* aGuid */ null,
+          aSource
         );
       } else {
         // Otherwise, bump the tag's timestamp, so that we can increment the
         // sync change counter for all bookmarks with the URI.
-        PlacesUtils.bookmarks.setItemLastModified(itemId,
-          PlacesUtils.toPRTime(Date.now()), aSource);
+        PlacesUtils.bookmarks.setItemLastModified(
+          itemId,
+          PlacesUtils.toPRTime(Date.now()),
+          aSource
+        );
       }
 
       // Try to preserve user's tag name casing.
@@ -202,7 +231,10 @@ TaggingService.prototype = {
   // nsITaggingService
   untagURI: function TS_untagURI(aURI, aTags, aSource) {
     if (!aURI || (aTags && (!Array.isArray(aTags) || aTags.length == 0))) {
-      throw Components.Exception("Invalid value for tags", Cr.NS_ERROR_INVALID_ARG);
+      throw Components.Exception(
+        "Invalid value for tags",
+        Cr.NS_ERROR_INVALID_ARG
+      );
     }
 
     if (!aTags) {
@@ -216,8 +248,10 @@ TaggingService.prototype = {
 
     let isAnyTagNotTrimmed = tags.some(tag => /^\s|\s$/.test(tag.name));
     if (isAnyTagNotTrimmed) {
-      throw Components.Exception("At least one tag passed to untagURI was not trimmed",
-                                 Cr.NS_ERROR_INVALID_ARG);
+      throw Components.Exception(
+        "At least one tag passed to untagURI was not trimmed",
+        Cr.NS_ERROR_INVALID_ARG
+      );
     }
 
     for (let tag of tags) {
@@ -262,8 +296,8 @@ TaggingService.prototype = {
 
     // sort the tag list
     tags.sort(function(a, b) {
-        return a.toLowerCase().localeCompare(b.toLowerCase());
-      });
+      return a.toLowerCase().localeCompare(b.toLowerCase());
+    });
     return tags;
   },
 
@@ -293,7 +327,10 @@ TaggingService.prototype = {
   observe: function TS_observe(aSubject, aTopic, aData) {
     if (aTopic == TOPIC_SHUTDOWN) {
       PlacesUtils.bookmarks.removeObserver(this);
-      PlacesUtils.observers.removeListener(["bookmark-added"], this.handlePlacesEvents);
+      PlacesUtils.observers.removeListener(
+        ["bookmark-added"],
+        this.handlePlacesEvents
+      );
       Services.obs.removeObserver(this, TOPIC_SHUTDOWN);
     }
   },
@@ -309,8 +346,9 @@ TaggingService.prototype = {
    *          A URI (string) that may or may not be bookmarked
    * @returns an array of item ids
    */
-  _getTaggedItemIdsIfUnbookmarkedURI:
-  function TS__getTaggedItemIdsIfUnbookmarkedURI(aURI) {
+  _getTaggedItemIdsIfUnbookmarkedURI: function TS__getTaggedItemIdsIfUnbookmarkedURI(
+    aURI
+  ) {
     var itemIds = [];
     var isBookmarked = false;
 
@@ -342,8 +380,10 @@ TaggingService.prototype = {
 
   handlePlacesEvents(events) {
     for (let event of events) {
-      if (!event.isTagging ||
-          event.itemType != PlacesUtils.bookmarks.TYPE_FOLDER) {
+      if (
+        !event.isTagging ||
+        event.itemType != PlacesUtils.bookmarks.TYPE_FOLDER
+      ) {
         continue;
       }
 
@@ -352,9 +392,16 @@ TaggingService.prototype = {
   },
 
   // nsINavBookmarkObserver
-  onItemRemoved: function TS_onItemRemoved(aItemId, aFolderId, aIndex,
-                                           aItemType, aURI, aGuid, aParentGuid,
-                                           aSource) {
+  onItemRemoved: function TS_onItemRemoved(
+    aItemId,
+    aFolderId,
+    aIndex,
+    aItemType,
+    aURI,
+    aGuid,
+    aParentGuid,
+    aSource
+  ) {
     // Item is a tag folder.
     if (aFolderId == PlacesUtils.tagsFolderId && this._tagFolders[aItemId]) {
       delete this._tagFolders[aItemId];
@@ -375,18 +422,34 @@ TaggingService.prototype = {
     }
   },
 
-  onItemChanged: function TS_onItemChanged(aItemId, aProperty,
-                                           aIsAnnotationProperty, aNewValue,
-                                           aLastModified, aItemType) {
-    if (aProperty == "title" && this._tagFolders[aItemId])
+  onItemChanged: function TS_onItemChanged(
+    aItemId,
+    aProperty,
+    aIsAnnotationProperty,
+    aNewValue,
+    aLastModified,
+    aItemType
+  ) {
+    if (aProperty == "title" && this._tagFolders[aItemId]) {
       this._tagFolders[aItemId] = aNewValue;
+    }
   },
 
-  onItemMoved: function TS_onItemMoved(aItemId, aOldParent, aOldIndex,
-                                      aNewParent, aNewIndex, aItemType) {
-    if (this._tagFolders[aItemId] && PlacesUtils.tagsFolderId == aOldParent &&
-        PlacesUtils.tagsFolderId != aNewParent)
+  onItemMoved: function TS_onItemMoved(
+    aItemId,
+    aOldParent,
+    aOldIndex,
+    aNewParent,
+    aNewIndex,
+    aItemType
+  ) {
+    if (
+      this._tagFolders[aItemId] &&
+      PlacesUtils.tagsFolderId == aOldParent &&
+      PlacesUtils.tagsFolderId != aNewParent
+    ) {
       delete this._tagFolders[aItemId];
+    }
   },
 
   onItemVisited() {},
@@ -407,8 +470,7 @@ TaggingService.prototype = {
 };
 
 // Implements nsIAutoCompleteSearch
-function TagAutoCompleteSearch() {
-}
+function TagAutoCompleteSearch() {}
 
 TagAutoCompleteSearch.prototype = {
   _stopped: false,
@@ -425,8 +487,10 @@ TagAutoCompleteSearch.prototype = {
     this._stopped = false;
 
     // only search on characters for the last tag
-    let index = Math.max(searchString.lastIndexOf(","),
-                         searchString.lastIndexOf(";"));
+    let index = Math.max(
+      searchString.lastIndexOf(","),
+      searchString.lastIndexOf(";")
+    );
     let before = "";
     if (index != -1) {
       before = searchString.slice(0, index + 1);
@@ -441,8 +505,9 @@ TagAutoCompleteSearch.prototype = {
 
     // Create a new result to add eventual matches.  Note we need a result
     // regardless having matches.
-    let result = Cc["@mozilla.org/autocomplete/simple-result;1"]
-                   .createInstance(Ci.nsIAutoCompleteSimpleResult);
+    let result = Cc["@mozilla.org/autocomplete/simple-result;1"].createInstance(
+      Ci.nsIAutoCompleteSimpleResult
+    );
     result.setDefaultIndex(0);
     result.setSearchString(searchString);
 
@@ -454,29 +519,33 @@ TagAutoCompleteSearch.prototype = {
 
     (async () => {
       let tags = (await PlacesUtils.bookmarks.fetchTags())
-        .filter(t => t.name.toLowerCase().startsWith(searchString.toLowerCase()))
+        .filter(t =>
+          t.name.toLowerCase().startsWith(searchString.toLowerCase())
+        )
         .map(t => t.name);
 
       // Chunk the search results via a generator.
-      let gen = (function* () {
+      let gen = function*() {
         for (let i = 0; i < tags.length; ++i) {
-          if (this._stopped)
+          if (this._stopped) {
             yield false;
+          }
 
           // For each match, prepend what the user has typed so far.
           count++;
           result.appendMatch(before + tags[i], tags[i]);
 
           // In case of many tags, notify once every 10 loops.
-          if ((i % 10) == 0) {
+          if (i % 10 == 0) {
             this.notifyResult(result, count, listener, true);
             yield true;
           }
         }
         yield false;
-      }.bind(this))();
+      }.bind(this)();
 
-      while (gen.next().value);
+      // eslint-disable-next-line no-empty
+      while (gen.next().value) {}
       this.notifyResult(result, count, listener, false);
     })();
   },
@@ -498,9 +567,7 @@ TagAutoCompleteSearch.prototype = {
   },
 
   classID: Components.ID("{1dcc23b0-d4cb-11dc-9ad6-479d56d89593}"),
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIAutoCompleteSearch,
-  ]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteSearch]),
 };
 
 var EXPORTED_SYMBOLS = ["TaggingService", "TagAutoCompleteSearch"];

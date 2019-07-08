@@ -15,14 +15,20 @@ add_task(async function() {
   const front = await target.getFront("performance");
   const rec = await front.startRecording({ withMarkers: true });
 
-  const markers = await waitForMarkerType(front,
-    ["nsCycleCollector::Collect", "nsCycleCollector::ForgetSkippable"]);
+  const markers = await waitForMarkerType(front, [
+    "nsCycleCollector::Collect",
+    "nsCycleCollector::ForgetSkippable",
+  ]);
   await front.stopRecording(rec);
 
-  ok(markers.some(m => m.name === "nsCycleCollector::Collect"),
-    "got some nsCycleCollector::Collect markers");
-  ok(markers.some(m => m.name === "nsCycleCollector::ForgetSkippable"),
-    "got some nsCycleCollector::Collect markers");
+  ok(
+    markers.some(m => m.name === "nsCycleCollector::Collect"),
+    "got some nsCycleCollector::Collect markers"
+  );
+  ok(
+    markers.some(m => m.name === "nsCycleCollector::ForgetSkippable"),
+    "got some nsCycleCollector::Collect markers"
+  );
 
   await target.destroy();
   gBrowser.removeCurrentTab();

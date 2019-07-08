@@ -14,7 +14,9 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const flags = require("devtools/shared/flags");
 
 // Logic modules
-const { PerformanceTelemetry } = require("devtools/client/performance/modules/logic/telemetry");
+const {
+  PerformanceTelemetry,
+} = require("devtools/client/performance/modules/logic/telemetry");
 const { PerformanceView } = require("./performance-view");
 const { DetailsView } = require("./views/details");
 const { RecordingsView } = require("./views/recordings");
@@ -43,17 +45,25 @@ const PerformanceController = {
     this.importRecording = this.importRecording.bind(this);
     this.exportRecording = this.exportRecording.bind(this);
     this.clearRecordings = this.clearRecordings.bind(this);
-    this._onRecordingSelectFromView = this._onRecordingSelectFromView.bind(this);
+    this._onRecordingSelectFromView = this._onRecordingSelectFromView.bind(
+      this
+    );
     this._onPrefChanged = this._onPrefChanged.bind(this);
     this._onThemeChanged = this._onThemeChanged.bind(this);
     this._onDetailsViewSelected = this._onDetailsViewSelected.bind(this);
     this._onProfilerStatus = this._onProfilerStatus.bind(this);
-    this._onRecordingStarted =
-      this._emitRecordingStateChange.bind(this, "recording-started");
-    this._onRecordingStopping =
-      this._emitRecordingStateChange.bind(this, "recording-stopping");
-    this._onRecordingStopped =
-      this._emitRecordingStateChange.bind(this, "recording-stopped");
+    this._onRecordingStarted = this._emitRecordingStateChange.bind(
+      this,
+      "recording-started"
+    );
+    this._onRecordingStopping = this._emitRecordingStateChange.bind(
+      this,
+      "recording-stopping"
+    );
+    this._onRecordingStopped = this._emitRecordingStateChange.bind(
+      this,
+      "recording-stopped"
+    );
 
     // Store data regarding if e10s is enabled.
     this._e10s = Services.appinfo.browserTabsRemoteAutostart;
@@ -69,8 +79,14 @@ const PerformanceController = {
     PerformanceView.on(EVENTS.UI_IMPORT_RECORDING, this.importRecording);
     PerformanceView.on(EVENTS.UI_CLEAR_RECORDINGS, this.clearRecordings);
     RecordingsView.on(EVENTS.UI_EXPORT_RECORDING, this.exportRecording);
-    RecordingsView.on(EVENTS.UI_RECORDING_SELECTED, this._onRecordingSelectFromView);
-    DetailsView.on(EVENTS.UI_DETAILS_VIEW_SELECTED, this._onDetailsViewSelected);
+    RecordingsView.on(
+      EVENTS.UI_RECORDING_SELECTED,
+      this._onRecordingSelectFromView
+    );
+    DetailsView.on(
+      EVENTS.UI_DETAILS_VIEW_SELECTED,
+      this._onDetailsViewSelected
+    );
 
     this._prefObserver = new PrefObserver("devtools.");
     this._prefObserver.on("devtools.theme", this._onThemeChanged);
@@ -89,8 +105,14 @@ const PerformanceController = {
     PerformanceView.off(EVENTS.UI_IMPORT_RECORDING, this.importRecording);
     PerformanceView.off(EVENTS.UI_CLEAR_RECORDINGS, this.clearRecordings);
     RecordingsView.off(EVENTS.UI_EXPORT_RECORDING, this.exportRecording);
-    RecordingsView.off(EVENTS.UI_RECORDING_SELECTED, this._onRecordingSelectFromView);
-    DetailsView.off(EVENTS.UI_DETAILS_VIEW_SELECTED, this._onDetailsViewSelected);
+    RecordingsView.off(
+      EVENTS.UI_RECORDING_SELECTED,
+      this._onRecordingSelectFromView
+    );
+    DetailsView.off(
+      EVENTS.UI_DETAILS_VIEW_SELECTED,
+      this._onDetailsViewSelected
+    );
 
     this._prefObserver.off("devtools.theme", this._onThemeChanged);
     this._prefObserver.destroy();
@@ -175,8 +197,10 @@ const PerformanceController = {
     if (!hasActor) {
       return true;
     }
-    const actorCanCheck =
-      await this.target.actorHasMethod("performance", "canCurrentlyRecord");
+    const actorCanCheck = await this.target.actorHasMethod(
+      "performance",
+      "canCurrentlyRecord"
+    );
     if (!actorCanCheck) {
       return true;
     }
@@ -236,7 +260,7 @@ const PerformanceController = {
     this.emit(EVENTS.RECORDING_EXPORTED, recording, file);
   },
 
-   /**
+  /**
    * Clears all completed recordings from the list as well as the current non-console
    * recording. Emits `EVENTS.RECORDING_DELETED` when complete so other components can
    * clean up.

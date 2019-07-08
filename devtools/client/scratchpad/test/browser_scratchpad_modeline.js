@@ -19,7 +19,10 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<p>test file open and save in Scratchpad");
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    "data:text/html,<p>test file open and save in Scratchpad"
+  );
 }
 
 function runTests() {
@@ -58,7 +61,11 @@ function runTests() {
     ok(Components.isSuccessCode(aStatus), "File was saved successfully");
 
     gFile = aFile;
-    gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsIFile), true, fileImported);
+    gScratchpad.importFromFile(
+      gFile.QueryInterface(Ci.nsIFile),
+      true,
+      fileImported
+    );
   });
 }
 
@@ -67,14 +74,23 @@ function fileImported(status, content) {
 
   // Since devtools.chrome.enabled is off, Scratchpad should still be in
   // the content context.
-  is(gScratchpad.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_CONTENT);
+  is(
+    gScratchpad.executionContext,
+    gScratchpadWindow.SCRATCHPAD_CONTEXT_CONTENT
+  );
 
   // Set the pref and try again.
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, true);
 
-  gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsIFile), true, function(status, content) {
+  gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsIFile), true, function(
+    status,
+    content
+  ) {
     ok(Components.isSuccessCode(status), "File was imported successfully");
-    is(gScratchpad.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_BROWSER);
+    is(
+      gScratchpad.executionContext,
+      gScratchpadWindow.SCRATCHPAD_CONTEXT_BROWSER
+    );
 
     gFile.remove(false);
     gFile = null;

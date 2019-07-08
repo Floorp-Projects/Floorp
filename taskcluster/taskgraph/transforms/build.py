@@ -104,7 +104,8 @@ def mozconfig(config, jobs):
 def use_profile_data(config, jobs):
     for job in jobs:
         use_pgo = job.pop('use-pgo', False)
-        if not use_pgo:
+        disable_pgo = config.params['try_task_config'].get('disable-pgo', False)
+        if not use_pgo or disable_pgo:
             yield job
             continue
 

@@ -1,6 +1,8 @@
 function run_test() {
   if (!("@mozilla.org/toolkit/crash-reporter;1" in Cc)) {
-    dump("INFO | test_crash_oom.js | Can't test crashreporter in a non-libxul build.\n");
+    dump(
+      "INFO | test_crash_oom.js | Can't test crashreporter in a non-libxul build.\n"
+    );
     return;
   }
 
@@ -9,35 +11,42 @@ function run_test() {
   // within the crasher subprocess.
 
   do_crash(
-   function() {
+    function() {
       // Delay crashing so that the memory report has time to complete.
       shouldDelay = true;
 
-      let env = Cc["@mozilla.org/process/environment;1"]
-                  .getService(Ci.nsIEnvironment);
+      let env = Cc["@mozilla.org/process/environment;1"].getService(
+        Ci.nsIEnvironment
+      );
       let profd = env.get("XPCSHELL_TEST_PROFILE_DIR");
-      let file = Cc["@mozilla.org/file/local;1"]
-                   .createInstance(Ci.nsIFile);
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       file.initWithPath(profd);
 
       let provider = {
         getFile(prop, persistent) {
           persistent.value = true;
-              if (prop == "ProfD" || prop == "ProfLD" || prop == "ProfDS" ||
-              prop == "ProfLDS" || prop == "TmpD") {
+          if (
+            prop == "ProfD" ||
+            prop == "ProfLD" ||
+            prop == "ProfDS" ||
+            prop == "ProfLDS" ||
+            prop == "TmpD"
+          ) {
             return file.clone();
           }
           throw Cr.NS_ERROR_FAILURE;
         },
         QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"]),
       };
-      Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)
-                     .registerProvider(provider);
+      Services.dirsvc
+        .QueryInterface(Ci.nsIDirectoryService)
+        .registerProvider(provider);
 
       crashReporter.saveMemoryReport();
     },
     function(mdump, extra) {
       Assert.equal(extra.ContainsMemoryReport, "1");
     },
-    true);
+    true
+  );
 }

@@ -65,7 +65,9 @@ WebSocketDebuggerTransport.prototype = {
 
   onMessage({ data }) {
     if (typeof data !== "string") {
-      throw new Error("Binary messages are not supported by WebSocket transport");
+      throw new Error(
+        "Binary messages are not supported by WebSocket transport"
+      );
     }
 
     const object = JSON.parse(data);

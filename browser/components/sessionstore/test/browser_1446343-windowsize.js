@@ -10,7 +10,7 @@ add_task(async function test() {
     await changeSizeMode("restore");
   }
 
-  const {outerWidth, outerHeight, screenX, screenY} = win;
+  const { outerWidth, outerHeight, screenX, screenY } = win;
   function checkCurrentState(sizemode) {
     let state = JSON.parse(ss.getWindowState(win));
     let winState = state.windows[0];

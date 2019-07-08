@@ -371,14 +371,14 @@
 }
 
 .ruleview-warning {
-  background-image: url(chrome://devtools/skin/images/alert.svg);
+  background-image: url(chrome://devtools/skin/images/alert-small.svg);
   fill: var(--yellow-60);
 }
 
 .ruleview-unused-warning {
-  background-image: url(chrome://devtools/skin/images/webconsole/info.svg);
+  background-image: url(chrome://devtools/skin/images/info-small.svg);
   background-color: var(--theme-sidebar-background);
-  fill: var(--theme-icon-dimmed-color);  
+  fill: var(--theme-icon-dimmed-color);
 }
 
 .ruleview-unused-warning:hover {

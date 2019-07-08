@@ -29,10 +29,14 @@ const gWindowUtils = window.windowUtils;
  * current window.
  */
 function assertNoFlushesRequired() {
-  Assert.ok(!gWindowUtils.needsFlush(Ci.nsIDOMWindowUtils.FLUSH_STYLE),
-            "No style flushes are required.");
-  Assert.ok(!gWindowUtils.needsFlush(Ci.nsIDOMWindowUtils.FLUSH_LAYOUT),
-            "No layout flushes are required.");
+  Assert.ok(
+    !gWindowUtils.needsFlush(Ci.nsIDOMWindowUtils.FLUSH_STYLE),
+    "No style flushes are required."
+  );
+  Assert.ok(
+    !gWindowUtils.needsFlush(Ci.nsIDOMWindowUtils.FLUSH_LAYOUT),
+    "No layout flushes are required."
+  );
 }
 
 /**
@@ -40,10 +44,14 @@ function assertNoFlushesRequired() {
  * are required.
  */
 function assertFlushesRequired() {
-  Assert.ok(gWindowUtils.needsFlush(Ci.nsIDOMWindowUtils.FLUSH_STYLE),
-            "Style flush required.");
-  Assert.ok(gWindowUtils.needsFlush(Ci.nsIDOMWindowUtils.FLUSH_LAYOUT),
-            "Layout flush required.");
+  Assert.ok(
+    gWindowUtils.needsFlush(Ci.nsIDOMWindowUtils.FLUSH_STYLE),
+    "Style flush required."
+  );
+  Assert.ok(
+    gWindowUtils.needsFlush(Ci.nsIDOMWindowUtils.FLUSH_LAYOUT),
+    "Layout flush required."
+  );
 }
 
 /**
@@ -104,8 +112,7 @@ add_task(async function test_can_get_results_from_callback() {
   });
 
   for (let prop in paddings) {
-    Assert.equal(paddings[prop], NEW_PADDING,
-                 "Got expected padding");
+    Assert.equal(paddings[prop], NEW_PADDING, "Got expected padding");
   }
 
   await cleanTheDOM();
@@ -120,8 +127,10 @@ add_task(async function test_can_get_results_from_callback() {
         Assert.ok(false, "A reflow should not have occurred.");
       },
       reflowInterruptible() {},
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIReflowObserver,
-                                              Ci.nsISupportsWeakReference])
+      QueryInterface: ChromeUtils.generateQI([
+        Ci.nsIReflowObserver,
+        Ci.nsISupportsWeakReference,
+      ]),
     };
 
     let docShell = window.docShell;
@@ -138,7 +147,10 @@ add_task(async function test_can_get_results_from_callback() {
   // rect was returned, so checking for properties being greater than
   // 0 is sufficient.
   for (let property of ["width", "height"]) {
-    Assert.ok(rect[property] > 0, `Rect property ${property} > 0 (${rect[property]})`);
+    Assert.ok(
+      rect[property] > 0,
+      `Rect property ${property} > 0 (${rect[property]})`
+    );
   }
 
   await cleanTheDOM();
@@ -205,43 +217,52 @@ add_task(async function test_execution_order() {
   let result = [];
 
   dirtyStyleAndLayout(1);
-  let promise1 = window.promiseDocumentFlushed(() => {
-    result.push(0);
-  }).then(() => {
-    result.push(2);
-  });
+  let promise1 = window
+    .promiseDocumentFlushed(() => {
+      result.push(0);
+    })
+    .then(() => {
+      result.push(2);
+    });
 
-  let promise2 = window.promiseDocumentFlushed(() => {
-    result.push(1);
-  }).then(() => {
-    result.push(3);
-  });
+  let promise2 = window
+    .promiseDocumentFlushed(() => {
+      result.push(1);
+    })
+    .then(() => {
+      result.push(3);
+    });
 
   await Promise.all([promise1, promise2]);
 
-  Assert.equal(result.length, 4,
-    "Should have run all callbacks and Promises.");
+  Assert.equal(result.length, 4, "Should have run all callbacks and Promises.");
 
-  let promise3 = window.promiseDocumentFlushed(() => {
-    result.push(4);
-  }).then(() => {
-    result.push(6);
-  });
+  let promise3 = window
+    .promiseDocumentFlushed(() => {
+      result.push(4);
+    })
+    .then(() => {
+      result.push(6);
+    });
 
-  let promise4 = window.promiseDocumentFlushed(() => {
-    result.push(5);
-  }).then(() => {
-    result.push(7);
-  });
+  let promise4 = window
+    .promiseDocumentFlushed(() => {
+      result.push(5);
+    })
+    .then(() => {
+      result.push(7);
+    });
 
   await Promise.all([promise3, promise4]);
 
-  Assert.equal(result.length, 8,
-    "Should have run all callbacks and Promises.");
+  Assert.equal(result.length, 8, "Should have run all callbacks and Promises.");
 
   for (let i = 0; i < result.length; ++i) {
-    Assert.equal(result[i], i,
-      "Callbacks and Promises should have run in the expected order.");
+    Assert.equal(
+      result[i],
+      i,
+      "Callbacks and Promises should have run in the expected order."
+    );
   }
 
   await cleanTheDOM();

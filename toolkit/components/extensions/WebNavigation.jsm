@@ -6,14 +6,23 @@
 
 const EXPORTED_SYMBOLS = ["WebNavigation"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker",
-                               "resource:///modules/BrowserWindowTracker.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "UrlbarUtils",
-                               "resource:///modules/UrlbarUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserWindowTracker",
+  "resource:///modules/BrowserWindowTracker.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "UrlbarUtils",
+  "resource:///modules/UrlbarUtils.jsm"
+);
 
 // Maximum amount of time that can be passed and still consider
 // the data recent (similar to how is done in nsNavHistory,
@@ -46,7 +55,10 @@ var Manager = {
     Services.mm.addMessageListener("Extension:HistoryChange", this);
     Services.mm.addMessageListener("Extension:CreatedNavigationTarget", this);
 
-    Services.mm.loadFrameScript("resource://gre/modules/WebNavigationContent.js", true);
+    Services.mm.loadFrameScript(
+      "resource://gre/modules/WebNavigationContent.js",
+      true
+    );
   },
 
   uninit() {
@@ -60,9 +72,14 @@ var Manager = {
     Services.mm.removeMessageListener("Extension:DocumentChange", this);
     Services.mm.removeMessageListener("Extension:HistoryChange", this);
     Services.mm.removeMessageListener("Extension:DOMContentLoaded", this);
-    Services.mm.removeMessageListener("Extension:CreatedNavigationTarget", this);
+    Services.mm.removeMessageListener(
+      "Extension:CreatedNavigationTarget",
+      this
+    );
 
-    Services.mm.removeDelayedFrameScript("resource://gre/modules/WebNavigationContent.js");
+    Services.mm.removeDelayedFrameScript(
+      "resource://gre/modules/WebNavigationContent.js"
+    );
     Services.mm.broadcastAsyncMessage("Extension:DisableWebNavigation");
 
     this.recentTabTransitionData = new WeakMap();
@@ -78,7 +95,7 @@ var Manager = {
       this.listeners.set(type, new Map());
     }
     let listeners = this.listeners.get(type);
-    listeners.set(listener, {filters, context});
+    listeners.set(listener, { filters, context });
   },
 
   removeListener(type, listener) {
@@ -100,7 +117,10 @@ var Manager = {
    * Support nsIObserver interface to observe the urlbar autocomplete events used
    * to keep track of the urlbar user interaction.
    */
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   /**
    * Observe autocomplete-did-enter-text (to track the user interaction with the awesomebar)
@@ -129,11 +149,16 @@ var Manager = {
         sourceTabBrowser,
       } = subject.wrappedJSObject;
 
-      this.fire("onCreatedNavigationTarget", createdTabBrowser, {}, {
-        sourceTabBrowser,
-        sourceFrameId: sourceFrameOuterWindowID,
-        url,
-      });
+      this.fire(
+        "onCreatedNavigationTarget",
+        createdTabBrowser,
+        {},
+        {
+          sourceTabBrowser,
+          sourceFrameId: sourceFrameOuterWindowID,
+          url,
+        }
+      );
     }
   },
 
@@ -179,15 +204,21 @@ var Manager = {
           tabTransitionData.typed = true;
           break;
         case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
-          // This "switchtab" autocompletion should be ignored, because
-          // it is not related to a navigation.
-          // Fall through.
+        // This "switchtab" autocompletion should be ignored, because
+        // it is not related to a navigation.
+        // Fall through.
         case UrlbarUtils.RESULT_TYPE.OMNIBOX:
           // "Omnibox" should be ignored as the add-on may or may not initiate
           // a navigation on the item being selected.
-          throw new Error(`Unexpectedly received notification for ${acData.result.type}`);
+          throw new Error(
+            `Unexpectedly received notification for ${acData.result.type}`
+          );
         default:
-          Cu.reportError(`Received unexpected result type ${acData.result.type}, falling back to typed transition.`);
+          Cu.reportError(
+            `Received unexpected result type ${
+              acData.result.type
+            }, falling back to typed transition.`
+          );
           // Fallback on "typed" if the type is unknown.
           tabTransitionData.typed = true;
       }
@@ -210,7 +241,9 @@ var Manager = {
         return;
       }
 
-      let controller = input.popup.view.QueryInterface(Ci.nsIAutoCompleteController);
+      let controller = input.popup.view.QueryInterface(
+        Ci.nsIAutoCompleteController
+      );
       let idx = input.popup.selectedIndex;
 
       let tabTransitionData = {
@@ -285,15 +318,19 @@ var Manager = {
    */
   setRecentTabTransitionData(tabTransitionData) {
     let window = BrowserWindowTracker.getTopWindow();
-    if (window && window.gBrowser && window.gBrowser.selectedTab &&
-        window.gBrowser.selectedTab.linkedBrowser) {
+    if (
+      window &&
+      window.gBrowser &&
+      window.gBrowser.selectedTab &&
+      window.gBrowser.selectedTab.linkedBrowser
+    ) {
       let browser = window.gBrowser.selectedTab.linkedBrowser;
 
       // Get recent tab transition data to update if any.
       let prevData = this.getAndForgetRecentTabTransitionData(browser);
 
       let newData = Object.assign(
-        {time: Date.now()},
+        { time: Date.now() },
         prevData,
         tabTransitionData
       );
@@ -319,7 +356,7 @@ var Manager = {
 
     // Return an empty object if there isn't any tab transition data
     // or if it's less recent than RECENT_DATA_THRESHOLD.
-    if (!data || (data.time - Date.now()) > RECENT_DATA_THRESHOLD) {
+    if (!data || data.time - Date.now() > RECENT_DATA_THRESHOLD) {
       return {};
     }
 
@@ -330,7 +367,7 @@ var Manager = {
    * Receive messages from the WebNavigationContent.js framescript
    * over message manager events.
    */
-  receiveMessage({name, data, target}) {
+  receiveMessage({ name, data, target }) {
     switch (name) {
       case "Extension:StateChange":
         this.onStateChange(target, data);
@@ -364,32 +401,29 @@ var Manager = {
       let ownerWin = target.ownerGlobal;
       let where = ownerWin.whereToOpenLink(data);
       if (where == "current") {
-        this.setRecentTabTransitionData({link: true});
+        this.setRecentTabTransitionData({ link: true });
       }
     }
   },
 
   onCreatedNavigationTarget(browser, data) {
-    const {
-      createdOuterWindowId,
-      isSourceTab,
-      sourceFrameId,
-      url,
-    } = data;
+    const { createdOuterWindowId, isSourceTab, sourceFrameId, url } = data;
 
     // We are going to receive two message manager messages for a single
     // onCreatedNavigationTarget event related to a window.open that is happening
     // in the child process (one from the source tab and one from the created tab),
     // the unique createdWindowId (the outerWindowID of the created docShell)
     // to pair them together.
-    const pairedMessage = this.createdNavigationTargetByOuterWindowId.get(createdOuterWindowId);
+    const pairedMessage = this.createdNavigationTargetByOuterWindowId.get(
+      createdOuterWindowId
+    );
 
     if (!isSourceTab) {
       if (pairedMessage) {
         // This should not happen, print a warning before overwriting the unexpected pending data.
         Services.console.logStringMessage(
           `Discarding onCreatedNavigationTarget for ${createdOuterWindowId}: ` +
-          "unexpected pending data while receiving the created tab data"
+            "unexpected pending data while receiving the created tab data"
         );
       }
 
@@ -414,7 +448,7 @@ var Manager = {
       // to the ObserverService (and the first one to be triggered).
       Services.console.logStringMessage(
         `Discarding onCreatedNavigationTarget for ${createdOuterWindowId}: ` +
-        "received source tab data without any created tab data available"
+          "received source tab data without any created tab data available"
       );
 
       return;
@@ -428,15 +462,22 @@ var Manager = {
     if (!createdTabBrowser) {
       Services.console.logStringMessage(
         `Discarding onCreatedNavigationTarget for ${createdOuterWindowId}: ` +
-        "the created tab has been already destroyed"
+          "the created tab has been already destroyed"
       );
 
       return;
     }
 
-    this.fire("onCreatedNavigationTarget", createdTabBrowser, {}, {
-      sourceTabBrowser, sourceFrameId, url,
-    });
+    this.fire(
+      "onCreatedNavigationTarget",
+      createdTabBrowser,
+      {},
+      {
+        sourceTabBrowser,
+        sourceFrameId,
+        url,
+      }
+    );
   },
 
   onStateChange(browser, data) {
@@ -444,13 +485,13 @@ var Manager = {
     if (stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
       let url = data.requestURL;
       if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
-        this.fire("onBeforeNavigate", browser, data, {url});
+        this.fire("onBeforeNavigate", browser, data, { url });
       } else if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         if (Components.isSuccessCode(data.status)) {
-          this.fire("onCompleted", browser, data, {url});
+          this.fire("onCompleted", browser, data, { url });
         } else {
           let error = `Error code ${data.status}`;
-          this.fire("onErrorOccurred", browser, data, {error, url});
+          this.fire("onErrorOccurred", browser, data, { error, url });
         }
       }
     }
@@ -483,7 +524,7 @@ var Manager = {
   },
 
   onLoad(browser, data) {
-    this.fire("onDOMContentLoaded", browser, data, {url: data.url});
+    this.fire("onDOMContentLoaded", browser, data, { url: data.url });
   },
 
   fire(type, browser, data, extra) {
@@ -505,9 +546,12 @@ var Manager = {
       details[prop] = extra[prop];
     }
 
-    for (let [listener, {filters, context}] of listeners) {
-      if (context && !context.privateBrowsingAllowed &&
-          PrivateBrowsingUtils.isBrowserPrivate(browser)) {
+    for (let [listener, { filters, context }] of listeners) {
+      if (
+        context &&
+        !context.privateBrowsingAllowed &&
+        PrivateBrowsingUtils.isBrowserPrivate(browser)
+      ) {
         continue;
       }
       // Call the listener if the listener has no filter or if its filter matches.

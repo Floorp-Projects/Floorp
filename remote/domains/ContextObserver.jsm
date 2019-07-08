@@ -25,37 +25,45 @@
 
 var EXPORTED_SYMBOLS = ["ContextObserver"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
 
 class ContextObserver {
   constructor(chromeEventHandler) {
     this.chromeEventHandler = chromeEventHandler;
     EventEmitter.decorate(this);
 
-    this.chromeEventHandler.addEventListener("DOMWindowCreated", this,
-      {mozSystemGroup: true});
+    this.chromeEventHandler.addEventListener("DOMWindowCreated", this, {
+      mozSystemGroup: true,
+    });
 
     // Listen for pageshow and pagehide to track pages going in/out to/from the BF Cache
-    this.chromeEventHandler.addEventListener("pageshow", this,
-      {mozSystemGroup: true});
-    this.chromeEventHandler.addEventListener("pagehide", this,
-      {mozSystemGroup: true});
+    this.chromeEventHandler.addEventListener("pageshow", this, {
+      mozSystemGroup: true,
+    });
+    this.chromeEventHandler.addEventListener("pagehide", this, {
+      mozSystemGroup: true,
+    });
 
     Services.obs.addObserver(this, "inner-window-destroyed");
   }
 
   destructor() {
-    this.chromeEventHandler.removeEventListener("DOMWindowCreated", this,
-      {mozSystemGroup: true});
-    this.chromeEventHandler.removeEventListener("pageshow", this,
-      {mozSystemGroup: true});
-    this.chromeEventHandler.removeEventListener("pagehide", this,
-      {mozSystemGroup: true});
+    this.chromeEventHandler.removeEventListener("DOMWindowCreated", this, {
+      mozSystemGroup: true,
+    });
+    this.chromeEventHandler.removeEventListener("pageshow", this, {
+      mozSystemGroup: true,
+    });
+    this.chromeEventHandler.removeEventListener("pagehide", this, {
+      mozSystemGroup: true,
+    });
     Services.obs.removeObserver(this, "inner-window-destroyed");
   }
 
-  handleEvent({type, target, persisted}) {
+  handleEvent({ type, target, persisted }) {
     const window = target.defaultView;
     if (window.top != this.chromeEventHandler.ownerGlobal) {
       // Ignore iframes for now.
@@ -65,31 +73,31 @@ class ContextObserver {
     const frameId = windowUtils.outerWindowID;
     const id = windowUtils.currentInnerWindowID;
     switch (type) {
-    case "DOMWindowCreated":
-      // Do not pass `id` here as that's the new document ID instead of the old one
-      // that is destroyed. Instead, pass the frameId and let the listener figure out
-      // what ExecutionContext to destroy.
-      this.emit("context-destroyed", { frameId });
-      this.emit("frame-navigated", { frameId, window });
-      this.emit("context-created", { id, window });
-      break;
-    case "pageshow":
-      // `persisted` is true when this is about a page being resurected from BF Cache
-      if (!persisted) {
-        return;
-      }
-      // XXX(ochameau) we might have to emit FrameNavigate here to properly handle BF Cache
-      // scenario in Page domain events
-      this.emit("context-created", { id, window });
-      break;
+      case "DOMWindowCreated":
+        // Do not pass `id` here as that's the new document ID instead of the old one
+        // that is destroyed. Instead, pass the frameId and let the listener figure out
+        // what ExecutionContext to destroy.
+        this.emit("context-destroyed", { frameId });
+        this.emit("frame-navigated", { frameId, window });
+        this.emit("context-created", { id, window });
+        break;
+      case "pageshow":
+        // `persisted` is true when this is about a page being resurected from BF Cache
+        if (!persisted) {
+          return;
+        }
+        // XXX(ochameau) we might have to emit FrameNavigate here to properly handle BF Cache
+        // scenario in Page domain events
+        this.emit("context-created", { id, window });
+        break;
 
-    case "pagehide":
-      // `persisted` is true when this is about a page being frozen into BF Cache
-      if (!persisted) {
-        return;
-      }
-      this.emit("context-destroyed", { id });
-      break;
+      case "pagehide":
+        // `persisted` is true when this is about a page being frozen into BF Cache
+        if (!persisted) {
+          return;
+        }
+        this.emit("context-destroyed", { id });
+        break;
     }
   }
 
@@ -99,5 +107,3 @@ class ContextObserver {
     this.emit("context-destroyed", { id: innerWindowID });
   }
 }
-
-

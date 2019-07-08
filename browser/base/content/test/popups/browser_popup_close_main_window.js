@@ -16,7 +16,6 @@ function muffleMainWindowType() {
   }
 }
 
-
 /**
  * Check that if we close the 1 remaining window, we treat it as quitting on
  * non-mac.
@@ -32,7 +31,9 @@ add_task(async function closing_last_window_equals_quitting() {
   muffleMainWindowType();
 
   let observed = 0;
-  function obs() { observed++; }
+  function obs() {
+    observed++;
+  }
   Services.obs.addObserver(obs, "browser-lastwindow-close-requested");
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
   let closedPromise = BrowserTestUtils.windowClosed(newWin);
@@ -56,7 +57,9 @@ add_task(async function closing_last_window_equals_quitting() {
   }
   muffleMainWindowType();
   let observed = 0;
-  function obs() { observed++; }
+  function obs() {
+    observed++;
+  }
   Services.obs.addObserver(obs, "browser-lastwindow-close-requested");
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
   let popupPromise = BrowserTestUtils.waitForNewWindow("https://example.com/");
@@ -72,7 +75,10 @@ add_task(async function closing_last_window_equals_quitting() {
   closedPromise = BrowserTestUtils.windowClosed(popupWin);
   popupWin.BrowserTryToCloseWindow();
   await closedPromise;
-  is(observed, 0, "Got no notification now that we're closing the last window, as it's a popup.");
+  is(
+    observed,
+    0,
+    "Got no notification now that we're closing the last window, as it's a popup."
+  );
   Services.obs.removeObserver(obs, "browser-lastwindow-close-requested");
 });
-

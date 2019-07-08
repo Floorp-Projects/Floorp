@@ -15,7 +15,9 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const Accordion = createFactory(require("devtools/client/inspector/layout/components/Accordion"));
+const Accordion = createFactory(
+  require("devtools/client/inspector/layout/components/Accordion")
+);
 const Rule = createFactory(require("./Rule"));
 const Rules = createFactory(require("./Rules"));
 const Toolbar = createFactory(require("./Toolbar"));
@@ -70,14 +72,19 @@ class RulesApp extends PureComponent {
         lastInherited = rule.inheritance.inherited;
 
         output.push(
-          dom.div({ className: "ruleview-header" }, rule.inheritance.inheritedSource)
+          dom.div(
+            { className: "ruleview-header" },
+            rule.inheritance.inheritedSource
+          )
         );
       }
 
-      output.push(Rule({
-        ...this.getRuleProps(),
-        rule,
-      }));
+      output.push(
+        Rule({
+          ...this.getRuleProps(),
+          rule,
+        })
+      );
     }
 
     return output;
@@ -148,7 +155,9 @@ class RulesApp extends PureComponent {
       },
     ];
 
-    return createElement(Fragment, null,
+    return createElement(
+      Fragment,
+      null,
       Accordion({ items }),
       dom.div({ className: "ruleview-header" }, getStr("rule.selectedElement"))
     );
@@ -173,42 +182,42 @@ class RulesApp extends PureComponent {
       }
     }
 
-    return (
+    return dom.div(
+      {
+        id: "sidebar-panel-ruleview",
+        className: "theme-sidebar inspector-tabpanel",
+      },
+      Toolbar({
+        onAddClass: this.props.onAddClass,
+        onAddRule: this.props.onAddRule,
+        onSetClassState: this.props.onSetClassState,
+        onToggleClassPanelExpanded: this.props.onToggleClassPanelExpanded,
+        onTogglePrintSimulation: this.props.onTogglePrintSimulation,
+        onTogglePseudoClass: this.props.onTogglePseudoClass,
+      }),
       dom.div(
         {
-          id: "sidebar-panel-ruleview",
-          className: "theme-sidebar inspector-tabpanel",
+          id: "ruleview-container",
+          className: "ruleview",
         },
-        Toolbar({
-          onAddClass: this.props.onAddClass,
-          onAddRule: this.props.onAddRule,
-          onSetClassState: this.props.onSetClassState,
-          onToggleClassPanelExpanded: this.props.onToggleClassPanelExpanded,
-          onTogglePrintSimulation: this.props.onTogglePrintSimulation,
-          onTogglePseudoClass: this.props.onTogglePseudoClass,
-        }),
         dom.div(
           {
-            id: "ruleview-container",
-            className: "ruleview",
+            id: "ruleview-container-focusable",
+            tabIndex: -1,
           },
-          dom.div(
-            {
-              id: "ruleview-container-focusable",
-              tabIndex: -1,
-            },
-            rules.length > 0 ?
-              createElement(Fragment, null,
+          rules.length > 0
+            ? createElement(
+                Fragment,
+                null,
                 this.renderPseudoElementRules(pseudoElementRules),
                 this.renderStyleRules(styleRules),
                 this.renderInheritedRules(inheritedRules),
                 this.renderKeyframesRules(keyframesRules)
               )
-              :
-              dom.div({ className: "devtools-sidepanel-no-result" },
+            : dom.div(
+                { className: "devtools-sidepanel-no-result" },
                 getStr("rule.empty")
               )
-          )
         )
       )
     );

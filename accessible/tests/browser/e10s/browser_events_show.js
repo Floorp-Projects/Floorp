@@ -7,11 +7,15 @@
 /**
  * Test show event
  */
-addAccessibleTask('<div id="div" style="visibility: hidden;"></div>',
+addAccessibleTask(
+  '<div id="div" style="visibility: hidden;"></div>',
   async function(browser) {
     let onShow = waitForEvent(EVENT_SHOW, "div");
     await invokeSetStyle(browser, "div", "visibility", "visible");
     let showEvent = await onShow;
-    ok(showEvent.accessibleDocument instanceof nsIAccessibleDocument,
-      "Accessible document not present.");
-  });
+    ok(
+      showEvent.accessibleDocument instanceof nsIAccessibleDocument,
+      "Accessible document not present."
+    );
+  }
+);

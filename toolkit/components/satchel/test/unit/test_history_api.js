@@ -5,15 +5,19 @@
 var testnum = 0;
 var dbConnection; // used for deleted table tests
 
-const {Promise} = ChromeUtils.import("resource://gre/modules/Promise.jsm");
+const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
 
 function countDeletedEntries(expected) {
   return new Promise((resolve, reject) => {
-    let stmt = dbConnection
-               .createAsyncStatement("SELECT COUNT(*) AS numEntries FROM moz_deleted_formhistory");
+    let stmt = dbConnection.createAsyncStatement(
+      "SELECT COUNT(*) AS numEntries FROM moz_deleted_formhistory"
+    );
     stmt.executeAsync({
       handleResult(resultSet) {
-        Assert.equal(expected, resultSet.getNextRow().getResultByName("numEntries"));
+        Assert.equal(
+          expected,
+          resultSet.getNextRow().getResultByName("numEntries")
+        );
         resolve();
       },
       handleError(error) {
@@ -29,9 +33,9 @@ function countDeletedEntries(expected) {
 
 function checkTimeDeleted(guid, checkFunction) {
   return new Promise((resolve, reject) => {
-    let stmt = dbConnection
-               .createAsyncStatement("SELECT timeDeleted FROM moz_deleted_formhistory " +
-                                     "WHERE guid = :guid");
+    let stmt = dbConnection.createAsyncStatement(
+      "SELECT timeDeleted FROM moz_deleted_formhistory WHERE guid = :guid"
+    );
     stmt.params.guid = guid;
     stmt.executeAsync({
       handleResult(resultSet) {
@@ -65,7 +69,7 @@ add_task(async function() {
   FormHistory._supportsDeletedTable = true;
 
   try {
-  // ===== test init =====
+    // ===== test init =====
     let testfile = do_get_file("formhistory_apitest.sqlite");
     let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
 
@@ -78,8 +82,12 @@ add_task(async function() {
 
     testfile.copyTo(profileDir, "formhistory.sqlite");
 
-    function checkExists(num) { Assert.ok(num > 0); }
-    function checkNotExists(num) { Assert.ok(num == 0); }
+    function checkExists(num) {
+      Assert.ok(num > 0);
+    }
+    function checkNotExists(num) {
+      Assert.ok(num == 0);
+    }
 
     // ===== 1 =====
     // Check initial state is as expected
@@ -102,9 +110,11 @@ add_task(async function() {
 
     let deferred = Promise.defer();
 
-    let stmt = dbConnection.createAsyncStatement("DELETE FROM moz_deleted_formhistory");
+    let stmt = dbConnection.createAsyncStatement(
+      "DELETE FROM moz_deleted_formhistory"
+    );
     stmt.executeAsync({
-      handleResult(resultSet) { },
+      handleResult(resultSet) {},
       handleError(error) {
         do_throw("Error occurred counting deleted all entries: " + error);
       },
@@ -131,17 +141,20 @@ add_task(async function() {
     // because it treats null values as not set
     // and here a search should be done explicity for null.
     deferred = Promise.defer();
-    await FormHistory.count({ fieldname: null, value: null },
-                            { handleResult: result => checkNotExists(result),
-                              handleError(error) {
-                                do_throw("Error occurred searching form history: " + error);
-                              },
-                              handleCompletion(reason) {
-                                if (!reason) {
-                                  deferred.resolve();
-                                }
-                              },
-                            });
+    await FormHistory.count(
+      { fieldname: null, value: null },
+      {
+        handleResult: result => checkNotExists(result),
+        handleError(error) {
+          do_throw("Error occurred searching form history: " + error);
+        },
+        handleCompletion(reason) {
+          if (!reason) {
+            deferred.resolve();
+          }
+        },
+      }
+    );
     await deferred.promise;
 
     // ===== 3 =====
@@ -175,7 +188,11 @@ add_task(async function() {
     await promiseCountEntries("time-B", null, checkExists); // firstUsed=1000, lastUsed=1099
     await promiseCountEntries("time-C", null, checkExists); // firstUsed=1099, lastUsed=1099
     await promiseCountEntries("time-D", null, checkExists); // firstUsed=2001, lastUsed=2001
-    await promiseUpdate({ op: "remove", firstUsedStart: 1050, firstUsedEnd: 2000 });
+    await promiseUpdate({
+      op: "remove",
+      firstUsedStart: 1050,
+      firstUsedEnd: 2000,
+    });
 
     await promiseCountEntries("time-A", null, checkExists);
     await promiseCountEntries("time-B", null, checkExists);
@@ -186,7 +203,11 @@ add_task(async function() {
     // ===== 6 =====
     // Test removing by time range (multiple entries)
     testnum++;
-    await promiseUpdate({ op: "remove", firstUsedStart: 1000, firstUsedEnd: 2000 });
+    await promiseUpdate({
+      op: "remove",
+      firstUsedStart: 1000,
+      firstUsedEnd: 2000,
+    });
 
     await promiseCountEntries("time-A", null, checkNotExists);
     await promiseCountEntries("time-B", null, checkNotExists);
@@ -229,13 +250,20 @@ add_task(async function() {
       // Only handle the first result
       if (results.length > 0) {
         let result = results[0];
-        return [result.timesUsed, result.firstUsed, result.lastUsed, result.guid];
+        return [
+          result.timesUsed,
+          result.firstUsed,
+          result.lastUsed,
+          result.guid,
+        ];
       }
       return undefined;
     };
 
-    let results = await FormHistory.search(["timesUsed", "firstUsed", "lastUsed"],
-                                           { fieldname: "field1", value: "value1" });
+    let results = await FormHistory.search(
+      ["timesUsed", "firstUsed", "lastUsed"],
+      { fieldname: "field1", value: "value1" }
+    );
     let [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
     Assert.equal(1, timesUsed);
     Assert.ok(firstUsed > 0);
@@ -254,7 +282,10 @@ add_task(async function() {
     // Update a single entry
     testnum++;
 
-    results = await FormHistory.search(["guid"], { fieldname: "field1", value: "value1" });
+    results = await FormHistory.search(["guid"], {
+      fieldname: "field1",
+      value: "value1",
+    });
     let guid = processFirstResult(results)[3];
 
     await promiseUpdate({ op: "update", guid, value: "modifiedValue" });
@@ -266,11 +297,19 @@ add_task(async function() {
     // ===== 13 =====
     // Add a single entry with times
     testnum++;
-    await promiseUpdate({ op: "add", fieldname: "field2", value: "value2",
-      timesUsed: 20, firstUsed: 100, lastUsed: 500 });
+    await promiseUpdate({
+      op: "add",
+      fieldname: "field2",
+      value: "value2",
+      timesUsed: 20,
+      firstUsed: 100,
+      lastUsed: 500,
+    });
 
-    results = await FormHistory.search(["timesUsed", "firstUsed", "lastUsed"],
-                                       { fieldname: "field2", value: "value2" });
+    results = await FormHistory.search(["timesUsed", "firstUsed", "lastUsed"], {
+      fieldname: "field2",
+      value: "value2",
+    });
     [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
 
     Assert.equal(20, timesUsed);
@@ -281,10 +320,18 @@ add_task(async function() {
     // ===== 14 =====
     // Bump an entry, which updates its lastUsed field
     testnum++;
-    await promiseUpdate({ op: "bump", fieldname: "field2", value: "value2",
-      timesUsed: 20, firstUsed: 100, lastUsed: 500 });
-    results = await FormHistory.search(["timesUsed", "firstUsed", "lastUsed"],
-                                       { fieldname: "field2", value: "value2" });
+    await promiseUpdate({
+      op: "bump",
+      fieldname: "field2",
+      value: "value2",
+      timesUsed: 20,
+      firstUsed: 100,
+      lastUsed: 500,
+    });
+    results = await FormHistory.search(["timesUsed", "firstUsed", "lastUsed"], {
+      fieldname: "field2",
+      value: "value2",
+    });
     [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
     Assert.equal(21, timesUsed);
     Assert.equal(100, firstUsed);
@@ -294,10 +341,18 @@ add_task(async function() {
     // ===== 15 =====
     // Bump an entry that does not exist
     testnum++;
-    await promiseUpdate({ op: "bump", fieldname: "field3", value: "value3",
-      timesUsed: 10, firstUsed: 50, lastUsed: 400 });
-    results = await FormHistory.search(["timesUsed", "firstUsed", "lastUsed"],
-                                       { fieldname: "field3", value: "value3" });
+    await promiseUpdate({
+      op: "bump",
+      fieldname: "field3",
+      value: "value3",
+      timesUsed: 10,
+      firstUsed: 50,
+      lastUsed: 400,
+    });
+    results = await FormHistory.search(["timesUsed", "firstUsed", "lastUsed"], {
+      fieldname: "field3",
+      value: "value3",
+    });
     [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
     Assert.equal(10, timesUsed);
     Assert.equal(50, firstUsed);
@@ -307,11 +362,22 @@ add_task(async function() {
     // ===== 16 =====
     // Bump an entry with a guid
     testnum++;
-    results = await FormHistory.search(["guid"], { fieldname: "field3", value: "value3" });
+    results = await FormHistory.search(["guid"], {
+      fieldname: "field3",
+      value: "value3",
+    });
     guid = processFirstResult(results)[3];
-    await promiseUpdate({ op: "bump", guid, timesUsed: 20, firstUsed: 55, lastUsed: 400 });
-    results = await FormHistory.search(["timesUsed", "firstUsed", "lastUsed"],
-                                       { fieldname: "field3", value: "value3" });
+    await promiseUpdate({
+      op: "bump",
+      guid,
+      timesUsed: 20,
+      firstUsed: 55,
+      lastUsed: 400,
+    });
+    results = await FormHistory.search(["timesUsed", "firstUsed", "lastUsed"], {
+      fieldname: "field3",
+      value: "value3",
+    });
     [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
     Assert.equal(11, timesUsed);
     Assert.equal(50, firstUsed);
@@ -323,10 +389,13 @@ add_task(async function() {
     testnum++;
     await countDeletedEntries(7);
 
-    results = await FormHistory.search(["guid"], { fieldname: "field1", value: "value1b" });
+    results = await FormHistory.search(["guid"], {
+      fieldname: "field1",
+      value: "value1b",
+    });
     guid = processFirstResult(results)[3];
 
-    await promiseUpdate({ op: "remove", guid});
+    await promiseUpdate({ op: "remove", guid });
     await promiseCountEntries("field1", "modifiedValue", checkExists);
     await promiseCountEntries("field1", "value1b", checkNotExists);
     await promiseCountEntries(null, null, num => Assert.equal(num, 3));
@@ -337,14 +406,24 @@ add_task(async function() {
     // ===== 18 =====
     // Add yet another single entry
     testnum++;
-    await promiseUpdate({ op: "add", fieldname: "field4", value: "value4",
-      timesUsed: 5, firstUsed: 230, lastUsed: 600 });
+    await promiseUpdate({
+      op: "add",
+      fieldname: "field4",
+      value: "value4",
+      timesUsed: 5,
+      firstUsed: 230,
+      lastUsed: 600,
+    });
     await promiseCountEntries(null, null, num => Assert.equal(num, 4));
 
     // ===== 19 =====
     // Remove an entry by time
     testnum++;
-    await promiseUpdate({ op: "remove", firstUsedStart: 60, firstUsedEnd: 250 });
+    await promiseUpdate({
+      op: "remove",
+      firstUsedStart: 60,
+      firstUsedEnd: 250,
+    });
     await promiseCountEntries("field1", "modifiedValue", checkExists);
     await promiseCountEntries("field2", "value2", checkNotExists);
     await promiseCountEntries("field3", "value3", checkExists);
@@ -356,16 +435,34 @@ add_task(async function() {
     // Bump multiple existing entries at once
     testnum++;
 
-    await promiseUpdate([{ op: "add", fieldname: "field5", value: "value5",
-      timesUsed: 5, firstUsed: 230, lastUsed: 600 },
-    { op: "add", fieldname: "field6", value: "value6",
-      timesUsed: 12, firstUsed: 430, lastUsed: 700 }]);
+    await promiseUpdate([
+      {
+        op: "add",
+        fieldname: "field5",
+        value: "value5",
+        timesUsed: 5,
+        firstUsed: 230,
+        lastUsed: 600,
+      },
+      {
+        op: "add",
+        fieldname: "field6",
+        value: "value6",
+        timesUsed: 12,
+        firstUsed: 430,
+        lastUsed: 700,
+      },
+    ]);
     await promiseCountEntries(null, null, num => Assert.equal(num, 4));
 
     await promiseUpdate([
       { op: "bump", fieldname: "field5", value: "value5" },
-      { op: "bump", fieldname: "field6", value: "value6" }]);
-    results = await FormHistory.search(["fieldname", "timesUsed", "firstUsed", "lastUsed"], { });
+      { op: "bump", fieldname: "field6", value: "value6" },
+    ]);
+    results = await FormHistory.search(
+      ["fieldname", "timesUsed", "firstUsed", "lastUsed"],
+      {}
+    );
 
     Assert.equal(6, results[2].timesUsed);
     Assert.equal(13, results[3].timesUsed);
@@ -383,30 +480,50 @@ add_task(async function() {
     Services.prefs.setBoolPref("browser.formfill.enable", false);
 
     // Cannot use arrow functions, see bug 1237961.
-    await Assert.rejects(promiseUpdate(
-      { op: "bump", fieldname: "field5", value: "value5" }),
-                         function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
-                         "bumping when form history is disabled should fail");
-    await Assert.rejects(promiseUpdate(
-      { op: "add", fieldname: "field5", value: "value5" }),
-                         function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
-                         "Adding when form history is disabled should fail");
-    await Assert.rejects(promiseUpdate([
-      { op: "update", fieldname: "field5", value: "value5" },
-      { op: "remove", fieldname: "field5", value: "value5" },
-    ]),
-                         function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
-                         "mixed operations when form history is disabled should fail");
-    await Assert.rejects(promiseUpdate([
-      null, undefined, "", 1, {},
-      { op: "remove", fieldname: "field5", value: "value5" },
-    ]),
-                         function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
-                         "Invalid entries when form history is disabled should fail");
+    await Assert.rejects(
+      promiseUpdate({ op: "bump", fieldname: "field5", value: "value5" }),
+      function(err) {
+        return err.result == Ci.mozIStorageError.MISUSE;
+      },
+      "bumping when form history is disabled should fail"
+    );
+    await Assert.rejects(
+      promiseUpdate({ op: "add", fieldname: "field5", value: "value5" }),
+      function(err) {
+        return err.result == Ci.mozIStorageError.MISUSE;
+      },
+      "Adding when form history is disabled should fail"
+    );
+    await Assert.rejects(
+      promiseUpdate([
+        { op: "update", fieldname: "field5", value: "value5" },
+        { op: "remove", fieldname: "field5", value: "value5" },
+      ]),
+      function(err) {
+        return err.result == Ci.mozIStorageError.MISUSE;
+      },
+      "mixed operations when form history is disabled should fail"
+    );
+    await Assert.rejects(
+      promiseUpdate([
+        null,
+        undefined,
+        "",
+        1,
+        {},
+        { op: "remove", fieldname: "field5", value: "value5" },
+      ]),
+      function(err) {
+        return err.result == Ci.mozIStorageError.MISUSE;
+      },
+      "Invalid entries when form history is disabled should fail"
+    );
 
     // Remove should work though.
-    await promiseUpdate([{ op: "remove", fieldname: "field5", value: null },
-      { op: "remove", fieldname: null, value: null }]);
+    await promiseUpdate([
+      { op: "remove", fieldname: "field5", value: null },
+      { op: "remove", fieldname: null, value: null },
+    ]);
     Services.prefs.clearUserPref("browser.formfill.enable");
   } catch (e) {
     throw new Error(`FAILED in test #${testnum} -- ${e}`);

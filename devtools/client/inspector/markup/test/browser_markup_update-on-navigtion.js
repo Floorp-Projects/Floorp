@@ -9,7 +9,7 @@ const URL_1 = URL_ROOT + "doc_markup_update-on-navigtion_1.html";
 const URL_2 = URL_ROOT + "doc_markup_update-on-navigtion_2.html";
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL(URL_1);
+  const { inspector, testActor } = await openInspectorForURL(URL_1);
 
   assertMarkupViewIsLoaded();
   await selectNode("#one", inspector);
@@ -37,7 +37,9 @@ add_task(async function() {
   }
 
   function assertMarkupViewIsEmpty() {
-    const markupViewFrame = inspector._markupFrame.contentDocument.getElementById("root");
+    const markupViewFrame = inspector._markupFrame.contentDocument.getElementById(
+      "root"
+    );
     is(markupViewFrame.childNodes.length, 0, "The markup-view is unloaded");
   }
 });

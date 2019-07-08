@@ -3,17 +3,30 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
+const { actionTypes: at } = ChromeUtils.import(
+  "resource://activity-stream/common/Actions.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "setInterval", "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "clearInterval", "resource://gre/modules/Timer.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "setInterval",
+  "resource://gre/modules/Timer.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "clearInterval",
+  "resource://gre/modules/Timer.jsm"
+);
 
 // Frequency at which SYSTEM_TICK events are fired
 const SYSTEM_TICK_INTERVAL = 5 * 60 * 1000;
 
 this.SystemTickFeed = class SystemTickFeed {
   init() {
-    this.intervalId = setInterval(() => this.store.dispatch({type: at.SYSTEM_TICK}), SYSTEM_TICK_INTERVAL);
+    this.intervalId = setInterval(
+      () => this.store.dispatch({ type: at.SYSTEM_TICK }),
+      SYSTEM_TICK_INTERVAL
+    );
   }
 
   onAction(action) {

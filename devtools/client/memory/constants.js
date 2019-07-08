@@ -16,7 +16,7 @@ exports.TREE_ROW_HEIGHT = 18;
 
 /** * Actions ******************************************************************/
 
-const actions = exports.actions = {};
+const actions = (exports.actions = {});
 
 // Fired by UI to request a snapshot from the actor.
 actions.TAKE_SNAPSHOT_START = "take-snapshot-start";
@@ -38,8 +38,10 @@ actions.TAKE_TREE_MAP_END = "take-tree-map-end";
 actions.TAKE_TREE_MAP_ERROR = "take-tree-map-error";
 
 // When requesting that the server start/stop recording allocation stacks.
-actions.TOGGLE_RECORD_ALLOCATION_STACKS_START = "toggle-record-allocation-stacks-start";
-actions.TOGGLE_RECORD_ALLOCATION_STACKS_END = "toggle-record-allocation-stacks-end";
+actions.TOGGLE_RECORD_ALLOCATION_STACKS_START =
+  "toggle-record-allocation-stacks-start";
+actions.TOGGLE_RECORD_ALLOCATION_STACKS_END =
+  "toggle-record-allocation-stacks-end";
 
 // When a heap snapshot is being saved to a user-specified
 // location on disk.
@@ -124,10 +126,15 @@ const COUNT = Object.freeze({ by: "count", count: true, bytes: true });
 const INTERNAL_TYPE = Object.freeze({ by: "internalType", then: COUNT });
 const DESCRIPTIVE_TYPE = Object.freeze({ by: "descriptiveType", then: COUNT });
 const ALLOCATION_STACK = Object.freeze({
-  by: "allocationStack", then: COUNT,
+  by: "allocationStack",
+  then: COUNT,
   noStack: COUNT,
 });
-const OBJECT_CLASS = Object.freeze({ by: "objectClass", then: COUNT, other: COUNT });
+const OBJECT_CLASS = Object.freeze({
+  by: "objectClass",
+  then: COUNT,
+  other: COUNT,
+});
 const COARSE_TYPE = Object.freeze({
   by: "coarseType",
   objects: OBJECT_CLASS,
@@ -232,7 +239,7 @@ exports.treeMapDisplays = Object.freeze({
 /**
  * The various main views that the tool can be in.
  */
-const viewState = exports.viewState = Object.create(null);
+const viewState = (exports.viewState = Object.create(null));
 viewState.CENSUS = "view-state-census";
 viewState.DIFFING = "view-state-diffing";
 viewState.DOMINATOR_TREE = "view-state-dominator-tree";
@@ -241,7 +248,7 @@ viewState.INDIVIDUALS = "view-state-individuals";
 
 /** * Snapshot States **********************************************************/
 
-const snapshotState = exports.snapshotState = Object.create(null);
+const snapshotState = (exports.snapshotState = Object.create(null));
 
 /**
  * Various states a snapshot can be in.
@@ -270,7 +277,7 @@ snapshotState.READ = "snapshot-state-read";
  *     ERROR
  */
 
-const censusState = exports.censusState = Object.create(null);
+const censusState = (exports.censusState = Object.create(null));
 
 censusState.SAVING = "census-state-saving";
 censusState.SAVED = "census-state-saved";
@@ -285,7 +292,7 @@ censusState.ERROR = "census-state-error";
  *     ERROR
  */
 
-const treeMapState = exports.treeMapState = Object.create(null);
+const treeMapState = (exports.treeMapState = Object.create(null));
 
 treeMapState.SAVING = "tree-map-state-saving";
 treeMapState.SAVED = "tree-map-state-saved";
@@ -301,7 +308,7 @@ treeMapState.ERROR = "tree-map-state-error";
  *                       V
  *                     ERROR
  */
-const diffingState = exports.diffingState = Object.create(null);
+const diffingState = (exports.diffingState = Object.create(null));
 
 // Selecting the two snapshots to diff.
 diffingState.SELECTING = "diffing-state-selecting";
@@ -324,12 +331,13 @@ diffingState.ERROR = "diffing-state-error";
  *
  * Any state may lead to the ERROR state, from which it can never leave.
  */
-const dominatorTreeState = exports.dominatorTreeState = Object.create(null);
+const dominatorTreeState = (exports.dominatorTreeState = Object.create(null));
 dominatorTreeState.COMPUTING = "dominator-tree-state-computing";
 dominatorTreeState.COMPUTED = "dominator-tree-state-computed";
 dominatorTreeState.FETCHING = "dominator-tree-state-fetching";
 dominatorTreeState.LOADED = "dominator-tree-state-loaded";
-dominatorTreeState.INCREMENTAL_FETCHING = "dominator-tree-state-incremental-fetching";
+dominatorTreeState.INCREMENTAL_FETCHING =
+  "dominator-tree-state-incremental-fetching";
 dominatorTreeState.ERROR = "dominator-tree-state-error";
 
 /** * States for Individuals Model *********************************************/
@@ -341,8 +349,9 @@ dominatorTreeState.ERROR = "dominator-tree-state-error";
  *
  * Any state may lead to the ERROR state, from which it can never leave.
  */
-const individualsState = exports.individualsState = Object.create(null);
-individualsState.COMPUTING_DOMINATOR_TREE = "individuals-state-computing-dominator-tree";
+const individualsState = (exports.individualsState = Object.create(null));
+individualsState.COMPUTING_DOMINATOR_TREE =
+  "individuals-state-computing-dominator-tree";
 individualsState.FETCHING = "individuals-state-fetching";
 individualsState.FETCHED = "individuals-state-fetched";
 individualsState.ERROR = "individuals-state-error";

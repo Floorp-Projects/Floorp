@@ -8,7 +8,12 @@
 
 const protocol = require("devtools/shared/protocol");
 const { symbolSpec } = require("devtools/shared/specs/symbol");
-loader.lazyRequireGetter(this, "createValueGrip", "devtools/server/actors/object/utils", true);
+loader.lazyRequireGetter(
+  this,
+  "createValueGrip",
+  "devtools/server/actors/object/utils",
+  true
+);
 
 /**
  * Creates an actor for the specified symbol.

@@ -1073,7 +1073,8 @@ void WebRenderScrollDataCollection::AppendRoot(
         // created above.
         size_t rootMetadataTarget = layerScrollData.size() - 1;
         for (size_t i = rootMetadataTarget; i > 0; i--) {
-          if (auto zoomContainerId = layerScrollData[i - 1].GetAsyncZoomContainerId()) {
+          if (auto zoomContainerId =
+                  layerScrollData[i - 1].GetAsyncZoomContainerId()) {
             if (*zoomContainerId == aRootMetadata->GetMetrics().GetScrollId()) {
               rootMetadataTarget = i - 1;
               break;

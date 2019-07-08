@@ -9,27 +9,30 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
 });
 
-add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
-  return new Promise(resolve => {
-    threadClient.once("paused", async function(packet) {
-      const [grip] = packet.frame.arguments;
+add_task(
+  threadClientTest(async ({ threadClient, debuggee, client }) => {
+    return new Promise(resolve => {
+      threadClient.once("paused", async function(packet) {
+        const [grip] = packet.frame.arguments;
 
-      // Checks grip.preview properties.
-      check_preview(grip);
+        // Checks grip.preview properties.
+        check_preview(grip);
 
-      const objClient = threadClient.pauseGrip(grip);
-      const response = await objClient.getPrototypeAndProperties();
-      // Checks the result of getPrototypeAndProperties.
-      check_prototype_and_properties(response);
+        const objClient = threadClient.pauseGrip(grip);
+        const response = await objClient.getPrototypeAndProperties();
+        // Checks the result of getPrototypeAndProperties.
+        check_prototype_and_properties(response);
 
-      await threadClient.resume();
-      resolve();
-    });
+        await threadClient.resume();
+        resolve();
+      });
 
-    debuggee.eval(function stopMe(arg1) {
-      debugger;
-    }.toString());
-    debuggee.eval(`
+      debuggee.eval(
+        function stopMe(arg1) {
+          debugger;
+        }.toString()
+      );
+      debuggee.eval(`
       stopMe({
         [Symbol()]: "first unnamed symbol",
         [Symbol()]: "second unnamed symbol",
@@ -41,88 +44,95 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
         x: 10,
       });
     `);
-  });
+    });
 
-  function check_preview(grip) {
-    Assert.equal(grip.class, "Object");
+    function check_preview(grip) {
+      Assert.equal(grip.class, "Object");
 
-    const {preview} = grip;
-    Assert.equal(preview.ownProperties.x.configurable, true);
-    Assert.equal(preview.ownProperties.x.enumerable, true);
-    Assert.equal(preview.ownProperties.x.writable, true);
-    Assert.equal(preview.ownProperties.x.value, 10);
+      const { preview } = grip;
+      Assert.equal(preview.ownProperties.x.configurable, true);
+      Assert.equal(preview.ownProperties.x.enumerable, true);
+      Assert.equal(preview.ownProperties.x.writable, true);
+      Assert.equal(preview.ownProperties.x.value, 10);
 
-    const [
-      firstUnnamedSymbol,
-      secondUnnamedSymbol,
-      namedSymbol,
-      iteratorSymbol,
-    ] = preview.ownSymbols;
+      const [
+        firstUnnamedSymbol,
+        secondUnnamedSymbol,
+        namedSymbol,
+        iteratorSymbol,
+      ] = preview.ownSymbols;
 
-    Assert.equal(firstUnnamedSymbol.name, undefined);
-    Assert.equal(firstUnnamedSymbol.type, "symbol");
-    Assert.equal(firstUnnamedSymbol.descriptor.configurable, true);
-    Assert.equal(firstUnnamedSymbol.descriptor.enumerable, true);
-    Assert.equal(firstUnnamedSymbol.descriptor.writable, true);
-    Assert.equal(firstUnnamedSymbol.descriptor.value, "first unnamed symbol");
+      Assert.equal(firstUnnamedSymbol.name, undefined);
+      Assert.equal(firstUnnamedSymbol.type, "symbol");
+      Assert.equal(firstUnnamedSymbol.descriptor.configurable, true);
+      Assert.equal(firstUnnamedSymbol.descriptor.enumerable, true);
+      Assert.equal(firstUnnamedSymbol.descriptor.writable, true);
+      Assert.equal(firstUnnamedSymbol.descriptor.value, "first unnamed symbol");
 
-    Assert.equal(secondUnnamedSymbol.name, undefined);
-    Assert.equal(secondUnnamedSymbol.type, "symbol");
-    Assert.equal(secondUnnamedSymbol.descriptor.configurable, true);
-    Assert.equal(secondUnnamedSymbol.descriptor.enumerable, true);
-    Assert.equal(secondUnnamedSymbol.descriptor.writable, true);
-    Assert.equal(secondUnnamedSymbol.descriptor.value, "second unnamed symbol");
+      Assert.equal(secondUnnamedSymbol.name, undefined);
+      Assert.equal(secondUnnamedSymbol.type, "symbol");
+      Assert.equal(secondUnnamedSymbol.descriptor.configurable, true);
+      Assert.equal(secondUnnamedSymbol.descriptor.enumerable, true);
+      Assert.equal(secondUnnamedSymbol.descriptor.writable, true);
+      Assert.equal(
+        secondUnnamedSymbol.descriptor.value,
+        "second unnamed symbol"
+      );
 
-    Assert.equal(namedSymbol.name, "named");
-    Assert.equal(namedSymbol.type, "symbol");
-    Assert.equal(namedSymbol.descriptor.configurable, true);
-    Assert.equal(namedSymbol.descriptor.enumerable, true);
-    Assert.equal(namedSymbol.descriptor.writable, true);
-    Assert.equal(namedSymbol.descriptor.value, "named symbol");
+      Assert.equal(namedSymbol.name, "named");
+      Assert.equal(namedSymbol.type, "symbol");
+      Assert.equal(namedSymbol.descriptor.configurable, true);
+      Assert.equal(namedSymbol.descriptor.enumerable, true);
+      Assert.equal(namedSymbol.descriptor.writable, true);
+      Assert.equal(namedSymbol.descriptor.value, "named symbol");
 
-    Assert.equal(iteratorSymbol.name, "Symbol.iterator");
-    Assert.equal(iteratorSymbol.type, "symbol");
-    Assert.equal(iteratorSymbol.descriptor.configurable, true);
-    Assert.equal(iteratorSymbol.descriptor.enumerable, true);
-    Assert.equal(iteratorSymbol.descriptor.writable, true);
-    Assert.equal(iteratorSymbol.descriptor.value.class, "Function");
-  }
+      Assert.equal(iteratorSymbol.name, "Symbol.iterator");
+      Assert.equal(iteratorSymbol.type, "symbol");
+      Assert.equal(iteratorSymbol.descriptor.configurable, true);
+      Assert.equal(iteratorSymbol.descriptor.enumerable, true);
+      Assert.equal(iteratorSymbol.descriptor.writable, true);
+      Assert.equal(iteratorSymbol.descriptor.value.class, "Function");
+    }
 
-  function check_prototype_and_properties(response) {
-    Assert.equal(response.ownProperties.x.configurable, true);
-    Assert.equal(response.ownProperties.x.enumerable, true);
-    Assert.equal(response.ownProperties.x.writable, true);
-    Assert.equal(response.ownProperties.x.value, 10);
+    function check_prototype_and_properties(response) {
+      Assert.equal(response.ownProperties.x.configurable, true);
+      Assert.equal(response.ownProperties.x.enumerable, true);
+      Assert.equal(response.ownProperties.x.writable, true);
+      Assert.equal(response.ownProperties.x.value, 10);
 
-    const [
-      firstUnnamedSymbol,
-      secondUnnamedSymbol,
-      namedSymbol,
-      iteratorSymbol,
-    ] = response.ownSymbols;
+      const [
+        firstUnnamedSymbol,
+        secondUnnamedSymbol,
+        namedSymbol,
+        iteratorSymbol,
+      ] = response.ownSymbols;
 
-    Assert.equal(firstUnnamedSymbol.name, "Symbol()");
-    Assert.equal(firstUnnamedSymbol.descriptor.configurable, true);
-    Assert.equal(firstUnnamedSymbol.descriptor.enumerable, true);
-    Assert.equal(firstUnnamedSymbol.descriptor.writable, true);
-    Assert.equal(firstUnnamedSymbol.descriptor.value, "first unnamed symbol");
+      Assert.equal(firstUnnamedSymbol.name, "Symbol()");
+      Assert.equal(firstUnnamedSymbol.descriptor.configurable, true);
+      Assert.equal(firstUnnamedSymbol.descriptor.enumerable, true);
+      Assert.equal(firstUnnamedSymbol.descriptor.writable, true);
+      Assert.equal(firstUnnamedSymbol.descriptor.value, "first unnamed symbol");
 
-    Assert.equal(secondUnnamedSymbol.name, "Symbol()");
-    Assert.equal(secondUnnamedSymbol.descriptor.configurable, true);
-    Assert.equal(secondUnnamedSymbol.descriptor.enumerable, true);
-    Assert.equal(secondUnnamedSymbol.descriptor.writable, true);
-    Assert.equal(secondUnnamedSymbol.descriptor.value, "second unnamed symbol");
+      Assert.equal(secondUnnamedSymbol.name, "Symbol()");
+      Assert.equal(secondUnnamedSymbol.descriptor.configurable, true);
+      Assert.equal(secondUnnamedSymbol.descriptor.enumerable, true);
+      Assert.equal(secondUnnamedSymbol.descriptor.writable, true);
+      Assert.equal(
+        secondUnnamedSymbol.descriptor.value,
+        "second unnamed symbol"
+      );
 
-    Assert.equal(namedSymbol.name, "Symbol(named)");
-    Assert.equal(namedSymbol.descriptor.configurable, true);
-    Assert.equal(namedSymbol.descriptor.enumerable, true);
-    Assert.equal(namedSymbol.descriptor.writable, true);
-    Assert.equal(namedSymbol.descriptor.value, "named symbol");
+      Assert.equal(namedSymbol.name, "Symbol(named)");
+      Assert.equal(namedSymbol.descriptor.configurable, true);
+      Assert.equal(namedSymbol.descriptor.enumerable, true);
+      Assert.equal(namedSymbol.descriptor.writable, true);
+      Assert.equal(namedSymbol.descriptor.value, "named symbol");
 
-    Assert.equal(iteratorSymbol.name, "Symbol(Symbol.iterator)");
-    Assert.equal(iteratorSymbol.descriptor.configurable, true);
-    Assert.equal(iteratorSymbol.descriptor.enumerable, true);
-    Assert.equal(iteratorSymbol.descriptor.writable, true);
-    Assert.equal(iteratorSymbol.descriptor.value.class, "Function");
-  }
-}));
+      Assert.equal(iteratorSymbol.name, "Symbol(Symbol.iterator)");
+      Assert.equal(iteratorSymbol.descriptor.configurable, true);
+      Assert.equal(iteratorSymbol.descriptor.enumerable, true);
+      Assert.equal(iteratorSymbol.descriptor.writable, true);
+      Assert.equal(iteratorSymbol.descriptor.value.class, "Function");
+    }
+  })
+);

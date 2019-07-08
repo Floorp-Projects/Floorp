@@ -1,6 +1,6 @@
-import {mount} from "enzyme";
+import { mount } from "enzyme";
 import React from "react";
-import {ReturnToAMO} from "content-src/asrouter/templates/ReturnToAMO/ReturnToAMO";
+import { ReturnToAMO } from "content-src/asrouter/templates/ReturnToAMO/ReturnToAMO";
 
 describe("<ReturnToAMO>", () => {
   let dispatch;
@@ -28,13 +28,17 @@ describe("<ReturnToAMO>", () => {
     it("should send an IMPRESSION on mount", () => {
       assert.notCalled(sendUserActionTelemetryStub);
 
-      wrapper = mount(<ReturnToAMO onReady={onReady}
-        dispatch={dispatch}
-        content={content}
-        onBlock={sandbox.stub()}
-        onAction={sandbox.stub()}
-        UISurface="NEWTAB_OVERLAY"
-        sendUserActionTelemetry={sendUserActionTelemetryStub} />);
+      wrapper = mount(
+        <ReturnToAMO
+          onReady={onReady}
+          dispatch={dispatch}
+          content={content}
+          onBlock={sandbox.stub()}
+          onAction={sandbox.stub()}
+          UISurface="NEWTAB_OVERLAY"
+          sendUserActionTelemetry={sendUserActionTelemetryStub}
+        />
+      );
 
       assert.calledOnce(sendUserActionTelemetryStub);
       assert.calledWithExactly(sendUserActionTelemetryStub, {
@@ -46,13 +50,17 @@ describe("<ReturnToAMO>", () => {
 
   describe("mounted", () => {
     beforeEach(() => {
-      wrapper = mount(<ReturnToAMO onReady={onReady}
-        dispatch={dispatch}
-        content={content}
-        onBlock={sandbox.stub()}
-        onAction={sandbox.stub()}
-        UISurface="NEWTAB_OVERLAY"
-        sendUserActionTelemetry={sendUserActionTelemetryStub} />);
+      wrapper = mount(
+        <ReturnToAMO
+          onReady={onReady}
+          dispatch={dispatch}
+          content={content}
+          onBlock={sandbox.stub()}
+          onAction={sandbox.stub()}
+          UISurface="NEWTAB_OVERLAY"
+          sendUserActionTelemetry={sendUserActionTelemetryStub}
+        />
+      );
 
       // Clear the IMPRESSION ping
       sendUserActionTelemetryStub.reset();

@@ -17,7 +17,7 @@ add_task(async function() {
   Services.prefs.setBoolPref(PREF, true);
 
   await addTab(TESTCASE_URI);
-  const {toolbox, inspector, view} = await openRuleView();
+  const { toolbox, inspector, view } = await openRuleView();
 
   info("Selecting the test node");
   await selectNode("div", inspector);
@@ -57,7 +57,9 @@ function checkDisplayedStylesheet(toolbox) {
       // selecting the desired sheet.
       if (editor.styleSheet.href.endsWith("scss")) {
         info("Original source editor selected");
-        editor.getSourceEditor().then(editorSelected)
+        editor
+          .getSourceEditor()
+          .then(editorSelected)
           .then(resolve, reject);
       }
     });
@@ -66,18 +68,24 @@ function checkDisplayedStylesheet(toolbox) {
 
 function editorSelected(editor) {
   const href = editor.styleSheet.href;
-  ok(href.endsWith("doc_sourcemaps.scss"),
-    "selected stylesheet is correct one");
+  ok(
+    href.endsWith("doc_sourcemaps.scss"),
+    "selected stylesheet is correct one"
+  );
 
-  const {line} = editor.sourceEditor.getCursor();
+  const { line } = editor.sourceEditor.getCursor();
   is(line, 3, "cursor is at correct line number in original source");
 }
 
 function verifyLinkText(text, view) {
   info("Verifying that the rule-view stylesheet link is " + text);
-  const label = getRuleViewLinkByIndex(view, 1)
-    .querySelector(".ruleview-rule-source-label");
+  const label = getRuleViewLinkByIndex(view, 1).querySelector(
+    ".ruleview-rule-source-label"
+  );
   return waitForSuccess(function() {
-    return label.textContent == text && label.getAttribute("title") === URL_ROOT + text;
+    return (
+      label.textContent == text &&
+      label.getAttribute("title") === URL_ROOT + text
+    );
   }, "Link text changed to display correct location: " + text);
 }

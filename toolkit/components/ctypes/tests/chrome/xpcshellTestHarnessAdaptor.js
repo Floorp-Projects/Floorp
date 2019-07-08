@@ -7,13 +7,13 @@ var _WORKINGDIR_ = null;
 var _OS_ = null;
 
 var Components = {
-  classes: { },
-  interfaces: { },
+  classes: {},
+  interfaces: {},
   stack: {
     caller: null,
   },
   utils: {
-    import() { },
+    import() {},
   },
 };
 
@@ -29,8 +29,7 @@ var Assert = {
       var text = "Assert.notEqual failed";
       try {
         text += ": " + left + " == " + right;
-      } catch (e) {
-      }
+      } catch (e) {}
       do_throw(text, stack);
     }
   },
@@ -40,8 +39,7 @@ var Assert = {
       var text = "Assert.equal failed";
       try {
         text += ": " + left + " != " + right;
-      } catch (e) {
-      }
+      } catch (e) {}
       do_throw(text, stack);
     }
   },
@@ -84,10 +82,11 @@ function do_get_file(path, allowNonexistent) {
   let bits = path.split("/");
   for (let i = 0; i < bits.length; i++) {
     if (bits[i]) {
-      if (bits[i] == "..")
+      if (bits[i] == "..") {
         lf = lf.parent;
-      else
+      } else {
         lf.append(bits[i]);
+      }
     }
   }
   return lf;

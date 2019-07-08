@@ -5,7 +5,7 @@
 
 "use strict";
 
-var {Toolbox} = require("devtools/client/framework/toolbox");
+var { Toolbox } = require("devtools/client/framework/toolbox");
 
 var toolbox = null;
 
@@ -18,7 +18,11 @@ function test() {
     await addTab(URL);
 
     const target = await TargetFactory.forTab(gBrowser.selectedTab);
-    toolbox = await gDevTools.showToolbox(target, TOOL_ID_1, Toolbox.HostType.BOTTOM);
+    toolbox = await gDevTools.showToolbox(
+      target,
+      TOOL_ID_1,
+      Toolbox.HostType.BOTTOM
+    );
 
     // select tool 2
     await toolbox.selectTool(TOOL_ID_2);
@@ -62,8 +66,7 @@ function test() {
         finish();
       });
     });
-  })()
-  .catch(error => {
+  })().catch(error => {
     ok(false, "There was an error running the test.");
   });
 }
@@ -80,22 +83,32 @@ function unhighlightTab(toolId) {
 
 function checkHighlighted(toolId) {
   const tab = toolbox.doc.getElementById("toolbox-tab-" + toolId);
-  ok(tab.classList.contains("highlighted"),
-     `The highlighted class is present in ${toolId}.`);
-  ok(!tab.classList.contains("selected"),
-     `The tab is not selected in ${toolId}`);
+  ok(
+    tab.classList.contains("highlighted"),
+    `The highlighted class is present in ${toolId}.`
+  );
+  ok(
+    !tab.classList.contains("selected"),
+    `The tab is not selected in ${toolId}`
+  );
 }
 
 function checkNoHighlightWhenSelected(toolId) {
   const tab = toolbox.doc.getElementById("toolbox-tab-" + toolId);
-  ok(tab.classList.contains("highlighted"),
-     `The highlighted class is present in ${toolId}`);
-  ok(tab.classList.contains("selected"),
-     `And the tab is selected, so the orange glow will not be present. in ${toolId}`);
+  ok(
+    tab.classList.contains("highlighted"),
+    `The highlighted class is present in ${toolId}`
+  );
+  ok(
+    tab.classList.contains("selected"),
+    `And the tab is selected, so the orange glow will not be present. in ${toolId}`
+  );
 }
 
 function checkNoHighlight(toolId) {
   const tab = toolbox.doc.getElementById("toolbox-tab-" + toolId);
-  ok(!tab.classList.contains("highlighted"),
-     `The highlighted class is not present in ${toolId}`);
+  ok(
+    !tab.classList.contains("highlighted"),
+    `The highlighted class is not present in ${toolId}`
+  );
 }

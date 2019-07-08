@@ -7,8 +7,9 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/test-cd-iframe-parent.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-cd-iframe-parent.html";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -36,27 +37,35 @@ add_task(async function() {
   let onCdErrorMessage = waitForMessage(hud, "Cannot cd()");
   hud.jsterm.execute("cd(document)");
   let cdErrorMessage = await onCdErrorMessage;
-  ok(cdErrorMessage.node.classList.contains("error"),
-    "An error message is shown when calling the cd command with `document`");
+  ok(
+    cdErrorMessage.node.classList.contains("error"),
+    "An error message is shown when calling the cd command with `document`"
+  );
 
   onCdErrorMessage = waitForMessage(hud, "Cannot cd()");
   hud.jsterm.execute(`cd("p")`);
   cdErrorMessage = await onCdErrorMessage;
-  ok(cdErrorMessage.node.classList.contains("error"),
-    "An error message is shown when calling the cd command with a non iframe selector");
+  ok(
+    cdErrorMessage.node.classList.contains("error"),
+    "An error message is shown when calling the cd command with a non iframe selector"
+  );
 });
 
 async function executeWindowTest(hud, iframeRole) {
   const BASE_TEXT = "Test for the cd() command (bug 609872) - iframe";
   const onMessages = waitForMessages({
     hud,
-    messages: [{
-      text: `${BASE_TEXT} ${iframeRole}`,
-    }, {
-      text: `p: ${BASE_TEXT} ${iframeRole}`,
-    }, {
-      text: `obj: ${iframeRole}!`,
-    }],
+    messages: [
+      {
+        text: `${BASE_TEXT} ${iframeRole}`,
+      },
+      {
+        text: `p: ${BASE_TEXT} ${iframeRole}`,
+      },
+      {
+        text: `obj: ${iframeRole}!`,
+      },
+    ],
   });
 
   hud.jsterm.execute(`document.title`);
@@ -64,7 +73,10 @@ async function executeWindowTest(hud, iframeRole) {
   hud.jsterm.execute(`"obj: " + window.foobar`);
 
   const messages = await onMessages;
-  ok(messages, `Expected evaluation result messages are shown in ${iframeRole} iframe`);
+  ok(
+    messages,
+    `Expected evaluation result messages are shown in ${iframeRole} iframe`
+  );
 
   // Clear the output so we don't pollute the next assertions.
   hud.ui.clearOutput();

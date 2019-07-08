@@ -31,7 +31,7 @@ const {
   PRESETS,
   DEFAULT_PRESET_CATEGORY,
 } = require("devtools/client/shared/widgets/CubicBezierPresets");
-const {getCSSLexer} = require("devtools/shared/css/lexer");
+const { getCSSLexer } = require("devtools/shared/css/lexer");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
@@ -46,7 +46,7 @@ function CubicBezier(coordinates) {
 
   this.coordinates = coordinates.map(n => +n);
 
-  for (let i = 4; i--;) {
+  for (let i = 4; i--; ) {
     const xy = this.coordinates[i];
     if (isNaN(xy) || (!(i % 2) && (xy < 0 || xy > 1))) {
       throw new Error(`Wrong coordinate at ${i}(${xy})`);
@@ -54,9 +54,11 @@ function CubicBezier(coordinates) {
   }
 
   this.coordinates.toString = function() {
-    return this.map(n => {
-      return (Math.round(n * 100) / 100 + "").replace(/^0\./, ".");
-    }) + "";
+    return (
+      this.map(n => {
+        return (Math.round(n * 100) / 100 + "").replace(/^0\./, ".");
+      }) + ""
+    );
   };
 }
 
@@ -73,9 +75,9 @@ CubicBezier.prototype = {
 
   toString: function() {
     // Check first if current coords are one of css predefined functions
-    const predefName = Object.keys(PREDEFINED)
-                           .find(key => coordsAreEqual(PREDEFINED[key],
-                                                       this.coordinates));
+    const predefName = Object.keys(PREDEFINED).find(key =>
+      coordsAreEqual(PREDEFINED[key], this.coordinates)
+    );
 
     return predefName || "cubic-bezier(" + this.coordinates + ")";
   },
@@ -96,10 +98,11 @@ function BezierCanvas(canvas, bezier, padding) {
   this.ctx = this.canvas.getContext("2d");
   const p = this.padding;
 
-  this.ctx.scale(canvas.width * (1 - p[1] - p[3]),
-                 -canvas.height * (1 - p[0] - p[2]));
-  this.ctx.translate(p[3] / (1 - p[1] - p[3]),
-                     -1 - p[0] / (1 - p[0] - p[2]));
+  this.ctx.scale(
+    canvas.width * (1 - p[1] - p[3]),
+    -canvas.height * (1 - p[0] - p[2])
+  );
+  this.ctx.translate(p[3] / (1 - p[1] - p[3]), -1 - p[0] / (1 - p[0] - p[2]));
 }
 
 exports.BezierCanvas = BezierCanvas;
@@ -110,24 +113,34 @@ BezierCanvas.prototype = {
    * @return {Array} Returns an array of 2 {top:String,left:String} objects
    */
   get offsets() {
-    const p = this.padding, w = this.canvas.width, h = this.canvas.height;
+    const p = this.padding,
+      w = this.canvas.width,
+      h = this.canvas.height;
 
-    return [{
-      left: w * (this.bezier.coordinates[0] * (1 - p[3] - p[1]) - p[3]) + "px",
-      top: h * (1 - this.bezier.coordinates[1] * (1 - p[0] - p[2]) - p[0])
-           + "px",
-    }, {
-      left: w * (this.bezier.coordinates[2] * (1 - p[3] - p[1]) - p[3]) + "px",
-      top: h * (1 - this.bezier.coordinates[3] * (1 - p[0] - p[2]) - p[0])
-           + "px",
-    }];
+    return [
+      {
+        left:
+          w * (this.bezier.coordinates[0] * (1 - p[3] - p[1]) - p[3]) + "px",
+        top:
+          h * (1 - this.bezier.coordinates[1] * (1 - p[0] - p[2]) - p[0]) +
+          "px",
+      },
+      {
+        left:
+          w * (this.bezier.coordinates[2] * (1 - p[3] - p[1]) - p[3]) + "px",
+        top:
+          h * (1 - this.bezier.coordinates[3] * (1 - p[0] - p[2]) - p[0]) +
+          "px",
+      },
+    ];
   },
 
   /**
    * Convert an element's left/top offsets into coordinates
    */
   offsetsToCoordinates: function(element) {
-    const w = this.canvas.width, h = this.canvas.height;
+    const w = this.canvas.width,
+      h = this.canvas.height;
 
     // Convert padding percentage to actual padding
     const p = this.padding.map((a, i) => a * (i % 2 ? w : h));
@@ -146,9 +159,9 @@ BezierCanvas.prototype = {
 
     const defaultSettings = {
       handleColor: "#666",
-      handleThickness: .008,
+      handleThickness: 0.008,
       bezierColor: "#4C9ED9",
-      bezierThickness: .015,
+      bezierThickness: 0.015,
       drawHandles: true,
     };
 
@@ -210,12 +223,14 @@ BezierCanvas.prototype = {
  * Emits "updated" events whenever the curve is changed. Along with the event is
  * sent a CubicBezier object
  */
-function CubicBezierWidget(parent,
-                           coordinates = PRESETS["ease-in"]["ease-in-sine"]) {
+function CubicBezierWidget(
+  parent,
+  coordinates = PRESETS["ease-in"]["ease-in-sine"]
+) {
   EventEmitter.decorate(this);
 
   this.parent = parent;
-  const {curve, p1, p2} = this._initMarkup();
+  const { curve, p1, p2 } = this._initMarkup();
 
   this.curveBoundingBox = curve.getBoundingClientRect();
   this.curve = curve;
@@ -223,8 +238,11 @@ function CubicBezierWidget(parent,
   this.p2 = p2;
 
   // Create and plot the bezier curve
-  this.bezierCanvas = new BezierCanvas(this.curve,
-    new CubicBezier(coordinates), [0.30, 0]);
+  this.bezierCanvas = new BezierCanvas(
+    this.curve,
+    new CubicBezier(coordinates),
+    [0.3, 0]
+  );
   this.bezierCanvas.plot();
 
   // Place the control points
@@ -359,10 +377,18 @@ CubicBezierWidget.prototype = {
       const offset = 3 * (event.shiftKey ? 10 : 1);
 
       switch (code) {
-        case 37: point.style.left = left - offset + "px"; break;
-        case 38: point.style.top = top - offset + "px"; break;
-        case 39: point.style.left = left + offset + "px"; break;
-        case 40: point.style.top = top + offset + "px"; break;
+        case 37:
+          point.style.left = left - offset + "px";
+          break;
+        case 38:
+          point.style.top = top - offset + "px";
+          break;
+        case 39:
+          point.style.left = left + offset + "px";
+          break;
+        case 40:
+          point.style.top = top + offset + "px";
+          break;
       }
 
       this._updateFromPoints();
@@ -378,10 +404,18 @@ CubicBezierWidget.prototype = {
     const y = event.pageY - top;
 
     // Find which point is closer
-    const distP1 = distance(x, y,
-      parseInt(this.p1.style.left, 10), parseInt(this.p1.style.top, 10));
-    const distP2 = distance(x, y,
-      parseInt(this.p2.style.left, 10), parseInt(this.p2.style.top, 10));
+    const distP1 = distance(
+      x,
+      y,
+      parseInt(this.p1.style.left, 10),
+      parseInt(this.p1.style.top, 10)
+    );
+    const distP2 = distance(
+      x,
+      y,
+      parseInt(this.p2.style.left, 10),
+      parseInt(this.p2.style.top, 10)
+    );
 
     const point = distP1 < distP2 ? this.p1 : this.p2;
     point.style.left = x + "px";
@@ -478,7 +512,7 @@ CubicBezierWidget.prototype = {
 function CubicBezierPresetWidget(parent) {
   this.parent = parent;
 
-  const {presetPane, presets, categories} = this._initMarkup();
+  const { presetPane, presets, categories } = this._initMarkup();
   this.presetPane = presetPane;
   this.presets = presets;
   this.categories = categories;
@@ -604,8 +638,10 @@ CubicBezierPresetWidget.prototype = {
 
     // Create preset label
     const presetLabelElem = doc.createElementNS(XHTML_NS, "p");
-    const presetDisplayLabel = this._normalizePresetLabel(categoryLabel,
-                                                        presetLabel);
+    const presetDisplayLabel = this._normalizePresetLabel(
+      categoryLabel,
+      presetLabel
+    );
     presetLabelElem.textContent = presetDisplayLabel;
     preset.appendChild(presetLabelElem);
     preset.setAttribute("title", presetDisplayLabel);
@@ -787,19 +823,22 @@ TimingFunctionPreviewWidget.prototype = {
     // The timing function passed to this function is applied to the keyframes that
     // actually move the dot. This way it can be previewed in both direction, instead of
     // being spread over the whole animation.
-    this.dot.animate([
-      { left: "-7px", opacity: .5, offset: 0 },
-      { left: "-7px", opacity: .5, offset: .19 },
-      { left: "-7px", opacity: 1, offset: .2, easing: timingFunction },
-      { left: "143px", opacity: 1, offset: .5 },
-      { left: "143px", opacity: .5, offset: .51 },
-      { left: "143px", opacity: .5, offset: .7 },
-      { left: "143px", opacity: 1, offset: .71, easing: timingFunction },
-      { left: "-7px", opacity: 1, offset: 1 },
-    ], {
-      duration: this.PREVIEW_DURATION * 2,
-      iterations: Infinity,
-    });
+    this.dot.animate(
+      [
+        { left: "-7px", opacity: 0.5, offset: 0 },
+        { left: "-7px", opacity: 0.5, offset: 0.19 },
+        { left: "-7px", opacity: 1, offset: 0.2, easing: timingFunction },
+        { left: "143px", opacity: 1, offset: 0.5 },
+        { left: "143px", opacity: 0.5, offset: 0.51 },
+        { left: "143px", opacity: 0.5, offset: 0.7 },
+        { left: "143px", opacity: 1, offset: 0.71, easing: timingFunction },
+        { left: "-7px", opacity: 1, offset: 1 },
+      ],
+      {
+        duration: this.PREVIEW_DURATION * 2,
+        iterations: Infinity,
+      }
+    );
   },
 };
 
@@ -843,8 +882,10 @@ function parseTimingFunction(value) {
   const getNextToken = () => {
     while (true) {
       const token = tokenStream.nextToken();
-      if (!token || (token.tokenType !== "whitespace" &&
-                     token.tokenType !== "comment")) {
+      if (
+        !token ||
+        (token.tokenType !== "whitespace" && token.tokenType !== "comment")
+      ) {
         return token;
       }
     }
@@ -864,8 +905,11 @@ function parseTimingFunction(value) {
     result.push(token.number);
 
     token = getNextToken();
-    if (!token || token.tokenType !== "symbol" ||
-        token.text !== (i == 3 ? ")" : ",")) {
+    if (
+      !token ||
+      token.tokenType !== "symbol" ||
+      token.text !== (i == 3 ? ")" : ",")
+    ) {
       return undefined;
     }
   }
@@ -898,5 +942,5 @@ function swapClassName(className, from, to) {
  * @return {Boolean}
  */
 function coordsAreEqual(c1, c2) {
-  return c1.reduce((prev, curr, index) => prev && (curr === c2[index]), true);
+  return c1.reduce((prev, curr, index) => prev && curr === c2[index], true);
 }

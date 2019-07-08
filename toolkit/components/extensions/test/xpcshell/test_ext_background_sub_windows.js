@@ -10,7 +10,8 @@ add_task(async function testBackgroundWindow() {
       browser.test.sendMessage("background-script-load");
 
       let img = document.createElement("img");
-      img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+      img.src =
+        "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
       document.body.appendChild(img);
 
       img.onload = () => {

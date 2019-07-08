@@ -24,7 +24,10 @@ add_task(async function no_request_if_prefed_off() {
     await Promise.all([installTestEngine(), promiseAfterCache()]);
 
     // The default engine should be set based on the prefs.
-    Assert.equal((await Services.search.getDefault()).name, getDefaultEngineName(false));
+    Assert.equal(
+      (await Services.search.getDefault()).name,
+      getDefaultEngineName(false)
+    );
 
     // Ensure nothing related to geoSpecificDefaults has been written in the metadata.
     let metadata = await promiseGlobalMetadata();
@@ -43,7 +46,10 @@ add_task(async function should_get_geo_defaults_only_once() {
     // Due to the previous initialization, we expect the region to already be set.
     Assert.ok(Services.prefs.prefHasUserValue("browser.search.region"));
     Assert.equal(Services.prefs.getCharPref("browser.search.region"), "FR");
-    await Promise.all([asyncReInit({ waitForRegionFetch: true }), promiseAfterCache()]);
+    await Promise.all([
+      asyncReInit({ waitForRegionFetch: true }),
+      promiseAfterCache(),
+    ]);
     checkRequest(requests);
     Assert.equal((await Services.search.getDefault()).name, kTestEngineName);
 
@@ -66,7 +72,10 @@ add_task(async function should_get_geo_defaults_only_once() {
 add_task(async function should_request_when_region_not_set() {
   await withGeoServer(async function cont(requests) {
     Services.prefs.clearUserPref("browser.search.region");
-    await Promise.all([asyncReInit({ waitForRegionFetch: true }), promiseAfterCache()]);
+    await Promise.all([
+      asyncReInit({ waitForRegionFetch: true }),
+      promiseAfterCache(),
+    ]);
     checkRequest(requests);
   });
 });
@@ -76,14 +85,19 @@ add_task(async function should_recheck_if_interval_expired() {
     await forceExpiration();
 
     let date = Date.now();
-    await Promise.all([asyncReInit({ waitForRegionFetch: true }), promiseAfterCache()]);
+    await Promise.all([
+      asyncReInit({ waitForRegionFetch: true }),
+      promiseAfterCache(),
+    ]);
     checkRequest(requests);
 
     // Check that the expiration timestamp has been updated.
     let metadata = await promiseGlobalMetadata();
     Assert.equal(typeof metadata.searchDefaultExpir, "number");
     Assert.ok(metadata.searchDefaultExpir >= date + kYearInSeconds * 1000);
-    Assert.ok(metadata.searchDefaultExpir < date + (kYearInSeconds + 3600) * 1000);
+    Assert.ok(
+      metadata.searchDefaultExpir < date + (kYearInSeconds + 3600) * 1000
+    );
   });
 });
 
@@ -97,7 +111,10 @@ add_task(async function should_recheck_if_appversion_changed() {
     data.appVersion = "1";
     await promiseSaveCacheData(data);
 
-    await Promise.all([asyncReInit({ waitForRegionFetch: true }), promiseAfterCache()]);
+    await Promise.all([
+      asyncReInit({ waitForRegionFetch: true }),
+      promiseAfterCache(),
+    ]);
     checkRequest(requests);
 
     // Check that the appVersion has been updated
@@ -120,7 +137,9 @@ add_task(async function should_recheck_when_broken_hash() {
     await promiseSaveGlobalMetadata(metadata);
 
     let commitPromise = promiseAfterCache();
-    let unInitPromise = SearchTestUtils.promiseSearchNotification("uninit-complete");
+    let unInitPromise = SearchTestUtils.promiseSearchNotification(
+      "uninit-complete"
+    );
     let reInitPromise = asyncReInit({ waitForRegionFetch: true });
     await unInitPromise;
 
@@ -154,21 +173,30 @@ add_task(async function should_remember_cohort_id() {
   // Make the server send a cohort id.
   const cohort = "xpcshell";
 
-  await withGeoServer(async function cont(requests) {
-    // Check that initially the cohort pref doesn't exist.
-    Assert.equal(Services.prefs.getPrefType(cohortPref), Services.prefs.PREF_INVALID);
+  await withGeoServer(
+    async function cont(requests) {
+      // Check that initially the cohort pref doesn't exist.
+      Assert.equal(
+        Services.prefs.getPrefType(cohortPref),
+        Services.prefs.PREF_INVALID
+      );
 
-    // Trigger a new request.
-    await forceExpiration();
-    let commitPromise = promiseAfterCache();
-    await asyncReInit({ waitForRegionFetch: true });
-    checkRequest(requests);
-    await commitPromise;
+      // Trigger a new request.
+      await forceExpiration();
+      let commitPromise = promiseAfterCache();
+      await asyncReInit({ waitForRegionFetch: true });
+      checkRequest(requests);
+      await commitPromise;
 
-    // Check that the cohort was saved.
-    Assert.equal(Services.prefs.getPrefType(cohortPref), Services.prefs.PREF_STRING);
-    Assert.equal(Services.prefs.getCharPref(cohortPref), cohort);
-  }, {cohort});
+      // Check that the cohort was saved.
+      Assert.equal(
+        Services.prefs.getPrefType(cohortPref),
+        Services.prefs.PREF_STRING
+      );
+      Assert.equal(Services.prefs.getCharPref(cohortPref), cohort);
+    },
+    { cohort }
+  );
 
   // Make the server stop sending the cohort.
   await withGeoServer(async function cont(requests) {
@@ -179,42 +207,53 @@ add_task(async function should_remember_cohort_id() {
     await asyncReInit({ waitForRegionFetch: true });
     checkRequest(requests, cohort);
     await commitPromise;
-    Assert.equal(Services.prefs.getPrefType(cohortPref), Services.prefs.PREF_INVALID);
+    Assert.equal(
+      Services.prefs.getPrefType(cohortPref),
+      Services.prefs.PREF_INVALID
+    );
   });
 });
 
 add_task(async function should_retry_after_failure() {
-  await withGeoServer(async function cont(requests) {
-    // Trigger a new request.
-    await forceExpiration();
-    await asyncReInit({ waitForRegionFetch: true });
-    checkRequest(requests);
+  await withGeoServer(
+    async function cont(requests) {
+      // Trigger a new request.
+      await forceExpiration();
+      await asyncReInit({ waitForRegionFetch: true });
+      checkRequest(requests);
 
-    // After another restart, a new request should be triggered automatically without
-    // the test having to call forceExpiration again.
-    await asyncReInit({ waitForRegionFetch: true });
-    checkRequest(requests);
-  }, {path: "lookup_fail"});
+      // After another restart, a new request should be triggered automatically without
+      // the test having to call forceExpiration again.
+      await asyncReInit({ waitForRegionFetch: true });
+      checkRequest(requests);
+    },
+    { path: "lookup_fail" }
+  );
 });
 
 add_task(async function should_honor_retry_after_header() {
-  await withGeoServer(async function cont(requests) {
-    // Trigger a new request.
-    await forceExpiration();
-    let date = Date.now();
-    let commitPromise = promiseAfterCache();
-    await asyncReInit({ waitForRegionFetch: true });
-    await commitPromise;
-    checkRequest(requests);
+  await withGeoServer(
+    async function cont(requests) {
+      // Trigger a new request.
+      await forceExpiration();
+      let date = Date.now();
+      let commitPromise = promiseAfterCache();
+      await asyncReInit({ waitForRegionFetch: true });
+      await commitPromise;
+      checkRequest(requests);
 
-    // Check that the expiration timestamp has been updated.
-    let metadata = await promiseGlobalMetadata();
-    Assert.equal(typeof metadata.searchDefaultExpir, "number");
-    Assert.ok(metadata.searchDefaultExpir >= date + kDayInSeconds * 1000);
-    Assert.ok(metadata.searchDefaultExpir < date + (kDayInSeconds + 3600) * 1000);
+      // Check that the expiration timestamp has been updated.
+      let metadata = await promiseGlobalMetadata();
+      Assert.equal(typeof metadata.searchDefaultExpir, "number");
+      Assert.ok(metadata.searchDefaultExpir >= date + kDayInSeconds * 1000);
+      Assert.ok(
+        metadata.searchDefaultExpir < date + (kDayInSeconds + 3600) * 1000
+      );
 
-    // After another restart, a new request should not be triggered.
-    await asyncReInit({ waitForRegionFetch: true });
-    checkNoRequest(requests);
-  }, {path: "lookup_unavailable"});
+      // After another restart, a new request should not be triggered.
+      await asyncReInit({ waitForRegionFetch: true });
+      checkNoRequest(requests);
+    },
+    { path: "lookup_unavailable" }
+  );
 });

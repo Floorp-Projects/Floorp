@@ -41,6 +41,7 @@
                   "*://*.reddit.com/*",
                   "*://*.stackoverflow.com/*",
                   "*://*.tumblr.com/*",
+                  "*://*.twitch.tv/*",
                   "*://*.twitter.com/*",
                   "*://*.vice.com/*",
                   "*://*.web.de/*",

@@ -4,7 +4,7 @@
 
 "use strict";
 
- /**
+/**
  * @typedef {Object} UIState
  * @property {string} status The Sync/FxA status, see STATUS_* constants.
  * @property {string} [email] The FxA email configured to log-in with Sync.
@@ -16,9 +16,12 @@
 
 var EXPORTED_SYMBOLS = ["UIState"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "Weave",
-                               "resource://services-sync/main.js");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Weave",
+  "resource://services-sync/main.js"
+);
 
 const TOPICS = [
   "weave:service:login:change",
@@ -146,7 +149,10 @@ const UIStateInternal = {
       // If Sync thinks it is configured but there's no FxA user, then we
       // want to enter the "login failed" state so the user can get
       // reconfigured.
-      let syncUserName = Services.prefs.getStringPref("services.sync.username", "");
+      let syncUserName = Services.prefs.getStringPref(
+        "services.sync.username",
+        ""
+      );
       if (syncUserName) {
         state.email = syncUserName;
         status = STATUS_LOGIN_FAILED;
@@ -199,7 +205,10 @@ const UIStateInternal = {
 
   _setLastSyncTime(state) {
     if (state.status == UIState.STATUS_SIGNED_IN) {
-      const lastSync = Services.prefs.getCharPref("services.sync.lastSync", null);
+      const lastSync = Services.prefs.getCharPref(
+        "services.sync.lastSync",
+        null
+      );
       state.lastSync = lastSync ? new Date(lastSync) : null;
     }
   },
@@ -216,9 +225,8 @@ const UIStateInternal = {
 
     // Referencing Weave.Service will implicitly initialize sync, and we don't
     // want to force that - so first check if it is ready.
-    let service = Cc["@mozilla.org/weave/service;1"]
-                  .getService(Ci.nsISupports)
-                  .wrappedJSObject;
+    let service = Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
+      .wrappedJSObject;
     if (!service.ready) {
       return false;
     }
@@ -234,8 +242,11 @@ const UIStateInternal = {
   },
 };
 
-ChromeUtils.defineModuleGetter(UIStateInternal, "fxAccounts",
-                               "resource://gre/modules/FxAccounts.jsm");
+ChromeUtils.defineModuleGetter(
+  UIStateInternal,
+  "fxAccounts",
+  "resource://gre/modules/FxAccounts.jsm"
+);
 
 for (let topic of TOPICS) {
   Services.obs.addObserver(UIStateInternal, topic);

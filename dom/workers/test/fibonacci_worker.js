@@ -21,4 +21,4 @@ onmessage = function(event) {
     };
     worker.postMessage(n - i);
   }
-}
+};

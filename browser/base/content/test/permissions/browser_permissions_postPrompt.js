@@ -4,20 +4,34 @@
 "use strict";
 
 const ORIGIN = "https://example.com";
-const PERMISSIONS_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) + "permissions.html";
+const PERMISSIONS_PAGE =
+  getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) +
+  "permissions.html";
 
 function testPostPrompt(task) {
   let uri = Services.io.newURI(PERMISSIONS_PAGE);
   return BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
     let icon = document.getElementById("web-notifications-notification-icon");
-    ok(!BrowserTestUtils.is_visible(icon), "notifications icon is not visible at first");
+    ok(
+      !BrowserTestUtils.is_visible(icon),
+      "notifications icon is not visible at first"
+    );
 
     await ContentTask.spawn(browser, null, task);
 
-    await TestUtils.waitForCondition(() => BrowserTestUtils.is_visible(icon), "notifications icon is visible");
-    ok(!PopupNotifications.panel.hasAttribute("panelopen"), "only the icon is showing, the panel is not open");
+    await TestUtils.waitForCondition(
+      () => BrowserTestUtils.is_visible(icon),
+      "notifications icon is visible"
+    );
+    ok(
+      !PopupNotifications.panel.hasAttribute("panelopen"),
+      "only the icon is showing, the panel is not open"
+    );
 
-    let popupshown = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+    let popupshown = BrowserTestUtils.waitForEvent(
+      PopupNotifications.panel,
+      "popupshown"
+    );
     icon.click();
     await popupshown;
 
@@ -26,18 +40,30 @@ function testPostPrompt(task) {
     let notification = PopupNotifications.panel.firstElementChild;
     EventUtils.synthesizeMouseAtCenter(notification.button, {});
 
-    is(Services.perms.testPermission(uri, "desktop-notification"), Ci.nsIPermissionManager.ALLOW_ACTION,
-       "User can override the default deny by using the prompt");
+    is(
+      Services.perms.testPermission(uri, "desktop-notification"),
+      Ci.nsIPermissionManager.ALLOW_ACTION,
+      "User can override the default deny by using the prompt"
+    );
 
     Services.perms.remove(uri, "desktop-notification");
   });
 }
 
 add_task(async function testNotificationPermission() {
-  Services.prefs.setBoolPref("dom.webnotifications.requireuserinteraction", true);
-  Services.prefs.setBoolPref("permissions.desktop-notification.postPrompt.enabled", true);
+  Services.prefs.setBoolPref(
+    "dom.webnotifications.requireuserinteraction",
+    true
+  );
+  Services.prefs.setBoolPref(
+    "permissions.desktop-notification.postPrompt.enabled",
+    true
+  );
 
-  Services.prefs.setIntPref("permissions.default.desktop-notification", Ci.nsIPermissionManager.DENY_ACTION);
+  Services.prefs.setIntPref(
+    "permissions.default.desktop-notification",
+    Ci.nsIPermissionManager.DENY_ACTION
+  );
 
   // First test that all requests (even with user interaction) will cause a post-prompt
   // if the global default is "deny".
@@ -69,5 +95,7 @@ add_task(async function testNotificationPermission() {
   });
 
   Services.prefs.clearUserPref("dom.webnotifications.requireuserinteraction");
-  Services.prefs.clearUserPref("permissions.desktop-notification.postPrompt.enabled");
+  Services.prefs.clearUserPref(
+    "permissions.desktop-notification.postPrompt.enabled"
+  );
 });

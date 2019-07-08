@@ -1,7 +1,8 @@
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-var httpProtocolHandler = Cc["@mozilla.org/network/protocol;1?name=http"]
-                          .getService(Ci.nsIHttpProtocolHandler);
+var httpProtocolHandler = Cc[
+  "@mozilla.org/network/protocol;1?name=http"
+].getService(Ci.nsIHttpProtocolHandler);
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
@@ -32,7 +33,9 @@ function run_test() {
 
     // Opened channel that has remaining references on shutdown
     live_channels.push(setupChannel(testpath));
-    live_channels[1].asyncOpen(new ChannelListener(checkRequestFinish, live_channels[1]));
+    live_channels[1].asyncOpen(
+      new ChannelListener(checkRequestFinish, live_channels[1])
+    );
   });
 
   do_test_pending();
@@ -41,7 +44,7 @@ function run_test() {
 function setupChannel(path) {
   var chan = NetUtil.newChannel({
     uri: URL + path,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.requestMethod = "GET";

@@ -11,8 +11,9 @@
 // - ctrl-a, ctrl-p and ctrl-n only work on OSX
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
-                 "bug 804845 and bug 619598";
+const TEST_URI =
+  "data:text/html;charset=utf-8,Web Console test for " +
+  "bug 804845 and bug 619598";
 
 add_task(async function() {
   // Run test with legacy JsTerm
@@ -67,7 +68,10 @@ function testSingleLineInputNavNoHistory(hud) {
   checkInput("|12", "no change of caret location on repeat ctrl-a");
 
   synthesizeLineUpKey();
-  checkInput("|12", "no change of caret location on ctrl-p from beginning of line");
+  checkInput(
+    "|12",
+    "no change of caret location on ctrl-p from beginning of line"
+  );
 
   synthesizeLineEndKey();
   checkInput("12|", "move caret to end of 2 char input with ctrl-e");
@@ -94,116 +98,134 @@ function testMultiLineInputNavNoHistory(hud) {
   // simulate shift-return
   for (const lineValue of lineValues) {
     setInputValue(hud, getInputValue(hud) + lineValue);
-    EventUtils.synthesizeKey("KEY_Enter", {shiftKey: true});
+    EventUtils.synthesizeKey("KEY_Enter", { shiftKey: true });
   }
 
   checkInput(
-`one
+    `one
 2
 something longer
 
 
 three!
-|`, "caret at end of multiline input");
+|`,
+    "caret at end of multiline input"
+  );
 
   // Ok, test navigating within the multi-line string!
   EventUtils.synthesizeKey("KEY_ArrowUp");
   checkInput(
-`one
+    `one
 2
 something longer
 
 
 |three!
-`, "up arrow from end of multiline");
+`,
+    "up arrow from end of multiline"
+  );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
   checkInput(
-`one
+    `one
 2
 something longer
 
 
 three!
-|`, "down arrow from within multiline");
+|`,
+    "down arrow from within multiline"
+  );
 
   // navigate up through input lines
   synthesizeLineUpKey();
   checkInput(
-`one
+    `one
 2
 something longer
 
 
 |three!
-`, "ctrl-p from end of multiline");
+`,
+    "ctrl-p from end of multiline"
+  );
 
   for (let i = 0; i < 5; i++) {
     synthesizeLineUpKey();
   }
 
   checkInput(
-`|one
+    `|one
 2
 something longer
 
 
 three!
-`, "reached start of input");
+`,
+    "reached start of input"
+  );
 
   synthesizeLineUpKey();
   checkInput(
-`|one
+    `|one
 2
 something longer
 
 
 three!
-`, "no change to multiline input on ctrl-p from beginning of multiline");
+`,
+    "no change to multiline input on ctrl-p from beginning of multiline"
+  );
 
   // navigate to end of first line
   synthesizeLineEndKey();
   checkInput(
-`one|
+    `one|
 2
 something longer
 
 
 three!
-`, "ctrl-e into multiline input");
+`,
+    "ctrl-e into multiline input"
+  );
 
   synthesizeLineEndKey();
   checkInput(
-`one|
+    `one|
 2
 something longer
 
 
 three!
-`, "repeat ctrl-e doesn't change caret position in multiline input");
+`,
+    "repeat ctrl-e doesn't change caret position in multiline input"
+  );
 
   synthesizeLineDownKey();
   synthesizeLineStartKey();
   checkInput(
-`one
+    `one
 |2
 something longer
 
 
 three!
-`);
+`
+  );
 
   synthesizeLineEndKey();
   synthesizeLineDownKey();
   synthesizeLineStartKey();
   checkInput(
-`one
+    `one
 2
 |something longer
 
 
 three!
-`);
+`
+  );
 }
 
 async function testNavWithHistory(hud) {
@@ -227,37 +249,58 @@ async function testNavWithHistory(hud) {
   checkInput("|", "caret location at start of empty line");
 
   synthesizeLineUpKey();
-  checkInput("multi-line\ninput\nhere|", "caret location at end of last history input");
+  checkInput(
+    "multi-line\ninput\nhere|",
+    "caret location at end of last history input"
+  );
 
   synthesizeLineStartKey();
-  checkInput("multi-line\ninput\n|here",
-    "caret location at beginning of last line of last history input");
+  checkInput(
+    "multi-line\ninput\n|here",
+    "caret location at beginning of last line of last history input"
+  );
 
   synthesizeLineUpKey();
-  checkInput("multi-line\n|input\nhere",
-    "caret location at beginning of second line of last history input");
+  checkInput(
+    "multi-line\n|input\nhere",
+    "caret location at beginning of second line of last history input"
+  );
 
   synthesizeLineUpKey();
-  checkInput("|multi-line\ninput\nhere",
-    "caret location at beginning of first line of last history input");
+  checkInput(
+    "|multi-line\ninput\nhere",
+    "caret location at beginning of first line of last history input"
+  );
 
   synthesizeLineUpKey();
-  checkInput("a longer single-line input to check caret repositioning|",
-    "caret location at the end of second history input");
+  checkInput(
+    "a longer single-line input to check caret repositioning|",
+    "caret location at the end of second history input"
+  );
 
   synthesizeLineUpKey();
-  checkInput("single line input|", "caret location at the end of first history input");
+  checkInput(
+    "single line input|",
+    "caret location at the end of first history input"
+  );
 
   synthesizeLineUpKey();
-  checkInput("|single line input",
-    "ctrl-p at beginning of history moves caret location to beginning of line");
+  checkInput(
+    "|single line input",
+    "ctrl-p at beginning of history moves caret location to beginning of line"
+  );
 
   synthesizeLineDownKey();
-  checkInput("a longer single-line input to check caret repositioning|",
-    "caret location at the end of second history input");
+  checkInput(
+    "a longer single-line input to check caret repositioning|",
+    "caret location at the end of second history input"
+  );
 
   synthesizeLineDownKey();
-  checkInput("multi-line\ninput\nhere|", "caret location at end of last history input");
+  checkInput(
+    "multi-line\ninput\nhere|",
+    "caret location at end of last history input"
+  );
 
   synthesizeLineDownKey();
   checkInput("|", "ctrl-n at end of history updates to empty input");
@@ -269,28 +312,33 @@ async function testNavWithHistory(hud) {
 
   // Attempt nav within input
   synthesizeLineUpKey();
-  checkInput("one|\nlinebreak", "ctrl-p from end of multi-line does not trigger history");
+  checkInput(
+    "one|\nlinebreak",
+    "ctrl-p from end of multi-line does not trigger history"
+  );
 
   synthesizeLineStartKey();
   checkInput("|one\nlinebreak");
 
   synthesizeLineUpKey();
-  checkInput("multi-line\ninput\nhere|",
-    "ctrl-p from start of multi-line triggers history");
+  checkInput(
+    "multi-line\ninput\nhere|",
+    "ctrl-p from start of multi-line triggers history"
+  );
 }
 
 function synthesizeLineStartKey() {
-  EventUtils.synthesizeKey("a", {ctrlKey: true});
+  EventUtils.synthesizeKey("a", { ctrlKey: true });
 }
 
 function synthesizeLineEndKey() {
-  EventUtils.synthesizeKey("e", {ctrlKey: true});
+  EventUtils.synthesizeKey("e", { ctrlKey: true });
 }
 
 function synthesizeLineUpKey() {
-  EventUtils.synthesizeKey("p", {ctrlKey: true});
+  EventUtils.synthesizeKey("p", { ctrlKey: true });
 }
 
 function synthesizeLineDownKey() {
-  EventUtils.synthesizeKey("n", {ctrlKey: true});
+  EventUtils.synthesizeKey("n", { ctrlKey: true });
 }

@@ -5,17 +5,21 @@
 
 "use strict";
 
-
-XPCOMUtils.defineLazyServiceGetter(this, "asyncHistory",
-                                   "@mozilla.org/browser/history;1",
-                                   "mozIAsyncHistory");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "asyncHistory",
+  "@mozilla.org/browser/history;1",
+  "mozIAsyncHistory"
+);
 
 add_task(async function test_embed_visit() {
   let place = {
     uri: NetUtil.newURI("http://places.test/"),
     visits: [
-      { transitionType: PlacesUtils.history.TRANSITIONS.EMBED,
-        visitDate: PlacesUtils.toPRTime(new Date()) },
+      {
+        transitionType: PlacesUtils.history.TRANSITIONS.EMBED,
+        visitDate: PlacesUtils.toPRTime(new Date()),
+      },
     ],
   };
   let errors = 0;
@@ -44,10 +48,14 @@ add_task(async function test_misc_visits() {
   let place = {
     uri: NetUtil.newURI("http://places.test/"),
     visits: [
-      { transitionType: PlacesUtils.history.TRANSITIONS.EMBED,
-        visitDate: PlacesUtils.toPRTime(new Date()) },
-      { transitionType: PlacesUtils.history.TRANSITIONS.LINK,
-        visitDate: PlacesUtils.toPRTime(new Date()) },
+      {
+        transitionType: PlacesUtils.history.TRANSITIONS.EMBED,
+        visitDate: PlacesUtils.toPRTime(new Date()),
+      },
+      {
+        transitionType: PlacesUtils.history.TRANSITIONS.LINK,
+        visitDate: PlacesUtils.toPRTime(new Date()),
+      },
     ],
   };
   let errors = 0;

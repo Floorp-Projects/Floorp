@@ -20,44 +20,51 @@ const TEST_URI = `<html>
  *   expected {JSON}      An expected states for the tree and the sidebar.
  * }
  */
-const tests = [{
-  desc: "Test the initial accessibility sidebar state.",
-  expected: {
-    sidebar: {
-      name: "Accessibility Panel Test",
-      role: "document",
-      actions: [],
-      value: "",
-      description: "",
-      keyboardShortcut: "",
-      childCount: 0,
-      indexInParent: 0,
-      states: ["readonly", "focusable", "opaque", "enabled", "sensitive"],
+const tests = [
+  {
+    desc: "Test the initial accessibility sidebar state.",
+    expected: {
+      sidebar: {
+        name: "Accessibility Panel Test",
+        role: "document",
+        actions: [],
+        value: "",
+        description: "",
+        keyboardShortcut: "",
+        childCount: 0,
+        indexInParent: 0,
+        states: ["readonly", "focusable", "opaque", "enabled", "sensitive"],
+      },
     },
   },
-}, {
-  desc: "Mark document as disabled for accessibility.",
-  setup: async ({ browser }) => ContentTask.spawn(browser, {}, () =>
-    content.document.body.setAttribute("aria-disabled", true)),
-  expected: {
-    sidebar: {
-      states: ["unavailable", "readonly", "focusable", "opaque"],
+  {
+    desc: "Mark document as disabled for accessibility.",
+    setup: async ({ browser }) =>
+      ContentTask.spawn(browser, {}, () =>
+        content.document.body.setAttribute("aria-disabled", true)
+      ),
+    expected: {
+      sidebar: {
+        states: ["unavailable", "readonly", "focusable", "opaque"],
+      },
     },
   },
-}, {
-  desc: "Append a new child to the document.",
-  setup: async ({ browser }) => ContentTask.spawn(browser, {}, () => {
-    const doc = content.document;
-    const button = doc.createElement("button");
-    button.textContent = "Press Me!";
-    doc.body.appendChild(button);
-  }),
-  expected: {
-    sidebar: {
-      childCount: 1,
+  {
+    desc: "Append a new child to the document.",
+    setup: async ({ browser }) =>
+      ContentTask.spawn(browser, {}, () => {
+        const doc = content.document;
+        const button = doc.createElement("button");
+        button.textContent = "Press Me!";
+        doc.body.appendChild(button);
+      }),
+    expected: {
+      sidebar: {
+        childCount: 1,
+      },
     },
   },
-}];
+];
 
 /**
  * Test that checks the Accessibility panel sidebar.

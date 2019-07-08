@@ -14,9 +14,13 @@ add_task(async () => {
   const snapshotFilePath = await memoryFront.saveHeapSnapshot({
     forceCopy: true,
   });
-  ok(!!(await OS.File.stat(snapshotFilePath)),
-     "Should have the heap snapshot file");
+  ok(
+    !!(await OS.File.stat(snapshotFilePath)),
+    "Should have the heap snapshot file"
+  );
   const snapshot = ChromeUtils.readHeapSnapshot(snapshotFilePath);
-  ok(snapshot instanceof HeapSnapshot,
-     "And we should be able to read a HeapSnapshot instance from the file");
+  ok(
+    snapshot instanceof HeapSnapshot,
+    "And we should be able to read a HeapSnapshot instance from the file"
+  );
 });

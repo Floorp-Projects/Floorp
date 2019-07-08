@@ -12,10 +12,15 @@ const URL = MAIN_DOMAIN + "animation.html";
 add_task(async function() {
   info("Creating a test document with 2 iframes containing animated nodes");
 
-  const {target, walker, animations} = await initAnimationsFrontForUrl(
+  const { target, walker, animations } = await initAnimationsFrontForUrl(
     "data:text/html;charset=utf-8," +
-    "<iframe id='i1' src='" + URL + "'></iframe>" +
-    "<iframe id='i2' src='" + URL + "'></iframe>");
+      "<iframe id='i1' src='" +
+      URL +
+      "'></iframe>" +
+      "<iframe id='i2' src='" +
+      URL +
+      "'></iframe>"
+  );
 
   info("Getting the 2 iframe container nodes and animated nodes in them");
   const nodeInFrame1 = await getNodeInFrame(walker, "#i1", ".simple-animation");
@@ -45,12 +50,15 @@ async function toggleAndCheckStates(animations, nodeFront, playState) {
   info("Getting the AnimationPlayerFront for the test node");
   await player.ready;
   const state = await player.getCurrentState();
-  is(state.playState, playState,
-     "The playState of the test node is " + playState);
+  is(
+    state.playState,
+    playState,
+    "The playState of the test node is " + playState
+  );
 }
 
 async function getNodeInFrame(walker, frameSelector, nodeSelector) {
   const iframe = await walker.querySelector(walker.rootNode, frameSelector);
-  const {nodes} = await walker.children(iframe);
+  const { nodes } = await walker.children(iframe);
   return walker.querySelector(nodes[0], nodeSelector);
 }

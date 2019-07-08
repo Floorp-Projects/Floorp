@@ -13,7 +13,9 @@ ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", this);
-const {OS: {File, Path, Constants}} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {
+  OS: { File, Path, Constants },
+} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const PING_SAVE_FOLDER = "saved-telemetry-pings";
 const PING_TIMEOUT_LENGTH = 5000;
@@ -43,7 +45,11 @@ var createSavedPings = async function(aPingInfos) {
     let num = aPingInfos[type].num;
     let age = now - (aPingInfos[type].age || 0);
     for (let i = 0; i < num; ++i) {
-      let pingId = await TelemetryController.addPendingPing("test-ping", {}, { overwrite: true });
+      let pingId = await TelemetryController.addPendingPing(
+        "test-ping",
+        {},
+        { overwrite: true }
+      );
       if (aPingInfos[type].age) {
         // savePing writes to the file synchronously, so we're good to
         // modify the lastModifedTime now.
@@ -75,7 +81,10 @@ var clearPings = async function(aPingIds) {
  * @param {Integer} aPendingQuota The new quota, in bytes.
  */
 function fakePendingPingsQuota(aPendingQuota) {
-  let storage = ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", null);
+  let storage = ChromeUtils.import(
+    "resource://gre/modules/TelemetryStorage.jsm",
+    null
+  );
   storage.Policy.getPendingPingsQuota = () => aPendingQuota;
 }
 
@@ -139,8 +148,10 @@ add_task(async function test_setup() {
   // Make sure we don't generate unexpected pings due to pref changes.
   await setEmptyPrefWatchlist();
 
-  Services.prefs.setCharPref(TelemetryUtils.Preferences.Server,
-                              "http://localhost:" + PingServer.port);
+  Services.prefs.setCharPref(
+    TelemetryUtils.Preferences.Server,
+    "http://localhost:" + PingServer.port
+  );
 });
 
 /**
@@ -154,7 +165,10 @@ add_task(async function setupEnvironment() {
   await TelemetryController.testSetup();
 
   let directory = TelemetryStorage.pingDirectoryPath;
-  await File.makeDir(directory, { ignoreExisting: true, unixMode: OS.Constants.S_IRWXU });
+  await File.makeDir(directory, {
+    ignoreExisting: true,
+    unixMode: OS.Constants.S_IRWXU,
+  });
 
   await TelemetryStorage.testClearPendingPings();
 });
@@ -225,7 +239,11 @@ add_task(async function test_old_formats() {
   await TelemetryStorage.savePing(PING_OLD_FORMAT, true);
   await TelemetryStorage.savePing(PING_NO_INFO, true);
   await TelemetryStorage.savePing(PING_NO_PAYLOAD, true);
-  await TelemetryStorage.savePingToFile(PING_NO_SLUG, PING_FILES_PATHS[3], true);
+  await TelemetryStorage.savePingToFile(
+    PING_NO_SLUG,
+    PING_FILES_PATHS[3],
+    true
+  );
 
   gSeenPings = 0;
   await TelemetryController.testReset();
@@ -246,44 +264,78 @@ add_task(async function test_corrupted_pending_pings() {
   Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_PARSE").clear();
 
   // Save a pending ping and get its id.
-  let pendingPingId = await TelemetryController.addPendingPing(TEST_TYPE, {}, {});
+  let pendingPingId = await TelemetryController.addPendingPing(
+    TEST_TYPE,
+    {},
+    {}
+  );
 
   // Try to load it: there should be no error.
   await TelemetryStorage.loadPendingPing(pendingPingId);
 
-  let h = Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_READ").snapshot();
-  Assert.equal(h.sum, 0, "Telemetry must not report a pending ping load failure");
-  h = Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_PARSE").snapshot();
-  Assert.equal(h.sum, 0, "Telemetry must not report a pending ping parse failure");
+  let h = Telemetry.getHistogramById(
+    "TELEMETRY_PENDING_LOAD_FAILURE_READ"
+  ).snapshot();
+  Assert.equal(
+    h.sum,
+    0,
+    "Telemetry must not report a pending ping load failure"
+  );
+  h = Telemetry.getHistogramById(
+    "TELEMETRY_PENDING_LOAD_FAILURE_PARSE"
+  ).snapshot();
+  Assert.equal(
+    h.sum,
+    0,
+    "Telemetry must not report a pending ping parse failure"
+  );
 
   // Delete it from the disk, so that its id will be kept in the cache but it will
   // fail loading the file.
   await OS.File.remove(getSavePathForPingId(pendingPingId));
 
   // Try to load a pending ping which isn't there anymore.
-  await Assert.rejects(TelemetryStorage.loadPendingPing(pendingPingId),
-                       /PingReadError/,
-                       "Telemetry must fail loading a ping which isn't there");
+  await Assert.rejects(
+    TelemetryStorage.loadPendingPing(pendingPingId),
+    /PingReadError/,
+    "Telemetry must fail loading a ping which isn't there"
+  );
 
-  h = Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_READ").snapshot();
+  h = Telemetry.getHistogramById(
+    "TELEMETRY_PENDING_LOAD_FAILURE_READ"
+  ).snapshot();
   Assert.equal(h.sum, 1, "Telemetry must report a pending ping load failure");
-  h = Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_PARSE").snapshot();
-  Assert.equal(h.sum, 0, "Telemetry must not report a pending ping parse failure");
+  h = Telemetry.getHistogramById(
+    "TELEMETRY_PENDING_LOAD_FAILURE_PARSE"
+  ).snapshot();
+  Assert.equal(
+    h.sum,
+    0,
+    "Telemetry must not report a pending ping parse failure"
+  );
 
   // Save a new ping, so that it gets in the pending pings cache.
   pendingPingId = await TelemetryController.addPendingPing(TEST_TYPE, {}, {});
   // Overwrite it with a corrupted JSON file and then try to load it.
   const INVALID_JSON = "{ invalid,JSON { {1}";
-  await OS.File.writeAtomic(getSavePathForPingId(pendingPingId), INVALID_JSON, { encoding: "utf-8" });
+  await OS.File.writeAtomic(getSavePathForPingId(pendingPingId), INVALID_JSON, {
+    encoding: "utf-8",
+  });
 
   // Try to load the ping with the corrupted JSON content.
-  await Assert.rejects(TelemetryStorage.loadPendingPing(pendingPingId),
-                       /PingParseError/,
-                       "Telemetry must fail loading a corrupted ping");
+  await Assert.rejects(
+    TelemetryStorage.loadPendingPing(pendingPingId),
+    /PingParseError/,
+    "Telemetry must fail loading a corrupted ping"
+  );
 
-  h = Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_READ").snapshot();
+  h = Telemetry.getHistogramById(
+    "TELEMETRY_PENDING_LOAD_FAILURE_READ"
+  ).snapshot();
   Assert.equal(h.sum, 1, "Telemetry must report a pending ping load failure");
-  h = Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_PARSE").snapshot();
+  h = Telemetry.getHistogramById(
+    "TELEMETRY_PENDING_LOAD_FAILURE_PARSE"
+  ).snapshot();
   Assert.equal(h.sum, 1, "Telemetry must report a pending ping parse failure");
 
   let exists = await OS.File.exists(getSavePathForPingId(pendingPingId));
@@ -343,7 +395,10 @@ add_task(async function test_pendingPingsQuota() {
   const PING_TYPE = "foo";
 
   // Disable upload so pings don't get sent and removed from the pending pings directory.
-  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, false);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.FhrUploadEnabled,
+    false
+  );
 
   // Remove all the pending pings then startup and wait for the cleanup task to complete.
   // There should be nothing to remove.
@@ -361,17 +416,24 @@ add_task(async function test_pendingPingsQuota() {
   let checkPendingPings = async function() {
     // Check that the pruned pings are not on disk anymore.
     for (let prunedPingId of expectedPrunedPings) {
-      await Assert.rejects(TelemetryStorage.loadPendingPing(prunedPingId),
-                           /TelemetryStorage.loadPendingPing - no ping with id/,
-                           "Ping " + prunedPingId + " should have been pruned.");
+      await Assert.rejects(
+        TelemetryStorage.loadPendingPing(prunedPingId),
+        /TelemetryStorage.loadPendingPing - no ping with id/,
+        "Ping " + prunedPingId + " should have been pruned."
+      );
       const pingPath = getSavePathForPingId(prunedPingId);
-      Assert.ok(!(await OS.File.exists(pingPath)), "The ping should not be on the disk anymore.");
+      Assert.ok(
+        !(await OS.File.exists(pingPath)),
+        "The ping should not be on the disk anymore."
+      );
     }
 
     // Check that the expected pings are there.
     for (let expectedPingId of expectedNotPrunedPings) {
-      Assert.ok((await TelemetryStorage.loadPendingPing(expectedPingId)),
-                "Ping" + expectedPingId + " should be among the pending pings.");
+      Assert.ok(
+        await TelemetryStorage.loadPendingPing(expectedPingId),
+        "Ping" + expectedPingId + " should be among the pending pings."
+      );
     }
   };
 
@@ -387,7 +449,11 @@ add_task(async function test_pendingPingsQuota() {
     const pingFilePath = getSavePathForPingId(pingId);
     const pingSize = (await OS.File.stat(pingFilePath)).size;
     // Add the info at the beginning of the array, so that most recent pings come first.
-    pendingPingsInfo.unshift({id: pingId, size: pingSize, timestamp: date.getTime() });
+    pendingPingsInfo.unshift({
+      id: pingId,
+      size: pingSize,
+      timestamp: date.getTime(),
+    });
 
     // Set the last modification date.
     await OS.File.setDates(pingFilePath, null, date.getTime());
@@ -399,20 +465,41 @@ add_task(async function test_pendingPingsQuota() {
   // We need to test the pending pings size before we hit the quota, otherwise a special
   // value is recorded.
   Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_SIZE_MB").clear();
-  Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA").clear();
-  Telemetry.getHistogramById("TELEMETRY_PENDING_EVICTING_OVER_QUOTA_MS").clear();
+  Telemetry.getHistogramById(
+    "TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA"
+  ).clear();
+  Telemetry.getHistogramById(
+    "TELEMETRY_PENDING_EVICTING_OVER_QUOTA_MS"
+  ).clear();
 
   await TelemetryController.testReset();
   await TelemetryStorage.testPendingQuotaTaskPromise();
 
   // Check that the correct values for quota probes are reported when no quota is hit.
-  let h = Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_SIZE_MB").snapshot();
-  Assert.equal(h.sum, Math.round(pingsSizeInBytes / 1024 / 1024),
-               "Telemetry must report the correct pending pings directory size.");
-  h = Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA").snapshot();
-  Assert.equal(h.sum, 0, "Telemetry must report 0 evictions if quota is not hit.");
-  h = Telemetry.getHistogramById("TELEMETRY_PENDING_EVICTING_OVER_QUOTA_MS").snapshot();
-  Assert.equal(h.sum, 0, "Telemetry must report a null elapsed time if quota is not hit.");
+  let h = Telemetry.getHistogramById(
+    "TELEMETRY_PENDING_PINGS_SIZE_MB"
+  ).snapshot();
+  Assert.equal(
+    h.sum,
+    Math.round(pingsSizeInBytes / 1024 / 1024),
+    "Telemetry must report the correct pending pings directory size."
+  );
+  h = Telemetry.getHistogramById(
+    "TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA"
+  ).snapshot();
+  Assert.equal(
+    h.sum,
+    0,
+    "Telemetry must report 0 evictions if quota is not hit."
+  );
+  h = Telemetry.getHistogramById(
+    "TELEMETRY_PENDING_EVICTING_OVER_QUOTA_MS"
+  ).snapshot();
+  Assert.equal(
+    h.sum,
+    0,
+    "Telemetry must report a null elapsed time if quota is not hit."
+  );
 
   // Set the quota to 80% of the space.
   const testQuotaInBytes = pingsSizeInBytes * 0.8;
@@ -442,11 +529,20 @@ add_task(async function test_pendingPingsQuota() {
   await TelemetryStorage.testPendingQuotaTaskPromise();
   await checkPendingPings();
 
-  h = Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA").snapshot();
-  Assert.equal(h.sum, pingsOutsideQuota.length,
-               "Telemetry must correctly report the over quota pings evicted from the pending pings directory.");
+  h = Telemetry.getHistogramById(
+    "TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA"
+  ).snapshot();
+  Assert.equal(
+    h.sum,
+    pingsOutsideQuota.length,
+    "Telemetry must correctly report the over quota pings evicted from the pending pings directory."
+  );
   h = Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_SIZE_MB").snapshot();
-  Assert.equal(h.sum, 17, "Pending pings quota was hit, a special size must be reported.");
+  Assert.equal(
+    h.sum,
+    17,
+    "Pending pings quota was hit, a special size must be reported."
+  );
 
   // Trigger a cleanup again and make sure we're not removing anything.
   await TelemetryController.testReset();
@@ -458,7 +554,7 @@ add_task(async function test_pendingPingsQuota() {
   const OVERSIZED_PING = {
     id: OVERSIZED_PING_ID,
     type: PING_TYPE,
-    creationDate: (new Date()).toISOString(),
+    creationDate: new Date().toISOString(),
     // Generate a 2MB string to use as the ping payload.
     payload: generateRandomString(2 * 1024 * 1024),
   };
@@ -466,19 +562,33 @@ add_task(async function test_pendingPingsQuota() {
 
   // Reset the histograms.
   Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_PENDING").clear();
-  Telemetry.getHistogramById("TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB").clear();
+  Telemetry.getHistogramById(
+    "TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB"
+  ).clear();
 
   // Try to manually load the oversized ping.
-  await Assert.rejects(TelemetryStorage.loadPendingPing(OVERSIZED_PING_ID),
-                       /loadPendingPing - exceeded the maximum ping size/,
-                       "The oversized ping should have been pruned.");
-  Assert.ok(!(await OS.File.exists(getSavePathForPingId(OVERSIZED_PING_ID))),
-            "The ping should not be on the disk anymore.");
+  await Assert.rejects(
+    TelemetryStorage.loadPendingPing(OVERSIZED_PING_ID),
+    /loadPendingPing - exceeded the maximum ping size/,
+    "The oversized ping should have been pruned."
+  );
+  Assert.ok(
+    !(await OS.File.exists(getSavePathForPingId(OVERSIZED_PING_ID))),
+    "The ping should not be on the disk anymore."
+  );
 
   // Make sure we're correctly updating the related histograms.
-  h = Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_PENDING").snapshot();
-  Assert.equal(h.sum, 1, "Telemetry must report 1 oversized ping in the pending pings directory.");
-  h = Telemetry.getHistogramById("TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB").snapshot();
+  h = Telemetry.getHistogramById(
+    "TELEMETRY_PING_SIZE_EXCEEDED_PENDING"
+  ).snapshot();
+  Assert.equal(
+    h.sum,
+    1,
+    "Telemetry must report 1 oversized ping in the pending pings directory."
+  );
+  h = Telemetry.getHistogramById(
+    "TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB"
+  ).snapshot();
   Assert.equal(h.values[2], 1, "Telemetry must report a 2MB, oversized, ping.");
 
   // Save the ping again to check if it gets pruned when scanning the pings directory.
@@ -491,10 +601,22 @@ add_task(async function test_pendingPingsQuota() {
   await checkPendingPings();
 
   // Make sure we're correctly updating the related histograms.
-  h = Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_PENDING").snapshot();
-  Assert.equal(h.sum, 2, "Telemetry must report 1 oversized ping in the pending pings directory.");
-  h = Telemetry.getHistogramById("TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB").snapshot();
-  Assert.equal(h.values[2], 2, "Telemetry must report two 2MB, oversized, pings.");
+  h = Telemetry.getHistogramById(
+    "TELEMETRY_PING_SIZE_EXCEEDED_PENDING"
+  ).snapshot();
+  Assert.equal(
+    h.sum,
+    2,
+    "Telemetry must report 1 oversized ping in the pending pings directory."
+  );
+  h = Telemetry.getHistogramById(
+    "TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB"
+  ).snapshot();
+  Assert.equal(
+    h.values[2],
+    2,
+    "Telemetry must report two 2MB, oversized, pings."
+  );
 
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
 });

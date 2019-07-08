@@ -19,21 +19,22 @@ module.exports = function(context) {
   //  --------------------------------------------------------------------------
 
   return {
-    "TryStatement": function(node) {
+    TryStatement(node) {
       let types = ["Bool", "Char", "Float", "Int"];
       let methods = types.map(type => "get" + type + "Pref");
-      if (node.block.type != "BlockStatement" ||
-          node.block.body.length != 1) {
+      if (node.block.type != "BlockStatement" || node.block.body.length != 1) {
         return;
       }
 
       let firstStm = node.block.body[0];
-      if (firstStm.type != "ExpressionStatement" ||
-          firstStm.expression.type != "AssignmentExpression" ||
-          firstStm.expression.right.type != "CallExpression" ||
-          firstStm.expression.right.callee.type != "MemberExpression" ||
-          firstStm.expression.right.callee.property.type != "Identifier" ||
-          !methods.includes(firstStm.expression.right.callee.property.name)) {
+      if (
+        firstStm.type != "ExpressionStatement" ||
+        firstStm.expression.type != "AssignmentExpression" ||
+        firstStm.expression.right.type != "CallExpression" ||
+        firstStm.expression.right.callee.type != "MemberExpression" ||
+        firstStm.expression.right.callee.property.type != "Identifier" ||
+        !methods.includes(firstStm.expression.right.callee.property.name)
+      ) {
         return;
       }
 

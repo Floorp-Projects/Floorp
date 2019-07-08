@@ -12,16 +12,23 @@ function promiseAuthWindowShown() {
       onOpenWindow(xulWin) {
         let domwindow = xulWin.docShell.domWindow;
         waitForFocus(() => {
-          is(domwindow.document.location.href, PROMPT_URL, "Should have seen a prompt window");
-          is(domwindow.args.promptType, "promptUserAndPass", "Should be an authenticate prompt");
+          is(
+            domwindow.document.location.href,
+            PROMPT_URL,
+            "Should have seen a prompt window"
+          );
+          is(
+            domwindow.args.promptType,
+            "promptUserAndPass",
+            "Should be an authenticate prompt"
+          );
           domwindow.document.documentElement.cancelDialog();
           Services.wm.removeListener(listener);
           resolve();
         }, domwindow);
       },
 
-      onCloseWindow() {
-      },
+      onCloseWindow() {},
     };
 
     Services.wm.addListener(listener);
@@ -29,12 +36,19 @@ function promiseAuthWindowShown() {
 }
 
 add_task(async function test() {
-  await BrowserTestUtils.withNewTab("https://example.com", async function(browser) {
-    let cancelDialogLimit = Services.prefs.getIntPref("prompts.authentication_dialog_abuse_limit");
+  await BrowserTestUtils.withNewTab("https://example.com", async function(
+    browser
+  ) {
+    let cancelDialogLimit = Services.prefs.getIntPref(
+      "prompts.authentication_dialog_abuse_limit"
+    );
 
     let authShown = promiseAuthWindowShown();
     let browserLoaded = BrowserTestUtils.browserLoaded(browser);
-    BrowserTestUtils.loadURI(browser, "https://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs");
+    BrowserTestUtils.loadURI(
+      browser,
+      "https://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs"
+    );
     await authShown;
     ok(true, "Seen dialog number 1");
     await browserLoaded;
@@ -62,7 +76,9 @@ add_task(async function test() {
     }
 
     let reloadButton = document.getElementById("reload-button");
-    await TestUtils.waitForCondition(() => !reloadButton.hasAttribute("disabled"));
+    await TestUtils.waitForCondition(
+      () => !reloadButton.hasAttribute("disabled")
+    );
 
     // Verify that we can click the reload button to reset the counter.
     authShown = promiseAuthWindowShown();
@@ -89,11 +105,16 @@ add_task(async function test() {
         let iframe = doc.createElement("iframe");
         doc.body.appendChild(iframe);
         let loaded = new Promise(resolve => {
-          iframe.addEventListener("load", function(e) {
-            resolve();
-          }, {once: true});
+          iframe.addEventListener(
+            "load",
+            function(e) {
+              resolve();
+            },
+            { once: true }
+          );
         });
-        iframe.src = "https://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs";
+        iframe.src =
+          "https://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs";
         await loaded;
       });
 
@@ -112,11 +133,16 @@ add_task(async function test() {
       let iframe = doc.createElement("iframe");
       doc.body.appendChild(iframe);
       let loaded = new Promise(resolve => {
-        iframe.addEventListener("load", function(e) {
-          resolve();
-        }, {once: true});
+        iframe.addEventListener(
+          "load",
+          function(e) {
+            resolve();
+          },
+          { once: true }
+        );
       });
-      iframe.src = "https://example.org/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs";
+      iframe.src =
+        "https://example.org/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs";
       await loaded;
     });
 
@@ -126,7 +152,8 @@ add_task(async function test() {
     // Verify that pressing enter in the urlbar also resets the counter.
     authShown = promiseAuthWindowShown();
     browserLoaded = BrowserTestUtils.browserLoaded(browser);
-    gURLBar.value = "https://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs";
+    gURLBar.value =
+      "https://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs";
     gURLBar.focus();
     EventUtils.synthesizeKey("KEY_Enter");
     await authShown;

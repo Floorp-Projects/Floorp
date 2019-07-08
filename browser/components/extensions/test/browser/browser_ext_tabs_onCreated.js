@@ -6,7 +6,7 @@
 add_task(async function test_onCreated_active() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
     background: function() {
       browser.tabs.onCreated.addListener(tab => {

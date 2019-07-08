@@ -1,9 +1,6 @@
 "use strict";
 
-const TEST_URLS = [
-  "about:robots",
-  "about:mozilla",
-];
+const TEST_URLS = ["about:robots", "about:mozilla"];
 
 add_task(async function() {
   let tabs = [];
@@ -16,7 +13,8 @@ add_task(async function() {
     }
   });
 
-  await withBookmarksDialog(true,
+  await withBookmarksDialog(
+    true,
     function open() {
       document.getElementById("Browser:BookmarkAllTabs").doCommand();
     },
@@ -26,19 +24,25 @@ add_task(async function() {
 
       let namepicker = dialog.document.getElementById("editBMPanel_namePicker");
       Assert.ok(!namepicker.readOnly, "Name field is writable");
-      let folderName = dialog.document.getElementById("stringBundle").getString("bookmarkAllTabsDefault");
+      let folderName = dialog.document
+        .getElementById("stringBundle")
+        .getString("bookmarkAllTabsDefault");
       Assert.equal(namepicker.value, folderName, "Name field is correct.");
 
       let promiseTitleChange = PlacesTestUtils.waitForNotification(
-        "onItemChanged", (id, prop, isAnno, val) => prop == "title" && val == "folder");
+        "onItemChanged",
+        (id, prop, isAnno, val) => prop == "title" && val == "folder"
+      );
       fillBookmarkTextField("editBMPanel_namePicker", "folder", dialog);
       await promiseTitleChange;
     },
     dialog => {
       let savedItemId = dialog.gEditItemOverlay.itemId;
       Assert.ok(savedItemId > 0, "Found the itemId");
-      return PlacesTestUtils.waitForNotification("onItemRemoved",
-                                                 id => id === savedItemId);
+      return PlacesTestUtils.waitForNotification(
+        "onItemRemoved",
+        id => id === savedItemId
+      );
     }
   );
 });

@@ -32,7 +32,7 @@ add_task(async function() {
     // ===== 1 =====
     testnum++;
     // Check for expected contents.
-    Assert.ok(await promiseCountEntries(null, null) > 0);
+    Assert.ok((await promiseCountEntries(null, null)) > 0);
     Assert.equal(1, await promiseCountEntries("name-A", "value-A"));
     Assert.equal(1, await promiseCountEntries("name-B", "value-B"));
     Assert.equal(1, await promiseCountEntries("name-C", "value-C1"));

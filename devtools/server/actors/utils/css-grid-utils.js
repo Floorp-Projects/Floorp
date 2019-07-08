@@ -54,7 +54,14 @@ function getStringifiableDimension(dimension) {
   };
 }
 
-function getStringifiableArea({ columnEnd, columnStart, name, rowEnd, rowStart, type }) {
+function getStringifiableArea({
+  columnEnd,
+  columnStart,
+  name,
+  rowEnd,
+  rowStart,
+  type,
+}) {
   return { columnEnd, columnStart, name, rowEnd, rowStart, type };
 }
 

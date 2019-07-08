@@ -6,34 +6,53 @@
 
 var EXPORTED_SYMBOLS = ["MSMigrationUtils"];
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {MigrationUtils} = ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { MigrationUtils } = ChromeUtils.import(
+  "resource:///modules/MigrationUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["FileReader"]);
 
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "WindowsRegistry",
-                               "resource://gre/modules/WindowsRegistry.jsm");
-ChromeUtils.defineModuleGetter(this, "ctypes",
-                               "resource://gre/modules/ctypes.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "WindowsRegistry",
+  "resource://gre/modules/WindowsRegistry.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ctypes",
+  "resource://gre/modules/ctypes.jsm"
+);
 
 const EDGE_COOKIE_PATH_OPTIONS = ["", "#!001\\", "#!002\\"];
 const EDGE_COOKIES_SUFFIX = "MicrosoftEdge\\Cookies";
 const EDGE_FAVORITES = "AC\\MicrosoftEdge\\User\\Default\\Favorites";
 const FREE_CLOSE_FAILED = 0;
-const INTERNET_EXPLORER_EDGE_GUID = [0x3CCD5499,
-                                     0x4B1087A8,
-                                     0x886015A2,
-                                     0x553BDD88];
+const INTERNET_EXPLORER_EDGE_GUID = [
+  0x3ccd5499,
+  0x4b1087a8,
+  0x886015a2,
+  0x553bdd88,
+];
 const RESULT_SUCCESS = 0;
 const VAULT_ENUMERATE_ALL_ITEMS = 512;
-const WEB_CREDENTIALS_VAULT_ID = [0x4BF4C442,
-                                  0x41A09B8A,
-                                  0x4ADD80B3,
-                                  0x28DB4D70];
+const WEB_CREDENTIALS_VAULT_ID = [
+  0x4bf4c442,
+  0x41a09b8a,
+  0x4add80b3,
+  0x28db4d70,
+];
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["File"]);
 
@@ -56,30 +75,31 @@ function CtypesKernelHelpers() {
   this._libs = {};
 
   this._structs.SYSTEMTIME = new ctypes.StructType("SYSTEMTIME", [
-    {wYear: wintypes.WORD},
-    {wMonth: wintypes.WORD},
-    {wDayOfWeek: wintypes.WORD},
-    {wDay: wintypes.WORD},
-    {wHour: wintypes.WORD},
-    {wMinute: wintypes.WORD},
-    {wSecond: wintypes.WORD},
-    {wMilliseconds: wintypes.WORD},
+    { wYear: wintypes.WORD },
+    { wMonth: wintypes.WORD },
+    { wDayOfWeek: wintypes.WORD },
+    { wDay: wintypes.WORD },
+    { wHour: wintypes.WORD },
+    { wMinute: wintypes.WORD },
+    { wSecond: wintypes.WORD },
+    { wMilliseconds: wintypes.WORD },
   ]);
 
   this._structs.FILETIME = new ctypes.StructType("FILETIME", [
-    {dwLowDateTime: wintypes.DWORD},
-    {dwHighDateTime: wintypes.DWORD},
+    { dwLowDateTime: wintypes.DWORD },
+    { dwHighDateTime: wintypes.DWORD },
   ]);
 
   try {
     this._libs.kernel32 = ctypes.open("Kernel32");
 
-    this._functions.FileTimeToSystemTime =
-      this._libs.kernel32.declare("FileTimeToSystemTime",
-                                  ctypes.winapi_abi,
-                                  wintypes.BOOL,
-                                  this._structs.FILETIME.ptr,
-                                  this._structs.SYSTEMTIME.ptr);
+    this._functions.FileTimeToSystemTime = this._libs.kernel32.declare(
+      "FileTimeToSystemTime",
+      ctypes.winapi_abi,
+      wintypes.BOOL,
+      this._structs.FILETIME.ptr,
+      this._structs.SYSTEMTIME.ptr
+    );
   } catch (ex) {
     this.finalize();
   }
@@ -101,7 +121,7 @@ CtypesKernelHelpers.prototype = {
     this._libs = {};
   },
 
-   /**
+  /**
    * Converts a FILETIME struct (2 DWORDS), to a SYSTEMTIME struct,
    * and then deduces the number of seconds since the epoch (which
    * is the data we want for the cookie expiry date).
@@ -117,20 +137,27 @@ CtypesKernelHelpers.prototype = {
     fileTime.dwLowDateTime = aTimeLo;
     fileTime.dwHighDateTime = aTimeHi;
     let systemTime = this._structs.SYSTEMTIME();
-    let result = this._functions.FileTimeToSystemTime(fileTime.address(),
-                                                      systemTime.address());
-    if (result == 0)
+    let result = this._functions.FileTimeToSystemTime(
+      fileTime.address(),
+      systemTime.address()
+    );
+    if (result == 0) {
       throw new Error(ctypes.winLastError);
+    }
 
     // System time is in UTC, so we use Date.UTC to get milliseconds from epoch,
     // then divide by 1000 to get seconds, and round down:
-    return Math.floor(Date.UTC(systemTime.wYear,
-                               systemTime.wMonth - 1,
-                               systemTime.wDay,
-                               systemTime.wHour,
-                               systemTime.wMinute,
-                               systemTime.wSecond,
-                               systemTime.wMilliseconds) / 1000);
+    return Math.floor(
+      Date.UTC(
+        systemTime.wYear,
+        systemTime.wMonth - 1,
+        systemTime.wDay,
+        systemTime.wHour,
+        systemTime.wMinute,
+        systemTime.wSecond,
+        systemTime.wMilliseconds
+      ) / 1000
+    );
   },
 };
 
@@ -139,105 +166,113 @@ function CtypesVaultHelpers() {
   this._functions = {};
 
   this._structs.GUID = new ctypes.StructType("GUID", [
-    {id: wintypes.DWORD.array(4)},
+    { id: wintypes.DWORD.array(4) },
   ]);
 
-  this._structs.VAULT_ITEM_ELEMENT = new ctypes.StructType("VAULT_ITEM_ELEMENT", [
-    // not documented
-    {schemaElementId: wintypes.DWORD},
-    // not documented
-    {unknown1: wintypes.DWORD},
-    // vault type
-    {type: wintypes.DWORD},
-    // not documented
-    {unknown2: wintypes.DWORD},
-    // value of the item
-    {itemValue: wintypes.LPCWSTR},
-    // not documented
-    {unknown3: wintypes.CHAR.array(12)},
-  ]);
+  this._structs.VAULT_ITEM_ELEMENT = new ctypes.StructType(
+    "VAULT_ITEM_ELEMENT",
+    [
+      // not documented
+      { schemaElementId: wintypes.DWORD },
+      // not documented
+      { unknown1: wintypes.DWORD },
+      // vault type
+      { type: wintypes.DWORD },
+      // not documented
+      { unknown2: wintypes.DWORD },
+      // value of the item
+      { itemValue: wintypes.LPCWSTR },
+      // not documented
+      { unknown3: wintypes.CHAR.array(12) },
+    ]
+  );
 
   this._structs.VAULT_ELEMENT = new ctypes.StructType("VAULT_ELEMENT", [
     // vault item schemaId
-    {schemaId: this._structs.GUID},
+    { schemaId: this._structs.GUID },
     // a pointer to the name of the browser VAULT_ITEM_ELEMENT
-    {pszCredentialFriendlyName: wintypes.LPCWSTR},
+    { pszCredentialFriendlyName: wintypes.LPCWSTR },
     // a pointer to the url VAULT_ITEM_ELEMENT
-    {pResourceElement: this._structs.VAULT_ITEM_ELEMENT.ptr},
+    { pResourceElement: this._structs.VAULT_ITEM_ELEMENT.ptr },
     // a pointer to the username VAULT_ITEM_ELEMENT
-    {pIdentityElement: this._structs.VAULT_ITEM_ELEMENT.ptr},
+    { pIdentityElement: this._structs.VAULT_ITEM_ELEMENT.ptr },
     // not documented
-    {pAuthenticatorElement: this._structs.VAULT_ITEM_ELEMENT.ptr},
+    { pAuthenticatorElement: this._structs.VAULT_ITEM_ELEMENT.ptr },
     // not documented
-    {pPackageSid: this._structs.VAULT_ITEM_ELEMENT.ptr},
+    { pPackageSid: this._structs.VAULT_ITEM_ELEMENT.ptr },
     // time stamp in local format
-    {lowLastModified: wintypes.DWORD},
-    {highLastModified: wintypes.DWORD},
+    { lowLastModified: wintypes.DWORD },
+    { highLastModified: wintypes.DWORD },
     // not documented
-    {flags: wintypes.DWORD},
+    { flags: wintypes.DWORD },
     // not documented
-    {dwPropertiesCount: wintypes.DWORD},
+    { dwPropertiesCount: wintypes.DWORD },
     // not documented
-    {pPropertyElements: this._structs.VAULT_ITEM_ELEMENT.ptr},
+    { pPropertyElements: this._structs.VAULT_ITEM_ELEMENT.ptr },
   ]);
 
   try {
     this._vaultcliLib = ctypes.open("vaultcli.dll");
 
-    this._functions.VaultOpenVault =
-      this._vaultcliLib.declare("VaultOpenVault",
-                                ctypes.winapi_abi,
-                                wintypes.DWORD,
-                                // GUID
-                                this._structs.GUID.ptr,
-                                // Flags
-                                wintypes.DWORD,
-                                // Vault Handle
-                                wintypes.VOIDP.ptr);
-    this._functions.VaultEnumerateItems =
-      this._vaultcliLib.declare("VaultEnumerateItems",
-                                ctypes.winapi_abi,
-                                wintypes.DWORD,
-                                // Vault Handle
-                                wintypes.VOIDP,
-                                // Flags
-                                wintypes.DWORD,
-                                // Items Count
-                                wintypes.PDWORD,
-                                // Items
-                                ctypes.voidptr_t);
-    this._functions.VaultCloseVault =
-      this._vaultcliLib.declare("VaultCloseVault",
-                                ctypes.winapi_abi,
-                                wintypes.DWORD,
-                                // Vault Handle
-                                wintypes.VOIDP);
-    this._functions.VaultGetItem =
-      this._vaultcliLib.declare("VaultGetItem",
-                                ctypes.winapi_abi,
-                                wintypes.DWORD,
-                                // Vault Handle
-                                wintypes.VOIDP,
-                                // Schema Id
-                                this._structs.GUID.ptr,
-                                // Resource
-                                this._structs.VAULT_ITEM_ELEMENT.ptr,
-                                // Identity
-                                this._structs.VAULT_ITEM_ELEMENT.ptr,
-                                // Package Sid
-                                this._structs.VAULT_ITEM_ELEMENT.ptr,
-                                // HWND Owner
-                                wintypes.DWORD,
-                                // Flags
-                                wintypes.DWORD,
-                                // Items
-                                this._structs.VAULT_ELEMENT.ptr.ptr);
-    this._functions.VaultFree =
-      this._vaultcliLib.declare("VaultFree",
-                                ctypes.winapi_abi,
-                                wintypes.DWORD,
-                                // Memory
-                                this._structs.VAULT_ELEMENT.ptr);
+    this._functions.VaultOpenVault = this._vaultcliLib.declare(
+      "VaultOpenVault",
+      ctypes.winapi_abi,
+      wintypes.DWORD,
+      // GUID
+      this._structs.GUID.ptr,
+      // Flags
+      wintypes.DWORD,
+      // Vault Handle
+      wintypes.VOIDP.ptr
+    );
+    this._functions.VaultEnumerateItems = this._vaultcliLib.declare(
+      "VaultEnumerateItems",
+      ctypes.winapi_abi,
+      wintypes.DWORD,
+      // Vault Handle
+      wintypes.VOIDP,
+      // Flags
+      wintypes.DWORD,
+      // Items Count
+      wintypes.PDWORD,
+      // Items
+      ctypes.voidptr_t
+    );
+    this._functions.VaultCloseVault = this._vaultcliLib.declare(
+      "VaultCloseVault",
+      ctypes.winapi_abi,
+      wintypes.DWORD,
+      // Vault Handle
+      wintypes.VOIDP
+    );
+    this._functions.VaultGetItem = this._vaultcliLib.declare(
+      "VaultGetItem",
+      ctypes.winapi_abi,
+      wintypes.DWORD,
+      // Vault Handle
+      wintypes.VOIDP,
+      // Schema Id
+      this._structs.GUID.ptr,
+      // Resource
+      this._structs.VAULT_ITEM_ELEMENT.ptr,
+      // Identity
+      this._structs.VAULT_ITEM_ELEMENT.ptr,
+      // Package Sid
+      this._structs.VAULT_ITEM_ELEMENT.ptr,
+      // HWND Owner
+      wintypes.DWORD,
+      // Flags
+      wintypes.DWORD,
+      // Items
+      this._structs.VAULT_ELEMENT.ptr.ptr
+    );
+    this._functions.VaultFree = this._vaultcliLib.declare(
+      "VaultFree",
+      ctypes.winapi_abi,
+      wintypes.DWORD,
+      // Memory
+      this._structs.VAULT_ELEMENT.ptr
+    );
   } catch (ex) {
     this.finalize();
   }
@@ -292,18 +327,22 @@ function getEdgeLocalDataFolder() {
     let dirEntries = packages.directoryEntries;
     while (dirEntries.hasMoreElements()) {
       let subDir = dirEntries.nextFile;
-      if (subDir.leafName.startsWith("Microsoft.MicrosoftEdge") && subDir.isReadable() &&
-          subDir.isDirectory()) {
+      if (
+        subDir.leafName.startsWith("Microsoft.MicrosoftEdge") &&
+        subDir.isReadable() &&
+        subDir.isDirectory()
+      ) {
         gEdgeDir = subDir;
         return subDir.clone();
       }
     }
   } catch (ex) {
-    Cu.reportError("Exception trying to find the Edge favorites directory: " + ex);
+    Cu.reportError(
+      "Exception trying to find the Edge favorites directory: " + ex
+    );
   }
   return null;
 }
-
 
 function Bookmarks(migrationType) {
   this._migrationType = migrationType;
@@ -317,7 +356,9 @@ Bookmarks.prototype = {
   },
 
   get importedAppLabel() {
-    return this._migrationType == MSMigrationUtils.MIGRATION_TYPE_IE ? "IE" : "Edge";
+    return this._migrationType == MSMigrationUtils.MIGRATION_TYPE_IE
+      ? "IE"
+      : "Edge";
   },
 
   __favoritesFolder: null,
@@ -332,7 +373,11 @@ Bookmarks.prototype = {
         let edgeDir = getEdgeLocalDataFolder();
         if (edgeDir) {
           edgeDir.appendRelativePath(EDGE_FAVORITES);
-          if (edgeDir.exists() && edgeDir.isReadable() && edgeDir.isDirectory()) {
+          if (
+            edgeDir.exists() &&
+            edgeDir.isReadable() &&
+            edgeDir.isDirectory()
+          ) {
             this.__favoritesFolder = edgeDir;
           }
         }
@@ -348,9 +393,11 @@ Bookmarks.prototype = {
         // Retrieve the name of IE's favorites subfolder that holds the bookmarks
         // in the toolbar. This was previously stored in the registry and changed
         // in IE7 to always be called "Links".
-        let folderName = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                                                    "Software\\Microsoft\\Internet Explorer\\Toolbar",
-                                                    "LinksFolderName");
+        let folderName = WindowsRegistry.readRegKey(
+          Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+          "Software\\Microsoft\\Internet Explorer\\Toolbar",
+          "LinksFolderName"
+        );
         this.__toolbarFolderName = folderName || "Links";
       } else {
         this.__toolbarFolderName = "Links";
@@ -364,18 +411,28 @@ Bookmarks.prototype = {
       // Import to the bookmarks menu.
       let folderGuid = PlacesUtils.bookmarks.menuGuid;
       if (!MigrationUtils.isStartupMigration) {
-        folderGuid =
-          await MigrationUtils.createImportedBookmarksFolder(this.importedAppLabel, folderGuid);
+        folderGuid = await MigrationUtils.createImportedBookmarksFolder(
+          this.importedAppLabel,
+          folderGuid
+        );
       }
       await this._migrateFolder(this._favoritesFolder, folderGuid);
-    })().then(() => aCallback(true),
-                       e => { Cu.reportError(e); aCallback(false); });
+    })().then(
+      () => aCallback(true),
+      e => {
+        Cu.reportError(e);
+        aCallback(false);
+      }
+    );
   },
 
   async _migrateFolder(aSourceFolder, aDestFolderGuid) {
     let bookmarks = await this._getBookmarksInFolder(aSourceFolder);
     if (bookmarks.length) {
-      await MigrationUtils.insertManyBookmarksWrapper(bookmarks, aDestFolderGuid);
+      await MigrationUtils.insertManyBookmarksWrapper(
+        bookmarks,
+        aDestFolderGuid
+      );
     }
   },
 
@@ -394,14 +451,17 @@ Bookmarks.prototype = {
         // Don't use isSymlink(), since it would throw for invalid
         // lnk files pointing to URLs or to unresolvable paths.
         if (entry.path == entry.target && entry.isDirectory()) {
-          let isBookmarksFolder = entry.leafName == this._toolbarFolderName &&
-                                  entry.parent.equals(this._favoritesFolder);
+          let isBookmarksFolder =
+            entry.leafName == this._toolbarFolderName &&
+            entry.parent.equals(this._favoritesFolder);
           if (isBookmarksFolder && entry.isReadable()) {
             // Import to the bookmarks toolbar.
             let folderGuid = PlacesUtils.bookmarks.toolbarGuid;
             if (!MigrationUtils.isStartupMigration) {
-              folderGuid =
-                await MigrationUtils.createImportedBookmarksFolder(this.importedAppLabel, folderGuid);
+              folderGuid = await MigrationUtils.createImportedBookmarksFolder(
+                this.importedAppLabel,
+                folderGuid
+              );
             }
             await this._migrateFolder(entry, folderGuid);
           } else if (entry.isReadable()) {
@@ -417,19 +477,26 @@ Bookmarks.prototype = {
           // and get the associated title.
           let matches = entry.leafName.match(/(.+)\.url$/i);
           if (matches) {
-            let fileHandler = Cc["@mozilla.org/network/protocol;1?name=file"].
-                              getService(Ci.nsIFileProtocolHandler);
+            let fileHandler = Cc[
+              "@mozilla.org/network/protocol;1?name=file"
+            ].getService(Ci.nsIFileProtocolHandler);
             let uri = fileHandler.readURLFile(entry);
-            rv.push({url: uri, title: matches[1]});
+            rv.push({ url: uri, title: matches[1] });
           }
         }
       } catch (ex) {
-        Cu.reportError("Unable to import " + this.importedAppLabel + " favorite (" + entry.leafName + "): " + ex);
+        Cu.reportError(
+          "Unable to import " +
+            this.importedAppLabel +
+            " favorite (" +
+            entry.leafName +
+            "): " +
+            ex
+        );
       }
     }
     return rv;
   },
-
 };
 
 function Cookies(migrationType) {
@@ -450,7 +517,9 @@ Cookies.prototype = {
   get _cookiesFolder() {
     // Edge stores cookies in a number of places, and this shouldn't get called:
     if (this._migrationType != MSMigrationUtils.MIGRATION_TYPE_IE) {
-      throw new Error("Shouldn't be looking for a single cookie folder unless we're migrating IE");
+      throw new Error(
+        "Shouldn't be looking for a single cookie folder unless we're migrating IE"
+      );
     }
 
     // Cookies are stored in txt files, in a Cookies folder whose path varies
@@ -465,8 +534,10 @@ Cookies.prototype = {
       let cookiesFolder = Services.dirsvc.get("CookD", Ci.nsIFile);
       if (cookiesFolder.exists() && cookiesFolder.isReadable()) {
         // In versions up to Windows 7, check if UAC is enabled.
-        if (AppConstants.isPlatformAndVersionAtMost("win", "6.1") &&
-            Services.appinfo.QueryInterface(Ci.nsIWinAppHelper).userCanElevate) {
+        if (
+          AppConstants.isPlatformAndVersionAtMost("win", "6.1") &&
+          Services.appinfo.QueryInterface(Ci.nsIWinAppHelper).userCanElevate
+        ) {
           cookiesFolder.append("Low");
         }
         this.__cookiesFolder = cookiesFolder;
@@ -478,7 +549,9 @@ Cookies.prototype = {
   __cookiesFolders: null,
   get _cookiesFolders() {
     if (this._migrationType != MSMigrationUtils.MIGRATION_TYPE_EDGE) {
-      throw new Error("Shouldn't be looking for multiple cookie folders unless we're migrating Edge");
+      throw new Error(
+        "Shouldn't be looking for multiple cookie folders unless we're migrating Edge"
+      );
     }
 
     let folders = [];
@@ -501,22 +574,26 @@ Cookies.prototype = {
   migrate(aCallback) {
     this.ctypesKernelHelpers = new CtypesKernelHelpers();
 
-    let cookiesGenerator = (function* genCookie() {
+    let cookiesGenerator = function* genCookie() {
       let success = false;
-      let folders = this._migrationType == MSMigrationUtils.MIGRATION_TYPE_EDGE ?
-                      this.__cookiesFolders : [this.__cookiesFolder];
+      let folders =
+        this._migrationType == MSMigrationUtils.MIGRATION_TYPE_EDGE
+          ? this.__cookiesFolders
+          : [this.__cookiesFolder];
       for (let folder of folders) {
         let entries = folder.directoryEntries;
         while (entries.hasMoreElements()) {
           let entry = entries.nextFile;
           // Skip eventual bogus entries.
-          if (!entry.isFile() || !/\.(cookie|txt)$/.test(entry.leafName))
+          if (!entry.isFile() || !/\.(cookie|txt)$/.test(entry.leafName)) {
             continue;
+          }
 
           this._readCookieFile(entry, function(aSuccess) {
             // Importing even a single cookie file is considered a success.
-            if (aSuccess)
+            if (aSuccess) {
               success = true;
+            }
             try {
               cookiesGenerator.next();
             } catch (ex) {}
@@ -529,37 +606,42 @@ Cookies.prototype = {
       this.ctypesKernelHelpers.finalize();
 
       aCallback(success);
-    }).apply(this);
+    }.apply(this);
     cookiesGenerator.next();
   },
 
   _readCookieFile(aFile, aCallback) {
-    File.createFromNsIFile(aFile).then(file => {
-      let fileReader = new FileReader();
-      let onLoadEnd = () => {
-        fileReader.removeEventListener("loadend", onLoadEnd);
+    File.createFromNsIFile(aFile).then(
+      file => {
+        let fileReader = new FileReader();
+        let onLoadEnd = () => {
+          fileReader.removeEventListener("loadend", onLoadEnd);
 
-        if (fileReader.readyState != fileReader.DONE) {
-          Cu.reportError("Could not read cookie contents: " + fileReader.error);
-          aCallback(false);
-          return;
-        }
+          if (fileReader.readyState != fileReader.DONE) {
+            Cu.reportError(
+              "Could not read cookie contents: " + fileReader.error
+            );
+            aCallback(false);
+            return;
+          }
 
-        let success = true;
-        try {
-          this._parseCookieBuffer(fileReader.result);
-        } catch (ex) {
-          Cu.reportError("Unable to migrate cookie: " + ex);
-          success = false;
-        } finally {
-          aCallback(success);
-        }
-      };
-      fileReader.addEventListener("loadend", onLoadEnd);
-      fileReader.readAsText(file);
-    }, () => {
-      aCallback(false);
-    });
+          let success = true;
+          try {
+            this._parseCookieBuffer(fileReader.result);
+          } catch (ex) {
+            Cu.reportError("Unable to migrate cookie: " + ex);
+            success = false;
+          } finally {
+            aCallback(success);
+          }
+        };
+        fileReader.addEventListener("loadend", onLoadEnd);
+        fileReader.readAsText(file);
+      },
+      () => {
+        aCallback(false);
+      }
+    );
   },
 
   /**
@@ -595,17 +677,18 @@ Cookies.prototype = {
       }
     }
     for (let record of records) {
-      let [name, value, hostpath, flags,
-           expireTimeLo, expireTimeHi] = record;
+      let [name, value, hostpath, flags, expireTimeLo, expireTimeHi] = record;
 
       // IE stores deleted cookies with a zero-length value, skip them.
-      if (value.length == 0)
+      if (value.length == 0) {
         continue;
+      }
 
       // IE sometimes has cookies created by apps that use "~~local~~/local/file/path"
       // as the hostpath, ignore those:
-      if (hostpath.startsWith("~~local~~"))
+      if (hostpath.startsWith("~~local~~")) {
         continue;
+      }
 
       let hostLen = hostpath.indexOf("/");
       let host = hostpath.substr(0, hostLen);
@@ -617,30 +700,35 @@ Cookies.prototype = {
         // Fist delete any possible extant matching host cookie.
         Services.cookies.remove(host, name, path, false, {});
         // Now make it a domain cookie.
-        if (host[0] != "." && !hostIsIPAddress(host))
+        if (host[0] != "." && !hostIsIPAddress(host)) {
           host = "." + host;
+        }
       }
 
       // Fallback: expire in 1h (NB: time is in seconds since epoch, so we have
       // to divide the result of Date.now() (which is in milliseconds) by 1000).
       let expireTime = Math.floor(Date.now() / 1000) + 3600;
       try {
-        expireTime = this.ctypesKernelHelpers.fileTimeToSecondsSinceEpoch(Number(expireTimeHi),
-                                                                          Number(expireTimeLo));
+        expireTime = this.ctypesKernelHelpers.fileTimeToSecondsSinceEpoch(
+          Number(expireTimeHi),
+          Number(expireTimeLo)
+        );
       } catch (ex) {
         Cu.reportError("Failed to get expiry time for cookie for " + host);
       }
 
-      Services.cookies.add(host,
-                           path,
-                           name,
-                           value,
-                           Number(flags) & 0x1, // secure
-                           false, // httpOnly
-                           false, // session
-                           expireTime,
-                           {},
-                           Ci.nsICookie.SAMESITE_NONE);
+      Services.cookies.add(
+        host,
+        path,
+        name,
+        value,
+        Number(flags) & 0x1, // secure
+        false, // httpOnly
+        false, // session
+        expireTime,
+        {},
+        Ci.nsICookie.SAMESITE_NONE
+      );
     }
   },
 };
@@ -651,24 +739,34 @@ function getTypedURLs(registryKeyPath) {
   // between different Windows versions. We just keep reading up to the first
   // non-existing entry to support different limits / states of the registry.
   let typedURLs = new Map();
-  let typedURLKey = Cc["@mozilla.org/windows-registry-key;1"].
-                    createInstance(Ci.nsIWindowsRegKey);
-  let typedURLTimeKey = Cc["@mozilla.org/windows-registry-key;1"].
-                        createInstance(Ci.nsIWindowsRegKey);
+  let typedURLKey = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+    Ci.nsIWindowsRegKey
+  );
+  let typedURLTimeKey = Cc[
+    "@mozilla.org/windows-registry-key;1"
+  ].createInstance(Ci.nsIWindowsRegKey);
   let cTypes = new CtypesKernelHelpers();
   try {
-    typedURLKey.open(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                     registryKeyPath + "\\TypedURLs",
-                     Ci.nsIWindowsRegKey.ACCESS_READ);
+    typedURLKey.open(
+      Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+      registryKeyPath + "\\TypedURLs",
+      Ci.nsIWindowsRegKey.ACCESS_READ
+    );
     try {
-      typedURLTimeKey.open(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                           registryKeyPath + "\\TypedURLsTime",
-                           Ci.nsIWindowsRegKey.ACCESS_READ);
+      typedURLTimeKey.open(
+        Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+        registryKeyPath + "\\TypedURLsTime",
+        Ci.nsIWindowsRegKey.ACCESS_READ
+      );
     } catch (ex) {
       typedURLTimeKey = null;
     }
     let entryName;
-    for (let entry = 1; typedURLKey.hasValue((entryName = "url" + entry)); entry++) {
+    for (
+      let entry = 1;
+      typedURLKey.hasValue((entryName = "url" + entry));
+      entry++
+    ) {
       let url = typedURLKey.readStringValue(entryName);
       // If we can't get a date for whatever reason, default to 6 months ago
       let timeTyped = Date.now() - 31536000 / 2;
@@ -683,8 +781,9 @@ function getTypedURLs(registryKeyPath) {
           let urlTimeHex = [];
           for (let i = 0; i < 8; i++) {
             let c = urlTime.charCodeAt(i).toString(16);
-            if (c.length == 1)
+            if (c.length == 1) {
               c = "0" + c;
+            }
             urlTimeHex.unshift(c);
           }
           try {
@@ -720,10 +819,8 @@ function getTypedURLs(registryKeyPath) {
   return typedURLs;
 }
 
-
 // Migrator for form passwords on Windows 8 and higher.
-function WindowsVaultFormPasswords() {
-}
+function WindowsVaultFormPasswords() {}
 
 WindowsVaultFormPasswords.prototype = {
   type: MigrationUtils.resourceTypes.PASSWORDS,
@@ -751,10 +848,12 @@ WindowsVaultFormPasswords.prototype = {
   async migrate(aCallback, aOnlyCheckExists = false) {
     // check if the vault item is an IE/Edge one
     function _isIEOrEdgePassword(id) {
-      return id[0] == INTERNET_EXPLORER_EDGE_GUID[0] &&
-             id[1] == INTERNET_EXPLORER_EDGE_GUID[1] &&
-             id[2] == INTERNET_EXPLORER_EDGE_GUID[2] &&
-             id[3] == INTERNET_EXPLORER_EDGE_GUID[3];
+      return (
+        id[0] == INTERNET_EXPLORER_EDGE_GUID[0] &&
+        id[1] == INTERNET_EXPLORER_EDGE_GUID[1] &&
+        id[2] == INTERNET_EXPLORER_EDGE_GUID[2] &&
+        id[3] == INTERNET_EXPLORER_EDGE_GUID[3]
+      );
     }
 
     let ctypesVaultHelpers = new CtypesVaultHelpers();
@@ -764,12 +863,18 @@ WindowsVaultFormPasswords.prototype = {
     let error, vault;
     try {
       // web credentials vault id
-      let vaultGuid = new ctypesVaultHelpers._structs.GUID(WEB_CREDENTIALS_VAULT_ID);
+      let vaultGuid = new ctypesVaultHelpers._structs.GUID(
+        WEB_CREDENTIALS_VAULT_ID
+      );
       error = new wintypes.DWORD();
       // web credentials vault
       vault = new wintypes.VOIDP();
       // open the current vault using the vaultGuid
-      error = ctypesVaultHelpers._functions.VaultOpenVault(vaultGuid.address(), 0, vault.address());
+      error = ctypesVaultHelpers._functions.VaultOpenVault(
+        vaultGuid.address(),
+        0,
+        vault.address()
+      );
       if (error != RESULT_SUCCESS) {
         throw new Error("Unable to open Vault: " + error);
       }
@@ -779,9 +884,12 @@ WindowsVaultFormPasswords.prototype = {
       let itemCount = new wintypes.DWORD();
       // enumerate all the available items. This api is going to return a table of all the
       // available items and item is going to point to the first element of this table.
-      error = ctypesVaultHelpers._functions.VaultEnumerateItems(vault, VAULT_ENUMERATE_ALL_ITEMS,
-                                                                itemCount.address(),
-                                                                item.address());
+      error = ctypesVaultHelpers._functions.VaultEnumerateItems(
+        vault,
+        VAULT_ENUMERATE_ALL_ITEMS,
+        itemCount.address(),
+        item.address()
+      );
       if (error != RESULT_SUCCESS) {
         throw new Error("Unable to enumerate Vault items: " + error);
       }
@@ -797,7 +905,9 @@ WindowsVaultFormPasswords.prototype = {
           let realURL;
           try {
             realURL = Services.io.newURI(url);
-          } catch (ex) { /* leave realURL as null */ }
+          } catch (ex) {
+            /* leave realURL as null */
+          }
           if (!realURL || !["http", "https", "ftp"].includes(realURL.scheme)) {
             // Ignore items for non-URLs or URLs that aren't HTTP(S)/FTP
             continue;
@@ -811,11 +921,16 @@ WindowsVaultFormPasswords.prototype = {
           let username = item.contents.pIdentityElement.contents.itemValue.readString();
           // the current login credential object
           let credential = new ctypesVaultHelpers._structs.VAULT_ELEMENT.ptr();
-          error = ctypesVaultHelpers._functions.VaultGetItem(vault,
-                                                             item.contents.schemaId.address(),
-                                                             item.contents.pResourceElement,
-                                                             item.contents.pIdentityElement, null,
-                                                             0, 0, credential.address());
+          error = ctypesVaultHelpers._functions.VaultGetItem(
+            vault,
+            item.contents.schemaId.address(),
+            item.contents.pResourceElement,
+            item.contents.pIdentityElement,
+            null,
+            0,
+            0,
+            credential.address()
+          );
           if (error != RESULT_SUCCESS) {
             throw new Error("Unable to get item: " + error);
           }
@@ -825,15 +940,18 @@ WindowsVaultFormPasswords.prototype = {
           try {
             // login manager wants time in milliseconds since epoch, so convert
             // to seconds since epoch and multiply to get milliseconds:
-            creation = ctypesKernelHelpers.
-                         fileTimeToSecondsSinceEpoch(item.contents.highLastModified,
-                                                     item.contents.lowLastModified) * 1000;
+            creation =
+              ctypesKernelHelpers.fileTimeToSecondsSinceEpoch(
+                item.contents.highLastModified,
+                item.contents.lowLastModified
+              ) * 1000;
           } catch (ex) {
             // Ignore exceptions in the dates and just create the login for right now.
           }
           // create a new login
           logins.push({
-            username, password,
+            username,
+            password,
             origin: realURL.prePath,
             timeCreated: creation,
           });

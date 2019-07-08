@@ -22,16 +22,17 @@ ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 function waitForPingDeletion(pingId) {
   const path = OS.Path.join(TelemetryStorage.pingDirectoryPath, pingId);
 
-  let checkFn = (resolve, reject) => setTimeout(() => {
-    OS.File.exists(path).then(exists => {
-      if (!exists) {
-        Assert.ok(true, pingId + " was deleted");
-        resolve();
-      } else {
-        checkFn(resolve, reject);
-      }
-    }, reject);
-  }, 250);
+  let checkFn = (resolve, reject) =>
+    setTimeout(() => {
+      OS.File.exists(path).then(exists => {
+        if (!exists) {
+          Assert.ok(true, pingId + " was deleted");
+          resolve();
+        } else {
+          checkFn(resolve, reject);
+        }
+      }, reject);
+    }, 250);
 
   return new Promise((resolve, reject) => checkFn(resolve, reject));
 }
@@ -51,7 +52,7 @@ add_task(async function test_pingSender() {
   const data = {
     type: "test-pingsender-type",
     id: TelemetryUtils.generateUUID(),
-    creationDate: (new Date(1485810000)).toISOString(),
+    creationDate: new Date(1485810000).toISOString(),
     version: 4,
     payload: {
       dummy: "stuff",
@@ -80,15 +81,18 @@ add_task(async function test_pingSender() {
   failingServer.start(-1);
 
   // Try to send the ping twice using the pingsender (we expect 404 both times).
-  const errorUrl = "http://localhost:" + failingServer.identity.primaryPort + "/lookup_fail";
+  const errorUrl =
+    "http://localhost:" + failingServer.identity.primaryPort + "/lookup_fail";
   TelemetrySend.testRunPingSender(errorUrl, pingPath);
   TelemetrySend.testRunPingSender(errorUrl, pingPath);
 
   // Wait until we hit the 404 server twice. After that, make sure that the ping
   // still exists locally.
   await deferred404Hit.promise;
-  Assert.ok((await OS.File.exists(pingPath)),
-            "The pending ping must not be deleted if we fail to send using the PingSender");
+  Assert.ok(
+    await OS.File.exists(pingPath),
+    "The pending ping must not be deleted if we fail to send using the PingSender"
+  );
 
   // Try to send it using the pingsender.
   const url = "http://localhost:" + PingServer.port + "/submit/telemetry/";
@@ -97,18 +101,33 @@ add_task(async function test_pingSender() {
   let req = await PingServer.promiseNextRequest();
   let ping = decodeRequestPayload(req);
 
-  Assert.equal(req.getHeader("User-Agent"), "pingsender/1.0",
-               "Should have received the correct user agent string.");
-  Assert.equal(req.getHeader("X-PingSender-Version"), "1.0",
-               "Should have received the correct PingSender version string.");
-  Assert.equal(req.getHeader("Content-Encoding"), "gzip",
-               "Should have a gzip encoded ping.");
+  Assert.equal(
+    req.getHeader("User-Agent"),
+    "pingsender/1.0",
+    "Should have received the correct user agent string."
+  );
+  Assert.equal(
+    req.getHeader("X-PingSender-Version"),
+    "1.0",
+    "Should have received the correct PingSender version string."
+  );
+  Assert.equal(
+    req.getHeader("Content-Encoding"),
+    "gzip",
+    "Should have a gzip encoded ping."
+  );
   Assert.ok(req.getHeader("Date"), "Should have received a Date header.");
   Assert.equal(ping.id, data.id, "Should have received the correct ping id.");
-  Assert.equal(ping.type, data.type,
-               "Should have received the correct ping type.");
-  Assert.deepEqual(ping.payload, data.payload,
-                   "Should have received the correct payload.");
+  Assert.equal(
+    ping.type,
+    data.type,
+    "Should have received the correct ping type."
+  );
+  Assert.deepEqual(
+    ping.payload,
+    data.payload,
+    "Should have received the correct payload."
+  );
 
   // Check that the PingSender removed the pending ping.
   await waitForPingDeletion(data.id);

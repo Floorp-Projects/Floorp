@@ -3,12 +3,13 @@
 /* global tabTracker */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
-var {
-  ExtensionError,
-} = ExtensionUtils;
+var { ExtensionError } = ExtensionUtils;
 
 /**
  * runFindOperation
@@ -22,38 +23,50 @@ var {
  *          data received by the message listener.
  */
 function runFindOperation(context, params, message) {
-  let {tabId} = params;
+  let { tabId } = params;
   let tab = tabId ? tabTracker.getTab(tabId) : tabTracker.activeTab;
   let browser = tab.linkedBrowser;
   let mm = browser.messageManager;
   tabId = tabId || tabTracker.getId(tab);
-  if (!context.privateBrowsingAllowed &&
-      PrivateBrowsingUtils.isBrowserPrivate(browser)) {
-    return Promise.reject({message: `Unable to search: ${tabId}`});
+  if (
+    !context.privateBrowsingAllowed &&
+    PrivateBrowsingUtils.isBrowserPrivate(browser)
+  ) {
+    return Promise.reject({ message: `Unable to search: ${tabId}` });
   }
   // We disallow find in about: urls.
-  if (tab.linkedBrowser.contentPrincipal.isSystemPrincipal ||
-      (["about", "chrome", "resource"].includes(tab.linkedBrowser.currentURI.scheme) &&
-      tab.linkedBrowser.currentURI.spec != "about:blank")) {
-    return Promise.reject({message: `Unable to search: ${tabId}`});
+  if (
+    tab.linkedBrowser.contentPrincipal.isSystemPrincipal ||
+    (["about", "chrome", "resource"].includes(
+      tab.linkedBrowser.currentURI.scheme
+    ) &&
+      tab.linkedBrowser.currentURI.spec != "about:blank")
+  ) {
+    return Promise.reject({ message: `Unable to search: ${tabId}` });
   }
 
   return new Promise((resolve, reject) => {
-    mm.addMessageListener(`ext-Finder:${message}Finished`, function messageListener(message) {
-      mm.removeMessageListener(`ext-Finder:${message}Finished`, messageListener);
-      switch (message.data) {
-        case "Success":
-          resolve();
-          break;
-        case "OutOfRange":
-          reject({message: "index supplied was out of range"});
-          break;
-        case "NoResults":
-          reject({message: "no search results to highlight"});
-          break;
+    mm.addMessageListener(
+      `ext-Finder:${message}Finished`,
+      function messageListener(message) {
+        mm.removeMessageListener(
+          `ext-Finder:${message}Finished`,
+          messageListener
+        );
+        switch (message.data) {
+          case "Success":
+            resolve();
+            break;
+          case "OutOfRange":
+            reject({ message: "index supplied was out of range" });
+            break;
+          case "NoResults":
+            reject({ message: "no search results to highlight" });
+            break;
+        }
+        resolve(message.data);
       }
-      resolve(message.data);
-    });
+    );
     mm.sendAsyncMessage(`ext-Finder:${message}`, params);
   });
 }
@@ -116,10 +129,15 @@ this.find = class extends ExtensionAPI {
          */
         removeHighlighting(tabId) {
           let tab = tabId ? tabTracker.getTab(tabId) : tabTracker.activeTab;
-          if (!context.privateBrowsingAllowed && PrivateBrowsingUtils.isBrowserPrivate(tab.linkedBrowser)) {
+          if (
+            !context.privateBrowsingAllowed &&
+            PrivateBrowsingUtils.isBrowserPrivate(tab.linkedBrowser)
+          ) {
             throw new ExtensionError(`Invalid tab ID: ${tabId}`);
           }
-          tab.linkedBrowser.messageManager.sendAsyncMessage("ext-Finder:clearHighlighting");
+          tab.linkedBrowser.messageManager.sendAsyncMessage(
+            "ext-Finder:clearHighlighting"
+          );
         },
       },
     };

@@ -20,17 +20,31 @@ module.exports = function(context) {
   //  --------------------------------------------------------------------------
 
   return {
-    "VariableDeclarator": function(node) {
-      if (node.id.type == "Identifier" && componentsBlacklist.includes(node.id.name)) {
-        context.report(node,
-          `${node.id.name} is now defined in global scope, a separate definition is no longer necessary.`);
+    VariableDeclarator(node) {
+      if (
+        node.id.type == "Identifier" &&
+        componentsBlacklist.includes(node.id.name)
+      ) {
+        context.report(
+          node,
+          `${
+            node.id.name
+          } is now defined in global scope, a separate definition is no longer necessary.`
+        );
       }
 
       if (node.id.type == "ObjectPattern") {
         for (let property of node.id.properties) {
-          if (property.type == "Property" && componentsBlacklist.includes(property.value.name)) {
-            context.report(node,
-              `${property.value.name} is now defined in global scope, a separate definition is no longer necessary.`);
+          if (
+            property.type == "Property" &&
+            componentsBlacklist.includes(property.value.name)
+          ) {
+            context.report(
+              node,
+              `${
+                property.value.name
+              } is now defined in global scope, a separate definition is no longer necessary.`
+            );
           }
         }
       }

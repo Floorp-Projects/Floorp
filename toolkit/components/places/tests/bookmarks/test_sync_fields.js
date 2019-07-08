@@ -20,7 +20,11 @@ class CounterTracker {
       throw new Error(`Already tracking item ${guid}`);
     }
     let initial = await this._getCounter(guid);
-    Assert.equal(initial, expectedInitial, `Initial value of item '${name}' is correct`);
+    Assert.equal(
+      initial,
+      expectedInitial,
+      `Initial value of item '${name}' is correct`
+    );
     this.tracked.set(guid, { name, value: expectedInitial });
   }
 
@@ -35,8 +39,10 @@ class CounterTracker {
       if (expectedToIncrement.includes(guid)) {
         // Note we don't check specifically for +1, as some changes will
         // increment the counter by more than 1 (which is OK).
-        Assert.ok(newValue > value,
-                  `${desc} was expected to increment - was ${value}, now ${newValue}`);
+        Assert.ok(
+          newValue > value,
+          `${desc} was expected to increment - was ${value}, now ${newValue}`
+        );
         this.tracked.set(guid, { name, value: newValue });
       } else {
         Assert.equal(newValue, value, `${desc} was NOT expected to increment`);
@@ -52,7 +58,11 @@ async function checkSyncFields(guid, expected) {
   }
   for (let name in expected) {
     let expectedValue = expected[name];
-    Assert.equal(results[0][name], expectedValue, `field ${name} matches item ${guid}`);
+    Assert.equal(
+      results[0][name],
+      expectedValue,
+      `field ${name} matches item ${guid}`
+    );
   }
 }
 
@@ -67,7 +77,7 @@ class TestCases {
       await PlacesTestUtils.markBookmarksAsSynced();
     }
 
-    if (("moveItem" in this) && ("reorder" in this)) {
+    if ("moveItem" in this && "reorder" in this) {
       info("Test 2: reparenting");
       try {
         await this.testReparenting();
@@ -91,26 +101,36 @@ class TestCases {
   async testChanges() {
     let testUri = NetUtil.newURI("http://test.mozilla.org");
 
-    let guid = await this.insertBookmark(PlacesUtils.bookmarks.unfiledGuid,
-                                          testUri,
-                                          PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                          "bookmark title");
+    let guid = await this.insertBookmark(
+      PlacesUtils.bookmarks.unfiledGuid,
+      testUri,
+      PlacesUtils.bookmarks.DEFAULT_INDEX,
+      "bookmark title"
+    );
     info(`Inserted bookmark ${guid}`);
-    await checkSyncFields(guid, { syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
-                                   syncChangeCounter: 1 });
+    await checkSyncFields(guid, {
+      syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+      syncChangeCounter: 1,
+    });
 
     // Pretend Sync just did whatever it does
-    await PlacesTestUtils.setBookmarkSyncFields({ guid,
-                                                  syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL });
+    await PlacesTestUtils.setBookmarkSyncFields({
+      guid,
+      syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+    });
     info(`Updated sync status of ${guid}`);
-    await checkSyncFields(guid, { syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
-                                   syncChangeCounter: 1 });
+    await checkSyncFields(guid, {
+      syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+      syncChangeCounter: 1,
+    });
 
     // update it - it should increment the change counter
     await this.setTitle(guid, "new title");
     info(`Changed title of ${guid}`);
-    await checkSyncFields(guid, { syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
-                                   syncChangeCounter: 2 });
+    await checkSyncFields(guid, {
+      syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+      syncChangeCounter: 2,
+    });
 
     // Tagging a bookmark should update its change counter.
     await this.tagURI(testUri, ["test-tag"]);
@@ -131,15 +151,20 @@ class TestCases {
 
   async testSeparators() {
     let insertSyncedBookmark = uri => {
-      return this.insertBookmark(PlacesUtils.bookmarks.unfiledGuid,
-                                 NetUtil.newURI(uri),
-                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                 "A bookmark name");
+      return this.insertBookmark(
+        PlacesUtils.bookmarks.unfiledGuid,
+        NetUtil.newURI(uri),
+        PlacesUtils.bookmarks.DEFAULT_INDEX,
+        "A bookmark name"
+      );
     };
 
     await insertSyncedBookmark("http://foo.bar");
     let secondBmk = await insertSyncedBookmark("http://bar.foo");
-    let sepGuid = await this.insertSeparator(PlacesUtils.bookmarks.unfiledGuid, PlacesUtils.bookmarks.DEFAULT_INDEX);
+    let sepGuid = await this.insertSeparator(
+      PlacesUtils.bookmarks.unfiledGuid,
+      PlacesUtils.bookmarks.DEFAULT_INDEX
+    );
     await insertSyncedBookmark("http://barbar.foo");
 
     info("Move a bookmark around the separator");
@@ -154,9 +179,11 @@ class TestCases {
   async testReparenting() {
     let counterTracker = new CounterTracker();
 
-    let folder1 = await this.createFolder(PlacesUtils.bookmarks.unfiledGuid,
-                                           "folder1",
-                                           PlacesUtils.bookmarks.DEFAULT_INDEX);
+    let folder1 = await this.createFolder(
+      PlacesUtils.bookmarks.unfiledGuid,
+      "folder1",
+      PlacesUtils.bookmarks.DEFAULT_INDEX
+    );
     info(`Created the first folder, guid is ${folder1}`);
 
     // New folder should have a change recorded.
@@ -164,10 +191,12 @@ class TestCases {
 
     // Put a new bookmark in the folder.
     let testUri = NetUtil.newURI("http://test2.mozilla.org");
-    let child1 = await this.insertBookmark(folder1,
-                                            testUri,
-                                            PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                            "bookmark 1");
+    let child1 = await this.insertBookmark(
+      folder1,
+      testUri,
+      PlacesUtils.bookmarks.DEFAULT_INDEX,
+      "bookmark 1"
+    );
     info(`Created a new bookmark into ${folder1}, guid is ${child1}`);
     // both the folder and the child should have a change recorded.
     await counterTracker.track(child1, "child 1");
@@ -175,11 +204,10 @@ class TestCases {
 
     // A new child in the folder at index 0 - even though the existing child
     // was bumped down the list, it should *not* have a change recorded.
-    let child2 = await this.insertBookmark(folder1,
-                                            testUri,
-                                            0,
-                                            "bookmark 2");
-    info(`Created a second new bookmark into folder ${folder1}, guid is ${child2}`);
+    let child2 = await this.insertBookmark(folder1, testUri, 0, "bookmark 2");
+    info(
+      `Created a second new bookmark into folder ${folder1}, guid is ${child2}`
+    );
 
     await counterTracker.track(child2, "child 2");
     await counterTracker.check(folder1);
@@ -191,31 +219,38 @@ class TestCases {
     await counterTracker.check(folder1);
 
     // Another folder to play with.
-    let folder2 = await this.createFolder(PlacesUtils.bookmarks.unfiledGuid,
-                                           "folder2",
-                                           PlacesUtils.bookmarks.DEFAULT_INDEX);
+    let folder2 = await this.createFolder(
+      PlacesUtils.bookmarks.unfiledGuid,
+      "folder2",
+      PlacesUtils.bookmarks.DEFAULT_INDEX
+    );
     info(`Created a second new folder, guid is ${folder2}`);
     await counterTracker.track(folder2, "folder 2");
     // nothing else has changed.
     await counterTracker.check();
 
     // Move one of the children to the new folder.
-    info(`Moving bookmark ${child2} from folder ${folder1} to folder ${folder2}`);
+    info(
+      `Moving bookmark ${child2} from folder ${folder1} to folder ${folder2}`
+    );
     await this.moveItem(child2, folder2, PlacesUtils.bookmarks.DEFAULT_INDEX);
     // child1 should have no change, everything should have a new change.
     await counterTracker.check(folder1, folder2, child2);
 
     // Move the new folder to another root.
-    await this.moveItem(folder2, PlacesUtils.bookmarks.toolbarGuid,
-                         PlacesUtils.bookmarks.DEFAULT_INDEX);
+    await this.moveItem(
+      folder2,
+      PlacesUtils.bookmarks.toolbarGuid,
+      PlacesUtils.bookmarks.DEFAULT_INDEX
+    );
     info(`Moving folder ${folder2} to toolbar`);
-    await counterTracker.check(folder2, PlacesUtils.bookmarks.toolbarGuid,
-                                PlacesUtils.bookmarks.unfiledGuid);
+    await counterTracker.check(
+      folder2,
+      PlacesUtils.bookmarks.toolbarGuid,
+      PlacesUtils.bookmarks.unfiledGuid
+    );
 
-    let child3 = await this.insertBookmark(folder2,
-                                            testUri,
-                                            0,
-                                            "bookmark 3");
+    let child3 = await this.insertBookmark(folder2, testUri, 0, "bookmark 3");
     info(`Prepended child ${child3} to folder ${folder2}`);
     await counterTracker.check(folder2, child3);
 
@@ -231,10 +266,14 @@ class TestCases {
 
     // Set folder2 and child2 to have a state of SYNC_STATUS_NORMAL and deleting
     // them will cause both GUIDs to be written to moz_bookmarks_deleted.
-    await PlacesTestUtils.setBookmarkSyncFields({ guid: folder2,
-                                                  syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL });
-    await PlacesTestUtils.setBookmarkSyncFields({ guid: child2,
-                                                  syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL });
+    await PlacesTestUtils.setBookmarkSyncFields({
+      guid: folder2,
+      syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+    });
+    await PlacesTestUtils.setBookmarkSyncFields({
+      guid: child2,
+      syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+    });
     await this.removeItem(folder2);
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
     let tombstoneGuids = sortBy(tombstones, "guid").map(({ guid }) => guid);
@@ -275,14 +314,19 @@ class SyncTestCases extends TestCases {
 
 async function findTagFolder(tag) {
   let db = await PlacesUtils.promiseDBConnection();
-  let results = await db.executeCached(`
+  let results = await db.executeCached(
+    `
   SELECT guid
   FROM moz_bookmarks
   WHERE type = :type AND
         parent = :tagsFolderId AND
         title = :tag`,
-  { type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    tagsFolderId: PlacesUtils.tagsFolderId, tag });
+    {
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      tagsFolderId: PlacesUtils.tagsFolderId,
+      tag,
+    }
+  );
   return results.length ? results[0].getResultByName("guid") : null;
 }
 
@@ -336,8 +380,9 @@ class AsyncTestCases extends TestCases {
   async setKeyword(guid, keyword) {
     let item = await PlacesUtils.bookmarks.fetch(guid);
     if (!item) {
-      throw new Error(`Cannot set keyword ${
-        keyword} on nonexistent bookmark ${guid}`);
+      throw new Error(
+        `Cannot set keyword ${keyword} on nonexistent bookmark ${guid}`
+      );
     }
     await PlacesUtils.keywords.insert({ keyword, url: item.url });
   }
@@ -345,8 +390,9 @@ class AsyncTestCases extends TestCases {
   async removeKeyword(guid, keyword) {
     let item = await PlacesUtils.bookmarks.fetch(guid);
     if (!item) {
-      throw new Error(`Cannot remove keyword ${
-        keyword} from nonexistent bookmark ${guid}`);
+      throw new Error(
+        `Cannot remove keyword ${keyword} from nonexistent bookmark ${guid}`
+      );
     }
     let entry = await PlacesUtils.keywords.fetch({ keyword, url: item.url });
     if (!entry) {

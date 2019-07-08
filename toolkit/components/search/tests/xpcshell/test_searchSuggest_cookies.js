@@ -8,13 +8,16 @@
 
 "use strict";
 
-const {SearchSuggestionController} = ChromeUtils.import("resource://gre/modules/SearchSuggestionController.jsm");
+const { SearchSuggestionController } = ChromeUtils.import(
+  "resource://gre/modules/SearchSuggestionController.jsm"
+);
 
 // We must make sure the FormHistoryStartup component is
 // initialized in order for it to respond to FormHistory
 // requests from nsFormAutoComplete.js.
-var formHistoryStartup = Cc["@mozilla.org/satchel/form-history-startup;1"].
-                         getService(Ci.nsIObserver);
+var formHistoryStartup = Cc[
+  "@mozilla.org/satchel/form-history-startup;1"
+].getService(Ci.nsIObserver);
 formHistoryStartup.observe(null, "profile-after-change", null);
 
 var httpServer = new HttpServer();
@@ -22,18 +25,24 @@ var httpServer = new HttpServer();
 function countCacheEntries() {
   info("Enumerating cache entries");
   return new Promise(resolve => {
-    let storage = Services.cache2.diskCacheStorage(Services.loadContextInfo.default, false);
-    storage.asyncVisitStorage({
-      onCacheStorageInfo(num, consumption) {
-        this._num = num;
+    let storage = Services.cache2.diskCacheStorage(
+      Services.loadContextInfo.default,
+      false
+    );
+    storage.asyncVisitStorage(
+      {
+        onCacheStorageInfo(num, consumption) {
+          this._num = num;
+        },
+        onCacheEntryInfo(uri) {
+          info("Found cache entry: " + uri.asciiSpec);
+        },
+        onCacheEntryVisitCompleted() {
+          resolve(this._num || 0);
+        },
       },
-      onCacheEntryInfo(uri) {
-        info("Found cache entry: " + uri.asciiSpec);
-      },
-      onCacheEntryVisitCompleted() {
-        resolve(this._num || 0);
-      },
-    }, true /* Do walk entries */);
+      true /* Do walk entries */
+    );
   });
 }
 
@@ -42,7 +51,9 @@ function countCookieEntries() {
   let enumerator = Services.cookies.enumerator;
   let cookieCount = 0;
   for (let cookie of enumerator) {
-    info("Cookie:" + cookie.rawHost + " " + JSON.stringify(cookie.originAttributes));
+    info(
+      "Cookie:" + cookie.rawHost + " " + JSON.stringify(cookie.originAttributes)
+    );
     cookieCount++;
     break;
   }
@@ -59,7 +70,8 @@ add_task(async function setup() {
   registerCleanupFunction(async function cleanup() {
     // Clean up all the data.
     await new Promise(resolve =>
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, resolve));
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, resolve)
+    );
     Services.prefs.clearUserPref("browser.search.suggest.enabled");
   });
 
@@ -70,25 +82,30 @@ add_task(async function setup() {
   let engines = await addTestEngines([
     {
       name: unicodeName,
-      xmlFileName: "engineMaker.sjs?" + JSON.stringify({
-        baseURL: gDataUrl,
-        name: unicodeName,
-        method: "GET",
-      }),
+      xmlFileName:
+        "engineMaker.sjs?" +
+        JSON.stringify({
+          baseURL: gDataUrl,
+          name: unicodeName,
+          method: "GET",
+        }),
     },
     {
       name: "engine two",
-      xmlFileName: "engineMaker.sjs?" + JSON.stringify({
-        baseURL: gDataUrl,
-        name: "engine two",
-        method: "GET",
-      }),
+      xmlFileName:
+        "engineMaker.sjs?" +
+        JSON.stringify({
+          baseURL: gDataUrl,
+          name: "engine two",
+          method: "GET",
+        }),
     },
   ]);
 
   // Clean up all the data.
   await new Promise(resolve =>
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, resolve));
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, resolve)
+  );
   Assert.equal(await countCacheEntries(), 0, "The cache should be empty");
   Assert.equal(await countCookieEntries(), 0, "Should not find any cookie");
 
@@ -99,7 +116,7 @@ add_task(async function setup() {
 async function test_engine(engines, privateMode) {
   let controller;
   await new Promise(resolve => {
-    controller = new SearchSuggestionController((result) => {
+    controller = new SearchSuggestionController(result => {
       Assert.equal(result.local.length, 0);
       Assert.equal(result.remote.length, 0);
       if (result.term == "cookie") {
@@ -113,13 +130,20 @@ async function test_engine(engines, privateMode) {
   Assert.equal(await countCookieEntries(), 0, "Should not find any cookie");
 
   let firstPartyDomain1 = controller.firstPartyDomains.get(engines[0].name);
-  Assert.ok(/^[\.a-z0-9-]+\.search\.suggestions\.mozilla/.test(firstPartyDomain1),
-            "Check firstPartyDomain1");
+  Assert.ok(
+    /^[\.a-z0-9-]+\.search\.suggestions\.mozilla/.test(firstPartyDomain1),
+    "Check firstPartyDomain1"
+  );
 
   let firstPartyDomain2 = controller.firstPartyDomains.get(engines[1].name);
-  Assert.ok(/^[\.a-z0-9-]+\.search\.suggestions\.mozilla/.test(firstPartyDomain2),
-            "Check firstPartyDomain2");
+  Assert.ok(
+    /^[\.a-z0-9-]+\.search\.suggestions\.mozilla/.test(firstPartyDomain2),
+    "Check firstPartyDomain2"
+  );
 
-  Assert.notEqual(firstPartyDomain1, firstPartyDomain2,
-                  "Check firstPartyDomain id unique per engine");
+  Assert.notEqual(
+    firstPartyDomain1,
+    firstPartyDomain2,
+    "Check firstPartyDomain id unique per engine"
+  );
 }

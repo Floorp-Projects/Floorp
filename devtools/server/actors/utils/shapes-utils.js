@@ -27,16 +27,27 @@ const getDistance = (x1, y1, x2, y2) => {
  *                             along the y radius.
  * @returns {Boolean} whether the click counts as being on the edge of the ellipse.
  */
-const clickedOnEllipseEdge = (x, y, cx, cy, rx, ry, clickWidthX, clickWidthY) => {
+const clickedOnEllipseEdge = (
+  x,
+  y,
+  cx,
+  cy,
+  rx,
+  ry,
+  clickWidthX,
+  clickWidthY
+) => {
   // The formula to determine if something is inside or on the edge of an ellipse is:
   // (x - cx)^2/rx^2 + (y - cy)^2/ry^2 <= 1. If > 1, it's outside.
   // We make two ellipses, adjusting rx and ry with clickWidthX and clickWidthY
   // to allow for an area around the edge of the ellipse that can be clicked on.
   // If the click was outside the inner ellipse and inside the outer ellipse, return true.
-  const inner = ((x - cx) ** 2) / (rx - clickWidthX) ** 2 +
-              ((y - cy) ** 2) / (ry - clickWidthY) ** 2;
-  const outer = ((x - cx) ** 2) / (rx + clickWidthX) ** 2 +
-              ((y - cy) ** 2) / (ry + clickWidthY) ** 2;
+  const inner =
+    (x - cx) ** 2 / (rx - clickWidthX) ** 2 +
+    (y - cy) ** 2 / (ry - clickWidthY) ** 2;
+  const outer =
+    (x - cx) ** 2 / (rx + clickWidthX) ** 2 +
+    (y - cy) ** 2 / (ry + clickWidthY) ** 2;
   return inner >= 1 && outer <= 1;
 };
 
@@ -99,8 +110,12 @@ const dotProduct = (a, b) => {
  * @returns {Boolean} whether the click was on the point
  */
 const clickedOnPoint = (x, y, pointX, pointY, radiusX, radiusY) => {
-  return x >= pointX - radiusX && x <= pointX + radiusX &&
-         y >= pointY - radiusY && y <= pointY + radiusY;
+  return (
+    x >= pointX - radiusX &&
+    x <= pointX + radiusX &&
+    y >= pointY - radiusY &&
+    y <= pointY + radiusY
+  );
 };
 
 const roundTo = (value, exp) => {
@@ -116,10 +131,10 @@ const roundTo = (value, exp) => {
   }
   // Shift
   value = value.toString().split("e");
-  value = Math.round(+(value[0] + "e" + (value[1] ? (+value[1] - exp) : -exp)));
+  value = Math.round(+(value[0] + "e" + (value[1] ? +value[1] - exp : -exp)));
   // Shift back
   value = value.toString().split("e");
-  return +(value[0] + "e" + (value[1] ? (+value[1] + exp) : exp));
+  return +(value[0] + "e" + (value[1] ? +value[1] + exp : exp));
 };
 
 exports.getDistance = getDistance;

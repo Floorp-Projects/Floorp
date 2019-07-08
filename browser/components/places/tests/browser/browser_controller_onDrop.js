@@ -17,16 +17,20 @@ add_task(async function setup() {
 
   bookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
-    children: [{
-      title: "bm1",
-      url: "http://example1.com",
-    }, {
-      title: "bm2",
-      url: "http://example2.com",
-    }, {
-      title: "bm3",
-      url: "http://example3.com",
-    }],
+    children: [
+      {
+        title: "bm1",
+        url: "http://example1.com",
+      },
+      {
+        title: "bm2",
+        url: "http://example2.com",
+      },
+      {
+        title: "bm3",
+        url: "http://example3.com",
+      },
+    ],
   });
 
   bookmarkIds = await PlacesUtils.promiseManyItemIds([
@@ -48,7 +52,7 @@ async function run_drag_test(startBookmarkIndex, insertionIndex) {
     dropEffect: "move",
     mozCursor: "auto",
     mozItemCount: 1,
-    types: [ PlacesUtils.TYPE_X_MOZ_PLACE ],
+    types: [PlacesUtils.TYPE_X_MOZ_PLACE],
     mozTypesAt(i) {
       return [this._data[0].type];
     },
@@ -72,15 +76,24 @@ async function run_drag_test(startBookmarkIndex, insertionIndex) {
 
   library.ContentTree.view.controller.setDataTransfer(event);
 
-  Assert.equal(dataTransfer.mozTypesAt(0), PlacesUtils.TYPE_X_MOZ_PLACE,
-    "Should have x-moz-place as the first data type.");
+  Assert.equal(
+    dataTransfer.mozTypesAt(0),
+    PlacesUtils.TYPE_X_MOZ_PLACE,
+    "Should have x-moz-place as the first data type."
+  );
 
   let dataObject = JSON.parse(dataTransfer.mozGetDataAt(0));
 
-  Assert.equal(dataObject.itemGuid, dragBookmark.guid,
-    "Should have the correct guid.");
-  Assert.equal(dataObject.title, dragBookmark.title,
-    "Should have the correct title.");
+  Assert.equal(
+    dataObject.itemGuid,
+    dragBookmark.guid,
+    "Should have the correct guid."
+  );
+  Assert.equal(
+    dataObject.title,
+    dragBookmark.title,
+    "Should have the correct title."
+  );
 
   Assert.equal(dataTransfer.dropEffect, "move");
 
@@ -94,9 +107,20 @@ async function run_drag_test(startBookmarkIndex, insertionIndex) {
 }
 
 add_task(async function test_simple_move_down() {
-  let moveNotification = PlacesTestUtils.waitForNotification("onItemMoved",
-    (id, oldParentId, oldIndex, newParentId, newIndex, itemType, guid, oldParentGuid, newParentGuid) =>
-      guid == bookmarks[0].guid && oldIndex == 0 && newIndex == 1);
+  let moveNotification = PlacesTestUtils.waitForNotification(
+    "onItemMoved",
+    (
+      id,
+      oldParentId,
+      oldIndex,
+      newParentId,
+      newIndex,
+      itemType,
+      guid,
+      oldParentGuid,
+      newParentGuid
+    ) => guid == bookmarks[0].guid && oldIndex == 0 && newIndex == 1
+  );
 
   await run_drag_test(0, 2);
 

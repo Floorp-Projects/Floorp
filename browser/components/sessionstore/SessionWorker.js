@@ -104,7 +104,11 @@ var Agent = {
     }
 
     // Check that all required preference values were passed.
-    for (let pref of ["maxUpgradeBackups", "maxSerializeBack", "maxSerializeForward"]) {
+    for (let pref of [
+      "maxUpgradeBackups",
+      "maxSerializeBack",
+      "maxSerializeForward",
+    ]) {
       if (!prefs.hasOwnProperty(pref)) {
         throw new TypeError(`Missing preference value for ${pref}`);
       }
@@ -117,7 +121,7 @@ var Agent = {
     this.maxSerializeBack = prefs.maxSerializeBack;
     this.maxSerializeForward = prefs.maxSerializeForward;
     this.upgradeBackupNeeded = paths.nextUpgradeBackup != paths.upgradeBackup;
-    return {result: true};
+    return { result: true };
   },
 
   /**
@@ -179,7 +183,7 @@ var Agent = {
           // and write it to $Path.cleanBackup.
           let oldCleanPath = this.Paths.clean.replace("jsonlz4", "js");
           let d = File.read(oldCleanPath);
-          File.writeAtomic(this.Paths.cleanBackup, d, {compression: "lz4"});
+          File.writeAtomic(this.Paths.cleanBackup, d, { compression: "lz4" });
         }
       }
 
@@ -230,11 +234,16 @@ var Agent = {
 
     // If necessary, perform an upgrade backup
     let upgradeBackupComplete = false;
-    if (this.upgradeBackupNeeded
-      && (this.state == STATE_CLEAN || this.state == STATE_UPGRADE_BACKUP)) {
+    if (
+      this.upgradeBackupNeeded &&
+      (this.state == STATE_CLEAN || this.state == STATE_UPGRADE_BACKUP)
+    ) {
       try {
         // If we loaded from `clean`, the file has since then been renamed to `cleanBackup`.
-        let path = this.state == STATE_CLEAN ? this.Paths.cleanBackup : this.Paths.upgradeBackup;
+        let path =
+          this.state == STATE_CLEAN
+            ? this.Paths.cleanBackup
+            : this.Paths.upgradeBackup;
         File.copy(path, this.Paths.nextUpgradeBackup);
         this.upgradeBackupNeeded = false;
         upgradeBackupComplete = true;
@@ -256,8 +265,8 @@ var Agent = {
           }
         }, this);
       } catch (ex) {
-          // Don't throw immediately
-          exn = exn || ex;
+        // Don't throw immediately
+        exn = exn || ex;
       } finally {
         if (iterator) {
           iterator.close();
@@ -313,7 +322,9 @@ var Agent = {
     try {
       File.remove(this.Paths.clean);
       // Remove old extension ones.
-      File.remove(this.Paths.clean.replace("jsonlz4", "js"), {ignoreAbsent: true});
+      File.remove(this.Paths.clean.replace("jsonlz4", "js"), {
+        ignoreAbsent: true,
+      });
     } catch (ex) {
       // Don't stop immediately.
       exn = exn || ex;
@@ -338,7 +349,6 @@ var Agent = {
     } catch (ex) {
       exn = exn || ex;
     }
-
 
     this.state = STATE_EMPTY;
     if (exn) {

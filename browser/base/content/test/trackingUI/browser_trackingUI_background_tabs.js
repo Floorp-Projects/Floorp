@@ -3,18 +3,24 @@
 
 "use strict";
 
-const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
-const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
+const TRACKING_PAGE =
+  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+const BENIGN_PAGE =
+  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
 
 const TP_PREF = "privacy.trackingprotection.enabled";
 
 add_task(async function testBackgroundTabs() {
-  info("Testing receiving and storing content blocking events in non-selected tabs.");
+  info(
+    "Testing receiving and storing content blocking events in non-selected tabs."
+  );
 
-  await SpecialPowers.pushPrefEnv({set: [
-    [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
-    [TP_PREF, true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
+      [TP_PREF, true],
+    ],
+  });
   await UrlClassifierTestUtils.addTestTrackers();
 
   registerCleanupFunction(() => {
@@ -25,28 +31,39 @@ add_task(async function testBackgroundTabs() {
 
   let backgroundTab = BrowserTestUtils.addTab(gBrowser);
   let browser = backgroundTab.linkedBrowser;
-  let hasContentBlockingEvent = TestUtils.waitForCondition(() =>
-    browser.securityUI.contentBlockingEvent != 0);
+  let hasContentBlockingEvent = TestUtils.waitForCondition(
+    () => browser.securityUI.contentBlockingEvent != 0
+  );
   await promiseTabLoadEvent(backgroundTab, TRACKING_PAGE);
   await hasContentBlockingEvent;
 
-  is(browser.securityUI.contentBlockingEvent,
-     Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT,
-     "Background tab has the correct content blocking event.");
+  is(
+    browser.securityUI.contentBlockingEvent,
+    Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT,
+    "Background tab has the correct content blocking event."
+  );
 
-  is(tab.linkedBrowser.securityUI.contentBlockingEvent, 0,
-     "Foreground tab has the correct content blocking event.");
+  is(
+    tab.linkedBrowser.securityUI.contentBlockingEvent,
+    0,
+    "Foreground tab has the correct content blocking event."
+  );
 
   ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
 
   await BrowserTestUtils.switchTab(gBrowser, backgroundTab);
 
-  is(browser.securityUI.contentBlockingEvent,
-     Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT,
-     "Background tab still has the correct content blocking event.");
+  is(
+    browser.securityUI.contentBlockingEvent,
+    Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT,
+    "Background tab still has the correct content blocking event."
+  );
 
-  is(tab.linkedBrowser.securityUI.contentBlockingEvent, 0,
-     "Foreground tab still has the correct content blocking event.");
+  is(
+    tab.linkedBrowser.securityUI.contentBlockingEvent,
+    0,
+    "Foreground tab still has the correct content blocking event."
+  );
 
   ok(ContentBlocking.iconBox.hasAttribute("active"), "shield is active");
 

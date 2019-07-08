@@ -9,8 +9,9 @@ function get_test_plugintag() {
   var host = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
   var tags = host.getPluginTags();
   for (let tag of tags) {
-    if (tag.name == "Test Plug-in")
+    if (tag.name == "Test Plug-in") {
       return tag;
+    }
   }
   return null;
 }
@@ -24,18 +25,22 @@ add_task(async function checkFlashOnlyPluginState() {
     plugins: [
       {
         matchName: "Test Plug-in",
-        versionRange: [{severity: "0"}],
+        versionRange: [{ severity: "0" }],
       },
     ],
   });
 
   var plugin = get_test_plugintag();
-  if (!plugin)
+  if (!plugin) {
     do_throw("Plugin tag not found");
+  }
 
   // run the code after the blocklist is closed
   Services.obs.notifyObservers(null, "addon-blocklist-closed");
   await new Promise(executeSoon);
   // should be marked as outdated by the blocklist
-  Assert.equal(await Blocklist.getPluginBlocklistState(plugin, "1", "1.9"), nsIBLS.STATE_OUTDATED);
+  Assert.equal(
+    await Blocklist.getPluginBlocklistState(plugin, "1", "1.9"),
+    nsIBLS.STATE_OUTDATED
+  );
 });

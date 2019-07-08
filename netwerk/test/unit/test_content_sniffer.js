@@ -1,6 +1,6 @@
 // This file tests nsIContentSniffer, introduced in bug 324985
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const unknownType = "application/x-unknown-content-type";
 const sniffedType = "application/x-sniffed";
@@ -18,31 +18,44 @@ var sniffing_enabled = true;
 var sniffer = {
   QueryInterface: ChromeUtils.generateQI(["nsIFactory", "nsIContentSniffer"]),
   createInstance: function sniffer_ci(outer, iid) {
-    if (outer)
+    if (outer) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
+    }
     return this.QueryInterface(iid);
   },
   lockFactory: function sniffer_lockf(lock) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  getMIMETypeFromContent (request, data, length) {
+  getMIMETypeFromContent(request, data, length) {
     return sniffedType;
-  }
+  },
 };
 
 var listener = {
   onStartRequest: function test_onStartR(request) {
     try {
       var chan = request.QueryInterface(Ci.nsIChannel);
-      if (chan.contentType == unknownType)
+      if (chan.contentType == unknownType) {
         do_throw("Type should not be unknown!");
-      if (sniffing_enabled && this._iteration > 2 &&
-          chan.contentType != sniffedType) {
-        do_throw("Expecting <" + sniffedType +"> but got <" +
-                 chan.contentType + "> for " + chan.URI.spec);
+      }
+      if (
+        sniffing_enabled &&
+        this._iteration > 2 &&
+        chan.contentType != sniffedType
+      ) {
+        do_throw(
+          "Expecting <" +
+            sniffedType +
+            "> but got <" +
+            chan.contentType +
+            "> for " +
+            chan.URI.spec
+        );
       } else if (!sniffing_enabled && chan.contentType == sniffedType) {
-        do_throw("Sniffing not enabled but sniffer called for " + chan.URI.spec);
+        do_throw(
+          "Sniffing not enabled but sniffer called for " + chan.URI.spec
+        );
       }
     } catch (e) {
       do_throw("Unexpected exception: " + e);
@@ -60,13 +73,14 @@ var listener = {
     do_test_finished();
   },
 
-  _iteration: 1
+  _iteration: 1,
 };
 
 function makeChan(url) {
-  var chan = NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true});
-  if (sniffing_enabled)
+  var chan = NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
+  if (sniffing_enabled) {
     chan.loadFlags |= Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS;
+  }
 
   return chan;
 }
@@ -79,16 +93,20 @@ function run_test() {
   httpserv.start(-1);
 
   urls = [
-  // NOTE: First URL here runs without our content sniffer
-  "data:" + unknownType + ", Some text",
-  "data:" + unknownType + ", Text", // Make sure sniffing works even if we
-                                    // used the unknown content sniffer too
-  "data:text/plain, Some more text",
-    "http://localhost:" + httpserv.identity.primaryPort
-];
+    // NOTE: First URL here runs without our content sniffer
+    "data:" + unknownType + ", Some text",
+    "data:" + unknownType + ", Text", // Make sure sniffing works even if we
+    // used the unknown content sniffer too
+    "data:text/plain, Some more text",
+    "http://localhost:" + httpserv.identity.primaryPort,
+  ];
 
-  Components.manager.nsIComponentRegistrar.registerFactory(snifferCID,
-    "Unit test content sniffer", snifferContract, sniffer);
+  Components.manager.nsIComponentRegistrar.registerFactory(
+    snifferCID,
+    "Unit test content sniffer",
+    snifferContract,
+    sniffer
+  );
 
   run_test_iteration(1);
 }
@@ -96,22 +114,28 @@ function run_test() {
 function run_test_iteration(index) {
   if (index > urls.length) {
     if (sniffing_enabled) {
-        sniffing_enabled = false;
-        index = listener._iteration = 1;
+      sniffing_enabled = false;
+      index = listener._iteration = 1;
     } else {
-        do_test_pending();
-        httpserv.stop(do_test_finished);
-        return; // we're done
+      do_test_pending();
+      httpserv.stop(do_test_finished);
+      return; // we're done
     }
   }
 
   if (sniffing_enabled && index == 2) {
     // Register our sniffer only here
     // This also makes sure that dynamic registration is working
-    var catMan = Cc["@mozilla.org/categorymanager;1"]
-                   .getService(Ci.nsICategoryManager);
-    catMan.nsICategoryManager.addCategoryEntry(categoryName, "unit test",
-                                               snifferContract, false, true);
+    var catMan = Cc["@mozilla.org/categorymanager;1"].getService(
+      Ci.nsICategoryManager
+    );
+    catMan.nsICategoryManager.addCategoryEntry(
+      categoryName,
+      "unit test",
+      snifferContract,
+      false,
+      true
+    );
   }
 
   var chan = makeChan(urls[index - 1]);
@@ -121,4 +145,3 @@ function run_test_iteration(index) {
 
   do_test_pending();
 }
-

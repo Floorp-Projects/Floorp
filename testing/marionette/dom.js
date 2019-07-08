@@ -4,9 +4,11 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const {Log} = ChromeUtils.import("chrome://marionette/content/log.js");
+const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
@@ -60,7 +62,7 @@ class WebElementEventTarget {
    *     most once after being added.  If true, the ``listener``
    *     would automatically be removed when invoked.
    */
-  addEventListener(type, listener, {once = false} = {}) {
+  addEventListener(type, listener, { once = false } = {}) {
     if (!(type in this.listeners)) {
       this.listeners[type] = [];
     }
@@ -70,7 +72,7 @@ class WebElementEventTarget {
       this.listeners[type].push(listener);
     }
 
-    this.mm.sendAsyncMessage("Marionette:DOM:AddEventListener", {type});
+    this.mm.sendAsyncMessage("Marionette:DOM:AddEventListener", { type });
   }
 
   /**
@@ -91,7 +93,9 @@ class WebElementEventTarget {
       if (stack[i] === listener) {
         stack.splice(i, 1);
         if (stack.length == 0) {
-          this.mm.sendAsyncMessage("Marionette:DOM:RemoveEventListener", {type});
+          this.mm.sendAsyncMessage("Marionette:DOM:RemoveEventListener", {
+            type,
+          });
         }
         return;
       }
@@ -119,7 +123,7 @@ class WebElementEventTarget {
     });
   }
 
-  receiveMessage({name, data, objects}) {
+  receiveMessage({ name, data, objects }) {
     if (name != "Marionette:DOM:OnEvent") {
       return;
     }
@@ -196,15 +200,15 @@ class ContentEventObserverService {
     }
   }
 
-  * [Symbol.iterator]() {
+  *[Symbol.iterator]() {
     for (let ev of this.events) {
       yield ev;
     }
   }
 
-  handleEvent({type, target}) {
+  handleEvent({ type, target }) {
     logger.trace(`Received DOM event ${type}`);
-    this.sendAsyncMessage("Marionette:DOM:OnEvent", {type}, {target});
+    this.sendAsyncMessage("Marionette:DOM:OnEvent", { type }, { target });
   }
 }
 this.ContentEventObserverService = ContentEventObserverService;

@@ -19,8 +19,10 @@ add_task(async function() {
 
   info("Clicking on the first checkbox to highlight the grid");
   const onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  const onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 1 && state.grids[0].highlighted);
+  const onCheckboxChange = waitUntilState(
+    store,
+    state => state.grids.length == 1 && state.grids[0].highlighted
+  );
   checkbox.click();
   await onHighlighterShown;
   await onCheckboxChange;
@@ -28,14 +30,21 @@ add_task(async function() {
   ok(checkbox.checked, "The checkbox is checked");
   is(gridList.childNodes.length, 1, "There's one grid in the list");
   is(highlighters.gridHighlighters.size, 1, "There's a highlighter shown");
-  is(highlighters.state.grids.size, 1, "There's a saved grid state to be restored.");
+  is(
+    highlighters.state.grids.size,
+    1,
+    "There's a saved grid state to be restored."
+  );
 
   info("Reload the iframe in content and expect the grid list to update");
   const oldGrid = store.getState().grids[0];
-  const onNewListUnchecked = waitUntilState(store, state =>
-    state.grids.length == 1 &&
-    state.grids[0].actorID !== oldGrid.actorID &&
-    !state.grids[0].highlighted);
+  const onNewListUnchecked = waitUntilState(
+    store,
+    state =>
+      state.grids.length == 1 &&
+      state.grids[0].actorID !== oldGrid.actorID &&
+      !state.grids[0].highlighted
+  );
   const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
   testActor.eval("window.wrappedJSObject.reloadIFrame();");
   await onNewListUnchecked;

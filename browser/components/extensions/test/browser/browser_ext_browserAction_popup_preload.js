@@ -3,21 +3,29 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
-let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>${url}</body></html>`;
+let scriptPage = url =>
+  `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>${url}</body></html>`;
 
 add_task(async function testBrowserActionClickCanceled() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.com/"
+  );
 
   // Make sure the mouse isn't hovering over the browserAction widget.
-  EventUtils.synthesizeMouseAtCenter(gURLBar.textbox, {type: "mouseover"}, window);
+  EventUtils.synthesizeMouseAtCenter(
+    gURLBar.textbox,
+    { type: "mouseover" },
+    window
+  );
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "browser_action": {
-        "default_popup": "popup.html",
-        "browser_style": true,
+      browser_action: {
+        default_popup: "popup.html",
+        browser_style: true,
       },
-      "permissions": ["activeTab"],
+      permissions: ["activeTab"],
     },
 
     files: {
@@ -27,7 +35,12 @@ add_task(async function testBrowserActionClickCanceled() {
 
   await extension.startup();
 
-  const {GlobalManager, Management: {global: {browserActionFor}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  const {
+    GlobalManager,
+    Management: {
+      global: { browserActionFor },
+    },
+  } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
   let ext = GlobalManager.extensionMap.get(extension.id);
   let browserAction = browserActionFor(ext);
@@ -35,47 +48,96 @@ add_task(async function testBrowserActionClickCanceled() {
   let widget = getBrowserActionWidget(extension).forWindow(window);
 
   // Test canceled click.
-  EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mousedown", button: 0}, window);
+  EventUtils.synthesizeMouseAtCenter(
+    widget.node,
+    { type: "mousedown", button: 0 },
+    window
+  );
 
   isnot(browserAction.pendingPopup, null, "Have pending popup");
-  is(browserAction.pendingPopup.window, window, "Have pending popup for the correct window");
+  is(
+    browserAction.pendingPopup.window,
+    window,
+    "Have pending popup for the correct window"
+  );
 
   is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
 
   is(browserAction.tabToRevokeDuringClearPopup, tab, "Tab to revoke was saved");
-  is(browserAction.tabManager.hasActiveTabPermission(tab), true, "Active tab was granted permission");
+  is(
+    browserAction.tabManager.hasActiveTabPermission(tab),
+    true,
+    "Active tab was granted permission"
+  );
 
-  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mouseup", button: 0}, window);
+  EventUtils.synthesizeMouseAtCenter(
+    document.documentElement,
+    { type: "mouseup", button: 0 },
+    window
+  );
 
   is(browserAction.pendingPopup, null, "Pending popup was cleared");
   is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
 
-  is(browserAction.tabToRevokeDuringClearPopup, null, "Tab to revoke was removed");
-  is(browserAction.tabManager.hasActiveTabPermission(tab), false, "Permission was revoked from tab");
+  is(
+    browserAction.tabToRevokeDuringClearPopup,
+    null,
+    "Tab to revoke was removed"
+  );
+  is(
+    browserAction.tabManager.hasActiveTabPermission(tab),
+    false,
+    "Permission was revoked from tab"
+  );
 
   // Test completed click.
-  EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mousedown", button: 0}, window);
+  EventUtils.synthesizeMouseAtCenter(
+    widget.node,
+    { type: "mousedown", button: 0 },
+    window
+  );
 
   isnot(browserAction.pendingPopup, null, "Have pending popup");
-  is(browserAction.pendingPopup.window, window, "Have pending popup for the correct window");
+  is(
+    browserAction.pendingPopup.window,
+    window,
+    "Have pending popup for the correct window"
+  );
 
   is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
 
   // We need to do these tests during the mouseup event cycle, since the click
   // and command events will be dispatched immediately after mouseup, and void
   // the results.
-  let mouseUpPromise = BrowserTestUtils.waitForEvent(widget.node, "mouseup", false, event => {
-    isnot(browserAction.pendingPopup, null, "Pending popup was not cleared");
-    isnot(browserAction.pendingPopupTimeout, null, "Have a pending popup timeout");
-    return true;
-  });
+  let mouseUpPromise = BrowserTestUtils.waitForEvent(
+    widget.node,
+    "mouseup",
+    false,
+    event => {
+      isnot(browserAction.pendingPopup, null, "Pending popup was not cleared");
+      isnot(
+        browserAction.pendingPopupTimeout,
+        null,
+        "Have a pending popup timeout"
+      );
+      return true;
+    }
+  );
 
-  EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mouseup", button: 0}, window);
+  EventUtils.synthesizeMouseAtCenter(
+    widget.node,
+    { type: "mouseup", button: 0 },
+    window
+  );
 
   await mouseUpPromise;
 
   is(browserAction.pendingPopup, null, "Pending popup was cleared");
-  is(browserAction.pendingPopupTimeout, null, "Pending popup timeout was cleared");
+  is(
+    browserAction.pendingPopupTimeout,
+    null,
+    "Pending popup timeout was cleared"
+  );
 
   await promisePopupShown(getBrowserActionPopup(extension));
   await closeBrowserAction(extension);
@@ -87,13 +149,17 @@ add_task(async function testBrowserActionClickCanceled() {
 
 add_task(async function testBrowserActionDisabled() {
   // Make sure the mouse isn't hovering over the browserAction widget.
-  EventUtils.synthesizeMouseAtCenter(gURLBar.textbox, {type: "mouseover"}, window);
+  EventUtils.synthesizeMouseAtCenter(
+    gURLBar.textbox,
+    { type: "mouseover" },
+    window
+  );
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "browser_action": {
-        "default_popup": "popup.html",
-        "browser_style": true,
+      browser_action: {
+        default_popup: "popup.html",
+        browser_style: true,
       },
     },
 
@@ -115,7 +181,12 @@ add_task(async function testBrowserActionDisabled() {
   await extension.awaitMessage("browserAction-disabled");
   await promiseAnimationFrame();
 
-  const {GlobalManager, Management: {global: {browserActionFor}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  const {
+    GlobalManager,
+    Management: {
+      global: { browserActionFor },
+    },
+  } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
   let ext = GlobalManager.extensionMap.get(extension.id);
   let browserAction = browserActionFor(ext);
@@ -126,19 +197,30 @@ add_task(async function testBrowserActionDisabled() {
   is(browserAction.pendingPopup, null, "Have no pending popup prior to click");
 
   // Test canceled click.
-  EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mousedown", button: 0}, window);
+  EventUtils.synthesizeMouseAtCenter(
+    widget.node,
+    { type: "mousedown", button: 0 },
+    window
+  );
 
   is(browserAction.pendingPopup, null, "Have no pending popup");
   is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
 
-  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mouseup", button: 0}, window);
+  EventUtils.synthesizeMouseAtCenter(
+    document.documentElement,
+    { type: "mouseup", button: 0 },
+    window
+  );
 
   is(browserAction.pendingPopup, null, "Have no pending popup");
   is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
-
 
   // Test completed click.
-  EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mousedown", button: 0}, window);
+  EventUtils.synthesizeMouseAtCenter(
+    widget.node,
+    { type: "mousedown", button: 0 },
+    window
+  );
 
   is(browserAction.pendingPopup, null, "Have no pending popup");
   is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
@@ -146,13 +228,26 @@ add_task(async function testBrowserActionDisabled() {
   // We need to do these tests during the mouseup event cycle, since the click
   // and command events will be dispatched immediately after mouseup, and void
   // the results.
-  let mouseUpPromise = BrowserTestUtils.waitForEvent(widget.node, "mouseup", false, event => {
-    is(browserAction.pendingPopup, null, "Have no pending popup");
-    is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
-    return true;
-  });
+  let mouseUpPromise = BrowserTestUtils.waitForEvent(
+    widget.node,
+    "mouseup",
+    false,
+    event => {
+      is(browserAction.pendingPopup, null, "Have no pending popup");
+      is(
+        browserAction.pendingPopupTimeout,
+        null,
+        "Have no pending popup timeout"
+      );
+      return true;
+    }
+  );
 
-  EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mouseup", button: 0}, window);
+  EventUtils.synthesizeMouseAtCenter(
+    widget.node,
+    { type: "mouseup", button: 0 },
+    window
+  );
 
   await mouseUpPromise;
 
@@ -170,20 +265,22 @@ add_task(async function testBrowserActionTabPopulation() {
   // Note: This test relates to https://bugzilla.mozilla.org/show_bug.cgi?id=1310019
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "browser_action": {
-        "default_popup": "popup.html",
-        "browser_style": true,
+      browser_action: {
+        default_popup: "popup.html",
+        browser_style: true,
       },
-      "permissions": ["activeTab"],
+      permissions: ["activeTab"],
     },
 
     files: {
       "popup.html": scriptPage("popup.js"),
       "popup.js": function() {
-        browser.tabs.query({active: true, currentWindow: true}).then(tabs => {
-          browser.test.assertEq("mochitest index /",
-                                tabs[0].title,
-                                "Tab has the expected title on first click");
+        browser.tabs.query({ active: true, currentWindow: true }).then(tabs => {
+          browser.test.assertEq(
+            "mochitest index /",
+            tabs[0].title,
+            "Tab has the expected title on first click"
+          );
           browser.test.sendMessage("tabTitle");
         });
       },
@@ -191,20 +288,35 @@ add_task(async function testBrowserActionTabPopulation() {
   });
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
-  await BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "http://example.com/");
+  await BrowserTestUtils.loadURI(
+    win.gBrowser.selectedBrowser,
+    "http://example.com/"
+  );
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
   // Make sure the mouse isn't hovering over the browserAction widget.
-  EventUtils.synthesizeMouseAtCenter(win.gURLBar.textbox, {type: "mouseover"}, win);
+  EventUtils.synthesizeMouseAtCenter(
+    win.gURLBar.textbox,
+    { type: "mouseover" },
+    win
+  );
 
   await extension.startup();
 
   let widget = getBrowserActionWidget(extension).forWindow(win);
-  EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mousedown", button: 0}, win);
+  EventUtils.synthesizeMouseAtCenter(
+    widget.node,
+    { type: "mousedown", button: 0 },
+    win
+  );
 
   await new Promise(resolve => setTimeout(resolve, 100));
 
-  EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mouseup", button: 0}, win);
+  EventUtils.synthesizeMouseAtCenter(
+    widget.node,
+    { type: "mouseup", button: 0 },
+    win
+  );
 
   await extension.awaitMessage("tabTitle");
 
@@ -215,9 +327,9 @@ add_task(async function testBrowserActionTabPopulation() {
 add_task(async function testClosePopupDuringPreload() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "browser_action": {
-        "default_popup": "popup.html",
-        "browser_style": true,
+      browser_action: {
+        default_popup: "popup.html",
+        browser_style: true,
       },
     },
 
@@ -231,33 +343,61 @@ add_task(async function testClosePopupDuringPreload() {
   });
 
   // Make sure the mouse isn't hovering over the browserAction widget.
-  EventUtils.synthesizeMouseAtCenter(gURLBar.textbox, {type: "mouseover"}, window);
+  EventUtils.synthesizeMouseAtCenter(
+    gURLBar.textbox,
+    { type: "mouseover" },
+    window
+  );
 
   await extension.startup();
 
-  const {GlobalManager, Management: {global: {browserActionFor}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  const {
+    GlobalManager,
+    Management: {
+      global: { browserActionFor },
+    },
+  } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
   let ext = GlobalManager.extensionMap.get(extension.id);
   let browserAction = browserActionFor(ext);
 
   let widget = getBrowserActionWidget(extension).forWindow(window);
 
-  EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mousedown", button: 0}, window);
+  EventUtils.synthesizeMouseAtCenter(
+    widget.node,
+    { type: "mousedown", button: 0 },
+    window
+  );
 
   isnot(browserAction.pendingPopup, null, "Have pending popup");
-  is(browserAction.pendingPopup.window, window, "Have pending popup for the correct window");
+  is(
+    browserAction.pendingPopup.window,
+    window,
+    "Have pending popup for the correct window"
+  );
 
   await extension.awaitMessage("popup_loaded");
   try {
     await browserAction.pendingPopup.browserLoaded;
   } catch (e) {
-    is(e.message, "Popup destroyed", "Popup content should have been destroyed");
+    is(
+      e.message,
+      "Popup destroyed",
+      "Popup content should have been destroyed"
+    );
   }
 
-  let promiseViewShowing =
-    BrowserTestUtils.waitForEvent(document, "ViewShowing", false,
-                                  ev => ev.target.id === browserAction.viewId);
-  EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mouseup", button: 0}, window);
+  let promiseViewShowing = BrowserTestUtils.waitForEvent(
+    document,
+    "ViewShowing",
+    false,
+    ev => ev.target.id === browserAction.viewId
+  );
+  EventUtils.synthesizeMouseAtCenter(
+    widget.node,
+    { type: "mouseup", button: 0 },
+    window
+  );
 
   // The popup panel may become visible after the ViewShowing event. Wait a bit
   // to ensure that the popup is not shown when window.close() was used.

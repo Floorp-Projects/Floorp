@@ -3,16 +3,16 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function testSteps()
-{
+async function testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const objectStoreName = "foo";
-  const indexName = "bar", keyPath = "bar";
+  const indexName = "bar",
+    keyPath = "bar";
 
   info("Opening database");
 
   let request = indexedDB.open(name);
-  let event =  await expectingUpgrade(request);
+  let event = await expectingUpgrade(request);
 
   let db = event.target.result;
 
@@ -24,14 +24,19 @@ async function testSteps()
 
   try {
     db.createObjectStore(objectStoreName);
-    ok(false,
-       "ConstraintError should be thrown if object store already exists");
+    ok(
+      false,
+      "ConstraintError should be thrown if object store already exists"
+    );
   } catch (e) {
     ok(true, "ConstraintError should be thrown if object store already exists");
-    is(e.message,
-       "Object store named '" + objectStoreName +
-       "' already exists at index '0'",
-       "Threw with correct error message");
+    is(
+      e.message,
+      "Object store named '" +
+        objectStoreName +
+        "' already exists at index '0'",
+      "Threw with correct error message"
+    );
   }
 
   info("Creating an index");
@@ -46,9 +51,11 @@ async function testSteps()
     ok(false, "ConstraintError should be thrown if index already exists");
   } catch (e) {
     ok(true, "ConstraintError should be thrown if index already exists");
-    is(e.message,
-       "Index named '" + indexName + "' already exists at index '0'",
-       "Threw with correct error message");
+    is(
+      e.message,
+      "Index named '" + indexName + "' already exists at index '0'",
+      "Threw with correct error message"
+    );
   }
 
   await expectingSuccess(request);

@@ -13,9 +13,7 @@
 // 3. Check that the request isn't conditional, i.e. the entry from previous
 //    load was doomed.
 
-
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort;
@@ -24,7 +22,7 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 var httpServer = null;
 
 function make_channel(url, callback, ctx) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
 // need something bigger than 1024 bytes
@@ -41,14 +39,18 @@ const responseBody =
   "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" +
   "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
-function contentHandler(metadata, response)
-{
+function contentHandler(metadata, response) {
   response.setHeader("Content-Type", "text/plain");
   response.setHeader("ETag", "Just testing");
   response.setHeader("Cache-Control", "max-age=99999");
 
-  Assert.throws(() => { var etag = metadata.getHeader("If-None-Match"); },
-                /NS_ERROR_NOT_AVAILABLE/, "conditional request not expected");
+  Assert.throws(
+    () => {
+      var etag = metadata.getHeader("If-None-Match");
+    },
+    /NS_ERROR_NOT_AVAILABLE/,
+    "conditional request not expected"
+  );
 
   response.setHeader("Accept-Ranges", "bytes");
   let len = responseBody.length;
@@ -56,8 +58,7 @@ function contentHandler(metadata, response)
   response.bodyOutputStream.write(responseBody, responseBody.length);
 }
 
-function run_test()
-{
+function run_test() {
   // Static check
   Assert.ok(responseBody.length > 1024);
 
@@ -76,16 +77,14 @@ function run_test()
   do_test_pending();
 }
 
-function firstTimeThrough(request, buffer)
-{
+function firstTimeThrough(request, buffer) {
   Assert.equal(buffer, responseBody);
 
   var chan = make_channel(URL + "/content");
   chan.asyncOpen(new ChannelListener(secondTimeThrough, null));
 }
 
-function secondTimeThrough(request, buffer)
-{
+function secondTimeThrough(request, buffer) {
   Assert.equal(buffer, responseBody);
   httpServer.stop(do_test_finished);
 }

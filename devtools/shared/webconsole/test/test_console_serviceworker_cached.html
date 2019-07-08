@@ -92,7 +92,7 @@ addEventListener("load", startTest);
 
 // This test needs to add tabs that are controlled by a service worker
 // so use some special powers to dig around and find gBrowser
-let {gBrowser} = SpecialPowers._getTopChromeWindow(SpecialPowers.window.get());
+let {gBrowser} = SpecialPowers._getTopChromeWindow(SpecialPowers.window);
 
 SimpleTest.registerCleanupFunction(() => {
   while (gBrowser.tabs.length > 1) {

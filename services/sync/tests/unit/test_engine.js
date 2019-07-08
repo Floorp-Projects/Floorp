@@ -1,10 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
+const { Observers } = ChromeUtils.import(
+  "resource://services-common/observers.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 function SteamStore(engine) {
   Store.call(this, "Steam", engine);
@@ -118,14 +122,20 @@ add_task(async function test_invalidChangedIDs() {
   let tracker = engine._tracker;
 
   await tracker._beforeSave();
-  await OS.File.writeAtomic(tracker._storage.path, new TextEncoder().encode("5"),
-                            { tmpPath: tracker._storage.path + ".tmp" });
+  await OS.File.writeAtomic(
+    tracker._storage.path,
+    new TextEncoder().encode("5"),
+    { tmpPath: tracker._storage.path + ".tmp" }
+  );
 
   ok(!tracker._storage.dataReady);
   const changes = await tracker.getChangedIDs();
   changes.placeholder = true;
-  deepEqual(changes, { placeholder: true },
-    "Accessing changed IDs should load changes from disk as a side effect");
+  deepEqual(
+    changes,
+    { placeholder: true },
+    "Accessing changed IDs should load changes from disk as a side effect"
+  );
   ok(tracker._storage.dataReady);
 
   Assert.ok(changes.placeholder);
@@ -137,7 +147,7 @@ add_task(async function test_wipeClient() {
   let engine = new SteamEngine("Steam", Service);
   Assert.ok(!engine.wasReset);
   Assert.ok(!engine._store.wasWiped);
-  Assert.ok((await engine._tracker.addChangedID("a-changed-id")));
+  Assert.ok(await engine._tracker.addChangedID("a-changed-id"));
   let changes = await engine._tracker.getChangedIDs();
   Assert.ok("a-changed-id" in changes);
 

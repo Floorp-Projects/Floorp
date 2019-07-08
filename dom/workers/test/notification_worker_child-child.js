@@ -1,28 +1,30 @@
 function ok(test, message) {
-  postMessage({ type: 'ok', test: test, message: message });
+  postMessage({ type: "ok", test: test, message: message });
 }
 
 function is(a, b, message) {
-  postMessage({ type: 'is', test1: a, test2: b, message: message });
+  postMessage({ type: "is", test1: a, test2: b, message: message });
 }
 
 if (self.Notification) {
   var steps = [
-    function () {
+    function() {
       ok(typeof Notification === "function", "Notification constructor exists");
       ok(Notification.permission, "Notification.permission exists");
-      ok(typeof Notification.requestPermission === "undefined", "Notification.requestPermission should not exist");
+      ok(
+        typeof Notification.requestPermission === "undefined",
+        "Notification.requestPermission should not exist"
+      );
       //ok(typeof Notification.get === "function", "Notification.get exists");
     },
 
-    function (done) {
-
+    function(done) {
       var options = {
         dir: "auto",
         lang: "",
         body: "This is a notification body",
         tag: "sometag",
-        icon: "icon.png"
+        icon: "icon.png",
       };
       var notification = new Notification("This is a title", options);
 
@@ -42,16 +44,16 @@ if (self.Notification) {
       // store notification in test context
       this.notification = notification;
 
-      notification.onshow = function () {
+      notification.onshow = function() {
         ok(true, "onshow handler should be called");
         done();
       };
     },
 
-    function (done) {
+    function(done) {
       var notification = this.notification;
 
-      notification.onclose = function () {
+      notification.onclose = function() {
         ok(true, "onclose handler should be called");
         done();
       };
@@ -64,7 +66,7 @@ if (self.Notification) {
     var context = {};
     (function executeRemainingTests(remainingTests) {
       if (!remainingTests.length) {
-        postMessage({type: 'finish'});
+        postMessage({ type: "finish" });
         return;
       }
 
@@ -84,8 +86,8 @@ if (self.Notification) {
         finishTest();
       }
     })(steps);
-  }
+  };
 } else {
   ok(true, "Notifications are not enabled in workers on the platform.");
-  postMessage({ type: 'finish' });
+  postMessage({ type: "finish" });
 }

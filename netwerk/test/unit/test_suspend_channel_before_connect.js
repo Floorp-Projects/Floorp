@@ -1,16 +1,16 @@
-
 var CC = Components.Constructor;
 
+const ServerSocket = CC(
+  "@mozilla.org/network/server-socket;1",
+  "nsIServerSocket",
+  "init"
+);
 
-const ServerSocket = CC("@mozilla.org/network/server-socket;1",
-                        "nsIServerSocket",
-                        "init");
+var obs = Cc["@mozilla.org/observer-service;1"].getService(
+  Ci.nsIObserverService
+);
 
-var obs = Cc["@mozilla.org/observer-service;1"]
-            .getService(Ci.nsIObserverService);
-
-var ios = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService);
+var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
 // A server that waits for a connect. If a channel is suspended it should not
 // try to connect to the server until it is is resumed or not try at all if it
@@ -26,22 +26,23 @@ TestServer.prototype = {
     Assert.ok(false, "Socket should not have tried to connect!");
   },
 
-  onStopListening(socket) {
-  },
+  onStopListening(socket) {},
 
   stop() {
-    try { this.listener.close(); } catch(ignore) {}
-  }
-}
+    try {
+      this.listener.close();
+    } catch (ignore) {}
+  },
+};
 
 var requestListenerObserver = {
-
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
   observe(subject, topic, data) {
-    if (topic === "http-on-modify-request" &&
-        subject instanceof Ci.nsIHttpChannel) {
-
+    if (
+      topic === "http-on-modify-request" &&
+      subject instanceof Ci.nsIHttpChannel
+    ) {
       var chan = subject.QueryInterface(Ci.nsIHttpChannel);
       chan.suspend();
       var obs = Cc["@mozilla.org/observer-service;1"].getService();
@@ -52,17 +53,20 @@ var requestListenerObserver = {
       // connect to the server. There are no other event since nothing should
       // happen until we resume the channel.
       let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      timer.initWithCallback(() => {
-        chan.cancel(Cr.NS_BINDING_ABORTED);
-        chan.resume();
-      }, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
+      timer.initWithCallback(
+        () => {
+          chan.cancel(Cr.NS_BINDING_ABORTED);
+          chan.resume();
+        },
+        1000,
+        Ci.nsITimer.TYPE_ONE_SHOT
+      );
     }
-  }
+  },
 };
 
 var listener = {
-  onStartRequest: function test_onStartR(request) {
-  },
+  onStartRequest: function test_onStartR(request) {},
 
   onDataAvailable: function test_ODA() {
     do_throw("Should not get any data!");
@@ -70,7 +74,7 @@ var listener = {
 
   onStopRequest: function test_onStopR(request, status) {
     executeSoon(run_next_test);
-  }
+  },
 };
 
 // Add observer and start a channel. Observer is going to suspend the channel on
@@ -78,15 +82,16 @@ var listener = {
 // not try to connect at all until it is resumed. In this case we are going to
 // wait for some time and cancel the channel before resuming it.
 add_test(function testNoConnectChannelCanceledEarly() {
-
   serv = new TestServer();
 
   obs.addObserver(requestListenerObserver, "http-on-modify-request");
   var chan = NetUtil.newChannel({
-    uri:"http://localhost:" + serv.port,
-    loadUsingSystemPrincipal: true
+    uri: "http://localhost:" + serv.port,
+    loadUsingSystemPrincipal: true,
   });
   chan.asyncOpen(listener);
 
-  registerCleanupFunction(function(){ serv.stop(); });
+  registerCleanupFunction(function() {
+    serv.stop();
+  });
 });

@@ -4,13 +4,33 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {log, PREF_REMOTE_PAIRING_URI, COMMAND_PAIR_SUPP_METADATA, COMMAND_PAIR_AUTHORIZE, COMMAND_PAIR_DECLINE, COMMAND_PAIR_HEARTBEAT, COMMAND_PAIR_COMPLETE} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const {fxAccounts, FxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-const {setTimeout, clearTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {
+  log,
+  PREF_REMOTE_PAIRING_URI,
+  COMMAND_PAIR_SUPP_METADATA,
+  COMMAND_PAIR_AUTHORIZE,
+  COMMAND_PAIR_DECLINE,
+  COMMAND_PAIR_HEARTBEAT,
+  COMMAND_PAIR_COMPLETE,
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const { fxAccounts, FxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
+const { setTimeout, clearTimeout } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.defineModuleGetter(this, "Weave", "resource://services-sync/main.js");
-ChromeUtils.defineModuleGetter(this, "FxAccountsPairingChannel", "resource://gre/modules/FxAccountsPairingChannel.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Weave",
+  "resource://services-sync/main.js"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FxAccountsPairingChannel",
+  "resource://gre/modules/FxAccountsPairingChannel.js"
+);
 
 const PAIRING_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob:pair-auth-webchannel";
 // A pairing flow is not tied to a specific browser window, can also finish in
@@ -37,8 +57,16 @@ class PairingStateMachine {
     if (!(RequiredStates instanceof Array)) {
       RequiredStates = [RequiredStates];
     }
-    if (!RequiredStates.some(RequiredState => this._currentState instanceof RequiredState)) {
-      const msg = `${messagePrefix ? `${messagePrefix}. ` : ""}Valid expected states: ${RequiredStates.map(({name}) => name).join(", ")}. Current state: ${this._currentState.label}.`;
+    if (
+      !RequiredStates.some(
+        RequiredState => this._currentState instanceof RequiredState
+      )
+    ) {
+      const msg = `${
+        messagePrefix ? `${messagePrefix}. ` : ""
+      }Valid expected states: ${RequiredStates.map(({ name }) => name).join(
+        ", "
+      )}. Current state: ${this._currentState.label}.`;
       throw new Error(msg);
     }
   }
@@ -61,7 +89,9 @@ class State {
     this.init(...args);
   }
 
-  init() { /* Does nothing by default but can be re-implemented. */ }
+  init() {
+    /* Does nothing by default but can be re-implemented. */
+  }
 
   get label() {
     return this.constructor.name;
@@ -82,8 +112,12 @@ class SuppConnectionPending extends State {
   }
 }
 class PendingConfirmationsState extends State {
-  localConfirmed() { throw new Error("Subclasses must implement this method."); }
-  remoteConfirmed() { throw new Error("Subclasses must implement this method."); }
+  localConfirmed() {
+    throw new Error("Subclasses must implement this method.");
+  }
+  remoteConfirmed() {
+    throw new Error("Subclasses must implement this method.");
+  }
 }
 class PendingConfirmations extends PendingConfirmationsState {
   init(sender, oauthOptions) {
@@ -110,12 +144,16 @@ class PendingLocalConfirmation extends PendingConfirmationsState {
   }
 
   remoteConfirmed() {
-    throw new Error("Insane state! Remote has already been confirmed at this point.");
+    throw new Error(
+      "Insane state! Remote has already been confirmed at this point."
+    );
   }
 }
 class PendingRemoteConfirmation extends PendingConfirmationsState {
   localConfirmed() {
-    throw new Error("Insane state! Local has already been confirmed at this point.");
+    throw new Error(
+      "Insane state! Local has already been confirmed at this point."
+    );
   }
 
   remoteConfirmed() {
@@ -143,7 +181,7 @@ this.FxAccountsPairingFlow = class FxAccountsPairingFlow {
   }
 
   static async start(options) {
-    const {emitter} = options;
+    const { emitter } = options;
     const fxaConfig = options.fxaConfig || FxAccounts.config;
     const fxa = options.fxAccounts || fxAccounts;
     const weave = options.weave || Weave;
@@ -151,9 +189,12 @@ this.FxAccountsPairingFlow = class FxAccountsPairingFlow {
 
     const contentPairingURI = await fxaConfig.promisePairingURI();
     const wsUri = Services.urlFormatter.formatURLPref(PREF_REMOTE_PAIRING_URI);
-    const pairingChannel = options.pairingChannel || (await FxAccountsPairingChannel.create(wsUri));
-    const {channelId, channelKey} = pairingChannel;
-    const channelKeyB64 = ChromeUtils.base64URLEncode(channelKey, {pad: false});
+    const pairingChannel =
+      options.pairingChannel || (await FxAccountsPairingChannel.create(wsUri));
+    const { channelId, channelKey } = pairingChannel;
+    const channelKeyB64 = ChromeUtils.base64URLEncode(channelKey, {
+      pad: false,
+    });
     const pairingFlow = new FxAccountsPairingFlow({
       channelId,
       pairingChannel,
@@ -177,7 +218,10 @@ this.FxAccountsPairingFlow = class FxAccountsPairingFlow {
     this._weave = options.weave;
     this._stateMachine = new PairingStateMachine(this._emitter);
     this._setupListeners();
-    this._flowTimeoutId = setTimeout(() => this._onFlowTimeout(), options.flowTimeout);
+    this._flowTimeoutId = setTimeout(
+      () => this._onFlowTimeout(),
+      options.flowTimeout
+    );
   }
 
   _onFlowTimeout() {
@@ -201,8 +245,14 @@ this.FxAccountsPairingFlow = class FxAccountsPairingFlow {
   }
 
   _setupListeners() {
-    this._pairingChannel.addEventListener("message", ({detail: {sender, data}}) => this.onPairingChannelMessage(sender, data));
-    this._pairingChannel.addEventListener("error", event => this._onPairingChannelError(event.detail.error));
+    this._pairingChannel.addEventListener(
+      "message",
+      ({ detail: { sender, data } }) =>
+        this.onPairingChannelMessage(sender, data)
+    );
+    this._pairingChannel.addEventListener("error", event =>
+      this._onPairingChannelError(event.detail.error)
+    );
     this._emitter.on("view:Closed", () => this.onPrefViewClosed());
   }
 
@@ -228,12 +278,31 @@ this.FxAccountsPairingFlow = class FxAccountsPairingFlow {
     try {
       switch (command) {
         case COMMAND_PAIR_SUPP_METADATA:
-          stateMachine.assertState([PendingConfirmations, PendingLocalConfirmation], `Wrong state for ${command}`);
-          const {ua, city, region, country, remote: ipAddress} = curState.sender;
-          return {ua, city, region, country, ipAddress};
+          stateMachine.assertState(
+            [PendingConfirmations, PendingLocalConfirmation],
+            `Wrong state for ${command}`
+          );
+          const {
+            ua,
+            city,
+            region,
+            country,
+            remote: ipAddress,
+          } = curState.sender;
+          return { ua, city, region, country, ipAddress };
         case COMMAND_PAIR_AUTHORIZE:
-          stateMachine.assertState([PendingConfirmations, PendingLocalConfirmation], `Wrong state for ${command}`);
-          const {client_id, state, scope, code_challenge, code_challenge_method, keys_jwk} = curState.oauthOptions;
+          stateMachine.assertState(
+            [PendingConfirmations, PendingLocalConfirmation],
+            `Wrong state for ${command}`
+          );
+          const {
+            client_id,
+            state,
+            scope,
+            code_challenge,
+            code_challenge_method,
+            keys_jwk,
+          } = curState.oauthOptions;
           const authorizeParams = {
             client_id,
             access_type: "offline",
@@ -243,7 +312,9 @@ this.FxAccountsPairingFlow = class FxAccountsPairingFlow {
             code_challenge_method,
             keys_jwk,
           };
-          const codeAndState = await this._fxa.authorizeOAuthCode(authorizeParams);
+          const codeAndState = await this._fxa.authorizeOAuthCode(
+            authorizeParams
+          );
           if (codeAndState.state != state) {
             throw new Error(`OAuth state mismatch`);
           }
@@ -260,10 +331,13 @@ this.FxAccountsPairingFlow = class FxAccountsPairingFlow {
           break;
         case COMMAND_PAIR_HEARTBEAT:
           if (curState instanceof Errored || this._pairingChannel.closed) {
-            return {err: curState.error.message || "Pairing channel closed"};
+            return { err: curState.error.message || "Pairing channel closed" };
           }
-          const suppAuthorized = !(curState instanceof PendingConfirmations || curState instanceof PendingRemoteConfirmation);
-          return {suppAuthorized};
+          const suppAuthorized = !(
+            curState instanceof PendingConfirmations ||
+            curState instanceof PendingRemoteConfirmation
+          );
+          return { suppAuthorized };
         case COMMAND_PAIR_COMPLETE:
           this.finalize();
           break;
@@ -278,15 +352,23 @@ this.FxAccountsPairingFlow = class FxAccountsPairingFlow {
   }
 
   async onPairingChannelMessage(sender, payload) {
-    const {message} = payload;
+    const { message } = payload;
     const stateMachine = this._stateMachine;
     const curState = stateMachine.currentState;
     try {
       switch (message) {
         case "pair:supp:request":
-          stateMachine.assertState(SuppConnectionPending, `Wrong state for ${message}`);
+          stateMachine.assertState(
+            SuppConnectionPending,
+            `Wrong state for ${message}`
+          );
           const oauthUri = await this._fxaConfig.promiseOAuthURI();
-          const {uid, email, avatar, displayName} = await this._fxa.getSignedInUserProfile();
+          const {
+            uid,
+            email,
+            avatar,
+            displayName,
+          } = await this._fxa.getSignedInUserProfile();
           const deviceName = this._weave.Service.clientsEngine.localName;
           await this._pairingChannel.send({
             message: "pair:auth:metadata",
@@ -297,7 +379,14 @@ this.FxAccountsPairingFlow = class FxAccountsPairingFlow {
               deviceName,
             },
           });
-          const {client_id, state, scope, code_challenge, code_challenge_method, keys_jwk} = payload.data;
+          const {
+            client_id,
+            state,
+            scope,
+            code_challenge,
+            code_challenge_method,
+            keys_jwk,
+          } = payload.data;
           const url = new URL(oauthUri);
           url.searchParams.append("client_id", client_id);
           url.searchParams.append("scope", scope);
@@ -316,11 +405,16 @@ this.FxAccountsPairingFlow = class FxAccountsPairingFlow {
           });
           break;
         case "pair:supp:authorize":
-          stateMachine.assertState([PendingConfirmations, PendingRemoteConfirmation], `Wrong state for ${message}`);
+          stateMachine.assertState(
+            [PendingConfirmations, PendingRemoteConfirmation],
+            `Wrong state for ${message}`
+          );
           curState.remoteConfirmed();
           break;
         default:
-          throw new Error(`Received unknown Pairing Channel message: ${message}`);
+          throw new Error(
+            `Received unknown Pairing Channel message: ${message}`
+          );
       }
     } catch (e) {
       log.error(e);
@@ -331,7 +425,11 @@ this.FxAccountsPairingFlow = class FxAccountsPairingFlow {
   onPrefViewClosed() {
     const curState = this._stateMachine.currentState;
     // We don't want to stop the pairing process in the later stages.
-    if (curState instanceof SuppConnectionPending || curState instanceof Aborted || curState instanceof Errored) {
+    if (
+      curState instanceof SuppConnectionPending ||
+      curState instanceof Aborted ||
+      curState instanceof Errored
+    ) {
       this.finalize();
     }
   }

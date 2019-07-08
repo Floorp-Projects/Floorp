@@ -5,10 +5,12 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/" +
-                 "browser/dom/tests/browser/geo_leak_test.html";
+const TEST_URI =
+  // eslint-disable-next-line no-useless-concat
+  "http://example.com/" + "browser/dom/tests/browser/geo_leak_test.html";
 
-const BASE_GEO_URL = "http://mochi.test:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs";
+const BASE_GEO_URL =
+  "http://mochi.test:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs";
 
 add_task(async function() {
   Services.prefs.setBoolPref("geo.prompt.testing", true);
@@ -21,11 +23,15 @@ add_task(async function() {
   // Open the test URI and close it. The test harness will make sure that the
   // page is cleaned up after some GCs. If geolocation is not shut down properly,
   // it will show up as a non-shutdown leak.
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: TEST_URI,
-  }, function(browser) { /* ... */ });
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_URI,
+    },
+    function(browser) {
+      /* ... */
+    }
+  );
 
   ok(true, "Need to do something in this test");
 });
-

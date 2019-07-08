@@ -185,7 +185,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    *
    * @param aRoot The root of the (full) layer tree
    * @param aOriginatingLayersId The layers id of the subtree that triggered
-   *                             this repaint, and to which aIsFirstPaint applies.
+   *                             this repaint, and to which aIsFirstPaint
+   * applies.
    * @param aIsFirstPaint True if the layers update that this is called in
    *                      response to included a first-paint. If this is true,
    *                      the part of the tree that is affected by the
@@ -196,8 +197,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    *                             process' layer subtree has its own sequence
    *                             numbers.
    */
-  void UpdateHitTestingTree(Layer* aRoot,
-                            bool aIsFirstPaint, LayersId aOriginatingLayersId,
+  void UpdateHitTestingTree(Layer* aRoot, bool aIsFirstPaint,
+                            LayersId aOriginatingLayersId,
                             uint32_t aPaintSequenceNumber);
 
   /**

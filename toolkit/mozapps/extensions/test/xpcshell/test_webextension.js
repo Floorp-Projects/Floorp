@@ -10,15 +10,15 @@ profileDir.append("extensions");
 const ADDONS = {
   webextension_1: {
     "manifest.json": {
-      "name": "Web Extension Name",
-      "version": "1.0",
-      "manifest_version": 2,
-      "applications": {
-        "gecko": {
-          "id": "webextension1@tests.mozilla.org",
+      name: "Web Extension Name",
+      version: "1.0",
+      manifest_version: 2,
+      applications: {
+        gecko: {
+          id: "webextension1@tests.mozilla.org",
         },
       },
-      "icons": {
+      icons: {
         "48": "icon48.png",
         "64": "icon64.png",
       },
@@ -27,60 +27,69 @@ const ADDONS = {
   },
   webextension_3: {
     "manifest.json": {
-      "name": "Web Extensiøn __MSG_name__",
-      "description": "Descriptïon __MSG_desc__ of add-on",
-      "version": "1.0",
-      "manifest_version": 2,
-      "default_locale": "en",
-      "applications": {
-        "gecko": {
-          "id": "webextension3@tests.mozilla.org",
+      name: "Web Extensiøn __MSG_name__",
+      description: "Descriptïon __MSG_desc__ of add-on",
+      version: "1.0",
+      manifest_version: 2,
+      default_locale: "en",
+      applications: {
+        gecko: {
+          id: "webextension3@tests.mozilla.org",
         },
       },
     },
     "_locales/en/messages.json": {
-      "name": {
-        "message": "foo ☹",
-        "description": "foo",
+      name: {
+        message: "foo ☹",
+        description: "foo",
       },
-      "desc": {
-        "message": "bar ☹",
-        "description": "bar",
+      desc: {
+        message: "bar ☹",
+        description: "bar",
       },
     },
     "_locales/fr/messages.json": {
-      "name": {
-        "message": "le foo ☺",
-        "description": "foo",
+      name: {
+        message: "le foo ☺",
+        description: "foo",
       },
-      "desc": {
-        "message": "le bar ☺",
-        "description": "bar",
+      desc: {
+        message: "le bar ☺",
+        description: "bar",
       },
     },
   },
 };
 
-
-let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
+let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+  Ci.nsIChromeRegistry
+);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
-const { GlobalManager } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+const { GlobalManager } = ChromeUtils.import(
+  "resource://gre/modules/Extension.jsm",
+  null
+);
 
 add_task(async function test_1() {
   await promiseStartupManager();
 
   equal(GlobalManager.extensionMap.size, 0);
 
-  let {addon} = await AddonTestUtils.promiseInstallXPI(ADDONS.webextension_1);
+  let { addon } = await AddonTestUtils.promiseInstallXPI(ADDONS.webextension_1);
 
   equal(GlobalManager.extensionMap.size, 1);
   ok(GlobalManager.extensionMap.has(ID));
 
-  Assert.throws(() => chromeReg.convertChromeURL(Services.io.newURI("chrome://webex/content/webex.xul")),
-                error => error.result == Cr.NS_ERROR_FILE_NOT_FOUND,
-                "Chrome manifest should not have been registered");
+  Assert.throws(
+    () =>
+      chromeReg.convertChromeURL(
+        Services.io.newURI("chrome://webex/content/webex.xul")
+      ),
+    error => error.result == Cr.NS_ERROR_FILE_NOT_FOUND,
+    "Chrome manifest should not have been registered"
+  );
 
   let uri = do_get_addon_root_uri(profileDir, ID);
 
@@ -142,16 +151,19 @@ add_task(async function test_1() {
 
 // Writing the manifest direct to the profile should work
 add_task(async function test_2() {
-  await promiseWriteWebManifestForExtension({
-    name: "Web Extension Name",
-    version: "1.0",
-    manifest_version: 2,
-    applications: {
-      gecko: {
-        id: ID,
+  await promiseWriteWebManifestForExtension(
+    {
+      name: "Web Extension Name",
+      version: "1.0",
+      manifest_version: 2,
+      applications: {
+        gecko: {
+          id: ID,
+        },
       },
     },
-  }, profileDir);
+    profileDir
+  );
 
   await promiseStartupManager();
 
@@ -175,7 +187,7 @@ add_task(async function test_2() {
 add_task(async function test_manifest_localization() {
   const extensionId = "webextension3@tests.mozilla.org";
 
-  let {addon} = await AddonTestUtils.promiseInstallXPI(ADDONS.webextension_3);
+  let { addon } = await AddonTestUtils.promiseInstallXPI(ADDONS.webextension_3);
 
   await addon.disable();
 
@@ -205,15 +217,18 @@ add_task(async function test_manifest_localization() {
 
 // Missing version should cause a failure
 add_task(async function test_3() {
-  await promiseWriteWebManifestForExtension({
-    name: "Web Extension Name",
-    manifest_version: 2,
-    applications: {
-      gecko: {
-        id: ID,
+  await promiseWriteWebManifestForExtension(
+    {
+      name: "Web Extension Name",
+      manifest_version: 2,
+      applications: {
+        gecko: {
+          id: ID,
+        },
       },
     },
-  }, profileDir);
+    profileDir
+  );
 
   await promiseRestartManager();
 
@@ -228,16 +243,19 @@ add_task(async function test_3() {
 
 // Incorrect manifest version should cause a failure
 add_task(async function test_4() {
-  await promiseWriteWebManifestForExtension({
-    name: "Web Extension Name",
-    version: "1.0",
-    manifest_version: 1,
-    applications: {
-      gecko: {
-        id: ID,
+  await promiseWriteWebManifestForExtension(
+    {
+      name: "Web Extension Name",
+      version: "1.0",
+      manifest_version: 1,
+      applications: {
+        gecko: {
+          id: ID,
+        },
       },
     },
-  }, profileDir);
+    profileDir
+  );
 
   await promiseRestartManager();
 
@@ -257,9 +275,9 @@ add_task(async function test_options_ui() {
   const extensionId = "webextension@tests.mozilla.org";
   let addon = await promiseInstallWebExtension({
     manifest: {
-      applications: {gecko: {id: extensionId}},
-      "options_ui": {
-        "page": "options.html",
+      applications: { gecko: { id: extensionId } },
+      options_ui: {
+        page: "options.html",
       },
     },
   });
@@ -268,18 +286,20 @@ add_task(async function test_options_ui() {
     optionsType: AddonManager.OPTIONS_TYPE_INLINE_BROWSER,
   });
 
-  ok(OPTIONS_RE.test(addon.optionsURL),
-     "Addon should have a moz-extension: options URL for /options.html");
+  ok(
+    OPTIONS_RE.test(addon.optionsURL),
+    "Addon should have a moz-extension: options URL for /options.html"
+  );
 
   await addon.uninstall();
 
   const ID2 = "webextension2@tests.mozilla.org";
   addon = await promiseInstallWebExtension({
     manifest: {
-      applications: {gecko: {id: ID2}},
-      "options_ui": {
-        "page": "options.html",
-        "open_in_tab": true,
+      applications: { gecko: { id: ID2 } },
+      options_ui: {
+        page: "options.html",
+        open_in_tab: true,
       },
     },
   });
@@ -288,8 +308,10 @@ add_task(async function test_options_ui() {
     optionsType: AddonManager.OPTIONS_TYPE_TAB,
   });
 
-  ok(OPTIONS_RE.test(addon.optionsURL),
-     "Addon should have a moz-extension: options URL for /options.html");
+  ok(
+    OPTIONS_RE.test(addon.optionsURL),
+    "Addon should have a moz-extension: options URL for /options.html"
+  );
 
   await addon.uninstall();
 });
@@ -298,8 +320,8 @@ add_task(async function test_options_ui() {
 add_task(async function test_experiments_dependencies() {
   let addon = await promiseInstallWebExtension({
     manifest: {
-      applications: {gecko: {id: "meh@experiment"}},
-      "permissions": ["experiments.meh"],
+      applications: { gecko: { id: "meh@experiment" } },
+      permissions: ["experiments.meh"],
     },
   });
 
@@ -344,7 +366,7 @@ add_task(async function developerShouldOverride() {
 });
 
 add_task(async function developerEmpty() {
-  for (let developer of [{}, null, {name: null, url: null}]) {
+  for (let developer of [{}, null, { name: null, url: null }]) {
     let addon = await promiseInstallWebExtension({
       manifest: {
         author: "Some author",
@@ -387,7 +409,7 @@ add_task(async function authorNotString() {
 add_task(async function testThemeExtension() {
   let addon = await promiseInstallWebExtension({
     manifest: {
-      "author": "Some author",
+      author: "Some author",
       manifest_version: 2,
       name: "Web Extension Name",
       version: "1.0",
@@ -414,7 +436,7 @@ add_task(async function testThemeExtension() {
   // Also test one without a proper 'theme' section.
   addon = await promiseInstallWebExtension({
     manifest: {
-      "author": "Some author",
+      author: "Some author",
       manifest_version: 2,
       name: "Web Extension Name",
       version: "1.0",

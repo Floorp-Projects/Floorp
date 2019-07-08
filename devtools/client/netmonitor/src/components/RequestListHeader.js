@@ -5,10 +5,16 @@
 "use strict";
 
 const Services = require("Services");
-const { createRef, Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createRef,
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/redux/visibility-handler-connect");
+const {
+  connect,
+} = require("devtools/client/shared/redux/visibility-handler-connect");
 const {
   getTheme,
   addThemeObserver,
@@ -26,13 +32,16 @@ const { getFormattedTime } = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
 const RequestListHeaderContextMenu = require("../widgets/RequestListHeaderContextMenu");
 const WaterfallBackground = require("../widgets/WaterfallBackground");
-const Draggable = createFactory(require("devtools/client/shared/components/splitter/Draggable"));
+const Draggable = createFactory(
+  require("devtools/client/shared/components/splitter/Draggable")
+);
 
 const { div, button } = dom;
 
 // Support for columns resizing is currently hidden behind this pref.
-const RESIZE_COLUMNS =
-  Services.prefs.getBoolPref("devtools.netmonitor.features.resizeColumns");
+const RESIZE_COLUMNS = Services.prefs.getBoolPref(
+  "devtools.netmonitor.features.resizeColumns"
+);
 
 /**
  * Render the request list header with sorting arrows for columns.
@@ -137,7 +146,10 @@ class RequestListHeader extends Component {
       // The 'waterfallWidth' will be further updated on every window resize.
       window.cancelIdleCallback(this._resizeTimerId);
       this._resizeTimerId = window.requestIdleCallback(() =>
-        this.props.resizeWaterfall(waterfallHeader.getBoundingClientRect().width));
+        this.props.resizeWaterfall(
+          waterfallHeader.getBoundingClientRect().width
+        )
+      );
     }
   }
 
@@ -169,7 +181,7 @@ class RequestListHeader extends Component {
         divisionScale = "second";
       }
 
-      let width = (x + scaledStep | 0) - (x | 0);
+      let width = ((x + scaledStep) | 0) - (x | 0);
       // Adjust the first marker for the borders
       if (x == 0) {
         width -= 2;
@@ -179,15 +191,17 @@ class RequestListHeader extends Component {
         width = undefined;
       }
 
-      labels.push(div(
-        {
-          key: labels.length,
-          className: "requests-list-timings-division",
-          "data-division-scale": divisionScale,
-          style: { width },
-        },
-        getFormattedTime(millisecondTime)
-      ));
+      labels.push(
+        div(
+          {
+            key: labels.length,
+            className: "requests-list-timings-division",
+            "data-division-scale": divisionScale,
+            style: { width },
+          },
+          getFormattedTime(millisecondTime)
+        )
+      );
     }
 
     return labels;
@@ -259,15 +273,21 @@ class RequestListHeader extends Component {
 
     // Calculate new compensate width as the original width + adjustment.
     // Do not allow to set it below minCompensateWidth.
-    const newCompensateWidth =
-      Math.max(adjustment + oldCompensateWidth, minCompensateWidth);
-    compensateHeaderRef.style.width =
-      `${this.px2percent(newCompensateWidth, parentWidth)}%`;
+    const newCompensateWidth = Math.max(
+      adjustment + oldCompensateWidth,
+      minCompensateWidth
+    );
+    compensateHeaderRef.style.width = `${this.px2percent(
+      newCompensateWidth,
+      parentWidth
+    )}%`;
 
     // Do not allow to reset size of column when compensate column is at minWidth.
     if (newCompensateWidth === minCompensateWidth) {
-      headerRef.style.width =
-        `${this.px2percent((sumOfBothColumns - newCompensateWidth), parentWidth)}%`;
+      headerRef.style.width = `${this.px2percent(
+        sumOfBothColumns - newCompensateWidth,
+        parentWidth
+      )}%`;
     }
   }
 
@@ -302,7 +322,7 @@ class RequestListHeader extends Component {
   getCompensateHeader() {
     const visibleColumns = this.getVisibleColumns();
     const lastColumn = visibleColumns[visibleColumns.length - 1].name;
-    const delta = (lastColumn === "waterfall") ? 2 : 1;
+    const delta = lastColumn === "waterfall" ? 2 : 1;
     return visibleColumns[visibleColumns.length - delta].name;
   }
 
@@ -385,13 +405,16 @@ class RequestListHeader extends Component {
       for (let i = 0; i < widths.length - 1; i++) {
         const name = visibleColumns[i].name;
         const minColWidth = this.getMinWidth(name);
-        const newColWidth = Math.max(widths[i] + changeInWidthPerColumn, minColWidth);
+        const newColWidth = Math.max(
+          widths[i] + changeInWidthPerColumn,
+          minColWidth
+        );
 
         widths[i] = newColWidth;
         if (changeInWidth > 0) {
-          changeInWidth -= (newColWidth - widths[i]);
+          changeInWidth -= newColWidth - widths[i];
         } else {
-          changeInWidth += (newColWidth - widths[i]);
+          changeInWidth += newColWidth - widths[i];
         }
         if (!changeInWidth) {
           break;
@@ -453,7 +476,7 @@ class RequestListHeader extends Component {
       if (width > 0) {
         // This prevents saving width 0 for waterfall when it is not showing for
         // @media (max-width: 700px)
-        newWidths.push({name, width});
+        newWidths.push({ name, width });
       }
     });
     this.props.setColumnsWidth(newWidths);
@@ -463,7 +486,7 @@ class RequestListHeader extends Component {
    * Helper method to convert pixels into percent based on parent container width
    */
   px2percent(pxWidth, parentWidth) {
-    const percent = Math.round((100 * pxWidth / parentWidth) * 100) / 100;
+    const percent = Math.round(((100 * pxWidth) / parentWidth) * 100) / 100;
     return percent;
   }
 
@@ -472,7 +495,7 @@ class RequestListHeader extends Component {
    */
   getVisibleColumns() {
     const { columns } = this.props;
-    return HEADERS.filter((header) => columns[header.name]);
+    return HEADERS.filter(header => columns[header.name]);
   }
 
   /**
@@ -496,7 +519,8 @@ class RequestListHeader extends Component {
     const name = header.name;
     const boxName = header.boxName || name;
     const label = header.noLocalization
-      ? name : L10N.getStr(`netmonitor.toolbar.${header.label || name}`);
+      ? name
+      : L10N.getStr(`netmonitor.toolbar.${header.label || name}`);
 
     const { scale, sort, waterfallWidth } = this.props;
     let sorted, sortedTitle;
@@ -504,9 +528,9 @@ class RequestListHeader extends Component {
 
     if (active) {
       sorted = sort.ascending ? "ascending" : "descending";
-      sortedTitle = L10N.getStr(sort.ascending
-        ? "networkMenu.sortedAsc"
-        : "networkMenu.sortedDesc");
+      sortedTitle = L10N.getStr(
+        sort.ascending ? "networkMenu.sortedAsc" : "networkMenu.sortedDesc"
+      );
     }
 
     // If the pref for this column width exists, set the style
@@ -521,15 +545,17 @@ class RequestListHeader extends Component {
     };
 
     // Support for columns resizing is currently hidden behind a pref.
-    const draggable = RESIZE_COLUMNS ? Draggable({
-      className: "column-resizer ",
-      onStart: () => this.onStartMove(),
-      onStop: () => this.onStopMove(),
-      onMove: (x) => this.onMove(name, x),
-    }) : undefined;
+    const draggable = RESIZE_COLUMNS
+      ? Draggable({
+          className: "column-resizer ",
+          onStart: () => this.onStartMove(),
+          onStop: () => this.onStopMove(),
+          onMove: x => this.onMove(name, x),
+        })
+      : undefined;
 
-    return (
-      dom.td({
+    return dom.td(
+      {
         id: `requests-list-${boxName}-header-box`,
         className: `requests-list-column requests-list-${boxName}`,
         style: columnStyle,
@@ -538,20 +564,20 @@ class RequestListHeader extends Component {
         // Used to style the next column.
         "data-active": active,
       },
-        button({
+      button(
+        {
           id: `requests-list-${name}-button`,
           className: `requests-list-header-button`,
           "data-sorted": sorted,
           title: sortedTitle ? `${label} (${sortedTitle})` : label,
-          onClick: (evt) => this.onHeaderClick(evt, name),
+          onClick: evt => this.onHeaderClick(evt, name),
         },
-          name === "waterfall"
-            ? this.waterfallLabel(waterfallWidth, scale, label)
-            : div({ className: "button-text" }, label),
-          div({ className: "button-icon" })
-        ),
-        (name !== lastVisibleColumn) && draggable
-      )
+        name === "waterfall"
+          ? this.waterfallLabel(waterfallWidth, scale, label)
+          : div({ className: "button-text" }, label),
+        div({ className: "button-icon" })
+      ),
+      name !== lastVisibleColumn && draggable
     );
   }
 
@@ -564,24 +590,24 @@ class RequestListHeader extends Component {
   }
 
   render() {
-    return (
-      dom.thead({ className: "devtools-toolbar requests-list-headers-group" },
-        dom.tr({
+    return dom.thead(
+      { className: "devtools-toolbar requests-list-headers-group" },
+      dom.tr(
+        {
           className: "requests-list-headers",
           onContextMenu: this.onContextMenu,
           ref: node => {
             this.requestListHeader = node;
           },
         },
-          this.renderColumns(),
-        )
+        this.renderColumns()
       )
     );
   }
 }
 
 module.exports = connect(
-  (state) => ({
+  state => ({
     columns: state.ui.columns,
     columnsData: state.ui.columnsData,
     firstRequestStartedMillis: state.requests.firstStartedMillis,
@@ -590,12 +616,12 @@ module.exports = connect(
     timingMarkers: state.timingMarkers,
     waterfallWidth: state.ui.waterfallWidth,
   }),
-  (dispatch) => ({
+  dispatch => ({
     resetColumns: () => dispatch(Actions.resetColumns()),
     resetSorting: () => dispatch(Actions.sortBy(null)),
-    resizeWaterfall: (width) => dispatch(Actions.resizeWaterfall(width)),
-    sortBy: (type) => dispatch(Actions.sortBy(type)),
-    toggleColumn: (column) => dispatch(Actions.toggleColumn(column)),
-    setColumnsWidth: (widths) => dispatch(Actions.setColumnsWidth(widths)),
+    resizeWaterfall: width => dispatch(Actions.resizeWaterfall(width)),
+    sortBy: type => dispatch(Actions.sortBy(type)),
+    toggleColumn: column => dispatch(Actions.toggleColumn(column)),
+    setColumnsWidth: widths => dispatch(Actions.setColumnsWidth(widths)),
   })
 )(RequestListHeader);

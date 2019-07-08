@@ -9,8 +9,8 @@
  */
 function thunk(options = {}, { dispatch, getState }) {
   return next => action => {
-    return (typeof action === "function")
-      ? action({dispatch, getState, ...options})
+    return typeof action === "function"
+      ? action({ dispatch, getState, ...options })
       : next(action);
   };
 }

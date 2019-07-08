@@ -5,7 +5,8 @@
 
 "use strict";
 
-const URL = "data:text/html;charset=utf8,test for showToolbox called while tool is opened";
+const URL =
+  "data:text/html;charset=utf8,test for showToolbox called while tool is opened";
 const lazyToolId = "testtool1";
 
 registerCleanupFunction(() => {
@@ -36,7 +37,9 @@ function isPanelReady(toolbox, toolId) {
  * returning. See Bug 1543907.
  */
 add_task(async function automaticallyBindTexbox() {
-  info("Registering a tool with an input field and making sure the context menu works");
+  info(
+    "Registering a tool with an input field and making sure the context menu works"
+  );
 
   gDevTools.registerTool({
     id: lazyToolId,
@@ -58,7 +61,10 @@ add_task(async function automaticallyBindTexbox() {
 
   ok(!isPanelReady(toolbox, lazyToolId), "lazyTool should not be ready yet");
   await gDevTools.showToolbox(toolbox.target, lazyToolId);
-  ok(isPanelReady(toolbox, lazyToolId), "lazyTool should not ready after showToolbox");
+  ok(
+    isPanelReady(toolbox, lazyToolId),
+    "lazyTool should not ready after showToolbox"
+  );
 
   // Make sure lazyTool is ready before leaving the test.
   await onLazyToolReady;

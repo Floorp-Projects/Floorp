@@ -44,10 +44,12 @@ export default class AddressOption extends ObservedPropertiesMixin(RichOption) {
   }
 
   static get observedAttributes() {
-    return RichOption.observedAttributes.concat(AddressOption.recordAttributes,
-                                                "address-fields",
-                                                "break-after-nth-field",
-                                                "data-field-separator");
+    return RichOption.observedAttributes.concat(
+      AddressOption.recordAttributes,
+      "address-fields",
+      "break-after-nth-field",
+      "data-field-separator"
+    );
   }
 
   constructor() {
@@ -62,9 +64,10 @@ export default class AddressOption extends ObservedPropertiesMixin(RichOption) {
       this[`_${name}`] = document.createElement("span");
       this[`_${name}`].classList.add(name);
       // XXX Bug 1490816: Use appropriate strings
-      let missingValueString = name.replace(/(-|^)([a-z])/g, ($0, $1, $2) => {
-        return $1.replace("-", " ") + $2.toUpperCase();
-      }) + " Missing";
+      let missingValueString =
+        name.replace(/(-|^)([a-z])/g, ($0, $1, $2) => {
+          return $1.replace("-", " ") + $2.toUpperCase();
+        }) + " Missing";
       this[`_${name}`].dataset.missingString = missingValueString;
     }
   }
@@ -81,7 +84,9 @@ export default class AddressOption extends ObservedPropertiesMixin(RichOption) {
 
   get requiredFields() {
     if (this.hasAttribute("address-fields")) {
-      let names = this.getAttribute("address-fields").trim().split(/\s+/);
+      let names = this.getAttribute("address-fields")
+        .trim()
+        .split(/\s+/);
       if (names.length) {
         return names;
       }
@@ -111,10 +116,13 @@ export default class AddressOption extends ObservedPropertiesMixin(RichOption) {
       fieldEl.textContent = this[camelCaseName] || "";
     }
 
-    let {fieldsOrder} = PaymentDialogUtils.getFormFormat(this.country);
+    let { fieldsOrder } = PaymentDialogUtils.getFormFormat(this.country);
     // A subset of the requested fields may be returned if the fields don't apply to the country.
     let requestedVisibleFields = this.addressFields || "mailing-address";
-    let visibleFields = EditAddress.computeVisibleFields(fieldsOrder, requestedVisibleFields);
+    let visibleFields = EditAddress.computeVisibleFields(
+      fieldsOrder,
+      requestedVisibleFields
+    );
     let visibleFieldCount = 0;
     let requiredFields = this.requiredFields;
     // Start by populating line 1

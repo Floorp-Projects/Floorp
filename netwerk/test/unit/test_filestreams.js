@@ -6,7 +6,8 @@
 do_get_profile();
 
 const OUTPUT_STREAM_CONTRACT_ID = "@mozilla.org/network/file-output-stream;1";
-const SAFE_OUTPUT_STREAM_CONTRACT_ID = "@mozilla.org/network/safe-file-output-stream;1";
+const SAFE_OUTPUT_STREAM_CONTRACT_ID =
+  "@mozilla.org/network/safe-file-output-stream;1";
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Helper Methods
@@ -19,13 +20,12 @@ const SAFE_OUTPUT_STREAM_CONTRACT_ID = "@mozilla.org/network/safe-file-output-st
  * @param aFile
  *        The file to modify in order for it to have a unique leafname.
  */
-function ensure_unique(aFile)
-{
+function ensure_unique(aFile) {
   ensure_unique.fileIndex = ensure_unique.fileIndex || 0;
 
   var leafName = aFile.leafName;
   while (aFile.clone().exists()) {
-    aFile.leafName = leafName + "_" + (ensure_unique.fileIndex++);
+    aFile.leafName = leafName + "_" + ensure_unique.fileIndex++;
   }
 }
 
@@ -47,20 +47,24 @@ function ensure_unique(aFile)
  *        the actual open. The stream should have a clone, so changes to the file
  *        object after Init and before Open should not affect it.
  */
-function check_access(aContractId, aDeferOpen, aTrickDeferredOpen)
-{
+function check_access(aContractId, aDeferOpen, aTrickDeferredOpen) {
   const LEAF_NAME = "filestreams-test-file.tmp";
   const TRICKY_LEAF_NAME = "BetYouDidNotExpectThat.tmp";
-  let file = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties).
-             get("ProfD", Ci.nsIFile);
+  let file = Cc["@mozilla.org/file/directory_service;1"]
+    .getService(Ci.nsIProperties)
+    .get("ProfD", Ci.nsIFile);
   file.append(LEAF_NAME);
 
   // Writing
 
   ensure_unique(file);
   let ostream = Cc[aContractId].createInstance(Ci.nsIFileOutputStream);
-  ostream.init(file, -1, -1, aDeferOpen ? Ci.nsIFileOutputStream.DEFER_OPEN : 0);
+  ostream.init(
+    file,
+    -1,
+    -1,
+    aDeferOpen ? Ci.nsIFileOutputStream.DEFER_OPEN : 0
+  );
   Assert.equal(aDeferOpen, !file.clone().exists()); // If defer, should not exist and vice versa
   if (aDeferOpen) {
     // File should appear when we do write to it.
@@ -80,23 +84,28 @@ function check_access(aContractId, aDeferOpen, aTrickDeferredOpen)
   // Reading
 
   ensure_unique(file);
-  let istream = Cc["@mozilla.org/network/file-input-stream;1"].
-                createInstance(Ci.nsIFileInputStream);
+  let istream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   var initOk, getOk;
   try {
-    istream.init(file, -1, 0, aDeferOpen ? Ci.nsIFileInputStream.DEFER_OPEN : 0);
+    istream.init(
+      file,
+      -1,
+      0,
+      aDeferOpen ? Ci.nsIFileInputStream.DEFER_OPEN : 0
+    );
     initOk = true;
-  }
-  catch(e) {
+  } catch (e) {
     initOk = false;
   }
   try {
-    let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-                  createInstance(Ci.nsIFileInputStream);
+    let fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+      Ci.nsIFileInputStream
+    );
     fstream.init(aFile, -1, 0, 0);
     getOk = true;
-  }
-  catch(e) {
+  } catch (e) {
     getOk = false;
   }
 
@@ -104,8 +113,9 @@ function check_access(aContractId, aDeferOpen, aTrickDeferredOpen)
   // intend to read does not exist, and then trying to read from it should
   // fail. The other case is where the open is not deferred, and there we should
   // get an error when we Init (and also when we try to read).
-  Assert.ok( (aDeferOpen && initOk && !getOk) ||
-             (!aDeferOpen && !initOk && !getOk) );
+  Assert.ok(
+    (aDeferOpen && initOk && !getOk) || (!aDeferOpen && !initOk && !getOk)
+  );
   istream.close();
 }
 
@@ -116,33 +126,40 @@ function check_access(aContractId, aDeferOpen, aTrickDeferredOpen)
  * @param aDeferOpen
  *        Whether to use DEFER_OPEN in the streams.
  */
-function sync_operations(aDeferOpen)
-{
+function sync_operations(aDeferOpen) {
   const TEST_DATA = "this is a test string";
   const LEAF_NAME = "filestreams-test-file.tmp";
 
-  let file = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties).
-             get("ProfD", Ci.nsIFile);
+  let file = Cc["@mozilla.org/file/directory_service;1"]
+    .getService(Ci.nsIProperties)
+    .get("ProfD", Ci.nsIFile);
   file.append(LEAF_NAME);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
-  let ostream = Cc[OUTPUT_STREAM_CONTRACT_ID].
-                createInstance(Ci.nsIFileOutputStream);
-  ostream.init(file, -1, -1, aDeferOpen ? Ci.nsIFileOutputStream.DEFER_OPEN : 0);
+  let ostream = Cc[OUTPUT_STREAM_CONTRACT_ID].createInstance(
+    Ci.nsIFileOutputStream
+  );
+  ostream.init(
+    file,
+    -1,
+    -1,
+    aDeferOpen ? Ci.nsIFileOutputStream.DEFER_OPEN : 0
+  );
 
   ostream.write(TEST_DATA, TEST_DATA.length);
   ostream.close();
 
-  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-                createInstance(Ci.nsIFileInputStream);
+  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   fstream.init(file, -1, 0, aDeferOpen ? Ci.nsIFileInputStream.DEFER_OPEN : 0);
 
-  let cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].
-                createInstance(Ci.nsIConverterInputStream);
+  let cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(
+    Ci.nsIConverterInputStream
+  );
   cstream.init(fstream, "UTF-8", 0, 0);
 
-  let string  = {};
+  let string = {};
   cstream.readString(-1, string);
   cstream.close();
   fstream.close();
@@ -153,85 +170,80 @@ function sync_operations(aDeferOpen)
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests
 
-function test_access()
-{
+function test_access() {
   check_access(OUTPUT_STREAM_CONTRACT_ID, false, false);
 }
 
-function test_access_trick()
-{
+function test_access_trick() {
   check_access(OUTPUT_STREAM_CONTRACT_ID, false, true);
 }
 
-function test_access_defer()
-{
+function test_access_defer() {
   check_access(OUTPUT_STREAM_CONTRACT_ID, true, false);
 }
 
-function test_access_defer_trick()
-{
+function test_access_defer_trick() {
   check_access(OUTPUT_STREAM_CONTRACT_ID, true, true);
 }
 
-function test_access_safe()
-{
+function test_access_safe() {
   check_access(SAFE_OUTPUT_STREAM_CONTRACT_ID, false, false);
 }
 
-function test_access_safe_trick()
-{
+function test_access_safe_trick() {
   check_access(SAFE_OUTPUT_STREAM_CONTRACT_ID, false, true);
 }
 
-function test_access_safe_defer()
-{
+function test_access_safe_defer() {
   check_access(SAFE_OUTPUT_STREAM_CONTRACT_ID, true, false);
 }
 
-function test_access_safe_defer_trick()
-{
+function test_access_safe_defer_trick() {
   check_access(SAFE_OUTPUT_STREAM_CONTRACT_ID, true, true);
 }
 
-function test_sync_operations()
-{
+function test_sync_operations() {
   sync_operations();
 }
 
-function test_sync_operations_deferred()
-{
+function test_sync_operations_deferred() {
   sync_operations(true);
 }
 
-function do_test_zero_size_buffered(disableBuffering)
-{
+function do_test_zero_size_buffered(disableBuffering) {
   const LEAF_NAME = "filestreams-test-file.tmp";
   const BUFFERSIZE = 4096;
 
-  let file = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties).
-             get("ProfD", Ci.nsIFile);
+  let file = Cc["@mozilla.org/file/directory_service;1"]
+    .getService(Ci.nsIProperties)
+    .get("ProfD", Ci.nsIFile);
   file.append(LEAF_NAME);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
-  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-                createInstance(Ci.nsIFileInputStream);
-  fstream.init(file, -1, 0,
-               Ci.nsIFileInputStream.CLOSE_ON_EOF |
-               Ci.nsIFileInputStream.REOPEN_ON_REWIND);
+  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
+  fstream.init(
+    file,
+    -1,
+    0,
+    Ci.nsIFileInputStream.CLOSE_ON_EOF | Ci.nsIFileInputStream.REOPEN_ON_REWIND
+  );
 
-  var buffered = Cc["@mozilla.org/network/buffered-input-stream;1"].
-                   createInstance(Ci.nsIBufferedInputStream);
+  var buffered = Cc[
+    "@mozilla.org/network/buffered-input-stream;1"
+  ].createInstance(Ci.nsIBufferedInputStream);
   buffered.init(fstream, BUFFERSIZE);
 
   if (disableBuffering) {
-      buffered.QueryInterface(Ci.nsIStreamBufferAccess).disableBuffering();
+    buffered.QueryInterface(Ci.nsIStreamBufferAccess).disableBuffering();
   }
 
   // Scriptable input streams clamp read sizes to the return value of
   // available(), so don't quite do what we want here.
-  let cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].
-                createInstance(Ci.nsIConverterInputStream);
+  let cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(
+    Ci.nsIConverterInputStream
+  );
   cstream.init(buffered, "UTF-8", 0, 0);
 
   Assert.equal(buffered.available(), 0);
@@ -263,10 +275,9 @@ function do_test_zero_size_buffered(disableBuffering)
   Assert.ok(!exceptionThrown);
 }
 
-function test_zero_size_buffered()
-{
-    do_test_zero_size_buffered(false);
-    do_test_zero_size_buffered(true);
+function test_zero_size_buffered() {
+  do_test_zero_size_buffered(false);
+  do_test_zero_size_buffered(true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -286,10 +297,8 @@ var tests = [
   test_zero_size_buffered,
 ];
 
-function run_test()
-{
+function run_test() {
   tests.forEach(function(test) {
     test();
   });
 }
-

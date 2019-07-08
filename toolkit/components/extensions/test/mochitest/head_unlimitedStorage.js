@@ -4,31 +4,47 @@
 
 /* exported checkSitePermissions */
 
-const {Services} = SpecialPowers;
-const {NetUtil} = SpecialPowers.Cu.import("resource://gre/modules/NetUtil.jsm", {});
+const { Services } = SpecialPowers;
+const { NetUtil } = SpecialPowers.Cu.import(
+  "resource://gre/modules/NetUtil.jsm",
+  {}
+);
 
 function checkSitePermissions(uuid, expectedPermAction, assertMessage) {
   if (!uuid) {
-    throw new Error("checkSitePermissions should not be called with an undefined uuid");
+    throw new Error(
+      "checkSitePermissions should not be called with an undefined uuid"
+    );
   }
 
   const baseURI = NetUtil.newURI(`moz-extension://${uuid}/`);
-  const principal = Services.scriptSecurityManager.createCodebasePrincipal(baseURI, {});
+  const principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    baseURI,
+    {}
+  );
 
   const sitePermissions = {
     webextUnlimitedStorage: Services.perms.testPermissionFromPrincipal(
-      principal, "WebExtensions-unlimitedStorage"
+      principal,
+      "WebExtensions-unlimitedStorage"
     ),
     indexedDB: Services.perms.testPermissionFromPrincipal(
-      principal, "indexedDB"
+      principal,
+      "indexedDB"
     ),
     persistentStorage: Services.perms.testPermissionFromPrincipal(
-      principal, "persistent-storage"
+      principal,
+      "persistent-storage"
     ),
   };
 
-  for (const [sitePermissionName, actualPermAction] of Object.entries(sitePermissions)) {
-    is(actualPermAction, expectedPermAction,
-       `The extension "${sitePermissionName}" SitePermission ${assertMessage} as expected`);
+  for (const [sitePermissionName, actualPermAction] of Object.entries(
+    sitePermissions
+  )) {
+    is(
+      actualPermAction,
+      expectedPermAction,
+      `The extension "${sitePermissionName}" SitePermission ${assertMessage} as expected`
+    );
   }
 }

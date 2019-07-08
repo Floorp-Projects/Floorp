@@ -6,11 +6,16 @@
 
 var EXPORTED_SYMBOLS = ["PrintingChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ReaderMode",
-  "resource://gre/modules/ReaderMode.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ReaderMode",
+  "resource://gre/modules/ReaderMode.jsm"
+);
 
 class PrintingChild extends ActorChild {
   // Bug 1088061: nsPrintJob's DoCommonPrint currently expects the
@@ -21,8 +26,10 @@ class PrintingChild extends ActorChild {
   // this hackery.
 
   get shouldSavePrintSettings() {
-    return Services.prefs.getBoolPref("print.use_global_printsettings") &&
-           Services.prefs.getBoolPref("print.save_print_settings");
+    return (
+      Services.prefs.getBoolPref("print.use_global_printsettings") &&
+      Services.prefs.getBoolPref("print.save_print_settings")
+    );
   }
 
   handleEvent(event) {
@@ -72,10 +79,12 @@ class PrintingChild extends ActorChild {
     let data = message.data;
     switch (message.name) {
       case "Printing:Preview:Enter": {
-        this.enterPrintPreview(Services.wm.getOuterWindowWithId(data.windowID),
-                               data.simplifiedMode,
-                               data.changingBrowsers,
-                               data.defaultPrinterName);
+        this.enterPrintPreview(
+          Services.wm.getOuterWindowWithId(data.windowID),
+          data.simplifiedMode,
+          data.changingBrowsers,
+          data.defaultPrinterName
+        );
         break;
       }
 
@@ -90,14 +99,19 @@ class PrintingChild extends ActorChild {
       }
 
       case "Printing:Preview:ParseDocument": {
-        this.parseDocument(data.URL, Services.wm.getOuterWindowWithId(data.windowID));
+        this.parseDocument(
+          data.URL,
+          Services.wm.getOuterWindowWithId(data.windowID)
+        );
         break;
       }
 
       case "Printing:Print": {
-        this.print(Services.wm.getOuterWindowWithId(data.windowID),
-                   data.simplifiedMode,
-                   data.defaultPrinterName);
+        this.print(
+          Services.wm.getOuterWindowWithId(data.windowID),
+          data.simplifiedMode,
+          data.defaultPrinterName
+        );
         break;
       }
     }
@@ -105,19 +119,25 @@ class PrintingChild extends ActorChild {
 
   getPrintSettings(defaultPrinterName) {
     try {
-      let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
-                    .getService(Ci.nsIPrintSettingsService);
+      let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+        Ci.nsIPrintSettingsService
+      );
 
       let printSettings = PSSVC.globalPrintSettings;
       if (!printSettings.printerName) {
         printSettings.printerName = defaultPrinterName;
       }
       // First get any defaults from the printer
-      PSSVC.initPrintSettingsFromPrinter(printSettings.printerName,
-                                         printSettings);
+      PSSVC.initPrintSettingsFromPrinter(
+        printSettings.printerName,
+        printSettings
+      );
       // now augment them with any values from last time
-      PSSVC.initPrintSettingsFromPrefs(printSettings, true,
-                                       printSettings.kInitSaveAll);
+      PSSVC.initPrintSettingsFromPrefs(
+        printSettings,
+        true,
+        printSettings.kInitSaveAll
+      );
 
       return printSettings;
     } catch (e) {
@@ -130,12 +150,14 @@ class PrintingChild extends ActorChild {
   parseDocument(URL, contentWindow) {
     // By using ReaderMode primitives, we parse given document and place the
     // resulting JS object into the DOM of current browser.
-    let articlePromise = ReaderMode.parseDocument(contentWindow.document).catch(Cu.reportError);
-    articlePromise.then((article) => {
+    let articlePromise = ReaderMode.parseDocument(contentWindow.document).catch(
+      Cu.reportError
+    );
+    articlePromise.then(article => {
       // We make use of a web progress listener in order to know when the content we inject
       // into the DOM has finished rendering. If our layout engine is still painting, we
       // will wait for MozAfterPaint event to be fired.
-      let {mm} = this;
+      let { mm } = this;
       let webProgressListener = {
         onStateChange(webProgress, req, flags, status) {
           if (flags & Ci.nsIWebProgressListener.STATE_STOP) {
@@ -167,12 +189,16 @@ class PrintingChild extends ActorChild {
         ]),
       };
 
-      const {content, docShell} = this.mm;
+      const { content, docShell } = this.mm;
 
       // Here we QI the docShell into a nsIWebProgress passing our web progress listener in.
-      let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIWebProgress);
-      webProgress.addProgressListener(webProgressListener, Ci.nsIWebProgress.NOTIFY_STATE_REQUEST);
+      let webProgress = docShell
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIWebProgress);
+      webProgress.addProgressListener(
+        webProgressListener,
+        Ci.nsIWebProgress.NOTIFY_STATE_REQUEST
+      );
 
       content.document.head.innerHTML = "";
 
@@ -186,14 +212,20 @@ class PrintingChild extends ActorChild {
       // Create link element referencing aboutReader.css and append it to head
       let headStyleElement = content.document.createElement("link");
       headStyleElement.setAttribute("rel", "stylesheet");
-      headStyleElement.setAttribute("href", "chrome://global/skin/aboutReader.css");
+      headStyleElement.setAttribute(
+        "href",
+        "chrome://global/skin/aboutReader.css"
+      );
       headStyleElement.setAttribute("type", "text/css");
       content.document.head.appendChild(headStyleElement);
 
       // Create link element referencing simplifyMode.css and append it to head
       headStyleElement = content.document.createElement("link");
       headStyleElement.setAttribute("rel", "stylesheet");
-      headStyleElement.setAttribute("href", "chrome://global/content/simplifyMode.css");
+      headStyleElement.setAttribute(
+        "href",
+        "chrome://global/content/simplifyMode.css"
+      );
       headStyleElement.setAttribute("type", "text/css");
       content.document.head.appendChild(headStyleElement);
 
@@ -242,18 +274,29 @@ class PrintingChild extends ActorChild {
         contentElement.appendChild(readerContent);
 
         let articleUri = Services.io.newURI(article.url);
-        let parserUtils = Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils);
-        let contentFragment = parserUtils.parseFragment(article.content,
-          Ci.nsIParserUtils.SanitizerDropForms | Ci.nsIParserUtils.SanitizerAllowStyle,
-          false, articleUri, readerContent);
+        let parserUtils = Cc["@mozilla.org/parserutils;1"].getService(
+          Ci.nsIParserUtils
+        );
+        let contentFragment = parserUtils.parseFragment(
+          article.content,
+          Ci.nsIParserUtils.SanitizerDropForms |
+            Ci.nsIParserUtils.SanitizerAllowStyle,
+          false,
+          articleUri,
+          readerContent
+        );
 
         readerContent.appendChild(contentFragment);
 
         // Display reader content element
         readerContent.style.display = "block";
       } else {
-        let aboutReaderStrings = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
-        let errorMessage = aboutReaderStrings.GetStringFromName("aboutReader.loadError");
+        let aboutReaderStrings = Services.strings.createBundle(
+          "chrome://global/locale/aboutReader.properties"
+        );
+        let errorMessage = aboutReaderStrings.GetStringFromName(
+          "aboutReader.loadError"
+        );
 
         content.document.title = errorMessage;
 
@@ -269,16 +312,22 @@ class PrintingChild extends ActorChild {
     });
   }
 
-  enterPrintPreview(contentWindow, simplifiedMode, changingBrowsers, defaultPrinterName) {
-    const {docShell} = this;
+  enterPrintPreview(
+    contentWindow,
+    simplifiedMode,
+    changingBrowsers,
+    defaultPrinterName
+  ) {
+    const { docShell } = this;
     try {
       let printSettings = this.getPrintSettings(defaultPrinterName);
 
       // If we happen to be on simplified mode, we need to set docURL in order
       // to generate header/footer content correctly, since simplified tab has
       // "about:blank" as its URI.
-      if (printSettings && simplifiedMode)
+      if (printSettings && simplifiedMode) {
         printSettings.docURL = contentWindow.document.baseURI;
+      }
 
       // The print preview docshell will be in a different TabGroup, so
       // printPreviewInitialize must be run in a separate runnable to avoid
@@ -288,13 +337,17 @@ class PrintingChild extends ActorChild {
           let listener = new PrintingListener(this.mm);
 
           this.printPreviewInitializingInfo = { changingBrowsers };
-          docShell.initOrReusePrintPreviewViewer().printPreview(printSettings, contentWindow, listener);
+          docShell
+            .initOrReusePrintPreviewViewer()
+            .printPreview(printSettings, contentWindow, listener);
         } catch (error) {
           // This might fail if we, for example, attempt to print a XUL document.
           // In that case, we inform the parent to bail out of print preview.
           Cu.reportError(error);
           this.printPreviewInitializingInfo = null;
-          this.mm.sendAsyncMessage("Printing:Preview:Entered", { failed: true });
+          this.mm.sendAsyncMessage("Printing:Preview:Entered", {
+            failed: true,
+          });
         }
       };
 
@@ -302,8 +355,10 @@ class PrintingChild extends ActorChild {
       // initial setup of a previous preview request. We delay this one until
       // that has finished because running them at the same time will almost
       // certainly cause failures.
-      if (this.printPreviewInitializingInfo &&
-          !this.printPreviewInitializingInfo.entered) {
+      if (
+        this.printPreviewInitializingInfo &&
+        !this.printPreviewInitializingInfo.entered
+      ) {
         this.printPreviewInitializingInfo.nextRequest = printPreviewInitialize;
       } else {
         Services.tm.dispatchToMainThread(printPreviewInitialize);
@@ -367,15 +422,24 @@ class PrintingChild extends ActorChild {
       }
     }
 
-    if ((!printCancelled || printSettings.saveOnCancel) &&
-        this.shouldSavePrintSettings) {
-      let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
-                    .getService(Ci.nsIPrintSettingsService);
+    if (
+      (!printCancelled || printSettings.saveOnCancel) &&
+      this.shouldSavePrintSettings
+    ) {
+      let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+        Ci.nsIPrintSettingsService
+      );
 
-      PSSVC.savePrintSettingsToPrefs(printSettings, true,
-                                     printSettings.kInitSaveAll);
-      PSSVC.savePrintSettingsToPrefs(printSettings, false,
-                                     printSettings.kInitSavePrinterName);
+      PSSVC.savePrintSettingsToPrefs(
+        printSettings,
+        true,
+        printSettings.kInitSaveAll
+      );
+      PSSVC.savePrintSettingsToPrefs(
+        printSettings,
+        false,
+        printSettings.kInitSavePrinterName
+      );
     }
   }
 
@@ -385,19 +449,23 @@ class PrintingChild extends ActorChild {
   }
 
   updatePageCount() {
-    let numPages = this.docShell.initOrReusePrintPreviewViewer().printPreviewNumPages;
+    let numPages = this.docShell.initOrReusePrintPreviewViewer()
+      .printPreviewNumPages;
     this.mm.sendAsyncMessage("Printing:Preview:UpdatePageCount", {
       numPages,
     });
   }
 
   navigate(navType, pageNum) {
-    this.docShell.initOrReusePrintPreviewViewer().printPreviewScrollToPage(navType, pageNum);
+    this.docShell
+      .initOrReusePrintPreviewViewer()
+      .printPreviewScrollToPage(navType, pageNum);
   }
 }
 
-PrintingChild.prototype.QueryInterface =
-  ChromeUtils.generateQI([Ci.nsIPrintingPromptService]);
+PrintingChild.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsIPrintingPromptService,
+]);
 
 function PrintingListener(global) {
   this.global = global;
@@ -412,9 +480,14 @@ PrintingListener.prototype = {
     });
   },
 
-  onProgressChange(aWebProgress, aRequest, aCurSelfProgress,
-                   aMaxSelfProgress, aCurTotalProgress,
-                   aMaxTotalProgress) {
+  onProgressChange(
+    aWebProgress,
+    aRequest,
+    aCurSelfProgress,
+    aMaxSelfProgress,
+    aCurTotalProgress,
+    aMaxTotalProgress
+  ) {
     this.global.sendAsyncMessage("Printing:Preview:ProgressChange", {
       curSelfProgress: aCurSelfProgress,
       maxSelfProgress: aMaxSelfProgress,

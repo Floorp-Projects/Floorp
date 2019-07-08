@@ -4,9 +4,13 @@
 
 /* eslint-env mozilla/frame-script */
 
-const {PageThumbUtils} = ChromeUtils.import("resource://gre/modules/PageThumbUtils.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { PageThumbUtils } = ChromeUtils.import(
+  "resource://gre/modules/PageThumbUtils.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["Blob", "FileReader"]);
 
@@ -27,33 +31,36 @@ const STATE_CANCELED = 3;
 const SANDBOXED_AUXILIARY_NAVIGATION = 0x2;
 
 const backgroundPageThumbsContent = {
-
   init() {
     Services.obs.addObserver(this, "document-element-inserted", true);
 
     // We want a low network priority for this service - lower than b/g tabs
     // etc - so set it to the lowest priority available.
-    this._webNav.QueryInterface(Ci.nsIDocumentLoader).
-      loadGroup.QueryInterface(Ci.nsISupportsPriority).
-      priority = Ci.nsISupportsPriority.PRIORITY_LOWEST;
+    this._webNav
+      .QueryInterface(Ci.nsIDocumentLoader)
+      .loadGroup.QueryInterface(Ci.nsISupportsPriority).priority =
+      Ci.nsISupportsPriority.PRIORITY_LOWEST;
 
     docShell.allowMedia = false;
     docShell.allowPlugins = false;
     docShell.allowContentRetargeting = false;
-    let defaultFlags = Ci.nsIRequest.LOAD_ANONYMOUS |
-                       Ci.nsIRequest.LOAD_BYPASS_CACHE |
-                       Ci.nsIRequest.INHIBIT_CACHING |
-                       Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
+    let defaultFlags =
+      Ci.nsIRequest.LOAD_ANONYMOUS |
+      Ci.nsIRequest.LOAD_BYPASS_CACHE |
+      Ci.nsIRequest.INHIBIT_CACHING |
+      Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
     docShell.defaultLoadFlags = defaultFlags;
     docShell.sandboxFlags |= SANDBOXED_AUXILIARY_NAVIGATION;
     docShell.useTrackingProtection = true;
 
-    addMessageListener("BackgroundPageThumbs:capture",
-                       this._onCapture.bind(this));
-    docShell.
-      QueryInterface(Ci.nsIInterfaceRequestor).
-      getInterface(Ci.nsIWebProgress).
-      addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
+    addMessageListener(
+      "BackgroundPageThumbs:capture",
+      this._onCapture.bind(this)
+    );
+    docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress)
+      .addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
   },
 
   observe(subj, topic, data) {
@@ -92,8 +99,9 @@ const backgroundPageThumbsContent = {
   },
 
   _startNextCapture() {
-    if (!this._nextCapture)
+    if (!this._nextCapture) {
       return;
+    }
     this._currentCapture = this._nextCapture;
     delete this._nextCapture;
     this._state = STATE_LOADING;
@@ -112,9 +120,11 @@ const backgroundPageThumbsContent = {
   },
 
   onStateChange(webProgress, req, flags, status) {
-    if (webProgress.isTopLevel &&
-        (flags & Ci.nsIWebProgressListener.STATE_STOP) &&
-        this._currentCapture) {
+    if (
+      webProgress.isTopLevel &&
+      flags & Ci.nsIWebProgressListener.STATE_STOP &&
+      this._currentCapture
+    ) {
       if (req.name == "about:blank") {
         if (this._state == STATE_CAPTURING) {
           // about:blank has loaded, ending the current capture.
@@ -125,9 +135,10 @@ const backgroundPageThumbsContent = {
           delete this._currentCapture;
           this._startNextCapture();
         }
-      } else if (this._state == STATE_LOADING &&
-                 (Components.isSuccessCode(status) ||
-                  status === Cr.NS_BINDING_ABORTED)) {
+      } else if (
+        this._state == STATE_LOADING &&
+        (Components.isSuccessCode(status) || status === Cr.NS_BINDING_ABORTED)
+      ) {
         // The requested page has loaded or stopped/aborted, so capture the page
         // soon but first let it settle in case of in-page redirects
         if (this._captureTimer) {
@@ -135,13 +146,18 @@ const backgroundPageThumbsContent = {
           this._captureTimer.delay = SETTLE_WAIT_TIME;
         } else {
           // Stay in LOADING until we're actually ready to be CAPTURING
-          this._captureTimer =
-            Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-          this._captureTimer.init(() => {
-            this._state = STATE_CAPTURING;
-            this._captureCurrentPage();
-            delete this._captureTimer;
-          }, SETTLE_WAIT_TIME, Ci.nsITimer.TYPE_ONE_SHOT);
+          this._captureTimer = Cc["@mozilla.org/timer;1"].createInstance(
+            Ci.nsITimer
+          );
+          this._captureTimer.init(
+            () => {
+              this._state = STATE_CAPTURING;
+              this._captureCurrentPage();
+              delete this._captureTimer;
+            },
+            SETTLE_WAIT_TIME,
+            Ci.nsITimer.TYPE_ONE_SHOT
+          );
         }
       } else if (this._state != STATE_CANCELED) {
         // Something went wrong.  Cancel the capture.  Loading about:blank
@@ -149,12 +165,17 @@ const backgroundPageThumbsContent = {
         // the request if it redirects, so do it asyncly.
         this._state = STATE_CANCELED;
         if (!this._cancelTimer) {
-          this._cancelTimer =
-            Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-          this._cancelTimer.init(() => {
-            this._loadAboutBlank();
-            delete this._cancelTimer;
-          }, 0, Ci.nsITimer.TYPE_ONE_SHOT);
+          this._cancelTimer = Cc["@mozilla.org/timer;1"].createInstance(
+            Ci.nsITimer
+          );
+          this._cancelTimer.init(
+            () => {
+              this._loadAboutBlank();
+              delete this._cancelTimer;
+            },
+            0,
+            Ci.nsITimer.TYPE_ONE_SHOT
+          );
         }
       }
     }
@@ -171,8 +192,16 @@ const backgroundPageThumbsContent = {
       docShell.isActive = true;
 
       let finalCanvas;
-      if (capture.isImage || content.document instanceof content.ImageDocument) {
-        finalCanvas = await PageThumbUtils.createImageThumbnailCanvas(content, capture.url, capture.targetWidth, capture.backgroundColor);
+      if (
+        capture.isImage ||
+        content.document instanceof content.ImageDocument
+      ) {
+        finalCanvas = await PageThumbUtils.createImageThumbnailCanvas(
+          content,
+          capture.url,
+          capture.targetWidth,
+          capture.backgroundColor
+        );
       } else {
         finalCanvas = PageThumbUtils.createSnapshotThumbnail(content, null);
       }
@@ -187,7 +216,9 @@ const backgroundPageThumbsContent = {
       });
     };
     let win = docShell.domWindow;
-    win.requestIdleCallback(() => doCapture().catch(ex => this._failCurrentCapture(ex.message)));
+    win.requestIdleCallback(() =>
+      doCapture().catch(ex => this._failCurrentCapture(ex.message))
+    );
   },
 
   _finishCurrentCapture() {

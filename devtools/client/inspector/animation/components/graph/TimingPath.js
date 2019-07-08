@@ -45,7 +45,12 @@ class TimingPath extends PureComponent {
     }
 
     if (state.duration === Infinity) {
-      this.renderInfinityDuration(pathList, state, mainIterationStartTime, helper);
+      this.renderInfinityDuration(
+        pathList,
+        state,
+        mainIterationStartTime,
+        helper
+      );
       return pathList;
     }
 
@@ -54,48 +59,83 @@ class TimingPath extends PureComponent {
     // e.g.
     // if { iterationStart: 0.25, iterations: 3 }, firstSectionCount is 0.75.
     const firstSectionCount =
-      iterationStart % 1 === 0 ? 0 : Math.min(1 - iterationStart % 1, iterationCount);
+      iterationStart % 1 === 0
+        ? 0
+        : Math.min(1 - (iterationStart % 1), iterationCount);
 
     if (firstSectionCount) {
-      this.renderFirstIteration(pathList, state,
-                                mainIterationStartTime, firstSectionCount, helper);
+      this.renderFirstIteration(
+        pathList,
+        state,
+        mainIterationStartTime,
+        firstSectionCount,
+        helper
+      );
     }
 
     if (iterationCount === Infinity) {
       // If the animation repeats infinitely,
       // we fill the remaining area with iteration paths.
-      this.renderInfinity(pathList, state,
-                          mainIterationStartTime, firstSectionCount, helper);
+      this.renderInfinity(
+        pathList,
+        state,
+        mainIterationStartTime,
+        firstSectionCount,
+        helper
+      );
     } else {
       // Otherwise, we show remaining iterations, endDelay and fill.
 
       // Append forwards fill-mode.
       if (state.fill === "both" || state.fill === "forwards") {
-        this.renderForwardsFill(pathList, state,
-                                mainIterationStartTime, iterationCount, helper);
+        this.renderForwardsFill(
+          pathList,
+          state,
+          mainIterationStartTime,
+          iterationCount,
+          helper
+        );
       }
 
       // Append middle section of iterations.
       // e.g.
       // if { iterationStart: 0.25, iterations: 3 }, middleSectionCount is 2.
       const middleSectionCount = Math.floor(iterationCount - firstSectionCount);
-      this.renderMiddleIterations(pathList, state, mainIterationStartTime,
-                                  firstSectionCount, middleSectionCount, helper);
+      this.renderMiddleIterations(
+        pathList,
+        state,
+        mainIterationStartTime,
+        firstSectionCount,
+        middleSectionCount,
+        helper
+      );
 
       // Append last section of iterations, if there is remaining iteration.
       // e.g.
       // if { iterationStart: 0.25, iterations: 3 }, lastSectionCount is 0.25.
-      const lastSectionCount = iterationCount - middleSectionCount - firstSectionCount;
+      const lastSectionCount =
+        iterationCount - middleSectionCount - firstSectionCount;
       if (lastSectionCount) {
-        this.renderLastIteration(pathList, state, mainIterationStartTime,
-                                 firstSectionCount, middleSectionCount,
-                                 lastSectionCount, helper);
+        this.renderLastIteration(
+          pathList,
+          state,
+          mainIterationStartTime,
+          firstSectionCount,
+          middleSectionCount,
+          lastSectionCount,
+          helper
+        );
       }
 
       // Append endDelay.
       if (state.endDelay > 0) {
-        this.renderEndDelay(pathList, state,
-                            mainIterationStartTime, iterationCount, helper);
+        this.renderEndDelay(
+          pathList,
+          state,
+          mainIterationStartTime,
+          iterationCount,
+          helper
+        );
       }
     }
     return pathList;
@@ -116,12 +156,10 @@ class TimingPath extends PureComponent {
     const endSegment = { x: state.delay, y: startSegment.y };
     const segments = [startSegment, endSegment];
     pathList.push(
-      dom.path(
-        {
-          className: "animation-delay-path",
-          d: helper.toPathString(segments),
-        }
-      )
+      dom.path({
+        className: "animation-delay-path",
+        d: helper.toPathString(segments),
+      })
     );
   }
 
@@ -140,18 +178,21 @@ class TimingPath extends PureComponent {
    * @param {SummaryGraphHelper} helper
    *        Instance of SummaryGraphHelper.
    */
-  renderFirstIteration(pathList, state, mainIterationStartTime,
-                       firstSectionCount, helper) {
+  renderFirstIteration(
+    pathList,
+    state,
+    mainIterationStartTime,
+    firstSectionCount,
+    helper
+  ) {
     const startTime = mainIterationStartTime;
     const endTime = startTime + firstSectionCount * state.duration;
     const segments = helper.createPathSegments(startTime, endTime);
     pathList.push(
-      dom.path(
-        {
-          className: "animation-iteration-path",
-          d: helper.toPathString(segments),
-        }
-      )
+      dom.path({
+        className: "animation-iteration-path",
+        d: helper.toPathString(segments),
+      })
     );
   }
 
@@ -171,8 +212,14 @@ class TimingPath extends PureComponent {
    * @param {SummaryGraphHelper} helper
    *        Instance of SummaryGraphHelper.
    */
-  renderMiddleIterations(pathList, state, mainIterationStartTime,
-                         firstSectionCount, middleSectionCount, helper) {
+  renderMiddleIterations(
+    pathList,
+    state,
+    mainIterationStartTime,
+    firstSectionCount,
+    middleSectionCount,
+    helper
+  ) {
     const offset = mainIterationStartTime + firstSectionCount * state.duration;
     for (let i = 0; i < middleSectionCount; i++) {
       // Get the path segments of each iteration.
@@ -180,12 +227,10 @@ class TimingPath extends PureComponent {
       const endTime = startTime + state.duration;
       const segments = helper.createPathSegments(startTime, endTime);
       pathList.push(
-        dom.path(
-          {
-            className: "animation-iteration-path",
-            d: helper.toPathString(segments),
-          }
-        )
+        dom.path({
+          className: "animation-iteration-path",
+          d: helper.toPathString(segments),
+        })
       );
     }
   }
@@ -209,19 +254,25 @@ class TimingPath extends PureComponent {
    * @param {SummaryGraphHelper} helper
    *        Instance of SummaryGraphHelper.
    */
-  renderLastIteration(pathList, state, mainIterationStartTime, firstSectionCount,
-                      middleSectionCount, lastSectionCount, helper) {
-    const startTime = mainIterationStartTime
-                    + (firstSectionCount + middleSectionCount) * state.duration;
+  renderLastIteration(
+    pathList,
+    state,
+    mainIterationStartTime,
+    firstSectionCount,
+    middleSectionCount,
+    lastSectionCount,
+    helper
+  ) {
+    const startTime =
+      mainIterationStartTime +
+      (firstSectionCount + middleSectionCount) * state.duration;
     const endTime = startTime + lastSectionCount * state.duration;
     const segments = helper.createPathSegments(startTime, endTime);
     pathList.push(
-      dom.path(
-        {
-          className: "animation-iteration-path",
-          d: helper.toPathString(segments),
-        }
-      )
+      dom.path({
+        className: "animation-iteration-path",
+        d: helper.toPathString(segments),
+      })
     );
   }
 
@@ -239,30 +290,41 @@ class TimingPath extends PureComponent {
    * @param {SummaryGraphHelper} helper
    *        Instance of SummaryGraphHelper.
    */
-  renderInfinity(pathList, state, mainIterationStartTime, firstSectionCount, helper) {
+  renderInfinity(
+    pathList,
+    state,
+    mainIterationStartTime,
+    firstSectionCount,
+    helper
+  ) {
     // Calculate the number of iterations to display,
     // with a maximum of MAX_INFINITE_ANIMATIONS_ITERATIONS
     let uncappedInfinityIterationCount =
-      (helper.totalDuration - firstSectionCount * state.duration) / state.duration;
+      (helper.totalDuration - firstSectionCount * state.duration) /
+      state.duration;
     // If there is a small floating point error resulting in, e.g. 1.0000001
     // ceil will give us 2 so round first.
-    uncappedInfinityIterationCount =
-      parseFloat(uncappedInfinityIterationCount.toPrecision(6));
-    const infinityIterationCount = Math.min(MAX_INFINITE_ANIMATIONS_ITERATIONS,
-                                            Math.ceil(uncappedInfinityIterationCount));
+    uncappedInfinityIterationCount = parseFloat(
+      uncappedInfinityIterationCount.toPrecision(6)
+    );
+    const infinityIterationCount = Math.min(
+      MAX_INFINITE_ANIMATIONS_ITERATIONS,
+      Math.ceil(uncappedInfinityIterationCount)
+    );
 
     // Append first full iteration path.
     const firstStartTime =
       mainIterationStartTime + firstSectionCount * state.duration;
     const firstEndTime = firstStartTime + state.duration;
-    const firstSegments = helper.createPathSegments(firstStartTime, firstEndTime);
+    const firstSegments = helper.createPathSegments(
+      firstStartTime,
+      firstEndTime
+    );
     pathList.push(
-      dom.path(
-        {
-          className: "animation-iteration-path",
-          d: helper.toPathString(firstSegments),
-        }
-      )
+      dom.path({
+        className: "animation-iteration-path",
+        d: helper.toPathString(firstSegments),
+      })
     );
 
     // Append other iterations. We can copy first segments.
@@ -282,12 +344,10 @@ class TimingPath extends PureComponent {
         });
       }
       pathList.push(
-        dom.path(
-          {
-            className: "animation-iteration-path infinity",
-            d: helper.toPathString(segments),
-          }
-        )
+        dom.path({
+          className: "animation-iteration-path infinity",
+          d: helper.toPathString(segments),
+        })
       );
     }
   }
@@ -309,12 +369,10 @@ class TimingPath extends PureComponent {
     const endSegment = { x: helper.totalDuration, y: startSegment.y };
     const segments = [startSegment, endSegment];
     pathList.push(
-      dom.path(
-        {
-          className: "animation-iteration-path infinity-duration",
-          d: helper.toPathString(segments),
-        }
-      )
+      dom.path({
+        className: "animation-iteration-path infinity-duration",
+        d: helper.toPathString(segments),
+      })
     );
   }
 
@@ -332,17 +390,21 @@ class TimingPath extends PureComponent {
    * @param {SummaryGraphHelper} helper
    *        Instance of SummaryGraphHelper.
    */
-  renderEndDelay(pathList, state, mainIterationStartTime, iterationCount, helper) {
+  renderEndDelay(
+    pathList,
+    state,
+    mainIterationStartTime,
+    iterationCount,
+    helper
+  ) {
     const startTime = mainIterationStartTime + iterationCount * state.duration;
     const startSegment = helper.getSegment(startTime);
     const endSegment = { x: startTime + state.endDelay, y: startSegment.y };
     pathList.push(
-      dom.path(
-        {
-          className: "animation-enddelay-path",
-          d: helper.toPathString([startSegment, endSegment]),
-        }
-      )
+      dom.path({
+        className: "animation-enddelay-path",
+        d: helper.toPathString([startSegment, endSegment]),
+      })
     );
   }
 
@@ -361,18 +423,24 @@ class TimingPath extends PureComponent {
    * @param {SummaryGraphHelper} helper
    *        Instance of SummaryGraphHelper.
    */
-  renderForwardsFill(pathList, state, mainIterationStartTime, iterationCount, helper) {
-    const startTime = mainIterationStartTime + iterationCount * state.duration
-                    + (state.endDelay > 0 ? state.endDelay : 0);
+  renderForwardsFill(
+    pathList,
+    state,
+    mainIterationStartTime,
+    iterationCount,
+    helper
+  ) {
+    const startTime =
+      mainIterationStartTime +
+      iterationCount * state.duration +
+      (state.endDelay > 0 ? state.endDelay : 0);
     const startSegment = helper.getSegment(startTime);
     const endSegment = { x: helper.totalDuration, y: startSegment.y };
     pathList.push(
-      dom.path(
-        {
-          className: "animation-fill-forwards-path",
-          d: helper.toPathString([startSegment, endSegment]),
-        }
-      )
+      dom.path({
+        className: "animation-fill-forwards-path",
+        d: helper.toPathString([startSegment, endSegment]),
+      })
     );
   }
 }

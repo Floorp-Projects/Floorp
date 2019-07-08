@@ -12,7 +12,9 @@
  */
 
 const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = [
-  { url: "sjs_content-type-test-server.sjs?fmt=html&res=undefined&text=Sample" },
+  {
+    url: "sjs_content-type-test-server.sjs?fmt=html&res=undefined&text=Sample",
+  },
   { url: "sjs_content-type-test-server.sjs?fmt=css&text=sample" },
   { url: "sjs_content-type-test-server.sjs?fmt=js&text=sample" },
   { url: "sjs_content-type-test-server.sjs?fmt=font" },
@@ -27,10 +29,9 @@ add_task(async function() {
   const { monitor } = await initNetMonitor(FILTERING_URL);
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getSelectedRequest,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getSelectedRequest, getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -46,21 +47,31 @@ add_task(async function() {
   await wait;
 
   info("Test with the first request in the list visible");
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-all-button"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".requests-list-filter-all-button")
+  );
   testDetailsPanel(true, 0);
 
   info("Test with first request in the list not visible");
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-all-button"));
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-js-button"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".requests-list-filter-all-button")
+  );
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".requests-list-filter-js-button")
+  );
   testFilterButtons(monitor, "js");
   testDetailsPanel(true, 2);
 
-  info("Test with no request in the list visible i.e. no request match the filters");
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-all-button"));
+  info(
+    "Test with no request in the list visible i.e. no request match the filters"
+  );
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".requests-list-filter-all-button")
+  );
   setFreetextFilter("foobar");
   // The network details panel should not open as there are no available requests visible
   testDetailsPanel(false);
@@ -71,17 +82,27 @@ add_task(async function() {
     if (!state.requests.selectedId) {
       return -1;
     }
-    return getSortedRequests(state).findIndex(r => r.id === state.requests.selectedId);
+    return getSortedRequests(state).findIndex(
+      r => r.id === state.requests.selectedId
+    );
   }
 
   async function testDetailsPanel(shouldPanelOpen, selectedItemIndex = 0) {
     // Expected default state should be panel closed
-    ok(!document.querySelector(".sidebar-toggle"),
-      "The pane toggle button should not be visible.");
-    is(!!document.querySelector(".network-details-panel"), false,
-      "The details pane should still be hidden.");
-    is(getSelectedRequest(store.getState()), null,
-      "There should still be no selected item in the requests menu.");
+    ok(
+      !document.querySelector(".sidebar-toggle"),
+      "The pane toggle button should not be visible."
+    );
+    is(
+      !!document.querySelector(".network-details-panel"),
+      false,
+      "The details pane should still be hidden."
+    );
+    is(
+      getSelectedRequest(store.getState()),
+      null,
+      "There should still be no selected item in the requests menu."
+    );
 
     // Trigger the details panel toggle action
     store.dispatch(Actions.toggleNetworkDetails());
@@ -89,23 +110,41 @@ add_task(async function() {
     const toggleButton = document.querySelector(".sidebar-toggle");
 
     if (shouldPanelOpen) {
-      is(toggleButton.classList.contains("pane-collapsed"), false,
+      is(
+        toggleButton.classList.contains("pane-collapsed"),
+        false,
         "The pane toggle button should now indicate that the details pane is " +
-        "not collapsed anymore after being pressed.");
-      is(!!document.querySelector(".network-details-panel"), true,
-        "The details pane should not be hidden after toggle button was pressed.");
-      isnot(getSelectedRequest(store.getState()), null,
-        "There should be a selected item in the requests menu.");
-      is(getSelectedIndex(store.getState()), selectedItemIndex,
-        `The item index ${selectedItemIndex} should be selected in the requests menu.`);
+          "not collapsed anymore after being pressed."
+      );
+      is(
+        !!document.querySelector(".network-details-panel"),
+        true,
+        "The details pane should not be hidden after toggle button was pressed."
+      );
+      isnot(
+        getSelectedRequest(store.getState()),
+        null,
+        "There should be a selected item in the requests menu."
+      );
+      is(
+        getSelectedIndex(store.getState()),
+        selectedItemIndex,
+        `The item index ${selectedItemIndex} should be selected in the requests menu.`
+      );
       // Close the panel
       EventUtils.sendMouseEvent({ type: "click" }, toggleButton);
     } else {
       ok(!toggleButton, "The pane toggle button should be not visible.");
-      is(!!document.querySelector(".network-details-panel"), false,
-        "The details pane should still be hidden.");
-      is(getSelectedRequest(store.getState()), null,
-        "There should still be no selected item in the requests menu.");
+      is(
+        !!document.querySelector(".network-details-panel"),
+        false,
+        "The details pane should still be hidden."
+      );
+      is(
+        getSelectedRequest(store.getState()),
+        null,
+        "There should still be no selected item in the requests menu."
+      );
     }
   }
 });

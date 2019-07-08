@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
   const objectStoreName = "Foo";
@@ -24,14 +23,15 @@ function* testSteps()
   let db = event.target.result;
   db.onerror = errorHandler;
 
-  let objectStore = db.createObjectStore(objectStoreName, { });
+  let objectStore = db.createObjectStore(objectStoreName, {});
 
   event = yield undefined;
 
   is(event.type, "success", "Got correct event type");
 
-  objectStore = db.transaction([objectStoreName], "readwrite")
-                  .objectStore(objectStoreName);
+  objectStore = db
+    .transaction([objectStoreName], "readwrite")
+    .objectStore(objectStoreName);
 
   request = objectStore.get(data.key);
   request.onsuccess = grabEventAndContinueHandler;
@@ -46,7 +46,10 @@ function* testSteps()
   is(event.target.result, data.key, "Got correct key");
 
   let uri = Services.io.newURI("http://appdata.example.com");
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    uri,
+    {}
+  );
 
   request = indexedDB.openForPrincipal(principal, name, 1);
   request.onerror = errorHandler;
@@ -59,14 +62,13 @@ function* testSteps()
   db = event.target.result;
   db.onerror = errorHandler;
 
-  objectStore = db.createObjectStore(objectStoreName, { });
+  objectStore = db.createObjectStore(objectStoreName, {});
 
   event = yield undefined;
 
   is(event.type, "success", "Got correct event type");
 
-  objectStore = db.transaction([objectStoreName])
-                  .objectStore(objectStoreName);
+  objectStore = db.transaction([objectStoreName]).objectStore(objectStoreName);
 
   request = objectStore.get(data.key);
   request.onsuccess = grabEventAndContinueHandler;

@@ -23,7 +23,7 @@ add_task(async function removeWebextension() {
     manifest: {
       name: addonName,
       applications: {
-        gecko: {id: addonID},
+        gecko: { id: addonID },
       },
     },
   });
@@ -38,7 +38,9 @@ add_task(async function removeWebextension() {
 
   ok(getTargetEl(document, addonID), "add-on is shown");
 
-  info("Click on the remove button and wait until the addon container is removed");
+  info(
+    "Click on the remove button and wait until the addon container is removed"
+  );
   getRemoveButton(document, addonID).click();
   await waitUntil(() => !getTargetEl(document, addonID), 100);
 

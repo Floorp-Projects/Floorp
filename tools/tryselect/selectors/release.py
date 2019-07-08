@@ -58,13 +58,17 @@ class ReleaseParser(BaseTryParser):
 
     ]
     common_groups = ['push']
+    templates = ['disable-pgo']
 
     def __init__(self, *args, **kwargs):
         super(ReleaseParser, self).__init__(*args, **kwargs)
         self.set_defaults(migrations=[])
 
 
-def run(version, migrations, limit_locales, tasks, push=True, message='{msg}', closed_tree=False):
+def run(
+    version, migrations, limit_locales, tasks,
+    try_config=None, push=True, message='{msg}', closed_tree=False
+):
     app_version = attr.evolve(version, beta_number=None, is_esr=False)
 
     files_to_change = {
@@ -88,6 +92,8 @@ def run(version, migrations, limit_locales, tasks, push=True, message='{msg}', c
             'release_type': release_type,
         },
     }
+    if try_config:
+        task_config['parameters']['try_task_config'] = try_config
 
     for migration in migrations:
         migration_path = os.path.join(

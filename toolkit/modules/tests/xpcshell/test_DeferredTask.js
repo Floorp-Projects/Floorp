@@ -7,8 +7,11 @@
 
 // Globals
 
-ChromeUtils.defineModuleGetter(this, "DeferredTask",
-                               "resource://gre/modules/DeferredTask.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "DeferredTask",
+  "resource://gre/modules/DeferredTask.jsm"
+);
 
 /**
  * Due to the nature of this module, most of the tests are time-dependent.  All
@@ -62,7 +65,9 @@ add_test(function test_arm_delay_notrestarted() {
   let executed = false;
 
   // Create a task that will run later.
-  let deferredTask = new DeferredTask(() => { executed = true; }, 4 * T);
+  let deferredTask = new DeferredTask(() => {
+    executed = true;
+  }, 4 * T);
   deferredTask.arm();
 
   // Before the task starts, call "arm" again.
@@ -210,7 +215,9 @@ add_test(function test_disarm() {
 add_test(function test_disarm_delay_restarted() {
   let executed = false;
 
-  let deferredTask = new DeferredTask(() => { executed = true; }, 4 * T);
+  let deferredTask = new DeferredTask(() => {
+    executed = true;
+  }, 4 * T);
   deferredTask.arm();
 
   do_timeout(2 * T, function() {
@@ -319,7 +326,9 @@ add_test(function test_finalize() {
   }, 2 * T);
   deferredTask.arm();
 
-  do_timeout(1 * T, () => { timePassed = true; });
+  do_timeout(1 * T, () => {
+    timePassed = true;
+  });
 
   // This should trigger the immediate execution of the task.
   deferredTask.finalize().then(function() {
@@ -358,7 +367,9 @@ add_test(function test_finalize_executes_entirely() {
       // wait for the 2*T specified on construction as normal task delay.  The
       // second execution will finish after the timeout below has passed again,
       // for a total of 2*T of wait time.
-      do_timeout(3 * T, () => { timePassed = true; });
+      do_timeout(3 * T, () => {
+        timePassed = true;
+      });
     }
 
     await promiseTimeout(1 * T);

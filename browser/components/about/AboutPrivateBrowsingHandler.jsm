@@ -6,20 +6,22 @@
 
 var EXPORTED_SYMBOLS = ["AboutPrivateBrowsingHandler"];
 
-const {RemotePages} = ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { RemotePages } = ChromeUtils.import(
+  "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var AboutPrivateBrowsingHandler = {
   _inited: false,
-  _topics: [
-    "OpenPrivateWindow",
-    "SearchHandoff",
-  ],
+  _topics: ["OpenPrivateWindow", "SearchHandoff"],
 
   init() {
     this.pageListener = new RemotePages("about:privatebrowsing");
     for (let topic of this._topics) {
-      this.pageListener.addMessageListener(topic, this.receiveMessage.bind(this));
+      this.pageListener.addMessageListener(
+        topic,
+        this.receiveMessage.bind(this)
+      );
     }
     this._inited = true;
   },
@@ -38,12 +40,13 @@ var AboutPrivateBrowsingHandler = {
     switch (aMessage.name) {
       case "OpenPrivateWindow": {
         let win = aMessage.target.browser.ownerGlobal;
-        win.OpenBrowserWindow({private: true});
+        win.OpenBrowserWindow({ private: true });
         break;
       }
       case "SearchHandoff": {
         let searchAlias = "";
-        let searchAliases = Services.search.defaultEngine.wrappedJSObject.__internalAliases;
+        let searchAliases =
+          Services.search.defaultEngine.wrappedJSObject.__internalAliases;
         if (searchAliases && searchAliases.length > 0) {
           searchAlias = `${searchAliases[0]} `;
         }

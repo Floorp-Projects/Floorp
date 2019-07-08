@@ -1,11 +1,13 @@
 "use strict";
 
 function setup_test_preference(enableScript) {
-  return SpecialPowers.pushPrefEnv({"set": [
-    ["media.autoplay.default", 1],
-    ["media.autoplay.enabled.user-gestures-needed", true],
-    ["media.autoplay.allow-extension-background-pages", enableScript],
-  ]});
+  return SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.autoplay.default", 1],
+      ["media.autoplay.enabled.user-gestures-needed", true],
+      ["media.autoplay.allow-extension-background-pages", enableScript],
+    ],
+  });
 }
 
 async function testAutoplayInBackgroundScript(enableScript) {
@@ -16,14 +18,18 @@ async function testAutoplayInBackgroundScript(enableScript) {
     background() {
       browser.test.log("- create audio in background page -");
       let audio = new Audio();
-      audio.src = "https://example.com/browser/browser/components/extensions/test/browser/silence.ogg";
-      audio.play().then(function() {
-        browser.test.log("play succeed!");
-        browser.test.sendMessage("play-succeed");
-      }, function() {
-        browser.test.log("play promise was rejected!");
-        browser.test.sendMessage("play-failed");
-      });
+      audio.src =
+        "https://example.com/browser/browser/components/extensions/test/browser/silence.ogg";
+      audio.play().then(
+        function() {
+          browser.test.log("play succeed!");
+          browser.test.sendMessage("play-succeed");
+        },
+        function() {
+          browser.test.log("play promise was rejected!");
+          browser.test.sendMessage("play-failed");
+        }
+      );
     },
   });
 
@@ -44,4 +50,3 @@ add_task(async function testMain() {
   await testAutoplayInBackgroundScript(true /* enable autoplay */);
   await testAutoplayInBackgroundScript(false /* enable autoplay */);
 });
-

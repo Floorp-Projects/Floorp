@@ -5,7 +5,7 @@
 
 requestLongerTimeout(5);
 
-var {Toolbox} = require("devtools/client/framework/toolbox");
+var { Toolbox } = require("devtools/client/framework/toolbox");
 
 function test() {
   const URL_1 = "data:text/plain;charset=UTF-8,abcde";
@@ -24,22 +24,24 @@ function test() {
 
   addTab(URL_1).then(async function() {
     let target = await TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.showToolbox(target, null, Toolbox.HostType.BOTTOM)
+    gDevTools
+      .showToolbox(target, null, Toolbox.HostType.BOTTOM)
       .then(function(aToolbox) {
         toolbox = aToolbox;
       })
       .then(() => toolbox.selectTool(TOOL_ID_1))
 
-    // undock toolbox and check title
+      // undock toolbox and check title
       .then(() => {
         // We have to first switch the host in order to spawn the new top level window
         // on which we are going to listen from title change event
-        return toolbox.switchHost(Toolbox.HostType.WINDOW)
+        return toolbox
+          .switchHost(Toolbox.HostType.WINDOW)
           .then(() => waitForTitleChange(toolbox));
       })
       .then(checkTitle.bind(null, NAME_1, URL_1, "toolbox undocked"))
 
-    // switch to different tool and check title
+      // switch to different tool and check title
       .then(async () => {
         const onTitleChanged = waitForTitleChange(toolbox);
         panel = await toolbox.selectTool(TOOL_ID_2);
@@ -47,7 +49,7 @@ function test() {
       })
       .then(checkTitle.bind(null, NAME_1, URL_1, "tool changed"))
 
-    // navigate to different local url and check title
+      // navigate to different local url and check title
       .then(async function() {
         const onTitleChanged = waitForTitleChange(toolbox);
         const waitForReloaded = panel.once("reloaded");
@@ -57,7 +59,7 @@ function test() {
       })
       .then(checkTitle.bind(null, NAME_2, URL_2, "url changed"))
 
-    // navigate to a real url and check title
+      // navigate to a real url and check title
       .then(async () => {
         const onTitleChanged = waitForTitleChange(toolbox);
         const waitForReloaded = panel.once("reloaded");
@@ -67,17 +69,22 @@ function test() {
       })
       .then(checkTitle.bind(null, NAME_3, URL_3, "url changed"))
 
-    // destroy toolbox, create new one hosted in a window (with a
-    // different tool id), and check title
+      // destroy toolbox, create new one hosted in a window (with a
+      // different tool id), and check title
       .then(function() {
         // Give the tools a chance to handle the navigation event before
         // destroying the toolbox.
         executeSoon(function() {
-          toolbox.destroy()
+          toolbox
+            .destroy()
             .then(async function() {
               // After destroying the toolbox, a fresh target is required.
               target = await TargetFactory.forTab(gBrowser.selectedTab);
-              return gDevTools.showToolbox(target, null, Toolbox.HostType.WINDOW);
+              return gDevTools.showToolbox(
+                target,
+                null,
+                Toolbox.HostType.WINDOW
+              );
             })
             .then(function(aToolbox) {
               toolbox = aToolbox;
@@ -87,8 +94,14 @@ function test() {
               toolbox.selectTool(TOOL_ID_1);
               return onTitleChanged;
             })
-            .then(checkTitle.bind(null, NAME_3, URL_3,
-                                  "toolbox destroyed and recreated"))
+            .then(
+              checkTitle.bind(
+                null,
+                NAME_3,
+                URL_3,
+                "toolbox destroyed and recreated"
+              )
+            )
 
             // clean up
             .then(() => toolbox.destroy())

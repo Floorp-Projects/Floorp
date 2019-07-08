@@ -16,11 +16,11 @@ add_task(async function() {
       frame.src = "page.html";
       document.body.appendChild(frame);
     },
-    manifest: {applications: {gecko: {id: ID1}}},
+    manifest: { applications: { gecko: { id: ID1 } } },
     files: {
       "page.js": function() {
         browser.runtime.onMessage.addListener((msg, sender) => {
-          browser.test.sendMessage("received-page", {msg, sender});
+          browser.test.sendMessage("received-page", { msg, sender });
         });
       },
       "page.html": `<!DOCTYPE html><meta charset="utf-8"><script src="page.js"></script>`,
@@ -30,10 +30,10 @@ add_task(async function() {
   let extension2 = ExtensionTestUtils.loadExtension({
     background() {
       browser.runtime.onMessageExternal.addListener((msg, sender) => {
-        browser.test.sendMessage("received-external", {msg, sender});
+        browser.test.sendMessage("received-external", { msg, sender });
       });
     },
-    manifest: {applications: {gecko: {id: ID2}}},
+    manifest: { applications: { gecko: { id: ID2 } } },
   });
 
   await Promise.all([extension1.startup(), extension2.startup()]);
@@ -71,8 +71,8 @@ add_task(async function() {
   extension1.sendMessage(ID2, "message");
   await checkRemoteMessage("message");
 
-  extension1.sendMessage(ID2, {msg: "message"});
-  await checkRemoteMessage({msg: "message"});
+  extension1.sendMessage(ID2, { msg: "message" });
+  await checkRemoteMessage({ msg: "message" });
 
   // And these should be (message, options)
   extension1.sendMessage("message", {});

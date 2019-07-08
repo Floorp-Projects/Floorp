@@ -14,14 +14,25 @@ add_task(async function test() {
       "https://support.mozilla.org/",
       "http://hg.mozilla.org/",
     ];
-    let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
-                                                 Ci.nsILoginInfo, "init");
+    let nsLoginInfo = new Components.Constructor(
+      "@mozilla.org/login-manager/loginInfo;1",
+      Ci.nsILoginInfo,
+      "init"
+    );
     let logins = [
       new nsLoginInfo(urls[0], urls[0], null, "", "o hai", "u1", "p1"),
       new nsLoginInfo(urls[1], urls[1], null, "ehsan", "coded", "u2", "p2"),
       new nsLoginInfo(urls[2], urls[2], null, "this", "awesome", "u3", "p3"),
       new nsLoginInfo(urls[3], urls[3], null, "array of", "logins", "u4", "p4"),
-      new nsLoginInfo(urls[4], urls[4], null, "then", "i wrote the test", "u5", "p5"),
+      new nsLoginInfo(
+        urls[4],
+        urls[4],
+        null,
+        "then",
+        "i wrote the test",
+        "u5",
+        "p5"
+      ),
     ];
     logins.forEach(login => Services.logins.addLogin(login));
 
@@ -79,13 +90,25 @@ add_task(async function test() {
 
       function assertMenuitemEnabled(idSuffix, expected, reason = "") {
         doc.defaultView.UpdateContextMenu();
-        let actual = !doc.getElementById("context-" + idSuffix).getAttribute("disabled");
-        is(actual, expected, idSuffix + " should be " + (expected ? "enabled" : "disabled") +
-                             (reason ? ": " + reason : ""));
+        let actual = !doc
+          .getElementById("context-" + idSuffix)
+          .getAttribute("disabled");
+        is(
+          actual,
+          expected,
+          idSuffix +
+            " should be " +
+            (expected ? "enabled" : "disabled") +
+            (reason ? ": " + reason : "")
+        );
       }
 
       function cleanUp() {
-        Services.ww.registerNotification(function notification(aSubject, aTopic, aData) {
+        Services.ww.registerNotification(function notification(
+          aSubject,
+          aTopic,
+          aData
+        ) {
           Services.ww.unregisterNotification(notification);
           Services.logins.removeAllLogins();
           doc.getElementById("passwordCol").hidden = true;
@@ -96,18 +119,28 @@ add_task(async function test() {
 
       function testSiteUrl() {
         info("Testing Copy Site URL");
-        waitForClipboard("http://mozilla.org/", function copySiteUrl() {
-          menuitem = doc.getElementById("context-copysiteurl");
-          menuitem.doCommand();
-        }, cleanUp, cleanUp);
+        waitForClipboard(
+          "http://mozilla.org/",
+          function copySiteUrl() {
+            menuitem = doc.getElementById("context-copysiteurl");
+            menuitem.doCommand();
+          },
+          cleanUp,
+          cleanUp
+        );
       }
 
       function testPassword() {
         info("Testing Copy Password");
-        waitForClipboard("coded", function copyPassword() {
-          menuitem = doc.getElementById("context-copypassword");
-          menuitem.doCommand();
-        }, testSiteUrl, testSiteUrl);
+        waitForClipboard(
+          "coded",
+          function copyPassword() {
+            menuitem = doc.getElementById("context-copypassword");
+            menuitem.doCommand();
+          },
+          testSiteUrl,
+          testSiteUrl
+        );
       }
 
       info("Testing Copy Username");

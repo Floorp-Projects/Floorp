@@ -4,7 +4,6 @@ onmessage = function(e) {
       dump("Error: no clients are currently controlled.\n");
       return;
     }
-    res[0].postMessage(indexedDB ? { available: true } :
-                                   { available: false });
+    res[0].postMessage(indexedDB ? { available: true } : { available: false });
   });
 };

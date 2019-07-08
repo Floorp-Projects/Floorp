@@ -17,8 +17,8 @@ add_task(async function test_disable_firefox_screenshots() {
     await checkPocket(true);
 
     await setupPolicyEngineWithJson({
-      "policies": {
-        "DisablePocket": true,
+      policies: {
+        DisablePocket: true,
       },
     });
 

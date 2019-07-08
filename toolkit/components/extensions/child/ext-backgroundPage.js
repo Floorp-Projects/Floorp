@@ -4,7 +4,10 @@ this.backgroundPage = class extends ExtensionAPI {
   getAPI(context) {
     function getBackgroundPage() {
       for (let view of context.extension.views) {
-        if (view.viewType == "background" && context.principal.subsumes(view.principal)) {
+        if (
+          view.viewType == "background" &&
+          context.principal.subsumes(view.principal)
+        ) {
           return view.contentWindow;
         }
       }

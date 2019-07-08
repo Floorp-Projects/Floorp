@@ -4,8 +4,9 @@
 
 "use strict";
 
-const URI = "chrome://mochitests/content/browser/devtools/client/shared/sourceeditor/" +
-            "test/codemirror/codemirror.html";
+const URI =
+  "chrome://mochitests/content/browser/devtools/client/shared/sourceeditor/" +
+  "test/codemirror/codemirror.html";
 loadHelperScript("helper_codemirror_runner.js");
 
 async function test() {
@@ -25,7 +26,10 @@ async function test() {
    * it seems very difficult to set a pref for just one of the tests.
    */
   await pushPref("privacy.reduceTimerPrecision", true);
-  await pushPref("privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 2000);
+  await pushPref(
+    "privacy.resistFingerprinting.reduceTimerPrecision.microseconds",
+    2000
+  );
 
   const tab = await addTab(URI);
   runCodeMirrorTest(tab.linkedBrowser);

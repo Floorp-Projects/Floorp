@@ -4,12 +4,19 @@
 
 function assertNoLeaksInTabTracker() {
   // Check that no tabs have been leaked by the internal tabTracker helper class.
-  const {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
-  const {tabTracker} = ExtensionParent.apiManager.global;
+  const { ExtensionParent } = ChromeUtils.import(
+    "resource://gre/modules/ExtensionParent.jsm"
+  );
+  const { tabTracker } = ExtensionParent.apiManager.global;
 
   for (const [tabId, nativeTab] of tabTracker._tabIds) {
     if (!nativeTab.ownerGlobal) {
-      ok(false, `A tab with tabId ${tabId} has been leaked in the tabTracker ("${nativeTab.title}")`);
+      ok(
+        false,
+        `A tab with tabId ${tabId} has been leaked in the tabTracker ("${
+          nativeTab.title
+        }")`
+      );
     }
   }
 }
@@ -25,9 +32,13 @@ add_task(async function testWindowCreate() {
       });
     };
 
-    let promiseTabUpdated = (expected) => {
+    let promiseTabUpdated = expected => {
       return new Promise(resolve => {
-        browser.tabs.onUpdated.addListener(function listener(tabId, changeInfo, tab) {
+        browser.tabs.onUpdated.addListener(function listener(
+          tabId,
+          changeInfo,
+          tab
+        ) {
           if (changeInfo.url === expected) {
             browser.tabs.onUpdated.removeListener(listener);
             resolve();
@@ -41,7 +52,7 @@ add_task(async function testWindowCreate() {
       let windowId = window.id;
 
       browser.test.log("Create additional tab in window 1");
-      let tab = await browser.tabs.create({windowId, url: "about:blank"});
+      let tab = await browser.tabs.create({ windowId, url: "about:blank" });
       let tabId = tab.id;
 
       browser.test.log("Create a new window, adopting the new tab");
@@ -53,10 +64,18 @@ add_task(async function testWindowCreate() {
       {
         let [, window] = await Promise.all([
           promiseTabAttached(),
-          browser.windows.create({tabId: tabId}),
+          browser.windows.create({ tabId: tabId }),
         ]);
-        browser.test.assertEq(false, window.incognito, "New window is not private");
-        browser.test.assertEq(tabId, window.tabs[0].id, "tabs property populated correctly");
+        browser.test.assertEq(
+          false,
+          window.incognito,
+          "New window is not private"
+        );
+        browser.test.assertEq(
+          tabId,
+          window.tabs[0].id,
+          "tabs property populated correctly"
+        );
 
         browser.test.log("Close the new window");
         await browser.windows.remove(window.id);
@@ -64,19 +83,33 @@ add_task(async function testWindowCreate() {
 
       {
         browser.test.log("Create a new private window");
-        let privateWindow = await browser.windows.create({incognito: true});
-        browser.test.assertEq(true, privateWindow.incognito, "Private window is private");
+        let privateWindow = await browser.windows.create({ incognito: true });
+        browser.test.assertEq(
+          true,
+          privateWindow.incognito,
+          "Private window is private"
+        );
 
         browser.test.log("Create additional tab in private window");
-        let privateTab = await browser.tabs.create({windowId: privateWindow.id});
-        browser.test.assertEq(true, privateTab.incognito, "Private tab is private");
+        let privateTab = await browser.tabs.create({
+          windowId: privateWindow.id,
+        });
+        browser.test.assertEq(
+          true,
+          privateTab.incognito,
+          "Private tab is private"
+        );
 
         browser.test.log("Create a new window, adopting the new private tab");
         let [, newWindow] = await Promise.all([
           promiseTabAttached(),
-          browser.windows.create({tabId: privateTab.id}),
+          browser.windows.create({ tabId: privateTab.id }),
         ]);
-        browser.test.assertEq(true, newWindow.incognito, "New private window is private");
+        browser.test.assertEq(
+          true,
+          newWindow.incognito,
+          "New private window is private"
+        );
 
         browser.test.log("Close the new private window");
         await browser.windows.remove(newWindow.id);
@@ -85,27 +118,29 @@ add_task(async function testWindowCreate() {
         await browser.windows.remove(privateWindow.id);
       }
 
-
       browser.test.log("Try to create a window with both a tab and a URL");
-      [tab] = await browser.tabs.query({windowId, active: true});
+      [tab] = await browser.tabs.query({ windowId, active: true });
       await browser.test.assertRejects(
-        browser.windows.create({tabId: tab.id, url: "http://example.com/"}),
+        browser.windows.create({ tabId: tab.id, url: "http://example.com/" }),
         /`tabId` may not be used in conjunction with `url`/,
-        "Create call failed as expected");
+        "Create call failed as expected"
+      );
 
-      browser.test.log("Try to create a window with both a tab and an invalid incognito setting");
+      browser.test.log(
+        "Try to create a window with both a tab and an invalid incognito setting"
+      );
       await browser.test.assertRejects(
-        browser.windows.create({tabId: tab.id, incognito: true}),
+        browser.windows.create({ tabId: tab.id, incognito: true }),
         /`incognito` property must match the incognito state of tab/,
-        "Create call failed as expected");
-
+        "Create call failed as expected"
+      );
 
       browser.test.log("Try to create a window with an invalid tabId");
       await browser.test.assertRejects(
-        browser.windows.create({tabId: 0}),
+        browser.windows.create({ tabId: 0 }),
         /Invalid tab ID: 0/,
-        "Create call failed as expected");
-
+        "Create call failed as expected"
+      );
 
       browser.test.log("Try to create a window with two URLs");
       let readyPromise = Promise.all([
@@ -116,18 +151,44 @@ add_task(async function testWindowCreate() {
         promiseTabUpdated("http://example.org/"),
       ]);
 
-      window = await browser.windows.create({url: ["http://example.com/", "http://example.org/"]});
+      window = await browser.windows.create({
+        url: ["http://example.com/", "http://example.org/"],
+      });
       await readyPromise;
 
-      browser.test.assertEq(2, window.tabs.length, "2 tabs were opened in new window");
-      browser.test.assertEq("about:blank", window.tabs[0].url, "about:blank, page not loaded yet");
-      browser.test.assertEq("about:blank", window.tabs[1].url, "about:blank, page not loaded yet");
+      browser.test.assertEq(
+        2,
+        window.tabs.length,
+        "2 tabs were opened in new window"
+      );
+      browser.test.assertEq(
+        "about:blank",
+        window.tabs[0].url,
+        "about:blank, page not loaded yet"
+      );
+      browser.test.assertEq(
+        "about:blank",
+        window.tabs[1].url,
+        "about:blank, page not loaded yet"
+      );
 
-      window = await browser.windows.get(window.id, {populate: true});
+      window = await browser.windows.get(window.id, { populate: true });
 
-      browser.test.assertEq(2, window.tabs.length, "2 tabs were opened in new window");
-      browser.test.assertEq("http://example.com/", window.tabs[0].url, "Correct URL was loaded in tab 1");
-      browser.test.assertEq("http://example.org/", window.tabs[1].url, "Correct URL was loaded in tab 2");
+      browser.test.assertEq(
+        2,
+        window.tabs.length,
+        "2 tabs were opened in new window"
+      );
+      browser.test.assertEq(
+        "http://example.com/",
+        window.tabs[0].url,
+        "Correct URL was loaded in tab 1"
+      );
+      browser.test.assertEq(
+        "http://example.org/",
+        window.tabs[1].url,
+        "Correct URL was loaded in tab 2"
+      );
 
       await browser.windows.remove(window.id);
 
@@ -141,7 +202,7 @@ add_task(async function testWindowCreate() {
   let extension = ExtensionTestUtils.loadExtension({
     incognitoOverride: "spanning",
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
 
     background,
@@ -159,7 +220,7 @@ add_task(async function testWebNavigationOnWindowCreateTabId() {
     const webNavEvents = [];
     const onceTabsAttached = [];
 
-    let promiseTabAttached = (tab) => {
+    let promiseTabAttached = tab => {
       return new Promise(resolve => {
         browser.tabs.onAttached.addListener(function listener(tabId) {
           if (tabId !== tab.id) {
@@ -174,7 +235,7 @@ add_task(async function testWebNavigationOnWindowCreateTabId() {
     // Listen to webNavigation.onCompleted events to ensure that
     // it is not going to be fired when we move the existent tabs
     // to new windows.
-    browser.webNavigation.onCompleted.addListener((data) => {
+    browser.webNavigation.onCompleted.addListener(data => {
       webNavEvents.push(data);
     });
 
@@ -194,11 +255,15 @@ add_task(async function testWebNavigationOnWindowCreateTabId() {
         return testTabURLs.includes(tab.url);
       });
 
-      browser.test.assertEq(2, testTabs.length, "Got the expected number of test tabs");
+      browser.test.assertEq(
+        2,
+        testTabs.length,
+        "Got the expected number of test tabs"
+      );
 
       for (let tab of testTabs) {
         onceTabsAttached.push(promiseTabAttached(tab));
-        await browser.windows.create({tabId: tab.id});
+        await browser.windows.create({ tabId: tab.id });
       }
 
       // Wait the tabs to have been attached to the new window and then assert that no
@@ -206,8 +271,11 @@ add_task(async function testWebNavigationOnWindowCreateTabId() {
       browser.test.log("Waiting tabs move to new window to be attached");
       await Promise.all(onceTabsAttached);
 
-      browser.test.assertEq("[]", JSON.stringify(webNavEvents),
-                            "No webNavigation.onCompleted event should have been received");
+      browser.test.assertEq(
+        "[]",
+        JSON.stringify(webNavEvents),
+        "No webNavigation.onCompleted event should have been received"
+      );
 
       // Remove all the test tabs before exiting the test successfully.
       for (let tab of testTabs) {
@@ -226,7 +294,7 @@ add_task(async function testWebNavigationOnWindowCreateTabId() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs", "webNavigation"],
+      permissions: ["tabs", "webNavigation"],
     },
     background,
   });
@@ -261,7 +329,7 @@ add_task(async function testGetLastFocusedDoesNotLeakDuringTabAdoption() {
       let stopGetLastFocusedLoop = false;
       Promise.resolve().then(async () => {
         while (!stopGetLastFocusedLoop) {
-          browser.windows.getLastFocused({populate: true});
+          browser.windows.getLastFocused({ populate: true });
           // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
           await new Promise(resolve => setTimeout(resolve, 50));
         }
@@ -277,14 +345,19 @@ add_task(async function testGetLastFocusedDoesNotLeakDuringTabAdoption() {
           };
           browser.tabs.onAttached.addListener(listener);
         }),
-        browser.windows.create({tabId: tab.id}),
+        browser.windows.create({ tabId: tab.id }),
       ]);
 
       // Check that getLastFocused populate the tabs property once the tab adoption
       // has been completed.
-      const lastFocusedPopulate = await browser.windows.getLastFocused({populate: true});
-      browser.test.assertEq(1, lastFocusedPopulate.tabs.length,
-                            "Got the expected number of tabs from windows.getLastFocused");
+      const lastFocusedPopulate = await browser.windows.getLastFocused({
+        populate: true,
+      });
+      browser.test.assertEq(
+        1,
+        lastFocusedPopulate.tabs.length,
+        "Got the expected number of tabs from windows.getLastFocused"
+      );
 
       // Remove the test tab.
       await browser.tabs.remove(tab.id);
@@ -299,7 +372,7 @@ add_task(async function testGetLastFocusedDoesNotLeakDuringTabAdoption() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs", "webNavigation"],
+      permissions: ["tabs", "webNavigation"],
     },
     background,
   });

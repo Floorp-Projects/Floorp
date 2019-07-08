@@ -5,9 +5,13 @@
 
 var EXPORTED_SYMBOLS = ["Addon", "STATE_ENABLED", "STATE_DISABLED"];
 
-const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-const {AddonUtils} = ChromeUtils.import("resource://services-sync/addonutils.js");
-const {Logger} = ChromeUtils.import("resource://tps/logger.jsm");
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
+const { AddonUtils } = ChromeUtils.import(
+  "resource://services-sync/addonutils.js"
+);
+const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 
 const STATE_ENABLED = 1;
 const STATE_DISABLED = 2;
@@ -23,7 +27,10 @@ Addon.prototype = {
   async uninstall() {
     // find our addon locally
     let addon = await AddonManager.getAddonByID(this.id);
-    Logger.AssertTrue(!!addon, "could not find addon " + this.id + " to uninstall");
+    Logger.AssertTrue(
+      !!addon,
+      "could not find addon " + this.id + " to uninstall"
+    );
     await AddonUtils.uninstallAddon(addon);
   },
 
@@ -37,8 +44,9 @@ Addon.prototype = {
 
     this.addon = addon;
 
-    Logger.logInfo("add-on found: " + addon.id + ", enabled: " +
-                   !addon.userDisabled);
+    Logger.logInfo(
+      "add-on found: " + addon.id + ", enabled: " + !addon.userDisabled
+    );
     if (state == STATE_ENABLED) {
       Logger.AssertFalse(addon.userDisabled, "add-on is disabled: " + addon.id);
       return true;
@@ -57,15 +65,24 @@ Addon.prototype = {
     // For Install, the id parameter initially passed is really the filename
     // for the addon's install .xml; we'll read the actual id from the .xml.
 
-    const result = await AddonUtils.installAddons([{id: this.id, requireSecureURI: false}]);
+    const result = await AddonUtils.installAddons([
+      { id: this.id, requireSecureURI: false },
+    ]);
 
-    Logger.AssertEqual(1, result.installedIDs.length, "Exactly 1 add-on was installed.");
-    Logger.AssertEqual(this.id, result.installedIDs[0],
-                       "Add-on was installed successfully: " + this.id);
+    Logger.AssertEqual(
+      1,
+      result.installedIDs.length,
+      "Exactly 1 add-on was installed."
+    );
+    Logger.AssertEqual(
+      this.id,
+      result.installedIDs[0],
+      "Add-on was installed successfully: " + this.id
+    );
   },
 
   async setEnabled(flag) {
-    Logger.AssertTrue((await this.find()), "Add-on is available.");
+    Logger.AssertTrue(await this.find(), "Add-on is available.");
 
     let userDisabled;
     if (flag == STATE_ENABLED) {

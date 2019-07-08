@@ -2,8 +2,11 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-ChromeUtils.defineModuleGetter(this, "TelemetryTestUtils",
-                             "resource://testing-common/TelemetryTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryTestUtils",
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
 add_task(async function test_bug1555798() {
   /*
@@ -22,7 +25,7 @@ add_task(async function test_bug1555798() {
 
   const DYNAMIC_CATEGORY = "telemetry.test.dynamic.event";
   Telemetry.registerEvents(DYNAMIC_CATEGORY, {
-    "an_event": {
+    an_event: {
       methods: ["a_method"],
       objects: ["an_object", "another_object"],
       record_on_release: true,
@@ -33,7 +36,7 @@ add_task(async function test_bug1555798() {
 
   for (let i = 0; i < 100; ++i) {
     Telemetry.registerScalars("telemetry.test.dynamic" + i, {
-      "scalar_name": {
+      scalar_name: {
         kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
         record_on_release: true,
       },
@@ -43,5 +46,5 @@ add_task(async function test_bug1555798() {
 
   Telemetry.recordEvent(DYNAMIC_CATEGORY, "a_method", "another_object");
 
-  TelemetryTestUtils.assertNumberOfEvents(2, {}, {process: "dynamic"});
+  TelemetryTestUtils.assertNumberOfEvents(2, {}, { process: "dynamic" });
 });

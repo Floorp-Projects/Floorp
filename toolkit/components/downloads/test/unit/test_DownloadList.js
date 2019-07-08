@@ -40,10 +40,12 @@ function getExpirableDate() {
 function promiseExpirableDownloadVisit(aSourceUrl) {
   return PlacesUtils.history.insert({
     url: aSourceUrl || httpUrl("source.txt"),
-    visits: [{
-      transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
-      date: getExpirableDate(),
-    }],
+    visits: [
+      {
+        transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
+        date: getExpirableDate(),
+      },
+    ],
   });
 }
 
@@ -336,7 +338,8 @@ add_task(async function test_history_expiration() {
 
   // Force a history expiration.
   Cc["@mozilla.org/places/expiration;1"]
-    .getService(Ci.nsIObserver).observe(null, "places-debug-start-expiration", -1);
+    .getService(Ci.nsIObserver)
+    .observe(null, "places-debug-start-expiration", -1);
 
   // Wait for both downloads to be removed.
   await deferred.promise;
@@ -393,9 +396,11 @@ add_task(async function test_removeFinished() {
   let removeNotifications = 0;
   let downloadView = {
     onDownloadRemoved(aDownload) {
-      Assert.ok(aDownload == downloadOne ||
-                aDownload == downloadTwo ||
-                aDownload == downloadThree);
+      Assert.ok(
+        aDownload == downloadOne ||
+          aDownload == downloadTwo ||
+          aDownload == downloadThree
+      );
       Assert.ok(removeNotifications < 3);
       if (++removeNotifications == 3) {
         deferred.resolve();
@@ -439,16 +444,18 @@ add_task(async function test_DownloadSummary() {
   await publicList.add(succeededPublicDownload);
 
   // Add a public download that has been canceled midway.
-  let canceledPublicDownload =
-      await promiseNewDownload(httpUrl("interruptible.txt"));
+  let canceledPublicDownload = await promiseNewDownload(
+    httpUrl("interruptible.txt")
+  );
   canceledPublicDownload.start().catch(() => {});
   await promiseDownloadMidway(canceledPublicDownload);
   await canceledPublicDownload.cancel();
   await publicList.add(canceledPublicDownload);
 
   // Add a public download that is in progress.
-  let inProgressPublicDownload =
-      await promiseNewDownload(httpUrl("interruptible.txt"));
+  let inProgressPublicDownload = await promiseNewDownload(
+    httpUrl("interruptible.txt")
+  );
   inProgressPublicDownload.start().catch(() => {});
   await promiseDownloadMidway(inProgressPublicDownload);
   await publicList.add(inProgressPublicDownload);
@@ -478,7 +485,10 @@ add_task(async function test_DownloadSummary() {
 
   Assert.ok(!combinedSummary.allHaveStopped);
   Assert.equal(combinedSummary.progressTotalBytes, TEST_DATA_SHORT.length * 4);
-  Assert.equal(combinedSummary.progressCurrentBytes, TEST_DATA_SHORT.length * 2);
+  Assert.equal(
+    combinedSummary.progressCurrentBytes,
+    TEST_DATA_SHORT.length * 2
+  );
 
   await inProgressPublicDownload.cancel();
 

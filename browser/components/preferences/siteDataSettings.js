@@ -5,16 +5,23 @@
 
 "use strict";
 
-var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "SiteDataManager",
-                               "resource:///modules/SiteDataManager.jsm");
-ChromeUtils.defineModuleGetter(this, "DownloadUtils",
-                               "resource://gre/modules/DownloadUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "SiteDataManager",
+  "resource:///modules/SiteDataManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "DownloadUtils",
+  "resource://gre/modules/DownloadUtils.jsm"
+);
 
 let gSiteDataSettings = {
-
   // Array of metadata of sites. Each array element is object holding:
   // - uri: uri of site; instance of nsIURI
   // - baseDomain: base domain of the site
@@ -54,31 +61,43 @@ let gSiteDataSettings = {
     }
 
     // Add "Host" column.
-    addColumnItem({raw: site.host}, "4");
+    addColumnItem({ raw: site.host }, "4");
 
     // Add "Cookies" column.
-    addColumnItem({raw: site.cookies.length}, "1");
+    addColumnItem({ raw: site.cookies.length }, "1");
 
     // Add "Storage" column
     if (site.usage > 0 || site.persisted) {
       let [value, unit] = DownloadUtils.convertByteUnits(site.usage);
-      let strName = site.persisted ? "site-storage-persistent" : "site-storage-usage";
-      addColumnItem({
-        id: strName,
-        args: { value, unit },
-      }, "2");
+      let strName = site.persisted
+        ? "site-storage-persistent"
+        : "site-storage-usage";
+      addColumnItem(
+        {
+          id: strName,
+          args: { value, unit },
+        },
+        "2"
+      );
     } else {
       // Pass null to avoid showing "0KB" when there is no site data stored.
       addColumnItem(null, "2");
     }
 
     // Add "Last Used" column.
-    let formattedLastAccessed = site.lastAccessed > 0 ?
-      this._relativeTimeFormat.formatBestUnit(site.lastAccessed) : null;
-    let formattedFullDate = site.lastAccessed > 0 ?
-      this._absoluteTimeFormat.format(site.lastAccessed) : null;
-    addColumnItem(site.lastAccessed > 0 ?
-      { raw: formattedLastAccessed } : null, "2", formattedFullDate);
+    let formattedLastAccessed =
+      site.lastAccessed > 0
+        ? this._relativeTimeFormat.formatBestUnit(site.lastAccessed)
+        : null;
+    let formattedFullDate =
+      site.lastAccessed > 0
+        ? this._absoluteTimeFormat.format(site.lastAccessed)
+        : null;
+    addColumnItem(
+      site.lastAccessed > 0 ? { raw: formattedLastAccessed } : null,
+      "2",
+      formattedFullDate
+    );
 
     item.appendChild(container);
     return item;
@@ -86,21 +105,28 @@ let gSiteDataSettings = {
 
   init() {
     function setEventListener(id, eventType, callback) {
-      document.getElementById(id)
-              .addEventListener(eventType, callback.bind(gSiteDataSettings));
+      document
+        .getElementById(id)
+        .addEventListener(eventType, callback.bind(gSiteDataSettings));
     }
 
     this._absoluteTimeFormat = new Services.intl.DateTimeFormat(undefined, {
-      dateStyle: "short", timeStyle: "short",
+      dateStyle: "short",
+      timeStyle: "short",
     });
 
-    this._relativeTimeFormat = new Services.intl.RelativeTimeFormat(undefined, {});
+    this._relativeTimeFormat = new Services.intl.RelativeTimeFormat(
+      undefined,
+      {}
+    );
 
     this._list = document.getElementById("sitesList");
     this._searchBox = document.getElementById("searchBox");
     SiteDataManager.getSites().then(sites => {
       this._sites = sites;
-      let sortCol = document.querySelector("treecol[data-isCurrentSortCol=true]");
+      let sortCol = document.querySelector(
+        "treecol[data-isCurrentSortCol=true]"
+      );
       this._sortSites(this._sites, sortCol);
       this._buildSitesList(this._sites);
       Services.obs.notifyObservers(null, "sitedata-settings-init");
@@ -125,7 +151,9 @@ let gSiteDataSettings = {
     removeSelectedBtn.disabled = this._list.selectedItems.length == 0;
     removeAllBtn.disabled = items.length == 0;
 
-    let l10nId = this._searchBox.value ? "site-data-remove-shown" : "site-data-remove-all";
+    let l10nId = this._searchBox.value
+      ? "site-data-remove-shown"
+      : "site-data-remove-all";
     document.l10n.setAttributes(removeAllBtn, l10nId);
   },
 
@@ -135,10 +163,12 @@ let gSiteDataSettings = {
    */
   _sortSites(sites, col) {
     let isCurrentSortCol = col.getAttribute("data-isCurrentSortCol");
-    let sortDirection = col.getAttribute("data-last-sortDirection") || "ascending";
+    let sortDirection =
+      col.getAttribute("data-last-sortDirection") || "ascending";
     if (isCurrentSortCol) {
       // Sort on the current column, flip the sorting direction
-      sortDirection = sortDirection === "ascending" ? "descending" : "ascending";
+      sortDirection =
+        sortDirection === "ascending" ? "descending" : "ascending";
     }
 
     let sortFunc = null;
@@ -266,7 +296,9 @@ let gSiteDataSettings = {
     let lastIndex = this._list.selectedItems.length - 1;
     let lastSelectedItem = this._list.selectedItems[lastIndex];
     let lastSelectedItemPosition = this._list.getIndexOfItem(lastSelectedItem);
-    let nextSelectedItem = this._list.getItemAtIndex(lastSelectedItemPosition + 1);
+    let nextSelectedItem = this._list.getItemAtIndex(
+      lastSelectedItemPosition + 1
+    );
 
     this._removeSiteItems(this._list.selectedItems);
     this._list.clearSelection();
@@ -299,9 +331,11 @@ let gSiteDataSettings = {
   onKeyPress(e) {
     if (e.keyCode == KeyEvent.DOM_VK_ESCAPE) {
       this.close();
-    } else if (e.keyCode == KeyEvent.DOM_VK_DELETE ||
-               (AppConstants.platform == "macosx" &&
-                e.keyCode == KeyEvent.DOM_VK_BACK_SPACE)) {
+    } else if (
+      e.keyCode == KeyEvent.DOM_VK_DELETE ||
+      (AppConstants.platform == "macosx" &&
+        e.keyCode == KeyEvent.DOM_VK_BACK_SPACE)
+    ) {
       this.removeSelected();
     }
   },

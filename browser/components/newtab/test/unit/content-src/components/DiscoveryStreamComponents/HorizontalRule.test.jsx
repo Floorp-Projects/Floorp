@@ -1,6 +1,6 @@
-import {HorizontalRule} from "content-src/components/DiscoveryStreamComponents/HorizontalRule/HorizontalRule";
+import { HorizontalRule } from "content-src/components/DiscoveryStreamComponents/HorizontalRule/HorizontalRule";
 import React from "react";
-import {shallow} from "enzyme";
+import { shallow } from "enzyme";
 
 describe("<HorizontalRule>", () => {
   let wrapper;

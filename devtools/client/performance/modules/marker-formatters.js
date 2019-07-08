@@ -24,12 +24,14 @@ const JS_MARKER_MAP = {
   "javascript: URI": L10N.getStr("marker.label.javascript.jsURI"),
   // The difference between these two event handler markers are differences
   // in their WebIDL implementation, so distinguishing them is not necessary.
-  "EventHandlerNonNull": L10N.getStr("marker.label.javascript.eventHandler"),
-  "EventListener.handleEvent": L10N.getStr("marker.label.javascript.eventHandler"),
+  EventHandlerNonNull: L10N.getStr("marker.label.javascript.eventHandler"),
+  "EventListener.handleEvent": L10N.getStr(
+    "marker.label.javascript.eventHandler"
+  ),
   // These markers do not get L10N'd because they're JS names.
   "setInterval handler": "setInterval",
   "setTimeout handler": "setTimeout",
-  "FrameRequestCallback": "requestAnimationFrame",
+  FrameRequestCallback: "requestAnimationFrame",
 };
 
 /**
@@ -93,7 +95,9 @@ exports.Formatters = {
 
   JSFields: function(marker) {
     if ("causeName" in marker && !JS_MARKER_MAP[marker.causeName]) {
-      const label = PREFS["show-platform-data"] ? marker.causeName : GECKO_SYMBOL;
+      const label = PREFS["show-platform-data"]
+        ? marker.causeName
+        : GECKO_SYMBOL;
       return {
         [L10N.getStr("marker.field.causeName")]: label,
       };
@@ -139,7 +143,9 @@ exports.Formatters = {
       fields[L10N.getStr("marker.field.causeName")] = label;
     }
 
-    fields[L10N.getStr("marker.field.type")] = L10N.getStr("marker.nurseryCollection");
+    fields[L10N.getStr("marker.field.type")] = L10N.getStr(
+      "marker.nurseryCollection"
+    );
 
     return fields;
   },
@@ -163,7 +169,9 @@ exports.Formatters = {
 
   MessagePortFields: function(marker) {
     if ("messagePortOperation" in marker) {
-      const label = L10N.getStr(`marker.messagePort.${marker.messagePortOperation}`);
+      const label = L10N.getStr(
+        `marker.messagePort.${marker.messagePortOperation}`
+      );
       return {
         [L10N.getStr("marker.field.type")]: label,
       };
@@ -191,7 +199,6 @@ exports.Formatters = {
  * @param string propName
  */
 exports.Formatters.labelForProperty = function(mainLabel, propName) {
-  return (marker = {}) => marker[propName]
-    ? `${mainLabel} (${marker[propName]})`
-    : mainLabel;
+  return (marker = {}) =>
+    marker[propName] ? `${mainLabel} (${marker[propName]})` : mainLabel;
 };

@@ -12,17 +12,21 @@
 // * it does a sanity check to ensure other cert verifier behavior is
 //   unmodified
 
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
-const { RemoteSecuritySettings } = ChromeUtils.import("resource://gre/modules/psm/RemoteSecuritySettings.jsm");
+const { setTimeout } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm",
+  {}
+);
+const { RemoteSecuritySettings } = ChromeUtils.import(
+  "resource://gre/modules/psm/RemoteSecuritySettings.jsm"
+);
 
 // First, we need to setup appInfo for the blocklist service to work
 var id = "xpcshell@tests.mozilla.org";
 var appName = "XPCShell";
 var version = "1";
 var platformVersion = "1.9.2";
-ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
-/* global updateAppInfo:false */ // Imported via AppInfo.jsm.
-updateAppInfo({
+ChromeUtils.import("resource://testing-common/AppInfo.jsm", this); // Imported via AppInfo.jsm.
+/* global updateAppInfo:false */ updateAppInfo({
   name: appName,
   ID: id,
   version,
@@ -41,8 +45,9 @@ if (!gRevocations.exists()) {
   existing.copyTo(gProfile, "revocations.txt");
 }
 
-var certDB = Cc["@mozilla.org/security/x509certdb;1"]
-               .getService(Ci.nsIX509CertDB);
+var certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
 
 const certBlocklist = [
   // test with some bad data ...
@@ -99,19 +104,35 @@ const certBlocklist = [
 
 function verify_cert(file, expectedError) {
   let ee = constructCertFromFile(file);
-  return checkCertErrorGeneric(certDB, ee, expectedError,
-                               certificateUsageSSLServer);
+  return checkCertErrorGeneric(
+    certDB,
+    ee,
+    expectedError,
+    certificateUsageSSLServer
+  );
 }
 
 // The certificate blocklist currently only applies to TLS server certificates.
 async function verify_non_tls_usage_succeeds(file) {
   let ee = constructCertFromFile(file);
-  await checkCertErrorGeneric(certDB, ee, PRErrorCodeSuccess,
-                              certificateUsageSSLClient);
-  await checkCertErrorGeneric(certDB, ee, PRErrorCodeSuccess,
-                              certificateUsageEmailSigner);
-  await checkCertErrorGeneric(certDB, ee, PRErrorCodeSuccess,
-                              certificateUsageEmailRecipient);
+  await checkCertErrorGeneric(
+    certDB,
+    ee,
+    PRErrorCodeSuccess,
+    certificateUsageSSLClient
+  );
+  await checkCertErrorGeneric(
+    certDB,
+    ee,
+    PRErrorCodeSuccess,
+    certificateUsageEmailSigner
+  );
+  await checkCertErrorGeneric(
+    certDB,
+    ee,
+    PRErrorCodeSuccess,
+    certificateUsageEmailRecipient
+  );
 }
 
 function load_cert(cert, trust) {
@@ -131,8 +152,10 @@ async function update_blocklist() {
   await OneCRLBlocklistClient.emit("sync", { data: fakeEvent });
   // Save the last check timestamp, used by cert_storage to assert
   // if the blocklist is «fresh».
-  Services.prefs.setIntPref(OneCRLBlocklistClient.lastCheckTimePref,
-    Math.floor(Date.now() / 1000));
+  Services.prefs.setIntPref(
+    OneCRLBlocklistClient.lastCheckTimePref,
+    Math.floor(Date.now() / 1000)
+  );
 }
 
 function* generate_revocations_txt_lines() {
@@ -140,8 +163,9 @@ function* generate_revocations_txt_lines() {
   let revocations = profile.clone();
   revocations.append("revocations.txt");
   ok(revocations.exists(), "the revocations file should exist");
-  let inputStream = Cc["@mozilla.org/network/file-input-stream;1"]
-                      .createInstance(Ci.nsIFileInputStream);
+  let inputStream = Cc[
+    "@mozilla.org/network/file-input-stream;1"
+  ].createInstance(Ci.nsIFileInputStream);
   inputStream.init(revocations, -1, -1, 0);
   inputStream.QueryInterface(Ci.nsILineInputStream);
   let hasmore = false;
@@ -159,10 +183,16 @@ function* generate_revocations_txt_lines() {
 function check_revocations_txt_contents(expected) {
   let lineGenerator = generate_revocations_txt_lines();
   let firstLine = lineGenerator.next();
-  equal(firstLine.done, false,
-        "first line of revocations.txt should be present");
-  equal(firstLine.value, "# Auto generated contents. Do not edit.",
-        "first line of revocations.txt");
+  equal(
+    firstLine.done,
+    false,
+    "first line of revocations.txt should be present"
+  );
+  equal(
+    firstLine.value,
+    "# Auto generated contents. Do not edit.",
+    "first line of revocations.txt"
+  );
   let line = lineGenerator.next();
   let topLevelFound = {};
   while (true) {
@@ -170,10 +200,14 @@ function check_revocations_txt_contents(expected) {
       break;
     }
 
-    ok(line.value in expected,
-       `${line.value} should be an expected top-level line in revocations.txt`);
-    ok(!(line.value in topLevelFound),
-       `should not have seen ${line.value} before in revocations.txt`);
+    ok(
+      line.value in expected,
+      `${line.value} should be an expected top-level line in revocations.txt`
+    );
+    ok(
+      !(line.value in topLevelFound),
+      `should not have seen ${line.value} before in revocations.txt`
+    );
     topLevelFound[line.value] = true;
     let topLevelLine = line.value;
 
@@ -184,18 +218,24 @@ function check_revocations_txt_contents(expected) {
       if (line.done || !(line.value in sublines)) {
         break;
       }
-      ok(!(line.value in subFound),
-         `should not have seen ${line.value} before in revocations.txt`);
+      ok(
+        !(line.value in subFound),
+        `should not have seen ${line.value} before in revocations.txt`
+      );
       subFound[line.value] = true;
     }
     for (let subline in sublines) {
-      ok(subFound[subline],
-         `should have found ${subline} below ${topLevelLine} in revocations.txt`);
+      ok(
+        subFound[subline],
+        `should have found ${subline} below ${topLevelLine} in revocations.txt`
+      );
     }
   }
   for (let topLevelLine in expected) {
-    ok(topLevelFound[topLevelLine],
-       `should have found ${topLevelLine} in revocations.txt`);
+    ok(
+      topLevelFound[topLevelLine],
+      `should have found ${topLevelLine} in revocations.txt`
+    );
   }
 }
 
@@ -205,20 +245,22 @@ function run_test() {
   load_cert("test-int", ",,");
   load_cert("other-test-ca", "CTu,CTu,CTu");
 
-  let certList = AppConstants.MOZ_NEW_CERT_STORAGE ?
-    Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage) :
-    Cc["@mozilla.org/security/certblocklist;1"].getService(Ci.nsICertBlocklist);
+  let certList = AppConstants.MOZ_NEW_CERT_STORAGE
+    ? Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage)
+    : Cc["@mozilla.org/security/certblocklist;1"].getService(
+        Ci.nsICertBlocklist
+      );
 
-  let expected = { "MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5":
-                     { "\tVCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=": true },
-                   "MBgxFjAUBgNVBAMMDU90aGVyIHRlc3QgQ0E=":
-                     { " Rym6o+VN9xgZXT/QLrvN/nv1ZN4=": true},
-                   "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=":
-                     { " a0X7/7DlTaedpgrIJg25iBPOkIM=": true},
-                   "MBwxGjAYBgNVBAMMEVRlc3QgSW50ZXJtZWRpYXRl":
-                     { " Tg==": true,
-                       " Hw==": true },
-                 };
+  let expected = {
+    MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5: {
+      "\tVCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=": true,
+    },
+    "MBgxFjAUBgNVBAMMDU90aGVyIHRlc3QgQ0E=": {
+      " Rym6o+VN9xgZXT/QLrvN/nv1ZN4=": true,
+    },
+    "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=": { " a0X7/7DlTaedpgrIJg25iBPOkIM=": true },
+    MBwxGjAYBgNVBAMMEVRlc3QgSW50ZXJtZWRpYXRl: { " Tg==": true, " Hw==": true },
+  };
 
   add_task(async function() {
     // check some existing items in revocations.txt are blocked.
@@ -321,28 +363,39 @@ function run_test() {
       // check that save with no further update is a no-op
       let lastModified = gRevocations.lastModifiedTime;
       // add an already existing entry
-      certList.revokeCertByIssuerAndSerial("MBwxGjAYBgNVBAMMEVRlc3QgSW50ZXJtZWRpYXRl",
-                                           "Hw==");
+      certList.revokeCertByIssuerAndSerial(
+        "MBwxGjAYBgNVBAMMEVRlc3QgSW50ZXJtZWRpYXRl",
+        "Hw=="
+      );
       certList.saveEntries();
       let newModified = gRevocations.lastModifiedTime;
-      equal(lastModified, newModified,
-            "saveEntries with no modifications should not update the backing file");
+      equal(
+        lastModified,
+        newModified,
+        "saveEntries with no modifications should not update the backing file"
+      );
     }
   });
 
-  add_test({
-    skip_if: () => AppConstants.MOZ_NEW_CERT_STORAGE,
-  }, function() {
-    // Check the blocklist entry has not changed
-    check_revocations_txt_contents(expected);
-    run_next_test();
-  });
+  add_test(
+    {
+      skip_if: () => AppConstants.MOZ_NEW_CERT_STORAGE,
+    },
+    function() {
+      // Check the blocklist entry has not changed
+      check_revocations_txt_contents(expected);
+      run_next_test();
+    }
+  );
 
-  add_task({
-    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
-  }, async function() {
-    ok(certList.isBlocklistFresh(), "Blocklist should be fresh.");
-  });
+  add_task(
+    {
+      skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+    },
+    async function() {
+      ok(certList.isBlocklistFresh(), "Blocklist should be fresh.");
+    }
+  );
 
   run_next_test();
 }

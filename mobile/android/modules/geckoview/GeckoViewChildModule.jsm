@@ -6,9 +6,11 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewChildModule"];
 
-const {GeckoViewUtils} = ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
+const { GeckoViewUtils } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewUtils.jsm"
+);
 
-const {debug, warn} = GeckoViewUtils.initLogging("Module[C]"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewUtils.initLogging("Module[C]"); // eslint-disable-line no-unused-vars
 
 class GeckoViewChildModule {
   static initLogging(aModuleName) {
@@ -28,25 +30,27 @@ class GeckoViewChildModule {
     this.settings = {};
 
     if (!aGlobal._gvEventDispatcher) {
-      aGlobal._gvEventDispatcher =
-          GeckoViewUtils.getDispatcherForWindow(aGlobal.content);
-      aGlobal.addEventListener("unload", event => {
-        if (event.target === this.messageManager) {
-          aGlobal._gvEventDispatcher.finalize();
+      aGlobal._gvEventDispatcher = GeckoViewUtils.getDispatcherForWindow(
+        aGlobal.content
+      );
+      aGlobal.addEventListener(
+        "unload",
+        event => {
+          if (event.target === this.messageManager) {
+            aGlobal._gvEventDispatcher.finalize();
+          }
+        },
+        {
+          mozSystemGroup: true,
         }
-      }, {
-        mozSystemGroup: true,
-      });
+      );
     }
     this.eventDispatcher = aGlobal._gvEventDispatcher;
 
-    this.messageManager.addMessageListener(
-      "GeckoView:UpdateSettings",
-      aMsg => {
-        Object.assign(this.settings, aMsg.data);
-        this.onSettingsUpdate();
-      }
-    );
+    this.messageManager.addMessageListener("GeckoView:UpdateSettings", aMsg => {
+      Object.assign(this.settings, aMsg.data);
+      this.onSettingsUpdate();
+    });
 
     this.messageManager.addMessageListener(
       "GeckoView:UpdateModuleState",
@@ -55,7 +59,7 @@ class GeckoViewChildModule {
           return;
         }
 
-        const {enabled, settings} = aMsg.data;
+        const { enabled, settings } = aMsg.data;
 
         if (settings) {
           Object.assign(this.settings, settings);

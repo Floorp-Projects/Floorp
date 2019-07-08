@@ -60,22 +60,29 @@ function editableTextTest(aID) {
     }
 
     aSkipStartOffset = aSkipStartOffset || 0;
-    var insertTripple = aValue ?
-      [ aSkipStartOffset, aSkipStartOffset + aValue.length, aValue ] : null;
+    var insertTripple = aValue
+      ? [aSkipStartOffset, aSkipStartOffset + aValue.length, aValue]
+      : null;
     var oldValue = getValue();
-    var removeTripple = oldValue ?
-      [ aSkipStartOffset, aSkipStartOffset + oldValue.length, oldValue ] : null;
+    var removeTripple = oldValue
+      ? [aSkipStartOffset, aSkipStartOffset + oldValue.length, oldValue]
+      : null;
 
-    this.generateTest(removeTripple, insertTripple, setTextContentsInvoke,
-                      getValueChecker(aValue), testID);
+    this.generateTest(
+      removeTripple,
+      insertTripple,
+      setTextContentsInvoke,
+      getValueChecker(aValue),
+      testID
+    );
   };
 
   /**
    * insertText test.
    */
   this.insertText = function insertText(aStr, aPos, aResStr, aResPos) {
-    var testID = "insertText '" + aStr + "' at " + aPos + " for " +
-      prettyName(aID);
+    var testID =
+      "insertText '" + aStr + "' at " + aPos + " for " + prettyName(aID);
 
     function insertTextInvoke() {
       dump(`\ninsertText '${aStr}' at ${aPos} pos\n`);
@@ -83,16 +90,26 @@ function editableTextTest(aID) {
       acc.insertText(aStr, aPos);
     }
 
-    var resPos = (aResPos != undefined) ? aResPos : aPos;
-    this.generateTest(null, [resPos, resPos + aStr.length, aStr],
-                      insertTextInvoke, getValueChecker(aResStr), testID);
+    var resPos = aResPos != undefined ? aResPos : aPos;
+    this.generateTest(
+      null,
+      [resPos, resPos + aStr.length, aStr],
+      insertTextInvoke,
+      getValueChecker(aResStr),
+      testID
+    );
   };
 
   /**
    * copyText test.
    */
   this.copyText = function copyText(aStartPos, aEndPos, aClipboardStr) {
-    var testID = "copyText from " + aStartPos + " to " + aEndPos + " for " +
+    var testID =
+      "copyText from " +
+      aStartPos +
+      " to " +
+      aEndPos +
+      " for " +
       prettyName(aID);
 
     function copyTextInvoke() {
@@ -100,17 +117,33 @@ function editableTextTest(aID) {
       acc.copyText(aStartPos, aEndPos);
     }
 
-    this.generateTest(null, null, copyTextInvoke,
-                      getClipboardChecker(aClipboardStr), testID);
+    this.generateTest(
+      null,
+      null,
+      copyTextInvoke,
+      getClipboardChecker(aClipboardStr),
+      testID
+    );
   };
 
   /**
    * copyText and pasteText test.
    */
-  this.copyNPasteText = function copyNPasteText(aStartPos, aEndPos,
-                                                aPos, aResStr) {
-    var testID = "copyText from " + aStartPos + " to " + aEndPos +
-      "and pasteText at " + aPos + " for " + prettyName(aID);
+  this.copyNPasteText = function copyNPasteText(
+    aStartPos,
+    aEndPos,
+    aPos,
+    aResStr
+  ) {
+    var testID =
+      "copyText from " +
+      aStartPos +
+      " to " +
+      aEndPos +
+      "and pasteText at " +
+      aPos +
+      " for " +
+      prettyName(aID);
 
     function copyNPasteTextInvoke() {
       var acc = getAccessible(aID, nsIAccessibleEditableText);
@@ -118,16 +151,31 @@ function editableTextTest(aID) {
       acc.pasteText(aPos);
     }
 
-    this.generateTest(null, [aStartPos, aEndPos, getTextFromClipboard],
-                      copyNPasteTextInvoke, getValueChecker(aResStr), testID);
+    this.generateTest(
+      null,
+      [aStartPos, aEndPos, getTextFromClipboard],
+      copyNPasteTextInvoke,
+      getValueChecker(aResStr),
+      testID
+    );
   };
 
   /**
    * cutText test.
    */
-  this.cutText = function cutText(aStartPos, aEndPos, aResStr,
-                                  aResStartPos, aResEndPos) {
-    var testID = "cutText from " + aStartPos + " to " + aEndPos + " for " +
+  this.cutText = function cutText(
+    aStartPos,
+    aEndPos,
+    aResStr,
+    aResStartPos,
+    aResEndPos
+  ) {
+    var testID =
+      "cutText from " +
+      aStartPos +
+      " to " +
+      aEndPos +
+      " for " +
       prettyName(aID);
 
     function cutTextInvoke() {
@@ -135,19 +183,35 @@ function editableTextTest(aID) {
       acc.cutText(aStartPos, aEndPos);
     }
 
-    var resStartPos = (aResStartPos != undefined) ? aResStartPos : aStartPos;
-    var resEndPos = (aResEndPos != undefined) ? aResEndPos : aEndPos;
-    this.generateTest([resStartPos, resEndPos, getTextFromClipboard], null,
-                      cutTextInvoke, getValueChecker(aResStr), testID);
+    var resStartPos = aResStartPos != undefined ? aResStartPos : aStartPos;
+    var resEndPos = aResEndPos != undefined ? aResEndPos : aEndPos;
+    this.generateTest(
+      [resStartPos, resEndPos, getTextFromClipboard],
+      null,
+      cutTextInvoke,
+      getValueChecker(aResStr),
+      testID
+    );
   };
 
   /**
    * cutText and pasteText test.
    */
-  this.cutNPasteText = function copyNPasteText(aStartPos, aEndPos,
-                                               aPos, aResStr) {
-    var testID = "cutText from " + aStartPos + " to " + aEndPos +
-      " and pasteText at " + aPos + " for " + prettyName(aID);
+  this.cutNPasteText = function copyNPasteText(
+    aStartPos,
+    aEndPos,
+    aPos,
+    aResStr
+  ) {
+    var testID =
+      "cutText from " +
+      aStartPos +
+      " to " +
+      aEndPos +
+      " and pasteText at " +
+      aPos +
+      " for " +
+      prettyName(aID);
 
     function cutNPasteTextInvoke() {
       var acc = getAccessible(aID, nsIAccessibleEditableText);
@@ -155,10 +219,13 @@ function editableTextTest(aID) {
       acc.pasteText(aPos);
     }
 
-    this.generateTest([aStartPos, aEndPos, getTextFromClipboard],
-                      [aPos, -1, getTextFromClipboard],
-                      cutNPasteTextInvoke, getValueChecker(aResStr),
-                      testID);
+    this.generateTest(
+      [aStartPos, aEndPos, getTextFromClipboard],
+      [aPos, -1, getTextFromClipboard],
+      cutNPasteTextInvoke,
+      getValueChecker(aResStr),
+      testID
+    );
   };
 
   /**
@@ -172,16 +239,26 @@ function editableTextTest(aID) {
       acc.pasteText(aPos);
     }
 
-    this.generateTest(null, [aPos, -1, getTextFromClipboard],
-                      pasteTextInvoke, getValueChecker(aResStr), testID);
+    this.generateTest(
+      null,
+      [aPos, -1, getTextFromClipboard],
+      pasteTextInvoke,
+      getValueChecker(aResStr),
+      testID
+    );
   };
 
   /**
    * deleteText test.
    */
   this.deleteText = function deleteText(aStartPos, aEndPos, aResStr) {
-    var testID = "deleteText from " + aStartPos + " to " + aEndPos +
-      " for " + prettyName(aID);
+    var testID =
+      "deleteText from " +
+      aStartPos +
+      " to " +
+      aEndPos +
+      " for " +
+      prettyName(aID);
 
     var oldValue = getValue().substring(aStartPos, aEndPos);
     var removeTripple = oldValue ? [aStartPos, aEndPos, oldValue] : null;
@@ -191,8 +268,13 @@ function editableTextTest(aID) {
       acc.deleteText(aStartPos, aEndPos);
     }
 
-    this.generateTest(removeTripple, null, deleteTextInvoke,
-                      getValueChecker(aResStr), testID);
+    this.generateTest(
+      removeTripple,
+      null,
+      deleteTextInvoke,
+      getValueChecker(aResStr),
+      testID
+    );
   };
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -201,11 +283,13 @@ function editableTextTest(aID) {
   function getValue() {
     var elm = getNode(aID);
     var elmClass = ChromeUtils.getClassName(elm);
-    if (elmClass === "HTMLTextAreaElement" || elmClass === "HTMLInputElement")
+    if (elmClass === "HTMLTextAreaElement" || elmClass === "HTMLInputElement") {
       return elm.value;
+    }
 
-    if (elmClass === "HTMLDocument")
+    if (elmClass === "HTMLDocument") {
       return elm.body.textContent;
+    }
 
     return elm.textContent;
   }
@@ -236,15 +320,21 @@ function editableTextTest(aID) {
    */
   this.unwrapNextTest = function unwrapNextTest() {
     var data = this.mEventQueue.mInvokers[this.mEventQueue.mIndex + 1];
-    if (data)
+    if (data) {
       data.func.apply(this, data.funcArgs);
+    }
   };
 
   /**
    * Used to generate an invoker object for the sheduled test.
    */
-  this.generateTest = function generateTest(aRemoveTriple, aInsertTriple,
-                                            aInvokeFunc, aChecker, aInvokerID) {
+  this.generateTest = function generateTest(
+    aRemoveTriple,
+    aInsertTriple,
+    aInvokeFunc,
+    aChecker,
+    aInvokerID
+  ) {
     var et = this;
     var invoker = {
       eventSeq: [],
@@ -256,26 +346,37 @@ function editableTextTest(aID) {
         aChecker.check();
         et.unwrapNextTest(); // replace dummy invoker on real invoker object.
       },
-      getID: function getID() { return aInvokerID; },
+      getID: function getID() {
+        return aInvokerID;
+      },
     };
 
     if (aRemoveTriple) {
-      let checker = new textChangeChecker(aID, aRemoveTriple[0],
-                                          aRemoveTriple[1], aRemoveTriple[2],
-                                          false);
+      let checker = new textChangeChecker(
+        aID,
+        aRemoveTriple[0],
+        aRemoveTriple[1],
+        aRemoveTriple[2],
+        false
+      );
       invoker.eventSeq.push(checker);
     }
 
     if (aInsertTriple) {
-      let checker = new textChangeChecker(aID, aInsertTriple[0],
-                                          aInsertTriple[1], aInsertTriple[2],
-                                          true);
+      let checker = new textChangeChecker(
+        aID,
+        aInsertTriple[0],
+        aInsertTriple[1],
+        aInsertTriple[2],
+        true
+      );
       invoker.eventSeq.push(checker);
     }
 
     // Claim that we don't want to fail when no events are expected.
-    if (!aRemoveTriple && !aInsertTriple)
+    if (!aRemoveTriple && !aInsertTriple) {
       invoker.noEventsOnAction = true;
+    }
 
     this.mEventQueue.mInvokers[this.mEventQueue.mIndex + 1] = invoker;
   };

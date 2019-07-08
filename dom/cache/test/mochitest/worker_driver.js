@@ -30,8 +30,11 @@ function workerTestExec(script) {
   return new Promise(function(resolve, reject) {
     var worker = new Worker("worker_wrapper.js");
     worker.onmessage = function(event) {
-      is(event.data.context, "Worker",
-         "Correct context for messages received on the worker");
+      is(
+        event.data.context,
+        "Worker",
+        "Correct context for messages received on the worker"
+      );
       if (event.data.type == "finish") {
         worker.terminate();
         SpecialPowers.forceGC();
@@ -51,7 +54,10 @@ function workerTestExec(script) {
       } else if (event.data.type == "getPermissions") {
         let result = {};
         event.data.permissions.forEach(function(permission) {
-          result[permission] = SpecialPowers.hasPermission(permission, window.document);
+          result[permission] = SpecialPowers.hasPermission(
+            permission,
+            window.document
+          );
         });
         worker.postMessage({
           type: "returnPermissions",

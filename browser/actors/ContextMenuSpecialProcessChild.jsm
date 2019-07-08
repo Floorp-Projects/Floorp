@@ -6,9 +6,13 @@
 
 var EXPORTED_SYMBOLS = ["ContextMenuSpecialProcessChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { E10SUtils } = ChromeUtils.import(
+  "resource://gre/modules/E10SUtils.jsm"
+);
 
 /**
  * This module is a workaround for bug 1555154, where the contextmenu event doesn't
@@ -17,9 +21,14 @@ const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
  */
 class ContextMenuSpecialProcessChild extends ActorChild {
   handleEvent(event) {
-    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT ||
-        Services.appinfo.remoteType == E10SUtils.EXTENSION_REMOTE_TYPE) {
-      this.content.getWindowGlobalChild().getActor("ContextMenu").handleEvent(event);
+    if (
+      Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT ||
+      Services.appinfo.remoteType == E10SUtils.EXTENSION_REMOTE_TYPE
+    ) {
+      this.content
+        .getWindowGlobalChild()
+        .getActor("ContextMenu")
+        .handleEvent(event);
     }
   }
 }

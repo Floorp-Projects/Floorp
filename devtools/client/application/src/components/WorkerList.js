@@ -6,8 +6,17 @@
 
 const { openTrustedLink } = require("devtools/client/shared/link");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { createFactory, Component } = require("devtools/client/shared/vendor/react");
-const { a, article, footer, h1, ul } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  createFactory,
+  Component,
+} = require("devtools/client/shared/vendor/react");
+const {
+  a,
+  article,
+  footer,
+  h1,
+  ul,
+} = require("devtools/client/shared/vendor/react-dom-factories");
 const Worker = createFactory(require("./Worker"));
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
@@ -31,27 +40,27 @@ class WorkerList extends Component {
     const { canDebugWorkers, client, workers } = this.props;
 
     return [
-      article({ className: "workers-container" },
-        Localized(
-          { id: "serviceworker-list-header" },
-          h1({})
-        ),
-        ul({},
-          workers.map(worker => Worker({
-            client,
-            isDebugEnabled: canDebugWorkers,
-            worker,
-          })))
+      article(
+        { className: "workers-container" },
+        Localized({ id: "serviceworker-list-header" }, h1({})),
+        ul(
+          {},
+          workers.map(worker =>
+            Worker({
+              client,
+              isDebugEnabled: canDebugWorkers,
+              worker,
+            })
+          )
+        )
       ),
       Localized(
         {
           id: "serviceworker-list-aboutdebugging2",
-          a: a(
-            {
-              className: "aboutdebugging-plug__link",
-              onClick: () => openTrustedLink("about:debugging#workers"),
-            }
-          ),
+          a: a({
+            className: "aboutdebugging-plug__link",
+            onClick: () => openTrustedLink("about:debugging#workers"),
+          }),
         },
         footer({ className: "aboutdebugging-plug" })
       ),

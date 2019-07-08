@@ -20,23 +20,36 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
+  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${t.targetClass}`));
   const { animationInspector, panel } = await openAnimationInspector();
 
   info("Checking animated property list and items existence at initial");
-  ok(!panel.querySelector(".animated-property-list"),
-     "The animated-property-list should not be in the DOM at initial");
+  ok(
+    !panel.querySelector(".animated-property-list"),
+    "The animated-property-list should not be in the DOM at initial"
+  );
 
   for (const { targetClass, expectedNumber } of TEST_DATA) {
-    info(`Checking animated-property-list and items existence at ${ targetClass }`);
-    await clickOnAnimationByTargetSelector(animationInspector,
-                                           panel, `.${ targetClass }`);
-    ok(panel.querySelector(".animated-property-list"),
-      `The animated-property-list should be in the DOM at ${ targetClass }`);
-    const itemEls =
-      panel.querySelectorAll(".animated-property-list .animated-property-item");
-    is(itemEls.length, expectedNumber,
-       `The number of animated-property-list should be ${ expectedNumber } ` +
-       `at ${ targetClass }`);
+    info(
+      `Checking animated-property-list and items existence at ${targetClass}`
+    );
+    await clickOnAnimationByTargetSelector(
+      animationInspector,
+      panel,
+      `.${targetClass}`
+    );
+    ok(
+      panel.querySelector(".animated-property-list"),
+      `The animated-property-list should be in the DOM at ${targetClass}`
+    );
+    const itemEls = panel.querySelectorAll(
+      ".animated-property-list .animated-property-item"
+    );
+    is(
+      itemEls.length,
+      expectedNumber,
+      `The number of animated-property-list should be ${expectedNumber} ` +
+        `at ${targetClass}`
+    );
   }
 });

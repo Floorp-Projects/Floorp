@@ -2,11 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["nsBrowserContentHandler", "nsDefaultCommandLineHandler"];
+var EXPORTED_SYMBOLS = [
+  "nsBrowserContentHandler",
+  "nsDefaultCommandLineHandler",
+];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
@@ -17,20 +24,27 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   UpdatePing: "resource://gre/modules/UpdatePing.jsm",
-  RemotePages: "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm",
+  RemotePages:
+    "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm",
 });
-XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
-  "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "WindowsUIUtils",
+  "@mozilla.org/windows-ui-utils;1",
+  "nsIWindowsUIUtils"
+);
 
-XPCOMUtils.defineLazyGetter(this, "gSystemPrincipal",
-  () => Services.scriptSecurityManager.getSystemPrincipal());
+XPCOMUtils.defineLazyGetter(this, "gSystemPrincipal", () =>
+  Services.scriptSecurityManager.getSystemPrincipal()
+);
 XPCOMUtils.defineLazyGlobalGetters(this, [URL]);
 
 const NEWINSTALL_PAGE = "about:newinstall";
 
 function shouldLoadURI(aURI) {
-  if (aURI && !aURI.schemeIs("chrome"))
+  if (aURI && !aURI.schemeIs("chrome")) {
     return true;
+  }
 
   dump("*** Preventing external load of chrome: URI into browser window\n");
   dump("    Use --chrome <uri> instead\n");
@@ -42,13 +56,16 @@ function resolveURIInternal(aCmdLine, aArgument) {
   var uriFixup = Services.uriFixup;
 
   if (!(uri instanceof Ci.nsIFileURL)) {
-    return uriFixup.createFixupURI(aArgument,
-                                   uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS);
+    return uriFixup.createFixupURI(
+      aArgument,
+      uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS
+    );
   }
 
   try {
-    if (uri.file.exists())
+    if (uri.file.exists()) {
       return uri;
+    }
   } catch (e) {
     Cu.reportError(e);
   }
@@ -77,9 +94,9 @@ function getNewInstallPage() {
 
 var gFirstWindow = false;
 
-const OVERRIDE_NONE        = 0;
+const OVERRIDE_NONE = 0;
 const OVERRIDE_NEW_PROFILE = 1;
-const OVERRIDE_NEW_MSTONE  = 2;
+const OVERRIDE_NEW_MSTONE = 2;
 const OVERRIDE_NEW_BUILD_ID = 3;
 const OVERRIDE_ALTERNATE_PROFILE = 4;
 /**
@@ -93,19 +110,27 @@ const OVERRIDE_ALTERNATE_PROFILE = 4;
  *  OVERRIDE_NONE otherwise.
  */
 function needHomepageOverride(prefb) {
-  let pService = Cc["@mozilla.org/toolkit/profile-service;1"].
-                 getService(Ci.nsIToolkitProfileService);
+  let pService = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
+    Ci.nsIToolkitProfileService
+  );
   if (pService.createdAlternateProfile) {
     return OVERRIDE_ALTERNATE_PROFILE;
   }
-  var savedmstone = prefb.getCharPref("browser.startup.homepage_override.mstone", "");
+  var savedmstone = prefb.getCharPref(
+    "browser.startup.homepage_override.mstone",
+    ""
+  );
 
-  if (savedmstone == "ignore")
+  if (savedmstone == "ignore") {
     return OVERRIDE_NONE;
+  }
 
   var mstone = Services.appinfo.platformVersion;
 
-  var savedBuildID = prefb.getCharPref("browser.startup.homepage_override.buildID", "");
+  var savedBuildID = prefb.getCharPref(
+    "browser.startup.homepage_override.buildID",
+    ""
+  );
 
   var buildID = Services.appinfo.platformBuildID;
 
@@ -114,12 +139,13 @@ function needHomepageOverride(prefb) {
     // agreement if the platform's installer had already shown one. Now with
     // about:rights we've removed the EULA stuff and default pref, but we need
     // a way to make existing profiles retain the default that we removed.
-    if (savedmstone)
+    if (savedmstone) {
       prefb.setBoolPref("browser.rights.3.shown", true);
+    }
 
     prefb.setCharPref("browser.startup.homepage_override.mstone", mstone);
     prefb.setCharPref("browser.startup.homepage_override.buildID", buildID);
-    return (savedmstone ? OVERRIDE_NEW_MSTONE : OVERRIDE_NEW_PROFILE);
+    return savedmstone ? OVERRIDE_NEW_MSTONE : OVERRIDE_NEW_PROFILE;
   }
 
   if (buildID != savedBuildID) {
@@ -138,19 +164,18 @@ function needHomepageOverride(prefb) {
  * @return The override page.
  */
 function getPostUpdateOverridePage(defaultOverridePage) {
-  var um = Cc["@mozilla.org/updates/update-manager;1"]
-             .getService(Ci.nsIUpdateManager);
+  var um = Cc["@mozilla.org/updates/update-manager;1"].getService(
+    Ci.nsIUpdateManager
+  );
   // The active update should be present when this code is called. If for
   // whatever reason it isn't fallback to the latest update in the update
   // history.
   if (um.activeUpdate) {
-    var update = um.activeUpdate
-                   .QueryInterface(Ci.nsIWritablePropertyBag);
+    var update = um.activeUpdate.QueryInterface(Ci.nsIWritablePropertyBag);
   } else {
     // If the updates.xml file is deleted then getUpdateAt will throw.
     try {
-      update = um.getUpdateAt(0)
-                 .QueryInterface(Ci.nsIWritablePropertyBag);
+      update = um.getUpdateAt(0).QueryInterface(Ci.nsIWritablePropertyBag);
     } catch (e) {
       Cu.reportError("Unable to find update: " + e);
       return defaultOverridePage;
@@ -160,13 +185,15 @@ function getPostUpdateOverridePage(defaultOverridePage) {
   let actions = update.getProperty("actions");
   // When the update doesn't specify actions fallback to the original behavior
   // of displaying the default override page.
-  if (!actions)
+  if (!actions) {
     return defaultOverridePage;
+  }
 
   // The existence of silent or the non-existence of showURL in the actions both
   // mean that an override page should not be displayed.
-  if (actions.includes("silent") || !actions.includes("showURL"))
+  if (actions.includes("silent") || !actions.includes("showURL")) {
     return "";
+  }
 
   // If a policy was set to not allow the update.xml-provided
   // URL to be used, use the default fallback (which will also
@@ -202,8 +229,13 @@ function getPostUpdateOverridePage(defaultOverridePage) {
  * @param forcePrivate (optional)
  *        Boolean. If set to true, the new window will be a private browsing one.
  */
-function openBrowserWindow(cmdLine, triggeringPrincipal, urlOrUrlList, postData = null,
-                           forcePrivate = false) {
+function openBrowserWindow(
+  cmdLine,
+  triggeringPrincipal,
+  urlOrUrlList,
+  postData = null,
+  forcePrivate = false
+) {
   let chromeURL = AppConstants.BROWSER_CHROME_URL;
 
   let args;
@@ -211,10 +243,14 @@ function openBrowserWindow(cmdLine, triggeringPrincipal, urlOrUrlList, postData 
     // Just pass in the defaultArgs directly. We'll use system principal on the other end.
     args = [gBrowserContentHandler.defaultArgs];
   } else {
-    let pService = Cc["@mozilla.org/toolkit/profile-service;1"].
-                  getService(Ci.nsIToolkitProfileService);
-    if (cmdLine && cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH &&
-        pService.createdAlternateProfile) {
+    let pService = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
+      Ci.nsIToolkitProfileService
+    );
+    if (
+      cmdLine &&
+      cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH &&
+      pService.createdAlternateProfile
+    ) {
       let url = getNewInstallPage();
       if (Array.isArray(urlOrUrlList)) {
         urlOrUrlList.unshift(url);
@@ -226,15 +262,22 @@ function openBrowserWindow(cmdLine, triggeringPrincipal, urlOrUrlList, postData 
     if (Array.isArray(urlOrUrlList)) {
       // There isn't an explicit way to pass a principal here, so we load multiple URLs
       // with system principal when we get to actually loading them.
-      if (!triggeringPrincipal || !triggeringPrincipal.equals(gSystemPrincipal)) {
-        throw new Error("Can't open multiple URLs with something other than system principal.");
+      if (
+        !triggeringPrincipal ||
+        !triggeringPrincipal.equals(gSystemPrincipal)
+      ) {
+        throw new Error(
+          "Can't open multiple URLs with something other than system principal."
+        );
       }
       // Passing an nsIArray for the url disables the "|"-splitting behavior.
-      let uriArray = Cc["@mozilla.org/array;1"]
-                      .createInstance(Ci.nsIMutableArray);
+      let uriArray = Cc["@mozilla.org/array;1"].createInstance(
+        Ci.nsIMutableArray
+      );
       urlOrUrlList.forEach(function(uri) {
-        var sstring = Cc["@mozilla.org/supports-string;1"]
-                        .createInstance(Ci.nsISupportsString);
+        var sstring = Cc["@mozilla.org/supports-string;1"].createInstance(
+          Ci.nsISupportsString
+        );
         sstring.data = uri;
         uriArray.appendElement(sstring);
       });
@@ -243,16 +286,18 @@ function openBrowserWindow(cmdLine, triggeringPrincipal, urlOrUrlList, postData 
       // Always pass at least 3 arguments to avoid the "|"-splitting behavior,
       // ie. avoid the loadOneOrMoreURIs function.
       // Also, we need to pass the triggering principal.
-      args = [urlOrUrlList,
-              null, // charset
-              null, // refererInfo
-              postData,
-              undefined, // allowThirdPartyFixup; this would be `false` but that
-                         // needs a conversion. Hopefully bug 1485961 will fix.
-              undefined, // user context id
-              null, // origin principal
-              null, // origin storage principal
-              triggeringPrincipal];
+      args = [
+        urlOrUrlList,
+        null, // charset
+        null, // refererInfo
+        postData,
+        undefined, // allowThirdPartyFixup; this would be `false` but that
+        // needs a conversion. Hopefully bug 1485961 will fix.
+        undefined, // user context id
+        null, // origin principal
+        null, // origin storage principal
+        triggeringPrincipal,
+      ];
     }
   }
 
@@ -264,9 +309,9 @@ function openBrowserWindow(cmdLine, triggeringPrincipal, urlOrUrlList, postData 
       win.document.documentElement.removeAttribute("windowtype");
 
       if (forcePrivate) {
-        win.docShell
-           .QueryInterface(Ci.nsILoadContext)
-           .usePrivateBrowsing = true;
+        win.docShell.QueryInterface(
+          Ci.nsILoadContext
+        ).usePrivateBrowsing = true;
       }
 
       win.location = chromeURL;
@@ -281,25 +326,31 @@ function openBrowserWindow(cmdLine, triggeringPrincipal, urlOrUrlList, postData 
     // If we have a single string guaranteed to not contain '|' we can simply
     // wrap it in an nsISupportsString object.
     let [url] = args;
-    args = Cc["@mozilla.org/supports-string;1"]
-             .createInstance(Ci.nsISupportsString);
+    args = Cc["@mozilla.org/supports-string;1"].createInstance(
+      Ci.nsISupportsString
+    );
     args.data = url;
   } else {
     // Otherwise, pass an nsIArray.
     if (args.length > 1) {
-      let string = Cc["@mozilla.org/supports-string;1"]
-                     .createInstance(Ci.nsISupportsString);
+      let string = Cc["@mozilla.org/supports-string;1"].createInstance(
+        Ci.nsISupportsString
+      );
       string.data = args[0];
       args[0] = string;
     }
     let array = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-    args.forEach(a => { array.appendElement(a); });
+    args.forEach(a => {
+      array.appendElement(a);
+    });
     args = array;
   }
 
-  let features = "chrome,dialog=no,all" + gBrowserContentHandler.getFeatures(cmdLine);
-  if (forcePrivate)
+  let features =
+    "chrome,dialog=no,all" + gBrowserContentHandler.getFeatures(cmdLine);
+  if (forcePrivate) {
     features += ",private";
+  }
 
   Services.ww.openWindow(null, chromeURL, "_blank", features, args);
 }
@@ -310,7 +361,7 @@ function openPreferences(cmdLine, extraArgs) {
 
 function doSearch(searchTerm, cmdLine) {
   var engine = Services.search.defaultEngine;
-  var countId = (engine.identifier || ("other-" + engine.name)) + ".system";
+  var countId = (engine.identifier || "other-" + engine.name) + ".system";
   var count = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
   count.add(countId);
 
@@ -318,7 +369,12 @@ function doSearch(searchTerm, cmdLine) {
 
   // XXXbsmedberg: use handURIToExistingBrowser to obey tabbed-browsing
   // preferences, but need nsIBrowserDOMWindow extensions
-  openBrowserWindow(cmdLine, gSystemPrincipal, submission.uri.spec, submission.postData);
+  openBrowserWindow(
+    cmdLine,
+    gSystemPrincipal,
+    submission.uri.spec,
+    submission.postData
+  );
 }
 
 function nsBrowserContentHandler() {
@@ -329,10 +385,12 @@ function nsBrowserContentHandler() {
 }
 nsBrowserContentHandler.prototype = {
   /* nsISupports */
-  QueryInterface: ChromeUtils.generateQI([Ci.nsICommandLineHandler,
-                                          Ci.nsIBrowserHandler,
-                                          Ci.nsIContentHandler,
-                                          Ci.nsICommandLineValidator]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsICommandLineHandler,
+    Ci.nsIBrowserHandler,
+    Ci.nsIContentHandler,
+    Ci.nsICommandLineValidator,
+  ]),
 
   /* nsICommandLineHandler */
   handle: function bch_handle(cmdLine) {
@@ -356,8 +414,9 @@ nsBrowserContentHandler.prototype = {
     try {
       while ((uriparam = cmdLine.handleFlagWithParam("new-window", false))) {
         let uri = resolveURIInternal(cmdLine, uriparam);
-        if (!shouldLoadURI(uri))
+        if (!shouldLoadURI(uri)) {
           continue;
+        }
         openBrowserWindow(cmdLine, gSystemPrincipal, uri.spec);
         cmdLine.preventDefault = true;
       }
@@ -368,9 +427,13 @@ nsBrowserContentHandler.prototype = {
     try {
       while ((uriparam = cmdLine.handleFlagWithParam("new-tab", false))) {
         let uri = resolveURIInternal(cmdLine, uriparam);
-        handURIToExistingBrowser(uri, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
-                                 cmdLine, false,
-                                 gSystemPrincipal);
+        handURIToExistingBrowser(
+          uri,
+          Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
+          cmdLine,
+          false,
+          gSystemPrincipal
+        );
         cmdLine.preventDefault = true;
       }
     } catch (e) {
@@ -380,8 +443,10 @@ nsBrowserContentHandler.prototype = {
     var chromeParam = cmdLine.handleFlagWithParam("chrome", false);
     if (chromeParam) {
       // Handle old preference dialog URLs.
-      if (chromeParam == "chrome://browser/content/pref/pref.xul" ||
-          chromeParam == "chrome://browser/content/preferences/preferences.xul") {
+      if (
+        chromeParam == "chrome://browser/content/pref/pref.xul" ||
+        chromeParam == "chrome://browser/content/preferences/preferences.xul"
+      ) {
         openPreferences(cmdLine);
         cmdLine.preventDefault = true;
       } else {
@@ -399,14 +464,23 @@ nsBrowserContentHandler.prototype = {
             let features = "chrome,dialog=no,all" + this.getFeatures(cmdLine);
             // Provide 1 null argument, as openWindow has a different behavior
             // when the arg count is 0.
-            let argArray = Cc["@mozilla.org/array;1"]
-                            .createInstance(Ci.nsIMutableArray);
+            let argArray = Cc["@mozilla.org/array;1"].createInstance(
+              Ci.nsIMutableArray
+            );
             argArray.appendElement(null);
-            Services.ww.openWindow(null, resolvedURI.spec, "_blank", features, argArray);
+            Services.ww.openWindow(
+              null,
+              resolvedURI.spec,
+              "_blank",
+              features,
+              argArray
+            );
             cmdLine.preventDefault = true;
           } else {
             dump("*** Preventing load of web URI as chrome\n");
-            dump("    If you're trying to load a webpage, do not pass --chrome.\n");
+            dump(
+              "    If you're trying to load a webpage, do not pass --chrome.\n"
+            );
           }
         } catch (e) {
           Cu.reportError(e);
@@ -417,11 +491,15 @@ nsBrowserContentHandler.prototype = {
       openPreferences(cmdLine);
       cmdLine.preventDefault = true;
     }
-    if (cmdLine.handleFlag("silent", false))
+    if (cmdLine.handleFlag("silent", false)) {
       cmdLine.preventDefault = true;
+    }
 
     try {
-      var privateWindowParam = cmdLine.handleFlagWithParam("private-window", false);
+      var privateWindowParam = cmdLine.handleFlagWithParam(
+        "private-window",
+        false
+      );
       if (privateWindowParam) {
         let forcePrivate = true;
         let resolvedURI;
@@ -433,8 +511,13 @@ nsBrowserContentHandler.prototype = {
         } else {
           resolvedURI = resolveURIInternal(cmdLine, privateWindowParam);
         }
-        handURIToExistingBrowser(resolvedURI, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
-                                 cmdLine, forcePrivate, gSystemPrincipal);
+        handURIToExistingBrowser(
+          resolvedURI,
+          Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
+          cmdLine,
+          forcePrivate,
+          gSystemPrincipal
+        );
         cmdLine.preventDefault = true;
       }
     } catch (e) {
@@ -443,8 +526,13 @@ nsBrowserContentHandler.prototype = {
       }
       // NS_ERROR_INVALID_ARG is thrown when flag exists, but has no param.
       if (cmdLine.handleFlag("private-window", false)) {
-        openBrowserWindow(cmdLine, gSystemPrincipal, "about:privatebrowsing", null,
-                          PrivateBrowsingUtils.enabled);
+        openBrowserWindow(
+          cmdLine,
+          gSystemPrincipal,
+          "about:privatebrowsing",
+          null,
+          PrivateBrowsingUtils.enabled
+        );
         cmdLine.preventDefault = true;
       }
     }
@@ -462,9 +550,9 @@ nsBrowserContentHandler.prototype = {
       if (cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
         let win = Services.wm.getMostRecentWindow("navigator:blank");
         if (win) {
-          win.docShell
-             .QueryInterface(Ci.nsILoadContext)
-             .usePrivateBrowsing = true;
+          win.docShell.QueryInterface(
+            Ci.nsILoadContext
+          ).usePrivateBrowsing = true;
         }
       }
     }
@@ -497,18 +585,21 @@ nsBrowserContentHandler.prototype = {
 
   get helpInfo() {
     let info =
-              "  --browser          Open a browser window.\n" +
-              "  --new-window <url> Open <url> in a new window.\n" +
-              "  --new-tab <url>    Open <url> in a new tab.\n" +
-              "  --private-window <url> Open <url> in a new private window.\n";
+      "  --browser          Open a browser window.\n" +
+      "  --new-window <url> Open <url> in a new window.\n" +
+      "  --new-tab <url>    Open <url> in a new tab.\n" +
+      "  --private-window <url> Open <url> in a new private window.\n";
     if (AppConstants.platform == "win") {
       info += "  --preferences      Open Options dialog.\n";
     } else {
       info += "  --preferences      Open Preferences dialog.\n";
     }
-    info += "  --screenshot [<path>] Save screenshot to <path> or in working directory.\n";
-    info += "  --window-size width[,height] Width and optionally height of screenshot.\n";
-    info += "  --search <term>    Search <term> with your default search engine.\n";
+    info +=
+      "  --screenshot [<path>] Save screenshot to <path> or in working directory.\n";
+    info +=
+      "  --window-size width[,height] Width and optionally height of screenshot.\n";
+    info +=
+      "  --search <term>    Search <term> with your default search engine.\n";
     info += "  --setDefaultBrowser Set this app as the default browser.\n";
     return info;
   },
@@ -535,8 +626,14 @@ nsBrowserContentHandler.prototype = {
       // URL if we do end up showing an overridePage. This makes it possible
       // to have the overridePage's content vary depending on the version we're
       // upgrading from.
-      let old_mstone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone", "unknown");
-      let old_buildId = Services.prefs.getCharPref("browser.startup.homepage_override.buildID", "unknown");
+      let old_mstone = Services.prefs.getCharPref(
+        "browser.startup.homepage_override.mstone",
+        "unknown"
+      );
+      let old_buildId = Services.prefs.getCharPref(
+        "browser.startup.homepage_override.buildID",
+        "unknown"
+      );
       override = needHomepageOverride(prefb);
       if (override != OVERRIDE_NONE) {
         switch (override) {
@@ -548,8 +645,12 @@ nsBrowserContentHandler.prototype = {
             break;
           case OVERRIDE_NEW_PROFILE:
             // New profile.
-            overridePage = Services.urlFormatter.formatURLPref("startup.homepage_welcome_url");
-            additionalPage = Services.urlFormatter.formatURLPref("startup.homepage_welcome_url.additional");
+            overridePage = Services.urlFormatter.formatURLPref(
+              "startup.homepage_welcome_url"
+            );
+            additionalPage = Services.urlFormatter.formatURLPref(
+              "startup.homepage_welcome_url.additional"
+            );
             // Turn on 'later run' pages for new profiles.
             LaterRun.enabled = true;
             break;
@@ -561,7 +662,9 @@ nsBrowserContentHandler.prototype = {
             // we may open the startPage in addition to restoring the session.
             willRestoreSession = SessionStartup.isAutomaticRestoreEnabled();
 
-            overridePage = Services.urlFormatter.formatURLPref("startup.homepage_override_url");
+            overridePage = Services.urlFormatter.formatURLPref(
+              "startup.homepage_override_url"
+            );
             if (prefb.prefHasUserValue("app.update.postupdate")) {
               prefb.clearUserPref("app.update.postupdate");
               overridePage = getPostUpdateOverridePage(overridePage);
@@ -583,8 +686,9 @@ nsBrowserContentHandler.prototype = {
     } catch (ex) {}
 
     // formatURLPref might return "about:blank" if getting the pref fails
-    if (overridePage == "about:blank")
+    if (overridePage == "about:blank") {
       overridePage = "";
+    }
 
     if (!additionalPage) {
       additionalPage = LaterRun.getURL() || "";
@@ -601,21 +705,26 @@ nsBrowserContentHandler.prototype = {
     var startPage = "";
     try {
       var choice = prefb.getIntPref("browser.startup.page");
-      if (choice == 1 || choice == 3)
+      if (choice == 1 || choice == 3) {
         startPage = HomePage.get();
+      }
     } catch (e) {
       Cu.reportError(e);
     }
 
-    if (startPage == "about:blank")
+    if (startPage == "about:blank") {
       startPage = "";
+    }
 
-    let skipStartPage = ((override == OVERRIDE_NEW_PROFILE) || (override == OVERRIDE_ALTERNATE_PROFILE)) &&
+    let skipStartPage =
+      (override == OVERRIDE_NEW_PROFILE ||
+        override == OVERRIDE_ALTERNATE_PROFILE) &&
       prefb.getBoolPref("browser.startup.firstrunSkipsHomepage");
     // Only show the startPage if we're not restoring an update session and are
     // not set to skip the start page on this profile
-    if (overridePage && startPage && !willRestoreSession && !skipStartPage)
+    if (overridePage && startPage && !willRestoreSession && !skipStartPage) {
       return overridePage + "|" + startPage;
+    }
 
     return overridePage || startPage || "about:blank";
   },
@@ -631,12 +740,13 @@ nsBrowserContentHandler.prototype = {
           var width = cmdLine.handleFlagWithParam("width", false);
           var height = cmdLine.handleFlagWithParam("height", false);
 
-          if (width)
+          if (width) {
             this.mFeatures += ",width=" + width;
-          if (height)
+          }
+          if (height) {
             this.mFeatures += ",height=" + height;
-        } catch (e) {
-        }
+          }
+        } catch (e) {}
       }
 
       // The global PB Service consumes this flag, so only eat it in per-window
@@ -645,8 +755,10 @@ nsBrowserContentHandler.prototype = {
         this.mFeatures += ",private";
       }
 
-      if (Services.prefs.getBoolPref("browser.suppress_first_window_animation") &&
-          !Services.wm.getMostRecentWindow("navigator:browser")) {
+      if (
+        Services.prefs.getBoolPref("browser.suppress_first_window_animation") &&
+        !Services.wm.getMostRecentWindow("navigator:browser")
+      ) {
         this.mFeatures += ",suppressanimation";
       }
     }
@@ -660,8 +772,9 @@ nsBrowserContentHandler.prototype = {
     const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
 
     try {
-      var webNavInfo = Cc["@mozilla.org/webnavigation-info;1"]
-                         .getService(Ci.nsIWebNavigationInfo);
+      var webNavInfo = Cc["@mozilla.org/webnavigation-info;1"].getService(
+        Ci.nsIWebNavigationInfo
+      );
       if (!webNavInfo.isTypeSupported(contentType, null)) {
         throw NS_ERROR_WONT_HANDLE_CONTENT;
       }
@@ -670,8 +783,13 @@ nsBrowserContentHandler.prototype = {
     }
 
     request.QueryInterface(Ci.nsIChannel);
-    handURIToExistingBrowser(request.URI, Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW,
-                             null, false, request.loadInfo.triggeringPrincipal);
+    handURIToExistingBrowser(
+      request.URI,
+      Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW,
+      null,
+      false,
+      request.loadInfo.triggeringPrincipal
+    );
     request.cancel(Cr.NS_BINDING_ABORTED);
   },
 
@@ -681,15 +799,20 @@ nsBrowserContentHandler.prototype = {
     // flag is also present and the command line is valid.
     var osintFlagIdx = cmdLine.findFlag("osint", false);
     var urlFlagIdx = cmdLine.findFlag("url", false);
-    if (urlFlagIdx > -1 && (osintFlagIdx > -1 ||
-        cmdLine.state == Ci.nsICommandLine.STATE_REMOTE_EXPLICIT)) {
+    if (
+      urlFlagIdx > -1 &&
+      (osintFlagIdx > -1 ||
+        cmdLine.state == Ci.nsICommandLine.STATE_REMOTE_EXPLICIT)
+    ) {
       var urlParam = cmdLine.getArgument(urlFlagIdx + 1);
-      if (cmdLine.length != urlFlagIdx + 2 || /firefoxurl:/i.test(urlParam))
+      if (cmdLine.length != urlFlagIdx + 2 || /firefoxurl:/i.test(urlParam)) {
         throw Cr.NS_ERROR_ABORT;
+      }
       var isDefault = false;
       try {
-        var url = Services.urlFormatter.formatURLPref("app.support.baseURL") +
-                  "win10-default-browser";
+        var url =
+          Services.urlFormatter.formatURLPref("app.support.baseURL") +
+          "win10-default-browser";
         if (urlParam == url) {
           isDefault = ShellService.isDefaultBrowser(false, false);
         }
@@ -705,27 +828,45 @@ nsBrowserContentHandler.prototype = {
 };
 var gBrowserContentHandler = new nsBrowserContentHandler();
 
-function handURIToExistingBrowser(uri, location, cmdLine, forcePrivate, triggeringPrincipal) {
-  if (!shouldLoadURI(uri))
+function handURIToExistingBrowser(
+  uri,
+  location,
+  cmdLine,
+  forcePrivate,
+  triggeringPrincipal
+) {
+  if (!shouldLoadURI(uri)) {
     return;
+  }
 
   // Unless using a private window is forced, open external links in private
   // windows only if we're in perma-private mode.
-  var allowPrivate = forcePrivate || PrivateBrowsingUtils.permanentPrivateBrowsing;
-  var navWin = BrowserWindowTracker.getTopWindow({private: allowPrivate});
+  var allowPrivate =
+    forcePrivate || PrivateBrowsingUtils.permanentPrivateBrowsing;
+  var navWin = BrowserWindowTracker.getTopWindow({ private: allowPrivate });
   if (!navWin) {
     // if we couldn't load it in an existing window, open a new one
-    openBrowserWindow(cmdLine, triggeringPrincipal, uri.spec, null, forcePrivate);
+    openBrowserWindow(
+      cmdLine,
+      triggeringPrincipal,
+      uri.spec,
+      null,
+      forcePrivate
+    );
     return;
   }
 
   var bwin = navWin.browserDOMWindow;
-  bwin.openURI(uri, null, location,
-               Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL, triggeringPrincipal);
+  bwin.openURI(
+    uri,
+    null,
+    location,
+    Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL,
+    triggeringPrincipal
+  );
 }
 
-function nsDefaultCommandLineHandler() {
-}
+function nsDefaultCommandLineHandler() {}
 
 nsDefaultCommandLineHandler.prototype = {
   /* nsISupports */
@@ -750,7 +891,8 @@ nsDefaultCommandLineHandler.prototype = {
           Services.dirsvc.get("ProfD", Ci.nsIFile);
           this._haveProfile = true;
         } catch (e) {
-          while ((ar = cmdLine.handleFlagWithParam("url", false)));
+          // eslint-disable-next-line no-empty
+          while ((ar = cmdLine.handleFlagWithParam("url", false))) {}
           cmdLine.preventDefault = true;
         }
       }
@@ -767,14 +909,19 @@ nsDefaultCommandLineHandler.prototype = {
     }
 
     if (cmdLine.findFlag("screenshot", true) != -1) {
-      HeadlessShell.handleCmdLineArgs(cmdLine, urilist.filter(shouldLoadURI).map(u => u.spec));
+      HeadlessShell.handleCmdLineArgs(
+        cmdLine,
+        urilist.filter(shouldLoadURI).map(u => u.spec)
+      );
       return;
     }
 
     for (let i = 0; i < cmdLine.length; ++i) {
       var curarg = cmdLine.getArgument(i);
       if (curarg.match(/^-/)) {
-        Cu.reportError("Warning: unrecognized command line flag " + curarg + "\n");
+        Cu.reportError(
+          "Warning: unrecognized command line flag " + curarg + "\n"
+        );
         // To emulate the pre-nsICommandLine behavior, we ignore
         // the argument after an unrecognized flag.
         ++i;
@@ -782,22 +929,34 @@ nsDefaultCommandLineHandler.prototype = {
         try {
           urilist.push(resolveURIInternal(cmdLine, curarg));
         } catch (e) {
-          Cu.reportError("Error opening URI '" + curarg + "' from the command line: " + e + "\n");
+          Cu.reportError(
+            "Error opening URI '" +
+              curarg +
+              "' from the command line: " +
+              e +
+              "\n"
+          );
         }
       }
     }
 
     if (urilist.length) {
-      if (cmdLine.state != Ci.nsICommandLine.STATE_INITIAL_LAUNCH &&
-          urilist.length == 1) {
+      if (
+        cmdLine.state != Ci.nsICommandLine.STATE_INITIAL_LAUNCH &&
+        urilist.length == 1
+      ) {
         // Try to find an existing window and load our URI into the
         // current tab, new tab, or new window as prefs determine.
         try {
-          handURIToExistingBrowser(urilist[0], Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW,
-                                   cmdLine, false, gSystemPrincipal);
+          handURIToExistingBrowser(
+            urilist[0],
+            Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW,
+            cmdLine,
+            false,
+            gSystemPrincipal
+          );
           return;
-        } catch (e) {
-        }
+        } catch (e) {}
       }
 
       var URLlist = urilist.filter(shouldLoadURI).map(u => u.spec);
@@ -805,9 +964,11 @@ nsDefaultCommandLineHandler.prototype = {
         openBrowserWindow(cmdLine, gSystemPrincipal, URLlist);
       }
     } else if (!cmdLine.preventDefault) {
-      if (AppConstants.isPlatformAndVersionAtLeast("win", "10") &&
-          cmdLine.state != Ci.nsICommandLine.STATE_INITIAL_LAUNCH &&
-          WindowsUIUtils.inTabletMode) {
+      if (
+        AppConstants.isPlatformAndVersionAtLeast("win", "10") &&
+        cmdLine.state != Ci.nsICommandLine.STATE_INITIAL_LAUNCH &&
+        WindowsUIUtils.inTabletMode
+      ) {
         // In windows 10 tablet mode, do not create a new window, but reuse the existing one.
         let win = BrowserWindowTracker.getTopWindow();
         if (win) {
@@ -822,8 +983,9 @@ nsDefaultCommandLineHandler.prototype = {
       // window, but for now the blank window getting closed quickly (and
       // causing only a slight flicker) is better than leaving it open.
       let win = Services.wm.getMostRecentWindow("navigator:blank");
-      if (win)
+      if (win) {
         win.close();
+      }
     }
   },
 

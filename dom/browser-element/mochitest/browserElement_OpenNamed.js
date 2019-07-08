@@ -26,11 +26,15 @@ function runTest() {
     is(popupFrame.getAttribute("name"), "OpenNamed");
 
     // Called when file_browserElement_OpenNamed2.html loads into popupFrame.
-    popupFrame.addEventListener("mozbrowsershowmodalprompt", function(f) {
-      ok(gotPopup, "Got openwindow event before showmodalprompt event.");
-      is(f.detail.message, "success: loaded");
-      SimpleTest.executeSoon(test2);
-    }, {once: true});
+    popupFrame.addEventListener(
+      "mozbrowsershowmodalprompt",
+      function(f) {
+        ok(gotPopup, "Got openwindow event before showmodalprompt event.");
+        is(f.detail.message, "success: loaded");
+        SimpleTest.executeSoon(test2);
+      },
+      { once: true }
+    );
 
     document.body.appendChild(popupFrame);
   });

@@ -6,22 +6,37 @@
  */
 
 function compareLists(service, knownProfiles) {
-  Assert.equal(service.profileCount, knownProfiles.length, "profileCount should be correct.");
+  Assert.equal(
+    service.profileCount,
+    knownProfiles.length,
+    "profileCount should be correct."
+  );
   let serviceProfiles = Array.from(service.profiles);
-  Assert.equal(serviceProfiles.length, knownProfiles.length, "Enumerator length should be correct.");
+  Assert.equal(
+    serviceProfiles.length,
+    knownProfiles.length,
+    "Enumerator length should be correct."
+  );
 
   for (let i = 0; i < knownProfiles.length; i++) {
     // Cannot use strictEqual here, it attempts to print out a string
     // representation of the profile objects and on some platforms that recurses
     // infinitely.
-    Assert.ok(serviceProfiles[i] === knownProfiles[i], `Should have the right profile in position ${i}.`);
+    Assert.ok(
+      serviceProfiles[i] === knownProfiles[i],
+      `Should have the right profile in position ${i}.`
+    );
   }
 }
 
 function removeProfile(profiles, position) {
   dump(`Removing profile in position ${position}.`);
   Assert.greaterOrEqual(position, 0, "Should be removing a valid position.");
-  Assert.less(position, profiles.length, "Should be removing a valid position.");
+  Assert.less(
+    position,
+    profiles.length,
+    "Should be removing a valid position."
+  );
 
   let last = profiles.pop();
 
@@ -71,12 +86,7 @@ add_task(async () => {
   removeProfile(profiles, 2);
   compareLists(service, profiles);
 
-  let expectedNames = [
-    "profile9",
-    "profile7",
-    "profile5",
-    "profile4",
-  ];
+  let expectedNames = ["profile9", "profile7", "profile5", "profile4"];
 
   let serviceProfiles = Array.from(service.profiles);
   for (let i = 0; i < expectedNames.length; i++) {

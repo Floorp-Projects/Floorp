@@ -4,32 +4,37 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const FileUtils = ChromeUtils.import("resource://gre/modules/FileUtils.jsm").FileUtils;
-const gEnv = Cc["@mozilla.org/process/environment;1"]
-               .getService(Ci.nsIEnvironment);
-const gDashboard = Cc["@mozilla.org/network/dashboard;1"]
-                     .getService(Ci.nsIDashboard);
-const gDirServ = Cc["@mozilla.org/file/directory_service;1"]
-                   .getService(Ci.nsIDirectoryServiceProvider);
-const gNetLinkSvc = Cc["@mozilla.org/network/network-link-service;1"]
-                      .getService(Ci.nsINetworkLinkService);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const FileUtils = ChromeUtils.import("resource://gre/modules/FileUtils.jsm")
+  .FileUtils;
+const gEnv = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
+const gDashboard = Cc["@mozilla.org/network/dashboard;1"].getService(
+  Ci.nsIDashboard
+);
+const gDirServ = Cc["@mozilla.org/file/directory_service;1"].getService(
+  Ci.nsIDirectoryServiceProvider
+);
+const gNetLinkSvc = Cc[
+  "@mozilla.org/network/network-link-service;1"
+].getService(Ci.nsINetworkLinkService);
 
 const gRequestNetworkingData = {
-  "http": gDashboard.requestHttpConnections,
-  "sockets": gDashboard.requestSockets,
-  "dns": gDashboard.requestDNSInfo,
-  "websockets": gDashboard.requestWebsocketConnections,
-  "dnslookuptool": () => {},
-  "logging": () => {},
-  "rcwn": gDashboard.requestRcwnStats,
+  http: gDashboard.requestHttpConnections,
+  sockets: gDashboard.requestSockets,
+  dns: gDashboard.requestDNSInfo,
+  websockets: gDashboard.requestWebsocketConnections,
+  dnslookuptool: () => {},
+  logging: () => {},
+  rcwn: gDashboard.requestRcwnStats,
 };
 const gDashboardCallbacks = {
-  "http": displayHttp,
-  "sockets": displaySockets,
-  "dns": displayDns,
-  "websockets": displayWebsockets,
-  "rcwn": displayRcwnStats,
+  http: displayHttp,
+  sockets: displaySockets,
+  dns: displayDns,
+  websockets: displayWebsockets,
+  rcwn: displayRcwnStats,
 };
 
 const REFRESH_INTERVAL_MS = 3000;
@@ -130,10 +135,14 @@ function displayWebsockets(data) {
 function displayRcwnStats(data) {
   let status = Services.prefs.getBoolPref("network.http.rcwn.enabled");
   let linkType = gNetLinkSvc.linkType;
-  if (!(linkType == Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN ||
-        linkType == Ci.nsINetworkLinkService.LINK_TYPE_ETHERNET ||
-        linkType == Ci.nsINetworkLinkService.LINK_TYPE_USB ||
-        linkType == Ci.nsINetworkLinkService.LINK_TYPE_WIFI)) {
+  if (
+    !(
+      linkType == Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN ||
+      linkType == Ci.nsINetworkLinkService.LINK_TYPE_ETHERNET ||
+      linkType == Ci.nsINetworkLinkService.LINK_TYPE_USB ||
+      linkType == Ci.nsINetworkLinkService.LINK_TYPE_WIFI
+    )
+  ) {
     status = false;
   }
 
@@ -151,31 +160,27 @@ function displayRcwnStats(data) {
   document.getElementById("rcwn_cache_not_slow").innerText = cacheNotSlow;
 
   // Keep in sync with CachePerfStats::EDataType in CacheFileUtils.h
-  const perfStatTypes = [
-    "open",
-    "read",
-    "write",
-    "entryopen",
-  ];
+  const perfStatTypes = ["open", "read", "write", "entryopen"];
 
-  const perfStatFieldNames = [
-    "avgShort",
-    "avgLong",
-    "stddevLong",
-  ];
+  const perfStatFieldNames = ["avgShort", "avgLong", "stddevLong"];
 
   for (let typeIndex in perfStatTypes) {
     for (let statFieldIndex in perfStatFieldNames) {
-      document.getElementById("rcwn_perfstats_" + perfStatTypes[typeIndex] + "_"
-                              + perfStatFieldNames[statFieldIndex]).innerText =
+      document.getElementById(
+        "rcwn_perfstats_" +
+          perfStatTypes[typeIndex] +
+          "_" +
+          perfStatFieldNames[statFieldIndex]
+      ).innerText =
         data.perfStats[typeIndex][perfStatFieldNames[statFieldIndex]];
     }
   }
 }
 
 function requestAllNetworkingData() {
-  for (let id in gRequestNetworkingData)
+  for (let id in gRequestNetworkingData) {
     requestNetworkingDataForTab(id);
+  }
 }
 
 function requestNetworkingDataForTab(id) {
@@ -199,8 +204,9 @@ function init() {
   requestAllNetworkingData();
 
   let autoRefresh = document.getElementById("autorefcheck");
-  if (autoRefresh.checked)
+  if (autoRefresh.checked) {
     setAutoRefreshInterval(autoRefresh);
+  }
 
   autoRefresh.addEventListener("click", function() {
     let refrButton = document.getElementById("refreshButton");
@@ -215,14 +221,16 @@ function init() {
 
   let refr = document.getElementById("refreshButton");
   refr.addEventListener("click", requestAllNetworkingData);
-  if (document.getElementById("autorefcheck").checked)
+  if (document.getElementById("autorefcheck").checked) {
     refr.disabled = "disabled";
+  }
 
   // Event delegation on #categories element
   let menu = document.getElementById("categories");
   menu.addEventListener("click", function click(e) {
-    if (e.target && e.target.parentNode == menu)
+    if (e.target && e.target.parentNode == menu) {
       show(e.target);
+    }
   });
 
   let dnsLookupButton = document.getElementById("dnsLookupButton");
@@ -264,7 +272,9 @@ function init() {
   }
 
   if (location.hash) {
-    let sectionButton = document.getElementById("category-" + location.hash.substring(1));
+    let sectionButton = document.getElementById(
+      "category-" + location.hash.substring(1)
+    );
     if (sectionButton) {
       sectionButton.click();
     }
@@ -292,9 +302,10 @@ function updateLogFile() {
 
 function updateLogModules() {
   // Try to get the environment variable for the log file
-  let logModules = gEnv.get("MOZ_LOG") ||
-                   gEnv.get("MOZ_LOG_MODULES") ||
-                   gEnv.get("NSPR_LOG_MODULES");
+  let logModules =
+    gEnv.get("MOZ_LOG") ||
+    gEnv.get("MOZ_LOG_MODULES") ||
+    gEnv.get("NSPR_LOG_MODULES");
   let currentLogModules = document.getElementById("current-log-modules");
   let setLogModulesButton = document.getElementById("set-log-modules-button");
   if (logModules.length > 0) {
@@ -415,8 +426,9 @@ function show(button) {
   let current_tab = document.querySelector(".active");
   let category = button.getAttribute("id").substring("category-".length);
   let content = document.getElementById(category);
-  if (current_tab == content)
+  if (current_tab == content) {
     return;
+  }
   current_tab.classList.remove("active");
   current_tab.hidden = true;
   content.classList.add("active");

@@ -7,21 +7,20 @@
 
 const constants = require("devtools/client/webconsole/constants");
 
-const FilterState = (overrides) => Object.freeze(
-  cloneState(constants.DEFAULT_FILTERS_VALUES, overrides)
-);
+const FilterState = overrides =>
+  Object.freeze(cloneState(constants.DEFAULT_FILTERS_VALUES, overrides));
 
 function filters(state = FilterState(), action) {
   switch (action.type) {
     case constants.FILTER_TOGGLE:
-      const {filter} = action;
+      const { filter } = action;
       const active = !state[filter];
-      return cloneState(state, {[filter]: active});
+      return cloneState(state, { [filter]: active });
     case constants.FILTERS_CLEAR:
       return FilterState();
     case constants.FILTER_TEXT_SET:
-      const {text} = action;
-      return cloneState(state, {[constants.FILTERS.TEXT]: text});
+      const { text } = action;
+      return cloneState(state, { [constants.FILTERS.TEXT]: text });
   }
 
   return state;

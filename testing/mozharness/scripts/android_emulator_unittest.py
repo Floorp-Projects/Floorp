@@ -15,7 +15,7 @@ import subprocess
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
-from mozharness.base.log import FATAL
+from mozharness.base.log import WARNING, FATAL
 from mozharness.base.script import BaseScript, PreScriptAction
 from mozharness.mozilla.automation import TBPL_RETRY
 from mozharness.mozilla.mozbase import MozbaseMixin
@@ -28,6 +28,7 @@ from mozharness.mozilla.testing.codecoverage import (
 
 SUITE_DEFAULT_E10S = ['geckoview-junit', 'mochitest', 'reftest']
 SUITE_NO_E10S = ['cppunittest', 'geckoview-junit', 'xpcshell']
+SUITE_REPEATABLE = ['mochitest', 'reftest']
 
 
 class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMixin,
@@ -92,6 +93,15 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
          "dest": "enable_webrender",
          "default": False,
          "help": "Run with WebRender enabled.",
+         }
+    ], [
+        ['--repeat'],
+        {"action": "store",
+         "type": "int",
+         "dest": "repeat",
+         "default": 0,
+         "help": "Repeat the tests the given number of times. Supported "
+                 "by mochitest, reftest, crashtest, ignored otherwise."
          }
     ]] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(code_coverage_config_options)
@@ -270,6 +280,11 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                 cmd.extend(['--disable-e10s'])
             elif category not in SUITE_DEFAULT_E10S and self.e10s:
                 cmd.extend(['--e10s'])
+        if c.get('repeat'):
+            if category in SUITE_REPEATABLE:
+                cmd.extend(["--repeat=%s" % c.get('repeat')])
+            else:
+                self.log("--repeat not supported in {}".format(category), level=WARNING)
 
         if not (self.verify_enabled or self.per_test_coverage):
             if user_paths:

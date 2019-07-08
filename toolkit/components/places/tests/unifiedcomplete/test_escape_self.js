@@ -20,13 +20,13 @@ add_task(async function test_escape() {
   info("Unescaped location matches itself");
   await check_autocomplete({
     search: "http://unescapeduri/",
-    matches: [ { uri: uri1, title: "title" } ],
+    matches: [{ uri: uri1, title: "title" }],
   });
 
   info("Escaped location matches itself");
   await check_autocomplete({
     search: "http://escapeduri/%40/",
-    matches: [ { uri: uri2, title: "title" } ],
+    matches: [{ uri: uri2, title: "title" }],
   });
 
   await cleanup();

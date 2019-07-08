@@ -1,24 +1,17 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 const MODULE_BASE = "resource://services-common/";
-const shared_modules = [
-  "async.js",
-  "logmanager.js",
-  "rest.js",
-  "utils.js",
-];
+const shared_modules = ["async.js", "logmanager.js", "rest.js", "utils.js"];
 
-const non_android_modules = [
-  "tokenserverclient.js",
-];
+const non_android_modules = ["tokenserverclient.js"];
 
 const TEST_BASE = "resource://testing-common/services/common/";
-const shared_test_modules = [
-  "logging.js",
-];
+const shared_test_modules = ["logging.js"];
 
 function expectImportsToSucceed(mm, base = MODULE_BASE) {
   for (let m of mm) {

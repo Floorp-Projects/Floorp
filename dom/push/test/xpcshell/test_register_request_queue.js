@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
+const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
 
 function run_test() {
   do_get_profile();
@@ -16,17 +16,24 @@ function run_test() {
 
 add_task(async function test_register_request_queue() {
   let db = PushServiceWebSocket.newPushDB();
-  registerCleanupFunction(() => { return db.drop().then(_ => db.close()); });
+  registerCleanupFunction(() => {
+    return db.drop().then(_ => db.close());
+  });
 
   let onHello;
-  let helloPromise = new Promise(resolve => onHello = after(2, function onHelloReceived(request) {
-    this.serverSendMsg(JSON.stringify({
-      messageType: "hello",
-      status: 200,
-      uaid: "54b08a9e-59c6-4ed7-bb54-f4fd60d6f606",
-    }));
-    resolve();
-  }));
+  let helloPromise = new Promise(
+    resolve =>
+      (onHello = after(2, function onHelloReceived(request) {
+        this.serverSendMsg(
+          JSON.stringify({
+            messageType: "hello",
+            status: 200,
+            uaid: "54b08a9e-59c6-4ed7-bb54-f4fd60d6f606",
+          })
+        );
+        resolve();
+      }))
+  );
 
   PushService.init({
     serverURI: "wss://push.example.org/",
@@ -43,20 +50,30 @@ add_task(async function test_register_request_queue() {
 
   let firstRegister = PushService.register({
     scope: "https://example.com/page/1",
-    originAttributes: ChromeUtils.originAttributesToSuffix(
-      { inIsolatedMozBrowser: false }),
+    originAttributes: ChromeUtils.originAttributesToSuffix({
+      inIsolatedMozBrowser: false,
+    }),
   });
   let secondRegister = PushService.register({
     scope: "https://example.com/page/1",
-    originAttributes: ChromeUtils.originAttributesToSuffix(
-      { inIsolatedMozBrowser: false }),
+    originAttributes: ChromeUtils.originAttributesToSuffix({
+      inIsolatedMozBrowser: false,
+    }),
   });
 
   await Promise.all([
     // eslint-disable-next-line mozilla/rejects-requires-await
-    Assert.rejects(firstRegister, /Registration error/, "Should time out the first request"),
+    Assert.rejects(
+      firstRegister,
+      /Registration error/,
+      "Should time out the first request"
+    ),
     // eslint-disable-next-line mozilla/rejects-requires-await
-    Assert.rejects(secondRegister, /Registration error/, "Should time out the second request"),
+    Assert.rejects(
+      secondRegister,
+      /Registration error/,
+      "Should time out the second request"
+    ),
   ]);
 
   await helloPromise;

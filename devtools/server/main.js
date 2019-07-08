@@ -15,16 +15,41 @@ var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
 
-loader.lazyRequireGetter(this, "Authentication", "devtools/shared/security/auth");
-loader.lazyRequireGetter(this, "LocalDebuggerTransport", "devtools/shared/transport/local-transport", true);
-loader.lazyRequireGetter(this, "ChildDebuggerTransport", "devtools/shared/transport/child-transport", true);
-loader.lazyRequireGetter(this, "WorkerThreadWorkerDebuggerTransport", "devtools/shared/transport/worker-transport", true);
-loader.lazyRequireGetter(this, "MainThreadWorkerDebuggerTransport", "devtools/shared/transport/worker-transport", true);
+loader.lazyRequireGetter(
+  this,
+  "Authentication",
+  "devtools/shared/security/auth"
+);
+loader.lazyRequireGetter(
+  this,
+  "LocalDebuggerTransport",
+  "devtools/shared/transport/local-transport",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "ChildDebuggerTransport",
+  "devtools/shared/transport/child-transport",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "WorkerThreadWorkerDebuggerTransport",
+  "devtools/shared/transport/worker-transport",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "MainThreadWorkerDebuggerTransport",
+  "devtools/shared/transport/worker-transport",
+  true
+);
 
 loader.lazyGetter(this, "generateUUID", () => {
   // eslint-disable-next-line no-shadow
-  const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"]
-                           .getService(Ci.nsIUUIDGenerator);
+  const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(
+    Ci.nsIUUIDGenerator
+  );
   return generateUUID;
 });
 
@@ -139,8 +164,10 @@ var DebuggerServer = {
     }
 
     if (!this.rootlessServer && !this.createRootActor) {
-      throw new Error("Use DebuggerServer.setRootActor() to add a root actor " +
-                      "implementation.");
+      throw new Error(
+        "Use DebuggerServer.setRootActor() to add a root actor " +
+          "implementation."
+      );
     }
   },
 
@@ -289,9 +316,9 @@ var DebuggerServer = {
   connectToParent(prefix, scopeOrManager) {
     this._checkInit();
 
-    const transport = isWorker ?
-                    new WorkerThreadWorkerDebuggerTransport(scopeOrManager, prefix) :
-                    new ChildDebuggerTransport(scopeOrManager, prefix);
+    const transport = isWorker
+      ? new WorkerThreadWorkerDebuggerTransport(scopeOrManager, prefix)
+      : new ChildDebuggerTransport(scopeOrManager, prefix);
 
     return this._onConnection(transport, prefix, true);
   },
@@ -305,7 +332,9 @@ var DebuggerServer = {
       const prefix = connection.allocID("content-process");
       let actor, childTransport;
 
-      mm.addMessageListener("debug:content-process-actor", function listener(msg) {
+      mm.addMessageListener("debug:content-process-actor", function listener(
+        msg
+      ) {
         // Arbitrarily choose the first content process to reply
         // XXX: This code needs to be updated if we use more than one content process
         mm.removeMessageListener("debug:content-process-actor", listener);
@@ -330,7 +359,10 @@ var DebuggerServer = {
       // Load the content process server startup script only once.
       if (!this._contentProcessServerStartupScriptLoaded) {
         // Load the process script that will receive the debug:init-content-server message
-        Services.ppmm.loadProcessScript(CONTENT_PROCESS_SERVER_STARTUP_SCRIPT, true);
+        Services.ppmm.loadProcessScript(
+          CONTENT_PROCESS_SERVER_STARTUP_SCRIPT,
+          true
+        );
         this._contentProcessServerStartupScriptLoaded = true;
       }
 
@@ -341,7 +373,10 @@ var DebuggerServer = {
       });
 
       function onClose() {
-        Services.obs.removeObserver(onMessageManagerClose, "message-manager-close");
+        Services.obs.removeObserver(
+          onMessageManagerClose,
+          "message-manager-close"
+        );
         EventEmitter.off(connection, "closed", onClose);
         if (childTransport) {
           // If we have a child transport, the actor has already
@@ -363,15 +398,15 @@ var DebuggerServer = {
         }
       }
 
-      const onMessageManagerClose =
-        DevToolsUtils.makeInfallible((subject, topic, data) => {
+      const onMessageManagerClose = DevToolsUtils.makeInfallible(
+        (subject, topic, data) => {
           if (subject == mm) {
             onClose();
             connection.send({ from: actor.actor, type: "tabDetached" });
           }
-        });
-      Services.obs.addObserver(onMessageManagerClose,
-                               "message-manager-close");
+        }
+      );
+      Services.obs.addObserver(onMessageManagerClose, "message-manager-close");
 
       EventEmitter.on(connection, "closed", onClose);
     });
@@ -395,7 +430,7 @@ var DebuggerServer = {
             dbg.removeListener(listener);
           },
 
-          onMessage: (message) => {
+          onMessage: message => {
             message = JSON.parse(message);
             if (message.type !== "rpc") {
               if (message.type == "attached") {
@@ -406,30 +441,39 @@ var DebuggerServer = {
               return;
             }
 
-            Promise.resolve().then(() => {
-              const method = {
-                "fetch": DevToolsUtils.fetch,
-              }[message.method];
-              if (!method) {
-                throw Error("Unknown method: " + message.method);
-              }
+            Promise.resolve()
+              .then(() => {
+                const method = {
+                  fetch: DevToolsUtils.fetch,
+                }[message.method];
+                if (!method) {
+                  throw Error("Unknown method: " + message.method);
+                }
 
-              return method.apply(undefined, message.params);
-            }).then((value) => {
-              dbg.postMessage(JSON.stringify({
-                type: "rpc",
-                result: value,
-                error: null,
-                id: message.id,
-              }));
-            }, (reason) => {
-              dbg.postMessage(JSON.stringify({
-                type: "rpc",
-                result: null,
-                error: reason,
-                id: message.id,
-              }));
-            });
+                return method.apply(undefined, message.params);
+              })
+              .then(
+                value => {
+                  dbg.postMessage(
+                    JSON.stringify({
+                      type: "rpc",
+                      result: value,
+                      error: null,
+                      id: message.id,
+                    })
+                  );
+                },
+                reason => {
+                  dbg.postMessage(
+                    JSON.stringify({
+                      type: "rpc",
+                      result: null,
+                      error: reason,
+                      id: message.id,
+                    })
+                  );
+                }
+              );
           },
         };
 
@@ -437,11 +481,13 @@ var DebuggerServer = {
       }
 
       // Step 2: Send a connect request to the worker debugger.
-      dbg.postMessage(JSON.stringify({
-        type: "connect",
-        id,
-        options,
-      }));
+      dbg.postMessage(
+        JSON.stringify({
+          type: "connect",
+          id,
+          options,
+        })
+      );
 
       // Steps 3-5 are performed on the worker thread (see worker.js).
 
@@ -453,7 +499,7 @@ var DebuggerServer = {
           reject("closed");
         },
 
-        onMessage: (message) => {
+        onMessage: message => {
           message = JSON.parse(message);
           if (message.type !== "connected" || message.id !== id) {
             return;
@@ -477,10 +523,12 @@ var DebuggerServer = {
                 // DebuggerTransport is not supposed to throw exceptions, so we
                 // need to make sure to catch these early.
                 try {
-                  dbg.postMessage(JSON.stringify({
-                    type: "disconnect",
-                    id,
-                  }));
+                  dbg.postMessage(
+                    JSON.stringify({
+                      type: "disconnect",
+                      id,
+                    })
+                  );
                 } catch (e) {
                   // We can safely ignore these exceptions. The only time the
                   // call to postMessage can fail is if the worker is either
@@ -493,7 +541,7 @@ var DebuggerServer = {
               connection.cancelForwarding(id);
             },
 
-            onPacket: (packet) => {
+            onPacket: packet => {
               // Ensure that any packets received from the server on the worker
               // thread are forwarded to the client on the main thread, as if
               // they had been sent by the server on the main thread.
@@ -521,7 +569,9 @@ var DebuggerServer = {
    * Check if the server is running in the child process.
    */
   get isInChildProcess() {
-    return Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+    return (
+      Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
+    );
   },
 
   /**
@@ -544,7 +594,7 @@ var DebuggerServer = {
     return new Promise(done => {
       // If waitForEval is set, pass a unique id and expect child.js to send
       // a message back once the code in child is evaluated.
-      if (typeof (waitForEval) != "boolean") {
+      if (typeof waitForEval != "boolean") {
         waitForEval = false;
       }
       let count = this._childMessageManagers.size;
@@ -557,7 +607,10 @@ var DebuggerServer = {
             if (msg.data.id !== id) {
               return;
             }
-            mm.removeMessageListener("debug:setup-in-child-response", evalListener);
+            mm.removeMessageListener(
+              "debug:setup-in-child-response",
+              evalListener
+            );
             if (--count === 0) {
               done();
             }
@@ -597,7 +650,7 @@ var DebuggerServer = {
    * @return object
    *         A promise object that is resolved once the connection is established.
    */
-  connectToFrame(connection, frame, onDestroy, {addonId} = {}) {
+  connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
     return new Promise(resolve => {
       // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
       // or else fallback to asking the frameLoader itself.
@@ -607,7 +660,10 @@ var DebuggerServer = {
       const trackMessageManager = () => {
         frame.addEventListener("DevTools:BrowserSwap", onBrowserSwap);
         mm.addMessageListener("debug:setup-in-parent", onSetupInParent);
-        mm.addMessageListener("debug:spawn-actor-in-parent", onSpawnActorInParent);
+        mm.addMessageListener(
+          "debug:spawn-actor-in-parent",
+          onSpawnActorInParent
+        );
         if (!actor) {
           mm.addMessageListener("debug:actor", onActorCreated);
         }
@@ -617,7 +673,10 @@ var DebuggerServer = {
       const untrackMessageManager = () => {
         frame.removeEventListener("DevTools:BrowserSwap", onBrowserSwap);
         mm.removeMessageListener("debug:setup-in-parent", onSetupInParent);
-        mm.removeMessageListener("debug:spawn-actor-in-parent", onSpawnActorInParent);
+        mm.removeMessageListener(
+          "debug:spawn-actor-in-parent",
+          onSpawnActorInParent
+        );
         if (!actor) {
           mm.removeMessageListener("debug:actor", onActorCreated);
         }
@@ -657,8 +716,12 @@ var DebuggerServer = {
           const errorMessage =
             "Exception during actor module setup running in the parent process: ";
           DevToolsUtils.reportException(errorMessage + e);
-          dumpn(`ERROR: ${errorMessage}\n\t module: '${module}'\n\t ` +
-                `setupParent: '${setupParent}'\n${DevToolsUtils.safeErrorString(e)}`);
+          dumpn(
+            `ERROR: ${errorMessage}\n\t module: '${module}'\n\t ` +
+              `setupParent: '${setupParent}'\n${DevToolsUtils.safeErrorString(
+                e
+              )}`
+          );
           return false;
         }
       };
@@ -693,9 +756,12 @@ var DebuggerServer = {
           // Manually set the actor ID in order to insert parent actorID as prefix
           // in order to help identifying actor hiearchy via actor IDs.
           // Remove `/` as it may confuse message forwarding between processes.
-          const contentPrefix = spawnedByActorID.replace(connection.prefix, "")
-                                                .replace("/", "-");
-          instance.actorID = connection.allocID(contentPrefix + "/" + instance.typeName);
+          const contentPrefix = spawnedByActorID
+            .replace(connection.prefix, "")
+            .replace("/", "-");
+          instance.actorID = connection.allocID(
+            contentPrefix + "/" + instance.typeName
+          );
           connection.addActor(instance);
 
           mm.sendAsyncMessage("debug:spawn-actor-in-parent:actor", {
@@ -708,8 +774,12 @@ var DebuggerServer = {
           const errorMessage =
             "Exception during actor module setup running in the parent process: ";
           DevToolsUtils.reportException(errorMessage + e + "\n" + e.stack);
-          dumpn(`ERROR: ${errorMessage}\n\t module: '${module}'\n\t ` +
-                `constructor: '${constructor}'\n${DevToolsUtils.safeErrorString(e)}`);
+          dumpn(
+            `ERROR: ${errorMessage}\n\t module: '${module}'\n\t ` +
+              `constructor: '${constructor}'\n${DevToolsUtils.safeErrorString(
+                e
+              )}`
+          );
         }
       };
 
@@ -771,7 +841,10 @@ var DebuggerServer = {
 
       const destroy = DevToolsUtils.makeInfallible(function() {
         EventEmitter.off(connection, "closed", destroy);
-        Services.obs.removeObserver(onMessageManagerClose, "message-manager-close");
+        Services.obs.removeObserver(
+          onMessageManagerClose,
+          "message-manager-close"
+        );
 
         // provides hook to actor modules that need to exchange messages
         // between e10s parent and child processes
@@ -781,8 +854,10 @@ var DebuggerServer = {
           }
         });
         // TODO: Remove this deprecated path once it's no longer needed by add-ons.
-        DebuggerServer.emit("disconnected-from-child:" + connPrefix,
-                            { mm, prefix: connPrefix });
+        DebuggerServer.emit("disconnected-from-child:" + connPrefix, {
+          mm,
+          prefix: connPrefix,
+        });
 
         if (childTransport) {
           // If we have a child transport, the actor has already
@@ -830,8 +905,7 @@ var DebuggerServer = {
           destroy();
         }
       };
-      Services.obs.addObserver(onMessageManagerClose,
-                               "message-manager-close");
+      Services.obs.addObserver(onMessageManagerClose, "message-manager-close");
 
       // Listen for connection close to cleanup things
       // when user unplug the device or we lose the connection somehow.
@@ -851,7 +925,12 @@ var DebuggerServer = {
    * that all our actors have names beginning with |forwardingPrefix + '/'|.
    * In particular, the root actor's name will be |forwardingPrefix + '/root'|.
    */
-  _onConnection(transport, forwardingPrefix, noRootActor = false, socketListener = null) {
+  _onConnection(
+    transport,
+    forwardingPrefix,
+    noRootActor = false,
+    socketListener = null
+  ) {
     let connID;
     if (forwardingPrefix) {
       connID = forwardingPrefix + "/";
@@ -863,7 +942,11 @@ var DebuggerServer = {
       connID = "server" + loader.id + ".conn" + this._nextConnID++ + ".";
     }
 
-    const conn = new DebuggerServerConnection(connID, transport, socketListener);
+    const conn = new DebuggerServerConnection(
+      connID,
+      transport,
+      socketListener
+    );
     this._connections[connID] = conn;
 
     // Create a root actor for the connection and send the hello packet.
@@ -903,7 +986,9 @@ var DebuggerServer = {
    * listeners from already loaded scripts.
    */
   removeContentServerScript() {
-    Services.ppmm.removeDelayedProcessScript(CONTENT_PROCESS_SERVER_STARTUP_SCRIPT);
+    Services.ppmm.removeDelayedProcessScript(
+      CONTENT_PROCESS_SERVER_STARTUP_SCRIPT
+    );
     try {
       Services.ppmm.broadcastAsyncMessage("debug:close-content-server");
     } catch (e) {
@@ -1126,16 +1211,22 @@ DebuggerServerConnection.prototype = {
     try {
       const actor = this.getActor(actorID);
       if (!actor) {
-        this.transport.send({ from: actorID ? actorID : "root",
-                              error: "noSuchActor",
-                              message: "No such actor for ID: " + actorID });
+        this.transport.send({
+          from: actorID ? actorID : "root",
+          error: "noSuchActor",
+          message: "No such actor for ID: " + actorID,
+        });
         return null;
       }
 
-      if (typeof (actor) !== "object") {
+      if (typeof actor !== "object") {
         // ActorPools should now contain only actor instances (i.e. objects)
-        throw new Error("Unexpected actor constructor/function in ActorPool " +
-                        "for actorID=" + actorID + ".");
+        throw new Error(
+          "Unexpected actor constructor/function in ActorPool " +
+            "for actorID=" +
+            actorID +
+            "."
+        );
       }
 
       return actor;
@@ -1167,34 +1258,42 @@ DebuggerServerConnection.prototype = {
   },
 
   _queueResponse: function(from, type, responseOrPromise) {
-    const pendingResponse = this._actorResponses.get(from) || Promise.resolve(null);
-    const responsePromise = pendingResponse.then(() => {
-      return responseOrPromise;
-    }).then(response => {
-      if (!this.transport) {
-        throw new Error(`Connection closed, pending response from '${from}', ` +
-                        `type '${type}' failed`);
-      }
+    const pendingResponse =
+      this._actorResponses.get(from) || Promise.resolve(null);
+    const responsePromise = pendingResponse
+      .then(() => {
+        return responseOrPromise;
+      })
+      .then(response => {
+        if (!this.transport) {
+          throw new Error(
+            `Connection closed, pending response from '${from}', ` +
+              `type '${type}' failed`
+          );
+        }
 
-      // It might happen that a function doesn't return anything (e.g. webconsole's
-      // evaluateJSAsync, which use sendActorEvent instead).
-      if (!response) {
-        return;
-      }
+        // It might happen that a function doesn't return anything (e.g. webconsole's
+        // evaluateJSAsync, which use sendActorEvent instead).
+        if (!response) {
+          return;
+        }
 
-      if (!response.from) {
-        response.from = from;
-      }
-      this.transport.send(response);
-    }).catch((error) => {
-      if (!this.transport) {
-        throw new Error(`Connection closed, pending error from '${from}', ` +
-                        `type '${type}' failed`);
-      }
+        if (!response.from) {
+          response.from = from;
+        }
+        this.transport.send(response);
+      })
+      .catch(error => {
+        if (!this.transport) {
+          throw new Error(
+            `Connection closed, pending error from '${from}', ` +
+              `type '${type}' failed`
+          );
+        }
 
-      const prefix = `error occurred while processing '${type}'`;
-      this.transport.send(this._unknownError(from, prefix, error));
-    });
+        const prefix = `error occurred while processing '${type}'`;
+        this.transport.send(this._unknownError(from, prefix, error));
+      });
 
     this._actorResponses.set(from, responsePromise);
   },
@@ -1272,7 +1371,9 @@ DebuggerServerConnection.prototype = {
       let separator = to.lastIndexOf("/");
       while (separator >= 0) {
         to = to.substring(0, separator);
-        const forwardTo = this._forwardingPrefixes.get(packet.to.substring(0, separator));
+        const forwardTo = this._forwardingPrefixes.get(
+          packet.to.substring(0, separator)
+        );
         if (forwardTo) {
           forwardTo.send(packet);
           return;
@@ -1290,7 +1391,10 @@ DebuggerServerConnection.prototype = {
 
     // handle "requestTypes" RDP request.
     if (packet.type == "requestTypes") {
-      ret = { from: actor.actorID, requestTypes: Object.keys(actor.requestTypes) };
+      ret = {
+        from: actor.actorID,
+        requestTypes: Object.keys(actor.requestTypes),
+      };
     } else if (actor.requestTypes && actor.requestTypes[packet.type]) {
       // Dispatch the request to the actor.
       try {
@@ -1305,8 +1409,9 @@ DebuggerServerConnection.prototype = {
     } else {
       ret = {
         error: "unrecognizedPacketType",
-        message:
-          `Actor ${actor.actorID} does not recognize the packet type '${packet.type}'`,
+        message: `Actor ${actor.actorID} does not recognize the packet type '${
+          packet.type
+        }'`,
       };
     }
 
@@ -1365,10 +1470,8 @@ DebuggerServerConnection.prototype = {
         packet.done.reject(error);
       }
     } else {
-      const message =
-        `Actor ${actorKey} does not recognize the bulk packet type '${type}'`;
-      ret = { error: "unrecognizedPacketType",
-              message: message };
+      const message = `Actor ${actorKey} does not recognize the bulk packet type '${type}'`;
+      ret = { error: "unrecognizedPacketType", message: message };
       packet.done.reject(new Error(message));
     }
 
@@ -1409,13 +1512,17 @@ DebuggerServerConnection.prototype = {
   _dumpPools() {
     dumpn("/-------------------- dumping pools:");
     if (this._actorPool) {
-      dumpn("--------------------- actorPool actors: " +
-            uneval(Object.keys(this._actorPool._actors)));
+      dumpn(
+        "--------------------- actorPool actors: " +
+          uneval(Object.keys(this._actorPool._actors))
+      );
     }
     for (const pool of this._extraPools) {
       if (pool !== this._actorPool) {
-        dumpn("--------------------- extraPool actors: " +
-              uneval(Object.keys(pool._actors)));
+        dumpn(
+          "--------------------- extraPool actors: " +
+            uneval(Object.keys(pool._actors))
+        );
       }
     }
   },
@@ -1425,8 +1532,10 @@ DebuggerServerConnection.prototype = {
    */
   _dumpPool(pool) {
     dumpn("/-------------------- dumping pool:");
-    dumpn("--------------------- actorPool actors: " +
-          uneval(Object.keys(pool._actors)));
+    dumpn(
+      "--------------------- actorPool actors: " +
+        uneval(Object.keys(pool._actors))
+    );
   },
 
   /**

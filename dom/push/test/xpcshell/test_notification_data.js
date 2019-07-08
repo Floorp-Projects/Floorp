@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
+const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
 
 let db;
 let userAgentID = "f5b47f8d-771f-4ea3-b999-91c135f8766d";
@@ -40,7 +40,9 @@ let ackDone;
 let server;
 add_task(async function test_notification_ack_data_setup() {
   db = PushServiceWebSocket.newPushDB();
-  registerCleanupFunction(() => { return db.drop().then(_ => db.close()); });
+  registerCleanupFunction(() => {
+    return db.drop().then(_ => db.close());
+  });
 
   await putRecord(
     "subscription1",
@@ -89,7 +91,7 @@ add_task(async function test_notification_ack_data_setup() {
   );
 
   let setupDone;
-  let setupDonePromise = new Promise(r => setupDone = r);
+  let setupDonePromise = new Promise(r => (setupDone = r));
 
   PushService.init({
     serverURI: "wss://push.example.org/",
@@ -97,14 +99,19 @@ add_task(async function test_notification_ack_data_setup() {
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          equal(request.uaid, userAgentID,
-                "Should send matching device IDs in handshake");
-          this.serverSendMsg(JSON.stringify({
-            messageType: "hello",
-            uaid: userAgentID,
-            status: 200,
-            use_webpush: true,
-          }));
+          equal(
+            request.uaid,
+            userAgentID,
+            "Should send matching device IDs in handshake"
+          );
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "hello",
+              uaid: userAgentID,
+              status: 200,
+              use_webpush: true,
+            })
+          );
           server = this;
           setupDone();
         },
@@ -126,7 +133,8 @@ add_task(async function test_notification_ack_data() {
       version: "v1",
       send: {
         headers: {
-          encryption_key: 'keyid="notification1"; dh="BO_tgGm-yvYAGLeRe16AvhzaUcpYRiqgsGOlXpt0DRWDRGGdzVLGlEVJMygqAUECarLnxCiAOHTP_znkedrlWoU"',
+          encryption_key:
+            'keyid="notification1"; dh="BO_tgGm-yvYAGLeRe16AvhzaUcpYRiqgsGOlXpt0DRWDRGGdzVLGlEVJMygqAUECarLnxCiAOHTP_znkedrlWoU"',
           encryption: 'keyid="notification1";salt="uAZaiXpOSfOLJxtOCZ09dA"',
           encoding: "aesgcm128",
         },
@@ -144,7 +152,8 @@ add_task(async function test_notification_ack_data() {
       version: "v2",
       send: {
         headers: {
-          encryption_key: 'keyid="notification2"; dh="BKVdQcgfncpNyNWsGrbecX0zq3eHIlHu5XbCGmVcxPnRSbhjrA6GyBIeGdqsUL69j5Z2CvbZd-9z1UBH0akUnGQ"',
+          encryption_key:
+            'keyid="notification2"; dh="BKVdQcgfncpNyNWsGrbecX0zq3eHIlHu5XbCGmVcxPnRSbhjrA6GyBIeGdqsUL69j5Z2CvbZd-9z1UBH0akUnGQ"',
           encryption: 'keyid="notification2";salt="vFn3t3M_k42zHBdpch3VRw"',
           encoding: "aesgcm128",
         },
@@ -161,11 +170,14 @@ add_task(async function test_notification_ack_data() {
       version: "v3",
       send: {
         headers: {
-          encryption_key: 'keyid="notification3";dh="BD3xV_ACT8r6hdIYES3BJj1qhz9wyv7MBrG9vM2UCnjPzwE_YFVpkD-SGqE-BR2--0M-Yf31wctwNsO1qjBUeMg"',
-          encryption: 'keyid="notification3"; salt="DFq188piWU7osPBgqn4Nlg"; rs=24',
+          encryption_key:
+            'keyid="notification3";dh="BD3xV_ACT8r6hdIYES3BJj1qhz9wyv7MBrG9vM2UCnjPzwE_YFVpkD-SGqE-BR2--0M-Yf31wctwNsO1qjBUeMg"',
+          encryption:
+            'keyid="notification3"; salt="DFq188piWU7osPBgqn4Nlg"; rs=24',
           encoding: "aesgcm128",
         },
-        data: "LKru3ZzxBZuAxYtsaCfaj_fehkrIvqbVd1iSwnwAUgnL-cTeDD-83blxHXTq7r0z9ydTdMtC3UjAcWi8LMnfY-BFzi0qJAjGYIikDA",
+        data:
+          "LKru3ZzxBZuAxYtsaCfaj_fehkrIvqbVd1iSwnwAUgnL-cTeDD-83blxHXTq7r0z9ydTdMtC3UjAcWi8LMnfY-BFzi0qJAjGYIikDA",
       },
       ackCode: 100,
       receive: {
@@ -179,7 +191,8 @@ add_task(async function test_notification_ack_data() {
       version: "v5",
       send: {
         headers: {
-          crypto_key: 'keyid=v4;dh="BMh_vsnqu79ZZkMTYkxl4gWDLdPSGE72Lr4w2hksSFW398xCMJszjzdblAWXyhSwakRNEU_GopAm4UGzyMVR83w"',
+          crypto_key:
+            'keyid=v4;dh="BMh_vsnqu79ZZkMTYkxl4gWDLdPSGE72Lr4w2hksSFW398xCMJszjzdblAWXyhSwakRNEU_GopAm4UGzyMVR83w"',
           encryption: 'keyid="v4";salt="C14Wb7rQTlXzrgcPHtaUzw"',
           encoding: "aesgcm",
         },
@@ -197,11 +210,13 @@ add_task(async function test_notification_ack_data() {
       version: "v5",
       send: {
         headers: {
-          crypto_key: 'keyid="v5"; dh="BOp-DpyR9eLY5Ci11_loIFqeHzWfc_0evJmq7N8NKzgp60UAMMM06XIi2VZp2_TSdw1omk7E19SyeCCwRp76E-U"',
+          crypto_key:
+            'keyid="v5"; dh="BOp-DpyR9eLY5Ci11_loIFqeHzWfc_0evJmq7N8NKzgp60UAMMM06XIi2VZp2_TSdw1omk7E19SyeCCwRp76E-U"',
           encryption: 'keyid=v5;salt="TvjOou1TqJOQY_ZsOYV3Ww";rs=24',
           encoding: "aesgcm",
         },
-        data: "rG9WYQ2ZwUgfj_tMlZ0vcIaNpBN05FW-9RUBZAM-UUZf0_9eGpuENBpUDAw3mFmd2XJpmvPvAtLVs54l3rGwg1o",
+        data:
+          "rG9WYQ2ZwUgfj_tMlZ0vcIaNpBN05FW-9RUBZAM-UUZf0_9eGpuENBpUDAw3mFmd2XJpmvPvAtLVs54l3rGwg1o",
       },
       ackCode: 100,
       receive: {
@@ -215,7 +230,8 @@ add_task(async function test_notification_ack_data() {
       version: "v6",
       send: {
         headers: {
-          crypto_key: 'dh="BEEjwWbF5jZKCgW0kmUWgG-wNcRvaa9_3zZElHAF8przHwd4cp5_kQsc-IMNZcVA0iUix31jxuMOytU-5DwWtyQ"',
+          crypto_key:
+            'dh="BEEjwWbF5jZKCgW0kmUWgG-wNcRvaa9_3zZElHAF8przHwd4cp5_kQsc-IMNZcVA0iUix31jxuMOytU-5DwWtyQ"',
           encryption: "salt=aAQcr2khAksgNspPiFEqiQ",
           encoding: "aesgcm",
         },
@@ -244,26 +260,44 @@ add_task(async function test_notification_ack_data() {
   ];
 
   let sendAndReceive = testData => {
-    let messageReceived = testData.receive ? promiseObserverNotification(PushServiceComponent.pushTopic, (subject, data) => {
-      let notification = subject.QueryInterface(Ci.nsIPushMessage).data;
-      equal(notification.text(), testData.receive.data,
-            "Check data for notification " + testData.version);
-      equal(data, testData.receive.scope,
-            "Check scope for notification " + testData.version);
-      return true;
-    }) : Promise.resolve();
+    let messageReceived = testData.receive
+      ? promiseObserverNotification(
+          PushServiceComponent.pushTopic,
+          (subject, data) => {
+            let notification = subject.QueryInterface(Ci.nsIPushMessage).data;
+            equal(
+              notification.text(),
+              testData.receive.data,
+              "Check data for notification " + testData.version
+            );
+            equal(
+              data,
+              testData.receive.scope,
+              "Check scope for notification " + testData.version
+            );
+            return true;
+          }
+        )
+      : Promise.resolve();
 
-    let ackReceived = new Promise(resolve => ackDone = resolve)
-        .then(ackData => {
-          deepEqual({
+    let ackReceived = new Promise(resolve => (ackDone = resolve)).then(
+      ackData => {
+        deepEqual(
+          {
             messageType: "ack",
-            updates: [{
-              channelID: testData.channelID,
-              version: testData.version,
-              code: testData.ackCode,
-            }],
-          }, ackData, "Check updates for acknowledgment " + testData.version);
-        });
+            updates: [
+              {
+                channelID: testData.channelID,
+                version: testData.version,
+                code: testData.ackCode,
+              },
+            ],
+          },
+          ackData,
+          "Check updates for acknowledgment " + testData.version
+        );
+      }
+    );
 
     let msg = JSON.parse(JSON.stringify(testData.send));
     msg.messageType = "notification";

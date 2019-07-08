@@ -12,17 +12,21 @@ add_task(async function() {
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;
-  const {
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   // Execute requests.
   await performRequests(monitor, tab, 1);
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
-  EventUtils.sendMouseEvent({ type: "contextmenu" },
-    document.querySelectorAll(".request-list-item")[0]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
+  EventUtils.sendMouseEvent(
+    { type: "contextmenu" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
 
   const requestItem = getSortedRequests(store.getState()).get(0);
 

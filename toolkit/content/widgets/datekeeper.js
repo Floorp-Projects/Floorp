@@ -13,17 +13,17 @@ function DateKeeper(props) {
 
 {
   const DAYS_IN_A_WEEK = 7,
-        MONTHS_IN_A_YEAR = 12,
-        YEAR_VIEW_SIZE = 200,
-        YEAR_BUFFER_SIZE = 10,
-        // The min value is 0001-01-01 based on HTML spec:
-        // https://html.spec.whatwg.org/#valid-date-string
-        MIN_DATE = -62135596800000,
-        // The max value is derived from the ECMAScript spec (275760-09-13):
-        // http://ecma-international.org/ecma-262/5.1/#sec-15.9.1.1
-        MAX_DATE = 8640000000000000,
-        MAX_YEAR = 275760,
-        MAX_MONTH = 9;
+    MONTHS_IN_A_YEAR = 12,
+    YEAR_VIEW_SIZE = 200,
+    YEAR_BUFFER_SIZE = 10,
+    // The min value is 0001-01-01 based on HTML spec:
+    // https://html.spec.whatwg.org/#valid-date-string
+    MIN_DATE = -62135596800000,
+    // The max value is derived from the ECMAScript spec (275760-09-13):
+    // http://ecma-international.org/ecma-262/5.1/#sec-15.9.1.1
+    MAX_DATE = 8640000000000000,
+    MAX_YEAR = 275760,
+    MAX_MONTH = 9;
 
   DateKeeper.prototype = {
     get year() {
@@ -51,16 +51,34 @@ function DateKeeper(props) {
      * @param  {Array<Number>} weekends
      * @param  {Number} calViewSize
      */
-    init({ year, month, day, min, max, step, stepBase, firstDayOfWeek = 0, weekends = [0], calViewSize = 42 }) {
+    init({
+      year,
+      month,
+      day,
+      min,
+      max,
+      step,
+      stepBase,
+      firstDayOfWeek = 0,
+      weekends = [0],
+      calViewSize = 42,
+    }) {
       const today = new Date();
 
       this.state = {
-        step, firstDayOfWeek, weekends, calViewSize,
+        step,
+        firstDayOfWeek,
+        weekends,
+        calViewSize,
         // min & max are NaN if empty or invalid
         min: new Date(Number.isNaN(min) ? MIN_DATE : min),
         max: new Date(Number.isNaN(max) ? MAX_DATE : max),
         stepBase: new Date(stepBase),
-        today: this._newUTCDate(today.getFullYear(), today.getMonth(), today.getDate()),
+        today: this._newUTCDate(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate()
+        ),
         weekHeaders: this._getWeekHeaders(firstDayOfWeek, weekends),
         years: [],
         dateObj: new Date(0),
@@ -85,9 +103,9 @@ function DateKeeper(props) {
     setCalendarMonth({ year = this.year, month = this.month }) {
       // Make sure the date is valid before setting.
       // Use setUTCFullYear so that year 99 doesn't get parsed as 1999
-      if (year > MAX_YEAR || year === MAX_YEAR && month >= MAX_MONTH) {
+      if (year > MAX_YEAR || (year === MAX_YEAR && month >= MAX_MONTH)) {
         this.state.dateObj.setUTCFullYear(MAX_YEAR, MAX_MONTH - 1, 1);
-      } else if (year < 1 || year === 1 && month < 0) {
+      } else if (year < 1 || (year === 1 && month < 0)) {
         this.state.dateObj.setUTCFullYear(1, 0, 1);
       } else {
         this.state.dateObj.setUTCFullYear(year, month, 1);
@@ -168,9 +186,12 @@ function DateKeeper(props) {
 
       // Generate new years array when the year is outside of the first &
       // last item range. If not, return the cached result.
-      if (!firstItem || !lastItem ||
-          currentYear <= firstItem.value + YEAR_BUFFER_SIZE ||
-          currentYear >= lastItem.value - YEAR_BUFFER_SIZE) {
+      if (
+        !firstItem ||
+        !lastItem ||
+        currentYear <= firstItem.value + YEAR_BUFFER_SIZE ||
+        currentYear >= lastItem.value - YEAR_BUFFER_SIZE
+      ) {
         // The year is set in the middle with items on both directions
         for (let i = -(YEAR_VIEW_SIZE / 2); i < YEAR_VIEW_SIZE / 2; i++) {
           const year = currentYear + i;
@@ -197,19 +218,25 @@ function DateKeeper(props) {
      *         }
      */
     getDays() {
-      const firstDayOfMonth = this._getFirstCalendarDate(this.state.dateObj, this.state.firstDayOfWeek);
+      const firstDayOfMonth = this._getFirstCalendarDate(
+        this.state.dateObj,
+        this.state.firstDayOfWeek
+      );
       const month = this.month;
       let days = [];
 
       for (let i = 0; i < this.state.calViewSize; i++) {
-        const dateObj = this._newUTCDate(firstDayOfMonth.getUTCFullYear(),
-                                         firstDayOfMonth.getUTCMonth(),
-                                         firstDayOfMonth.getUTCDate() + i);
+        const dateObj = this._newUTCDate(
+          firstDayOfMonth.getUTCFullYear(),
+          firstDayOfMonth.getUTCMonth(),
+          firstDayOfMonth.getUTCDate() + i
+        );
 
         let classNames = [];
         let enabled = true;
 
-        const isValid = dateObj.getTime() >= MIN_DATE && dateObj.getTime() <= MAX_DATE;
+        const isValid =
+          dateObj.getTime() >= MIN_DATE && dateObj.getTime() <= MAX_DATE;
         if (!isValid) {
           classNames.push("out-of-range");
           enabled = false;
@@ -223,16 +250,22 @@ function DateKeeper(props) {
 
         const isWeekend = this.state.weekends.includes(dateObj.getUTCDay());
         const isCurrentMonth = month == dateObj.getUTCMonth();
-        const isSelection = this.state.selection.year == dateObj.getUTCFullYear() &&
-                            this.state.selection.month == dateObj.getUTCMonth() &&
-                            this.state.selection.day == dateObj.getUTCDate();
-        const isOutOfRange = dateObj.getTime() < this.state.min.getTime() ||
-                             dateObj.getTime() > this.state.max.getTime();
+        const isSelection =
+          this.state.selection.year == dateObj.getUTCFullYear() &&
+          this.state.selection.month == dateObj.getUTCMonth() &&
+          this.state.selection.day == dateObj.getUTCDate();
+        const isOutOfRange =
+          dateObj.getTime() < this.state.min.getTime() ||
+          dateObj.getTime() > this.state.max.getTime();
         const isToday = this.state.today.getTime() == dateObj.getTime();
-        const isOffStep = this._checkIsOffStep(dateObj,
-                                               this._newUTCDate(dateObj.getUTCFullYear(),
-                                                                dateObj.getUTCMonth(),
-                                                                dateObj.getUTCDate() + 1));
+        const isOffStep = this._checkIsOffStep(
+          dateObj,
+          this._newUTCDate(
+            dateObj.getUTCFullYear(),
+            dateObj.getUTCMonth(),
+            dateObj.getUTCDate() + 1
+          )
+        );
 
         if (isWeekend) {
           classNames.push("weekend");
@@ -276,8 +309,11 @@ function DateKeeper(props) {
         return false;
       }
       // Calculate the last valid date
-      const lastValidStep = Math.floor((next - 1 - this.state.stepBase) / this.state.step);
-      const lastValidTimeInMs = lastValidStep * this.state.step + this.state.stepBase.getTime();
+      const lastValidStep = Math.floor(
+        (next - 1 - this.state.stepBase) / this.state.step
+      );
+      const lastValidTimeInMs =
+        lastValidStep * this.state.step + this.state.stepBase.getTime();
       // The date is off-step if the last valid date is smaller than the start date
       return lastValidTimeInMs < start.getTime();
     },
@@ -299,7 +335,9 @@ function DateKeeper(props) {
       for (let i = 0; i < DAYS_IN_A_WEEK; i++) {
         headers.push({
           content: dayOfWeek % DAYS_IN_A_WEEK,
-          classNames: weekends.includes(dayOfWeek % DAYS_IN_A_WEEK) ? ["weekend"] : [],
+          classNames: weekends.includes(dayOfWeek % DAYS_IN_A_WEEK)
+            ? ["weekend"]
+            : [],
         });
         dayOfWeek++;
       }
@@ -314,7 +352,10 @@ function DateKeeper(props) {
      */
     _getFirstCalendarDate(dateObj, firstDayOfWeek) {
       const daysOffset = 1 - DAYS_IN_A_WEEK;
-      let firstDayOfMonth = this._newUTCDate(dateObj.getUTCFullYear(), dateObj.getUTCMonth());
+      let firstDayOfMonth = this._newUTCDate(
+        dateObj.getUTCFullYear(),
+        dateObj.getUTCMonth()
+      );
       let dayOfWeek = firstDayOfMonth.getUTCDay();
 
       return this._newUTCDate(
@@ -322,7 +363,10 @@ function DateKeeper(props) {
         firstDayOfMonth.getUTCMonth(),
         // When first calendar date is the same as first day of the week, add
         // another row on top of it.
-        firstDayOfWeek == dayOfWeek ? daysOffset : (firstDayOfWeek - dayOfWeek + daysOffset) % DAYS_IN_A_WEEK);
+        firstDayOfWeek == dayOfWeek
+          ? daysOffset
+          : (firstDayOfWeek - dayOfWeek + daysOffset) % DAYS_IN_A_WEEK
+      );
     },
 
     /**

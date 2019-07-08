@@ -1,13 +1,16 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * vim:set ts=2 sw=2 sts=2 et:
-*/
+ */
 "use strict";
 
-const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
-const {SyncedTabs} = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm");
+const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
+const { SyncedTabs } = ChromeUtils.import(
+  "resource://services-sync/SyncedTabs.jsm"
+);
 
-const faviconService = Cc["@mozilla.org/browser/favicon-service;1"]
-                       .getService(Ci.nsIFaviconService);
+const faviconService = Cc["@mozilla.org/browser/favicon-service;1"].getService(
+  Ci.nsIFaviconService
+);
 
 Log.repository.getLogger("Sync.RemoteTabs").addAppender(new Log.DumpAppender());
 
@@ -38,7 +41,9 @@ let MockClientsEngine = {
 
   isMobile(guid) {
     if (!guid.endsWith("desktop") && !guid.endsWith("mobile")) {
-      throw new Error("this module expected guids to end with 'desktop' or 'mobile'");
+      throw new Error(
+        "this module expected guids to end with 'desktop' or 'mobile'"
+      );
     }
     return guid.endsWith("mobile");
   },
@@ -78,9 +83,9 @@ add_task(async function setup() {
   tabsEngine = Weave.Service.engineManager.get("tabs");
 
   // Tell the Sync XPCOM service it is initialized.
-  let weaveXPCService = Cc["@mozilla.org/weave/service;1"]
-                          .getService(Ci.nsISupports)
-                          .wrappedJSObject;
+  let weaveXPCService = Cc["@mozilla.org/weave/service;1"].getService(
+    Ci.nsISupports
+  ).wrappedJSObject;
   weaveXPCService.ready = true;
 });
 
@@ -98,10 +103,11 @@ add_task(async function test_clientWithTabs() {
     guid_desktop: {
       clientName: "My Desktop",
       tabs: [
-      {
-        urlHistory: ["http://foo.com/"],
-        icon: "http://foo.com/favicon",
-      }],
+        {
+          urlHistory: ["http://foo.com/"],
+          icon: "http://foo.com/favicon",
+        },
+      ],
     },
     guid_mobile: {
       clientName: "My Phone",
@@ -111,7 +117,9 @@ add_task(async function test_clientWithTabs() {
 
   let clients = await SyncedTabs.getTabClients();
   equal(clients.length, 2);
-  clients.sort((a, b) => { return a.name.localeCompare(b.name); });
+  clients.sort((a, b) => {
+    return a.name.localeCompare(b.name);
+  });
   equal(clients[0].tabs.length, 1);
   equal(clients[0].tabs[0].url, "http://foo.com/");
   equal(clients[0].tabs[0].icon, "http://foo.com/favicon");
@@ -120,48 +128,56 @@ add_task(async function test_clientWithTabs() {
 });
 
 add_task(async function test_staleClientWithTabs() {
-  await configureClients({
-    guid_desktop: {
-      clientName: "My Desktop",
-      tabs: [
-      {
-        urlHistory: ["http://foo.com/"],
-        icon: "http://foo.com/favicon",
-      }],
+  await configureClients(
+    {
+      guid_desktop: {
+        clientName: "My Desktop",
+        tabs: [
+          {
+            urlHistory: ["http://foo.com/"],
+            icon: "http://foo.com/favicon",
+          },
+        ],
+      },
+      guid_mobile: {
+        clientName: "My Phone",
+        tabs: [],
+      },
+      guid_stale_mobile: {
+        clientName: "My Deleted Phone",
+        tabs: [],
+      },
+      guid_stale_desktop: {
+        clientName: "My Deleted Laptop",
+        tabs: [
+          {
+            urlHistory: ["https://bar.com/"],
+            icon: "https://bar.com/favicon",
+          },
+        ],
+      },
+      guid_stale_name_desktop: {
+        clientName: "My Generic Device",
+        tabs: [
+          {
+            urlHistory: ["https://example.edu/"],
+            icon: "https://example.edu/favicon",
+          },
+        ],
+      },
     },
-    guid_mobile: {
-      clientName: "My Phone",
-      tabs: [],
-    },
-    guid_stale_mobile: {
-      clientName: "My Deleted Phone",
-      tabs: [],
-    },
-    guid_stale_desktop: {
-      clientName: "My Deleted Laptop",
-      tabs: [
-      {
-        urlHistory: ["https://bar.com/"],
-        icon: "https://bar.com/favicon",
-      }],
-    },
-    guid_stale_name_desktop: {
-      clientName: "My Generic Device",
-      tabs: [
-      {
-        urlHistory: ["https://example.edu/"],
-        icon: "https://example.edu/favicon",
-      }],
-    },
-  }, {
-    guid_stale_mobile: false,
-    guid_stale_desktop: false,
-    // We should always use the device name from the clients collection, instead
-    // of the possibly stale tabs collection.
-    guid_stale_name_desktop: "My Laptop",
-  });
+    {
+      guid_stale_mobile: false,
+      guid_stale_desktop: false,
+      // We should always use the device name from the clients collection, instead
+      // of the possibly stale tabs collection.
+      guid_stale_name_desktop: "My Laptop",
+    }
+  );
   let clients = await SyncedTabs.getTabClients();
-  clients.sort((a, b) => { return a.name.localeCompare(b.name); });
+  clients.sort((a, b) => {
+    return a.name.localeCompare(b.name);
+  });
   equal(clients.length, 3);
   equal(clients[0].name, "My Desktop");
   equal(clients[0].tabs.length, 1);
@@ -179,16 +195,19 @@ add_task(async function test_clientWithTabsIconsDisabled() {
     guid_desktop: {
       clientName: "My Desktop",
       tabs: [
-      {
-        urlHistory: ["http://foo.com/"],
-        icon: "http://foo.com/favicon",
-      }],
+        {
+          urlHistory: ["http://foo.com/"],
+          icon: "http://foo.com/favicon",
+        },
+      ],
     },
   });
 
   let clients = await SyncedTabs.getTabClients();
   equal(clients.length, 1);
-  clients.sort((a, b) => { return a.name.localeCompare(b.name); });
+  clients.sort((a, b) => {
+    return a.name.localeCompare(b.name);
+  });
   equal(clients[0].tabs.length, 1);
   equal(clients[0].tabs[0].url, "http://foo.com/");
   // Expect the default favicon due to the pref being false.
@@ -202,14 +221,15 @@ add_task(async function test_filter() {
     guid_desktop: {
       clientName: "My Desktop",
       tabs: [
-      {
-        urlHistory: ["http://foo.com/"],
-        title: "A test page.",
-      },
-      {
-        urlHistory: ["http://bar.com/"],
-        title: "Another page.",
-      }],
+        {
+          urlHistory: ["http://foo.com/"],
+          title: "A test page.",
+        },
+        {
+          urlHistory: ["http://bar.com/"],
+          title: "Another page.",
+        },
+      ],
     },
   });
 
@@ -229,18 +249,20 @@ add_task(async function test_duplicatesTabsAcrossClients() {
     guid_desktop: {
       clientName: "My Desktop",
       tabs: [
-      {
-        urlHistory: ["http://foo.com/"],
-        title: "A test page.",
-      }],
+        {
+          urlHistory: ["http://foo.com/"],
+          title: "A test page.",
+        },
+      ],
     },
     guid_mobile: {
       clientName: "My Phone",
       tabs: [
-      {
+        {
           urlHistory: ["http://foo.com/"],
           title: "A test page.",
-      }],
+        },
+      ],
     },
   });
 

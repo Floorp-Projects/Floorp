@@ -10,7 +10,10 @@ ChromeUtils.import("resource://testing-common/CrashManagerTest.jsm", this);
 var bsp = ChromeUtils.import("resource://gre/modules/CrashManager.jsm", null);
 
 add_task(async function test_instantiation() {
-  Assert.ok(!bsp.gCrashManager, "CrashManager global instance not initially defined.");
+  Assert.ok(
+    !bsp.gCrashManager,
+    "CrashManager global instance not initially defined."
+  );
 
   do_get_profile();
   await makeFakeAppDir();
@@ -22,13 +25,17 @@ add_task(async function test_instantiation() {
 
   Assert.ok(bsp.gCrashManager, "Profile creation makes it available.");
   Assert.ok(Services.crashmanager, "CrashManager available via Services.");
-  Assert.strictEqual(bsp.gCrashManager, Services.crashmanager,
-                     "The objects are the same.");
+  Assert.strictEqual(
+    bsp.gCrashManager,
+    Services.crashmanager,
+    "The objects are the same."
+  );
 });
 
 var gMinidumpDir = do_get_tempdir();
-var gCrashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"]
-                       .getService(Ci.nsICrashReporter);
+var gCrashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
+  Ci.nsICrashReporter
+);
 
 // Ensure that the nsICrashReporter methods can find the dump
 gCrashReporter.minidumpPath = gMinidumpDir;
@@ -64,35 +71,50 @@ async function test_addCrashBase(crashId, allThreads) {
     crashType = Ci.nsICrashService.CRASH_TYPE_HANG;
   }
   let cs = Cc["@mozilla.org/crashservice;1"].getService(Ci.nsICrashService);
-  await cs.addCrash(Ci.nsICrashService.PROCESS_TYPE_CONTENT, crashType,
-    crashId);
+  await cs.addCrash(
+    Ci.nsICrashService.PROCESS_TYPE_CONTENT,
+    crashType,
+    crashId
+  );
   let crashes = await Services.crashmanager.getCrashes();
-  let crash = crashes.find(c => { return c.id === crashId; });
+  let crash = crashes.find(c => {
+    return c.id === crashId;
+  });
   Assert.ok(crash, "Crash " + crashId + " has been stored successfully.");
   Assert.equal(crash.metadata.ProcessType, "content");
-  Assert.equal(crash.metadata.MinidumpSha256Hash,
-    "c8ad56a2096310f40c8a4b46c890625a740fdd72e409f412933011ff947c5a40");
+  Assert.equal(
+    crash.metadata.MinidumpSha256Hash,
+    "c8ad56a2096310f40c8a4b46c890625a740fdd72e409f412933011ff947c5a40"
+  );
   Assert.ok(crash.metadata.StackTraces, "The StackTraces field is present.\n");
 
   try {
     let stackTraces = JSON.parse(crash.metadata.StackTraces);
     Assert.equal(stackTraces.status, "OK");
     Assert.ok(stackTraces.crash_info, "The crash_info field is populated.");
-    Assert.ok(stackTraces.modules && (stackTraces.modules.length > 0),
-              "The module list is populated.");
-    Assert.ok(stackTraces.threads && (stackTraces.threads.length > 0),
-              "The thread list is populated.");
+    Assert.ok(
+      stackTraces.modules && stackTraces.modules.length > 0,
+      "The module list is populated."
+    );
+    Assert.ok(
+      stackTraces.threads && stackTraces.threads.length > 0,
+      "The thread list is populated."
+    );
 
     if (allThreads) {
-      Assert.ok(stackTraces.threads.length > 1,
-        "The stack trace contains more than one thread.");
+      Assert.ok(
+        stackTraces.threads.length > 1,
+        "The stack trace contains more than one thread."
+      );
     } else {
-      Assert.ok(stackTraces.threads.length == 1,
-        "The stack trace contains exactly one thread.");
+      Assert.ok(
+        stackTraces.threads.length == 1,
+        "The stack trace contains exactly one thread."
+      );
     }
 
     let frames = stackTraces.threads[0].frames;
-    Assert.ok(frames && (frames.length > 0), "The stack trace is present.\n");
+    Assert.ok(frames && frames.length > 0, "The stack trace is present.\n");
   } catch (e) {
     Assert.ok(false, "StackTraces does not contain valid JSON.");
   }
@@ -101,8 +123,10 @@ async function test_addCrashBase(crashId, allThreads) {
     let telemetryEnvironment = JSON.parse(crash.metadata.TelemetryEnvironment);
     Assert.equal(telemetryEnvironment.EscapedField, "EscapedData\n\nfoo");
   } catch (e) {
-    Assert.ok(false,
-              "TelemetryEnvironment contents were not properly re-escaped\n");
+    Assert.ok(
+      false,
+      "TelemetryEnvironment contents were not properly re-escaped\n"
+    );
   }
 
   await teardown();
@@ -133,12 +157,16 @@ add_task(async function test_addCrash_quitting() {
   });
 
   let cs = Cc["@mozilla.org/crashservice;1"].getService(Ci.nsICrashService);
-  let addCrashPromise =
-    cs.addCrash(Ci.nsICrashService.PROCESS_TYPE_CONTENT,
-                Ci.nsICrashService.CRASH_TYPE_CRASH, firstCrashId);
+  let addCrashPromise = cs.addCrash(
+    Ci.nsICrashService.PROCESS_TYPE_CONTENT,
+    Ci.nsICrashService.CRASH_TYPE_CRASH,
+    firstCrashId
+  );
 
   // Spin the event loop so that the minidump analyzer is launched
-  await new Promise((resolve) => { executeSoon(resolve); });
+  await new Promise(resolve => {
+    executeSoon(resolve);
+  });
 
   // Pretend we're quitting
   let obs = cs.QueryInterface(Ci.nsIObserver);
@@ -150,20 +178,29 @@ add_task(async function test_addCrash_quitting() {
   // Now wait for the crash to be recorded
   await addCrashPromise;
   let crashes = await Services.crashmanager.getCrashes();
-  let crash = crashes.find(c => { return c.id === firstCrashId; });
+  let crash = crashes.find(c => {
+    return c.id === firstCrashId;
+  });
   Assert.ok(crash, "Crash " + firstCrashId + " has been stored successfully.");
 
   // Cleanup the fake crash and generate a new one
   await teardown();
   await setup(secondCrashId);
 
-  await cs.addCrash(Ci.nsICrashService.PROCESS_TYPE_CONTENT,
-                    Ci.nsICrashService.CRASH_TYPE_CRASH, secondCrashId);
+  await cs.addCrash(
+    Ci.nsICrashService.PROCESS_TYPE_CONTENT,
+    Ci.nsICrashService.CRASH_TYPE_CRASH,
+    secondCrashId
+  );
   crashes = await Services.crashmanager.getCrashes();
-  crash = crashes.find(c => { return c.id === secondCrashId; });
+  crash = crashes.find(c => {
+    return c.id === secondCrashId;
+  });
   Assert.ok(crash, "Crash " + secondCrashId + " has been stored successfully.");
-  Assert.ok(crash.metadata.StackTraces === undefined,
-            "The StackTraces field is not present because the minidump " +
-            "analyzer did not start.\n");
+  Assert.ok(
+    crash.metadata.StackTraces === undefined,
+    "The StackTraces field is not present because the minidump " +
+      "analyzer did not start.\n"
+  );
   await teardown();
 });

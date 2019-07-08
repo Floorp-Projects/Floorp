@@ -37,8 +37,8 @@ async function prepareAndProcessForm(url, login) {
 }
 
 async function checkFormsWithLogin(formUrls, login, expectedUsername, expectedPassword) {
-  LoginManager.removeAllLogins();
-  LoginManager.addLogin(login);
+  await LoginManager.removeAllLogins();
+  await LoginManager.addLogin(login);
 
   for (let url of formUrls) {
     info("start test_checkNoAutofillOnDowngrade w. url: " + url);

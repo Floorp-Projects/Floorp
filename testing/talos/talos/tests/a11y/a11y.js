@@ -10,10 +10,11 @@ function initAccessibility() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   if (!gAccService) {
     var service = Cc["@mozilla.org/accessibilityService;1"];
-    if (service) { // fails if build lacks accessibility module
-      gAccService =
-      Cc["@mozilla.org/accessibilityService;1"]
-        .getService(Ci.nsIAccessibilityService);
+    if (service) {
+      // fails if build lacks accessibility module
+      gAccService = Cc["@mozilla.org/accessibilityService;1"].getService(
+        Ci.nsIAccessibilityService
+      );
     }
   }
   return gAccService;
@@ -22,8 +23,7 @@ function initAccessibility() {
 function getAccessible(aNode) {
   try {
     return gAccService.getAccessibleFor(aNode);
-  } catch (e) {
-  }
+  } catch (e) {}
 
   return null;
 }

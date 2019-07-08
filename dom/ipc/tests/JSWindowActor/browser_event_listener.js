@@ -20,7 +20,7 @@ declTest("test event triggering actor creation", {
         is(topic, TOPIC, "topic matches");
 
         Services.obs.removeObserver(obs, TOPIC);
-        resolve({subject, data});
+        resolve({ subject, data });
       }, TOPIC);
     });
 
@@ -28,12 +28,16 @@ declTest("test event triggering actor creation", {
     await BrowserTestUtils.synthesizeMouseAtCenter("#testSelect", {}, browser);
 
     // Wait for the observer notification to fire, and inspect the results.
-    let {subject, data} = await observePromise;
+    let { subject, data } = await observePromise;
     is(data, "mozshowdropdown");
 
     let parent = browser.browsingContext.currentWindowGlobal;
     let actorParent = parent.getActor("Test");
     ok(actorParent, "JSWindowActorParent should have value.");
-    is(subject.wrappedJSObject, actorParent, "Should have been recieved on the right actor");
+    is(
+      subject.wrappedJSObject,
+      actorParent,
+      "Should have been recieved on the right actor"
+    );
   },
 });

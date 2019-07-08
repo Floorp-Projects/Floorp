@@ -3,13 +3,14 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,Test that 'Open in Network Panel' " +
-                 "context menu item opens the selected request in netmonitor panel.";
+const TEST_URI =
+  "data:text/html;charset=utf8,Test that 'Open in Network Panel' " +
+  "context menu item opens the selected request in netmonitor panel.";
 
 const TEST_FILE = "test-network-request.html";
 const JSON_TEST_URL = "test-network-request.html";
-const TEST_PATH = "http://example.com/browser/devtools/client/webconsole/" +
-                  "test/mochitest/";
+const TEST_PATH =
+  "http://example.com/browser/devtools/client/webconsole/" + "test/mochitest/";
 
 const NET_PREF = "devtools.webconsole.filter.net";
 const XHR_PREF = "devtools.webconsole.filter.netxhr";

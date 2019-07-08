@@ -6,7 +6,8 @@ registerCleanupFunction(() => {
 });
 
 function run_test() {
-  let data = '[NaN, undefined, null, true, false, Infinity, 0, 1, "a", "b", {a: 1}, {a: "a"}, [{a: 1}], [{a: true}], {a: 1, b: 2}, [1, 2], [1, 2, 3]]';
+  let data =
+    '[NaN, undefined, null, true, false, Infinity, 0, 1, "a", "b", {a: 1}, {a: "a"}, [{a: 1}], [{a: true}], {a: 1, b: 2}, [1, 2], [1, 2, 3]]';
   _("Generating two copies of data:", data);
   /* eslint-disable no-eval */
   let d1 = eval(data);

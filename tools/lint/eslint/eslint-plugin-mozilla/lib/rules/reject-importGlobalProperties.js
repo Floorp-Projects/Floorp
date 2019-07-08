@@ -8,7 +8,9 @@
 
 "use strict";
 
-const privilegedGlobals = Object.keys(require("../environments/privileged.js").globals);
+const privilegedGlobals = Object.keys(
+  require("../environments/privileged.js").globals
+);
 
 // -----------------------------------------------------------------------------
 // Rule Definition
@@ -18,35 +20,40 @@ module.exports = {
   meta: {
     messages: {
       unexpectedCall: "Unexpected call to Cu.importGlobalProperties",
-      unexpectedCallWebIdl: "Unnecessary call to Cu.importGlobalProperties (webidl names are automatically imported)",
+      unexpectedCallWebIdl:
+        "Unnecessary call to Cu.importGlobalProperties (webidl names are automatically imported)",
     },
-    schema: [{
-      // XXX Better name?
-      "enum": ["everything", "allownonwebidl"],
-    }],
+    schema: [
+      {
+        // XXX Better name?
+        enum: ["everything", "allownonwebidl"],
+      },
+    ],
     type: "problem",
   },
 
   create(context) {
     return {
-      "CallExpression": function(node) {
+      CallExpression(node) {
         if (node.callee.type !== "MemberExpression") {
           return;
         }
         let memexp = node.callee;
-        if (memexp.object.type === "Identifier" &&
-            // Only Cu, not Components.utils; see bug 1230369.
-            memexp.object.name === "Cu" &&
-            memexp.property.type === "Identifier" &&
-            memexp.property.name === "importGlobalProperties") {
+        if (
+          memexp.object.type === "Identifier" &&
+          // Only Cu, not Components.utils; see bug 1230369.
+          memexp.object.name === "Cu" &&
+          memexp.property.type === "Identifier" &&
+          memexp.property.name === "importGlobalProperties"
+        ) {
           if (context.options.includes("allownonwebidl")) {
             for (let element of node.arguments[0].elements) {
               if (privilegedGlobals.includes(element.value)) {
-                context.report({ node, messageId: "unexpectedCallWebIdl"});
+                context.report({ node, messageId: "unexpectedCallWebIdl" });
               }
             }
           } else {
-            context.report({node, messageId: "unexpectedCall"});
+            context.report({ node, messageId: "unexpectedCall" });
           }
         }
       },

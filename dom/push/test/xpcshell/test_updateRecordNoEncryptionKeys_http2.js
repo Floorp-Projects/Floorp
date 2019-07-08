@@ -3,9 +3,9 @@
 
 "use strict";
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-const {PushDB, PushService, PushServiceHttp2} = serviceExports;
+const { PushDB, PushService, PushServiceHttp2 } = serviceExports;
 
 var httpServer = null;
 
@@ -57,8 +57,10 @@ add_task(async function test1() {
 
   await db.put(record);
 
-  let notifyPromise = promiseObserverNotification(PushServiceComponent.subscriptionChangeTopic,
-                                                  _ => true);
+  let notifyPromise = promiseObserverNotification(
+    PushServiceComponent.subscriptionChangeTopic,
+    _ => true
+  );
 
   PushService.init({
     serverURI: serverURL + "/subscribe",

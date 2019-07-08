@@ -7,21 +7,22 @@ var disableWorkerTest = "This test uses SpecialPowers";
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const fileData = "abcdefghijklmnopqrstuvwxyz";
   const fileType = "text/plain";
 
-  const databaseName =
-    ("window" in this) ? window.location.pathname : "Test";
+  const databaseName = "window" in this ? window.location.pathname : "Test";
   const objectStoreName = "foo";
   const objectStoreKey = "10";
 
   info("Creating temp file");
 
-  SpecialPowers.createFiles([{data: fileData, options: {type: fileType}}], function(files) {
+  SpecialPowers.createFiles(
+    [{ data: fileData, options: { type: fileType } }],
+    function(files) {
       testGenerator.next(files[0]);
-  });
+    }
+  );
 
   let file = yield undefined;
 

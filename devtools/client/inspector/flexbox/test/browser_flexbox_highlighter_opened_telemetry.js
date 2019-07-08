@@ -15,7 +15,10 @@ add_task(async function() {
   const { document: doc } = flexboxInspector;
   const { highlighters, store } = inspector;
 
-  const onFlexHighlighterToggleRendered = waitForDOM(doc, "#flexbox-checkbox-toggle");
+  const onFlexHighlighterToggleRendered = waitForDOM(
+    doc,
+    "#flexbox-checkbox-toggle"
+  );
   await selectNode("#container", inspector);
   const [flexHighlighterToggle] = await onFlexHighlighterToggleRendered;
 
@@ -27,6 +30,10 @@ add_task(async function() {
 
 function checkResults() {
   checkTelemetry("devtools.layout.flexboxhighlighter.opened", "", 1, "scalar");
-  checkTelemetry("DEVTOOLS_FLEXBOX_HIGHLIGHTER_TIME_ACTIVE_SECONDS", "", null,
-    "hasentries");
+  checkTelemetry(
+    "DEVTOOLS_FLEXBOX_HIGHLIGHTER_TIME_ACTIVE_SECONDS",
+    "",
+    null,
+    "hasentries"
+  );
 }

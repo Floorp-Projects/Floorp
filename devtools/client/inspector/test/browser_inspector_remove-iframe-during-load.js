@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT + "doc_inspector_remove-iframe-during-load.html";
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL("about:blank");
+  const { inspector, testActor } = await openInspectorForURL("about:blank");
   await selectNode("body", inspector);
 
   // We do not want to wait for the inspector to be fully ready before testing
@@ -21,28 +21,38 @@ add_task(async function() {
   // DOMContentLoaded and after load. This is what used to make the inspector go
   // blank when navigating to that page.
   // At this stage, there should be no iframes in the page anymore.
-  ok(!(await testActor.hasNode("iframe")),
-     "Iframes added by the content page should have been removed");
+  ok(
+    !(await testActor.hasNode("iframe")),
+    "Iframes added by the content page should have been removed"
+  );
 
   // Create/remove an extra one now, after the load event.
   info("Creating and removing an iframe.");
   const onMarkupLoaded = inspector.once("markuploaded");
-  testActor.eval("new " + function() {
-    const iframe = document.createElement("iframe");
-    document.body.appendChild(iframe);
-    iframe.remove();
-  });
+  testActor.eval(
+    "new " +
+      function() {
+        const iframe = document.createElement("iframe");
+        document.body.appendChild(iframe);
+        iframe.remove();
+      }
+  );
 
-  ok(!(await testActor.hasNode("iframe")),
-     "The after-load iframe should have been removed.");
+  ok(
+    !(await testActor.hasNode("iframe")),
+    "The after-load iframe should have been removed."
+  );
 
   info("Waiting for markup-view to load.");
   await onMarkupLoaded;
 
   // Assert that the markup-view is displayed and works
   ok(!(await testActor.hasNode("iframe")), "Iframe has been removed.");
-  is((await testActor.getProperty("#yay", "textContent")), "load",
-     "Load event fired.");
+  is(
+    await testActor.getProperty("#yay", "textContent"),
+    "load",
+    "Load event fired."
+  );
 
   await selectNode("#yay", inspector);
 });

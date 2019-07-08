@@ -1,5 +1,7 @@
-var gTestPage = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
-var gTestImage = "http://example.org/browser/browser/base/content/test/general/moz.png";
+var gTestPage =
+  "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+var gTestImage =
+  "http://example.org/browser/browser/base/content/test/general/moz.png";
 var gTab1, gTab2, gTab3;
 var gLevel;
 const BACK = 0;
@@ -42,7 +44,11 @@ function thirdPageLoaded() {
   (async function() {
     FullZoomHelper.zoomTest(gTab1, gLevel, "Tab 1 should still be zoomed");
     FullZoomHelper.zoomTest(gTab2, 1, "Tab 2 should still not be affected");
-    FullZoomHelper.zoomTest(gTab3, gLevel, "Tab 3 should have zoomed as it was loading in the background");
+    FullZoomHelper.zoomTest(
+      gTab3,
+      gLevel,
+      "Tab 3 should have zoomed as it was loading in the background"
+    );
 
     // Switching to tab 2 should update its zoom setting.
     await FullZoomHelper.selectTabAndWaitForLocationChange(gTab2);
@@ -56,9 +62,17 @@ function thirdPageLoaded() {
 
 function imageLoaded() {
   (async function() {
-    FullZoomHelper.zoomTest(gTab1, 1, "Zoom should be 1 when image was loaded in the background");
+    FullZoomHelper.zoomTest(
+      gTab1,
+      1,
+      "Zoom should be 1 when image was loaded in the background"
+    );
     await FullZoomHelper.selectTabAndWaitForLocationChange(gTab1);
-    FullZoomHelper.zoomTest(gTab1, 1, "Zoom should still be 1 when tab with image is selected");
+    FullZoomHelper.zoomTest(
+      gTab1,
+      1,
+      "Zoom should still be 1 when tab with image is selected"
+    );
   })().then(imageZoomSwitch, FullZoomHelper.failAndContinue(finish));
 }
 
@@ -66,14 +80,22 @@ function imageZoomSwitch() {
   (async function() {
     await FullZoomHelper.navigate(BACK);
     await FullZoomHelper.navigate(FORWARD);
-    FullZoomHelper.zoomTest(gTab1, 1, "Tab 1 should not be zoomed when an image loads");
+    FullZoomHelper.zoomTest(
+      gTab1,
+      1,
+      "Tab 1 should not be zoomed when an image loads"
+    );
 
     await FullZoomHelper.selectTabAndWaitForLocationChange(gTab2);
-    FullZoomHelper.zoomTest(gTab1, 1, "Tab 1 should still not be zoomed when deselected");
+    FullZoomHelper.zoomTest(
+      gTab1,
+      1,
+      "Tab 1 should still not be zoomed when deselected"
+    );
   })().then(finishTest, FullZoomHelper.failAndContinue(finish));
 }
 
-var finishTestStarted  = false;
+var finishTestStarted = false;
 function finishTest() {
   (async function() {
     ok(!finishTestStarted, "finishTest called more than once");

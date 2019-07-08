@@ -8,30 +8,34 @@
 
 const CC = Components.Constructor;
 
-const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
-const {
-  StreamUtils,
-} = ChromeUtils.import("chrome://marionette/content/stream-utils.js");
-const {
-  BulkPacket,
-  JSONPacket,
-  Packet,
-} = ChromeUtils.import("chrome://marionette/content/packets.js");
-const {
-  executeSoon,
-} = ChromeUtils.import("chrome://marionette/content/sync.js");
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
+const { StreamUtils } = ChromeUtils.import(
+  "chrome://marionette/content/stream-utils.js"
+);
+const { BulkPacket, JSONPacket, Packet } = ChromeUtils.import(
+  "chrome://marionette/content/packets.js"
+);
+const { executeSoon } = ChromeUtils.import(
+  "chrome://marionette/content/sync.js"
+);
 
-const flags = {wantVerbose: false, wantLogging: false};
+const flags = { wantVerbose: false, wantLogging: false };
 
-const dumpv =
-  flags.wantVerbose ?
-  function(msg) { dump(msg + "\n"); } :
-  function() {};
+const dumpv = flags.wantVerbose
+  ? function(msg) {
+      dump(msg + "\n");
+    }
+  : function() {};
 
 const Pipe = CC("@mozilla.org/pipe;1", "nsIPipe", "init");
 
-const ScriptableInputStream = CC("@mozilla.org/scriptableinputstream;1",
-    "nsIScriptableInputStream", "init");
+const ScriptableInputStream = CC(
+  "@mozilla.org/scriptableinputstream;1",
+  "nsIScriptableInputStream",
+  "init"
+);
 
 this.EXPORTED_SYMBOLS = ["DebuggerTransport"];
 
@@ -361,9 +365,12 @@ DebuggerTransport.prototype = {
    */
   onInputStreamReady(stream) {
     try {
-      while (stream.available() && this._incomingEnabled &&
-             this._processIncoming(stream, stream.available())) {
-         // Loop until there is nothing more to process
+      while (
+        stream.available() &&
+        this._incomingEnabled &&
+        this._processIncoming(stream, stream.available())
+      ) {
+        // Loop until there is nothing more to process
       }
       this._waitForIncoming();
     } catch (e) {
@@ -407,8 +414,9 @@ DebuggerTransport.prototype = {
         // header pattern.
         this._incoming = Packet.fromHeader(this._incomingHeader, this);
         if (!this._incoming) {
-          throw new Error("No packet types for header: " +
-                        this._incomingHeader);
+          throw new Error(
+            "No packet types for header: " + this._incomingHeader
+          );
         }
       }
 
@@ -446,8 +454,11 @@ DebuggerTransport.prototype = {
    */
   _readHeader() {
     let amountToRead = PACKET_HEADER_MAX - this._incomingHeader.length;
-    this._incomingHeader +=
-    StreamUtils.delimitedRead(this._scriptableInput, ":", amountToRead);
+    this._incomingHeader += StreamUtils.delimitedRead(
+      this._scriptableInput,
+      ":",
+      amountToRead
+    );
     if (flags.wantVerbose) {
       dumpv("Header read: " + this._incomingHeader);
     }
@@ -486,7 +497,7 @@ DebuggerTransport.prototype = {
    */
   _onJSONObjectReady(object) {
     executeSoon(() => {
-    // Ensure the transport is still alive by the time this runs.
+      // Ensure the transport is still alive by the time this runs.
       if (this.active) {
         this.emit("packet", object);
         this.hooks.onPacket(object);
@@ -502,7 +513,7 @@ DebuggerTransport.prototype = {
    */
   _onBulkReadReady(...args) {
     executeSoon(() => {
-    // Ensure the transport is still alive by the time this runs.
+      // Ensure the transport is still alive by the time this runs.
       if (this.active) {
         this.emit("bulkpacket", ...args);
         this.hooks.onBulkPacket(...args);

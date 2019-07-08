@@ -4,12 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var gVisits = [{url: "http://www.mozilla.com/",
-                transition: TRANSITION_TYPED},
-               {url: "http://www.google.com/",
-                transition: TRANSITION_BOOKMARK},
-               {url: "http://www.espn.com/",
-                transition: TRANSITION_LINK}];
+var gVisits = [
+  { url: "http://www.mozilla.com/", transition: TRANSITION_TYPED },
+  { url: "http://www.google.com/", transition: TRANSITION_BOOKMARK },
+  { url: "http://www.espn.com/", transition: TRANSITION_LINK },
+];
 
 add_task(async function test_execute() {
   let completionPromise = new Promise(resolveCompletionPromise => {
@@ -30,15 +29,14 @@ add_task(async function test_execute() {
     PlacesObservers.addListener(["page-visited"], listener);
   });
 
-
   for (var visit of gVisits) {
     if (visit.transition == TRANSITION_TYPED) {
       PlacesUtils.history.markPageAsTyped(uri(visit.url));
     } else if (visit.transition == TRANSITION_BOOKMARK) {
       PlacesUtils.history.markPageAsFollowedBookmark(uri(visit.url));
     } else {
-     // because it is a top level visit with no referrer,
-     // it will result in TRANSITION_LINK
+      // because it is a top level visit with no referrer,
+      // it will result in TRANSITION_LINK
     }
     await PlacesTestUtils.addVisits({
       uri: uri(visit.url),

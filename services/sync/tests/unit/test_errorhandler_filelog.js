@@ -1,18 +1,20 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-const logsdir            = FileUtils.getDir("ProfD", ["weave", "logs"], true);
+const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 
 // Delay to wait before cleanup, to allow files to age.
 // This is so large because the file timestamp granularity is per-second, and
 // so otherwise we can end up with all of our files -- the ones we want to
 // keep, and the ones we want to clean up -- having the same modified time.
-const CLEANUP_DELAY      = 2000;
-const DELAY_BUFFER       = 500; // Buffer for timers on different OS platforms.
+const CLEANUP_DELAY = 2000;
+const DELAY_BUFFER = 500; // Buffer for timers on different OS platforms.
 
 var errorHandler = Service.errorHandler;
 
@@ -66,14 +68,19 @@ add_test(function test_logOnSuccess_false() {
 });
 
 function readFile(file, callback) {
-  NetUtil.asyncFetch({
-    uri: NetUtil.newURI(file),
-    loadUsingSystemPrincipal: true,
-  }, function(inputStream, statusCode, request) {
-    let data = NetUtil.readInputStreamToString(inputStream,
-                                               inputStream.available());
-    callback(statusCode, data);
-  });
+  NetUtil.asyncFetch(
+    {
+      uri: NetUtil.newURI(file),
+      loadUsingSystemPrincipal: true,
+    },
+    function(inputStream, statusCode, request) {
+      let data = NetUtil.readInputStreamToString(
+        inputStream,
+        inputStream.available()
+      );
+      callback(statusCode, data);
+    }
+  );
 }
 
 add_test(function test_logOnSuccess_true() {
@@ -366,36 +373,49 @@ add_test(function test_logErrorCleanup_age() {
     oldLogs.push(newLog.leafName);
   }
 
-  Svc.Obs.add("services-tests:common:log-manager:cleanup-logs", function onCleanupLogs() {
-    Svc.Obs.remove("services-tests:common:log-manager:cleanup-logs", onCleanupLogs);
+  Svc.Obs.add(
+    "services-tests:common:log-manager:cleanup-logs",
+    function onCleanupLogs() {
+      Svc.Obs.remove(
+        "services-tests:common:log-manager:cleanup-logs",
+        onCleanupLogs
+      );
 
-    // Only the newest created log file remains.
-    let entries = logsdir.directoryEntries;
-    Assert.ok(entries.hasMoreElements());
-    let logfile = entries.getNext().QueryInterface(Ci.nsIFile);
-    Assert.ok(oldLogs.every(function(e) {
-      return e != logfile.leafName;
-    }));
-    Assert.ok(!entries.hasMoreElements());
+      // Only the newest created log file remains.
+      let entries = logsdir.directoryEntries;
+      Assert.ok(entries.hasMoreElements());
+      let logfile = entries.getNext().QueryInterface(Ci.nsIFile);
+      Assert.ok(
+        oldLogs.every(function(e) {
+          return e != logfile.leafName;
+        })
+      );
+      Assert.ok(!entries.hasMoreElements());
 
-    // Clean up.
-    try {
-      logfile.remove(false);
-    } catch (ex) {
-      dump("Couldn't delete file: " + ex.message + "\n");
-      // Stupid Windows box.
+      // Clean up.
+      try {
+        logfile.remove(false);
+      } catch (ex) {
+        dump("Couldn't delete file: " + ex.message + "\n");
+        // Stupid Windows box.
+      }
+
+      Svc.Prefs.resetBranch("");
+      run_next_test();
     }
-
-    Svc.Prefs.resetBranch("");
-    run_next_test();
-  });
+  );
 
   let delay = CLEANUP_DELAY + DELAY_BUFFER;
 
   _("Cleaning up logs after " + delay + "msec.");
-  CommonUtils.namedTimer(function onTimer() {
-    Svc.Obs.notify("weave:service:sync:error");
-  }, delay, this, "cleanup-timer");
+  CommonUtils.namedTimer(
+    function onTimer() {
+      Svc.Obs.notify("weave:service:sync:error");
+    },
+    delay,
+    this,
+    "cleanup-timer"
+  );
 });
 
 add_task(async function test_remove_log_on_startOver() {

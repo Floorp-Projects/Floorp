@@ -3,8 +3,11 @@
 
 "use strict";
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {escapeCSSComment, unescapeCSSComment} = require("devtools/shared/css/parsing-utils");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const {
+  escapeCSSComment,
+  unescapeCSSComment,
+} = require("devtools/shared/css/parsing-utils");
 
 const TEST_DATA = [
   {

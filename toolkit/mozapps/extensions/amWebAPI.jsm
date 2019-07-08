@@ -4,19 +4,28 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
-                                      "extensions.webextPermissionPrompts", false);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "WEBEXT_PERMISSION_PROMPTS",
+  "extensions.webextPermissionPrompts",
+  false
+);
 
-const MSG_PROMISE_REQUEST  = "WebAPIPromiseRequest";
-const MSG_PROMISE_RESULT   = "WebAPIPromiseResult";
-const MSG_INSTALL_EVENT    = "WebAPIInstallEvent";
-const MSG_INSTALL_CLEANUP  = "WebAPICleanup";
-const MSG_ADDON_EVENT_REQ  = "WebAPIAddonEventRequest";
-const MSG_ADDON_EVENT      = "WebAPIAddonEvent";
+const MSG_PROMISE_REQUEST = "WebAPIPromiseRequest";
+const MSG_PROMISE_RESULT = "WebAPIPromiseResult";
+const MSG_INSTALL_EVENT = "WebAPIInstallEvent";
+const MSG_INSTALL_CLEANUP = "WebAPICleanup";
+const MSG_ADDON_EVENT_REQ = "WebAPIAddonEventRequest";
+const MSG_ADDON_EVENT = "WebAPIAddonEvent";
 
 class APIBroker {
   constructor(mm) {
@@ -51,7 +60,9 @@ class APIBroker {
       case MSG_INSTALL_EVENT: {
         let install = this._installMap.get(payload.id);
         if (!install) {
-          let err = new Error(`Got install event for unknown install ${payload.id}`);
+          let err = new Error(
+            `Got install event for unknown install ${payload.id}`
+          );
           Cu.reportError(err);
           return;
         }
@@ -80,10 +91,10 @@ class APIBroker {
     this._eventListener = callback;
     if (callback) {
       this.mm.addMessageListener(MSG_ADDON_EVENT, this);
-      this.mm.sendAsyncMessage(MSG_ADDON_EVENT_REQ, {enabled: true});
+      this.mm.sendAsyncMessage(MSG_ADDON_EVENT_REQ, { enabled: true });
     } else {
       this.mm.removeMessageListener(MSG_ADDON_EVENT, this);
-      this.mm.sendAsyncMessage(MSG_ADDON_EVENT_REQ, {enabled: false});
+      this.mm.sendAsyncMessage(MSG_ADDON_EVENT_REQ, { enabled: false });
     }
   }
 
@@ -234,7 +245,8 @@ class WebAPI extends APIObject {
       // Provide the host from which the amWebAPI is being called
       // (so that we can detect if the API is being used from the disco pane,
       // AMO, testpilot or another unknown webpage).
-      sourceHost: this.window.document.nodePrincipal.URI &&
+      sourceHost:
+        this.window.document.nodePrincipal.URI &&
         this.window.document.nodePrincipal.URI.host,
     };
     installOptions.triggeringPrincipal = this.window.document.nodePrincipal;
@@ -269,6 +281,10 @@ class WebAPI extends APIObject {
     }
   }
 }
-WebAPI.prototype.QueryInterface = ChromeUtils.generateQI(["nsIDOMGlobalPropertyInitializer"]);
-WebAPI.prototype.classID = Components.ID("{8866d8e3-4ea5-48b7-a891-13ba0ac15235}");
+WebAPI.prototype.QueryInterface = ChromeUtils.generateQI([
+  "nsIDOMGlobalPropertyInitializer",
+]);
+WebAPI.prototype.classID = Components.ID(
+  "{8866d8e3-4ea5-48b7-a891-13ba0ac15235}"
+);
 var EXPORTED_SYMBOLS = ["WebAPI"];

@@ -20,12 +20,15 @@ function test_openUnsharedDatabase_file_exists() {
   Assert.ok(db.exists());
 }
 
-var tests = [test_openUnsharedDatabase_file_DNE,
-             test_openUnsharedDatabase_file_exists];
+var tests = [
+  test_openUnsharedDatabase_file_DNE,
+  test_openUnsharedDatabase_file_exists,
+];
 
 function run_test() {
-  for (var i = 0; i < tests.length; i++)
+  for (var i = 0; i < tests.length; i++) {
     tests[i]();
+  }
 
   cleanup();
 }

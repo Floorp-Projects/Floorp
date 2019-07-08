@@ -23,16 +23,18 @@ function sortObjectKeys(object) {
     return object;
   }
 
-  return Object.keys(object).sort(function(left, right) {
-    return left.toLowerCase().localeCompare(right.toLowerCase());
-  }).reduce((acc, key) => {
-    if (typeof object[key] === "object") {
-      acc[key] = sortObjectKeys(object[key]);
-    } else {
-      acc[key] = object[key];
-    }
-    return acc;
-  }, {});
+  return Object.keys(object)
+    .sort(function(left, right) {
+      return left.toLowerCase().localeCompare(right.toLowerCase());
+    })
+    .reduce((acc, key) => {
+      if (typeof object[key] === "object") {
+        acc[key] = sortObjectKeys(object[key]);
+      } else {
+        acc[key] = object[key];
+      }
+      return acc;
+    }, {});
 }
 
 module.exports = {

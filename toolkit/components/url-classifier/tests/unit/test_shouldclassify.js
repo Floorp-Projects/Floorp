@@ -4,8 +4,10 @@
 
 "use strict";
 
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { UrlClassifierTestUtils } = ChromeUtils.import(
+  "resource://testing-common/UrlClassifierTestUtils.jsm"
+);
 
 const defaultTopWindowURI = NetUtil.newURI("http://www.example.com/");
 
@@ -19,11 +21,11 @@ var normalOrigin, trackingOrigin;
 // 4. be Conservative
 // We test are the combinations here to make sure the algorithm is correct
 
-const PARAM_LOAD_BYPASS_URL_CLASSIFIER    = 1 << 0;
-const PARAM_CONTENT_POLICY_TYPE_DOCUMENT  = 1 << 1;
-const PARAM_TRIGGERING_PRINCIPAL_SYSTEM   = 1 << 2;
-const PARAM_CAP_BE_CONSERVATIVE           = 1 << 3;
-const PARAM_MAX                           = 1 << 4;
+const PARAM_LOAD_BYPASS_URL_CLASSIFIER = 1 << 0;
+const PARAM_CONTENT_POLICY_TYPE_DOCUMENT = 1 << 1;
+const PARAM_TRIGGERING_PRINCIPAL_SYSTEM = 1 << 2;
+const PARAM_CAP_BE_CONSERVATIVE = 1 << 3;
+const PARAM_MAX = 1 << 4;
 
 function getParameters(bitFlags) {
   var params = {
@@ -59,8 +61,10 @@ function getExpectedResult(params) {
   if (params.beConservative) {
     return false;
   }
-  if (params.system &&
-      params.contentType != Ci.nsIContentPolicy.TYPE_DOCUMENT) {
+  if (
+    params.system &&
+    params.contentType != Ci.nsIContentPolicy.TYPE_DOCUMENT
+  ) {
     return false;
   }
 
@@ -70,10 +74,19 @@ function getExpectedResult(params) {
 function setupHttpServer() {
   httpServer = new HttpServer();
   httpServer.start(-1);
-  httpServer.identity.setPrimary("http", "tracking.example.org", httpServer.identity.primaryPort);
-  httpServer.identity.add("http", "example.org", httpServer.identity.primaryPort);
+  httpServer.identity.setPrimary(
+    "http",
+    "tracking.example.org",
+    httpServer.identity.primaryPort
+  );
+  httpServer.identity.add(
+    "http",
+    "example.org",
+    httpServer.identity.primaryPort
+  );
   normalOrigin = "http://localhost:" + httpServer.identity.primaryPort;
-  trackingOrigin = "http://tracking.example.org:" + httpServer.identity.primaryPort;
+  trackingOrigin =
+    "http://tracking.example.org:" + httpServer.identity.primaryPort;
 }
 
 function setupChannel(params) {
@@ -86,8 +99,10 @@ function setupChannel(params) {
       contentPolicyType: params.contentType,
     });
   } else {
-    let principal =
-      Services.scriptSecurityManager.createCodebasePrincipal(NetUtil.newURI(trackingOrigin), {});
+    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+      NetUtil.newURI(trackingOrigin),
+      {}
+    );
     channel = NetUtil.newChannel({
       uri: trackingOrigin + "/evil.js",
       loadingPrincipal: principal,
@@ -99,14 +114,20 @@ function setupChannel(params) {
   channel.QueryInterface(Ci.nsIHttpChannel);
   channel.requestMethod = "GET";
   channel.loadFlags |= params.loadFlags;
-  channel.QueryInterface(Ci.nsIHttpChannelInternal).setTopWindowURIIfUnknown(defaultTopWindowURI);
-  channel.QueryInterface(Ci.nsIHttpChannelInternal).beConservative = params.beConservative;
+  channel
+    .QueryInterface(Ci.nsIHttpChannelInternal)
+    .setTopWindowURIIfUnknown(defaultTopWindowURI);
+  channel.QueryInterface(Ci.nsIHttpChannelInternal).beConservative =
+    params.beConservative;
 
   return channel;
 }
 
 add_task(async function testShouldClassify() {
-  Services.prefs.setBoolPref("privacy.trackingprotection.annotate_channels", true);
+  Services.prefs.setBoolPref(
+    "privacy.trackingprotection.annotate_channels",
+    true
+  );
 
   setupHttpServer();
 
@@ -119,8 +140,10 @@ add_task(async function testShouldClassify() {
     await new Promise(resolve => {
       channel.asyncOpen({
         onStartRequest: (request, context) => {
-          Assert.equal(request.QueryInterface(Ci.nsIHttpChannel).isTrackingResource(),
-                       getExpectedResult(params));
+          Assert.equal(
+            request.QueryInterface(Ci.nsIHttpChannel).isTrackingResource(),
+            getExpectedResult(params)
+          );
           request.cancel(Cr.NS_ERROR_ABORT);
           resolve();
         },

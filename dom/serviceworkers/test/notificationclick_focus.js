@@ -11,30 +11,39 @@ function promisifyTimerFocus(client, delay) {
 }
 
 onnotificationclick = function(e) {
-  e.waitUntil(self.clients.matchAll().then(function(clients) {
-    if (clients.length === 0) {
-      dump("********************* CLIENTS LIST EMPTY! Test will timeout! ***********************\n");
-      return Promise.resolve();
-    }
+  e.waitUntil(
+    self.clients.matchAll().then(function(clients) {
+      if (clients.length === 0) {
+        dump(
+          "********************* CLIENTS LIST EMPTY! Test will timeout! ***********************\n"
+        );
+        return Promise.resolve();
+      }
 
-    var immediatePromise = clients[0].focus();
-    var withinTimeout = promisifyTimerFocus(clients[0], 100);
+      var immediatePromise = clients[0].focus();
+      var withinTimeout = promisifyTimerFocus(clients[0], 100);
 
-    var afterTimeout = promisifyTimerFocus(clients[0], 2000).then(function() {
-      throw "Should have failed!";
-    }, function() {
-      return Promise.resolve();
-    });
+      var afterTimeout = promisifyTimerFocus(clients[0], 2000).then(
+        function() {
+          throw "Should have failed!";
+        },
+        function() {
+          return Promise.resolve();
+        }
+      );
 
-    return Promise.all([immediatePromise, withinTimeout, afterTimeout]).then(function() {
-      clients.forEach(function(client) {
-        client.postMessage({ok: true});
-      });
-    }).catch(function(ex) {
-      dump("Error " + ex + "\n");
-      clients.forEach(function(client) {
-        client.postMessage({ok: false});
-      });
-    });
-  }));
-}
+      return Promise.all([immediatePromise, withinTimeout, afterTimeout])
+        .then(function() {
+          clients.forEach(function(client) {
+            client.postMessage({ ok: true });
+          });
+        })
+        .catch(function(ex) {
+          dump("Error " + ex + "\n");
+          clients.forEach(function(client) {
+            client.postMessage({ ok: false });
+          });
+        });
+    })
+  );
+};

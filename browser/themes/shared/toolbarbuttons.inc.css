@@ -105,8 +105,11 @@ toolbar .toolbarbutton-1 {
   -moz-box-pack: center;
 }
 
-:root:not([uidensity=compact]) #PanelUI-menu-button {
+:root:not([uidensity=compact]) #PanelUI-button {
   padding-inline-start: 5px;
+}
+
+:root:not([uidensity=compact]) #PanelUI-menu-button {
   padding-inline-end: 5px;
 }
 

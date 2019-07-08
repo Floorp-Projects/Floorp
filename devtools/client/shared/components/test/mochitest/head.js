@@ -10,7 +10,9 @@
 var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 var { Assert } = require("resource://testing-common/Assert.jsm");
 var { gDevTools } = require("devtools/client/framework/devtools");
-var { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js");
+var { BrowserLoader } = ChromeUtils.import(
+  "resource://devtools/client/shared/browser-loader.js"
+);
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
 var Services = require("Services");
@@ -28,12 +30,16 @@ var { require: browserRequire } = BrowserLoader({
 const React = browserRequire("devtools/client/shared/vendor/react");
 const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
 const dom = browserRequire("devtools/client/shared/vendor/react-dom-factories");
-const TestUtils = browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+const TestUtils = browserRequire(
+  "devtools/client/shared/vendor/react-dom-test-utils"
+);
 
-const ShallowRenderer =
-  browserRequire("devtools/client/shared/vendor/react-test-renderer-shallow");
-const TestRenderer =
-  browserRequire("devtools/client/shared/vendor/react-test-renderer");
+const ShallowRenderer = browserRequire(
+  "devtools/client/shared/vendor/react-test-renderer-shallow"
+);
+const TestRenderer = browserRequire(
+  "devtools/client/shared/vendor/react-test-renderer"
+);
 
 var EXAMPLE_URL = "http://example.com/browser/browser/devtools/shared/test/";
 
@@ -42,17 +48,14 @@ SimpleTest.registerCleanupFunction(() => {
 });
 
 function forceRender(comp) {
-  return setState(comp, {})
-    .then(() => setState(comp, {}));
+  return setState(comp, {}).then(() => setState(comp, {}));
 }
 
 // All tests are asynchronous.
 SimpleTest.waitForExplicitFinish();
 
 function onNextAnimationFrame(fn) {
-  return () =>
-    requestAnimationFrame(() =>
-      requestAnimationFrame(fn));
+  return () => requestAnimationFrame(() => requestAnimationFrame(fn));
 }
 
 function setState(component, newState) {
@@ -119,7 +122,8 @@ const TEST_TREE_VIEW_INTERFACE = {
 var TEST_TREE_INTERFACE = {
   getParent: x => TEST_TREE.parent[x],
   getChildren: x => TEST_TREE.children[x],
-  renderItem: (x, depth, focused) => "-".repeat(depth) + x + ":" + focused + "\n",
+  renderItem: (x, depth, focused) =>
+    "-".repeat(depth) + x + ":" + focused + "\n",
   getRoots: () => ["A", "M"],
   getKey: x => "key-" + x,
   itemHeight: 1,
@@ -140,17 +144,21 @@ function isAccessibleTree(tree, options = {}) {
   is(treeNode.getAttribute("tabindex"), "0", "Tab index is set");
   is(treeNode.getAttribute("role"), "tree", "Tree semantics is present");
   if (options.hasActiveDescendant) {
-    ok(treeNode.hasAttribute("aria-activedescendant"),
-       "Tree has an active descendant set");
+    ok(
+      treeNode.hasAttribute("aria-activedescendant"),
+      "Tree has an active descendant set"
+    );
   }
 
   const treeNodes = [...treeNode.querySelectorAll(".tree-node")];
   for (const node of treeNodes) {
     ok(node.id, "TreeNode has an id");
     is(node.getAttribute("role"), "treeitem", "Tree item semantics is present");
-    is(parseInt(node.getAttribute("aria-level"), 10),
-       parseInt(node.getAttribute("data-depth"), 10) + 1,
-       "Aria level attribute is set correctly");
+    is(
+      parseInt(node.getAttribute("aria-level"), 10),
+      parseInt(node.getAttribute("data-depth"), 10) + 1,
+      "Aria level attribute is set correctly"
+    );
   }
 }
 
@@ -213,7 +221,15 @@ var TEST_TREE = {
  * Frame
  */
 function checkFrameString({
-  el, file, line, column, source, functionName, shouldLink, tooltip, locationPrefix,
+  el,
+  file,
+  line,
+  column,
+  source,
+  functionName,
+  shouldLink,
+  tooltip,
+  locationPrefix,
 }) {
   const $ = selector => el.querySelector(selector);
 
@@ -225,9 +241,16 @@ function checkFrameString({
   const $line = $(".frame-link-line");
 
   is($filename.textContent, file, "Correct filename");
-  is(el.getAttribute("data-line"), line ? `${line}` : null, "Expected `data-line` found");
-  is(el.getAttribute("data-column"),
-     column ? `${column}` : null, "Expected `data-column` found");
+  is(
+    el.getAttribute("data-line"),
+    line ? `${line}` : null,
+    "Expected `data-line` found"
+  );
+  is(
+    el.getAttribute("data-column"),
+    column ? `${column}` : null,
+    "Expected `data-column` found"
+  );
   is($sourceInner.getAttribute("title"), tooltip, "Correct tooltip");
   is($source.tagName, shouldLink ? "A" : "SPAN", "Correct linkable status");
   if (shouldLink) {
@@ -308,7 +331,7 @@ async function createComponentTest(factory, props) {
   return {
     container,
     component,
-    $: (s) => container.querySelector(s),
+    $: s => container.querySelector(s),
   };
 }
 
@@ -343,7 +366,11 @@ function matchSnapshot(name, el) {
   const renderer = TestRenderer.create(el, {});
   const tree = renderer.toJSON();
 
-  is(JSON.stringify(tree, (key, value) =>
-    (typeof value === "function") ? value.toString() : value),
-     JSON.stringify(snapshot), name);
+  is(
+    JSON.stringify(tree, (key, value) =>
+      typeof value === "function" ? value.toString() : value
+    ),
+    JSON.stringify(snapshot),
+    name
+  );
 }

@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SpecialPowers sandboxes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<iframe id="iframe"></iframe>
+
+<script>
+/**
+ * Tests that the shared sandbox functionality for cross-process script
+ * execution works as expected. In particular, ensures that Assert methods
+ * report the correct diagnostics in the caller scope.
+ */
+
+/* eslint-disable prettier/prettier */
+/* globals SpecialPowers, Assert */
+
+async function interceptDiagnostics(func) {
+  let originalRecord = SimpleTest.record;
+  try {
+    let diags = [];
+
+    SimpleTest.record = (condition, name, diag, stack) => {
+      diags.push({condition, name, diag, stack});
+    };
+
+    await func();
+
+    return diags;
+  } finally {
+    SimpleTest.record = originalRecord;
+  }
+}
+
+add_task(async function() {
+  let frame = document.getElementById("iframe");
+  frame.src = "https://example.com/tests/testing/mochitest/tests/Harness_sanity/file_spawn.html";
+
+  await new Promise(resolve => {
+    frame.addEventListener("load", resolve, {once: true});
+  });
+
+  let expected = [
+    [false, "Thing - 1 == 2", "got 1, expected 2 (operator ==)"],
+    [true, "Hmm - 1 == 1", undefined],
+    [true, "Yay. - true == true", undefined],
+    [false, "Boo!. - false == true", "got false, expected true (operator ==)"],
+  ];
+
+  // Test that a representative variety of assertions work as expected, and
+  // trigger the expected calls to the harness's reporting function.
+  //
+  // Note: Assert.jsm has its own tests, and defers all of its reporting to a
+  // single reporting function, so we don't need to test it comprehensively. We
+  // just need to make sure that the general functionality works as expected.
+  let tests = {
+    "SpecialPowers.spawn": () => {
+      return SpecialPowers.spawn(frame, [], () => {
+        Assert.equal(1, 2, "Thing");
+        Assert.equal(1, 1, "Hmm");
+        Assert.ok(true, "Yay.");
+        Assert.ok(false, "Boo!.");
+      });
+    },
+    "SpecialPowers.loadChromeScript": async () => {
+      let script = SpecialPowers.loadChromeScript(() => {
+        this.addMessageListener("ping", () => "pong");
+
+        Assert.equal(1, 2, "Thing");
+        Assert.equal(1, 1, "Hmm");
+        Assert.ok(true, "Yay.");
+        Assert.ok(false, "Boo!.");
+      });
+
+      await script.sendQuery("ping");
+      script.destroy();
+    },
+  };
+
+  for (let [name, func] of Object.entries(tests)) {
+    info(`Starting task: ${name}`);
+
+    let diags = await interceptDiagnostics(func);
+
+    let results = diags.map(diag => [diag.condition, diag.name, diag.diag]);
+
+    isDeeply(results, expected, "Got expected assertions");
+  }
+});
+</script>
+</body>
+</html>

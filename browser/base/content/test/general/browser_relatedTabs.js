@@ -10,13 +10,18 @@ add_task(async function() {
   // returning a list of opened tabs for verifying the expected order.
   // The new tab behaviour is documented in bug 465673
   let tabs = [];
-  let ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
-                                            "nsIReferrerInfo",
-                                            "init");
+  let ReferrerInfo = Components.Constructor(
+    "@mozilla.org/referrer-info;1",
+    "nsIReferrerInfo",
+    "init"
+  );
 
   function addTab(aURL, aReferrer) {
     let referrerInfo = new ReferrerInfo(
-      Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, aReferrer);
+      Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+      true,
+      aReferrer
+    );
     let tab = BrowserTestUtils.addTab(gBrowser, aURL, { referrerInfo });
     tabs.push(tab);
     return BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -40,15 +45,27 @@ add_task(async function() {
   await addTab("http://mochi.test:8888/#7");
 
   function testPosition(tabNum, expectedPosition, msg) {
-    is(Array.prototype.indexOf.call(gBrowser.tabs, tabs[tabNum]), expectedPosition, msg);
+    is(
+      Array.prototype.indexOf.call(gBrowser.tabs, tabs[tabNum]),
+      expectedPosition,
+      msg
+    );
   }
 
   testPosition(0, 3, "tab without referrer was opened to the far right");
   testPosition(1, 7, "tab without referrer was opened to the far right");
   testPosition(2, 5, "tab with referrer opened immediately to the right");
   testPosition(3, 1, "next tab with referrer opened further to the right");
-  testPosition(4, 4, "tab selection changed, tab opens immediately to the right");
-  testPosition(5, 6, "blank tab with referrer opens to the right of 3rd original tab where removed tab was");
+  testPosition(
+    4,
+    4,
+    "tab selection changed, tab opens immediately to the right"
+  );
+  testPosition(
+    5,
+    6,
+    "blank tab with referrer opens to the right of 3rd original tab where removed tab was"
+  );
   testPosition(6, 2, "tab has moved, new tab opens immediately to the right");
   testPosition(7, 8, "blank tab without referrer opens at the end");
   testPosition(8, 9, "tab without referrer opens at the end");

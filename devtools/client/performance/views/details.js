@@ -25,7 +25,7 @@ const DetailsView = {
    * mapping of subviews.
    */
   components: {
-    "waterfall": {
+    waterfall: {
       id: "waterfall-view",
       view: WaterfallView,
       features: ["withMarkers"],
@@ -59,7 +59,9 @@ const DetailsView = {
     this.toolbar = $("#performance-toolbar-controls-detail-views");
 
     this._onViewToggle = this._onViewToggle.bind(this);
-    this._onRecordingStoppedOrSelected = this._onRecordingStoppedOrSelected.bind(this);
+    this._onRecordingStoppedOrSelected = this._onRecordingStoppedOrSelected.bind(
+      this
+    );
     this.setAvailableViews = this.setAvailableViews.bind(this);
 
     for (const button of $$("toolbarbutton[data-view]", this.toolbar)) {
@@ -68,10 +70,14 @@ const DetailsView = {
 
     await this.setAvailableViews();
 
-    PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE,
-                             this._onRecordingStoppedOrSelected);
-    PerformanceController.on(EVENTS.RECORDING_SELECTED,
-                             this._onRecordingStoppedOrSelected);
+    PerformanceController.on(
+      EVENTS.RECORDING_STATE_CHANGE,
+      this._onRecordingStoppedOrSelected
+    );
+    PerformanceController.on(
+      EVENTS.RECORDING_SELECTED,
+      this._onRecordingStoppedOrSelected
+    );
     PerformanceController.on(EVENTS.PREF_CHANGED, this.setAvailableViews);
   },
 
@@ -87,10 +93,14 @@ const DetailsView = {
       component.initialized && (await component.view.destroy());
     }
 
-    PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE,
-                              this._onRecordingStoppedOrSelected);
-    PerformanceController.off(EVENTS.RECORDING_SELECTED,
-                              this._onRecordingStoppedOrSelected);
+    PerformanceController.off(
+      EVENTS.RECORDING_STATE_CHANGE,
+      this._onRecordingStoppedOrSelected
+    );
+    PerformanceController.off(
+      EVENTS.RECORDING_SELECTED,
+      this._onRecordingStoppedOrSelected
+    );
     PerformanceController.off(EVENTS.PREF_CHANGED, this.setAvailableViews);
   },
 
@@ -125,8 +135,10 @@ const DetailsView = {
     //
     // 2. If we have a finished recording and no panel was selected yet,
     // use a default now that we have the recording configurations
-    if ((this._initialized && isCompleted && invalidCurrentView) ||
-        (!this._initialized && isCompleted && recording)) {
+    if (
+      (this._initialized && isCompleted && invalidCurrentView) ||
+      (!this._initialized && isCompleted && recording)
+    ) {
       await this.selectDefaultView();
     }
   },
@@ -146,9 +158,10 @@ const DetailsView = {
       return false;
     }
 
-    const prefSupported = (prefs && prefs.length) ?
-                        prefs.every(p => PerformanceController.getPref(p)) :
-                        true;
+    const prefSupported =
+      prefs && prefs.length
+        ? prefs.every(p => PerformanceController.getPref(p))
+        : true;
     return PerformanceController.isFeatureSupported(features) && prefSupported;
   },
 
@@ -271,4 +284,3 @@ const DetailsView = {
 EventEmitter.decorate(DetailsView);
 
 exports.DetailsView = DetailsView;
-

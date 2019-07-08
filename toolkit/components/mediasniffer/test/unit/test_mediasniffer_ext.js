@@ -4,12 +4,14 @@
 
 var CC = Components.Constructor;
 
-var BinaryOutputStream = CC("@mozilla.org/binaryoutputstream;1",
-                            "nsIBinaryOutputStream",
-                            "setOutputStream");
+var BinaryOutputStream = CC(
+  "@mozilla.org/binaryoutputstream;1",
+  "nsIBinaryOutputStream",
+  "setOutputStream"
+);
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var httpserver = new HttpServer();
 
@@ -45,13 +47,17 @@ const tests = [
 var listener = {
   onStartRequest(request) {
     info("Sniffing " + tests[testRan].path);
-    Assert.equal(request.QueryInterface(Ci.nsIChannel).contentType, tests[testRan].expected);
+    Assert.equal(
+      request.QueryInterface(Ci.nsIChannel).contentType,
+      tests[testRan].expected
+    );
   },
 
   onDataAvailable(request, stream, offset, count) {
     try {
-      var bis = Cc["@mozilla.org/binaryinputstream;1"]
-                  .createInstance(Ci.nsIBinaryInputStream);
+      var bis = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+        Ci.nsIBinaryInputStream
+      );
       bis.setInputStream(stream);
       bis.readByteArray(bis.available());
     } catch (ex) {
@@ -85,11 +91,13 @@ function runNext() {
 }
 
 function getFileContents(aFile) {
-  var fileStream = Cc["@mozilla.org/network/file-input-stream;1"]
-                      .createInstance(Ci.nsIFileInputStream);
+  var fileStream = Cc[
+    "@mozilla.org/network/file-input-stream;1"
+  ].createInstance(Ci.nsIFileInputStream);
   fileStream.init(aFile, 1, -1, null);
-  var bis = Cc["@mozilla.org/binaryinputstream;1"]
-              .createInstance(Ci.nsIBinaryInputStream);
+  var bis = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+    Ci.nsIBinaryInputStream
+  );
   bis.setInputStream(fileStream);
 
   var data = bis.readByteArray(bis.available());

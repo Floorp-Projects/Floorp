@@ -2,23 +2,29 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function setup() {
-  await BrowserTestUtils.openNewForegroundTab({gBrowser, url: "about:logins"});
+  await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url: "about:logins",
+  });
   registerCleanupFunction(() => {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
 });
 
 add_task(async function test_open_preferences() {
-  let promiseNewTab = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences#privacy-logins");
+  let promiseNewTab = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "about:preferences#privacy-logins"
+  );
 
   let browser = gBrowser.selectedBrowser;
   await BrowserTestUtils.synthesizeMouseAtCenter("menu-button", {}, browser);
   await ContentTask.spawn(browser, null, async () => {
     return ContentTaskUtils.waitForCondition(() => {
-      let menuButton = Cu.waiveXrays(content.document.querySelector("menu-button"));
-      return !menuButton.shadowRoot
-                        .querySelector(".menu")
-                        .hidden;
+      let menuButton = Cu.waiveXrays(
+        content.document.querySelector("menu-button")
+      );
+      return !menuButton.shadowRoot.querySelector(".menu").hidden;
     }, "waiting for menu to open");
   });
 
@@ -27,9 +33,13 @@ add_task(async function test_open_preferences() {
   // thinks that the shadow DOM element is in another document and throws an exception
   // when trying to call element.ownerGlobal on the targeted shadow DOM node. This is
   // on file as bug 1557489. As a workaround, this manually calculates the position to click.
-  let {x, y} = await ContentTask.spawn(browser, null, async () => {
-    let menuButton = Cu.waiveXrays(content.document.querySelector("menu-button"));
-    let prefsItem = menuButton.shadowRoot.querySelector(".menuitem-preferences");
+  let { x, y } = await ContentTask.spawn(browser, null, async () => {
+    let menuButton = Cu.waiveXrays(
+      content.document.querySelector("menu-button")
+    );
+    let prefsItem = menuButton.shadowRoot.querySelector(
+      ".menuitem-preferences"
+    );
     return prefsItem.getBoundingClientRect();
   });
   await BrowserTestUtils.synthesizeMouseAtPoint(x + 5, y + 5, {}, browser);

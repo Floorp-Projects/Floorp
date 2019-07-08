@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- /**
-  * Check for correct functionality of bookmarks backups
-  */
+/**
+ * Check for correct functionality of bookmarks backups
+ */
 
 const NUMBER_OF_BACKUPS = 10;
 
@@ -15,11 +15,14 @@ async function createBackups(nBackups, dateObj, bookmarksBackupDir) {
   let dates = [];
   while (dates.length < nBackups) {
     // Use last year to ensure today's backup is the newest.
-    let randomDate = new Date(dateObj.getFullYear() - 1,
-                              Math.floor(12 * Math.random()),
-                              Math.floor(28 * Math.random()));
-    if (!dates.includes(randomDate.getTime()))
+    let randomDate = new Date(
+      dateObj.getFullYear() - 1,
+      Math.floor(12 * Math.random()),
+      Math.floor(28 * Math.random())
+    );
+    if (!dates.includes(randomDate.getTime())) {
       dates.push(randomDate.getTime());
+    }
   }
   // Sort dates from oldest to newest.
   dates.sort();
@@ -33,8 +36,9 @@ async function createBackups(nBackups, dateObj, bookmarksBackupDir) {
     backupFile.append(backupFilename);
     backupFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0666", 8));
     info("Creating fake backup " + backupFile.leafName);
-    if (!backupFile.exists())
+    if (!backupFile.exists()) {
       do_throw("Unable to create fake backup " + backupFile.leafName);
+    }
   }
 
   return dates;
@@ -64,8 +68,14 @@ async function checkBackups(dates, bookmarksBackupDir) {
       backupFile.append(backupFilename);
       shouldExist = false;
     }
-    if (backupFile.exists() != shouldExist)
-      do_throw("Backup should " + (shouldExist ? "" : "not") + " exist: " + backupFilename);
+    if (backupFile.exists() != shouldExist) {
+      do_throw(
+        "Backup should " +
+          (shouldExist ? "" : "not") +
+          " exist: " +
+          backupFilename
+      );
+    }
   }
 }
 
@@ -88,7 +98,11 @@ add_task(async function test_create_backups() {
   let bookmarksBackupDir = new FileUtils.File(backupFolderPath);
 
   let dateObj = new Date();
-  let dates = await createBackups(NUMBER_OF_BACKUPS, dateObj, bookmarksBackupDir);
+  let dates = await createBackups(
+    NUMBER_OF_BACKUPS,
+    dateObj,
+    bookmarksBackupDir
+  );
   // Add today's backup.
   await PlacesBackups.create(NUMBER_OF_BACKUPS);
   dates.push(dateObj.getTime());
@@ -120,7 +134,11 @@ add_task(async function test_saveBookmarks_with_backups() {
 
   let filePath = do_get_tempdir().path + "/backup.json";
   let dateObj = new Date();
-  let dates = await createBackups(NUMBER_OF_BACKUPS, dateObj, bookmarksBackupDir);
+  let dates = await createBackups(
+    NUMBER_OF_BACKUPS,
+    dateObj,
+    bookmarksBackupDir
+  );
 
   await PlacesBackups.saveBookmarksToJSONFile(filePath);
   dates.push(dateObj.getTime());

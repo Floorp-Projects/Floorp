@@ -10,12 +10,12 @@
 // - press RETURN to move to the property value
 // - blur the input to commit
 
-const TEST_URI = "<style>.title {color: red;}</style>" +
-                 "<h1 class=title>Header</h1>";
+const TEST_URI =
+  "<style>.title {color: red;}</style>" + "<h1 class=title>Header</h1>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   info("Selecting the test node");
   await selectNode("h1", inspector);
@@ -24,7 +24,7 @@ add_task(async function() {
   const ruleEditor = getRuleViewRuleEditor(view, 1);
   let editor = await focusNewRuleViewProperty(ruleEditor);
 
-  info("Sending \"background\" to the editable field.");
+  info('Sending "background" to the editable field.');
   for (const key of "background") {
     const onSuggest = editor.once("after-suggest");
     EventUtils.synthesizeKey(key, {}, view.styleWindow);
@@ -33,8 +33,11 @@ add_task(async function() {
 
   const itemIndex = 4;
   const bgcItem = editor.popup.getItemAtIndex(itemIndex);
-  is(bgcItem.label, "background-color",
-    "Check the expected completion element is background-color.");
+  is(
+    bgcItem.label,
+    "background-color",
+    "Check the expected completion element is background-color."
+  );
   editor.popup.selectItemAtIndex(itemIndex);
 
   info("Select the background-color suggestion with a mouse click.");
@@ -55,12 +58,13 @@ add_task(async function() {
   editor = inplaceEditor(view.styleDocument.activeElement);
   const textProp = ruleEditor.rule.textProps[1];
 
-  is(ruleEditor.rule.textProps.length, 2,
-    "Created a new text property.");
-  is(ruleEditor.propertyList.children.length, 2,
-    "Created a property editor.");
-  is(editor, inplaceEditor(textProp.editor.valueSpan),
-    "Editing the value span now.");
+  is(ruleEditor.rule.textProps.length, 2, "Created a new text property.");
+  is(ruleEditor.propertyList.children.length, 2, "Created a property editor.");
+  is(
+    editor,
+    inplaceEditor(textProp.editor.valueSpan),
+    "Editing the value span now."
+  );
 
   info("Entering a value and blurring the field to expect a rule change");
   onModifications = view.once("ruleview-changed");

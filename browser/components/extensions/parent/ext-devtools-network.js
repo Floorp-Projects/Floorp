@@ -2,13 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-var {
-  SpreadArgs,
-} = ExtensionCommon;
+var { SpreadArgs } = ExtensionCommon;
 
-var {
-  ExtensionError,
-} = ExtensionUtils;
+var { ExtensionError } = ExtensionUtils;
 
 this.devtools_network = class extends ExtensionAPI {
   getAPI(context) {
@@ -43,7 +39,7 @@ this.devtools_network = class extends ExtensionAPI {
             context,
             name: "devtools.network.onRequestFinished",
             register: fire => {
-              const listener = (data) => {
+              const listener = data => {
                 fire.async(data);
               };
 
@@ -61,12 +57,19 @@ this.devtools_network = class extends ExtensionAPI {
           // to fetch response content from the back-end.
           Request: {
             async getContent(requestId) {
-              return context.devToolsToolbox.fetchResponseContent(requestId)
-                .then(({content}) => new SpreadArgs([content.text, content.mimeType]))
+              return context.devToolsToolbox
+                .fetchResponseContent(requestId)
+                .then(
+                  ({ content }) =>
+                    new SpreadArgs([content.text, content.mimeType])
+                )
                 .catch(err => {
                   const debugName = context.extension.policy.debugName;
-                  const errorMsg = "Unexpected error while fetching response content";
-                  Cu.reportError(`${debugName}: ${errorMsg} for ${requestId}: ${err}`);
+                  const errorMsg =
+                    "Unexpected error while fetching response content";
+                  Cu.reportError(
+                    `${debugName}: ${errorMsg} for ${requestId}: ${err}`
+                  );
                   throw new ExtensionError(errorMsg);
                 });
             },

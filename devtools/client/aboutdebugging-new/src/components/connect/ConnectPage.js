@@ -4,22 +4,30 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const {
-  USB_STATES,
-} = require("../../constants");
+const { USB_STATES } = require("../../constants");
 
 const Actions = require("../../actions/index");
 
-loader.lazyRequireGetter(this, "ADB_ADDON_STATES", "devtools/shared/adb/adb-addon", true);
+loader.lazyRequireGetter(
+  this,
+  "ADB_ADDON_STATES",
+  "devtools/shared/adb/adb-addon",
+  true
+);
 
-const Link = createFactory(require("devtools/client/shared/vendor/react-router-dom").Link);
+const Link = createFactory(
+  require("devtools/client/shared/vendor/react-router-dom").Link
+);
 const ConnectSection = createFactory(require("./ConnectSection"));
 const ConnectSteps = createFactory(require("./ConnectSteps"));
 const NetworkLocationsForm = createFactory(require("./NetworkLocationsForm"));
@@ -28,8 +36,10 @@ const NetworkLocationsList = createFactory(require("./NetworkLocationsList"));
 const { PAGE_TYPES, RUNTIMES } = require("../../constants");
 const Types = require("../../types/index");
 
-const USB_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-usb-icon.svg";
-const GLOBE_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg";
+const USB_ICON_SRC =
+  "chrome://devtools/skin/images/aboutdebugging-usb-icon.svg";
+const GLOBE_ICON_SRC =
+  "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg";
 
 const TROUBLESHOOT_USB_URL =
   "https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_over_USB";
@@ -87,8 +97,8 @@ class ConnectPage extends PureComponent {
         {
           className: "connect-page__usb-section__heading__status",
         },
-        statusTextId,
-      ),
+        statusTextId
+      )
     );
   }
 
@@ -138,45 +148,45 @@ class ConnectPage extends PureComponent {
               {
                 className: "connect-page__usb-section__heading__title",
               },
-              "USB",
-            ),
+              "USB"
+            )
           ),
           this.renderUsbStatus(),
-          this.renderUsbToggleButton(),
+          this.renderUsbToggleButton()
         ),
       },
       isAddonInstalled
-        ? ConnectSteps(
-          {
+        ? ConnectSteps({
             steps: [
               {
-                localizationId: "about-debugging-setup-usb-step-enable-dev-menu2",
+                localizationId:
+                  "about-debugging-setup-usb-step-enable-dev-menu2",
               },
               {
                 localizationId: "about-debugging-setup-usb-step-enable-debug2",
               },
               {
-                localizationId: "about-debugging-setup-usb-step-enable-debug-firefox2",
+                localizationId:
+                  "about-debugging-setup-usb-step-enable-debug-firefox2",
               },
               {
                 localizationId: "about-debugging-setup-usb-step-plug-device",
               },
             ],
-          }
-        )
+          })
         : Localized(
-          {
-            id: "about-debugging-setup-usb-disabled",
-          },
-          dom.aside(
             {
-              className: "qa-connect-usb-disabled-message",
+              id: "about-debugging-setup-usb-disabled",
             },
-            "Enabling this will download and add the required Android USB debugging " +
-              "components to Firefox."
-          )
-        ),
-        this.renderTroubleshootText(RUNTIMES.USB),
+            dom.aside(
+              {
+                className: "qa-connect-usb-disabled-message",
+              },
+              "Enabling this will download and add the required Android USB debugging " +
+                "components to Firefox."
+            )
+          ),
+      this.renderTroubleshootText(RUNTIMES.USB)
     );
   }
 
@@ -196,24 +206,26 @@ class ConnectPage extends PureComponent {
           {},
           NetworkLocationsList({ dispatch, networkLocations }),
           NetworkLocationsForm({ dispatch, networkLocations }),
-          this.renderTroubleshootText(RUNTIMES.NETWORK),
+          this.renderTroubleshootText(RUNTIMES.NETWORK)
         ),
-      },
-      )
+      })
     );
   }
 
   renderTroubleshootText(connectionType) {
-    const localizationId = connectionType === RUNTIMES.USB
-      ? "about-debugging-setup-usb-troubleshoot"
-      : "about-debugging-setup-network-troubleshoot";
+    const localizationId =
+      connectionType === RUNTIMES.USB
+        ? "about-debugging-setup-usb-troubleshoot"
+        : "about-debugging-setup-network-troubleshoot";
 
-    const className = "connect-page__troubleshoot connect-page__troubleshoot--" +
+    const className =
+      "connect-page__troubleshoot connect-page__troubleshoot--" +
       `${connectionType === RUNTIMES.USB ? "usb" : "network"}`;
 
-    const url = connectionType === RUNTIMES.USB
-      ? TROUBLESHOOT_USB_URL
-      : TROUBLESHOOT_NETWORK_URL;
+    const url =
+      connectionType === RUNTIMES.USB
+        ? TROUBLESHOOT_USB_URL
+        : TROUBLESHOOT_NETWORK_URL;
 
     return dom.aside(
       {
@@ -222,17 +234,12 @@ class ConnectPage extends PureComponent {
       Localized(
         {
           id: localizationId,
-          a: dom.a(
-            {
-              href: url,
-              target: "_blank",
-            }
-          ),
+          a: dom.a({
+            href: url,
+            target: "_blank",
+          }),
         },
-        dom.p(
-          {},
-          localizationId,
-        ),
+        dom.p({}, localizationId)
       )
     );
   }
@@ -251,7 +258,7 @@ class ConnectPage extends PureComponent {
             className: "alt-heading alt-heading--larger",
           },
           "Setup"
-        ),
+        )
       ),
       Localized(
         {
@@ -269,10 +276,7 @@ class ConnectPage extends PureComponent {
             to: `/runtime/${RUNTIMES.THIS_FIREFOX}`,
           }),
         },
-        dom.p(
-          {},
-          "about-debugging-setup-this-firefox",
-        ),
+        dom.p({}, "about-debugging-setup-this-firefox")
       ),
       dom.section(
         {
@@ -286,12 +290,12 @@ class ConnectPage extends PureComponent {
             {
               className: "alt-heading",
             },
-            "Connect a device",
-          ),
+            "Connect a device"
+          )
         ),
         this.renderUsb(),
         this.renderNetwork()
-      ),
+      )
     );
   }
 }

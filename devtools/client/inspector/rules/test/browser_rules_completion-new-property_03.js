@@ -11,7 +11,7 @@ const TEST_URI = "<h1 style='color: red'>Header</h1>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {toolbox, inspector, view} = await openRuleView();
+  const { toolbox, inspector, view } = await openRuleView();
 
   info("Test autocompletion for background-color");
   await runAutocompletionTest(toolbox, inspector, view);
@@ -25,7 +25,7 @@ async function runAutocompletionTest(toolbox, inspector, view) {
   const ruleEditor = getRuleViewRuleEditor(view, 0);
   const editor = await focusNewRuleViewProperty(ruleEditor);
 
-  info("Sending \"background\" to the editable field");
+  info('Sending "background" to the editable field');
   for (const key of "background") {
     const onSuggest = editor.once("after-suggest");
     EventUtils.synthesizeKey(key, {}, view.styleWindow);
@@ -35,8 +35,11 @@ async function runAutocompletionTest(toolbox, inspector, view) {
   const itemIndex = 4;
 
   const bgcItem = editor.popup.getItemAtIndex(itemIndex);
-  is(bgcItem.label, "background-color",
-     "check the expected completion element");
+  is(
+    bgcItem.label,
+    "background-color",
+    "check the expected completion element"
+  );
 
   editor.popup.selectedIndex = itemIndex;
 

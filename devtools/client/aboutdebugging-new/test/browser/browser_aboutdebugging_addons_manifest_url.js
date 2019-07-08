@@ -13,8 +13,10 @@ Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-adb.js", this);
 // Test that manifest URLs for addon targets show the manifest correctly in a new tab.
 // This test reuses the ADB extension to be sure to have a valid manifest URL to open.
 add_task(async function() {
-  await pushPref("devtools.remote.adb.extensionURL",
-                 CHROME_URL_ROOT + "resources/test-adb-extension/adb-extension-#OS#.xpi");
+  await pushPref(
+    "devtools.remote.adb.extensionURL",
+    CHROME_URL_ROOT + "resources/test-adb-extension/adb-extension-#OS#.xpi"
+  );
   await checkAdbNotRunning();
 
   const { document, tab, window } = await openAboutDebugging();
@@ -40,13 +42,21 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(target.linkedBrowser);
 
   info("Retrieve the text content of the new tab");
-  const textContent = await ContentTask.spawn(target.linkedBrowser, {}, function() {
-    return content.wrappedJSObject.document.body.textContent;
-  });
+  const textContent = await ContentTask.spawn(
+    target.linkedBrowser,
+    {},
+    function() {
+      return content.wrappedJSObject.document.body.textContent;
+    }
+  );
 
   const manifestObject = JSON.parse(textContent);
   ok(manifestObject, "The displayed content is a valid JSON object");
-  is(manifestObject.name, ABD_ADDON_NAME, "Manifest tab shows the expected content");
+  is(
+    manifestObject.name,
+    ABD_ADDON_NAME,
+    "Manifest tab shows the expected content"
+  );
 
   info("Close the manifest.json tab");
   await removeTab(target);

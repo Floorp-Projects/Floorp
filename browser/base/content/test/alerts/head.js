@@ -1,10 +1,15 @@
 async function addNotificationPermission(originString) {
   return new Promise(resolve => {
-    SpecialPowers.pushPermissions([{
-      type: "desktop-notification",
-      allow: true,
-      context: originString,
-    }], resolve);
+    SpecialPowers.pushPermissions(
+      [
+        {
+          type: "desktop-notification",
+          allow: true,
+          context: originString,
+        },
+      ],
+      resolve
+    );
   });
 }
 
@@ -33,7 +38,10 @@ function promiseWindowClosed(window) {
  */
 function openNotification(aBrowser, fn, timeout) {
   info(`openNotification: ${fn}`);
-  return ContentTask.spawn(aBrowser, [fn, timeout], async function([contentFn, contentTimeout]) {
+  return ContentTask.spawn(aBrowser, [fn, timeout], async function([
+    contentFn,
+    contentTimeout,
+  ]) {
     await new Promise((resolve, reject) => {
       let win = content.wrappedJSObject;
       let notification = win[contentFn]();

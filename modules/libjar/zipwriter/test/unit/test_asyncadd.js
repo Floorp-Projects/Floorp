@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // Values taken from using zipinfo to list the test.zip contents
 var TESTS = [
@@ -22,8 +22,7 @@ var TESTS = [
 var size = 0;
 
 var observer = {
-  onStartRequest(request) {
-  },
+  onStartRequest(request) {},
 
   onStopRequest(request, status) {
     Assert.equal(status, Cr.NS_OK);
@@ -46,8 +45,10 @@ var observer = {
         Assert.equal(entry.realSize, TESTS[i].size);
         Assert.equal(entry.size, TESTS[i].size);
         Assert.equal(entry.CRC32, TESTS[i].crc);
-        Assert.equal(Math.floor(entry.lastModifiedTime / PR_USEC_PER_SEC),
-                     Math.floor(source.lastModifiedTime / PR_MSEC_PER_SEC));
+        Assert.equal(
+          Math.floor(entry.lastModifiedTime / PR_USEC_PER_SEC),
+          Math.floor(source.lastModifiedTime / PR_MSEC_PER_SEC)
+        );
 
         zipR.test(entryName);
       }
@@ -60,24 +61,31 @@ var observer = {
 
 var methods = {
   file: function method_file(entry, source) {
-    zipW.addEntryFile(entry, Ci.nsIZipWriter.COMPRESSION_NONE, source,
-                      true);
+    zipW.addEntryFile(entry, Ci.nsIZipWriter.COMPRESSION_NONE, source, true);
   },
   channel: function method_channel(entry, source) {
-    zipW.addEntryChannel(entry, source.lastModifiedTime * PR_MSEC_PER_SEC,
-                         Ci.nsIZipWriter.COMPRESSION_NONE,
-                         NetUtil.newChannel({
-                           uri: ioSvc.newFileURI(source),
-                           loadUsingSystemPrincipal: true,
-                         }), true);
+    zipW.addEntryChannel(
+      entry,
+      source.lastModifiedTime * PR_MSEC_PER_SEC,
+      Ci.nsIZipWriter.COMPRESSION_NONE,
+      NetUtil.newChannel({
+        uri: ioSvc.newFileURI(source),
+        loadUsingSystemPrincipal: true,
+      }),
+      true
+    );
   },
   stream: function method_stream(entry, source) {
-    zipW.addEntryStream(entry, source.lastModifiedTime * PR_MSEC_PER_SEC,
-                        Ci.nsIZipWriter.COMPRESSION_NONE,
-                        NetUtil.newChannel({
-                          uri: ioSvc.newFileURI(source),
-                          loadUsingSystemPrincipal: true,
-                        }).open(), true);
+    zipW.addEntryStream(
+      entry,
+      source.lastModifiedTime * PR_MSEC_PER_SEC,
+      Ci.nsIZipWriter.COMPRESSION_NONE,
+      NetUtil.newChannel({
+        uri: ioSvc.newFileURI(source),
+        loadUsingSystemPrincipal: true,
+      }).open(),
+      true
+    );
   },
 };
 
@@ -89,9 +97,12 @@ function run_test() {
     for (let method in methods) {
       var entry = method + "/" + TESTS[i].name;
       methods[method](entry, source);
-      size += ZIP_FILE_HEADER_SIZE + ZIP_CDS_HEADER_SIZE +
-              (ZIP_EXTENDED_TIMESTAMP_SIZE * 2) +
-              (entry.length * 2) + TESTS[i].size;
+      size +=
+        ZIP_FILE_HEADER_SIZE +
+        ZIP_CDS_HEADER_SIZE +
+        ZIP_EXTENDED_TIMESTAMP_SIZE * 2 +
+        entry.length * 2 +
+        TESTS[i].size;
     }
   }
   do_test_pending();

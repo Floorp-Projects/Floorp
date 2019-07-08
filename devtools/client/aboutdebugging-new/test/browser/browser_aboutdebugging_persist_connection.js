@@ -41,8 +41,10 @@ add_task(async function() {
   });
 });
 
-async function testRemoteClientPersistConnection(mocks,
-  { client, id, runtimeName, sidebarName, type }) {
+async function testRemoteClientPersistConnection(
+  mocks,
+  { client, id, runtimeName, sidebarName, type }
+) {
   info("Open about:debugging and connect to the test runtime");
   let { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
@@ -70,13 +72,18 @@ async function testRemoteClientPersistConnection(mocks,
   info("Remove the runtime from the list of remote runtimes");
   mocks.removeRuntime(id);
 
-  info("Emit 'closed' on the client and wait for the sidebar item to disappear");
+  info(
+    "Emit 'closed' on the client and wait for the sidebar item to disappear"
+  );
   client._eventEmitter.emit("closed");
   if (type === "usb") {
     await waitUntilUsbDeviceIsUnplugged(sidebarName, document);
   } else {
-    await waitUntil(() => !findSidebarItemByText(sidebarName, document) &&
-                        !findSidebarItemByText(runtimeName, document));
+    await waitUntil(
+      () =>
+        !findSidebarItemByText(sidebarName, document) &&
+        !findSidebarItemByText(runtimeName, document)
+    );
   }
 
   info("Remove the tab");

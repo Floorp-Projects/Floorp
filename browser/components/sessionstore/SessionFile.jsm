@@ -25,13 +25,21 @@ var EXPORTED_SYMBOLS = ["SessionFile"];
  * This implementation uses OS.File, which guarantees property 1.
  */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {AsyncShutdown} = ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { AsyncShutdown } = ChromeUtils.import(
+  "resource://gre/modules/AsyncShutdown.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
-  "@mozilla.org/base/telemetry;1", "nsITelemetry");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "Telemetry",
+  "@mozilla.org/base/telemetry;1",
+  "nsITelemetry"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   RunState: "resource:///modules/sessionstore/RunState.jsm",
@@ -40,13 +48,18 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const PREF_UPGRADE_BACKUP = "browser.sessionstore.upgradeBackup.latestBuildID";
-const PREF_MAX_UPGRADE_BACKUPS = "browser.sessionstore.upgradeBackup.maxUpgradeBackups";
+const PREF_MAX_UPGRADE_BACKUPS =
+  "browser.sessionstore.upgradeBackup.maxUpgradeBackups";
 
 const PREF_MAX_SERIALIZE_BACK = "browser.sessionstore.max_serialize_back";
 const PREF_MAX_SERIALIZE_FWD = "browser.sessionstore.max_serialize_forward";
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "kMaxWriteFailures",
-  "browser.sessionstore.max_write_failures", 5);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "kMaxWriteFailures",
+  "browser.sessionstore.max_write_failures",
+  5
+);
 
 var SessionFile = {
   /**
@@ -94,7 +107,11 @@ var SessionFileInternal = {
 
     // The path at which we store the previous version of `clean`. Updated
     // whenever we successfully load from `clean`.
-    cleanBackup: Path.join(profileDir, "sessionstore-backups", "previous.jsonlz4"),
+    cleanBackup: Path.join(
+      profileDir,
+      "sessionstore-backups",
+      "previous.jsonlz4"
+    ),
 
     // The directory containing all sessionstore backups.
     backups: Path.join(profileDir, "sessionstore-backups"),
@@ -113,13 +130,21 @@ var SessionFileInternal = {
     // this file is therefore removed during clean shutdown.  This
     // file is designed to protect against crashes that are nasty
     // enough to corrupt |recovery|.
-    recoveryBackup: Path.join(profileDir, "sessionstore-backups", "recovery.baklz4"),
+    recoveryBackup: Path.join(
+      profileDir,
+      "sessionstore-backups",
+      "recovery.baklz4"
+    ),
 
     // The path to a backup created during an upgrade of Firefox.
     // Having this backup protects the user essentially from bugs in
     // Firefox or add-ons, especially for users of Nightly. This file
     // does not contain any information more sensitive than |clean|.
-    upgradeBackupPrefix: Path.join(profileDir, "sessionstore-backups", "upgrade.jsonlz4-"),
+    upgradeBackupPrefix: Path.join(
+      profileDir,
+      "sessionstore-backups",
+      "upgrade.jsonlz4-"
+    ),
 
     // The path to the backup of the version of the session store used
     // during the latest upgrade of Firefox. During load/recovery,
@@ -155,10 +180,7 @@ var SessionFileInternal = {
       // Finally, if nothing works, fall back to the last known state
       // that can be loaded (`cleanBackup`) or, if available, to the
       // backup performed during the latest upgrade.
-      let order = ["clean",
-                   "recovery",
-                   "recoveryBackup",
-                   "cleanBackup"];
+      let order = ["clean", "recovery", "recoveryBackup", "cleanBackup"];
       if (SessionFileInternal.latestUpgradeBackupID) {
         // We have an upgradeBackup
         order.push("upgradeBackup");
@@ -221,11 +243,11 @@ var SessionFileInternal = {
         let path;
         let startMs = Date.now();
 
-        let options = {encoding: "utf-8"};
+        let options = { encoding: "utf-8" };
         if (useOldExtension) {
           path = this.Paths[key]
-                     .replace("jsonlz4", "js")
-                     .replace("baklz4", "bak");
+            .replace("jsonlz4", "js")
+            .replace("baklz4", "bak");
         } else {
           path = this.Paths[key];
           options.compression = "lz4";
@@ -233,10 +255,22 @@ var SessionFileInternal = {
         let source = await OS.File.read(path, options);
         let parsed = JSON.parse(source);
 
-        if (!SessionStore.isFormatVersionCompatible(parsed.version || ["sessionrestore", 0] /* fallback for old versions*/)) {
+        if (
+          !SessionStore.isFormatVersionCompatible(
+            parsed.version || [
+              "sessionrestore",
+              0,
+            ] /* fallback for old versions*/
+          )
+        ) {
           // Skip sessionstore files that we don't understand.
-          Cu.reportError("Cannot extract data from Session Restore file " + path +
-            ". Wrong format/version: " + JSON.stringify(parsed.version) + ".");
+          Cu.reportError(
+            "Cannot extract data from Session Restore file " +
+              path +
+              ". Wrong format/version: " +
+              JSON.stringify(parsed.version) +
+              "."
+          );
           continue;
         }
         result = {
@@ -245,39 +279,46 @@ var SessionFileInternal = {
           parsed,
           useOldExtension,
         };
-        Telemetry.getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE").
-          add(false);
-        Telemetry.getHistogramById("FX_SESSION_RESTORE_READ_FILE_MS").
-          add(Date.now() - startMs);
+        Telemetry.getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE").add(
+          false
+        );
+        Telemetry.getHistogramById("FX_SESSION_RESTORE_READ_FILE_MS").add(
+          Date.now() - startMs
+        );
         break;
       } catch (ex) {
-          if (ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
-            exists = false;
-          } else if (ex instanceof OS.File.Error) {
-            // The file might be inaccessible due to wrong permissions
-            // or similar failures. We'll just count it as "corrupted".
-            console.error("Could not read session file ", ex, ex.stack);
-            corrupted = true;
-          } else if (ex instanceof SyntaxError) {
-            console.error("Corrupt session file (invalid JSON found) ", ex, ex.stack);
-            // File is corrupted, try next file
-            corrupted = true;
-          }
+        if (ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
+          exists = false;
+        } else if (ex instanceof OS.File.Error) {
+          // The file might be inaccessible due to wrong permissions
+          // or similar failures. We'll just count it as "corrupted".
+          console.error("Could not read session file ", ex, ex.stack);
+          corrupted = true;
+        } else if (ex instanceof SyntaxError) {
+          console.error(
+            "Corrupt session file (invalid JSON found) ",
+            ex,
+            ex.stack
+          );
+          // File is corrupted, try next file
+          corrupted = true;
+        }
       } finally {
         if (exists) {
           noFilesFound = false;
-          Telemetry.getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE").
-            add(corrupted);
+          Telemetry.getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE").add(
+            corrupted
+          );
         }
       }
     }
-    return {result, noFilesFound};
+    return { result, noFilesFound };
   },
 
   // Find the correct session file, read it and setup the worker.
   async read() {
     // Load session files with lz4 compression.
-    let {result, noFilesFound} = await this._readInternal(false);
+    let { result, noFilesFound } = await this._readInternal(false);
     if (!result) {
       // No result? Probably because of migration, let's
       // load uncompressed session files.
@@ -287,8 +328,9 @@ var SessionFileInternal = {
 
     // All files are corrupted if files found but none could deliver a result.
     let allCorrupt = !noFilesFound && !result;
-    Telemetry.getHistogramById("FX_SESSION_RESTORE_ALL_FILES_CORRUPT").
-      add(allCorrupt);
+    Telemetry.getHistogramById("FX_SESSION_RESTORE_ALL_FILES_CORRUPT").add(
+      allCorrupt
+    );
 
     if (!result) {
       // If everything fails, start with an empty session.
@@ -330,18 +372,36 @@ var SessionFileInternal = {
       }
 
       if (!this._readOrigin) {
-        throw new Error("_initWorker called too early! Please read the session file from disk first.");
+        throw new Error(
+          "_initWorker called too early! Please read the session file from disk first."
+        );
       }
 
       this._initializationStarted = true;
-      SessionWorker.post("init", [this._readOrigin, this._usingOldExtension, this.Paths, {
-        maxUpgradeBackups: Services.prefs.getIntPref(PREF_MAX_UPGRADE_BACKUPS, 3),
-        maxSerializeBack: Services.prefs.getIntPref(PREF_MAX_SERIALIZE_BACK, 10),
-        maxSerializeForward: Services.prefs.getIntPref(PREF_MAX_SERIALIZE_FWD, -1),
-      }]).catch(err => {
-        // Ensure that we report errors but that they do not stop us.
-        Promise.reject(err);
-      }).then(resolve);
+      SessionWorker.post("init", [
+        this._readOrigin,
+        this._usingOldExtension,
+        this.Paths,
+        {
+          maxUpgradeBackups: Services.prefs.getIntPref(
+            PREF_MAX_UPGRADE_BACKUPS,
+            3
+          ),
+          maxSerializeBack: Services.prefs.getIntPref(
+            PREF_MAX_SERIALIZE_BACK,
+            10
+          ),
+          maxSerializeForward: Services.prefs.getIntPref(
+            PREF_MAX_SERIALIZE_FWD,
+            -1
+          ),
+        },
+      ])
+        .catch(err => {
+          // Ensure that we report errors but that they do not stop us.
+          Promise.reject(err);
+        })
+        .then(resolve);
     });
   },
 
@@ -384,29 +444,34 @@ var SessionFileInternal = {
     let performShutdownCleanup = isFinalWrite && !SessionStore.willAutoRestore;
 
     this._attempts++;
-    let options = {isFinalWrite, performShutdownCleanup};
+    let options = { isFinalWrite, performShutdownCleanup };
     let promise = this._postToWorker("write", [aData, options]);
 
     // Wait until the write is done.
-    promise = promise.then(msg => {
-      // Record how long the write took.
-      this._recordTelemetry(msg.telemetry);
-      this._successes++;
-      if (msg.result.upgradeBackup) {
-        // We have just completed a backup-on-upgrade, store the information
-        // in preferences.
-        Services.prefs.setCharPref(PREF_UPGRADE_BACKUP,
-          Services.appinfo.platformBuildID);
+    promise = promise.then(
+      msg => {
+        // Record how long the write took.
+        this._recordTelemetry(msg.telemetry);
+        this._successes++;
+        if (msg.result.upgradeBackup) {
+          // We have just completed a backup-on-upgrade, store the information
+          // in preferences.
+          Services.prefs.setCharPref(
+            PREF_UPGRADE_BACKUP,
+            Services.appinfo.platformBuildID
+          );
+        }
+      },
+      err => {
+        // Catch and report any errors.
+        console.error("Could not write session state file ", err, err.stack);
+        this._failures++;
+        this._workerHealth.failures++;
+        // By not doing anything special here we ensure that |promise| cannot
+        // be rejected anymore. The shutdown/cleanup code at the end of the
+        // function will thus always be executed.
       }
-    }, err => {
-      // Catch and report any errors.
-      console.error("Could not write session state file ", err, err.stack);
-      this._failures++;
-      this._workerHealth.failures++;
-      // By not doing anything special here we ensure that |promise| cannot
-      // be rejected anymore. The shutdown/cleanup code at the end of the
-      // function will thus always be executed.
-    });
+    );
 
     // Ensure that we can write sessionstore.js cleanly before the profile
     // becomes unaccessible.
@@ -420,7 +485,8 @@ var SessionFileInternal = {
           successes: this._successes,
           failures: this._failures,
         }),
-      });
+      }
+    );
 
     // This code will always be executed because |promise| can't fail anymore.
     // We ensured that by having a reject handler that reports the failure but
@@ -430,7 +496,10 @@ var SessionFileInternal = {
       AsyncShutdown.profileBeforeChange.removeBlocker(promise);
 
       if (isFinalWrite) {
-        Services.obs.notifyObservers(null, "sessionstore-final-state-write-complete");
+        Services.obs.notifyObservers(
+          null,
+          "sessionstore-final-state-write-complete"
+        );
       } else {
         this._checkWorkerHealth();
       }

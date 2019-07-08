@@ -6,14 +6,20 @@
  */
 
 async function test_autocomplete(data) {
-  let {desc, typed, autofilled, modified, waitForUrl, keys} = data;
+  let { desc, typed, autofilled, modified, waitForUrl, keys } = data;
   info(desc);
 
   await promiseAutocompleteResultPopup(typed);
-  Assert.equal(gURLBar.textValue, autofilled, "autofilled value is as expected");
+  Assert.equal(
+    gURLBar.textValue,
+    autofilled,
+    "autofilled value is as expected"
+  );
 
-  let promiseLoad =
-    BrowserTestUtils.waitForDocLoadAndStopIt(waitForUrl, gBrowser.selectedBrowser);
+  let promiseLoad = BrowserTestUtils.waitForDocLoadAndStopIt(
+    waitForUrl,
+    gBrowser.selectedBrowser
+  );
 
   keys.forEach(([key, mods]) => EventUtils.synthesizeKey(key, mods));
 
@@ -37,19 +43,21 @@ add_task(async function() {
     transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
   });
 
-  await test_autocomplete({ desc: "CTRL+ENTER on the autofilled part should use autofill",
-                            typed: "exam",
-                            autofilled: "example.com/",
-                            modified: "example.com",
-                            waitForUrl: "http://example.com/",
-                            keys: [["KEY_Enter"]],
-                          });
+  await test_autocomplete({
+    desc: "CTRL+ENTER on the autofilled part should use autofill",
+    typed: "exam",
+    autofilled: "example.com/",
+    modified: "example.com",
+    waitForUrl: "http://example.com/",
+    keys: [["KEY_Enter"]],
+  });
 
-  await test_autocomplete({ desc: "CTRL+ENTER on the autofilled part should bypass autofill",
-                            typed: "exam",
-                            autofilled: "example.com/",
-                            modified: "www.exam.com",
-                            waitForUrl: "http://www.exam.com/",
-                            keys: [["KEY_Enter", {ctrlKey: true}]],
-                          });
+  await test_autocomplete({
+    desc: "CTRL+ENTER on the autofilled part should bypass autofill",
+    typed: "exam",
+    autofilled: "example.com/",
+    modified: "www.exam.com",
+    waitForUrl: "http://www.exam.com/",
+    keys: [["KEY_Enter", { ctrlKey: true }]],
+  });
 });

@@ -20,52 +20,48 @@
  * }
  */
 module.exports.CHANGES_STATE = {
-  "source1": {
-    "type": "inline",
-    "href": "http://localhost:5000/at-rules-nested.html",
-    "id": "source1",
-    "index": 0,
-    "isFramed": false,
-    "rules": {
-      "rule1": {
-        "selectors": ["@media (min-width: 50em)"],
-        "ruleId": "rule1",
-        "add": [],
-        "remove": [],
-        "children": [
-          "rule2"
-        ]
+  source1: {
+    type: "inline",
+    href: "http://localhost:5000/at-rules-nested.html",
+    id: "source1",
+    index: 0,
+    isFramed: false,
+    rules: {
+      rule1: {
+        selectors: ["@media (min-width: 50em)"],
+        ruleId: "rule1",
+        add: [],
+        remove: [],
+        children: ["rule2"],
       },
-      "rule2": {
-        "selectors": ["@supports (display: grid)"],
-        "ruleId": "rule2",
-        "add": [],
-        "remove": [],
-        "children": [
-          "rule3"
-        ],
-        "parent": "rule1"
+      rule2: {
+        selectors: ["@supports (display: grid)"],
+        ruleId: "rule2",
+        add: [],
+        remove: [],
+        children: ["rule3"],
+        parent: "rule1",
       },
-      "rule3": {
-        "selectors": ["body"],
-        "ruleId": "rule3",
-        "add": [
+      rule3: {
+        selectors: ["body"],
+        ruleId: "rule3",
+        add: [
           {
-            "property": "background-color",
-            "value": "red",
-            "index": 0
-          }
+            property: "background-color",
+            value: "red",
+            index: 0,
+          },
         ],
-        "remove": [
+        remove: [
           {
-            "property": "background-color",
-            "value": "royalblue",
-            "index": 0
-          }
+            property: "background-color",
+            value: "royalblue",
+            index: 0,
+          },
         ],
-        "children": [],
-        "parent": "rule2"
-      }
-    }
-  }
+        children: [],
+        parent: "rule2",
+      },
+    },
+  },
 };

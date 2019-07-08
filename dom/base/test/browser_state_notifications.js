@@ -4,18 +4,19 @@
 
 "use strict";
 
-const { addObserver, removeObserver } = Cc["@mozilla.org/observer-service;1"].
-                                          getService(Ci.nsIObserverService);
-const { openWindow } = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-                         getService(Ci.nsIWindowWatcher);
+const { addObserver, removeObserver } = Cc[
+  "@mozilla.org/observer-service;1"
+].getService(Ci.nsIObserverService);
+const { openWindow } = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(
+  Ci.nsIWindowWatcher
+);
 
 const Test = routine => () => {
   waitForExplicitFinish();
-  routine()
-      .then(finish, error => {
-        ok(false, error);
-        finish();
-      });
+  routine().then(finish, error => {
+    ok(false, error);
+    finish();
+  });
 };
 
 // Returns promise for the observer notification subject for
@@ -33,7 +34,9 @@ const receive = (topic, p, syncCallback) => {
       observe: subject => {
         // Browser loads bunch of other documents that we don't care
         // about so we let allow filtering notifications via `p` function.
-        if (p && !p(subject)) return;
+        if (p && !p(subject)) {
+          return;
+        }
         // If observer is a first one with a given `topic`
         // in a queue resolve promise and take it off the queue
         // otherwise keep waiting.
@@ -48,7 +51,7 @@ const receive = (topic, p, syncCallback) => {
           }
           resolve(subject);
         }
-      }
+      },
     };
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     const id = setTimeout(timeout, 90000);
@@ -58,7 +61,8 @@ const receive = (topic, p, syncCallback) => {
 };
 receive.queue = [];
 
-const openTab = uri => gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, uri);
+const openTab = uri =>
+  (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, uri));
 
 // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -67,17 +71,22 @@ const isData = document => document.URL.startsWith("data:");
 
 const uri1 = "data:text/html;charset=utf-8,<h1>1</h1>";
 // For whatever reason going back on load event doesn't work so timeout it is :(
-const uri2 = "data:text/html;charset=utf-8,<h1>2</h1><script>setTimeout(SpecialPowers.wrap(window).back,100)</script>";
+const uri2 =
+  "data:text/html;charset=utf-8,<h1>2</h1><script>setTimeout(SpecialPowers.wrap(window).back,100)</script>";
 const uri3 = "data:text/html;charset=utf-8,<h1>3</h1>";
 
 const uri4 = "chrome://browser/content/license.html";
 
 const test = Test(async function() {
-  let documentInteractive = receive("content-document-interactive", isData, d => {
-    // This test is executed synchronously when the event is received.
-    is(d.readyState, "interactive", "document is interactive");
-    is(d.URL, uri1, "document.URL matches tab url");
-  });
+  let documentInteractive = receive(
+    "content-document-interactive",
+    isData,
+    d => {
+      // This test is executed synchronously when the event is received.
+      is(d.readyState, "interactive", "document is interactive");
+      is(d.URL, uri1, "document.URL matches tab url");
+    }
+  );
   let documentLoaded = receive("content-document-loaded", isData);
   let pageShown = receive("content-page-shown", isData);
 
@@ -123,7 +132,6 @@ const test = Test(async function() {
   is(interactiveDocument2, shownPage, "loaded document is shown");
 
   info("go back to uri#1");
-
 
   documentInteractive = receive("content-document-interactive", isData, d => {
     // This test is executed synchronously when the event is received.

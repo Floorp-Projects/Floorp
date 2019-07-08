@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+from __future__ import print_function
 assert __name__ != '__main__'
 
 '''
@@ -16,12 +17,12 @@ import sys
 # --
 
 def print_now(*args):
-    print(*args)
+    print((*args))
     sys.stdout.flush()
 
 
 def run_checked(*args, **kwargs):
-    print(' ', args)
+    print((' ', args))
     sys.stdout.flush()
     return subprocess.run(args, check=True, **kwargs)
 

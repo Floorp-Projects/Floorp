@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 const URL = "http://example.org/";
 
@@ -12,28 +12,33 @@ const URL = "http://example.org/";
 let serviceName, sharedUrl, sharedTitle;
 let sharingPreferencesCalled = false;
 
-let mockShareData = [{
-  name: "NSA",
-  menuItemTitle: "National Security Agency",
-  image: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEA" +
-    "LAAAAAABAAEAAAICTAEAOw==",
-}];
+let mockShareData = [
+  {
+    name: "NSA",
+    menuItemTitle: "National Security Agency",
+    image:
+      "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEA" +
+      "LAAAAAABAAEAAAICTAEAOw==",
+  },
+];
 
-let stub = sinon.stub(BrowserPageActions.shareURL, "_sharingService").get(() => {
-  return {
-    getSharingProviders(url) {
-      return mockShareData;
-    },
-    shareUrl(name, url, title) {
-      serviceName = name;
-      sharedUrl = url;
-      sharedTitle = title;
-    },
-    openSharingPreferences() {
-      sharingPreferencesCalled = true;
-    },
-  };
-});
+let stub = sinon
+  .stub(BrowserPageActions.shareURL, "_sharingService")
+  .get(() => {
+    return {
+      getSharingProviders(url) {
+        return mockShareData;
+      },
+      shareUrl(name, url, title) {
+        serviceName = name;
+        sharedUrl = url;
+        sharedTitle = title;
+      },
+      openSharingPreferences() {
+        sharingPreferencesCalled = true;
+      },
+    };
+  });
 
 registerCleanupFunction(async function() {
   stub.restore();
@@ -64,12 +69,17 @@ add_task(async function shareURL() {
     EventUtils.synthesizeMouseAtCenter(shareButton, {});
     await hiddenPromise;
 
-    Assert.equal(serviceName, mockShareData[0].name,
-                 "Shared the correct service name");
-    Assert.equal(sharedUrl, "http://example.org/",
-                 "Shared correct URL");
-    Assert.equal(sharedTitle, "mochitest index /",
-                 "Shared with the correct title");
+    Assert.equal(
+      serviceName,
+      mockShareData[0].name,
+      "Shared the correct service name"
+    );
+    Assert.equal(sharedUrl, "http://example.org/", "Shared correct URL");
+    Assert.equal(
+      sharedTitle,
+      "mochitest index /",
+      "Shared with the correct title"
+    );
   });
 });
 
@@ -89,8 +99,9 @@ add_task(async function shareURLAddressBar() {
 
     // Click "Add to Address Bar"
     contextMenuPromise = promisePanelHidden("pageActionContextMenu");
-    let ctxMenuButton = document.querySelector("#pageActionContextMenu " +
-                                               ".pageActionContextMenuItem");
+    let ctxMenuButton = document.querySelector(
+      "#pageActionContextMenu .pageActionContextMenuItem"
+    );
     EventUtils.synthesizeMouseAtCenter(ctxMenuButton, {});
     await contextMenuPromise;
 
@@ -99,7 +110,6 @@ add_task(async function shareURLAddressBar() {
       return document.getElementById("pageAction-urlbar-shareURL");
     }, "Waiting for the share url button to be added to url bar");
 
-
     // Press the Share button
     let shareButton = document.getElementById("pageAction-urlbar-shareURL");
     let viewPromise = promisePageActionPanelShown();
@@ -107,7 +117,9 @@ add_task(async function shareURLAddressBar() {
     await viewPromise;
 
     // Ensure we have share providers
-    let panel = document.getElementById("pageAction-urlbar-shareURL-subview-body");
+    let panel = document.getElementById(
+      "pageAction-urlbar-shareURL-subview-body"
+    );
     // We should see 1 receiver and one extra node for the "More..." button
     Assert.equal(panel.children.length, 2, "Has correct share receivers");
 
@@ -121,8 +133,9 @@ add_task(async function shareURLAddressBar() {
     await contextMenuPromise;
 
     contextMenuPromise = promisePanelHidden("pageActionContextMenu");
-    ctxMenuButton = document.querySelector("#pageActionContextMenu " +
-                                           ".pageActionContextMenuItem");
+    ctxMenuButton = document.querySelector(
+      "#pageActionContextMenu .pageActionContextMenuItem"
+    );
     EventUtils.synthesizeMouseAtCenter(ctxMenuButton, {});
     await contextMenuPromise;
   });
@@ -150,7 +163,10 @@ add_task(async function openSharingPreferences() {
     EventUtils.synthesizeMouseAtCenter(moreButton, {});
     await hiddenPromise;
 
-    Assert.equal(sharingPreferencesCalled, true,
-                 "We called openSharingPreferences");
+    Assert.equal(
+      sharingPreferencesCalled,
+      true,
+      "We called openSharingPreferences"
+    );
   });
 });

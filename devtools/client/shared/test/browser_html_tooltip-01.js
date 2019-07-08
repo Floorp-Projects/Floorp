@@ -11,7 +11,9 @@
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const TEST_URI = CHROME_URL_ROOT + "doc_html_tooltip.xul";
 
-const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
+const {
+  HTMLTooltip,
+} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 loadHelperScript("helper_html_tooltip.js");
 
 let useXulWrapper;
@@ -25,7 +27,7 @@ function getTooltipContent(doc) {
 }
 
 add_task(async function() {
-  const [,, doc] = await createHost("bottom", TEST_URI);
+  const [, , doc] = await createHost("bottom", TEST_URI);
 
   info("Run tests for a Tooltip without using a XUL panel");
   useXulWrapper = false;
@@ -37,11 +39,11 @@ add_task(async function() {
 });
 
 async function runTests(doc) {
-  const tooltip = new HTMLTooltip(doc, {useXulWrapper});
+  const tooltip = new HTMLTooltip(doc, { useXulWrapper });
 
   info("Set tooltip content");
   tooltip.panel.appendChild(getTooltipContent(doc));
-  tooltip.setContentSize({width: 100, height: 50});
+  tooltip.setContentSize({ width: 100, height: 50 });
 
   is(tooltip.isVisible(), false, "Tooltip is not visible");
 

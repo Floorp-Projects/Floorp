@@ -1,20 +1,31 @@
-var {NewTabUtils} = ChromeUtils.import("resource://gre/modules/NewTabUtils.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { NewTabUtils } = ChromeUtils.import(
+  "resource://gre/modules/NewTabUtils.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 Cu.importGlobalProperties(["btoa"]);
 
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
-  "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 
 const PREF_NEWTAB_ENHANCED = "browser.newtabpage.enhanced";
-const SEARCH_SHORTCUTS_EXPERIMENT_PREF = "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts";
+const SEARCH_SHORTCUTS_EXPERIMENT_PREF =
+  "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts";
 
 // use time at the start of the tests, chnaging it inside timeDaysAgo()
 // may cause tiny time differences, which break expected sql ordering
-const TIME_NOW = (new Date()).getTime();
+const TIME_NOW = new Date().getTime();
 
 Services.prefs.setBoolPref(PREF_NEWTAB_ENHANCED, true);
 Services.prefs.setBoolPref(SEARCH_SHORTCUTS_EXPERIMENT_PREF, false);
@@ -23,7 +34,7 @@ do_get_profile();
 
 // utility function to compute past timestamp in microseconds
 function timeDaysAgo(numDays) {
-  return (TIME_NOW - (numDays * 24 * 60 * 60 * 1000)) * 1000;
+  return (TIME_NOW - numDays * 24 * 60 * 60 * 1000) * 1000;
 }
 
 // tests that timestamp falls within 10 days of now

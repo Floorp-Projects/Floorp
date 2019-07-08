@@ -1,31 +1,49 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "TalosParentProfiler",
-                               "resource://talos-powers/TalosParentProfiler.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-                               "resource://gre/modules/AppConstants.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TalosParentProfiler",
+  "resource://talos-powers/TalosParentProfiler.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 var OPENER_DELAY = 1000; // ms delay between tests
 
 async function openDelay(win) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     win.setTimeout(resolve, OPENER_DELAY);
   });
 }
 
 function waitForBrowserPaint() {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     let observer = {
       observe(doc) {
-        if (!doc.location || doc.location.href != AppConstants.BROWSER_CHROME_URL) {
+        if (
+          !doc.location ||
+          doc.location.href != AppConstants.BROWSER_CHROME_URL
+        ) {
           return;
         }
         Services.obs.removeObserver(observer, "document-element-inserted");
-        doc.ownerGlobal.addEventListener("MozAfterPaint", (evt) => {
-          resolve(doc.ownerGlobal.performance.timing.fetchStart + evt.paintTimeStamp);
-        }, {once: true});
+        doc.ownerGlobal.addEventListener(
+          "MozAfterPaint",
+          evt => {
+            resolve(
+              doc.ownerGlobal.performance.timing.fetchStart + evt.paintTimeStamp
+            );
+          },
+          { once: true }
+        );
       },
     };
     Services.obs.addObserver(observer, "document-element-inserted");

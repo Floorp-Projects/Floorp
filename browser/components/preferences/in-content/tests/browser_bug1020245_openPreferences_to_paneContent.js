@@ -12,28 +12,59 @@ add_task(async function() {
   let prefs = await openPreferencesViaOpenPreferencesAPI("panePrivacy");
   is(prefs.selectedPane, "panePrivacy", "Privacy pane was selected");
   prefs = await openPreferencesViaHash("privacy");
-  is(prefs.selectedPane, "panePrivacy", "Privacy pane is selected when hash is 'privacy'");
+  is(
+    prefs.selectedPane,
+    "panePrivacy",
+    "Privacy pane is selected when hash is 'privacy'"
+  );
   prefs = await openPreferencesViaOpenPreferencesAPI("nonexistant-category");
-  is(prefs.selectedPane, "paneGeneral", "General pane is selected by default when a nonexistant-category is requested");
+  is(
+    prefs.selectedPane,
+    "paneGeneral",
+    "General pane is selected by default when a nonexistant-category is requested"
+  );
   prefs = await openPreferencesViaHash("nonexistant-category");
-  is(prefs.selectedPane, "paneGeneral", "General pane is selected when hash is a nonexistant-category");
+  is(
+    prefs.selectedPane,
+    "paneGeneral",
+    "General pane is selected when hash is a nonexistant-category"
+  );
   prefs = await openPreferencesViaHash();
   is(prefs.selectedPane, "paneGeneral", "General pane is selected by default");
-  prefs = await openPreferencesViaOpenPreferencesAPI("privacy-reports", {leaveOpen: true});
+  prefs = await openPreferencesViaOpenPreferencesAPI("privacy-reports", {
+    leaveOpen: true,
+  });
   is(prefs.selectedPane, "panePrivacy", "Privacy pane is selected by default");
   let doc = gBrowser.contentDocument;
-  is(doc.location.hash, "#privacy", "The subcategory should be removed from the URI");
-  await TestUtils.waitForCondition(() => doc.querySelector(".spotlight"), "Wait for the reports section is spotlighted.");
-  is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "reports", "The reports section is spotlighted.");
+  is(
+    doc.location.hash,
+    "#privacy",
+    "The subcategory should be removed from the URI"
+  );
+  await TestUtils.waitForCondition(
+    () => doc.querySelector(".spotlight"),
+    "Wait for the reports section is spotlighted."
+  );
+  is(
+    doc.querySelector(".spotlight").getAttribute("data-subcategory"),
+    "reports",
+    "The reports section is spotlighted."
+  );
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test opening Preferences with subcategory on an existing Preferences tab. See bug 1358475.
 add_task(async function() {
-  let prefs = await openPreferencesViaOpenPreferencesAPI("general", {leaveOpen: true});
+  let prefs = await openPreferencesViaOpenPreferencesAPI("general", {
+    leaveOpen: true,
+  });
   is(prefs.selectedPane, "paneGeneral", "General pane is selected by default");
   let doc = gBrowser.contentDocument;
-  is(doc.location.hash, "#general", "The subcategory should be removed from the URI");
+  is(
+    doc.location.hash,
+    "#general",
+    "The subcategory should be removed from the URI"
+  );
   // The reasons that here just call the `openPreferences` API without the helping function are
   //   - already opened one about:preferences tab up there and
   //   - the goal is to test on the existing tab and
@@ -41,9 +72,20 @@ add_task(async function() {
   openPreferences("privacy-reports");
   let selectedPane = gBrowser.contentWindow.history.state;
   is(selectedPane, "panePrivacy", "Privacy pane should be selected");
-  is(doc.location.hash, "#privacy", "The subcategory should be removed from the URI");
-  await TestUtils.waitForCondition(() => doc.querySelector(".spotlight"), "Wait for the reports section is spotlighted.");
-  is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "reports", "The reports section is spotlighted.");
+  is(
+    doc.location.hash,
+    "#privacy",
+    "The subcategory should be removed from the URI"
+  );
+  await TestUtils.waitForCondition(
+    () => doc.querySelector(".spotlight"),
+    "Wait for the reports section is spotlighted."
+  );
+  is(
+    doc.querySelector(".spotlight").getAttribute("data-subcategory"),
+    "reports",
+    "The reports section is spotlighted."
+  );
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -57,7 +99,9 @@ add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.crashReports.unsubmittedCheck.autoSubmit2", true]],
   });
-  await openPreferencesViaOpenPreferencesAPI("privacy-reports", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("privacy-reports", {
+    leaveOpen: true,
+  });
 
   let doc = gBrowser.contentDocument;
   ok(
@@ -78,7 +122,9 @@ add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.crashReports.unsubmittedCheck.autoSubmit2", false]],
   });
-  await openPreferencesViaOpenPreferencesAPI("privacy-reports", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("privacy-reports", {
+    leaveOpen: true,
+  });
 
   let doc = gBrowser.contentDocument;
   ok(
@@ -92,18 +138,32 @@ add_task(async function() {
 
 function openPreferencesViaHash(aPane) {
   return new Promise(resolve => {
-    let finalPrefPaneLoaded = TestUtils.topicObserved("sync-pane-loaded", () => true);
-    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:preferences" + (aPane ? "#" + aPane : ""));
+    let finalPrefPaneLoaded = TestUtils.topicObserved(
+      "sync-pane-loaded",
+      () => true
+    );
+    gBrowser.selectedTab = BrowserTestUtils.addTab(
+      gBrowser,
+      "about:preferences" + (aPane ? "#" + aPane : "")
+    );
     let newTabBrowser = gBrowser.selectedBrowser;
 
-    newTabBrowser.addEventListener("Initialized", function() {
-      newTabBrowser.contentWindow.addEventListener("load", async function() {
-        let win = gBrowser.contentWindow;
-        let selectedPane = win.history.state;
-        await finalPrefPaneLoaded;
-        gBrowser.removeCurrentTab();
-        resolve({selectedPane});
-      }, {once: true});
-    }, {capture: true, once: true});
+    newTabBrowser.addEventListener(
+      "Initialized",
+      function() {
+        newTabBrowser.contentWindow.addEventListener(
+          "load",
+          async function() {
+            let win = gBrowser.contentWindow;
+            let selectedPane = win.history.state;
+            await finalPrefPaneLoaded;
+            gBrowser.removeCurrentTab();
+            resolve({ selectedPane });
+          },
+          { once: true }
+        );
+      },
+      { capture: true, once: true }
+    );
   });
 }

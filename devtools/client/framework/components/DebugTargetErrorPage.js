@@ -31,18 +31,15 @@ class DebugTargetErrorPage extends PureComponent {
         {
           className: "error-page__title",
         },
-        L10N.getStr("toolbox.debugTargetErrorPage.title"),
+        L10N.getStr("toolbox.debugTargetErrorPage.title")
       ),
-      dom.p(
-        {},
-        L10N.getStr("toolbox.debugTargetErrorPage.description"),
-      ),
+      dom.p({}, L10N.getStr("toolbox.debugTargetErrorPage.description")),
       dom.output(
         {
           className: "error-page__details",
         },
-        errorMessage,
-      ),
+        errorMessage
+      )
     );
   }
 }

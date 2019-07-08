@@ -8,22 +8,30 @@
  * This checks for the failure found in bug 1530549.
  */
 
-add_task(threadClientTest(async ({ threadClient, debuggee }) => {
-  dumpn("Evaluating test code and waiting for first debugger statement");
-  const dbgStmt = await executeOnNextTickAndWaitForPause(
-    () => evaluateTestCode(debuggee), threadClient);
-  equal(dbgStmt.frame.where.line, 3, "Should be at debugger statement on line 3");
+add_task(
+  threadClientTest(async ({ threadClient, debuggee }) => {
+    dumpn("Evaluating test code and waiting for first debugger statement");
+    const dbgStmt = await executeOnNextTickAndWaitForPause(
+      () => evaluateTestCode(debuggee),
+      threadClient
+    );
+    equal(
+      dbgStmt.frame.where.line,
+      3,
+      "Should be at debugger statement on line 3"
+    );
 
-  dumpn("Step out of inner and into var statement IIFE");
-  const step2 = await stepOut(threadClient);
-  equal(step2.frame.where.line, 4);
-  deepEqual(step2.why.frameFinished.return, { type: "undefined"});
+    dumpn("Step out of inner and into var statement IIFE");
+    const step2 = await stepOut(threadClient);
+    equal(step2.frame.where.line, 4);
+    deepEqual(step2.why.frameFinished.return, { type: "undefined" });
 
-  dumpn("Step out of vars and into script body");
-  const step3 = await stepOut(threadClient);
-  equal(step3.frame.where.line, 9);
-  deepEqual(step3.why.frameFinished.return, { type: "undefined"});
-}));
+    dumpn("Step out of vars and into script body");
+    const step3 = await stepOut(threadClient);
+    equal(step3.frame.where.line, 9);
+    deepEqual(step3.why.frameFinished.return, { type: "undefined" });
+  })
+);
 
 function evaluateTestCode(debuggee) {
   Cu.evalInSandbox(

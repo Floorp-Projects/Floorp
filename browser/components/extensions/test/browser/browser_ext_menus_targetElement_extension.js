@@ -7,18 +7,26 @@ add_task(async function getTargetElement_in_extension_tab() {
   async function background() {
     browser.menus.onShown.addListener(info => {
       let elem = browser.menus.getTargetElement(info.targetElementId);
-      browser.test.assertEq(null, elem, "should not get element of tab content in background");
+      browser.test.assertEq(
+        null,
+        elem,
+        "should not get element of tab content in background"
+      );
 
       // By using getViews() here, we verify that the targetElementId can
       // synchronously be mapped to a valid element in a different tab
       // during the onShown event.
-      let [tabGlobal] = browser.extension.getViews({type: "tab"});
+      let [tabGlobal] = browser.extension.getViews({ type: "tab" });
       elem = tabGlobal.browser.menus.getTargetElement(info.targetElementId);
-      browser.test.assertEq("BUTTON", elem.tagName, "should get element in tab content");
+      browser.test.assertEq(
+        "BUTTON",
+        elem.tagName,
+        "should get element in tab content"
+      );
       browser.test.sendMessage("elementChecked");
     });
 
-    browser.tabs.create({url: "tab.html"});
+    browser.tabs.create({ url: "tab.html" });
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -31,7 +39,11 @@ add_task(async function getTargetElement_in_extension_tab() {
     background,
   });
 
-  let extensionTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+  let extensionTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    null,
+    true
+  );
   await extension.startup();
   // Must wait for the tab to have loaded completely before calling openContextMenu.
   await extensionTabPromise;
@@ -48,14 +60,18 @@ add_task(async function getTargetElement_in_extension_tab_on_click() {
   // calling getTargetElement in onClicked results in the expected behavior.
   async function background() {
     browser.menus.onClicked.addListener(info => {
-      let [tabGlobal] = browser.extension.getViews({type: "tab"});
+      let [tabGlobal] = browser.extension.getViews({ type: "tab" });
       let elem = tabGlobal.browser.menus.getTargetElement(info.targetElementId);
-      browser.test.assertEq("BUTTON", elem.tagName, "should get element in tab content on click");
+      browser.test.assertEq(
+        "BUTTON",
+        elem.tagName,
+        "should get element in tab content on click"
+      );
       browser.test.sendMessage("elementClicked");
     });
 
-    browser.menus.create({title: "click here"}, () => {
-      browser.tabs.create({url: "tab.html"});
+    browser.menus.create({ title: "click here" }, () => {
+      browser.tabs.create({ url: "tab.html" });
     });
   }
 
@@ -69,7 +85,11 @@ add_task(async function getTargetElement_in_extension_tab_on_click() {
     background,
   });
 
-  let extensionTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+  let extensionTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    null,
+    true
+  );
   await extension.startup();
   await extensionTabPromise;
   let menu = await openContextMenu("button");
@@ -84,11 +104,19 @@ add_task(async function getTargetElement_in_browserAction_popup() {
   async function background() {
     browser.menus.onShown.addListener(info => {
       let elem = browser.menus.getTargetElement(info.targetElementId);
-      browser.test.assertEq(null, elem, "should not get element of popup content in background");
+      browser.test.assertEq(
+        null,
+        elem,
+        "should not get element of popup content in background"
+      );
 
-      let [popupGlobal] = browser.extension.getViews({type: "popup"});
+      let [popupGlobal] = browser.extension.getViews({ type: "popup" });
       elem = popupGlobal.browser.menus.getTargetElement(info.targetElementId);
-      browser.test.assertEq("BUTTON", elem.tagName, "should get element in popup content");
+      browser.test.assertEq(
+        "BUTTON",
+        elem.tagName,
+        "should get element in popup content"
+      );
       browser.test.sendMessage("popupChecked");
     });
 
@@ -127,7 +155,11 @@ add_task(async function getTargetElement_in_sidebar_panel() {
     browser.menus.onShown.addListener(info => {
       let expected = document.querySelector("button");
       let elem = browser.menus.getTargetElement(info.targetElementId);
-      browser.test.assertEq(expected, elem, "should get element in sidebar content");
+      browser.test.assertEq(
+        expected,
+        elem,
+        "should get element in sidebar content"
+      );
       browser.test.sendMessage("done");
     });
 

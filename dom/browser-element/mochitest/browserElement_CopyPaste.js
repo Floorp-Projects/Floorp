@@ -28,13 +28,21 @@ var testSelectionChange = false;
 function copyToClipboard(str, callback) {
   gTextarea.value = str;
   SpecialPowers.wrap(gTextarea).editor.selectAll();
-  SimpleTest.waitForClipboard(() => true, () => {
-    SpecialPowers.wrap(gTextarea).editor.copy();
-  }, callback, () => { ok(false, "clipboard copy failed"); });
+  SimpleTest.waitForClipboard(
+    () => true,
+    () => {
+      SpecialPowers.wrap(gTextarea).editor.copy();
+    },
+    callback,
+    () => {
+      ok(false, "clipboard copy failed");
+    }
+  );
 }
 
 function getScriptForGetContent() {
-  var script = 'data:,\
+  var script =
+    'data:,\
     var elt = content.document.getElementById("text"); \
     var txt = ""; \
     if (elt) { \
@@ -64,108 +72,147 @@ function runTest() {
   gTextarea = document.createElement("textarea");
   document.body.appendChild(gTextarea);
 
-  iframeOuter.addEventListener("mozbrowserloadend", function(e) {
-    if (createEmbededFrame) {
-      var contentWin = SpecialPowers.wrap(iframeOuter)
-                             .frameLoader.docShell.contentViewer.DOMDocument.defaultView;
-      var contentDoc = contentWin.document;
-      iframeInner = contentDoc.createElement("iframe");
-      iframeInner.setAttribute("mozbrowser", true);
-      iframeInner.setAttribute("remote", "false");
-      contentDoc.body.appendChild(iframeInner);
-      iframeInner.addEventListener("mozbrowserloadend", function(f) {
+  iframeOuter.addEventListener(
+    "mozbrowserloadend",
+    function(e) {
+      if (createEmbededFrame) {
+        var contentWin = SpecialPowers.wrap(iframeOuter).frameLoader.docShell
+          .contentViewer.DOMDocument.defaultView;
+        var contentDoc = contentWin.document;
+        iframeInner = contentDoc.createElement("iframe");
+        iframeInner.setAttribute("mozbrowser", true);
+        iframeInner.setAttribute("remote", "false");
+        contentDoc.body.appendChild(iframeInner);
+        iframeInner.addEventListener(
+          "mozbrowserloadend",
+          function(f) {
+            mm = SpecialPowers.getBrowserFrameMessageManager(iframeInner);
+            dispatchTest(f);
+          },
+          { once: true }
+        );
+      } else {
+        iframeInner = iframeOuter;
         mm = SpecialPowers.getBrowserFrameMessageManager(iframeInner);
-        dispatchTest(f);
-      }, {once: true});
-    } else {
-      iframeInner = iframeOuter;
-      mm = SpecialPowers.getBrowserFrameMessageManager(iframeInner);
-      dispatchTest(e);
-    }
-  }, {once: true});
+        dispatchTest(e);
+      }
+    },
+    { once: true }
+  );
 }
 
 function doCommand(cmd) {
   var COMMAND_MAP = {
-    "cut": "cmd_cut",
-    "copy": "cmd_copy",
-    "paste": "cmd_paste",
-    "selectall": "cmd_selectAll",
+    cut: "cmd_cut",
+    copy: "cmd_copy",
+    paste: "cmd_paste",
+    selectall: "cmd_selectAll",
   };
   var script = 'data:,docShell.doCommand("' + COMMAND_MAP[cmd] + '");';
   mm.loadFrameScript(script, false);
 }
 
 function dispatchTest(e) {
-  iframeInner.addEventListener("mozbrowserloadend", function(f) {
-    iframeInner.focus();
-    SimpleTest.executeSoon(function() { testSelectAll(f); });
-  }, {once: true});
+  iframeInner.addEventListener(
+    "mozbrowserloadend",
+    function(f) {
+      iframeInner.focus();
+      SimpleTest.executeSoon(function() {
+        testSelectAll(f);
+      });
+    },
+    { once: true }
+  );
 
   switch (state) {
     case 0: // test for textarea
       defaultData = "Test for selection change event";
       pasteData = "from parent ";
-      iframeInner.src = "data:text/html,<html><body>" +
-                   "<textarea id='text'>" + defaultData + "</textarea>" +
-                   "</body>" +
-                   "</html>";
+      iframeInner.src =
+        "data:text/html,<html><body>" +
+        "<textarea id='text'>" +
+        defaultData +
+        "</textarea>" +
+        "</body>" +
+        "</html>";
       stateMeaning = " (test: textarea)";
-      focusScript = "var elt=content.document.getElementById('text');elt.focus();elt.select();";
+      focusScript =
+        "var elt=content.document.getElementById('text');elt.focus();elt.select();";
       break;
     case 1: // test for input text
       defaultData = "Test for selection change event";
       pasteData = "from parent ";
-      iframeInner.src = "data:text/html,<html><body>" +
-                   "<input type='text' id='text' value='" + defaultData + "'>" +
-                   "</body>" +
-                   "</html>";
+      iframeInner.src =
+        "data:text/html,<html><body>" +
+        "<input type='text' id='text' value='" +
+        defaultData +
+        "'>" +
+        "</body>" +
+        "</html>";
       stateMeaning = " (test: <input type=text>)";
-      focusScript = "var elt=content.document.getElementById('text');elt.focus();elt.select();";
+      focusScript =
+        "var elt=content.document.getElementById('text');elt.focus();elt.select();";
       break;
     case 2: // test for input number
       defaultData = "12345";
       pasteData = "67890";
-      iframeInner.src = "data:text/html,<html><body>" +
-                   "<input type='number' id='text' value='" + defaultData + "'>" +
-                   "</body>" +
-                   "</html>";
+      iframeInner.src =
+        "data:text/html,<html><body>" +
+        "<input type='number' id='text' value='" +
+        defaultData +
+        "'>" +
+        "</body>" +
+        "</html>";
       stateMeaning = " (test: <input type=number>)";
-      focusScript = "var elt=content.document.getElementById('text');elt.focus();elt.select();";
+      focusScript =
+        "var elt=content.document.getElementById('text');elt.focus();elt.select();";
       break;
     case 3: // test for div contenteditable
       defaultData = "Test for selection change event";
       pasteData = "from parent ";
-      iframeInner.src = "data:text/html,<html><body>" +
-                   "<div contenteditable='true' id='text'>" + defaultData + "</div>" +
-                   "</body>" +
-                   "</html>";
+      iframeInner.src =
+        "data:text/html,<html><body>" +
+        "<div contenteditable='true' id='text'>" +
+        defaultData +
+        "</div>" +
+        "</body>" +
+        "</html>";
       stateMeaning = " (test: content editable div)";
-      focusScript = "var elt=content.document.getElementById('text');elt.focus();";
+      focusScript =
+        "var elt=content.document.getElementById('text');elt.focus();";
       break;
     case 4: // test for normal div
       defaultData = "Test for selection change event";
       pasteData = "from parent ";
-      iframeInner.src = "data:text/html,<html><body>" +
-                   "<div id='text'>" + defaultData + "</div>" +
-                   "</body>" +
-                   "</html>";
+      iframeInner.src =
+        "data:text/html,<html><body>" +
+        "<div id='text'>" +
+        defaultData +
+        "</div>" +
+        "</body>" +
+        "</html>";
       stateMeaning = " (test: normal div)";
-      focusScript = "var elt=content.document.getElementById('text');elt.focus();";
+      focusScript =
+        "var elt=content.document.getElementById('text');elt.focus();";
       break;
     case 5: // test for normal div with designMode:on
       defaultData = "Test for selection change event";
       pasteData = "from parent ";
-      iframeInner.src = "data:text/html,<html><body id='text'>" +
-                   defaultData +
-                   "</body>" +
-                   "<script>document.designMode='on';</script>" +
-                   "</html>";
+      iframeInner.src =
+        "data:text/html,<html><body id='text'>" +
+        defaultData +
+        "</body>" +
+        "<script>document.designMode='on';</script>" +
+        "</html>";
       stateMeaning = " (test: normal div with designMode:on)";
-      focusScript = "var elt=content.document.getElementById('text');elt.focus();";
+      focusScript =
+        "var elt=content.document.getElementById('text');elt.focus();";
       break;
     default:
-      if (createEmbededFrame || browserElementTestHelpers.getOOPByDefaultPref()) {
+      if (
+        createEmbededFrame ||
+        browserElementTestHelpers.getOOPByDefaultPref()
+      ) {
         SimpleTest.finish();
       } else {
         createEmbededFrame = true;
@@ -181,21 +228,35 @@ function dispatchTest(e) {
 }
 
 function isChildProcess() {
-  return SpecialPowers.Services.appinfo
-                      .processType != SpecialPowers.Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+  return (
+    SpecialPowers.Services.appinfo.processType !=
+    SpecialPowers.Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
+  );
 }
 
 function testSelectAll(e) {
   // Skip mozbrowser test if we're at child process.
   if (!isChildProcess()) {
     let eventName = "mozbrowsercaretstatechanged";
-    iframeOuter.addEventListener(eventName, function(f) {
-      ok(true, "got mozbrowsercaretstatechanged event." + stateMeaning);
-      ok(f.detail, "event.detail is not null." + stateMeaning);
-      ok(f.detail.width != 0, "event.detail.width is not zero" + stateMeaning);
-      ok(f.detail.height != 0, "event.detail.height is not zero" + stateMeaning);
-      SimpleTest.executeSoon(function() { testCopy1(f); });
-    }, {capture: true, once: true});
+    iframeOuter.addEventListener(
+      eventName,
+      function(f) {
+        ok(true, "got mozbrowsercaretstatechanged event." + stateMeaning);
+        ok(f.detail, "event.detail is not null." + stateMeaning);
+        ok(
+          f.detail.width != 0,
+          "event.detail.width is not zero" + stateMeaning
+        );
+        ok(
+          f.detail.height != 0,
+          "event.detail.height is not zero" + stateMeaning
+        );
+        SimpleTest.executeSoon(function() {
+          testCopy1(f);
+        });
+      },
+      { capture: true, once: true }
+    );
   }
 
   mm.addMessageListener("content-focus", function messageforfocus(msg) {
@@ -203,7 +264,9 @@ function testSelectAll(e) {
     // test selectall command, after calling this the caretstatechanged event should be fired.
     doCommand("selectall");
     if (isChildProcess()) {
-      SimpleTest.executeSoon(function() { testCopy1(e); });
+      SimpleTest.executeSoon(function() {
+        testCopy1(e);
+      });
     }
   });
 
@@ -220,7 +283,9 @@ function testCopy1(e) {
 
     let nextTest = function(success) {
       ok(success, "copy command works" + stateMeaning);
-      SimpleTest.executeSoon(function() { testPaste1(e); });
+      SimpleTest.executeSoon(function() {
+        testPaste1(e);
+      });
     };
 
     let success = function() {
@@ -242,7 +307,9 @@ function testPaste1(e) {
   copyToClipboard(pasteData, () => {
     doCommand("selectall");
     doCommand("paste");
-    SimpleTest.executeSoon(function() { testPaste2(e); });
+    SimpleTest.executeSoon(function() {
+      testPaste2(e);
+    });
   });
 }
 
@@ -251,14 +318,22 @@ function testPaste2(e) {
     mm.removeMessageListener("content-text", messageforpaste);
     if (state == 4) {
       // normal div cannot paste, so the content remain unchange
-      ok(SpecialPowers.wrap(msg).json === defaultData, "paste command works" + stateMeaning);
+      ok(
+        SpecialPowers.wrap(msg).json === defaultData,
+        "paste command works" + stateMeaning
+      );
     } else if (state == 3 && browserElementTestHelpers.getOOPByDefaultPref()) {
       // Something weird when we doCommand with content editable element in OOP. Mark this case as todo
       todo(false, "paste command works" + stateMeaning);
     } else {
-      ok(SpecialPowers.wrap(msg).json === pasteData, "paste command works" + stateMeaning);
+      ok(
+        SpecialPowers.wrap(msg).json === pasteData,
+        "paste command works" + stateMeaning
+      );
     }
-    SimpleTest.executeSoon(function() { testCut1(e); });
+    SimpleTest.executeSoon(function() {
+      testCut1(e);
+    });
   });
 
   mm.loadFrameScript(getScriptForGetContent(), false);
@@ -279,7 +354,9 @@ function testCut1(e) {
       } else {
         ok(success, "cut function works" + stateMeaning);
       }
-      SimpleTest.executeSoon(function() { testCut2(e); });
+      SimpleTest.executeSoon(function() {
+        testCut2(e);
+      });
     };
 
     let success = function() {
@@ -295,9 +372,13 @@ function testCut1(e) {
     // Something weird when we doCommand with content editable element in OOP.
     // Always true in this case
     // Normal div case cannot cut, always true as well.
-    if ((state == 3 && browserElementTestHelpers.getOOPByDefaultPref()) ||
-        state == 4) {
-      compareData = function() { return true; };
+    if (
+      (state == 3 && browserElementTestHelpers.getOOPByDefaultPref()) ||
+      state == 4
+    ) {
+      compareData = function() {
+        return true;
+      };
     }
 
     SimpleTest.waitForClipboard(compareData, setup, success, fail);
@@ -309,12 +390,18 @@ function testCut2(e) {
     mm.removeMessageListener("content-text", messageforcut);
     // normal div cannot cut
     if (state == 4) {
-      ok(SpecialPowers.wrap(msg).json !== "", "cut command works" + stateMeaning);
+      ok(
+        SpecialPowers.wrap(msg).json !== "",
+        "cut command works" + stateMeaning
+      );
     } else if (state == 3 && browserElementTestHelpers.getOOPByDefaultPref()) {
       // Something weird when we doCommand with content editable element in OOP. Mark this case as todo
       todo(false, "cut command works" + stateMeaning);
     } else {
-      ok(SpecialPowers.wrap(msg).json === "", "cut command works" + stateMeaning);
+      ok(
+        SpecialPowers.wrap(msg).json === "",
+        "cut command works" + stateMeaning
+      );
     }
 
     state++;
@@ -326,12 +413,16 @@ function testCut2(e) {
 
 // Give our origin permission to open browsers, and remove it when the test is complete.
 var principal = SpecialPowers.wrap(document).nodePrincipal;
-var context = { url: SpecialPowers.wrap(principal.URI).spec,
-                originAttributes: {
-                  inIsolatedMozBrowser: true }};
+var context = {
+  url: SpecialPowers.wrap(principal.URI).spec,
+  originAttributes: {
+    inIsolatedMozBrowser: true,
+  },
+};
 
 addEventListener("testready", function() {
-  SpecialPowers.pushPermissions([
-    {type: "browser", allow: 1, context},
-  ], runTest);
+  SpecialPowers.pushPermissions(
+    [{ type: "browser", allow: 1, context }],
+    runTest
+  );
 });

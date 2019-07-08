@@ -14,12 +14,20 @@ add_task(async function() {
   });
   const getFrontFront = await target.getFront("accessibility");
   const onFrontFront = await promise;
-  is(getFrontFront, onFrontFront, "got the front instantiated in the future and it's the same");
+  is(
+    getFrontFront,
+    onFrontFront,
+    "got the front instantiated in the future and it's the same"
+  );
 
   info("Test applying onFront to an existing front");
   await new Promise(resolve => {
     target.onFront("accessibility", front => {
-      is(front, getFrontFront, "got the already instantiated front and it's the same");
+      is(
+        front,
+        getFrontFront,
+        "got the already instantiated front and it's the same"
+      );
       resolve();
     });
   });

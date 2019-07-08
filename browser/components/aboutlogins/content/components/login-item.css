@@ -76,6 +76,20 @@
   padding-inline-start: 32px; /* 8px on each side, and 16px for icon width */
 }
 
+:host(:not([data-editing])) input[type="url"] {
+  color: var(--in-content-link-color) !important;
+  cursor: pointer;
+}
+
+:host(:not([data-editing])) input[type="url"]:hover {
+  color: var(--in-content-link-color-hover) !important;
+  text-decoration: underline;
+}
+
+:host(:not([data-editing])) input[type="url"]:hover:active {
+  color: var(--in-content-link-color-active) !important;
+}
+
 .detail-row,
 .reveal-password-wrapper {
   display: flex;
@@ -110,6 +124,11 @@
   color: var(--success-color) !important; /* override common.css */
   background-color: transparent;
   opacity: 1; /* override common.css fading out disabled buttons */
+}
+
+.copy-button[data-copied]:-moz-focusring {
+  outline-width: 0;
+  box-shadow: none;
 }
 
 .meta-info {

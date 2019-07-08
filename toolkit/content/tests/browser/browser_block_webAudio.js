@@ -1,4 +1,5 @@
-const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_webAudio.html";
+const PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_webAudio.html";
 
 // The tab closing code leaves an uncaught rejection. This test has been
 // whitelisted until the issue is fixed.
@@ -8,10 +9,12 @@ if (!gMultiProcessBrowser) {
 }
 
 add_task(async function setup_test_preference() {
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["media.useAudioChannelService.testing", true],
-    ["media.block-autoplay-until-in-foreground", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.useAudioChannelService.testing", true],
+      ["media.block-autoplay-until-in-foreground", true],
+    ],
+  });
 });
 
 add_task(async function block_web_audio() {

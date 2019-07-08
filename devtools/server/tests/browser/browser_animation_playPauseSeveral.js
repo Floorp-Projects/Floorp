@@ -11,12 +11,16 @@
 // have infinite animations are listed. This is done to avoid intermittents
 // caused when finite animations are already done playing by the time the test
 // runs.
-const ALL_ANIMATED_NODES = [".simple-animation", ".multiple-animations",
-                            ".delayed-animation"];
+const ALL_ANIMATED_NODES = [
+  ".simple-animation",
+  ".multiple-animations",
+  ".delayed-animation",
+];
 
 add_task(async function() {
-  const {target, walker, animations} =
-    await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
+  const { target, walker, animations } = await initAnimationsFrontForUrl(
+    MAIN_DOMAIN + "animation.html"
+  );
 
   info("Pause all animations in the test document");
   await toggleAndCheckStates(walker, animations, ALL_ANIMATED_NODES, "paused");
@@ -29,8 +33,10 @@ add_task(async function() {
 });
 
 async function toggleAndCheckStates(walker, animations, selectors, playState) {
-  info("Checking the playState of all the nodes that have infinite running " +
-       "animations");
+  info(
+    "Checking the playState of all the nodes that have infinite running " +
+      "animations"
+  );
 
   for (const selector of selectors) {
     const players = await getPlayersFor(walker, animations, selector);
@@ -54,6 +60,9 @@ async function getPlayersFor(walker, animations, selector) {
 
 async function checkPlayState(player, selector, expectedState) {
   const state = await player.getCurrentState();
-  is(state.playState, expectedState,
-    "The playState of node " + selector + " is " + expectedState);
+  is(
+    state.playState,
+    expectedState,
+    "The playState of node " + selector + " is " + expectedState
+  );
 }

@@ -5,10 +5,10 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
-  const name =
-    this.window ? window.location.pathname : "test_wasm_put_get_values.js";
+function* testSteps() {
+  const name = this.window
+    ? window.location.pathname
+    : "test_wasm_put_get_values.js";
 
   const objectStoreName = "Wasm";
 
@@ -47,8 +47,9 @@ function* testSteps()
 
   info("Testing failure to store wasm");
 
-  let objectStore = db.transaction([objectStoreName], "readwrite")
-                      .objectStore(objectStoreName);
+  let objectStore = db
+    .transaction([objectStoreName], "readwrite")
+    .objectStore(objectStoreName);
 
   // storing a wasm module in IDB should now fail
   let failed = false;

@@ -29,12 +29,11 @@ async function runTests(options) {
     // promise that resolves to an object containing them.
     async function getDetails(tabId) {
       return {
-        title: await browser.pageAction.getTitle({tabId}),
-        popup: await browser.pageAction.getPopup({tabId}),
-        isShown: await browser.pageAction.isShown({tabId}),
+        title: await browser.pageAction.getTitle({ tabId }),
+        popup: await browser.pageAction.getPopup({ tabId }),
+        isShown: await browser.pageAction.isShown({ tabId }),
       };
     }
-
 
     // Runs the next test in the `tests` array, checks the results,
     // and passes control back to the outer test scope.
@@ -42,8 +41,11 @@ async function runTests(options) {
       let test = tests.shift();
 
       test(async expecting => {
-        let [tab] = await browser.tabs.query({active: true, currentWindow: true});
-        let {id: tabId, windowId, url} = tab;
+        let [tab] = await browser.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
+        let { id: tabId, windowId, url } = tab;
 
         browser.test.log(`Get details: tab={id: ${tabId}, url: ${url}}`);
 
@@ -51,15 +53,24 @@ async function runTests(options) {
         // run the next test.
         let details = await getDetails(tabId);
         if (expecting) {
-          browser.test.assertEq(expecting.title, details.title,
-                                "expected value from getTitle");
+          browser.test.assertEq(
+            expecting.title,
+            details.title,
+            "expected value from getTitle"
+          );
 
-          browser.test.assertEq(expecting.popup, details.popup,
-                                "expected value from getPopup");
+          browser.test.assertEq(
+            expecting.popup,
+            details.popup,
+            "expected value from getPopup"
+          );
         }
 
-        browser.test.assertEq(!!expecting, details.isShown,
-                              "expected value from isShown");
+        browser.test.assertEq(
+          !!expecting,
+          details.isShown,
+          "expected value from isShown"
+        );
 
         // Check that the actual icon has the expected values, then
         // run the next test.
@@ -72,7 +83,10 @@ async function runTests(options) {
       let windows = [];
       tests = getTests(tabs, windows);
 
-      let resultTabs = await browser.tabs.query({active: true, currentWindow: true});
+      let resultTabs = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
 
       tabs[0] = resultTabs[0].id;
       windows[0] = resultTabs[0].windowId;
@@ -80,7 +94,7 @@ async function runTests(options) {
       nextTest();
     }
 
-    browser.test.onMessage.addListener((msg) => {
+    browser.test.onMessage.addListener(msg => {
       if (msg == "runTests") {
         runTests();
       } else if (msg == "runNextTest") {
@@ -106,10 +120,13 @@ async function runTests(options) {
   let windows = [];
 
   function checkDetails(details, windowId) {
-    let {document} = Services.wm.getOuterWindowWithId(windowId);
+    let { document } = Services.wm.getOuterWindowWithId(windowId);
     let image = document.getElementById(pageActionId);
     if (details == null) {
-      ok(image == null || image.getAttribute("disabled") == "true", "image is disabled");
+      ok(
+        image == null || image.getAttribute("disabled") == "true",
+        "image is disabled"
+      );
     } else {
       ok(image, "image exists");
 
@@ -117,7 +134,11 @@ async function runTests(options) {
 
       let title = details.title || options.manifest.name;
       is(image.getAttribute("tooltiptext"), title, "image title is correct");
-      is(image.getAttribute("aria-label"), title, "image aria-label is correct");
+      is(
+        image.getAttribute("aria-label"),
+        title,
+        "image aria-label is correct"
+      );
       // TODO: Popup URL.
     }
   }
@@ -125,31 +146,38 @@ async function runTests(options) {
   let testNewWindows = 1;
 
   let awaitFinish = new Promise(resolve => {
-    extension.onMessage("nextTest", async (expecting, windowId, testsRemaining) => {
-      if (!pageActionId) {
-        pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
+    extension.onMessage(
+      "nextTest",
+      async (expecting, windowId, testsRemaining) => {
+        if (!pageActionId) {
+          pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(
+            makeWidgetId(extension.id)
+          );
+        }
+
+        await promiseAnimationFrame(currentWindow);
+
+        checkDetails(expecting, windowId);
+
+        if (testsRemaining) {
+          extension.sendMessage("runNextTest");
+        } else if (testNewWindows) {
+          testNewWindows--;
+
+          BrowserTestUtils.openNewBrowserWindow()
+            .then(window => {
+              windows.push(window);
+              currentWindow = window;
+              return focusWindow(window);
+            })
+            .then(() => {
+              extension.sendMessage("runTests");
+            });
+        } else {
+          resolve();
+        }
       }
-
-      await promiseAnimationFrame(currentWindow);
-
-      checkDetails(expecting, windowId);
-
-      if (testsRemaining) {
-        extension.sendMessage("runNextTest");
-      } else if (testNewWindows) {
-        testNewWindows--;
-
-        BrowserTestUtils.openNewBrowserWindow().then(window => {
-          windows.push(window);
-          currentWindow = window;
-          return focusWindow(window);
-        }).then(() => {
-          extension.sendMessage("runTests");
-        });
-      } else {
-        resolve();
-      }
-    });
+    );
   });
 
   let reqLoc = Services.locale.requestedLocales;

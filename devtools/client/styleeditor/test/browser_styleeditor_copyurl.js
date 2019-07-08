@@ -11,22 +11,37 @@ const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 add_task(async function() {
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
-  const onContextMenuShown = new Promise((resolve) => {
-    ui._contextMenu.addEventListener("popupshown", () => {
-      resolve();
-    }, {once: true});
+  const onContextMenuShown = new Promise(resolve => {
+    ui._contextMenu.addEventListener(
+      "popupshown",
+      () => {
+        resolve();
+      },
+      { once: true }
+    );
   });
 
   info("Right-click the first stylesheet editor.");
   const editor = ui.editors[0];
   const stylesheetEl = editor.summary.querySelector(".stylesheet-name");
-  await EventUtils.synthesizeMouseAtCenter(stylesheetEl, {button: 2, type: "contextmenu"},
-                                           ui._window);
+  await EventUtils.synthesizeMouseAtCenter(
+    stylesheetEl,
+    { button: 2, type: "contextmenu" },
+    ui._window
+  );
   await onContextMenuShown;
 
-  is(ui._copyUrlItem.getAttribute("hidden"), "false", "Copy URL menu item is showing.");
+  is(
+    ui._copyUrlItem.getAttribute("hidden"),
+    "false",
+    "Copy URL menu item is showing."
+  );
 
-  info("Click on Copy URL menu item and wait for the URL to be copied to the clipboard.");
-  await waitForClipboardPromise(() => ui._copyUrlItem.click(),
-                                ui._contextMenuStyleSheet.href);
+  info(
+    "Click on Copy URL menu item and wait for the URL to be copied to the clipboard."
+  );
+  await waitForClipboardPromise(
+    () => ui._copyUrlItem.click(),
+    ui._contextMenuStyleSheet.href
+  );
 });

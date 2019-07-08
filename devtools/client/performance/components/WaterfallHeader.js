@@ -32,11 +32,14 @@ function WaterfallHeader(props) {
     const time = Math.round(x / dataScale + startTime);
     const label = L10N.getFormatStr("timeline.tick", time);
 
-    const node = dom.div({
-      key: x,
-      className: "plain waterfall-header-tick",
-      style: { transform: `translateX(${left}px)` },
-    }, label);
+    const node = dom.div(
+      {
+        key: x,
+        className: "plain waterfall-header-tick",
+        style: { transform: `translateX(${left}px)` },
+      },
+      label
+    );
     ticks.push(node);
   }
 

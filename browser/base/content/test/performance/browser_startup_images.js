@@ -69,7 +69,8 @@ add_task(async function() {
     ok(false, "You need to run this test on a debug build.");
   }
 
-  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
+  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()
+    .wrappedJSObject;
   await startupRecorder.done;
 
   let data = Cu.cloneInto(startupRecorder.data.images, {});
@@ -88,25 +89,41 @@ add_task(async function() {
       return el.file == loaded;
     });
     if (whitelistItem) {
-      if (!whitelistItem.intermittentShown ||
-          !whitelistItem.intermittentShown.includes(AppConstants.platform)) {
-        todo(shownImages.has(loaded), `Whitelisted image ${loaded} should not have been shown.`);
+      if (
+        !whitelistItem.intermittentShown ||
+        !whitelistItem.intermittentShown.includes(AppConstants.platform)
+      ) {
+        todo(
+          shownImages.has(loaded),
+          `Whitelisted image ${loaded} should not have been shown.`
+        );
       }
       continue;
     }
-    ok(shownImages.has(loaded), `Loaded image ${loaded} should have been shown.`);
+    ok(
+      shownImages.has(loaded),
+      `Loaded image ${loaded} should have been shown.`
+    );
   }
 
   // Check for unneeded whitelist entries.
   for (let item of filteredWhitelist) {
-    if (!item.intermittentNotLoaded ||
-        !item.intermittentNotLoaded.includes(AppConstants.platform)) {
+    if (
+      !item.intermittentNotLoaded ||
+      !item.intermittentNotLoaded.includes(AppConstants.platform)
+    ) {
       if (window.devicePixelRatio >= 2 && item.hidpi) {
         if (item.hidpi != "<not loaded>") {
-          ok(loadedImages.has(item.hidpi), `Whitelisted image ${item.hidpi} should have been loaded.`);
+          ok(
+            loadedImages.has(item.hidpi),
+            `Whitelisted image ${item.hidpi} should have been loaded.`
+          );
         }
       } else {
-        ok(loadedImages.has(item.file), `Whitelisted image ${item.file} should have been loaded.`);
+        ok(
+          loadedImages.has(item.file),
+          `Whitelisted image ${item.file} should have been loaded.`
+        );
       }
     }
   }

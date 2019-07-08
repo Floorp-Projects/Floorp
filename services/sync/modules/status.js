@@ -1,12 +1,25 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var EXPORTED_SYMBOLS = ["Status"];
 
-const {CLIENT_NOT_CONFIGURED, ENGINE_SUCCEEDED, LOGIN_FAILED, LOGIN_FAILED_NO_PASSPHRASE, LOGIN_FAILED_NO_USERNAME, LOGIN_SUCCEEDED, STATUS_OK, SYNC_FAILED, SYNC_FAILED_PARTIAL, SYNC_SUCCEEDED} = ChromeUtils.import("resource://services-sync/constants.js");
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {BrowserIDManager} = ChromeUtils.import("resource://services-sync/browserid_identity.js");
+const {
+  CLIENT_NOT_CONFIGURED,
+  ENGINE_SUCCEEDED,
+  LOGIN_FAILED,
+  LOGIN_FAILED_NO_PASSPHRASE,
+  LOGIN_FAILED_NO_USERNAME,
+  LOGIN_SUCCEEDED,
+  STATUS_OK,
+  SYNC_FAILED,
+  SYNC_FAILED_PARTIAL,
+  SYNC_SUCCEEDED,
+} = ChromeUtils.import("resource://services-sync/constants.js");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { BrowserIDManager } = ChromeUtils.import(
+  "resource://services-sync/browserid_identity.js"
+);
 
 var Status = {
   _log: Log.repository.getLogger("Sync.Status"),
@@ -26,7 +39,9 @@ var Status = {
   },
 
   set service(code) {
-    this._log.debug("Status.service: " + (this._service || undefined) + " => " + code);
+    this._log.debug(
+      "Status.service: " + (this._service || undefined) + " => " + code
+    );
     this._service = code;
   },
 
@@ -38,8 +53,10 @@ var Status = {
     this._log.debug("Status.login: " + this._login + " => " + code);
     this._login = code;
 
-    if (code == LOGIN_FAILED_NO_USERNAME ||
-        code == LOGIN_FAILED_NO_PASSPHRASE) {
+    if (
+      code == LOGIN_FAILED_NO_USERNAME ||
+      code == LOGIN_FAILED_NO_PASSPHRASE
+    ) {
       this.service = CLIENT_NOT_CONFIGURED;
     } else if (code != LOGIN_SUCCEEDED) {
       this.service = LOGIN_FAILED;
@@ -74,10 +91,16 @@ var Status = {
   // Implement toString because adding a logger introduces a cyclic object
   // value, so we can't trivially debug-print Status as JSON.
   toString: function toString() {
-    return "<Status" +
-           ": login: " + Status.login +
-           ", service: " + Status.service +
-           ", sync: " + Status.sync + ">";
+    return (
+      "<Status" +
+      ": login: " +
+      Status.login +
+      ", service: " +
+      Status.service +
+      ", sync: " +
+      Status.sync +
+      ">"
+    );
   },
 
   checkSetup: function checkSetup() {

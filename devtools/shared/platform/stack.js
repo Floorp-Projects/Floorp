@@ -39,7 +39,7 @@ function getNthPathExcluding(n, substr) {
   if (!stack[n]) {
     n = 0;
   }
-  return (stack[n] || "");
+  return stack[n] || "";
 }
 
 /**

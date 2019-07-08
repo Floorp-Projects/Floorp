@@ -2,26 +2,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = [ "BookmarkJSONUtils" ];
+var EXPORTED_SYMBOLS = ["BookmarkJSONUtils"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 
 Cu.importGlobalProperties(["fetch"]);
 
-ChromeUtils.defineModuleGetter(this, "PlacesBackups",
-  "resource://gre/modules/PlacesBackups.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesBackups",
+  "resource://gre/modules/PlacesBackups.jsm"
+);
 
 // This is used to translate old folder pseudonyms in queries with their newer
 // guids.
 const OLD_BOOKMARK_QUERY_TRANSLATIONS = {
-  "PLACES_ROOT": PlacesUtils.bookmarks.rootGuid,
-  "BOOKMARKS_MENU": PlacesUtils.bookmarks.menuGuid,
-  "TAGS": PlacesUtils.bookmarks.tagsGuid,
-  "UNFILED_BOOKMARKS": PlacesUtils.bookmarks.unfiledGuid,
-  "TOOLBAR": PlacesUtils.bookmarks.toolbarGuid,
-  "MOBILE_BOOKMARKS": PlacesUtils.bookmarks.mobileGuid,
+  PLACES_ROOT: PlacesUtils.bookmarks.rootGuid,
+  BOOKMARKS_MENU: PlacesUtils.bookmarks.menuGuid,
+  TAGS: PlacesUtils.bookmarks.tagsGuid,
+  UNFILED_BOOKMARKS: PlacesUtils.bookmarks.unfiledGuid,
+  TOOLBAR: PlacesUtils.bookmarks.toolbarGuid,
+  MOBILE_BOOKMARKS: PlacesUtils.bookmarks.mobileGuid,
 };
 
 /**
@@ -31,11 +36,13 @@ const OLD_BOOKMARK_QUERY_TRANSLATIONS = {
  * is case-sensitive if you are going to reuse this code.
  */
 function generateHash(aString) {
-  let cryptoHash = Cc["@mozilla.org/security/hash;1"]
-                     .createInstance(Ci.nsICryptoHash);
+  let cryptoHash = Cc["@mozilla.org/security/hash;1"].createInstance(
+    Ci.nsICryptoHash
+  );
   cryptoHash.init(Ci.nsICryptoHash.MD5);
-  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"]
-                       .createInstance(Ci.nsIStringInputStream);
+  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   stringStream.setUTF8Data(aString);
   cryptoHash.updateFromStream(stringStream, -1);
   // base64 allows the '/' char, but we can't use it for filenames.
@@ -59,11 +66,15 @@ var BookmarkJSONUtils = Object.freeze({
    * @resolves When the new bookmarks have been created.
    * @rejects JavaScript exception.
    */
-  async importFromURL(aSpec, {
-    replace: aReplace = false,
-    source: aSource = aReplace ? PlacesUtils.bookmarks.SOURCES.RESTORE :
-                                 PlacesUtils.bookmarks.SOURCES.IMPORT,
-  } = {}) {
+  async importFromURL(
+    aSpec,
+    {
+      replace: aReplace = false,
+      source: aSource = aReplace
+        ? PlacesUtils.bookmarks.SOURCES.RESTORE
+        : PlacesUtils.bookmarks.SOURCES.IMPORT,
+    } = {}
+  ) {
     notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN, aReplace);
     try {
       let importer = new BookmarkImporter(aReplace, aSource);
@@ -93,15 +104,20 @@ var BookmarkJSONUtils = Object.freeze({
    * @resolves When the new bookmarks have been created.
    * @rejects JavaScript exception.
    */
-  async importFromFile(aFilePath, {
-    replace: aReplace = false,
-    source: aSource = aReplace ? PlacesUtils.bookmarks.SOURCES.RESTORE :
-                                 PlacesUtils.bookmarks.SOURCES.IMPORT,
-  } = {}) {
+  async importFromFile(
+    aFilePath,
+    {
+      replace: aReplace = false,
+      source: aSource = aReplace
+        ? PlacesUtils.bookmarks.SOURCES.RESTORE
+        : PlacesUtils.bookmarks.SOURCES.IMPORT,
+    } = {}
+  ) {
     notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN, aReplace);
     try {
-      if (!(await OS.File.exists(aFilePath)))
+      if (!(await OS.File.exists(aFilePath))) {
         throw new Error("Cannot restore from nonexisting json file");
+      }
 
       let importer = new BookmarkImporter(aReplace, aSource);
       if (aFilePath.endsWith("jsonlz4")) {
@@ -111,7 +127,9 @@ var BookmarkJSONUtils = Object.freeze({
       }
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aReplace);
     } catch (ex) {
-      Cu.reportError("Failed to restore bookmarks from " + aFilePath + ": " + ex);
+      Cu.reportError(
+        "Failed to restore bookmarks from " + aFilePath + ": " + ex
+      );
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aReplace);
       throw ex;
     }
@@ -141,8 +159,8 @@ var BookmarkJSONUtils = Object.freeze({
     // Report the time taken to convert the tree to JSON.
     try {
       Services.telemetry
-              .getHistogramById("PLACES_BACKUPS_TOJSON_MS")
-              .add(Date.now() - startTime);
+        .getHistogramById("PLACES_BACKUPS_TOJSON_MS")
+        .add(Date.now() - startTime);
     } catch (ex) {
       Cu.reportError("Unable to report telemetry.");
     }
@@ -159,8 +177,9 @@ var BookmarkJSONUtils = Object.freeze({
     // filesystem writeAtomic will fail.  Eventual dangling .tmp files should
     // be cleaned up by the caller.
     let writeOptions = { tmpPath: OS.Path.join(aFilePath + ".tmp") };
-    if (aOptions.compress)
+    if (aOptions.compress) {
       writeOptions.compression = "lz4";
+    }
 
     await OS.File.writeAtomic(aFilePath, jsonString, writeOptions);
     return { count, hash };
@@ -183,9 +202,10 @@ BookmarkImporter.prototype = {
    * @rejects JavaScript exception.
    */
   async importFromURL(spec) {
-    if (!spec.startsWith("chrome://") &&
-        !spec.startsWith("file://")) {
-      throw new Error("importFromURL can only be used with chrome:// and file:// URLs");
+    if (!spec.startsWith("chrome://") && !spec.startsWith("file://")) {
+      throw new Error(
+        "importFromURL can only be used with chrome:// and file:// URLs"
+      );
     }
     let nodes = await (await fetch(spec)).json();
 
@@ -206,11 +226,13 @@ BookmarkImporter.prototype = {
    * @resolves When the new bookmarks have been created.
    * @rejects JavaScript exception.
    */
-  importFromCompressedFile: async function BI_importFromCompressedFile(aFilePath) {
-      let aResult = await OS.File.read(aFilePath, { compression: "lz4" });
-      let decoder = new TextDecoder();
-      let jsonString = decoder.decode(aResult);
-      await this.importFromJSON(jsonString);
+  importFromCompressedFile: async function BI_importFromCompressedFile(
+    aFilePath
+  ) {
+    let aResult = await OS.File.read(aFilePath, { compression: "lz4" });
+    let decoder = new TextDecoder();
+    let jsonString = decoder.decode(aResult);
+    await this.importFromJSON(jsonString);
   },
 
   /**
@@ -222,11 +244,16 @@ BookmarkImporter.prototype = {
    * @rejects JavaScript exception.
    */
   async importFromJSON(aString) {
-    let nodes =
-      PlacesUtils.unwrapNodes(aString, PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
+    let nodes = PlacesUtils.unwrapNodes(
+      aString,
+      PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER
+    );
 
-    if (nodes.length == 0 || !nodes[0].children ||
-        nodes[0].children.length == 0) {
+    if (
+      nodes.length == 0 ||
+      !nodes[0].children ||
+      nodes[0].children.length == 0
+    ) {
       return;
     }
 
@@ -249,8 +276,9 @@ BookmarkImporter.prototype = {
     // match what we need for insertTree, and we also have mappings of folders
     // so we can repair any searches after inserting the bookmarks (see bug 824502).
     for (let node of nodes) {
-      if (!node.children || node.children.length == 0)
-        continue; // Nothing to restore for this root
+      if (!node.children || node.children.length == 0) {
+        continue;
+      } // Nothing to restore for this root
 
       // Ensure we set the source correctly.
       node.source = this._source;
@@ -276,7 +304,9 @@ BookmarkImporter.prototype = {
 
       fixupSearchQueries(node, folderIdToGuidMap);
 
-      await PlacesUtils.bookmarks.insertTree(node, { fixupOrSkipInvalidEntries: true });
+      await PlacesUtils.bookmarks.insertTree(node, {
+        fixupOrSkipInvalidEntries: true,
+      });
 
       // Now add any favicons.
       try {
@@ -326,7 +356,9 @@ function fixupQuery(aQueryURL, aFolderIdMap) {
   let invalid = false;
   let convert = function(str, existingFolderId) {
     let guid;
-    if (Object.keys(OLD_BOOKMARK_QUERY_TRANSLATIONS).includes(existingFolderId)) {
+    if (
+      Object.keys(OLD_BOOKMARK_QUERY_TRANSLATIONS).includes(existingFolderId)
+    ) {
       guid = OLD_BOOKMARK_QUERY_TRANSLATIONS[existingFolderId];
     } else {
       guid = aFolderIdMap[existingFolderId];
@@ -351,11 +383,11 @@ function fixupQuery(aQueryURL, aFolderIdMap) {
  * A mapping of root folder names to Guids. To help fixupRootFolderGuid.
  */
 const rootToFolderGuidMap = {
-  "placesRoot": PlacesUtils.bookmarks.rootGuid,
-  "bookmarksMenuFolder": PlacesUtils.bookmarks.menuGuid,
-  "unfiledBookmarksFolder": PlacesUtils.bookmarks.unfiledGuid,
-  "toolbarFolder": PlacesUtils.bookmarks.toolbarGuid,
-  "mobileFolder": PlacesUtils.bookmarks.mobileGuid,
+  placesRoot: PlacesUtils.bookmarks.rootGuid,
+  bookmarksMenuFolder: PlacesUtils.bookmarks.menuGuid,
+  unfiledBookmarksFolder: PlacesUtils.bookmarks.unfiledGuid,
+  toolbarFolder: PlacesUtils.bookmarks.toolbarGuid,
+  mobileFolder: PlacesUtils.bookmarks.mobileGuid,
 };
 
 /**
@@ -396,8 +428,9 @@ function translateTreeTypes(node) {
 
       // Older type mobile folders have a random guid with an annotation. We need
       // to make sure those go into the proper mobile folder.
-      let isMobileFolder = node.annos &&
-                           node.annos.some(anno => anno.name == PlacesUtils.MOBILE_ROOT_ANNO);
+      let isMobileFolder =
+        node.annos &&
+        node.annos.some(anno => anno.name == PlacesUtils.MOBILE_ROOT_ANNO);
       if (isMobileFolder) {
         node.guid = PlacesUtils.bookmarks.mobileGuid;
       } else {
@@ -440,9 +473,13 @@ function translateTreeTypes(node) {
   }
 
   if (node.tags) {
-     // Separate any tags into an array, and ignore any that are too long.
-    node.tags = node.tags.split(",").filter(aTag =>
-      aTag.length > 0 && aTag.length <= PlacesUtils.bookmarks.MAX_TAG_LENGTH);
+    // Separate any tags into an array, and ignore any that are too long.
+    node.tags = node.tags
+      .split(",")
+      .filter(
+        aTag =>
+          aTag.length > 0 && aTag.length <= PlacesUtils.bookmarks.MAX_TAG_LENGTH
+      );
 
     // If we end up with none, then delete the property completely.
     if (!node.tags.length) {
@@ -487,12 +524,19 @@ function insertFaviconForNode(node) {
       // Create a fake faviconURI to use (FIXME: bug 523932)
       let faviconURI = Services.io.newURI("fake-favicon-uri:" + node.url);
       PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-        faviconURI, node.icon, 0,
-        Services.scriptSecurityManager.getSystemPrincipal());
+        faviconURI,
+        node.icon,
+        0,
+        Services.scriptSecurityManager.getSystemPrincipal()
+      );
       PlacesUtils.favicons.setAndFetchFaviconForPage(
-        Services.io.newURI(node.url), faviconURI, false,
-        PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
-        Services.scriptSecurityManager.getSystemPrincipal());
+        Services.io.newURI(node.url),
+        faviconURI,
+        false,
+        PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+        null,
+        Services.scriptSecurityManager.getSystemPrincipal()
+      );
     } catch (ex) {
       Cu.reportError("Failed to import favicon data:" + ex);
     }
@@ -504,9 +548,13 @@ function insertFaviconForNode(node) {
 
   try {
     PlacesUtils.favicons.setAndFetchFaviconForPage(
-      Services.io.newURI(node.url), Services.io.newURI(node.iconUri), false,
-      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
-      Services.scriptSecurityManager.getSystemPrincipal());
+      Services.io.newURI(node.url),
+      Services.io.newURI(node.iconUri),
+      false,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      null,
+      Services.scriptSecurityManager.getSystemPrincipal()
+    );
   } catch (ex) {
     Cu.reportError("Failed to import favicon URI:" + ex);
   }

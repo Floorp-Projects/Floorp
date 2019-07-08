@@ -33,11 +33,14 @@ add_task(async function() {
   await waitFor(monitor.panelWin.api, EVENTS.THROTTLING_CHANGED);
 
   // Verify existence of the telemetry event.
-  checkTelemetryEvent({
-    mode: "GPRS",
-  }, {
-    method: "throttle_changed",
-  });
+  checkTelemetryEvent(
+    {
+      mode: "GPRS",
+    },
+    {
+      method: "throttle_changed",
+    }
+  );
 
   return teardown(monitor);
 });

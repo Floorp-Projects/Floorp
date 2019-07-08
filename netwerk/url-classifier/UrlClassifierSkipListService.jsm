@@ -4,10 +4,13 @@
 
 this.UrlClassifierSkipListService = function() {};
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "RemoteSettings",
-                               "resource://services-settings/remote-settings.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "RemoteSettings",
+  "resource://services-settings/remote-settings.js"
+);
 
 const COLLECTION_NAME = "url-classifier-skip-urls";
 
@@ -31,7 +34,9 @@ class Feature {
     if (!this.remoteEntries) {
       let remoteEntries;
       try {
-        remoteEntries = await RemoteSettings(COLLECTION_NAME).get({ syncIfEmpty: false });
+        remoteEntries = await RemoteSettings(COLLECTION_NAME).get({
+          syncIfEmpty: false,
+        });
       } catch (e) {
         remoteEntries = [];
       }
@@ -99,7 +104,9 @@ UrlClassifierSkipListService.prototype = {
     }
 
     RemoteSettings(COLLECTION_NAME).on("sync", event => {
-      let { data: { current } } = event;
+      let {
+        data: { current },
+      } = event;
       for (let key of Object.keys(this.features)) {
         let feature = this.features[key];
         feature.onRemoteSettingsUpdate(current);

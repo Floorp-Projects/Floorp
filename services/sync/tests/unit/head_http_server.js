@@ -5,10 +5,27 @@
 var Cm = Components.manager;
 
 // Shared logging for all HTTP server functions.
-var {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-var {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
-var {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
-var {AccountState, MockFxaStorageManager, SyncTestingInfrastructure, configureFxAccountIdentity, configureIdentity, encryptPayload, getLoginTelemetryScalar, makeFxAccountsInternalMock, makeIdentityConfig, promiseNamedTimer, promiseZeroTimer, sumHistogram, syncTestLogging, waitForZeroTimer} = ChromeUtils.import("resource://testing-common/services/sync/utils.js");
+var { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+var { CommonUtils } = ChromeUtils.import("resource://services-common/utils.js");
+var { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+var {
+  AccountState,
+  MockFxaStorageManager,
+  SyncTestingInfrastructure,
+  configureFxAccountIdentity,
+  configureIdentity,
+  encryptPayload,
+  getLoginTelemetryScalar,
+  makeFxAccountsInternalMock,
+  makeIdentityConfig,
+  promiseNamedTimer,
+  promiseZeroTimer,
+  sumHistogram,
+  syncTestLogging,
+  waitForZeroTimer,
+} = ChromeUtils.import("resource://testing-common/services/sync/utils.js");
 
 const SYNC_HTTP_LOGGER = "Sync.Test.Server";
 
@@ -35,8 +52,10 @@ function return_timestamp(request, response, timestamp) {
 }
 
 function has_hawk_header(req) {
-  return req.hasHeader("Authorization") &&
-         req.getHeader("Authorization").startsWith("Hawk");
+  return (
+    req.hasHeader("Authorization") &&
+    req.getHeader("Authorization").startsWith("Hawk")
+  );
 }
 
 function basic_auth_header(user, password) {
@@ -84,7 +103,6 @@ function ServerWBO(id, initialPayload, modified) {
   this.sortindex = 0;
 }
 ServerWBO.prototype = {
-
   get data() {
     return JSON.parse(this.payload);
   },
@@ -168,9 +186,7 @@ ServerWBO.prototype = {
     this.modified = modifiedTimestamp;
     return this;
   },
-
 };
-
 
 /**
  * Represent a collection on the server. The '_wbos' attribute is a
@@ -205,7 +221,6 @@ function ServerCollection(wbos, acceptNew, timestamp) {
   this._log = Log.repository.getLogger(SYNC_HTTP_LOGGER);
 }
 ServerCollection.prototype = {
-
   /**
    * Convenience accessor for our WBO keys.
    * Excludes deleted items, of course.
@@ -279,7 +294,7 @@ ServerCollection.prototype = {
    */
   insertWBO: function insertWBO(wbo) {
     this.timestamp = Math.max(this.timestamp, wbo.modified);
-    return this._wbos[wbo.id] = wbo;
+    return (this._wbos[wbo.id] = wbo);
   },
 
   /**
@@ -344,10 +359,12 @@ ServerCollection.prototype = {
   },
 
   _inResultSet(wbo, options) {
-    return wbo.payload
-           && (!options.ids || (options.ids.includes(wbo.id)))
-           && (!options.newer || (wbo.modified > options.newer))
-           && (!options.older || (wbo.modified < options.older));
+    return (
+      wbo.payload &&
+      (!options.ids || options.ids.includes(wbo.id)) &&
+      (!options.newer || wbo.modified > options.newer) &&
+      (!options.older || wbo.modified < options.older)
+    );
   },
 
   count(options) {
@@ -383,8 +400,10 @@ ServerCollection.prototype = {
 
       default:
         if (options.sort) {
-          this._log.error("Error: client requesting unknown sort order",
-                          options.sort);
+          this._log.error(
+            "Error: client requesting unknown sort order",
+            options.sort
+          );
           throw new Error("Unknown sort order");
         }
         // If the client didn't request a sort order, shuffle the records
@@ -406,8 +425,12 @@ ServerCollection.prototype = {
       }
 
       if (request && request.getHeader("accept") == "application/newlines") {
-        this._log.error("Error: client requesting application/newlines content");
-        throw new Error("This server should not serve application/newlines content");
+        this._log.error(
+          "Error: client requesting application/newlines content"
+        );
+        throw new Error(
+          "This server should not serve application/newlines content"
+        );
       }
 
       // Use options as a backchannel to report count.
@@ -437,8 +460,9 @@ ServerCollection.prototype = {
       let record = input[key];
       let wbo = this.wbo(record.id);
       if (!wbo && this.acceptNew) {
-        this._log.debug("Creating WBO " + JSON.stringify(record.id) +
-                        " on the fly.");
+        this._log.debug(
+          "Creating WBO " + JSON.stringify(record.id) + " on the fly."
+        );
         wbo = new ServerWBO(record.id);
         this.insertWBO(wbo);
       }
@@ -451,9 +475,7 @@ ServerCollection.prototype = {
         failed[record.id] = "no wbo configured";
       }
     }
-    return {modified: new_timestamp(),
-            success,
-            failed};
+    return { modified: new_timestamp(), success, failed };
   },
 
   delete(options) {
@@ -532,7 +554,10 @@ ServerCollection.prototype = {
           break;
 
         case "POST":
-          let res = self.post(readBytesFromInputStream(request.bodyInputStream), request);
+          let res = self.post(
+            readBytesFromInputStream(request.bodyInputStream),
+            request
+          );
           body = JSON.stringify(res);
           response.newModified = res.modified;
           break;
@@ -546,16 +571,13 @@ ServerCollection.prototype = {
           response.deleted = deleted;
           break;
       }
-      response.setHeader("X-Weave-Timestamp",
-                         "" + new_timestamp(),
-                         false);
+      response.setHeader("X-Weave-Timestamp", "" + new_timestamp(), false);
 
       // Update the collection timestamp to the appropriate modified time.
       // This is either a value set by the handler, or the current time.
       if (request.method != "GET") {
-        self.timestamp = (response.newModified >= 0) ?
-                         response.newModified :
-                         new_timestamp();
+        self.timestamp =
+          response.newModified >= 0 ? response.newModified : new_timestamp();
       }
       response.setHeader("X-Last-Modified", "" + self.timestamp, false);
 
@@ -563,15 +585,16 @@ ServerCollection.prototype = {
       response.bodyOutputStream.write(body, body.length);
     };
   },
-
 };
 
 /*
  * Test setup helpers.
  */
 function sync_httpd_setup(handlers) {
-  handlers["/1.1/foo/storage/meta/global"]
-      = (new ServerWBO("global", {})).handler();
+  handlers["/1.1/foo/storage/meta/global"] = new ServerWBO(
+    "global",
+    {}
+  ).handler();
   return httpd_setup(handlers);
 }
 
@@ -629,17 +652,17 @@ function track_collections_helper() {
     }
 
     response.setHeader("Content-Type", "application/json");
-    response.setHeader("X-Weave-Timestamp",
-                       "" + new_timestamp(),
-                       false);
+    response.setHeader("X-Weave-Timestamp", "" + new_timestamp(), false);
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.bodyOutputStream.write(body, body.length);
   }
 
-  return {"collections": collections,
-          "handler": info_collections,
-          "with_updated_collection": with_updated_collection,
-          "update_collection": update_collection};
+  return {
+    collections,
+    handler: info_collections,
+    with_updated_collection,
+    update_collection,
+  };
 }
 
 // ===========================================================================//
@@ -676,11 +699,11 @@ var SyncServerCallback = {
  * SyncServerCallback) as input.
  */
 function SyncServer(callback) {
-  this.callback = callback || {__proto__: SyncServerCallback};
-  this.server   = new HttpServer();
-  this.started  = false;
-  this.users    = {};
-  this._log     = Log.repository.getLogger(SYNC_HTTP_LOGGER);
+  this.callback = callback || { __proto__: SyncServerCallback };
+  this.server = new HttpServer();
+  this.started = false;
+  this.users = {};
+  this._log = Log.repository.getLogger(SYNC_HTTP_LOGGER);
 
   // Install our own default handler. This allows us to mess around with the
   // whole URL space.
@@ -688,8 +711,8 @@ function SyncServer(callback) {
   handler._handleDefault = this.handleDefault.bind(this, handler);
 }
 SyncServer.prototype = {
-  server: null,    // HttpServer.
-  users:  null,    // Map of username => {collections, password}.
+  server: null, // HttpServer.
+  users: null, // Map of username => {collections, password}.
 
   /**
    * Start the SyncServer's underlying HTTP server.
@@ -710,8 +733,8 @@ SyncServer.prototype = {
       this.server.start(port);
       let i = this.server.identity;
       this.port = i.primaryPort;
-      this.baseURI = i.primaryScheme + "://" + i.primaryHost + ":" +
-                     i.primaryPort + "/";
+      this.baseURI =
+        i.primaryScheme + "://" + i.primaryHost + ":" + i.primaryPort + "/";
       this.started = true;
       if (cb) {
         cb();
@@ -735,7 +758,9 @@ SyncServer.prototype = {
    */
   stop: function stop(cb) {
     if (!this.started) {
-      this._log.warn("SyncServer: Warning: server not running. Can't stop me now!");
+      this._log.warn(
+        "SyncServer: Warning: server not running. Can't stop me now!"
+      );
       return;
     }
 
@@ -817,8 +842,8 @@ SyncServer.prototype = {
     }
     let userCollections = this.users[username].collections;
     for (let [id, contents] of Object.entries(collections)) {
-      let coll = userCollections[id] ||
-                 this._insertCollection(userCollections, id);
+      let coll =
+        userCollections[id] || this._insertCollection(userCollections, id);
       for (let [wboID, payload] of Object.entries(contents)) {
         coll.insert(wboID, payload);
       }
@@ -873,10 +898,10 @@ SyncServer.prototype = {
    * @return a proxy for the user data stored in this server.
    */
   user: function user(username) {
-    let collection       = this.getCollection.bind(this, username);
+    let collection = this.getCollection.bind(this, username);
     let createCollection = this.createCollection.bind(this, username);
-    let createContents   = this.createContents.bind(this, username);
-    let modified         = function(collectionName) {
+    let createContents = this.createContents.bind(this, username);
+    let modified = function(collectionName) {
       return collection(collectionName).timestamp;
     };
     let deleteCollections = this.deleteCollections.bind(this, username);
@@ -950,7 +975,9 @@ SyncServer.prototype = {
   },
 
   _handleDefault: function _handleDefault(handler, req, resp) {
-    this._log.debug("SyncServer: Handling request: " + req.method + " " + req.path);
+    this._log.debug(
+      "SyncServer: Handling request: " + req.method + " " + req.path
+    );
 
     if (this.callback.onRequest) {
       this.callback.onRequest(req, resp);
@@ -981,7 +1008,15 @@ SyncServer.prototype = {
     // Hand off to the appropriate handler for this path component.
     if (first in this.toplevelHandlers) {
       let newHandler = this.toplevelHandlers[first];
-      return newHandler.call(this, newHandler, req, resp, version, username, rest);
+      return newHandler.call(
+        this,
+        newHandler,
+        req,
+        resp,
+        version,
+        username,
+        rest
+      );
     }
     this._log.debug("SyncServer: Unknown top-level " + first);
     throw HTTP_404;
@@ -996,8 +1031,9 @@ SyncServer.prototype = {
     for (let coll in colls) {
       responseObject[coll] = colls[coll].timestamp;
     }
-    this._log.trace("SyncServer: info/collections returning " +
-                    JSON.stringify(responseObject));
+    this._log.trace(
+      "SyncServer: info/collections returning " + JSON.stringify(responseObject)
+    );
     return responseObject;
   },
 
@@ -1005,15 +1041,23 @@ SyncServer.prototype = {
    * Collection of the handler methods we use for top-level path components.
    */
   toplevelHandlers: {
-    "storage": function handleStorage(handler, req, resp, version, username, rest) {
+    storage: function handleStorage(
+      handler,
+      req,
+      resp,
+      version,
+      username,
+      rest
+    ) {
       let respond = this.respond.bind(this, req, resp);
       if (!rest || !rest.length) {
-        this._log.debug("SyncServer: top-level storage " +
-                        req.method + " request.");
+        this._log.debug(
+          "SyncServer: top-level storage " + req.method + " request."
+        );
 
         // TODO: verify if this is spec-compliant.
         if (req.method != "DELETE") {
-          respond(405, "Method Not Allowed", "[]", {"Allow": "DELETE"});
+          respond(405, "Method Not Allowed", "[]", { Allow: "DELETE" });
           return undefined;
         }
 
@@ -1043,7 +1087,9 @@ SyncServer.prototype = {
           // having a timestamp of 0.
           let collTimestamp = coll ? coll.timestamp : 0;
           if (xius && xius < collTimestamp) {
-            this._log.info(`x-if-unmodified-since mismatch - request wants ${xius} but our collection has ${collTimestamp}`);
+            this._log.info(
+              `x-if-unmodified-since mismatch - request wants ${xius} but our collection has ${collTimestamp}`
+            );
             respond(412, "precondition failed", "precondition failed");
             return true;
           }
@@ -1133,7 +1179,11 @@ SyncServer.prototype = {
             if (xius > 0) {
               let wbo = coll.wbo(wboID);
               if (xius < wbo.modified) {
-                this._log.info(`x-if-unmodified-since mismatch - request wants ${xius} but wbo has ${wbo.modified}`);
+                this._log.info(
+                  `x-if-unmodified-since mismatch - request wants ${xius} but wbo has ${
+                    wbo.modified
+                  }`
+                );
                 respond(412, "precondition failed", "precondition failed");
                 return undefined;
               }
@@ -1142,7 +1192,7 @@ SyncServer.prototype = {
               return resp;
             }
           }
-          // fall through to post.
+        // fall through to post.
         case "POST":
           if (checkXIUSFailure()) {
             return undefined;
@@ -1154,7 +1204,9 @@ SyncServer.prototype = {
           if (wboID) {
             let wbo = coll.wbo(wboID);
             if (!wbo) {
-              this._log.trace("SyncServer: creating WBO " + collection + "/" + wboID);
+              this._log.trace(
+                "SyncServer: creating WBO " + collection + "/" + wboID
+              );
               wbo = coll.insert(wboID);
             }
             // Rather than instantiate each WBO's handler function, do it once
@@ -1169,7 +1221,7 @@ SyncServer.prototype = {
       }
     },
 
-    "info": function handleInfo(handler, req, resp, version, username, rest) {
+    info: function handleInfo(handler, req, resp, version, username, rest) {
       switch (rest) {
         case "collections":
           let body = JSON.stringify(this.infoCollections(username));

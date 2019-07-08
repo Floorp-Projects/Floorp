@@ -2,13 +2,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const PREF_BLOCKLIST_LASTUPDATETIME   = "app.update.lastUpdateTime.blocklist-background-update-timer";
-const PREF_BLOCKLIST_PINGCOUNTTOTAL   = "extensions.blocklist.pingCountTotal";
+const PREF_BLOCKLIST_LASTUPDATETIME =
+  "app.update.lastUpdateTime.blocklist-background-update-timer";
+const PREF_BLOCKLIST_PINGCOUNTTOTAL = "extensions.blocklist.pingCountTotal";
 const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
 
 const SECONDS_IN_DAY = 60 * 60 * 24;
 
-var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+var gTestserver = AddonTestUtils.createHttpServer({ hosts: ["example.com"] });
 
 let resolveQuery;
 gTestserver.registerPathHandler("/", function pathHandler(metadata, response) {
@@ -32,8 +33,10 @@ add_task(async function setup() {
   gTestserver.start(-1);
   gPort = gTestserver.identity.primaryPort;
 
-  Services.prefs.setCharPref("extensions.blocklist.url",
-                             "http://example.com/?%PING_COUNT%&%TOTAL_PING_COUNT%&%DAYS_SINCE_LAST_PING%");
+  Services.prefs.setCharPref(
+    "extensions.blocklist.url",
+    "http://example.com/?%PING_COUNT%&%TOTAL_PING_COUNT%&%DAYS_SINCE_LAST_PING%"
+  );
 });
 
 function getNowInSeconds() {
@@ -49,15 +52,19 @@ add_task(async function test2() {
 });
 
 add_task(async function test3() {
-  Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
-                            (getNowInSeconds() - SECONDS_IN_DAY));
+  Services.prefs.setIntPref(
+    PREF_BLOCKLIST_LASTUPDATETIME,
+    getNowInSeconds() - SECONDS_IN_DAY
+  );
   await checkQuery("2&2&1");
 });
 
 add_task(async function test4() {
   Services.prefs.setIntPref(PREF_BLOCKLIST_PINGCOUNTVERSION, -1);
-  Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
-                            (getNowInSeconds() - (SECONDS_IN_DAY * 2)));
+  Services.prefs.setIntPref(
+    PREF_BLOCKLIST_LASTUPDATETIME,
+    getNowInSeconds() - SECONDS_IN_DAY * 2
+  );
   await checkQuery("1&3&2");
 });
 
@@ -67,46 +74,60 @@ add_task(async function test5() {
 });
 
 add_task(async function test6() {
-  Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
-                            (getNowInSeconds() - (SECONDS_IN_DAY * 3)));
+  Services.prefs.setIntPref(
+    PREF_BLOCKLIST_LASTUPDATETIME,
+    getNowInSeconds() - SECONDS_IN_DAY * 3
+  );
   await checkQuery("2&4&3");
 });
 
 add_task(async function test7() {
   Services.prefs.setIntPref(PREF_BLOCKLIST_PINGCOUNTVERSION, 2147483647);
-  Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
-                            (getNowInSeconds() - (SECONDS_IN_DAY * 4)));
+  Services.prefs.setIntPref(
+    PREF_BLOCKLIST_LASTUPDATETIME,
+    getNowInSeconds() - SECONDS_IN_DAY * 4
+  );
   await checkQuery("2147483647&5&4");
 });
 
 add_task(async function test8() {
-  Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
-                            (getNowInSeconds() - (SECONDS_IN_DAY * 5)));
+  Services.prefs.setIntPref(
+    PREF_BLOCKLIST_LASTUPDATETIME,
+    getNowInSeconds() - SECONDS_IN_DAY * 5
+  );
   await checkQuery("1&6&5");
 });
 
 add_task(async function test9() {
   Services.prefs.setIntPref(PREF_BLOCKLIST_PINGCOUNTTOTAL, 2147483647);
-  Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
-                            (getNowInSeconds() - (SECONDS_IN_DAY * 6)));
+  Services.prefs.setIntPref(
+    PREF_BLOCKLIST_LASTUPDATETIME,
+    getNowInSeconds() - SECONDS_IN_DAY * 6
+  );
   await checkQuery("2&2147483647&6");
 });
 
 add_task(async function test10() {
-  Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
-                            (getNowInSeconds() - (SECONDS_IN_DAY * 7)));
+  Services.prefs.setIntPref(
+    PREF_BLOCKLIST_LASTUPDATETIME,
+    getNowInSeconds() - SECONDS_IN_DAY * 7
+  );
   await checkQuery("3&1&7");
 });
 
 add_task(async function test11() {
   Services.prefs.setIntPref(PREF_BLOCKLIST_PINGCOUNTVERSION, -1);
-  Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
-                            (getNowInSeconds() - (SECONDS_IN_DAY * 8)));
+  Services.prefs.setIntPref(
+    PREF_BLOCKLIST_LASTUPDATETIME,
+    getNowInSeconds() - SECONDS_IN_DAY * 8
+  );
   await checkQuery("1&2&8");
 });
 
 add_task(async function test12() {
-  Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
-                            (getNowInSeconds() - (SECONDS_IN_DAY * 9)));
+  Services.prefs.setIntPref(
+    PREF_BLOCKLIST_LASTUPDATETIME,
+    getNowInSeconds() - SECONDS_IN_DAY * 9
+  );
   await checkQuery("2&3&9");
 });

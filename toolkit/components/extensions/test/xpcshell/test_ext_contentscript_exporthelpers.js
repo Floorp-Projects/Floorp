@@ -1,6 +1,6 @@
 "use strict";
 
-const server = createHttpServer({hosts: ["example.com"]});
+const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));
 
 add_task(async function test_contentscript_exportHelpers() {
@@ -11,16 +11,22 @@ add_task(async function test_contentscript_exportHelpers() {
 
     /* globals exportFunction, precisePi, reportPi */
     let value = 3.14;
-    exportFunction(() => value, window, {defineAs: "precisePi"});
+    exportFunction(() => value, window, { defineAs: "precisePi" });
 
-    browser.test.assertEq("undefined", typeof precisePi,
-                          "exportFunction should export to the page's scope only");
+    browser.test.assertEq(
+      "undefined",
+      typeof precisePi,
+      "exportFunction should export to the page's scope only"
+    );
 
-    browser.test.assertEq("undefined", typeof window.precisePi,
-                          "exportFunction should export to the page's scope only");
+    browser.test.assertEq(
+      "undefined",
+      typeof window.precisePi,
+      "exportFunction should export to the page's scope only"
+    );
 
     let results = [];
-    exportFunction(pi => results.push(pi), window, {defineAs: "reportPi"});
+    exportFunction(pi => results.push(pi), window, { defineAs: "reportPi" });
 
     let s = document.createElement("script");
     s.textContent = `(${function() {
@@ -43,24 +49,35 @@ add_task(async function test_contentscript_exportHelpers() {
     document.documentElement.appendChild(s);
     // Inline script ought to run synchronously.
 
-    browser.test.assertEq(3.14, results[0],
-                          "exportFunction on window should define a global function");
-    browser.test.assertEq(3.14, results[1],
-                          "exportFunction on window should export a property to window.");
+    browser.test.assertEq(
+      3.14,
+      results[0],
+      "exportFunction on window should define a global function"
+    );
+    browser.test.assertEq(
+      3.14,
+      results[1],
+      "exportFunction on window should export a property to window."
+    );
 
-    browser.test.assertEq(2, results.length,
-                          "Expecting the number of results to match the number of method calls");
+    browser.test.assertEq(
+      2,
+      results.length,
+      "Expecting the number of results to match the number of method calls"
+    );
 
     browser.test.notifyPass("export helper test completed");
   }
 
   let extensionData = {
     manifest: {
-      content_scripts: [{
-        js: ["contentscript.js"],
-        matches: ["http://example.com/data/file_sample.html"],
-        run_at: "document_start",
-      }],
+      content_scripts: [
+        {
+          js: ["contentscript.js"],
+          matches: ["http://example.com/data/file_sample.html"],
+          run_at: "document_start",
+        },
+      ],
     },
 
     files: {
@@ -72,7 +89,8 @@ add_task(async function test_contentscript_exportHelpers() {
   await extension.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
-    "http://example.com/data/file_sample.html");
+    "http://example.com/data/file_sample.html"
+  );
 
   await extension.awaitFinish("export helper test completed");
   await contentPage.close();

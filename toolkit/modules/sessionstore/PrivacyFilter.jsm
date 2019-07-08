@@ -1,13 +1,16 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this file,
-* You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
 var EXPORTED_SYMBOLS = ["PrivacyFilter"];
 
-ChromeUtils.defineModuleGetter(this, "PrivacyLevel",
-  "resource://gre/modules/sessionstore/PrivacyLevel.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivacyLevel",
+  "resource://gre/modules/sessionstore/PrivacyLevel.jsm"
+);
 
 /**
  * A module that provides methods to filter various kinds of data collected
@@ -60,8 +63,8 @@ var PrivacyFilter = Object.freeze({
         if (children.length) {
           retval.children = children;
         }
-      // Only copy keys other than "children" if we have a valid URL in
-      // data.url and we thus passed the privacy level check.
+        // Only copy keys other than "children" if we have a valid URL in
+        // data.url and we thus passed the privacy level check.
       } else if (data.url) {
         retval[key] = data[key];
       }
@@ -95,8 +98,9 @@ var PrivacyFilter = Object.freeze({
     }
 
     // Remove private closed windows.
-    browserState._closedWindows =
-      browserState._closedWindows.filter(win => !win.isPrivate);
+    browserState._closedWindows = browserState._closedWindows.filter(
+      win => !win.isPrivate
+    );
 
     // Remove private tabs from all remaining closed windows.
     browserState._closedWindows.forEach(win => this.filterPrivateTabs(win));
@@ -111,7 +115,7 @@ var PrivacyFilter = Object.freeze({
    */
   filterPrivateTabs(winState) {
     // Remove open private tabs.
-    for (let i = winState.tabs.length - 1; i >= 0 ; i--) {
+    for (let i = winState.tabs.length - 1; i >= 0; i--) {
       let tab = winState.tabs[i];
 
       if (tab.isPrivate) {

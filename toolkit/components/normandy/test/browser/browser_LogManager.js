@@ -13,13 +13,13 @@ add_task(async function() {
 
   // Ensure that our loggers have at least one appender.
   LogManager.configure(Log.Level.Warn);
-  const logger  = LogManager.getLogger("test");
+  const logger = LogManager.getLogger("test");
   ok(logger.appenders.length > 0, "Loggers have at least one appender.");
 
   // Ensure our loggers log to the console.
   await new Promise(resolve => {
     SimpleTest.waitForExplicitFinish();
-    SimpleTest.monitorConsole(resolve, [{message: /legend has it/}]);
+    SimpleTest.monitorConsole(resolve, [{ message: /legend has it/ }]);
     logger.warn("legend has it");
     SimpleTest.endMonitorConsole();
   });

@@ -6,7 +6,9 @@
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
 ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm", this);
-const {parseKeyValuePairs} = ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
+const { parseKeyValuePairs } = ChromeUtils.import(
+  "resource://gre/modules/KeyValueParser.jsm"
+);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
@@ -43,9 +45,10 @@ function runMinidumpAnalyzer(minidumpPath, allThreads) {
 
       exe.append(exeName);
 
-      let args = [ minidumpPath ];
-      let process = Cc["@mozilla.org/process/util;1"]
-                      .createInstance(Ci.nsIProcess);
+      let args = [minidumpPath];
+      let process = Cc["@mozilla.org/process/util;1"].createInstance(
+        Ci.nsIProcess
+      );
       process.init(exe);
       process.startHidden = true;
       process.noShell = true;
@@ -89,8 +92,9 @@ function computeMinidumpHash(minidumpPath) {
   return (async function() {
     try {
       let minidumpData = await OS.File.read(minidumpPath);
-      let hasher = Cc["@mozilla.org/security/hash;1"]
-                     .createInstance(Ci.nsICryptoHash);
+      let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
+        Ci.nsICryptoHash
+      );
       hasher.init(hasher.SHA256);
       hasher.update(minidumpData, minidumpData.length);
 
@@ -130,7 +134,7 @@ function processExtraFile(extraPath) {
       // automatically unescaped to two backslashes plus a newline, so we need
       // to re-escape them into '\\n' again so that the fields holding JSON
       // strings are valid.
-      [ "TelemetryEnvironment", "StackTraces" ].forEach(field => {
+      ["TelemetryEnvironment", "StackTraces"].forEach(field => {
         if (field in keyValuePairs) {
           keyValuePairs[field] = keyValuePairs[field].replace(/\n/g, "n");
         }
@@ -155,60 +159,58 @@ this.CrashService = function() {
 
 CrashService.prototype = Object.freeze({
   classID: Components.ID("{92668367-1b17-4190-86b2-1061b2179744}"),
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsICrashService,
-    Ci.nsIObserver,
-  ]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsICrashService, Ci.nsIObserver]),
 
   async addCrash(processType, crashType, id) {
     switch (processType) {
-    case Ci.nsICrashService.PROCESS_TYPE_MAIN:
-      processType = Services.crashmanager.PROCESS_TYPE_MAIN;
-      break;
-    case Ci.nsICrashService.PROCESS_TYPE_CONTENT:
-      processType = Services.crashmanager.PROCESS_TYPE_CONTENT;
-      break;
-    case Ci.nsICrashService.PROCESS_TYPE_PLUGIN:
-      processType = Services.crashmanager.PROCESS_TYPE_PLUGIN;
-      break;
-    case Ci.nsICrashService.PROCESS_TYPE_GMPLUGIN:
-      processType = Services.crashmanager.PROCESS_TYPE_GMPLUGIN;
-      break;
-    case Ci.nsICrashService.PROCESS_TYPE_GPU:
-      processType = Services.crashmanager.PROCESS_TYPE_GPU;
-      break;
-    case Ci.nsICrashService.PROCESS_TYPE_VR:
-      processType = Services.crashmanager.PROCESS_TYPE_VR;
-      break;
-    case Ci.nsICrashService.PROCESS_TYPE_RDD:
-      processType = Services.crashmanager.PROCESS_TYPE_RDD;
-      break;
-    case Ci.nsICrashService.PROCESS_TYPE_SOCKET:
-      processType = Services.crashmanager.PROCESS_TYPE_SOCKET;
-      break;
-    case Ci.nsICrashService.PROCESS_TYPE_IPDLUNITTEST:
-      // We'll never send crash reports for this type of process.
-      return;
-    default:
-      throw new Error("Unrecognized PROCESS_TYPE: " + processType);
+      case Ci.nsICrashService.PROCESS_TYPE_MAIN:
+        processType = Services.crashmanager.PROCESS_TYPE_MAIN;
+        break;
+      case Ci.nsICrashService.PROCESS_TYPE_CONTENT:
+        processType = Services.crashmanager.PROCESS_TYPE_CONTENT;
+        break;
+      case Ci.nsICrashService.PROCESS_TYPE_PLUGIN:
+        processType = Services.crashmanager.PROCESS_TYPE_PLUGIN;
+        break;
+      case Ci.nsICrashService.PROCESS_TYPE_GMPLUGIN:
+        processType = Services.crashmanager.PROCESS_TYPE_GMPLUGIN;
+        break;
+      case Ci.nsICrashService.PROCESS_TYPE_GPU:
+        processType = Services.crashmanager.PROCESS_TYPE_GPU;
+        break;
+      case Ci.nsICrashService.PROCESS_TYPE_VR:
+        processType = Services.crashmanager.PROCESS_TYPE_VR;
+        break;
+      case Ci.nsICrashService.PROCESS_TYPE_RDD:
+        processType = Services.crashmanager.PROCESS_TYPE_RDD;
+        break;
+      case Ci.nsICrashService.PROCESS_TYPE_SOCKET:
+        processType = Services.crashmanager.PROCESS_TYPE_SOCKET;
+        break;
+      case Ci.nsICrashService.PROCESS_TYPE_IPDLUNITTEST:
+        // We'll never send crash reports for this type of process.
+        return;
+      default:
+        throw new Error("Unrecognized PROCESS_TYPE: " + processType);
     }
 
     let allThreads = false;
 
     switch (crashType) {
-    case Ci.nsICrashService.CRASH_TYPE_CRASH:
-      crashType = Services.crashmanager.CRASH_TYPE_CRASH;
-      break;
-    case Ci.nsICrashService.CRASH_TYPE_HANG:
-      crashType = Services.crashmanager.CRASH_TYPE_HANG;
-      allThreads = true;
-      break;
-    default:
-      throw new Error("Unrecognized CRASH_TYPE: " + crashType);
+      case Ci.nsICrashService.CRASH_TYPE_CRASH:
+        crashType = Services.crashmanager.CRASH_TYPE_CRASH;
+        break;
+      case Ci.nsICrashService.CRASH_TYPE_HANG:
+        crashType = Services.crashmanager.CRASH_TYPE_HANG;
+        allThreads = true;
+        break;
+      default:
+        throw new Error("Unrecognized CRASH_TYPE: " + crashType);
     }
 
-    let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"]
-               .getService(Ci.nsICrashReporter);
+    let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
+      Ci.nsICrashReporter
+    );
     let minidumpPath = cr.getMinidumpForID(id).path;
     let extraPath = cr.getExtraFileForID(id).path;
     let metadata = {};
@@ -227,11 +229,17 @@ CrashService.prototype = Object.freeze({
       metadata.MinidumpSha256Hash = hash;
     }
 
-    let blocker = Services.crashmanager.addCrash(processType, crashType, id,
-                                                 new Date(), metadata);
+    let blocker = Services.crashmanager.addCrash(
+      processType,
+      crashType,
+      id,
+      new Date(),
+      metadata
+    );
 
     AsyncShutdown.profileBeforeChange.addBlocker(
-      "CrashService waiting for content crash ping to be sent", blocker
+      "CrashService waiting for content crash ping to be sent",
+      blocker
     );
 
     blocker.then(AsyncShutdown.profileBeforeChange.removeBlocker(blocker));
@@ -247,7 +255,7 @@ CrashService.prototype = Object.freeze({
         break;
       case "quit-application":
         gQuitting = true;
-        gRunningProcesses.forEach((process) => {
+        gRunningProcesses.forEach(process => {
           try {
             process.kill();
           } catch (e) {

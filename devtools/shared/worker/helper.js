@@ -14,7 +14,7 @@
   } else {
     root.workerHelper = factory();
   }
-}(this, function() {
+})(this, function() {
   /**
    * This file is to only be included by ChromeWorkers. This exposes
    * a `createTask` function to workers to register tasks for communication
@@ -90,7 +90,10 @@
       function handleResponse(response) {
         // If a promise
         if (response && typeof response.then === "function") {
-          response.then(val => self.postMessage({ id, response: val }), handleError);
+          response.then(
+            val => self.postMessage({ id, response: val }),
+            handleError
+          );
         } else if (response instanceof Error) {
           // If an error object
           handleError(response);
@@ -130,4 +133,4 @@
   }
 
   return { createTask: createTask };
-}));
+});

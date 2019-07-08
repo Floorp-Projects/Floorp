@@ -3,14 +3,21 @@
 
 // Tests find bar auto-close behavior
 
-const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com");
+const TEST_PATH = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  "https://example.com"
+);
 
 add_task(async function findbar_test() {
   let newTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   gBrowser.selectedTab = newTab;
 
   let url = TEST_PATH + "test_bug628179.html";
-  let promise = BrowserTestUtils.browserLoaded(newTab.linkedBrowser, false, url);
+  let promise = BrowserTestUtils.browserLoaded(
+    newTab.linkedBrowser,
+    false,
+    url
+  );
   BrowserTestUtils.loadURI(newTab.linkedBrowser, url);
   await promise;
 
@@ -24,10 +31,15 @@ add_task(async function findbar_test() {
     await awaitLoad;
   });
 
-  ok(!gFindBar.hidden, "the Find bar isn't hidden after the location of a " +
-     "subdocument changes");
+  ok(
+    !gFindBar.hidden,
+    "the Find bar isn't hidden after the location of a subdocument changes"
+  );
 
-  let findBarClosePromise = BrowserTestUtils.waitForEvent(gBrowser, "findbarclose");
+  let findBarClosePromise = BrowserTestUtils.waitForEvent(
+    gBrowser,
+    "findbarclose"
+  );
   gFindBar.close();
   await findBarClosePromise;
 

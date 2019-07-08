@@ -2,15 +2,25 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "SessionStore",
-                               "resource:///modules/sessionstore/SessionStore.jsm");
-ChromeUtils.defineModuleGetter(this, "TabStateFlusher",
-                               "resource:///modules/sessionstore/TabStateFlusher.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "SessionStore",
+  "resource:///modules/sessionstore/SessionStore.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TabStateFlusher",
+  "resource:///modules/sessionstore/TabStateFlusher.jsm"
+);
 
-async function testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected) {
+async function testTabsUpdateURL(
+  existentTabURL,
+  tabsUpdateURL,
+  isErrorExpected
+) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
 
     files: {
@@ -29,22 +39,37 @@ async function testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected)
     background: function() {
       browser.test.sendMessage("ready", browser.runtime.getURL("tab.html"));
 
-      browser.test.onMessage.addListener(async (msg, tabsUpdateURL, isErrorExpected) => {
-        let tabs = await browser.tabs.query({lastFocusedWindow: true});
+      browser.test.onMessage.addListener(
+        async (msg, tabsUpdateURL, isErrorExpected) => {
+          let tabs = await browser.tabs.query({ lastFocusedWindow: true });
 
-        try {
-          let tab = await browser.tabs.update(tabs[1].id, {url: tabsUpdateURL});
+          try {
+            let tab = await browser.tabs.update(tabs[1].id, {
+              url: tabsUpdateURL,
+            });
 
-          browser.test.assertFalse(isErrorExpected, `tabs.update with URL ${tabsUpdateURL} should be rejected`);
-          browser.test.assertTrue(tab, "on success the tab should be defined");
-        } catch (error) {
-          browser.test.assertTrue(isErrorExpected, `tabs.update with URL ${tabsUpdateURL} should not be rejected`);
-          browser.test.assertTrue(/^Illegal URL/.test(error.message),
-                                  "tabs.update should be rejected with the expected error message");
+            browser.test.assertFalse(
+              isErrorExpected,
+              `tabs.update with URL ${tabsUpdateURL} should be rejected`
+            );
+            browser.test.assertTrue(
+              tab,
+              "on success the tab should be defined"
+            );
+          } catch (error) {
+            browser.test.assertTrue(
+              isErrorExpected,
+              `tabs.update with URL ${tabsUpdateURL} should not be rejected`
+            );
+            browser.test.assertTrue(
+              /^Illegal URL/.test(error.message),
+              "tabs.update should be rejected with the expected error message"
+            );
+          }
+
+          browser.test.sendMessage("done");
         }
-
-        browser.test.sendMessage("done");
-      });
+      );
     },
   });
 
@@ -58,7 +83,10 @@ async function testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected)
 
   info(`tab.update URL "${tabsUpdateURL}" on tab with URL "${existentTabURL}"`);
 
-  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, existentTabURL);
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    existentTabURL
+  );
 
   extension.sendMessage("start", tabsUpdateURL, isErrorExpected);
   await extension.awaitMessage("done");
@@ -104,10 +132,11 @@ add_task(async function() {
     },
   ];
 
-  let testCases = checkList
-        .map((check) => Object.assign({}, check, {existentTabURL: "about:blank"}));
+  let testCases = checkList.map(check =>
+    Object.assign({}, check, { existentTabURL: "about:blank" })
+  );
 
-  for (let {existentTabURL, tabsUpdateURL, isErrorExpected} of testCases) {
+  for (let { existentTabURL, tabsUpdateURL, isErrorExpected } of testCases) {
     await testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected);
   }
 
@@ -119,7 +148,7 @@ add_task(async function test_update_reload() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs", "history"],
+      permissions: ["tabs", "history"],
     },
 
     background() {
@@ -146,39 +175,60 @@ add_task(async function test_update_reload() {
   }
 
   await extension.startup();
-  extension.sendMessage("query", {url: URL});
+  extension.sendMessage("query", { url: URL });
   let tabs = await extension.awaitMessage("result");
   let tabId = tabs[0].id;
 
   let history = await getTabHistory();
-  is(history.entries.length, 1,
-     "Tab history contains the expected number of entries.");
-  is(history.entries[0].url, URL,
-     `Tab history contains the expected entry: URL.`);
+  is(
+    history.entries.length,
+    1,
+    "Tab history contains the expected number of entries."
+  );
+  is(
+    history.entries[0].url,
+    URL,
+    `Tab history contains the expected entry: URL.`
+  );
 
-  extension.sendMessage("update", tabId, {url: `${URL}1/`});
+  extension.sendMessage("update", tabId, { url: `${URL}1/` });
   await Promise.all([
     extension.awaitMessage("result"),
     extension.awaitMessage("historyAdded"),
   ]);
 
   history = await getTabHistory();
-  is(history.entries.length, 2,
-     "Tab history contains the expected number of entries.");
-  is(history.entries[1].url, `${URL}1/`,
-     `Tab history contains the expected entry: ${URL}1/.`);
+  is(
+    history.entries.length,
+    2,
+    "Tab history contains the expected number of entries."
+  );
+  is(
+    history.entries[1].url,
+    `${URL}1/`,
+    `Tab history contains the expected entry: ${URL}1/.`
+  );
 
-  extension.sendMessage("update", tabId, {url: `${URL}2/`, loadReplace: true});
+  extension.sendMessage("update", tabId, {
+    url: `${URL}2/`,
+    loadReplace: true,
+  });
   await Promise.all([
     extension.awaitMessage("result"),
     extension.awaitMessage("historyAdded"),
   ]);
 
   history = await getTabHistory();
-  is(history.entries.length, 2,
-     "Tab history contains the expected number of entries.");
-  is(history.entries[1].url, `${URL}2/`,
-     `Tab history contains the expected entry: ${URL}2/.`);
+  is(
+    history.entries.length,
+    2,
+    "Tab history contains the expected number of entries."
+  );
+  is(
+    history.entries[1].url,
+    `${URL}2/`,
+    `Tab history contains the expected entry: ${URL}2/.`
+  );
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(win);

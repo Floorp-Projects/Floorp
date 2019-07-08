@@ -25,6 +25,6 @@ ErrorActor.prototype = {
 };
 
 ErrorActor.prototype.requestTypes = {
-  "error": ErrorActor.prototype.onError,
+  error: ErrorActor.prototype.onError,
 };
 exports.ErrorActor = ErrorActor;

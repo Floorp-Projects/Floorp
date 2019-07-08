@@ -6,22 +6,24 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewContentBlocking"];
 
-const {GeckoViewModule} = ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
+const { GeckoViewModule } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewModule.jsm"
+);
 
 class GeckoViewContentBlocking extends GeckoViewModule {
   onEnable() {
-    debug `onEnable`;
+    debug`onEnable`;
 
     const flags = Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING;
-    this.progressFilter =
-      Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
-      .createInstance(Ci.nsIWebProgress);
+    this.progressFilter = Cc[
+      "@mozilla.org/appshell/component/browser-status-filter;1"
+    ].createInstance(Ci.nsIWebProgress);
     this.progressFilter.addProgressListener(this, flags);
     this.browser.addProgressListener(this.progressFilter, flags);
   }
 
   onDisable() {
-    debug `onDisable`;
+    debug`onDisable`;
 
     if (!this.progressFilter) {
       return;
@@ -31,7 +33,7 @@ class GeckoViewContentBlocking extends GeckoViewModule {
   }
 
   onContentBlockingEvent(aWebProgress, aRequest, aEvent) {
-    debug `onContentBlockingEvent`;
+    debug`onContentBlockingEvent`;
 
     if (!aRequest || !(aRequest instanceof Ci.nsIClassifiedChannel)) {
       return;
@@ -55,4 +57,7 @@ class GeckoViewContentBlocking extends GeckoViewModule {
   }
 }
 
-const {debug, warn} = GeckoViewContentBlocking.initLogging("GeckoViewContentBlocking"); // eslint-disable-line no-unused-vars
+// eslint-disable-next-line no-unused-vars
+const { debug, warn } = GeckoViewContentBlocking.initLogging(
+  "GeckoViewContentBlocking"
+);

@@ -17,7 +17,9 @@ add_task(async function() {
 
   const { tab, document } = await openAboutDebugging("workers");
 
-  const warningSection = document.querySelector(".service-worker-multi-process");
+  const warningSection = document.querySelector(
+    ".service-worker-multi-process"
+  );
   const img = warningSection.querySelector(".warning");
   ok(img, "warning message is rendered");
 
@@ -27,8 +29,10 @@ add_task(async function() {
 
   info("Wait for service worker to appear in the list");
   // Check that the service worker appears in the UI
-  const serviceWorkerContainer =
-    await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
+  const serviceWorkerContainer = await waitUntilServiceWorkerContainer(
+    SERVICE_WORKER,
+    document
+  );
 
   info("Wait until the service worker is running and the Debug button appears");
   await waitUntil(() => {

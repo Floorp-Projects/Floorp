@@ -6,9 +6,9 @@
 var testGenerator = testSteps();
 
 function* testSteps() {
-  const dbName = this.window ?
-                 window.location.pathname :
-                 "test_objectStore_openKeyCursor";
+  const dbName = this.window
+    ? window.location.pathname
+    : "test_objectStore_openKeyCursor";
   const dbVersion = 1;
   const objectStoreName = "foo";
   const keyCount = 100;
@@ -34,8 +34,9 @@ function* testSteps() {
   event = yield undefined;
 
   db = event.target.result;
-  objectStore = db.transaction(objectStoreName, "readwrite")
-                  .objectStore(objectStoreName);
+  objectStore = db
+    .transaction(objectStoreName, "readwrite")
+    .objectStore(objectStoreName);
 
   info("Getting all keys");
   objectStore.getAllKeys().onsuccess = grabEventAndContinueHandler;

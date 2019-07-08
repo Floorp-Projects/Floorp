@@ -19,11 +19,11 @@ window.onload = function() {
   navigateByForm("child2_child0");
   navigateByHyperlink("child3_child0");
 
-  xpcWaitForFinishedFrames(function() {
-    isNavigated(frames[0].frames[0], "Should be able to navigate off-domain grandchild by setting location.");
-    isNavigated(frames[1].frames[0], "Should be able to navigate off-domain grandchild by calling window.open.");
-    isNavigated(frames[2].frames[0], "Should be able to navigate off-domain grandchild by submitting form.");
-    isNavigated(frames[3].frames[0], "Should be able to navigate off-domain grandchild by targeted hyperlink.");
+  xpcWaitForFinishedFrames(async function() {
+    await isNavigated(frames[0].frames[0], "Should be able to navigate off-domain grandchild by setting location.");
+    await isNavigated(frames[1].frames[0], "Should be able to navigate off-domain grandchild by calling window.open.");
+    await isNavigated(frames[2].frames[0], "Should be able to navigate off-domain grandchild by submitting form.");
+    await isNavigated(frames[3].frames[0], "Should be able to navigate off-domain grandchild by targeted hyperlink.");
 
     xpcCleanupWindows();
     SimpleTest.finish();

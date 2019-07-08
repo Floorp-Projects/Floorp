@@ -8,7 +8,11 @@ function waitForNewWindow() {
         function downloadOnLoad() {
           domwindow.removeEventListener("load", downloadOnLoad, true);
 
-          is(domwindow.document.location.href, "chrome://mozapps/content/downloads/unknownContentType.xul", "Download page appeared");
+          is(
+            domwindow.document.location.href,
+            "chrome://mozapps/content/downloads/unknownContentType.xul",
+            "Download page appeared"
+          );
           resolve(domwindow);
         }
 
@@ -34,11 +38,18 @@ async function testLink(link, name) {
   let win = await winPromise;
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
-    Assert.equal(content.document.getElementById("unload-flag").textContent,
-      "Okay", "beforeunload shouldn't have fired");
+    Assert.equal(
+      content.document.getElementById("unload-flag").textContent,
+      "Okay",
+      "beforeunload shouldn't have fired"
+    );
   });
 
-  is(win.document.getElementById("location").value, name, "file name should match");
+  is(
+    win.document.getElementById("location").value,
+    name,
+    "file name should match"
+  );
 
   await BrowserTestUtils.closeWindow(win);
 }
@@ -76,6 +87,10 @@ add_task(async function() {
   requestLongerTimeout(3);
   waitForExplicitFinish();
 
-  await runTest("http://mochi.test:8888/browser/browser/base/content/test/general/download_page.html");
-  await runTest("https://example.com:443/browser/browser/base/content/test/general/download_page.html");
+  await runTest(
+    "http://mochi.test:8888/browser/browser/base/content/test/general/download_page.html"
+  );
+  await runTest(
+    "https://example.com:443/browser/browser/base/content/test/general/download_page.html"
+  );
 });

@@ -9,9 +9,14 @@ requestLongerTimeout(2);
  * Test different text filtering flags
  */
 const REQUESTS = [
-  { url: "sjs_content-type-test-server.sjs?fmt=html&res=undefined&text=Sample" },
-  { url: "sjs_content-type-test-server.sjs?fmt=html&res=undefined&text=Sample" +
-         "&cookies=1" },
+  {
+    url: "sjs_content-type-test-server.sjs?fmt=html&res=undefined&text=Sample",
+  },
+  {
+    url:
+      "sjs_content-type-test-server.sjs?fmt=html&res=undefined&text=Sample" +
+      "&cookies=1",
+  },
   { url: "sjs_content-type-test-server.sjs?fmt=css&text=sample" },
   { url: "sjs_content-type-test-server.sjs?fmt=js&text=sample" },
   { url: "sjs_content-type-test-server.sjs?fmt=font" },
@@ -140,10 +145,9 @@ add_task(async function() {
   const { monitor } = await initNetMonitor(FILTERING_URL);
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getDisplayedRequests,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getDisplayedRequests, getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -378,10 +382,16 @@ add_task(async function() {
       return visibleItems.size === visibility.filter(e => e).length;
     });
 
-    is(items.size, visibility.length,
-      "There should be a specific amount of items in the requests menu.");
-    is(visibleItems.size, visibility.filter(e => e).length,
-      "There should be a specific amount of visible items in the requests menu.");
+    is(
+      items.size,
+      visibility.length,
+      "There should be a specific amount of items in the requests menu."
+    );
+    is(
+      visibleItems.size,
+      visibility.filter(e => e).length,
+      "There should be a specific amount of visible items in the requests menu."
+    );
 
     for (let i = 0; i < visibility.length; i++) {
       const itemId = items.get(i).id;
@@ -396,8 +406,11 @@ add_task(async function() {
         return isThere === shouldBeVisible;
       });
 
-      is(isThere, shouldBeVisible,
-        `The item at index ${i} has visibility=${shouldBeVisible}`);
+      is(
+        isThere,
+        shouldBeVisible,
+        `The item at index ${i} has visibility=${shouldBeVisible}`
+      );
     }
 
     // Fake mouse over the status column only after the list is fully updated

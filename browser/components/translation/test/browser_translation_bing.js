@@ -9,8 +9,12 @@
 const kClientIdPref = "browser.translation.bing.clientIdOverride";
 const kClientSecretPref = "browser.translation.bing.apiKeyOverride";
 
-const {BingTranslator} = ChromeUtils.import("resource:///modules/translation/BingTranslator.jsm");
-const {TranslationDocument} = ChromeUtils.import("resource:///modules/translation/TranslationDocument.jsm");
+const { BingTranslator } = ChromeUtils.import(
+  "resource:///modules/translation/BingTranslator.jsm"
+);
+const { TranslationDocument } = ChromeUtils.import(
+  "resource:///modules/translation/TranslationDocument.jsm"
+);
 
 add_task(async function setup() {
   Services.prefs.setCharPref(kClientIdPref, "testClient");
@@ -39,12 +43,19 @@ add_task(async function test_bing_translation() {
 
   await ContentTask.spawn(browser, null, async function() {
     // eslint-disable-next-line no-shadow
-    const {BingTranslator} = ChromeUtils.import("resource:///modules/translation/BingTranslator.jsm");
+    const { BingTranslator } = ChromeUtils.import(
+      "resource:///modules/translation/BingTranslator.jsm"
+    );
     // eslint-disable-next-line no-shadow
-    const {TranslationDocument} = ChromeUtils.import("resource:///modules/translation/TranslationDocument.jsm");
+    const { TranslationDocument } = ChromeUtils.import(
+      "resource:///modules/translation/TranslationDocument.jsm"
+    );
 
     let client = new BingTranslator(
-      new TranslationDocument(content.document), "fr", "en");
+      new TranslationDocument(content.document),
+      "fr",
+      "en"
+    );
     let result = await client.translate();
 
     // XXXmikedeboer; here you would continue the test/ content inspection.
@@ -75,12 +86,19 @@ add_task(async function test_handling_out_of_valid_key_error() {
 
   await ContentTask.spawn(browser, null, async function() {
     // eslint-disable-next-line no-shadow
-    const {BingTranslator} = ChromeUtils.import("resource:///modules/translation/BingTranslator.jsm");
+    const { BingTranslator } = ChromeUtils.import(
+      "resource:///modules/translation/BingTranslator.jsm"
+    );
     // eslint-disable-next-line no-shadow
-    const {TranslationDocument} = ChromeUtils.import("resource:///modules/translation/TranslationDocument.jsm");
+    const { TranslationDocument } = ChromeUtils.import(
+      "resource:///modules/translation/TranslationDocument.jsm"
+    );
 
     let client = new BingTranslator(
-      new TranslationDocument(content.document), "fr", "en");
+      new TranslationDocument(content.document),
+      "fr",
+      "en"
+    );
     client._resetToken();
     try {
       await client.translate();
@@ -90,7 +108,10 @@ add_task(async function test_handling_out_of_valid_key_error() {
     client._resetToken();
 
     // Checking if the client detected service and unavailable.
-    Assert.ok(client._serviceUnavailable, "Service should be detected unavailable.");
+    Assert.ok(
+      client._serviceUnavailable,
+      "Service should be detected unavailable."
+    );
   });
 
   // Cleaning up.
@@ -106,11 +127,15 @@ add_task(async function test_handling_out_of_valid_key_error() {
  */
 function constructFixtureURL(filename) {
   // Deduce the Mochitest server address in use from a pref that was pre-processed.
-  let server = Services.prefs.getCharPref("browser.translation.bing.authURL")
-                             .replace("http://", "");
+  let server = Services.prefs
+    .getCharPref("browser.translation.bing.authURL")
+    .replace("http://", "");
   server = server.substr(0, server.indexOf("/"));
-  let url = "http://" + server +
-    "/browser/browser/components/translation/test/fixtures/" + filename;
+  let url =
+    "http://" +
+    server +
+    "/browser/browser/components/translation/test/fixtures/" +
+    filename;
   return url;
 }
 
@@ -121,9 +146,13 @@ function constructFixtureURL(filename) {
  */
 function promiseTestPageLoad(url) {
   return new Promise(resolve => {
-    let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
+    let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url));
     let browser = gBrowser.selectedBrowser;
-    BrowserTestUtils.browserLoaded(browser, false, (loadurl) => loadurl != "about:blank").then(() => {
+    BrowserTestUtils.browserLoaded(
+      browser,
+      false,
+      loadurl => loadurl != "about:blank"
+    ).then(() => {
       info("Page loaded: " + browser.currentURI.spec);
       resolve(tab);
     });

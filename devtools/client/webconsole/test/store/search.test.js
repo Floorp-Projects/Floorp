@@ -6,7 +6,9 @@
 const expect = require("expect");
 
 const actions = require("devtools/client/webconsole/actions/index");
-const { getVisibleMessages } = require("devtools/client/webconsole/selectors/messages");
+const {
+  getVisibleMessages,
+} = require("devtools/client/webconsole/selectors/messages");
 const { setupStore } = require("devtools/client/webconsole/test/helpers");
 
 describe("Searching in grips", () => {
@@ -74,7 +76,9 @@ describe("Searching in grips", () => {
     });
 
     it("do not match on full url", () => {
-      store.dispatch(actions.filterTextSet("http://example.com/browser/devtools"));
+      store.dispatch(
+        actions.filterTextSet("http://example.com/browser/devtools")
+      );
       expect(getVisibleMessages(store.getState()).length).toEqual(0);
     });
   });

@@ -5,11 +5,10 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const invalidOrigin = {
     url: "ftp://ftp.invalid.origin",
-    path: "storage/default/ftp+++ftp.invalid.origin"
+    path: "storage/default/ftp+++ftp.invalid.origin",
   };
 
   info("Persisting an invalid origin");
@@ -19,8 +18,10 @@ function* testSteps()
   let request = persist(invalidPrincipal, continueToNextStepSync);
   yield undefined;
 
-  ok(request.resultCode === NS_ERROR_FAILURE,
-     "Persist() failed because of the invalid origin");
+  ok(
+    request.resultCode === NS_ERROR_FAILURE,
+    "Persist() failed because of the invalid origin"
+  );
   ok(request.result === null, "The request result is null");
 
   let originDir = getRelativeFile(invalidOrigin.path);
@@ -31,8 +32,7 @@ function* testSteps()
   yield undefined;
 
   ok(request.resultCode === NS_OK, "Persisted() succeeded");
-  ok(!request.result,
-     "The origin isn't persisted since the operation failed");
+  ok(!request.result, "The origin isn't persisted since the operation failed");
 
   finishTest();
 }

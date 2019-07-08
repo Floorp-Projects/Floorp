@@ -12,7 +12,9 @@ const TOOLKIT_MINVERSION = "42.0a1";
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42.0a2", "42.0a2");
 
-const {AddonUpdateChecker} = ChromeUtils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm");
+const { AddonUpdateChecker } = ChromeUtils.import(
+  "resource://gre/modules/addons/AddonUpdateChecker.jsm"
+);
 
 let testserver = createHttpServer();
 gPort = testserver.identity.primaryPort;
@@ -34,7 +36,6 @@ function serveManifest(request, response) {
 const extensionsDir = gProfD.clone();
 extensionsDir.append("extensions");
 
-
 function checkUpdates(aData) {
   // Registers JSON update manifest for it with the testing server,
   // checks for updates, and yields the list of updates on
@@ -46,19 +47,20 @@ function checkUpdates(aData) {
   let updateUrl = `http://localhost:${gPort}${path}`;
 
   let addonData = {};
-  if ("updates" in aData)
+  if ("updates" in aData) {
     addonData.updates = aData.updates;
+  }
 
   let manifestJSON = {
-    "addons": {
+    addons: {
       [aData.id]: addonData,
     },
   };
 
-  mapManifest(path.replace(/\?.*/, ""),
-              { data: JSON.stringify(manifestJSON),
-                contentType: aData.contentType || "application/json" });
-
+  mapManifest(path.replace(/\?.*/, ""), {
+    data: JSON.stringify(manifestJSON),
+    contentType: aData.contentType || "application/json",
+  });
 
   return new Promise((resolve, reject) => {
     AddonUpdateChecker.checkForUpdates(aData.id, updateUrl, {
@@ -71,7 +73,6 @@ function checkUpdates(aData) {
   });
 }
 
-
 add_task(async function test_default_values() {
   // Checks that the appropriate defaults are used for omitted values.
 
@@ -80,9 +81,11 @@ add_task(async function test_default_values() {
   let updates = await checkUpdates({
     id: "updatecheck-defaults@tests.mozilla.org",
     version: "0.1",
-    updates: [{
-      version: "0.2",
-    }],
+    updates: [
+      {
+        version: "0.2",
+      },
+    ],
   });
 
   equal(updates.length, 1);
@@ -107,10 +110,12 @@ add_task(async function test_default_values() {
   updates = await checkUpdates({
     id: "updatecheck-defaults@tests.mozilla.org",
     version: "0.1",
-    updates: [{
-      version: "0.2",
-      applications: { "foo": {} },
-    }],
+    updates: [
+      {
+        version: "0.2",
+        applications: { foo: {} },
+      },
+    ],
   });
 
   equal(updates.length, 0);
@@ -124,7 +129,6 @@ add_task(async function test_default_values() {
   equal(updates.length, 0);
 });
 
-
 add_task(async function test_explicit_values() {
   // Checks that the appropriate explicit values are used when
   // provided.
@@ -132,18 +136,20 @@ add_task(async function test_explicit_values() {
   let updates = await checkUpdates({
     id: "updatecheck-explicit@tests.mozilla.org",
     version: "0.1",
-    updates: [{
-      version: "0.2",
-      update_link: "https://example.com/foo.xpi",
-      update_hash: "sha256:0",
-      update_info_url: "https://example.com/update_info.html",
-      applications: {
-        gecko: {
-          strict_min_version: "42.0a2.xpcshell",
-          strict_max_version: "43.xpcshell",
+    updates: [
+      {
+        version: "0.2",
+        update_link: "https://example.com/foo.xpi",
+        update_hash: "sha256:0",
+        update_info_url: "https://example.com/update_info.html",
+        applications: {
+          gecko: {
+            strict_min_version: "42.0a2.xpcshell",
+            strict_max_version: "43.xpcshell",
+          },
         },
       },
-    }],
+    ],
   });
 
   equal(updates.length, 1);
@@ -160,20 +166,18 @@ add_task(async function test_explicit_values() {
   equal(update.strictCompatibility, true, "inferred strictCompatibility flag");
   equal(update.updateURL, "https://example.com/foo.xpi", "updateURL");
   equal(update.updateHash, "sha256:0", "updateHash");
-  equal(update.updateInfoURL, "https://example.com/update_info.html", "updateInfoURL");
+  equal(
+    update.updateInfoURL,
+    "https://example.com/update_info.html",
+    "updateInfoURL"
+  );
 });
-
 
 add_task(async function test_secure_hashes() {
   // Checks that only secure hash functions are accepted for
   // non-secure update URLs.
 
-  let hashFunctions = ["sha512",
-                       "sha256",
-                       "sha1",
-                       "md5",
-                       "md4",
-                       "xxx"];
+  let hashFunctions = ["sha512", "sha256", "sha1", "md5", "md4", "xxx"];
 
   let updateItems = hashFunctions.map((hash, idx) => ({
     version: `0.${idx}`,
@@ -200,10 +204,17 @@ add_task(async function test_secure_hashes() {
   ok(updates[1].updateHash.startsWith("sha256:"), "sha256 hash is present");
   ok(updates[1].updateURL);
 
-  messages = messages.filter(msg => /Update link.*not secure.*strong enough hash \(needs to be sha256 or sha512\)/.test(msg.message));
-  equal(messages.length, hashFunctions.length - 2, "insecure hashes generated the expected warning");
+  messages = messages.filter(msg =>
+    /Update link.*not secure.*strong enough hash \(needs to be sha256 or sha512\)/.test(
+      msg.message
+    )
+  );
+  equal(
+    messages.length,
+    hashFunctions.length - 2,
+    "insecure hashes generated the expected warning"
+  );
 });
-
 
 add_task(async function test_strict_compat() {
   // Checks that strict compatibility is enabled for strict max
@@ -216,15 +227,24 @@ add_task(async function test_strict_compat() {
       id: "updatecheck-strict@tests.mozilla.org",
       version: "0.1",
       updates: [
-        { version: "0.2",
-          applications: { gecko: { strict_max_version: "*" } } },
-        { version: "0.3",
-          applications: { gecko: { strict_max_version: "43" } } },
-        { version: "0.4",
-          applications: { gecko: { advisory_max_version: "43" } } },
-        { version: "0.5",
-          applications: { gecko: { advisory_max_version: "43",
-                                   strict_max_version: "44" } } },
+        {
+          version: "0.2",
+          applications: { gecko: { strict_max_version: "*" } },
+        },
+        {
+          version: "0.3",
+          applications: { gecko: { strict_max_version: "43" } },
+        },
+        {
+          version: "0.4",
+          applications: { gecko: { advisory_max_version: "43" } },
+        },
+        {
+          version: "0.5",
+          applications: {
+            gecko: { advisory_max_version: "43", strict_max_version: "44" },
+          },
+        },
       ],
     });
   });
@@ -243,10 +263,17 @@ add_task(async function test_strict_compat() {
   equal(updates[3].targetApplications[0].maxVersion, "44");
   equal(updates[3].strictCompatibility, true);
 
-  messages = messages.filter(msg => /Ignoring 'advisory_max_version'.*'strict_max_version' also present/.test(msg.message));
-  equal(messages.length, 1, "mix of advisory_max_version and strict_max_version generated the expected warning");
+  messages = messages.filter(msg =>
+    /Ignoring 'advisory_max_version'.*'strict_max_version' also present/.test(
+      msg.message
+    )
+  );
+  equal(
+    messages.length,
+    1,
+    "mix of advisory_max_version and strict_max_version generated the expected warning"
+  );
 });
-
 
 add_task(async function test_update_url_security() {
   // Checks that update links to privileged URLs are not accepted.
@@ -256,60 +283,57 @@ add_task(async function test_update_url_security() {
       id: "updatecheck-security@tests.mozilla.org",
       version: "0.1",
       updates: [
-        { version: "0.2",
+        {
+          version: "0.2",
           update_link: "chrome://browser/content/browser.xhtml",
-          update_hash: "sha256:08ac852190ecd81f40a514ea9299fe9143d9ab5e296b97e73fb2a314de49648a" },
-        { version: "0.3",
+          update_hash:
+            "sha256:08ac852190ecd81f40a514ea9299fe9143d9ab5e296b97e73fb2a314de49648a",
+        },
+        {
+          version: "0.3",
           update_link: "http://example.com/update.xpi",
-          update_hash: "sha256:18ac852190ecd81f40a514ea9299fe9143d9ab5e296b97e73fb2a314de49648a" },
+          update_hash:
+            "sha256:18ac852190ecd81f40a514ea9299fe9143d9ab5e296b97e73fb2a314de49648a",
+        },
       ],
     });
   });
 
   equal(updates.length, 2, "both updates were processed");
   equal(updates[0].updateURL, null, "privileged update URL was removed");
-  equal(updates[1].updateURL, "http://example.com/update.xpi", "safe update URL was accepted");
+  equal(
+    updates[1].updateURL,
+    "http://example.com/update.xpi",
+    "safe update URL was accepted"
+  );
 
-  messages = messages.filter(msg => /http:\/\/localhost.*\/updates\/.*may not load or link to chrome:/.test(msg.message));
-  equal(messages.length, 1, "privileged update URL generated the expected console message");
+  messages = messages.filter(msg =>
+    /http:\/\/localhost.*\/updates\/.*may not load or link to chrome:/.test(
+      msg.message
+    )
+  );
+  equal(
+    messages.length,
+    1,
+    "privileged update URL generated the expected console message"
+  );
 });
-
 
 add_task(async function test_type_detection() {
   // Checks that JSON update manifests are detected correctly
   // regardless of extension or MIME type.
 
   let tests = [
-    { contentType: "application/json",
-      extension: "json",
-      valid: true },
-    { contentType: "application/json",
-      extension: "php",
-      valid: true },
-    { contentType: "text/plain",
-      extension: "json",
-      valid: true },
-    { contentType: "application/octet-stream",
-      extension: "json",
-      valid: true },
-    { contentType: "text/plain",
-      extension: "json?foo=bar",
-      valid: true },
-    { contentType: "text/plain",
-      extension: "php",
-      valid: true },
-    { contentType: "text/plain",
-      extension: "rdf",
-      valid: true },
-    { contentType: "application/json",
-      extension: "rdf",
-      valid: true },
-    { contentType: "text/xml",
-      extension: "json",
-      valid: true },
-    { contentType: "application/rdf+xml",
-      extension: "json",
-      valid: true },
+    { contentType: "application/json", extension: "json", valid: true },
+    { contentType: "application/json", extension: "php", valid: true },
+    { contentType: "text/plain", extension: "json", valid: true },
+    { contentType: "application/octet-stream", extension: "json", valid: true },
+    { contentType: "text/plain", extension: "json?foo=bar", valid: true },
+    { contentType: "text/plain", extension: "php", valid: true },
+    { contentType: "text/plain", extension: "rdf", valid: true },
+    { contentType: "application/json", extension: "rdf", valid: true },
+    { contentType: "text/xml", extension: "json", valid: true },
+    { contentType: "application/rdf+xml", extension: "json", valid: true },
   ];
 
   for (let [i, test] of tests.entries()) {
@@ -337,11 +361,19 @@ add_task(async function test_type_detection() {
     if (test.valid) {
       // Make sure we don't get any XML parsing errors from the
       // XMLHttpRequest machinery.
-      ok(!messages.some(msg => /not well-formed/.test(msg.message)),
-         "expect XMLHttpRequest not to attempt XML parsing");
+      ok(
+        !messages.some(msg => /not well-formed/.test(msg.message)),
+        "expect XMLHttpRequest not to attempt XML parsing"
+      );
     }
 
-    messages = messages.filter(msg => /Update manifest was not valid XML/.test(msg.message));
-    equal(messages.length, !test.valid, "expected number of XML parsing errors");
+    messages = messages.filter(msg =>
+      /Update manifest was not valid XML/.test(msg.message)
+    );
+    equal(
+      messages.length,
+      !test.valid,
+      "expected number of XML parsing errors"
+    );
   }
 });

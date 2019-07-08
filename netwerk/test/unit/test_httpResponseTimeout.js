@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var baseURL;
 const kResponseTimeoutPref = "network.http.response.timeout";
@@ -16,8 +16,9 @@ const kShortLivedKeepalivePref =
 const kLongLivedKeepalivePref =
   "network.http.tcp_keepalive.long_lived_connections";
 
-const prefService = Cc["@mozilla.org/preferences-service;1"]
-                       .getService(Ci.nsIPrefBranch);
+const prefService = Cc["@mozilla.org/preferences-service;1"].getService(
+  Ci.nsIPrefBranch
+);
 
 var server = new HttpServer();
 
@@ -26,13 +27,11 @@ function TimeoutListener(expectResponse) {
 }
 
 TimeoutListener.prototype = {
-  onStartRequest (request) {
-  },
+  onStartRequest(request) {},
 
-  onDataAvailable (request, stream) {
-  },
+  onDataAvailable(request, stream) {},
 
-  onStopRequest (request, status) {
+  onStopRequest(request, status) {
     if (this.expectResponse) {
       Assert.equal(status, Cr.NS_OK);
     } else {
@@ -55,8 +54,10 @@ function testTimeout(timeoutEnabled, expectResponse) {
     prefService.setIntPref(kResponseTimeoutPref, 0);
   }
 
-  var chan = NetUtil.newChannel({uri: baseURL, loadUsingSystemPrincipal: true})
-                    .QueryInterface(Ci.nsIHttpChannel);
+  var chan = NetUtil.newChannel({
+    uri: baseURL,
+    loadUsingSystemPrincipal: true,
+  }).QueryInterface(Ci.nsIHttpChannel);
   var listener = new TimeoutListener(expectResponse);
   chan.asyncOpen(listener);
 }
@@ -124,10 +125,10 @@ function setup_tests() {
     // Disable by enabling TCP keepalive for long-lived HTTP connections.
     testTimeoutDisabledByLongLivedKeepalives,
     // Disable by enabling TCP keepalive for both HTTP connection types.
-    testTimeoutDisabledByBothKeepalives
+    testTimeoutDisabledByBothKeepalives,
   ];
 
-  for (var i=0; i < tests.length; i++) {
+  for (var i = 0; i < tests.length; i++) {
     add_test(tests[i]);
   }
 }
@@ -137,11 +138,11 @@ function setup_http_server() {
   server.start(-1);
   baseURL = "http://localhost:" + server.identity.primaryPort + "/";
   info("Using baseURL: " + baseURL);
-  server.registerPathHandler('/', function(metadata, response) {
+  server.registerPathHandler("/", function(metadata, response) {
     // Wait until the timeout should have passed, then respond.
     response.processAsync();
 
-    do_timeout((kResponseTimeout+1)*1000 /* ms */, function() {
+    do_timeout((kResponseTimeout + 1) * 1000 /* ms */, function() {
       response.setStatusLine(metadata.httpVersion, 200, "OK");
       response.write("Hello world");
       response.finish();

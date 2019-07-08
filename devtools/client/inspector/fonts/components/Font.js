@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -59,7 +62,10 @@ class Font extends PureComponent {
     // This way we can collapse the declarations by default and display an expander icon
     // to expand them again.
     const leading = ruleText.substring(0, ruleText.indexOf("{") + 1);
-    const body = ruleText.substring(ruleText.indexOf("{") + 1, ruleText.lastIndexOf("}"));
+    const body = ruleText.substring(
+      ruleText.indexOf("{") + 1,
+      ruleText.lastIndexOf("}")
+    );
     const trailing = ruleText.substring(ruleText.lastIndexOf("}"));
 
     const { isFontFaceRuleExpanded } = this.state;
@@ -70,14 +76,12 @@ class Font extends PureComponent {
       },
       this.renderFontCSSCodeTwisty(),
       leading,
-      isFontFaceRuleExpanded ?
-        body :
-        dom.span(
-          {
+      isFontFaceRuleExpanded
+        ? body
+        : dom.span({
             className: "font-css-code-expander",
             onClick: this.onFontFaceRuleToggle,
-          }
-        ),
+          }),
       trailing
     );
   }
@@ -105,18 +109,9 @@ class Font extends PureComponent {
   }
 
   render() {
-    const {
-      font,
-      onPreviewClick,
-      onToggleFontHighlight,
-    } = this.props;
+    const { font, onPreviewClick, onToggleFontHighlight } = this.props;
 
-    const {
-      CSSFamilyName,
-      previewUrl,
-      rule,
-      ruleText,
-    } = font;
+    const { CSSFamilyName, previewUrl, rule, ruleText } = font;
 
     return dom.li(
       {

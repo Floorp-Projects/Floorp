@@ -8,7 +8,8 @@
 /* import-globals-from helper_addons.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/helper_addons.js",
-  this);
+  this
+);
 
 var { DebuggerServer } = require("devtools/server/main");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
@@ -40,21 +41,39 @@ add_task(async function() {
   ok(addonFront1, "Should find an addon actor for addon1.");
 
   const addon2 = await addTemporaryAddon(ADDON2_PATH);
-  const front1AfterAddingAddon2 = await client.mainRoot.getAddon({ id: ADDON1_ID });
+  const front1AfterAddingAddon2 = await client.mainRoot.getAddon({
+    id: ADDON1_ID,
+  });
   const addonFront2 = await client.mainRoot.getAddon({ id: ADDON2_ID });
 
-  is(addonListChangedEvents, 1, "Should have received an addonListChanged event.");
+  is(
+    addonListChangedEvents,
+    1,
+    "Should have received an addonListChanged event."
+  );
   ok(addonFront2, "Should find an addon actor for addon2.");
-  is(addonFront1, front1AfterAddingAddon2, "Front for addon1 should be the same");
+  is(
+    addonFront1,
+    front1AfterAddingAddon2,
+    "Front for addon1 should be the same"
+  );
 
   await removeAddon(addon1);
   const front1AfterRemove = await client.mainRoot.getAddon({ id: ADDON1_ID });
-  is(addonListChangedEvents, 2, "Should have received an addonListChanged event.");
+  is(
+    addonListChangedEvents,
+    2,
+    "Should have received an addonListChanged event."
+  );
   ok(!front1AfterRemove, "Should no longer get a front for addon1");
 
   await removeAddon(addon2);
   const front2AfterRemove = await client.mainRoot.getAddon({ id: ADDON2_ID });
-  is(addonListChangedEvents, 3, "Should have received an addonListChanged event.");
+  is(
+    addonListChangedEvents,
+    3,
+    "Should have received an addonListChanged event."
+  );
   ok(!front2AfterRemove, "Should no longer get a front for addon1");
 
   await client.close();

@@ -3,10 +3,18 @@
 
 "use strict";
 
-const {ON_PROFILE_CHANGE_NOTIFICATION, WEBCHANNEL_ID, log} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const {CryptoUtils} = ChromeUtils.import("resource://services-crypto/utils.js");
-const { FxAccountsWebChannel, FxAccountsWebChannelHelpers } =
-    ChromeUtils.import("resource://gre/modules/FxAccountsWebChannel.jsm", null);
+const {
+  ON_PROFILE_CHANGE_NOTIFICATION,
+  WEBCHANNEL_ID,
+  log,
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const { CryptoUtils } = ChromeUtils.import(
+  "resource://services-crypto/utils.js"
+);
+const {
+  FxAccountsWebChannel,
+  FxAccountsWebChannelHelpers,
+} = ChromeUtils.import("resource://gre/modules/FxAccountsWebChannel.jsm", null);
 
 const URL_STRING = "https://example.com";
 
@@ -17,24 +25,29 @@ const mockSendingContext = {
 };
 
 add_test(function() {
-  validationHelper(undefined,
-  "Error: Missing configuration options");
+  validationHelper(undefined, "Error: Missing configuration options");
 
-  validationHelper({
-    channel_id: WEBCHANNEL_ID,
-  },
-  "Error: Missing 'content_uri' option");
+  validationHelper(
+    {
+      channel_id: WEBCHANNEL_ID,
+    },
+    "Error: Missing 'content_uri' option"
+  );
 
-  validationHelper({
-    content_uri: "bad uri",
-    channel_id: WEBCHANNEL_ID,
-  },
-  /NS_ERROR_MALFORMED_URI/);
+  validationHelper(
+    {
+      content_uri: "bad uri",
+      channel_id: WEBCHANNEL_ID,
+    },
+    /NS_ERROR_MALFORMED_URI/
+  );
 
-  validationHelper({
-    content_uri: URL_STRING,
-  },
-  "Error: Missing 'channel_id' option");
+  validationHelper(
+    {
+      content_uri: URL_STRING,
+    },
+    "Error: Missing 'channel_id' option"
+  );
 
   run_next_test();
 });
@@ -51,8 +64,11 @@ add_task(async function test_rejection_reporting() {
     content_uri: URL_STRING,
     helpers: {
       login(accountData) {
-        equal(accountData.email, "testuser@testuser.com",
-          "Should forward incoming message data to the helper");
+        equal(
+          accountData.email,
+          "testuser@testuser.com",
+          "Should forward incoming message data to the helper"
+        );
         return Promise.reject(new Error("oops"));
       },
     },
@@ -69,13 +85,22 @@ add_task(async function test_rejection_reporting() {
   let { message, context } = await promiseSend;
 
   equal(context, mockSendingContext, "Should forward the original context");
-  equal(message.command, "fxaccounts:login",
-    "Should include the incoming command");
+  equal(
+    message.command,
+    "fxaccounts:login",
+    "Should include the incoming command"
+  );
   equal(message.messageId, "1234", "Should include the message ID");
-  equal(message.data.error.message, "Error: oops",
-    "Should convert the error message to a string");
-  notStrictEqual(message.data.error.stack, null,
-    "Should include the stack for JS error rejections");
+  equal(
+    message.data.error.message,
+    "Error: oops",
+    "Should convert the error message to a string"
+  );
+  notStrictEqual(
+    message.data.error.stack,
+    null,
+    "Should include the stack for JS error rejections"
+  );
 });
 
 add_test(function test_exception_reporting() {
@@ -90,8 +115,11 @@ add_test(function test_exception_reporting() {
     content_uri: URL_STRING,
     helpers: {
       openSyncPreferences(browser, entryPoint) {
-        equal(entryPoint, "fxa:verification_complete",
-          "Should forward incoming message data to the helper");
+        equal(
+          entryPoint,
+          "fxa:verification_complete",
+          "Should forward incoming message data to the helper"
+        );
         throw new TypeError("splines not reticulated");
       },
     },
@@ -99,13 +127,22 @@ add_test(function test_exception_reporting() {
 
   channel._channel.send = (message, context) => {
     equal(context, mockSendingContext, "Should forward the original context");
-    equal(message.command, "fxaccounts:sync_preferences",
-      "Should include the incoming command");
+    equal(
+      message.command,
+      "fxaccounts:sync_preferences",
+      "Should include the incoming command"
+    );
     equal(message.messageId, "5678", "Should include the message ID");
-    equal(message.data.error.message, "TypeError: splines not reticulated",
-      "Should convert the exception to a string");
-    notStrictEqual(message.data.error.stack, null,
-      "Should include the stack for JS exceptions");
+    equal(
+      message.data.error.message,
+      "TypeError: splines not reticulated",
+      "Should convert the exception to a string"
+    );
+    notStrictEqual(
+      message.data.error.stack,
+      null,
+      "Should include the stack for JS exceptions"
+    );
 
     run_next_test();
   };
@@ -277,7 +314,10 @@ add_test(function test_fxa_status_message() {
       Assert.equal(signedInUser.uid, "uid");
       Assert.equal(signedInUser.verified, true);
 
-      deepEqual(response.data.capabilities.engines, ["creditcards", "addresses"]);
+      deepEqual(response.data.capabilities.engines, [
+        "creditcards",
+        "addresses",
+      ]);
 
       run_next_test();
     },
@@ -302,7 +342,6 @@ add_test(function test_unrecognized_message() {
   run_next_test();
 });
 
-
 add_test(function test_helpers_should_allow_relink_same_email() {
   let helpers = new FxAccountsWebChannelHelpers();
 
@@ -317,7 +356,7 @@ add_test(function test_helpers_should_allow_relink_different_email() {
 
   helpers.setPreviousAccountNameHashPref("testuser@testuser.com");
 
-  helpers._promptForRelink = (acctName) => {
+  helpers._promptForRelink = acctName => {
     return acctName === "allowed_to_relink@testuser.com";
   };
 
@@ -339,8 +378,10 @@ add_task(async function test_helpers_login_without_customize_sync() {
           Assert.equal(false, "verifiedCanLinkAccount" in accountData);
 
           // previously signed in user preference is updated.
-          Assert.equal(helpers.getPreviousAccountNameHashPref(),
-                       CryptoUtils.sha256Base64("testuser@testuser.com"));
+          Assert.equal(
+            helpers.getPreviousAccountNameHashPref(),
+            CryptoUtils.sha256Base64("testuser@testuser.com")
+          );
 
           resolve();
         });
@@ -382,43 +423,78 @@ add_task(async function test_helpers_login_with_customize_sync() {
   });
 });
 
-add_task(async function test_helpers_login_with_customize_sync_and_declined_engines() {
-  let helpers = new FxAccountsWebChannelHelpers({
-    fxAccounts: {
-      setSignedInUser(accountData) {
-        return new Promise(resolve => {
-          // ensure fxAccounts is informed of the new user being signed in.
-          Assert.equal(accountData.email, "testuser@testuser.com");
+add_task(
+  async function test_helpers_login_with_customize_sync_and_declined_engines() {
+    let helpers = new FxAccountsWebChannelHelpers({
+      fxAccounts: {
+        setSignedInUser(accountData) {
+          return new Promise(resolve => {
+            // ensure fxAccounts is informed of the new user being signed in.
+            Assert.equal(accountData.email, "testuser@testuser.com");
 
-          // customizeSync should be stripped in the data.
-          Assert.equal(false, "customizeSync" in accountData);
-          Assert.equal(false, "declinedSyncEngines" in accountData);
-          Assert.equal(Services.prefs.getBoolPref("services.sync.engine.addons"), false);
-          Assert.equal(Services.prefs.getBoolPref("services.sync.engine.bookmarks"), true);
-          Assert.equal(Services.prefs.getBoolPref("services.sync.engine.history"), true);
-          Assert.equal(Services.prefs.getBoolPref("services.sync.engine.passwords"), true);
-          Assert.equal(Services.prefs.getBoolPref("services.sync.engine.prefs"), false);
-          Assert.equal(Services.prefs.getBoolPref("services.sync.engine.tabs"), true);
+            // customizeSync should be stripped in the data.
+            Assert.equal(false, "customizeSync" in accountData);
+            Assert.equal(false, "declinedSyncEngines" in accountData);
+            Assert.equal(
+              Services.prefs.getBoolPref("services.sync.engine.addons"),
+              false
+            );
+            Assert.equal(
+              Services.prefs.getBoolPref("services.sync.engine.bookmarks"),
+              true
+            );
+            Assert.equal(
+              Services.prefs.getBoolPref("services.sync.engine.history"),
+              true
+            );
+            Assert.equal(
+              Services.prefs.getBoolPref("services.sync.engine.passwords"),
+              true
+            );
+            Assert.equal(
+              Services.prefs.getBoolPref("services.sync.engine.prefs"),
+              false
+            );
+            Assert.equal(
+              Services.prefs.getBoolPref("services.sync.engine.tabs"),
+              true
+            );
 
-          resolve();
-        });
+            resolve();
+          });
+        },
       },
-    },
-  });
+    });
 
-  Assert.equal(Services.prefs.getBoolPref("services.sync.engine.addons"), true);
-  Assert.equal(Services.prefs.getBoolPref("services.sync.engine.bookmarks"), true);
-  Assert.equal(Services.prefs.getBoolPref("services.sync.engine.history"), true);
-  Assert.equal(Services.prefs.getBoolPref("services.sync.engine.passwords"), true);
-  Assert.equal(Services.prefs.getBoolPref("services.sync.engine.prefs"), true);
-  Assert.equal(Services.prefs.getBoolPref("services.sync.engine.tabs"), true);
-  await helpers.login({
-    email: "testuser@testuser.com",
-    verifiedCanLinkAccount: true,
-    customizeSync: true,
-    declinedSyncEngines: ["addons", "prefs"],
-  });
-});
+    Assert.equal(
+      Services.prefs.getBoolPref("services.sync.engine.addons"),
+      true
+    );
+    Assert.equal(
+      Services.prefs.getBoolPref("services.sync.engine.bookmarks"),
+      true
+    );
+    Assert.equal(
+      Services.prefs.getBoolPref("services.sync.engine.history"),
+      true
+    );
+    Assert.equal(
+      Services.prefs.getBoolPref("services.sync.engine.passwords"),
+      true
+    );
+    Assert.equal(
+      Services.prefs.getBoolPref("services.sync.engine.prefs"),
+      true
+    );
+    Assert.equal(Services.prefs.getBoolPref("services.sync.engine.tabs"), true);
+    await helpers.login({
+      email: "testuser@testuser.com",
+      verifiedCanLinkAccount: true,
+      customizeSync: true,
+      declinedSyncEngines: ["addons", "prefs"],
+    });
+  }
+);
 
 add_task(async function test_helpers_login_with_offered_sync_engines() {
   let helpers;
@@ -458,13 +534,15 @@ add_task(async function test_helpers_login_with_offered_sync_engines() {
 
 add_test(function test_helpers_open_sync_preferences() {
   let helpers = new FxAccountsWebChannelHelpers({
-    fxAccounts: {
-    },
+    fxAccounts: {},
   });
 
   let mockBrowser = {
     loadURI(uri) {
-      Assert.equal(uri, "about:preferences?entrypoint=fxa%3Averification_complete#sync");
+      Assert.equal(
+        uri,
+        "about:preferences?entrypoint=fxa%3Averification_complete#sync"
+      );
       run_next_test();
     },
   };
@@ -493,7 +571,10 @@ add_task(async function test_helpers_getFxAStatus_extra_engines() {
     },
   });
 
-  Services.prefs.setBoolPref("services.sync.engine.creditcards.available", true);
+  Services.prefs.setBoolPref(
+    "services.sync.engine.creditcards.available",
+    true
+  );
   // Not defining "services.sync.engine.addresses.available" on purpose.
 
   let fxaStatus = await helpers.getFxaStatus("sync", mockSendingContext);
@@ -501,7 +582,6 @@ add_task(async function test_helpers_getFxAStatus_extra_engines() {
   ok(!!fxaStatus.signedInUser);
   deepEqual(fxaStatus.capabilities.engines, ["creditcards"]);
 });
-
 
 add_task(async function test_helpers_getFxaStatus_allowed_signedInUser() {
   let wasCalled = {
@@ -535,27 +615,26 @@ add_task(async function test_helpers_getFxaStatus_allowed_signedInUser() {
     return true;
   };
 
-  return helpers.getFxaStatus("sync", mockSendingContext)
-    .then(fxaStatus => {
-      Assert.ok(!!fxaStatus);
-      Assert.ok(wasCalled.getSignedInUser);
-      Assert.ok(wasCalled.shouldAllowFxaStatus);
+  return helpers.getFxaStatus("sync", mockSendingContext).then(fxaStatus => {
+    Assert.ok(!!fxaStatus);
+    Assert.ok(wasCalled.getSignedInUser);
+    Assert.ok(wasCalled.shouldAllowFxaStatus);
 
-      Assert.ok(!!fxaStatus.signedInUser);
-      let {signedInUser} = fxaStatus;
+    Assert.ok(!!fxaStatus.signedInUser);
+    let { signedInUser } = fxaStatus;
 
-      Assert.equal(signedInUser.email, "testuser@testuser.com");
-      Assert.equal(signedInUser.sessionToken, "sessionToken");
-      Assert.equal(signedInUser.uid, "uid");
-      Assert.ok(signedInUser.verified);
+    Assert.equal(signedInUser.email, "testuser@testuser.com");
+    Assert.equal(signedInUser.sessionToken, "sessionToken");
+    Assert.equal(signedInUser.uid, "uid");
+    Assert.ok(signedInUser.verified);
 
-      // These properties are filtered and should not
-      // be returned to the requester.
-      Assert.equal(false, "kSync" in signedInUser);
-      Assert.equal(false, "kXCS" in signedInUser);
-      Assert.equal(false, "kExtSync" in signedInUser);
-      Assert.equal(false, "kExtKbHash" in signedInUser);
-    });
+    // These properties are filtered and should not
+    // be returned to the requester.
+    Assert.equal(false, "kSync" in signedInUser);
+    Assert.equal(false, "kXCS" in signedInUser);
+    Assert.equal(false, "kExtSync" in signedInUser);
+    Assert.equal(false, "kExtKbHash" in signedInUser);
+  });
 });
 
 add_task(async function test_helpers_getFxaStatus_allowed_no_signedInUser() {
@@ -581,14 +660,13 @@ add_task(async function test_helpers_getFxaStatus_allowed_no_signedInUser() {
     return true;
   };
 
-  return helpers.getFxaStatus("sync", mockSendingContext)
-    .then(fxaStatus => {
-      Assert.ok(!!fxaStatus);
-      Assert.ok(wasCalled.getSignedInUser);
-      Assert.ok(wasCalled.shouldAllowFxaStatus);
+  return helpers.getFxaStatus("sync", mockSendingContext).then(fxaStatus => {
+    Assert.ok(!!fxaStatus);
+    Assert.ok(wasCalled.getSignedInUser);
+    Assert.ok(wasCalled.shouldAllowFxaStatus);
 
-      Assert.equal(null, fxaStatus.signedInUser);
-    });
+    Assert.equal(null, fxaStatus.signedInUser);
+  });
 });
 
 add_task(async function test_helpers_getFxaStatus_not_allowed() {
@@ -614,134 +692,175 @@ add_task(async function test_helpers_getFxaStatus_not_allowed() {
     return false;
   };
 
-  return helpers.getFxaStatus("sync", mockSendingContext)
-    .then(fxaStatus => {
-      Assert.ok(!!fxaStatus);
-      Assert.ok(!wasCalled.getSignedInUser);
-      Assert.ok(wasCalled.shouldAllowFxaStatus);
+  return helpers.getFxaStatus("sync", mockSendingContext).then(fxaStatus => {
+    Assert.ok(!!fxaStatus);
+    Assert.ok(!wasCalled.getSignedInUser);
+    Assert.ok(wasCalled.shouldAllowFxaStatus);
 
-      Assert.equal(null, fxaStatus.signedInUser);
-    });
+    Assert.equal(null, fxaStatus.signedInUser);
+  });
 });
 
-add_task(async function test_helpers_shouldAllowFxaStatus_sync_service_not_private_browsing() {
-  let wasCalled = {
-    isPrivateBrowsingMode: false,
-  };
-  let helpers = new FxAccountsWebChannelHelpers({});
+add_task(
+  async function test_helpers_shouldAllowFxaStatus_sync_service_not_private_browsing() {
+    let wasCalled = {
+      isPrivateBrowsingMode: false,
+    };
+    let helpers = new FxAccountsWebChannelHelpers({});
 
-  helpers.isPrivateBrowsingMode = (sendingContext) => {
-    wasCalled.isPrivateBrowsingMode = true;
-    Assert.equal(sendingContext, mockSendingContext);
-    return false;
-  };
+    helpers.isPrivateBrowsingMode = sendingContext => {
+      wasCalled.isPrivateBrowsingMode = true;
+      Assert.equal(sendingContext, mockSendingContext);
+      return false;
+    };
 
-  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("sync", mockSendingContext, false);
-  Assert.ok(shouldAllowFxaStatus);
-  Assert.ok(wasCalled.isPrivateBrowsingMode);
-});
+    let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus(
+      "sync",
+      mockSendingContext,
+      false
+    );
+    Assert.ok(shouldAllowFxaStatus);
+    Assert.ok(wasCalled.isPrivateBrowsingMode);
+  }
+);
 
-add_task(async function test_helpers_shouldAllowFxaStatus_oauth_service_not_private_browsing() {
-  let wasCalled = {
-    isPrivateBrowsingMode: false,
-  };
-  let helpers = new FxAccountsWebChannelHelpers({});
+add_task(
+  async function test_helpers_shouldAllowFxaStatus_oauth_service_not_private_browsing() {
+    let wasCalled = {
+      isPrivateBrowsingMode: false,
+    };
+    let helpers = new FxAccountsWebChannelHelpers({});
 
-  helpers.isPrivateBrowsingMode = (sendingContext) => {
-    wasCalled.isPrivateBrowsingMode = true;
-    Assert.equal(sendingContext, mockSendingContext);
-    return false;
-  };
+    helpers.isPrivateBrowsingMode = sendingContext => {
+      wasCalled.isPrivateBrowsingMode = true;
+      Assert.equal(sendingContext, mockSendingContext);
+      return false;
+    };
 
-  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("dcdb5ae7add825d2", mockSendingContext, false);
-  Assert.ok(shouldAllowFxaStatus);
-  Assert.ok(wasCalled.isPrivateBrowsingMode);
-});
+    let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus(
+      "dcdb5ae7add825d2",
+      mockSendingContext,
+      false
+    );
+    Assert.ok(shouldAllowFxaStatus);
+    Assert.ok(wasCalled.isPrivateBrowsingMode);
+  }
+);
 
-add_task(async function test_helpers_shouldAllowFxaStatus_no_service_not_private_browsing() {
-  let wasCalled = {
-    isPrivateBrowsingMode: false,
-  };
-  let helpers = new FxAccountsWebChannelHelpers({});
+add_task(
+  async function test_helpers_shouldAllowFxaStatus_no_service_not_private_browsing() {
+    let wasCalled = {
+      isPrivateBrowsingMode: false,
+    };
+    let helpers = new FxAccountsWebChannelHelpers({});
 
-  helpers.isPrivateBrowsingMode = (sendingContext) => {
-    wasCalled.isPrivateBrowsingMode = true;
-    Assert.equal(sendingContext, mockSendingContext);
-    return false;
-  };
+    helpers.isPrivateBrowsingMode = sendingContext => {
+      wasCalled.isPrivateBrowsingMode = true;
+      Assert.equal(sendingContext, mockSendingContext);
+      return false;
+    };
 
-  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("", mockSendingContext, false);
-  Assert.ok(shouldAllowFxaStatus);
-  Assert.ok(wasCalled.isPrivateBrowsingMode);
-});
+    let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus(
+      "",
+      mockSendingContext,
+      false
+    );
+    Assert.ok(shouldAllowFxaStatus);
+    Assert.ok(wasCalled.isPrivateBrowsingMode);
+  }
+);
 
-add_task(async function test_helpers_shouldAllowFxaStatus_sync_service_private_browsing() {
-  let wasCalled = {
-    isPrivateBrowsingMode: false,
-  };
-  let helpers = new FxAccountsWebChannelHelpers({});
+add_task(
+  async function test_helpers_shouldAllowFxaStatus_sync_service_private_browsing() {
+    let wasCalled = {
+      isPrivateBrowsingMode: false,
+    };
+    let helpers = new FxAccountsWebChannelHelpers({});
 
-  helpers.isPrivateBrowsingMode = (sendingContext) => {
-    wasCalled.isPrivateBrowsingMode = true;
-    Assert.equal(sendingContext, mockSendingContext);
-    return true;
-  };
+    helpers.isPrivateBrowsingMode = sendingContext => {
+      wasCalled.isPrivateBrowsingMode = true;
+      Assert.equal(sendingContext, mockSendingContext);
+      return true;
+    };
 
-  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("sync", mockSendingContext, false);
-  Assert.ok(shouldAllowFxaStatus);
-  Assert.ok(wasCalled.isPrivateBrowsingMode);
-});
+    let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus(
+      "sync",
+      mockSendingContext,
+      false
+    );
+    Assert.ok(shouldAllowFxaStatus);
+    Assert.ok(wasCalled.isPrivateBrowsingMode);
+  }
+);
 
-add_task(async function test_helpers_shouldAllowFxaStatus_oauth_service_private_browsing() {
-  let wasCalled = {
-    isPrivateBrowsingMode: false,
-  };
-  let helpers = new FxAccountsWebChannelHelpers({});
+add_task(
+  async function test_helpers_shouldAllowFxaStatus_oauth_service_private_browsing() {
+    let wasCalled = {
+      isPrivateBrowsingMode: false,
+    };
+    let helpers = new FxAccountsWebChannelHelpers({});
 
-  helpers.isPrivateBrowsingMode = (sendingContext) => {
-    wasCalled.isPrivateBrowsingMode = true;
-    Assert.equal(sendingContext, mockSendingContext);
-    return true;
-  };
+    helpers.isPrivateBrowsingMode = sendingContext => {
+      wasCalled.isPrivateBrowsingMode = true;
+      Assert.equal(sendingContext, mockSendingContext);
+      return true;
+    };
 
-  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("dcdb5ae7add825d2", mockSendingContext, false);
-  Assert.ok(!shouldAllowFxaStatus);
-  Assert.ok(wasCalled.isPrivateBrowsingMode);
-});
+    let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus(
+      "dcdb5ae7add825d2",
+      mockSendingContext,
+      false
+    );
+    Assert.ok(!shouldAllowFxaStatus);
+    Assert.ok(wasCalled.isPrivateBrowsingMode);
+  }
+);
 
-add_task(async function test_helpers_shouldAllowFxaStatus_oauth_service_pairing_private_browsing() {
-  let wasCalled = {
-    isPrivateBrowsingMode: false,
-  };
-  let helpers = new FxAccountsWebChannelHelpers({});
+add_task(
+  async function test_helpers_shouldAllowFxaStatus_oauth_service_pairing_private_browsing() {
+    let wasCalled = {
+      isPrivateBrowsingMode: false,
+    };
+    let helpers = new FxAccountsWebChannelHelpers({});
 
-  helpers.isPrivateBrowsingMode = (sendingContext) => {
-    wasCalled.isPrivateBrowsingMode = true;
-    Assert.equal(sendingContext, mockSendingContext);
-    return true;
-  };
+    helpers.isPrivateBrowsingMode = sendingContext => {
+      wasCalled.isPrivateBrowsingMode = true;
+      Assert.equal(sendingContext, mockSendingContext);
+      return true;
+    };
 
-  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("dcdb5ae7add825d2", mockSendingContext, true);
-  Assert.ok(shouldAllowFxaStatus);
-  Assert.ok(wasCalled.isPrivateBrowsingMode);
-});
+    let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus(
+      "dcdb5ae7add825d2",
+      mockSendingContext,
+      true
+    );
+    Assert.ok(shouldAllowFxaStatus);
+    Assert.ok(wasCalled.isPrivateBrowsingMode);
+  }
+);
 
-add_task(async function test_helpers_shouldAllowFxaStatus_no_service_private_browsing() {
-  let wasCalled = {
-    isPrivateBrowsingMode: false,
-  };
-  let helpers = new FxAccountsWebChannelHelpers({});
+add_task(
+  async function test_helpers_shouldAllowFxaStatus_no_service_private_browsing() {
+    let wasCalled = {
+      isPrivateBrowsingMode: false,
+    };
+    let helpers = new FxAccountsWebChannelHelpers({});
 
-  helpers.isPrivateBrowsingMode = (sendingContext) => {
-    wasCalled.isPrivateBrowsingMode = true;
-    Assert.equal(sendingContext, mockSendingContext);
-    return true;
-  };
+    helpers.isPrivateBrowsingMode = sendingContext => {
+      wasCalled.isPrivateBrowsingMode = true;
+      Assert.equal(sendingContext, mockSendingContext);
+      return true;
+    };
 
-  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("", mockSendingContext, false);
-  Assert.ok(!shouldAllowFxaStatus);
-  Assert.ok(wasCalled.isPrivateBrowsingMode);
-});
+    let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus(
+      "",
+      mockSendingContext,
+      false
+    );
+    Assert.ok(!shouldAllowFxaStatus);
+    Assert.ok(wasCalled.isPrivateBrowsingMode);
+  }
+);
 
 add_task(async function test_helpers_isPrivateBrowsingMode_private_browsing() {
   let wasCalled = {
@@ -810,7 +929,12 @@ add_task(async function test_helpers_change_password() {
       },
     },
   });
-  await helpers.changePassword({ email: "email", uid: "uid", unwrapBKey: "unwrapBKey", foo: "foo" });
+  await helpers.changePassword({
+    email: "email",
+    uid: "uid",
+    unwrapBKey: "unwrapBKey",
+    foo: "foo",
+  });
   Assert.ok(wasCalled.updateUserAccountData);
   Assert.ok(wasCalled.updateDeviceRegistration);
 });

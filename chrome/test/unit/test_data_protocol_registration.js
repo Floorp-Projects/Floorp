@@ -4,15 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var manifests = [
-  do_get_file("data/test_data_protocol_registration.manifest"),
-];
+var manifests = [do_get_file("data/test_data_protocol_registration.manifest")];
 registerManifests(manifests);
 
 function run_test() {
-  const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+  const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+    Ci.nsIUUIDGenerator
+  );
 
-  let newAppInfo = ChromeUtils.import("resource://testing-common/AppInfo.jsm", {}).newAppInfo;
+  let newAppInfo = ChromeUtils.import(
+    "resource://testing-common/AppInfo.jsm",
+    {}
+  ).newAppInfo;
   let XULAppInfo = newAppInfo({
     name: "XPCShell",
     ID: "{39885e5f-f6b4-4e2a-87e5-6259ecf79011}",
@@ -26,8 +29,9 @@ function run_test() {
     scheme: "XULAppInfo",
     contractID: XULAPPINFO_CONTRACTID,
     createInstance(outer, iid) {
-      if (outer != null)
+      if (outer != null) {
         throw Cr.NS_ERROR_NO_AGGREGATION;
+      }
       return XULAppInfo.QueryInterface(iid);
     },
   };
@@ -49,27 +53,39 @@ function run_test() {
       // register it if it is not. Otherwise, store the previous one
       // to be restored later and register the new one.
       if (registrar.isContractIDRegistered(factory.contractID)) {
-        dump(factory.scheme + " is already registered. Storing currently registered object for restoration later.");
+        dump(
+          factory.scheme +
+            " is already registered. Storing currently registered object for restoration later."
+        );
         old_factories.push({
           CID: registrar.contractIDToCID(factory.contractID),
-          factory: Components.manager.getClassObject(Cc[factory.contractID], Ci.nsIFactory),
+          factory: Components.manager.getClassObject(
+            Cc[factory.contractID],
+            Ci.nsIFactory
+          ),
         });
         old_factories_inds.push(true);
       } else {
         dump(factory.scheme + " has never been registered. Registering...");
-        old_factories.push({CID: "", factory: null});
+        old_factories.push({ CID: "", factory: null });
         old_factories_inds.push(false);
       }
 
-      registrar.registerFactory(factory.CID, "test-" + factory.scheme, factory.contractID, factory);
+      registrar.registerFactory(
+        factory.CID,
+        "test-" + factory.scheme,
+        factory.contractID,
+        factory
+      );
     } else {
       do_throw("CID " + factory.CID + " has already been registered!");
     }
   }
 
   // Check for new chrome
-  let cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
-           getService(Ci.nsIChromeRegistry);
+  let cr = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+    Ci.nsIChromeRegistry
+  );
   cr.checkForNewChrome();
 
   // Check that our override worked
@@ -94,7 +110,12 @@ function run_test() {
 
     if (ind) {
       let old_factory = old_factories[i];
-      registrar.registerFactory(old_factory.CID, factory.scheme, factory.contractID, null);
+      registrar.registerFactory(
+        old_factory.CID,
+        factory.scheme,
+        factory.contractID,
+        null
+      );
     }
   }
 }

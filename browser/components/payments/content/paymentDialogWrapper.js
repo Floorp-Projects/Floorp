@@ -11,30 +11,50 @@
 
 "use strict";
 
-const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
-                     .getService(Ci.nsIPaymentRequestService);
+const paymentSrv = Cc[
+  "@mozilla.org/dom/payments/payment-request-service;1"
+].getService(Ci.nsIPaymentRequestService);
 
-const paymentUISrv = Cc["@mozilla.org/dom/payments/payment-ui-service;1"]
-                     .getService(Ci.nsIPaymentUIService);
+const paymentUISrv = Cc[
+  "@mozilla.org/dom/payments/payment-ui-service;1"
+].getService(Ci.nsIPaymentUIService);
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker",
-                               "resource:///modules/BrowserWindowTracker.jsm");
-ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
-                               "resource://formautofill/FormAutofillUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "OSKeyStore",
-                               "resource://formautofill/OSKeyStore.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserWindowTracker",
+  "resource:///modules/BrowserWindowTracker.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormAutofillUtils",
+  "resource://formautofill/FormAutofillUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "OSKeyStore",
+  "resource://formautofill/OSKeyStore.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "formAutofillStorage", () => {
   let storage;
   try {
-    storage = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {})
-                         .formAutofillStorage;
+    storage = ChromeUtils.import(
+      "resource://formautofill/FormAutofillStorage.jsm",
+      {}
+    ).formAutofillStorage;
     storage.initialize();
   } catch (ex) {
     storage = null;
@@ -45,9 +65,13 @@ XPCOMUtils.defineLazyGetter(this, "formAutofillStorage", () => {
 });
 
 XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
-  const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
+  const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName(
+    "brandShortName"
+  );
   return FormAutofillUtils.stringBundle.formatStringFromName(
-    `useCreditCardPasswordPrompt.${AppConstants.platform}`, [brandShortName]);
+    `useCreditCardPasswordPrompt.${AppConstants.platform}`,
+    [brandShortName]
+  );
 });
 
 /**
@@ -69,7 +93,9 @@ class TempCollection {
   get _formAutofillCollection() {
     // lazy getter for the formAutofill collection - to resolve on first access
     Object.defineProperty(this, "_formAutofillCollection", {
-      value: formAutofillStorage[this._type], writable: false, configurable: true,
+      value: formAutofillStorage[this._type],
+      writable: false,
+      configurable: true,
     });
     return this._formAutofillCollection;
   }
@@ -79,15 +105,18 @@ class TempCollection {
   }
 
   async update(guid, record, preserveOldProperties) {
-    let recordToSave = Object.assign(preserveOldProperties ? this._data[guid] : {}, record);
+    let recordToSave = Object.assign(
+      preserveOldProperties ? this._data[guid] : {},
+      record
+    );
     await this._formAutofillCollection.computeFields(recordToSave);
     return (this._data[guid] = recordToSave);
   }
 
   async add(record) {
-    let guid = "temp-" + Math.abs(Math.random() * 0xffffffff|0);
+    let guid = "temp-" + Math.abs((Math.random() * 0xffffffff) | 0);
     let timeLastModified = Date.now();
-    let recordToSave = Object.assign({guid, timeLastModified}, record);
+    let recordToSave = Object.assign({ guid, timeLastModified }, record);
     await this._formAutofillCollection.computeFields(recordToSave);
     this._data[guid] = recordToSave;
     return guid;
@@ -115,8 +144,9 @@ var paymentDialogWrapper = {
    * @returns {object} containing only the requested payer values.
    */
   async _convertProfileAddressToPayerData(guid) {
-    let addressData = this.temporaryStore.addresses.get(guid) ||
-                      await formAutofillStorage.addresses.get(guid);
+    let addressData =
+      this.temporaryStore.addresses.get(guid) ||
+      (await formAutofillStorage.addresses.get(guid));
     if (!addressData) {
       throw new Error(`Payer address not found: ${guid}`);
     }
@@ -141,8 +171,9 @@ var paymentDialogWrapper = {
    * @returns {nsIPaymentAddress}
    */
   async _convertProfileAddressToPaymentAddress(guid) {
-    let addressData = this.temporaryStore.addresses.get(guid) ||
-                      await formAutofillStorage.addresses.get(guid);
+    let addressData =
+      this.temporaryStore.addresses.get(guid) ||
+      (await formAutofillStorage.addresses.get(guid));
     if (!addressData) {
       throw new Error(`Address not found: ${guid}`);
     }
@@ -179,8 +210,9 @@ var paymentDialogWrapper = {
    *                                      master password dialog was cancelled);
    */
   async _convertProfileBasicCardToPaymentMethodData(guid, cardSecurityCode) {
-    let cardData = this.temporaryStore.creditCards.get(guid) ||
-                   await formAutofillStorage.creditCards.get(guid);
+    let cardData =
+      this.temporaryStore.creditCards.get(guid) ||
+      (await formAutofillStorage.creditCards.get(guid));
     if (!cardData) {
       throw new Error(`Basic card not found in storage: ${guid}`);
     }
@@ -188,7 +220,9 @@ var paymentDialogWrapper = {
     let cardNumber;
     try {
       cardNumber = await OSKeyStore.decrypt(
-        cardData["cc-number-encrypted"], reauthPasswordPromptMessage);
+        cardData["cc-number-encrypted"],
+        reauthPasswordPromptMessage
+      );
     } catch (ex) {
       if (ex.result != Cr.NS_ERROR_ABORT) {
         throw ex;
@@ -200,7 +234,9 @@ var paymentDialogWrapper = {
     let billingAddressGUID = cardData.billingAddressGUID;
     let billingAddress;
     try {
-      billingAddress = await this._convertProfileAddressToPaymentAddress(billingAddressGUID);
+      billingAddress = await this._convertProfileAddressToPaymentAddress(
+        billingAddressGUID
+      );
     } catch (ex) {
       // The referenced address may not exist if it was deleted or hasn't yet synced to this profile
       Cu.reportError(ex);
@@ -218,7 +254,7 @@ var paymentDialogWrapper = {
   },
 
   init(requestId, frame) {
-    if (!requestId || typeof(requestId) != "string") {
+    if (!requestId || typeof requestId != "string") {
       throw new Error("Invalid PaymentRequest ID");
     }
 
@@ -231,7 +267,10 @@ var paymentDialogWrapper = {
     }
 
     this._attachToFrame(frame);
-    this.mm.loadFrameScript("chrome://payments/content/paymentDialogFrameScript.js", true);
+    this.mm.loadFrameScript(
+      "chrome://payments/content/paymentDialogFrameScript.js",
+      true
+    );
     // Until we have bug 1446164 and bug 1407418 we use form autofill's temporary
     // shim for data-localization* attributes.
     this.mm.loadFrameScript("chrome://formautofill/content/l10n.js", true);
@@ -288,15 +327,19 @@ var paymentDialogWrapper = {
     payerEmail = "",
     payerPhone = "",
   }) {
-    let showResponse = this.createComponentInstance(Ci.nsIPaymentShowActionResponse);
+    let showResponse = this.createComponentInstance(
+      Ci.nsIPaymentShowActionResponse
+    );
 
-    showResponse.init(this.request.requestId,
-                      acceptStatus,
-                      methodName,
-                      methodData,
-                      payerName,
-                      payerEmail,
-                      payerPhone);
+    showResponse.init(
+      this.request.requestId,
+      acceptStatus,
+      methodName,
+      methodData,
+      payerName,
+      payerEmail,
+      payerPhone
+    );
     return showResponse;
   },
 
@@ -308,14 +351,17 @@ var paymentDialogWrapper = {
     cardSecurityCode = "",
     billingAddress = null,
   }) {
-    const basicCardResponseData = Cc["@mozilla.org/dom/payments/basiccard-response-data;1"]
-                                  .createInstance(Ci.nsIBasicCardResponseData);
-    basicCardResponseData.initData(cardholderName,
-                                   cardNumber,
-                                   expiryMonth,
-                                   expiryYear,
-                                   cardSecurityCode,
-                                   billingAddress);
+    const basicCardResponseData = Cc[
+      "@mozilla.org/dom/payments/basiccard-response-data;1"
+    ].createInstance(Ci.nsIBasicCardResponseData);
+    basicCardResponseData.initData(
+      cardholderName,
+      cardNumber,
+      expiryMonth,
+      expiryYear,
+      cardSecurityCode,
+      billingAddress
+    );
     return basicCardResponseData;
   },
 
@@ -332,25 +378,32 @@ var paymentDialogWrapper = {
     regionCode = "",
     sortingCode = "",
   }) {
-    const paymentAddress = Cc["@mozilla.org/dom/payments/payment-address;1"]
-                           .createInstance(Ci.nsIPaymentAddress);
-    const addressLine = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+    const paymentAddress = Cc[
+      "@mozilla.org/dom/payments/payment-address;1"
+    ].createInstance(Ci.nsIPaymentAddress);
+    const addressLine = Cc["@mozilla.org/array;1"].createInstance(
+      Ci.nsIMutableArray
+    );
     for (let line of addressLines) {
-      const address = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+      const address = Cc["@mozilla.org/supports-string;1"].createInstance(
+        Ci.nsISupportsString
+      );
       address.data = line;
       addressLine.appendElement(address);
     }
-    paymentAddress.init(country,
-                        addressLine,
-                        region,
-                        regionCode,
-                        city,
-                        dependentLocality,
-                        postalCode,
-                        sortingCode,
-                        organization,
-                        recipient,
-                        phone);
+    paymentAddress.init(
+      country,
+      addressLine,
+      region,
+      regionCode,
+      city,
+      dependentLocality,
+      postalCode,
+      sortingCode,
+      organization,
+      recipient,
+      phone
+    );
     return paymentAddress;
   },
 
@@ -358,7 +411,8 @@ var paymentDialogWrapper = {
     let componentName;
     switch (componentInterface) {
       case Ci.nsIPaymentShowActionResponse: {
-        componentName = "@mozilla.org/dom/payments/payment-show-action-response;1";
+        componentName =
+          "@mozilla.org/dom/payments/payment-show-action-response;1";
         break;
       }
       case Ci.nsIGeneralResponseData: {
@@ -412,8 +466,10 @@ var paymentDialogWrapper = {
   },
 
   async onAutofillStorageChange() {
-    let [savedAddresses, savedBasicCards] =
-      await Promise.all([this.fetchSavedAddresses(), this.fetchSavedPaymentCards()]);
+    let [savedAddresses, savedBasicCards] = await Promise.all([
+      this.fetchSavedAddresses(),
+      this.fetchSavedPaymentCards(),
+    ]);
 
     this.sendMessageToContent("updateState", {
       savedAddresses,
@@ -449,10 +505,12 @@ var paymentDialogWrapper = {
   _serializeRequest(value, name = null) {
     // Primitives: String, Number, Boolean, null
     let type = typeof value;
-    if (value === null ||
-        type == "string" ||
-        type == "number" ||
-        type == "boolean") {
+    if (
+      value === null ||
+      type == "string" ||
+      type == "number" ||
+      type == "boolean"
+    ) {
       return value;
     }
     if (name == "topLevelPrincipal") {
@@ -487,7 +545,9 @@ var paymentDialogWrapper = {
           break;
       }
       if (!iface) {
-        throw new Error(`No interface associated with the members of the ${name} nsIArray`);
+        throw new Error(
+          `No interface associated with the members of the ${name} nsIArray`
+        );
       }
       for (let i = 0; i < value.length; i++) {
         let item = value.queryElementAt(i, iface);
@@ -500,8 +560,9 @@ var paymentDialogWrapper = {
     }
     // Structures: Arrays
     if (Array.isArray(value)) {
-      let items = value.map(item => this._serializeRequest(item))
-                       .filter(item => item !== undefined);
+      let items = value
+        .map(item => this._serializeRequest(item))
+        .filter(item => item !== undefined);
       return items;
     }
     // Structures: Objects
@@ -524,8 +585,10 @@ var paymentDialogWrapper = {
     let chromeWindow = this.frameWeakRef.get().ownerGlobal;
     let isPrivate = PrivateBrowsingUtils.isWindowPrivate(chromeWindow);
 
-    let [savedAddresses, savedBasicCards] =
-      await Promise.all([this.fetchSavedAddresses(), this.fetchSavedPaymentCards()]);
+    let [savedAddresses, savedBasicCards] = await Promise.all([
+      this.fetchSavedAddresses(),
+      this.fetchSavedPaymentCards(),
+    ]);
 
     this.sendMessageToContent("showPaymentRequest", {
       request: requestSerialized,
@@ -540,19 +603,23 @@ var paymentDialogWrapper = {
   debugFrame() {
     // To avoid self-XSS-type attacks, ensure that Browser Chrome debugging is enabled.
     if (!Services.prefs.getBoolPref("devtools.chrome.enabled", false)) {
-      Cu.reportError("devtools.chrome.enabled must be enabled to debug the frame");
+      Cu.reportError(
+        "devtools.chrome.enabled must be enabled to debug the frame"
+      );
       return;
     }
-    let {
-      gDevToolsBrowser,
-    } = ChromeUtils.import("resource://devtools/client/framework/gDevTools.jsm");
+    let { gDevToolsBrowser } = ChromeUtils.import(
+      "resource://devtools/client/framework/gDevTools.jsm"
+    );
     gDevToolsBrowser.openContentProcessToolbox({
       selectedBrowser: this.frameWeakRef.get(),
     });
   },
 
   onOpenPreferences() {
-    BrowserWindowTracker.getTopWindow().openPreferences("privacy-form-autofill");
+    BrowserWindowTracker.getTopWindow().openPreferences(
+      "privacy-form-autofill"
+    );
   },
 
   onPaymentCancel() {
@@ -572,8 +639,10 @@ var paymentDialogWrapper = {
   }) {
     let methodData;
     try {
-      methodData = await this._convertProfileBasicCardToPaymentMethodData(paymentCardGUID,
-                                                                          cardSecurityCode);
+      methodData = await this._convertProfileBasicCardToPaymentMethodData(
+        paymentCardGUID,
+        cardSecurityCode
+      );
     } catch (ex) {
       // TODO (Bug 1498403): Some kind of "credit card storage error" here, perhaps asking user
       // to re-enter credit card # from management UI.
@@ -584,7 +653,9 @@ var paymentDialogWrapper = {
     if (!methodData) {
       // TODO (Bug 1429265/Bug 1429205): Handle when a user hits cancel on the
       // Master Password dialog.
-      Cu.reportError("Bug 1429265/Bug 1429205: User canceled master password entry");
+      Cu.reportError(
+        "Bug 1429265/Bug 1429205: User canceled master password entry"
+      );
       return;
     }
 
@@ -600,10 +671,13 @@ var paymentDialogWrapper = {
 
     // Update the lastUsedTime for the payerAddress and paymentCard. Check if
     // the record exists in formAutofillStorage because it may be temporary.
-    if (shippingGUID && await formAutofillStorage.addresses.get(shippingGUID)) {
+    if (
+      shippingGUID &&
+      (await formAutofillStorage.addresses.get(shippingGUID))
+    ) {
       formAutofillStorage.addresses.notifyUsed(shippingGUID);
     }
-    if (payerGUID && await formAutofillStorage.addresses.get(payerGUID)) {
+    if (payerGUID && (await formAutofillStorage.addresses.get(payerGUID))) {
       formAutofillStorage.addresses.notifyUsed(payerGUID);
     }
     if (await formAutofillStorage.creditCards.get(paymentCardGUID)) {
@@ -619,13 +693,7 @@ var paymentDialogWrapper = {
     });
   },
 
-  pay({
-    payerName,
-    payerEmail,
-    payerPhone,
-    methodName,
-    methodData,
-  }) {
+  pay({ payerName, payerEmail, payerPhone, methodName, methodData }) {
     const showResponse = this.createShowResponse({
       acceptStatus: Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
       payerName,
@@ -638,7 +706,7 @@ var paymentDialogWrapper = {
     this.sendMessageToContent("responseSent");
   },
 
-  async onChangePayerAddress({payerAddressGUID}) {
+  async onChangePayerAddress({ payerAddressGUID }) {
     if (payerAddressGUID) {
       // If a payer address was de-selected e.g. the selected address was deleted, we'll
       // just wait to send the address change when the payer address is eventually selected
@@ -648,7 +716,12 @@ var paymentDialogWrapper = {
         payerEmail,
         payerPhone,
       } = await this._convertProfileAddressToPayerData(payerAddressGUID);
-      paymentSrv.changePayerDetail(this.request.requestId, payerName, payerEmail, payerPhone);
+      paymentSrv.changePayerDetail(
+        this.request.requestId,
+        payerName,
+        payerEmail,
+        payerPhone
+      );
     }
   },
 
@@ -658,11 +731,16 @@ var paymentDialogWrapper = {
     const methodName = "basic-card";
     let methodDetails;
     try {
-      let billingAddress = await this._convertProfileAddressToPaymentAddress(billingAddressGUID);
-      const basicCardChangeDetails = Cc["@mozilla.org/dom/payments/basiccard-change-details;1"]
-                                       .createInstance(Ci.nsIBasicCardChangeDetails);
+      let billingAddress = await this._convertProfileAddressToPaymentAddress(
+        billingAddressGUID
+      );
+      const basicCardChangeDetails = Cc[
+        "@mozilla.org/dom/payments/basiccard-change-details;1"
+      ].createInstance(Ci.nsIBasicCardChangeDetails);
       basicCardChangeDetails.initData(billingAddress);
-      methodDetails = basicCardChangeDetails.QueryInterface(Ci.nsIMethodChangeDetails);
+      methodDetails = basicCardChangeDetails.QueryInterface(
+        Ci.nsIMethodChangeDetails
+      );
     } catch (ex) {
       // TODO (Bug 1498403): Some kind of "credit card storage error" here, perhaps asking user
       // to re-enter credit card # from management UI.
@@ -670,20 +748,26 @@ var paymentDialogWrapper = {
       return;
     }
 
-    paymentSrv.changePaymentMethod(this.request.requestId, methodName, methodDetails);
+    paymentSrv.changePaymentMethod(
+      this.request.requestId,
+      methodName,
+      methodDetails
+    );
   },
 
-  async onChangeShippingAddress({shippingAddressGUID}) {
+  async onChangeShippingAddress({ shippingAddressGUID }) {
     if (shippingAddressGUID) {
       // If a shipping address was de-selected e.g. the selected address was deleted, we'll
       // just wait to send the address change when the shipping address is eventually selected
       // before clicking Pay since it's a required field.
-      let address = await this._convertProfileAddressToPaymentAddress(shippingAddressGUID);
+      let address = await this._convertProfileAddressToPaymentAddress(
+        shippingAddressGUID
+      );
       paymentSrv.changeShippingAddress(this.request.requestId, address);
     }
   },
 
-  onChangeShippingOption({optionID}) {
+  onChangeShippingOption({ optionID }) {
     // Note, failing here on browser_host_name.js because the test closes
     // the dialog before the onChangeShippingOption is called, thus
     // deleting the request and making the requestId invalid. Unclear
@@ -704,8 +788,9 @@ var paymentDialogWrapper = {
     };
     try {
       let isTemporary = record.isTemporary;
-      let collection = isTemporary ? this.temporaryStore[collectionName] :
-                                     formAutofillStorage[collectionName];
+      let collection = isTemporary
+        ? this.temporaryStore[collectionName]
+        : formAutofillStorage[collectionName];
 
       if (guid) {
         // We want to preserve old properties since the edit forms are often
@@ -737,7 +822,10 @@ var paymentDialogWrapper = {
       responseMessage.error = true;
       Cu.reportError(ex);
     } finally {
-      this.sendMessageToContent("updateAutofillRecord:Response", responseMessage);
+      this.sendMessageToContent(
+        "updateAutofillRecord:Response",
+        responseMessage
+      );
     }
   },
 
@@ -767,8 +855,8 @@ var paymentDialogWrapper = {
     }
   },
 
-  receiveMessage({data}) {
-    let {messageType} = data;
+  receiveMessage({ data }) {
+    let { messageType } = data;
 
     switch (messageType) {
       case "debugFrame": {
@@ -808,9 +896,11 @@ var paymentDialogWrapper = {
         break;
       }
       case "paymentDialogReady": {
-        this.frameWeakRef.get().dispatchEvent(new Event("tabmodaldialogready", {
-          bubbles: true,
-        }));
+        this.frameWeakRef.get().dispatchEvent(
+          new Event("tabmodaldialogready", {
+            bubbles: true,
+          })
+        );
         break;
       }
       case "pay": {
@@ -818,11 +908,18 @@ var paymentDialogWrapper = {
         break;
       }
       case "updateAutofillRecord": {
-        this.onUpdateAutofillRecord(data.collectionName, data.record, data.guid, data.messageID);
+        this.onUpdateAutofillRecord(
+          data.collectionName,
+          data.record,
+          data.guid,
+          data.messageID
+        );
         break;
       }
       default: {
-        throw new Error(`paymentDialogWrapper: Unexpected messageType: ${messageType}`);
+        throw new Error(
+          `paymentDialogWrapper: Unexpected messageType: ${messageType}`
+        );
       }
     }
   },

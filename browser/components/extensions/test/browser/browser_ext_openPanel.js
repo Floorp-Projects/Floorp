@@ -3,7 +3,10 @@
 "use strict";
 
 add_task(async function test_openPopup_requires_user_interaction() {
-  const {GlobalManager} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  const { GlobalManager } = ChromeUtils.import(
+    "resource://gre/modules/Extension.jsm",
+    null
+  );
 
   async function backgroundScript() {
     browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tabInfo) => {
@@ -15,19 +18,23 @@ add_task(async function test_openPopup_requires_user_interaction() {
       await browser.test.assertRejects(
         browser.pageAction.openPopup(),
         "pageAction.openPopup may only be called from a user input handler",
-        "The error is informative.");
+        "The error is informative."
+      );
       await browser.test.assertRejects(
         browser.browserAction.openPopup(),
         "browserAction.openPopup may only be called from a user input handler",
-        "The error is informative.");
+        "The error is informative."
+      );
       await browser.test.assertRejects(
         browser.sidebarAction.open(),
         "sidebarAction.open may only be called from a user input handler",
-        "The error is informative.");
+        "The error is informative."
+      );
       await browser.test.assertRejects(
         browser.sidebarAction.close(),
         "sidebarAction.close may only be called from a user input handler",
-        "The error is informative.");
+        "The error is informative."
+      );
 
       browser.runtime.onMessage.addListener(async msg => {
         browser.test.assertEq(msg, "from-panel", "correct message received");
@@ -36,20 +43,20 @@ add_task(async function test_openPopup_requires_user_interaction() {
 
       browser.test.sendMessage("ready");
     });
-    browser.tabs.create({url: "tab.html"});
+    browser.tabs.create({ url: "tab.html" });
   }
 
   let extensionData = {
     background: backgroundScript,
     manifest: {
-      "browser_action": {
-        "default_popup": "panel.html",
+      browser_action: {
+        default_popup: "panel.html",
       },
-      "page_action": {
-        "default_popup": "panel.html",
+      page_action: {
+        default_popup: "panel.html",
       },
-      "sidebar_action": {
-        "default_panel": "panel.html",
+      sidebar_action: {
+        default_panel: "panel.html",
       },
     },
 
@@ -71,18 +78,34 @@ add_task(async function test_openPopup_requires_user_interaction() {
       </body></html>
       `,
       "tab.js": function() {
-        document.getElementById("openBrowserAction").addEventListener("click", () => {
-          browser.browserAction.openPopup();
-        }, {once: true});
-        document.getElementById("openPageAction").addEventListener("click", () => {
-          browser.pageAction.openPopup();
-        }, {once: true});
-        document.getElementById("openSidebarAction").addEventListener("click", () => {
-          browser.sidebarAction.open();
-        }, {once: true});
-        document.getElementById("closeSidebarAction").addEventListener("click", () => {
-          browser.sidebarAction.close();
-        }, {once: true});
+        document.getElementById("openBrowserAction").addEventListener(
+          "click",
+          () => {
+            browser.browserAction.openPopup();
+          },
+          { once: true }
+        );
+        document.getElementById("openPageAction").addEventListener(
+          "click",
+          () => {
+            browser.pageAction.openPopup();
+          },
+          { once: true }
+        );
+        document.getElementById("openSidebarAction").addEventListener(
+          "click",
+          () => {
+            browser.sidebarAction.open();
+          },
+          { once: true }
+        );
+        document.getElementById("closeSidebarAction").addEventListener(
+          "click",
+          () => {
+            browser.sidebarAction.close();
+          },
+          { once: true }
+        );
       },
       "panel.js": function() {
         browser.runtime.sendMessage("from-panel");
@@ -94,14 +117,21 @@ add_task(async function test_openPopup_requires_user_interaction() {
 
   async function click(id) {
     let open = extension.awaitMessage("panel-opened");
-    await BrowserTestUtils.synthesizeMouseAtCenter(id, {}, gBrowser.selectedBrowser);
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      id,
+      {},
+      gBrowser.selectedBrowser
+    );
     return open;
   }
 
   function testActiveTab(extension, expected) {
     let ext = GlobalManager.extensionMap.get(extension.id);
-    is(ext.tabManager.hasActiveTabPermission(gBrowser.selectedTab), expected,
-       "activeTab permission is correct");
+    is(
+      ext.tabManager.hasActiveTabPermission(gBrowser.selectedTab),
+      expected,
+      "activeTab permission is correct"
+    );
   }
 
   await extension.startup();
@@ -118,7 +148,11 @@ add_task(async function test_openPopup_requires_user_interaction() {
 
   await click("#openSidebarAction");
 
-  await BrowserTestUtils.synthesizeMouseAtCenter("#closeSidebarAction", {}, gBrowser.selectedBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#closeSidebarAction",
+    {},
+    gBrowser.selectedBrowser
+  );
   await BrowserTestUtils.waitForCondition(() => !SidebarUI.isOpen);
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);

@@ -31,8 +31,14 @@ add_task(async function() {
   resetTabs();
 
   // move the add-on button in the Panel Menu
-  CustomizableUI.addWidgetToArea(kButton, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
-  ok(!navBar.contains(addonButton), "Addon button was removed from the browser bar");
+  CustomizableUI.addWidgetToArea(
+    kButton,
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
+  ok(
+    !navBar.contains(addonButton),
+    "Addon button was removed from the browser bar"
+  );
 
   await waitForOverflowButtonShown();
 
@@ -40,7 +46,10 @@ add_task(async function() {
   await document.getElementById("nav-bar").overflowable.show();
   var panelMenu = document.getElementById("widget-overflow-mainView");
   let addonButtonInPanel = panelMenu.getElementsByAttribute("id", kButton);
-  ok(panelMenu.contains(addonButton), "Addon button was added to the Panel Menu");
+  ok(
+    panelMenu.contains(addonButton),
+    "Addon button was added to the Panel Menu"
+  );
   await checkButtonFunctionality(addonButtonInPanel[0]);
 });
 
@@ -68,6 +77,7 @@ function resetTabs() {
 
 async function checkButtonFunctionality(aButton) {
   aButton.click();
-  await waitForCondition(() => gBrowser.currentURI &&
-                               gBrowser.currentURI.spec == "about:addons");
+  await waitForCondition(
+    () => gBrowser.currentURI && gBrowser.currentURI.spec == "about:addons"
+  );
 }

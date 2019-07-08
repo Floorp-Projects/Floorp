@@ -8,18 +8,26 @@
  * anywhere else. Bug 1504358.
  */
 
-add_task(threadClientTest(async ({ threadClient, debuggee }) => {
-  dumpn("Evaluating test code and waiting for first debugger statement");
-  const dbgStmt = await executeOnNextTickAndWaitForPause(
-    () => evaluateTestCode(debuggee), threadClient);
-  equal(dbgStmt.frame.where.line, 2, "Should be at debugger statement on line 2");
+add_task(
+  threadClientTest(async ({ threadClient, debuggee }) => {
+    dumpn("Evaluating test code and waiting for first debugger statement");
+    const dbgStmt = await executeOnNextTickAndWaitForPause(
+      () => evaluateTestCode(debuggee),
+      threadClient
+    );
+    equal(
+      dbgStmt.frame.where.line,
+      2,
+      "Should be at debugger statement on line 2"
+    );
 
-  dumpn("Step out of inner and into outer");
-  const step2 = await stepOut(threadClient);
-  // The bug was that we'd step right past the end of the function and never pause.
-  equal(step2.frame.where.line, 2);
-  deepEqual(step2.why.frameFinished.return, { type: "undefined"});
-}));
+    dumpn("Step out of inner and into outer");
+    const step2 = await stepOut(threadClient);
+    // The bug was that we'd step right past the end of the function and never pause.
+    equal(step2.frame.where.line, 2);
+    deepEqual(step2.why.frameFinished.return, { type: "undefined" });
+  })
+);
 
 function evaluateTestCode(debuggee) {
   // By placing the inner and outer on the same line, this triggers the server's

@@ -22,7 +22,8 @@ function runTest() {
     }
   });
   iframe.setAttribute("mozbrowser", "true");
-  iframe.src = 'data:text/html,Outer iframe <iframe id="inner-iframe"></iframe>';
+  iframe.src =
+    'data:text/html,Outer iframe <iframe id="inner-iframe"></iframe>';
   // For kicks, this test uses a display:none iframe.  This shouldn't make a
   // difference in anything.
   iframe.style.display = "none";
@@ -74,7 +75,9 @@ function outerIframeLoaded() {
 
 function waitForMessages(num) {
   if (numMsgReceived < num) {
-    SimpleTest.executeSoon(function() { waitForMessages(num); });
+    SimpleTest.executeSoon(function() {
+      waitForMessages(num);
+    });
     return;
   }
 

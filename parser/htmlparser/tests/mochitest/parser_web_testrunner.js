@@ -21,13 +21,17 @@
 
 var functionsToRunAsync = [];
 
-window.addEventListener("message", function(event) {
-  if (event.source == window && event.data == "async-run") {
-    event.stopPropagation();
-    var fn = functionsToRunAsync.shift();
-    fn();
-  }
-}, true);
+window.addEventListener(
+  "message",
+  function(event) {
+    if (event.source == window && event.data == "async-run") {
+      event.stopPropagation();
+      var fn = functionsToRunAsync.shift();
+      fn();
+    }
+  },
+  true
+);
 
 function asyncRun(fn) {
   functionsToRunAsync.push(fn);
@@ -74,22 +78,24 @@ function makeTestChecker(input, expected, errors) {
   };
 }
 
-function makeFragmentTestChecker(input,
-                                 expected,
-                                 errors,
-                                 fragment,
-                                 testframe) {
+function makeFragmentTestChecker(input, expected, errors, fragment, testframe) {
   return function() {
     var context;
     if (fragment.startsWith("svg ")) {
-      context = document.createElementNS("http://www.w3.org/2000/svg",
-                                         fragment.substring(4));
+      context = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        fragment.substring(4)
+      );
     } else if (fragment.startsWith("math ")) {
-      context = document.createElementNS("http://www.w3.org/1998/Math/MathML",
-                                         fragment.substring(5));
+      context = document.createElementNS(
+        "http://www.w3.org/1998/Math/MathML",
+        fragment.substring(5)
+      );
     } else {
-      context = document.createElementNS("http://www.w3.org/1999/xhtml",
-                                         fragment);
+      context = document.createElementNS(
+        "http://www.w3.org/1999/xhtml",
+        fragment
+      );
     }
     // eslint-disable-next-line no-unsanitized/property
     context.innerHTML = input;
@@ -104,18 +110,16 @@ function makeFragmentTestChecker(input,
 
 var testcases;
 function nextTest(testframe) {
-  var {done, value} = testcases.next();
+  var { done, value } = testcases.next();
   if (done) {
     SimpleTest.finish();
     return;
   }
   var [input, output, errors, fragment] = value;
   if (fragment) {
-    asyncRun(makeFragmentTestChecker(input,
-                                     output,
-                                     errors,
-                                     fragment,
-                                     testframe));
+    asyncRun(
+      makeFragmentTestChecker(input, output, errors, fragment, testframe)
+    );
   } else {
     testframe.onload = makeTestChecker(input, output, errors);
     testframe.srcdoc = input;

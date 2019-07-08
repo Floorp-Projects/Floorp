@@ -13,15 +13,14 @@
 // Note: if the urgent request handling is broken (the urgent-marked requests
 // get blocked by queuing) this test will time out
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 var server = new HttpServer();
 server.start(-1);
 var baseURL = "http://localhost:" + server.identity.primaryPort + "/";
 var maxConnections = 0;
 var urgentRequests = 0;
-var totalRequests  = 0;
+var totalRequests = 0;
 var debug = false;
-
 
 function log(msg) {
   if (!debug) {
@@ -34,7 +33,10 @@ function log(msg) {
 }
 
 function make_channel(url) {
-  var request = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  var request = NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+  });
   request.QueryInterface(Ci.nsIHttpChannel);
   return request;
 }
@@ -67,7 +69,7 @@ function urgentStartHttpRequest(id) {
 
 function setup_httpRequests() {
   log("setup_httpRequests");
-  for (var i = 0; i < maxConnections ; i++) {
+  for (var i = 0; i < maxConnections; i++) {
     commonHttpRequest(i);
     do_test_pending();
   }
@@ -80,44 +82,45 @@ function setup_urgentStartRequests() {
   }
 }
 
-function HttpResponseListener(id)
-{
-  this.id = id
-};
+function HttpResponseListener(id) {
+  this.id = id;
+}
 
 var testOrder = 0;
-HttpResponseListener.prototype =
-{
-  onStartRequest (request) {
-  },
+HttpResponseListener.prototype = {
+  onStartRequest(request) {},
 
-  onDataAvailable (request, stream, off, cnt) {
-  },
+  onDataAvailable(request, stream, off, cnt) {},
 
-  onStopRequest (request, status) {
+  onStopRequest(request, status) {
     log("STOP id=" + this.id);
     do_test_finished();
-  }
+  },
 };
 
 var responseQueue = new Array();
-function setup_http_server()
-{
+function setup_http_server() {
   log("setup_http_server");
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-  maxConnections = prefs.getIntPref("network.http.max-persistent-connections-per-server");
+  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
+  maxConnections = prefs.getIntPref(
+    "network.http.max-persistent-connections-per-server"
+  );
   urgentRequests = 2;
   totalRequests = maxConnections + urgentRequests;
   var allCommonHttpRequestReceived = false;
   // Start server; will be stopped at test cleanup time.
-  server.registerPathHandler('/', function(metadata, response)
-  {
+  server.registerPathHandler("/", function(metadata, response) {
     var id = metadata.getHeader("X-ID");
     log("Server recived the response id=" + id);
     response.processAsync();
     responseQueue.push(response);
 
-    if (responseQueue.length == maxConnections && !allCommonHttpRequestReceived) {
+    if (
+      responseQueue.length == maxConnections &&
+      !allCommonHttpRequestReceived
+    ) {
       allCommonHttpRequestReceived = true;
       setup_urgentStartRequests();
     }
@@ -146,4 +149,3 @@ function run_test() {
   setup_http_server();
   setup_httpRequests();
 }
-

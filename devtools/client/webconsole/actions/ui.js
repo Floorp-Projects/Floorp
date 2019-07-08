@@ -26,7 +26,7 @@ const {
 } = require("devtools/client/webconsole/constants");
 
 function persistToggle() {
-  return ({dispatch, getState, prefsService}) => {
+  return ({ dispatch, getState, prefsService }) => {
     dispatch({
       type: PERSIST_TOGGLE,
     });
@@ -36,12 +36,15 @@ function persistToggle() {
 }
 
 function contentMessagesToggle() {
-  return ({dispatch, getState, prefsService}) => {
+  return ({ dispatch, getState, prefsService }) => {
     dispatch({
       type: SHOW_CONTENT_MESSAGES_TOGGLE,
     });
     const uiState = getAllUi(getState());
-    prefsService.setBoolPref(PREFS.UI.CONTENT_MESSAGES, uiState.showContentMessages);
+    prefsService.setBoolPref(
+      PREFS.UI.CONTENT_MESSAGES,
+      uiState.showContentMessages
+    );
   };
 }
 
@@ -86,7 +89,7 @@ function splitConsoleCloseButtonToggle(shouldDisplayButton) {
 }
 
 function editorToggle() {
-  return ({dispatch, getState, prefsService}) => {
+  return ({ dispatch, getState, prefsService }) => {
     dispatch({
       type: EDITOR_TOGGLE,
     });
@@ -103,7 +106,7 @@ function editorToggle() {
  * @param {String} messageId: id of the message containing the {actor} parameter.
  */
 function showMessageObjectInSidebar(actor, messageId) {
-  return ({dispatch, getState}) => {
+  return ({ dispatch, getState }) => {
     const { parameters } = getMessage(getState(), messageId);
     if (Array.isArray(parameters)) {
       for (const parameter of parameters) {
@@ -123,7 +126,7 @@ function showObjectInSidebar(grip) {
   };
 }
 
-function reverseSearchInputToggle({initialValue} = {}) {
+function reverseSearchInputToggle({ initialValue } = {}) {
   return {
     type: REVERSE_SEARCH_INPUT_TOGGLE,
     initialValue,

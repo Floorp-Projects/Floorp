@@ -9,7 +9,10 @@
 
 "use strict";
 
-const { createElement, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createElement,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -69,20 +72,23 @@ class Accordion extends PureComponent {
       { className: containerClassName, key: i },
 
       div(
-        { className: "_header",
-          onClick: event => this.handleHeaderClick(i, event) },
+        {
+          className: "_header",
+          onClick: event => this.handleHeaderClick(i, event),
+        },
         span({ className: arrowClassName }),
         span({ className: "truncate" }, item.header)
       ),
 
-      (created[i] || opened[i]) ?
-        div(
-          { className: "_content",
-            style: { display: opened[i] ? "block" : "none" },
-          },
-          createElement(item.component, item.componentProps || {})
-        ) :
-        null
+      created[i] || opened[i]
+        ? div(
+            {
+              className: "_content",
+              style: { display: opened[i] ? "block" : "none" },
+            },
+            createElement(item.component, item.componentProps || {})
+          )
+        : null
     );
   }
 

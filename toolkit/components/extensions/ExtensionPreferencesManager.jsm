@@ -22,21 +22,32 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionPreferencesManager"];
 
-const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+const { Management } = ChromeUtils.import(
+  "resource://gre/modules/Extension.jsm",
+  null
+);
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
-                               "resource://gre/modules/ExtensionSettingsStore.jsm");
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionSettingsStore",
+  "resource://gre/modules/ExtensionSettingsStore.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Preferences",
+  "resource://gre/modules/Preferences.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "defaultPreferences", function() {
-  return new Preferences({defaultBranch: true});
+  return new Preferences({ defaultBranch: true });
 });
 
 /* eslint-disable mozilla/balanced-listeners */
-Management.on("uninstall", (type, {id}) => {
+Management.on("uninstall", (type, { id }) => {
   ExtensionPreferencesManager.removeAll(id);
 });
 
@@ -83,7 +94,7 @@ function initialValueCallback() {
  * @param {Object} item
  *        An object that represents an item handed back from the setting store
  *        from which the new pref values can be calculated.
-*/
+ */
 function setPrefs(setting, item) {
   let prefs = item.initialValue || setting.setCallback(item.value);
   let changed = false;
@@ -132,11 +143,14 @@ async function processSetting(id, name, action) {
   let item = ExtensionSettingsStore[action](id, STORE_TYPE, name);
   if (item) {
     let setting = settingsMap.get(name);
-    let expectedPrefs = expectedItem.initialValue
-      || setting.setCallback(expectedItem.value);
-    if (Object.keys(expectedPrefs)
-              .some(pref => (expectedPrefs[pref] &&
-                             Preferences.get(pref) != expectedPrefs[pref]))) {
+    let expectedPrefs =
+      expectedItem.initialValue || setting.setCallback(expectedItem.value);
+    if (
+      Object.keys(expectedPrefs).some(
+        pref =>
+          expectedPrefs[pref] && Preferences.get(pref) != expectedPrefs[pref]
+      )
+    ) {
       return false;
     }
     setPrefs(setting, item);
@@ -192,7 +206,12 @@ this.ExtensionPreferencesManager = {
     let setting = settingsMap.get(name);
     await ExtensionSettingsStore.initialize();
     let item = await ExtensionSettingsStore.addSetting(
-      id, STORE_TYPE, name, value, initialValueCallback.bind(setting));
+      id,
+      STORE_TYPE,
+      name,
+      value,
+      initialValueCallback.bind(setting)
+    );
     if (item) {
       setPrefs(setting, item);
       return true;
@@ -365,18 +384,28 @@ this.ExtensionPreferencesManager = {
    *
    * @returns {object} API object with get/set/clear methods
    */
-  getSettingsAPI(extensionId, name, callback, storeType, readOnly = false, validate = () => {}) {
+  getSettingsAPI(
+    extensionId,
+    name,
+    callback,
+    storeType,
+    readOnly = false,
+    validate = () => {}
+  ) {
     return {
       async get(details) {
         validate();
-        let levelOfControl = details.incognito ?
-          "not_controllable" :
-          await ExtensionPreferencesManager.getLevelOfControl(
-            extensionId, name, storeType);
+        let levelOfControl = details.incognito
+          ? "not_controllable"
+          : await ExtensionPreferencesManager.getLevelOfControl(
+              extensionId,
+              name,
+              storeType
+            );
         levelOfControl =
-          (readOnly && levelOfControl === "controllable_by_this_extension") ?
-            "not_controllable" :
-            levelOfControl;
+          readOnly && levelOfControl === "controllable_by_this_extension"
+            ? "not_controllable"
+            : levelOfControl;
         return {
           levelOfControl,
           value: await callback(),
@@ -386,7 +415,10 @@ this.ExtensionPreferencesManager = {
         validate();
         if (!readOnly) {
           return ExtensionPreferencesManager.setSetting(
-            extensionId, name, details.value);
+            extensionId,
+            name,
+            details.value
+          );
         }
         return false;
       },

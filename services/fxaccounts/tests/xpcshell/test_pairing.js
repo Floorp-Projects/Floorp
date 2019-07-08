@@ -3,10 +3,22 @@
 
 "use strict";
 
-const {FxAccountsPairingFlow} = ChromeUtils.import("resource://gre/modules/FxAccountsPairing.jsm", {});
-const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});
-const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", {});
-const {CryptoUtils} = ChromeUtils.import("resource://services-crypto/utils.js", {});
+const { FxAccountsPairingFlow } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsPairing.jsm",
+  {}
+);
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm",
+  {}
+);
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm",
+  {}
+);
+const { CryptoUtils } = ChromeUtils.import(
+  "resource://services-crypto/utils.js",
+  {}
+);
 XPCOMUtils.defineLazyModuleGetters(this, {
   jwcrypto: "resource://services-crypto/jwcrypto.jsm",
 });
@@ -32,8 +44,12 @@ const PAIR_URI = "https://foo.bar/pair";
 const OAUTH_URI = "https://foo.bar/oauth";
 const KSYNC = "myksync";
 const fxaConfig = {
-  promisePairingURI() { return PAIR_URI; },
-  promiseOAuthURI() { return OAUTH_URI; },
+  promisePairingURI() {
+    return PAIR_URI;
+  },
+  promiseOAuthURI() {
+    return OAUTH_URI;
+  },
 };
 const fxAccounts = {
   getScopedKeys(scope) {
@@ -46,7 +62,7 @@ const fxAccounts = {
     };
   },
   authorizeOAuthCode() {
-    return {code: "mycode", state: "mystate"};
+    return { code: "mycode", state: "mystate" };
   },
   getSignedInUserProfile() {
     return {
@@ -71,15 +87,19 @@ class MockPairingChannel extends EventTarget {
   }
 
   send(data) {
-    this.dispatchEvent(new CustomEvent("send", {
-      detail: { data },
-    }));
+    this.dispatchEvent(
+      new CustomEvent("send", {
+        detail: { data },
+      })
+    );
   }
 
   simulateIncoming(data) {
-    this.dispatchEvent(new CustomEvent("message", {
-      detail: { data, sender: SENDER_SUPP },
-    }));
+    this.dispatchEvent(
+      new CustomEvent("message", {
+        detail: { data, sender: SENDER_SUPP },
+      })
+    );
   }
 
   close() {
@@ -90,8 +110,20 @@ class MockPairingChannel extends EventTarget {
 add_task(async function testFullFlow() {
   const emitter = new EventEmitter();
   const pairingChannel = new MockPairingChannel();
-  const pairingUri = await FxAccountsPairingFlow.start({emitter, pairingChannel, fxAccounts, fxaConfig, weave});
-  Assert.equal(pairingUri, `${PAIR_URI}#channel_id=${CHANNEL_ID}&channel_key=${ChromeUtils.base64URLEncode(CHANNEL_KEY, {pad: false})}`);
+  const pairingUri = await FxAccountsPairingFlow.start({
+    emitter,
+    pairingChannel,
+    fxAccounts,
+    fxaConfig,
+    weave,
+  });
+  Assert.equal(
+    pairingUri,
+    `${PAIR_URI}#channel_id=${CHANNEL_ID}&channel_key=${ChromeUtils.base64URLEncode(
+      CHANNEL_KEY,
+      { pad: false }
+    )}`
+  );
 
   const flow = FxAccountsPairingFlow.get(CHANNEL_ID);
 
@@ -103,7 +135,10 @@ add_task(async function testFullFlow() {
     data: {
       client_id: "client_id_1",
       state: "mystate",
-      keys_jwk: ChromeUtils.base64URLEncode(new TextEncoder().encode(JSON.stringify(epk.publicJWK)), {pad: false}),
+      keys_jwk: ChromeUtils.base64URLEncode(
+        new TextEncoder().encode(JSON.stringify(epk.publicJWK)),
+        { pad: false }
+      ),
       scope: "profile https://identity.mozilla.com/apps/oldsync",
       code_challenge: "chal",
       code_challenge_method: "S256",
@@ -112,43 +147,72 @@ add_task(async function testFullFlow() {
   const sentAuthMetadata = await promiseMetadataSent;
   Assert.deepEqual(sentAuthMetadata, {
     message: "pair:auth:metadata",
-    data: {email: EMAIL, avatar: AVATAR, displayName: DISPLAY_NAME, deviceName: DEVICE_NAME},
+    data: {
+      email: EMAIL,
+      avatar: AVATAR,
+      displayName: DISPLAY_NAME,
+      deviceName: DEVICE_NAME,
+    },
   });
   const oauthUrl = await promiseSwitchToWebContent;
-  Assert.equal(oauthUrl, `${OAUTH_URI}?client_id=client_id_1&scope=profile+https%3A%2F%2Fidentity.mozilla.com%2Fapps%2Foldsync&email=foo%40bar.com&uid=abcd&channel_id=${CHANNEL_ID}&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob%3Apair-auth-webchannel`);
+  Assert.equal(
+    oauthUrl,
+    `${OAUTH_URI}?client_id=client_id_1&scope=profile+https%3A%2F%2Fidentity.mozilla.com%2Fapps%2Foldsync&email=foo%40bar.com&uid=abcd&channel_id=${CHANNEL_ID}&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob%3Apair-auth-webchannel`
+  );
 
-  let pairSuppMetadata = await simulateIncomingWebChannel(flow, "fxaccounts:pair_supplicant_metadata");
-  Assert.deepEqual({
-    ua: "Firefox Supp",
-    city: "Nice",
-    region: "PACA",
-    country: "France",
-    ipAddress: "127.0.0.1",
-  }, pairSuppMetadata);
+  let pairSuppMetadata = await simulateIncomingWebChannel(
+    flow,
+    "fxaccounts:pair_supplicant_metadata"
+  );
+  Assert.deepEqual(
+    {
+      ua: "Firefox Supp",
+      city: "Nice",
+      region: "PACA",
+      country: "France",
+      ipAddress: "127.0.0.1",
+    },
+    pairSuppMetadata
+  );
 
   const authorizeOAuthCode = sinon.spy(fxAccounts, "authorizeOAuthCode");
   const promiseOAuthParamsMsg = promiseOutgoingMessage(pairingChannel);
   await simulateIncomingWebChannel(flow, "fxaccounts:pair_authorize");
   Assert.ok(authorizeOAuthCode.calledOnce);
   const oauthCodeArgs = authorizeOAuthCode.firstCall.args[0];
-  Assert.equal(oauthCodeArgs.keys_jwk, ChromeUtils.base64URLEncode(new TextEncoder().encode(JSON.stringify(epk.publicJWK)), {pad: false}));
+  Assert.equal(
+    oauthCodeArgs.keys_jwk,
+    ChromeUtils.base64URLEncode(
+      new TextEncoder().encode(JSON.stringify(epk.publicJWK)),
+      { pad: false }
+    )
+  );
   Assert.equal(oauthCodeArgs.client_id, "client_id_1");
   Assert.equal(oauthCodeArgs.access_type, "offline");
   Assert.equal(oauthCodeArgs.state, "mystate");
-  Assert.equal(oauthCodeArgs.scope, "profile https://identity.mozilla.com/apps/oldsync");
+  Assert.equal(
+    oauthCodeArgs.scope,
+    "profile https://identity.mozilla.com/apps/oldsync"
+  );
   Assert.equal(oauthCodeArgs.code_challenge, "chal");
   Assert.equal(oauthCodeArgs.code_challenge_method, "S256");
   const oAuthParams = await promiseOAuthParamsMsg;
   Assert.deepEqual(oAuthParams, {
-    "message": "pair:auth:authorize",
-    "data": {"code": "mycode", "state": "mystate"},
+    message: "pair:auth:authorize",
+    data: { code: "mycode", state: "mystate" },
   });
-  let heartbeat = await simulateIncomingWebChannel(flow, "fxaccounts:pair_heartbeat");
+  let heartbeat = await simulateIncomingWebChannel(
+    flow,
+    "fxaccounts:pair_heartbeat"
+  );
   Assert.ok(!heartbeat.suppAuthorized);
   await pairingChannel.simulateIncoming({
     message: "pair:supp:authorize",
   });
-  heartbeat = await simulateIncomingWebChannel(flow, "fxaccounts:pair_heartbeat");
+  heartbeat = await simulateIncomingWebChannel(
+    flow,
+    "fxaccounts:pair_heartbeat"
+  );
   Assert.ok(heartbeat.suppAuthorized);
   await simulateIncomingWebChannel(flow, "fxaccounts:pair_complete");
   // The flow should have been destroyed!
@@ -160,36 +224,62 @@ add_task(async function testFullFlow() {
 add_task(async function testUnknownPairingMessage() {
   const emitter = new EventEmitter();
   const pairingChannel = new MockPairingChannel();
-  await FxAccountsPairingFlow.start({emitter, pairingChannel, fxAccounts, fxaConfig, weave});
+  await FxAccountsPairingFlow.start({
+    emitter,
+    pairingChannel,
+    fxAccounts,
+    fxaConfig,
+    weave,
+  });
   const flow = FxAccountsPairingFlow.get(CHANNEL_ID);
   const viewErrorObserved = emitter.once("view:Error");
   pairingChannel.simulateIncoming({
     message: "pair:boom",
   });
   await viewErrorObserved;
-  let heartbeat = await simulateIncomingWebChannel(flow, "fxaccounts:pair_heartbeat");
+  let heartbeat = await simulateIncomingWebChannel(
+    flow,
+    "fxaccounts:pair_heartbeat"
+  );
   Assert.ok(heartbeat.err);
 });
 
 add_task(async function testUnknownWebChannelCommand() {
   const emitter = new EventEmitter();
   const pairingChannel = new MockPairingChannel();
-  await FxAccountsPairingFlow.start({emitter, pairingChannel, fxAccounts, fxaConfig, weave});
+  await FxAccountsPairingFlow.start({
+    emitter,
+    pairingChannel,
+    fxAccounts,
+    fxaConfig,
+    weave,
+  });
   const flow = FxAccountsPairingFlow.get(CHANNEL_ID);
   const viewErrorObserved = emitter.once("view:Error");
   await simulateIncomingWebChannel(flow, "fxaccounts:boom");
   await viewErrorObserved;
-  let heartbeat = await simulateIncomingWebChannel(flow, "fxaccounts:pair_heartbeat");
+  let heartbeat = await simulateIncomingWebChannel(
+    flow,
+    "fxaccounts:pair_heartbeat"
+  );
   Assert.ok(heartbeat.err);
 });
 
 add_task(async function testPairingChannelFailure() {
   const emitter = new EventEmitter();
   const pairingChannel = new MockPairingChannel();
-  await FxAccountsPairingFlow.start({emitter, pairingChannel, fxAccounts, fxaConfig, weave});
+  await FxAccountsPairingFlow.start({
+    emitter,
+    pairingChannel,
+    fxAccounts,
+    fxaConfig,
+    weave,
+  });
   const flow = FxAccountsPairingFlow.get(CHANNEL_ID);
   const viewErrorObserved = emitter.once("view:Error");
-  sinon.stub(pairingChannel, "send").callsFake(() => { throw new Error("Boom!"); });
+  sinon.stub(pairingChannel, "send").callsFake(() => {
+    throw new Error("Boom!");
+  });
   pairingChannel.simulateIncoming({
     message: "pair:supp:request",
     data: {
@@ -202,7 +292,10 @@ add_task(async function testPairingChannelFailure() {
   });
   await viewErrorObserved;
 
-  let heartbeat = await simulateIncomingWebChannel(flow, "fxaccounts:pair_heartbeat");
+  let heartbeat = await simulateIncomingWebChannel(
+    flow,
+    "fxaccounts:pair_heartbeat"
+  );
   Assert.ok(heartbeat.err);
 });
 
@@ -210,11 +303,21 @@ add_task(async function testFlowTimeout() {
   const emitter = new EventEmitter();
   const pairingChannel = new MockPairingChannel();
   const viewErrorObserved = emitter.once("view:Error");
-  await FxAccountsPairingFlow.start({emitter, pairingChannel, fxAccounts, fxaConfig, weave, flowTimeout: 1});
+  await FxAccountsPairingFlow.start({
+    emitter,
+    pairingChannel,
+    fxAccounts,
+    fxaConfig,
+    weave,
+    flowTimeout: 1,
+  });
   const flow = FxAccountsPairingFlow.get(CHANNEL_ID);
   await viewErrorObserved;
 
-  let heartbeat = await simulateIncomingWebChannel(flow, "fxaccounts:pair_heartbeat");
+  let heartbeat = await simulateIncomingWebChannel(
+    flow,
+    "fxaccounts:pair_heartbeat"
+  );
   Assert.ok(heartbeat.err.match(/Timeout/));
 });
 
@@ -233,7 +336,11 @@ async function promiseOutgoingMessage(pairingChannel) {
 }
 
 async function generateEphemeralKeypair() {
-  const keypair = await crypto.subtle.generateKey({name: "ECDH", namedCurve: "P-256"}, true, ["deriveKey"]);
+  const keypair = await crypto.subtle.generateKey(
+    { name: "ECDH", namedCurve: "P-256" },
+    true,
+    ["deriveKey"]
+  );
   const publicJWK = await crypto.subtle.exportKey("jwk", keypair.publicKey);
   const privateJWK = await crypto.subtle.exportKey("jwk", keypair.privateKey);
   delete publicJWK.key_ops;

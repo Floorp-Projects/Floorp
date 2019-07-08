@@ -18,7 +18,6 @@ const INITIAL_CLASS_LIST = {
 };
 
 const reducers = {
-
   [UPDATE_CLASSES](classList, { classes }) {
     return {
       ...classList,
@@ -32,7 +31,6 @@ const reducers = {
       isClassPanelExpanded,
     };
   },
-
 };
 
 module.exports = function(classList = INITIAL_CLASS_LIST, action) {

@@ -5,17 +5,21 @@
 
 "use strict";
 
-var {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
-const {colorUtils} = require("devtools/shared/css/color");
-const {cssColors} = require("devtools/shared/css/color-db");
+const { colorUtils } = require("devtools/shared/css/color");
+const { cssColors } = require("devtools/shared/css/color-db");
 const InspectorUtils = require("InspectorUtils");
 
 function isValid(colorName) {
-  ok(colorUtils.isValidCSSColor(colorName),
-     colorName + " is valid in database");
-  ok(InspectorUtils.isValidCSSColor(colorName),
-     colorName + " is valid in InspectorUtils");
+  ok(
+    colorUtils.isValidCSSColor(colorName),
+    colorName + " is valid in database"
+  );
+  ok(
+    InspectorUtils.isValidCSSColor(colorName),
+    colorName + " is valid in InspectorUtils"
+  );
 }
 
 function checkOne(colorName, checkName) {
@@ -26,7 +30,7 @@ function checkOne(colorName, checkName) {
   isValid(colorName);
 
   if (checkName) {
-    const {r, g, b} = ours;
+    const { r, g, b } = ours;
 
     // The color we got might not map back to the same name; but our
     // implementation should agree with InspectorUtils about which name is
@@ -34,8 +38,11 @@ function checkOne(colorName, checkName) {
     const ourName = colorUtils.rgbToColorName(r, g, b);
     const domName = InspectorUtils.rgbToColorName(r, g, b);
 
-    equal(ourName, domName,
-          colorName + " canonical name agrees with InspectorUtils");
+    equal(
+      ourName,
+      domName,
+      colorName + " canonical name agrees with InspectorUtils"
+    );
   }
 }
 
@@ -52,9 +59,15 @@ function run_test() {
   if (false) {
     const names = InspectorUtils.getCSSValuesForProperty("background-color");
     for (const name of names) {
-      if (name !== "hsl" && name !== "hsla" &&
-          name !== "rgb" && name !== "rgba" &&
-          name !== "inherit" && name !== "initial" && name !== "unset") {
+      if (
+        name !== "hsl" &&
+        name !== "hsla" &&
+        name !== "rgb" &&
+        name !== "rgba" &&
+        name !== "inherit" &&
+        name !== "initial" &&
+        name !== "unset"
+      ) {
         checkOne(name, true);
       }
     }

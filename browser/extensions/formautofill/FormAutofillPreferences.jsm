@@ -13,12 +13,18 @@ var EXPORTED_SYMBOLS = ["FormAutofillPreferences"];
 // Add addresses enabled flag in telemetry environment for recording the number of
 // users who disable/enable the address autofill feature.
 const BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
-const MANAGE_ADDRESSES_URL = "chrome://formautofill/content/manageAddresses.xhtml";
-const MANAGE_CREDITCARDS_URL = "chrome://formautofill/content/manageCreditCards.xhtml";
+const MANAGE_ADDRESSES_URL =
+  "chrome://formautofill/content/manageAddresses.xhtml";
+const MANAGE_CREDITCARDS_URL =
+  "chrome://formautofill/content/manageCreditCards.xhtml";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {FormAutofill} = ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
-const {FormAutofillUtils} = ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { FormAutofill } = ChromeUtils.import(
+  "resource://formautofill/FormAutofill.jsm"
+);
+const { FormAutofillUtils } = ChromeUtils.import(
+  "resource://formautofill/FormAutofillUtils.jsm"
+);
 
 const {
   ENABLED_AUTOFILL_ADDRESSES_PREF,
@@ -70,16 +76,25 @@ FormAutofillPreferences.prototype = {
    * @param  {XULDocument} document
    */
   createPreferenceGroup(document) {
-    let learnMoreURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "autofill-card-address";
+    let learnMoreURL =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "autofill-card-address";
     let formAutofillFragment = document.createDocumentFragment();
     let formAutofillGroupBoxLabel = document.createXULElement("label");
-    let formAutofillGroupBoxLabelHeading = document.createElementNS(HTML_NS, "h2");
+    let formAutofillGroupBoxLabelHeading = document.createElementNS(
+      HTML_NS,
+      "h2"
+    );
     let formAutofillGroup = document.createXULElement("vbox");
     let addressAutofill = document.createXULElement("hbox");
     let addressAutofillCheckboxGroup = document.createXULElement("hbox");
     let addressAutofillCheckbox = document.createXULElement("checkbox");
-    let addressAutofillLearnMore = document.createXULElement("label", {is: "text-link"});
-    let savedAddressesBtn = document.createXULElement("button", {is: "highlightable-button"});
+    let addressAutofillLearnMore = document.createXULElement("label", {
+      is: "text-link",
+    });
+    let savedAddressesBtn = document.createXULElement("button", {
+      is: "highlightable-button",
+    });
     // Wrappers are used to properly compute the search tooltip positions
     let savedAddressesBtnWrapper = document.createXULElement("hbox");
     let savedCreditCardsBtnWrapper = document.createXULElement("hbox");
@@ -92,12 +107,22 @@ FormAutofillPreferences.prototype = {
     addressAutofill.id = "addressAutofill";
     addressAutofillLearnMore.id = "addressAutofillLearnMore";
 
-    formAutofillGroupBoxLabelHeading.textContent = this.bundle.GetStringFromName("autofillHeader");
+    formAutofillGroupBoxLabelHeading.textContent = this.bundle.GetStringFromName(
+      "autofillHeader"
+    );
 
     addressAutofill.setAttribute("data-subcategory", "address-autofill");
-    addressAutofillCheckbox.setAttribute("label", this.bundle.GetStringFromName("autofillAddressesCheckbox"));
-    addressAutofillLearnMore.textContent = this.bundle.GetStringFromName("learnMoreLabel");
-    savedAddressesBtn.setAttribute("label", this.bundle.GetStringFromName("savedAddressesBtnLabel"));
+    addressAutofillCheckbox.setAttribute(
+      "label",
+      this.bundle.GetStringFromName("autofillAddressesCheckbox")
+    );
+    addressAutofillLearnMore.textContent = this.bundle.GetStringFromName(
+      "learnMoreLabel"
+    );
+    savedAddressesBtn.setAttribute(
+      "label",
+      this.bundle.GetStringFromName("savedAddressesBtnLabel")
+    );
     // Align the start to keep the savedAddressesBtn as original size
     // when addressAutofillCheckboxGroup's height is changed by a longer l10n string
     savedAddressesBtnWrapper.setAttribute("align", "start");
@@ -105,8 +130,12 @@ FormAutofillPreferences.prototype = {
     addressAutofillLearnMore.setAttribute("href", learnMoreURL);
 
     // Add preferences search support
-    savedAddressesBtn.setAttribute("searchkeywords", MANAGE_ADDRESSES_KEYWORDS.concat(EDIT_ADDRESS_KEYWORDS)
-                                                       .map(key => this.bundle.GetStringFromName(key)).join("\n"));
+    savedAddressesBtn.setAttribute(
+      "searchkeywords",
+      MANAGE_ADDRESSES_KEYWORDS.concat(EDIT_ADDRESS_KEYWORDS)
+        .map(key => this.bundle.GetStringFromName(key))
+        .join("\n")
+    );
 
     // Manually set the checked state
     if (FormAutofill.isAutofillAddressesEnabled) {
@@ -137,8 +166,12 @@ FormAutofillPreferences.prototype = {
       let creditCardAutofill = document.createXULElement("hbox");
       let creditCardAutofillCheckboxGroup = document.createXULElement("hbox");
       let creditCardAutofillCheckbox = document.createXULElement("checkbox");
-      let creditCardAutofillLearnMore = document.createXULElement("label", {is: "text-link"});
-      let savedCreditCardsBtn = document.createXULElement("button", {is: "highlightable-button"});
+      let creditCardAutofillLearnMore = document.createXULElement("label", {
+        is: "text-link",
+      });
+      let savedCreditCardsBtn = document.createXULElement("button", {
+        is: "highlightable-button",
+      });
       savedCreditCardsBtn.className = "accessory-button";
       creditCardAutofillCheckbox.className = "tail-with-learn-more";
       creditCardAutofillLearnMore.className = "learnMore";
@@ -146,10 +179,21 @@ FormAutofillPreferences.prototype = {
       creditCardAutofill.id = "creditCardAutofill";
       creditCardAutofillLearnMore.id = "creditCardAutofillLearnMore";
 
-      creditCardAutofill.setAttribute("data-subcategory", "credit-card-autofill");
-      creditCardAutofillCheckbox.setAttribute("label", this.bundle.GetStringFromName("autofillCreditCardsCheckbox"));
-      creditCardAutofillLearnMore.textContent = this.bundle.GetStringFromName("learnMoreLabel");
-      savedCreditCardsBtn.setAttribute("label", this.bundle.GetStringFromName("savedCreditCardsBtnLabel"));
+      creditCardAutofill.setAttribute(
+        "data-subcategory",
+        "credit-card-autofill"
+      );
+      creditCardAutofillCheckbox.setAttribute(
+        "label",
+        this.bundle.GetStringFromName("autofillCreditCardsCheckbox")
+      );
+      creditCardAutofillLearnMore.textContent = this.bundle.GetStringFromName(
+        "learnMoreLabel"
+      );
+      savedCreditCardsBtn.setAttribute(
+        "label",
+        this.bundle.GetStringFromName("savedCreditCardsBtnLabel")
+      );
       // Align the start to keep the savedCreditCardsBtn as original size
       // when creditCardAutofillCheckboxGroup's height is changed by a longer l10n string
       savedCreditCardsBtnWrapper.setAttribute("align", "start");
@@ -157,8 +201,12 @@ FormAutofillPreferences.prototype = {
       creditCardAutofillLearnMore.setAttribute("href", learnMoreURL);
 
       // Add preferences search support
-      savedCreditCardsBtn.setAttribute("searchkeywords", MANAGE_CREDITCARDS_KEYWORDS.concat(EDIT_CREDITCARD_KEYWORDS)
-                                                           .map(key => this.bundle.GetStringFromName(key)).join("\n"));
+      savedCreditCardsBtn.setAttribute(
+        "searchkeywords",
+        MANAGE_CREDITCARDS_KEYWORDS.concat(EDIT_CREDITCARD_KEYWORDS)
+          .map(key => this.bundle.GetStringFromName(key))
+          .join("\n")
+      );
 
       // Manually set the checked state
       if (FormAutofill.isAutofillCreditCardsEnabled) {
@@ -192,9 +240,15 @@ FormAutofillPreferences.prototype = {
 
         if (target == this.refs.addressAutofillCheckbox) {
           // Set preference directly instead of relying on <Preference>
-          Services.prefs.setBoolPref(ENABLED_AUTOFILL_ADDRESSES_PREF, target.checked);
+          Services.prefs.setBoolPref(
+            ENABLED_AUTOFILL_ADDRESSES_PREF,
+            target.checked
+          );
         } else if (target == this.refs.creditCardAutofillCheckbox) {
-          Services.prefs.setBoolPref(ENABLED_AUTOFILL_CREDITCARDS_PREF, target.checked);
+          Services.prefs.setBoolPref(
+            ENABLED_AUTOFILL_CREDITCARDS_PREF,
+            target.checked
+          );
         } else if (target == this.refs.savedAddressesBtn) {
           target.ownerGlobal.gSubDialog.open(MANAGE_ADDRESSES_URL);
         } else if (target == this.refs.savedCreditCardsBtn) {

@@ -7,15 +7,21 @@
 // are rejected.
 
 do_get_profile(); // Must be called before getting nsIX509CertDB
-const certDB = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
+const certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
 
 const SERVER_PORT = 8888;
 
 function getOCSPResponder(expectedCertNames) {
   let expectedPaths = expectedCertNames.slice();
-  return startOCSPResponder(SERVER_PORT, "www.example.com", "test_keysize_ev/",
-                            expectedCertNames, expectedPaths);
+  return startOCSPResponder(
+    SERVER_PORT,
+    "www.example.com",
+    "test_keysize_ev/",
+    expectedCertNames,
+    expectedPaths
+  );
 }
 
 function loadCert(certName, trustString) {
@@ -39,9 +45,13 @@ function loadCert(certName, trustString) {
  * @param {Boolean} expectedResult
  *        Whether the chain is expected to validate as EV.
  */
-async function keySizeTestForEV(expectedNamesForOCSP,
-                                rootCertFileName, intCertFileNames,
-                                endEntityCertFileName, expectedResult) {
+async function keySizeTestForEV(
+  expectedNamesForOCSP,
+  rootCertFileName,
+  intCertFileNames,
+  endEntityCertFileName,
+  expectedResult
+) {
   clearOCSPCache();
   let ocspResponder = getOCSPResponder(expectedNamesForOCSP);
 
@@ -53,7 +63,8 @@ async function keySizeTestForEV(expectedNamesForOCSP,
     certDB,
     constructCertFromFile(`test_keysize_ev/${endEntityCertFileName}.pem`),
     certificateUsageSSLServer,
-    expectedResult);
+    expectedResult
+  );
 
   await stopOCSPResponder(ocspResponder);
 }
@@ -91,51 +102,70 @@ async function checkRSAChains(inadequateKeySize, adequateKeySize) {
   let intFullName = intOKName + "-" + rootOKName;
   let eeFullName = eeOKName + "-" + intOKName + "-" + rootOKName;
   let expectedNamesForOCSP = gEVExpected
-                           ? [ intFullName,
-                               eeFullName ]
-                           : [ eeFullName ];
-  await keySizeTestForEV(expectedNamesForOCSP, rootOKCertFileName,
-                         [ intFullName ], eeFullName, gEVExpected);
+    ? [intFullName, eeFullName]
+    : [eeFullName];
+  await keySizeTestForEV(
+    expectedNamesForOCSP,
+    rootOKCertFileName,
+    [intFullName],
+    eeFullName,
+    gEVExpected
+  );
 
   // Chain with a root cert that has an inadequate size for EV, but
   // adequate size for DV
   intFullName = intOKName + "-" + rootNotOKName;
   eeFullName = eeOKName + "-" + intOKName + "-" + rootNotOKName;
-  expectedNamesForOCSP = [ eeFullName ];
-  await keySizeTestForEV(expectedNamesForOCSP, rootNotOKName,
-                         [ intFullName ], eeFullName, false);
+  expectedNamesForOCSP = [eeFullName];
+  await keySizeTestForEV(
+    expectedNamesForOCSP,
+    rootNotOKName,
+    [intFullName],
+    eeFullName,
+    false
+  );
 
   // Chain with an intermediate cert that has an inadequate size for EV, but
   // adequate size for DV
   intFullName = intNotOKName + "-" + rootOKName;
   eeFullName = eeOKName + "-" + intNotOKName + "-" + rootOKName;
-  expectedNamesForOCSP = [ eeFullName ];
-  await keySizeTestForEV(expectedNamesForOCSP, rootOKCertFileName,
-                         [ intFullName ], eeFullName, false);
+  expectedNamesForOCSP = [eeFullName];
+  await keySizeTestForEV(
+    expectedNamesForOCSP,
+    rootOKCertFileName,
+    [intFullName],
+    eeFullName,
+    false
+  );
 
   // Chain with an end entity cert that has an inadequate size for EV, but
   // adequate size for DV
   intFullName = intOKName + "-" + rootOKName;
   eeFullName = eeNotOKName + "-" + intOKName + "-" + rootOKName;
-  expectedNamesForOCSP = gEVExpected
-                       ? [ intFullName,
-                           eeFullName ]
-                       : [ eeFullName ];
-  await keySizeTestForEV(expectedNamesForOCSP, rootOKCertFileName,
-                         [ intFullName ], eeFullName, false);
+  expectedNamesForOCSP = gEVExpected ? [intFullName, eeFullName] : [eeFullName];
+  await keySizeTestForEV(
+    expectedNamesForOCSP,
+    rootOKCertFileName,
+    [intFullName],
+    eeFullName,
+    false
+  );
 }
 
 add_task(async function() {
   Services.prefs.setCharPref("network.dns.localDomains", "www.example.com");
   Services.prefs.setIntPref("security.OCSP.enabled", 1);
 
-  let smallKeyEVRoot =
-    constructCertFromFile("test_keysize_ev/ev_root_rsa_2040.pem");
-  equal(smallKeyEVRoot.sha256Fingerprint,
-        "40:AB:5D:A5:89:15:A9:4B:82:87:B8:A6:9A:84:B1:DB:" +
-        "7A:9D:DB:B8:4E:E1:23:E3:C6:64:E7:50:DC:35:8C:68",
-        "test sanity check: the small-key EV root must have the same " +
-        "fingerprint as the corresponding entry in ExtendedValidation.cpp");
+  let smallKeyEVRoot = constructCertFromFile(
+    "test_keysize_ev/ev_root_rsa_2040.pem"
+  );
+  equal(
+    smallKeyEVRoot.sha256Fingerprint,
+    "40:AB:5D:A5:89:15:A9:4B:82:87:B8:A6:9A:84:B1:DB:" +
+      "7A:9D:DB:B8:4E:E1:23:E3:C6:64:E7:50:DC:35:8C:68",
+    "test sanity check: the small-key EV root must have the same " +
+      "fingerprint as the corresponding entry in ExtendedValidation.cpp"
+  );
 
   await checkRSAChains(2040, 2048);
 });

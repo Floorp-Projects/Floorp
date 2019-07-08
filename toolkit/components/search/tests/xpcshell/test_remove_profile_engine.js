@@ -5,8 +5,9 @@ add_task(async function run_test() {
   // Copy an engine to [profile]/searchplugin/
   let dir = do_get_profile().clone();
   dir.append("searchplugins");
-  if (!dir.exists())
+  if (!dir.exists()) {
     dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  }
   do_get_file("data/engine-override.xml").copyTo(dir, "bug645970.xml");
 
   let file = dir.clone();

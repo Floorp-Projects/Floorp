@@ -5,8 +5,9 @@ function test() {
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
 
-  var cr = Cc["@mozilla.org/chrome/chrome-registry;1"]
-             .getService(Ci.nsIChromeRegistry);
+  var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+    Ci.nsIChromeRegistry
+  );
 
   var chromeroot = extractChromeRoot(gTestPath);
   var xpipath = chromeroot + "unsigned.xpi";
@@ -23,8 +24,11 @@ function test() {
 }
 
 function install_ended(install, addon) {
-  Assert.deepEqual(install.installTelemetryInfo, {source: "file-url"},
-                   "Got the expected install.installTelemetryInfo");
+  Assert.deepEqual(
+    install.installTelemetryInfo,
+    { source: "file-url" },
+    "Got the expected install.installTelemetryInfo"
+  );
 
   install.cancel();
 }

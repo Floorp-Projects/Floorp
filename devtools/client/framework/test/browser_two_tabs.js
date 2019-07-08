@@ -40,9 +40,8 @@ add_task(async () => {
 });
 
 async function checkGetTab(client, tab1, tab2, targetFront1, targetFront2) {
-  let front = await client.mainRoot.getTab({tab: tab1});
-  is(targetFront1, front,
-     "getTab returns the same target form for first tab");
+  let front = await client.mainRoot.getTab({ tab: tab1 });
+  is(targetFront1, front, "getTab returns the same target form for first tab");
   const filter = {};
   // Filter either by tabId or outerWindowID,
   // if we are running tests OOP or not.
@@ -53,11 +52,13 @@ async function checkGetTab(client, tab1, tab2, targetFront1, targetFront2) {
     filter.outerWindowID = windowUtils.outerWindowID;
   }
   front = await client.mainRoot.getTab(filter);
-  is(targetFront1, front,
-     "getTab returns the same target form when filtering by tabId/outerWindowID");
-  front = await client.mainRoot.getTab({tab: tab2});
-  is(targetFront2, front,
-     "getTab returns the same target form for second tab");
+  is(
+    targetFront1,
+    front,
+    "getTab returns the same target form when filtering by tabId/outerWindowID"
+  );
+  front = await client.mainRoot.getTab({ tab: tab2 });
+  is(targetFront2, front, "getTab returns the same target form for second tab");
 }
 
 async function checkGetTabFailures(client) {
@@ -72,7 +73,10 @@ async function checkGetTabFailures(client) {
     await client.mainRoot.getTab({ outerWindowID: -999 });
     ok(false, "getTab unexpectedly succeed with a wrong outerWindowID");
   } catch (error) {
-    is(error, "Protocol error (noTab): Unable to find tab with outerWindowID '-999'");
+    is(
+      error,
+      "Protocol error (noTab): Unable to find tab with outerWindowID '-999'"
+    );
   }
 }
 
@@ -80,12 +84,18 @@ async function checkSelectedTargetActor(targetFront2) {
   // Send a naive request to the second target actor to check if it works
   await targetFront2.attach();
   const response = await targetFront2.activeConsole.startListeners([]);
-  ok("startedListeners" in response, "Actor from the selected tab should respond to the request.");
+  ok(
+    "startedListeners" in response,
+    "Actor from the selected tab should respond to the request."
+  );
 }
 
 async function checkFirstTargetActor(targetFront1) {
   // then send a request to the first target actor to check if it still works
   await targetFront1.attach();
   const response = await targetFront1.activeConsole.startListeners([]);
-  ok("startedListeners" in response, "Actor from the first tab should still respond.");
+  ok(
+    "startedListeners" in response,
+    "Actor from the first tab should still respond."
+  );
 }

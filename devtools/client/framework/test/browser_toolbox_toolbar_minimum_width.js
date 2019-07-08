@@ -20,14 +20,20 @@ add_task(async function(pickerEnable, commandsEnable) {
   const tab = await addTab("about:blank");
 
   info("Open devtools on the Inspector in a side dock");
-  const toolbox = await openToolboxForTab(tab, "inspector", Toolbox.HostType.RIGHT);
+  const toolbox = await openToolboxForTab(
+    tab,
+    "inspector",
+    Toolbox.HostType.RIGHT
+  );
   await waitUntil(() => toolbox.doc.querySelector(".tools-chevron-menu"));
 
   await openChevronMenu(toolbox);
 
   // Check that all of tools is overflowed.
-  toolbox.panelDefinitions.forEach(({id}) => {
-    const menuItem = toolbox.doc.getElementById("tools-chevron-menupopup-" + id);
+  toolbox.panelDefinitions.forEach(({ id }) => {
+    const menuItem = toolbox.doc.getElementById(
+      "tools-chevron-menupopup-" + id
+    );
     const tab = toolbox.doc.getElementById("toolbox-tab-" + id);
     ok(menuItem, id + " is in the overflowed menu");
     ok(!tab, id + " tab does not exist");

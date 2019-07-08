@@ -10,8 +10,9 @@ const PAGE_URL = ROOT_URL + "/unresponsive.html";
 add_task(async function test() {
   waitForExplicitFinish();
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: PAGE_URL },
-    async function(browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: PAGE_URL }, async function(
+    browser
+  ) {
     let dataBack = 0;
     let tabId = gBrowser.selectedBrowser.outerWindowID;
 

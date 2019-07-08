@@ -123,7 +123,7 @@ are also in the UI process. Consider this outline of a Gecko display list:
 If item P was a filter, for example, that would normally apply to all of items
 A, B, and C. This would mean either sharing the filter between the "chrome" renderroot
 and the "content" renderroot, or duplicating it such that it existed in both
-renderroots. The sharing is not possibly as it violates the independence of WR
+renderroots. The sharing is not possible as it violates the independence of WR
 documents. The duplication is technically possible, but could result in visual
 glitches as the two documents would be processed and composited separately.
 
@@ -135,7 +135,7 @@ properties do NOT get carried across the render root boundary. Similarly, a
 scrollframe may not contain content from multiple render roots, because that
 would lead to a similar problem in APZ where it would have to update the scroll
 position of scrollframes in multiple documents and they might get composited
-at separate times resulting in visual glitches.
+at separate times, resulting in visual glitches.
 
 Security Concerns
 -----------------
@@ -225,7 +225,7 @@ helpers in gfxUtils that assist with this task.
 
 The other catch is that an APZ message may be associated with multiple documents.
 A concrete example is if a user on a touch device does a multitouch action with
-one fingers landing on different documents, which would trigger a call to
+different fingers landing on different documents, which would trigger a call to
 `RecvSetTargetAPZC
 <https://searchfox.org/mozilla-central/rev/06bd14ced96f25ff1dbd5352cb985fc0fa12a64e/gfx/layers/ipc/APZCTreeManagerParent.cpp#76>`_
 with multiple targets, each potentially belonging to a different render root.
@@ -243,7 +243,7 @@ Deferred updates
 ~~~~~~~~~~~~~~~~
 
 Bug 1547351 provided a new and tricky problem where a content process is rendering
-stuff that needs go into the "default" document because it's actually an
+stuff that needs to go into the "default" document because it's actually an
 out-of-process addon content that renders in the chrome area. Prior to this bug,
 the WebRenderBridgeParent instances that corresponded to content processes
 (hereafter referred to as "sub-WRBPs", in contrast to the "root WRBP" that
@@ -255,7 +255,7 @@ The solution chosen to this problem was to have the root WebRenderLayerManager
 with the render root it belongs in, and send that information over to the
 root WRBP as part of the display list transaction. The sub-WRBPs know their own
 pipeline ids, and therefore can find their render root by querying the root WRBP.
-The catch is that sub-WRBPs may receive display list transactions before the
+The catch is that sub-WRBPs may receive display list transactions *before* the
 root WRBP receives the display list update that contains the render root mapping
 information. This happens in cases like during tab switch preload, where the
 user mouses over a background tab, and we pre-render it (i.e. compute and send
@@ -310,7 +310,7 @@ scenario, other documents may still be backlogged, so the unthrottling is
 undesirable.
 
 Instead, what we want is for all documents processing a particular transaction
-id to finish their word and render before we send the completion message back
+id to finish their work and render before we send the completion message back
 to content. In fact, there's a bunch of work that falls into the same category
 as this completion message - stuff that should happen after all the WR documents
 are done processing their pieces of the split transaction.
@@ -324,8 +324,8 @@ acts as a barrier to ensure that the call chain only gets propagated once all
 the documents have done their processing work.
 
 I'm listing this piece as a potential source of complexity for document splitting
-because it seems like a fairly important piece but the relevant code that is
-"buried" away in place where one might not easily stumble upon it. It's also not
+because it seems like a fairly important piece but the relevant code is
+"buried" away in a place where one might not easily stumble upon it. It's also not
 clear to me that the implications of this problem and solution have been fully
 explored. In particular, I assume that there are latent bugs here because other
 pieces of code were assuming a certain behaviour from the pre-document-splitting

@@ -4,14 +4,20 @@
 
 var EXPORTED_SYMBOLS = ["CryptoUtils"];
 
-const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
-const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Observers } = ChromeUtils.import(
+  "resource://services-common/observers.js"
+);
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 
-XPCOMUtils.defineLazyGetter(this, "textEncoder",
-  function() { return new TextEncoder(); }
-);
+XPCOMUtils.defineLazyGetter(this, "textEncoder", function() {
+  return new TextEncoder();
+});
 
 /**
  * A number of `Legacy` suffixed functions are exposed by CryptoUtils.
@@ -23,7 +29,9 @@ var CryptoUtils = {
     let bytes = [];
 
     if (a.length != b.length) {
-      throw new Error("can't xor unequal length strings: " + a.length + " vs " + b.length);
+      throw new Error(
+        "can't xor unequal length strings: " + a.length + " vs " + b.length
+      );
     }
 
     for (let i = 0; i < a.length; i++) {
@@ -93,16 +101,18 @@ var CryptoUtils = {
   },
 
   sha256(message) {
-    let hasher = Cc["@mozilla.org/security/hash;1"]
-                 .createInstance(Ci.nsICryptoHash);
+    let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
+      Ci.nsICryptoHash
+    );
     hasher.init(hasher.SHA256);
     return CommonUtils.bytesAsHex(CryptoUtils.digestUTF8(message, hasher));
   },
 
   sha256Base64(message) {
     let data = this._utf8Converter.convertToByteArray(message, {});
-    let hasher = Cc["@mozilla.org/security/hash;1"]
-                 .createInstance(Ci.nsICryptoHash);
+    let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
+      Ci.nsICryptoHash
+    );
     hasher.init(hasher.SHA256);
     hasher.update(data, data.length);
     return hasher.finish(true);
@@ -119,8 +129,9 @@ var CryptoUtils = {
    * Produce an HMAC hasher and initialize it with the given HMAC key.
    */
   makeHMACHasher: function makeHMACHasher(type, key) {
-    let hasher = Cc["@mozilla.org/security/hmac;1"]
-                   .createInstance(Ci.nsICryptoHMAC);
+    let hasher = Cc["@mozilla.org/security/hmac;1"].createInstance(
+      Ci.nsICryptoHMAC
+    );
     hasher.init(type, key);
     return hasher;
   },
@@ -162,7 +173,13 @@ var CryptoUtils = {
    * @returns {Uint8Array}
    */
   async hmac(alg, key, data) {
-    const hmacKey = await crypto.subtle.importKey("raw", key, {name: "HMAC", hash: alg}, false, ["sign"]);
+    const hmacKey = await crypto.subtle.importKey(
+      "raw",
+      key,
+      { name: "HMAC", hash: alg },
+      false,
+      ["sign"]
+    );
     const result = await crypto.subtle.sign("HMAC", hmacKey, data);
     return new Uint8Array(result);
   },
@@ -175,13 +192,23 @@ var CryptoUtils = {
    * @returns {Uint8Array}
    */
   async hkdf(ikm, salt, info, len) {
-    const key = await crypto.subtle.importKey("raw", ikm, {name: "HKDF"}, false, ["deriveBits"]);
-    const okm = await crypto.subtle.deriveBits({
+    const key = await crypto.subtle.importKey(
+      "raw",
+      ikm,
+      { name: "HKDF" },
+      false,
+      ["deriveBits"]
+    );
+    const okm = await crypto.subtle.deriveBits(
+      {
         name: "HKDF",
         hash: "SHA-256",
         salt,
         info,
-    }, key, len * 8);
+      },
+      key,
+      len * 8
+    );
     return new Uint8Array(okm);
   },
 
@@ -196,13 +223,23 @@ var CryptoUtils = {
   async pbkdf2Generate(passphrase, salt, iterations, len) {
     passphrase = CommonUtils.byteStringToArrayBuffer(passphrase);
     salt = CommonUtils.byteStringToArrayBuffer(salt);
-    const key = await crypto.subtle.importKey("raw", passphrase, {name: "PBKDF2"}, false, ["deriveBits"]);
-    const output = await crypto.subtle.deriveBits({
+    const key = await crypto.subtle.importKey(
+      "raw",
+      passphrase,
+      { name: "PBKDF2" },
+      false,
+      ["deriveBits"]
+    );
+    const output = await crypto.subtle.deriveBits(
+      {
         name: "PBKDF2",
         hash: "SHA-256",
         salt,
         iterations,
-    }, key, len * 8);
+      },
+      key,
+      len * 8
+    );
     return CommonUtils.arrayBufferToByteString(new Uint8Array(output));
   },
 
@@ -244,13 +281,14 @@ var CryptoUtils = {
    *           ts - (number) Integer seconds since Unix epoch that was used.
    */
   async computeHTTPMACSHA1(identifier, key, method, uri, extra) {
-    let ts = (extra && extra.ts) ? extra.ts : Math.floor(Date.now() / 1000);
-    let nonce_bytes = (extra && extra.nonce_bytes > 0) ? extra.nonce_bytes : 8;
+    let ts = extra && extra.ts ? extra.ts : Math.floor(Date.now() / 1000);
+    let nonce_bytes = extra && extra.nonce_bytes > 0 ? extra.nonce_bytes : 8;
 
     // We are allowed to use more than the Base64 alphabet if we want.
-    let nonce = (extra && extra.nonce)
-                ? extra.nonce
-                : btoa(CryptoUtils.generateRandomBytesLegacy(nonce_bytes));
+    let nonce =
+      extra && extra.nonce
+        ? extra.nonce
+        : btoa(CryptoUtils.generateRandomBytesLegacy(nonce_bytes));
 
     let host = uri.asciiHost;
     let port;
@@ -266,28 +304,41 @@ var CryptoUtils = {
       throw new Error("Unsupported URI scheme: " + uri.scheme);
     }
 
-    let ext = (extra && extra.ext) ? extra.ext : "";
+    let ext = extra && extra.ext ? extra.ext : "";
 
-    let requestString = ts.toString(10) + "\n" +
-                        nonce + "\n" +
-                        usedMethod + "\n" +
-                        uri.pathQueryRef + "\n" +
-                        host + "\n" +
-                        port + "\n" +
-                        ext + "\n";
+    let requestString =
+      ts.toString(10) +
+      "\n" +
+      nonce +
+      "\n" +
+      usedMethod +
+      "\n" +
+      uri.pathQueryRef +
+      "\n" +
+      host +
+      "\n" +
+      port +
+      "\n" +
+      ext +
+      "\n";
 
     const mac = await CryptoUtils.hmacLegacy("SHA-1", key, requestString);
 
     function getHeader() {
-      return CryptoUtils.getHTTPMACSHA1Header(this.identifier, this.ts,
-                                              this.nonce, this.mac, this.ext);
+      return CryptoUtils.getHTTPMACSHA1Header(
+        this.identifier,
+        this.ts,
+        this.nonce,
+        this.mac,
+        this.ext
+      );
     }
 
     return {
       identifier,
       key,
-      method:     usedMethod,
-      hostname:   host,
+      method: usedMethod,
+      hostname: host,
       port,
       mac,
       nonce,
@@ -296,7 +347,6 @@ var CryptoUtils = {
       getHeader,
     };
   },
-
 
   /**
    * Obtain the HTTP MAC Authorization header value from fields.
@@ -314,18 +364,32 @@ var CryptoUtils = {
    * @returns
    *         (string) Value to put in Authorization header.
    */
-  getHTTPMACSHA1Header: function getHTTPMACSHA1Header(identifier, ts, nonce,
-                                                      mac, ext) {
-    let header = 'MAC id="' + identifier + '", ' +
-                'ts="' + ts + '", ' +
-                'nonce="' + nonce + '", ' +
-                'mac="' + btoa(mac) + '"';
+  getHTTPMACSHA1Header: function getHTTPMACSHA1Header(
+    identifier,
+    ts,
+    nonce,
+    mac,
+    ext
+  ) {
+    let header =
+      'MAC id="' +
+      identifier +
+      '", ' +
+      'ts="' +
+      ts +
+      '", ' +
+      'nonce="' +
+      nonce +
+      '", ' +
+      'mac="' +
+      btoa(mac) +
+      '"';
 
     if (!ext) {
       return header;
     }
 
-    return header += ', ext="' + ext + '"';
+    return (header += ', ext="' + ext + '"');
   },
 
   /**
@@ -335,7 +399,10 @@ var CryptoUtils = {
   stripHeaderAttributes(value) {
     value = value || "";
     let i = value.indexOf(";");
-    return value.substring(0, (i >= 0) ? i : undefined).trim().toLowerCase();
+    return value
+      .substring(0, i >= 0 ? i : undefined)
+      .trim()
+      .toLowerCase();
   },
 
   /**
@@ -392,9 +459,12 @@ var CryptoUtils = {
    */
   async computeHAWK(uri, method, options) {
     let credentials = options.credentials;
-    let ts = options.ts || Math.floor(((options.now || Date.now()) +
-                                       (options.localtimeOffsetMsec || 0))
-                                      / 1000);
+    let ts =
+      options.ts ||
+      Math.floor(
+        ((options.now || Date.now()) + (options.localtimeOffsetMsec || 0)) /
+          1000
+      );
     let port;
     if (uri.port != -1) {
       port = uri.port;
@@ -419,29 +489,48 @@ var CryptoUtils = {
 
     let contentType = CryptoUtils.stripHeaderAttributes(options.contentType);
 
-    if (!artifacts.hash && options.hasOwnProperty("payload")
-        && options.payload) {
-      const buffer = textEncoder.encode(`hawk.1.payload\n${contentType}\n${options.payload}\n`);
+    if (
+      !artifacts.hash &&
+      options.hasOwnProperty("payload") &&
+      options.payload
+    ) {
+      const buffer = textEncoder.encode(
+        `hawk.1.payload\n${contentType}\n${options.payload}\n`
+      );
       const hash = await crypto.subtle.digest("SHA-256", buffer);
       // HAWK specifies this .hash to use +/ (not _-) and include the
       // trailing "==" padding.
-      artifacts.hash = ChromeUtils.base64URLEncode(hash, {pad: true}).replace(/-/g, "+").replace(/_/g, "/");
+      artifacts.hash = ChromeUtils.base64URLEncode(hash, { pad: true })
+        .replace(/-/g, "+")
+        .replace(/_/g, "/");
     }
 
-    let requestString = ("hawk.1.header\n" +
-                         artifacts.ts.toString(10) + "\n" +
-                         artifacts.nonce + "\n" +
-                         artifacts.method + "\n" +
-                         artifacts.resource + "\n" +
-                         artifacts.host + "\n" +
-                         artifacts.port + "\n" +
-                         (artifacts.hash || "") + "\n");
+    let requestString =
+      "hawk.1.header\n" +
+      artifacts.ts.toString(10) +
+      "\n" +
+      artifacts.nonce +
+      "\n" +
+      artifacts.method +
+      "\n" +
+      artifacts.resource +
+      "\n" +
+      artifacts.host +
+      "\n" +
+      artifacts.port +
+      "\n" +
+      (artifacts.hash || "") +
+      "\n";
     if (artifacts.ext) {
       requestString += artifacts.ext.replace("\\", "\\\\").replace("\n", "\\n");
     }
     requestString += "\n";
 
-    const hash = await CryptoUtils.hmacLegacy("SHA-256", credentials.key, requestString);
+    const hash = await CryptoUtils.hmacLegacy(
+      "SHA-256",
+      credentials.key,
+      requestString
+    );
     artifacts.mac = btoa(hash);
     // The output MAC uses "+" and "/", and padded== .
 
@@ -449,23 +538,32 @@ var CryptoUtils = {
       // This is used for "x=y" attributes inside HTTP headers.
       return attribute.replace(/\\/g, "\\\\").replace(/\"/g, '\\"');
     }
-    let header = ('Hawk id="' + credentials.id + '", ' +
-                  'ts="' + artifacts.ts + '", ' +
-                  'nonce="' + artifacts.nonce + '", ' +
-                  (artifacts.hash ? ('hash="' + artifacts.hash + '", ') : "") +
-                  (artifacts.ext ? ('ext="' + escape(artifacts.ext) + '", ') : "") +
-                  'mac="' + artifacts.mac + '"');
+    let header =
+      'Hawk id="' +
+      credentials.id +
+      '", ' +
+      'ts="' +
+      artifacts.ts +
+      '", ' +
+      'nonce="' +
+      artifacts.nonce +
+      '", ' +
+      (artifacts.hash ? 'hash="' + artifacts.hash + '", ' : "") +
+      (artifacts.ext ? 'ext="' + escape(artifacts.ext) + '", ' : "") +
+      'mac="' +
+      artifacts.mac +
+      '"';
     return {
       artifacts,
       field: header,
     };
   },
-
 };
 
 XPCOMUtils.defineLazyGetter(CryptoUtils, "_utf8Converter", function() {
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  let converter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
 
   return converter;
@@ -473,10 +571,12 @@ XPCOMUtils.defineLazyGetter(CryptoUtils, "_utf8Converter", function() {
 
 var Svc = {};
 
-XPCOMUtils.defineLazyServiceGetter(Svc,
-                                   "KeyFactory",
-                                   "@mozilla.org/security/keyobjectfactory;1",
-                                   "nsIKeyObjectFactory");
+XPCOMUtils.defineLazyServiceGetter(
+  Svc,
+  "KeyFactory",
+  "@mozilla.org/security/keyobjectfactory;1",
+  "nsIKeyObjectFactory"
+);
 
 Observers.add("xpcom-shutdown", function unloadServices() {
   Observers.remove("xpcom-shutdown", unloadServices);

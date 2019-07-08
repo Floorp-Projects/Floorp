@@ -8,18 +8,22 @@ var mDBConn = DBConn();
 
 add_task(async function test_history_clear() {
   await PlacesTestUtils.addVisits([
-    { uri: uri("http://typed.mozilla.org/"),
-      transition: TRANSITION_TYPED },
-    { uri: uri("http://link.mozilla.org/"),
-      transition: TRANSITION_LINK },
-    { uri: uri("http://download.mozilla.org/"),
-      transition: TRANSITION_DOWNLOAD },
-    { uri: uri("http://redir_temp.mozilla.org/"),
+    { uri: uri("http://typed.mozilla.org/"), transition: TRANSITION_TYPED },
+    { uri: uri("http://link.mozilla.org/"), transition: TRANSITION_LINK },
+    {
+      uri: uri("http://download.mozilla.org/"),
+      transition: TRANSITION_DOWNLOAD,
+    },
+    {
+      uri: uri("http://redir_temp.mozilla.org/"),
       transition: TRANSITION_REDIRECT_TEMPORARY,
-      referrer: "http://link.mozilla.org/"},
-    { uri: uri("http://redir_perm.mozilla.org/"),
+      referrer: "http://link.mozilla.org/",
+    },
+    {
+      uri: uri("http://redir_perm.mozilla.org/"),
       transition: TRANSITION_REDIRECT_PERMANENT,
-      referrer: "http://link.mozilla.org/"},
+      referrer: "http://link.mozilla.org/",
+    },
   ]);
 
   // add a place: bookmark
@@ -46,16 +50,17 @@ add_task(async function test_history_clear() {
   });
 
   await PlacesTestUtils.addVisits([
-    { uri: uri("http://typed.mozilla.org/"),
-      transition: TRANSITION_BOOKMARK },
-    { uri: uri("http://frecency.mozilla.org/"),
-      transition: TRANSITION_LINK },
+    { uri: uri("http://typed.mozilla.org/"), transition: TRANSITION_BOOKMARK },
+    { uri: uri("http://frecency.mozilla.org/"), transition: TRANSITION_LINK },
   ]);
   await PlacesTestUtils.promiseAsyncUpdates();
 
   // Clear history and wait for the onClearHistory notification.
-  let promiseClearHistory =
-    PlacesTestUtils.waitForNotification("onClearHistory", () => true, "history");
+  let promiseClearHistory = PlacesTestUtils.waitForNotification(
+    "onClearHistory",
+    () => true,
+    "history"
+  );
   await PlacesUtils.history.clear();
   await promiseClearHistory;
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -63,25 +68,29 @@ add_task(async function test_history_clear() {
   // Check that frecency for not cleared items (bookmarks) has been converted
   // to -1.
   let stmt = mDBConn.createStatement(
-    "SELECT h.id FROM moz_places h WHERE h.frecency > 0 ");
+    "SELECT h.id FROM moz_places h WHERE h.frecency > 0 "
+  );
   Assert.ok(!stmt.executeStep());
   stmt.finalize();
 
   stmt = mDBConn.createStatement(
     `SELECT h.id FROM moz_places h WHERE h.frecency < 0
-       AND EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1`);
+       AND EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1`
+  );
   Assert.ok(stmt.executeStep());
   stmt.finalize();
 
   // Check that all visit_counts have been brought to 0
   stmt = mDBConn.createStatement(
-    "SELECT id FROM moz_places WHERE visit_count <> 0 LIMIT 1");
+    "SELECT id FROM moz_places WHERE visit_count <> 0 LIMIT 1"
+  );
   Assert.ok(!stmt.executeStep());
   stmt.finalize();
 
   // Check that history tables are empty
   stmt = mDBConn.createStatement(
-    "SELECT * FROM (SELECT id FROM moz_historyvisits LIMIT 1)");
+    "SELECT * FROM (SELECT id FROM moz_historyvisits LIMIT 1)"
+  );
   Assert.ok(!stmt.executeStep());
   stmt.finalize();
 
@@ -89,7 +98,8 @@ add_task(async function test_history_clear() {
   stmt = mDBConn.createStatement(
     `SELECT h.id FROM moz_places h WHERE
        url_hash NOT BETWEEN hash('place', 'prefix_lo') AND hash('place', 'prefix_hi')
-       AND NOT EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1`);
+       AND NOT EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1`
+  );
   Assert.ok(!stmt.executeStep());
   stmt.finalize();
 
@@ -98,28 +108,32 @@ add_task(async function test_history_clear() {
     `SELECT 1
      FROM moz_pages_w_icons
      LEFT JOIN moz_places h ON url_hash = page_url_hash AND url = page_url
-     WHERE h.id ISNULL`);
+     WHERE h.id ISNULL`
+  );
   Assert.ok(!stmt.executeStep());
   stmt.finalize();
   stmt = mDBConn.createStatement(
     `SELECT 1
      FROM moz_icons WHERE id NOT IN (
        SELECT icon_id FROM moz_icons_to_pages
-     )`);
+     )`
+  );
   Assert.ok(!stmt.executeStep());
   stmt.finalize();
 
   // Check that we only have annotations for retained places
   stmt = mDBConn.createStatement(
     `SELECT a.id FROM moz_annos a WHERE NOT EXISTS
-       (SELECT id FROM moz_places WHERE id = a.place_id) LIMIT 1`);
+       (SELECT id FROM moz_places WHERE id = a.place_id) LIMIT 1`
+  );
   Assert.ok(!stmt.executeStep());
   stmt.finalize();
 
   // Check that we only have inputhistory for retained places
   stmt = mDBConn.createStatement(
     `SELECT i.place_id FROM moz_inputhistory i WHERE NOT EXISTS
-       (SELECT id FROM moz_places WHERE id = i.place_id) LIMIT 1`);
+       (SELECT id FROM moz_places WHERE id = i.place_id) LIMIT 1`
+  );
   Assert.ok(!stmt.executeStep());
   stmt.finalize();
 
@@ -128,7 +142,8 @@ add_task(async function test_history_clear() {
     `SELECT h.id FROM moz_places h
      WHERE url_hash BETWEEN hash('place', 'prefix_lo')
                         AND hash('place', 'prefix_hi')
-       AND h.frecency <> 0 LIMIT 1`);
+       AND h.frecency <> 0 LIMIT 1`
+  );
   Assert.ok(!stmt.executeStep());
   stmt.finalize();
 });

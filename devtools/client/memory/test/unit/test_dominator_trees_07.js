@@ -14,8 +14,7 @@ const {
   takeSnapshotAndCensus,
   fetchImmediatelyDominated,
 } = require("devtools/client/memory/actions/snapshot");
-const DominatorTreeLazyChildren
-  = require("devtools/client/memory/dominator-tree-lazy-children");
+const DominatorTreeLazyChildren = require("devtools/client/memory/dominator-tree-lazy-children");
 
 const { changeView } = require("devtools/client/memory/actions/view");
 
@@ -30,12 +29,17 @@ add_task(async function() {
   dispatch(takeSnapshotAndCensus(front, heapWorker));
 
   // Wait for the dominator tree to finish being fetched.
-  await waitUntilState(store, state =>
-    state.snapshots[0] &&
-    state.snapshots[0].dominatorTree &&
-    state.snapshots[0].dominatorTree.state === dominatorTreeState.LOADED);
-  ok(getState().snapshots[0].dominatorTree.root,
-     "The dominator tree was fetched");
+  await waitUntilState(
+    store,
+    state =>
+      state.snapshots[0] &&
+      state.snapshots[0].dominatorTree &&
+      state.snapshots[0].dominatorTree.state === dominatorTreeState.LOADED
+  );
+  ok(
+    getState().snapshots[0].dominatorTree.root,
+    "The dominator tree was fetched"
+  );
 
   // Find a node that has more children.
 
@@ -80,29 +84,47 @@ add_task(async function() {
 
   const oldNode2 = findNodeRev(oldRoot);
   ok(oldNode2, "Should have found another node with more children.");
-  ok(oldNode !== oldNode2,
-     "The second node should not be the same as the first one");
+  ok(
+    oldNode !== oldNode2,
+    "The second node should not be the same as the first one"
+  );
 
   // Fetch both subtrees concurrently.
-  dispatch(fetchImmediatelyDominated(heapWorker, getState().snapshots[0].id,
-                                     new DominatorTreeLazyChildren(oldNode.nodeId, 0)));
-  dispatch(fetchImmediatelyDominated(heapWorker, getState().snapshots[0].id,
-                                     new DominatorTreeLazyChildren(oldNode2.nodeId, 0)));
+  dispatch(
+    fetchImmediatelyDominated(
+      heapWorker,
+      getState().snapshots[0].id,
+      new DominatorTreeLazyChildren(oldNode.nodeId, 0)
+    )
+  );
+  dispatch(
+    fetchImmediatelyDominated(
+      heapWorker,
+      getState().snapshots[0].id,
+      new DominatorTreeLazyChildren(oldNode2.nodeId, 0)
+    )
+  );
 
-  equal(getState().snapshots[0].dominatorTree.state,
-        dominatorTreeState.INCREMENTAL_FETCHING,
-        "Fetching immediately dominated children should put us in the " +
-        "INCREMENTAL_FETCHING state");
+  equal(
+    getState().snapshots[0].dominatorTree.state,
+    dominatorTreeState.INCREMENTAL_FETCHING,
+    "Fetching immediately dominated children should put us in the " +
+      "INCREMENTAL_FETCHING state"
+  );
 
-  await waitUntilState(store, state =>
-    state.snapshots[0].dominatorTree.state === dominatorTreeState.LOADED);
-  ok(true,
-     "The dominator tree should go back to LOADED after the incremental " +
-     "fetching is done.");
+  await waitUntilState(
+    store,
+    state =>
+      state.snapshots[0].dominatorTree.state === dominatorTreeState.LOADED
+  );
+  ok(
+    true,
+    "The dominator tree should go back to LOADED after the incremental " +
+      "fetching is done."
+  );
 
   const newRoot = getState().snapshots[0].dominatorTree.root;
-  ok(oldRoot !== newRoot,
-     "When we insert new nodes, we get a new tree");
+  ok(oldRoot !== newRoot, "When we insert new nodes, we get a new tree");
 
   // Find the new node which has the children inserted.
 
@@ -125,17 +147,25 @@ add_task(async function() {
 
   const newNode = findNodeWithId(oldNode.nodeId, newRoot);
   ok(newNode, "Should find the node in the new tree again");
-  ok(newNode !== oldNode,
-     "We did not mutate the old node in place, instead created a new node");
-  ok(newNode.children.length,
-     "And the new node should have the new children attached");
+  ok(
+    newNode !== oldNode,
+    "We did not mutate the old node in place, instead created a new node"
+  );
+  ok(
+    newNode.children.length,
+    "And the new node should have the new children attached"
+  );
 
   const newNode2 = findNodeWithId(oldNode2.nodeId, newRoot);
   ok(newNode2, "Should find the second node in the new tree again");
-  ok(newNode2 !== oldNode2,
-     "We did not mutate the second old node in place, instead created a new node");
-  ok(newNode2.children,
-     "And the new node should have the new children attached");
+  ok(
+    newNode2 !== oldNode2,
+    "We did not mutate the second old node in place, instead created a new node"
+  );
+  ok(
+    newNode2.children,
+    "And the new node should have the new children attached"
+  );
 
   heapWorker.destroy();
   await front.detach();

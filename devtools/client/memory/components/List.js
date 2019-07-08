@@ -25,15 +25,18 @@ class List extends Component {
   render() {
     const { items, onClick, itemComponent: Item } = this.props;
 
-    return (
-      dom.ul({ className: "list" }, ...items.map((item, index) => {
-        return Item(Object.assign({}, this.props, {
-          key: index,
-          item,
-          index,
-          onClick: () => onClick(item),
-        }));
-      }))
+    return dom.ul(
+      { className: "list" },
+      ...items.map((item, index) => {
+        return Item(
+          Object.assign({}, this.props, {
+            key: index,
+            item,
+            index,
+            onClick: () => onClick(item),
+          })
+        );
+      })
     );
   }
 }

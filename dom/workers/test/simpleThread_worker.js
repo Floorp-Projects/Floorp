@@ -8,8 +8,7 @@ function messageListener(event) {
   var exception;
   try {
     event.bubbles = true;
-  }
-  catch(e) {
+  } catch (e) {
     exception = e;
   }
 
@@ -24,16 +23,16 @@ function messageListener(event) {
       postMessage(Components.toString());
       break;
     case "start":
-      for (var i = 0; i < 1000; i++) { }
+      for (var i = 0; i < 1000; i++) {}
       postMessage("started");
       break;
     case "stop":
-      self.postMessage('no-op');
+      self.postMessage("no-op");
       postMessage("stopped");
       self.removeEventListener("message", messageListener);
       break;
     default:
-      throw 'Bad message: ' + event.data;
+      throw "Bad message: " + event.data;
   }
 }
 

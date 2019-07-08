@@ -20,9 +20,12 @@ add_task(async function() {
 
   info("Select the container's supposed flex item.");
   await selectNode("#item", inspector);
-  const noFlexContainerOrItemSelected =
-    doc.querySelector(".flex-accordion .devtools-sidepanel-no-result");
+  const noFlexContainerOrItemSelected = doc.querySelector(
+    ".flex-accordion .devtools-sidepanel-no-result"
+  );
 
-  ok(noFlexContainerOrItemSelected,
-    "The flexbox pane shows a message to select a flex container or item to continue.");
+  ok(
+    noFlexContainerOrItemSelected,
+    "The flexbox pane shows a message to select a flex container or item to continue."
+  );
 });

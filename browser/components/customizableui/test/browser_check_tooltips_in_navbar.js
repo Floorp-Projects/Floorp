@@ -8,7 +8,14 @@ add_task(async function check_tooltips_in_navbar() {
   await startCustomizing();
   let homeButtonWrapper = document.getElementById("wrapper-home-button");
   let homeButton = document.getElementById("home-button");
-  is(homeButtonWrapper.getAttribute("tooltiptext"), homeButton.getAttribute("label"), "the wrapper's tooltip should match the button's label");
-  ok(homeButtonWrapper.getAttribute("tooltiptext"), "the button should have tooltip text");
+  is(
+    homeButtonWrapper.getAttribute("tooltiptext"),
+    homeButton.getAttribute("label"),
+    "the wrapper's tooltip should match the button's label"
+  );
+  ok(
+    homeButtonWrapper.getAttribute("tooltiptext"),
+    "the button should have tooltip text"
+  );
   await endCustomizing();
 });

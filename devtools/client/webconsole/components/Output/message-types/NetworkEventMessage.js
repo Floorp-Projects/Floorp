@@ -7,15 +7,26 @@
 "use strict";
 
 // React & Redux
-const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  createElement,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const Message = createFactory(require("devtools/client/webconsole/components/Output/Message"));
+const Message = createFactory(
+  require("devtools/client/webconsole/components/Output/Message")
+);
 const actions = require("devtools/client/webconsole/actions/index");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 
-loader.lazyRequireGetter(this, "TabboxPanel", "devtools/client/netmonitor/src/components/TabboxPanel");
-const { getHTTPStatusCodeURL } = require("devtools/client/netmonitor/src/utils/mdn-utils");
+loader.lazyRequireGetter(
+  this,
+  "TabboxPanel",
+  "devtools/client/netmonitor/src/components/TabboxPanel"
+);
+const {
+  getHTTPStatusCodeURL,
+} = require("devtools/client/netmonitor/src/utils/mdn-utils");
 const LEARN_MORE = l10n.getStr("webConsoleMoreInfoLabel");
 
 const Services = require("Services");
@@ -66,35 +77,41 @@ function NetworkEventMessage({
     timeStamp,
   } = message;
 
-  const {
-    response = {},
-    totalTime,
-  } = networkMessageUpdate;
+  const { response = {}, totalTime } = networkMessageUpdate;
 
-  const {
-    httpVersion,
-    status,
-    statusText,
-  } = response;
+  const { httpVersion, status, statusText } = response;
 
-  const topLevelClasses = [ "cm-s-mozilla" ];
+  const topLevelClasses = ["cm-s-mozilla"];
   let statusCode, statusInfo;
 
-  if (httpVersion && status && statusText !== undefined && totalTime !== undefined) {
-    const statusCodeDocURL = getHTTPStatusCodeURL(status.toString(), "webconsole");
-    statusCode = dom.span({
-      className: "status-code",
-      "data-code": status,
-      title: LEARN_MORE,
-      onClick: (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        serviceContainer.openLink(statusCodeDocURL, e);
+  if (
+    httpVersion &&
+    status &&
+    statusText !== undefined &&
+    totalTime !== undefined
+  ) {
+    const statusCodeDocURL = getHTTPStatusCodeURL(
+      status.toString(),
+      "webconsole"
+    );
+    statusCode = dom.span(
+      {
+        className: "status-code",
+        "data-code": status,
+        title: LEARN_MORE,
+        onClick: e => {
+          e.stopPropagation();
+          e.preventDefault();
+          serviceContainer.openLink(statusCodeDocURL, e);
+        },
       },
-    }, status);
+      status
+    );
     statusInfo = dom.span(
-      {className: "status-info"},
-      `[${httpVersion} `, statusCode, ` ${statusText} ${totalTime}ms]`
+      { className: "status-info" },
+      `[${httpVersion} `,
+      statusCode,
+      ` ${statusText} ${totalTime}ms]`
     );
   }
 
@@ -111,12 +128,14 @@ function NetworkEventMessage({
   };
 
   // Message body components.
-  const method = dom.span({className: "method" }, request.method);
+  const method = dom.span({ className: "method" }, request.method);
   const xhr = isXHR
     ? dom.span({ className: "xhr" }, l10n.getStr("webConsoleXhrIndicator"))
     : null;
-  const requestUrl = dom.span({ className: "url", title: request.url },
-    request.url);
+  const requestUrl = dom.span(
+    { className: "url", title: request.url },
+    request.url
+  );
   const statusBody = statusInfo
     ? dom.a({ className: "status" }, statusInfo)
     : null;
@@ -129,9 +148,9 @@ function NetworkEventMessage({
   // Individual methods might be implemented step by step as needed.
   const connector = {
     viewSourceInDebugger: (url, line, column) => {
-      serviceContainer.onViewSourceInDebugger({url, line, column});
+      serviceContainer.onViewSourceInDebugger({ url, line, column });
     },
-    getLongString: (grip) => {
+    getLongString: grip => {
       return serviceContainer.getLongString(grip);
     },
     getTabTarget: () => {},
@@ -146,21 +165,25 @@ function NetworkEventMessage({
 
   // Only render the attachment if the network-event is
   // actually opened (performance optimization).
-  const attachment = open && dom.div({
-    className: "network-info network-monitor devtools-monospace"},
-    createElement(TabboxPanel, {
-      connector,
-      activeTabId: networkMessageActiveTabId,
-      request: networkMessageUpdate,
-      sourceMapService: serviceContainer.sourceMapService,
-      openLink: serviceContainer.openLink,
-      selectTab: (tabId) => {
-        dispatch(actions.selectNetworkMessageTab(tabId));
+  const attachment =
+    open &&
+    dom.div(
+      {
+        className: "network-info network-monitor devtools-monospace",
       },
-      hideToggleButton: true,
-      showWebSocketsTab: false,
-    })
-  );
+      createElement(TabboxPanel, {
+        connector,
+        activeTabId: networkMessageActiveTabId,
+        request: networkMessageUpdate,
+        sourceMapService: serviceContainer.sourceMapService,
+        openLink: serviceContainer.openLink,
+        selectTab: tabId => {
+          dispatch(actions.selectNetworkMessageTab(tabId));
+        },
+        hideToggleButton: true,
+        showWebSocketsTab: false,
+      })
+    );
 
   return Message({
     dispatch,

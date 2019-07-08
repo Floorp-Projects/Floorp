@@ -7,8 +7,10 @@
 /* import-globals-from ../../../test/head.js */
 
 // Load the NetMonitor head.js file to share its API.
-var netMonitorHead = "chrome://mochitests/content/browser/devtools/client/netmonitor/test/head.js";
+var netMonitorHead =
+  "chrome://mochitests/content/browser/devtools/client/netmonitor/test/head.js";
 Services.scriptloader.loadSubScript(netMonitorHead, this);
 
 // Directory with HAR related test files.
-const HAR_EXAMPLE_URL = "http://example.com/browser/devtools/client/netmonitor/src/har/test/";
+const HAR_EXAMPLE_URL =
+  "http://example.com/browser/devtools/client/netmonitor/src/har/test/";

@@ -10,21 +10,33 @@ add_task(async function() {
     return;
   }
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, async function() {
-    let popupopened = BrowserTestUtils.waitForEvent(gURLBar.popup, "popupshown");
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:blank" },
+    async function() {
+      let popupopened = BrowserTestUtils.waitForEvent(
+        gURLBar.popup,
+        "popupshown"
+      );
 
-    gURLBar.focus();
-    EventUtils.sendString("a");
-    await popupopened;
+      gURLBar.focus();
+      EventUtils.sendString("a");
+      await popupopened;
 
-    // Since the current tab is blank the preferences pane will load there
-    let loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    let popupclosed = BrowserTestUtils.waitForEvent(gURLBar.popup, "popuphidden");
-    EventUtils.synthesizeMouseAtCenter(button, {});
-    await loaded;
-    await popupclosed;
+      // Since the current tab is blank the preferences pane will load there
+      let loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+      let popupclosed = BrowserTestUtils.waitForEvent(
+        gURLBar.popup,
+        "popuphidden"
+      );
+      EventUtils.synthesizeMouseAtCenter(button, {});
+      await loaded;
+      await popupclosed;
 
-    is(gBrowser.selectedBrowser.currentURI.spec, "about:preferences#general",
-       "Should have loaded the right page");
-  });
+      is(
+        gBrowser.selectedBrowser.currentURI.spec,
+        "about:preferences#general",
+        "Should have loaded the right page"
+      );
+    }
+  );
 });

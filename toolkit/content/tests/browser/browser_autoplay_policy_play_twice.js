@@ -1,24 +1,32 @@
-const VIDEO_PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_video.html";
+const VIDEO_PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_video.html";
 
 function setup_test_preference(enableUserGesture) {
   let state = enableUserGesture ? "enable" : "disable";
   info(`- set pref : ${state} user gesture -`);
-  return SpecialPowers.pushPrefEnv({"set": [
-    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
-    ["media.autoplay.enabled.user-gestures-needed", enableUserGesture],
-  ]});
+  return SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
+      ["media.autoplay.enabled.user-gestures-needed", enableUserGesture],
+    ],
+  });
 }
 
 async function allow_play_for_played_video() {
   info("- open new tab  -");
-  let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
-                                                        "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "about:blank"
+  );
   BrowserTestUtils.loadURI(tab.linkedBrowser, VIDEO_PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- simulate user-click to start video -");
-  await BrowserTestUtils.synthesizeMouseAtCenter("#v", {button: 0},
-                                                 tab.linkedBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#v",
+    { button: 0 },
+    tab.linkedBrowser
+  );
 
   async function play_video_again() {
     let video = content.document.getElementById("v");

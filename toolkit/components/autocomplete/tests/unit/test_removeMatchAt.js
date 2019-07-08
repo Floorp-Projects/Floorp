@@ -1,6 +1,7 @@
 function run_test() {
-  let result = Cc["@mozilla.org/autocomplete/simple-result;1"]
-                 .createInstance(Ci.nsIAutoCompleteSimpleResult);
+  let result = Cc["@mozilla.org/autocomplete/simple-result;1"].createInstance(
+    Ci.nsIAutoCompleteSimpleResult
+  );
   result.appendMatch("a", "");
   result.appendMatch("b", "");
   result.removeMatchAt(0);

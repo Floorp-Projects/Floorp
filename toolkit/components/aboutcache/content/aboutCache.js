@@ -10,30 +10,43 @@ var storage = searchParams.get("storage") || "";
 var cacheContext = searchParams.get("context");
 
 // The context is in a format as used by the HTTP cache v2 back end
-if (cacheContext)
-  var [context, isAnon, isInBrowser, isPrivate] = cacheContext.match(/(a,)?(b,)?(p,)?/);
+if (cacheContext) {
+  var [context, isAnon, isInBrowser, isPrivate] = cacheContext.match(
+    /(a,)?(b,)?(p,)?/
+  );
+}
 
-function $(id) { return document.getElementById(id) || {}; }
+function $(id) {
+  return document.getElementById(id) || {};
+}
 
 // Initialize the context UI controls at the start according what we got in the "context=" argument
-addEventListener("DOMContentLoaded", function() {
-  $("anon").checked = !!isAnon;
-  $("inbrowser").checked = !!isInBrowser;
-  $("priv").checked = !!isPrivate;
-}, false);
+addEventListener(
+  "DOMContentLoaded",
+  function() {
+    $("anon").checked = !!isAnon;
+    $("inbrowser").checked = !!isInBrowser;
+    $("priv").checked = !!isPrivate;
+  },
+  false
+);
 
 // When user presses the [Update] button, we build a new context key according the UI control
 // values and navigate to a new about:cache?storage=<name>&context=<key> URL.
 function navigate() {
   context = "";
-  if ($("anon").checked)
+  if ($("anon").checked) {
     context += "a,";
-  if ($("inbrowser").checked)
+  }
+  if ($("inbrowser").checked) {
     context += "b,";
-  if ($("priv").checked)
+  }
+  if ($("priv").checked) {
     context += "p,";
+  }
 
-  window.location.href = "about:cache?storage=" + storage + "&context=" + context;
+  window.location.href =
+    "about:cache?storage=" + storage + "&context=" + context;
 }
 
 let submitButton = document.getElementById("submit");

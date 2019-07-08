@@ -20,9 +20,14 @@ add_task(async function test_label_and_icon() {
   // Because there is debounce logic in ContentLinkHandler.jsm to reduce the
   // favicon loads, we have to wait some time before checking that icon was
   // stored properly.
-  await BrowserTestUtils.waitForCondition(() => {
-    return gBrowser.getIcon(tab) != null;
-  }, "wait for favicon load to finish", 100, 5);
+  await BrowserTestUtils.waitForCondition(
+    () => {
+      return gBrowser.getIcon(tab) != null;
+    },
+    "wait for favicon load to finish",
+    100,
+    5
+  );
 
   // Retrieve the tab state.
   await TabStateFlusher.flush(browser);
@@ -36,7 +41,11 @@ add_task(async function test_label_and_icon() {
   await promiseTabRestoring(tab);
 
   // Check that label and icon are set for the restoring tab.
-  is(gBrowser.getIcon(tab), "chrome://browser/content/robot.ico", "icon is set");
+  is(
+    gBrowser.getIcon(tab),
+    "chrome://browser/content/robot.ico",
+    "icon is set"
+  );
   is(tab.label, "Gort! Klaatu barada nikto!", "label is set");
 
   // Cleanup.

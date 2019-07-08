@@ -2,16 +2,15 @@
 
 const global = this;
 
-const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+const { ExtensionCommon } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionCommon.jsm"
+);
 
-var {
-  BaseContext,
-  EventManager,
-} = ExtensionCommon;
+var { BaseContext, EventManager } = ExtensionCommon;
 
 class StubContext extends BaseContext {
   constructor() {
-    let fakeExtension = {id: "test@web.extension"};
+    let fakeExtension = { id: "test@web.extension" };
     super("testEnv", fakeExtension);
     this.sandbox = Cu.Sandbox(global);
   }
@@ -25,7 +24,6 @@ class StubContext extends BaseContext {
   }
 }
 
-
 add_task(async function test_post_unload_promises() {
   let context = new StubContext();
 
@@ -36,7 +34,7 @@ add_task(async function test_post_unload_promises() {
   // Make sure promises resolve normally prior to unload.
   let promises = [
     context.wrapPromise(Promise.resolve()),
-    context.wrapPromise(Promise.reject({message: ""})).catch(() => {}),
+    context.wrapPromise(Promise.reject({ message: "" })).catch(() => {}),
   ];
 
   await Promise.all(promises);
@@ -44,11 +42,9 @@ add_task(async function test_post_unload_promises() {
   // Make sure promises that resolve after unload do not trigger
   // resolution handlers.
 
-  context.wrapPromise(Promise.resolve("resolved"))
-         .then(fail);
+  context.wrapPromise(Promise.resolve("resolved")).then(fail);
 
-  context.wrapPromise(Promise.reject({message: "rejected"}))
-         .then(fail, fail);
+  context.wrapPromise(Promise.reject({ message: "rejected" })).then(fail, fail);
 
   context.unload();
 
@@ -57,7 +53,6 @@ add_task(async function test_post_unload_promises() {
   // any micro-tasks that get enqueued by the resolution handlers above.
   await new Promise(resolve => setTimeout(resolve, 0));
 });
-
 
 add_task(async function test_post_unload_listeners() {
   let context = new StubContext();
@@ -117,13 +112,13 @@ add_task(async function test_post_unload_listeners() {
 
 class Context extends BaseContext {
   constructor(principal) {
-    let fakeExtension = {id: "test@web.extension"};
+    let fakeExtension = { id: "test@web.extension" };
     super("testEnv", fakeExtension);
     Object.defineProperty(this, "principal", {
       value: principal,
       configurable: true,
     });
-    this.sandbox = Cu.Sandbox(principal, {wantXrays: false});
+    this.sandbox = Cu.Sandbox(principal, { wantXrays: false });
   }
 
   get cloneScope() {
@@ -132,17 +127,28 @@ class Context extends BaseContext {
 }
 
 let ssm = Services.scriptSecurityManager;
-const PRINCIPAL1 = ssm.createCodebasePrincipalFromOrigin("http://www.example.org");
-const PRINCIPAL2 = ssm.createCodebasePrincipalFromOrigin("http://www.somethingelse.org");
+const PRINCIPAL1 = ssm.createCodebasePrincipalFromOrigin(
+  "http://www.example.org"
+);
+const PRINCIPAL2 = ssm.createCodebasePrincipalFromOrigin(
+  "http://www.somethingelse.org"
+);
 
 // Test that toJSON() works in the json sandbox
 add_task(async function test_stringify_toJSON() {
   let context = new Context(PRINCIPAL1);
-  let obj = Cu.evalInSandbox("({hidden: true, toJSON() { return {visible: true}; } })", context.sandbox);
+  let obj = Cu.evalInSandbox(
+    "({hidden: true, toJSON() { return {visible: true}; } })",
+    context.sandbox
+  );
 
   let stringified = context.jsonStringify(obj);
-  let expected = JSON.stringify({visible: true});
-  equal(stringified, expected, "Stringified object with toJSON() method is as expected");
+  let expected = JSON.stringify({ visible: true });
+  equal(
+    stringified,
+    expected,
+    "Stringified object with toJSON() method is as expected"
+  );
 });
 
 // Test that stringifying in inaccessible property throws
@@ -151,7 +157,10 @@ add_task(async function test_stringify_inaccessible() {
   let sandbox = context.sandbox;
   let sandbox2 = Cu.Sandbox(PRINCIPAL2);
 
-  Cu.waiveXrays(sandbox).subobj = Cu.evalInSandbox("({ subobject: true })", sandbox2);
+  Cu.waiveXrays(sandbox).subobj = Cu.evalInSandbox(
+    "({ subobject: true })",
+    sandbox2
+  );
   let obj = Cu.evalInSandbox("({ local: true, nested: subobj })", sandbox);
   Assert.throws(() => {
     context.jsonStringify(obj);
@@ -165,10 +174,17 @@ add_task(async function test_stringify_accessible() {
   let sandbox = context.sandbox;
   let sandbox2 = Cu.Sandbox(PRINCIPAL2);
 
-  Cu.waiveXrays(sandbox).subobj = Cu.evalInSandbox("({ subobject: true })", sandbox2);
+  Cu.waiveXrays(sandbox).subobj = Cu.evalInSandbox(
+    "({ subobject: true })",
+    sandbox2
+  );
   let obj = Cu.evalInSandbox("({ local: true, nested: subobj })", sandbox);
   let stringified = context.jsonStringify(obj);
 
-  let expected = JSON.stringify({local: true, nested: {subobject: true}});
-  equal(stringified, expected, "Stringified object with accessible property is as expected");
+  let expected = JSON.stringify({ local: true, nested: { subobject: true } });
+  equal(
+    stringified,
+    expected,
+    "Stringified object with accessible property is as expected"
+  );
 });

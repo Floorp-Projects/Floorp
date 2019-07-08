@@ -50,8 +50,14 @@ PerformancePanel.prototype = {
     }
 
     const { PerformanceController, PerformanceView, EVENTS } = this.panelWin;
-    PerformanceController.on(EVENTS.RECORDING_ADDED, this._checkRecordingStatus);
-    PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._checkRecordingStatus);
+    PerformanceController.on(
+      EVENTS.RECORDING_ADDED,
+      this._checkRecordingStatus
+    );
+    PerformanceController.on(
+      EVENTS.RECORDING_STATE_CHANGE,
+      this._checkRecordingStatus
+    );
 
     await PerformanceController.initialize(this.toolbox, this.target, front);
     await PerformanceView.initialize();
@@ -84,8 +90,14 @@ PerformancePanel.prototype = {
     }
 
     const { PerformanceController, PerformanceView, EVENTS } = this.panelWin;
-    PerformanceController.off(EVENTS.RECORDING_ADDED, this._checkRecordingStatus);
-    PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._checkRecordingStatus);
+    PerformanceController.off(
+      EVENTS.RECORDING_ADDED,
+      this._checkRecordingStatus
+    );
+    PerformanceController.off(
+      EVENTS.RECORDING_STATE_CHANGE,
+      this._checkRecordingStatus
+    );
 
     await PerformanceController.destroy();
     await PerformanceView.destroy();

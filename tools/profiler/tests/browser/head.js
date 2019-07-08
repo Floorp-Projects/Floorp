@@ -1,5 +1,6 @@
-
-const { BrowserTestUtils } = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+const { BrowserTestUtils } = ChromeUtils.import(
+  "resource://testing-common/BrowserTestUtils.jsm"
+);
 
 const BASE_URL = "http://example.com/browser/tools/profiler/tests/browser/";
 
@@ -44,7 +45,7 @@ function wait(time) {
  * @return {Array} The payloads.
  */
 function getPayloadsOfType(thread, type) {
-  const {markers} = thread;
+  const { markers } = thread;
   const results = [];
   for (const markerTuple of markers.data) {
     const payload = markerTuple[markers.schema.data];

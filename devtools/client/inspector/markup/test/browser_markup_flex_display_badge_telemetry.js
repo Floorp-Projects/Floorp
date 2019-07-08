@@ -24,7 +24,8 @@ add_task(async function() {
   await selectNode("#flex", inspector);
   const flexContainer = await getContainerForSelector("#flex", inspector);
   const flexDisplayBadge = flexContainer.elt.querySelector(
-    ".inspector-badge.interactive[data-display]");
+    ".inspector-badge.interactive[data-display]"
+  );
 
   info("Toggling ON the flexbox highlighter from the flex display badge.");
   const onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
@@ -41,6 +42,10 @@ add_task(async function() {
 
 function checkResults() {
   checkTelemetry("devtools.markup.flexboxhighlighter.opened", "", 1, "scalar");
-  checkTelemetry("DEVTOOLS_FLEXBOX_HIGHLIGHTER_TIME_ACTIVE_SECONDS", "", null,
-    "hasentries");
+  checkTelemetry(
+    "DEVTOOLS_FLEXBOX_HIGHLIGHTER_TIME_ACTIVE_SECONDS",
+    "",
+    null,
+    "hasentries"
+  );
 }

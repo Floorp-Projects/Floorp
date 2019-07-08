@@ -5,7 +5,8 @@ const PERMISSION_NAME = "desktop-notification";
 const PROMPT_ALLOW_BUTTON = -1;
 const PROMPT_NOT_NOW_BUTTON = 0;
 const PROMPT_NEVER_BUTTON = 1;
-const TEST_URL = "https://example.com/browser/dom/notification/test/browser/notification.html";
+const TEST_URL =
+  "https://example.com/browser/dom/notification/test/browser/notification.html";
 
 /**
  * Clicks the specified web-notifications prompt button.
@@ -46,31 +47,51 @@ function clickDoorhangerButton(aButtonIndex) {
 function tabWithRequest(task, permission) {
   Services.perms.remove(ORIGIN_URI, PERMISSION_NAME);
 
-  return BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: TEST_URL,
-  }, async function(browser) {
-    let requestPromise = ContentTask.spawn(browser, {
-      permission,
-    }, async function({permission}) {
-      function requestCallback(perm) {
-        is(perm, permission,
-          "Should call the legacy callback with the permission state");
-      }
-      let perm = await content.window.Notification
-                              .requestPermission(requestCallback);
-      is(perm, permission,
-         "Should resolve the promise with the permission state");
-    });
+  return BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_URL,
+    },
+    async function(browser) {
+      let requestPromise = ContentTask.spawn(
+        browser,
+        {
+          permission,
+        },
+        async function({ permission }) {
+          function requestCallback(perm) {
+            is(
+              perm,
+              permission,
+              "Should call the legacy callback with the permission state"
+            );
+          }
+          let perm = await content.window.Notification.requestPermission(
+            requestCallback
+          );
+          is(
+            perm,
+            permission,
+            "Should resolve the promise with the permission state"
+          );
+        }
+      );
 
-    await BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-    await task();
-    await requestPromise;
-  });
+      await BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      await task();
+      await requestPromise;
+    }
+  );
 }
 
 add_task(async function setup() {
-  Services.prefs.setBoolPref("dom.webnotifications.requireuserinteraction", false);
+  Services.prefs.setBoolPref(
+    "dom.webnotifications.requireuserinteraction",
+    false
+  );
   SimpleTest.registerCleanupFunction(() => {
     Services.prefs.clearUserPref("dom.webnotifications.requireuserinteraction");
     Services.perms.remove(ORIGIN_URI, PERMISSION_NAME);
@@ -82,12 +103,16 @@ add_task(async function test_requestPermission_granted() {
     clickDoorhangerButton(PROMPT_ALLOW_BUTTON);
   }, "granted");
 
-  ok(!PopupNotifications.getNotification("web-notifications"),
-     "Should remove the doorhanger notification icon if granted");
+  ok(
+    !PopupNotifications.getNotification("web-notifications"),
+    "Should remove the doorhanger notification icon if granted"
+  );
 
-  is(Services.perms.testPermission(ORIGIN_URI, PERMISSION_NAME),
-     Services.perms.ALLOW_ACTION,
-     "Check permission in perm. manager");
+  is(
+    Services.perms.testPermission(ORIGIN_URI, PERMISSION_NAME),
+    Services.perms.ALLOW_ACTION,
+    "Check permission in perm. manager"
+  );
 });
 
 add_task(async function test_requestPermission_denied_temporarily() {
@@ -95,12 +120,16 @@ add_task(async function test_requestPermission_denied_temporarily() {
     clickDoorhangerButton(PROMPT_NOT_NOW_BUTTON);
   }, "default");
 
-  ok(!PopupNotifications.getNotification("web-notifications"),
-     "Should remove the doorhanger notification icon if denied");
+  ok(
+    !PopupNotifications.getNotification("web-notifications"),
+    "Should remove the doorhanger notification icon if denied"
+  );
 
-  is(Services.perms.testPermission(ORIGIN_URI, PERMISSION_NAME),
-     Services.perms.UNKNOWN_ACTION,
-     "Check permission in perm. manager");
+  is(
+    Services.perms.testPermission(ORIGIN_URI, PERMISSION_NAME),
+    Services.perms.UNKNOWN_ACTION,
+    "Check permission in perm. manager"
+  );
 });
 
 add_task(async function test_requestPermission_denied_permanently() {
@@ -108,10 +137,14 @@ add_task(async function test_requestPermission_denied_permanently() {
     await clickDoorhangerButton(PROMPT_NEVER_BUTTON);
   }, "denied");
 
-  ok(!PopupNotifications.getNotification("web-notifications"),
-     "Should remove the doorhanger notification icon if denied");
+  ok(
+    !PopupNotifications.getNotification("web-notifications"),
+    "Should remove the doorhanger notification icon if denied"
+  );
 
-  is(Services.perms.testPermission(ORIGIN_URI, PERMISSION_NAME),
-     Services.perms.DENY_ACTION,
-     "Check permission in perm. manager");
+  is(
+    Services.perms.testPermission(ORIGIN_URI, PERMISSION_NAME),
+    Services.perms.DENY_ACTION,
+    "Check permission in perm. manager"
+  );
 });

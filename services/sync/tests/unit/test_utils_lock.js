@@ -3,7 +3,7 @@ _("Make sure lock prevents calling with a shared lock");
 // Utility that we only use here.
 
 function do_check_begins(thing, startsWith) {
-  if (!(thing && thing.indexOf && (thing.indexOf(startsWith) == 0))) {
+  if (!(thing && thing.indexOf && thing.indexOf(startsWith) == 0)) {
     do_throw(thing + " doesn't begin with " + startsWith);
   }
 }
@@ -28,21 +28,19 @@ add_task(async function run_test() {
     },
 
     func() {
-      return this._lock("Test utils lock",
-                              async function() {
-                                rightThis = this == obj;
-                                didCall = true;
-                                return 5;
-                              })();
+      return this._lock("Test utils lock", async function() {
+        rightThis = this == obj;
+        didCall = true;
+        return 5;
+      })();
     },
 
     throwy() {
-      return this._lock("Test utils lock throwy",
-                              async function() {
-                                rightThis = this == obj;
-                                didCall = true;
-                                return this.throwy();
-                              })();
+      return this._lock("Test utils lock throwy", async function() {
+        rightThis = this == obj;
+        didCall = true;
+        return this.throwy();
+      })();
     },
   };
 

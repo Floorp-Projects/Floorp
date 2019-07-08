@@ -9,17 +9,20 @@
  * for null titles.
  */
 
-const bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-           getService(Ci.nsINavBookmarksService);
+const bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(
+  Ci.nsINavBookmarksService
+);
 
 const TEST_URL = "http://www.mozilla.org";
 
 function run_test() {
   // Insert a bookmark with an empty title.
-  var itemId = bs.insertBookmark(bs.toolbarFolder,
-                                 uri(TEST_URL),
-                                 bs.DEFAULT_INDEX,
-                                 "");
+  var itemId = bs.insertBookmark(
+    bs.toolbarFolder,
+    uri(TEST_URL),
+    bs.DEFAULT_INDEX,
+    ""
+  );
   // Check returned title is an empty string.
   Assert.equal(bs.getItemTitle(itemId), "");
   // Set title to null.
@@ -30,10 +33,12 @@ function run_test() {
   bs.removeItem(itemId);
 
   // Insert a bookmark with a null title.
-  itemId = bs.insertBookmark(bs.toolbarFolder,
-                             uri(TEST_URL),
-                             bs.DEFAULT_INDEX,
-                             null);
+  itemId = bs.insertBookmark(
+    bs.toolbarFolder,
+    uri(TEST_URL),
+    bs.DEFAULT_INDEX,
+    null
+  );
   // Check returned title defaults to an empty string.
   Assert.equal(bs.getItemTitle(itemId), "");
   // Set title to an empty string.

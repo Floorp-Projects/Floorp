@@ -6,13 +6,24 @@
 
 const { openDocLink, openTrustedLink } = require("devtools/client/shared/link");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { createFactory, Component } = require("devtools/client/shared/vendor/react");
-const { a, article, h1, li, p, ul } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  createFactory,
+  Component,
+} = require("devtools/client/shared/vendor/react");
+const {
+  a,
+  article,
+  h1,
+  li,
+  p,
+  ul,
+} = require("devtools/client/shared/vendor/react-dom-factories");
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const DOC_URL = "https://developer.mozilla.org/docs/Web/API/Service_Worker_API/Using_Service_Workers" +
+const DOC_URL =
+  "https://developer.mozilla.org/docs/Web/API/Service_Worker_API/Using_Service_Workers" +
   "?utm_source=devtools&utm_medium=sw-panel-blank";
 
 /**
@@ -45,38 +56,43 @@ class WorkerListEmpty extends Component {
   render() {
     return article(
       { className: "worker-list-empty js-worker-list-empty" },
-      Localized({
-        id: "serviceworker-empty-intro",
-        a: a({ className: "external-link", onClick: () => this.openDocumentation() }),
-      },
+      Localized(
+        {
+          id: "serviceworker-empty-intro",
+          a: a({
+            className: "external-link",
+            onClick: () => this.openDocumentation(),
+          }),
+        },
         h1({ className: "worker-list-empty__title" })
       ),
-      Localized(
-        { id: "serviceworker-empty-suggestions" },
-        p({})
-      ),
+      Localized({ id: "serviceworker-empty-suggestions" }, p({})),
       ul(
         { className: "worker-list-empty__tips" },
-        Localized({
-          id: "serviceworker-empty-suggestions-console",
-          a: a({ className: "link", onClick: () => this.switchToConsole() }),
-        },
+        Localized(
+          {
+            id: "serviceworker-empty-suggestions-console",
+            a: a({ className: "link", onClick: () => this.switchToConsole() }),
+          },
           li({ className: "worker-list-empty__tips__item" })
         ),
-        Localized({
-          id: "serviceworker-empty-suggestions-debugger",
-          a: a({ className: "link", onClick: () => this.switchToDebugger() }),
-        },
+        Localized(
+          {
+            id: "serviceworker-empty-suggestions-debugger",
+            a: a({ className: "link", onClick: () => this.switchToDebugger() }),
+          },
           li({ className: "worker-list-empty__tips__item" })
         ),
-        Localized({
-          id: "serviceworker-empty-suggestions-aboutdebugging",
-          a: a({
-            className: "link js-trusted-link",
-            onClick: () => this.openAboutDebugging() }),
-        },
+        Localized(
+          {
+            id: "serviceworker-empty-suggestions-aboutdebugging",
+            a: a({
+              className: "link js-trusted-link",
+              onClick: () => this.openAboutDebugging(),
+            }),
+          },
           li({ className: "worker-list-empty__tips__item" })
-        ),
+        )
       )
     );
   }

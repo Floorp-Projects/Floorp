@@ -34,17 +34,28 @@
 //
 // NOTE: Entire directory whitelisting should be kept to a minimum. Normally you
 //       should use "expectUncaughtRejection" to flag individual failures.
-const {PromiseTestUtils} = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 PromiseTestUtils.whitelistRejectionsGlobally(/No matching message handler/);
 PromiseTestUtils.whitelistRejectionsGlobally(/Receiving end does not exist/);
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {CustomizableUI} = ChromeUtils.import("resource:///modules/CustomizableUI.jsm");
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { CustomizableUI } = ChromeUtils.import(
+  "resource:///modules/CustomizableUI.jsm"
+);
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
-  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  const { Management } = ChromeUtils.import(
+    "resource://gre/modules/Extension.jsm",
+    null
+  );
   return Management;
 });
 
@@ -57,15 +68,14 @@ function loadTestSubscript(filePath) {
   Services.scriptloader.loadSubScript(new URL(filePath, gTestPath).href, this);
 }
 
-
 // We run tests under two different configurations, from browser.ini and
 // browser-remote.ini. When running from browser-remote.ini, the tests are
 // copied to the sub-directory "test-oop-extensions", which we detect here, and
 // use to select our configuration.
 let remote = gTestPath.includes("test-oop-extensions");
-SpecialPowers.pushPrefEnv({set: [
-  ["extensions.webextensions.remote", remote],
-]});
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.webextensions.remote", remote]],
+});
 if (remote) {
   // We don't want to reset this at the end of the test, so that we don't have
   // to spawn a new extension child process for each test unit.
@@ -73,13 +83,16 @@ if (remote) {
 }
 
 // Don't try to create screenshots of sites we load during tests.
-Services.prefs.getDefaultBranch("browser.newtabpage.activity-stream.")
-        .setBoolPref("feeds.topsites", false);
+Services.prefs
+  .getDefaultBranch("browser.newtabpage.activity-stream.")
+  .setBoolPref("feeds.topsites", false);
 
 {
   // Touch the recipeParentPromise lazy getter so we don't get
   // `this._recipeManager is undefined` errors during tests.
-  const {LoginManagerParent} = ChromeUtils.import("resource://gre/modules/LoginManagerParent.jsm");
+  const { LoginManagerParent } = ChromeUtils.import(
+    "resource://gre/modules/LoginManagerParent.jsm"
+  );
   void LoginManagerParent.recipeParentPromise;
 }
 
@@ -104,9 +117,13 @@ var focusWindow = async function focusWindow(win) {
   }
 
   let promise = new Promise(resolve => {
-    win.addEventListener("focus", function() {
-      resolve();
-    }, {capture: true, once: true});
+    win.addEventListener(
+      "focus",
+      function() {
+        resolve();
+      },
+      { capture: true, once: true }
+    );
   });
 
   win.focus();
@@ -118,14 +135,17 @@ function imageBufferFromDataURI(encodedImageData) {
   return Uint8Array.from(decodedImageData, byte => byte.charCodeAt(0)).buffer;
 }
 
-let img = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==";
+let img =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==";
 var imageBuffer = imageBufferFromDataURI(img);
 
 function getInlineOptionsBrowser(aboutAddonsBrowser) {
-  let {contentWindow} = aboutAddonsBrowser;
+  let { contentWindow } = aboutAddonsBrowser;
   let htmlBrowser = contentWindow.document.getElementById("html-view-browser");
-  return htmlBrowser.contentDocument.getElementById("addon-inline-options") ||
-    contentWindow.document.getElementById("addon-options");
+  return (
+    htmlBrowser.contentDocument.getElementById("addon-inline-options") ||
+    contentWindow.document.getElementById("addon-options")
+  );
 }
 
 function getListStyleImage(button) {
@@ -139,7 +159,7 @@ function getListStyleImage(button) {
 async function promiseAnimationFrame(win = window) {
   await new Promise(resolve => win.requestAnimationFrame(resolve));
 
-  let {tm} = Services;
+  let { tm } = Services;
   return new Promise(resolve => tm.dispatchToMainThread(resolve));
 }
 
@@ -182,12 +202,17 @@ function promisePopupNotificationShown(name, win = window) {
   return new Promise(resolve => {
     function popupshown() {
       let notification = win.PopupNotifications.getNotification(name);
-      if (!notification) { return; }
+      if (!notification) {
+        return;
+      }
 
       ok(notification, `${name} notification shown`);
       ok(win.PopupNotifications.isPanelOpen, "notification panel open");
 
-      win.PopupNotifications.panel.removeEventListener("popupshown", popupshown);
+      win.PopupNotifications.panel.removeEventListener(
+        "popupshown",
+        popupshown
+      );
       resolve(win.PopupNotifications.panel.firstElementChild);
     }
 
@@ -206,16 +231,28 @@ function promisePossiblyInaccurateContentDimensions(browser) {
     }
 
     return {
-      window: copyProps(
-        content,
-        ["innerWidth", "innerHeight", "outerWidth", "outerHeight",
-         "scrollX", "scrollY", "scrollMaxX", "scrollMaxY"]),
-      body: copyProps(
-        content.document.body,
-        ["clientWidth", "clientHeight", "scrollWidth", "scrollHeight"]),
-      root: copyProps(
-        content.document.documentElement,
-        ["clientWidth", "clientHeight", "scrollWidth", "scrollHeight"]),
+      window: copyProps(content, [
+        "innerWidth",
+        "innerHeight",
+        "outerWidth",
+        "outerHeight",
+        "scrollX",
+        "scrollY",
+        "scrollMaxX",
+        "scrollMaxY",
+      ]),
+      body: copyProps(content.document.body, [
+        "clientWidth",
+        "clientHeight",
+        "scrollWidth",
+        "scrollHeight",
+      ]),
+      root: copyProps(content.document.documentElement, [
+        "clientWidth",
+        "clientHeight",
+        "scrollWidth",
+        "scrollHeight",
+      ]),
       isStandards: content.document.compatMode !== "BackCompat",
     };
   });
@@ -233,8 +270,10 @@ async function promiseContentDimensions(browser) {
   // <browser> dimensions before returning data.
 
   let dims = await promisePossiblyInaccurateContentDimensions(browser);
-  while (browser.clientWidth !== dims.window.innerWidth ||
-         browser.clientHeight !== dims.window.innerHeight) {
+  while (
+    browser.clientWidth !== dims.window.innerWidth ||
+    browser.clientHeight !== dims.window.innerHeight
+  ) {
     await delay(50);
     dims = await promisePossiblyInaccurateContentDimensions(browser);
   }
@@ -243,8 +282,11 @@ async function promiseContentDimensions(browser) {
 }
 
 async function awaitPopupResize(browser) {
-  await BrowserTestUtils.waitForEvent(browser, "WebExtPopupResized",
-                                      event => event.detail === "delayed");
+  await BrowserTestUtils.waitForEvent(
+    browser,
+    "WebExtPopupResized",
+    event => event.detail === "delayed"
+  );
 
   return promiseContentDimensions(browser);
 }
@@ -263,19 +305,29 @@ function getPanelForNode(node) {
   return node;
 }
 
-var awaitBrowserLoaded = browser => ContentTask.spawn(browser, null, () => {
-  if (content.document.readyState !== "complete" ||
-      content.document.documentURI === "about:blank") {
-    return ContentTaskUtils.waitForEvent(this, "load", true, event => {
-      return content.document.documentURI !== "about:blank";
-    }).then(() => {});
-  }
-});
+var awaitBrowserLoaded = browser =>
+  ContentTask.spawn(browser, null, () => {
+    if (
+      content.document.readyState !== "complete" ||
+      content.document.documentURI === "about:blank"
+    ) {
+      return ContentTaskUtils.waitForEvent(this, "load", true, event => {
+        return content.document.documentURI !== "about:blank";
+      }).then(() => {});
+    }
+  });
 
-var awaitExtensionPanel = async function(extension, win = window, awaitLoad = true) {
-  let {originalTarget: browser} = await BrowserTestUtils.waitForEvent(
-    win.document, "WebExtPopupLoaded", true,
-    event => event.detail.extension.id === extension.id);
+var awaitExtensionPanel = async function(
+  extension,
+  win = window,
+  awaitLoad = true
+) {
+  let { originalTarget: browser } = await BrowserTestUtils.waitForEvent(
+    win.document,
+    "WebExtPopupLoaded",
+    true,
+    event => event.detail.extension.id === extension.id
+  );
 
   await Promise.all([
     promisePopupShown(getPanelForNode(browser)),
@@ -291,7 +343,9 @@ function getCustomizableUIPanelID() {
 }
 
 function getBrowserActionWidget(extension) {
-  return CustomizableUI.getWidget(makeWidgetId(extension.id) + "-browser-action");
+  return CustomizableUI.getWidget(
+    makeWidgetId(extension.id) + "-browser-action"
+  );
 }
 
 function getBrowserActionPopup(extension, win = window) {
@@ -342,65 +396,124 @@ function openBrowserActionPanel(extension, win = window, awaitLoad = false) {
 
 async function toggleBookmarksToolbar(visible = true) {
   let bookmarksToolbar = document.getElementById("PersonalToolbar");
-  let transitionPromise =
-    BrowserTestUtils.waitForEvent(bookmarksToolbar, "transitionend",
-                                  e => e.propertyName == "max-height");
+  let transitionPromise = BrowserTestUtils.waitForEvent(
+    bookmarksToolbar,
+    "transitionend",
+    e => e.propertyName == "max-height"
+  );
 
   setToolbarVisibility(bookmarksToolbar, visible);
   await transitionPromise;
 }
 
 async function openContextMenuInPopup(extension, selector = "body") {
-  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
+  let contentAreaContextMenu = document.getElementById(
+    "contentAreaContextMenu"
+  );
   let browser = await awaitExtensionPanel(extension);
 
   // Ensure that the document layout has been flushed before triggering the mouse event
   // (See Bug 1519808 for a rationale).
   await browser.ownerGlobal.promiseDocumentFlushed(() => {});
-  let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {type: "mousedown", button: 2}, browser);
-  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {type: "contextmenu"}, browser);
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    contentAreaContextMenu,
+    "popupshown"
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    selector,
+    { type: "mousedown", button: 2 },
+    browser
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    selector,
+    { type: "contextmenu" },
+    browser
+  );
   await popupShownPromise;
   return contentAreaContextMenu;
 }
 
 async function openContextMenuInSidebar(selector = "body") {
-  let contentAreaContextMenu = SidebarUI.browser.contentDocument.getElementById("contentAreaContextMenu");
-  let browser = SidebarUI.browser.contentDocument.getElementById("webext-panels-browser");
-  let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {type: "mousedown", button: 2}, browser);
-  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {type: "contextmenu"}, browser);
+  let contentAreaContextMenu = SidebarUI.browser.contentDocument.getElementById(
+    "contentAreaContextMenu"
+  );
+  let browser = SidebarUI.browser.contentDocument.getElementById(
+    "webext-panels-browser"
+  );
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    contentAreaContextMenu,
+    "popupshown"
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    selector,
+    { type: "mousedown", button: 2 },
+    browser
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    selector,
+    { type: "contextmenu" },
+    browser
+  );
   await popupShownPromise;
   return contentAreaContextMenu;
 }
 
 async function openContextMenuInFrame(frameSelector) {
-  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-  let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-  await BrowserTestUtils.synthesizeMouseAtCenter([frameSelector, "body"], {type: "contextmenu"}, gBrowser.selectedBrowser);
+  let contentAreaContextMenu = document.getElementById(
+    "contentAreaContextMenu"
+  );
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    contentAreaContextMenu,
+    "popupshown"
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    [frameSelector, "body"],
+    { type: "contextmenu" },
+    gBrowser.selectedBrowser
+  );
   await popupShownPromise;
   return contentAreaContextMenu;
 }
 
 async function openContextMenu(selector = "#img1", win = window) {
-  let contentAreaContextMenu = win.document.getElementById("contentAreaContextMenu");
-  let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {type: "mousedown", button: 2}, win.gBrowser.selectedBrowser);
-  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {type: "contextmenu"}, win.gBrowser.selectedBrowser);
+  let contentAreaContextMenu = win.document.getElementById(
+    "contentAreaContextMenu"
+  );
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    contentAreaContextMenu,
+    "popupshown"
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    selector,
+    { type: "mousedown", button: 2 },
+    win.gBrowser.selectedBrowser
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    selector,
+    { type: "contextmenu" },
+    win.gBrowser.selectedBrowser
+  );
   await popupShownPromise;
   return contentAreaContextMenu;
 }
 
 async function closeContextMenu(contextMenu) {
-  let contentAreaContextMenu = contextMenu || document.getElementById("contentAreaContextMenu");
-  let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
+  let contentAreaContextMenu =
+    contextMenu || document.getElementById("contentAreaContextMenu");
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    contentAreaContextMenu,
+    "popuphidden"
+  );
   contentAreaContextMenu.hidePopup();
   await popupHiddenPromise;
 }
 
 async function openExtensionContextMenu(selector = "#img1") {
   let contextMenu = await openContextMenu(selector);
-  let topLevelMenu = contextMenu.getElementsByAttribute("ext-type", "top-level-menu");
+  let topLevelMenu = contextMenu.getElementsByAttribute(
+    "ext-type",
+    "top-level-menu"
+  );
 
   // Return null if the extension only has one item and therefore no extension menu.
   if (topLevelMenu.length == 0) {
@@ -408,15 +521,23 @@ async function openExtensionContextMenu(selector = "#img1") {
   }
 
   let extensionMenu = topLevelMenu[0];
-  let popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popupshown"
+  );
   EventUtils.synthesizeMouseAtCenter(extensionMenu, {});
   await popupShownPromise;
   return extensionMenu;
 }
 
 async function closeExtensionContextMenu(itemToSelect, modifiers = {}) {
-  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-  let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
+  let contentAreaContextMenu = document.getElementById(
+    "contentAreaContextMenu"
+  );
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    contentAreaContextMenu,
+    "popuphidden"
+  );
   if (itemToSelect) {
     EventUtils.synthesizeMouseAtCenter(itemToSelect, modifiers);
   } else {
@@ -465,7 +586,7 @@ async function openChromeContextMenu(menuId, target, win = window) {
   const node = win.document.querySelector(target);
   const menu = win.document.getElementById(menuId);
   const shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(node, {type: "contextmenu"}, win);
+  EventUtils.synthesizeMouseAtCenter(node, { type: "contextmenu" }, win);
   await shown;
   return menu;
 }
@@ -496,7 +617,11 @@ async function openActionContextMenu(extension, kind, win = window) {
   let buttonID;
   let menuID;
   if (kind == "page") {
-    buttonID = "#" + BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
+    buttonID =
+      "#" +
+      BrowserPageActions.urlbarButtonNodeIDForActionID(
+        makeWidgetId(extension.id)
+      );
     menuID = "pageActionContextMenu";
   } else {
     buttonID = `#${makeWidgetId(extension.id)}-${kind}-action`;
@@ -506,7 +631,8 @@ async function openActionContextMenu(extension, kind, win = window) {
 }
 
 function closeActionContextMenu(itemToSelect, kind, win = window) {
-  let menuID = kind == "page" ? "pageActionContextMenu" : "toolbar-context-menu";
+  let menuID =
+    kind == "page" ? "pageActionContextMenu" : "toolbar-context-menu";
   return closeChromeContextMenu(menuID, itemToSelect, win);
 }
 
@@ -514,7 +640,11 @@ function openTabContextMenu(win = window) {
   // The TabContextMenu initializes its strings only on a focus or mouseover event.
   // Calls focus event on the TabContextMenu before opening.
   gBrowser.selectedTab.focus();
-  return openChromeContextMenu("tabContextMenu", ".tabbrowser-tab[selected]", win);
+  return openChromeContextMenu(
+    "tabContextMenu",
+    ".tabbrowser-tab[selected]",
+    win
+  );
 }
 
 function closeTabContextMenu(itemToSelect, win = window) {
@@ -537,7 +667,9 @@ async function getPageActionButton(extension, win = window) {
 
   await promiseAnimationFrame(win);
 
-  let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
+  let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(
+    makeWidgetId(extension.id)
+  );
 
   return win.document.getElementById(pageActionId);
 }
@@ -564,19 +696,21 @@ function promisePrefChangeObserved(pref) {
     Preferences.observe(pref, function prefObserver() {
       Preferences.ignore(pref, prefObserver);
       resolve();
-    }));
+    })
+  );
 }
 
 function promiseWindowRestored(window) {
-  return new Promise(resolve => window.addEventListener("SSWindowRestored", resolve, {once: true}));
+  return new Promise(resolve =>
+    window.addEventListener("SSWindowRestored", resolve, { once: true })
+  );
 }
 
 function awaitEvent(eventName, id) {
   return new Promise(resolve => {
     let listener = (_eventName, ...args) => {
       let extension = args[0];
-      if (_eventName === eventName &&
-          extension.id == id) {
+      if (_eventName === eventName && extension.id == id) {
         Management.off(eventName, listener);
         resolve();
       }
@@ -601,11 +735,15 @@ async function locationChange(tab, url, task) {
 }
 
 function navigateTab(tab, url) {
-  return locationChange(tab, url, (url) => { content.location.href = url; });
+  return locationChange(tab, url, url => {
+    content.location.href = url;
+  });
 }
 
 function historyPushState(tab, url) {
-  return locationChange(tab, url, (url) => { content.history.pushState(null, null, url); });
+  return locationChange(tab, url, url => {
+    content.history.pushState(null, null, url);
+  });
 }
 
 // This monitor extension runs with incognito: not_allowed, if it receives any
@@ -620,7 +758,9 @@ async function startIncognitoMonitorExtension() {
     // Map<tabId -> tab>
     let seenTabs = new Map();
     function getTabById(tabId) {
-      return seenTabs.has(tabId) ? seenTabs.get(tabId) : browser.tabs.get(tabId);
+      return seenTabs.has(tabId)
+        ? seenTabs.get(tabId)
+        : browser.tabs.get(tabId);
     }
 
     async function testTab(tabOrId, eventName) {
@@ -630,11 +770,18 @@ async function startIncognitoMonitorExtension() {
         try {
           tab = await getTabById(tabId);
         } catch (e) {
-          browser.test.fail(`tabs.${eventName} for id ${tabOrId} unexpected failure ${e}\n`);
+          browser.test.fail(
+            `tabs.${eventName} for id ${tabOrId} unexpected failure ${e}\n`
+          );
           return;
         }
       }
-      browser.test.assertFalse(tab.incognito, `tabs.${eventName} ${tab.id}: monitor extension got expected incognito value`);
+      browser.test.assertFalse(
+        tab.incognito,
+        `tabs.${eventName} ${
+          tab.id
+        }: monitor extension got expected incognito value`
+      );
       seenTabs.set(tab.id, tab);
     }
     async function testTabInfo(tabInfo, eventName) {
@@ -646,17 +793,28 @@ async function startIncognitoMonitorExtension() {
         } else if (tabInfo.tab !== undefined) {
           await testTab(tabInfo.tab, eventName);
         } else if (tabInfo.tabIds !== undefined) {
-          await Promise.all(tabInfo.tabIds.map(tabId => testTab(tabId, eventName)));
+          await Promise.all(
+            tabInfo.tabIds.map(tabId => testTab(tabId, eventName))
+          );
         } else if (tabInfo.tabId !== undefined) {
           await testTab(tabInfo.tabId, eventName);
         }
       }
     }
-    let tabEvents = ["onUpdated", "onCreated", "onAttached", "onDetached",
-                     "onRemoved", "onMoved", "onZoomChange",
-                     "onHighlighted"];
+    let tabEvents = [
+      "onUpdated",
+      "onCreated",
+      "onAttached",
+      "onDetached",
+      "onRemoved",
+      "onMoved",
+      "onZoomChange",
+      "onHighlighted",
+    ];
     for (let eventName of tabEvents) {
-      browser.tabs[eventName].addListener(async details => { await testTabInfo(details, eventName); });
+      browser.tabs[eventName].addListener(async details => {
+        await testTabInfo(details, eventName);
+      });
     }
     browser.tabs.onReplaced.addListener(async (addedTabId, removedTabId) => {
       await testTabInfo(addedTabId, "onReplaced (addedTabId)");
@@ -666,24 +824,36 @@ async function startIncognitoMonitorExtension() {
     // Map<windowId -> window>
     let seenWindows = new Map();
     function getWindowById(windowId) {
-      return seenWindows.has(windowId) ? seenWindows.get(windowId) : browser.windows.get(windowId);
+      return seenWindows.has(windowId)
+        ? seenWindows.get(windowId)
+        : browser.windows.get(windowId);
     }
 
     browser.windows.onCreated.addListener(window => {
-      browser.test.assertFalse(window.incognito, `windows.onCreated monitor extension got expected incognito value`);
+      browser.test.assertFalse(
+        window.incognito,
+        `windows.onCreated monitor extension got expected incognito value`
+      );
       seenWindows.set(window.id, window);
     });
-    browser.windows.onRemoved.addListener(async (windowId) => {
+    browser.windows.onRemoved.addListener(async windowId => {
       let window;
       try {
         window = await getWindowById(windowId);
       } catch (e) {
-        browser.test.fail(`windows.onCreated for id ${windowId} unexpected failure ${e}\n`);
+        browser.test.fail(
+          `windows.onCreated for id ${windowId} unexpected failure ${e}\n`
+        );
         return;
       }
-      browser.test.assertFalse(window.incognito, `windows.onRemoved ${window.id}: monitor extension got expected incognito value`);
+      browser.test.assertFalse(
+        window.incognito,
+        `windows.onRemoved ${
+          window.id
+        }: monitor extension got expected incognito value`
+      );
     });
-    browser.windows.onFocusChanged.addListener(async (windowId) => {
+    browser.windows.onFocusChanged.addListener(async windowId => {
       if (windowId == browser.windows.WINDOW_ID_NONE) {
         return;
       }
@@ -692,17 +862,24 @@ async function startIncognitoMonitorExtension() {
       try {
         window = await getWindowById(windowId);
       } catch (e) {
-        browser.test.fail(`windows.onFocusChanged for id ${windowId} unexpected failure ${e}\n`);
+        browser.test.fail(
+          `windows.onFocusChanged for id ${windowId} unexpected failure ${e}\n`
+        );
         return;
       }
-      browser.test.assertFalse(window.incognito, `windows.onFocusChanged ${window.id}: monitor extesion got expected incognito value`);
+      browser.test.assertFalse(
+        window.incognito,
+        `windows.onFocusChanged ${
+          window.id
+        }: monitor extesion got expected incognito value`
+      );
       seenWindows.set(window.id, window);
     });
   }
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
     incognitoOverride: "not_allowed",
     background,
@@ -718,14 +895,14 @@ async function getIncognitoWindow(url = "about:privatebrowsing") {
   function background(expectUrl) {
     browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       if (changeInfo.status === "complete" && tab.url === expectUrl) {
-        browser.test.sendMessage("data", {tabId, windowId: tab.windowId});
+        browser.test.sendMessage("data", { tabId, windowId: tab.windowId });
       }
     });
   }
 
   let windowWatcher = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
     background: `(${background})(${JSON.stringify(url)})`,
     incognitoOverride: "spanning",
@@ -734,10 +911,10 @@ async function getIncognitoWindow(url = "about:privatebrowsing") {
   await windowWatcher.startup();
   let data = windowWatcher.awaitMessage("data");
 
-  let win = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, url);
 
   let details = await data;
   await windowWatcher.unload();
-  return {win, details};
+  return { win, details };
 }

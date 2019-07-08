@@ -27,9 +27,17 @@ function test() {
   let placement = CustomizableUI.getPlacementOfWidget(buttonID);
   // Check our bookkeeping
   ok(placement, "Button should be placed");
-  is(placement && placement.area, CustomizableUI.AREA_TABSTRIP, "Should be placed on tabstrip.");
+  is(
+    placement && placement.area,
+    CustomizableUI.AREA_TABSTRIP,
+    "Should be placed on tabstrip."
+  );
   // Check we didn't move the node.
-  is(btn.parentNode && btn.parentNode.id, "nav-bar", "Actual button should still be on navbar.");
+  is(
+    btn.parentNode && btn.parentNode.id,
+    "nav-bar",
+    "Actual button should still be on navbar."
+  );
 
   // Now remove the node again. This should remove the bookkeeping, but again
   // not affect the actual node.
@@ -38,6 +46,9 @@ function test() {
   // Check our bookkeeping:
   ok(!placement, "Button should no longer have a placement.");
   // Check our node.
-  is(btn.parentNode && btn.parentNode.id, "nav-bar", "Actual button should still be on navbar.");
+  is(
+    btn.parentNode && btn.parentNode.id,
+    "nav-bar",
+    "Actual button should still be on navbar."
+  );
 }
-

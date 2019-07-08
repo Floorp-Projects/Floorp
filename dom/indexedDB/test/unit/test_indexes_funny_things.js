@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   // Blob constructor is not implemented outside of windows yet (Bug 827723).
   if (!this.window) {
     finishTest();
@@ -25,27 +24,27 @@ function* testSteps()
   const arr = [1, 2, 3, 4, 5];
 
   const objectStoreData = [
-    { key: "1", value: blob1},
-    { key: "2", value: blob2},
-    { key: "3", value: blob3},
-    { key: "4", value: str},
-    { key: "5", value: arr},
+    { key: "1", value: blob1 },
+    { key: "2", value: blob2 },
+    { key: "3", value: blob3 },
+    { key: "4", value: str },
+    { key: "5", value: arr },
   ];
 
   const indexData = [
-    { name: "type", keyPath: "type", options: { } },
+    { name: "type", keyPath: "type", options: {} },
     { name: "length", keyPath: "length", options: { unique: true } },
   ];
 
   const objectStoreDataTypeSort = [
-    { key: "3", value: blob3},
-    { key: "1", value: blob1},
-    { key: "2", value: blob2},
+    { key: "3", value: blob3 },
+    { key: "1", value: blob1 },
+    { key: "2", value: blob2 },
   ];
 
   const objectStoreDataLengthSort = [
-    { key: "5", value: arr},
-    { key: "4", value: str},
+    { key: "5", value: arr },
+    { key: "4", value: str },
   ];
 
   let request = indexedDB.open(name, 1);
@@ -60,8 +59,7 @@ function* testSteps()
   // First, add all our data to the object store.
   let addedData = 0;
   for (let i in objectStoreData) {
-    request = objectStore.add(objectStoreData[i].value,
-                              objectStoreData[i].key);
+    request = objectStore.add(objectStoreData[i].value, objectStoreData[i].key);
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       if (++addedData == objectStoreData.length) {
@@ -72,13 +70,15 @@ function* testSteps()
   event = yield undefined;
   // Now create the indexes.
   for (let i in indexData) {
-    objectStore.createIndex(indexData[i].name, indexData[i].keyPath,
-                            indexData[i].options);
+    objectStore.createIndex(
+      indexData[i].name,
+      indexData[i].keyPath,
+      indexData[i].options
+    );
   }
   is(objectStore.indexNames.length, indexData.length, "Good index count");
   yield undefined;
-  objectStore = db.transaction(objectStoreName)
-                  .objectStore(objectStoreName);
+  objectStore = db.transaction(objectStoreName).objectStore(objectStoreName);
 
   // Check global properties to make sure they are correct.
   is(objectStore.indexNames.length, indexData.length, "Good index count");
@@ -107,23 +107,34 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataTypeSort[keyIndex].value.type,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataTypeSort[keyIndex].key,
-         "Correct primary key");
+      is(
+        cursor.key,
+        objectStoreDataTypeSort[keyIndex].value.type,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataTypeSort[keyIndex].key,
+        "Correct primary key"
+      );
       ok(!("value" in cursor), "No value");
 
       cursor.continue();
 
-      is(cursor.key, objectStoreDataTypeSort[keyIndex].value.type,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataTypeSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataTypeSort[keyIndex].value.type,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataTypeSort[keyIndex].key,
+        "Correct value"
+      );
       ok(!("value" in cursor), "No value");
 
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -140,21 +151,32 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataLengthSort[keyIndex].value.length,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataLengthSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataLengthSort[keyIndex].value.length,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataLengthSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
 
-      is(cursor.key, objectStoreDataLengthSort[keyIndex].value.length,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataLengthSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataLengthSort[keyIndex].value.length,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataLengthSort[keyIndex].key,
+        "Correct value"
+      );
 
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };

@@ -13,11 +13,13 @@
  */
 function setE10sPrefs() {
   return new Promise(resolve =>
-    SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.tabs.remote.autostart", true]
-      ]
-    }, resolve));
+    SpecialPowers.pushPrefEnv(
+      {
+        set: [["browser.tabs.remote.autostart", true]],
+      },
+      resolve
+    )
+  );
 }
 
 /**
@@ -34,7 +36,8 @@ function unsetE10sPrefs() {
 /* import-globals-from shared-head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/accessible/tests/browser/shared-head.js",
-  this);
+  this
+);
 
 /**
  * Returns a promise that resolves when 'a11y-consumers-changed' event is fired.
@@ -81,7 +84,8 @@ function contentA11yInitOrShutdownPromise(browser) {
  */
 function promiseOK(promise, expected) {
   return promise.then(flag =>
-    flag === expected ? Promise.resolve() : Promise.reject());
+    flag === expected ? Promise.resolve() : Promise.reject()
+  );
 }
 
 /**
@@ -94,12 +98,13 @@ function promiseOK(promise, expected) {
  *                                  service initialized correctly.
  */
 function initPromise(contentBrowser) {
-  let a11yInitPromise = contentBrowser ?
-    contentA11yInitOrShutdownPromise(contentBrowser) :
-    a11yInitOrShutdownPromise();
+  let a11yInitPromise = contentBrowser
+    ? contentA11yInitOrShutdownPromise(contentBrowser)
+    : a11yInitOrShutdownPromise();
   return promiseOK(a11yInitPromise, "1").then(
     () => ok(true, "Service initialized correctly"),
-    () => ok(false, "Service shutdown incorrectly"));
+    () => ok(false, "Service shutdown incorrectly")
+  );
 }
 
 /**
@@ -112,12 +117,13 @@ function initPromise(contentBrowser) {
  *                                  service shuts down correctly.
  */
 function shutdownPromise(contentBrowser) {
-  let a11yShutdownPromise = contentBrowser ?
-    contentA11yInitOrShutdownPromise(contentBrowser) :
-    a11yInitOrShutdownPromise();
+  let a11yShutdownPromise = contentBrowser
+    ? contentA11yInitOrShutdownPromise(contentBrowser)
+    : a11yInitOrShutdownPromise();
   return promiseOK(a11yShutdownPromise, "0").then(
     () => ok(true, "Service shutdown correctly"),
-    () => ok(false, "Service initialized incorrectly"));
+    () => ok(false, "Service initialized incorrectly")
+  );
 }
 
 /**
@@ -135,12 +141,11 @@ function waitForEvent(eventType, expectedId) {
         } catch (e) {
           // This can throw NS_ERROR_FAILURE.
         }
-        if (event.eventType === eventType &&
-            id === expectedId) {
+        if (event.eventType === eventType && id === expectedId) {
           Services.obs.removeObserver(this, "accessible-event");
           resolve(event);
         }
-      }
+      },
     };
     Services.obs.addObserver(eventObserver, "accessible-event");
   });

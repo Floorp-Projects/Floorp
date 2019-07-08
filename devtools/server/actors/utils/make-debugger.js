@@ -57,7 +57,10 @@ const { reportException } = require("devtools/shared/DevToolsUtils");
  *              current globals that should be debuggees (as determined by
  *              |findDebuggees|) to the |Debugger| instance.
  */
-module.exports = function makeDebugger({ findDebuggees, shouldAddNewGlobalAsDebuggee }) {
+module.exports = function makeDebugger({
+  findDebuggees,
+  shouldAddNewGlobalAsDebuggee,
+}) {
   const dbg = isReplaying ? new ReplayDebugger() : new Debugger();
   EventEmitter.decorate(dbg);
 

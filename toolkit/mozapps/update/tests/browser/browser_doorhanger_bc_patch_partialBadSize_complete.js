@@ -4,13 +4,15 @@
 "use strict";
 
 add_task(async function doorhanger_bc_patch_partialBadSize_complete() {
-  let params = {checkAttempts: 1,
-                queryString: "&invalidPartialSize=1&promptWaitTime=0"};
+  let params = {
+    checkAttempts: 1,
+    queryString: "&invalidPartialSize=1&promptWaitTime=0",
+  };
   await runDoorhangerUpdateTest(params, [
     {
       notificationId: "update-restart",
       button: "secondaryButton",
-      checkActiveUpdate: {state: STATE_PENDING},
+      checkActiveUpdate: { state: STATE_PENDING },
     },
   ]);
 });

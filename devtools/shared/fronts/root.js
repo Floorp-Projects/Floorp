@@ -3,13 +3,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Ci} = require("chrome");
-const {rootSpec} = require("devtools/shared/specs/root");
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const { Ci } = require("chrome");
+const { rootSpec } = require("devtools/shared/specs/root");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
 
 loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
-loader.lazyRequireGetter(this, "BrowsingContextTargetFront", "devtools/shared/fronts/targets/browsing-context", true);
-loader.lazyRequireGetter(this, "ContentProcessTargetFront", "devtools/shared/fronts/targets/content-process", true);
+loader.lazyRequireGetter(
+  this,
+  "BrowsingContextTargetFront",
+  "devtools/shared/fronts/targets/browsing-context",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "ContentProcessTargetFront",
+  "devtools/shared/fronts/targets/content-process",
+  true
+);
 
 class RootFront extends FrontClassWithSpec(rootSpec) {
   constructor(client, form) {
@@ -113,7 +126,9 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
       };
       switch (front.type) {
         case Ci.nsIWorkerDebugger.TYPE_SERVICE:
-          const registration = result.service.find(r => r.scope === front.scope);
+          const registration = result.service.find(
+            r => r.scope === front.scope
+          );
           if (registration) {
             // XXX: Race, sometimes a ServiceWorkerRegistrationInfo doesn't
             // have a scriptSpec, but its associated WorkerDebugger does.
@@ -210,9 +225,9 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
   async getTab(filter) {
     const packet = {};
     if (filter) {
-      if (typeof (filter.outerWindowID) == "number") {
+      if (typeof filter.outerWindowID == "number") {
         packet.outerWindowID = filter.outerWindowID;
-      } else if (typeof (filter.tabId) == "number") {
+      } else if (typeof filter.tabId == "number") {
         packet.tabId = filter.tabId;
       } else if ("tab" in filter) {
         const browser = filter.tab.linkedBrowser;

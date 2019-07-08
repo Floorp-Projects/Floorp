@@ -9,8 +9,18 @@ const { assert } = DevToolsUtils;
 const EventEmitter = require("devtools/shared/event-emitter");
 const { SourceLocation } = require("devtools/server/actors/common");
 
-loader.lazyRequireGetter(this, "SourceActor", "devtools/server/actors/source", true);
-loader.lazyRequireGetter(this, "isEvalSource", "devtools/server/actors/source", true);
+loader.lazyRequireGetter(
+  this,
+  "SourceActor",
+  "devtools/server/actors/source",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isEvalSource",
+  "devtools/server/actors/source",
+  true
+);
 
 /**
  * Manages the sources for a thread. Handles source maps, locations in the
@@ -88,8 +98,7 @@ TabSources.prototype = {
    * @returns a SourceActor representing the source or null.
    */
   source: function({ source, isInlineSource, contentType }) {
-    assert(source,
-           "TabSources.prototype.source needs a source");
+    assert(source, "TabSources.prototype.source needs a source");
 
     if (!this.allowSource(source)) {
       return null;
@@ -108,9 +117,11 @@ TabSources.prototype = {
 
     this._thread.threadLifetimePool.addActor(actor);
 
-    if (this._autoBlackBox &&
-        !this.neverAutoBlackBoxSources.has(actor.url) &&
-        this._isMinifiedURL(actor.url)) {
+    if (
+      this._autoBlackBox &&
+      !this.neverAutoBlackBoxSources.has(actor.url) &&
+      this._isMinifiedURL(actor.url)
+    ) {
       this.blackBox(actor.url);
       this.neverAutoBlackBoxSources.add(actor.url);
     }
@@ -140,8 +151,9 @@ TabSources.prototype = {
     const sourceActor = this._getSourceActor(source);
 
     if (!sourceActor) {
-      throw new Error("getSource: could not find source actor for " +
-                      (source.url || "source"));
+      throw new Error(
+        "getSource: could not find source actor for " + (source.url || "source")
+      );
     }
 
     return sourceActor;
@@ -220,7 +232,9 @@ TabSources.prototype = {
     try {
       const url = new URL(uri);
       const pathname = url.pathname;
-      return MINIFIED_SOURCE_REGEXP.test(pathname.slice(pathname.lastIndexOf("/") + 1));
+      return MINIFIED_SOURCE_REGEXP.test(
+        pathname.slice(pathname.lastIndexOf("/") + 1)
+      );
     } catch (e) {
       // Not a valid URL so don't try to parse out the filename, just test the
       // whole thing with the minified source regexp.
@@ -255,7 +269,11 @@ TabSources.prototype = {
     // Assume the source is inline if the element that introduced it is a
     // script element and does not have a src attribute.
     const element = source.element ? source.element.unsafeDereference() : null;
-    if (element && element.tagName === "SCRIPT" && !element.hasAttribute("src")) {
+    if (
+      element &&
+      element.tagName === "SCRIPT" &&
+      !element.hasAttribute("src")
+    ) {
       if (source.introductionScript) {
         // As for other evaluated sources, script elements which were
         // dynamically generated when another script ran should have
@@ -274,9 +292,11 @@ TabSources.prototype = {
     } else if (url) {
       // There are a few special URLs that we know are JavaScript:
       // inline `javascript:` and code coming from the console
-      if (url.indexOf("Scratchpad/") === 0 ||
-          url.indexOf("javascript:") === 0 ||
-          url === "debugger eval code") {
+      if (
+        url.indexOf("Scratchpad/") === 0 ||
+        url.indexOf("javascript:") === 0 ||
+        url === "debugger eval code"
+      ) {
         spec.contentType = "text/javascript";
       } else {
         try {
@@ -322,7 +342,7 @@ TabSources.prototype = {
    *          Returns an object of the form { source, line, column }
    */
   getScriptOffsetLocation: function(script, offset) {
-    const {lineNumber, columnNumber} = script.getOffsetMetadata(offset);
+    const { lineNumber, columnNumber } = script.getOffsetMetadata(offset);
     return new SourceLocation(
       this.createSourceActor(script.source),
       lineNumber,
@@ -377,9 +397,8 @@ TabSources.prototype = {
 
     const ranges = this.blackBoxedSources.get(url) || [];
     // ranges are sorted in ascening order
-    const index = ranges.findIndex(r => (
-      r.end.line <= range.start.line &&
-      r.end.column <= range.start.column)
+    const index = ranges.findIndex(
+      r => r.end.line <= range.start.line && r.end.column <= range.start.column
     );
 
     ranges.splice(index + 1, 0, range);
@@ -399,11 +418,12 @@ TabSources.prototype = {
     }
 
     const ranges = this.blackBoxedSources.get(url);
-    const index = ranges.findIndex(r =>
-        r.start.line === range.start.line
-      && r.start.column === range.start.column
-      && r.end.line === range.end.line
-      && r.end.column === range.end.column
+    const index = ranges.findIndex(
+      r =>
+        r.start.line === range.start.line &&
+        r.start.column === range.start.column &&
+        r.end.line === range.end.line &&
+        r.end.column === range.end.column
     );
 
     if (index !== -1) {
@@ -431,10 +451,12 @@ function isHiddenSource(source) {
 }
 
 function isLocationInRange({ line, column }, range) {
-  return (range.start.line <= line
-    || (range.start.line == line && range.start.column <= column))
-    && (range.end.line >= line
-    || (range.end.line == line && range.end.column >= column));
+  return (
+    (range.start.line <= line ||
+      (range.start.line == line && range.start.column <= column)) &&
+    (range.end.line >= line ||
+      (range.end.line == line && range.end.column >= column))
+  );
 }
 
 exports.TabSources = TabSources;

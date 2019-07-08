@@ -11,7 +11,7 @@ add_task(async function test_cleared_alarm_does_not_fire() {
       browser.test.fail("cleared alarm does not fire");
       browser.test.notifyFail("alarm-cleared");
     });
-    browser.alarms.create(ALARM_NAME, {when: Date.now() + 1000});
+    browser.alarms.create(ALARM_NAME, { when: Date.now() + 1000 });
 
     let wasCleared = await browser.alarms.clear(ALARM_NAME);
     browser.test.assertTrue(wasCleared, "alarm was cleared");

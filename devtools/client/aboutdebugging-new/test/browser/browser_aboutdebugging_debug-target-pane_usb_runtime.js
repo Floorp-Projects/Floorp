@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-collapsibilities.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-collapsibilities.js",
+  this
+);
 
 const RUNTIME_ID = "test-runtime-id";
 const RUNTIME_DEVICE_NAME = "test device name";
@@ -15,13 +18,17 @@ add_task(async function() {
   const mocks = new Mocks();
   await checkTargetPanes({ enableLocalTabs: false }, mocks);
 
-  info("Check that enableLocalTabs has no impact on the categories displayed for remote" +
-    " runtimes.");
+  info(
+    "Check that enableLocalTabs has no impact on the categories displayed for remote" +
+      " runtimes."
+  );
   await checkTargetPanes({ enableLocalTabs: true }, mocks);
 });
 
 async function checkTargetPanes({ enableLocalTabs }, mocks) {
-  const { document, tab, window } = await openAboutDebugging({ enableLocalTabs });
+  const { document, tab, window } = await openAboutDebugging({
+    enableLocalTabs,
+  });
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   mocks.createUSBRuntime(RUNTIME_ID, {

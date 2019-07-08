@@ -16,9 +16,7 @@ const {
   takeSnapshotAndCensus,
   clearSnapshots,
 } = require("devtools/client/memory/actions/snapshot");
-const {
-  changeView,
-} = require("devtools/client/memory/actions/view");
+const { changeView } = require("devtools/client/memory/actions/view");
 
 const EXPECTED_INDIVIDUAL_STATES = [
   individualsState.COMPUTING_DOMINATOR_TREE,
@@ -54,27 +52,31 @@ add_task(async function() {
   const breakdown = getState().censusDisplay.breakdown;
   ok(breakdown, "Should have a breakdown");
 
-  dispatch(fetchIndividuals(heapWorker, snapshotId, breakdown,
-                            reportLeafIndex));
+  dispatch(
+    fetchIndividuals(heapWorker, snapshotId, breakdown, reportLeafIndex)
+  );
 
   for (const state of EXPECTED_INDIVIDUAL_STATES) {
     await waitUntilState(store, s => {
-      return s.view.state === viewState.INDIVIDUALS &&
-             s.individuals &&
-             s.individuals.state === state;
+      return (
+        s.view.state === viewState.INDIVIDUALS &&
+        s.individuals &&
+        s.individuals.state === state
+      );
     });
     ok(true, `Reached state = ${state}`);
   }
 
   ok(getState().individuals, "Should have individuals state");
   ok(getState().individuals.nodes, "Should have individuals nodes");
-  ok(getState().individuals.nodes.length > 0,
-     "Should have a positive number of nodes");
+  ok(
+    getState().individuals.nodes.length > 0,
+    "Should have a positive number of nodes"
+  );
 
   dispatch(clearSnapshots(heapWorker));
 
-  equal(getState().view.state, viewState.CENSUS,
-        "Went back to census view");
+  equal(getState().view.state, viewState.CENSUS, "Went back to census view");
 
   heapWorker.destroy();
   await front.detach();

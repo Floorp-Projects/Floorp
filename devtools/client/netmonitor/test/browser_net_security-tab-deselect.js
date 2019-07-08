@@ -21,7 +21,9 @@ add_task(async function() {
     "https://example.com" + CORS_SJS_PATH,
     "http://example.com" + CORS_SJS_PATH,
   ];
-  await ContentTask.spawn(tab.linkedBrowser, REQUEST_URLS, async function(urls) {
+  await ContentTask.spawn(tab.linkedBrowser, REQUEST_URLS, async function(
+    urls
+  ) {
     for (const url of urls) {
       content.wrappedJSObject.performRequests(1, url);
     }
@@ -30,20 +32,28 @@ add_task(async function() {
 
   info("Selecting secure request.");
   wait = waitForDOM(document, ".tabs");
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
   await wait;
 
   info("Selecting security tab.");
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelector("#security-tab"));
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelector("#security-tab")
+  );
 
   info("Selecting insecure request.");
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[1]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[1]
+  );
 
-  ok(document.querySelector("#headers-tab[aria-selected=true]"),
-    "Selected tab was reset when selected security tab was hidden.");
+  ok(
+    document.querySelector("#headers-tab[aria-selected=true]"),
+    "Selected tab was reset when selected security tab was hidden."
+  );
 
   return teardown(monitor);
 });

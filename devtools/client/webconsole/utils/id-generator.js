@@ -12,6 +12,6 @@ exports.IdGenerator = class IdGenerator {
   }
 
   getNextId(packet) {
-    return (packet && packet.actor) ? packet.actor : "" + this.messageId++;
+    return packet && packet.actor ? packet.actor : "" + this.messageId++;
   }
 };

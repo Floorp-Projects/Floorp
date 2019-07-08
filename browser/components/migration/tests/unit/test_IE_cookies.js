@@ -1,7 +1,10 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "ctypes",
-                               "resource://gre/modules/ctypes.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ctypes",
+  "resource://gre/modules/ctypes.jsm"
+);
 
 add_task(async function() {
   let migrator = await MigrationUtils.getMigrator("ie");
@@ -34,12 +37,14 @@ add_task(async function() {
   // NOTE: Even though MSDN documentation does not indicate a calling convention,
   // InternetSetCookieW is declared in SDK headers as __stdcall but is exported
   // from wininet.dll without name mangling, so it is effectively winapi_abi
-  let setIECookie = wininet.declare("InternetSetCookieW",
-                                    ctypes.winapi_abi,
-                                    BOOL,
-                                    LPCTSTR,
-                                    LPCTSTR,
-                                    LPCTSTR);
+  let setIECookie = wininet.declare(
+    "InternetSetCookieW",
+    ctypes.winapi_abi,
+    BOOL,
+    LPCTSTR,
+    LPCTSTR,
+    LPCTSTR
+  );
 
   /*
   BOOL InternetGetCookieW(
@@ -52,17 +57,19 @@ add_task(async function() {
   // NOTE: Even though MSDN documentation does not indicate a calling convention,
   // InternetGetCookieW is declared in SDK headers as __stdcall but is exported
   // from wininet.dll without name mangling, so it is effectively winapi_abi
-  let getIECookie = wininet.declare("InternetGetCookieW",
-                                    ctypes.winapi_abi,
-                                    BOOL,
-                                    LPCTSTR,
-                                    LPCTSTR,
-                                    LPCTSTR,
-                                    LPDWORD);
+  let getIECookie = wininet.declare(
+    "InternetGetCookieW",
+    ctypes.winapi_abi,
+    BOOL,
+    LPCTSTR,
+    LPCTSTR,
+    LPCTSTR,
+    LPDWORD
+  );
 
   // We need to randomize the cookie to avoid clashing with other cookies
   // that might have been set by previous tests and not properly cleared.
-  let date = (new Date()).getDate();
+  let date = new Date().getDate();
   const COOKIE = {
     get host() {
       return new URL(this.href).host;
@@ -79,11 +86,16 @@ add_task(async function() {
     // Remove the cookie.
     try {
       let expired = new Date(new Date().setDate(date - 2));
-      let rv = setIECookie(COOKIE.href, COOKIE.name,
-                           `; expires=${expired.toUTCString()}`);
+      let rv = setIECookie(
+        COOKIE.href,
+        COOKIE.name,
+        `; expires=${expired.toUTCString()}`
+      );
       Assert.ok(rv, "Expired the IE cookie");
-      Assert.ok(!getIECookie(COOKIE.href, COOKIE.name, data, sizeRef),
-      "The cookie has been properly removed");
+      Assert.ok(
+        !getIECookie(COOKIE.href, COOKIE.name, data, sizeRef),
+        "The cookie has been properly removed"
+      );
     } catch (ex) {}
 
     // Close the library.
@@ -98,21 +110,32 @@ add_task(async function() {
   Assert.ok(rv, "Added a persistent IE cookie: " + value);
 
   // Sanity check the cookie has been created.
-  Assert.ok(getIECookie(COOKIE.href, COOKIE.name, data, sizeRef),
-            "Found the added persistent IE cookie");
+  Assert.ok(
+    getIECookie(COOKIE.href, COOKIE.name, data, sizeRef),
+    "Found the added persistent IE cookie"
+  );
   info("Found cookie: " + data.readString());
-  Assert.equal(data.readString(), `${COOKIE.name}=${COOKIE.value}`,
-            "Found the expected cookie");
+  Assert.equal(
+    data.readString(),
+    `${COOKIE.name}=${COOKIE.value}`,
+    "Found the expected cookie"
+  );
 
   // Sanity check that there are no cookies.
-  Assert.equal(Services.cookies.countCookiesFromHost(COOKIE.host), 0,
-               "There are no cookies initially");
+  Assert.equal(
+    Services.cookies.countCookiesFromHost(COOKIE.host),
+    0,
+    "There are no cookies initially"
+  );
 
   // Migrate cookies.
   await promiseMigration(migrator, MigrationUtils.resourceTypes.COOKIES);
 
-  Assert.equal(Services.cookies.countCookiesFromHost(COOKIE.host), 1,
-               "Migrated the expected number of cookies");
+  Assert.equal(
+    Services.cookies.countCookiesFromHost(COOKIE.host),
+    1,
+    "Migrated the expected number of cookies"
+  );
 
   // Now check the cookie details.
   let enumerator = Services.cookies.getCookiesFromHost(COOKIE.host, {});

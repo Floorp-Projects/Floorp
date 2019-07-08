@@ -1124,7 +1124,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
             RefPtr<nsDocShell> docShell = nsDocShell::Cast(childIDocShell);
             if (docShell && docShell->TreatAsBackgroundLoad() &&
                 docShell->GetDocument()->GetReadyStateEnum() <
-                Document::READYSTATE_COMPLETE) {
+                    Document::READYSTATE_COMPLETE) {
               docShells.AppendElement(childIDocShell);
             }
           }
@@ -1134,7 +1134,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
             RefPtr<nsDocShell> docShell = nsDocShell::Cast(docShells[i]);
             if (docShell && docShell->TreatAsBackgroundLoad() &&
                 docShell->GetDocument()->GetReadyStateEnum() <
-                Document::READYSTATE_COMPLETE) {
+                    Document::READYSTATE_COMPLETE) {
               nsEventStatus status = nsEventStatus_eIgnore;
               WidgetEvent event(true, eLoad);
               event.mFlags.mBubbles = false;
@@ -1144,7 +1144,8 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
               nsCOMPtr<Element> element = win->GetFrameElementInternal();
 
               docShell->SetFakeOnLoadDispatched();
-              EventDispatcher::Dispatch(element, nullptr, &event, nullptr, &status);
+              EventDispatcher::Dispatch(element, nullptr, &event, nullptr,
+                                        &status);
             }
           }
         }

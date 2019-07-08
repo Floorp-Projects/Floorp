@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var gSWM;
 var gSWCount = 0;
@@ -17,10 +17,13 @@ function init() {
     return;
   }
 
-  gSWM = Cc["@mozilla.org/serviceworkers/manager;1"]
-           .getService(Ci.nsIServiceWorkerManager);
+  gSWM = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
+    Ci.nsIServiceWorkerManager
+  );
   if (!gSWM) {
-    dump("AboutServiceWorkers: Failed to get the ServiceWorkerManager service!\n");
+    dump(
+      "AboutServiceWorkers: Failed to get the ServiceWorkerManager service!\n"
+    );
     return;
   }
 
@@ -39,8 +42,7 @@ function init() {
 
   let ps = undefined;
   try {
-    ps = Cc["@mozilla.org/push/Service;1"]
-           .getService(Ci.nsIPushService);
+    ps = Cc["@mozilla.org/push/Service;1"].getService(Ci.nsIPushService);
   } catch (e) {
     dump("Could not acquire PushService\n");
   }
@@ -48,7 +50,9 @@ function init() {
   for (let i = 0; i < length; ++i) {
     let info = data.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
     if (!info) {
-      dump("AboutServiceWorkers: Invalid nsIServiceWorkerRegistrationInfo interface.\n");
+      dump(
+        "AboutServiceWorkers: Invalid nsIServiceWorkerRegistrationInfo interface.\n"
+      );
       continue;
     }
 
@@ -63,7 +67,9 @@ async function display(info, pushService) {
   parent.appendChild(div);
 
   let title = document.createElement("h2");
-  document.l10n.setAttributes(title, "origin-title", { originTitle: info.principal.origin });
+  document.l10n.setAttributes(title, "origin-title", {
+    originTitle: info.principal.origin,
+  });
   div.appendChild(title);
 
   let list = document.createElement("ul");
@@ -87,7 +93,7 @@ async function display(info, pushService) {
     } else {
       document.l10n.setAttributes(item, l10nId, { name: value });
     }
-      return item;
+    return item;
   }
 
   createItem("scope", info.scope);
@@ -101,13 +107,19 @@ async function display(info, pushService) {
 
   let pushItem = createItem("push-end-point-waiting");
   if (pushService) {
-    pushService.getSubscription(info.scope, info.principal, (status, pushRecord) => {
-      if (Components.isSuccessCode(status)) {
-        document.l10n.setAttributes(pushItem, "push-end-point-result", { name: JSON.stringify(pushRecord) });
-      } else {
-        dump("about:serviceworkers - retrieving push registration failed\n");
+    pushService.getSubscription(
+      info.scope,
+      info.principal,
+      (status, pushRecord) => {
+        if (Components.isSuccessCode(status)) {
+          document.l10n.setAttributes(pushItem, "push-end-point-result", {
+            name: JSON.stringify(pushRecord),
+          });
+        } else {
+          dump("about:serviceworkers - retrieving push registration failed\n");
+        }
       }
-    });
+    );
   }
 
   let updateButton = document.createElement("button");
@@ -132,17 +144,21 @@ async function display(info, pushService) {
         parent.removeChild(div);
 
         if (!--gSWCount) {
-         let div = document.getElementById("warning_no_serviceworkers");
-         div.classList.add("active");
+          let div = document.getElementById("warning_no_serviceworkers");
+          div.classList.add("active");
         }
       },
 
       async unregisterFailed() {
-        let [alertMsg] = await document.l10n.formatValues([{ id: "unregister-error" }]);
+        let [alertMsg] = await document.l10n.formatValues([
+          { id: "unregister-error" },
+        ]);
         alert(alertMsg);
       },
 
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIServiceWorkerUnregisterCallback]),
+      QueryInterface: ChromeUtils.generateQI([
+        Ci.nsIServiceWorkerUnregisterCallback,
+      ]),
     };
 
     loadingMessage.classList.remove("inactive");
@@ -155,6 +171,10 @@ async function display(info, pushService) {
   ++gSWCount;
 }
 
-window.addEventListener("DOMContentLoaded", function() {
-  init();
-}, {once: true});
+window.addEventListener(
+  "DOMContentLoaded",
+  function() {
+    init();
+  },
+  { once: true }
+);

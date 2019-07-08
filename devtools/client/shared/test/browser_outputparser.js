@@ -3,8 +3,11 @@
 
 "use strict";
 
-const {initCssProperties, getCssProperties} = require("devtools/shared/fronts/css-properties");
-const { CSS_PROPERTIES_DB} = require("devtools/shared/css/properties-db");
+const {
+  initCssProperties,
+  getCssProperties,
+} = require("devtools/shared/fronts/css-properties");
+const { CSS_PROPERTIES_DB } = require("devtools/shared/css/properties-db");
 
 add_task(async function() {
   await pushPref("layout.css.backdrop-filter.enabled", true);
@@ -16,15 +19,17 @@ add_task(async function() {
 async function performTest() {
   const OutputParser = require("devtools/client/shared/output-parser");
 
-  const [host, , doc] = await createHost("bottom", "data:text/html," +
-    "<h1>browser_outputParser.js</h1><div></div>");
+  const [host, , doc] = await createHost(
+    "bottom",
+    "data:text/html," + "<h1>browser_outputParser.js</h1><div></div>"
+  );
 
   // Mock the toolbox that initCssProperties expect so we get the fallback css properties.
   const toolbox = {
     target: {
       client: {},
       hasActor: () => false,
-      getFront: typeName => ({getCSSDatabase: () => CSS_PROPERTIES_DB}),
+      getFront: typeName => ({ getCSSDatabase: () => CSS_PROPERTIES_DB }),
     },
   };
   await initCssProperties(toolbox);
@@ -64,13 +69,20 @@ function makeColorTest(name, value, segments) {
   };
 
   for (const segment of segments) {
-    if (typeof (segment) === "string") {
+    if (typeof segment === "string") {
       result.expected += segment;
     } else {
-      result.expected += "<span data-color=\"" + segment.name + "\">" +
-        "<span class=\"" + COLOR_TEST_CLASS + "\" style=\"background-color:" +
-        segment.name + "\"></span><span>" +
-        segment.name + "</span></span>";
+      result.expected +=
+        '<span data-color="' +
+        segment.name +
+        '">' +
+        '<span class="' +
+        COLOR_TEST_CLASS +
+        '" style="background-color:' +
+        segment.name +
+        '"></span><span>' +
+        segment.name +
+        "</span></span>";
     }
   }
 
@@ -81,92 +93,148 @@ function makeColorTest(name, value, segments) {
 
 function testParseCssProperty(doc, parser) {
   const tests = [
-    makeColorTest("border", "1px solid red",
-                  ["1px solid ", {name: "red"}]),
+    makeColorTest("border", "1px solid red", ["1px solid ", { name: "red" }]),
 
-    makeColorTest("background-image",
+    makeColorTest(
+      "background-image",
       "linear-gradient(to right, #F60 10%, rgba(0,0,0,1))",
-      ["linear-gradient(to right, ", {name: "#F60"},
-       " 10%, ", {name: "rgba(0,0,0,1)"},
-       ")"]),
+      [
+        "linear-gradient(to right, ",
+        { name: "#F60" },
+        " 10%, ",
+        { name: "rgba(0,0,0,1)" },
+        ")",
+      ]
+    ),
 
     // In "arial black", "black" is a font, not a color.
     // (The font-family parser creates a span)
     makeColorTest("font-family", "arial black", ["<span>arial black</span>"]),
 
-    makeColorTest("box-shadow", "0 0 1em red",
-                  ["0 0 1em ", {name: "red"}]),
+    makeColorTest("box-shadow", "0 0 1em red", ["0 0 1em ", { name: "red" }]),
 
-    makeColorTest("box-shadow",
-      "0 0 1em red, 2px 2px 0 0 rgba(0,0,0,.5)",
-      ["0 0 1em ", {name: "red"},
-       ", 2px 2px 0 0 ",
-      {name: "rgba(0,0,0,.5)"}]),
+    makeColorTest("box-shadow", "0 0 1em red, 2px 2px 0 0 rgba(0,0,0,.5)", [
+      "0 0 1em ",
+      { name: "red" },
+      ", 2px 2px 0 0 ",
+      { name: "rgba(0,0,0,.5)" },
+    ]),
 
-    makeColorTest("content", "\"red\"", ["\"red\""]),
+    makeColorTest("content", '"red"', ['"red"']),
 
     // Invalid property names should not cause exceptions.
     makeColorTest("hellothere", "'red'", ["'red'"]),
 
-    makeColorTest("filter",
+    makeColorTest(
+      "filter",
       "blur(1px) drop-shadow(0 0 0 blue) url(red.svg#blue)",
-      ["<span data-filters=\"blur(1px) drop-shadow(0 0 0 blue) ",
-       "url(red.svg#blue)\"><span>",
-       "blur(1px) drop-shadow(0 0 0 ",
-       {name: "blue"},
-       ") url(red.svg#blue)</span></span>"]),
+      [
+        '<span data-filters="blur(1px) drop-shadow(0 0 0 blue) ',
+        'url(red.svg#blue)"><span>',
+        "blur(1px) drop-shadow(0 0 0 ",
+        { name: "blue" },
+        ") url(red.svg#blue)</span></span>",
+      ]
+    ),
 
     makeColorTest("color", "currentColor", ["currentColor"]),
 
     // Test a very long property.
-    makeColorTest("background-image",
+    makeColorTest(
+      "background-image",
       /* eslint-disable max-len */
       "linear-gradient(to left, transparent 0, transparent 5%,#F00 0, #F00 10%,#FF0 0, #FF0 15%,#0F0 0, #0F0 20%,#0FF 0, #0FF 25%,#00F 0, #00F 30%,#800 0, #800 35%,#880 0, #880 40%,#080 0, #080 45%,#088 0, #088 50%,#008 0, #008 55%,#FFF 0, #FFF 60%,#EEE 0, #EEE 65%,#CCC 0, #CCC 70%,#999 0, #999 75%,#666 0, #666 80%,#333 0, #333 85%,#111 0, #111 90%,#000 0, #000 95%,transparent 0, transparent 100%)",
       /* eslint-enable max-len */
-      ["linear-gradient(to left, ", {name: "transparent"},
-       " 0, ", {name: "transparent"},
-       " 5%,", {name: "#F00"},
-       " 0, ", {name: "#F00"},
-       " 10%,", {name: "#FF0"},
-       " 0, ", {name: "#FF0"},
-       " 15%,", {name: "#0F0"},
-       " 0, ", {name: "#0F0"},
-       " 20%,", {name: "#0FF"},
-       " 0, ", {name: "#0FF"},
-       " 25%,", {name: "#00F"},
-       " 0, ", {name: "#00F"},
-       " 30%,", {name: "#800"},
-       " 0, ", {name: "#800"},
-       " 35%,", {name: "#880"},
-       " 0, ", {name: "#880"},
-       " 40%,", {name: "#080"},
-       " 0, ", {name: "#080"},
-       " 45%,", {name: "#088"},
-       " 0, ", {name: "#088"},
-       " 50%,", {name: "#008"},
-       " 0, ", {name: "#008"},
-       " 55%,", {name: "#FFF"},
-       " 0, ", {name: "#FFF"},
-       " 60%,", {name: "#EEE"},
-       " 0, ", {name: "#EEE"},
-       " 65%,", {name: "#CCC"},
-       " 0, ", {name: "#CCC"},
-       " 70%,", {name: "#999"},
-       " 0, ", {name: "#999"},
-       " 75%,", {name: "#666"},
-       " 0, ", {name: "#666"},
-       " 80%,", {name: "#333"},
-       " 0, ", {name: "#333"},
-       " 85%,", {name: "#111"},
-       " 0, ", {name: "#111"},
-       " 90%,", {name: "#000"},
-       " 0, ", {name: "#000"},
-       " 95%,", {name: "transparent"},
-       " 0, ", {name: "transparent"},
-       " 100%)"]),
+      [
+        "linear-gradient(to left, ",
+        { name: "transparent" },
+        " 0, ",
+        { name: "transparent" },
+        " 5%,",
+        { name: "#F00" },
+        " 0, ",
+        { name: "#F00" },
+        " 10%,",
+        { name: "#FF0" },
+        " 0, ",
+        { name: "#FF0" },
+        " 15%,",
+        { name: "#0F0" },
+        " 0, ",
+        { name: "#0F0" },
+        " 20%,",
+        { name: "#0FF" },
+        " 0, ",
+        { name: "#0FF" },
+        " 25%,",
+        { name: "#00F" },
+        " 0, ",
+        { name: "#00F" },
+        " 30%,",
+        { name: "#800" },
+        " 0, ",
+        { name: "#800" },
+        " 35%,",
+        { name: "#880" },
+        " 0, ",
+        { name: "#880" },
+        " 40%,",
+        { name: "#080" },
+        " 0, ",
+        { name: "#080" },
+        " 45%,",
+        { name: "#088" },
+        " 0, ",
+        { name: "#088" },
+        " 50%,",
+        { name: "#008" },
+        " 0, ",
+        { name: "#008" },
+        " 55%,",
+        { name: "#FFF" },
+        " 0, ",
+        { name: "#FFF" },
+        " 60%,",
+        { name: "#EEE" },
+        " 0, ",
+        { name: "#EEE" },
+        " 65%,",
+        { name: "#CCC" },
+        " 0, ",
+        { name: "#CCC" },
+        " 70%,",
+        { name: "#999" },
+        " 0, ",
+        { name: "#999" },
+        " 75%,",
+        { name: "#666" },
+        " 0, ",
+        { name: "#666" },
+        " 80%,",
+        { name: "#333" },
+        " 0, ",
+        { name: "#333" },
+        " 85%,",
+        { name: "#111" },
+        " 0, ",
+        { name: "#111" },
+        " 90%,",
+        { name: "#000" },
+        " 0, ",
+        { name: "#000" },
+        " 95%,",
+        { name: "transparent" },
+        " 0, ",
+        { name: "transparent" },
+        " 100%)",
+      ]
+    ),
 
     // Note the lack of a space before the color here.
-    makeColorTest("border", "1px dotted#f06", ["1px dotted ", {name: "#f06"}]),
+    makeColorTest("border", "1px dotted#f06", [
+      "1px dotted ",
+      { name: "#f06" },
+    ]),
   ];
 
   const target = doc.querySelector("div");
@@ -181,8 +249,11 @@ function testParseCssProperty(doc, parser) {
 
     target.appendChild(frag);
 
-    is(target.innerHTML, test.expected,
-       "CSS property correctly parsed for " + test.name + ": " + test.value);
+    is(
+      target.innerHTML,
+      test.expected,
+      "CSS property correctly parsed for " + test.name + ": " + test.value
+    );
 
     target.innerHTML = "";
   }
@@ -197,8 +268,11 @@ function testParseCssVar(doc, parser) {
   ok(target, "captain, we have the div");
   target.appendChild(frag);
 
-  is(target.innerHTML, "var(--some-kind-of-green)",
-     "CSS property correctly parsed");
+  is(
+    target.innerHTML,
+    "var(--some-kind-of-green)",
+    "CSS property correctly parsed"
+  );
 
   target.innerHTML = "";
 }
@@ -219,8 +293,8 @@ function testParseURL(doc, parser) {
     },
     {
       desc: "simple test with double quotes",
-      leader: "url(\"",
-      trailer: "\")",
+      leader: 'url("',
+      trailer: '")',
     },
     {
       desc: "test with single quotes and whitespace",
@@ -247,9 +321,9 @@ function testParseURL(doc, parser) {
     },
     {
       desc: "bad url, double quote, missing paren",
-      leader: "url(\"",
-      trailer: "\"",
-      expectedTrailer: "\")",
+      leader: 'url("',
+      trailer: '"',
+      expectedTrailer: '")',
     },
     {
       desc: "bad url, single quote, missing paren and quote",
@@ -271,10 +345,11 @@ function testParseURL(doc, parser) {
 
     const expectedTrailer = test.expectedTrailer || test.trailer;
 
-    const expected = test.leader +
-        "<a target=\"_blank\" class=\"test-urlclass\" " +
-        "href=\"something.jpg\">something.jpg</a>" +
-        expectedTrailer;
+    const expected =
+      test.leader +
+      '<a target="_blank" class="test-urlclass" ' +
+      'href="something.jpg">something.jpg</a>' +
+      expectedTrailer;
 
     is(target.innerHTML, expected, test.desc);
 
@@ -308,10 +383,13 @@ function testParseAngle(doc, parser) {
   let swatchCount = frag.querySelectorAll(".test-angleswatch").length;
   is(swatchCount, 1, "angle swatch was created");
 
-  frag = parser.parseCssProperty("background-image",
-    "linear-gradient(90deg, red, blue", {
+  frag = parser.parseCssProperty(
+    "background-image",
+    "linear-gradient(90deg, red, blue",
+    {
       angleSwatchClass: "test-angleswatch",
-    });
+    }
+  );
 
   swatchCount = frag.querySelectorAll(".test-angleswatch").length;
   is(swatchCount, 1, "angle swatch was created");
@@ -323,8 +401,9 @@ function testParseShape(doc, parser) {
   const tests = [
     {
       desc: "Polygon shape",
-      definition: "polygon(evenodd, 0px 0px, 10%200px,30%30% , calc(250px - 10px) 0 ,\n "
-                  + "12em var(--variable), 100% 100%) margin-box",
+      definition:
+        "polygon(evenodd, 0px 0px, 10%200px,30%30% , calc(250px - 10px) 0 ,\n " +
+        "12em var(--variable), 100% 100%) margin-box",
       spanCount: 18,
     },
     {
@@ -424,7 +503,7 @@ function testParseShape(doc, parser) {
     },
   ];
 
-  for (const {desc, definition, spanCount} of tests) {
+  for (const { desc, definition, spanCount } of tests) {
     info(desc);
     const frag = parser.parseCssProperty("clip-path", definition, {
       shapeClass: "ruleview-shape",
@@ -439,29 +518,33 @@ function testParseVariable(doc, parser) {
   const TESTS = [
     {
       text: "var(--seen)",
-      variables: {"--seen": "chartreuse" },
-      expected: "<span>var(<span data-variable=\"--seen = chartreuse\">--seen</span>)" +
+      variables: { "--seen": "chartreuse" },
+      expected:
+        '<span>var(<span data-variable="--seen = chartreuse">--seen</span>)' +
         "</span>",
     },
     {
       text: "var(--not-seen)",
       variables: {},
-      expected: "<span>var(<span class=\"unmatched-class\" " +
-        "data-variable=\"--not-seen is not set\">--not-seen</span>)</span>",
+      expected:
+        '<span>var(<span class="unmatched-class" ' +
+        'data-variable="--not-seen is not set">--not-seen</span>)</span>',
     },
     {
       text: "var(--seen, seagreen)",
-      variables: {"--seen": "chartreuse" },
-      expected: "<span>var(<span data-variable=\"--seen = chartreuse\">--seen</span>," +
-        "<span class=\"unmatched-class\"> <span data-color=\"seagreen\"><span>seagreen" +
+      variables: { "--seen": "chartreuse" },
+      expected:
+        '<span>var(<span data-variable="--seen = chartreuse">--seen</span>,' +
+        '<span class="unmatched-class"> <span data-color="seagreen"><span>seagreen' +
         "</span></span></span>)</span>",
     },
     {
       text: "var(--not-seen, var(--seen))",
-      variables: {"--seen": "chartreuse" },
-      expected: "<span>var(<span class=\"unmatched-class\" " +
-        "data-variable=\"--not-seen is not set\">--not-seen</span>,<span> <span>var" +
-        "(<span data-variable=\"--seen = chartreuse\">--seen</span>)</span></span>)" +
+      variables: { "--seen": "chartreuse" },
+      expected:
+        '<span>var(<span class="unmatched-class" ' +
+        'data-variable="--not-seen is not set">--not-seen</span>,<span> <span>var' +
+        '(<span data-variable="--seen = chartreuse">--seen</span>)</span></span>)' +
         "</span>",
     },
   ];
@@ -547,7 +630,7 @@ function testParseFontFamily(doc, parser) {
     },
   ];
 
-  for (const {desc, definition, families} of tests) {
+  for (const { desc, definition, families } of tests) {
     info(desc);
     const frag = parser.parseCssProperty("font-family", definition, {
       fontFamilyClass: "ruleview-font-family",
@@ -561,7 +644,7 @@ function testParseFontFamily(doc, parser) {
   }
 
   info("Test font-family text content");
-  for (const {desc, definition, output} of textContentTests) {
+  for (const { desc, definition, output } of textContentTests) {
     info(desc);
     const frag = parser.parseCssProperty("font-family", definition, {});
     is(frag.textContent, output, desc + " text content matches");

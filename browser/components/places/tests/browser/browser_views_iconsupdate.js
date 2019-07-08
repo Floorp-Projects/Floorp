@@ -9,7 +9,9 @@
 
 add_task(async function() {
   const PAGE_URI = NetUtil.newURI("http://places.test/");
-  const ICON_URI = NetUtil.newURI("http://mochi.test:8888/browser/browser/components/places/tests/browser/favicon-normal16.png");
+  const ICON_URI = NetUtil.newURI(
+    "http://mochi.test:8888/browser/browser/components/places/tests/browser/favicon-normal16.png"
+  );
 
   info("Uncollapse the personal toolbar if needed");
   let toolbar = document.getElementById("PersonalToolbar");
@@ -24,7 +26,7 @@ add_task(async function() {
   info("Open the bookmarks sidebar");
   let sidebar = document.getElementById("sidebar");
   let promiseSidebarLoaded = new Promise(resolve => {
-    sidebar.addEventListener("load", resolve, {capture: true, once: true});
+    sidebar.addEventListener("load", resolve, { capture: true, once: true });
   });
   SidebarUI.show("viewBookmarksSidebar");
   registerCleanupFunction(() => {
@@ -55,7 +57,9 @@ add_task(async function() {
 
   await new Promise(resolve => {
     PlacesUtils.favicons.setAndFetchFaviconForPage(
-      PAGE_URI, ICON_URI, true,
+      PAGE_URI,
+      ICON_URI,
+      true,
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
       resolve,
       Services.scriptSecurityManager.getSystemPrincipal()
@@ -93,8 +97,9 @@ add_task(async function() {
  * @returns DOM Node of the element.
  */
 function getNodeForToolbarItem(guid) {
-  return Array.from(document.getElementById("PlacesToolbarItems").children)
-              .find(child => child._placesNode && child._placesNode.bookmarkGuid == guid);
+  return Array.from(
+    document.getElementById("PlacesToolbarItems").children
+  ).find(child => child._placesNode && child._placesNode.bookmarkGuid == guid);
 }
 
 /**
@@ -109,7 +114,11 @@ async function getRectForSidebarItem(guid) {
   let tree = sidebar.contentDocument.getElementById("bookmarks-view");
   tree.selectItems([guid]);
   let treerect = tree.getBoundingClientRect();
-  let cellrect = tree.getCoordsForCellItem(tree.currentIndex, tree.columns[0], "cell");
+  let cellrect = tree.getCoordsForCellItem(
+    tree.currentIndex,
+    tree.columns[0],
+    "cell"
+  );
 
   // Adjust the position for the tree and sidebar.
   return {

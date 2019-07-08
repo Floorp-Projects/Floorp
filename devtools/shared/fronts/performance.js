@@ -4,14 +4,21 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
-const { PerformanceRecordingFront } = require("devtools/shared/fronts/performance-recording");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
+const {
+  PerformanceRecordingFront,
+} = require("devtools/shared/fronts/performance-recording");
 const { performanceSpec } = require("devtools/shared/specs/performance");
 
-loader.lazyRequireGetter(this, "PerformanceIO",
-  "devtools/client/performance/modules/io");
-loader.lazyRequireGetter(this, "getSystemInfo",
-  "devtools/shared/system", true);
+loader.lazyRequireGetter(
+  this,
+  "PerformanceIO",
+  "devtools/client/performance/modules/io"
+);
+loader.lazyRequireGetter(this, "getSystemInfo", "devtools/shared/system", true);
 
 class PerformanceFront extends FrontClassWithSpec(performanceSpec) {
   constructor(client) {
@@ -63,8 +70,10 @@ class PerformanceFront extends FrontClassWithSpec(performanceSpec) {
 
   get traits() {
     if (!this._traits) {
-      Cu.reportError("Cannot access traits of PerformanceFront before " +
-                     "calling `connect()`.");
+      Cu.reportError(
+        "Cannot access traits of PerformanceFront before " +
+          "calling `connect()`."
+      );
     }
     return this._traits;
   }
@@ -90,8 +99,8 @@ class PerformanceFront extends FrontClassWithSpec(performanceSpec) {
       generation: origGeneration,
     } = recording.getStartingBufferStatus();
 
-    const normalizedCurrent = (totalSize * (currentGeneration - origGeneration)) +
-                            currentPosition;
+    const normalizedCurrent =
+      totalSize * (currentGeneration - origGeneration) + currentPosition;
     const percent = (normalizedCurrent - origPosition) / totalSize;
 
     // Clamp between 0 and 1; can get negative percentage values when a new

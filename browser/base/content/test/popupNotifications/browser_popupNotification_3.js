@@ -14,7 +14,8 @@ function test() {
 
 var tests = [
   // Test notification is removed when dismissed if removeOnDismissal is true
-  { id: "Test#1",
+  {
+    id: "Test#1",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.addOptions({
@@ -27,12 +28,16 @@ var tests = [
       dismissNotification(popup);
     },
     onHidden(popup) {
-      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
+      ok(
+        !this.notifyObj.dismissalCallbackTriggered,
+        "dismissal callback wasn't triggered"
+      );
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
     },
   },
   // Test multiple notification icons are shown
-  { id: "Test#2",
+  {
+    id: "Test#2",
     run() {
       this.notifyObj1 = new BasicNotification(this.id);
       this.notifyObj1.id += "_1";
@@ -48,24 +53,40 @@ var tests = [
       checkPopup(popup, this.notifyObj2);
 
       // check notifyObj1 anchor icon is showing
-      isnot(document.getElementById("default-notification-icon").getBoundingClientRect().width, 0,
-            "default anchor should be visible");
+      isnot(
+        document
+          .getElementById("default-notification-icon")
+          .getBoundingClientRect().width,
+        0,
+        "default anchor should be visible"
+      );
       // check notifyObj2 anchor icon is showing
-      isnot(document.getElementById("geo-notification-icon").getBoundingClientRect().width, 0,
-            "geo anchor should be visible");
+      isnot(
+        document.getElementById("geo-notification-icon").getBoundingClientRect()
+          .width,
+        0,
+        "geo anchor should be visible"
+      );
 
       dismissNotification(popup);
     },
     onHidden(popup) {
       this.notification1.remove();
-      ok(this.notifyObj1.removedCallbackTriggered, "removed callback triggered");
+      ok(
+        this.notifyObj1.removedCallbackTriggered,
+        "removed callback triggered"
+      );
 
       this.notification2.remove();
-      ok(this.notifyObj2.removedCallbackTriggered, "removed callback triggered");
+      ok(
+        this.notifyObj2.removedCallbackTriggered,
+        "removed callback triggered"
+      );
     },
   },
   // Test that multiple notification icons are removed when switching tabs
-  { id: "Test#3",
+  {
+    id: "Test#3",
     async run() {
       // show the notification on old tab.
       this.notifyObjOld = new BasicNotification(this.id);
@@ -74,7 +95,10 @@ var tests = [
 
       // switch tab
       this.oldSelectedTab = gBrowser.selectedTab;
-      await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      await BrowserTestUtils.openNewForegroundTab(
+        gBrowser,
+        "http://example.com/"
+      );
 
       // show the notification on new tab.
       this.notifyObjNew = new BasicNotification(this.id);
@@ -85,11 +109,20 @@ var tests = [
       checkPopup(popup, this.notifyObjNew);
 
       // check notifyObjOld anchor icon is removed
-      is(document.getElementById("default-notification-icon").getBoundingClientRect().width, 0,
-         "default anchor shouldn't be visible");
+      is(
+        document
+          .getElementById("default-notification-icon")
+          .getBoundingClientRect().width,
+        0,
+        "default anchor shouldn't be visible"
+      );
       // check notifyObjNew anchor icon is showing
-      isnot(document.getElementById("geo-notification-icon").getBoundingClientRect().width, 0,
-            "geo anchor should be visible");
+      isnot(
+        document.getElementById("geo-notification-icon").getBoundingClientRect()
+          .width,
+        0,
+        "geo anchor should be visible"
+      );
 
       dismissNotification(popup);
     },
@@ -102,7 +135,8 @@ var tests = [
     },
   },
   // test security delay - too early
-  { id: "Test#4",
+  {
+    id: "Test#4",
     run() {
       // Set the security delay to 100s
       PopupNotifications.buttonDelay = 100000;
@@ -120,12 +154,19 @@ var tests = [
       });
     },
     onHidden(popup) {
-      ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked because it was too soon");
-      ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback was triggered");
+      ok(
+        !this.notifyObj.mainActionClicked,
+        "mainAction was not clicked because it was too soon"
+      );
+      ok(
+        this.notifyObj.dismissalCallbackTriggered,
+        "dismissal callback was triggered"
+      );
     },
   },
   // test security delay - after delay
-  { id: "Test#5",
+  {
+    id: "Test#5",
     run() {
       // Set the security delay to 10ms
       PopupNotifications.buttonDelay = 10;
@@ -142,13 +183,20 @@ var tests = [
       }, 500);
     },
     onHidden(popup) {
-      ok(this.notifyObj.mainActionClicked, "mainAction was clicked after the delay");
-      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback was not triggered");
+      ok(
+        this.notifyObj.mainActionClicked,
+        "mainAction was clicked after the delay"
+      );
+      ok(
+        !this.notifyObj.dismissalCallbackTriggered,
+        "dismissal callback was not triggered"
+      );
       PopupNotifications.buttonDelay = PREF_SECURITY_DELAY_INITIAL;
     },
   },
   // reload removes notification
-  { id: "Test#6",
+  {
+    id: "Test#6",
     async run() {
       await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
       let notifyObj = new BasicNotification(this.id);
@@ -165,10 +213,14 @@ var tests = [
     },
   },
   // location change in background tab removes notification
-  { id: "Test#7",
+  {
+    id: "Test#7",
     async run() {
       let oldSelectedTab = gBrowser.selectedTab;
-      let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      let newTab = await BrowserTestUtils.openNewForegroundTab(
+        gBrowser,
+        "http://example.com/"
+      );
       gBrowser.selectedTab = oldSelectedTab;
       let browser = gBrowser.getBrowserForTab(newTab);
 
@@ -190,11 +242,15 @@ var tests = [
     },
   },
   // Popup notification anchor shouldn't disappear when a notification with the same ID is re-added in a background tab
-  { id: "Test#8",
+  {
+    id: "Test#8",
     async run() {
       await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
       let originalTab = gBrowser.selectedTab;
-      let bgTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      let bgTab = await BrowserTestUtils.openNewForegroundTab(
+        gBrowser,
+        "http://example.com/"
+      );
       let anchor = document.createXULElement("box");
       anchor.id = "test26-anchor";
       anchor.className = "notification-anchor-icon";
@@ -225,13 +281,20 @@ var tests = [
     },
   },
   // location change in an embedded frame should not remove a notification
-  { id: "Test#9",
+  {
+    id: "Test#9",
     async run() {
-      await promiseTabLoadEvent(gBrowser.selectedTab, "data:text/html;charset=utf8,<iframe%20id='iframe'%20src='http://example.com/'>");
+      await promiseTabLoadEvent(
+        gBrowser.selectedTab,
+        "data:text/html;charset=utf8,<iframe%20id='iframe'%20src='http://example.com/'>"
+      );
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.options.eventCallback = function(eventName) {
         if (eventName == "removed") {
-          ok(false, "Notification removed from browser when subframe navigated");
+          ok(
+            false,
+            "Notification removed from browser when subframe navigated"
+          );
         }
       };
       showNotification(this.notifyObj);
@@ -243,9 +306,14 @@ var tests = [
           gBrowser.removeProgressListener(progressListener);
 
           executeSoon(() => {
-            let notification = PopupNotifications.getNotification(self.notifyObj.id,
-                                                                  self.notifyObj.browser);
-            ok(notification != null, "Notification remained when subframe navigated");
+            let notification = PopupNotifications.getNotification(
+              self.notifyObj.id,
+              self.notifyObj.browser
+            );
+            ok(
+              notification != null,
+              "Notification remained when subframe navigated"
+            );
             self.notifyObj.options.eventCallback = undefined;
 
             notification.remove();
@@ -256,14 +324,16 @@ var tests = [
       info("Adding progress listener and performing navigation");
       gBrowser.addProgressListener(progressListener);
       ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-        content.document.getElementById("iframe")
-                        .setAttribute("src", "http://example.org/");
+        content.document
+          .getElementById("iframe")
+          .setAttribute("src", "http://example.org/");
       });
     },
     onHidden() {},
   },
   // Popup Notifications should catch exceptions from callbacks
-  { id: "Test#10",
+  {
+    id: "Test#10",
     run() {
       this.testNotif1 = new BasicNotification(this.id);
       this.testNotif1.message += " 1";

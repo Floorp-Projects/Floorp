@@ -17,9 +17,10 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-grips");
   Cu.evalInSandbox(
-    "" + function stopMe(arg1) {
-      debugger;
-    },
+    "" +
+      function stopMe(arg1) {
+        debugger;
+      },
     gDebuggee,
     "1.8",
     getFileUrl("test_source-01.js")
@@ -27,11 +28,14 @@ function run_test() {
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_source();
-                           });
+    attachTestTabAndResume(gClient, "test-grips", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_source();
+    });
   });
   do_test_pending();
 }
@@ -60,8 +64,7 @@ function test_source() {
         Assert.ok(response.contentType.includes("javascript"));
 
         Assert.ok(!!response.source);
-        Assert.equal(SOURCE_CONTENT,
-                     response.source);
+        Assert.equal(SOURCE_CONTENT, response.source);
 
         gThreadClient.resume().then(function() {
           finishClient(gClient);
@@ -70,10 +73,5 @@ function test_source() {
     });
   });
 
-  Cu.evalInSandbox(
-    SOURCE_CONTENT,
-    gDebuggee,
-    "1.8",
-    SOURCE_URL
-  );
+  Cu.evalInSandbox(SOURCE_CONTENT, gDebuggee, "1.8", SOURCE_URL);
 }

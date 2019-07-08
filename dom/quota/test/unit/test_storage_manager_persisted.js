@@ -1,7 +1,6 @@
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   navigator.storage.persisted().then(grabArgAndContinueHandler);
   let persistedResult = yield undefined;
 

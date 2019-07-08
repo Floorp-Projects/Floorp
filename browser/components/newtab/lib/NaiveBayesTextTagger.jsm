@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {toksToTfIdfVector} = ChromeUtils.import("resource://activity-stream/lib/Tokenize.jsm");
+const { toksToTfIdfVector } = ChromeUtils.import(
+  "resource://activity-stream/lib/Tokenize.jsm"
+);
 
 this.NaiveBayesTextTagger = class NaiveBayesTextTagger {
   constructor(model) {
@@ -34,7 +36,7 @@ this.NaiveBayesTextTagger = class NaiveBayesTextTagger {
         classLogProb += tfidf * classModel.feature_log_probs[termId];
       }
 
-      if ((bestLogProb === null) || (classLogProb > bestLogProb)) {
+      if (bestLogProb === null || classLogProb > bestLogProb) {
         bestLogProb = classLogProb;
         bestClassId = classId;
       }
@@ -50,12 +52,13 @@ this.NaiveBayesTextTagger = class NaiveBayesTextTagger {
       bestClassLabel = null;
     }
 
-    let confident = ((bestClassId === this.model.positive_class_id) &&
-                      (bestLogProb > this.model.positive_class_threshold_log_prob));
+    let confident =
+      bestClassId === this.model.positive_class_id &&
+      bestLogProb > this.model.positive_class_threshold_log_prob;
     return {
-      "label": bestClassLabel,
-      "logProb": bestLogProb,
-      "confident": confident,
+      label: bestClassLabel,
+      logProb: bestLogProb,
+      confident,
     };
   }
 };

@@ -14,8 +14,11 @@ add_task(async function test() {
 
   await promiseAutocompleteResultPopup("", window, true);
 
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), -1,
-               "Nothing selected");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedIndex(window),
+    -1,
+    "Nothing selected"
+  );
 
   let resultCount = UrlbarTestUtils.getResultCount(window);
   Assert.ok(resultCount > 0, "At least one result");
@@ -23,12 +26,18 @@ add_task(async function test() {
   for (let i = 0; i < resultCount; i++) {
     EventUtils.synthesizeKey("KEY_ArrowDown");
   }
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), resultCount - 1,
-               "Last result selected");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedIndex(window),
+    resultCount - 1,
+    "Last result selected"
+  );
   Assert.notEqual(gURLBar.value, "", "Input should not be empty");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), -1,
-               "Nothing selected");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedIndex(window),
+    -1,
+    "Nothing selected"
+  );
   Assert.equal(gURLBar.value, "", "Input should be empty");
 });

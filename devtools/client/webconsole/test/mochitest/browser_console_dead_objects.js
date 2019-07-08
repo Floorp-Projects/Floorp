@@ -21,8 +21,9 @@ add_task(async function() {
   const jsterm = hud.jsterm;
 
   // Add the reference to the nuked sandbox.
-  await jsterm.execute("window.nukedSandbox = Cu.Sandbox(null);" +
-                       "Cu.nukeSandbox(nukedSandbox);");
+  await jsterm.execute(
+    "window.nukedSandbox = Cu.Sandbox(null);" + "Cu.nukeSandbox(nukedSandbox);"
+  );
 
   await jsterm.execute("nukedSandbox");
   await waitFor(() => findMessage(hud, "DeadObject", ".objectTitle"));

@@ -24,7 +24,7 @@ add_task(async function systemAddonPreffedOff() {
   const id = "system1@tests.mozilla.org";
   Services.prefs.setBoolPref("extensions.system1.enabled", false);
 
-  await overrideBuiltIns({"system": [id]});
+  await overrideBuiltIns({ system: [id] });
 
   await promiseStartupManager();
 

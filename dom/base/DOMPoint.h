@@ -23,6 +23,7 @@ namespace dom {
 
 class GlobalObject;
 struct DOMPointInit;
+struct DOMMatrixInit;
 
 class DOMPointReadOnly : public nsWrapperCache {
  public:
@@ -43,6 +44,9 @@ class DOMPointReadOnly : public nsWrapperCache {
   double Y() const { return mY; }
   double Z() const { return mZ; }
   double W() const { return mW; }
+
+  already_AddRefed<DOMPoint> MatrixTransform(const DOMMatrixInit& aInit,
+                                             ErrorResult& aRv);
 
   nsISupports* GetParentObject() const { return mParent; }
   virtual JSObject* WrapObject(JSContext* aCx,

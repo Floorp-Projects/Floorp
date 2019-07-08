@@ -16,8 +16,7 @@
 // Disable automatic network detection, so tests work correctly when
 // not connected to a network.
 // eslint-disable-next-line mozilla/use-services
-var ios = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService);
+var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 ios.manageOfflineStatus = false;
 ios.offline = false;
 
@@ -38,18 +37,99 @@ var server; // for use in the shutdown handler, if necessary
           SELECT, SMALL, SPAN, STRIKE, STRONG, STYLE, SUB,
           SUP, TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD,
           TITLE, TR, TT, U, UL, VAR */
-var tags = ["A", "ABBR", "ACRONYM", "ADDRESS", "APPLET", "AREA", "B", "BASE",
-            "BASEFONT", "BDO", "BIG", "BLOCKQUOTE", "BODY", "BR", "BUTTON",
-            "CAPTION", "CENTER", "CITE", "CODE", "COL", "COLGROUP", "DD",
-            "DEL", "DFN", "DIR", "DIV", "DL", "DT", "EM", "FIELDSET", "FONT",
-            "FORM", "FRAME", "FRAMESET", "H1", "H2", "H3", "H4", "H5", "H6",
-            "HEAD", "HR", "HTML", "I", "IFRAME", "IMG", "INPUT", "INS",
-            "ISINDEX", "KBD", "LABEL", "LEGEND", "LI", "LINK", "MAP", "MENU",
-            "META", "NOFRAMES", "NOSCRIPT", "OBJECT", "OL", "OPTGROUP",
-            "OPTION", "P", "PARAM", "PRE", "Q", "S", "SAMP", "SCRIPT",
-            "SELECT", "SMALL", "SPAN", "STRIKE", "STRONG", "STYLE", "SUB",
-            "SUP", "TABLE", "TBODY", "TD", "TEXTAREA", "TFOOT", "TH", "THEAD",
-            "TITLE", "TR", "TT", "U", "UL", "VAR"];
+var tags = [
+  "A",
+  "ABBR",
+  "ACRONYM",
+  "ADDRESS",
+  "APPLET",
+  "AREA",
+  "B",
+  "BASE",
+  "BASEFONT",
+  "BDO",
+  "BIG",
+  "BLOCKQUOTE",
+  "BODY",
+  "BR",
+  "BUTTON",
+  "CAPTION",
+  "CENTER",
+  "CITE",
+  "CODE",
+  "COL",
+  "COLGROUP",
+  "DD",
+  "DEL",
+  "DFN",
+  "DIR",
+  "DIV",
+  "DL",
+  "DT",
+  "EM",
+  "FIELDSET",
+  "FONT",
+  "FORM",
+  "FRAME",
+  "FRAMESET",
+  "H1",
+  "H2",
+  "H3",
+  "H4",
+  "H5",
+  "H6",
+  "HEAD",
+  "HR",
+  "HTML",
+  "I",
+  "IFRAME",
+  "IMG",
+  "INPUT",
+  "INS",
+  "ISINDEX",
+  "KBD",
+  "LABEL",
+  "LEGEND",
+  "LI",
+  "LINK",
+  "MAP",
+  "MENU",
+  "META",
+  "NOFRAMES",
+  "NOSCRIPT",
+  "OBJECT",
+  "OL",
+  "OPTGROUP",
+  "OPTION",
+  "P",
+  "PARAM",
+  "PRE",
+  "Q",
+  "S",
+  "SAMP",
+  "SCRIPT",
+  "SELECT",
+  "SMALL",
+  "SPAN",
+  "STRIKE",
+  "STRONG",
+  "STYLE",
+  "SUB",
+  "SUP",
+  "TABLE",
+  "TBODY",
+  "TD",
+  "TEXTAREA",
+  "TFOOT",
+  "TH",
+  "THEAD",
+  "TITLE",
+  "TR",
+  "TT",
+  "U",
+  "UL",
+  "VAR",
+];
 
 /**
  * Below, we'll use makeTagFunc to create a function for each of the
@@ -93,7 +173,7 @@ function makeTagFunc(tagName) {
 function makeTags() {
   // map our global HTML generation functions
   for (let tag of tags) {
-      this[tag] = makeTagFunc(tag.toLowerCase());
+    this[tag] = makeTagFunc(tag.toLowerCase());
   }
 }
 
@@ -137,7 +217,7 @@ function runServer() {
 
   // verify server address
   // if a.b.c.d or 'localhost'
-  if (typeof(_SERVER_ADDR) != "undefined") {
+  if (typeof _SERVER_ADDR != "undefined") {
     if (_SERVER_ADDR == "localhost") {
       gServerAddress = _SERVER_ADDR;
     } else {
@@ -145,40 +225,49 @@ function runServer() {
       if (quads.length == 4) {
         var invalid = false;
         for (var i = 0; i < 4; i++) {
-          if (quads[i] < 0 || quads[i] > 255)
+          if (quads[i] < 0 || quads[i] > 255) {
             invalid = true;
+          }
         }
-        if (!invalid)
+        if (!invalid) {
           gServerAddress = _SERVER_ADDR;
-        else
-          throw new Error("invalid _SERVER_ADDR, please specify a valid IP Address");
+        } else {
+          throw new Error(
+            "invalid _SERVER_ADDR, please specify a valid IP Address"
+          );
+        }
       }
     }
   } else {
-    throw new Error("please define _SERVER_ADDR (as an ip address) before running server.js");
+    throw new Error(
+      "please define _SERVER_ADDR (as an ip address) before running server.js"
+    );
   }
 
-  if (typeof(_SERVER_PORT) != "undefined") {
-    if (parseInt(_SERVER_PORT) > 0 && parseInt(_SERVER_PORT) < 65536)
+  if (typeof _SERVER_PORT != "undefined") {
+    if (parseInt(_SERVER_PORT) > 0 && parseInt(_SERVER_PORT) < 65536) {
       SERVER_PORT = _SERVER_PORT;
+    }
   } else {
-    throw new Error("please define _SERVER_PORT (as a port number) before running server.js");
+    throw new Error(
+      "please define _SERVER_PORT (as a port number) before running server.js"
+    );
   }
 
   // If DISPLAY_RESULTS is not specified, it defaults to true
-  if (typeof(_DISPLAY_RESULTS) != "undefined") {
+  if (typeof _DISPLAY_RESULTS != "undefined") {
     displayResults = _DISPLAY_RESULTS;
   }
 
   server._start(SERVER_PORT, gServerAddress);
 
   // touch a file in the profile directory to indicate we're alive
-  var foStream = Cc["@mozilla.org/network/file-output-stream;1"]
-                   .createInstance(Ci.nsIFileOutputStream);
-  var serverAlive = Cc["@mozilla.org/file/local;1"]
-                      .createInstance(Ci.nsIFile);
+  var foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
+  var serverAlive = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
 
-  if (typeof(_PROFILE_PATH) == "undefined") {
+  if (typeof _PROFILE_PATH == "undefined") {
     serverAlive.initWithFile(serverBasePath);
     serverAlive.append("mochitesttestingprofile");
   } else {
@@ -188,14 +277,16 @@ function runServer() {
   // Create a file to inform the harness that the server is ready
   if (serverAlive.exists()) {
     serverAlive.append("server_alive.txt");
-    foStream.init(serverAlive,
-                  0x02 | 0x08 | 0x20, 436, 0); // write, create, truncate
+    foStream.init(serverAlive, 0x02 | 0x08 | 0x20, 436, 0); // write, create, truncate
     var data = "It's alive!";
     foStream.write(data, data.length);
     foStream.close();
   } else {
-    throw new Error("Failed to create server_alive.txt because " + serverAlive.path +
-                    " could not be found.");
+    throw new Error(
+      "Failed to create server_alive.txt because " +
+        serverAlive.path +
+        " could not be found."
+    );
   }
 
   makeTags();
@@ -204,18 +295,18 @@ function runServer() {
   // The following is threading magic to spin an event loop -- this has to
   // happen manually in xpcshell for the server to actually work.
   //
-  var thread = Cc["@mozilla.org/thread-manager;1"]
-                 .getService()
-                 .currentThread;
-  while (!server.isStopped())
+  var thread = Cc["@mozilla.org/thread-manager;1"].getService().currentThread;
+  while (!server.isStopped()) {
     thread.processNextEvent(true);
+  }
 
   // Server stopped by /server/shutdown handler -- go through pending events
   // and return.
 
   // get rid of any pending requests
-  while (thread.hasPendingEvents())
+  while (thread.hasPendingEvents()) {
     thread.processNextEvent(true);
+  }
 }
 
 /** Creates and returns an HTTP server configured to serve Mochitests. */
@@ -225,7 +316,6 @@ function createMochitestServer(serverBasePath) {
   server.registerDirectory("/", serverBasePath);
   server.registerPathHandler("/server/shutdown", serverShutdown);
   server.registerPathHandler("/server/debug", serverDebug);
-  server.registerPathHandler("/nested_oop", nestedTest);
   server.registerContentType("sjs", "sjs"); // .sjs == CGI-like functionality
   server.registerContentType("jar", "application/x-jar");
   server.registerContentType("ogg", "application/ogg");
@@ -239,17 +329,18 @@ function createMochitestServer(serverBasePath) {
   server.registerContentType("wasm", "application/wasm");
   server.setIndexHandler(defaultDirHandler);
 
-  var serverRoot =
-    {
-      getFile: function getFile(path) {
-        var file = serverBasePath.clone().QueryInterface(Ci.nsIFile);
-        path.split("/").forEach(function(p) {
-          file.appendRelativePath(p);
-        });
-        return file;
-      },
-      QueryInterface(aIID) { return this; },
-    };
+  var serverRoot = {
+    getFile: function getFile(path) {
+      var file = serverBasePath.clone().QueryInterface(Ci.nsIFile);
+      path.split("/").forEach(function(p) {
+        file.appendRelativePath(p);
+      });
+      return file;
+    },
+    QueryInterface(aIID) {
+      return this;
+    },
+  };
 
   server.setObjectState("SERVER_ROOT", serverRoot);
 
@@ -268,27 +359,32 @@ function processLocations(server) {
   serverLocations.append("server-locations.txt");
 
   const PR_RDONLY = 0x01;
-  var fis = new FileInputStream(serverLocations, PR_RDONLY, 292 /* 0444 */,
-                                Ci.nsIFileInputStream.CLOSE_ON_EOF);
+  var fis = new FileInputStream(
+    serverLocations,
+    PR_RDONLY,
+    292 /* 0444 */,
+    Ci.nsIFileInputStream.CLOSE_ON_EOF
+  );
 
   var lis = new ConverterInputStream(fis, "UTF-8", 1024, 0x0);
   lis.QueryInterface(Ci.nsIUnicharLineInputStream);
 
-  const LINE_REGEXP =
-    new RegExp("^([a-z][-a-z0-9+.]*)" +
-               "://" +
-               "(" +
-                 "\\d+\\.\\d+\\.\\d+\\.\\d+" +
-                 "|" +
-                 "(?:[a-z0-9](?:[-a-z0-9]*[a-z0-9])?\\.)*" +
-                 "[a-z](?:[-a-z0-9]*[a-z0-9])?" +
-               ")" +
-               ":" +
-               "(\\d+)" +
-               "(?:" +
-               "\\s+" +
-               "(\\S+(?:,\\S+)*)" +
-               ")?$");
+  const LINE_REGEXP = new RegExp(
+    "^([a-z][-a-z0-9+.]*)" +
+      "://" +
+      "(" +
+      "\\d+\\.\\d+\\.\\d+\\.\\d+" +
+      "|" +
+      "(?:[a-z0-9](?:[-a-z0-9]*[a-z0-9])?\\.)*" +
+      "[a-z](?:[-a-z0-9]*[a-z0-9])?" +
+      ")" +
+      ":" +
+      "(\\d+)" +
+      "(?:" +
+      "\\s+" +
+      "(\\S+(?:,\\S+)*)" +
+      ")?$"
+  );
 
   var line = {};
   var lineno = 0;
@@ -298,19 +394,24 @@ function processLocations(server) {
     lineno++;
 
     var lineValue = line.value;
-    if (lineValue.charAt(0) == "#" || lineValue == "")
+    if (lineValue.charAt(0) == "#" || lineValue == "") {
       continue;
+    }
 
     var match = LINE_REGEXP.exec(lineValue);
-    if (!match)
+    if (!match) {
       throw new Error("Syntax error in server-locations.txt, line " + lineno);
+    }
 
     var [, scheme, host, port, options] = match;
     if (options) {
       if (options.split(",").includes("primary")) {
         if (seenPrimary) {
-          throw new Error("Multiple primary locations in server-locations.txt, " +
-                          "line " + lineno);
+          throw new Error(
+            "Multiple primary locations in server-locations.txt, " +
+              "line " +
+              lineno
+          );
         }
 
         server.identity.setPrimary(scheme, host, port);
@@ -320,8 +421,7 @@ function processLocations(server) {
     }
 
     server.identity.add(scheme, host, port);
-  }
-  while (more);
+  } while (more);
 }
 
 // PATH HANDLERS
@@ -341,8 +441,9 @@ function serverShutdown(metadata, response) {
 // /server/debug?[012]
 function serverDebug(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 400, "Bad debugging level");
-  if (metadata.queryString.length !== 1)
+  if (metadata.queryString.length !== 1) {
     return;
+  }
 
   var mode;
   if (metadata.queryString === "0") {
@@ -410,10 +511,12 @@ function list(requestPath, directory, recurse) {
   // Sort files by name, so that tests can be run in a pre-defined order inside
   // a given directory (see bug 384823)
   function leafNameComparator(first, second) {
-    if (first.leafName < second.leafName)
+    if (first.leafName < second.leafName) {
       return -1;
-    if (first.leafName > second.leafName)
+    }
+    if (first.leafName > second.leafName) {
       return 1;
+    }
     return 0;
   }
   files.sort(leafNameComparator);
@@ -429,8 +532,8 @@ function list(requestPath, directory, recurse) {
       [links[key], childCount] = list(key, file, recurse);
       count += childCount;
     } else if (file.leafName.charAt(0) != ".") {
-        links[key] = {"test": {"url": key, "expected": "pass"}};
-      }
+      links[key] = { test: { url: key, expected: "pass" } };
+    }
   }
 
   return [links, count];
@@ -442,20 +545,23 @@ function list(requestPath, directory, recurse) {
  * a supporting file.
  */
 function isTest(filename, pattern) {
-  if (pattern)
+  if (pattern) {
     return pattern.test(filename);
+  }
 
   // File name is a URL style path to a test file, make sure that we check for
   // tests that start with the appropriate prefix.
-  var testPrefix = typeof(_TEST_PREFIX) == "string" ? _TEST_PREFIX : "test_";
+  var testPrefix = typeof _TEST_PREFIX == "string" ? _TEST_PREFIX : "test_";
   var testPattern = new RegExp("^" + testPrefix);
 
   var pathPieces = filename.split("/");
 
-  return testPattern.test(pathPieces[pathPieces.length - 1]) &&
-         !filename.includes(".js") &&
-         !filename.includes(".css") &&
-         !/\^headers\^$/.test(filename);
+  return (
+    testPattern.test(pathPieces[pathPieces.length - 1]) &&
+    !filename.includes(".js") &&
+    !filename.includes(".css") &&
+    !/\^headers\^$/.test(filename)
+  );
 }
 
 /**
@@ -466,11 +572,12 @@ function linksToListItems(links) {
   var children = "";
   for (let link in links) {
     const value = links[link];
-    var classVal = (!isTest(link) && !(value instanceof Object))
-      ? "non-test invisible"
-      : "test";
+    var classVal =
+      !isTest(link) && !(value instanceof Object)
+        ? "non-test invisible"
+        : "test";
     if (value instanceof Object) {
-      children = UL({class: "testdir"}, linksToListItems(value));
+      children = UL({ class: "testdir" }, linksToListItems(value));
     } else {
       children = "";
     }
@@ -478,14 +585,20 @@ function linksToListItems(links) {
     var bug_title = link.match(/test_bug\S+/);
     var bug_num = null;
     if (bug_title != null) {
-        bug_num = bug_title[0].match(/\d+/);
+      bug_num = bug_title[0].match(/\d+/);
     }
 
-    if ((bug_title == null) || (bug_num == null)) {
-      response += LI({class: classVal}, A({href: link}, link), children);
+    if (bug_title == null || bug_num == null) {
+      response += LI({ class: classVal }, A({ href: link }, link), children);
     } else {
       var bug_url = "https://bugzilla.mozilla.org/show_bug.cgi?id=" + bug_num;
-      response += LI({class: classVal}, A({href: link}, link), " - ", A({href: bug_url}, "Bug " + bug_num), children);
+      response += LI(
+        { class: classVal },
+        A({ href: link }, link),
+        " - ",
+        A({ href: bug_url }, "Bug " + bug_num),
+        children
+      );
     }
   }
   return response;
@@ -498,40 +611,48 @@ function linksToTableRows(links, recursionLevel) {
   var response = "";
   for (let link in links) {
     const value = links[link];
-    var classVal = (!isTest(link) && ((value instanceof Object) && ("test" in value)))
-      ? "non-test invisible"
-      : "";
+    var classVal =
+      !isTest(link) && (value instanceof Object && "test" in value)
+        ? "non-test invisible"
+        : "";
 
-    var spacer = "padding-left: " + (10 * recursionLevel) + "px";
+    var spacer = "padding-left: " + 10 * recursionLevel + "px";
 
-    if ((value instanceof Object) && !("test" in value)) {
-      response += TR({class: "dir", id: "tr-" + link },
-                     TD({colspan: "3"}, "&#160;"),
-                     TD({style: spacer},
-                        A({href: link}, link)));
+    if (value instanceof Object && !("test" in value)) {
+      response += TR(
+        { class: "dir", id: "tr-" + link },
+        TD({ colspan: "3" }, "&#160;"),
+        TD({ style: spacer }, A({ href: link }, link))
+      );
       response += linksToTableRows(value, recursionLevel + 1);
     } else {
       var bug_title = link.match(/test_bug\S+/);
       var bug_num = null;
       if (bug_title != null) {
-          bug_num = bug_title[0].match(/\d+/);
+        bug_num = bug_title[0].match(/\d+/);
       }
-      if ((bug_title == null) || (bug_num == null)) {
-        response += TR({class: classVal, id: "tr-" + link },
-                       TD("0"),
-                       TD("0"),
-                       TD("0"),
-                       TD({style: spacer},
-                          A({href: link}, link)));
+      if (bug_title == null || bug_num == null) {
+        response += TR(
+          { class: classVal, id: "tr-" + link },
+          TD("0"),
+          TD("0"),
+          TD("0"),
+          TD({ style: spacer }, A({ href: link }, link))
+        );
       } else {
         var bug_url = "https://bugzilla.mozilla.org/show_bug.cgi?id=" + bug_num;
-        response += TR({class: classVal, id: "tr-" + link },
-                       TD("0"),
-                       TD("0"),
-                       TD("0"),
-                       TD({style: spacer},
-                          A({href: link}, link), " - ",
-                          A({href: bug_url}, "Bug " + bug_num)));
+        response += TR(
+          { class: classVal, id: "tr-" + link },
+          TD("0"),
+          TD("0"),
+          TD("0"),
+          TD(
+            { style: spacer },
+            A({ href: link }, link),
+            " - ",
+            A({ href: bug_url }, "Bug " + bug_num)
+          )
+        );
       }
     }
   }
@@ -541,9 +662,9 @@ function linksToTableRows(links, recursionLevel) {
 function arrayOfTestFiles(linkArray, fileArray, testPattern) {
   for (let link in linkArray) {
     const value = linkArray[link];
-    if ((value instanceof Object) && !("test" in value)) {
+    if (value instanceof Object && !("test" in value)) {
       arrayOfTestFiles(value, fileArray, testPattern);
-    } else if (isTest(link, testPattern) && (value instanceof Object)) {
+    } else if (isTest(link, testPattern) && value instanceof Object) {
       fileArray.push(value.test);
     }
   }
@@ -554,7 +675,9 @@ function arrayOfTestFiles(linkArray, fileArray, testPattern) {
 function jsonArrayOfTestFiles(links) {
   var testFiles = [];
   arrayOfTestFiles(links, testFiles);
-  testFiles = testFiles.map(function(file) { return '"' + file.url + '"'; });
+  testFiles = testFiles.map(function(file) {
+    return '"' + file.url + '"';
+  });
 
   return "[" + testFiles.join(",\n") + "]";
 }
@@ -563,19 +686,11 @@ function jsonArrayOfTestFiles(links) {
  * Produce a normal directory listing.
  */
 function regularListing(metadata, response) {
-  var [links] = list(metadata.path,
-                     metadata.getProperty("directory"),
-                     false);
+  var [links] = list(metadata.path, metadata.getProperty("directory"), false);
   response.write(
     HTML(
-      HEAD(
-        TITLE("mochitest index ", metadata.path)
-      ),
-      BODY(
-        BR(),
-        A({href: ".."}, "Up a level"),
-        UL(linksToListItems(links))
-      )
+      HEAD(TITLE("mochitest index ", metadata.path)),
+      BODY(BR(), A({ href: ".." }, "Up a level"), UL(linksToListItems(links)))
     )
   );
 }
@@ -585,45 +700,29 @@ function regularListing(metadata, response) {
  * it into an object for creating a table of clickable links for each test.
  */
 function convertManifestToTestLinks(root, manifest) {
-  const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+  const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
   var manifestFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   manifestFile.initWithFile(serverBasePath);
   manifestFile.append(manifest);
 
-  var manifestStream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+  var manifestStream = Cc[
+    "@mozilla.org/network/file-input-stream;1"
+  ].createInstance(Ci.nsIFileInputStream);
   manifestStream.init(manifestFile, -1, 0, 0);
 
-  var manifestObj = JSON.parse(NetUtil.readInputStreamToString(manifestStream,
-                                                               manifestStream.available()));
+  var manifestObj = JSON.parse(
+    NetUtil.readInputStreamToString(manifestStream, manifestStream.available())
+  );
   var paths = manifestObj.tests;
   var pathPrefix = "/" + root + "/";
-  return [paths.reduce(function(t, p) { t[pathPrefix + p.path] = true; return t; }, {}),
-          paths.length];
-}
-
-/**
- * Produce a test harness page that has one remote iframe
- */
-function nestedTest(metadata, response) {
-  response.setStatusLine("1.1", 200, "OK");
-  response.setHeader("Content-type", "text/html;charset=utf-8", false);
-  response.write(
-    HTML(
-      HEAD(
-        TITLE("Mochitest | ", metadata.path),
-        LINK({rel: "stylesheet",
-              type: "text/css", href: "/static/harness.css"}),
-        SCRIPT({type: "text/javascript",
-                src: "/nested_setup.js"}),
-        SCRIPT({type: "text/javascript"},
-               "window.onload = addPermissions; gTestURL = '/tests?" + metadata.queryString + "';")
-        ),
-      BODY(
-        DIV({class: "container"},
-          DIV({class: "frameholder", id: "holder-div"})
-        )
-        )));
+  return [
+    paths.reduce(function(t, p) {
+      t[pathPrefix + p.path] = true;
+      return t;
+    }, {}),
+    paths.length,
+  ];
 }
 
 /**
@@ -634,98 +733,125 @@ function testListing(metadata, response) {
   var links = {};
   var count = 0;
   if (!metadata.queryString.includes("manifestFile")) {
-    [links, count] = list(metadata.path,
-                          metadata.getProperty("directory"),
-                          true);
-  } else if (typeof(Components) != undefined) {
+    [links, count] = list(
+      metadata.path,
+      metadata.getProperty("directory"),
+      true
+    );
+  } else if (typeof Components != undefined) {
     var manifest = metadata.queryString.match(/manifestFile=([^&]+)/)[1];
 
-    [links, count] = convertManifestToTestLinks(metadata.path.split("/")[1],
-                                                manifest);
+    [links, count] = convertManifestToTestLinks(
+      metadata.path.split("/")[1],
+      manifest
+    );
   }
 
-  var table_class = metadata.queryString.indexOf("hideResultsTable=1") > -1 ? "invisible" : "";
+  var table_class =
+    metadata.queryString.indexOf("hideResultsTable=1") > -1 ? "invisible" : "";
 
-  let testname = (metadata.queryString.indexOf("testname=") > -1)
-                 ? metadata.queryString.match(/testname=([^&]+)/)[1]
-                 : "";
+  let testname =
+    metadata.queryString.indexOf("testname=") > -1
+      ? metadata.queryString.match(/testname=([^&]+)/)[1]
+      : "";
 
   dumpn("count: " + count);
-  var tests = testname
-              ? "['/" + testname + "']"
-              : jsonArrayOfTestFiles(links);
+  var tests = testname ? "['/" + testname + "']" : jsonArrayOfTestFiles(links);
   response.write(
     HTML(
       HEAD(
         TITLE("MochiTest | ", metadata.path),
-        LINK({rel: "stylesheet",
-              type: "text/css", href: "/static/harness.css"}
-        ),
-        SCRIPT({type: "text/javascript",
-                 src: "/tests/SimpleTest/StructuredLog.jsm"}),
-        SCRIPT({type: "text/javascript",
-                 src: "/tests/SimpleTest/LogController.js"}),
-        SCRIPT({type: "text/javascript",
-                 src: "/tests/SimpleTest/MemoryStats.js"}),
-        SCRIPT({type: "text/javascript",
-                 src: "/tests/SimpleTest/TestRunner.js"}),
-        SCRIPT({type: "text/javascript",
-                 src: "/tests/SimpleTest/MozillaLogger.js"}),
-        SCRIPT({type: "text/javascript",
-                 src: "/chunkifyTests.js"}),
-        SCRIPT({type: "text/javascript",
-                 src: "/manifestLibrary.js"}),
-        SCRIPT({type: "text/javascript",
-                 src: "/tests/SimpleTest/setup.js"}),
-        SCRIPT({type: "text/javascript"},
-               "window.onload =  hookup; gTestList=" + tests + ";"
+        LINK({
+          rel: "stylesheet",
+          type: "text/css",
+          href: "/static/harness.css",
+        }),
+        SCRIPT({
+          type: "text/javascript",
+          src: "/tests/SimpleTest/StructuredLog.jsm",
+        }),
+        SCRIPT({
+          type: "text/javascript",
+          src: "/tests/SimpleTest/LogController.js",
+        }),
+        SCRIPT({
+          type: "text/javascript",
+          src: "/tests/SimpleTest/MemoryStats.js",
+        }),
+        SCRIPT({
+          type: "text/javascript",
+          src: "/tests/SimpleTest/TestRunner.js",
+        }),
+        SCRIPT({
+          type: "text/javascript",
+          src: "/tests/SimpleTest/MozillaLogger.js",
+        }),
+        SCRIPT({ type: "text/javascript", src: "/chunkifyTests.js" }),
+        SCRIPT({ type: "text/javascript", src: "/manifestLibrary.js" }),
+        SCRIPT({ type: "text/javascript", src: "/tests/SimpleTest/setup.js" }),
+        SCRIPT(
+          { type: "text/javascript" },
+          "window.onload =  hookup; gTestList=" + tests + ";"
         )
       ),
       BODY(
-        DIV({class: "container"},
-          H2("--> ", A({href: "#", id: "runtests"}, "Run Tests"), " <--"),
-            P({style: "float: right;"},
+        DIV(
+          { class: "container" },
+          H2("--> ", A({ href: "#", id: "runtests" }, "Run Tests"), " <--"),
+          P(
+            { style: "float: right;" },
             SMALL(
               "Based on the ",
-              A({href: "http://www.mochikit.com/"}, "MochiKit"),
+              A({ href: "http://www.mochikit.com/" }, "MochiKit"),
               " unit tests."
             )
           ),
-          DIV({class: "status"},
-            H1({id: "indicator"}, "Status"),
-            H2({id: "pass"}, "Passed: ", SPAN({id: "pass-count"}, "0")),
-            H2({id: "fail"}, "Failed: ", SPAN({id: "fail-count"}, "0")),
-            H2({id: "fail"}, "Todo: ", SPAN({id: "todo-count"}, "0"))
+          DIV(
+            { class: "status" },
+            H1({ id: "indicator" }, "Status"),
+            H2({ id: "pass" }, "Passed: ", SPAN({ id: "pass-count" }, "0")),
+            H2({ id: "fail" }, "Failed: ", SPAN({ id: "fail-count" }, "0")),
+            H2({ id: "fail" }, "Todo: ", SPAN({ id: "todo-count" }, "0"))
           ),
-          DIV({class: "clear"}),
-          DIV({id: "current-test"},
-            B("Currently Executing: ",
-              SPAN({id: "current-test-path"}, "_")
-            )
+          DIV({ class: "clear" }),
+          DIV(
+            { id: "current-test" },
+            B("Currently Executing: ", SPAN({ id: "current-test-path" }, "_"))
           ),
-          DIV({class: "clear"}),
-          DIV({class: "frameholder"},
-            IFRAME({scrolling: "no", id: "testframe", "allowfullscreen": true})
+          DIV({ class: "clear" }),
+          DIV(
+            { class: "frameholder" },
+            IFRAME({ scrolling: "no", id: "testframe", allowfullscreen: true })
           ),
-          DIV({class: "clear"}),
-          DIV({class: "toggle"},
-            A({href: "#", id: "toggleNonTests"}, "Show Non-Tests"),
+          DIV({ class: "clear" }),
+          DIV(
+            { class: "toggle" },
+            A({ href: "#", id: "toggleNonTests" }, "Show Non-Tests"),
             BR()
           ),
 
-          (
-           displayResults ?
-            TABLE({cellpadding: 0, cellspacing: 0, class: table_class, id: "test-table"},
-              TR(TD("Passed"), TD("Failed"), TD("Todo"), TD("Test Files")),
-              linksToTableRows(links, 0)
-            ) : ""
-          ),
-
+          displayResults
+            ? TABLE(
+                {
+                  cellpadding: 0,
+                  cellspacing: 0,
+                  class: table_class,
+                  id: "test-table",
+                },
+                TR(TD("Passed"), TD("Failed"), TD("Todo"), TD("Test Files")),
+                linksToTableRows(links, 0)
+              )
+            : "",
           BR(),
-          TABLE({cellpadding: 0, cellspacing: 0, border: 1, bordercolor: "red", id: "fail-table"}
-          ),
+          TABLE({
+            cellpadding: 0,
+            cellspacing: 0,
+            border: 1,
+            bordercolor: "red",
+            id: "fail-table",
+          }),
 
-          DIV({class: "clear"})
+          DIV({ class: "clear" })
         )
       )
     )

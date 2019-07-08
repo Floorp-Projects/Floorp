@@ -7,7 +7,9 @@
  * Utility functions for collapsing markers into a waterfall.
  */
 
-const { MarkerBlueprintUtils } = require("devtools/client/performance/modules/marker-blueprint-utils");
+const {
+  MarkerBlueprintUtils,
+} = require("devtools/client/performance/modules/marker-blueprint-utils");
 
 /**
  * Creates a parent marker, which functions like a regular marker,
@@ -46,7 +48,8 @@ function collapseMarkersIntoNode({ rootNode, markersList, filter }) {
     const blueprint = MarkerBlueprintUtils.getBlueprintFor(curr);
 
     const nestable = "nestable" in blueprint ? blueprint.nestable : true;
-    const collapsible = "collapsible" in blueprint ? blueprint.collapsible : true;
+    const collapsible =
+      "collapsible" in blueprint ? blueprint.collapsible : true;
 
     let finalized = false;
 
@@ -76,10 +79,12 @@ function collapseMarkersIntoNode({ rootNode, markersList, filter }) {
       // make it a child of the current parent and stop going upwards.
       // If the markers aren't from the same process, attach them to the root
       // node as well. Every process has its own main thread.
-      if (nestable &&
-          curr.start >= parentNode.start &&
-          curr.end <= parentNode.end &&
-          curr.processType == parentNode.processType) {
+      if (
+        nestable &&
+        curr.start >= parentNode.start &&
+        curr.end <= parentNode.end &&
+        curr.processType == parentNode.processType
+      ) {
         pushNode(parentNode, curr);
         finalized = true;
         break;
@@ -125,7 +130,8 @@ function createParentNodeFactory(root) {
       // If this finished parent marker doesn't have an end time,
       // so probably a synthesized marker, use the last marker's end time.
       if (lastParent.end == void 0) {
-        lastParent.end = lastParent.submarkers[lastParent.submarkers.length - 1].end;
+        lastParent.end =
+          lastParent.submarkers[lastParent.submarkers.length - 1].end;
       }
 
       // If no children were ever pushed into this parent node,
@@ -141,9 +147,8 @@ function createParentNodeFactory(root) {
     /**
      * Returns the most recent parent node.
      */
-    getCurrentParentNode: () => parentMarkers.length
-      ? parentMarkers[parentMarkers.length - 1]
-      : null,
+    getCurrentParentNode: () =>
+      parentMarkers.length ? parentMarkers[parentMarkers.length - 1] : null,
 
     /**
      * Push this marker into the most recent parent node.

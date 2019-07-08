@@ -4,25 +4,32 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const {
-  error,
-  WebDriverError,
-} = ChromeUtils.import("chrome://marionette/content/error.js");
-const {evaluate} = ChromeUtils.import("chrome://marionette/content/evaluate.js");
-const {Log} = ChromeUtils.import("chrome://marionette/content/log.js");
-const {modal} = ChromeUtils.import("chrome://marionette/content/modal.js");
-const {
-  MessageManagerDestroyedPromise,
-} = ChromeUtils.import("chrome://marionette/content/sync.js");
+const { error, WebDriverError } = ChromeUtils.import(
+  "chrome://marionette/content/error.js"
+);
+const { evaluate } = ChromeUtils.import(
+  "chrome://marionette/content/evaluate.js"
+);
+const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
+const { modal } = ChromeUtils.import("chrome://marionette/content/modal.js");
+const { MessageManagerDestroyedPromise } = ChromeUtils.import(
+  "chrome://marionette/content/sync.js"
+);
 
 this.EXPORTED_SYMBOLS = ["proxy"];
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 XPCOMUtils.defineLazyServiceGetter(
-    this, "uuidgen", "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
+  this,
+  "uuidgen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
 // Proxy handler that traps requests to get a property.  Will prioritise
 // properties that exist on the object's own prototype.
@@ -122,7 +129,7 @@ proxy.AsyncMessageChannel = class {
       let path = proxy.AsyncMessageChannel.makePath(uuid);
       let cb = msg => {
         this.activeMessageId = null;
-        let {data, type} = msg.json;
+        let { data, type } = msg.json;
 
         switch (msg.json.type) {
           case proxy.AsyncMessageChannel.ReplyType.Ok:
@@ -143,7 +150,7 @@ proxy.AsyncMessageChannel = class {
 
       // The currently selected tab or window is closing. Make sure to wait
       // until it's fully gone.
-      this.closeHandler = async ({type, target}) => {
+      this.closeHandler = async ({ type, target }) => {
         log.trace(`Received DOM event ${type} for ${target}`);
 
         let messageManager;
@@ -200,8 +207,9 @@ proxy.AsyncMessageChannel = class {
       this.browser.window.addEventListener("unload", this.closeHandler);
 
       if (this.browser.tab) {
-        let node = this.browser.tab.addEventListener ?
-            this.browser.tab : this.browser.contentBrowser;
+        let node = this.browser.tab.addEventListener
+          ? this.browser.tab
+          : this.browser.contentBrowser;
         node.addEventListener("TabClose", this.closeHandler);
       }
     }
@@ -217,8 +225,9 @@ proxy.AsyncMessageChannel = class {
       this.browser.window.removeEventListener("unload", this.closeHandler);
 
       if (this.browser.tab) {
-        let node = this.browser.tab.addEventListener ?
-            this.browser.tab : this.browser.contentBrowser;
+        let node = this.browser.tab.addEventListener
+          ? this.browser.tab
+          : this.browser.contentBrowser;
         if (node) {
           node.removeEventListener("TabClose", this.closeHandler);
         }
@@ -271,7 +280,7 @@ proxy.AsyncMessageChannel = class {
     const path = proxy.AsyncMessageChannel.makePath(uuid);
 
     let data = evaluate.toJSON(payload);
-    const msg = {type, data};
+    const msg = { type, data };
 
     // here sendAsync is actually the content frame's
     // sendAsyncMessage(path, message) global

@@ -1,9 +1,8 @@
-
 Svc.Prefs.set("registerEngines", "");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 // configure the identity we use for this test.
-const identityConfig = makeIdentityConfig({username: "johndoe"});
+const identityConfig = makeIdentityConfig({ username: "johndoe" });
 
 function FakeCollection() {
   this.deleted = false;
@@ -16,8 +15,8 @@ FakeCollection.prototype = {
       self.timestamp = new_timestamp();
       let timestamp = "" + self.timestamp;
       if (request.method == "DELETE") {
-          body = timestamp;
-          self.deleted = true;
+        body = timestamp;
+        self.deleted = true;
       }
       response.setHeader("X-Weave-Timestamp", timestamp);
       response.setStatusLine(request.httpVersion, 200, "OK");
@@ -52,11 +51,15 @@ add_task(async function test_wipeServer_list_success() {
     Assert.ok(!steam_coll.deleted);
     Assert.ok(!diesel_coll.deleted);
 
-    _("wipeServer() will happily ignore the non-existent collection and use the timestamp of the last DELETE that was successful.");
+    _(
+      "wipeServer() will happily ignore the non-existent collection and use the timestamp of the last DELETE that was successful."
+    );
     let timestamp = await Service.wipeServer(["steam", "diesel", "petrol"]);
     Assert.equal(timestamp, diesel_coll.timestamp);
 
-    _("wipeServer stopped deleting after encountering an error with the 'petrol' collection, thus only 'steam' has been deleted.");
+    _(
+      "wipeServer stopped deleting after encountering an error with the 'petrol' collection, thus only 'steam' has been deleted."
+    );
     Assert.ok(steam_coll.deleted);
     Assert.ok(diesel_coll.deleted);
   } finally {
@@ -85,7 +88,9 @@ add_task(async function test_wipeServer_list_503() {
     Assert.ok(!steam_coll.deleted);
     Assert.ok(!diesel_coll.deleted);
 
-    _("wipeServer() will happily ignore the non-existent collection, delete the 'steam' collection and abort after an receiving an error on the 'petrol' collection.");
+    _(
+      "wipeServer() will happily ignore the non-existent collection, delete the 'steam' collection and abort after an receiving an error on the 'petrol' collection."
+    );
     let error;
     try {
       await Service.wipeServer(["non-existent", "steam", "petrol", "diesel"]);
@@ -96,7 +101,9 @@ add_task(async function test_wipeServer_list_503() {
     _("wipeServer() threw this exception: " + error);
     Assert.equal(error.status, 503);
 
-    _("wipeServer stopped deleting after encountering an error with the 'petrol' collection, thus only 'steam' has been deleted.");
+    _(
+      "wipeServer stopped deleting after encountering an error with the 'petrol' collection, thus only 'steam' has been deleted."
+    );
     Assert.ok(steam_coll.deleted);
     Assert.ok(!diesel_coll.deleted);
   } finally {

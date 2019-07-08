@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["AudioPlaybackChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
 
 class AudioPlaybackChild extends ActorChild {
   handleMediaControlMessage(msg) {
@@ -49,14 +51,14 @@ class AudioPlaybackChild extends ActorChild {
         } else if (data === "activeMediaBlockStop") {
           name += "ActiveMediaBlockStop";
         } else {
-          name += (data === "active") ? "Start" : "Stop";
+          name += data === "active" ? "Start" : "Stop";
         }
         this.mm.sendAsyncMessage(name);
       }
     }
   }
 
-  receiveMessage({name, data}) {
+  receiveMessage({ name, data }) {
     switch (name) {
       case "AudioPlayback":
         this.handleMediaControlMessage(data.type);

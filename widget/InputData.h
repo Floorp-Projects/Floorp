@@ -381,11 +381,11 @@ class PanGestureInput : public InputData {
 
   PanDeltaType mDeltaType = PANDELTA_PIXEL;
 
-  bool mHandledByAPZ: 1;
+  bool mHandledByAPZ : 1;
 
   // true if this is a PANGESTURE_END event that will be followed by a
   // PANGESTURE_MOMENTUMSTART event.
-  bool mFollowedByMomentum: 1;
+  bool mFollowedByMomentum : 1;
 
   // If this is true, and this event started a new input block that couldn't
   // find a scrollable target which is scrollable in the horizontal component
@@ -393,24 +393,31 @@ class PanGestureInput : public InputData {
   // hold until a content response has arrived, even if the block has a
   // confirmed target.
   // This is used by events that can result in a swipe instead of a scroll.
-  bool mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection: 1;
+  bool mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection : 1;
 
   // This is used by APZ to communicate to the macOS widget code whether
   // the overscroll-behavior of the scroll frame handling this swipe allows
   // non-local overscroll behaviors in the horizontal direction (such as
   // swipe navigation).
-  bool mOverscrollBehaviorAllowsSwipe: 1;
+  bool mOverscrollBehaviorAllowsSwipe : 1;
 
   // true if APZ should do a fling animation after this pan ends, like
-  // it would with touchscreens. (For platforms that don't emit momentum events.)
-  bool mSimulateMomentum: 1;
+  // it would with touchscreens. (For platforms that don't emit momentum
+  // events.)
+  bool mSimulateMomentum : 1;
 
   void SetHandledByAPZ(bool aHandled) { mHandledByAPZ = aHandled; }
-  void SetFollowedByMomentum(bool aFollowed) { mFollowedByMomentum = aFollowed; }
-  void SetRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(bool aRequires) {
-    mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection = aRequires;
+  void SetFollowedByMomentum(bool aFollowed) {
+    mFollowedByMomentum = aFollowed;
   }
-  void SetOverscrollBehaviorAllowsSwipe(bool aAllows) { mOverscrollBehaviorAllowsSwipe = aAllows; }
+  void SetRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(
+      bool aRequires) {
+    mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection =
+        aRequires;
+  }
+  void SetOverscrollBehaviorAllowsSwipe(bool aAllows) {
+    mOverscrollBehaviorAllowsSwipe = aAllows;
+  }
   void SetSimulateMomentum(bool aSimulate) { mSimulateMomentum = aSimulate; }
 };
 

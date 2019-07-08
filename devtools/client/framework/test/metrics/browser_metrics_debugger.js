@@ -11,7 +11,8 @@
  * retrieved by perfherder via logs.
  */
 
-const TEST_URL = "data:text/html;charset=UTF-8,<div>Debugger modules load test</div>";
+const TEST_URL =
+  "data:text/html;charset=UTF-8,<div>Debugger modules load test</div>";
 
 add_task(async function() {
   const toolbox = await openNewTabAndToolbox(TEST_URL, "jsdebugger");

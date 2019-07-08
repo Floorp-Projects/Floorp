@@ -48,8 +48,11 @@ add_task(async function test() {
   Assert.equal(buttonPopup.children.length, 6, "Expected number of engines");
   for (let i = 0; i < buttonPopup.children.length; i++) {
     let item = buttonPopup.children[i];
-    Assert.equal(item.getAttribute("title"), "engine" + (i + 1),
-                 "Expected engine title");
+    Assert.equal(
+      item.getAttribute("title"),
+      "engine" + (i + 1),
+      "Expected engine title"
+    );
   }
 
   // Mouse out of the menu button to close it.
@@ -60,9 +63,11 @@ add_task(async function test() {
   Assert.ok(!menuButton.open, "Submenu should be closed");
 
   // Key up until the menu button is selected.
-  for (let button = null;
-       button != menuButton;
-       button = searchbar.textbox.popup.oneOffButtons.selectedButton) {
+  for (
+    let button = null;
+    button != menuButton;
+    button = searchbar.textbox.popup.oneOffButtons.selectedButton
+  ) {
     EventUtils.synthesizeKey("KEY_ArrowUp");
   }
 
@@ -87,8 +92,13 @@ function getOpenSearchItems() {
   let os = [];
 
   let addEngineList = oneOffsContainer.querySelector(".search-add-engines");
-  for (let item = addEngineList.firstElementChild; item; item = item.nextElementSibling)
+  for (
+    let item = addEngineList.firstElementChild;
+    item;
+    item = item.nextElementSibling
+  ) {
     os.push(item);
+  }
 
   return os;
 }

@@ -63,5 +63,8 @@ function assertDialogVisible(doc) {
 
 function assertDialogHidden(doc) {
   ok(!document.querySelector(".qa-profiler-dialog"), "Dialog is removed");
-  ok(!document.querySelector(".qa-profiler-dialog-mask"), "Dialog mask is removed");
+  ok(
+    !document.querySelector(".qa-profiler-dialog-mask"),
+    "Dialog mask is removed"
+  );
 }

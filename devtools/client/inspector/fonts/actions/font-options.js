@@ -4,12 +4,9 @@
 
 "use strict";
 
-const {
-  UPDATE_PREVIEW_TEXT,
-} = require("./index");
+const { UPDATE_PREVIEW_TEXT } = require("./index");
 
 module.exports = {
-
   /**
    * Update the preview text in the font inspector
    */
@@ -19,5 +16,4 @@ module.exports = {
       previewText,
     };
   },
-
 };

@@ -7,18 +7,26 @@ ChromeUtils.import("resource://normandy/lib/ShieldPreferences.jsm", this);
 
 const OPT_OUT_STUDIES_ENABLED_PREF = "app.shield.optoutstudies.enabled";
 
-const {NormandyTestUtils} = ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm");
-const {addonStudyFactory, preferenceStudyFactory} = NormandyTestUtils.factories;
+const { NormandyTestUtils } = ChromeUtils.import(
+  "resource://testing-common/NormandyTestUtils.jsm"
+);
+const {
+  addonStudyFactory,
+  preferenceStudyFactory,
+} = NormandyTestUtils.factories;
 
 ShieldPreferences.init();
 
 decorate_task(
   withMockPreferences,
   AddonStudies.withStudies([
-    addonStudyFactory({active: true}),
-    addonStudyFactory({active: true}),
+    addonStudyFactory({ active: true }),
+    addonStudyFactory({ active: true }),
   ]),
-  async function testDisableStudiesWhenOptOutDisabled(mockPreferences, [study1, study2]) {
+  async function testDisableStudiesWhenOptOutDisabled(
+    mockPreferences,
+    [study1, study2]
+  ) {
     mockPreferences.set(OPT_OUT_STUDIES_ENABLED_PREF, true);
     const observers = [
       studyEndObserved(study1.recipeId),
@@ -39,11 +47,15 @@ decorate_task(
 decorate_task(
   withMockPreferences,
   PreferenceExperiments.withMockExperiments([
-    preferenceStudyFactory({active: true}),
-    preferenceStudyFactory({active: true}),
+    preferenceStudyFactory({ active: true }),
+    preferenceStudyFactory({ active: true }),
   ]),
   withStub(PreferenceExperiments, "stop"),
-  async function testDisableExperimentsWhenOptOutDisabled(mockPreferences, [study1, study2], stopStub) {
+  async function testDisableExperimentsWhenOptOutDisabled(
+    mockPreferences,
+    [study1, study2],
+    stopStub
+  ) {
     mockPreferences.set(OPT_OUT_STUDIES_ENABLED_PREF, true);
     let stopArgs = [];
     let stoppedBoth = new Promise(resolve => {
@@ -59,12 +71,9 @@ decorate_task(
     Services.prefs.setBoolPref(OPT_OUT_STUDIES_ENABLED_PREF, false);
     await stoppedBoth;
 
-    Assert.deepEqual(
-      stopArgs,
-      [
-        [study1.name, { reason: "general-opt-out" }],
-        [study2.name, { reason: "general-opt-out" }],
-      ],
-    );
+    Assert.deepEqual(stopArgs, [
+      [study1.name, { reason: "general-opt-out" }],
+      [study2.name, { reason: "general-opt-out" }],
+    ]);
   }
 );

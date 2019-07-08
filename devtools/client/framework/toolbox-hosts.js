@@ -9,9 +9,16 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 const Services = require("Services");
-const {DOMHelpers} = require("resource://devtools/client/shared/DOMHelpers.jsm");
+const {
+  DOMHelpers,
+} = require("resource://devtools/client/shared/DOMHelpers.jsm");
 
-loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
+loader.lazyRequireGetter(
+  this,
+  "gDevToolsBrowser",
+  "devtools/client/framework/devtools-browser",
+  true
+);
 
 /* A host should always allow this much space for the page to be displayed.
  * There is also a min-height on the browser, but we still don't want to set
@@ -50,15 +57,19 @@ BottomHost.prototype = {
 
     const gBrowser = this.hostTab.ownerDocument.defaultView.gBrowser;
     const ownerDocument = gBrowser.ownerDocument;
-    this._browserContainer =
-      gBrowser.getBrowserContainer(this.hostTab.linkedBrowser);
+    this._browserContainer = gBrowser.getBrowserContainer(
+      this.hostTab.linkedBrowser
+    );
 
     this._splitter = ownerDocument.createXULElement("splitter");
     this._splitter.setAttribute("class", "devtools-horizontal-splitter");
     // Avoid resizing notification containers
     this._splitter.setAttribute("resizebefore", "flex");
 
-    this.frame = createDevToolsFrame(ownerDocument, "devtools-toolbox-bottom-iframe");
+    this.frame = createDevToolsFrame(
+      ownerDocument,
+      "devtools-toolbox-bottom-iframe"
+    );
     this.frame.height = Math.min(
       Services.prefs.getIntPref(this.heightPref),
       this._browserContainer.clientHeight - MIN_PAGE_SIZE
@@ -134,13 +145,18 @@ class SidebarHost {
     await gDevToolsBrowser.loadBrowserStyleSheet(this.hostTab.ownerGlobal);
     const gBrowser = this.hostTab.ownerDocument.defaultView.gBrowser;
     const ownerDocument = gBrowser.ownerDocument;
-    this._browserContainer = gBrowser.getBrowserContainer(this.hostTab.linkedBrowser);
+    this._browserContainer = gBrowser.getBrowserContainer(
+      this.hostTab.linkedBrowser
+    );
     this._browserPanel = gBrowser.getPanel(this.hostTab.linkedBrowser);
 
     this._splitter = ownerDocument.createXULElement("splitter");
     this._splitter.setAttribute("class", "devtools-side-splitter");
 
-    this.frame = createDevToolsFrame(ownerDocument, "devtools-toolbox-side-iframe");
+    this.frame = createDevToolsFrame(
+      ownerDocument,
+      "devtools-toolbox-side-iframe"
+    );
     this.frame.width = Math.min(
       Services.prefs.getIntPref(this.widthPref),
       this._browserPanel.clientWidth - MIN_PAGE_SIZE
@@ -151,8 +167,7 @@ class SidebarHost {
     const topDoc = topWindow.document.documentElement;
     const isLTR = topWindow.getComputedStyle(topDoc).direction === "ltr";
 
-    if (isLTR && this.type == "right" ||
-        !isLTR && this.type == "left") {
+    if ((isLTR && this.type == "right") || (!isLTR && this.type == "left")) {
       this._browserPanel.appendChild(this._splitter);
       this._browserPanel.appendChild(this.frame);
     } else {
@@ -242,15 +257,25 @@ WindowHost.prototype = {
   create: function() {
     return new Promise(resolve => {
       const flags = "chrome,centerscreen,resizable,dialog=no";
-      const win = Services.ww.openWindow(null, this.WINDOW_URL, "_blank",
-                                      flags, null);
+      const win = Services.ww.openWindow(
+        null,
+        this.WINDOW_URL,
+        "_blank",
+        flags,
+        null
+      );
 
       const frameLoad = () => {
         win.removeEventListener("load", frameLoad, true);
         win.focus();
 
-        this.frame = createDevToolsFrame(win.document, "devtools-toolbox-window-iframe");
-        win.document.getElementById("devtools-toolbox-window").appendChild(this.frame);
+        this.frame = createDevToolsFrame(
+          win.document,
+          "devtools-toolbox-window-iframe"
+        );
+        win.document
+          .getElementById("devtools-toolbox-window")
+          .appendChild(this.frame);
 
         // The forceOwnRefreshDriver attribute is set to avoid Windows only issues with
         // CSS transitions when switching from docked to window hosts.
@@ -419,10 +444,10 @@ function createDevToolsFrame(doc, className) {
 }
 
 exports.Hosts = {
-  "bottom": BottomHost,
-  "left": LeftHost,
-  "right": RightHost,
-  "window": WindowHost,
-  "custom": CustomHost,
-  "page": PageHost,
+  bottom: BottomHost,
+  left: LeftHost,
+  right: RightHost,
+  window: WindowHost,
+  custom: CustomHost,
+  page: PageHost,
 };

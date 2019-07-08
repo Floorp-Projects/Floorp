@@ -12,9 +12,18 @@ const {
   UI_ENABLE_ALLOCATIONS_PREF,
   PROFILER_SAMPLE_RATE_PREF,
 } = require("devtools/client/performance/test/helpers/prefs");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording, waitForAllWidgetsRendered } = require("devtools/client/performance/test/helpers/actions");
-const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+  waitForAllWidgetsRendered,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  setSelectedRecording,
+} = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({

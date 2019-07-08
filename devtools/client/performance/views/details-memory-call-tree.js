@@ -18,10 +18,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
  * CallTree view containing memory allocation sites, controlled by DetailsView.
  */
 const MemoryCallTreeView = extend(DetailsSubview, {
-
-  rerenderPrefs: [
-    "invert-call-tree",
-  ],
+  rerenderPrefs: ["invert-call-tree"],
 
   // Units are in milliseconds.
   rangeChangeDebounceTime: 100,
@@ -66,14 +63,15 @@ const MemoryCallTreeView = extend(DetailsSubview, {
    */
   _onLink: function(treeItem) {
     const { url, line, column } = treeItem.frame.getInfo();
-    PerformanceController.toolbox.viewSourceInDebugger(url, line, column)
-    .then(success => {
-      if (success) {
-        this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
-      } else {
-        this.emit(EVENTS.SOURCE_NOT_FOUND_IN_JS_DEBUGGER);
-      }
-    });
+    PerformanceController.toolbox
+      .viewSourceInDebugger(url, line, column)
+      .then(success => {
+        if (success) {
+          this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
+        } else {
+          this.emit(EVENTS.SOURCE_NOT_FOUND_IN_JS_DEBUGGER);
+        }
+      });
   },
 
   /**

@@ -1,12 +1,17 @@
-var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+var gTestRoot = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content/",
+  "http://127.0.0.1:8888/"
+);
 
 // simple tab load helper, pilfered from browser plugin tests
 function promiseTabLoad(tab, url, eventType = "load") {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     function handle(event) {
-      if (event.originalTarget != tab.linkedBrowser.contentDocument ||
-          event.target.location.href == "about:blank" ||
-          (url && event.target.location.href != url)) {
+      if (
+        event.originalTarget != tab.linkedBrowser.contentDocument ||
+        event.target.location.href == "about:blank" ||
+        (url && event.target.location.href != url)
+      ) {
         return;
       }
       tab.linkedBrowser.removeEventListener(eventType, handle, true);
@@ -21,8 +26,13 @@ function promiseTabLoad(tab, url, eventType = "load") {
 }
 
 // dom event listener helper
-function promiseWaitForEvent(object, eventName, capturing = false, chrome = false) {
-  return new Promise((resolve) => {
+function promiseWaitForEvent(
+  object,
+  eventName,
+  capturing = false,
+  chrome = false
+) {
+  return new Promise(resolve => {
     function listener(event) {
       object.removeEventListener(eventName, listener, capturing, chrome);
       resolve(event);
@@ -40,7 +50,7 @@ add_task(async function() {
 add_task(async function() {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
-  let pluginTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  let pluginTab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
   let prefTab = BrowserTestUtils.addTab(gBrowser);
 
   await promiseTabLoad(pluginTab, gTestRoot + "plugin_test.html");
@@ -69,25 +79,37 @@ add_task(async function() {
 
   for (let iteration = 0; iteration < 5; iteration++) {
     ppromise = promiseWaitForEvent(window, "MozAfterPaint");
-    EventUtils.synthesizeMouseAtCenter(tabStripContainer.childNodes[1], {}, window);
+    EventUtils.synthesizeMouseAtCenter(
+      tabStripContainer.childNodes[1],
+      {},
+      window
+    );
     await ppromise;
 
     await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
-      Assert.ok(XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible(),
-        "plugin is visible");
+      Assert.ok(
+        XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible(),
+        "plugin is visible"
+      );
     });
 
     ppromise = promiseWaitForEvent(window, "MozAfterPaint");
-    EventUtils.synthesizeMouseAtCenter(tabStripContainer.childNodes[2], {}, window);
+    EventUtils.synthesizeMouseAtCenter(
+      tabStripContainer.childNodes[2],
+      {},
+      window
+    );
     await ppromise;
 
     await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
-      Assert.ok(!XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible(),
-        "plugin is hidden");
+      Assert.ok(
+        !XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible(),
+        "plugin is hidden"
+      );
     });
   }
 

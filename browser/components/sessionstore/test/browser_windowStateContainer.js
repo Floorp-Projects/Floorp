@@ -29,8 +29,11 @@ add_task(async function() {
   let winState = JSON.parse(ss.getWindowState(win));
 
   for (let i = 0; i < 4; i++) {
-    Assert.equal(winState.windows[0].tabs[i].userContextId, i + 1,
-                 "1st Window: tabs[" + i + "].userContextId should exist.");
+    Assert.equal(
+      winState.windows[0].tabs[i].userContextId,
+      i + 1,
+      "1st Window: tabs[" + i + "].userContextId should exist."
+    );
   }
 
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
@@ -49,27 +52,37 @@ add_task(async function() {
 
   for (let i = 0; i < 4; i++) {
     let browser = win2.gBrowser.tabs[i].linkedBrowser;
-    await ContentTask.spawn(browser, { expectedId: i + 1 }, async function(args) {
-      Assert.equal(docShell.getOriginAttributes().userContextId,
-                   args.expectedId,
-                   "The docShell has the correct userContextId");
+    await ContentTask.spawn(browser, { expectedId: i + 1 }, async function(
+      args
+    ) {
+      Assert.equal(
+        docShell.getOriginAttributes().userContextId,
+        args.expectedId,
+        "The docShell has the correct userContextId"
+      );
 
-      Assert.equal(content.document.nodePrincipal.originAttributes.userContextId,
-                   args.expectedId,
-                   "The document has the correct userContextId");
+      Assert.equal(
+        content.document.nodePrincipal.originAttributes.userContextId,
+        args.expectedId,
+        "The document has the correct userContextId"
+      );
     });
   }
 
   // Test the last tab, which doesn't have userContextId.
   let browser = win2.gBrowser.tabs[4].linkedBrowser;
   await ContentTask.spawn(browser, { expectedId: 0 }, async function(args) {
-    Assert.equal(docShell.getOriginAttributes().userContextId,
-                 args.expectedId,
-                 "The docShell has the correct userContextId");
+    Assert.equal(
+      docShell.getOriginAttributes().userContextId,
+      args.expectedId,
+      "The docShell has the correct userContextId"
+    );
 
-    Assert.equal(content.document.nodePrincipal.originAttributes.userContextId,
-                 args.expectedId,
-                 "The document has the correct userContextId");
+    Assert.equal(
+      content.document.nodePrincipal.originAttributes.userContextId,
+      args.expectedId,
+      "The document has the correct userContextId"
+    );
   });
 
   await BrowserTestUtils.closeWindow(win);
@@ -92,8 +105,11 @@ add_task(async function() {
   let winState = JSON.parse(ss.getWindowState(win));
 
   for (let i = 0; i < 2; i++) {
-    Assert.equal(winState.windows[0].tabs[i].userContextId, i,
-                 "1st Window: tabs[" + i + "].userContextId should be " + i);
+    Assert.equal(
+      winState.windows[0].tabs[i].userContextId,
+      i,
+      "1st Window: tabs[" + i + "].userContextId should be " + i
+    );
   }
 
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
@@ -114,13 +130,17 @@ add_task(async function() {
   for (let i = 0; i < 2; i++) {
     let browser = win2.gBrowser.tabs[i].linkedBrowser;
     await ContentTask.spawn(browser, { expectedId: i }, async function(args) {
-      Assert.equal(docShell.getOriginAttributes().userContextId,
-                   args.expectedId,
-                   "The docShell has the correct userContextId");
+      Assert.equal(
+        docShell.getOriginAttributes().userContextId,
+        args.expectedId,
+        "The docShell has the correct userContextId"
+      );
 
-      Assert.equal(content.document.nodePrincipal.originAttributes.userContextId,
-                   args.expectedId,
-                   "The document has the correct userContextId");
+      Assert.equal(
+        content.document.nodePrincipal.originAttributes.userContextId,
+        args.expectedId,
+        "The document has the correct userContextId"
+      );
     });
   }
 

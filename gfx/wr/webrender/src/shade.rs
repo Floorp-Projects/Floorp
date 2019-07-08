@@ -508,8 +508,7 @@ pub struct Shaders {
     pub cs_blur_rgba8: LazilyCompiledShader,
     pub cs_border_segment: LazilyCompiledShader,
     pub cs_border_solid: LazilyCompiledShader,
-    pub cs_scale_a8: LazilyCompiledShader,
-    pub cs_scale_rgba8: LazilyCompiledShader,
+    pub cs_scale: LazilyCompiledShader,
     pub cs_line_decoration: LazilyCompiledShader,
     pub cs_gradient: LazilyCompiledShader,
 
@@ -688,18 +687,10 @@ impl Shaders {
             pls_precache_flags,
         )?;
 
-        let cs_scale_a8 = LazilyCompiledShader::new(
+        let cs_scale = LazilyCompiledShader::new(
             ShaderKind::Cache(VertexArrayKind::Scale),
             "cs_scale",
-            &["ALPHA_TARGET"],
-            device,
-            options.precache_flags,
-        )?;
-
-        let cs_scale_rgba8 = LazilyCompiledShader::new(
-            ShaderKind::Cache(VertexArrayKind::Scale),
-            "cs_scale",
-            &["COLOR_TARGET"],
+            &[],
             device,
             options.precache_flags,
         )?;
@@ -854,8 +845,7 @@ impl Shaders {
             cs_line_decoration,
             cs_gradient,
             cs_border_solid,
-            cs_scale_a8,
-            cs_scale_rgba8,
+            cs_scale,
             brush_solid,
             brush_image,
             brush_fast_image,
@@ -937,8 +927,7 @@ impl Shaders {
     }
 
     pub fn deinit(self, device: &mut Device) {
-        self.cs_scale_a8.deinit(device);
-        self.cs_scale_rgba8.deinit(device);
+        self.cs_scale.deinit(device);
         self.cs_blur_a8.deinit(device);
         self.cs_blur_rgba8.deinit(device);
         self.brush_solid.deinit(device);

@@ -8,8 +8,9 @@
 // See Bug 660806. Check that history navigation with the UP/DOWN arrows does not trigger
 // autocompletion.
 
-const TEST_URI = "data:text/html;charset=utf-8,<p>bug 660806 - history " +
-                 "navigation must not show the autocomplete popup";
+const TEST_URI =
+  "data:text/html;charset=utf-8,<p>bug 660806 - history " +
+  "navigation must not show the autocomplete popup";
 
 add_task(async function() {
   // Run in legacy JsTerm.
@@ -50,8 +51,11 @@ async function testHistory() {
   // before checking the popup status.
   await new Promise(executeSoon);
 
-  is(getInputValue(hud), "window.foobarBug660806.location",
-    "input has expected value");
+  is(
+    getInputValue(hud),
+    "window.foobarBug660806.location",
+    "input has expected value"
+  );
 
   ok(!popup.isOpen, "popup is not open");
   popup.off("popup-opened", onShown);

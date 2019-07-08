@@ -39,6 +39,8 @@
   --highlighter-marker-color: #000;
 
   --grey-40: #b1b1b3;
+  --red-40: #ff3b6b;
+  --yellow-60: #d7b600;
 }
 
 /**
@@ -735,6 +737,34 @@
 :-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio-separator:before {
   content: "-";
   margin-inline-start: 3px;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-text-label:before {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  content: "";
+  margin-inline-end: 4px;
+  vertical-align: -2px;
+  background-image: none;
+  background-position: center;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-text-label.fail:before {
+  background-image: url(chrome://devtools/skin/images/error-small.svg);
+  fill: var(--red-40);
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-text-label.WARNING:before {
+  background-image: url(chrome://devtools/skin/images/alert-small.svg);
+  fill: var(--yellow-60);
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-text-label.BEST_PRACTICES:before {
+  background-image: url(chrome://devtools/skin/images/info-small.svg);
 }
 
 :-moz-native-anonymous .accessible-infobar-name:not(:empty) {

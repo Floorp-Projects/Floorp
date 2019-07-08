@@ -14,8 +14,10 @@ function run_test() {
   let method1Called = false;
 
   let testObject = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIScriptableOK,
-                                            Ci.nsIScriptableWithNotXPCOM]),
+    QueryInterface: ChromeUtils.generateQI([
+      Ci.nsIScriptableOK,
+      Ci.nsIScriptableWithNotXPCOM,
+    ]),
 
     method1() {
       method1Called = true;
@@ -58,7 +60,11 @@ function run_test() {
     xpcomObject.QueryInterface(Ci.nsIScriptableWithNotXPCOM);
     ok(false, "Should not have implemented nsIScriptableWithNotXPCOM");
   } catch (e) {
-    ok(true, "Should not have implemented nsIScriptableWithNotXPCOM. Correctly threw error: " + e);
+    ok(
+      true,
+      "Should not have implemented nsIScriptableWithNotXPCOM. Correctly threw error: " +
+        e
+    );
   }
   strictEqual(xpcomObject.method2, undefined);
 }

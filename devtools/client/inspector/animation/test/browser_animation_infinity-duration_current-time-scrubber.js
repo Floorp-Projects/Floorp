@@ -12,12 +12,16 @@ add_task(async function() {
 
   info("Set initial state");
   await clickOnCurrentTimeScrubberController(animationInspector, panel, 0);
-  const initialCurrentTime = animationInspector.state.animations[0].state.currentTime;
+  const initialCurrentTime =
+    animationInspector.state.animations[0].state.currentTime;
 
   info("Check whether the animation currentTime was increased");
   await clickOnCurrentTimeScrubberController(animationInspector, panel, 1);
-  ok(initialCurrentTime <= animationInspector.state.animations[0].state.currentTime,
-     "currentTime should be increased");
+  ok(
+    initialCurrentTime <=
+      animationInspector.state.animations[0].state.currentTime,
+    "currentTime should be increased"
+  );
 
   info("Check whether the progress bar was moved");
   const areaEl = panel.querySelector(".keyframes-progress-bar-area");
@@ -26,6 +30,8 @@ add_task(async function() {
   const barBounds = barEl.getBoundingClientRect();
   const barX = barBounds.x + barBounds.width / 2 - controllerBounds.x;
   const expectedBarX = controllerBounds.width * 0.5;
-  ok(Math.abs(barX - expectedBarX) < 1,
-     "Progress bar should indicate at progress of 0.5");
+  ok(
+    Math.abs(barX - expectedBarX) < 1,
+    "Progress bar should indicate at progress of 0.5"
+  );
 });

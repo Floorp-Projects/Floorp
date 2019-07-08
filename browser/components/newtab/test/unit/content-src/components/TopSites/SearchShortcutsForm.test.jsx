@@ -1,6 +1,9 @@
-import {SearchShortcutsForm, SelectableSearchShortcut} from "content-src/components/TopSites/SearchShortcutsForm";
+import {
+  SearchShortcutsForm,
+  SelectableSearchShortcut,
+} from "content-src/components/TopSites/SearchShortcutsForm";
 import React from "react";
-import {shallow} from "enzyme";
+import { shallow } from "enzyme";
 
 describe("<SearchShortcutsForm>", () => {
   let wrapper;
@@ -10,8 +13,10 @@ describe("<SearchShortcutsForm>", () => {
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     dispatchStub = sandbox.stub();
-    const defaultProps = {rows: [], searchShortcuts: []};
-    wrapper = shallow(<SearchShortcutsForm TopSites={defaultProps} dispatch={dispatchStub} />);
+    const defaultProps = { rows: [], searchShortcuts: [] };
+    wrapper = shallow(
+      <SearchShortcutsForm TopSites={defaultProps} dispatch={dispatchStub} />
+    );
   });
 
   afterEach(() => {
@@ -24,18 +29,27 @@ describe("<SearchShortcutsForm>", () => {
   });
 
   it("should render SelectableSearchShortcut components", () => {
-    wrapper.setState({shortcuts: [{}, {}]});
+    wrapper.setState({ shortcuts: [{}, {}] });
 
-    assert.lengthOf(wrapper.find(".search-shortcuts-container div").children(), 2);
-    assert.equal(wrapper.find(".search-shortcuts-container div").children().at(0)
-      .type(), SelectableSearchShortcut);
+    assert.lengthOf(
+      wrapper.find(".search-shortcuts-container div").children(),
+      2
+    );
+    assert.equal(
+      wrapper
+        .find(".search-shortcuts-container div")
+        .children()
+        .at(0)
+        .type(),
+      SelectableSearchShortcut
+    );
   });
 
   it("should render SelectableSearchShortcut components", () => {
     const onCloseStub = sandbox.stub();
-    const fakeEvent = {preventDefault: sandbox.stub()};
-    wrapper.setState({shortcuts: [{}, {}]});
-    wrapper.setProps({onClose: onCloseStub});
+    const fakeEvent = { preventDefault: sandbox.stub() };
+    wrapper.setState({ shortcuts: [{}, {}] });
+    wrapper.setProps({ onClose: onCloseStub });
 
     wrapper.find(".done").simulate("click", fakeEvent);
 

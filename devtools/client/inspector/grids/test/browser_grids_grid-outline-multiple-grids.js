@@ -36,29 +36,41 @@ add_task(async function() {
   info("Toggling ON the CSS grid highlighter for #grid1.");
   let onHighlighterShown = highlighters.once("grid-highlighter-shown");
   const onGridOutlineRendered = waitForDOM(doc, "#grid-cell-group rect", 2);
-  let onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length === 2 &&
-    state.grids[0].highlighted &&
-    !state.grids[1].highlighted);
+  let onCheckboxChange = waitUntilState(
+    store,
+    state =>
+      state.grids.length === 2 &&
+      state.grids[0].highlighted &&
+      !state.grids[1].highlighted
+  );
   checkbox1.click();
   await onHighlighterShown;
   await onCheckboxChange;
   const elements = await onGridOutlineRendered;
 
   info("Checking the grid outline for #grid1 is shown.");
-  ok(doc.getElementById("grid-outline-container"), "Grid outline container is rendered.");
+  ok(
+    doc.getElementById("grid-outline-container"),
+    "Grid outline container is rendered."
+  );
   is(elements.length, 2, "Grid outline is shown.");
 
   info("Toggling ON the CSS grid highlighter for #grid2.");
   onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length === 2 &&
-    state.grids[0].highlighted &&
-    state.grids[1].highlighted);
+  onCheckboxChange = waitUntilState(
+    store,
+    state =>
+      state.grids.length === 2 &&
+      state.grids[0].highlighted &&
+      state.grids[1].highlighted
+  );
   checkbox2.click();
   await onHighlighterShown;
   await onCheckboxChange;
 
   info("Checking the grid outline is not shown.");
-  ok(!doc.getElementById("grid-outline-container"), "Grid outline is not rendered.");
+  ok(
+    !doc.getElementById("grid-outline-container"),
+    "Grid outline is not rendered."
+  );
 });

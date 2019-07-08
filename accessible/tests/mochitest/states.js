@@ -72,92 +72,178 @@ const kExtraState = 1;
  * @param aAbsentExtraState  Extra state bits that are not wanted.
  * @param aTestName          The test name.
  */
-function testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
-                    aAbsentExtraState, aTestName) {
+function testStates(
+  aAccOrElmOrID,
+  aState,
+  aExtraState,
+  aAbsentState,
+  aAbsentExtraState,
+  aTestName
+) {
   var [state, extraState] = getStates(aAccOrElmOrID);
   var role = getRole(aAccOrElmOrID);
-  var id = prettyName(aAccOrElmOrID) + (aTestName ? " [" + aTestName + "]" : "");
+  var id =
+    prettyName(aAccOrElmOrID) + (aTestName ? " [" + aTestName + "]" : "");
 
   // Primary test.
   if (aState) {
-    isState(state & aState, aState, false,
-            "wrong state bits for " + id + "!");
+    isState(state & aState, aState, false, "wrong state bits for " + id + "!");
   }
 
-  if (aExtraState)
-    isState(extraState & aExtraState, aExtraState, true,
-            "wrong extra state bits for " + id + "!");
+  if (aExtraState) {
+    isState(
+      extraState & aExtraState,
+      aExtraState,
+      true,
+      "wrong extra state bits for " + id + "!"
+    );
+  }
 
-  if (aAbsentState)
-    isState(state & aAbsentState, 0, false,
-            "state bits should not be present in ID " + id + "!");
+  if (aAbsentState) {
+    isState(
+      state & aAbsentState,
+      0,
+      false,
+      "state bits should not be present in ID " + id + "!"
+    );
+  }
 
-  if (aAbsentExtraState)
-    isState(extraState & aAbsentExtraState, 0, true,
-            "extraState bits should not be present in ID " + id + "!");
+  if (aAbsentExtraState) {
+    isState(
+      extraState & aAbsentExtraState,
+      0,
+      true,
+      "extraState bits should not be present in ID " + id + "!"
+    );
+  }
 
   // Additional test.
 
   // focused/focusable
-  if (state & STATE_FOCUSED)
-    isState(state & STATE_FOCUSABLE, STATE_FOCUSABLE, false,
-            "Focussed " + id + " must be focusable!");
+  if (state & STATE_FOCUSED) {
+    isState(
+      state & STATE_FOCUSABLE,
+      STATE_FOCUSABLE,
+      false,
+      "Focussed " + id + " must be focusable!"
+    );
+  }
 
-  if (aAbsentState && (aAbsentState & STATE_FOCUSABLE)) {
-    isState(state & STATE_FOCUSED, 0, false,
-              "Not focusable " + id + " must be not focused!");
+  if (aAbsentState && aAbsentState & STATE_FOCUSABLE) {
+    isState(
+      state & STATE_FOCUSED,
+      0,
+      false,
+      "Not focusable " + id + " must be not focused!"
+    );
   }
 
   // multiline/singleline
-  if (extraState & EXT_STATE_MULTI_LINE)
-    isState(extraState & EXT_STATE_SINGLE_LINE, 0, true,
-            "Multiline " + id + " cannot be singleline!");
+  if (extraState & EXT_STATE_MULTI_LINE) {
+    isState(
+      extraState & EXT_STATE_SINGLE_LINE,
+      0,
+      true,
+      "Multiline " + id + " cannot be singleline!"
+    );
+  }
 
-  if (extraState & EXT_STATE_SINGLE_LINE)
-    isState(extraState & EXT_STATE_MULTI_LINE, 0, true,
-            "Singleline " + id + " cannot be multiline!");
+  if (extraState & EXT_STATE_SINGLE_LINE) {
+    isState(
+      extraState & EXT_STATE_MULTI_LINE,
+      0,
+      true,
+      "Singleline " + id + " cannot be multiline!"
+    );
+  }
 
   // expanded/collapsed/expandable
-  if (state & STATE_COLLAPSED || state & STATE_EXPANDED)
-    isState(extraState & EXT_STATE_EXPANDABLE, EXT_STATE_EXPANDABLE, true,
-            "Collapsed or expanded " + id + " must be expandable!");
+  if (state & STATE_COLLAPSED || state & STATE_EXPANDED) {
+    isState(
+      extraState & EXT_STATE_EXPANDABLE,
+      EXT_STATE_EXPANDABLE,
+      true,
+      "Collapsed or expanded " + id + " must be expandable!"
+    );
+  }
 
-  if (state & STATE_COLLAPSED)
-    isState(state & STATE_EXPANDED, 0, false,
-            "Collapsed " + id + " cannot be expanded!");
+  if (state & STATE_COLLAPSED) {
+    isState(
+      state & STATE_EXPANDED,
+      0,
+      false,
+      "Collapsed " + id + " cannot be expanded!"
+    );
+  }
 
-  if (state & STATE_EXPANDED)
-    isState(state & STATE_COLLAPSED, 0, false,
-            "Expanded " + id + " cannot be collapsed!");
+  if (state & STATE_EXPANDED) {
+    isState(
+      state & STATE_COLLAPSED,
+      0,
+      false,
+      "Expanded " + id + " cannot be collapsed!"
+    );
+  }
 
-  if (aAbsentState && (extraState & EXT_STATE_EXPANDABLE)) {
+  if (aAbsentState && extraState & EXT_STATE_EXPANDABLE) {
     if (aAbsentState & STATE_EXPANDED) {
-      isState(state & STATE_COLLAPSED, STATE_COLLAPSED, false,
-              "Not expanded " + id + " must be collapsed!");
+      isState(
+        state & STATE_COLLAPSED,
+        STATE_COLLAPSED,
+        false,
+        "Not expanded " + id + " must be collapsed!"
+      );
     } else if (aAbsentState & STATE_COLLAPSED) {
-      isState(state & STATE_EXPANDED, STATE_EXPANDED, false,
-              "Not collapsed " + id + " must be expanded!");
+      isState(
+        state & STATE_EXPANDED,
+        STATE_EXPANDED,
+        false,
+        "Not collapsed " + id + " must be expanded!"
+      );
     }
   }
 
   // checked/mixed/checkable
-  if (state & STATE_CHECKED || state & STATE_MIXED &&
-      role != ROLE_TOGGLE_BUTTON && role != ROLE_PROGRESSBAR)
-    isState(state & STATE_CHECKABLE, STATE_CHECKABLE, false,
-            "Checked or mixed element must be checkable!");
+  if (
+    state & STATE_CHECKED ||
+    (state & STATE_MIXED &&
+      role != ROLE_TOGGLE_BUTTON &&
+      role != ROLE_PROGRESSBAR)
+  ) {
+    isState(
+      state & STATE_CHECKABLE,
+      STATE_CHECKABLE,
+      false,
+      "Checked or mixed element must be checkable!"
+    );
+  }
 
-  if (state & STATE_CHECKED)
-    isState(state & STATE_MIXED, 0, false,
-            "Checked element cannot be state mixed!");
+  if (state & STATE_CHECKED) {
+    isState(
+      state & STATE_MIXED,
+      0,
+      false,
+      "Checked element cannot be state mixed!"
+    );
+  }
 
-  if (state & STATE_MIXED)
-    isState(state & STATE_CHECKED, 0, false,
-            "Mixed element cannot be state checked!");
+  if (state & STATE_MIXED) {
+    isState(
+      state & STATE_CHECKED,
+      0,
+      false,
+      "Mixed element cannot be state checked!"
+    );
+  }
 
   // selected/selectable
-  if ((state & STATE_SELECTED) && !(aAbsentState & STATE_SELECTABLE)) {
-    isState(state & STATE_SELECTABLE, STATE_SELECTABLE, false,
-            "Selected element must be selectable!");
+  if (state & STATE_SELECTED && !(aAbsentState & STATE_SELECTABLE)) {
+    isState(
+      state & STATE_SELECTABLE,
+      STATE_SELECTABLE,
+      false,
+      "Selected element must be selectable!"
+    );
   }
 }
 
@@ -174,13 +260,15 @@ function testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
 function testStatesInSubtree(aAccOrElmOrID, aState, aExtraState, aAbsentState) {
   // test accessible and its subtree for propagated states.
   var acc = getAccessible(aAccOrElmOrID);
-  if (!acc)
+  if (!acc) {
     return;
+  }
 
-  if (getRole(acc) != ROLE_TEXT_LEAF)
+  if (getRole(acc) != ROLE_TEXT_LEAF) {
     // Right now, text leafs don't get tested because the states are not being
     // propagated.
     testStates(acc, aState, aExtraState, aAbsentState);
+  }
 
   // Iterate over its children to see if the state got propagated.
   var children = null;
@@ -202,9 +290,13 @@ function testStatesInSubtree(aAccOrElmOrID, aState, aExtraState, aAbsentState) {
  */
 function testIsDefunct(aAccessible, aTestName) {
   var id = prettyName(aAccessible) + (aTestName ? " [" + aTestName + "]" : "");
-  var [/* state*/, extraState] = getStates(aAccessible);
-  isState(extraState & EXT_STATE_DEFUNCT, EXT_STATE_DEFUNCT, true,
-          "no defuct state for " + id + "!");
+  var [, /* state*/ extraState] = getStates(aAccessible);
+  isState(
+    extraState & EXT_STATE_DEFUNCT,
+    EXT_STATE_DEFUNCT,
+    true,
+    "no defuct state for " + id + "!"
+  );
 }
 
 function getStringStates(aAccOrElmOrID) {
@@ -214,10 +306,12 @@ function getStringStates(aAccOrElmOrID) {
 
 function getStates(aAccOrElmOrID) {
   var acc = getAccessible(aAccOrElmOrID);
-  if (!acc)
+  if (!acc) {
     return [0, 0];
+  }
 
-  var state = {}, extraState = {};
+  var state = {},
+    extraState = {};
   acc.getState(state, extraState);
 
   return [state.value, extraState.value];
@@ -228,8 +322,10 @@ function getStates(aAccOrElmOrID) {
  */
 function hasState(aAccOrElmOrID, aState, aExtraState) {
   var [state, exstate] = getStates(aAccOrElmOrID);
-  return (aState ? state & aState : true) &&
-    (aExtraState ? exstate & aExtraState : true);
+  return (
+    (aState ? state & aState : true) &&
+    (aExtraState ? exstate & aExtraState : true)
+  );
 }
 
 // //////////////////////////////////////////////////////////////////////////////
@@ -246,14 +342,18 @@ function isState(aState1, aState2, aIsExtraStates, aMsg) {
 
   var got = "0";
   if (aState1) {
-    got = statesToString(aIsExtraStates ? 0 : aState1,
-                         aIsExtraStates ? aState1 : 0);
+    got = statesToString(
+      aIsExtraStates ? 0 : aState1,
+      aIsExtraStates ? aState1 : 0
+    );
   }
 
   var expected = "0";
   if (aState2) {
-    expected = statesToString(aIsExtraStates ? 0 : aState2,
-                              aIsExtraStates ? aState2 : 0);
+    expected = statesToString(
+      aIsExtraStates ? 0 : aState2,
+      aIsExtraStates ? aState2 : 0
+    );
   }
 
   ok(false, aMsg + "got '" + got + "', expected '" + expected + "'");

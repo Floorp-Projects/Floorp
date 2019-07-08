@@ -33,13 +33,13 @@ const testMethods = [
   ["foo"],
   ["foO"],
   ["fOo"],
-  ["Foo"]
-]
+  ["Foo"],
+];
 
 function run_test() {
   var chan = NetUtil.newChannel({
     uri: "http://localhost/",
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   }).QueryInterface(Ci.nsIHttpChannel);
 
   for (var i = 0; i < testMethods.length; i++) {

@@ -1,12 +1,14 @@
 "use strict";
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // The following are used to compare against a well-tested reference
 // implementation of file I/O.
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var myok = ok;
 var myis = is;
@@ -54,17 +56,20 @@ var maketest = function(prefix, test) {
       }
       utils.info("This was a promise");
       // The test returns a promise
-      result = result.then(function test_complete() {
-        utils.info("Complete");
-      }, function catch_uncaught_errors(err) {
-        utils.fail("Uncaught error " + err);
-        if (err && typeof err == "object" && "message" in err) {
-          utils.fail("(" + err.message + ")");
+      result = result.then(
+        function test_complete() {
+          utils.info("Complete");
+        },
+        function catch_uncaught_errors(err) {
+          utils.fail("Uncaught error " + err);
+          if (err && typeof err == "object" && "message" in err) {
+            utils.fail("(" + err.message + ")");
+          }
+          if (err && typeof err == "object" && "stack" in err) {
+            utils.fail("at " + err.stack);
+          }
         }
-        if (err && typeof err == "object" && "stack" in err) {
-          utils.fail("at " + err.stack);
-        }
-      });
+      );
       return result;
     } catch (x) {
       utils.fail("Error " + x + " at " + x.stack);
@@ -86,10 +91,12 @@ var reference_fetch_file = function reference_fetch_file(path, test) {
   test.info("Fetching file " + path);
   return new Promise((resolve, reject) => {
     let file = new FileUtils.File(path);
-    NetUtil.asyncFetch({
-      uri: NetUtil.newURI(file),
-      loadUsingSystemPrincipal: true,
-    }, function(stream, status) {
+    NetUtil.asyncFetch(
+      {
+        uri: NetUtil.newURI(file),
+        loadUsingSystemPrincipal: true,
+      },
+      function(stream, status) {
         if (!Components.isSuccessCode(status)) {
           reject(status);
           return;
@@ -106,7 +113,8 @@ var reference_fetch_file = function reference_fetch_file(path, test) {
         } else {
           resolve(result);
         }
-      });
+      }
+    );
   });
 };
 
@@ -125,7 +133,8 @@ function toggleDebugTest(pref, consoleListener) {
   Services.prefs.setBoolPref("toolkit.osfile.log", pref);
   Services.prefs.setBoolPref("toolkit.osfile.log.redirect", pref);
   Services.console[pref ? "registerListener" : "unregisterListener"](
-    consoleListener);
+    consoleListener
+  );
 }
 
 var test = maketest("Main", function main(test) {
@@ -146,8 +155,15 @@ var test = maketest("Main", function main(test) {
 /**
  * A file that we know exists and that can be used for reading.
  */
-var EXISTING_FILE = OS.Path.join("chrome", "toolkit", "components",
-  "osfile", "tests", "mochi", "main_test_osfile_async.js");
+var EXISTING_FILE = OS.Path.join(
+  "chrome",
+  "toolkit",
+  "components",
+  "osfile",
+  "tests",
+  "mochi",
+  "main_test_osfile_async.js"
+);
 
 /**
  * Test OS.File.stat and OS.File.prototype.stat
@@ -173,7 +189,11 @@ var test_stat = maketest("stat", function stat(test) {
     test.ok(true, "stat 2 has worked " + stat2);
     test.ok(stat2, "stat 2 is not empty");
     for (let key in stat2) {
-      test.is("" + stat1[key], "" + stat2[key], "Stat field " + key + "is the same");
+      test.is(
+        "" + stat1[key],
+        "" + stat2[key],
+        "Stat field " + key + "is the same"
+      );
     }
   })();
 });
@@ -181,25 +201,28 @@ var test_stat = maketest("stat", function stat(test) {
 /**
  * Test feature detection using OS.File.Info.prototype on main thread
  */
-var test_info_features_detect = maketest("features_detect", function features_detect(test) {
-  return (async function() {
-    if (OS.Constants.Win) {
-      // see if winBirthDate is defined
-      if ("winBirthDate" in OS.File.Info.prototype) {
-        test.ok(true, "winBirthDate is defined");
-      } else {
-        test.fail("winBirthDate not defined though we are under Windows");
+var test_info_features_detect = maketest(
+  "features_detect",
+  function features_detect(test) {
+    return (async function() {
+      if (OS.Constants.Win) {
+        // see if winBirthDate is defined
+        if ("winBirthDate" in OS.File.Info.prototype) {
+          test.ok(true, "winBirthDate is defined");
+        } else {
+          test.fail("winBirthDate not defined though we are under Windows");
+        }
+      } else if (OS.Constants.libc) {
+        // see if unixGroup is defined
+        if ("unixGroup" in OS.File.Info.prototype) {
+          test.ok(true, "unixGroup is defined");
+        } else {
+          test.fail("unixGroup is not defined though we are under Unix");
+        }
       }
-    } else if (OS.Constants.libc) {
-      // see if unixGroup is defined
-      if ("unixGroup" in OS.File.Info.prototype) {
-        test.ok(true, "unixGroup is defined");
-      } else {
-        test.fail("unixGroup is not defined though we are under Unix");
-      }
-    }
-  })();
-});
+    })();
+  }
+);
 
 /**
  * Test file.{getPosition, setPosition}
@@ -211,19 +234,27 @@ var test_position = maketest("position", function position(test) {
     try {
       let view = await file.read();
       test.info("First batch of content read");
-      let CHUNK_SIZE = 178;// An arbitrary number of bytes to read from the file
+      let CHUNK_SIZE = 178; // An arbitrary number of bytes to read from the file
       let pos = await file.getPosition();
       test.info("Obtained position");
       test.is(pos, view.byteLength, "getPosition returned the end of the file");
       pos = await file.setPosition(-CHUNK_SIZE, OS.File.POS_END);
       test.info("Changed position");
-      test.is(pos, view.byteLength - CHUNK_SIZE, "setPosition returned the correct position");
+      test.is(
+        pos,
+        view.byteLength - CHUNK_SIZE,
+        "setPosition returned the correct position"
+      );
 
       let view2 = await file.read();
       test.info("Read the end of the file");
       for (let i = 0; i < CHUNK_SIZE; ++i) {
         if (view2[i] != view[i + view.byteLength - CHUNK_SIZE]) {
-          test.is(view2[i], view[i], "setPosition put us in the right position");
+          test.is(
+            view2[i],
+            view[i],
+            "setPosition put us in the right position"
+          );
         }
       }
     } finally {
@@ -242,7 +273,10 @@ var test_iter = maketest("iter", function iter(test) {
     // Trivial walks through the directory
     test.info("Preparing iteration");
     let iterator = new OS.File.DirectoryIterator(currentDir);
-    let temporary_file_name = OS.Path.join(currentDir, "empty-temporary-file.tmp");
+    let temporary_file_name = OS.Path.join(
+      currentDir,
+      "empty-temporary-file.tmp"
+    );
     try {
       await OS.File.remove(temporary_file_name);
     } catch (err) {
@@ -258,14 +292,29 @@ var test_iter = maketest("iter", function iter(test) {
     for (let entry of reference_dir_contents(currentDir)) {
       referenceEntries.add(entry);
     }
-    test.is(referenceEntries.size, allFiles1.length, "All the entries in the directory have been listed");
+    test.is(
+      referenceEntries.size,
+      allFiles1.length,
+      "All the entries in the directory have been listed"
+    );
     for (let entry of allFiles1) {
-      test.ok(referenceEntries.has(entry.path), "File " + entry.path + " effectively exists");
+      test.ok(
+        referenceEntries.has(entry.path),
+        "File " + entry.path + " effectively exists"
+      );
       // Ensure that we have correct isDir and isSymLink
       // Current directory is {objdir}/_tests/testing/mochitest/, assume it has some dirs and symlinks.
       var f = new FileUtils.File(entry.path);
-      test.is(entry.isDir, f.isDirectory(), "Get file " + entry.path + " isDir correctly");
-      test.is(entry.isSymLink, f.isSymlink(), "Get file " + entry.path + " isSymLink correctly");
+      test.is(
+        entry.isDir,
+        f.isDirectory(),
+        "Get file " + entry.path + " isDir correctly"
+      );
+      test.is(
+        entry.isSymLink,
+        f.isSymlink(),
+        "Get file " + entry.path + " isSymLink correctly"
+      );
     }
 
     await iterator.close();
@@ -285,10 +334,18 @@ var test_iter = maketest("iter", function iter(test) {
       allFiles2.push(entry);
     });
     test.info("Obtained all files through forEach");
-    is(allFiles1.length, allFiles2.length, "Both runs returned the same number of files");
+    is(
+      allFiles1.length,
+      allFiles2.length,
+      "Both runs returned the same number of files"
+    );
     for (let i = 0; i < allFiles1.length; ++i) {
       if (allFiles1[i].path != allFiles2[i].path) {
-        test.is(allFiles1[i].path, allFiles2[i].path, "Both runs return the same files");
+        test.is(
+          allFiles1[i].path,
+          allFiles2[i].path,
+          "Both runs return the same files"
+        );
         break;
       }
     }
@@ -306,9 +363,17 @@ var test_iter = maketest("iter", function iter(test) {
     iterator = new OS.File.DirectoryIterator(currentDir);
     await iterator.forEach(function cb(entry, index, iterator) {
       if (index < BATCH_LENGTH) {
-        test.is(entry.path, someFiles1[index].path, "Both runs return the same files (part 1)");
+        test.is(
+          entry.path,
+          someFiles1[index].path,
+          "Both runs return the same files (part 1)"
+        );
       } else if (index < 2 * BATCH_LENGTH) {
-        test.is(entry.path, someFiles2[index - BATCH_LENGTH].path, "Both runs return the same files (part 2)");
+        test.is(
+          entry.path,
+          someFiles2[index - BATCH_LENGTH].path,
+          "Both runs return the same files (part 2)"
+        );
       } else if (index == 2 * BATCH_LENGTH) {
         test.info("Attempting to stop asynchronous forEach");
         return iterator.close();
@@ -320,14 +385,21 @@ var test_iter = maketest("iter", function iter(test) {
     await iterator.close();
 
     // Ensuring that we find new files if they appear
-    let file = await OS.File.open(temporary_file_name, { write: true } );
+    let file = await OS.File.open(temporary_file_name, { write: true });
     file.close();
     iterator = new OS.File.DirectoryIterator(currentDir);
     try {
       let files = await iterator.nextBatch();
-      is(files.length, allFiles1.length + 1, "The directory iterator has noticed the new file");
+      is(
+        files.length,
+        allFiles1.length + 1,
+        "The directory iterator has noticed the new file"
+      );
       let exists = await iterator.exists();
-      test.ok(exists, "After nextBatch, iterator detects that the directory exists");
+      test.ok(
+        exists,
+        "After nextBatch, iterator detects that the directory exists"
+      );
     } finally {
       await iterator.close();
     }
@@ -338,7 +410,10 @@ var test_iter = maketest("iter", function iter(test) {
       iterator = null;
       iterator = new OS.File.DirectoryIterator("/I do not exist");
       let exists = await iterator.exists();
-      test.ok(!exists, "Before any iteration, iterator detects that the directory doesn't exist");
+      test.ok(
+        !exists,
+        "Before any iteration, iterator detects that the directory doesn't exist"
+      );
       let exn = null;
       try {
         await iterator.next();
@@ -346,18 +421,27 @@ var test_iter = maketest("iter", function iter(test) {
         if (ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
           exn = ex;
           let exists = await iterator.exists();
-          test.ok(!exists, "After one iteration, iterator detects that the directory doesn't exist");
+          test.ok(
+            !exists,
+            "After one iteration, iterator detects that the directory doesn't exist"
+          );
         } else {
           throw ex;
         }
       }
-      test.ok(exn, "Iterating through a directory that does not exist has failed with becauseNoSuchFile");
+      test.ok(
+        exn,
+        "Iterating through a directory that does not exist has failed with becauseNoSuchFile"
+      );
     } finally {
       if (iterator) {
         iterator.close();
       }
     }
-    test.ok(!!iterator, "The directory iterator for a non-existing directory was correctly created");
+    test.ok(
+      !!iterator,
+      "The directory iterator for a non-existing directory was correctly created"
+    );
   })();
 });
 
@@ -382,8 +466,9 @@ var test_debug = maketest("debug", function debug(test) {
       try {
         Services.prefs.setBoolPref("toolkit.osfile.log", pref);
       } catch (x) {
-        test.fail("Setting OS.Shared.DEBUG to " + pref +
-          " should not cause error.");
+        test.fail(
+          "Setting OS.Shared.DEBUG to " + pref + " should not cause error."
+        );
       } finally {
         test.is(OS.Shared.DEBUG, pref, "OS.Shared.DEBUG is set correctly.");
       }

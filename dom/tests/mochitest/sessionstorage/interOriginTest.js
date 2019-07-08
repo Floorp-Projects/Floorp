@@ -8,23 +8,23 @@ const slavePath = "/tests/dom/tests/mochitest/sessionstorage/";
 
 window.addEventListener("message", onMessageReceived);
 
-function onMessageReceived(event)
-{
+function onMessageReceived(event) {
   //alert("master got event: "+event.data);
-  switch (event.data)
-  {
+  switch (event.data) {
     // Indication of the frame onload event
     case "frame loaded":
-      if (--slaveLoadsPending)
+      if (--slaveLoadsPending) {
         break;
+      }
 
-      // Just fall through...
+    // Just fall through...
 
     // Indication of successfully finished step of a test
     case "perf":
       // We called doStep before the frame was load
-      if (event.data == "perf")
+      if (event.data == "perf") {
         doStep();
+      }
 
       slave.postMessage("step", slaveOrigin);
       break;

@@ -36,23 +36,26 @@ const TEST_URI = `
 `;
 
 const TESTS = [
-  {selector: "#id1", expectedTextContent: "georgia, arial, sans-serif"},
-  {selector: "#id2", expectedTextContent: "georgia,arial,sans-serif"},
-  {selector: "#id3", expectedTextContent: "georgia ,arial ,sans-serif"},
-  {selector: "#id4", expectedTextContent: "arial, georgia, sans-serif"},
-  {selector: "#id5", expectedTextContent: "helvetica !important"},
+  { selector: "#id1", expectedTextContent: "georgia, arial, sans-serif" },
+  { selector: "#id2", expectedTextContent: "georgia,arial,sans-serif" },
+  { selector: "#id3", expectedTextContent: "georgia ,arial ,sans-serif" },
+  { selector: "#id4", expectedTextContent: "arial, georgia, sans-serif" },
+  { selector: "#id5", expectedTextContent: "helvetica !important" },
 ];
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
-  for (const {selector, expectedTextContent} of TESTS) {
+  for (const { selector, expectedTextContent } of TESTS) {
     await selectNode(selector, inspector);
     info("Looking for font-family property value in selector " + selector);
 
     const prop = getRuleViewProperty(view, selector, "font-family").valueSpan;
-    is(prop.textContent, expectedTextContent,
-       "The font-family property value is correct");
+    is(
+      prop.textContent,
+      expectedTextContent,
+      "The font-family property value is correct"
+    );
   }
 });

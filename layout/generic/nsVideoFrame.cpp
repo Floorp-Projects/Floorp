@@ -238,18 +238,19 @@ already_AddRefed<Layer> nsVideoFrame::BuildLayer(
   return result.forget();
 }
 
-class DispatchResizeToControls : public Runnable {
+class DispatchResizeEvent : public Runnable {
  public:
-  explicit DispatchResizeToControls(nsIContent* aContent)
-      : mozilla::Runnable("DispatchResizeToControls"), mContent(aContent) {}
+  explicit DispatchResizeEvent(nsIContent* aContent, const nsString& aName)
+      : mozilla::Runnable("DispatchResizeEvent"),
+        mContent(aContent),
+        mName(aName) {}
   NS_IMETHOD Run() override {
-    nsContentUtils::DispatchTrustedEvent(
-        mContent->OwnerDoc(), mContent,
-        NS_LITERAL_STRING("resizevideocontrols"), CanBubble::eNo,
-        Cancelable::eNo);
+    nsContentUtils::DispatchTrustedEvent(mContent->OwnerDoc(), mContent, mName,
+                                         CanBubble::eNo, Cancelable::eNo);
     return NS_OK;
   }
   nsCOMPtr<nsIContent> mContent;
+  nsString mName;
 };
 
 void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
@@ -354,10 +355,12 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       FinishReflowChild(child, aPresContext, kidDesiredSize, &kidReflowInput,
                         borderPadding.left, borderPadding.top, 0);
 
-      if (child->GetContent() == videoControlsDiv &&
-          child->GetSize() != oldChildSize) {
+      if (child->GetSize() != oldChildSize) {
+        const nsString name = child->GetContent() == videoControlsDiv
+                                  ? NS_LITERAL_STRING("resizevideocontrols")
+                                  : NS_LITERAL_STRING("resizecaption");
         RefPtr<Runnable> event =
-            new DispatchResizeToControls(child->GetContent());
+            new DispatchResizeEvent(child->GetContent(), name);
         nsContentUtils::AddScriptRunner(event);
       }
     } else {

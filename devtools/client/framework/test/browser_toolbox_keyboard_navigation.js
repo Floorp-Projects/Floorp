@@ -27,10 +27,14 @@ add_task(async function() {
   const doc = toolbox.doc;
 
   const toolbar = doc.querySelector(".devtools-tabbar");
-  const toolbarControls = [...toolbar.querySelectorAll(
-    ".devtools-tab, button")].filter(elm =>
-      !elm.hidden && doc.defaultView.getComputedStyle(elm).getPropertyValue(
-        "display") !== "none");
+  const toolbarControls = [
+    ...toolbar.querySelectorAll(".devtools-tab, button"),
+  ].filter(
+    elm =>
+      !elm.hidden &&
+      doc.defaultView.getComputedStyle(elm).getPropertyValue("display") !==
+        "none"
+  );
 
   // Put the keyboard focus onto the first toolbar control.
   toolbarControls[0].focus();
@@ -41,7 +45,7 @@ add_task(async function() {
   ok(!containsFocus(doc, toolbar), "Focus is outside of the toolbar");
 
   // Move the focus back to the toolbar.
-  EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   ok(containsFocus(doc, toolbar), "Focus is within the toolbar again");
 
   // Move through the toolbar forward using the right arrow key.
@@ -57,7 +61,7 @@ add_task(async function() {
   ok(!containsFocus(doc, toolbar), "Focus is outside of the toolbar");
 
   // Move the focus back to the toolbar.
-  EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   ok(containsFocus(doc, toolbar), "Focus is within the toolbar again");
 
   // Move through the toolbar backward using the left arrow key.
@@ -80,7 +84,7 @@ add_task(async function() {
 
   // Move the focus back to the toolbar, ensure we land on the last active
   // descendant control.
-  EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   is(doc.activeElement.id, expectedFocusedControl.id, "New control is focused");
 });
 
@@ -107,8 +111,11 @@ add_task(async function() {
   let onceSelected = toolbox.once("webconsole-selected");
   EventUtils.synthesizeKey("Enter");
   await onceSelected;
-  is(doc.activeElement.id, "toolbox-panel-iframe-" + toolbox.currentToolId,
-    "Selected tool frame is now focused.");
+  is(
+    doc.activeElement.id,
+    "toolbox-panel-iframe-" + toolbox.currentToolId,
+    "Selected tool frame is now focused."
+  );
 
   // Webconsole steal the focus from button after sending "webconsole-selected"
   // event.
@@ -123,6 +130,9 @@ add_task(async function() {
   EventUtils.synthesizeKey(" ");
   await onceSelected;
 
-  is(doc.activeElement.id, "toolbox-panel-iframe-" + toolbox.currentToolId,
-    "Selected tool frame is now focused.");
+  is(
+    doc.activeElement.id,
+    "toolbox-panel-iframe-" + toolbox.currentToolId,
+    "Selected tool frame is now focused."
+  );
 });

@@ -1,14 +1,17 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
- // Tests ime composition handling.
+// Tests ime composition handling.
 
 function synthesizeCompositionChange(string) {
   EventUtils.synthesizeCompositionChange({
     composition: {
       string,
       clauses: [
-        { length: string.length, attr: Ci.nsITextInputProcessor.ATTR_RAW_CLAUSE },
+        {
+          length: string.length,
+          attr: Ci.nsITextInputProcessor.ATTR_RAW_CLAUSE,
+        },
       ],
     },
     caret: { start: string.length, length: 0 },
@@ -28,7 +31,9 @@ add_task(async function test_composition() {
     transition: PlacesUtils.history.TRANSITIONS.TYPED,
   });
 
-  info("The popup should not be shown during composition but, after compositionend, it should be.");
+  info(
+    "The popup should not be shown during composition but, after compositionend, it should be."
+  );
   Assert.ok(!UrlbarTestUtils.isPopupOpen(window), "Popup should be closed");
   synthesizeCompositionChange("I");
   Assert.equal(gURLBar.value, "I", "Check urlbar value");
@@ -43,7 +48,9 @@ add_task(async function test_composition() {
   });
   Assert.equal(gURLBar.value, "In", "Check urlbar value");
 
-  info("If composition starts while the popup is shown, the compositionstart event should close the popup.");
+  info(
+    "If composition starts while the popup is shown, the compositionstart event should close the popup."
+  );
   Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Popup should be open");
   synthesizeCompositionChange("t");
   Assert.equal(gURLBar.value, "Int", "Check urlbar value");
@@ -74,7 +81,9 @@ add_task(async function test_composition() {
   });
   Assert.equal(gURLBar.value, "Inte", "Check urlbar value");
 
-  info("If composition replaces some characters and canceled, the search string should be the latest value.");
+  info(
+    "If composition replaces some characters and canceled, the search string should be the latest value."
+  );
   Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Popup should be open");
   EventUtils.synthesizeKey("VK_LEFT", { shiftKey: true });
   EventUtils.synthesizeKey("VK_LEFT", { shiftKey: true });
@@ -123,7 +132,9 @@ add_task(async function test_composition() {
   });
   Assert.equal(gURLBar.value, "", "Check urlbar value");
 
-  info("If popup is open at starting composition, the popup should be reopened after composition anyway.");
+  info(
+    "If popup is open at starting composition, the popup should be reopened after composition anyway."
+  );
   Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Popup should be open");
   synthesizeCompositionChange("I");
   Assert.equal(gURLBar.value, "I", "Check urlbar value");
@@ -173,4 +184,3 @@ add_task(async function test_composition() {
   });
   Assert.equal(gURLBar.value, "Mozilla.org/", "Check urlbar value");
 });
-

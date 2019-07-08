@@ -1,7 +1,7 @@
 "use strict";
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * Tests logging by passing OS.Shared.LOG both an object with its own
@@ -30,7 +30,7 @@ function run_test() {
 
         ++messageCount;
         if (messageCount == 1) {
-          Assert.equal(aMessage.message, "TEST OS {\"name\":\"test\"}\n");
+          Assert.equal(aMessage.message, 'TEST OS {"name":"test"}\n');
         }
         if (messageCount == 2) {
           Assert.equal(aMessage.message, "TEST OS name is test\n");
@@ -47,12 +47,13 @@ function run_test() {
     Services.prefs.setBoolPref("toolkit.osfile.log", pref);
     Services.prefs.setBoolPref("toolkit.osfile.log.redirect", pref);
     Services.console[pref ? "registerListener" : "unregisterListener"](
-      consoleListener);
+      consoleListener
+    );
   }
 
   toggleConsoleListener(true);
 
-  let objectDefault = {name: "test"};
+  let objectDefault = { name: "test" };
   let CustomToString = function() {
     this.name = "test";
   };

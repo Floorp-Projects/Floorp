@@ -17,38 +17,50 @@ add_task(async function test_initialize() {
   Services.prefs.setBoolPref("signon.autofillForms", false);
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("signon.autofillForms");
-    autocompletePopup.removeEventListener("popupshowing", autocompleteUnexpectedPopupShowing);
+    autocompletePopup.removeEventListener(
+      "popupshowing",
+      autocompleteUnexpectedPopupShowing
+    );
   });
   for (let login of loginList()) {
     Services.logins.addLogin(login);
   }
-  autocompletePopup.addEventListener("popupshowing", autocompleteUnexpectedPopupShowing);
+  autocompletePopup.addEventListener(
+    "popupshowing",
+    autocompleteUnexpectedPopupShowing
+  );
 });
 
 add_task(async function test_context_menu_username() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: TEST_ORIGIN + BASIC_FORM_PAGE_PATH,
-  }, async function(browser) {
-    await openContextMenu(browser, "#form-basic-username");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_ORIGIN + BASIC_FORM_PAGE_PATH,
+    },
+    async function(browser) {
+      await openContextMenu(browser, "#form-basic-username");
 
-    let contextMenu = document.getElementById("contentAreaContextMenu");
-    Assert.equal(contextMenu.state, "open", "Context menu opened");
-    contextMenu.hidePopup();
-  });
+      let contextMenu = document.getElementById("contentAreaContextMenu");
+      Assert.equal(contextMenu.state, "open", "Context menu opened");
+      contextMenu.hidePopup();
+    }
+  );
 });
 
 add_task(async function test_context_menu_password() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: TEST_ORIGIN + BASIC_FORM_PAGE_PATH,
-  }, async function(browser) {
-    await openContextMenu(browser, "#form-basic-password");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_ORIGIN + BASIC_FORM_PAGE_PATH,
+    },
+    async function(browser) {
+      await openContextMenu(browser, "#form-basic-password");
 
-    let contextMenu = document.getElementById("contentAreaContextMenu");
-    Assert.equal(contextMenu.state, "open", "Context menu opened");
-    contextMenu.hidePopup();
-  });
+      let contextMenu = document.getElementById("contentAreaContextMenu");
+      Assert.equal(contextMenu.state, "open", "Context menu opened");
+      contextMenu.hidePopup();
+    }
+  );
 });
 
 function autocompleteUnexpectedPopupShowing(event) {
@@ -62,13 +74,24 @@ function autocompleteUnexpectedPopupShowing(event) {
  */
 async function openContextMenu(browser, loginInput) {
   // First synthesize a mousedown. We need this to get the focus event with the "contextmenu" event.
-  let eventDetails1 = {type: "mousedown", button: 2};
-  await BrowserTestUtils.synthesizeMouseAtCenter(loginInput, eventDetails1, browser);
+  let eventDetails1 = { type: "mousedown", button: 2 };
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    loginInput,
+    eventDetails1,
+    browser
+  );
 
   // Then synthesize the contextmenu click over the input element.
-  let contextMenuShownPromise = BrowserTestUtils.waitForEvent(window, "popupshown");
-  let eventDetails = {type: "contextmenu", button: 2};
-  await BrowserTestUtils.synthesizeMouseAtCenter(loginInput, eventDetails, browser);
+  let contextMenuShownPromise = BrowserTestUtils.waitForEvent(
+    window,
+    "popupshown"
+  );
+  let eventDetails = { type: "contextmenu", button: 2 };
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    loginInput,
+    eventDetails,
+    browser
+  );
   await contextMenuShownPromise;
 
   // Wait to see which popups are shown.

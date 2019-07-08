@@ -6,17 +6,19 @@
   addMessageListener, currentTabDocument, currentBrowser*/
 
 /**
-  * A global variable holding an array of test functions.
-  */
+ * A global variable holding an array of test functions.
+ */
 var gTestFuncs = [];
 /**
-  * A global Iterator for the array of test functions.
-  */
+ * A global Iterator for the array of test functions.
+ */
 var gIterator;
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var AccessFu;
-const {Logger, Utils} = ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
+const { Logger, Utils } = ChromeUtils.import(
+  "resource://gre/modules/accessibility/Utils.jsm"
+);
 
 const MovementGranularity = {
   CHARACTER: 1,
@@ -26,14 +28,16 @@ const MovementGranularity = {
 };
 
 var AccessFuTest = {
-
   addFunc: function AccessFuTest_addFunc(aFunc) {
     if (aFunc) {
       gTestFuncs.push(aFunc);
     }
   },
 
-  _registerListener: function AccessFuTest__registerListener(aWaitForMessage, aListenerFunc) {
+  _registerListener: function AccessFuTest__registerListener(
+    aWaitForMessage,
+    aListenerFunc
+  ) {
     var listener = {
       observe: function observe(aMessage) {
         // Ignore unexpected messages.
@@ -59,11 +63,13 @@ var AccessFuTest = {
   },
 
   once_log: function AccessFuTest_once_log(aWaitForMessage, aListenerFunc) {
-    return this._registerListener(aWaitForMessage,
+    return this._registerListener(
+      aWaitForMessage,
       function listenAndUnregister() {
         Services.console.unregisterListener(this);
         aListenerFunc();
-      });
+      }
+    );
   },
 
   _addObserver: function AccessFuTest__addObserver(aWaitForData, aListener) {
@@ -134,7 +140,7 @@ var AccessFuTest = {
     }
 
     // Create an Iterator for gTestFuncs array.
-    gIterator = (function* () {
+    gIterator = (function*() {
       for (var testFunc of gTestFuncs) {
         yield testFunc;
       }
@@ -144,12 +150,14 @@ var AccessFuTest = {
     Logger.logLevel = Logger.DEBUG;
 
     // Start AccessFu and put it in stand-by.
-    ({AccessFu} = ChromeUtils.import("resource://gre/modules/accessibility/AccessFu.jsm"));
+    ({ AccessFu } = ChromeUtils.import(
+      "resource://gre/modules/accessibility/AccessFu.jsm"
+    ));
 
     var prefs = [["accessibility.accessfu.notify_output", 1]];
     prefs.push.apply(prefs, aAdditionalPrefs);
 
-    SpecialPowers.pushPrefEnv({ "set": prefs }, function() {
+    SpecialPowers.pushPrefEnv({ set: prefs }, function() {
       if (AccessFuTest._waitForExplicitFinish) {
         // Run all test functions asynchronously.
         AccessFuTest.nextTest();
@@ -166,8 +174,10 @@ class AccessFuContentTestRunner {
   constructor() {
     this.listenersMap = new Map();
     let frames = Array.from(currentTabDocument().querySelectorAll("iframe"));
-    this.mms = [Utils.getMessageManager(currentBrowser()),
-      ...frames.map(f => Utils.getMessageManager(f)).filter(mm => !!mm)];
+    this.mms = [
+      Utils.getMessageManager(currentBrowser()),
+      ...frames.map(f => Utils.getMessageManager(f)).filter(mm => !!mm),
+    ];
   }
 
   start(aFinishedCallback) {
@@ -208,14 +218,19 @@ class AccessFuContentTestRunner {
 
   isFocused(aExpected) {
     var doc = currentTabDocument();
-    SimpleTest.is(doc.activeElement, doc.querySelector(aExpected),
-      "Correct element is focused: " + aExpected);
+    SimpleTest.is(
+      doc.activeElement,
+      doc.querySelector(aExpected),
+      "Correct element is focused: " + aExpected
+    );
   }
 
   async setupMessageManager(aMessageManager) {
     function contentScript() {
       // eslint-disable-next-line no-shadow
-      const {Logger, Utils} = ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
+      const { Logger, Utils } = ChromeUtils.import(
+        "resource://gre/modules/accessibility/Utils.jsm"
+      );
       Logger.logLevel = "DEBUG";
       Utils.inTest = true;
 
@@ -232,13 +247,18 @@ class AccessFuContentTestRunner {
     }
 
     aMessageManager.loadFrameScript(
-      "data:,(" + contentScript.toString() + ")();", false);
+      "data:,(" + contentScript.toString() + ")();",
+      false
+    );
 
     aMessageManager.loadFrameScript(
-      "chrome://global/content/accessibility/content-script.js", false);
+      "chrome://global/content/accessibility/content-script.js",
+      false
+    );
 
     let startedPromise = new Promise(resolve =>
-      aMessageManager.addMessageListener("AccessFu:ContentStarted", resolve));
+      aMessageManager.addMessageListener("AccessFu:ContentStarted", resolve)
+    );
 
     await startedPromise;
 
@@ -254,7 +274,9 @@ class AccessFuContentTestRunner {
       if (this.debug) {
         info("Android event: " + JSON.stringify(evt));
       }
-      let listener = (this.listenersMap.get(evt.eventType || evt) || []).shift();
+      let listener = (
+        this.listenersMap.get(evt.eventType || evt) || []
+      ).shift();
       if (listener) {
         listener(evt);
       }
@@ -282,34 +304,44 @@ class AccessFuContentTestRunner {
   }
 
   moveNext(aRule, ...aExpectedEvents) {
-    return this.moveCursor({ action: "moveNext", rule: aRule },
-      ...aExpectedEvents);
+    return this.moveCursor(
+      { action: "moveNext", rule: aRule },
+      ...aExpectedEvents
+    );
   }
 
   movePrevious(aRule, ...aExpectedEvents) {
-    return this.moveCursor({ action: "movePrevious", rule: aRule },
-      ...aExpectedEvents);
+    return this.moveCursor(
+      { action: "movePrevious", rule: aRule },
+      ...aExpectedEvents
+    );
   }
 
   moveFirst(aRule, ...aExpectedEvents) {
-    return this.moveCursor({ action: "moveFirst", rule: aRule },
-      ...aExpectedEvents);
+    return this.moveCursor(
+      { action: "moveFirst", rule: aRule },
+      ...aExpectedEvents
+    );
   }
 
   moveLast(aRule, ...aExpectedEvents) {
-    return this.moveCursor({ action: "moveLast", rule: aRule },
-      ...aExpectedEvents);
+    return this.moveCursor(
+      { action: "moveLast", rule: aRule },
+      ...aExpectedEvents
+    );
   }
 
   async clearCursor() {
     return new Promise(resolve => {
-      let _listener = (msg) => {
-        this.mms.forEach(
-          mm => mm.removeMessageListener("AccessFu:CursorCleared", _listener));
+      let _listener = msg => {
+        this.mms.forEach(mm =>
+          mm.removeMessageListener("AccessFu:CursorCleared", _listener)
+        );
         resolve();
       };
-      this.mms.forEach(
-        mm => mm.addMessageListener("AccessFu:CursorCleared", _listener));
+      this.mms.forEach(mm =>
+        mm.addMessageListener("AccessFu:CursorCleared", _listener)
+      );
       this.sendMessage({
         name: "AccessFu:ClearCursor",
         data: {
@@ -355,15 +387,24 @@ class AccessFuContentTestRunner {
   }
 
   eventTextMatches(aEvent, aExpected) {
-    isDeeply(aEvent.text, aExpected,
+    isDeeply(
+      aEvent.text,
+      aExpected,
       "Event text matches. " +
-      `Got ${JSON.stringify(aEvent.text)}, expected ${JSON.stringify(aExpected)}.`);
+        `Got ${JSON.stringify(aEvent.text)}, expected ${JSON.stringify(
+          aExpected
+        )}.`
+    );
   }
 
   eventInfoMatches(aEvent, aExpected) {
     for (let key in aExpected) {
-      is(aEvent[key], aExpected[key], `Event info matches for ${key}. ` +
-         `Got ${aEvent[key]}, expected ${aExpected[key]}.`);
+      is(
+        aEvent[key],
+        aExpected[key],
+        `Event info matches for ${key}. ` +
+          `Got ${aEvent[key]}, expected ${aExpected[key]}.`
+      );
     }
   }
 

@@ -26,12 +26,12 @@ function run_test() {
 
 var test_transport = async function(transportFactory) {
   let clientResolve;
-  const clientDeferred = new Promise((resolve) => {
+  const clientDeferred = new Promise(resolve => {
     clientResolve = resolve;
   });
 
   let serverResolve;
-  const serverDeferred = new Promise((resolve) => {
+  const serverDeferred = new Promise(resolve => {
     serverResolve = resolve;
   });
 
@@ -45,19 +45,22 @@ var test_transport = async function(transportFactory) {
   const transport = await transportFactory();
 
   // Sending from client to server
-  function write_data({copyFrom}) {
-    NetUtil.asyncFetch({
-      uri: NetUtil.newURI(getTestTempFile("bulk-input")),
-      loadUsingSystemPrincipal: true,
-    }, function(input, status) {
-      copyFrom(input).then(() => {
-        input.close();
-      });
-    });
+  function write_data({ copyFrom }) {
+    NetUtil.asyncFetch(
+      {
+        uri: NetUtil.newURI(getTestTempFile("bulk-input")),
+        loadUsingSystemPrincipal: true,
+      },
+      function(input, status) {
+        copyFrom(input).then(() => {
+          input.close();
+        });
+      }
+    );
   }
 
   // Receiving on server from client
-  function on_bulk_packet({actor, type, length, copyTo}) {
+  function on_bulk_packet({ actor, type, length, copyTo }) {
     Assert.equal(actor, "root");
     Assert.equal(type, "file-stream");
     Assert.equal(length, reallyLong.length);
@@ -67,16 +70,18 @@ var test_transport = async function(transportFactory) {
 
     const output = FileUtils.openSafeFileOutputStream(outputFile);
 
-    copyTo(output).then(() => {
-      FileUtils.closeSafeFileOutputStream(output);
-      return verify();
-    }).then(() => {
-      // It's now safe to close
-      transport.hooks.onClosed = () => {
-        clientResolve();
-      };
-      transport.close();
-    });
+    copyTo(output)
+      .then(() => {
+        FileUtils.closeSafeFileOutputStream(output);
+        return verify();
+      })
+      .then(() => {
+        // It's now safe to close
+        transport.hooks.onClosed = () => {
+          clientResolve();
+        };
+        transport.close();
+      });
   }
 
   // Client
@@ -89,11 +94,13 @@ var test_transport = async function(transportFactory) {
       type: "explode",
     });
 
-    transport.startBulkSend({
-      actor: "root",
-      type: "file-stream",
-      length: reallyLong.length,
-    }).then(write_data);
+    transport
+      .startBulkSend({
+        actor: "root",
+        type: "file-stream",
+        length: reallyLong.length,
+      })
+      .then(write_data);
   }
 
   transport.hooks = {
@@ -156,19 +163,24 @@ function verify() {
   Assert.equal(outputFile.fileSize, reallyLong.length);
 
   // Ensure output file contents actually match
-  return new Promise((resolve) => {
-    NetUtil.asyncFetch({
-      uri: NetUtil.newURI(getTestTempFile("bulk-output")),
-      loadUsingSystemPrincipal: true,
-    }, input => {
-      const outputData = NetUtil.readInputStreamToString(input, reallyLong.length);
-      // Avoid do_check_eq here so we don't log the contents
-      Assert.ok(outputData === reallyLong);
-      input.close();
-      resolve();
-    });
-  })
-  .then(cleanup_files);
+  return new Promise(resolve => {
+    NetUtil.asyncFetch(
+      {
+        uri: NetUtil.newURI(getTestTempFile("bulk-output")),
+        loadUsingSystemPrincipal: true,
+      },
+      input => {
+        const outputData = NetUtil.readInputStreamToString(
+          input,
+          reallyLong.length
+        );
+        // Avoid do_check_eq here so we don't log the contents
+        Assert.ok(outputData === reallyLong);
+        input.close();
+        resolve();
+      }
+    );
+  }).then(cleanup_files);
 }
 
 function cleanup_files() {

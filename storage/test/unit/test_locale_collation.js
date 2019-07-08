@@ -73,8 +73,9 @@ function ensureResultsAreCorrect(aActual, aExpected) {
   print("Expected results: " + aExpected);
 
   Assert.equal(aActual.length, aExpected.length);
-  for (let i = 0; i < aActual.length; i++)
+  for (let i = 0; i < aActual.length; i++) {
     Assert.equal(aActual[i], aExpected[i]);
+  }
 }
 
 /**
@@ -90,10 +91,12 @@ function ensureResultsAreCorrect(aActual, aExpected) {
  */
 function getResults(aCollation, aConn) {
   let results = [];
-  let stmt = aConn.createStatement("SELECT t FROM test " +
-                                   "ORDER BY t COLLATE " + aCollation + " ASC");
-  while (stmt.executeStep())
+  let stmt = aConn.createStatement(
+    "SELECT t FROM test ORDER BY t COLLATE " + aCollation + " ASC"
+  );
+  while (stmt.executeStep()) {
     results.push(stmt.row.t);
+  }
   stmt.finalize();
   return results;
 }
@@ -165,8 +168,9 @@ function readTestData() {
 
   let file = do_get_file(DATA_BASENAME);
 
-  let istream = Cc["@mozilla.org/network/file-input-stream;1"].
-                createInstance(Ci.nsIFileInputStream);
+  let istream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   istream.init(file, -1, -1, 0);
   istream.QueryInterface(Ci.nsILineInputStream);
 
@@ -191,8 +195,10 @@ function readTestData() {
  *        A connection to either the UTF-8 database or the UTF-16 database.
  */
 function runTest(aCollation, aConn) {
-  ensureResultsAreCorrect(getResults(aCollation, aConn),
-                          gStrings.slice(0).sort(localeCompare(aCollation)));
+  ensureResultsAreCorrect(
+    getResults(aCollation, aConn),
+    gStrings.slice(0).sort(localeCompare(aCollation))
+  );
 }
 
 /**
@@ -232,8 +238,9 @@ function setup() {
   gUtf16Conn = createUtf16Database();
   initTableWithStrings(gStrings, gUtf16Conn);
 
-  let collFact = Cc["@mozilla.org/intl/collation-factory;1"].
-                 createInstance(Ci.nsICollationFactory);
+  let collFact = Cc["@mozilla.org/intl/collation-factory;1"].createInstance(
+    Ci.nsICollationFactory
+  );
   gLocaleCollation = collFact.CreateCollation();
 }
 
@@ -242,42 +249,42 @@ function setup() {
 var gTests = [
   {
     desc: "Case and accent sensitive UTF-8",
-    run:   () => runUtf8Test("locale_case_accent_sensitive"),
+    run: () => runUtf8Test("locale_case_accent_sensitive"),
   },
 
   {
     desc: "Case sensitive, accent insensitive UTF-8",
-    run:   () => runUtf8Test("locale_case_sensitive"),
+    run: () => runUtf8Test("locale_case_sensitive"),
   },
 
   {
     desc: "Case insensitive, accent sensitive UTF-8",
-    run:   () => runUtf8Test("locale_accent_sensitive"),
+    run: () => runUtf8Test("locale_accent_sensitive"),
   },
 
   {
     desc: "Case and accent insensitive UTF-8",
-    run:   () => runUtf8Test("locale"),
+    run: () => runUtf8Test("locale"),
   },
 
   {
     desc: "Case and accent sensitive UTF-16",
-    run:   () => runUtf16Test("locale_case_accent_sensitive"),
+    run: () => runUtf16Test("locale_case_accent_sensitive"),
   },
 
   {
     desc: "Case sensitive, accent insensitive UTF-16",
-    run:   () => runUtf16Test("locale_case_sensitive"),
+    run: () => runUtf16Test("locale_case_sensitive"),
   },
 
   {
     desc: "Case insensitive, accent sensitive UTF-16",
-    run:   () => runUtf16Test("locale_accent_sensitive"),
+    run: () => runUtf16Test("locale_accent_sensitive"),
   },
 
   {
     desc: "Case and accent insensitive UTF-16",
-    run:   () => runUtf16Test("locale"),
+    run: () => runUtf16Test("locale"),
   },
 ];
 

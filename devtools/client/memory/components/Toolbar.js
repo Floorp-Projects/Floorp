@@ -79,20 +79,23 @@ class Toolbar extends Component {
               id: "select-display",
               className: "select-display",
               onChange: e => {
-                const newDisplay =
-                  censusDisplays.find(b => b.displayName === e.target.value);
+                const newDisplay = censusDisplays.find(
+                  b => b.displayName === e.target.value
+                );
                 onCensusDisplayChange(newDisplay);
               },
               value: censusDisplay.displayName,
             },
-            censusDisplays.map(({ tooltip, displayName }) => dom.option(
-              {
-                key: `display-${displayName}`,
-                value: displayName,
-                title: tooltip,
-              },
-              displayName
-            ))
+            censusDisplays.map(({ tooltip, displayName }) =>
+              dom.option(
+                {
+                  key: `display-${displayName}`,
+                  value: displayName,
+                  title: tooltip,
+                },
+                displayName
+              )
+            )
           )
         ),
 
@@ -109,46 +112,54 @@ class Toolbar extends Component {
         })
       );
     } else if (view.state == viewState.TREE_MAP) {
-      assert(treeMapDisplays.length >= 1,
-       "Should always have at least one tree map display");
+      assert(
+        treeMapDisplays.length >= 1,
+        "Should always have at least one tree map display"
+      );
 
       // Only show the dropdown if there are multiple display options
-      viewToolbarOptions = treeMapDisplays.length > 1
-        ? dom.div(
-          {
-            className: "toolbar-group",
-          },
-
-            dom.label(
+      viewToolbarOptions =
+        treeMapDisplays.length > 1
+          ? dom.div(
               {
-                className: "display-by",
-                title: L10N.getStr("toolbar.displayBy.tooltip"),
+                className: "toolbar-group",
               },
-              L10N.getStr("toolbar.displayBy"),
-              dom.select(
+
+              dom.label(
                 {
-                  id: "select-tree-map-display",
-                  onChange: e => {
-                    const newDisplay =
-                      treeMapDisplays.find(b => b.displayName === e.target.value);
-                    onTreeMapDisplayChange(newDisplay);
-                  },
+                  className: "display-by",
+                  title: L10N.getStr("toolbar.displayBy.tooltip"),
                 },
-                treeMapDisplays.map(({ tooltip, displayName }) => dom.option(
+                L10N.getStr("toolbar.displayBy"),
+                dom.select(
                   {
-                    key: `tree-map-display-${displayName}`,
-                    value: displayName,
-                    title: tooltip,
+                    id: "select-tree-map-display",
+                    onChange: e => {
+                      const newDisplay = treeMapDisplays.find(
+                        b => b.displayName === e.target.value
+                      );
+                      onTreeMapDisplayChange(newDisplay);
+                    },
                   },
-                  displayName
-                ))
+                  treeMapDisplays.map(({ tooltip, displayName }) =>
+                    dom.option(
+                      {
+                        key: `tree-map-display-${displayName}`,
+                        value: displayName,
+                        title: tooltip,
+                      },
+                      displayName
+                    )
+                  )
+                )
               )
             )
-          )
-        : null;
+          : null;
     } else {
-      assert(view.state === viewState.DOMINATOR_TREE ||
-             view.state === viewState.INDIVIDUALS);
+      assert(
+        view.state === viewState.DOMINATOR_TREE ||
+          view.state === viewState.INDIVIDUALS
+      );
 
       viewToolbarOptions = dom.div(
         {
@@ -165,27 +176,33 @@ class Toolbar extends Component {
             {
               id: "select-label-display",
               onChange: e => {
-                const newDisplay =
-                  labelDisplays.find(b => b.displayName === e.target.value);
+                const newDisplay = labelDisplays.find(
+                  b => b.displayName === e.target.value
+                );
                 onLabelDisplayChange(newDisplay);
               },
               value: labelDisplay.displayName,
             },
-            labelDisplays.map(({ tooltip, displayName }) => dom.option(
-              {
-                key: `label-display-${displayName}`,
-                value: displayName,
-                title: tooltip,
-              },
-              displayName
-            ))
+            labelDisplays.map(({ tooltip, displayName }) =>
+              dom.option(
+                {
+                  key: `label-display-${displayName}`,
+                  value: displayName,
+                  title: tooltip,
+                },
+                displayName
+              )
+            )
           )
         )
       );
     }
 
     let viewSelect;
-    if (view.state !== viewState.DIFFING && view.state !== viewState.INDIVIDUALS) {
+    if (
+      view.state !== viewState.DIFFING &&
+      view.state !== viewState.INDIVIDUALS
+    ) {
       viewSelect = dom.label(
         {
           title: L10N.getStr("toolbar.view.tooltip"),
@@ -222,71 +239,65 @@ class Toolbar extends Component {
       );
     }
 
-    return (
+    return dom.div(
+      {
+        className: "devtools-toolbar",
+      },
+
       dom.div(
         {
-          className: "devtools-toolbar",
+          className: "toolbar-group",
         },
 
-        dom.div(
-          {
-            className: "toolbar-group",
-          },
+        dom.button({
+          id: "clear-snapshots",
+          className: "clear-snapshots devtools-button",
+          disabled: !snapshots.length,
+          onClick: onClearSnapshotsClick,
+          title: L10N.getStr("clear-snapshots.tooltip"),
+        }),
 
-          dom.button({
-            id: "clear-snapshots",
-            className: "clear-snapshots devtools-button",
-            disabled: !snapshots.length,
-            onClick: onClearSnapshotsClick,
-            title: L10N.getStr("clear-snapshots.tooltip"),
-          }),
+        dom.button({
+          id: "take-snapshot",
+          className: "take-snapshot devtools-button",
+          onClick: onTakeSnapshotClick,
+          title: L10N.getStr("take-snapshot"),
+        }),
 
-          dom.button({
-            id: "take-snapshot",
-            className: "take-snapshot devtools-button",
-            onClick: onTakeSnapshotClick,
-            title: L10N.getStr("take-snapshot"),
-          }),
+        dom.button({
+          id: "diff-snapshots",
+          className:
+            "devtools-button devtools-monospace" + (diffing ? " checked" : ""),
+          disabled: snapshots.length < 2,
+          onClick: onToggleDiffing,
+          title: L10N.getStr("diff-snapshots.tooltip"),
+        }),
 
-          dom.button(
-            {
-              id: "diff-snapshots",
-              className: "devtools-button devtools-monospace" +
-                         (diffing ? " checked" : ""),
-              disabled: snapshots.length < 2,
-              onClick: onToggleDiffing,
-              title: L10N.getStr("diff-snapshots.tooltip"),
-            }
-          ),
+        dom.button({
+          id: "import-snapshot",
+          className: "import-snapshot devtools-button",
+          onClick: onImportClick,
+          title: L10N.getStr("import-snapshot"),
+        })
+      ),
 
-          dom.button(
-            {
-              id: "import-snapshot",
-              className: "import-snapshot devtools-button",
-              onClick: onImportClick,
-              title: L10N.getStr("import-snapshot"),
-            }
-          )
-        ),
+      dom.label(
+        {
+          id: "record-allocation-stacks-label",
+          title: L10N.getStr("checkbox.recordAllocationStacks.tooltip"),
+        },
+        dom.input({
+          id: "record-allocation-stacks-checkbox",
+          type: "checkbox",
+          checked: allocations.recording,
+          disabled: allocations.togglingInProgress,
+          onChange: onToggleRecordAllocationStacks,
+        }),
+        L10N.getStr("checkbox.recordAllocationStacks")
+      ),
 
-        dom.label(
-          {
-            id: "record-allocation-stacks-label",
-            title: L10N.getStr("checkbox.recordAllocationStacks.tooltip"),
-          },
-          dom.input({
-            id: "record-allocation-stacks-checkbox",
-            type: "checkbox",
-            checked: allocations.recording,
-            disabled: allocations.togglingInProgress,
-            onChange: onToggleRecordAllocationStacks,
-          }),
-          L10N.getStr("checkbox.recordAllocationStacks")
-        ),
-
-        viewSelect,
-        viewToolbarOptions
-      )
+      viewSelect,
+      viewToolbarOptions
     );
   }
 }

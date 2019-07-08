@@ -4,37 +4,44 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  GeckoViewTelemetryController: "resource://gre/modules/GeckoViewTelemetryController.jsm",
+  GeckoViewTelemetryController:
+    "resource://gre/modules/GeckoViewTelemetryController.jsm",
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
 });
 
 function ContentProcessSingleton() {}
 ContentProcessSingleton.prototype = {
   classID: Components.ID("{ca2a8470-45c7-11e4-916c-0800200c9a66}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   observe(subject, topic, data) {
     switch (topic) {
-    case "app-startup": {
-      Services.obs.addObserver(this, "xpcom-shutdown");
-      // Initialize Telemetry in the content process: use a different
-      // controller depending on the platform.
-      if (Services.prefs.getBoolPref("toolkit.telemetry.isGeckoViewMode", false)) {
-        GeckoViewTelemetryController.setup();
-        return;
+      case "app-startup": {
+        Services.obs.addObserver(this, "xpcom-shutdown");
+        // Initialize Telemetry in the content process: use a different
+        // controller depending on the platform.
+        if (
+          Services.prefs.getBoolPref("toolkit.telemetry.isGeckoViewMode", false)
+        ) {
+          GeckoViewTelemetryController.setup();
+          return;
+        }
+        // Initialize Firefox Desktop Telemetry.
+        TelemetryController.observe(null, topic, null);
+        break;
       }
-      // Initialize Firefox Desktop Telemetry.
-      TelemetryController.observe(null, topic, null);
-      break;
-    }
-    case "xpcom-shutdown":
-      Services.obs.removeObserver(this, "xpcom-shutdown");
-      break;
+      case "xpcom-shutdown":
+        Services.obs.removeObserver(this, "xpcom-shutdown");
+        break;
     }
   },
 };

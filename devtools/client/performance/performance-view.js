@@ -9,8 +9,12 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const React = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
-const RecordingControls = React.createFactory(require("devtools/client/performance/components/RecordingControls"));
-const RecordingButton = React.createFactory(require("devtools/client/performance/components/RecordingButton"));
+const RecordingControls = React.createFactory(
+  require("devtools/client/performance/components/RecordingControls")
+);
+const RecordingButton = React.createFactory(
+  require("devtools/client/performance/components/RecordingButton")
+);
 
 const EVENTS = require("./events");
 const PerformanceUtils = require("./modules/utils");
@@ -24,7 +28,6 @@ const { L10N } = require("./modules/global");
  * Master view handler for the performance tool.
  */
 var PerformanceView = {
-
   _state: null,
 
   // Set to true if the front emits a "buffer-status" event, indicating
@@ -34,7 +37,7 @@ var PerformanceView = {
   // Mapping of state to selectors for different properties and their values,
   // from the main profiler view. Used in `PerformanceView.setState()`
   states: {
-    "unavailable": [
+    unavailable: [
       {
         sel: "#performance-view",
         opt: "selectedPanel",
@@ -46,7 +49,7 @@ var PerformanceView = {
         val: () => true,
       },
     ],
-    "empty": [
+    empty: [
       {
         sel: "#performance-view",
         opt: "selectedPanel",
@@ -58,7 +61,7 @@ var PerformanceView = {
         val: () => true,
       },
     ],
-    "recording": [
+    recording: [
       {
         sel: "#performance-view",
         opt: "selectedPanel",
@@ -92,7 +95,7 @@ var PerformanceView = {
         val: () => $("#console-recording-notice"),
       },
     ],
-    "recorded": [
+    recorded: [
       {
         sel: "#performance-view",
         opt: "selectedPanel",
@@ -109,7 +112,7 @@ var PerformanceView = {
         val: () => $("#details-pane"),
       },
     ],
-    "loading": [
+    loading: [
       {
         sel: "#performance-view",
         opt: "selectedPanel",
@@ -141,13 +144,26 @@ var PerformanceView = {
     this._onNewRecordingFailed = this._onNewRecordingFailed.bind(this);
 
     // Bind to controller events to unlock the record button
-    PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
-    PerformanceController.on(EVENTS.RECORDING_PROFILER_STATUS_UPDATE,
-                             this._onProfilerStatusUpdated);
-    PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
-    PerformanceController.on(EVENTS.RECORDING_ADDED, this._onRecordingStateChange);
-    PerformanceController.on(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START,
-                             this._onNewRecordingFailed);
+    PerformanceController.on(
+      EVENTS.RECORDING_SELECTED,
+      this._onRecordingSelected
+    );
+    PerformanceController.on(
+      EVENTS.RECORDING_PROFILER_STATUS_UPDATE,
+      this._onProfilerStatusUpdated
+    );
+    PerformanceController.on(
+      EVENTS.RECORDING_STATE_CHANGE,
+      this._onRecordingStateChange
+    );
+    PerformanceController.on(
+      EVENTS.RECORDING_ADDED,
+      this._onRecordingStateChange
+    );
+    PerformanceController.on(
+      EVENTS.BACKEND_FAILED_AFTER_RECORDING_START,
+      this._onNewRecordingFailed
+    );
 
     if (await PerformanceController.canCurrentlyRecord()) {
       this.setState("empty");
@@ -171,10 +187,13 @@ var PerformanceView = {
       isDisabled: false,
     };
     // Mount to an HTML element.
-    const {createHtmlMount} = PerformanceUtils;
-    this._recordingControlsMount = createHtmlMount($("#recording-controls-mount"));
-    this._recordingButtonsMounts = Array.from($$(".recording-button-mount"))
-                                        .map(createHtmlMount);
+    const { createHtmlMount } = PerformanceUtils;
+    this._recordingControlsMount = createHtmlMount(
+      $("#recording-controls-mount")
+    );
+    this._recordingButtonsMounts = Array.from(
+      $$(".recording-button-mount")
+    ).map(createHtmlMount);
 
     this._renderRecordingControls();
   },
@@ -183,8 +202,10 @@ var PerformanceView = {
    * DE-XUL: Render the recording controls and buttons using React.
    */
   _renderRecordingControls: function() {
-    ReactDOM.render(RecordingControls(this._recordingControlsState),
-                    this._recordingControlsMount);
+    ReactDOM.render(
+      RecordingControls(this._recordingControlsState),
+      this._recordingControlsMount
+    );
     for (const button of this._recordingButtonsMounts) {
       ReactDOM.render(RecordingButton(this._recordingControlsState), button);
     }
@@ -194,14 +215,26 @@ var PerformanceView = {
    * Unbinds events and destroys subviews.
    */
   async destroy() {
-    PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
-    PerformanceController.off(EVENTS.RECORDING_PROFILER_STATUS_UPDATE,
-                              this._onProfilerStatusUpdated);
-    PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE,
-                              this._onRecordingStateChange);
-    PerformanceController.off(EVENTS.RECORDING_ADDED, this._onRecordingStateChange);
-    PerformanceController.off(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START,
-                              this._onNewRecordingFailed);
+    PerformanceController.off(
+      EVENTS.RECORDING_SELECTED,
+      this._onRecordingSelected
+    );
+    PerformanceController.off(
+      EVENTS.RECORDING_PROFILER_STATUS_UPDATE,
+      this._onProfilerStatusUpdated
+    );
+    PerformanceController.off(
+      EVENTS.RECORDING_STATE_CHANGE,
+      this._onRecordingStateChange
+    );
+    PerformanceController.off(
+      EVENTS.RECORDING_ADDED,
+      this._onRecordingStateChange
+    );
+    PerformanceController.off(
+      EVENTS.BACKEND_FAILED_AFTER_RECORDING_START,
+      this._onNewRecordingFailed
+    );
 
     await ToolbarView.destroy();
     await RecordingsView.destroy();
@@ -241,9 +274,12 @@ var PerformanceView = {
       // Wrap the label in quotes if it exists for the commands.
       label = label ? `"${label}"` : "";
 
-      const startCommand =
-        $(".console-profile-recording-notice .console-profile-command");
-      const stopCommand = $(".console-profile-stop-notice .console-profile-command");
+      const startCommand = $(
+        ".console-profile-recording-notice .console-profile-command"
+      );
+      const stopCommand = $(
+        ".console-profile-stop-notice .console-profile-command"
+      );
 
       startCommand.value = `console.profile(${label})`;
       stopCommand.value = `console.profileEnd(${label})`;
@@ -275,7 +311,8 @@ var PerformanceView = {
       return;
     }
 
-    const bufferUsage = PerformanceController.getBufferUsageForRecording(recording) || 0;
+    const bufferUsage =
+      PerformanceController.getBufferUsageForRecording(recording) || 0;
 
     // Normalize to a percentage value
     const percent = Math.floor(bufferUsage * 100);
@@ -324,8 +361,12 @@ var PerformanceView = {
     const currentRecording = PerformanceController.getCurrentRecording();
     const recordings = PerformanceController.getRecordings();
 
-    this._toggleRecordButtons(!!recordings.find(r => !r.isConsole() && r.isRecording()));
-    this._lockRecordButtons(!!recordings.find(r => !r.isConsole() && r.isFinalizing()));
+    this._toggleRecordButtons(
+      !!recordings.find(r => !r.isConsole() && r.isRecording())
+    );
+    this._lockRecordButtons(
+      !!recordings.find(r => !r.isConsole() && r.isFinalizing())
+    );
 
     if (currentRecording && currentRecording.isFinalizing()) {
       this.setState("loading");
@@ -371,9 +412,15 @@ var PerformanceView = {
    */
   _onImportButtonClick: function(e) {
     const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    fp.init(window, L10N.getStr("recordingsList.importDialogTitle"),
-            Ci.nsIFilePicker.modeOpen);
-    fp.appendFilter(L10N.getStr("recordingsList.saveDialogJSONFilter"), "*.json");
+    fp.init(
+      window,
+      L10N.getStr("recordingsList.importDialogTitle"),
+      Ci.nsIFilePicker.modeOpen
+    );
+    fp.appendFilter(
+      L10N.getStr("recordingsList.saveDialogJSONFilter"),
+      "*.json"
+    );
     fp.appendFilter(L10N.getStr("recordingsList.saveDialogAllFilter"), "*.*");
 
     fp.open(rv => {

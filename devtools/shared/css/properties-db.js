@@ -17,8 +17,11 @@ let db;
 try {
   db = require("devtools/shared/css/generated/properties-db");
 } catch (error) {
-  console.error(`If this error is being displayed and "mach devtools-css-db" is not ` +
-                `being run, then it needs to be fixed.`, error);
+  console.error(
+    `If this error is being displayed and "mach devtools-css-db" is not ` +
+      `being run, then it needs to be fixed.`,
+    error
+  );
   db = {
     CSS_PROPERTIES: {},
     PSEUDO_ELEMENTS: [],

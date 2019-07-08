@@ -13,8 +13,10 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionChildDevToolsUtils"];
 
-const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Create a variable to hold the cached ThemeChangeObserver which does not
 // get created until a devtools context has been created.
@@ -40,7 +42,8 @@ class ThemeChangeObserver extends EventEmitter {
     if (this.contexts.has(context)) {
       throw new Error(
         "addContext on the ThemeChangeObserver was called more than once" +
-        " for the context.");
+          " for the context."
+      );
     }
 
     context.callOnClose({
@@ -64,7 +67,7 @@ class ThemeChangeObserver extends EventEmitter {
     this.emit("themeChanged", themeName);
   }
 
-  receiveMessage({name, data}) {
+  receiveMessage({ name, data }) {
     if (name === "Extension:DevToolsThemeChanged") {
       this.onThemeChanged(data.themeName);
     }
@@ -90,10 +93,9 @@ var ExtensionChildDevToolsUtils = {
    */
   initThemeChangeObserver(themeName, context) {
     if (!themeChangeObserver) {
-      themeChangeObserver = new ThemeChangeObserver(
-        themeName,
-        function() { themeChangeObserver = null; }
-      );
+      themeChangeObserver = new ThemeChangeObserver(themeName, function() {
+        themeChangeObserver = null;
+      });
     }
     themeChangeObserver.addContext(context);
   },
@@ -105,7 +107,9 @@ var ExtensionChildDevToolsUtils = {
    */
   getThemeChangeObserver() {
     if (!themeChangeObserver) {
-      throw new Error("A ThemeChangeObserver must be created before being retrieved.");
+      throw new Error(
+        "A ThemeChangeObserver must be created before being retrieved."
+      );
     }
     return themeChangeObserver;
   },

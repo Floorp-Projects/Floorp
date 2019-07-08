@@ -23,36 +23,55 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGetter(this, "browserBundle", () => {
   return Services.strings.createBundle(
-    "chrome://browser/locale/browser.properties");
+    "chrome://browser/locale/browser.properties"
+  );
 });
 XPCOMUtils.defineLazyGetter(this, "brandBundle", () => {
   return Services.strings.createBundle(
-      "chrome://branding/locale/brand.properties");
+    "chrome://branding/locale/brand.properties"
+  );
 });
 XPCOMUtils.defineLazyGetter(this, "extBundle", function() {
   return Services.strings.createBundle(
-    "chrome://mozapps/locale/extensions/extensions.properties");
+    "chrome://mozapps/locale/extensions/extensions.properties"
+  );
 });
 XPCOMUtils.defineLazyGetter(this, "extensionStylesheets", () => {
-  const {ExtensionParent} =
-    ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+  const { ExtensionParent } = ChromeUtils.import(
+    "resource://gre/modules/ExtensionParent.jsm"
+  );
   return ExtensionParent.extensionStylesheets;
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this, "allowPrivateBrowsingByDefault",
-  "extensions.allowPrivateBrowsingByDefault", true);
+  this,
+  "allowPrivateBrowsingByDefault",
+  "extensions.allowPrivateBrowsingByDefault",
+  true
+);
 XPCOMUtils.defineLazyPreferenceGetter(
-  this, "SUPPORT_URL", "app.support.baseURL",
-  "", null, val => Services.urlFormatter.formatURL(val));
+  this,
+  "SUPPORT_URL",
+  "app.support.baseURL",
+  "",
+  null,
+  val => Services.urlFormatter.formatURL(val)
+);
 
 const UPDATES_RECENT_TIMESPAN = 2 * 24 * 3600000; // 2 days (in milliseconds)
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "ABUSE_REPORT_ENABLED",
-                                      "extensions.abuseReport.enabled", false);
 XPCOMUtils.defineLazyPreferenceGetter(
-  this, "LIST_RECOMMENDATIONS_ENABLED",
-  "extensions.htmlaboutaddons.recommendations.enabled", false);
+  this,
+  "ABUSE_REPORT_ENABLED",
+  "extensions.abuseReport.enabled",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "LIST_RECOMMENDATIONS_ENABLED",
+  "extensions.htmlaboutaddons.recommendations.enabled",
+  false
+);
 
 const PLUGIN_ICON_URL = "chrome://global/skin/plugins/pluginGeneric.svg";
 const PERMISSION_MASKS = {
@@ -73,12 +92,17 @@ const PREF_PRIVACY_POLICY_URL = "extensions.recommendations.privacyPolicyUrl";
 const PREF_RECOMMENDATION_ENABLED = "browser.discovery.enabled";
 const PREF_TELEMETRY_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PRIVATE_BROWSING_PERM_NAME = "internal:privateBrowsingAllowed";
-const PRIVATE_BROWSING_PERMS =
-  {permissions: [PRIVATE_BROWSING_PERM_NAME], origins: []};
+const PRIVATE_BROWSING_PERMS = {
+  permissions: [PRIVATE_BROWSING_PERM_NAME],
+  origins: [],
+};
 
 const AddonCardListenerHandler = {
   ADDON_EVENTS: new Set([
-    "onDisabled", "onEnabled", "onInstalled", "onPropertyChanged",
+    "onDisabled",
+    "onEnabled",
+    "onInstalled",
+    "onPropertyChanged",
     "onUninstalling",
   ]),
   MANAGER_EVENTS: new Set(["onUpdateModeChanged"]),
@@ -138,9 +162,11 @@ const AddonCardListenerHandler = {
 };
 
 function isAbuseReportSupported(addon) {
-  return ABUSE_REPORT_ENABLED &&
+  return (
+    ABUSE_REPORT_ENABLED &&
     ["extension", "theme"].includes(addon.type) &&
-    !(addon.isBuiltin || addon.isSystem);
+    !(addon.isBuiltin || addon.isSystem)
+  );
 }
 
 async function isAllowedInPrivateBrowsing(addon) {
@@ -159,16 +185,22 @@ function isPending(addon, action) {
 }
 
 async function getAddonMessageInfo(addon) {
-  const {name} = addon;
+  const { name } = addon;
   const appName = brandBundle.GetStringFromName("brandShortName");
   const {
-    STATE_BLOCKED, STATE_OUTDATED, STATE_SOFTBLOCKED,
-    STATE_VULNERABLE_UPDATE_AVAILABLE, STATE_VULNERABLE_NO_UPDATE,
+    STATE_BLOCKED,
+    STATE_OUTDATED,
+    STATE_SOFTBLOCKED,
+    STATE_VULNERABLE_UPDATE_AVAILABLE,
+    STATE_VULNERABLE_NO_UPDATE,
   } = Ci.nsIBlocklistService;
 
   const formatString = (name, args) =>
     extBundle.formatStringFromName(
-      `details.notification.${name}`, args, args.length);
+      `details.notification.${name}`,
+      args,
+      args.length
+    );
   const getString = name =>
     extBundle.GetStringFromName(`details.notification.${name}`);
 
@@ -186,11 +218,17 @@ async function getAddonMessageInfo(addon) {
       message: formatString("unsignedAndDisabled", [name, appName]),
       type: "error",
     };
-  } else if (!addon.isCompatible && (AddonManager.checkCompatibility ||
-      addon.blocklistState !== STATE_SOFTBLOCKED)) {
+  } else if (
+    !addon.isCompatible &&
+    (AddonManager.checkCompatibility ||
+      addon.blocklistState !== STATE_SOFTBLOCKED)
+  ) {
     return {
-      message: formatString(
-        "incompatible", [name, appName, Services.appinfo.version]),
+      message: formatString("incompatible", [
+        name,
+        appName,
+        Services.appinfo.version,
+      ]),
       type: "warning",
     };
   } else if (!isCorrectlySigned(addon)) {
@@ -239,11 +277,13 @@ async function getAddonMessageInfo(addon) {
 
 // Don't change how we handle this while the page is open.
 const INLINE_OPTIONS_ENABLED = Services.prefs.getBoolPref(
-  "extensions.htmlaboutaddons.inline-options.enabled");
+  "extensions.htmlaboutaddons.inline-options.enabled"
+);
 const OPTIONS_TYPE_MAP = {
   [AddonManager.OPTIONS_TYPE_TAB]: "tab",
-  [AddonManager.OPTIONS_TYPE_INLINE_BROWSER]:
-    INLINE_OPTIONS_ENABLED ? "inline" : "tab",
+  [AddonManager.OPTIONS_TYPE_INLINE_BROWSER]: INLINE_OPTIONS_ENABLED
+    ? "inline"
+    : "tab",
 };
 
 // Check if an add-on has the provided options type, accounting for the pref
@@ -268,9 +308,11 @@ async function isAddonOptionsUIAllowed(addon) {
   }
   // The current page is in a private browsing window, and the add-on does not
   // have the permission to access private browsing windows. Block access.
-  return allowPrivateBrowsingByDefault ||
+  return (
+    allowPrivateBrowsingByDefault ||
     // Note: This function is async because isAllowedInPrivateBrowsing is async.
-    isAllowedInPrivateBrowsing(addon);
+    isAllowedInPrivateBrowsing(addon)
+  );
 }
 
 /**
@@ -321,7 +363,7 @@ function nl2br(text) {
  *          The URL of the best fitting screenshot, if any.
  */
 function getScreenshotUrlForAddon(addon) {
-  let {screenshots} = addon;
+  let { screenshots } = addon;
   if (!screenshots || !screenshots.length) {
     return null;
   }
@@ -350,9 +392,11 @@ function getScreenshotUrlForAddon(addon) {
 function formatAmoUrl(contentAttribute, url) {
   let parsedUrl = new URL(url);
   let domain = `.${parsedUrl.hostname}`;
-  if (!domain.endsWith(".addons.mozilla.org") &&
-      // For testing: addons-dev.allizom.org and addons.allizom.org
-      !domain.endsWith(".allizom.org")) {
+  if (
+    !domain.endsWith(".addons.mozilla.org") &&
+    // For testing: addons-dev.allizom.org and addons.allizom.org
+    !domain.endsWith(".allizom.org")
+  ) {
     return url;
   }
 
@@ -423,24 +467,24 @@ var DiscoveryAPI = {
     preferClientId = preferClientId && this.clientIdDiscoveryEnabled;
 
     // Reuse a request for this preference first.
-    let resultPromise = this._resultPromises.get(preferClientId) ||
+    let resultPromise =
+      this._resultPromises.get(preferClientId) ||
       // If the client ID isn't preferred, we can still reuse a request with the
       // client ID.
-      !preferClientId && this._resultPromises.get(true);
+      (!preferClientId && this._resultPromises.get(true));
 
     if (resultPromise) {
       return resultPromise;
     }
 
     // Nothing is prepared for this preference, make a new request.
-    resultPromise = this._fetchRecommendedAddons(preferClientId)
-      .catch(e => {
-        // Delete the pending promise, so _fetchRecommendedAddons can be
-        // called again at the next property access.
-        this._resultPromises.delete(preferClientId);
-        Cu.reportError(e);
-        throw e;
-      });
+    resultPromise = this._fetchRecommendedAddons(preferClientId).catch(e => {
+      // Delete the pending promise, so _fetchRecommendedAddons can be
+      // called again at the next property access.
+      this._resultPromises.delete(preferClientId);
+      Cu.reportError(e);
+      throw e;
+    });
 
     // Store the new result for the preference.
     this._resultPromises.set(preferClientId, resultPromise);
@@ -450,14 +494,17 @@ var DiscoveryAPI = {
 
   get clientIdDiscoveryEnabled() {
     // These prefs match Discovery.jsm for enabling clientId cookies.
-    return Services.prefs.getBoolPref(PREF_RECOMMENDATION_ENABLED, false) &&
-           Services.prefs.getBoolPref(PREF_TELEMETRY_ENABLED, false) &&
-           !PrivateBrowsingUtils.isContentWindowPrivate(window);
+    return (
+      Services.prefs.getBoolPref(PREF_RECOMMENDATION_ENABLED, false) &&
+      Services.prefs.getBoolPref(PREF_TELEMETRY_ENABLED, false) &&
+      !PrivateBrowsingUtils.isContentWindowPrivate(window)
+    );
   },
 
   async _fetchRecommendedAddons(useClientId) {
-    let discoveryApiUrl =
-      new URL(Services.urlFormatter.formatURLPref(PREF_DISCOVERY_API_URL));
+    let discoveryApiUrl = new URL(
+      Services.urlFormatter.formatURLPref(PREF_DISCOVERY_API_URL)
+    );
 
     if (useClientId) {
       let clientId = await ClientID.getClientIdHash();
@@ -469,7 +516,7 @@ var DiscoveryAPI = {
     if (!res.ok) {
       throw new Error(`Failed to fetch recommended add-ons, ${res.status}`);
     }
-    let {results} = await res.json();
+    let { results } = await res.json();
     return results.map(details => new DiscoAddonWrapper(details));
   },
 };
@@ -481,7 +528,7 @@ class PanelList extends HTMLElement {
 
   constructor() {
     super();
-    this.attachShadow({mode: "open"});
+    this.attachShadow({ mode: "open" });
     this.shadowRoot.appendChild(importTemplate("panel-list"));
   }
 
@@ -529,20 +576,36 @@ class PanelList extends HTMLElement {
     this.parentNode.style.overflow = "hidden";
 
     // Wait for a layout flush, then find the bounds.
-    let {height, width, y, left, right, winHeight, winWidth} =
-      await new Promise(resolve => {
-        requestAnimationFrame(() => setTimeout(() => {
+    let {
+      height,
+      width,
+      y,
+      left,
+      right,
+      winHeight,
+      winWidth,
+    } = await new Promise(resolve => {
+      requestAnimationFrame(() =>
+        setTimeout(() => {
           // Use y since top is reserved.
-          let {y, left, right} =
-            window.windowUtils.getBoundsWithoutFlushing(this.parentNode);
-          let {height, width} =
-            window.windowUtils.getBoundsWithoutFlushing(this);
+          let { y, left, right } = window.windowUtils.getBoundsWithoutFlushing(
+            this.parentNode
+          );
+          let { height, width } = window.windowUtils.getBoundsWithoutFlushing(
+            this
+          );
           resolve({
-            height, width, y, left, right,
-            winHeight: innerHeight, winWidth: innerWidth,
+            height,
+            width,
+            y,
+            left,
+            right,
+            winHeight: innerHeight,
+            winWidth: innerWidth,
           });
-        }, 0));
-      });
+        }, 0)
+      );
+    });
 
     // Calculate the left/right alignment.
     let align;
@@ -617,15 +680,18 @@ class PanelList extends HTMLElement {
         // There will be a focusin after the mousedown that opens the panel
         // using the mouse. Ignore the first focusin event if it's on the
         // triggering target.
-        if (this.triggeringEvent &&
-            e.target == this.triggeringEvent.target &&
-            !this.focusHasChanged) {
+        if (
+          this.triggeringEvent &&
+          e.target == this.triggeringEvent.target &&
+          !this.focusHasChanged
+        ) {
           this.focusHasChanged = true;
-        // If the target isn't in the panel, hide. This will close when focus
-        // moves out of the panel, or there's a click started outside the panel.
+          // If the target isn't in the panel, hide. This will close when focus
+          // moves out of the panel, or there's a click started outside the
+          // panel.
         } else if (!e.target || e.target.closest("panel-list") != this) {
           this.hide();
-        // Just record that there was a focusin event.
+          // Just record that there was a focusin event.
         } else {
           this.focusHasChanged = true;
         }
@@ -643,7 +709,7 @@ class PanelList extends HTMLElement {
   }
 
   sendEvent(name, detail) {
-    this.dispatchEvent(new CustomEvent(name, {detail}));
+    this.dispatchEvent(new CustomEvent(name, { detail }));
   }
 }
 customElements.define("panel-list", PanelList);
@@ -651,7 +717,7 @@ customElements.define("panel-list", PanelList);
 class PanelItem extends HTMLElement {
   constructor() {
     super();
-    this.attachShadow({mode: "open"});
+    this.attachShadow({ mode: "open" });
     this.shadowRoot.appendChild(importTemplate("panel-item"));
     this.button = this.shadowRoot.querySelector("button");
   }
@@ -690,8 +756,7 @@ class AddonOptions extends HTMLElement {
     let elWasVisible = false;
 
     // Collect the panel-list children that are not already hidden.
-    const children = Array.from(this.panel.children)
-                          .filter(el => !el.hidden);
+    const children = Array.from(this.panel.children).filter(el => !el.hidden);
 
     for (let child of children) {
       if (child.tagName == "PANEL-ITEM-SEPARATOR") {
@@ -727,8 +792,7 @@ class AddonOptions extends HTMLElement {
         break;
       case "toggle-disabled": {
         let toggleDisabledAction = addon.userDisabled ? "enable" : "disable";
-        document.l10n.setAttributes(
-          el, `${toggleDisabledAction}-addon-button`);
+        document.l10n.setAttributes(el, `${toggleDisabledAction}-addon-button`);
         el.hidden = !hasPermission(addon, toggleDisabledAction);
         break;
       }
@@ -739,7 +803,8 @@ class AddonOptions extends HTMLElement {
         el.hidden = card.expanded;
         break;
       case "preferences":
-        el.hidden = getOptionsType(addon) !== "tab" &&
+        el.hidden =
+          getOptionsType(addon) !== "tab" &&
           (getOptionsType(addon) !== "inline" || card.expanded);
         if (!el.hidden) {
           isAddonOptionsUIAllowed(addon).then(allowed => {
@@ -777,8 +842,10 @@ class PluginOptions extends AddonOptions {
     if (action in userDisabledStates) {
       let userDisabled = userDisabledStates[action];
       el.checked = addon.userDisabled === userDisabled;
-      let resultProp = (action == "always-activate" && addon.isFlashPlugin) ?
-        "hidden" : "disabled";
+      let resultProp =
+        action == "always-activate" && addon.isFlashPlugin
+          ? "hidden"
+          : "disabled";
       el[resultProp] = !(el.checked || hasPermission(addon, action));
     } else {
       super.setElementState(el, card, addon);
@@ -794,7 +861,7 @@ class FiveStarRating extends HTMLElement {
 
   constructor() {
     super();
-    this.attachShadow({mode: "open"});
+    this.attachShadow({ mode: "open" });
     this.shadowRoot.append(importTemplate("five-star-rating"));
   }
 
@@ -815,7 +882,7 @@ class FiveStarRating extends HTMLElement {
     // 0.25 <= x <  0.75 = half
     // 0.75 <= x <= 1    = full
     // ... et cetera, until x <= 5.
-    let {rating} = this;
+    let { rating } = this;
     return [0, 1, 2, 3, 4].map(ratingStart => {
       let distanceToFull = rating - ratingStart;
       if (distanceToFull < 0.25) {
@@ -855,18 +922,21 @@ class ContentSelectDropdown extends HTMLElement {
     }
     // This creates the menulist and menupopup elements needed for the inline
     // browser to support <select> elements and context menus.
-    this.appendChild(MozXULElement.parseXULToFragment(`
+    this.appendChild(
+      MozXULElement.parseXULToFragment(`
       <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
         <menupopup rolluponmousewheel="true" activateontab="true"
                    position="after_start" level="parent"/>
       </menulist>
-    `));
+    `)
+    );
   }
 }
 customElements.define("content-select-dropdown", ContentSelectDropdown);
 
 class ProxyContextMenu extends HTMLElement {
   openPopupAtScreen(...args) {
+    // prettier-ignore
     const parentContextMenuPopup =
       windowRoot.ownerGlobal.document.getElementById("contentAreaContextMenu");
     return parentContextMenuPopup.openPopupAtScreen(...args);
@@ -923,7 +993,7 @@ class InlineOptionsBrowser extends HTMLElement {
   }
 
   async render() {
-    let {addon} = this;
+    let { addon } = this;
     if (!addon) {
       throw new Error("addon required to create inline options");
     }
@@ -944,17 +1014,20 @@ class InlineOptionsBrowser extends HTMLElement {
       event.stopPropagation();
     });
 
-    let {optionsURL, optionsBrowserStyle} = addon;
+    let { optionsURL, optionsBrowserStyle } = addon;
     if (addon.isWebExtension) {
       let policy = ExtensionParent.WebExtensionPolicy.getByID(addon.id);
       browser.sameProcessAsFrameLoader = policy.extension.groupFrameLoader;
     }
 
     let readyPromise;
-    let remoteSubframes =
-      window.docShell.QueryInterface(Ci.nsILoadContext).useRemoteSubframes;
+    let remoteSubframes = window.docShell.QueryInterface(Ci.nsILoadContext)
+      .useRemoteSubframes;
     let loadRemote = E10SUtils.canLoadURIInRemoteType(
-      optionsURL, remoteSubframes, E10SUtils.EXTENSION_REMOTE_TYPE);
+      optionsURL,
+      remoteSubframes,
+      E10SUtils.EXTENSION_REMOTE_TYPE
+    );
     if (loadRemote) {
       browser.setAttribute("remote", "true");
       browser.setAttribute("remoteType", E10SUtils.EXTENSION_REMOTE_TYPE);
@@ -1004,7 +1077,7 @@ class InlineOptionsBrowser extends HTMLElement {
 
     await new Promise(resolve => {
       let messageListener = {
-        receiveMessage({name, data}) {
+        receiveMessage({ name, data }) {
           if (name === "Extension:BrowserResized") {
             // Add a pixel to work around a scrolling issue, bug 1548687.
             browser.style.height = `${data.height + 1}px`;
@@ -1024,8 +1097,11 @@ class InlineOptionsBrowser extends HTMLElement {
         return;
       }
 
-      mm.loadFrameScript("chrome://extensions/content/ext-browser-content.js",
-                         false, true);
+      mm.loadFrameScript(
+        "chrome://extensions/content/ext-browser-content.js",
+        false,
+        true
+      );
       mm.loadFrameScript("chrome://browser/content/content.js", false, true);
       mm.addMessageListener("Extension:BrowserContentLoaded", messageListener);
       mm.addMessageListener("Extension:BrowserResized", messageListener);
@@ -1041,6 +1117,7 @@ class InlineOptionsBrowser extends HTMLElement {
 
       mm.sendAsyncMessage("Extension:InitBrowser", browserOptions);
 
+      // prettier-ignore
       browser.loadURI(optionsURL, {
         triggeringPrincipal:
           Services.scriptSecurityManager.getSystemPrincipal(),
@@ -1127,10 +1204,13 @@ class AddonPermissionsList extends HTMLElement {
 
   render() {
     let appName = brandBundle.GetStringFromName("brandShortName");
-    let {msgs} = Extension.formatPermissionStrings({
-      permissions: this.addon.userPermissions,
-      appName,
-    }, browserBundle);
+    let { msgs } = Extension.formatPermissionStrings(
+      {
+        permissions: this.addon.userPermissions,
+        appName,
+      },
+      browserBundle
+    );
 
     this.textContent = "";
 
@@ -1155,8 +1235,9 @@ class AddonPermissionsList extends HTMLElement {
     let learnMoreLink = document.createElement("a");
     learnMoreLink.setAttribute("target", "_blank");
     learnMoreLink.href = SUPPORT_URL + "extension-permissions";
-    learnMoreLink.textContent =
-      browserBundle.GetStringFromName("webextPerms.learnMore");
+    learnMoreLink.textContent = browserBundle.GetStringFromName(
+      "webextPerms.learnMore"
+    );
     learnMoreRow.appendChild(learnMoreLink);
     this.appendChild(learnMoreRow);
   }
@@ -1201,16 +1282,19 @@ class AddonDetails extends HTMLElement {
           break;
       }
     } else if (e.type == "keypress") {
-      if (e.keyCode == KeyEvent.DOM_VK_RETURN &&
-          e.target.getAttribute("action") === "pb-learn-more") {
+      if (
+        e.keyCode == KeyEvent.DOM_VK_RETURN &&
+        e.target.getAttribute("action") === "pb-learn-more"
+      ) {
         e.target.click();
       }
     }
   }
 
   get releaseNotesUri() {
-    return this.addon.updateInstall ?
-      this.addon.updateInstall.releaseNotesURI : this.addon.releaseNotesURI;
+    return this.addon.updateInstall
+      ? this.addon.updateInstall.releaseNotesURI
+      : this.addon.releaseNotesURI;
   }
 
   setAddon(addon) {
@@ -1218,11 +1302,11 @@ class AddonDetails extends HTMLElement {
   }
 
   update() {
-    let {addon} = this;
+    let { addon } = this;
 
     // Hide tab buttons that won't have any content.
-    let getButtonByName =
-      name => this.tabGroup.querySelector(`[name="${name}"]`);
+    let getButtonByName = name =>
+      this.tabGroup.querySelector(`[name="${name}"]`);
     let permsBtn = getButtonByName("permissions");
     permsBtn.hidden = addon.type != "extension";
     let notesBtn = getButtonByName("release-notes");
@@ -1256,7 +1340,7 @@ class AddonDetails extends HTMLElement {
   }
 
   async render() {
-    let {addon} = this;
+    let { addon } = this;
     if (!addon) {
       throw new Error("addon-details must be initialized by setAddon");
     }
@@ -1283,23 +1367,28 @@ class AddonDetails extends HTMLElement {
       description.appendChild(nl2br(addon.fullDescription));
     }
 
-    this.querySelector(".addon-detail-contribute").hidden =
-      !addon.contributionURL;
-    this.querySelector(".addon-detail-row-updates").hidden =
-      !hasPermission(addon, "upgrade");
+    this.querySelector(
+      ".addon-detail-contribute"
+    ).hidden = !addon.contributionURL;
+    this.querySelector(".addon-detail-row-updates").hidden = !hasPermission(
+      addon,
+      "upgrade"
+    );
 
     // By default, all private browsing rows are hidden. Possibly show one.
     if (allowPrivateBrowsingByDefault || addon.type != "extension") {
       // All add-addons of this type are allowed in private browsing mode, so
       // do not show any UI.
     } else if (addon.incognito == "not_allowed") {
-      let pbRowNotAllowed =
-        this.querySelector(".addon-detail-row-private-browsing-disallowed");
+      let pbRowNotAllowed = this.querySelector(
+        ".addon-detail-row-private-browsing-disallowed"
+      );
       pbRowNotAllowed.hidden = false;
       pbRowNotAllowed.nextElementSibling.hidden = false;
     } else if (!hasPermission(addon, "change-privatebrowsing")) {
-      let pbRowRequired =
-        this.querySelector(".addon-detail-row-private-browsing-required");
+      let pbRowRequired = this.querySelector(
+        ".addon-detail-row-private-browsing-required"
+      );
       pbRowRequired.hidden = false;
       pbRowRequired.nextElementSibling.hidden = false;
     } else {
@@ -1308,8 +1397,9 @@ class AddonDetails extends HTMLElement {
       pbRow.nextElementSibling.hidden = false;
       let isAllowed = await isAllowedInPrivateBrowsing(addon);
       pbRow.querySelector(`[value="${isAllowed ? 1 : 0}"]`).checked = true;
-      let learnMore = pbRow.nextElementSibling
-        .querySelector('a[data-l10n-name="learn-more"]');
+      let learnMore = pbRow.nextElementSibling.querySelector(
+        'a[data-l10n-name="learn-more"]'
+      );
       learnMore.href = SUPPORT_URL + "extensions-pb";
     }
 
@@ -1461,7 +1551,7 @@ class AddonCard extends HTMLElement {
   }
 
   async handleEvent(e) {
-    let {addon} = this;
+    let { addon } = this;
     let action = e.target.getAttribute("action");
 
     if (e.type == "click") {
@@ -1508,23 +1598,30 @@ class AddonCard extends HTMLElement {
           addon.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
           break;
         case "install-update":
-          this.updateInstall.install().then(() => {
-            // The card will update with the new add-on when it gets installed.
-            this.sendEvent("update-installed");
-          }, () => {
-            // Update our state if the install is cancelled.
-            this.update();
-            this.sendEvent("update-cancelled");
-          });
+          this.updateInstall.install().then(
+            () => {
+              // The card will update with the new add-on when it gets
+              // installed.
+              this.sendEvent("update-installed");
+            },
+            () => {
+              // Update our state if the install is cancelled.
+              this.update();
+              this.sendEvent("update-cancelled");
+            }
+          );
           // Clear the install since it will be removed from the global list of
           // available updates (whether it succeeds or fails).
           this.updateInstall = null;
           break;
         case "contribute":
           this.recordActionEvent("contribute");
+          // prettier-ignore
           windowRoot.ownerGlobal.openUILinkIn(addon.contributionURL, "tab", {
             triggeringPrincipal:
-              Services.scriptSecurityManager.createNullPrincipal({}),
+              Services.scriptSecurityManager.createNullPrincipal(
+                {}
+              ),
           });
           break;
         case "preferences":
@@ -1540,7 +1637,8 @@ class AddonCard extends HTMLElement {
           {
             this.panel.hide();
             let {
-              remove, report,
+              remove,
+              report,
             } = windowRoot.ownerGlobal.promptRemoveExtension(addon);
             let value = remove ? "accepted" : "cancelled";
             this.recordActionEvent("uninstall", value);
@@ -1549,7 +1647,8 @@ class AddonCard extends HTMLElement {
               this.sendEvent("remove");
               if (report) {
                 openAbuseReport({
-                  addonId: addon.id, reportEntryPoint: "uninstall",
+                  addonId: addon.id,
+                  reportEntryPoint: "uninstall",
                 });
               }
             } else {
@@ -1568,24 +1667,30 @@ class AddonCard extends HTMLElement {
           break;
         case "report":
           this.panel.hide();
-          openAbuseReport({addonId: addon.id, reportEntryPoint: "menu"});
+          openAbuseReport({ addonId: addon.id, reportEntryPoint: "menu" });
           break;
         case "link":
           if (e.target.getAttribute("url")) {
             windowRoot.ownerGlobal.openWebLinkIn(
-              e.target.getAttribute("url"), "tab");
+              e.target.getAttribute("url"),
+              "tab"
+            );
           }
           break;
         case "pb-learn-more":
           windowRoot.ownerGlobal.openTrustedLinkIn(
-            SUPPORT_URL + "extensions-pb", "tab");
+            SUPPORT_URL + "extensions-pb",
+            "tab"
+          );
           break;
         default:
           // Handle a click on the card itself.
           if (!this.expanded) {
             loadViewFn("detail", this.addon.id);
-          } else if (e.target.localName == "a" &&
-                     e.target.getAttribute("data-telemetry-name")) {
+          } else if (
+            e.target.localName == "a" &&
+            e.target.getAttribute("data-telemetry-name")
+          ) {
             let value = e.target.getAttribute("data-telemetry-name");
             AMTelemetry.recordLinkEvent({
               object: "aboutAddons",
@@ -1599,7 +1704,7 @@ class AddonCard extends HTMLElement {
           break;
       }
     } else if (e.type == "change") {
-      let {name} = e.target;
+      let { name } = e.target;
       let telemetryValue = e.target.getAttribute("data-telemetry-value");
       if (name == "autoupdate") {
         this.recordActionEvent("setAddonUpdate", telemetryValue);
@@ -1611,10 +1716,16 @@ class AddonCard extends HTMLElement {
 
         if (e.target.value == "1") {
           await ExtensionPermissions.add(
-            addon.id, PRIVATE_BROWSING_PERMS, extension);
+            addon.id,
+            PRIVATE_BROWSING_PERMS,
+            extension
+          );
         } else {
           await ExtensionPermissions.remove(
-            addon.id, PRIVATE_BROWSING_PERMS, extension);
+            addon.id,
+            PRIVATE_BROWSING_PERMS,
+            extension
+          );
         }
         // Reload the extension if it is already enabled. This ensures any
         // change on the private browsing permission is properly handled.
@@ -1701,7 +1812,7 @@ class AddonCard extends HTMLElement {
    * be called if there has been a change to the add-on.
    */
   update() {
-    let {addon, card} = this;
+    let { addon, card } = this;
 
     // Update the icon.
     let icon;
@@ -1739,22 +1850,28 @@ class AddonCard extends HTMLElement {
     this.options.update(this, addon, this.updateInstall);
 
     // Badge the more options menu if there's an update.
-    card.querySelector(".more-options-button")
+    card
+      .querySelector(".more-options-button")
       .classList.toggle("more-options-button-badged", !!this.updateInstall);
 
     // Set the private browsing badge visibility.
-    if (!allowPrivateBrowsingByDefault && addon.type == "extension" &&
-        addon.incognito != "not_allowed") {
+    if (
+      !allowPrivateBrowsingByDefault &&
+      addon.type == "extension" &&
+      addon.incognito != "not_allowed"
+    ) {
       // Keep update synchronous, the badge can appear later.
       isAllowedInPrivateBrowsing(addon).then(isAllowed => {
-        card.querySelector(".addon-badge-private-browsing-allowed")
-          .hidden = !isAllowed;
+        card.querySelector(
+          ".addon-badge-private-browsing-allowed"
+        ).hidden = !isAllowed;
       });
     }
 
     // Show the recommended badge if needed.
-    card.querySelector(".addon-badge-recommended")
-      .hidden = !addon.isRecommended;
+    card.querySelector(
+      ".addon-badge-recommended"
+    ).hidden = !addon.isRecommended;
 
     // Update description.
     card.querySelector(".addon-description").textContent = addon.description;
@@ -1770,12 +1887,13 @@ class AddonCard extends HTMLElement {
   }
 
   async updateMessage() {
-    let {addon, card} = this;
+    let { addon, card } = this;
     let messageBar = card.querySelector(".addon-card-message");
     let link = messageBar.querySelector("button");
 
-    let {message, type = "", linkText, linkUrl} =
-      await getAddonMessageInfo(addon);
+    let { message, type = "", linkText, linkUrl } = await getAddonMessageInfo(
+      addon
+    );
 
     if (message) {
       messageBar.querySelector("span").textContent = message;
@@ -1805,7 +1923,7 @@ class AddonCard extends HTMLElement {
   render() {
     this.textContent = "";
 
-    let {addon} = this;
+    let { addon } = this;
     if (!addon) {
       throw new Error("addon-card must be initialized with setAddon()");
     }
@@ -1841,7 +1959,7 @@ class AddonCard extends HTMLElement {
   }
 
   sendEvent(name, detail) {
-    this.dispatchEvent(new CustomEvent(name, {detail}));
+    this.dispatchEvent(new CustomEvent(name, { detail }));
   }
 
   recordActionEvent(action, value) {
@@ -1888,7 +2006,8 @@ class RecommendedAddonCard extends HTMLElement {
 
     this.setCardContent(card, addon);
     if (addon.type != "theme") {
-      card.querySelector(".addon-description")
+      card
+        .querySelector(".addon-description")
         .append(importTemplate("addon-description-in-disco-card"));
       this.setCardDescription(card, addon);
     }
@@ -1913,8 +2032,11 @@ class RecommendedAddonCard extends HTMLElement {
     if (addon.type == "theme") {
       card.querySelector(".addon-icon").hidden = true;
     } else {
-      card.querySelector(".addon-icon").src =
-        AddonManager.getPreferredIconURL(addon, 32, window);
+      card.querySelector(".addon-icon").src = AddonManager.getPreferredIconURL(
+        addon,
+        32,
+        window
+      );
     }
 
     // Set the theme preview.
@@ -1939,8 +2061,10 @@ class RecommendedAddonCard extends HTMLElement {
       });
       // This is intentionally a link to the add-on listing instead of the
       // author page, because the add-on listing provides more relevant info.
-      authorInfo.querySelector("a").href =
-        formatAmoUrl("discopane-entry-link", addon.amoListingUrl);
+      authorInfo.querySelector("a").href = formatAmoUrl(
+        "discopane-entry-link",
+        addon.amoListingUrl
+      );
       authorInfo.hidden = false;
     }
   }
@@ -1948,8 +2072,8 @@ class RecommendedAddonCard extends HTMLElement {
   setCardDescription(card, addon) {
     // Set the description. Note that this is the editorial description, not
     // the add-on's original description that would normally appear on a card.
-    card.querySelector(".disco-description-main")
-      .textContent = addon.editorialDescription;
+    card.querySelector(".disco-description-main").textContent =
+      addon.editorialDescription;
     if (addon.editorialHeading) {
       card.querySelector(".disco-description-intro").textContent =
         addon.editorialHeading;
@@ -2026,13 +2150,17 @@ class RecommendedAddonCard extends HTMLElement {
     let url = addon.sourceURI.spec;
     let install = await AddonManager.getInstallForURL(url, {
       name: addon.name,
-      telemetryInfo: {source: "disco"},
+      telemetryInfo: { source: "disco" },
     });
     // We are hosted in a <browser> in about:addons, but we can just use the
     // main tab's browser since all of it is using the system principal.
     let browser = window.docShell.chromeEventHandler;
-    AddonManager.installAddonFromWebpage("application/x-xpinstall", browser,
-      Services.scriptSecurityManager.getSystemPrincipal(), install);
+    AddonManager.installAddonFromWebpage(
+      "application/x-xpinstall",
+      browser,
+      Services.scriptSecurityManager.getSystemPrincipal(),
+      install
+    );
   }
 
   /**
@@ -2154,7 +2282,7 @@ class AddonList extends HTMLElement {
     // that it matches the filterFn for. It might not go in any section.
     let sectionedAddons = this.sections.map(() => []);
     for (let addon of addons) {
-      let index = this.sections.findIndex(({filterFn}) => filterFn(addon));
+      let index = this.sections.findIndex(({ filterFn }) => filterFn(addon));
       if (index != -1) {
         sectionedAddons[index].push(addon);
       } else if (isPending(addon, "uninstall")) {
@@ -2179,7 +2307,7 @@ class AddonList extends HTMLElement {
     stack.setAttribute("class", "pending-uninstall");
     stack.setAttribute("reverse", "");
     return stack;
- }
+  }
 
   addPendingUninstallBar(addon) {
     const stack = this.pendingUninstallStack;
@@ -2204,7 +2332,7 @@ class AddonList extends HTMLElement {
     });
 
     document.l10n.setAttributes(message, "pending-uninstall-description", {
-      "addon": addon.name,
+      addon: addon.name,
     });
     document.l10n.setAttributes(undo, "pending-uninstall-undo-button");
 
@@ -2220,7 +2348,7 @@ class AddonList extends HTMLElement {
   }
 
   createSectionHeading(headingIndex) {
-    let {headingId} = this.sections[headingIndex];
+    let { headingId } = this.sections[headingIndex];
     let heading = document.createElement("h2");
     heading.classList.add("list-section-heading");
     document.l10n.setAttributes(heading, headingId);
@@ -2246,7 +2374,8 @@ class AddonList extends HTMLElement {
 
     // Find where to insert the card.
     let insertBefore = Array.from(sectionCards).find(
-      otherCard => this.sortByFn(card.addon, otherCard.addon) < 0);
+      otherCard => this.sortByFn(card.addon, otherCard.addon) < 0
+    );
     // This will append if insertBefore is null.
     section.insertBefore(card, insertBefore || null);
   }
@@ -2258,8 +2387,9 @@ class AddonList extends HTMLElement {
       return;
     }
 
-    let insertSection = this.sections.findIndex(
-      ({filterFn}) => filterFn(addon));
+    let insertSection = this.sections.findIndex(({ filterFn }) =>
+      filterFn(addon)
+    );
 
     // Don't add the add-on if it doesn't go in a section.
     if (insertSection == -1) {
@@ -2270,11 +2400,11 @@ class AddonList extends HTMLElement {
     let card = document.createElement("addon-card");
     card.setAddon(addon);
     this.insertCardInto(card, insertSection);
-    this.sendEvent("add", {id: addon.id});
+    this.sendEvent("add", { id: addon.id });
   }
 
   sendEvent(name, detail) {
-    this.dispatchEvent(new CustomEvent(name, {detail}));
+    this.dispatchEvent(new CustomEvent(name, { detail }));
   }
 
   removeAddon(addon) {
@@ -2283,7 +2413,7 @@ class AddonList extends HTMLElement {
       let section = card.parentNode;
       card.remove();
       this.updateSectionIfEmpty(section);
-      this.sendEvent("remove", {id: addon.id});
+      this.sendEvent("remove", { id: addon.id });
     }
   }
 
@@ -2298,7 +2428,7 @@ class AddonList extends HTMLElement {
           let oldSection = card.parentNode;
           this.insertCardInto(card, sectionIndex);
           this.updateSectionIfEmpty(oldSection);
-          this.sendEvent("move", {id: addon.id});
+          this.sendEvent("move", { id: addon.id });
         }
       } else {
         this.removeAddon(addon);
@@ -2363,8 +2493,10 @@ class AddonList extends HTMLElement {
   }
 
   onOperationCancelled(addon) {
-    if (this.pendingUninstallAddons.has(addon) &&
-        !isPending(addon, "uninstall")) {
+    if (
+      this.pendingUninstallAddons.has(addon) &&
+      !isPending(addon, "uninstall")
+    ) {
       this.pendingUninstallAddons.delete(addon);
       this.removePendingUninstallBar(addon);
     }
@@ -2380,8 +2512,10 @@ class AddonList extends HTMLElement {
   }
 
   onUninstalling(addon) {
-    if (isPending(addon, "uninstall") &&
-        (this.type === "all" || addon.type === this.type)) {
+    if (
+      isPending(addon, "uninstall") &&
+      (this.type === "all" || addon.type === this.type)
+    ) {
       this.pendingUninstallAddons.add(addon);
       this.addPendingUninstallBar(addon);
       this.updateAddon(addon);
@@ -2480,7 +2614,7 @@ class RecommendedAddonList extends HTMLElement {
 
     if (wasHidden != card.hidden) {
       let eventName = card.hidden ? "card-hidden" : "card-shown";
-      this.dispatchEvent(new CustomEvent(eventName, {detail: {card}}));
+      this.dispatchEvent(new CustomEvent(eventName, { detail: { card } }));
     }
   }
 
@@ -2547,8 +2681,10 @@ class TaarMessageBar extends HTMLElement {
   }
 
   handleEvent(e) {
-    if (e.type == "click" &&
-        e.target.getAttribute("action") == "notice-learn-more") {
+    if (
+      e.type == "click" &&
+      e.target.getAttribute("action") == "notice-learn-more"
+    ) {
       // The element is a button but opens a URL, so record as link.
       AMTelemetry.recordLinkEvent({
         object: "aboutAddons",
@@ -2558,7 +2694,9 @@ class TaarMessageBar extends HTMLElement {
         },
       });
       windowRoot.ownerGlobal.openTrustedLinkIn(
-        SUPPORT_URL + "personalized-addons", "tab");
+        SUPPORT_URL + "personalized-addons",
+        "tab"
+      );
     }
   }
 }
@@ -2568,8 +2706,9 @@ class RecommendedFooter extends HTMLElement {
   connectedCallback() {
     if (this.childElementCount == 0) {
       this.appendChild(importTemplate("recommended-footer"));
-      this.querySelector(".privacy-policy-link")
-        .href = Services.prefs.getStringPref(PREF_PRIVACY_POLICY_URL);
+      this.querySelector(
+        ".privacy-policy-link"
+      ).href = Services.prefs.getStringPref(PREF_PRIVACY_POLICY_URL);
       this.addEventListener("click", this);
     }
   }
@@ -2586,16 +2725,18 @@ class RecommendedFooter extends HTMLElement {
             view: "discover",
           },
         });
-        let amoUrl =
-          Services.urlFormatter.formatURLPref("extensions.getAddons.link.url");
+        let amoUrl = Services.urlFormatter.formatURLPref(
+          "extensions.getAddons.link.url"
+        );
         amoUrl = formatAmoUrl("find-more-link-bottom", amoUrl);
         windowRoot.ownerGlobal.openTrustedLinkIn(amoUrl, "tab");
         break;
     }
   }
 }
-customElements.define(
-  "recommended-footer", RecommendedFooter, {extends: "footer"});
+customElements.define("recommended-footer", RecommendedFooter, {
+  extends: "footer",
+});
 
 /**
  * This element will handle showing recommendations with a
@@ -2631,9 +2772,11 @@ class RecommendedSection extends HTMLElement {
 
     // Hide footer until the cards are loaded, to prevent the content from
     // suddenly shifting when the user attempts to interact with it.
-    let {footer} = this;
+    let { footer } = this;
     footer.hidden = true;
-    this.list.loadCardsIfNeeded().finally(() => { footer.hidden = false; });
+    this.list.loadCardsIfNeeded().finally(() => {
+      footer.hidden = false;
+    });
   }
 }
 
@@ -2652,7 +2795,7 @@ class RecommendedExtensionsSection extends RecommendedSection {
 
   render() {
     super.render();
-    let {list} = this;
+    let { list } = this;
     list.cardsReady.then(() => this.setAmoButtonVisibility());
     list.addEventListener("card-hidden", this);
     list.addEventListener("card-shown", this);
@@ -2667,7 +2810,9 @@ class RecommendedExtensionsSection extends RecommendedSection {
   }
 }
 customElements.define(
-  "recommended-extensions-section", RecommendedExtensionsSection);
+  "recommended-extensions-section",
+  RecommendedExtensionsSection
+);
 
 class RecommendedThemesSection extends RecommendedSection {
   get template() {
@@ -2677,8 +2822,9 @@ class RecommendedThemesSection extends RecommendedSection {
   render() {
     super.render();
     let themeRecommendationRow = this.querySelector(".theme-recommendation");
-    let themeRecommendationUrl =
-      Services.prefs.getStringPref(PREF_THEME_RECOMMENDATION_URL);
+    let themeRecommendationUrl = Services.prefs.getStringPref(
+      PREF_THEME_RECOMMENDATION_URL
+    );
     if (themeRecommendationUrl) {
       themeRecommendationRow.querySelector("a").href = themeRecommendationUrl;
     }
@@ -2701,7 +2847,7 @@ class DiscoveryPane extends RecommendedSection {
 customElements.define("discovery-pane", DiscoveryPane);
 
 class ListView {
-  constructor({param, root}) {
+  constructor({ param, root }) {
     this.type = param;
     this.root = root;
   }
@@ -2711,22 +2857,29 @@ class ListView {
 
     let list = document.createElement("addon-list");
     list.type = this.type;
-    list.setSections([{
-      headingId: "addons-enabled-heading",
-      filterFn: addon => !addon.hidden && addon.isActive &&
-                         !isPending(addon, "uninstall"),
-    }, {
-      headingId: "addons-disabled-heading",
-      filterFn: addon => !addon.hidden && !addon.isActive &&
-                         !isPending(addon, "uninstall"),
-    }]);
+    list.setSections([
+      {
+        headingId: "addons-enabled-heading",
+        filterFn: addon =>
+          !addon.hidden && addon.isActive && !isPending(addon, "uninstall"),
+      },
+      {
+        headingId: "addons-disabled-heading",
+        filterFn: addon =>
+          !addon.hidden && !addon.isActive && !isPending(addon, "uninstall"),
+      },
+    ]);
     frag.appendChild(list);
 
     // Show recommendations for themes and extensions.
-    if (LIST_RECOMMENDATIONS_ENABLED &&
-        (this.type == "extension" || this.type == "theme")) {
-      let elementName = this.type == "extension" ?
-        "recommended-extensions-section" : "recommended-themes-section";
+    if (
+      LIST_RECOMMENDATIONS_ENABLED &&
+      (this.type == "extension" || this.type == "theme")
+    ) {
+      let elementName =
+        this.type == "extension"
+          ? "recommended-extensions-section"
+          : "recommended-themes-section";
       let recommendations = document.createElement(elementName);
       // Start loading the recommendations. This can finish after the view load
       // event is sent.
@@ -2742,7 +2895,7 @@ class ListView {
 }
 
 class DetailView {
-  constructor({param, root}) {
+  constructor({ param, root }) {
     let [id, selectedTab] = param.split("/");
     this.id = id;
     this.selectedTab = selectedTab;
@@ -2768,8 +2921,10 @@ class DetailView {
     card.setAddon(addon);
     card.expand();
     await card.render();
-    if (this.selectedTab === "preferences" &&
-        (await isAddonOptionsUIAllowed(addon))) {
+    if (
+      this.selectedTab === "preferences" &&
+      (await isAddonOptionsUIAllowed(addon))
+    ) {
       card.showPrefs();
     }
 
@@ -2779,7 +2934,7 @@ class DetailView {
 }
 
 class UpdatesView {
-  constructor({param, root}) {
+  constructor({ param, root }) {
     this.root = root;
     this.param = param;
   }
@@ -2788,10 +2943,12 @@ class UpdatesView {
     let list = document.createElement("addon-list");
     list.type = "all";
     if (this.param == "available") {
-      list.setSections([{
-        headingId: "available-updates-heading",
-        filterFn: addon => addon.updateInstall,
-      }]);
+      list.setSections([
+        {
+          headingId: "available-updates-heading",
+          filterFn: addon => addon.updateInstall,
+        },
+      ]);
     } else if (this.param == "recent") {
       list.sortByFn = (a, b) => {
         if (a.updateDate > b.updateDate) {
@@ -2803,11 +2960,13 @@ class UpdatesView {
         return 0;
       };
       let updateLimit = new Date() - UPDATES_RECENT_TIMESPAN;
-      list.setSections([{
-        headingId: "recent-updates-heading",
-        filterFn: addon =>
-          !addon.hidden && addon.updateDate && addon.updateDate > updateLimit,
-      }]);
+      list.setSections([
+        {
+          headingId: "recent-updates-heading",
+          filterFn: addon =>
+            !addon.hidden && addon.updateDate && addon.updateDate > updateLimit,
+        },
+      ]);
     } else {
       throw new Error(`Unknown updates view ${this.param}`);
     }
@@ -2849,12 +3008,16 @@ function initialize(opts) {
   replaceWithDefaultViewFn = opts.replaceWithDefaultViewFn;
   setCategoryFn = opts.setCategoryFn;
   AddonCardListenerHandler.startup();
-  window.addEventListener("unload", () => {
-    // Clear out the main node so the disconnectedCallback will trigger
-    // properly and all of the custom elements can cleanup.
-    mainEl.textContent = "";
-    AddonCardListenerHandler.shutdown();
-  }, {once: true});
+  window.addEventListener(
+    "unload",
+    () => {
+      // Clear out the main node so the disconnectedCallback will trigger
+      // properly and all of the custom elements can cleanup.
+      mainEl.textContent = "";
+      AddonCardListenerHandler.shutdown();
+    },
+    { once: true }
+  );
 }
 
 /**
@@ -2866,16 +3029,16 @@ async function show(type, param) {
   let container = document.createElement("div");
   container.setAttribute("current-view", type);
   if (type == "list") {
-    await new ListView({param, root: container}).render();
+    await new ListView({ param, root: container }).render();
   } else if (type == "detail") {
-    await new DetailView({param, root: container}).render();
+    await new DetailView({ param, root: container }).render();
   } else if (type == "discover") {
     let discoverView = new DiscoveryView();
     let elem = discoverView.render();
     await document.l10n.translateFragment(elem);
     container.append(elem);
   } else if (type == "updates") {
-    await new UpdatesView({param, root: container}).render();
+    await new UpdatesView({ param, root: container }).render();
   } else {
     throw new Error(`Unknown view type: ${type}`);
   }

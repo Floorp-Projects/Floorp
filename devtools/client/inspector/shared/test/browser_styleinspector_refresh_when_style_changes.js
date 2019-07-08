@@ -12,31 +12,38 @@
 
 const TEST_URI = TEST_URL_ROOT + "doc_content_style_changes.html";
 
-const TEST_DATA = [{
-  target: "#test",
-  className: "green-class",
-  force: true,
-}, {
-  target: "#test",
-  className: "green-class",
-  force: false,
-}, {
-  target: "#parent",
-  className: "purple-class",
-  force: true,
-}, {
-  target: "#parent",
-  className: "purple-class",
-  force: false,
-}, {
-  target: "#sibling",
-  className: "blue-class",
-  force: true,
-}, {
-  target: "#sibling",
-  className: "blue-class",
-  force: false,
-}];
+const TEST_DATA = [
+  {
+    target: "#test",
+    className: "green-class",
+    force: true,
+  },
+  {
+    target: "#test",
+    className: "green-class",
+    force: false,
+  },
+  {
+    target: "#parent",
+    className: "purple-class",
+    force: true,
+  },
+  {
+    target: "#parent",
+    className: "purple-class",
+    force: false,
+  },
+  {
+    target: "#sibling",
+    className: "blue-class",
+    force: true,
+  },
+  {
+    target: "#sibling",
+    className: "blue-class",
+    force: false,
+  },
+];
 
 add_task(async function() {
   const tab = await addTab(TEST_URI);
@@ -58,22 +65,35 @@ add_task(async function() {
 
 async function runViewTest(inspector, tab, viewName) {
   for (const { target, className, force } of TEST_DATA) {
-    info((force ? "Adding" : "Removing") +
-         ` class ${className} on ${target} and expecting a ${viewName}-view refresh`);
+    info(
+      (force ? "Adding" : "Removing") +
+        ` class ${className} on ${target} and expecting a ${viewName}-view refresh`
+    );
 
     await toggleClassAndWaitForViewChange(
-      { target, className, force }, inspector, tab, `${viewName}-view-refreshed`);
+      { target, className, force },
+      inspector,
+      tab,
+      `${viewName}-view-refreshed`
+    );
   }
 }
 
-async function toggleClassAndWaitForViewChange(whatToMutate, inspector, tab, eventName) {
+async function toggleClassAndWaitForViewChange(
+  whatToMutate,
+  inspector,
+  tab,
+  eventName
+) {
   const onRefreshed = inspector.once(eventName);
 
-  await ContentTask.spawn(tab.linkedBrowser, whatToMutate,
-    function({ target, className, force }) {
-      content.document.querySelector(target).classList.toggle(className, force);
-    }
-  );
+  await ContentTask.spawn(tab.linkedBrowser, whatToMutate, function({
+    target,
+    className,
+    force,
+  }) {
+    content.document.querySelector(target).classList.toggle(className, force);
+  });
 
   await onRefreshed;
   ok(true, "The view was refreshed after the class was changed");

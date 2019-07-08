@@ -25,10 +25,13 @@ add_task(async function() {
   info("Waiting for source editor to be ready.");
   await ui.editors[1].getSourceEditor();
 
-  is(ui.selectedEditor, ui.editors[1],
-    "second editor is selected after reload");
+  is(
+    ui.selectedEditor,
+    ui.editors[1],
+    "second editor is selected after reload"
+  );
 
-  const {line, ch} = ui.selectedEditor.sourceEditor.getCursor();
+  const { line, ch } = ui.selectedEditor.sourceEditor.getCursor();
   is(line, LINE_NO, "correct line selected");
   is(ch, COL_NO, "correct column selected");
 });

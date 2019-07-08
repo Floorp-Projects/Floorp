@@ -270,9 +270,10 @@ class nsDocShell final : public nsDocLoader,
                          LOCATION_CHANGE_SAME_DOCUMENT);
   }
 
-  // This function is created exclusively for dom.background_loading_iframe is set.
-  // As soon as the current DocShell knows itself can be treated as background loading,
-  // it triggers the parent docshell to see if the parent document can fire load event earlier.
+  // This function is created exclusively for dom.background_loading_iframe is
+  // set. As soon as the current DocShell knows itself can be treated as
+  // background loading, it triggers the parent docshell to see if the parent
+  // document can fire load event earlier.
   void TriggerParentCheckDocShellIsEmpty() {
     RefPtr<nsDocShell> parent = GetParentDocshell();
     if (parent) {

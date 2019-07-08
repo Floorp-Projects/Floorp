@@ -21,8 +21,11 @@ async function promiseAutoComplete(inputText) {
 }
 
 function assertSelected(index) {
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), index,
-    "Should have the correct index selected");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedIndex(window),
+    index,
+    "Should have the correct index selected"
+  );
 }
 
 let gMaxResults;
@@ -47,8 +50,11 @@ add_task(async function() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await promiseAutoComplete("http://example.com/autocomplete/");
 
-  Assert.equal(UrlbarTestUtils.getResultCount(window), gMaxResults,
-    "Should have got the correct amount of results");
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    gMaxResults,
+    "Should have got the correct amount of results"
+  );
 
   let initiallySelected = UrlbarTestUtils.getSelectedIndex(window);
 
@@ -56,22 +62,33 @@ add_task(async function() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   assertSelected(initiallySelected + 1);
 
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, initiallySelected + 1);
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    initiallySelected + 1
+  );
   let expectedURL = result.url;
 
-  Assert.equal(gURLBar.value, expectedURL,
-    "Value in the URL bar should be updated by keyboard selection");
+  Assert.equal(
+    gURLBar.value,
+    expectedURL,
+    "Value in the URL bar should be updated by keyboard selection"
+  );
 
   // Verify that what we're about to do changes the selectedIndex:
-  Assert.notEqual(initiallySelected + 1, 3,
-    "Shouldn't be changing the selectedIndex to the same index we keyboard-selected.");
+  Assert.notEqual(
+    initiallySelected + 1,
+    3,
+    "Shouldn't be changing the selectedIndex to the same index we keyboard-selected."
+  );
 
   let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 3);
-  EventUtils.synthesizeMouseAtCenter(element, {type: "mousemove"});
+  EventUtils.synthesizeMouseAtCenter(element, { type: "mousemove" });
 
   await UrlbarTestUtils.promisePopupClose(window, async () => {
-    let openedExpectedPage =
-      BrowserTestUtils.waitForDocLoadAndStopIt(expectedURL, gBrowser.selectedBrowser);
+    let openedExpectedPage = BrowserTestUtils.waitForDocLoadAndStopIt(
+      expectedURL,
+      gBrowser.selectedBrowser
+    );
     EventUtils.synthesizeKey("KEY_Enter");
     await openedExpectedPage;
   });

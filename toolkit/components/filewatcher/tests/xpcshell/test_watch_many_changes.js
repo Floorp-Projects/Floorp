@@ -19,7 +19,10 @@ function run_test() {
 add_task(async function test_fill_notification_buffer() {
   // Create and watch a sub-directory of the profile directory so we don't
   // catch notifications we're not interested in (i.e. "startupCache").
-  let watchedDir = OS.Path.join(OS.Constants.Path.profileDir, "filewatcher_playground");
+  let watchedDir = OS.Path.join(
+    OS.Constants.Path.profileDir,
+    "filewatcher_playground"
+  );
   await OS.File.makeDir(watchedDir);
 
   // The number of files to create.
@@ -41,15 +44,15 @@ add_task(async function test_fill_notification_buffer() {
 
   // Initialise the change callback.
   let changeCallback = function(changed) {
-      info(changed + " has changed.");
+    info(changed + " has changed.");
 
-      detectedChanges += 1;
+    detectedChanges += 1;
 
-      // Resolve the promise if we get all the expected changes.
-      if (detectedChanges >= expectedChanges) {
-        deferred.resolve();
-      }
-    };
+    // Resolve the promise if we get all the expected changes.
+    if (detectedChanges >= expectedChanges) {
+      deferred.resolve();
+    }
+  };
 
   // Add the profile directory to the watch list and wait for the file watcher
   // to start watching it.

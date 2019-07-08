@@ -60,8 +60,12 @@ DOMHelpers.prototype = {
     return parentNode;
   },
 
-  getChildObject: function Helpers_getChildObject(node, index, previousSibling,
-                                                showTextNodesWithWhitespace) {
+  getChildObject: function Helpers_getChildObject(
+    node,
+    index,
+    previousSibling,
+    showTextNodesWithWhitespace
+  ) {
     if (!node) {
       return null;
     }
@@ -108,8 +112,7 @@ DOMHelpers.prototype = {
 
   getFirstChild: function Helpers_getFirstChild(node) {
     const SHOW_ALL = nodeFilterConstants.SHOW_ALL;
-    this.treeWalker = node.ownerDocument.createTreeWalker(node,
-      SHOW_ALL, null);
+    this.treeWalker = node.ownerDocument.createTreeWalker(node, SHOW_ALL, null);
     return this.treeWalker.firstChild();
   },
 
@@ -124,8 +127,10 @@ DOMHelpers.prototype = {
   },
 
   isWhitespaceText: function Helpers_isWhitespaceText(node) {
-    return node.nodeType == this.window.Node.TEXT_NODE &&
-                            !/[^\s]/.exec(node.nodeValue);
+    return (
+      node.nodeType == this.window.Node.TEXT_NODE &&
+      !/[^\s]/.exec(node.nodeValue)
+    );
   },
 
   destroy: function Helpers_destroy() {
@@ -146,16 +151,21 @@ DOMHelpers.prototype = {
     const docShell = window.docShell;
     const onReady = function(event) {
       if (event.target == window.document) {
-        docShell.chromeEventHandler.removeEventListener("DOMContentLoaded", onReady);
+        docShell.chromeEventHandler.removeEventListener(
+          "DOMContentLoaded",
+          onReady
+        );
         // If in `callback` the URL of the window is changed and a listener to DOMContentLoaded
         // is attached, the event we just received will be also be caught by the new listener.
         // We want to avoid that so we execute the callback in the next queue.
         Services.tm.dispatchToMainThread(callback);
       }
     };
-    if ((window.document.readyState == "complete" ||
-         window.document.readyState == "interactive") &&
-         window.location.href == targetURL) {
+    if (
+      (window.document.readyState == "complete" ||
+        window.document.readyState == "interactive") &&
+      window.location.href == targetURL
+    ) {
       Services.tm.dispatchToMainThread(callback);
     } else {
       docShell.chromeEventHandler.addEventListener("DOMContentLoaded", onReady);

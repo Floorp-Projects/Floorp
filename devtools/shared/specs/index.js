@@ -11,7 +11,7 @@
 
 // Declare in which spec module and front module a set of types are defined.
 // This array should be sorted by `spec` attribute.
-const Types = exports.__TypesForTests = [
+const Types = (exports.__TypesForTests = [
   {
     types: ["accessible", "accessiblewalker", "accessibility"],
     spec: "devtools/shared/specs/accessibility",
@@ -177,7 +177,14 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/source",
   },
   {
-    types: ["cookies", "localStorage", "sessionStorage", "Cache", "indexedDB", "storage"],
+    types: [
+      "cookies",
+      "localStorage",
+      "sessionStorage",
+      "Cache",
+      "indexedDB",
+      "storage",
+    ],
     spec: "devtools/shared/specs/storage",
     front: "devtools/shared/fronts/storage",
   },
@@ -282,7 +289,7 @@ const Types = exports.__TypesForTests = [
     spec: "devtools/shared/specs/worker/service-worker-registration",
     front: "devtools/shared/fronts/worker/service-worker-registration",
   },
-];
+]);
 
 const lazySpecs = new Map();
 const lazyFronts = new Map();
@@ -310,7 +317,8 @@ function lazyLoadSpec(type) {
       require(modulePath);
     } catch (e) {
       throw new Error(
-        `Unable to load lazy spec module '${modulePath}' for type '${type}'`);
+        `Unable to load lazy spec module '${modulePath}' for type '${type}'`
+      );
     }
     lazySpecs.delete(type);
     return true;
@@ -335,7 +343,8 @@ function lazyLoadFront(type) {
     } catch (e) {
       throw new Error(
         `Unable to load lazy front module '${modulePath}' for type '${type}'.
-        Error: ${e}`);
+        Error: ${e}`
+      );
     }
     lazyFronts.delete(type);
     return true;

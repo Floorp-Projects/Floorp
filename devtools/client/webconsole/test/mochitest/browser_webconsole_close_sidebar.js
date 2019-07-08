@@ -73,11 +73,13 @@ add_task(async function() {
 async function showSidebar(hud) {
   const onMessage = waitForMessage(hud, "Object");
   ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-    content.wrappedJSObject.console.log({a: 1});
+    content.wrappedJSObject.console.log({ a: 1 });
   });
   await onMessage;
 
-  const objectNode = hud.ui.outputNode.querySelector(".object-inspector .objectBox");
+  const objectNode = hud.ui.outputNode.querySelector(
+    ".object-inspector .objectBox"
+  );
   const appNode = hud.ui.document.querySelector(".webconsole-app");
   const onSidebarShown = waitForNodeMutation(appNode, { childList: true });
 
@@ -88,6 +90,9 @@ async function showSidebar(hud) {
   await hideContextMenu(hud);
 
   // Let's wait for the object inside the sidebar to be expanded.
-  await waitFor(() =>
-    appNode.querySelectorAll(".sidebar .tree-node").length > 1, null, 100);
+  await waitFor(
+    () => appNode.querySelectorAll(".sidebar .tree-node").length > 1,
+    null,
+    100
+  );
 }

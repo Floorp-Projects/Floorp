@@ -4,14 +4,22 @@
 function _contentPaintHandler() {
   var utils = content.windowUtils;
   if (utils.isMozAfterPaintPending) {
-    addEventListener("MozAfterPaint", function afterpaint(e) {
-      removeEventListener("MozAfterPaint", afterpaint, true);
-      sendAsyncMessage("PageLoader:LoadEvent", {});
-    }, true);
+    addEventListener(
+      "MozAfterPaint",
+      function afterpaint(e) {
+        removeEventListener("MozAfterPaint", afterpaint, true);
+        sendAsyncMessage("PageLoader:LoadEvent", {});
+      },
+      true
+    );
   } else {
     sendAsyncMessage("PageLoader:LoadEvent", {});
   }
 }
 
-
-addEventListener("load", contentLoadHandlerCallback(_contentPaintHandler), true); // eslint-disable-line no-undef
+addEventListener(
+  "load",
+  // eslint-disable-next-line no-undef
+  contentLoadHandlerCallback(_contentPaintHandler),
+  true
+);

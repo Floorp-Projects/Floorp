@@ -3,8 +3,10 @@
 "use strict";
 
 add_task(async function() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser,
-    "https://example.com/browser/browser/components/pocket/test/test.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com/browser/browser/components/pocket/test/test.html"
+  );
 
   info("clicking on pocket button in url bar");
   let pocketButton = document.getElementById("pocket-button");

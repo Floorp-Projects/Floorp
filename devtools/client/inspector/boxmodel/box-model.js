@@ -10,9 +10,22 @@ const {
   updateOffsetParent,
 } = require("./actions/box-model");
 
-loader.lazyRequireGetter(this, "EditingSession", "devtools/client/inspector/boxmodel/utils/editing-session");
-loader.lazyRequireGetter(this, "InplaceEditor", "devtools/client/shared/inplace-editor", true);
-loader.lazyRequireGetter(this, "RulePreviewTooltip", "devtools/client/shared/widgets/tooltip/RulePreviewTooltip");
+loader.lazyRequireGetter(
+  this,
+  "EditingSession",
+  "devtools/client/inspector/boxmodel/utils/editing-session"
+);
+loader.lazyRequireGetter(
+  this,
+  "InplaceEditor",
+  "devtools/client/shared/inplace-editor",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "RulePreviewTooltip",
+  "devtools/client/shared/widgets/tooltip/RulePreviewTooltip"
+);
 
 const NUMERIC = /^-?[\d\.]+$/;
 
@@ -47,7 +60,6 @@ function BoxModel(inspector, window) {
 }
 
 BoxModel.prototype = {
-
   /**
    * Destruction function called when the inspector is destroyed. Removes event listeners
    * and cleans up references.
@@ -104,9 +116,12 @@ BoxModel.prototype = {
    * Returns true if the layout panel is visible, and false otherwise.
    */
   isPanelVisible() {
-    return this.inspector.toolbox && this.inspector.sidebar &&
-           this.inspector.toolbox.currentToolId === "inspector" &&
-           (this.inspector.sidebar.getCurrentTabID() === "layoutview");
+    return (
+      this.inspector.toolbox &&
+      this.inspector.sidebar &&
+      this.inspector.toolbox.currentToolId === "inspector" &&
+      this.inspector.sidebar.getCurrentTabID() === "layoutview"
+    );
   },
 
   /**
@@ -114,9 +129,11 @@ BoxModel.prototype = {
    * be displayed in the view.
    */
   isPanelVisibleAndNodeValid() {
-    return this.isPanelVisible() &&
-           this.inspector.selection.isConnected() &&
-           this.inspector.selection.isElementNode();
+    return (
+      this.isPanelVisible() &&
+      this.inspector.selection.isConnected() &&
+      this.inspector.selection.isElementNode()
+    );
   },
 
   /**
@@ -145,11 +162,13 @@ BoxModel.prototype = {
       this._updateReasons.push(reason);
     }
 
-    const lastRequest = ((async function() {
-      if (!this.inspector ||
-          !this.isPanelVisible() ||
-          !this.inspector.selection.isConnected() ||
-          !this.inspector.selection.isElementNode()) {
+    const lastRequest = async function() {
+      if (
+        !this.inspector ||
+        !this.isPanelVisible() ||
+        !this.inspector.selection.isConnected() ||
+        !this.inspector.selection.isElementNode()
+      ) {
         return null;
       }
 
@@ -167,14 +186,18 @@ BoxModel.prototype = {
 
       // Update the layout properties with whether or not the element's position is
       // editable with the geometry editor.
-      const isPositionEditable = await this.inspector.pageStyle.isPositionEditable(node);
+      const isPositionEditable = await this.inspector.pageStyle.isPositionEditable(
+        node
+      );
 
       layout = Object.assign({}, layout, {
         isPositionEditable,
       });
 
-      const actorCanGetOffSetParent =
-        await this.inspector.target.actorHasMethod("domwalker", "getOffsetParent");
+      const actorCanGetOffSetParent = await this.inspector.target.actorHasMethod(
+        "domwalker",
+        "getOffsetParent"
+      );
 
       if (actorCanGetOffSetParent) {
         // Update the redux store with the latest offset parent DOM node
@@ -197,12 +220,14 @@ BoxModel.prototype = {
       this._updateReasons = [];
 
       return null;
-    }).bind(this))().catch(error => {
-      // If we failed because we were being destroyed while waiting for a request, ignore.
-      if (this.document) {
-        console.error(error);
-      }
-    });
+    }
+      .bind(this)()
+      .catch(error => {
+        // If we failed because we were being destroyed while waiting for a request, ignore.
+        if (this.document) {
+          console.error(error);
+        }
+      });
 
     this._lastRequest = lastRequest;
   },
@@ -267,8 +292,10 @@ BoxModel.prototype = {
       return;
     }
 
-    if (this.inspector.selection.isConnected() &&
-        this.inspector.selection.isElementNode()) {
+    if (
+      this.inspector.selection.isConnected() &&
+      this.inspector.selection.isElementNode()
+    ) {
       this.trackReflows();
     }
 
@@ -315,52 +342,53 @@ BoxModel.prototype = {
     });
     const initialValue = session.getProperty(property);
 
-    const editor = new InplaceEditor({
-      element: element,
-      initial: initialValue,
-      contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
-      property: {
-        name: property,
-      },
-      start: self => {
-        self.elt.parentNode.classList.add("boxmodel-editing");
-      },
-      change: value => {
-        if (NUMERIC.test(value)) {
-          value += "px";
-        }
-
-        const properties = [
-          { name: property, value: value },
-        ];
-
-        if (property.substring(0, 7) == "border-") {
-          const bprop = property.substring(0, property.length - 5) + "style";
-          const style = session.getProperty(bprop);
-          if (!style || style == "none" || style == "hidden") {
-            properties.push({ name: bprop, value: "solid" });
+    const editor = new InplaceEditor(
+      {
+        element: element,
+        initial: initialValue,
+        contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
+        property: {
+          name: property,
+        },
+        start: self => {
+          self.elt.parentNode.classList.add("boxmodel-editing");
+        },
+        change: value => {
+          if (NUMERIC.test(value)) {
+            value += "px";
           }
-        }
 
-        if (property.substring(0, 9) == "position-") {
-          properties[0].name = property.substring(9);
-        }
+          const properties = [{ name: property, value: value }];
 
-        session.setProperties(properties).catch(console.error);
+          if (property.substring(0, 7) == "border-") {
+            const bprop = property.substring(0, property.length - 5) + "style";
+            const style = session.getProperty(bprop);
+            if (!style || style == "none" || style == "hidden") {
+              properties.push({ name: bprop, value: "solid" });
+            }
+          }
+
+          if (property.substring(0, 9) == "position-") {
+            properties[0].name = property.substring(9);
+          }
+
+          session.setProperties(properties).catch(console.error);
+        },
+        done: (value, commit) => {
+          editor.elt.parentNode.classList.remove("boxmodel-editing");
+          if (!commit) {
+            session.revert().then(() => {
+              session.destroy();
+            }, console.error);
+            return;
+          }
+
+          this.updateBoxModel("editable-value-change");
+        },
+        cssProperties: this.inspector.cssProperties,
       },
-      done: (value, commit) => {
-        editor.elt.parentNode.classList.remove("boxmodel-editing");
-        if (!commit) {
-          session.revert().then(() => {
-            session.destroy();
-          }, console.error);
-          return;
-        }
-
-        this.updateBoxModel("editable-value-change");
-      },
-      cssProperties: this.inspector.cssProperties,
-    }, event);
+      event
+    );
   },
 
   /**
@@ -389,8 +417,10 @@ BoxModel.prototype = {
       return;
     }
 
-    if (this.inspector.selection.isConnected() &&
-        this.inspector.selection.isElementNode()) {
+    if (
+      this.inspector.selection.isConnected() &&
+      this.inspector.selection.isElementNode()
+    ) {
       this.trackReflows();
     }
 
@@ -424,7 +454,6 @@ BoxModel.prototype = {
       markup.off("node-hover", this.onMarkupViewNodeHover);
     }
   },
-
 };
 
 module.exports = BoxModel;

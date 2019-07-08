@@ -32,9 +32,7 @@ Object.assign(proto, {
   },
 
   isPaused: function() {
-    return this.threadActor
-      ? this.threadActor.state === "paused"
-      : true;
+    return this.threadActor ? this.threadActor.state === "paused" : true;
   },
 
   withPaused: function(method) {
@@ -45,7 +43,8 @@ Object.assign(proto, {
 
       return {
         error: "wrongState",
-        message: this.constructor.name +
+        message:
+          this.constructor.name +
           " actors can only be accessed while the thread is paused.",
       };
     };
@@ -88,8 +87,10 @@ Object.assign(proto, {
    */
   destroy: proto.withPaused(function(request) {
     if (this.hooks.isThreadLifetimePool()) {
-      return { error: "notReleasable",
-               message: "Only thread-lifetime actors can be released." };
+      return {
+        error: "notReleasable",
+        message: "Only thread-lifetime actors can be released.",
+      };
     }
 
     return protocol.Actor.prototype.destroy.call(this);
@@ -97,5 +98,4 @@ Object.assign(proto, {
 });
 
 exports.PauseScopedObjectActor = ActorClassWithSpec(objectSpec, proto);
-  // ActorClassWithSpec(objectSpec, {...ObjectActorProto, ...proto});
-
+// ActorClassWithSpec(objectSpec, {...ObjectActorProto, ...proto});

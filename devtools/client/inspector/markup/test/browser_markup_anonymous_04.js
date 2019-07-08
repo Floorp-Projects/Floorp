@@ -12,7 +12,7 @@ const PREF = "devtools.inspector.showAllAnonymousContent";
 add_task(async function() {
   Services.prefs.setBoolPref(PREF, true);
 
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   const native = await getNodeFront("#native", inspector);
 
@@ -25,7 +25,11 @@ add_task(async function() {
   ok(!child.isAnonymous, "<input type=file> is not anonymous");
 
   const grandchildren = await inspector.walker.children(child);
-  is(grandchildren.nodes.length, 2, "<input type=file> has native anonymous children");
+  is(
+    grandchildren.nodes.length,
+    2,
+    "<input type=file> has native anonymous children"
+  );
 
   for (const node of grandchildren.nodes) {
     ok(node.isAnonymous, "Child is anonymous");

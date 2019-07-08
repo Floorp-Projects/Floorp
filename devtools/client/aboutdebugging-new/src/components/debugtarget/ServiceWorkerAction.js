@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
@@ -12,7 +15,9 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const { getCurrentRuntimeDetails } = require("../../modules/runtimes-state-helper");
+const {
+  getCurrentRuntimeDetails,
+} = require("../../modules/runtimes-state-helper");
 
 const InspectAction = createFactory(require("./InspectAction"));
 
@@ -34,8 +39,9 @@ class ServiceWorkerAction extends PureComponent {
 
   _renderInspectAction() {
     const { status } = this.props.target.details;
-    const shallRenderInspectAction = status === SERVICE_WORKER_STATUSES.RUNNING ||
-                                     status === SERVICE_WORKER_STATUSES.REGISTERING;
+    const shallRenderInspectAction =
+      status === SERVICE_WORKER_STATUSES.RUNNING ||
+      status === SERVICE_WORKER_STATUSES.REGISTERING;
 
     if (!shallRenderInspectAction) {
       return null;
@@ -64,8 +70,10 @@ class ServiceWorkerAction extends PureComponent {
 
   _renderStatus() {
     const status = this.props.target.details.status.toLowerCase();
-    const statusClassName = status === SERVICE_WORKER_STATUSES.RUNNING.toLowerCase()
-                              ? "service-worker-action__status--running" : "";
+    const statusClassName =
+      status === SERVICE_WORKER_STATUSES.RUNNING.toLowerCase()
+        ? "service-worker-action__status--running"
+        : "";
 
     return Localized(
       {
@@ -73,8 +81,7 @@ class ServiceWorkerAction extends PureComponent {
       },
       dom.span(
         {
-          className:
-            `service-worker-action__status qa-worker-status ${ statusClassName }`,
+          className: `service-worker-action__status qa-worker-status ${statusClassName}`,
         },
         status
       )
@@ -87,7 +94,7 @@ class ServiceWorkerAction extends PureComponent {
         className: "service-worker-action",
       },
       this._renderStatus(),
-      this._renderInspectAction(),
+      this._renderInspectAction()
     );
   }
 }

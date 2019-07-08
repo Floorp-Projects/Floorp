@@ -22,24 +22,29 @@ class EditorToolbar extends Component {
   }
 
   render() {
-    const {
-      editorMode,
-      webConsoleUI,
-    } = this.props;
+    const { editorMode, webConsoleUI } = this.props;
 
     if (!editorMode) {
       return null;
     }
 
-    return dom.div({
-      className: "devtools-toolbar devtools-input-toolbar webconsole-editor-toolbar",
-    },
-      dom.button({
-        className: "devtools-button webconsole-editor-toolbar-executeButton",
-        title: l10n.getFormatStr("webconsole.editor.toolbar.executeButton.tooltip",
-          [isMacOS ? "Cmd + Enter" : "Ctrl + Enter"]),
-        onClick: () => webConsoleUI.jsterm.execute(),
-      }, l10n.getStr("webconsole.editor.toolbar.executeButton.label")));
+    return dom.div(
+      {
+        className:
+          "devtools-toolbar devtools-input-toolbar webconsole-editor-toolbar",
+      },
+      dom.button(
+        {
+          className: "devtools-button webconsole-editor-toolbar-executeButton",
+          title: l10n.getFormatStr(
+            "webconsole.editor.toolbar.executeButton.tooltip",
+            [isMacOS ? "Cmd + Enter" : "Ctrl + Enter"]
+          ),
+          onClick: () => webConsoleUI.jsterm.execute(),
+        },
+        l10n.getStr("webconsole.editor.toolbar.executeButton.label")
+      )
+    );
   }
 }
 

@@ -5,9 +5,13 @@ async function focusWindow(win) {
     return;
   }
   let promise = new Promise(resolve => {
-    win.addEventListener("focus", function() {
-      resolve();
-    }, {capture: true, once: true});
+    win.addEventListener(
+      "focus",
+      function() {
+        resolve();
+      },
+      { capture: true, once: true }
+    );
   });
   win.focus();
   await promise;
@@ -17,10 +21,11 @@ function getDialogDoc() {
   // Trudge through all the open windows, until we find the one
   // that has either commonDialog.xul or selectDialog.xul loaded.
   // var enumerator = Services.wm.getEnumerator("navigator:browser");
-  for (let {docShell} of Services.wm.getEnumerator(null)) {
+  for (let { docShell } of Services.wm.getEnumerator(null)) {
     var containedDocShells = docShell.getDocShellEnumerator(
       docShell.typeChrome,
-      docShell.ENUMERATE_FORWARDS);
+      docShell.ENUMERATE_FORWARDS
+    );
     for (let childDocShell of containedDocShells) {
       // Get the corresponding document for this docshell
       // We don't want it if it's not done loading.
@@ -28,8 +33,10 @@ function getDialogDoc() {
         continue;
       }
       var childDoc = childDocShell.contentViewer.DOMDocument;
-      if (childDoc.location.href != "chrome://global/content/commonDialog.xul" &&
-          childDoc.location.href != "chrome://global/content/selectDialog.xul") {
+      if (
+        childDoc.location.href != "chrome://global/content/commonDialog.xul" &&
+        childDoc.location.href != "chrome://global/content/selectDialog.xul"
+      ) {
         continue;
       }
 
@@ -60,24 +67,34 @@ async function submitForm(browser, formAction, selectorValues) {
     }
     form.submit();
   }
-  await ContentTask.spawn(browser, [formAction, selectorValues], contentSubmitForm);
+  await ContentTask.spawn(
+    browser,
+    [formAction, selectorValues],
+    contentSubmitForm
+  );
   let result = await getResponseResult(browser, formAction);
   return result;
 }
 
 async function getResponseResult(browser, resultUrl) {
-  let fieldValues = await ContentTask.spawn(browser, [resultUrl], async function(contentResultUrl) {
-    await ContentTaskUtils.waitForCondition(() => {
-      return content.location.pathname.endsWith(contentResultUrl) &&
-        content.document.readyState == "complete";
-    }, `Wait for form submission load (${contentResultUrl})`);
-    let username = content.document.getElementById("user").textContent;
-    let password = content.document.getElementById("pass").textContent;
-    return {
-      username,
-      password,
-    };
-  });
+  let fieldValues = await ContentTask.spawn(
+    browser,
+    [resultUrl],
+    async function(contentResultUrl) {
+      await ContentTaskUtils.waitForCondition(() => {
+        return (
+          content.location.pathname.endsWith(contentResultUrl) &&
+          content.document.readyState == "complete"
+        );
+      }, `Wait for form submission load (${contentResultUrl})`);
+      let username = content.document.getElementById("user").textContent;
+      let password = content.document.getElementById("pass").textContent;
+      return {
+        username,
+        password,
+      };
+    }
+  );
   return fieldValues;
 }
 
@@ -114,10 +131,20 @@ async function loadAccessRestrictedURL(browser, url, username, password) {
 }
 
 const PRIVATE_BROWSING_CAPTURE_PREF = "signon.privateBrowsingCapture.enabled";
-let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
-                                             Ci.nsILoginInfo, "init");
-let login = new nsLoginInfo("https://example.com", "https://example.com", null,
-                            "notifyu1", "notifyp1", "user", "pass");
+let nsLoginInfo = new Components.Constructor(
+  "@mozilla.org/login-manager/loginInfo;1",
+  Ci.nsILoginInfo,
+  "init"
+);
+let login = new nsLoginInfo(
+  "https://example.com",
+  "https://example.com",
+  null,
+  "notifyu1",
+  "notifyp1",
+  "user",
+  "pass"
+);
 const form1Url = `https://example.com/${DIRECTORY_PATH}subtst_privbrowsing_1.html`;
 const form2Url = `https://example.com/${DIRECTORY_PATH}subtst_privbrowsing_2.html`;
 const authUrl = `https://example.com/${DIRECTORY_PATH}authenticate.sjs`;
@@ -129,103 +156,144 @@ let privateWin;
 // resulting from successful or unsuccessful logins in previous tasks
 
 add_task(async function test_setup() {
-  normalWin = await BrowserTestUtils.openNewBrowserWindow({private: false});
-  privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  normalWin = await BrowserTestUtils.openNewBrowserWindow({ private: false });
+  privateWin = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   Services.logins.removeAllLogins();
 });
 
 add_task(async function test_normal_popup_notification_1() {
   info("test 1: run outside of private mode, popup notification should appear");
   await focusWindow(normalWin);
-  await BrowserTestUtils.withNewTab({
-    gBrowser: normalWin.gBrowser,
-    url: form1Url,
-  }, async function(browser) {
-    let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-      "#user": "notifyu1",
-      "#pass": "notifyp1",
-    });
-    is(fieldValues.username, "notifyu1", "Checking submitted username");
-    is(fieldValues.password, "notifyp1", "Checking submitted password");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser: normalWin.gBrowser,
+      url: form1Url,
+    },
+    async function(browser) {
+      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
+        "#user": "notifyu1",
+        "#pass": "notifyp1",
+      });
+      is(fieldValues.username, "notifyu1", "Checking submitted username");
+      is(fieldValues.password, "notifyp1", "Checking submitted password");
 
-    let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
-    ok(notif, "got notification popup");
-    if (notif) {
-      await TestUtils.waitForCondition(() => !notif.dismissed,
-                                       "notification should not be dismissed");
-      notif.remove();
+      let notif = getCaptureDoorhanger(
+        "password-save",
+        PopupNotifications,
+        browser
+      );
+      ok(notif, "got notification popup");
+      if (notif) {
+        await TestUtils.waitForCondition(
+          () => !notif.dismissed,
+          "notification should not be dismissed"
+        );
+        notif.remove();
+      }
     }
-  });
+  );
 });
 
 add_task(async function test_private_popup_notification_2() {
-  info("test 2: run inside of private mode, dismissed popup notification should appear");
+  info(
+    "test 2: run inside of private mode, dismissed popup notification should appear"
+  );
 
-  const capturePrefValue = Services.prefs.getBoolPref(PRIVATE_BROWSING_CAPTURE_PREF);
-  ok(capturePrefValue, `Expect ${PRIVATE_BROWSING_CAPTURE_PREF} to default to true`);
+  const capturePrefValue = Services.prefs.getBoolPref(
+    PRIVATE_BROWSING_CAPTURE_PREF
+  );
+  ok(
+    capturePrefValue,
+    `Expect ${PRIVATE_BROWSING_CAPTURE_PREF} to default to true`
+  );
 
   // clear existing logins for parity with the previous test
   Services.logins.removeAllLogins();
   await focusWindow(privateWin);
-  await BrowserTestUtils.withNewTab({
-    gBrowser: privateWin.gBrowser,
-    url: form1Url,
-  }, async function(browser) {
-    let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-      "#user": "notifyu1",
-      "#pass": "notifyp1",
-    });
-    is(fieldValues.username, "notifyu1", "Checking submitted username");
-    is(fieldValues.password, "notifyp1", "Checking submitted password");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser: privateWin.gBrowser,
+      url: form1Url,
+    },
+    async function(browser) {
+      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
+        "#user": "notifyu1",
+        "#pass": "notifyp1",
+      });
+      is(fieldValues.username, "notifyu1", "Checking submitted username");
+      is(fieldValues.password, "notifyp1", "Checking submitted password");
 
-    let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
-    ok(notif, "Expected notification popup");
-    if (notif) {
-      await TestUtils.waitForCondition(() => notif.dismissed,
-                                       "notification should be dismissed");
-      notif.remove();
+      let notif = getCaptureDoorhanger(
+        "password-save",
+        PopupNotifications,
+        browser
+      );
+      ok(notif, "Expected notification popup");
+      if (notif) {
+        await TestUtils.waitForCondition(
+          () => notif.dismissed,
+          "notification should be dismissed"
+        );
+        notif.remove();
+      }
     }
-  });
+  );
   is(Services.logins.getAllLogins().length, 0, "No logins were saved");
 });
 
 add_task(async function test_private_popup_notification_no_capture_pref_2b() {
-  info("test 2b: run inside of private mode, with capture pref off," +
-       "popup notification should not appear");
+  info(
+    "test 2b: run inside of private mode, with capture pref off," +
+      "popup notification should not appear"
+  );
 
-  const capturePrefValue = Services.prefs.getBoolPref(PRIVATE_BROWSING_CAPTURE_PREF);
+  const capturePrefValue = Services.prefs.getBoolPref(
+    PRIVATE_BROWSING_CAPTURE_PREF
+  );
   Services.prefs.setBoolPref(PRIVATE_BROWSING_CAPTURE_PREF, false);
 
   // clear existing logins for parity with the previous test
   Services.logins.removeAllLogins();
 
   await focusWindow(privateWin);
-  await BrowserTestUtils.withNewTab({
-    gBrowser: privateWin.gBrowser,
-    url: form1Url,
-  }, async function(browser) {
-    let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-      "#user": "notifyu1",
-      "#pass": "notifyp1",
-    });
-    is(fieldValues.username, "notifyu1", "Checking submitted username");
-    is(fieldValues.password, "notifyp1", "Checking submitted password");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser: privateWin.gBrowser,
+      url: form1Url,
+    },
+    async function(browser) {
+      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
+        "#user": "notifyu1",
+        "#pass": "notifyp1",
+      });
+      is(fieldValues.username, "notifyu1", "Checking submitted username");
+      is(fieldValues.password, "notifyp1", "Checking submitted password");
 
-    let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
-    // restore the pref to its original value
-    Services.prefs.setBoolPref(PRIVATE_BROWSING_CAPTURE_PREF, capturePrefValue);
+      let notif = getCaptureDoorhanger(
+        "password-save",
+        PopupNotifications,
+        browser
+      );
+      // restore the pref to its original value
+      Services.prefs.setBoolPref(
+        PRIVATE_BROWSING_CAPTURE_PREF,
+        capturePrefValue
+      );
 
-    ok(!notif, "Expected no notification popup");
-    if (notif) {
-      notif.remove();
+      ok(!notif, "Expected no notification popup");
+      if (notif) {
+        notif.remove();
+      }
     }
-  });
+  );
   is(Services.logins.getAllLogins().length, 0, "No logins were saved");
 });
 
 add_task(async function test_normal_popup_notification_3() {
-  info("test 3: run with a login, outside of private mode, " +
-       "match existing username/password: no popup notification should appear");
+  info(
+    "test 3: run with a login, outside of private mode, " +
+      "match existing username/password: no popup notification should appear"
+  );
 
   Services.logins.removeAllLogins();
   Services.logins.addLogin(login);
@@ -236,31 +304,47 @@ add_task(async function test_normal_popup_notification_3() {
   let loginGuid = allLogins[0].guid;
 
   await focusWindow(normalWin);
-  await BrowserTestUtils.withNewTab({
-    gBrowser: normalWin.gBrowser,
-    url: form1Url,
-  }, async function(browser) {
-    let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-      "#user": "notifyu1",
-      "#pass": "notifyp1",
-    });
-    is(fieldValues.username, "notifyu1", "Checking submitted username");
-    is(fieldValues.password, "notifyp1", "Checking submitted password");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser: normalWin.gBrowser,
+      url: form1Url,
+    },
+    async function(browser) {
+      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
+        "#user": "notifyu1",
+        "#pass": "notifyp1",
+      });
+      is(fieldValues.username, "notifyu1", "Checking submitted username");
+      is(fieldValues.password, "notifyp1", "Checking submitted password");
 
-    let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
-    ok(!notif, "got no notification popup");
-    if (notif) {
-      notif.remove();
+      let notif = getCaptureDoorhanger(
+        "password-save",
+        PopupNotifications,
+        browser
+      );
+      ok(!notif, "got no notification popup");
+      if (notif) {
+        notif.remove();
+      }
     }
-  });
+  );
   allLogins = Services.logins.getAllLogins();
-  is(allLogins[0].guid, loginGuid, "Sanity-check we are comparing the same login record");
-  ok(allLogins[0].timeLastUsed > timeLastUsed, "The timeLastUsed timestamp has been updated");
+  is(
+    allLogins[0].guid,
+    loginGuid,
+    "Sanity-check we are comparing the same login record"
+  );
+  ok(
+    allLogins[0].timeLastUsed > timeLastUsed,
+    "The timeLastUsed timestamp has been updated"
+  );
 });
 
 add_task(async function test_private_popup_notification_3b() {
-  info("test 3b: run with a login, in private mode," +
-       " match existing username/password: no popup notification should appear");
+  info(
+    "test 3b: run with a login, in private mode," +
+      " match existing username/password: no popup notification should appear"
+  );
 
   Services.logins.removeAllLogins();
   Services.logins.addLogin(login);
@@ -271,31 +355,48 @@ add_task(async function test_private_popup_notification_3b() {
   let loginGuid = allLogins[0].guid;
 
   await focusWindow(privateWin);
-  await BrowserTestUtils.withNewTab({
-    gBrowser: privateWin.gBrowser,
-    url: form1Url,
-  }, async function(browser) {
-    let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-      "#user": "notifyu1",
-      "#pass": "notifyp1",
-    });
-    is(fieldValues.username, "notifyu1", "Checking submitted username");
-    is(fieldValues.password, "notifyp1", "Checking submitted password");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser: privateWin.gBrowser,
+      url: form1Url,
+    },
+    async function(browser) {
+      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
+        "#user": "notifyu1",
+        "#pass": "notifyp1",
+      });
+      is(fieldValues.username, "notifyu1", "Checking submitted username");
+      is(fieldValues.password, "notifyp1", "Checking submitted password");
 
-    let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
-    ok(!notif, "got no notification popup");
-    if (notif) {
-      notif.remove();
+      let notif = getCaptureDoorhanger(
+        "password-save",
+        PopupNotifications,
+        browser
+      );
+      ok(!notif, "got no notification popup");
+      if (notif) {
+        notif.remove();
+      }
     }
-  });
+  );
   allLogins = Services.logins.getAllLogins();
-  is(allLogins[0].guid, loginGuid, "Sanity-check we are comparing the same login record");
-  is(allLogins[0].timeLastUsed, timeLastUsed, "The timeLastUsed timestamp has not been updated");
+  is(
+    allLogins[0].guid,
+    loginGuid,
+    "Sanity-check we are comparing the same login record"
+  );
+  is(
+    allLogins[0].timeLastUsed,
+    timeLastUsed,
+    "The timeLastUsed timestamp has not been updated"
+  );
 });
 
 add_task(async function test_normal_new_password_4() {
-  info("test 4: run with a login, outside of private mode," +
-       " add a new password: popup notification should appear");
+  info(
+    "test 4: run with a login, outside of private mode," +
+      " add a new password: popup notification should appear"
+  );
   Services.logins.removeAllLogins();
   Services.logins.addLogin(login);
   let allLogins = Services.logins.getAllLogins();
@@ -305,36 +406,60 @@ add_task(async function test_normal_new_password_4() {
   let loginGuid = allLogins[0].guid;
 
   await focusWindow(normalWin);
-  await BrowserTestUtils.withNewTab({
-    gBrowser: normalWin.gBrowser,
-    url: form2Url,
-  }, async function(browser) {
-    let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-      "#pass": "notifyp1",
-      "#newpass": "notifyp2",
-    });
-    is(fieldValues.password, "notifyp1", "Checking submitted password");
-    let notif = getCaptureDoorhanger("password-change", PopupNotifications, browser);
-    ok(notif, "got notification popup");
-    if (notif) {
-      await TestUtils.waitForCondition(() => !notif.dismissed,
-                                       "notification should not be dismissed");
-      notif.remove();
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser: normalWin.gBrowser,
+      url: form2Url,
+    },
+    async function(browser) {
+      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
+        "#pass": "notifyp1",
+        "#newpass": "notifyp2",
+      });
+      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      let notif = getCaptureDoorhanger(
+        "password-change",
+        PopupNotifications,
+        browser
+      );
+      ok(notif, "got notification popup");
+      if (notif) {
+        await TestUtils.waitForCondition(
+          () => !notif.dismissed,
+          "notification should not be dismissed"
+        );
+        notif.remove();
+      }
     }
-  });
+  );
   // We put up a doorhanger, but didn't interact with it, so we expect the login timestamps
   // to be unchanged
   allLogins = Services.logins.getAllLogins();
-  is(allLogins[0].guid, loginGuid, "Sanity-check we are comparing the same login record");
-  is(allLogins[0].timeLastUsed, timeLastUsed, "The timeLastUsed timestamp was not updated");
+  is(
+    allLogins[0].guid,
+    loginGuid,
+    "Sanity-check we are comparing the same login record"
+  );
+  is(
+    allLogins[0].timeLastUsed,
+    timeLastUsed,
+    "The timeLastUsed timestamp was not updated"
+  );
 });
 
 add_task(async function test_private_new_password_5() {
-  info("test 5: run with a login, in private mode," +
-      "add a new password: popup notification should appear");
+  info(
+    "test 5: run with a login, in private mode," +
+      "add a new password: popup notification should appear"
+  );
 
-  const capturePrefValue = Services.prefs.getBoolPref(PRIVATE_BROWSING_CAPTURE_PREF);
-  ok(capturePrefValue, `Expect ${PRIVATE_BROWSING_CAPTURE_PREF} to default to true`);
+  const capturePrefValue = Services.prefs.getBoolPref(
+    PRIVATE_BROWSING_CAPTURE_PREF
+  );
+  ok(
+    capturePrefValue,
+    `Expect ${PRIVATE_BROWSING_CAPTURE_PREF} to default to true`
+  );
 
   let allLogins = Services.logins.getAllLogins();
   // Sanity check the HTTP login exists.
@@ -343,53 +468,81 @@ add_task(async function test_private_new_password_5() {
   let loginGuid = allLogins[0].guid;
 
   await focusWindow(privateWin);
-  await BrowserTestUtils.withNewTab({
-    gBrowser: privateWin.gBrowser,
-    url: form2Url,
-  }, async function(browser) {
-    let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-      "#pass": "notifyp1",
-      "#newpass": "notifyp2",
-    });
-    is(fieldValues.password, "notifyp1", "Checking submitted password");
-    let notif = getCaptureDoorhanger("password-change", PopupNotifications, browser);
-    ok(notif, "Expected notification popup");
-    if (notif) {
-      await TestUtils.waitForCondition(() => !notif.dismissed,
-                                       "notification should not be dismissed");
-      notif.remove();
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser: privateWin.gBrowser,
+      url: form2Url,
+    },
+    async function(browser) {
+      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
+        "#pass": "notifyp1",
+        "#newpass": "notifyp2",
+      });
+      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      let notif = getCaptureDoorhanger(
+        "password-change",
+        PopupNotifications,
+        browser
+      );
+      ok(notif, "Expected notification popup");
+      if (notif) {
+        await TestUtils.waitForCondition(
+          () => !notif.dismissed,
+          "notification should not be dismissed"
+        );
+        notif.remove();
+      }
     }
-  });
+  );
   // We put up a doorhanger, but didn't interact with it, so we expect the login timestamps
   // to be unchanged
   allLogins = Services.logins.getAllLogins();
-  is(allLogins[0].guid, loginGuid, "Sanity-check we are comparing the same login record");
-  is(allLogins[0].timeLastUsed, timeLastUsed, "The timeLastUsed timestamp has not been updated");
+  is(
+    allLogins[0].guid,
+    loginGuid,
+    "Sanity-check we are comparing the same login record"
+  );
+  is(
+    allLogins[0].timeLastUsed,
+    timeLastUsed,
+    "The timeLastUsed timestamp has not been updated"
+  );
 });
 
 add_task(async function test_normal_with_login_6() {
-  info("test 6: run with a login, outside of private mode, " +
-       "submit with an existing password (from test 4): popup notification should appear");
+  info(
+    "test 6: run with a login, outside of private mode, " +
+      "submit with an existing password (from test 4): popup notification should appear"
+  );
 
   await focusWindow(normalWin);
-  await BrowserTestUtils.withNewTab({
-    gBrowser: normalWin.gBrowser,
-    url: form2Url,
-  }, async function(browser) {
-    let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-      "#pass": "notifyp1",
-      "#newpass": "notifyp2",
-    });
-    is(fieldValues.password, "notifyp1", "Checking submitted password");
-    let notif = getCaptureDoorhanger("password-change", PopupNotifications, browser);
-    ok(notif, "got notification popup");
-    if (notif) {
-      await TestUtils.waitForCondition(() => !notif.dismissed,
-                                       "notification should not be dismissed");
-      notif.remove();
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser: normalWin.gBrowser,
+      url: form2Url,
+    },
+    async function(browser) {
+      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
+        "#pass": "notifyp1",
+        "#newpass": "notifyp2",
+      });
+      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      let notif = getCaptureDoorhanger(
+        "password-change",
+        PopupNotifications,
+        browser
+      );
+      ok(notif, "got notification popup");
+      if (notif) {
+        await TestUtils.waitForCondition(
+          () => !notif.dismissed,
+          "notification should not be dismissed"
+        );
+        notif.remove();
+      }
+      Services.logins.removeLogin(login);
     }
-    Services.logins.removeLogin(login);
-  });
+  );
 });
 
 add_task(async function test_normal_autofilled_7() {
@@ -400,25 +553,30 @@ add_task(async function test_normal_autofilled_7() {
   is(Services.logins.getAllLogins().length, 1, "Should have the HTTP login");
 
   await focusWindow(normalWin);
-  await BrowserTestUtils.withNewTab({
-    gBrowser: normalWin.gBrowser,
-    url: "about:blank",
-  }, async function(browser) {
-    // Add the observer before loading the form page
-    let formFilled = ContentTask.spawn(browser, null, async function() {
-      const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
-      await TestUtils.topicObserved("passwordmgr-processed-form");
-      await Promise.resolve();
-    });
-    await SimpleTest.promiseFocus(browser.ownerGlobal);
-    await BrowserTestUtils.loadURI(browser, form1Url);
-    await formFilled;
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser: normalWin.gBrowser,
+      url: "about:blank",
+    },
+    async function(browser) {
+      // Add the observer before loading the form page
+      let formFilled = ContentTask.spawn(browser, null, async function() {
+        const { TestUtils } = ChromeUtils.import(
+          "resource://testing-common/TestUtils.jsm"
+        );
+        await TestUtils.topicObserved("passwordmgr-processed-form");
+        await Promise.resolve();
+      });
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
+      await BrowserTestUtils.loadURI(browser, form1Url);
+      await formFilled;
 
-    // the form should have been autofilled, so submit without updating field values
-    let fieldValues = await submitForm(browser, "formsubmit.sjs", {});
-    is(fieldValues.username, "notifyu1", "Checking submitted username");
-    is(fieldValues.password, "notifyp1", "Checking submitted password");
-  });
+      // the form should have been autofilled, so submit without updating field values
+      let fieldValues = await submitForm(browser, "formsubmit.sjs", {});
+      is(fieldValues.username, "notifyu1", "Checking submitted username");
+      is(fieldValues.password, "notifyp1", "Checking submitted password");
+    }
+  );
 });
 
 add_task(async function test_private_not_autofilled_8() {
@@ -427,14 +585,17 @@ add_task(async function test_private_not_autofilled_8() {
   is(Services.logins.getAllLogins().length, 1, "Should have the HTTP login");
 
   await focusWindow(privateWin);
-  await BrowserTestUtils.withNewTab({
-    gBrowser: privateWin.gBrowser,
-    url: form1Url,
-  }, async function(browser) {
-    let fieldValues = await submitForm(browser, "formsubmit.sjs", {});
-    ok(!fieldValues.username, "Checking submitted username");
-    ok(!fieldValues.password, "Checking submitted password");
-  });
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser: privateWin.gBrowser,
+      url: form1Url,
+    },
+    async function(browser) {
+      let fieldValues = await submitForm(browser, "formsubmit.sjs", {});
+      ok(!fieldValues.username, "Checking submitted username");
+      ok(!fieldValues.password, "Checking submitted password");
+    }
+  );
 });
 
 // Disabled for Bug 1523777
@@ -480,118 +641,164 @@ add_task(async function test_private_not_autofilled_8() {
 // });
 
 add_task(async function test_normal_autofilled_10() {
-  info("test 10: verify that the user/pass pair does get autofilled in non-private window");
+  info(
+    "test 10: verify that the user/pass pair does get autofilled in non-private window"
+  );
   // Sanity check the HTTP login exists.
   is(Services.logins.getAllLogins().length, 1, "Should have the HTTP login");
 
   await focusWindow(normalWin);
-  await BrowserTestUtils.withNewTab({
-    gBrowser: normalWin.gBrowser,
-    url: form1Url,
-  }, async function(browser) {
-    let fieldValues = await submitForm(browser, "formsubmit.sjs", {});
-    is(fieldValues.username, "notifyu1", "Checking submitted username");
-    is(fieldValues.password, "notifyp1", "Checking submitted password");
-  });
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser: normalWin.gBrowser,
+      url: form1Url,
+    },
+    async function(browser) {
+      let fieldValues = await submitForm(browser, "formsubmit.sjs", {});
+      is(fieldValues.username, "notifyu1", "Checking submitted username");
+      is(fieldValues.password, "notifyp1", "Checking submitted password");
+    }
+  );
 });
 
 add_task(async function test_normal_http_basic_auth() {
-  info("test normal/basic-auth: verify that we get a doorhanger after basic-auth login");
+  info(
+    "test normal/basic-auth: verify that we get a doorhanger after basic-auth login"
+  );
   Services.logins.removeAllLogins();
   clearHttpAuths();
 
   await focusWindow(normalWin);
-  await BrowserTestUtils.withNewTab({
-    gBrowser: normalWin.gBrowser,
-    url: "https://example.com",
-  }, async function(browser) {
-    await loadAccessRestrictedURL(browser, authUrl, "test", "testpass");
-    ok(true, "Auth-required page loaded");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser: normalWin.gBrowser,
+      url: "https://example.com",
+    },
+    async function(browser) {
+      await loadAccessRestrictedURL(browser, authUrl, "test", "testpass");
+      ok(true, "Auth-required page loaded");
 
-    // verify result in the response document
-    let fieldValues = await ContentTask.spawn(browser, [], async function() {
-      let username = content.document.getElementById("user").textContent;
-      let password = content.document.getElementById("pass").textContent;
-      let ok = content.document.getElementById("ok").textContent;
-      return {
-        username,
-        password,
-        ok,
-      };
-    });
-    is(fieldValues.ok, "PASS", "Checking authorization passed");
-    is(fieldValues.username, "test", "Checking authorized username");
-    is(fieldValues.password, "testpass", "Checking authorized password");
+      // verify result in the response document
+      let fieldValues = await ContentTask.spawn(browser, [], async function() {
+        let username = content.document.getElementById("user").textContent;
+        let password = content.document.getElementById("pass").textContent;
+        let ok = content.document.getElementById("ok").textContent;
+        return {
+          username,
+          password,
+          ok,
+        };
+      });
+      is(fieldValues.ok, "PASS", "Checking authorization passed");
+      is(fieldValues.username, "test", "Checking authorized username");
+      is(fieldValues.password, "testpass", "Checking authorized password");
 
-    let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
-    ok(notif, "got notification popup");
-    if (notif) {
-      await TestUtils.waitForCondition(() => !notif.dismissed,
-                                       "notification should not be dismissed");
-      notif.remove();
+      let notif = getCaptureDoorhanger(
+        "password-save",
+        PopupNotifications,
+        browser
+      );
+      ok(notif, "got notification popup");
+      if (notif) {
+        await TestUtils.waitForCondition(
+          () => !notif.dismissed,
+          "notification should not be dismissed"
+        );
+        notif.remove();
+      }
     }
-  });
+  );
 });
 
 add_task(async function test_private_http_basic_auth() {
-  info("test private/basic-auth: verify that we don't get a doorhanger after basic-auth login");
+  info(
+    "test private/basic-auth: verify that we don't get a doorhanger after basic-auth login"
+  );
   Services.logins.removeAllLogins();
   clearHttpAuths();
 
-  const capturePrefValue = Services.prefs.getBoolPref(PRIVATE_BROWSING_CAPTURE_PREF);
-  ok(capturePrefValue, `Expect ${PRIVATE_BROWSING_CAPTURE_PREF} to default to true`);
+  const capturePrefValue = Services.prefs.getBoolPref(
+    PRIVATE_BROWSING_CAPTURE_PREF
+  );
+  ok(
+    capturePrefValue,
+    `Expect ${PRIVATE_BROWSING_CAPTURE_PREF} to default to true`
+  );
 
   await focusWindow(privateWin);
-  await BrowserTestUtils.withNewTab({
-    gBrowser: privateWin.gBrowser,
-    url: "https://example.com",
-  }, async function(browser) {
-    await loadAccessRestrictedURL(browser, authUrl, "test", "testpass");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser: privateWin.gBrowser,
+      url: "https://example.com",
+    },
+    async function(browser) {
+      await loadAccessRestrictedURL(browser, authUrl, "test", "testpass");
 
-    let fieldValues = await getResponseResult(browser, "authenticate.sjs");
-    is(fieldValues.username, "test", "Checking authorized username");
-    is(fieldValues.password, "testpass", "Checking authorized password");
+      let fieldValues = await getResponseResult(browser, "authenticate.sjs");
+      is(fieldValues.username, "test", "Checking authorized username");
+      is(fieldValues.password, "testpass", "Checking authorized password");
 
-    let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
-    ok(notif, "got notification popup");
-    if (notif) {
-      await TestUtils.waitForCondition(() => notif.dismissed,
-                                       "notification should be dismissed");
-      notif.remove();
+      let notif = getCaptureDoorhanger(
+        "password-save",
+        PopupNotifications,
+        browser
+      );
+      ok(notif, "got notification popup");
+      if (notif) {
+        await TestUtils.waitForCondition(
+          () => notif.dismissed,
+          "notification should be dismissed"
+        );
+        notif.remove();
+      }
     }
-  });
+  );
 });
 
 add_task(async function test_private_http_basic_auth_no_capture_pref() {
-  info("test private/basic-auth: verify that we don't get a doorhanger after basic-auth login" +
-       "with capture pref off");
+  info(
+    "test private/basic-auth: verify that we don't get a doorhanger after basic-auth login" +
+      "with capture pref off"
+  );
 
-  const capturePrefValue = Services.prefs.getBoolPref(PRIVATE_BROWSING_CAPTURE_PREF);
+  const capturePrefValue = Services.prefs.getBoolPref(
+    PRIVATE_BROWSING_CAPTURE_PREF
+  );
   Services.prefs.setBoolPref(PRIVATE_BROWSING_CAPTURE_PREF, false);
 
   Services.logins.removeAllLogins();
   clearHttpAuths();
 
   await focusWindow(privateWin);
-  await BrowserTestUtils.withNewTab({
-    gBrowser: privateWin.gBrowser,
-    url: "https://example.com",
-  }, async function(browser) {
-    await loadAccessRestrictedURL(browser, authUrl, "test", "testpass");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser: privateWin.gBrowser,
+      url: "https://example.com",
+    },
+    async function(browser) {
+      await loadAccessRestrictedURL(browser, authUrl, "test", "testpass");
 
-    let fieldValues = await getResponseResult(browser, "authenticate.sjs");
-    is(fieldValues.username, "test", "Checking authorized username");
-    is(fieldValues.password, "testpass", "Checking authorized password");
+      let fieldValues = await getResponseResult(browser, "authenticate.sjs");
+      is(fieldValues.username, "test", "Checking authorized username");
+      is(fieldValues.password, "testpass", "Checking authorized password");
 
-    let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
-    // restore the pref to its original value
-    Services.prefs.setBoolPref(PRIVATE_BROWSING_CAPTURE_PREF, capturePrefValue);
+      let notif = getCaptureDoorhanger(
+        "password-save",
+        PopupNotifications,
+        browser
+      );
+      // restore the pref to its original value
+      Services.prefs.setBoolPref(
+        PRIVATE_BROWSING_CAPTURE_PREF,
+        capturePrefValue
+      );
 
-    ok(!notif, "got no notification popup");
-    if (notif) {
-      notif.remove();
+      ok(!notif, "got no notification popup");
+      if (notif) {
+        notif.remove();
+      }
     }
-  });
+  );
 });
 
 add_task(async function test_cleanup() {

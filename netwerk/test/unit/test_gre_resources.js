@@ -1,9 +1,8 @@
 // test that things that are expected to be in gre-resources are still there
 
-var ios = Cc["@mozilla.org/network/io-service;1"]. getService(Ci.nsIIOService);
+var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
-function wrapInputStream(input)
-{
+function wrapInputStream(input) {
   var nsIScriptableInputStream = Ci.nsIScriptableInputStream;
   var factory = Cc["@mozilla.org/scriptableinputstream;1"];
   var wrapper = factory.createInstance(nsIScriptableInputStream);
@@ -13,18 +12,19 @@ function wrapInputStream(input)
 
 function check_file(file) {
   var channel = NetUtil.newChannel({
-    uri: "resource://gre-resources/"+file,
-    loadUsingSystemPrincipal: true
+    uri: "resource://gre-resources/" + file,
+    loadUsingSystemPrincipal: true,
   });
   try {
     let instr = wrapInputStream(channel.open());
-    Assert.ok(instr.read(1024).length > 0)
+    Assert.ok(instr.read(1024).length > 0);
   } catch (e) {
-    do_throw("Failed to read " + file + " from gre-resources:"+e)
+    do_throw("Failed to read " + file + " from gre-resources:" + e);
   }
 }
 
 function run_test() {
-  for (let file of ["ua.css"])
-    check_file(file)
+  for (let file of ["ua.css"]) {
+    check_file(file);
+  }
 }

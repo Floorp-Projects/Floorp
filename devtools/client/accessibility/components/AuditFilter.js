@@ -23,8 +23,8 @@ function validateCheck({ error, score }) {
 
 const AUDIT_TYPE_TO_FILTER = {
   [AUDIT_TYPE.CONTRAST]: {
-     filterKey: FILTERS.CONTRAST,
-     validator: validateCheck,
+    filterKey: FILTERS.CONTRAST,
+    validator: validateCheck,
   },
   [AUDIT_TYPE.TEXT_LABEL]: {
     filterKey: FILTERS.TEXT_LABEL,
@@ -56,9 +56,12 @@ class AuditFilter extends React.Component {
     }
 
     for (const type in checks) {
-      if (AUDIT_TYPE_TO_FILTER[type] && checks[type] &&
-          filters[AUDIT_TYPE_TO_FILTER[type].filterKey] &&
-          AUDIT_TYPE_TO_FILTER[type].validator(checks[type])) {
+      if (
+        AUDIT_TYPE_TO_FILTER[type] &&
+        checks[type] &&
+        filters[AUDIT_TYPE_TO_FILTER[type].filterKey] &&
+        AUDIT_TYPE_TO_FILTER[type].validator(checks[type])
+      ) {
         return false;
       }
     }

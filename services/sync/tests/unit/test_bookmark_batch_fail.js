@@ -2,8 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 _("Making sure a failing sync reports a useful error");
-const {BookmarksEngine} = ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { BookmarksEngine } = ChromeUtils.import(
+  "resource://services-sync/engines/bookmarks.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 add_task(async function run_test() {
   let engine = new BookmarksEngine(Service);

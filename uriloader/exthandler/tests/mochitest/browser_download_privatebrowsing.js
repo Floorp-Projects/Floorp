@@ -38,8 +38,10 @@ add_task(async function test_download_privatebrowsing() {
 
   let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   try {
-    let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser,
-      `data:text/html,<a download href="data:text/plain,">download</a>`);
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      win.gBrowser,
+      `data:text/html,<a download href="data:text/plain,">download</a>`
+    );
 
     let promiseNextPrivateDownload = new Promise(resolve => {
       privateList.addView({

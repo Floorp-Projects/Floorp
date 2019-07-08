@@ -4,8 +4,8 @@
 
 "use strict";
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var Path = OS.Path;
 var profileDir;
@@ -34,7 +34,7 @@ add_task(async function test_basic() {
   let dir = Path.join(profileDir, "directory");
 
   // Sanity checking for the test
-  Assert.equal(false, (await OS.File.exists(dir)));
+  Assert.equal(false, await OS.File.exists(dir));
 
   // Make a directory
   await OS.File.makeDir(dir);
@@ -46,12 +46,12 @@ add_task(async function test_basic() {
   await OS.File.makeDir(dir);
 
   // Make a directory with ignoreExisting
-  await OS.File.makeDir(dir, {ignoreExisting: true});
+  await OS.File.makeDir(dir, { ignoreExisting: true });
 
   // Make a directory with ignoreExisting false
   let exception = null;
   try {
-    await OS.File.makeDir(dir, {ignoreExisting: false});
+    await OS.File.makeDir(dir, { ignoreExisting: false });
   } catch (ex) {
     exception = ex;
   }
@@ -78,10 +78,10 @@ add_task(async function test_option_from() {
   let dir = Path.join(profileDir, "a", "b", "c");
 
   // Sanity checking for the test
-  Assert.equal(false, (await OS.File.exists(dir)));
+  Assert.equal(false, await OS.File.exists(dir));
 
   // Make a directory
-  await OS.File.makeDir(dir, {from: profileDir});
+  await OS.File.makeDir(dir, { from: profileDir });
 
   // check if the directory exists
   await OS.File.stat(dir);
@@ -90,12 +90,12 @@ add_task(async function test_option_from() {
   await OS.File.makeDir(dir);
 
   // Make a directory with ignoreExisting
-  await OS.File.makeDir(dir, {ignoreExisting: true});
+  await OS.File.makeDir(dir, { ignoreExisting: true });
 
   // Make a directory with ignoreExisting false
   let exception = null;
   try {
-    await OS.File.makeDir(dir, {ignoreExisting: false});
+    await OS.File.makeDir(dir, { ignoreExisting: false });
   } catch (ex) {
     exception = ex;
   }
@@ -120,9 +120,9 @@ add_task(async function test_option_from() {
   // Test edge cases on paths
 
   let dir3 = Path.join(profileDir, "d", "", "e", "f");
-  Assert.equal(false, (await OS.File.exists(dir3)));
-  await OS.File.makeDir(dir3, {from: profileDir});
-  Assert.ok((await OS.File.exists(dir3)));
+  Assert.equal(false, await OS.File.exists(dir3));
+  await OS.File.makeDir(dir3, { from: profileDir });
+  Assert.ok(await OS.File.exists(dir3));
 
   let dir4;
   if (OS.Constants.Win) {
@@ -132,7 +132,7 @@ add_task(async function test_option_from() {
   } else {
     dir4 = profileDir + "////g";
   }
-  Assert.equal(false, (await OS.File.exists(dir4)));
-  await OS.File.makeDir(dir4, {from: profileDir});
-  Assert.ok((await OS.File.exists(dir4)));
+  Assert.equal(false, await OS.File.exists(dir4));
+  await OS.File.makeDir(dir4, { from: profileDir });
+  Assert.ok(await OS.File.exists(dir4));
 });

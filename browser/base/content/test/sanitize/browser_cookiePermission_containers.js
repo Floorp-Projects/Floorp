@@ -1,1 +1,1 @@
-runAllCookiePermissionTests({name: "container", oa: {userContextId: 1}});
+runAllCookiePermissionTests({ name: "container", oa: { userContextId: 1 } });

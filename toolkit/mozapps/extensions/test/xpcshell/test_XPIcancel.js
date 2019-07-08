@@ -4,7 +4,9 @@
 
 // Test the cancellable doing/done/cancelAll API in XPIProvider
 
-const {XPIInstall} = ChromeUtils.import("resource://gre/modules/addons/XPIInstall.jsm");
+const { XPIInstall } = ChromeUtils.import(
+  "resource://gre/modules/addons/XPIInstall.jsm"
+);
 
 function run_test() {
   // Check that cancelling with nothing in progress doesn't blow up
@@ -14,8 +16,9 @@ function run_test() {
   let getsCancelled = {
     isCancelled: false,
     cancel() {
-      if (this.isCancelled)
+      if (this.isCancelled) {
         do_throw("Already cancelled");
+      }
       this.isCancelled = true;
     },
   };
@@ -36,8 +39,9 @@ function run_test() {
   let addsAnother = {
     isCancelled: false,
     cancel() {
-      if (this.isCancelled)
+      if (this.isCancelled) {
         do_throw("Already cancelled");
+      }
       this.isCancelled = true;
       XPIInstall.doing(getsCancelled);
     },
@@ -52,8 +56,9 @@ function run_test() {
   let removesAnother = {
     isCancelled: false,
     cancel() {
-      if (this.isCancelled)
+      if (this.isCancelled) {
         do_throw("Already cancelled");
+      }
       this.isCancelled = true;
       XPIInstall.done(doesntGetCancelled);
     },

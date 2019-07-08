@@ -1,7 +1,12 @@
 "use strict";
 
-const {GlobalManager} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
-const {ExtensionPermissions} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
+const { GlobalManager } = ChromeUtils.import(
+  "resource://gre/modules/Extension.jsm",
+  null
+);
+const { ExtensionPermissions } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
 
 const NEWTAB_PRIVATE_ALLOWED = "browser.newtab.privateAllowed";
 const NEWTAB_EXTENSION_CONTROLLED = "browser.newtab.extensionControlled";
@@ -17,14 +22,28 @@ function promisePrefChange(pref) {
 }
 
 function verifyPrefSettings(controlled, allowed) {
-  is(Services.prefs.getBoolPref(NEWTAB_EXTENSION_CONTROLLED, false), controlled, "newtab extension controlled");
-  is(Services.prefs.getBoolPref(NEWTAB_PRIVATE_ALLOWED, false), allowed, "newtab private permission after permission change");
+  is(
+    Services.prefs.getBoolPref(NEWTAB_EXTENSION_CONTROLLED, false),
+    controlled,
+    "newtab extension controlled"
+  );
+  is(
+    Services.prefs.getBoolPref(NEWTAB_PRIVATE_ALLOWED, false),
+    allowed,
+    "newtab private permission after permission change"
+  );
 
   if (controlled) {
-    ok(aboutNewTabService.newTabURL.endsWith(NEWTAB_URI), "Newtab url is overridden by the extension.");
+    ok(
+      aboutNewTabService.newTabURL.endsWith(NEWTAB_URI),
+      "Newtab url is overridden by the extension."
+    );
   }
   if (controlled && allowed) {
-    ok(BROWSER_NEW_TAB_URL.endsWith(NEWTAB_URI), "active newtab url is overridden by the extension.");
+    ok(
+      BROWSER_NEW_TAB_URL.endsWith(NEWTAB_URI),
+      "active newtab url is overridden by the extension."
+    );
   } else {
     let expectednewTab = controlled ? "about:privatebrowsing" : "about:newtab";
     is(BROWSER_NEW_TAB_URL, expectednewTab, "active newtab url is default.");
@@ -36,9 +55,11 @@ async function promiseUpdatePrivatePermission(allowed, extension) {
   let ext = GlobalManager.extensionMap.get(extension.id);
   await Promise.all([
     promisePrefChange(NEWTAB_PRIVATE_ALLOWED),
-    ExtensionPermissions[allowed ? "add" : "remove"](extension.id,
-                                                     {permissions: ["internal:privateBrowsingAllowed"], origins: []},
-                                                     ext),
+    ExtensionPermissions[allowed ? "add" : "remove"](
+      extension.id,
+      { permissions: ["internal:privateBrowsingAllowed"], origins: [] },
+      ext
+    ),
   ]);
 
   verifyPrefSettings(true, allowed);
@@ -47,12 +68,12 @@ async function promiseUpdatePrivatePermission(allowed, extension) {
 add_task(async function test_new_tab_private() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "applications": {
-        "gecko": {
-          "id": "@private-newtab",
+      applications: {
+        gecko: {
+          id: "@private-newtab",
         },
       },
-      "chrome_url_overrides": {
+      chrome_url_overrides: {
         newtab: NEWTAB_URI,
       },
     },

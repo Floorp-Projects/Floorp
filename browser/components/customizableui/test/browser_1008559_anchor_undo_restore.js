@@ -10,37 +10,57 @@ const kAnchorAttribute = "cui-anchorid";
  * and into the palette.
  */
 add_task(async function() {
-  CustomizableUI.addWidgetToArea("history-panelmenu", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "history-panelmenu",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
   await startCustomizing();
   let button = document.getElementById("history-panelmenu");
-  is(button.getAttribute(kAnchorAttribute), "nav-bar-overflow-button",
-     "Button (" + button.id + ") starts out with correct anchor");
+  is(
+    button.getAttribute(kAnchorAttribute),
+    "nav-bar-overflow-button",
+    "Button (" + button.id + ") starts out with correct anchor"
+  );
 
-  let navbar = CustomizableUI.getCustomizationTarget(document.getElementById("nav-bar"));
+  let navbar = CustomizableUI.getCustomizationTarget(
+    document.getElementById("nav-bar")
+  );
   let onMouseUp = BrowserTestUtils.waitForEvent(navbar, "mouseup");
   simulateItemDrag(button, navbar);
   await onMouseUp;
-  is(CustomizableUI.getPlacementOfWidget(button.id).area, "nav-bar",
-     "Button (" + button.id + ") ends up in nav-bar");
+  is(
+    CustomizableUI.getPlacementOfWidget(button.id).area,
+    "nav-bar",
+    "Button (" + button.id + ") ends up in nav-bar"
+  );
 
-  ok(!button.hasAttribute(kAnchorAttribute),
-     "Button (" + button.id + ") has no anchor in toolbar");
+  ok(
+    !button.hasAttribute(kAnchorAttribute),
+    "Button (" + button.id + ") has no anchor in toolbar"
+  );
 
-  CustomizableUI.addWidgetToArea("history-panelmenu", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "history-panelmenu",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
 
-  is(button.getAttribute(kAnchorAttribute), "nav-bar-overflow-button",
-     "Button (" + button.id + ") has anchor again");
+  is(
+    button.getAttribute(kAnchorAttribute),
+    "nav-bar-overflow-button",
+    "Button (" + button.id + ") has anchor again"
+  );
 
   let resetButton = document.getElementById("customization-reset-button");
   ok(!resetButton.hasAttribute("disabled"), "Should be able to reset now.");
   await gCustomizeMode.reset();
 
-  ok(!button.hasAttribute(kAnchorAttribute),
-     "Button (" + button.id + ") once again has no anchor in customize panel");
+  ok(
+    !button.hasAttribute(kAnchorAttribute),
+    "Button (" + button.id + ") once again has no anchor in customize panel"
+  );
 
   await endCustomizing();
 });
-
 
 /**
  * Check that anchor gets set correctly when moving an item from the panel to the toolbar
@@ -49,24 +69,34 @@ add_task(async function() {
 add_task(async function() {
   await startCustomizing();
   let button = document.getElementById("home-button");
-  ok(!button.hasAttribute(kAnchorAttribute),
-     "Button (" + button.id + ") has no anchor in toolbar");
+  ok(
+    !button.hasAttribute(kAnchorAttribute),
+    "Button (" + button.id + ") has no anchor in toolbar"
+  );
 
   let panel = document.getElementById(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
   let onMouseUp = BrowserTestUtils.waitForEvent(panel, "mouseup");
   simulateItemDrag(button, panel);
   await onMouseUp;
-  is(CustomizableUI.getPlacementOfWidget(button.id).area, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
-     "Button (" + button.id + ") ends up in panel");
-  is(button.getAttribute(kAnchorAttribute), "nav-bar-overflow-button",
-     "Button (" + button.id + ") has correct anchor in the panel");
+  is(
+    CustomizableUI.getPlacementOfWidget(button.id).area,
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
+    "Button (" + button.id + ") ends up in panel"
+  );
+  is(
+    button.getAttribute(kAnchorAttribute),
+    "nav-bar-overflow-button",
+    "Button (" + button.id + ") has correct anchor in the panel"
+  );
 
   let resetButton = document.getElementById("customization-reset-button");
   ok(!resetButton.hasAttribute("disabled"), "Should be able to reset now.");
   await gCustomizeMode.reset();
 
-  ok(!button.hasAttribute(kAnchorAttribute),
-     "Button (" + button.id + ") once again has no anchor in toolbar");
+  ok(
+    !button.hasAttribute(kAnchorAttribute),
+    "Button (" + button.id + ") once again has no anchor in toolbar"
+  );
 
   await endCustomizing();
 });

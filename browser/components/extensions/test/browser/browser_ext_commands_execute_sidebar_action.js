@@ -5,15 +5,15 @@
 add_task(async function test_execute_sidebar_action() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "commands": {
-        "_execute_sidebar_action": {
-          "suggested_key": {
-            "default": "Alt+Shift+J",
+      commands: {
+        _execute_sidebar_action: {
+          suggested_key: {
+            default: "Alt+Shift+J",
           },
         },
       },
-      "sidebar_action": {
-        "default_panel": "sidebar.html",
+      sidebar_action: {
+        default_panel: "sidebar.html",
       },
     },
     files: {
@@ -44,9 +44,12 @@ add_task(async function test_execute_sidebar_action() {
   await SimpleTest.promiseFocus(window);
   // Since we didn't set useAddonManager, the sidebar will not be automatically
   // opened for this test.
-  ok(document.getElementById("sidebar-box").hidden, "sidebar box is not visible");
+  ok(
+    document.getElementById("sidebar-box").hidden,
+    "sidebar box is not visible"
+  );
   // Send the key to open the sidebar.
-  EventUtils.synthesizeKey("j", {altKey: true, shiftKey: true});
+  EventUtils.synthesizeKey("j", { altKey: true, shiftKey: true });
   await extension.awaitFinish("execute-sidebar-action-opened");
   await extension.unload();
 });

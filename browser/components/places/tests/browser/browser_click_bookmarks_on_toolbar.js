@@ -4,7 +4,11 @@
 
 const PREF_LOAD_BOOKMARKS_IN_TABS = "browser.tabs.loadBookmarksInTabs";
 const EXAMPLE_PAGE = "http://example.com/";
-const TEST_PAGES = ["about:mozilla", "about:robots", "javascript:window.location=%22" + EXAMPLE_PAGE + "%22"];
+const TEST_PAGES = [
+  "about:mozilla",
+  "about:robots",
+  "javascript:window.location=%22" + EXAMPLE_PAGE + "%22",
+];
 
 var gBookmarkElements = [];
 
@@ -27,11 +31,17 @@ function waitForLoad(browser, url) {
 function waitForNewTab(url, inBackground) {
   return BrowserTestUtils.waitForNewTab(gBrowser, url).then(tab => {
     if (inBackground) {
-      Assert.notEqual(tab,
-        gBrowser.selectedTab, `The new tab is in the background`);
+      Assert.notEqual(
+        tab,
+        gBrowser.selectedTab,
+        `The new tab is in the background`
+      );
     } else {
-      Assert.equal(tab,
-        gBrowser.selectedTab, `The new tab is in the foreground`);
+      Assert.equal(
+        tab,
+        gBrowser.selectedTab,
+        `The new tab is in the foreground`
+      );
     }
 
     BrowserTestUtils.removeTab(tab);
@@ -39,13 +49,15 @@ function waitForNewTab(url, inBackground) {
 }
 
 add_task(async function setup() {
-  let bookmarks = await Promise.all(TEST_PAGES.map((url, index) => {
-    return PlacesUtils.bookmarks.insert({
-      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-      title: `Title ${index}`,
-      url,
-    });
-  }));
+  let bookmarks = await Promise.all(
+    TEST_PAGES.map((url, index) => {
+      return PlacesUtils.bookmarks.insert({
+        parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+        title: `Title ${index}`,
+        url,
+      });
+    })
+  );
 
   let toolbar = document.getElementById("PersonalToolbar");
   let wasCollapsed = toolbar.collapsed;
@@ -67,9 +79,11 @@ add_task(async function setup() {
       await promiseSetToolbarVisibility(toolbar, false);
     }
 
-    await Promise.all(bookmarks.map(bookmark => {
-      return PlacesUtils.bookmarks.remove(bookmark);
-    }));
+    await Promise.all(
+      bookmarks.map(bookmark => {
+        return PlacesUtils.bookmarks.remove(bookmark);
+      })
+    );
   });
 });
 
@@ -82,7 +96,8 @@ add_task(async function click() {
 
   promise = waitForNewTab(TEST_PAGES[1], false);
   EventUtils.synthesizeMouseAtCenter(gBookmarkElements[1], {
-    button: 0, accelKey: true,
+    button: 0,
+    accelKey: true,
   });
   await promise;
 
@@ -94,7 +109,8 @@ add_task(async function click() {
 add_task(async function middleclick() {
   let promise = waitForNewTab(TEST_PAGES[0], true);
   EventUtils.synthesizeMouseAtCenter(gBookmarkElements[0], {
-    button: 1, shiftKey: true,
+    button: 1,
+    shiftKey: true,
   });
   await promise;
 
@@ -106,9 +122,9 @@ add_task(async function middleclick() {
 });
 
 add_task(async function clickWithPrefSet() {
-  await SpecialPowers.pushPrefEnv({set: [
-    [PREF_LOAD_BOOKMARKS_IN_TABS, true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [[PREF_LOAD_BOOKMARKS_IN_TABS, true]],
+  });
 
   let promise = waitForNewTab(TEST_PAGES[0], false);
   EventUtils.synthesizeMouseAtCenter(gBookmarkElements[0], {
@@ -133,7 +149,7 @@ add_task(async function clickWithPrefSet() {
 
   // With loadBookmarksInTabs, reuse current tab if blank
   for (let button of [0, 1]) {
-    await BrowserTestUtils.withNewTab({gBrowser}, async (tab) => {
+    await BrowserTestUtils.withNewTab({ gBrowser }, async tab => {
       promise = waitForLoad(gBrowser.selectedBrowser, TEST_PAGES[1]);
       EventUtils.synthesizeMouseAtCenter(gBookmarkElements[1], {
         button,
@@ -148,9 +164,9 @@ add_task(async function clickWithPrefSet() {
 // Open a tab, then quickly open the context menu to ensure that the command
 // enabled state of the menuitems is updated properly.
 add_task(async function quickContextMenu() {
-  await SpecialPowers.pushPrefEnv({set: [
-    [PREF_LOAD_BOOKMARKS_IN_TABS, true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [[PREF_LOAD_BOOKMARKS_IN_TABS, true]],
+  });
 
   let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, TEST_PAGES[0]);
 
@@ -167,8 +183,10 @@ add_task(async function quickContextMenu() {
   });
   await promise;
 
-  Assert.ok(!document.getElementById("placesContext_open").disabled,
-            "Commands in context menu are enabled");
+  Assert.ok(
+    !document.getElementById("placesContext_open").disabled,
+    "Commands in context menu are enabled"
+  );
 
   promise = BrowserTestUtils.waitForEvent(placesContext, "popuphidden");
   placesContext.hidePopup();

@@ -25,7 +25,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   await selectNode("#testid", inspector);
   await testEditSelector(view, "span");
@@ -41,8 +41,11 @@ async function testEditSelector(view, name) {
   info("Focusing an existing selector name in the rule-view");
   const editor = await focusEditableField(view, ruleEditor.selectorText);
 
-  is(inplaceEditor(ruleEditor.selectorText), editor,
-    "The selector editor got focused");
+  is(
+    inplaceEditor(ruleEditor.selectorText),
+    editor,
+    "The selector editor got focused"
+  );
 
   info("Entering a new selector name and committing");
   editor.input.value = name;
@@ -55,8 +58,10 @@ async function testEditSelector(view, name) {
   await onRuleViewChanged;
 
   ok(getRuleViewRule(view, name), "Rule with " + name + " selector exists.");
-  ok(getRuleViewRuleEditor(view, 1).element.getAttribute("unmatched"),
-    "Rule with " + name + " does not match the current element.");
+  ok(
+    getRuleViewRuleEditor(view, 1).element.getAttribute("unmatched"),
+    "Rule with " + name + " does not match the current element."
+  );
 
   // Escape the new property editor after editing the selector
   const onBlur = once(view.styleDocument.activeElement, "blur");
@@ -69,14 +74,15 @@ async function testAddImportantProperty(view) {
   const textProp = await addProperty(view, 1, "color", "red !important");
 
   is(textProp.value, "red", "Text prop should have been changed.");
-  is(textProp.priority, "important",
-    "Text prop has an \"important\" priority.");
+  is(textProp.priority, "important", 'Text prop has an "important" priority.');
   ok(!textProp.overridden, "Property should not be overridden");
 
   const ruleEditor = getRuleViewRuleEditor(view, 1);
   const prop = ruleEditor.rule.textProps[0];
-  ok(!prop.overridden,
-    "Existing property on matched rule should not be overridden");
+  ok(
+    !prop.overridden,
+    "Existing property on matched rule should not be overridden"
+  );
 }
 
 async function testAddMatchedRule(view, name) {
@@ -87,8 +93,11 @@ async function testAddMatchedRule(view, name) {
   info("Focusing an existing selector name in the rule-view");
   const editor = await focusEditableField(view, ruleEditor.selectorText);
 
-  is(inplaceEditor(ruleEditor.selectorText), editor,
-    "The selector editor got focused");
+  is(
+    inplaceEditor(ruleEditor.selectorText),
+    editor,
+    "The selector editor got focused"
+  );
 
   info("Entering a new selector name and committing");
   editor.input.value = name;
@@ -100,8 +109,11 @@ async function testAddMatchedRule(view, name) {
   EventUtils.synthesizeKey("KEY_Enter");
   await onRuleViewChanged;
 
-  is(getRuleViewRuleEditor(view, 1).element.getAttribute("unmatched"), "false",
-    "Rule with " + name + " does match the current element.");
+  is(
+    getRuleViewRuleEditor(view, 1).element.getAttribute("unmatched"),
+    "false",
+    "Rule with " + name + " does match the current element."
+  );
 
   // Escape the new property editor after editing the selector
   const onBlur = once(view.styleDocument.activeElement, "blur");

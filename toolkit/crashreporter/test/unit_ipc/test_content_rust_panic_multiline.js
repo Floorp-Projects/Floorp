@@ -3,7 +3,9 @@ load("../unit/head_crashreporter.js");
 
 function run_test() {
   if (!("@mozilla.org/toolkit/crash-reporter;1" in Cc)) {
-    dump("INFO | test_content_rust_panic.js | Can't test crashreporter in a non-libxul build.\n");
+    dump(
+      "INFO | test_content_rust_panic.js | Can't test crashreporter in a non-libxul build.\n"
+    );
     return;
   }
 

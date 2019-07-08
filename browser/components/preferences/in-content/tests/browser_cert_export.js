@@ -17,14 +17,20 @@ function createTemporarySaveDirectory() {
 }
 
 add_task(async function checkCertExportWorks() {
-  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
-  let certButton = gBrowser.selectedBrowser.contentDocument.getElementById("viewCertificatesButton");
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  let certButton = gBrowser.selectedBrowser.contentDocument.getElementById(
+    "viewCertificatesButton"
+  );
   certButton.scrollIntoView();
-  let certDialogLoaded = promiseLoadSubDialog("chrome://pippki/content/certManager.xul");
+  let certDialogLoaded = promiseLoadSubDialog(
+    "chrome://pippki/content/certManager.xul"
+  );
   certButton.click();
   let dialogWin = await certDialogLoaded;
   let doc = dialogWin.document;
-  doc.getElementById("certmanagertabs").selectedTab = doc.getElementById("ca_tab");
+  doc.getElementById("certmanagertabs").selectedTab = doc.getElementById(
+    "ca_tab"
+  );
   let expectedCert;
   let treeView = doc.getElementById("ca-tree").view;
   // Select any which cert. Ignore parent rows (ie rows without certs):
@@ -63,11 +69,14 @@ add_task(async function checkCertExportWorks() {
   exportButton.click();
   await finishedExporting;
   if (destFile && destFile.exists()) {
-    let contents = await OS.File.read(destFile.path, {encoding: "utf-8"});
-    is(contents, dialogWin.getPEMString(expectedCert), "Should have written correct contents");
+    let contents = await OS.File.read(destFile.path, { encoding: "utf-8" });
+    is(
+      contents,
+      dialogWin.getPEMString(expectedCert),
+      "Should have written correct contents"
+    );
   } else {
     ok(false, "No cert saved!");
   }
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
-

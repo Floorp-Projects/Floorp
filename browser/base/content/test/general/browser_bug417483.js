@@ -1,10 +1,14 @@
 add_task(async function() {
-  let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, true);
-  const htmlContent = "data:text/html, <iframe src='data:text/html,text text'></iframe>";
+  let loadedPromise = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    true
+  );
+  const htmlContent =
+    "data:text/html, <iframe src='data:text/html,text text'></iframe>";
   BrowserTestUtils.loadURI(gBrowser, htmlContent);
   await loadedPromise;
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, { }, async function(arg) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function(arg) {
     let frame = content.frames[0];
     let sel = frame.getSelection();
     let range = frame.document.createRange();
@@ -15,16 +19,32 @@ add_task(async function() {
     frame.focus();
   });
 
-  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
+  let contentAreaContextMenu = document.getElementById(
+    "contentAreaContextMenu"
+  );
 
-  let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-  await BrowserTestUtils.synthesizeMouse("frame", 5, 5,
-        { type: "contextmenu", button: 2}, gBrowser.selectedBrowser);
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    contentAreaContextMenu,
+    "popupshown"
+  );
+  await BrowserTestUtils.synthesizeMouse(
+    "frame",
+    5,
+    5,
+    { type: "contextmenu", button: 2 },
+    gBrowser.selectedBrowser
+  );
   await popupShownPromise;
 
-  ok(document.getElementById("frame-sep").hidden, "'frame-sep' should be hidden if the selection contains only spaces");
+  ok(
+    document.getElementById("frame-sep").hidden,
+    "'frame-sep' should be hidden if the selection contains only spaces"
+  );
 
-  let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    contentAreaContextMenu,
+    "popuphidden"
+  );
   contentAreaContextMenu.hidePopup();
   await popupHiddenPromise;
 });

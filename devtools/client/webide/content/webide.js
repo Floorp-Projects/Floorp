@@ -6,58 +6,80 @@
 /* import-globals-from project-panel.js */
 /* import-globals-from runtime-panel.js */
 
-const {loader, require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {gDevTools} = require("devtools/client/framework/devtools");
-const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
-const {Toolbox} = require("devtools/client/framework/toolbox");
+const { loader, require } = ChromeUtils.import(
+  "resource://devtools/shared/Loader.jsm"
+);
+const { gDevTools } = require("devtools/client/framework/devtools");
+const {
+  gDevToolsBrowser,
+} = require("devtools/client/framework/devtools-browser");
+const { Toolbox } = require("devtools/client/framework/toolbox");
 const Services = require("Services");
-const {AppProjects} = require("devtools/client/webide/modules/app-projects");
-const {Connection} = require("devtools/shared/client/connection-manager");
-const {AppManager} = require("devtools/client/webide/modules/app-manager");
+const { AppProjects } = require("devtools/client/webide/modules/app-projects");
+const { Connection } = require("devtools/shared/client/connection-manager");
+const { AppManager } = require("devtools/client/webide/modules/app-manager");
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
-const {getJSON} = require("devtools/client/shared/getjson");
+const { getJSON } = require("devtools/client/shared/getjson");
 const Telemetry = require("devtools/client/shared/telemetry");
-const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
-const {openContentLink} = require("devtools/client/shared/link");
+const { RuntimeScanners } = require("devtools/client/webide/modules/runtimes");
+const { openContentLink } = require("devtools/client/shared/link");
 const {
   checkVersionCompatibility,
   COMPATIBILITY_STATUS,
 } = require("devtools/client/shared/remote-debugging/version-checker");
 
-loader.lazyRequireGetter(this, "adbAddon", "devtools/shared/adb/adb-addon", true);
+loader.lazyRequireGetter(
+  this,
+  "adbAddon",
+  "devtools/shared/adb/adb-addon",
+  true
+);
 
-const Strings =
-  Services.strings.createBundle("chrome://devtools/locale/webide.properties");
+const Strings = Services.strings.createBundle(
+  "chrome://devtools/locale/webide.properties"
+);
 
-const TELEMETRY_WEBIDE_IMPORT_PROJECT_COUNT = "DEVTOOLS_WEBIDE_IMPORT_PROJECT_COUNT";
+const TELEMETRY_WEBIDE_IMPORT_PROJECT_COUNT =
+  "DEVTOOLS_WEBIDE_IMPORT_PROJECT_COUNT";
 
-const HELP_URL = "https://developer.mozilla.org/docs/Tools/WebIDE/Troubleshooting";
+const HELP_URL =
+  "https://developer.mozilla.org/docs/Tools/WebIDE/Troubleshooting";
 
 const MAX_ZOOM = 1.4;
 const MIN_ZOOM = 0.6;
 
-[["AppManager", AppManager],
- ["AppProjects", AppProjects],
- ["Connection", Connection]].forEach(([key, value]) => {
-   Object.defineProperty(this, key, {
-     value: value,
-     enumerable: true,
-     writable: false,
-   });
- });
+[
+  ["AppManager", AppManager],
+  ["AppProjects", AppProjects],
+  ["Connection", Connection],
+].forEach(([key, value]) => {
+  Object.defineProperty(this, key, {
+    value: value,
+    enumerable: true,
+    writable: false,
+  });
+});
 
 // Download remote resources early
 getJSON("devtools.webide.templatesURL");
 getJSON("devtools.devices.url");
 
-window.addEventListener("load", function() {
-  UI.init();
-}, {once: true});
+window.addEventListener(
+  "load",
+  function() {
+    UI.init();
+  },
+  { once: true }
+);
 
-window.addEventListener("unload", function() {
-  UI.destroy();
-}, {once: true});
+window.addEventListener(
+  "unload",
+  function() {
+    UI.destroy();
+  },
+  { once: true }
+);
 
 var UI = {
   init: function() {
@@ -69,8 +91,9 @@ var UI = {
 
     function createNotificationBox() {
       return new window.MozElements.NotificationBox(element => {
-        document.getElementById("containerbox")
-                .insertAdjacentElement("afterbegin", element);
+        document
+          .getElementById("containerbox")
+          .insertAdjacentElement("afterbegin", element);
       });
     }
     // Create two distinct NotificationBox to be able to show the deprecation message and
@@ -91,16 +114,21 @@ var UI = {
     this.onfocus = this.onfocus.bind(this);
     window.addEventListener("focus", this.onfocus, true);
 
-    AppProjects.load().then(() => {
-      this.autoSelectProject();
-    }, e => {
-      console.error(e);
-      this.reportError("error_appProjectsLoadFailed");
-    });
+    AppProjects.load().then(
+      () => {
+        this.autoSelectProject();
+      },
+      e => {
+        console.error(e);
+        this.reportError("error_appProjectsLoadFailed");
+      }
+    );
 
     // Auto install the ADB Addon Helper. Only once.
     // If the user decides to uninstall any of this addon, we won't install it again.
-    const autoinstallADBExtension = Services.prefs.getBoolPref("devtools.webide.autoinstallADBExtension");
+    const autoinstallADBExtension = Services.prefs.getBoolPref(
+      "devtools.webide.autoinstallADBExtension"
+    );
     if (autoinstallADBExtension) {
       adbAddon.install("webide");
     }
@@ -108,16 +136,23 @@ var UI = {
     // Remove deprecated remote debugging extensions.
     adbAddon.uninstallUnsupportedExtensions();
 
-    Services.prefs.setBoolPref("devtools.webide.autoinstallADBExtension", false);
+    Services.prefs.setBoolPref(
+      "devtools.webide.autoinstallADBExtension",
+      false
+    );
 
     this.setupDeck();
 
     this.contentViewer = window.docShell.contentViewer;
-    this.contentViewer.fullZoom = Services.prefs.getCharPref("devtools.webide.zoom");
+    this.contentViewer.fullZoom = Services.prefs.getCharPref(
+      "devtools.webide.zoom"
+    );
 
     // If the new about:debugging is enabled, show a deprecation message to encourage
     // users to open the new Remote Debugging
-    if (Services.prefs.getBoolPref("devtools.aboutdebugging.new-enabled", false)) {
+    if (
+      Services.prefs.getBoolPref("devtools.aboutdebugging.new-enabled", false)
+    ) {
       this.showDeprecationMessage();
     }
 
@@ -140,10 +175,12 @@ var UI = {
     // we need to validate the project regularly. Let's assume that
     // if a modification happened, it happened when the window was
     // not focused.
-    if (AppManager.selectedProject &&
-        AppManager.selectedProject.type != "mainProcess" &&
-        AppManager.selectedProject.type != "runtimeApp" &&
-        AppManager.selectedProject.type != "tab") {
+    if (
+      AppManager.selectedProject &&
+      AppManager.selectedProject.type != "mainProcess" &&
+      AppManager.selectedProject.type != "runtimeApp" &&
+      AppManager.selectedProject.type != "tab"
+    ) {
       AppManager.validateAndUpdateProject(AppManager.selectedProject);
     }
   },
@@ -211,7 +248,9 @@ var UI = {
   updateTitle: function() {
     const project = AppManager.selectedProject;
     if (project) {
-      window.document.title = Strings.formatStringFromName("title_app", [project.name]);
+      window.document.title = Strings.formatStringFromName("title_app", [
+        project.name,
+      ]);
     } else {
       window.document.title = Strings.GetStringFromName("title_noApp");
     }
@@ -268,28 +307,31 @@ var UI = {
     this._busyOperationDescription = operationDescription;
     this.setupBusyTimeout();
     this.busy();
-    promise.then(() => {
-      this.cancelBusyTimeout();
-      this.unbusy();
-    }, (e) => {
-      let message;
-      if (e && e.error && e.message) {
-        // Some errors come from fronts that are not based on protocol.js.
-        // Errors are not translated to strings.
-        message = operationDescription + " (" + e.error + "): " + e.message;
-      } else {
-        message = operationDescription + (e ? (": " + e) : "");
-      }
-      this.cancelBusyTimeout();
-      const operationCanceled = e && e.canceled;
-      if (!operationCanceled) {
-        UI.reportError("error_operationFail", message);
-        if (e) {
-          console.error(e);
+    promise.then(
+      () => {
+        this.cancelBusyTimeout();
+        this.unbusy();
+      },
+      e => {
+        let message;
+        if (e && e.error && e.message) {
+          // Some errors come from fronts that are not based on protocol.js.
+          // Errors are not translated to strings.
+          message = operationDescription + " (" + e.error + "): " + e.message;
+        } else {
+          message = operationDescription + (e ? ": " + e : "");
         }
+        this.cancelBusyTimeout();
+        const operationCanceled = e && e.canceled;
+        if (!operationCanceled) {
+          UI.reportError("error_operationFail", message);
+          if (e) {
+            console.error(e);
+          }
+        }
+        this.unbusy();
       }
-      this.unbusy();
-    });
+    );
     return promise;
   },
 
@@ -304,18 +346,29 @@ var UI = {
 
     console.error(text);
 
-    const buttons = [{
-      label: Strings.GetStringFromName("notification_showTroubleShooting_label"),
-      accessKey: Strings.GetStringFromName("notification_showTroubleShooting_accesskey"),
-      callback: function() {
-        Cmds.showTroubleShooting();
+    const buttons = [
+      {
+        label: Strings.GetStringFromName(
+          "notification_showTroubleShooting_label"
+        ),
+        accessKey: Strings.GetStringFromName(
+          "notification_showTroubleShooting_accesskey"
+        ),
+        callback: function() {
+          Cmds.showTroubleShooting();
+        },
       },
-    }];
+    ];
 
     const nbox = this.notificationBox;
     nbox.removeAllNotifications(true);
-    nbox.appendNotification(text, "webide:errornotification", null,
-      nbox.PRIORITY_WARNING_LOW, buttons);
+    nbox.appendNotification(
+      text,
+      "webide:errornotification",
+      null,
+      nbox.PRIORITY_WARNING_LOW,
+      buttons
+    );
   },
 
   showDeprecationMessage: function() {
@@ -328,19 +381,30 @@ var UI = {
       // immediately. Fallback to the previous string in this case.
       text = Strings.GetStringFromName("error_webIDEDeprecated");
     }
-    const buttons = [{
-      label: Strings.GetStringFromName("notification_openAboutDebugging.label"),
-      accessKey: Strings.GetStringFromName("notification_openAboutDebugging.accesskey"),
-      callback: function() {
-        const { openTrustedLink } = require("devtools/client/shared/link");
-        openTrustedLink("about:debugging");
+    const buttons = [
+      {
+        label: Strings.GetStringFromName(
+          "notification_openAboutDebugging.label"
+        ),
+        accessKey: Strings.GetStringFromName(
+          "notification_openAboutDebugging.accesskey"
+        ),
+        callback: function() {
+          const { openTrustedLink } = require("devtools/client/shared/link");
+          openTrustedLink("about:debugging");
+        },
       },
-    }];
+    ];
 
     const nbox = this.deprecationBox;
     nbox.removeAllNotifications(true);
-    nbox.appendNotification(text, "webide:deprecationnotification", null,
-      nbox.PRIORITY_WARNING_LOW, buttons);
+    nbox.appendNotification(
+      text,
+      "webide:deprecationnotification",
+      null,
+      nbox.PRIORITY_WARNING_LOW,
+      buttons
+    );
   },
 
   dismissErrorNotification: function() {
@@ -403,8 +467,10 @@ var UI = {
       } else if (AppManager.selectedProject.type == "mainProcess") {
         playCmd.setAttribute("disabled", "true");
         stopCmd.setAttribute("disabled", "true");
-      } else if (AppManager.selectedProject.errorsCount == 0 &&
-            AppManager.runtimeCanHandleApps()) {
+      } else if (
+        AppManager.selectedProject.errorsCount == 0 &&
+        AppManager.runtimeCanHandleApps()
+      ) {
         playCmd.removeAttribute("disabled");
       } else {
         playCmd.setAttribute("disabled", "true");
@@ -417,11 +483,18 @@ var UI = {
     const disconnectCmd = document.querySelector("#cmd_disconnectRuntime");
     const devicePrefsCmd = document.querySelector("#cmd_showDevicePrefs");
     const settingsCmd = document.querySelector("#cmd_showSettings");
-    const performancePanelCmd = document.querySelector("#cmd_showPerformancePanel");
+    const performancePanelCmd = document.querySelector(
+      "#cmd_showPerformancePanel"
+    );
 
     // Display the performance menu only if the pref is enabled
-    const performancePanelMenu = document.querySelector("menuitem[command=cmd_showPerformancePanel]");
-    performancePanelMenu.hidden = !Services.prefs.getBoolPref("devtools.performance.new-panel-enabled", false);
+    const performancePanelMenu = document.querySelector(
+      "menuitem[command=cmd_showPerformancePanel]"
+    );
+    performancePanelMenu.hidden = !Services.prefs.getBoolPref(
+      "devtools.performance.new-panel-enabled",
+      false
+    );
 
     if (AppManager.connected) {
       if (AppManager.deviceFront) {
@@ -480,12 +553,14 @@ var UI = {
   autoConnectRuntime: function() {
     // Automatically reconnect to the previously selected runtime,
     // if available and has an ID and feature is enabled
-    if (AppManager.selectedRuntime ||
-        !Services.prefs.getBoolPref("devtools.webide.autoConnectRuntime") ||
-        !this.lastConnectedRuntime) {
+    if (
+      AppManager.selectedRuntime ||
+      !Services.prefs.getBoolPref("devtools.webide.autoConnectRuntime") ||
+      !this.lastConnectedRuntime
+    ) {
       return;
     }
-    let [ , type, id] = this.lastConnectedRuntime.match(/^(\w+):(.+)$/);
+    let [, type, id] = this.lastConnectedRuntime.match(/^(\w+):(.+)$/);
 
     type = type.toLowerCase();
 
@@ -512,12 +587,13 @@ var UI = {
   connectToRuntime: function(runtime) {
     const name = runtime.name;
     let promise = AppManager.connectToRuntime(runtime);
-    promise.then(() => this.initConnectionTelemetry())
-           .catch(() => {
-             // Empty rejection handler to silence uncaught rejection warnings
-             // |busyUntil| will listen for rejections.
-             // Bug 1121100 may find a better way to silence these.
-           });
+    promise
+      .then(() => this.initConnectionTelemetry())
+      .catch(() => {
+        // Empty rejection handler to silence uncaught rejection warnings
+        // |busyUntil| will listen for rejections.
+        // Bug 1121100 may find a better way to silence these.
+      });
     promise = this.busyUntil(promise, "Connecting to " + name);
     // Stop busy timeout for runtimes that take unknown or long amounts of time
     // to connect.
@@ -528,9 +604,14 @@ var UI = {
   },
 
   updateRuntimeButton: function() {
-    const labelNode = document.querySelector("#runtime-panel-button > .panel-button-label");
+    const labelNode = document.querySelector(
+      "#runtime-panel-button > .panel-button-label"
+    );
     if (!AppManager.selectedRuntime) {
-      labelNode.setAttribute("value", Strings.GetStringFromName("runtimeButton_label"));
+      labelNode.setAttribute(
+        "value",
+        Strings.GetStringFromName("runtimeButton_label")
+      );
     } else {
       const name = AppManager.selectedRuntime.name;
       labelNode.setAttribute("value", name);
@@ -538,10 +619,12 @@ var UI = {
   },
 
   saveLastConnectedRuntime: function() {
-    if (AppManager.selectedRuntime &&
-        AppManager.selectedRuntime.id !== undefined) {
-      this.lastConnectedRuntime = AppManager.selectedRuntime.type + ":" +
-                                  AppManager.selectedRuntime.id;
+    if (
+      AppManager.selectedRuntime &&
+      AppManager.selectedRuntime.id !== undefined
+    ) {
+      this.lastConnectedRuntime =
+        AppManager.selectedRuntime.type + ":" + AppManager.selectedRuntime.id;
     } else {
       this.lastConnectedRuntime = "";
     }
@@ -585,8 +668,8 @@ var UI = {
   },
 
   logActionState: function(action, state) {
-    const histogramId = "DEVTOOLS_WEBIDE_CONNECTION_" +
-                      action.toUpperCase() + "_USED";
+    const histogramId =
+      "DEVTOOLS_WEBIDE_CONNECTION_" + action.toUpperCase() + "_USED";
     this._telemetry.getHistogramById(histogramId).add(state);
   },
 
@@ -609,9 +692,13 @@ var UI = {
     if (!project) {
       return;
     }
-    if (!(project.type == "runtimeApp" ||
-          project.type == "mainProcess" ||
-          project.type == "tab")) {
+    if (
+      !(
+        project.type == "runtimeApp" ||
+        project.type == "mainProcess" ||
+        project.type == "tab"
+      )
+    ) {
       return; // For something that is not an editable app, we're done.
     }
 
@@ -628,9 +715,13 @@ var UI = {
     if (!project) {
       return;
     }
-    if (!(project.type == "runtimeApp" ||
-          project.type == "mainProcess" ||
-          project.type == "tab")) {
+    if (
+      !(
+        project.type == "runtimeApp" ||
+        project.type == "mainProcess" ||
+        project.type == "tab"
+      )
+    ) {
       return; // For something that is not an editable app, we're done.
     }
 
@@ -641,7 +732,9 @@ var UI = {
     const isPackaged = !!source.path;
     let project;
     try {
-      project = await AppProjects[isPackaged ? "addPackaged" : "addHosted"](source);
+      project = await AppProjects[isPackaged ? "addPackaged" : "addHosted"](
+        source
+      );
     } catch (e) {
       if (e === "Already added") {
         // Select project that's already been added,
@@ -655,12 +748,16 @@ var UI = {
     // Select project
     AppManager.selectedProject = project;
 
-    this._telemetry.getHistogramById(TELEMETRY_WEBIDE_IMPORT_PROJECT_COUNT).add(true);
+    this._telemetry
+      .getHistogramById(TELEMETRY_WEBIDE_IMPORT_PROJECT_COUNT)
+      .add(true);
   },
 
   // Remember the last selected project on the runtime
   saveLastSelectedProject: function() {
-    const shouldRestore = Services.prefs.getBoolPref("devtools.webide.restoreLastProject");
+    const shouldRestore = Services.prefs.getBoolPref(
+      "devtools.webide.restoreLastProject"
+    );
     if (!shouldRestore) {
       return;
     }
@@ -670,7 +767,8 @@ var UI = {
       return;
     }
 
-    let project = "", type = "";
+    let project = "",
+      type = "";
     const selected = AppManager.selectedProject;
     if (selected) {
       if (selected.type == "runtimeApp") {
@@ -678,15 +776,16 @@ var UI = {
         project = selected.app.manifestURL;
       } else if (selected.type == "mainProcess") {
         type = "mainProcess";
-      } else if (selected.type == "packaged" ||
-                 selected.type == "hosted") {
+      } else if (selected.type == "packaged" || selected.type == "hosted") {
         type = "local";
         project = selected.location;
       }
     }
     if (type) {
-      Services.prefs.setCharPref("devtools.webide.lastSelectedProject",
-                                 type + ":" + project);
+      Services.prefs.setCharPref(
+        "devtools.webide.lastSelectedProject",
+        type + ":" + project
+      );
     } else {
       Services.prefs.clearUserPref("devtools.webide.lastSelectedProject");
     }
@@ -696,11 +795,15 @@ var UI = {
     if (AppManager.selectedProject) {
       return;
     }
-    const shouldRestore = Services.prefs.getBoolPref("devtools.webide.restoreLastProject");
+    const shouldRestore = Services.prefs.getBoolPref(
+      "devtools.webide.restoreLastProject"
+    );
     if (!shouldRestore) {
       return;
     }
-    const pref = Services.prefs.getCharPref("devtools.webide.lastSelectedProject");
+    const pref = Services.prefs.getCharPref(
+      "devtools.webide.lastSelectedProject"
+    );
     if (!pref) {
       return;
     }
@@ -708,7 +811,7 @@ var UI = {
     if (!m) {
       return;
     }
-    const [ , type, project] = m;
+    const [, type, project] = m;
 
     if (type == "local") {
       const lastProject = AppProjects.get(project);
@@ -782,16 +885,24 @@ var UI = {
       const report = await checkVersionCompatibility(client);
 
       if (report.status == COMPATIBILITY_STATUS.TOO_RECENT) {
-        this.reportError("error_runtimeVersionTooRecent", report.runtimeID,
-          report.localID);
+        this.reportError(
+          "error_runtimeVersionTooRecent",
+          report.runtimeID,
+          report.localID
+        );
       }
       if (report.status == COMPATIBILITY_STATUS.TOO_OLD) {
-        this.reportError("error_runtimeVersionTooOld", report.runtimeVersion,
-          report.minVersion);
+        this.reportError(
+          "error_runtimeVersionTooOld",
+          report.runtimeVersion,
+          report.minVersion
+        );
       }
       if (report.status == COMPATIBILITY_STATUS.TOO_OLD_67_DEBUGGER) {
-        this.reportError("error_runtimeVersionTooOld67Debugger",
-          report.runtimeVersion);
+        this.reportError(
+          "error_runtimeVersionTooOld67Debugger",
+          report.runtimeVersion
+        );
       }
     }
   },
@@ -819,7 +930,10 @@ var UI = {
     if (!this.toolboxPromise || this.toolboxPromise === promise) {
       this.toolboxPromise = null;
       this.resetFocus();
-      Services.prefs.setIntPref("devtools.toolbox.footer.height", iframe.height);
+      Services.prefs.setIntPref(
+        "devtools.toolbox.footer.height",
+        iframe.height
+      );
 
       const splitter = document.querySelector(".devtools-horizontal-splitter");
       splitter.setAttribute("hidden", "true");
@@ -856,14 +970,19 @@ var UI = {
     const height = Services.prefs.getIntPref("devtools.toolbox.footer.height");
     iframe.height = height;
 
-    const promise = this.toolboxPromise = AppManager.getTarget().then(target => {
-      return this._showToolbox(target, iframe);
-    }).then(toolbox => {
-      // Destroy the toolbox on WebIDE side before
-      // toolbox.destroy's promise resolves.
-      toolbox.once("destroyed", this._onToolboxClosed.bind(this, promise, iframe));
-      return toolbox;
-    }, console.error);
+    const promise = (this.toolboxPromise = AppManager.getTarget()
+      .then(target => {
+        return this._showToolbox(target, iframe);
+      })
+      .then(toolbox => {
+        // Destroy the toolbox on WebIDE side before
+        // toolbox.destroy's promise resolves.
+        toolbox.once(
+          "destroyed",
+          this._onToolboxClosed.bind(this, promise, iframe)
+        );
+        return toolbox;
+      }, console.error));
 
     return this.busyUntil(this.toolboxPromise, "opening toolbox");
   },
@@ -872,11 +991,15 @@ var UI = {
     const splitter = document.querySelector(".devtools-horizontal-splitter");
     splitter.removeAttribute("hidden");
 
-    document.getElementById("containerbox").insertBefore(iframe, splitter.nextSibling);
+    document
+      .getElementById("containerbox")
+      .insertBefore(iframe, splitter.nextSibling);
     const host = Toolbox.HostType.CUSTOM;
     const options = { customIframe: iframe, zoom: false, uid: iframe.uid };
 
-    document.querySelector("#action-button-debug").setAttribute("active", "true");
+    document
+      .querySelector("#action-button-debug")
+      .setAttribute("active", "true");
 
     return gDevTools.showToolbox(target, null, host, options);
   },
@@ -909,12 +1032,15 @@ var Cmds = {
 
   takeScreenshot: function() {
     const url = AppManager.deviceFront.screenshotToDataURL();
-    return UI.busyUntil(url.then(longstr => {
-      return longstr.string().then(dataURL => {
-        longstr.release().catch(console.error);
-        UI.openInBrowser(dataURL);
-      });
-    }), "taking screenshot");
+    return UI.busyUntil(
+      url.then(longstr => {
+        return longstr.string().then(dataURL => {
+          longstr.release().catch(console.error);
+          UI.openInBrowser(dataURL);
+        });
+      }),
+      "taking screenshot"
+    );
   },
 
   showRuntimeDetails: function() {
@@ -929,25 +1055,38 @@ var Cmds = {
     UI.selectDeckPanel("performance");
     const iframe = document.getElementById("deck-panel-performance");
 
-    iframe.addEventListener("DOMContentLoaded", () => {
-      iframe.contentWindow.gInit(AppManager.perfFront,
-                                 AppManager.preferenceFront);
-    }, { once: true });
+    iframe.addEventListener(
+      "DOMContentLoaded",
+      () => {
+        iframe.contentWindow.gInit(
+          AppManager.perfFront,
+          AppManager.preferenceFront
+        );
+      },
+      { once: true }
+    );
   },
 
   async play() {
     let busy;
     switch (AppManager.selectedProject.type) {
       case "packaged":
-        busy = UI.busyWithProgressUntil(AppManager.installAndRunProject(),
-                                        "installing and running app");
+        busy = UI.busyWithProgressUntil(
+          AppManager.installAndRunProject(),
+          "installing and running app"
+        );
         break;
       case "hosted":
-        busy = UI.busyUntil(AppManager.installAndRunProject(),
-                            "installing and running app");
+        busy = UI.busyUntil(
+          AppManager.installAndRunProject(),
+          "installing and running app"
+        );
         break;
       case "runtimeApp":
-        busy = UI.busyUntil(AppManager.launchOrReloadRuntimeApp(), "launching / reloading app");
+        busy = UI.busyUntil(
+          AppManager.launchOrReloadRuntimeApp(),
+          "launching / reloading app"
+        );
         break;
       case "tab":
         busy = UI.busyUntil(AppManager.reloadTab(), "reloading tab");
@@ -992,14 +1131,20 @@ var Cmds = {
   zoomIn: function() {
     if (UI.contentViewer.fullZoom < MAX_ZOOM) {
       UI.contentViewer.fullZoom += 0.1;
-      Services.prefs.setCharPref("devtools.webide.zoom", UI.contentViewer.fullZoom);
+      Services.prefs.setCharPref(
+        "devtools.webide.zoom",
+        UI.contentViewer.fullZoom
+      );
     }
   },
 
   zoomOut: function() {
     if (UI.contentViewer.fullZoom > MIN_ZOOM) {
       UI.contentViewer.fullZoom -= 0.1;
-      Services.prefs.setCharPref("devtools.webide.zoom", UI.contentViewer.fullZoom);
+      Services.prefs.setCharPref(
+        "devtools.webide.zoom",
+        UI.contentViewer.fullZoom
+      );
     }
   },
 

@@ -3,38 +3,108 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
-const {CryptoUtils} = ChromeUtils.import("resource://services-crypto/utils.js");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {clearTimeout, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-const {FxAccountsStorageManager} = ChromeUtils.import("resource://gre/modules/FxAccountsStorage.jsm");
-const {ASSERTION_LIFETIME, ASSERTION_USE_PERIOD, CERT_LIFETIME, COMMAND_SENDTAB, DERIVED_KEYS_NAMES, ERRNO_DEVICE_SESSION_CONFLICT, ERRNO_INVALID_AUTH_TOKEN, ERRNO_UNKNOWN_DEVICE, ERROR_AUTH_ERROR, ERROR_INVALID_PARAMETER, ERROR_NO_ACCOUNT, ERROR_OFFLINE, ERROR_TO_GENERAL_ERROR_CLASS, ERROR_UNKNOWN, ERROR_UNVERIFIED_ACCOUNT, FXA_PWDMGR_MEMORY_FIELDS, FXA_PWDMGR_PLAINTEXT_FIELDS, FXA_PWDMGR_REAUTH_WHITELIST, FXA_PWDMGR_SECURE_FIELDS, FX_OAUTH_CLIENT_ID, KEY_LIFETIME, ONLOGIN_NOTIFICATION, ONLOGOUT_NOTIFICATION, ONVERIFIED_NOTIFICATION, ON_DEVICE_DISCONNECTED_NOTIFICATION, ON_NEW_DEVICE_ID, POLL_SESSION, PREF_LAST_FXA_USER, SERVER_ERRNO_TO_ERROR, SCOPE_OLD_SYNC, log, logPII} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
+const { CryptoUtils } = ChromeUtils.import(
+  "resource://services-crypto/utils.js"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { clearTimeout, setTimeout } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
+const { FxAccountsStorageManager } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsStorage.jsm"
+);
+const {
+  ASSERTION_LIFETIME,
+  ASSERTION_USE_PERIOD,
+  CERT_LIFETIME,
+  COMMAND_SENDTAB,
+  DERIVED_KEYS_NAMES,
+  ERRNO_DEVICE_SESSION_CONFLICT,
+  ERRNO_INVALID_AUTH_TOKEN,
+  ERRNO_UNKNOWN_DEVICE,
+  ERROR_AUTH_ERROR,
+  ERROR_INVALID_PARAMETER,
+  ERROR_NO_ACCOUNT,
+  ERROR_OFFLINE,
+  ERROR_TO_GENERAL_ERROR_CLASS,
+  ERROR_UNKNOWN,
+  ERROR_UNVERIFIED_ACCOUNT,
+  FXA_PWDMGR_MEMORY_FIELDS,
+  FXA_PWDMGR_PLAINTEXT_FIELDS,
+  FXA_PWDMGR_REAUTH_WHITELIST,
+  FXA_PWDMGR_SECURE_FIELDS,
+  FX_OAUTH_CLIENT_ID,
+  KEY_LIFETIME,
+  ONLOGIN_NOTIFICATION,
+  ONLOGOUT_NOTIFICATION,
+  ONVERIFIED_NOTIFICATION,
+  ON_DEVICE_DISCONNECTED_NOTIFICATION,
+  ON_NEW_DEVICE_ID,
+  POLL_SESSION,
+  PREF_LAST_FXA_USER,
+  SERVER_ERRNO_TO_ERROR,
+  SCOPE_OLD_SYNC,
+  log,
+  logPII,
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
-ChromeUtils.defineModuleGetter(this, "FxAccountsClient",
-  "resource://gre/modules/FxAccountsClient.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FxAccountsClient",
+  "resource://gre/modules/FxAccountsClient.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "FxAccountsConfig",
-  "resource://gre/modules/FxAccountsConfig.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FxAccountsConfig",
+  "resource://gre/modules/FxAccountsConfig.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "jwcrypto",
-  "resource://services-crypto/jwcrypto.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "jwcrypto",
+  "resource://services-crypto/jwcrypto.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "FxAccountsOAuthGrantClient",
-  "resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FxAccountsOAuthGrantClient",
+  "resource://gre/modules/FxAccountsOAuthGrantClient.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "FxAccountsCommands",
-  "resource://gre/modules/FxAccountsCommands.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FxAccountsCommands",
+  "resource://gre/modules/FxAccountsCommands.js"
+);
 
-ChromeUtils.defineModuleGetter(this, "FxAccountsProfile",
-  "resource://gre/modules/FxAccountsProfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FxAccountsProfile",
+  "resource://gre/modules/FxAccountsProfile.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "Utils",
-  "resource://services-sync/util.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Utils",
+  "resource://services-sync/util.js"
+);
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "FXA_ENABLED",
-    "identity.fxaccounts.enabled", true);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "FXA_ENABLED",
+  "identity.fxaccounts.enabled",
+  true
+);
 
 // All properties exposed by the public FxAccounts API.
 var publicProperties = [
@@ -94,15 +164,18 @@ var publicProperties = [
 // }
 // If the state has changed between the function being called and the promise
 // being resolved, the .resolve() call will actually be rejected.
-var AccountState = this.AccountState = function(storageManager) {
+var AccountState = (this.AccountState = function(storageManager) {
   this.storageManager = storageManager;
-  this.promiseInitialized = this.storageManager.getAccountData().then(data => {
-    this.oauthTokens = data && data.oauthTokens ? data.oauthTokens : {};
-  }).catch(err => {
-    log.error("Failed to initialize the storage manager", err);
-    // Things are going to fall apart, but not much we can do about it here.
-  });
-};
+  this.promiseInitialized = this.storageManager
+    .getAccountData()
+    .then(data => {
+      this.oauthTokens = data && data.oauthTokens ? data.oauthTokens : {};
+    })
+    .catch(err => {
+      log.error("Failed to initialize the storage manager", err);
+      // Things are going to fall apart, but not much we can do about it here.
+    });
+});
 
 AccountState.prototype = {
   oauthTokens: null,
@@ -117,12 +190,14 @@ AccountState.prototype = {
   abort() {
     if (this.whenVerifiedDeferred) {
       this.whenVerifiedDeferred.reject(
-        new Error("Verification aborted; Another user signing in"));
+        new Error("Verification aborted; Another user signing in")
+      );
       this.whenVerifiedDeferred = null;
     }
     if (this.whenKeysReadyDeferred) {
       this.whenKeysReadyDeferred.reject(
-        new Error("Verification aborted; Another user signing in"));
+        new Error("Verification aborted; Another user signing in")
+      );
       this.whenKeysReadyDeferred = null;
     }
     return this.signOut();
@@ -167,9 +242,12 @@ AccountState.prototype = {
 
   resolve(result) {
     if (!this.isCurrent) {
-      log.info("An accountState promise was resolved, but was actually rejected" +
-               " due to a different user being signed in. Originally resolved" +
-               " with", result);
+      log.info(
+        "An accountState promise was resolved, but was actually rejected" +
+          " due to a different user being signed in. Originally resolved" +
+          " with",
+        result
+      );
       return Promise.reject(new Error("A different user signed in"));
     }
     return Promise.resolve(result);
@@ -181,9 +259,12 @@ AccountState.prototype = {
     // might cause the consumer to attempt some remediation and cause other
     // problems.
     if (!this.isCurrent) {
-      log.info("An accountState promise was rejected, but we are ignoring that" +
-               "reason and rejecting it due to a different user being signed in." +
-               "Originally rejected with", error);
+      log.info(
+        "An accountState promise was rejected, but we are ignoring that" +
+          "reason and rejecting it due to a different user being signed in." +
+          "Originally rejected with",
+        error
+      );
       return Promise.reject(new Error("A different user signed in"));
     }
     return Promise.reject(error);
@@ -252,9 +333,11 @@ AccountState.prototype = {
   // set of user data.)
   _persistCachedTokens() {
     this._cachePreamble();
-    return this.updateUserAccountData({ oauthTokens: this.oauthTokens }).catch(err => {
-      log.error("Failed to update cached tokens", err);
-    });
+    return this.updateUserAccountData({ oauthTokens: this.oauthTokens }).catch(
+      err => {
+        log.error("Failed to update cached tokens", err);
+      }
+    );
   },
 };
 
@@ -265,8 +348,10 @@ function getScopeKey(scopeArray) {
 }
 
 function getPropertyDescriptor(obj, prop) {
-  return Object.getOwnPropertyDescriptor(obj, prop) ||
-         getPropertyDescriptor(Object.getPrototypeOf(obj), prop);
+  return (
+    Object.getOwnPropertyDescriptor(obj, prop) ||
+    getPropertyDescriptor(Object.getPrototypeOf(obj), prop)
+  );
 }
 
 /**
@@ -286,7 +371,7 @@ function copyObjectProperties(from, to, thisObj, keys) {
     // Look for the prop in the prototype chain.
     let desc = getPropertyDescriptor(from, prop);
 
-    if (typeof(desc.value) == "function") {
+    if (typeof desc.value == "function") {
       desc.value = desc.value.bind(thisObj);
     }
 
@@ -315,9 +400,17 @@ var FxAccounts = function(mockInternal) {
 
   if (!mockInternal) {
     internal = new FxAccountsInternal();
-    copyObjectProperties(FxAccountsInternal.prototype, external, internal, publicProperties);
+    copyObjectProperties(
+      FxAccountsInternal.prototype,
+      external,
+      internal,
+      publicProperties
+    );
   } else {
-    internal = Object.create(FxAccountsInternal.prototype, Object.getOwnPropertyDescriptors(mockInternal));
+    internal = Object.create(
+      FxAccountsInternal.prototype,
+      Object.getOwnPropertyDescriptors(mockInternal)
+    );
     copyObjectProperties(internal, external, internal, publicProperties);
     // Exposes the internal object for testing only.
     external.internal = internal;
@@ -327,9 +420,9 @@ var FxAccounts = function(mockInternal) {
     // internal.fxaPushService option is used in testing.
     // Otherwise we load the service lazily.
     XPCOMUtils.defineLazyGetter(internal, "fxaPushService", function() {
-      return Cc["@mozilla.org/fxaccounts/push;1"]
-        .getService(Ci.nsISupports)
-        .wrappedJSObject;
+      return Cc["@mozilla.org/fxaccounts/push;1"].getService(
+        Ci.nsISupports
+      ).wrappedJSObject;
     });
   }
 
@@ -403,7 +496,9 @@ FxAccountsInternal.prototype = {
   _profile: null,
   get profile() {
     if (!this._profile) {
-      let profileServerUrl = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.profile.uri");
+      let profileServerUrl = Services.urlFormatter.formatURLPref(
+        "identity.fxaccounts.remote.profile.uri"
+      );
       this._profile = new FxAccountsProfile({
         fxa: this,
         profileServerUrl,
@@ -423,7 +518,9 @@ FxAccountsInternal.prototype = {
   _oauthClient: null,
   get oauthClient() {
     if (!this._oauthClient) {
-      const serverURL = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.oauth.uri");
+      const serverURL = Services.urlFormatter.formatURLPref(
+        "identity.fxaccounts.remote.oauth.uri"
+      );
       this._oauthClient = new FxAccountsOAuthGrantClient({
         serverURL,
         client_id: FX_OAUTH_CLIENT_ID,
@@ -450,8 +547,8 @@ FxAccountsInternal.prototype = {
   // });
   _withCurrentAccountState(func) {
     const state = this.currentAccountState;
-    const getUserData = (fields) => state.getUserAccountData(fields);
-    const updateUserData = (data) => state.updateUserAccountData(data);
+    const getUserData = fields => state.getUserAccountData(fields);
+    const updateUserData = data => state.updateUserAccountData(data);
     return func(getUserData, updateUserData);
   },
 
@@ -464,17 +561,23 @@ FxAccountsInternal.prototype = {
     if (typeof deviceIds == "string") {
       deviceIds = [deviceIds];
     }
-    return this.currentAccountState.getUserAccountData()
-      .then(data => {
-        if (!data) {
-          throw this._error(ERROR_NO_ACCOUNT);
-        }
-        if (!data.sessionToken) {
-          throw this._error(ERROR_AUTH_ERROR,
-            "notifyDevices called without a session token");
-        }
-        return this.fxAccountsClient.notifyDevices(data.sessionToken, deviceIds,
-          excludedIds, payload, TTL);
+    return this.currentAccountState.getUserAccountData().then(data => {
+      if (!data) {
+        throw this._error(ERROR_NO_ACCOUNT);
+      }
+      if (!data.sessionToken) {
+        throw this._error(
+          ERROR_AUTH_ERROR,
+          "notifyDevices called without a session token"
+        );
+      }
+      return this.fxAccountsClient.notifyDevices(
+        data.sessionToken,
+        deviceIds,
+        excludedIds,
+        payload,
+        TTL
+      );
     });
   },
 
@@ -507,11 +610,13 @@ FxAccountsInternal.prototype = {
    */
   checkEmailStatus: function checkEmailStatus(sessionToken, options = {}) {
     if (!sessionToken) {
-      return Promise.reject(new Error(
-        "checkEmailStatus called without a session token"));
+      return Promise.reject(
+        new Error("checkEmailStatus called without a session token")
+      );
     }
-    return this.fxAccountsClient.recoveryEmailStatus(sessionToken,
-      options).catch(error => this._handleTokenError(error));
+    return this.fxAccountsClient
+      .recoveryEmailStatus(sessionToken, options)
+      .catch(error => this._handleTokenError(error));
   },
 
   /**
@@ -575,7 +680,10 @@ FxAccountsInternal.prototype = {
       // about:prefs. When that happens we can detect the state and re-add the
       // pref. Note that we only do this for verified users as that's what sync
       // does (ie, if the user is unverified, sync will set it on verification)
-      if (!Services.prefs.prefHasUserValue("services.sync.username") && data.email) {
+      if (
+        !Services.prefs.prefHasUserValue("services.sync.username") &&
+        data.email
+      ) {
         Services.prefs.setStringPref("services.sync.username", data.email);
       }
     } else {
@@ -615,12 +723,15 @@ FxAccountsInternal.prototype = {
     log.debug("setSignedInUser - aborting any existing flows");
     const signedInUser = await this.getSignedInUser();
     if (signedInUser) {
-      await this._signOutServer(signedInUser.sessionToken, signedInUser.oauthTokens);
+      await this._signOutServer(
+        signedInUser.sessionToken,
+        signedInUser.oauthTokens
+      );
     }
     await this.abortExistingFlow();
-    let currentAccountState = this.currentAccountState = this.newAccountState(
+    let currentAccountState = (this.currentAccountState = this.newAccountState(
       Cu.cloneInto(credentials, {}) // Pass a clone of the credentials object.
-    );
+    ));
     // This promise waits for storage, but not for verification.
     // We're telling the caller that this is durable now (although is that
     // really something we should commit to? Why not let the write happen in
@@ -645,23 +756,30 @@ FxAccountsInternal.prototype = {
    *        match the currently signed in user.
    */
   updateUserAccountData(credentials) {
-    log.debug("updateUserAccountData called with fields", Object.keys(credentials));
+    log.debug(
+      "updateUserAccountData called with fields",
+      Object.keys(credentials)
+    );
     if (logPII) {
       log.debug("updateUserAccountData called with data", credentials);
     }
     let currentAccountState = this.currentAccountState;
-    return currentAccountState.promiseInitialized.then(() => {
-      return currentAccountState.getUserAccountData(["uid"]);
-    }).then(existing => {
-      if (existing.uid != credentials.uid) {
-        throw new Error("The specified credentials aren't for the current user");
-      }
-      // We need to nuke uid as storage will complain if we try and
-      // update it (even when the value is the same)
-      credentials = Cu.cloneInto(credentials, {}); // clone it first
-      delete credentials.uid;
-      return currentAccountState.updateUserAccountData(credentials);
-    });
+    return currentAccountState.promiseInitialized
+      .then(() => {
+        return currentAccountState.getUserAccountData(["uid"]);
+      })
+      .then(existing => {
+        if (existing.uid != credentials.uid) {
+          throw new Error(
+            "The specified credentials aren't for the current user"
+          );
+        }
+        // We need to nuke uid as storage will complain if we try and
+        // update it (even when the value is the same)
+        credentials = Cu.cloneInto(credentials, {}); // clone it first
+        delete credentials.uid;
+        return currentAccountState.updateUserAccountData(credentials);
+      });
   },
 
   /**
@@ -677,29 +795,39 @@ FxAccountsInternal.prototype = {
   _getAssertion: function _getAssertion(audience) {
     log.debug("enter getAssertion()");
     let currentState = this.currentAccountState;
-    return currentState.getUserAccountData().then(data => {
-      if (!data) {
-        // No signed-in user
-        return null;
-      }
-      if (!this.isUserEmailVerified(data)) {
-        // Signed-in user has not verified email
-        return null;
-      }
-      if (!data.sessionToken) {
-        // can't get a signed certificate without a session token. This
-        // can happen if we request an assertion after clearing an invalid
-        // session token from storage.
-        throw this._error(ERROR_AUTH_ERROR, "getAssertion called without a session token");
-      }
-      return this.getKeypairAndCertificate(currentState).then(
-        ({keyPair, certificate}) => {
-          return this.getAssertionFromCert(data, keyPair, certificate, audience);
+    return currentState
+      .getUserAccountData()
+      .then(data => {
+        if (!data) {
+          // No signed-in user
+          return null;
         }
-      );
-    }).catch(err =>
-      this._handleTokenError(err)
-    ).then(result => currentState.resolve(result));
+        if (!this.isUserEmailVerified(data)) {
+          // Signed-in user has not verified email
+          return null;
+        }
+        if (!data.sessionToken) {
+          // can't get a signed certificate without a session token. This
+          // can happen if we request an assertion after clearing an invalid
+          // session token from storage.
+          throw this._error(
+            ERROR_AUTH_ERROR,
+            "getAssertion called without a session token"
+          );
+        }
+        return this.getKeypairAndCertificate(currentState).then(
+          ({ keyPair, certificate }) => {
+            return this.getAssertionFromCert(
+              data,
+              keyPair,
+              certificate,
+              audience
+            );
+          }
+        );
+      })
+      .catch(err => this._handleTokenError(err))
+      .then(result => currentState.resolve(result));
   },
 
   /**
@@ -729,8 +857,8 @@ FxAccountsInternal.prototype = {
       });
       data = await this.currentAccountState.getUserAccountData();
     }
-    const {device} = data;
-    if ((await this.checkDeviceUpdateNeeded(device))) {
+    const { device } = data;
+    if (await this.checkDeviceUpdateNeeded(device)) {
       return this._registerOrUpdateDevice(data);
     }
     // Return the device id that we already registered with the server.
@@ -741,16 +869,26 @@ FxAccountsInternal.prototype = {
     // There is no device registered or the device registration is outdated.
     // Either way, we should register the device with FxA
     // before returning the id to the caller.
-    const availableCommandsKeys = Object.keys((await this.availableCommands())).sort();
-    return !device || !device.registrationVersion ||
-           device.registrationVersion < this.DEVICE_REGISTRATION_VERSION ||
-           !device.registeredCommandsKeys ||
-           !CommonUtils.arrayEqual(device.registeredCommandsKeys, availableCommandsKeys);
+    const availableCommandsKeys = Object.keys(
+      await this.availableCommands()
+    ).sort();
+    return (
+      !device ||
+      !device.registrationVersion ||
+      device.registrationVersion < this.DEVICE_REGISTRATION_VERSION ||
+      !device.registeredCommandsKeys ||
+      !CommonUtils.arrayEqual(
+        device.registeredCommandsKeys,
+        availableCommandsKeys
+      )
+    );
   },
 
   async getDeviceList() {
     const accountData = await this._getVerifiedAccountOrReject();
-    const devices = await this.fxAccountsClient.getDeviceList(accountData.sessionToken);
+    const devices = await this.fxAccountsClient.getDeviceList(
+      accountData.sessionToken
+    );
 
     // Check if our push registration is still good.
     const ourDevice = devices.find(device => device.isCurrentDevice);
@@ -774,12 +912,14 @@ FxAccountsInternal.prototype = {
       // error.
       if (data) {
         if (!data.sessionToken) {
-          return Promise.reject(new Error(
-            "resendVerificationEmail called without a session token"));
+          return Promise.reject(
+            new Error("resendVerificationEmail called without a session token")
+          );
         }
         this.startPollEmailStatus(currentState, data.sessionToken, "start");
-        return this.fxAccountsClient.resendVerificationEmail(
-          data.sessionToken).catch(err => this._handleTokenError(err));
+        return this.fxAccountsClient
+          .resendVerificationEmail(data.sessionToken)
+          .catch(err => this._handleTokenError(err));
       }
       throw new Error("Cannot resend verification email; no signed-in user");
     });
@@ -896,7 +1036,7 @@ FxAccountsInternal.prototype = {
     if (sessionToken) {
       log.debug("Destroying session and device.");
       try {
-        await this.fxAccountsClient.signOut(sessionToken, {service: "sync"});
+        await this.fxAccountsClient.signOut(sessionToken, { service: "sync" });
       } catch (err) {
         log.error("Error during remote sign out of Firefox Accounts", err);
       }
@@ -920,8 +1060,9 @@ FxAccountsInternal.prototype = {
   sessionStatus() {
     return this.getSignedInUser().then(data => {
       if (!data.sessionToken) {
-        return Promise.reject(new Error(
-          "sessionStatus called without a session token"));
+        return Promise.reject(
+          new Error("sessionStatus called without a session token")
+        );
       }
       return this.fxAccountsClient.sessionStatus(data.sessionToken);
     });
@@ -958,9 +1099,12 @@ FxAccountsInternal.prototype = {
     // - keyFetchToken means we can almost certainly grab them.
     // - kSync, kXCS, kExtSync and kExtKbHash means we already have them.
     // - kB is deprecated but |getKeys| will help us migrate to kSync and friends.
-    return userData && (userData.keyFetchToken ||
-                        DERIVED_KEYS_NAMES.every(k => userData[k]) ||
-                        userData.kB);
+    return (
+      userData &&
+      (userData.keyFetchToken ||
+        DERIVED_KEYS_NAMES.every(k => userData[k]) ||
+        userData.kB)
+    );
   },
 
   /**
@@ -991,9 +1135,10 @@ FxAccountsInternal.prototype = {
       if (!userData) {
         throw new Error("Can't get keys; User is not signed in");
       }
-      if (userData.kB) { // Bug 1426306 - Migrate from kB to derived keys.
+      if (userData.kB) {
+        // Bug 1426306 - Migrate from kB to derived keys.
         log.info("Migrating kB to derived keys.");
-        const {uid, kB} = userData;
+        const { uid, kB } = userData;
         await this.updateUserAccountData({
           uid,
           ...(await this._deriveKeys(uid, CommonUtils.hexToBytes(kB))),
@@ -1009,9 +1154,11 @@ FxAccountsInternal.prototype = {
         currentState.whenKeysReadyDeferred = PromiseUtils.defer();
         if (userData.keyFetchToken) {
           this.fetchAndUnwrapKeys(userData.keyFetchToken).then(
-            (dataWithKeys) => {
+            dataWithKeys => {
               if (DERIVED_KEYS_NAMES.some(k => !dataWithKeys[k])) {
-                const missing = DERIVED_KEYS_NAMES.filter(k => !dataWithKeys[k]);
+                const missing = DERIVED_KEYS_NAMES.filter(
+                  k => !dataWithKeys[k]
+                );
                 currentState.whenKeysReadyDeferred.reject(
                   new Error(`user data missing: ${missing.join(", ")}`)
                 );
@@ -1019,7 +1166,7 @@ FxAccountsInternal.prototype = {
               }
               currentState.whenKeysReadyDeferred.resolve(dataWithKeys);
             },
-            (err) => {
+            err => {
               currentState.whenKeysReadyDeferred.reject(err);
             }
           );
@@ -1027,7 +1174,9 @@ FxAccountsInternal.prototype = {
           currentState.whenKeysReadyDeferred.reject("No keyFetchToken");
         }
       }
-      return await currentState.resolve(currentState.whenKeysReadyDeferred.promise);
+      return await currentState.resolve(
+        currentState.whenKeysReadyDeferred.promise
+      );
     } catch (err) {
       return currentState.resolve(this._handleTokenError(err));
     }
@@ -1045,7 +1194,7 @@ FxAccountsInternal.prototype = {
       return currentState.resolve(null);
     }
 
-    let {wrapKB} = await this.fetchKeys(keyFetchToken);
+    let { wrapKB } = await this.fetchKeys(keyFetchToken);
 
     let data = await currentState.getUserAccountData();
 
@@ -1056,8 +1205,10 @@ FxAccountsInternal.prototype = {
 
     // Next statements must be synchronous until we updateUserAccountData
     // so that we don't risk getting into a weird state.
-    let kBbytes = CryptoUtils.xor(CommonUtils.hexToBytes(data.unwrapBKey),
-                                  wrapKB);
+    let kBbytes = CryptoUtils.xor(
+      CommonUtils.hexToBytes(data.unwrapBKey),
+      wrapKB
+    );
 
     if (logPII) {
       log.debug("kBbytes: " + kBbytes);
@@ -1068,11 +1219,15 @@ FxAccountsInternal.prototype = {
       unwrapBKey: null,
     };
 
-    log.debug("Keys Obtained:" +
-              DERIVED_KEYS_NAMES.map(k => `${k}=${!!updateData[k]}`).join(", "));
+    log.debug(
+      "Keys Obtained:" +
+        DERIVED_KEYS_NAMES.map(k => `${k}=${!!updateData[k]}`).join(", ")
+    );
     if (logPII) {
-      log.debug("Keys Obtained:" +
-                DERIVED_KEYS_NAMES.map(k => `${k}=${updateData[k]}`).join(", "));
+      log.debug(
+        "Keys Obtained:" +
+          DERIVED_KEYS_NAMES.map(k => `${k}=${updateData[k]}`).join(", ")
+      );
     }
 
     await currentState.updateUserAccountData(updateData);
@@ -1089,10 +1244,14 @@ FxAccountsInternal.prototype = {
 
   async _deriveKeys(uid, kBbytes) {
     return {
-      kSync: CommonUtils.bytesAsHex((await this._deriveSyncKey(kBbytes))),
+      kSync: CommonUtils.bytesAsHex(await this._deriveSyncKey(kBbytes)),
       kXCS: CommonUtils.bytesAsHex(this._deriveXClientState(kBbytes)),
-      kExtSync: CommonUtils.bytesAsHex((await this._deriveWebExtSyncStoreKey(kBbytes))),
-      kExtKbHash: CommonUtils.bytesAsHex(this._deriveWebExtKbHash(uid, kBbytes)),
+      kExtSync: CommonUtils.bytesAsHex(
+        await this._deriveWebExtSyncStoreKey(kBbytes)
+      ),
+      kExtKbHash: CommonUtils.bytesAsHex(
+        this._deriveWebExtKbHash(uid, kBbytes)
+      ),
     };
   },
 
@@ -1102,8 +1261,12 @@ FxAccountsInternal.prototype = {
    * @returns HKDF(kB, undefined, "identity.mozilla.com/picl/v1/oldsync", 64)
    */
   _deriveSyncKey(kBbytes) {
-    return CryptoUtils.hkdfLegacy(kBbytes, undefined,
-                            "identity.mozilla.com/picl/v1/oldsync", 2 * 32);
+    return CryptoUtils.hkdfLegacy(
+      kBbytes,
+      undefined,
+      "identity.mozilla.com/picl/v1/oldsync",
+      2 * 32
+    );
   },
 
   /**
@@ -1112,9 +1275,12 @@ FxAccountsInternal.prototype = {
    * @returns HKDF(kB, undefined, "identity.mozilla.com/picl/v1/chrome.storage.sync", 64)
    */
   _deriveWebExtSyncStoreKey(kBbytes) {
-    return CryptoUtils.hkdfLegacy(kBbytes, undefined,
-                            "identity.mozilla.com/picl/v1/chrome.storage.sync",
-                            2 * 32);
+    return CryptoUtils.hkdfLegacy(
+      kBbytes,
+      undefined,
+      "identity.mozilla.com/picl/v1/chrome.storage.sync",
+      2 * 32
+    );
   },
 
   /**
@@ -1136,8 +1302,9 @@ FxAccountsInternal.prototype = {
   },
 
   _sha256(bytes) {
-    let hasher = Cc["@mozilla.org/security/hash;1"]
-                    .createInstance(Ci.nsICryptoHash);
+    let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
+      Ci.nsICryptoHash
+    );
     hasher.init(hasher.SHA256);
     return CryptoUtils.digestBytes(bytes, hasher);
   },
@@ -1153,26 +1320,36 @@ FxAccountsInternal.prototype = {
     // "audience" should look like "http://123done.org".
     // The generated assertion will expire in two minutes.
     let assertion = await new Promise((resolve, reject) => {
-      jwcrypto.generateAssertion(cert, keyPair, audience, options, (err, signed) => {
-        if (err) {
-          log.error("getAssertionFromCert: " + err);
-          reject(err);
-        } else {
-          log.debug("getAssertionFromCert returning signed: " + !!signed);
-          if (logPII) {
-            log.debug("getAssertionFromCert returning signed: " + signed);
+      jwcrypto.generateAssertion(
+        cert,
+        keyPair,
+        audience,
+        options,
+        (err, signed) => {
+          if (err) {
+            log.error("getAssertionFromCert: " + err);
+            reject(err);
+          } else {
+            log.debug("getAssertionFromCert returning signed: " + !!signed);
+            if (logPII) {
+              log.debug("getAssertionFromCert returning signed: " + signed);
+            }
+            resolve(signed);
           }
-          resolve(signed);
         }
-      });
+      );
     });
     return currentState.resolve(assertion);
   },
 
   getCertificateSigned(sessionToken, serializedPublicKey, lifetime) {
-    log.debug("getCertificateSigned: " + !!sessionToken + " " + !!serializedPublicKey);
+    log.debug(
+      "getCertificateSigned: " + !!sessionToken + " " + !!serializedPublicKey
+    );
     if (logPII) {
-      log.debug("getCertificateSigned: " + sessionToken + " " + serializedPublicKey);
+      log.debug(
+        "getCertificateSigned: " + sessionToken + " " + serializedPublicKey
+      );
     }
     return this.fxAccountsClient.signCertificate(
       sessionToken,
@@ -1191,19 +1368,30 @@ FxAccountsInternal.prototype = {
     // The purpose of this pref is to expedite any auth errors as the result of a
     // expired or revoked FxA session token, e.g., from resetting or changing the FxA
     // password.
-    let ignoreCachedAuthCredentials = Services.prefs.getBoolPref("services.sync.debug.ignoreCachedAuthCredentials", false);
+    let ignoreCachedAuthCredentials = Services.prefs.getBoolPref(
+      "services.sync.debug.ignoreCachedAuthCredentials",
+      false
+    );
     let mustBeValidUntil = this.now() + ASSERTION_USE_PERIOD;
-    let accountData = await currentState.getUserAccountData(["cert", "keyPair", "sessionToken"]);
+    let accountData = await currentState.getUserAccountData([
+      "cert",
+      "keyPair",
+      "sessionToken",
+    ]);
 
-    let keyPairValid = !ignoreCachedAuthCredentials &&
-                       accountData.keyPair &&
-                       (accountData.keyPair.validUntil > mustBeValidUntil);
-    let certValid = !ignoreCachedAuthCredentials &&
-                    accountData.cert &&
-                    (accountData.cert.validUntil > mustBeValidUntil);
+    let keyPairValid =
+      !ignoreCachedAuthCredentials &&
+      accountData.keyPair &&
+      accountData.keyPair.validUntil > mustBeValidUntil;
+    let certValid =
+      !ignoreCachedAuthCredentials &&
+      accountData.cert &&
+      accountData.cert.validUntil > mustBeValidUntil;
     // TODO: get the lifetime from the cert's .exp field
     if (keyPairValid && certValid) {
-      log.debug("getKeypairAndCertificate: already have keyPair and certificate");
+      log.debug(
+        "getKeypairAndCertificate: already have keyPair and certificate"
+      );
       return {
         keyPair: accountData.keyPair.rawKeyPair,
         certificate: accountData.cert.rawCert,
@@ -1244,9 +1432,11 @@ FxAccountsInternal.prototype = {
 
     // and generate the cert.
     let certWillBeValidUntil = this.now() + CERT_LIFETIME;
-    let certificate = await this.getCertificateSigned(accountData.sessionToken,
-                                                      keyPair.rawKeyPair.serializedPublicKey,
-                                                      CERT_LIFETIME);
+    let certificate = await this.getCertificateSigned(
+      accountData.sessionToken,
+      keyPair.rawKeyPair.serializedPublicKey,
+      CERT_LIFETIME
+    );
     log.debug("getCertificate got a new one: " + !!certificate);
     if (certificate) {
       // Cache both keypair and cert.
@@ -1268,16 +1458,20 @@ FxAccountsInternal.prototype = {
   /**
    * @param {String} scope Single key bearing scope
    */
-  async getKeyForScope(scope, {keyRotationTimestamp}) {
+  async getKeyForScope(scope, { keyRotationTimestamp }) {
     if (scope !== SCOPE_OLD_SYNC) {
       throw new Error(`Unavailable key material for ${scope}`);
     }
-    let {kSync, kXCS} = await this.getKeys();
+    let { kSync, kXCS } = await this.getKeys();
     if (!kSync || !kXCS) {
       throw new Error("Could not find requested key.");
     }
-    kXCS = ChromeUtils.base64URLEncode(CommonUtils.hexToArrayBuffer(kXCS), {pad: false});
-    kSync = ChromeUtils.base64URLEncode(CommonUtils.hexToArrayBuffer(kSync), {pad: false});
+    kXCS = ChromeUtils.base64URLEncode(CommonUtils.hexToArrayBuffer(kXCS), {
+      pad: false,
+    });
+    kSync = ChromeUtils.base64URLEncode(CommonUtils.hexToArrayBuffer(kSync), {
+      pad: false,
+    });
     const kid = `${keyRotationTimestamp}-${kXCS}`;
     return {
       scope,
@@ -1291,8 +1485,12 @@ FxAccountsInternal.prototype = {
    * @param {String} scopes Space separated requested scopes
    */
   async getScopedKeys(scopes, clientId) {
-    const {sessionToken} = await this._getVerifiedAccountOrReject();
-    const keyData = await this.fxAccountsClient.getScopedKeyData(sessionToken, clientId, scopes);
+    const { sessionToken } = await this._getVerifiedAccountOrReject();
+    const keyData = await this.fxAccountsClient.getScopedKeyData(
+      sessionToken,
+      clientId,
+      scopes
+    );
     const scopedKeys = {};
     for (const [scope, data] of Object.entries(keyData)) {
       scopedKeys[scope] = await this.getKeyForScope(scope, data);
@@ -1313,16 +1511,19 @@ FxAccountsInternal.prototype = {
    */
   loadAndPoll() {
     let currentState = this.currentAccountState;
-    return currentState.getUserAccountData()
-      .then(data => {
-        if (data) {
-          Services.telemetry.getHistogramById("FXA_CONFIGURED").add(1);
-          if (!this.isUserEmailVerified(data)) {
-            this.startPollEmailStatus(currentState, data.sessionToken, "browser-startup");
-          }
+    return currentState.getUserAccountData().then(data => {
+      if (data) {
+        Services.telemetry.getHistogramById("FXA_CONFIGURED").add(1);
+        if (!this.isUserEmailVerified(data)) {
+          this.startPollEmailStatus(
+            currentState,
+            data.sessionToken,
+            "browser-startup"
+          );
         }
-        return data;
-      });
+      }
+      return data;
+    });
   },
 
   startVerifiedCheck(data) {
@@ -1357,8 +1558,8 @@ FxAccountsInternal.prototype = {
       log.debug("whenVerified promise starts polling for verified email");
       this.startPollEmailStatus(currentState, data.sessionToken, "start");
     }
-    return currentState.whenVerifiedDeferred.promise.then(
-      result => currentState.resolve(result)
+    return currentState.whenVerifiedDeferred.promise.then(result =>
+      currentState.resolve(result)
     );
   },
 
@@ -1378,7 +1579,9 @@ FxAccountsInternal.prototype = {
     // if the user requested the verification email to be resent while we
     // were already polling for receipt of an earlier email.
     if (this.currentTimer) {
-      log.debug("startPollEmailStatus starting while existing timer is running");
+      log.debug(
+        "startPollEmailStatus starting while existing timer is running"
+      );
       clearTimeout(this.currentTimer);
       this.currentTimer = null;
     }
@@ -1403,7 +1606,9 @@ FxAccountsInternal.prototype = {
     log.debug("entering pollEmailStatus: " + why);
     let nextPollMs;
     try {
-      const response = await this.checkEmailStatus(sessionToken, { reason: why });
+      const response = await this.checkEmailStatus(sessionToken, {
+        reason: why,
+      });
       log.debug("checkEmailStatus -> " + JSON.stringify(response));
       if (response && response.verified) {
         await this.onPollEmailSuccess(currentState);
@@ -1418,7 +1623,9 @@ FxAccountsInternal.prototype = {
       if (error && error.retryAfter) {
         // If the server told us to back off, back off the requested amount.
         nextPollMs = (error.retryAfter + 3) * 1000;
-        log.warn(`the server rejected our email status check and told us to try again in ${nextPollMs}ms`);
+        log.warn(
+          `the server rejected our email status check and told us to try again in ${nextPollMs}ms`
+        );
       } else {
         log.error(`checkEmailStatus failed to poll`, error);
       }
@@ -1439,11 +1646,18 @@ FxAccountsInternal.prototype = {
     // Poll email status again after a short delay.
     if (nextPollMs === undefined) {
       let currentMinute = Math.ceil(pollDuration / 60000);
-      nextPollMs = (why == "start" && currentMinute < this.VERIFICATION_POLL_START_SLOWDOWN_THRESHOLD) ?
-                   this.VERIFICATION_POLL_TIMEOUT_INITIAL :
-                   this.VERIFICATION_POLL_TIMEOUT_SUBSEQUENT;
+      nextPollMs =
+        why == "start" &&
+        currentMinute < this.VERIFICATION_POLL_START_SLOWDOWN_THRESHOLD
+          ? this.VERIFICATION_POLL_TIMEOUT_INITIAL
+          : this.VERIFICATION_POLL_TIMEOUT_SUBSEQUENT;
     }
-    this._scheduleNextPollEmailStatus(currentState, sessionToken, nextPollMs, why);
+    this._scheduleNextPollEmailStatus(
+      currentState,
+      sessionToken,
+      nextPollMs,
+      why
+    );
   },
 
   // Easy-to-mock testable method
@@ -1501,7 +1715,10 @@ FxAccountsInternal.prototype = {
     }
 
     if (!scope || !scope.length) {
-      throw this._error(ERROR_INVALID_PARAMETER, "Missing or invalid 'scope' option");
+      throw this._error(
+        ERROR_INVALID_PARAMETER,
+        "Missing or invalid 'scope' option"
+      );
     }
 
     await this._getVerifiedAccountOrReject();
@@ -1526,7 +1743,7 @@ FxAccountsInternal.prototype = {
       let token = result.access_token;
       // If we got one, cache it.
       if (token) {
-        let entry = {token, server: oAuthURL};
+        let entry = { token, server: oAuthURL };
         // But before we do, check the cache again - if we find one now, it
         // means someone else concurrently requested the same scope and beat
         // us to the cache write. To be nice to the server, we revoke the one
@@ -1574,10 +1791,18 @@ FxAccountsInternal.prototype = {
     await this._getVerifiedAccountOrReject();
     const client = this.oauthClient;
     const oAuthURL = client.serverURL.href;
-    const params = {...options};
+    const params = { ...options };
     if (params.keys_jwk) {
-      const jwk = JSON.parse(new TextDecoder().decode(ChromeUtils.base64URLDecode(params.keys_jwk, {padding: "reject"})));
-      params.keys_jwe = await this.createKeysJWE(params.client_id, params.scope, jwk);
+      const jwk = JSON.parse(
+        new TextDecoder().decode(
+          ChromeUtils.base64URLDecode(params.keys_jwk, { padding: "reject" })
+        )
+      );
+      params.keys_jwe = await this.createKeysJWE(
+        params.client_id,
+        params.scope,
+        jwk
+      );
       delete params.keys_jwk;
     }
     try {
@@ -1602,7 +1827,10 @@ FxAccountsInternal.prototype = {
    */
   async removeCachedOAuthToken(options) {
     if (!options.token || typeof options.token !== "string") {
-      throw this._error(ERROR_INVALID_PARAMETER, "Missing or invalid 'token' option");
+      throw this._error(
+        ERROR_INVALID_PARAMETER,
+        "Missing or invalid 'token' option"
+      );
     }
     let currentState = this.currentAccountState;
     let existing = currentState.removeCachedToken(options.token);
@@ -1641,19 +1869,27 @@ FxAccountsInternal.prototype = {
   _errorToErrorClass(aError) {
     if (aError.errno) {
       let error = SERVER_ERRNO_TO_ERROR[aError.errno];
-      return this._error(ERROR_TO_GENERAL_ERROR_CLASS[error] || ERROR_UNKNOWN, aError);
-    } else if (aError.message &&
-        (aError.message === "INVALID_PARAMETER" ||
+      return this._error(
+        ERROR_TO_GENERAL_ERROR_CLASS[error] || ERROR_UNKNOWN,
+        aError
+      );
+    } else if (
+      aError.message &&
+      (aError.message === "INVALID_PARAMETER" ||
         aError.message === "NO_ACCOUNT" ||
         aError.message === "UNVERIFIED_ACCOUNT" ||
-        aError.message === "AUTH_ERROR")) {
+        aError.message === "AUTH_ERROR")
+    ) {
       return aError;
     }
     return this._error(ERROR_UNKNOWN, aError);
   },
 
   _error(aError, aDetails) {
-    log.error("FxA rejecting with error ${aError}, details: ${aDetails}", {aError, aDetails});
+    log.error("FxA rejecting with error ${aError}, details: ${aDetails}", {
+      aError,
+      aDetails,
+    });
     let reason = new Error(aError);
     if (aDetails) {
       reason.details = aDetails;
@@ -1681,16 +1917,19 @@ FxAccountsInternal.prototype = {
    */
   getSignedInUserProfile() {
     let currentState = this.currentAccountState;
-    return this.profile.getProfile().then(
-      profileData => {
-        let profile = Cu.cloneInto(profileData, {});
-        return currentState.resolve(profile);
-      },
-      error => {
-        log.error("Could not retrieve profile data", error);
-        return currentState.reject(error);
-      }
-    ).catch(err => Promise.reject(this._errorToErrorClass(err)));
+    return this.profile
+      .getProfile()
+      .then(
+        profileData => {
+          let profile = Cu.cloneInto(profileData, {});
+          return currentState.resolve(profile);
+        },
+        error => {
+          log.error("Could not retrieve profile data", error);
+          return currentState.reject(error);
+        }
+      )
+      .catch(err => Promise.reject(this._errorToErrorClass(err)));
   },
 
   // Attempt to update the auth server with whatever device details are stored
@@ -1714,7 +1953,7 @@ FxAccountsInternal.prototype = {
       return;
     }
     const localDeviceId = accountData.device.id;
-    const isLocalDevice = (deviceId == localDeviceId);
+    const isLocalDevice = deviceId == localDeviceId;
     if (isLocalDevice) {
       this.signOut(true);
     }
@@ -1723,7 +1962,10 @@ FxAccountsInternal.prototype = {
   },
 
   handleEmailUpdated(newEmail) {
-    Services.prefs.setStringPref(PREF_LAST_FXA_USER, CryptoUtils.sha256Base64(newEmail));
+    Services.prefs.setStringPref(
+      PREF_LAST_FXA_USER,
+      CryptoUtils.sha256Base64(newEmail)
+    );
     return this.currentAccountState.updateUserAccountData({ email: newEmail });
   },
 
@@ -1731,7 +1973,9 @@ FxAccountsInternal.prototype = {
     const accountData = await this.currentAccountState.getUserAccountData();
     const localUid = accountData ? accountData.uid : null;
     if (!localUid) {
-      log.info(`Account destroyed push notification received, but we're already logged-out`);
+      log.info(
+        `Account destroyed push notification received, but we're already logged-out`
+      );
       return null;
     }
     if (uid == localUid) {
@@ -1741,7 +1985,8 @@ FxAccountsInternal.prototype = {
     }
     log.info(
       `The destroyed account uid doesn't match with the local uid. ` +
-      `Local: ${localUid}, account uid destroyed: ${uid}`);
+        `Local: ${localUid}, account uid destroyed: ${uid}`
+    );
     return null;
   },
 
@@ -1749,7 +1994,7 @@ FxAccountsInternal.prototype = {
    * Delete all the cached persisted credentials we store for FxA.
    *
    * @return Promise resolves when the user data has been persisted
-  */
+   */
   resetCredentials() {
     // Delete all fields except those required for the user to
     // reauthenticate.
@@ -1768,8 +2013,9 @@ FxAccountsInternal.prototype = {
   },
 
   getProfileCache() {
-    return this.currentAccountState.getUserAccountData(["profileCache"])
-      .then(data => data ? data.profileCache : null);
+    return this.currentAccountState
+      .getUserAccountData(["profileCache"])
+      .then(data => (data ? data.profileCache : null));
   },
 
   setProfileCache(profileCache) {
@@ -1784,11 +2030,14 @@ FxAccountsInternal.prototype = {
   },
 
   async availableCommands() {
-    if (!Services.prefs.getBoolPref("identity.fxaccounts.commands.enabled", true)) {
+    if (
+      !Services.prefs.getBoolPref("identity.fxaccounts.commands.enabled", true)
+    ) {
       return {};
     }
     const sendTabKey = await this.commands.sendTab.getEncryptedKey();
-    if (!sendTabKey) { // This will happen if the account is not verified yet.
+    if (!sendTabKey) {
+      // This will happen if the account is not verified yet.
       return {};
     }
     return {
@@ -1800,7 +2049,7 @@ FxAccountsInternal.prototype = {
   // you'll have to bump the DEVICE_REGISTRATION_VERSION number to force older
   // devices to re-register when Firefox updates
   async _registerOrUpdateDevice(signedInUser) {
-    const {sessionToken, device: currentDevice} = signedInUser;
+    const { sessionToken, device: currentDevice } = signedInUser;
     if (!sessionToken) {
       throw new Error("_registerOrUpdateDevice called without a session token");
     }
@@ -1821,22 +2070,32 @@ FxAccountsInternal.prototype = {
         }
       }
       deviceOptions.availableCommands = await this.availableCommands();
-      const availableCommandsKeys = Object.keys(deviceOptions.availableCommands).sort();
+      const availableCommandsKeys = Object.keys(
+        deviceOptions.availableCommands
+      ).sort();
 
       let device;
       if (currentDevice && currentDevice.id) {
         log.debug("updating existing device details");
         device = await this.fxAccountsClient.updateDevice(
-          sessionToken, currentDevice.id, deviceName, deviceOptions);
+          sessionToken,
+          currentDevice.id,
+          deviceName,
+          deviceOptions
+        );
       } else {
         log.debug("registering new device details");
         device = await this.fxAccountsClient.registerDevice(
-          sessionToken, deviceName, this._getDeviceType(), deviceOptions);
+          sessionToken,
+          deviceName,
+          this._getDeviceType(),
+          deviceOptions
+        );
         Services.obs.notifyObservers(null, ON_NEW_DEVICE_ID);
       }
 
       // Get the freshest device props before updating them.
-      let {device: deviceProps} = await this.getSignedInUser();
+      let { device: deviceProps } = await this.getSignedInUser();
       await this.currentAccountState.updateUserAccountData({
         device: {
           ...deviceProps, // Copy the other properties (e.g. handledCommands).
@@ -1860,22 +2119,23 @@ FxAccountsInternal.prototype = {
   },
 
   _handleDeviceError(error, sessionToken) {
-    return Promise.resolve().then(() => {
-      if (error.code === 400) {
-        if (error.errno === ERRNO_UNKNOWN_DEVICE) {
-          return this._recoverFromUnknownDevice();
+    return Promise.resolve()
+      .then(() => {
+        if (error.code === 400) {
+          if (error.errno === ERRNO_UNKNOWN_DEVICE) {
+            return this._recoverFromUnknownDevice();
+          }
+
+          if (error.errno === ERRNO_DEVICE_SESSION_CONFLICT) {
+            return this._recoverFromDeviceSessionConflict(error, sessionToken);
+          }
         }
 
-        if (error.errno === ERRNO_DEVICE_SESSION_CONFLICT) {
-          return this._recoverFromDeviceSessionConflict(error, sessionToken);
-        }
-      }
-
-      // `_handleTokenError` re-throws the error.
-      return this._handleTokenError(error);
-    }).catch(error =>
-      this._logErrorAndResetDeviceRegistrationVersion(error)
-    ).catch(() => {});
+        // `_handleTokenError` re-throws the error.
+        return this._handleTokenError(error);
+      })
+      .catch(error => this._logErrorAndResetDeviceRegistrationVersion(error))
+      .catch(() => {});
   },
 
   async _recoverFromUnknownDevice() {
@@ -1884,7 +2144,7 @@ FxAccountsInternal.prototype = {
     // retried and should succeed.
     log.warn("unknown device id, clearing the local device data");
     try {
-      await this.currentAccountState.updateUserAccountData({device: null});
+      await this.currentAccountState.updateUserAccountData({ device: null });
     } catch (error) {
       await this._logErrorAndResetDeviceRegistrationVersion(error);
     }
@@ -1899,7 +2159,9 @@ FxAccountsInternal.prototype = {
     //      version on the account data and return the correct device id. At next
     //      sync or next sign-in, registration is retried and should succeed.
     //   4. If we don't find a match, log the original error.
-    log.warn("device session conflict, attempting to ascertain the correct device id");
+    log.warn(
+      "device session conflict, attempting to ascertain the correct device id"
+    );
     try {
       const devices = await this.fxAccountsClient.getDeviceList(sessionToken);
       const matchingDevices = devices.filter(device => device.isCurrentDevice);
@@ -1915,7 +2177,9 @@ FxAccountsInternal.prototype = {
         return deviceId;
       }
       if (length > 1) {
-        log.error("insane server state, " + length + " devices for this session");
+        log.error(
+          "insane server state, " + length + " devices for this session"
+        );
       }
       await this._logErrorAndResetDeviceRegistrationVersion(error);
     } catch (secondError) {
@@ -1938,7 +2202,8 @@ FxAccountsInternal.prototype = {
     } catch (secondError) {
       log.error(
         "failed to reset the device registration version, device registration won't be retried",
-        secondError);
+        secondError
+      );
     }
   },
 
@@ -1947,19 +2212,20 @@ FxAccountsInternal.prototype = {
       throw err;
     }
     log.warn("recovering from invalid token error", err);
-    return this.accountStatus().then(exists => {
-      if (!exists) {
-        // Delete all local account data. Since the account no longer
-        // exists, we can skip the remote calls.
-        log.info("token invalidated because the account no longer exists");
-        return this.signOut(true);
-      }
-      log.info("clearing credentials to handle invalid token error");
-      return this.resetCredentials();
-    }).then(() => Promise.reject(err));
+    return this.accountStatus()
+      .then(exists => {
+        if (!exists) {
+          // Delete all local account data. Since the account no longer
+          // exists, we can skip the remote calls.
+          log.info("token invalidated because the account no longer exists");
+          return this.signOut(true);
+        }
+        log.info("clearing credentials to handle invalid token error");
+        return this.resetCredentials();
+      })
+      .then(() => Promise.reject(err));
   },
 };
-
 
 // A getter for the instance to export
 XPCOMUtils.defineLazyGetter(this, "fxAccounts", function() {

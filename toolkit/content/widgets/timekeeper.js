@@ -25,12 +25,12 @@ function TimeKeeper(props) {
 
 {
   const DAY_PERIOD_IN_HOURS = 12,
-        SECOND_IN_MS = 1000,
-        MINUTE_IN_MS = 60000,
-        HOUR_IN_MS = 3600000,
-        DAY_PERIOD_IN_MS = 43200000,
-        DAY_IN_MS = 86400000,
-        TIME_FORMAT_24 = "24";
+    SECOND_IN_MS = 1000,
+    MINUTE_IN_MS = 60000,
+    HOUR_IN_MS = 3600000,
+    DAY_PERIOD_IN_MS = 43200000,
+    DAY_IN_MS = 86400000,
+    TIME_FORMAT_24 = "24";
 
   TimeKeeper.prototype = {
     /**
@@ -51,7 +51,9 @@ function TimeKeeper(props) {
     },
     get dayPeriod() {
       // 0 stands for AM and 12 for PM
-      return this.state.time.getUTCHours() < DAY_PERIOD_IN_HOURS ? 0 : DAY_PERIOD_IN_HOURS;
+      return this.state.time.getUTCHours() < DAY_PERIOD_IN_HOURS
+        ? 0
+        : DAY_PERIOD_IN_HOURS;
     },
 
     /**
@@ -98,7 +100,7 @@ function TimeKeeper(props) {
       }
 
       this.state.isOffStep = this._isOffStep(this.state.time);
-      this.state.isOutOfRange = (this.state.time < min || this.state.time > max);
+      this.state.isOutOfRange = this.state.time < min || this.state.time > max;
       this.state.isInvalid = this.state.isOutOfRange || this.state.isOffStep;
 
       this._setRanges(this.dayPeriod, this.hour, this.minute, this.second);
@@ -177,8 +179,16 @@ function TimeKeeper(props) {
         this.state.ranges.seconds = this._getSecondsRange(hour, minute);
       }
 
-      if (this.state.hour != hour || this.state.minute != minute || this.state.second != second) {
-        this.state.ranges.milliseconds = this._getMillisecondsRange(hour, minute, second);
+      if (
+        this.state.hour != hour ||
+        this.state.minute != minute ||
+        this.state.second != second
+      ) {
+        this.state.ranges.milliseconds = this._getMillisecondsRange(
+          hour,
+          minute,
+          second
+        );
       }
 
       // Save the time states for comparison.
@@ -201,8 +211,10 @@ function TimeKeeper(props) {
       const start = 0;
       const end = DAY_IN_MS - 1;
       const minStep = DAY_PERIOD_IN_MS;
-      const formatter = (time) =>
-        new Date(time).getUTCHours() < DAY_PERIOD_IN_HOURS ? 0 : DAY_PERIOD_IN_HOURS;
+      const formatter = time =>
+        new Date(time).getUTCHours() < DAY_PERIOD_IN_HOURS
+          ? 0
+          : DAY_PERIOD_IN_HOURS;
 
       return this._getSteps(start, end, minStep, formatter);
     },
@@ -218,7 +230,7 @@ function TimeKeeper(props) {
       const start = format == "24" ? 0 : dayPeriod * HOUR_IN_MS;
       const end = format == "24" ? DAY_IN_MS - 1 : start + DAY_PERIOD_IN_MS - 1;
       const minStep = HOUR_IN_MS;
-      const formatter = (time) => new Date(time).getUTCHours();
+      const formatter = time => new Date(time).getUTCHours();
 
       return this._getSteps(start, end, minStep, formatter);
     },
@@ -233,7 +245,7 @@ function TimeKeeper(props) {
       const start = hour * HOUR_IN_MS;
       const end = start + HOUR_IN_MS - 1;
       const minStep = MINUTE_IN_MS;
-      const formatter = (time) => new Date(time).getUTCMinutes();
+      const formatter = time => new Date(time).getUTCMinutes();
 
       return this._getSteps(start, end, minStep, formatter);
     },
@@ -249,7 +261,7 @@ function TimeKeeper(props) {
       const start = hour * HOUR_IN_MS + minute * MINUTE_IN_MS;
       const end = start + MINUTE_IN_MS - 1;
       const minStep = SECOND_IN_MS;
-      const formatter = (time) => new Date(time).getUTCSeconds();
+      const formatter = time => new Date(time).getUTCSeconds();
 
       return this._getSteps(start, end, minStep, formatter);
     },
@@ -262,10 +274,11 @@ function TimeKeeper(props) {
      * @return {Array<Number>}
      */
     _getMillisecondsRange(hour, minute, second) {
-      const start = hour * HOUR_IN_MS + minute * MINUTE_IN_MS + second * SECOND_IN_MS;
+      const start =
+        hour * HOUR_IN_MS + minute * MINUTE_IN_MS + second * SECOND_IN_MS;
       const end = start + SECOND_IN_MS - 1;
       const minStep = 1;
-      const formatter = (time) => new Date(time).getUTCMilliseconds();
+      const formatter = time => new Date(time).getUTCMilliseconds();
 
       return this._getSteps(start, end, minStep, formatter);
     },
@@ -291,8 +304,12 @@ function TimeKeeper(props) {
       const timeStep = Math.max(minStep, step);
 
       // Make sure the starting point and end point is not off step
-      let time = min.valueOf() + Math.ceil((startValue - min.valueOf()) / timeStep) * timeStep;
-      let maxValue = min.valueOf() + Math.floor((max.valueOf() - min.valueOf()) / step) * step;
+      let time =
+        min.valueOf() +
+        Math.ceil((startValue - min.valueOf()) / timeStep) * timeStep;
+      let maxValue =
+        min.valueOf() +
+        Math.floor((max.valueOf() - min.valueOf()) / step) * step;
       let steps = [];
 
       // Increment by timeStep until reaching the end of the range.
@@ -302,9 +319,12 @@ function TimeKeeper(props) {
           // Check if the value is within the min and max. If it's out of range,
           // also check for the case when minStep is too large, and has stepped out
           // of range when it should be enabled.
-          enabled: (time >= min.valueOf() && time <= max.valueOf()) ||
-            (time > maxValue && startValue <= maxValue &&
-              endValue >= maxValue && formatter(time) == formatter(maxValue)),
+          enabled:
+            (time >= min.valueOf() && time <= max.valueOf()) ||
+            (time > maxValue &&
+              startValue <= maxValue &&
+              endValue >= maxValue &&
+              formatter(time) == formatter(maxValue)),
         });
         time += timeStep;
       }
@@ -323,9 +343,10 @@ function TimeKeeper(props) {
      */
     _step(current, offset, range) {
       const index = range.findIndex(step => step.value == current);
-      const newIndex = offset > 0 ?
-                     Math.min(index + offset, range.length - 1) :
-                     Math.max(index + offset, 0);
+      const newIndex =
+        offset > 0
+          ? Math.min(index + offset, range.length - 1)
+          : Math.max(index + offset, 0);
       return range[newIndex].value;
     },
 
@@ -336,12 +357,16 @@ function TimeKeeper(props) {
      */
     stepDayPeriodBy(offset) {
       const current = this.dayPeriod;
-      const dayPeriod = this._step(current, offset, this.state.ranges.dayPeriod);
+      const dayPeriod = this._step(
+        current,
+        offset,
+        this.state.ranges.dayPeriod
+      );
 
       if (current != dayPeriod) {
-        this.hour < DAY_PERIOD_IN_HOURS ?
-          this.setState({ hour: this.hour + DAY_PERIOD_IN_HOURS }) :
-          this.setState({ hour: this.hour - DAY_PERIOD_IN_HOURS });
+        this.hour < DAY_PERIOD_IN_HOURS
+          ? this.setState({ hour: this.hour + DAY_PERIOD_IN_HOURS })
+          : this.setState({ hour: this.hour - DAY_PERIOD_IN_HOURS });
       }
     },
 
@@ -394,7 +419,11 @@ function TimeKeeper(props) {
      */
     stepMillisecondBy(offset) {
       const current = this.milliseconds;
-      const millisecond = this._step(current, offset, this.state.ranges.millisecond);
+      const millisecond = this._step(
+        current,
+        offset,
+        this.state.ranges.millisecond
+      );
 
       if (current != millisecond) {
         this.setState({ millisecond });

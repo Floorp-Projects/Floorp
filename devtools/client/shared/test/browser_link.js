@@ -9,8 +9,7 @@
 // Use any valid test page here.
 const TEST_URI = TEST_URI_ROOT + "dummy.html";
 
-const {openDocLink, openTrustedLink} =
-  require("devtools/client/shared/link");
+const { openDocLink, openTrustedLink } = require("devtools/client/shared/link");
 
 add_task(async function() {
   // Open a link to a page that will not trigger any request.
@@ -18,15 +17,21 @@ add_task(async function() {
   openDocLink(TEST_URI);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  is(gBrowser.selectedBrowser.currentURI.spec, TEST_URI,
-    "openDocLink opened a tab with the expected url");
+  is(
+    gBrowser.selectedBrowser.currentURI.spec,
+    TEST_URI,
+    "openDocLink opened a tab with the expected url"
+  );
 
   info("Open trusted link to about:config");
   openTrustedLink("about:config");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  is(gBrowser.selectedBrowser.currentURI.spec, "about:config",
-    "openTrustedLink opened a tab with the expected url");
+  is(
+    gBrowser.selectedBrowser.currentURI.spec,
+    "about:config",
+    "openTrustedLink opened a tab with the expected url"
+  );
 
   await removeTab(gBrowser.selectedTab);
   await removeTab(gBrowser.selectedTab);

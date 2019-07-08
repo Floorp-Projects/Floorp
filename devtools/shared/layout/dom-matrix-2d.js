@@ -17,11 +17,7 @@
  * @return {Array}
  *         The new matrix.
  */
-const scale = (sx = 1, sy = sx) => [
-  sx, 0, 0,
-  0, sy, 0,
-  0, 0, 1,
-];
+const scale = (sx = 1, sy = sx) => [sx, 0, 0, 0, sy, 0, 0, 0, 1];
 exports.scale = scale;
 
 /**
@@ -37,11 +33,7 @@ exports.scale = scale;
  * @return {Array}
  *         The new matrix.
  */
-const translate = (tx = 0, ty = tx) => [
-  1, 0, tx,
-  0, 1, ty,
-  0, 0, 1,
-];
+const translate = (tx = 0, ty = tx) => [1, 0, tx, 0, 1, ty, 0, 0, 1];
 exports.translate = translate;
 
 /**
@@ -51,11 +43,7 @@ exports.translate = translate;
  * @return {Array}
  *         The new matrix.
  */
-const reflectAboutY = () => [
-  -1, 0, 0,
-  0,  1, 0,
-  0,  0, 1,
-];
+const reflectAboutY = () => [-1, 0, 0, 0, 1, 0, 0, 0, 1];
 exports.reflectAboutY = reflectAboutY;
 
 /**
@@ -72,11 +60,7 @@ const rotate = (angle = 0) => {
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
 
-  return [
-    cos,  sin, 0,
-    -sin, cos, 0,
-    0,    0,   1,
-  ];
+  return [cos, sin, 0, -sin, cos, 0, 0, 0, 1];
 };
 exports.rotate = rotate;
 
@@ -86,11 +70,7 @@ exports.rotate = rotate;
  * @return {Array}
  *         The new matrix.
  */
-const identity = () => [
-  1, 0, 0,
-  0, 1, 0,
-  0, 0, 1,
-];
+const identity = () => [1, 0, 0, 0, 1, 0, 0, 0, 1];
 exports.identity = identity;
 
 /**
@@ -116,11 +96,7 @@ const multiply = (M1, M2) => {
   const c32 = M1[6] * M2[1] + M1[7] * M2[4] + M1[8] * M2[7];
   const c33 = M1[6] * M2[2] + M1[7] * M2[5] + M1[8] * M2[8];
 
-  return [
-    c11, c12, c13,
-    c21, c22, c23,
-    c31, c32, c33,
-  ];
+  return [c11, c12, c13, c21, c22, c23, c31, c32, c33];
 };
 exports.multiply = multiply;
 
@@ -148,10 +124,16 @@ exports.apply = apply;
  * @return {Boolean}
  *        `true` if the matrix passed is a identity matrix, `false` otherwise.
  */
-const isIdentity = (M) =>
-  M[0] === 1 && M[1] === 0 && M[2] === 0 &&
-  M[3] === 0 && M[4] === 1 && M[5] === 0 &&
-  M[6] === 0 && M[7] === 0 && M[8] === 1;
+const isIdentity = M =>
+  M[0] === 1 &&
+  M[1] === 0 &&
+  M[2] === 0 &&
+  M[3] === 0 &&
+  M[4] === 1 &&
+  M[5] === 0 &&
+  M[6] === 0 &&
+  M[7] === 0 &&
+  M[8] === 1;
 exports.isIdentity = isIdentity;
 
 /**
@@ -171,15 +153,29 @@ exports.isIdentity = isIdentity;
 const getBasis = (u, v) => {
   const uLength = Math.abs(Math.sqrt(u[0] ** 2 + u[1] ** 2));
   const vLength = Math.abs(Math.sqrt(v[0] ** 2 + v[1] ** 2));
-  const basis =
-    [ u[0] / uLength, v[0] / vLength, 0,
-      u[1] / uLength, v[1] / vLength, 0,
-      0,                0,                1 ];
+  const basis = [
+    u[0] / uLength,
+    v[0] / vLength,
+    0,
+    u[1] / uLength,
+    v[1] / vLength,
+    0,
+    0,
+    0,
+    1,
+  ];
   const determinant = 1 / (basis[0] * basis[4] - basis[1] * basis[3]);
-  const invertedBasis =
-    [ basis[4] / determinant,  -basis[1] / determinant, 0,
-      -basis[3] / determinant,  basis[0] / determinant, 0,
-      0,                        0,                      1 ];
+  const invertedBasis = [
+    basis[4] / determinant,
+    -basis[1] / determinant,
+    0,
+    -basis[3] / determinant,
+    basis[0] / determinant,
+    0,
+    0,
+    0,
+    1,
+  ];
   return { basis, invertedBasis, uLength, vLength };
 };
 exports.getBasis = getBasis;
@@ -216,14 +212,11 @@ exports.changeMatrixBase = changeMatrixBase;
  *        The transformation matrix.
  */
 function getNodeTransformationMatrix(node, ancestor = node.parentElement) {
-  const { a, b, c, d, e, f } = ancestor.getTransformToParent()
-                                     .multiply(node.getTransformToAncestor(ancestor));
+  const { a, b, c, d, e, f } = ancestor
+    .getTransformToParent()
+    .multiply(node.getTransformToAncestor(ancestor));
 
-  return [
-    a, c, e,
-    b, d, f,
-    0, 0, 1,
-  ];
+  return [a, c, e, b, d, f, 0, 0, 1];
 }
 exports.getNodeTransformationMatrix = getNodeTransformationMatrix;
 
@@ -249,28 +242,16 @@ function getWritingModeMatrix(size, style) {
       // This is the initial value. No further adjustment needed.
       break;
     case "vertical-rl":
-      currentMatrix = multiply(
-        translate(width, 0),
-        rotate(-Math.PI / 2)
-      );
+      currentMatrix = multiply(translate(width, 0), rotate(-Math.PI / 2));
       break;
     case "vertical-lr":
-      currentMatrix = multiply(
-        reflectAboutY(),
-        rotate(-Math.PI / 2)
-      );
+      currentMatrix = multiply(reflectAboutY(), rotate(-Math.PI / 2));
       break;
     case "sideways-rl":
-      currentMatrix = multiply(
-        translate(width, 0),
-        rotate(-Math.PI / 2)
-      );
+      currentMatrix = multiply(translate(width, 0), rotate(-Math.PI / 2));
       break;
     case "sideways-lr":
-      currentMatrix = multiply(
-        rotate(Math.PI / 2),
-        translate(-height, 0)
-      );
+      currentMatrix = multiply(rotate(Math.PI / 2), translate(-height, 0));
       break;
     default:
       console.error(`Unexpected writing-mode: ${writingMode}`);
@@ -310,10 +291,7 @@ exports.getWritingModeMatrix = getWritingModeMatrix;
  *         The matching 6 element CSS transform function.
  */
 function getCSSMatrixTransform(M) {
-  const [
-    a, c, e,
-    b, d, f,
-  ] = M;
+  const [a, c, e, b, d, f] = M;
   return `matrix(${a}, ${b}, ${c}, ${d}, ${e}, ${f})`;
 }
 exports.getCSSMatrixTransform = getCSSMatrixTransform;

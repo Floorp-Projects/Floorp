@@ -6,10 +6,10 @@
  *
  */
 
-const DATA_URI_IMAGE = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+const DATA_URI_IMAGE =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
 export const expectedValues = {
-
   // Simple Snippet (https://github.com/mozmeao/snippets/blob/master/activity-stream/simple-snippet.html)
   simple_snippet: {
     icon: DATA_URI_IMAGE,
@@ -101,7 +101,8 @@ export const expectedValues = {
     block_button_text: "Block",
 
     donation_form_url: "https://donate.mozilla.org/",
-    text: "Big corporations want to restrict how we access the web. Fake news is making it harder for us to find the truth. Online bullies are silencing inspired voices. The not-for-profit Mozilla Foundation fights for a healthy internet with programs like our Tech Policy Fellowships and Internet Health Report; will you donate today?",
+    text:
+      "Big corporations want to restrict how we access the web. Fake news is making it harder for us to find the truth. Online bullies are silencing inspired voices. The not-for-profit Mozilla Foundation fights for a healthy internet with programs like our Tech Policy Fellowships and Internet Health Report; will you donate today?",
     icon: DATA_URI_IMAGE,
     button_label: "Donate",
     monthly_checkbox_label_text: "Make my donation monthly",

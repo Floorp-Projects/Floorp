@@ -3,9 +3,9 @@
 
 "use strict";
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-const {PushDB, PushService, PushServiceHttp2} = serviceExports;
+const { PushDB, PushService, PushServiceHttp2 } = serviceExports;
 
 var httpServer = null;
 
@@ -24,11 +24,15 @@ function subscribe5xxCodeHandler(metadata, response) {
   } else {
     ok(true, "Subscribed");
     do_test_finished();
-    response.setHeader("Location",
-                       "http://localhost:" + serverPort + "/subscription");
-    response.setHeader("Link",
-                       '</pushEndpoint>; rel="urn:ietf:params:push", ' +
-                       '</receiptPushEndpoint>; rel="urn:ietf:params:push:receipt"');
+    response.setHeader(
+      "Location",
+      "http://localhost:" + serverPort + "/subscription"
+    );
+    response.setHeader(
+      "Link",
+      '</pushEndpoint>; rel="urn:ietf:params:push", ' +
+        '</receiptPushEndpoint>; rel="urn:ietf:params:push:receipt"'
+    );
     response.setStatusLine(metadata.httpVersion, 201, "OK");
   }
   retries++;
@@ -41,7 +45,6 @@ function listenSuccessHandler(metadata, response) {
   response.setHeader("Retry-After", "10");
   response.setStatusLine(metadata.httpVersion, 500, "Retry");
 }
-
 
 httpServer = new HttpServer();
 httpServer.registerPathHandler("/subscribe5xxCode", subscribe5xxCodeHandler);
@@ -88,21 +91,39 @@ add_task(async function test1() {
   var subscriptionUri = serverURL + "/subscription";
   var pushEndpoint = serverURL + "/pushEndpoint";
   var pushReceiptEndpoint = serverURL + "/receiptPushEndpoint";
-  equal(newRecord.endpoint, pushEndpoint,
-    "Wrong push endpoint in registration record");
+  equal(
+    newRecord.endpoint,
+    pushEndpoint,
+    "Wrong push endpoint in registration record"
+  );
 
-  equal(newRecord.pushReceiptEndpoint, pushReceiptEndpoint,
-    "Wrong push endpoint receipt in registration record");
+  equal(
+    newRecord.pushReceiptEndpoint,
+    pushReceiptEndpoint,
+    "Wrong push endpoint receipt in registration record"
+  );
 
   let record = await db.getByKeyID(subscriptionUri);
-  equal(record.subscriptionUri, subscriptionUri,
-    "Wrong subscription ID in database record");
-  equal(record.pushEndpoint, pushEndpoint,
-    "Wrong push endpoint in database record");
-  equal(record.pushReceiptEndpoint, pushReceiptEndpoint,
-    "Wrong push endpoint receipt in database record");
-  equal(record.scope, "https://example.com/retry5xxCode",
-    "Wrong scope in database record");
+  equal(
+    record.subscriptionUri,
+    subscriptionUri,
+    "Wrong subscription ID in database record"
+  );
+  equal(
+    record.pushEndpoint,
+    pushEndpoint,
+    "Wrong push endpoint in database record"
+  );
+  equal(
+    record.pushReceiptEndpoint,
+    pushReceiptEndpoint,
+    "Wrong push endpoint receipt in database record"
+  );
+  equal(
+    record.scope,
+    "https://example.com/retry5xxCode",
+    "Wrong scope in database record"
+  );
 
   httpServer.stop(do_test_finished);
 });

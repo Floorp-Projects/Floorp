@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
+var hs = Cc["@mozilla.org/browser/nav-history-service;1"].getService(
+  Ci.nsINavHistoryService
+);
 
 /**
  * Checks to see that a search has exactly one result in the database.
@@ -25,7 +26,7 @@ function search_has_result(aTerms) {
   root.containerOpen = true;
   var cc = root.childCount;
   root.containerOpen = false;
-  return (cc == 1);
+  return cc == 1;
 }
 
 add_task(async function test_execute() {

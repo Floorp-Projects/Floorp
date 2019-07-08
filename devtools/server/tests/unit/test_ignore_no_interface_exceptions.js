@@ -8,18 +8,24 @@
  * exceptions, but not normal ones.
  */
 
-add_task(threadClientTest(async ({ threadClient, debuggee }) => {
-  await threadClient.pauseOnExceptions(true, false);
-  const paused =
-    await executeOnNextTickAndWaitForPause(
-      () => evaluateTestCode(debuggee), threadClient);
-  equal(paused.frame.where.line, 6, "paused at throw");
+add_task(
+  threadClientTest(
+    async ({ threadClient, debuggee }) => {
+      await threadClient.pauseOnExceptions(true, false);
+      const paused = await executeOnNextTickAndWaitForPause(
+        () => evaluateTestCode(debuggee),
+        threadClient
+      );
+      equal(paused.frame.where.line, 6, "paused at throw");
 
-  await resume(threadClient);
-}, {
-  // Bug 1508289, exception tests fails in worker scope
-  doNotRunWorker: true,
-}));
+      await resume(threadClient);
+    },
+    {
+      // Bug 1508289, exception tests fails in worker scope
+      doNotRunWorker: true,
+    }
+  )
+);
 
 function evaluateTestCode(debuggee) {
   /* eslint-disable */

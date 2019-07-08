@@ -5,12 +5,19 @@
 
 "use strict";
 
-const {setTimeout, clearTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
+const { setTimeout, clearTimeout } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm",
+  {}
+);
 
 var FormAutofillHandler, OSKeyStore;
 add_task(async function setup() {
-  ({FormAutofillHandler} = ChromeUtils.import("resource://formautofill/FormAutofillHandler.jsm"));
-  ({OSKeyStore} = ChromeUtils.import("resource://formautofill/OSKeyStore.jsm"));
+  ({ FormAutofillHandler } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillHandler.jsm"
+  ));
+  ({ OSKeyStore } = ChromeUtils.import(
+    "resource://formautofill/OSKeyStore.jsm"
+  ));
 });
 
 const TESTCASES = [
@@ -23,10 +30,10 @@ const TESTCASES = [
     profileData: {},
     expectedResult: {
       "street-addr": "",
-      "city": "",
-      "country": "",
-      "email": "",
-      "tel": "",
+      city: "",
+      country: "",
+      email: "",
+      tel: "",
     },
   },
   {
@@ -43,20 +50,20 @@ const TESTCASES = [
                <input id="tel" autocomplete="tel"></form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
+      guid: "123",
       "street-address": "2 Harrison St line2",
       "-moz-street-address-one-line": "2 Harrison St line2",
       "address-level2": "San Francisco",
-      "country": "US",
-      "email": "foo@mozilla.com",
-      "tel": "1234567",
+      country: "US",
+      email: "foo@mozilla.com",
+      tel: "1234567",
     },
     expectedResult: {
       "street-addr": "2 Harrison St line2",
-      "city": "San Francisco",
-      "country": "US",
-      "email": "foo@mozilla.com",
-      "tel": "1234567",
+      city: "San Francisco",
+      country: "US",
+      email: "foo@mozilla.com",
+      tel: "1234567",
     },
   },
   {
@@ -73,23 +80,24 @@ const TESTCASES = [
                <input id="tel" autocomplete="shipping tel"></form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
+      guid: "123",
       "street-address": "2 Harrison St",
       "address-level2": "San Francisco",
-      "country": "US",
-      "email": "foo@mozilla.com",
-      "tel": "1234567",
+      country: "US",
+      email: "foo@mozilla.com",
+      tel: "1234567",
     },
     expectedResult: {
       "street-addr": "2 Harrison St",
-      "city": "San Francisco",
-      "country": "US",
-      "email": "foo@mozilla.com",
-      "tel": "1234567",
+      city: "San Francisco",
+      country: "US",
+      email: "foo@mozilla.com",
+      tel: "1234567",
     },
   },
   {
-    description: "Form with autocomplete properties and profile is partly matched",
+    description:
+      "Form with autocomplete properties and profile is partly matched",
     document: `<form><input id="given-name" autocomplete="shipping given-name">
                <input id="family-name" autocomplete="shipping family-name">
                <input id="street-addr" autocomplete="shipping street-address">
@@ -99,19 +107,19 @@ const TESTCASES = [
                <input id="tel" autocomplete="shipping tel"></form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
+      guid: "123",
       "street-address": "2 Harrison St",
       "address-level2": "San Francisco",
-      "country": "US",
-      "email": "",
-      "tel": "",
+      country: "US",
+      email: "",
+      tel: "",
     },
     expectedResult: {
       "street-addr": "2 Harrison St",
-      "city": "San Francisco",
-      "country": "US",
-      "email": "",
-      "tel": "",
+      city: "San Francisco",
+      country: "US",
+      email: "",
+      tel: "",
     },
   },
   {
@@ -125,23 +133,24 @@ const TESTCASES = [
                <input id="tel" autocomplete="shipping tel"></form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
+      guid: "123",
       "street-address": "",
       "address-level2": "",
-      "country": "",
-      "email": "foo@mozilla.com",
-      "tel": "1234567",
+      country: "",
+      email: "foo@mozilla.com",
+      tel: "1234567",
     },
     expectedResult: {
       "street-addr": "",
-      "city": "",
-      "country": "",
-      "email": "foo@mozilla.com",
-      "tel": "1234567",
+      city: "",
+      country: "",
+      email: "foo@mozilla.com",
+      tel: "1234567",
     },
   },
   {
-    description: "Form with autocomplete select elements and matching option values",
+    description:
+      "Form with autocomplete select elements and matching option values",
     document: `<form>
                <input id="given-name" autocomplete="shipping given-name">
                <select id="country" autocomplete="shipping country">
@@ -156,17 +165,18 @@ const TESTCASES = [
                </form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
-      "country": "US",
+      guid: "123",
+      country: "US",
       "address-level1": "CA",
     },
     expectedResult: {
-      "country": "US",
-      "state": "CA",
+      country: "US",
+      state: "CA",
     },
   },
   {
-    description: "Form with autocomplete select elements and matching option texts",
+    description:
+      "Form with autocomplete select elements and matching option texts",
     document: `<form>
                <input id="given-name" autocomplete="shipping given-name">
                <select id="country" autocomplete="shipping country">
@@ -181,13 +191,13 @@ const TESTCASES = [
                </form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
-      "country": "United States",
+      guid: "123",
+      country: "United States",
       "address-level1": "California",
     },
     expectedResult: {
-      "country": "US",
-      "state": "CA",
+      country: "US",
+      state: "CA",
     },
   },
   {
@@ -210,20 +220,20 @@ const TESTCASES = [
                </form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
+      guid: "123",
       "street-address": "2 Harrison St line2",
       "-moz-street-address-one-line": "2 Harrison St line2",
       "address-level2": "San Francisco",
-      "country": "US",
-      "email": "foo@mozilla.com",
-      "tel": "1234567",
+      country: "US",
+      email: "foo@mozilla.com",
+      tel: "1234567",
     },
     expectedResult: {
       "street-addr": "2 Harrison St line2",
-      "city": "San Francisco",
-      "country": "US",
-      "email": "foo@mozilla.com",
-      "tel": "1234567",
+      city: "San Francisco",
+      country: "US",
+      email: "foo@mozilla.com",
+      tel: "1234567",
       "cc-number": "",
       "cc-name": "",
       "cc-exp-month": "",
@@ -250,7 +260,7 @@ const TESTCASES = [
                </form>`,
     focusedInputId: "cc-number",
     profileData: {
-      "guid": "123",
+      guid: "123",
       "cc-number": "4111111111111111",
       "cc-name": "test name",
       "cc-exp-month": "06",
@@ -258,23 +268,22 @@ const TESTCASES = [
     },
     expectedResult: {
       "street-addr": "",
-      "city": "",
-      "country": "",
-      "email": "",
-      "tel": "",
+      city: "",
+      country: "",
+      email: "",
+      tel: "",
       "cc-number": "4111111111111111",
       "cc-name": "test name",
       "cc-exp-month": "06",
       "cc-exp-year": "25",
     },
   },
-
-
 ];
 
 const TESTCASES_INPUT_UNCHANGED = [
   {
-    description: "Form with autocomplete select elements; with default and no matching options",
+    description:
+      "Form with autocomplete select elements; with default and no matching options",
     document: `<form>
                <input id="given-name" autocomplete="shipping given-name">
                <select id="country" autocomplete="shipping country">
@@ -288,13 +297,13 @@ const TESTCASES_INPUT_UNCHANGED = [
                </form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
-      "country": "US",
+      guid: "123",
+      country: "US",
       "address-level1": "unknown state",
     },
     expectedResult: {
-      "country": "US",
-      "state": "",
+      country: "US",
+      state: "",
     },
   },
 ];
@@ -312,16 +321,17 @@ const TESTCASES_FILL_SELECT = [
                </select></form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
-      "country": "US",
+      guid: "123",
+      country: "US",
       "address-level1": "CA",
     },
     expectedResult: {
-      "state": "CA",
+      state: "CA",
     },
   },
   {
-    description: "Form with US states select elements; with lower case state key",
+    description:
+      "Form with US states select elements; with lower case state key",
     document: `<form>
                <input id="given-name" autocomplete="shipping given-name">
                <input id="family-name" autocomplete="shipping family-name">
@@ -331,16 +341,17 @@ const TESTCASES_FILL_SELECT = [
                </select></form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
-      "country": "US",
+      guid: "123",
+      country: "US",
       "address-level1": "CA",
     },
     expectedResult: {
-      "state": "ca",
+      state: "ca",
     },
   },
   {
-    description: "Form with US states select elements; with state name and extra spaces",
+    description:
+      "Form with US states select elements; with state name and extra spaces",
     document: `<form>
                <input id="given-name" autocomplete="shipping given-name">
                <input id="family-name" autocomplete="shipping family-name">
@@ -350,16 +361,17 @@ const TESTCASES_FILL_SELECT = [
                </select></form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
-      "country": "US",
+      guid: "123",
+      country: "US",
       "address-level1": " California ",
     },
     expectedResult: {
-      "state": "CA",
+      state: "CA",
     },
   },
   {
-    description: "Form with US states select elements; with partial state key match",
+    description:
+      "Form with US states select elements; with partial state key match",
     document: `<form>
                <input id="given-name" autocomplete="shipping given-name">
                <input id="family-name" autocomplete="shipping family-name">
@@ -369,12 +381,12 @@ const TESTCASES_FILL_SELECT = [
                </select></form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
-      "country": "US",
+      guid: "123",
+      country: "US",
       "address-level1": "WA",
     },
     expectedResult: {
-      "state": "US-WA",
+      state: "US-WA",
     },
   },
 
@@ -390,11 +402,11 @@ const TESTCASES_FILL_SELECT = [
                </select></form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
-      "country": "US",
+      guid: "123",
+      country: "US",
     },
     expectedResult: {
-      "country": "US",
+      country: "US",
     },
   },
   {
@@ -408,11 +420,11 @@ const TESTCASES_FILL_SELECT = [
                </select></form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
-      "country": "US",
+      guid: "123",
+      country: "US",
     },
     expectedResult: {
-      "country": "us",
+      country: "us",
     },
   },
   {
@@ -426,11 +438,11 @@ const TESTCASES_FILL_SELECT = [
                </select></form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
-      "country": "US",
+      guid: "123",
+      country: "US",
     },
     expectedResult: {
-      "country": "XX",
+      country: "XX",
     },
   },
   {
@@ -444,15 +456,16 @@ const TESTCASES_FILL_SELECT = [
                </select></form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
-      "country": "US",
+      guid: "123",
+      country: "US",
     },
     expectedResult: {
-      "country": "XX",
+      country: "XX",
     },
   },
   {
-    description: "Form with country select elements; with partial matching value",
+    description:
+      "Form with country select elements; with partial matching value",
     document: `<form>
                <input id="given-name" autocomplete="given-name">
                <input id="family-name" autocomplete="family-name">
@@ -462,11 +475,11 @@ const TESTCASES_FILL_SELECT = [
                </select></form>`,
     focusedInputId: "given-name",
     profileData: {
-      "guid": "123",
-      "country": "US",
+      guid: "123",
+      country: "US",
     },
     expectedResult: {
-      "country": "XX",
+      country: "XX",
     },
   },
 ];
@@ -479,12 +492,16 @@ function do_test(testcases, testFn) {
         info("Starting testcase: " + testcase.description);
         let ccNumber = testcase.profileData["cc-number"];
         if (ccNumber) {
-          testcase.profileData["cc-number-encrypted"] = await OSKeyStore.encrypt(ccNumber);
+          testcase.profileData[
+            "cc-number-encrypted"
+          ] = await OSKeyStore.encrypt(ccNumber);
           delete testcase.profileData["cc-number"];
         }
 
-        let doc = MockDocument.createTestDocument("http://localhost:8080/test/",
-                                                  testcase.document);
+        let doc = MockDocument.createTestDocument(
+          "http://localhost:8080/test/",
+          testcase.document
+        );
         let form = doc.querySelector("form");
         let formLike = FormLikeFactory.createFromForm(form);
         let handler = new FormAutofillHandler(formLike);
@@ -515,10 +532,15 @@ function do_test(testcases, testFn) {
           promises.push(...testFn(testcase, element));
         });
 
-        let [adaptedProfile] = handler.activeSection.getAdaptedProfiles([testcase.profileData]);
+        let [adaptedProfile] = handler.activeSection.getAdaptedProfiles([
+          testcase.profileData,
+        ]);
         await handler.autofillFormFields(adaptedProfile, focusedInput);
-        Assert.equal(handler.activeSection.filledRecordGUID, testcase.profileData.guid,
-                     "Check if filledRecordGUID is set correctly");
+        Assert.equal(
+          handler.activeSection.filledRecordGUID,
+          testcase.profileData.guid,
+          "Check if filledRecordGUID is set correctly"
+        );
         await Promise.all(promises);
       });
     })();
@@ -529,18 +551,29 @@ do_test(TESTCASES, (testcase, element) => {
   let id = element.id;
   return [
     new Promise(resolve => {
-      element.addEventListener("input", () => {
-        Assert.ok(true, "Checking " + id + " field fires input event");
-        resolve();
-      }, {once: true});
+      element.addEventListener(
+        "input",
+        () => {
+          Assert.ok(true, "Checking " + id + " field fires input event");
+          resolve();
+        },
+        { once: true }
+      );
     }),
     new Promise(resolve => {
-      element.addEventListener("change", () => {
-        Assert.ok(true, "Checking " + id + " field fires change event");
-        Assert.equal(element.value, testcase.expectedResult[id],
-                    "Check the " + id + " field was filled with correct data");
-        resolve();
-      }, {once: true});
+      element.addEventListener(
+        "change",
+        () => {
+          Assert.ok(true, "Checking " + id + " field fires change event");
+          Assert.equal(
+            element.value,
+            testcase.expectedResult[id],
+            "Check the " + id + " field was filled with correct data"
+          );
+          resolve();
+        },
+        { once: true }
+      );
     }),
   ];
 });
@@ -554,8 +587,11 @@ do_test(TESTCASES_INPUT_UNCHANGED, (testcase, element) => {
         let id = element.id;
         element.removeEventListener("change", cleaner);
         element.removeEventListener("input", cleaner);
-        Assert.equal(element.value, testcase.expectedResult[id],
-                    "Check no value is changed on the " + id + " field");
+        Assert.equal(
+          element.value,
+          testcase.expectedResult[id],
+          "Check no value is changed on the " + id + " field"
+        );
         resolve();
       }, 1000);
       cleaner = event => {
@@ -572,11 +608,18 @@ do_test(TESTCASES_FILL_SELECT, (testcase, element) => {
   let id = element.id;
   return [
     new Promise(resolve => {
-      element.addEventListener("input", () => {
-        Assert.equal(element.value, testcase.expectedResult[id],
-                    "Check the " + id + " field was filled with correct data");
-        resolve();
-      }, {once: true});
+      element.addEventListener(
+        "input",
+        () => {
+          Assert.equal(
+            element.value,
+            testcase.expectedResult[id],
+            "Check the " + id + " field was filled with correct data"
+          );
+          resolve();
+        },
+        { once: true }
+      );
     }),
   ];
 });

@@ -20,17 +20,20 @@ async function replacePushService(mockService) {
     } catch (error) {
       promise = Promise.reject(error);
     }
-    promise.then(result => {
-      chromeScript.sendAsyncMessage("service-response", {
-        id: msg.id,
-        result,
-      });
-    }, error => {
-      chromeScript.sendAsyncMessage("service-response", {
-        id: msg.id,
-        error,
-      });
-    });
+    promise.then(
+      result => {
+        chromeScript.sendAsyncMessage("service-response", {
+          id: msg.id,
+          result,
+        });
+      },
+      error => {
+        chromeScript.sendAsyncMessage("service-response", {
+          id: msg.id,
+          error,
+        });
+      }
+    );
   });
   await new Promise(resolve => {
     chromeScript.addMessageListener("service-replaced", function onReplaced() {
@@ -62,7 +65,7 @@ let currentMockSocket = null;
 function setupMockPushSocket(mockWebSocket) {
   currentMockSocket = mockWebSocket;
   currentMockSocket._isActive = true;
-  chromeScript.sendSyncMessage("socket-setup");
+  chromeScript.sendAsyncMessage("socket-setup");
   chromeScript.addMessageListener("socket-client-msg", function(msg) {
     mockWebSocket.handleMessage(msg);
   });
@@ -73,7 +76,7 @@ function teardownMockPushSocket() {
     return new Promise(resolve => {
       currentMockSocket._isActive = false;
       chromeScript.addMessageListener("socket-server-teardown", resolve);
-      chromeScript.sendSyncMessage("socket-teardown");
+      chromeScript.sendAsyncMessage("socket-teardown");
     });
   }
   return Promise.resolve();
@@ -96,30 +99,36 @@ class MockWebSocket {
   }
 
   onHello(request) {
-    this.serverSendMsg(JSON.stringify({
-      messageType: "hello",
-      uaid: this.userAgentID,
-      status: 200,
-      use_webpush: true,
-    }));
+    this.serverSendMsg(
+      JSON.stringify({
+        messageType: "hello",
+        uaid: this.userAgentID,
+        status: 200,
+        use_webpush: true,
+      })
+    );
   }
 
   onRegister(request) {
-    this.serverSendMsg(JSON.stringify({
-      messageType: "register",
-      uaid: this.userAgentID,
-      channelID: request.channelID,
-      status: 200,
-      pushEndpoint: "https://example.com/endpoint/" + this.registerCount++,
-    }));
+    this.serverSendMsg(
+      JSON.stringify({
+        messageType: "register",
+        uaid: this.userAgentID,
+        channelID: request.channelID,
+        status: 200,
+        pushEndpoint: "https://example.com/endpoint/" + this.registerCount++,
+      })
+    );
   }
 
   onUnregister(request) {
-    this.serverSendMsg(JSON.stringify({
-      messageType: "unregister",
-      channelID: request.channelID,
-      status: 200,
-    }));
+    this.serverSendMsg(
+      JSON.stringify({
+        messageType: "unregister",
+        channelID: request.channelID,
+        status: 200,
+      })
+    );
   }
 
   onAck(request) {
@@ -130,20 +139,20 @@ class MockWebSocket {
     let request = JSON.parse(msg);
     let messageType = request.messageType;
     switch (messageType) {
-    case "hello":
-      this.onHello(request);
-      break;
-    case "register":
-      this.onRegister(request);
-      break;
-    case "unregister":
-      this.onUnregister(request);
-      break;
-    case "ack":
-      this.onAck(request);
-      break;
-    default:
-      throw new Error("Unexpected message: " + messageType);
+      case "hello":
+        this.onHello(request);
+        break;
+      case "register":
+        this.onRegister(request);
+        break;
+      case "unregister":
+        this.onUnregister(request);
+        break;
+      case "ack":
+        this.onAck(request);
+        break;
+      default:
+        throw new Error("Unexpected message: " + messageType);
     }
   }
 
@@ -164,21 +173,24 @@ SimpleTest.registerCleanupFunction(async function() {
 
 function setPushPermission(allow) {
   return new Promise(resolve => {
-    SpecialPowers.pushPermissions([
-      { type: "desktop-notification", allow, context: document },
-      ], resolve);
+    SpecialPowers.pushPermissions(
+      [{ type: "desktop-notification", allow, context: document }],
+      resolve
+    );
   });
 }
 
 function setupPrefs() {
-  return SpecialPowers.pushPrefEnv({"set": [
-    ["dom.push.enabled", true],
-    ["dom.push.connection.enabled", true],
-    ["dom.push.maxRecentMessageIDsPerSubscription", 0],
-    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-    ["dom.serviceWorkers.enabled", true],
-    ["dom.serviceWorkers.testing.enabled", true],
-    ]});
+  return SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.push.enabled", true],
+      ["dom.push.connection.enabled", true],
+      ["dom.push.maxRecentMessageIDsPerSubscription", 0],
+      ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+    ],
+  });
 }
 
 async function setupPrefsAndReplaceService(mockService) {
@@ -202,8 +214,9 @@ function injectControlledFrame(target = document.body) {
         iframe = null;
       },
       waitOnWorkerMessage(type) {
-        return iframe ? iframe.contentWindow.waitOnWorkerMessage(type) :
-               Promise.reject(new Error("Frame removed from document"));
+        return iframe
+          ? iframe.contentWindow.waitOnWorkerMessage(type)
+          : Promise.reject(new Error("Frame removed from document"));
       },
       innerWindowId() {
         var utils = SpecialPowers.getDOMWindowUtils(iframe.contentWindow);

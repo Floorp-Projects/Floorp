@@ -5,7 +5,9 @@
 
 "use strict";
 
-const { require, DevToolsLoader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require, DevToolsLoader } = ChromeUtils.import(
+  "resource://devtools/shared/Loader.jsm"
+);
 const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
@@ -29,9 +31,16 @@ var listener = {
     let string;
     try {
       message.QueryInterface(Ci.nsIScriptError);
-      dump(message.sourceName + ":" + message.lineNumber + ": " +
-           scriptErrorFlagsToKind(message.flags) + ": " +
-           message.errorMessage + "\n");
+      dump(
+        message.sourceName +
+          ":" +
+          message.lineNumber +
+          ": " +
+          scriptErrorFlagsToKind(message.flags) +
+          ": " +
+          message.errorMessage +
+          "\n"
+      );
       string = message.errorMessage;
     } catch (ex) {
       // Be a little paranoid with message, as the whole goal here is to lose

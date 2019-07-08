@@ -1,5 +1,5 @@
 "use strict";
 
-self.onerror = function () {
+self.onerror = function() {
   postMessage("error");
-}
+};

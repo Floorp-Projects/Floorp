@@ -26,12 +26,10 @@ class TickLines extends PureComponent {
         className: "tick-lines",
       },
       ticks.map(tick =>
-        dom.div(
-          {
-            className: "tick-line",
-            style: { marginInlineStart: `${ tick.position }%` },
-          }
-        )
+        dom.div({
+          className: "tick-line",
+          style: { marginInlineStart: `${tick.position}%` },
+        })
       )
     );
   }

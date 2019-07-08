@@ -147,17 +147,24 @@ void DOMMatrixReadOnly::SetDataFromMatrixInit(DOMMatrixInit& aMatrixInit) {
 }
 
 already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::FromMatrix(
-    const GlobalObject& aGlobal, const DOMMatrixInit& aMatrixInit,
-    ErrorResult& aRv) {
+    nsISupports* aParent, const DOMMatrixInit& aMatrixInit, ErrorResult& aRv) {
   DOMMatrixInit matrixInit(aMatrixInit);
   if (!ValidateAndFixupMatrixInit(matrixInit, aRv)) {
     return nullptr;
   };
 
   RefPtr<DOMMatrixReadOnly> rval =
-      new DOMMatrixReadOnly(aGlobal.GetAsSupports(), matrixInit.mIs2D.Value());
+      new DOMMatrixReadOnly(aParent, matrixInit.mIs2D.Value());
   rval->SetDataFromMatrixInit(matrixInit);
   return rval.forget();
+}
+
+already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::FromMatrix(
+    const GlobalObject& aGlobal, const DOMMatrixInit& aMatrixInit,
+    ErrorResult& aRv) {
+  RefPtr<DOMMatrixReadOnly> matrix =
+      FromMatrix(aGlobal.GetAsSupports(), aMatrixInit, aRv);
+  return matrix.forget();
 }
 
 already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::FromFloat32Array(
@@ -848,11 +855,7 @@ DOMMatrix* DOMMatrix::Scale3dSelf(double aScale, double aOriginX,
 }
 
 DOMMatrix* DOMMatrix::RotateFromVectorSelf(double aX, double aY) {
-  if (aX == 0.0 || aY == 0.0) {
-    return this;
-  }
-
-  const double angle = atan2(aY, aX);
+  const double angle = (aX == 0.0 && aY == 0.0) ? 0 : atan2(aY, aX);
 
   if (fmod(angle, 2 * M_PI) == 0) {
     return this;

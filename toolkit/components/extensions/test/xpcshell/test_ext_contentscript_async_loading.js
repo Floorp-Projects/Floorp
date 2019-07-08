@@ -1,6 +1,6 @@
 "use strict";
 
-const server = createHttpServer({hosts: ["example.com"]});
+const server = createHttpServer({ hosts: ["example.com"] });
 
 server.registerPathHandler("/dummy", (request, response) => {
   response.setStatusLine(request.httpVersion, 200, "OK");
@@ -62,7 +62,9 @@ add_task(async function test_async_loading() {
   const observed = ExtensionTestUtils.loadExtension(extension);
   await observed.startup();
 
-  const contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy");
+  const contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/dummy"
+  );
   await checkOrder(observed);
   await observed.unload();
 

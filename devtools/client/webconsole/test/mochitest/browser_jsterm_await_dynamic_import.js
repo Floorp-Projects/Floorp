@@ -5,7 +5,8 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/test/mochitest/test-dynamic-import.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/test/mochitest/test-dynamic-import.html";
 
 add_task(async function() {
   // Enable dynamic import

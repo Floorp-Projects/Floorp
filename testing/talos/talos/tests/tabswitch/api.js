@@ -2,8 +2,10 @@
 
 /* globals ExtensionAPI */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {RemotePages} = ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { RemotePages } = ChromeUtils.import(
+  "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
+);
 
 let context = {};
 let TalosParentProfiler;
@@ -17,7 +19,7 @@ let TalosParentProfiler;
  * @returns Promise
  */
 function waitForDelayedStartup(win) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const topic = "browser-delayed-startup-finished";
     Services.obs.addObserver(function onStartup(subject) {
       if (win == subject) {
@@ -40,7 +42,7 @@ function waitForDelayedStartup(win) {
  *        Resolves once all tabs have finished loading.
  */
 function loadTabs(gBrowser, urls) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     gBrowser.loadTabs(urls, {
       inBackground: true,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
@@ -49,15 +51,20 @@ function loadTabs(gBrowser, urls) {
     let waitingToLoad = new Set(urls);
 
     let listener = {
-      QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
-                                              "nsISupportsWeakReference"]),
+      QueryInterface: ChromeUtils.generateQI([
+        "nsIWebProgressListener",
+        "nsISupportsWeakReference",
+      ]),
       onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
-        let loadedState = Ci.nsIWebProgressListener.STATE_STOP |
+        let loadedState =
+          Ci.nsIWebProgressListener.STATE_STOP |
           Ci.nsIWebProgressListener.STATE_IS_NETWORK;
-        if ((aStateFlags & loadedState) == loadedState &&
-            !aWebProgress.isLoadingDocument &&
-            aWebProgress.isTopLevel &&
-            Components.isSuccessCode(aStatus)) {
+        if (
+          (aStateFlags & loadedState) == loadedState &&
+          !aWebProgress.isLoadingDocument &&
+          aWebProgress.isTopLevel &&
+          Components.isSuccessCode(aStatus)
+        ) {
           dump(`Loaded: ${aBrowser.currentURI.spec}\n`);
           waitingToLoad.delete(aBrowser.currentURI.spec);
 
@@ -111,11 +118,15 @@ async function switchToTab(tab) {
  *        Resolves once the TabSwitchDone event is fired.
  */
 function waitForTabSwitchDone(browser) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     let gBrowser = browser.ownerGlobal.gBrowser;
-    gBrowser.addEventListener("TabSwitchDone", function onTabSwitchDone() {
-      resolve();
-    }, {once: true});
+    gBrowser.addEventListener(
+      "TabSwitchDone",
+      function onTabSwitchDone() {
+        resolve();
+      },
+      { once: true }
+    );
   });
 }
 
@@ -132,12 +143,16 @@ function waitForTabSwitchDone(browser) {
  *        milliseconds since midnight 01 January, 1970 UTC.
  */
 function waitForContentPresented(browser) {
-  return new Promise((resolve) => {
-    browser.addEventListener("MozLayerTreeReady", function onLayersReady(event) {
-      let now = Cu.now();
-      TalosParentProfiler.mark("MozLayerTreeReady seen by tabswitch");
-      resolve(now);
-    }, { once: true });
+  return new Promise(resolve => {
+    browser.addEventListener(
+      "MozLayerTreeReady",
+      function onLayersReady(event) {
+        let now = Cu.now();
+        TalosParentProfiler.mark("MozLayerTreeReady seen by tabswitch");
+        resolve(now);
+      },
+      { once: true }
+    );
   });
 }
 
@@ -156,13 +171,18 @@ function forceGC(win, browser) {
   // TODO: Find a better way of letting Talos force GC in the child. We're
   // stealing a chunk of pageloader to do this, and we should probably put
   // something into TalosPowers instead.
-  browser.messageManager.loadFrameScript("chrome://pageloader/content/talos-content.js", false);
+  browser.messageManager.loadFrameScript(
+    "chrome://pageloader/content/talos-content.js",
+    false
+  );
 
   win.windowUtils.garbageCollect();
 
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     let mm = browser.messageManager;
-    mm.addMessageListener("Talos:ForceGC:OK", function onTalosContentForceGC(msg) {
+    mm.addMessageListener("Talos:ForceGC:OK", function onTalosContentForceGC(
+      msg
+    ) {
       mm.removeMessageListener("Talos:ForceGC:OK", onTalosContentForceGC);
       resolve();
     });
@@ -183,12 +203,17 @@ function forceGC(win, browser) {
  */
 async function test(window) {
   if (!window.gMultiProcessBrowser) {
-    dump("** The tabswitch Talos test does not support running in non-e10s mode " +
-         "anymore! Bailing out!\n");
+    dump(
+      "** The tabswitch Talos test does not support running in non-e10s mode " +
+        "anymore! Bailing out!\n"
+    );
     return;
   }
 
-  ChromeUtils.import("resource://talos-powers/TalosParentProfiler.jsm", context);
+  ChromeUtils.import(
+    "resource://talos-powers/TalosParentProfiler.jsm",
+    context
+  );
   TalosParentProfiler = context.TalosParentProfiler;
 
   let testURLs = [];
@@ -199,9 +224,13 @@ async function test(window) {
     if (prefFile) {
       testURLs = handleFile(win, prefFile);
     }
-  } catch (ex) { /* error condition handled below */ }
+  } catch (ex) {
+    /* error condition handled below */
+  }
   if (!testURLs || testURLs.length == 0) {
-    dump("no tabs to test, 'addon.test.tabswitch.urlfile' pref isn't set to page set path\n");
+    dump(
+      "no tabs to test, 'addon.test.tabswitch.urlfile' pref isn't set to page set path\n"
+    );
     return;
   }
 
@@ -255,23 +284,27 @@ async function test(window) {
     await switchToTab(initialTab);
   }
 
-  let output = "<!DOCTYPE html>" +
-               '<html lang="en">' +
-               "<head><title>Tab Switch Results</title></head>" +
-               "<body><h1>Tab switch times</h1>" +
-               "<table>";
+  let output =
+    "<!DOCTYPE html>" +
+    '<html lang="en">' +
+    "<head><title>Tab Switch Results</title></head>" +
+    "<body><h1>Tab switch times</h1>" +
+    "<table>";
   let time = 0;
   for (let i in times) {
     time += times[i];
-    output += "<tr><td>" + testURLs[i] + "</td><td>" + times[i] + "ms</td></tr>";
+    output +=
+      "<tr><td>" + testURLs[i] + "</td><td>" + times[i] + "ms</td></tr>";
   }
   output += "</table></body></html>";
   dump("total tab switch time:" + time + "\n");
 
   let resultsTab = win.gBrowser.loadOneTab(
-    "data:text/html;charset=utf-8," + encodeURIComponent(output), {
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-  });
+    "data:text/html;charset=utf-8," + encodeURIComponent(output),
+    {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    }
+  );
 
   win.gBrowser.selectedTab = resultsTab;
 
@@ -286,8 +319,7 @@ async function test(window) {
 }
 
 function handleFile(win, file) {
-  let localFile = Cc["@mozilla.org/file/local;1"]
-    .createInstance(Ci.nsIFile);
+  let localFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   localFile.initWithPath(file);
   let localURI = Services.io.newFileURI(localFile);
   let req = new win.XMLHttpRequest();
@@ -298,14 +330,14 @@ function handleFile(win, file) {
   let server = Services.prefs.getCharPref("addon.test.tabswitch.webserver");
   let maxurls = Services.prefs.getIntPref("addon.test.tabswitch.maxurls");
   let parent = server + "/tests/";
-  let lines = req.responseText.split('<a href=\"');
+  let lines = req.responseText.split('<a href="');
   testURLs = [];
   if (maxurls && maxurls > 0) {
     lines.splice(maxurls, lines.length);
   }
   lines.forEach(function(a) {
-    if (a.split('\"')[0] != "") {
-      testURLs.push(parent + "tp5n/" + a.split('\"')[0]);
+    if (a.split('"')[0] != "") {
+      testURLs.push(parent + "tp5n/" + a.split('"')[0]);
     }
   });
 
@@ -319,14 +351,19 @@ this.tabswitch = class extends ExtensionAPI {
     return {
       tabswitch: {
         setup({ processScriptPath }) {
-          const AboutNewTabService = Cc["@mozilla.org/browser/aboutnewtab-service;1"]
-                                       .getService(Ci.nsIAboutNewTabService);
+          const AboutNewTabService = Cc[
+            "@mozilla.org/browser/aboutnewtab-service;1"
+          ].getService(Ci.nsIAboutNewTabService);
           AboutNewTabService.newTabURL = "about:blank";
 
-          const processScriptURL = context.extension.baseURI.resolve(processScriptPath);
+          const processScriptURL = context.extension.baseURI.resolve(
+            processScriptPath
+          );
           Services.ppmm.loadProcessScript(processScriptURL, true);
           remotePage = new RemotePages("about:tabswitch");
-          remotePage.addMessageListener("tabswitch-do-test", function doTest(msg) {
+          remotePage.addMessageListener("tabswitch-do-test", function doTest(
+            msg
+          ) {
             test(msg.target.browser.ownerGlobal);
           });
 

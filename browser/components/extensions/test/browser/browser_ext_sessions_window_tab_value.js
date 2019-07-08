@@ -4,14 +4,24 @@ add_task(async function test_sessions_tab_value() {
   info("Testing set/get/deleteTabValue.");
 
   async function background() {
-    let tests = [{key: "tabkey1", value: "Tab Value"},
-                 {key: "tabkey2", value: 25},
-                 {key: "tabkey3", value: {val: "Tab Value"}},
-                 {key: "tabkey4", value: function() { return null; }}];
+    let tests = [
+      { key: "tabkey1", value: "Tab Value" },
+      { key: "tabkey2", value: 25 },
+      { key: "tabkey3", value: { val: "Tab Value" } },
+      {
+        key: "tabkey4",
+        value: function() {
+          return null;
+        },
+      },
+    ];
 
     async function test(params) {
-      let {key, value} = params;
-      let tabs = await browser.tabs.query({currentWindow: true, active: true});
+      let { key, value } = params;
+      let tabs = await browser.tabs.query({
+        currentWindow: true,
+        active: true,
+      });
       let currentTabId = tabs[0].id;
 
       browser.sessions.setTabValue(currentTabId, key, value);
@@ -19,20 +29,46 @@ add_task(async function test_sessions_tab_value() {
       let testValue1 = await browser.sessions.getTabValue(currentTabId, key);
       let valueType = typeof value;
 
-      browser.test.log(`Test that setting, getting and deleting tab value behaves properly when value is type "${valueType}"`);
+      browser.test.log(
+        `Test that setting, getting and deleting tab value behaves properly when value is type "${valueType}"`
+      );
 
       if (valueType == "string") {
-        browser.test.assertEq(value, testValue1, `Value for key '${key}' should be '${value}'.`);
-        browser.test.assertEq("string", (typeof testValue1), "typeof value should be '${valueType}'.");
+        browser.test.assertEq(
+          value,
+          testValue1,
+          `Value for key '${key}' should be '${value}'.`
+        );
+        browser.test.assertEq(
+          "string",
+          typeof testValue1,
+          "typeof value should be '${valueType}'."
+        );
       } else if (valueType == "number") {
-        browser.test.assertEq(value, testValue1, `Value for key '${key}' should be '${value}'.`);
-        browser.test.assertEq("number", (typeof testValue1), "typeof value should be '${valueType}'.");
+        browser.test.assertEq(
+          value,
+          testValue1,
+          `Value for key '${key}' should be '${value}'.`
+        );
+        browser.test.assertEq(
+          "number",
+          typeof testValue1,
+          "typeof value should be '${valueType}'."
+        );
       } else if (valueType == "object") {
         let innerVal1 = value.val;
         let innerVal2 = testValue1.val;
-        browser.test.assertEq(innerVal1, innerVal2, `Value for key '${key}' should be '${innerVal1}'.`);
+        browser.test.assertEq(
+          innerVal1,
+          innerVal2,
+          `Value for key '${key}' should be '${innerVal1}'.`
+        );
       } else if (valueType == "function") {
-        browser.test.assertEq(null, testValue1, `Value for key '${key}' is non-JSON-able and should be 'null'.`);
+        browser.test.assertEq(
+          null,
+          testValue1,
+          `Value for key '${key}' is non-JSON-able and should be 'null'.`
+        );
       }
 
       // Remove the tab key/value.
@@ -40,7 +76,11 @@ add_task(async function test_sessions_tab_value() {
 
       // This should now return undefined.
       testValue1 = await browser.sessions.getTabValue(currentTabId, key);
-      browser.test.assertEq(undefined, testValue1, `Key has been deleted and value for key "${key}" should be 'undefined'.`);
+      browser.test.assertEq(
+        undefined,
+        testValue1,
+        `Key has been deleted and value for key "${key}" should be 'undefined'.`
+      );
     }
 
     for (let params of tests) {
@@ -48,9 +88,11 @@ add_task(async function test_sessions_tab_value() {
     }
 
     // Attempt to remove a non-existent key, should not throw error.
-    let tabs = await browser.tabs.query({currentWindow: true, active: true});
+    let tabs = await browser.tabs.query({ currentWindow: true, active: true });
     await browser.sessions.removeTabValue(tabs[0].id, "non-existent-key");
-    browser.test.succeed("Attempting to remove a non-existent key should not fail.");
+    browser.test.succeed(
+      "Attempting to remove a non-existent key should not fail."
+    );
 
     browser.test.sendMessage("testComplete");
   }
@@ -83,56 +125,85 @@ add_task(async function test_sessions_tab_value_persistence() {
     let value1 = "Tab Value 1a";
     let value2 = "Tab Value 1b";
 
-    browser.test.log("Test that two different tabs hold different values for a given key.");
+    browser.test.log(
+      "Test that two different tabs hold different values for a given key."
+    );
 
-    await browser.tabs.create({url: "http://example.com"});
+    await browser.tabs.create({ url: "http://example.com" });
 
     // Wait until the newly created tab has completed loading or it will still have
     // about:blank url when it gets removed and will not appear in the removed tabs history.
-    browser.webNavigation.onCompleted.addListener(async function newTabListener(details) {
-      browser.webNavigation.onCompleted.removeListener(newTabListener);
+    browser.webNavigation.onCompleted.addListener(
+      async function newTabListener(details) {
+        browser.webNavigation.onCompleted.removeListener(newTabListener);
 
-      let tabs = await browser.tabs.query({currentWindow: true});
+        let tabs = await browser.tabs.query({ currentWindow: true });
 
-      let tabId_1 = tabs[0].id;
-      let tabId_2 = tabs[1].id;
+        let tabId_1 = tabs[0].id;
+        let tabId_2 = tabs[1].id;
 
-      browser.sessions.setTabValue(tabId_1, key, value1);
-      browser.sessions.setTabValue(tabId_2, key, value2);
+        browser.sessions.setTabValue(tabId_1, key, value1);
+        browser.sessions.setTabValue(tabId_2, key, value2);
 
-      let testValue1 = await browser.sessions.getTabValue(tabId_1, key);
-      let testValue2 = await browser.sessions.getTabValue(tabId_2, key);
+        let testValue1 = await browser.sessions.getTabValue(tabId_1, key);
+        let testValue2 = await browser.sessions.getTabValue(tabId_2, key);
 
-      browser.test.assertEq(value1, testValue1, `Value for key '${key}' should be '${value1}'.`);
-      browser.test.assertEq(value2, testValue2, `Value for key '${key}' should be '${value2}'.`);
+        browser.test.assertEq(
+          value1,
+          testValue1,
+          `Value for key '${key}' should be '${value1}'.`
+        );
+        browser.test.assertEq(
+          value2,
+          testValue2,
+          `Value for key '${key}' should be '${value2}'.`
+        );
 
-      browser.test.log("Test that value is copied to duplicated tab for a given key.");
+        browser.test.log(
+          "Test that value is copied to duplicated tab for a given key."
+        );
 
-      let duptab = await browser.tabs.duplicate(tabId_2);
-      let tabId_3 = duptab.id;
+        let duptab = await browser.tabs.duplicate(tabId_2);
+        let tabId_3 = duptab.id;
 
-      let testValue3 = await browser.sessions.getTabValue(tabId_3, key);
+        let testValue3 = await browser.sessions.getTabValue(tabId_3, key);
 
-      browser.test.assertEq(value2, testValue3, `Value for key '${key}' should be '${value2}'.`);
+        browser.test.assertEq(
+          value2,
+          testValue3,
+          `Value for key '${key}' should be '${value2}'.`
+        );
 
-      browser.test.log("Test that restored tab still holds the value for a given key.");
+        browser.test.log(
+          "Test that restored tab still holds the value for a given key."
+        );
 
-      await browser.tabs.remove([tabId_3]);
+        await browser.tabs.remove([tabId_3]);
 
-      let sessions = await browser.sessions.getRecentlyClosed({maxResults: 1});
+        let sessions = await browser.sessions.getRecentlyClosed({
+          maxResults: 1,
+        });
 
-      let sessionData = await browser.sessions.restore(sessions[0].tab.sessionId);
-      let restoredId = sessionData.tab.id;
+        let sessionData = await browser.sessions.restore(
+          sessions[0].tab.sessionId
+        );
+        let restoredId = sessionData.tab.id;
 
-      let testValue = await browser.sessions.getTabValue(restoredId, key);
+        let testValue = await browser.sessions.getTabValue(restoredId, key);
 
-      browser.test.assertEq(value2, testValue, `Value for key '${key}' should be '${value2}'.`);
+        browser.test.assertEq(
+          value2,
+          testValue,
+          `Value for key '${key}' should be '${value2}'.`
+        );
 
-      await browser.tabs.remove(tabId_2);
-      await browser.tabs.remove(restoredId);
+        await browser.tabs.remove(tabId_2);
+        await browser.tabs.remove(restoredId);
 
-      browser.test.sendMessage("testComplete");
-    }, {url: [{hostContains: "example.com"}]});
+        browser.test.sendMessage("testComplete");
+      },
+      { url: [{ hostContains: "example.com" }] }
+    );
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -159,13 +230,20 @@ add_task(async function test_sessions_window_value() {
   info("Testing set/get/deleteWindowValue.");
 
   async function background() {
-    let tests = [{key: "winkey1", value: "Window Value"},
-                 {key: "winkey2", value: 25},
-                 {key: "winkey3", value: {val: "Window Value"}},
-                 {key: "winkey4", value: function() { return null; }}];
+    let tests = [
+      { key: "winkey1", value: "Window Value" },
+      { key: "winkey2", value: 25 },
+      { key: "winkey3", value: { val: "Window Value" } },
+      {
+        key: "winkey4",
+        value: function() {
+          return null;
+        },
+      },
+    ];
 
     async function test(params) {
-      let {key, value} = params;
+      let { key, value } = params;
       let win = await browser.windows.getCurrent();
       let currentWinId = win.id;
 
@@ -174,20 +252,46 @@ add_task(async function test_sessions_window_value() {
       let testValue1 = await browser.sessions.getWindowValue(currentWinId, key);
       let valueType = typeof value;
 
-      browser.test.log(`Test that setting, getting and deleting window value behaves properly when value is type "${valueType}"`);
+      browser.test.log(
+        `Test that setting, getting and deleting window value behaves properly when value is type "${valueType}"`
+      );
 
       if (valueType == "string") {
-        browser.test.assertEq(value, testValue1, `Value for key '${key}' should be '${value}'.`);
-        browser.test.assertEq("string", (typeof testValue1), "typeof value should be '${valueType}'.");
+        browser.test.assertEq(
+          value,
+          testValue1,
+          `Value for key '${key}' should be '${value}'.`
+        );
+        browser.test.assertEq(
+          "string",
+          typeof testValue1,
+          "typeof value should be '${valueType}'."
+        );
       } else if (valueType == "number") {
-        browser.test.assertEq(value, testValue1, `Value for key '${key}' should be '${value}'.`);
-        browser.test.assertEq("number", (typeof testValue1), "typeof value should be '${valueType}'.");
+        browser.test.assertEq(
+          value,
+          testValue1,
+          `Value for key '${key}' should be '${value}'.`
+        );
+        browser.test.assertEq(
+          "number",
+          typeof testValue1,
+          "typeof value should be '${valueType}'."
+        );
       } else if (valueType == "object") {
         let innerVal1 = value.val;
         let innerVal2 = testValue1.val;
-        browser.test.assertEq(innerVal1, innerVal2, `Value for key '${key}' should be '${innerVal1}'.`);
+        browser.test.assertEq(
+          innerVal1,
+          innerVal2,
+          `Value for key '${key}' should be '${innerVal1}'.`
+        );
       } else if (valueType == "function") {
-        browser.test.assertEq(null, testValue1, `Value for key '${key}' is non-JSON-able and should be 'null'.`);
+        browser.test.assertEq(
+          null,
+          testValue1,
+          `Value for key '${key}' is non-JSON-able and should be 'null'.`
+        );
       }
 
       // Remove the window key/value.
@@ -195,7 +299,11 @@ add_task(async function test_sessions_window_value() {
 
       // This should return undefined as the key no longer exists.
       testValue1 = await browser.sessions.getWindowValue(currentWinId, key);
-      browser.test.assertEq(undefined, testValue1, `Key has been deleted and value for key '${key}' should be 'undefined'.`);
+      browser.test.assertEq(
+        undefined,
+        testValue1,
+        `Key has been deleted and value for key '${key}' should be 'undefined'.`
+      );
     }
 
     for (let params of tests) {
@@ -205,7 +313,9 @@ add_task(async function test_sessions_window_value() {
     // Attempt to remove a non-existent key, should not throw error.
     let win = await browser.windows.getCurrent();
     await browser.sessions.removeWindowValue(win.id, "non-existent-key");
-    browser.test.succeed("Attempting to remove a non-existent key should not fail.");
+    browser.test.succeed(
+      "Attempting to remove a non-existent key should not fail."
+    );
 
     browser.test.sendMessage("testComplete");
   }
@@ -231,7 +341,9 @@ add_task(async function test_sessions_window_value() {
 });
 
 add_task(async function test_sessions_window_value_persistence() {
-  info("Testing that different values for the same key in different windows are persisted properly.");
+  info(
+    "Testing that different values for the same key in different windows are persisted properly."
+  );
 
   async function background() {
     let key = "winkey1";
@@ -250,8 +362,16 @@ add_task(async function test_sessions_window_value_persistence() {
     let testValue1 = await browser.sessions.getWindowValue(window1Id, key);
     let testValue2 = await browser.sessions.getWindowValue(window2Id, key);
 
-    browser.test.assertEq(value1, testValue1, `Value for key '${key}' should be '${value1}'.`);
-    browser.test.assertEq(value2, testValue2, `Value for key '${key}' should be '${value2}'.`);
+    browser.test.assertEq(
+      value1,
+      testValue1,
+      `Value for key '${key}' should be '${value1}'.`
+    );
+    browser.test.assertEq(
+      value2,
+      testValue2,
+      `Value for key '${key}' should be '${value2}'.`
+    );
 
     await browser.windows.remove(window2Id);
     browser.test.sendMessage("testComplete");
@@ -276,4 +396,3 @@ add_task(async function test_sessions_window_value_persistence() {
 
   await extension.unload();
 });
-

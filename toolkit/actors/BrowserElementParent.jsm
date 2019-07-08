@@ -6,12 +6,20 @@
 
 var EXPORTED_SYMBOLS = ["BrowserElementParent", "PermitUnloader"];
 
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
-let {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyPreferenceGetter(this, "unloadTimeoutMs",
-  "dom.beforeunload_timeout_ms");
+let { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "unloadTimeoutMs",
+  "dom.beforeunload_timeout_ms"
+);
 
 // Out-of-process subframes might be in the following states following a request
 // to permit closing:
@@ -74,9 +82,11 @@ class BrowserElementParent extends JSWindowActorParent {
           // If this is a non-remote browser, the DOMWindowClose event will bubble
           // up naturally, and doesn't need to be re-dispatched.
           if (browser.isRemoteBrowser) {
-            browser.dispatchEvent(new win.CustomEvent("DOMWindowClose", {
-              bubbles: true,
-            }));
+            browser.dispatchEvent(
+              new win.CustomEvent("DOMWindowClose", {
+                bubbles: true,
+              })
+            );
           }
         }
         break;
@@ -203,9 +213,13 @@ var PermitUnloader = {
         actor.sendPermitUnload(flags);
       }
 
-      timer.initWithCallback(() => {
-        this._onTimeout(frameLoader);
-      }, unloadTimeoutMs, timer.TYPE_ONE_SHOT);
+      timer.initWithCallback(
+        () => {
+          this._onTimeout(frameLoader);
+        },
+        unloadTimeoutMs,
+        timer.TYPE_ONE_SHOT
+      );
 
       Services.tm.spinEventLoopUntilOrShutdown(() => {
         return this._finishedPermitUnload(frameStates);

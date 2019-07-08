@@ -9,20 +9,23 @@
 // Import the inspector's head.js first (which itself imports shared-head.js).
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js",
-  this);
+  this
+);
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.defaultColorUnit");
 });
 
-var {getInplaceEditorForSpan: inplaceEditor} =
-  require("devtools/client/shared/inplace-editor");
+var {
+  getInplaceEditorForSpan: inplaceEditor,
+} = require("devtools/client/shared/inplace-editor");
 
 const ROOT_TEST_DIR = getRootDirectory(gTestPath);
 const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
 
-const STYLE_INSPECTOR_L10N =
-  new LocalizationHelper("devtools/shared/locales/styleinspector.properties");
+const STYLE_INSPECTOR_L10N = new LocalizationHelper(
+  "devtools/shared/locales/styleinspector.properties"
+);
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.defaultColorUnit");
@@ -126,12 +129,21 @@ var waitForSuccess = async function(validatorFn, desc = "untitled") {
  *          - {String} value The expected style value
  * The style will be checked like so: getComputedStyle(element)[name] === value
  */
-var simulateColorPickerChange = async function(ruleView, colorPicker,
-    newRgba, expectedChange) {
+var simulateColorPickerChange = async function(
+  ruleView,
+  colorPicker,
+  newRgba,
+  expectedChange
+) {
   let onComputedStyleChanged;
   if (expectedChange) {
-    const {selector, name, value} = expectedChange;
-    onComputedStyleChanged = waitForComputedStyleProperty(selector, null, name, value);
+    const { selector, name, value } = expectedChange;
+    onComputedStyleChanged = waitForComputedStyleProperty(
+      selector,
+      null,
+      name,
+      value
+    );
   }
   const onRuleViewChanged = ruleView.once("ruleview-changed");
   info("Getting the spectrum colorpicker object");
@@ -171,8 +183,13 @@ var simulateColorPickerChange = async function(ruleView, colorPicker,
  *          - {String} value The expected style value
  * The style will be checked like so: getComputedStyle(element)[name] === value
  */
-var openColorPickerAndSelectColor = async function(view, ruleIndex,
-    propIndex, newRgba, expectedChange) {
+var openColorPickerAndSelectColor = async function(
+  view,
+  ruleIndex,
+  propIndex,
+  newRgba,
+  expectedChange
+) {
   const ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
   const propEditor = ruleEditor.rule.textProps[propIndex].editor;
   const swatch = propEditor.valueSpan.querySelector(".ruleview-colorswatch");
@@ -185,7 +202,7 @@ var openColorPickerAndSelectColor = async function(view, ruleIndex,
 
   await simulateColorPickerChange(view, cPicker, newRgba, expectedChange);
 
-  return {propEditor, swatch, cPicker};
+  return { propEditor, swatch, cPicker };
 };
 
 /**
@@ -209,8 +226,13 @@ var openColorPickerAndSelectColor = async function(view, ruleIndex,
  *          - {String} value The expected style value
  * The style will be checked like so: getComputedStyle(element)[name] === value
  */
-var openCubicBezierAndChangeCoords = async function(view, ruleIndex,
-    propIndex, coords, expectedChange) {
+var openCubicBezierAndChangeCoords = async function(
+  view,
+  ruleIndex,
+  propIndex,
+  coords,
+  expectedChange
+) {
   const ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
   const propEditor = ruleEditor.rule.textProps[propIndex].editor;
   const swatch = propEditor.valueSpan.querySelector(".ruleview-bezierswatch");
@@ -230,11 +252,11 @@ var openCubicBezierAndChangeCoords = async function(view, ruleIndex,
 
   if (expectedChange) {
     info("Waiting for the style to be applied on the page");
-    const {selector, name, value} = expectedChange;
+    const { selector, name, value } = expectedChange;
     await waitForComputedStyleProperty(selector, null, name, value);
   }
 
-  return {propEditor, swatch, bezierTooltip};
+  return { propEditor, swatch, bezierTooltip };
 };
 
 /**
@@ -258,9 +280,14 @@ var openCubicBezierAndChangeCoords = async function(view, ruleIndex,
  *        property to be blurred. Set to false if you don't want this.
  * @return {TextProperty} The instance of the TextProperty that was added
  */
-var addProperty = async function(view, ruleIndex, name, value,
-                                 commitValueWith = "VK_RETURN",
-                                 blurNewProperty = true) {
+var addProperty = async function(
+  view,
+  ruleIndex,
+  name,
+  value,
+  commitValueWith = "VK_RETURN",
+  blurNewProperty = true
+) {
   info("Adding new property " + name + ":" + value + " to rule " + ruleIndex);
 
   const ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
@@ -278,7 +305,9 @@ var addProperty = async function(view, ruleIndex, name, value,
     // style attribute on the element: first when the name is added with an empty value,
     // and then when the value is added.
     let receivedMutations = 0;
-    view.inspector.walker.on("mutations", function onWalkerMutations(mutations) {
+    view.inspector.walker.on("mutations", function onWalkerMutations(
+      mutations
+    ) {
       receivedMutations += mutations.length;
       if (receivedMutations >= 2) {
         view.inspector.walker.off("mutations", onWalkerMutations);
@@ -298,10 +327,16 @@ var addProperty = async function(view, ruleIndex, name, value,
   const textProps = ruleEditor.rule.textProps;
   const textProp = textProps[textProps.length - 1];
 
-  is(ruleEditor.rule.textProps.length, numOfProps + 1,
-     "A new test property was added");
-  is(editor, inplaceEditor(textProp.editor.valueSpan),
-     "The inplace editor appeared for the value");
+  is(
+    ruleEditor.rule.textProps.length,
+    numOfProps + 1,
+    "A new test property was added"
+  );
+  is(
+    editor,
+    inplaceEditor(textProp.editor.valueSpan),
+    "The inplace editor appeared for the value"
+  );
 
   info("Adding value " + value);
   // Setting the input value schedules a preview to be shown in 10ms which
@@ -315,7 +350,9 @@ var addProperty = async function(view, ruleIndex, name, value,
   EventUtils.synthesizeKey(commitValueWith, {}, view.styleWindow);
   await onValueAdded;
 
-  info("Waiting for DOM mutations in case the property was added to the element style");
+  info(
+    "Waiting for DOM mutations in case the property was added to the element style"
+  );
   await onMutations;
 
   if (blurNewProperty) {
@@ -340,8 +377,12 @@ var addProperty = async function(view, ruleIndex, name, value,
  *        focused. This parameter is true by default, and that causes the new
  *        property to be blurred. Set to false if you don't want this.
  */
-var setProperty = async function(view, textProp, value,
-                                        blurNewProperty = true) {
+var setProperty = async function(
+  view,
+  textProp,
+  value,
+  blurNewProperty = true
+) {
   await focusEditableField(view, textProp.editor.valueSpan);
 
   const onPreview = view.once("ruleview-changed");
@@ -402,8 +443,7 @@ var renameProperty = async function(view, textProp, name) {
  *        focused. This parameter is true by default, and that causes the new
  *        property to be blurred. Set to false if you don't want this.
  */
-var removeProperty = async function(view, textProp,
-                                           blurNewProperty = true) {
+var removeProperty = async function(view, textProp, blurNewProperty = true) {
   await focusEditableField(view, textProp.editor.nameSpan);
 
   const onModifications = view.once("ruleview-changed");
@@ -479,21 +519,31 @@ async function addNewRule(inspector, view) {
  *        The index we expect the rule to have in the rule-view
  * @return a promise that resolves after the rule has been added
  */
-async function addNewRuleAndDismissEditor(inspector, view, expectedSelector,
-                                          expectedIndex) {
+async function addNewRuleAndDismissEditor(
+  inspector,
+  view,
+  expectedSelector,
+  expectedIndex
+) {
   await addNewRule(inspector, view);
 
   info("Getting the new rule at index " + expectedIndex);
   const ruleEditor = getRuleViewRuleEditor(view, expectedIndex);
   const editor = ruleEditor.selectorText.ownerDocument.activeElement;
-  is(editor.value, expectedSelector,
-     "The editor for the new selector has the correct value: " + expectedSelector);
+  is(
+    editor.value,
+    expectedSelector,
+    "The editor for the new selector has the correct value: " + expectedSelector
+  );
 
   info("Pressing escape to leave the editor");
   EventUtils.synthesizeKey("KEY_Escape");
 
-  is(ruleEditor.selectorText.textContent, expectedSelector,
-     "The new selector has the correct text: " + expectedSelector);
+  is(
+    ruleEditor.selectorText.textContent,
+    expectedSelector,
+    "The new selector has the correct text: " + expectedSelector
+  );
 }
 
 /**
@@ -526,7 +576,10 @@ function waitForStyleModification(inspector) {
   return new Promise(function(resolve) {
     function checkForStyleModification(mutations) {
       for (const mutation of mutations) {
-        if (mutation.type === "attributes" && mutation.attributeName === "style") {
+        if (
+          mutation.type === "attributes" &&
+          mutation.attributeName === "style"
+        ) {
           inspector.off("markupmutation", checkForStyleModification);
           resolve();
           return;
@@ -556,7 +609,9 @@ async function clickSelectorIcon(icon, view) {
  */
 async function toggleClassPanelCheckBox(view, name) {
   info(`Clicking on checkbox for class ${name}`);
-  const checkBox = [...view.classPanel.querySelectorAll("[type=checkbox]")].find(box => {
+  const checkBox = [
+    ...view.classPanel.querySelectorAll("[type=checkbox]"),
+  ].find(box => {
     return box.dataset.name === name;
   });
 
@@ -574,14 +629,23 @@ async function toggleClassPanelCheckBox(view, name) {
  */
 function checkClassPanelContent(view, classes) {
   const checkBoxNodeList = view.classPanel.querySelectorAll("[type=checkbox]");
-  is(checkBoxNodeList.length, classes.length,
-     "The panel contains the expected number of checkboxes");
+  is(
+    checkBoxNodeList.length,
+    classes.length,
+    "The panel contains the expected number of checkboxes"
+  );
 
   for (let i = 0; i < classes.length; i++) {
-    is(checkBoxNodeList[i].dataset.name, classes[i].name,
-       `Checkbox ${i} has the right class name`);
-    is(checkBoxNodeList[i].checked, classes[i].state,
-       `Checkbox ${i} has the right state`);
+    is(
+      checkBoxNodeList[i].dataset.name,
+      classes[i].name,
+      `Checkbox ${i} has the right class name`
+    );
+    is(
+      checkBoxNodeList[i].checked,
+      classes[i].state,
+      `Checkbox ${i} has the right state`
+    );
   }
 }
 
@@ -595,7 +659,9 @@ async function openEyedropper(view, swatch) {
   const tooltip = view.tooltips.getTooltip("colorPicker").tooltip;
 
   info("Click on the swatch");
-  const onColorPickerReady = view.tooltips.getTooltip("colorPicker").once("ready");
+  const onColorPickerReady = view.tooltips
+    .getTooltip("colorPicker")
+    .once("ready");
   swatch.click();
   await onColorPickerReady;
 
@@ -665,7 +731,7 @@ function getPropertiesForRuleIndex(view, ruleIndex) {
  */
 async function toggleDeclaration(inspector, view, ruleIndex, declaration) {
   const ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
-  const [[ name, value ]] = Object.entries(declaration);
+  const [[name, value]] = Object.entries(declaration);
 
   let textProp = null;
   for (const currProp of ruleEditor.rule.textProps) {
@@ -698,7 +764,7 @@ async function toggleDeclaration(inspector, view, ruleIndex, declaration) {
  */
 async function checkDeclarationIsInactive(view, ruleIndex, declaration) {
   const declarations = getPropertiesForRuleIndex(view, ruleIndex);
-  const [[ name, value ]] = Object.entries(declaration);
+  const [[name, value]] = Object.entries(declaration);
   const dec = `${name}:${value}`;
   const { used, warning } = declarations.get(dec);
 
@@ -720,7 +786,7 @@ async function checkDeclarationIsInactive(view, ruleIndex, declaration) {
  */
 function checkDeclarationIsActive(view, ruleIndex, declaration) {
   const declarations = getPropertiesForRuleIndex(view, ruleIndex);
-  const [[ name, value ]] = Object.entries(declaration);
+  const [[name, value]] = Object.entries(declaration);
   const dec = `${name}:${value}`;
   const { used, warning } = declarations.get(dec);
 
@@ -741,7 +807,7 @@ function checkDeclarationIsActive(view, ruleIndex, declaration) {
 async function checkInteractiveTooltip(view, ruleIndex, declaration) {
   // Get the declaration
   const declarations = getPropertiesForRuleIndex(view, ruleIndex);
-  const [[ name, value ]] = Object.entries(declaration);
+  const [[name, value]] = Object.entries(declaration);
   const dec = `${name}:${value}`;
   const { icon, data } = declarations.get(dec);
 
@@ -827,7 +893,9 @@ async function runInactiveCSSTests(view, inspector, tests) {
       info("Checking whether declarations are marked as used.");
 
       for (const activeDeclarations of test.activeDeclarations) {
-        for (const [name, value] of Object.entries(activeDeclarations.declarations)) {
+        for (const [name, value] of Object.entries(
+          activeDeclarations.declarations
+        )) {
           checkDeclarationIsActive(view, activeDeclarations.ruleIndex, {
             [name]: value,
           });
@@ -839,9 +907,11 @@ async function runInactiveCSSTests(view, inspector, tests) {
       info("Checking that declarations are unused and have a warning.");
 
       for (const inactiveDeclaration of test.inactiveDeclarations) {
-        await checkDeclarationIsInactive(view,
-                                         inactiveDeclaration.ruleIndex,
-                                         inactiveDeclaration.declaration);
+        await checkDeclarationIsInactive(
+          view,
+          inactiveDeclaration.ruleIndex,
+          inactiveDeclaration.declaration
+        );
       }
     }
   }
@@ -858,5 +928,7 @@ async function runInactiveCSSTests(view, inspector, tests) {
  * @return {HTMLElement}
  */
 function getPseudoClassCheckbox(view, pseudo) {
-  return view.pseudoClassCheckboxes.filter(checkbox => checkbox.value === pseudo)[0];
+  return view.pseudoClassCheckboxes.filter(
+    checkbox => checkbox.value === pseudo
+  )[0];
 }

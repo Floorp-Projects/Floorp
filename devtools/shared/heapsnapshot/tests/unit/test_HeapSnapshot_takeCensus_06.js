@@ -12,27 +12,31 @@ function run_test() {
   const g = newGlobal();
   const dbg = new Debugger(g);
 
-  Pattern({ count: Pattern.NATURAL,
-            bytes: Pattern.NATURAL })
-    .assert(saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "count" } }));
+  Pattern({ count: Pattern.NATURAL, bytes: Pattern.NATURAL }).assert(
+    saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "count" } })
+  );
 
-  let census = saveHeapSnapshotAndTakeCensus(dbg,
-    { breakdown: { by: "count", count: false, bytes: false } });
+  let census = saveHeapSnapshotAndTakeCensus(dbg, {
+    breakdown: { by: "count", count: false, bytes: false },
+  });
   equal("count" in census, false);
   equal("bytes" in census, false);
 
-  census = saveHeapSnapshotAndTakeCensus(dbg,
-    { breakdown: { by: "count", count: true, bytes: false } });
+  census = saveHeapSnapshotAndTakeCensus(dbg, {
+    breakdown: { by: "count", count: true, bytes: false },
+  });
   equal("count" in census, true);
   equal("bytes" in census, false);
 
-  census = saveHeapSnapshotAndTakeCensus(dbg,
-    { breakdown: { by: "count", count: false, bytes: true } });
+  census = saveHeapSnapshotAndTakeCensus(dbg, {
+    breakdown: { by: "count", count: false, bytes: true },
+  });
   equal("count" in census, false);
   equal("bytes" in census, true);
 
-  census = saveHeapSnapshotAndTakeCensus(dbg,
-    { breakdown: { by: "count", count: true, bytes: true } });
+  census = saveHeapSnapshotAndTakeCensus(dbg, {
+    breakdown: { by: "count", count: true, bytes: true },
+  });
   equal("count" in census, true);
   equal("bytes" in census, true);
 
@@ -45,22 +49,24 @@ function run_test() {
     Debugger: { count: Pattern.NATURAL },
     Sandbox: { count: Pattern.NATURAL },
 
-            // The below are all Debugger prototype objects.
+    // The below are all Debugger prototype objects.
     Source: { count: Pattern.NATURAL },
     Environment: { count: Pattern.NATURAL },
     Script: { count: Pattern.NATURAL },
     Memory: { count: Pattern.NATURAL },
     Frame: { count: Pattern.NATURAL },
-  })
-    .assert(saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "objectClass" } }));
+  }).assert(
+    saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "objectClass" } })
+  );
 
   Pattern({
     objects: { count: Pattern.NATURAL },
     scripts: { count: Pattern.NATURAL },
     strings: { count: Pattern.NATURAL },
     other: { count: Pattern.NATURAL },
-  })
-    .assert(saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "coarseType" } }));
+  }).assert(
+    saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "coarseType" } })
+  );
 
   // As for { by: 'objectClass' }, restrict our pattern to the types
   // we predict will stick around for a long time.
@@ -68,8 +74,9 @@ function run_test() {
     JSString: { count: Pattern.NATURAL },
     "js::Shape": { count: Pattern.NATURAL },
     JSObject: { count: Pattern.NATURAL },
-  })
-    .assert(saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "internalType" } }));
+  }).assert(
+    saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "internalType" } })
+  );
 
   // Nested breakdowns.
 
@@ -84,12 +91,11 @@ function run_test() {
     JSString: coarseTypePattern,
     "js::Shape": coarseTypePattern,
     JSObject: coarseTypePattern,
-  })
-    .assert(saveHeapSnapshotAndTakeCensus(dbg, {
-      breakdown: { by: "internalType",
-                   then: { by: "coarseType" },
-      },
-    }));
+  }).assert(
+    saveHeapSnapshotAndTakeCensus(dbg, {
+      breakdown: { by: "internalType", then: { by: "coarseType" } },
+    })
+  );
 
   Pattern({
     Function: { count: Pattern.NATURAL },
@@ -97,22 +103,23 @@ function run_test() {
     Debugger: { count: Pattern.NATURAL },
     Sandbox: { count: Pattern.NATURAL },
     other: coarseTypePattern,
-  })
-    .assert(saveHeapSnapshotAndTakeCensus(dbg, {
+  }).assert(
+    saveHeapSnapshotAndTakeCensus(dbg, {
       breakdown: {
         by: "objectClass",
         then: { by: "count" },
         other: { by: "coarseType" },
       },
-    }));
+    })
+  );
 
   Pattern({
     objects: { count: Pattern.NATURAL, label: "object" },
     scripts: { count: Pattern.NATURAL, label: "scripts" },
     strings: { count: Pattern.NATURAL, label: "strings" },
     other: { count: Pattern.NATURAL, label: "other" },
-  })
-    .assert(saveHeapSnapshotAndTakeCensus(dbg, {
+  }).assert(
+    saveHeapSnapshotAndTakeCensus(dbg, {
       breakdown: {
         by: "coarseType",
         objects: { by: "count", label: "object" },
@@ -120,7 +127,8 @@ function run_test() {
         strings: { by: "count", label: "strings" },
         other: { by: "count", label: "other" },
       },
-    }));
+    })
+  );
 
   do_test_finished();
 }

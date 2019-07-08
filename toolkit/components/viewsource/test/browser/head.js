@@ -2,7 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+var { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 
 /**
@@ -16,11 +18,15 @@ async function waitForViewSourceTab(open) {
   let tabPromise;
 
   tabPromise = new Promise(resolve => {
-    gBrowser.tabContainer.addEventListener("TabOpen", event => {
-      let tab = event.target;
-      sourceLoadedPromise = waitForSourceLoaded(tab);
-      resolve(tab);
-    }, { once: true });
+    gBrowser.tabContainer.addEventListener(
+      "TabOpen",
+      event => {
+        let tab = event.target;
+        sourceLoadedPromise = waitForSourceLoaded(tab);
+        resolve(tab);
+      },
+      { once: true }
+    );
   });
 
   await open();
@@ -49,17 +55,25 @@ function openViewSourceForBrowser(browser) {
  * @returns the new tab which shows the source.
  */
 async function openViewSource() {
-  let contentAreaContextMenuPopup =
-    document.getElementById("contentAreaContextMenu");
-  let popupShownPromise =
-    BrowserTestUtils.waitForEvent(contentAreaContextMenuPopup, "popupshown");
-  await BrowserTestUtils.synthesizeMouseAtCenter("body",
-          { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
+  let contentAreaContextMenuPopup = document.getElementById(
+    "contentAreaContextMenu"
+  );
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    contentAreaContextMenuPopup,
+    "popupshown"
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "body",
+    { type: "contextmenu", button: 2 },
+    gBrowser.selectedBrowser
+  );
   await popupShownPromise;
 
   return waitForViewSourceTab(async () => {
-    let popupHiddenPromise =
-        BrowserTestUtils.waitForEvent(contentAreaContextMenuPopup, "popuphidden");
+    let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+      contentAreaContextMenuPopup,
+      "popuphidden"
+    );
     let item = document.getElementById("context-viewsource");
     EventUtils.synthesizeMouseAtCenter(item, {});
     await popupHiddenPromise;
@@ -76,17 +90,25 @@ async function openViewSource() {
  * @returns the new tab which shows the source.
  */
 async function openViewPartialSource(aCSSSelector) {
-  let contentAreaContextMenuPopup =
-    document.getElementById("contentAreaContextMenu");
-  let popupShownPromise =
-    BrowserTestUtils.waitForEvent(contentAreaContextMenuPopup, "popupshown");
-  await BrowserTestUtils.synthesizeMouseAtCenter(aCSSSelector,
-          { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
+  let contentAreaContextMenuPopup = document.getElementById(
+    "contentAreaContextMenu"
+  );
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    contentAreaContextMenuPopup,
+    "popupshown"
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    aCSSSelector,
+    { type: "contextmenu", button: 2 },
+    gBrowser.selectedBrowser
+  );
   await popupShownPromise;
 
   return waitForViewSourceTab(async () => {
-    let popupHiddenPromise =
-        BrowserTestUtils.waitForEvent(contentAreaContextMenuPopup, "popuphidden");
+    let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+      contentAreaContextMenuPopup,
+      "popuphidden"
+    );
     let item = document.getElementById("context-viewpartialsource-selection");
     EventUtils.synthesizeMouseAtCenter(item, {});
     await popupHiddenPromise;
@@ -101,23 +123,33 @@ async function openViewPartialSource(aCSSSelector) {
  * @returns the new tab which shows the source.
  */
 async function openViewFrameSourceTab(aCSSSelector) {
-  let contentAreaContextMenuPopup =
-    document.getElementById("contentAreaContextMenu");
-  let popupShownPromise =
-    BrowserTestUtils.waitForEvent(contentAreaContextMenuPopup, "popupshown");
-  await BrowserTestUtils.synthesizeMouseAtCenter(aCSSSelector,
-          { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
+  let contentAreaContextMenuPopup = document.getElementById(
+    "contentAreaContextMenu"
+  );
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    contentAreaContextMenuPopup,
+    "popupshown"
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    aCSSSelector,
+    { type: "contextmenu", button: 2 },
+    gBrowser.selectedBrowser
+  );
   await popupShownPromise;
 
   let frameContextMenu = document.getElementById("frame");
-  popupShownPromise =
-    BrowserTestUtils.waitForEvent(frameContextMenu, "popupshown");
+  popupShownPromise = BrowserTestUtils.waitForEvent(
+    frameContextMenu,
+    "popupshown"
+  );
   EventUtils.synthesizeMouseAtCenter(frameContextMenu, {});
   await popupShownPromise;
 
   return waitForViewSourceTab(async () => {
-    let popupHiddenPromise =
-        BrowserTestUtils.waitForEvent(frameContextMenu, "popuphidden");
+    let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+      frameContextMenu,
+      "popuphidden"
+    );
     let item = document.getElementById("context-viewframesource");
     EventUtils.synthesizeMouseAtCenter(item, {});
     await popupHiddenPromise;
@@ -153,10 +185,14 @@ async function openDocumentSelect(aURI, aCSSSelector) {
     gBrowser.removeTab(tab);
   });
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, { selector: aCSSSelector }, async function(arg) {
-    let element = content.document.querySelector(arg.selector);
-    content.getSelection().selectAllChildren(element);
-  });
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    { selector: aCSSSelector },
+    async function(arg) {
+      let element = content.document.querySelector(arg.selector);
+      content.getSelection().selectAllChildren(element);
+    }
+  );
 
   return openViewPartialSource(aCSSSelector);
 }
@@ -178,7 +214,7 @@ async function openDocument(aURI) {
 }
 
 function pushPrefs(...aPrefs) {
-  return SpecialPowers.pushPrefEnv({"set": aPrefs});
+  return SpecialPowers.pushPrefEnv({ set: aPrefs });
 }
 
 function waitForPrefChange(pref) {

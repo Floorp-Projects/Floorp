@@ -16,8 +16,9 @@ function is(a, b, m) {
 function obs() {
   info("adding observer");
 
-  this.os = Cc["@mozilla.org/observer-service;1"]
-              .getService(Ci.nsIObserverService);
+  this.os = Cc["@mozilla.org/observer-service;1"].getService(
+    Ci.nsIObserverService
+  );
   this.os.addObserver(this, "http-on-modify-request");
 }
 
@@ -35,21 +36,26 @@ obs.prototype = {
       channel.visitRequestHeaders({
         visitHeader(aHeader, aValue) {
           info(aHeader + ": " + aValue);
-        }});
+        },
+      });
     } catch (err) {
       ok(false, "catch error " + err);
     }
 
     // Ignore notifications we don't care about (like favicons)
-    if (!channel.URI.spec.includes(
-          "http://example.org/tests/netwerk/test/mochitests/")) {
+    if (
+      !channel.URI.spec.includes(
+        "http://example.org/tests/netwerk/test/mochitests/"
+      )
+    ) {
       info("ignoring this one");
       return;
     }
 
-    sendAsyncMessage("observer:gotCookie",
-                     { cookie: channel.getRequestHeader("Cookie"),
-                       uri: channel.URI.spec });
+    sendAsyncMessage("observer:gotCookie", {
+      cookie: channel.getRequestHeader("Cookie"),
+      uri: channel.URI.spec,
+    });
   },
 
   remove() {
@@ -57,15 +63,27 @@ obs.prototype = {
 
     this.os.removeObserver(this, "http-on-modify-request");
     this.os = null;
-  }
-}
+  },
+};
 
 function getCookieCount(cs) {
   let count = 0;
   for (let cookie of cs.enumerator) {
     info("cookie: " + cookie);
-    info("cookie host " + cookie.host + " path " + cookie.path + " name " + cookie.name +
-         " value " + cookie.value + " isSecure " + cookie.isSecure + " expires " + cookie.expires);
+    info(
+      "cookie host " +
+        cookie.host +
+        " path " +
+        cookie.path +
+        " name " +
+        cookie.name +
+        " value " +
+        cookie.value +
+        " isSecure " +
+        cookie.isSecure +
+        " expires " +
+        cookie.expires
+    );
     ++count;
   }
 
@@ -73,8 +91,7 @@ function getCookieCount(cs) {
 }
 
 addMessageListener("init", ({ domain }) => {
-  let cs = Cc["@mozilla.org/cookiemanager;1"]
-             .getService(Ci.nsICookieManager);
+  let cs = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
 
   info("we are going to remove these cookies");
 
@@ -82,17 +99,30 @@ addMessageListener("init", ({ domain }) => {
   info(count + " cookies");
 
   cs.removeAll();
-  cs.add(domain, "", "oh", "hai", false, false, true, Math.pow(2, 62), {},
-         Ci.nsICookie.SAMESITE_NONE);
-  is(cs.countCookiesFromHost(domain), 1, "number of cookies for domain " + domain);
+  cs.add(
+    domain,
+    "",
+    "oh",
+    "hai",
+    false,
+    false,
+    true,
+    Math.pow(2, 62),
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
+  is(
+    cs.countCookiesFromHost(domain),
+    1,
+    "number of cookies for domain " + domain
+  );
 
   gObs = new obs();
   sendAsyncMessage("init:return");
 });
 
 addMessageListener("getCookieCount", () => {
-  let cs = Cc["@mozilla.org/cookiemanager;1"]
-             .getService(Ci.nsICookieManager);
+  let cs = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   let count = getCookieCount(cs);
 
   cs.removeAll();
@@ -102,8 +132,7 @@ addMessageListener("getCookieCount", () => {
 addMessageListener("shutdown", () => {
   gObs.remove();
 
-  let cs = Cc["@mozilla.org/cookiemanager;1"]
-             .getService(Ci.nsICookieManager);
+  let cs = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   cs.removeAll();
   sendAsyncMessage("shutdown:return");
 });

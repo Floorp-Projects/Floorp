@@ -6,39 +6,51 @@
 
 ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
 
-const VIDEO_PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_empty.html";
+const VIDEO_PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_empty.html";
 
 function setTestingPreferences(defaultSetting) {
   info(`set default autoplay setting to '${defaultSetting}'`);
-  let defaultValue = defaultSetting == "blocked" ?
-    SpecialPowers.Ci.nsIAutoplay.BLOCKED : SpecialPowers.Ci.nsIAutoplay.ALLOWED;
-  return SpecialPowers.pushPrefEnv({"set": [
-    ["media.autoplay.default", defaultValue],
-    ["media.autoplay.enabled.user-gestures-needed", true],
-    ["media.autoplay.block-event.enabled", true],
-  ]});
+  let defaultValue =
+    defaultSetting == "blocked"
+      ? SpecialPowers.Ci.nsIAutoplay.BLOCKED
+      : SpecialPowers.Ci.nsIAutoplay.ALLOWED;
+  return SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.autoplay.default", defaultValue],
+      ["media.autoplay.enabled.user-gestures-needed", true],
+      ["media.autoplay.block-event.enabled", true],
+    ],
+  });
 }
 
 async function testAutoplayExistingPermission(args) {
   info("- Starting '" + args.name + "' -");
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: VIDEO_PAGE,
-  }, async (browser) => {
-    let promptShowing = () =>
-    PopupNotifications.getNotification("autoplay-media", browser);
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: VIDEO_PAGE,
+    },
+    async browser => {
+      let promptShowing = () =>
+        PopupNotifications.getNotification("autoplay-media", browser);
 
-    SitePermissions.set(browser.currentURI, "autoplay-media", args.permission);
-    ok(!promptShowing(), "Should not be showing permission prompt yet");
+      SitePermissions.set(
+        browser.currentURI,
+        "autoplay-media",
+        args.permission
+      );
+      ok(!promptShowing(), "Should not be showing permission prompt yet");
 
-    await loadAutoplayVideo(browser, args);
-    await checkVideoDidPlay(browser, args);
+      await loadAutoplayVideo(browser, args);
+      await checkVideoDidPlay(browser, args);
 
-    // Reset permission.
-    SitePermissions.remove(browser.currentURI, "autoplay-media");
+      // Reset permission.
+      SitePermissions.remove(browser.currentURI, "autoplay-media");
 
-    info("- Finished '" + args.name + "' -");
-  });
+      info("- Finished '" + args.name + "' -");
+    }
+  );
 }
 
 async function testAutoplayExistingPermissionAgainstDefaultSetting(args) {
@@ -83,14 +95,16 @@ add_task(async () => {
  */
 add_task(async () => {
   await testAutoplayExistingPermissionAgainstDefaultSetting({
-    name: "Site has prexisting allow permission but default setting is 'blocked'",
+    name:
+      "Site has prexisting allow permission but default setting is 'blocked'",
     permission: SitePermissions.ALLOW,
     defaultSetting: "blocked",
     shouldPlay: true,
     mode: "autoplay attribute",
   });
   await testAutoplayExistingPermissionAgainstDefaultSetting({
-    name: "Site has prexisting block permission but default setting is 'allowed'",
+    name:
+      "Site has prexisting block permission but default setting is 'allowed'",
     permission: SitePermissions.BLOCK,
     defaultSetting: "allowed",
     shouldPlay: false,

@@ -5,8 +5,10 @@
 // replace the current database.
 
 add_task(async function() {
-  await test_database_replacement("../migration/places_v43.sqlite",
-                                  "places.sqlite",
-                                  false,
-                                  PlacesUtils.history.DATABASE_STATUS_CORRUPT);
+  await test_database_replacement(
+    "../migration/places_v43.sqlite",
+    "places.sqlite",
+    false,
+    PlacesUtils.history.DATABASE_STATUS_CORRUPT
+  );
 });

@@ -18,7 +18,10 @@ add_task(async function test() {
   BrowserTestUtils.removeTab(tab);
 
   ok(gotTabClose, "should have got the TabClose event");
-  ok(!gotTabAttrModified, "shouldn't have got the TabAttrModified event after TabClose");
+  ok(
+    !gotTabAttrModified,
+    "shouldn't have got the TabAttrModified event after TabClose"
+  );
 
   tab.removeEventListener("TabClose", onTabClose);
   tab.removeEventListener("TabAttrModified", onTabAttrModified);

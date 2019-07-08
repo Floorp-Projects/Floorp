@@ -1,5 +1,5 @@
 function ok(a, msg) {
-  postMessage({type: "check", status: !!a, msg });
+  postMessage({ type: "check", status: !!a, msg });
 }
 
 function is(a, b, msg) {
@@ -7,23 +7,24 @@ function is(a, b, msg) {
 }
 
 function finish(a, msg) {
-  postMessage({type: "finish" });
+  postMessage({ type: "finish" });
 }
 
 function check(resource, initiatorType, protocol) {
   let entries = performance.getEntries();
   ok(entries.length == 1, "We have an entry");
 
-  ok(entries[0] instanceof PerformanceEntry,
-     "The entry is a PerformanceEntry");
+  ok(entries[0] instanceof PerformanceEntry, "The entry is a PerformanceEntry");
   ok(entries[0].name.endsWith(resource), "The entry has been found!");
 
   is(entries[0].entryType, "resource", "Correct EntryType");
   ok(entries[0].startTime > 0, "We have a startTime");
   ok(entries[0].duration > 0, "We have a duration");
 
-  ok(entries[0] instanceof PerformanceResourceTiming,
-     "The entry is a PerformanceResourceTiming");
+  ok(
+    entries[0] instanceof PerformanceResourceTiming,
+    "The entry is a PerformanceResourceTiming"
+  );
 
   is(entries[0].initiatorType, initiatorType, "Correct initiatorType");
   is(entries[0].nextHopProtocol, protocol, "Correct protocol");
@@ -39,11 +40,11 @@ function simple_checks() {
 
 function fetch_request() {
   fetch("test_worker_performance_entries.sjs")
-  .then(r => r.blob())
-  .then(blob => {
-    check("test_worker_performance_entries.sjs", "fetch", "http/1.1");
-  })
-  .then(next);
+    .then(r => r.blob())
+    .then(blob => {
+      check("test_worker_performance_entries.sjs", "fetch", "http/1.1");
+    })
+    .then(next);
 }
 
 function xhr_request() {
@@ -53,7 +54,7 @@ function xhr_request() {
   xhr.onload = () => {
     check("test_worker_performance_entries.sjs", "xmlhttprequest", "http/1.1");
     next();
-  }
+  };
 }
 
 function sync_xhr_request() {
@@ -72,12 +73,16 @@ function import_script() {
 
 function redirect() {
   fetch("test_worker_performance_entries.sjs?redirect")
-  .then(r => r.text())
-  .then(text => {
-    is(text, "Hello world \\o/", "The redirect worked correctly");
-    check("test_worker_performance_entries.sjs?redirect", "fetch", "http/1.1");
-  })
-  .then(next);
+    .then(r => r.text())
+    .then(text => {
+      is(text, "Hello world \\o/", "The redirect worked correctly");
+      check(
+        "test_worker_performance_entries.sjs?redirect",
+        "fetch",
+        "http/1.1"
+      );
+    })
+    .then(next);
 }
 
 let tests = [

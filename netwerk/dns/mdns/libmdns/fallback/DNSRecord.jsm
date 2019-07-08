@@ -8,22 +8,26 @@
 
 var EXPORTED_SYMBOLS = ["DNSRecord"];
 
-const {DataWriter} = ChromeUtils.import("resource://gre/modules/DataWriter.jsm");
-const {DNS_CLASS_CODES, DNS_RECORD_TYPES} = ChromeUtils.import("resource://gre/modules/DNSTypes.jsm");
+const { DataWriter } = ChromeUtils.import(
+  "resource://gre/modules/DataWriter.jsm"
+);
+const { DNS_CLASS_CODES, DNS_RECORD_TYPES } = ChromeUtils.import(
+  "resource://gre/modules/DNSTypes.jsm"
+);
 
 class DNSRecord {
   constructor(properties = {}) {
-    this.name       = properties.name || "";
+    this.name = properties.name || "";
     this.recordType = properties.recordType || DNS_RECORD_TYPES.ANY;
-    this.classCode  = properties.classCode || DNS_CLASS_CODES.IN;
+    this.classCode = properties.classCode || DNS_CLASS_CODES.IN;
     this.cacheFlush = properties.cacheFlush || false;
   }
 
   static parseFromPacketReader(reader) {
-    let name       = reader.getLabel();
+    let name = reader.getLabel();
     let recordType = reader.getValue(2);
-    let classCode  = reader.getValue(2);
-    let cacheFlush = !!((classCode & 0x8000));
+    let classCode = reader.getValue(2);
+    let cacheFlush = !!(classCode & 0x8000);
     classCode &= 0xff;
 
     return new this({

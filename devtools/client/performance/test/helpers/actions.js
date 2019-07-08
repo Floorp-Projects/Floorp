@@ -3,8 +3,13 @@
 "use strict";
 
 const { Constants } = require("devtools/client/performance/modules/constants");
-const { once, times } = require("devtools/client/performance/test/helpers/event-utils");
-const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
+const {
+  once,
+  times,
+} = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  waitUntil,
+} = require("devtools/client/performance/test/helpers/wait-utils");
 
 /**
  * Starts a manual recording in the given performance tool panel and
@@ -36,7 +41,8 @@ exports.stopRecording = function(panel, options = {}) {
  * Waits for all the necessary events to be emitted after a recording starts.
  */
 exports.waitForRecordingStartedEvents = function(panel, options = {}) {
-  options.expectedViewState = options.expectedViewState || /^(console-)?recording$/;
+  options.expectedViewState =
+    options.expectedViewState || /^(console-)?recording$/;
 
   const EVENTS = panel.panelWin.EVENTS;
   const controller = panel.panelWin.PerformanceController;
@@ -50,18 +56,18 @@ exports.waitForRecordingStartedEvents = function(panel, options = {}) {
     options.skipWaitingForRecordingStarted
       ? null
       : once(controller, EVENTS.RECORDING_STATE_CHANGE, {
-        expectedArgs: ["recording-started"],
-      }),
+          expectedArgs: ["recording-started"],
+        }),
     options.skipWaitingForViewState
       ? null
       : once(view, EVENTS.UI_STATE_CHANGED, {
-        expectedArgs: [options.expectedViewState],
-      }),
+          expectedArgs: [options.expectedViewState],
+        }),
     options.skipWaitingForOverview
       ? null
       : once(overview, EVENTS.UI_OVERVIEW_RENDERED, {
-        expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL],
-      }),
+          expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL],
+        }),
   ]);
 };
 
@@ -70,7 +76,8 @@ exports.waitForRecordingStartedEvents = function(panel, options = {}) {
  */
 exports.waitForRecordingStoppedEvents = function(panel, options = {}) {
   options.expectedViewClass = options.expectedViewClass || "WaterfallView";
-  options.expectedViewEvent = options.expectedViewEvent || "UI_WATERFALL_RENDERED";
+  options.expectedViewEvent =
+    options.expectedViewEvent || "UI_WATERFALL_RENDERED";
   options.expectedViewState = options.expectedViewState || "recorded";
 
   const EVENTS = panel.panelWin.EVENTS;
@@ -86,23 +93,23 @@ exports.waitForRecordingStoppedEvents = function(panel, options = {}) {
     options.skipWaitingForRecordingStop
       ? null
       : once(controller, EVENTS.RECORDING_STATE_CHANGE, {
-        expectedArgs: ["recording-stopping"],
-      }),
+          expectedArgs: ["recording-stopping"],
+        }),
     options.skipWaitingForRecordingStop
       ? null
       : once(controller, EVENTS.RECORDING_STATE_CHANGE, {
-        expectedArgs: ["recording-stopped"],
-      }),
+          expectedArgs: ["recording-stopped"],
+        }),
     options.skipWaitingForViewState
       ? null
       : once(view, EVENTS.UI_STATE_CHANGED, {
-        expectedArgs: [options.expectedViewState],
-      }),
+          expectedArgs: [options.expectedViewState],
+        }),
     options.skipWaitingForOverview
       ? null
       : once(overview, EVENTS.UI_OVERVIEW_RENDERED, {
-        expectedArgs: [Constants.FRAMERATE_GRAPH_HIGH_RES_INTERVAL],
-      }),
+          expectedArgs: [Constants.FRAMERATE_GRAPH_HIGH_RES_INTERVAL],
+        }),
     options.skipWaitingForSubview
       ? null
       : once(subview, EVENTS[options.expectedViewEvent]),
@@ -112,7 +119,7 @@ exports.waitForRecordingStoppedEvents = function(panel, options = {}) {
 /**
  * Waits for rendering to happen once on all the performance tool's widgets.
  */
-exports.waitForAllWidgetsRendered = (panel) => {
+exports.waitForAllWidgetsRendered = panel => {
   const { panelWin } = panel;
   const { EVENTS } = panelWin;
 
@@ -133,15 +140,21 @@ exports.waitForAllWidgetsRendered = (panel) => {
  * Waits for rendering to happen on the performance tool's overview graph,
  * making sure some markers were also rendered.
  */
-exports.waitForOverviewRenderedWithMarkers = (panel, minTimes = 3, minMarkers = 1) => {
+exports.waitForOverviewRenderedWithMarkers = (
+  panel,
+  minTimes = 3,
+  minMarkers = 1
+) => {
   const { EVENTS, OverviewView, PerformanceController } = panel.panelWin;
 
   return Promise.all([
     times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, minTimes, {
       expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL],
     }),
-    waitUntil(() =>
-      PerformanceController.getCurrentRecording().getMarkers().length >= minMarkers
+    waitUntil(
+      () =>
+        PerformanceController.getCurrentRecording().getMarkers().length >=
+        minMarkers
     ),
   ]);
 };
@@ -149,7 +162,7 @@ exports.waitForOverviewRenderedWithMarkers = (panel, minTimes = 3, minMarkers = 
 /**
  * Reloads the given tab target.
  */
-exports.reload = (target) => {
+exports.reload = target => {
   target.reload();
   return once(target, "navigate");
 };

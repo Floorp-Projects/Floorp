@@ -40,20 +40,33 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
     is(dragZoom.zoom, 0, "Zooming starts at 0");
     is(dragZoom.smoothZoom, 0, "Smoothed zooming starts at 0");
     is(rafMock.timesCalled, 0, "No RAFs have been queued");
-    is(style.transform, "translate(0px) scale(1)",
-       "No transforms have been done.");
+    is(
+      style.transform,
+      "translate(0px) scale(1)",
+      "No transforms have been done."
+    );
 
-    canvases.container.dispatchEvent(new WheelEvent("wheel", {
-      deltaY: -PIXEL_DELTA,
-      deltaMode: PIXEL_SCROLL_MODE,
-    }));
+    canvases.container.dispatchEvent(
+      new WheelEvent("wheel", {
+        deltaY: -PIXEL_DELTA,
+        deltaMode: PIXEL_SCROLL_MODE,
+      })
+    );
 
-    is(style.transform, "translate(0px) scale(1.05)",
-       "The div has been slightly scaled.");
-    is(dragZoom.zoom, PIXEL_DELTA * dragZoom.ZOOM_SPEED,
-      "The zoom was increased");
-    ok(floatEquality(dragZoom.smoothZoom, 0.05),
-      "The smooth zoom is between the initial value and the target");
+    is(
+      style.transform,
+      "translate(0px) scale(1.05)",
+      "The div has been slightly scaled."
+    );
+    is(
+      dragZoom.zoom,
+      PIXEL_DELTA * dragZoom.ZOOM_SPEED,
+      "The zoom was increased"
+    );
+    ok(
+      floatEquality(dragZoom.smoothZoom, 0.05),
+      "The smooth zoom is between the initial value and the target"
+    );
     is(rafMock.timesCalled, 1, "A RAF has been queued");
   }
 
@@ -68,41 +81,59 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
       lastCallCount = rafMock.timesCalled;
       rafMock.nextFrame();
     }
-    is(style.transform, "translate(0px) scale(1.1)",
-       "The scale has been fully applied");
-    is(dragZoom.zoom, dragZoom.smoothZoom,
-      "The smooth and target zoom values match");
-    isnot(MAX_RAF_LOOP, i,
-      "The RAF loop correctly stopped");
+    is(
+      style.transform,
+      "translate(0px) scale(1.1)",
+      "The scale has been fully applied"
+    );
+    is(
+      dragZoom.zoom,
+      dragZoom.smoothZoom,
+      "The smooth and target zoom values match"
+    );
+    isnot(MAX_RAF_LOOP, i, "The RAF loop correctly stopped");
   }
 
   info("Dragging correctly translates the div");
   {
-    div.dispatchEvent(new MouseEvent("mousemove", {
-      clientX: 10,
-      clientY: 10,
-    }));
+    div.dispatchEvent(
+      new MouseEvent("mousemove", {
+        clientX: 10,
+        clientY: 10,
+      })
+    );
     div.dispatchEvent(new MouseEvent("mousedown"));
-    div.dispatchEvent(new MouseEvent("mousemove", {
-      clientX: 20,
-      clientY: 20,
-    }));
+    div.dispatchEvent(
+      new MouseEvent("mousemove", {
+        clientX: 20,
+        clientY: 20,
+      })
+    );
     div.dispatchEvent(new MouseEvent("mouseup"));
 
-    is(style.transform, "translate(2.5px, 5px) scale(1.1)",
-      "The style is correctly translated");
-    ok(floatEquality(dragZoom.translateX, 5),
-      "Translate X moved by some pixel amount");
-    ok(floatEquality(dragZoom.translateY, 10),
-      "Translate Y moved by some pixel amount");
+    is(
+      style.transform,
+      "translate(2.5px, 5px) scale(1.1)",
+      "The style is correctly translated"
+    );
+    ok(
+      floatEquality(dragZoom.translateX, 5),
+      "Translate X moved by some pixel amount"
+    );
+    ok(
+      floatEquality(dragZoom.translateY, 10),
+      "Translate Y moved by some pixel amount"
+    );
   }
 
   info("Zooming centers around the mouse");
   {
-    canvases.container.dispatchEvent(new WheelEvent("wheel", {
-      deltaY: -PIXEL_DELTA,
-      deltaMode: PIXEL_SCROLL_MODE,
-    }));
+    canvases.container.dispatchEvent(
+      new WheelEvent("wheel", {
+        deltaY: -PIXEL_DELTA,
+        deltaMode: PIXEL_SCROLL_MODE,
+      })
+    );
     // Run through the RAF loop to zoom in towards that value.
     let lastCallCount;
     for (let i = 0; i < MAX_RAF_LOOP; i++) {
@@ -112,12 +143,19 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
       lastCallCount = rafMock.timesCalled;
       rafMock.nextFrame();
     }
-    is(style.transform, "translate(8.18182px, 18.1818px) scale(1.2)",
-       "Zooming affects the translation to keep the mouse centered");
-    ok(floatEquality(dragZoom.translateX, 8.181818181818185),
-       "Translate X was affected by the mouse position");
-    ok(floatEquality(dragZoom.translateY, 18.18181818181817),
-       "Translate Y was affected by the mouse position");
+    is(
+      style.transform,
+      "translate(8.18182px, 18.1818px) scale(1.2)",
+      "Zooming affects the translation to keep the mouse centered"
+    );
+    ok(
+      floatEquality(dragZoom.translateX, 8.181818181818185),
+      "Translate X was affected by the mouse position"
+    );
+    ok(
+      floatEquality(dragZoom.translateY, 18.18181818181817),
+      "Translate Y was affected by the mouse position"
+    );
     is(dragZoom.zoom, 0.2, "Zooming starts at 0");
   }
 
@@ -128,15 +166,19 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
     const previousZoom = dragZoom.zoom;
     const previousSmoothZoom = dragZoom.smoothZoom;
 
-    canvases.container.dispatchEvent(new WheelEvent("wheel", {
-      deltaY: -PIXEL_DELTA,
-      deltaMode: PIXEL_SCROLL_MODE,
-    }));
+    canvases.container.dispatchEvent(
+      new WheelEvent("wheel", {
+        deltaY: -PIXEL_DELTA,
+        deltaMode: PIXEL_SCROLL_MODE,
+      })
+    );
 
-    is(dragZoom.zoom, previousZoom,
-      "The zoom stayed the same");
-    is(dragZoom.smoothZoom, previousSmoothZoom,
-      "The smooth zoom stayed the same");
+    is(dragZoom.zoom, previousZoom, "The zoom stayed the same");
+    is(
+      dragZoom.smoothZoom,
+      previousSmoothZoom,
+      "The smooth zoom stayed the same"
+    );
   }
 
   info("Translation isn't tracked after destruction");
@@ -150,10 +192,8 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
       clientY: 40,
     });
     div.dispatchEvent(new MouseEvent("mouseup"));
-    is(dragZoom.translateX, initialX,
-      "The translationX didn't change");
-    is(dragZoom.translateY, initialY,
-      "The translationY didn't change");
+    is(dragZoom.translateX, initialX, "The translationX didn't change");
+    is(dragZoom.translateY, initialY, "The translationY didn't change");
   }
   panelDoc.body.removeChild(div);
 });

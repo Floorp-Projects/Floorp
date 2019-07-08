@@ -4,19 +4,24 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const SidebarToggle = createFactory(require("devtools/client/shared/components/SidebarToggle"));
-const Tabs = createFactory(require("devtools/client/shared/components/tabs/Tabs").Tabs);
+const SidebarToggle = createFactory(
+  require("devtools/client/shared/components/SidebarToggle")
+);
+const Tabs = createFactory(
+  require("devtools/client/shared/components/tabs/Tabs").Tabs
+);
 
 class Sidebar extends PureComponent {
   static get propTypes() {
     return {
-      children: PropTypes.oneOfType([
-        PropTypes.array,
-        PropTypes.element,
-      ]).isRequired,
+      children: PropTypes.oneOfType([PropTypes.array, PropTypes.element])
+        .isRequired,
       onAfterChange: PropTypes.func,
       onAllTabsMenuClick: PropTypes.func,
       renderOnlySelected: PropTypes.bool,
@@ -48,14 +53,12 @@ class Sidebar extends PureComponent {
       onClick,
     } = this.props.sidebarToggleButton;
 
-    return (
-      SidebarToggle({
-        collapsed,
-        collapsePaneTitle,
-        expandPaneTitle,
-        onClick,
-      })
-    );
+    return SidebarToggle({
+      collapsed,
+      collapsePaneTitle,
+      expandPaneTitle,
+      onClick,
+    });
   }
 
   render() {
@@ -69,8 +72,8 @@ class Sidebar extends PureComponent {
       activeTab,
     } = this.props;
 
-    return (
-      Tabs({
+    return Tabs(
+      {
         onAfterChange,
         onAllTabsMenuClick,
         renderOnlySelected,
@@ -78,8 +81,7 @@ class Sidebar extends PureComponent {
         showAllTabsMenu,
         activeTab,
       },
-        children
-      )
+      children
     );
   }
 }

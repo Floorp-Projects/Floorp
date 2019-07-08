@@ -3,7 +3,9 @@
  */
 "use strict";
 
-const { L10nRegistry } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
+const { L10nRegistry } = ChromeUtils.import(
+  "resource://gre/modules/L10nRegistry.jsm"
+);
 
 const ID = "langpack-und@test.mozilla.org";
 
@@ -14,36 +16,38 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "58");
 
 const ADDONS = {
   langpack_1: {
-    "browser/localization/und/browser.ftl": "message-browser = Value from Browser\n",
+    "browser/localization/und/browser.ftl":
+      "message-browser = Value from Browser\n",
     "localization/und/toolkit_test.ftl": "message-id1 = Value 1\n",
-    "chrome/und/locale/und/global/test.properties": "message = Value from .properties\n",
+    "chrome/und/locale/und/global/test.properties":
+      "message = Value from .properties\n",
     "manifest.json": {
-      "name": "und Language Pack",
-      "version": "1",
-      "manifest_version": 2,
-      "applications": {
-        "gecko": {
-          "id": "langpack-und@test.mozilla.org",
-          "strict_min_version": "58.0",
-          "strict_max_version": "58.*",
+      name: "und Language Pack",
+      version: "1",
+      manifest_version: 2,
+      applications: {
+        gecko: {
+          id: "langpack-und@test.mozilla.org",
+          strict_min_version: "58.0",
+          strict_max_version: "58.*",
         },
       },
-      "sources": {
-        "browser": {
-          "base_path": "browser/",
+      sources: {
+        browser: {
+          base_path: "browser/",
         },
       },
-      "langpack_id": "und",
-      "languages": {
-        "und": {
-          "chrome_resources": {
-            "global": "chrome/und/locale/und/global/",
+      langpack_id: "und",
+      languages: {
+        und: {
+          chrome_resources: {
+            global: "chrome/und/locale/und/global/",
           },
-          "version": "20171001190118",
+          version: "20171001190118",
         },
       },
-      "author": "Mozilla Localization Task Force",
-      "description": "Language pack for Testy for und",
+      author: "Mozilla Localization Task Force",
+      description: "Language pack for Testy for und",
     },
   },
 };
@@ -74,7 +78,7 @@ add_task(async function() {
   equal(L10nRegistry.getAvailableLocales().includes("und"), false);
   equal(Services.locale.availableLocales.includes("und"), false);
 
-  let [, {addon}] = await Promise.all([
+  let [, { addon }] = await Promise.all([
     promiseLangpackStartup(),
     AddonTestUtils.promiseInstallXPI(ADDONS.langpack_1),
   ]);
@@ -91,10 +95,7 @@ add_task(async function() {
 
   // This quirky code here allows us to handle a scenario where enabling the
   // addon is synchronous or asynchronous.
-  await Promise.all([
-    promiseLangpackStartup(),
-    addon.enable(),
-  ]);
+  await Promise.all([promiseLangpackStartup(), addon.enable()]);
 
   // After re-enabling it, the `und` locale is available again.
   equal(L10nRegistry.getAvailableLocales().includes("und"), true);
@@ -112,7 +113,7 @@ add_task(async function() {
  * correct strings available in the language pack.
  */
 add_task(async function() {
-  let [, {addon}] = await Promise.all([
+  let [, { addon }] = await Promise.all([
     promiseLangpackStartup(),
     AddonTestUtils.promiseInstallXPI(ADDONS.langpack_1),
   ]);
@@ -150,7 +151,7 @@ add_task(async function() {
 });
 
 add_task(async function test_amazing_disappearing_langpacks() {
-  let check = (yes) => {
+  let check = yes => {
     equal(L10nRegistry.getAvailableLocales().includes("und"), yes);
     equal(Services.locale.availableLocales.includes("und"), yes);
   };
@@ -170,8 +171,7 @@ add_task(async function test_amazing_disappearing_langpacks() {
 
   check(false);
 
-  await AddonTestUtils.manuallyUninstall(AddonTestUtils.profileExtensions,
-                                        ID);
+  await AddonTestUtils.manuallyUninstall(AddonTestUtils.profileExtensions, ID);
 
   await promiseStartupManager();
 
@@ -183,7 +183,7 @@ add_task(async function test_amazing_disappearing_langpacks() {
  * gets upgraded.
  */
 add_task(async function() {
-  let [, {addon}] = await Promise.all([
+  let [, { addon }] = await Promise.all([
     promiseLangpackStartup(),
     AddonTestUtils.promiseInstallXPI(ADDONS.langpack_1),
   ]);

@@ -20,7 +20,9 @@ const {
 } = require("devtools/client/webconsole/constants");
 
 // Test fakes.
-const { stubPreparedMessages } = require("devtools/client/webconsole/test/fixtures/stubs/index");
+const {
+  stubPreparedMessages,
+} = require("devtools/client/webconsole/test/fixtures/stubs/index");
 const serviceContainer = require("devtools/client/webconsole/test/fixtures/serviceContainer");
 
 describe("CSSWarning component:", () => {
@@ -28,17 +30,24 @@ describe("CSSWarning component:", () => {
     const message = stubPreparedMessages.get(
       "Unknown property ‘such-unknown-property’.  Declaration dropped."
     );
-    const wrapper = render(CSSWarning({
-      message,
-      serviceContainer,
-      timestampsVisible: true,
-    }));
-    const { timestampString } = require("devtools/client/webconsole/webconsole-l10n");
+    const wrapper = render(
+      CSSWarning({
+        message,
+        serviceContainer,
+        timestampsVisible: true,
+      })
+    );
+    const {
+      timestampString,
+    } = require("devtools/client/webconsole/webconsole-l10n");
 
-    expect(wrapper.find(".timestamp").text()).toBe(timestampString(message.timeStamp));
+    expect(wrapper.find(".timestamp").text()).toBe(
+      timestampString(message.timeStamp)
+    );
 
-    expect(wrapper.find(".message-body").text())
-      .toBe("Unknown property ‘such-unknown-property’.  Declaration dropped.");
+    expect(wrapper.find(".message-body").text()).toBe(
+      "Unknown property ‘such-unknown-property’.  Declaration dropped."
+    );
 
     // There shouldn't be a matched elements label rendered by default.
     const elementLabel = wrapper.find(`.elements-label`);
@@ -57,14 +66,17 @@ describe("CSSWarning component:", () => {
       "Unknown property ‘such-unknown-property’.  Declaration dropped."
     );
 
-    const wrapper = mount(Provider({store},
-      CSSWarning({
-        message,
-        open: true,
-        dispatch: store.dispatch,
-        serviceContainer,
-      })
-    ));
+    const wrapper = mount(
+      Provider(
+        { store },
+        CSSWarning({
+          message,
+          open: true,
+          dispatch: store.dispatch,
+          serviceContainer,
+        })
+      )
+    );
 
     wrapper.find(".collapse-button[aria-expanded='true']").simulate("click");
 
@@ -82,15 +94,18 @@ describe("CSSWarning component:", () => {
       "Unknown property ‘such-unknown-property’.  Declaration dropped."
     );
 
-    const wrapper = mount(Provider({store},
-      CSSWarning({
-        message,
-        open: false,
-        payload: {}, // fake the existence of a payload to test just MESSAGE_OPEN action
-        dispatch: store.dispatch,
-        serviceContainer,
-      })
-    ));
+    const wrapper = mount(
+      Provider(
+        { store },
+        CSSWarning({
+          message,
+          open: false,
+          payload: {}, // fake the existence of a payload to test just MESSAGE_OPEN action
+          dispatch: store.dispatch,
+          serviceContainer,
+        })
+      )
+    );
 
     wrapper.find(".collapse-button[aria-expanded='false']").simulate("click");
 

@@ -11,7 +11,7 @@
  *
  */
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort + "/content";
@@ -20,36 +20,35 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 var httpServer = null;
 
 function make_channel(url) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
 const responseContent = "response body";
 // We need a large content in order to make sure that the IPDL stream is cut
 // into several different chunks.
 // We fill each chunk with a different character for easy debugging.
-const altContent = "a".repeat(128*1024) +
-                   "b".repeat(128*1024) +
-                   "c".repeat(128*1024) +
-                   "d".repeat(128*1024) +
-                   "e".repeat(128*1024) +
-                   "f".repeat(128*1024) +
-                   "g".repeat(128*1024) +
-                   "h".repeat(128*1024) +
-                   "i".repeat(13); // Just so the chunk size doesn't match exactly.
+const altContent =
+  "a".repeat(128 * 1024) +
+  "b".repeat(128 * 1024) +
+  "c".repeat(128 * 1024) +
+  "d".repeat(128 * 1024) +
+  "e".repeat(128 * 1024) +
+  "f".repeat(128 * 1024) +
+  "g".repeat(128 * 1024) +
+  "h".repeat(128 * 1024) +
+  "i".repeat(13); // Just so the chunk size doesn't match exactly.
 
 const firstChunkSize = Math.floor(altContent.length / 4);
 const altContentType = "text/binary";
 
-function contentHandler(metadata, response)
-{
+function contentHandler(metadata, response) {
   response.setHeader("Content-Type", "text/plain");
   response.setHeader("Cache-Control", "max-age=86400");
 
   response.bodyOutputStream.write(responseContent, responseContent.length);
 }
 
-function run_test()
-{
+function run_test() {
   do_get_profile();
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/content", contentHandler);
@@ -67,8 +66,7 @@ function run_test()
 // Output stream used to write alt-data to the cache entry.
 var os;
 
-function readServerContent(request, buffer)
-{
+function readServerContent(request, buffer) {
   var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
   Assert.equal(buffer, responseContent);
@@ -83,8 +81,7 @@ function readServerContent(request, buffer)
   });
 }
 
-function openAltChannel()
-{
+function openAltChannel() {
   var chan = make_channel(URL);
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
   cc.preferAlternativeDataType(altContentType, "", true);
@@ -94,7 +91,7 @@ function openAltChannel()
 
 var altDataListener = {
   buffer: "",
-  onStartRequest(request) { },
+  onStartRequest(request) {},
   onDataAvailable(request, stream, offset, count) {
     let string = NetUtil.readInputStreamToString(stream, count);
     this.buffer += string;
@@ -104,7 +101,10 @@ var altDataListener = {
     // data in the first chunk.
     if (this.buffer.length == firstChunkSize) {
       // write the rest of the content
-      os.write(altContent.substring(firstChunkSize, altContent.length), altContent.length - firstChunkSize);
+      os.write(
+        altContent.substring(firstChunkSize, altContent.length),
+        altContent.length - firstChunkSize
+      );
       os.close();
     }
   },
@@ -117,8 +117,7 @@ var altDataListener = {
   },
 };
 
-function openAltChannelWithOriginalContent()
-{
+function openAltChannelWithOriginalContent() {
   var chan = make_channel(URL);
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
   cc.preferAlternativeDataType(altContentType, "", false);
@@ -128,7 +127,7 @@ function openAltChannelWithOriginalContent()
 
 var originalListener = {
   buffer: "",
-  onStartRequest(request) { },
+  onStartRequest(request) {},
   onDataAvailable(request, stream, offset, count) {
     let string = NetUtil.readInputStreamToString(stream, count);
     this.buffer += string;
@@ -142,12 +141,11 @@ var originalListener = {
   },
 };
 
-function testAltDataStream(cc)
-{
+function testAltDataStream(cc) {
   cc.getAltDataInputStream(altContentType, {
     onInputStreamReady(aInputStream) {
       Assert.ok(!!aInputStream);
       httpServer.stop(do_test_finished);
-    }
+    },
   });
 }

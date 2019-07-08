@@ -79,17 +79,20 @@ var FindHelper = {
     try {
       this._finder = this._targetTab.browser.finder;
     } catch (e) {
-      throw new Error("FindHelper: " + e + "\n" +
-        "JS stack: \n" + (e.stack || Components.stack.formattedStack));
+      throw new Error(
+        "FindHelper: " +
+          e +
+          "\n" +
+          "JS stack: \n" +
+          (e.stack || Components.stack.formattedStack)
+      );
     }
 
     this._finder.addResultListener(this);
     this._initialViewport = JSON.stringify(this._targetTab.getViewport());
     this._viewportChanged = false;
 
-    WindowEventDispatcher.registerListener(this, [
-      "Tab:Selected",
-    ]);
+    WindowEventDispatcher.registerListener(this, ["Tab:Selected"]);
   },
 
   /**
@@ -109,9 +112,7 @@ var FindHelper = {
     this._initialViewport = null;
     this._viewportChanged = false;
 
-    WindowEventDispatcher.unregisterListener(this, [
-      "Tab:Selected",
-    ]);
+    WindowEventDispatcher.unregisterListener(this, ["Tab:Selected"]);
   },
 
   /**
@@ -178,9 +179,14 @@ var FindHelper = {
   onMatchesCountResult: function(result) {
     this._result = result;
 
-    GlobalEventDispatcher.sendRequest(Object.assign({
-      type: "FindInPage:MatchesCountResult",
-    }, this._result));
+    GlobalEventDispatcher.sendRequest(
+      Object.assign(
+        {
+          type: "FindInPage:MatchesCountResult",
+        },
+        this._result
+      )
+    );
   },
 
   /**

@@ -151,13 +151,14 @@ var res2 = [
 ];
 
 add_task(async function() {
-  const style = "div { position: absolute; top: 42px; left: 42px; " +
-              "height: 100.111px; width: 100px; border: 10px solid black; " +
-              "padding: 20px; margin: 30px auto;}";
+  const style =
+    "div { position: absolute; top: 42px; left: 42px; " +
+    "height: 100.111px; width: 100px; border: 10px solid black; " +
+    "padding: 20px; margin: 30px auto;}";
   const html = "<style>" + style + "</style><div></div>";
 
   await addTab("data:text/html," + encodeURIComponent(html));
-  const {inspector, boxmodel, testActor} = await openLayoutView();
+  const { inspector, boxmodel, testActor } = await openLayoutView();
   await selectNode("div", inspector);
 
   await testInitialValues(inspector, boxmodel);
@@ -170,8 +171,11 @@ function testInitialValues(inspector, boxmodel) {
 
   for (let i = 0; i < res1.length; i++) {
     const elt = doc.querySelector(res1[i].selector);
-    is(elt.textContent, res1[i].value,
-       res1[i].selector + " has the right value.");
+    is(
+      elt.textContent,
+      res1[i].value,
+      res1[i].selector + " has the right value."
+    );
   }
 }
 
@@ -180,13 +184,19 @@ async function testChangingValues(inspector, boxmodel, testActor) {
   const doc = boxmodel.document;
 
   const onUpdated = waitForUpdate(inspector);
-  await testActor.setAttribute("div", "style",
-                               "height:150px;padding-right:50px;top:50px");
+  await testActor.setAttribute(
+    "div",
+    "style",
+    "height:150px;padding-right:50px;top:50px"
+  );
   await onUpdated;
 
   for (let i = 0; i < res2.length; i++) {
     const elt = doc.querySelector(res2[i].selector);
-    is(elt.textContent, res2[i].value,
-       res2[i].selector + " has the right value after style update.");
+    is(
+      elt.textContent,
+      res2[i].value,
+      res2[i].selector + " has the right value after style update."
+    );
   }
 }

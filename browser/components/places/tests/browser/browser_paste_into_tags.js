@@ -19,7 +19,10 @@ add_task(async function() {
   let ContentTree = organizer.ContentTree;
   ok(ContentTree, "ContentTree is in scope");
 
-  let visits = {uri: MOZURISPEC, transition: PlacesUtils.history.TRANSITION_TYPED};
+  let visits = {
+    uri: MOZURISPEC,
+    transition: PlacesUtils.history.TRANSITION_TYPED,
+  };
   await PlacesTestUtils.addVisits(visits);
 
   // create an initial tag to work with
@@ -60,7 +63,7 @@ add_task(async function() {
 
   // check if a bookmark was created
   let bookmarks = [];
-  await PlacesUtils.bookmarks.fetch({url: MOZURISPEC}, bm => {
+  await PlacesUtils.bookmarks.fetch({ url: MOZURISPEC }, bm => {
     bookmarks.push(bm);
   });
   ok(bookmarks.length > 0, "bookmark exists for the tagged history item");
@@ -107,8 +110,7 @@ function copyHistNode(PlacesOrganizer, ContentTree) {
   PlacesOrganizer._places.selectNode(histContainer.getChild(0));
   let histNode = ContentTree.view.view.nodeForTreeIndex(0);
   ContentTree.view.selectNode(histNode);
-  is(histNode.uri, MOZURISPEC.spec,
-     "historyNode exists: " + histNode.uri);
+  is(histNode.uri, MOZURISPEC.spec, "historyNode exists: " + histNode.uri);
   // copy the history node
   ContentTree.view.controller.copy();
 }

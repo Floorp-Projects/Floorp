@@ -20,7 +20,7 @@ const {
  *                                    `a.b.c.d.` is described as ['a', 'b', 'c', 'd'] ).
  */
 function autocompleteUpdate(force, getterPath) {
-  return ({dispatch, getState, services}) => {
+  return ({ dispatch, getState, services }) => {
     if (services.inputHasSelection()) {
       return dispatch(autocompleteClear());
     }
@@ -31,15 +31,16 @@ function autocompleteUpdate(force, getterPath) {
 
     const state = getState().autocomplete;
     const { cache } = state;
-    if (!force && (
-      !inputValue ||
-      /^[a-zA-Z0-9_$]/.test(inputValue.substring(cursor))
-    )) {
+    if (
+      !force &&
+      (!inputValue || /^[a-zA-Z0-9_$]/.test(inputValue.substring(cursor)))
+    ) {
       return dispatch(autocompleteClear());
     }
 
     const input = inputValue.substring(0, cursor);
-    const retrieveFromCache = !force &&
+    const retrieveFromCache =
+      !force &&
       cache &&
       cache.input &&
       input.startsWith(cache.input) &&
@@ -50,10 +51,11 @@ function autocompleteUpdate(force, getterPath) {
       return dispatch(autoCompleteDataRetrieveFromCache(input));
     }
 
-    let authorizedEvaluations = (
+    let authorizedEvaluations =
       Array.isArray(state.authorizedEvaluations) &&
       state.authorizedEvaluations.length > 0
-    ) ? state.authorizedEvaluations : [];
+        ? state.authorizedEvaluations
+        : [];
 
     if (Array.isArray(getterPath) && getterPath.length > 0) {
       // We need to check for any previous authorizations. For example, here if getterPath
@@ -70,13 +72,15 @@ function autocompleteUpdate(force, getterPath) {
       }
     }
 
-    return dispatch(autocompleteDataFetch({
-      input,
-      frameActorId,
-      client,
-      authorizedEvaluations,
-      force,
-    }));
+    return dispatch(
+      autocompleteDataFetch({
+        input,
+        frameActorId,
+        client,
+        authorizedEvaluations,
+        force,
+      })
+    );
   };
 }
 
@@ -127,30 +131,34 @@ function autocompleteDataFetch({
   client,
   authorizedEvaluations,
 }) {
-  return ({dispatch, services}) => {
+  return ({ dispatch, services }) => {
     const selectedNodeActor = services.getSelectedNodeActor();
     const id = generateRequestId();
-    dispatch({type: AUTOCOMPLETE_PENDING_REQUEST, id});
-    client.autocomplete(
-      input,
-      undefined,
-      frameActorId,
-      selectedNodeActor,
-      authorizedEvaluations
-    ).then(data => {
-      dispatch(
-        autocompleteDataReceive({
-          id,
-          input,
-          force,
-          frameActorId,
-          data,
-          authorizedEvaluations,
-        }));
-    }).catch(e => {
-      console.error("failed autocomplete", e);
-      dispatch(autocompleteClear());
-    });
+    dispatch({ type: AUTOCOMPLETE_PENDING_REQUEST, id });
+    client
+      .autocomplete(
+        input,
+        undefined,
+        frameActorId,
+        selectedNodeActor,
+        authorizedEvaluations
+      )
+      .then(data => {
+        dispatch(
+          autocompleteDataReceive({
+            id,
+            input,
+            force,
+            frameActorId,
+            data,
+            authorizedEvaluations,
+          })
+        );
+      })
+      .catch(e => {
+        console.error("failed autocomplete", e);
+        dispatch(autocompleteClear());
+      });
   };
 }
 

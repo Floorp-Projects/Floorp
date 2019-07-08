@@ -1,13 +1,18 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
-const {HistoryEngine} = ChromeUtils.import("resource://services-sync/engines/history.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { HistoryEngine } = ChromeUtils.import(
+  "resource://services-sync/engines/history.js"
+);
 
 // Use only for rawAddVisit.
-XPCOMUtils.defineLazyServiceGetter(this, "asyncHistory",
-                                   "@mozilla.org/browser/history;1",
-                                   "mozIAsyncHistory");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "asyncHistory",
+  "@mozilla.org/browser/history;1",
+  "mozIAsyncHistory"
+);
 async function rawAddVisit(id, uri, visitPRTime, transitionType) {
   return new Promise((resolve, reject) => {
     let results = [];
@@ -22,14 +27,18 @@ async function rawAddVisit(id, uri, visitPRTime, transitionType) {
         resolve({ results, count });
       },
     };
-    asyncHistory.updatePlaces([{
-      guid: id,
-      uri: typeof uri == "string" ? CommonUtils.makeURI(uri) : uri,
-      visits: [{ visitDate: visitPRTime, transitionType }],
-    }], handler);
+    asyncHistory.updatePlaces(
+      [
+        {
+          guid: id,
+          uri: typeof uri == "string" ? CommonUtils.makeURI(uri) : uri,
+          visits: [{ visitDate: visitPRTime, transitionType }],
+        },
+      ],
+      handler
+    );
   });
 }
-
 
 add_task(async function test_history_download_limit() {
   let engine = new HistoryEngine(Service);
@@ -43,18 +52,25 @@ add_task(async function test_history_download_limit() {
   let collection = server.user("foo").collection("history");
   for (let i = 0; i < 15; i++) {
     let id = "place" + i.toString(10).padStart(7, "0");
-    let wbo = new ServerWBO(id, encryptPayload({
+    let wbo = new ServerWBO(
       id,
-      histUri: "http://example.com/" + i,
-      title: "Page " + i,
-      visits: [{
-        date: Date.now() * 1000,
-        type: PlacesUtils.history.TRANSITIONS.TYPED,
-      }, {
-        date: Date.now() * 1000,
-        type: PlacesUtils.history.TRANSITIONS.LINK,
-      }],
-    }), lastSync + 1 + i);
+      encryptPayload({
+        id,
+        histUri: "http://example.com/" + i,
+        title: "Page " + i,
+        visits: [
+          {
+            date: Date.now() * 1000,
+            type: PlacesUtils.history.TRANSITIONS.TYPED,
+          },
+          {
+            date: Date.now() * 1000,
+            type: PlacesUtils.history.TRANSITIONS.LINK,
+          },
+        ],
+      }),
+      lastSync + 1 + i
+    );
     wbo.sortindex = 15 - i;
     collection.insertWBO(wbo);
   }
@@ -73,9 +89,18 @@ add_task(async function test_history_download_limit() {
   deepEqual(ping.engines[0].incoming, { applied: 5 });
 
   let backlogAfterFirstSync = Array.from(engine.toFetch).sort();
-  deepEqual(backlogAfterFirstSync, ["place0000000", "place0000001",
-    "place0000002", "place0000003", "place0000004", "place0000005",
-    "place0000006", "place0000007", "place0000008", "place0000009"]);
+  deepEqual(backlogAfterFirstSync, [
+    "place0000000",
+    "place0000001",
+    "place0000002",
+    "place0000003",
+    "place0000004",
+    "place0000005",
+    "place0000006",
+    "place0000007",
+    "place0000008",
+    "place0000009",
+  ]);
 
   // We should have fast-forwarded the last sync time.
   equal(await engine.getLastSync(), lastSync + 15);
@@ -91,15 +116,21 @@ add_task(async function test_history_download_limit() {
   deepEqual(backlogAfterFirstSync, backlogAfterSecondSync);
 
   // Now add a newer record to the server.
-  let newWBO = new ServerWBO("placeAAAAAAA", encryptPayload({
-    id: "placeAAAAAAA",
-    histUri: "http://example.com/a",
-    title: "New Page A",
-    visits: [{
-      date: Date.now() * 1000,
-      type: PlacesUtils.history.TRANSITIONS.TYPED,
-    }],
-  }), lastSync + 20);
+  let newWBO = new ServerWBO(
+    "placeAAAAAAA",
+    encryptPayload({
+      id: "placeAAAAAAA",
+      histUri: "http://example.com/a",
+      title: "New Page A",
+      visits: [
+        {
+          date: Date.now() * 1000,
+          type: PlacesUtils.history.TRANSITIONS.TYPED,
+        },
+      ],
+    }),
+    lastSync + 20
+  );
   newWBO.sortindex = -1;
   collection.insertWBO(newWBO);
 
@@ -121,9 +152,13 @@ add_task(async function test_history_download_limit() {
   ping = await sync_engine_and_validate_telem(engine, false);
   deepEqual(ping.engines[0].incoming, { applied: 5 });
 
-  deepEqual(
-    Array.from(engine.toFetch).sort(),
-    ["place0000005", "place0000006", "place0000007", "place0000008", "place0000009"]);
+  deepEqual(Array.from(engine.toFetch).sort(), [
+    "place0000005",
+    "place0000006",
+    "place0000007",
+    "place0000008",
+    "place0000009",
+  ]);
 
   // Sync again to clear out the backlog.
   engine.lastModified = collection.modified;
@@ -151,11 +186,17 @@ add_task(async function test_history_visit_roundtrip() {
   // during normal navigation.
   let time = (Date.now() - oneHourMS) * 1000 + 555;
   // We use the low level history api since it lets us provide microseconds
-  let {count} = await rawAddVisit(id, "https://www.example.com", time,
-                                  PlacesUtils.history.TRANSITIONS.TYPED);
+  let { count } = await rawAddVisit(
+    id,
+    "https://www.example.com",
+    time,
+    PlacesUtils.history.TRANSITIONS.TYPED
+  );
   equal(count, 1);
   // Check that it was inserted and that we didn't round on the insert.
-  let visits = await PlacesSyncUtils.history.fetchVisitsForURL("https://www.example.com");
+  let visits = await PlacesSyncUtils.history.fetchVisitsForURL(
+    "https://www.example.com"
+  );
   equal(visits.length, 1);
   equal(visits[0].date, time);
 
@@ -164,19 +205,23 @@ add_task(async function test_history_visit_roundtrip() {
   // Sync the visit up to the server.
   await sync_engine_and_validate_telem(engine, false);
 
-  collection.updateRecord(id, cleartext => {
-    // Double-check that we didn't round the visit's timestamp to the nearest
-    // millisecond when uploading.
-    equal(cleartext.visits[0].date, time);
-    // Add a remote visit so that we get past the deepEquals check in reconcile
-    // (otherwise the history engine will skip applying this record). The
-    // contents of this visit don't matter, beyond the fact that it needs to
-    // exist.
-    cleartext.visits.push({
-      date: (Date.now() - oneHourMS / 2) * 1000,
-      type: PlacesUtils.history.TRANSITIONS.LINK,
-    });
-  }, Date.now() / 1000 + 10);
+  collection.updateRecord(
+    id,
+    cleartext => {
+      // Double-check that we didn't round the visit's timestamp to the nearest
+      // millisecond when uploading.
+      equal(cleartext.visits[0].date, time);
+      // Add a remote visit so that we get past the deepEquals check in reconcile
+      // (otherwise the history engine will skip applying this record). The
+      // contents of this visit don't matter, beyond the fact that it needs to
+      // exist.
+      cleartext.visits.push({
+        date: (Date.now() - oneHourMS / 2) * 1000,
+        type: PlacesUtils.history.TRANSITIONS.LINK,
+      });
+    },
+    Date.now() / 1000 + 10
+  );
 
   // Force a remote sync.
   await engine.setLastSync(Date.now() / 1000 - 30);
@@ -185,7 +230,9 @@ add_task(async function test_history_visit_roundtrip() {
   // Make sure that we didn't duplicate the visit when inserting. (Prior to bug
   // 1423395, we would insert a duplicate visit, where the timestamp was
   // effectively `Math.round(microsecondTimestamp / 1000) * 1000`.)
-  visits = await PlacesSyncUtils.history.fetchVisitsForURL("https://www.example.com");
+  visits = await PlacesSyncUtils.history.fetchVisitsForURL(
+    "https://www.example.com"
+  );
   equal(visits.length, 2);
 
   await engine.wipeClient();
@@ -211,37 +258,48 @@ add_task(async function test_history_visit_dedupe_old() {
     visits: initialVisits,
   });
 
-  let recentVisits = await PlacesSyncUtils.history.fetchVisitsForURL("https://www.example.com");
+  let recentVisits = await PlacesSyncUtils.history.fetchVisitsForURL(
+    "https://www.example.com"
+  );
   equal(recentVisits.length, 20);
-  let {visits: allVisits, guid} = await PlacesUtils.history.fetch("https://www.example.com", {
-    includeVisits: true,
-  });
+  let { visits: allVisits, guid } = await PlacesUtils.history.fetch(
+    "https://www.example.com",
+    {
+      includeVisits: true,
+    }
+  );
   equal(allVisits.length, 26);
 
   let collection = server.user("foo").collection("history");
 
   await sync_engine_and_validate_telem(engine, false);
 
-  collection.updateRecord(guid, data => {
-    data.visits.push(
-      // Add a couple remote visit equivalent to some old visits we have already
-      {
-        date: Date.UTC(2017, 10, 1) * 1000, // Nov 1, 2017
-        type: PlacesUtils.history.TRANSITIONS.LINK,
-      }, {
-        date: Date.UTC(2017, 10, 2) * 1000, // Nov 2, 2017
-        type: PlacesUtils.history.TRANSITIONS.LINK,
-      },
-      // Add a couple new visits to make sure we are still applying them.
-      {
-        date: Date.UTC(2017, 11, 4) * 1000, // Dec 4, 2017
-        type: PlacesUtils.history.TRANSITIONS.LINK,
-      }, {
-        date: Date.UTC(2017, 11, 5) * 1000, // Dec 5, 2017
-        type: PlacesUtils.history.TRANSITIONS.LINK,
-      }
-    );
-  }, Date.now() / 1000 + 10);
+  collection.updateRecord(
+    guid,
+    data => {
+      data.visits.push(
+        // Add a couple remote visit equivalent to some old visits we have already
+        {
+          date: Date.UTC(2017, 10, 1) * 1000, // Nov 1, 2017
+          type: PlacesUtils.history.TRANSITIONS.LINK,
+        },
+        {
+          date: Date.UTC(2017, 10, 2) * 1000, // Nov 2, 2017
+          type: PlacesUtils.history.TRANSITIONS.LINK,
+        },
+        // Add a couple new visits to make sure we are still applying them.
+        {
+          date: Date.UTC(2017, 11, 4) * 1000, // Dec 4, 2017
+          type: PlacesUtils.history.TRANSITIONS.LINK,
+        },
+        {
+          date: Date.UTC(2017, 11, 5) * 1000, // Dec 5, 2017
+          type: PlacesUtils.history.TRANSITIONS.LINK,
+        }
+      );
+    },
+    Date.now() / 1000 + 10
+  );
 
   await engine.setLastSync(Date.now() / 1000 - 30);
   await sync_engine_and_validate_telem(engine, false);
@@ -251,10 +309,14 @@ add_task(async function test_history_visit_dedupe_old() {
   })).visits;
 
   equal(allVisits.length, 28);
-  ok(allVisits.find(x => x.date.getTime() === Date.UTC(2017, 11, 4)),
-     "Should contain the Dec. 4th visit");
-  ok(allVisits.find(x => x.date.getTime() === Date.UTC(2017, 11, 5)),
-     "Should contain the Dec. 5th visit");
+  ok(
+    allVisits.find(x => x.date.getTime() === Date.UTC(2017, 11, 4)),
+    "Should contain the Dec. 4th visit"
+  );
+  ok(
+    allVisits.find(x => x.date.getTime() === Date.UTC(2017, 11, 5)),
+    "Should contain the Dec. 5th visit"
+  );
 
   await engine.wipeClient();
   await engine.finalize();

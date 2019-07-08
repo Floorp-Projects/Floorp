@@ -11,9 +11,18 @@ const { Toolbox } = require("devtools/client/framework/toolbox");
 
 const EXTENSION = "@reorder.test";
 
-const TEST_STARTING_ORDER = ["inspector", "webconsole", "jsdebugger", "styleeditor",
-                             "performance", "memory", "netmonitor", "storage",
-                             "accessibility", EXTENSION];
+const TEST_STARTING_ORDER = [
+  "inspector",
+  "webconsole",
+  "jsdebugger",
+  "styleeditor",
+  "performance",
+  "memory",
+  "netmonitor",
+  "storage",
+  "accessibility",
+  EXTENSION,
+];
 
 add_task(async function() {
   const extension = ExtensionTestUtils.loadExtension({
@@ -47,22 +56,44 @@ add_task(async function() {
   await extension.startup();
 
   const tab = await addTab("about:blank");
-  const toolbox = await openToolboxForTab(tab, "webconsole", Toolbox.HostType.BOTTOM);
+  const toolbox = await openToolboxForTab(
+    tab,
+    "webconsole",
+    Toolbox.HostType.BOTTOM
+  );
   await extension.awaitMessage("devtools-page-ready");
 
-  const originalPreference = Services.prefs.getCharPref("devtools.toolbox.tabsOrder");
+  const originalPreference = Services.prefs.getCharPref(
+    "devtools.toolbox.tabsOrder"
+  );
   const win = getWindow(toolbox);
-  const { outerWidth: originalWindowWidth, outerHeight: originalWindowHeight } = win;
+  const {
+    outerWidth: originalWindowWidth,
+    outerHeight: originalWindowHeight,
+  } = win;
   registerCleanupFunction(() => {
-    Services.prefs.setCharPref("devtools.toolbox.tabsOrder", originalPreference);
+    Services.prefs.setCharPref(
+      "devtools.toolbox.tabsOrder",
+      originalPreference
+    );
     win.resizeTo(originalWindowWidth, originalWindowHeight);
   });
 
   info("Test for DragAndDrop the extension tab");
   let dragTarget = EXTENSION;
   let dropTarget = "webconsole";
-  let expectedOrder = ["inspector", EXTENSION, "webconsole", "jsdebugger", "styleeditor",
-                       "performance", "memory", "netmonitor", "storage", "accessibility"];
+  let expectedOrder = [
+    "inspector",
+    EXTENSION,
+    "webconsole",
+    "jsdebugger",
+    "styleeditor",
+    "performance",
+    "memory",
+    "netmonitor",
+    "storage",
+    "accessibility",
+  ];
   prepareToolTabReorderTest(toolbox, TEST_STARTING_ORDER);
   await dndToolTab(toolbox, dragTarget, dropTarget);
   assertToolTabOrder(toolbox, expectedOrder);
@@ -75,8 +106,18 @@ add_task(async function() {
   await toolbox.selectTool("storage");
   dragTarget = "storage";
   dropTarget = "inspector";
-  expectedOrder = ["storage", "inspector", "webconsole", "jsdebugger", "styleeditor",
-                   "performance", "memory", "netmonitor", "accessibility", EXTENSION];
+  expectedOrder = [
+    "storage",
+    "inspector",
+    "webconsole",
+    "jsdebugger",
+    "styleeditor",
+    "performance",
+    "memory",
+    "netmonitor",
+    "accessibility",
+    EXTENSION,
+  ];
   await dndToolTab(toolbox, dragTarget, dropTarget);
   assertToolTabPreferenceOrder(expectedOrder);
   await resizeWindow(toolbox, originalWindowWidth, originalWindowHeight);
@@ -86,8 +127,17 @@ add_task(async function() {
   await extension.unload();
   dragTarget = "webconsole";
   dropTarget = "inspector";
-  expectedOrder = ["webconsole", "inspector", "jsdebugger", "styleeditor",
-                   "performance", "memory", "netmonitor", "storage", "accessibility"];
+  expectedOrder = [
+    "webconsole",
+    "inspector",
+    "jsdebugger",
+    "styleeditor",
+    "performance",
+    "memory",
+    "netmonitor",
+    "storage",
+    "accessibility",
+  ];
   await dndToolTab(toolbox, dragTarget, dropTarget);
   assertToolTabPreferenceOrder(expectedOrder);
 });

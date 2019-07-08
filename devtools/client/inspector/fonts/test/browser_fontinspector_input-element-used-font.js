@@ -19,6 +19,8 @@ add_task(async function() {
 
   const fontEls = getUsedFontsEls(viewDoc);
   ok(fontEls.length == 1, `Used fonts found for styled input element`);
-  ok(fontEls[0].textContent == "Ostrich Sans Medium",
-    `Proper font found: 'Ostrich Sans Medium' for styled input.`);
+  ok(
+    fontEls[0].textContent == "Ostrich Sans Medium",
+    `Proper font found: 'Ostrich Sans Medium' for styled input.`
+  );
 });

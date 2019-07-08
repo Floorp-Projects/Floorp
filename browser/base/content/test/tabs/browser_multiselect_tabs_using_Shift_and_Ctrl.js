@@ -2,9 +2,7 @@ const PREF_MULTISELECT_TABS = "browser.tabs.multiselect";
 
 add_task(async function setPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [PREF_MULTISELECT_TABS, true],
-    ],
+    set: [[PREF_MULTISELECT_TABS, true]],
   });
 });
 
@@ -41,8 +39,9 @@ add_task(async function selectionWithShiftPreviously() {
   ok(tab5.multiselected, "Tab5 is multi-selected");
   is(gBrowser.multiSelectedTabsCount, 5, "Five tabs are multi-selected");
 
-  for (let tab of [tab1, tab2, tab3, tab4, tab5])
+  for (let tab of [tab1, tab2, tab3, tab4, tab5]) {
     BrowserTestUtils.removeTab(tab);
+  }
 });
 
 add_task(async function selectionWithCtrlPreviously() {
@@ -78,6 +77,7 @@ add_task(async function selectionWithCtrlPreviously() {
   ok(tab5.multiselected, "Tab5 is multi-selected");
   is(gBrowser.multiSelectedTabsCount, 4, "Four tabs are multi-selected");
 
-  for (let tab of [tab1, tab2, tab3, tab4, tab5])
+  for (let tab of [tab1, tab2, tab3, tab4, tab5]) {
     BrowserTestUtils.removeTab(tab);
+  }
 });

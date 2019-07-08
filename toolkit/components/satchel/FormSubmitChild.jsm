@@ -6,13 +6,21 @@
 
 var EXPORTED_SYMBOLS = ["FormSubmitChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "CreditCard",
-                               "resource://gre/modules/CreditCard.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "CreditCard",
+  "resource://gre/modules/CreditCard.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 class FormSubmitChild extends ActorChild {
   constructor(dispatcher) {
@@ -32,8 +40,8 @@ class FormSubmitChild extends ActorChild {
   }
 
   updatePrefs() {
-    this.debug          = Services.prefs.getBoolPref("browser.formfill.debug");
-    this.enabled        = Services.prefs.getBoolPref("browser.formfill.enable");
+    this.debug = Services.prefs.getBoolPref("browser.formfill.debug");
+    this.enabled = Services.prefs.getBoolPref("browser.formfill.enable");
   }
 
   log(message) {
@@ -68,14 +76,19 @@ class FormSubmitChild extends ActorChild {
 
   onDOMFormBeforeSubmit(event) {
     let form = event.target;
-    if (!this.enabled || PrivateBrowsingUtils.isContentWindowPrivate(form.ownerGlobal)) {
+    if (
+      !this.enabled ||
+      PrivateBrowsingUtils.isContentWindowPrivate(form.ownerGlobal)
+    ) {
       return;
     }
 
     this.log("Form submit observer notified.");
 
-    if (form.hasAttribute("autocomplete") &&
-        form.getAttribute("autocomplete").toLowerCase() == "off") {
+    if (
+      form.hasAttribute("autocomplete") &&
+      form.getAttribute("autocomplete").toLowerCase() == "off"
+    ) {
       return;
     }
 

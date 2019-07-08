@@ -18,10 +18,12 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {view} = await openRuleView();
+  const { view } = await openRuleView();
 
-  ok(!view.selectorHighlighter,
-    "No selectorhighlighter exist in the rule-view");
+  ok(
+    !view.selectorHighlighter,
+    "No selectorhighlighter exist in the rule-view"
+  );
 
   info("Clicking on a selector icon");
   const icon = await getRuleViewSelectorHighlighterIcon(view, "body, p, td");

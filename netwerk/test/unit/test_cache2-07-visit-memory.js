@@ -1,5 +1,4 @@
-function run_test()
-{
+function run_test() {
   do_get_profile();
 
   // Add entry to the memory storage
@@ -12,9 +11,14 @@ function run_test()
           storage = getCacheStorage("disk");
           storage.asyncVisitStorage(
             // Previous tests should store 4 disk entries
-            new VisitCallback(4, 4096, ["http://a/", "http://b/", "http://c/", "http://d/"], function() {
-              finish_cache2_test();
-            }),
+            new VisitCallback(
+              4,
+              4096,
+              ["http://a/", "http://b/", "http://c/", "http://d/"],
+              function() {
+                finish_cache2_test();
+              }
+            ),
             true
           );
         }),
@@ -23,9 +27,17 @@ function run_test()
     });
   });
 
-  asyncOpenCacheEntry("http://mem1/", "memory", Ci.nsICacheStorage.OPEN_NORMALLY, null,
+  asyncOpenCacheEntry(
+    "http://mem1/",
+    "memory",
+    Ci.nsICacheStorage.OPEN_NORMALLY,
+    null,
     new OpenCallback(NEW, "m1m", "m1d", function(entry) {
-      asyncOpenCacheEntry("http://mem1/", "memory", Ci.nsICacheStorage.OPEN_NORMALLY, null,
+      asyncOpenCacheEntry(
+        "http://mem1/",
+        "memory",
+        Ci.nsICacheStorage.OPEN_NORMALLY,
+        null,
         new OpenCallback(NORMAL, "m1m", "m1d", function(entry) {
           mc.fired();
         })
@@ -33,9 +45,17 @@ function run_test()
     })
   );
 
-  asyncOpenCacheEntry("http://a/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
+  asyncOpenCacheEntry(
+    "http://a/",
+    "disk",
+    Ci.nsICacheStorage.OPEN_NORMALLY,
+    null,
     new OpenCallback(NEW, "a1m", "a1d", function(entry) {
-      asyncOpenCacheEntry("http://a/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
+      asyncOpenCacheEntry(
+        "http://a/",
+        "disk",
+        Ci.nsICacheStorage.OPEN_NORMALLY,
+        null,
         new OpenCallback(NORMAL, "a1m", "a1d", function(entry) {
           mc.fired();
         })
@@ -43,9 +63,17 @@ function run_test()
     })
   );
 
-  asyncOpenCacheEntry("http://b/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
+  asyncOpenCacheEntry(
+    "http://b/",
+    "disk",
+    Ci.nsICacheStorage.OPEN_NORMALLY,
+    null,
     new OpenCallback(NEW, "a1m", "a1d", function(entry) {
-      asyncOpenCacheEntry("http://b/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
+      asyncOpenCacheEntry(
+        "http://b/",
+        "disk",
+        Ci.nsICacheStorage.OPEN_NORMALLY,
+        null,
         new OpenCallback(NORMAL, "a1m", "a1d", function(entry) {
           mc.fired();
         })
@@ -53,9 +81,17 @@ function run_test()
     })
   );
 
-  asyncOpenCacheEntry("http://c/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
+  asyncOpenCacheEntry(
+    "http://c/",
+    "disk",
+    Ci.nsICacheStorage.OPEN_NORMALLY,
+    null,
     new OpenCallback(NEW, "a1m", "a1d", function(entry) {
-      asyncOpenCacheEntry("http://c/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
+      asyncOpenCacheEntry(
+        "http://c/",
+        "disk",
+        Ci.nsICacheStorage.OPEN_NORMALLY,
+        null,
         new OpenCallback(NORMAL, "a1m", "a1d", function(entry) {
           mc.fired();
         })
@@ -63,9 +99,17 @@ function run_test()
     })
   );
 
-  asyncOpenCacheEntry("http://d/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
+  asyncOpenCacheEntry(
+    "http://d/",
+    "disk",
+    Ci.nsICacheStorage.OPEN_NORMALLY,
+    null,
     new OpenCallback(NEW, "a1m", "a1d", function(entry) {
-      asyncOpenCacheEntry("http://d/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
+      asyncOpenCacheEntry(
+        "http://d/",
+        "disk",
+        Ci.nsICacheStorage.OPEN_NORMALLY,
+        null,
         new OpenCallback(NORMAL, "a1m", "a1d", function(entry) {
           mc.fired();
         })

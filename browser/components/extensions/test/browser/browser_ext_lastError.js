@@ -6,9 +6,11 @@ async function sendMessage(options) {
       browser.test.assertEq(undefined, result, "Argument value");
       if (options.checkLastError) {
         let lastError = browser[options.checkLastError].lastError;
-        browser.test.assertEq("runtime.sendMessage's message argument is missing",
-                              lastError && lastError.message,
-                              "lastError value");
+        browser.test.assertEq(
+          "runtime.sendMessage's message argument is missing",
+          lastError && lastError.message,
+          "lastError value"
+        );
       }
       browser.test.sendMessage("done");
     });
@@ -34,10 +36,12 @@ add_task(async function testLastError() {
   // checked.
   for (let api of ["extension", "runtime"]) {
     let waitForConsole = new Promise(resolve => {
-      SimpleTest.monitorConsole(resolve, [{message: /message argument is missing/, forbid: true}]);
+      SimpleTest.monitorConsole(resolve, [
+        { message: /message argument is missing/, forbid: true },
+      ]);
     });
 
-    await sendMessage({checkLastError: api});
+    await sendMessage({ checkLastError: api });
 
     SimpleTest.endMonitorConsole();
     await waitForConsole;
@@ -45,7 +49,11 @@ add_task(async function testLastError() {
 
   // Check that we do have a console message when lastError is not checked.
   let waitForConsole = new Promise(resolve => {
-    SimpleTest.monitorConsole(resolve, [{message: /Unchecked lastError value: Error: runtime.sendMessage's message argument is missing/}]);
+    SimpleTest.monitorConsole(resolve, [
+      {
+        message: /Unchecked lastError value: Error: runtime.sendMessage's message argument is missing/,
+      },
+    ]);
   });
 
   await sendMessage({});

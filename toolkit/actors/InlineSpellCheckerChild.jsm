@@ -8,8 +8,11 @@
 
 var EXPORTED_SYMBOLS = ["InlineSpellCheckerChild"];
 
-ChromeUtils.defineModuleGetter(this, "InlineSpellCheckerContent",
-                               "resource://gre/modules/InlineSpellCheckerContent.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "InlineSpellCheckerContent",
+  "resource://gre/modules/InlineSpellCheckerContent.jsm"
+);
 
 class InlineSpellCheckerChild extends JSWindowActorChild {
   receiveMessage(msg) {

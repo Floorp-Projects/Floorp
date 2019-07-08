@@ -43,21 +43,44 @@ function assert_time_equals_literal(actual, expected, description) {
  */
 function assert_matrix_equals(actual, expected, description) {
   var matrixRegExp = /^matrix\((.+),(.+),(.+),(.+),(.+),(.+)\)/;
-  assert_regexp_match(actual, matrixRegExp,
-    'Actual value should be a matrix')
-  assert_regexp_match(expected, matrixRegExp,
-    'Expected value should be a matrix');
+  assert_regexp_match(actual, matrixRegExp, "Actual value should be a matrix");
+  assert_regexp_match(
+    expected,
+    matrixRegExp,
+    "Expected value should be a matrix"
+  );
 
-  var actualMatrixArray = actual.match(matrixRegExp).slice(1).map(Number);
-  var expectedMatrixArray = expected.match(matrixRegExp).slice(1).map(Number);
+  var actualMatrixArray = actual
+    .match(matrixRegExp)
+    .slice(1)
+    .map(Number);
+  var expectedMatrixArray = expected
+    .match(matrixRegExp)
+    .slice(1)
+    .map(Number);
 
-  assert_equals(actualMatrixArray.length, expectedMatrixArray.length,
-    'Array lengths should be equal (got \'' + expected + '\' and \'' + actual +
-    '\'): ' + description);
+  assert_equals(
+    actualMatrixArray.length,
+    expectedMatrixArray.length,
+    "Array lengths should be equal (got '" +
+      expected +
+      "' and '" +
+      actual +
+      "'): " +
+      description
+  );
   for (var i = 0; i < actualMatrixArray.length; i++) {
-    assert_approx_equals(actualMatrixArray[i], expectedMatrixArray[i], 0.01,
-      'Matrix array should be equal (got \'' + expected + '\' and \'' + actual +
-      '\'): ' + description);
+    assert_approx_equals(
+      actualMatrixArray[i],
+      expectedMatrixArray[i],
+      0.01,
+      "Matrix array should be equal (got '" +
+        expected +
+        "' and '" +
+        actual +
+        "'): " +
+        description
+    );
   }
 }
 
@@ -69,28 +92,34 @@ function assert_properties_equal(actual, expected) {
   assert_equals(actual.length, expected.length);
 
   const compareProperties = (a, b) =>
-    a.property == b.property ? 0 : (a.property < b.property ? -1 : 1);
+    a.property == b.property ? 0 : a.property < b.property ? -1 : 1;
 
-  const sortedActual   = actual.sort(compareProperties);
+  const sortedActual = actual.sort(compareProperties);
   const sortedExpected = expected.sort(compareProperties);
 
   const serializeValues = values =>
-    values.map(value =>
-      '{ ' +
-          [ 'offset', 'value', 'easing', 'composite' ].map(
-            member => `${member}: ${value[member]}`
-          ).join(', ') +
-                      ' }')
-          .join(', ');
+    values
+      .map(
+        value =>
+          "{ " +
+          ["offset", "value", "easing", "composite"]
+            .map(member => `${member}: ${value[member]}`)
+            .join(", ") +
+          " }"
+      )
+      .join(", ");
 
   for (let i = 0; i < sortedActual.length; i++) {
-    assert_equals(sortedActual[i].property,
-                  sortedExpected[i].property,
-                  'CSS property name should match');
-    assert_equals(serializeValues(sortedActual[i].values),
-                  serializeValues(sortedExpected[i].values),
-                  `Values arrays do not match for `
-                  + `${sortedActual[i].property} property`);
+    assert_equals(
+      sortedActual[i].property,
+      sortedExpected[i].property,
+      "CSS property name should match"
+    );
+    assert_equals(
+      serializeValues(sortedActual[i].values),
+      serializeValues(sortedExpected[i].values),
+      `Values arrays do not match for ` + `${sortedActual[i].property} property`
+    );
   }
 }
 
@@ -127,12 +156,14 @@ function valueFormat(offset, value, composite, easing) {
  * @param options  The options passed to Element.animate().
  */
 function addDivAndAnimate(t, attrs, frames, options) {
-  let animDur = (typeof options === 'object') ?
-    options.duration : options;
-  assert_greater_than_equal(animDur, 100 * MS_PER_SEC,
-      'Clients of this addDivAndAnimate API must request a duration ' +
-      'of at least 100s, to avoid intermittent failures from e.g.' +
-      'the main thread being busy for an extended period');
+  let animDur = typeof options === "object" ? options.duration : options;
+  assert_greater_than_equal(
+    animDur,
+    100 * MS_PER_SEC,
+    "Clients of this addDivAndAnimate API must request a duration " +
+      "of at least 100s, to avoid intermittent failures from e.g." +
+      "the main thread being busy for an extended period"
+  );
 
   return addDiv(t, attrs).animate(frames, options);
 }
@@ -148,14 +179,14 @@ function addDivAndAnimate(t, attrs, frames, options) {
  *               the div.
  */
 function addDiv(t, attrs) {
-  var div = document.createElement('div');
+  var div = document.createElement("div");
   if (attrs) {
     for (var attrName in attrs) {
       div.setAttribute(attrName, attrs[attrName]);
     }
   }
   document.body.appendChild(div);
-  if (t && typeof t.add_cleanup === 'function') {
+  if (t && typeof t.add_cleanup === "function") {
     t.add_cleanup(function() {
       if (div.parentNode) {
         div.remove();
@@ -176,17 +207,19 @@ function addDiv(t, attrs) {
  *               the style sheet.
  */
 function addStyle(t, rules) {
-  var extraStyle = document.createElement('style');
+  var extraStyle = document.createElement("style");
   document.head.appendChild(extraStyle);
   if (rules) {
     var sheet = extraStyle.sheet;
     for (var selector in rules) {
-      sheet.insertRule(selector + '{' + rules[selector] + '}',
-                       sheet.cssRules.length);
+      sheet.insertRule(
+        selector + "{" + rules[selector] + "}",
+        sheet.cssRules.length
+      );
     }
   }
 
-  if (t && typeof t.add_cleanup === 'function') {
+  if (t && typeof t.add_cleanup === "function") {
     t.add_cleanup(function() {
       extraStyle.remove();
     });
@@ -200,7 +233,7 @@ function addStyle(t, rules) {
 function propertyToIDL(property) {
   var prefixMatch = property.match(/^-(\w+)-/);
   if (prefixMatch) {
-    var prefix = prefixMatch[1] === 'moz' ? 'Moz' : prefixMatch[1];
+    var prefix = prefixMatch[1] === "moz" ? "Moz" : prefixMatch[1];
     property = prefix + property.substring(prefixMatch[0].length - 1);
   }
   // https://drafts.csswg.org/cssom/#css-property-to-idl-attribute
@@ -248,11 +281,10 @@ function waitForAnimationFrames(frameCount, onFrame) {
   const timeAtStart = document.timeline.currentTime;
   return new Promise(function(resolve, reject) {
     function handleFrame() {
-      if (onFrame && typeof onFrame === 'function') {
+      if (onFrame && typeof onFrame === "function") {
         onFrame();
       }
-      if (timeAtStart != document.timeline.currentTime &&
-          --frameCount <= 0) {
+      if (timeAtStart != document.timeline.currentTime && --frameCount <= 0) {
         resolve();
       } else {
         window.requestAnimationFrame(handleFrame); // wait another frame
@@ -277,9 +309,11 @@ function waitForIdle() {
  *   Promise.all([animations[0].ready, animations[1].ready, ... animations[N-1].ready]);
  */
 function waitForAllAnimations(animations) {
-  return Promise.all(animations.map(function(animation) {
-    return animation.ready;
-  }));
+  return Promise.all(
+    animations.map(function(animation) {
+      return animation.ready;
+    })
+  );
 }
 
 /**
@@ -294,14 +328,24 @@ function flushComputedStyle(elem) {
 }
 
 if (opener) {
-  for (var funcName of ["async_test", "assert_not_equals", "assert_equals",
-                        "assert_approx_equals", "assert_less_than",
-                        "assert_less_than_equal", "assert_greater_than",
-                        "assert_between_inclusive",
-                        "assert_true", "assert_false",
-                        "assert_class_string", "assert_throws",
-                        "assert_unreached", "assert_regexp_match",
-                        "promise_test", "test"]) {
+  for (var funcName of [
+    "async_test",
+    "assert_not_equals",
+    "assert_equals",
+    "assert_approx_equals",
+    "assert_less_than",
+    "assert_less_than_equal",
+    "assert_greater_than",
+    "assert_between_inclusive",
+    "assert_true",
+    "assert_false",
+    "assert_class_string",
+    "assert_throws",
+    "assert_unreached",
+    "assert_regexp_match",
+    "promise_test",
+    "test",
+  ]) {
     if (opener[funcName]) {
       window[funcName] = opener[funcName].bind(opener);
     }
@@ -359,9 +403,11 @@ function useTestRefreshMode(t) {
  * Returns true if off-main-thread animations.
  */
 function isOMTAEnabled() {
-  const OMTAPrefKey = 'layers.offmainthreadcomposition.async-animations';
-  return SpecialPowers.DOMWindowUtils.layerManagerRemote &&
-         SpecialPowers.getBoolPref(OMTAPrefKey);
+  const OMTAPrefKey = "layers.offmainthreadcomposition.async-animations";
+  return (
+    SpecialPowers.DOMWindowUtils.layerManagerRemote &&
+    SpecialPowers.getBoolPref(OMTAPrefKey)
+  );
 }
 
 /**
@@ -376,7 +422,7 @@ function addSVGElement(target, tag, attrs) {
   if (!target) {
     return null;
   }
-  var element = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  var element = document.createElementNS("http://www.w3.org/2000/svg", tag);
   if (attrs) {
     for (var attrName in attrs) {
       element.setAttributeNS(null, attrName, attrs[attrName]);
@@ -400,8 +446,12 @@ function getDistance(target, prop, v1, v2) {
   if (!target) {
     return 0.0;
   }
-  return SpecialPowers.DOMWindowUtils
-           .computeAnimationDistance(target, prop, v1, v2);
+  return SpecialPowers.DOMWindowUtils.computeAnimationDistance(
+    target,
+    prop,
+    v1,
+    v2
+  );
 }
 
 /*
@@ -420,8 +470,10 @@ function waitForPaints() {
 // at precisely the time the animation started (due to aligning with vsync
 // refresh rate) then we won't end up restyling in that frame.
 function animationStartsRightNow(aAnimation) {
-  return aAnimation.startTime === aAnimation.timeline.currentTime &&
-         aAnimation.currentTime === 0;
+  return (
+    aAnimation.startTime === aAnimation.timeline.currentTime &&
+    aAnimation.currentTime === 0
+  );
 }
 
 // Waits for a given animation being ready to restyle.

@@ -17,7 +17,7 @@
 // 4. When the server receive all 6 requests, check if the order in |responseQueue| is
 //    equal to |transactionQueue| by comparing the value of X-ID.
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var server = new HttpServer();
 server.start(-1);
@@ -38,7 +38,10 @@ function log(msg) {
 }
 
 function make_channel(url) {
-  var request = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  var request = NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+  });
   request.QueryInterface(Ci.nsIHttpChannel);
   return request;
 }
@@ -64,25 +67,49 @@ function createHttpRequest(requestId, priority, isBlocking, callback) {
 
 function setup_dummyHttpRequests(callback) {
   log("setup_dummyHttpRequests");
-  for (var i = 0; i < maxConnections ; i++) {
+  for (var i = 0; i < maxConnections; i++) {
     createHttpRequest(i, i, false, callback);
     do_test_pending();
   }
 }
 
 var transactionQueue = [
-  {requestId: 101, priority: Ci.nsISupportsPriority.PRIORITY_HIGH, isBlocking: true},
-  {requestId: 102, priority: Ci.nsISupportsPriority.PRIORITY_NORMAL, isBlocking: true},
-  {requestId: 103, priority: Ci.nsISupportsPriority.PRIORITY_LOW, isBlocking: true},
-  {requestId: 104, priority: Ci.nsISupportsPriority.PRIORITY_HIGH, isBlocking: false},
-  {requestId: 105, priority: Ci.nsISupportsPriority.PRIORITY_NORMAL, isBlocking: false},
-  {requestId: 106, priority: Ci.nsISupportsPriority.PRIORITY_LOW, isBlocking: false},
+  {
+    requestId: 101,
+    priority: Ci.nsISupportsPriority.PRIORITY_HIGH,
+    isBlocking: true,
+  },
+  {
+    requestId: 102,
+    priority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
+    isBlocking: true,
+  },
+  {
+    requestId: 103,
+    priority: Ci.nsISupportsPriority.PRIORITY_LOW,
+    isBlocking: true,
+  },
+  {
+    requestId: 104,
+    priority: Ci.nsISupportsPriority.PRIORITY_HIGH,
+    isBlocking: false,
+  },
+  {
+    requestId: 105,
+    priority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
+    isBlocking: false,
+  },
+  {
+    requestId: 106,
+    priority: Ci.nsISupportsPriority.PRIORITY_LOW,
+    isBlocking: false,
+  },
 ];
 
 function setup_HttpRequests() {
   log("setup_HttpRequests");
   // Create channels in reverse order
-  for (var i = transactionQueue.length - 1; i > -1;) {
+  for (var i = transactionQueue.length - 1; i > -1; ) {
     var e = transactionQueue[i];
     createHttpRequest(e.requestId, e.priority, e.isBlocking);
     do_test_pending();
@@ -90,47 +117,44 @@ function setup_HttpRequests() {
   }
 }
 
-function check_response_id(responses)
-{
+function check_response_id(responses) {
   for (var i = 0; i < responses.length; i++) {
     var id = responses[i].getHeader("X-ID");
     Assert.equal(id, transactionQueue[i].requestId);
   }
 }
 
-function HttpResponseListener(id, onStopCallback)
-{
-  this.id = id
+function HttpResponseListener(id, onStopCallback) {
+  this.id = id;
   this.stopCallback = onStopCallback;
-};
+}
 
-HttpResponseListener.prototype =
-{
-  onStartRequest (request) {
-  },
+HttpResponseListener.prototype = {
+  onStartRequest(request) {},
 
-  onDataAvailable (request, stream, off, cnt) {
-  },
+  onDataAvailable(request, stream, off, cnt) {},
 
-  onStopRequest (request, status) {
+  onStopRequest(request, status) {
     log("STOP id=" + this.id);
     do_test_finished();
     if (this.stopCallback) {
       this.stopCallback();
     }
-  }
+  },
 };
 
-function setup_http_server()
-{
+function setup_http_server() {
   log("setup_http_server");
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-  maxConnections = prefs.getIntPref("network.http.max-persistent-connections-per-server");
+  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
+  maxConnections = prefs.getIntPref(
+    "network.http.max-persistent-connections-per-server"
+  );
 
   var allDummyHttpRequestReceived = false;
   // Start server; will be stopped at test cleanup time.
-  server.registerPathHandler('/', function(metadata, response)
-  {
+  server.registerPathHandler("/", function(metadata, response) {
     var id = metadata.getHeader("X-ID");
     log("Server recived the response id=" + id);
 
@@ -153,13 +177,11 @@ function setup_http_server()
       check_response_id(responseQueue);
       processResponses();
     }
-
   });
 
   registerCleanupFunction(function() {
     server.stop(serverStopListener);
   });
-
 }
 
 function processDummyResponse() {

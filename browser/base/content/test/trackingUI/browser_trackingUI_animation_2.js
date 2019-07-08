@@ -8,9 +8,12 @@
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PB_PREF = "privacy.trackingprotection.enabled";
 const NCB_PREF = "network.cookie.cookieBehavior";
-const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
-const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
-const COOKIE_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/cookiePage.html";
+const BENIGN_PAGE =
+  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
+const TRACKING_PAGE =
+  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+const COOKIE_PAGE =
+  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/cookiePage.html";
 const DTSCBN_PREF = "dom.testing.sync-content-blocking-notifications";
 
 requestLongerTimeout(2);
@@ -28,25 +31,40 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   Services.prefs.setBoolPref(DTSCBN_PREF, true);
 
   info("Load a test page not containing tracking elements");
-  let benignTab = await BrowserTestUtils.openNewForegroundTab(tabbrowser, BENIGN_PAGE);
+  let benignTab = await BrowserTestUtils.openNewForegroundTab(
+    tabbrowser,
+    BENIGN_PAGE
+  );
   let ContentBlocking = tabbrowser.ownerGlobal.ContentBlocking;
 
   ok(!ContentBlocking.iconBox.hasAttribute("active"), "iconBox not active");
   ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
 
   info("Load a test page containing tracking elements");
-  let trackingTab = await BrowserTestUtils.openNewForegroundTab(tabbrowser, TRACKING_PAGE);
+  let trackingTab = await BrowserTestUtils.openNewForegroundTab(
+    tabbrowser,
+    TRACKING_PAGE
+  );
 
   ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
   ok(ContentBlocking.iconBox.hasAttribute("animate"), "iconBox animating");
-  await BrowserTestUtils.waitForEvent(ContentBlocking.animatedIcon, "animationend");
+  await BrowserTestUtils.waitForEvent(
+    ContentBlocking.animatedIcon,
+    "animationend"
+  );
 
   info("Load a test page containing tracking cookies");
-  let trackingCookiesTab = await BrowserTestUtils.openNewForegroundTab(tabbrowser, COOKIE_PAGE);
+  let trackingCookiesTab = await BrowserTestUtils.openNewForegroundTab(
+    tabbrowser,
+    COOKIE_PAGE
+  );
 
   ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
   ok(ContentBlocking.iconBox.hasAttribute("animate"), "iconBox animating");
-  await BrowserTestUtils.waitForEvent(ContentBlocking.animatedIcon, "animationend");
+  await BrowserTestUtils.waitForEvent(
+    ContentBlocking.animatedIcon,
+    "animationend"
+  );
 
   info("Switch from tracking cookie -> benign tab");
   let securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
@@ -74,13 +92,19 @@ async function testTrackingProtectionAnimation(tabbrowser) {
 
   info("Reload tracking cookies tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
-  let contentBlockingEvent = waitForContentBlockingEvent(2, tabbrowser.ownerGlobal);
+  let contentBlockingEvent = waitForContentBlockingEvent(
+    2,
+    tabbrowser.ownerGlobal
+  );
   tabbrowser.reload();
   await Promise.all([securityChanged, contentBlockingEvent]);
 
   ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
   ok(ContentBlocking.iconBox.hasAttribute("animate"), "iconBox animating");
-  await BrowserTestUtils.waitForEvent(ContentBlocking.animatedIcon, "animationend");
+  await BrowserTestUtils.waitForEvent(
+    ContentBlocking.animatedIcon,
+    "animationend"
+  );
 
   info("Reload tracking tab");
   securityChanged = waitForSecurityChange(2, tabbrowser.ownerGlobal);
@@ -91,13 +115,15 @@ async function testTrackingProtectionAnimation(tabbrowser) {
 
   ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
   ok(ContentBlocking.iconBox.hasAttribute("animate"), "iconBox animating");
-  await BrowserTestUtils.waitForEvent(ContentBlocking.animatedIcon, "animationend");
+  await BrowserTestUtils.waitForEvent(
+    ContentBlocking.animatedIcon,
+    "animationend"
+  );
 
   info("Inject tracking cookie inside tracking tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
   let timeoutPromise = new Promise(resolve => setTimeout(resolve, 500));
-  await ContentTask.spawn(tabbrowser.selectedBrowser, {},
-                          function() {
+  await ContentTask.spawn(tabbrowser.selectedBrowser, {}, function() {
     content.postMessage("cookie", "*");
   });
   let result = await Promise.race([securityChanged, timeoutPromise]);
@@ -109,8 +135,7 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   info("Inject tracking element inside tracking tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
   timeoutPromise = new Promise(resolve => setTimeout(resolve, 500));
-  await ContentTask.spawn(tabbrowser.selectedBrowser, {},
-                          function() {
+  await ContentTask.spawn(tabbrowser.selectedBrowser, {}, function() {
     content.postMessage("tracking", "*");
   });
   result = await Promise.race([securityChanged, timeoutPromise]);
@@ -124,8 +149,7 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   info("Inject tracking cookie inside tracking cookies tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
   timeoutPromise = new Promise(resolve => setTimeout(resolve, 500));
-  await ContentTask.spawn(tabbrowser.selectedBrowser, {},
-                          function() {
+  await ContentTask.spawn(tabbrowser.selectedBrowser, {}, function() {
     content.postMessage("cookie", "*");
   });
   result = await Promise.race([securityChanged, timeoutPromise]);
@@ -137,8 +161,7 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   info("Inject tracking element inside tracking cookies tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
   timeoutPromise = new Promise(resolve => setTimeout(resolve, 500));
-  await ContentTask.spawn(tabbrowser.selectedBrowser, {},
-                          function() {
+  await ContentTask.spawn(tabbrowser.selectedBrowser, {}, function() {
     content.postMessage("tracking", "*");
   });
   result = await Promise.race([securityChanged, timeoutPromise]);
@@ -164,15 +187,26 @@ add_task(async function testNormalBrowsing() {
 
   Services.prefs.setBoolPref(TP_PREF, true);
   ok(TrackingProtection.enabled, "TP is enabled after setting the pref");
-  Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
-  ok(ThirdPartyCookies.enabled, "ThirdPartyCookies is enabled after setting the pref");
-  Services.prefs.setIntPref(ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS);
+  Services.prefs.setIntPref(
+    NCB_PREF,
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
+  );
+  ok(
+    ThirdPartyCookies.enabled,
+    "ThirdPartyCookies is enabled after setting the pref"
+  );
+  Services.prefs.setIntPref(
+    ContentBlocking.prefIntroCount,
+    ContentBlocking.MAX_INTROS
+  );
 
   await testTrackingProtectionAnimation(gBrowser);
 });
 
 add_task(async function testPrivateBrowsing() {
-  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
   let tabbrowser = privateWin.gBrowser;
 
   let ContentBlocking = tabbrowser.ownerGlobal.ContentBlocking;
@@ -184,9 +218,18 @@ add_task(async function testPrivateBrowsing() {
 
   Services.prefs.setBoolPref(TP_PB_PREF, true);
   ok(TrackingProtection.enabled, "TP is enabled after setting the pref");
-  Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
-  ok(ThirdPartyCookies.enabled, "ThirdPartyCookies is enabled after setting the pref");
-  Services.prefs.setIntPref(ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS);
+  Services.prefs.setIntPref(
+    NCB_PREF,
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
+  );
+  ok(
+    ThirdPartyCookies.enabled,
+    "ThirdPartyCookies is enabled after setting the pref"
+  );
+  Services.prefs.setIntPref(
+    ContentBlocking.prefIntroCount,
+    ContentBlocking.MAX_INTROS
+  );
 
   await testTrackingProtectionAnimation(tabbrowser);
 

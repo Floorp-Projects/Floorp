@@ -4,12 +4,20 @@
 
 var EXPORTED_SYMBOLS = ["Resource"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
-const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
-const {Utils} = ChromeUtils.import("resource://services-sync/util.js");
-const {setTimeout, clearTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Observers } = ChromeUtils.import(
+  "resource://services-common/observers.js"
+);
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
+const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
+const { setTimeout, clearTimeout } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch", "Headers", "Request"]);
 /* global AbortController */
 
@@ -36,10 +44,12 @@ function Resource(uri) {
 // (static) Caches the latest server timestamp (X-Weave-Timestamp header).
 Resource.serverTime = null;
 
-XPCOMUtils.defineLazyPreferenceGetter(Resource,
-                                      "SEND_VERSION_INFO",
-                                      "services.sync.sendVersionInfo",
-                                      true);
+XPCOMUtils.defineLazyPreferenceGetter(
+  Resource,
+  "SEND_VERSION_INFO",
+  "services.sync.sendVersionInfo",
+  true
+);
 Resource.prototype = {
   _logName: "Sync.Resource",
 
@@ -146,7 +156,7 @@ Resource.prototype = {
       method,
       signal,
       mozErrors: true, // Return nsresult error codes instead of a generic
-                      // NetworkError when fetch rejects.
+      // NetworkError when fetch rejects.
     };
 
     if (data) {
@@ -172,7 +182,9 @@ Resource.prototype = {
     let didTimeout = false;
     const timeoutId = setTimeout(() => {
       didTimeout = true;
-      this._log.error(`Request timed out after ${this.ABORT_TIMEOUT}ms. Aborting.`);
+      this._log.error(
+        `Request timed out after ${this.ABORT_TIMEOUT}ms. Aborting.`
+      );
       controller.abort();
     }, this.ABORT_TIMEOUT);
     let response;
@@ -183,7 +195,10 @@ Resource.prototype = {
       if (!didTimeout) {
         throw e;
       }
-      throw Components.Exception("Request aborted (timeout)", Cr.NS_ERROR_NET_TIMEOUT);
+      throw Components.Exception(
+        "Request aborted (timeout)",
+        Cr.NS_ERROR_NET_TIMEOUT
+      );
     } finally {
       clearTimeout(timeoutId);
     }
@@ -215,8 +230,10 @@ Resource.prototype = {
       } catch (ex) {
         this._log.warn("Got exception parsing response body", ex);
         // Stringify to avoid possibly printing non-printable characters.
-        this._log.debug("Parse fail: Response body starts",
-                        (ret.data + "").slice(0, 100));
+        this._log.debug(
+          "Parse fail: Response body starts",
+          (ret.data + "").slice(0, 100)
+        );
         throw ex;
       }
     });
@@ -228,7 +245,9 @@ Resource.prototype = {
     const { status, ok: success, url } = response;
 
     // Log the status of the request.
-    this._log.debug(`${method} ${success ? "success" : "fail"} ${status} ${url}`);
+    this._log.debug(
+      `${method} ${success ? "success" : "fail"} ${status} ${url}`
+    );
 
     // Additionally give the full response body when Trace logging.
     if (this._log.level <= Log.Level.Trace) {
@@ -236,7 +255,9 @@ Resource.prototype = {
     }
 
     if (!success) {
-      this._log.warn(`${method} request to ${url} failed with status ${status}`);
+      this._log.warn(
+        `${method} request to ${url} failed with status ${status}`
+      );
     }
   },
 
@@ -249,13 +270,14 @@ Resource.prototype = {
     if (headers.has("x-weave-backoff")) {
       let backoff = headers.get("x-weave-backoff");
       this._log.debug(`Got X-Weave-Backoff: ${backoff}`);
-      Observers.notify("weave:service:backoff:interval",
-                       parseInt(backoff, 10));
+      Observers.notify("weave:service:backoff:interval", parseInt(backoff, 10));
     }
 
     if (success && headers.has("x-weave-quota-remaining")) {
-      Observers.notify("weave:service:quota:remaining",
-                       parseInt(headers.get("x-weave-quota-remaining"), 10));
+      Observers.notify(
+        "weave:service:quota:remaining",
+        parseInt(headers.get("x-weave-quota-remaining"), 10)
+      );
     }
   },
 

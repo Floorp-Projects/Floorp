@@ -18,7 +18,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
   const rule = getRuleViewRuleEditor(view, 1).rule;
@@ -30,8 +30,10 @@ add_task(async function() {
   let newValue = await getRulePropertyValue("background-color");
   is(newValue, "", "background-color should have been unset.");
 
-  info("Entering a new property name, including : to commit and " +
-       "focus the value");
+  info(
+    "Entering a new property name, including : to commit and " +
+      "focus the value"
+  );
 
   await focusEditableField(view, prop.editor.nameSpan);
   const onNameDone = view.once("ruleview-changed");
@@ -47,8 +49,10 @@ add_task(async function() {
   is(newValue, "blue", "border-color should have been set.");
 
   ok(prop.enabled, "border-color property is enabled.");
-  ok(!prop.editor.element.classList.contains("ruleview-overridden"),
-    "border-color is not overridden");
+  ok(
+    !prop.editor.element.classList.contains("ruleview-overridden"),
+    "border-color is not overridden"
+  );
 
   info("Disabling border-color property");
   await togglePropStatus(view, prop);
@@ -63,8 +67,10 @@ add_task(async function() {
   is(newValue, "red", "new border-color should have been set.");
 
   ok(prop.enabled, "border-color property is enabled.");
-  ok(!prop.editor.element.classList.contains("ruleview-overridden"),
-    "border-color is not overridden");
+  ok(
+    !prop.editor.element.classList.contains("ruleview-overridden"),
+    "border-color is not overridden"
+  );
 });
 
 async function getRulePropertyValue(name) {

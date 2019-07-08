@@ -25,17 +25,25 @@ function urlClick(url) {
 
 function promiseNewTabSwitched() {
   return new Promise(resolve => {
-    gBrowser.addEventListener("TabSwitchDone", function() {
-      executeSoon(resolve);
-    }, {once: true});
+    gBrowser.addEventListener(
+      "TabSwitchDone",
+      function() {
+        executeSoon(resolve);
+      },
+      { once: true }
+    );
   });
 }
 
 function promiseLoaded(browser) {
   return ContentTask.spawn(browser, undefined, async () => {
     if (!["interactive", "complete"].includes(content.document.readyState)) {
-      await new Promise(resolve => addEventListener(
-        "DOMContentLoaded", resolve, {once: true, capture: true}));
+      await new Promise(resolve =>
+        addEventListener("DOMContentLoaded", resolve, {
+          once: true,
+          capture: true,
+        })
+      );
     }
   });
 }
@@ -48,23 +56,43 @@ async function testURL(url, loadFunc, endFunc) {
   // We need to ensure that we set the pageshow event listener before running
   // loadFunc, otherwise there's a chance that the content process will finish
   // loading the page and fire pageshow before the event listener gets set.
-  let pageShowPromise = BrowserTestUtils.waitForContentEvent(browser, "pageshow");
+  let pageShowPromise = BrowserTestUtils.waitForContentEvent(
+    browser,
+    "pageshow"
+  );
   loadFunc(url);
   await pageShowPromise;
 
-  await ContentTask.spawn(browser, { isRemote: gMultiProcessBrowser },
+  await ContentTask.spawn(
+    browser,
+    { isRemote: gMultiProcessBrowser },
     async function(arg) {
-      Assert.equal(Services.focus.focusedElement, null, "focusedElement not null");
+      Assert.equal(
+        Services.focus.focusedElement,
+        null,
+        "focusedElement not null"
+      );
 
       if (arg.isRemote) {
-        Assert.equal(Services.focus.activeWindow, content, "activeWindow not correct");
+        Assert.equal(
+          Services.focus.activeWindow,
+          content,
+          "activeWindow not correct"
+        );
       }
-  });
+    }
+  );
 
   is(document.activeElement, browser, "content window should be focused");
 
-  ok(!gBrowser.contentPrincipal.equals(pagePrincipal),
-     "load of " + url + " by " + loadFunc.name + " should produce a page with a different principal");
+  ok(
+    !gBrowser.contentPrincipal.equals(pagePrincipal),
+    "load of " +
+      url +
+      " by " +
+      loadFunc.name +
+      " should produce a page with a different principal"
+  );
 
   await BrowserTestUtils.removeTab(tab);
 }

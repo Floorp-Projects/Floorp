@@ -32,14 +32,17 @@ add_task(async function() {
 });
 
 async function testTargetScopedActor(client, form) {
-  ok(form.testOneActor,
-    "Found the test target-scoped actor.");
-  ok(form.testOneActor.includes("testOne"),
-    "testOneActor's actorPrefix should be used.");
+  ok(form.testOneActor, "Found the test target-scoped actor.");
+  ok(
+    form.testOneActor.includes("testOne"),
+    "testOneActor's actorPrefix should be used."
+  );
 
-  const response = await client.request({ to: form.testOneActor, type: "ping" });
-  is(response.pong, "pong",
-     "Actor should respond to requests.");
+  const response = await client.request({
+    to: form.testOneActor,
+    type: "ping",
+  });
+  is(response.pong, "pong", "Actor should respond to requests.");
 }
 
 async function closeTab(client, form) {
@@ -47,9 +50,12 @@ async function closeTab(client, form) {
   /* eslint-disable-next-line mozilla/rejects-requires-await*/
   const onReject = Assert.rejects(
     client.request({ to: form.testOneActor, type: "ping" }),
-    err => err.message === `'ping' active request packet to '${form.testOneActor}' ` +
-                           `can't be sent as the connection just closed.`,
-    "testOneActor went away.");
+    err =>
+      err.message ===
+      `'ping' active request packet to '${form.testOneActor}' ` +
+        `can't be sent as the connection just closed.`,
+    "testOneActor went away."
+  );
   await removeTab(gBrowser.selectedTab);
   await onReject;
 }

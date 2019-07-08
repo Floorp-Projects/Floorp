@@ -1,7 +1,7 @@
-import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
-import {mount} from "enzyme";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import { mount } from "enzyme";
 import React from "react";
-import {_StartupOverlay as StartupOverlay} from "content-src/asrouter/templates/StartupOverlay/StartupOverlay";
+import { _StartupOverlay as StartupOverlay } from "content-src/asrouter/templates/StartupOverlay/StartupOverlay";
 
 describe("<StartupOverlay>", () => {
   let wrapper;
@@ -15,7 +15,9 @@ describe("<StartupOverlay>", () => {
     onReady = sandbox.stub();
     onBlock = sandbox.stub();
 
-    wrapper = mount(<StartupOverlay onBlock={onBlock} onReady={onReady} dispatch={dispatch} />);
+    wrapper = mount(
+      <StartupOverlay onBlock={onBlock} onReady={onReady} dispatch={dispatch} />
+    );
   });
 
   afterEach(() => {
@@ -23,14 +25,16 @@ describe("<StartupOverlay>", () => {
   });
 
   it("should not render if state.show is false", () => {
-    wrapper.setState({overlayRemoved: true});
+    wrapper.setState({ overlayRemoved: true });
     assert.isTrue(wrapper.isEmptyRender());
   });
 
   it("should call prop.onReady after mount + timeout", async () => {
     const clock = sandbox.useFakeTimers();
-    wrapper = mount(<StartupOverlay onBlock={onBlock} onReady={onReady} dispatch={dispatch} />);
-    wrapper.setState({overlayRemoved: false});
+    wrapper = mount(
+      <StartupOverlay onBlock={onBlock} onReady={onReady} dispatch={dispatch} />
+    );
+    wrapper.setState({ overlayRemoved: false });
 
     clock.tick(10);
 
@@ -44,7 +48,13 @@ describe("<StartupOverlay>", () => {
 
     assert.calledOnce(dispatch);
     assert.isUserEventAction(dispatch.firstCall.args[0]);
-    assert.calledWith(dispatch, ac.UserEvent({event: at.SKIPPED_SIGNIN, value: {has_flow_params: false}}));
+    assert.calledWith(
+      dispatch,
+      ac.UserEvent({
+        event: at.SKIPPED_SIGNIN,
+        value: { has_flow_params: false },
+      })
+    );
   });
 
   it("should emit UserEvent SUBMIT_EMAIL when you submit the form", () => {
@@ -54,6 +64,12 @@ describe("<StartupOverlay>", () => {
 
     assert.calledOnce(dispatch);
     assert.isUserEventAction(dispatch.firstCall.args[0]);
-    assert.calledWith(dispatch, ac.UserEvent({event: at.SUBMIT_EMAIL, value: {has_flow_params: false}}));
+    assert.calledWith(
+      dispatch,
+      ac.UserEvent({
+        event: at.SUBMIT_EMAIL,
+        value: { has_flow_params: false },
+      })
+    );
   });
 });

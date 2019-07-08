@@ -26,11 +26,18 @@ add_task(async function() {
   const [flexItemSizingContainer] = await onFlexItemSizingRendered;
 
   info("Checking the initial state of the flex item list.");
-  is(flexItemSizingContainer.querySelectorAll("li").length, 2,
-    "Got the correct number of flex item sizing properties in the list.");
+  is(
+    flexItemSizingContainer.querySelectorAll("li").length,
+    2,
+    "Got the correct number of flex item sizing properties in the list."
+  );
 
   info("Changing the flexbox in the page.");
-  const onFlexItemSizingChanged = waitForDOM(doc, "ul.flex-item-sizing > li", 3);
+  const onFlexItemSizingChanged = waitForDOM(
+    doc,
+    "ul.flex-item-sizing > li",
+    3
+  );
   testActor.eval(`
     document.getElementById("item").style.minWidth = "100px";
   `);

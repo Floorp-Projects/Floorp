@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
@@ -82,13 +85,16 @@ class ExtensionSidebar extends PureComponent {
 
     const className = "devtools-monospace extension-sidebar inspector-tabpanel";
 
-    return dom.div({
-      id,
-      className,
-      style: {
-        height: "100%",
+    return dom.div(
+      {
+        id,
+        className,
+        style: {
+          height: "100%",
+        },
       },
-    }, sidebarContentEl);
+      sidebarContentEl
+    );
   }
 }
 

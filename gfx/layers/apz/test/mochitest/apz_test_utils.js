@@ -24,35 +24,55 @@ function convertEntries(entries) {
 function parseRect(str) {
   var pieces = str.replace(/[()\s]+/g, "").split(",");
   SimpleTest.is(pieces.length, 4, "expected string of form (x,y,w,h)");
-  return { x: parseInt(pieces[0]),
-           y: parseInt(pieces[1]),
-           w: parseInt(pieces[2]),
-           h: parseInt(pieces[3]) };
+  return {
+    x: parseInt(pieces[0]),
+    y: parseInt(pieces[1]),
+    w: parseInt(pieces[2]),
+    h: parseInt(pieces[3]),
+  };
 }
 
 // These functions expect rects with fields named x/y/w/h, such as
 // that returned by parseRect().
 function rectContains(haystack, needle) {
-  return haystack.x <= needle.x
-      && haystack.y <= needle.y
-      && (haystack.x + haystack.w) >= (needle.x + needle.w)
-      && (haystack.y + haystack.h) >= (needle.y + needle.h);
+  return (
+    haystack.x <= needle.x &&
+    haystack.y <= needle.y &&
+    haystack.x + haystack.w >= needle.x + needle.w &&
+    haystack.y + haystack.h >= needle.y + needle.h
+  );
 }
 function rectToString(rect) {
   return "(" + rect.x + "," + rect.y + "," + rect.w + "," + rect.h + ")";
 }
-function assertRectContainment(haystackRect, haystackDesc, needleRect, needleDesc) {
-  SimpleTest.ok(rectContains(haystackRect, needleRect),
-                haystackDesc + " " + rectToString(haystackRect) + " should contain " +
-                needleDesc + " " + rectToString(needleRect));
+function assertRectContainment(
+  haystackRect,
+  haystackDesc,
+  needleRect,
+  needleDesc
+) {
+  SimpleTest.ok(
+    rectContains(haystackRect, needleRect),
+    haystackDesc +
+      " " +
+      rectToString(haystackRect) +
+      " should contain " +
+      needleDesc +
+      " " +
+      rectToString(needleRect)
+  );
 }
 
 function getPropertyAsRect(scrollFrames, scrollId, prop) {
-  SimpleTest.ok(scrollId in scrollFrames,
-                "expected scroll frame data for scroll id " + scrollId);
+  SimpleTest.ok(
+    scrollId in scrollFrames,
+    "expected scroll frame data for scroll id " + scrollId
+  );
   var scrollFrameData = scrollFrames[scrollId];
-  SimpleTest.ok("displayport" in scrollFrameData,
-                "expected a " + prop + " for scroll id " + scrollId);
+  SimpleTest.ok(
+    "displayport" in scrollFrameData,
+    "expected a " + prop + " for scroll id " + scrollId
+  );
   var value = scrollFrameData[prop];
   return parseRect(value);
 }
@@ -68,7 +88,9 @@ function convertScrollFrameData(scrollFrames) {
 function convertBuckets(buckets) {
   var result = {};
   for (var i = 0; i < buckets.length; ++i) {
-    result[buckets[i].sequenceNumber] = convertScrollFrameData(buckets[i].scrollFrames);
+    result[buckets[i].sequenceNumber] = convertScrollFrameData(
+      buckets[i].scrollFrames
+    );
   }
   return result;
 }
@@ -94,14 +116,20 @@ function getLastNonemptyBucket(buckets) {
 
 // Takes something like "matrix(1, 0, 0, 1, 234.024, 528.29023)"" and returns a number array
 function parseTransform(transform) {
-  return /matrix\((.*),(.*),(.*),(.*),(.*),(.*)\)/.exec(transform)
-    .slice(1).map(parseFloat);
+  return /matrix\((.*),(.*),(.*),(.*),(.*),(.*)\)/
+    .exec(transform)
+    .slice(1)
+    .map(parseFloat);
 }
 
 function isTransformClose(a, b, name) {
-  is(a.length, b.length, `expected transforms ${a} and ${b} to be the same length`);
+  is(
+    a.length,
+    b.length,
+    `expected transforms ${a} and ${b} to be the same length`
+  );
   for (let i = 0; i < a.length; i++) {
-    ok(Math.abs(a[i] - b[i]) < .01, name);
+    ok(Math.abs(a[i] - b[i]) < 0.01, name);
   }
 }
 
@@ -115,7 +143,7 @@ function buildApzcTree(paint) {
   // The APZC tree can potentially have multiple root nodes,
   // so we invent a node that is the parent of all roots.
   // This 'root' does not correspond to an APZC.
-  var root = {scrollId: -1, children: []};
+  var root = { scrollId: -1, children: [] };
   for (let scrollId in paint) {
     paint[scrollId].children = [];
     paint[scrollId].scrollId = scrollId;
@@ -135,7 +163,8 @@ function buildApzcTree(paint) {
 // Given an APZC tree produced by buildApzcTree, return the RCD node in
 // the tree, or null if there was none.
 function findRcdNode(apzcTree) {
-  if (apzcTree.isRootContent) { // isRootContent will be undefined or "1"
+  // isRootContent will be undefined or "1"
+  if (apzcTree.isRootContent) {
     return apzcTree;
   }
   for (var i = 0; i < apzcTree.children.length; i++) {
@@ -151,7 +180,9 @@ function findRcdNode(apzcTree) {
 // Assumes |elementId| will be present in the content description for the
 // element, and not in the content descriptions of other elements.
 function isLayerized(elementId) {
-  var contentTestData = SpecialPowers.getDOMWindowUtils(window).getContentAPZTestData();
+  var contentTestData = SpecialPowers.getDOMWindowUtils(
+    window
+  ).getContentAPZTestData();
   var nonEmptyBucket = getLastNonemptyBucket(contentTestData.paints);
   ok(nonEmptyBucket != null, "expected at least one nonempty paint");
   var seqno = nonEmptyBucket.sequenceNumber;
@@ -170,14 +201,19 @@ function isLayerized(elementId) {
 function promiseApzRepaintsFlushed(aWindow = window) {
   return new Promise(function(resolve, reject) {
     var repaintDone = function() {
-      SpecialPowers.Services.obs.removeObserver(repaintDone, "apz-repaints-flushed");
+      SpecialPowers.Services.obs.removeObserver(
+        repaintDone,
+        "apz-repaints-flushed"
+      );
       setTimeout(resolve, 0);
     };
     SpecialPowers.Services.obs.addObserver(repaintDone, "apz-repaints-flushed");
     if (SpecialPowers.getDOMWindowUtils(aWindow).flushApzRepaints()) {
       dump("Flushed APZ repaints, waiting for callback...\n");
     } else {
-      dump("Flushing APZ repaints was a no-op, triggering callback directly...\n");
+      dump(
+        "Flushing APZ repaints was a no-op, triggering callback directly...\n"
+      );
       repaintDone();
     }
   });
@@ -248,18 +284,24 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
 
     // If the "apz.subtest" pref has been set, only a single subtest whose name matches
     // the pref's value (if any) will be run.
-    var onlyOneSubtest = SpecialPowers.getCharPref("apz.subtest", /* default = */ "");
+    var onlyOneSubtest = SpecialPowers.getCharPref(
+      "apz.subtest",
+      /* default = */ ""
+    );
 
     function advanceSubtestExecution() {
       var test = aSubtests[testIndex];
       if (w) {
         // Run any cleanup functions registered in the subtest
-        if (w.ApzCleanup) { // guard against the subtest not loading apz_test_utils.js
+        // Guard against the subtest not loading apz_test_utils.js
+        if (w.ApzCleanup) {
           w.ApzCleanup.execute();
         }
         if (typeof test.dp_suppression != "undefined") {
           // We modified the suppression when starting the test, so now undo that.
-          SpecialPowers.getDOMWindowUtils(window).respectDisplayPortSuppression(!test.dp_suppression);
+          SpecialPowers.getDOMWindowUtils(window).respectDisplayPortSuppression(
+            !test.dp_suppression
+          );
         }
         if (test.prefs) {
           // We pushed some prefs for this test, pop them, and re-invoke
@@ -286,15 +328,29 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
       let recognizedProps = ["file", "prefs", "dp_suppression", "onload"];
       for (let prop in test) {
         if (!recognizedProps.includes(prop)) {
-          SimpleTest.ok(false, "Subtest " + test.file + " has unrecognized property '" + prop + "'");
-          setTimeout(function() { advanceSubtestExecution(); }, 0);
+          SimpleTest.ok(
+            false,
+            "Subtest " + test.file + " has unrecognized property '" + prop + "'"
+          );
+          setTimeout(function() {
+            advanceSubtestExecution();
+          }, 0);
           return;
         }
       }
 
       if (onlyOneSubtest && onlyOneSubtest != test.file) {
-        SimpleTest.ok(true, "Skipping " + test.file + " because only " + onlyOneSubtest + " is being run");
-        setTimeout(function() { advanceSubtestExecution(); }, 0);
+        SimpleTest.ok(
+          true,
+          "Skipping " +
+            test.file +
+            " because only " +
+            onlyOneSubtest +
+            " is being run"
+        );
+        setTimeout(function() {
+          advanceSubtestExecution();
+        }, 0);
         return;
       }
 
@@ -306,7 +362,9 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         // unsuppression can trigger a repaint which interferes with the test, so
         // to avoid that we can force the displayport to be unsuppressed for the
         // entire test which is more deterministic.
-        SpecialPowers.getDOMWindowUtils(window).respectDisplayPortSuppression(test.dp_suppression);
+        SpecialPowers.getDOMWindowUtils(window).respectDisplayPortSuppression(
+          test.dp_suppression
+        );
       }
 
       function spawnTest(aFile) {
@@ -314,21 +372,39 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         w.subtestDone = advanceSubtestExecution;
         w.isApzSubtest = true;
         w.SimpleTest = SimpleTest;
-        w.dump = function(msg) { return dump(aFile + " | " + msg); };
-        w.is = function(a, b, msg) { return is(a, b, aFile + " | " + msg); };
-        w.isfuzzy = function(a, b, eps, msg) { return isfuzzy(a, b, eps, aFile + " | " + msg); };
+        w.dump = function(msg) {
+          return dump(aFile + " | " + msg);
+        };
+        w.is = function(a, b, msg) {
+          return is(a, b, aFile + " | " + msg);
+        };
+        w.isfuzzy = function(a, b, eps, msg) {
+          return isfuzzy(a, b, eps, aFile + " | " + msg);
+        };
         w.ok = function(cond, msg) {
           arguments[1] = aFile + " | " + msg;
           // Forward all arguments to SimpleTest.ok where we will check that ok() was
           // called with at most 2 arguments.
           return SimpleTest.ok.apply(SimpleTest, arguments);
         };
-        w.todo_is = function(a, b, msg) { return todo_is(a, b, aFile + " | " + msg); };
-        w.todo = function(cond, msg) { return todo(cond, aFile + " | " + msg); };
+        w.todo_is = function(a, b, msg) {
+          return todo_is(a, b, aFile + " | " + msg);
+        };
+        w.todo = function(cond, msg) {
+          return todo(cond, aFile + " | " + msg);
+        };
         if (test.onload) {
-          w.addEventListener("load", function(e) { test.onload(w); }, { once: true });
+          w.addEventListener(
+            "load",
+            function(e) {
+              test.onload(w);
+            },
+            { once: true }
+          );
         }
-        var subtestUrl = location.href.substring(0, location.href.lastIndexOf("/") + 1) + aFile;
+        var subtestUrl =
+          location.href.substring(0, location.href.lastIndexOf("/") + 1) +
+          aFile;
         function urlResolves(url) {
           var request = new XMLHttpRequest();
           request.open("GET", url, false);
@@ -336,8 +412,13 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
           return request.status !== 404;
         }
         if (!urlResolves(subtestUrl)) {
-          SimpleTest.ok(false, "Subtest URL " + subtestUrl + " does not resolve. " +
-              "Be sure it's present in the support-files section of mochitest.ini.");
+          SimpleTest.ok(
+            false,
+            "Subtest URL " +
+              subtestUrl +
+              " does not resolve. " +
+              "Be sure it's present in the support-files section of mochitest.ini."
+          );
           reject();
           return undefined;
         }
@@ -347,7 +428,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
 
       if (test.prefs) {
         // Got some prefs for this subtest, push them
-        SpecialPowers.pushPrefEnv({"set": test.prefs}, function() {
+        SpecialPowers.pushPrefEnv({ set: test.prefs }, function() {
           w = spawnTest(test.file);
         });
       } else {
@@ -362,7 +443,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
 }
 
 function pushPrefs(prefs) {
-  return SpecialPowers.pushPrefEnv({"set": prefs});
+  return SpecialPowers.pushPrefEnv({ set: prefs });
 }
 
 async function waitUntilApzStable() {
@@ -379,7 +460,9 @@ async function waitUntilApzStable() {
     /* eslint-env mozilla/frame-script */
     function parentProcessFlush() {
       function apzFlush() {
-        const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+        const { Services } = ChromeUtils.import(
+          "resource://gre/modules/Services.jsm"
+        );
         var topWin = Services.wm.getMostRecentWindow("navigator:browser");
         if (!topWin) {
           topWin = Services.wm.getMostRecentWindow("navigator:geckoview");
@@ -393,15 +476,21 @@ async function waitUntilApzStable() {
         };
         var flushRepaint = function() {
           if (topUtils.isMozAfterPaintPending) {
-            topWin.addEventListener("MozAfterPaint", flushRepaint, { once: true });
+            topWin.addEventListener("MozAfterPaint", flushRepaint, {
+              once: true,
+            });
             return;
           }
 
           Services.obs.addObserver(repaintDone, "apz-repaints-flushed");
           if (topUtils.flushApzRepaints()) {
-            dump("Parent process: flushed APZ repaints, waiting for callback...\n");
+            dump(
+              "Parent process: flushed APZ repaints, waiting for callback...\n"
+            );
           } else {
-            dump("Parent process: flushing APZ repaints was a no-op, triggering callback directly...\n");
+            dump(
+              "Parent process: flushing APZ repaints was a no-op, triggering callback directly...\n"
+            );
             repaintDone();
           }
         };
@@ -420,9 +509,11 @@ async function waitUntilApzStable() {
 
     // This is the first time waitUntilApzStable is being called, do initialization
     if (typeof waitUntilApzStable.chromeHelper == "undefined") {
-      waitUntilApzStable.chromeHelper = SpecialPowers.loadChromeScript(parentProcessFlush);
+      waitUntilApzStable.chromeHelper = SpecialPowers.loadChromeScript(
+        parentProcessFlush
+      );
       ApzCleanup.register(() => {
-        waitUntilApzStable.chromeHelper.sendSyncMessage("cleanup", null);
+        waitUntilApzStable.chromeHelper.sendAsyncMessage("cleanup", null);
         waitUntilApzStable.chromeHelper.destroy();
         delete waitUntilApzStable.chromeHelper;
       });
@@ -510,7 +601,10 @@ function runContinuation(testFunction) {
       try {
         driveTest();
       } catch (ex) {
-        SimpleTest.ok(false, "APZ test continuation failed with exception: " + ex);
+        SimpleTest.ok(
+          false,
+          "APZ test continuation failed with exception: " + ex
+        );
       }
     });
   };
@@ -527,7 +621,10 @@ function runAsyncContinuation(testFunction) {
         ret = await asyncContinuation.next();
       }
     } catch (ex) {
-      SimpleTest.ok(false, "APZ async test continuation failed with exception: " + ex);
+      SimpleTest.ok(
+        false,
+        "APZ async test continuation failed with exception: " + ex
+      );
       throw ex;
     }
   };
@@ -551,7 +648,9 @@ function runAsyncContinuation(testFunction) {
 function getSnapshot(rect) {
   function parentProcessSnapshot() {
     addMessageListener("snapshot", function(parentRect) {
-      const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+      const { Services } = ChromeUtils.import(
+        "resource://gre/modules/Services.jsm"
+      );
       var topWin = Services.wm.getMostRecentWindow("navigator:browser");
       if (!topWin) {
         topWin = Services.wm.getMostRecentWindow("navigator:geckoview");
@@ -563,24 +662,39 @@ function getSnapshot(rect) {
       parentRect.y -= topWin.mozInnerScreenY;
 
       // take the snapshot
-      var canvas = topWin.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+      var canvas = topWin.document.createElementNS(
+        "http://www.w3.org/1999/xhtml",
+        "canvas"
+      );
       canvas.width = parentRect.w;
       canvas.height = parentRect.h;
       var ctx = canvas.getContext("2d");
-      ctx.drawWindow(topWin, parentRect.x, parentRect.y, parentRect.w, parentRect.h,
+      ctx.drawWindow(
+        topWin,
+        parentRect.x,
+        parentRect.y,
+        parentRect.w,
+        parentRect.h,
         "rgb(255,255,255)",
-        ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_USE_WIDGET_LAYERS | ctx.DRAWWINDOW_DRAW_CARET);
+        ctx.DRAWWINDOW_DRAW_VIEW |
+          ctx.DRAWWINDOW_USE_WIDGET_LAYERS |
+          ctx.DRAWWINDOW_DRAW_CARET
+      );
       return canvas.toDataURL();
     });
   }
 
   if (typeof getSnapshot.chromeHelper == "undefined") {
     // This is the first time getSnapshot is being called; do initialization
-    getSnapshot.chromeHelper = SpecialPowers.loadChromeScript(parentProcessSnapshot);
-    ApzCleanup.register(function() { getSnapshot.chromeHelper.destroy(); });
+    getSnapshot.chromeHelper = SpecialPowers.loadChromeScript(
+      parentProcessSnapshot
+    );
+    ApzCleanup.register(function() {
+      getSnapshot.chromeHelper.destroy();
+    });
   }
 
-  return getSnapshot.chromeHelper.sendSyncMessage("snapshot", JSON.stringify(rect)).toString();
+  return getSnapshot.chromeHelper.sendQuery("snapshot", JSON.stringify(rect));
 }
 
 // Takes the document's query string and parses it, assuming the query string
@@ -641,8 +755,8 @@ function injectScript(aScript, aWindow = window) {
 function getHitTestConfig() {
   if (!("hitTestConfig" in window)) {
     var utils = SpecialPowers.getDOMWindowUtils(window);
-    var isWebRender = (utils.layerManagerType == "WebRender");
-    var isWindows = (getPlatform() == "windows");
+    var isWebRender = utils.layerManagerType == "WebRender";
+    var isWindows = getPlatform() == "windows";
     window.hitTestConfig = { utils, isWebRender, isWindows };
   }
   return window.hitTestConfig;
@@ -656,7 +770,7 @@ function centerOf(element) {
     element = document.getElementById(element);
   }
   var bounds = element.getBoundingClientRect();
-  return { x: bounds.x + (bounds.width / 2), y: bounds.y + (bounds.height / 2) };
+  return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
 }
 
 // Peform a compositor hit test at the given point and return the result.
@@ -666,11 +780,30 @@ function centerOf(element) {
 function hitTest(point) {
   var utils = getHitTestConfig().utils;
   dump("Hit-testing point (" + point.x + ", " + point.y + ")\n");
-  utils.sendMouseEvent("MozMouseHittest", point.x, point.y, 0, 0, 0, true, 0, 0, true, true);
+  utils.sendMouseEvent(
+    "MozMouseHittest",
+    point.x,
+    point.y,
+    0,
+    0,
+    0,
+    true,
+    0,
+    0,
+    true,
+    true
+  );
   var data = utils.getCompositorAPZTestData();
-  ok(data.hitResults.length >= 1, "Expected at least one hit result in the APZTestData");
+  ok(
+    data.hitResults.length >= 1,
+    "Expected at least one hit result in the APZTestData"
+  );
   var result = data.hitResults[data.hitResults.length - 1];
-  return { hitInfo: result.hitResult, scrollId: result.scrollId, layersId: result.layersId };
+  return {
+    hitInfo: result.hitResult,
+    scrollId: result.scrollId,
+    layersId: result.layersId,
+  };
 }
 
 // Returns a canonical stringification of the hitInfo bitfield.
@@ -693,20 +826,30 @@ function hitInfoToString(hitInfo) {
 // Takes an object returned by hitTest, along with the expected values, and
 // asserts that they match. Notably, it uses hitInfoToString to provide a
 // more useful message for the case that the hit info doesn't match
-function checkHitResult(hitResult, expectedHitInfo, expectedScrollId, expectedLayersId, desc) {
-  is(hitInfoToString(hitResult.hitInfo), hitInfoToString(expectedHitInfo), desc + " hit info");
+function checkHitResult(
+  hitResult,
+  expectedHitInfo,
+  expectedScrollId,
+  expectedLayersId,
+  desc
+) {
+  is(
+    hitInfoToString(hitResult.hitInfo),
+    hitInfoToString(expectedHitInfo),
+    desc + " hit info"
+  );
   is(hitResult.scrollId, expectedScrollId, desc + " scrollid");
   is(hitResult.layersId, expectedLayersId, desc + " layersid");
 }
 
 // Symbolic constants used by hitTestScrollbar().
 var ScrollbarTrackLocation = {
-    START: 1,
-    END: 2,
+  START: 1,
+  END: 2,
 };
 var LayerState = {
-    ACTIVE: 1,
-    INACTIVE: 2,
+  ACTIVE: 1,
+  INACTIVE: 2,
 };
 
 // Perform a hit test on the scrollbar(s) of a scroll frame.
@@ -743,8 +886,12 @@ function hitTestScrollbar(params) {
   // coordinates for hit-testing we need to account for this. We assume the
   // buttons are square, and so can use the scrollbar width/height to estimate
   // the size of the buttons
-  var scrollbarArrowButtonHeight = config.isWindows ? verticalScrollbarWidth : 0;
-  var scrollbarArrowButtonWidth = config.isWindows ? horizontalScrollbarHeight : 0;
+  var scrollbarArrowButtonHeight = config.isWindows
+    ? verticalScrollbarWidth
+    : 0;
+  var scrollbarArrowButtonWidth = config.isWindows
+    ? horizontalScrollbarHeight
+    : 0;
 
   // Compute the expected hit result flags.
   // The direction flag (APZHitResultFlags.SCROLLBAR_VERTICAL) is added in
@@ -774,37 +921,51 @@ function hitTestScrollbar(params) {
     }
   }
 
-  var scrollframeMsg = (params.layerState == LayerState.ACTIVE)
-    ? "active scrollframe" : "inactive scrollframe";
+  var scrollframeMsg =
+    params.layerState == LayerState.ACTIVE
+      ? "active scrollframe"
+      : "inactive scrollframe";
 
   // Hit-test the targeted areas, assuming we don't have overlay scrollbars
   // with zero dimensions.
   if (params.directions.vertical && verticalScrollbarWidth > 0) {
     var verticalScrollbarPoint = {
-        x: boundingClientRect.right - (verticalScrollbarWidth / 2),
-        y: (params.trackLocation == ScrollbarTrackLocation.START)
-             ? (boundingClientRect.y + scrollbarArrowButtonHeight + 5)
-             : (boundingClientRect.bottom - horizontalScrollbarHeight - scrollbarArrowButtonHeight - 5),
+      x: boundingClientRect.right - verticalScrollbarWidth / 2,
+      y:
+        params.trackLocation == ScrollbarTrackLocation.START
+          ? boundingClientRect.y + scrollbarArrowButtonHeight + 5
+          : boundingClientRect.bottom -
+            horizontalScrollbarHeight -
+            scrollbarArrowButtonHeight -
+            5,
     };
-    checkHitResult(hitTest(verticalScrollbarPoint),
-                   expectedHitInfo | APZHitResultFlags.SCROLLBAR_VERTICAL,
-                   params.expectedScrollId,
-                   params.expectedLayersId,
-                   scrollframeMsg + " - vertical scrollbar");
+    checkHitResult(
+      hitTest(verticalScrollbarPoint),
+      expectedHitInfo | APZHitResultFlags.SCROLLBAR_VERTICAL,
+      params.expectedScrollId,
+      params.expectedLayersId,
+      scrollframeMsg + " - vertical scrollbar"
+    );
   }
 
   if (params.directions.horizontal && horizontalScrollbarHeight > 0) {
     var horizontalScrollbarPoint = {
-        x: (params.trackLocation == ScrollbarTrackLocation.START)
-             ? (boundingClientRect.x + scrollbarArrowButtonWidth + 5)
-             : (boundingClientRect.right - verticalScrollbarWidth - scrollbarArrowButtonWidth - 5),
-        y: boundingClientRect.bottom - (horizontalScrollbarHeight / 2),
+      x:
+        params.trackLocation == ScrollbarTrackLocation.START
+          ? boundingClientRect.x + scrollbarArrowButtonWidth + 5
+          : boundingClientRect.right -
+            verticalScrollbarWidth -
+            scrollbarArrowButtonWidth -
+            5,
+      y: boundingClientRect.bottom - horizontalScrollbarHeight / 2,
     };
-    checkHitResult(hitTest(horizontalScrollbarPoint),
-                   expectedHitInfo,
-                   params.expectedScrollId,
-                   params.expectedLayersId,
-                   scrollframeMsg + " - horizontal scrollbar");
+    checkHitResult(
+      hitTest(horizontalScrollbarPoint),
+      expectedHitInfo,
+      params.expectedScrollId,
+      params.expectedLayersId,
+      scrollframeMsg + " - horizontal scrollbar"
+    );
   }
 }
 
@@ -862,7 +1023,16 @@ var ApzCleanup = {
       try {
         func();
       } catch (ex) {
-        SimpleTest.ok(false, "Subtest cleanup function [" + func.toString() + "] threw exception [" + ex + "] on page [" + location.href + "]");
+        SimpleTest.ok(
+          false,
+          "Subtest cleanup function [" +
+            func.toString() +
+            "] threw exception [" +
+            ex +
+            "] on page [" +
+            location.href +
+            "]"
+        );
       }
     }
   },

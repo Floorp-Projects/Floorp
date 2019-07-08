@@ -11,11 +11,13 @@ add_task(async () => {
   let defaultProfile = makeRandomProfileDir("default");
 
   let profilesIni = {
-    profiles: [{
-      name: "default",
-      path: defaultProfile.leafName,
-      default: true,
-    }],
+    profiles: [
+      {
+        name: "default",
+        path: defaultProfile.leafName,
+        default: true,
+      },
+    ],
     installs: {
       [hash]: {
         default: defaultProfile.leafName,
@@ -29,8 +31,16 @@ add_task(async () => {
 
   let { profile, didCreate } = selectStartupProfile();
   Assert.ok(!didCreate, "Should have not created a new profile.");
-  Assert.equal(profile.name, "default", "Should have selected the default profile.");
-  Assert.equal(profile, service.defaultProfile, "Should have selected the default profile.");
+  Assert.equal(
+    profile.name,
+    "default",
+    "Should have selected the default profile."
+  );
+  Assert.equal(
+    profile,
+    service.defaultProfile,
+    "Should have selected the default profile."
+  );
 
   checkProfileService(profilesIni);
 
@@ -40,7 +50,11 @@ add_task(async () => {
   profile.remove(false);
 
   Assert.ok(!service.defaultProfile, "Should no longer be a default profile.");
-  Assert.equal(profile, service.currentProfile, "Should still be the profile in use.");
+  Assert.equal(
+    profile,
+    service.currentProfile,
+    "Should still be the profile in use."
+  );
 
   // These are the modifications that should have been made.
   profilesIni.profiles.pop();
@@ -57,5 +71,9 @@ add_task(async () => {
   // checkProfileService doesn't differentiate between a blank default profile
   // for the install and a missing install.
   profilesIni = readProfilesIni();
-  Assert.equal(profilesIni.installs[hash].default, "", "Should be a blank default profile.");
+  Assert.equal(
+    profilesIni.installs[hash].default,
+    "",
+    "Should be a blank default profile."
+  );
 });

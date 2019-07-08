@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(async function test() {
-  await SpecialPowers.pushPrefEnv({"set": [["browser.ctrlTab.recentlyUsedOrder", true]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.ctrlTab.recentlyUsedOrder", true]],
+  });
 
   let [origTab] = gBrowser.visibleTabs;
   let tabOne = BrowserTestUtils.addTab(gBrowser);
@@ -17,13 +19,23 @@ add_task(async function test() {
 
   gBrowser.showOnlyTheseTabs([origTab]);
   pressCtrlTab();
-  ok(!ctrlTab.isOpen, "With 1 tab open, Ctrl+Tab doesn't open the preview panel");
+  ok(
+    !ctrlTab.isOpen,
+    "With 1 tab open, Ctrl+Tab doesn't open the preview panel"
+  );
   releaseCtrl();
 
   gBrowser.showOnlyTheseTabs([origTab, tabOne, tabTwo]);
   pressCtrlTab();
-  ok(ctrlTab.isOpen, "Ctrl+Tab opens the preview panel after re-showing hidden tabs");
-  is(ctrlTab.tabList.length, 3, "Ctrl+Tab panel displays all visible tabs after re-showing hidden ones");
+  ok(
+    ctrlTab.isOpen,
+    "Ctrl+Tab opens the preview panel after re-showing hidden tabs"
+  );
+  is(
+    ctrlTab.tabList.length,
+    3,
+    "Ctrl+Tab panel displays all visible tabs after re-showing hidden ones"
+  );
   releaseCtrl();
 
   // cleanup

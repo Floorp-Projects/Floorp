@@ -8,7 +8,9 @@ function findCommonPrefixLength(strs) {
     // only one page in the manifest
     // i.e. http://localhost/tests/perf-reftest/bloom-basic.html
     var place = strs[0].lastIndexOf("/");
-    if (place < 0) place = 0;
+    if (place < 0) {
+      place = 0;
+    }
     return place;
   }
 
@@ -32,8 +34,9 @@ function findCommonPrefixLength(strs) {
       }
     }
 
-    if (failed)
+    if (failed) {
       break;
+    }
 
     len++;
   } while (true);
@@ -68,11 +71,15 @@ Report.prototype.getReport = function() {
   for (var i = 0; i < pages.length; i++) {
     // don't report any measurements that were reported for about:blank
     // some tests (like about-preferences) use it as a dummy test page
-    if (pages[i] == "about:blank")
+    if (pages[i] == "about:blank") {
       continue;
-    report += "|" +
-      i + ";" +
-      pages[i].substr(prefixLen) + ";" +
+    }
+    report +=
+      "|" +
+      i +
+      ";" +
+      pages[i].substr(prefixLen) +
+      ";" +
       this.timeVals[pages[i]].join(";") +
       "\n";
   }
@@ -83,7 +90,7 @@ Report.prototype.getReport = function() {
     report += "_x_x_mozilla_cycle_collect," + this.totalCCTime + "\n";
     report += "__end_cc_report\n";
   }
-  var now = (new Date()).getTime(); // eslint-disable-line mozilla/avoid-Date-timing
+  var now = new Date().getTime(); // eslint-disable-line mozilla/avoid-Date-timing
   report += "__startTimestamp" + now + "__endTimestamp\n"; // timestamp for determning shutdown time, used by talos
 
   return report;
@@ -92,20 +99,23 @@ Report.prototype.getReport = function() {
 Report.prototype.getReportSummary = function() {
   function average(arr) {
     var sum = 0;
-    for (var i in arr)
+    for (var i in arr) {
       sum += arr[i];
+    }
     return sum / (arr.length || 1);
   }
 
   function median(arr) {
-    if (!arr.length)
-      return 0; // As good indication for "not available" as any other value.
+    if (!arr.length) {
+      return 0;
+    } // As good indication for "not available" as any other value.
 
     var sorted = arr.slice(0).sort();
     var mid = Math.floor(arr.length / 2);
 
-    if (sorted.length % 2)
+    if (sorted.length % 2) {
       return sorted[mid];
+    }
 
     return average(sorted.slice(mid, mid + 2));
   }
@@ -118,8 +128,12 @@ Report.prototype.getReportSummary = function() {
     }
     var avg = average(arr);
 
-    var squareDiffArr = arr.map( function(v) { return Math.pow(v - avg, 2); } );
-    var sum = squareDiffArr.reduce( function(a, b) { return a + b; } );
+    var squareDiffArr = arr.map(function(v) {
+      return Math.pow(v - avg, 2);
+    });
+    var sum = squareDiffArr.reduce(function(a, b) {
+      return a + b;
+    });
     var rv = Math.sqrt(sum / (arr.length - 1));
     return rv;
   }
@@ -133,20 +147,35 @@ Report.prototype.getReportSummary = function() {
 
   for (var i = 0; i < pages.length; i++) {
     var results = this.timeVals[pages[i]].map(function(v) {
-                                                return Number(v);
-                                              });
+      return Number(v);
+    });
 
-    report += "\n[#" + i + "] " + pages[i].substr(prefixLen)
-            + "  Cycles:" + results.length
-            + "  Average:" + average(results).toFixed(2)
-            + "  Median:" + median(results).toFixed(2)
-            + "  stddev:" + stddev(results).toFixed(2)
-            + " (" + (100 * stddev(results) / median(results)).toFixed(1) + "%)"
-            + (results.length < 5 ? "" : ("  stddev-sans-first:" + stddev(results.slice(1)).toFixed(2)))
-            + "\nValues: " + results.map(function(v) {
-                                           return v.toFixed(1);
-                                         }).join("  ")
-            + "\n";
+    report +=
+      "\n[#" +
+      i +
+      "] " +
+      pages[i].substr(prefixLen) +
+      "  Cycles:" +
+      results.length +
+      "  Average:" +
+      average(results).toFixed(2) +
+      "  Median:" +
+      median(results).toFixed(2) +
+      "  stddev:" +
+      stddev(results).toFixed(2) +
+      " (" +
+      ((100 * stddev(results)) / median(results)).toFixed(1) +
+      "%)" +
+      (results.length < 5
+        ? ""
+        : "  stddev-sans-first:" + stddev(results.slice(1)).toFixed(2)) +
+      "\nValues: " +
+      results
+        .map(function(v) {
+          return v.toFixed(1);
+        })
+        .join("  ") +
+      "\n";
   }
   report += "-------- Summary: end --------\n";
 

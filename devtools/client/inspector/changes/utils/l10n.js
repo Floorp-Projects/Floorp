@@ -5,7 +5,9 @@
 "use strict";
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/changes.properties");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/changes.properties"
+);
 
 module.exports = {
   getStr: (...args) => L10N.getStr(...args),

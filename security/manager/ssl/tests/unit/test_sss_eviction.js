@@ -51,15 +51,24 @@ function do_state_read(aSubject, aTopic, aData) {
 
   equal(aData, SSS_STATE_FILE_NAME);
 
-  ok(gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://frequentlyused.example.com"), 0));
+  ok(
+    gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://frequentlyused.example.com"),
+      0
+    )
+  );
   let secInfo = new FakeTransportSecurityInfo();
   for (let i = 0; i < 2000; i++) {
     let uri = Services.io.newURI("http://bad" + i + ".example.com");
-    gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                            "max-age=1000", secInfo, 0,
-                            Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
+    gSSService.processHeader(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      uri,
+      "max-age=1000",
+      secInfo,
+      0,
+      Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
+    );
   }
   do_test_pending();
   Services.obs.addObserver(do_state_written, "data-storage-written");
@@ -75,13 +84,15 @@ function run_test() {
   // until we create it.
   ok(!stateFile.exists());
   let outputStream = FileUtils.openFileOutputStream(stateFile);
-  let now = (new Date()).getTime();
-  let line = "frequentlyused.example.com:HSTS\t4\t0\t" + (now + 100000) + ",1,0\n";
+  let now = new Date().getTime();
+  let line =
+    "frequentlyused.example.com:HSTS\t4\t0\t" + (now + 100000) + ",1,0\n";
   outputStream.write(line, line.length);
   outputStream.close();
   Services.obs.addObserver(do_state_read, "data-storage-ready");
   do_test_pending();
-  gSSService = Cc["@mozilla.org/ssservice;1"]
-                 .getService(Ci.nsISiteSecurityService);
+  gSSService = Cc["@mozilla.org/ssservice;1"].getService(
+    Ci.nsISiteSecurityService
+  );
   notEqual(gSSService, null);
 }

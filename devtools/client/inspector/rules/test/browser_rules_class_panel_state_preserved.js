@@ -7,8 +7,10 @@
 // Test that class states are preserved when switching to other nodes
 
 add_task(async function() {
-  await addTab("data:text/html;charset=utf-8,<body class='class1 class2 class3'><div>");
-  const {inspector, view} = await openRuleView();
+  await addTab(
+    "data:text/html;charset=utf-8,<body class='class1 class2 class3'><div>"
+  );
+  const { inspector, view } = await openRuleView();
 
   info("Open the class panel");
   view.showClassPanel();
@@ -19,8 +21,11 @@ add_task(async function() {
 
   info("Now select the <div> so the panel gets refreshed");
   await selectNode("div", inspector);
-  is(view.classPanel.querySelectorAll("[type=checkbox]").length, 0,
-     "The panel content doesn't contain any checkboxes anymore");
+  is(
+    view.classPanel.querySelectorAll("[type=checkbox]").length,
+    0,
+    "The panel content doesn't contain any checkboxes anymore"
+  );
 
   info("Select the <body> again");
   await selectNode("body", inspector);

@@ -22,8 +22,10 @@ registerCleanupFunction(remove_bookmarks_html);
 add_task(async function test_migrate_bookmarks() {
   // Initialize Places through the History Service and check that a new
   // database has been created.
-  Assert.equal(PlacesUtils.history.databaseStatus,
-               PlacesUtils.history.DATABASE_STATUS_CREATE);
+  Assert.equal(
+    PlacesUtils.history.databaseStatus,
+    PlacesUtils.history.DATABASE_STATUS_CREATE
+  );
 
   // A migrator would run before nsBrowserGlue Places initialization, so mimic
   // that behavior adding a bookmark and notifying the migration.
@@ -50,13 +52,17 @@ add_task(async function test_migrate_bookmarks() {
   Assert.equal(bm.title, "migrated");
 
   // Check that we have not imported any new bookmark.
-  Assert.ok(!(await PlacesUtils.bookmarks.fetch({
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    index: 1,
-  })));
+  Assert.ok(
+    !(await PlacesUtils.bookmarks.fetch({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      index: 1,
+    }))
+  );
 
-  Assert.ok(!(await PlacesUtils.bookmarks.fetch({
-    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: 0,
-  })));
+  Assert.ok(
+    !(await PlacesUtils.bookmarks.fetch({
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      index: 0,
+    }))
+  );
 });

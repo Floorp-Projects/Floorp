@@ -12,28 +12,40 @@ export class ImpressionsWrapper extends React.PureComponent {
   // only send the event if the page becomes visible again.
   sendImpressionOrAddListener() {
     if (this.props.document.visibilityState === VISIBLE) {
-      this.props.sendImpression({id: this.props.id});
+      this.props.sendImpression({ id: this.props.id });
     } else {
       // We should only ever send the latest impression stats ping, so remove any
       // older listeners.
       if (this._onVisibilityChange) {
-        this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+        this.props.document.removeEventListener(
+          VISIBILITY_CHANGE_EVENT,
+          this._onVisibilityChange
+        );
       }
 
       // When the page becomes visible, send the impression stats ping if the section isn't collapsed.
       this._onVisibilityChange = () => {
         if (this.props.document.visibilityState === VISIBLE) {
-          this.props.sendImpression({id: this.props.id});
-          this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+          this.props.sendImpression({ id: this.props.id });
+          this.props.document.removeEventListener(
+            VISIBILITY_CHANGE_EVENT,
+            this._onVisibilityChange
+          );
         }
       };
-      this.props.document.addEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+      this.props.document.addEventListener(
+        VISIBILITY_CHANGE_EVENT,
+        this._onVisibilityChange
+      );
     }
   }
 
   componentWillUnmount() {
     if (this._onVisibilityChange) {
-      this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+      this.props.document.removeEventListener(
+        VISIBILITY_CHANGE_EVENT,
+        this._onVisibilityChange
+      );
     }
   }
 

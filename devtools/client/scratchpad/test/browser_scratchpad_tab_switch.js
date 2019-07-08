@@ -17,17 +17,27 @@ function test() {
     BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
       openScratchpad(runTests);
     });
-    BrowserTestUtils.loadURI(gBrowser, "data:text/html,test context switch in Scratchpad tab 2");
+    BrowserTestUtils.loadURI(
+      gBrowser,
+      "data:text/html,test context switch in Scratchpad tab 2"
+    );
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,test context switch in Scratchpad tab 1");
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    "data:text/html,test context switch in Scratchpad tab 1"
+  );
 }
 
 async function runTests() {
   sp = gScratchpadWindow.Scratchpad;
 
-  const contentMenu = gScratchpadWindow.document.getElementById("sp-menu-content");
-  const browserMenu = gScratchpadWindow.document.getElementById("sp-menu-browser");
+  const contentMenu = gScratchpadWindow.document.getElementById(
+    "sp-menu-content"
+  );
+  const browserMenu = gScratchpadWindow.document.getElementById(
+    "sp-menu-browser"
+  );
   const notificationBox = sp.notificationBox;
 
   ok(contentMenu, "found #sp-menu-content");
@@ -36,17 +46,29 @@ async function runTests() {
 
   sp.setContentContext();
 
-  is(sp.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_CONTENT,
-     "executionContext is content");
+  is(
+    sp.executionContext,
+    gScratchpadWindow.SCRATCHPAD_CONTEXT_CONTENT,
+    "executionContext is content"
+  );
 
-  is(contentMenu.getAttribute("checked"), "true",
-     "content menuitem is checked");
+  is(
+    contentMenu.getAttribute("checked"),
+    "true",
+    "content menuitem is checked"
+  );
 
-  isnot(browserMenu.getAttribute("checked"), "true",
-     "chrome menuitem is not checked");
+  isnot(
+    browserMenu.getAttribute("checked"),
+    "true",
+    "chrome menuitem is not checked"
+  );
 
-  is(notificationBox.currentNotification, null,
-     "there is no notification currently shown for content context");
+  is(
+    notificationBox.currentNotification,
+    null,
+    "there is no notification currently shown for content context"
+  );
 
   sp.setText("window.foosbug653108 = 'aloha';");
 
@@ -57,8 +79,11 @@ async function runTests() {
   await sp.run();
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    is(content.wrappedJSObject.foosbug653108, "aloha",
-      "content.foosbug653108 has been set");
+    is(
+      content.wrappedJSObject.foosbug653108,
+      "aloha",
+      "content.foosbug653108 has been set"
+    );
   });
 
   gBrowser.tabContainer.addEventListener("TabSelect", runTests2, true);
@@ -77,12 +102,18 @@ async function runTests2() {
   sp.setText("window.foosbug653108 = 'ahoyhoy';");
   await sp.run();
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    is(content.wrappedJSObject.foosbug653108, "ahoyhoy",
-      "content.foosbug653108 has been set 2");
+    is(
+      content.wrappedJSObject.foosbug653108,
+      "ahoyhoy",
+      "content.foosbug653108 has been set 2"
+    );
   });
 
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(runTests3);
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,test context switch in Scratchpad location 2");
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    "data:text/html,test context switch in Scratchpad location 2"
+  );
 }
 
 function runTests3() {

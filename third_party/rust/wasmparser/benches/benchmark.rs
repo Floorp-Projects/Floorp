@@ -11,6 +11,7 @@ const VALIDATOR_CONFIG: Option<ValidatingParserConfig> = Some(ValidatingParserCo
         enable_reference_types: true,
         enable_simd: true,
         enable_bulk_memory: true,
+        enable_multi_value: true,
     },
     mutable_global_imports: true,
 });

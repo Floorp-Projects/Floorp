@@ -4,13 +4,14 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "AUSTLMY",
-];
+var EXPORTED_SYMBOLS = ["AUSTLMY"];
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {BitsError, BitsUnknownError} =
-  ChromeUtils.import("resource://gre/modules/Bits.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { BitsError, BitsUnknownError } = ChromeUtils.import(
+  "resource://gre/modules/Bits.jsm"
+);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
 // It is possible for the update.session telemetry to be set more than once
@@ -286,7 +287,10 @@ var AUSTLMY = {
    * @param  aCode
    *         An integer value for the error code from the update.bt file.
    */
-  pingBinaryTransparencyResult: function UT_pingBinaryTransparencyResult(aSuffix, aCode) {
+  pingBinaryTransparencyResult: function UT_pingBinaryTransparencyResult(
+    aSuffix,
+    aCode
+  ) {
     try {
       let id = "update.binarytransparencyresult";
       let key = aSuffix.toLowerCase().replace("_", "-");
@@ -314,8 +318,10 @@ var AUSTLMY = {
    */
   pingBitsError: function UT_pingBitsError(aIsComplete, aError) {
     if (AppConstants.platform != "win") {
-      Cu.reportError("Warning: Attempted to submit BITS telemetry on a " +
-                     "non-Windows platform");
+      Cu.reportError(
+        "Warning: Attempted to submit BITS telemetry on a " +
+          "non-Windows platform"
+      );
       return;
     }
     if (!(aError instanceof BitsError)) {
@@ -325,12 +331,16 @@ var AUSTLMY = {
     // Coerce the error to integer
     let type = +aError.type;
     if (isNaN(type)) {
-      Cu.reportError("Error sending BITS Error ping: Either error is not a " +
-                     "BitsError, or error type is not an integer.");
+      Cu.reportError(
+        "Error sending BITS Error ping: Either error is not a " +
+          "BitsError, or error type is not an integer."
+      );
       type = Ci.nsIBits.ERROR_TYPE_UNKNOWN;
     } else if (type == Ci.nsIBits.ERROR_TYPE_SUCCESS) {
-      Cu.reportError("Error sending BITS Error ping: The error type must not " +
-                     "be the success type.");
+      Cu.reportError(
+        "Error sending BITS Error ping: The error type must not " +
+          "be the success type."
+      );
       type = Ci.nsIBits.ERROR_TYPE_UNKNOWN;
     }
     this._pingBitsResult(aIsComplete, type);
@@ -343,8 +353,11 @@ var AUSTLMY = {
         scalarKey = this.PATCH_PARTIAL;
       }
       try {
-        Services.telemetry.keyedScalarSet("update.bitshresult", scalarKey,
-                                          aError.code);
+        Services.telemetry.keyedScalarSet(
+          "update.bitshresult",
+          scalarKey,
+          aError.code
+        );
       } catch (e) {
         Cu.reportError(e);
       }
@@ -363,8 +376,10 @@ var AUSTLMY = {
    */
   pingBitsSuccess: function UT_pingBitsSuccess(aIsComplete) {
     if (AppConstants.platform != "win") {
-      Cu.reportError("Warning: Attempted to submit BITS telemetry on a " +
-                     "non-Windows platform");
+      Cu.reportError(
+        "Warning: Attempted to submit BITS telemetry on a " +
+          "non-Windows platform"
+      );
       return;
     }
     this._pingBitsResult(aIsComplete, Ci.nsIBits.ERROR_TYPE_SUCCESS);
@@ -412,9 +427,12 @@ var AUSTLMY = {
    *         UPDATE_LAST_NOTIFY_INTERVAL_DAYS_NOTIFY
    */
   pingLastUpdateTime: function UT_pingLastUpdateTime(aSuffix) {
-    const PREF_APP_UPDATE_LASTUPDATETIME = "app.update.lastUpdateTime.background-update-timer";
+    const PREF_APP_UPDATE_LASTUPDATETIME =
+      "app.update.lastUpdateTime.background-update-timer";
     if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_LASTUPDATETIME)) {
-      let lastUpdateTimeSeconds = Services.prefs.getIntPref(PREF_APP_UPDATE_LASTUPDATETIME);
+      let lastUpdateTimeSeconds = Services.prefs.getIntPref(
+        PREF_APP_UPDATE_LASTUPDATETIME
+      );
       if (lastUpdateTimeSeconds) {
         let currentTimeSeconds = Math.round(Date.now() / 1000);
         if (lastUpdateTimeSeconds > currentTimeSeconds) {
@@ -426,8 +444,8 @@ var AUSTLMY = {
             Cu.reportError(e);
           }
         } else {
-          let intervalDays = (currentTimeSeconds - lastUpdateTimeSeconds) /
-                             (60 * 60 * 24);
+          let intervalDays =
+            (currentTimeSeconds - lastUpdateTimeSeconds) / (60 * 60 * 24);
           try {
             let id = "UPDATE_LAST_NOTIFY_INTERVAL_DAYS_" + aSuffix;
             // exponential type histogram
@@ -473,38 +491,50 @@ var AUSTLMY = {
 
       // The check interval only happens once even if the partial patch fails
       // to apply on restart and the complete patch is downloaded.
-      scalarSet(basePrefix + "intervals.check",
-                update.getProperty("checkInterval"));
+      scalarSet(
+        basePrefix + "intervals.check",
+        update.getProperty("checkInterval")
+      );
 
       for (let i = 0; i < aUpdate.patchCount; ++i) {
-        let patch =
-          aUpdate.getPatchAt(i).QueryInterface(Ci.nsIWritablePropertyBag);
+        let patch = aUpdate
+          .getPatchAt(i)
+          .QueryInterface(Ci.nsIWritablePropertyBag);
         let type = patch.type;
 
         scalarSet(basePrefix + "mar_" + type + "_size_bytes", patch.size);
 
         let prefix = basePrefix + "intervals.";
         let internalDownloadStart = patch.getProperty("internalDownloadStart");
-        let internalDownloadFinished =
-          patch.getProperty("internalDownloadFinished");
-        if (internalDownloadStart !== null && internalDownloadFinished !== null) {
-          scalarSet(prefix + "download_internal_" + type,
-                    Math.max((internalDownloadFinished - internalDownloadStart), 1));
+        let internalDownloadFinished = patch.getProperty(
+          "internalDownloadFinished"
+        );
+        if (
+          internalDownloadStart !== null &&
+          internalDownloadFinished !== null
+        ) {
+          scalarSet(
+            prefix + "download_internal_" + type,
+            Math.max(internalDownloadFinished - internalDownloadStart, 1)
+          );
         }
 
         let bitsDownloadStart = patch.getProperty("bitsDownloadStart");
         let bitsDownloadFinished = patch.getProperty("bitsDownloadFinished");
         if (bitsDownloadStart !== null && bitsDownloadFinished !== null) {
-          scalarSet(prefix + "download_bits_" + type,
-                    Math.max((bitsDownloadFinished - bitsDownloadStart), 1));
+          scalarSet(
+            prefix + "download_bits_" + type,
+            Math.max(bitsDownloadFinished - bitsDownloadStart, 1)
+          );
         }
-
 
         let stageStart = patch.getProperty("stageStart");
         let stageFinished = patch.getProperty("stageFinished");
         if (stageStart !== null && stageFinished !== null) {
-          scalarSet(prefix + "stage_" + type,
-                    Math.max((stageFinished - stageStart), 1));
+          scalarSet(
+            prefix + "stage_" + type,
+            Math.max(stageFinished - stageStart, 1)
+          );
         }
 
         // Both the partial and the complete patch are recorded for the apply
@@ -513,31 +543,38 @@ var AUSTLMY = {
         let applyStart = patch.getProperty("applyStart");
         if (applyStart !== null) {
           let applyFinished = Math.ceil(Date.now() / 1000);
-          scalarSet(prefix + "apply_" + type,
-                    Math.max((applyFinished - applyStart), 1));
+          scalarSet(
+            prefix + "apply_" + type,
+            Math.max(applyFinished - applyStart, 1)
+          );
         }
 
         prefix = basePrefix + "downloads.";
         let internalBytes = patch.getProperty("internalBytes");
         if (internalBytes !== null) {
-          scalarSet(prefix + "internal_" + type + "_bytes",
-                    Math.max(internalBytes, 1));
+          scalarSet(
+            prefix + "internal_" + type + "_bytes",
+            Math.max(internalBytes, 1)
+          );
         }
         let internalSeconds = patch.getProperty("internalSeconds");
         if (internalSeconds !== null) {
-          scalarSet(prefix + "internal_" + type + "_seconds",
-                    Math.max(internalSeconds, 1));
+          scalarSet(
+            prefix + "internal_" + type + "_seconds",
+            Math.max(internalSeconds, 1)
+          );
         }
 
         let bitsBytes = patch.getProperty("bitsBytes");
         if (bitsBytes !== null) {
-          scalarSet(prefix + "bits_" + type + "_bytes",
-                    Math.max(bitsBytes, 1));
+          scalarSet(prefix + "bits_" + type + "_bytes", Math.max(bitsBytes, 1));
         }
         let bitsSeconds = patch.getProperty("bitsSeconds");
         if (bitsSeconds !== null) {
-          scalarSet(prefix + "bits_" + type + "_seconds",
-                    Math.max(bitsSeconds, 1));
+          scalarSet(
+            prefix + "bits_" + type + "_seconds",
+            Math.max(bitsSeconds, 1)
+          );
         }
       }
     } catch (e) {
@@ -578,11 +615,14 @@ var AUSTLMY = {
 
     let attempted = 0;
     try {
-      let wrk = Cc["@mozilla.org/windows-registry-key;1"].
-                createInstance(Ci.nsIWindowsRegKey);
-      wrk.open(wrk.ROOT_KEY_LOCAL_MACHINE,
-               "SOFTWARE\\Mozilla\\MaintenanceService",
-               wrk.ACCESS_READ | wrk.WOW64_64);
+      let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+        Ci.nsIWindowsRegKey
+      );
+      wrk.open(
+        wrk.ROOT_KEY_LOCAL_MACHINE,
+        "SOFTWARE\\Mozilla\\MaintenanceService",
+        wrk.ACCESS_READ | wrk.WOW64_64
+      );
       // Was the service at some point installed, but is now uninstalled?
       attempted = wrk.readIntValue("Attempted");
       wrk.close();

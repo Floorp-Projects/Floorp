@@ -10,13 +10,19 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 async function verifyPref(configFile, expectedValue) {
   let decoder = new TextDecoder();
   let configValue = await UpdateUtils.getAppUpdateAutoEnabled();
-  Assert.equal(configValue, expectedValue,
-               "Value returned by getAppUpdateAutoEnabled should have " +
-               "matched the expected value");
+  Assert.equal(
+    configValue,
+    expectedValue,
+    "Value returned by getAppUpdateAutoEnabled should have " +
+      "matched the expected value"
+  );
   let fileContents = await OS.File.read(configFile.path);
   let saveObject = JSON.parse(decoder.decode(fileContents));
-  Assert.equal(saveObject["app.update.auto"], expectedValue,
-               "Value in update config file should match expected");
+  Assert.equal(
+    saveObject["app.update.auto"],
+    expectedValue,
+    "Value in update config file should match expected"
+  );
 }
 
 async function run_test() {
@@ -41,8 +47,11 @@ async function run_test() {
   configFile.remove(false);
   Assert.ok(!configFile.exists(), "Pref file should have been removed");
   let configValue = await UpdateUtils.getAppUpdateAutoEnabled();
-  Assert.equal(configValue, true, "getAppUpdateAutoEnabled should have " +
-                                  "returned the default value (true)");
+  Assert.equal(
+    configValue,
+    true,
+    "getAppUpdateAutoEnabled should have returned the default value (true)"
+  );
 
   // Setting a new value should cause the value to get written out again
   await UpdateUtils.setAppUpdateAutoEnabled(false);
@@ -52,8 +61,10 @@ async function run_test() {
   Services.prefs.setBoolPref("app.update.auto.migrated", false);
   Services.prefs.setBoolPref("app.update.auto", true);
   configFile.remove(false);
-  Assert.ok(!configFile.exists(), "App update config file should have been " +
-                                  "removed");
+  Assert.ok(
+    !configFile.exists(),
+    "App update config file should have been removed"
+  );
   await verifyPref(configFile, true);
 
   // Test that setting app.update.auto without migrating also works

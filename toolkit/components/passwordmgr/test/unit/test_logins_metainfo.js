@@ -10,9 +10,12 @@
 
 // Globals
 
-XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
-                                   "@mozilla.org/uuid-generator;1",
-                                   "nsIUUIDGenerator");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gUUIDGenerator",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
 const gLooksLikeUUIDRegex = /^\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$/;
 
@@ -131,8 +134,10 @@ add_task(function test_addLogin_metainfo_duplicate() {
     origin: "http://duplicate.example.com",
     guid: gLoginMetaInfo2.guid,
   });
-  Assert.throws(() => Services.logins.addLogin(loginInfo),
-                /specified GUID already exists/);
+  Assert.throws(
+    () => Services.logins.addLogin(loginInfo),
+    /specified GUID already exists/
+  );
 
   // Verify that no data was stored by the previous call.
   LoginTestUtils.checkLogins([gLoginInfo1, gLoginInfo2, gLoginInfo3]);
@@ -164,13 +169,16 @@ add_task(function test_modifyLogin_nsIProperyBag_metainfo() {
   let newUUIDValue = gUUIDGenerator.generateUUID().toString();
 
   // Check that properties are changed as requested.
-  Services.logins.modifyLogin(gLoginInfo1, newPropertyBag({
-    guid: newUUIDValue,
-    timeCreated: newTimeMs,
-    timeLastUsed: newTimeMs + 2,
-    timePasswordChanged: newTimeMs + 1,
-    timesUsed: 2,
-  }));
+  Services.logins.modifyLogin(
+    gLoginInfo1,
+    newPropertyBag({
+      guid: newUUIDValue,
+      timeCreated: newTimeMs,
+      timeLastUsed: newTimeMs + 2,
+      timePasswordChanged: newTimeMs + 1,
+      timesUsed: 2,
+    })
+  );
 
   gLoginMetaInfo1 = retrieveLoginMatching(gLoginInfo1);
   Assert.equal(gLoginMetaInfo1.guid, newUUIDValue);
@@ -181,9 +189,12 @@ add_task(function test_modifyLogin_nsIProperyBag_metainfo() {
 
   // Check that timePasswordChanged is updated when changing the password.
   let originalLogin = gLoginInfo2.clone().QueryInterface(Ci.nsILoginMetaInfo);
-  Services.logins.modifyLogin(gLoginInfo2, newPropertyBag({
-    password: "new password",
-  }));
+  Services.logins.modifyLogin(
+    gLoginInfo2,
+    newPropertyBag({
+      password: "new password",
+    })
+  );
   gLoginInfo2.password = "new password";
 
   gLoginMetaInfo2 = retrieveLoginMatching(gLoginInfo2);
@@ -194,10 +205,13 @@ add_task(function test_modifyLogin_nsIProperyBag_metainfo() {
 
   // Check that timePasswordChanged is not set to the current time when changing
   // the password and specifying a new value for the property at the same time.
-  Services.logins.modifyLogin(gLoginInfo2, newPropertyBag({
-    password: "other password",
-    timePasswordChanged: newTimeMs,
-  }));
+  Services.logins.modifyLogin(
+    gLoginInfo2,
+    newPropertyBag({
+      password: "other password",
+      timePasswordChanged: newTimeMs,
+    })
+  );
   gLoginInfo2.password = "other password";
 
   gLoginMetaInfo2 = retrieveLoginMatching(gLoginInfo2);
@@ -207,9 +221,12 @@ add_task(function test_modifyLogin_nsIProperyBag_metainfo() {
   Assert.equal(gLoginMetaInfo2.timePasswordChanged, newTimeMs);
 
   // Check the special timesUsedIncrement property.
-  Services.logins.modifyLogin(gLoginInfo2, newPropertyBag({
-    timesUsedIncrement: 2,
-  }));
+  Services.logins.modifyLogin(
+    gLoginInfo2,
+    newPropertyBag({
+      timesUsedIncrement: 2,
+    })
+  );
 
   gLoginMetaInfo2 = retrieveLoginMatching(gLoginInfo2);
   Assert.equal(gLoginMetaInfo2.timeCreated, originalLogin.timeCreated);
@@ -222,9 +239,16 @@ add_task(function test_modifyLogin_nsIProperyBag_metainfo() {
  * Tests that modifying a login to a duplicate GUID throws an exception.
  */
 add_task(function test_modifyLogin_nsIProperyBag_metainfo_duplicate() {
-  Assert.throws(() => Services.logins.modifyLogin(gLoginInfo1, newPropertyBag({
-    guid: gLoginInfo2.guid,
-  })), /specified GUID already exists/);
+  Assert.throws(
+    () =>
+      Services.logins.modifyLogin(
+        gLoginInfo1,
+        newPropertyBag({
+          guid: gLoginInfo2.guid,
+        })
+      ),
+    /specified GUID already exists/
+  );
   LoginTestUtils.checkLogins([gLoginInfo1, gLoginInfo2, gLoginInfo3]);
 });
 
@@ -233,26 +257,32 @@ add_task(function test_modifyLogin_nsIProperyBag_metainfo_duplicate() {
  */
 add_task(function test_searchLogins_metainfo() {
   // Find by GUID.
-  let logins = Services.logins.searchLogins(newPropertyBag({
-    guid: gLoginMetaInfo1.guid,
-  }));
+  let logins = Services.logins.searchLogins(
+    newPropertyBag({
+      guid: gLoginMetaInfo1.guid,
+    })
+  );
   Assert.equal(logins.length, 1);
   let foundLogin = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   assertMetaInfoEqual(foundLogin, gLoginMetaInfo1);
 
   // Find by timestamp.
-  logins = Services.logins.searchLogins(newPropertyBag({
-    timePasswordChanged: gLoginMetaInfo2.timePasswordChanged,
-  }));
+  logins = Services.logins.searchLogins(
+    newPropertyBag({
+      timePasswordChanged: gLoginMetaInfo2.timePasswordChanged,
+    })
+  );
   Assert.equal(logins.length, 1);
   foundLogin = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   assertMetaInfoEqual(foundLogin, gLoginMetaInfo2);
 
   // Find using two properties at the same time.
-  logins = Services.logins.searchLogins(newPropertyBag({
-    guid: gLoginMetaInfo3.guid,
-    timePasswordChanged: gLoginMetaInfo3.timePasswordChanged,
-  }));
+  logins = Services.logins.searchLogins(
+    newPropertyBag({
+      guid: gLoginMetaInfo3.guid,
+      timePasswordChanged: gLoginMetaInfo3.timePasswordChanged,
+    })
+  );
   Assert.equal(logins.length, 1);
   foundLogin = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   assertMetaInfoEqual(foundLogin, gLoginMetaInfo3);

@@ -39,8 +39,8 @@ function onFileOpened(message) {
   const elem = document.getElementById("file");
   is(getGlobal(elem), window,
      "getGlobal() works as expected");
-  isnot(getGlobal(file), window,
-        "File from MessageManager is wrapped");
+  is(getGlobal(file), window,
+     "File from MessageManager is not wrapped");
   SpecialPowers.wrap(elem).mozSetFileArray([file]);
   is(getGlobal(elem.files[0]), window,
      "File read back from input element is not wrapped");

@@ -1056,8 +1056,7 @@ void Statistics::endGC() {
     runtime->addTelemetry(JS_TELEMETRY_GC_TIME_BETWEEN_S,
                           timeSinceLastGC.ToSeconds());
     if (!nonincremental()) {
-      runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_COUNT,
-                            slices_.length());
+      runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_COUNT, slices_.length());
     }
   }
 

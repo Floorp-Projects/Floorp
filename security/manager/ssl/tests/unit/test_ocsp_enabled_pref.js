@@ -7,8 +7,9 @@
 // behavior.
 
 do_get_profile(); // Must be called before getting nsIX509CertDB
-const gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
-                  .getService(Ci.nsIX509CertDB);
+const gCertDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
 
 const SERVER_PORT = 8888;
 
@@ -25,8 +26,13 @@ function getFailingOCSPResponder() {
 }
 
 function getOCSPResponder(expectedCertNames) {
-  return startOCSPResponder(SERVER_PORT, "www.example.com", "test_ev_certs",
-                            expectedCertNames, []);
+  return startOCSPResponder(
+    SERVER_PORT,
+    "www.example.com",
+    "test_ev_certs",
+    expectedCertNames,
+    []
+  );
 }
 
 // Tests that in ocspOff mode, OCSP fetches are never done.
@@ -37,15 +43,23 @@ async function testOff() {
   // EV chains should verify successfully but never get EV status.
   clearOCSPCache();
   let ocspResponder = getFailingOCSPResponder();
-  await checkEVStatus(gCertDB, certFromFile("test-oid-path-ee"),
-                      certificateUsageSSLServer, false);
+  await checkEVStatus(
+    gCertDB,
+    certFromFile("test-oid-path-ee"),
+    certificateUsageSSLServer,
+    false
+  );
   await stopOCSPResponder(ocspResponder);
 
   // A DV chain should verify successfully.
   clearOCSPCache();
   ocspResponder = getFailingOCSPResponder();
-  await checkCertErrorGeneric(gCertDB, certFromFile("non-ev-root-path-ee"),
-                              PRErrorCodeSuccess, certificateUsageSSLServer);
+  await checkCertErrorGeneric(
+    gCertDB,
+    certFromFile("non-ev-root-path-ee"),
+    PRErrorCodeSuccess,
+    certificateUsageSSLServer
+  );
   await stopOCSPResponder(ocspResponder);
 }
 
@@ -57,19 +71,29 @@ async function testOn() {
   // If a successful OCSP response is fetched, then an EV chain should verify
   // successfully and get EV status as well.
   clearOCSPCache();
-  let ocspResponder =
-      getOCSPResponder(gEVExpected ? ["test-oid-path-int", "test-oid-path-ee"]
-                                   : ["test-oid-path-ee"]);
-  await checkEVStatus(gCertDB, certFromFile("test-oid-path-ee"),
-                      certificateUsageSSLServer, gEVExpected);
+  let ocspResponder = getOCSPResponder(
+    gEVExpected
+      ? ["test-oid-path-int", "test-oid-path-ee"]
+      : ["test-oid-path-ee"]
+  );
+  await checkEVStatus(
+    gCertDB,
+    certFromFile("test-oid-path-ee"),
+    certificateUsageSSLServer,
+    gEVExpected
+  );
   await stopOCSPResponder(ocspResponder);
 
   // If a successful OCSP response is fetched, then a DV chain should verify
   // successfully.
   clearOCSPCache();
   ocspResponder = getOCSPResponder(["non-ev-root-path-ee"]);
-  await checkCertErrorGeneric(gCertDB, certFromFile("non-ev-root-path-ee"),
-                              PRErrorCodeSuccess, certificateUsageSSLServer);
+  await checkCertErrorGeneric(
+    gCertDB,
+    certFromFile("non-ev-root-path-ee"),
+    PRErrorCodeSuccess,
+    certificateUsageSSLServer
+  );
   await stopOCSPResponder(ocspResponder);
 }
 
@@ -82,17 +106,25 @@ async function testEVOnly() {
   // successfully and get EV status as well.
   clearOCSPCache();
   let ocspResponder = gEVExpected
-                    ? getOCSPResponder(["test-oid-path-int", "test-oid-path-ee"])
-                    : getFailingOCSPResponder();
-  await checkEVStatus(gCertDB, certFromFile("test-oid-path-ee"),
-                      certificateUsageSSLServer, gEVExpected);
+    ? getOCSPResponder(["test-oid-path-int", "test-oid-path-ee"])
+    : getFailingOCSPResponder();
+  await checkEVStatus(
+    gCertDB,
+    certFromFile("test-oid-path-ee"),
+    certificateUsageSSLServer,
+    gEVExpected
+  );
   await stopOCSPResponder(ocspResponder);
 
   // A DV chain should verify successfully even without doing OCSP fetches.
   clearOCSPCache();
   ocspResponder = getFailingOCSPResponder();
-  await checkCertErrorGeneric(gCertDB, certFromFile("non-ev-root-path-ee"),
-                              PRErrorCodeSuccess, certificateUsageSSLServer);
+  await checkCertErrorGeneric(
+    gCertDB,
+    certFromFile("non-ev-root-path-ee"),
+    PRErrorCodeSuccess,
+    certificateUsageSSLServer
+  );
   await stopOCSPResponder(ocspResponder);
 }
 

@@ -16,7 +16,11 @@ function createHtml(link) {
 }
 
 function createLink(name) {
-  return '<link rel="search" title="Test OpenSearch" type="application/opensearchdescription+xml" href="http://example.com/' + name + '.xml">';
+  return (
+    '<link rel="search" title="Test OpenSearch" type="application/opensearchdescription+xml" href="http://example.com/' +
+    name +
+    '.xml">'
+  );
 }
 
 function runTest() {
@@ -47,17 +51,20 @@ function runTest() {
 
       // We should recieve opensearch events when the user creates new links
       // to a search engine, but only when we listen for them
-      SpecialPowers.getBrowserFrameMessageManager(iframe1)
-                   .loadFrameScript("data:,content.document.title='New title';",
-                                    /* allowDelayedLoad = */ false);
+      SpecialPowers.getBrowserFrameMessageManager(iframe1).loadFrameScript(
+        "data:,content.document.title='New title';",
+        /* allowDelayedLoad = */ false
+      );
 
-      SpecialPowers.getBrowserFrameMessageManager(iframe1)
-                   .loadFrameScript("data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=SEARCH type=application/opensearchdescription+xml href=http://example.com/newsearch.xml>')",
-                                    /* allowDelayedLoad = */ false);
+      SpecialPowers.getBrowserFrameMessageManager(iframe1).loadFrameScript(
+        "data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=SEARCH type=application/opensearchdescription+xml href=http://example.com/newsearch.xml>')",
+        /* allowDelayedLoad = */ false
+      );
 
-      SpecialPowers.getBrowserFrameMessageManager(iframe2)
-                   .loadFrameScript("data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=SEARCH type=application/opensearchdescription+xml href=http://example.com/newsearch.xml>')",
-                                    /* allowDelayedLoad = */ false);
+      SpecialPowers.getBrowserFrameMessageManager(iframe2).loadFrameScript(
+        "data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=SEARCH type=application/opensearchdescription+xml href=http://example.com/newsearch.xml>')",
+        /* allowDelayedLoad = */ false
+      );
     } else if (numLinkChanges == 2) {
       is(e.detail.href, "http://example.com/newsearch.xml");
 
@@ -68,9 +75,10 @@ function runTest() {
 
       // the rel attribute can have various space seperated values, make
       // sure we only pick up correct values for 'opensearch'
-      SpecialPowers.getBrowserFrameMessageManager(iframe1)
-                   .loadFrameScript("data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=someopensearch type=application/opensearchdescription+xml href=http://example.com/newsearch.xml>')",
-                                    /* allowDelayedLoad = */ false);
+      SpecialPowers.getBrowserFrameMessageManager(iframe1).loadFrameScript(
+        "data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=someopensearch type=application/opensearchdescription+xml href=http://example.com/newsearch.xml>')",
+        /* allowDelayedLoad = */ false
+      );
       // Test setting a page with multiple links elements
       iframe1.src = createHtml(createLink("another") + createLink("search"));
     } else if (numLinkChanges == 4) {
@@ -80,9 +88,10 @@ function runTest() {
       is(e.detail.href, "http://example.com/search.xml");
 
       // Make sure opensearch check is case insensitive
-      SpecialPowers.getBrowserFrameMessageManager(iframe1)
-                   .loadFrameScript("data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=SEARCH type=application/opensearchdescription+xml href=http://example.com/ucasesearch.xml>')",
-                                    /* allowDelayedLoad = */ false);
+      SpecialPowers.getBrowserFrameMessageManager(iframe1).loadFrameScript(
+        "data:,content.document.head.insertAdjacentHTML('beforeend', '<link rel=SEARCH type=application/opensearchdescription+xml href=http://example.com/ucasesearch.xml>')",
+        /* allowDelayedLoad = */ false
+      );
     } else if (numLinkChanges == 6) {
       is(e.detail.href, "http://example.com/ucasesearch.xml");
       SimpleTest.finish();
@@ -94,7 +103,6 @@ function runTest() {
   iframe3.addEventListener("mozbrowseropensearch", function(e) {
     ok(false, "Should not get a opensearch event for iframe3.");
   });
-
 
   iframe1.src = createHtml(createLink("mysearch"));
   // We should not recieve opensearch change events for either of the below iframes

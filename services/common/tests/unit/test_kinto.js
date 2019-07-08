@@ -1,11 +1,18 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Kinto} = ChromeUtils.import("resource://services-common/kinto-offline-client.js");
-const {FirefoxAdapter} = ChromeUtils.import("resource://services-common/kinto-storage-adapter.js");
+const { Kinto } = ChromeUtils.import(
+  "resource://services-common/kinto-offline-client.js"
+);
+const { FirefoxAdapter } = ChromeUtils.import(
+  "resource://services-common/kinto-storage-adapter.js"
+);
 
-const BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream;1",
-  "nsIBinaryInputStream", "setInputStream");
+const BinaryInputStream = Components.Constructor(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
 
 var server;
 
@@ -13,15 +20,15 @@ var server;
 const kintoFilename = "kinto.sqlite";
 
 function do_get_kinto_sqliteHandle() {
-  return FirefoxAdapter.openConnection({path: kintoFilename});
+  return FirefoxAdapter.openConnection({ path: kintoFilename });
 }
 
 function do_get_kinto_collection(sqliteHandle, collection = "test_collection") {
   let config = {
     remote: `http://localhost:${server.identity.primaryPort}/v1/`,
-    headers: {Authorization: "Basic " + btoa("user:pass")},
+    headers: { Authorization: "Basic " + btoa("user:pass") },
     adapter: FirefoxAdapter,
-    adapterOptions: {sqliteHandle},
+    adapterOptions: { sqliteHandle },
   };
   return new Kinto(config).collection(collection);
 }
@@ -56,7 +63,7 @@ add_task(async function test_kinto_add_get() {
     try {
       await collection.create(createResult.data);
       do_throw("Creation of a record with an id should fail");
-    } catch (err) { }
+    } catch (err) {}
     // try a few creates without waiting for the first few to resolve
     let promises = [];
     promises.push(collection.create(newRecord));
@@ -77,7 +84,10 @@ add_task(async function test_kinto_add_get() {
   try {
     sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection1 = do_get_kinto_collection(sqliteHandle);
-    const collection2 = do_get_kinto_collection(sqliteHandle, "test_collection_2");
+    const collection2 = do_get_kinto_collection(
+      sqliteHandle,
+      "test_collection_2"
+    );
 
     let newRecord = { foo: "bar" };
 
@@ -90,8 +100,10 @@ add_task(async function test_kinto_add_get() {
     }
 
     // ensure subsequent operations still work
-    await Promise.all([collection1.create(newRecord),
-                       collection2.create(newRecord)]);
+    await Promise.all([
+      collection1.create(newRecord),
+      collection2.create(newRecord),
+    ]);
     await Promise.all(promises);
   } finally {
     await sqliteHandle.close();
@@ -173,7 +185,7 @@ add_task(async function test_kinto_delete() {
     try {
       getResult = await collection.get(createResult.data.id);
       do_throw("there should not be a result");
-    } catch (e) { }
+    } catch (e) {}
   } finally {
     await sqliteHandle.close();
   }
@@ -218,7 +230,11 @@ add_task(async function test_importBulk_ignores_already_imported_records() {
   try {
     sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection = do_get_kinto_collection(sqliteHandle);
-    const record = {id: "41b71c13-17e9-4ee3-9268-6a41abf9730f", title: "foo", last_modified: 1457896541};
+    const record = {
+      id: "41b71c13-17e9-4ee3-9268-6a41abf9730f",
+      title: "foo",
+      last_modified: 1457896541,
+    };
     await collection.importBulk([record]);
     let impactedRecords = await collection.importBulk([record]);
     Assert.equal(impactedRecords.length, 0);
@@ -234,9 +250,13 @@ add_task(async function test_loadDump_should_overwrite_old_records() {
   try {
     sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection = do_get_kinto_collection(sqliteHandle);
-    const record = {id: "41b71c13-17e9-4ee3-9268-6a41abf9730f", title: "foo", last_modified: 1457896541};
+    const record = {
+      id: "41b71c13-17e9-4ee3-9268-6a41abf9730f",
+      title: "foo",
+      last_modified: 1457896541,
+    };
     await collection.loadDump([record]);
-    const updated = Object.assign({}, record, {last_modified: 1457896543});
+    const updated = Object.assign({}, record, { last_modified: 1457896543 });
     let impactedRecords = await collection.loadDump([updated]);
     Assert.equal(impactedRecords.length, 1);
   } finally {
@@ -252,8 +272,11 @@ add_task(async function test_loadDump_should_not_overwrite_unsynced_records() {
     sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection = do_get_kinto_collection(sqliteHandle);
     const recordId = "41b71c13-17e9-4ee3-9268-6a41abf9730f";
-    await collection.create({id: recordId, title: "foo"}, {useRecordId: true});
-    const record = {id: recordId, title: "bar", last_modified: 1457896541};
+    await collection.create(
+      { id: recordId, title: "foo" },
+      { useRecordId: true }
+    );
+    const record = { id: recordId, title: "bar", last_modified: 1457896541 };
     let impactedRecords = await collection.loadDump([record]);
     Assert.equal(impactedRecords.length, 0);
   } finally {
@@ -263,20 +286,22 @@ add_task(async function test_loadDump_should_not_overwrite_unsynced_records() {
 
 add_task(clear_collection);
 
-add_task(async function test_loadDump_should_not_overwrite_records_without_last_modified() {
-  let sqliteHandle;
-  try {
-    sqliteHandle = await do_get_kinto_sqliteHandle();
-    const collection = do_get_kinto_collection(sqliteHandle);
-    const recordId = "41b71c13-17e9-4ee3-9268-6a41abf9730f";
-    await collection.create({id: recordId, title: "foo"}, {synced: true});
-    const record = {id: recordId, title: "bar", last_modified: 1457896541};
-    let impactedRecords = await collection.loadDump([record]);
-    Assert.equal(impactedRecords.length, 0);
-  } finally {
-    await sqliteHandle.close();
+add_task(
+  async function test_loadDump_should_not_overwrite_records_without_last_modified() {
+    let sqliteHandle;
+    try {
+      sqliteHandle = await do_get_kinto_sqliteHandle();
+      const collection = do_get_kinto_collection(sqliteHandle);
+      const recordId = "41b71c13-17e9-4ee3-9268-6a41abf9730f";
+      await collection.create({ id: recordId, title: "foo" }, { synced: true });
+      const record = { id: recordId, title: "bar", last_modified: 1457896541 };
+      let impactedRecords = await collection.loadDump([record]);
+      Assert.equal(impactedRecords.length, 0);
+    } finally {
+      await sqliteHandle.close();
+    }
   }
-});
+);
 
 add_task(clear_collection);
 
@@ -292,17 +317,24 @@ add_task(async function test_kinto_sync() {
     try {
       const sampled = getSampleResponse(request, server.identity.primaryPort);
       if (!sampled) {
-        do_throw(`unexpected ${request.method} request for ${request.path}?${request.queryString}`);
+        do_throw(
+          `unexpected ${request.method} request for ${request.path}?${
+            request.queryString
+          }`
+        );
       }
 
-      response.setStatusLine(null, sampled.status.status,
-                             sampled.status.statusText);
+      response.setStatusLine(
+        null,
+        sampled.status.status,
+        sampled.status.statusText
+      );
       // send the headers
       for (let headerLine of sampled.sampleHeaders) {
         let headerElements = headerLine.split(":");
         response.setHeader(headerElements[0], headerElements[1].trimLeft());
       }
-      response.setHeader("Date", (new Date()).toUTCString());
+      response.setHeader("Date", new Date().toUTCString());
 
       response.write(sampled.responseBody);
     } catch (e) {
@@ -357,120 +389,129 @@ function run_test() {
   run_next_test();
 
   registerCleanupFunction(function() {
-    server.stop(function() { });
+    server.stop(function() {});
   });
 }
 
 // get a response for a given request from sample data
 function getSampleResponse(req, port) {
   const responses = {
-    "OPTIONS": {
-      "sampleHeaders": [
+    OPTIONS: {
+      sampleHeaders: [
         "Access-Control-Allow-Headers: Content-Length,Expires,Backoff,Retry-After,Last-Modified,Total-Records,ETag,Pragma,Cache-Control,authorization,content-type,if-none-match,Alert,Next-Page",
         "Access-Control-Allow-Methods: GET,HEAD,OPTIONS,POST,DELETE,OPTIONS",
         "Access-Control-Allow-Origin: *",
         "Content-Type: application/json; charset=UTF-8",
         "Server: waitress",
       ],
-      "status": {status: 200, statusText: "OK"},
-      "responseBody": "null",
+      status: { status: 200, statusText: "OK" },
+      responseBody: "null",
     },
     "GET:/v1/?": {
-      "sampleHeaders": [
+      sampleHeaders: [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
         "Content-Type: application/json; charset=UTF-8",
         "Server: waitress",
       ],
-      "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({
-        "settings": {
-          "batch_max_requests": 25,
+      status: { status: 200, statusText: "OK" },
+      responseBody: JSON.stringify({
+        settings: {
+          batch_max_requests: 25,
         },
-        "url": `http://localhost:${port}/v1/`,
-        "documentation": "https://kinto.readthedocs.org/",
-        "version": "1.5.1",
-        "commit": "cbc6f58",
-        "hello": "kinto",
+        url: `http://localhost:${port}/v1/`,
+        documentation: "https://kinto.readthedocs.org/",
+        version: "1.5.1",
+        commit: "cbc6f58",
+        hello: "kinto",
       }),
     },
     "GET:/v1/buckets/default/collections/test_collection": {
-      "sampleHeaders": [
+      sampleHeaders: [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
         "Content-Type: application/json; charset=UTF-8",
         "Server: waitress",
-        "Etag: \"1234\"",
+        'Etag: "1234"',
       ],
-      "status": { status: 200, statusText: "OK" },
-      "responseBody": JSON.stringify({
-        "data": {
-          "id": "test_collection",
-          "last_modified": 1234,
+      status: { status: 200, statusText: "OK" },
+      responseBody: JSON.stringify({
+        data: {
+          id: "test_collection",
+          last_modified: 1234,
         },
       }),
     },
     "GET:/v1/buckets/default/collections/test_collection/records?_sort=-last_modified": {
-      "sampleHeaders": [
+      sampleHeaders: [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
         "Content-Type: application/json; charset=UTF-8",
         "Server: waitress",
-        "Etag: \"1445606341071\"",
+        'Etag: "1445606341071"',
       ],
-      "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({
-        "data": [{
-          "last_modified": 1445606341071,
-          "done": false,
-          "id": "68db8313-686e-4fff-835e-07d78ad6f2af",
-          "title": "New test",
-        }],
+      status: { status: 200, statusText: "OK" },
+      responseBody: JSON.stringify({
+        data: [
+          {
+            last_modified: 1445606341071,
+            done: false,
+            id: "68db8313-686e-4fff-835e-07d78ad6f2af",
+            title: "New test",
+          },
+        ],
       }),
     },
     "GET:/v1/buckets/default/collections/test_collection/records?_sort=-last_modified&_since=1445606341071": {
-      "sampleHeaders": [
+      sampleHeaders: [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
         "Content-Type: application/json; charset=UTF-8",
         "Server: waitress",
-        "Etag: \"1445607941223\"",
+        'Etag: "1445607941223"',
       ],
-      "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({
-        "data": [{
-          "last_modified": 1445607941223,
-          "done": false,
-          "id": "901967b0-f729-4b30-8d8d-499cba7f4b1d",
-          "title": "Another new test",
-        }],
+      status: { status: 200, statusText: "OK" },
+      responseBody: JSON.stringify({
+        data: [
+          {
+            last_modified: 1445607941223,
+            done: false,
+            id: "901967b0-f729-4b30-8d8d-499cba7f4b1d",
+            title: "Another new test",
+          },
+        ],
       }),
     },
     "GET:/v1/buckets/default/collections/test_collection/records?_sort=-last_modified&_since=1445607941223": {
-      "sampleHeaders": [
+      sampleHeaders: [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
         "Content-Type: application/json; charset=UTF-8",
         "Server: waitress",
-        "Etag: \"1445607541267\"",
+        'Etag: "1445607541267"',
       ],
-      "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({
-        "data": [{
-          "last_modified": 1445607541265,
-          "done": false,
-          "id": "901967b0-f729-4b30-8d8d-499cba7f4b1d",
-          "title": "Modified title",
-        }, {
-          "last_modified": 1445607541267,
-          "done": true,
-          "id": "some-manually-chosen-id",
-          "title": "New record with custom ID",
-        }],
+      status: { status: 200, statusText: "OK" },
+      responseBody: JSON.stringify({
+        data: [
+          {
+            last_modified: 1445607541265,
+            done: false,
+            id: "901967b0-f729-4b30-8d8d-499cba7f4b1d",
+            title: "Modified title",
+          },
+          {
+            last_modified: 1445607541267,
+            done: true,
+            id: "some-manually-chosen-id",
+            title: "New record with custom ID",
+          },
+        ],
       }),
     },
   };
-  return responses[`${req.method}:${req.path}?${req.queryString}`] ||
-         responses[`${req.method}:${req.path}`] ||
-         responses[req.method];
+  return (
+    responses[`${req.method}:${req.path}?${req.queryString}`] ||
+    responses[`${req.method}:${req.path}`] ||
+    responses[req.method]
+  );
 }

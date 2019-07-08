@@ -2,11 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {navigate} = ChromeUtils.import("chrome://marionette/content/navigate.js");
+const { navigate } = ChromeUtils.import(
+  "chrome://marionette/content/navigate.js"
+);
 
 add_test(function test_isLoadEventExpected() {
-  Assert.throws(() => navigate.isLoadEventExpected(undefined),
-      /Expected at least one URL/);
+  Assert.throws(
+    () => navigate.isLoadEventExpected(undefined),
+    /Expected at least one URL/
+  );
 
   equal(true, navigate.isLoadEventExpected("http://a/"));
   equal(true, navigate.isLoadEventExpected("http://a/", "http://a/"));
@@ -16,7 +20,10 @@ add_test(function test_isLoadEventExpected() {
   equal(true, navigate.isLoadEventExpected("http://a/#a", "http://a/#A"));
   equal(false, navigate.isLoadEventExpected("http://a/#a", "http://a/#a"));
 
-  equal(false, navigate.isLoadEventExpected("http://a/", "javascript:whatever"));
+  equal(
+    false,
+    navigate.isLoadEventExpected("http://a/", "javascript:whatever")
+  );
 
   run_next_test();
 });

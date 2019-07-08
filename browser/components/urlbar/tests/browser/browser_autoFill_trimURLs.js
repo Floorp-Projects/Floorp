@@ -23,11 +23,14 @@ add_task(async function setup() {
   await PlacesUtils.history.clear();
 
   // Adding a tab would hit switch-to-tab, so it's safer to just add a visit.
-  await PlacesTestUtils.addVisits([{
-    uri: "http://www.autofilltrimurl.com/whatever",
-  }, {
-    uri: "https://www.secureautofillurl.com/whatever",
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://www.autofilltrimurl.com/whatever",
+    },
+    {
+      uri: "https://www.secureautofillurl.com/whatever",
+    },
+  ]);
 });
 
 async function promiseSearch(searchtext) {
@@ -42,27 +45,51 @@ async function promiseTestResult(test) {
 
   await promiseSearch(test.search);
 
-  Assert.equal(gURLBar.inputField.value, test.autofilledValue,
-    `Autofilled value is as expected for search '${test.search}'`);
+  Assert.equal(
+    gURLBar.inputField.value,
+    test.autofilledValue,
+    `Autofilled value is as expected for search '${test.search}'`
+  );
 
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
 
-  Assert.equal(result.displayed.title, test.resultListDisplayTitle,
-    `Autocomplete result should have displayed title as expected for search '${test.search}'`);
+  Assert.equal(
+    result.displayed.title,
+    test.resultListDisplayTitle,
+    `Autocomplete result should have displayed title as expected for search '${
+      test.search
+    }'`
+  );
 
   if (!UrlbarPrefs.get("quantumbar") && test.resultListActionText == "Visit") {
-    Assert.equal(result.displayed.action, "",
-      `Autocomplete action text should be empty for search '${test.search}'`);
+    Assert.equal(
+      result.displayed.action,
+      "",
+      `Autocomplete action text should be empty for search '${test.search}'`
+    );
   } else {
-    Assert.equal(result.displayed.action, test.resultListActionText,
-      `Autocomplete action text should be as expected for search '${test.search}'`);
+    Assert.equal(
+      result.displayed.action,
+      test.resultListActionText,
+      `Autocomplete action text should be as expected for search '${
+        test.search
+      }'`
+    );
   }
 
-  Assert.equal(result.type, test.resultListType,
-    `Autocomplete result should have searchengine for the type for search '${test.search}'`);
+  Assert.equal(
+    result.type,
+    test.resultListType,
+    `Autocomplete result should have searchengine for the type for search '${
+      test.search
+    }'`
+  );
 
-  Assert.equal(!!result.searchParams, !!test.searchParams,
-    "Should have search params if expected");
+  Assert.equal(
+    !!result.searchParams,
+    !!test.searchParams,
+    "Should have search params if expected"
+  );
   if (test.searchParams) {
     let definedParams = {};
     for (let [k, v] of Object.entries(result.searchParams)) {
@@ -70,11 +97,17 @@ async function promiseTestResult(test) {
         definedParams[k] = v;
       }
     }
-    Assert.deepEqual(definedParams, test.searchParams,
-      "Shoud have the correct search params");
+    Assert.deepEqual(
+      definedParams,
+      test.searchParams,
+      "Shoud have the correct search params"
+    );
   } else {
-    Assert.equal(result.url, test.finalCompleteValue,
-      "Should have the correct URL/finalCompleteValue");
+    Assert.equal(
+      result.url,
+      test.finalCompleteValue,
+      "Should have the correct URL/finalCompleteValue"
+    );
   }
 }
 
@@ -143,13 +176,22 @@ add_task(async function autofill_tests() {
 
 add_task(async function autofill_complete_domain() {
   await promiseSearch("http://www.autofilltrimurl.com");
-  Assert.equal(gURLBar.inputField.value, "http://www.autofilltrimurl.com/",
-    "Should have the correct autofill value");
+  Assert.equal(
+    gURLBar.inputField.value,
+    "http://www.autofilltrimurl.com/",
+    "Should have the correct autofill value"
+  );
 
   // Now ensure selecting from the popup correctly trims.
-  Assert.equal(UrlbarTestUtils.getResultCount(window), 2,
-    "Should have the correct matches");
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    2,
+    "Should have the correct matches"
+  );
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  Assert.equal(gURLBar.inputField.value, "www.autofilltrimurl.com/whatever",
-    "Should have applied trim correctly");
+  Assert.equal(
+    gURLBar.inputField.value,
+    "www.autofilltrimurl.com/whatever",
+    "Should have applied trim correctly"
+  );
 });

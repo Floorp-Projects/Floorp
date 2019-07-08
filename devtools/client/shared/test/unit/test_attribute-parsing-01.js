@@ -5,57 +5,60 @@
 
 // Test splitBy from node-attribute-parser.js
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {splitBy} = require("devtools/client/shared/node-attribute-parser");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { splitBy } = require("devtools/client/shared/node-attribute-parser");
 
-const TEST_DATA = [{
-  value: "this is a test",
-  splitChar: " ",
-  expected: [
-    {value: "this"},
-    {value: " ", type: "string"},
-    {value: "is"},
-    {value: " ", type: "string"},
-    {value: "a"},
-    {value: " ", type: "string"},
-    {value: "test"},
-  ],
-}, {
-  value: "/path/to/handler",
-  splitChar: " ",
-  expected: [
-    {value: "/path/to/handler"},
-  ],
-}, {
-  value: "test",
-  splitChar: " ",
-  expected: [
-    {value: "test"},
-  ],
-}, {
-  value: " test ",
-  splitChar: " ",
-  expected: [
-    {value: " ", type: "string"},
-    {value: "test"},
-    {value: " ", type: "string"},
-  ],
-}, {
-  value: "",
-  splitChar: " ",
-  expected: [],
-}, {
-  value: "   ",
-  splitChar: " ",
-  expected: [
-    {value: " ", type: "string"},
-    {value: " ", type: "string"},
-    {value: " ", type: "string"},
-  ],
-}];
+const TEST_DATA = [
+  {
+    value: "this is a test",
+    splitChar: " ",
+    expected: [
+      { value: "this" },
+      { value: " ", type: "string" },
+      { value: "is" },
+      { value: " ", type: "string" },
+      { value: "a" },
+      { value: " ", type: "string" },
+      { value: "test" },
+    ],
+  },
+  {
+    value: "/path/to/handler",
+    splitChar: " ",
+    expected: [{ value: "/path/to/handler" }],
+  },
+  {
+    value: "test",
+    splitChar: " ",
+    expected: [{ value: "test" }],
+  },
+  {
+    value: " test ",
+    splitChar: " ",
+    expected: [
+      { value: " ", type: "string" },
+      { value: "test" },
+      { value: " ", type: "string" },
+    ],
+  },
+  {
+    value: "",
+    splitChar: " ",
+    expected: [],
+  },
+  {
+    value: "   ",
+    splitChar: " ",
+    expected: [
+      { value: " ", type: "string" },
+      { value: " ", type: "string" },
+      { value: " ", type: "string" },
+    ],
+  },
+];
 
 function run_test() {
-  for (const {value, splitChar, expected} of TEST_DATA) {
+  for (const { value, splitChar, expected } of TEST_DATA) {
     info("Splitting string: " + value);
     const tokens = splitBy(value, splitChar);
 

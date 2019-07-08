@@ -2,24 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 function AutoCompleteImmediateSearch(aName, aResult) {
   this.name = aName;
   this._result = aResult;
 }
-AutoCompleteImmediateSearch.prototype = Object.create(AutoCompleteSearchBase.prototype);
+AutoCompleteImmediateSearch.prototype = Object.create(
+  AutoCompleteSearchBase.prototype
+);
 AutoCompleteImmediateSearch.prototype.searchType =
   Ci.nsIAutoCompleteSearchDescriptor.SEARCH_TYPE_IMMEDIATE;
-AutoCompleteImmediateSearch.prototype.QueryInterface =
-  ChromeUtils.generateQI([Ci.nsIFactory,
-                          Ci.nsIAutoCompleteSearch,
-                          Ci.nsIAutoCompleteSearchDescriptor]);
+AutoCompleteImmediateSearch.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsIFactory,
+  Ci.nsIAutoCompleteSearch,
+  Ci.nsIAutoCompleteSearchDescriptor,
+]);
 
 function AutoCompleteDelayedSearch(aName, aResult) {
   this.name = aName;
   this._result = aResult;
 }
-AutoCompleteDelayedSearch.prototype = Object.create(AutoCompleteSearchBase.prototype);
+AutoCompleteDelayedSearch.prototype = Object.create(
+  AutoCompleteSearchBase.prototype
+);
 
 function AutoCompleteResult(aValues, aDefaultIndex) {
   this._values = aValues;
@@ -34,17 +38,24 @@ add_test(function test_immediate_search() {
   let inputStr = "moz";
 
   let immediateSearch = new AutoCompleteImmediateSearch(
-    "immediate", new AutoCompleteResult(["moz-immediate"], 0));
+    "immediate",
+    new AutoCompleteResult(["moz-immediate"], 0)
+  );
   registerAutoCompleteSearch(immediateSearch);
   let delayedSearch = new AutoCompleteDelayedSearch(
-    "delayed", new AutoCompleteResult(["moz-delayed"], 0));
+    "delayed",
+    new AutoCompleteResult(["moz-delayed"], 0)
+  );
   registerAutoCompleteSearch(delayedSearch);
 
-  let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);
+  let controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
+    Ci.nsIAutoCompleteController
+  );
 
-  let input = new AutoCompleteInputBase([delayedSearch.name,
-                                         immediateSearch.name]);
+  let input = new AutoCompleteInputBase([
+    delayedSearch.name,
+    immediateSearch.name,
+  ]);
   input.completeDefaultIndex = true;
   input.textValue = inputStr;
 
@@ -77,18 +88,25 @@ add_test(function test_immediate_search_notimeout() {
   let inputStr = "moz";
 
   let immediateSearch = new AutoCompleteImmediateSearch(
-    "immediate", new AutoCompleteResult(["moz-immediate"], 0));
+    "immediate",
+    new AutoCompleteResult(["moz-immediate"], 0)
+  );
   registerAutoCompleteSearch(immediateSearch);
 
   let delayedSearch = new AutoCompleteDelayedSearch(
-    "delayed", new AutoCompleteResult(["moz-delayed"], 0));
+    "delayed",
+    new AutoCompleteResult(["moz-delayed"], 0)
+  );
   registerAutoCompleteSearch(delayedSearch);
 
-  let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);
+  let controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
+    Ci.nsIAutoCompleteController
+  );
 
-  let input = new AutoCompleteInputBase([delayedSearch.name,
-                                         immediateSearch.name]);
+  let input = new AutoCompleteInputBase([
+    delayedSearch.name,
+    immediateSearch.name,
+  ]);
   input.completeDefaultIndex = true;
   input.textValue = inputStr;
   input.timeout = 0;
@@ -121,11 +139,14 @@ add_test(function test_delayed_search_notimeout() {
   let inputStr = "moz";
 
   let delayedSearch = new AutoCompleteDelayedSearch(
-    "delayed", new AutoCompleteResult(["moz-delayed"], 0));
+    "delayed",
+    new AutoCompleteResult(["moz-delayed"], 0)
+  );
   registerAutoCompleteSearch(delayedSearch);
 
-  let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);
+  let controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
+    Ci.nsIAutoCompleteController
+  );
 
   let input = new AutoCompleteInputBase([delayedSearch.name]);
   input.completeDefaultIndex = true;

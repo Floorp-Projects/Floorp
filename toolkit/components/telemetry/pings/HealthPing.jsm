@@ -8,22 +8,47 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "TelemetryHealthPing",
-];
+var EXPORTED_SYMBOLS = ["TelemetryHealthPing"];
 
-ChromeUtils.defineModuleGetter(this, "TelemetryController", "resource://gre/modules/TelemetryController.jsm");
-ChromeUtils.defineModuleGetter(this, "setTimeout", "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "clearTimeout", "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryUtils", "resource://gre/modules/TelemetryUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryController",
+  "resource://gre/modules/TelemetryController.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "setTimeout",
+  "resource://gre/modules/Timer.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "clearTimeout",
+  "resource://gre/modules/Timer.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryUtils",
+  "resource://gre/modules/TelemetryUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
-ChromeUtils.defineModuleGetter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Preferences",
+  "resource://gre/modules/Preferences.jsm"
+);
 
 const Utils = TelemetryUtils;
 
 const MS_IN_A_MINUTE = 60 * 1000;
-const IS_HEALTH_PING_ENABLED = Preferences.get(TelemetryUtils.Preferences.HealthPingEnabled, true);
+const IS_HEALTH_PING_ENABLED = Preferences.get(
+  TelemetryUtils.Preferences.HealthPingEnabled,
+  true
+);
 
 // Send health ping every hour
 const SEND_TICK_DELAY = 60 * MS_IN_A_MINUTE;
@@ -36,14 +61,14 @@ const LOGGER_PREFIX = "TelemetryHealthPing::";
 
 var Policy = {
   setSchedulerTickTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
-  clearSchedulerTickTimeout: (id) => clearTimeout(id),
+  clearSchedulerTickTimeout: id => clearTimeout(id),
 };
 
 var TelemetryHealthPing = {
   Reason: Object.freeze({
     IMMEDIATE: "immediate", // Ping was sent immediately after recording with no delay.
-    DELAYED: "delayed",     // Recorded data was sent after a delay.
-    SHUT_DOWN: "shutdown",  // Recorded data was sent on shutdown.
+    DELAYED: "delayed", // Recorded data was sent after a delay.
+    SHUT_DOWN: "shutdown", // Recorded data was sent on shutdown.
   }),
 
   FailureType: Object.freeze({
@@ -52,8 +77,9 @@ var TelemetryHealthPing = {
   }),
 
   OsInfo: Object.freeze({
-    "name": Services.appinfo.OS,
-    "version": Services.sysinfo.get("kernel_version") || Services.sysinfo.get("version"),
+    name: Services.appinfo.OS,
+    version:
+      Services.sysinfo.get("kernel_version") || Services.sysinfo.get("version"),
   }),
 
   HEALTH_PING_TYPE: "health",
@@ -162,9 +188,16 @@ var TelemetryHealthPing = {
       // If we submit the health ping immediately, the send task would be triggered again
       // before discarding oversized pings from the queue.
       // To work around this, we send the ping on the next tick.
-      Services.tm.dispatchToMainThread(() => r(
-        TelemetryController
-          .submitExternalPing(this.HEALTH_PING_TYPE, payload, options))));
+      Services.tm.dispatchToMainThread(() =>
+        r(
+          TelemetryController.submitExternalPing(
+            this.HEALTH_PING_TYPE,
+            payload,
+            options
+          )
+        )
+      )
+    );
   },
 
   /**
@@ -174,7 +207,12 @@ var TelemetryHealthPing = {
    * @returns {Promise} Test-only, resolved when the ping is stored or sent.
    */
   _addToFailure(failureType, failureSubType) {
-    this._log.trace("_addToFailure() - with type and subtype: " + failureType + " : " + failureSubType);
+    this._log.trace(
+      "_addToFailure() - with type and subtype: " +
+        failureType +
+        " : " +
+        failureSubType
+    );
 
     if (!(failureType in this._failures)) {
       this._failures[failureType] = {};
@@ -184,13 +222,15 @@ var TelemetryHealthPing = {
     this._failures[failureType][failureSubType] = current + 1;
 
     const now = Utils.monotonicNow();
-    if ((now - this._lastSendTime) >= SEND_TICK_DELAY) {
+    if (now - this._lastSendTime >= SEND_TICK_DELAY) {
       return this._submitPing(this.Reason.IMMEDIATE);
     }
 
     let submissionDelay = SEND_TICK_DELAY - now - this._lastSendTime;
-    this._timeoutId =
-      Policy.setSchedulerTickTimeout(() => TelemetryHealthPing._submitPing(this.Reason.DELAYED), submissionDelay);
+    this._timeoutId = Policy.setSchedulerTickTimeout(
+      () => TelemetryHealthPing._submitPing(this.Reason.DELAYED),
+      submissionDelay
+    );
     return Promise.resolve();
   },
 
@@ -240,7 +280,10 @@ var TelemetryHealthPing = {
 
   get _log() {
     if (!this._logger) {
-      this._logger = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX + "::");
+      this._logger = Log.repository.getLoggerWithMessagePrefix(
+        LOGGER_NAME,
+        LOGGER_PREFIX + "::"
+      );
     }
 
     return this._logger;

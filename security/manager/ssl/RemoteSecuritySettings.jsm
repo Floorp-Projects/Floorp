@@ -3,36 +3,50 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const EXPORTED_SYMBOLS = [
-  "RemoteSecuritySettings",
-];
+const EXPORTED_SYMBOLS = ["RemoteSecuritySettings"];
 
-const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js");
+const { RemoteSettings } = ChromeUtils.import(
+  "resource://services-settings/remote-settings.js"
+);
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {X509} = ChromeUtils.import("resource://gre/modules/psm/X509.jsm", null);
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { X509 } = ChromeUtils.import(
+  "resource://gre/modules/psm/X509.jsm",
+  null
+);
 
-const INTERMEDIATES_BUCKET_PREF          = "security.remote_settings.intermediates.bucket";
-const INTERMEDIATES_CHECKED_SECONDS_PREF = "security.remote_settings.intermediates.checked";
-const INTERMEDIATES_COLLECTION_PREF      = "security.remote_settings.intermediates.collection";
-const INTERMEDIATES_DL_PER_POLL_PREF     = "security.remote_settings.intermediates.downloads_per_poll";
-const INTERMEDIATES_DL_PARALLEL_REQUESTS = "security.remote_settings.intermediates.parallel_downloads";
-const INTERMEDIATES_ENABLED_PREF         = "security.remote_settings.intermediates.enabled";
-const INTERMEDIATES_SIGNER_PREF          = "security.remote_settings.intermediates.signer";
-const LOGLEVEL_PREF                      = "browser.policies.loglevel";
+const INTERMEDIATES_BUCKET_PREF =
+  "security.remote_settings.intermediates.bucket";
+const INTERMEDIATES_CHECKED_SECONDS_PREF =
+  "security.remote_settings.intermediates.checked";
+const INTERMEDIATES_COLLECTION_PREF =
+  "security.remote_settings.intermediates.collection";
+const INTERMEDIATES_DL_PER_POLL_PREF =
+  "security.remote_settings.intermediates.downloads_per_poll";
+const INTERMEDIATES_DL_PARALLEL_REQUESTS =
+  "security.remote_settings.intermediates.parallel_downloads";
+const INTERMEDIATES_ENABLED_PREF =
+  "security.remote_settings.intermediates.enabled";
+const INTERMEDIATES_SIGNER_PREF =
+  "security.remote_settings.intermediates.signer";
+const LOGLEVEL_PREF = "browser.policies.loglevel";
 
-const ONECRL_BUCKET_PREF     = "services.settings.security.onecrl.bucket";
+const ONECRL_BUCKET_PREF = "services.settings.security.onecrl.bucket";
 const ONECRL_COLLECTION_PREF = "services.settings.security.onecrl.collection";
-const ONECRL_SIGNER_PREF     = "services.settings.security.onecrl.signer";
-const ONECRL_CHECKED_PREF    = "services.settings.security.onecrl.checked";
+const ONECRL_SIGNER_PREF = "services.settings.security.onecrl.signer";
+const ONECRL_CHECKED_PREF = "services.settings.security.onecrl.checked";
 
-const PINNING_ENABLED_PREF         = "services.blocklist.pinning.enabled";
-const PINNING_BUCKET_PREF          = "services.blocklist.pinning.bucket";
-const PINNING_COLLECTION_PREF      = "services.blocklist.pinning.collection";
+const PINNING_ENABLED_PREF = "services.blocklist.pinning.enabled";
+const PINNING_BUCKET_PREF = "services.blocklist.pinning.bucket";
+const PINNING_COLLECTION_PREF = "services.blocklist.pinning.collection";
 const PINNING_CHECKED_SECONDS_PREF = "services.blocklist.pinning.checked";
-const PINNING_SIGNER_PREF          = "services.blocklist.pinning.signer";
+const PINNING_SIGNER_PREF = "services.blocklist.pinning.signer";
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
@@ -43,7 +57,11 @@ XPCOMUtils.defineLazyGetter(this, "baseAttachmentsURL", async () => {
   const serverInfo = await (await fetch(`${server}/`, {
     credentials: "omit",
   })).json();
-  const {capabilities: {attachments: {base_url}}} = serverInfo;
+  const {
+    capabilities: {
+      attachments: { base_url },
+    },
+  } = serverInfo;
   return base_url;
 });
 
@@ -59,15 +77,24 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 });
 
 function hexify(data) {
-  return Array.from(data, (c, i) => data.charCodeAt(i).toString(16).padStart(2, "0")).join("");
+  return Array.from(data, (c, i) =>
+    data
+      .charCodeAt(i)
+      .toString(16)
+      .padStart(2, "0")
+  ).join("");
 }
 
 // Hash a UTF-8 string into a hex string with SHA256
 function getHash(str) {
   // return the two-digit hexadecimal code for a byte
-  let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+  let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
+    Ci.nsICryptoHash
+  );
   hasher.init(Ci.nsICryptoHash.SHA256);
-  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
+  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   stringStream.data = str;
   hasher.updateFromStream(stringStream, -1);
 
@@ -100,7 +127,9 @@ class CRLiteState {
     this.state = state;
   }
 }
-CRLiteState.prototype.QueryInterface = ChromeUtils.generateQI([Ci.nsICRLiteState]);
+CRLiteState.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsICRLiteState,
+]);
 
 class CertInfo {
   constructor(cert, subject) {
@@ -124,8 +153,9 @@ class IssuerAndSerialRevocationState extends RevocationState {
     this.serial = serial;
   }
 }
-IssuerAndSerialRevocationState.prototype.QueryInterface =
-  ChromeUtils.generateQI([Ci.nsIIssuerAndSerialRevocationState]);
+IssuerAndSerialRevocationState.prototype.QueryInterface = ChromeUtils.generateQI(
+  [Ci.nsIIssuerAndSerialRevocationState]
+);
 
 class SubjectAndPubKeyRevocationState extends RevocationState {
   constructor(subject, pubKey, state) {
@@ -134,11 +164,12 @@ class SubjectAndPubKeyRevocationState extends RevocationState {
     this.pubKey = pubKey;
   }
 }
-SubjectAndPubKeyRevocationState.prototype.QueryInterface =
-  ChromeUtils.generateQI([Ci.nsISubjectAndPubKeyRevocationState]);
+SubjectAndPubKeyRevocationState.prototype.QueryInterface = ChromeUtils.generateQI(
+  [Ci.nsISubjectAndPubKeyRevocationState]
+);
 
 function setRevocations(certStorage, revocations) {
-  return new Promise((resolve) =>
+  return new Promise(resolve =>
     certStorage.setRevocations(revocations, resolve)
   );
 }
@@ -148,79 +179,109 @@ function setRevocations(certStorage, revocations) {
  *
  * @param {Object} data   Current records in the local db.
  */
-const updateCertBlocklist = AppConstants.MOZ_NEW_CERT_STORAGE ?
-  async function ({ data: { current, created, updated, deleted } }) {
-    const certList = Cc["@mozilla.org/security/certstorage;1"]
-      .getService(Ci.nsICertStorage);
-    let items = [];
+const updateCertBlocklist = AppConstants.MOZ_NEW_CERT_STORAGE
+  ? async function({ data: { current, created, updated, deleted } }) {
+      const certList = Cc["@mozilla.org/security/certstorage;1"].getService(
+        Ci.nsICertStorage
+      );
+      let items = [];
 
-    // See if we have prior revocation data (this can happen when we can't open
-    // the database and we have to re-create it (see bug 1546361)).
-    let hasPriorRevocationData = await new Promise((resolve) => {
-      certList.hasPriorData(Ci.nsICertStorage.DATA_TYPE_REVOCATION, (rv, hasPriorData) => {
-        if (rv == Cr.NS_OK) {
-          resolve(hasPriorData);
-        } else {
-          // If calling hasPriorData failed, assume we need to reload
-          // everything (even though it's unlikely doing so will succeed).
-          resolve(false);
-        }
+      // See if we have prior revocation data (this can happen when we can't open
+      // the database and we have to re-create it (see bug 1546361)).
+      let hasPriorRevocationData = await new Promise(resolve => {
+        certList.hasPriorData(
+          Ci.nsICertStorage.DATA_TYPE_REVOCATION,
+          (rv, hasPriorData) => {
+            if (rv == Cr.NS_OK) {
+              resolve(hasPriorData);
+            } else {
+              // If calling hasPriorData failed, assume we need to reload
+              // everything (even though it's unlikely doing so will succeed).
+              resolve(false);
+            }
+          }
+        );
       });
-    });
 
-    // If we don't have prior data, make it so we re-load everything.
-    if (!hasPriorRevocationData) {
-      deleted = [];
-      updated = [];
-      created = current;
-    }
-
-    for (let item of deleted) {
-      if (item.issuerName && item.serialNumber) {
-        items.push(new IssuerAndSerialRevocationState(item.issuerName,
-          item.serialNumber, Ci.nsICertStorage.STATE_UNSET));
-      } else if (item.subject && item.pubKeyHash) {
-        items.push(new SubjectAndPubKeyRevocationState(item.subject,
-          item.pubKeyHash, Ci.nsICertStorage.STATE_UNSET));
+      // If we don't have prior data, make it so we re-load everything.
+      if (!hasPriorRevocationData) {
+        deleted = [];
+        updated = [];
+        created = current;
       }
-    }
 
-    const toAdd = created.concat(updated.map(u => u.new));
-
-    for (let item of toAdd) {
-      if (item.issuerName && item.serialNumber) {
-        items.push(new IssuerAndSerialRevocationState(item.issuerName,
-          item.serialNumber, Ci.nsICertStorage.STATE_ENFORCE));
-      } else if (item.subject && item.pubKeyHash) {
-        items.push(new SubjectAndPubKeyRevocationState(item.subject,
-          item.pubKeyHash, Ci.nsICertStorage.STATE_ENFORCE));
-      }
-    }
-
-    try {
-      await setRevocations(certList, items);
-    } catch (e) {
-      Cu.reportError(e);
-    }
-  } : async function ({ data: { current: records } }) {
-    const certList = Cc["@mozilla.org/security/certblocklist;1"]
-      .getService(Ci.nsICertBlocklist);
-    for (let item of records) {
-      try {
+      for (let item of deleted) {
         if (item.issuerName && item.serialNumber) {
-          certList.revokeCertByIssuerAndSerial(item.issuerName,
-            item.serialNumber);
+          items.push(
+            new IssuerAndSerialRevocationState(
+              item.issuerName,
+              item.serialNumber,
+              Ci.nsICertStorage.STATE_UNSET
+            )
+          );
         } else if (item.subject && item.pubKeyHash) {
-          certList.revokeCertBySubjectAndPubKey(item.subject,
-            item.pubKeyHash);
+          items.push(
+            new SubjectAndPubKeyRevocationState(
+              item.subject,
+              item.pubKeyHash,
+              Ci.nsICertStorage.STATE_UNSET
+            )
+          );
         }
+      }
+
+      const toAdd = created.concat(updated.map(u => u.new));
+
+      for (let item of toAdd) {
+        if (item.issuerName && item.serialNumber) {
+          items.push(
+            new IssuerAndSerialRevocationState(
+              item.issuerName,
+              item.serialNumber,
+              Ci.nsICertStorage.STATE_ENFORCE
+            )
+          );
+        } else if (item.subject && item.pubKeyHash) {
+          items.push(
+            new SubjectAndPubKeyRevocationState(
+              item.subject,
+              item.pubKeyHash,
+              Ci.nsICertStorage.STATE_ENFORCE
+            )
+          );
+        }
+      }
+
+      try {
+        await setRevocations(certList, items);
       } catch (e) {
-        // Prevent errors relating to individual blocklist entries from causing sync to fail.
         Cu.reportError(e);
       }
     }
-    certList.saveEntries();
-  };
+  : async function({ data: { current: records } }) {
+      const certList = Cc["@mozilla.org/security/certblocklist;1"].getService(
+        Ci.nsICertBlocklist
+      );
+      for (let item of records) {
+        try {
+          if (item.issuerName && item.serialNumber) {
+            certList.revokeCertByIssuerAndSerial(
+              item.issuerName,
+              item.serialNumber
+            );
+          } else if (item.subject && item.pubKeyHash) {
+            certList.revokeCertBySubjectAndPubKey(
+              item.subject,
+              item.pubKeyHash
+            );
+          }
+        } catch (e) {
+          // Prevent errors relating to individual blocklist entries from causing sync to fail.
+          Cu.reportError(e);
+        }
+      }
+      certList.saveEntries();
+    };
 
 /**
  * Modify the appropriate security pins based on records from the remote
@@ -233,8 +294,9 @@ async function updatePinningList({ data: { current: records } }) {
     return;
   }
 
-  const siteSecurityService = Cc["@mozilla.org/ssservice;1"]
-    .getService(Ci.nsISiteSecurityService);
+  const siteSecurityService = Cc["@mozilla.org/ssservice;1"].getService(
+    Ci.nsISiteSecurityService
+  );
 
   // clear the current preload list
   siteSecurityService.clearPreloads();
@@ -245,15 +307,20 @@ async function updatePinningList({ data: { current: records } }) {
       const { pinType, pins = [], versions } = item;
       if (versions.includes(Services.appinfo.version)) {
         if (pinType == "KeyPin" && pins.length) {
-          siteSecurityService.setKeyPins(item.hostName,
+          siteSecurityService.setKeyPins(
+            item.hostName,
             item.includeSubdomains,
             item.expires,
-            pins, true);
+            pins,
+            true
+          );
         }
         if (pinType == "STSPin") {
-          siteSecurityService.setHSTSPreload(item.hostName,
+          siteSecurityService.setHSTSPreload(
+            item.hostName,
             item.includeSubdomains,
-            item.expires);
+            item.expires
+          );
         }
       }
     } catch (e) {
@@ -271,18 +338,24 @@ var RemoteSecuritySettings = {
    * @returns {Object} intantiated clients for security remote settings.
    */
   init() {
-    const OneCRLBlocklistClient = RemoteSettings(Services.prefs.getCharPref(ONECRL_COLLECTION_PREF), {
-      bucketNamePref: ONECRL_BUCKET_PREF,
-      lastCheckTimePref: ONECRL_CHECKED_PREF,
-      signerName: Services.prefs.getCharPref(ONECRL_SIGNER_PREF),
-    });
+    const OneCRLBlocklistClient = RemoteSettings(
+      Services.prefs.getCharPref(ONECRL_COLLECTION_PREF),
+      {
+        bucketNamePref: ONECRL_BUCKET_PREF,
+        lastCheckTimePref: ONECRL_CHECKED_PREF,
+        signerName: Services.prefs.getCharPref(ONECRL_SIGNER_PREF),
+      }
+    );
     OneCRLBlocklistClient.on("sync", updateCertBlocklist);
 
-    const PinningBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PINNING_COLLECTION_PREF), {
-      bucketNamePref: PINNING_BUCKET_PREF,
-      lastCheckTimePref: PINNING_CHECKED_SECONDS_PREF,
-      signerName: Services.prefs.getCharPref(PINNING_SIGNER_PREF),
-    });
+    const PinningBlocklistClient = RemoteSettings(
+      Services.prefs.getCharPref(PINNING_COLLECTION_PREF),
+      {
+        bucketNamePref: PINNING_BUCKET_PREF,
+        lastCheckTimePref: PINNING_CHECKED_SECONDS_PREF,
+        signerName: Services.prefs.getCharPref(PINNING_SIGNER_PREF),
+      }
+    );
     PinningBlocklistClient.on("sync", updatePinningList);
 
     let IntermediatePreloadsClient;
@@ -300,16 +373,21 @@ var RemoteSecuritySettings = {
 
 class IntermediatePreloads {
   constructor() {
-    this.client = RemoteSettings(Services.prefs.getCharPref(INTERMEDIATES_COLLECTION_PREF), {
-      bucketNamePref: INTERMEDIATES_BUCKET_PREF,
-      lastCheckTimePref: INTERMEDIATES_CHECKED_SECONDS_PREF,
-      signerName: Services.prefs.getCharPref(INTERMEDIATES_SIGNER_PREF),
-      localFields: ["cert_import_complete"],
-    });
+    this.client = RemoteSettings(
+      Services.prefs.getCharPref(INTERMEDIATES_COLLECTION_PREF),
+      {
+        bucketNamePref: INTERMEDIATES_BUCKET_PREF,
+        lastCheckTimePref: INTERMEDIATES_CHECKED_SECONDS_PREF,
+        signerName: Services.prefs.getCharPref(INTERMEDIATES_SIGNER_PREF),
+        localFields: ["cert_import_complete"],
+      }
+    );
 
     this.client.on("sync", this.onSync.bind(this));
-    Services.obs.addObserver(this.onObservePollEnd.bind(this),
-                              "remote-settings:changes-poll-end");
+    Services.obs.addObserver(
+      this.onObservePollEnd.bind(this),
+      "remote-settings:changes-poll-end"
+    );
 
     log.debug("Intermediate Preloading: constructor");
   }
@@ -320,13 +398,23 @@ class IntermediatePreloads {
 
     if (!Services.prefs.getBoolPref(INTERMEDIATES_ENABLED_PREF, true)) {
       log.debug("Intermediate Preloading is disabled");
-      Services.obs.notifyObservers(null, "remote-security-settings:intermediates-updated", "disabled");
+      Services.obs.notifyObservers(
+        null,
+        "remote-security-settings:intermediates-updated",
+        "disabled"
+      );
       return;
     }
 
     // Download attachments that are awaiting download, up to a max.
-    const maxDownloadsPerRun = Services.prefs.getIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
-    const parallelDownloads = Services.prefs.getIntPref(INTERMEDIATES_DL_PARALLEL_REQUESTS, 8);
+    const maxDownloadsPerRun = Services.prefs.getIntPref(
+      INTERMEDIATES_DL_PER_POLL_PREF,
+      100
+    );
+    const parallelDownloads = Services.prefs.getIntPref(
+      INTERMEDIATES_DL_PARALLEL_REQUESTS,
+      8
+    );
 
     // Bug 1519256: Move this to a separate method that's on a separate timer
     // with a higher frequency (so we can attempt to download outstanding
@@ -334,17 +422,22 @@ class IntermediatePreloads {
 
     // See if we have prior cert data (this can happen when we can't open the database and we
     // have to re-create it (see bug 1546361)).
-    const certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage);
-    let hasPriorCertData = await new Promise((resolve) => {
-      certStorage.hasPriorData(Ci.nsICertStorage.DATA_TYPE_CERTIFICATE, (rv, hasPriorData) => {
-        if (rv == Cr.NS_OK) {
-          resolve(hasPriorData);
-        } else {
-          // If calling hasPriorData failed, assume we need to reload everything (even though
-          // it's unlikely doing so will succeed).
-          resolve(false);
+    const certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
+      Ci.nsICertStorage
+    );
+    let hasPriorCertData = await new Promise(resolve => {
+      certStorage.hasPriorData(
+        Ci.nsICertStorage.DATA_TYPE_CERTIFICATE,
+        (rv, hasPriorData) => {
+          if (rv == Cr.NS_OK) {
+            resolve(hasPriorData);
+          } else {
+            // If calling hasPriorData failed, assume we need to reload everything (even though
+            // it's unlikely doing so will succeed).
+            resolve(false);
+          }
         }
-      });
+      );
     });
     const col = await this.client.openCollection();
     // If we don't have prior data, make it so we re-load everything.
@@ -352,7 +445,7 @@ class IntermediatePreloads {
       const { data: current } = await col.list({ order: "" }); // no sort needed.
       const toReset = current.filter(record => record.cert_import_complete);
       await col.db.execute(transaction => {
-        toReset.forEach((record) => {
+        toReset.forEach(record => {
           transaction.update({ ...record, cert_import_complete: false });
         });
       });
@@ -363,7 +456,11 @@ class IntermediatePreloads {
     log.debug(`There are ${waiting.length} intermediates awaiting download.`);
     if (waiting.length == 0) {
       // Nothing to do.
-      Services.obs.notifyObservers(null, "remote-security-settings:intermediates-updated", "success");
+      Services.obs.notifyObservers(
+        null,
+        "remote-security-settings:intermediates-updated",
+        "success"
+      );
       return;
     }
 
@@ -371,33 +468,38 @@ class IntermediatePreloads {
     let recordsCertsAndSubjects = [];
     for (let i = 0; i < toDownload.length; i += parallelDownloads) {
       const chunk = toDownload.slice(i, i + parallelDownloads);
-      const downloaded = await Promise.all(chunk.map(record => this.maybeDownloadAttachment(record)));
+      const downloaded = await Promise.all(
+        chunk.map(record => this.maybeDownloadAttachment(record))
+      );
       recordsCertsAndSubjects = recordsCertsAndSubjects.concat(downloaded);
     }
 
     let certInfos = [];
     let recordsToUpdate = [];
-    for (let {record, cert, subject} of recordsCertsAndSubjects) {
+    for (let { record, cert, subject } of recordsCertsAndSubjects) {
       if (cert && subject) {
         certInfos.push(new CertInfo(cert, subject));
         recordsToUpdate.push(record);
       }
     }
-    let result = await new Promise((resolve) => {
+    let result = await new Promise(resolve => {
       certStorage.addCerts(certInfos, resolve);
-    }).catch((err) => err);
+    }).catch(err => err);
     if (result != Cr.NS_OK) {
       Cu.reportError(`certStorage.addCerts failed: ${result}`);
       return;
     }
     await col.db.execute(transaction => {
-      recordsToUpdate.forEach((record) => {
+      recordsToUpdate.forEach(record => {
         transaction.update({ ...record, cert_import_complete: true });
       });
     });
 
-    Services.obs.notifyObservers(null, "remote-security-settings:intermediates-updated",
-                                  "success");
+    Services.obs.notifyObservers(
+      null,
+      "remote-security-settings:intermediates-updated",
+      "success"
+    );
   }
 
   async onObservePollEnd(subject, topic, data) {
@@ -419,15 +521,20 @@ class IntermediatePreloads {
 
     log.debug(`Removing ${deleted.length} Intermediate certificates`);
     await this.removeCerts(deleted);
-    let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage);
-    let hasPriorCRLiteData = await new Promise((resolve) => {
-      certStorage.hasPriorData(Ci.nsICertStorage.DATA_TYPE_CRLITE, (rv, hasPriorData) => {
-        if (rv == Cr.NS_OK) {
-          resolve(hasPriorData);
-        } else {
-          resolve(false);
+    let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
+      Ci.nsICertStorage
+    );
+    let hasPriorCRLiteData = await new Promise(resolve => {
+      certStorage.hasPriorData(
+        Ci.nsICertStorage.DATA_TYPE_CRLITE,
+        (rv, hasPriorData) => {
+          if (rv == Cr.NS_OK) {
+            resolve(hasPriorData);
+          } else {
+            resolve(false);
+          }
         }
-      });
+      );
     });
     if (!hasPriorCRLiteData) {
       deleted = [];
@@ -437,15 +544,26 @@ class IntermediatePreloads {
     const toAdd = created.concat(updated.map(u => u.new));
     let entries = [];
     for (let entry of deleted) {
-      entries.push(new CRLiteState(entry.subjectDN, entry.pubKeyHash,
-        Ci.nsICertStorage.STATE_UNSET));
+      entries.push(
+        new CRLiteState(
+          entry.subjectDN,
+          entry.pubKeyHash,
+          Ci.nsICertStorage.STATE_UNSET
+        )
+      );
     }
     for (let entry of toAdd) {
-      entries.push(new CRLiteState(entry.subjectDN, entry.pubKeyHash,
-        entry.crlite_enrolled ? Ci.nsICertStorage.STATE_ENFORCE
-          : Ci.nsICertStorage.STATE_UNSET));
+      entries.push(
+        new CRLiteState(
+          entry.subjectDN,
+          entry.pubKeyHash,
+          entry.crlite_enrolled
+            ? Ci.nsICertStorage.STATE_ENFORCE
+            : Ci.nsICertStorage.STATE_UNSET
+        )
+      );
     }
-    await new Promise((resolve) => certStorage.setCRLiteState(entries, resolve));
+    await new Promise(resolve => certStorage.setCRLiteState(entries, resolve));
   }
 
   /**
@@ -455,7 +573,9 @@ class IntermediatePreloads {
    * @return {Promise}          resolves to a Uint8Array on success
    */
   async _downloadAttachmentBytes(record) {
-    const {attachment: {location}} = record;
+    const {
+      attachment: { location },
+    } = record;
     const remoteFilePath = (await baseAttachmentsURL) + location;
     const headers = new Headers();
     headers.set("Accept-Encoding", "gzip");
@@ -463,15 +583,16 @@ class IntermediatePreloads {
     return fetch(remoteFilePath, {
       headers,
       credentials: "omit",
-    }).then(resp => {
-      log.debug(`Download fetch completed: ${resp.ok} ${resp.status}`);
-      if (!resp.ok) {
-        Cu.reportError(`Failed to fetch ${remoteFilePath}: ${resp.status}`);
-        return Promise.reject();
-      }
-      return resp.arrayBuffer();
     })
-    .then(buffer => new Uint8Array(buffer));
+      .then(resp => {
+        log.debug(`Download fetch completed: ${resp.ok} ${resp.status}`);
+        if (!resp.ok) {
+          Cu.reportError(`Failed to fetch ${remoteFilePath}: ${resp.status}`);
+          return Promise.reject();
+        }
+        return resp.arrayBuffer();
+      })
+      .then(buffer => new Uint8Array(buffer));
   }
 
   /**
@@ -487,7 +608,9 @@ class IntermediatePreloads {
    *                            name of the same.
    */
   async maybeDownloadAttachment(record) {
-    const {attachment: {hash, size}} = record;
+    const {
+      attachment: { hash, size },
+    } = record;
     let result = { record, cert: null, subject: null };
 
     let attachmentData;
@@ -506,7 +629,11 @@ class IntermediatePreloads {
 
     // check the length
     if (attachmentData.length !== size) {
-      log.debug(`Unexpected attachment length. Hash=${hash} Lengths ${attachmentData.length} != ${size}`);
+      log.debug(
+        `Unexpected attachment length. Hash=${hash} Lengths ${
+          attachmentData.length
+        } != ${size}`
+      );
       return result;
     }
 
@@ -514,7 +641,9 @@ class IntermediatePreloads {
     let dataAsString = gTextDecoder.decode(attachmentData);
     let calculatedHash = getHash(dataAsString);
     if (calculatedHash !== hash) {
-      log.warn(`Invalid hash. CalculatedHash=${calculatedHash}, Hash=${hash}, data=${dataAsString}`);
+      log.warn(
+        `Invalid hash. CalculatedHash=${calculatedHash}, Hash=${hash}, data=${dataAsString}`
+      );
       return result;
     }
     log.debug(`downloaded cert with hash=${hash}, size=${size}`);
@@ -530,7 +659,9 @@ class IntermediatePreloads {
       cert.parse(certBytes);
       // get the DER-encoded subject and get a base64-encoded string from it
       // TODO(bug 1542028): add getters for _der and _bytes
-      subjectBase64 = btoa(bytesToString(cert.tbsCertificate.subject._der._bytes));
+      subjectBase64 = btoa(
+        bytesToString(cert.tbsCertificate.subject._der._bytes)
+      );
     } catch (err) {
       Cu.reportError(`Failed to decode cert: ${err}`);
       return result;
@@ -545,11 +676,13 @@ class IntermediatePreloads {
   }
 
   async removeCerts(recordsToRemove) {
-    let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage);
+    let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
+      Ci.nsICertStorage
+    );
     let hashes = recordsToRemove.map(record => record.derHash);
-    let result = await new Promise((resolve) => {
-        certStorage.removeCertsByHashes(hashes, resolve);
-    }).catch((err) => err);
+    let result = await new Promise(resolve => {
+      certStorage.removeCertsByHashes(hashes, resolve);
+    }).catch(err => err);
     if (result != Cr.NS_OK) {
       Cu.reportError(`Failed to remove some intermediate certificates`);
     }

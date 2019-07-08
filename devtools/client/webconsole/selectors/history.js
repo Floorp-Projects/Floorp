@@ -30,7 +30,7 @@ function getHistoryValue(state, direction) {
 }
 
 function getNextHistoryValue(state) {
-  if (state.history.position < (state.history.entries.length - 1)) {
+  if (state.history.position < state.history.entries.length - 1) {
     return state.history.entries[state.history.position + 1];
   }
 
@@ -48,11 +48,15 @@ function getPreviousHistoryValue(state) {
 
 function getReverseSearchResult(state) {
   const { history } = state;
-  const { currentReverseSearchResults, currentReverseSearchResultsPosition } = history;
+  const {
+    currentReverseSearchResults,
+    currentReverseSearchResultsPosition,
+  } = history;
 
-  if (!Array.isArray(currentReverseSearchResults)
-    || currentReverseSearchResults.length === 0
-    || !Number.isInteger(currentReverseSearchResultsPosition)
+  if (
+    !Array.isArray(currentReverseSearchResults) ||
+    currentReverseSearchResults.length === 0 ||
+    !Number.isInteger(currentReverseSearchResultsPosition)
   ) {
     return null;
   }

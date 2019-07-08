@@ -10,14 +10,19 @@ const URI = ROOT + "browser_tab_dragdrop2_frame1.xul";
 add_task(async function() {
   // Open a new window.
   let args = "chrome,all,dialog=no";
-  let win = window.openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", args, URI);
+  let win = window.openDialog(
+    AppConstants.BROWSER_CHROME_URL,
+    "_blank",
+    args,
+    URI
+  );
 
   // Wait until the tests were run.
   await promiseTestsDone(win);
   ok(true, "tests succeeded");
 
   // Create a second tab so that we can move the original one out.
-  BrowserTestUtils.addTab(win.gBrowser, "about:blank", {skipAnimation: true});
+  BrowserTestUtils.addTab(win.gBrowser, "about:blank", { skipAnimation: true });
 
   // Tear off the original tab.
   let browser = win.gBrowser.selectedBrowser;

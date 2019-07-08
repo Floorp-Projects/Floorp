@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
+const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
 
 const channelID = "00c7fa13-7b71-447d-bd27-a91abc09d1b2";
 
@@ -15,7 +15,9 @@ function run_test() {
 
 add_task(async function test_unregister_error() {
   let db = PushServiceWebSocket.newPushDB();
-  registerCleanupFunction(() => { return db.drop().then(_ => db.close()); });
+  registerCleanupFunction(() => {
+    return db.drop().then(_ => db.close());
+  });
   await db.put({
     channelID,
     pushEndpoint: "https://example.org/update/failure",
@@ -26,29 +28,33 @@ add_task(async function test_unregister_error() {
   });
 
   let unregisterDone;
-  let unregisterPromise = new Promise(resolve => unregisterDone = resolve);
+  let unregisterPromise = new Promise(resolve => (unregisterDone = resolve));
   PushService.init({
     serverURI: "wss://push.example.org/",
     db,
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          this.serverSendMsg(JSON.stringify({
-            messageType: "hello",
-            status: 200,
-            uaid: "083e6c17-1063-4677-8638-ab705aebebc2",
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "hello",
+              status: 200,
+              uaid: "083e6c17-1063-4677-8638-ab705aebebc2",
+            })
+          );
         },
         onUnregister(request) {
           // The server is notified out-of-band. Since channels may be pruned,
           // any failures are swallowed.
           equal(request.channelID, channelID, "Unregister: wrong channel ID");
-          this.serverSendMsg(JSON.stringify({
-            messageType: "unregister",
-            status: 500,
-            error: "omg, everything is exploding",
-            channelID,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "unregister",
+              status: 500,
+              error: "omg, everything is exploding",
+              channelID,
+            })
+          );
           unregisterDone();
         },
       });

@@ -10,7 +10,10 @@ const EVENTS = require("../events");
 const { L10N } = require("../modules/global");
 const { DetailsSubview } = require("./details-abstract-subview");
 
-const { FlameGraph, FlameGraphUtils } = require("devtools/client/shared/widgets/FlameGraph");
+const {
+  FlameGraph,
+  FlameGraphUtils,
+} = require("devtools/client/shared/widgets/FlameGraph");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 
@@ -19,7 +22,6 @@ const EventEmitter = require("devtools/shared/event-emitter");
  * controlled by DetailsView.
  */
 const JsFlameGraphView = extend(DetailsSubview, {
-
   shouldUpdateWhileMouseIsActive: true,
 
   rerenderPrefs: [
@@ -73,21 +75,25 @@ const JsFlameGraphView = extend(DetailsSubview, {
 
     const data = FlameGraphUtils.createFlameGraphDataFromThread(thread, {
       invertTree: PerformanceController.getOption("invert-flame-graph"),
-      flattenRecursion: PerformanceController.getOption("flatten-tree-recursion"),
+      flattenRecursion: PerformanceController.getOption(
+        "flatten-tree-recursion"
+      ),
       contentOnly: !PerformanceController.getOption("show-platform-data"),
-      showIdleBlocks: PerformanceController.getOption("show-idle-blocks")
-                      && L10N.getStr("table.idle"),
+      showIdleBlocks:
+        PerformanceController.getOption("show-idle-blocks") &&
+        L10N.getStr("table.idle"),
     });
 
-    this.graph.setData({ data,
-                         bounds: {
-                           startTime: 0,
-                           endTime: duration,
-                         },
-                         visible: {
-                           startTime: interval.startTime || 0,
-                           endTime: interval.endTime || duration,
-                         },
+    this.graph.setData({
+      data,
+      bounds: {
+        startTime: 0,
+        endTime: duration,
+      },
+      visible: {
+        startTime: interval.startTime || 0,
+        endTime: interval.endTime || duration,
+      },
     });
 
     this.graph.focus();

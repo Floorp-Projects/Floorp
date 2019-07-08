@@ -6,10 +6,14 @@
 const expect = require("expect");
 
 const actions = require("devtools/client/webconsole/actions/index");
-const { getFilteredMessagesCount } = require("devtools/client/webconsole/selectors/messages");
+const {
+  getFilteredMessagesCount,
+} = require("devtools/client/webconsole/selectors/messages");
 const { setupStore } = require("devtools/client/webconsole/test/helpers");
 const { FILTERS } = require("devtools/client/webconsole/constants");
-const { stubPackets } = require("devtools/client/webconsole/test/fixtures/stubs/index");
+const {
+  stubPackets,
+} = require("devtools/client/webconsole/test/fixtures/stubs/index");
 
 describe("Filtering - Hidden messages", () => {
   let store;
@@ -100,19 +104,23 @@ describe("Filtering - Hidden messages", () => {
     store.dispatch(actions.filterToggle(FILTERS.LOG));
 
     let counter = getFilteredMessagesCount(store.getState());
-    expect(counter).toEqual(Object.assign({}, BASIC_TEST_CASE_FILTERED_MESSAGE_COUNT, {
-      [FILTERS.LOG]: 0,
-      global: 6,
-    }));
+    expect(counter).toEqual(
+      Object.assign({}, BASIC_TEST_CASE_FILTERED_MESSAGE_COUNT, {
+        [FILTERS.LOG]: 0,
+        global: 6,
+      })
+    );
 
     store.dispatch(actions.filterToggle(FILTERS.ERROR));
 
     counter = getFilteredMessagesCount(store.getState());
-    expect(counter).toEqual(Object.assign({}, BASIC_TEST_CASE_FILTERED_MESSAGE_COUNT, {
-      [FILTERS.ERROR]: 0,
-      [FILTERS.LOG]: 0,
-      global: 3,
-    }));
+    expect(counter).toEqual(
+      Object.assign({}, BASIC_TEST_CASE_FILTERED_MESSAGE_COUNT, {
+        [FILTERS.ERROR]: 0,
+        [FILTERS.LOG]: 0,
+        global: 3,
+      })
+    );
 
     store.dispatch(actions.filterToggle(FILTERS.LOG));
     store.dispatch(actions.filterToggle(FILTERS.ERROR));

@@ -17,7 +17,9 @@ add_task(async function() {
 
   let places = [];
   let transition = PlacesUtils.history.TRANSITION_TYPED;
-  TEST_URIs.forEach(uri => places.push({uri: Services.io.newURI(uri), transition}));
+  TEST_URIs.forEach(uri =>
+    places.push({ uri: Services.io.newURI(uri), transition })
+  );
 
   await PlacesTestUtils.addVisits(places);
   await testForgetThisSiteVisibility(1);
@@ -33,7 +35,9 @@ var testForgetThisSiteVisibility = async function(selectionCount) {
   // Select History in the left pane.
   organizer.PlacesOrganizer.selectLeftPaneBuiltIn("History");
   let PO = organizer.PlacesOrganizer;
-  let histContainer = PO._places.selectedNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  let histContainer = PO._places.selectedNode.QueryInterface(
+    Ci.nsINavHistoryContainerResultNode
+  );
   histContainer.containerOpen = true;
   PO._places.selectNode(histContainer.getChild(0));
 
@@ -43,7 +47,11 @@ var testForgetThisSiteVisibility = async function(selectionCount) {
   let selection = tree.view.selection;
   selection.clearSelection();
   selection.rangedSelect(0, selectionCount - 1, true);
-  is(selection.count, selectionCount, "The selected range is as big as expected");
+  is(
+    selection.count,
+    selectionCount,
+    "The selected range is as big as expected"
+  );
 
   // Open the context menu.
   let contextmenu = doc.getElementById("placesContext");
@@ -52,14 +60,24 @@ var testForgetThisSiteVisibility = async function(selectionCount) {
   // Get cell coordinates.
   let rect = tree.getCoordsForCellItem(0, tree.columns[0], "text");
   // Initiate a context menu for the selected cell.
-  EventUtils.synthesizeMouse(tree.body, rect.x + rect.width / 2, rect.y + rect.height / 2, {type: "contextmenu", button: 2}, organizer);
+  EventUtils.synthesizeMouse(
+    tree.body,
+    rect.x + rect.width / 2,
+    rect.y + rect.height / 2,
+    { type: "contextmenu", button: 2 },
+    organizer
+  );
   await popupShown;
 
   let forgetThisSite = doc.getElementById("placesContext_deleteHost");
-  let hideForgetThisSite = (selectionCount != 1);
-  is(forgetThisSite.hidden, hideForgetThisSite,
-    `The Forget this site menu item should ${hideForgetThisSite ? "" : "not "}` +
-    ` be hidden with ${selectionCount} items selected`);
+  let hideForgetThisSite = selectionCount != 1;
+  is(
+    forgetThisSite.hidden,
+    hideForgetThisSite,
+    `The Forget this site menu item should ${
+      hideForgetThisSite ? "" : "not "
+    } be hidden with ${selectionCount} items selected`
+  );
 
   // Close the context menu.
   contextmenu.hidePopup();
@@ -70,8 +88,12 @@ var testForgetThisSiteVisibility = async function(selectionCount) {
 
 function promisePopupShown(popup) {
   return new Promise(resolve => {
-    popup.addEventListener("popupshown", function() {
-      resolve();
-    }, {capture: true, once: true});
+    popup.addEventListener(
+      "popupshown",
+      function() {
+        resolve();
+      },
+      { capture: true, once: true }
+    );
   });
 }

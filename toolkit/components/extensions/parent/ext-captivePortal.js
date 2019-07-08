@@ -5,27 +5,36 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-XPCOMUtils.defineLazyServiceGetter(this, "gCPS",
-                                   "@mozilla.org/network/captive-portal-service;1",
-                                   "nsICaptivePortalService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gCPS",
+  "@mozilla.org/network/captive-portal-service;1",
+  "nsICaptivePortalService"
+);
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "gCaptivePortalEnabled",
-                                      "network.captive-portal-service.enabled",
-                                      false);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gCaptivePortalEnabled",
+  "network.captive-portal-service.enabled",
+  false
+);
 
 function nameForCPSState(state) {
   switch (state) {
-    case gCPS.UNKNOWN: return "unknown";
-    case gCPS.NOT_CAPTIVE: return "not_captive";
-    case gCPS.UNLOCKED_PORTAL: return "unlocked_portal";
-    case gCPS.LOCKED_PORTAL: return "locked_portal";
-    default: return "unknown";
+    case gCPS.UNKNOWN:
+      return "unknown";
+    case gCPS.NOT_CAPTIVE:
+      return "not_captive";
+    case gCPS.UNLOCKED_PORTAL:
+      return "unlocked_portal";
+    case gCPS.LOCKED_PORTAL:
+      return "locked_portal";
+    default:
+      return "unknown";
   }
 }
 
-var {
-  ExtensionError,
-} = ExtensionUtils;
+var { ExtensionError } = ExtensionUtils;
 
 this.captivePortal = class extends ExtensionAPI {
   getAPI(context) {
@@ -52,12 +61,18 @@ this.captivePortal = class extends ExtensionAPI {
             checkEnabled();
 
             let observer = (subject, topic) => {
-              fire.async({state: nameForCPSState(gCPS.state)});
+              fire.async({ state: nameForCPSState(gCPS.state) });
             };
 
-            Services.obs.addObserver(observer, "ipc:network:captive-portal-set-state");
+            Services.obs.addObserver(
+              observer,
+              "ipc:network:captive-portal-set-state"
+            );
             return () => {
-              Services.obs.removeObserver(observer, "ipc:network:captive-portal-set-state");
+              Services.obs.removeObserver(
+                observer,
+                "ipc:network:captive-portal-set-state"
+              );
             };
           },
         }).api(),
@@ -68,12 +83,18 @@ this.captivePortal = class extends ExtensionAPI {
             checkEnabled();
 
             let observer = (subject, topic, data) => {
-              fire.async({status: data});
+              fire.async({ status: data });
             };
 
-            Services.obs.addObserver(observer, "network:captive-portal-connectivity");
+            Services.obs.addObserver(
+              observer,
+              "network:captive-portal-connectivity"
+            );
             return () => {
-              Services.obs.removeObserver(observer, "network:captive-portal-connectivity");
+              Services.obs.removeObserver(
+                observer,
+                "network:captive-portal-connectivity"
+              );
             };
           },
         }).api(),

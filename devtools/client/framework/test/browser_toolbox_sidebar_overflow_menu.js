@@ -8,7 +8,7 @@
 // Test that the sidebar widget correctly displays the "all tabs..." button
 // when the tabs overflow.
 
-const {ToolSidebar} = require("devtools/client/framework/sidebar");
+const { ToolSidebar } = require("devtools/client/framework/sidebar");
 
 const testToolDefinition = {
   id: "testTool",
@@ -41,14 +41,16 @@ add_task(async function() {
     showAllTabsMenu: true,
   });
 
-  const allTabsMenu = toolPanel.panelDoc.querySelector(".devtools-sidebar-alltabs");
+  const allTabsMenu = toolPanel.panelDoc.querySelector(
+    ".devtools-sidebar-alltabs"
+  );
   ok(allTabsMenu, "The all-tabs menu is available");
   is(allTabsMenu.getAttribute("hidden"), "true", "The menu is hidden for now");
 
   info("Adding 10 tabs to the sidebar widget");
   for (let nb = 0; nb < 10; nb++) {
     const url = `data:text/html;charset=utf8,<title>tab ${nb}</title><p>Test tab ${nb}</p>`;
-    sidebar.addTab("tab" + nb, url, {selected: nb === 0});
+    sidebar.addTab("tab" + nb, url, { selected: nb === 0 });
   }
 
   info("Fake an overflow event so that the all-tabs menu is visible");
@@ -63,10 +65,17 @@ add_task(async function() {
     const item = allTabsMenu.querySelector("#sidebar-alltabs-item-" + id);
 
     info("Click on the tab");
-    EventUtils.sendMouseEvent({type: "click"}, item, toolPanel.panelDoc.defaultView);
+    EventUtils.sendMouseEvent(
+      { type: "click" },
+      item,
+      toolPanel.panelDoc.defaultView
+    );
 
-    is(tabbox.selectedTab.id, "sidebar-tab-" + id,
-      "The selected tab is now nb " + nb);
+    is(
+      tabbox.selectedTab.id,
+      "sidebar-tab-" + id,
+      "The selected tab is now nb " + nb
+    );
   }
 
   info("Fake an underflow event so that the all-tabs menu gets hidden");

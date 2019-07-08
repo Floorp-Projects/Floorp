@@ -3,30 +3,51 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const {div, button} = dom;
+const { div, button } = dom;
 
-const DebugTargetInfo =
-  createFactory(require("devtools/client/framework/components/DebugTargetInfo"));
-const MenuButton = createFactory(require("devtools/client/shared/components/menu/MenuButton"));
-const ToolboxTabs = createFactory(require("devtools/client/framework/components/ToolboxTabs"));
+const DebugTargetInfo = createFactory(
+  require("devtools/client/framework/components/DebugTargetInfo")
+);
+const MenuButton = createFactory(
+  require("devtools/client/shared/components/menu/MenuButton")
+);
+const ToolboxTabs = createFactory(
+  require("devtools/client/framework/components/ToolboxTabs")
+);
 
 loader.lazyGetter(this, "MeatballMenu", function() {
-  return createFactory(require("devtools/client/framework/components/MeatballMenu"));
+  return createFactory(
+    require("devtools/client/framework/components/MeatballMenu")
+  );
 });
 loader.lazyGetter(this, "MenuItem", function() {
-  return createFactory(require("devtools/client/shared/components/menu/MenuItem"));
+  return createFactory(
+    require("devtools/client/shared/components/menu/MenuItem")
+  );
 });
 loader.lazyGetter(this, "MenuList", function() {
-  return createFactory(require("devtools/client/shared/components/menu/MenuList"));
+  return createFactory(
+    require("devtools/client/shared/components/menu/MenuList")
+  );
 });
 loader.lazyGetter(this, "WebReplayPlayer", function() {
-  return createFactory(require("devtools/client/webreplay/components/WebReplayPlayer"));
+  return createFactory(
+    require("devtools/client/webreplay/components/WebReplayPlayer")
+  );
 });
 
-loader.lazyRequireGetter(this, "getUnicodeUrl", "devtools/client/shared/unicode-url", true);
+loader.lazyRequireGetter(
+  this,
+  "getUnicodeUrl",
+  "devtools/client/shared/unicode-url",
+  true
+);
 
 /**
  * This is the overall component for the toolbox toolbar. It is designed to not know how
@@ -50,10 +71,12 @@ class ToolboxToolbar extends Component {
       // List of tool panel definitions (used by ToolboxTabs component).
       panelDefinitions: PropTypes.array,
       // List of possible docking options.
-      hostTypes: PropTypes.arrayOf(PropTypes.shape({
-        position: PropTypes.string.isRequired,
-        switchHost: PropTypes.func.isRequired,
-      })),
+      hostTypes: PropTypes.arrayOf(
+        PropTypes.shape({
+          position: PropTypes.string.isRequired,
+          switchHost: PropTypes.func.isRequired,
+        })
+      ),
       // Current docking type. Typically one of the position values in
       // |hostTypes| but this is not always the case (e.g. when it is "custom").
       currentHostType: PropTypes.string,
@@ -159,13 +182,9 @@ class ToolboxToolbar extends Component {
    * @param {boolean} isStart - Render either the starting buttons, or ending buttons.
    */
   renderToolboxButtons(isStart) {
-    const {
-      focusedButton,
-      toolboxButtons,
-      focusButton,
-    } = this.props;
+    const { focusedButton, toolboxButtons, focusButton } = this.props;
     const visibleButtons = toolboxButtons.filter(command => {
-      const {isVisible, isInStartContainer} = command;
+      const { isVisible, isInStartContainer } = command;
       return isVisible && (isStart ? isInStartContainer : !isInStartContainer);
     });
 
@@ -182,44 +201,42 @@ class ToolboxToolbar extends Component {
       visibleButtons.push(rdm);
     }
 
-    const renderedButtons =
-      visibleButtons.map(command => {
-        const {
-          id,
-          description,
-          disabled,
-          onClick,
-          isChecked,
-          className: buttonClass,
-          onKeyDown,
-        } = command;
+    const renderedButtons = visibleButtons.map(command => {
+      const {
+        id,
+        description,
+        disabled,
+        onClick,
+        isChecked,
+        className: buttonClass,
+        onKeyDown,
+      } = command;
 
-        // If button is frame button, create menu button in order to
-        // use the doorhanger menu.
-        if (id === "command-button-frames") {
-          return this.renderFrameButton(command);
-        }
+      // If button is frame button, create menu button in order to
+      // use the doorhanger menu.
+      if (id === "command-button-frames") {
+        return this.renderFrameButton(command);
+      }
 
-        return button({
-          id,
-          title: description,
-          disabled,
-          className: (
-            "command-button devtools-button "
-            + (buttonClass || "")
-            + (isChecked ? " checked" : "")
-          ),
-          onClick: (event) => {
-            onClick(event);
-            focusButton(id);
-          },
-          onFocus: () => focusButton(id),
-          tabIndex: id === focusedButton ? "0" : "-1",
-          onKeyDown: (event) => {
-            onKeyDown(event);
-          },
-        });
+      return button({
+        id,
+        title: description,
+        disabled,
+        className:
+          "command-button devtools-button " +
+          (buttonClass || "") +
+          (isChecked ? " checked" : ""),
+        onClick: event => {
+          onClick(event);
+          focusButton(id);
+        },
+        onFocus: () => focusButton(id),
+        tabIndex: id === focusedButton ? "0" : "-1",
+        onKeyDown: event => {
+          onKeyDown(event);
+        },
       });
+    });
 
     // Add the appropriate separator, if needed.
     const children = renderedButtons;
@@ -229,24 +246,18 @@ class ToolboxToolbar extends Component {
         // For the end group we add a separator *before* the RDM button if it
         // exists, but only if it is not the only button.
       } else if (rdmIndex !== -1 && visibleButtons.length > 1) {
-        children.splice(
-          children.length - 1,
-          0,
-          this.renderSeparator()
-        );
+        children.splice(children.length - 1, 0, this.renderSeparator());
       }
     }
 
-    return div({id: `toolbox-buttons-${isStart ? "start" : "end"}`}, ...children);
+    return div(
+      { id: `toolbox-buttons-${isStart ? "start" : "end"}` },
+      ...children
+    );
   }
 
   renderFrameButton(command) {
-    const {
-      id,
-      isChecked,
-      disabled,
-      description,
-    } = command;
+    const { id, isChecked, disabled, description } = command;
 
     const { toolbox } = this.props;
 
@@ -256,7 +267,9 @@ class ToolboxToolbar extends Component {
         disabled,
         menuId: id + "-panel",
         doc: toolbox.doc,
-        className: `devtools-button command-button ${isChecked ? "checked" : ""}`,
+        className: `devtools-button command-button ${
+          isChecked ? "checked" : ""
+        }`,
         ref: "frameMenuButton",
         title: description,
         onCloseButton: async () => {
@@ -291,15 +304,17 @@ class ToolboxToolbar extends Component {
     const items = [];
     toolbox.frameMap.forEach((frame, index) => {
       const label = toolbox.target.isWebExtension
-                    ? toolbox.target.getExtensionPathName(frame.url)
-                    : getUnicodeUrl(frame.url);
-      items.push(MenuItem({
-        id: frame.id.toString(),
-        key: "toolbox-frame-key-" + frame.id,
-        label,
-        checked: frame.id === toolbox.selectedFrameId,
-        onClick: this.clickFrameButton,
-      }));
+        ? toolbox.target.getExtensionPathName(frame.url)
+        : getUnicodeUrl(frame.url);
+      items.push(
+        MenuItem({
+          id: frame.id.toString(),
+          key: "toolbox-frame-key-" + frame.id,
+          label,
+          checked: frame.id === toolbox.selectedFrameId,
+          onClick: this.clickFrameButton,
+        })
+      );
     });
 
     return MenuList(
@@ -307,14 +322,15 @@ class ToolboxToolbar extends Component {
         id: "toolbox-frame-menu",
         onHighlightedChildChange: this.highlightFrame,
       },
-      items);
+      items
+    );
   }
 
   /**
    * Render a separator.
    */
   renderSeparator() {
-    return div({className: "devtools-separator"});
+    return div({ className: "devtools-separator" });
   }
 
   /**
@@ -403,19 +419,16 @@ class ToolboxToolbar extends Component {
 
     const closeButton = canCloseToolbox
       ? button({
-        id: closeButtonId,
-        onFocus: () => focusButton(closeButtonId),
-        className: "devtools-button",
-        title: L10N.getStr("toolbox.closebutton.tooltip"),
-        onClick: () => closeToolbox(),
-        tabIndex: focusedButton === "toolbox-close" ? "0" : "-1",
-      })
+          id: closeButtonId,
+          onFocus: () => focusButton(closeButtonId),
+          className: "devtools-button",
+          title: L10N.getStr("toolbox.closebutton.tooltip"),
+          onClick: () => closeToolbox(),
+          tabIndex: focusedButton === "toolbox-close" ? "0" : "-1",
+        })
       : null;
 
-    return div({id: "toolbox-controls"},
-      meatballMenuButton,
-      closeButton
-    );
+    return div({ id: "toolbox-controls" }, meatballMenuButton, closeButton);
   }
 
   /**
@@ -423,7 +436,7 @@ class ToolboxToolbar extends Component {
    * render functions for how each of the sections is rendered.
    */
   render() {
-    const { L10N, debugTargetData, toolbox} = this.props;
+    const { L10N, debugTargetData, toolbox } = this.props;
     const classnames = ["devtools-tabbar"];
     const startButtons = this.renderToolboxButtonsStart();
     const endButtons = this.renderToolboxButtonsEnd();
@@ -436,8 +449,7 @@ class ToolboxToolbar extends Component {
     }
 
     const toolbar = this.props.canRender
-      ? (
-        div(
+      ? div(
           {
             className: classnames.join(" "),
           },
@@ -446,7 +458,6 @@ class ToolboxToolbar extends Component {
           endButtons,
           this.renderToolboxControls()
         )
-      )
       : div({ className: classnames.join(" ") });
 
     const debugTargetInfo = debugTargetData
@@ -460,7 +471,7 @@ class ToolboxToolbar extends Component {
           toolbox: toolbox,
         }),
         debugTargetInfo,
-        toolbar,
+        toolbar
       );
     }
 

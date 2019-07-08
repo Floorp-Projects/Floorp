@@ -8,47 +8,46 @@
  * breaking on. Bug 907278.
  */
 
-add_task(threadClientTest(({ threadClient, debuggee, client }) => {
-  return new Promise(resolve => {
-    // Expose console as the test script uses it
-    debuggee.console = { log: x => void x };
+add_task(
+  threadClientTest(({ threadClient, debuggee, client }) => {
+    return new Promise(resolve => {
+      // Expose console as the test script uses it
+      debuggee.console = { log: x => void x };
 
-    // Inline all paused listeners as promises won't resolve when paused
-    threadClient.once("paused", async (packet1) => {
-      await setBreakpoint(packet1, threadClient, client);
+      // Inline all paused listeners as promises won't resolve when paused
+      threadClient.once("paused", async packet1 => {
+        await setBreakpoint(packet1, threadClient, client);
 
-      threadClient.once("paused", ({ why }) => {
-        Assert.equal(why.type, "breakpoint");
+        threadClient.once("paused", ({ why }) => {
+          Assert.equal(why.type, "breakpoint");
 
-        threadClient.once("paused", (packet3) => {
-          testDbgStatement(packet3);
-          resolve();
+          threadClient.once("paused", packet3 => {
+            testDbgStatement(packet3);
+            resolve();
+          });
+          threadClient.resume();
         });
-        threadClient.resume();
+        debuggee.test();
       });
-      debuggee.test();
-    });
 
-    Cu.evalInSandbox(
-      "debugger;\n" +
-      function test() {
-        console.log("foo bar");
-        debugger;
-      },
-      debuggee,
-      "1.8",
-      "http://example.com/",
-      1
-    );
-  });
-}));
+      Cu.evalInSandbox(
+        "debugger;\n" +
+          function test() {
+            console.log("foo bar");
+            debugger;
+          },
+        debuggee,
+        "1.8",
+        "http://example.com/",
+        1
+      );
+    });
+  })
+);
 
 function setBreakpoint(packet, threadClient, client) {
   return new Promise(async resolve => {
-    const source = await getSourceById(
-      threadClient,
-      packet.frame.where.actor
-    );
+    const source = await getSourceById(threadClient, packet.frame.where.actor);
     threadClient.once("resumed", resolve);
 
     threadClient.setBreakpoint({ sourceUrl: source.url, line: 3 }, {});

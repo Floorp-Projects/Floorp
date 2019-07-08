@@ -835,7 +835,8 @@ struct nsGridContainerFrame::UsedTrackSizes {
   /** Helper function for the above method */
   void ResolveSubgridTrackSizesForAxis(nsGridContainerFrame* aFrame,
                                        LogicalAxis aAxis, Subgrid* aSubgrid,
-                                       gfxContext& aRC, nscoord aContentBoxSize);
+                                       gfxContext& aRC,
+                                       nscoord aContentBoxSize);
 
   // This only has valid sizes when mCanResolveLineRangeSize is true in
   // the same axis.  It may have zero tracks (a grid with only abs.pos.
@@ -3011,9 +3012,11 @@ void nsGridContainerFrame::UsedTrackSizes::ResolveTrackSizesForAxis(
     const auto& range = subgrid->mArea.LineRangeForAxis(parentAxis);
     nscoord contentBoxSize = range.ToLength(parentSizes->mSizes[parentAxis]);
     auto parentWM = aFrame->GetParent()->GetWritingMode();
-    contentBoxSize -= subgrid->mMarginBorderPadding.StartEnd(parentAxis, parentWM);
+    contentBoxSize -=
+        subgrid->mMarginBorderPadding.StartEnd(parentAxis, parentWM);
     contentBoxSize = std::max(nscoord(0), contentBoxSize);
-    ResolveSubgridTrackSizesForAxis(aFrame, aAxis, subgrid, aRC, contentBoxSize);
+    ResolveSubgridTrackSizesForAxis(aFrame, aAxis, subgrid, aRC,
+                                    contentBoxSize);
   }
 }
 
@@ -3050,7 +3053,8 @@ void nsGridContainerFrame::GridReflowInput::CalculateTrackSizesForAxis(
   if (MOZ_LIKELY(!isSubgriddedAxis)) {
     tracks.Initialize(sizingFunctions, gapStyle, gridEnd, aContentBoxSize);
   } else {
-    tracks.mGridGap = nsLayoutUtils::ResolveGapToLength(gapStyle, aContentBoxSize);
+    tracks.mGridGap =
+        nsLayoutUtils::ResolveGapToLength(gapStyle, aContentBoxSize);
     tracks.mContentBoxSize = aContentBoxSize;
     const auto* subgrid = mFrame->GetProperty(Subgrid::Prop());
     tracks.mSizes.SetLength(gridEnd);
@@ -3097,7 +3101,8 @@ void nsGridContainerFrame::GridReflowInput::CalculateTrackSizesForAxis(
   }
 
   if (aContentBoxSize != NS_UNCONSTRAINEDSIZE) {
-    tracks.AlignJustifyContent(mGridStyle, mWM, aContentBoxSize, isSubgriddedAxis);
+    tracks.AlignJustifyContent(mGridStyle, mWM, aContentBoxSize,
+                               isSubgriddedAxis);
   } else if (!useParentGaps) {
     const nscoord gridGap = tracks.mGridGap;
     nscoord pos = 0;

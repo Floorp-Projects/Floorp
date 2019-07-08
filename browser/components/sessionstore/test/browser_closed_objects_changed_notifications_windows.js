@@ -33,7 +33,11 @@ function countingObserver() {
 }
 
 function assertNotificationCount(count) {
-  is(notificationsCount, count, "The expected number of notifications was received.");
+  is(
+    notificationsCount,
+    count,
+    "The expected number of notifications was received."
+  );
 }
 
 async function awaitNotification(callback) {
@@ -48,7 +52,9 @@ add_task(async function test_closedObjectsChangedNotifications() {
 
   // Forget any previous closed windows or tabs from other tests that may have
   // run in the same session.
-  await awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-session-history"));
+  await awaitNotification(() =>
+    Services.obs.notifyObservers(null, "browser:purge-session-history")
+  );
 
   // Add an observer to count the number of notifications.
   Services.obs.addObserver(countingObserver, TOPIC);
@@ -78,7 +84,9 @@ add_task(async function test_closedObjectsChangedNotifications() {
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref(MAX_WINDOWS_UNDO_PREF);
   });
-  await awaitNotification(() => Services.prefs.setIntPref(MAX_WINDOWS_UNDO_PREF, 1));
+  await awaitNotification(() =>
+    Services.prefs.setIntPref(MAX_WINDOWS_UNDO_PREF, 1)
+  );
   assertNotificationCount(5);
 
   info("Forgetting a closed window.");
@@ -96,7 +104,9 @@ add_task(async function test_closedObjectsChangedNotifications() {
   assertNotificationCount(8);
 
   info("Sending idle-daily");
-  await awaitNotification(() => Services.obs.notifyObservers(null, "idle-daily"));
+  await awaitNotification(() =>
+    Services.obs.notifyObservers(null, "idle-daily")
+  );
   assertNotificationCount(9);
 
   info("Opening and closing another window.");
@@ -104,7 +114,9 @@ add_task(async function test_closedObjectsChangedNotifications() {
   assertNotificationCount(10);
 
   info("Purging session history.");
-  await awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-session-history"));
+  await awaitNotification(() =>
+    Services.obs.notifyObservers(null, "browser:purge-session-history")
+  );
   assertNotificationCount(11);
 
   info("Setting window state.");

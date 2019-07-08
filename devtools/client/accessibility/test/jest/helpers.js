@@ -13,9 +13,7 @@ const {
 /**
  * Prepare the store for use in testing.
  */
-function setupStore({
-  preloadedState,
-} = {}) {
+function setupStore({ preloadedState } = {}) {
   const store = createStore(combineReducers(reducers), preloadedState);
   return store;
 }

@@ -13,13 +13,21 @@ const { Toolbox } = require("devtools/client/framework/toolbox");
 
 add_task(async function() {
   const tab = await addTab("about:blank");
-  const toolbox = await openToolboxForTab(tab, "inspector", Toolbox.HostType.BOTTOM);
+  const toolbox = await openToolboxForTab(
+    tab,
+    "inspector",
+    Toolbox.HostType.BOTTOM
+  );
 
   info("Check opening meatball menu by clicking the menu button");
   await openMeatballMenuWithClick(toolbox);
-  const menuDockToBottom = toolbox.doc.getElementById("toolbox-meatball-menu-dock-bottom");
-  ok(menuDockToBottom.getAttribute("aria-checked") === "true",
-     "menuDockToBottom has checked");
+  const menuDockToBottom = toolbox.doc.getElementById(
+    "toolbox-meatball-menu-dock-bottom"
+  );
+  ok(
+    menuDockToBottom.getAttribute("aria-checked") === "true",
+    "menuDockToBottom has checked"
+  );
 
   info("Check closing meatball menu by clicking outside the popup area");
   await closeMeatballMenuWithClick(toolbox);
@@ -42,7 +50,9 @@ add_task(async function() {
 });
 
 async function openMeatballMenuWithClick(toolbox) {
-  const meatballButton = toolbox.doc.getElementById("toolbox-meatball-menu-button");
+  const meatballButton = toolbox.doc.getElementById(
+    "toolbox-meatball-menu-button"
+  );
   await waitUntil(() => meatballButton.style.pointerEvents !== "none");
   EventUtils.synthesizeMouseAtCenter(meatballButton, {}, toolbox.win);
 
@@ -51,7 +61,9 @@ async function openMeatballMenuWithClick(toolbox) {
     panel[0].addEventListener("popupshown", res, { once: true });
   });
 
-  const menuPanel = toolbox.doc.getElementById("toolbox-meatball-menu-button-panel");
+  const menuPanel = toolbox.doc.getElementById(
+    "toolbox-meatball-menu-button-panel"
+  );
   ok(menuPanel, "meatball panel is available");
 
   info("Waiting for the menu panel to be displayed");
@@ -61,11 +73,17 @@ async function openMeatballMenuWithClick(toolbox) {
 }
 
 async function closeMeatballMenuWithClick(toolbox) {
-  const meatballButton = toolbox.doc.getElementById("toolbox-meatball-menu-button");
-  await waitUntil(() => toolbox.win.getComputedStyle(meatballButton).pointerEvents === "none");
+  const meatballButton = toolbox.doc.getElementById(
+    "toolbox-meatball-menu-button"
+  );
+  await waitUntil(
+    () => toolbox.win.getComputedStyle(meatballButton).pointerEvents === "none"
+  );
   meatballButton.click();
 
-  const menuPanel = toolbox.doc.getElementById("toolbox-meatball-menu-button-panel");
+  const menuPanel = toolbox.doc.getElementById(
+    "toolbox-meatball-menu-button-panel"
+  );
   ok(menuPanel, "meatball panel is available");
 
   info("Waiting for the menu panel to be hidden");
@@ -73,7 +91,9 @@ async function closeMeatballMenuWithClick(toolbox) {
 }
 
 async function waitForMeatballMenuToClose(toolbox) {
-  const menuPanel = toolbox.doc.getElementById("toolbox-meatball-menu-button-panel");
+  const menuPanel = toolbox.doc.getElementById(
+    "toolbox-meatball-menu-button-panel"
+  );
   ok(menuPanel, "meatball panel is available");
 
   info("Waiting for the menu panel to be hidden");
@@ -81,15 +101,32 @@ async function waitForMeatballMenuToClose(toolbox) {
 }
 
 function checkKeyHandling(toolbox) {
-  const selectable =
-    toolbox.doc.getElementById("toolbox-meatball-menu").querySelectorAll(focusableSelector);
+  const selectable = toolbox.doc
+    .getElementById("toolbox-meatball-menu")
+    .querySelectorAll(focusableSelector);
 
   EventUtils.synthesizeKey("VK_DOWN", {}, toolbox.win);
-  is(toolbox.doc.activeElement, selectable[0], "First item selected with down key.");
+  is(
+    toolbox.doc.activeElement,
+    selectable[0],
+    "First item selected with down key."
+  );
   EventUtils.synthesizeKey("VK_UP", {}, toolbox.win);
-  is(toolbox.doc.activeElement, selectable[selectable.length - 1], "End item selected with up key.");
+  is(
+    toolbox.doc.activeElement,
+    selectable[selectable.length - 1],
+    "End item selected with up key."
+  );
   EventUtils.synthesizeKey("VK_HOME", {}, toolbox.win);
-  is(toolbox.doc.activeElement, selectable[0], "First item selected with home key.");
+  is(
+    toolbox.doc.activeElement,
+    selectable[0],
+    "First item selected with home key."
+  );
   EventUtils.synthesizeKey("VK_END", {}, toolbox.win);
-  is(toolbox.doc.activeElement, selectable[selectable.length - 1], "End item selected with down key.");
+  is(
+    toolbox.doc.activeElement,
+    selectable[selectable.length - 1],
+    "End item selected with down key."
+  );
 }

@@ -7,9 +7,13 @@
 
 var EXPORTED_SYMBOLS = ["RokuApp"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
@@ -57,11 +61,11 @@ RokuApp.prototype = {
       }
     });
 
-    xhr.addEventListener("error", (function() {
+    xhr.addEventListener("error", function() {
       if (callback) {
         callback({ state: "unknown" });
       }
-    }));
+    });
 
     xhr.send(null);
   },
@@ -83,22 +87,27 @@ RokuApp.prototype = {
 
     // Start a given app with any extra query data. Each app uses it's own data scheme.
     // NOTE: Roku will also pass "source=external-control" as a param
-    let url = this.resourceURL + "launch/" + this.mediaAppID + "?version=" + parseInt(PROTOCOL_VERSION);
+    let url =
+      this.resourceURL +
+      "launch/" +
+      this.mediaAppID +
+      "?version=" +
+      parseInt(PROTOCOL_VERSION);
     let xhr = new XMLHttpRequest();
     xhr.open("POST", url, true);
     xhr.overrideMimeType("text/plain");
 
-    xhr.addEventListener("load", (function() {
+    xhr.addEventListener("load", function() {
       if (callback) {
         callback(xhr.status === 200);
       }
-    }));
+    });
 
-    xhr.addEventListener("error", (function() {
+    xhr.addEventListener("error", function() {
       if (callback) {
         callback(false);
       }
-    }));
+    });
 
     xhr.send(null);
   },
@@ -111,17 +120,17 @@ RokuApp.prototype = {
     xhr.open("POST", url, true);
     xhr.overrideMimeType("text/plain");
 
-    xhr.addEventListener("load", (function() {
+    xhr.addEventListener("load", function() {
       if (callback) {
         callback(xhr.status === 200);
       }
-    }));
+    });
 
-    xhr.addEventListener("error", (function() {
+    xhr.addEventListener("error", function() {
       if (callback) {
         callback(false);
       }
-    }));
+    });
 
     xhr.send(null);
   },
@@ -146,20 +155,25 @@ function RemoteMedia(url, listener) {
   this._status = "uninitialized";
 
   let serverURI = Services.io.newURI(this._url);
-  this._socket = Cc["@mozilla.org/network/socket-transport-service;1"].getService(Ci.nsISocketTransportService).createTransport([], serverURI.host, 9191, null);
+  this._socket = Cc["@mozilla.org/network/socket-transport-service;1"]
+    .getService(Ci.nsISocketTransportService)
+    .createTransport([], serverURI.host, 9191, null);
   this._outputStream = this._socket.openOutputStream(0, 0, 0);
 
-  this._scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(Ci.nsIScriptableInputStream);
+  this._scriptableStream = Cc[
+    "@mozilla.org/scriptableinputstream;1"
+  ].createInstance(Ci.nsIScriptableInputStream);
 
   this._inputStream = this._socket.openInputStream(0, 0, 0);
-  this._pump = Cc["@mozilla.org/network/input-stream-pump;1"].createInstance(Ci.nsIInputStreamPump);
+  this._pump = Cc["@mozilla.org/network/input-stream-pump;1"].createInstance(
+    Ci.nsIInputStreamPump
+  );
   this._pump.init(this._inputStream, 0, 0, true);
   this._pump.asyncRead(this, null);
 }
 
 RemoteMedia.prototype = {
-  onStartRequest(request) {
-  },
+  onStartRequest(request) {},
 
   onDataAvailable(request, stream, offset, count) {
     this._scriptableStream.init(stream);
@@ -177,7 +191,10 @@ RemoteMedia.prototype = {
 
     if (this._listener) {
       // Check to see if we are getting the initial "connected" message
-      if (this._status == "connected" && "onRemoteMediaStart" in this._listener) {
+      if (
+        this._status == "connected" &&
+        "onRemoteMediaStart" in this._listener
+      ) {
         this._listener.onRemoteMediaStart(this);
       }
 
@@ -188,13 +205,15 @@ RemoteMedia.prototype = {
   },
 
   onStopRequest(request, result) {
-    if (this._listener && "onRemoteMediaStop" in this._listener)
+    if (this._listener && "onRemoteMediaStop" in this._listener) {
       this._listener.onRemoteMediaStop(this);
+    }
   },
 
   _sendMsg: function _sendMsg(data) {
-    if (!data)
+    if (!data) {
       return;
+    }
 
     // Add the protocol version
     data._v = PROTOCOL_VERSION;
@@ -209,7 +228,7 @@ RemoteMedia.prototype = {
   },
 
   get active() {
-    return (this._socket && this._socket.isAlive());
+    return this._socket && this._socket.isAlive();
   },
 
   play: function play() {
@@ -222,7 +241,12 @@ RemoteMedia.prototype = {
   },
 
   load: function load(data) {
-    this._sendMsg({ type: "LOAD", title: data.title, source: data.source, poster: data.poster });
+    this._sendMsg({
+      type: "LOAD",
+      title: data.title,
+      source: data.source,
+      poster: data.poster,
+    });
   },
 
   get status() {

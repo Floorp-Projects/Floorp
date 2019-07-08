@@ -37,8 +37,10 @@ add_task(async function test_load_start() {
  * Ensure that anchor navigation invalidates shistory.
  */
 add_task(async function test_hashchange() {
-  const PATH = getRootDirectory(gTestPath)
-              .replace("chrome://mochitests/content/", "http://example.com/");
+  const PATH = getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content/",
+    "http://example.com/"
+  );
   const URL = PATH + "file_sessionHistory_hashchange.html";
   // Create a new tab.
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
@@ -47,16 +49,16 @@ add_task(async function test_hashchange() {
 
   // Check that we start with a single shistory entry.
   await TabStateFlusher.flush(browser);
-  let {entries} = JSON.parse(ss.getTabState(tab));
+  let { entries } = JSON.parse(ss.getTabState(tab));
   is(entries.length, 1, "there is one shistory entry");
 
   // Click the link and wait for a hashchange event.
-  browser.messageManager.sendAsyncMessage("ss-test:click", {id: "a"});
+  browser.messageManager.sendAsyncMessage("ss-test:click", { id: "a" });
   await promiseContentMessage(browser, "ss-test:hashchange");
 
   // Check that we now have two shistory entries.
   await TabStateFlusher.flush(browser);
-  ({entries} = JSON.parse(ss.getTabState(tab)));
+  ({ entries } = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 2, "there are two shistory entries");
 
   // Cleanup.
@@ -91,7 +93,7 @@ add_task(async function test_pageshow() {
 
   // Check that loading from bfcache did invalidate shistory.
   await TabStateFlusher.flush(browser);
-  let {index} = JSON.parse(ss.getTabState(tab));
+  let { index } = JSON.parse(ss.getTabState(tab));
   is(index, 1, "first history entry is selected");
 
   // Cleanup.
@@ -102,10 +104,11 @@ add_task(async function test_pageshow() {
  * Ensure that subframe navigation invalidates shistory.
  */
 add_task(async function test_subframes() {
-  const URL = "data:text/html;charset=utf-8," +
-              "<iframe src=http%3A//example.com/ name=t></iframe>" +
-              "<a id=a1 href=http%3A//example.com/1 target=t>clickme</a>" +
-              "<a id=a2 href=http%3A//example.com/%23 target=t>clickme</a>";
+  const URL =
+    "data:text/html;charset=utf-8," +
+    "<iframe src=http%3A//example.com/ name=t></iframe>" +
+    "<a id=a1 href=http%3A//example.com/1 target=t>clickme</a>" +
+    "<a id=a2 href=http%3A//example.com/%23 target=t>clickme</a>";
 
   // Create a new tab.
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
@@ -114,17 +117,17 @@ add_task(async function test_subframes() {
 
   // Check that we have a single shistory entry.
   await TabStateFlusher.flush(browser);
-  let {entries} = JSON.parse(ss.getTabState(tab));
+  let { entries } = JSON.parse(ss.getTabState(tab));
   is(entries.length, 1, "there is one shistory entry");
   is(entries[0].children.length, 1, "the entry has one child");
 
   // Navigate the subframe.
-  browser.messageManager.sendAsyncMessage("ss-test:click", {id: "a1"});
+  browser.messageManager.sendAsyncMessage("ss-test:click", { id: "a1" });
   await promiseBrowserLoaded(browser, false /* don't ignore subframes */);
 
   // Check shistory.
   await TabStateFlusher.flush(browser);
-  ({entries} = JSON.parse(ss.getTabState(tab)));
+  ({ entries } = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 2, "there now are two shistory entries");
   is(entries[1].children.length, 1, "the second entry has one child");
 
@@ -133,12 +136,12 @@ add_task(async function test_subframes() {
   await promiseBrowserLoaded(browser, false /* don't ignore subframes */);
 
   // Navigate the subframe again.
-  browser.messageManager.sendAsyncMessage("ss-test:click", {id: "a2"});
+  browser.messageManager.sendAsyncMessage("ss-test:click", { id: "a2" });
   await promiseContentMessage(browser, "ss-test:hashchange");
 
   // Check shistory.
   await TabStateFlusher.flush(browser);
-  ({entries} = JSON.parse(ss.getTabState(tab)));
+  ({ entries } = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 2, "there now are two shistory entries");
   is(entries[1].children.length, 1, "the second entry has one child");
 
@@ -157,7 +160,7 @@ add_task(async function test_about_page_navigate() {
 
   // Check that we have a single shistory entry.
   await TabStateFlusher.flush(browser);
-  let {entries} = JSON.parse(ss.getTabState(tab));
+  let { entries } = JSON.parse(ss.getTabState(tab));
   is(entries.length, 1, "there is one shistory entry");
   is(entries[0].url, "about:blank", "url is correct");
 
@@ -169,7 +172,7 @@ add_task(async function test_about_page_navigate() {
 
   // Check that we have changed the history entry.
   await TabStateFlusher.flush(browser);
-  ({entries} = JSON.parse(ss.getTabState(tab)));
+  ({ entries } = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 1, "there is one shistory entry");
   is(entries[0].url, "about:robots", "url is correct");
 
@@ -188,7 +191,7 @@ add_task(async function test_pushstate_replacestate() {
 
   // Check that we have a single shistory entry.
   await TabStateFlusher.flush(browser);
-  let {entries} = JSON.parse(ss.getTabState(tab));
+  let { entries } = JSON.parse(ss.getTabState(tab));
   is(entries.length, 1, "there is one shistory entry");
   is(entries[0].url, "http://example.com/1", "url is correct");
 
@@ -198,7 +201,7 @@ add_task(async function test_pushstate_replacestate() {
 
   // Check that we have added the history entry.
   await TabStateFlusher.flush(browser);
-  ({entries} = JSON.parse(ss.getTabState(tab)));
+  ({ entries } = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 2, "there is another shistory entry");
   is(entries[1].url, "http://example.com/test-entry/", "url is correct");
 
@@ -208,9 +211,13 @@ add_task(async function test_pushstate_replacestate() {
 
   // Check that we have modified the history entry.
   await TabStateFlusher.flush(browser);
-  ({entries} = JSON.parse(ss.getTabState(tab)));
+  ({ entries } = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 2, "there is still two shistory entries");
-  is(entries[1].url, "http://example.com/test-entry/test-entry2/", "url is correct");
+  is(
+    entries[1].url,
+    "http://example.com/test-entry/test-entry2/",
+    "url is correct"
+  );
 
   // Cleanup.
   gBrowser.removeTab(tab);
@@ -220,13 +227,17 @@ add_task(async function test_pushstate_replacestate() {
  * Ensure that slow loading subframes will invalidate shistory.
  */
 add_task(async function test_slow_subframe_load() {
-  const SLOW_URL = "http://mochi.test:8888/browser/browser/components/" +
-                   "sessionstore/test/browser_sessionHistory_slow.sjs";
+  const SLOW_URL =
+    "http://mochi.test:8888/browser/browser/components/" +
+    "sessionstore/test/browser_sessionHistory_slow.sjs";
 
-  const URL = "data:text/html;charset=utf-8," +
-              "<frameset cols=50%25,50%25>" +
-              "<frame src='" + SLOW_URL + "'>" +
-              "</frameset>";
+  const URL =
+    "data:text/html;charset=utf-8," +
+    "<frameset cols=50%25,50%25>" +
+    "<frame src='" +
+    SLOW_URL +
+    "'>" +
+    "</frameset>";
 
   // Add a new tab with a slow loading subframe
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
@@ -234,7 +245,7 @@ add_task(async function test_slow_subframe_load() {
   await promiseBrowserLoaded(browser);
 
   await TabStateFlusher.flush(browser);
-  let {entries} = JSON.parse(ss.getTabState(tab));
+  let { entries } = JSON.parse(ss.getTabState(tab));
 
   // Check the number of children.
   is(entries.length, 1, "there is one root entry ...");

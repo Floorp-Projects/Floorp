@@ -185,6 +185,8 @@ static constexpr Register WasmTableCallIndexReg = ABINonArgReg3;
 
 static constexpr Register PreBarrierReg = r1;
 
+static constexpr Register InterpreterPCReg = r9;
+
 static constexpr Register InvalidReg{Registers::invalid_reg};
 static constexpr FloatRegister InvalidFloatReg;
 

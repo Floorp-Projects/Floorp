@@ -4,121 +4,175 @@
 
 var EXPORTED_SYMBOLS = ["LightweightThemeConsumer"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-  "resource://gre/modules/AppConstants.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
 // Get the theme variables from the app resource directory.
 // This allows per-app variables.
-ChromeUtils.defineModuleGetter(this, "ThemeContentPropertyList",
-  "resource:///modules/ThemeVariableMap.jsm");
-ChromeUtils.defineModuleGetter(this, "ThemeVariableMap",
-  "resource:///modules/ThemeVariableMap.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ThemeContentPropertyList",
+  "resource:///modules/ThemeVariableMap.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ThemeVariableMap",
+  "resource:///modules/ThemeVariableMap.jsm"
+);
 
 const toolkitVariableMap = [
-  ["--lwt-accent-color", {
-    lwtProperty: "accentcolor",
-    processColor(rgbaChannels, element) {
-      if (!rgbaChannels || rgbaChannels.a == 0) {
-        return "white";
-      }
-      // Remove the alpha channel
-      const {r, g, b} = rgbaChannels;
-      return `rgb(${r}, ${g}, ${b})`;
+  [
+    "--lwt-accent-color",
+    {
+      lwtProperty: "accentcolor",
+      processColor(rgbaChannels, element) {
+        if (!rgbaChannels || rgbaChannels.a == 0) {
+          return "white";
+        }
+        // Remove the alpha channel
+        const { r, g, b } = rgbaChannels;
+        return `rgb(${r}, ${g}, ${b})`;
+      },
     },
-  }],
-  ["--lwt-text-color", {
-    lwtProperty: "textcolor",
-    processColor(rgbaChannels, element) {
-      if (!rgbaChannels) {
-        rgbaChannels = {r: 0, g: 0, b: 0};
-      }
-      // Remove the alpha channel
-      const {r, g, b} = rgbaChannels;
-      element.setAttribute("lwthemetextcolor", _isTextColorDark(r, g, b) ? "dark" : "bright");
-      return `rgba(${r}, ${g}, ${b})`;
+  ],
+  [
+    "--lwt-text-color",
+    {
+      lwtProperty: "textcolor",
+      processColor(rgbaChannels, element) {
+        if (!rgbaChannels) {
+          rgbaChannels = { r: 0, g: 0, b: 0 };
+        }
+        // Remove the alpha channel
+        const { r, g, b } = rgbaChannels;
+        element.setAttribute(
+          "lwthemetextcolor",
+          _isTextColorDark(r, g, b) ? "dark" : "bright"
+        );
+        return `rgba(${r}, ${g}, ${b})`;
+      },
     },
-  }],
-  ["--arrowpanel-background", {
-    lwtProperty: "popup",
-  }],
-  ["--arrowpanel-color", {
-    lwtProperty: "popup_text",
-    processColor(rgbaChannels, element) {
-      const disabledColorVariable = "--panel-disabled-color";
+  ],
+  [
+    "--arrowpanel-background",
+    {
+      lwtProperty: "popup",
+    },
+  ],
+  [
+    "--arrowpanel-color",
+    {
+      lwtProperty: "popup_text",
+      processColor(rgbaChannels, element) {
+        const disabledColorVariable = "--panel-disabled-color";
 
-      if (!rgbaChannels) {
-        element.removeAttribute("lwt-popup-brighttext");
-        element.removeAttribute("lwt-popup-darktext");
-        element.style.removeProperty(disabledColorVariable);
-        return null;
-      }
+        if (!rgbaChannels) {
+          element.removeAttribute("lwt-popup-brighttext");
+          element.removeAttribute("lwt-popup-darktext");
+          element.style.removeProperty(disabledColorVariable);
+          return null;
+        }
 
-      let {r, g, b, a} = rgbaChannels;
+        let { r, g, b, a } = rgbaChannels;
 
-      if (_isTextColorDark(r, g, b)) {
-        element.removeAttribute("lwt-popup-brighttext");
-        element.setAttribute("lwt-popup-darktext", "true");
-      } else {
-        element.removeAttribute("lwt-popup-darktext");
-        element.setAttribute("lwt-popup-brighttext", "true");
-      }
+        if (_isTextColorDark(r, g, b)) {
+          element.removeAttribute("lwt-popup-brighttext");
+          element.setAttribute("lwt-popup-darktext", "true");
+        } else {
+          element.removeAttribute("lwt-popup-darktext");
+          element.setAttribute("lwt-popup-brighttext", "true");
+        }
 
-      element.style.setProperty(disabledColorVariable, `rgba(${r}, ${g}, ${b}, 0.5)`);
-      return `rgba(${r}, ${g}, ${b}, ${a})`;
+        element.style.setProperty(
+          disabledColorVariable,
+          `rgba(${r}, ${g}, ${b}, 0.5)`
+        );
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+      },
     },
-  }],
-  ["--arrowpanel-border-color", {
-    lwtProperty: "popup_border",
-  }],
-  ["--lwt-toolbar-field-background-color", {
-    lwtProperty: "toolbar_field",
-  }],
-  ["--lwt-toolbar-field-color", {
-    lwtProperty: "toolbar_field_text",
-    processColor(rgbaChannels, element) {
-      if (!rgbaChannels) {
-        element.removeAttribute("lwt-toolbar-field-brighttext");
-        return null;
-      }
-      const {r, g, b, a} = rgbaChannels;
-      if (_isTextColorDark(r, g, b)) {
-        element.removeAttribute("lwt-toolbar-field-brighttext");
-      } else {
-        element.setAttribute("lwt-toolbar-field-brighttext", "true");
-      }
-      return `rgba(${r}, ${g}, ${b}, ${a})`;
+  ],
+  [
+    "--arrowpanel-border-color",
+    {
+      lwtProperty: "popup_border",
     },
-  }],
-  ["--lwt-toolbar-field-border-color", {
-    lwtProperty: "toolbar_field_border",
-  }],
-  ["--lwt-toolbar-field-focus", {
-    lwtProperty: "toolbar_field_focus",
-  }],
-  ["--lwt-toolbar-field-focus-color", {
-    lwtProperty: "toolbar_field_text_focus",
-  }],
-  ["--toolbar-field-focus-border-color", {
-    lwtProperty: "toolbar_field_border_focus",
-  }],
-  ["--lwt-toolbar-field-highlight", {
-    lwtProperty: "toolbar_field_highlight",
-    processColor(rgbaChannels, element) {
-      if (!rgbaChannels) {
-        element.removeAttribute("lwt-selection");
-        return null;
-      }
-      element.setAttribute("lwt-selection", "true");
-      const {r, g, b, a} = rgbaChannels;
-      return `rgba(${r}, ${g}, ${b}, ${a})`;
+  ],
+  [
+    "--lwt-toolbar-field-background-color",
+    {
+      lwtProperty: "toolbar_field",
     },
-  }],
-  ["--lwt-toolbar-field-highlight-text", {
-    lwtProperty: "toolbar_field_highlight_text",
-  }],
+  ],
+  [
+    "--lwt-toolbar-field-color",
+    {
+      lwtProperty: "toolbar_field_text",
+      processColor(rgbaChannels, element) {
+        if (!rgbaChannels) {
+          element.removeAttribute("lwt-toolbar-field-brighttext");
+          return null;
+        }
+        const { r, g, b, a } = rgbaChannels;
+        if (_isTextColorDark(r, g, b)) {
+          element.removeAttribute("lwt-toolbar-field-brighttext");
+        } else {
+          element.setAttribute("lwt-toolbar-field-brighttext", "true");
+        }
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+      },
+    },
+  ],
+  [
+    "--lwt-toolbar-field-border-color",
+    {
+      lwtProperty: "toolbar_field_border",
+    },
+  ],
+  [
+    "--lwt-toolbar-field-focus",
+    {
+      lwtProperty: "toolbar_field_focus",
+    },
+  ],
+  [
+    "--lwt-toolbar-field-focus-color",
+    {
+      lwtProperty: "toolbar_field_text_focus",
+    },
+  ],
+  [
+    "--toolbar-field-focus-border-color",
+    {
+      lwtProperty: "toolbar_field_border_focus",
+    },
+  ],
+  [
+    "--lwt-toolbar-field-highlight",
+    {
+      lwtProperty: "toolbar_field_highlight",
+      processColor(rgbaChannels, element) {
+        if (!rgbaChannels) {
+          element.removeAttribute("lwt-selection");
+          return null;
+        }
+        element.setAttribute("lwt-selection", "true");
+        const { r, g, b, a } = rgbaChannels;
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+      },
+    },
+  ],
+  [
+    "--lwt-toolbar-field-highlight-text",
+    {
+      lwtProperty: "toolbar_field_highlight_text",
+    },
+  ],
 ];
 
 function LightweightThemeConsumer(aDocument) {
@@ -136,7 +190,9 @@ function LightweightThemeConsumer(aDocument) {
     this.darkThemeMediaQuery.addListener(this);
   }
 
-  const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
+  const { LightweightThemeManager } = ChromeUtils.import(
+    "resource://gre/modules/LightweightThemeManager.jsm"
+  );
   this._update(LightweightThemeManager.themeData);
 
   this._win.addEventListener("resolutionchange", this);
@@ -147,8 +203,9 @@ LightweightThemeConsumer.prototype = {
   _lastData: null,
 
   observe(aSubject, aTopic, aData) {
-    if (aTopic != "lightweight-theme-styling-update")
+    if (aTopic != "lightweight-theme-styling-update") {
       return;
+    }
 
     let data = aSubject.wrappedJSObject;
     if (data.window && data.window !== this._winId) {
@@ -196,7 +253,7 @@ LightweightThemeConsumer.prototype = {
       theme = { id: DEFAULT_THEME_ID };
     }
 
-    let active = this._active = Object.keys(theme).length;
+    let active = (this._active = Object.keys(theme).length);
 
     let root = this._doc.documentElement;
 
@@ -208,7 +265,12 @@ LightweightThemeConsumer.prototype = {
 
     this._setExperiment(active, themeData.experiment, theme.experimental);
     _setImage(root, active, "--lwt-header-image", theme.headerURL);
-    _setImage(root, active, "--lwt-additional-images", theme.additionalBackgrounds);
+    _setImage(
+      root,
+      active,
+      "--lwt-additional-images",
+      theme.additionalBackgrounds
+    );
     _setProperties(root, active, theme);
 
     if (theme.id != DEFAULT_THEME_ID || this.darkMode) {
@@ -251,7 +313,10 @@ LightweightThemeConsumer.prototype = {
     if (properties.colors) {
       for (const property in properties.colors) {
         const cssVariable = experiment.colors[property];
-        const value = _sanitizeCSSColor(root.ownerDocument, properties.colors[property]);
+        const value = _sanitizeCSSColor(
+          root.ownerDocument,
+          properties.colors[property]
+        );
         usedVariables.push([cssVariable, value]);
       }
     }
@@ -259,7 +324,10 @@ LightweightThemeConsumer.prototype = {
     if (properties.images) {
       for (const property in properties.images) {
         const cssVariable = experiment.images[property];
-        usedVariables.push([cssVariable, `url(${properties.images[property]})`]);
+        usedVariables.push([
+          cssVariable,
+          `url(${properties.images[property]})`,
+        ]);
       }
     }
     if (properties.properties) {
@@ -276,8 +344,10 @@ LightweightThemeConsumer.prototype = {
     if (experiment.stylesheet) {
       /* Stylesheet URLs are validated using WebExtension schemas */
       let stylesheetAttr = `href="${experiment.stylesheet}" type="text/css"`;
-      let stylesheet = this._doc.createProcessingInstruction("xml-stylesheet",
-        stylesheetAttr);
+      let stylesheet = this._doc.createProcessingInstruction(
+        "xml-stylesheet",
+        stylesheetAttr
+      );
       this._doc.insertBefore(stylesheet, root);
       this._lastExperimentData.stylesheet = stylesheet;
     }
@@ -301,7 +371,12 @@ function _setImage(aRoot, aActive, aVariableName, aURLs) {
   if (aURLs && !Array.isArray(aURLs)) {
     aURLs = [aURLs];
   }
-  _setProperty(aRoot, aActive, aVariableName, aURLs && aURLs.map(v => `url("${v.replace(/"/g, '\\"')}")`).join(","));
+  _setProperty(
+    aRoot,
+    aActive,
+    aVariableName,
+    aURLs && aURLs.map(v => `url("${v.replace(/"/g, '\\"')}")`).join(",")
+  );
 }
 
 function _setProperty(elem, active, variableName, value) {
@@ -323,8 +398,9 @@ function _setProperties(root, active, themeData) {
         processColor,
         isColor = true,
       } = definition;
-      let elem = optionalElementID ? root.ownerDocument.getElementById(optionalElementID)
-                                   : root;
+      let elem = optionalElementID
+        ? root.ownerDocument.getElementById(optionalElementID)
+        : root;
       let val = themeData[lwtProperty];
       if (isColor) {
         val = _sanitizeCSSColor(root.ownerDocument, val);
@@ -383,5 +459,5 @@ function _parseRGBA(aColorString) {
 }
 
 function _isTextColorDark(r, g, b) {
-  return (0.2125 * r + 0.7154 * g + 0.0721 * b) <= 110;
+  return 0.2125 * r + 0.7154 * g + 0.0721 * b <= 110;
 }

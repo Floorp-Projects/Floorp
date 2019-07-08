@@ -27,25 +27,36 @@ add_task(async function() {
   await client.readHeapSnapshot(secondSnapshotFilePath);
   ok(true, "Should have read both heap snapshot files");
 
-  const { delta } = await client.takeCensusDiff(firstSnapshotFilePath,
-                                                secondSnapshotFilePath,
-                                                { breakdown: BREAKDOWN });
+  const { delta } = await client.takeCensusDiff(
+    firstSnapshotFilePath,
+    secondSnapshotFilePath,
+    { breakdown: BREAKDOWN }
+  );
 
-  equal(delta.AllocationMarker.count, 1,
-    "There exists one new AllocationMarker in the second heap snapshot");
+  equal(
+    delta.AllocationMarker.count,
+    1,
+    "There exists one new AllocationMarker in the second heap snapshot"
+  );
 
-  const { delta: deltaTreeNode } = await client.takeCensusDiff(firstSnapshotFilePath,
-                                                               secondSnapshotFilePath,
-                                                               { breakdown: BREAKDOWN },
-                                                               { asTreeNode: true });
+  const { delta: deltaTreeNode } = await client.takeCensusDiff(
+    firstSnapshotFilePath,
+    secondSnapshotFilePath,
+    { breakdown: BREAKDOWN },
+    { asTreeNode: true }
+  );
 
   // Have to manually set these because symbol properties aren't structured
   // cloned.
   delta[CensusUtils.basisTotalBytes] = deltaTreeNode.totalBytes;
   delta[CensusUtils.basisTotalCount] = deltaTreeNode.totalCount;
 
-  compareCensusViewData(BREAKDOWN, delta, deltaTreeNode,
-    "Returning delta-census as a tree node represents same data as the report");
+  compareCensusViewData(
+    BREAKDOWN,
+    delta,
+    deltaTreeNode,
+    "Returning delta-census as a tree node represents same data as the report"
+  );
 
   client.destroy();
 });

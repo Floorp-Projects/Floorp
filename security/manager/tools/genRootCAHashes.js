@@ -12,41 +12,48 @@
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 const CertDb = Cc[nsX509CertDB].getService(Ci.nsIX509CertDB);
 
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { CommonUtils } = ChromeUtils.import("resource://services-common/utils.js");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
 
 const FILENAME_OUTPUT = "RootHashes.inc";
 const FILENAME_TRUST_ANCHORS = "KnownRootHashes.json";
 const ROOT_NOT_ASSIGNED = -1;
 
-const JSON_HEADER = "// This Source Code Form is subject to the terms of the Mozilla Public\n" +
-"// License, v. 2.0. If a copy of the MPL was not distributed with this\n" +
-"// file, You can obtain one at http://mozilla.org/MPL/2.0/. */\n" +
-"//\n" +
-"//***************************************************************************\n" +
-"// This is an automatically generated file. It's used to maintain state for\n" +
-"// runs of genRootCAHashes.js; you should never need to manually edit it\n" +
-"//***************************************************************************\n" +
-"\n";
+const JSON_HEADER =
+  "// This Source Code Form is subject to the terms of the Mozilla Public\n" +
+  "// License, v. 2.0. If a copy of the MPL was not distributed with this\n" +
+  "// file, You can obtain one at http://mozilla.org/MPL/2.0/. */\n" +
+  "//\n" +
+  "//***************************************************************************\n" +
+  "// This is an automatically generated file. It's used to maintain state for\n" +
+  "// runs of genRootCAHashes.js; you should never need to manually edit it\n" +
+  "//***************************************************************************\n" +
+  "\n";
 
-const FILE_HEADER = "/* This Source Code Form is subject to the terms of the Mozilla Public\n" +
-" * License, v. 2.0. If a copy of the MPL was not distributed with this\n" +
-" * file, You can obtain one at http://mozilla.org/MPL/2.0/. */\n" +
-"\n" +
-"/*****************************************************************************/\n" +
-"/* This is an automatically generated file. If you're not                    */\n" +
-"/* RootCertificateTelemetryUtils.cpp, you shouldn't be #including it.        */\n" +
-"/*****************************************************************************/\n" +
-"\n" +
-"#define HASH_LEN 32\n";
+const FILE_HEADER =
+  "/* This Source Code Form is subject to the terms of the Mozilla Public\n" +
+  " * License, v. 2.0. If a copy of the MPL was not distributed with this\n" +
+  " * file, You can obtain one at http://mozilla.org/MPL/2.0/. */\n" +
+  "\n" +
+  "/*****************************************************************************/\n" +
+  "/* This is an automatically generated file. If you're not                    */\n" +
+  "/* RootCertificateTelemetryUtils.cpp, you shouldn't be #including it.        */\n" +
+  "/*****************************************************************************/\n" +
+  "\n" +
+  "#define HASH_LEN 32\n";
 
-const FP_PREAMBLE = "struct CertAuthorityHash {\n" +
-"  // See bug 1338873 about making these fields const.\n" +
-"  uint8_t hash[HASH_LEN];\n" +
-"  int32_t binNumber;\n" +
-"};\n\n" +
-"static const struct CertAuthorityHash ROOT_TABLE[] = {\n";
+const FP_PREAMBLE =
+  "struct CertAuthorityHash {\n" +
+  "  // See bug 1338873 about making these fields const.\n" +
+  "  uint8_t hash[HASH_LEN];\n" +
+  "  int32_t binNumber;\n" +
+  "};\n\n" +
+  "static const struct CertAuthorityHash ROOT_TABLE[] = {\n";
 
 const FP_POSTAMBLE = "};\n";
 
@@ -86,12 +93,12 @@ function stripComments(buf) {
   return data;
 }
 
-
 // Load the trust anchors JSON object from disk
 function loadTrustAnchors(file) {
   if (file.exists()) {
-    let stream = Cc["@mozilla.org/network/file-input-stream;1"]
-                   .createInstance(Ci.nsIFileInputStream);
+    let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+      Ci.nsIFileInputStream
+    );
     stream.init(file, -1, 0, 0);
     let buf = NetUtil.readInputStreamToString(stream, stream.available());
     return JSON.parse(stripComments(buf));
@@ -111,7 +118,6 @@ function writeTrustAnchors(file) {
 
   FileUtils.closeSafeFileOutputStream(fos);
 }
-
 
 // Write the C++ header file
 function writeRootHashes(fos) {
@@ -178,22 +184,25 @@ function insertTrustAnchorsFromDatabase() {
     // If this is a trusted cert
     if (CertDb.isCertTrusted(cert, CERT_TYPE, TRUST_TYPE)) {
       // Base64 encode the hex string
-      let binaryFingerprint = CommonUtils.hexToBytes(stripColons(cert.sha256Fingerprint));
+      let binaryFingerprint = CommonUtils.hexToBytes(
+        stripColons(cert.sha256Fingerprint)
+      );
       let encodedFingerprint = btoa(binaryFingerprint);
 
-       // Scan to see if this is already in the database.
-      if (findTrustAnchorByFingerprint(encodedFingerprint) == ROOT_NOT_ASSIGNED) {
+      // Scan to see if this is already in the database.
+      if (
+        findTrustAnchorByFingerprint(encodedFingerprint) == ROOT_NOT_ASSIGNED
+      ) {
         // Let's get a usable name; some old certs do not have CN= filled out
         let label = getLabelForCert(cert);
 
         // Add to list
         gTrustAnchors.maxBin += 1;
-        gTrustAnchors.roots.push(
-          {
-            "label": label,
-            "binNumber": gTrustAnchors.maxBin,
-            "sha256Fingerprint": encodedFingerprint,
-          });
+        gTrustAnchors.roots.push({
+          label,
+          binNumber: gTrustAnchors.maxBin,
+          sha256Fingerprint: encodedFingerprint,
+        });
       }
     }
   }
@@ -204,8 +213,9 @@ function insertTrustAnchorsFromDatabase() {
 //
 
 if (arguments.length != 1) {
-  throw new Error("Usage: genRootCAHashes.js " +
-                  "<absolute path to current RootHashes.inc>");
+  throw new Error(
+    "Usage: genRootCAHashes.js <absolute path to current RootHashes.inc>"
+  );
 }
 
 var trustAnchorsFile = FileUtils.getFile("CurWorkD", [FILENAME_TRUST_ANCHORS]);
@@ -239,6 +249,8 @@ gTrustAnchors.roots.sort(function(a, b) {
 });
 
 // Write the output file.
-var rootHashesFileOutputStream = FileUtils.openSafeFileOutputStream(rootHashesFile);
+var rootHashesFileOutputStream = FileUtils.openSafeFileOutputStream(
+  rootHashesFile
+);
 writeRootHashes(rootHashesFileOutputStream);
 FileUtils.closeSafeFileOutputStream(rootHashesFileOutputStream);

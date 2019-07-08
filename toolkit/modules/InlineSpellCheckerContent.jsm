@@ -5,10 +5,11 @@
 
 "use strict";
 
-var { InlineSpellChecker, SpellCheckHelper } =
-  ChromeUtils.import("resource://gre/modules/InlineSpellChecker.jsm");
+var { InlineSpellChecker, SpellCheckHelper } = ChromeUtils.import(
+  "resource://gre/modules/InlineSpellChecker.jsm"
+);
 
-var EXPORTED_SYMBOLS = [ "InlineSpellCheckerContent" ];
+var EXPORTED_SYMBOLS = ["InlineSpellCheckerContent"];
 
 var InlineSpellCheckerContent = {
   _spellChecker: null,
@@ -22,45 +23,55 @@ var InlineSpellCheckerContent = {
       // Get the editor off the window.
       let win = event.target.ownerGlobal;
       let editingSession = win.docShell.editingSession;
-      spellChecker = this._spellChecker =
-        new InlineSpellChecker(editingSession.getEditorForWindow(win));
+      spellChecker = this._spellChecker = new InlineSpellChecker(
+        editingSession.getEditorForWindow(win)
+      );
     } else {
       // Use the element's editor.
-      spellChecker = this._spellChecker =
-        new InlineSpellChecker(event.composedTarget.editor);
+      spellChecker = this._spellChecker = new InlineSpellChecker(
+        event.composedTarget.editor
+      );
     }
 
     this._spellChecker.initFromEvent(event.rangeParent, event.rangeOffset);
 
     if (!spellChecker.canSpellCheck) {
-      return { canSpellCheck: false,
-               initialSpellCheckPending: true,
-               enableRealTimeSpell: false };
+      return {
+        canSpellCheck: false,
+        initialSpellCheckPending: true,
+        enableRealTimeSpell: false,
+      };
     }
 
     if (!spellChecker.mInlineSpellChecker.enableRealTimeSpell) {
-      return { canSpellCheck: true,
-               initialSpellCheckPending: spellChecker.initialSpellCheckPending,
-               enableRealTimeSpell: false };
+      return {
+        canSpellCheck: true,
+        initialSpellCheckPending: spellChecker.initialSpellCheckPending,
+        enableRealTimeSpell: false,
+      };
     }
 
     if (spellChecker.initialSpellCheckPending) {
-      return { canSpellCheck: true,
-               initialSpellCheckPending: true,
-               enableRealTimeSpell: true };
+      return {
+        canSpellCheck: true,
+        initialSpellCheckPending: true,
+        enableRealTimeSpell: true,
+      };
     }
 
     let realSpellChecker = spellChecker.mInlineSpellChecker.spellChecker;
     let dictionaryList = realSpellChecker.GetDictionaryList();
 
-    return { canSpellCheck: spellChecker.canSpellCheck,
-             initialSpellCheckPending: spellChecker.initialSpellCheckPending,
-             enableRealTimeSpell: spellChecker.enabled,
-             overMisspelling: spellChecker.overMisspelling,
-             misspelling: spellChecker.mMisspelling,
-             spellSuggestions: this._generateSpellSuggestions(),
-             currentDictionary: spellChecker.mInlineSpellChecker.spellChecker.GetCurrentDictionary(),
-             dictionaryList };
+    return {
+      canSpellCheck: spellChecker.canSpellCheck,
+      initialSpellCheckPending: spellChecker.initialSpellCheckPending,
+      enableRealTimeSpell: spellChecker.enabled,
+      overMisspelling: spellChecker.overMisspelling,
+      misspelling: spellChecker.mMisspelling,
+      spellSuggestions: this._generateSpellSuggestions(),
+      currentDictionary: spellChecker.mInlineSpellChecker.spellChecker.GetCurrentDictionary(),
+      dictionaryList,
+    };
   },
 
   uninitContextMenu() {

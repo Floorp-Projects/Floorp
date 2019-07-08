@@ -30,7 +30,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(PAGE_URL);
   const toolbox = hud.ui.wrapper.toolbox;
 
-  info("Finding \"here\" message and waiting for source map to be applied");
+  info('Finding "here" message and waiting for source map to be applied');
   await waitFor(() => {
     const node = findMessage(hud, "here");
     if (!node) {
@@ -49,5 +49,8 @@ add_task(async function() {
   const node = await waitFor(() => findMessage(hud, "original source"));
   ok(node, "source map error is displayed in web console");
 
-  ok(!!node.querySelector(".learn-more-link"), "source map error has learn more link");
+  ok(
+    !!node.querySelector(".learn-more-link"),
+    "source map error has learn more link"
+  );
 });

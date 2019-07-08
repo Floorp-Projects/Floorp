@@ -5,8 +5,10 @@
 const C = Cc;
 const I = Ci;
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const ToolkitProfileService = "@mozilla.org/toolkit/profile-service;1";
 
@@ -24,7 +26,9 @@ var gProfileDisplay;
 // Called once when the wizard is opened.
 function initWizard() {
   try {
-    gProfileService = C[ToolkitProfileService].getService(I.nsIToolkitProfileService);
+    gProfileService = C[ToolkitProfileService].getService(
+      I.nsIToolkitProfileService
+    );
     gProfileManagerBundle = document.getElementById("bundle_profileManager");
 
     gDefaultProfileParent = Services.dirsvc.get("DefProfRt", I.nsIFile);
@@ -32,12 +36,16 @@ function initWizard() {
     // Initialize the profile location display.
     gProfileDisplay = document.getElementById("profileDisplay").firstChild;
     document.addEventListener("wizardfinish", onFinish);
-    document.getElementById("explanation").addEventListener("pageshow", enableNextButton);
-    document.getElementById("createProfile").addEventListener("pageshow", initSecondWizardPage);
+    document
+      .getElementById("explanation")
+      .addEventListener("pageshow", enableNextButton);
+    document
+      .getElementById("createProfile")
+      .addEventListener("pageshow", initSecondWizardPage);
     setDisplayToDefaultFolder();
   } catch (e) {
     window.close();
-    throw (e);
+    throw e;
   }
 }
 
@@ -52,15 +60,48 @@ function initSecondWizardPage() {
 }
 
 const kSaltTable = [
-  "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n",
-  "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
-  "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" ];
+  "a",
+  "b",
+  "c",
+  "d",
+  "e",
+  "f",
+  "g",
+  "h",
+  "i",
+  "j",
+  "k",
+  "l",
+  "m",
+  "n",
+  "o",
+  "p",
+  "q",
+  "r",
+  "s",
+  "t",
+  "u",
+  "v",
+  "w",
+  "x",
+  "y",
+  "z",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "0",
+];
 
 var kSaltString = "";
 for (var i = 0; i < 8; ++i) {
   kSaltString += kSaltTable[Math.floor(Math.random() * kSaltTable.length)];
 }
-
 
 function saltName(aName) {
   return kSaltString + "." + aName;
@@ -68,7 +109,9 @@ function saltName(aName) {
 
 function setDisplayToDefaultFolder() {
   var defaultProfileDir = gDefaultProfileParent.clone();
-  defaultProfileDir.append(saltName(document.getElementById("profileName").value));
+  defaultProfileDir.append(
+    saltName(document.getElementById("profileName").value)
+  );
   gProfileRoot = defaultProfileDir;
   document.getElementById("useDefault").disabled = true;
 }
@@ -81,9 +124,14 @@ function updateProfileDisplay() {
 function chooseProfileFolder() {
   var newProfileRoot;
 
-  var dirChooser = C["@mozilla.org/filepicker;1"].createInstance(I.nsIFilePicker);
-  dirChooser.init(window, gProfileManagerBundle.getString("chooseFolder"),
-                  I.nsIFilePicker.modeGetFolder);
+  var dirChooser = C["@mozilla.org/filepicker;1"].createInstance(
+    I.nsIFilePicker
+  );
+  dirChooser.init(
+    window,
+    gProfileManagerBundle.getString("chooseFolder"),
+    I.nsIFilePicker.modeGetFolder
+  );
   dirChooser.appendFilters(I.nsIFilePicker.filterAll);
 
   // default to the Profiles folder
@@ -94,8 +142,9 @@ function chooseProfileFolder() {
 
     // Disable the "Default Folder..." button when the default profile folder
     // was selected manually in the File Picker.
-    document.getElementById("useDefault").disabled =
-      (newProfileRoot.parent.equals(gDefaultProfileParent));
+    document.getElementById(
+      "useDefault"
+    ).disabled = newProfileRoot.parent.equals(gDefaultProfileParent);
 
     gProfileRoot = newProfileRoot;
     updateProfileDisplay();
@@ -113,9 +162,13 @@ function checkCurrentInput(currentInput) {
   if (!errorMessage) {
     finishText.className = "";
     if (AppConstants.platform == "macosx") {
-      finishText.firstChild.data = gProfileManagerBundle.getString("profileFinishTextMac");
+      finishText.firstChild.data = gProfileManagerBundle.getString(
+        "profileFinishTextMac"
+      );
     } else {
-      finishText.firstChild.data = gProfileManagerBundle.getString("profileFinishText");
+      finishText.firstChild.data = gProfileManagerBundle.getString(
+        "profileFinishText"
+      );
     }
     canAdvance = true;
   } else {
@@ -143,16 +196,19 @@ function updateProfileName(aNewName) {
 // Returns an error message describing the error in the name or "" when it's valid.
 function checkProfileName(profileNameToCheck) {
   // Check for emtpy profile name.
-  if (!/\S/.test(profileNameToCheck))
+  if (!/\S/.test(profileNameToCheck)) {
     return gProfileManagerBundle.getString("profileNameEmpty");
+  }
 
   // Check whether all characters in the profile name are allowed.
-  if (/([\\*:?<>|\/\"])/.test(profileNameToCheck))
+  if (/([\\*:?<>|\/\"])/.test(profileNameToCheck)) {
     return gProfileManagerBundle.getFormattedString("invalidChar", [RegExp.$1]);
+  }
 
   // Check whether a profile with the same name already exists.
-  if (profileExists(profileNameToCheck))
+  if (profileExists(profileNameToCheck)) {
     return gProfileManagerBundle.getString("profileExists");
+  }
 
   // profileNameToCheck is valid.
   return "";
@@ -160,8 +216,9 @@ function checkProfileName(profileNameToCheck) {
 
 function profileExists(aName) {
   for (let profile of gProfileService.profiles) {
-    if (profile.name.toLowerCase() == aName.toLowerCase())
+    if (profile.name.toLowerCase() == aName.toLowerCase()) {
       return true;
+    }
   }
 
   return false;
@@ -180,12 +237,17 @@ function onFinish(event) {
   try {
     profile = gProfileService.createProfile(gProfileRoot, profileName);
   } catch (e) {
-    var profileCreationFailed =
-      gProfileManagerBundle.getString("profileCreationFailed");
-    var profileCreationFailedTitle =
-      gProfileManagerBundle.getString("profileCreationFailedTitle");
-    Services.prompt.alert(window, profileCreationFailedTitle,
-                          profileCreationFailed + "\n" + e);
+    var profileCreationFailed = gProfileManagerBundle.getString(
+      "profileCreationFailed"
+    );
+    var profileCreationFailedTitle = gProfileManagerBundle.getString(
+      "profileCreationFailedTitle"
+    );
+    Services.prompt.alert(
+      window,
+      profileCreationFailedTitle,
+      profileCreationFailed + "\n" + e
+    );
 
     event.preventDefault();
     return;
@@ -200,7 +262,9 @@ function onFinish(event) {
     // Use the newly created Profile.
     var profileLock = profile.lock(null);
 
-    var dialogParams = window.arguments[0].QueryInterface(I.nsIDialogParamBlock);
+    var dialogParams = window.arguments[0].QueryInterface(
+      I.nsIDialogParamBlock
+    );
     dialogParams.objects.insertElementAt(profileLock, 0);
   }
 }

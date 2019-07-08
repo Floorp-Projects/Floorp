@@ -21,10 +21,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: `${FRAMESCRIPT_URL}:1`,
-        attributes: [
-          "Bubbling",
-          "DOM2",
-        ],
+        attributes: ["Bubbling", "DOM2"],
         handler: `() => { /* Do nothing */ }`,
       },
     ],
@@ -35,7 +32,7 @@ add_task(async function() {
   waitForExplicitFinish();
   await pushPref("devtools.chrome.enabled", true);
 
-  const {tab, inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const { tab, inspector, testActor } = await openInspectorForURL(TEST_URL);
   const browser = tab.linkedBrowser;
   const mm = browser.messageManager;
 
@@ -52,6 +49,6 @@ add_task(async function() {
 function frameScript() {
   const div = content.document.querySelector("div");
   div.addEventListener("click", () => {
-   /* Do nothing */
+    /* Do nothing */
   });
 }

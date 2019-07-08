@@ -73,7 +73,7 @@ class nsSVGPaintServerFrame : public nsSVGContainerFrame {
   virtual already_AddRefed<gfxPattern> GetPaintServerPattern(
       nsIFrame* aSource, const DrawTarget* aDrawTarget,
       const gfxMatrix& aContextMatrix,
-      nsStyleSVGPaint nsStyleSVG::*aFillOrStroke, float aOpacity,
+      mozilla::StyleSVGPaint nsStyleSVG::*aFillOrStroke, float aOpacity,
       imgDrawingParams& aImgParams,
       const gfxRect* aOverrideBounds = nullptr) = 0;
 

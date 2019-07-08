@@ -5,12 +5,12 @@
 
 "use strict";
 
-const {ELLIPSIS} = require("devtools/shared/l10n");
+const { ELLIPSIS } = require("devtools/shared/l10n");
 
 add_task(async function() {
   info("Test Object type property started");
 
-  const TEST_JSON_URL = "data:application/json,{\"x\":{\"type\":\"string\"}}";
+  const TEST_JSON_URL = 'data:application/json,{"x":{"type":"string"}}';
   await addJsonViewTab(TEST_JSON_URL);
 
   let count = await getElementCount(".jsonPanelBox .treeTable .treeRow");

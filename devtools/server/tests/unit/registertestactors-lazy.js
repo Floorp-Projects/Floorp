@@ -3,8 +3,13 @@
 
 "use strict";
 
-var {RetVal, Actor, ActorClassWithSpec, FrontClassWithSpec,
-     generateActorSpec} = require("devtools/shared/protocol");
+var {
+  RetVal,
+  Actor,
+  ActorClassWithSpec,
+  FrontClassWithSpec,
+  generateActorSpec,
+} = require("devtools/shared/protocol");
 var Services = require("Services");
 
 const lazySpec = generateActorSpec({

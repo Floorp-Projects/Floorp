@@ -8,7 +8,10 @@
  **/
 
 add_task(async function() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.com"
+  );
 
   let newTitlePromise = new Promise(resolve => {
     let observer = {
@@ -21,12 +24,12 @@ add_task(async function() {
         }
       },
 
-      onBeginUpdateBatch() { },
-      onEndUpdateBatch() { },
-      onDeleteURI() { },
-      onClearHistory() { },
-      onPageChanged() { },
-      onDeleteVisits() { },
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onDeleteURI() {},
+      onClearHistory() {},
+      onPageChanged() {},
+      onDeleteVisits() {},
       QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver]),
     };
 
@@ -34,15 +37,21 @@ add_task(async function() {
   });
 
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
-    let title =  content.document.title;
+    let title = content.document.title;
     content.history.pushState("", "", "new_page");
     Assert.ok(title, "Content window should initially have a title.");
   });
 
   let newtitle = await newTitlePromise;
 
-  await ContentTask.spawn(tab.linkedBrowser, { newtitle }, async function(args) {
-    Assert.equal(args.newtitle, content.document.title, "Title after pushstate.");
+  await ContentTask.spawn(tab.linkedBrowser, { newtitle }, async function(
+    args
+  ) {
+    Assert.equal(
+      args.newtitle,
+      content.document.title,
+      "Title after pushstate."
+    );
   });
 
   await PlacesUtils.history.clear();

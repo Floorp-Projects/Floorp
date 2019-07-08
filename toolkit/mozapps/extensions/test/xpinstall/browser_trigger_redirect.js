@@ -28,7 +28,11 @@ function finish_test(count) {
 
   Services.perms.remove(makeURI("http://example.com"), "install");
 
-  is(gBrowser.currentURI.spec, TESTROOT + "triggerredirect.html#foo", "Should have redirected");
+  is(
+    gBrowser.currentURI.spec,
+    TESTROOT + "triggerredirect.html#foo",
+    "Should have redirected"
+  );
 
   gBrowser.removeCurrentTab();
   Harness.finish();

@@ -6,9 +6,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "Promise",
-];
+var EXPORTED_SYMBOLS = ["Promise"];
 
 /**
  * This module implements the "promise" construct, according to the
@@ -91,5 +89,5 @@ var EXPORTED_SYMBOLS = [
 
 // eslint-disable-next-line mozilla/use-services
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
-    .getService(Ci.mozIJSSubScriptLoader)
-    .loadSubScript("resource://gre/modules/Promise-backend.js", this);
+  .getService(Ci.mozIJSSubScriptLoader)
+  .loadSubScript("resource://gre/modules/Promise-backend.js", this);

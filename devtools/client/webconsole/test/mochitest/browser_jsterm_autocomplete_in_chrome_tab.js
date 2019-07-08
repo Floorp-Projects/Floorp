@@ -21,7 +21,7 @@ async function performTests() {
   ok(hud, "we have a console");
   ok(hud.iframeWindow, "we have the console UI window");
 
-  const {jsterm} = hud;
+  const { jsterm } = hud;
   ok(jsterm, "we have a jsterm");
   ok(hud.outputNode, "we have an output node");
 

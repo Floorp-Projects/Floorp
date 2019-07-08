@@ -2,9 +2,11 @@
 
 var { Constructor: CC } = Components;
 
-const UDPSocket = CC("@mozilla.org/network/udp-socket;1",
-                     "nsIUDPSocket",
-                     "init");
+const UDPSocket = CC(
+  "@mozilla.org/network/udp-socket;1",
+  "nsIUDPSocket",
+  "init"
+);
 const ADDRESS_TEST1 = "224.0.0.200";
 const ADDRESS_TEST2 = "224.0.0.201";
 const ADDRESS_TEST3 = "224.0.0.202";
@@ -12,8 +14,9 @@ const ADDRESS_TEST4 = "224.0.0.203";
 
 const TIMEOUT = 2000;
 
-const ua = Cc["@mozilla.org/network/protocol;1?name=http"]
-           .getService(Ci.nsIHttpProtocolHandler).userAgent;
+const ua = Cc["@mozilla.org/network/protocol;1?name=http"].getService(
+  Ci.nsIHttpProtocolHandler
+).userAgent;
 
 var gConverter;
 
@@ -23,14 +26,18 @@ function run_test() {
 }
 
 function setup() {
-  gConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-               createInstance(Ci.nsIScriptableUnicodeConverter);
+  gConverter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
   gConverter.charset = "utf8";
 }
 
 function createSocketAndJoin(addr) {
-  let socket = new UDPSocket(-1, false,
-                     Services.scriptSecurityManager.getSystemPrincipal());
+  let socket = new UDPSocket(
+    -1,
+    false,
+    Services.scriptSecurityManager.getSystemPrincipal()
+  );
   socket.joinMulticast(addr);
   return socket;
 }
@@ -47,7 +54,7 @@ function sendPing(socket, addr) {
         socket.close();
         resolve(message.data);
       },
-      onStopListening(socket, status) {}
+      onStopListening(socket, status) {},
     });
 
     info("Multicast send to port " + socket.port);
@@ -56,19 +63,22 @@ function sendPing(socket, addr) {
     // Timers are bad, but it seems like the only way to test *not* getting a
     // packet.
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    timer.initWithCallback(() => {
-      socket.close();
-      reject();
-    }, TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
+    timer.initWithCallback(
+      () => {
+        socket.close();
+        reject();
+      },
+      TIMEOUT,
+      Ci.nsITimer.TYPE_ONE_SHOT
+    );
   });
 }
 
 add_test(() => {
   info("Joining multicast group");
   let socket = createSocketAndJoin(ADDRESS_TEST1);
-  sendPing(socket, ADDRESS_TEST1).then(
-    run_next_test,
-    () => do_throw("Joined group, but no packet received")
+  sendPing(socket, ADDRESS_TEST1).then(run_next_test, () =>
+    do_throw("Joined group, but no packet received")
   );
 });
 

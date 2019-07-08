@@ -5,13 +5,13 @@
 /*
  *  Test that channels with different LoadInfo
  *  are stored in separate namespaces ("cookie jars")
- */ 
+ */
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
 });
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var httpserver = new HttpServer();
 
@@ -19,35 +19,46 @@ var cookieSetPath = "/setcookie";
 var cookieCheckPath = "/checkcookie";
 
 function inChildProcess() {
-  return Cc["@mozilla.org/xre/app-info;1"]
-           .getService(Ci.nsIXULRuntime)
-           .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+  return (
+    Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
+      .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
+  );
 }
 
 // Test array:
-//  - element 0: name for cookie, used both to set and later to check 
+//  - element 0: name for cookie, used both to set and later to check
 //  - element 1: loadInfo (determines cookie namespace)
 //
 // TODO: bug 722850: make private browsing work per-app, and add tests.  For now
 // all values are 'false' for PB.
 
 var tests = [
-  { cookieName: 'LCC_App0_BrowF_PrivF', 
-    originAttributes: new OriginAttributes(0, false, 0) },
-  { cookieName: 'LCC_App0_BrowT_PrivF', 
-    originAttributes: new OriginAttributes(0, true, 0) },
-  { cookieName: 'LCC_App1_BrowF_PrivF', 
-    originAttributes: new OriginAttributes(1, false, 0) },
-  { cookieName: 'LCC_App1_BrowT_PrivF', 
-    originAttributes: new OriginAttributes(1, true, 0) },
+  {
+    cookieName: "LCC_App0_BrowF_PrivF",
+    originAttributes: new OriginAttributes(0, false, 0),
+  },
+  {
+    cookieName: "LCC_App0_BrowT_PrivF",
+    originAttributes: new OriginAttributes(0, true, 0),
+  },
+  {
+    cookieName: "LCC_App1_BrowF_PrivF",
+    originAttributes: new OriginAttributes(1, false, 0),
+  },
+  {
+    cookieName: "LCC_App1_BrowT_PrivF",
+    originAttributes: new OriginAttributes(1, true, 0),
+  },
 ];
 
 // test number: index into 'tests' array
 var i = 0;
 
-function setupChannel(path)
-{
-  var chan = NetUtil.newChannel({uri: URL + path, loadUsingSystemPrincipal: true});
+function setupChannel(path) {
+  var chan = NetUtil.newChannel({
+    uri: URL + path,
+    loadUsingSystemPrincipal: true,
+  });
   chan.loadInfo.originAttributes = tests[i].originAttributes;
   chan.QueryInterface(Ci.nsIHttpChannel);
   return chan;
@@ -59,8 +70,7 @@ function setCookie() {
   channel.asyncOpen(new ChannelListener(setNextCookie, null));
 }
 
-function setNextCookie(request, data, context) 
-{
+function setNextCookie(request, data, context) {
   if (++i == tests.length) {
     // all cookies set: switch to checking them
     i = 0;
@@ -73,8 +83,7 @@ function setNextCookie(request, data, context)
 
 // Open channel that should send one and only one correct Cookie: header to
 // server, corresponding to it's namespace
-function checkCookie()
-{
+function checkCookie() {
   var channel = setupChannel(cookieCheckPath);
   channel.asyncOpen(new ChannelListener(completeCheckCookie, null));
 }
@@ -89,19 +98,32 @@ function completeCheckCookie(request, data, context) {
   var j;
   for (j = 0; j < tests.length; j++) {
     var cookieToCheck = tests[j].cookieName;
-    found = (cookiesSeen.includes(cookieToCheck));
+    found = cookiesSeen.includes(cookieToCheck);
     if (found && expectedCookie != cookieToCheck) {
-      do_throw("test index " + i + ": found unexpected cookie '" 
-          + cookieToCheck + "': in '" + cookiesSeen + "'");
+      do_throw(
+        "test index " +
+          i +
+          ": found unexpected cookie '" +
+          cookieToCheck +
+          "': in '" +
+          cookiesSeen +
+          "'"
+      );
     } else if (!found && expectedCookie == cookieToCheck) {
-      do_throw("test index " + i + ": missing expected cookie '" 
-          + expectedCookie + "': in '" + cookiesSeen + "'");
+      do_throw(
+        "test index " +
+          i +
+          ": missing expected cookie '" +
+          expectedCookie +
+          "': in '" +
+          cookiesSeen +
+          "'"
+      );
     }
   }
   // If we get here we're good.
   info("Saw only correct cookie '" + expectedCookie + "'");
   Assert.ok(true);
-
 
   if (++i == tests.length) {
     // end of tests
@@ -111,12 +133,14 @@ function completeCheckCookie(request, data, context) {
   }
 }
 
-function run_test()
-{
+function run_test() {
   // Allow all cookies if the pref service is available in this process.
   if (!inChildProcess()) {
     Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
-    Services.prefs.setBoolPref("network.cookieSettings.unblocked_for_testing", true);
+    Services.prefs.setBoolPref(
+      "network.cookieSettings.unblocked_for_testing",
+      true
+    );
   }
 
   httpserver.registerPathHandler(cookieSetPath, cookieSetHandler);
@@ -127,8 +151,7 @@ function run_test()
   do_test_pending();
 }
 
-function cookieSetHandler(metadata, response)
-{
+function cookieSetHandler(metadata, response) {
   var cookieName = metadata.getHeader("foo-set-cookie");
 
   response.setStatusLine(metadata.httpVersion, 200, "Ok");
@@ -137,8 +160,7 @@ function cookieSetHandler(metadata, response)
   response.bodyOutputStream.write("Ok", "Ok".length);
 }
 
-function cookieCheckHandler(metadata, response)
-{
+function cookieCheckHandler(metadata, response) {
   var cookies = metadata.getHeader("Cookie");
 
   response.setStatusLine(metadata.httpVersion, 200, "Ok");
@@ -146,4 +168,3 @@ function cookieCheckHandler(metadata, response)
   response.setHeader("Content-Type", "text/plain");
   response.bodyOutputStream.write("Ok", "Ok".length);
 }
-

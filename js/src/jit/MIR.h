@@ -5231,9 +5231,6 @@ class MMathFunction : public MUnaryInstruction,
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override {
-    if (input()->type() == MIRType::SinCosDouble) {
-      return false;
-    }
     switch (function_) {
       case Sin:
       case Log:
@@ -5799,26 +5796,6 @@ class MStringConvertCase : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool possiblyCalls() const override { return true; }
   Mode mode() const { return mode_; }
-};
-
-class MSinCos : public MUnaryInstruction, public FloatingPointPolicy<0>::Data {
-  explicit MSinCos(MDefinition* input) : MUnaryInstruction(classOpcode, input) {
-    setResultType(MIRType::SinCosDouble);
-    specialization_ = MIRType::Double;
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(SinCos)
-
-  static MSinCos* New(TempAllocator& alloc, MDefinition* input) {
-    return new (alloc) MSinCos(input);
-  }
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  bool possiblyCalls() const override { return true; }
 };
 
 class MStringSplit : public MBinaryInstruction,

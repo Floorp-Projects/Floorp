@@ -4,19 +4,44 @@
 
 "use strict";
 
-const { createFactory, Component } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  Component,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { a, br, button, dd, dl, dt, header, li, section, span, time } =
-  require("devtools/client/shared/vendor/react-dom-factories");
-const { getUnicodeUrl, getUnicodeUrlPath } = require("devtools/client/shared/unicode-url");
+const {
+  a,
+  br,
+  button,
+  dd,
+  dl,
+  dt,
+  header,
+  li,
+  section,
+  span,
+  time,
+} = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  getUnicodeUrl,
+  getUnicodeUrlPath,
+} = require("devtools/client/shared/unicode-url");
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-loader.lazyRequireGetter(this, "DebuggerClient",
-  "devtools/shared/client/debugger-client", true);
-loader.lazyRequireGetter(this, "gDevToolsBrowser",
-  "devtools/client/framework/devtools-browser", true);
+loader.lazyRequireGetter(
+  this,
+  "DebuggerClient",
+  "devtools/shared/client/debugger-client",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "gDevToolsBrowser",
+  "devtools/client/framework/devtools-browser",
+  true
+);
 
 /**
  * This component is dedicated to display a worker, more accurately a service worker, in
@@ -127,12 +152,10 @@ class Worker extends Component {
           title: shallDisableLink,
         },
       },
-      a(
-        {
-          onClick: !shallDisableLink ? this.debug : null,
-          className: `${linkClass} worker__debug-link js-debug-link`,
-        }
-      )
+      a({
+        onClick: !shallDisableLink ? this.debug : null,
+        className: `${linkClass} worker__debug-link js-debug-link`,
+      })
     );
     return link;
   }
@@ -149,12 +172,10 @@ class Worker extends Component {
           title: !isDebugEnabled,
         },
       },
-      a(
-        {
-          onClick: this.start,
-          className: `worker__start-link js-start-link ${linkClass}`,
-        }
-      )
+      a({
+        onClick: this.start,
+        className: `worker__start-link js-start-link ${linkClass}`,
+      })
     );
     return link;
   }
@@ -163,58 +184,72 @@ class Worker extends Component {
     const { worker } = this.props;
     const status = this.getServiceWorkerStatus();
 
-    const unregisterButton = this.isActive() ?
-      Localized(
-        { id: "serviceworker-worker-unregister" },
-        button({
-          onClick: this.unregister,
-          className: "devtools-button worker__unregister-button js-unregister-button",
-          "data-standalone": true,
-        })
-      ) : null;
+    const unregisterButton = this.isActive()
+      ? Localized(
+          { id: "serviceworker-worker-unregister" },
+          button({
+            onClick: this.unregister,
+            className:
+              "devtools-button worker__unregister-button js-unregister-button",
+            "data-standalone": true,
+          })
+        )
+      : null;
 
-    const lastUpdated = worker.lastUpdateTime ?
-      Localized(
-        {
-          id: "serviceworker-worker-updated",
-          // XXX: $date should normally be a Date object, but we pass the timestamp as a
-          // workaround. See Bug 1465718. worker.lastUpdateTime is in microseconds,
-          // convert to a valid timestamp in milliseconds by dividing by 1000.
-          "$date": worker.lastUpdateTime / 1000,
-          time: time({ className: "js-sw-updated" }),
-        },
-        span({ className: "worker__data__updated" })
-      ) : null;
+    const lastUpdated = worker.lastUpdateTime
+      ? Localized(
+          {
+            id: "serviceworker-worker-updated",
+            // XXX: $date should normally be a Date object, but we pass the timestamp as a
+            // workaround. See Bug 1465718. worker.lastUpdateTime is in microseconds,
+            // convert to a valid timestamp in milliseconds by dividing by 1000.
+            $date: worker.lastUpdateTime / 1000,
+            time: time({ className: "js-sw-updated" }),
+          },
+          span({ className: "worker__data__updated" })
+        )
+      : null;
 
-    return li({ className: "worker js-sw-container" },
+    return li(
+      { className: "worker js-sw-container" },
       header(
         { className: "worker__header" },
-        span({ title: worker.scope, className: "worker__scope js-sw-scope" },
-          this.formatScope(worker.scope)),
-        section(
-          { className: "worker__controls" },
-          unregisterButton),
+        span(
+          { title: worker.scope, className: "worker__scope js-sw-scope" },
+          this.formatScope(worker.scope)
+        ),
+        section({ className: "worker__controls" }, unregisterButton)
       ),
       dl(
         { className: "worker__data" },
-        Localized({ id: "serviceworker-worker-source" },
+        Localized(
+          { id: "serviceworker-worker-source" },
           dt({ className: "worker__meta-name" })
         ),
-        dd({},
-            span({ title: worker.scope, className: "worker__source-url js-source-url" },
-              this.formatSource(worker.url)),
-            this.renderDebugLink(),
-            lastUpdated ? br({}) : null,
-            lastUpdated ? lastUpdated : null),
-        Localized({ id: "serviceworker-worker-status" },
+        dd(
+          {},
+          span(
+            {
+              title: worker.scope,
+              className: "worker__source-url js-source-url",
+            },
+            this.formatSource(worker.url)
+          ),
+          this.renderDebugLink(),
+          lastUpdated ? br({}) : null,
+          lastUpdated ? lastUpdated : null
+        ),
+        Localized(
+          { id: "serviceworker-worker-status" },
           dt({ className: "worker__meta-name" })
         ),
-        dd({},
+        dd(
+          {},
           Localized(
             { id: "serviceworker-worker-status-" + status },
-            span({ className: "js-worker-status" }),
+            span({ className: "js-worker-status" })
           ),
-          !this.isRunning() ? this.renderStartLink() : null,
+          !this.isRunning() ? this.renderStartLink() : null
         )
       )
     );

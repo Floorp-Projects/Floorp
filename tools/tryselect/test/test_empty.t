@@ -11,6 +11,11 @@ Test empty selector
   Calculated try_task_config.json:
   {
       "tasks": [],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "empty"
+          }
+      },
       "version": 1
   }
   
@@ -22,6 +27,11 @@ Test empty selector
   Calculated try_task_config.json:
   {
       "tasks": [],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "empty"
+          }
+      },
       "version": 1
   }
   
@@ -33,6 +43,11 @@ Test empty selector
   Calculated try_task_config.json:
   {
       "tasks": [],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "empty"
+          }
+      },
       "version": 1
   }
   

@@ -10,7 +10,8 @@
 // Load the shared-head file first.
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
-  this);
+  this
+);
 
 /**
  * Set all preferences needed to enable service worker debugging and testing.
@@ -59,8 +60,9 @@ async function unregisterAllWorkers(client) {
   let workers;
   await asyncWaitUntil(async function() {
     workers = await client.mainRoot.listAllWorkers();
-    const allWorkersRegistered =
-      workers.service.every(worker => !!worker.registrationFront);
+    const allWorkersRegistered = workers.service.every(
+      worker => !!worker.registrationFront
+    );
     return allWorkersRegistered;
   });
 
@@ -73,7 +75,9 @@ async function unregisterAllWorkers(client) {
 async function waitForWorkerRegistration(swTab) {
   info("Wait until the registration appears on the window");
   const swBrowser = swTab.linkedBrowser;
-  await asyncWaitUntil(async () => ContentTask.spawn(swBrowser, {}, function() {
-    return content.wrappedJSObject.getRegistration();
-  }));
+  await asyncWaitUntil(async () =>
+    ContentTask.spawn(swBrowser, {}, function() {
+      return content.wrappedJSObject.getRegistration();
+    })
+  );
 }

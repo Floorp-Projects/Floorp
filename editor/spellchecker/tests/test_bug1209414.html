@@ -41,13 +41,13 @@ var onSpellCheck =
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm").onSpellCheck;
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(function() {
-  /* global browserElement */
+SimpleTest.waitForFocus(async function() {
+  /* global actorParent */
   /* eslint-env mozilla/frame-script */
   script = SpecialPowers.loadChromeScript(function() {
-    var chromeWin = browserElement.ownerGlobal.docShell
-                    .rootTreeItem.domWindow
-                    .QueryInterface(Ci.nsIDOMChromeWindow);
+    var chromeWin = actorParent.rootFrameLoader
+                    .ownerElement.ownerGlobal.docShell
+                    .rootTreeItem.domWindow;
     var contextMenu = chromeWin.document.getElementById("contentAreaContextMenu");
     contextMenu.addEventListener("popupshown",
                                  () => sendAsyncMessage("popupshown"));
@@ -85,9 +85,9 @@ SimpleTest.waitForFocus(function() {
     addMessageListener("contextMenu-not-null", () => contextMenu != null);
     addMessageListener("de_DE-exists", () => de_DE.exists());
   });
-  is(script.sendSyncMessage("contextMenu-not-null")[0][0], true,
+  is(await script.sendQuery("contextMenu-not-null"), true,
      "Got context menu XUL");
-  is(script.sendSyncMessage("de_DE-exists")[0][0], true,
+  is(await script.sendQuery("de_DE-exists"), true,
      "true expected (de_DE directory should exist)");
   script.addMessageListener("popupshown", handlePopup);
 
@@ -117,8 +117,8 @@ SimpleTest.waitForFocus(function() {
   });
 });
 
-function handlePopup() {
-  var state = script.sendSyncMessage("hidepopup")[0][0];
+async function handlePopup() {
+  var state = await script.sendQuery("hidepopup");
   is(state, "open", "checking if popup is open");
 
   onSpellCheck(elem_de, function() {
@@ -135,7 +135,7 @@ function handlePopup() {
     is(getMisspelledWords(editor_de), "heute" + "ist" + "ein" + "guter", "some misspelled words expected: heute ist ein guter");
 
     // Remove the fake de_DE dictionary again.
-    script.sendSyncMessage("destroy");
+    script.sendAsyncMessage("destroy");
 
     // This will clear the content preferences and reset "spellchecker.dictionary".
     spellchecker.SetCurrentDictionary("");

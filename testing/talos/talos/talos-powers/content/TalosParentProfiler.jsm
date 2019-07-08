@@ -16,7 +16,7 @@
 
 var EXPORTED_SYMBOLS = ["TalosParentProfiler"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const TalosParentProfiler = {
   // Whether or not this TalosContentProfiler object has had initFromObject
@@ -35,9 +35,9 @@ const TalosParentProfiler = {
   get TalosPowers() {
     // Use a bit of XPCOM hackery to get at the Talos Powers service
     // implementation...
-    return Cc["@mozilla.org/talos/talos-powers-service;1"]
-             .getService(Ci.nsISupports)
-             .wrappedJSObject;
+    return Cc["@mozilla.org/talos/talos-powers-service;1"].getService(
+      Ci.nsISupports
+    ).wrappedJSObject;
   },
 
   /**
@@ -52,17 +52,25 @@ const TalosParentProfiler = {
    */
   initFromObject(obj = {}) {
     if (!this.initted) {
-      if (("gecko_profile_dir" in obj) && typeof obj.gecko_profile_dir == "string" &&
-          ("gecko_profile_interval" in obj) && Number.isFinite(obj.gecko_profile_interval * 1) &&
-          ("gecko_profile_entries" in obj) && Number.isFinite(obj.gecko_profile_entries * 1) &&
-          ("gecko_profile_threads" in obj) && typeof obj.gecko_profile_threads == "string") {
+      if (
+        "gecko_profile_dir" in obj &&
+        typeof obj.gecko_profile_dir == "string" &&
+        "gecko_profile_interval" in obj &&
+        Number.isFinite(obj.gecko_profile_interval * 1) &&
+        "gecko_profile_entries" in obj &&
+        Number.isFinite(obj.gecko_profile_entries * 1) &&
+        "gecko_profile_threads" in obj &&
+        typeof obj.gecko_profile_threads == "string"
+      ) {
         this.interval = obj.gecko_profile_interval;
         this.entries = obj.gecko_profile_entries;
         this.threadsArray = obj.gecko_profile_threads.split(",");
         this.profileDir = obj.gecko_profile_dir;
         this.initted = true;
       } else {
-        console.error("Profiler could not init with object: " + JSON.stringify(obj));
+        console.error(
+          "Profiler could not init with object: " + JSON.stringify(obj)
+        );
       }
     }
   },
@@ -117,8 +125,9 @@ const TalosParentProfiler = {
         threadsArray: this.threadsArray,
       });
     } else {
-      let msg = "You should not call beginTest without having first " +
-                "initted the Profiler";
+      let msg =
+        "You should not call beginTest without having first " +
+        "initted the Profiler";
       console.error(msg);
     }
   },
@@ -137,10 +146,11 @@ const TalosParentProfiler = {
       let profileFile = this.profileDir + "/" + this.currentTest + ".profile";
       return this.TalosPowers.profilerFinish(profileFile);
     }
-      let msg = "You should not call finishTest without having first " +
-                "initted the Profiler";
-      console.error(msg);
-      return Promise.reject(msg);
+    let msg =
+      "You should not call finishTest without having first " +
+      "initted the Profiler";
+    console.error(msg);
+    return Promise.reject(msg);
   },
 
   /**

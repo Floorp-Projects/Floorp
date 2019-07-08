@@ -42,10 +42,16 @@ addMessageListener(SYMBOL_TABLE_RESPONSE_EVENT, e => {
 function connectToPage() {
   const unsafeWindow = content.wrappedJSObject;
   if (unsafeWindow.connectToGeckoProfiler) {
-    unsafeWindow.connectToGeckoProfiler(makeAccessibleToPage({
-      getProfile: () => Promise.resolve(gProfile),
-      getSymbolTable: (debugName, breakpadId) => getSymbolTable(debugName, breakpadId),
-    }, unsafeWindow));
+    unsafeWindow.connectToGeckoProfiler(
+      makeAccessibleToPage(
+        {
+          getProfile: () => Promise.resolve(gProfile),
+          getSymbolTable: (debugName, breakpadId) =>
+            getSymbolTable(debugName, breakpadId),
+        },
+        unsafeWindow
+      )
+    );
   }
 }
 
@@ -69,11 +75,14 @@ function getSymbolTable(debugName, breakpadId) {
  */
 function createPromiseInPage(fun, contentGlobal) {
   function funThatClonesObjects(resolve, reject) {
-    return fun(result => resolve(Cu.cloneInto(result, contentGlobal)),
-               error => reject(Cu.cloneInto(error, contentGlobal)));
+    return fun(
+      result => resolve(Cu.cloneInto(result, contentGlobal)),
+      error => reject(Cu.cloneInto(error, contentGlobal))
+    );
   }
-  return new contentGlobal.Promise(Cu.exportFunction(funThatClonesObjects,
-                                                     contentGlobal));
+  return new contentGlobal.Promise(
+    Cu.exportFunction(funThatClonesObjects, contentGlobal)
+  );
 }
 
 /**
@@ -84,10 +93,12 @@ function wrapFunction(fun, contentGlobal) {
   return function() {
     const result = fun.apply(this, arguments);
     if (typeof result === "object") {
-      if (("then" in result) && (typeof result.then === "function")) {
+      if ("then" in result && typeof result.then === "function") {
         // fun returned a promise.
-        return createPromiseInPage((resolve, reject) =>
-          result.then(resolve, reject), contentGlobal);
+        return createPromiseInPage(
+          (resolve, reject) => result.then(resolve, reject),
+          contentGlobal
+        );
       }
       return Cu.cloneInto(result, contentGlobal);
     }
@@ -105,8 +116,9 @@ function makeAccessibleToPage(obj, contentGlobal) {
   for (const field in obj) {
     switch (typeof obj[field]) {
       case "function":
-        Cu.exportFunction(
-          wrapFunction(obj[field], contentGlobal), result, { defineAs: field });
+        Cu.exportFunction(wrapFunction(obj[field], contentGlobal), result, {
+          defineAs: field,
+        });
         break;
       case "object":
         Cu.cloneInto(obj[field], result, { defineAs: field });

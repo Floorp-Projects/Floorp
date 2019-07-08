@@ -12,8 +12,11 @@ add_task(async function() {
   const target = await addTabTarget(MAIN_DOMAIN + "doc_perf.html");
   const front = await target.getFront("performance");
 
-  const rec = await front.startRecording(
-    { withMarkers: true, withTicks: true, withMemory: true });
+  const rec = await front.startRecording({
+    withMarkers: true,
+    withTicks: true,
+    withMemory: true,
+  });
   ok(rec.isRecording(), "RecordingModel is recording when created");
   await busyWait(100);
   await waitUntil(() => rec.getMemory().length);
@@ -23,28 +26,45 @@ add_task(async function() {
   await waitUntil(() => rec.getMarkers().length);
   ok(true, "RecordingModel populates markers while recording");
 
-  ok(!rec.isCompleted(), "RecordingModel is not completed when still recording");
+  ok(
+    !rec.isCompleted(),
+    "RecordingModel is not completed when still recording"
+  );
 
   const stopping = once(front, "recording-stopping");
   const stopped = once(front, "recording-stopped");
   front.stopRecording(rec);
 
   await stopping;
-  ok(!rec.isRecording(), "on 'recording-stopping', model is no longer recording");
+  ok(
+    !rec.isRecording(),
+    "on 'recording-stopping', model is no longer recording"
+  );
   // This handler should be called BEFORE "recording-stopped" is called, as
   // there is some delay, but in the event where "recording-stopped" finishes
   // before we check here, ensure that we're atleast in the right state
   if (rec.getProfile()) {
     ok(rec.isCompleted(), "recording is completed once it has profile data");
   } else {
-    ok(!rec.isCompleted(), "recording is not yet completed on 'recording-stopping'");
-    ok(rec.isFinalizing(),
-      "recording is finalized between 'recording-stopping' and 'recording-stopped'");
+    ok(
+      !rec.isCompleted(),
+      "recording is not yet completed on 'recording-stopping'"
+    );
+    ok(
+      rec.isFinalizing(),
+      "recording is finalized between 'recording-stopping' and 'recording-stopped'"
+    );
   }
 
   await stopped;
-  ok(!rec.isRecording(), "on 'recording-stopped', model is still no longer recording");
-  ok(rec.isCompleted(), "on 'recording-stopped', model is considered 'complete'");
+  ok(
+    !rec.isRecording(),
+    "on 'recording-stopped', model is still no longer recording"
+  );
+  ok(
+    rec.isCompleted(),
+    "on 'recording-stopped', model is considered 'complete'"
+  );
 
   checkSystemInfo(rec, "Host");
   checkSystemInfo(rec, "Client");
@@ -56,9 +76,18 @@ add_task(async function() {
 
   const importedModel = await front.importRecording(file);
 
-  ok(importedModel.isCompleted(), "All imported recordings should be completed");
-  ok(!importedModel.isRecording(), "All imported recordings should not be recording");
-  ok(importedModel.isImported(), "All imported recordings should be considerd imported");
+  ok(
+    importedModel.isCompleted(),
+    "All imported recordings should be completed"
+  );
+  ok(
+    !importedModel.isRecording(),
+    "All imported recordings should not be recording"
+  );
+  ok(
+    importedModel.isImported(),
+    "All imported recordings should be considerd imported"
+  );
 
   checkSystemInfo(importedModel, "Host");
   checkSystemInfo(importedModel, "Client");

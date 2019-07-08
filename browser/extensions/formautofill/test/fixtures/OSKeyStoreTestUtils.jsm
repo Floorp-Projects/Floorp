@@ -3,21 +3,28 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "OSKeyStoreTestUtils",
-];
+var EXPORTED_SYMBOLS = ["OSKeyStoreTestUtils"];
 
 ChromeUtils.import("resource://formautofill/OSKeyStore.jsm", this);
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
 var OSKeyStoreTestUtils = {
-  TEST_ONLY_REAUTH: "extensions.formautofill.osKeyStore.unofficialBuildOnlyLogin",
+  TEST_ONLY_REAUTH:
+    "extensions.formautofill.osKeyStore.unofficialBuildOnlyLogin",
 
   setup() {
     this.ORIGINAL_STORE_LABEL = OSKeyStore.STORE_LABEL;
-    OSKeyStore.STORE_LABEL = "test-" + Math.random().toString(36).substr(2);
+    OSKeyStore.STORE_LABEL =
+      "test-" +
+      Math.random()
+        .toString(36)
+        .substr(2);
   },
 
   async cleanup() {
@@ -41,8 +48,10 @@ var OSKeyStoreTestUtils = {
 
     Services.prefs.setStringPref(this.TEST_ONLY_REAUTH, str);
 
-    await TestUtils.topicObserved("oskeystore-testonly-reauth",
-      (subject, data) => data == str);
+    await TestUtils.topicObserved(
+      "oskeystore-testonly-reauth",
+      (subject, data) => data == str
+    );
 
     Services.prefs.setStringPref(this.TEST_ONLY_REAUTH, "");
   },

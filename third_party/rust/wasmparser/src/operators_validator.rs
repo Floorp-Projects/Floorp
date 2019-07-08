@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-use std::cmp::min;
-use std::result;
+use core::cmp::min;
+use core::result;
 use std::str;
 use std::vec::Vec;
 
-use primitives::{
-    FuncType, GlobalType, MemoryImmediate, MemoryType, Operator, SIMDLineIndex, TableType, Type,
+use crate::primitives::{
+    FuncType, GlobalType, MemoryImmediate, MemoryType, Operator, SIMDLaneIndex, TableType, Type,
     TypeOrFuncType,
 };
 
@@ -455,7 +455,7 @@ impl OperatorValidator {
         resources: &dyn WasmModuleResources,
     ) -> OperatorValidatorResult<()> {
         if memory_index as usize >= resources.memories().len() {
-            return Err("no liner memories are present");
+            return Err("no linear memories are present");
         }
         Ok(())
     }
@@ -466,7 +466,7 @@ impl OperatorValidator {
         resources: &dyn WasmModuleResources,
     ) -> OperatorValidatorResult<()> {
         if memory_index as usize >= resources.memories().len() {
-            return Err("no liner memories are present");
+            return Err("no linear memories are present");
         }
         if !resources.memories()[memory_index as usize].shared {
             return Err("atomic accesses require shared memory");
@@ -525,7 +525,7 @@ impl OperatorValidator {
         Ok(())
     }
 
-    fn check_simd_line_index(&self, index: SIMDLineIndex, max: u8) -> OperatorValidatorResult<()> {
+    fn check_simd_lane_index(&self, index: SIMDLaneIndex, max: u8) -> OperatorValidatorResult<()> {
         if index >= max {
             return Err("SIMD index out of bounds");
         }
@@ -1250,11 +1250,11 @@ impl OperatorValidator {
                 self.check_simd_enabled()?;
                 self.func_state.change_frame_with_type(0, Type::V128)?;
             }
-            Operator::V8x16Shuffle { ref lines } => {
+            Operator::V8x16Shuffle { ref lanes } => {
                 self.check_simd_enabled()?;
                 self.check_operands_2(Type::V128, Type::V128)?;
-                for i in lines {
-                    self.check_simd_line_index(*i, 32)?;
+                for i in lanes {
+                    self.check_simd_lane_index(*i, 32)?;
                 }
                 self.func_state.change_frame_with_type(2, Type::V128)?;
             }
@@ -1278,75 +1278,75 @@ impl OperatorValidator {
                 self.check_operands_1(Type::F64)?;
                 self.func_state.change_frame_with_type(1, Type::V128)?;
             }
-            Operator::I8x16ExtractLaneS { line } | Operator::I8x16ExtractLaneU { line } => {
+            Operator::I8x16ExtractLaneS { lane } | Operator::I8x16ExtractLaneU { lane } => {
                 self.check_simd_enabled()?;
-                self.check_simd_line_index(line, 16)?;
+                self.check_simd_lane_index(lane, 16)?;
                 self.check_operands_1(Type::V128)?;
                 self.func_state.change_frame_with_type(1, Type::I32)?;
             }
-            Operator::I16x8ExtractLaneS { line } | Operator::I16x8ExtractLaneU { line } => {
+            Operator::I16x8ExtractLaneS { lane } | Operator::I16x8ExtractLaneU { lane } => {
                 self.check_simd_enabled()?;
-                self.check_simd_line_index(line, 8)?;
+                self.check_simd_lane_index(lane, 8)?;
                 self.check_operands_1(Type::V128)?;
                 self.func_state.change_frame_with_type(1, Type::I32)?;
             }
-            Operator::I32x4ExtractLane { line } => {
+            Operator::I32x4ExtractLane { lane } => {
                 self.check_simd_enabled()?;
-                self.check_simd_line_index(line, 4)?;
+                self.check_simd_lane_index(lane, 4)?;
                 self.check_operands_1(Type::V128)?;
                 self.func_state.change_frame_with_type(1, Type::I32)?;
             }
-            Operator::I8x16ReplaceLane { line } => {
+            Operator::I8x16ReplaceLane { lane } => {
                 self.check_simd_enabled()?;
-                self.check_simd_line_index(line, 16)?;
+                self.check_simd_lane_index(lane, 16)?;
                 self.check_operands_2(Type::V128, Type::I32)?;
                 self.func_state.change_frame_with_type(2, Type::V128)?;
             }
-            Operator::I16x8ReplaceLane { line } => {
+            Operator::I16x8ReplaceLane { lane } => {
                 self.check_simd_enabled()?;
-                self.check_simd_line_index(line, 8)?;
+                self.check_simd_lane_index(lane, 8)?;
                 self.check_operands_2(Type::V128, Type::I32)?;
                 self.func_state.change_frame_with_type(2, Type::V128)?;
             }
-            Operator::I32x4ReplaceLane { line } => {
+            Operator::I32x4ReplaceLane { lane } => {
                 self.check_simd_enabled()?;
-                self.check_simd_line_index(line, 4)?;
+                self.check_simd_lane_index(lane, 4)?;
                 self.check_operands_2(Type::V128, Type::I32)?;
                 self.func_state.change_frame_with_type(2, Type::V128)?;
             }
-            Operator::I64x2ExtractLane { line } => {
+            Operator::I64x2ExtractLane { lane } => {
                 self.check_simd_enabled()?;
-                self.check_simd_line_index(line, 2)?;
+                self.check_simd_lane_index(lane, 2)?;
                 self.check_operands_1(Type::V128)?;
                 self.func_state.change_frame_with_type(1, Type::I64)?;
             }
-            Operator::I64x2ReplaceLane { line } => {
+            Operator::I64x2ReplaceLane { lane } => {
                 self.check_simd_enabled()?;
-                self.check_simd_line_index(line, 2)?;
+                self.check_simd_lane_index(lane, 2)?;
                 self.check_operands_2(Type::V128, Type::I64)?;
                 self.func_state.change_frame_with_type(2, Type::V128)?;
             }
-            Operator::F32x4ExtractLane { line } => {
+            Operator::F32x4ExtractLane { lane } => {
                 self.check_simd_enabled()?;
-                self.check_simd_line_index(line, 4)?;
+                self.check_simd_lane_index(lane, 4)?;
                 self.check_operands_1(Type::V128)?;
                 self.func_state.change_frame_with_type(1, Type::F32)?;
             }
-            Operator::F32x4ReplaceLane { line } => {
+            Operator::F32x4ReplaceLane { lane } => {
                 self.check_simd_enabled()?;
-                self.check_simd_line_index(line, 4)?;
+                self.check_simd_lane_index(lane, 4)?;
                 self.check_operands_2(Type::V128, Type::F32)?;
                 self.func_state.change_frame_with_type(2, Type::V128)?;
             }
-            Operator::F64x2ExtractLane { line } => {
+            Operator::F64x2ExtractLane { lane } => {
                 self.check_simd_enabled()?;
-                self.check_simd_line_index(line, 2)?;
+                self.check_simd_lane_index(lane, 2)?;
                 self.check_operands_1(Type::V128)?;
                 self.func_state.change_frame_with_type(1, Type::F64)?;
             }
-            Operator::F64x2ReplaceLane { line } => {
+            Operator::F64x2ReplaceLane { lane } => {
                 self.check_simd_enabled()?;
-                self.check_simd_line_index(line, 2)?;
+                self.check_simd_lane_index(lane, 2)?;
                 self.check_operands_2(Type::V128, Type::F64)?;
                 self.func_state.change_frame_with_type(2, Type::V128)?;
             }
@@ -1456,7 +1456,7 @@ impl OperatorValidator {
             Operator::V128Bitselect => {
                 self.check_simd_enabled()?;
                 self.check_operands(&[Type::V128, Type::V128, Type::V128])?;
-                self.func_state.change_frame_with_type(2, Type::V128)?;
+                self.func_state.change_frame_with_type(3, Type::V128)?;
             }
             Operator::I8x16AnyTrue
             | Operator::I8x16AllTrue
@@ -1484,7 +1484,20 @@ impl OperatorValidator {
             | Operator::I64x2ShrU => {
                 self.check_simd_enabled()?;
                 self.check_operands_2(Type::V128, Type::I32)?;
-                self.func_state.change_frame_with_type(1, Type::V128)?;
+                self.func_state.change_frame_with_type(2, Type::V128)?;
+            }
+            Operator::V8x16Shuffle1 => {
+                self.check_simd_enabled()?;
+                self.check_operands_2(Type::V128, Type::V128)?;
+                self.func_state.change_frame_with_type(2, Type::V128)?;
+            }
+            Operator::V8x16Shuffle2Imm { ref lanes } => {
+                self.check_simd_enabled()?;
+                self.check_operands_2(Type::V128, Type::V128)?;
+                for i in lanes {
+                    self.check_simd_lane_index(*i, 32)?;
+                }
+                self.func_state.change_frame_with_type(2, Type::V128)?;
             }
 
             Operator::MemoryInit { segment } => {

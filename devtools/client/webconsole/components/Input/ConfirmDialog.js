@@ -4,26 +4,41 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
-loader.lazyRequireGetter(this, "HTMLTooltip", "devtools/client/shared/widgets/tooltip/HTMLTooltip", true);
-loader.lazyRequireGetter(this, "createPortal", "devtools/client/shared/vendor/react-dom", true);
+loader.lazyRequireGetter(
+  this,
+  "PropTypes",
+  "devtools/client/shared/vendor/react-prop-types"
+);
+loader.lazyRequireGetter(
+  this,
+  "HTMLTooltip",
+  "devtools/client/shared/widgets/tooltip/HTMLTooltip",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "createPortal",
+  "devtools/client/shared/vendor/react-dom",
+  true
+);
 
 // React & Redux
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const {getAutocompleteState} = require("devtools/client/webconsole/selectors/autocomplete");
+const {
+  getAutocompleteState,
+} = require("devtools/client/webconsole/selectors/autocomplete");
 const autocompleteActions = require("devtools/client/webconsole/actions/autocomplete");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 
 const utmParams = new URLSearchParams({
-  "utm_source": "mozilla",
-  "utm_medium": "devtools-webconsole",
-  "utm_campaign": "default",
+  utm_source: "mozilla",
+  utm_medium: "devtools-webconsole",
+  utm_campaign: "default",
 });
-const LEARN_MORE_URL =
-  `https://developer.mozilla.org/docs/Tools/Web_Console/Invoke_getters_from_autocomplete?${utmParams}`;
+const LEARN_MORE_URL = `https://developer.mozilla.org/docs/Tools/Web_Console/Invoke_getters_from_autocomplete?${utmParams}`;
 
 class ConfirmDialog extends Component {
   static get propTypes() {
@@ -62,10 +77,10 @@ class ConfirmDialog extends Component {
   }
 
   componentDidUpdate() {
-    const {getterPath, serviceContainer} = this.props;
+    const { getterPath, serviceContainer } = this.props;
 
     if (getterPath) {
-      this.tooltip.show(serviceContainer.getJsTermTooltipAnchor(), {y: 5});
+      this.tooltip.show(serviceContainer.getJsTermTooltipAnchor(), { y: 5 });
       this.tooltip.focus();
     } else {
       this.tooltip.hide();
@@ -75,7 +90,7 @@ class ConfirmDialog extends Component {
 
   componentDidThrow(e) {
     console.error("Error in ConfirmDialog", e);
-    this.setState(state => ({...state, hasError: true}));
+    this.setState(state => ({ ...state, hasError: true }));
   }
 
   onLearnMoreClick(e) {
@@ -100,7 +115,7 @@ class ConfirmDialog extends Component {
       return null;
     }
 
-    const {getterPath} = this.props;
+    const { getterPath } = this.props;
     const getterName = getterPath.join(".");
 
     // We deliberately use getStr, and not getFormatStr, because we want getterName to
@@ -108,50 +123,60 @@ class ConfirmDialog extends Component {
     const description = l10n.getStr("webconsole.confirmDialog.getter.label");
     const [descriptionPrefix, descriptionSuffix] = description.split("%S");
 
-    const learnMoreElement = dom.a({
-      className: "learn-more-link",
-      title: LEARN_MORE_URL.split("?")[0],
-      onClick: this.onLearnMoreClick,
-    }, l10n.getStr("webConsoleMoreInfoLabel"));
-
-    return createPortal([
-      dom.p({
-        className: "confirm-label",
+    const learnMoreElement = dom.a(
+      {
+        className: "learn-more-link",
+        title: LEARN_MORE_URL.split("?")[0],
+        onClick: this.onLearnMoreClick,
       },
-        dom.span({}, descriptionPrefix),
-        dom.span({className: "emphasized"}, getterName),
-        dom.span({}, descriptionSuffix)
-      ),
-      dom.button({
-        className: "confirm-button",
-        onBlur: () => this.cancel(),
-        onKeyDown: event => {
-          const {key} = event;
-          if (["Escape", "ArrowLeft", "Backspace"].includes(key)) {
-            this.cancel();
-            event.stopPropagation();
-            return;
-          }
+      l10n.getStr("webConsoleMoreInfoLabel")
+    );
 
-          if (["Tab", "Enter", " "].includes(key)) {
-            this.confirm();
-            event.stopPropagation();
-          }
+    return createPortal(
+      [
+        dom.p(
+          {
+            className: "confirm-label",
+          },
+          dom.span({}, descriptionPrefix),
+          dom.span({ className: "emphasized" }, getterName),
+          dom.span({}, descriptionSuffix)
+        ),
+        dom.button(
+          {
+            className: "confirm-button",
+            onBlur: () => this.cancel(),
+            onKeyDown: event => {
+              const { key } = event;
+              if (["Escape", "ArrowLeft", "Backspace"].includes(key)) {
+                this.cancel();
+                event.stopPropagation();
+                return;
+              }
 
-          if (key === "?") {
-            this.onLearnMoreClick();
-            event.stopPropagation();
-          }
-        },
-        // We can't use onClick because it would respond to Enter and Space keypress.
-        // We don't want that because we have a Ctrl+Space shortcut to force an
-        // autocomplete update; if the ConfirmDialog need to be displayed, since
-        // we automatically focus the button, the keyup on space would fire the onClick
-        // handler.
-        onMouseDown: this.confirm,
-      }, l10n.getStr("webconsole.confirmDialog.getter.invokeButtonLabel")),
-      learnMoreElement,
-    ], this.tooltip.panel);
+              if (["Tab", "Enter", " "].includes(key)) {
+                this.confirm();
+                event.stopPropagation();
+              }
+
+              if (key === "?") {
+                this.onLearnMoreClick();
+                event.stopPropagation();
+              }
+            },
+            // We can't use onClick because it would respond to Enter and Space keypress.
+            // We don't want that because we have a Ctrl+Space shortcut to force an
+            // autocomplete update; if the ConfirmDialog need to be displayed, since
+            // we automatically focus the button, the keyup on space would fire the onClick
+            // handler.
+            onMouseDown: this.confirm,
+          },
+          l10n.getStr("webconsole.confirmDialog.getter.invokeButtonLabel")
+        ),
+        learnMoreElement,
+      ],
+      this.tooltip.panel
+    );
   }
 }
 
@@ -171,4 +196,7 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-module.exports = connect(mapStateToProps, mapDispatchToProps)(ConfirmDialog);
+module.exports = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(ConfirmDialog);

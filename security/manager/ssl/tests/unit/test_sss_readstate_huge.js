@@ -16,27 +16,55 @@ function checkStateRead(aSubject, aTopic, aData) {
 
   equal(aData, SSS_STATE_FILE_NAME);
 
-  ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            Services.io.newURI("https://example0.example.com"),
-                            0));
-  ok(gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://example423.example.com"), 0));
-  ok(gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://example1023.example.com"), 0));
-  ok(!gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://example1024.example.com"), 0));
-  ok(!gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://example1025.example.com"), 0));
-  ok(!gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://example9000.example.com"), 0));
-  ok(!gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://example99999.example.com"), 0));
+  ok(
+    gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://example0.example.com"),
+      0
+    )
+  );
+  ok(
+    gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://example423.example.com"),
+      0
+    )
+  );
+  ok(
+    gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://example1023.example.com"),
+      0
+    )
+  );
+  ok(
+    !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://example1024.example.com"),
+      0
+    )
+  );
+  ok(
+    !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://example1025.example.com"),
+      0
+    )
+  );
+  ok(
+    !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://example9000.example.com"),
+      0
+    )
+  );
+  ok(
+    !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://example99999.example.com"),
+      0
+    )
+  );
   do_test_finished();
 }
 
@@ -53,15 +81,18 @@ function run_test() {
   for (let i = 0; i < 10000; i++) {
     // The 0s will all get squashed down into one 0 when they are read.
     // This is just to make the file size large (>2MB).
-    lines.push(`example${i}.example.com:HSTS\t` +
-               "0000000000000000000000000000000000000000000000000\t" +
-               "00000000000000000000000000000000000000\t" +
-               `${expiryTime},1,0000000000000000000000000000000000000000000000000000000000000000000000000`);
+    lines.push(
+      `example${i}.example.com:HSTS\t` +
+        "0000000000000000000000000000000000000000000000000\t" +
+        "00000000000000000000000000000000000000\t" +
+        `${expiryTime},1,0000000000000000000000000000000000000000000000000000000000000000000000000`
+    );
   }
   writeLinesAndClose(lines, outputStream);
   Services.obs.addObserver(checkStateRead, "data-storage-ready");
   do_test_pending();
-  gSSService = Cc["@mozilla.org/ssservice;1"]
-                 .getService(Ci.nsISiteSecurityService);
+  gSSService = Cc["@mozilla.org/ssservice;1"].getService(
+    Ci.nsISiteSecurityService
+  );
   notEqual(gSSService, null);
 }

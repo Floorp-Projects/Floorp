@@ -2,11 +2,9 @@
 
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 
-const HOSTS = new Set([
-  "example.com",
-]);
+const HOSTS = new Set(["example.com"]);
 
-const server = createHttpServer({hosts: HOSTS});
+const server = createHttpServer({ hosts: HOSTS });
 
 const BASE_URL = "http://example.com";
 const FETCH_ORIGIN = "http://example.com/dummy";
@@ -15,7 +13,7 @@ server.registerPathHandler("/return_headers.sjs", (request, response) => {
   response.setHeader("Content-Type", "text/plain", false);
 
   let headers = {};
-  for (let {data: header} of request.headers) {
+  for (let { data: header } of request.headers) {
     headers[header.toLowerCase()] = request.getHeader(header);
   }
 
@@ -30,11 +28,7 @@ server.registerPathHandler("/dummy", (request, response) => {
 add_task(async function test_suspend() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: [
-        "webRequest",
-        "webRequestBlocking",
-        `${BASE_URL}/`,
-      ],
+      permissions: ["webRequest", "webRequestBlocking", `${BASE_URL}/`],
     },
 
     background() {
@@ -43,47 +37,64 @@ add_task(async function test_suspend() {
           // Make sure that returning undefined or a promise that resolves to
           // undefined does not break later handlers.
         },
-        {urls: ["<all_urls>"]},
-        ["blocking", "requestHeaders"]);
+        { urls: ["<all_urls>"] },
+        ["blocking", "requestHeaders"]
+      );
 
       browser.webRequest.onBeforeSendHeaders.addListener(
         details => {
           return Promise.resolve();
         },
-        {urls: ["<all_urls>"]},
-        ["blocking", "requestHeaders"]);
+        { urls: ["<all_urls>"] },
+        ["blocking", "requestHeaders"]
+      );
 
       browser.webRequest.onBeforeSendHeaders.addListener(
         details => {
-          let requestHeaders = details.requestHeaders.concat({name: "Foo", value: "Bar"});
+          let requestHeaders = details.requestHeaders.concat({
+            name: "Foo",
+            value: "Bar",
+          });
 
           return new Promise(resolve => {
             // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
             setTimeout(resolve, 500);
           }).then(() => {
-            return {requestHeaders};
+            return { requestHeaders };
           });
         },
-        {urls: ["<all_urls>"]},
-        ["blocking", "requestHeaders"]);
+        { urls: ["<all_urls>"] },
+        ["blocking", "requestHeaders"]
+      );
     },
   });
 
   await extension.startup();
 
-  let headers = JSON.parse(await ExtensionTestUtils.fetch(FETCH_ORIGIN, `${BASE_URL}/return_headers.sjs`));
+  let headers = JSON.parse(
+    await ExtensionTestUtils.fetch(
+      FETCH_ORIGIN,
+      `${BASE_URL}/return_headers.sjs`
+    )
+  );
 
-  equal(headers.foo, "Bar", "Request header was correctly set on suspended request");
+  equal(
+    headers.foo,
+    "Bar",
+    "Request header was correctly set on suspended request"
+  );
 
   await extension.unload();
 });
-
 
 // Test that requests that were canceled while suspended for a blocking
 // listener are correctly resumed.
 add_task(async function test_error_resume() {
   let observer = channel => {
-    if (channel instanceof Ci.nsIHttpChannel && channel.URI.spec === "http://example.com/dummy") {
+    if (
+      channel instanceof Ci.nsIHttpChannel &&
+      channel.URI.spec === "http://example.com/dummy"
+    ) {
       Services.obs.removeObserver(observer, "http-on-before-connect");
 
       // Wait until the next tick to make sure this runs after WebRequest observers.
@@ -95,14 +106,9 @@ add_task(async function test_error_resume() {
 
   Services.obs.addObserver(observer, "http-on-before-connect");
 
-
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: [
-        "webRequest",
-        "webRequestBlocking",
-        `${BASE_URL}/`,
-      ],
+      permissions: ["webRequest", "webRequestBlocking", `${BASE_URL}/`],
     },
 
     background() {
@@ -114,8 +120,9 @@ add_task(async function test_error_resume() {
             browser.test.sendMessage("got-before-send-headers");
           }
         },
-        {urls: ["<all_urls>"]},
-        ["blocking"]);
+        { urls: ["<all_urls>"] },
+        ["blocking"]
+      );
 
       browser.webRequest.onErrorOccurred.addListener(
         details => {
@@ -125,7 +132,8 @@ add_task(async function test_error_resume() {
             browser.test.sendMessage("got-error-occurred");
           }
         },
-        {urls: ["<all_urls>"]});
+        { urls: ["<all_urls>"] }
+      );
     },
   });
 
@@ -148,16 +156,11 @@ add_task(async function test_error_resume() {
   await extension.unload();
 });
 
-
 // Test that response header modifications take effect before onStartRequest fires.
 add_task(async function test_set_responseHeaders() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: [
-        "webRequest",
-        "webRequestBlocking",
-        "http://example.com/",
-      ],
+      permissions: ["webRequest", "webRequestBlocking", "http://example.com/"],
     },
 
     background() {
@@ -165,12 +168,13 @@ add_task(async function test_set_responseHeaders() {
         details => {
           browser.test.log(`onHeadersReceived({url: ${details.url}})`);
 
-          details.responseHeaders.push({name: "foo", value: "bar"});
+          details.responseHeaders.push({ name: "foo", value: "bar" });
 
-          return {responseHeaders: details.responseHeaders};
+          return { responseHeaders: details.responseHeaders };
         },
-        {urls: ["http://example.com/?modify_headers"]},
-        ["blocking", "responseHeaders"]);
+        { urls: ["http://example.com/?modify_headers"] },
+        ["blocking", "responseHeaders"]
+      );
     },
   });
 
@@ -179,15 +183,21 @@ add_task(async function test_set_responseHeaders() {
   await new Promise(resolve => setTimeout(resolve, 0));
 
   let resolveHeaderPromise;
-  let headerPromise = new Promise(resolve => { resolveHeaderPromise = resolve; });
+  let headerPromise = new Promise(resolve => {
+    resolveHeaderPromise = resolve;
+  });
   {
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    const { Services } = ChromeUtils.import(
+      "resource://gre/modules/Services.jsm"
+    );
 
     let ssm = Services.scriptSecurityManager;
 
     let channel = NetUtil.newChannel({
       uri: "http://example.com/?modify_headers",
-      loadingPrincipal: ssm.createCodebasePrincipalFromOrigin("http://example.com"),
+      loadingPrincipal: ssm.createCodebasePrincipalFromOrigin(
+        "http://example.com"
+      ),
       contentPolicyType: Ci.nsIContentPolicy.TYPE_XMLHTTPREQUEST,
       securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
     });
@@ -206,8 +216,7 @@ add_task(async function test_set_responseHeaders() {
         request.cancel(Cr.NS_BINDING_ABORTED);
       },
 
-      onStopRequest() {
-      },
+      onStopRequest() {},
 
       onDataAvailable() {
         throw new Components.Exception("", Cr.NS_ERROR_FAILURE);
@@ -226,11 +235,7 @@ add_task(async function test_set_responseHeaders() {
 add_task(async function test_logged_error_on_promise_result() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: [
-        "webRequest",
-        "webRequestBlocking",
-        `${BASE_URL}/`,
-      ],
+      permissions: ["webRequest", "webRequestBlocking", `${BASE_URL}/`],
     },
 
     background() {
@@ -240,38 +245,52 @@ add_task(async function test_logged_error_on_promise_result() {
 
       let exceptionRaised = false;
 
-      browser.webRequest.onBeforeRequest.addListener(() => {
-        if (exceptionRaised) {
-          return;
-        }
+      browser.webRequest.onBeforeRequest.addListener(
+        () => {
+          if (exceptionRaised) {
+            return;
+          }
 
-        // We only need to raise the exception once.
-        exceptionRaised = true;
-        return onBeforeRequest();
-      }, {
-        urls: ["http://example.com/*"],
-        types: ["main_frame"],
-      }, ["blocking"]);
+          // We only need to raise the exception once.
+          exceptionRaised = true;
+          return onBeforeRequest();
+        },
+        {
+          urls: ["http://example.com/*"],
+          types: ["main_frame"],
+        },
+        ["blocking"]
+      );
 
-      browser.webRequest.onBeforeRequest.addListener(() => {
-        browser.test.sendMessage("web-request-event-received");
-      }, {
-        urls: ["http://example.com/*"],
-        types: ["main_frame"],
-      }, ["blocking"]);
+      browser.webRequest.onBeforeRequest.addListener(
+        () => {
+          browser.test.sendMessage("web-request-event-received");
+        },
+        {
+          urls: ["http://example.com/*"],
+          types: ["main_frame"],
+        },
+        ["blocking"]
+      );
     },
   });
 
-  let {messages} = await promiseConsoleOutput(async () => {
+  let { messages } = await promiseConsoleOutput(async () => {
     await extension.startup();
 
-    let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/dummy`);
+    let contentPage = await ExtensionTestUtils.loadContentPage(
+      `${BASE_URL}/dummy`
+    );
     await extension.awaitMessage("web-request-event-received");
     await contentPage.close();
   });
 
-  ok(messages.some(msg => /Expected webRequest exception from a promise result/.test(msg.message)),
-     "Got expected console message");
+  ok(
+    messages.some(msg =>
+      /Expected webRequest exception from a promise result/.test(msg.message)
+    ),
+    "Got expected console message"
+  );
 
   await extension.unload();
 });

@@ -109,8 +109,11 @@ RuleRewriter.prototype = {
     // Whether there are any newlines in the input text.
     this.hasNewLine = /[\r\n]/.test(this.inputString);
     // The declarations.
-    this.declarations = parseNamedDeclarations(this.isCssPropertyKnown, this.inputString,
-                                               true);
+    this.declarations = parseNamedDeclarations(
+      this.isCssPropertyKnown,
+      this.inputString,
+      true
+    );
     this.decl = null;
     this.result = null;
   },
@@ -196,17 +199,19 @@ RuleRewriter.prototype = {
 
     // Push a closing paren on the stack.
     const pushParen = (token, closer) => {
-      result = result + text.substring(previousOffset, token.startOffset) +
+      result =
+        result +
+        text.substring(previousOffset, token.startOffset) +
         text.substring(token.startOffset, token.endOffset);
       // We set the location of the paren in a funny way, to handle
       // the case where we've seen a function token, where the paren
       // appears at the end.
-      parenStack.push({closer, offset: result.length - 1});
+      parenStack.push({ closer, offset: result.length - 1 });
       previousOffset = token.endOffset;
     };
 
     // Pop a closing paren from the stack.
-    const popSomeParens = (closer) => {
+    const popSomeParens = closer => {
       while (parenStack.length > 0) {
         const paren = parenStack.pop();
 
@@ -216,7 +221,9 @@ RuleRewriter.prototype = {
 
         // Found a non-matching closing paren, so quote it.  Note that
         // these are processed in reverse order.
-        result = result.substring(0, paren.offset) + "\\" +
+        result =
+          result.substring(0, paren.offset) +
+          "\\" +
           result.substring(paren.offset);
         anySanitized = true;
       }
@@ -293,9 +300,11 @@ RuleRewriter.prototype = {
    * @return {Number} index of the first non-whitespace character, or -1
    */
   skipWhitespaceBackward: function(string, index) {
-    for (--index;
-         index >= 0 && (string[index] === " " || string[index] === "\t");
-         --index) {
+    for (
+      --index;
+      index >= 0 && (string[index] === " " || string[index] === "\t");
+      --index
+    ) {
       // Nothing.
     }
     return index;
@@ -309,9 +318,12 @@ RuleRewriter.prototype = {
    *                       function must check for that.
    */
   maybeTerminateDecl: function(index) {
-    if (index < 0 || index >= this.declarations.length
-        // No need to rewrite declarations in comments.
-        || ("commentOffsets" in this.declarations[index])) {
+    if (
+      index < 0 ||
+      index >= this.declarations.length ||
+      // No need to rewrite declarations in comments.
+      "commentOffsets" in this.declarations[index]
+    ) {
       return;
     }
 
@@ -326,8 +338,8 @@ RuleRewriter.prototype = {
     if (termDecl.terminator) {
       // Insert the terminator just at the end of the declaration,
       // before any trailing whitespace.
-      this.result = this.result.substring(0, endIndex) + termDecl.terminator +
-        trailingText;
+      this.result =
+        this.result.substring(0, endIndex) + termDecl.terminator + trailingText;
       // In a couple of cases, we may have had to add something to
       // terminate the declaration, but the termination did not
       // actually affect the property's value -- and at this spot, we
@@ -404,16 +416,19 @@ RuleRewriter.prototype = {
 
       // Insert the name and value separately, so we can report
       // sanitization changes properly.
-      const commentNamePart =
-          this.inputString.substring(decl.offsets[0],
-                                     decl.colonOffsets[1]);
+      const commentNamePart = this.inputString.substring(
+        decl.offsets[0],
+        decl.colonOffsets[1]
+      );
       this.result += unescapeCSSComment(commentNamePart);
 
       // When uncommenting, we must be sure to sanitize the text, to
       // avoid things like /* decl: }; */, which will be accepted as
       // a property but which would break the entire style sheet.
-      let newText = this.inputString.substring(decl.colonOffsets[1],
-                                               decl.offsets[1]);
+      let newText = this.inputString.substring(
+        decl.colonOffsets[1],
+        decl.offsets[1]
+      );
       newText = cssTrimRight(unescapeCSSComment(newText));
       this.result += this.sanitizeText(newText, index) + ";";
 
@@ -427,15 +442,27 @@ RuleRewriter.prototype = {
     } else {
       // Disable it.  Note that we use our special comment syntax
       // here.
-      const declText = this.inputString.substring(decl.offsets[0],
-                                                decl.offsets[1]);
-      this.result += "/*" + COMMENT_PARSING_HEURISTIC_BYPASS_CHAR +
-        " " + escapeCSSComment(declText) + " */";
+      const declText = this.inputString.substring(
+        decl.offsets[0],
+        decl.offsets[1]
+      );
+      this.result +=
+        "/*" +
+        COMMENT_PARSING_HEURISTIC_BYPASS_CHAR +
+        " " +
+        escapeCSSComment(declText) +
+        " */";
     }
     this.completeCopying(copyOffset);
 
     if (isEnabled) {
-      this.modifications.push({ type: "set", index, name, value: decl.value, priority });
+      this.modifications.push({
+        type: "set",
+        index,
+        name,
+        value: decl.value,
+        priority,
+      });
     } else {
       this.modifications.push({ type: "disable", index, name });
     }
@@ -472,8 +499,10 @@ RuleRewriter.prototype = {
     let newIndentation = "";
     if (this.hasNewLine) {
       if (this.declarations.length > 0) {
-        newIndentation = this.getIndentation(this.inputString,
-                                             this.declarations[0].offsets[0]);
+        newIndentation = this.getIndentation(
+          this.inputString,
+          this.declarations[0].offsets[0]
+        );
       } else if (this.defaultIndentation) {
         newIndentation = this.defaultIndentation;
       } else {
@@ -489,8 +518,10 @@ RuleRewriter.prototype = {
     // is actually used.
     let savedWhitespace = "";
     if (this.hasNewLine) {
-      const wsOffset = this.skipWhitespaceBackward(this.result,
-                                                 this.result.length);
+      const wsOffset = this.skipWhitespaceBackward(
+        this.result,
+        this.result.length
+      );
       if (this.result[wsOffset] === "\r" || this.result[wsOffset] === "\n") {
         savedWhitespace = this.result.substring(wsOffset + 1);
         this.result = this.result.substring(0, wsOffset + 1);
@@ -504,8 +535,12 @@ RuleRewriter.prototype = {
     newText += ";";
 
     if (!enabled) {
-      newText = "/*" + COMMENT_PARSING_HEURISTIC_BYPASS_CHAR + " " +
-        escapeCSSComment(newText) + " */";
+      newText =
+        "/*" +
+        COMMENT_PARSING_HEURISTIC_BYPASS_CHAR +
+        " " +
+        escapeCSSComment(newText) +
+        " */";
     }
 
     this.result += newIndentation + newText;
@@ -533,7 +568,13 @@ RuleRewriter.prototype = {
    *                          enabled, false if disabled
    */
   createProperty: function(index, name, value, priority, enabled) {
-    this.editPromise = this.internalCreateProperty(index, name, value, priority, enabled);
+    this.editPromise = this.internalCreateProperty(
+      index,
+      name,
+      value,
+      priority,
+      enabled
+    );
     // Log the modification only if the created property is enabled.
     if (enabled) {
       this.modifications.push({ type: "set", index, name, value, priority });
@@ -564,9 +605,11 @@ RuleRewriter.prototype = {
 
     // Note that this assumes that "set" never operates on disabled
     // properties.
-    this.result += this.inputString.substring(this.decl.offsets[0],
-                                              this.decl.colonOffsets[1]) +
-      this.sanitizeText(value, index);
+    this.result +=
+      this.inputString.substring(
+        this.decl.offsets[0],
+        this.decl.colonOffsets[1]
+      ) + this.sanitizeText(value, index);
 
     if (priority === "important") {
       this.result += " !important";
@@ -607,10 +650,15 @@ RuleRewriter.prototype = {
     // bother with this if we're looking at sources that already
     // have a newline somewhere.
     if (this.hasNewLine) {
-      const nlOffset = this.skipWhitespaceBackward(this.result,
-                                                 this.decl.offsets[0]);
-      if (nlOffset < 0 || this.result[nlOffset] === "\r" ||
-          this.result[nlOffset] === "\n") {
+      const nlOffset = this.skipWhitespaceBackward(
+        this.result,
+        this.decl.offsets[0]
+      );
+      if (
+        nlOffset < 0 ||
+        this.result[nlOffset] === "\r" ||
+        this.result[nlOffset] === "\n"
+      ) {
         const trailingText = this.inputString.substring(copyOffset);
         const match = BLANK_LINE_RX.exec(trailingText);
         if (match) {
@@ -658,7 +706,7 @@ RuleRewriter.prototype = {
    *                  |text| is the rewritten text of the rule.
    */
   getResult: function() {
-    return {changed: this.changedDeclarations, text: this.result};
+    return { changed: this.changedDeclarations, text: this.result };
   },
 };
 

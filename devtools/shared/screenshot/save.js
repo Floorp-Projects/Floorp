@@ -72,13 +72,15 @@ const screenshotCommandParams = [
  */
 function formatHelpField(param) {
   const padding = " ".repeat(5);
-  return Object.entries(param).map(([key, value]) => {
-    if (key === "name") {
-      const name = `${padding}--${value}`;
-      return name;
-    }
-    return `${padding.repeat(2)}${key}: ${value}`;
-  }).join("\n");
+  return Object.entries(param)
+    .map(([key, value]) => {
+      if (key === "name") {
+        const name = `${padding}--${value}`;
+        return name;
+      }
+      return `${padding.repeat(2)}${key}: ${value}`;
+    })
+    .join("\n");
 }
 
 /**
@@ -131,7 +133,9 @@ function saveScreenshot(window, args = {}, value) {
  */
 function simulateCameraShutter(window) {
   if (Services.prefs.getBoolPref("devtools.screenshot.audio.enabled")) {
-    const audioCamera = new window.Audio("resource://devtools/client/themes/audio/shutter.wav");
+    const audioCamera = new window.Audio(
+      "resource://devtools/client/themes/audio/shutter.wav"
+    );
     audioCamera.play();
   }
 }
@@ -149,8 +153,7 @@ function simulateCameraShutter(window) {
  *         Response messages from processing the screenshot.
  */
 async function save(args, image) {
-  const fileNeeded = args.filename ||
-    !args.clipboard || args.file;
+  const fileNeeded = args.filename || !args.clipboard || args.file;
   const results = [];
 
   if (args.clipboard) {
@@ -177,21 +180,31 @@ async function save(args, image) {
  */
 function saveToClipboard(base64URI) {
   try {
-    const imageTools = Cc["@mozilla.org/image/tools;1"]
-                       .getService(Ci.imgITools);
+    const imageTools = Cc["@mozilla.org/image/tools;1"].getService(
+      Ci.imgITools
+    );
 
     const base64Data = base64URI.replace("data:image/png;base64,", "");
 
     const image = atob(base64Data);
-    const img = imageTools.decodeImageFromBuffer(image, image.length, "image/png");
+    const img = imageTools.decodeImageFromBuffer(
+      image,
+      image.length,
+      "image/png"
+    );
 
-    const transferable = Cc["@mozilla.org/widget/transferable;1"]
-                     .createInstance(Ci.nsITransferable);
+    const transferable = Cc[
+      "@mozilla.org/widget/transferable;1"
+    ].createInstance(Ci.nsITransferable);
     transferable.init(null);
     transferable.addDataFlavor("image/png");
     transferable.setTransferData("image/png", img, -1);
 
-    Services.clipboard.setData(transferable, null, Services.clipboard.kGlobalClipboard);
+    Services.clipboard.setData(
+      transferable,
+      null,
+      Services.clipboard.kGlobalClipboard
+    );
     return L10N.getStr("screenshotCopied");
   } catch (ex) {
     console.error(ex);

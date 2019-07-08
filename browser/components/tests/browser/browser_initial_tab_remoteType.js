@@ -11,16 +11,17 @@
 
 const PRIVILEGEDABOUT_PROCESS_PREF =
   "browser.tabs.remote.separatePrivilegedContentProcess";
-const PRIVILEGEDABOUT_PROCESS_ENABLED =
-  Services.prefs.getBoolPref(PRIVILEGEDABOUT_PROCESS_PREF);
+const PRIVILEGEDABOUT_PROCESS_ENABLED = Services.prefs.getBoolPref(
+  PRIVILEGEDABOUT_PROCESS_PREF
+);
 
 const REMOTE_BROWSER_SHOWN = "remote-browser-shown";
 
 // When the privileged content process is enabled, we expect about:home
 // to load in it. Otherwise, it's in a normal web content process.
-const EXPECTED_ABOUTHOME_REMOTE_TYPE =
-  PRIVILEGEDABOUT_PROCESS_ENABLED ? E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE
-                             : E10SUtils.DEFAULT_REMOTE_TYPE;
+const EXPECTED_ABOUTHOME_REMOTE_TYPE = PRIVILEGEDABOUT_PROCESS_ENABLED
+  ? E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE
+  : E10SUtils.DEFAULT_REMOTE_TYPE;
 
 /**
  * Test helper function that takes an nsICommandLine, and passes it
@@ -40,8 +41,11 @@ const EXPECTED_ABOUTHOME_REMOTE_TYPE =
  *        Resolves once the checks have completed, and the opened window
  *        have been closed.
  */
-async function assertOneRemoteBrowserShown(aCmdLine, aExpectedURL,
-                                           aRemoteType) {
+async function assertOneRemoteBrowserShown(
+  aCmdLine,
+  aExpectedURL,
+  aRemoteType
+) {
   let shownRemoteBrowsers = 0;
   let observer = () => {
     shownRemoteBrowsers++;
@@ -52,18 +56,21 @@ async function assertOneRemoteBrowserShown(aCmdLine, aExpectedURL,
     url: aExpectedURL,
   });
 
-  let cmdLineHandler = Cc["@mozilla.org/browser/final-clh;1"]
-                         .getService(Ci.nsICommandLineHandler);
+  let cmdLineHandler = Cc["@mozilla.org/browser/final-clh;1"].getService(
+    Ci.nsICommandLineHandler
+  );
   cmdLineHandler.handle(aCmdLine);
 
   let newWin = await newWinPromise;
 
   Services.obs.removeObserver(observer, REMOTE_BROWSER_SHOWN);
 
-  Assert.equal(newWin.gBrowser.selectedBrowser.remoteType,
-               aRemoteType);
-  Assert.equal(shownRemoteBrowsers, 1,
-               "Should have only shown 1 remote browser");
+  Assert.equal(newWin.gBrowser.selectedBrowser.remoteType, aRemoteType);
+  Assert.equal(
+    shownRemoteBrowsers,
+    1,
+    "Should have only shown 1 remote browser"
+  );
   await BrowserTestUtils.closeWindow(newWin);
 }
 
@@ -147,11 +154,13 @@ function constructOnePageCmdLine(aURL) {
 add_task(async function setup() {
   NewTabPagePreloading.removePreloadedBrowser(window);
 
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["browser.newtab.preload", false],
-    ["browser.startup.homepage", "about:home"],
-    ["browser.startup.page", 1],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.newtab.preload", false],
+      ["browser.startup.homepage", "about:home"],
+      ["browser.startup.page", 1],
+    ],
+  });
 });
 
 /**
@@ -159,8 +168,11 @@ add_task(async function setup() {
  */
 add_task(async function test_default_args_and_homescreen() {
   let cmdLine = Cu.createCommandLine();
-  await assertOneRemoteBrowserShown(cmdLine, "about:home",
-                                    EXPECTED_ABOUTHOME_REMOTE_TYPE);
+  await assertOneRemoteBrowserShown(
+    cmdLine,
+    "about:home",
+    EXPECTED_ABOUTHOME_REMOTE_TYPE
+  );
 });
 
 /**
@@ -170,8 +182,11 @@ add_task(async function test_default_args_and_homescreen() {
 add_task(async function test_abouthome_arg() {
   const URI = "about:home";
   let cmdLine = constructOnePageCmdLine(URI);
-  await assertOneRemoteBrowserShown(cmdLine, URI,
-                                    EXPECTED_ABOUTHOME_REMOTE_TYPE);
+  await assertOneRemoteBrowserShown(
+    cmdLine,
+    URI,
+    EXPECTED_ABOUTHOME_REMOTE_TYPE
+  );
 });
 
 /**
@@ -181,6 +196,9 @@ add_task(async function test_abouthome_arg() {
 add_task(async function test_examplecom_arg() {
   const URI = "http://example.com/";
   let cmdLine = constructOnePageCmdLine(URI);
-  await assertOneRemoteBrowserShown(cmdLine, URI,
-                                    E10SUtils.DEFAULT_REMOTE_TYPE);
+  await assertOneRemoteBrowserShown(
+    cmdLine,
+    URI,
+    E10SUtils.DEFAULT_REMOTE_TYPE
+  );
 });

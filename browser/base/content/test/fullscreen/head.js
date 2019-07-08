@@ -1,8 +1,14 @@
-const { ContentTaskUtils } = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
-const { ContentTask } = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+const { ContentTaskUtils } = ChromeUtils.import(
+  "resource://testing-common/ContentTaskUtils.jsm"
+);
+const { ContentTask } = ChromeUtils.import(
+  "resource://testing-common/ContentTask.jsm"
+);
 
 function waitForFullScreenState(browser, state) {
-  let eventName = state ? "MozDOMFullscreen:Entered" : "MozDOMFullscreen:Exited";
+  let eventName = state
+    ? "MozDOMFullscreen:Entered"
+    : "MozDOMFullscreen:Exited";
   return BrowserTestUtils.waitForEvent(browser.ownerGlobal, eventName);
 }
 
@@ -14,7 +20,7 @@ function waitForFullScreenState(browser, state) {
  */
 function changeFullscreen(browser, fullScreenState) {
   let fullScreenChange = waitForFullScreenState(browser, fullScreenState);
-  ContentTask.spawn(browser, fullScreenState, (state) => {
+  ContentTask.spawn(browser, fullScreenState, state => {
     if (state) {
       content.document.body.requestFullscreen();
     } else {

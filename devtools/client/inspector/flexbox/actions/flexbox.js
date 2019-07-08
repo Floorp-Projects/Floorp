@@ -12,7 +12,6 @@ const {
 } = require("./index");
 
 module.exports = {
-
   /**
    * Clears the flexbox state by resetting it back to the initial flexbox state.
    */
@@ -57,5 +56,4 @@ module.exports = {
       highlighted,
     };
   },
-
 };

@@ -37,20 +37,35 @@ function testAccordionStateAfterClickingHeader(doc) {
   const gContent = doc.querySelector(".grid-pane ._content");
 
   info("Checking initial state of the grid panel.");
-  is(gContent.style.display, "block", "The grid panel content is 'display: block'.");
-  ok(Services.prefs.getBoolPref(GRID_OPENED_PREF),
-    `${GRID_OPENED_PREF} is pref on by default.`);
+  is(
+    gContent.style.display,
+    "block",
+    "The grid panel content is 'display: block'."
+  );
+  ok(
+    Services.prefs.getBoolPref(GRID_OPENED_PREF),
+    `${GRID_OPENED_PREF} is pref on by default.`
+  );
 
   info("Clicking the grid header to hide the grid panel.");
   header.click();
 
   info("Checking the new state of the grid panel.");
-  is(gContent.style.display, "none", "The grid panel content is 'display: none'.");
-  ok(!Services.prefs.getBoolPref(GRID_OPENED_PREF), `${GRID_OPENED_PREF} is pref off.`);
+  is(
+    gContent.style.display,
+    "none",
+    "The grid panel content is 'display: none'."
+  );
+  ok(
+    !Services.prefs.getBoolPref(GRID_OPENED_PREF),
+    `${GRID_OPENED_PREF} is pref off.`
+  );
 }
 
 function testAccordionStateAfterSwitchingSidebars(inspector, doc) {
-  info("Checking the grid accordion state is persistent after switching sidebars.");
+  info(
+    "Checking the grid accordion state is persistent after switching sidebars."
+  );
 
   const gContent = doc.querySelector(".grid-pane ._content");
 
@@ -61,13 +76,22 @@ function testAccordionStateAfterSwitchingSidebars(inspector, doc) {
   inspector.sidebar.select("layoutview");
 
   info("Checking the state of the grid panel.");
-  is(gContent.style.display, "none", "The grid panel content is 'display: none'.");
-  ok(!Services.prefs.getBoolPref(GRID_OPENED_PREF), `${GRID_OPENED_PREF} is pref off.`);
+  is(
+    gContent.style.display,
+    "none",
+    "The grid panel content is 'display: none'."
+  );
+  ok(
+    !Services.prefs.getBoolPref(GRID_OPENED_PREF),
+    `${GRID_OPENED_PREF} is pref off.`
+  );
 }
 
 async function testAccordionStateAfterReopeningLayoutView(toolbox) {
-  info("Checking the grid accordion state is persistent after closing and re-opening the "
-  + "layout view.");
+  info(
+    "Checking the grid accordion state is persistent after closing and re-opening the " +
+      "layout view."
+  );
 
   info("Closing the toolbox.");
   await toolbox.destroy();
@@ -79,6 +103,8 @@ async function testAccordionStateAfterReopeningLayoutView(toolbox) {
 
   info("Checking the state of the grid panel.");
   ok(!gContent, "The grid panel content is not rendered.");
-  ok(!Services.prefs.getBoolPref(GRID_OPENED_PREF),
-    `${GRID_OPENED_PREF} is pref off.`);
+  ok(
+    !Services.prefs.getBoolPref(GRID_OPENED_PREF),
+    `${GRID_OPENED_PREF} is pref off.`
+  );
 }

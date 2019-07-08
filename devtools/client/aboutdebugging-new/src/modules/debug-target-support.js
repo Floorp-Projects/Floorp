@@ -10,12 +10,18 @@ const Services = require("Services");
 
 // Process target debugging is disabled by default.
 function isProcessDebuggingSupported() {
-  return Services.prefs.getBoolPref(PREFERENCES.PROCESS_DEBUGGING_ENABLED, false);
+  return Services.prefs.getBoolPref(
+    PREFERENCES.PROCESS_DEBUGGING_ENABLED,
+    false
+  );
 }
 
 // Process target debugging is disabled by default.
 function isLocalTabDebuggingSupported() {
-  return Services.prefs.getBoolPref(PREFERENCES.LOCAL_TAB_DEBUGGING_ENABLED, false);
+  return Services.prefs.getBoolPref(
+    PREFERENCES.LOCAL_TAB_DEBUGGING_ENABLED,
+    false
+  );
 }
 
 // Installing extensions can be disabled in enterprise policy.
@@ -33,12 +39,15 @@ const ALL_DEBUG_TARGET_PANES = [
   DEBUG_TARGET_PANE.SERVICE_WORKER,
   DEBUG_TARGET_PANE.SHARED_WORKER,
   DEBUG_TARGET_PANE.TAB,
-  ...(isTemporaryExtensionSupported() ? [DEBUG_TARGET_PANE.TEMPORARY_EXTENSION] : []),
+  ...(isTemporaryExtensionSupported()
+    ? [DEBUG_TARGET_PANE.TEMPORARY_EXTENSION]
+    : []),
 ];
 
 // All debug target panes except temporary extensions
-const REMOTE_DEBUG_TARGET_PANES = ALL_DEBUG_TARGET_PANES.filter(p =>
-  p !== DEBUG_TARGET_PANE.TEMPORARY_EXTENSION);
+const REMOTE_DEBUG_TARGET_PANES = ALL_DEBUG_TARGET_PANES.filter(
+  p => p !== DEBUG_TARGET_PANE.TEMPORARY_EXTENSION
+);
 
 const THIS_FIREFOX_DEBUG_TARGET_PANES = ALL_DEBUG_TARGET_PANES
   // Main process debugging is not available for This Firefox.
@@ -59,6 +68,8 @@ const SUPPORTED_TARGET_PANE_BY_RUNTIME = {
  * a DEBUG_TARGET but INSTALLED_EXTENSION and TEMPORARY_EXTENSION are DEBUG_TARGET_PANES.
  */
 function isSupportedDebugTargetPane(runtimeType, debugTargetPaneKey) {
-  return SUPPORTED_TARGET_PANE_BY_RUNTIME[runtimeType].includes(debugTargetPaneKey);
+  return SUPPORTED_TARGET_PANE_BY_RUNTIME[runtimeType].includes(
+    debugTargetPaneKey
+  );
 }
 exports.isSupportedDebugTargetPane = isSupportedDebugTargetPane;

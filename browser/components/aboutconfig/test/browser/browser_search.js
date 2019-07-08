@@ -6,7 +6,9 @@
  * be resolved in bug 1539000.
  */
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.whitelistRejectionsGlobally(/Too many characters in placeable/);
+PromiseTestUtils.whitelistRejectionsGlobally(
+  /Too many characters in placeable/
+);
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
@@ -34,8 +36,9 @@ add_task(async function test_search() {
     // modified by other code during the execution of this test.
     this.search("Wser.down   ");
 
-    let filteredPrefArray =
-        prefArray.filter(pref => pref.includes("wser.down"));
+    let filteredPrefArray = prefArray.filter(pref =>
+      pref.includes("wser.down")
+    );
     // Adding +1 to the list since button does not match an exact
     // preference name then a row is added for the user to add a
     // new button preference if desired

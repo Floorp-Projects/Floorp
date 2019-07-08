@@ -35,28 +35,39 @@ function activateDesktopViewPrompts() {
   Promise.all([
     browser.l10n.getMessage("webcompat.reportDesktopMode.message"),
     browser.l10n.getMessage("webcompat.reportDesktopModeYes.label"),
-  ]).then(([message, button]) => {
-    browser.tabExtras.onDesktopSiteRequested.addListener(async tabId => {
-      browser.tabs.get(tabId).then(tab => {
-        browser.snackbars.show(message, button).then(() => {
-          reportForTab(tab);
-        }).catch(() => {});
-      }).catch(() => {});
-    });
-  }).catch(() => {});
+  ])
+    .then(([message, button]) => {
+      browser.tabExtras.onDesktopSiteRequested.addListener(async tabId => {
+        browser.tabs
+          .get(tabId)
+          .then(tab => {
+            browser.snackbars
+              .show(message, button)
+              .then(() => {
+                reportForTab(tab);
+              })
+              .catch(() => {});
+          })
+          .catch(() => {});
+      });
+    })
+    .catch(() => {});
 }
 
 function activateMenuItem() {
   browser.nativeMenu.show();
 
-  browser.l10n.getMessage("webcompat.menu.name").then(label => {
-    // We use Fennec NativeMenus because its BrowserAction implementation
-    // lacks support for enabling/disabling its items.
-    browser.nativeMenu.setLabel(label);
-  }).catch(() => {});
+  browser.l10n
+    .getMessage("webcompat.menu.name")
+    .then(label => {
+      // We use Fennec NativeMenus because its BrowserAction implementation
+      // lacks support for enabling/disabling its items.
+      browser.nativeMenu.setLabel(label);
+    })
+    .catch(() => {});
 
   browser.nativeMenu.onClicked.addListener(async () => {
-    const tabs = await browser.tabs.query({active: true});
+    const tabs = await browser.tabs.query({ active: true });
     reportForTab(tabs[0]);
   });
 
@@ -74,32 +85,45 @@ function activateMenuItem() {
     }
   });
 
-  browser.tabs.onActivated.addListener(({tabId}) => {
-    browser.tabs.get(tabId).then(({url}) => {
-      updateMenuItem(url);
-    }).catch(() => {
-      updateMenuItem("about"); // So the action is disabled
-    });
+  browser.tabs.onActivated.addListener(({ tabId }) => {
+    browser.tabs
+      .get(tabId)
+      .then(({ url }) => {
+        updateMenuItem(url);
+      })
+      .catch(() => {
+        updateMenuItem("about"); // So the action is disabled
+      });
   });
 
-  browser.tabs.query({active: true}).then(tabs => {
-    updateMenuItem(tabs[0].url);
-  }).catch(() => {});
+  browser.tabs
+    .query({ active: true })
+    .then(tabs => {
+      updateMenuItem(tabs[0].url);
+    })
+    .catch(() => {});
 }
 
 function isReportableUrl(url) {
-  return url && !(url.startsWith("about") ||
-                  url.startsWith("chrome") ||
-                  url.startsWith("file") ||
-                  url.startsWith("resource"));
+  return (
+    url &&
+    !(
+      url.startsWith("about") ||
+      url.startsWith("chrome") ||
+      url.startsWith("file") ||
+      url.startsWith("resource")
+    )
+  );
 }
 
 async function reportForTab(tab) {
-  return getWebCompatInfoForTab(tab).then(async info => {
-    return openWebCompatTab(info, tab.incognito);
-  }).catch(err => {
-    console.error("Report Site Issue: unexpected error", err);
-  });
+  return getWebCompatInfoForTab(tab)
+    .then(async info => {
+      return openWebCompatTab(info, tab.incognito);
+    })
+    .catch(err => {
+      console.error("Report Site Issue: unexpected error", err);
+    });
 }
 
 async function checkEndpointPref() {
@@ -124,8 +148,7 @@ function hasFastClickPageScript() {
       if (proto && proto.needsClick) {
         return true;
       }
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   return false;
@@ -142,8 +165,9 @@ function hasMarfeelPageScript() {
 }
 
 function checkForFrameworks(tabId) {
-  return browser.tabs.executeScript(tabId, {
-    code: `
+  return browser.tabs
+    .executeScript(tabId, {
+      code: `
       (function() {
         ${hasFastClickPageScript};
         ${hasMobifyPageScript};
@@ -158,11 +182,13 @@ function checkForFrameworks(tabId) {
         return result;
       })();
     `,
-  }).then(([results]) => results).catch(() => false);
+    })
+    .then(([results]) => results)
+    .catch(() => false);
 }
 
 function getWebCompatInfoForTab(tab) {
-  const {id, windiwId, url} = tab;
+  const { id, windiwId, url } = tab;
   return Promise.all([
     browser.browserInfo.getBlockList(),
     browser.browserInfo.getBuildID(),
@@ -171,37 +197,52 @@ function getWebCompatInfoForTab(tab) {
     browser.browserInfo.hasTouchScreen(),
     browser.tabExtras.getWebcompatInfo(id),
     checkForFrameworks(id),
-    browser.tabs.captureVisibleTab(windiwId, Config.screenshotFormat).catch(e => {
-      console.error("Report Site Issue: getting a screenshot failed", e);
-      return Promise.resolve(undefined);
-    }),
-  ]).then(([blockList, buildID, graphicsPrefs, channel, hasTouchScreen,
-            frameInfo, frameworks, screenshot]) => {
-    if (channel !== "linux") {
-      delete graphicsPrefs["layers.acceleration.force-enabled"];
-    }
-
-    const consoleLog = frameInfo.log;
-    delete frameInfo.log;
-
-    return Object.assign(frameInfo, {
-      tabId: id,
-      blockList,
-      details: Object.assign(graphicsPrefs, {
-        buildID,
-        channel,
-        consoleLog,
-        frameworks,
-        hasTouchScreen,
-        "mixed active content blocked": frameInfo.hasMixedActiveContentBlocked,
-        "mixed passive content blocked": frameInfo.hasMixedDisplayContentBlocked,
-        "tracking content blocked": frameInfo.hasTrackingContentBlocked ?
-                                    `true (${blockList})` : "false",
+    browser.tabs
+      .captureVisibleTab(windiwId, Config.screenshotFormat)
+      .catch(e => {
+        console.error("Report Site Issue: getting a screenshot failed", e);
+        return Promise.resolve(undefined);
       }),
+  ]).then(
+    ([
+      blockList,
+      buildID,
+      graphicsPrefs,
+      channel,
+      hasTouchScreen,
+      frameInfo,
+      frameworks,
       screenshot,
-      url,
-    });
-  });
+    ]) => {
+      if (channel !== "linux") {
+        delete graphicsPrefs["layers.acceleration.force-enabled"];
+      }
+
+      const consoleLog = frameInfo.log;
+      delete frameInfo.log;
+
+      return Object.assign(frameInfo, {
+        tabId: id,
+        blockList,
+        details: Object.assign(graphicsPrefs, {
+          buildID,
+          channel,
+          consoleLog,
+          frameworks,
+          hasTouchScreen,
+          "mixed active content blocked":
+            frameInfo.hasMixedActiveContentBlocked,
+          "mixed passive content blocked":
+            frameInfo.hasMixedDisplayContentBlocked,
+          "tracking content blocked": frameInfo.hasTrackingContentBlocked
+            ? `true (${blockList})`
+            : "false",
+        }),
+        screenshot,
+        url,
+      });
+    }
+  );
 }
 
 function stripNonASCIIChars(str) {
@@ -211,7 +252,7 @@ function stripNonASCIIChars(str) {
 
 async function openWebCompatTab(compatInfo, usePrivateTab) {
   const url = new URL(Config.newIssueEndpoint);
-  const {details} = compatInfo;
+  const { details } = compatInfo;
   const params = {
     url: `${compatInfo.url}`,
     utm_source: "mobile-reporter",
@@ -224,7 +265,9 @@ async function openWebCompatTab(compatInfo, usePrivateTab) {
   for (let framework of FRAMEWORK_KEYS) {
     if (details.frameworks[framework]) {
       params.details[framework] = true;
-      params.extra_labels.push(framework.replace(/^has/, "type-").toLowerCase());
+      params.extra_labels.push(
+        framework.replace(/^has/, "type-").toLowerCase()
+      );
     }
   }
   delete details.frameworks;
@@ -233,15 +276,22 @@ async function openWebCompatTab(compatInfo, usePrivateTab) {
     params.extra_labels.push("type-webrender-enabled");
   }
   if (compatInfo.hasTrackingContentBlocked) {
-    params.extra_labels.push(`type-tracking-protection-${compatInfo.blockList}`);
+    params.extra_labels.push(
+      `type-tracking-protection-${compatInfo.blockList}`
+    );
   }
 
   // Need custom API for private tabs until https://bugzil.la/1372178 is fixed
-  const tab = usePrivateTab ? await browser.tabExtras.createPrivateTab() :
-                              await browser.tabs.create({url: "about:blank"});
+  const tab = usePrivateTab
+    ? await browser.tabExtras.createPrivateTab()
+    : await browser.tabs.create({ url: "about:blank" });
   const json = stripNonASCIIChars(JSON.stringify(params));
-  await browser.tabExtras.loadURIWithPostData(tab.id, url.href, json,
-                                              "application/json");
+  await browser.tabExtras.loadURIWithPostData(
+    tab.id,
+    url.href,
+    json,
+    "application/json"
+  );
   await browser.tabs.executeScript(tab.id, {
     runAt: "document_end",
     code: `(function() {

@@ -7,8 +7,10 @@
 // Tests adding a new rule and a new property in this rule.
 
 add_task(async function() {
-  await addTab("data:text/html;charset=utf-8,<div id='testid'>Styled Node</div>");
-  const {inspector, view} = await openRuleView();
+  await addTab(
+    "data:text/html;charset=utf-8,<div id='testid'>Styled Node</div>"
+  );
+  const { inspector, view } = await openRuleView();
 
   info("Selecting the test node");
   await selectNode("#testid", inspector);

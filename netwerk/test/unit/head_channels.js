@@ -3,9 +3,9 @@
  */
 function read_stream(stream, count) {
   /* assume stream has non-ASCII data */
-  var wrapper =
-      Cc["@mozilla.org/binaryinputstream;1"]
-        .createInstance(Ci.nsIBinaryInputStream);
+  var wrapper = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+    Ci.nsIBinaryInputStream
+  );
   wrapper.setInputStream(stream);
   /* JS methods can be called with a maximum of 65535 arguments, and input
      streams don't have to return all the data they make .available() when
@@ -15,10 +15,11 @@ function read_stream(stream, count) {
     var bytes = wrapper.readByteArray(Math.min(65535, count));
     data.push(String.fromCharCode.apply(null, bytes));
     count -= bytes.length;
-    if (bytes.length == 0)
+    if (bytes.length == 0) {
       do_throw("Nothing read from input stream!");
+    }
   }
-  return data.join('');
+  return data.join("");
 }
 
 const CL_EXPECT_FAILURE = 0x1;
@@ -64,50 +65,64 @@ ChannelListener.prototype = {
   _contentLen: -1,
   _lastEvent: 0,
 
-  QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIStreamListener",
+    "nsIRequestObserver",
+  ]),
 
   onStartRequest(request) {
     try {
-      if (this._got_onstartrequest)
+      if (this._got_onstartrequest) {
         do_throw("Got second onStartRequest event!");
+      }
       this._got_onstartrequest = true;
       this._lastEvent = Date.now();
 
       try {
-        this._isFromCache = request.QueryInterface(Ci.nsICacheInfoChannel).isFromCache();
+        this._isFromCache = request
+          .QueryInterface(Ci.nsICacheInfoChannel)
+          .isFromCache();
       } catch (e) {}
 
       var thrown = false;
       try {
-        this._cacheEntryId = request.QueryInterface(Ci.nsICacheInfoChannel).getCacheEntryId();
+        this._cacheEntryId = request
+          .QueryInterface(Ci.nsICacheInfoChannel)
+          .getCacheEntryId();
       } catch (e) {
         thrown = true;
       }
-      if (this._isFromCache && thrown)
+      if (this._isFromCache && thrown) {
         do_throw("Should get a CacheEntryId");
-      else if (!this._isFromCache && !thrown)
+      } else if (!this._isFromCache && !thrown) {
         do_throw("Shouldn't get a CacheEntryId");
+      }
 
       request.QueryInterface(Ci.nsIChannel);
       try {
         this._contentLen = request.contentLength;
-      }
-      catch (ex) {
-        if (!(this._flags & (CL_EXPECT_FAILURE | CL_ALLOW_UNKNOWN_CL)))
+      } catch (ex) {
+        if (!(this._flags & (CL_EXPECT_FAILURE | CL_ALLOW_UNKNOWN_CL))) {
           do_throw("Could not get contentLength");
+        }
       }
-      if (!request.isPending())
+      if (!request.isPending()) {
         do_throw("request reports itself as not pending from onStartRequest!");
-      if (this._contentLen == -1 && !(this._flags & (CL_EXPECT_FAILURE | CL_ALLOW_UNKNOWN_CL)))
+      }
+      if (
+        this._contentLen == -1 &&
+        !(this._flags & (CL_EXPECT_FAILURE | CL_ALLOW_UNKNOWN_CL))
+      ) {
         do_throw("Content length is unknown in onStartRequest!");
+      }
 
-      if ((this._flags & CL_FROM_CACHE)) {
+      if (this._flags & CL_FROM_CACHE) {
         request.QueryInterface(Ci.nsICachingChannel);
         if (!request.isFromCache()) {
           do_throw("Response is not from the cache (CL_FROM_CACHE)");
         }
       }
-      if ((this._flags & CL_NOT_FROM_CACHE)) {
+      if (this._flags & CL_NOT_FROM_CACHE) {
         request.QueryInterface(Ci.nsICachingChannel);
         if (request.isFromCache()) {
           do_throw("Response is from the cache (CL_NOT_FROM_CACHE)");
@@ -116,7 +131,9 @@ ChannelListener.prototype = {
 
       if (this._flags & CL_SUSPEND) {
         request.suspend();
-        do_timeout(SUSPEND_DELAY, function() { request.resume(); });
+        do_timeout(SUSPEND_DELAY, function() {
+          request.resume();
+        });
       }
     } catch (ex) {
       do_throw("Error in onStartRequest: " + ex);
@@ -127,24 +144,35 @@ ChannelListener.prototype = {
     try {
       let current = Date.now();
 
-      if (!this._got_onstartrequest)
+      if (!this._got_onstartrequest) {
         do_throw("onDataAvailable without onStartRequest event!");
-      if (this._got_onstoprequest)
+      }
+      if (this._got_onstoprequest) {
         do_throw("onDataAvailable after onStopRequest event!");
-      if (!request.isPending())
+      }
+      if (!request.isPending()) {
         do_throw("request reports itself as not pending from onDataAvailable!");
-      if (this._flags & CL_EXPECT_FAILURE)
+      }
+      if (this._flags & CL_EXPECT_FAILURE) {
         do_throw("Got data despite expecting a failure");
+      }
 
-      if (current - this._lastEvent >= SUSPEND_DELAY &&
-          !(this._flags & CL_EXPECT_3S_DELAY))
-       do_throw("Data received after significant unexpected delay");
-      else if (current - this._lastEvent < SUSPEND_DELAY &&
-               this._flags & CL_EXPECT_3S_DELAY)
+      if (
+        current - this._lastEvent >= SUSPEND_DELAY &&
+        !(this._flags & CL_EXPECT_3S_DELAY)
+      ) {
+        do_throw("Data received after significant unexpected delay");
+      } else if (
+        current - this._lastEvent < SUSPEND_DELAY &&
+        this._flags & CL_EXPECT_3S_DELAY
+      ) {
         do_throw("Data received sooner than expected");
-      else if (current - this._lastEvent >= SUSPEND_DELAY &&
-               this._flags & CL_EXPECT_3S_DELAY)
-        this._flags &= ~CL_EXPECT_3S_DELAY; // No more delays expected
+      } else if (
+        current - this._lastEvent >= SUSPEND_DELAY &&
+        this._flags & CL_EXPECT_3S_DELAY
+      ) {
+        this._flags &= ~CL_EXPECT_3S_DELAY;
+      } // No more delays expected
 
       this._buffer = this._buffer.concat(read_stream(stream, count));
       this._lastEvent = current;
@@ -156,43 +184,65 @@ ChannelListener.prototype = {
   onStopRequest(request, status) {
     try {
       var success = Components.isSuccessCode(status);
-      if (!this._got_onstartrequest)
+      if (!this._got_onstartrequest) {
         do_throw("onStopRequest without onStartRequest event!");
-      if (this._got_onstoprequest)
+      }
+      if (this._got_onstoprequest) {
         do_throw("Got second onStopRequest event!");
+      }
       this._got_onstoprequest = true;
-      if ((this._flags & (CL_EXPECT_FAILURE | CL_EXPECT_LATE_FAILURE)) && success)
-        do_throw("Should have failed to load URL (status is " + status.toString(16) + ")");
-      else if (!(this._flags & (CL_EXPECT_FAILURE | CL_EXPECT_LATE_FAILURE)) && !success)
+      if (
+        this._flags & (CL_EXPECT_FAILURE | CL_EXPECT_LATE_FAILURE) &&
+        success
+      ) {
+        do_throw(
+          "Should have failed to load URL (status is " +
+            status.toString(16) +
+            ")"
+        );
+      } else if (
+        !(this._flags & (CL_EXPECT_FAILURE | CL_EXPECT_LATE_FAILURE)) &&
+        !success
+      ) {
         do_throw("Failed to load URL: " + status.toString(16));
-      if (status != request.status)
+      }
+      if (status != request.status) {
         do_throw("request.status does not match status arg to onStopRequest!");
-      if (request.isPending())
+      }
+      if (request.isPending()) {
         do_throw("request reports itself as pending from onStopRequest!");
-      if (!(this._flags & (CL_EXPECT_FAILURE | CL_EXPECT_LATE_FAILURE | CL_IGNORE_CL)) &&
-          !(this._flags & CL_EXPECT_GZIP) &&
-          this._contentLen != -1)
-          Assert.equal(this._buffer.length, this._contentLen)
+      }
+      if (
+        !(
+          this._flags &
+          (CL_EXPECT_FAILURE | CL_EXPECT_LATE_FAILURE | CL_IGNORE_CL)
+        ) &&
+        !(this._flags & CL_EXPECT_GZIP) &&
+        this._contentLen != -1
+      ) {
+        Assert.equal(this._buffer.length, this._contentLen);
+      }
     } catch (ex) {
       do_throw("Error in onStopRequest: " + ex);
     }
     try {
-      this._closure(request,
-                    this._buffer,
-                    this._closurectx,
-                    this._isFromCache,
-                    this._cacheEntryId);
+      this._closure(
+        request,
+        this._buffer,
+        this._closurectx,
+        this._isFromCache,
+        this._cacheEntryId
+      );
       this._closurectx = null;
     } catch (ex) {
       do_throw("Error in closure function: " + ex);
     }
-  }
+  },
 };
 
 var ES_ABORT_REDIRECT = 0x01;
 
-function ChannelEventSink(flags)
-{
+function ChannelEventSink(flags) {
   this._flags = flags;
 }
 
@@ -200,17 +250,19 @@ ChannelEventSink.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor"]),
 
   getInterface(iid) {
-    if (iid.equals(Ci.nsIChannelEventSink))
+    if (iid.equals(Ci.nsIChannelEventSink)) {
       return this;
+    }
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
-    if (this._flags & ES_ABORT_REDIRECT)
+    if (this._flags & ES_ABORT_REDIRECT) {
       throw Cr.NS_BINDING_ABORTED;
+    }
 
     callback.onRedirectVerifyCallback(Cr.NS_OK);
-  }
+  },
 };
 
 /**
@@ -222,12 +274,13 @@ function OriginAttributes(inIsolatedMozBrowser, privateId) {
 }
 OriginAttributes.prototype = {
   inIsolatedMozBrowser: false,
-  privateBrowsingId: 0
+  privateBrowsingId: 0,
 };
 
 function readFile(file) {
-  let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
-                  .createInstance(Ci.nsIFileInputStream);
+  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   fstream.init(file, -1, 0, 0);
   let data = NetUtil.readInputStreamToString(fstream, fstream.available());
   fstream.close();
@@ -237,9 +290,8 @@ function readFile(file) {
 function addCertFromFile(certdb, filename, trustString) {
   let certFile = do_get_file(filename, false);
   let pem = readFile(certFile)
-              .replace(/-----BEGIN CERTIFICATE-----/, "")
-              .replace(/-----END CERTIFICATE-----/, "")
-              .replace(/[\r\n]/g, "");
+    .replace(/-----BEGIN CERTIFICATE-----/, "")
+    .replace(/-----END CERTIFICATE-----/, "")
+    .replace(/[\r\n]/g, "");
   certdb.addCertFromBase64(pem, trustString);
 }
-

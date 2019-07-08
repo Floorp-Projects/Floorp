@@ -32,7 +32,8 @@ const WONTDIE_BODY = String.raw`
 const SCRIPTS = [
   {
     name: "wontdie",
-    description: "a native app that does not exit when stdin closes or on SIGTERM",
+    description:
+      "a native app that does not exit when stdin closes or on SIGTERM",
     script: WONTDIE_BODY.replace(/^ {2}/gm, ""),
   },
 ];
@@ -40,7 +41,6 @@ const SCRIPTS = [
 add_task(async function setup() {
   await setupHosts(SCRIPTS);
 });
-
 
 // Test that an unresponsive native application still gets killed eventually
 add_task(async function test_unresponsive_native_app() {
@@ -62,7 +62,7 @@ add_task(async function test_unresponsive_native_app() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      applications: {gecko: {id: ID}},
+      applications: { gecko: { id: ID } },
       permissions: ["nativeMessaging"],
     },
   });

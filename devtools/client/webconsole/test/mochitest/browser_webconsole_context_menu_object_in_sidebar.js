@@ -19,8 +19,9 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const message = findMessage(hud, "foo");
-  const [objectA, objectB] =
-    message.querySelectorAll(".object-inspector .objectBox-object");
+  const [objectA, objectB] = message.querySelectorAll(
+    ".object-inspector .objectBox-object"
+  );
   const number = findMessage(hud, "100", ".objectBox");
   const string = findMessage(hud, "foo", ".objectBox");
   const bool = findMessage(hud, "false", ".objectBox");
@@ -40,15 +41,21 @@ add_task(async function() {
     });
   }
 
-  let sidebarText = hud.ui.document.querySelector(".sidebar-contents").textContent;
+  let sidebarText = hud.ui.document.querySelector(".sidebar-contents")
+    .textContent;
   ok(sidebarText.includes("a: 1"), "Sidebar is shown for {a:1}");
 
   info("Showing sidebar for {a:1} again");
   await showSidebarWithContextMenu(hud, objectA, false);
-  ok(hud.ui.document.querySelector(".sidebar"),
-     "Sidebar is still shown after clicking on same object");
-  is(hud.ui.document.querySelector(".sidebar-contents").textContent, sidebarText,
-     "Sidebar is not updated after clicking on same object");
+  ok(
+    hud.ui.document.querySelector(".sidebar"),
+    "Sidebar is still shown after clicking on same object"
+  );
+  is(
+    hud.ui.document.querySelector(".sidebar-contents").textContent,
+    sidebarText,
+    "Sidebar is not updated after clicking on same object"
+  );
 
   info("Showing sidebar for {b:1}");
   await showSidebarWithContextMenu(hud, objectB, false);
@@ -63,8 +70,11 @@ add_task(async function() {
     });
   }
 
-  isnot(hud.ui.document.querySelector(".sidebar-contents").textContent, sidebarText,
-        "Sidebar is updated for {b:1}");
+  isnot(
+    hud.ui.document.querySelector(".sidebar-contents").textContent,
+    sidebarText,
+    "Sidebar is updated for {b:1}"
+  );
   sidebarText = hud.ui.document.querySelector(".sidebar-contents").textContent;
 
   ok(sidebarText.includes("b: 1"), "Sidebar contents shown for {b:1}");
@@ -82,12 +92,21 @@ add_task(async function() {
   ok(!boolContextMenuEnabled, "Context menu entry is disabled for bool");
 
   info("Checking context menu entry is disabled for null message");
-  const nullContextMenuEnabled = await isContextMenuEntryEnabled(hud, nullMessage);
+  const nullContextMenuEnabled = await isContextMenuEntryEnabled(
+    hud,
+    nullMessage
+  );
   ok(!nullContextMenuEnabled, "Context menu entry is disabled for nullMessage");
 
   info("Checking context menu entry is disabled for undefined message");
-  const undefinedContextMenuEnabled = await isContextMenuEntryEnabled(hud, undefinedMsg);
-  ok(!undefinedContextMenuEnabled, "Context menu entry is disabled for undefinedMsg");
+  const undefinedContextMenuEnabled = await isContextMenuEntryEnabled(
+    hud,
+    undefinedMsg
+  );
+  ok(
+    !undefinedContextMenuEnabled,
+    "Context menu entry is disabled for undefinedMsg"
+  );
 });
 
 async function showSidebarWithContextMenu(hud, node, expectMutation) {

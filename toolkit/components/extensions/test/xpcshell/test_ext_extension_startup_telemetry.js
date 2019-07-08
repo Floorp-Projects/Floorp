@@ -28,40 +28,60 @@ add_task(async function test_telemetry() {
 
   await extension1.startup();
 
-  assertHistogramSnapshot(HISTOGRAM, {processSnapshot, expectedValue: true},
-                          `Data recorded for first extension for histogram: ${HISTOGRAM}.`);
+  assertHistogramSnapshot(
+    HISTOGRAM,
+    { processSnapshot, expectedValue: true },
+    `Data recorded for first extension for histogram: ${HISTOGRAM}.`
+  );
 
-  assertHistogramSnapshot(HISTOGRAM_KEYED, {
-    keyed: true,
-    processSnapshot: processKeyedSnapshot,
-    expectedValue: {
-      [extension1.extension.id]: true,
+  assertHistogramSnapshot(
+    HISTOGRAM_KEYED,
+    {
+      keyed: true,
+      processSnapshot: processKeyedSnapshot,
+      expectedValue: {
+        [extension1.extension.id]: true,
+      },
     },
-  }, `Data recorded for first extension for histogram ${HISTOGRAM_KEYED}`);
+    `Data recorded for first extension for histogram ${HISTOGRAM_KEYED}`
+  );
 
   let histogram = Services.telemetry.getHistogramById(HISTOGRAM);
-  let histogramKeyed = Services.telemetry.getKeyedHistogramById(HISTOGRAM_KEYED);
+  let histogramKeyed = Services.telemetry.getKeyedHistogramById(
+    HISTOGRAM_KEYED
+  );
   let histogramSum = histogram.snapshot().sum;
   let histogramSumExt1 = histogramKeyed.snapshot()[extension1.extension.id].sum;
 
   await extension2.startup();
 
-  assertHistogramSnapshot(HISTOGRAM, {
-    processSnapshot: (snapshot) => snapshot.sum > histogramSum,
-    expectedValue: true,
-  }, `Data recorded for second extension for histogram: ${HISTOGRAM}.`);
-
-  assertHistogramSnapshot(HISTOGRAM_KEYED, {
-    keyed: true,
-    processSnapshot: processKeyedSnapshot,
-    expectedValue: {
-      [extension1.extension.id]: true,
-      [extension2.extension.id]: true,
+  assertHistogramSnapshot(
+    HISTOGRAM,
+    {
+      processSnapshot: snapshot => snapshot.sum > histogramSum,
+      expectedValue: true,
     },
-  }, `Data recorded for second extension for histogram ${HISTOGRAM_KEYED}`);
+    `Data recorded for second extension for histogram: ${HISTOGRAM}.`
+  );
 
-  equal(histogramKeyed.snapshot()[extension1.extension.id].sum, histogramSumExt1,
-        `Data recorder for first extension is unchanged on the keyed histogram ${HISTOGRAM_KEYED}`);
+  assertHistogramSnapshot(
+    HISTOGRAM_KEYED,
+    {
+      keyed: true,
+      processSnapshot: processKeyedSnapshot,
+      expectedValue: {
+        [extension1.extension.id]: true,
+        [extension2.extension.id]: true,
+      },
+    },
+    `Data recorded for second extension for histogram ${HISTOGRAM_KEYED}`
+  );
+
+  equal(
+    histogramKeyed.snapshot()[extension1.extension.id].sum,
+    histogramSumExt1,
+    `Data recorder for first extension is unchanged on the keyed histogram ${HISTOGRAM_KEYED}`
+  );
 
   await extension1.unload();
   await extension2.unload();

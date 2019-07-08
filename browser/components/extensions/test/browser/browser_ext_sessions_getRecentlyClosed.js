@@ -22,9 +22,12 @@ add_task(async function test_sessions_get_recently_closed() {
   function background() {
     Promise.all([
       browser.sessions.getRecentlyClosed(),
-      browser.tabs.query({active: true, currentWindow: true}),
+      browser.tabs.query({ active: true, currentWindow: true }),
     ]).then(([recentlyClosed, tabs]) => {
-      browser.test.sendMessage("initialData", {recentlyClosed, currentWindowId: tabs[0].windowId});
+      browser.test.sendMessage("initialData", {
+        recentlyClosed,
+        currentWindowId: tabs[0].windowId,
+      });
     });
 
     browser.test.onMessage.addListener((msg, filter) => {
@@ -48,24 +51,40 @@ add_task(async function test_sessions_get_recently_closed() {
 
   await extension.startup();
 
-  let {recentlyClosed, currentWindowId} = await extension.awaitMessage("initialData");
+  let { recentlyClosed, currentWindowId } = await extension.awaitMessage(
+    "initialData"
+  );
   recordInitialTimestamps(recentlyClosed.map(item => item.lastModified));
 
   await openAndCloseWindow();
   extension.sendMessage("check-sessions");
   recentlyClosed = await extension.awaitMessage("recentlyClosed");
-  checkRecentlyClosed(recentlyClosed.filter(onlyNewItemsFilter), 1, currentWindowId);
+  checkRecentlyClosed(
+    recentlyClosed.filter(onlyNewItemsFilter),
+    1,
+    currentWindowId
+  );
 
   await openAndCloseWindow("about:config", ["about:robots", "about:mozilla"]);
   extension.sendMessage("check-sessions");
   recentlyClosed = await extension.awaitMessage("recentlyClosed");
   // Check for multiple tabs in most recently closed window
-  is(recentlyClosed[0].window.tabs.length, 3, "most recently closed window has the expected number of tabs");
+  is(
+    recentlyClosed[0].window.tabs.length,
+    3,
+    "most recently closed window has the expected number of tabs"
+  );
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.com"
+  );
   BrowserTestUtils.removeTab(tab);
 
-  tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
+  tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.com"
+  );
   BrowserTestUtils.removeTab(tab);
 
   await openAndCloseWindow();
@@ -86,25 +105,34 @@ add_task(async function test_sessions_get_recently_closed() {
   is(finalResult[4].tab, undefined, "fifth item is not a tab");
 
   // test with filter
-  extension.sendMessage("check-sessions", {maxResults: 2});
+  extension.sendMessage("check-sessions", { maxResults: 2 });
   recentlyClosed = await extension.awaitMessage("recentlyClosed");
-  checkRecentlyClosed(recentlyClosed.filter(onlyNewItemsFilter), 2, currentWindowId);
+  checkRecentlyClosed(
+    recentlyClosed.filter(onlyNewItemsFilter),
+    2,
+    currentWindowId
+  );
 
   await extension.unload();
 });
 
 add_task(async function test_sessions_get_recently_closed_navigated() {
   function background() {
-    browser.sessions.getRecentlyClosed({maxResults: 1}).then(recentlyClosed => {
-      let tab = recentlyClosed[0].window.tabs[0];
-      browser.test.assertEq(
-        "http://example.com/", tab.url,
-        "Tab in closed window has the expected url.");
-      browser.test.assertTrue(
-        tab.title.includes("mochitest index"),
-        "Tab in closed window has the expected title.");
-      browser.test.notifyPass("getRecentlyClosed with navigation");
-    });
+    browser.sessions
+      .getRecentlyClosed({ maxResults: 1 })
+      .then(recentlyClosed => {
+        let tab = recentlyClosed[0].window.tabs[0];
+        browser.test.assertEq(
+          "http://example.com/",
+          tab.url,
+          "Tab in closed window has the expected url."
+        );
+        browser.test.assertTrue(
+          tab.title.includes("mochitest index"),
+          "Tab in closed window has the expected title."
+        );
+        browser.test.notifyPass("getRecentlyClosed with navigation");
+      });
   }
 
   let extension = ExtensionTestUtils.loadExtension({

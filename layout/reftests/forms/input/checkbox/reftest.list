@@ -14,6 +14,6 @@
 skip-if(!gtkWidget) == gtk-theme-width-height.html gtk-theme-width-height-ref.html
 == checkbox-baseline.html checkbox-baseline-ref.html
 == checkbox-radio-color.html checkbox-radio-color-ref.html
-skip-if(gtkWidget) == checkbox-clamp-01.html checkbox-clamp-01-ref.html
-skip-if(OSX||winWidget) == checkbox-clamp-02.html checkbox-clamp-02-ref.html
+skip-if(gtkWidget) fails-if(geckoview&&webrender) == checkbox-clamp-01.html checkbox-clamp-01-ref.html
+skip-if(OSX||winWidget) fails-if(geckoview&&webrender) == checkbox-clamp-02.html checkbox-clamp-02-ref.html
 fails-if(OSX) == checkbox-minimum-size.html checkbox-minimum-size-ref.html

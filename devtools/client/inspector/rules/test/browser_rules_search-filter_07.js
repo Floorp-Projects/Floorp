@@ -21,7 +21,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
   info("Enter the test value in the search filter");
@@ -36,11 +36,14 @@ add_task(async function() {
   info("Check that the correct rules are visible");
   is(view.element.children.length, 2, "Should have 2 rules.");
   is(rule.selectorText, "#testid", "Second rule is #testid.");
-  ok(!propEditor.container.classList.contains("ruleview-highlight"),
-    "width text property is not highlighted.");
-  ok(rule.textProps[1].editor.container.classList
-    .contains("ruleview-highlight"),
-    "height text property is correctly highlighted.");
+  ok(
+    !propEditor.container.classList.contains("ruleview-highlight"),
+    "width text property is not highlighted."
+  );
+  ok(
+    rule.textProps[1].editor.container.classList.contains("ruleview-highlight"),
+    "height text property is correctly highlighted."
+  );
 
   info("Change the width property to margin-left");
   EventUtils.sendString("margin-left", view.styleWindow);
@@ -50,8 +53,10 @@ add_task(async function() {
   EventUtils.synthesizeKey("KEY_Enter");
   await onRuleViewChanged;
 
-  ok(propEditor.container.classList.contains("ruleview-highlight"),
-    "margin-left text property is correctly highlighted.");
+  ok(
+    propEditor.container.classList.contains("ruleview-highlight"),
+    "margin-left text property is correctly highlighted."
+  );
 
   // After pressing return on the property name, the value has been focused
   // automatically. Blur it now and wait for the rule-view to refresh to avoid

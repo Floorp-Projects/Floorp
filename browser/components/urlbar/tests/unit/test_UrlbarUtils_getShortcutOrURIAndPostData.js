@@ -8,14 +8,18 @@
 
 "use strict";
 
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 
 function getPostDataString(aIS) {
-  if (!aIS)
+  if (!aIS) {
     return null;
+  }
 
-  let sis = Cc["@mozilla.org/scriptableinputstream;1"].
-            createInstance(Ci.nsIScriptableInputStream);
+  let sis = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+    Ci.nsIScriptableInputStream
+  );
   sis.init(aIS);
   let dataLines = sis.read(aIS.available()).split("\n");
 
@@ -37,7 +41,7 @@ keyWordData.prototype = {
     this.postData = aPostData;
     this.searchWord = aSearchWord;
 
-    this.method = (this.postData ? "POST" : "GET");
+    this.method = this.postData ? "POST" : "GET";
   },
 };
 
@@ -52,60 +56,139 @@ function searchKeywordData(aKeyWord, aURL, aPostData, aSearchWord) {
 searchKeywordData.prototype = new keyWordData();
 
 var testData = [
-  [new bmKeywordData("bmget", "http://bmget/search=%s", null, "foo"),
-   new keywordResult("http://bmget/search=foo", null)],
+  [
+    new bmKeywordData("bmget", "http://bmget/search=%s", null, "foo"),
+    new keywordResult("http://bmget/search=foo", null),
+  ],
 
-  [new bmKeywordData("bmpost", "http://bmpost/", "search=%s", "foo2"),
-   new keywordResult("http://bmpost/", "search=foo2")],
+  [
+    new bmKeywordData("bmpost", "http://bmpost/", "search=%s", "foo2"),
+    new keywordResult("http://bmpost/", "search=foo2"),
+  ],
 
-  [new bmKeywordData("bmpostget", "http://bmpostget/search1=%s", "search2=%s", "foo3"),
-   new keywordResult("http://bmpostget/search1=foo3", "search2=foo3")],
+  [
+    new bmKeywordData(
+      "bmpostget",
+      "http://bmpostget/search1=%s",
+      "search2=%s",
+      "foo3"
+    ),
+    new keywordResult("http://bmpostget/search1=foo3", "search2=foo3"),
+  ],
 
-  [new bmKeywordData("bmget-nosearch", "http://bmget-nosearch/", null, ""),
-   new keywordResult("http://bmget-nosearch/", null)],
+  [
+    new bmKeywordData("bmget-nosearch", "http://bmget-nosearch/", null, ""),
+    new keywordResult("http://bmget-nosearch/", null),
+  ],
 
-  [new searchKeywordData("searchget", "http://searchget/?search={searchTerms}", null, "foo4"),
-   new keywordResult("http://searchget/?search=foo4", null, true)],
+  [
+    new searchKeywordData(
+      "searchget",
+      "http://searchget/?search={searchTerms}",
+      null,
+      "foo4"
+    ),
+    new keywordResult("http://searchget/?search=foo4", null, true),
+  ],
 
-  [new searchKeywordData("searchpost", "http://searchpost/", "search={searchTerms}", "foo5"),
-   new keywordResult("http://searchpost/", "search=foo5", true)],
+  [
+    new searchKeywordData(
+      "searchpost",
+      "http://searchpost/",
+      "search={searchTerms}",
+      "foo5"
+    ),
+    new keywordResult("http://searchpost/", "search=foo5", true),
+  ],
 
-  [new searchKeywordData("searchpostget", "http://searchpostget/?search1={searchTerms}", "search2={searchTerms}", "foo6"),
-   new keywordResult("http://searchpostget/?search1=foo6", "search2=foo6", true)],
+  [
+    new searchKeywordData(
+      "searchpostget",
+      "http://searchpostget/?search1={searchTerms}",
+      "search2={searchTerms}",
+      "foo6"
+    ),
+    new keywordResult(
+      "http://searchpostget/?search1=foo6",
+      "search2=foo6",
+      true
+    ),
+  ],
 
   // Bookmark keywords that don't take parameters should not be activated if a
   // parameter is passed (bug 420328).
-  [new bmKeywordData("bmget-noparam", "http://bmget-noparam/", null, "foo7"),
-   new keywordResult(null, null, true)],
-  [new bmKeywordData("bmpost-noparam", "http://bmpost-noparam/", "not_a=param", "foo8"),
-   new keywordResult(null, null, true)],
+  [
+    new bmKeywordData("bmget-noparam", "http://bmget-noparam/", null, "foo7"),
+    new keywordResult(null, null, true),
+  ],
+  [
+    new bmKeywordData(
+      "bmpost-noparam",
+      "http://bmpost-noparam/",
+      "not_a=param",
+      "foo8"
+    ),
+    new keywordResult(null, null, true),
+  ],
 
   // Test escaping (%s = escaped, %S = raw)
   // UTF-8 default
-  [new bmKeywordData("bmget-escaping", "http://bmget/?esc=%s&raw=%S", null, "fo\xE9"),
-   new keywordResult("http://bmget/?esc=fo%C3%A9&raw=fo\xE9", null)],
+  [
+    new bmKeywordData(
+      "bmget-escaping",
+      "http://bmget/?esc=%s&raw=%S",
+      null,
+      "fo\xE9"
+    ),
+    new keywordResult("http://bmget/?esc=fo%C3%A9&raw=fo\xE9", null),
+  ],
   // Explicitly-defined ISO-8859-1
-  [new bmKeywordData("bmget-escaping2", "http://bmget/?esc=%s&raw=%S&mozcharset=ISO-8859-1", null, "fo\xE9"),
-   new keywordResult("http://bmget/?esc=fo%E9&raw=fo\xE9", null)],
+  [
+    new bmKeywordData(
+      "bmget-escaping2",
+      "http://bmget/?esc=%s&raw=%S&mozcharset=ISO-8859-1",
+      null,
+      "fo\xE9"
+    ),
+    new keywordResult("http://bmget/?esc=fo%E9&raw=fo\xE9", null),
+  ],
 
   // Bug 359809: Test escaping +, /, and @
   // UTF-8 default
-  [new bmKeywordData("bmget-escaping", "http://bmget/?esc=%s&raw=%S", null, "+/@"),
-   new keywordResult("http://bmget/?esc=%2B%2F%40&raw=+/@", null)],
+  [
+    new bmKeywordData(
+      "bmget-escaping",
+      "http://bmget/?esc=%s&raw=%S",
+      null,
+      "+/@"
+    ),
+    new keywordResult("http://bmget/?esc=%2B%2F%40&raw=+/@", null),
+  ],
   // Explicitly-defined ISO-8859-1
-  [new bmKeywordData("bmget-escaping2", "http://bmget/?esc=%s&raw=%S&mozcharset=ISO-8859-1", null, "+/@"),
-   new keywordResult("http://bmget/?esc=%2B%2F%40&raw=+/@", null)],
+  [
+    new bmKeywordData(
+      "bmget-escaping2",
+      "http://bmget/?esc=%s&raw=%S&mozcharset=ISO-8859-1",
+      null,
+      "+/@"
+    ),
+    new keywordResult("http://bmget/?esc=%2B%2F%40&raw=+/@", null),
+  ],
 
   // Test using a non-bmKeywordData object, to test the behavior of
   // getShortcutOrURIAndPostData for non-keywords (setupKeywords only adds keywords for
   // bmKeywordData objects)
-  [{keyword: "http://gavinsharp.com"},
-   new keywordResult(null, null, true)],
+  [{ keyword: "http://gavinsharp.com" }, new keywordResult(null, null, true)],
 ];
 
 AddonTestUtils.init(this, false);
 AddonTestUtils.overrideCertDB();
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "42"
+);
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
@@ -118,16 +201,27 @@ add_task(async function test_getshortcutoruri() {
     let [data, result] = item;
 
     let query = data.keyword;
-    if (data.searchWord)
+    if (data.searchWord) {
       query += " " + data.searchWord;
+    }
     let returnedData = await UrlbarUtils.getShortcutOrURIAndPostData(query);
     // null result.url means we should expect the same query we sent in
     let expected = result.url || query;
-    Assert.equal(returnedData.url, expected, "got correct URL for " + data.keyword);
-    Assert.equal(getPostDataString(returnedData.postData), result.postData,
-      "got correct postData for " + data.keyword);
-    Assert.equal(returnedData.mayInheritPrincipal, !result.isUnsafe,
-      "got correct mayInheritPrincipal for " + data.keyword);
+    Assert.equal(
+      returnedData.url,
+      expected,
+      "got correct URL for " + data.keyword
+    );
+    Assert.equal(
+      getPostDataString(returnedData.postData),
+      result.postData,
+      "got correct postData for " + data.keyword
+    );
+    Assert.equal(
+      returnedData.mayInheritPrincipal,
+      !result.isUnsafe,
+      "got correct mayInheritPrincipal for " + data.keyword
+    );
   }
 
   await cleanupKeywords();
@@ -137,14 +231,23 @@ var folder = null;
 var gAddedEngines = [];
 
 async function setupKeywords() {
-  folder = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                                                title: "keyword-test" });
+  folder = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: "keyword-test",
+  });
   for (let item of testData) {
     let data = item[0];
     if (data instanceof bmKeywordData) {
-      await PlacesUtils.bookmarks.insert({ url: data.uri, parentGuid: folder.guid });
-      await PlacesUtils.keywords.insert({ keyword: data.keyword, url: data.uri.spec, postData: data.postData });
+      await PlacesUtils.bookmarks.insert({
+        url: data.uri,
+        parentGuid: folder.guid,
+      });
+      await PlacesUtils.keywords.insert({
+        keyword: data.keyword,
+        url: data.uri.spec,
+        postData: data.postData,
+      });
     }
 
     if (data instanceof searchKeywordData) {
@@ -165,7 +268,8 @@ async function setupKeywords() {
 
 async function cleanupKeywords() {
   await PlacesUtils.bookmarks.remove(folder);
-  for (let engine of gAddedEngines)
+  for (let engine of gAddedEngines) {
     await Services.search.removeEngine(engine);
+  }
   gAddedEngines = [];
 }

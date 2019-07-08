@@ -52,8 +52,13 @@ add_task(async function() {
   message = await onMessageReceived;
   ok(message, "`foo + foo2` was evaluated as expected with debugger paused");
 
-  info("Checking the first command, which is the last to resolve since it paused");
-  ok(firstCallEvaluationResult === unresolvedSymbol, "firstCall was not evaluated yet");
+  info(
+    "Checking the first command, which is the last to resolve since it paused"
+  );
+  ok(
+    firstCallEvaluationResult === unresolvedSymbol,
+    "firstCall was not evaluated yet"
+  );
 
   info("Resuming the thread");
   dbg.actions.resume(dbg.selectors.getThreadContext());

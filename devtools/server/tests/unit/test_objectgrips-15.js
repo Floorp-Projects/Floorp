@@ -16,11 +16,14 @@ function run_test() {
   gDebuggee = addTestGlobal("test-object-grip");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-object-grip",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             testObjectGroup();
-                           });
+    attachTestTabAndResume(gClient, "test-object-grip", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      testObjectGroup();
+    });
   });
   do_test_pending();
 }
@@ -35,7 +38,9 @@ function evalCode() {
       debugger;
     }
 
-    Promise.resolve().then(foo).then(foo);
+    Promise.resolve()
+      .then(foo)
+      .then(foo);
   });
 }
 

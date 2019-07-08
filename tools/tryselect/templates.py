@@ -23,7 +23,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
 
 
-class Template(object):
+class TryConfig(object):
     __metaclass__ = ABCMeta
 
     def __init__(self):
@@ -37,6 +37,17 @@ class Template(object):
     @abstractproperty
     def arguments(self):
         pass
+
+    @abstractmethod
+    def try_config(self, **kwargs):
+        pass
+
+
+class Template(TryConfig):
+    def try_config(self, **kwargs):
+        context = self.context(**kwargs)
+        if context:
+            return {'templates': context}
 
     @abstractmethod
     def context(self, **kwargs):
@@ -209,6 +220,22 @@ class GeckoProfile(Template):
         return {'gecko-profile': profile}
 
 
+class DisablePgo(TryConfig):
+
+    arguments = [
+        [['--disable-pgo'],
+         {'action': 'store_true',
+          'help': 'Don\'t run PGO builds',
+          }],
+    ]
+
+    def try_config(self, disable_pgo, **kwargs):
+        if disable_pgo:
+            return {
+                'disable-pgo': True,
+            }
+
+
 all_templates = {
     'artifact': Artifact,
     'path': Path,
@@ -216,4 +243,5 @@ all_templates = {
     'rebuild': Rebuild,
     'chemspill-prio': ChemspillPrio,
     'gecko-profile': GeckoProfile,
+    'disable-pgo': DisablePgo,
 }

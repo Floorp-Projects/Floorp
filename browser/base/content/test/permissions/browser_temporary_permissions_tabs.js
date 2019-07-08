@@ -10,7 +10,13 @@ add_task(async function testTempPermissionOnTabMove() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri.spec);
 
-  SitePermissions.set(uri, id, SitePermissions.BLOCK, SitePermissions.SCOPE_TEMPORARY, tab.linkedBrowser);
+  SitePermissions.set(
+    uri,
+    id,
+    SitePermissions.BLOCK,
+    SitePermissions.SCOPE_TEMPORARY,
+    tab.linkedBrowser
+  );
 
   Assert.deepEqual(SitePermissions.get(uri, id, tab.linkedBrowser), {
     state: SitePermissions.BLOCK,
@@ -39,7 +45,13 @@ add_task(async function testTempPermissionMultipleTabs() {
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri.spec);
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri.spec);
 
-  SitePermissions.set(uri, id, SitePermissions.BLOCK, SitePermissions.SCOPE_TEMPORARY, tab2.linkedBrowser);
+  SitePermissions.set(
+    uri,
+    id,
+    SitePermissions.BLOCK,
+    SitePermissions.SCOPE_TEMPORARY,
+    tab2.linkedBrowser
+  );
 
   Assert.deepEqual(SitePermissions.get(uri, id, tab2.linkedBrowser), {
     state: SitePermissions.BLOCK,
@@ -51,16 +63,25 @@ add_task(async function testTempPermissionMultipleTabs() {
     scope: SitePermissions.SCOPE_PERSISTENT,
   });
 
-  let geoIcon = document.querySelector(".blocked-permission-icon[data-permission-id=geo]");
+  let geoIcon = document.querySelector(
+    ".blocked-permission-icon[data-permission-id=geo]"
+  );
 
-  Assert.notEqual(geoIcon.getBoundingClientRect().width, 0, "geo anchor should be visible");
+  Assert.notEqual(
+    geoIcon.getBoundingClientRect().width,
+    0,
+    "geo anchor should be visible"
+  );
 
   await BrowserTestUtils.switchTab(gBrowser, tab1);
 
-  Assert.equal(geoIcon.getBoundingClientRect().width, 0, "geo anchor should not be visible");
+  Assert.equal(
+    geoIcon.getBoundingClientRect().width,
+    0,
+    "geo anchor should not be visible"
+  );
 
   SitePermissions.remove(uri, id, tab2.linkedBrowser);
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
 });
-

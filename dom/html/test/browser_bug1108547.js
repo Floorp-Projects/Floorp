@@ -21,8 +21,9 @@ function runPass(getterFile, finishedCallback) {
   function whenDelayedStartupFinished(win, callback) {
     let topic = "browser-delayed-startup-finished";
     Services.obs.addObserver(function onStartup(aSubject) {
-      if (win != aSubject)
+      if (win != aSubject) {
         return;
+      }
 
       Services.obs.removeObserver(onStartup, topic);
       executeSoon(callback);
@@ -30,22 +31,34 @@ function runPass(getterFile, finishedCallback) {
   }
 
   // First, set the cookie in a normal window.
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, rootDir + "file_bug1108547-1.html");
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(afterOpenCookieSetter);
+  gBrowser.selectedTab = BrowserTestUtils.addTab(
+    gBrowser,
+    rootDir + "file_bug1108547-1.html"
+  );
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(
+    afterOpenCookieSetter
+  );
 
   function afterOpenCookieSetter() {
     gBrowser.removeCurrentTab();
 
     // Now, open a private window.
-    privateWin = OpenBrowserWindow({private: true});
-      whenDelayedStartupFinished(privateWin, afterPrivateWindowOpened);
+    privateWin = OpenBrowserWindow({ private: true });
+    whenDelayedStartupFinished(privateWin, afterPrivateWindowOpened);
   }
 
   function afterPrivateWindowOpened() {
     // In the private window, open the getter file, and wait for a new tab to be opened.
-    privateWin.gBrowser.selectedTab = BrowserTestUtils.addTab(privateWin.gBrowser, rootDir + getterFile);
+    privateWin.gBrowser.selectedTab = BrowserTestUtils.addTab(
+      privateWin.gBrowser,
+      rootDir + getterFile
+    );
     testBrowser = privateWin.gBrowser.selectedBrowser;
-    privateWin.gBrowser.tabContainer.addEventListener("TabOpen", onNewTabOpened, true);
+    privateWin.gBrowser.tabContainer.addEventListener(
+      "TabOpen",
+      onNewTabOpened,
+      true
+    );
   }
 
   function fetchResult() {
@@ -56,8 +69,17 @@ function runPass(getterFile, finishedCallback) {
 
   function onNewTabOpened() {
     // When the new tab is opened, wait for it to load.
-    privateWin.gBrowser.tabContainer.removeEventListener("TabOpen", onNewTabOpened, true);
-    BrowserTestUtils.browserLoaded(privateWin.gBrowser.tabs[privateWin.gBrowser.tabs.length - 1].linkedBrowser).then(fetchResult).then(onNewTabLoaded);
+    privateWin.gBrowser.tabContainer.removeEventListener(
+      "TabOpen",
+      onNewTabOpened,
+      true
+    );
+    BrowserTestUtils.browserLoaded(
+      privateWin.gBrowser.tabs[privateWin.gBrowser.tabs.length - 1]
+        .linkedBrowser
+    )
+      .then(fetchResult)
+      .then(onNewTabLoaded);
   }
 
   function onNewTabLoaded(result) {
@@ -68,17 +90,24 @@ function runPass(getterFile, finishedCallback) {
     privateWin.close();
 
     // Clear all cookies.
-    Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager).removeAll();
+    Cc["@mozilla.org/cookiemanager;1"]
+      .getService(Ci.nsICookieManager)
+      .removeAll();
 
     // Open a new private window, this time to set a cookie inside it.
-    privateWin = OpenBrowserWindow({private: true});
-      whenDelayedStartupFinished(privateWin, afterPrivateWindowOpened2);
+    privateWin = OpenBrowserWindow({ private: true });
+    whenDelayedStartupFinished(privateWin, afterPrivateWindowOpened2);
   }
 
   function afterPrivateWindowOpened2() {
     // In the private window, open the setter file, and wait for it to load.
-    privateWin.gBrowser.selectedTab = BrowserTestUtils.addTab(privateWin.gBrowser, rootDir + "file_bug1108547-1.html");
-    BrowserTestUtils.browserLoaded(privateWin.gBrowser.selectedBrowser).then(afterOpenCookieSetter2);
+    privateWin.gBrowser.selectedTab = BrowserTestUtils.addTab(
+      privateWin.gBrowser,
+      rootDir + "file_bug1108547-1.html"
+    );
+    BrowserTestUtils.browserLoaded(privateWin.gBrowser.selectedBrowser).then(
+      afterOpenCookieSetter2
+    );
   }
 
   function afterOpenCookieSetter2() {
@@ -86,7 +115,10 @@ function runPass(getterFile, finishedCallback) {
     privateWin.close();
 
     // Now try to read the cookie in a normal window, and wait for a new tab to be opened.
-    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, rootDir + getterFile);
+    gBrowser.selectedTab = BrowserTestUtils.addTab(
+      gBrowser,
+      rootDir + getterFile
+    );
     testBrowser = gBrowser.selectedBrowser;
     gBrowser.tabContainer.addEventListener("TabOpen", onNewTabOpened2, true);
   }
@@ -94,7 +126,11 @@ function runPass(getterFile, finishedCallback) {
   function onNewTabOpened2() {
     // When the new tab is opened, wait for it to load.
     gBrowser.tabContainer.removeEventListener("TabOpen", onNewTabOpened2, true);
-    BrowserTestUtils.browserLoaded(gBrowser.tabs[gBrowser.tabs.length - 1].linkedBrowser).then(fetchResult).then(onNewTabLoaded2);
+    BrowserTestUtils.browserLoaded(
+      gBrowser.tabs[gBrowser.tabs.length - 1].linkedBrowser
+    )
+      .then(fetchResult)
+      .then(onNewTabLoaded2);
   }
 
   function onNewTabLoaded2(result) {

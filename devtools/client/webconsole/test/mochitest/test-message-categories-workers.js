@@ -11,4 +11,3 @@
 var onmessage = function() {
   fooBarWorker();
 };
-

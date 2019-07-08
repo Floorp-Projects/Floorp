@@ -10,7 +10,7 @@ const TEST_URL = URL_ROOT + "doc_filter.html";
 
 add_task(async function() {
   await addTab(TEST_URL);
-  const {view} = await openRuleView();
+  const { view } = await openRuleView();
   await testPressingEscapeRevertsChanges(view);
 });
 
@@ -23,15 +23,25 @@ async function testPressingEscapeRevertsChanges(view) {
   await setValueInFilterWidget("blur(2px)", view);
 
   await waitForComputedStyleProperty("body", null, "filter", "blur(2px)");
-  is(propEditor.valueSpan.textContent, "blur(2px)",
-    "Got expected property value.");
+  is(
+    propEditor.valueSpan.textContent,
+    "blur(2px)",
+    "Got expected property value."
+  );
 
   await pressEscapeToCloseTooltip(view);
 
-  await waitForComputedStyleProperty("body", null, "filter",
-    "blur(2px) contrast(2)");
-  is(propEditor.valueSpan.textContent, "blur(2px) contrast(2)",
-    "Got expected property value.");
+  await waitForComputedStyleProperty(
+    "body",
+    null,
+    "filter",
+    "blur(2px) contrast(2)"
+  );
+  is(
+    propEditor.valueSpan.textContent,
+    "blur(2px) contrast(2)",
+    "Got expected property value."
+  );
 }
 
 async function clickOnFilterSwatch(swatch, view) {

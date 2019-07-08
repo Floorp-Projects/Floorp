@@ -6,10 +6,10 @@ exports[`Badges component: contrast ratio fail render 1`] = `"<span class=\\"bad
 
 exports[`Badges component: contrast ratio success render 1`] = `"<span class=\\"badges\\" role=\\"group\\" aria-label=\\"accessibility.badges\\"></span>"`;
 
-exports[`Badges component: empty checks render 1`] = `null`;
+exports[`Badges component: empty checks render 1`] = `""`;
 
-exports[`Badges component: no props render 1`] = `null`;
+exports[`Badges component: no props render 1`] = `""`;
 
-exports[`Badges component: null checks render 1`] = `null`;
+exports[`Badges component: null checks render 1`] = `""`;
 
-exports[`Badges component: unsupported checks render 1`] = `null`;
+exports[`Badges component: unsupported checks render 1`] = `""`;

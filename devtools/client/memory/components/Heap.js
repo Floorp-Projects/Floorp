@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { assert, safeErrorString } = require("devtools/shared/DevToolsUtils");
@@ -13,7 +16,9 @@ const CensusHeader = createFactory(require("./CensusHeader"));
 const DominatorTree = createFactory(require("./DominatorTree"));
 const DominatorTreeHeader = createFactory(require("./DominatorTreeHeader"));
 const TreeMap = createFactory(require("./TreeMap"));
-const HSplitBox = createFactory(require("devtools/client/shared/components/HSplitBox"));
+const HSplitBox = createFactory(
+  require("devtools/client/shared/components/HSplitBox")
+);
 const Individuals = createFactory(require("./Individuals"));
 const IndividualsHeader = createFactory(require("./IndividualsHeader"));
 const ShortestPaths = createFactory(require("./ShortestPaths"));
@@ -45,17 +50,13 @@ const { snapshot: snapshotModel, diffingModel } = models;
 function getState(view, snapshot, diffing, individuals) {
   switch (view.state) {
     case viewState.CENSUS:
-      return snapshot.census
-        ? snapshot.census.state
-        : snapshot.state;
+      return snapshot.census ? snapshot.census.state : snapshot.state;
 
     case viewState.DIFFING:
       return diffing.state;
 
     case viewState.TREE_MAP:
-      return snapshot.treeMap
-      ? snapshot.treeMap.state
-      : snapshot.state;
+      return snapshot.treeMap ? snapshot.treeMap.state : snapshot.state;
 
     case viewState.DOMINATOR_TREE:
       return snapshot.dominatorTree
@@ -110,9 +111,11 @@ function shouldDisplayStatus(state, view, snapshot) {
  */
 function getStateStatusText(state, diffing) {
   if (state === diffingState.SELECTING) {
-    return L10N.getStr(diffing.firstSnapshotId === null
-                         ? "diffing.prompt.selectBaseline"
-                         : "diffing.prompt.selectComparison");
+    return L10N.getStr(
+      diffing.firstSnapshotId === null
+        ? "diffing.prompt.selectBaseline"
+        : "diffing.prompt.selectComparison"
+    );
   }
 
   return getStatusTextFull(state);
@@ -162,8 +165,10 @@ function getError(snapshot, diffing, individuals) {
       return snapshot.treeMap.error;
     }
 
-    if (snapshot.dominatorTree &&
-        snapshot.dominatorTree.state === dominatorTreeState.ERROR) {
+    if (
+      snapshot.dominatorTree &&
+      snapshot.dominatorTree.state === dominatorTreeState.ERROR
+    ) {
       return snapshot.dominatorTree.error;
     }
   }
@@ -242,14 +247,17 @@ class Heap extends Component {
   }
 
   _renderInitial(onSnapshotClick) {
-    return this._renderHeapView("initial", dom.button(
-      {
-        className: "devtools-button take-snapshot",
-        onClick: onSnapshotClick,
-        "data-standalone": true,
-      },
-      L10N.getStr("take-snapshot")
-    ));
+    return this._renderHeapView(
+      "initial",
+      dom.button(
+        {
+          className: "devtools-button take-snapshot",
+          onClick: onSnapshotClick,
+          "data-standalone": true,
+        },
+        L10N.getStr("take-snapshot")
+      )
+    );
   }
 
   _renderStatus(state, statusText, diffing) {
@@ -258,12 +266,15 @@ class Heap extends Component {
       throbber = "devtools-throbber";
     }
 
-    return this._renderHeapView(state, dom.span(
-      {
-        className: `snapshot-status ${throbber}`,
-      },
-      statusText
-    ));
+    return this._renderHeapView(
+      state,
+      dom.span(
+        {
+          className: `snapshot-status ${throbber}`,
+        },
+        statusText
+      )
+    );
   }
 
   _renderError(state, statusText, error) {
@@ -274,53 +285,78 @@ class Heap extends Component {
     );
   }
 
-  _renderCensus(state, census, diffing, onViewSourceInDebugger, onViewIndividuals) {
-    assert(census.report, "Should not render census that does not have a report");
+  _renderCensus(
+    state,
+    census,
+    diffing,
+    onViewSourceInDebugger,
+    onViewIndividuals
+  ) {
+    assert(
+      census.report,
+      "Should not render census that does not have a report"
+    );
 
     if (!census.report.children) {
-      const censusFilterMsg = census.filter ? L10N.getStr("heapview.none-match")
-                                            : L10N.getStr("heapview.empty");
-      const msg = diffing ? L10N.getStr("heapview.no-difference")
-                          : censusFilterMsg;
+      const censusFilterMsg = census.filter
+        ? L10N.getStr("heapview.none-match")
+        : L10N.getStr("heapview.empty");
+      const msg = diffing
+        ? L10N.getStr("heapview.no-difference")
+        : censusFilterMsg;
       return this._renderHeapView(state, dom.div({ className: "empty" }, msg));
     }
 
     const contents = [];
 
-    if (census.display.breakdown.by === "allocationStack"
-        && census.report.children
-        && census.report.children.length === 1
-        && census.report.children[0].name === "noStack") {
-      contents.push(dom.div({ className: "error no-allocation-stacks" },
-                            L10N.getStr("heapview.noAllocationStacks")));
+    if (
+      census.display.breakdown.by === "allocationStack" &&
+      census.report.children &&
+      census.report.children.length === 1 &&
+      census.report.children[0].name === "noStack"
+    ) {
+      contents.push(
+        dom.div(
+          { className: "error no-allocation-stacks" },
+          L10N.getStr("heapview.noAllocationStacks")
+        )
+      );
     }
 
     contents.push(CensusHeader({ diffing }));
-    contents.push(Census({
-      onViewSourceInDebugger,
-      onViewIndividuals,
-      diffing,
-      census,
-      onExpand: node => this.props.onCensusExpand(census, node),
-      onCollapse: node => this.props.onCensusCollapse(census, node),
-      onFocus: node => this.props.onCensusFocus(census, node),
-    }));
+    contents.push(
+      Census({
+        onViewSourceInDebugger,
+        onViewIndividuals,
+        diffing,
+        census,
+        onExpand: node => this.props.onCensusExpand(census, node),
+        onCollapse: node => this.props.onCensusCollapse(census, node),
+        onFocus: node => this.props.onCensusFocus(census, node),
+      })
+    );
 
     return this._renderHeapView(state, ...contents);
   }
 
   _renderTreeMap(state, treeMap) {
-    return this._renderHeapView(
-      state,
-      TreeMap({ treeMap })
-    );
+    return this._renderHeapView(state, TreeMap({ treeMap }));
   }
 
-  _renderIndividuals(state, individuals, dominatorTree, onViewSourceInDebugger) {
-    assert(individuals.state === individualsState.FETCHED,
-           "Should have fetched individuals");
-    assert(dominatorTree && dominatorTree.root,
-           "Should have a dominator tree and its root");
+  _renderIndividuals(
+    state,
+    individuals,
+    dominatorTree,
+    onViewSourceInDebugger
+  ) {
+    assert(
+      individuals.state === individualsState.FETCHED,
+      "Should have fetched individuals"
+    );
+    assert(
+      dominatorTree && dominatorTree.root,
+      "Should have a dominator tree and its root"
+    );
 
     const tree = dom.div(
       {
@@ -339,9 +375,7 @@ class Heap extends Component {
     );
 
     const shortestPaths = ShortestPaths({
-      graph: individuals.focused
-        ? individuals.focused.shortestPaths
-        : null,
+      graph: individuals.focused ? individuals.focused.shortestPaths : null,
     });
 
     return this._renderHeapView(
@@ -371,7 +405,12 @@ class Heap extends Component {
     );
   }
 
-  _renderDominatorTree(state, onViewSourceInDebugger, dominatorTree, onLoadMoreSiblings) {
+  _renderDominatorTree(
+    state,
+    onViewSourceInDebugger,
+    dominatorTree,
+    onLoadMoreSiblings
+  ) {
     const tree = dom.div(
       {
         className: "vbox",
@@ -391,9 +430,7 @@ class Heap extends Component {
     );
 
     const shortestPaths = ShortestPaths({
-      graph: dominatorTree.focused
-        ? dominatorTree.focused.shortestPaths
-        : null,
+      graph: dominatorTree.focused ? dominatorTree.focused.shortestPaths : null,
     });
 
     return this._renderHeapView(
@@ -436,14 +473,18 @@ class Heap extends Component {
     }
 
     if (view.state === viewState.CENSUS || view.state === viewState.DIFFING) {
-      const census = view.state === viewState.CENSUS
-        ? snapshot.census
-        : diffing.census;
+      const census =
+        view.state === viewState.CENSUS ? snapshot.census : diffing.census;
       if (!census) {
         return this._renderStatus(state, statusText, diffing);
       }
-      return this._renderCensus(state, census, diffing, onViewSourceInDebugger,
-                                onViewIndividuals);
+      return this._renderCensus(
+        state,
+        census,
+        diffing,
+        onViewSourceInDebugger,
+        onViewIndividuals
+      );
     }
 
     if (view.state === viewState.TREE_MAP) {
@@ -451,23 +492,33 @@ class Heap extends Component {
     }
 
     if (view.state === viewState.INDIVIDUALS) {
-      assert(individuals.state === individualsState.FETCHED,
-             "Should have fetched the individuals -- " +
-             "other states are rendered as statuses");
-      return this._renderIndividuals(state, individuals,
-                                     individuals.dominatorTree,
-                                     onViewSourceInDebugger);
+      assert(
+        individuals.state === individualsState.FETCHED,
+        "Should have fetched the individuals -- " +
+          "other states are rendered as statuses"
+      );
+      return this._renderIndividuals(
+        state,
+        individuals,
+        individuals.dominatorTree,
+        onViewSourceInDebugger
+      );
     }
 
-    assert(view.state === viewState.DOMINATOR_TREE,
-           "If we aren't in progress, looking at a census, or diffing, then we " +
-           "must be looking at a dominator tree");
+    assert(
+      view.state === viewState.DOMINATOR_TREE,
+      "If we aren't in progress, looking at a census, or diffing, then we " +
+        "must be looking at a dominator tree"
+    );
     assert(!diffing, "Should not have diffing");
     assert(snapshot.dominatorTree, "Should have a dominator tree");
 
-    return this._renderDominatorTree(state, onViewSourceInDebugger,
-                                     snapshot.dominatorTree,
-                                     onLoadMoreSiblings);
+    return this._renderDominatorTree(
+      state,
+      onViewSourceInDebugger,
+      snapshot.dominatorTree,
+      onLoadMoreSiblings
+    );
   }
 }
 

@@ -94,6 +94,17 @@ jobs:
       when:
           - {weekday: 'Saturday', hour: 5, minute: 0}
 
+    - name: android-power-tests
+      job:
+          type: decision-task
+          treeherder-symbol: apt
+          target-tasks-method: android_power
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {weekday: 'Saturday', hour: 17, minute: 0}
+
     - name: searchfox-index
       job:
           type: decision-task
@@ -161,24 +172,10 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr60
+          - mozilla-esr68
       when:
-          by-project:
-              # No default branch
-              mozilla-central:
-                  - {weekday: 'Monday', hour: 10, minute: 0}
-                  - {weekday: 'Thursday', hour: 10, minute: 0}
-              mozilla-beta:
-                  - {weekday: 'Monday', hour: 10, minute: 0}
-                  - {weekday: 'Thursday', hour: 10, minute: 0}
-              mozilla-release:
-                  - {weekday: 'Monday', hour: 10, minute: 0}
-                  - {weekday: 'Thursday', hour: 10, minute: 0}
-              mozilla-esr60:
-                  - {weekday: 'Monday', hour: 10, minute: 0}
-                  - {weekday: 'Thursday', hour: 10, minute: 0}
-              mozilla-esr68:
-                  - {weekday: 'Monday', hour: 10, minute: 0}
-                  - {weekday: 'Thursday', hour: 10, minute: 0}
+          - {weekday: 'Monday', hour: 10, minute: 0}
+          - {weekday: 'Thursday', hour: 10, minute: 0}
 
     - name: pipfile-update
       job:

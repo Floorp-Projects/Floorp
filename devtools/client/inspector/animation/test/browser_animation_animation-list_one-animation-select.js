@@ -12,11 +12,19 @@ add_task(async function() {
   const { panel } = await openAnimationInspector();
 
   info("Checking whether an item element has been selected");
-  is(panel.querySelector(".animation-item").classList.contains("selected"), true,
-     "The animation item should have 'selected' class");
+  is(
+    panel.querySelector(".animation-item").classList.contains("selected"),
+    true,
+    "The animation item should have 'selected' class"
+  );
 
-  info("Checking whether the element will be unselected after closing the detail pane");
+  info(
+    "Checking whether the element will be unselected after closing the detail pane"
+  );
   clickOnDetailCloseButton(panel);
-  is(panel.querySelector(".animation-item").classList.contains("selected"), false,
-     "The animation item should not have 'selected' class");
+  is(
+    panel.querySelector(".animation-item").classList.contains("selected"),
+    false,
+    "The animation item should not have 'selected' class"
+  );
 });

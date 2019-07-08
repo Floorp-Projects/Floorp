@@ -12,7 +12,8 @@ add_task(async function() {
 
   info("Check the tick label content with limited duration animation");
   isnot(
-    panel.querySelector(".animation-list-container .tick-label:last-child").textContent,
+    panel.querySelector(".animation-list-container .tick-label:last-child")
+      .textContent,
     "\u221E",
     "The content should not be \u221E"
   );
@@ -20,7 +21,8 @@ add_task(async function() {
   info("Check the tick label content with infinity duration animation only");
   await selectNodeAndWaitForAnimations(".infinity", inspector);
   is(
-    panel.querySelector(".animation-list-container .tick-label:last-child").textContent,
+    panel.querySelector(".animation-list-container .tick-label:last-child")
+      .textContent,
     "\u221E",
     "The content should be \u221E"
   );

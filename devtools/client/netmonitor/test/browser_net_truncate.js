@@ -7,7 +7,9 @@
  * Verifies that truncated response bodies still have the correct reported size.
  */
 add_task(async function() {
-  const limit = Services.prefs.getIntPref("devtools.netmonitor.responseBodyLimit");
+  const limit = Services.prefs.getIntPref(
+    "devtools.netmonitor.responseBodyLimit"
+  );
   const URL = EXAMPLE_URL + "sjs_truncate-test-server.sjs?limit=" + limit;
   const { monitor, tab } = await initNetMonitor(URL);
 
@@ -29,16 +31,26 @@ add_task(async function() {
 
   const type = item.querySelector(".requests-list-type").textContent;
   const fullMimeType = item.querySelector(".requests-list-type").title;
-  const transferred = item.querySelector(".requests-list-transferred").textContent;
+  const transferred = item.querySelector(".requests-list-transferred")
+    .textContent;
   const size = item.querySelector(".requests-list-size").textContent;
 
   is(type, "plain", "Type should be rendered correctly.");
-  is(fullMimeType, "text/plain; charset=utf-8",
-    "Mimetype should be rendered correctly.");
-  is(transferred, L10N.getFormatStrWithNumbers("networkMenu.sizeMB", 2),
-    "Transferred size should be rendered correctly.");
-  is(size, L10N.getFormatStrWithNumbers("networkMenu.sizeMB", 2),
-    "Size should be rendered correctly.");
+  is(
+    fullMimeType,
+    "text/plain; charset=utf-8",
+    "Mimetype should be rendered correctly."
+  );
+  is(
+    transferred,
+    L10N.getFormatStrWithNumbers("networkMenu.sizeMB", 2),
+    "Transferred size should be rendered correctly."
+  );
+  is(
+    size,
+    L10N.getFormatStrWithNumbers("networkMenu.sizeMB", 2),
+    "Size should be rendered correctly."
+  );
 
   return teardown(monitor);
 });

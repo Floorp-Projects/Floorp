@@ -7,7 +7,9 @@
 
 "use strict";
 
-const {DownloadHistory} = ChromeUtils.import("resource://gre/modules/DownloadHistory.jsm");
+const { DownloadHistory } = ChromeUtils.import(
+  "resource://gre/modules/DownloadHistory.jsm"
+);
 
 let baseDate = new Date("2000-01-01");
 
@@ -57,8 +59,10 @@ class TestView {
       return;
     }
     for (let i = 0; i < this.downloads.length; i++) {
-      if (this.downloads[i].source.url != this.expected[i].source.url ||
-          this.downloads[i].target.path != this.expected[i].target.path) {
+      if (
+        this.downloads[i].source.url != this.expected[i].source.url ||
+        this.downloads[i].target.path != this.expected[i].target.path
+      ) {
         return;
       }
     }
@@ -68,12 +72,18 @@ class TestView {
     for (let i = 0; i < this.downloads.length; i++) {
       let download = this.downloads[i];
       let testDownload = this.expected[i];
-      info("Checking download source " + download.source.url +
-           " with target " + download.target.path);
-      if (!areEqual(download.succeeded, !!testDownload.succeeded) ||
-          !areEqual(download.canceled, !!testDownload.canceled) ||
-          !areEqual(download.hasPartialData, !!testDownload.hasPartialData) ||
-          !areEqual(!!download.error, !!testDownload.error)) {
+      info(
+        "Checking download source " +
+          download.source.url +
+          " with target " +
+          download.target.path
+      );
+      if (
+        !areEqual(download.succeeded, !!testDownload.succeeded) ||
+        !areEqual(download.canceled, !!testDownload.canceled) ||
+        !areEqual(download.hasPartialData, !!testDownload.hasPartialData) ||
+        !areEqual(!!download.error, !!testDownload.error)
+      ) {
         return;
       }
       // If the above properties match, the error details should be correct.
@@ -81,16 +91,20 @@ class TestView {
         if (testDownload.error.becauseSourceFailed) {
           Assert.equal(download.error.message, "History download failed.");
         }
-        Assert.equal(download.error.becauseBlockedByParentalControls,
-                     testDownload.error.becauseBlockedByParentalControls);
-        Assert.equal(download.error.becauseBlockedByReputationCheck,
-                     testDownload.error.becauseBlockedByReputationCheck);
+        Assert.equal(
+          download.error.becauseBlockedByParentalControls,
+          testDownload.error.becauseBlockedByParentalControls
+        );
+        Assert.equal(
+          download.error.becauseBlockedByReputationCheck,
+          testDownload.error.becauseBlockedByReputationCheck
+        );
       }
     }
     this.resolveWhenExpected();
   }
   async waitForExpected() {
-    let promise = new Promise(resolve => this.resolveWhenExpected = resolve);
+    let promise = new Promise(resolve => (this.resolveWhenExpected = resolve));
     this.checkForExpectedDownloads();
     await promise;
   }
@@ -146,8 +160,14 @@ add_task(async function test_DownloadHistory() {
 
     // Add the download to history using the XPCOM service, then use the
     // DownloadHistory module to save the associated metadata.
-    let promiseFileAnnotation = waitForAnnotation(properties.source.url, "downloads/destinationFileURI");
-    let promiseMetaAnnotation = waitForAnnotation(properties.source.url, "downloads/metaData");
+    let promiseFileAnnotation = waitForAnnotation(
+      properties.source.url,
+      "downloads/destinationFileURI"
+    );
+    let promiseMetaAnnotation = waitForAnnotation(
+      properties.source.url,
+      "downloads/metaData"
+    );
     let promiseVisit = promiseWaitForVisit(properties.source.url);
     await DownloadHistory.addDownloadToHistory(download);
     await promiseVisit;
@@ -176,8 +196,11 @@ add_task(async function test_DownloadHistory() {
   // Add a download to history and verify it's placed before session downloads,
   // even if the start date is more recent.
   let downloadToAdd = { offset: NEXT_OFFSET, canceled: true };
-  view.expected.splice(view.expected.findIndex(d => d.inSession), 0,
-                       downloadToAdd);
+  view.expected.splice(
+    view.expected.findIndex(d => d.inSession),
+    0,
+    downloadToAdd
+  );
   await addTestDownload(downloadToAdd);
   await view.waitForExpected();
 
@@ -202,16 +225,22 @@ add_task(async function test_DownloadHistory() {
   await allView.waitForExpected();
 
   // Add a new private download and verify it appears only on the complete list.
-  let privateDownloadToAdd = { offset: NEXT_OFFSET + 10, inSession: true,
-                               succeeded: true, isPrivate: true };
+  let privateDownloadToAdd = {
+    offset: NEXT_OFFSET + 10,
+    inSession: true,
+    succeeded: true,
+    isPrivate: true,
+  };
   allView.expected.push(privateDownloadToAdd);
   await addTestDownload(privateDownloadToAdd);
   await view.waitForExpected();
   await allView.waitForExpected();
 
   // Now test the maxHistoryResults parameter.
-  let allHistoryList2 = await DownloadHistory.getList({ type: Downloads.ALL,
-    maxHistoryResults: 3 });
+  let allHistoryList2 = await DownloadHistory.getList({
+    type: Downloads.ALL,
+    maxHistoryResults: 3,
+  });
   // Prepare the set of downloads to contain fewer history downloads by removing
   // the oldest ones.
   let allView2 = new TestView(allView.expected.slice(3));
@@ -220,8 +249,10 @@ add_task(async function test_DownloadHistory() {
 
   // Create a dummy list and view like the previous limited one to just add and
   // remove its view to make sure it doesn't break other lists' updates.
-  let dummyList = await DownloadHistory.getList({ type: Downloads.ALL,
-    maxHistoryResults: 3 });
+  let dummyList = await DownloadHistory.getList({
+    type: Downloads.ALL,
+    maxHistoryResults: 3,
+  });
   let dummyView = new TestView([]);
   await dummyList.addView(dummyView);
   await dummyList.removeView(dummyView);
@@ -229,8 +260,9 @@ add_task(async function test_DownloadHistory() {
   // Clear history and check that session downloads with partial data remain.
   // Private downloads are also not cleared when clearing history.
   view.expected = view.expected.filter(d => d.hasPartialData);
-  allView.expected = allView.expected.filter(d => d.hasPartialData ||
-                                                  d.isPrivate);
+  allView.expected = allView.expected.filter(
+    d => d.hasPartialData || d.isPrivate
+  );
   await PlacesUtils.history.clear();
   await view.waitForExpected();
   await allView.waitForExpected();

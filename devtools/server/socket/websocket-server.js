@@ -7,7 +7,11 @@
 const { Cc, CC } = require("chrome");
 const { executeSoon } = require("devtools/shared/DevToolsUtils");
 const { delimitedRead } = require("devtools/shared/transport/stream-utils");
-const CryptoHash = CC("@mozilla.org/security/hash;1", "nsICryptoHash", "initWithString");
+const CryptoHash = CC(
+  "@mozilla.org/security/hash;1",
+  "nsICryptoHash",
+  "initWithString"
+);
 const threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
 
 // Limit the header size to put an upper bound on allocated memory
@@ -21,26 +25,32 @@ function readLine(input) {
   return new Promise((resolve, reject) => {
     let line = "";
     const wait = () => {
-      input.asyncWait(stream => {
-        try {
-          const amountToRead = HEADER_MAX_LEN - line.length;
-          line += delimitedRead(input, "\n", amountToRead);
+      input.asyncWait(
+        stream => {
+          try {
+            const amountToRead = HEADER_MAX_LEN - line.length;
+            line += delimitedRead(input, "\n", amountToRead);
 
-          if (line.endsWith("\n")) {
-            resolve(line.trimRight());
-            return;
+            if (line.endsWith("\n")) {
+              resolve(line.trimRight());
+              return;
+            }
+
+            if (line.length >= HEADER_MAX_LEN) {
+              throw new Error(
+                `Failed to read HTTP header longer than ${HEADER_MAX_LEN} bytes`
+              );
+            }
+
+            wait();
+          } catch (ex) {
+            reject(ex);
           }
-
-          if (line.length >= HEADER_MAX_LEN) {
-            throw new Error(
-              `Failed to read HTTP header longer than ${HEADER_MAX_LEN} bytes`);
-          }
-
-          wait();
-        } catch (ex) {
-          reject(ex);
-        }
-      }, 0, 0, threadManager.currentThread);
+        },
+        0,
+        0,
+        threadManager.currentThread
+      );
     };
 
     wait();
@@ -60,15 +70,20 @@ function writeString(output, data) {
         return;
       }
 
-      output.asyncWait(stream => {
-        try {
-          const written = output.write(data, data.length);
-          data = data.slice(written);
-          wait();
-        } catch (ex) {
-          reject(ex);
-        }
-      }, 0, 0, threadManager.currentThread);
+      output.asyncWait(
+        stream => {
+          try {
+            const written = output.write(data, data.length);
+            data = data.slice(written);
+            wait();
+          } catch (ex) {
+            reject(ex);
+          }
+        },
+        0,
+        0,
+        threadManager.currentThread
+      );
     };
 
     wait();
@@ -119,7 +134,7 @@ function writeHttpResponse(output, response) {
  * Sec-WebSocket-Accept response header.
  */
 function processRequest({ requestLine, headers }) {
-  const [ method, path ] = requestLine.split(" ");
+  const [method, path] = requestLine.split(" ");
   if (method !== "GET") {
     throw new Error("The handshake request must use GET method");
   }
@@ -134,19 +149,29 @@ function processRequest({ requestLine, headers }) {
   }
 
   const connection = headers.get("connection");
-  if (!connection || !connection.split(",").map(t => t.trim()).includes("Upgrade")) {
+  if (
+    !connection ||
+    !connection
+      .split(",")
+      .map(t => t.trim())
+      .includes("Upgrade")
+  ) {
     throw new Error("The handshake request has incorrect Connection header");
   }
 
   const version = headers.get("sec-websocket-version");
   if (!version || version !== "13") {
-    throw new Error("The handshake request must have Sec-WebSocket-Version: 13");
+    throw new Error(
+      "The handshake request must have Sec-WebSocket-Version: 13"
+    );
   }
 
   // Compute the accept key
   const key = headers.get("sec-websocket-key");
   if (!key) {
-    throw new Error("The handshake request must have a Sec-WebSocket-Key header");
+    throw new Error(
+      "The handshake request must have a Sec-WebSocket-Key header"
+    );
   }
 
   return { acceptKey: computeKey(key) };
@@ -181,7 +206,7 @@ const serverHandshake = async function(input, output) {
     ]);
   } catch (error) {
     // Send error response in case of error
-    await writeHttpResponse(output, [ "HTTP/1.1 400 Bad Request" ]);
+    await writeHttpResponse(output, ["HTTP/1.1 400 Bad Request"]);
     throw error;
   }
 };
@@ -205,7 +230,12 @@ const accept = async function(transport, input, output) {
   };
 
   return new Promise((resolve, reject) => {
-    const socket = WebSocket.createServerWebSocket(null, [], transportProvider, "");
+    const socket = WebSocket.createServerWebSocket(
+      null,
+      [],
+      transportProvider,
+      ""
+    );
     socket.addEventListener("close", () => {
       input.close();
       output.close();

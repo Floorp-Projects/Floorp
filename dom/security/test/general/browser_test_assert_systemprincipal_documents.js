@@ -10,20 +10,30 @@ add_task(async function setup() {
   SimpleTest.expectAssertions(1);
 
   await SpecialPowers.pushPrefEnv({
-    "set": [["security.disallow_non_local_systemprincipal_in_tests", true]],
+    set: [["security.disallow_non_local_systemprincipal_in_tests", true]],
   });
 });
 
 add_task(async function open_test_iframe_in_tab() {
   // This looks at the iframe (load type SUBDOCUMENT)
-  await BrowserTestUtils.withNewTab({ gBrowser, url: kTestURI}, async (browser) => {
-    await ContentTask.spawn(browser, {}, async function() {
-      let outerPrincipal = content.document.nodePrincipal;
-      ok(outerPrincipal.isSystemPrincipal, "Sanity: Using SystemPrincipal for test file on chrome://");
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: kTestURI },
+    async browser => {
+      await ContentTask.spawn(browser, {}, async function() {
+        let outerPrincipal = content.document.nodePrincipal;
+        ok(
+          outerPrincipal.isSystemPrincipal,
+          "Sanity: Using SystemPrincipal for test file on chrome://"
+        );
 
-      const iframeWin = content.document.getElementById("testframe").contentWindow;
-      const iframeChannel = iframeWin.docShell.currentDocumentChannel;
-      ok(iframeChannel.loadInfo.loadingPrincipal.isSystemPrincipal, 'LoadingPrincipal for iframe is SystemPrincipal');
-    });
-  });
+        const iframeWin = content.document.getElementById("testframe")
+          .contentWindow;
+        const iframeChannel = iframeWin.docShell.currentDocumentChannel;
+        ok(
+          iframeChannel.loadInfo.loadingPrincipal.isSystemPrincipal,
+          "LoadingPrincipal for iframe is SystemPrincipal"
+        );
+      });
+    }
+  );
 });

@@ -9,19 +9,21 @@
 
 "use strict";
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 function inChildProcess() {
-  return Cc["@mozilla.org/xre/app-info;1"]
-           .getService(Ci.nsIXULRuntime)
-           .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+  return (
+    Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
+      .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
+  );
 }
 
-var ios = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService);
-var ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
-                                          "nsIReferrerInfo",
-                                          "init");
+var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+var ReferrerInfo = Components.Constructor(
+  "@mozilla.org/referrer-info;1",
+  "nsIReferrerInfo",
+  "init"
+);
 var observer = {
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
@@ -35,7 +37,11 @@ var observer = {
       let currentReferrer = subject.getRequestHeader("Referer");
       Assert.equal(currentReferrer, "http://site1.com/");
       var uri = ios.newURI("http://site2.com");
-      subject.referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, uri);
+      subject.referrerInfo = new ReferrerInfo(
+        Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+        true,
+        uri
+      );
     } catch (ex) {
       do_throw("Exception: " + ex);
     }
@@ -54,14 +60,19 @@ let cancelDuringOnStartListener = {
       var uri = ios.newURI("http://site3.com/");
 
       // Need to set NECKO_ERRORS_ARE_FATAL=0 else we'll abort process
-      var env = Cc["@mozilla.org/process/environment;1"].
-                  getService(Ci.nsIEnvironment);
+      var env = Cc["@mozilla.org/process/environment;1"].getService(
+        Ci.nsIEnvironment
+      );
       env.set("NECKO_ERRORS_ARE_FATAL", "0");
       // we expect setting referrer to fail
       try {
-        request.referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, uri);
+        request.referrerInfo = new ReferrerInfo(
+          Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+          true,
+          uri
+        );
         do_throw("Error should have been thrown before getting here");
-      } catch (ex) { }
+      } catch (ex) {}
     } catch (ex) {
       do_throw("Exception: " + ex);
     }
@@ -73,7 +84,7 @@ let cancelDuringOnStartListener = {
 
   onStopRequest: function test_onStopR(request, status) {
     this.resolved();
-  }
+  },
 };
 
 var cancelDuringOnDataListener = {
@@ -102,12 +113,18 @@ var cancelDuringOnDataListener = {
 };
 
 function makeChan(url) {
-  var chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
-                    .QueryInterface(Ci.nsIHttpChannel);
+  var chan = NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+  }).QueryInterface(Ci.nsIHttpChannel);
 
   // ENSURE_CALLED_BEFORE_CONNECT: set original value
   var uri = ios.newURI("http://site1.com");
-  chan.referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, uri);
+  chan.referrerInfo = new ReferrerInfo(
+    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    true,
+    uri
+  );
   return chan;
 }
 
@@ -126,8 +143,9 @@ add_task(async function setup() {
 });
 
 add_task(async function test_cancel_during_onModifyRequest() {
-  var chan = makeChan("http://localhost:" +
-                      httpserv.identity.primaryPort + "/failtest");
+  var chan = makeChan(
+    "http://localhost:" + httpserv.identity.primaryPort + "/failtest"
+  );
 
   if (!inChildProcess()) {
     Services.obs.addObserver(observer, "http-on-modify-request");
@@ -139,7 +157,7 @@ add_task(async function test_cancel_during_onModifyRequest() {
   await new Promise(resolve => {
     cancelDuringOnStartListener.resolved = resolve;
     chan.asyncOpen(cancelDuringOnStartListener);
-  })
+  });
 
   if (!inChildProcess()) {
     Services.obs.removeObserver(observer, "http-on-modify-request");
@@ -150,18 +168,25 @@ add_task(async function test_cancel_during_onModifyRequest() {
 });
 
 add_task(async function test_cancel_before_asyncOpen() {
-  var chan = makeChan("http://localhost:" +
-                      httpserv.identity.primaryPort + "/failtest");
+  var chan = makeChan(
+    "http://localhost:" + httpserv.identity.primaryPort + "/failtest"
+  );
 
   chan.cancel(Cr.NS_BINDING_ABORTED);
 
-  Assert.throws(() => { chan.asyncOpen(cancelDuringOnStartListener); },
-                /NS_BINDING_ABORTED/, "cannot open if already cancelled");
+  Assert.throws(
+    () => {
+      chan.asyncOpen(cancelDuringOnStartListener);
+    },
+    /NS_BINDING_ABORTED/,
+    "cannot open if already cancelled"
+  );
 });
 
 add_task(async function test_cancel_during_onData() {
-  var chan = makeChan("http://localhost:" +
-                      httpserv.identity.primaryPort + "/cancel_middle");
+  var chan = makeChan(
+    "http://localhost:" + httpserv.identity.primaryPort + "/cancel_middle"
+  );
 
   await new Promise(resolve => {
     cancelDuringOnDataListener.resolved = resolve;
@@ -169,7 +194,6 @@ add_task(async function test_cancel_during_onData() {
     chan.asyncOpen(cancelDuringOnDataListener);
   });
 });
-
 
 var cancelAfterOnStopListener = {
   data: "",
@@ -187,12 +211,13 @@ var cancelAfterOnStopListener = {
     info("onStopRequest");
     Assert.equal(request.status, Cr.NS_OK);
     this.resolved();
-  }
+  },
 };
 
 add_task(async function test_cancel_after_onStop() {
-  var chan = makeChan("http://localhost:" +
-                      httpserv.identity.primaryPort + "/normal_response");
+  var chan = makeChan(
+    "http://localhost:" + httpserv.identity.primaryPort + "/normal_response"
+  );
 
   await new Promise(resolve => {
     cancelAfterOnStopListener.resolved = resolve;
@@ -208,7 +233,6 @@ add_task(async function test_cancel_after_onStop() {
   Assert.equal(chan.status, Cr.NS_BINDING_ABORTED);
 });
 
-
 // PATHS
 
 // /failtest
@@ -219,7 +243,7 @@ function failtest(metadata, response) {
 function cancel_middle(metadata, response) {
   response.processAsync();
   response.setStatusLine(metadata.httpVersion, 200, "OK");
-  let str1 = "a".repeat(128*1024);
+  let str1 = "a".repeat(128 * 1024);
   response.write(str1, str1.length);
   response.bodyOutputStream.flush();
 
@@ -227,7 +251,7 @@ function cancel_middle(metadata, response) {
     cancelDuringOnDataListener.receivedSomeData = resolve;
   });
   p.then(() => {
-    let str1 = "b".repeat(128*1024);
+    let str1 = "b".repeat(128 * 1024);
     response.write(str2, str2.length);
     response.finish();
   });

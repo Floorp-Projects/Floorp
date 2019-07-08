@@ -17,7 +17,7 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 // ------------------------------------------------------------------------------
 
 function invalidCode(code, type, message) {
-  return {code, errors: [{message, type}]};
+  return { code, errors: [{ message, type }] };
 }
 
 ruleTester.run("avoid-Date-timing", rule, {
@@ -28,12 +28,15 @@ ruleTester.run("avoid-Date-timing", rule, {
     "Date.UTC(2017, 7);",
   ],
   invalid: [
-    invalidCode("Date.now();", "CallExpression",
-                "use performance.now() instead of Date.now() " +
-                "for timing measurements"),
-    invalidCode("new Date();", "NewExpression",
-                "use performance.now() instead of new Date() " +
-                "for timing measurements"),
+    invalidCode(
+      "Date.now();",
+      "CallExpression",
+      "use performance.now() instead of Date.now() for timing measurements"
+    ),
+    invalidCode(
+      "new Date();",
+      "NewExpression",
+      "use performance.now() instead of new Date() for timing measurements"
+    ),
   ],
 });
-

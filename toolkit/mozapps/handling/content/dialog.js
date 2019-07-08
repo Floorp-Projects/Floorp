@@ -28,14 +28,19 @@
  *   The nsIInterfaceRequestor of the parent window; may be null
  */
 
-const {EnableDelayHelper} = ChromeUtils.import("resource://gre/modules/SharedPromptUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+const { EnableDelayHelper } = ChromeUtils.import(
+  "resource://gre/modules/SharedPromptUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { PrivateBrowsingUtils } = ChromeUtils.import(
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 class MozHandler extends window.MozElements.MozRichlistitem {
   connectedCallback() {
     this.textContent = "";
-    this.appendChild(window.MozXULElement.parseXULToFragment(`
+    this.appendChild(
+      window.MozXULElement.parseXULToFragment(`
       <vbox pack="center">
         <image height="32" width="32"/>
       </vbox>
@@ -43,13 +48,14 @@ class MozHandler extends window.MozElements.MozRichlistitem {
         <label class="name"/>
         <label class="description"/>
       </vbox>
-    `));
+    `)
+    );
     this.initializeAttributeInheritance();
   }
 
   static get inheritedAttributes() {
     return {
-      "image": "src=image,disabled",
+      image: "src=image,disabled",
       ".name": "value=name,disabled",
       ".description": "value=description,disabled",
     };
@@ -76,23 +82,26 @@ var dialog = {
 
   // Methods
 
- /**
-  * This function initializes the content of the dialog.
-  */
+  /**
+   * This function initializes the content of the dialog.
+   */
   initialize: function initialize() {
     this._handlerInfo = window.arguments[7].QueryInterface(Ci.nsIHandlerInfo);
-    this._URI         = window.arguments[8].QueryInterface(Ci.nsIURI);
-    this._windowCtxt  = window.arguments[9];
+    this._URI = window.arguments[8].QueryInterface(Ci.nsIURI);
+    this._windowCtxt = window.arguments[9];
     let usePrivateBrowsing = false;
     if (this._windowCtxt) {
       // The context should be nsIRemoteWindowContext in OOP, or nsIDOMWindow otherwise.
       try {
-        usePrivateBrowsing = this._windowCtxt.getInterface(Ci.nsIRemoteWindowContext)
-                                             .usePrivateBrowsing;
+        usePrivateBrowsing = this._windowCtxt.getInterface(
+          Ci.nsIRemoteWindowContext
+        ).usePrivateBrowsing;
       } catch (e) {
         try {
           let opener = this._windowCtxt.getInterface(Ci.nsIDOMWindow);
-          usePrivateBrowsing = PrivateBrowsingUtils.isContentWindowPrivate(opener);
+          usePrivateBrowsing = PrivateBrowsingUtils.isContentWindowPrivate(
+            opener
+          );
         } catch (e) {
           Cu.reportError(`No interface to determine privateness: ${e}`);
         }
@@ -100,40 +109,46 @@ var dialog = {
       this._windowCtxt.QueryInterface(Ci.nsIInterfaceRequestor);
     }
 
-    this.isPrivate = usePrivateBrowsing ||
-                     (window.opener && PrivateBrowsingUtils.isWindowPrivate(window.opener));
+    this.isPrivate =
+      usePrivateBrowsing ||
+      (window.opener && PrivateBrowsingUtils.isWindowPrivate(window.opener));
 
-    this._itemChoose  = document.getElementById("item-choose");
-    this._okButton    = document.documentElement.getButton("extra1");
+    this._itemChoose = document.getElementById("item-choose");
+    this._okButton = document.documentElement.getButton("extra1");
 
     var description = {
       image: document.getElementById("description-image"),
-      text:  document.getElementById("description-text"),
+      text: document.getElementById("description-text"),
     };
     var options = document.getElementById("item-action-text");
     var checkbox = {
       desc: document.getElementById("remember"),
-      text:  document.getElementById("remember-text"),
+      text: document.getElementById("remember-text"),
     };
 
     // Setting values
-    document.title               = window.arguments[0];
-    description.image.src        = window.arguments[1];
+    document.title = window.arguments[0];
+    description.image.src = window.arguments[1];
     description.text.textContent = window.arguments[2];
-    options.value                = window.arguments[3];
-    checkbox.desc.label          = window.arguments[4];
-    checkbox.desc.accessKey      = window.arguments[5];
-    checkbox.text.textContent    = window.arguments[6];
+    options.value = window.arguments[3];
+    checkbox.desc.label = window.arguments[4];
+    checkbox.desc.accessKey = window.arguments[5];
+    checkbox.text.textContent = window.arguments[6];
 
     // Hide stuff that needs to be hidden
-    if (!checkbox.desc.label)
+    if (!checkbox.desc.label) {
       checkbox.desc.hidden = true;
+    }
 
     // UI is ready, lets populate our list
     this.populateList();
     // Explicitly not an 'accept' button to avoid having `enter` accept the dialog.
-    document.addEventListener("dialogextra1", () => { this.onOK(); });
-    document.addEventListener("dialogaccept", e => { e.preventDefault(); });
+    document.addEventListener("dialogextra1", () => {
+      this.onOK();
+    });
+    document.addEventListener("dialogaccept", e => {
+      e.preventDefault();
+    });
 
     this._delayHelper = new EnableDelayHelper({
       disableDialog: () => {
@@ -148,16 +163,18 @@ var dialog = {
     });
   },
 
- /**
-  * Populates the list that a user can choose from.
-  */
+  /**
+   * Populates the list that a user can choose from.
+   */
   populateList: function populateList() {
     var items = document.getElementById("items");
     var possibleHandlers = this._handlerInfo.possibleApplicationHandlers;
     var preferredHandler = this._handlerInfo.preferredApplicationHandler;
     for (let i = possibleHandlers.length - 1; i >= 0; --i) {
       let app = possibleHandlers.queryElementAt(i, Ci.nsIHandlerApp);
-      let elm = document.createXULElement("richlistitem", {is: "mozapps-handler"});
+      let elm = document.createXULElement("richlistitem", {
+        is: "mozapps-handler",
+      });
       elm.setAttribute("name", app.name);
       elm.obj = app;
 
@@ -184,7 +201,9 @@ var dialog = {
           let policy = WebExtensionPolicy.getByURI(uri);
           if (policy && !policy.privateBrowsingAllowed) {
             var bundle = document.getElementById("base-strings");
-            var disabledLabel = bundle.getString("privatebrowsing.disabled.label");
+            var disabledLabel = bundle.getString(
+              "privatebrowsing.disabled.label"
+            );
             elm.setAttribute("disabled", true);
             elm.setAttribute("description", disabledLabel);
             if (app == preferredHandler) {
@@ -200,25 +219,31 @@ var dialog = {
       }
 
       items.insertBefore(elm, this._itemChoose);
-      if (preferredHandler && app == preferredHandler)
+      if (preferredHandler && app == preferredHandler) {
         this.selectedItem = elm;
+      }
     }
 
     if (this._handlerInfo.hasDefaultHandler) {
-      let elm = document.createXULElement("richlistitem", {is: "mozapps-handler"});
+      let elm = document.createXULElement("richlistitem", {
+        is: "mozapps-handler",
+      });
       elm.id = "os-default-handler";
       elm.setAttribute("name", this._handlerInfo.defaultDescription);
 
       items.insertBefore(elm, items.firstChild);
-      if (this._handlerInfo.preferredAction ==
-          Ci.nsIHandlerInfo.useSystemDefault)
-          this.selectedItem = elm;
+      if (
+        this._handlerInfo.preferredAction == Ci.nsIHandlerInfo.useSystemDefault
+      ) {
+        this.selectedItem = elm;
+      }
     }
 
     // Add gio handlers
     if (Cc["@mozilla.org/gio-service;1"]) {
-      let gIOSvc = Cc["@mozilla.org/gio-service;1"]
-                     .getService(Ci.nsIGIOService);
+      let gIOSvc = Cc["@mozilla.org/gio-service;1"].getService(
+        Ci.nsIGIOService
+      );
       var gioApps = gIOSvc.getAppsForURIScheme(this._URI.scheme);
       for (let handler of gioApps.enumerate(Ci.nsIHandlerApp)) {
         // OS handler share the same name, it's most likely the same app, skipping...
@@ -236,7 +261,9 @@ var dialog = {
           }
         }
         if (!appAlreadyInHandlers) {
-          let elm = document.createXULElement("richlistitem", {is: "mozapps-handler"});
+          let elm = document.createXULElement("richlistitem", {
+            is: "mozapps-handler",
+          });
           elm.setAttribute("name", handler.name);
           elm.obj = handler;
           items.insertBefore(elm, this._itemChoose);
@@ -247,9 +274,9 @@ var dialog = {
     items.ensureSelectedElementIsVisible();
   },
 
- /**
-  * Brings up a filepicker and allows a user to choose an application.
-  */
+  /**
+   * Brings up a filepicker and allows a user to choose an application.
+   */
   chooseApplication: function chooseApplication() {
     var bundle = document.getElementById("base-strings");
     var title = bundle.getString("choose.application.title");
@@ -262,22 +289,28 @@ var dialog = {
       if (rv == Ci.nsIFilePicker.returnOK && fp.file) {
         let uri = Services.io.newFileURI(fp.file);
 
-        let handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
-                         createInstance(Ci.nsILocalHandlerApp);
+        let handlerApp = Cc[
+          "@mozilla.org/uriloader/local-handler-app;1"
+        ].createInstance(Ci.nsILocalHandlerApp);
         handlerApp.executable = fp.file;
 
         // if this application is already in the list, select it and don't add it again
         let parent = document.getElementById("items");
         for (let i = 0; i < parent.childNodes.length; ++i) {
           let elm = parent.childNodes[i];
-          if (elm.obj instanceof Ci.nsILocalHandlerApp && elm.obj.equals(handlerApp)) {
+          if (
+            elm.obj instanceof Ci.nsILocalHandlerApp &&
+            elm.obj.equals(handlerApp)
+          ) {
             parent.selectedItem = elm;
             parent.ensureSelectedElementIsVisible();
             return;
           }
         }
 
-        let elm = document.createXULElement("richlistitem", {is: "mozapps-handler"});
+        let elm = document.createXULElement("richlistitem", {
+          is: "mozapps-handler",
+        });
         elm.setAttribute("name", fp.file.leafName);
         elm.setAttribute("image", "moz-icon://" + uri.spec + "?size=32");
         elm.obj = handlerApp;
@@ -288,9 +321,9 @@ var dialog = {
     });
   },
 
- /**
-  * Function called when the OK button is pressed.
-  */
+  /**
+   * Function called when the OK button is pressed.
+   */
   onOK: function onOK() {
     if (this._buttonDisabled) {
       return;
@@ -308,52 +341,53 @@ var dialog = {
     }
     this._handlerInfo.alwaysAskBeforeHandling = !checkbox.checked;
 
-    var hs = Cc["@mozilla.org/uriloader/handler-service;1"].
-             getService(Ci.nsIHandlerService);
+    var hs = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
+      Ci.nsIHandlerService
+    );
     hs.store(this._handlerInfo);
 
     this._handlerInfo.launchWithURI(this._URI, this._windowCtxt);
     window.close();
   },
 
- /**
-  * Determines if the OK button should be disabled or not
-  */
+  /**
+   * Determines if the OK button should be disabled or not
+   */
   updateOKButton: function updateOKButton() {
-    this._okButton.disabled = this._itemChoose.selected ||
-                              this._buttonDisabled;
+    this._okButton.disabled = this._itemChoose.selected || this._buttonDisabled;
   },
 
- /**
-  * Updates the UI based on the checkbox being checked or not.
-  */
+  /**
+   * Updates the UI based on the checkbox being checked or not.
+   */
   onCheck: function onCheck() {
-    if (document.getElementById("remember").checked)
+    if (document.getElementById("remember").checked) {
       document.getElementById("remember-text").setAttribute("visible", "true");
-    else
+    } else {
       document.getElementById("remember-text").removeAttribute("visible");
+    }
   },
 
   /**
    * Function called when the user double clicks on an item of the list
    */
   onDblClick: function onDblClick() {
-    if (this.selectedItem == this._itemChoose)
+    if (this.selectedItem == this._itemChoose) {
       this.chooseApplication();
-    else
+    } else {
       this.onOK();
+    }
   },
 
   // Getters / Setters
 
- /**
-  * Returns/sets the selected element in the richlistbox
-  */
+  /**
+   * Returns/sets the selected element in the richlistbox
+   */
   get selectedItem() {
     return document.getElementById("items").selectedItem;
   },
   set selectedItem(aItem) {
-    return document.getElementById("items").selectedItem = aItem;
+    return (document.getElementById("items").selectedItem = aItem);
   },
-
 };

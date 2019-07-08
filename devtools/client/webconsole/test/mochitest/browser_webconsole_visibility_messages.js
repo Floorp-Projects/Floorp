@@ -38,7 +38,7 @@ add_task(async function() {
 
   info("Wait for console to be hidden");
   const { document } = hud.iframeWindow;
-  await waitFor(() => (document.visibilityState == "hidden"));
+  await waitFor(() => document.visibilityState == "hidden");
 
   const onAllMessagesInStore = new Promise(done => {
     const store = hud.ui.wrapper.getStore();
@@ -51,7 +51,7 @@ add_task(async function() {
     });
   });
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, [MESSAGES_COUNT], (count) => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, [MESSAGES_COUNT], count => {
     for (let i = 1; i <= count; i++) {
       content.wrappedJSObject.log("in-inspector log " + i);
     }
@@ -69,11 +69,16 @@ add_task(async function() {
   info("And wait for all messages to be visible");
   const waitForMessagePromises = [];
   for (let j = 1; j <= MESSAGES_COUNT; j++) {
-    waitForMessagePromises.push(waitFor(() => findMessage(hud, "in-inspector log " + j)));
+    waitForMessagePromises.push(
+      waitFor(() => findMessage(hud, "in-inspector log " + j))
+    );
   }
 
   await Promise.all(waitForMessagePromises);
-  ok(true, "All the messages logged when the console was hidden were displayed.");
+  ok(
+    true,
+    "All the messages logged when the console was hidden were displayed."
+  );
 });
 
 // Similar scenario, but with the split console on the inspector panel.
@@ -93,11 +98,11 @@ add_task(async function() {
 
   info("Wait for console to be hidden");
   const { document } = hud.iframeWindow;
-  await waitFor(() => (document.visibilityState == "hidden"));
+  await waitFor(() => document.visibilityState == "hidden");
 
   await toolbox.openSplitConsole();
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, [MESSAGES_COUNT], (count) => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, [MESSAGES_COUNT], count => {
     for (let i = 1; i <= count; i++) {
       content.wrappedJSObject.log("in-inspector log " + i);
     }
@@ -106,7 +111,9 @@ add_task(async function() {
   info("Wait for all messages to be visible in the split console");
   const waitForMessagePromises = [];
   for (let j = 1; j <= MESSAGES_COUNT; j++) {
-    waitForMessagePromises.push(waitFor(() => findMessage(hud, "in-inspector log " + j)));
+    waitForMessagePromises.push(
+      waitFor(() => findMessage(hud, "in-inspector log " + j))
+    );
   }
 
   await Promise.all(waitForMessagePromises);

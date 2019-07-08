@@ -24,11 +24,15 @@ RemoteCanvas.prototype.load = function(callback) {
   iframe.addEventListener("load", function() {
     info("iframe loaded");
     var m = iframe.contentDocument.getElementById("av");
-    m.addEventListener("suspend", function(aEvent) {
-      setTimeout(function() {
-        me.remotePageLoaded(callback);
-      }, 0);
-    }, {once: true});
+    m.addEventListener(
+      "suspend",
+      function(aEvent) {
+        setTimeout(function() {
+          me.remotePageLoaded(callback);
+        }, 0);
+      },
+      { once: true }
+    );
     m.src = m.getAttribute("source");
   });
   window.document.body.appendChild(iframe);
@@ -54,11 +58,18 @@ function runTest(index) {
   function testCallback(canvas) {
     canvases.push(canvas);
 
-    if (canvases.length == 2) { // when both canvases are loaded
+    if (canvases.length == 2) {
+      // when both canvases are loaded
       var expectedEqual = currentTest.op == "==";
       var result = canvases[0].compare(canvases[1], expectedEqual);
-      ok(result, "Rendering of reftest " + currentTest.test + " should " +
-        (expectedEqual ? "not " : "") + "be different to the reference");
+      ok(
+        result,
+        "Rendering of reftest " +
+          currentTest.test +
+          " should " +
+          (expectedEqual ? "not " : "") +
+          "be different to the reference"
+      );
 
       if (result) {
         canvases[0].cleanup();
@@ -68,10 +79,11 @@ function runTest(index) {
         info("Snapshot of canvas 2: " + canvases[1].snapshot.toDataURL());
       }
 
-      if (index < tests.length - 1)
+      if (index < tests.length - 1) {
         runTest(index + 1);
-      else
+      } else {
         SimpleTest.finish();
+      }
     }
   }
 
@@ -86,6 +98,15 @@ function runTest(index) {
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestCompleteLog();
 
-window.addEventListener("load", function() {
-  SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, function() { runTest(0); });
-}, true);
+window.addEventListener(
+  "load",
+  function() {
+    SpecialPowers.pushPrefEnv(
+      { set: [["media.cache_size", 40000]] },
+      function() {
+        runTest(0);
+      }
+    );
+  },
+  true
+);

@@ -12,10 +12,12 @@ const ADDON_NAME = "test-devtools";
 add_task(async function() {
   info("Turn off addon debugging.");
   await new Promise(resolve => {
-    const options = {"set": [
-      ["devtools.chrome.enabled", false],
-      ["devtools.debugger.remote-enabled", false],
-    ]};
+    const options = {
+      set: [
+        ["devtools.chrome.enabled", false],
+        ["devtools.debugger.remote-enabled", false],
+      ],
+    };
     SpecialPowers.pushPrefEnv(options, resolve);
   });
 
@@ -40,7 +42,10 @@ add_task(async function() {
   addonDebugCheckbox.click();
 
   info("Wait until all debug buttons are enabled.");
-  waitUntil(() => addonDebugCheckbox.checked && areDebugButtonsEnabled(document), 100);
+  waitUntil(
+    () => addonDebugCheckbox.checked && areDebugButtonsEnabled(document),
+    100
+  );
   info("Addons debugging should be enabled and debug buttons are enabled");
 
   info("Click again on 'Enable addons debugging' checkbox.");
@@ -51,7 +56,7 @@ add_task(async function() {
   info("All debug buttons are disabled again.");
 
   info("Uninstall addon installed earlier.");
-  await uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
+  await uninstallAddon({ document, id: ADDON_ID, name: ADDON_NAME });
 
   await closeAboutDebugging(tab);
 });

@@ -718,8 +718,7 @@ void EGLImageTextureSource::BindTexture(GLenum aTextureUnit,
     return egl->HasKHRImageBase() && egl->HasKHRImageTexture2D() &&
            gl->IsExtensionSupported(GLContext::OES_EGL_image);
   }();
-  MOZ_ASSERT(supportsEglImage,
-             "EGLImage not supported or disabled in runtime");
+  MOZ_ASSERT(supportsEglImage, "EGLImage not supported or disabled in runtime");
 #endif
 
   GLuint tex = mCompositor->GetTemporaryTexture(mTextureTarget, aTextureUnit);

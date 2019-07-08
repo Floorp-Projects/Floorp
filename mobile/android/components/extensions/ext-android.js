@@ -1,7 +1,10 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 // This function is pretty tightly tied to Extension.jsm.
 // Its job is to fill in the |tab| property of the sender.
@@ -37,7 +40,7 @@ extensions.on("page-shutdown", (type, context) => {
       // WebExtension as an embedded inline options page.
       return;
     }
-    let {BrowserApp} = context.xulBrowser.ownerGlobal;
+    let { BrowserApp } = context.xulBrowser.ownerGlobal;
     if (BrowserApp) {
       let nativeTab = BrowserApp.getTabForBrowser(context.xulBrowser);
       if (nativeTab) {
@@ -48,13 +51,13 @@ extensions.on("page-shutdown", (type, context) => {
 });
 /* eslint-enable mozilla/balanced-listeners */
 
-global.openOptionsPage = (extension) => {
+global.openOptionsPage = extension => {
   let window = windowTracker.topWindow;
   if (!window) {
-    return Promise.reject({message: "No browser window available"});
+    return Promise.reject({ message: "No browser window available" });
   }
 
-  let {BrowserApp} = window;
+  let { BrowserApp } = window;
 
   if (extension.manifest.options_ui.open_in_tab) {
     BrowserApp.selectOrAddTab(extension.manifest.options_ui.page, {
@@ -62,7 +65,7 @@ global.openOptionsPage = (extension) => {
       parentId: BrowserApp.selectedTab.id,
     });
   } else {
-    BrowserApp.openAddonManager({addonId: extension.id});
+    BrowserApp.openAddonManager({ addonId: extension.id });
   }
 
   return Promise.resolve();
@@ -74,35 +77,27 @@ extensions.registerModules({
     schema: "chrome://geckoview/content/schemas/browser_action.json",
     scopes: ["addon_parent"],
     manifest: ["browser_action"],
-    paths: [
-      ["browserAction"],
-    ],
+    paths: [["browserAction"]],
   },
   browsingData: {
     url: "chrome://geckoview/content/ext-browsingData.js",
     schema: "chrome://geckoview/content/schemas/browsing_data.json",
     scopes: ["addon_parent"],
     manifest: ["browsing_data"],
-    paths: [
-      ["browsingData"],
-    ],
+    paths: [["browsingData"]],
   },
   pageAction: {
     url: "chrome://geckoview/content/ext-pageAction.js",
     schema: "chrome://geckoview/content/schemas/page_action.json",
     scopes: ["addon_parent"],
     manifest: ["page_action"],
-    paths: [
-      ["pageAction"],
-    ],
+    paths: [["pageAction"]],
   },
   tabs: {
     url: "chrome://geckoview/content/ext-tabs.js",
     schema: "chrome://geckoview/content/schemas/tabs.json",
     scopes: ["addon_parent"],
-    paths: [
-      ["tabs"],
-    ],
+    paths: [["tabs"]],
   },
 });
 

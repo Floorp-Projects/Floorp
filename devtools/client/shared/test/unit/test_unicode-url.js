@@ -8,8 +8,11 @@
  */
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const { getUnicodeUrl, getUnicodeUrlPath, getUnicodeHostname } =
-  require("devtools/client/shared/unicode-url");
+const {
+  getUnicodeUrl,
+  getUnicodeUrlPath,
+  getUnicodeHostname,
+} = require("devtools/client/shared/unicode-url");
 
 // List of URLs used to test Unicode URL conversion
 const TEST_URLS = [
@@ -84,14 +87,14 @@ const TEST_URLS = [
     expectedUnicode: "https://example.org/test.html?\u4e00=1",
   },
   {
-    raw: "https://xn--g6w.xn--8pv/%E6%B8%AC%E8%A9%A6.html" +
-         "?%E4%B8%80=%E4%B8%80" +
-         "#%E6%AD%A4",
+    raw:
+      "https://xn--g6w.xn--8pv/%E6%B8%AC%E8%A9%A6.html" +
+      "?%E4%B8%80=%E4%B8%80" +
+      "#%E6%AD%A4",
     // Do not type Unicode characters directly, because this test file isn't
     // specified with a known encoding.
-    expectedUnicode: "https://\u6e2c.\u672c/\u6e2c\u8a66.html" +
-                     "?\u4e00=\u4e00" +
-                     "#\u6b64",
+    expectedUnicode:
+      "https://\u6e2c.\u672c/\u6e2c\u8a66.html" + "?\u4e00=\u4e00" + "#\u6b64",
   },
   // Type:     data: URIs
   // Expected: All should not be converted.
@@ -104,14 +107,16 @@ const TEST_URLS = [
     expectedUnicode: "data:text/plain;charset=UTF-8;%E6%B8%AC%20%E8%A9%A6",
   },
   {
-    raw: "data:image/png;base64,iVBORw0KGgoAAA" +
-         "ANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4" +
-         "//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU" +
-         "5ErkJggg==",
-    expectedUnicode: "data:image/png;base64,iVBORw0KGgoAAA" +
-                     "ANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4" +
-                     "//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU" +
-                     "5ErkJggg==",
+    raw:
+      "data:image/png;base64,iVBORw0KGgoAAA" +
+      "ANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4" +
+      "//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU" +
+      "5ErkJggg==",
+    expectedUnicode:
+      "data:image/png;base64,iVBORw0KGgoAAA" +
+      "ANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4" +
+      "//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU" +
+      "5ErkJggg==",
   },
   // Type:     Malformed URLs
   // Expected: All should not be converted.
@@ -120,10 +125,9 @@ const TEST_URLS = [
     expectedUnicode: "://example.org/test",
   },
   {
-    raw: "://xn--g6w.xn--8pv/%E6%B8%AC%E8%A9%A6.html" +
-         "?%E4%B8%80=%E4%B8%80",
-    expectedUnicode: "://xn--g6w.xn--8pv/%E6%B8%AC%E8%A9%A6.html" +
-                     "?%E4%B8%80=%E4%B8%80",
+    raw: "://xn--g6w.xn--8pv/%E6%B8%AC%E8%A9%A6.html" + "?%E4%B8%80=%E4%B8%80",
+    expectedUnicode:
+      "://xn--g6w.xn--8pv/%E6%B8%AC%E8%A9%A6.html" + "?%E4%B8%80=%E4%B8%80",
   },
   {
     // %E8%A9 isn't a valid UTF-8 code, so this URL is malformed.
@@ -195,14 +199,14 @@ const TEST_URL_PATHS = [
     expectedUnicode: "/\u6e2c\u8a66.html",
   },
   {
-    raw: "/%E6%B8%AC%E8%A9%A6.html" +
-         "?%E4%B8%80=%E4%B8%80&%E4%BA%8C=%E4%BA%8C" +
-         "#%E6%AD%A4",
+    raw:
+      "/%E6%B8%AC%E8%A9%A6.html" +
+      "?%E4%B8%80=%E4%B8%80&%E4%BA%8C=%E4%BA%8C" +
+      "#%E6%AD%A4",
     // Do not type Unicode characters directly, because this test file isn't
     // specified with a known encoding.
-    expectedUnicode: "/\u6e2c\u8a66.html" +
-                     "?\u4e00=\u4e00&\u4e8c=\u4e8c" +
-                     "#\u6b64",
+    expectedUnicode:
+      "/\u6e2c\u8a66.html" + "?\u4e00=\u4e00&\u4e8c=\u4e8c" + "#\u6b64",
   },
   // Type:     Malformed URL paths
   // Expected: All should not be converted.
@@ -217,24 +221,39 @@ function run_test() {
   // Test URLs
   for (const url of TEST_URLS) {
     const result = getUnicodeUrl(url.raw);
-    equal(result, url.expectedUnicode,
-          "Test getUnicodeUrl: " + url.raw +
-            " should be unicodized to " + url.expectedUnicode);
+    equal(
+      result,
+      url.expectedUnicode,
+      "Test getUnicodeUrl: " +
+        url.raw +
+        " should be unicodized to " +
+        url.expectedUnicode
+    );
   }
 
   // Test hostnames
   for (const hostname of TEST_HOSTNAMES) {
     const result = getUnicodeHostname(hostname.raw);
-    equal(result, hostname.expectedUnicode,
-          "Test getUnicodeHostname: " + hostname.raw +
-            " should be unicodized to " + hostname.expectedUnicode);
+    equal(
+      result,
+      hostname.expectedUnicode,
+      "Test getUnicodeHostname: " +
+        hostname.raw +
+        " should be unicodized to " +
+        hostname.expectedUnicode
+    );
   }
 
   // Test URL paths
   for (const urlPath of TEST_URL_PATHS) {
     const result = getUnicodeUrlPath(urlPath.raw);
-    equal(result, urlPath.expectedUnicode,
-          "Test getUnicodeUrlPath: " + urlPath.raw +
-            " should be unicodized to " + urlPath.expectedUnicode);
+    equal(
+      result,
+      urlPath.expectedUnicode,
+      "Test getUnicodeUrlPath: " +
+        urlPath.raw +
+        " should be unicodized to " +
+        urlPath.expectedUnicode
+    );
   }
 }

@@ -10,17 +10,25 @@
 
 add_task(async function() {
   const { inspector } = await openInspectorForURL(
-    "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");
+    "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>"
+  );
   const markup = inspector.markup;
   const doc = markup.doc;
   const rootContainer = markup.getContainer(markup._rootNode);
 
-  is(doc.activeElement, doc.body, "Keyboard focus by default is on document body");
+  is(
+    doc.activeElement,
+    doc.body,
+    "Keyboard focus by default is on document body"
+  );
 
   await selectNode("span", inspector, "test");
   is(doc.activeElement, doc.body, "Keyboard focus remains on document body.");
 
   await selectNode("h1", inspector, "test-keyboard");
-  is(doc.activeElement, rootContainer.elt,
-    "Keyboard focus must be on the markup tree conainer.");
+  is(
+    doc.activeElement,
+    rootContainer.elt,
+    "Keyboard focus must be on the markup tree conainer."
+  );
 });

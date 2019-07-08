@@ -7,8 +7,10 @@
 
 var EXPORTED_SYMBOLS = ["WebChannelChild"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
 
 function getMessageManager(event) {
   let window = Cu.getGlobalForObject(event.target);
@@ -46,14 +48,17 @@ class WebChannelChild extends ActorChild {
     if (whitelist != _lastWhitelistValue) {
       let urls = whitelist.split(/\s+/);
       _cachedWhitelist = urls.map(origin =>
-        Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin));
+        Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin)
+      );
     }
     return _cachedWhitelist;
   }
 
   _onMessageToChrome(e) {
     // If target is window then we want the document principal, otherwise fallback to target itself.
-    let principal = e.target.nodePrincipal ? e.target.nodePrincipal : e.target.document.nodePrincipal;
+    let principal = e.target.nodePrincipal
+      ? e.target.nodePrincipal
+      : e.target.document.nodePrincipal;
 
     if (e.detail) {
       if (typeof e.detail != "string") {
@@ -61,17 +66,25 @@ class WebChannelChild extends ActorChild {
         // non-string values for e.detail.  They're whitelisted by site origin,
         // so we compare on originNoSuffix in order to avoid other origin attributes
         // that are not relevant here, such as containers or private browsing.
-        let objectsAllowed = this._getWhitelistedPrincipals().some(whitelisted =>
-          principal.originNoSuffix == whitelisted.originNoSuffix);
+        let objectsAllowed = this._getWhitelistedPrincipals().some(
+          whitelisted => principal.originNoSuffix == whitelisted.originNoSuffix
+        );
         if (!objectsAllowed) {
-          Cu.reportError("WebChannelMessageToChrome sent with an object from a non-whitelisted principal");
+          Cu.reportError(
+            "WebChannelMessageToChrome sent with an object from a non-whitelisted principal"
+          );
           return;
         }
       }
 
       let mm = getMessageManager(e);
 
-      mm.sendAsyncMessage("WebChannelMessageToChrome", e.detail, { eventTarget: e.target }, principal);
+      mm.sendAsyncMessage(
+        "WebChannelMessageToChrome",
+        e.detail,
+        { eventTarget: e.target },
+        principal
+      );
     } else {
       Cu.reportError("WebChannel message failed. No message detail.");
     }
@@ -86,19 +99,30 @@ class WebChannelChild extends ActorChild {
       let eventTarget = msg.objects.eventTarget || msg.target.content;
 
       // Use nodePrincipal if available, otherwise fallback to document principal.
-      let targetPrincipal = eventTarget instanceof Ci.nsIDOMWindow ? eventTarget.document.nodePrincipal : eventTarget.nodePrincipal;
+      let targetPrincipal =
+        eventTarget instanceof Ci.nsIDOMWindow
+          ? eventTarget.document.nodePrincipal
+          : eventTarget.nodePrincipal;
 
       if (msg.principal.subsumes(targetPrincipal)) {
         // If eventTarget is a window, use it as the targetWindow, otherwise
         // find the window that owns the eventTarget.
-        let targetWindow = eventTarget instanceof Ci.nsIDOMWindow ? eventTarget : eventTarget.ownerGlobal;
+        let targetWindow =
+          eventTarget instanceof Ci.nsIDOMWindow
+            ? eventTarget
+            : eventTarget.ownerGlobal;
 
-        eventTarget.dispatchEvent(new targetWindow.CustomEvent("WebChannelMessageToContent", {
-          detail: Cu.cloneInto({
-            id: msg.data.id,
-            message: msg.data.message,
-          }, targetWindow),
-        }));
+        eventTarget.dispatchEvent(
+          new targetWindow.CustomEvent("WebChannelMessageToContent", {
+            detail: Cu.cloneInto(
+              {
+                id: msg.data.id,
+                message: msg.data.message,
+              },
+              targetWindow
+            ),
+          })
+        );
       } else {
         Cu.reportError("WebChannel message failed. Principal mismatch.");
       }

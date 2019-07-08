@@ -32,13 +32,13 @@
       Notification.requestPermission();
     },
 
-    function(done) {
+    async function(done) {
       info("Test requestPermission deny");
       function assertPermissionDenied(perm) {
         is(perm, "denied", "Permission should be denied.");
         is(Notification.permission, "denied", "Permission should be denied.");
       }
-      NotificationTest.denyNotifications();
+      await NotificationTest.denyNotifications();
       Notification.requestPermission()
         .then(assertPermissionDenied)
         .then(_ => Notification.requestPermission(assertPermissionDenied))
@@ -48,13 +48,13 @@
         .then(done);
     },
 
-    function(done) {
+    async function(done) {
       info("Test requestPermission grant");
       function assertPermissionGranted(perm) {
         is(perm, "granted", "Permission should be granted.");
         is(Notification.permission, "granted", "Permission should be granted");
       }
-      NotificationTest.allowNotifications();
+      await NotificationTest.allowNotifications();
       Notification.requestPermission()
         .then(assertPermissionGranted)
         .then(_ => Notification.requestPermission(assertPermissionGranted))

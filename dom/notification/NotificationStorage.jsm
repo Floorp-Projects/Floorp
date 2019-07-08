@@ -5,14 +5,19 @@
 "use strict";
 
 const DEBUG = false;
-function debug(s) { dump("-*- NotificationStorage.js: " + s + "\n"); }
+function debug(s) {
+  dump("-*- NotificationStorage.js: " + s + "\n");
+}
 
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 const kMessageNotificationGetAllOk = "Notification:GetAll:Return:OK";
 const kMessageNotificationGetAllKo = "Notification:GetAll:Return:KO";
-const kMessageNotificationSaveKo   = "Notification:Save:Return:KO";
+const kMessageNotificationSaveKo = "Notification:Save:Return:KO";
 const kMessageNotificationDeleteKo = "Notification:Delete:Return:KO";
 
 const kMessages = [
@@ -33,7 +38,6 @@ function NotificationStorage() {
 }
 
 NotificationStorage.prototype = {
-
   registerListeners() {
     for (let message of kMessages) {
       Services.cpmm.addMessageListener(message, this);
@@ -47,16 +51,32 @@ NotificationStorage.prototype = {
   },
 
   observe(aSubject, aTopic, aData) {
-    if (DEBUG) debug("Topic: " + aTopic);
+    if (DEBUG) {
+      debug("Topic: " + aTopic);
+    }
     if (aTopic === "xpcom-shutdown") {
       Services.obs.removeObserver(this, "xpcom-shutdown");
       this.unregisterListeners();
     }
   },
 
-  put(origin, id, title, dir, lang, body, tag, icon, alertName,
-                data, behavior, serviceWorkerRegistrationScope) {
-    if (DEBUG) { debug("PUT: " + origin + " " + id + ": " + title); }
+  put(
+    origin,
+    id,
+    title,
+    dir,
+    lang,
+    body,
+    tag,
+    icon,
+    alertName,
+    data,
+    behavior,
+    serviceWorkerRegistrationScope
+  ) {
+    if (DEBUG) {
+      debug("PUT: " + origin + " " + id + ": " + title);
+    }
     var notification = {
       id,
       title,
@@ -80,19 +100,45 @@ NotificationStorage.prototype = {
   },
 
   get(origin, tag, callback) {
-    if (DEBUG) { debug("GET: " + origin + " " + tag); }
+    if (DEBUG) {
+      debug("GET: " + origin + " " + tag);
+    }
     this._fetchFromDB(origin, tag, callback);
   },
 
   getByID(origin, id, callback) {
-    if (DEBUG) { debug("GETBYID: " + origin + " " + id); }
+    if (DEBUG) {
+      debug("GETBYID: " + origin + " " + id);
+    }
     var GetByIDProxyCallback = function(id, originalCallback) {
       this.searchID = id;
       this.originalCallback = originalCallback;
       var self = this;
-      this.handle = function(id, title, dir, lang, body, tag, icon, data, behavior, serviceWorkerRegistrationScope) {
+      this.handle = function(
+        id,
+        title,
+        dir,
+        lang,
+        body,
+        tag,
+        icon,
+        data,
+        behavior,
+        serviceWorkerRegistrationScope
+      ) {
         if (id == this.searchID) {
-          self.originalCallback.handle(id, title, dir, lang, body, tag, icon, data, behavior, serviceWorkerRegistrationScope);
+          self.originalCallback.handle(
+            id,
+            title,
+            dir,
+            lang,
+            body,
+            tag,
+            icon,
+            data,
+            behavior,
+            serviceWorkerRegistrationScope
+          );
         }
       };
       this.done = function() {
@@ -104,7 +150,9 @@ NotificationStorage.prototype = {
   },
 
   delete(origin, id) {
-    if (DEBUG) { debug("DELETE: " + id); }
+    if (DEBUG) {
+      debug("DELETE: " + id);
+    }
     Services.cpmm.sendAsyncMessage("Notification:Delete", {
       origin,
       id,
@@ -117,8 +165,12 @@ NotificationStorage.prototype = {
     switch (message.name) {
       case kMessageNotificationGetAllOk:
         delete this._requests[message.data.requestID];
-        this._returnNotifications(message.data.notifications, request.origin,
-                                  request.tag, request.callback);
+        this._returnNotifications(
+          message.data.notifications,
+          request.origin,
+          request.tag,
+          request.callback
+        );
         break;
 
       case kMessageNotificationGetAllKo:
@@ -131,13 +183,19 @@ NotificationStorage.prototype = {
       case kMessageNotificationSaveKo:
       case kMessageNotificationDeleteKo:
         if (DEBUG) {
-          debug("Error received when treating: '" + message.name +
-                "': " + message.data.errorMsg);
+          debug(
+            "Error received when treating: '" +
+              message.name +
+              "': " +
+              message.data.errorMsg
+          );
         }
         break;
 
       default:
-        if (DEBUG) debug("Unrecognized message: " + message.name);
+        if (DEBUG) {
+          debug("Unrecognized message: " + message.name);
+        }
         break;
     }
   },
@@ -164,30 +222,36 @@ NotificationStorage.prototype = {
     notifications.forEach(function(notification) {
       try {
         Services.tm.dispatchToMainThread(
-          callback.handle.bind(callback,
-                               notification.id,
-                               notification.title,
-                               notification.dir,
-                               notification.lang,
-                               notification.body,
-                               notification.tag,
-                               notification.icon,
-                               notification.data,
-                               notification.mozbehavior,
-                               notification.serviceWorkerRegistrationScope));
+          callback.handle.bind(
+            callback,
+            notification.id,
+            notification.title,
+            notification.dir,
+            notification.lang,
+            notification.body,
+            notification.tag,
+            notification.icon,
+            notification.data,
+            notification.mozbehavior,
+            notification.serviceWorkerRegistrationScope
+          )
+        );
       } catch (e) {
-        if (DEBUG) { debug("Error calling callback handle: " + e); }
+        if (DEBUG) {
+          debug("Error calling callback handle: " + e);
+        }
       }
     });
     try {
       Services.tm.dispatchToMainThread(callback.done);
     } catch (e) {
-      if (DEBUG) { debug("Error calling callback done: " + e); }
+      if (DEBUG) {
+        debug("Error calling callback done: " + e);
+      }
     }
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsINotificationStorage]),
 };
-
 
 var EXPORTED_SYMBOLS = ["NotificationStorage"];

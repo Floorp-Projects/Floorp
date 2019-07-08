@@ -51,13 +51,18 @@ const cols = {
 function Columns() {
   return Object.assign(
     cols,
-    RESPONSE_HEADERS.reduce((acc, header) => Object.assign(acc, { [header]: false }), {})
+    RESPONSE_HEADERS.reduce(
+      (acc, header) => Object.assign(acc, { [header]: false }),
+      {}
+    )
   );
 }
 
 function ColumnsData() {
   const defaultColumnsData = JSON.parse(
-    Services.prefs.getDefaultBranch(null).getCharPref("devtools.netmonitor.columnsData")
+    Services.prefs
+      .getDefaultBranch(null)
+      .getCharPref("devtools.netmonitor.columnsData")
   );
   return new Map(defaultColumnsData.map(i => [i.name, i]));
 }
@@ -70,7 +75,9 @@ function UI(initialState = {}) {
     networkDetailsOpen: false,
     networkDetailsWidth: null,
     networkDetailsHeight: null,
-    persistentLogsEnabled: Services.prefs.getBoolPref("devtools.netmonitor.persistlog"),
+    persistentLogsEnabled: Services.prefs.getBoolPref(
+      "devtools.netmonitor.persistlog"
+    ),
     browserCacheDisabled: Services.prefs.getBoolPref("devtools.cache.disabled"),
     statisticsOpen: false,
     waterfallWidth: null,

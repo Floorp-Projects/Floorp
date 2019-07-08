@@ -11,26 +11,26 @@ import RichOption from "./rich-option.js";
  * </rich-select>
  */
 
-export default class BasicCardOption extends ObservedPropertiesMixin(RichOption) {
+export default class BasicCardOption extends ObservedPropertiesMixin(
+  RichOption
+) {
   static get recordAttributes() {
-    return [
-      "cc-exp",
-      "cc-name",
-      "cc-number",
-      "cc-type",
-      "guid",
-    ];
+    return ["cc-exp", "cc-name", "cc-number", "cc-type", "guid"];
   }
 
   static get observedAttributes() {
-    return RichOption.observedAttributes.concat(BasicCardOption.recordAttributes);
+    return RichOption.observedAttributes.concat(
+      BasicCardOption.recordAttributes
+    );
   }
 
   constructor() {
     super();
 
     for (let name of ["cc-name", "cc-number", "cc-exp", "cc-type"]) {
-      this[`_${name}`] = document.createElement(name == "cc-type" ? "img" : "span");
+      this[`_${name}`] = document.createElement(
+        name == "cc-type" ? "img" : "span"
+      );
       this[`_${name}`].classList.add(name);
     }
   }
@@ -63,7 +63,9 @@ export default class BasicCardOption extends ObservedPropertiesMixin(RichOption)
       ccExp,
       ccName,
       // XXX Bug 1473772 - Hard-coded string:
-    ].filter(str => !!str).join(" \xa0 ");
+    ]
+      .filter(str => !!str)
+      .join(" \xa0 ");
   }
 
   get requiredFields() {
@@ -72,12 +74,15 @@ export default class BasicCardOption extends ObservedPropertiesMixin(RichOption)
 
   render() {
     this["_cc-name"].textContent = this.ccName || "";
-    this["_cc-number"].textContent = BasicCardOption.formatCCNumber(this.ccNumber);
+    this["_cc-number"].textContent = BasicCardOption.formatCCNumber(
+      this.ccNumber
+    );
     // XXX Bug 1473772 - Hard-coded string:
     this["_cc-exp"].textContent = this.ccExp ? "Exp. " + this.ccExp : "";
     // XXX: Bug 1491040, displaying cc-type in this context may need its own localized string
     this["_cc-type"].alt = this.ccType || "";
-    this["_cc-type"].src = "chrome://formautofill/content/icon-credit-card-generic.svg";
+    this["_cc-type"].src =
+      "chrome://formautofill/content/icon-credit-card-generic.svg";
   }
 }
 

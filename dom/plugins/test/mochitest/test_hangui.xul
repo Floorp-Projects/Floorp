@@ -19,6 +19,8 @@
 </body>
 <script class="testbody" type="application/javascript">
 <![CDATA[
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 SimpleTest.waitForExplicitFinish();
 SimpleTest.expectChildProcessCrash();
 SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
@@ -89,9 +91,9 @@ function finishTest() {
     os.removeObserver(testObserver, "plugin-crashed");
     --obsCount;
   }
-  SpecialPowers.clearUserPref(hangUITimeoutPref);
-  SpecialPowers.clearUserPref(hangUIMinDisplayPref);
-  SpecialPowers.clearUserPref(timeoutPref);
+  Services.prefs.clearUserPref(hangUITimeoutPref);
+  Services.prefs.clearUserPref(hangUIMinDisplayPref);
+  Services.prefs.clearUserPref(timeoutPref);
   SimpleTest.finish();
 }
 
@@ -151,9 +153,9 @@ function test9b() {
 
 function test9a() {
   resetVars();
-  SpecialPowers.setIntPref(hangUITimeoutPref, 1);
-  SpecialPowers.setIntPref(hangUIMinDisplayPref, 1);
-  SpecialPowers.setIntPref(timeoutPref, 45);
+  Services.prefs.setIntPref(hangUITimeoutPref, 1);
+  Services.prefs.setIntPref(hangUIMinDisplayPref, 1);
+  Services.prefs.setIntPref(timeoutPref, 45);
   hanguiContinue("test9a: Continue button works with checkbox", true, "test9b");
   p.stall(STALL_DURATION);
 }
@@ -165,8 +167,8 @@ function test9() {
 
 function test8a() {
   resetVars();
-  SpecialPowers.setIntPref(hangUITimeoutPref, 1);
-  SpecialPowers.setIntPref(hangUIMinDisplayPref, 4);
+  Services.prefs.setIntPref(hangUITimeoutPref, 1);
+  Services.prefs.setIntPref(hangUIMinDisplayPref, 4);
   hanguiExpect("test8a: Plugin Hang UI is not showing (disabled due to hangUIMinDisplaySecs)", false, false, "test9");
   var exceptionThrown = false;
   try {
@@ -184,7 +186,7 @@ function test8() {
 
 function test7a() {
   resetVars();
-  SpecialPowers.setIntPref(hangUITimeoutPref, 0);
+  Services.prefs.setIntPref(hangUITimeoutPref, 0);
   hanguiExpect("test7a: Plugin Hang UI is not showing (disabled)", false, false, "test8");
   var exceptionThrown = false;
   try {
@@ -201,9 +203,9 @@ function test7() {
 }
 
 function test6() {
-  SpecialPowers.setIntPref(hangUITimeoutPref, 1);
-  SpecialPowers.setIntPref(hangUIMinDisplayPref, 1);
-  SpecialPowers.setIntPref(timeoutPref, 3);
+  Services.prefs.setIntPref(hangUITimeoutPref, 1);
+  Services.prefs.setIntPref(hangUIMinDisplayPref, 1);
+  Services.prefs.setIntPref(timeoutPref, 3);
   hanguiExpect("test6: Plugin Hang UI is showing", true, true, "test7");
   var exceptionThrown = false;
   try {
@@ -250,9 +252,9 @@ function test2() {
 }
 
 function test1() {
-  SpecialPowers.setIntPref(hangUITimeoutPref, 1);
-  SpecialPowers.setIntPref(hangUIMinDisplayPref, 1);
-  SpecialPowers.setIntPref(timeoutPref, 45);
+  Services.prefs.setIntPref(hangUITimeoutPref, 1);
+  Services.prefs.setIntPref(hangUIMinDisplayPref, 1);
+  Services.prefs.setIntPref(timeoutPref, 45);
   hanguiExpect("test1: Plugin Hang UI is showing", true, true, "test2");
   p.stall(STALL_DURATION);
 }

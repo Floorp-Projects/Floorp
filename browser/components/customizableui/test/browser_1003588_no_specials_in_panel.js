@@ -4,16 +4,22 @@
 "use strict";
 
 function simulateItemDragAndEnd(aToDrag, aTarget) {
-  var ds = Cc["@mozilla.org/widget/dragservice;1"].
-           getService(Ci.nsIDragService);
+  var ds = Cc["@mozilla.org/widget/dragservice;1"].getService(
+    Ci.nsIDragService
+  );
 
   ds.startDragSession();
   try {
-    var [result, dataTransfer] = EventUtils.synthesizeDragOver(aToDrag.parentNode, aTarget);
+    var [result, dataTransfer] = EventUtils.synthesizeDragOver(
+      aToDrag.parentNode,
+      aTarget
+    );
     EventUtils.synthesizeDropAfterDragOver(result, dataTransfer, aTarget);
     // Send dragend to move dragging item back to initial place.
-    EventUtils.sendDragEvent({ type: "dragend", dataTransfer },
-                             aToDrag.parentNode);
+    EventUtils.sendDragEvent(
+      { type: "dragend", dataTransfer },
+      aToDrag.parentNode
+    );
   } finally {
     ds.endDragSession(true);
   }
@@ -59,7 +65,6 @@ add_task(async function checkAddingToToolbar() {
   }
 });
 
-
 add_task(async function checkDragging() {
   let startArea = CustomizableUI.AREA_TABSTRIP;
   let targetArea = CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
@@ -81,32 +86,45 @@ add_task(async function checkDragging() {
 
   await startCustomizing();
   let existingSpecial = null;
-  existingSpecial = gCustomizeMode.visiblePalette.querySelector("toolbarspring");
-  ok(existingSpecial, "Should have a flexible space in the palette by default in photon");
+  existingSpecial = gCustomizeMode.visiblePalette.querySelector(
+    "toolbarspring"
+  );
+  ok(
+    existingSpecial,
+    "Should have a flexible space in the palette by default in photon"
+  );
   for (let id of elementsToMove) {
-    simulateItemDragAndEnd(document.getElementById(id), document.getElementById(targetArea));
+    simulateItemDragAndEnd(
+      document.getElementById(id),
+      document.getElementById(targetArea)
+    );
   }
 
   assertAreaPlacements(startArea, placementsWithSpecials);
   assertAreaPlacements(targetArea, startingTargetPlacements);
 
   for (let id of elementsToMove) {
-    simulateItemDrag(document.getElementById(id), gCustomizeMode.visiblePalette);
+    simulateItemDrag(
+      document.getElementById(id),
+      gCustomizeMode.visiblePalette
+    );
   }
 
   assertAreaPlacements(startArea, startingToolbarPlacements);
   assertAreaPlacements(targetArea, startingTargetPlacements);
 
-  let allSpecials = gCustomizeMode.visiblePalette.querySelectorAll("toolbarspring,toolbarseparator,toolbarspacer");
+  let allSpecials = gCustomizeMode.visiblePalette.querySelectorAll(
+    "toolbarspring,toolbarseparator,toolbarspacer"
+  );
   allSpecials = [...allSpecials].filter(special => special != existingSpecial);
-  ok(!allSpecials.length,
-     "No (new) specials should make it to the palette alive.");
+  ok(
+    !allSpecials.length,
+    "No (new) specials should make it to the palette alive."
+  );
   await endCustomizing();
 });
-
 
 add_task(async function asyncCleanup() {
   await endCustomizing();
   CustomizableUI.reset();
 });
-

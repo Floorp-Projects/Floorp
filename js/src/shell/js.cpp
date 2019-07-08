@@ -10333,16 +10333,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     }
   }
 
-  if (const char* str = op.getStringOption("ion-sincos")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.disableSincos = false;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disableSincos = true;
-    } else {
-      return OptionFailure("ion-sincos", str);
-    }
-  }
-
   if (const char* str = op.getStringOption("ion-sink")) {
     if (strcmp(str, "on") == 0) {
       jit::JitOptions.disableSink = false;
@@ -10993,15 +10983,6 @@ int main(int argc, char** argv, char** envp) {
           "Profile guided optimization (default: on, off to disable)") ||
       !op.addStringOption('\0', "ion-range-analysis", "on/off",
                           "Range analysis (default: on, off to disable)") ||
-#if defined(__APPLE__)
-      !op.addStringOption(
-          '\0', "ion-sincos", "on/off",
-          "Replace sin(x)/cos(x) to sincos(x) (default: on, off to disable)") ||
-#else
-      !op.addStringOption(
-          '\0', "ion-sincos", "on/off",
-          "Replace sin(x)/cos(x) to sincos(x) (default: off, on to enable)") ||
-#endif
       !op.addStringOption('\0', "ion-sink", "on/off",
                           "Sink code motion (default: off, on to enable)") ||
       !op.addStringOption('\0', "ion-optimization-levels", "on/off",

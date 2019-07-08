@@ -48,21 +48,25 @@ const TEST_URI = `
 //   nb: the number of color swatches this property should have
 // }
 const TESTS = [
-  {selector: "body", propertyName: "color", nb: 1},
-  {selector: "body", propertyName: "background-color", nb: 1},
-  {selector: "body", propertyName: "border", nb: 1},
-  {selector: "*", propertyName: "color", nb: 1},
-  {selector: "*", propertyName: "background", nb: 16},
-  {selector: "*", propertyName: "box-shadow", nb: 2},
+  { selector: "body", propertyName: "color", nb: 1 },
+  { selector: "body", propertyName: "background-color", nb: 1 },
+  { selector: "body", propertyName: "border", nb: 1 },
+  { selector: "*", propertyName: "color", nb: 1 },
+  { selector: "*", propertyName: "background", nb: 16 },
+  { selector: "*", propertyName: "box-shadow", nb: 2 },
 ];
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {view} = await openRuleView();
+  const { view } = await openRuleView();
 
-  for (const {selector, propertyName, nb} of TESTS) {
-    info("Looking for color swatches in property " + propertyName +
-      " in selector " + selector);
+  for (const { selector, propertyName, nb } of TESTS) {
+    info(
+      "Looking for color swatches in property " +
+        propertyName +
+        " in selector " +
+        selector
+    );
 
     const prop = getRuleViewProperty(view, selector, propertyName).valueSpan;
     const swatches = prop.querySelectorAll(".ruleview-colorswatch");

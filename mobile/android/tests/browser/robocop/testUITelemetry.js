@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const EVENT_TEST1 = "_test_event_1.1";
 const EVENT_TEST2 = "_test_event_2.1";
@@ -72,19 +72,27 @@ add_test(function test_enabled() {
 
 add_test(function test_telemetry_events() {
   let expected = expectedArraysToObjs([
-    ["event",   EVENT_TEST1, METHOD_TEST1, [],                                             undefined],
-    ["event",   EVENT_TEST2, METHOD_TEST1, [SESSION_STARTED_TWICE],                        undefined],
-    ["event",   EVENT_TEST2, METHOD_TEST2, [SESSION_STARTED_TWICE],                        undefined],
-    ["event",   EVENT_TEST3, METHOD_TEST1, [SESSION_STARTED_TWICE, SESSION_STOPPED_TWICE], "foobarextras"],
+    ["event", EVENT_TEST1, METHOD_TEST1, [], undefined],
+    ["event", EVENT_TEST2, METHOD_TEST1, [SESSION_STARTED_TWICE], undefined],
+    ["event", EVENT_TEST2, METHOD_TEST2, [SESSION_STARTED_TWICE], undefined],
+    [
+      "event",
+      EVENT_TEST3,
+      METHOD_TEST1,
+      [SESSION_STARTED_TWICE, SESSION_STOPPED_TWICE],
+      "foobarextras",
+    ],
     ["session", SESSION_STARTED_TWICE, REASON_TEST1],
-    ["event",   EVENT_TEST4, METHOD_TEST1, [SESSION_STOPPED_TWICE],                        "barextras"],
+    ["event", EVENT_TEST4, METHOD_TEST1, [SESSION_STOPPED_TWICE], "barextras"],
     ["session", SESSION_STOPPED_TWICE, REASON_TEST2],
-    ["event",   EVENT_TEST1, METHOD_NONE, [],                                              undefined],
+    ["event", EVENT_TEST1, METHOD_NONE, [], undefined],
   ]);
 
   let clearMeasurements = false;
   let obs = getObserver();
-  let measurements = removeNonTestMeasurements(obs.getUIMeasurements(clearMeasurements));
+  let measurements = removeNonTestMeasurements(
+    obs.getUIMeasurements(clearMeasurements)
+  );
 
   measurements.forEach(function(m, i) {
     if (m.type === "event") {

@@ -520,14 +520,6 @@ void Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len);
 
 void Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest);
 
-void Gecko_nsStyleSVGPaint_CopyFrom(nsStyleSVGPaint* dest,
-                                    const nsStyleSVGPaint* src);
-
-void Gecko_nsStyleSVGPaint_SetURLValue(nsStyleSVGPaint* paint,
-                                       const mozilla::StyleComputedUrl* url);
-
-void Gecko_nsStyleSVGPaint_Reset(nsStyleSVGPaint* paint);
-
 void Gecko_nsStyleSVG_SetDashArrayLength(nsStyleSVG* svg, uint32_t len);
 
 void Gecko_nsStyleSVG_CopyDashArray(nsStyleSVG* dst, const nsStyleSVG* src);

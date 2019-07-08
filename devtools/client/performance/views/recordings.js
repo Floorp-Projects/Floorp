@@ -11,8 +11,12 @@ const PerformanceUtils = require("../modules/utils");
 
 const React = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-const RecordingList = React.createFactory(require("../components/RecordingList"));
-const RecordingListItem = React.createFactory(require("../components/RecordingListItem"));
+const RecordingList = React.createFactory(
+  require("../components/RecordingList")
+);
+const RecordingListItem = React.createFactory(
+  require("../components/RecordingListItem")
+);
 
 const EventEmitter = require("devtools/shared/event-emitter");
 
@@ -31,10 +35,19 @@ const RecordingsView = {
     this._onRecordingDeleted = this._onRecordingDeleted.bind(this);
     this._onRecordingExported = this._onRecordingExported.bind(this);
 
-    PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
+    PerformanceController.on(
+      EVENTS.RECORDING_STATE_CHANGE,
+      this._onRecordingStateChange
+    );
     PerformanceController.on(EVENTS.RECORDING_ADDED, this._onNewRecording);
-    PerformanceController.on(EVENTS.RECORDING_DELETED, this._onRecordingDeleted);
-    PerformanceController.on(EVENTS.RECORDING_EXPORTED, this._onRecordingExported);
+    PerformanceController.on(
+      EVENTS.RECORDING_DELETED,
+      this._onRecordingDeleted
+    );
+    PerformanceController.on(
+      EVENTS.RECORDING_EXPORTED,
+      this._onRecordingExported
+    );
 
     // DE-XUL: Begin migrating the recording sidebar to React. Temporarily hold state
     // here.
@@ -43,7 +56,9 @@ const RecordingsView = {
       labels: new WeakMap(),
       selected: null,
     };
-    this._listMount = PerformanceUtils.createHtmlMount($("#recording-list-mount"));
+    this._listMount = PerformanceUtils.createHtmlMount(
+      $("#recording-list-mount")
+    );
     this._renderList();
   },
 
@@ -84,7 +99,7 @@ const RecordingsView = {
    * DE-XUL: Render the recording list using React.
    */
   _renderList: function() {
-    const {recordings, labels, selected} = this._listState;
+    const { recordings, labels, selected } = this._listState;
 
     const recordingList = RecordingList({
       itemComponent: RecordingListItem,
@@ -106,11 +121,19 @@ const RecordingsView = {
    * Destruction function, called when the tool is closed.
    */
   destroy: function() {
-    PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE,
-                              this._onRecordingStateChange);
+    PerformanceController.off(
+      EVENTS.RECORDING_STATE_CHANGE,
+      this._onRecordingStateChange
+    );
     PerformanceController.off(EVENTS.RECORDING_ADDED, this._onNewRecording);
-    PerformanceController.off(EVENTS.RECORDING_DELETED, this._onRecordingDeleted);
-    PerformanceController.off(EVENTS.RECORDING_EXPORTED, this._onRecordingExported);
+    PerformanceController.off(
+      EVENTS.RECORDING_DELETED,
+      this._onRecordingDeleted
+    );
+    PerformanceController.off(
+      EVENTS.RECORDING_EXPORTED,
+      this._onRecordingExported
+    );
   },
 
   /**
@@ -136,8 +159,11 @@ const RecordingsView = {
 
     if (!recordings.includes(recording)) {
       recordings.push(recording);
-      labels.set(recording, recording.getLabel() ||
-        L10N.getFormatStr("recordingsList.itemLabel", recordings.length));
+      labels.set(
+        recording,
+        recording.getLabel() ||
+          L10N.getFormatStr("recordingsList.itemLabel", recordings.length)
+      );
 
       // If this is a manual recording, immediately select it, or
       // select a console profile if its the only one
@@ -147,7 +173,8 @@ const RecordingsView = {
     }
 
     // Determine if the recording needs to be selected.
-    const isCompletedManualRecording = !recording.isConsole() && recording.isCompleted();
+    const isCompletedManualRecording =
+      !recording.isConsole() && recording.isCompleted();
     if (recording.isImported() || isCompletedManualRecording) {
       this._onSelect(recording);
     }
@@ -182,18 +209,26 @@ const RecordingsView = {
    */
   _onSaveButtonClick: function(recording) {
     const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    fp.init(window, L10N.getStr("recordingsList.saveDialogTitle"),
-            Ci.nsIFilePicker.modeSave);
-    fp.appendFilter(L10N.getStr("recordingsList.saveDialogJSONFilter"), "*.json");
+    fp.init(
+      window,
+      L10N.getStr("recordingsList.saveDialogTitle"),
+      Ci.nsIFilePicker.modeSave
+    );
+    fp.appendFilter(
+      L10N.getStr("recordingsList.saveDialogJSONFilter"),
+      "*.json"
+    );
     fp.appendFilter(L10N.getStr("recordingsList.saveDialogAllFilter"), "*.*");
     fp.defaultString = "profile.json";
 
-    fp.open({ done: result => {
-      if (result == Ci.nsIFilePicker.returnCancel) {
-        return;
-      }
-      this.emit(EVENTS.UI_EXPORT_RECORDING, recording, fp.file);
-    }});
+    fp.open({
+      done: result => {
+        if (result == Ci.nsIFilePicker.returnCancel) {
+          return;
+        }
+        this.emit(EVENTS.UI_EXPORT_RECORDING, recording, fp.file);
+      },
+    });
   },
 
   _onRecordingExported: function(recording, file) {

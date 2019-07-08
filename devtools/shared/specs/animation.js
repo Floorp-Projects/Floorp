@@ -25,7 +25,7 @@ const animationPlayerSpec = generateActorSpec({
   typeName: "animationplayer",
 
   events: {
-    "changed": {
+    changed: {
       type: "changed",
       state: Arg(0, "json"),
     },
@@ -62,7 +62,7 @@ const animationsSpec = generateActorSpec({
   typeName: "animations",
 
   events: {
-    "mutations": {
+    mutations: {
       type: "mutations",
       changes: Arg(0, "array:animationMutationChange"),
     },

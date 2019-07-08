@@ -4,9 +4,37 @@
 
 const FRECENCY_DEFAULT = 10000;
 
-var {ObjectUtils} = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {HTTP_400, HTTP_401, HTTP_402, HTTP_403, HTTP_404, HTTP_405, HTTP_406, HTTP_407, HTTP_408, HTTP_409, HTTP_410, HTTP_411, HTTP_412, HTTP_413, HTTP_414, HTTP_415, HTTP_417, HTTP_500, HTTP_501, HTTP_502, HTTP_503, HTTP_504, HTTP_505, HttpError, HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+var { ObjectUtils } = ChromeUtils.import(
+  "resource://gre/modules/ObjectUtils.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {
+  HTTP_400,
+  HTTP_401,
+  HTTP_402,
+  HTTP_403,
+  HTTP_404,
+  HTTP_405,
+  HTTP_406,
+  HTTP_407,
+  HTTP_408,
+  HTTP_409,
+  HTTP_410,
+  HTTP_411,
+  HTTP_412,
+  HTTP_413,
+  HTTP_414,
+  HTTP_415,
+  HTTP_417,
+  HTTP_500,
+  HTTP_501,
+  HTTP_502,
+  HTTP_503,
+  HTTP_504,
+  HTTP_505,
+  HttpError,
+  HttpServer,
+} = ChromeUtils.import("resource://testing-common/httpd.js");
 
 // Import common head.
 {
@@ -34,9 +62,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const TITLE_SEARCH_ENGINE_SEPARATOR = " \u00B7\u2013\u00B7 ";
 
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 AddonTestUtils.init(this, false);
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "42",
+  "42"
+);
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
@@ -45,12 +80,7 @@ add_task(async function setup() {
 async function cleanup() {
   Services.prefs.clearUserPref("browser.urlbar.autoFill");
   Services.prefs.clearUserPref("browser.urlbar.autoFill.searchEngines");
-  let suggestPrefs = [
-    "history",
-    "bookmark",
-    "openpage",
-    "searches",
-  ];
+  let suggestPrefs = ["history", "bookmark", "openpage", "searches"];
   for (let type of suggestPrefs) {
     Services.prefs.clearUserPref("browser.urlbar.suggest." + type);
   }
@@ -139,18 +169,22 @@ async function _check_autocomplete_matches(match, result) {
   }
   let title = match.comment || match.title;
 
-  if (tags)
+  if (tags) {
     title += " \u2013 " + tags.sort().join(", ");
-  if (style)
+  }
+  if (style) {
     style = style.sort();
-  else
+  } else {
     style = ["favicon"];
+  }
 
   let actual = { value: result.value, comment: result.comment };
   let expected = { value: match.value || uri, comment: title };
-  info(`Checking match: ` +
-       `actual=${JSON.stringify(actual)} ... ` +
-       `expected=${JSON.stringify(expected)}`);
+  info(
+    `Checking match: ` +
+      `actual=${JSON.stringify(actual)} ... ` +
+      `expected=${JSON.stringify(expected)}`
+  );
 
   let actualAction = PlacesUtils.parseActionUrl(actual.value);
   let expectedAction = PlacesUtils.parseActionUrl(expected.value);
@@ -167,14 +201,26 @@ async function _check_autocomplete_matches(match, result) {
   }
 
   let actualStyle = result.style.split(/\s+/).sort();
-  if (style)
-    Assert.equal(actualStyle.toString(), style.toString(), "Match should have expected style");
+  if (style) {
+    Assert.equal(
+      actualStyle.toString(),
+      style.toString(),
+      "Match should have expected style"
+    );
+  }
   if (uri && uri.startsWith("moz-action:")) {
-    Assert.ok(actualStyle.includes("action"), "moz-action results should always have 'action' in their style");
+    Assert.ok(
+      actualStyle.includes("action"),
+      "moz-action results should always have 'action' in their style"
+    );
   }
 
   if (match.icon) {
-    await compareFavicons(result.image, match.icon, "Match should have the expected icon");
+    await compareFavicons(
+      result.image,
+      match.icon,
+      "Match should have the expected icon"
+    );
   }
 
   return true;
@@ -203,8 +249,9 @@ async function check_autocomplete(test) {
   let input = test.input || new AutoCompleteInput(["unifiedcomplete"]);
   input.textValue = test.search;
 
-  if (test.searchParam)
+  if (test.searchParam) {
     input.searchParam = test.searchParam;
+  }
 
   // Caret must be at the end for autoFill to happen.
   let strLen = test.search.length;
@@ -212,8 +259,9 @@ async function check_autocomplete(test) {
   Assert.equal(input.selectionStart, strLen, "Selection starts at end");
   Assert.equal(input.selectionEnd, strLen, "Selection ends at the end");
 
-  let controller = Cc["@mozilla.org/autocomplete/controller;1"]
-                     .getService(Ci.nsIAutoCompleteController);
+  let controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
+    Ci.nsIAutoCompleteController
+  );
   controller.input = input;
 
   let numSearchesStarted = 0;
@@ -260,7 +308,10 @@ async function check_autocomplete(test) {
           image: controller.getImageAt(0),
         };
         info(`First match is "${result.value}", "${result.comment}"`);
-        Assert.ok(await _check_autocomplete_matches(matches[0], result), "first item is correct");
+        Assert.ok(
+          await _check_autocomplete_matches(matches[0], result),
+          "first item is correct"
+        );
         info("Checking rest of the matches");
       }
 
@@ -277,8 +328,9 @@ async function check_autocomplete(test) {
         let found = false;
         for (let j = lowerBound; j < upperBound; ++j) {
           // Skip processed expected results
-          if (matches[j] == undefined)
+          if (matches[j] == undefined) {
             continue;
+          }
           if (await _check_autocomplete_matches(matches[j], result)) {
             info("Got a match at index " + j + "!");
             // Make it undefined so we don't process it again
@@ -288,31 +340,44 @@ async function check_autocomplete(test) {
           }
         }
 
-        if (!found)
-          do_throw(`Didn't find the current result ("${result.value}", "${result.comment}") in matches`); // ' (Emacs syntax highlighting fix)
+        if (!found) {
+          do_throw(
+            `Didn't find the current result ("${result.value}", "${
+              result.comment
+            }") in matches`
+          );
+        } // ' (Emacs syntax highlighting fix)
       }
     }
 
-    Assert.equal(controller.matchCount, matches.length,
-                 "Got as many results as expected");
+    Assert.equal(
+      controller.matchCount,
+      matches.length,
+      "Got as many results as expected"
+    );
 
     // If we expect results, make sure we got matches.
-    Assert.equal(controller.searchStatus, matches.length ?
-                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH :
-                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
+    Assert.equal(
+      controller.searchStatus,
+      matches.length
+        ? Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH
+        : Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH
+    );
   }
 
   if (test.autofilled) {
     // Check the autoFilled result.
-    Assert.equal(input.textValue, test.autofilled,
-                 "Autofilled value is correct");
+    Assert.equal(
+      input.textValue,
+      test.autofilled,
+      "Autofilled value is correct"
+    );
 
     // Now force completion and check correct casing of the result.
     // This ensures the controller is able to do its magic case-preserving
     // stuff and correct replacement of the user's casing with result's one.
     controller.handleEnter(false);
-    Assert.equal(input.textValue, test.completed,
-                 "Completed value is correct");
+    Assert.equal(input.textValue, test.completed, "Completed value is correct");
   }
   return input;
 }
@@ -325,15 +390,21 @@ var addBookmark = async function(aBookmarkObj) {
   });
 
   if (aBookmarkObj.keyword) {
-    await PlacesUtils.keywords.insert({ keyword: aBookmarkObj.keyword,
-                                        url: aBookmarkObj.uri instanceof Ci.nsIURI ? aBookmarkObj.uri.spec : aBookmarkObj.uri,
-                                        postData: aBookmarkObj.postData,
-                                      });
+    await PlacesUtils.keywords.insert({
+      keyword: aBookmarkObj.keyword,
+      url:
+        aBookmarkObj.uri instanceof Ci.nsIURI
+          ? aBookmarkObj.uri.spec
+          : aBookmarkObj.uri,
+      postData: aBookmarkObj.postData,
+    });
   }
 
   if (aBookmarkObj.tags) {
-    let uri = aBookmarkObj.uri instanceof Ci.nsIURI ?
-      aBookmarkObj.uri : Services.io.newURI(aBookmarkObj.uri);
+    let uri =
+      aBookmarkObj.uri instanceof Ci.nsIURI
+        ? aBookmarkObj.uri
+        : Services.io.newURI(aBookmarkObj.uri);
     PlacesUtils.tagging.tagURI(uri, aBookmarkObj.tags);
   }
 };
@@ -389,7 +460,7 @@ function makeSearchMatch(input, extra = {}) {
     input,
     searchQuery: "searchQuery" in extra ? extra.searchQuery : input,
   };
-  let style = [ "action", "searchengine" ];
+  let style = ["action", "searchengine"];
   if ("style" in extra && Array.isArray(extra.style)) {
     style.push(...extra.style);
   }
@@ -421,7 +492,7 @@ function makeVisitMatch(input, url, extra = {}) {
     url,
     input,
   };
-  let style = [ "action", "visiturl" ];
+  let style = ["action", "visiturl"];
   if (extra.heuristic) {
     style.push("heuristic");
   }
@@ -434,14 +505,14 @@ function makeVisitMatch(input, url, extra = {}) {
 
 function makeSwitchToTabMatch(url, extra = {}) {
   return {
-    uri: makeActionURI("switchtab", {url}),
+    uri: makeActionURI("switchtab", { url }),
     title: extra.title || url,
-    style: [ "action", "switchtab" ],
+    style: ["action", "switchtab"],
   };
 }
 
 function makeExtensionMatch(extra = {}) {
-  let style = [ "action", "extension" ];
+  let style = ["action", "extension"];
   if (extra.heuristic) {
     style.push("heuristic");
   }
@@ -504,9 +575,9 @@ async function addTestSuggestionsEngine(suggestionsFn = null) {
     // URL query params are x-www-form-urlencoded, which converts spaces into
     // plus signs, so un-convert any plus signs back to spaces.
     let searchStr = decodeURIComponent(req.queryString.replace(/\+/g, " "));
-    let suggestions =
-      suggestionsFn ? suggestionsFn(searchStr) :
-      [searchStr].concat(["foo", "bar"].map(s => searchStr + " " + s));
+    let suggestions = suggestionsFn
+      ? suggestionsFn(searchStr)
+      : [searchStr].concat(["foo", "bar"].map(s => searchStr + " " + s));
     let data = [searchStr, suggestions];
     resp.setHeader("Content-Type", "application/json", false);
     resp.write(JSON.stringify(data));
@@ -532,8 +603,10 @@ add_task(async function ensure_search_engine() {
   for (let engine of await Services.search.getEngines()) {
     await Services.search.removeEngine(engine);
   }
-  await Services.search.addEngineWithDetails("MozSearch",
-    {method: "GET", template: "http://s.example.com/search"});
+  await Services.search.addEngineWithDetails("MozSearch", {
+    method: "GET",
+    template: "http://s.example.com/search",
+  });
   let engine = Services.search.getEngineByName("MozSearch");
   await Services.search.setDefault(engine);
 });
@@ -549,11 +622,17 @@ add_task(async function ensure_search_engine() {
 function addAdaptiveFeedback(aUrl, aSearch) {
   let promise = TestUtils.topicObserved("places-autocomplete-feedback-updated");
   let thing = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteInput,
-                                            Ci.nsIAutoCompletePopup,
-                                            Ci.nsIAutoCompleteController]),
-    get popup() { return thing; },
-    get controller() { return thing; },
+    QueryInterface: ChromeUtils.generateQI([
+      Ci.nsIAutoCompleteInput,
+      Ci.nsIAutoCompletePopup,
+      Ci.nsIAutoCompleteController,
+    ]),
+    get popup() {
+      return thing;
+    },
+    get controller() {
+      return thing;
+    },
     popupOpen: true,
     selectedIndex: 0,
     getValueAt: () => aUrl,

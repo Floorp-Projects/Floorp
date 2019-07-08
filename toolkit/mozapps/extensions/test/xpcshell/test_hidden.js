@@ -1,4 +1,3 @@
-
 add_task(async function test_hidden() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "2");
   AddonTestUtils.usePrivilegedSignatures = id => id.startsWith("privileged");
@@ -33,8 +32,10 @@ add_task(async function test_hidden() {
 
   await promiseInstallAllFiles([xpi1, xpi2]);
 
-  let [addon1, addon2] = await promiseAddonsByIDs(["privileged@tests.mozilla.org",
-                                                   "unprivileged@tests.mozilla.org"]);
+  let [addon1, addon2] = await promiseAddonsByIDs([
+    "privileged@tests.mozilla.org",
+    "unprivileged@tests.mozilla.org",
+  ]);
 
   ok(addon1.isPrivileged, "Privileged is privileged");
   ok(addon1.hidden, "Privileged extension should be hidden");
@@ -43,8 +44,10 @@ add_task(async function test_hidden() {
 
   await promiseRestartManager();
 
-  ([addon1, addon2] = await promiseAddonsByIDs(["privileged@tests.mozilla.org",
-                                                "unprivileged@tests.mozilla.org"]));
+  [addon1, addon2] = await promiseAddonsByIDs([
+    "privileged@tests.mozilla.org",
+    "unprivileged@tests.mozilla.org",
+  ]);
 
   ok(addon1.isPrivileged, "Privileged is privileged");
   ok(addon1.hidden, "Privileged extension should be hidden");

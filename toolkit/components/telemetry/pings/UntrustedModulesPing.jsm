@@ -11,9 +11,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "TelemetryUntrustedModulesPing",
-];
+var EXPORTED_SYMBOLS = ["TelemetryUntrustedModulesPing"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
@@ -26,7 +24,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   Telemetry: ["@mozilla.org/base/telemetry;1", "nsITelemetry"],
-  UpdateTimerManager: ["@mozilla.org/updates/timer-manager;1", "nsIUpdateTimerManager"],
+  UpdateTimerManager: [
+    "@mozilla.org/updates/timer-manager;1",
+    "nsIUpdateTimerManager",
+  ],
 });
 
 const DEFAULT_INTERVAL_SECONDS = 24 * 60 * 60; // 1 day
@@ -43,8 +44,10 @@ var TelemetryUntrustedModulesPing = Object.freeze({
     UpdateTimerManager.registerTimer(
       TIMER_NAME,
       this,
-      Services.prefs.getIntPref(TelemetryUtils.Preferences.UntrustedModulesPingFrequency,
-                                DEFAULT_INTERVAL_SECONDS)
+      Services.prefs.getIntPref(
+        TelemetryUtils.Preferences.UntrustedModulesPingFrequency,
+        DEFAULT_INTERVAL_SECONDS
+      )
     );
   },
 
@@ -53,7 +56,8 @@ var TelemetryUntrustedModulesPing = Object.freeze({
       Telemetry.getUntrustedModuleLoadEvents().then(payload => {
         try {
           if (payload) {
-            TelemetryController.submitExternalPing(PING_SUBMISSION_NAME,
+            TelemetryController.submitExternalPing(
+              PING_SUBMISSION_NAME,
               payload,
               {
                 addClientId: true,
@@ -62,11 +66,11 @@ var TelemetryUntrustedModulesPing = Object.freeze({
             );
           }
         } catch (ex) {
-         this._log.error("payload handler caught an exception", ex);
+          this._log.error("payload handler caught an exception", ex);
         }
       });
     } catch (ex) {
-     this._log.error("notify() caught an exception", ex);
+      this._log.error("notify() caught an exception", ex);
     }
   },
 });

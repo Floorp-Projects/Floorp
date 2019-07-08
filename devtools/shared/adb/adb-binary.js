@@ -7,12 +7,24 @@
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 
 loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
-loader.lazyImporter(this, "ExtensionParent", "resource://gre/modules/ExtensionParent.jsm");
+loader.lazyImporter(
+  this,
+  "ExtensionParent",
+  "resource://gre/modules/ExtensionParent.jsm"
+);
 loader.lazyRequireGetter(this, "Services");
-loader.lazyRequireGetter(this, "FileUtils",
-                         "resource://gre/modules/FileUtils.jsm", true);
-loader.lazyRequireGetter(this, "NetUtil",
-                         "resource://gre/modules/NetUtil.jsm", true);
+loader.lazyRequireGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm",
+  true
+);
 loader.lazyGetter(this, "UNPACKED_ROOT_PATH", () => {
   return OS.Path.join(OS.Constants.Path.localProfileDir, "adb");
 });
@@ -35,18 +47,24 @@ const MANIFEST = "manifest.json";
  */
 async function readFromExtension(fileUri) {
   return new Promise(resolve => {
-    NetUtil.asyncFetch({
-      uri: fileUri,
-      loadUsingSystemPrincipal: true,
-    }, (input) => {
-      try {
-        const string = NetUtil.readInputStreamToString(input, input.available());
-        resolve(JSON.parse(string));
-      } catch (e) {
-        dumpn(`Could not read ${fileUri} in the extension: ${e}`);
-        resolve(null);
+    NetUtil.asyncFetch(
+      {
+        uri: fileUri,
+        loadUsingSystemPrincipal: true,
+      },
+      input => {
+        try {
+          const string = NetUtil.readInputStreamToString(
+            input,
+            input.available()
+          );
+          resolve(JSON.parse(string));
+        } catch (e) {
+          dumpn(`Could not read ${fileUri} in the extension: ${e}`);
+          resolve(null);
+        }
       }
-    });
+    );
   });
 }
 
@@ -67,21 +85,24 @@ async function unpackFile(file) {
   const basePath = file.substring(file.lastIndexOf("/") + 1);
   const filePath = OS.Path.join(UNPACKED_ROOT_PATH, basePath);
   await new Promise((resolve, reject) => {
-    NetUtil.asyncFetch({
-      uri: policy.getURL(file),
-      loadUsingSystemPrincipal: true,
-    }, (input) => {
-      try {
-        // Since we have to use NetUtil to read, probably it's okay to use for
-        // writing, rather than bouncing to OS.File...?
-        const outputFile = new FileUtils.File(filePath);
-        const output = FileUtils.openAtomicFileOutputStream(outputFile);
-        NetUtil.asyncCopy(input, output, resolve);
-      } catch (e) {
-        dumpn(`Could not unpack file ${file} in the extension: ${e}`);
-        reject(e);
+    NetUtil.asyncFetch(
+      {
+        uri: policy.getURL(file),
+        loadUsingSystemPrincipal: true,
+      },
+      input => {
+        try {
+          // Since we have to use NetUtil to read, probably it's okay to use for
+          // writing, rather than bouncing to OS.File...?
+          const outputFile = new FileUtils.File(filePath);
+          const output = FileUtils.openAtomicFileOutputStream(outputFile);
+          NetUtil.asyncCopy(input, output, resolve);
+        } catch (e) {
+          dumpn(`Could not unpack file ${file} in the extension: ${e}`);
+          reject(e);
+        }
       }
-    });
+    );
   });
   // Mark binaries as executable.
   await OS.File.setPermissions(filePath, { unixMode: 0o744 });
@@ -172,7 +193,7 @@ async function isManifestUnpacked() {
  * Uses OS.File since this is a local file.
  */
 async function getManifestFromUnpacked() {
-  if (!await isManifestUnpacked()) {
+  if (!(await isManifestUnpacked())) {
     throw new Error("Manifest doesn't exist at unpacked path");
   }
 
@@ -182,8 +203,7 @@ async function getManifestFromUnpacked() {
   let data;
   try {
     data = JSON.parse(json);
-  } catch (e) {
-  }
+  } catch (e) {}
   return data;
 }
 
@@ -191,7 +211,7 @@ async function getManifestFromUnpacked() {
  * Check state of binary unpacking, including the location and manifest.
  */
 async function isUnpacked() {
-  if (!await isManifestUnpacked()) {
+  if (!(await isManifestUnpacked())) {
     dumpn("Needs unpacking, no manifest found");
     return false;
   }
@@ -201,7 +221,7 @@ async function isUnpacked() {
   if (manifestInExtension.version != unpackedManifest.version) {
     dumpn(
       `Needs unpacking, extension version ${manifestInExtension.version} != ` +
-      `unpacked version ${unpackedManifest.version}`
+        `unpacked version ${unpackedManifest.version}`
     );
     return false;
   }
@@ -217,8 +237,7 @@ async function isUnpacked() {
  *        File object for the binary.
  */
 async function getFileForBinary() {
-  if (!await isUnpacked() &&
-      !await extractFiles()) {
+  if (!(await isUnpacked()) && !(await extractFiles())) {
     return null;
   }
 

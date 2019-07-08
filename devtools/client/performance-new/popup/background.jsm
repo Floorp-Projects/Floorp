@@ -12,17 +12,26 @@
 
 // The following are not lazily loaded as they are needed during initialization.f
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
 // The following utilities are lazily loaded as they are not needed when controlling the
 // global state of the profiler, and only are used during specific funcationality like
 // symbolication or capturing a profile.
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "ProfilerGetSymbols",
-  "resource://gre/modules/ProfilerGetSymbols.jsm");
-loader.lazyRequireGetter(this, "receiveProfile",
-  "devtools/client/performance-new/browser", true);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ProfilerGetSymbols",
+  "resource://gre/modules/ProfilerGetSymbols.jsm"
+);
+loader.lazyRequireGetter(
+  this,
+  "receiveProfile",
+  "devtools/client/performance-new/browser",
+  true
+);
 
 // This pref contains the JSON serialization of the popup's profiler state with
 // a string key based off of the debug name and breakpad id.
@@ -33,8 +42,8 @@ const DEFAULT_WINDOW_LENGTH = 20; // 20sec
 const symbolCache = new Map();
 
 const primeSymbolStore = libs => {
-  for (const {path, debugName, debugPath, breakpadId} of libs) {
-    symbolCache.set(`${debugName}/${breakpadId}`, {path, debugPath});
+  for (const { path, debugName, debugPath, breakpadId } of libs) {
+    symbolCache.set(`${debugName}/${breakpadId}`, { path, debugPath });
   }
 };
 
@@ -47,8 +56,7 @@ function adjustState(newState) {
   Object.assign(state, newState);
 
   try {
-    Services.prefs.setStringPref(PROFILER_STATE_PREF,
-      JSON.stringify(state));
+    Services.prefs.setStringPref(PROFILER_STATE_PREF, JSON.stringify(state));
   } catch (error) {
     console.error("Unable to save the profiler state for the popup.");
     throw error;
@@ -64,19 +72,21 @@ function getSymbols(debugName, breakpadId) {
   if (!cachedLibInfo) {
     throw new Error(
       `The library ${debugName} ${breakpadId} is not in the ` +
-      "Services.profiler.sharedLibraries list, so the local path for it is not known " +
-      "and symbols for it can not be obtained. This usually happens if a content " +
-      "process uses a library that's not used in the parent process - " +
-      "Services.profiler.sharedLibraries only knows about libraries in the " +
-      "parent process.");
+        "Services.profiler.sharedLibraries list, so the local path for it is not known " +
+        "and symbols for it can not be obtained. This usually happens if a content " +
+        "process uses a library that's not used in the parent process - " +
+        "Services.profiler.sharedLibraries only knows about libraries in the " +
+        "parent process."
+    );
   }
 
-  const {path, debugPath} = cachedLibInfo;
+  const { path, debugPath } = cachedLibInfo;
   if (!OS.Path.split(path).absolute) {
     throw new Error(
       "Services.profiler.sharedLibraries did not contain an absolute path for " +
-      `the library ${debugName} ${breakpadId}, so symbols for this library can not ` +
-      "be obtained.");
+        `the library ${debugName} ${breakpadId}, so symbols for this library can not ` +
+        "be obtained."
+    );
   }
 
   return ProfilerGetSymbols.getSymbolTable(path, debugPath, breakpadId);
@@ -91,11 +101,12 @@ async function captureProfile() {
   // more samples while the parent process waits for subprocess profiles.
   Services.profiler.PauseSampling();
 
-  const profile = await Services.profiler.getProfileDataAsGzippedArrayBuffer()
-                                .catch(e => {
-                                  console.error(e);
-                                  return {};
-                                });
+  const profile = await Services.profiler
+    .getProfileDataAsGzippedArrayBuffer()
+    .catch(e => {
+      console.error(e);
+      return {};
+    });
 
   receiveProfile(profile, getSymbols);
 
@@ -118,13 +129,18 @@ function getEnabledFeatures(features, threads) {
 function startProfiler() {
   const threads = state.threads.split(",");
   const features = getEnabledFeatures(state.features, threads);
-  const windowLength = state.windowLength !== state.infiniteWindowLength
-  ? state.windowLength
-  : 0;
+  const windowLength =
+    state.windowLength !== state.infiniteWindowLength ? state.windowLength : 0;
 
   const { buffersize, interval } = state;
 
-  Services.profiler.StartProfiler(buffersize, interval, features, threads, windowLength);
+  Services.profiler.StartProfiler(
+    buffersize,
+    interval,
+    features,
+    threads,
+    windowLength
+  );
 }
 
 async function stopProfiler() {
@@ -190,7 +206,10 @@ const isRunningObserver = {
 
 function getStoredStateOrNull() {
   // Pull out the stored state from preferences, it is a raw string.
-  const storedStateString = Services.prefs.getStringPref(PROFILER_STATE_PREF, "");
+  const storedStateString = Services.prefs.getStringPref(
+    PROFILER_STATE_PREF,
+    ""
+  );
   if (storedStateString === "") {
     return null;
   }
@@ -199,8 +218,10 @@ function getStoredStateOrNull() {
     // Attempt to parse the results.
     return JSON.parse(storedStateString);
   } catch (error) {
-    console.error(`Could not parse the stored state for the profile in the ` +
-      `preferences ${PROFILER_STATE_PREF}`);
+    console.error(
+      `Could not parse the stored state for the profile in the ` +
+        `preferences ${PROFILER_STATE_PREF}`
+    );
   }
   return null;
 }

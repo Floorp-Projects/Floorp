@@ -1,8 +1,11 @@
 "use strict";
 
-XPCOMUtils.defineLazyServiceGetter(this, "idleService",
-                                   "@mozilla.org/widget/idleservice;1",
-                                   "nsIIdleService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "idleService",
+  "@mozilla.org/widget/idleservice;1",
+  "nsIIdleService"
+);
 
 // WeakMap[Extension -> Object]
 let observersMap = new WeakMap();
@@ -17,7 +20,7 @@ const getIdleObserverInfo = (extension, context) => {
     observersMap.set(extension, observerInfo);
     context.callOnClose({
       close: () => {
-        let {observer, detectionInterval} = observersMap.get(extension);
+        let { observer, detectionInterval } = observersMap.get(extension);
         if (observer) {
           idleService.removeIdleObserver(observer, detectionInterval);
         }
@@ -30,15 +33,15 @@ const getIdleObserverInfo = (extension, context) => {
 
 const getIdleObserver = (extension, context) => {
   let observerInfo = getIdleObserverInfo(extension, context);
-  let {observer, detectionInterval} = observerInfo;
+  let { observer, detectionInterval } = observerInfo;
   if (!observer) {
-    observer = new class extends ExtensionCommon.EventEmitter {
+    observer = new (class extends ExtensionCommon.EventEmitter {
       observe(subject, topic, data) {
         if (topic == "idle" || topic == "active") {
           this.emit("stateChanged", topic);
         }
       }
-    }();
+    })();
     idleService.addIdleObserver(observer, detectionInterval);
     observerInfo.observer = observer;
     observerInfo.detectionInterval = detectionInterval;
@@ -48,7 +51,7 @@ const getIdleObserver = (extension, context) => {
 
 const setDetectionInterval = (extension, context, newInterval) => {
   let observerInfo = getIdleObserverInfo(extension, context);
-  let {observer, detectionInterval} = observerInfo;
+  let { observer, detectionInterval } = observerInfo;
   if (observer) {
     idleService.removeIdleObserver(observer, detectionInterval);
     idleService.addIdleObserver(observer, newInterval);
@@ -58,7 +61,7 @@ const setDetectionInterval = (extension, context, newInterval) => {
 
 this.idle = class extends ExtensionAPI {
   getAPI(context) {
-    let {extension} = context;
+    let { extension } = context;
     return {
       idle: {
         queryState: function(detectionIntervalInSeconds) {

@@ -2,19 +2,20 @@
 
 /* eslint-env mozilla/frame-script */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "WebNavigationFrames",
-                               "resource://gre/modules/WebNavigationFrames.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "WebNavigationFrames",
+  "resource://gre/modules/WebNavigationFrames.jsm"
+);
 
 function getDocShellOuterWindowId(docShell) {
   if (!docShell) {
     return undefined;
   }
 
-  return docShell.domWindow
-                 .windowUtils
-                 .outerWindowID;
+  return docShell.domWindow.windowUtils.outerWindowID;
 }
 
 function loadListener(event) {
@@ -23,7 +24,11 @@ function loadListener(event) {
   let url = document.documentURI;
   let frameId = WebNavigationFrames.getFrameId(window);
   let parentFrameId = WebNavigationFrames.getParentFrameId(window);
-  sendAsyncMessage("Extension:DOMContentLoaded", {frameId, parentFrameId, url});
+  sendAsyncMessage("Extension:DOMContentLoaded", {
+    frameId,
+    parentFrameId,
+    url,
+  });
 }
 
 addEventListener("DOMContentLoaded", loadListener);
@@ -32,13 +37,22 @@ addMessageListener("Extension:DisableWebNavigation", () => {
 });
 
 var CreatedNavigationTargetListener = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   init() {
-    Services.obs.addObserver(this, "webNavigation-createdNavigationTarget-from-js");
+    Services.obs.addObserver(
+      this,
+      "webNavigation-createdNavigationTarget-from-js"
+    );
   },
   uninit() {
-    Services.obs.removeObserver(this, "webNavigation-createdNavigationTarget-from-js");
+    Services.obs.removeObserver(
+      this,
+      "webNavigation-createdNavigationTarget-from-js"
+    );
   },
 
   observe(subject, topic, data) {
@@ -48,13 +62,23 @@ var CreatedNavigationTargetListener = {
 
     let props = subject.QueryInterface(Ci.nsIPropertyBag2);
 
-    const createdDocShell = props.getPropertyAsInterface("createdTabDocShell", Ci.nsIDocShell);
-    const sourceDocShell = props.getPropertyAsInterface("sourceTabDocShell", Ci.nsIDocShell);
+    const createdDocShell = props.getPropertyAsInterface(
+      "createdTabDocShell",
+      Ci.nsIDocShell
+    );
+    const sourceDocShell = props.getPropertyAsInterface(
+      "sourceTabDocShell",
+      Ci.nsIDocShell
+    );
 
-    const isSourceTabDescendant = sourceDocShell.sameTypeRootTreeItem === docShell;
+    const isSourceTabDescendant =
+      sourceDocShell.sameTypeRootTreeItem === docShell;
 
-    if (docShell !== createdDocShell && docShell !== sourceDocShell &&
-        !isSourceTabDescendant) {
+    if (
+      docShell !== createdDocShell &&
+      docShell !== sourceDocShell &&
+      !isSourceTabDescendant
+    ) {
       // if the createdNavigationTarget is not related to this docShell
       // (this docShell is not the newly created docShell, it is not the source docShell,
       // and the source docShell is not a descendant of it)
@@ -64,7 +88,9 @@ var CreatedNavigationTargetListener = {
 
     const isSourceTab = docShell === sourceDocShell || isSourceTabDescendant;
 
-    const sourceFrameId = WebNavigationFrames.getDocShellFrameId(sourceDocShell);
+    const sourceFrameId = WebNavigationFrames.getDocShellFrameId(
+      sourceDocShell
+    );
     const createdOuterWindowId = getDocShellOuterWindowId(sourceDocShell);
 
     let url;
@@ -92,7 +118,7 @@ var FormSubmitListener = {
     this.formSubmitWindows = new WeakSet();
   },
 
-  handleEvent({target: form}) {
+  handleEvent({ target: form }) {
     this.formSubmitWindows.add(form.ownerGlobal);
   },
 
@@ -110,9 +136,11 @@ var WebProgressListener = {
     this.previousURIMap = new WeakMap();
 
     // Populate the above previousURIMap by iterating over the docShells tree.
-    for (let currentDocShell of WebNavigationFrames.iterateDocShellTree(docShell)) {
+    for (let currentDocShell of WebNavigationFrames.iterateDocShellTree(
+      docShell
+    )) {
       let win = currentDocShell.domWindow;
-      let {currentURI} = currentDocShell.QueryInterface(Ci.nsIWebNavigation);
+      let { currentURI } = currentDocShell.QueryInterface(Ci.nsIWebNavigation);
 
       this.previousURIMap.set(win, currentURI);
     }
@@ -120,44 +148,62 @@ var WebProgressListener = {
     // This WeakSet of DOMWindows keeps track of the attempted refresh.
     this.refreshAttemptedDOMWindows = new WeakSet();
 
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebProgress);
-    webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
-                                          Ci.nsIWebProgress.NOTIFY_REFRESH |
-                                          Ci.nsIWebProgress.NOTIFY_LOCATION);
+    let webProgress = docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
+    webProgress.addProgressListener(
+      this,
+      Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
+        Ci.nsIWebProgress.NOTIFY_REFRESH |
+        Ci.nsIWebProgress.NOTIFY_LOCATION
+    );
   },
 
   uninit() {
     if (!docShell) {
       return;
     }
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebProgress);
+    let webProgress = docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
     webProgress.removeProgressListener(this);
   },
 
-  onRefreshAttempted: function onRefreshAttempted(webProgress, URI, delay, sameURI) {
+  onRefreshAttempted: function onRefreshAttempted(
+    webProgress,
+    URI,
+    delay,
+    sameURI
+  ) {
     this.refreshAttemptedDOMWindows.add(webProgress.DOMWindow);
 
     // If this function doesn't return true, the attempted refresh will be blocked.
     return true;
   },
 
-  onStateChange: function onStateChange(webProgress, request, stateFlags, status) {
-    let {originalURI, URI: locationURI} = request.QueryInterface(Ci.nsIChannel);
+  onStateChange: function onStateChange(
+    webProgress,
+    request,
+    stateFlags,
+    status
+  ) {
+    let { originalURI, URI: locationURI } = request.QueryInterface(
+      Ci.nsIChannel
+    );
 
     // Prevents "about", "chrome", "resource" and "moz-extension" URI schemes to be
     // reported with the resolved "file" or "jar" URIs. (see Bug 1246125 for rationale)
     if (locationURI.schemeIs("file") || locationURI.schemeIs("jar")) {
-      let shouldUseOriginalURI = originalURI.schemeIs("about") ||
-                                 originalURI.schemeIs("chrome") ||
-                                 originalURI.schemeIs("resource") ||
-                                 originalURI.schemeIs("moz-extension");
+      let shouldUseOriginalURI =
+        originalURI.schemeIs("about") ||
+        originalURI.schemeIs("chrome") ||
+        originalURI.schemeIs("resource") ||
+        originalURI.schemeIs("moz-extension");
 
       locationURI = shouldUseOriginalURI ? originalURI : locationURI;
     }
 
-    this.sendStateChange({webProgress, locationURI, stateFlags, status});
+    this.sendStateChange({ webProgress, locationURI, stateFlags, status });
 
     // Based on the docs of the webNavigation.onCommitted event, it should be raised when:
     // "The document  might still be downloading, but at least part of
@@ -169,14 +215,21 @@ var WebProgressListener = {
     // then send an "Extension:DocumentChange" message to the main process,
     // where it will be turned into a webNavigation.onCommitted event.
     // (see Bug 1264936 and Bug 125662 for rationale)
-    if ((webProgress.DOMWindow.top != webProgress.DOMWindow) &&
-        (stateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT)) {
-      this.sendDocumentChange({webProgress, locationURI, request});
+    if (
+      webProgress.DOMWindow.top != webProgress.DOMWindow &&
+      stateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT
+    ) {
+      this.sendDocumentChange({ webProgress, locationURI, request });
     }
   },
 
-  onLocationChange: function onLocationChange(webProgress, request, locationURI, flags) {
-    let {DOMWindow} = webProgress;
+  onLocationChange: function onLocationChange(
+    webProgress,
+    request,
+    locationURI,
+    flags
+  ) {
+    let { DOMWindow } = webProgress;
 
     // Get the previous URI loaded in the DOMWindow.
     let previousURI = this.previousURIMap.get(DOMWindow);
@@ -184,7 +237,8 @@ var WebProgressListener = {
     // Update the URI in the map with the new locationURI.
     this.previousURIMap.set(DOMWindow, locationURI);
 
-    let isSameDocument = (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT);
+    let isSameDocument =
+      flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT;
 
     // When a frame navigation doesn't change the current loaded document
     // (which can be due to history.pushState/replaceState or to a changed hash in the url),
@@ -193,20 +247,27 @@ var WebProgressListener = {
     // an "Extension:HistoryChange" to the main process, where it will be turned
     // into a webNavigation.onHistoryStateUpdated/onReferenceFragmentUpdated event.
     if (isSameDocument) {
-      this.sendHistoryChange({webProgress, previousURI, locationURI, request});
+      this.sendHistoryChange({
+        webProgress,
+        previousURI,
+        locationURI,
+        request,
+      });
     } else if (webProgress.DOMWindow.top == webProgress.DOMWindow) {
       // We have to catch the document changes from top level frames here,
       // where we can detect the "server redirect" transition.
       // (see Bug 1264936 and Bug 125662 for rationale)
-      this.sendDocumentChange({webProgress, locationURI, request});
+      this.sendDocumentChange({ webProgress, locationURI, request });
     }
   },
 
-  sendStateChange({webProgress, locationURI, stateFlags, status}) {
+  sendStateChange({ webProgress, locationURI, stateFlags, status }) {
     let data = {
       requestURL: locationURI.spec,
       frameId: WebNavigationFrames.getFrameId(webProgress.DOMWindow),
-      parentFrameId: WebNavigationFrames.getParentFrameId(webProgress.DOMWindow),
+      parentFrameId: WebNavigationFrames.getParentFrameId(
+        webProgress.DOMWindow
+      ),
       status,
       stateFlags,
     };
@@ -214,27 +275,35 @@ var WebProgressListener = {
     sendAsyncMessage("Extension:StateChange", data);
   },
 
-  sendDocumentChange({webProgress, locationURI, request}) {
-    let {loadType, DOMWindow} = webProgress;
-    let frameTransitionData = this.getFrameTransitionData({loadType, request, DOMWindow});
+  sendDocumentChange({ webProgress, locationURI, request }) {
+    let { loadType, DOMWindow } = webProgress;
+    let frameTransitionData = this.getFrameTransitionData({
+      loadType,
+      request,
+      DOMWindow,
+    });
 
     let data = {
       frameTransitionData,
       location: locationURI ? locationURI.spec : "",
       frameId: WebNavigationFrames.getFrameId(webProgress.DOMWindow),
-      parentFrameId: WebNavigationFrames.getParentFrameId(webProgress.DOMWindow),
+      parentFrameId: WebNavigationFrames.getParentFrameId(
+        webProgress.DOMWindow
+      ),
     };
 
     sendAsyncMessage("Extension:DocumentChange", data);
   },
 
-  sendHistoryChange({webProgress, previousURI, locationURI, request}) {
-    let {loadType, DOMWindow} = webProgress;
+  sendHistoryChange({ webProgress, previousURI, locationURI, request }) {
+    let { loadType, DOMWindow } = webProgress;
 
     let isHistoryStateUpdated = false;
     let isReferenceFragmentUpdated = false;
 
-    let pathChanged = !(previousURI && locationURI.equalsExceptRef(previousURI));
+    let pathChanged = !(
+      previousURI && locationURI.equalsExceptRef(previousURI)
+    );
     let hashChanged = !(previousURI && previousURI.ref == locationURI.ref);
 
     // When the location changes but the document is the same:
@@ -253,21 +322,28 @@ var WebProgressListener = {
     }
 
     if (isHistoryStateUpdated || isReferenceFragmentUpdated) {
-      let frameTransitionData = this.getFrameTransitionData({loadType, request, DOMWindow});
+      let frameTransitionData = this.getFrameTransitionData({
+        loadType,
+        request,
+        DOMWindow,
+      });
 
       let data = {
         frameTransitionData,
-        isHistoryStateUpdated, isReferenceFragmentUpdated,
+        isHistoryStateUpdated,
+        isReferenceFragmentUpdated,
         location: locationURI ? locationURI.spec : "",
         frameId: WebNavigationFrames.getFrameId(webProgress.DOMWindow),
-        parentFrameId: WebNavigationFrames.getParentFrameId(webProgress.DOMWindow),
+        parentFrameId: WebNavigationFrames.getParentFrameId(
+          webProgress.DOMWindow
+        ),
       };
 
       sendAsyncMessage("Extension:HistoryChange", data);
     }
   },
 
-  getFrameTransitionData({loadType, request, DOMWindow}) {
+  getFrameTransitionData({ loadType, request, DOMWindow }) {
     let frameTransitionData = {};
 
     if (loadType & Ci.nsIDocShell.LOAD_CMD_HISTORY) {

@@ -18,7 +18,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
   await editAndCheck(view);
 });
@@ -31,18 +31,27 @@ async function editAndCheck(view) {
 
   info("Focusing the inplace editor field");
   const editor = await focusEditableField(view, propEditor.valueSpan);
-  is(inplaceEditor(propEditor.valueSpan), editor,
-    "Focused editor should be the value span.");
+  is(
+    inplaceEditor(propEditor.valueSpan),
+    editor,
+    "Focused editor should be the value span."
+  );
 
-  const onPropertyChange = waitForComputedStyleProperty("#testid", null,
-    "padding-top", newPaddingValue);
+  const onPropertyChange = waitForComputedStyleProperty(
+    "#testid",
+    null,
+    "padding-top",
+    newPaddingValue
+  );
   const onRefreshAfterPreview = once(view, "ruleview-changed");
 
   info("Entering a new value");
   EventUtils.sendString(newPaddingValue, view.styleWindow);
 
-  info("Waiting for the debounced previewValue to apply the " +
-    "changes to document");
+  info(
+    "Waiting for the debounced previewValue to apply the " +
+      "changes to document"
+  );
 
   view.debounce.flush();
   await onPropertyChange;
@@ -71,19 +80,31 @@ async function editAndCheck(view) {
 
   is(computed.length, propNames.length, "There should be 4 computed values");
   propNames.forEach((propName, i) => {
-    is(computed[i].name, propName,
-      "Computed property #" + i + " has name " + propName);
-    is(computed[i].value, newPaddingValue,
-      "Computed value of " + propName + " is as expected");
+    is(
+      computed[i].name,
+      propName,
+      "Computed property #" + i + " has name " + propName
+    );
+    is(
+      computed[i].value,
+      newPaddingValue,
+      "Computed value of " + propName + " is as expected"
+    );
   });
 
   propEditor.expander.click();
   const computedDom = propEditor.computed;
-  is(computedDom.children.length, propNames.length,
-    "There should be 4 nodes in the DOM");
+  is(
+    computedDom.children.length,
+    propNames.length,
+    "There should be 4 nodes in the DOM"
+  );
   propNames.forEach((propName, i) => {
-    is(computedDom.getElementsByClassName("ruleview-propertyvalue")[i]
-      .textContent, newPaddingValue,
-      "Computed value of " + propName + " in DOM is as expected");
+    is(
+      computedDom.getElementsByClassName("ruleview-propertyvalue")[i]
+        .textContent,
+      newPaddingValue,
+      "Computed value of " + propName + " in DOM is as expected"
+    );
   });
 }

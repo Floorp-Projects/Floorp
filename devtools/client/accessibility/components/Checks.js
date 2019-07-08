@@ -4,24 +4,34 @@
 "use strict";
 
 // React
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { div } = require("devtools/client/shared/vendor/react-dom-factories");
 
-const List = createFactory(require("devtools/client/shared/components/List").List);
-const ColorContrastCheck =
-  createFactory(require("./ColorContrastAccessibility").ColorContrastCheck);
+const List = createFactory(
+  require("devtools/client/shared/components/List").List
+);
+const ColorContrastCheck = createFactory(
+  require("./ColorContrastAccessibility").ColorContrastCheck
+);
+const TextLabelCheck = createFactory(require("./TextLabelCheck"));
 const { L10N } = require("../utils/l10n");
 
-const { accessibility: { AUDIT_TYPE } } = require("devtools/shared/constants");
+const {
+  accessibility: { AUDIT_TYPE },
+} = require("devtools/shared/constants");
 
 function EmptyChecks() {
-  return (
-    div({
+  return div(
+    {
       className: "checks-empty",
       role: "presentation",
-    }, L10N.getStr("accessibility.checks.empty2"))
+    },
+    L10N.getStr("accessibility.checks.empty2")
   );
 }
 
@@ -37,6 +47,10 @@ class Checks extends Component {
 
   [AUDIT_TYPE.CONTRAST](contrastRatio) {
     return ColorContrastCheck(contrastRatio);
+  }
+
+  [AUDIT_TYPE.TEXT_LABEL](textLabelCheck) {
+    return TextLabelCheck(textLabelCheck);
   }
 
   render() {
@@ -63,11 +77,12 @@ class Checks extends Component {
       return EmptyChecks();
     }
 
-    return (
-      div({
+    return div(
+      {
         className: "checks",
         role: "presentation",
-      }, List({ items, labelledby }))
+      },
+      List({ items, labelledby })
     );
   }
 }

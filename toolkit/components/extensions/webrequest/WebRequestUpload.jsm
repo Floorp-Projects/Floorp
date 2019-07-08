@@ -8,25 +8,35 @@ const EXPORTED_SYMBOLS = ["WebRequestUpload"];
 
 /* exported WebRequestUpload */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
 
-const {
-  DefaultMap,
-} = ExtensionUtils;
+const { DefaultMap } = ExtensionUtils;
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["TextEncoder"]);
 
-XPCOMUtils.defineLazyServiceGetter(this, "mimeHeader", "@mozilla.org/network/mime-hdrparam;1",
-                                   "nsIMIMEHeaderParam");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "mimeHeader",
+  "@mozilla.org/network/mime-hdrparam;1",
+  "nsIMIMEHeaderParam"
+);
 
 const BinaryInputStream = Components.Constructor(
-  "@mozilla.org/binaryinputstream;1", "nsIBinaryInputStream",
-  "setInputStream");
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
 const ConverterInputStream = Components.Constructor(
-  "@mozilla.org/intl/converter-input-stream;1", "nsIConverterInputStream",
-  "init");
+  "@mozilla.org/intl/converter-input-stream;1",
+  "nsIConverterInputStream",
+  "init"
+);
 
 var WebRequestUpload;
 
@@ -104,8 +114,7 @@ class Headers extends Map {
       let bytes = new TextEncoder().encode(header);
       let binHeader = String.fromCharCode(...bytes);
 
-      return mimeHeader.getParameterHTTP(binHeader, paramName, null,
-                                         false, {});
+      return mimeHeader.getParameterHTTP(binHeader, paramName, null, false, {});
     }
 
     return null;
@@ -212,9 +221,11 @@ function parseFormData(stream, channel, lenient = false) {
 
     touchedStreams.add(stream);
     let converterStream = ConverterInputStream(
-      stream, "UTF-8", 0,
-      lenient ? Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER
-              : 0);
+      stream,
+      "UTF-8",
+      0,
+      lenient ? Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER : 0
+    );
     converterStreams.push(converterStream);
     return converterStream;
   }
@@ -331,8 +342,13 @@ function parseFormData(stream, channel, lenient = false) {
       let headers = new Headers(headerText);
 
       let name = headers.getParam("content-disposition", "name");
-      if (!name || headers.getParam("content-disposition", "") !== "form-data") {
-        throw new Error("Invalid MIME stream: No valid Content-Disposition header");
+      if (
+        !name ||
+        headers.getParam("content-disposition", "") !== "form-data"
+      ) {
+        throw new Error(
+          "Invalid MIME stream: No valid Content-Disposition header"
+        );
       }
 
       if (headers.has("content-type")) {
@@ -358,7 +374,10 @@ function parseFormData(stream, channel, lenient = false) {
     let formData = new DefaultMap(() => []);
 
     for (let part of getParts(stream, "&")) {
-      let [name, value] = part.replace(/\+/g, " ").split("=").map(decodeURIComponent);
+      let [name, value] = part
+        .replace(/\+/g, " ")
+        .split("=")
+        .map(decodeURIComponent);
       formData.get(name).push(value);
     }
 
@@ -439,7 +458,10 @@ function createFormData(stream, channel, lenient) {
  * @param {integer} [maxRead = WebRequestUpload.MAX_RAW_BYTES]
  *        The maximum total bytes to read.
  */
-function* getRawDataChunked(outerStream, maxRead = WebRequestUpload.MAX_RAW_BYTES) {
+function* getRawDataChunked(
+  outerStream,
+  maxRead = WebRequestUpload.MAX_RAW_BYTES
+) {
   for (let stream of getStreams(outerStream)) {
     // We need to inspect the stream to make sure it's not a file input
     // stream. If it's wrapped in a buffered input stream, unwrap it first,
@@ -451,10 +473,12 @@ function* getRawDataChunked(outerStream, maxRead = WebRequestUpload.MAX_RAW_BYTE
 
     // For file fields, we return an object containing the full path of
     // the file, rather than its data.
-    if ((unbuffered instanceof Ci.nsIFileInputStream) ||
-        (unbuffered instanceof Ci.mozIIPCBlobInputStream)) {
+    if (
+      unbuffered instanceof Ci.nsIFileInputStream ||
+      unbuffered instanceof Ci.mozIIPCBlobInputStream
+    ) {
       // But this is not actually supported yet.
-      yield {file: "<file>"};
+      yield { file: "<file>" };
       continue;
     }
 
@@ -467,7 +491,7 @@ function* getRawDataChunked(outerStream, maxRead = WebRequestUpload.MAX_RAW_BYTE
 
         maxRead -= buffer.byteLength;
 
-        let chunk = {bytes: buffer};
+        let chunk = { bytes: buffer };
 
         if (buffer.byteLength < available) {
           chunk.truncated = true;
@@ -492,8 +516,11 @@ WebRequestUpload = {
       return null;
     }
 
-    if (channel instanceof Ci.nsIUploadChannel2 && channel.uploadStreamHasHeaders) {
-      return {error: "Upload streams with headers are unsupported"};
+    if (
+      channel instanceof Ci.nsIUploadChannel2 &&
+      channel.uploadStreamHasHeaders
+    ) {
+      return { error: "Upload streams with headers are unsupported" };
     }
 
     try {
@@ -501,7 +528,7 @@ WebRequestUpload = {
 
       let formData = createFormData(stream, channel);
       if (formData) {
-        return {formData};
+        return { formData };
       }
 
       // If we failed to parse the stream as form data, return it as a
@@ -513,10 +540,13 @@ WebRequestUpload = {
       };
     } catch (e) {
       Cu.reportError(e);
-      return {error: e.message || String(e)};
+      return { error: e.message || String(e) };
     }
   },
 };
 
-XPCOMUtils.defineLazyPreferenceGetter(WebRequestUpload, "MAX_RAW_BYTES",
-                                      "webextensions.webRequest.requestBodyMaxRawBytes");
+XPCOMUtils.defineLazyPreferenceGetter(
+  WebRequestUpload,
+  "MAX_RAW_BYTES",
+  "webextensions.webRequest.requestBodyMaxRawBytes"
+);

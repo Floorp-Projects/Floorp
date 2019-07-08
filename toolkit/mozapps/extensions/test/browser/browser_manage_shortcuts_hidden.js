@@ -23,16 +23,18 @@ async function registerAndStartExtension(mockProvider, ext) {
   // the add-on manager, e.g. by passing "useAddonManager" to `loadExtension`.
   // "useAddonManager" can however not be used, because the resulting add-ons
   // are unsigned, and only add-ons with privileged signatures can be hidden.
-  mockProvider.createAddons([{
-    id: extension.id,
-    name: ext.manifest.name,
-    type: "extension",
-    version: "1",
-    // We use MockProvider because the "hidden" property cannot
-    // be set when "useAddonManager" is passed to loadExtension.
-    hidden: ext.manifest.hidden,
-    isSystem: ext.isSystem,
-  }]);
+  mockProvider.createAddons([
+    {
+      id: extension.id,
+      name: ext.manifest.name,
+      type: "extension",
+      version: "1",
+      // We use MockProvider because the "hidden" property cannot
+      // be set when "useAddonManager" is passed to loadExtension.
+      hidden: ext.manifest.hidden,
+      isSystem: ext.isSystem,
+    },
+  ]);
   return extension;
 }
 
@@ -46,7 +48,7 @@ function getShortcutByName(doc, extension, name) {
 }
 
 function getNoShortcutListItem(doc, extension) {
-  let {id} = extension;
+  let { id } = extension;
   let li = doc.querySelector(`.shortcuts-no-commands-list [addon-id="${id}"]`);
   return li && li.textContent;
 }
@@ -64,10 +66,15 @@ add_task(async function extension_with_shortcuts() {
   await extension.startup();
   let doc = await loadShortcutsView();
 
-  ok(getShortcutByName(doc, extension, "theShortcut"),
-     "Extension with shortcuts should have a card");
-  is(getNoShortcutListItem(doc, extension), null,
-     "Extension with shortcuts should not be listed");
+  ok(
+    getShortcutByName(doc, extension, "theShortcut"),
+    "Extension with shortcuts should have a card"
+  );
+  is(
+    getNoShortcutListItem(doc, extension),
+    null,
+    "Extension with shortcuts should not be listed"
+  );
 
   await closeShortcutsView(doc);
   await extension.unload();
@@ -83,10 +90,16 @@ add_task(async function extension_without_shortcuts() {
   await extension.startup();
   let doc = await loadShortcutsView();
 
-  is(getShortcutCard(doc, extension), null,
-     "Extension without shortcuts should not have a card");
-  is(getNoShortcutListItem(doc, extension), "no shortcut addon",
-     "The add-on's name is set in the list");
+  is(
+    getShortcutCard(doc, extension),
+    null,
+    "Extension without shortcuts should not have a card"
+  );
+  is(
+    getNoShortcutListItem(doc, extension),
+    "no shortcut addon",
+    "The add-on's name is set in the list"
+  );
 
   await closeShortcutsView(doc);
   await extension.unload();
@@ -114,13 +127,21 @@ add_task(async function hidden_extension() {
 
   let doc = await loadShortcutsView();
 
-  ok(getShortcutByName(doc, hiddenExt1, "hiddenShortcut"),
-     "Hidden extension with shortcuts should have a card");
+  ok(
+    getShortcutByName(doc, hiddenExt1, "hiddenShortcut"),
+    "Hidden extension with shortcuts should have a card"
+  );
 
-  is(getShortcutCard(doc, hiddenExt2), null,
-     "Hidden extension without shortcuts should not have a card");
-  is(getNoShortcutListItem(doc, hiddenExt2), null,
-     "Hidden extension without shortcuts should not be listed");
+  is(
+    getShortcutCard(doc, hiddenExt2),
+    null,
+    "Hidden extension without shortcuts should not have a card"
+  );
+  is(
+    getNoShortcutListItem(doc, hiddenExt2),
+    null,
+    "Hidden extension without shortcuts should not be listed"
+  );
 
   await closeShortcutsView(doc);
   await hiddenExt1.unload();
@@ -153,13 +174,21 @@ add_task(async function system_addons_and_shortcuts() {
 
   let doc = await loadShortcutsView();
 
-  ok(getShortcutByName(doc, systemExt1, "systemShortcut"),
-     "System add-on with shortcut should have a card");
+  ok(
+    getShortcutByName(doc, systemExt1, "systemShortcut"),
+    "System add-on with shortcut should have a card"
+  );
 
-  is(getShortcutCard(doc, systemExt2), null,
-     "System add-on without shortcut should not have a card");
-  is(getNoShortcutListItem(doc, systemExt2), null,
-     "System add-on without shortcuts should not be listed");
+  is(
+    getShortcutCard(doc, systemExt2),
+    null,
+    "System add-on without shortcut should not have a card"
+  );
+  is(
+    getNoShortcutListItem(doc, systemExt2),
+    null,
+    "System add-on without shortcuts should not be listed"
+  );
 
   await closeShortcutsView(doc);
   await systemExt1.unload();

@@ -7,26 +7,49 @@
 "use strict";
 
 const EDIT_ADDRESS_URL = "chrome://formautofill/content/editAddress.xhtml";
-const EDIT_CREDIT_CARD_URL = "chrome://formautofill/content/editCreditCard.xhtml";
+const EDIT_CREDIT_CARD_URL =
+  "chrome://formautofill/content/editCreditCard.xhtml";
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {FormAutofill} = ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { FormAutofill } = ChromeUtils.import(
+  "resource://formautofill/FormAutofill.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "CreditCard",
-                               "resource://gre/modules/CreditCard.jsm");
-ChromeUtils.defineModuleGetter(this, "formAutofillStorage",
-                               "resource://formautofill/FormAutofillStorage.jsm");
-ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
-                               "resource://formautofill/FormAutofillUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "OSKeyStore",
-                               "resource://formautofill/OSKeyStore.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "CreditCard",
+  "resource://gre/modules/CreditCard.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "formAutofillStorage",
+  "resource://formautofill/FormAutofillStorage.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormAutofillUtils",
+  "resource://formautofill/FormAutofillUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "OSKeyStore",
+  "resource://formautofill/OSKeyStore.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
-  const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
+  const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName(
+    "brandShortName"
+  );
   return FormAutofillUtils.stringBundle.formatStringFromName(
-    `editCreditCardPasswordPrompt.${AppConstants.platform}`, [brandShortName]);
+    `editCreditCardPasswordPrompt.${AppConstants.platform}`,
+    [brandShortName]
+  );
 });
 
 this.log = null;
@@ -41,7 +64,7 @@ class ManageRecords {
     this._isLoadingRecords = false;
     this.prefWin = window.opener;
     this.localizeDocument();
-    window.addEventListener("DOMContentLoaded", this, {once: true});
+    window.addEventListener("DOMContentLoaded", this, { once: true });
   }
 
   async init() {
@@ -58,7 +81,9 @@ class ManageRecords {
   }
 
   localizeDocument() {
-    document.documentElement.style.minWidth = FormAutofillUtils.stringBundle.GetStringFromName("manageDialogsWidth");
+    document.documentElement.style.minWidth = FormAutofillUtils.stringBundle.GetStringFromName(
+      "manageDialogsWidth"
+    );
     FormAutofillUtils.localizeMarkup(document);
   }
 
@@ -131,10 +156,12 @@ class ManageRecords {
     let selectedGuids = this._selectedOptions.map(option => option.value);
     this.clearRecordElements();
     for (let record of records) {
-      let option = new Option(this.getLabel(record),
-                              record.guid,
-                              false,
-                              selectedGuids.includes(record.guid));
+      let option = new Option(
+        this.getLabel(record),
+        record.guid,
+        false,
+        selectedGuids.includes(record.guid)
+      );
       option.record = record;
       this._elements.records.appendChild(option);
     }
@@ -237,8 +264,10 @@ class ManageRecords {
       this.removeRecords(this._selectedOptions);
     } else if (event.target == this._elements.add) {
       this.openEditDialog();
-    } else if (event.target == this._elements.edit ||
-               event.target.parentNode == this._elements.records && event.detail > 1) {
+    } else if (
+      event.target == this._elements.edit ||
+      (event.target.parentNode == this._elements.records && event.detail > 1)
+    ) {
       this.openEditDialog(this._selectedOptions[0].record);
     }
   }
@@ -269,7 +298,7 @@ class ManageRecords {
    * Attach event listener
    */
   attachEventListeners() {
-    window.addEventListener("unload", this, {once: true});
+    window.addEventListener("unload", this, { once: true });
     window.addEventListener("keypress", this);
     window.addEventListener("contextmenu", this);
     this._elements.records.addEventListener("change", this);
@@ -294,9 +323,12 @@ class ManageRecords {
 class ManageAddresses extends ManageRecords {
   constructor(elements) {
     super("addresses", elements);
-    elements.add.setAttribute("searchkeywords", FormAutofillUtils.EDIT_ADDRESS_KEYWORDS
-                                                  .map(key => FormAutofillUtils.stringBundle.GetStringFromName(key))
-                                                  .join("\n"));
+    elements.add.setAttribute(
+      "searchkeywords",
+      FormAutofillUtils.EDIT_ADDRESS_KEYWORDS.map(key =>
+        FormAutofillUtils.stringBundle.GetStringFromName(key)
+      ).join("\n")
+    );
   }
 
   /**
@@ -321,9 +353,12 @@ class ManageAddresses extends ManageRecords {
 class ManageCreditCards extends ManageRecords {
   constructor(elements) {
     super("creditCards", elements);
-    elements.add.setAttribute("searchkeywords", FormAutofillUtils.EDIT_CREDITCARD_KEYWORDS
-                                                  .map(key => FormAutofillUtils.stringBundle.GetStringFromName(key))
-                                                  .join("\n"));
+    elements.add.setAttribute(
+      "searchkeywords",
+      FormAutofillUtils.EDIT_CREDITCARD_KEYWORDS.map(key =>
+        FormAutofillUtils.stringBundle.GetStringFromName(key)
+      ).join("\n")
+    );
     this._isDecrypted = false;
   }
 
@@ -334,11 +369,16 @@ class ManageCreditCards extends ManageRecords {
    */
   async openEditDialog(creditCard) {
     // Ask for reauth if user is trying to edit an existing credit card.
-    if (!creditCard || await OSKeyStore.ensureLoggedIn(reauthPasswordPromptMessage)) {
+    if (
+      !creditCard ||
+      (await OSKeyStore.ensureLoggedIn(reauthPasswordPromptMessage))
+    ) {
       let decryptedCCNumObj = {};
       if (creditCard && creditCard["cc-number-encrypted"]) {
         try {
-          decryptedCCNumObj["cc-number"] = await OSKeyStore.decrypt(creditCard["cc-number-encrypted"]);
+          decryptedCCNumObj["cc-number"] = await OSKeyStore.decrypt(
+            creditCard["cc-number-encrypted"]
+          );
         } catch (ex) {
           if (ex.result == Cr.NS_ERROR_ABORT) {
             // User shouldn't be ask to reauth here, but it could happen.
@@ -352,7 +392,11 @@ class ManageCreditCards extends ManageRecords {
           Cu.reportError(ex);
         }
       }
-      let decryptedCreditCard = Object.assign({}, creditCard, decryptedCCNumObj);
+      let decryptedCreditCard = Object.assign(
+        {},
+        creditCard,
+        decryptedCCNumObj
+      );
       this.prefWin.gSubDialog.open(EDIT_CREDIT_CARD_URL, "resizable=no", {
         record: decryptedCreditCard,
       });
@@ -377,7 +421,10 @@ class ManageCreditCards extends ManageRecords {
     // Revert back to encrypted form when re-rendering happens
     this._isDecrypted = false;
     // Display third-party card icons when possible
-    this._elements.records.classList.toggle("branded", AppConstants.MOZILLA_OFFICIAL);
+    this._elements.records.classList.toggle(
+      "branded",
+      AppConstants.MOZILLA_OFFICIAL
+    );
     await super.renderRecordElements(records);
 
     let options = this._elements.records.options;

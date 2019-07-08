@@ -1,4 +1,3 @@
-
 const PREF_SIGNATURES_GENERAL = "xpinstall.signatures.required";
 const PREF_SIGNATURES_LANGPACKS = "extensions.langpacks.signatures.required";
 

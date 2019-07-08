@@ -35,15 +35,27 @@ add_task(async function test() {
   Assert.equal(root.childCount, 2);
 
   let child = root.getChild(0);
-  Assert.equal(child.visitType, TRANSITION_LINK, "Visit type should be TRANSITION_LINK");
+  Assert.equal(
+    child.visitType,
+    TRANSITION_LINK,
+    "Visit type should be TRANSITION_LINK"
+  );
   Assert.equal(child.visitId, 1, "Visit ID should be 1");
   Assert.equal(child.fromVisitId, -1, "Should have no referrer visit ID");
   Assert.equal(child.title, "test2", "Should have the correct title");
 
   child = root.getChild(1);
-  Assert.equal(child.visitType, TRANSITION_LINK, "Visit type should be TRANSITION_LINK");
+  Assert.equal(
+    child.visitType,
+    TRANSITION_LINK,
+    "Visit type should be TRANSITION_LINK"
+  );
   Assert.equal(child.visitId, 2, "Visit ID should be 2");
-  Assert.equal(child.fromVisitId, 1, "First visit should be the referring visit");
+  Assert.equal(
+    child.fromVisitId,
+    1,
+    "First visit should be the referring visit"
+  );
   Assert.equal(child.title, "test2", "Should have the correct title");
 
   root.containerOpen = false;

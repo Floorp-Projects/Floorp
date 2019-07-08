@@ -7,8 +7,9 @@
 
 // See Bugs 594497 and 619598.
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
-               "bug 594497 and bug 619598";
+const TEST_URI =
+  "data:text/html;charset=utf-8,Web Console test for " +
+  "bug 594497 and bug 619598";
 
 const TEST_VALUES = [
   "document",
@@ -51,7 +52,9 @@ async function performTests() {
   checkInput("document;\nwindow;\ndocument.body|", "↑: input #3 is correct");
   ok(inputHasNoSelection(jsterm));
 
-  info("Move cursor and ensure hitting arrow up twice won't navigate the history");
+  info(
+    "Move cursor and ensure hitting arrow up twice won't navigate the history"
+  );
   EventUtils.synthesizeKey("KEY_ArrowLeft");
   EventUtils.synthesizeKey("KEY_ArrowLeft");
   checkInput("document;\nwindow;\ndocument.bo|dy");
@@ -63,7 +66,10 @@ async function performTests() {
   ok(inputHasNoSelection(jsterm));
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  checkInput("|document;\nwindow;\ndocument.body", "↑ again: input #3 is correct");
+  checkInput(
+    "|document;\nwindow;\ndocument.body",
+    "↑ again: input #3 is correct"
+  );
   ok(inputHasNoSelection(jsterm));
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
@@ -96,7 +102,10 @@ async function performTests() {
   ok(inputHasNoSelection(jsterm));
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  checkInput("document;\nwindow;\ndocument.body|", "↓ again: input #3 is correct");
+  checkInput(
+    "document;\nwindow;\ndocument.body|",
+    "↓ again: input #3 is correct"
+  );
   ok(inputHasNoSelection(jsterm));
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -107,30 +116,42 @@ async function performTests() {
 
   info("Test that Cmd + ArrowDown/Up works as expected on OSX");
   if (Services.appinfo.OS === "Darwin") {
-    const option = {metaKey: true};
+    const option = { metaKey: true };
     EventUtils.synthesizeKey("KEY_ArrowUp", option);
     checkInput("document.location|", "Cmd+↑ : input is correct");
 
     EventUtils.synthesizeKey("KEY_ArrowUp", option);
-    checkInput("document;\nwindow;\ndocument.body|", "Cmd+↑ : input is correct");
+    checkInput(
+      "document;\nwindow;\ndocument.body|",
+      "Cmd+↑ : input is correct"
+    );
 
     EventUtils.synthesizeKey("KEY_ArrowUp", option);
-    checkInput("|document;\nwindow;\ndocument.body",
-      "Cmd+↑ : cursor is moved to the beginning of the input");
+    checkInput(
+      "|document;\nwindow;\ndocument.body",
+      "Cmd+↑ : cursor is moved to the beginning of the input"
+    );
 
     EventUtils.synthesizeKey("KEY_ArrowUp", option);
     checkInput("document.body|", "Cmd+↑: input is correct");
 
     EventUtils.synthesizeKey("KEY_ArrowDown", option);
-    checkInput("document;\nwindow;\ndocument.body|", "Cmd+↓ : input is correct");
+    checkInput(
+      "document;\nwindow;\ndocument.body|",
+      "Cmd+↓ : input is correct"
+    );
 
     EventUtils.synthesizeKey("KEY_ArrowUp", option);
-    checkInput("|document;\nwindow;\ndocument.body",
-      "Cmd+↑ : cursor is moved to the beginning of the input");
+    checkInput(
+      "|document;\nwindow;\ndocument.body",
+      "Cmd+↑ : cursor is moved to the beginning of the input"
+    );
 
     EventUtils.synthesizeKey("KEY_ArrowDown", option);
-    checkInput("document;\nwindow;\ndocument.body|",
-      "Cmd+↓ : cursor is moved to the end of the input");
+    checkInput(
+      "document;\nwindow;\ndocument.body|",
+      "Cmd+↓ : cursor is moved to the end of the input"
+    );
 
     EventUtils.synthesizeKey("KEY_ArrowDown", option);
     checkInput("document.location|", "Cmd+↓ : input is correct");
@@ -141,23 +162,25 @@ async function performTests() {
 }
 
 function setCursorAtPosition(hud, pos) {
-  const {jsterm} = hud;
-  const {inputNode, editor} = jsterm;
+  const { jsterm } = hud;
+  const { inputNode, editor } = jsterm;
 
   if (editor) {
     let line = 0;
     let ch = 0;
     let currentPos = 0;
-    getInputValue(hud).split("\n").every(l => {
-      if (l.length < pos - currentPos) {
-        line++;
-        currentPos += l.length;
-        return true;
-      }
-      ch = pos - currentPos;
-      return false;
-    });
-    return editor.setCursor({line, ch });
+    getInputValue(hud)
+      .split("\n")
+      .every(l => {
+        if (l.length < pos - currentPos) {
+          line++;
+          currentPos += l.length;
+          return true;
+        }
+        ch = pos - currentPos;
+        return false;
+      });
+    return editor.setCursor({ line, ch });
   }
 
   return inputNode.setSelectionRange(pos, pos);

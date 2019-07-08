@@ -2,9 +2,13 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-const {HomePage} = ChromeUtils.import("resource:///modules/HomePage.jsm");
-const {ExtensionPermissions} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
+const { ExtensionPermissions } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
 
 const {
   createAppInfo,
@@ -13,8 +17,10 @@ const {
 } = AddonTestUtils;
 
 const EXTENSION_ID = "test_overrides@tests.mozilla.org";
-const HOMEPAGE_EXTENSION_CONTROLLED = "browser.startup.homepage_override.extensionControlled";
-const HOMEPAGE_PRIVATE_ALLOWED = "browser.startup.homepage_override.privateAllowed";
+const HOMEPAGE_EXTENSION_CONTROLLED =
+  "browser.startup.homepage_override.extensionControlled";
+const HOMEPAGE_PRIVATE_ALLOWED =
+  "browser.startup.homepage_override.privateAllowed";
 const HOMEPAGE_URL_PREF = "browser.startup.homepage";
 const HOMEPAGE_URI = "webext-homepage-1.html";
 
@@ -39,11 +45,22 @@ function promisePrefChange(pref) {
 let defaultHomepageURL;
 
 function verifyPrefSettings(controlled, allowed) {
-  equal(Services.prefs.getBoolPref(HOMEPAGE_EXTENSION_CONTROLLED, false), controlled, "homepage extension controlled");
-  equal(Services.prefs.getBoolPref(HOMEPAGE_PRIVATE_ALLOWED, false), allowed, "homepage private permission after permission change");
+  equal(
+    Services.prefs.getBoolPref(HOMEPAGE_EXTENSION_CONTROLLED, false),
+    controlled,
+    "homepage extension controlled"
+  );
+  equal(
+    Services.prefs.getBoolPref(HOMEPAGE_PRIVATE_ALLOWED, false),
+    allowed,
+    "homepage private permission after permission change"
+  );
 
   if (controlled && allowed) {
-    ok(HomePage.get().endsWith(HOMEPAGE_URI), "Home page url is overridden by the extension");
+    ok(
+      HomePage.get().endsWith(HOMEPAGE_URI),
+      "Home page url is overridden by the extension"
+    );
   } else {
     equal(HomePage.get(), defaultHomepageURL, "Home page url is default.");
   }
@@ -53,9 +70,11 @@ async function promiseUpdatePrivatePermission(allowed, extension) {
   info(`update private allowed permission`);
   await Promise.all([
     promisePrefChange(HOMEPAGE_PRIVATE_ALLOWED),
-    ExtensionPermissions[allowed ? "add" : "remove"](extension.id,
-                                                     {permissions: ["internal:privateBrowsingAllowed"], origins: []},
-                                                     extension),
+    ExtensionPermissions[allowed ? "add" : "remove"](
+      extension.id,
+      { permissions: ["internal:privateBrowsingAllowed"], origins: [] },
+      extension
+    ),
   ]);
 
   verifyPrefSettings(true, allowed);
@@ -67,14 +86,14 @@ add_task(async function test_overrides_private() {
   let extensionInfo = {
     useAddonManager: "permanent",
     manifest: {
-      "version": "1.0",
-      "applications": {
-        "gecko": {
-          "id": EXTENSION_ID,
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
         },
       },
-      "chrome_settings_overrides": {
-        "homepage": HOMEPAGE_URI,
+      chrome_settings_overrides: {
+        homepage: HOMEPAGE_URI,
       },
     },
   };
@@ -97,10 +116,10 @@ add_task(async function test_overrides_private() {
   await promiseUpdatePrivatePermission(true, extension.extension);
 
   extensionInfo.manifest = {
-    "version": "2.0",
-    "applications": {
-      "gecko": {
-        "id": EXTENSION_ID,
+    version: "2.0",
+    applications: {
+      gecko: {
+        id: EXTENSION_ID,
       },
     },
   };

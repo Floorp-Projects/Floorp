@@ -8,8 +8,10 @@ var Services = require("Services");
 var EventEmitter = require("devtools/shared/event-emitter");
 var Telemetry = require("devtools/client/shared/telemetry");
 
-const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/toolbox.properties"
+);
 
 /**
  * ToolSidebar provides methods to register tabs in the sidebar.
@@ -66,7 +68,10 @@ function ToolSidebar(tabbox, panel, uid, options = {}) {
   this._onTabBoxOverflow = this._onTabBoxOverflow.bind(this);
   this._onTabBoxUnderflow = this._onTabBoxUnderflow.bind(this);
 
-  const width = Services.prefs.getIntPref("devtools.toolsidebar-width." + this._uid, undefined);
+  const width = Services.prefs.getIntPref(
+    "devtools.toolsidebar-width." + this._uid,
+    undefined
+  );
   if (width) {
     this._width = width;
   }
@@ -142,8 +147,10 @@ ToolSidebar.prototype = {
     this._allTabsBtn.setAttribute("top", "0");
     this._allTabsBtn.setAttribute("width", "15");
     this._allTabsBtn.setAttribute("type", "menu");
-    this._allTabsBtn.setAttribute("tooltiptext",
-      L10N.getStr("sidebar.showAllTabs.tooltip"));
+    this._allTabsBtn.setAttribute(
+      "tooltiptext",
+      L10N.getStr("sidebar.showAllTabs.tooltip")
+    );
     this._allTabsBtn.setAttribute("hidden", "true");
     allTabsContainer.appendChild(this._allTabsBtn);
 
@@ -213,7 +220,9 @@ ToolSidebar.prototype = {
 
     const menu = this._allTabsBtn.querySelector("menupopup");
     if (options.insertBefore) {
-      const referenceItem = menu.querySelector(`#${idPrefix}${options.insertBefore}`);
+      const referenceItem = menu.querySelector(
+        `#${idPrefix}${options.insertBefore}`
+      );
       menu.insertBefore(item, referenceItem);
     } else {
       menu.appendChild(item);
@@ -264,7 +273,7 @@ ToolSidebar.prototype = {
     // Add the tab to the allTabs menu if exists
     const allTabsItem = this._addItemToAllTabsMenu(id, tab, options);
 
-    const onIFrameLoaded = (event) => {
+    const onIFrameLoaded = event => {
       const win = iframe.contentWindow;
       const doc = win.document;
       tab.setAttribute("label", doc.title);
@@ -324,7 +333,8 @@ ToolSidebar.prototype = {
       }
 
       // Find an ID for this unknown tab
-      let id = tab.getAttribute("id") || "untitled-tab-" + (this.untitledTabsIndex++);
+      let id =
+        tab.getAttribute("id") || "untitled-tab-" + this.untitledTabsIndex++;
 
       // If the existing tab contains the tab ID prefix, extract the ID of the
       // tab
@@ -353,7 +363,7 @@ ToolSidebar.prototype = {
     }
 
     const win = this.getWindowForTab(tabId);
-    if (win && ("destroy" in win)) {
+    if (win && "destroy" in win) {
       await win.destroy();
     }
 
@@ -384,7 +394,9 @@ ToolSidebar.prototype = {
 
     // Toggle the item in the allTabs menu.
     if (this._allTabsBtn) {
-      this._allTabsBtn.querySelector("#sidebar-alltabs-item-" + id).hidden = !isVisible;
+      this._allTabsBtn.querySelector(
+        "#sidebar-alltabs-item-" + id
+      ).hidden = !isVisible;
     }
   },
 
@@ -432,7 +444,9 @@ ToolSidebar.prototype = {
   getTabPanel: function(id) {
     // Search with and without the ID prefix as there might have been existing
     // tabpanels by the time the sidebar got created
-    return this._tabbox.tabpanels.querySelector("#" + this.TABPANEL_ID_PREFIX + id + ", #" + id);
+    return this._tabbox.tabpanels.querySelector(
+      "#" + this.TABPANEL_ID_PREFIX + id + ", #" + id
+    );
   },
 
   /**
@@ -468,7 +482,11 @@ ToolSidebar.prototype = {
     }
 
     if (this._telemetry) {
-      this._telemetry.toolOpened(this._currentTool, this.toolboxSessionId, this);
+      this._telemetry.toolOpened(
+        this._currentTool,
+        this.toolboxSessionId,
+        this
+      );
     }
 
     this.emit(this._currentTool + "-selected");
@@ -520,7 +538,11 @@ ToolSidebar.prototype = {
       this._currentTool = id;
 
       if (this._telemetry) {
-        this._telemetry.toolOpened(this._currentTool, this.toolboxSessionId, this);
+        this._telemetry.toolOpened(
+          this._currentTool,
+          this.toolboxSessionId,
+          this
+        );
       }
 
       this._selectTabSoon(id);
@@ -533,7 +555,10 @@ ToolSidebar.prototype = {
    * Show the sidebar.
    */
   hide: function() {
-    Services.prefs.setIntPref("devtools.toolsidebar-width." + this._uid, this._tabbox.width);
+    Services.prefs.setIntPref(
+      "devtools.toolsidebar-width." + this._uid,
+      this._tabbox.width
+    );
     this._tabbox.setAttribute("hidden", "true");
     this._panelDoc.activeElement.blur();
 
@@ -565,7 +590,10 @@ ToolSidebar.prototype = {
     }
     this._destroyed = true;
 
-    Services.prefs.setIntPref("devtools.toolsidebar-width." + this._uid, this._tabbox.width);
+    Services.prefs.setIntPref(
+      "devtools.toolsidebar-width." + this._uid,
+      this._tabbox.width
+    );
 
     if (this._allTabsBtn) {
       this.removeAllTabsMenu();
@@ -579,7 +607,7 @@ ToolSidebar.prototype = {
     while (this._tabbox.tabpanels && this._tabbox.tabpanels.hasChildNodes()) {
       const panel = this._tabbox.tabpanels.firstChild;
       const win = panel.firstChild.contentWindow;
-      if (win && ("destroy" in win)) {
+      if (win && "destroy" in win) {
         await win.destroy();
       }
       panel.remove();
@@ -590,7 +618,11 @@ ToolSidebar.prototype = {
     }
 
     if (this._currentTool && this._telemetry) {
-      this._telemetry.toolClosed(this._currentTool, this.toolboxSessionId, this);
+      this._telemetry.toolClosed(
+        this._currentTool,
+        this.toolboxSessionId,
+        this
+      );
     }
 
     this._toolPanel.emit("sidebar-destroyed", this);

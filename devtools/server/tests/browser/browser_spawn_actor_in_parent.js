@@ -8,7 +8,8 @@
 // This test instanciates a first test actor "InContentActor" that uses
 // spawnActorInParentProcess to instanciate the second test actor "InParentActor"
 
-const ACTOR_URL = "chrome://mochitests/content/browser/devtools/server/tests/browser/test-spawn-actor-in-parent.js";
+const ACTOR_URL =
+  "chrome://mochitests/content/browser/devtools/server/tests/browser/test-spawn-actor-in-parent.js";
 
 const { InContentFront, InParentFront } = require(ACTOR_URL);
 
@@ -44,18 +45,20 @@ add_task(async function() {
   inParentFront.actorID = formSpawn.inParentActor;
   inParentFront.manage(inParentFront);
 
-  const {
-    args,
-    isInParent,
-    conn,
-    mm,
-  } = await inParentFront.test();
+  const { args, isInParent, conn, mm } = await inParentFront.test();
   is(args[0], 1, "first actor constructor arg is correct");
   is(args[1], 2, "first actor constructor arg is correct");
   is(args[2], 3, "first actor constructor arg is correct");
   ok(isInParent, "The ParentActor really runs in the parent process");
-  ok(conn, "`conn`, first contructor argument is a DebuggerServerConnection instance");
-  is(mm, "ChromeMessageSender", "`mm`, last constructor argument is a message manager");
+  ok(
+    conn,
+    "`conn`, first contructor argument is a DebuggerServerConnection instance"
+  );
+  is(
+    mm,
+    "ChromeMessageSender",
+    "`mm`, last constructor argument is a message manager"
+  );
 
   await target.destroy();
   gBrowser.removeCurrentTab();

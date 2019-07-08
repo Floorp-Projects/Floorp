@@ -42,7 +42,7 @@
 if (typeof Components != "undefined") {
   // Specify exported symbols for JSM module loader.
   this.EXPORTED_SYMBOLS = ["AndroidLog"];
-  var {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  var { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 }
 
 // From <https://android.googlesource.com/platform/system/core/+/master/include/android/log.h>.
@@ -59,12 +59,14 @@ const ANDROID_LOG_ERROR = 6;
 const MAX_TAG_LENGTH = 18;
 
 var liblog = ctypes.open("liblog.so"); // /system/lib/liblog.so
-var __android_log_write = liblog.declare("__android_log_write",
-                                         ctypes.default_abi,
-                                         ctypes.int, // return value: num bytes logged
-                                         ctypes.int, // priority (ANDROID_LOG_* constant)
-                                         ctypes.char.ptr, // tag
-                                         ctypes.char.ptr); // message
+var __android_log_write = liblog.declare(
+  "__android_log_write",
+  ctypes.default_abi,
+  ctypes.int, // return value: num bytes logged
+  ctypes.int, // priority (ANDROID_LOG_* constant)
+  ctypes.char.ptr, // tag
+  ctypes.char.ptr
+); // message
 
 var AndroidLog = {
   MAX_TAG_LENGTH: MAX_TAG_LENGTH,

@@ -14,8 +14,12 @@ add_task(async function reset_before_launching() {
 
 add_task(async function transparent_reset() {
   for (let i = 1; i < 3; ++i) {
-    info("Do stome stuff before and after " + i + " reset(s), " +
-         "it shouldn't break");
+    info(
+      "Do stome stuff before and after " +
+        i +
+        " reset(s), " +
+        "it shouldn't break"
+    );
     let CONTENT = "some content " + i;
     let path = OS.Path.join(Path.profileDir, "tmp");
     await OS.File.writeAtomic(path, CONTENT);
@@ -23,20 +27,22 @@ add_task(async function transparent_reset() {
       await OS.File.resetWorker();
     }
     let data = await OS.File.read(path);
-    let string = (new TextDecoder()).decode(data);
+    let string = new TextDecoder().decode(data);
     Assert.equal(string, CONTENT);
   }
 });
 
 add_task(async function file_open_cannot_reset() {
   let TEST_FILE = OS.Path.join(Path.profileDir, "tmp-" + Math.random());
-  info("Leaking file descriptor " + TEST_FILE + ", we shouldn't be able to reset");
-  let openedFile = await OS.File.open(TEST_FILE, { create: true} );
+  info(
+    "Leaking file descriptor " + TEST_FILE + ", we shouldn't be able to reset"
+  );
+  let openedFile = await OS.File.open(TEST_FILE, { create: true });
   let thrown = false;
   try {
     await OS.File.resetWorker();
   } catch (ex) {
-    if (ex.message.includes(OS.Path.basename(TEST_FILE)) ) {
+    if (ex.message.includes(OS.Path.basename(TEST_FILE))) {
       thrown = true;
     } else {
       throw ex;
@@ -57,7 +63,7 @@ add_task(async function dir_open_cannot_reset() {
   try {
     await OS.File.resetWorker();
   } catch (ex) {
-    if (ex.message.includes(OS.Path.basename(TEST_DIR)) ) {
+    if (ex.message.includes(OS.Path.basename(TEST_DIR))) {
       thrown = true;
     } else {
       throw ex;
@@ -75,8 +81,7 @@ add_task(async function race_against_itself() {
   // Arbitrary operation, just to wake up the worker
   try {
     await OS.File.read("/foo");
-  } catch (ex) {
-  }
+  } catch (ex) {}
 
   let all = [];
   for (let i = 0; i < 100; ++i) {
@@ -86,14 +91,12 @@ add_task(async function race_against_itself() {
   await Promise.all(all);
 });
 
-
 add_task(async function finish_with_a_reset() {
   info("Reset without waiting for the result");
   // Arbitrary operation, just to wake up the worker
   try {
     await OS.File.read("/foo");
-  } catch (ex) {
-  }
+  } catch (ex) {}
   // Now reset
   /* don't yield*/ OS.File.resetWorker();
 });

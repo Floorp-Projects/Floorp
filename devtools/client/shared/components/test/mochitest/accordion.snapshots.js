@@ -5,37 +5,37 @@
 
 window._snapshots = {
   "Accordion basic render.": {
-    "type": "ul",
-    "props": {
-      "className": "accordion",
-      "tabIndex": -1,
+    type: "ul",
+    props: {
+      className: "accordion",
+      tabIndex: -1,
     },
-    "children": [
+    children: [
       {
-        "type": "li",
-        "props": {
-          "className": "accordion-item-1",
+        type: "li",
+        props: {
+          className: "accordion-item-1",
           "aria-labelledby": "label-id-1",
         },
-        "children": [
+        children: [
           {
-            "type": "h2",
-            "props": {
-              "className": "accordion-header",
-              "id": "label-id-1",
-              "tabIndex": 0,
+            type: "h2",
+            props: {
+              className: "accordion-header",
+              id: "label-id-1",
+              tabIndex: 0,
               "aria-expanded": false,
-              "onKeyDown": "e => this.onHandleHeaderKeyDown(e, i)",
-              "onClick": "() => this.handleHeaderClick(i)",
+              onKeyDown: "e => this.onHandleHeaderKeyDown(e, i)",
+              onClick: "() => this.handleHeaderClick(i)",
             },
-            "children": [
+            children: [
               {
-                "type": "div",
-                "props": {
-                  "className": "arrow theme-twisty",
-                  "role": "presentation",
+                type: "div",
+                props: {
+                  className: "arrow theme-twisty",
+                  role: "presentation",
                 },
-                "children": null,
+                children: null,
               },
               "Test Accordion Item 1",
             ],
@@ -43,43 +43,43 @@ window._snapshots = {
         ],
       },
       {
-        "type": "li",
-        "props": {
-          "className": "accordion-item-2",
+        type: "li",
+        props: {
+          className: "accordion-item-2",
           "aria-labelledby": "label-id-2",
         },
-        "children": [
+        children: [
           {
-            "type": "h2",
-            "props": {
-              "className": "accordion-header",
-              "id": "label-id-2",
-              "tabIndex": 0,
+            type: "h2",
+            props: {
+              className: "accordion-header",
+              id: "label-id-2",
+              tabIndex: 0,
               "aria-expanded": false,
-              "onKeyDown": "e => this.onHandleHeaderKeyDown(e, i)",
-              "onClick": "() => this.handleHeaderClick(i)",
+              onKeyDown: "e => this.onHandleHeaderKeyDown(e, i)",
+              onClick: "() => this.handleHeaderClick(i)",
             },
-            "children": [
+            children: [
               {
-                "type": "div",
-                "props": {
-                  "className": "arrow theme-twisty",
-                  "role": "presentation",
+                type: "div",
+                props: {
+                  className: "arrow theme-twisty",
+                  role: "presentation",
                 },
-                "children": null,
+                children: null,
               },
               "Test Accordion Item 2",
               {
-                "type": "div",
-                "props": {
-                  "className": "header-buttons",
-                  "role": "presentation",
+                type: "div",
+                props: {
+                  className: "header-buttons",
+                  role: "presentation",
                 },
-                "children": [
+                children: [
                   {
-                    "type": "button",
-                    "props": {},
-                    "children": null,
+                    type: "button",
+                    props: {},
+                    children: null,
                   },
                 ],
               },
@@ -88,45 +88,45 @@ window._snapshots = {
         ],
       },
       {
-        "type": "li",
-        "props": {
-          "className": "accordion-item-3",
+        type: "li",
+        props: {
+          className: "accordion-item-3",
           "aria-labelledby": "label-id-3",
         },
-        "children": [
+        children: [
           {
-            "type": "h2",
-            "props": {
-              "className": "accordion-header",
-              "id": "label-id-3",
-              "tabIndex": 0,
+            type: "h2",
+            props: {
+              className: "accordion-header",
+              id: "label-id-3",
+              tabIndex: 0,
               "aria-expanded": true,
-              "onKeyDown": "e => this.onHandleHeaderKeyDown(e, i)",
-              "onClick": "() => this.handleHeaderClick(i)",
+              onKeyDown: "e => this.onHandleHeaderKeyDown(e, i)",
+              onClick: "() => this.handleHeaderClick(i)",
             },
-            "children": [
+            children: [
               {
-                "type": "div",
-                "props": {
-                  "className": "arrow theme-twisty open",
-                  "role": "presentation",
+                type: "div",
+                props: {
+                  className: "arrow theme-twisty open",
+                  role: "presentation",
                 },
-                "children": null,
+                children: null,
               },
               "Test Accordion Item 3",
             ],
           },
           {
-            "type": "div",
-            "props": {
-              "className": "accordion-content",
-              "role": "presentation",
+            type: "div",
+            props: {
+              className: "accordion-content",
+              role: "presentation",
             },
-            "children": [
+            children: [
               {
-                "type": "div",
-                "props": {},
-                "children": null,
+                type: "div",
+                props: {},
+                children: null,
               },
             ],
           },

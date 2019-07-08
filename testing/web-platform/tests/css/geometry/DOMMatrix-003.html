@@ -204,6 +204,24 @@
         },"test rotateFromVector()");
 
         test(function() {
+          var result = initialDOMMatrix().rotateFromVector(0, 1);
+          var expected = initialDOMMatrix().rotate(90);
+          checkDOMMatrix(result, expected);
+        },"test rotateFromVector() with x being zero");
+
+        test(function() {
+          var result = initialDOMMatrix().rotateFromVector(1, 0);
+          var expected = initialDOMMatrix()
+          checkDOMMatrix(result, expected);
+        },"test rotateFromVector() with y being zero");
+
+        test(function() {
+          var result = initialDOMMatrix().rotateFromVector(0, 0);
+          var expected = initialDOMMatrix()
+          checkDOMMatrix(result, expected);
+        },"test rotateFromVector() with two zeros");
+
+        test(function() {
           var result = initialDOMMatrix().rotateAxisAngle(3, 3, 3, 120);
           var expected = initialDOMMatrix().multiply(getRotationMatrix(3, 3, 3, 120));
           checkDOMMatrix(result, expected);

@@ -52,7 +52,9 @@ add_task(async function test_indexExists_not_created() {
 
 add_task(async function test_temp_tableExists_and_indexExists() {
   var msc = getOpenedDatabase();
-  msc.executeSimpleSQL("CREATE TEMP TABLE test_temp(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)");
+  msc.executeSimpleSQL(
+    "CREATE TEMP TABLE test_temp(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)"
+  );
   Assert.ok(msc.tableExists("test_temp"));
 
   msc.executeSimpleSQL("CREATE INDEX test_temp_ind ON test_temp (name)");
@@ -77,8 +79,10 @@ add_task(async function test_indexExists_created() {
 add_task(async function test_createTable_already_created() {
   var msc = getOpenedDatabase();
   Assert.ok(msc.tableExists("test"));
-  Assert.throws(() => msc.createTable("test", "id INTEGER PRIMARY KEY, name TEXT"),
-                /NS_ERROR_FAILURE/);
+  Assert.throws(
+    () => msc.createTable("test", "id INTEGER PRIMARY KEY, name TEXT"),
+    /NS_ERROR_FAILURE/
+  );
 });
 
 add_task(async function test_attach_createTable_tableExists_indexExists() {
@@ -90,8 +94,10 @@ add_task(async function test_attach_createTable_tableExists_indexExists() {
   Assert.ok(!msc.tableExists("sample.test"));
   msc.createTable("sample.test", "id INTEGER PRIMARY KEY, name TEXT");
   Assert.ok(msc.tableExists("sample.test"));
-  Assert.throws(() => msc.createTable("sample.test", "id INTEGER PRIMARY KEY, name TEXT"),
-                /NS_ERROR_FAILURE/);
+  Assert.throws(
+    () => msc.createTable("sample.test", "id INTEGER PRIMARY KEY, name TEXT"),
+    /NS_ERROR_FAILURE/
+  );
 
   Assert.ok(!msc.indexExists("sample.test_ind"));
   msc.executeSimpleSQL("CREATE INDEX sample.test_ind ON test (name)");
@@ -181,8 +187,9 @@ add_task(async function test_createTable() {
         // Do nothing.
       }
     }
-    Assert.ok(e.result == Cr.NS_ERROR_NOT_INITIALIZED ||
-              e.result == Cr.NS_ERROR_FAILURE);
+    Assert.ok(
+      e.result == Cr.NS_ERROR_NOT_INITIALIZED || e.result == Cr.NS_ERROR_FAILURE
+    );
   } finally {
     if (con) {
       con.close();
@@ -226,22 +233,24 @@ add_task(async function test_close_does_not_spin_event_loop() {
   gDBConn = null;
 });
 
-add_task(async function test_asyncClose_succeeds_with_finalized_async_statement() {
-  // XXX this test isn't perfect since we can't totally control when events will
-  //     run.  If this paticular function fails randomly, it means we have a
-  //     real bug.
+add_task(
+  async function test_asyncClose_succeeds_with_finalized_async_statement() {
+    // XXX this test isn't perfect since we can't totally control when events will
+    //     run.  If this paticular function fails randomly, it means we have a
+    //     real bug.
 
-  // We want to make sure we create a cached async statement to make sure that
-  // when we finalize our statement, we end up finalizing the async one too so
-  // close will succeed.
-  let stmt = createStatement("SELECT * FROM test");
-  stmt.executeAsync();
-  stmt.finalize();
+    // We want to make sure we create a cached async statement to make sure that
+    // when we finalize our statement, we end up finalizing the async one too so
+    // close will succeed.
+    let stmt = createStatement("SELECT * FROM test");
+    stmt.executeAsync();
+    stmt.finalize();
 
-  await asyncClose(getOpenedDatabase());
-  // Reset gDBConn so that later tests will get a new connection object.
-  gDBConn = null;
-});
+    await asyncClose(getOpenedDatabase());
+    // Reset gDBConn so that later tests will get a new connection object.
+    gDBConn = null;
+  }
+);
 
 // Would assert on debug builds.
 if (!AppConstants.DEBUG) {
@@ -250,7 +259,9 @@ if (!AppConstants.DEBUG) {
     // statements after the database has been closed (typically by
     // letting the gc finalize the statement).
     let db = getOpenedDatabase();
-    let stmt = createStatement("SELECT * FROM test -- test_close_then_release_statement");
+    let stmt = createStatement(
+      "SELECT * FROM test -- test_close_then_release_statement"
+    );
     db.close();
     stmt.finalize(); // Finalize too late - this should not crash
 
@@ -263,7 +274,9 @@ if (!AppConstants.DEBUG) {
     // statements after the database has been async closed (typically by
     // letting the gc finalize the statement).
     let db = getOpenedDatabase();
-    let stmt = createStatement("SELECT * FROM test -- test_asyncClose_then_release_statement");
+    let stmt = createStatement(
+      "SELECT * FROM test -- test_asyncClose_then_release_statement"
+    );
     await asyncClose(db);
     stmt.finalize(); // Finalize too late - this should not crash
 
@@ -336,7 +349,11 @@ async function standardAsyncTest(promisedDB, name, shouldInit = false) {
   let found = false;
   await executeAsync(stmt, function(results) {
     info("Data has been extracted");
-    for (let row = results.getNextRow(); row != null; row = results.getNextRow()) {
+    for (
+      let row = results.getNextRow();
+      row != null;
+      row = results.getNextRow()
+    ) {
       if (row.getResultByName("name") == name) {
         found = true;
         break;
@@ -353,20 +370,30 @@ async function standardAsyncTest(promisedDB, name, shouldInit = false) {
 add_task(async function test_open_async() {
   await standardAsyncTest(openAsyncDatabase(getTestDB(), null), "default");
   await standardAsyncTest(openAsyncDatabase(getTestDB()), "no optional arg");
-  await standardAsyncTest(openAsyncDatabase(getTestDB(),
-    {shared: false, growthIncrement: 54}), "non-default options");
-  await standardAsyncTest(openAsyncDatabase("memory"),
-    "in-memory database", true);
-  await standardAsyncTest(openAsyncDatabase("memory",
-    {shared: false}),
-    "in-memory database and options", true);
+  await standardAsyncTest(
+    openAsyncDatabase(getTestDB(), { shared: false, growthIncrement: 54 }),
+    "non-default options"
+  );
+  await standardAsyncTest(
+    openAsyncDatabase("memory"),
+    "in-memory database",
+    true
+  );
+  await standardAsyncTest(
+    openAsyncDatabase("memory", { shared: false }),
+    "in-memory database and options",
+    true
+  );
 
   info("Testing async opening with bogus options 0");
   let raised = false;
   let adb = null;
 
   try {
-    adb = await openAsyncDatabase("memory", {shared: false, growthIncrement: 54});
+    adb = await openAsyncDatabase("memory", {
+      shared: false,
+      growthIncrement: 54,
+    });
   } catch (ex) {
     raised = true;
   } finally {
@@ -380,7 +407,7 @@ add_task(async function test_open_async() {
   raised = false;
   adb = null;
   try {
-    adb = await openAsyncDatabase(getTestDB(), {shared: "forty-two"});
+    adb = await openAsyncDatabase(getTestDB(), { shared: "forty-two" });
   } catch (ex) {
     raised = true;
   } finally {
@@ -394,7 +421,9 @@ add_task(async function test_open_async() {
   raised = false;
   adb = null;
   try {
-    adb = await openAsyncDatabase(getTestDB(), {growthIncrement: "forty-two"});
+    adb = await openAsyncDatabase(getTestDB(), {
+      growthIncrement: "forty-two",
+    });
   } catch (ex) {
     raised = true;
   } finally {
@@ -405,10 +434,9 @@ add_task(async function test_open_async() {
   Assert.ok(raised);
 });
 
-
 add_task(async function test_async_open_with_shared_cache() {
   info("Testing that opening with a shared cache doesn't break stuff");
-  let adb = await openAsyncDatabase(getTestDB(), {shared: true});
+  let adb = await openAsyncDatabase(getTestDB(), { shared: true });
 
   let stmt = adb.createAsyncStatement("INSERT INTO test (name) VALUES (:name)");
   stmt.params.name = "clockworker";
@@ -421,7 +449,11 @@ add_task(async function test_async_open_with_shared_cache() {
   let found = false;
   await executeAsync(stmt, function(results) {
     info("Data has been extracted");
-    for (let row = results.getNextRow(); row != null; row = results.getNextRow()) {
+    for (
+      let row = results.getNextRow();
+      row != null;
+      row = results.getNextRow()
+    ) {
       if (row.getResultByName("name") == "clockworker") {
         found = true;
         break;
@@ -457,14 +489,17 @@ add_task(async function test_clone_no_optional_param_async() {
   info("Cloning database");
 
   let adb2 = await asyncClone(adb1);
-  info("Testing that the cloned db is a mozIStorageAsyncConnection " +
-       "and not a mozIStorageConnection");
+  info(
+    "Testing that the cloned db is a mozIStorageAsyncConnection " +
+      "and not a mozIStorageConnection"
+  );
   Assert.ok(adb2 instanceof Ci.mozIStorageAsyncConnection);
   Assert.ok(adb2 instanceof Ci.mozIStorageConnection);
 
   info("Inserting data into source db");
-  let stmt = adb1.
-               createAsyncStatement("INSERT INTO test (name) VALUES (:name)");
+  let stmt = adb1.createAsyncStatement(
+    "INSERT INTO test (name) VALUES (:name)"
+  );
 
   stmt.params.name = "yoric";
   let result = await executeAsync(stmt);
@@ -476,7 +511,11 @@ add_task(async function test_clone_no_optional_param_async() {
   let found = false;
   await executeAsync(stmt, function(results) {
     info("Data has been extracted");
-    for (let row = results.getNextRow(); row != null; row = results.getNextRow()) {
+    for (
+      let row = results.getNextRow();
+      row != null;
+      row = results.getNextRow()
+    ) {
       if (row.getResultByName("name") == "yoric") {
         found = true;
         break;
@@ -538,10 +577,7 @@ add_task(async function test_clone_shared_readonly() {
 });
 
 add_task(async function test_close_clone_fails() {
-  let calls = [
-    "openDatabase",
-    "openUnsharedDatabase",
-  ];
+  let calls = ["openDatabase", "openUnsharedDatabase"];
   calls.forEach(function(methodName) {
     let db = Services.storage[methodName](getTestDB());
     db.close();
@@ -557,14 +593,8 @@ add_task(async function test_memory_clone_fails() {
 
 add_task(async function test_clone_copies_functions() {
   const FUNC_NAME = "test_func";
-  let calls = [
-    "openDatabase",
-    "openUnsharedDatabase",
-  ];
-  let functionMethods = [
-    "createFunction",
-    "createAggregateFunction",
-  ];
+  let calls = ["openDatabase", "openUnsharedDatabase"];
+  let functionMethods = ["createFunction", "createAggregateFunction"];
   calls.forEach(function(methodName) {
     [true, false].forEach(function(readOnly) {
       functionMethods.forEach(function(functionMethod) {
@@ -579,7 +609,9 @@ add_task(async function test_clone_copies_functions() {
         // Clone it, and make sure the function exists still.
         let db2 = db1.clone(readOnly);
         // Note: this would fail if the function did not exist.
-        let stmt = db2.createStatement("SELECT " + FUNC_NAME + "(id) FROM test");
+        let stmt = db2.createStatement(
+          "SELECT " + FUNC_NAME + "(id) FROM test"
+        );
         stmt.finalize();
         db1.close();
         db2.close();
@@ -603,14 +635,8 @@ add_task(async function test_clone_copies_overridden_functions() {
     onFinal: () => 0,
   };
 
-  let calls = [
-    "openDatabase",
-    "openUnsharedDatabase",
-  ];
-  let functionMethods = [
-    "createFunction",
-    "createAggregateFunction",
-  ];
+  let calls = ["openDatabase", "openUnsharedDatabase"];
+  let functionMethods = ["createFunction", "createAggregateFunction"];
   calls.forEach(function(methodName) {
     [true, false].forEach(function(readOnly) {
       functionMethods.forEach(function(functionMethod) {
@@ -622,7 +648,9 @@ add_task(async function test_clone_copies_overridden_functions() {
 
         // Clone it, and make sure the function gets called.
         let db2 = db1.clone(readOnly);
-        let stmt = db2.createStatement("SELECT " + FUNC_NAME + "(id) FROM test");
+        let stmt = db2.createStatement(
+          "SELECT " + FUNC_NAME + "(id) FROM test"
+        );
         stmt.executeStep();
         Assert.ok(func.called);
         stmt.finalize();
@@ -723,9 +751,11 @@ add_task(async function test_clone_attach_database() {
   let c = 0;
   function attachDB(conn, name) {
     let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
-    file.append("test_storage_" + (++c) + ".sqlite");
+    file.append("test_storage_" + ++c + ".sqlite");
     let db = Services.storage.openUnsharedDatabase(file);
-    conn.executeSimpleSQL(`ATTACH DATABASE '${db.databaseFile.path}' AS ${name}`);
+    conn.executeSimpleSQL(
+      `ATTACH DATABASE '${db.databaseFile.path}' AS ${name}`
+    );
     db.executeSimpleSQL(`CREATE TABLE test_${name}(name TEXT);`);
     db.close();
   }
@@ -790,7 +820,8 @@ add_task(async function test_async_clone_with_temp_trigger_and_table() {
      AFTER DELETE ON test_temp FOR EACH ROW
      BEGIN
        INSERT INTO test(name) VALUES(OLD.name);
-     END`];
+     END`,
+  ];
   for (let query of createQueries) {
     let stmt = db.createAsyncStatement(query);
     await executeAsync(stmt);
@@ -920,29 +951,37 @@ add_task(async function test_defaultTransactionType() {
   Assert.ok(db instanceof Ci.mozIStorageAsyncConnection);
 
   info("Verify default transaction type");
-  Assert.equal(db.defaultTransactionType,
-    Ci.mozIStorageConnection.TRANSACTION_DEFERRED);
+  Assert.equal(
+    db.defaultTransactionType,
+    Ci.mozIStorageConnection.TRANSACTION_DEFERRED
+  );
 
   info("Test other transaction types");
-  for (let type of [Ci.mozIStorageConnection.TRANSACTION_IMMEDIATE,
-                    Ci.mozIStorageConnection.TRANSACTION_EXCLUSIVE]) {
+  for (let type of [
+    Ci.mozIStorageConnection.TRANSACTION_IMMEDIATE,
+    Ci.mozIStorageConnection.TRANSACTION_EXCLUSIVE,
+  ]) {
     db.defaultTransactionType = type;
     Assert.equal(db.defaultTransactionType, type);
   }
 
   info("Should reject unknown transaction types");
-  Assert.throws(() => db.defaultTransactionType =
-                        Ci.mozIStorageConnection.TRANSACTION_DEFAULT,
-                /NS_ERROR_ILLEGAL_VALUE/);
+  Assert.throws(
+    () =>
+      (db.defaultTransactionType =
+        Ci.mozIStorageConnection.TRANSACTION_DEFAULT),
+    /NS_ERROR_ILLEGAL_VALUE/
+  );
 
-  db.defaultTransactionType =
-    Ci.mozIStorageConnection.TRANSACTION_IMMEDIATE;
+  db.defaultTransactionType = Ci.mozIStorageConnection.TRANSACTION_IMMEDIATE;
 
   info("Clone should inherit default transaction type");
   let clone = await asyncClone(db, true);
   Assert.ok(clone instanceof Ci.mozIStorageAsyncConnection);
-  Assert.equal(clone.defaultTransactionType,
-    Ci.mozIStorageConnection.TRANSACTION_IMMEDIATE);
+  Assert.equal(
+    clone.defaultTransactionType,
+    Ci.mozIStorageConnection.TRANSACTION_IMMEDIATE
+  );
 
   info("Begin immediate transaction on main connection");
   db.beginTransaction();
@@ -972,8 +1011,9 @@ add_task(async function test_defaultTransactionType() {
 
 add_task(async function test_getInterface() {
   let db = getOpenedDatabase();
-  let target = db.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIEventTarget);
+  let target = db
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIEventTarget);
   // Just check that target is non-null.  Other tests will ensure that it has
   // the correct value.
   Assert.ok(target != null);

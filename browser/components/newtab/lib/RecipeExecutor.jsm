@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {tokenize} = ChromeUtils.import("resource://activity-stream/lib/Tokenize.jsm");
+const { tokenize } = ChromeUtils.import(
+  "resource://activity-stream/lib/Tokenize.jsm"
+);
 
 /**
  * RecipeExecutor is the core feature engineering pipeline for the in-browser
@@ -71,11 +73,12 @@ this.RecipeExecutor = class RecipeExecutor {
    *   map (strings to anything)
    */
   _typeOf(data) {
-    let t = typeof(data);
+    let t = typeof data;
     if (t === "object") {
       if (data === null) {
         return "null";
-      } if (Array.isArray(data)) {
+      }
+      if (Array.isArray(data)) {
         return "array";
       }
       return "map";
@@ -91,7 +94,11 @@ this.RecipeExecutor = class RecipeExecutor {
   _lookupScalar(item, k, dfault) {
     if (this._typeOf(k) === "number") {
       return k;
-    } else if ((this._typeOf(k) === "string") && (k in item) && (this._typeOf(item[k]) === "number")) {
+    } else if (
+      this._typeOf(k) === "string" &&
+      k in item &&
+      this._typeOf(item[k]) === "number"
+    ) {
       return item[k];
     }
     return dfault;
@@ -137,7 +144,7 @@ this.RecipeExecutor = class RecipeExecutor {
 
     for (let nbTagger of this.nbTaggers) {
       let result = nbTagger.tagTokens(tokens);
-      if ((result.label !== null) && result.confident) {
+      if (result.label !== null && result.confident) {
         extended_tags[result.label] = result;
         tags[result.label] = Math.exp(result.logProb);
       }
@@ -207,7 +214,7 @@ this.RecipeExecutor = class RecipeExecutor {
     let rhs = null;
     if ("rhsValue" in config) {
       rhs = config.rhsValue;
-    } else if (("rhsField" in config) && (config.rhsField in item)) {
+    } else if ("rhsField" in config && config.rhsField in item) {
       rhs = item[config.rhsField];
     }
     if (rhs === null) {
@@ -215,14 +222,15 @@ this.RecipeExecutor = class RecipeExecutor {
     }
 
     if (
-    // eslint-disable-next-line eqeqeq
-      ((config.op === "==") && (item[config.field] == rhs)) ||
-        // eslint-disable-next-line eqeqeq
-        ((config.op === "!=") && (item[config.field] != rhs)) ||
-        ((config.op === "<") && (item[config.field] < rhs)) ||
-        ((config.op === "<=") && (item[config.field] <= rhs)) ||
-        ((config.op === ">") && (item[config.field] > rhs)) ||
-        ((config.op === ">=") && (item[config.field] >= rhs))) {
+      // eslint-disable-next-line eqeqeq
+      (config.op === "==" && item[config.field] == rhs) ||
+      // eslint-disable-next-line eqeqeq
+      (config.op === "!=" && item[config.field] != rhs) ||
+      (config.op === "<" && item[config.field] < rhs) ||
+      (config.op === "<=" && item[config.field] <= rhs) ||
+      (config.op === ">" && item[config.field] > rhs) ||
+      (config.op === ">=" && item[config.field] >= rhs)
+    ) {
       return item;
     }
 
@@ -249,7 +257,9 @@ this.RecipeExecutor = class RecipeExecutor {
       domain = domain.substring(4);
     }
     let toks = tokenize(domain);
-    let pathToks =  tokenize(decodeURIComponent(url.pathname.replace(/\+/g, " ")));
+    let pathToks = tokenize(
+      decodeURIComponent(url.pathname.replace(/\+/g, " "))
+    );
     for (let tok of pathToks) {
       toks.push(tok);
     }
@@ -258,7 +268,7 @@ this.RecipeExecutor = class RecipeExecutor {
       for (let tok of k) {
         toks.push(tok);
       }
-      if ((pair[1] !== null) && (pair[1] !== "")) {
+      if (pair[1] !== null && pair[1] !== "") {
         let v = tokenize(decodeURIComponent(pair[1].replace(/\+/g, " ")));
         for (let tok of v) {
           toks.push(tok);
@@ -295,9 +305,11 @@ this.RecipeExecutor = class RecipeExecutor {
       pathLength = config.path_length;
     }
     if (pathLength > 0) {
-      item[config.dest] += url.pathname.toLocaleLowerCase().split("/")
-                            .slice(0, pathLength + 1)
-                            .join("/");
+      item[config.dest] += url.pathname
+        .toLocaleLowerCase()
+        .split("/")
+        .slice(0, pathLength + 1)
+        .join("/");
     }
 
     return item;
@@ -352,7 +364,7 @@ this.RecipeExecutor = class RecipeExecutor {
       return null;
     }
     let k = this._lookupScalar(item, config.k, 1048576);
-    let descending = (!("descending" in config) || (config.descending !== false));
+    let descending = !("descending" in config) || config.descending !== false;
 
     // we can't sort by the values in the map, so we have to convert this
     // to an array, and then sort.
@@ -361,10 +373,13 @@ this.RecipeExecutor = class RecipeExecutor {
       let innerType = this._typeOf(item[config.field][outerKey]);
       if (innerType === "map") {
         Object.keys(item[config.field][outerKey]).forEach(innerKey => {
-          sortable.push({key: innerKey, value: item[config.field][outerKey][innerKey]});
+          sortable.push({
+            key: innerKey,
+            value: item[config.field][outerKey][innerKey],
+          });
         });
       } else {
-        sortable.push({key: outerKey, value: item[config.field][outerKey]});
+        sortable.push({ key: outerKey, value: item[config.field][outerKey] });
       }
     });
 
@@ -571,7 +586,7 @@ this.RecipeExecutor = class RecipeExecutor {
    */
   vectorAdd(item, config) {
     if (!(config.left in item)) {
-      return this.copyValue(item, {src: config.right, dest: config.left});
+      return this.copyValue(item, { src: config.right, dest: config.left });
     }
     if (!(config.right in item)) {
       return null;
@@ -804,7 +819,7 @@ this.RecipeExecutor = class RecipeExecutor {
    *  dest                Where we should write the value of haystack[needle]
    */
   lookupValue(item, config) {
-    if ((config.haystack in item) && (config.needle in item[config.haystack])) {
+    if (config.haystack in item && config.needle in item[config.haystack]) {
       item[config.dest] = item[config.haystack][config.needle];
     }
 
@@ -899,7 +914,8 @@ this.RecipeExecutor = class RecipeExecutor {
 
     Object.keys(item[config.field]).forEach(tag => {
       Object.keys(item[config.field][tag]).forEach(subtag => {
-        item[config.field][tag][subtag] = Math.exp(item[config.field][tag][subtag]) / softmaxSum[tag];
+        item[config.field][tag][subtag] =
+          Math.exp(item[config.field][tag][subtag]) / softmaxSum[tag];
       });
     });
 
@@ -982,8 +998,10 @@ this.RecipeExecutor = class RecipeExecutor {
     }
     if (type === "map") {
       Object.keys(right[config.field]).forEach(key => {
-        if (!(key in left[config.field]) ||
-          (right[config.field][key] > left[config.field][key])) {
+        if (
+          !(key in left[config.field]) ||
+          right[config.field][key] > left[config.field][key]
+        ) {
           left[config.field][key] = right[config.field][key];
         }
       });
@@ -1034,7 +1052,7 @@ this.RecipeExecutor = class RecipeExecutor {
     if (config.operation === "sum") {
       op = (a, b) => a + b;
     } else if (config.operation === "max") {
-      op = (a, b) => ((a > b) ? a : b);
+      op = (a, b) => (a > b ? a : b);
     } else if (config.operation === "overwrite") {
       op = (a, b) => b;
     } else if (config.operation === "count") {
@@ -1045,7 +1063,10 @@ this.RecipeExecutor = class RecipeExecutor {
     if (!(config.left_field in left)) {
       left[config.left_field] = {};
     }
-    if ((!(config.right_key_field in right)) || (!(config.right_value_field in right))) {
+    if (
+      !(config.right_key_field in right) ||
+      !(config.right_value_field in right)
+    ) {
       return left;
     }
 

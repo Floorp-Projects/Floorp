@@ -13,32 +13,32 @@
  * limitations under the License.
  */
 
-use std::collections::HashSet;
-use std::result;
+use super::HashSet;
+use core::result;
 use std::str;
 use std::string::String;
 use std::vec::Vec;
 
-use limits::{
+use crate::limits::{
     MAX_WASM_FUNCTIONS, MAX_WASM_FUNCTION_LOCALS, MAX_WASM_GLOBALS, MAX_WASM_MEMORIES,
     MAX_WASM_MEMORY_PAGES, MAX_WASM_TABLES, MAX_WASM_TYPES,
 };
 
-use binary_reader::BinaryReader;
+use crate::binary_reader::BinaryReader;
 
-use primitives::{
+use crate::primitives::{
     BinaryReaderError, ExternalKind, FuncType, GlobalType, ImportSectionEntryType, MemoryType,
     Operator, ResizableLimits, Result, SectionCode, TableType, Type,
 };
 
-use parser::{Parser, ParserInput, ParserState, WasmDecoder};
+use crate::parser::{Parser, ParserInput, ParserState, WasmDecoder};
 
-use operators_validator::{
+use crate::operators_validator::{
     FunctionEnd, OperatorValidator, OperatorValidatorConfig, WasmModuleResources,
     DEFAULT_OPERATOR_VALIDATOR_CONFIG,
 };
 
-use readers::FunctionBody;
+use crate::readers::FunctionBody;
 
 type ValidatorResult<'a, T> = result::Result<T, ParserState<'a>>;
 
@@ -222,7 +222,11 @@ impl<'a> ValidatingParser<'a> {
         if let Type::Func = func_type.form {
             self.check_value_types(&*func_type.params)?;
             self.check_value_types(&*func_type.returns)?;
-            Ok(())
+            if !self.config.operator_config.enable_multi_value && func_type.returns.len() > 1 {
+                self.create_error("func type returns multiple values")
+            } else {
+                Ok(())
+            }
         } else {
             self.create_error("type signature is not a func")
         }

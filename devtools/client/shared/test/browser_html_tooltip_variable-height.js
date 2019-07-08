@@ -15,7 +15,9 @@ const CONTAINER_HEIGHT = 300;
 const CONTAINER_WIDTH = 200;
 const TOOLTIP_HEIGHT = 50;
 
-const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
+const {
+  HTMLTooltip,
+} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 loadHelperScript("helper_html_tooltip.js");
 
 add_task(async function() {
@@ -23,23 +25,31 @@ add_task(async function() {
   await pushPref("devtools.toolbox.footer.height", 400);
 
   await addTab("about:blank");
-  const [,, doc] = await createHost("bottom", TEST_URI);
+  const [, , doc] = await createHost("bottom", TEST_URI);
 
-  const tooltip = new HTMLTooltip(doc, {useXulWrapper: false});
+  const tooltip = new HTMLTooltip(doc, { useXulWrapper: false });
   info("Set tooltip content 50px tall, but request a container 200px tall");
   const tooltipContent = doc.createElementNS(HTML_NS, "div");
-  tooltipContent.style.cssText = "height: " + TOOLTIP_HEIGHT + "px; background: red;";
+  tooltipContent.style.cssText =
+    "height: " + TOOLTIP_HEIGHT + "px; background: red;";
   tooltip.panel.appendChild(tooltipContent);
-  tooltip.setContentSize({width: CONTAINER_WIDTH, height: Infinity});
+  tooltip.setContentSize({ width: CONTAINER_WIDTH, height: Infinity });
 
   info("Show the tooltip and check the container and panel height.");
   await showTooltip(tooltip, doc.getElementById("box1"));
 
   const containerRect = tooltip.container.getBoundingClientRect();
   const panelRect = tooltip.panel.getBoundingClientRect();
-  is(containerRect.height, CONTAINER_HEIGHT,
-    "Tooltip container has the expected height.");
-  is(panelRect.height, TOOLTIP_HEIGHT, "Tooltip panel has the expected height.");
+  is(
+    containerRect.height,
+    CONTAINER_HEIGHT,
+    "Tooltip container has the expected height."
+  );
+  is(
+    panelRect.height,
+    TOOLTIP_HEIGHT,
+    "Tooltip panel has the expected height."
+  );
 
   info("Click below the tooltip panel but in the tooltip filler element.");
   let onHidden = once(tooltip, "hidden");
@@ -48,9 +58,11 @@ add_task(async function() {
 
   info("Show the tooltip one more time, and increase the content height");
   await showTooltip(tooltip, doc.getElementById("box1"));
-  tooltipContent.style.height = (2 * CONTAINER_HEIGHT) + "px";
+  tooltipContent.style.height = 2 * CONTAINER_HEIGHT + "px";
 
-  info("Click at the same coordinates as earlier, this time it should hit the tooltip.");
+  info(
+    "Click at the same coordinates as earlier, this time it should hit the tooltip."
+  );
   const onPanelClick = once(tooltip.panel, "click");
   EventUtils.synthesizeMouse(tooltip.container, 100, 100, {}, doc.defaultView);
   await onPanelClick;

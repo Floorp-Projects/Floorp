@@ -23,8 +23,11 @@ function testNavigationState(inspector, elms, focused, activedescendant) {
   const doc = inspector.markup.doc;
   const id = activedescendant.getAttribute("id");
   is(doc.activeElement, focused, `Keyboard focus should be set to ${focused}`);
-  is(elms.root.elt.getAttribute("aria-activedescendant"), id,
-    `Active descendant should be set to ${id}`);
+  is(
+    elms.root.elt.getAttribute("aria-activedescendant"),
+    id,
+    `Active descendant should be set to ${id}`
+  );
 }
 
 /**
@@ -46,8 +49,11 @@ function testNavigationState(inspector, elms, focused, activedescendant) {
  *        - {String} waitFor, optional: markupview event to wait for if keyboard actions
  *          result in async updates. Also accepts the inspector event "inspector-updated".
  */
-async function runAccessibilityNavigationTest(inspector, elms,
-  {desc, key, options, focused, activedescendant, waitFor}) {
+async function runAccessibilityNavigationTest(
+  inspector,
+  elms,
+  { desc, key, options, focused, activedescendant, waitFor }
+) {
   info(desc);
 
   const markup = inspector.markup;
@@ -56,8 +62,10 @@ async function runAccessibilityNavigationTest(inspector, elms,
 
   let updated;
   if (waitFor) {
-    updated = waitFor === "inspector-updated" ?
-      inspector.once(waitFor) : markup.once(waitFor);
+    updated =
+      waitFor === "inspector-updated"
+        ? inspector.once(waitFor)
+        : markup.once(waitFor);
   } else {
     updated = Promise.resolve();
   }

@@ -3,9 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { immutableUpdate } = require("resource://devtools/shared/ThreadSafeDevToolsUtils.js");
-const { Visitor, walk } = require("resource://devtools/shared/heapsnapshot/CensusUtils.js");
-const { deduplicatePaths } = require("resource://devtools/shared/heapsnapshot/shortest-paths");
+const {
+  immutableUpdate,
+} = require("resource://devtools/shared/ThreadSafeDevToolsUtils.js");
+const {
+  Visitor,
+  walk,
+} = require("resource://devtools/shared/heapsnapshot/CensusUtils.js");
+const {
+  deduplicatePaths,
+} = require("resource://devtools/shared/heapsnapshot/shortest-paths");
 
 const DEFAULT_MAX_DEPTH = 4;
 const DEFAULT_MAX_SIBLINGS = 15;
@@ -163,9 +170,11 @@ LabelAndShallowSizeVisitor.prototype.shallowSize = function() {
  *          - {Number} shallowSize
  *          - {Object} label
  */
-DominatorTreeNode.getLabelAndShallowSize = function(nodeId,
-                                                     snapshot,
-                                                     breakdown) {
+DominatorTreeNode.getLabelAndShallowSize = function(
+  nodeId,
+  snapshot,
+  breakdown
+) {
   const description = snapshot.describeNode(breakdown, nodeId);
 
   const visitor = new LabelAndShallowSizeVisitor();
@@ -194,16 +203,26 @@ DominatorTreeNode.getLabelAndShallowSize = function(nodeId,
  *
  * @returns {DominatorTreeNode}
  */
-DominatorTreeNode.partialTraversal = function(dominatorTree,
-                                               snapshot,
-                                               breakdown,
-                                               maxDepth = DEFAULT_MAX_DEPTH,
-                                               maxSiblings = DEFAULT_MAX_SIBLINGS) {
+DominatorTreeNode.partialTraversal = function(
+  dominatorTree,
+  snapshot,
+  breakdown,
+  maxDepth = DEFAULT_MAX_DEPTH,
+  maxSiblings = DEFAULT_MAX_SIBLINGS
+) {
   function dfs(nodeId, depth) {
-    const { label, shallowSize } =
-      DominatorTreeNode.getLabelAndShallowSize(nodeId, snapshot, breakdown);
+    const { label, shallowSize } = DominatorTreeNode.getLabelAndShallowSize(
+      nodeId,
+      snapshot,
+      breakdown
+    );
     const retainedSize = dominatorTree.getRetainedSize(nodeId);
-    const node = new DominatorTreeNode(nodeId, label, shallowSize, retainedSize);
+    const node = new DominatorTreeNode(
+      nodeId,
+      label,
+      shallowSize,
+      retainedSize
+    );
     const childNodeIds = dominatorTree.getImmediatelyDominated(nodeId);
 
     const newDepth = depth + 1;
@@ -237,7 +256,12 @@ DominatorTreeNode.partialTraversal = function(dominatorTree,
  *
  * @returns {DominatorTreeNode}
  */
-DominatorTreeNode.insert = function(nodeTree, path, newChildren, moreChildrenAvailable) {
+DominatorTreeNode.insert = function(
+  nodeTree,
+  path,
+  newChildren,
+  moreChildrenAvailable
+) {
   function insert(tree, i) {
     if (tree.nodeId !== path[i]) {
       return tree;
@@ -252,8 +276,8 @@ DominatorTreeNode.insert = function(nodeTree, path, newChildren, moreChildrenAva
 
     return tree.children
       ? immutableUpdate(tree, {
-        children: tree.children.map(c => insert(c, i + 1)),
-      })
+          children: tree.children.map(c => insert(c, i + 1)),
+        })
       : tree;
   }
 
@@ -306,11 +330,13 @@ DominatorTreeNode.getNodeByIdAlongPath = function(id, tree, path) {
  * @param {Array<DominatorTreeNode>} treeNodes
  * @param {Number} maxNumPaths
  */
-DominatorTreeNode.attachShortestPaths = function(snapshot,
-                                                  breakdown,
-                                                  start,
-                                                  treeNodes,
-                                                  maxNumPaths = DEFAULT_MAX_NUM_PATHS) {
+DominatorTreeNode.attachShortestPaths = function(
+  snapshot,
+  breakdown,
+  start,
+  treeNodes,
+  maxNumPaths = DEFAULT_MAX_NUM_PATHS
+) {
   const idToTreeNode = new Map();
   const targets = [];
   for (const node of treeNodes) {
@@ -319,15 +345,20 @@ DominatorTreeNode.attachShortestPaths = function(snapshot,
     targets.push(id);
   }
 
-  const shortestPaths = snapshot.computeShortestPaths(start,
-                                                      targets,
-                                                      maxNumPaths);
+  const shortestPaths = snapshot.computeShortestPaths(
+    start,
+    targets,
+    maxNumPaths
+  );
 
   for (const [target, paths] of shortestPaths) {
     const deduped = deduplicatePaths(target, paths);
     deduped.nodes = deduped.nodes.map(id => {
-      const { label } =
-        DominatorTreeNode.getLabelAndShallowSize(id, snapshot, breakdown);
+      const { label } = DominatorTreeNode.getLabelAndShallowSize(
+        id,
+        snapshot,
+        breakdown
+      );
       return { id, label };
     });
 

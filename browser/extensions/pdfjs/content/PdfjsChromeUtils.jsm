@@ -20,19 +20,30 @@ var EXPORTED_SYMBOLS = ["PdfjsChromeUtils"];
 const PREF_PREFIX = "pdfjs";
 const PDF_CONTENT_TYPE = "application/pdf";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PdfJsDefaultPreferences",
-  "resource://pdf.js/PdfJsDefaultPreferences.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PdfJsDefaultPreferences",
+  "resource://pdf.js/PdfJsDefaultPreferences.jsm"
+);
 
 var Svc = {};
-XPCOMUtils.defineLazyServiceGetter(Svc, "mime",
-                                   "@mozilla.org/mime;1",
-                                   "nsIMIMEService");
+XPCOMUtils.defineLazyServiceGetter(
+  Svc,
+  "mime",
+  "@mozilla.org/mime;1",
+  "nsIMIMEService"
+);
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "matchesCountLimit",
-  "accessibility.typeaheadfind.matchesCountLimit");
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "matchesCountLimit",
+  "accessibility.typeaheadfind.matchesCountLimit"
+);
 
 var PdfjsChromeUtils = {
   // For security purposes when running remote, we restrict preferences
@@ -78,8 +89,10 @@ var PdfjsChromeUtils = {
       this._ppmm.removeMessageListener("PDFJS:Parent:setBoolPref", this);
       this._ppmm.removeMessageListener("PDFJS:Parent:setCharPref", this);
       this._ppmm.removeMessageListener("PDFJS:Parent:setStringPref", this);
-      this._ppmm.removeMessageListener("PDFJS:Parent:isDefaultHandlerApp",
-                                       this);
+      this._ppmm.removeMessageListener(
+        "PDFJS:Parent:isDefaultHandlerApp",
+        this
+      );
 
       this._mmg.removeMessageListener("PDFJS:Parent:displayWarning", this);
 
@@ -178,12 +191,12 @@ var PdfjsChromeUtils = {
 
   _requestMatchesCount(data) {
     if (!data) {
-      return {current: 0, total: 0};
+      return { current: 0, total: 0 };
     }
     let result = {
       current: data.current,
       total: data.total,
-      limit: (typeof matchesCountLimit === "number" ? matchesCountLimit : 0),
+      limit: typeof matchesCountLimit === "number" ? matchesCountLimit : 0,
     };
     if (result.total > result.limit) {
       result.total = -1;
@@ -216,8 +229,9 @@ var PdfjsChromeUtils = {
 
     let browser = aEvent.currentTarget.browser;
     if (!this._browsers.has(browser)) {
-      throw new Error("FindEventManager was not bound " +
-                      "for the current browser.");
+      throw new Error(
+        "FindEventManager was not bound for the current browser."
+      );
     }
     // Only forward the events if the current browser is a registered browser.
     let mm = browser.messageManager;
@@ -236,8 +250,9 @@ var PdfjsChromeUtils = {
   _addEventListener(aMsg) {
     let browser = aMsg.target;
     if (this._browsers.has(browser)) {
-      throw new Error("FindEventManager was bound 2nd time " +
-                      "without unbinding it first.");
+      throw new Error(
+        "FindEventManager was bound 2nd time without unbinding it first."
+      );
     }
 
     // Since this jsm is global, we need to store all the browsers
@@ -291,10 +306,15 @@ var PdfjsChromeUtils = {
 
   _ensurePreferenceAllowed(aPrefName) {
     let unPrefixedName = aPrefName.split(PREF_PREFIX + ".");
-    if (unPrefixedName[0] !== "" ||
-        !this._allowedPrefNames.includes(unPrefixedName[1])) {
-      let msg = "\"" + aPrefName + "\" " +
-                "can't be accessed from content. See PdfjsChromeUtils.";
+    if (
+      unPrefixedName[0] !== "" ||
+      !this._allowedPrefNames.includes(unPrefixedName[1])
+    ) {
+      let msg =
+        '"' +
+        aPrefName +
+        '" ' +
+        "can't be accessed from content. See PdfjsChromeUtils.";
       throw new Error(msg);
     }
   },
@@ -331,8 +351,10 @@ var PdfjsChromeUtils = {
    */
   isDefaultHandlerApp() {
     var handlerInfo = Svc.mime.getFromTypeAndExtension(PDF_CONTENT_TYPE, "pdf");
-    return (!handlerInfo.alwaysAskBeforeHandling &&
-            handlerInfo.preferredAction === Ci.nsIHandlerInfo.handleInternally);
+    return (
+      !handlerInfo.alwaysAskBeforeHandling &&
+      handlerInfo.preferredAction === Ci.nsIHandlerInfo.handleInternally
+    );
   },
 
   /*
@@ -354,30 +376,35 @@ var PdfjsChromeUtils = {
       let mm = browser.messageManager;
       mm.sendAsyncMessage("PDFJS:Child:fallbackDownload", { download });
     }
-    let buttons = [{
-      label: data.label,
-      accessKey: data.accessKey,
-      callback() {
-        messageSent = true;
-        sendMessage(true);
+    let buttons = [
+      {
+        label: data.label,
+        accessKey: data.accessKey,
+        callback() {
+          messageSent = true;
+          sendMessage(true);
+        },
       },
-    }];
-    notificationBox.appendNotification(data.message, "pdfjs-fallback", null,
-                                       notificationBox.PRIORITY_INFO_LOW,
-                                       buttons,
-                                       function eventsCallback(eventType) {
-      // Currently there is only one event "removed" but if there are any other
-      // added in the future we still only care about removed at the moment.
-      if (eventType !== "removed") {
-        return;
+    ];
+    notificationBox.appendNotification(
+      data.message,
+      "pdfjs-fallback",
+      null,
+      notificationBox.PRIORITY_INFO_LOW,
+      buttons,
+      function eventsCallback(eventType) {
+        // Currently there is only one event "removed" but if there are any other
+        // added in the future we still only care about removed at the moment.
+        if (eventType !== "removed") {
+          return;
+        }
+        // Don't send a response again if we already responded when the button was
+        // clicked.
+        if (messageSent) {
+          return;
+        }
+        sendMessage(false);
       }
-      // Don't send a response again if we already responded when the button was
-      // clicked.
-      if (messageSent) {
-        return;
-      }
-      sendMessage(false);
-    });
+    );
   },
 };
-

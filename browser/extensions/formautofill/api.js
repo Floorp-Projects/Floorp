@@ -8,24 +8,38 @@
 
 const CACHED_STYLESHEETS = new WeakMap();
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "FormAutofill",
-                               "resource://formautofill/FormAutofill.jsm");
-ChromeUtils.defineModuleGetter(this, "formAutofillParent",
-                               "resource://formautofill/FormAutofillParent.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormAutofill",
+  "resource://formautofill/FormAutofill.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "formAutofillParent",
+  "resource://formautofill/FormAutofillParent.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "resProto",
-                                   "@mozilla.org/network/protocol;1?name=resource",
-                                   "nsISubstitutingProtocolHandler");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "resProto",
+  "@mozilla.org/network/protocol;1?name=resource",
+  "nsISubstitutingProtocolHandler"
+);
 
 const RESOURCE_HOST = "formautofill";
 
 function insertStyleSheet(domWindow, url) {
   let doc = domWindow.document;
   let styleSheetAttr = `href="${url}" type="text/css"`;
-  let styleSheet = doc.createProcessingInstruction("xml-stylesheet", styleSheetAttr);
+  let styleSheet = doc.createProcessingInstruction(
+    "xml-stylesheet",
+    styleSheetAttr
+  );
 
   doc.insertBefore(styleSheet, doc.documentElement);
 
@@ -44,21 +58,29 @@ function onMaybeOpenPopup(evt) {
   }
 
   insertStyleSheet(domWindow, "chrome://formautofill/content/formautofill.css");
-  insertStyleSheet(domWindow, "resource://formautofill/autocomplete-item-shared.css");
+  insertStyleSheet(
+    domWindow,
+    "resource://formautofill/autocomplete-item-shared.css"
+  );
   insertStyleSheet(domWindow, "resource://formautofill/autocomplete-item.css");
 }
 
 function isAvailable() {
-  let availablePref = Services.prefs.getCharPref("extensions.formautofill.available");
+  let availablePref = Services.prefs.getCharPref(
+    "extensions.formautofill.available"
+  );
   if (availablePref == "on") {
     return true;
   } else if (availablePref == "detect") {
     let locale = Services.locale.requestedLocale;
     let region = Services.prefs.getCharPref("browser.search.region", "");
-    let supportedCountries = Services.prefs.getCharPref("extensions.formautofill.supportedCountries")
-                                           .split(",");
-    if (!Services.prefs.getBoolPref("extensions.formautofill.supportRTL") &&
-        Services.locale.isAppLocaleRTL) {
+    let supportedCountries = Services.prefs
+      .getCharPref("extensions.formautofill.supportedCountries")
+      .split(",");
+    if (
+      !Services.prefs.getBoolPref("extensions.formautofill.supportRTL") &&
+      Services.locale.isAppLocaleRTL
+    ) {
       return false;
     }
     return locale == "en-US" && supportedCountries.includes(region);
@@ -74,9 +96,14 @@ this.formautofill = class extends ExtensionAPI {
     let uri = Services.io.newURI("chrome/res/", null, this.extension.rootURI);
     resProto.setSubstitution(RESOURCE_HOST, uri);
 
-    let aomStartup = Cc["@mozilla.org/addons/addon-manager-startup;1"]
-                                 .getService(Ci.amIAddonManagerStartup);
-    const manifestURI = Services.io.newURI("manifest.json", null, this.extension.rootURI);
+    let aomStartup = Cc[
+      "@mozilla.org/addons/addon-manager-startup;1"
+    ].getService(Ci.amIAddonManagerStartup);
+    const manifestURI = Services.io.newURI(
+      "manifest.json",
+      null,
+      this.extension.rootURI
+    );
     this.chromeHandle = aomStartup.registerChrome(manifestURI, [
       ["content", "formautofill", "chrome/content/"],
     ]);
@@ -85,8 +112,9 @@ this.formautofill = class extends ExtensionAPI {
     // chrome.manifest for handling localization since its what the
     // build system can handle for localized repacks.
     if (this.extension.rootURI instanceof Ci.nsIJARURI) {
-      this.autofillManifest = this.extension.rootURI.JARFile
-                                  .QueryInterface(Ci.nsIFileURL).file;
+      this.autofillManifest = this.extension.rootURI.JARFile.QueryInterface(
+        Ci.nsIFileURL
+      ).file;
     } else if (this.extension.rootURI instanceof Ci.nsIFileURL) {
       this.autofillManifest = this.extension.rootURI.file;
     }
@@ -94,7 +122,9 @@ this.formautofill = class extends ExtensionAPI {
     if (this.autofillManifest) {
       Components.manager.addBootstrappedManifestLocation(this.autofillManifest);
     } else {
-      Cu.reportError("Cannot find formautofill chrome.manifest for registring translated strings");
+      Cu.reportError(
+        "Cannot find formautofill chrome.manifest for registring translated strings"
+      );
     }
 
     if (!isAvailable()) {
@@ -102,7 +132,9 @@ this.formautofill = class extends ExtensionAPI {
       // reset the sync related prefs incase the feature was previously available
       // but isn't now.
       Services.prefs.clearUserPref("services.sync.engine.addresses.available");
-      Services.prefs.clearUserPref("services.sync.engine.creditcards.available");
+      Services.prefs.clearUserPref(
+        "services.sync.engine.creditcards.available"
+      );
       Services.telemetry.scalarSet("formautofill.availability", false);
       return;
     }
@@ -116,18 +148,33 @@ this.formautofill = class extends ExtensionAPI {
     // This pref determines whether the "addresses"/"creditcards" sync engine is
     // available (ie, whether it is shown in any UI etc) - it *does not* determine
     // whether the engine is actually enabled or not.
-    Services.prefs.setBoolPref("services.sync.engine.addresses.available", true);
+    Services.prefs.setBoolPref(
+      "services.sync.engine.addresses.available",
+      true
+    );
     if (FormAutofill.isAutofillCreditCardsAvailable) {
-      Services.prefs.setBoolPref("services.sync.engine.creditcards.available", true);
+      Services.prefs.setBoolPref(
+        "services.sync.engine.creditcards.available",
+        true
+      );
     } else {
-      Services.prefs.clearUserPref("services.sync.engine.creditcards.available");
+      Services.prefs.clearUserPref(
+        "services.sync.engine.creditcards.available"
+      );
     }
 
     // Listen for the autocomplete popup message to lazily append our stylesheet related to the popup.
-    Services.mm.addMessageListener("FormAutoComplete:MaybeOpenPopup", onMaybeOpenPopup);
+    Services.mm.addMessageListener(
+      "FormAutoComplete:MaybeOpenPopup",
+      onMaybeOpenPopup
+    );
 
     formAutofillParent.init().catch(Cu.reportError);
-    Services.mm.loadFrameScript("chrome://formautofill/content/FormAutofillFrameScript.js", true, true);
+    Services.mm.loadFrameScript(
+      "chrome://formautofill/content/FormAutofillFrameScript.js",
+      true,
+      true
+    );
   }
 
   onShutdown(isAppShutdown) {
@@ -141,10 +188,15 @@ this.formautofill = class extends ExtensionAPI {
     this.chromeHandle = null;
 
     if (this.autofillManifest) {
-      Components.manager.removeBootstrappedManifestLocation(this.autofillManifest);
+      Components.manager.removeBootstrappedManifestLocation(
+        this.autofillManifest
+      );
     }
 
-    Services.mm.removeMessageListener("FormAutoComplete:MaybeOpenPopup", onMaybeOpenPopup);
+    Services.mm.removeMessageListener(
+      "FormAutoComplete:MaybeOpenPopup",
+      onMaybeOpenPopup
+    );
 
     for (let win of Services.wm.getEnumerator("navigator:browser")) {
       let cachedStyleSheets = CACHED_STYLESHEETS.get(win);

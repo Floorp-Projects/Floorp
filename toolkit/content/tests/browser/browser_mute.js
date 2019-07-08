@@ -9,8 +9,11 @@ function test_on_browser(browser) {
 }
 
 add_task(async function() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: PAGE,
-  }, test_on_browser);
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: PAGE,
+    },
+    test_on_browser
+  );
 });

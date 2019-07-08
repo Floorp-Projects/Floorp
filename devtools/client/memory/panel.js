@@ -12,7 +12,10 @@ function MemoryPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
   this._toolbox = toolbox;
 
-  const { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
+  const { BrowserLoader } = Cu.import(
+    "resource://devtools/client/shared/browser-loader.js",
+    {}
+  );
   const browserRequire = BrowserLoader({
     baseURI: "resource://devtools/client/memory/",
     window: this.panelWin,

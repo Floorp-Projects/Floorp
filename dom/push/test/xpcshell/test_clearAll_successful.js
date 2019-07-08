@@ -3,14 +3,14 @@
 
 "use strict";
 
-const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
+const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
 
 var db;
 var unregisterDefers = {};
 var userAgentID = "4ce480ef-55b2-4f83-924c-dcd35ab978b4";
 
 function promiseUnregister(keyID, code) {
-  return new Promise(r => unregisterDefers[keyID] = r);
+  return new Promise(r => (unregisterDefers[keyID] = r));
 }
 
 function run_test() {
@@ -37,33 +37,39 @@ add_task(async function setup() {
   await putTestRecord(db, "privileged", "app://chrome/only", Infinity);
 
   let handshakeDone;
-  let handshakePromise = new Promise(r => handshakeDone = r);
+  let handshakePromise = new Promise(r => (handshakeDone = r));
   PushService.init({
     serverURI: "wss://push.example.org/",
     db,
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          this.serverSendMsg(JSON.stringify({
-            messageType: "hello",
-            uaid: userAgentID,
-            status: 200,
-            use_webpush: true,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "hello",
+              uaid: userAgentID,
+              status: 200,
+              use_webpush: true,
+            })
+          );
           handshakeDone();
         },
         onUnregister(request) {
           let resolve = unregisterDefers[request.channelID];
-          equal(typeof resolve, "function",
-            "Dropped unexpected channel ID " + request.channelID);
+          equal(
+            typeof resolve,
+            "function",
+            "Dropped unexpected channel ID " + request.channelID
+          );
           delete unregisterDefers[request.channelID];
-          equal(request.code, 200,
-            "Expected manual unregister reason");
-          this.serverSendMsg(JSON.stringify({
-            messageType: "unregister",
-            channelID: request.channelID,
-            status: 200,
-          }));
+          equal(request.code, 200, "Expected manual unregister reason");
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "unregister",
+              channelID: request.channelID,
+              status: 200,
+            })
+          );
           resolve();
         },
       });
@@ -81,18 +87,22 @@ add_task(async function test_sanitize() {
     promiseUnregister("active-1"),
     promiseUnregister("active-2"),
     promiseObserverNotification(
-      PushServiceComponent.subscriptionModifiedTopic, (subject, data) => {
+      PushServiceComponent.subscriptionModifiedTopic,
+      (subject, data) => {
         modifiedScopes.push(data);
         return modifiedScopes.length == 3;
-    }),
+      }
+    ),
 
     // Privileged should be recreated.
     promiseUnregister("privileged"),
     promiseObserverNotification(
-      PushServiceComponent.subscriptionChangeTopic, (subject, data) => {
+      PushServiceComponent.subscriptionChangeTopic,
+      (subject, data) => {
         changeScopes.push(data);
         return changeScopes.length == 1;
-    }),
+      }
+    ),
   ]);
 
   await PushService.clear({
@@ -101,14 +111,21 @@ add_task(async function test_sanitize() {
 
   await promiseCleared;
 
-  deepEqual(modifiedScopes.sort(compareAscending), [
-    "app://chrome/only",
-    "https://example.com/another-page",
-    "https://example.info/some-page",
-  ], "Should modify active subscription scopes");
+  deepEqual(
+    modifiedScopes.sort(compareAscending),
+    [
+      "app://chrome/only",
+      "https://example.com/another-page",
+      "https://example.info/some-page",
+    ],
+    "Should modify active subscription scopes"
+  );
 
-  deepEqual(changeScopes, ["app://chrome/only"],
-    "Should fire change notification for privileged scope");
+  deepEqual(
+    changeScopes,
+    ["app://chrome/only"],
+    "Should fire change notification for privileged scope"
+  );
 
   let remainingIDs = await getAllKeyIDs(db);
   deepEqual(remainingIDs, [], "Should drop all subscriptions");

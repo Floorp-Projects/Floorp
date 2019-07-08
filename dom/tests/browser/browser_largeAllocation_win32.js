@@ -1,5 +1,8 @@
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
-Services.scriptloader.loadSubScript(testDir + "/helper_largeAllocation.js", this);
+Services.scriptloader.loadSubScript(
+  testDir + "/helper_largeAllocation.js",
+  this
+);
 
 add_task(async function() {
   info("Test 1 - On win32 - no forceEnable pref");
@@ -15,4 +18,3 @@ add_task(async function() {
   /* global largeAllocSuccessTests */
   await largeAllocSuccessTests();
 });
-

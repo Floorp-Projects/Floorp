@@ -15,8 +15,11 @@ DevToolsUtils.defineLazyGetter(this, "IOUtil", () => {
 });
 
 DevToolsUtils.defineLazyGetter(this, "ScriptableInputStream", () => {
-  return CC("@mozilla.org/scriptableinputstream;1",
-            "nsIScriptableInputStream", "init");
+  return CC(
+    "@mozilla.org/scriptableinputstream;1",
+    "nsIScriptableInputStream",
+    "init"
+  );
 });
 
 const BUFFER_SIZE = 0x8000;
@@ -68,8 +71,9 @@ function StreamCopier(input, output, length) {
   if (IOUtil.outputStreamIsBuffered(output)) {
     this.output = output;
   } else {
-    this.output = Cc["@mozilla.org/network/buffered-output-stream;1"]
-                  .createInstance(Ci.nsIBufferedOutputStream);
+    this.output = Cc[
+      "@mozilla.org/network/buffered-output-stream;1"
+    ].createInstance(Ci.nsIBufferedOutputStream);
     this.output.init(output, BUFFER_SIZE);
   }
   this._length = length;
@@ -101,7 +105,6 @@ function StreamCopier(input, output, length) {
 StreamCopier._nextId = 0;
 
 StreamCopier.prototype = {
-
   copy: function() {
     // Dispatch to the next tick so that it's possible to attach a progress
     // event listener, even for extremely fast copies (like when testing).
@@ -134,8 +137,7 @@ StreamCopier.prototype = {
     }
 
     this._amountLeft -= bytesCopied;
-    this._debug("Copied: " + bytesCopied +
-                ", Left: " + this._amountLeft);
+    this._debug("Copied: " + bytesCopied + ", Left: " + this._amountLeft);
     this._emitProgress();
 
     if (this._amountLeft === 0) {
@@ -159,8 +161,10 @@ StreamCopier.prototype = {
     try {
       this.output.flush();
     } catch (e) {
-      if (e.result == Cr.NS_BASE_STREAM_WOULD_BLOCK ||
-          e.result == Cr.NS_ERROR_FAILURE) {
+      if (
+        e.result == Cr.NS_BASE_STREAM_WOULD_BLOCK ||
+        e.result == Cr.NS_ERROR_FAILURE
+      ) {
         this._debug("Flush would block, will retry");
         this._streamReadyCallback = this._flush;
         this._debug("Waiting for output stream");
@@ -195,7 +199,6 @@ StreamCopier.prototype = {
     // understand when several copiers are running simultaneously
     dumpv("Copier: " + this._id + " " + msg);
   },
-
 };
 
 /**
@@ -217,8 +220,9 @@ StreamCopier.prototype = {
  *         end with it.
  */
 function delimitedRead(stream, delimiter, count) {
-  dumpv("Starting delimited read for " + delimiter + " up to " +
-        count + " bytes");
+  dumpv(
+    "Starting delimited read for " + delimiter + " up to " + count + " bytes"
+  );
 
   let scriptableStream;
   if (stream instanceof Ci.nsIScriptableInputStream) {

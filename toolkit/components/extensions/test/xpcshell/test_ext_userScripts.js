@@ -2,9 +2,7 @@
 
 const PROCESS_COUNT_PREF = "dom.ipc.processCount";
 
-const {
-  createAppInfo,
-} = AddonTestUtils;
+const { createAppInfo } = AddonTestUtils;
 
 AddonTestUtils.init(this);
 
@@ -25,13 +23,19 @@ add_task(async function setup_test_environment() {
   // Grant the optional permissions requested.
   function permissionObserver(subject, topic, data) {
     if (topic == "webextension-optional-permission-prompt") {
-      let {resolve} = subject.wrappedJSObject;
+      let { resolve } = subject.wrappedJSObject;
       resolve(true);
     }
   }
-  Services.obs.addObserver(permissionObserver, "webextension-optional-permission-prompt");
+  Services.obs.addObserver(
+    permissionObserver,
+    "webextension-optional-permission-prompt"
+  );
   registerCleanupFunction(() => {
-    Services.obs.removeObserver(permissionObserver, "webextension-optional-permission-prompt");
+    Services.obs.removeObserver(
+      permissionObserver,
+      "webextension-optional-permission-prompt"
+    );
   });
 });
 
@@ -39,14 +43,20 @@ add_task(async function setup_test_environment() {
 // property.
 add_task(async function test_userScripts_manifest_property_required() {
   function background() {
-    browser.test.assertEq(undefined, browser.userScripts,
-                          "userScripts API namespace should be undefined in the extension page");
+    browser.test.assertEq(
+      undefined,
+      browser.userScripts,
+      "userScripts API namespace should be undefined in the extension page"
+    );
     browser.test.sendMessage("background-page:done");
   }
 
   async function contentScript() {
-    browser.test.assertEq(undefined, browser.userScripts,
-                          "userScripts API namespace should be undefined in the content script");
+    browser.test.assertEq(
+      undefined,
+      browser.userScripts,
+      "userScripts API namespace should be undefined in the content script"
+    );
     browser.test.sendMessage("content-script:done");
   }
 
@@ -56,7 +66,7 @@ add_task(async function test_userScripts_manifest_property_required() {
       permissions: ["http://*/*/file_sample.html"],
       content_scripts: [
         {
-          matches:  ["http://*/*/file_sample.html"],
+          matches: ["http://*/*/file_sample.html"],
           js: ["content_script.js"],
           run_at: "document_start",
         },
@@ -85,7 +95,7 @@ add_task(async function test_userScripts_matches_denied() {
   async function background() {
     async function registerUserScriptWithMatches(matches) {
       const scripts = await browser.userScripts.register({
-        js: [{code: ""}],
+        js: [{ code: "" }],
         matches,
       });
       await scripts.unregister();
@@ -106,16 +116,21 @@ add_task(async function test_userScripts_matches_denied() {
           await browser.test.assertRejects(
             registerUserScriptWithMatches([testMatch]),
             /Permission denied to register a user script for/,
-            "Got the expected rejection when the extension permission does not subsume the userScript matches");
+            "Got the expected rejection when the extension permission does not subsume the userScript matches"
+          );
         }
       } else if (msg === "grant-all-urls") {
-        await browser.permissions.request({origins: ["<all_urls>"]});
+        await browser.permissions.request({ origins: ["<all_urls>"] });
       } else if (msg === "test-allowed-matches") {
         for (let testMatch of testMatches) {
           try {
             await registerUserScriptWithMatches([testMatch]);
           } catch (err) {
-            browser.test.fail(`Unexpected rejection ${err} on matching ${JSON.stringify(testMatch)}`);
+            browser.test.fail(
+              `Unexpected rejection ${err} on matching ${JSON.stringify(
+                testMatch
+              )}`
+            );
           }
         }
       } else {
@@ -167,23 +182,28 @@ add_task(async function test_userScripts_no_webext_apis() {
   async function background() {
     const matches = ["http://localhost/*/file_sample.html*"];
 
-    const sharedCode = {code: "console.log(\"js code shared by multiple userScripts\");"};
+    const sharedCode = {
+      code: 'console.log("js code shared by multiple userScripts");',
+    };
 
     const userScriptOptions = {
-      js: [sharedCode, {
-        code: `
+      js: [
+        sharedCode,
+        {
+          code: `
           window.addEventListener("load", () => {
             const webextAPINamespaces = this.browser ? Object.keys(this.browser) : undefined;
             document.body.innerHTML = "userScript loaded - " + JSON.stringify(webextAPINamespaces);
           }, {once: true});
         `,
-      }],
+        },
+      ],
       runAt: "document_start",
       matches,
       scriptMetadata: {
         name: "test-user-script",
         arrayProperty: ["el1"],
-        objectProperty: {nestedProp: "nestedValue"},
+        objectProperty: { nestedProp: "nestedValue" },
         nullProperty: null,
       },
     };
@@ -205,28 +225,34 @@ add_task(async function test_userScripts_no_webext_apis() {
       await script.unregister();
       await browser.userScripts.register({
         ...userScriptOptions,
-        scriptMetadata: {name: "test-new-script"},
-        js: [sharedCode, {
-          code: `
+        scriptMetadata: { name: "test-new-script" },
+        js: [
+          sharedCode,
+          {
+            code: `
           window.addEventListener("load", () => {
             const webextAPINamespaces = this.browser ? Object.keys(this.browser) : undefined;
             document.body.innerHTML = "new userScript loaded - " + JSON.stringify(webextAPINamespaces);
           }, {once: true});
         `,
-        }],
+          },
+        ],
       });
 
       browser.test.sendMessage("script-registered");
     });
 
     const scriptToRemove = await browser.userScripts.register({
-      js: [sharedCode, {
-        code: `
+      js: [
+        sharedCode,
+        {
+          code: `
           window.addEventListener("load", () => {
             document.body.innerHTML = "unexpected unregistered userScript loaded";
           }, {once: true});
         `,
-      }],
+        },
+      ],
       runAt: "document_start",
       matches,
       scriptMetadata: {
@@ -234,8 +260,10 @@ add_task(async function test_userScripts_no_webext_apis() {
       },
     });
 
-    browser.test.assertTrue("unregister" in script,
-                            "Got an unregister method on the userScript API object");
+    browser.test.assertTrue(
+      "unregister" in script,
+      "Got an unregister method on the userScript API object"
+    );
 
     // Remove the last registered user script.
     await scriptToRemove.unregister();
@@ -245,9 +273,7 @@ add_task(async function test_userScripts_no_webext_apis() {
 
   let extensionData = {
     manifest: {
-      permissions: [
-        "http://localhost/*/file_sample.html",
-      ],
+      permissions: ["http://localhost/*/file_sample.html"],
       user_scripts: {},
     },
     background,
@@ -261,7 +287,9 @@ add_task(async function test_userScripts_no_webext_apis() {
 
   let url = `${BASE_URL}/file_sample.html?testpage=1`;
   let contentPage = await ExtensionTestUtils.loadContentPage(
-    url, ExtensionTestUtils.remoteContentScripts ? {remote: true} : undefined);
+    url,
+    ExtensionTestUtils.remoteContentScripts ? { remote: true } : undefined
+  );
   let result = await contentPage.spawn(undefined, async () => {
     return {
       textContent: this.content.document.body.textContent,
@@ -269,16 +297,22 @@ add_task(async function test_userScripts_no_webext_apis() {
       readyState: this.content.document.readyState,
     };
   });
-  Assert.deepEqual(result, {
-    textContent: "userScript loaded - undefined",
-    url,
-    readyState: "complete",
-  }, "The userScript executed on the expected url and no access to the WebExtensions APIs");
+  Assert.deepEqual(
+    result,
+    {
+      textContent: "userScript loaded - undefined",
+      url,
+      readyState: "complete",
+    },
+    "The userScript executed on the expected url and no access to the WebExtensions APIs"
+  );
 
   // If the tests is running with "remote content process" mode, test that the userScript
   // are being correctly registered in newly created processes (received as part of the sharedData).
   if (ExtensionTestUtils.remoteContentScripts) {
-    info("Test content script are correctly created on a newly created process");
+    info(
+      "Test content script are correctly created on a newly created process"
+    );
 
     await extension.sendMessage("register-new-script");
     await extension.awaitMessage("script-registered");
@@ -288,7 +322,9 @@ add_task(async function test_userScripts_no_webext_apis() {
     Services.prefs.setIntPref(PROCESS_COUNT_PREF, 2);
 
     const url2 = `${BASE_URL}/file_sample.html?testpage=2`;
-    let contentPage2 = await ExtensionTestUtils.loadContentPage(url2, {remote: true});
+    let contentPage2 = await ExtensionTestUtils.loadContentPage(url2, {
+      remote: true,
+    });
     let result2 = await contentPage2.spawn(undefined, async () => {
       return {
         textContent: this.content.document.body.textContent,
@@ -296,11 +332,15 @@ add_task(async function test_userScripts_no_webext_apis() {
         readyState: this.content.document.readyState,
       };
     });
-    Assert.deepEqual(result2, {
-      textContent: "new userScript loaded - undefined",
-      url: url2,
-      readyState: "complete",
-    }, "The userScript executed on the expected url and no access to the WebExtensions APIs");
+    Assert.deepEqual(
+      result2,
+      {
+        textContent: "new userScript loaded - undefined",
+        url: url2,
+        readyState: "complete",
+      },
+      "The userScript executed on the expected url and no access to the WebExtensions APIs"
+    );
 
     await contentPage2.close();
   }
@@ -333,13 +373,13 @@ add_task(async function test_cached_userScript_on_document_start() {
     }
 
     await browser.userScripts.register({
-      js: [{
-        code: `(${userScript})();`,
-      }],
-      runAt: "document_start",
-      matches: [
-        "http://localhost/*/file_sample.html",
+      js: [
+        {
+          code: `(${userScript})();`,
+        },
       ],
+      runAt: "document_start",
+      matches: ["http://localhost/*/file_sample.html"],
     });
 
     browser.test.sendMessage("user-script-registered");
@@ -347,9 +387,7 @@ add_task(async function test_cached_userScript_on_document_start() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: [
-        "http://localhost/*/file_sample.html",
-      ],
+      permissions: ["http://localhost/*/file_sample.html"],
       user_scripts: {
         api_script: "api-script.js",
         // The following is an unexpected manifest property, that we expect to be ignored and
@@ -370,20 +408,28 @@ add_task(async function test_cached_userScript_on_document_start() {
   let contentPage = await ExtensionTestUtils.loadContentPage(url);
 
   let msg = await extension.awaitMessage("user-script-loaded");
-  Assert.deepEqual(msg, {
-    url,
-    documentReadyState: "loading",
-  }, "Got the expected url and document.readyState from a non cached user script");
+  Assert.deepEqual(
+    msg,
+    {
+      url,
+      documentReadyState: "loading",
+    },
+    "Got the expected url and document.readyState from a non cached user script"
+  );
 
   // Reload the page and check that the cached content script is still able to
   // run on document_start.
   await contentPage.loadURL(url);
 
   let msgFromCached = await extension.awaitMessage("user-script-loaded");
-  Assert.deepEqual(msgFromCached, {
-    url,
-    documentReadyState: "loading",
-  }, "Got the expected url and document.readyState from a cached user script");
+  Assert.deepEqual(
+    msgFromCached,
+    {
+      url,
+      documentReadyState: "loading",
+    },
+    "Got the expected url and document.readyState from a cached user script"
+  );
 
   await contentPage.close();
   await extension.unload();
@@ -395,7 +441,10 @@ add_task(async function test_userScripts_pref_disabled() {
       let promise = (async () => {
         await browser.userScripts.register({
           js: [
-            {code: "throw new Error('This userScripts should not be registered')"},
+            {
+              code:
+                "throw new Error('This userScripts should not be registered')",
+            },
           ],
           runAt: "document_start",
           matches: ["<all_urls>"],
@@ -405,7 +454,8 @@ add_task(async function test_userScripts_pref_disabled() {
       await browser.test.assertRejects(
         promise,
         /userScripts APIs are currently experimental/,
-        "Got the expected error from userScripts.register when the userScripts API is disabled");
+        "Got the expected error from userScripts.register when the userScripts API is disabled"
+      );
 
       browser.test.sendMessage("background-page:done");
     }
@@ -417,7 +467,8 @@ add_task(async function test_userScripts_pref_disabled() {
       await browser.test.assertRejects(
         promise,
         /userScripts APIs are currently experimental/,
-        "Got the expected error from userScripts.onBeforeScript when the userScripts API is disabled");
+        "Got the expected error from userScripts.onBeforeScript when the userScripts API is disabled"
+      );
 
       browser.test.sendMessage("content-script:done");
     }
@@ -426,10 +477,10 @@ add_task(async function test_userScripts_pref_disabled() {
       background,
       manifest: {
         permissions: ["http://*/*/file_sample.html"],
-        user_scripts: {api_script: ""},
+        user_scripts: { api_script: "" },
         content_scripts: [
           {
-            matches:  ["http://*/*/file_sample.html"],
+            matches: ["http://*/*/file_sample.html"],
             js: ["content_script.js"],
             run_at: "document_start",
           },
@@ -453,8 +504,10 @@ add_task(async function test_userScripts_pref_disabled() {
     await contentPage.close();
   }
 
-  await runWithPrefs([["extensions.webextensions.userScripts.enabled", false]],
-                     run_userScript_on_pref_disabled_test);
+  await runWithPrefs(
+    [["extensions.webextensions.userScripts.enabled", false]],
+    run_userScript_on_pref_disabled_test
+  );
 });
 
 // This test verify that userScripts.onBeforeScript API Event is not available without
@@ -473,8 +526,11 @@ add_task(async function test_user_script_api_script_required() {
     },
     files: {
       "content_script.js": function() {
-        browser.test.assertEq(undefined, browser.userScripts && browser.userScripts.onBeforeScript,
-                              "Got an undefined onBeforeScript property as expected");
+        browser.test.assertEq(
+          undefined,
+          browser.userScripts && browser.userScripts.onBeforeScript,
+          "Got an undefined onBeforeScript property as expected"
+        );
         browser.test.sendMessage("no-onBeforeScript:done");
       },
     },
@@ -511,14 +567,14 @@ add_task(async function test_scriptMetaData() {
 
       // Objects
       ["some array with value"],
-      {"some object": "with value"},
+      { "some object": "with value" },
     ];
   }
 
   async function background(pageUrl) {
     for (let scriptMetadata of getTestCases(true)) {
       await browser.userScripts.register({
-        js: [{file: "userscript.js"}],
+        js: [{ file: "userscript.js" }],
         runAt: "document_end",
         allFrames: true,
         matches: ["http://localhost/*/file_sample.html"],
@@ -548,8 +604,11 @@ add_task(async function test_scriptMetaData() {
             metadata = JSON.stringify(script.metadata);
           }
 
-          browser.test.assertEq(expectation, metadata,
-                                `Expected metadata at call ${i}`);
+          browser.test.assertEq(
+            expectation,
+            metadata,
+            `Expected metadata at call ${i}`
+          );
           if (++i === testCases.length) {
             browser.test.sendMessage("apiscript:done");
           }

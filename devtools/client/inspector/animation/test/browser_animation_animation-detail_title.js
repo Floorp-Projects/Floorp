@@ -22,17 +22,23 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
-  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
+  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${t.targetClass}`));
   const { animationInspector, panel } = await openAnimationInspector();
 
   info("Checking title in each header of animation detail");
 
   for (const { targetClass, expectedTitle } of TEST_DATA) {
-    info(`Checking title at ${ targetClass }`);
-    await clickOnAnimationByTargetSelector(animationInspector,
-                                           panel, `.${ targetClass }`);
+    info(`Checking title at ${targetClass}`);
+    await clickOnAnimationByTargetSelector(
+      animationInspector,
+      panel,
+      `.${targetClass}`
+    );
     const titleEl = panel.querySelector(".animation-detail-title");
-    is(titleEl.textContent, expectedTitle,
-      `Title of "${ targetClass }" should be "${ expectedTitle }"`);
+    is(
+      titleEl.textContent,
+      expectedTitle,
+      `Title of "${targetClass}" should be "${expectedTitle}"`
+    );
   }
 });

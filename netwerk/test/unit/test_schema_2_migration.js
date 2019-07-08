@@ -43,16 +43,36 @@ function* do_run_test() {
   // Populate it, with:
   // 1) Unexpired, unique cookies.
   for (let i = 0; i < 20; ++i) {
-    let cookie = new Cookie("oh" + i, "hai", "foo.com", "/",
-                            futureExpiry, now, now + i, false, false, false);
+    let cookie = new Cookie(
+      "oh" + i,
+      "hai",
+      "foo.com",
+      "/",
+      futureExpiry,
+      now,
+      now + i,
+      false,
+      false,
+      false
+    );
 
     schema2db.insertCookie(cookie);
   }
 
   // 2) Expired, unique cookies.
   for (let i = 20; i < 40; ++i) {
-    let cookie = new Cookie("oh" + i, "hai", "bar.com", "/",
-                            pastExpiry, now, now + i, false, false, false);
+    let cookie = new Cookie(
+      "oh" + i,
+      "hai",
+      "bar.com",
+      "/",
+      pastExpiry,
+      now,
+      now + i,
+      false,
+      false,
+      false
+    );
 
     schema2db.insertCookie(cookie);
   }
@@ -60,26 +80,66 @@ function* do_run_test() {
   // 3) Many copies of the same cookie, some of which have expired and
   // some of which have not.
   for (let i = 40; i < 45; ++i) {
-    let cookie = new Cookie("oh", "hai", "baz.com", "/",
-                            futureExpiry + i, now, now + i, false, false, false);
+    let cookie = new Cookie(
+      "oh",
+      "hai",
+      "baz.com",
+      "/",
+      futureExpiry + i,
+      now,
+      now + i,
+      false,
+      false,
+      false
+    );
 
     schema2db.insertCookie(cookie);
   }
   for (let i = 45; i < 50; ++i) {
-    let cookie = new Cookie("oh", "hai", "baz.com", "/",
-                            pastExpiry - i, now, now + i, false, false, false);
+    let cookie = new Cookie(
+      "oh",
+      "hai",
+      "baz.com",
+      "/",
+      pastExpiry - i,
+      now,
+      now + i,
+      false,
+      false,
+      false
+    );
 
     schema2db.insertCookie(cookie);
   }
   for (let i = 50; i < 55; ++i) {
-    let cookie = new Cookie("oh", "hai", "baz.com", "/",
-                            futureExpiry - i, now, now + i, false, false, false);
+    let cookie = new Cookie(
+      "oh",
+      "hai",
+      "baz.com",
+      "/",
+      futureExpiry - i,
+      now,
+      now + i,
+      false,
+      false,
+      false
+    );
 
     schema2db.insertCookie(cookie);
   }
   for (let i = 55; i < 60; ++i) {
-    let cookie = new Cookie("oh", "hai", "baz.com", "/",
-                            pastExpiry + i, now, now + i, false, false, false);
+    let cookie = new Cookie(
+      "oh",
+      "hai",
+      "baz.com",
+      "/",
+      pastExpiry + i,
+      now,
+      now + i,
+      false,
+      false,
+      false
+    );
 
     schema2db.insertCookie(cookie);
   }
@@ -113,14 +173,34 @@ function* do_run_test() {
 
   // Populate it with more cookies.
   for (let i = 60; i < 80; ++i) {
-    let cookie = new Cookie("oh" + i, "hai", "foo.com", "/",
-                            futureExpiry, now, now + i, false, false, false);
+    let cookie = new Cookie(
+      "oh" + i,
+      "hai",
+      "foo.com",
+      "/",
+      futureExpiry,
+      now,
+      now + i,
+      false,
+      false,
+      false
+    );
 
     schema2db.insertCookie(cookie);
   }
   for (let i = 80; i < 100; ++i) {
-    let cookie = new Cookie("oh" + i, "hai", "cat.com", "/",
-                            futureExpiry, now, now + i, false, false, false);
+    let cookie = new Cookie(
+      "oh" + i,
+      "hai",
+      "cat.com",
+      "/",
+      futureExpiry,
+      now,
+      now + i,
+      false,
+      false,
+      false
+    );
 
     schema2db.insertCookie(cookie);
   }
@@ -128,8 +208,18 @@ function* do_run_test() {
   // Attempt to add a cookie with the same (name, host, path) values as another
   // cookie. This should succeed since we have a REPLACE clause for conflict on
   // the unique index.
-  cookie = new Cookie("oh", "hai", "baz.com", "/",
-                          futureExpiry, now, now + 100, false, false, false);
+  cookie = new Cookie(
+    "oh",
+    "hai",
+    "baz.com",
+    "/",
+    futureExpiry,
+    now,
+    now + 100,
+    false,
+    false,
+    false
+  );
 
   schema2db.insertCookie(cookie);
 
@@ -217,4 +307,3 @@ function* do_run_test() {
 
   finish_test();
 }
-

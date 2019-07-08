@@ -4,11 +4,16 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-const Draggable = createFactory(require("devtools/client/shared/components/splitter/Draggable"));
+const Draggable = createFactory(
+  require("devtools/client/shared/components/splitter/Draggable")
+);
 
 /**
  * This component represents a Splitter. The splitter supports vertical
@@ -22,27 +27,15 @@ class SplitBox extends Component {
       // Initial size of controlled panel.
       initialSize: PropTypes.string,
       // Initial width of controlled panel.
-      initialWidth: PropTypes.oneOfType([
-        PropTypes.number,
-        PropTypes.string,
-      ]),
+      initialWidth: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       // Initial height of controlled panel.
-      initialHeight: PropTypes.oneOfType([
-        PropTypes.number,
-        PropTypes.string,
-      ]),
+      initialHeight: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       // Left/top panel
       startPanel: PropTypes.any,
       // Min panel size.
-      minSize: PropTypes.oneOfType([
-        PropTypes.number,
-        PropTypes.string,
-      ]),
+      minSize: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       // Max panel size.
-      maxSize: PropTypes.oneOfType([
-        PropTypes.number,
-        PropTypes.string,
-      ]),
+      maxSize: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       // Right/bottom panel
       endPanel: PropTypes.any,
       // True if the right/bottom panel should be controlled.
@@ -93,11 +86,7 @@ class SplitBox extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const {
-      endPanelControl,
-      splitterSize,
-      vert,
-    } = nextProps;
+    const { endPanelControl, splitterSize, vert } = nextProps;
 
     if (endPanelControl != this.props.endPanelControl) {
       this.setState({ endPanelControl });
@@ -113,7 +102,8 @@ class SplitBox extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    return nextState.width != this.state.width ||
+    return (
+      nextState.width != this.state.width ||
       nextState.endPanelControl != this.props.endPanelControl ||
       nextState.height != this.state.height ||
       nextState.vert != this.state.vert ||
@@ -121,12 +111,16 @@ class SplitBox extends Component {
       nextProps.startPanel != this.props.startPanel ||
       nextProps.endPanel != this.props.endPanel ||
       nextProps.minSize != this.props.minSize ||
-      nextProps.maxSize != this.props.maxSize;
+      nextProps.maxSize != this.props.maxSize
+    );
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.props.onControlledPanelResized && (prevState.width !== this.state.width ||
-                                                prevState.height !== this.state.height)) {
+    if (
+      this.props.onControlledPanelResized &&
+      (prevState.width !== this.state.width ||
+        prevState.height !== this.state.height)
+    ) {
       this.props.onControlledPanelResized(this.state.width, this.state.height);
     }
   }
@@ -141,7 +135,9 @@ class SplitBox extends Component {
   onStartMove() {
     const doc = this.splitBox.ownerDocument;
     const defaultCursor = doc.documentElement.style.cursor;
-    doc.documentElement.style.cursor = (this.state.vert ? "ew-resize" : "ns-resize");
+    doc.documentElement.style.cursor = this.state.vert
+      ? "ew-resize"
+      : "ns-resize";
 
     this.splitBox.classList.add("dragging");
 
@@ -179,17 +175,17 @@ class SplitBox extends Component {
         endPanelControl = !endPanelControl;
       }
 
-      size = endPanelControl ?
-        (nodeBounds.left + nodeBounds.width) - x :
-        x - nodeBounds.left;
+      size = endPanelControl
+        ? nodeBounds.left + nodeBounds.width - x
+        : x - nodeBounds.left;
 
       this.setState({
         width: size,
       });
     } else {
-      size = endPanelControl ?
-        (nodeBounds.top + nodeBounds.height) - y :
-        y - nodeBounds.top;
+      size = endPanelControl
+        ? nodeBounds.top + nodeBounds.height - y
+        : y - nodeBounds.top;
 
       this.setState({
         height: size,
@@ -204,13 +200,17 @@ class SplitBox extends Component {
     const { endPanelControl, splitterSize, vert } = this.state;
     const { startPanel, endPanel, minSize, maxSize } = this.props;
 
-    const style = Object.assign({
-      // Set the size of the controlled panel (height or width depending on the
-      // current state). This can be used to help with styling of dependent
-      // panels.
-      "--split-box-controlled-panel-size":
-        `${vert ? this.state.width : this.state.height}`,
-    }, this.props.style);
+    const style = Object.assign(
+      {
+        // Set the size of the controlled panel (height or width depending on the
+        // current state). This can be used to help with styling of dependent
+        // panels.
+        "--split-box-controlled-panel-size": `${
+          vert ? this.state.width : this.state.height
+        }`,
+      },
+      this.props.style
+    );
 
     // Calculate class names list.
     let classNames = ["split-box"];
@@ -252,43 +252,49 @@ class SplitBox extends Component {
       flex: "0 0 " + splitterSize + "px",
     };
 
-    return (
-      dom.div(
-        {
-          className: classNames.join(" "),
-          ref: div => {
-            this.splitBox = div;
-          },
-          style },
-        startPanel ?
-          dom.div({
-            className: endPanelControl ? "uncontrolled" : "controlled",
-            style: leftPanelStyle,
-            role: "presentation",
-            ref: div => {
-              this.startPanelContainer = div;
-            }},
+    return dom.div(
+      {
+        className: classNames.join(" "),
+        ref: div => {
+          this.splitBox = div;
+        },
+        style,
+      },
+      startPanel
+        ? dom.div(
+            {
+              className: endPanelControl ? "uncontrolled" : "controlled",
+              style: leftPanelStyle,
+              role: "presentation",
+              ref: div => {
+                this.startPanelContainer = div;
+              },
+            },
             startPanel
-          ) : null,
-        splitterSize > 0 ?
-          Draggable({
+          )
+        : null,
+      splitterSize > 0
+        ? Draggable({
             className: "splitter",
             style: splitterStyle,
             onStart: this.onStartMove,
             onStop: this.onStopMove,
             onMove: this.onMove,
-          }) : null,
-        endPanel ?
-          dom.div({
-            className: endPanelControl ? "controlled" : "uncontrolled",
-            style: rightPanelStyle,
-            role: "presentation",
-            ref: div => {
-              this.endPanelContainer = div;
-            }},
+          })
+        : null,
+      endPanel
+        ? dom.div(
+            {
+              className: endPanelControl ? "controlled" : "uncontrolled",
+              style: rightPanelStyle,
+              role: "presentation",
+              ref: div => {
+                this.endPanelContainer = div;
+              },
+            },
             endPanel
-          ) : null
-      )
+          )
+        : null
     );
   }
   /* eslint-enable complexity */

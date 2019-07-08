@@ -1,8 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {PasswordEngine} = ChromeUtils.import("resource://services-sync/engines/passwords.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { PasswordEngine } = ChromeUtils.import(
+  "resource://services-sync/engines/passwords.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 let engine;
 let store;
@@ -11,7 +13,7 @@ let tracker;
 add_task(async function setup() {
   await Service.engineManager.register(PasswordEngine);
   engine = Service.engineManager.get("passwords");
-  store  = engine._store;
+  store = engine._store;
   tracker = engine._tracker;
 
   // Don't do asynchronous writes.
@@ -27,13 +29,15 @@ add_task(async function test_tracking() {
 
   async function createPassword() {
     _("RECORD NUM: " + recordNum);
-    let record = {id: "GUID" + recordNum,
-                  hostname: "http://foo.bar.com",
-                  formSubmitURL: "http://foo.bar.com",
-                  username: "john" + recordNum,
-                  password: "smith",
-                  usernameField: "username",
-                  passwordField: "password"};
+    let record = {
+      id: "GUID" + recordNum,
+      hostname: "http://foo.bar.com",
+      formSubmitURL: "http://foo.bar.com",
+      username: "john" + recordNum,
+      password: "smith",
+      usernameField: "username",
+      passwordField: "password",
+    };
     recordNum++;
     let login = store._nsLoginInfoFromRecord(record);
     Services.logins.addLogin(login);
@@ -41,7 +45,9 @@ add_task(async function test_tracking() {
   }
 
   try {
-    _("Create a password record. Won't show because we haven't started tracking yet");
+    _(
+      "Create a password record. Won't show because we haven't started tracking yet"
+    );
     await createPassword();
     changes = await tracker.getChangedIDs();
     do_check_empty(changes);

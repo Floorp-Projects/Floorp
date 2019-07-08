@@ -6,15 +6,23 @@
 
 const EXPORTED_SYMBOLS = ["SecurityInfo"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const wpl = Ci.nsIWebProgressListener;
-XPCOMUtils.defineLazyServiceGetter(this, "NSSErrorsService",
-                                   "@mozilla.org/nss_errors_service;1",
-                                   "nsINSSErrorsService");
-XPCOMUtils.defineLazyServiceGetter(this, "sss",
-                                   "@mozilla.org/ssservice;1",
-                                   "nsISiteSecurityService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "NSSErrorsService",
+  "@mozilla.org/nss_errors_service;1",
+  "nsINSSErrorsService"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "sss",
+  "@mozilla.org/ssservice;1",
+  "nsISiteSecurityService"
+);
 
 // NOTE: SecurityInfo is largely reworked from the devtools NetworkHelper with changes
 // to better support the WebRequest api.  The objects returned are formatted specifically
@@ -101,7 +109,9 @@ const SecurityInfo = {
       info.errorMessage = securityInfo.errorMessage;
       if (options.certificateChain && securityInfo.failedCertChain) {
         info.certificates = this.getCertificateChain(
-          securityInfo.failedCertChain, options);
+          securityInfo.failedCertChain,
+          options
+        );
       }
       return info;
     }
@@ -151,15 +161,23 @@ const SecurityInfo = {
     info.isUntrusted = securityInfo.isUntrusted;
 
     info.certificateTransparencyStatus = this.getTransparencyStatus(
-      securityInfo.certificateTransparencyStatus);
+      securityInfo.certificateTransparencyStatus
+    );
 
     // Protocol version.
-    info.protocolVersion = this.formatSecurityProtocol(securityInfo.protocolVersion);
+    info.protocolVersion = this.formatSecurityProtocol(
+      securityInfo.protocolVersion
+    );
 
     if (options.certificateChain && securityInfo.succeededCertChain) {
-      info.certificates = this.getCertificateChain(securityInfo.succeededCertChain, options);
+      info.certificates = this.getCertificateChain(
+        securityInfo.succeededCertChain,
+        options
+      );
     } else {
-      info.certificates = [this.parseCertificateInfo(securityInfo.serverCert, options)];
+      info.certificates = [
+        this.parseCertificateInfo(securityInfo.serverCert, options),
+      ];
     }
 
     // HSTS and HPKP if available.
@@ -168,7 +186,10 @@ const SecurityInfo = {
       // private. Thus we must give isSecureURI correct flags or we
       // might get incorrect results.
       let flags = 0;
-      if (channel instanceof Ci.nsIPrivateBrowsingChannel && channel.isChannelPrivate) {
+      if (
+        channel instanceof Ci.nsIPrivateBrowsingChannel &&
+        channel.isChannelPrivate
+      ) {
         flags = Ci.nsISocketProvider.NO_PERMANENT_STORAGE;
       }
 
@@ -214,8 +235,12 @@ const SecurityInfo = {
       subject: cert.subjectName,
       issuer: cert.issuerName,
       validity: {
-        start: cert.validity.notBefore ? Math.trunc(cert.validity.notBefore / 1000) : 0,
-        end: cert.validity.notAfter ? Math.trunc(cert.validity.notAfter / 1000) : 0,
+        start: cert.validity.notBefore
+          ? Math.trunc(cert.validity.notBefore / 1000)
+          : 0,
+        end: cert.validity.notAfter
+          ? Math.trunc(cert.validity.notAfter / 1000)
+          : 0,
       },
       fingerprint: {
         sha1: cert.sha1Fingerprint,
@@ -238,11 +263,14 @@ const SecurityInfo = {
     switch (status) {
       case Ci.nsITransportSecurityInfo.CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE:
         return "not_applicable";
-      case Ci.nsITransportSecurityInfo.CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT:
+      case Ci.nsITransportSecurityInfo
+        .CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT:
         return "policy_compliant";
-      case Ci.nsITransportSecurityInfo.CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS:
+      case Ci.nsITransportSecurityInfo
+        .CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS:
         return "policy_not_enough_scts";
-      case Ci.nsITransportSecurityInfo.CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS:
+      case Ci.nsITransportSecurityInfo
+        .CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS:
         return "policy_not_diverse_scts";
     }
     return "unknown";

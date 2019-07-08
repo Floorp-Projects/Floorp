@@ -8,36 +8,22 @@
  */
 EnableEngines(["prefs"]);
 
-var phases = { "phase1": "profile1",
-               "phase2": "profile2",
-               "phase3": "profile1"};
+var phases = { phase1: "profile1", phase2: "profile2", phase3: "profile1" };
 
 /*
  * Preference lists
  */
 
 var prefs1 = [
-  { name: "browser.startup.homepage",
-    value: "http://www.getfirefox.com",
-  },
-  { name: "browser.urlbar.maxRichResults",
-    value: 20,
-  },
-  { name: "privacy.clearOnShutdown.siteSettings",
-    value: true,
-  },
+  { name: "browser.startup.homepage", value: "http://www.getfirefox.com" },
+  { name: "browser.urlbar.maxRichResults", value: 20 },
+  { name: "privacy.clearOnShutdown.siteSettings", value: true },
 ];
 
 var prefs2 = [
-  { name: "browser.startup.homepage",
-    value: "http://www.mozilla.com",
-  },
-  { name: "browser.urlbar.maxRichResults",
-    value: 18,
-  },
-  { name: "privacy.clearOnShutdown.siteSettings",
-    value: false,
-  },
+  { name: "browser.startup.homepage", value: "http://www.mozilla.com" },
+  { name: "browser.urlbar.maxRichResults", value: 18 },
+  { name: "privacy.clearOnShutdown.siteSettings", value: false },
 ];
 
 /*
@@ -45,17 +31,10 @@ var prefs2 = [
  */
 
 // Add prefs to profile1 and sync.
-Phase("phase1", [
-  [Prefs.modify, prefs1],
-  [Prefs.verify, prefs1],
-  [Sync],
-]);
+Phase("phase1", [[Prefs.modify, prefs1], [Prefs.verify, prefs1], [Sync]]);
 
 // Sync profile2 and verify same prefs are present.
-Phase("phase2", [
-  [Sync],
-  [Prefs.verify, prefs1],
-]);
+Phase("phase2", [[Sync], [Prefs.verify, prefs1]]);
 
 // Using profile1, change some prefs, then do another sync with wipe-client.
 // Verify that the cloud's prefs are restored, and the recent local changes
@@ -66,4 +45,3 @@ Phase("phase3", [
   [Sync, SYNC_WIPE_CLIENT],
   [Prefs.verify, prefs1],
 ]);
-

@@ -7,11 +7,13 @@ requestLongerTimeout(3);
 /* import-globals-from classifierHelper.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/components/url-classifier/tests/browser/classifierHelper.js",
-  this);
+  this
+);
 /* import-globals-from classifierTester.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/components/url-classifier/tests/browser/classifierTester.js",
-  this);
+  this
+);
 
 add_task(async function checkFlashBlockLists() {
   classifierTester.setPrefs({
@@ -28,12 +30,16 @@ add_task(async function checkFlashBlockLists() {
     let tab = await classifierTester.buildTestCaseInNewTab(gBrowser, testCase);
 
     let depth = testCase.domains.length - 1;
-    let pluginInfo = await classifierTester.getPluginInfo(tab.linkedBrowser,
-                                                          depth);
+    let pluginInfo = await classifierTester.getPluginInfo(
+      tab.linkedBrowser,
+      depth
+    );
 
-    classifierTester.checkPluginInfo(pluginInfo,
-                                     "unknown",
-                                     classifierTester.ASK_TO_ACTIVATE_PREF_VALUE);
+    classifierTester.checkPluginInfo(
+      pluginInfo,
+      "unknown",
+      classifierTester.ASK_TO_ACTIVATE_PREF_VALUE
+    );
 
     BrowserTestUtils.removeTab(tab);
   }

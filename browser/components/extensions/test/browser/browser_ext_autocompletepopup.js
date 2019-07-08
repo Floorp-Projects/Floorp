@@ -5,17 +5,20 @@
 add_task(async function testAutocompletePopup() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "browser_action": {
-        "default_popup": "page.html",
-        "browser_style": false,
+      browser_action: {
+        default_popup: "page.html",
+        browser_style: false,
       },
-      "page_action": {
-        "default_popup": "page.html",
-        "browser_style": false,
+      page_action: {
+        default_popup: "page.html",
+        browser_style: false,
       },
     },
     background: async function() {
-      let [tab] = await browser.tabs.query({active: true, currentWindow: true});
+      let [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
       await browser.pageAction.show(tab.id);
       browser.test.sendMessage("ready");
     },
@@ -60,7 +63,10 @@ add_task(async function testAutocompletePopup() {
     // If this didn't work, we hang. Other tests deal with testing the actual functionality of datalist.
     ok(true, "datalist popup has been shown");
   }
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.com/"
+  );
   await extension.startup();
   await extension.awaitMessage("ready");
 

@@ -13,18 +13,22 @@ add_task(async function() {
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
   const {
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
-  const { getHeadersURL } = require("devtools/client/netmonitor/src/utils/mdn-utils");
+    getHeadersURL,
+  } = require("devtools/client/netmonitor/src/utils/mdn-utils");
 
   store.dispatch(Actions.batchEnable(false));
 
   // Execute requests.
   await performRequests(monitor, tab, 2);
 
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelectorAll(".request-list-item")[0]);
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
 
   testShowLearnMore(getSortedRequests(store.getState()).get(0));
 
@@ -38,16 +42,22 @@ add_task(async function() {
     const selector = ".properties-view .treeRow.stringRow";
     document.querySelectorAll(selector).forEach((rowEl, index) => {
       const headerName = rowEl.querySelectorAll(".treeLabelCell .treeLabel")[0]
-                            .textContent;
+        .textContent;
       const headerDocURL = getHeadersURL(headerName);
-      const learnMoreEl = rowEl.querySelectorAll(".treeValueCell .learn-more-link");
+      const learnMoreEl = rowEl.querySelectorAll(
+        ".treeValueCell .learn-more-link"
+      );
 
       if (headerDocURL === null) {
-        ok(learnMoreEl.length === 0,
-           "undocumented header does not include a \"Learn More\" button");
+        ok(
+          learnMoreEl.length === 0,
+          'undocumented header does not include a "Learn More" button'
+        );
       } else {
-        ok(learnMoreEl[0].getAttribute("title") === headerDocURL,
-           "documented header includes a \"Learn More\" button with a link to MDN");
+        ok(
+          learnMoreEl[0].getAttribute("title") === headerDocURL,
+          'documented header includes a "Learn More" button with a link to MDN'
+        );
       }
     });
   }

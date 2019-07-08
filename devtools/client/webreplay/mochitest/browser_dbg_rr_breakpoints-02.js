@@ -8,9 +8,10 @@
 
 // Test unhandled divergence while evaluating at a breakpoint with Web Replay.
 add_task(async function() {
-  const dbg = await attachRecordingDebugger("doc_rr_basic.html",
-                                            { waitForRecording: true });
-  const {threadClient, tab, toolbox, target} = dbg;
+  const dbg = await attachRecordingDebugger("doc_rr_basic.html", {
+    waitForRecording: true,
+  });
+  const { threadClient, tab, toolbox, target } = dbg;
 
   const bp = await setBreakpoint(threadClient, "doc_rr_basic.html", 21);
   await rewindToLine(threadClient, 21);

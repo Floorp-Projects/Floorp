@@ -10,40 +10,73 @@
 var { DER } = ChromeUtils.import("resource://gre/modules/psm/DER.jsm", null);
 
 function run_simple_tests() {
-  throws(() => new DER.DER("this is not an array"), /invalid input/,
-         "should throw given non-array input");
-  throws(() => new DER.DER([0, "invalid input", 1]), /invalid input/,
-         "should throw given non-byte data (string case)");
-  throws(() => new DER.DER([31, 1, {}]), /invalid input/,
-         "should throw given non-byte data (object case)");
-  throws(() => new DER.DER([0.1, 3, 1]), /invalid input/,
-         "should throw given non-byte data (non-integer case)");
-  throws(() => new DER.DER([1, 3, -1]), /invalid input/,
-         "should throw given non-byte data (negative integer case)");
-  throws(() => new DER.DER([1, 300, 79]), /invalid input/,
-         "should throw given non-byte data (large integer case)");
+  throws(
+    () => new DER.DER("this is not an array"),
+    /invalid input/,
+    "should throw given non-array input"
+  );
+  throws(
+    () => new DER.DER([0, "invalid input", 1]),
+    /invalid input/,
+    "should throw given non-byte data (string case)"
+  );
+  throws(
+    () => new DER.DER([31, 1, {}]),
+    /invalid input/,
+    "should throw given non-byte data (object case)"
+  );
+  throws(
+    () => new DER.DER([0.1, 3, 1]),
+    /invalid input/,
+    "should throw given non-byte data (non-integer case)"
+  );
+  throws(
+    () => new DER.DER([1, 3, -1]),
+    /invalid input/,
+    "should throw given non-byte data (negative integer case)"
+  );
+  throws(
+    () => new DER.DER([1, 300, 79]),
+    /invalid input/,
+    "should throw given non-byte data (large integer case)"
+  );
 
   let testReadByte = new DER.DER([0x0a, 0x0b]);
   equal(testReadByte.readByte(), 0x0a, "should read 0x0a");
   equal(testReadByte.readByte(), 0x0b, "should read 0x0b");
-  throws(() => testReadByte.readByte(), /data truncated/,
-         "reading more data than is available should fail");
+  throws(
+    () => testReadByte.readByte(),
+    /data truncated/,
+    "reading more data than is available should fail"
+  );
 
   let testReadBytes = new DER.DER([0x0c, 0x0d, 0x0e]);
-  deepEqual(testReadBytes.readBytes(3), [0x0c, 0x0d, 0x0e],
-            "should read correct sequence of bytes");
+  deepEqual(
+    testReadBytes.readBytes(3),
+    [0x0c, 0x0d, 0x0e],
+    "should read correct sequence of bytes"
+  );
 
   let testReadNegativeBytes = new DER.DER([0xff, 0xaf]);
-  throws(() => testReadNegativeBytes.readBytes(-4), /invalid length/,
-         "reading a negative number of bytes should fail");
+  throws(
+    () => testReadNegativeBytes.readBytes(-4),
+    /invalid length/,
+    "reading a negative number of bytes should fail"
+  );
 
   let testReadZeroBytes = new DER.DER([]);
-  equal(testReadZeroBytes.readBytes(0).length, 0,
-        "reading zero bytes should result in a zero-length array");
+  equal(
+    testReadZeroBytes.readBytes(0).length,
+    0,
+    "reading zero bytes should result in a zero-length array"
+  );
 
   let testReadTooManyBytes = new DER.DER([0xab, 0xcd, 0xef]);
-  throws(() => testReadTooManyBytes.readBytes(4), /data truncated/,
-         "reading too many bytes should fail");
+  throws(
+    () => testReadTooManyBytes.readBytes(4),
+    /data truncated/,
+    "reading too many bytes should fail"
+  );
 
   let testSEQUENCE = new DER.DER([0x30, 0x01, 0x01]);
   let content = testSEQUENCE.readTagAndGetContents(DER.SEQUENCE);
@@ -54,164 +87,268 @@ function run_simple_tests() {
 
   // The length purports to be 4 bytes, but there are only 2 available.
   let truncatedSEQUENCE = new DER.DER([0x30, 0x04, 0x00, 0x00]);
-  throws(() => truncatedSEQUENCE.readTagAndGetContents(DER.SEQUENCE),
-         /data truncated/, "should get 'data truncated' error");
+  throws(
+    () => truncatedSEQUENCE.readTagAndGetContents(DER.SEQUENCE),
+    /data truncated/,
+    "should get 'data truncated' error"
+  );
 
   // With 2 bytes of content, there is 1 remaining after reading the content.
   let extraDataSEQUENCE = new DER.DER([0x30, 0x02, 0xab, 0xcd, 0xef]);
   content = extraDataSEQUENCE.readTagAndGetContents(DER.SEQUENCE);
   equal(content.length, 2, "content should have length 2");
   deepEqual(content, [0xab, 0xcd], "value of content should be [0xab, 0xcd]");
-  ok(!extraDataSEQUENCE.atEnd(),
-     "extraDataSEQUENCE should not be at the end of its input");
-  throws(() => extraDataSEQUENCE.assertAtEnd(), /extra data/,
-         "should get 'extra data' error");
+  ok(
+    !extraDataSEQUENCE.atEnd(),
+    "extraDataSEQUENCE should not be at the end of its input"
+  );
+  throws(
+    () => extraDataSEQUENCE.assertAtEnd(),
+    /extra data/,
+    "should get 'extra data' error"
+  );
 
   // The length of 0x81 0x01 is invalid because it could be encoded as just
   // 0x01, which is shorter.
   let invalidLengthSEQUENCE1 = new DER.DER([0x30, 0x81, 0x01, 0x00]);
-  throws(() => invalidLengthSEQUENCE1.readTagAndGetContents(DER.SEQUENCE),
-         /invalid length/, "should get 'invalid length' error");
+  throws(
+    () => invalidLengthSEQUENCE1.readTagAndGetContents(DER.SEQUENCE),
+    /invalid length/,
+    "should get 'invalid length' error"
+  );
 
   // Similarly, 0x82 0x00 0x01 could be encoded as just 0x01, which is shorter.
   let invalidLengthSEQUENCE2 = new DER.DER([0x30, 0x82, 0x00, 0x01, 0x00]);
-  throws(() => invalidLengthSEQUENCE2.readTagAndGetContents(DER.SEQUENCE),
-         /invalid length/, "should get 'invalid length' error");
+  throws(
+    () => invalidLengthSEQUENCE2.readTagAndGetContents(DER.SEQUENCE),
+    /invalid length/,
+    "should get 'invalid length' error"
+  );
 
   // Lengths requiring 4 bytes to encode are not supported.
   let unsupportedLengthSEQUENCE = new DER.DER([0x30, 0x83, 0x01, 0x01, 0x01]);
-  throws(() => unsupportedLengthSEQUENCE.readTagAndGetContents(DER.SEQUENCE),
-         /unsupported length/, "should get 'unsupported length' error");
+  throws(
+    () => unsupportedLengthSEQUENCE.readTagAndGetContents(DER.SEQUENCE),
+    /unsupported length/,
+    "should get 'unsupported length' error"
+  );
 
   // Indefinite lengths are not supported (and aren't DER anyway).
   let unsupportedASN1SEQUENCE = new DER.DER([0x30, 0x80, 0x01, 0x00, 0x00]);
-  throws(() => unsupportedASN1SEQUENCE.readTagAndGetContents(DER.SEQUENCE),
-         /unsupported asn.1/, "should get 'unsupported asn.1' error");
+  throws(
+    () => unsupportedASN1SEQUENCE.readTagAndGetContents(DER.SEQUENCE),
+    /unsupported asn.1/,
+    "should get 'unsupported asn.1' error"
+  );
 
   let unexpectedTag = new DER.DER([0x31, 0x01, 0x00]);
-  throws(() => unexpectedTag.readTagAndGetContents(DER.SEQUENCE),
-         /unexpected tag/, "should get 'unexpected tag' error");
+  throws(
+    () => unexpectedTag.readTagAndGetContents(DER.SEQUENCE),
+    /unexpected tag/,
+    "should get 'unexpected tag' error"
+  );
 
   let readTLVTestcase = new DER.DER([0x02, 0x03, 0x45, 0x67, 0x89]);
   let bytes = readTLVTestcase.readTLV();
-  deepEqual(bytes, [0x02, 0x03, 0x45, 0x67, 0x89],
-            "bytes read with readTLV should be equal to expected value");
+  deepEqual(
+    bytes,
+    [0x02, 0x03, 0x45, 0x67, 0x89],
+    "bytes read with readTLV should be equal to expected value"
+  );
 
   let peekTagTestcase = new DER.DER([0x30, 0x01, 0x00]);
-  ok(peekTagTestcase.peekTag(DER.SEQUENCE),
-     "peekTag should return true for peeking with a SEQUENCE at a SEQUENCE");
-  ok(!peekTagTestcase.peekTag(DER.SET),
-     "peekTag should return false for peeking with a SET at a SEQUENCE");
+  ok(
+    peekTagTestcase.peekTag(DER.SEQUENCE),
+    "peekTag should return true for peeking with a SEQUENCE at a SEQUENCE"
+  );
+  ok(
+    !peekTagTestcase.peekTag(DER.SET),
+    "peekTag should return false for peeking with a SET at a SEQUENCE"
+  );
   peekTagTestcase.readTLV();
-  ok(!peekTagTestcase.peekTag(DER.SEQUENCE),
-     "peekTag should return false for peeking at a DER with no more data");
+  ok(
+    !peekTagTestcase.peekTag(DER.SEQUENCE),
+    "peekTag should return false for peeking at a DER with no more data"
+  );
 
   let tlvChoiceTestcase = new DER.DER([0x31, 0x02, 0xaa, 0xbb]);
   let tlvChoiceContents = tlvChoiceTestcase.readTLVChoice([DER.NULL, DER.SET]);
-  deepEqual(tlvChoiceContents, [0x31, 0x02, 0xaa, 0xbb],
-            "readTLVChoice should return expected bytes");
+  deepEqual(
+    tlvChoiceContents,
+    [0x31, 0x02, 0xaa, 0xbb],
+    "readTLVChoice should return expected bytes"
+  );
 
   let tlvChoiceNoMatchTestcase = new DER.DER([0x30, 0x01, 0xff]);
-  throws(() => tlvChoiceNoMatchTestcase.readTLVChoice([DER.NULL, DER.SET]),
-         /unexpected tag/,
-         "readTLVChoice should throw if no matching tag is found");
+  throws(
+    () => tlvChoiceNoMatchTestcase.readTLVChoice([DER.NULL, DER.SET]),
+    /unexpected tag/,
+    "readTLVChoice should throw if no matching tag is found"
+  );
 }
 
 function run_bit_string_tests() {
   let bitstringDER = new DER.DER([0x03, 0x04, 0x03, 0x01, 0x02, 0xf8]);
   let bitstring = bitstringDER.readBIT_STRING();
   equal(bitstring.unusedBits, 3, "BIT STRING should have 3 unused bits");
-  deepEqual(bitstring.contents, [0x01, 0x02, 0xf8],
-            "BIT STRING should have expected contents");
+  deepEqual(
+    bitstring.contents,
+    [0x01, 0x02, 0xf8],
+    "BIT STRING should have expected contents"
+  );
 
   let bitstringTooManyUnusedBits = new DER.DER([0x03, 0x02, 0x08, 0x00]);
-  throws(() => bitstringTooManyUnusedBits.readBIT_STRING(),
-         /invalid BIT STRING encoding/,
-         "BIT STRING with too many unused bits should throw");
+  throws(
+    () => bitstringTooManyUnusedBits.readBIT_STRING(),
+    /invalid BIT STRING encoding/,
+    "BIT STRING with too many unused bits should throw"
+  );
 
   // A BIT STRING must have the unused bits byte, and so its length must be at
   // least one.
   let bitstringMissingUnusedBits = new DER.DER([0x03, 0x00]);
-  throws(() => bitstringMissingUnusedBits.readBIT_STRING(),
-         /invalid BIT STRING encoding/,
-         "BIT STRING with missing unused bits (and no contents) should throw");
+  throws(
+    () => bitstringMissingUnusedBits.readBIT_STRING(),
+    /invalid BIT STRING encoding/,
+    "BIT STRING with missing unused bits (and no contents) should throw"
+  );
 
   // The minimal BIT STRING is 03 01 00 (zero bits of padding and zero bytes of
   // content).
   let minimalBitstringDER = new DER.DER([0x03, 0x01, 0x00]);
   let minimalBitstring = minimalBitstringDER.readBIT_STRING();
-  equal(minimalBitstring.unusedBits, 0,
-       "minimal BIT STRING should have 0 unused bits");
-  equal(minimalBitstring.contents.length, 0,
-        "minimal BIT STRING should have empty contents");
+  equal(
+    minimalBitstring.unusedBits,
+    0,
+    "minimal BIT STRING should have 0 unused bits"
+  );
+  equal(
+    minimalBitstring.contents.length,
+    0,
+    "minimal BIT STRING should have empty contents"
+  );
 
   // However, a BIT STRING with zero bytes of content can't have any padding,
   // because that makes no sense.
   let noContentsPaddedBitstringDER = new DER.DER([0x03, 0x01, 0x03]);
-  throws(() => noContentsPaddedBitstringDER.readBIT_STRING(),
-          /invalid BIT STRING encoding/,
-         "BIT STRING with no contents with non-zero padding should throw");
+  throws(
+    () => noContentsPaddedBitstringDER.readBIT_STRING(),
+    /invalid BIT STRING encoding/,
+    "BIT STRING with no contents with non-zero padding should throw"
+  );
 }
 
 function run_compound_tests() {
-  let derBytes =
-    [ 0x30, 0x1a,                       // SEQUENCE
-        0x02, 0x02, 0x77, 0xff,         //   INTEGER
-        0x06, 0x03, 0x2b, 0x01, 0x01,   //   OBJECT IDENTIFIER
-        0x30, 0x07,                     //   SEQUENCE
-          0x05, 0x00,                   //     NULL
-          0x02, 0x03, 0x45, 0x46, 0x47, //     INTEGER
-        0x30, 0x06,                     //   SEQUENCE
-          0x02, 0x02, 0x00, 0xff,       //     INTEGER
-          0x05, 0x00 ]; //     NULL
+  let derBytes = [
+    0x30,
+    0x1a, // SEQUENCE
+    0x02,
+    0x02,
+    0x77,
+    0xff, //   INTEGER
+    0x06,
+    0x03,
+    0x2b,
+    0x01,
+    0x01, //   OBJECT IDENTIFIER
+    0x30,
+    0x07, //   SEQUENCE
+    0x05,
+    0x00, //     NULL
+    0x02,
+    0x03,
+    0x45,
+    0x46,
+    0x47, //     INTEGER
+    0x30,
+    0x06, //   SEQUENCE
+    0x02,
+    0x02,
+    0x00,
+    0xff, //     INTEGER
+    0x05,
+    0x00,
+  ]; //     NULL
   let der = new DER.DER(derBytes);
   let contents = new DER.DER(der.readTagAndGetContents(DER.SEQUENCE));
   let firstINTEGER = contents.readTagAndGetContents(DER.INTEGER);
-  deepEqual(firstINTEGER, [0x77, 0xff],
-            "first INTEGER should have expected value");
+  deepEqual(
+    firstINTEGER,
+    [0x77, 0xff],
+    "first INTEGER should have expected value"
+  );
   let oid = contents.readTagAndGetContents(DER.OBJECT_IDENTIFIER);
-  deepEqual(oid, [0x2b, 0x01, 0x01],
-            "OBJECT IDENTIFIER should have expected value");
+  deepEqual(
+    oid,
+    [0x2b, 0x01, 0x01],
+    "OBJECT IDENTIFIER should have expected value"
+  );
 
   let firstNested = new DER.DER(contents.readTagAndGetContents(DER.SEQUENCE));
   let firstNestedNULL = firstNested.readTagAndGetContents(DER.NULL);
-  equal(firstNestedNULL.length, 0,
-        "first nested NULL should have expected value (empty array)");
+  equal(
+    firstNestedNULL.length,
+    0,
+    "first nested NULL should have expected value (empty array)"
+  );
   let firstNestedINTEGER = firstNested.readTagAndGetContents(DER.INTEGER);
-  deepEqual(firstNestedINTEGER, [0x45, 0x46, 0x47],
-            "first nested INTEGER should have expected value");
+  deepEqual(
+    firstNestedINTEGER,
+    [0x45, 0x46, 0x47],
+    "first nested INTEGER should have expected value"
+  );
   firstNested.assertAtEnd();
 
   let secondNested = new DER.DER(contents.readTagAndGetContents(DER.SEQUENCE));
   let secondNestedINTEGER = secondNested.readTagAndGetContents(DER.INTEGER);
-  deepEqual(secondNestedINTEGER, [0x00, 0xff],
-            "second nested INTEGER should have expected value");
+  deepEqual(
+    secondNestedINTEGER,
+    [0x00, 0xff],
+    "second nested INTEGER should have expected value"
+  );
   let secondNestedNULL = secondNested.readTagAndGetContents(DER.NULL);
-  equal(secondNestedNULL.length, 0,
-        "second nested NULL should have expected value (empty array)");
+  equal(
+    secondNestedNULL.length,
+    0,
+    "second nested NULL should have expected value (empty array)"
+  );
   secondNested.assertAtEnd();
 
   contents.assertAtEnd();
   der.assertAtEnd();
 
-  let invalidDERBytes =
-    [ 0x30, 0x06,     // SEQUENCE
-        0x30, 0x02,   //   SEQUENCE
-          0x02, 0x01, //     INTEGER (missing data)
-        0x05, 0x00,   //   NULL
-      0x00, 0x00 ]; // (extra data)
+  let invalidDERBytes = [
+    0x30,
+    0x06, // SEQUENCE
+    0x30,
+    0x02, //   SEQUENCE
+    0x02,
+    0x01, //     INTEGER (missing data)
+    0x05,
+    0x00, //   NULL
+    0x00,
+    0x00,
+  ]; // (extra data)
   let invalidDER = new DER.DER(invalidDERBytes);
   let invalidContents = new DER.DER(
-    invalidDER.readTagAndGetContents(DER.SEQUENCE));
+    invalidDER.readTagAndGetContents(DER.SEQUENCE)
+  );
   let invalidContentsContents = new DER.DER(
-    invalidContents.readTagAndGetContents(DER.SEQUENCE));
-  throws(() => invalidContentsContents.readTagAndGetContents(DER.INTEGER),
-         /data truncated/, "should throw due to missing data");
+    invalidContents.readTagAndGetContents(DER.SEQUENCE)
+  );
+  throws(
+    () => invalidContentsContents.readTagAndGetContents(DER.INTEGER),
+    /data truncated/,
+    "should throw due to missing data"
+  );
   let nestedNULL = invalidContents.readTagAndGetContents(DER.NULL);
   equal(nestedNULL.length, 0, "nested NULL should have expected value");
   invalidContents.assertAtEnd();
-  throws(() => invalidDER.assertAtEnd(), /extra data/,
-         "should throw due to extra data");
+  throws(
+    () => invalidDER.assertAtEnd(),
+    /extra data/,
+    "should throw due to extra data"
+  );
 }
 
 function run_test() {

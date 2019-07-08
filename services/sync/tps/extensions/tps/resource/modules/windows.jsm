@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
- /* This is a JavaScript module (JSM) to be imported via
+/* This is a JavaScript module (JSM) to be imported via
    Components.utils.import() and acts as a singleton.
    Only the following listed symbols will exposed on import, and only when
    and where imported. */
 
 const EXPORTED_SYMBOLS = ["BrowserWindows"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var BrowserWindows = {
   /**
@@ -24,10 +24,14 @@ var BrowserWindows = {
   Add(aPrivate, fn) {
     return new Promise(resolve => {
       let mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
-      let win = mainWindow.OpenBrowserWindow({private: aPrivate});
-      win.addEventListener("load", function() {
-        resolve(win);
-      }, {once: true});
+      let win = mainWindow.OpenBrowserWindow({ private: aPrivate });
+      win.addEventListener(
+        "load",
+        function() {
+          resolve(win);
+        },
+        { once: true }
+      );
     });
   },
 };

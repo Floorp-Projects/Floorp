@@ -10,14 +10,16 @@
 
 // PlaceUtils will not store any favicon for data: uris so we need to use a dedicated page
 // here.
-const TAB_URL = "https://example.com/browser/devtools/client/aboutdebugging-new/" +
-                "test/browser/test-tab-favicons.html";
+const TAB_URL =
+  "https://example.com/browser/devtools/client/aboutdebugging-new/" +
+  "test/browser/test-tab-favicons.html";
 
 // This is the same png data-url as the one used in test-tab-favicons.html.
-const EXPECTED_FAVICON = "data:image/png;base64," +
-    "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAATklEQVRYhe3SIQ4AI" +
-    "BADwf7/04elBAtrVlSduGnSTDJ7cuT1PQJwwO+Hl7sAGAA07gjAAfgIBeAAoH" +
-    "FHAA7ARygABwCNOwJwAD5CATRgAYXh+kypw86nAAAAAElFTkSuQmCC";
+const EXPECTED_FAVICON =
+  "data:image/png;base64," +
+  "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAATklEQVRYhe3SIQ4AI" +
+  "BADwf7/04elBAtrVlSduGnSTDJ7cuT1PQJwwO+Hl7sAGAA07gjAAfgIBeAAoH" +
+  "FHAA7ARygABwCNOwJwAD5CATRgAYXh+kypw86nAAAAAElFTkSuQmCC";
 
 add_task(async function() {
   const faviconTab = await addTab(TAB_URL, { background: true });
@@ -26,14 +28,19 @@ add_task(async function() {
 
   await waitUntil(() => findDebugTargetByText("Favicon tab", document));
   const faviconTabTarget = findDebugTargetByText("Favicon tab", document);
-  const faviconTabIcon = faviconTabTarget.querySelector(".qa-debug-target-item-icon");
+  const faviconTabIcon = faviconTabTarget.querySelector(
+    ".qa-debug-target-item-icon"
+  );
 
   // Note this relies on PlaceUtils.promiseFaviconData returning the same data-url as the
   // one provided in the test page. If the implementation changes and PlaceUtils returns a
   // different base64 from the one we defined, we can instead load the image and check a
   // few pixels to verify it matches the expected icon.
-  is(faviconTabIcon.src, EXPECTED_FAVICON,
-    "The debug target item for the tab shows the favicon of the tab");
+  is(
+    faviconTabIcon.src,
+    EXPECTED_FAVICON,
+    "The debug target item for the tab shows the favicon of the tab"
+  );
 
   await removeTab(tab);
   await removeTab(faviconTab);

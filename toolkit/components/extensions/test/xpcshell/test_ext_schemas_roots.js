@@ -2,10 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {SchemaRoot} = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
-const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+const { SchemaRoot } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
+const { ExtensionCommon } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionCommon.jsm"
+);
 
-let {SchemaAPIInterface} = ExtensionCommon;
+let { SchemaAPIInterface } = ExtensionCommon;
 
 const global = this;
 
@@ -14,14 +16,14 @@ let baseSchemaJSON = [
     namespace: "base",
 
     properties: {
-      PROP1: {value: 42},
+      PROP1: { value: 42 },
     },
 
     types: [
       {
         id: "type1",
         type: "string",
-        "enum": ["value1", "value2", "value3"],
+        enum: ["value1", "value2", "value3"],
       },
     ],
 
@@ -29,9 +31,7 @@ let baseSchemaJSON = [
       {
         name: "foo",
         type: "function",
-        parameters: [
-          {name: "arg1", $ref: "type1"},
-        ],
+        parameters: [{ name: "arg1", $ref: "type1" }],
       },
     ],
   },
@@ -44,7 +44,7 @@ let experimentFooJSON = [
       {
         id: "typeFoo",
         type: "string",
-        "enum": ["foo1", "foo2", "foo3"],
+        enum: ["foo1", "foo2", "foo3"],
       },
     ],
 
@@ -53,8 +53,8 @@ let experimentFooJSON = [
         name: "foo",
         type: "function",
         parameters: [
-          {name: "arg1", $ref: "typeFoo"},
-          {name: "arg2", $ref: "base.type1"},
+          { name: "arg1", $ref: "typeFoo" },
+          { name: "arg2", $ref: "base.type1" },
         ],
       },
     ],
@@ -68,7 +68,7 @@ let experimentBarJSON = [
       {
         id: "typeBar",
         type: "string",
-        "enum": ["bar1", "bar2", "bar3"],
+        enum: ["bar1", "bar2", "bar3"],
       },
     ],
 
@@ -77,14 +77,13 @@ let experimentBarJSON = [
         name: "bar",
         type: "function",
         parameters: [
-          {name: "arg1", $ref: "typeBar"},
-          {name: "arg2", $ref: "base.type1"},
+          { name: "arg1", $ref: "typeBar" },
+          { name: "arg2", $ref: "base.type1" },
         ],
       },
     ],
   },
 ];
-
 
 let tallied = null;
 
@@ -173,9 +172,7 @@ let wrapper = {
 };
 
 add_task(async function() {
-  let baseSchemas = new Map([
-    ["resource://schemas/base.json", baseSchemaJSON],
-  ]);
+  let baseSchemas = new Map([["resource://schemas/base.json", baseSchemaJSON]]);
   let experimentSchemas = new Map([
     ["resource://experiment-foo/schema.json", experimentFooJSON],
     ["resource://experiment-bar/schema.json", experimentBarJSON],
@@ -213,27 +210,33 @@ add_task(async function() {
   base.base.foo("value3");
   verify("call", "base", "foo", ["value3"]);
 
-
   root.experiments.foo.foo("foo2", "value1");
   verify("call", "experiments.foo", "foo", ["foo2", "value1"]);
 
   root.experiments.bar.bar("bar2", "value1");
   verify("call", "experiments.bar", "bar", ["bar2", "value1"]);
 
+  Assert.throws(
+    () => root.base.foo("Meh."),
+    /Type error for parameter arg1/,
+    "root.base.foo()"
+  );
 
-  Assert.throws(() => root.base.foo("Meh."),
-                /Type error for parameter arg1/,
-                "root.base.foo()");
+  Assert.throws(
+    () => base.base.foo("Meh."),
+    /Type error for parameter arg1/,
+    "base.base.foo()"
+  );
 
-  Assert.throws(() => base.base.foo("Meh."),
-                /Type error for parameter arg1/,
-                "base.base.foo()");
+  Assert.throws(
+    () => root.experiments.foo.foo("Meh."),
+    /Incorrect argument types/,
+    "root.experiments.foo.foo()"
+  );
 
-  Assert.throws(() => root.experiments.foo.foo("Meh."),
-                /Incorrect argument types/,
-                "root.experiments.foo.foo()");
-
-  Assert.throws(() => root.experiments.bar.bar("Meh."),
-                /Incorrect argument types/,
-                "root.experiments.bar.bar()");
+  Assert.throws(
+    () => root.experiments.bar.bar("Meh."),
+    /Incorrect argument types/,
+    "root.experiments.bar.bar()"
+  );
 });

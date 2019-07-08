@@ -5,14 +5,19 @@
 const Cm = Components.manager;
 Cm.QueryInterface(Ci.nsIServiceManager);
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 let firstPaintNotification = "widget-first-paint";
 // widget-first-paint fires much later than expected on Linux.
-if (AppConstants.platform == "linux")
+if (AppConstants.platform == "linux") {
   firstPaintNotification = "xul-window-visible";
+}
 
 let win, canvas;
 let paints = [];
@@ -20,27 +25,39 @@ let afterPaintListener = () => {
   let width, height;
   canvas.width = width = win.innerWidth;
   canvas.height = height = win.innerHeight;
-  if (width < 1 || height < 1)
+  if (width < 1 || height < 1) {
     return;
-  let ctx = canvas.getContext("2d", {alpha: false, willReadFrequently: true});
+  }
+  let ctx = canvas.getContext("2d", { alpha: false, willReadFrequently: true });
 
-  ctx.drawWindow(win, 0, 0, width, height, "white",
-                 ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_VIEW |
-                 ctx.DRAWWINDOW_ASYNC_DECODE_IMAGES |
-                 ctx.DRAWWINDOW_USE_WIDGET_LAYERS);
-  paints.push({data: ctx.getImageData(0, 0, width, height).data,
-               width, height});
+  ctx.drawWindow(
+    win,
+    0,
+    0,
+    width,
+    height,
+    "white",
+    ctx.DRAWWINDOW_DO_NOT_FLUSH |
+      ctx.DRAWWINDOW_DRAW_VIEW |
+      ctx.DRAWWINDOW_ASYNC_DECODE_IMAGES |
+      ctx.DRAWWINDOW_USE_WIDGET_LAYERS
+  );
+  paints.push({
+    data: ctx.getImageData(0, 0, width, height).data,
+    width,
+    height,
+  });
 };
 
 /**
-  * The startupRecorder component observes notifications at various stages of
-  * startup and records the set of JS components and modules that were already
-  * loaded at each of these points.
-  * The records are meant to be used by startup tests in
-  * browser/base/content/test/performance
-  * This component only exists in nightly and debug builds, it doesn't ship in
-  * our release builds.
-  */
+ * The startupRecorder component observes notifications at various stages of
+ * startup and records the set of JS components and modules that were already
+ * loaded at each of these points.
+ * The records are meant to be used by startup tests in
+ * browser/base/content/test/performance
+ * This component only exists in nightly and debug builds, it doesn't ship in
+ * our release builds.
+ */
 function startupRecorder() {
   this.wrappedJSObject = this;
   this.data = {
@@ -52,7 +69,9 @@ function startupRecorder() {
     extras: {},
     prefStats: {},
   };
-  this.done = new Promise(resolve => { this._resolve = resolve; });
+  this.done = new Promise(resolve => {
+    this._resolve = resolve;
+  });
 }
 startupRecorder.prototype = {
   classID: Components.ID("{11c095b2-e42e-4bdf-9dd0-aed87595f6a4}"),
@@ -60,8 +79,9 @@ startupRecorder.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   record(name) {
-    if (!Services.prefs.getBoolPref("browser.startup.record", false))
+    if (!Services.prefs.getBoolPref("browser.startup.record", false)) {
       return;
+    }
 
     Services.profiler.AddMarker("startupRecorder:" + name);
     this.data.code[name] = {
@@ -93,8 +113,9 @@ startupRecorder.prototype = {
         firstPaintNotification,
         "sessionstore-windows-restored",
       ];
-      for (let t of topics)
+      for (let t of topics) {
         Services.obs.addObserver(this, t);
+      }
       return;
     }
 
@@ -104,11 +125,15 @@ startupRecorder.prototype = {
       // In the case we're handling xul-window-visible, we'll have been handed
       // an nsIXULWindow instead of an nsIDOMWindow.
       if (subject instanceof Ci.nsIXULWindow) {
-        subject = subject.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindow);
+        subject = subject
+          .QueryInterface(Ci.nsIInterfaceRequestor)
+          .getInterface(Ci.nsIDOMWindow);
       }
 
-      if (subject.document.documentElement.getAttribute("windowtype") != "navigator:browser") {
+      if (
+        subject.document.documentElement.getAttribute("windowtype") !=
+        "navigator:browser"
+      ) {
         return;
       }
     }
@@ -120,13 +145,17 @@ startupRecorder.prototype = {
 
     Services.obs.removeObserver(this, topic);
 
-    if (topic == firstPaintNotification &&
-        Services.prefs.getBoolPref("browser.startup.record", false)) {
+    if (
+      topic == firstPaintNotification &&
+      Services.prefs.getBoolPref("browser.startup.record", false)
+    ) {
       // Because of the check for navigator:browser we made earlier, we know
       // that if we got here, then the subject must be the first browser window.
       win = subject;
-      canvas = win.document.createElementNS("http://www.w3.org/1999/xhtml",
-                                            "canvas");
+      canvas = win.document.createElementNS(
+        "http://www.w3.org/1999/xhtml",
+        "canvas"
+      );
       canvas.mozOpaque = true;
       afterPaintListener();
       win.addEventListener("MozAfterPaint", afterPaintListener);
@@ -143,15 +172,19 @@ startupRecorder.prototype = {
       // loaded scripts after we are fully done with startup and ready
       // to react to user events.
       Services.tm.dispatchToMainThread(
-        this.record.bind(this, "before handling user events"));
+        this.record.bind(this, "before handling user events")
+      );
 
       // 10 is an arbitrary value here, it needs to be at least 2 to avoid
       // races with code initializing itself using idle callbacks.
       (function waitForIdle(callback, count = 10) {
-        if (count)
-          Services.tm.idleDispatchToMainThread(() => waitForIdle(callback, count - 1));
-        else
+        if (count) {
+          Services.tm.idleDispatchToMainThread(() =>
+            waitForIdle(callback, count - 1)
+          );
+        } else {
           callback();
+        }
       })(() => {
         this.record("before becoming idle");
         Services.obs.removeObserver(this, "image-drawing");
@@ -161,11 +194,15 @@ startupRecorder.prototype = {
         this.data.frames = paints;
         this.data.prefStats = {};
         if (AppConstants.DEBUG) {
-          Services.prefs.readStats((key, value) => this.data.prefStats[key] = value);
+          Services.prefs.readStats(
+            (key, value) => (this.data.prefStats[key] = value)
+          );
         }
         paints = null;
 
-        let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+        let env = Cc["@mozilla.org/process/environment;1"].getService(
+          Ci.nsIEnvironment
+        );
         if (!env.exists("MOZ_PROFILER_STARTUP")) {
           this._resolve();
           this._resolve = null;

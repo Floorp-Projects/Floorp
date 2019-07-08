@@ -52,8 +52,18 @@ function* do_run_test() {
   // Create a cookie object for testing.
   this.now = Date.now() * 1000;
   this.futureExpiry = Math.round(this.now / 1e6 + 1000);
-  this.cookie = new Cookie("oh", "hai", "bar.com", "/", this.futureExpiry,
-    this.now, this.now, false, false, false);
+  this.cookie = new Cookie(
+    "oh",
+    "hai",
+    "bar.com",
+    "/",
+    this.futureExpiry,
+    this.now,
+    this.now,
+    false,
+    false,
+    false
+  );
 
   this.sub_generator = run_test_1(test_generator);
   sub_generator.next();
@@ -67,7 +77,10 @@ function* do_run_test() {
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_3(test_generator, COOKIE_DATABASE_SCHEMA_CURRENT);
+  this.sub_generator = run_test_3(
+    test_generator,
+    COOKIE_DATABASE_SCHEMA_CURRENT
+  );
   sub_generator.next();
   yield;
 
@@ -79,13 +92,19 @@ function* do_run_test() {
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_4_exists(test_generator, 1,
-    "ALTER TABLE moz_cookies ADD lastAccessed INTEGER");
+  this.sub_generator = run_test_4_exists(
+    test_generator,
+    1,
+    "ALTER TABLE moz_cookies ADD lastAccessed INTEGER"
+  );
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_4_exists(test_generator, 2,
-    "ALTER TABLE moz_cookies ADD baseDomain TEXT");
+  this.sub_generator = run_test_4_exists(
+    test_generator,
+    2,
+    "ALTER TABLE moz_cookies ADD baseDomain TEXT"
+  );
   sub_generator.next();
   yield;
 
@@ -93,32 +112,37 @@ function* do_run_test() {
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_4_exists(test_generator, 3,
-    "ALTER TABLE moz_cookies ADD creationTime INTEGER");
+  this.sub_generator = run_test_4_exists(
+    test_generator,
+    3,
+    "ALTER TABLE moz_cookies ADD creationTime INTEGER"
+  );
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_4_exists(test_generator, 3,
-    "CREATE UNIQUE INDEX moz_uniqueid ON moz_cookies (name, host, path)");
+  this.sub_generator = run_test_4_exists(
+    test_generator,
+    3,
+    "CREATE UNIQUE INDEX moz_uniqueid ON moz_cookies (name, host, path)"
+  );
   sub_generator.next();
   yield;
 
   finish_test();
-  
 }
 
 const garbage = "hello thar!";
 
-function create_garbage_file(file)
-{
+function create_garbage_file(file) {
   // Create an empty database file.
   file.create(Ci.nsIFile.NORMAL_FILE_TYPE, -1);
   Assert.ok(file.exists());
   Assert.equal(file.fileSize, 0);
 
   // Write some garbage to it.
-  let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
-                createInstance(Ci.nsIFileOutputStream);
+  let ostream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
   ostream.init(file, -1, -1, 0);
   ostream.write(garbage, garbage.length);
   ostream.flush();
@@ -128,16 +152,14 @@ function create_garbage_file(file)
   Assert.equal(file.fileSize, garbage.length);
 }
 
-function check_garbage_file(file)
-{
+function check_garbage_file(file) {
   Assert.ok(file.exists());
   Assert.equal(file.fileSize, garbage.length);
   file.remove(false);
   Assert.ok(!file.exists());
 }
 
-function* run_test_1(generator)
-{
+function* run_test_1(generator) {
   // Create a garbage database file.
   create_garbage_file(cookieFile);
 
@@ -165,8 +187,7 @@ function* run_test_1(generator)
   do_run_generator(generator);
 }
 
-function* run_test_2(generator)
-{
+function* run_test_2(generator) {
   // Load the profile and populate it.
   do_load_profile();
   let uri = NetUtil.newURI("http://foo.com/");
@@ -196,8 +217,7 @@ function* run_test_2(generator)
   do_run_generator(generator);
 }
 
-function* run_test_3(generator, schema)
-{
+function* run_test_3(generator, schema) {
   // Manually create a schema 2 database, populate it, and set the schema
   // version to the desired number.
   let schema2db = new CookieDatabaseConnection(do_get_cookie_file(profile), 2);
@@ -224,8 +244,7 @@ function* run_test_3(generator, schema)
   do_run_generator(generator);
 }
 
-function* run_test_4_exists(generator, schema, stmt)
-{
+function* run_test_4_exists(generator, schema, stmt) {
   // Manually create a database, populate it, and add the desired column.
   let db = new CookieDatabaseConnection(do_get_cookie_file(profile), schema);
   db.insertCookie(cookie);
@@ -254,12 +273,21 @@ function* run_test_4_exists(generator, schema, stmt)
   do_run_generator(generator);
 }
 
-function* run_test_4_baseDomain(generator)
-{
+function* run_test_4_baseDomain(generator) {
   // Manually create a database and populate it with a bad host.
   let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 2);
-  let badCookie = new Cookie("oh", "hai", ".", "/", this.futureExpiry, this.now,
-    this.now, false, false, false);
+  let badCookie = new Cookie(
+    "oh",
+    "hai",
+    ".",
+    "/",
+    this.futureExpiry,
+    this.now,
+    this.now,
+    false,
+    false,
+    false
+  );
   db.insertCookie(badCookie);
   db.close();
 

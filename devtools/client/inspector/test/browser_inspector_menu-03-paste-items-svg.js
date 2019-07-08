@@ -6,8 +6,10 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 // Test that HTML can be pasted in SVG elements.
 
 const TEST_URL = URL_ROOT + "doc_inspector_svg.svg";
-const PASTE_AS_FIRST_CHILD = '<circle xmlns="http://www.w3.org/2000/svg" cx="42" cy="42" r="5"/>';
-const PASTE_AS_LAST_CHILD = '<circle xmlns="http://www.w3.org/2000/svg" cx="42" cy="42" r="15"/>';
+const PASTE_AS_FIRST_CHILD =
+  '<circle xmlns="http://www.w3.org/2000/svg" cx="42" cy="42" r="5"/>';
+const PASTE_AS_LAST_CHILD =
+  '<circle xmlns="http://www.w3.org/2000/svg" cx="42" cy="42" r="15"/>';
 
 add_task(async function() {
   const clipboard = require("devtools/shared/platform/clipboard");
@@ -33,11 +35,9 @@ add_task(async function() {
     });
     info(`Testing ${menuId} for ${clipboardData}`);
 
-    await SimpleTest.promiseClipboardChange(clipboardData,
-      () => {
-        clipboard.copyString(clipboardData);
-      }
-    );
+    await SimpleTest.promiseClipboardChange(clipboardData, () => {
+      clipboard.copyString(clipboardData);
+    });
 
     const onMutation = inspector.once("markupmutation");
     allMenuItems.find(item => item.id === menuId).click();

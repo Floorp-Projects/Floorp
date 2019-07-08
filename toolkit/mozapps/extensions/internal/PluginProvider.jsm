@@ -8,17 +8,23 @@
 
 var EXPORTED_SYMBOLS = [];
 
-const {AddonManager, AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
 /* globals AddonManagerPrivate*/
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Blocklist",
-                               "resource://gre/modules/Blocklist.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Blocklist",
+  "resource://gre/modules/Blocklist.jsm"
+);
 
-const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
-const LIST_UPDATED_TOPIC     = "plugins-list-updated";
+const URI_EXTENSION_STRINGS =
+  "chrome://mozapps/locale/extensions/extensions.properties";
+const LIST_UPDATED_TOPIC = "plugins-list-updated";
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.plugins";
 
 // Create a new logger for use by the Addons Plugin Provider
@@ -48,10 +54,11 @@ var PluginProvider = {
 
   async observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-    case LIST_UPDATED_TOPIC:
-      if (this.plugins)
-        this.updatePluginList();
-      break;
+      case LIST_UPDATED_TOPIC:
+        if (this.plugins) {
+          this.updatePluginList();
+        }
+        break;
     }
   },
 
@@ -59,10 +66,12 @@ var PluginProvider = {
    * Creates a PluginWrapper for a plugin object.
    */
   buildWrapper(aPlugin) {
-    return new PluginWrapper(aPlugin.id,
-                             aPlugin.name,
-                             aPlugin.description,
-                             aPlugin.tags);
+    return new PluginWrapper(
+      aPlugin.id,
+      aPlugin.name,
+      aPlugin.description,
+      aPlugin.tags
+    );
   },
 
   /**
@@ -72,11 +81,13 @@ var PluginProvider = {
    *         The ID of the add-on to retrieve
    */
   async getAddonByID(aId) {
-    if (!this.plugins)
+    if (!this.plugins) {
       this.buildPluginList();
+    }
 
-    if (aId in this.plugins)
+    if (aId in this.plugins) {
       return this.buildWrapper(this.plugins[aId]);
+    }
     return null;
   },
 
@@ -91,11 +102,13 @@ var PluginProvider = {
       return [];
     }
 
-    if (!this.plugins)
+    if (!this.plugins) {
       this.buildPluginList();
+    }
 
-    return Promise.all(Object.keys(this.plugins).map(
-      id => this.getAddonByID(id)));
+    return Promise.all(
+      Object.keys(this.plugins).map(id => this.getAddonByID(id))
+    );
   },
 
   /**
@@ -114,15 +127,16 @@ var PluginProvider = {
    * @return a dictionary of plugins indexed by our generated ID
    */
   getPluginList() {
-    let tags = Cc["@mozilla.org/plugin/host;1"].
-               getService(Ci.nsIPluginHost).
-               getPluginTags();
+    let tags = Cc["@mozilla.org/plugin/host;1"]
+      .getService(Ci.nsIPluginHost)
+      .getPluginTags();
 
     let list = {};
     let seenPlugins = {};
     for (let tag of tags) {
-      if (!(tag.name in seenPlugins))
+      if (!(tag.name in seenPlugins)) {
         seenPlugins[tag.name] = {};
+      }
       if (!(tag.description in seenPlugins[tag.name])) {
         let plugin = {
           id: tag.name + tag.description,
@@ -156,10 +170,12 @@ var PluginProvider = {
   updatePluginList() {
     let newList = this.getPluginList();
 
-    let lostPlugins = Object.keys(this.plugins).filter(id => !(id in newList)).
-                      map(id => this.buildWrapper(this.plugins[id]));
-    let newPlugins = Object.keys(newList).filter(id => !(id in this.plugins)).
-                     map(id => this.buildWrapper(newList[id]));
+    let lostPlugins = Object.keys(this.plugins)
+      .filter(id => !(id in newList))
+      .map(id => this.buildWrapper(this.plugins[id]));
+    let newPlugins = Object.keys(newList)
+      .filter(id => !(id in this.plugins))
+      .map(id => this.buildWrapper(newList[id]));
     let matchedIDs = Object.keys(newList).filter(id => id in this.plugins);
 
     // The plugin host generates new tags for every plugin after a scan and
@@ -172,40 +188,51 @@ var PluginProvider = {
       let newWrapper = this.buildWrapper(newList[id]);
 
       if (newWrapper.isActive != oldWrapper.isActive) {
-        AddonManagerPrivate.callAddonListeners(newWrapper.isActive ?
-                                               "onEnabling" : "onDisabling",
-                                               newWrapper, false);
+        AddonManagerPrivate.callAddonListeners(
+          newWrapper.isActive ? "onEnabling" : "onDisabling",
+          newWrapper,
+          false
+        );
         changedWrappers.push(newWrapper);
       }
     }
 
     // Notify about new installs
     for (let plugin of newPlugins) {
-      AddonManagerPrivate.callInstallListeners("onExternalInstall", null,
-                                               plugin, null, false);
+      AddonManagerPrivate.callInstallListeners(
+        "onExternalInstall",
+        null,
+        plugin,
+        null,
+        false
+      );
       AddonManagerPrivate.callAddonListeners("onInstalling", plugin, false);
     }
 
     // Notify for any plugins that have vanished.
-    for (let plugin of lostPlugins)
+    for (let plugin of lostPlugins) {
       AddonManagerPrivate.callAddonListeners("onUninstalling", plugin, false);
+    }
 
     this.plugins = newList;
 
     // Signal that new installs are complete
-    for (let plugin of newPlugins)
+    for (let plugin of newPlugins) {
       AddonManagerPrivate.callAddonListeners("onInstalled", plugin);
+    }
 
     // Signal that enables/disables are complete
     for (let wrapper of changedWrappers) {
-      AddonManagerPrivate.callAddonListeners(wrapper.isActive ?
-                                             "onEnabled" : "onDisabled",
-                                             wrapper);
+      AddonManagerPrivate.callAddonListeners(
+        wrapper.isActive ? "onEnabled" : "onDisabled",
+        wrapper
+      );
     }
 
     // Signal that uninstalls are complete
-    for (let plugin of lostPlugins)
+    for (let plugin of lostPlugins) {
       AddonManagerPrivate.callAddonListeners("onUninstalled", plugin);
+    }
   },
 };
 
@@ -242,35 +269,48 @@ PluginWrapper.prototype = {
   },
 
   get version() {
-    let { tags: [tag] } = pluginFor(this);
+    let {
+      tags: [tag],
+    } = pluginFor(this);
     return tag.version;
   },
 
   get homepageURL() {
     let { description } = pluginFor(this);
-    if (/<A\s+HREF=[^>]*>/i.test(description))
+    if (/<A\s+HREF=[^>]*>/i.test(description)) {
       return /<A\s+HREF=["']?([^>"'\s]*)/i.exec(description)[1];
+    }
     return null;
   },
 
   get isActive() {
-    let { tags: [tag] } = pluginFor(this);
+    let {
+      tags: [tag],
+    } = pluginFor(this);
     return !tag.blocklisted && !tag.disabled;
   },
 
   get appDisabled() {
-    let { tags: [tag] } = pluginFor(this);
+    let {
+      tags: [tag],
+    } = pluginFor(this);
     return tag.blocklisted;
   },
 
   get userDisabled() {
-    let { tags: [tag] } = pluginFor(this);
-    if (tag.disabled)
+    let {
+      tags: [tag],
+    } = pluginFor(this);
+    if (tag.disabled) {
       return true;
+    }
 
-    if (tag.clicktoplay ||
-        this.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE ||
-        this.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE) {
+    if (
+      tag.clicktoplay ||
+      this.blocklistState ==
+        Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE ||
+      this.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE
+    ) {
       return AddonManager.STATE_ASK_TO_ACTIVATE;
     }
 
@@ -283,18 +323,20 @@ PluginWrapper.prototype = {
       val = AddonManager.STATE_ASK_TO_ACTIVATE;
     }
 
-    if (val === previousVal)
+    if (val === previousVal) {
       return val;
+    }
 
     let { tags } = pluginFor(this);
 
     for (let tag of tags) {
-      if (val === true)
+      if (val === true) {
         tag.enabledState = Ci.nsIPluginTag.STATE_DISABLED;
-      else if (val === false)
+      } else if (val === false) {
         tag.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
-      else if (val == AddonManager.STATE_ASK_TO_ACTIVATE)
+      } else if (val == AddonManager.STATE_ASK_TO_ACTIVATE) {
         tag.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
+      }
     }
 
     // If 'userDisabled' was 'true' and we're going to a state that's not
@@ -313,9 +355,13 @@ PluginWrapper.prototype = {
 
     // If the 'userDisabled' value involved AddonManager.STATE_ASK_TO_ACTIVATE,
     // call the onPropertyChanged listeners.
-    if (previousVal == AddonManager.STATE_ASK_TO_ACTIVATE ||
-        val == AddonManager.STATE_ASK_TO_ACTIVATE) {
-      AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, ["userDisabled"]);
+    if (
+      previousVal == AddonManager.STATE_ASK_TO_ACTIVATE ||
+      val == AddonManager.STATE_ASK_TO_ACTIVATE
+    ) {
+      AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, [
+        "userDisabled",
+      ]);
     }
 
     return val;
@@ -329,26 +375,32 @@ PluginWrapper.prototype = {
   },
 
   get blocklistState() {
-    let { tags: [tag] } = pluginFor(this);
+    let {
+      tags: [tag],
+    } = pluginFor(this);
     return tag.blocklistState;
   },
 
   async getBlocklistURL() {
-    let { tags: [tag] } = pluginFor(this);
+    let {
+      tags: [tag],
+    } = pluginFor(this);
     return Blocklist.getPluginBlockURL(tag);
   },
 
   get pluginLibraries() {
     let libs = [];
-    for (let tag of pluginFor(this).tags)
+    for (let tag of pluginFor(this).tags) {
       libs.push(tag.filename);
+    }
     return libs;
   },
 
   get pluginFullpath() {
     let paths = [];
-    for (let tag of pluginFor(this).tags)
+    for (let tag of pluginFor(this).tags) {
       paths.push(tag.fullpath);
+    }
     return paths;
   },
 
@@ -379,27 +431,33 @@ PluginWrapper.prototype = {
   },
 
   get scope() {
-    let { tags: [tag] } = pluginFor(this);
+    let {
+      tags: [tag],
+    } = pluginFor(this);
     let path = tag.fullpath;
     // Plugins inside the application directory are in the application scope
     let dir = Services.dirsvc.get("APlugns", Ci.nsIFile);
-    if (path.startsWith(dir.path))
+    if (path.startsWith(dir.path)) {
       return AddonManager.SCOPE_APPLICATION;
+    }
 
     // Plugins inside the profile directory are in the profile scope
     dir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-    if (path.startsWith(dir.path))
+    if (path.startsWith(dir.path)) {
       return AddonManager.SCOPE_PROFILE;
+    }
 
     // Plugins anywhere else in the user's home are in the user scope,
     // but not all platforms have a home directory.
     try {
       dir = Services.dirsvc.get("Home", Ci.nsIFile);
-      if (path.startsWith(dir.path))
+      if (path.startsWith(dir.path)) {
         return AddonManager.SCOPE_USER;
+      }
     } catch (e) {
-      if (!e.result || e.result != Cr.NS_ERROR_FAILURE)
+      if (!e.result || e.result != Cr.NS_ERROR_FAILURE) {
         throw e;
+      }
       // Do nothing: missing "Home".
     }
 
@@ -416,14 +474,17 @@ PluginWrapper.prototype = {
   },
 
   get permissions() {
-    let { tags: [tag] } = pluginFor(this);
+    let {
+      tags: [tag],
+    } = pluginFor(this);
     let permissions = 0;
     if (tag.isEnabledStateLocked) {
       return permissions;
     }
     if (!this.appDisabled) {
-      if (this.userDisabled !== true)
+      if (this.userDisabled !== true) {
         permissions |= AddonManager.PERM_CAN_DISABLE;
+      }
 
       if (this.userDisabled !== AddonManager.STATE_ASK_TO_ACTIVATE) {
         permissions |= AddonManager.PERM_CAN_ASK_TO_ACTIVATE;
@@ -431,9 +492,14 @@ PluginWrapper.prototype = {
 
       let blocklistState = this.blocklistState;
       let isCTPBlocklisted =
-        (blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE ||
-         blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
-      if (this.userDisabled !== false && !isCTPBlocklisted && !this.isFlashPlugin) {
+        blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE ||
+        blocklistState ==
+          Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE;
+      if (
+        this.userDisabled !== false &&
+        !isCTPBlocklisted &&
+        !this.isFlashPlugin
+      ) {
         permissions |= AddonManager.PERM_CAN_ENABLE;
       }
     }
@@ -445,7 +511,10 @@ PluginWrapper.prototype = {
   },
 
   get optionsURL() {
-    return "chrome://mozapps/content/extensions/pluginPrefs.xul#id=" + encodeURIComponent(this.id);
+    return (
+      "chrome://mozapps/content/extensions/pluginPrefs.xul#id=" +
+      encodeURIComponent(this.id)
+    );
   },
 
   get updateDate() {
@@ -469,7 +538,7 @@ PluginWrapper.prototype = {
   },
 
   get installTelemetryInfo() {
-    return {source: "plugin"};
+    return { source: "plugin" };
   },
 
   isCompatibleWith(aAppVersion, aPlatformVersion) {
@@ -477,12 +546,15 @@ PluginWrapper.prototype = {
   },
 
   findUpdates(aListener, aReason, aAppVersion, aPlatformVersion) {
-    if ("onNoCompatibilityUpdateAvailable" in aListener)
+    if ("onNoCompatibilityUpdateAvailable" in aListener) {
       aListener.onNoCompatibilityUpdateAvailable(this);
-    if ("onNoUpdateAvailable" in aListener)
+    }
+    if ("onNoUpdateAvailable" in aListener) {
       aListener.onNoUpdateAvailable(this);
-    if ("onUpdateFinished" in aListener)
+    }
+    if ("onUpdateFinished" in aListener) {
       aListener.onUpdateFinished(this);
+    }
   },
 
   get isFlashPlugin() {
@@ -491,8 +563,12 @@ PluginWrapper.prototype = {
 };
 
 AddonManagerPrivate.registerProvider(PluginProvider, [
-  new AddonManagerPrivate.AddonType("plugin", URI_EXTENSION_STRINGS,
-                                    "type.plugin.name",
-                                    AddonManager.VIEW_TYPE_LIST, 6000,
-                                    AddonManager.TYPE_SUPPORTS_ASK_TO_ACTIVATE),
+  new AddonManagerPrivate.AddonType(
+    "plugin",
+    URI_EXTENSION_STRINGS,
+    "type.plugin.name",
+    AddonManager.VIEW_TYPE_LIST,
+    6000,
+    AddonManager.TYPE_SUPPORTS_ASK_TO_ACTIVATE
+  ),
 ]);

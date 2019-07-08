@@ -50,7 +50,9 @@ class Header extends PureComponent {
       return null;
     }
 
-    return createElement(Fragment, null,
+    return createElement(
+      Fragment,
+      null,
       dom.div({ className: "devtools-separator" }),
       dom.input({
         id: "flexbox-checkbox-toggle",
@@ -90,15 +92,11 @@ class Header extends PureComponent {
       return null;
     }
 
-    const {
-      flexContainer,
-      setSelectedNode,
-    } = this.props;
-    const {
-      flexItems,
-      flexItemShown,
-    } = flexContainer;
-    const flexItem = flexItems.find(item => item.nodeFront.actorID === flexItemShown);
+    const { flexContainer, setSelectedNode } = this.props;
+    const { flexItems, flexItemShown } = flexContainer;
+    const flexItem = flexItems.find(
+      item => item.nodeFront.actorID === flexItemShown
+    );
 
     if (!flexItem) {
       return null;
@@ -112,37 +110,29 @@ class Header extends PureComponent {
   }
 
   render() {
-    const {
-      flexContainer,
-      setSelectedNode,
-    } = this.props;
-    const {
-      flexItemShown,
-      nodeFront,
-    } = flexContainer;
+    const { flexContainer, setSelectedNode } = this.props;
+    const { flexItemShown, nodeFront } = flexContainer;
 
-    return (
-      dom.div({ className: "flex-header devtools-monospace" },
-        flexItemShown ?
-          dom.button({
+    return dom.div(
+      { className: "flex-header devtools-monospace" },
+      flexItemShown
+        ? dom.button({
             className: "flex-header-button-prev devtools-button",
             onClick: e => {
               e.stopPropagation();
               setSelectedNode(nodeFront);
             },
           })
-          :
-          null,
-        dom.div(
-          {
-            className: "flex-header-content" +
-                       (flexItemShown ? " flex-item-shown" : ""),
-          },
-          this.renderFlexContainer(),
-          this.renderFlexItemSelector()
-        ),
-        this.renderFlexboxHighlighterToggle()
-      )
+        : null,
+      dom.div(
+        {
+          className:
+            "flex-header-content" + (flexItemShown ? " flex-item-shown" : ""),
+        },
+        this.renderFlexContainer(),
+        this.renderFlexItemSelector()
+      ),
+      this.renderFlexboxHighlighterToggle()
     );
   }
 }

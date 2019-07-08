@@ -14,13 +14,19 @@ add_task(async function() {
   await addTab(TEST_URL);
   const { inspector, view } = await openRuleView();
 
-  info("Test that implicit grid line names from explicit grid areas are shown.");
+  info(
+    "Test that implicit grid line names from explicit grid areas are shown."
+  );
   await testExplicitNamedAreas(inspector, view);
 
-  info("Test that explicit grid line names creating implicit grid areas are shown.");
+  info(
+    "Test that explicit grid line names creating implicit grid areas are shown."
+  );
   await testImplicitNamedAreasWithExplicitGridLineNames(inspector, view);
 
-  info("Test that implicit grid line names creating implicit grid areas are not shown.");
+  info(
+    "Test that implicit grid line names creating implicit grid areas are not shown."
+  );
   await testImplicitAreasWithImplicitGridLineNames(inspector, view);
   await testImplicitNamedAreasWithReversedGridLineNames(inspector, view);
 });
@@ -30,7 +36,9 @@ async function testExplicitNamedAreas(inspector, view) {
 
   const gridColLines = ["header-start", "header-end", "main-start", "main-end"];
 
-  const propertyName = view.styleDocument.querySelectorAll(".ruleview-propertyvalue")[0];
+  const propertyName = view.styleDocument.querySelectorAll(
+    ".ruleview-propertyvalue"
+  )[0];
   const gridLineNamesUpdated = inspector.once("grid-line-names-updated");
   const editor = await focusEditableField(view, propertyName);
   const onPopupShown = once(editor.popup, "popup-opened");
@@ -40,19 +48,33 @@ async function testExplicitNamedAreas(inspector, view) {
 
   await onPopupShown;
 
-  info("Check that the expected grid line column names are shown in the editor popup.");
+  info(
+    "Check that the expected grid line column names are shown in the editor popup."
+  );
   for (const lineName of gridColLines) {
-    ok(editor.gridLineNames.cols.indexOf(lineName) > -1,
-      `${lineName} is a suggested implicit grid line`);
+    ok(
+      editor.gridLineNames.cols.indexOf(lineName) > -1,
+      `${lineName} is a suggested implicit grid line`
+    );
   }
 }
 
-async function testImplicitNamedAreasWithExplicitGridLineNames(inspector, view) {
+async function testImplicitNamedAreasWithExplicitGridLineNames(
+  inspector,
+  view
+) {
   await selectNode(".contentArea", inspector);
 
-  const gridRowLines = ["main-start", "main-end", "content-start", "content-end"];
+  const gridRowLines = [
+    "main-start",
+    "main-end",
+    "content-start",
+    "content-end",
+  ];
 
-  const propertyName = view.styleDocument.querySelectorAll(".ruleview-propertyvalue")[1];
+  const propertyName = view.styleDocument.querySelectorAll(
+    ".ruleview-propertyvalue"
+  )[1];
   const gridLineNamesUpdated = inspector.once("grid-line-names-updated");
   const editor = await focusEditableField(view, propertyName);
   const onPopupShown = once(editor.popup, "popup-opened");
@@ -62,17 +84,23 @@ async function testImplicitNamedAreasWithExplicitGridLineNames(inspector, view) 
 
   await onPopupShown;
 
-  info("Check that the expected grid line row names are shown in the editor popup.");
+  info(
+    "Check that the expected grid line row names are shown in the editor popup."
+  );
   for (const lineName of gridRowLines) {
-    ok(editor.gridLineNames.rows.indexOf(lineName) > -1,
-      `${lineName} is a suggested explicit grid line`);
+    ok(
+      editor.gridLineNames.rows.indexOf(lineName) > -1,
+      `${lineName} is a suggested explicit grid line`
+    );
   }
 }
 
 async function testImplicitAreasWithImplicitGridLineNames(inspector, view) {
   await selectNode(".a", inspector);
 
-  const propertyName = view.styleDocument.querySelectorAll(".ruleview-propertyvalue")[0];
+  const propertyName = view.styleDocument.querySelectorAll(
+    ".ruleview-propertyvalue"
+  )[0];
   const gridLineNamesUpdated = inspector.once("grid-line-names-updated");
   const editor = await focusEditableField(view, propertyName);
   const onPopupShown = once(editor.popup, "popup-opened");
@@ -82,15 +110,24 @@ async function testImplicitAreasWithImplicitGridLineNames(inspector, view) {
 
   await onPopupShown;
 
-  info("Check that the implicit grid lines created by implicit areas are not shown.");
-  ok(!(editor.gridLineNames.cols.indexOf("a-end") > -1),
-    "a-end is not shown because it is created by an implicit named area.");
+  info(
+    "Check that the implicit grid lines created by implicit areas are not shown."
+  );
+  ok(
+    !(editor.gridLineNames.cols.indexOf("a-end") > -1),
+    "a-end is not shown because it is created by an implicit named area."
+  );
 }
 
-async function testImplicitNamedAreasWithReversedGridLineNames(inspector, view) {
+async function testImplicitNamedAreasWithReversedGridLineNames(
+  inspector,
+  view
+) {
   await selectNode(".b", inspector);
 
-  const propertyName = view.styleDocument.querySelectorAll(".ruleview-propertyvalue")[0];
+  const propertyName = view.styleDocument.querySelectorAll(
+    ".ruleview-propertyvalue"
+  )[0];
   const gridLineNamesUpdated = inspector.once("grid-line-names-updated");
   const editor = await focusEditableField(view, propertyName);
   const onPopupShown = once(editor.popup, "popup-opened");
@@ -100,7 +137,11 @@ async function testImplicitNamedAreasWithReversedGridLineNames(inspector, view) 
 
   await onPopupShown;
 
-  info("Test that reversed implicit grid line names from implicit areas are not shown");
-  ok(!(editor.gridLineNames.cols.indexOf("b-start") > -1),
-    "b-start is not shown because it is created by an implicit named area.");
+  info(
+    "Test that reversed implicit grid line names from implicit areas are not shown"
+  );
+  ok(
+    !(editor.gridLineNames.cols.indexOf("b-start") > -1),
+    "b-start is not shown because it is created by an implicit named area."
+  );
 }

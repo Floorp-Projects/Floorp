@@ -6,14 +6,19 @@
  * be resolved in bug 1539000.
  */
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.whitelistRejectionsGlobally(/Too many characters in placeable/);
+PromiseTestUtils.whitelistRejectionsGlobally(
+  /Too many characters in placeable/
+);
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["test.aboutconfig.modify.boolean", true],
       ["test.aboutconfig.modify.number", 1337],
-      ["test.aboutconfig.modify.string", "the answer to the life the universe and everything"],
+      [
+        "test.aboutconfig.modify.string",
+        "the answer to the life the universe and everything",
+      ],
     ],
   });
 
@@ -25,23 +30,30 @@ add_task(async function setup() {
 });
 
 add_task(async function test_observe_add_user_pref_before_search() {
-  Assert.equal(Services.prefs.getPrefType(PREF_NEW),
-               Ci.nsIPrefBranch.PREF_INVALID);
+  Assert.equal(
+    Services.prefs.getPrefType(PREF_NEW),
+    Ci.nsIPrefBranch.PREF_INVALID
+  );
 
-  await AboutConfigTest.withNewTab(async function() {
-    this.bypassWarningButton.click();
+  await AboutConfigTest.withNewTab(
+    async function() {
+      this.bypassWarningButton.click();
 
-    // No results are shown after the warning page is dismissed or bypassed,
-    // and newly added preferences should not be displayed.
-    Preferences.set(PREF_NEW, true);
-    Assert.ok(!this.prefsTable.firstElementChild);
-    Preferences.reset(PREF_NEW);
-  }, { dontBypassWarning: true });
+      // No results are shown after the warning page is dismissed or bypassed,
+      // and newly added preferences should not be displayed.
+      Preferences.set(PREF_NEW, true);
+      Assert.ok(!this.prefsTable.firstElementChild);
+      Preferences.reset(PREF_NEW);
+    },
+    { dontBypassWarning: true }
+  );
 });
 
 add_task(async function test_observe_add_user_pref() {
-  Assert.equal(Services.prefs.getPrefType(PREF_NEW),
-               Ci.nsIPrefBranch.PREF_INVALID);
+  Assert.equal(
+    Services.prefs.getPrefType(PREF_NEW),
+    Ci.nsIPrefBranch.PREF_INVALID
+  );
 
   await AboutConfigTest.withNewTab(async function() {
     for (let value of [false, true, "", "value", 0, -10]) {
@@ -114,9 +126,7 @@ add_task(async function test_observe_delete_user_pref() {
 
 add_task(async function test_observe_reset_user_pref() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
-      [PREF_BOOLEAN_DEFAULT_TRUE, false],
-    ],
+    set: [[PREF_BOOLEAN_DEFAULT_TRUE, false]],
   });
 
   await AboutConfigTest.withNewTab(async function() {

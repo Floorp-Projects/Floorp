@@ -16,7 +16,8 @@ add_task(async function test_resultDomain() {
   let [engine1, engine2, engine3] = await addTestEngines([
     { name: "Test search engine", xmlFileName: "engine.xml" },
     { name: "A second test engine", xmlFileName: "engine2.xml" },
-    { name: "bacon",
+    {
+      name: "bacon",
       details: {
         alias: "bacon",
         description: "Search Bacon",
@@ -28,8 +29,10 @@ add_task(async function test_resultDomain() {
 
   Assert.equal(engine1.getResultDomain(), "google.com");
   Assert.equal(engine1.getResultDomain("text/html"), "google.com");
-  Assert.equal(engine1.getResultDomain("application/x-moz-default-purpose"),
-               "purpose.google.com");
+  Assert.equal(
+    engine1.getResultDomain("application/x-moz-default-purpose"),
+    "purpose.google.com"
+  );
   Assert.equal(engine1.getResultDomain("fake-response-type"), "");
   Assert.equal(engine2.getResultDomain(), "duckduckgo.com");
   Assert.equal(engine3.getResultDomain(), "www.bacon.moz");

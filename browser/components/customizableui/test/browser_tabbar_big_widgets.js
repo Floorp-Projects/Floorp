@@ -17,7 +17,11 @@ function test() {
   ok(currentHeight > originalHeight, "Titlebar should have grown");
   CustomizableUI.removeWidgetFromArea(kButtonId);
   currentHeight = titlebar.getBoundingClientRect().height;
-  is(currentHeight, originalHeight, "Titlebar should have gone back to its original size.");
+  is(
+    currentHeight,
+    originalHeight,
+    "Titlebar should have gone back to its original size."
+  );
 }
 
 function cleanup() {
@@ -26,4 +30,3 @@ function cleanup() {
     btn.remove();
   }
 }
-

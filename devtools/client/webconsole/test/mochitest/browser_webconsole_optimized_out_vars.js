@@ -8,9 +8,10 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/" +
-                 "test-closure-optimized-out.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/" +
+  "test-closure-optimized-out.html";
 
 add_task(async function() {
   const breakpointLine = 18;

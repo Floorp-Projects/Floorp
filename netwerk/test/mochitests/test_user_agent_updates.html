@@ -202,7 +202,7 @@ SpecialPowers.pushPrefEnv({
 }, function () {
   // Sets the OVERRIDES var in the chrome script.
   // We do this to avoid code duplication.
-  chromeScript.sendSyncMessage("set-overrides", OVERRIDES);
+  chromeScript.sendAsyncMessage("set-overrides", OVERRIDES);
 
   // testProfileLoad, testDownload, and testProfileSave must run in this order
   // because testDownload depends on testProfileLoad and testProfileSave depends

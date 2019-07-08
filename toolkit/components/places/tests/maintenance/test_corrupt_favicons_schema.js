@@ -13,8 +13,10 @@ add_task(async function() {
   await db.execute("DROP TABLE moz_icons");
   await db.close();
 
-  Assert.equal(PlacesUtils.history.databaseStatus,
-               PlacesUtils.history.DATABASE_STATUS_CORRUPT);
+  Assert.equal(
+    PlacesUtils.history.databaseStatus,
+    PlacesUtils.history.DATABASE_STATUS_CORRUPT
+  );
   db = await PlacesUtils.promiseDBConnection();
   let rows = await db.execute("SELECT 1 FROM moz_icons");
   Assert.equal(rows.length, 0, "Found no icons");

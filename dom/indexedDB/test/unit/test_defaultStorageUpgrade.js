@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   Services.prefs.setBoolPref("dom.indexedDB.storageOption.enabled", true);
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("dom.indexedDB.storageOption.enabled");
@@ -29,12 +28,18 @@ function* testSteps()
     { url: "https://www.mozilla.org:8080", dbName: "dbE", dbVersion: 1 },
 
     // This one lives in storage/permanent/indexeddb+++fx-devtools
-    { url: "indexeddb://fx-devtools", dbName: "dbF",
-      dbOptions: { version: 1, storage: "persistent" } },
+    {
+      url: "indexeddb://fx-devtools",
+      dbName: "dbF",
+      dbOptions: { version: 1, storage: "persistent" },
+    },
 
     // This one lives in storage/permanent/moz-safe-about+home
-    { url: "moz-safe-about:home", dbName: "dbG",
-      dbOptions: { version: 1, storage: "persistent" } },
+    {
+      url: "moz-safe-about:home",
+      dbName: "dbG",
+      dbOptions: { version: 1, storage: "persistent" },
+    },
 
     // This one lives in storage/default/file++++Users+joe+
     { url: "file:///Users/joe/", dbName: "dbH", dbVersion: 1 },
@@ -73,24 +78,36 @@ function* testSteps()
     { url: "file://///index.html", dbName: "dbS", dbVersion: 1 },
 
     // This one lives in storage/permanent/resource+++fx-share-addon-at-mozilla-dot-org-fx-share-addon-data
-    { url: "resource://fx-share-addon-at-mozilla-dot-org-fx-share-addon-data",
-      dbName: "dbU", dbOptions: { version: 1, storage: "persistent" } },
+    {
+      url: "resource://fx-share-addon-at-mozilla-dot-org-fx-share-addon-data",
+      dbName: "dbU",
+      dbOptions: { version: 1, storage: "persistent" },
+    },
 
     // This one lives in storage/temporary/http+++localhost+81
     // The .metadata file was intentionally removed for this origin directory
     // to test restoring during upgrade.
-    { url: "http://localhost:81", dbName: "dbV",
-      dbOptions: { version: 1, storage: "temporary" } },
+    {
+      url: "http://localhost:81",
+      dbName: "dbV",
+      dbOptions: { version: 1, storage: "temporary" },
+    },
 
     // This one lives in storage/temporary/http+++localhost+82
     // The .metadata file was intentionally truncated for this origin directory
     // to test restoring during upgrade.
-    { url: "http://localhost:82", dbName: "dbW",
-      dbOptions: { version: 1, storage: "temporary" } },
+    {
+      url: "http://localhost:82",
+      dbName: "dbW",
+      dbOptions: { version: 1, storage: "temporary" },
+    },
 
     // This one lives in storage/temporary/http+++localhost
-    { url: "http://localhost", dbName: "dbZ",
-      dbOptions: { version: 1, storage: "temporary" } },
+    {
+      url: "http://localhost",
+      dbName: "dbZ",
+      dbOptions: { version: 1, storage: "temporary" },
+    },
   ];
 
   function openDatabase(params) {
@@ -98,11 +115,17 @@ function* testSteps()
     if ("url" in params) {
       let principal = getPrincipal(params.url);
       if ("dbVersion" in params) {
-        request = indexedDB.openForPrincipal(principal, params.dbName,
-                                             params.dbVersion);
+        request = indexedDB.openForPrincipal(
+          principal,
+          params.dbName,
+          params.dbVersion
+        );
       } else {
-        request = indexedDB.openForPrincipal(principal, params.dbName,
-                                             params.dbOptions);
+        request = indexedDB.openForPrincipal(
+          principal,
+          params.dbName,
+          params.dbOptions
+        );
       }
     } else if ("dbVersion" in params) {
       request = indexedDB.open(params.dbName, params.dbVersion);

@@ -3,15 +3,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
-const {Prefs} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { actionCreators: ac, actionTypes: at } = ChromeUtils.import(
+  "resource://activity-stream/common/Actions.jsm"
+);
+const { Prefs } = ChromeUtils.import(
+  "resource://activity-stream/lib/ActivityStreamPrefs.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-  "resource://gre/modules/AppConstants.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 this.PrefsFeed = class PrefsFeed {
   constructor(prefMap) {
@@ -22,7 +32,12 @@ this.PrefsFeed = class PrefsFeed {
   onPrefChanged(name, value) {
     const prefItem = this._prefMap.get(name);
     if (prefItem) {
-      this.store.dispatch(ac[prefItem.skipBroadcast ? "OnlyToMain" : "BroadcastToContent"]({type: at.PREF_CHANGED, data: {name, value}}));
+      this.store.dispatch(
+        ac[prefItem.skipBroadcast ? "OnlyToMain" : "BroadcastToContent"]({
+          type: at.PREF_CHANGED,
+          data: { name, value },
+        })
+      );
     }
   }
 
@@ -43,24 +58,36 @@ this.PrefsFeed = class PrefsFeed {
 
     // Get the firefox accounts url for links and to send firstrun metrics to.
     values.fxa_endpoint = Services.prefs.getStringPref(
-      "browser.newtabpage.activity-stream.fxaccounts.endpoint", "https://accounts.firefox.com");
+      "browser.newtabpage.activity-stream.fxaccounts.endpoint",
+      "https://accounts.firefox.com"
+    );
 
     // Read the pref for search shortcuts top sites experiment from firefox.js and store it
     // in our interal list of prefs to watch
     let searchTopSiteExperimentPrefValue = Services.prefs.getBoolPref(
-      "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts");
-    values["improvesearch.topSiteSearchShortcuts"] = searchTopSiteExperimentPrefValue;
-    this._prefMap.set("improvesearch.topSiteSearchShortcuts", {value: searchTopSiteExperimentPrefValue});
+      "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts"
+    );
+    values[
+      "improvesearch.topSiteSearchShortcuts"
+    ] = searchTopSiteExperimentPrefValue;
+    this._prefMap.set("improvesearch.topSiteSearchShortcuts", {
+      value: searchTopSiteExperimentPrefValue,
+    });
 
     // Read the pref for search hand-off from firefox.js and store it
     // in our interal list of prefs to watch
     let handoffToAwesomebarPrefValue = Services.prefs.getBoolPref(
-      "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar");
+      "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar"
+    );
     values["improvesearch.handoffToAwesomebar"] = handoffToAwesomebarPrefValue;
-    this._prefMap.set("improvesearch.handoffToAwesomebar", {value: handoffToAwesomebarPrefValue});
+    this._prefMap.set("improvesearch.handoffToAwesomebar", {
+      value: handoffToAwesomebarPrefValue,
+    });
 
     // Set the initial state of all prefs in redux
-    this.store.dispatch(ac.BroadcastToContent({type: at.PREFS_INITIAL_VALUES, data: values}));
+    this.store.dispatch(
+      ac.BroadcastToContent({ type: at.PREFS_INITIAL_VALUES, data: values })
+    );
   }
 
   removeListeners() {

@@ -1,5 +1,10 @@
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-let {telemetryHelper} = ChromeUtils.import("resource://services-sync/browserid_identity.js", null);
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+let { telemetryHelper } = ChromeUtils.import(
+  "resource://services-sync/browserid_identity.js",
+  null
+);
 
 const prefs = new Preferences("services.sync.");
 
@@ -9,15 +14,21 @@ function cleanup() {
 
 add_test(function test_success() {
   telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.SUCCESS);
-  Assert.deepEqual(getLoginTelemetryScalar(), {SUCCESS: 1});
+  Assert.deepEqual(getLoginTelemetryScalar(), { SUCCESS: 1 });
   // doing it again should not bump the count.
   telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.SUCCESS);
   Assert.deepEqual(getLoginTelemetryScalar(), {});
 
   // check the prefs.
   Assert.equal(prefs.get(telemetryHelper.PREFS.REJECTED_AT), undefined);
-  Assert.equal(prefs.get(telemetryHelper.PREFS.APPEARS_PERMANENTLY_REJECTED), undefined);
-  Assert.equal(prefs.get(telemetryHelper.PREFS.LAST_RECORDED_STATE), telemetryHelper.STATES.SUCCESS);
+  Assert.equal(
+    prefs.get(telemetryHelper.PREFS.APPEARS_PERMANENTLY_REJECTED),
+    undefined
+  );
+  Assert.equal(
+    prefs.get(telemetryHelper.PREFS.LAST_RECORDED_STATE),
+    telemetryHelper.STATES.SUCCESS
+  );
 
   cleanup();
   run_next_test();
@@ -25,10 +36,10 @@ add_test(function test_success() {
 
 add_test(function test_success_to_error() {
   telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.SUCCESS);
-  Assert.deepEqual(getLoginTelemetryScalar(), {SUCCESS: 1});
+  Assert.deepEqual(getLoginTelemetryScalar(), { SUCCESS: 1 });
   // transition to an error state
   telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.NOTVERIFIED);
-  Assert.deepEqual(getLoginTelemetryScalar(), {NOTVERIFIED: 1});
+  Assert.deepEqual(getLoginTelemetryScalar(), { NOTVERIFIED: 1 });
 
   cleanup();
   run_next_test();
@@ -37,7 +48,7 @@ add_test(function test_success_to_error() {
 add_test(function test_unverified() {
   telemetryHelper.nowInMinutes = () => 10000;
   telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.NOTVERIFIED);
-  Assert.deepEqual(getLoginTelemetryScalar(), {NOTVERIFIED: 1});
+  Assert.deepEqual(getLoginTelemetryScalar(), { NOTVERIFIED: 1 });
 
   Assert.equal(prefs.get(telemetryHelper.PREFS.REJECTED_AT), 10000);
 
@@ -57,7 +68,7 @@ add_test(function test_unverified() {
 
   // now record success - should get the new state recorded and the duration.
   telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.SUCCESS);
-  Assert.deepEqual(getLoginTelemetryScalar(), {SUCCESS: 1});
+  Assert.deepEqual(getLoginTelemetryScalar(), { SUCCESS: 1 });
 
   // we are now at 10010 minutes, so should have recorded it took 10.
   Assert.equal(sumHistogram("WEAVE_LOGIN_FAILED_FOR"), 10);
@@ -69,7 +80,7 @@ add_test(function test_unverified() {
 add_test(function test_unverified_give_up() {
   telemetryHelper.nowInMinutes = () => 10000;
   telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.NOTVERIFIED);
-  Assert.deepEqual(getLoginTelemetryScalar(), {NOTVERIFIED: 1});
+  Assert.deepEqual(getLoginTelemetryScalar(), { NOTVERIFIED: 1 });
 
   Assert.equal(prefs.get(telemetryHelper.PREFS.REJECTED_AT), 10000);
 
@@ -92,18 +103,18 @@ add_test(function test_unverified_give_up() {
   // Now record success - it also should *not* again record the failure duration.
   telemetryHelper.nowInMinutes = () => 60000;
   telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.SUCCESS);
-  Assert.deepEqual(getLoginTelemetryScalar(), {SUCCESS: 1});
+  Assert.deepEqual(getLoginTelemetryScalar(), { SUCCESS: 1 });
   Assert.equal(sumHistogram("WEAVE_LOGIN_FAILED_FOR"), 0);
 
   // Even though we were permanently rejected, the SUCCESS recording should
   // have reset that state, so new error states should work as normal.
   telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.NOTVERIFIED);
-  Assert.deepEqual(getLoginTelemetryScalar(), {NOTVERIFIED: 1});
+  Assert.deepEqual(getLoginTelemetryScalar(), { NOTVERIFIED: 1 });
   Assert.equal(sumHistogram("WEAVE_LOGIN_FAILED_FOR"), 0);
 
   telemetryHelper.nowInMinutes = () => 60001;
   telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.SUCCESS);
-  Assert.deepEqual(getLoginTelemetryScalar(), {SUCCESS: 1});
+  Assert.deepEqual(getLoginTelemetryScalar(), { SUCCESS: 1 });
   Assert.equal(sumHistogram("WEAVE_LOGIN_FAILED_FOR"), 1);
 
   cleanup();
@@ -113,7 +124,10 @@ add_test(function test_unverified_give_up() {
 add_test(function test_bad_state() {
   // We call the internal implementation to check it throws as the public
   // method catches and logs.
-  Assert.throws(() => telemetryHelper._maybeRecordLoginState("foo"), /invalid state/);
+  Assert.throws(
+    () => telemetryHelper._maybeRecordLoginState("foo"),
+    /invalid state/
+  );
   cleanup();
   run_next_test();
 });

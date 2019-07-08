@@ -18,9 +18,15 @@ add_task(async function() {
 
   info("Checking current time label content");
   await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
-  assertLabelContent(labelEl, animationInspector.state.animations[0].state.currentTime);
+  assertLabelContent(
+    labelEl,
+    animationInspector.state.animations[0].state.currentTime
+  );
   await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.2);
-  assertLabelContent(labelEl, animationInspector.state.animations[0].state.currentTime);
+  assertLabelContent(
+    labelEl,
+    animationInspector.state.animations[0].state.currentTime
+  );
 
   info("Checking current time label content during running");
   // Resume
@@ -33,7 +39,7 @@ add_task(async function() {
 
 function assertLabelContent(labelEl, time) {
   const expected = formatStopwatchTime(time);
-  is(labelEl.textContent, expected, `Content of label should be ${ expected }`);
+  is(labelEl.textContent, expected, `Content of label should be ${expected}`);
 }
 
 function formatStopwatchTime(time) {
@@ -44,7 +50,7 @@ function formatStopwatchTime(time) {
 
   let milliseconds = parseInt(time % 1000, 10);
   let seconds = parseInt((time / 1000) % 60, 10);
-  let minutes = parseInt((time / (1000 * 60)), 10);
+  let minutes = parseInt(time / (1000 * 60), 10);
 
   const pad = (nb, max) => {
     if (nb < max) {

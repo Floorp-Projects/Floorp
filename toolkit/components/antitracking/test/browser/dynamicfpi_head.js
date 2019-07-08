@@ -13,18 +13,26 @@ this.DynamicFPIHelper = {
       info("Starting test `" + name + "' with dynamic FPI...");
 
       await SpecialPowers.flushPrefEnv();
-      await SpecialPowers.pushPrefEnv({"set": [
-        ["dom.storage_access.enabled", true],
-        ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN],
-        ["privacy.trackingprotection.enabled", false],
-        ["privacy.trackingprotection.pbmode.enabled", false],
-        ["privacy.trackingprotection.annotate_channels", true],
-        ["privacy.storagePrincipal.enabledForTrackers", false],
-        ["privacy.restrict3rdpartystorage.userInteractionRequiredForHosts", "not-tracking.example.com"],
-      ]});
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["dom.storage_access.enabled", true],
+          [
+            "network.cookie.cookieBehavior",
+            Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+          ],
+          ["privacy.trackingprotection.enabled", false],
+          ["privacy.trackingprotection.pbmode.enabled", false],
+          ["privacy.trackingprotection.annotate_channels", true],
+          ["privacy.storagePrincipal.enabledForTrackers", false],
+          [
+            "privacy.restrict3rdpartystorage.userInteractionRequiredForHosts",
+            "not-tracking.example.com",
+          ],
+        ],
+      });
 
       if (extraPrefs && Array.isArray(extraPrefs) && extraPrefs.length) {
-        await SpecialPowers.pushPrefEnv({"set": extraPrefs });
+        await SpecialPowers.pushPrefEnv({ set: extraPrefs });
       }
 
       info("Creating a new tab");
@@ -35,44 +43,57 @@ this.DynamicFPIHelper = {
       await BrowserTestUtils.browserLoaded(browser);
 
       info("Creating a 3rd party content");
-      await ContentTask.spawn(browser, {
-                                page: TEST_4TH_PARTY_STORAGE_PAGE,
-                                callback: callback.toString(),
-                              },
-                              async obj => {
-        await new content.Promise(resolve => {
-          let ifr = content.document.createElement("iframe");
-          ifr.onload = __ => {
-            is(ifr.contentWindow.document.nodePrincipal.originAttributes.firstPartyDomain, "", "We don't have first-party set on nodePrincipal");
-            is(ifr.contentWindow.document.effectiveStoragePrincipal.originAttributes.firstPartyDomain, "example.net", "We have first-party set on storagePrincipal");
-            info("Sending code to the 3rd party content");
-            ifr.contentWindow.postMessage(obj.callback, "*");
-          };
+      await ContentTask.spawn(
+        browser,
+        {
+          page: TEST_4TH_PARTY_STORAGE_PAGE,
+          callback: callback.toString(),
+        },
+        async obj => {
+          await new content.Promise(resolve => {
+            let ifr = content.document.createElement("iframe");
+            ifr.onload = __ => {
+              is(
+                ifr.contentWindow.document.nodePrincipal.originAttributes
+                  .firstPartyDomain,
+                "",
+                "We don't have first-party set on nodePrincipal"
+              );
+              is(
+                ifr.contentWindow.document.effectiveStoragePrincipal
+                  .originAttributes.firstPartyDomain,
+                "example.net",
+                "We have first-party set on storagePrincipal"
+              );
+              info("Sending code to the 3rd party content");
+              ifr.contentWindow.postMessage(obj.callback, "*");
+            };
 
-          content.addEventListener("message", function msg(event) {
-            if (event.data.type == "finish") {
-              content.removeEventListener("message", msg);
-              resolve();
-              return;
-            }
+            content.addEventListener("message", function msg(event) {
+              if (event.data.type == "finish") {
+                content.removeEventListener("message", msg);
+                resolve();
+                return;
+              }
 
-            if (event.data.type == "ok") {
-              ok(event.data.what, event.data.msg);
-              return;
-            }
+              if (event.data.type == "ok") {
+                ok(event.data.what, event.data.msg);
+                return;
+              }
 
-            if (event.data.type == "info") {
-              info(event.data.msg);
-              return;
-            }
+              if (event.data.type == "info") {
+                info(event.data.msg);
+                return;
+              }
 
-            ok(false, "Unknown message");
+              ok(false, "Unknown message");
+            });
+
+            content.document.body.appendChild(ifr);
+            ifr.src = obj.page;
           });
-
-          content.document.body.appendChild(ifr);
-          ifr.src = obj.page;
-        });
-      });
+        }
+      );
 
       info("Removing the tab");
       BrowserTestUtils.removeTab(tab);

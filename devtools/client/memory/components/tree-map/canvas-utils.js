@@ -45,7 +45,6 @@ function Canvases(parentEl, debounceRate) {
 }
 
 Canvases.prototype = {
-
   /**
    * Remove the handlers and elements
    *
@@ -121,9 +120,8 @@ function handleResizes(canvases, debounceRate) {
   }
 
   // Tests may not need debouncing
-  const debouncedResize = debounceRate > 0
-    ? debounce(resize, debounceRate)
-    : resize;
+  const debouncedResize =
+    debounceRate > 0 ? debounce(resize, debounceRate) : resize;
 
   window.addEventListener("resize", debouncedResize);
   resize();

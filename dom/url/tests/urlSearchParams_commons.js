@@ -49,7 +49,6 @@ function testURL() {
   url.searchParams.set("e", "f");
   ok(url.href.indexOf("e=f") != 1, "URL right");
 
-
   url = new URL("mailto:a@b.com?subject=Hi");
   ok(url.searchParams, "URL searchParams exists!");
   ok(url.searchParams.has("subject"), "Hi");
@@ -60,31 +59,31 @@ function testURL() {
 function testParserURLSearchParams() {
   var checks = [
     { input: "", data: {} },
-    { input: "a", data: { "a": [""] } },
-    { input: "a=b", data: { "a": ["b"] } },
-    { input: "a=", data: { "a": [""] } },
+    { input: "a", data: { a: [""] } },
+    { input: "a=b", data: { a: ["b"] } },
+    { input: "a=", data: { a: [""] } },
     { input: "=b", data: { "": ["b"] } },
     { input: "&", data: {} },
-    { input: "&a", data: { "a": [""] } },
-    { input: "a&", data: { "a": [""] } },
-    { input: "a&a", data: { "a": ["", ""] } },
-    { input: "a&b&c", data: { "a": [""], "b": [""], "c": [""] } },
-    { input: "a=b&c=d", data: { "a": ["b"], "c": ["d"] } },
-    { input: "a=b&c=d&", data: { "a": ["b"], "c": ["d"] } },
-    { input: "&&&a=b&&&&c=d&", data: { "a": ["b"], "c": ["d"] } },
-    { input: "a=a&a=b&a=c", data: { "a": ["a", "b", "c"] } },
-    { input: "a==a", data: { "a": ["=a"] } },
-    { input: "a=a+b+c+d", data: { "a": ["a b c d"] } },
+    { input: "&a", data: { a: [""] } },
+    { input: "a&", data: { a: [""] } },
+    { input: "a&a", data: { a: ["", ""] } },
+    { input: "a&b&c", data: { a: [""], b: [""], c: [""] } },
+    { input: "a=b&c=d", data: { a: ["b"], c: ["d"] } },
+    { input: "a=b&c=d&", data: { a: ["b"], c: ["d"] } },
+    { input: "&&&a=b&&&&c=d&", data: { a: ["b"], c: ["d"] } },
+    { input: "a=a&a=b&a=c", data: { a: ["a", "b", "c"] } },
+    { input: "a==a", data: { a: ["=a"] } },
+    { input: "a=a+b+c+d", data: { a: ["a b c d"] } },
     { input: "%=a", data: { "%": ["a"] } },
     { input: "%a=a", data: { "%a": ["a"] } },
     { input: "%a_=a", data: { "%a_": ["a"] } },
-    { input: "%61=a", data: { "a": ["a"] } },
+    { input: "%61=a", data: { a: ["a"] } },
     { input: "%=a", data: { "%": ["a"] } },
     { input: "%a=a", data: { "%a": ["a"] } },
     { input: "%a_=a", data: { "%a_": ["a"] } },
-    { input: "%61=a", data: { "a": ["a"] } },
+    { input: "%61=a", data: { a: ["a"] } },
     { input: "%61+%4d%4D=", data: { "a MM": [""] } },
-    { input: "?a=1", data: { "a": ["1"] } },
+    { input: "?a=1", data: { a: ["1"] } },
     { input: "?", data: {} },
     { input: "?=b", data: { "": ["b"] } },
   ];
@@ -110,10 +109,12 @@ function testParserURLSearchParams() {
 }
 
 function testEncoding() {
-  var encoding = [ [ "1", "1" ],
-                   [ "a b", "a+b" ],
-                   [ "<>", "%3C%3E" ],
-                   [ "\u0541", "%D5%81"] ];
+  var encoding = [
+    ["1", "1"],
+    ["a b", "a+b"],
+    ["<>", "%3C%3E"],
+    ["\u0541", "%D5%81"],
+  ];
 
   for (var i = 0; i < encoding.length; ++i) {
     var url = new URL("http://www.example.net");
@@ -132,11 +133,17 @@ function testCopyConstructor() {
   var p = url.searchParams;
   var q = new URLSearchParams(p);
   q.set("a", "b");
-  is(url.href, "http://example.com/",
-     "Messing with copy of URLSearchParams should not affect URL");
+  is(
+    url.href,
+    "http://example.com/",
+    "Messing with copy of URLSearchParams should not affect URL"
+  );
   p.set("c", "d");
-  is(url.href, "http://example.com/?c=d",
-     "Messing with URLSearchParams should affect URL");
+  is(
+    url.href,
+    "http://example.com/?c=d",
+    "Messing with URLSearchParams should affect URL"
+  );
 
   runTest();
 }
@@ -174,7 +181,11 @@ function testGetNULL() {
   is(u.get(""), null, "URL.searchParams.get('') should be null");
 
   var url = new URL("http://www.example.net?a=b");
-  is(url.searchParams.get("b"), null, "URL.searchParams.get('b') should be null");
+  is(
+    url.searchParams.get("b"),
+    null,
+    "URL.searchParams.get('b') should be null"
+  );
   is(url.searchParams.get("a"), "b", "URL.searchParams.get('a')");
 
   runTest();
@@ -209,11 +220,27 @@ function testSet() {
   is(u.getAll("u").length, 1, "URLSearchParams.getAll('u').length should be 1");
 
   u = new URLSearchParams("name1=value1&name1=value2&name1=value3");
-  is(u.get("name1"), "value1", "URL.searchParams.get('name1') should return value1");
-  is(u.getAll("name1").length, 3, "URLSearchParams.getAll('name1').length should be 3");
+  is(
+    u.get("name1"),
+    "value1",
+    "URL.searchParams.get('name1') should return value1"
+  );
+  is(
+    u.getAll("name1").length,
+    3,
+    "URLSearchParams.getAll('name1').length should be 3"
+  );
   u.set("name1", "firstPair");
-  is(u.get("name1"), "firstPair", "URL.searchParams.get('name1') should return firstPair");
-  is(u.getAll("name1").length, 1, "URLSearchParams.getAll('name1').length should be 1");
+  is(
+    u.get("name1"),
+    "firstPair",
+    "URL.searchParams.get('name1') should return firstPair"
+  );
+  is(
+    u.getAll("name1").length,
+    1,
+    "URLSearchParams.getAll('name1').length should be 1"
+  );
 
   runTest();
 }
@@ -236,10 +263,22 @@ function testIterable() {
     var entry = entries_iter.next();
     is(key.value, v.toString(), "Correct Key iterator: " + v.toString());
     ok(!key.done, "Key.done is false");
-    is(value.value, (v * 2).toString(), "Correct Value iterator: " + (v * 2).toString());
+    is(
+      value.value,
+      (v * 2).toString(),
+      "Correct Value iterator: " + (v * 2).toString()
+    );
     ok(!value.done, "Value.done is false");
-    is(entry.value[0], v.toString(), "Correct Entry 0 iterator: " + v.toString());
-    is(entry.value[1], (v * 2).toString(), "Correct Entry 1 iterator: " + (v * 2).toString());
+    is(
+      entry.value[0],
+      v.toString(),
+      "Correct Entry 0 iterator: " + v.toString()
+    );
+    is(
+      entry.value[1],
+      (v * 2).toString(),
+      "Correct Entry 1 iterator: " + (v * 2).toString()
+    );
     ok(!entry.done, "Entry.done is false");
   }
 
@@ -270,12 +309,15 @@ function testIterable() {
   runTest();
 }
 function testZeroHandling() {
-  var u = new URLSearchParams;
+  var u = new URLSearchParams();
   u.set("a", "b\0c");
   u.set("d\0e", "f");
   u.set("g\0h", "i\0j");
-  is(u.toString(), "a=b%00c&d%00e=f&g%00h=i%00j",
-     "Should encode U+0000 as %00");
+  is(
+    u.toString(),
+    "a=b%00c&d%00e=f&g%00h=i%00j",
+    "Should encode U+0000 as %00"
+  );
 
   runTest();
 }
@@ -297,21 +339,35 @@ function testCTORs() {
     result = 42;
   }
 
-  is(result, 42, "CTOR throws if the sequence doesn't contain exactly 2 elements");
+  is(
+    result,
+    42,
+    "CTOR throws if the sequence doesn't contain exactly 2 elements"
+  );
 
   try {
     result = new URLSearchParams([[1, 2, 3]]);
   } catch (e) {
     result = 43;
   }
-  is(result, 43, "CTOR throws if the sequence doesn't contain exactly 2 elements");
+  is(
+    result,
+    43,
+    "CTOR throws if the sequence doesn't contain exactly 2 elements"
+  );
 
-  var c = new URLSearchParams({ a: "b", c: 42, d: null, e: [1, 2, 3], f: {a: 42} });
+  var c = new URLSearchParams({
+    a: "b",
+    c: 42,
+    d: null,
+    e: [1, 2, 3],
+    f: { a: 42 },
+  });
   is(c.get("a"), "b", "CTOR with record<>");
   is(c.get("c"), "42", "CTOR with record<>");
   is(c.get("d"), "null", "CTOR with record<>");
   is(c.get("e"), [1, 2, 3].toString(), "CTOR with record<>");
-  is(c.get("f"), {a: 42}.toString(), "CTOR with record<>");
+  is(c.get("f"), { a: 42 }.toString(), "CTOR with record<>");
 
   runTest();
 }

@@ -4,15 +4,18 @@
 
 "use strict";
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this,
-                                   "IdentityCryptoService",
-                                   "@mozilla.org/identity/crypto-service;1",
-                                   "nsIIdentityCryptoService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "IdentityCryptoService",
+  "@mozilla.org/identity/crypto-service;1",
+  "nsIIdentityCryptoService"
+);
 XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 
 const EXPORTED_SYMBOLS = ["jwcrypto"];
@@ -27,8 +30,9 @@ XPCOMUtils.defineLazyGetter(this, "log", function() {
   log.addAppender(appender);
   try {
     const level =
-      Services.prefs.getPrefType(PREF_LOG_LEVEL) == Ci.nsIPrefBranch.PREF_STRING
-      && Services.prefs.getCharPref(PREF_LOG_LEVEL);
+      Services.prefs.getPrefType(PREF_LOG_LEVEL) ==
+        Ci.nsIPrefBranch.PREF_STRING &&
+      Services.prefs.getCharPref(PREF_LOG_LEVEL);
     log.level = Log.Level[level] || Log.Level.Error;
   } catch (e) {
     log.error(e);
@@ -72,8 +76,16 @@ class JWCrypto {
    */
   async generateJWE(key, data) {
     // Generate an ephemeral key to use just for this encryption.
-    const epk = await crypto.subtle.generateKey(ECDH_PARAMS, true, ["deriveKey"]);
-    const peerPublicKey = await crypto.subtle.importKey("jwk", key, ECDH_PARAMS, false, ["deriveKey"]);
+    const epk = await crypto.subtle.generateKey(ECDH_PARAMS, true, [
+      "deriveKey",
+    ]);
+    const peerPublicKey = await crypto.subtle.importKey(
+      "jwk",
+      key,
+      ECDH_PARAMS,
+      false,
+      ["deriveKey"]
+    );
     return this._generateJWE(epk, peerPublicKey, data);
   }
 
@@ -82,28 +94,37 @@ class JWCrypto {
     const ownPublicJWK = await crypto.subtle.exportKey("jwk", epk.publicKey);
     delete ownPublicJWK.key_ops;
     // Do ECDH agreement to get the content encryption key.
-    const contentKey = await deriveECDHSharedAESKey(epk.privateKey, peerPublicKey, ["encrypt"]);
-    let header = {alg: "ECDH-ES", enc: "A256GCM", epk: ownPublicJWK};
+    const contentKey = await deriveECDHSharedAESKey(
+      epk.privateKey,
+      peerPublicKey,
+      ["encrypt"]
+    );
+    let header = { alg: "ECDH-ES", enc: "A256GCM", epk: ownPublicJWK };
     // Yes, additionalData is the byte representation of the base64 representation of the stringified header.
-    const additionalData = UTF8_ENCODER.encode(ChromeUtils.base64URLEncode(UTF8_ENCODER.encode(JSON.stringify(header)), {pad: false}));
-    const encrypted = await crypto.subtle.encrypt({
+    const additionalData = UTF8_ENCODER.encode(
+      ChromeUtils.base64URLEncode(UTF8_ENCODER.encode(JSON.stringify(header)), {
+        pad: false,
+      })
+    );
+    const encrypted = await crypto.subtle.encrypt(
+      {
         name: "AES-GCM",
         iv,
         additionalData,
         tagLength: AES_TAG_LEN,
       },
       contentKey,
-      data,
+      data
     );
     const tagIdx = encrypted.byteLength - ((AES_TAG_LEN + 7) >> 3);
     let ciphertext = encrypted.slice(0, tagIdx);
     let tag = encrypted.slice(tagIdx);
     // JWE serialization.
     header = UTF8_ENCODER.encode(JSON.stringify(header));
-    header = ChromeUtils.base64URLEncode(header, {pad: false});
-    tag = ChromeUtils.base64URLEncode(tag, {pad: false});
-    ciphertext = ChromeUtils.base64URLEncode(ciphertext, {pad: false});
-    iv = ChromeUtils.base64URLEncode(iv, {pad: false});
+    header = ChromeUtils.base64URLEncode(header, { pad: false });
+    tag = ChromeUtils.base64URLEncode(tag, { pad: false });
+    ciphertext = ChromeUtils.base64URLEncode(ciphertext, { pad: false });
+    iv = ChromeUtils.base64URLEncode(iv, { pad: false });
     return `${header}..${iv}.${ciphertext}.${tag}`; // No CEK
   }
 
@@ -124,22 +145,43 @@ class JWCrypto {
   async decryptJWE(jwe, key) {
     let [header, cek, iv, ciphertext, authTag] = jwe.split(".");
     const additionalData = UTF8_ENCODER.encode(header);
-    header = JSON.parse(UTF8_DECODER.decode(ChromeUtils.base64URLDecode(header, {padding: "reject"})));
-    if (cek.length > 0 || header.enc !== "A256GCM" || header.alg !== "ECDH-ES") {
+    header = JSON.parse(
+      UTF8_DECODER.decode(
+        ChromeUtils.base64URLDecode(header, { padding: "reject" })
+      )
+    );
+    if (
+      cek.length > 0 ||
+      header.enc !== "A256GCM" ||
+      header.alg !== "ECDH-ES"
+    ) {
       throw new Error("Unknown algorithm.");
     }
     if ("apu" in header || "apv" in header) {
       throw new Error("apu and apv header values are not supported.");
     }
-    const peerPublicKey = await crypto.subtle.importKey("jwk", header.epk, ECDH_PARAMS, false, ["deriveKey"]);
+    const peerPublicKey = await crypto.subtle.importKey(
+      "jwk",
+      header.epk,
+      ECDH_PARAMS,
+      false,
+      ["deriveKey"]
+    );
     // Do ECDH agreement to get the content encryption key.
-    const contentKey = await deriveECDHSharedAESKey(key, peerPublicKey, ["decrypt"]);
-    iv = ChromeUtils.base64URLDecode(iv, {padding: "reject"});
-    ciphertext = new Uint8Array(ChromeUtils.base64URLDecode(ciphertext, {padding: "reject"}));
-    authTag = new Uint8Array(ChromeUtils.base64URLDecode(authTag, {padding: "reject"}));
+    const contentKey = await deriveECDHSharedAESKey(key, peerPublicKey, [
+      "decrypt",
+    ]);
+    iv = ChromeUtils.base64URLDecode(iv, { padding: "reject" });
+    ciphertext = new Uint8Array(
+      ChromeUtils.base64URLDecode(ciphertext, { padding: "reject" })
+    );
+    authTag = new Uint8Array(
+      ChromeUtils.base64URLDecode(authTag, { padding: "reject" })
+    );
     const bundle = new Uint8Array([...ciphertext, ...authTag]);
 
-    const decrypted = await crypto.subtle.decrypt({
+    const decrypted = await crypto.subtle.decrypt(
+      {
         name: "AES-GCM",
         iv,
         tagLength: AES_TAG_LEN,
@@ -163,26 +205,26 @@ class JWCrypto {
       let publicKey;
 
       switch (aKeyPair.keyType) {
-       case "RS256":
-        publicKey = {
-          algorithm: "RS",
-          exponent:  aKeyPair.hexRSAPublicKeyExponent,
-          modulus:   aKeyPair.hexRSAPublicKeyModulus,
-        };
-        break;
+        case "RS256":
+          publicKey = {
+            algorithm: "RS",
+            exponent: aKeyPair.hexRSAPublicKeyExponent,
+            modulus: aKeyPair.hexRSAPublicKeyModulus,
+          };
+          break;
 
-       case "DS160":
-        publicKey = {
-          algorithm: "DS",
-          y: aKeyPair.hexDSAPublicValue,
-          p: aKeyPair.hexDSAPrime,
-          q: aKeyPair.hexDSASubPrime,
-          g: aKeyPair.hexDSAGenerator,
-        };
-        break;
+        case "DS160":
+          publicKey = {
+            algorithm: "DS",
+            y: aKeyPair.hexDSAPublicValue,
+            p: aKeyPair.hexDSAPrime,
+            q: aKeyPair.hexDSASubPrime,
+            g: aKeyPair.hexDSAGenerator,
+          };
+          break;
 
-      default:
-        return aCallback("unknown key type");
+        default:
+          return aCallback("unknown key type");
       }
 
       const keyWrapper = {
@@ -226,26 +268,35 @@ class JWCrypto {
   generateAssertion(aCert, aKeyPair, aAudience, aOptions, aCallback) {
     if (typeof aOptions == "function") {
       aCallback = aOptions;
-      aOptions = { };
+      aOptions = {};
     }
 
     // for now, we hack the algorithm name
     // XXX bug 769851
-    const header = {"alg": "DS128"};
+    const header = { alg: "DS128" };
     const headerBytes = IdentityCryptoService.base64UrlEncode(
-                          JSON.stringify(header));
+      JSON.stringify(header)
+    );
 
-
-    function getExpiration(duration = ASSERTION_DEFAULT_DURATION_MS, localtimeOffsetMsec = 0, now = Date.now()) {
+    function getExpiration(
+      duration = ASSERTION_DEFAULT_DURATION_MS,
+      localtimeOffsetMsec = 0,
+      now = Date.now()
+    ) {
       return now + localtimeOffsetMsec + duration;
     }
 
     const payload = {
-      exp: getExpiration(aOptions.duration, aOptions.localtimeOffsetMsec, aOptions.now),
+      exp: getExpiration(
+        aOptions.duration,
+        aOptions.localtimeOffsetMsec,
+        aOptions.now
+      ),
       aud: aAudience,
     };
     const payloadBytes = IdentityCryptoService.base64UrlEncode(
-                          JSON.stringify(payload));
+      JSON.stringify(payload)
+    );
 
     log.debug("payload", { payload, payloadBytes });
     const message = headerBytes + "." + payloadBytes;
@@ -274,8 +325,14 @@ class JWCrypto {
  * @returns {Promise<CryptoKey>}
  */
 async function deriveECDHSharedAESKey(privateKey, publicKey, keyUsages) {
-  const params = {...ECDH_PARAMS, ...{public: publicKey}};
-  const sharedKey = await crypto.subtle.deriveKey(params, privateKey, AES_PARAMS, true, keyUsages);
+  const params = { ...ECDH_PARAMS, ...{ public: publicKey } };
+  const sharedKey = await crypto.subtle.deriveKey(
+    params,
+    privateKey,
+    AES_PARAMS,
+    true,
+    keyUsages
+  );
   // This is the NIST Concat KDF specialized to a specific set of parameters,
   // which basically turn it into a single application of SHA256.
   // The details are from the JWA RFC.
@@ -283,16 +340,30 @@ async function deriveECDHSharedAESKey(privateKey, publicKey, keyUsages) {
   sharedKeyBytes = new Uint8Array(sharedKeyBytes);
   const info = [
     "\x00\x00\x00\x07A256GCM", // 7-byte algorithm identifier
-    "\x00\x00\x00\x00",  // empty PartyUInfo
-    "\x00\x00\x00\x00",  // empty PartyVInfo
-    "\x00\x00\x01\x00",  // keylen == 256
+    "\x00\x00\x00\x00", // empty PartyUInfo
+    "\x00\x00\x00\x00", // empty PartyVInfo
+    "\x00\x00\x01\x00", // keylen == 256
   ].join("");
-  const pkcs = `\x00\x00\x00\x01${String.fromCharCode.apply(null, sharedKeyBytes)}${info}`;
-  const pkcsBuf = Uint8Array.from(Array.prototype.map.call(pkcs, (c) => c.charCodeAt(0)));
-  const derivedKeyBytes = await crypto.subtle.digest({
-    name: "SHA-256",
-  }, pkcsBuf);
-  return crypto.subtle.importKey("raw", derivedKeyBytes, AES_PARAMS, false, keyUsages);
+  const pkcs = `\x00\x00\x00\x01${String.fromCharCode.apply(
+    null,
+    sharedKeyBytes
+  )}${info}`;
+  const pkcsBuf = Uint8Array.from(
+    Array.prototype.map.call(pkcs, c => c.charCodeAt(0))
+  );
+  const derivedKeyBytes = await crypto.subtle.digest(
+    {
+      name: "SHA-256",
+    },
+    pkcsBuf
+  );
+  return crypto.subtle.importKey(
+    "raw",
+    derivedKeyBytes,
+    AES_PARAMS,
+    false,
+    keyUsages
+  );
 }
 
 const jwcrypto = new JWCrypto();

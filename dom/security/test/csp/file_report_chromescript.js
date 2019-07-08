@@ -1,5 +1,5 @@
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 Cu.importGlobalProperties(["TextDecoder"]);
 
@@ -8,14 +8,17 @@ const reportURI = "http://mochi.test:8888/foo.sjs";
 var openingObserver = {
   observe: function(subject, topic, data) {
     // subject should be an nsURI
-    if (subject.QueryInterface == undefined)
+    if (subject.QueryInterface == undefined) {
       return;
+    }
 
-    var message = {report: "", error: false};
+    var message = { report: "", error: false };
 
-    if (topic == 'http-on-opening-request') {
+    if (topic == "http-on-opening-request") {
       var asciiSpec = subject.QueryInterface(Ci.nsIHttpChannel).URI.asciiSpec;
-      if (asciiSpec !== reportURI) return;
+      if (asciiSpec !== reportURI) {
+        return;
+      }
 
       var reportText = false;
       try {
@@ -23,17 +26,22 @@ var openingObserver = {
         // We'll parse the report text as JSON and verify that the properties
         // have expected values.
         var reportText = "{}";
-        var uploadStream = subject.QueryInterface(Ci.nsIUploadChannel).uploadStream;
+        var uploadStream = subject.QueryInterface(Ci.nsIUploadChannel)
+          .uploadStream;
 
         if (uploadStream) {
           // get the bytes from the request body
-          var binstream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
+          var binstream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+            Ci.nsIBinaryInputStream
+          );
           binstream.setInputStream(uploadStream);
 
           let bytes = NetUtil.readInputStream(binstream);
 
           // rewind stream as we are supposed to - there will be an assertion later if we don't.
-          uploadStream.QueryInterface(Ci.nsISeekableStream).seek(Ci.nsISeekableStream.NS_SEEK_SET, 0);
+          uploadStream
+            .QueryInterface(Ci.nsISeekableStream)
+            .seek(Ci.nsISeekableStream.NS_SEEK_SET, 0);
 
           let textDecoder = new TextDecoder();
           reportText = textDecoder.decode(bytes);
@@ -44,12 +52,12 @@ var openingObserver = {
         message.error = e.toString();
       }
 
-      sendAsyncMessage('opening-request-completed', message);
+      sendAsyncMessage("opening-request-completed", message);
     }
-  }
+  },
 };
 
-Services.obs.addObserver(openingObserver, 'http-on-opening-request');
+Services.obs.addObserver(openingObserver, "http-on-opening-request");
 addMessageListener("finish", function() {
-  Services.obs.removeObserver(openingObserver, 'http-on-opening-request');
+  Services.obs.removeObserver(openingObserver, "http-on-opening-request");
 });

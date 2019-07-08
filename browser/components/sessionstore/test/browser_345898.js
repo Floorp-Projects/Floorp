@@ -6,40 +6,64 @@ function test() {
   /** Test for Bug 345898 **/
 
   // all of the following calls with illegal arguments should throw NS_ERROR_ILLEGAL_VALUE
-  Assert.throws(() => ss.getWindowState({}),
+  Assert.throws(
+    () => ss.getWindowState({}),
     /NS_ERROR_ILLEGAL_VALUE/,
-    "Invalid window for getWindowState throws");
-  Assert.throws(() => ss.setWindowState({}, "", false),
+    "Invalid window for getWindowState throws"
+  );
+  Assert.throws(
+    () => ss.setWindowState({}, "", false),
     /NS_ERROR_ILLEGAL_VALUE/,
-    "Invalid window for setWindowState throws");
-  Assert.throws(() => ss.getTabState({}),
+    "Invalid window for setWindowState throws"
+  );
+  Assert.throws(
+    () => ss.getTabState({}),
     /NS_ERROR_ILLEGAL_VALUE/,
-    "Invalid tab for getTabState throws");
-  Assert.throws(() => ss.setTabState({}, "{}"),
+    "Invalid tab for getTabState throws"
+  );
+  Assert.throws(
+    () => ss.setTabState({}, "{}"),
     /NS_ERROR_ILLEGAL_VALUE/,
-    "Invalid tab state for setTabState throws");
-  Assert.throws(() => ss.setTabState({}, JSON.stringify({ entries: [] })),
+    "Invalid tab state for setTabState throws"
+  );
+  Assert.throws(
+    () => ss.setTabState({}, JSON.stringify({ entries: [] })),
     /NS_ERROR_ILLEGAL_VALUE/,
-    "Invalid tab for setTabState throws");
-  Assert.throws(() => ss.duplicateTab({}, {}),
+    "Invalid tab for setTabState throws"
+  );
+  Assert.throws(
+    () => ss.duplicateTab({}, {}),
     /NS_ERROR_ILLEGAL_VALUE/,
-    "Invalid tab for duplicateTab throws");
-  Assert.throws(() => ss.duplicateTab({}, gBrowser.selectedTab),
+    "Invalid tab for duplicateTab throws"
+  );
+  Assert.throws(
+    () => ss.duplicateTab({}, gBrowser.selectedTab),
     /NS_ERROR_ILLEGAL_VALUE/,
-    "Invalid window for duplicateTab throws");
-  Assert.throws(() => ss.getClosedTabData({}),
+    "Invalid window for duplicateTab throws"
+  );
+  Assert.throws(
+    () => ss.getClosedTabData({}),
     /NS_ERROR_ILLEGAL_VALUE/,
-    "Invalid window for getClosedTabData throws");
-  Assert.throws(() => ss.undoCloseTab({}, 0),
+    "Invalid window for getClosedTabData throws"
+  );
+  Assert.throws(
+    () => ss.undoCloseTab({}, 0),
     /NS_ERROR_ILLEGAL_VALUE/,
-    "Invalid window for undoCloseTab throws");
-  Assert.throws(() => ss.undoCloseTab(window, -1),
+    "Invalid window for undoCloseTab throws"
+  );
+  Assert.throws(
+    () => ss.undoCloseTab(window, -1),
     /NS_ERROR_ILLEGAL_VALUE/,
-    "Invalid index for undoCloseTab throws");
-  Assert.throws(() => ss.getCustomWindowValue({}, ""),
+    "Invalid index for undoCloseTab throws"
+  );
+  Assert.throws(
+    () => ss.getCustomWindowValue({}, ""),
     /NS_ERROR_ILLEGAL_VALUE/,
-    "Invalid window for getCustomWindowValue throws");
-  Assert.throws(() => ss.setCustomWindowValue({}, "", ""),
+    "Invalid window for getCustomWindowValue throws"
+  );
+  Assert.throws(
+    () => ss.setCustomWindowValue({}, "", ""),
     /NS_ERROR_ILLEGAL_VALUE/,
-    "Invalid window for setCustomWindowValue throws");
+    "Invalid window for setCustomWindowValue throws"
+  );
 }

@@ -28,31 +28,37 @@ function promiseTabLoadEvent(tab, url) {
 
   let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, handle);
 
-  if (url)
+  if (url) {
     BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+  }
 
   return loaded;
 }
 
 var gInvalidFormPopup = document.getElementById("invalid-form-popup");
-ok(gInvalidFormPopup,
-   "The browser should have a popup to show when a form is invalid");
+ok(
+  gInvalidFormPopup,
+  "The browser should have a popup to show when a form is invalid"
+);
 
 function checkPopupShow() {
-  ok(gInvalidFormPopup.state == "showing" || gInvalidFormPopup.state == "open",
-     "[Test " + testId + "] The invalid form popup should be shown");
+  ok(
+    gInvalidFormPopup.state == "showing" || gInvalidFormPopup.state == "open",
+    "[Test " + testId + "] The invalid form popup should be shown"
+  );
 }
 
 function checkPopupHide() {
-  ok(gInvalidFormPopup.state != "showing" && gInvalidFormPopup.state != "open",
-     "[Test " + testId + "] The invalid form popup should not be shown");
+  ok(
+    gInvalidFormPopup.state != "showing" && gInvalidFormPopup.state != "open",
+    "[Test " + testId + "] The invalid form popup should not be shown"
+  );
 }
 
 var gObserver = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIFormSubmitObserver]),
 
-  notifyInvalidSubmit(aFormElement, aInvalidElements) {
-  },
+  notifyInvalidSubmit(aFormElement, aInvalidElements) {},
 };
 
 var testId = 0;
@@ -71,8 +77,10 @@ function getDocFooter() {
 }
 
 function getEmptyFrame() {
-  return "<iframe style='width:100px; height:30px; margin:3px; border:1px solid lightgray;' " +
-         "name='t' srcdoc=\"<html><head><meta charset='utf-8'></head><body>form target</body></html>\"></iframe>";
+  return (
+    "<iframe style='width:100px; height:30px; margin:3px; border:1px solid lightgray;' " +
+    "name='t' srcdoc=\"<html><head><meta charset='utf-8'></head><body>form target</body></html>\"></iframe>"
+  );
 }
 
 async function openNewTab(uri, background) {
@@ -100,15 +108,24 @@ async function blurChildElement(browser) {
 async function checkChildFocus(browser, message) {
   await ContentTask.spawn(browser, [message, testId], async function(args) {
     let [msg, id] = args;
-    var focused = content.document.activeElement == content.document.getElementById("i");
+    var focused =
+      content.document.activeElement == content.document.getElementById("i");
 
     var validMsg = true;
     if (msg) {
-      validMsg = (msg == content.document.getElementById("i").validationMessage);
+      validMsg = msg == content.document.getElementById("i").validationMessage;
     }
 
-    Assert.equal(focused, true, "Test " + id + " First invalid element should be focused");
-    Assert.equal(validMsg, true, "Test " + id + " The panel should show the message from validationMessage");
+    Assert.equal(
+      focused,
+      true,
+      "Test " + id + " First invalid element should be focused"
+    );
+    Assert.equal(
+      validMsg,
+      true,
+      "Test " + id + " The panel should show the message from validationMessage"
+    );
   });
 }
 
@@ -117,7 +134,10 @@ async function checkChildFocus(browser, message) {
  */
 add_task(async function() {
   incrementTest();
-  let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input><input id='s' type='submit'></form>" + getDocFooter();
+  let uri =
+    getDocHeader() +
+    "<form target='t' action='data:text/html,'><input><input id='s' type='submit'></form>" +
+    getDocFooter();
   let browser = await openNewTab(uri);
 
   await clickChildElement(browser);
@@ -139,15 +159,24 @@ add_task(async function() {
  */
 add_task(async function() {
   incrementTest();
-  let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input required id='i'><input id='s' type='submit'></form>" + getDocFooter();
+  let uri =
+    getDocHeader() +
+    "<form target='t' action='data:text/html,'><input required id='i'><input id='s' type='submit'></form>" +
+    getDocFooter();
   let browser = await openNewTab(uri);
 
-  let popupShownPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    gInvalidFormPopup,
+    "popupshown"
+  );
   await clickChildElement(browser);
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
+  await checkChildFocus(
+    browser,
+    gInvalidFormPopup.firstElementChild.textContent
+  );
 
   gBrowser.removeCurrentTab();
 });
@@ -158,15 +187,24 @@ add_task(async function() {
  */
 add_task(async function() {
   incrementTest();
-  let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input><input id='i' required><input required><input id='s' type='submit'></form>" + getDocFooter();
+  let uri =
+    getDocHeader() +
+    "<form target='t' action='data:text/html,'><input><input id='i' required><input required><input id='s' type='submit'></form>" +
+    getDocFooter();
   let browser = await openNewTab(uri);
 
-  let popupShownPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    gInvalidFormPopup,
+    "popupshown"
+  );
   await clickChildElement(browser);
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
+  await checkChildFocus(
+    browser,
+    gInvalidFormPopup.firstElementChild.textContent
+  );
 
   gBrowser.removeCurrentTab();
 });
@@ -177,17 +215,29 @@ add_task(async function() {
  */
 add_task(async function() {
   incrementTest();
-  let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" + getDocFooter();
+  let uri =
+    getDocHeader() +
+    "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" +
+    getDocFooter();
   let browser = await openNewTab(uri);
 
-  let popupShownPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    gInvalidFormPopup,
+    "popupshown"
+  );
   await clickChildElement(browser);
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
+  await checkChildFocus(
+    browser,
+    gInvalidFormPopup.firstElementChild.textContent
+  );
 
-  let popupHiddenPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popuphidden");
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    gInvalidFormPopup,
+    "popuphidden"
+  );
   EventUtils.sendString("a");
   await popupHiddenPromise;
 
@@ -200,15 +250,24 @@ add_task(async function() {
  */
 add_task(async function() {
   incrementTest();
-  let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input type='email' id='i' required><input id='s' type='submit'></form>" + getDocFooter();
+  let uri =
+    getDocHeader() +
+    "<form target='t' action='data:text/html,'><input type='email' id='i' required><input id='s' type='submit'></form>" +
+    getDocFooter();
   let browser = await openNewTab(uri);
 
-  let popupShownPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    gInvalidFormPopup,
+    "popupshown"
+  );
   await clickChildElement(browser);
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
+  await checkChildFocus(
+    browser,
+    gInvalidFormPopup.firstElementChild.textContent
+  );
 
   await new Promise((resolve, reject) => {
     EventUtils.sendString("a");
@@ -227,17 +286,29 @@ add_task(async function() {
  */
 add_task(async function() {
   incrementTest();
-  let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" + getDocFooter();
+  let uri =
+    getDocHeader() +
+    "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" +
+    getDocFooter();
   let browser = await openNewTab(uri);
 
-  let popupShownPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    gInvalidFormPopup,
+    "popupshown"
+  );
   await clickChildElement(browser);
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
+  await checkChildFocus(
+    browser,
+    gInvalidFormPopup.firstElementChild.textContent
+  );
 
-  let popupHiddenPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popuphidden");
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    gInvalidFormPopup,
+    "popuphidden"
+  );
   await blurChildElement(browser);
   await popupHiddenPromise;
 
@@ -249,17 +320,29 @@ add_task(async function() {
  */
 add_task(async function() {
   incrementTest();
-  let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" + getDocFooter();
+  let uri =
+    getDocHeader() +
+    "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" +
+    getDocFooter();
   let browser = await openNewTab(uri);
 
-  let popupShownPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    gInvalidFormPopup,
+    "popupshown"
+  );
   await clickChildElement(browser);
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
+  await checkChildFocus(
+    browser,
+    gInvalidFormPopup.firstElementChild.textContent
+  );
 
-  let popupHiddenPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popuphidden");
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    gInvalidFormPopup,
+    "popuphidden"
+  );
   EventUtils.synthesizeKey("KEY_Tab");
   await popupHiddenPromise;
 
@@ -271,17 +354,29 @@ add_task(async function() {
  */
 add_task(async function() {
   incrementTest();
-  let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" + getDocFooter();
+  let uri =
+    getDocHeader() +
+    "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" +
+    getDocFooter();
   let browser1 = await openNewTab(uri);
 
-  let popupShownPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    gInvalidFormPopup,
+    "popupshown"
+  );
   await clickChildElement(browser1);
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser1, gInvalidFormPopup.firstElementChild.textContent);
+  await checkChildFocus(
+    browser1,
+    gInvalidFormPopup.firstElementChild.textContent
+  );
 
-  let popupHiddenPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popuphidden");
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    gInvalidFormPopup,
+    "popuphidden"
+  );
 
   let browser2 = await openNewTab("data:text/html,<html></html>");
   await popupHiddenPromise;
@@ -296,17 +391,29 @@ add_task(async function() {
  */
 add_task(async function() {
   incrementTest();
-  let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" + getDocFooter();
+  let uri =
+    getDocHeader() +
+    "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" +
+    getDocFooter();
   let browser = await openNewTab(uri);
 
-  let popupShownPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    gInvalidFormPopup,
+    "popupshown"
+  );
   await clickChildElement(browser);
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
+  await checkChildFocus(
+    browser,
+    gInvalidFormPopup.firstElementChild.textContent
+  );
 
-  let popupHiddenPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popuphidden");
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    gInvalidFormPopup,
+    "popuphidden"
+  );
   await BrowserTestUtils.loadURI(browser, "data:text/html,<div>hello!</div>");
   await BrowserTestUtils.browserLoaded(browser);
 
@@ -327,9 +434,16 @@ add_task(async function() {
   }
 
   incrementTest();
-  let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" + getDocFooter();
+  let uri =
+    getDocHeader() +
+    "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" +
+    getDocFooter();
   let browser = await openNewTab(uri, true);
-  isnot(gBrowser.selectedBrowser, browser, "This tab should have been loaded in background");
+  isnot(
+    gBrowser.selectedBrowser,
+    browser,
+    "This tab should have been loaded in background"
+  );
 
   let notifierPromise = new Promise((resolve, reject) => {
     gObserver.notifyInvalidSubmit = function() {
@@ -360,17 +474,29 @@ add_task(async function() {
  */
 add_task(async function() {
   incrementTest();
-  let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input type='email' required id='i'><input id='s' type='submit'></form>" + getDocFooter();
+  let uri =
+    getDocHeader() +
+    "<form target='t' action='data:text/html,'><input type='email' required id='i'><input id='s' type='submit'></form>" +
+    getDocFooter();
   let browser = await openNewTab(uri);
 
-  let popupShownPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    gInvalidFormPopup,
+    "popupshown"
+  );
   await clickChildElement(browser);
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
+  await checkChildFocus(
+    browser,
+    gInvalidFormPopup.firstElementChild.textContent
+  );
 
-  let inputPromise = BrowserTestUtils.waitForEvent(gBrowser.contentDocument.getElementById("i"), "input");
+  let inputPromise = BrowserTestUtils.waitForEvent(
+    gBrowser.contentDocument.getElementById("i"),
+    "input"
+  );
   EventUtils.sendString("f");
   await inputPromise;
 

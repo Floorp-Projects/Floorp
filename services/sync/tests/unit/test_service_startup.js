@@ -7,13 +7,12 @@ add_task(async function run_test() {
   validate_all_future_pings();
   _("When imported, Service.onStartup is called");
 
-  let xps = Cc["@mozilla.org/weave/service;1"]
-              .getService(Ci.nsISupports)
-              .wrappedJSObject;
+  let xps = Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
+    .wrappedJSObject;
   Assert.ok(!xps.enabled);
 
   // Test fixtures
-  let {Service} = ChromeUtils.import("resource://services-sync/service.js");
+  let { Service } = ChromeUtils.import("resource://services-sync/service.js");
   Service.identity.username = "johndoe";
   Assert.ok(xps.enabled);
 
@@ -31,8 +30,14 @@ add_task(async function run_test() {
 
   _("Engines are registered.");
   let engines = Service.engineManager.getAll();
-  Assert.ok(Utils.deepEquals(engines.map(engine => engine.name),
-                             ["tabs", "bookmarks", "forms", "history"]));
+  Assert.ok(
+    Utils.deepEquals(engines.map(engine => engine.name), [
+      "tabs",
+      "bookmarks",
+      "forms",
+      "history",
+    ])
+  );
 
   // Clean up.
   Svc.Prefs.resetBranch("");

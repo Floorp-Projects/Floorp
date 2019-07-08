@@ -10,7 +10,7 @@ var EXPORTED_SYMBOLS = [
   "MessagePromise",
 ];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * Wait for a single event to be fired on a specific EventListener.
@@ -43,34 +43,48 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
  *
  * @throws {TypeError}
  */
-function EventPromise(listener, type, options = {
+function EventPromise(
+  listener,
+  type,
+  options = {
     capture: false,
     wantsUntrusted: false,
     mozSystemGroup: false,
-  }) {
+  }
+) {
   if (!listener || !("addEventListener" in listener)) {
     throw new TypeError();
   }
   if (typeof type != "string") {
     throw new TypeError();
   }
-  if (("capture" in options && typeof options.capture != "boolean") ||
-      ("wantsUntrusted" in options && typeof options.wantsUntrusted != "boolean") ||
-      ("mozSystemGroup" in options && typeof options.mozSystemGroup != "boolean")) {
+  if (
+    ("capture" in options && typeof options.capture != "boolean") ||
+    ("wantsUntrusted" in options &&
+      typeof options.wantsUntrusted != "boolean") ||
+    ("mozSystemGroup" in options && typeof options.mozSystemGroup != "boolean")
+  ) {
     throw new TypeError();
   }
 
   options.once = true;
 
   return new Promise(resolve => {
-    listener.addEventListener(type, event => {
-      Services.tm.dispatchToMainThread(() => resolve(event));
-    }, options);
+    listener.addEventListener(
+      type,
+      event => {
+        Services.tm.dispatchToMainThread(() => resolve(event));
+      },
+      options
+    );
   });
 }
 
-function DOMContentLoadedPromise(window, options = {mozSystemGroup: true}) {
-  if (window.document.readyState == "complete" || window.document.readyState == "interactive") {
+function DOMContentLoadedPromise(window, options = { mozSystemGroup: true }) {
+  if (
+    window.document.readyState == "complete" ||
+    window.document.readyState == "interactive"
+  ) {
     return Promise.resolve();
   }
   return new EventPromise(window, "DOMContentLoaded", options);

@@ -8,8 +8,12 @@ const protocol = require("devtools/shared/protocol");
 const { Memory } = require("devtools/server/performance/memory");
 const { actorBridgeWithSpec } = require("devtools/server/actors/common");
 const { memorySpec } = require("devtools/shared/specs/memory");
-loader.lazyRequireGetter(this, "StackFrameCache",
-                         "devtools/server/actors/utils/stack", true);
+loader.lazyRequireGetter(
+  this,
+  "StackFrameCache",
+  "devtools/server/actors/utils/stack",
+  true
+);
 
 /**
  * An actor that returns memory usage data for its parent actor's window.

@@ -1,11 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
-var httpProtocolHandler = Cc["@mozilla.org/network/protocol;1?name=http"]
-                          .getService(Ci.nsIHttpProtocolHandler);
+var httpProtocolHandler = Cc[
+  "@mozilla.org/network/protocol;1?name=http"
+].getService(Ci.nsIHttpProtocolHandler);
 
 // Tracking info/collections.
 var collectionsHelper = track_collections_helper();
@@ -36,10 +37,17 @@ add_task(async function setup() {
 
   // Note this string is missing the trailing ".destkop" as the test
   // adjusts the "client.type" pref where that portion comes from.
-  expectedUA = Services.appinfo.name + "/" + Services.appinfo.version +
-               " (" + httpProtocolHandler.oscpu + ")" +
-               " FxSync/" + WEAVE_VERSION + "." +
-               Services.appinfo.appBuildID;
+  expectedUA =
+    Services.appinfo.name +
+    "/" +
+    Services.appinfo.version +
+    " (" +
+    httpProtocolHandler.oscpu +
+    ")" +
+    " FxSync/" +
+    WEAVE_VERSION +
+    "." +
+    Services.appinfo.appBuildID;
 });
 
 add_task(async function test_fetchInfo() {
@@ -83,4 +91,3 @@ add_task(async function test_mobile_get() {
 add_test(function tear_down() {
   server.stop(run_next_test);
 });
-

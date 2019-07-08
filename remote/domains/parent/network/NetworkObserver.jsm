@@ -4,17 +4,33 @@
 
 "use strict";
 
-const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
 
 const Cm = Components.manager;
 const CC = Components.Constructor;
 
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1", "nsIBinaryInputStream", "setInputStream");
-const BinaryOutputStream = CC("@mozilla.org/binaryoutputstream;1", "nsIBinaryOutputStream", "setOutputStream");
-const StorageStream = CC("@mozilla.org/storagestream;1", "nsIStorageStream", "init");
+const BinaryInputStream = CC(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
+const BinaryOutputStream = CC(
+  "@mozilla.org/binaryoutputstream;1",
+  "nsIBinaryOutputStream",
+  "setOutputStream"
+);
+const StorageStream = CC(
+  "@mozilla.org/storagestream;1",
+  "nsIStorageStream",
+  "init"
+);
 
 // Cap response storage with 100Mb per tracked tab.
 const MAX_RESPONSE_STORAGE_SIZE = 100 * 1024 * 1024;
@@ -36,7 +52,9 @@ class NetworkObserver {
   constructor() {
     EventEmitter.decorate(this);
     this._browserSessionCount = new Map();
-    this._activityDistributor = Cc["@mozilla.org/network/http-activity-distributor;1"].getService(Ci.nsIHttpActivityDistributor);
+    this._activityDistributor = Cc[
+      "@mozilla.org/network/http-activity-distributor;1"
+    ].getService(Ci.nsIHttpActivityDistributor);
     this._activityDistributor.addObserver(this);
 
     this._redirectMap = new Map();
@@ -53,8 +71,19 @@ class NetworkObserver {
     };
     // Register self as ChannelEventSink to track redirects.
     const registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-    registrar.registerFactory(SINK_CLASS_ID, SINK_CLASS_DESCRIPTION, SINK_CONTRACT_ID, this._channelSinkFactory);
-    Services.catMan.addCategoryEntry(SINK_CATEGORY_NAME, SINK_CONTRACT_ID, SINK_CONTRACT_ID, false, true);
+    registrar.registerFactory(
+      SINK_CLASS_ID,
+      SINK_CLASS_DESCRIPTION,
+      SINK_CONTRACT_ID,
+      this._channelSinkFactory
+    );
+    Services.catMan.addCategoryEntry(
+      SINK_CATEGORY_NAME,
+      SINK_CONTRACT_ID,
+      SINK_CONTRACT_ID,
+      false,
+      true
+    );
 
     // Request interception state.
     this._browserSuspendedChannels = new Map();
@@ -62,12 +91,24 @@ class NetworkObserver {
     this._browserResponseStorages = new Map();
 
     this._onRequest = this._onRequest.bind(this);
-    this._onExamineResponse = this._onResponse.bind(this, false /* fromCache */);
+    this._onExamineResponse = this._onResponse.bind(
+      this,
+      false /* fromCache */
+    );
     this._onCachedResponse = this._onResponse.bind(this, true /* fromCache */);
     Services.obs.addObserver(this._onRequest, "http-on-modify-request");
-    Services.obs.addObserver(this._onExamineResponse, "http-on-examine-response");
-    Services.obs.addObserver(this._onCachedResponse, "http-on-examine-cached-response");
-    Services.obs.addObserver(this._onCachedResponse, "http-on-examine-merged-response");
+    Services.obs.addObserver(
+      this._onExamineResponse,
+      "http-on-examine-response"
+    );
+    Services.obs.addObserver(
+      this._onCachedResponse,
+      "http-on-examine-cached-response"
+    );
+    Services.obs.addObserver(
+      this._onCachedResponse,
+      "http-on-examine-merged-response"
+    );
   }
 
   setExtraHTTPHeaders(browser, headers) {
@@ -111,7 +152,11 @@ class NetworkObserver {
       }
       // 2. Set new headers.
       for (const header of headers) {
-        httpChannel.setRequestHeader(header.name, header.value, false /* merge */);
+        httpChannel.setRequestHeader(
+          header.name,
+          header.value,
+          false /* merge */
+        );
       }
     }
     suspendedChannels.delete(requestId);
@@ -150,14 +195,26 @@ class NetworkObserver {
     }
     const httpChannel = oldChannel.QueryInterface(Ci.nsIHttpChannel);
     const loadContext = getLoadContext(httpChannel);
-    if (!loadContext || !this._browserSessionCount.has(loadContext.topFrameElement)) {
+    if (
+      !loadContext ||
+      !this._browserSessionCount.has(loadContext.topFrameElement)
+    ) {
       return;
     }
     this._redirectMap.set(newChannel, oldChannel);
   }
 
-  observeActivity(channel, activityType, activitySubtype, timestamp, extraSizeData, extraStringData) {
-    if (activityType !== Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION) {
+  observeActivity(
+    channel,
+    activityType,
+    activitySubtype,
+    timestamp,
+    extraSizeData,
+    extraStringData
+  ) {
+    if (
+      activityType !== Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION
+    ) {
       return;
     }
     if (!(channel instanceof Ci.nsIHttpChannel)) {
@@ -165,10 +222,16 @@ class NetworkObserver {
     }
     const httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
     const loadContext = getLoadContext(httpChannel);
-    if (!loadContext || !this._browserSessionCount.has(loadContext.topFrameElement)) {
+    if (
+      !loadContext ||
+      !this._browserSessionCount.has(loadContext.topFrameElement)
+    ) {
       return;
     }
-    if (activitySubtype !== Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE) {
+    if (
+      activitySubtype !==
+      Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
+    ) {
       return;
     }
     this.emit("requestfinished", httpChannel, {
@@ -182,17 +245,30 @@ class NetworkObserver {
     }
     const httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
     const loadContext = getLoadContext(httpChannel);
-    if (!loadContext || !this._browserSessionCount.has(loadContext.topFrameElement)) {
+    if (
+      !loadContext ||
+      !this._browserSessionCount.has(loadContext.topFrameElement)
+    ) {
       return;
     }
-    const extraHeaders = this._extraHTTPHeaders.get(loadContext.topFrameElement);
+    const extraHeaders = this._extraHTTPHeaders.get(
+      loadContext.topFrameElement
+    );
     if (extraHeaders) {
       for (const header of extraHeaders) {
-        httpChannel.setRequestHeader(header.name, header.value, false /* merge */);
+        httpChannel.setRequestHeader(
+          header.name,
+          header.value,
+          false /* merge */
+        );
       }
     }
-    const causeType = httpChannel.loadInfo ? httpChannel.loadInfo.externalContentPolicyType : Ci.nsIContentPolicy.TYPE_OTHER;
-    const suspendedChannels = this._browserSuspendedChannels.get(loadContext.topFrameElement);
+    const causeType = httpChannel.loadInfo
+      ? httpChannel.loadInfo.externalContentPolicyType
+      : Ci.nsIContentPolicy.TYPE_OTHER;
+    const suspendedChannels = this._browserSuspendedChannels.get(
+      loadContext.topFrameElement
+    );
     if (suspendedChannels) {
       httpChannel.suspend();
       suspendedChannels.set(requestId(httpChannel), httpChannel);
@@ -218,13 +294,16 @@ class NetworkObserver {
 
   _onResponse(fromCache, httpChannel, topic) {
     const loadContext = getLoadContext(httpChannel);
-    if (!loadContext || !this._browserSessionCount.has(loadContext.topFrameElement)) {
+    if (
+      !loadContext ||
+      !this._browserSessionCount.has(loadContext.topFrameElement)
+    ) {
       return;
     }
     httpChannel.QueryInterface(Ci.nsIHttpChannelInternal);
     const headers = [];
     httpChannel.visitResponseHeaders({
-      visitHeader: (name, value) => headers.push({name, value}),
+      visitHeader: (name, value) => headers.push({ name, value }),
     });
 
     let remoteIPAddress = undefined;
@@ -262,7 +341,13 @@ class NetworkObserver {
     const value = this._browserSessionCount.get(browser) || 0;
     this._browserSessionCount.set(browser, value + 1);
     if (value === 0) {
-      this._browserResponseStorages.set(browser, new ResponseStorage(MAX_RESPONSE_STORAGE_SIZE, MAX_RESPONSE_STORAGE_SIZE / 10));
+      this._browserResponseStorages.set(
+        browser,
+        new ResponseStorage(
+          MAX_RESPONSE_STORAGE_SIZE,
+          MAX_RESPONSE_STORAGE_SIZE / 10
+        )
+      );
     }
     return () => this.stopTrackingBrowserNetwork(browser);
   }
@@ -281,11 +366,24 @@ class NetworkObserver {
     this._activityDistributor.removeObserver(this);
     const registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
     registrar.unregisterFactory(SINK_CLASS_ID, this._channelSinkFactory);
-    Services.catMan.deleteCategoryEntry(SINK_CATEGORY_NAME, SINK_CONTRACT_ID, false);
+    Services.catMan.deleteCategoryEntry(
+      SINK_CATEGORY_NAME,
+      SINK_CONTRACT_ID,
+      false
+    );
     Services.obs.removeObserver(this._onRequest, "http-on-modify-request");
-    Services.obs.removeObserver(this._onExamineResponse, "http-on-examine-response");
-    Services.obs.removeObserver(this._onCachedResponse, "http-on-examine-cached-response");
-    Services.obs.removeObserver(this._onCachedResponse, "http-on-examine-merged-response");
+    Services.obs.removeObserver(
+      this._onExamineResponse,
+      "http-on-examine-response"
+    );
+    Services.obs.removeObserver(
+      this._onCachedResponse,
+      "http-on-examine-cached-response"
+    );
+    Services.obs.removeObserver(
+      this._onCachedResponse,
+      "http-on-examine-merged-response"
+    );
   }
 }
 
@@ -335,8 +433,9 @@ function readRequestPostData(httpChannel) {
   let text = undefined;
   try {
     text = NetUtil.readInputStreamToString(iStream, iStream.available());
-    const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-        .createInstance(Ci.nsIScriptableUnicodeConverter);
+    const converter = Cc[
+      "@mozilla.org/intl/scriptableunicodeconverter"
+    ].createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
     text = converter.ConvertToUnicode(text);
   } catch (err) {
@@ -356,14 +455,18 @@ function getLoadContext(httpChannel) {
   let loadContext = null;
   try {
     if (httpChannel.notificationCallbacks) {
-      loadContext = httpChannel.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      loadContext = httpChannel.notificationCallbacks.getInterface(
+        Ci.nsILoadContext
+      );
     }
   } catch (e) {}
   try {
     if (!loadContext && httpChannel.loadGroup) {
-      loadContext = httpChannel.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      loadContext = httpChannel.loadGroup.notificationCallbacks.getInterface(
+        Ci.nsILoadContext
+      );
     }
-  } catch (e) { }
+  } catch (e) {}
   return loadContext;
 }
 
@@ -374,7 +477,7 @@ function requestId(httpChannel) {
 function requestHeaders(httpChannel) {
   const headers = [];
   httpChannel.visitRequestHeaders({
-    visitHeader: (name, value) => headers.push({name, value}),
+    visitHeader: (name, value) => headers.push({ name, value }),
   });
   return headers;
 }
@@ -405,11 +508,15 @@ class ResponseStorage {
       return;
     }
     let encodings = [];
-    if ((httpChannel instanceof Ci.nsIEncodedChannel) && httpChannel.contentEncodings && !httpChannel.applyConversion) {
+    if (
+      httpChannel instanceof Ci.nsIEncodedChannel &&
+      httpChannel.contentEncodings &&
+      !httpChannel.applyConversion
+    ) {
       const encodingHeader = httpChannel.getResponseHeader("Content-Encoding");
       encodings = encodingHeader.split(/\s*\t*,\s*\t*/);
     }
-    this._responses.set(requestId(httpChannel), {body, encodings});
+    this._responses.set(requestId(httpChannel), { body, encodings });
     this._totalSize += body.length;
     if (this._totalSize > this._maxTotalSize) {
       for (let [, response] of this._responses) {
@@ -425,17 +532,19 @@ class ResponseStorage {
 
   getBase64EncodedResponse(requestId) {
     const response = this._responses.get(requestId);
-    if (!response)
+    if (!response) {
       throw new Error(`Request "${requestId}" is not found`);
-    if (response.evicted)
-      return {base64body: "", evicted: true};
+    }
+    if (response.evicted) {
+      return { base64body: "", evicted: true };
+    }
     let result = response.body;
     if (response.encodings && response.encodings.length) {
       for (const encoding of response.encodings) {
         result = CommonUtils.convertString(result, encoding, "uncompressed");
       }
     }
-    return {base64body: btoa(result)};
+    return { base64body: btoa(result) };
   }
 }
 
@@ -460,7 +569,12 @@ class ResponseBodyListener {
     this._chunks.push(data);
 
     oStream.writeBytes(data, aCount);
-    this.originalListener.onDataAvailable(aRequest, sStream.newInputStream(0), aOffset, aCount);
+    this.originalListener.onDataAvailable(
+      aRequest,
+      sStream.newInputStream(0),
+      aOffset,
+      aCount
+    );
   }
 
   onStartRequest(aRequest) {
@@ -471,25 +585,35 @@ class ResponseBodyListener {
     this.originalListener.onStopRequest(aRequest, aStatusCode);
     const body = this._chunks.join("");
     delete this._chunks;
-    this._networkObserver._onResponseFinished(this._browser, this._httpChannel, body);
+    this._networkObserver._onResponseFinished(
+      this._browser,
+      this._httpChannel,
+      body
+    );
   }
 }
 
 function getNetworkErrorStatusText(status) {
-  if (!status)
+  if (!status) {
     return null;
+  }
   for (const key of Object.keys(Cr)) {
-    if (Cr[key] === status)
+    if (Cr[key] === status) {
       return key;
+    }
   }
   // Security module. The following is taken from
   // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/How_to_check_the_secruity_state_of_an_XMLHTTPRequest_over_SSL
   if ((status & 0xff0000) === 0x5a0000) {
     // NSS_SEC errors (happen below the base value because of negative vals)
-    if ((status & 0xffff) < Math.abs(Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE)) {
+    if (
+      (status & 0xffff) <
+      Math.abs(Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE)
+    ) {
       // The bases are actually negative, so in our positive numeric space, we
       // need to subtract the base off our value.
-      const nssErr = Math.abs(Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE) - (status & 0xffff);
+      const nssErr =
+        Math.abs(Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE) - (status & 0xffff);
       switch (nssErr) {
         case 11:
           return "SEC_ERROR_EXPIRED_CERTIFICATE";
@@ -511,7 +635,8 @@ function getNetworkErrorStatusText(status) {
           return "SEC_ERROR_UNKNOWN";
       }
     }
-    const sslErr = Math.abs(Ci.nsINSSErrorsService.NSS_SSL_ERROR_BASE) - (status & 0xffff);
+    const sslErr =
+      Math.abs(Ci.nsINSSErrorsService.NSS_SSL_ERROR_BASE) - (status & 0xffff);
     switch (sslErr) {
       case 3:
         return "SSL_ERROR_NO_CERTIFICATE";

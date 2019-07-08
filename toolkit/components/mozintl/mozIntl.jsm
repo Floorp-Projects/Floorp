@@ -2,13 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { Localization } = ChromeUtils.import("resource://gre/modules/Localization.jsm", null);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Localization } = ChromeUtils.import(
+  "resource://gre/modules/Localization.jsm",
+  null
+);
 
-const mozIntlHelper =
-  Cc["@mozilla.org/mozintlhelper;1"].getService(Ci.mozIMozIntlHelper);
-const osPrefs =
-  Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences);
+const mozIntlHelper = Cc["@mozilla.org/mozintlhelper;1"].getService(
+  Ci.mozIMozIntlHelper
+);
+const osPrefs = Cc["@mozilla.org/intl/ospreferences;1"].getService(
+  Ci.mozIOSPreferences
+);
 
 /**
  * RegExp used to parse a BCP47 language tag (ex: en-US, sr-Cyrl-RU etc.)
@@ -82,7 +87,7 @@ function defineCachedGetter(obj, prop, get) {
  * @param {Function} get - Function that will be used as a getter.
  */
 function defineGetter(obj, prop, get) {
-  Object.defineProperty(obj, prop, {get});
+  Object.defineProperty(obj, prop, { get });
 }
 
 /**
@@ -99,17 +104,23 @@ function defineGetter(obj, prop, get) {
 function startOf(date, unit) {
   date = new Date(date.getTime());
   switch (unit) {
-    case "year": date.setMonth(0);
+    case "year":
+      date.setMonth(0);
     // falls through
-    case "month": date.setDate(1);
+    case "month":
+      date.setDate(1);
     // falls through
-    case "day": date.setHours(0);
+    case "day":
+      date.setHours(0);
     // falls through
-    case "hour": date.setMinutes(0);
+    case "hour":
+      date.setMinutes(0);
     // falls through
-    case "minute": date.setSeconds(0);
+    case "minute":
+      date.setSeconds(0);
     // falls through
-    case "second": date.setMilliseconds(0);
+    case "second":
+      date.setMilliseconds(0);
   }
   return date;
 }
@@ -126,14 +137,20 @@ function startOf(date, unit) {
  */
 function bestFit(absDiff) {
   switch (true) {
-    case absDiff.years > 0 && absDiff.months > threshold.month: return "year";
-    case absDiff.months > 0 && absDiff.days > threshold.day: return "month";
+    case absDiff.years > 0 && absDiff.months > threshold.month:
+      return "year";
+    case absDiff.months > 0 && absDiff.days > threshold.day:
+      return "month";
     // case absDiff.months > 0 && absDiff.weeks > threshold.week: return "month";
     // case absDiff.weeks > 0 && absDiff.days > threshold.day: return "week";
-    case absDiff.days > 0 && absDiff.hours > threshold.hour: return "day";
-    case absDiff.hours > 0 && absDiff.minutes > threshold.minute: return "hour";
-    case absDiff.minutes > 0 && absDiff.seconds > threshold.second: return "minute";
-    default: return "second";
+    case absDiff.days > 0 && absDiff.hours > threshold.hour:
+      return "day";
+    case absDiff.hours > 0 && absDiff.minutes > threshold.minute:
+      return "hour";
+    case absDiff.minutes > 0 && absDiff.seconds > threshold.second:
+      return "minute";
+    default:
+      return "second";
   }
 }
 
@@ -158,68 +175,487 @@ const threshold = {
  */
 const availableLocaleDisplayNames = {
   region: new Set([
-    "ad", "ae", "af", "ag", "ai", "al", "am", "ao",
-    "aq", "ar", "as", "at", "au", "aw", "az", "ba",
-    "bb", "bd", "be", "bf", "bg", "bh", "bi", "bj",
-    "bl", "bm", "bn", "bo", "bq", "br", "bs", "bt",
-    "bv", "bw", "by", "bz", "ca", "cc", "cd", "cf",
-    "cg", "ch", "ci", "ck", "cl", "cm", "cn", "co",
-    "cp", "cr", "cu", "cv", "cw", "cx", "cy", "cz",
-    "de", "dg", "dj", "dk", "dm", "do", "dz", "ec",
-    "ee", "eg", "eh", "er", "es", "et", "fi", "fj",
-    "fk", "fm", "fo", "fr", "ga", "gb", "gd", "ge",
-    "gf", "gg", "gh", "gi", "gl", "gm", "gn", "gp",
-    "gq", "gr", "gs", "gt", "gu", "gw", "gy", "hk",
-    "hm", "hn", "hr", "ht", "hu", "id", "ie", "il",
-    "im", "in", "io", "iq", "ir", "is", "it", "je",
-    "jm", "jo", "jp", "ke", "kg", "kh", "ki", "km",
-    "kn", "kp", "kr", "kw", "ky", "kz", "la", "lb",
-    "lc", "li", "lk", "lr", "ls", "lt", "lu", "lv",
-    "ly", "ma", "mc", "md", "me", "mf", "mg", "mh",
-    "mk", "ml", "mm", "mn", "mo", "mp", "mq", "mr",
-    "ms", "mt", "mu", "mv", "mw", "mx", "my", "mz",
-    "na", "nc", "ne", "nf", "ng", "ni", "nl", "no",
-    "np", "nr", "nu", "nz", "om", "pa", "pe", "pf",
-    "pg", "ph", "pk", "pl", "pm", "pn", "pr", "pt",
-    "pw", "py", "qa", "qm", "qs", "qu", "qw", "qx",
-    "qz", "re", "ro", "rs", "ru", "rw", "sa", "sb",
-    "sc", "sd", "se", "sg", "sh", "si", "sk", "sl",
-    "sm", "sn", "so", "sr", "ss", "st", "sv", "sx",
-    "sy", "sz", "tc", "td", "tf", "tg", "th", "tj",
-    "tk", "tl", "tm", "tn", "to", "tr", "tt", "tv",
-    "tw", "tz", "ua", "ug", "us", "uy", "uz", "va",
-    "vc", "ve", "vg", "vi", "vn", "vu", "wf", "ws",
-    "xa", "xb", "xc", "xd", "xe", "xg", "xh", "xj",
-    "xk", "xl", "xm", "xp", "xq", "xr", "xs", "xt",
-    "xu", "xv", "xw", "ye", "yt", "za", "zm", "zw",
+    "ad",
+    "ae",
+    "af",
+    "ag",
+    "ai",
+    "al",
+    "am",
+    "ao",
+    "aq",
+    "ar",
+    "as",
+    "at",
+    "au",
+    "aw",
+    "az",
+    "ba",
+    "bb",
+    "bd",
+    "be",
+    "bf",
+    "bg",
+    "bh",
+    "bi",
+    "bj",
+    "bl",
+    "bm",
+    "bn",
+    "bo",
+    "bq",
+    "br",
+    "bs",
+    "bt",
+    "bv",
+    "bw",
+    "by",
+    "bz",
+    "ca",
+    "cc",
+    "cd",
+    "cf",
+    "cg",
+    "ch",
+    "ci",
+    "ck",
+    "cl",
+    "cm",
+    "cn",
+    "co",
+    "cp",
+    "cr",
+    "cu",
+    "cv",
+    "cw",
+    "cx",
+    "cy",
+    "cz",
+    "de",
+    "dg",
+    "dj",
+    "dk",
+    "dm",
+    "do",
+    "dz",
+    "ec",
+    "ee",
+    "eg",
+    "eh",
+    "er",
+    "es",
+    "et",
+    "fi",
+    "fj",
+    "fk",
+    "fm",
+    "fo",
+    "fr",
+    "ga",
+    "gb",
+    "gd",
+    "ge",
+    "gf",
+    "gg",
+    "gh",
+    "gi",
+    "gl",
+    "gm",
+    "gn",
+    "gp",
+    "gq",
+    "gr",
+    "gs",
+    "gt",
+    "gu",
+    "gw",
+    "gy",
+    "hk",
+    "hm",
+    "hn",
+    "hr",
+    "ht",
+    "hu",
+    "id",
+    "ie",
+    "il",
+    "im",
+    "in",
+    "io",
+    "iq",
+    "ir",
+    "is",
+    "it",
+    "je",
+    "jm",
+    "jo",
+    "jp",
+    "ke",
+    "kg",
+    "kh",
+    "ki",
+    "km",
+    "kn",
+    "kp",
+    "kr",
+    "kw",
+    "ky",
+    "kz",
+    "la",
+    "lb",
+    "lc",
+    "li",
+    "lk",
+    "lr",
+    "ls",
+    "lt",
+    "lu",
+    "lv",
+    "ly",
+    "ma",
+    "mc",
+    "md",
+    "me",
+    "mf",
+    "mg",
+    "mh",
+    "mk",
+    "ml",
+    "mm",
+    "mn",
+    "mo",
+    "mp",
+    "mq",
+    "mr",
+    "ms",
+    "mt",
+    "mu",
+    "mv",
+    "mw",
+    "mx",
+    "my",
+    "mz",
+    "na",
+    "nc",
+    "ne",
+    "nf",
+    "ng",
+    "ni",
+    "nl",
+    "no",
+    "np",
+    "nr",
+    "nu",
+    "nz",
+    "om",
+    "pa",
+    "pe",
+    "pf",
+    "pg",
+    "ph",
+    "pk",
+    "pl",
+    "pm",
+    "pn",
+    "pr",
+    "pt",
+    "pw",
+    "py",
+    "qa",
+    "qm",
+    "qs",
+    "qu",
+    "qw",
+    "qx",
+    "qz",
+    "re",
+    "ro",
+    "rs",
+    "ru",
+    "rw",
+    "sa",
+    "sb",
+    "sc",
+    "sd",
+    "se",
+    "sg",
+    "sh",
+    "si",
+    "sk",
+    "sl",
+    "sm",
+    "sn",
+    "so",
+    "sr",
+    "ss",
+    "st",
+    "sv",
+    "sx",
+    "sy",
+    "sz",
+    "tc",
+    "td",
+    "tf",
+    "tg",
+    "th",
+    "tj",
+    "tk",
+    "tl",
+    "tm",
+    "tn",
+    "to",
+    "tr",
+    "tt",
+    "tv",
+    "tw",
+    "tz",
+    "ua",
+    "ug",
+    "us",
+    "uy",
+    "uz",
+    "va",
+    "vc",
+    "ve",
+    "vg",
+    "vi",
+    "vn",
+    "vu",
+    "wf",
+    "ws",
+    "xa",
+    "xb",
+    "xc",
+    "xd",
+    "xe",
+    "xg",
+    "xh",
+    "xj",
+    "xk",
+    "xl",
+    "xm",
+    "xp",
+    "xq",
+    "xr",
+    "xs",
+    "xt",
+    "xu",
+    "xv",
+    "xw",
+    "ye",
+    "yt",
+    "za",
+    "zm",
+    "zw",
   ]),
-  "language": new Set([
-    "aa", "ab", "ach", "ae", "af", "ak", "am", "an",
-    "ar", "as", "ast", "av", "ay", "az", "ba", "be",
-    "bg", "bh", "bi", "bm", "bn", "bo", "br", "bs",
-    "ca", "cak", "ce", "ch", "co", "cr", "crh", "cs",
-    "csb", "cu", "cv", "cy", "da", "de", "dsb", "dv",
-    "dz", "ee", "el", "en", "eo", "es", "et", "eu",
-    "fa", "ff", "fi", "fj", "fo", "fr", "fur", "fy",
-    "ga", "gd", "gl", "gn", "gu", "gv", "ha", "haw",
-    "he", "hi", "hil", "ho", "hr", "hsb", "ht", "hu",
-    "hy", "hz", "ia", "id", "ie", "ig", "ii", "ik",
-    "io", "is", "it", "iu", "ja", "jv", "ka", "kab",
-    "kg", "ki", "kj", "kk", "kl", "km", "kn", "ko",
-    "kok", "kr", "ks", "ku", "kv", "kw", "ky", "la",
-    "lb", "lg", "li", "lij", "ln", "lo", "lt", "ltg",
-    "lu", "lv", "mai", "meh", "mg", "mh", "mi", "mix",
-    "mk", "ml", "mn", "mr", "ms", "mt", "my", "na",
-    "nb", "nd", "ne", "ng", "nl", "nn", "no", "nr",
-    "nso", "nv", "ny", "oc", "oj", "om", "or", "os",
-    "pa", "pi", "pl", "ps", "pt", "qu", "rm", "rn",
-    "ro", "ru", "rw", "sa", "sc", "sd", "se", "sg",
-    "si", "sk", "sl", "sm", "sn", "so", "son", "sq",
-    "sr", "ss", "st", "su", "sv", "sw", "ta", "te",
-    "tg", "th", "ti", "tig", "tk", "tl", "tlh", "tn",
-    "to", "tr", "ts", "tt", "tw", "ty", "ug", "uk",
-    "ur", "uz", "ve", "vi", "vo", "wa", "wen", "wo",
-    "xh", "yi", "yo", "za", "zam", "zh", "zu",
+  language: new Set([
+    "aa",
+    "ab",
+    "ach",
+    "ae",
+    "af",
+    "ak",
+    "am",
+    "an",
+    "ar",
+    "as",
+    "ast",
+    "av",
+    "ay",
+    "az",
+    "ba",
+    "be",
+    "bg",
+    "bh",
+    "bi",
+    "bm",
+    "bn",
+    "bo",
+    "br",
+    "bs",
+    "ca",
+    "cak",
+    "ce",
+    "ch",
+    "co",
+    "cr",
+    "crh",
+    "cs",
+    "csb",
+    "cu",
+    "cv",
+    "cy",
+    "da",
+    "de",
+    "dsb",
+    "dv",
+    "dz",
+    "ee",
+    "el",
+    "en",
+    "eo",
+    "es",
+    "et",
+    "eu",
+    "fa",
+    "ff",
+    "fi",
+    "fj",
+    "fo",
+    "fr",
+    "fur",
+    "fy",
+    "ga",
+    "gd",
+    "gl",
+    "gn",
+    "gu",
+    "gv",
+    "ha",
+    "haw",
+    "he",
+    "hi",
+    "hil",
+    "ho",
+    "hr",
+    "hsb",
+    "ht",
+    "hu",
+    "hy",
+    "hz",
+    "ia",
+    "id",
+    "ie",
+    "ig",
+    "ii",
+    "ik",
+    "io",
+    "is",
+    "it",
+    "iu",
+    "ja",
+    "jv",
+    "ka",
+    "kab",
+    "kg",
+    "ki",
+    "kj",
+    "kk",
+    "kl",
+    "km",
+    "kn",
+    "ko",
+    "kok",
+    "kr",
+    "ks",
+    "ku",
+    "kv",
+    "kw",
+    "ky",
+    "la",
+    "lb",
+    "lg",
+    "li",
+    "lij",
+    "ln",
+    "lo",
+    "lt",
+    "ltg",
+    "lu",
+    "lv",
+    "mai",
+    "meh",
+    "mg",
+    "mh",
+    "mi",
+    "mix",
+    "mk",
+    "ml",
+    "mn",
+    "mr",
+    "ms",
+    "mt",
+    "my",
+    "na",
+    "nb",
+    "nd",
+    "ne",
+    "ng",
+    "nl",
+    "nn",
+    "no",
+    "nr",
+    "nso",
+    "nv",
+    "ny",
+    "oc",
+    "oj",
+    "om",
+    "or",
+    "os",
+    "pa",
+    "pi",
+    "pl",
+    "ps",
+    "pt",
+    "qu",
+    "rm",
+    "rn",
+    "ro",
+    "ru",
+    "rw",
+    "sa",
+    "sc",
+    "sd",
+    "se",
+    "sg",
+    "si",
+    "sk",
+    "sl",
+    "sm",
+    "sn",
+    "so",
+    "son",
+    "sq",
+    "sr",
+    "ss",
+    "st",
+    "su",
+    "sv",
+    "sw",
+    "ta",
+    "te",
+    "tg",
+    "th",
+    "ti",
+    "tig",
+    "tk",
+    "tl",
+    "tlh",
+    "tn",
+    "to",
+    "tr",
+    "ts",
+    "tt",
+    "tw",
+    "ty",
+    "ug",
+    "uk",
+    "ur",
+    "uz",
+    "ve",
+    "vi",
+    "vo",
+    "wa",
+    "wen",
+    "wo",
+    "xh",
+    "yi",
+    "yo",
+    "za",
+    "zam",
+    "zh",
+    "zu",
   ]),
 };
 
@@ -339,8 +775,8 @@ class MozIntl {
       }
 
       const [
-        /* languageTag */,
-        languageSubtag,
+        ,
+        /* languageTag */ languageSubtag,
         scriptSubtag,
         regionSubtag,
         variantSubtags,
@@ -355,7 +791,9 @@ class MozIntl {
       }
 
       if (regionSubtag) {
-        displayName.push(this.getRegionDisplayNames(locales, [regionSubtag])[0]);
+        displayName.push(
+          this.getRegionDisplayNames(locales, [regionSubtag])[0]
+        );
       }
 
       if (variantSubtags) {
@@ -370,7 +808,9 @@ class MozIntl {
       } else {
         modifiers = displayName[1];
       }
-      return localePattern.replace("{0}", displayName[0]).replace("{1}", modifiers);
+      return localePattern
+        .replace("{0}", displayName[0])
+        .replace("{1}", modifiers);
     });
   }
 
@@ -383,13 +823,16 @@ class MozIntl {
 
     class MozDateTimeFormat extends DateTimeFormat {
       constructor(locales, options, ...args) {
-        let resolvedLocales = DateTimeFormat.supportedLocalesOf(getLocales(locales));
+        let resolvedLocales = DateTimeFormat.supportedLocalesOf(
+          getLocales(locales)
+        );
         if (options) {
           if (options.dateStyle || options.timeStyle) {
             options.pattern = osPrefs.getDateTimePattern(
               getDateTimePatternStyle(options.dateStyle),
               getDateTimePatternStyle(options.timeStyle),
-              resolvedLocales[0]);
+              resolvedLocales[0]
+            );
           } else {
             // make sure that user doesn't pass a pattern explicitly
             options.pattern = undefined;
@@ -439,7 +882,7 @@ class MozIntl {
         super(getLocales(locales), options, ...args);
       }
 
-      formatBestUnit(date, {now = new Date()} = {}) {
+      formatBestUnit(date, { now = new Date() } = {}) {
         const diff = {
           _: {},
           ms: date.getTime() - now.getTime(),
@@ -453,13 +896,19 @@ class MozIntl {
           return Math.trunc((startOf(date, "day") - startOf(now, "day")) / day);
         });
         defineCachedGetter(diff, "hours", function() {
-          return Math.trunc((startOf(date, "hour") - startOf(now, "hour")) / hour);
+          return Math.trunc(
+            (startOf(date, "hour") - startOf(now, "hour")) / hour
+          );
         });
         defineCachedGetter(diff, "minutes", function() {
-          return Math.trunc((startOf(date, "minute") - startOf(now, "minute")) / minute);
+          return Math.trunc(
+            (startOf(date, "minute") - startOf(now, "minute")) / minute
+          );
         });
         defineCachedGetter(diff, "seconds", function() {
-          return Math.trunc((startOf(date, "second") - startOf(now, "second")) / second);
+          return Math.trunc(
+            (startOf(date, "second") - startOf(now, "second")) / second
+          );
         });
 
         const absDiff = {
@@ -488,11 +937,16 @@ class MozIntl {
         const unit = bestFit(absDiff);
 
         switch (unit) {
-          case "year": return this.format(diff.years, unit);
-          case "month": return this.format(diff.months, unit);
-          case "day": return this.format(diff.days, unit);
-          case "hour": return this.format(diff.hours, unit);
-          case "minute": return this.format(diff.minutes, unit);
+          case "year":
+            return this.format(diff.years, unit);
+          case "month":
+            return this.format(diff.months, unit);
+          case "day":
+            return this.format(diff.days, unit);
+          case "hour":
+            return this.format(diff.hours, unit);
+          case "minute":
+            return this.format(diff.minutes, unit);
           default:
             if (unit !== "second") {
               throw new TypeError(`Unsupported unit "${unit}"`);
@@ -505,7 +959,9 @@ class MozIntl {
   }
 }
 
-MozIntl.prototype.classID = Components.ID("{35ec195a-e8d0-4300-83af-c8a2cc84b4a3}");
+MozIntl.prototype.classID = Components.ID(
+  "{35ec195a-e8d0-4300-83af-c8a2cc84b4a3}"
+);
 MozIntl.prototype.QueryInterface = ChromeUtils.generateQI([Ci.mozIMozIntl]);
 
 var EXPORTED_SYMBOLS = ["MozIntl"];

@@ -106,7 +106,8 @@ const TEST_DATA = [
     expected: COMPATIBILITY_STATUS.TOO_OLD_67_DEBUGGER,
   },
   {
-    description: "regular compatibility issue for 67 -> 64 (not debugger-related)",
+    description:
+      "regular compatibility issue for 67 -> 64 (not debugger-related)",
     localBuildId: "20190131000000",
     localVersion: "67.0",
     runtimeBuildId: "20190131000000",
@@ -114,7 +115,8 @@ const TEST_DATA = [
     expected: COMPATIBILITY_STATUS.TOO_OLD,
   },
   {
-    description: "debugger backward compatibility error not raised for 68 -> 67",
+    description:
+      "debugger backward compatibility error not raised for 68 -> 67",
     localBuildId: "20190131000000",
     localVersion: "68.0",
     runtimeBuildId: "20190202000000",
@@ -135,9 +137,15 @@ add_task(async function testVersionChecker() {
       platformversion: testData.runtimeVersion,
     };
 
-    const report = _compareVersionCompatibility(localDescription, runtimeDescription);
-    equal(report.status, testData.expected,
-      "Expected status for test: " + testData.description);
+    const report = _compareVersionCompatibility(
+      localDescription,
+      runtimeDescription
+    );
+    equal(
+      report.status,
+      testData.expected,
+      "Expected status for test: " + testData.description
+    );
   }
 });
 
@@ -145,6 +153,9 @@ add_task(async function testVersionCheckWithVeryOldClient() {
   // Use an empty object as debugger client, calling any method on it will fail.
   const emptyClient = {};
   const report = await checkVersionCompatibility(emptyClient);
-  equal(report.status, COMPATIBILITY_STATUS.TOO_OLD,
-      "Report status too old if debugger client is not implementing expected interface");
+  equal(
+    report.status,
+    COMPATIBILITY_STATUS.TOO_OLD,
+    "Report status too old if debugger client is not implementing expected interface"
+  );
 });

@@ -1,10 +1,22 @@
 add_task(async function newtabPreloaded() {
-  await openPreferencesViaOpenPreferencesAPI("paneHome", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("paneHome", { leaveOpen: true });
 
-  const {contentDocument: doc, contentWindow} = gBrowser;
+  const { contentDocument: doc, contentWindow } = gBrowser;
   function dispatchMenuItemCommand(menuItem) {
     const cmdEvent = doc.createEvent("xulcommandevent");
-    cmdEvent.initCommandEvent("command", true, true, contentWindow, 0, false, false, false, false, null, 0);
+    cmdEvent.initCommandEvent(
+      "command",
+      true,
+      true,
+      contentWindow,
+      0,
+      false,
+      false,
+      false,
+      false,
+      null,
+      0
+    );
     menuItem.dispatchEvent(cmdEvent);
   }
 

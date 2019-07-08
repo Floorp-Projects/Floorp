@@ -1,10 +1,18 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "SessionStore",
-                               "resource:///modules/sessionstore/SessionStore.jsm");
-ChromeUtils.defineModuleGetter(this, "TabStateFlusher",
-                               "resource:///modules/sessionstore/TabStateFlusher.jsm");
-const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "SessionStore",
+  "resource:///modules/sessionstore/SessionStore.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TabStateFlusher",
+  "resource:///modules/sessionstore/TabStateFlusher.jsm"
+);
+const { E10SUtils } = ChromeUtils.import(
+  "resource://gre/modules/E10SUtils.jsm"
+);
 const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
 
 async function doorhangerTest(testFn) {
@@ -34,8 +42,18 @@ async function doorhangerTest(testFn) {
   // Open some tabs so we can hide them.
   let firstTab = gBrowser.selectedTab;
   let tabs = [
-    await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/?one", true, true),
-    await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/?two", true, true),
+    await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "http://example.com/?one",
+      true,
+      true
+    ),
+    await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "http://example.com/?two",
+      true,
+      true
+    ),
   ];
   gBrowser.selectedTab = firstTab;
 
@@ -54,22 +72,27 @@ add_task(function test_doorhanger_keep() {
     // Hide the first tab, expect the doorhanger.
     let panel = document.getElementById("extension-notification-panel");
     let popupShown = promisePopupShown(panel);
-    extension.sendMessage("hide", {url: "*://*/?one"});
+    extension.sendMessage("hide", { url: "*://*/?one" });
     await extension.awaitMessage("done");
     await popupShown;
 
     is(gBrowser.visibleTabs.length, 2, "There are 2 visible tabs now");
-    is(panel.anchorNode.closest("toolbarbutton").id,
-       "alltabs-button", "The doorhanger is anchored to the all tabs button");
+    is(
+      panel.anchorNode.closest("toolbarbutton").id,
+      "alltabs-button",
+      "The doorhanger is anchored to the all tabs button"
+    );
 
     // Click the Keep Tabs Hidden button.
-    let popupnotification = document.getElementById("extension-tab-hide-notification");
+    let popupnotification = document.getElementById(
+      "extension-tab-hide-notification"
+    );
     let popupHidden = promisePopupHidden(panel);
     popupnotification.button.click();
     await popupHidden;
 
     // Hide another tab and ensure the popup didn't open.
-    extension.sendMessage("hide", {url: "*://*/?two"});
+    extension.sendMessage("hide", { url: "*://*/?two" });
     await extension.awaitMessage("done");
     is(panel.state, "closed", "The popup is still closed");
     is(gBrowser.visibleTabs.length, 1, "There's one visible tab now");
@@ -86,26 +109,41 @@ add_task(function test_doorhanger_disable() {
     // Hide the first tab, expect the doorhanger.
     let panel = document.getElementById("extension-notification-panel");
     let popupShown = promisePopupShown(panel);
-    extension.sendMessage("hide", {url: "*://*/?one"});
+    extension.sendMessage("hide", { url: "*://*/?one" });
     await extension.awaitMessage("done");
     await popupShown;
 
     is(gBrowser.visibleTabs.length, 2, "There are 2 visible tabs now");
-    is(panel.anchorNode.closest("toolbarbutton").id,
-       "alltabs-button", "The doorhanger is anchored to the all tabs button");
+    is(
+      panel.anchorNode.closest("toolbarbutton").id,
+      "alltabs-button",
+      "The doorhanger is anchored to the all tabs button"
+    );
 
     // verify the contents of the description.
-    let popupnotification = document.getElementById("extension-tab-hide-notification");
-    let description = popupnotification.querySelector("#extension-tab-hide-notification-description");
+    let popupnotification = document.getElementById(
+      "extension-tab-hide-notification"
+    );
+    let description = popupnotification.querySelector(
+      "#extension-tab-hide-notification-description"
+    );
     let addon = await AddonManager.getAddonByID(extension.id);
-    ok(description.textContent.includes(addon.name),
-       "The extension name is in the description");
+    ok(
+      description.textContent.includes(addon.name),
+      "The extension name is in the description"
+    );
     let images = Array.from(description.querySelectorAll("image"));
     is(images.length, 2, "There are two images");
-    ok(images.some(img => img.src.includes("addon-icon.png")),
-       "There's an icon for the extension");
-    ok(images.some(img => getComputedStyle(img).backgroundImage.includes("arrow-dropdown-16.svg")),
-       "There's an icon for the all tabs menu");
+    ok(
+      images.some(img => img.src.includes("addon-icon.png")),
+      "There's an icon for the extension"
+    );
+    ok(
+      images.some(img =>
+        getComputedStyle(img).backgroundImage.includes("arrow-dropdown-16.svg")
+      ),
+      "There's an icon for the all tabs menu"
+    );
 
     // Click the Disable Extension button.
     let popupHidden = promisePopupHidden(panel);
@@ -123,23 +161,26 @@ add_task(async function test_tabs_showhide() {
     browser.test.onMessage.addListener(async (msg, data) => {
       switch (msg) {
         case "hideall": {
-          let tabs = await browser.tabs.query({hidden: false});
+          let tabs = await browser.tabs.query({ hidden: false });
           browser.test.assertEq(tabs.length, 5, "got 5 tabs");
           let ids = tabs.map(tab => tab.id);
           browser.test.log(`working with ids ${JSON.stringify(ids)}`);
 
           let hidden = await browser.tabs.hide(ids);
           browser.test.assertEq(hidden.length, 3, "hid 3 tabs");
-          tabs = await browser.tabs.query({hidden: true});
+          tabs = await browser.tabs.query({ hidden: true });
           ids = tabs.map(tab => tab.id);
-          browser.test.assertEq(JSON.stringify(hidden.sort()),
-                                JSON.stringify(ids.sort()), "hidden tabIds match");
+          browser.test.assertEq(
+            JSON.stringify(hidden.sort()),
+            JSON.stringify(ids.sort()),
+            "hidden tabIds match"
+          );
 
-          browser.test.sendMessage("hidden", {hidden});
+          browser.test.sendMessage("hidden", { hidden });
           break;
         }
         case "showall": {
-          let tabs = await browser.tabs.query({hidden: true});
+          let tabs = await browser.tabs.query({ hidden: true });
           for (let tab of tabs) {
             browser.test.assertTrue(tab.hidden, "tab is hidden");
           }
@@ -153,7 +194,7 @@ add_task(async function test_tabs_showhide() {
   }
 
   let extdata = {
-    manifest: {permissions: ["tabs", "tabHide"]},
+    manifest: { permissions: ["tabs", "tabHide"] },
     background,
     useAddonManager: "temporary", // So the doorhanger can find the addon.
   };
@@ -161,18 +202,33 @@ add_task(async function test_tabs_showhide() {
   await extension.startup();
 
   let sessData = {
-    windows: [{
-      tabs: [
-        {entries: [{url: "about:blank", triggeringPrincipal_base64}]},
-        {entries: [{url: "https://example.com/", triggeringPrincipal_base64}]},
-        {entries: [{url: "https://mochi.test:8888/", triggeringPrincipal_base64}]},
-      ],
-    }, {
-      tabs: [
-        {entries: [{url: "about:blank", triggeringPrincipal_base64}]},
-        {entries: [{url: "http://test1.example.com/", triggeringPrincipal_base64}]},
-      ],
-    }],
+    windows: [
+      {
+        tabs: [
+          { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
+          {
+            entries: [
+              { url: "https://example.com/", triggeringPrincipal_base64 },
+            ],
+          },
+          {
+            entries: [
+              { url: "https://mochi.test:8888/", triggeringPrincipal_base64 },
+            ],
+          },
+        ],
+      },
+      {
+        tabs: [
+          { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
+          {
+            entries: [
+              { url: "http://test1.example.com/", triggeringPrincipal_base64 },
+            ],
+          },
+        ],
+      },
+    ],
   };
 
   // Set up a test session with 2 windows and 5 tabs.
@@ -183,7 +239,11 @@ add_task(async function test_tabs_showhide() {
 
   for (let win of BrowserWindowIterator()) {
     let allTabsButton = win.document.getElementById("alltabs-button");
-    is(getComputedStyle(allTabsButton).visibility, "collapse", "The all tabs button is hidden");
+    is(
+      getComputedStyle(allTabsButton).visibility,
+      "collapse",
+      "The all tabs button is hidden"
+    );
   }
 
   // Attempt to hide all the tabs, however the active tab in each window cannot
@@ -211,7 +271,11 @@ add_task(async function test_tabs_showhide() {
     }
 
     let allTabsButton = win.document.getElementById("alltabs-button");
-    is(getComputedStyle(allTabsButton).visibility, "visible", "The all tabs button is visible");
+    is(
+      getComputedStyle(allTabsButton).visibility,
+      "visible",
+      "The all tabs button is visible"
+    );
   }
 
   // Close the other window then restore it to test that the tabs are
@@ -262,12 +326,22 @@ add_task(async function test_tabs_showhide() {
 // tabs.onUpdated listener gets called with hidden state changes.
 add_task(async function test_tabs_shutdown() {
   let tabs = [
-    await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/", true, true),
-    await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/", true, true),
+    await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "http://example.com/",
+      true,
+      true
+    ),
+    await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "http://mochi.test:8888/",
+      true,
+      true
+    ),
   ];
 
   async function background() {
-    let tabs = await browser.tabs.query({url: "http://example.com/"});
+    let tabs = await browser.tabs.query({ url: "http://example.com/" });
     let testTab = tabs[0];
 
     browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -280,13 +354,13 @@ add_task(async function test_tabs_shutdown() {
 
     let hidden = await browser.tabs.hide(testTab.id);
     browser.test.assertEq(hidden[0], testTab.id, "tab was hidden");
-    tabs = await browser.tabs.query({hidden: true});
+    tabs = await browser.tabs.query({ hidden: true });
     browser.test.assertEq(tabs[0].id, testTab.id, "tab was hidden");
     browser.test.sendMessage("ready");
   }
 
   let extdata = {
-    manifest: {permissions: ["tabs", "tabHide"]},
+    manifest: { permissions: ["tabs", "tabHide"] },
     useAddonManager: "temporary", // For testing onShutdown.
     background,
   };
@@ -316,23 +390,25 @@ add_task(async function test_pref_disabled() {
   });
 
   async function background() {
-    let tabs = await browser.tabs.query({hidden: false});
+    let tabs = await browser.tabs.query({ hidden: false });
     let ids = tabs.map(tab => tab.id);
 
-    await browser.test.assertRejects(
-      browser.tabs.hide(ids),
-      /tabs.hide is currently experimental/,
-      "Got the expected error when pref not enabled"
-    ).catch(err => {
-      browser.test.notifyFail("pref-test");
-      throw err;
-    });
+    await browser.test
+      .assertRejects(
+        browser.tabs.hide(ids),
+        /tabs.hide is currently experimental/,
+        "Got the expected error when pref not enabled"
+      )
+      .catch(err => {
+        browser.test.notifyFail("pref-test");
+        throw err;
+      });
 
     browser.test.notifyPass("pref-test");
   }
 
   let extdata = {
-    manifest: {permissions: ["tabs", "tabHide"]},
+    manifest: { permissions: ["tabs", "tabHide"] },
     background,
   };
   let extension = ExtensionTestUtils.loadExtension(extdata);

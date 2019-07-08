@@ -7,23 +7,30 @@
 "use strict";
 
 const TOPIC_PRESENTATION_RECEIVER_LAUNCH = "presentation-receiver:launch";
-const TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE = "presentation-receiver:launch:response";
+const TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE =
+  "presentation-receiver:launch:response";
 
 // globals XPCOMUtils
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 // globals Services
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function log(str) {
   // dump("-*- PresentationRequestUIGlue.js -*-: " + str + "\n");
 }
 
-function PresentationRequestUIGlue() { }
+function PresentationRequestUIGlue() {}
 
 PresentationRequestUIGlue.prototype = {
   sendRequest: function sendRequest(aURL, aSessionId, aDevice) {
-    log("PresentationRequestUIGlue - sendRequest aURL=" + aURL +
-        " aSessionId=" + aSessionId);
+    log(
+      "PresentationRequestUIGlue - sendRequest aURL=" +
+        aURL +
+        " aSessionId=" +
+        aSessionId
+    );
 
     let localDevice;
     try {
@@ -37,8 +44,9 @@ PresentationRequestUIGlue.prototype = {
     }
 
     return new Promise((aResolve, aReject) => {
-      let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
-                            .getService(Ci.nsIUUIDGenerator);
+      let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+        Ci.nsIUUIDGenerator
+      );
       let requestId = uuidGenerator.generateUUID().toString();
 
       let handleObserve = (aSubject, aTopic, aData) => {
@@ -49,8 +57,10 @@ PresentationRequestUIGlue.prototype = {
           return;
         }
 
-        Services.obs.removeObserver(handleObserve,
-                                    TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE);
+        Services.obs.removeObserver(
+          handleObserve,
+          TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE
+        );
         switch (data.result) {
           case "success":
             aResolve(aSubject);
@@ -61,17 +71,21 @@ PresentationRequestUIGlue.prototype = {
         }
       };
 
-      Services.obs.addObserver(handleObserve,
-                               TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE);
+      Services.obs.addObserver(
+        handleObserve,
+        TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE
+      );
 
       let data = {
         url: aURL,
         windowId: localDevice.windowId,
         requestId: requestId,
       };
-      Services.obs.notifyObservers(null,
-                                   TOPIC_PRESENTATION_RECEIVER_LAUNCH,
-                                   JSON.stringify(data));
+      Services.obs.notifyObservers(
+        null,
+        TOPIC_PRESENTATION_RECEIVER_LAUNCH,
+        JSON.stringify(data)
+      );
     });
   },
 
@@ -79,4 +93,6 @@ PresentationRequestUIGlue.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationRequestUIGlue]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PresentationRequestUIGlue]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
+  PresentationRequestUIGlue,
+]);

@@ -1,16 +1,13 @@
 /* eslint max-len: ["error", 80] */
 "use strict";
 
-const {
-  AddonTestUtils,
-} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 
 const {
-  ExtensionUtils: {
-    promiseEvent,
-    promiseObserved,
-  },
-}  = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+  ExtensionUtils: { promiseEvent, promiseObserved },
+} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 // The response to the discovery API, as documented at:
 // https://addons-server.readthedocs.io/en/latest/topics/api/discovery.html
@@ -23,17 +20,23 @@ const API_RESPONSE_FILE = RELATIVE_DIR + "discovery/api_response.json";
 
 const AMO_TEST_HOST = "rewritten-for-testing.addons.allizom.org";
 
-const ArrayBufferInputStream =
-  Components.Constructor("@mozilla.org/io/arraybuffer-input-stream;1",
-                         "nsIArrayBufferInputStream", "setData");
+const ArrayBufferInputStream = Components.Constructor(
+  "@mozilla.org/io/arraybuffer-input-stream;1",
+  "nsIArrayBufferInputStream",
+  "setData"
+);
 
 AddonTestUtils.initMochitest(this);
 
-const amoServer = AddonTestUtils.createHttpServer({hosts: [AMO_TEST_HOST]});
+const amoServer = AddonTestUtils.createHttpServer({ hosts: [AMO_TEST_HOST] });
 
-amoServer.registerFile("/png",
-  FileUtils.getFile("CurWorkD",
-                    `${RELATIVE_DIR}discovery/small-1x1.png`.split("/")));
+amoServer.registerFile(
+  "/png",
+  FileUtils.getFile(
+    "CurWorkD",
+    `${RELATIVE_DIR}discovery/small-1x1.png`.split("/")
+  )
+);
 amoServer.registerPathHandler("/dummy", (request, response) => {
   response.write("Dummy");
 });
@@ -55,8 +58,8 @@ function getTestExpectationFromApiResult(result) {
 // Read the content of API_RESPONSE_FILE, and replaces any embedded URLs with
 // URLs that point to the `amoServer` test server.
 async function readAPIResponseFixture() {
-  let apiText = await OS.File.read(API_RESPONSE_FILE, {encoding: "utf-8"});
-  apiText = apiText.replace(/\bhttps?:\/\/[^"]+(?=")/g, (url) => {
+  let apiText = await OS.File.read(API_RESPONSE_FILE, { encoding: "utf-8" });
+  apiText = apiText.replace(/\bhttps?:\/\/[^"]+(?=")/g, url => {
     try {
       url = new URL(url);
     } catch (e) {
@@ -114,8 +117,9 @@ class DiscoveryAPIHandler {
 
 // Retrieve the list of visible action elements inside a document or container.
 function getVisibleActions(documentOrElement) {
-  return Array.from(documentOrElement.querySelectorAll("[action]"))
-    .filter(elem => elem.offsetWidth && elem.offsetHeight);
+  return Array.from(documentOrElement.querySelectorAll("[action]")).filter(
+    elem => elem.offsetWidth && elem.offsetHeight
+  );
 }
 
 function getActionName(actionElement) {
@@ -142,7 +146,7 @@ function getCardByAddonId(win, addonId) {
 // Wait until the current `<discovery-pane>` element has finished loading its
 // cards. This can be used after the cards have been loaded.
 function promiseDiscopaneUpdate(win) {
-  let {cardsReady} = getCardContainer(win);
+  let { cardsReady } = getCardContainer(win);
   ok(cardsReady, "Discovery cards should have started to initialize");
   return cardsReady;
 }
@@ -154,15 +158,20 @@ async function switchToNonDiscoView(win) {
   // share the same document.
   win.managerWindow.gViewController.loadView("addons://list/extensions");
   await wait_for_view_load(win.managerWindow);
-  ok(win.document.querySelector("addon-list"),
-     "Should be at the extension list view");
+  ok(
+    win.document.querySelector("addon-list"),
+    "Should be at the extension list view"
+  );
 }
 
 // Switch to the discopane and wait until it has fully rendered, including any
 // cards from the discovery API.
 async function switchToDiscoView(win) {
-  is(getDiscoveryElement(win), null,
-     "Cannot switch to discopane when the discopane is already shown");
+  is(
+    getDiscoveryElement(win),
+    null,
+    "Cannot switch to discopane when the discopane is already shown"
+  );
   win.managerWindow.gViewController.loadView("addons://discover/");
   await wait_for_view_load(win.managerWindow);
   await promiseDiscopaneUpdate(win);
@@ -192,8 +201,11 @@ async function promiseAddonInstall(amoServer, extensionData) {
   amoServer.registerFile("/xpi", xpiFile);
 
   let addonId = extensionData.manifest.applications.gecko.id;
-  let installedPromise =
-    waitAppMenuNotificationShown("addon-installed", addonId, true);
+  let installedPromise = waitAppMenuNotificationShown(
+    "addon-installed",
+    addonId,
+    true
+  );
 
   if (!extensionData.manifest.theme) {
     info(`${description}: Waiting for permission prompt`);
@@ -202,8 +214,9 @@ async function promiseAddonInstall(amoServer, extensionData) {
     panel.button.click();
   } else {
     info(`${description}: Waiting for install prompt`);
-    let panel =
-      await promisePopupNotificationShown("addon-install-confirmation");
+    let panel = await promisePopupNotificationShown(
+      "addon-install-confirmation"
+    );
     panel.button.click();
   }
 
@@ -211,11 +224,16 @@ async function promiseAddonInstall(amoServer, extensionData) {
   await installedPromise;
 
   let addon = await AddonManager.getAddonByID(addonId);
-  Assert.deepEqual(addon.installTelemetryInfo, {
-    // This is the expected source because before the HTML-based discopane,
-    // "disco" was already used to mark installs from the AMO-hosted discopane.
-    source: "disco",
-  }, "The installed add-on should have the expected telemetry info");
+  Assert.deepEqual(
+    addon.installTelemetryInfo,
+    {
+      // This is the expected source because before the HTML-based discopane,
+      // "disco" was already used to mark installs from the AMO-hosted
+      // discopane.
+      source: "disco",
+    },
+    "The installed add-on should have the expected telemetry info"
+  );
 }
 
 // Install an add-on by clicking on the card.
@@ -224,7 +242,8 @@ async function testCardInstall(card) {
   Assert.deepEqual(
     getVisibleActions(card).map(getActionName),
     ["install-addon"],
-    "Should have an Install button before install");
+    "Should have an Install button before install"
+  );
 
   let installButton =
     card.querySelector("[data-l10n-id='install-extension-button']") ||
@@ -237,7 +256,8 @@ async function testCardInstall(card) {
   Assert.deepEqual(
     getVisibleActions(card).map(getActionName),
     ["manage-addon"],
-    "Should have a Manage button after install");
+    "Should have a Manage button after install"
+  );
 }
 
 // Uninstall the add-on (not via the card, since it has no uninstall button).
@@ -246,7 +266,8 @@ async function testAddonUninstall(card) {
   Assert.deepEqual(
     getVisibleActions(card).map(getActionName),
     ["manage-addon"],
-    "Should have a Manage button before uninstall");
+    "Should have a Manage button before uninstall"
+  );
 
   let addon = await AddonManager.getAddonByID(card.addonId);
 
@@ -257,14 +278,17 @@ async function testAddonUninstall(card) {
   Assert.deepEqual(
     getVisibleActions(card).map(getActionName),
     ["install-addon"],
-    "Should have an Install button after uninstall");
+    "Should have an Install button after uninstall"
+  );
 }
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["extensions.getAddons.discovery.api_url",
-       `http://${AMO_TEST_HOST}/discoapi`],
+      [
+        "extensions.getAddons.discovery.api_url",
+        `http://${AMO_TEST_HOST}/discoapi`,
+      ],
       // Enable HTML for all because some tests load non-discopane views.
       ["extensions.htmlaboutaddons.enabled", true],
       ["extensions.htmlaboutaddons.discover.enabled", true],
@@ -293,7 +317,8 @@ add_task(async function discopane_with_real_api_data() {
   Assert.deepEqual(
     getVisibleActions(win.document).map(getActionName),
     [],
-    "The AMO button should be invisible when the AMO API hasn't responded");
+    "The AMO button should be invisible when the AMO API hasn't responded"
+  );
 
   apiHandler.unblockResponses();
   await promiseDiscopaneUpdate(win);
@@ -306,14 +331,16 @@ add_task(async function discopane_with_real_api_data() {
       ...new Array(apiResultArray.length).fill("install-addon"),
       "open-amo",
     ],
-    "All add-on cards should be rendered, with AMO button at the end.");
+    "All add-on cards should be rendered, with AMO button at the end."
+  );
 
   let imgCount = await waitForAllImagesLoaded(win);
   is(imgCount, apiResultArray.length, "Expected an image for every result");
 
   // Check that the cards have the expected content.
-  let cards =
-    Array.from(win.document.querySelectorAll("recommended-addon-card"));
+  let cards = Array.from(
+    win.document.querySelectorAll("recommended-addon-card")
+  );
   is(cards.length, apiResultArray.length, "Every API result has a card");
   for (let [i, card] of cards.entries()) {
     let expectations = getTestExpectationFromApiResult(apiResultArray[i]);
@@ -325,26 +352,36 @@ add_task(async function discopane_with_real_api_data() {
     };
     checkContent(".disco-addon-name", expectations.addonName);
     await win.document.l10n.translateFragment(card);
-    checkContent(".disco-addon-author [data-l10n-name='author']",
-                 expectations.authorName);
+    checkContent(
+      ".disco-addon-author [data-l10n-name='author']",
+      expectations.authorName
+    );
 
     let amoListingLink = card.querySelector(".disco-addon-author a");
-    ok(amoListingLink.search.includes("utm_source=firefox-browser"),
-       `Listing link should have attribution parameter, url=${amoListingLink}`);
+    ok(
+      amoListingLink.search.includes("utm_source=firefox-browser"),
+      `Listing link should have attribution parameter, url=${amoListingLink}`
+    );
 
     let actions = getVisibleActions(card);
     is(actions.length, 1, "Card should only have one install button");
     let installButton = actions[0];
     if (expectations.typeIsTheme) {
       // Theme button + screenshot
-      ok(installButton.matches("[data-l10n-id='install-theme-button'"),
-         "Has theme install button");
-      ok(card.querySelector(".card-heading-image").offsetWidth,
-         "Preview image must be visible");
+      ok(
+        installButton.matches("[data-l10n-id='install-theme-button'"),
+        "Has theme install button"
+      );
+      ok(
+        card.querySelector(".card-heading-image").offsetWidth,
+        "Preview image must be visible"
+      );
     } else {
       // Extension button + extended description.
-      ok(installButton.matches("[data-l10n-id='install-extension-button'"),
-         "Has extension install button");
+      ok(
+        installButton.matches("[data-l10n-id='install-extension-button'"),
+        "Has extension install button"
+      );
       checkContent(".disco-description-intro", expectations.editorialHead);
       checkContent(".disco-description-main", expectations.editorialBody);
 
@@ -360,8 +397,9 @@ add_task(async function discopane_with_real_api_data() {
       if (expectations.dailyUsers) {
         Assert.deepEqual(
           win.document.l10n.getAttributes(userCountElem),
-          {id: "user-count", args: {dailyUsers: expectations.dailyUsers}},
-          "Card count should be rendered");
+          { id: "user-count", args: { dailyUsers: expectations.dailyUsers } },
+          "Card count should be rendered"
+        );
       } else {
         is(userCountElem.offsetWidth, 0, "User count element is not visible");
       }
@@ -380,8 +418,8 @@ add_task(async function discopane_with_real_api_data() {
 add_task(async function install_from_discopane() {
   const apiText = await readAPIResponseFixture();
   const apiResultArray = JSON.parse(apiText).results;
-  let getAddonIdByAMOAddonType =
-    type => apiResultArray.find(r => r.addon.type === type).addon.guid;
+  let getAddonIdByAMOAddonType = type =>
+    apiResultArray.find(r => r.addon.type === type).addon.guid;
   const FIRST_EXTENSION_ID = getAddonIdByAMOAddonType("extension");
   const FIRST_THEME_ID = getAddonIdByAMOAddonType("statictheme");
 
@@ -398,7 +436,7 @@ add_task(async function install_from_discopane() {
     manifest: {
       name: "My Awesome Add-on",
       description: "Test extension install button",
-      applications: {gecko: {id: FIRST_EXTENSION_ID}},
+      applications: { gecko: { id: FIRST_EXTENSION_ID } },
       permissions: ["<all_urls>"],
     },
   });
@@ -410,7 +448,7 @@ add_task(async function install_from_discopane() {
     manifest: {
       name: "My Fancy Theme",
       description: "Test theme install button",
-      applications: {gecko: {id: FIRST_THEME_ID}},
+      applications: { gecko: { id: FIRST_THEME_ID } },
       theme: {
         colors: {
           tab_selected: "red",
@@ -434,15 +472,34 @@ add_task(async function install_from_discopane() {
       ...new Array(apiResultArray.length - 2).fill("install-addon"),
       "open-amo",
     ],
-    "The Install buttons should be replaced with Manage buttons");
+    "The Install buttons should be replaced with Manage buttons"
+  );
 
   assertAboutAddonsTelemetryEvents([
-    ["addonsManager", "action", "aboutAddons", null,
-     {action: "installFromRecommendation", view: "discover",
-      addonId: FIRST_EXTENSION_ID, type: "extension"}],
-    ["addonsManager", "action", "aboutAddons", null,
-     {action: "installFromRecommendation", view: "discover",
-      addonId: FIRST_THEME_ID, type: "theme"}],
+    [
+      "addonsManager",
+      "action",
+      "aboutAddons",
+      null,
+      {
+        action: "installFromRecommendation",
+        view: "discover",
+        addonId: FIRST_EXTENSION_ID,
+        type: "extension",
+      },
+    ],
+    [
+      "addonsManager",
+      "action",
+      "aboutAddons",
+      null,
+      {
+        action: "installFromRecommendation",
+        view: "discover",
+        addonId: FIRST_THEME_ID,
+        type: "theme",
+      },
+    ],
   ]);
 
   // End of the testing installation from a card.
@@ -451,22 +508,35 @@ add_task(async function install_from_discopane() {
   // and in order to be able to force the discovery pane to be rendered again.
   let loaded = waitForViewLoad(win);
   getCardByAddonId(win, FIRST_EXTENSION_ID)
-    .querySelector("[action='manage-addon']").click();
+    .querySelector("[action='manage-addon']")
+    .click();
   await loaded;
   {
-    let addonCard =
-      win.document.querySelector(
-        `addon-card[addon-id="${FIRST_EXTENSION_ID}"]`);
+    let addonCard = win.document.querySelector(
+      `addon-card[addon-id="${FIRST_EXTENSION_ID}"]`
+    );
     ok(addonCard, "Add-on details should be shown");
     ok(addonCard.expanded, "The card should have been expanded");
     // TODO bug 1540253: Check that the "recommended" badge is visible.
   }
 
-  assertAboutAddonsTelemetryEvents([
-    ["addonsManager", "action", "aboutAddons", null,
-     {action: "manage", view: "discover", addonId: FIRST_EXTENSION_ID,
-      type: "extension"}],
-  ], {methods: ["action"]});
+  assertAboutAddonsTelemetryEvents(
+    [
+      [
+        "addonsManager",
+        "action",
+        "aboutAddons",
+        null,
+        {
+          action: "manage",
+          view: "discover",
+          addonId: FIRST_EXTENSION_ID,
+          type: "extension",
+        },
+      ],
+    ],
+    { methods: ["action"] }
+  );
 
   // Now we are going to force an updated rendering and check that the cards are
   // in the expected order, and then test uninstallation of the above add-ons.
@@ -481,7 +551,8 @@ add_task(async function install_from_discopane() {
       "manage-addon",
       "open-amo",
     ],
-    "Already-installed add-ons should be rendered at the end of the list");
+    "Already-installed add-ons should be rendered at the end of the list"
+  );
 
   promiseThemeChange = promiseObserved("lightweight-theme-styling-update");
   await testAddonUninstall(getCardByAddonId(win, FIRST_THEME_ID));
@@ -503,15 +574,23 @@ add_task(async function discopane_navigate_while_loading() {
 
   let updatePromise = promiseDiscopaneUpdate(win);
   let didUpdateDiscopane = false;
-  updatePromise.then(() => { didUpdateDiscopane = true; });
+  updatePromise.then(() => {
+    didUpdateDiscopane = true;
+  });
 
   // Switch views while the request is pending.
   await switchToNonDiscoView(win);
 
-  is(didUpdateDiscopane, false,
-     "discopane should still not be updated because the request is blocked");
-  is(getDiscoveryElement(win), null,
-     "Discopane should be removed after switching to the extension list");
+  is(
+    didUpdateDiscopane,
+    false,
+    "discopane should still not be updated because the request is blocked"
+  );
+  is(
+    getDiscoveryElement(win),
+    null,
+    "Discopane should be removed after switching to the extension list"
+  );
 
   // Release pending requests, to verify that completing the request will not
   // cause changes to the visible view. The updatePromise will still resolve
@@ -519,10 +598,15 @@ add_task(async function discopane_navigate_while_loading() {
   apiHandler.unblockResponses();
 
   await updatePromise;
-  ok(win.document.querySelector("addon-list"),
-     "Should still be at the extension list view");
-  is(getDiscoveryElement(win), null,
-     "Discopane should not be in the document when it is not the active view");
+  ok(
+    win.document.querySelector("addon-list"),
+    "Should still be at the extension list view"
+  );
+  is(
+    getDiscoveryElement(win),
+    null,
+    "Discopane should not be in the document when it is not the active view"
+  );
 
   is(apiHandler.requestCount, 1, "Discovery API should be fetched once");
 
@@ -563,7 +647,8 @@ add_task(async function discopane_cache_api_responses() {
   Assert.deepEqual(
     getVisibleActions(win.document).map(getActionName),
     ["open-amo"],
-    "The AMO button should be visible even when the response was invalid");
+    "The AMO button should be visible even when the response was invalid"
+  );
 
   // Change to a valid response, so that the next response will be cached.
   apiHandler.setResponseText(`{"results": []}`);
@@ -571,15 +656,21 @@ add_task(async function discopane_cache_api_responses() {
   await switchToNonDiscoView(win);
   await switchToDiscoView(win); // Request #2
 
-  is(apiHandler.requestCount, 2,
-     "Should fetch new data because an invalid response should not be cached");
+  is(
+    apiHandler.requestCount,
+    2,
+    "Should fetch new data because an invalid response should not be cached"
+  );
 
   await switchToNonDiscoView(win);
   await switchToDiscoView(win);
   await closeView(win);
 
-  is(apiHandler.requestCount, 2,
-     "The previous response was valid and should have been reused");
+  is(
+    apiHandler.requestCount,
+    2,
+    "The previous response was valid and should have been reused"
+  );
 
   // Now open a new about:addons page and verify that a new API request is sent.
   let anotherWin = await loadInitialView("discover");
@@ -593,8 +684,18 @@ add_task(async function discopane_no_cookies() {
   let requestPromise = new Promise(resolve => {
     amoServer.registerPathHandler("/discoapi", resolve);
   });
-  Services.cookies.add(AMO_TEST_HOST, "/", "name", "value", false, false,
-    false, Date.now() / 1000 + 600, {}, Ci.nsICookie.SAMESITE_NONE);
+  Services.cookies.add(
+    AMO_TEST_HOST,
+    "/",
+    "name",
+    "value",
+    false,
+    false,
+    false,
+    Date.now() / 1000 + 600,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
   let win = await loadInitialView("discover");
   let request = await requestPromise;
   ok(!request.hasHeader("Cookie"), "discovery API should not receive cookies");
@@ -614,21 +715,25 @@ add_task(async function discopane_interaction_telemetry() {
   // Minimal API response to get the link in recommended-addon-card to render.
   const DUMMY_EXTENSION_ID = "dummy@extensionid";
   const apiResponse = {
-    results: [{
-      addon: {
-        guid: DUMMY_EXTENSION_ID,
-        type: "extension",
-        authors: [{
-          name: "Some author",
-        }],
-        url: `http://${AMO_TEST_HOST}/dummy`,
-        icon_url: `http://${AMO_TEST_HOST}/png`,
+    results: [
+      {
+        addon: {
+          guid: DUMMY_EXTENSION_ID,
+          type: "extension",
+          authors: [
+            {
+              name: "Some author",
+            },
+          ],
+          url: `http://${AMO_TEST_HOST}/dummy`,
+          icon_url: `http://${AMO_TEST_HOST}/png`,
+        },
       },
-    }],
+    ],
   };
   let apiHandler = new DiscoveryAPIHandler(JSON.stringify(apiResponse));
 
-  let expectedAmoUrlFor = (where) => {
+  let expectedAmoUrlFor = where => {
     // eslint-disable-next-line max-len
     return `http://${AMO_TEST_HOST}/dummy?utm_source=firefox-browser&utm_medium=firefox-browser&utm_content=${where}`;
   };
@@ -636,11 +741,15 @@ add_task(async function discopane_interaction_telemetry() {
   let testClickInDiscoCard = async (selector, utmContentParam) => {
     let tabbrowser = win.windowRoot.ownerGlobal.gBrowser;
     let tabPromise = BrowserTestUtils.waitForNewTab(tabbrowser);
-    getDiscoveryElement(win).querySelector(selector).click();
+    getDiscoveryElement(win)
+      .querySelector(selector)
+      .click();
     let tab = await tabPromise;
-    is(tab.linkedBrowser.currentURI.spec,
-       expectedAmoUrlFor(utmContentParam),
-      "Expected URL of new tab");
+    is(
+      tab.linkedBrowser.currentURI.spec,
+      expectedAmoUrlFor(utmContentParam),
+      "Expected URL of new tab"
+    );
     BrowserTestUtils.removeTab(tab);
   };
 
@@ -657,8 +766,8 @@ add_task(async function discopane_interaction_telemetry() {
   await testClickInDiscoCard(".disco-addon-author a", "discopane-entry-link");
 
   assertAboutAddonsTelemetryEvents([
-    ["addonsManager", "link", "aboutAddons", "discomore", {view: "discover"}],
-    ["addonsManager", "link", "aboutAddons", "discohome", {view: "discover"}],
+    ["addonsManager", "link", "aboutAddons", "discomore", { view: "discover" }],
+    ["addonsManager", "link", "aboutAddons", "discohome", { view: "discover" }],
   ]);
 
   is(apiHandler.requestCount, 1, "Discovery API should be fetched once");

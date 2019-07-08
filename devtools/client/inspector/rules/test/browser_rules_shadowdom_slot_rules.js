@@ -7,7 +7,9 @@
 // Test that when selecting a slot element, the rule view displays the rules for the
 // corresponding element.
 
-const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
+const TEST_URL =
+  `data:text/html;charset=utf-8,` +
+  encodeURIComponent(`
   <html>
   <head>
   <style>
@@ -44,8 +46,8 @@ const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
 `);
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
-  const {markup} = inspector;
+  const { inspector } = await openInspectorForURL(TEST_URL);
+  const { markup } = inspector;
   const ruleview = inspector.getPanel("ruleview").view;
 
   // <test-component> is a shadow host.
@@ -55,7 +57,9 @@ add_task(async function() {
   await markup.expandNode(hostFront);
   await waitForMultipleChildrenUpdates(inspector);
 
-  info("Test that expanding a shadow host shows shadow root and one host child.");
+  info(
+    "Test that expanding a shadow host shows shadow root and one host child."
+  );
   const hostContainer = markup.getContainer(hostFront);
 
   info("Expand the shadow root");
@@ -72,7 +76,9 @@ add_task(async function() {
   const slotChildContainers = slotContainer.getChildContainers();
   is(slotChildContainers.length, 3, "Expecting 3 slotted children");
 
-  info("Select slotted node and check that the rule view displays correct content");
+  info(
+    "Select slotted node and check that the rule view displays correct content"
+  );
   await selectNode(slotChildContainers[0].node, inspector);
   checkRule(ruleview, "#el1", "color", "red");
 
@@ -89,5 +95,9 @@ function checkRule(ruleview, selector, name, expectedValue) {
   const rule = getRuleViewRule(ruleview, selector);
   ok(rule, "ruleview shows the expected rule for slotted " + selector);
   const value = getRuleViewPropertyValue(ruleview, selector, name);
-  is(value, expectedValue, "ruleview shows the expected value for slotted " + selector);
+  is(
+    value,
+    expectedValue,
+    "ruleview shows the expected value for slotted " + selector
+  );
 }

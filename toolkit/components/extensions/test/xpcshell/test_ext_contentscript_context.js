@@ -2,7 +2,7 @@
 
 /* eslint-disable mozilla/balanced-listeners */
 
-const server = createHttpServer({hosts: ["example.com", "example.org"]});
+const server = createHttpServer({ hosts: ["example.com", "example.org"] });
 
 server.registerPathHandler("/dummy", (request, response) => {
   response.setStatusLine(request.httpVersion, 200, "OK");
@@ -14,9 +14,13 @@ function loadExtension() {
   function contentScript() {
     browser.test.sendMessage("content-script-ready");
 
-    window.addEventListener("pagehide", () => {
-      browser.test.sendMessage("content-script-hide");
-    }, true);
+    window.addEventListener(
+      "pagehide",
+      () => {
+        browser.test.sendMessage("content-script-hide");
+      },
+      true
+    );
     window.addEventListener("pageshow", () => {
       browser.test.sendMessage("content-script-show");
     });
@@ -24,11 +28,13 @@ function loadExtension() {
 
   return ExtensionTestUtils.loadExtension({
     manifest: {
-      content_scripts: [{
-        "matches": ["http://example.com/dummy*"],
-        "js": ["content_script.js"],
-        "run_at": "document_start",
-      }],
+      content_scripts: [
+        {
+          matches: ["http://example.com/dummy*"],
+          js: ["content_script.js"],
+          run_at: "document_start",
+        },
+      ],
     },
 
     files: {
@@ -41,18 +47,27 @@ add_task(async function test_contentscript_context() {
   let extension = loadExtension();
   await extension.startup();
 
-  let contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy");
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/dummy"
+  );
   await extension.awaitMessage("content-script-ready");
   await extension.awaitMessage("content-script-show");
 
   // Get the content script context and check that it points to the correct window.
   await contentPage.spawn(extension.id, async extensionId => {
-    let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", null);
+    let { DocumentManager } = ChromeUtils.import(
+      "resource://gre/modules/ExtensionContent.jsm",
+      null
+    );
     this.context = DocumentManager.getContext(extensionId, this.content);
 
     Assert.ok(this.context, "Got content script context");
 
-    Assert.equal(this.context.contentWindow, this.content, "Context's contentWindow property is correct");
+    Assert.equal(
+      this.context.contentWindow,
+      this.content,
+      "Context's contentWindow property is correct"
+    );
 
     // Navigate so that the content page is hidden in the bfcache.
 
@@ -62,7 +77,11 @@ add_task(async function test_contentscript_context() {
   await extension.awaitMessage("content-script-hide");
 
   await contentPage.spawn(null, async () => {
-    Assert.equal(this.context.contentWindow, null, "Context's contentWindow property is null");
+    Assert.equal(
+      this.context.contentWindow,
+      null,
+      "Context's contentWindow property is null"
+    );
 
     // Navigate back so the content page is resurrected from the bfcache.
     this.content.history.back();
@@ -71,7 +90,11 @@ add_task(async function test_contentscript_context() {
   await extension.awaitMessage("content-script-show");
 
   await contentPage.spawn(null, async () => {
-    Assert.equal(this.context.contentWindow, this.content, "Context's contentWindow property is correct");
+    Assert.equal(
+      this.context.contentWindow,
+      this.content,
+      "Context's contentWindow property is correct"
+    );
   });
 
   await contentPage.close();
@@ -82,7 +105,7 @@ add_task(async function test_contentscript_context() {
 async function contentscript_context_incognito_not_allowed_test() {
   async function background() {
     await browser.contentScripts.register({
-      js: [{file: "registered_script.js"}],
+      js: [{ file: "registered_script.js" }],
       matches: ["http://example.com/dummy"],
       runAt: "document_start",
     });
@@ -92,14 +115,14 @@ async function contentscript_context_incognito_not_allowed_test() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      content_scripts: [{
-        "matches": ["http://example.com/dummy"],
-        "js": ["content_script.js"],
-        "run_at": "document_start",
-      }],
-      permissions: [
-        "http://example.com/*",
+      content_scripts: [
+        {
+          matches: ["http://example.com/dummy"],
+          js: ["content_script.js"],
+          run_at: "document_start",
+        },
       ],
+      permissions: ["http://example.com/*"],
     },
     background,
     files: {
@@ -115,12 +138,22 @@ async function contentscript_context_incognito_not_allowed_test() {
   await extension.startup();
   await extension.awaitMessage("background-ready");
 
-  let contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy", {privateBrowsing: true});
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/dummy",
+    { privateBrowsing: true }
+  );
 
   await contentPage.spawn(extension.id, async extensionId => {
-    let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", null);
+    let { DocumentManager } = ChromeUtils.import(
+      "resource://gre/modules/ExtensionContent.jsm",
+      null
+    );
     let context = DocumentManager.getContext(extensionId, this.content);
-    Assert.equal(context, null, "Extension unable to use content_script in private browsing window");
+    Assert.equal(
+      context,
+      null,
+      "Extension unable to use content_script in private browsing window"
+    );
   });
 
   await contentPage.close();
@@ -128,34 +161,51 @@ async function contentscript_context_incognito_not_allowed_test() {
 }
 
 add_task(async function test_contentscript_context_incognito_not_allowed() {
-  return runWithPrefs([["extensions.allowPrivateBrowsingByDefault", false]],
-                      contentscript_context_incognito_not_allowed_test);
+  return runWithPrefs(
+    [["extensions.allowPrivateBrowsingByDefault", false]],
+    contentscript_context_incognito_not_allowed_test
+  );
 });
 
 add_task(async function test_contentscript_context_unload_while_in_bfcache() {
-  let contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy?first");
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/dummy?first"
+  );
   let extension = loadExtension();
   await extension.startup();
   await extension.awaitMessage("content-script-ready");
 
   // Get the content script context and check that it points to the correct window.
   await contentPage.spawn(extension.id, async extensionId => {
-    let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", null);
+    let { DocumentManager } = ChromeUtils.import(
+      "resource://gre/modules/ExtensionContent.jsm",
+      null
+    );
     // Save context so we can verify that contentWindow is nulled after unload.
     this.context = DocumentManager.getContext(extensionId, this.content);
 
-    Assert.equal(this.context.contentWindow, this.content, "Context's contentWindow property is correct");
+    Assert.equal(
+      this.context.contentWindow,
+      this.content,
+      "Context's contentWindow property is correct"
+    );
 
     this.contextUnloadedPromise = new Promise(resolve => {
-      this.context.callOnClose({close: resolve});
+      this.context.callOnClose({ close: resolve });
     });
     this.pageshownPromise = new Promise(resolve => {
-      this.content.addEventListener("pageshow", () => {
-        // Yield to the event loop once more to ensure that all pageshow event
-        // handlers have been dispatched before fulfilling the promise.
-        let {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-        setTimeout(resolve, 0);
-      }, {once: true, mozSystemGroup: true});
+      this.content.addEventListener(
+        "pageshow",
+        () => {
+          // Yield to the event loop once more to ensure that all pageshow event
+          // handlers have been dispatched before fulfilling the promise.
+          let { setTimeout } = ChromeUtils.import(
+            "resource://gre/modules/Timer.jsm"
+          );
+          setTimeout(resolve, 0);
+        },
+        { once: true, mozSystemGroup: true }
+      );
     });
 
     // Navigate so that the content page is hidden in the bfcache.
@@ -175,14 +225,22 @@ add_task(async function test_contentscript_context_unload_while_in_bfcache() {
     // Now wait a little bit and check again to ensure that the contentWindow
     // property is not somehow restored.
     await new Promise(resolve => this.content.setTimeout(resolve, 0));
-    Assert.equal(this.context.contentWindow, null, "Context's contentWindow property is null");
+    Assert.equal(
+      this.context.contentWindow,
+      null,
+      "Context's contentWindow property is null"
+    );
 
     // Navigate back so the content page is resurrected from the bfcache.
     this.content.history.back();
 
     await this.pageshownPromise;
 
-    Assert.equal(this.context.contentWindow, null, "Context's contentWindow property is null after restore from bfcache");
+    Assert.equal(
+      this.context.contentWindow,
+      null,
+      "Context's contentWindow property is null after restore from bfcache"
+    );
   });
 
   await contentPage.close();
@@ -201,17 +259,27 @@ add_task(async function test_contentscript_context_valid_during_execution() {
     browser.test.sendMessage("content-script-ready");
     window.wrappedJSObject.checkContextIsValid("Context is valid on execution");
 
-    window.addEventListener("pagehide", () => {
-      window.wrappedJSObject.checkContextIsValid("Context is valid on pagehide");
-      browser.test.sendMessage("content-script-hide");
-    }, true);
+    window.addEventListener(
+      "pagehide",
+      () => {
+        window.wrappedJSObject.checkContextIsValid(
+          "Context is valid on pagehide"
+        );
+        browser.test.sendMessage("content-script-hide");
+      },
+      true
+    );
     window.addEventListener("pageshow", () => {
-      window.wrappedJSObject.checkContextIsValid("Context is valid on pageshow");
+      window.wrappedJSObject.checkContextIsValid(
+        "Context is valid on pageshow"
+      );
 
       // This unload listener is registered after pageshow, to ensure that the
       // page can be stored in the bfcache at the previous pagehide.
       window.addEventListener("unload", () => {
-        window.wrappedJSObject.checkContextIsValid("Context is valid on unload");
+        window.wrappedJSObject.checkContextIsValid(
+          "Context is valid on unload"
+        );
         browser.test.sendMessage("content-script-unload");
       });
 
@@ -221,10 +289,12 @@ add_task(async function test_contentscript_context_valid_during_execution() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      content_scripts: [{
-        "matches": ["http://example.com/dummy*"],
-        "js": ["content_script.js"],
-      }],
+      content_scripts: [
+        {
+          matches: ["http://example.com/dummy*"],
+          js: ["content_script.js"],
+        },
+      ],
     },
 
     files: {
@@ -232,18 +302,29 @@ add_task(async function test_contentscript_context_valid_during_execution() {
     },
   });
 
-  let contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy?first");
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/dummy?first"
+  );
   await contentPage.spawn(extension.id, async extensionId => {
     let context;
-    let checkContextIsValid = (description) => {
+    let checkContextIsValid = description => {
       if (!context) {
-        let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", null);
+        let { DocumentManager } = ChromeUtils.import(
+          "resource://gre/modules/ExtensionContent.jsm",
+          null
+        );
         context = DocumentManager.getContext(extensionId, this.content);
       }
-      Assert.equal(context.contentWindow, this.content, `${description}: contentWindow`);
+      Assert.equal(
+        context.contentWindow,
+        this.content,
+        `${description}: contentWindow`
+      );
       Assert.equal(context.active, true, `${description}: active`);
     };
-    Cu.exportFunction(checkContextIsValid, this.content, {defineAs: "checkContextIsValid"});
+    Cu.exportFunction(checkContextIsValid, this.content, {
+      defineAs: "checkContextIsValid",
+    });
   });
   await extension.startup();
   await extension.awaitMessage("content-script-ready");

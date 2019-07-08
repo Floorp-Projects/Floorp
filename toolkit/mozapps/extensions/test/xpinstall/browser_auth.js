@@ -3,7 +3,10 @@
 // This verifies bug 312473
 function test() {
   // Turn off the authentication dialog blocking for this test.
-  Services.prefs.setBoolPref("network.auth.non-web-content-triggered-resources-http-auth-allow", true);
+  Services.prefs.setBoolPref(
+    "network.auth.non-web-content-triggered-resources-http-auth-allow",
+    true
+  );
 
   Harness.authenticationCallback = get_auth_info;
   Harness.downloadFailedCallback = download_failed;
@@ -16,15 +19,21 @@ function test() {
   var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-  var triggers = encodeURIComponent(JSON.stringify({
-    "Unsigned XPI": TESTROOT + "authRedirect.sjs?" + TESTROOT + "amosigned.xpi",
-  }));
+  var triggers = encodeURIComponent(
+    JSON.stringify({
+      "Unsigned XPI":
+        TESTROOT + "authRedirect.sjs?" + TESTROOT + "amosigned.xpi",
+    })
+  );
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    TESTROOT + "installtrigger.html?" + triggers
+  );
 }
 
 function get_auth_info() {
-  return [ "testuser", "testpass" ];
+  return ["testuser", "testpass"];
 }
 
 function download_failed(install) {
@@ -37,13 +46,16 @@ function install_ended(install, addon) {
 
 function finish_test(count) {
   is(count, 1, "1 Add-on should have been successfully installed");
-  var authMgr = Cc["@mozilla.org/network/http-auth-manager;1"]
-                  .getService(Ci.nsIHttpAuthManager);
+  var authMgr = Cc["@mozilla.org/network/http-auth-manager;1"].getService(
+    Ci.nsIHttpAuthManager
+  );
   authMgr.clearAll();
 
   Services.perms.remove(makeURI("http://example.com"), "install");
 
-  Services.prefs.clearUserPref("network.auth.non-web-content-triggered-resources-http-auth-allow");
+  Services.prefs.clearUserPref(
+    "network.auth.non-web-content-triggered-resources-http-auth-allow"
+  );
 
   gBrowser.removeCurrentTab();
   Harness.finish();

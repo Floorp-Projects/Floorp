@@ -1568,14 +1568,7 @@ void LIRGenerator::visitSign(MSign* ins) {
 
 void LIRGenerator::visitMathFunction(MMathFunction* ins) {
   MOZ_ASSERT(IsFloatingPointType(ins->type()));
-  MOZ_ASSERT_IF(ins->input()->type() != MIRType::SinCosDouble,
-                ins->type() == ins->input()->type());
-
-  if (ins->input()->type() == MIRType::SinCosDouble) {
-    MOZ_ASSERT(ins->type() == MIRType::Double);
-    redefine(ins, ins->input(), ins->function());
-    return;
-  }
+  MOZ_ASSERT(ins->type() == ins->input()->type());
 
   LInstruction* lir;
   if (ins->type() == MIRType::Double) {
@@ -3407,18 +3400,6 @@ void LIRGenerator::visitArrayJoin(MArrayJoin* ins) {
                                useRegisterAtStart(ins->sep()), tempDef);
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitSinCos(MSinCos* ins) {
-  MOZ_ASSERT(ins->type() == MIRType::SinCosDouble);
-  MOZ_ASSERT(ins->input()->type() == MIRType::Double ||
-             ins->input()->type() == MIRType::Float32 ||
-             ins->input()->type() == MIRType::Int32);
-
-  LSinCos* lir = new (alloc()) LSinCos(useRegisterAtStart(ins->input()),
-                                       tempFixed(CallTempNonArgRegs[0]),
-                                       tempFixed(CallTempNonArgRegs[1]));
-  defineSinCos(lir, ins);
 }
 
 void LIRGenerator::visitStringSplit(MStringSplit* ins) {

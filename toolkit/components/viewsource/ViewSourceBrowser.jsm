@@ -4,8 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 const BUNDLE_URL = "chrome://global/locale/viewSource.properties";
 
@@ -65,7 +68,7 @@ ViewSourceBrowser.prototype = {
    * executes, we can assume the DOM content has not yet loaded.
    */
   init() {
-    this.messages.forEach((msgName) => {
+    this.messages.forEach(msgName => {
       this.mm.addMessageListener(msgName, this);
     });
 
@@ -77,7 +80,7 @@ ViewSourceBrowser.prototype = {
    * clean up event and message listeners.
    */
   uninit() {
-    this.messages.forEach((msgName) => {
+    this.messages.forEach(msgName => {
       this.mm.removeMessageListener(msgName, this);
     });
   },
@@ -145,7 +148,7 @@ ViewSourceBrowser.prototype = {
     if (this._bundle) {
       return this._bundle;
     }
-    return this._bundle = Services.strings.createBundle(BUNDLE_URL);
+    return (this._bundle = Services.strings.createBundle(BUNDLE_URL));
   },
 
   /**
@@ -184,8 +187,11 @@ ViewSourceBrowser.prototype = {
       throw new Error("Must supply the browser if passing the outerWindowID");
     }
 
-    this.sendAsyncMessage("ViewSource:LoadSource",
-                          { URL, outerWindowID, lineNumber });
+    this.sendAsyncMessage("ViewSource:LoadSource", {
+      URL,
+      outerWindowID,
+      lineNumber,
+    });
   },
 
   /**
@@ -197,8 +203,11 @@ ViewSourceBrowser.prototype = {
    * @param baseURI base URI of the original document
    */
   loadViewSourceFromSelection(URL, drawSelection, baseURI) {
-    this.sendAsyncMessage("ViewSource:LoadSourceWithSelection",
-                          { URL, drawSelection, baseURI });
+    this.sendAsyncMessage("ViewSource:LoadSourceWithSelection", {
+      URL,
+      drawSelection,
+      baseURI,
+    });
   },
 
   /**
@@ -233,22 +242,26 @@ ViewSourceBrowser.prototype = {
     let window = Services.wm.getMostRecentWindow(null);
 
     let ok = Services.prompt.prompt(
-        window,
-        this.bundle.GetStringFromName("goToLineTitle"),
-        this.bundle.GetStringFromName("goToLineText"),
-        input,
-        null,
-        {value: 0});
+      window,
+      this.bundle.GetStringFromName("goToLineTitle"),
+      this.bundle.GetStringFromName("goToLineText"),
+      input,
+      null,
+      { value: 0 }
+    );
 
-    if (!ok)
+    if (!ok) {
       return;
+    }
 
     let line = parseInt(input.value, 10);
 
     if (!(line > 0)) {
-      Services.prompt.alert(window,
-                            this.bundle.GetStringFromName("invalidInputTitle"),
-                            this.bundle.GetStringFromName("invalidInputText"));
+      Services.prompt.alert(
+        window,
+        this.bundle.GetStringFromName("invalidInputTitle"),
+        this.bundle.GetStringFromName("invalidInputText")
+      );
       this.promptAndGoToLine();
     } else {
       this.goToLine(line);
@@ -285,9 +298,11 @@ ViewSourceBrowser.prototype = {
    */
   onGoToLineFailed() {
     let window = Services.wm.getMostRecentWindow(null);
-    Services.prompt.alert(window,
-                          this.bundle.GetStringFromName("outOfRangeTitle"),
-                          this.bundle.GetStringFromName("outOfRangeText"));
+    Services.prompt.alert(
+      window,
+      this.bundle.GetStringFromName("outOfRangeTitle"),
+      this.bundle.GetStringFromName("outOfRangeText")
+    );
     this.promptAndGoToLine();
   },
 
@@ -308,7 +323,6 @@ ViewSourceBrowser.prototype = {
   storeSyntaxHighlighting(state) {
     Services.prefs.setBoolPref("view_source.syntax_highlight", state);
   },
-
 };
 
 /**

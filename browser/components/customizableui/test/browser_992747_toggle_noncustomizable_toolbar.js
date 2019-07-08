@@ -23,4 +23,3 @@ function test() {
   is(tb.getAttribute("collapsed"), "false", "Toolbar should be uncollapsed");
   tb.remove();
 }
-

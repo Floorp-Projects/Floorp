@@ -1,10 +1,8 @@
 "use strict";
 
-const HOSTS = new Set([
-  "example.com",
-]);
+const HOSTS = new Set(["example.com"]);
 
-const server = createHttpServer({hosts: HOSTS});
+const server = createHttpServer({ hosts: HOSTS });
 
 const BASE_URL = "http://example.com";
 
@@ -42,9 +40,19 @@ server.registerPathHandler("/authenticate.sjs", (request, response) => {
   if (proxy_realm && !request.hasHeader("Proxy-Authorization")) {
     // We're not testing anything that requires checking the proxy auth user/password.
     response.setStatusLine("1.0", 407, "Proxy authentication required");
-    response.setHeader("Proxy-Authenticate", `basic realm="${proxy_realm}"`, true);
+    response.setHeader(
+      "Proxy-Authenticate",
+      `basic realm="${proxy_realm}"`,
+      true
+    );
     response.write("proxy auth required");
-  } else if (!(realms.has(realm) && request.hasHeader("Authorization") && checkAuthorization())) {
+  } else if (
+    !(
+      realms.has(realm) &&
+      request.hasHeader("Authorization") &&
+      checkAuthorization()
+    )
+  ) {
     realms.add(realm);
     response.setStatusLine(request.httpVersion, 401, "Authentication required");
     response.setHeader("WWW-Authenticate", `basic realm="${realm}"`, true);
@@ -58,34 +66,66 @@ server.registerPathHandler("/authenticate.sjs", (request, response) => {
 function getExtension(bgConfig) {
   function background(config) {
     let path = config.path;
-    browser.webRequest.onBeforeRequest.addListener((details) => {
-      browser.test.log(`onBeforeRequest called with ${details.requestId} ${details.url}`);
-      browser.test.sendMessage("onBeforeRequest");
-      return config.onBeforeRequest.hasOwnProperty("result") && config.onBeforeRequest.result;
-    }, {urls: [path]}, config.onBeforeRequest.hasOwnProperty("extra") ? config.onBeforeRequest.extra : []);
-    browser.webRequest.onAuthRequired.addListener((details) => {
-      browser.test.log(`onAuthRequired called with ${details.requestId} ${details.url}`);
-      browser.test.assertEq(config.realm, details.realm, "providing www authorization");
-      browser.test.sendMessage("onAuthRequired");
-      return config.onAuthRequired.hasOwnProperty("result") && config.onAuthRequired.result;
-    }, {urls: [path]}, config.onAuthRequired.hasOwnProperty("extra") ? config.onAuthRequired.extra : []);
-    browser.webRequest.onCompleted.addListener((details) => {
-      browser.test.log(`onCompleted called with ${details.requestId} ${details.url}`);
-      browser.test.sendMessage("onCompleted");
-    }, {urls: [path]});
-    browser.webRequest.onErrorOccurred.addListener((details) => {
-      browser.test.log(`onErrorOccurred called with ${JSON.stringify(details)}`);
-      browser.test.sendMessage("onErrorOccurred");
-    }, {urls: [path]});
+    browser.webRequest.onBeforeRequest.addListener(
+      details => {
+        browser.test.log(
+          `onBeforeRequest called with ${details.requestId} ${details.url}`
+        );
+        browser.test.sendMessage("onBeforeRequest");
+        return (
+          config.onBeforeRequest.hasOwnProperty("result") &&
+          config.onBeforeRequest.result
+        );
+      },
+      { urls: [path] },
+      config.onBeforeRequest.hasOwnProperty("extra")
+        ? config.onBeforeRequest.extra
+        : []
+    );
+    browser.webRequest.onAuthRequired.addListener(
+      details => {
+        browser.test.log(
+          `onAuthRequired called with ${details.requestId} ${details.url}`
+        );
+        browser.test.assertEq(
+          config.realm,
+          details.realm,
+          "providing www authorization"
+        );
+        browser.test.sendMessage("onAuthRequired");
+        return (
+          config.onAuthRequired.hasOwnProperty("result") &&
+          config.onAuthRequired.result
+        );
+      },
+      { urls: [path] },
+      config.onAuthRequired.hasOwnProperty("extra")
+        ? config.onAuthRequired.extra
+        : []
+    );
+    browser.webRequest.onCompleted.addListener(
+      details => {
+        browser.test.log(
+          `onCompleted called with ${details.requestId} ${details.url}`
+        );
+        browser.test.sendMessage("onCompleted");
+      },
+      { urls: [path] }
+    );
+    browser.webRequest.onErrorOccurred.addListener(
+      details => {
+        browser.test.log(
+          `onErrorOccurred called with ${JSON.stringify(details)}`
+        );
+        browser.test.sendMessage("onErrorOccurred");
+      },
+      { urls: [path] }
+    );
   }
 
   return ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: [
-        "webRequest",
-        "webRequestBlocking",
-        bgConfig.path,
-      ],
+      permissions: ["webRequest", "webRequestBlocking", bgConfig.path],
     },
     background: `(${background})(${JSON.stringify(bgConfig)})`,
   });
@@ -156,7 +196,7 @@ add_task(async function test_webRequest_auth_cancelled() {
   };
 
   let ex1 = getExtension(config);
-  config.onAuthRequired.result = {cancel: true};
+  config.onAuthRequired.result = { cancel: true };
   let ex2 = getExtension(config);
   await ex1.startup();
   await ex2.startup();
@@ -176,7 +216,6 @@ add_task(async function test_webRequest_auth_cancelled() {
   await ex1.unload();
   await ex2.unload();
 });
-
 
 add_task(async function test_webRequest_auth_nonblocking() {
   let config = {
@@ -200,7 +239,7 @@ add_task(async function test_webRequest_auth_nonblocking() {
   // non-blocking ext tries to cancel but cannot.
   delete config.onBeforeRequest.extra;
   delete config.onAuthRequired.extra;
-  config.onAuthRequired.result = {cancel: true};
+  config.onAuthRequired.result = { cancel: true };
   let ex2 = getExtension(config);
   await ex1.startup();
   await ex2.startup();
@@ -245,7 +284,7 @@ add_task(async function test_webRequest_auth_blocking_noreturn() {
   };
 
   let ex1 = getExtension(config);
-  config.onAuthRequired.result = {cancel: true};
+  config.onAuthRequired.result = { cancel: true };
   let ex2 = getExtension(config);
   await ex1.startup();
   await ex2.startup();
@@ -284,7 +323,7 @@ add_task(async function test_webRequest_duelingAuth() {
     username: `testuser_da1${Math.random()}`,
     password: `testpass_da1${Math.random()}`,
   };
-  config.onAuthRequired.result = {authCredentials};
+  config.onAuthRequired.result = { authCredentials };
   let ex1 = getExtension(config);
   await ex1.startup();
 
@@ -301,8 +340,9 @@ add_task(async function test_webRequest_duelingAuth() {
   let ex2 = getExtension(config);
   await ex2.startup();
 
-
-  let requestUrl = `${BASE_URL}/authenticate.sjs?realm=${config.realm}&user=${authCredentials.username}&pass=${authCredentials.password}`;
+  let requestUrl = `${BASE_URL}/authenticate.sjs?realm=${config.realm}&user=${
+    authCredentials.username
+  }&pass=${authCredentials.password}`;
   let contentPage = await ExtensionTestUtils.loadContentPage(requestUrl);
   await Promise.all([
     exNone.awaitMessage("onBeforeRequest"),
@@ -347,26 +387,33 @@ add_task(async function test_webRequest_duelingAuth() {
 add_task(async function test_webRequest_auth_proxy() {
   function background(permissionPath) {
     let proxyOk = false;
-    browser.webRequest.onAuthRequired.addListener((details) => {
-      browser.test.log(`handlingExt onAuthRequired called with ${details.requestId} ${details.url}`);
-      if (details.isProxy) {
-        browser.test.succeed("providing proxy authorization");
-        proxyOk = true;
-        return {authCredentials: {username: "puser", password: "ppass"}};
-      }
-      browser.test.assertTrue(proxyOk, "providing www authorization after proxy auth");
-      browser.test.sendMessage("done");
-      return {authCredentials: {username: "auser", password: "apass"}};
-    }, {urls: [permissionPath]}, ["blocking"]);
+    browser.webRequest.onAuthRequired.addListener(
+      details => {
+        browser.test.log(
+          `handlingExt onAuthRequired called with ${details.requestId} ${
+            details.url
+          }`
+        );
+        if (details.isProxy) {
+          browser.test.succeed("providing proxy authorization");
+          proxyOk = true;
+          return { authCredentials: { username: "puser", password: "ppass" } };
+        }
+        browser.test.assertTrue(
+          proxyOk,
+          "providing www authorization after proxy auth"
+        );
+        browser.test.sendMessage("done");
+        return { authCredentials: { username: "auser", password: "apass" } };
+      },
+      { urls: [permissionPath] },
+      ["blocking"]
+    );
   }
 
   let handlingExt = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: [
-        "webRequest",
-        "webRequestBlocking",
-        `${BASE_URL}/*`,
-      ],
+      permissions: ["webRequest", "webRequestBlocking", `${BASE_URL}/*`],
     },
     background: `(${background})("${BASE_URL}/*")`,
   });

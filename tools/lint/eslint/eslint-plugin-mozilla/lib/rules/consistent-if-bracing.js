@@ -20,10 +20,17 @@ module.exports = {
       IfStatement(node) {
         if (node.parent.type !== "IfStatement") {
           let types = new Set();
-          for (let currentNode = node; currentNode; currentNode = currentNode.alternate) {
+          for (
+            let currentNode = node;
+            currentNode;
+            currentNode = currentNode.alternate
+          ) {
             let type = currentNode.consequent.type;
             types.add(type == "BlockStatement" ? "Block" : "NotBlock");
-            if (currentNode.alternate && currentNode.alternate.type !== "IfStatement") {
+            if (
+              currentNode.alternate &&
+              currentNode.alternate.type !== "IfStatement"
+            ) {
               type = currentNode.alternate.type;
               types.add(type == "BlockStatement" ? "Block" : "NotBlock");
               break;

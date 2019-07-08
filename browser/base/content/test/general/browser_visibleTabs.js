@@ -21,7 +21,11 @@ add_task(async function() {
   is(visible[2], testTab, "last created tab is last");
 
   // Only show the test tab (but also get pinned and selected)
-  is(gBrowser.selectedTab, origTab, "sanity check that we're on the original tab");
+  is(
+    gBrowser.selectedTab,
+    origTab,
+    "sanity check that we're on the original tab"
+  );
   gBrowser.showOnlyTheseTabs([testTab]);
   is(gBrowser.visibleTabs.length, 3, "all 3 tabs are still visible");
 
@@ -46,7 +50,11 @@ add_task(async function() {
   gBrowser.selectTabAtIndex(2);
   is(gBrowser.selectedTab, testTab, "no third tab, so select last tab");
   gBrowser.selectTabAtIndex(-2);
-  is(gBrowser.selectedTab, pinned, "pinned tab is second from left (when orig tab is hidden)");
+  is(
+    gBrowser.selectedTab,
+    pinned,
+    "pinned tab is second from left (when orig tab is hidden)"
+  );
   gBrowser.selectTabAtIndex(-1);
   is(gBrowser.selectedTab, testTab, "last tab is the test tab");
 

@@ -3,8 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 const { PureComponent } = require("devtools/client/shared/vendor/react");
-const { div, input, select, option } = require("devtools/client/shared/vendor/react-dom-factories");
-const { withCommonPathPrefixRemoved } = require("devtools/client/performance-new/utils");
+const {
+  div,
+  input,
+  select,
+  option,
+} = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  withCommonPathPrefixRemoved,
+} = require("devtools/client/performance-new/utils");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 // A list of directories with add and remove buttons.
@@ -60,14 +67,16 @@ class DirectoryPicker extends PureComponent {
           size: "4",
           ref: this._takeListBoxRef,
         },
-        dirs.map((fullPath, i) => option(
-          {
-            key: fullPath,
-            className: "pref-settings-dir-list-item",
-            title: fullPath,
-          },
-          truncatedDirs[i]
-        ))
+        dirs.map((fullPath, i) =>
+          option(
+            {
+              key: fullPath,
+              className: "pref-settings-dir-list-item",
+              title: fullPath,
+            },
+            truncatedDirs[i]
+          )
+        )
       ),
       div(
         { className: "perf-settings-dir-list-button-group" },
@@ -82,7 +91,7 @@ class DirectoryPicker extends PureComponent {
           value: "-",
           title: "Remove the selected directory from the list",
           onClick: this._handleRemoveButtonClick,
-        }),
+        })
       ),
     ];
   }

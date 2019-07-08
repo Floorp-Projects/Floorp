@@ -13,9 +13,10 @@ function setupTest(uri, cookies, loads) {
   SimpleTest.waitForExplicitFinish();
 
   var prefSet = new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({ set: [
-      ["network.cookie.cookieBehavior", 1],
-    ]}, resolve);
+    SpecialPowers.pushPrefEnv(
+      { set: [["network.cookie.cookieBehavior", 1]] },
+      resolve
+    );
   });
 
   gScript = SpecialPowers.loadChromeScript(SCRIPT_URL);
@@ -28,7 +29,7 @@ function setupTest(uri, cookies, loads) {
   prefSet.then(() => {
     // load a window which contains an iframe; each will attempt to set
     // cookies from their respective domains.
-    gPopup = window.open(uri, 'hai', 'width=100,height=100');
+    gPopup = window.open(uri, "hai", "width=100,height=100");
   });
 }
 

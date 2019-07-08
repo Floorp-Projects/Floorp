@@ -4,7 +4,8 @@
 "use strict";
 
 const BASE = "http://example.com/browser/browser/components/sessionstore/test/";
-const READER_MODE_URL = "about:reader?url=" +
+const READER_MODE_URL =
+  "about:reader?url=" +
   encodeURIComponent(BASE + "browser_scrollPositions_readerModeArticle.html");
 
 // Randomized set of scroll positions we will use in this test.
@@ -29,8 +30,11 @@ add_task(async function test_scroll_background_about_reader_tabs() {
   ]);
 
   // Scroll down a little.
-  await sendMessage(browser, "ss-test:setScrollPosition", {x: 0, y: SCROLL_READER_MODE_Y});
-  await checkScroll(tab, {scroll: SCROLL_READER_MODE_STR}, "scroll is fine");
+  await sendMessage(browser, "ss-test:setScrollPosition", {
+    x: 0,
+    y: SCROLL_READER_MODE_Y,
+  });
+  await checkScroll(tab, { scroll: SCROLL_READER_MODE_STR }, "scroll is fine");
 
   // Close the window
   await BrowserTestUtils.closeWindow(newWin);
@@ -59,10 +63,17 @@ add_task(async function test_scroll_background_about_reader_tabs() {
   newWin.gBrowser.selectedTab = tab;
   await Promise.all([
     promiseTabRestored(tab),
-    BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "AboutReaderContentReady"),
+    BrowserTestUtils.waitForContentEvent(
+      tab.linkedBrowser,
+      "AboutReaderContentReady"
+    ),
   ]);
 
-  await checkScroll(tab, {scroll: SCROLL_READER_MODE_STR}, "scroll is still fine");
+  await checkScroll(
+    tab,
+    { scroll: SCROLL_READER_MODE_STR },
+    "scroll is still fine"
+  );
 
   await BrowserTestUtils.closeWindow(newWin);
 });

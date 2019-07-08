@@ -6,7 +6,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,Test editor mode toggle keyboard shortcut";
+const TEST_URI =
+  "data:text/html;charset=utf-8,Test editor mode toggle keyboard shortcut";
 const EDITOR_PREF = "devtools.webconsole.input.editor";
 
 add_task(async function() {

@@ -17,8 +17,14 @@ add_task(async function test_xpath_exp_for_strange_documents() {
 
   // Fill in some values.
   let uniqueValue = Math.random();
-  await setInputValue(browser, {selector: "input[type=text]", value: uniqueValue});
-  await setInputChecked(browser, {selector: "input[type=checkbox]", checked: true});
+  await setInputValue(browser, {
+    selector: "input[type=text]",
+    value: uniqueValue,
+  });
+  await setInputChecked(browser, {
+    selector: "input[type=checkbox]",
+    checked: true,
+  });
 
   // Duplicate the tab.
   let tab2 = gBrowser.duplicateTab(tab);
@@ -26,9 +32,11 @@ add_task(async function test_xpath_exp_for_strange_documents() {
   await promiseTabRestored(tab2);
 
   // Check that we generated valid XPath expressions to restore form values.
-  let text = await getInputValue(browser2, {selector: "input[type=text]"});
+  let text = await getInputValue(browser2, { selector: "input[type=text]" });
   is(text, uniqueValue, "generated XPath expression was valid");
-  let checkbox = await getInputChecked(browser2, {selector: "input[type=checkbox]"});
+  let checkbox = await getInputChecked(browser2, {
+    selector: "input[type=checkbox]",
+  });
   ok(checkbox, "generated XPath expression was valid");
 
   // Cleanup.

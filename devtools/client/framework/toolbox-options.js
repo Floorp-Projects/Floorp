@@ -5,12 +5,19 @@
 "use strict";
 
 const Services = require("Services");
-const {gDevTools} = require("devtools/client/framework/devtools");
+const { gDevTools } = require("devtools/client/framework/devtools");
 
-const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/toolbox.properties"
+);
 
-loader.lazyRequireGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm", true);
+loader.lazyRequireGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm",
+  true
+);
 
 exports.OptionsPanel = OptionsPanel;
 
@@ -67,7 +74,9 @@ function OptionsPanel(iframeWindow, toolbox) {
   this._themeUnregistered = this._themeUnregistered.bind(this);
   this._disableJSClicked = this._disableJSClicked.bind(this);
 
-  this.disableJSNode = this.panelDoc.getElementById("devtools-disable-javascript");
+  this.disableJSNode = this.panelDoc.getElementById(
+    "devtools-disable-javascript"
+  );
 
   this._addListeners();
 
@@ -76,7 +85,6 @@ function OptionsPanel(iframeWindow, toolbox) {
 }
 
 OptionsPanel.prototype = {
-
   get target() {
     return this.toolbox.target;
   },
@@ -95,8 +103,10 @@ OptionsPanel.prototype = {
   _addListeners: function() {
     Services.prefs.addObserver("devtools.cache.disabled", this._prefChanged);
     Services.prefs.addObserver("devtools.theme", this._prefChanged);
-    Services.prefs.addObserver("devtools.source-map.client-service.enabled",
-                               this._prefChanged);
+    Services.prefs.addObserver(
+      "devtools.source-map.client-service.enabled",
+      this._prefChanged
+    );
     gDevTools.on("theme-registered", this._themeRegistered);
     gDevTools.on("theme-unregistered", this._themeUnregistered);
 
@@ -113,8 +123,10 @@ OptionsPanel.prototype = {
   _removeListeners: function() {
     Services.prefs.removeObserver("devtools.cache.disabled", this._prefChanged);
     Services.prefs.removeObserver("devtools.theme", this._prefChanged);
-    Services.prefs.removeObserver("devtools.source-map.client-service.enabled",
-                                  this._prefChanged);
+    Services.prefs.removeObserver(
+      "devtools.source-map.client-service.enabled",
+      this._prefChanged
+    );
 
     this.toolbox.off("tool-registered", this.setupToolsList);
     this.toolbox.off("tool-unregistered", this.setupToolsList);
@@ -155,7 +167,8 @@ OptionsPanel.prototype = {
     await this.toolbox.isOpen;
 
     const enabledToolbarButtonsBox = this.panelDoc.getElementById(
-      "enabled-toolbox-buttons-box");
+      "enabled-toolbox-buttons-box"
+    );
 
     const toolbarButtons = this.toolbox.toolbarButtons;
 
@@ -164,11 +177,14 @@ OptionsPanel.prototype = {
       return;
     }
 
-    const onCheckboxClick = (checkbox) => {
+    const onCheckboxClick = checkbox => {
       const commandButton = toolbarButtons.filter(
-        toggleableButton => toggleableButton.id === checkbox.id)[0];
+        toggleableButton => toggleableButton.id === checkbox.id
+      )[0];
       Services.prefs.setBoolPref(
-        commandButton.visibilityswitch, checkbox.checked);
+        commandButton.visibilityswitch,
+        checkbox.checked
+      );
       this.toolbox.updateToolboxButtonsVisibility();
     };
 
@@ -182,8 +198,10 @@ OptionsPanel.prototype = {
       if (Services.prefs.getBoolPref(button.visibilityswitch, true)) {
         checkboxInput.setAttribute("checked", true);
       }
-      checkboxInput.addEventListener("change",
-        onCheckboxClick.bind(this, checkboxInput));
+      checkboxInput.addEventListener(
+        "change",
+        onCheckboxClick.bind(this, checkboxInput)
+      );
 
       checkboxLabel.appendChild(checkboxInput);
       checkboxLabel.appendChild(checkboxSpanLabel);
@@ -202,9 +220,11 @@ OptionsPanel.prototype = {
   setupToolsList: function() {
     const defaultToolsBox = this.panelDoc.getElementById("default-tools-box");
     const additionalToolsBox = this.panelDoc.getElementById(
-      "additional-tools-box");
+      "additional-tools-box"
+    );
     const toolsNotSupportedLabel = this.panelDoc.getElementById(
-      "tools-not-supported-label");
+      "tools-not-supported-label"
+    );
     let atleastOneToolNotSupported = false;
 
     // Signal tool registering/unregistering globally (for the tools registered
@@ -215,13 +235,20 @@ OptionsPanel.prototype = {
       Services.prefs.setBoolPref(tool.visibilityswitch, this.checked);
 
       if (!tool.isWebExtension) {
-        gDevTools.emit(this.checked ? "tool-registered" : "tool-unregistered", tool.id);
+        gDevTools.emit(
+          this.checked ? "tool-registered" : "tool-unregistered",
+          tool.id
+        );
         // Record which tools were registered and unregistered.
-        telemetry.keyedScalarSet("devtools.tool.registered", tool.id, this.checked);
+        telemetry.keyedScalarSet(
+          "devtools.tool.registered",
+          tool.id,
+          this.checked
+        );
       }
     };
 
-    const createToolCheckbox = (tool) => {
+    const createToolCheckbox = tool => {
       const checkboxLabel = this.panelDoc.createElement("label");
       const checkboxInput = this.panelDoc.createElement("input");
       checkboxInput.setAttribute("type", "checkbox");
@@ -233,8 +260,10 @@ OptionsPanel.prototype = {
         checkboxSpanLabel.textContent = tool.label;
       } else {
         atleastOneToolNotSupported = true;
-        checkboxSpanLabel.textContent =
-          L10N.getFormatStr("options.toolNotSupportedMarker", tool.label);
+        checkboxSpanLabel.textContent = L10N.getFormatStr(
+          "options.toolNotSupportedMarker",
+          tool.label
+        );
         checkboxInput.setAttribute("data-unsupported", "true");
         checkboxInput.setAttribute("disabled", "true");
       }
@@ -243,8 +272,10 @@ OptionsPanel.prototype = {
         checkboxInput.setAttribute("checked", "true");
       }
 
-      checkboxInput.addEventListener("change",
-        onCheckboxClick.bind(checkboxInput, this.telemetry, tool));
+      checkboxInput.addEventListener(
+        "change",
+        onCheckboxClick.bind(checkboxInput, this.telemetry, tool)
+      );
 
       checkboxLabel.appendChild(checkboxInput);
       checkboxLabel.appendChild(checkboxSpanLabel);
@@ -267,8 +298,9 @@ OptionsPanel.prototype = {
       fragment.appendChild(createToolCheckbox(tool));
     }
 
-    const toolsNotSupportedLabelNode =
-      this.panelDoc.getElementById("tools-not-supported-label");
+    const toolsNotSupportedLabelNode = this.panelDoc.getElementById(
+      "tools-not-supported-label"
+    );
     defaultToolsBox.insertBefore(fragment, toolsNotSupportedLabelNode);
 
     // Clean up any existent additional tools content.
@@ -284,27 +316,29 @@ OptionsPanel.prototype = {
     }
 
     // Populating the additional tools that came from the installed WebExtension add-ons.
-    for (const {uuid, name, pref} of this.toolbox.listWebExtensions()) {
+    for (const { uuid, name, pref } of this.toolbox.listWebExtensions()) {
       atleastOneAddon = true;
 
-      additionalToolsBox.appendChild(createToolCheckbox({
-        isWebExtension: true,
+      additionalToolsBox.appendChild(
+        createToolCheckbox({
+          isWebExtension: true,
 
-        // Use the preference as the unified webextensions tool id.
-        id: `webext-${uuid}`,
-        tooltip: name,
-        label: name,
-        // Disable the devtools extension using the given pref name:
-        // the toolbox options for the WebExtensions are not related to a single
-        // tool (e.g. a devtools panel created from the extension devtools_page)
-        // but to the entire devtools part of a webextension which is enabled
-        // by the Addon Manager (but it may be disabled by its related
-        // devtools about:config preference), and so the following
-        visibilityswitch: pref,
+          // Use the preference as the unified webextensions tool id.
+          id: `webext-${uuid}`,
+          tooltip: name,
+          label: name,
+          // Disable the devtools extension using the given pref name:
+          // the toolbox options for the WebExtensions are not related to a single
+          // tool (e.g. a devtools panel created from the extension devtools_page)
+          // but to the entire devtools part of a webextension which is enabled
+          // by the Addon Manager (but it may be disabled by its related
+          // devtools about:config preference), and so the following
+          visibilityswitch: pref,
 
-        // Only local tabs are currently supported as targets.
-        isTargetSupported: target => target.isLocalTab,
-      }));
+          // Only local tabs are currently supported as targets.
+          isTargetSupported: target => target.isLocalTab,
+        })
+      );
     }
 
     if (!atleastOneAddon) {
@@ -336,8 +370,7 @@ OptionsPanel.prototype = {
       inputRadio.setAttribute("value", theme.id);
       inputRadio.setAttribute("name", "devtools-theme-item");
       inputRadio.addEventListener("change", function(e) {
-        SetPref(themeBox.getAttribute("data-pref"),
-          e.target.value);
+        SetPref(themeBox.getAttribute("data-pref"), e.target.value);
       });
 
       const inputSpanLabel = this.panelDoc.createElement("span");
@@ -368,14 +401,16 @@ OptionsPanel.prototype = {
 
     // Labels for these new buttons are nightly only and mostly intended for working on
     // devtools.
-    const prefDefinitions = [{
-      pref: "devtools.performance.new-panel-enabled",
-      label: "Enable new performance recorder (then re-open DevTools)",
-      id: "devtools-new-performance",
-      parentId: "context-options",
-    }];
+    const prefDefinitions = [
+      {
+        pref: "devtools.performance.new-panel-enabled",
+        label: "Enable new performance recorder (then re-open DevTools)",
+        id: "devtools-new-performance",
+        parentId: "context-options",
+      },
+    ];
 
-    const createPreferenceOption = ({pref, label, id}) => {
+    const createPreferenceOption = ({ pref, label, id }) => {
       const inputLabel = this.panelDoc.createElement("label");
       const checkbox = this.panelDoc.createElement("input");
       checkbox.setAttribute("type", "checkbox");
@@ -405,14 +440,18 @@ OptionsPanel.prototype = {
       // no element after the last label. But that's OK and it will do what we
       // want.
       const referenceElement = parent.querySelector("label:last-of-type + *");
-      parent.insertBefore(createPreferenceOption(prefDefinition), referenceElement);
+      parent.insertBefore(
+        createPreferenceOption(prefDefinition),
+        referenceElement
+      );
       parent.removeAttribute("hidden");
     }
   },
 
   async populatePreferences() {
     const prefCheckboxes = this.panelDoc.querySelectorAll(
-      "input[type=checkbox][data-pref]");
+      "input[type=checkbox][data-pref]"
+    );
     for (const prefCheckbox of prefCheckboxes) {
       if (GetPref(prefCheckbox.getAttribute("data-pref"))) {
         prefCheckbox.setAttribute("checked", true);
@@ -424,18 +463,20 @@ OptionsPanel.prototype = {
     }
     // Themes radio inputs are handled in setupThemeList
     const prefRadiogroups = this.panelDoc.querySelectorAll(
-      ".radiogroup[data-pref]:not(#devtools-theme-box)");
+      ".radiogroup[data-pref]:not(#devtools-theme-box)"
+    );
     for (const radioGroup of prefRadiogroups) {
       const selectedValue = GetPref(radioGroup.getAttribute("data-pref"));
 
-      for (const radioInput of radioGroup.querySelectorAll("input[type=radio]")) {
+      for (const radioInput of radioGroup.querySelectorAll(
+        "input[type=radio]"
+      )) {
         if (radioInput.getAttribute("value") == selectedValue) {
           radioInput.setAttribute("checked", true);
         }
 
         radioInput.addEventListener("change", function(e) {
-          SetPref(radioGroup.getAttribute("data-pref"),
-            e.target.value);
+          SetPref(radioGroup.getAttribute("data-pref"), e.target.value);
         });
       }
     }
@@ -455,21 +496,24 @@ OptionsPanel.prototype = {
 
       prefSelect.addEventListener("change", function(e) {
         const select = e.target;
-        SetPref(select.getAttribute("data-pref"),
-          select.options[select.selectedIndex].value);
+        SetPref(
+          select.getAttribute("data-pref"),
+          select.options[select.selectedIndex].value
+        );
       });
     }
 
     if (!this.target.chrome) {
-      this.disableJSNode.checked =
-        !this.target.configureOptions.javascriptEnabled;
+      this.disableJSNode.checked = !this.target.configureOptions
+        .javascriptEnabled;
       this.disableJSNode.addEventListener("click", this._disableJSClicked);
     } else {
       // Hide the checkbox and label
       this.disableJSNode.parentNode.style.display = "none";
 
-      const triggersPageRefreshLabel =
-        this.panelDoc.getElementById("triggers-page-refresh-label");
+      const triggersPageRefreshLabel = this.panelDoc.getElementById(
+        "triggers-page-refresh-label"
+      );
       triggersPageRefreshLabel.style.display = "none";
     }
   },
@@ -509,7 +553,7 @@ OptionsPanel.prototype = {
     const checked = event.target.checked;
 
     const options = {
-      "javascriptEnabled": !checked,
+      javascriptEnabled: !checked,
     };
 
     this.target.reconfigure({ options });

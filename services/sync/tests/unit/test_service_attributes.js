@@ -1,8 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
-const {FakeGUIDService} = ChromeUtils.import("resource://testing-common/services/sync/fakeservices.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { FakeGUIDService } = ChromeUtils.import(
+  "resource://testing-common/services/sync/fakeservices.js"
+);
 
 add_task(async function test_urls() {
   _("URL related Service properties correspond to preference settings.");
@@ -24,17 +26,22 @@ add_task(async function test_urls() {
     Service.clusterURL = "http://weave.cluster/1.1/johndoe/";
 
     Assert.equal(Service.userBaseURL, "http://weave.cluster/1.1/johndoe/");
-    Assert.equal(Service.infoURL,
-                 "http://weave.cluster/1.1/johndoe/info/collections");
-    Assert.equal(Service.storageURL,
-                 "http://weave.cluster/1.1/johndoe/storage/");
-    Assert.equal(Service.metaURL,
-                 "http://weave.cluster/1.1/johndoe/storage/meta/global");
+    Assert.equal(
+      Service.infoURL,
+      "http://weave.cluster/1.1/johndoe/info/collections"
+    );
+    Assert.equal(
+      Service.storageURL,
+      "http://weave.cluster/1.1/johndoe/storage/"
+    );
+    Assert.equal(
+      Service.metaURL,
+      "http://weave.cluster/1.1/johndoe/storage/meta/global"
+    );
   } finally {
     Svc.Prefs.resetBranch("");
   }
 });
-
 
 add_test(function test_syncID() {
   _("Service.syncID is auto-generated, corresponds to preference.");

@@ -2,32 +2,32 @@
 "use strict";
 
 module.exports = {
-  "env": {
-    "browser": true,
+  env: {
+    browser: true,
   },
 
   // All globals made available in the test environment.
-  "globals": {
+  globals: {
     // SpecialPowers is injected into the window object via SimpleTest.js
-    "SpecialPowers": false,
-    "XPCNativeWrapper": false,
+    SpecialPowers: false,
+    XPCNativeWrapper: false,
   },
 
-  "overrides": [{
-    "env": {
-      // Ideally we wouldn't be using the simpletest env here, but our uses of
-      // js files mean we pick up everything from the global scope, which could
-      // be any one of a number of html files. So we just allow the basics...
-      "mozilla/simpletest": true,
+  overrides: [
+    {
+      env: {
+        // Ideally we wouldn't be using the simpletest env here, but our uses of
+        // js files mean we pick up everything from the global scope, which could
+        // be any one of a number of html files. So we just allow the basics...
+        "mozilla/simpletest": true,
+      },
+      files: ["*.js"],
     },
-    "files": ["*.js"],
-  }],
-
-  "plugins": [
-    "mozilla",
   ],
 
-  "rules": {
+  plugins: ["mozilla"],
+
+  rules: {
     "mozilla/import-content-task-globals": "error",
     "mozilla/import-headjs-globals": "error",
     "mozilla/mark-test-function-used": "error",

@@ -10,11 +10,11 @@ const promise = require("promise");
 const flags = require("devtools/shared/flags");
 const ToolDefinitions = require("devtools/client/definitions").Tools;
 const CssLogic = require("devtools/shared/inspector/css-logic");
-const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
+const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
 const OutputParser = require("devtools/client/shared/output-parser");
-const {PrefObserver} = require("devtools/client/shared/prefs");
-const {createChild} = require("devtools/client/inspector/shared/utils");
-const {gDevTools} = require("devtools/client/framework/devtools");
+const { PrefObserver } = require("devtools/client/shared/prefs");
+const { createChild } = require("devtools/client/inspector/shared/utils");
+const { gDevTools } = require("devtools/client/framework/devtools");
 const {
   VIEW_NODE_SELECTOR_TYPE,
   VIEW_NODE_PROPERTY_TYPE,
@@ -24,13 +24,31 @@ const {
 } = require("devtools/client/inspector/shared/node-types");
 const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overlay");
 
-loader.lazyRequireGetter(this, "StyleInspectorMenu", "devtools/client/inspector/shared/style-inspector-menu");
-loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-shortcuts");
-loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
-loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
+loader.lazyRequireGetter(
+  this,
+  "StyleInspectorMenu",
+  "devtools/client/inspector/shared/style-inspector-menu"
+);
+loader.lazyRequireGetter(
+  this,
+  "KeyShortcuts",
+  "devtools/client/shared/key-shortcuts"
+);
+loader.lazyRequireGetter(
+  this,
+  "clipboardHelper",
+  "devtools/shared/platform/clipboard"
+);
+loader.lazyRequireGetter(
+  this,
+  "openContentLink",
+  "devtools/client/shared/link",
+  true
+);
 
-const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
-const {LocalizationHelper} = require("devtools/shared/l10n");
+const STYLE_INSPECTOR_PROPERTIES =
+  "devtools/shared/locales/styleinspector.properties";
+const { LocalizationHelper } = require("devtools/shared/l10n");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 
 const FILTER_CHANGED_TIMEOUT = 150;
@@ -117,7 +135,7 @@ UpdateProcess.prototype = {
     while (!this.canceled) {
       const next = this._next();
       this.onItem(next);
-      if ((Date.now() - time) > this.threshold) {
+      if (Date.now() - time > this.threshold) {
         this.onBatch();
         return;
       }
@@ -172,11 +190,15 @@ function CssComputedView(inspector, document, pageStyle) {
   this.element = doc.getElementById("computed-property-container");
   this.searchField = doc.getElementById("computed-searchbox");
   this.searchClearButton = doc.getElementById("computed-searchinput-clear");
-  this.includeBrowserStylesCheckbox = doc.getElementById("browser-style-checkbox");
+  this.includeBrowserStylesCheckbox = doc.getElementById(
+    "browser-style-checkbox"
+  );
 
   this.shortcuts = new KeyShortcuts({ window: this.styleWindow });
   this._onShortcut = this._onShortcut.bind(this);
-  this.shortcuts.on("CmdOrCtrl+F", event => this._onShortcut("CmdOrCtrl+F", event));
+  this.shortcuts.on("CmdOrCtrl+F", event =>
+    this._onShortcut("CmdOrCtrl+F", event)
+  );
   this.shortcuts.on("Escape", event => this._onShortcut("Escape", event));
   this.styleDocument.addEventListener("copy", this._onCopy);
   this.styleDocument.addEventListener("mousedown", this.focusWindow);
@@ -184,16 +206,22 @@ function CssComputedView(inspector, document, pageStyle) {
   this.element.addEventListener("contextmenu", this._onContextMenu);
   this.searchField.addEventListener("input", this._onFilterStyles);
   this.searchClearButton.addEventListener("click", this._onClearSearch);
-  this.includeBrowserStylesCheckbox.addEventListener("input",
-    this._onIncludeBrowserStyles);
+  this.includeBrowserStylesCheckbox.addEventListener(
+    "input",
+    this._onIncludeBrowserStyles
+  );
 
   if (flags.testing) {
     // In tests, we start listening immediately to avoid having to simulate a mousemove.
     this.highlighters.addToView(this);
   } else {
-    this.element.addEventListener("mousemove", () => {
-      this.highlighters.addToView(this);
-    }, { once: true });
+    this.element.addEventListener(
+      "mousemove",
+      () => {
+        this.highlighters.addToView(this);
+      },
+      { once: true }
+    );
   }
 
   this.searchClearButton.hidden = true;
@@ -335,9 +363,11 @@ CssComputedView.prototype = {
 
     // Check if the node isn't a selector first since this doesn't require
     // walking the DOM
-    if (classes.contains("matched") ||
-        classes.contains("bestmatch") ||
-        classes.contains("parentmatch")) {
+    if (
+      classes.contains("matched") ||
+      classes.contains("bestmatch") ||
+      classes.contains("parentmatch")
+    ) {
       let selectorText = "";
 
       for (const child of node.childNodes[0].childNodes) {
@@ -373,34 +403,43 @@ CssComputedView.prototype = {
     let value, type;
 
     // Get the property and value for a node that's a property name or value
-    const isHref = classes.contains("theme-link") && !classes.contains("computed-link");
-    if (propertyView && (classes.contains("computed-property-name") ||
-                         classes.contains("computed-property-value") ||
-                         isHref)) {
+    const isHref =
+      classes.contains("theme-link") && !classes.contains("computed-link");
+    if (
+      propertyView &&
+      (classes.contains("computed-property-name") ||
+        classes.contains("computed-property-value") ||
+        isHref)
+    ) {
       value = {
-        property: parent.querySelector(".computed-property-name").firstChild.textContent,
+        property: parent.querySelector(".computed-property-name").firstChild
+          .textContent,
         value: parent.querySelector(".computed-property-value").textContent,
       };
     }
-    if (propertyContent && (classes.contains("computed-other-property-value") ||
-                            isHref)) {
+    if (
+      propertyContent &&
+      (classes.contains("computed-other-property-value") || isHref)
+    ) {
       const view = propertyContent.previousSibling;
       value = {
-        property: view.querySelector(".computed-property-name").firstChild.textContent,
+        property: view.querySelector(".computed-property-name").firstChild
+          .textContent,
         value: node.textContent,
       };
     }
     if (classes.contains("computed-font-family")) {
       if (propertyView) {
         value = {
-          property: parent.querySelector(
-            ".computed-property-name").firstChild.textContent,
+          property: parent.querySelector(".computed-property-name").firstChild
+            .textContent,
           value: node.parentNode.textContent,
         };
       } else if (propertyContent) {
         const view = propertyContent.previousSibling;
         value = {
-          property: view.querySelector(".computed-property-name").firstChild.textContent,
+          property: view.querySelector(".computed-property-name").firstChild
+            .textContent,
           value: node.parentNode.textContent,
         };
       } else {
@@ -411,8 +450,10 @@ CssComputedView.prototype = {
     // Get the type
     if (classes.contains("computed-property-name")) {
       type = VIEW_NODE_PROPERTY_TYPE;
-    } else if (classes.contains("computed-property-value") ||
-               classes.contains("computed-other-property-value")) {
+    } else if (
+      classes.contains("computed-property-value") ||
+      classes.contains("computed-other-property-value")
+    ) {
       type = VIEW_NODE_VALUE_TYPE;
     } else if (classes.contains("computed-font-family")) {
       type = VIEW_NODE_FONT_TYPE;
@@ -442,8 +483,10 @@ CssComputedView.prototype = {
 
     this._createViewsPromise = new Promise((resolve, reject) => {
       this._createViewsProcess = new UpdateProcess(
-        this.styleWindow, CssComputedView.propertyNames, {
-          onItem: (propertyName) => {
+        this.styleWindow,
+        CssComputedView.propertyNames,
+        {
+          onItem: propertyName => {
             // Per-item callback.
             const propView = new PropertyView(this, propertyName);
             fragment.appendChild(propView.buildMain());
@@ -484,65 +527,71 @@ CssComputedView.prototype = {
     // early if it changed
     const viewedElement = this._viewedElement;
 
-    return promise.all([
-      this._createPropertyViews(),
-      this.pageStyle.getComputed(this._viewedElement, {
-        filter: this._sourceFilter,
-        onlyMatched: !this.includeBrowserStyles,
-        markMatched: true,
-      }),
-    ]).then(([, computed]) => {
-      if (viewedElement !== this._viewedElement) {
-        return promise.resolve();
-      }
-
-      this._matchedProperties = new Set();
-      for (const name in computed) {
-        if (computed[name].matched) {
-          this._matchedProperties.add(name);
+    return promise
+      .all([
+        this._createPropertyViews(),
+        this.pageStyle.getComputed(this._viewedElement, {
+          filter: this._sourceFilter,
+          onlyMatched: !this.includeBrowserStyles,
+          markMatched: true,
+        }),
+      ])
+      .then(([, computed]) => {
+        if (viewedElement !== this._viewedElement) {
+          return promise.resolve();
         }
-      }
-      this._computed = computed;
 
-      if (this._refreshProcess) {
-        this._refreshProcess.cancel();
-      }
-
-      this.noResults.hidden = true;
-
-      // Reset visible property count
-      this.numVisibleProperties = 0;
-
-      // Reset zebra striping.
-      this._darkStripe = true;
-
-      return new Promise((resolve, reject) => {
-        this._refreshProcess = new UpdateProcess(
-          this.styleWindow, this.propertyViews, {
-            onItem: (propView) => {
-              propView.refresh();
-            },
-            onCancel: () => {
-              reject("_refreshProcess of computed view cancelled");
-            },
-            onDone: () => {
-              this._refreshProcess = null;
-              this.noResults.hidden = this.numVisibleProperties > 0;
-
-              const searchBox = this.searchField.parentNode;
-              searchBox.classList.toggle(
-                "devtools-searchbox-no-match",
-                this.searchField.value.length > 0 && !this.numVisibleProperties,
-              );
-
-              this.inspector.emit("computed-view-refreshed");
-              resolve(undefined);
-            },
+        this._matchedProperties = new Set();
+        for (const name in computed) {
+          if (computed[name].matched) {
+            this._matchedProperties.add(name);
           }
-        );
-        this._refreshProcess.schedule();
-      });
-    }).catch(console.error);
+        }
+        this._computed = computed;
+
+        if (this._refreshProcess) {
+          this._refreshProcess.cancel();
+        }
+
+        this.noResults.hidden = true;
+
+        // Reset visible property count
+        this.numVisibleProperties = 0;
+
+        // Reset zebra striping.
+        this._darkStripe = true;
+
+        return new Promise((resolve, reject) => {
+          this._refreshProcess = new UpdateProcess(
+            this.styleWindow,
+            this.propertyViews,
+            {
+              onItem: propView => {
+                propView.refresh();
+              },
+              onCancel: () => {
+                reject("_refreshProcess of computed view cancelled");
+              },
+              onDone: () => {
+                this._refreshProcess = null;
+                this.noResults.hidden = this.numVisibleProperties > 0;
+
+                const searchBox = this.searchField.parentNode;
+                searchBox.classList.toggle(
+                  "devtools-searchbox-no-match",
+                  this.searchField.value.length > 0 &&
+                    !this.numVisibleProperties
+                );
+
+                this.inspector.emit("computed-view-refreshed");
+                resolve(undefined);
+              },
+            }
+          );
+          this._refreshProcess.schedule();
+        });
+      })
+      .catch(console.error);
   },
 
   /**
@@ -554,8 +603,11 @@ CssComputedView.prototype = {
     }
     // Handle the search box's keypress event. If the escape key is pressed,
     // clear the search box field.
-    if (name === "Escape" && event.target === this.searchField &&
-        this._onClearSearch()) {
+    if (
+      name === "Escape" &&
+      event.target === this.searchField &&
+      this._onClearSearch()
+    ) {
       event.preventDefault();
       event.stopPropagation();
     } else if (name === "CmdOrCtrl+F") {
@@ -583,8 +635,8 @@ CssComputedView.prototype = {
       clearTimeout(this._filterChangedTimeout);
     }
 
-    const filterTimeout = (this.searchField.value.length > 0)
-      ? FILTER_CHANGED_TIMEOUT : 0;
+    const filterTimeout =
+      this.searchField.value.length > 0 ? FILTER_CHANGED_TIMEOUT : 0;
     this.searchClearButton.hidden = this.searchField.value.length === 0;
 
     this._filterChangedTimeout = setTimeout(() => {
@@ -622,9 +674,9 @@ CssComputedView.prototype = {
    */
   refreshSourceFilter: function() {
     this._matchedProperties = null;
-    this._sourceFilter = this.includeBrowserStyles ?
-                                 CssLogic.FILTER.UA :
-                                 CssLogic.FILTER.USER;
+    this._sourceFilter = this.includeBrowserStyles
+      ? CssLogic.FILTER.UA
+      : CssLogic.FILTER.USER;
   },
 
   /**
@@ -639,8 +691,9 @@ CssComputedView.prototype = {
 
     // Here we build and cache a list of css properties supported by the browser
     // We could use any element but let's use the main document's root element
-    const styles = this.styleWindow
-      .getComputedStyle(this.styleDocument.documentElement);
+    const styles = this.styleWindow.getComputedStyle(
+      this.styleDocument.documentElement
+    );
     const mozProps = [];
     for (let i = 0, numStyles = styles.length; i < numStyles; i++) {
       const prop = styles.item(i);
@@ -655,13 +708,17 @@ CssComputedView.prototype = {
     }
 
     CssComputedView.propertyNames.sort();
-    CssComputedView.propertyNames.push.apply(CssComputedView.propertyNames,
-      mozProps.sort());
+    CssComputedView.propertyNames.push.apply(
+      CssComputedView.propertyNames,
+      mozProps.sort()
+    );
 
     this._createPropertyViews().catch(e => {
       if (!this._isDestroyed) {
-        console.warn("The creation of property views was cancelled because " +
-          "the computed-view was destroyed before it was done creating views");
+        console.warn(
+          "The creation of property views was cancelled because " +
+            "the computed-view was destroyed before it was done creating views"
+        );
       } else {
         console.error(e);
       }
@@ -713,7 +770,10 @@ CssComputedView.prototype = {
    */
   _onCopy: function(event) {
     const win = this.styleWindow;
-    const text = win.getSelection().toString().trim();
+    const text = win
+      .getSelection()
+      .toString()
+      .trim();
     if (text !== "") {
       this.copySelection();
       event.preventDefault();
@@ -726,7 +786,10 @@ CssComputedView.prototype = {
   copySelection: function() {
     try {
       const win = this.styleWindow;
-      const text = win.getSelection().toString().trim();
+      const text = win
+        .getSelection()
+        .toString()
+        .trim();
 
       clipboardHelper.copyString(text);
     } catch (e) {
@@ -771,8 +834,10 @@ CssComputedView.prototype = {
     this.searchClearButton.removeEventListener("click", this._onClearSearch);
     this.styleDocument.removeEventListener("copy", this._onCopy);
     this.styleDocument.removeEventListener("mousedown", this.focusWindow);
-    this.includeBrowserStylesCheckbox.removeEventListener("input",
-      this._onIncludeBrowserStyles);
+    this.includeBrowserStylesCheckbox.removeEventListener(
+      "input",
+      this._onIncludeBrowserStyles
+    );
 
     // Nodes used in templating
     this.element = null;
@@ -893,9 +958,11 @@ PropertyView.prototype = {
 
     const searchTerm = this.tree.searchField.value.toLowerCase();
     const isValidSearchTerm = searchTerm.trim().length > 0;
-    if (isValidSearchTerm &&
-        !this.name.toLowerCase().includes(searchTerm) &&
-        !this.value.toLowerCase().includes(searchTerm)) {
+    if (
+      isValidSearchTerm &&
+      !this.name.toLowerCase().includes(searchTerm) &&
+      !this.value.toLowerCase().includes(searchTerm)
+    ) {
       return false;
     }
 
@@ -909,8 +976,10 @@ PropertyView.prototype = {
    */
   get propertyHeaderClassName() {
     if (this.visible) {
-      const isDark = this.tree._darkStripe = !this.tree._darkStripe;
-      return isDark ? "computed-property-view row-striped" : "computed-property-view";
+      const isDark = (this.tree._darkStripe = !this.tree._darkStripe);
+      return isDark
+        ? "computed-property-view row-striped"
+        : "computed-property-view";
     }
     return "computed-property-hidden";
   },
@@ -1051,7 +1120,8 @@ PropertyView.prototype = {
     this.tree.numVisibleProperties++;
 
     const outputParser = this.tree._outputParser;
-    const frag = outputParser.parseCssProperty(this.propertyInfo.name,
+    const frag = outputParser.parseCssProperty(
+      this.propertyInfo.name,
       this.propertyInfo.value,
       {
         colorSwatchClass: "computed-colorswatch",
@@ -1059,7 +1129,8 @@ PropertyView.prototype = {
         urlClass: "theme-link",
         fontFamilyClass: "computed-font-family",
         // No need to use baseURI here as computed URIs are never relative.
-      });
+      }
+    );
     this.valueNode.innerHTML = "";
     this.valueNode.appendChild(frag);
 
@@ -1092,7 +1163,8 @@ PropertyView.prototype = {
           this._buildMatchedSelectors();
           this.matchedExpander.setAttribute("open", "");
           this.tree.inspector.emit("computed-view-property-expanded");
-        }).catch(console.error);
+        })
+        .catch(console.error);
     }
 
     this.matchedSelectorsContainer.innerHTML = "";
@@ -1140,7 +1212,8 @@ PropertyView.prototype = {
       });
 
       const valueDiv = createChild(status, "div", {
-        class: "fix-get-selection computed-other-property-value theme-fg-color1",
+        class:
+          "fix-get-selection computed-other-property-value theme-fg-color1",
       });
       valueDiv.appendChild(selector.outputFragment);
     }
@@ -1243,7 +1316,12 @@ function SelectorView(tree, selectorInfo) {
     };
     this.generatedLocation = this.currentLocation;
     this.sourceMapURLService = this.tree.inspector.toolbox.sourceMapURLService;
-    this.sourceMapURLService.subscribe(url, rule.line, rule.column, this._updateLocation);
+    this.sourceMapURLService.subscribe(
+      url,
+      rule.line,
+      rule.column,
+      this._updateLocation
+    );
   }
 }
 
@@ -1256,9 +1334,7 @@ SelectorView.STATUS_NAMES = [
   // "Parent Match", "Matched", "Best Match"
 ];
 
-SelectorView.CLASS_NAMES = [
-  "parentmatch", "matched", "bestmatch",
-];
+SelectorView.CLASS_NAMES = ["parentmatch", "matched", "bestmatch"];
 
 SelectorView.prototype = {
   /**
@@ -1322,7 +1398,8 @@ SelectorView.prototype = {
     const outputParser = this.tree._outputParser;
     const frag = outputParser.parseCssProperty(
       this.selectorInfo.name,
-      this.selectorInfo.value, {
+      this.selectorInfo.value,
+      {
         colorSwatchClass: "computed-colorswatch",
         colorClass: "computed-color",
         urlClass: "theme-link",
@@ -1366,8 +1443,10 @@ SelectorView.prototype = {
     const selector = '[sourcelocation="' + this.source + '"]';
     const link = this.tree.element.querySelector(selector);
     if (link) {
-      const text = CssLogic.shortSource(this.currentLocation) +
-          ":" + this.currentLocation.line;
+      const text =
+        CssLogic.shortSource(this.currentLocation) +
+        ":" +
+        this.currentLocation.line;
       link.textContent = text;
     }
 
@@ -1398,7 +1477,7 @@ SelectorView.prototype = {
       return;
     }
 
-    const {href, line, column} = this.currentLocation;
+    const { href, line, column } = this.currentLocation;
     const target = inspector.target;
     if (ToolDefinitions.styleEditor.isTargetSupported(target)) {
       gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
@@ -1414,8 +1493,12 @@ SelectorView.prototype = {
     const rule = this.selectorInfo.rule;
     if (rule && rule.parentStyleSheet && rule.type != ELEMENT_STYLE) {
       const url = rule.parentStyleSheet.href || rule.parentStyleSheet.nodeHref;
-      this.sourceMapURLService.unsubscribe(url, rule.line,
-                                           rule.column, this._updateLocation);
+      this.sourceMapURLService.unsubscribe(
+        url,
+        rule.line,
+        rule.column,
+        this._updateLocation
+      );
     }
   },
 };
@@ -1424,8 +1507,11 @@ function ComputedViewTool(inspector, window) {
   this.inspector = inspector;
   this.document = window.document;
 
-  this.computedView = new CssComputedView(this.inspector, this.document,
-    this.inspector.pageStyle);
+  this.computedView = new CssComputedView(
+    this.inspector,
+    this.document,
+    this.inspector.pageStyle
+  );
 
   this.onDetachedFront = this.onDetachedFront.bind(this);
   this.onSelected = this.onSelected.bind(this);
@@ -1465,25 +1551,29 @@ ComputedViewTool.prototype = {
       return;
     }
 
-    const isInactive = !this.isSidebarActive() &&
-                     this.inspector.selection.nodeFront;
+    const isInactive =
+      !this.isSidebarActive() && this.inspector.selection.nodeFront;
     if (isInactive) {
       return;
     }
 
     this.computedView.setPageStyle(this.inspector.pageStyle);
 
-    if (!this.inspector.selection.isConnected() ||
-        !this.inspector.selection.isElementNode()) {
+    if (
+      !this.inspector.selection.isConnected() ||
+      !this.inspector.selection.isElementNode()
+    ) {
       this.computedView.selectElement(null);
       return;
     }
 
     if (selectElement) {
       const done = this.inspector.updating("computed-view");
-      this.computedView.selectElement(this.inspector.selection.nodeFront).then(() => {
-        done();
-      });
+      this.computedView
+        .selectElement(this.inspector.selection.nodeFront)
+        .then(() => {
+          done();
+        });
     }
   },
 
@@ -1494,7 +1584,9 @@ ComputedViewTool.prototype = {
   },
 
   onPanelSelected: function() {
-    if (this.inspector.selection.nodeFront === this.computedView._viewedElement) {
+    if (
+      this.inspector.selection.nodeFront === this.computedView._viewedElement
+    ) {
       this.refresh();
     } else {
       this.onSelected();

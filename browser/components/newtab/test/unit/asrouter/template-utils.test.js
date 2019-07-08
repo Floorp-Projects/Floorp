@@ -1,4 +1,4 @@
-import {safeURI} from "content-src/asrouter/template-utils";
+import { safeURI } from "content-src/asrouter/template-utils";
 
 describe("safeURI", () => {
   let warnStub;
@@ -15,7 +15,10 @@ describe("safeURI", () => {
     assert.equal(safeURI("https://foo.com"), "https://foo.com");
   });
   it("should allow data URIs", () => {
-    assert.equal(safeURI("data:image/png;base64,iVBO"), "data:image/png;base64,iVBO");
+    assert.equal(
+      safeURI("data:image/png;base64,iVBO"),
+      "data:image/png;base64,iVBO"
+    );
   });
   it("should not allow javascript: URIs", () => {
     assert.equal(safeURI("javascript:foo()"), ""); // eslint-disable-line no-script-url

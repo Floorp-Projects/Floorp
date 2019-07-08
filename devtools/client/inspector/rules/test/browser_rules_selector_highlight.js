@@ -12,8 +12,8 @@ const TEST_URI = [
   "  h1 {}",
   "  h1#testid {}",
   "  h1 + p {}",
-  "  div[hidden=\"true\"] {}",
-  "  div[title=\"test\"][checked=true] {}",
+  '  div[hidden="true"] {}',
+  '  div[title="test"][checked=true] {}',
   "  p:empty {}",
   "  p:lang(en) {}",
   "  .testclass:active {}",
@@ -22,12 +22,12 @@ const TEST_URI = [
   "</style>",
   "<h1>Styled Node</h1>",
   "<p>Paragraph</p>",
-  "<h1 id=\"testid\">Styled Node</h1>",
-  "<div hidden=\"true\"></div>",
-  "<div title=\"test\" checked=\"true\"></div>",
+  '<h1 id="testid">Styled Node</h1>',
+  '<div hidden="true"></div>',
+  '<div title="test" checked="true"></div>',
   "<p></p>",
-  "<p lang=\"en\">Paragraph<p>",
-  "<div class=\"testclass\">Styled Node</div>",
+  '<p lang="en">Paragraph<p>',
+  '<div class="testclass">Styled Node</div>',
 ].join("\n");
 
 const SELECTOR_ATTRIBUTE = "ruleview-selector-attribute";
@@ -38,35 +38,29 @@ const SELECTOR_PSEUDO_CLASS_LOCK = "ruleview-selector-pseudo-class-lock";
 const TEST_DATA = [
   {
     node: "h1",
-    expected: [
-      { value: "h1", class: SELECTOR_ELEMENT },
-    ],
+    expected: [{ value: "h1", class: SELECTOR_ELEMENT }],
   },
   {
     node: "h1 + p",
-    expected: [
-      { value: "h1 + p", class: SELECTOR_ELEMENT },
-    ],
+    expected: [{ value: "h1 + p", class: SELECTOR_ELEMENT }],
   },
   {
     node: "h1#testid",
-    expected: [
-      { value: "h1#testid", class: SELECTOR_ELEMENT },
-    ],
+    expected: [{ value: "h1#testid", class: SELECTOR_ELEMENT }],
   },
   {
     node: "div[hidden='true']",
     expected: [
       { value: "div", class: SELECTOR_ELEMENT },
-      { value: "[hidden=\"true\"]", class: SELECTOR_ATTRIBUTE },
+      { value: '[hidden="true"]', class: SELECTOR_ATTRIBUTE },
     ],
   },
   {
-    node: "div[title=\"test\"][checked=\"true\"]",
+    node: 'div[title="test"][checked="true"]',
     expected: [
       { value: "div", class: SELECTOR_ELEMENT },
-      { value: "[title=\"test\"]", class: SELECTOR_ATTRIBUTE },
-      { value: "[checked=\"true\"]", class: SELECTOR_ATTRIBUTE },
+      { value: '[title="test"]', class: SELECTOR_ATTRIBUTE },
+      { value: '[checked="true"]', class: SELECTOR_ATTRIBUTE },
     ],
   },
   {
@@ -111,9 +105,9 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
-  for (const {node, pseudoClass, expected} of TEST_DATA) {
+  for (const { node, pseudoClass, expected } of TEST_DATA) {
     await selectNode(node, inspector);
 
     if (pseudoClass) {
@@ -122,22 +116,37 @@ add_task(async function() {
       await onRefresh;
     }
 
-    const selectorContainer =
-      getRuleViewRuleEditor(view, 1).selectorText.firstChild;
+    const selectorContainer = getRuleViewRuleEditor(view, 1).selectorText
+      .firstChild;
 
     if (selectorContainer.children.length === expected.length) {
       for (let i = 0; i < expected.length; i++) {
-        is(expected[i].value, selectorContainer.children[i].textContent,
-          "Got expected selector value: " + expected[i].value + " == " +
-          selectorContainer.children[i].textContent);
-        is(expected[i].class, selectorContainer.children[i].className,
-          "Got expected class name: " + expected[i].class + " == " +
-          selectorContainer.children[i].className);
+        is(
+          expected[i].value,
+          selectorContainer.children[i].textContent,
+          "Got expected selector value: " +
+            expected[i].value +
+            " == " +
+            selectorContainer.children[i].textContent
+        );
+        is(
+          expected[i].class,
+          selectorContainer.children[i].className,
+          "Got expected class name: " +
+            expected[i].class +
+            " == " +
+            selectorContainer.children[i].className
+        );
       }
     } else {
       for (const selector of selectorContainer.children) {
-        info("Actual selector components: { value: " + selector.textContent +
-          ", class: " + selector.className + " }\n");
+        info(
+          "Actual selector components: { value: " +
+            selector.textContent +
+            ", class: " +
+            selector.className +
+            " }\n"
+        );
       }
     }
   }

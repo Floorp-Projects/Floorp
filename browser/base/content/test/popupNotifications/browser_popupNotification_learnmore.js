@@ -13,7 +13,8 @@ function test() {
 
 var tests = [
   // Test checkbox being checked by default
-  { id: "without_learn_more",
+  {
+    id: "without_learn_more",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       showNotification(this.notifyObj);
@@ -21,16 +22,23 @@ var tests = [
     onShown(popup) {
       checkPopup(popup, this.notifyObj);
       let notification = popup.children[0];
-      let link = notification.querySelector(".popup-notification-learnmore-link");
+      let link = notification.querySelector(
+        ".popup-notification-learnmore-link"
+      );
       ok(!link.href, "no href");
-      is(window.getComputedStyle(link).getPropertyValue("display"), "none", "link hidden");
+      is(
+        window.getComputedStyle(link).getPropertyValue("display"),
+        "none",
+        "link hidden"
+      );
       dismissNotification(popup);
     },
-    onHidden() { },
+    onHidden() {},
   },
 
   // Test that passing the learnMoreURL field sets up the link.
-  { id: "with_learn_more",
+  {
+    id: "with_learn_more",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.options.learnMoreURL = "https://mozilla.org";
@@ -39,12 +47,18 @@ var tests = [
     onShown(popup) {
       checkPopup(popup, this.notifyObj);
       let notification = popup.children[0];
-      let link = notification.querySelector(".popup-notification-learnmore-link");
+      let link = notification.querySelector(
+        ".popup-notification-learnmore-link"
+      );
       is(link.textContent, "Learn more…", "correct label");
       is(link.href, "https://mozilla.org", "correct href");
-      isnot(window.getComputedStyle(link).getPropertyValue("display"), "none", "link not hidden");
+      isnot(
+        window.getComputedStyle(link).getPropertyValue("display"),
+        "none",
+        "link not hidden"
+      );
       dismissNotification(popup);
     },
-    onHidden() { },
+    onHidden() {},
   },
- ];
+];

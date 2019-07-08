@@ -6,7 +6,9 @@
 
 const { getJSON } = require("devtools/client/shared/getjson");
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/device.properties");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/device.properties"
+);
 
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
 

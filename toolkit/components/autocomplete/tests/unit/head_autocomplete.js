@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 /**
  * Dummy nsIAutoCompleteInput source that returns
@@ -13,7 +15,6 @@ function AutoCompleteInputBase(aSearches) {
   this.searches = aSearches;
 }
 AutoCompleteInputBase.prototype = {
-
   // Array of AutoCompleteSearch names
   searches: null,
 
@@ -69,7 +70,6 @@ function AutoCompleteResultBase(aValues) {
   this._values = aValues;
 }
 AutoCompleteResultBase.prototype = {
-
   // Arrays
   _values: null,
   _comments: [],
@@ -124,17 +124,13 @@ function AutoCompleteSearchBase(aName, aResult) {
   this._result = aResult;
 }
 AutoCompleteSearchBase.prototype = {
-
   // Search name. Used by AutoCompleteController
   name: null,
 
   // AutoCompleteResult
   _result: null,
 
-  startSearch(aSearchString,
-                        aSearchParam,
-                        aPreviousResult,
-                        aListener) {
+  startSearch(aSearchString, aSearchParam, aPreviousResult, aListener) {
     var result = this._result;
 
     result.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
@@ -144,8 +140,10 @@ AutoCompleteSearchBase.prototype = {
   stopSearch() {},
 
   // nsISupports implementation
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory,
-                                          Ci.nsIAutoCompleteSearch]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIFactory,
+    Ci.nsIAutoCompleteSearch,
+  ]),
 
   // nsIFactory implementation
   createInstance(outer, iid) {
@@ -178,13 +176,14 @@ AutocompletePopupBase.prototype = {
  */
 function registerAutoCompleteSearch(aSearch) {
   var name = "@mozilla.org/autocomplete/search;1?name=" + aSearch.name;
-  var cid = Cc["@mozilla.org/uuid-generator;1"].
-            getService(Ci.nsIUUIDGenerator).
-            generateUUID();
+  var cid = Cc["@mozilla.org/uuid-generator;1"]
+    .getService(Ci.nsIUUIDGenerator)
+    .generateUUID();
 
   var desc = "Test AutoCompleteSearch";
-  var componentManager = Components.manager
-                                   .QueryInterface(Ci.nsIComponentRegistrar);
+  var componentManager = Components.manager.QueryInterface(
+    Ci.nsIComponentRegistrar
+  );
   componentManager.registerFactory(cid, desc, name, aSearch);
 
   // Keep the id on the object so we can unregister later
@@ -195,8 +194,8 @@ function registerAutoCompleteSearch(aSearch) {
  * Helper to unregister an AutoCompleteSearch.
  */
 function unregisterAutoCompleteSearch(aSearch) {
-  var componentManager = Components.manager
-                                   .QueryInterface(Ci.nsIComponentRegistrar);
+  var componentManager = Components.manager.QueryInterface(
+    Ci.nsIComponentRegistrar
+  );
   componentManager.unregisterFactory(aSearch.cid, aSearch);
 }
-

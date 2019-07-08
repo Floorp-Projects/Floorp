@@ -16,9 +16,20 @@ async function openPopupAndSelectFolder(guid, newBookmark = false) {
 
   let notificationPromise;
   if (!newBookmark) {
-    notificationPromise = PlacesTestUtils.waitForNotification("onItemMoved",
-      (id, oldParentId, oldIndex, newParentId, newIndex, type,
-       itemGuid, oldParentGuid, newParentGuid) => guid == newParentGuid);
+    notificationPromise = PlacesTestUtils.waitForNotification(
+      "onItemMoved",
+      (
+        id,
+        oldParentId,
+        oldIndex,
+        newParentId,
+        newIndex,
+        type,
+        itemGuid,
+        oldParentGuid,
+        newParentGuid
+      ) => guid == newParentGuid
+    );
   }
 
   // Expand the folder tree.
@@ -36,18 +47,27 @@ async function assertRecentFolders(expectedGuids, msg) {
   // to open the dialog again.
   let diskGuids = [];
   await TestUtils.waitForCondition(async () => {
-    diskGuids = await PlacesUtils.metadata.get(PlacesUIUtils.LAST_USED_FOLDERS_META_KEY, []);
+    diskGuids = await PlacesUtils.metadata.get(
+      PlacesUIUtils.LAST_USED_FOLDERS_META_KEY,
+      []
+    );
     return diskGuids.length == expectedGuids.length;
   }, `Should have written data to disk for: ${msg}`);
 
-  Assert.deepEqual(diskGuids, expectedGuids, `Should match the disk GUIDS for ${msg}`);
+  Assert.deepEqual(
+    diskGuids,
+    expectedGuids,
+    `Should match the disk GUIDS for ${msg}`
+  );
 
   await clickBookmarkStar();
 
   let actualGuids = [];
   function getGuids() {
     actualGuids = [];
-    const folderMenuPopup = document.getElementById("editBMPanel_folderMenuList").menupopup;
+    const folderMenuPopup = document.getElementById(
+      "editBMPanel_folderMenuList"
+    ).menupopup;
 
     let separatorFound = false;
     // The list of folders goes from editBMPanel_foldersSeparator to the end.
@@ -90,25 +110,32 @@ add_task(async function setup() {
 
   folders = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
-    children: [{
-      title: "Bob",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    }, {
-      title: "Place",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    }, {
-      title: "Delight",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    }, {
-      title: "Surprise",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    }, {
-      title: "Treble Bob",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    }, {
-      title: "Principal",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    }],
+    children: [
+      {
+        title: "Bob",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      },
+      {
+        title: "Place",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      },
+      {
+        title: "Delight",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      },
+      {
+        title: "Surprise",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      },
+      {
+        title: "Treble Bob",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      },
+      {
+        title: "Principal",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      },
+    ],
   });
 
   registerCleanupFunction(async () => {
@@ -125,15 +152,20 @@ add_task(async function test_remember_last_folder() {
 
   await openPopupAndSelectFolder(folders[0].guid, true);
 
-  await assertRecentFolders([folders[0].guid], "Should have one folder in the list.");
+  await assertRecentFolders(
+    [folders[0].guid],
+    "Should have one folder in the list."
+  );
 });
 
 add_task(async function test_forget_oldest_folder() {
   // Add some more folders.
   let expectedFolders = [folders[0].guid];
   for (let i = 1; i < folders.length; i++) {
-    await assertRecentFolders(expectedFolders,
-      "Should have only the expected folders in the list");
+    await assertRecentFolders(
+      expectedFolders,
+      "Should have only the expected folders in the list"
+    );
 
     await openPopupAndSelectFolder(folders[i].guid);
 
@@ -143,8 +175,10 @@ add_task(async function test_forget_oldest_folder() {
     }
   }
 
-  await assertRecentFolders(expectedFolders,
-    "Should have expired the original folder");
+  await assertRecentFolders(
+    expectedFolders,
+    "Should have expired the original folder"
+  );
 });
 
 add_task(async function test_reorder_folders() {
@@ -159,6 +193,8 @@ add_task(async function test_reorder_folders() {
   // Take an old one and put it at the front.
   await openPopupAndSelectFolder(folders[2].guid);
 
-  await assertRecentFolders(expectedFolders,
-    "Should have correctly re-ordered the list");
+  await assertRecentFolders(
+    expectedFolders,
+    "Should have correctly re-ordered the list"
+  );
 });

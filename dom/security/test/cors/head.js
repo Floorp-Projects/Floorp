@@ -1,14 +1,15 @@
-'use strict';
+"use strict";
 
 function scopedCuImport(path) {
   const scope = {};
   ChromeUtils.import(path, scope);
   return scope;
 }
-const {loader, require} = scopedCuImport("resource://devtools/shared/Loader.jsm");
-const {TargetFactory} = require("devtools/client/framework/target");
-const {Utils: WebConsoleUtils} =
-  require("devtools/client/webconsole/utils");
+const { loader, require } = scopedCuImport(
+  "resource://devtools/shared/Loader.jsm"
+);
+const { TargetFactory } = require("devtools/client/framework/target");
+const { Utils: WebConsoleUtils } = require("devtools/client/webconsole/utils");
 let { gDevTools } = require("devtools/client/framework/devtools");
 let promise = require("promise");
 
@@ -58,9 +59,8 @@ var openToolboxForTab = async function(tab, toolId, hostType) {
  */
 function findMessages(hud, text, selector = ".message") {
   const messages = hud.ui.experimentalOutputNode.querySelectorAll(selector);
-  const elements = Array.prototype.filter.call(
-    messages,
-    (el) => el.textContent.includes(text)
+  const elements = Array.prototype.filter.call(messages, el =>
+    el.textContent.includes(text)
   );
   return elements;
 }

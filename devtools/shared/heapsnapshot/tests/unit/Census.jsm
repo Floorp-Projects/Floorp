@@ -38,10 +38,12 @@ this.Census = (function() {
     if (typeof subject === "object") {
       dumpn(name);
       for (const prop in subject) {
-        count = walk(subject[prop],
-                     name + "[" + uneval(prop) + "]",
-                     walker.enter(prop),
-                     count);
+        count = walk(
+          subject[prop],
+          name + "[" + uneval(prop) + "]",
+          walker.enter(prop),
+          count
+        );
       }
       walker.done();
     } else {
@@ -72,11 +74,15 @@ this.Census = (function() {
   };
 
   function expectedObject() {
-    throw new Error("Census mismatch: subject has leaf where basis has nested object");
+    throw new Error(
+      "Census mismatch: subject has leaf where basis has nested object"
+    );
   }
 
   function expectedLeaf() {
-    throw new Error("Census mismatch: subject has nested object where basis has leaf");
+    throw new Error(
+      "Census mismatch: subject has nested object where basis has leaf"
+    );
   }
 
   // Return a function that, given a 'basis' census, returns a census walker that
@@ -92,7 +98,7 @@ this.Census = (function() {
   // - extra(prop): Called when the subject has a property named |prop|, but the
   //   basis has no such property. This should return a walker that can check
   //   the subject's value.
-  function makeBasisChecker({compare, missing, extra}) {
+  function makeBasisChecker({ compare, missing, extra }) {
     return function makeWalker(basis) {
       if (typeof basis === "object") {
         const unvisited = new Set(Object.getOwnPropertyNames(basis));
@@ -120,12 +126,15 @@ this.Census = (function() {
   }
 
   function missingProp(prop) {
-    throw new Error("Census mismatch: subject lacks property present in basis: " + prop);
+    throw new Error(
+      "Census mismatch: subject lacks property present in basis: " + prop
+    );
   }
 
   function extraProp(prop) {
-    throw new Error("Census mismatch: subject has property not present in basis: "
-      + prop);
+    throw new Error(
+      "Census mismatch: subject has property not present in basis: " + prop
+    );
   }
 
   // Return a walker that checks that the subject census has counts all equal to
@@ -173,4 +182,4 @@ this.Census = (function() {
   };
 
   return Census;
-}());
+})();

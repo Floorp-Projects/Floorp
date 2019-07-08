@@ -2,14 +2,19 @@ function test() {
   var isWin7OrHigher = false;
   try {
     let version = Cc["@mozilla.org/system-info;1"]
-                    .getService(Ci.nsIPropertyBag2)
-                    .getProperty("version");
-    isWin7OrHigher = (parseFloat(version) >= 6.1);
-  } catch (ex) { }
+      .getService(Ci.nsIPropertyBag2)
+      .getProperty("version");
+    isWin7OrHigher = parseFloat(version) >= 6.1;
+  } catch (ex) {}
 
-  is(!!Win7Features, isWin7OrHigher, "Win7Features available when it should be");
-  if (!isWin7OrHigher)
+  is(
+    !!Win7Features,
+    isWin7OrHigher,
+    "Win7Features available when it should be"
+  );
+  if (!isWin7OrHigher) {
     return;
+  }
 
   const ENABLE_PREF_NAME = "browser.taskbar.previews.enable";
 
@@ -31,16 +36,18 @@ function test() {
 
   checkPreviews(4, "Correct number of previews after adding");
 
-  for (let preview of AeroPeek.previews)
+  for (let preview of AeroPeek.previews) {
     ok(preview.visible, "Preview is shown as expected");
+  }
 
   Services.prefs.setBoolPref(ENABLE_PREF_NAME, false);
   is(0, AeroPeek.previews.length, "Should have 0 previews when disabled");
 
   Services.prefs.setBoolPref(ENABLE_PREF_NAME, true);
   checkPreviews(4, "Previews are back when re-enabling");
-  for (let preview of AeroPeek.previews)
+  for (let preview of AeroPeek.previews) {
     ok(preview.visible, "Preview is shown as expected after re-enabling");
+  }
 
   [1, 2, 3, 4].forEach(function(idx) {
     gBrowser.selectedTab = gBrowser.tabs[idx];
@@ -49,21 +56,33 @@ function test() {
 
   // Close #4
   getPreviewForTab(gBrowser.selectedTab).controller.onClose();
-  checkPreviews(3, "Expected number of previews after closing selected tab via controller");
+  checkPreviews(
+    3,
+    "Expected number of previews after closing selected tab via controller"
+  );
   ok(gBrowser.tabs.length == 3, "Successfully closed a tab");
 
   // Select #1
-  ok(getPreviewForTab(gBrowser.tabs[0]).controller.onActivate(), "Activation was accepted");
+  ok(
+    getPreviewForTab(gBrowser.tabs[0]).controller.onActivate(),
+    "Activation was accepted"
+  );
   ok(gBrowser.tabs[0].selected, "Correct tab was selected");
   checkSelectedTab();
 
   // Remove #3 (non active)
   gBrowser.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
-  checkPreviews(2, "Expected number of previews after closing unselected via browser");
+  checkPreviews(
+    2,
+    "Expected number of previews after closing unselected via browser"
+  );
 
   // Remove #1 (active)
   gBrowser.removeTab(gBrowser.tabs[0]);
-  checkPreviews(1, "Expected number of previews after closing selected tab via browser");
+  checkPreviews(
+    1,
+    "Expected number of previews after closing selected tab via browser"
+  );
 
   // Add a new tab
   BrowserTestUtils.addTab(gBrowser);
@@ -78,15 +97,27 @@ function test() {
   getPreviewForTab(gBrowser.tabs[1]).controller.onClose();
   checkPreviews(1);
 
-  if (Services.prefs.prefHasUserValue(ENABLE_PREF_NAME))
-    Services.prefs.setBoolPref(ENABLE_PREF_NAME, !Services.prefs.getBoolPref(ENABLE_PREF_NAME));
+  if (Services.prefs.prefHasUserValue(ENABLE_PREF_NAME)) {
+    Services.prefs.setBoolPref(
+      ENABLE_PREF_NAME,
+      !Services.prefs.getBoolPref(ENABLE_PREF_NAME)
+    );
+  }
 
   finish();
 
   function checkPreviews(aPreviews, msg) {
     let nPreviews = AeroPeek.previews.length;
-    is(aPreviews, gBrowser.tabs.length, "Browser has expected number of tabs - " + msg);
-    is(nPreviews, gBrowser.tabs.length, "Browser has one preview per tab - " + msg);
+    is(
+      aPreviews,
+      gBrowser.tabs.length,
+      "Browser has expected number of tabs - " + msg
+    );
+    is(
+      nPreviews,
+      gBrowser.tabs.length,
+      "Browser has one preview per tab - " + msg
+    );
     is(nPreviews, aPreviews, msg || "Got expected number of previews");
   }
 

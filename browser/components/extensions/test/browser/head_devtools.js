@@ -5,10 +5,16 @@
 /* exported openToolboxForTab, closeToolboxForTab, getToolboxTargetForTab,
             registerBlankToolboxPanel, TOOLBOX_BLANK_PANEL_ID */
 
-ChromeUtils.defineModuleGetter(this, "gDevTools",
-                               "resource://devtools/client/framework/gDevTools.jsm");
-ChromeUtils.defineModuleGetter(this, "devtools",
-                               "resource://devtools/shared/Loader.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "gDevTools",
+  "resource://devtools/client/framework/gDevTools.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "devtools",
+  "resource://devtools/shared/Loader.jsm"
+);
 
 const TOOLBOX_BLANK_PANEL_ID = "testBlankPanel";
 
@@ -46,22 +52,34 @@ function getToolboxTargetForTab(tab) {
 }
 
 async function openToolboxForTab(tab, panelId = TOOLBOX_BLANK_PANEL_ID) {
-  if (panelId == TOOLBOX_BLANK_PANEL_ID && !gDevTools.getToolDefinition(panelId)) {
+  if (
+    panelId == TOOLBOX_BLANK_PANEL_ID &&
+    !gDevTools.getToolDefinition(panelId)
+  ) {
     info(`Registering ${TOOLBOX_BLANK_PANEL_ID} tool to the developer tools`);
     registerBlankToolboxPanel();
   }
 
   const target = await getToolboxTargetForTab(tab);
   const toolbox = await gDevTools.showToolbox(target, panelId);
-  const {url, outerWindowID} = target.form;
-  info(`Developer toolbox opened on panel "${panelId}" for target ${JSON.stringify({url, outerWindowID})}`);
-  return {toolbox, target};
+  const { url, outerWindowID } = target.form;
+  info(
+    `Developer toolbox opened on panel "${panelId}" for target ${JSON.stringify(
+      { url, outerWindowID }
+    )}`
+  );
+  return { toolbox, target };
 }
 
 async function closeToolboxForTab(tab) {
   const target = await getToolboxTargetForTab(tab);
-  const {url, outerWindowID} = target.form;
+  const { url, outerWindowID } = target.form;
   await gDevTools.closeToolbox(target);
   await target.destroy();
-  info(`Developer toolbox closed for target ${JSON.stringify({url, outerWindowID})}`);
+  info(
+    `Developer toolbox closed for target ${JSON.stringify({
+      url,
+      outerWindowID,
+    })}`
+  );
 }

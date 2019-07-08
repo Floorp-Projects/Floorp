@@ -9,8 +9,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 /**
  * A flex item computed style properties.
  */
-const flexItemProperties = exports.flexItemProperties = {
-
+const flexItemProperties = (exports.flexItemProperties = {
   // The computed value of flex-basis.
   "flex-basis": PropTypes.string,
 
@@ -30,18 +29,16 @@ const flexItemProperties = exports.flexItemProperties = {
   "max-width": PropTypes.string,
 
   // The computed height of the flex item element.
-  "height": PropTypes.string,
+  height: PropTypes.string,
 
   // The computed width of the flex item element.
-  "width": PropTypes.string,
-
-};
+  width: PropTypes.string,
+});
 
 /**
  * A flex item sizing data.
  */
-const flexItemSizing = exports.flexItemSizing = {
-
+const flexItemSizing = (exports.flexItemSizing = {
   // The max size of the flex item in the cross axis.
   crossMaxSize: PropTypes.number,
 
@@ -61,14 +58,12 @@ const flexItemSizing = exports.flexItemSizing = {
 
   // The min size of the flex item in the maxin axis.
   mainMinSize: PropTypes.number,
-
-};
+});
 
 /**
  * A flex item data.
  */
-const flexItem = exports.flexItem = {
-
+const flexItem = (exports.flexItem = {
   // The actor ID of the flex item.
   actorID: PropTypes.string,
 
@@ -83,14 +78,12 @@ const flexItem = exports.flexItem = {
 
   // The authored style properties of the flex item.
   properties: PropTypes.shape(flexItemProperties),
-
-};
+});
 
 /**
  * A flex container computed style properties.
  */
-const flexContainerProperties = exports.flexContainerProperties = {
-
+const flexContainerProperties = (exports.flexContainerProperties = {
   // The computed value of align-content.
   "align-content": PropTypes.string,
 
@@ -105,14 +98,12 @@ const flexContainerProperties = exports.flexContainerProperties = {
 
   // The computed value of justify-content.
   "justify-content": PropTypes.string,
-
-};
+});
 
 /**
  * A flex container data.
  */
-const flexContainer = exports.flexContainer = {
-
+const flexContainer = (exports.flexContainer = {
   // The actor ID of the flex container.
   actorID: PropTypes.string,
 
@@ -133,14 +124,12 @@ const flexContainer = exports.flexContainer = {
 
   // The computed style properties of the flex container.
   properties: PropTypes.shape(flexContainerProperties),
-
-};
+});
 
 /**
  * The Flexbox UI state.
  */
 exports.flexbox = {
-
   // The color of the flexbox highlighter overlay.
   color: PropTypes.string,
 
@@ -153,5 +142,4 @@ exports.flexbox = {
 
   // Whether or not the flexbox highlighter is highlighting the flex container.
   highlighted: PropTypes.bool,
-
 };

@@ -20,8 +20,10 @@ add_task(async function() {
   await wait;
 
   wait = waitUntil(() => document.querySelector(".headers-overview"));
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
   await wait;
 
   await waitForRequestData(store, ["requestHeaders", "responseHeaders"]);
@@ -32,12 +34,27 @@ add_task(async function() {
 
   info("Check if Headers are filtered correctly");
 
-  const totalResponseHeaders = ["cache-control", "connection", "content-length",
-                                "content-type", "date", "expires", "foo-bar",
-                                "foo-bar", "foo-bar", "pragma", "server", "set-cookie",
-                                "set-cookie"];
-  const expectedResponseHeaders = ["cache-control", "connection", "content-length",
-                                   "content-type"];
+  const totalResponseHeaders = [
+    "cache-control",
+    "connection",
+    "content-length",
+    "content-type",
+    "date",
+    "expires",
+    "foo-bar",
+    "foo-bar",
+    "foo-bar",
+    "pragma",
+    "server",
+    "set-cookie",
+    "set-cookie",
+  ];
+  const expectedResponseHeaders = [
+    "cache-control",
+    "connection",
+    "content-length",
+    "content-type",
+  ];
   const expectedRequestHeaders = ["Cache-Control", "Connection"];
 
   const labelCells = document.querySelectorAll(".treeLabelCell");
@@ -57,10 +74,16 @@ add_task(async function() {
     }
   }
 
-  is(filteredResponseHeaders.toString(), expectedResponseHeaders.toString(),
-    "Response Headers are filtered");
-  is(filteredRequestHeaders.toString(), expectedRequestHeaders.toString(),
-    "Request Headers are filtered");
+  is(
+    filteredResponseHeaders.toString(),
+    expectedResponseHeaders.toString(),
+    "Response Headers are filtered"
+  );
+  is(
+    filteredRequestHeaders.toString(),
+    expectedRequestHeaders.toString(),
+    "Request Headers are filtered"
+  );
 
   await teardown(monitor);
 });

@@ -4,9 +4,13 @@
 
 "use strict";
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
@@ -17,7 +21,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL", "XMLSerializer"]);
 
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
-  return Services.strings.createBundle("chrome://browser/locale/browser.properties");
+  return Services.strings.createBundle(
+    "chrome://browser/locale/browser.properties"
+  );
 });
 
 const kMigrationPref = "browser.livebookmarks.migrationAttemptsLeft";
@@ -28,7 +34,10 @@ function migrationSucceeded() {
 
 function migrationError() {
   // Decrement the number of remaining attempts.
-  let remainingAttempts = Math.max(0, Services.prefs.getIntPref(kMigrationPref, 1) - 1);
+  let remainingAttempts = Math.max(
+    0,
+    Services.prefs.getIntPref(kMigrationPref, 1) - 1
+  );
   Services.prefs.setIntPref(kMigrationPref, remainingAttempts);
 }
 
@@ -37,8 +46,11 @@ var LiveBookmarkMigrator = {
     if (!liveBookmark.feedURI || !liveBookmark.feedURI.host) {
       return false;
     }
-    let {host} = liveBookmark.feedURI;
-    return host.endsWith("fxfeeds.mozilla.com") || host.endsWith("fxfeeds.mozilla.org");
+    let { host } = liveBookmark.feedURI;
+    return (
+      host.endsWith("fxfeeds.mozilla.com") ||
+      host.endsWith("fxfeeds.mozilla.org")
+    );
   },
 
   async _fetch() {
@@ -52,8 +64,7 @@ var LiveBookmarkMigrator = {
 
     // Copied and modified from nsLivemarkService.js, which we'll want to remove even when
     // we keep this migration for a while.
-    const LB_SQL =
-      `SELECT b.title, b.guid, b.dateAdded, b.position as 'index', p.guid AS parentGuid,
+    const LB_SQL = `SELECT b.title, b.guid, b.dateAdded, b.position as 'index', p.guid AS parentGuid,
               ( ${getAnnoSQLFragment(":feedURI_anno")} ) AS feedURI,
               ( ${getAnnoSQLFragment(":siteURI_anno")} ) AS siteURI
             FROM moz_bookmarks b
@@ -68,10 +79,11 @@ var LiveBookmarkMigrator = {
     // to be off-by-N in their positioning because of the insertions.
 
     let conn = await PlacesUtils.promiseDBConnection();
-    let rows = await conn.execute(LB_SQL,
-      { folder_type: Ci.nsINavBookmarksService.TYPE_FOLDER,
-        feedURI_anno: PlacesUtils.LMANNO_FEEDURI,
-        siteURI_anno: PlacesUtils.LMANNO_SITEURI });
+    let rows = await conn.execute(LB_SQL, {
+      folder_type: Ci.nsINavBookmarksService.TYPE_FOLDER,
+      feedURI_anno: PlacesUtils.LMANNO_FEEDURI,
+      siteURI_anno: PlacesUtils.LMANNO_SITEURI,
+    });
     // Create a JS object out of the sqlite result:
     let liveBookmarks = [];
     for (let row of rows) {
@@ -111,8 +123,10 @@ var LiveBookmarkMigrator = {
       let head = doc.createElement("head");
       root.appendChild(head);
       let title = doc.createElement("title");
-      title.textContent =
-        gBrowserBundle.formatStringFromName("livebookmarkMigration.title", [appName]);
+      title.textContent = gBrowserBundle.formatStringFromName(
+        "livebookmarkMigration.title",
+        [appName]
+      );
       head.appendChild(title);
 
       let body = doc.createElement("body");
@@ -139,21 +153,26 @@ var LiveBookmarkMigrator = {
 
       let serializer = new XMLSerializer();
       // The serializer doesn't add an XML declaration (bug 318086), so we add it manually.
-      opmlString = '<?xml version="1.0"?>\n' + serializer.serializeToString(doc);
+      opmlString =
+        '<?xml version="1.0"?>\n' + serializer.serializeToString(doc);
     } finally {
       hiddenBrowser.close();
     }
 
-    let {path: basePath} = Services.dirsvc.get("Desk", Ci.nsIFile);
+    let { path: basePath } = Services.dirsvc.get("Desk", Ci.nsIFile);
     let feedFileName = appName + " feeds backup.opml";
     basePath = OS.Path.join(basePath, feedFileName);
-    let {file, path} = await OS.File.openUnique(basePath, {humanReadable: true});
+    let { file, path } = await OS.File.openUnique(basePath, {
+      humanReadable: true,
+    });
     await file.close();
-    return OS.File.writeAtomic(path, opmlString, {encoding: "utf-8"});
+    return OS.File.writeAtomic(path, opmlString, { encoding: "utf-8" });
   },
 
   async _transformBookmarks(liveBookmarks) {
-    let itemsToReplace = liveBookmarks.filter(lb => !this._isOldDefaultBookmark(lb));
+    let itemsToReplace = liveBookmarks.filter(
+      lb => !this._isOldDefaultBookmark(lb)
+    );
     let itemsToInsert = itemsToReplace.map(item => ({
       url: item.siteURI || item.feedURI,
       parentGuid: item.parentGuid,
@@ -170,16 +189,24 @@ var LiveBookmarkMigrator = {
     // Now remove all of the actual live bookmarks. Avoid mismatches due to the
     // bookmarks having been moved or altered in the meantime, just remove
     // anything with a matching guid:
-    let itemsToRemove = liveBookmarks.map(lb => ({guid: lb.guid}));
+    let itemsToRemove = liveBookmarks.map(lb => ({ guid: lb.guid }));
     await PlacesUtils.bookmarks.remove(itemsToRemove).catch(Cu.reportError);
   },
 
   _openSUMOPage() {
-    let sumoURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "live-bookmarks-migration";
-    let topWin = BrowserWindowTracker.getTopWindow({private: false});
+    let sumoURL =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "live-bookmarks-migration";
+    let topWin = BrowserWindowTracker.getTopWindow({ private: false });
     if (!topWin) {
       let args = PlacesUtils.toISupportsString(sumoURL);
-      Services.ww.openWindow(null, AppConstants.BROWSER_CHROME_URL, "_blank", "chrome,dialog=no,all", args);
+      Services.ww.openWindow(
+        null,
+        AppConstants.BROWSER_CHROME_URL,
+        "_blank",
+        "chrome,dialog=no,all",
+        args
+      );
     } else {
       topWin.openTrustedLinkIn(sumoURL, "tab");
     }
@@ -194,7 +221,9 @@ var LiveBookmarkMigrator = {
         return;
       }
 
-      let haveNonDefaultBookmarks = liveBookmarks.some(lb => !this._isOldDefaultBookmark(lb));
+      let haveNonDefaultBookmarks = liveBookmarks.some(
+        lb => !this._isOldDefaultBookmark(lb)
+      );
       // Then generate OPML file content, write to disk, if we've got anything to back up:
       if (haveNonDefaultBookmarks) {
         await this._writeOPML(liveBookmarks);
@@ -215,7 +244,12 @@ var LiveBookmarkMigrator = {
         // Note that if we get here, we've removed any extant livemarks, so there's no point
         // re-running the migration - there won't be any livemarks left and we won't re-show the SUMO
         // page. So just report the error, but mark migration as successful.
-        Cu.reportError(new Error("Live bookmarks migration didn't manage to show the support page: " + ex));
+        Cu.reportError(
+          new Error(
+            "Live bookmarks migration didn't manage to show the support page: " +
+              ex
+          )
+        );
       }
     } catch (ex) {
       migrationError();

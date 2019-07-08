@@ -30,25 +30,38 @@
 "use strict";
 
 do_get_profile(); // must be called before getting nsIX509CertDB
-const certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
+const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
 
 function certFromFile(certName) {
   return constructCertFromFile("test_cert_version/" + certName + ".pem");
 }
 
 function loadCertWithTrust(certName, trustString) {
-  addCertFromFile(certdb, "test_cert_version/" + certName + ".pem", trustString);
+  addCertFromFile(
+    certdb,
+    "test_cert_version/" + certName + ".pem",
+    trustString
+  );
 }
 
 function checkEndEntity(cert, expectedResult) {
-  return checkCertErrorGeneric(certdb, cert, expectedResult,
-                               certificateUsageSSLServer);
+  return checkCertErrorGeneric(
+    certdb,
+    cert,
+    expectedResult,
+    certificateUsageSSLServer
+  );
 }
 
 function checkIntermediate(cert, expectedResult) {
-  return checkCertErrorGeneric(certdb, cert, expectedResult,
-                               certificateUsageSSLCA);
+  return checkCertErrorGeneric(
+    certdb,
+    cert,
+    expectedResult,
+    certificateUsageSSLCA
+  );
 }
 
 // Test that the code that decodes certificates to display them in the
@@ -57,8 +70,11 @@ function checkCertVersion(cert, expectedVersionString) {
   let asn1 = cert.ASN1Structure.QueryInterface(Ci.nsIASN1Sequence);
   let tbsCertificate = asn1.ASN1Objects.queryElementAt(0, Ci.nsIASN1Sequence);
   let version = tbsCertificate.ASN1Objects.queryElementAt(0, Ci.nsIASN1Object);
-  equal(version.displayValue, expectedVersionString,
-        "Actual and expected version strings should match");
+  equal(
+    version.displayValue,
+    expectedVersionString,
+    "Actual and expected version strings should match"
+  );
 }
 
 add_task(async function() {
@@ -66,8 +82,14 @@ add_task(async function() {
 
   // Section for CAs lacking the basicConstraints extension entirely:
   loadCertWithTrust("int-v1-noBC_ca", ",,");
-  await checkIntermediate(certFromFile("int-v1-noBC_ca"), MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA);
-  await checkEndEntity(certFromFile("ee_int-v1-noBC"), MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA);
+  await checkIntermediate(
+    certFromFile("int-v1-noBC_ca"),
+    MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA
+  );
+  await checkEndEntity(
+    certFromFile("ee_int-v1-noBC"),
+    MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA
+  );
   // A v1 certificate with no basicConstraints extension may issue certificates
   // if it is a trust anchor.
   loadCertWithTrust("int-v1-noBC_ca", "CTu,,");
@@ -75,54 +97,138 @@ add_task(async function() {
   await checkEndEntity(certFromFile("ee_int-v1-noBC"), PRErrorCodeSuccess);
 
   loadCertWithTrust("int-v2-noBC_ca", ",,");
-  await checkIntermediate(certFromFile("int-v2-noBC_ca"), SEC_ERROR_CA_CERT_INVALID);
-  await checkEndEntity(certFromFile("ee_int-v2-noBC"), SEC_ERROR_CA_CERT_INVALID);
+  await checkIntermediate(
+    certFromFile("int-v2-noBC_ca"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
+  await checkEndEntity(
+    certFromFile("ee_int-v2-noBC"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
   loadCertWithTrust("int-v2-noBC_ca", "CTu,,");
-  await checkIntermediate(certFromFile("int-v2-noBC_ca"), SEC_ERROR_CA_CERT_INVALID);
-  await checkEndEntity(certFromFile("ee_int-v2-noBC"), SEC_ERROR_CA_CERT_INVALID);
+  await checkIntermediate(
+    certFromFile("int-v2-noBC_ca"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
+  await checkEndEntity(
+    certFromFile("ee_int-v2-noBC"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
 
   loadCertWithTrust("int-v3-noBC_ca", ",,");
-  await checkIntermediate(certFromFile("int-v3-noBC_ca"), SEC_ERROR_CA_CERT_INVALID);
-  await checkEndEntity(certFromFile("ee_int-v3-noBC"), SEC_ERROR_CA_CERT_INVALID);
+  await checkIntermediate(
+    certFromFile("int-v3-noBC_ca"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
+  await checkEndEntity(
+    certFromFile("ee_int-v3-noBC"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
   loadCertWithTrust("int-v3-noBC_ca", "CTu,,");
-  await checkIntermediate(certFromFile("int-v3-noBC_ca"), SEC_ERROR_CA_CERT_INVALID);
-  await checkEndEntity(certFromFile("ee_int-v3-noBC"), SEC_ERROR_CA_CERT_INVALID);
+  await checkIntermediate(
+    certFromFile("int-v3-noBC_ca"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
+  await checkEndEntity(
+    certFromFile("ee_int-v3-noBC"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
 
   loadCertWithTrust("int-v4-noBC_ca", ",,");
-  await checkIntermediate(certFromFile("int-v4-noBC_ca"), SEC_ERROR_CA_CERT_INVALID);
-  await checkEndEntity(certFromFile("ee_int-v4-noBC"), SEC_ERROR_CA_CERT_INVALID);
+  await checkIntermediate(
+    certFromFile("int-v4-noBC_ca"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
+  await checkEndEntity(
+    certFromFile("ee_int-v4-noBC"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
   loadCertWithTrust("int-v4-noBC_ca", "CTu,,");
-  await checkIntermediate(certFromFile("int-v4-noBC_ca"), SEC_ERROR_CA_CERT_INVALID);
-  await checkEndEntity(certFromFile("ee_int-v4-noBC"), SEC_ERROR_CA_CERT_INVALID);
+  await checkIntermediate(
+    certFromFile("int-v4-noBC_ca"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
+  await checkEndEntity(
+    certFromFile("ee_int-v4-noBC"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
 
   // Section for CAs with basicConstraints not specifying cA:
   loadCertWithTrust("int-v1-BC-not-cA_ca", ",,");
-  await checkIntermediate(certFromFile("int-v1-BC-not-cA_ca"), SEC_ERROR_CA_CERT_INVALID);
-  await checkEndEntity(certFromFile("ee_int-v1-BC-not-cA"), SEC_ERROR_CA_CERT_INVALID);
+  await checkIntermediate(
+    certFromFile("int-v1-BC-not-cA_ca"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
+  await checkEndEntity(
+    certFromFile("ee_int-v1-BC-not-cA"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
   loadCertWithTrust("int-v1-BC-not-cA_ca", "CTu,,");
-  await checkIntermediate(certFromFile("int-v1-BC-not-cA_ca"), SEC_ERROR_CA_CERT_INVALID);
-  await checkEndEntity(certFromFile("ee_int-v1-BC-not-cA"), SEC_ERROR_CA_CERT_INVALID);
+  await checkIntermediate(
+    certFromFile("int-v1-BC-not-cA_ca"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
+  await checkEndEntity(
+    certFromFile("ee_int-v1-BC-not-cA"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
 
   loadCertWithTrust("int-v2-BC-not-cA_ca", ",,");
-  await checkIntermediate(certFromFile("int-v2-BC-not-cA_ca"), SEC_ERROR_CA_CERT_INVALID);
-  await checkEndEntity(certFromFile("ee_int-v2-BC-not-cA"), SEC_ERROR_CA_CERT_INVALID);
+  await checkIntermediate(
+    certFromFile("int-v2-BC-not-cA_ca"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
+  await checkEndEntity(
+    certFromFile("ee_int-v2-BC-not-cA"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
   loadCertWithTrust("int-v2-BC-not-cA_ca", "CTu,,");
-  await checkIntermediate(certFromFile("int-v2-BC-not-cA_ca"), SEC_ERROR_CA_CERT_INVALID);
-  await checkEndEntity(certFromFile("ee_int-v2-BC-not-cA"), SEC_ERROR_CA_CERT_INVALID);
+  await checkIntermediate(
+    certFromFile("int-v2-BC-not-cA_ca"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
+  await checkEndEntity(
+    certFromFile("ee_int-v2-BC-not-cA"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
 
   loadCertWithTrust("int-v3-BC-not-cA_ca", ",,");
-  await checkIntermediate(certFromFile("int-v3-BC-not-cA_ca"), SEC_ERROR_CA_CERT_INVALID);
-  await checkEndEntity(certFromFile("ee_int-v3-BC-not-cA"), SEC_ERROR_CA_CERT_INVALID);
+  await checkIntermediate(
+    certFromFile("int-v3-BC-not-cA_ca"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
+  await checkEndEntity(
+    certFromFile("ee_int-v3-BC-not-cA"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
   loadCertWithTrust("int-v3-BC-not-cA_ca", "CTu,,");
-  await checkIntermediate(certFromFile("int-v3-BC-not-cA_ca"), SEC_ERROR_CA_CERT_INVALID);
-  await checkEndEntity(certFromFile("ee_int-v3-BC-not-cA"), SEC_ERROR_CA_CERT_INVALID);
+  await checkIntermediate(
+    certFromFile("int-v3-BC-not-cA_ca"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
+  await checkEndEntity(
+    certFromFile("ee_int-v3-BC-not-cA"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
 
   loadCertWithTrust("int-v4-BC-not-cA_ca", ",,");
-  await checkIntermediate(certFromFile("int-v4-BC-not-cA_ca"), SEC_ERROR_CA_CERT_INVALID);
-  await checkEndEntity(certFromFile("ee_int-v4-BC-not-cA"), SEC_ERROR_CA_CERT_INVALID);
+  await checkIntermediate(
+    certFromFile("int-v4-BC-not-cA_ca"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
+  await checkEndEntity(
+    certFromFile("ee_int-v4-BC-not-cA"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
   loadCertWithTrust("int-v4-BC-not-cA_ca", "CTu,,");
-  await checkIntermediate(certFromFile("int-v4-BC-not-cA_ca"), SEC_ERROR_CA_CERT_INVALID);
-  await checkEndEntity(certFromFile("ee_int-v4-BC-not-cA"), SEC_ERROR_CA_CERT_INVALID);
+  await checkIntermediate(
+    certFromFile("int-v4-BC-not-cA_ca"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
+  await checkEndEntity(
+    certFromFile("ee_int-v4-BC-not-cA"),
+    SEC_ERROR_CA_CERT_INVALID
+  );
 
   // Section for CAs with basicConstraints specifying cA:
   loadCertWithTrust("int-v1-BC-cA_ca", ",,");
@@ -164,10 +270,22 @@ add_task(async function() {
   await checkEndEntity(certFromFile("ee-v3-BC-not-cA_ca"), PRErrorCodeSuccess);
   await checkEndEntity(certFromFile("ee-v4-BC-not-cA_ca"), PRErrorCodeSuccess);
 
-  await checkEndEntity(certFromFile("ee-v1-BC-cA_ca"), MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY);
-  await checkEndEntity(certFromFile("ee-v2-BC-cA_ca"), MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY);
-  await checkEndEntity(certFromFile("ee-v3-BC-cA_ca"), MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY);
-  await checkEndEntity(certFromFile("ee-v4-BC-cA_ca"), MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY);
+  await checkEndEntity(
+    certFromFile("ee-v1-BC-cA_ca"),
+    MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY
+  );
+  await checkEndEntity(
+    certFromFile("ee-v2-BC-cA_ca"),
+    MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY
+  );
+  await checkEndEntity(
+    certFromFile("ee-v3-BC-cA_ca"),
+    MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY
+  );
+  await checkEndEntity(
+    certFromFile("ee-v4-BC-cA_ca"),
+    MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY
+  );
 
   // Section for self-signed certificates:
   await checkEndEntity(certFromFile("ss-v1-noBC"), SEC_ERROR_UNKNOWN_ISSUER);
@@ -175,10 +293,22 @@ add_task(async function() {
   await checkEndEntity(certFromFile("ss-v3-noBC"), SEC_ERROR_UNKNOWN_ISSUER);
   await checkEndEntity(certFromFile("ss-v4-noBC"), SEC_ERROR_UNKNOWN_ISSUER);
 
-  await checkEndEntity(certFromFile("ss-v1-BC-not-cA"), SEC_ERROR_UNKNOWN_ISSUER);
-  await checkEndEntity(certFromFile("ss-v2-BC-not-cA"), SEC_ERROR_UNKNOWN_ISSUER);
-  await checkEndEntity(certFromFile("ss-v3-BC-not-cA"), SEC_ERROR_UNKNOWN_ISSUER);
-  await checkEndEntity(certFromFile("ss-v4-BC-not-cA"), SEC_ERROR_UNKNOWN_ISSUER);
+  await checkEndEntity(
+    certFromFile("ss-v1-BC-not-cA"),
+    SEC_ERROR_UNKNOWN_ISSUER
+  );
+  await checkEndEntity(
+    certFromFile("ss-v2-BC-not-cA"),
+    SEC_ERROR_UNKNOWN_ISSUER
+  );
+  await checkEndEntity(
+    certFromFile("ss-v3-BC-not-cA"),
+    SEC_ERROR_UNKNOWN_ISSUER
+  );
+  await checkEndEntity(
+    certFromFile("ss-v4-BC-not-cA"),
+    SEC_ERROR_UNKNOWN_ISSUER
+  );
 
   await checkEndEntity(certFromFile("ss-v1-BC-cA"), SEC_ERROR_UNKNOWN_ISSUER);
   await checkEndEntity(certFromFile("ss-v2-BC-cA"), SEC_ERROR_UNKNOWN_ISSUER);

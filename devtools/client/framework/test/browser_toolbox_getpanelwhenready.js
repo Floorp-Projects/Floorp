@@ -19,12 +19,18 @@ add_task(async function() {
   await toolbox.selectTool("jsdebugger");
   const debuggerPanel = await debuggerPanelPromise;
 
-  is(debuggerPanel, toolbox.getPanel("jsdebugger"),
-      "The debugger panel from getPanelWhenReady before loading is the actual panel");
+  is(
+    debuggerPanel,
+    toolbox.getPanel("jsdebugger"),
+    "The debugger panel from getPanelWhenReady before loading is the actual panel"
+  );
 
   const debuggerPanel2 = await toolbox.getPanelWhenReady("jsdebugger");
-  is(debuggerPanel2, toolbox.getPanel("jsdebugger"),
-      "The debugger panel from getPanelWhenReady after loading is the actual panel");
+  is(
+    debuggerPanel2,
+    toolbox.getPanel("jsdebugger"),
+    "The debugger panel from getPanelWhenReady after loading is the actual panel"
+  );
 
   await cleanup();
 });

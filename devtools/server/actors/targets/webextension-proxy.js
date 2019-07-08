@@ -4,9 +4,13 @@
 
 "use strict";
 
-const {DebuggerServer} = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/main");
 
-loader.lazyImporter(this, "ExtensionParent", "resource://gre/modules/ExtensionParent.jsm");
+loader.lazyImporter(
+  this,
+  "ExtensionParent",
+  "resource://gre/modules/ExtensionParent.jsm"
+);
 
 function WebExtensionTargetActorProxy(connection, parentActor) {
   this._conn = connection;
@@ -26,17 +30,25 @@ WebExtensionTargetActorProxy.prototype = {
    */
   async connect() {
     if (this._browser) {
-      throw new Error("This actor is already connected to the extension process");
+      throw new Error(
+        "This actor is already connected to the extension process"
+      );
     }
 
     // Called when the debug browser element has been destroyed
     // (no actor is using it anymore to connect the child extension process).
     const onDestroy = this.destroy.bind(this);
 
-    this._browser = await ExtensionParent.DebugUtils.getExtensionProcessBrowser(this);
+    this._browser = await ExtensionParent.DebugUtils.getExtensionProcessBrowser(
+      this
+    );
 
-    this._form = await DebuggerServer.connectToFrame(this._conn, this._browser, onDestroy,
-                                                     {addonId: this.addonId});
+    this._form = await DebuggerServer.connectToFrame(
+      this._conn,
+      this._browser,
+      onDestroy,
+      { addonId: this.addonId }
+    );
 
     this._childActorID = this._form.actor;
 
@@ -51,14 +63,18 @@ WebExtensionTargetActorProxy.prototype = {
   },
 
   get _mm() {
-    return this._browser && (
-      this._browser.messageManager ||
-      this._browser.frameLoader.messageManager);
+    return (
+      this._browser &&
+      (this._browser.messageManager || this._browser.frameLoader.messageManager)
+    );
   },
 
   destroy() {
     if (this._mm) {
-      this._mm.removeMessageListener("debug:webext_child_exit", this._onChildExit);
+      this._mm.removeMessageListener(
+        "debug:webext_child_exit",
+        this._onChildExit
+      );
 
       this._mm.sendAsyncMessage("debug:webext_parent_exit", {
         actor: this._childActorID,
@@ -90,4 +106,3 @@ WebExtensionTargetActorProxy.prototype = {
 };
 
 exports.WebExtensionTargetActorProxy = WebExtensionTargetActorProxy;
-

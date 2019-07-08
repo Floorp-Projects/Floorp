@@ -2,7 +2,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com") + "bad_meta_tags.html";
+const TEST_PATH =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "https://example.com"
+  ) + "bad_meta_tags.html";
 
 /**
  * This tests that with the page bad_meta_tags.html, ContentMetaHandler.jsm parses
@@ -16,10 +20,17 @@ add_task(async function test_bad_meta_tags() {
 
   // Wait until places has stored the page info
   const pageInfo = await waitForPageInfo(TEST_PATH);
-  is(pageInfo.description, "description", "did not collect a og:description because meta tag was malformed");
-  is(pageInfo.previewImageURL.href, "http://test.com/twitter-image.jpg", "did not collect og:image because of invalid loading principal");
+  is(
+    pageInfo.description,
+    "description",
+    "did not collect a og:description because meta tag was malformed"
+  );
+  is(
+    pageInfo.previewImageURL.href,
+    "http://test.com/twitter-image.jpg",
+    "did not collect og:image because of invalid loading principal"
+  );
 
   BrowserTestUtils.removeTab(tab);
   await PlacesUtils.history.clear();
 });
-

@@ -1,7 +1,10 @@
 "use strict";
 
 add_task(async function() {
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:mozilla");
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(
+    gBrowser,
+    "about:mozilla"
+  ));
   await promiseBrowserLoaded(gBrowser.selectedBrowser);
 
   let win = gBrowser.replaceTabWithWindow(tab);
@@ -26,8 +29,10 @@ function promiseDelayedStartupFinished(win) {
 function promiseBrowserHasURL(browser, url) {
   let promise = Promise.resolve();
 
-  if (browser.contentDocument.readyState === "complete" &&
-      browser.currentURI.spec === url) {
+  if (
+    browser.contentDocument.readyState === "complete" &&
+    browser.currentURI.spec === url
+  ) {
     return promise;
   }
 

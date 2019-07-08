@@ -35,7 +35,9 @@ exports.InContentActor = protocol.ActorClassWithSpec(inContentSpec, {
   },
 
   isInContent: function() {
-    return Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
+    return (
+      Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT
+    );
   },
 
   spawnInParent: async function(url) {
@@ -52,8 +54,7 @@ exports.InContentActor = protocol.ActorClassWithSpec(inContentSpec, {
   },
 });
 
-class InContentFront extends FrontClassWithSpec(inContentSpec) {
-}
+class InContentFront extends FrontClassWithSpec(inContentSpec) {}
 exports.InContentFront = InContentFront;
 
 const inParentSpec = protocol.generateActorSpec({
@@ -79,7 +80,8 @@ exports.InParentActor = protocol.ActorClassWithSpec(inParentSpec, {
   test: function() {
     return {
       args: this.args,
-      isInParent: Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT,
+      isInParent:
+        Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT,
       conn: this.conn instanceof DebuggerServerConnection,
       // We don't have access to MessageListenerManager in Sandboxes,
       // so fallback to constructor name checks...
@@ -88,6 +90,5 @@ exports.InParentActor = protocol.ActorClassWithSpec(inParentSpec, {
   },
 });
 
-class InParentFront extends FrontClassWithSpec(inParentSpec) {
-}
+class InParentFront extends FrontClassWithSpec(inParentSpec) {}
 exports.InParentFront = InParentFront;

@@ -89,7 +89,7 @@ class nsSVGImageFrame final : public mozilla::SVGGeometryFrame,
                            PostDestroyData& aPostDestroyData) override;
 
   bool GetIntrinsicImageDimensions(mozilla::gfx::Size& aSize,
-                                  mozilla::AspectRatio& aAspectRatio) const;
+                                   mozilla::AspectRatio& aAspectRatio) const;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {

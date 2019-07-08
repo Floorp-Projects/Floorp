@@ -31,8 +31,11 @@ add_task(async function testUsbDeviceUnplugged() {
   mocks.emitUSBUpdate();
   await waitUntilUsbDeviceIsUnplugged(USB_DEVICE_NAME, document);
 
-  is(document.location.hash, `#/runtime/this-firefox`,
-    "Redirection to the default page (this-firefox)");
+  is(
+    document.location.hash,
+    `#/runtime/this-firefox`,
+    "Redirection to the default page (this-firefox)"
+  );
 
   await removeTab(tab);
 });
@@ -64,8 +67,11 @@ add_task(async function testUsbClientDisconnected() {
     return item && item.querySelector(".qa-connect-button");
   });
 
-  is(document.location.hash, `#/runtime/this-firefox`,
-    "Redirection to the default page (this-firefox)");
+  is(
+    document.location.hash,
+    `#/runtime/this-firefox`,
+    "Redirection to the default page (this-firefox)"
+  );
   await removeTab(tab);
 });
 
@@ -94,7 +100,10 @@ add_task(async function testNetworkClientDisconnected() {
     return item && item.querySelector(".qa-connect-button");
   });
 
-  is(document.location.hash, `#/runtime/this-firefox`,
-    "Redirection to the default page (this-firefox)");
+  is(
+    document.location.hash,
+    `#/runtime/this-firefox`,
+    "Redirection to the default page (this-firefox)"
+  );
   await removeTab(tab);
 });

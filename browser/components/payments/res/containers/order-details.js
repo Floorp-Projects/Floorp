@@ -12,15 +12,22 @@ import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.j
  * <order-details></order-details>
  */
 
-export default class OrderDetails extends PaymentStateSubscriberMixin(HTMLElement) {
+export default class OrderDetails extends PaymentStateSubscriberMixin(
+  HTMLElement
+) {
   connectedCallback() {
     if (!this._contents) {
       let template = document.getElementById("order-details-template");
-      let contents = this._contents = document.importNode(template.content, true);
+      let contents = (this._contents = document.importNode(
+        template.content,
+        true
+      ));
 
       this._mainItemsList = contents.querySelector(".main-list");
       this._footerItemsList = contents.querySelector(".footer-items-list");
-      this._totalAmount = contents.querySelector(".details-total > currency-amount");
+      this._totalAmount = contents.querySelector(
+        ".details-total > currency-amount"
+      );
 
       this.appendChild(this._contents);
     }
@@ -115,14 +122,19 @@ export default class OrderDetails extends PaymentStateSubscriberMixin(HTMLElemen
     let footerItems = [];
     let methodId = state.selectedPaymentCard;
     if (methodId) {
-      let modifier = paymentRequest.getModifierForPaymentMethod(state, methodId);
+      let modifier = paymentRequest.getModifierForPaymentMethod(
+        state,
+        methodId
+      );
       if (modifier && Array.isArray(modifier.additionalDisplayItems)) {
         footerItems.push(...modifier.additionalDisplayItems);
       }
     }
     if (Array.isArray(items) && items.length) {
       let predicate = OrderDetails.isFooterItem;
-      footerItems.push(...request.paymentDetails.displayItems.filter(predicate));
+      footerItems.push(
+        ...request.paymentDetails.displayItems.filter(predicate)
+      );
     }
     return footerItems;
   }

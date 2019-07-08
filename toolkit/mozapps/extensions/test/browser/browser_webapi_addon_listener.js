@@ -5,7 +5,6 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("extensions.webapi.testing");
 });
 
-
 async function getListenerEvents(browser) {
   let result = await ContentTask.spawn(browser, null, async function() {
     return content.document.getElementById("result").textContent;
@@ -47,10 +46,10 @@ add_task(async function test_restartless() {
 
     let events = await getListenerEvents(browser);
     let expected = [
-      {id: RESTARTLESS_ID, event: "onDisabling"},
-      {id: RESTARTLESS_ID, event: "onDisabled"},
-      {id: RESTARTLESS_ID, event: "onEnabling"},
-      {id: RESTARTLESS_ID, event: "onEnabled"},
+      { id: RESTARTLESS_ID, event: "onDisabling" },
+      { id: RESTARTLESS_ID, event: "onDisabled" },
+      { id: RESTARTLESS_ID, event: "onEnabling" },
+      { id: RESTARTLESS_ID, event: "onEnabled" },
     ];
     Assert.deepEqual(events, expected, "Got expected disable/enable events");
   });
@@ -59,8 +58,12 @@ add_task(async function test_restartless() {
 // Test install events
 add_task(async function test_restartless() {
   await BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
-    let addon = new MockAddon(INSTALL_ID, "installme", null,
-                              AddonManager.OP_NEED_RESTART_NONE);
+    let addon = new MockAddon(
+      INSTALL_ID,
+      "installme",
+      null,
+      AddonManager.OP_NEED_RESTART_NONE
+    );
     let install = new MockInstall(null, null, addon);
 
     let installPromise = new Promise(resolve => {
@@ -76,8 +79,8 @@ add_task(async function test_restartless() {
 
     let events = await getListenerEvents(browser);
     let expected = [
-      {id: INSTALL_ID, event: "onInstalling"},
-      {id: INSTALL_ID, event: "onInstalled"},
+      { id: INSTALL_ID, event: "onInstalling" },
+      { id: INSTALL_ID, event: "onInstalled" },
     ];
     Assert.deepEqual(events, expected, "Got expected install events");
   });
@@ -93,8 +96,8 @@ add_task(async function test_uninstall() {
 
     let events = await getListenerEvents(browser);
     let expected = [
-      {id: RESTARTLESS_ID, event: "onUninstalling"},
-      {id: RESTARTLESS_ID, event: "onUninstalled"},
+      { id: RESTARTLESS_ID, event: "onUninstalling" },
+      { id: RESTARTLESS_ID, event: "onUninstalled" },
     ];
     Assert.deepEqual(events, expected, "Got expected uninstall events");
   });
@@ -109,15 +112,12 @@ add_task(async function test_cancel() {
     addon.uninstall();
 
     let events = await getListenerEvents(browser);
-    let expected = [
-      {id: CANCEL_ID, event: "onUninstalling"},
-    ];
+    let expected = [{ id: CANCEL_ID, event: "onUninstalling" }];
     Assert.deepEqual(events, expected, "Got expected uninstalling event");
 
     addon.cancelUninstall();
     events = await getListenerEvents(browser);
-    expected.push({id: CANCEL_ID, event: "onOperationCancelled"});
+    expected.push({ id: CANCEL_ID, event: "onOperationCancelled" });
     Assert.deepEqual(events, expected, "Got expected cancel event");
   });
 });
-

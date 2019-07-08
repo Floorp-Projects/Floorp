@@ -6,35 +6,50 @@
 
 var EXPORTED_SYMBOLS = ["UserAgentUpdates"];
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 ChromeUtils.defineModuleGetter(
-  this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
-  this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
+
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 ChromeUtils.defineModuleGetter(
-  this, "OS", "resource://gre/modules/osfile.jsm");
-
-
-ChromeUtils.defineModuleGetter(
-  this, "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");
+  this,
+  "UpdateUtils",
+  "resource://gre/modules/UpdateUtils.jsm"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
-  this, "gUpdateTimer", "@mozilla.org/updates/timer-manager;1", "nsIUpdateTimerManager");
-
-XPCOMUtils.defineLazyGetter(this, "gDecoder",
-  function() { return new TextDecoder(); }
+  this,
+  "gUpdateTimer",
+  "@mozilla.org/updates/timer-manager;1",
+  "nsIUpdateTimerManager"
 );
 
-XPCOMUtils.defineLazyGetter(this, "gEncoder",
-  function() { return new TextEncoder(); }
-);
+XPCOMUtils.defineLazyGetter(this, "gDecoder", function() {
+  return new TextDecoder();
+});
+
+XPCOMUtils.defineLazyGetter(this, "gEncoder", function() {
+  return new TextEncoder();
+});
 
 const TIMER_ID = "user-agent-updates-timer";
 
@@ -58,7 +73,10 @@ var gInitialized = false;
 function readChannel(url) {
   return new Promise((resolve, reject) => {
     try {
-      let channel = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+      let channel = NetUtil.newChannel({
+        uri: url,
+        loadUsingSystemPrincipal: true,
+      });
       channel.contentType = "application/json";
 
       NetUtil.asyncFetch(channel, (inputStream, status) => {
@@ -73,8 +91,16 @@ function readChannel(url) {
         resolve(data);
       });
     } catch (ex) {
-      reject(new Error("UserAgentUpdates: Could not fetch " + url + " " +
-                       ex + "\n" + ex.stack));
+      reject(
+        new Error(
+          "UserAgentUpdates: Could not fetch " +
+            url +
+            " " +
+            ex +
+            "\n" +
+            ex.stack
+        )
+      );
     }
   });
 }
@@ -119,32 +145,40 @@ var UserAgentUpdates = {
     // try loading from profile dir, then from app dir
     let dirs = [KEY_PREFDIR, KEY_APPDIR];
 
-    dirs.reduce((prevLoad, dir) => {
-      let file = FileUtils.getFile(dir, [FILE_UPDATES], true).path;
-      // tryNext returns promise to read file under dir and parse it
-      let tryNext = () => OS.File.read(file).then(
-        (bytes) => {
-          let update = JSON.parse(gDecoder.decode(bytes));
-          if (!update) {
-            throw new Error("invalid update");
-          }
-          return update;
+    dirs
+      .reduce((prevLoad, dir) => {
+        let file = FileUtils.getFile(dir, [FILE_UPDATES], true).path;
+        // tryNext returns promise to read file under dir and parse it
+        let tryNext = () =>
+          OS.File.read(file).then(bytes => {
+            let update = JSON.parse(gDecoder.decode(bytes));
+            if (!update) {
+              throw new Error("invalid update");
+            }
+            return update;
+          });
+        // try to load next one if the previous load failed
+        return prevLoad ? prevLoad.catch(tryNext) : tryNext();
+      }, null)
+      .catch(ex => {
+        if (AppConstants.platform !== "android") {
+          // All previous (non-Android) load attempts have failed, so we bail.
+          throw new Error(
+            "UserAgentUpdates: Failed to load " +
+              FILE_UPDATES +
+              ex +
+              "\n" +
+              ex.stack
+          );
         }
-      );
-      // try to load next one if the previous load failed
-      return prevLoad ? prevLoad.catch(tryNext) : tryNext();
-    }, null).catch((ex) => {
-      if (AppConstants.platform !== "android") {
-        // All previous (non-Android) load attempts have failed, so we bail.
-        throw new Error("UserAgentUpdates: Failed to load " + FILE_UPDATES +
-                         ex + "\n" + ex.stack);
-      }
-      // Make one last attempt to read from the Fennec APK root.
-      return readChannel("resource://android/" + FILE_UPDATES);
-    }).then((update) => {
-      // Apply update if loading was successful
-      this._applyUpdate(update);
-    }).catch(Cu.reportError);
+        // Make one last attempt to read from the Fennec APK root.
+        return readChannel("resource://android/" + FILE_UPDATES);
+      })
+      .then(update => {
+        // Apply update if loading was successful
+        this._applyUpdate(update);
+      })
+      .catch(Cu.reportError);
     this._scheduleUpdate();
   },
 
@@ -152,21 +186,22 @@ var UserAgentUpdates = {
     let file = FileUtils.getFile(KEY_PREFDIR, [FILE_UPDATES], true);
     let path = file.path;
     let bytes = gEncoder.encode(JSON.stringify(update));
-    OS.File.writeAtomic(path, bytes, {tmpPath: path + ".tmp"}).then(
-      () => {
-        this._lastUpdated = Date.now();
-        Services.prefs.setCharPref(
-          PREF_UPDATES_LASTUPDATED, this._lastUpdated.toString());
-      },
-      Cu.reportError
-    );
+    OS.File.writeAtomic(path, bytes, { tmpPath: path + ".tmp" }).then(() => {
+      this._lastUpdated = Date.now();
+      Services.prefs.setCharPref(
+        PREF_UPDATES_LASTUPDATED,
+        this._lastUpdated.toString()
+      );
+    }, Cu.reportError);
   },
 
   _getPref(name, def) {
     try {
       switch (typeof def) {
-        case "number": return Services.prefs.getIntPref(name);
-        case "boolean": return Services.prefs.getBoolPref(name);
+        case "number":
+          return Services.prefs.getIntPref(name);
+        case "boolean":
+          return Services.prefs.getBoolPref(name);
       }
       return Services.prefs.getCharPref(name);
     } catch (e) {
@@ -176,15 +211,33 @@ var UserAgentUpdates = {
 
   _getParameters() {
     return {
-      "%DATE%": function() { return Date.now().toString(); },
-      "%PRODUCT%": function() { return Services.appinfo.name; },
-      "%APP_ID%": function() { return Services.appinfo.ID; },
-      "%APP_VERSION%": function() { return Services.appinfo.version; },
-      "%BUILD_ID%": function() { return Services.appinfo.appBuildID; },
-      "%OS%": function() { return Services.appinfo.OS; },
-      "%CHANNEL%": function() { return UpdateUtils.UpdateChannel; },
-      "%DISTRIBUTION%": function() { return this._getPref(PREF_APP_DISTRIBUTION, ""); },
-      "%DISTRIBUTION_VERSION%": function() { return this._getPref(PREF_APP_DISTRIBUTION_VERSION, ""); },
+      "%DATE%": function() {
+        return Date.now().toString();
+      },
+      "%PRODUCT%": function() {
+        return Services.appinfo.name;
+      },
+      "%APP_ID%": function() {
+        return Services.appinfo.ID;
+      },
+      "%APP_VERSION%": function() {
+        return Services.appinfo.version;
+      },
+      "%BUILD_ID%": function() {
+        return Services.appinfo.appBuildID;
+      },
+      "%OS%": function() {
+        return Services.appinfo.OS;
+      },
+      "%CHANNEL%": function() {
+        return UpdateUtils.UpdateChannel;
+      },
+      "%DISTRIBUTION%": function() {
+        return this._getPref(PREF_APP_DISTRIBUTION, "");
+      },
+      "%DISTRIBUTION_VERSION%": function() {
+        return this._getPref(PREF_APP_DISTRIBUTION_VERSION, "");
+      },
     };
   },
 
@@ -216,21 +269,28 @@ var UserAgentUpdates = {
 
   _update() {
     let url = this._getUpdateURL();
-    url && this._fetchUpdate(url,
-      response => { // success
-        // apply update and save overrides to profile
-        this._applyUpdate(response);
-        this._saveToFile(response);
-        this._scheduleUpdate(); // cancel any retries
-      },
-      response => { // error
-        this._scheduleUpdate(true /* retry */);
-      });
+    url &&
+      this._fetchUpdate(
+        url,
+        response => {
+          // success
+          // apply update and save overrides to profile
+          this._applyUpdate(response);
+          this._saveToFile(response);
+          this._scheduleUpdate(); // cancel any retries
+        },
+        response => {
+          // error
+          this._scheduleUpdate(true /* retry */);
+        }
+      );
   },
 
   _scheduleUpdate(retry) {
     // only schedule updates in the main process
-    if (Services.appinfo.processType !== Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+    if (
+      Services.appinfo.processType !== Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
+    ) {
       return;
     }
     let interval = this._getPref(PREF_UPDATES_INTERVAL, 604800 /* 1 week */);
@@ -257,7 +317,9 @@ var UserAgentUpdates = {
         } else if (data === PREF_UPDATES_LASTUPDATED) {
           // reload from file if there has been an update
           let lastUpdated = parseInt(
-            this._getPref(PREF_UPDATES_LASTUPDATED, "0"), 0);
+            this._getPref(PREF_UPDATES_LASTUPDATED, "0"),
+            0
+          );
           if (lastUpdated > this._lastUpdated) {
             this._applySavedUpdate();
             this._lastUpdated = lastUpdated;
@@ -267,8 +329,5 @@ var UserAgentUpdates = {
     }
   },
 
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsITimerCallback,
-  ]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsITimerCallback]),
 };

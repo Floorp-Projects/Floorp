@@ -2,13 +2,29 @@
  * Test capture popup notifications in content opened by window.open
  */
 
-let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
-                                             Ci.nsILoginInfo, "init");
-let login1 = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
-                             "notifyu1", "notifyp1", "user", "pass");
-let login2 = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
-                             "notifyu2", "notifyp2", "user", "pass");
-
+let nsLoginInfo = new Components.Constructor(
+  "@mozilla.org/login-manager/loginInfo;1",
+  Ci.nsILoginInfo,
+  "init"
+);
+let login1 = new nsLoginInfo(
+  "http://mochi.test:8888",
+  "http://mochi.test:8888",
+  null,
+  "notifyu1",
+  "notifyp1",
+  "user",
+  "pass"
+);
+let login2 = new nsLoginInfo(
+  "http://mochi.test:8888",
+  "http://mochi.test:8888",
+  null,
+  "notifyu2",
+  "notifyp2",
+  "user",
+  "pass"
+);
 
 function withTestTabUntilStorageChange(aPageFile, aTaskFn) {
   function storageChangedObserved(subject, data) {
@@ -19,18 +35,23 @@ function withTestTabUntilStorageChange(aPageFile, aTaskFn) {
     return true;
   }
 
-  let storageChangedPromised = TestUtils.topicObserved("passwordmgr-storage-changed",
-                                                       storageChangedObserved);
-  return BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "http://mochi.test:8888" + DIRECTORY_PATH + aPageFile,
-  }, async function(browser) {
-    ok(true, "loaded " + aPageFile);
-    info("running test case task");
-    await aTaskFn();
-    info("waiting for storage change");
-    await storageChangedPromised;
-  });
+  let storageChangedPromised = TestUtils.topicObserved(
+    "passwordmgr-storage-changed",
+    storageChangedObserved
+  );
+  return BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "http://mochi.test:8888" + DIRECTORY_PATH + aPageFile,
+    },
+    async function(browser) {
+      ok(true, "loaded " + aPageFile);
+      info("running test case task");
+      await aTaskFn();
+      info("waiting for storage change");
+      await storageChangedPromised;
+    }
+  );
 }
 
 add_task(async function setup() {
@@ -38,10 +59,14 @@ add_task(async function setup() {
 });
 
 add_task(async function test_saveChromeHiddenAutoClose() {
-  let notifShownPromise = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+  let notifShownPromise = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown"
+  );
   // query arguments are: username, password, features, auto-close (delimited by '|')
-  let url = "subtst_notifications_11.html?notifyu1|notifyp1|" +
-            "menubar=no,toolbar=no,location=no|autoclose";
+  let url =
+    "subtst_notifications_11.html?notifyu1|notifyp1|" +
+    "menubar=no,toolbar=no,location=no|autoclose";
   await withTestTabUntilStorageChange(url, async function() {
     info("waiting for popupshown");
     await notifShownPromise;
@@ -65,8 +90,12 @@ add_task(async function test_saveChromeHiddenAutoClose() {
 });
 
 add_task(async function test_changeChromeHiddenAutoClose() {
-  let notifShownPromise = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-  let url = "subtst_notifications_11.html?notifyu1|pass2|menubar=no,toolbar=no,location=no|autoclose";
+  let notifShownPromise = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown"
+  );
+  let url =
+    "subtst_notifications_11.html?notifyu1|pass2|menubar=no,toolbar=no,location=no|autoclose";
   await withTestTabUntilStorageChange(url, async function() {
     info("waiting for popupshown");
     await notifShownPromise;
@@ -85,7 +114,10 @@ add_task(async function test_changeChromeHiddenAutoClose() {
   is(login.password, "pass2", "Check password changed");
   is(login.timesUsed, 2, "check .timesUsed incremented on change");
   ok(login.timeCreated < login.timeLastUsed, "timeLastUsed bumped");
-  ok(login.timeLastUsed == login.timePasswordChanged, "timeUsed == timeChanged");
+  ok(
+    login.timeLastUsed == login.timePasswordChanged,
+    "timeUsed == timeChanged"
+  );
 
   login1.password = "pass2";
   Services.logins.removeLogin(login1);
@@ -95,7 +127,10 @@ add_task(async function test_changeChromeHiddenAutoClose() {
 add_task(async function test_saveChromeVisibleSameWindow() {
   // This test actually opens a new tab in the same window with default browser settings.
   let url = "subtst_notifications_11.html?notifyu2|notifyp2||";
-  let notifShownPromise = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+  let notifShownPromise = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown"
+  );
   await withTestTabUntilStorageChange(url, async function() {
     await notifShownPromise;
     let popup = getCaptureDoorhanger("password-save");
@@ -116,7 +151,10 @@ add_task(async function test_saveChromeVisibleSameWindow() {
 
 add_task(async function test_changeChromeVisibleSameWindow() {
   let url = "subtst_notifications_11.html?notifyu2|pass2||";
-  let notifShownPromise = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+  let notifShownPromise = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown"
+  );
   await withTestTabUntilStorageChange(url, async function() {
     await notifShownPromise;
     let popup = getCaptureDoorhanger("password-change");
@@ -135,7 +173,10 @@ add_task(async function test_changeChromeVisibleSameWindow() {
   is(login.password, "pass2", "Check password changed");
   is(login.timesUsed, 2, "check .timesUsed incremented on change");
   ok(login.timeCreated < login.timeLastUsed, "timeLastUsed bumped");
-  ok(login.timeLastUsed == login.timePasswordChanged, "timeUsed == timeChanged");
+  ok(
+    login.timeLastUsed == login.timePasswordChanged,
+    "timeUsed == timeChanged"
+  );
 
   // cleanup
   login2.password = "pass2";

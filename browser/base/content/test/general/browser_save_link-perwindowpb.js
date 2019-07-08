@@ -13,15 +13,19 @@ function triggerSave(aWindow, aCallback) {
   var fileName;
   let testBrowser = aWindow.gBrowser.selectedBrowser;
   // This page sets a cookie if and only if a cookie does not exist yet
-  let testURI = "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517-2.html";
+  let testURI =
+    "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517-2.html";
   BrowserTestUtils.loadURI(testBrowser, testURI);
-  BrowserTestUtils.browserLoaded(testBrowser, false, testURI)
-                  .then(() => {
+  BrowserTestUtils.browserLoaded(testBrowser, false, testURI).then(() => {
     waitForFocus(function() {
       info("register to handle popupshown");
       aWindow.document.addEventListener("popupshown", contextMenuOpened);
 
-      BrowserTestUtils.synthesizeMouseAtCenter("#fff", {type: "contextmenu", button: 2}, testBrowser);
+      BrowserTestUtils.synthesizeMouseAtCenter(
+        "#fff",
+        { type: "contextmenu", button: 2 },
+        testBrowser
+      );
       info("right clicked!");
     }, aWindow);
   });
@@ -87,7 +91,14 @@ function test() {
   function whenDelayedStartupFinished(aWindow, aCallback) {
     info("whenDelayedStartupFinished");
     Services.obs.addObserver(function obs(aSubject, aTopic) {
-      info("whenDelayedStartupFinished, got topic: " + aTopic + ", got subject: " + aSubject + ", waiting for " + aWindow);
+      info(
+        "whenDelayedStartupFinished, got topic: " +
+          aTopic +
+          ", got subject: " +
+          aSubject +
+          ", waiting for " +
+          aWindow
+      );
       if (aWindow == aSubject) {
         Services.obs.removeObserver(obs, aTopic);
         executeSoon(aCallback);
@@ -119,7 +130,10 @@ function test() {
   function onExamineResponse(subject) {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
     info("onExamineResponse with " + channel.URI.spec);
-    if (channel.URI.spec != "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517.sjs") {
+    if (
+      channel.URI.spec !=
+      "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517.sjs"
+    ) {
       info("returning");
       return;
     }
@@ -142,7 +156,10 @@ function test() {
   function onModifyRequest(subject) {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
     info("onModifyRequest with " + channel.URI.spec);
-    if (channel.URI.spec != "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517.sjs") {
+    if (
+      channel.URI.spec !=
+      "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517.sjs"
+    ) {
       return;
     }
     try {
@@ -170,7 +187,7 @@ function test() {
       is(gNumSet, 1, "1 cookie should be set");
 
       // The second save from a private window also sets a cookie.
-      testOnWindow({private: true}, function(win2) {
+      testOnWindow({ private: true }, function(win2) {
         triggerSave(win2, function() {
           is(gNumSet, 2, "2 cookies should be set");
           finish();
@@ -183,7 +200,8 @@ function test() {
 /* import-globals-from ../../../../../toolkit/content/tests/browser/common/mockTransfer.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
-  this);
+  this
+);
 
 function createTemporarySaveDirectory() {
   var saveDir = Services.dirsvc.get("TmpD", Ci.nsIFile);

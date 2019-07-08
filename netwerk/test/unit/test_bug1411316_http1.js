@@ -12,7 +12,7 @@
 // 3. We expect that all 6 active connections should be closed with the status
 //    NS_ERROR_ABORT.
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var server = new HttpServer();
 server.start(-1);
@@ -32,7 +32,10 @@ function log(msg) {
 }
 
 function make_channel(url) {
-  var request = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  var request = NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+  });
   request.QueryInterface(Ci.nsIHttpChannel);
   return request;
 }
@@ -53,44 +56,42 @@ function createHttpRequest(status) {
 
 function setupHttpRequests(status) {
   log("setupHttpRequests");
-  for (var i = 0; i < maxConnections ; i++) {
+  for (var i = 0; i < maxConnections; i++) {
     createHttpRequest(status);
     do_test_pending();
   }
 }
 
-function HttpResponseListener(id, onStopRequestStatus)
-{
-  this.id = id
+function HttpResponseListener(id, onStopRequestStatus) {
+  this.id = id;
   this.onStopRequestStatus = onStopRequestStatus;
-};
+}
 
-HttpResponseListener.prototype =
-{
-  onStartRequest (request) {
-  },
+HttpResponseListener.prototype = {
+  onStartRequest(request) {},
 
-  onDataAvailable (request, stream, off, cnt) {
-  },
+  onDataAvailable(request, stream, off, cnt) {},
 
-  onStopRequest (request, status) {
+  onStopRequest(request, status) {
     log("STOP id=" + this.id + " status=" + status);
     Assert.ok(this.onStopRequestStatus == status);
     do_test_finished();
-  }
+  },
 };
 
 var responseQueue = new Array();
-function setup_http_server()
-{
+function setup_http_server() {
   log("setup_http_server");
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-  maxConnections = prefs.getIntPref("network.http.max-persistent-connections-per-server");
+  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
+  maxConnections = prefs.getIntPref(
+    "network.http.max-persistent-connections-per-server"
+  );
 
   var allDummyHttpRequestReceived = false;
   // Start server; will be stopped at test cleanup time.
-  server.registerPathHandler('/', function(metadata, response)
-  {
+  server.registerPathHandler("/", function(metadata, response) {
     var id = metadata.getHeader("X-ID");
     log("Server recived the response id=" + id);
 
@@ -102,13 +103,11 @@ function setup_http_server()
       log("received all http requets");
       Services.obs.notifyObservers(null, "net:cancel-all-connections");
     }
-
   });
 
   registerCleanupFunction(function() {
     server.stop(serverStopListener);
   });
-
 }
 
 function run_test() {

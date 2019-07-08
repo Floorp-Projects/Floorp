@@ -14,7 +14,9 @@ add_task(async function() {
   info("Checking spacebar makes animations to pause");
   await testPauseAndResumeBySpacebar(animationInspector, panel);
 
-  info("Checking spacebar makes animations to pause when the button has the focus");
+  info(
+    "Checking spacebar makes animations to pause when the button has the focus"
+  );
   const pauseResumeButton = panel.querySelector(".pause-resume-button");
   await testPauseAndResumeBySpacebar(animationInspector, pauseResumeButton);
 

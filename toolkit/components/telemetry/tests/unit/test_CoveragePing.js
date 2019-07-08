@@ -2,11 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const COVERAGE_VERSION = "2";
 
@@ -28,31 +27,45 @@ add_task(async function setup() {
   server.start(-1);
   const serverPort = server.identity.primaryPort;
 
-  Services.prefs.setCharPref(REPORTING_ENDPOINT_BASE_PREF, `http://localhost:${serverPort}`);
+  Services.prefs.setCharPref(
+    REPORTING_ENDPOINT_BASE_PREF,
+    `http://localhost:${serverPort}`
+  );
 
-  server.registerPathHandler(`/${REPORTING_ENDPOINT}/${COVERAGE_VERSION}/${uuid}`, (request, response) => {
-    equal(request.method, "PUT");
-    let telemetryEnabled = Services.prefs.getBoolPref(TELEMETRY_ENABLED_PREF, false);
+  server.registerPathHandler(
+    `/${REPORTING_ENDPOINT}/${COVERAGE_VERSION}/${uuid}`,
+    (request, response) => {
+      equal(request.method, "PUT");
+      let telemetryEnabled = Services.prefs.getBoolPref(
+        TELEMETRY_ENABLED_PREF,
+        false
+      );
 
-    let requestBody = NetUtil.readInputStreamToString(request.bodyInputStream,
-      request.bodyInputStream.available());
+      let requestBody = NetUtil.readInputStreamToString(
+        request.bodyInputStream,
+        request.bodyInputStream.available()
+      );
 
-    let resultObj = JSON.parse(requestBody);
+      let resultObj = JSON.parse(requestBody);
 
-    deepEqual(Object.keys(resultObj), [
-      "appUpdateChannel", "osName", "osVersion", "telemetryEnabled",
-    ]);
+      deepEqual(Object.keys(resultObj), [
+        "appUpdateChannel",
+        "osName",
+        "osVersion",
+        "telemetryEnabled",
+      ]);
 
-    if (telemetryEnabled) {
-      ok(resultObj.telemetryEnabled);
-    } else {
-      ok(!resultObj.telemetryEnabled);
+      if (telemetryEnabled) {
+        ok(resultObj.telemetryEnabled);
+      } else {
+        ok(!resultObj.telemetryEnabled);
+      }
+
+      const response_body = "OK";
+      response.bodyOutputStream.write(response_body, response_body.length);
+      server.stop();
     }
-
-    const response_body = "OK";
-    response.bodyOutputStream.write(response_body, response_body.length);
-    server.stop();
-  });
+  );
 
   // Trigger a proper telemetry init.
   do_get_profile(true);
@@ -100,4 +113,3 @@ add_task(async function test_prefs() {
 
   ok(alreadyRun, "should run if no opt-out and enabled");
 });
-

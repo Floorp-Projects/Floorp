@@ -1,4 +1,3 @@
-
 "use strict";
 
 const LOGIN_HOST = "http://example.com";
@@ -6,7 +5,8 @@ const LOGIN_HOST = "http://example.com";
 function openExceptionsDialog() {
   return window.openDialog(
     "chrome://browser/content/preferences/permissions.xul",
-    "Toolkit:PasswordManagerExceptions", "",
+    "Toolkit:PasswordManagerExceptions",
+    "",
     {
       blockVisible: true,
       sessionVisible: false,
@@ -24,7 +24,10 @@ function countDisabledHosts(dialog) {
 
 function promiseStorageChanged(expectedData) {
   function observer(subject, data) {
-    return data == expectedData && subject.QueryInterface(Ci.nsISupportsString).data == LOGIN_HOST;
+    return (
+      data == expectedData &&
+      subject.QueryInterface(Ci.nsISupportsString).data == LOGIN_HOST
+    );
   }
 
   return TestUtils.topicObserved("passwordmgr-storage-changed", observer);

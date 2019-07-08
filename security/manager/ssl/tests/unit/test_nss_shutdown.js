@@ -10,24 +10,28 @@
 
 function startAsyncNSSOperation(certdb, appFile) {
   return new Promise((resolve, reject) => {
-    certdb.openSignedAppFileAsync(Ci.nsIX509CertDB.AppXPCShellRoot, appFile,
+    certdb.openSignedAppFileAsync(
+      Ci.nsIX509CertDB.AppXPCShellRoot,
+      appFile,
       function(rv, aZipReader, aSignerCert) {
         // rv will either indicate success (if NSS hasn't been shut down yet) or
         // it will be some error code that varies depending on when NSS got shut
         // down. As such, there's nothing really to check here. Just resolve the
         // promise to continue execution.
         resolve();
-      });
+      }
+    );
   });
 }
 
 add_task(async function() {
   do_get_profile();
   let psm = Cc["@mozilla.org/psm;1"]
-              .getService(Ci.nsISupports)
-              .QueryInterface(Ci.nsIObserver);
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
+    .getService(Ci.nsISupports)
+    .QueryInterface(Ci.nsIObserver);
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   let appFile = do_get_file("test_signed_apps/app_mf-1_sf-1_p7-1.zip");
 
   let promises = [];

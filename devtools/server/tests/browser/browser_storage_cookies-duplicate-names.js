@@ -8,7 +8,10 @@
 // name (and different paths).
 
 /* import-globals-from storage-helpers.js */
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/server/tests/browser/storage-helpers.js", this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/server/tests/browser/storage-helpers.js",
+  this
+);
 
 const TESTDATA = {
   "http://test1.example.org": [
@@ -43,8 +46,9 @@ const TESTDATA = {
 };
 
 add_task(async function() {
-  const { target, front } =
-    await openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies-same-name.html");
+  const { target, front } = await openTabAndSetupStorage(
+    MAIN_DOMAIN + "storage-cookies-same-name.html"
+  );
 
   const data = await front.listStores();
 
@@ -70,14 +74,19 @@ function testCookies(cookiesActor) {
 var testCookiesObjects = async function(index, hosts, cookiesActor) {
   const host = Object.keys(hosts)[index];
   const matchItems = data => {
-    is(data.total, TESTDATA[host].length,
-       "Number of cookies in host " + host + " matches");
+    is(
+      data.total,
+      TESTDATA[host].length,
+      "Number of cookies in host " + host + " matches"
+    );
     for (const item of data.data) {
       let found = false;
       for (const toMatch of TESTDATA[host]) {
-        if (item.name === toMatch.name &&
-            item.host === toMatch.host &&
-            item.path === toMatch.path) {
+        if (
+          item.name === toMatch.name &&
+          item.host === toMatch.host &&
+          item.path === toMatch.path
+        ) {
           found = true;
           ok(true, "Found cookie " + item.name + " in response");
           is(item.value.str, toMatch.value, "The value matches.");

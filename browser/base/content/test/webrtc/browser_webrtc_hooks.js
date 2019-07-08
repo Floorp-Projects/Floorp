@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {webrtcUI} = ChromeUtils.import("resource:///modules/webrtcUI.jsm");
+const { webrtcUI } = ChromeUtils.import("resource:///modules/webrtcUI.jsm");
 
 const ORIGIN = "https://example.com";
 
@@ -10,15 +10,16 @@ async function tryPeerConnection(browser, expectedError = null) {
   let errtype = await ContentTask.spawn(browser, null, async function() {
     let pc = new content.RTCPeerConnection();
     try {
-      await pc.createOffer({offerToReceiveAudio: true});
+      await pc.createOffer({ offerToReceiveAudio: true });
       return null;
     } catch (err) {
       return err.name;
     }
   });
 
-  let detail = expectedError ? `createOffer() threw a ${expectedError}`
-      : "createOffer() succeeded";
+  let detail = expectedError
+    ? `createOffer() threw a ${expectedError}`
+    : "createOffer() succeeded";
   is(errtype, expectedError, detail);
 }
 
@@ -61,7 +62,7 @@ const Events = {
       webrtcUI.off(event, this.handlers.get(event));
       this.handlers.delete(event);
     }
-    for (let [event ] of this.details) {
+    for (let [event] of this.details) {
       ok(false, `Got unexpected event ${event}`);
     }
   },
@@ -76,8 +77,16 @@ var gTests = [
       await tryPeerConnection(browser);
 
       let details = Events.expect("peer-request-allowed");
-      isnot(details.callID, undefined, "peer-request-allowed event includes callID");
-      isnot(details.windowID, undefined, "peer-request-allowed event includes windowID");
+      isnot(
+        details.callID,
+        undefined,
+        "peer-request-allowed event includes callID"
+      );
+      isnot(
+        details.windowID,
+        undefined,
+        "peer-request-allowed event includes windowID"
+      );
 
       Events.off();
     },
@@ -90,7 +99,11 @@ var gTests = [
 
       let blockerCalled = false;
       let blocker = params => {
-        is(params.origin, ORIGIN, "Peer connection blocker origin parameter is correct");
+        is(
+          params.origin,
+          ORIGIN,
+          "Peer connection blocker origin parameter is correct"
+        );
         blockerCalled = true;
         return "allow";
       };
@@ -144,16 +157,18 @@ var gTests = [
     run: async function testMultipleAllowBlockers(browser) {
       Events.on();
 
-      let blocker1Called = false, blocker1 = params => {
-        blocker1Called = true;
-        return "allow";
-      };
+      let blocker1Called = false,
+        blocker1 = params => {
+          blocker1Called = true;
+          return "allow";
+        };
       webrtcUI.addPeerConnectionBlocker(blocker1);
 
-      let blocker2Called = false, blocker2 = params => {
-        blocker2Called = true;
-        return "allow";
-      };
+      let blocker2Called = false,
+        blocker2 = params => {
+          blocker2Called = true;
+          return "allow";
+        };
       webrtcUI.addPeerConnectionBlocker(blocker2);
 
       await tryPeerConnection(browser);
@@ -173,16 +188,18 @@ var gTests = [
     run: async function testAllowDenyBlockers(browser) {
       Events.on();
 
-      let blocker1Called = false, blocker1 = params => {
-        blocker1Called = true;
-        return "allow";
-      };
+      let blocker1Called = false,
+        blocker1 = params => {
+          blocker1Called = true;
+          return "allow";
+        };
       webrtcUI.addPeerConnectionBlocker(blocker1);
 
-      let blocker2Called = false, blocker2 = params => {
-        blocker2Called = true;
-        return "deny";
-      };
+      let blocker2Called = false,
+        blocker2 = params => {
+          blocker2Called = true;
+          return "deny";
+        };
       webrtcUI.addPeerConnectionBlocker(blocker2);
 
       await tryPeerConnection(browser, "NotAllowedError");
@@ -202,23 +219,28 @@ var gTests = [
     run: async function testDenyAllowBlockers(browser) {
       Events.on();
 
-      let blocker1Called = false, blocker1 = params => {
-        blocker1Called = true;
-        return "deny";
-      };
+      let blocker1Called = false,
+        blocker1 = params => {
+          blocker1Called = true;
+          return "deny";
+        };
       webrtcUI.addPeerConnectionBlocker(blocker1);
 
-      let blocker2Called = false, blocker2 = params => {
-        blocker2Called = true;
-        return "allow";
-      };
+      let blocker2Called = false,
+        blocker2 = params => {
+          blocker2Called = true;
+          return "allow";
+        };
       webrtcUI.addPeerConnectionBlocker(blocker2);
 
       await tryPeerConnection(browser, "NotAllowedError");
 
       Events.expect("peer-request-blocked");
       ok(blocker1Called, "First blocker was called");
-      ok(!blocker2Called, "Peer connection blocker after a deny is not invoked");
+      ok(
+        !blocker2Called,
+        "Peer connection blocker after a deny is not invoked"
+      );
 
       webrtcUI.removePeerConnectionBlocker(blocker1);
       webrtcUI.removePeerConnectionBlocker(blocker2);
@@ -231,16 +253,18 @@ var gTests = [
     run: async function testRemoveBlocker(browser) {
       Events.on();
 
-      let blocker1Called = false, blocker1 = params => {
-        blocker1Called = true;
-        return "allow";
-      };
+      let blocker1Called = false,
+        blocker1 = params => {
+          blocker1Called = true;
+          return "allow";
+        };
       webrtcUI.addPeerConnectionBlocker(blocker1);
 
-      let blocker2Called = false, blocker2 = params => {
-        blocker2Called = true;
-        return "allow";
-      };
+      let blocker2Called = false,
+        blocker2 = params => {
+          blocker2Called = true;
+          return "allow";
+        };
       webrtcUI.addPeerConnectionBlocker(blocker2);
       webrtcUI.removePeerConnectionBlocker(blocker1);
 
@@ -260,16 +284,18 @@ var gTests = [
     desc: "Blocker that throws is ignored",
     run: async function testBlockerThrows(browser) {
       Events.on();
-      let blocker1Called = false, blocker1 = params => {
-        blocker1Called = true;
-        throw new Error("kaboom");
-      };
+      let blocker1Called = false,
+        blocker1 = params => {
+          blocker1Called = true;
+          throw new Error("kaboom");
+        };
       webrtcUI.addPeerConnectionBlocker(blocker1);
 
-      let blocker2Called = false, blocker2 = params => {
-        blocker2Called = true;
-        return "allow";
-      };
+      let blocker2Called = false,
+        blocker2 = params => {
+          blocker2Called = true;
+          return "allow";
+        };
       webrtcUI.addPeerConnectionBlocker(blocker2);
 
       await tryPeerConnection(browser);
@@ -287,17 +313,20 @@ var gTests = [
   {
     desc: "Cancel peer request",
     run: async function testBlockerCancel(browser) {
-      let blocker, blockerPromise = new Promise(resolve => {
-        blocker = params => {
-          resolve();
-          // defer indefinitely
-          return new Promise(innerResolve => {});
-        };
-      });
+      let blocker,
+        blockerPromise = new Promise(resolve => {
+          blocker = params => {
+            resolve();
+            // defer indefinitely
+            return new Promise(innerResolve => {});
+          };
+        });
       webrtcUI.addPeerConnectionBlocker(blocker);
 
       await ContentTask.spawn(browser, null, async function() {
-        (new content.RTCPeerConnection()).createOffer({offerToReceiveAudio: true});
+        new content.RTCPeerConnection().createOffer({
+          offerToReceiveAudio: true,
+        });
       });
 
       await blockerPromise;
@@ -314,8 +343,16 @@ var gTests = [
       });
 
       let details = await eventPromise;
-      isnot(details.callID, undefined, "peer-request-cancel event includes callID");
-      is(details.origin, ORIGIN, "peer-request-cancel event has correct origin");
+      isnot(
+        details.callID,
+        undefined,
+        "peer-request-cancel event includes callID"
+      );
+      is(
+        details.origin,
+        ORIGIN,
+        "peer-request-cancel event has correct origin"
+      );
 
       webrtcUI.removePeerConnectionBlocker(blocker);
     },
@@ -323,10 +360,13 @@ var gTests = [
 ];
 
 add_task(async function test() {
-  await runTests(gTests,
-                 { cleanup() {
-                     is(webrtcUI.peerConnectionBlockers.size, 0,
-                        "Peer connection blockers list is empty");
-                   },
-                 });
+  await runTests(gTests, {
+    cleanup() {
+      is(
+        webrtcUI.peerConnectionBlockers.size,
+        0,
+        "Peer connection blockers list is empty"
+      );
+    },
+  });
 });

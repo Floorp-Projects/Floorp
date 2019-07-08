@@ -4,8 +4,8 @@ const EVENT_OBJECT_SHOW = 0x8002;
 const EVENT_OBJECT_HIDE = 0x8003;
 const WINEVENT_OUTOFCONTEXT = 0;
 const WINEVENT_SKIPOWNPROCESS = 2;
-const QS_ALLINPUT = 0x04FF;
-const INFINITE = 0xFFFFFFFF;
+const QS_ALLINPUT = 0x04ff;
+const INFINITE = 0xffffffff;
 const WAIT_OBJECT_0 = 0;
 const WAIT_TIMEOUT = 258;
 const PM_NOREMOVE = 0;
@@ -23,92 +23,112 @@ DialogWatcher.prototype.init = function() {
     this.user32 = ctypes.open("user32.dll");
   }
   if (!this.findWindow) {
-    this.findWindow = user32.declare("FindWindowW",
-                                     ctypes.winapi_abi,
-                                     ctypes.uintptr_t,
-                                     ctypes.char16_t.ptr,
-                                     ctypes.char16_t.ptr);
+    this.findWindow = user32.declare(
+      "FindWindowW",
+      ctypes.winapi_abi,
+      ctypes.uintptr_t,
+      ctypes.char16_t.ptr,
+      ctypes.char16_t.ptr
+    );
   }
   if (!this.winEventProcType) {
-    this.winEventProcType = ctypes.FunctionType(ctypes.stdcall_abi,
-                                                ctypes.void_t,
-                                                [ctypes.uintptr_t,
-                                                ctypes.uint32_t,
-                                                ctypes.uintptr_t,
-                                                ctypes.long,
-                                                ctypes.long,
-                                                ctypes.uint32_t,
-                                                ctypes.uint32_t]).ptr;
+    this.winEventProcType = ctypes.FunctionType(
+      ctypes.stdcall_abi,
+      ctypes.void_t,
+      [
+        ctypes.uintptr_t,
+        ctypes.uint32_t,
+        ctypes.uintptr_t,
+        ctypes.long,
+        ctypes.long,
+        ctypes.uint32_t,
+        ctypes.uint32_t,
+      ]
+    ).ptr;
   }
   if (!this.setWinEventHook) {
-    this.setWinEventHook = user32.declare("SetWinEventHook",
-                                          ctypes.winapi_abi,
-                                          ctypes.uintptr_t,
-                                          ctypes.uint32_t,
-                                          ctypes.uint32_t,
-                                          ctypes.uintptr_t,
-                                          this.winEventProcType,
-                                          ctypes.uint32_t,
-                                          ctypes.uint32_t,
-                                          ctypes.uint32_t);
+    this.setWinEventHook = user32.declare(
+      "SetWinEventHook",
+      ctypes.winapi_abi,
+      ctypes.uintptr_t,
+      ctypes.uint32_t,
+      ctypes.uint32_t,
+      ctypes.uintptr_t,
+      this.winEventProcType,
+      ctypes.uint32_t,
+      ctypes.uint32_t,
+      ctypes.uint32_t
+    );
   }
   if (!this.unhookWinEvent) {
-    this.unhookWinEvent = user32.declare("UnhookWinEvent",
-                                         ctypes.winapi_abi,
-                                         ctypes.int,
-                                         ctypes.uintptr_t);
+    this.unhookWinEvent = user32.declare(
+      "UnhookWinEvent",
+      ctypes.winapi_abi,
+      ctypes.int,
+      ctypes.uintptr_t
+    );
   }
   if (!this.pointType) {
-    this.pointType = ctypes.StructType("tagPOINT",
-                                       [ { "x": ctypes.long },
-                                         { "y": ctypes.long } ] );
+    this.pointType = ctypes.StructType("tagPOINT", [
+      { x: ctypes.long },
+      { y: ctypes.long },
+    ]);
   }
   if (!this.msgType) {
-    this.msgType = ctypes.StructType("tagMSG",
-                                     [ { "hwnd": ctypes.uintptr_t },
-                                       { "message": ctypes.uint32_t },
-                                       { "wParam": ctypes.uintptr_t },
-                                       { "lParam": ctypes.intptr_t },
-                                       { "time": ctypes.uint32_t },
-                                       { "pt": this.pointType } ] );
+    this.msgType = ctypes.StructType("tagMSG", [
+      { hwnd: ctypes.uintptr_t },
+      { message: ctypes.uint32_t },
+      { wParam: ctypes.uintptr_t },
+      { lParam: ctypes.intptr_t },
+      { time: ctypes.uint32_t },
+      { pt: this.pointType },
+    ]);
   }
   if (!this.peekMessage) {
-    this.peekMessage = user32.declare("PeekMessageW",
-                                      ctypes.winapi_abi,
-                                      ctypes.int,
-                                      this.msgType.ptr,
-                                      ctypes.uintptr_t,
-                                      ctypes.uint32_t,
-                                      ctypes.uint32_t,
-                                      ctypes.uint32_t);
+    this.peekMessage = user32.declare(
+      "PeekMessageW",
+      ctypes.winapi_abi,
+      ctypes.int,
+      this.msgType.ptr,
+      ctypes.uintptr_t,
+      ctypes.uint32_t,
+      ctypes.uint32_t,
+      ctypes.uint32_t
+    );
   }
   if (!this.msgWaitForMultipleObjects) {
-    this.msgWaitForMultipleObjects = user32.declare("MsgWaitForMultipleObjects",
-                                                    ctypes.winapi_abi,
-                                                    ctypes.uint32_t,
-                                                    ctypes.uint32_t,
-                                                    ctypes.uintptr_t.ptr,
-                                                    ctypes.int,
-                                                    ctypes.uint32_t,
-                                                    ctypes.uint32_t);
+    this.msgWaitForMultipleObjects = user32.declare(
+      "MsgWaitForMultipleObjects",
+      ctypes.winapi_abi,
+      ctypes.uint32_t,
+      ctypes.uint32_t,
+      ctypes.uintptr_t.ptr,
+      ctypes.int,
+      ctypes.uint32_t,
+      ctypes.uint32_t
+    );
   }
   if (!this.getWindowTextW) {
-    this.getWindowTextW = user32.declare("GetWindowTextW",
-                                         ctypes.winapi_abi,
-                                         ctypes.int,
-                                         ctypes.uintptr_t,
-                                         ctypes.char16_t.ptr,
-                                         ctypes.int);
+    this.getWindowTextW = user32.declare(
+      "GetWindowTextW",
+      ctypes.winapi_abi,
+      ctypes.int,
+      ctypes.uintptr_t,
+      ctypes.char16_t.ptr,
+      ctypes.int
+    );
   }
   if (!this.messageBox) {
     // Handy for debugging this code
-    this.messageBox = user32.declare("MessageBoxW",
-                                     ctypes.winapi_abi,
-                                     ctypes.int,
-                                     ctypes.uintptr_t,
-                                     ctypes.char16_t.ptr,
-                                     ctypes.char16_t.ptr,
-                                     ctypes.uint32_t);
+    this.messageBox = user32.declare(
+      "MessageBoxW",
+      ctypes.winapi_abi,
+      ctypes.int,
+      ctypes.uintptr_t,
+      ctypes.char16_t.ptr,
+      ctypes.char16_t.ptr,
+      ctypes.uint32_t
+    );
   }
 };
 
@@ -123,7 +143,16 @@ DialogWatcher.prototype.getWindowText = function(hwnd) {
 };
 
 DialogWatcher.prototype.processWindowEvents = function(timeout) {
-  var onWinEvent = function(self, hook, event, hwnd, idObject, idChild, dwEventThread, dwmsEventTime) {
+  var onWinEvent = function(
+    self,
+    hook,
+    event,
+    hwnd,
+    idObject,
+    idChild,
+    dwEventThread,
+    dwmsEventTime
+  ) {
     var nhwnd = Number(hwnd);
     if (event == EVENT_OBJECT_SHOW) {
       if (nhwnd == self.hwnd) {
@@ -135,21 +164,45 @@ DialogWatcher.prototype.processWindowEvents = function(timeout) {
         self.hwnd = nhwnd;
         self.onDialogStart(nhwnd);
       }
-    } else if (event == EVENT_OBJECT_HIDE && nhwnd == self.hwnd && self.onDialogEnd) {
+    } else if (
+      event == EVENT_OBJECT_HIDE &&
+      nhwnd == self.hwnd &&
+      self.onDialogEnd
+    ) {
       self.onDialogEnd();
       self.hwnd = null;
     }
   };
   var self = this;
-  var callback = this.winEventProcType(function(hook, event, hwnd, idObject,
-                                                idChild, dwEventThread,
-                                                dwmsEventTime) {
-      onWinEvent(self, hook, event, hwnd, idObject, idChild, dwEventThread,
-                 dwmsEventTime);
-    } );
-  var hook = this.setWinEventHook(EVENT_OBJECT_SHOW, EVENT_OBJECT_HIDE,
-                                  0, callback, 0, 0,
-                                  WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+  var callback = this.winEventProcType(function(
+    hook,
+    event,
+    hwnd,
+    idObject,
+    idChild,
+    dwEventThread,
+    dwmsEventTime
+  ) {
+    onWinEvent(
+      self,
+      hook,
+      event,
+      hwnd,
+      idObject,
+      idChild,
+      dwEventThread,
+      dwmsEventTime
+    );
+  });
+  var hook = this.setWinEventHook(
+    EVENT_OBJECT_SHOW,
+    EVENT_OBJECT_HIDE,
+    0,
+    callback,
+    0,
+    0,
+    WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS
+  );
   if (!hook) {
     return null;
   }
@@ -169,14 +222,19 @@ DialogWatcher.prototype.processWindowEvents = function(timeout) {
   var waitStatus = WAIT_OBJECT_0;
   var expectingStart = this.onDialogStart && this.hwnd === undefined;
   var startWaitTime = Date.now();
-  while (this.hwnd === undefined || this.onDialogEnd && this.hwnd) {
-    waitStatus = this.msgWaitForMultipleObjects(0, null, 0, expectingStart ?
-                                                            INFINITE : timeout, 0);
+  while (this.hwnd === undefined || (this.onDialogEnd && this.hwnd)) {
+    waitStatus = this.msgWaitForMultipleObjects(
+      0,
+      null,
+      0,
+      expectingStart ? INFINITE : timeout,
+      0
+    );
     if (waitStatus == WAIT_OBJECT_0) {
-      var msg = new this.msgType;
+      var msg = new this.msgType();
       this.peekMessage(msg.address(), 0, 0, 0, PM_NOREMOVE);
     }
-    if (waitStatus == WAIT_TIMEOUT || (Date.now() - startWaitTime) >= timeout) {
+    if (waitStatus == WAIT_TIMEOUT || Date.now() - startWaitTime >= timeout) {
       break;
     }
   }

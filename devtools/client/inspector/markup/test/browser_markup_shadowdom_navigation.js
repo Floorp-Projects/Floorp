@@ -45,7 +45,7 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Making sure the markup-view frame is focused");
   inspector.markup._frame.focus();
@@ -70,15 +70,29 @@ function checkSelectedNode(key, expected, slottedClassName, inspector) {
   const selectedContainer = inspector.markup.getSelectedContainer();
   const slotted = !!slottedClassName;
 
-  is(selectedContainer.isSlotted(), slotted,
-    `Selected container is ${slotted ? "slotted" : "not slotted"} as expected`);
-  is(inspector.selection.isSlotted(), slotted,
-    `Inspector selection is also ${slotted ? "slotted" : "not slotted"}`);
-  ok(selectedContainer.elt.textContent.includes(expected),
-    "Found expected content: " + expected + " in container after pressing " + key);
+  is(
+    selectedContainer.isSlotted(),
+    slotted,
+    `Selected container is ${slotted ? "slotted" : "not slotted"} as expected`
+  );
+  is(
+    inspector.selection.isSlotted(),
+    slotted,
+    `Inspector selection is also ${slotted ? "slotted" : "not slotted"}`
+  );
+  ok(
+    selectedContainer.elt.textContent.includes(expected),
+    "Found expected content: " +
+      expected +
+      " in container after pressing " +
+      key
+  );
 
   if (slotted) {
-    is(selectedContainer.node.className, slottedClassName,
-      "Slotted has the expected classname " + slottedClassName);
+    is(
+      selectedContainer.node.className,
+      slottedClassName,
+      "Slotted has the expected classname " + slottedClassName
+    );
   }
 }

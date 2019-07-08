@@ -6,7 +6,6 @@
 
 TEST_HARNESS_FILES.testing.mochitest.tests.SimpleTest += [
     '/docshell/test/chrome/docshell_helpers.js',
-    '/testing/specialpowers/content/MozillaLogger.js',
     'ChromeTask.js',
     'EventUtils.js',
     'ExtensionTestUtils.js',
@@ -14,6 +13,7 @@ TEST_HARNESS_FILES.testing.mochitest.tests.SimpleTest += [
     'LogController.js',
     'MemoryStats.js',
     'MockObjects.js',
+    'MozillaLogger.js',
     'NativeKeyCodes.js',
     'paint_listener.js',
     'setup.js',

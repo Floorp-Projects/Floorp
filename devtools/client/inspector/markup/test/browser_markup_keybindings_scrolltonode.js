@@ -6,8 +6,7 @@
 
 // Test the keyboard shortcut "S" used to scroll to the selected node.
 
-const HTML =
-  `<div style="width: 300px; height: 3000px; position:relative;">
+const HTML = `<div style="width: 300px; height: 3000px; position:relative;">
     <div id="scroll-top"
       style="height: 50px; top: 0; position:absolute;">
       TOP</div>
@@ -54,7 +53,7 @@ add_task(async function() {
   info("Select #scroll-bottom node");
   await selectNode("#scroll-bottom", inspector);
   info("Press shift + S, nothing should happen due to the modifier");
-  await EventUtils.synthesizeKey("S", {shiftKey: true}, inspector.panelWin);
+  await EventUtils.synthesizeKey("S", { shiftKey: true }, inspector.panelWin);
 
   info("Same state, #scroll-top is visible, #scroll-bottom is scrolled out");
   await checkElementIsInViewport("#scroll-top", true, testActor);
@@ -82,6 +81,9 @@ async function checkElementIsInViewport(selector, expected, testActor) {
       rect.top <= window.innerHeight && rect.left <= window.innerWidth;
   `);
 
-  is(isInViewport, expected,
-    selector + " in the viewport: expected to be " + expected);
+  is(
+    isInViewport,
+    expected,
+    selector + " in the viewport: expected to be " + expected
+  );
 }

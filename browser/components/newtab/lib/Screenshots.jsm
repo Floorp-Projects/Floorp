@@ -7,14 +7,26 @@ const EXPORTED_SYMBOLS = ["Screenshots"];
 
 Cu.importGlobalProperties(["fetch"]);
 
-ChromeUtils.defineModuleGetter(this, "BackgroundPageThumbs",
-  "resource://gre/modules/BackgroundPageThumbs.jsm");
-ChromeUtils.defineModuleGetter(this, "PageThumbs",
-  "resource://gre/modules/PageThumbs.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BackgroundPageThumbs",
+  "resource://gre/modules/BackgroundPageThumbs.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PageThumbs",
+  "resource://gre/modules/PageThumbs.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 const GREY_10 = "#F9F9FA";
 
@@ -28,7 +40,9 @@ this.Screenshots = {
    */
   async getScreenshotForURL(url) {
     try {
-      await BackgroundPageThumbs.captureIfMissing(url, {backgroundColor: GREY_10});
+      await BackgroundPageThumbs.captureIfMissing(url, {
+        backgroundColor: GREY_10,
+      });
       const imgPath = PageThumbs.getThumbnailPath(url);
 
       const filePathResponse = await fetch(`file://${imgPath}`);
@@ -40,7 +54,7 @@ this.Screenshots = {
         return null;
       }
 
-      return {path: imgPath, data: fileContents};
+      return { path: imgPath, data: fileContents };
     } catch (err) {
       Cu.reportError(`getScreenshot(${url}) failed: ${err}`);
     }

@@ -7,13 +7,17 @@
 "use strict";
 
 define(function(require, exports, module) {
-  const { createFactory, Component } = require("devtools/client/shared/vendor/react");
+  const {
+    createFactory,
+    Component,
+  } = require("devtools/client/shared/vendor/react");
   const dom = require("devtools/client/shared/vendor/react-dom-factories");
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const { createFactories } = require("devtools/client/shared/react-utils");
 
-  const TreeView =
-    createFactory(require("devtools/client/shared/components/tree/TreeView"));
+  const TreeView = createFactory(
+    require("devtools/client/shared/components/tree/TreeView")
+  );
   const { JsonToolbar } = createFactories(require("./JsonToolbar"));
 
   const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
@@ -86,20 +90,24 @@ define(function(require, exports, module) {
       }
 
       // Render the value (summary) using Reps library.
-      return Rep(Object.assign({}, props, {
-        cropLimit: 50,
-        noGrip: true,
-        isInContentPage: true,
-      }));
+      return Rep(
+        Object.assign({}, props, {
+          cropLimit: 50,
+          noGrip: true,
+          isInContentPage: true,
+        })
+      );
     }
 
     renderTree() {
       // Append custom column for displaying values. This column
       // Take all available horizontal space.
-      const columns = [{
-        id: "value",
-        width: "100%",
-      }];
+      const columns = [
+        {
+          id: "value",
+          width: "100%",
+        },
+      ];
 
       // Render tree component.
       return TreeView({
@@ -117,24 +125,25 @@ define(function(require, exports, module) {
       const data = this.props.data;
 
       if (!isObject(data)) {
-        content = div({className: "jsonPrimitiveValue"}, Rep({
-          object: data,
-        }));
-      } else if (data instanceof Error) {
-        content = div({className: "jsonParseError"},
-          data + ""
+        content = div(
+          { className: "jsonPrimitiveValue" },
+          Rep({
+            object: data,
+          })
         );
+      } else if (data instanceof Error) {
+        content = div({ className: "jsonParseError" }, data + "");
       } else {
         content = this.renderTree();
       }
 
-      return (
-        div({className: "jsonPanelBox tab-panel-inner"},
-          JsonToolbar({actions: this.props.actions, dataSize: this.props.dataSize}),
-          div({className: "panelContent"},
-            content
-          )
-        )
+      return div(
+        { className: "jsonPanelBox tab-panel-inner" },
+        JsonToolbar({
+          actions: this.props.actions,
+          dataSize: this.props.dataSize,
+        }),
+        div({ className: "panelContent" }, content)
       );
     }
   }

@@ -48,10 +48,15 @@ add_task(async function() {
   await teardown(monitor);
 
   async function testLastMenuItem(column) {
-    EventUtils.sendMouseEvent({ type: "contextmenu" },
-      document.querySelector(`#requests-list-${column}-button`));
+    EventUtils.sendMouseEvent(
+      { type: "contextmenu" },
+      document.querySelector(`#requests-list-${column}-button`)
+    );
 
-    const menuItem = getContextMenuItem(monitor, `request-list-header-${column}-toggle`);
+    const menuItem = getContextMenuItem(
+      monitor,
+      `request-list-header-${column}-toggle`
+    );
     ok(menuItem.disabled, "Last visible column menu item should be disabled.");
   }
 });

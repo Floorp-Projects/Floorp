@@ -252,7 +252,7 @@ inline StyleAtom::StyleAtom(already_AddRefed<nsAtom> aAtom) {
   nsAtom* atom = aAtom.take();
   if (atom->IsStatic()) {
     ptrdiff_t offset = reinterpret_cast<const uint8_t*>(atom->AsStatic()) -
-        reinterpret_cast<const uint8_t*>(&detail::gGkAtoms);
+                       reinterpret_cast<const uint8_t*>(&detail::gGkAtoms);
     _0 = (offset << 1) | 1;
   } else {
     _0 = reinterpret_cast<uintptr_t>(atom);

@@ -6,17 +6,31 @@
 
 const PERMISSION_SAVE_LOGINS = "login-saving";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "LoginHelper",
-                               "resource://gre/modules/LoginHelper.jsm");
-ChromeUtils.defineModuleGetter(this, "LoginFormFactory",
-                               "resource://gre/modules/LoginFormFactory.jsm");
-ChromeUtils.defineModuleGetter(this, "LoginManagerContent",
-                               "resource://gre/modules/LoginManagerContent.jsm");
-ChromeUtils.defineModuleGetter(this, "InsecurePasswordUtils",
-                               "resource://gre/modules/InsecurePasswordUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginHelper",
+  "resource://gre/modules/LoginHelper.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginFormFactory",
+  "resource://gre/modules/LoginFormFactory.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginManagerContent",
+  "resource://gre/modules/LoginManagerContent.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "InsecurePasswordUtils",
+  "resource://gre/modules/InsecurePasswordUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let logger = LoginHelper.createLogger("nsLoginManager");
@@ -29,17 +43,17 @@ if (Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT) {
   throw new Error("LoginManager.jsm should only run in the parent process");
 }
 
-
 function LoginManager() {
   this.init();
 }
 
 LoginManager.prototype = {
-
   classID: Components.ID("{cb9e0de8-3598-4ed7-857b-827f011ad5d8}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsILoginManager,
-                                          Ci.nsISupportsWeakReference,
-                                          Ci.nsIInterfaceRequestor]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsILoginManager,
+    Ci.nsISupportsWeakReference,
+    Ci.nsIInterfaceRequestor,
+  ]),
   getInterface(aIID) {
     if (aIID.equals(Ci.mozIStorageConnection) && this._storage) {
       let ir = this._storage.QueryInterface(Ci.nsIInterfaceRequestor);
@@ -51,14 +65,15 @@ LoginManager.prototype = {
       return this;
     }
 
-    throw new Components.Exception("Interface not available", Cr.NS_ERROR_NO_INTERFACE);
+    throw new Components.Exception(
+      "Interface not available",
+      Cr.NS_ERROR_NO_INTERFACE
+    );
   },
-
 
   /* ---------- private members ---------- */
 
   _storage: null, // Storage component which contains the saved logins
-
 
   /**
    * Initialize the Login Manager. Automatically called when service
@@ -68,7 +83,7 @@ LoginManager.prototype = {
    */
   init() {
     // Cache references to current |this| in utility objects
-    this._observer._pwmgr            = this;
+    this._observer._pwmgr = this;
 
     Services.obs.addObserver(this._observer, "xpcom-shutdown");
     Services.obs.addObserver(this._observer, "passwordmgr-storage-replace");
@@ -80,18 +95,22 @@ LoginManager.prototype = {
   },
 
   _initStorage() {
-    this._storage = Cc["@mozilla.org/login-manager/storage/default;1"]
-                    .createInstance(Ci.nsILoginManagerStorage);
+    this._storage = Cc[
+      "@mozilla.org/login-manager/storage/default;1"
+    ].createInstance(Ci.nsILoginManagerStorage);
     this.initializationPromise = this._storage.initialize();
     this.initializationPromise.then(() => {
-      log.debug("initializationPromise is resolved, updating isMasterPasswordSet in sharedData");
-      Services.ppmm.sharedData.set("isMasterPasswordSet", LoginHelper.isMasterPasswordSet());
+      log.debug(
+        "initializationPromise is resolved, updating isMasterPasswordSet in sharedData"
+      );
+      Services.ppmm.sharedData.set(
+        "isMasterPasswordSet",
+        LoginHelper.isMasterPasswordSet()
+      );
     });
   },
 
-
   /* ---------- Utility objects ---------- */
-
 
   /**
    * Internal utility object, implements the nsIObserver interface.
@@ -100,8 +119,10 @@ LoginManager.prototype = {
   _observer: {
     _pwmgr: null,
 
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                            Ci.nsISupportsWeakReference]),
+    QueryInterface: ChromeUtils.generateQI([
+      Ci.nsIObserver,
+      Ci.nsISupportsWeakReference,
+    ]),
 
     // nsIObserver
     observe(subject, topic, data) {
@@ -113,14 +134,17 @@ LoginManager.prototype = {
           await this._pwmgr._storage.terminate();
           this._pwmgr._initStorage();
           await this._pwmgr.initializationPromise;
-          Services.obs.notifyObservers(null,
-                                       "passwordmgr-storage-replace-complete");
+          Services.obs.notifyObservers(
+            null,
+            "passwordmgr-storage-replace-complete"
+          );
         })();
       } else if (topic == "gather-telemetry") {
         // When testing, the "data" parameter is a string containing the
         // reference time in milliseconds for time-based statistics.
-        this._pwmgr._gatherTelemetry(data ? parseInt(data)
-                                          : new Date().getTime());
+        this._pwmgr._gatherTelemetry(
+          data ? parseInt(data) : new Date().getTime()
+        );
       } else {
         log.debug("Oops! Unexpected notification:", topic);
       }
@@ -155,13 +179,25 @@ LoginManager.prototype = {
     clearAndGetHistogram("PWMGR_NUM_HTTPAUTH_PASSWORDS").add(
       this.countLogins("", null, "")
     );
-    Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_BLOCKLIST_NUM_SITES");
-    Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_NUM_SAVED_PASSWORDS");
+    Services.obs.notifyObservers(
+      null,
+      "weave:telemetry:histogram",
+      "PWMGR_BLOCKLIST_NUM_SITES"
+    );
+    Services.obs.notifyObservers(
+      null,
+      "weave:telemetry:histogram",
+      "PWMGR_NUM_SAVED_PASSWORDS"
+    );
 
     // This is a boolean histogram, and not a flag, because we don't want to
     // record any value if _gatherTelemetry is not called.
     clearAndGetHistogram("PWMGR_SAVING_ENABLED").add(LoginHelper.enabled);
-    Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_SAVING_ENABLED");
+    Services.obs.notifyObservers(
+      null,
+      "weave:telemetry:histogram",
+      "PWMGR_SAVING_ENABLED"
+    );
 
     // Don't try to get logins if MP is enabled, since we don't want to show a MP prompt.
     if (!this.isLoggedIn) {
@@ -170,8 +206,12 @@ LoginManager.prototype = {
 
     let logins = this.getAllLogins();
 
-    let usernamePresentHistogram = clearAndGetHistogram("PWMGR_USERNAME_PRESENT");
-    let loginLastUsedDaysHistogram = clearAndGetHistogram("PWMGR_LOGIN_LAST_USED_DAYS");
+    let usernamePresentHistogram = clearAndGetHistogram(
+      "PWMGR_USERNAME_PRESENT"
+    );
+    let loginLastUsedDaysHistogram = clearAndGetHistogram(
+      "PWMGR_LOGIN_LAST_USED_DAYS"
+    );
 
     let originCount = new Map();
     for (let login of logins) {
@@ -188,15 +228,24 @@ LoginManager.prototype = {
         );
       }
     }
-    Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_LOGIN_LAST_USED_DAYS");
+    Services.obs.notifyObservers(
+      null,
+      "weave:telemetry:histogram",
+      "PWMGR_LOGIN_LAST_USED_DAYS"
+    );
 
-    let passwordsCountHistogram = clearAndGetHistogram("PWMGR_NUM_PASSWORDS_PER_HOSTNAME");
+    let passwordsCountHistogram = clearAndGetHistogram(
+      "PWMGR_NUM_PASSWORDS_PER_HOSTNAME"
+    );
     for (let count of originCount.values()) {
       passwordsCountHistogram.add(count);
     }
-    Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_NUM_PASSWORDS_PER_HOSTNAME");
+    Services.obs.notifyObservers(
+      null,
+      "weave:telemetry:histogram",
+      "PWMGR_NUM_PASSWORDS_PER_HOSTNAME"
+    );
   },
-
 
   /**
    * Ensures that a login isn't missing any necessary fields.
@@ -222,26 +271,26 @@ LoginManager.prototype = {
     if (login.formActionOrigin || login.formActionOrigin == "") {
       // We have a form submit URL. Can't have a HTTP realm.
       if (login.httpRealm != null) {
-        throw new Error("Can't add a login with both a httpRealm and formActionOrigin.");
+        throw new Error(
+          "Can't add a login with both a httpRealm and formActionOrigin."
+        );
       }
     } else if (login.httpRealm) {
       // We have a HTTP realm. Can't have a form submit URL.
       if (login.formActionOrigin != null) {
-        throw new Error("Can't add a login with both a httpRealm and formActionOrigin.");
+        throw new Error(
+          "Can't add a login with both a httpRealm and formActionOrigin."
+        );
       }
     } else {
       // Need one or the other!
-      throw new Error("Can't add a login without a httpRealm or formActionOrigin.");
+      throw new Error(
+        "Can't add a login without a httpRealm or formActionOrigin."
+      );
     }
   },
 
-
-
-
   /* ---------- Primary Public interfaces ---------- */
-
-
-
 
   /**
    * @type Promise
@@ -250,7 +299,6 @@ LoginManager.prototype = {
    */
   initializationPromise: null,
 
-
   /**
    * Add a new login to login storage.
    */
@@ -258,8 +306,11 @@ LoginManager.prototype = {
     this._checkLogin(login);
 
     // Look for an existing entry.
-    let logins = this.findLogins(login.origin, login.formActionOrigin,
-                                 login.httpRealm);
+    let logins = this.findLogins(
+      login.origin,
+      login.formActionOrigin,
+      login.httpRealm
+    );
 
     if (logins.some(l => login.matches(l, true))) {
       throw new Error("This login already exists.");
@@ -270,9 +321,12 @@ LoginManager.prototype = {
   },
 
   async addLogins(logins) {
-    let crypto = Cc["@mozilla.org/login-manager/crypto/SDR;1"].
-                 getService(Ci.nsILoginManagerCrypto);
-    let plaintexts = logins.map(l => l.username).concat(logins.map(l => l.password));
+    let crypto = Cc["@mozilla.org/login-manager/crypto/SDR;1"].getService(
+      Ci.nsILoginManagerCrypto
+    );
+    let plaintexts = logins
+      .map(l => l.username)
+      .concat(logins.map(l => l.password));
     let ciphertexts = await crypto.encryptMany(plaintexts);
     let usernames = ciphertexts.slice(0, logins.length);
     let passwords = ciphertexts.slice(logins.length);
@@ -310,7 +364,6 @@ LoginManager.prototype = {
     return this._storage.removeLogin(login);
   },
 
-
   /**
    * Change the specified login to match the new login.
    */
@@ -318,7 +371,6 @@ LoginManager.prototype = {
     log.debug("Modifying login");
     return this._storage.modifyLogin(oldLogin, newLogin);
   },
-
 
   /**
    * Get a dump of all stored logins. Used by the login manager UI.
@@ -361,26 +413,37 @@ LoginManager.prototype = {
 
     let disabledHosts = [];
     for (let perm of Services.perms.enumerator) {
-      if (perm.type == PERMISSION_SAVE_LOGINS && perm.capability == Services.perms.DENY_ACTION) {
+      if (
+        perm.type == PERMISSION_SAVE_LOGINS &&
+        perm.capability == Services.perms.DENY_ACTION
+      ) {
         disabledHosts.push(perm.principal.URI.displayPrePath);
       }
     }
 
-    log.debug("getAllDisabledHosts: returning", disabledHosts.length, "disabled hosts.");
+    log.debug(
+      "getAllDisabledHosts: returning",
+      disabledHosts.length,
+      "disabled hosts."
+    );
     return disabledHosts;
   },
-
 
   /**
    * Search for the known logins for entries matching the specified criteria.
    */
   findLogins(origin, formActionOrigin, httpRealm) {
-    log.debug("Searching for logins matching origin:", origin,
-              "formActionOrigin:", formActionOrigin, "httpRealm:", httpRealm);
+    log.debug(
+      "Searching for logins matching origin:",
+      origin,
+      "formActionOrigin:",
+      formActionOrigin,
+      "httpRealm:",
+      httpRealm
+    );
 
     return this._storage.findLogins(origin, formActionOrigin, httpRealm);
   },
-
 
   /**
    * Public wrapper around _searchLogins to convert the nsIPropertyBag to a
@@ -397,36 +460,43 @@ LoginManager.prototype = {
         log.warn("searchLogins: An `origin` is recommended");
       }
 
-      if (!matchData.hasKey("formActionOrigin") && !matchData.hasKey("httpRealm")) {
-        log.warn("searchLogins: `formActionOrigin` or `httpRealm` is recommended");
+      if (
+        !matchData.hasKey("formActionOrigin") &&
+        !matchData.hasKey("httpRealm")
+      ) {
+        log.warn(
+          "searchLogins: `formActionOrigin` or `httpRealm` is recommended"
+        );
       }
     }
 
     return this._storage.searchLogins(matchData);
   },
 
-
   /**
    * Search for the known logins for entries matching the specified criteria,
    * returns only the count.
    */
   countLogins(origin, formActionOrigin, httpRealm) {
-    log.debug("Counting logins matching origin:", origin,
-              "formActionOrigin:", formActionOrigin, "httpRealm:", httpRealm);
+    log.debug(
+      "Counting logins matching origin:",
+      origin,
+      "formActionOrigin:",
+      formActionOrigin,
+      "httpRealm:",
+      httpRealm
+    );
 
     return this._storage.countLogins(origin, formActionOrigin, httpRealm);
   },
-
 
   get uiBusy() {
     return this._storage.uiBusy;
   },
 
-
   get isLoggedIn() {
     return this._storage.isLoggedIn;
   },
-
 
   /**
    * Check to see if user has disabled saving logins for the origin.
@@ -438,9 +508,11 @@ LoginManager.prototype = {
     }
 
     let uri = Services.io.newURI(origin);
-    return Services.perms.testPermission(uri, PERMISSION_SAVE_LOGINS) != Services.perms.DENY_ACTION;
+    return (
+      Services.perms.testPermission(uri, PERMISSION_SAVE_LOGINS) !=
+      Services.perms.DENY_ACTION
+    );
   },
-
 
   /**
    * Enable or disable storing logins for the specified origin.
@@ -453,11 +525,18 @@ LoginManager.prototype = {
     if (enabled) {
       Services.perms.remove(uri, PERMISSION_SAVE_LOGINS);
     } else {
-      Services.perms.add(uri, PERMISSION_SAVE_LOGINS, Services.perms.DENY_ACTION);
+      Services.perms.add(
+        uri,
+        PERMISSION_SAVE_LOGINS,
+        Services.perms.DENY_ACTION
+      );
     }
 
     log.debug("Login saving for", origin, "now enabled?", enabled);
-    LoginHelper.notifyStorageChanged(enabled ? "hostSavingEnabled" : "hostSavingDisabled", origin);
+    LoginHelper.notifyStorageChanged(
+      enabled ? "hostSavingEnabled" : "hostSavingDisabled",
+      origin
+    );
   },
 }; // end of LoginManager implementation
 

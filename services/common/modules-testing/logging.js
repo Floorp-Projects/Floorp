@@ -4,12 +4,9 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "getTestLogger",
-  "initTestLogging",
-];
+var EXPORTED_SYMBOLS = ["getTestLogger", "initTestLogging"];
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 function initTestLogging(level) {
   function LogStats() {
@@ -21,8 +18,16 @@ function initTestLogging(level) {
         this.errorsLogged += 1;
       }
 
-      return message.time + "\t" + message.loggerName + "\t" + message.levelDesc + "\t" +
-        this.formatText(message) + "\n";
+      return (
+        message.time +
+        "\t" +
+        message.loggerName +
+        "\t" +
+        message.levelDesc +
+        "\t" +
+        this.formatText(message) +
+        "\n"
+      );
     },
   };
   LogStats.prototype.__proto__ = new Log.BasicFormatter();
@@ -31,7 +36,7 @@ function initTestLogging(level) {
   let logStats = new LogStats();
   let appender = new Log.DumpAppender(logStats);
 
-  if (typeof(level) == "undefined") {
+  if (typeof level == "undefined") {
     level = "Debug";
   }
   getTestLogger().level = Log.Level[level];
@@ -53,4 +58,3 @@ function initTestLogging(level) {
 function getTestLogger(component) {
   return Log.repository.getLogger("Testing");
 }
-

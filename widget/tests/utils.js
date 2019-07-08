@@ -1,7 +1,7 @@
-
 function getTestPlugin(pluginName) {
-  var ph = SpecialPowers.Cc["@mozilla.org/plugin/host;1"]
-                                 .getService(SpecialPowers.Ci.nsIPluginHost);
+  var ph = SpecialPowers.Cc["@mozilla.org/plugin/host;1"].getService(
+    SpecialPowers.Ci.nsIPluginHost
+  );
   var tags = ph.getPluginTags();
   var name = pluginName || "Test Plug-in";
   for (var tag of tags) {

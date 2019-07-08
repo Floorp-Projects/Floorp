@@ -411,6 +411,16 @@ android-hw-p2-8-0-arm7-api-16/debug:
     test-sets:
         - android-hw-arm7-debug-unittests
 
+android-hw-p2-8-0-arm7-api-16-qr/opt:
+    build-platform: android-api-16/opt
+    test-sets:
+        - android-hw-arm7-qr
+
+android-hw-p2-8-0-arm7-api-16-qr/debug:
+    build-platform: android-api-16/debug
+    test-sets:
+        - android-hw-arm7-qr
+
 android-hw-p2-8-0-android-aarch64/opt:
     build-platform: android-aarch64/opt
     test-sets:

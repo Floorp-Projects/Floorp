@@ -9,8 +9,12 @@
  */
 
 const { censusState, viewState } = require("devtools/client/memory/constants");
-const { setCensusDisplayAndRefresh } = require("devtools/client/memory/actions/census-display");
-const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
+const {
+  setCensusDisplayAndRefresh,
+} = require("devtools/client/memory/actions/census-display");
+const {
+  takeSnapshotAndCensus,
+} = require("devtools/client/memory/actions/snapshot");
 const { changeView } = require("devtools/client/memory/actions/view");
 
 const CUSTOM = {
@@ -32,20 +36,34 @@ add_task(async function() {
 
   dispatch(changeView(viewState.CENSUS));
   dispatch(setCensusDisplayAndRefresh(heapWorker, CUSTOM));
-  equal(getState().censusDisplay, CUSTOM,
-        "CUSTOM display stored in display state.");
+  equal(
+    getState().censusDisplay,
+    CUSTOM,
+    "CUSTOM display stored in display state."
+  );
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   await waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
 
-  equal(getState().snapshots[0].census.display, CUSTOM,
-  "New snapshot stored CUSTOM display when done taking census");
-  ok(getState().snapshots[0].census.report.children.length, "Census has some children");
+  equal(
+    getState().snapshots[0].census.display,
+    CUSTOM,
+    "New snapshot stored CUSTOM display when done taking census"
+  );
+  ok(
+    getState().snapshots[0].census.report.children.length,
+    "Census has some children"
+  );
   // Ensure we don't have `count` in any results
-  ok(getState().snapshots[0].census.report.children.every(c => !c.count),
-     "Census used CUSTOM display without counts");
+  ok(
+    getState().snapshots[0].census.report.children.every(c => !c.count),
+    "Census used CUSTOM display without counts"
+  );
   // Ensure we do have `bytes` in the results
-  ok(getState().snapshots[0].census.report.children
-               .every(c => typeof c.bytes === "number"),
-     "Census used CUSTOM display with bytes");
+  ok(
+    getState().snapshots[0].census.report.children.every(
+      c => typeof c.bytes === "number"
+    ),
+    "Census used CUSTOM display with bytes"
+  );
 });

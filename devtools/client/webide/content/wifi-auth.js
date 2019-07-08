@@ -4,16 +4,19 @@
 
 "use strict";
 
-const { require } =
-  ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const QR = require("devtools/shared/qrcode/index");
 
-window.addEventListener("load", function() {
-  document.getElementById("close").onclick = () => window.close();
-  document.getElementById("no-scanner").onclick = showToken;
-  document.getElementById("yes-scanner").onclick = hideToken;
-  buildUI();
-}, {once: true});
+window.addEventListener(
+  "load",
+  function() {
+    document.getElementById("close").onclick = () => window.close();
+    document.getElementById("no-scanner").onclick = showToken;
+    document.getElementById("yes-scanner").onclick = hideToken;
+    buildUI();
+  },
+  { once: true }
+);
 
 function buildUI() {
   const { oob } = window.arguments[0];

@@ -8,33 +8,43 @@
 
 const Cm = Components.manager;
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Load devtools module lazily.
 XPCOMUtils.defineLazyGetter(this, "devtools", function() {
   // eslint-disable-next-line no-shadow
-  const {devtools} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+  const { devtools } = ChromeUtils.import(
+    "resource://devtools/shared/Loader.jsm"
+  );
   return devtools;
 });
 
 // Load JsonView services lazily.
 XPCOMUtils.defineLazyGetter(this, "JsonViewService", function() {
   // eslint-disable-next-line no-shadow
-  const {JsonViewService} = devtools.require("devtools/client/jsonview/converter-child");
+  const { JsonViewService } = devtools.require(
+    "devtools/client/jsonview/converter-child"
+  );
   return JsonViewService;
 });
 
 // Constants
 const JSON_VIEW_PREF = "devtools.jsonview.enabled";
 const JSON_VIEW_MIME_TYPE = "application/vnd.mozilla.json.view";
-const JSON_VIEW_CONTRACT_ID = "@mozilla.org/streamconv;1?from=" +
-  JSON_VIEW_MIME_TYPE + "&to=*/*";
-const JSON_VIEW_CLASS_ID = Components.ID("{d8c9acee-dec5-11e4-8c75-1681e6b88ec1}");
+const JSON_VIEW_CONTRACT_ID =
+  "@mozilla.org/streamconv;1?from=" + JSON_VIEW_MIME_TYPE + "&to=*/*";
+const JSON_VIEW_CLASS_ID = Components.ID(
+  "{d8c9acee-dec5-11e4-8c75-1681e6b88ec1}"
+);
 const JSON_VIEW_CLASS_DESCRIPTION = "JSONView converter";
 
 const JSON_SNIFFER_CONTRACT_ID = "@mozilla.org/devtools/jsonview-sniffer;1";
-const JSON_SNIFFER_CLASS_ID = Components.ID("{4148c488-dca1-49fc-a621-2a0097a62422}");
+const JSON_SNIFFER_CLASS_ID = Components.ID(
+  "{4148c488-dca1-49fc-a621-2a0097a62422}"
+);
 const JSON_SNIFFER_CLASS_DESCRIPTION = "JSONView content sniffer";
 const JSON_VIEW_TYPE = "JSON View";
 const CONTENT_SNIFFER_CATEGORY = "net-content-sniffers";
@@ -62,7 +72,7 @@ JsonViewSniffer.prototype = {
   isTopLevelLoad: function(request) {
     const loadInfo = request.loadInfo;
     if (loadInfo && loadInfo.isTopLevelLoad) {
-      return (request.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI);
+      return request.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI;
     }
     return false;
   },
@@ -77,8 +87,9 @@ JsonViewSniffer.prototype = {
         return "";
       }
       try {
-        if (request.contentDisposition ==
-          Ci.nsIChannel.DISPOSITION_ATTACHMENT) {
+        if (
+          request.contentDisposition == Ci.nsIChannel.DISPOSITION_ATTACHMENT
+        ) {
           return "";
         }
       } catch (e) {
@@ -127,8 +138,7 @@ const JsonViewFactory = {
  * Listen for 'devtools.jsonview.enabled' preference changes and
  * register/unregister the JSON View XPCOM services as appropriate.
  */
-function ConverterObserver() {
-}
+function ConverterObserver() {}
 
 ConverterObserver.prototype = {
   initialize: function() {
@@ -171,19 +181,28 @@ ConverterObserver.prototype = {
     const registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 
     if (!registrar.isCIDRegistered(JSON_SNIFFER_CLASS_ID)) {
-      registrar.registerFactory(JSON_SNIFFER_CLASS_ID,
+      registrar.registerFactory(
+        JSON_SNIFFER_CLASS_ID,
         JSON_SNIFFER_CLASS_DESCRIPTION,
         JSON_SNIFFER_CONTRACT_ID,
-        JsonSnifferFactory);
-      Services.catMan.addCategoryEntry(CONTENT_SNIFFER_CATEGORY, JSON_VIEW_TYPE,
-        JSON_SNIFFER_CONTRACT_ID, false, false);
+        JsonSnifferFactory
+      );
+      Services.catMan.addCategoryEntry(
+        CONTENT_SNIFFER_CATEGORY,
+        JSON_VIEW_TYPE,
+        JSON_SNIFFER_CONTRACT_ID,
+        false,
+        false
+      );
     }
 
     if (!registrar.isCIDRegistered(JSON_VIEW_CLASS_ID)) {
-      registrar.registerFactory(JSON_VIEW_CLASS_ID,
+      registrar.registerFactory(
+        JSON_VIEW_CLASS_ID,
         JSON_VIEW_CLASS_DESCRIPTION,
         JSON_VIEW_CONTRACT_ID,
-        JsonViewFactory);
+        JsonViewFactory
+      );
     }
   },
 
@@ -192,8 +211,11 @@ ConverterObserver.prototype = {
 
     if (registrar.isCIDRegistered(JSON_SNIFFER_CLASS_ID)) {
       registrar.unregisterFactory(JSON_SNIFFER_CLASS_ID, JsonSnifferFactory);
-      Services.catMan.deleteCategoryEntry(CONTENT_SNIFFER_CATEGORY,
-        JSON_VIEW_TYPE, false);
+      Services.catMan.deleteCategoryEntry(
+        CONTENT_SNIFFER_CATEGORY,
+        JSON_VIEW_TYPE,
+        false
+      );
     }
 
     if (registrar.isCIDRegistered(JSON_VIEW_CLASS_ID)) {

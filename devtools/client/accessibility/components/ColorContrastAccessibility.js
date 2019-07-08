@@ -4,9 +4,16 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { div, span, h3 } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  div,
+  span,
+  h3,
+} = require("devtools/client/shared/vendor/react-dom-factories");
 const LearnMoreLink = createFactory(require("./LearnMoreLink"));
 
 const { A11Y_CONTRAST_LEARN_MORE_LINK } = require("../constants");
@@ -27,27 +34,20 @@ class ContrastValueClass extends Component {
   }
 
   render() {
-    const {
-      backgroundColor,
-      color,
-      value,
-      score,
-    } = this.props;
+    const { backgroundColor, color, value, score } = this.props;
 
-    const className = [
-      "accessibility-contrast-value",
-      score,
-    ].join(" ");
+    const className = ["accessibility-contrast-value", score].join(" ");
 
-    return (
-      span({
+    return span(
+      {
         className,
         role: "presentation",
         style: {
           "--accessibility-contrast-color": `rgba(${color})`,
           "--accessibility-contrast-bg": `rgba(${backgroundColor})`,
         },
-      }, value.toFixed(2))
+      },
+      value.toFixed(2)
     );
   }
 }
@@ -81,63 +81,88 @@ class ColorContrastAccessibilityClass extends Component {
       error,
       isLargeText,
       color,
-      value, backgroundColor, score,
-      min, backgroundColorMin, scoreMin,
-      max, backgroundColorMax, scoreMax,
+      value,
+      backgroundColor,
+      score,
+      min,
+      backgroundColorMin,
+      scoreMin,
+      max,
+      backgroundColorMax,
+      scoreMax,
     } = this.props;
 
     const children = [];
 
     if (error) {
-      children.push(span({
-        className: "accessibility-color-contrast-error",
-        role: "presentation",
-      }, L10N.getStr("accessibility.contrast.error")));
+      children.push(
+        span(
+          {
+            className: "accessibility-color-contrast-error",
+            role: "presentation",
+          },
+          L10N.getStr("accessibility.contrast.error")
+        )
+      );
 
-      return (div({
-        role: "presentation",
-        className: "accessibility-color-contrast",
-      }, ...children));
+      return div(
+        {
+          role: "presentation",
+          className: "accessibility-color-contrast",
+        },
+        ...children
+      );
     }
 
     if (value) {
       children.push(ContrastValue({ score, color, backgroundColor, value }));
     } else {
       children.push(
-        ContrastValue(
-          { score: scoreMin, color, backgroundColor: backgroundColorMin, value: min }),
+        ContrastValue({
+          score: scoreMin,
+          color,
+          backgroundColor: backgroundColorMin,
+          value: min,
+        }),
         div({
           role: "presentation",
           className: "accessibility-color-contrast-separator",
         }),
-        ContrastValue(
-          { score: scoreMax, color, backgroundColor: backgroundColorMax, value: max }),
+        ContrastValue({
+          score: scoreMax,
+          color,
+          backgroundColor: backgroundColorMax,
+          value: max,
+        })
       );
     }
 
     if (isLargeText) {
       children.push(
-        span({
-          className: "accessibility-color-contrast-large-text",
-          role: "presentation",
-          title: L10N.getStr("accessibility.contrast.large.title"),
-        }, L10N.getStr("accessibility.contrast.large.text"))
+        span(
+          {
+            className: "accessibility-color-contrast-large-text",
+            role: "presentation",
+            title: L10N.getStr("accessibility.contrast.large.title"),
+          },
+          L10N.getStr("accessibility.contrast.large.text")
+        )
       );
     }
 
-    return (
-      div(
-        {
-          role: "presentation",
-          className: "accessibility-color-contrast",
-        },
-        ...children
-      )
+    return div(
+      {
+        role: "presentation",
+        className: "accessibility-color-contrast",
+      },
+      ...children
     );
   }
 }
 
-const ColorContrastAccessibility = createFactory(ColorContrastAccessibilityClass);
+const ColorContrastAccessibility = createFactory(
+  ColorContrastAccessibilityClass
+);
 
 class ContrastAnnotationClass extends Component {
   static get propTypes() {
@@ -149,17 +174,13 @@ class ContrastAnnotationClass extends Component {
   render() {
     const { score } = this.props;
 
-    return (
-      LearnMoreLink(
-        {
-          className: "accessibility-color-contrast-annotation",
-          href: A11Y_CONTRAST_LEARN_MORE_LINK,
-          learnMoreStringKey: "accessibility.learnMore",
-          l10n: L10N,
-          messageStringKey: `accessibility.contrast.annotation.${score}`,
-        }
-      )
-    );
+    return LearnMoreLink({
+      className: "accessibility-check-annotation",
+      href: A11Y_CONTRAST_LEARN_MORE_LINK,
+      learnMoreStringKey: "accessibility.learnMore",
+      l10n: L10N,
+      messageStringKey: `accessibility.contrast.annotation.${score}`,
+    });
   }
 }
 
@@ -175,17 +196,19 @@ class ColorContrastCheck extends Component {
   render() {
     const { error } = this.props;
 
-    return (
-      div({
+    return div(
+      {
         role: "presentation",
-        className: "accessibility-color-contrast-check",
+        className: "accessibility-check",
       },
-        h3({
-          className: "accessibility-color-contrast-header",
-        }, L10N.getStr("accessibility.contrast.header")),
-        ColorContrastAccessibility(this.props),
-        !error && ContrastAnnotation(this.props)
-      )
+      h3(
+        {
+          className: "accessibility-check-header",
+        },
+        L10N.getStr("accessibility.contrast.header")
+      ),
+      ColorContrastAccessibility(this.props),
+      !error && ContrastAnnotation(this.props)
     );
   }
 }

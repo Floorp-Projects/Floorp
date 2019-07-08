@@ -7,10 +7,20 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { UI_ENABLE_ALLOCATIONS_PREF } = require("devtools/client/performance/test/helpers/prefs");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  UI_ENABLE_ALLOCATIONS_PREF,
+} = require("devtools/client/performance/test/helpers/prefs");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
@@ -26,7 +36,10 @@ add_task(async function() {
   await startRecording(panel);
   await stopRecording(panel);
 
-  const rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
+  const rendered = once(
+    MemoryFlameGraphView,
+    EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED
+  );
   await DetailsView.selectView("memory-flamegraph");
   await rendered;
 
@@ -38,8 +51,10 @@ add_task(async function() {
     expectedViewEvent: "UI_MEMORY_FLAMEGRAPH_RENDERED",
   });
 
-  ok(true,
-    "MemoryFlameGraphView rendered again after recording completed a second time.");
+  ok(
+    true,
+    "MemoryFlameGraphView rendered again after recording completed a second time."
+  );
 
   await teardownToolboxAndRemoveTab(panel);
 });

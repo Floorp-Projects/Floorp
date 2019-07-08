@@ -57,6 +57,9 @@ class DOMMatrixReadOnly : public nsWrapperCache {
                                JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<DOMMatrixReadOnly> FromMatrix(
+      nsISupports* aParent, const DOMMatrixInit& aMatrixInit, ErrorResult& aRv);
+
+  static already_AddRefed<DOMMatrixReadOnly> FromMatrix(
       const GlobalObject& aGlobal, const DOMMatrixInit& aMatrixInit,
       ErrorResult& aRv);
 

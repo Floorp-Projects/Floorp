@@ -8,20 +8,32 @@ ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/httpd.js", this);
-var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "AddonTestUtils",
-                               "resource://testing-common/AddonTestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetrySend",
-                               "resource://gre/modules/TelemetrySend.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryStorage",
-                               "resource://gre/modules/TelemetryStorage.jsm");
-ChromeUtils.defineModuleGetter(this, "Log",
-                               "resource://gre/modules/Log.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonTestUtils",
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetrySend",
+  "resource://gre/modules/TelemetrySend.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryStorage",
+  "resource://gre/modules/TelemetryStorage.jsm"
+);
+ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
 
 const gIsWindows = AppConstants.platform == "win";
 const gIsMac = AppConstants.platform == "macosx";
@@ -41,7 +53,7 @@ var gGlobalScope = this;
 const PingServer = {
   _httpServer: null,
   _started: false,
-  _defers: [ PromiseUtils.defer() ],
+  _defers: [PromiseUtils.defer()],
   _currentDeferred: 0,
   _logger: null,
 
@@ -55,7 +67,10 @@ const PingServer = {
 
   get _log() {
     if (!this._logger) {
-      this._logger = Log.repository.getLoggerWithMessagePrefix("Toolkit.Telemetry", "PingServer::");
+      this._logger = Log.repository.getLoggerWithMessagePrefix(
+        "Toolkit.Telemetry",
+        "PingServer::"
+      );
     }
 
     return this._logger;
@@ -69,7 +84,11 @@ const PingServer = {
   resetPingHandler() {
     this.registerPingHandler((request, response) => {
       let r = request;
-      this._log.trace(`defaultPingHandler() - ${r.method} ${r.scheme}://${r.host}:${r.port}${r.path}`);
+      this._log.trace(
+        `defaultPingHandler() - ${r.method} ${r.scheme}://${r.host}:${r.port}${
+          r.path
+        }`
+      );
       let deferred = this._defers[this._defers.length - 1];
       this._defers.push(PromiseUtils.defer());
       deferred.resolve(request);
@@ -92,7 +111,7 @@ const PingServer = {
   },
 
   clearRequests() {
-    this._defers = [ PromiseUtils.defer() ];
+    this._defers = [PromiseUtils.defer()];
     this._currentDeferred = 0;
   },
 
@@ -100,11 +119,15 @@ const PingServer = {
     const deferred = this._defers[this._currentDeferred++];
     // Send the ping to the consumer on the next tick, so that the completion gets
     // signaled to Telemetry.
-    return new Promise(r => Services.tm.dispatchToMainThread(() => r(deferred.promise)));
+    return new Promise(r =>
+      Services.tm.dispatchToMainThread(() => r(deferred.promise))
+    );
   },
 
   promiseNextPing() {
-    return this.promiseNextRequest().then(request => decodeRequestPayload(request));
+    return this.promiseNextRequest().then(request =>
+      decodeRequestPayload(request)
+    );
   },
 
   async promiseNextRequests(count) {
@@ -132,8 +155,10 @@ function decodeRequestPayload(request) {
   let s = request.bodyInputStream;
   let payload = null;
 
-  if (request.hasHeader("content-encoding") &&
-      request.getHeader("content-encoding") == "gzip") {
+  if (
+    request.hasHeader("content-encoding") &&
+    request.getHeader("content-encoding") == "gzip"
+  ) {
     let observer = {
       buffer: "",
       onStreamComplete(loader, context, status, length, result) {
@@ -141,34 +166,48 @@ function decodeRequestPayload(request) {
         // at a time, so chunk the result into parts of that size.
         const chunkSize = 500000;
         for (let offset = 0; offset < result.length; offset += chunkSize) {
-          this.buffer += String.fromCharCode.apply(String, result.slice(offset, offset + chunkSize));
+          this.buffer += String.fromCharCode.apply(
+            String,
+            result.slice(offset, offset + chunkSize)
+          );
         }
       },
     };
 
-    let scs = Cc["@mozilla.org/streamConverters;1"]
-              .getService(Ci.nsIStreamConverterService);
-    let listener = Cc["@mozilla.org/network/stream-loader;1"]
-                  .createInstance(Ci.nsIStreamLoader);
+    let scs = Cc["@mozilla.org/streamConverters;1"].getService(
+      Ci.nsIStreamConverterService
+    );
+    let listener = Cc["@mozilla.org/network/stream-loader;1"].createInstance(
+      Ci.nsIStreamLoader
+    );
     listener.init(observer);
-    let converter = scs.asyncConvertData("gzip", "uncompressed",
-                                         listener, null);
+    let converter = scs.asyncConvertData(
+      "gzip",
+      "uncompressed",
+      listener,
+      null
+    );
     converter.onStartRequest(null, null);
     converter.onDataAvailable(null, s, 0, s.available());
     converter.onStopRequest(null, null, null);
-    let unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+    let unicodeConverter = Cc[
+      "@mozilla.org/intl/scriptableunicodeconverter"
+    ].createInstance(Ci.nsIScriptableUnicodeConverter);
     unicodeConverter.charset = "UTF-8";
     let utf8string = unicodeConverter.ConvertToUnicode(observer.buffer);
     utf8string += unicodeConverter.Finish();
     payload = JSON.parse(utf8string);
   } else {
     let bytes = NetUtil.readInputStream(s, s.available());
-    payload = JSON.parse((new TextDecoder()).decode(bytes));
+    payload = JSON.parse(new TextDecoder().decode(bytes));
   }
 
   // Check for canary value
-  Assert.notEqual(TelemetryUtils.knownClientID, payload.clientId, "Known clientId should never appear in a ping on the server");
+  Assert.notEqual(
+    TelemetryUtils.knownClientID,
+    payload.clientId,
+    "Known clientId should never appear in a ping on the server"
+  );
 
   return payload;
 }
@@ -179,7 +218,12 @@ function checkPingFormat(aPing, aType, aHasClientId, aHasEnvironment) {
   const PING_FORMAT_VERSION = 4;
   const PLATFORM_VERSION = "1.9.2";
   const MANDATORY_PING_FIELDS = [
-    "type", "id", "creationDate", "version", "application", "payload",
+    "type",
+    "id",
+    "creationDate",
+    "version",
+    "application",
+    "payload",
   ];
 
   const APPLICATION_TEST_DATA = {
@@ -198,20 +242,31 @@ function checkPingFormat(aPing, aType, aHasClientId, aHasEnvironment) {
   }
 
   Assert.equal(aPing.type, aType, "The ping must have the correct type.");
-  Assert.equal(aPing.version, PING_FORMAT_VERSION, "The ping must have the correct version.");
+  Assert.equal(
+    aPing.version,
+    PING_FORMAT_VERSION,
+    "The ping must have the correct version."
+  );
 
   // Test the application section.
   for (let f in APPLICATION_TEST_DATA) {
-    Assert.equal(aPing.application[f], APPLICATION_TEST_DATA[f],
-                 f + " must have the correct value.");
+    Assert.equal(
+      aPing.application[f],
+      APPLICATION_TEST_DATA[f],
+      f + " must have the correct value."
+    );
   }
 
   // We can't check the values for channel and architecture. Just make
   // sure they are in.
-  Assert.ok("architecture" in aPing.application,
-            "The application section must have an architecture field.");
-  Assert.ok("channel" in aPing.application,
-            "The application section must have a channel field.");
+  Assert.ok(
+    "architecture" in aPing.application,
+    "The application section must have an architecture field."
+  );
+  Assert.ok(
+    "channel" in aPing.application,
+    "The application section must have a channel field."
+  );
 
   // Check the clientId and environment fields, as needed.
   Assert.equal("clientId" in aPing, aHasClientId);
@@ -223,7 +278,7 @@ function wrapWithExceptionHandler(f) {
     try {
       f(...args);
     } catch (ex) {
-      if (typeof(ex) != "object") {
+      if (typeof ex != "object") {
         throw ex;
       }
       dump("Caught exception: " + ex.message + "\n");
@@ -243,8 +298,11 @@ function loadAddonManager(...args) {
   // used by system add-ons.
   const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"], true);
   AddonTestUtils.registerDirectory("XREAppFeat", distroDir);
-  AddonTestUtils.awaitPromise(AddonTestUtils.overrideBuiltIns(
-          {"system": ["tel-system-xpi@tests.mozilla.org"]}));
+  AddonTestUtils.awaitPromise(
+    AddonTestUtils.overrideBuiltIns({
+      system: ["tel-system-xpi@tests.mozilla.org"],
+    })
+  );
   return AddonTestUtils.promiseStartupManager();
 }
 
@@ -254,15 +312,22 @@ function finishAddonManagerStartup() {
 
 var gAppInfo = null;
 
-function createAppInfo(ID = "xpcshell@tests.mozilla.org", name = "XPCShell",
-                       version = "1.0", platformVersion = "1.0") {
+function createAppInfo(
+  ID = "xpcshell@tests.mozilla.org",
+  name = "XPCShell",
+  version = "1.0",
+  platformVersion = "1.0"
+) {
   AddonTestUtils.createAppInfo(ID, name, version, platformVersion);
   gAppInfo = AddonTestUtils.appInfo;
 }
 
 // Fake the timeout functions for the TelemetryScheduler.
 function fakeSchedulerTimer(set, clear) {
-  let scheduler = ChromeUtils.import("resource://gre/modules/TelemetryScheduler.jsm", null);
+  let scheduler = ChromeUtils.import(
+    "resource://gre/modules/TelemetryScheduler.jsm",
+    null
+  );
   scheduler.Policy.setSchedulerTickTimeout = set;
   scheduler.Policy.clearSchedulerTickTimeout = clear;
 }
@@ -286,7 +351,10 @@ function fakeNow(...args) {
     ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", null),
     ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", null),
     ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", null),
-    ChromeUtils.import("resource://gre/modules/TelemetryReportingPolicy.jsm", null),
+    ChromeUtils.import(
+      "resource://gre/modules/TelemetryReportingPolicy.jsm",
+      null
+    ),
     ChromeUtils.import("resource://gre/modules/TelemetryScheduler.jsm", null),
   ];
 
@@ -298,47 +366,68 @@ function fakeNow(...args) {
 }
 
 function fakeMonotonicNow(ms) {
-  const m = ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", null);
+  const m = ChromeUtils.import(
+    "resource://gre/modules/TelemetrySession.jsm",
+    null
+  );
   m.Policy.monotonicNow = () => ms;
   return ms;
 }
 
 // Fake the timeout functions for TelemetryController sending.
 function fakePingSendTimer(set, clear) {
-  let module = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", null);
-  let obj = Cu.cloneInto({set, clear}, module, {cloneFunctions: true});
+  let module = ChromeUtils.import(
+    "resource://gre/modules/TelemetrySend.jsm",
+    null
+  );
+  let obj = Cu.cloneInto({ set, clear }, module, { cloneFunctions: true });
   module.Policy.setSchedulerTickTimeout = obj.set;
   module.Policy.clearSchedulerTickTimeout = obj.clear;
 }
 
 function fakeMidnightPingFuzzingDelay(delayMs) {
-  let module = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", null);
+  let module = ChromeUtils.import(
+    "resource://gre/modules/TelemetrySend.jsm",
+    null
+  );
   module.Policy.midnightPingFuzzingDelay = () => delayMs;
 }
 
 function fakeGeneratePingId(func) {
-  let module = ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", null);
+  let module = ChromeUtils.import(
+    "resource://gre/modules/TelemetryController.jsm",
+    null
+  );
   module.Policy.generatePingId = func;
 }
 
 function fakeCachedClientId(uuid) {
-  let module = ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", null);
+  let module = ChromeUtils.import(
+    "resource://gre/modules/TelemetryController.jsm",
+    null
+  );
   module.Policy.getCachedClientID = () => uuid;
 }
 
 // Fake the gzip compression for the next ping to be sent out
 // and immediately reset to the original function.
 function fakeGzipCompressStringForNextPing(length) {
-  let send = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", null);
+  let send = ChromeUtils.import(
+    "resource://gre/modules/TelemetrySend.jsm",
+    null
+  );
   let largePayload = generateString(length);
-  send.Policy.gzipCompressString = (data) => {
+  send.Policy.gzipCompressString = data => {
     send.Policy.gzipCompressString = send.gzipCompressString;
     return largePayload;
   };
 }
 
 function fakeIntlReady() {
-  const m = ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", null);
+  const m = ChromeUtils.import(
+    "resource://gre/modules/TelemetryEnvironment.jsm",
+    null
+  );
   m.Policy._intlLoaded = true;
   // Dispatch the observer event in case the promise has been registered already.
   Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
@@ -386,9 +475,12 @@ function getSnapshot(histogramId) {
 
 // Helper for setting an empty list of Environment preferences to watch.
 function setEmptyPrefWatchlist() {
-  const {TelemetryEnvironment} = ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm");
+  const { TelemetryEnvironment } = ChromeUtils.import(
+    "resource://gre/modules/TelemetryEnvironment.jsm"
+  );
   return TelemetryEnvironment.onInitialized().then(() =>
-    TelemetryEnvironment.testWatchPreferences(new Map()));
+    TelemetryEnvironment.testWatchPreferences(new Map())
+  );
 }
 
 if (runningInParent) {
@@ -397,18 +489,33 @@ if (runningInParent) {
   // Telemetry archiving should be on.
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.ArchiveEnabled, true);
   // Telemetry xpcshell tests cannot show the infobar.
-  Services.prefs.setBoolPref(TelemetryUtils.Preferences.BypassNotification, true);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.BypassNotification,
+    true
+  );
   // FHR uploads should be enabled.
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
   // Many tests expect the shutdown and the new-profile to not be sent on shutdown
   // and will fail if receive an unexpected ping. Let's globally disable these features:
   // the relevant tests will enable these prefs when needed.
-  Services.prefs.setBoolPref(TelemetryUtils.Preferences.ShutdownPingSender, false);
-  Services.prefs.setBoolPref(TelemetryUtils.Preferences.ShutdownPingSenderFirstSession, false);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.ShutdownPingSender,
+    false
+  );
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.ShutdownPingSenderFirstSession,
+    false
+  );
   Services.prefs.setBoolPref("toolkit.telemetry.newProfilePing.enabled", false);
-  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FirstShutdownPingEnabled, false);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.FirstShutdownPingEnabled,
+    false
+  );
   // Turn off Health Ping submission.
-  Services.prefs.setBoolPref(TelemetryUtils.Preferences.HealthPingEnabled, false);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.HealthPingEnabled,
+    false
+  );
 
   // Speed up child process accumulations
   Services.prefs.setIntPref(TelemetryUtils.Preferences.IPCBatchTimeout, 10);
@@ -418,20 +525,31 @@ if (runningInParent) {
 
   // Make sure ecosystem telemetry is disabled, no matter which build
   // Individual tests will enable it when appropriate
-  Services.prefs.setBoolPref(TelemetryUtils.Preferences.EcosystemTelemetryEnabled, false);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.EcosystemTelemetryEnabled,
+    false
+  );
 
   // Non-unified Telemetry (e.g. Fennec on Android) needs the preference to be set
   // in order to enable Telemetry.
   if (Services.prefs.getBoolPref(TelemetryUtils.Preferences.Unified, false)) {
-    Services.prefs.setBoolPref(TelemetryUtils.Preferences.OverridePreRelease, true);
+    Services.prefs.setBoolPref(
+      TelemetryUtils.Preferences.OverridePreRelease,
+      true
+    );
   } else {
-    Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
+    Services.prefs.setBoolPref(
+      TelemetryUtils.Preferences.TelemetryEnabled,
+      true
+    );
   }
 
-  fakePingSendTimer((callback, timeout) => {
-    Services.tm.dispatchToMainThread(() => callback());
-  },
-  () => {});
+  fakePingSendTimer(
+    (callback, timeout) => {
+      Services.tm.dispatchToMainThread(() => callback());
+    },
+    () => {}
+  );
 
   // This gets imported via fakeNow();
   /* global TelemetrySend */

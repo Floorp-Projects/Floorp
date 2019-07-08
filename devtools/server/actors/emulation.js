@@ -8,7 +8,12 @@ const { Ci } = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const { emulationSpec } = require("devtools/shared/specs/emulation");
 
-loader.lazyRequireGetter(this, "TouchSimulator", "devtools/server/actors/emulation/touch-simulator", true);
+loader.lazyRequireGetter(
+  this,
+  "TouchSimulator",
+  "devtools/server/actors/emulation/touch-simulator",
+  true
+);
 
 /**
  * This actor overrides various browser features to simulate different environments to
@@ -24,7 +29,6 @@ loader.lazyRequireGetter(this, "TouchSimulator", "devtools/server/actors/emulati
  * "no override" for each of the properties.
  */
 const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
-
   initialize(conn, targetActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.targetActor = targetActor;
@@ -70,7 +74,9 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
 
   get touchSimulator() {
     if (!this._touchSimulator) {
-      this._touchSimulator = new TouchSimulator(this.targetActor.chromeEventHandler);
+      this._touchSimulator = new TouchSimulator(
+        this.targetActor.chromeEventHandler
+      );
     }
 
     return this._touchSimulator;
@@ -154,7 +160,7 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
     let match = throttleData == current;
     // If both objects, check all entries
     if (match && current && throttleData) {
-      match = Object.entries(current).every(([ k, v ]) => {
+      match = Object.entries(current).every(([k, v]) => {
         return throttleData[k] === v;
       });
     }
@@ -171,7 +177,7 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
       return false;
     }
     consoleActor.startListeners({
-      listeners: [ "NetworkActivity" ],
+      listeners: ["NetworkActivity"],
     });
     consoleActor.setPreferences({
       preferences: {
@@ -203,7 +209,7 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
       return null;
     }
     const prefs = consoleActor.getPreferences({
-      preferences: [ "NetworkMonitor.throttleData" ],
+      preferences: ["NetworkMonitor.throttleData"],
     });
     return prefs.preferences["NetworkMonitor.throttleData"] || null;
   },
@@ -357,8 +363,10 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
   },
 
   setScreenOrientation(type, angle) {
-    if (this.win.screen.orientation.angle !== angle ||
-        this.win.screen.orientation.type !== type) {
+    if (
+      this.win.screen.orientation.angle !== angle ||
+      this.win.screen.orientation.type !== type
+    ) {
       this.win.document.setRDMPaneOrientation(type, angle);
     }
   },
@@ -374,7 +382,11 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
    *        Whether or not screen orientation change is a result of rotating the viewport.
    *        If true, then dispatch the "orientationchange" event on the content window.
    */
-  async simulateScreenOrientationChange(type, angle, isViewportRotated = false) {
+  async simulateScreenOrientationChange(
+    type,
+    angle,
+    isViewportRotated = false
+  ) {
     // Don't dispatch the "orientationchange" event if orientation change is a result
     // of switching to a new device, location change, or opening RDM.
     if (!isViewportRotated) {

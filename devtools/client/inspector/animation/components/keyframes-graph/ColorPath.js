@@ -6,11 +6,11 @@
 
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-const {colorUtils} = require("devtools/shared/css/color.js");
+const { colorUtils } = require("devtools/shared/css/color.js");
 
 const ComputedStylePath = require("./ComputedStylePath");
 
-const DEFAULT_COLOR = {r: 0, g: 0, b: 0, a: 1};
+const DEFAULT_COLOR = { r: 0, g: 0, b: 0, a: 1 };
 
 /* Count for linearGradient ID */
 let LINEAR_GRADIENT_ID_COUNT = 0;
@@ -90,25 +90,21 @@ class ColorPath extends ComputedStylePath {
           className: "hint",
         },
         dom.title({}, startKeyframe.easing),
-        dom.rect(
-          {
-            x: startTime,
-            y: -graphHeight,
-            height: graphHeight,
-            width: endTime - startTime,
-          }
-        ),
-        dom.line(
-          {
-            x1: startTime,
-            y1: -graphHeight,
-            x2: endTime,
-            y2: -graphHeight,
-            style: {
-              "stroke-width": easingHintStrokeWidth,
-            },
-          }
-        )
+        dom.rect({
+          x: startTime,
+          y: -graphHeight,
+          height: graphHeight,
+          width: endTime - startTime,
+        }),
+        dom.line({
+          x1: startTime,
+          y1: -graphHeight,
+          x2: endTime,
+          y2: -graphHeight,
+          style: {
+            "stroke-width": easingHintStrokeWidth,
+          },
+        })
       );
       hints.push(g);
     }
@@ -125,17 +121,15 @@ class ColorPath extends ComputedStylePath {
     }
 
     const lastSegment = segments[segments.length - 1];
-    const id = `color-property-${ LINEAR_GRADIENT_ID_COUNT++ }`;
-    const path = super.renderPathSegments(segments, { fill: `url(#${ id })` });
+    const id = `color-property-${LINEAR_GRADIENT_ID_COUNT++}`;
+    const path = super.renderPathSegments(segments, { fill: `url(#${id})` });
     const linearGradient = dom.linearGradient(
       { id },
       segments.map(segment => {
-        return dom.stop(
-          {
-            "stopColor": segment.computedStyle,
-            "offset": segment.x / lastSegment.x,
-          }
-        );
+        return dom.stop({
+          stopColor: segment.computedStyle,
+          offset: segment.x / lastSegment.x,
+        });
       })
     );
 
@@ -173,8 +167,10 @@ function getRGBA(propertyName, colorString) {
     }
     case "scrollbar-color": {
       // This property can specify "auto", "dark", "light" keywords and multiple colors.
-      if (["auto", "dark", "light"].includes(colorString) ||
-          colorString.indexOf(" ") > 0) {
+      if (
+        ["auto", "dark", "light"].includes(colorString) ||
+        colorString.indexOf(" ") > 0
+      ) {
         return DEFAULT_COLOR;
       }
       break;
@@ -208,7 +204,9 @@ function getRGBADistance(rgba1, rgba2) {
   const diffR = startR - endR;
   const diffG = startG - endG;
   const diffB = startB - endB;
-  return Math.sqrt(diffA * diffA + diffR * diffR + diffG * diffG + diffB * diffB);
+  return Math.sqrt(
+    diffA * diffA + diffR * diffR + diffG * diffG + diffB * diffB
+  );
 }
 
 module.exports = ColorPath;

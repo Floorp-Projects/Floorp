@@ -11,7 +11,9 @@ add_task(async function() {
   waitForExplicitFinish();
 
   const recordingFile = newRecordingFile();
-  const recordingTab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
+  const recordingTab = BrowserTestUtils.addTab(gBrowser, null, {
+    recordExecution: "*",
+  });
   gBrowser.selectedTab = recordingTab;
   openTrustedLinkIn(EXAMPLE_URL + "doc_rr_continuous.html", "current");
 
@@ -35,8 +37,9 @@ add_task(async function() {
   await toolbox.destroy();
   await gBrowser.removeTab(recordingTab);
 
-  const replayingTab = BrowserTestUtils.addTab(gBrowser, null,
-                                               { replayExecution: recordingFile });
+  const replayingTab = BrowserTestUtils.addTab(gBrowser, null, {
+    replayExecution: recordingFile,
+  });
   gBrowser.selectedTab = replayingTab;
   await once(Services.ppmm, "HitRecordingEndpoint");
 

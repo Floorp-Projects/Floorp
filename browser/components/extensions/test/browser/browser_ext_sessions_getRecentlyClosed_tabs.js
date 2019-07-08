@@ -16,14 +16,20 @@ function expectedTabInfo(tab, window) {
 
 function checkTabInfo(expected, actual) {
   for (let prop in expected) {
-    is(actual[prop], expected[prop], `Expected value found for ${prop} of tab object.`);
+    is(
+      actual[prop],
+      expected[prop],
+      `Expected value found for ${prop} of tab object.`
+    );
   }
 }
 
 add_task(async function test_sessions_get_recently_closed_tabs() {
   // Below, the test makes assumptions about the last accessed time of tabs that are
   // not true is we execute fast and reduce the timer precision enough
-  await SpecialPowers.pushPrefEnv({set: [["privacy.reduceTimerPrecision", false]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.reduceTimerPrecision", false]],
+  });
 
   async function background() {
     browser.test.onMessage.addListener(async msg => {
@@ -51,7 +57,9 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
   // Ensure that getRecentlyClosed returns correct results after the back
   // button has been used.
   let goBackPromise = BrowserTestUtils.waitForLocationChange(
-    win.gBrowser, "about:mozilla");
+    win.gBrowser,
+    "about:mozilla"
+  );
   tabBrowser.goBack();
   await goBackPromise;
 
@@ -61,9 +69,14 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
   // favicon loads, we have to wait some time before checking that icon was
   // stored properly. If that page doesn't have favicon links, let it timeout.
   try {
-    await BrowserTestUtils.waitForCondition(() => {
-      return gBrowser.getIcon(tab) != null;
-    }, "wait for favicon load to finish", 100, 5);
+    await BrowserTestUtils.waitForCondition(
+      () => {
+        return gBrowser.getIcon(tab) != null;
+      },
+      "wait for favicon load to finish",
+      100,
+      5
+    );
   } catch (e) {
     // This page doesn't have any favicon link, just continue.
   }
@@ -74,9 +87,14 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
   for (let url of ["about:robots", "about:buildconfig"]) {
     tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
     try {
-      await BrowserTestUtils.waitForCondition(() => {
-        return gBrowser.getIcon(tab) != null;
-      }, "wait for favicon load to finish", 100, 5);
+      await BrowserTestUtils.waitForCondition(
+        () => {
+          return gBrowser.getIcon(tab) != null;
+        },
+        "wait for favicon load to finish",
+        100,
+        5
+      );
     } catch (e) {
       // This page doesn't have any favicon link, just continue.
     }
@@ -94,8 +112,10 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
   let tabInfo = recentlyClosed[0].tab;
   let expectedTab = expectedTabs.pop();
   checkTabInfo(expectedTab, tabInfo);
-  ok(tabInfo.lastAccessed > lastAccessedTimes.get(tabInfo.url),
-     "lastAccessed has been updated");
+  ok(
+    tabInfo.lastAccessed > lastAccessedTimes.get(tabInfo.url),
+    "lastAccessed has been updated"
+  );
 
   // Test with a closed window containing tabs.
   await BrowserTestUtils.closeWindow(win);
@@ -106,8 +126,10 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
   is(tabInfos.length, 2, "Expected number of tabs in closed window.");
   for (let x = 0; x < tabInfos.length; x++) {
     checkTabInfo(expectedTabs[x], tabInfos[x]);
-    ok(tabInfos[x].lastAccessed > lastAccessedTimes.get(tabInfos[x].url),
-       "lastAccessed has been updated");
+    ok(
+      tabInfos[x].lastAccessed > lastAccessedTimes.get(tabInfos[x].url),
+      "lastAccessed has been updated"
+    );
   }
 
   await extension.unload();
@@ -128,9 +150,11 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
   is(tabInfos.length, 2, "Expected number of tabs in closed window.");
   for (let tabInfo of tabInfos) {
     for (let prop in expectedTabs[0]) {
-      is(undefined,
-         tabInfo[prop],
-         `${prop} of tab object is undefined without tabs permission.`);
+      is(
+        undefined,
+        tabInfo[prop],
+        `${prop} of tab object is undefined without tabs permission.`
+      );
     }
   }
 

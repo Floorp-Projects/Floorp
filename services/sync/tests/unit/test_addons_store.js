@@ -3,30 +3,46 @@
 
 "use strict";
 
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-const {AddonsEngine} = ChromeUtils.import("resource://services-sync/engines/addons.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+const { AddonsEngine } = ChromeUtils.import(
+  "resource://services-sync/engines/addons.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
 
 const HTTP_PORT = 8888;
 
 const prefs = new Preferences();
 
-prefs.set("extensions.getAddons.get.url", "http://localhost:8888/search/guid:%IDS%");
+prefs.set(
+  "extensions.getAddons.get.url",
+  "http://localhost:8888/search/guid:%IDS%"
+);
 // Note that all compat-override URLs currently 404, but that's OK - the main
 // thing is to avoid us hitting the real AMO.
-prefs.set("extensions.getAddons.compatOverides.url", "http://localhost:8888/compat-override/guid:%IDS%");
+prefs.set(
+  "extensions.getAddons.compatOverides.url",
+  "http://localhost:8888/compat-override/guid:%IDS%"
+);
 prefs.set("extensions.install.requireSecureOrigin", false);
 prefs.set("extensions.checkUpdateSecurity", false);
 
 AddonTestUtils.init(this);
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "1.9.2"
+);
 AddonTestUtils.overrideCertDB();
 
 Services.prefs.setCharPref("extensions.minCompatibleAppVersion", "0");
 Services.prefs.setCharPref("extensions.minCompatiblePlatformVersion", "0");
 Services.prefs.setBoolPref("extensions.legacy.enabled", true);
-
 
 const SYSTEM_ADDON_ID = "system1@tests.mozilla.org";
 add_task(async function setupSystemAddon() {
@@ -35,13 +51,13 @@ add_task(async function setupSystemAddon() {
 
   let xpi = await AddonTestUtils.createTempWebExtensionFile({
     manifest: {
-      applications: {gecko: {id: SYSTEM_ADDON_ID}},
+      applications: { gecko: { id: SYSTEM_ADDON_ID } },
     },
   });
 
   xpi.copyTo(distroDir, `${SYSTEM_ADDON_ID}.xpi`);
 
-  await AddonTestUtils.overrideBuiltIns({system: [SYSTEM_ADDON_ID]});
+  await AddonTestUtils.overrideBuiltIns({ system: [SYSTEM_ADDON_ID] });
   await AddonTestUtils.promiseStartupManager();
 });
 
@@ -63,7 +79,7 @@ const ADDONS = {
 
   test_addon2: {
     manifest: {
-      applications: {gecko: {id: ID2}},
+      applications: { gecko: { id: ID2 } },
     },
   },
 
@@ -132,11 +148,21 @@ let tracker;
 let store;
 let reconciler;
 
-const proxyService = Cc["@mozilla.org/network/protocol-proxy-service;1"]
-  .getService(Ci.nsIProtocolProxyService);
+const proxyService = Cc[
+  "@mozilla.org/network/protocol-proxy-service;1"
+].getService(Ci.nsIProtocolProxyService);
 
 const proxyFilter = {
-  proxyInfo: proxyService.newProxyInfo("http", "localhost", HTTP_PORT, "", "", 0, 4096, null),
+  proxyInfo: proxyService.newProxyInfo(
+    "http",
+    "localhost",
+    HTTP_PORT,
+    "",
+    "",
+    0,
+    4096,
+    null
+  ),
 
   applyFilter(service, channel, defaultProxyInfo, callback) {
     if (channel.URI.host === "example.com") {
@@ -163,11 +189,11 @@ registerCleanupFunction(() => {
 function createRecordForThisApp(id, addonId, enabled, deleted) {
   return {
     id,
-    addonID:       addonId,
+    addonID: addonId,
     enabled,
-    deleted:       !!deleted,
+    deleted: !!deleted,
     applicationID: Services.appinfo.ID,
-    source:        "amo",
+    source: "amo",
   };
 }
 
@@ -175,14 +201,20 @@ function createAndStartHTTPServer(port) {
   try {
     let server = new HttpServer();
 
-    server.registerPathHandler("/search/guid:addon1%40tests.mozilla.org", (req, resp) => {
-      resp.setHeader("Content-type", "application/json", true);
-      resp.write(JSON.stringify(SEARCH_RESULT));
-    });
-    server.registerPathHandler("/search/guid:missing-xpi%40tests.mozilla.org", (req, resp) => {
-      resp.setHeader("Content-type", "application/json", true);
-      resp.write(JSON.stringify(MISSING_SEARCH_RESULT));
-    });
+    server.registerPathHandler(
+      "/search/guid:addon1%40tests.mozilla.org",
+      (req, resp) => {
+        resp.setHeader("Content-type", "application/json", true);
+        resp.write(JSON.stringify(SEARCH_RESULT));
+      }
+    );
+    server.registerPathHandler(
+      "/search/guid:missing-xpi%40tests.mozilla.org",
+      (req, resp) => {
+        resp.setHeader("Content-type", "application/json", true);
+        resp.write(JSON.stringify(MISSING_SEARCH_RESULT));
+      }
+    );
     server.registerFile("/addon1.xpi", XPIS.test_addon1);
 
     server.start(port);
@@ -209,9 +241,9 @@ async function checkReconcilerUpToDate(addon) {
 
 add_task(async function setup() {
   await Service.engineManager.register(AddonsEngine);
-  engine     = Service.engineManager.get("addons");
-  tracker    = engine._tracker;
-  store      = engine._store;
+  engine = Service.engineManager.get("addons");
+  tracker = engine._tracker;
+  store = engine._store;
   reconciler = engine._reconciler;
 
   reconciler.startListening();
@@ -280,7 +312,9 @@ add_task(async function test_apply_enabled() {
 });
 
 add_task(async function test_apply_enabled_appDisabled() {
-  _("Ensures that changes to the userEnabled flag apply when the addon is appDisabled.");
+  _(
+    "Ensures that changes to the userEnabled flag apply when the addon is appDisabled."
+  );
 
   // this addon is appDisabled by default.
   let addon = await installAddon(XPIS.test_addon3);
@@ -312,8 +346,10 @@ add_task(async function test_apply_enabled_appDisabled() {
   await uninstallAddon(addon, reconciler);
 });
 
- add_task(async function test_ignore_different_appid() {
-   _("Ensure that incoming records with a different application ID are ignored.");
+add_task(async function test_ignore_different_appid() {
+  _(
+    "Ensure that incoming records with a different application ID are ignored."
+  );
 
   // We test by creating a record that should result in an update.
   let addon = await installAddon(XPIS.test_addon1, reconciler);
@@ -365,21 +401,30 @@ add_task(async function test_apply_uninstall() {
 add_task(async function test_addon_syncability() {
   _("Ensure isAddonSyncable functions properly.");
 
-  Svc.Prefs.set("addons.trustedSourceHostnames",
-                "addons.mozilla.org,other.example.com");
+  Svc.Prefs.set(
+    "addons.trustedSourceHostnames",
+    "addons.mozilla.org,other.example.com"
+  );
 
   Assert.ok(!(await store.isAddonSyncable(null)));
 
   let addon = await installAddon(XPIS.test_addon1, reconciler);
-  Assert.ok((await store.isAddonSyncable(addon)));
+  Assert.ok(await store.isAddonSyncable(addon));
 
   let dummy = {};
-  const KEYS = ["id", "syncGUID", "type", "scope", "foreignInstall", "isSyncable"];
+  const KEYS = [
+    "id",
+    "syncGUID",
+    "type",
+    "scope",
+    "foreignInstall",
+    "isSyncable",
+  ];
   for (let k of KEYS) {
     dummy[k] = addon[k];
   }
 
-  Assert.ok((await store.isAddonSyncable(dummy)));
+  Assert.ok(await store.isAddonSyncable(dummy));
 
   dummy.type = "UNSUPPORTED";
   Assert.ok(!(await store.isAddonSyncable(dummy)));
@@ -407,8 +452,8 @@ add_task(async function test_addon_syncability() {
   ];
 
   let untrusted = [
-    "http://addons.mozilla.org/foo",     // non-https
-    "ftps://addons.mozilla.org/foo",     // non-https
+    "http://addons.mozilla.org/foo", // non-https
+    "ftps://addons.mozilla.org/foo", // non-https
     "https://untrusted.example.com/foo", // non-trusted hostname`
   ];
 
@@ -426,7 +471,11 @@ add_task(async function test_addon_syncability() {
   }
 
   Svc.Prefs.set("addons.trustedSourceHostnames", "addons.mozilla.org");
-  Assert.ok(store.isSourceURITrusted(Services.io.newURI("https://addons.mozilla.org/foo")));
+  Assert.ok(
+    store.isSourceURITrusted(
+      Services.io.newURI("https://addons.mozilla.org/foo")
+    )
+  );
 
   Svc.Prefs.reset("addons.trustedSourceHostnames");
 });
@@ -446,13 +495,13 @@ add_task(async function test_get_all_ids() {
   let addon3 = await installAddon(XPIS.test_addon3, reconciler);
 
   _("Ensure they're syncable.");
-  Assert.ok((await store.isAddonSyncable(addon1)));
-  Assert.ok((await store.isAddonSyncable(addon2)));
-  Assert.ok((await store.isAddonSyncable(addon3)));
+  Assert.ok(await store.isAddonSyncable(addon1));
+  Assert.ok(await store.isAddonSyncable(addon2));
+  Assert.ok(await store.isAddonSyncable(addon3));
 
   let ids = await store.getAllIDs();
 
-  Assert.equal("object", typeof(ids));
+  Assert.equal("object", typeof ids);
   Assert.equal(3, Object.keys(ids).length);
   Assert.ok(addon1.syncGUID in ids);
   Assert.ok(addon2.syncGUID in ids);
@@ -644,7 +693,9 @@ add_task(async function test_wipe_and_install() {
 // does *not* have a copy in its cache, and repopulating that cache would not
 // re-add it as the addon is no longer installed locally.
 add_task(async function test_incoming_reconciled_but_not_cached() {
-  _("Ensure we handle incoming records our reconciler has but the addon cache does not");
+  _(
+    "Ensure we handle incoming records our reconciler has but the addon cache does not"
+  );
 
   // Make sure addon is not installed.
   let addon = await AddonManager.getAddonByID(ID1);
@@ -653,7 +704,7 @@ add_task(async function test_incoming_reconciled_but_not_cached() {
   Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", false);
 
   addon = await installAddon(XPIS.test_addon1, reconciler);
-  Assert.notEqual((await AddonManager.getAddonByID(ID1)), null);
+  Assert.notEqual(await AddonManager.getAddonByID(ID1), null);
   await uninstallAddon(addon, reconciler);
 
   Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);
@@ -666,7 +717,7 @@ add_task(async function test_incoming_reconciled_but_not_cached() {
   let failed = await store.applyIncomingBatch([record]);
   Assert.equal(0, failed.length);
 
-  Assert.notEqual((await AddonManager.getAddonByID(ID1)), null);
+  Assert.notEqual(await AddonManager.getAddonByID(ID1), null);
 
   await promiseStopServer(server);
 });

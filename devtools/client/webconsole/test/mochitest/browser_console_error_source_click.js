@@ -8,8 +8,9 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,<p>hello world" +
-                 "<button onclick='foobar.explode()'>click!</button>";
+const TEST_URI =
+  "data:text/html;charset=utf8,<p>hello world" +
+  "<button onclick='foobar.explode()'>click!</button>";
 
 add_task(async function() {
   await pushPref("devtools.browserconsole.contentMessages", true);
@@ -30,15 +31,19 @@ add_task(async function() {
     button.click();
   });
 
-  await waitForMessageAndViewSource(hud,
-    "ReferenceError: foobar is not defined");
+  await waitForMessageAndViewSource(
+    hud,
+    "ReferenceError: foobar is not defined"
+  );
 });
 
 async function waitForMessageAndViewSource(hud, message) {
   const msg = await waitFor(() => findMessage(hud, message));
   ok(msg, `Message found: "${message}"`);
 
-  const locationNode = msg.querySelector(".message-location .frame-link-source");
+  const locationNode = msg.querySelector(
+    ".message-location .frame-link-source"
+  );
   ok(locationNode, "Message location link element found");
 
   const onTabOpen = BrowserTestUtils.waitForNewTab(gBrowser, null, true);

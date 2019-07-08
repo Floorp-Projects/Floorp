@@ -17,7 +17,7 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
+  const { jsterm } = hud;
 
   let onMessage = waitForMessage(hud, "true");
   jsterm.execute("[] instanceof Array");

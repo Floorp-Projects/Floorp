@@ -5,7 +5,9 @@
 
 /* globals TestUtils */
 
-let {ExtensionTestCommon} = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm");
+let { ExtensionTestCommon } = ChromeUtils.import(
+  "resource://testing-common/ExtensionTestCommon.jsm"
+);
 
 ChromeUtils.import("resource://testing-common/ContentTask.jsm", {});
 
@@ -22,12 +24,13 @@ var gManagerWindow;
 var gCategoryUtilities;
 
 function installAddon(details) {
-  let id = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator)
-                                              .generateUUID().number;
+  let id = Cc["@mozilla.org/uuid-generator;1"]
+    .getService(Ci.nsIUUIDGenerator)
+    .generateUUID().number;
   if (!details.manifest) {
     details.manifest = {};
   }
-  details.manifest.applications = {gecko: {id}};
+  details.manifest.applications = { gecko: { id } };
   let xpi = ExtensionTestCommon.generateXPI(details);
 
   return AddonManager.installTemporaryAddon(xpi).then(addon => {
@@ -45,8 +48,8 @@ function installAddon(details) {
 add_task(async function() {
   gAddon = await installAddon({
     manifest: {
-      "options_ui": {
-        "page": "options.html",
+      options_ui: {
+        page: "options.html",
       },
     },
 
@@ -80,42 +83,63 @@ add_task(async function() {
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 });
 
-
 async function openDetailsBrowser(addonId) {
   var addon = get_addon_element(gManagerWindow, addonId);
 
-  is(addon.mAddon.optionsType, AddonManager.OPTIONS_TYPE_INLINE_BROWSER,
-     "Options should be inline browser type");
+  is(
+    addon.mAddon.optionsType,
+    AddonManager.OPTIONS_TYPE_INLINE_BROWSER,
+    "Options should be inline browser type"
+  );
 
   addon.parentNode.ensureElementIsVisible(addon);
 
-  var button = gManagerWindow.document.getAnonymousElementByAttribute(addon, "anonid", "preferences-btn");
+  var button = gManagerWindow.document.getAnonymousElementByAttribute(
+    addon,
+    "anonid",
+    "preferences-btn"
+  );
 
   is_element_visible(button, "Preferences button should be visible");
 
   EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
-  await TestUtils.topicObserved(AddonManager.OPTIONS_NOTIFICATION_DISPLAYED,
-                                (subject, data) => data == addonId);
+  await TestUtils.topicObserved(
+    AddonManager.OPTIONS_NOTIFICATION_DISPLAYED,
+    (subject, data) => data == addonId
+  );
 
-  is(gManagerWindow.gViewController.currentViewId,
-     `addons://detail/${encodeURIComponent(addonId)}/preferences`,
-     "Current view should scroll to preferences");
+  is(
+    gManagerWindow.gViewController.currentViewId,
+    `addons://detail/${encodeURIComponent(addonId)}/preferences`,
+    "Current view should scroll to preferences"
+  );
 
   var browser = gManagerWindow.document.querySelector(
-    "#detail-grid > rows > stack > .inline-options-browser");
+    "#detail-grid > rows > stack > .inline-options-browser"
+  );
   var rows = browser.parentNode.parentNode;
 
   let url = await ContentTask.spawn(browser, {}, () => content.location.href);
 
   ok(browser, "Grid should have a browser descendant");
   is(browser.localName, "browser", "Grid should have a browser descendant");
-  is(url, addon.mAddon.optionsURL, "Browser has the expected options URL loaded");
+  is(
+    url,
+    addon.mAddon.optionsURL,
+    "Browser has the expected options URL loaded"
+  );
 
-  is(browser.clientWidth, browser.parentNode.clientWidth,
-     "Browser should be the same width as its direct parent");
-  is(browser.clientWidth, rows.clientWidth,
-     "Browser should be the same width as its rows ancestor");
+  is(
+    browser.clientWidth,
+    browser.parentNode.clientWidth,
+    "Browser should be the same width as its direct parent"
+  );
+  is(
+    browser.clientWidth,
+    rows.clientWidth,
+    "Browser should be the same width as its rows ancestor"
+  );
 
   button = gManagerWindow.document.getElementById("detail-prefs-btn");
   is_element_hidden(button, "Preferences button should not be visible");
@@ -123,23 +147,35 @@ async function openDetailsBrowser(addonId) {
   return browser;
 }
 
-
 add_task(async function test_inline_browser_addon() {
   let browser = await openDetailsBrowser(gAddon.id);
 
   function checkHeights(expected) {
-    let {clientHeight} = browser;
-    return ContentTask.spawn(browser, {expected, clientHeight}, ({expected, clientHeight}) => {
-      let {body} = content.document;
+    let { clientHeight } = browser;
+    return ContentTask.spawn(
+      browser,
+      { expected, clientHeight },
+      ({ expected, clientHeight }) => {
+        let { body } = content.document;
 
-      is(body.clientHeight, expected, `Document body should be ${expected}px tall`);
-      is(body.clientHeight, body.scrollHeight,
-         "Document body should be tall enough to fit its contents");
+        is(
+          body.clientHeight,
+          expected,
+          `Document body should be ${expected}px tall`
+        );
+        is(
+          body.clientHeight,
+          body.scrollHeight,
+          "Document body should be tall enough to fit its contents"
+        );
 
-      let heightDiff = clientHeight - expected;
-      ok(heightDiff >= 0 && heightDiff < 50,
-         `Browser should be slightly taller than the document body (${clientHeight} vs. ${expected})`);
-    });
+        let heightDiff = clientHeight - expected;
+        ok(
+          heightDiff >= 0 && heightDiff < 50,
+          `Browser should be slightly taller than the document body (${clientHeight} vs. ${expected})`
+        );
+      }
+    );
   }
 
   // Delay long enough to avoid hitting our resize rate limit.
@@ -149,7 +185,9 @@ add_task(async function test_inline_browser_addon() {
 
   await checkHeights(300);
 
-  info("Increase the document height, and expect the browser to grow correspondingly");
+  info(
+    "Increase the document height, and expect the browser to grow correspondingly"
+  );
   await ContentTask.spawn(browser, null, () => {
     content.document.body.classList.toggle("bigger");
   });
@@ -158,7 +196,9 @@ add_task(async function test_inline_browser_addon() {
 
   await checkHeights(600);
 
-  info("Decrease the document height, and expect the browser to shrink correspondingly");
+  info(
+    "Decrease the document height, and expect the browser to shrink correspondingly"
+  );
   await ContentTask.spawn(browser, null, () => {
     content.document.body.classList.toggle("bigger");
   });
@@ -168,14 +208,13 @@ add_task(async function test_inline_browser_addon() {
   await checkHeights(300);
 
   await new Promise(resolve =>
-    gCategoryUtilities.openType("extension", resolve));
+    gCategoryUtilities.openType("extension", resolve)
+  );
 
-  browser = gManagerWindow.document.querySelector(
-    ".inline-options-browser");
+  browser = gManagerWindow.document.querySelector(".inline-options-browser");
 
   is(browser, null, "Options browser should be removed from the document");
 });
-
 
 // Test that loading an add-on with no inline browser works as expected
 // after having viewed our main test add-on.
@@ -186,25 +225,32 @@ add_task(async function test_plain_addon() {
 
   addon.parentNode.ensureElementIsVisible(addon);
 
-  await EventUtils.synthesizeMouseAtCenter(addon, { clickCount: 1 }, gManagerWindow);
+  await EventUtils.synthesizeMouseAtCenter(
+    addon,
+    { clickCount: 1 },
+    gManagerWindow
+  );
 
   EventUtils.synthesizeMouseAtCenter(addon, { clickCount: 2 }, gManagerWindow);
 
   await BrowserTestUtils.waitForEvent(gManagerWindow, "ViewChanged");
 
-  is(gManagerWindow.gViewController.currentViewId,
-     `addons://detail/${encodeURIComponent(gOtherAddon.id)}`,
-     "Detail view should be open");
+  is(
+    gManagerWindow.gViewController.currentViewId,
+    `addons://detail/${encodeURIComponent(gOtherAddon.id)}`,
+    "Detail view should be open"
+  );
 
   var browser = gManagerWindow.document.querySelector(
-    "#detail-grid > rows > .inline-options-browser");
+    "#detail-grid > rows > .inline-options-browser"
+  );
 
   is(browser, null, "Detail view should have no inline browser");
 
   await new Promise(resolve =>
-    gCategoryUtilities.openType("extension", resolve));
+    gCategoryUtilities.openType("extension", resolve)
+  );
 });
-
 
 // Test that loading the original add-on details successfully creates a
 // browser.
@@ -212,10 +258,10 @@ add_task(async function test_inline_browser_addon_again() {
   let browser = await openDetailsBrowser(gAddon.id);
 
   await new Promise(resolve =>
-    gCategoryUtilities.openType("extension", resolve));
+    gCategoryUtilities.openType("extension", resolve)
+  );
 
-  browser = gManagerWindow.document.querySelector(
-    ".inline-options-browser");
+  browser = gManagerWindow.document.querySelector(".inline-options-browser");
 
   is(browser, null, "Options browser should be removed from the document");
 });

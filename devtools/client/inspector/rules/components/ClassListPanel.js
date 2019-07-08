@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createRef, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createRef,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
@@ -58,42 +61,41 @@ class ClassListPanel extends PureComponent {
   }
 
   render() {
-    return (
+    return dom.div(
+      {
+        id: "ruleview-class-panel",
+        className: "theme-toolbar ruleview-reveal-panel",
+      },
+      dom.input({
+        className: "devtools-textinput add-class",
+        placeholder: getStr("rule.classPanel.newClass.placeholder"),
+        onChange: this.onInputChange,
+        onKeyUp: this.onInputKeyUp,
+        ref: this.inputRef,
+        value: this.state.value,
+      }),
       dom.div(
-        {
-          id: "ruleview-class-panel",
-          className: "theme-toolbar ruleview-reveal-panel",
-        },
-        dom.input({
-          className: "devtools-textinput add-class",
-          placeholder: getStr("rule.classPanel.newClass.placeholder"),
-          onChange: this.onInputChange,
-          onKeyUp: this.onInputKeyUp,
-          ref: this.inputRef,
-          value: this.state.value,
-        }),
-        dom.div({ className: "classes" },
-          this.props.classes.length ?
-            this.props.classes.map(({ name, isApplied }) => {
-              return (
-                dom.label(
-                  {
-                    key: name,
-                    title: name,
-                  },
-                  dom.input({
-                    checked: isApplied,
-                    onChange: this.onToggleChange,
-                    type: "checkbox",
-                    value: name,
-                  }),
-                  dom.span({}, name)
-                )
+        { className: "classes" },
+        this.props.classes.length
+          ? this.props.classes.map(({ name, isApplied }) => {
+              return dom.label(
+                {
+                  key: name,
+                  title: name,
+                },
+                dom.input({
+                  checked: isApplied,
+                  onChange: this.onToggleChange,
+                  type: "checkbox",
+                  value: name,
+                }),
+                dom.span({}, name)
               );
             })
-            :
-            dom.p({ className: "no-classes" }, getStr("rule.classPanel.noClasses"))
-        )
+          : dom.p(
+              { className: "no-classes" },
+              getStr("rule.classPanel.noClasses")
+            )
       )
     );
   }

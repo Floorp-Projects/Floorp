@@ -131,7 +131,9 @@ class Toolbar extends PureComponent {
           }),
           dom.button({
             id: "rotate-button",
-            className: "devtools-button",
+            className: `devtools-button viewport-orientation-${
+              viewport.width > viewport.height ? "landscape" : "portrait"
+            }`,
             onClick: () => onRotateViewport(viewport.id),
             title: getStr("responsive.rotate"),
           }),

@@ -121,7 +121,7 @@ function runTests(testcases) {
   const names = $$("#name .table-widget-cell");
   const rows = $$("#value .table-widget-cell");
   for (const testcase of testcases) {
-    const {value, results} = testcase;
+    const { value, results } = testcase;
 
     info(`Testing input: ${value}`);
 
@@ -132,8 +132,11 @@ function runTests(testcases) {
       info(`Testing row ${i} for "${value}"`);
       info(`key: ${names[i].value}, value: ${rows[i].value}`);
       const state = results[i] ? "visible" : "hidden";
-      is(rows[i].hasAttribute("hidden"), !results[i],
-         `Row ${i} should be ${state}`);
+      is(
+        rows[i].hasAttribute("hidden"),
+        !results[i],
+        `Row ${i} should be ${state}`
+      );
     }
   }
 }

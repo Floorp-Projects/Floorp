@@ -9,12 +9,14 @@
  * This script is the entry point of Network monitor panel.
  * See README.md for more information.
  */
-const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js");
+const { BrowserLoader } = ChromeUtils.import(
+  "resource://devtools/client/shared/browser-loader.js"
+);
 
-const require = window.windowRequire = BrowserLoader({
+const require = (window.windowRequire = BrowserLoader({
   baseURI: "resource://devtools/client/netmonitor/",
   window,
-}).require;
+}).require);
 
 const { NetMonitorAPI } = require("./src/api");
 const { NetMonitorApp } = require("./src/app");
@@ -70,22 +72,24 @@ const url = new window.URL(href);
 // If query parameters are given in a chrome tab, the inspector
 // is running in standalone.
 if (window.location.protocol === "chrome:" && url.search.length > 1) {
-  const { targetFromURL } = require("devtools/client/framework/target-from-url");
+  const {
+    targetFromURL,
+  } = require("devtools/client/framework/target-from-url");
 
   (async function() {
     try {
       const target = await targetFromURL(url);
 
       // Start the network event listening as it is done in the toolbox code
-      await target.activeConsole.startListeners([
-        "NetworkActivity",
-      ]);
+      await target.activeConsole.startListeners(["NetworkActivity"]);
 
       // Create a fake toolbox object
       const toolbox = {
         target,
         viewSourceInDebugger() {
-          throw new Error("toolbox.viewSourceInDebugger is not implement from a tab");
+          throw new Error(
+            "toolbox.viewSourceInDebugger is not implement from a tab"
+          );
         },
       };
 

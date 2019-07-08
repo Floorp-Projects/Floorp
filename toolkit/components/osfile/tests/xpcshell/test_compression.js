@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function run_test() {
   do_test_pending();
@@ -47,7 +47,9 @@ add_task(async function test_uncompressed() {
   }
   Assert.ok(!!exn);
   // Check the exception message (and that it contains the file name)
-  Assert.ok(exn.message.includes(`Invalid header (no magic number) - Data: ${ path }`));
+  Assert.ok(
+    exn.message.includes(`Invalid header (no magic number) - Data: ${path}`)
+  );
 });
 
 add_task(async function test_no_header() {
@@ -66,7 +68,9 @@ add_task(async function test_no_header() {
   }
   Assert.ok(!!exn);
   // Check the exception message (and that it contains the file name)
-  Assert.ok(exn.message.includes(`Buffer is too short (no header) - Data: ${ path }`));
+  Assert.ok(
+    exn.message.includes(`Buffer is too short (no header) - Data: ${path}`)
+  );
 });
 
 add_task(async function test_invalid_content() {
@@ -90,7 +94,11 @@ add_task(async function test_invalid_content() {
   }
   Assert.ok(!!exn);
   // Check the exception message (and that it contains the file name)
-  Assert.ok(exn.message.includes(`Invalid content: Decompression stopped at 0 - Data: ${ path }`));
+  Assert.ok(
+    exn.message.includes(
+      `Invalid content: Decompression stopped at 0 - Data: ${path}`
+    )
+  );
 });
 
 add_task(function() {

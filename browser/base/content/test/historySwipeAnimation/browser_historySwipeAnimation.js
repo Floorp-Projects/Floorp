@@ -7,21 +7,31 @@ function test() {
 
   BrowserOpenTab();
   let tab = gBrowser.selectedTab;
-  registerCleanupFunction(function() { gBrowser.removeTab(tab); });
+  registerCleanupFunction(function() {
+    gBrowser.removeTab(tab);
+  });
 
   ok(gHistorySwipeAnimation, "gHistorySwipeAnimation exists.");
 
   if (!gHistorySwipeAnimation._isSupported()) {
-    is(gHistorySwipeAnimation.active, false, "History swipe animation is not " +
-       "active when not supported by the platform.");
+    is(
+      gHistorySwipeAnimation.active,
+      false,
+      "History swipe animation is not " +
+        "active when not supported by the platform."
+    );
     finish();
     return;
   }
 
   gHistorySwipeAnimation.init();
 
-  is(gHistorySwipeAnimation.active, true, "History swipe animation support " +
-     "was successfully initialized when supported.");
+  is(
+    gHistorySwipeAnimation.active,
+    true,
+    "History swipe animation support " +
+      "was successfully initialized when supported."
+  );
 
   test0();
 
@@ -29,8 +39,11 @@ function test() {
     // Test uninit of gHistorySwipeAnimation.
     // This test MUST be the last one to execute.
     gHistorySwipeAnimation.uninit();
-    is(gHistorySwipeAnimation.active, false, "History swipe animation support " +
-       "was successfully uninitialized");
+    is(
+      gHistorySwipeAnimation.active,
+      false,
+      "History swipe animation support was successfully uninitialized"
+    );
     finish();
   }
 }

@@ -7,8 +7,10 @@
 add_task(async function() {
   // In reality, this won't try to clone the database, because attached
   // databases cannot be supported when cloning. This test also verifies that.
-  await test_database_replacement("../migration/favicons_v41.sqlite",
-                                  "favicons.sqlite",
-                                  true,
-                                  PlacesUtils.history.DATABASE_STATUS_CREATE);
+  await test_database_replacement(
+    "../migration/favicons_v41.sqlite",
+    "favicons.sqlite",
+    true,
+    PlacesUtils.history.DATABASE_STATUS_CREATE
+  );
 });

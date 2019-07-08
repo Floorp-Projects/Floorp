@@ -4,9 +4,9 @@
 
 add_task(async function setup() {
   // make sure userContext is enabled.
-  return SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.userContext.enabled", true],
-  ]});
+  return SpecialPowers.pushPrefEnv({
+    set: [["privacy.userContext.enabled", true]],
+  });
 });
 
 add_task(async function() {
@@ -14,33 +14,83 @@ add_task(async function() {
 
   let testCases = [
     // No private window
-    {privateTab: false, cookieStoreId: null, success: true, expectedCookieStoreId: "firefox-default"},
-    {privateTab: false, cookieStoreId: "firefox-default", success: true, expectedCookieStoreId: "firefox-default"},
-    {privateTab: false, cookieStoreId: "firefox-container-1", success: true, expectedCookieStoreId: "firefox-container-1"},
-    {privateTab: false, cookieStoreId: "firefox-container-2", success: true, expectedCookieStoreId: "firefox-container-2"},
-    {privateTab: false, cookieStoreId: "firefox-container-42", failure: "exist"},
-    {privateTab: false, cookieStoreId: "firefox-private", failure: "defaultToPrivate"},
-    {privateTab: false, cookieStoreId: "wow", failure: "illegal"},
+    {
+      privateTab: false,
+      cookieStoreId: null,
+      success: true,
+      expectedCookieStoreId: "firefox-default",
+    },
+    {
+      privateTab: false,
+      cookieStoreId: "firefox-default",
+      success: true,
+      expectedCookieStoreId: "firefox-default",
+    },
+    {
+      privateTab: false,
+      cookieStoreId: "firefox-container-1",
+      success: true,
+      expectedCookieStoreId: "firefox-container-1",
+    },
+    {
+      privateTab: false,
+      cookieStoreId: "firefox-container-2",
+      success: true,
+      expectedCookieStoreId: "firefox-container-2",
+    },
+    {
+      privateTab: false,
+      cookieStoreId: "firefox-container-42",
+      failure: "exist",
+    },
+    {
+      privateTab: false,
+      cookieStoreId: "firefox-private",
+      failure: "defaultToPrivate",
+    },
+    { privateTab: false, cookieStoreId: "wow", failure: "illegal" },
 
     // Private window
-    {privateTab: true, cookieStoreId: null, success: true, expectedCookieStoreId: "firefox-private"},
-    {privateTab: true, cookieStoreId: "firefox-private", success: true, expectedCookieStoreId: "firefox-private"},
-    {privateTab: true, cookieStoreId: "firefox-default", failure: "privateToDefault"},
-    {privateTab: true, cookieStoreId: "firefox-container-1", failure: "privateToDefault"},
-    {privateTab: true, cookieStoreId: "wow", failure: "illegal"},
+    {
+      privateTab: true,
+      cookieStoreId: null,
+      success: true,
+      expectedCookieStoreId: "firefox-private",
+    },
+    {
+      privateTab: true,
+      cookieStoreId: "firefox-private",
+      success: true,
+      expectedCookieStoreId: "firefox-private",
+    },
+    {
+      privateTab: true,
+      cookieStoreId: "firefox-default",
+      failure: "privateToDefault",
+    },
+    {
+      privateTab: true,
+      cookieStoreId: "firefox-container-1",
+      failure: "privateToDefault",
+    },
+    { privateTab: true, cookieStoreId: "wow", failure: "illegal" },
   ];
 
   let extension = ExtensionTestUtils.loadExtension({
     incognitoOverride: "spanning",
     manifest: {
-      "permissions": ["tabs", "cookies"],
+      permissions: ["tabs", "cookies"],
     },
 
     background: function() {
       function testTab(data, tab) {
         browser.test.assertTrue(data.success, "we want a success");
         browser.test.assertTrue(!!tab, "we have a tab");
-        browser.test.assertEq(data.expectedCookieStoreId, tab.cookieStoreId, "tab should have the correct cookieStoreId");
+        browser.test.assertEq(
+          data.expectedCookieStoreId,
+          tab.cookieStoreId,
+          "tab should have the correct cookieStoreId"
+        );
       }
 
       async function runTest(data) {
@@ -49,7 +99,9 @@ add_task(async function() {
           let tab;
           try {
             tab = await browser.tabs.create({
-              windowId: data.privateTab ? this.privateWindowId : this.defaultWindowId,
+              windowId: data.privateTab
+                ? this.privateWindowId
+                : this.defaultWindowId,
               cookieStoreId: data.cookieStoreId,
             });
 
@@ -58,19 +110,27 @@ add_task(async function() {
             browser.test.assertTrue(!!data.failure, "we want a failure");
 
             if (data.failure == "illegal") {
-              browser.test.assertTrue(/Illegal cookieStoreId/.test(error.message),
-                                      "runtime.lastError should report the expected error message");
+              browser.test.assertTrue(
+                /Illegal cookieStoreId/.test(error.message),
+                "runtime.lastError should report the expected error message"
+              );
             } else if (data.failure == "defaultToPrivate") {
-              browser.test.assertTrue("Illegal to set private cookieStorageId in a non private window",
-                                      error.message,
-                                      "runtime.lastError should report the expected error message");
+              browser.test.assertTrue(
+                "Illegal to set private cookieStorageId in a non private window",
+                error.message,
+                "runtime.lastError should report the expected error message"
+              );
             } else if (data.failure == "privateToDefault") {
-              browser.test.assertTrue("Illegal to set non private cookieStorageId in a private window",
-                                      error.message,
-                                      "runtime.lastError should report the expected error message");
+              browser.test.assertTrue(
+                "Illegal to set non private cookieStorageId in a private window",
+                error.message,
+                "runtime.lastError should report the expected error message"
+              );
             } else if (data.failure == "exist") {
-              browser.test.assertTrue(/No cookie store exists/.test(error.message),
-                                      "runtime.lastError should report the expected error message");
+              browser.test.assertTrue(
+                /No cookie store exists/.test(error.message),
+                "runtime.lastError should report the expected error message"
+              );
             } else {
               browser.test.fail("The test is broken");
             }
@@ -85,7 +145,9 @@ add_task(async function() {
           {
             // Tests for tab querying
             let [tab] = await browser.tabs.query({
-              windowId: data.privateTab ? this.privateWindowId : this.defaultWindowId,
+              windowId: data.privateTab
+                ? this.privateWindowId
+                : this.defaultWindowId,
               cookieStoreId: data.cookieStoreId,
             });
 
@@ -97,7 +159,10 @@ add_task(async function() {
 
           let store = stores.find(store => store.id === tab.cookieStoreId);
           browser.test.assertTrue(!!store, "We have a store for this tab.");
-          browser.test.assertTrue(store.tabIds.includes(tab.id), "tabIds includes this tab.");
+          browser.test.assertTrue(
+            store.tabIds.includes(tab.id),
+            "tabIds includes this tab."
+          );
 
           await browser.tabs.remove(tab.id);
 
@@ -108,10 +173,10 @@ add_task(async function() {
       }
 
       async function initialize() {
-        let win = await browser.windows.create({incognito: true});
+        let win = await browser.windows.create({ incognito: true });
         this.privateWindowId = win.id;
 
-        win = await browser.windows.create({incognito: false});
+        win = await browser.windows.create({ incognito: false });
         this.defaultWindowId = win.id;
 
         browser.test.sendMessage("ready");
@@ -158,16 +223,19 @@ add_task(async function() {
 });
 
 add_task(async function userContext_disabled() {
-  await SpecialPowers.pushPrefEnv({"set": [["privacy.userContext.enabled", false]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.userContext.enabled", false]],
+  });
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs", "cookies"],
+      permissions: ["tabs", "cookies"],
     },
     async background() {
       await browser.test.assertRejects(
-        browser.tabs.create({cookieStoreId: "firefox-container-1"}),
+        browser.tabs.create({ cookieStoreId: "firefox-container-1" }),
         /Contextual identities are currently disabled/,
-        "should refuse to open container tab when contextual identities are disabled");
+        "should refuse to open container tab when contextual identities are disabled"
+      );
       browser.test.sendMessage("done");
     },
   });

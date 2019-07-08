@@ -10,8 +10,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("dom.indexedDB.storageOption.enabled");
   });
@@ -32,8 +31,10 @@ function* testSteps()
 
   // Open a database with content privileges.
   let principal = getPrincipal(origin);
-  let request = indexedDB.openForPrincipal(principal, name,
-    { version, storage: "persistent" });
+  let request = indexedDB.openForPrincipal(principal, name, {
+    version,
+    storage: "persistent",
+  });
 
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
@@ -45,7 +46,7 @@ function* testSteps()
   let db = event.target.result;
   db.onerror = errorHandler;
 
-  let objectStore = db.createObjectStore(objectStoreName, { });
+  let objectStore = db.createObjectStore(objectStoreName, {});
 
   event = yield undefined;
 
@@ -55,8 +56,9 @@ function* testSteps()
   is(db.version, version, "Correct version");
   is(db.storage, "default", "Correct persistence type");
 
-  objectStore = db.transaction([objectStoreName], "readwrite")
-                  .objectStore(objectStoreName);
+  objectStore = db
+    .transaction([objectStoreName], "readwrite")
+    .objectStore(objectStoreName);
 
   request = objectStore.get(data.key);
   request.onsuccess = grabEventAndContinueHandler;
@@ -76,8 +78,10 @@ function* testSteps()
   // receive an upgradeneeded event.
   Services.prefs.setBoolPref("dom.indexedDB.storageOption.enabled", true);
 
-  request = indexedDB.openForPrincipal(principal, name,
-    { version, storage: "persistent" });
+  request = indexedDB.openForPrincipal(principal, name, {
+    version,
+    storage: "persistent",
+  });
 
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;

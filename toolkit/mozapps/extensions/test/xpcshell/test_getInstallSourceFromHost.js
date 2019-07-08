@@ -31,9 +31,12 @@ add_task(function test_getInstallSourceFromHost_helpers() {
   ];
 
   for (let testCase of sourceHostTestCases) {
-    let {host, installSourceFromHost} = testCase;
+    let { host, installSourceFromHost } = testCase;
 
-    equal(AddonManager.getInstallSourceFromHost(host), installSourceFromHost,
-          `Got the expected result from getInstallFromHost for host ${host}`);
+    equal(
+      AddonManager.getInstallSourceFromHost(host),
+      installSourceFromHost,
+      `Got the expected result from getInstallFromHost for host ${host}`
+    );
   }
 });

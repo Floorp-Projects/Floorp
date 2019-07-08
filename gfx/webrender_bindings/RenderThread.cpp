@@ -678,7 +678,10 @@ void RenderThread::NotifyNotUsed(uint64_t aExternalImageId) {
   }
 
   auto it = mRenderTextures.find(aExternalImageId);
+#ifndef MOZ_WIDGET_ANDROID
+  // This assert fails on GeckoView intermittently. Bug 1559958 tracks it.
   MOZ_ASSERT(it != mRenderTextures.end());
+#endif
   if (it == mRenderTextures.end()) {
     return;
   }

@@ -14,8 +14,12 @@ add_task(async function() {
 
   // Fetch WebConsoleCommands so that it is available for next Content Tasks
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
-    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-    const { WebConsoleCommands } = require("devtools/server/actors/webconsole/utils");
+    const { require } = ChromeUtils.import(
+      "resource://devtools/shared/Loader.jsm"
+    );
+    const {
+      WebConsoleCommands,
+    } = require("devtools/server/actors/webconsole/utils");
 
     // Bind the symbol on this in order to make it available for next tasks
     this.WebConsoleCommands = WebConsoleCommands;
@@ -40,8 +44,10 @@ async function registerNewCommand(consoleClient) {
       return "ok";
     });
 
-    ok(this.WebConsoleCommands.hasCommand("setFoo"),
-        "The command should be registered");
+    ok(
+      this.WebConsoleCommands.hasCommand("setFoo"),
+      "The command should be registered"
+    );
   });
 
   const command = "setFoo('bar')";
@@ -69,8 +75,11 @@ async function wrapCommand(consoleClient) {
     };
 
     this.WebConsoleCommands.register("keys", newKeys);
-    is(this.WebConsoleCommands.getCommand("keys"), newKeys,
-        "the keys() command should have been replaced");
+    is(
+      this.WebConsoleCommands.getCommand("keys"),
+      newKeys,
+      "the keys() command should have been replaced"
+    );
 
     this.origKeys = origKeys;
   });
@@ -92,8 +101,11 @@ async function wrapCommand(consoleClient) {
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     this.WebConsoleCommands.register("keys", this.origKeys);
-    is(this.WebConsoleCommands.getCommand("keys"), this.origKeys,
-      "the keys() command should be restored");
+    is(
+      this.WebConsoleCommands.getCommand("keys"),
+      this.origKeys,
+      "the keys() command should be restored"
+    );
     delete this.origKeys;
   });
 }
@@ -131,10 +143,16 @@ async function registerAccessor(consoleClient) {
   });
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
-    is(content.document.getElementById("quack").textContent, ">o_/",
-       "#foo textContent should equal to \">o_/\"");
+    is(
+      content.document.getElementById("quack").textContent,
+      ">o_/",
+      '#foo textContent should equal to ">o_/"'
+    );
     this.WebConsoleCommands.unregister("$foo");
-    ok(!this.WebConsoleCommands.hasCommand("$foo"), "$foo should be unregistered");
+    ok(
+      !this.WebConsoleCommands.hasCommand("$foo"),
+      "$foo should be unregistered"
+    );
   });
 }
 
@@ -170,12 +188,14 @@ async function unregisterAfterOverridingTwice(consoleClient) {
     this.WebConsoleCommands.unregister("keys");
   });
 
-  info("checking the value after unregistration (should restore " +
-    "the original command)");
+  info(
+    "checking the value after unregistration (should restore " +
+      "the original command)"
+  );
   await evaluateJSAndCheckResult(consoleClient, "keys({});", {
     result: {
       class: "Array",
-      preview: {items: []},
+      preview: { items: [] },
     },
   });
 }

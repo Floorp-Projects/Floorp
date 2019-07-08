@@ -19,44 +19,44 @@ const SIDES = ["top", "right", "bottom", "left"];
 // the amount of pixels) and the expectation.
 const TESTS = {
   "Drag top's handler along x and y, south-east direction": {
-    "expects": "Only y axis is used to updated the top's element value",
-    "drag": "top",
-    "by": {x: 10, y: 10},
+    expects: "Only y axis is used to updated the top's element value",
+    drag: "top",
+    by: { x: 10, y: 10 },
   },
   "Drag right's handler along x and y, south-east direction": {
-    "expects": "Only x axis is used to updated the right's element value",
-    "drag": "right",
-    "by": {x: 10, y: 10},
+    expects: "Only x axis is used to updated the right's element value",
+    drag: "right",
+    by: { x: 10, y: 10 },
   },
   "Drag bottom's handler along x and y, south-east direction": {
-    "expects": "Only y axis is used to updated the bottom's element value",
-    "drag": "bottom",
-    "by": {x: 10, y: 10},
+    expects: "Only y axis is used to updated the bottom's element value",
+    drag: "bottom",
+    by: { x: 10, y: 10 },
   },
   "Drag left's handler along x and y, south-east direction": {
-    "expects": "Only y axis is used to updated the left's element value",
-    "drag": "left",
-    "by": {x: 10, y: 10},
+    expects: "Only y axis is used to updated the left's element value",
+    drag: "left",
+    by: { x: 10, y: 10 },
   },
   "Drag top's handler along x and y, north-west direction": {
-    "expects": "Only y axis is used to updated the top's element value",
-    "drag": "top",
-    "by": {x: -20, y: -20},
+    expects: "Only y axis is used to updated the top's element value",
+    drag: "top",
+    by: { x: -20, y: -20 },
   },
   "Drag right's handler along x and y, north-west direction": {
-    "expects": "Only x axis is used to updated the right's element value",
-    "drag": "right",
-    "by": {x: -20, y: -20},
+    expects: "Only x axis is used to updated the right's element value",
+    drag: "right",
+    by: { x: -20, y: -20 },
   },
   "Drag bottom's handler along x and y, north-west direction": {
-    "expects": "Only y axis is used to updated the bottom's element value",
-    "drag": "bottom",
-    "by": {x: -20, y: -20},
+    expects: "Only y axis is used to updated the bottom's element value",
+    drag: "bottom",
+    by: { x: -20, y: -20 },
   },
   "Drag left's handler along x and y, north-west direction": {
-    "expects": "Only y axis is used to updated the left's element value",
-    "drag": "left",
-    "by": {x: -20, y: -20},
+    expects: "Only y axis is used to updated the left's element value",
+    drag: "left",
+    by: { x: -20, y: -20 },
   },
 };
 
@@ -83,14 +83,16 @@ add_task(async function() {
 async function executeTest(helper, desc, data) {
   info(desc);
 
-  ok((await areElementAndHighlighterMovedCorrectly(
-    helper, data.drag, data.by)), data.expects);
+  ok(
+    await areElementAndHighlighterMovedCorrectly(helper, data.drag, data.by),
+    data.expects
+  );
 }
 
 async function areElementAndHighlighterMovedCorrectly(helper, side, by) {
   const { mouse, reflow, highlightedNode } = helper;
 
-  const {x, y} = await getHandlerCoords(helper, side);
+  const { x, y } = await getHandlerCoords(helper, side);
 
   const dx = x + by.x;
   const dy = y + by.y;
@@ -107,27 +109,27 @@ async function areElementAndHighlighterMovedCorrectly(helper, side, by) {
   info(`Checking ${side} handler is moved correctly`);
   await isHandlerPositionUpdated(helper, side, x, y, by);
 
-  let delta = (side === "left" || side === "right") ? by.x : by.y;
-  delta = delta * ((side === "right" || side === "bottom") ? -1 : 1);
+  let delta = side === "left" || side === "right" ? by.x : by.y;
+  delta = delta * (side === "right" || side === "bottom" ? -1 : 1);
 
   info("Checking element's sides are correct after drag & drop");
-  return areElementSideValuesCorrect(highlightedNode, beforeDragStyle,
-                                     side, delta);
+  return areElementSideValuesCorrect(
+    highlightedNode,
+    beforeDragStyle,
+    side,
+    delta
+  );
 }
 
 async function isHandlerPositionUpdated(helper, name, x, y, by) {
-  const {x: afterDragX, y: afterDragY} = await getHandlerCoords(helper, name);
+  const { x: afterDragX, y: afterDragY } = await getHandlerCoords(helper, name);
 
   if (name === "left" || name === "right") {
-    is(afterDragX, x + by.x,
-      `${name} handler's x axis updated.`);
-    is(afterDragY, y,
-      `${name} handler's y axis unchanged.`);
+    is(afterDragX, x + by.x, `${name} handler's x axis updated.`);
+    is(afterDragY, y, `${name} handler's y axis unchanged.`);
   } else {
-    is(afterDragX, x,
-      `${name} handler's x axis unchanged.`);
-    is(afterDragY, y + by.y,
-      `${name} handler's y axis updated.`);
+    is(afterDragX, x, `${name} handler's x axis unchanged.`);
+    is(afterDragY, y + by.y, `${name} handler's y axis updated.`);
   }
 }
 
@@ -143,22 +145,20 @@ async function areElementSideValuesCorrect(node, beforeDragStyle, name, delta) {
       // `isSideCorrect` is used only as test's return value, not to perform
       // the actual test, because with `is` instead of `ok` we gather more
       // information in case of failure
-      isSideCorrect = isSideCorrect && (afterValue === beforeValue + delta);
+      isSideCorrect = isSideCorrect && afterValue === beforeValue + delta;
 
-      is(afterValue, beforeValue + delta,
-        `${side} is updated.`);
+      is(afterValue, beforeValue + delta, `${side} is updated.`);
     } else {
-      isSideCorrect = isSideCorrect && (afterValue === beforeValue);
+      isSideCorrect = isSideCorrect && afterValue === beforeValue;
 
-      is(afterValue, beforeValue,
-        `${side} is unchaged.`);
+      is(afterValue, beforeValue, `${side} is unchaged.`);
     }
   }
 
   return isSideCorrect;
 }
 
-async function getHandlerCoords({getElementAttribute}, side) {
+async function getHandlerCoords({ getElementAttribute }, side) {
   return {
     x: Math.round(await getElementAttribute("handler-" + side, "cx")),
     y: Math.round(await getElementAttribute("handler-" + side, "cy")),

@@ -7,7 +7,7 @@
 
 // Test that the sidebar widget auto-registers existing tabs.
 
-const {ToolSidebar} = require("devtools/client/framework/sidebar");
+const { ToolSidebar } = require("devtools/client/framework/sidebar");
 
 const testToolDefinition = {
   id: "testTool",
@@ -48,14 +48,24 @@ add_task(async function() {
   info("Checking that the sidebar API works with existing tabs");
 
   sidebar.select("tab2");
-  is(tabbox.selectedTab, tabbox.querySelector("#tab2"),
-    "Existing tabs can be selected");
+  is(
+    tabbox.selectedTab,
+    tabbox.querySelector("#tab2"),
+    "Existing tabs can be selected"
+  );
 
   sidebar.select("tab1");
-  is(tabbox.selectedTab, tabbox.querySelector("#tab1"),
-    "Existing tabs can be selected");
+  is(
+    tabbox.selectedTab,
+    tabbox.querySelector("#tab1"),
+    "Existing tabs can be selected"
+  );
 
-  is(sidebar.getCurrentTabID(), "tab1", "getCurrentTabID returns the expected id");
+  is(
+    sidebar.getCurrentTabID(),
+    "tab1",
+    "getCurrentTabID returns the expected id"
+  );
 
   info("Removing a tab");
   sidebar.removeTab("tab2", "tabpanel2");

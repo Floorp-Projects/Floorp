@@ -9,7 +9,7 @@ var Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
 var EXPORTED_SYMBOLS = ["BrowserElementPromptService"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 const BROWSER_FRAMES_ENABLED_PREF = "dom.mozBrowserFramesEnabled";
@@ -27,8 +27,12 @@ BrowserElementPrompt.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
 
   alert(title, text) {
-    this._browserElementChild.showModalPrompt(
-      this._win, {promptType: "alert", title, message: text, returnValue: undefined});
+    this._browserElementChild.showModalPrompt(this._win, {
+      promptType: "alert",
+      title,
+      message: text,
+      returnValue: undefined,
+    });
   },
 
   alertCheck(title, text, checkMsg, checkState) {
@@ -38,8 +42,12 @@ BrowserElementPrompt.prototype = {
   },
 
   confirm(title, text) {
-    return this._browserElementChild.showModalPrompt(
-      this._win, {promptType: "confirm", title, message: text, returnValue: undefined});
+    return this._browserElementChild.showModalPrompt(this._win, {
+      promptType: "confirm",
+      title,
+      message: text,
+      returnValue: undefined,
+    });
   },
 
   confirmCheck(title, text, checkMsg, checkState) {
@@ -58,30 +66,37 @@ BrowserElementPrompt.prototype = {
   //   int button, // Index of the button that user pressed.
   //   boolean checked, // True if the check box is checked.
   // }
-  confirmEx(title, text, buttonFlags, button0Title, button1Title,
-                      button2Title, checkMsg, checkState) {
-    let buttonProperties = this._buildConfirmExButtonProperties(buttonFlags,
-                                                                button0Title,
-                                                                button1Title,
-                                                                button2Title);
+  confirmEx(
+    title,
+    text,
+    buttonFlags,
+    button0Title,
+    button1Title,
+    button2Title,
+    checkMsg,
+    checkState
+  ) {
+    let buttonProperties = this._buildConfirmExButtonProperties(
+      buttonFlags,
+      button0Title,
+      button1Title,
+      button2Title
+    );
     let defaultReturnValue = { selectedButton: buttonProperties.defaultButton };
     if (checkMsg) {
       defaultReturnValue.checked = checkState.value;
     }
-    let ret = this._browserElementChild.showModalPrompt(
-      this._win,
-      {
-        promptType: "custom-prompt",
-        title,
-        message: text,
-        defaultButton: buttonProperties.defaultButton,
-        buttons: buttonProperties.buttons,
-        showCheckbox: !!checkMsg,
-        checkboxMessage: checkMsg,
-        checkboxCheckedByDefault: !!checkState.value,
-        returnValue: defaultReturnValue,
-      }
-    );
+    let ret = this._browserElementChild.showModalPrompt(this._win, {
+      promptType: "custom-prompt",
+      title,
+      message: text,
+      defaultButton: buttonProperties.defaultButton,
+      buttons: buttonProperties.buttons,
+      showCheckbox: !!checkMsg,
+      checkboxMessage: checkMsg,
+      checkboxCheckedByDefault: !!checkState.value,
+      returnValue: defaultReturnValue,
+    });
     if (checkMsg) {
       checkState.value = ret.checked;
     }
@@ -89,13 +104,13 @@ BrowserElementPrompt.prototype = {
   },
 
   prompt(title, text, value, checkMsg, checkState) {
-    let rv = this._browserElementChild.showModalPrompt(
-      this._win,
-      { promptType: "prompt",
-        title,
-        message: text,
-        initialValue: value.value,
-        returnValue: null });
+    let rv = this._browserElementChild.showModalPrompt(this._win, {
+      promptType: "prompt",
+      title,
+      message: text,
+      initialValue: value.value,
+      returnValue: null,
+    });
 
     value.value = rv;
 
@@ -107,7 +122,14 @@ BrowserElementPrompt.prototype = {
     return rv !== null;
   },
 
-  promptUsernameAndPassword(title, text, username, password, checkMsg, checkState) {
+  promptUsernameAndPassword(
+    title,
+    text,
+    username,
+    password,
+    checkMsg,
+    checkState
+  ) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
@@ -119,8 +141,12 @@ BrowserElementPrompt.prototype = {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  _buildConfirmExButtonProperties(buttonFlags, button0Title,
-                                            button1Title, button2Title) {
+  _buildConfirmExButtonProperties(
+    buttonFlags,
+    button0Title,
+    button1Title,
+    button2Title
+  ) {
     let r = {
       defaultButton: -1,
       buttons: [],
@@ -151,34 +177,34 @@ BrowserElementPrompt.prototype = {
 
       ret.messageType = "builtin";
       switch (titleType) {
-      case Ci.nsIPrompt.BUTTON_TITLE_OK:
-        ret.message = "ok";
-        break;
-      case Ci.nsIPrompt.BUTTON_TITLE_CANCEL:
-        ret.message = "cancel";
-        break;
-      case Ci.nsIPrompt.BUTTON_TITLE_YES:
-        ret.message = "yes";
-        break;
-      case Ci.nsIPrompt.BUTTON_TITLE_NO:
-        ret.message = "no";
-        break;
-      case Ci.nsIPrompt.BUTTON_TITLE_SAVE:
-        ret.message = "save";
-        break;
-      case Ci.nsIPrompt.BUTTON_TITLE_DONT_SAVE:
-        ret.message = "dontsave";
-        break;
-      case Ci.nsIPrompt.BUTTON_TITLE_REVERT:
-        ret.message = "revert";
-        break;
-      case Ci.nsIPrompt.BUTTON_TITLE_IS_STRING:
-        ret.message = buttonTitle;
-        ret.messageType = "custom";
-        break;
-      default:
-        // This button is not shown.
-        return;
+        case Ci.nsIPrompt.BUTTON_TITLE_OK:
+          ret.message = "ok";
+          break;
+        case Ci.nsIPrompt.BUTTON_TITLE_CANCEL:
+          ret.message = "cancel";
+          break;
+        case Ci.nsIPrompt.BUTTON_TITLE_YES:
+          ret.message = "yes";
+          break;
+        case Ci.nsIPrompt.BUTTON_TITLE_NO:
+          ret.message = "no";
+          break;
+        case Ci.nsIPrompt.BUTTON_TITLE_SAVE:
+          ret.message = "save";
+          break;
+        case Ci.nsIPrompt.BUTTON_TITLE_DONT_SAVE:
+          ret.message = "dontsave";
+          break;
+        case Ci.nsIPrompt.BUTTON_TITLE_REVERT:
+          ret.message = "revert";
+          break;
+        case Ci.nsIPrompt.BUTTON_TITLE_IS_STRING:
+          ret.message = buttonTitle;
+          ret.messageType = "custom";
+          break;
+        default:
+          // This button is not shown.
+          return;
       }
 
       // If this is the default button, set r.defaultButton to
@@ -198,17 +224,17 @@ BrowserElementPrompt.prototype = {
     // If defaultButton is still -1 here, it means the default button won't
     // be shown.
     if (r.defaultButton === -1) {
-      throw new Components.Exception("Default button won't be shown",
-                                     Cr.NS_ERROR_FAILURE);
+      throw new Components.Exception(
+        "Default button won't be shown",
+        Cr.NS_ERROR_FAILURE
+      );
     }
 
     return r;
   },
 };
 
-
-function BrowserElementAuthPrompt() {
-}
+function BrowserElementAuthPrompt() {}
 
 BrowserElementAuthPrompt.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIAuthPrompt2]),
@@ -217,12 +243,20 @@ BrowserElementAuthPrompt.prototype = {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  asyncPromptAuth: function asyncPromptAuth(channel, callback, context, level, authInfo) {
+  asyncPromptAuth: function asyncPromptAuth(
+    channel,
+    callback,
+    context,
+    level,
+    authInfo
+  ) {
     debug("asyncPromptAuth");
 
     // The cases that we don't support now.
-    if ((authInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY) &&
-        (authInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD)) {
+    if (
+      authInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY &&
+      authInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD
+    ) {
       throw Cr.NS_ERROR_FAILURE;
     }
 
@@ -232,8 +266,9 @@ BrowserElementAuthPrompt.prototype = {
       throw Cr.NS_ERROR_FAILURE;
     }
 
-    let browserElementParent =
-      BrowserElementPromptService.getBrowserElementParentForFrame(frame);
+    let browserElementParent = BrowserElementPromptService.getBrowserElementParentForFrame(
+      frame
+    );
 
     if (!browserElementParent) {
       debug("Failed to load browser element parent.");
@@ -290,8 +325,9 @@ BrowserElementAuthPrompt.prototype = {
     }
 
     // Didn't find an available prompt, so just return.
-    if (!hashKey)
+    if (!hashKey) {
       return;
+    }
 
     let prompt = this._asyncPrompts[hashKey];
 
@@ -300,8 +336,9 @@ BrowserElementAuthPrompt.prototype = {
 
     let self = this;
     let callback = function(ok, username, password) {
-      debug("Async auth callback is called, ok = " +
-            ok + ", username = " + username);
+      debug(
+        "Async auth callback is called, ok = " + ok + ", username = " + username
+      );
 
       // Here we got the username and password provided by embedder, or
       // ok = false if the prompt was cancelled by embedder.
@@ -319,7 +356,7 @@ BrowserElementAuthPrompt.prototype = {
           if (idx == -1) {
             prompt.authInfo.username = username;
           } else {
-            prompt.authInfo.domain   = username.substring(0, idx);
+            prompt.authInfo.domain = username.substring(0, idx);
             prompt.authInfo.username = username.substring(idx + 1);
           }
         } else {
@@ -341,12 +378,17 @@ BrowserElementAuthPrompt.prototype = {
         try {
           if (ok) {
             debug("Ok, calling onAuthAvailable to finish auth");
-            consumer.callback.onAuthAvailable(consumer.context, prompt.authInfo);
+            consumer.callback.onAuthAvailable(
+              consumer.context,
+              prompt.authInfo
+            );
           } else {
             debug("Cancelled, calling onAuthCancelled to finish auth.");
             consumer.callback.onAuthCancelled(consumer.context, true);
           }
-        } catch (e) { /* Throw away exceptions caused by callback */ }
+        } catch (e) {
+          /* Throw away exceptions caused by callback */
+        }
       }
 
       // Process the next prompt, if one is pending.
@@ -358,7 +400,8 @@ BrowserElementAuthPrompt.prototype = {
         // Call promptAuth of browserElementParent, to show the prompt.
         prompt.browserElementParent.promptAuth(
           self._createAuthDetail(prompt.channel, prompt.authInfo),
-          callback);
+          callback
+        );
       },
     };
 
@@ -366,19 +409,21 @@ BrowserElementAuthPrompt.prototype = {
   },
 
   _getFrameFromChannel(channel) {
-    let loadContext = channel.notificationCallbacks.getInterface(Ci.nsILoadContext);
+    let loadContext = channel.notificationCallbacks.getInterface(
+      Ci.nsILoadContext
+    );
     return loadContext.topFrameElement;
   },
 
   _createAuthDetail(channel, authInfo) {
     let [hostname, httpRealm] = this._getAuthTarget(channel, authInfo);
     return {
-      host:             hostname,
-      path:             channel.URI.pathQueryRef,
-      realm:            httpRealm,
-      username:         authInfo.username,
-      isProxy:          !!(authInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY),
-      isOnlyPassword:   !!(authInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD),
+      host: hostname,
+      path: channel.URI.pathQueryRef,
+      realm: httpRealm,
+      username: authInfo.username,
+      isProxy: !!(authInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY),
+      isOnlyPassword: !!(authInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD),
     };
   },
 
@@ -390,23 +435,29 @@ BrowserElementAuthPrompt.prototype = {
     // If our proxy is demanding authentication, don't use the
     // channel's actual destination.
     if (authInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY) {
-      if (!(channel instanceof Ci.nsIProxiedChannel))
+      if (!(channel instanceof Ci.nsIProxiedChannel)) {
         throw new Error("proxy auth needs nsIProxiedChannel");
+      }
 
       let info = channel.proxyInfo;
-      if (!info)
+      if (!info) {
         throw new Error("proxy auth needs nsIProxyInfo");
+      }
 
       // Proxies don't have a scheme, but we'll use "moz-proxy://"
       // so that it's more obvious what the login is for.
-      var idnService = Cc["@mozilla.org/network/idn-service;1"].
-                       getService(Ci.nsIIDNService);
-      hostname = "moz-proxy://" +
-                  idnService.convertUTF8toACE(info.host) +
-                  ":" + info.port;
+      var idnService = Cc["@mozilla.org/network/idn-service;1"].getService(
+        Ci.nsIIDNService
+      );
+      hostname =
+        "moz-proxy://" +
+        idnService.convertUTF8toACE(info.host) +
+        ":" +
+        info.port;
       realm = authInfo.realm;
-      if (!realm)
+      if (!realm) {
         realm = hostname;
+      }
 
       return [hostname, realm];
     }
@@ -417,8 +468,9 @@ BrowserElementAuthPrompt.prototype = {
     // will be available here. If it wasn't set or wasn't HTTP, we'll use
     // the formatted hostname instead.
     realm = authInfo.realm;
-    if (!realm)
+    if (!realm) {
       realm = hostname;
+    }
 
     return [hostname, realm];
   },
@@ -431,7 +483,6 @@ BrowserElementAuthPrompt.prototype = {
   },
 };
 
-
 function AuthPromptWrapper(oldImpl, browserElementImpl) {
   this._oldImpl = oldImpl;
   this._browserElementImpl = browserElementImpl;
@@ -443,27 +494,42 @@ AuthPromptWrapper.prototype = {
     if (this._canGetParentElement(channel)) {
       return this._browserElementImpl.promptAuth(channel, level, authInfo);
     }
-      return this._oldImpl.promptAuth(channel, level, authInfo);
+    return this._oldImpl.promptAuth(channel, level, authInfo);
   },
 
   asyncPromptAuth(channel, callback, context, level, authInfo) {
     if (this._canGetParentElement(channel)) {
-      return this._browserElementImpl.asyncPromptAuth(channel, callback, context, level, authInfo);
+      return this._browserElementImpl.asyncPromptAuth(
+        channel,
+        callback,
+        context,
+        level,
+        authInfo
+      );
     }
-      return this._oldImpl.asyncPromptAuth(channel, callback, context, level, authInfo);
+    return this._oldImpl.asyncPromptAuth(
+      channel,
+      callback,
+      context,
+      level,
+      authInfo
+    );
   },
 
   _canGetParentElement(channel) {
     try {
-      let context = channel.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      let context = channel.notificationCallbacks.getInterface(
+        Ci.nsILoadContext
+      );
       let frame = context.topFrameElement;
       if (!frame) {
         // This function returns a boolean value
         return !!context.nestedFrameId;
       }
 
-      if (!BrowserElementPromptService.getBrowserElementParentForFrame(frame))
+      if (!BrowserElementPromptService.getBrowserElementParentForFrame(frame)) {
         return false;
+      }
 
       return true;
     } catch (e) {
@@ -490,32 +556,45 @@ BrowserElementPromptFactory.prototype = {
   },
 
   _getNativePromptIfAllowed(win, iid, err) {
-    if (this._mayUseNativePrompt())
+    if (this._mayUseNativePrompt()) {
       return this._wrapped.getPrompt(win, iid);
+    }
 
-      // Not allowed, throw an exception.
-      throw err;
+    // Not allowed, throw an exception.
+    throw err;
   },
 
   getPrompt(win, iid) {
     // It is possible for some object to get a prompt without passing
     // valid reference of window, like nsNSSComponent. In such case, we
     // should just fall back to the native prompt service
-    if (!win)
+    if (!win) {
       return this._getNativePromptIfAllowed(win, iid, Cr.NS_ERROR_INVALID_ARG);
+    }
 
-    if (iid.number != Ci.nsIPrompt.number &&
-        iid.number != Ci.nsIAuthPrompt2.number) {
-      debug("We don't recognize the requested IID (" + iid + ", " +
-            "allowed IID: " +
-            "nsIPrompt=" + Ci.nsIPrompt + ", " +
-            "nsIAuthPrompt2=" + Ci.nsIAuthPrompt2 + ")");
+    if (
+      iid.number != Ci.nsIPrompt.number &&
+      iid.number != Ci.nsIAuthPrompt2.number
+    ) {
+      debug(
+        "We don't recognize the requested IID (" +
+          iid +
+          ", " +
+          "allowed IID: " +
+          "nsIPrompt=" +
+          Ci.nsIPrompt +
+          ", " +
+          "nsIAuthPrompt2=" +
+          Ci.nsIAuthPrompt2 +
+          ")"
+      );
       return this._getNativePromptIfAllowed(win, iid, Cr.NS_ERROR_INVALID_ARG);
     }
 
     // Try to find a BrowserElementChild for the window.
-    let browserElementChild =
-      BrowserElementPromptService.getBrowserElementChildForWindow(win);
+    let browserElementChild = BrowserElementPromptService.getBrowserElementChildForWindow(
+      win
+    );
 
     if (iid.number === Ci.nsIAuthPrompt2.number) {
       debug("Caller requests an instance of nsIAuthPrompt2.");
@@ -534,30 +613,34 @@ BrowserElementPromptFactory.prototype = {
       // functions of nsIAuthPrompt2.
       if (this._mayUseNativePrompt()) {
         return new AuthPromptWrapper(
-            this._wrapped.getPrompt(win, iid),
-            new BrowserElementAuthPrompt().QueryInterface(iid))
-          .QueryInterface(iid);
+          this._wrapped.getPrompt(win, iid),
+          new BrowserElementAuthPrompt().QueryInterface(iid)
+        ).QueryInterface(iid);
       }
-        // Falling back is not allowed, so we don't need wrap the
-        // BrowserElementPrompt.
-        return new BrowserElementAuthPrompt().QueryInterface(iid);
+      // Falling back is not allowed, so we don't need wrap the
+      // BrowserElementPrompt.
+      return new BrowserElementAuthPrompt().QueryInterface(iid);
     }
 
     if (!browserElementChild) {
-      debug("We can't find a browserElementChild for " +
-            win + ", " + win.location);
+      debug(
+        "We can't find a browserElementChild for " + win + ", " + win.location
+      );
       return this._getNativePromptIfAllowed(win, iid, Cr.NS_ERROR_FAILURE);
     }
 
     debug("Returning wrapped getPrompt for " + win);
-    return new BrowserElementPrompt(win, browserElementChild)
-                                   .QueryInterface(iid);
+    return new BrowserElementPrompt(win, browserElementChild).QueryInterface(
+      iid
+    );
   },
 };
 
 var BrowserElementPromptService = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   _initialized: false,
 
@@ -568,14 +651,22 @@ var BrowserElementPromptService = {
 
     // If the pref is disabled, do nothing except wait for the pref to change.
     if (!this._browserFramesPrefEnabled()) {
-      Services.prefs.addObserver(BROWSER_FRAMES_ENABLED_PREF, this, /* ownsWeak = */ true);
+      Services.prefs.addObserver(
+        BROWSER_FRAMES_ENABLED_PREF,
+        this,
+        /* ownsWeak = */ true
+      );
       return;
     }
 
     this._initialized = true;
     this._browserElementParentMap = new WeakMap();
 
-    Services.obs.addObserver(this, "outer-window-destroyed", /* ownsWeak = */ true);
+    Services.obs.addObserver(
+      this,
+      "outer-window-destroyed",
+      /* ownsWeak = */ true
+    );
 
     // Wrap the existing @mozilla.org/prompter;1 implementation.
     var contractID = "@mozilla.org/prompter;1";
@@ -599,9 +690,12 @@ var BrowserElementPromptService = {
         return newInstance.QueryInterface(iid);
       },
     };
-    Cm.registerFactory(newCID,
-                       "BrowserElementPromptService's prompter;1 wrapper",
-                       contractID, newFactory);
+    Cm.registerFactory(
+      newCID,
+      "BrowserElementPromptService's prompter;1 wrapper",
+      contractID,
+      newFactory
+    );
 
     debug("Done installing new prompt factory.");
   },
@@ -612,7 +706,9 @@ var BrowserElementPromptService = {
 
   _browserElementChildMap: {},
   mapWindowToBrowserElementChild(win, browserElementChild) {
-    this._browserElementChildMap[this._getOuterWindowID(win)] = browserElementChild;
+    this._browserElementChildMap[
+      this._getOuterWindowID(win)
+    ] = browserElementChild;
   },
   unmapWindowToBrowserElementChild(win) {
     delete this._browserElementChildMap[this._getOuterWindowID(win)];
@@ -645,16 +741,16 @@ var BrowserElementPromptService = {
 
   observe(subject, topic, data) {
     switch (topic) {
-    case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
-      if (data == BROWSER_FRAMES_ENABLED_PREF) {
-        this._init();
-      }
-      break;
-    case "outer-window-destroyed":
-      this._observeOuterWindowDestroyed(subject);
-      break;
-    default:
-      debug("Observed unexpected topic " + topic);
+      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
+        if (data == BROWSER_FRAMES_ENABLED_PREF) {
+          this._init();
+        }
+        break;
+      case "outer-window-destroyed":
+        this._observeOuterWindowDestroyed(subject);
+        break;
+      default:
+        debug("Observed unexpected topic " + topic);
     }
   },
 };

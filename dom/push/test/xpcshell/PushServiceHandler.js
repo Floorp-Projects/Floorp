@@ -2,10 +2,14 @@
 // process for handling push notifications with scope "chrome://test-scope"
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-let pushService = Cc["@mozilla.org/push/Service;1"].getService(Ci.nsIPushService);
+let pushService = Cc["@mozilla.org/push/Service;1"].getService(
+  Ci.nsIPushService
+);
 
 function PushServiceHandler() {
   // So JS code can reach into us.

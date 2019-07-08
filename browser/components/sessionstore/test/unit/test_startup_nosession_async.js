@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-
 // Test SessionStartup.sessionType in the following scenario:
 // - no sessionstore.js;
 // - the session store has been loaded, so no need to go

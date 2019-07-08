@@ -20,8 +20,9 @@ add_task(async function() {
   async function testShowDOMProperties() {
     info("Testing 'Show DOM Properties' menu item.");
     const allMenuItems = openContextMenuAndGetAllItems(inspector);
-    const showDOMPropertiesNode =
-      allMenuItems.find(item => item.id === "node-menu-showdomproperties");
+    const showDOMPropertiesNode = allMenuItems.find(
+      item => item.id === "node-menu-showdomproperties"
+    );
     ok(showDOMPropertiesNode, "the popup menu has a show dom properties item");
 
     const consoleOpened = toolbox.once("webconsole-ready");
@@ -43,12 +44,16 @@ add_task(async function() {
     info("Testing 'Duplicate Node' menu item for normal elements.");
 
     await selectNode(".duplicate", inspector);
-    is((await testActor.getNumberOfElementMatches(".duplicate")), 1,
-       "There should initially be 1 .duplicate node");
+    is(
+      await testActor.getNumberOfElementMatches(".duplicate"),
+      1,
+      "There should initially be 1 .duplicate node"
+    );
 
     const allMenuItems = openContextMenuAndGetAllItems(inspector);
-    const menuItem =
-      allMenuItems.find(item => item.id === "node-menu-duplicatenode");
+    const menuItem = allMenuItems.find(
+      item => item.id === "node-menu-duplicatenode"
+    );
     ok(menuItem, "'Duplicate node' menu item should exist");
 
     info("Triggering 'Duplicate Node' and waiting for inspector to update");
@@ -56,11 +61,16 @@ add_task(async function() {
     menuItem.click();
     await updated;
 
-    is((await testActor.getNumberOfElementMatches(".duplicate")), 2,
-       "The duplicated node should be in the markup.");
+    is(
+      await testActor.getNumberOfElementMatches(".duplicate"),
+      2,
+      "The duplicated node should be in the markup."
+    );
 
-    const container = await getContainerForSelector(".duplicate + .duplicate",
-                                                   inspector);
+    const container = await getContainerForSelector(
+      ".duplicate + .duplicate",
+      inspector
+    );
     ok(container, "A MarkupContainer should be created for the new node");
   }
 
@@ -68,7 +78,9 @@ add_task(async function() {
     info("Testing 'Delete Node' menu item for normal elements.");
     await selectNode("#delete", inspector);
     const allMenuItems = openContextMenuAndGetAllItems(inspector);
-    const deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
+    const deleteNode = allMenuItems.find(
+      item => item.id === "node-menu-delete"
+    );
     ok(deleteNode, "the popup menu has a delete menu item");
     const updated = inspector.once("inspector-updated");
 
@@ -82,12 +94,17 @@ add_task(async function() {
   async function testDeleteTextNode() {
     info("Testing 'Delete Node' menu item for text elements.");
     const { walker } = inspector;
-    const divBefore = await walker.querySelector(walker.rootNode, "#nestedHiddenElement");
+    const divBefore = await walker.querySelector(
+      walker.rootNode,
+      "#nestedHiddenElement"
+    );
     const { nodes } = await walker.children(divBefore);
     await selectNode(nodes[0], inspector, "test-highlight");
 
     const allMenuItems = openContextMenuAndGetAllItems(inspector);
-    const deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
+    const deleteNode = allMenuItems.find(
+      item => item.id === "node-menu-delete"
+    );
     ok(deleteNode, "the popup menu has a delete menu item");
     ok(!deleteNode.disabled, "the delete menu item is not disabled");
     const updated = inspector.once("inspector-updated");
@@ -96,7 +113,10 @@ add_task(async function() {
     deleteNode.click();
     await updated;
 
-    const divAfter = await walker.querySelector(walker.rootNode, "#nestedHiddenElement");
+    const divAfter = await walker.querySelector(
+      walker.rootNode,
+      "#nestedHiddenElement"
+    );
     const nodesAfter = (await walker.children(divAfter)).nodes;
     ok(nodesAfter.length == 0, "the node still had children");
   }
@@ -106,15 +126,19 @@ add_task(async function() {
     await selectNode("html", inspector);
 
     const allMenuItems = openContextMenuAndGetAllItems(inspector);
-    const deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
+    const deleteNode = allMenuItems.find(
+      item => item.id === "node-menu-delete"
+    );
     deleteNode.click();
 
     await new Promise(resolve => {
       executeSoon(resolve);
     });
 
-    ok((await testActor.eval("!!document.documentElement")),
-       "Document element still alive.");
+    ok(
+      await testActor.eval("!!document.documentElement"),
+      "Document element still alive."
+    );
   }
 
   function testScrollIntoView() {

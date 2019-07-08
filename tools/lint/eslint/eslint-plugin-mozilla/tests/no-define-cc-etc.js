@@ -21,10 +21,13 @@ function invalidCode(code, varNames) {
     varNames = [varNames];
   }
   return {
-    code, errors: varNames.map(name => [{
-      message: `${name} is now defined in global scope, a separate definition is no longer necessary.`,
-      type: "VariableDeclarator",
-    }]),
+    code,
+    errors: varNames.map(name => [
+      {
+        message: `${name} is now defined in global scope, a separate definition is no longer necessary.`,
+        type: "VariableDeclarator",
+      },
+    ]),
   };
 }
 
@@ -47,7 +50,13 @@ ruleTester.run("no-define-cc-etc", rule, {
     invalidCode("const {classes: Cc} = Components;", "Cc"),
     invalidCode("let {classes: Cc, manager: Cm} = Components", "Cc"),
     invalidCode("const Cu = Components.utils;", "Cu"),
-    invalidCode("var Ci = Components.interfaces, Cc = Components.classes;", ["Ci", "Cc"]),
-    invalidCode("var {'interfaces': Ci, 'classes': Cc} = Components;", ["Ci", "Cc"]),
+    invalidCode("var Ci = Components.interfaces, Cc = Components.classes;", [
+      "Ci",
+      "Cc",
+    ]),
+    invalidCode("var {'interfaces': Ci, 'classes': Cc} = Components;", [
+      "Ci",
+      "Cc",
+    ]),
   ],
 });

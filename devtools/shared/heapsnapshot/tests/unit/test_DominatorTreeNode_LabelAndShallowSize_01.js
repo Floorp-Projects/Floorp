@@ -40,10 +40,7 @@ const description = {
   domNode: {},
 };
 
-const expected = [
-  "objects",
-  "Function",
-];
+const expected = ["objects", "Function"];
 
 const shallowSize = 32;
 

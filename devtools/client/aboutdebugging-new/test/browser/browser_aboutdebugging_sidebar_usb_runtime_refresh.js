@@ -36,11 +36,15 @@ add_task(async function() {
   document.querySelector(".qa-refresh-devices-button").click();
 
   info(`Wait until the sidebar item for ${OTHER_RUNTIME_APP_NAME} appears`);
-  await waitUntil(() => findSidebarItemByText(OTHER_RUNTIME_APP_NAME, document));
+  await waitUntil(() =>
+    findSidebarItemByText(OTHER_RUNTIME_APP_NAME, document)
+  );
 
   const sidebarItem = findSidebarItemByText(RUNTIME_DEVICE_NAME, document);
-  ok(!sidebarItem.querySelector(".qa-connect-button"),
-    "Original USB runtime is still connected");
+  ok(
+    !sidebarItem.querySelector(".qa-connect-button"),
+    "Original USB runtime is still connected"
+  );
 
   await removeTab(tab);
 });

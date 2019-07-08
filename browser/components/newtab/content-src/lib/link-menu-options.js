@@ -1,11 +1,11 @@
-import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
 
 const _OpenInPrivateWindow = site => ({
   id: "newtab-menu-open-new-private-window",
   icon: "new-window-private",
   action: ac.OnlyToMain({
     type: at.OPEN_PRIVATE_WINDOW,
-    data: {url: site.url, referrer: site.referrer},
+    data: { url: site.url, referrer: site.referrer },
   }),
   userEvent: "OPEN_PRIVATE_WINDOW",
 });
@@ -16,8 +16,8 @@ const _OpenInPrivateWindow = site => ({
  * the index of the site.
  */
 export const LinkMenuOptions = {
-  Separator: () => ({type: "separator"}),
-  EmptyItem: () => ({type: "empty"}),
+  Separator: () => ({ type: "separator" }),
+  EmptyItem: () => ({ type: "empty" }),
   RemoveBookmark: site => ({
     id: "newtab-menu-remove-bookmark",
     icon: "bookmark-added",
@@ -32,7 +32,7 @@ export const LinkMenuOptions = {
     icon: "bookmark-hollow",
     action: ac.AlsoToMain({
       type: at.BOOKMARK_URL,
-      data: {url: site.url, title: site.title, type: site.type},
+      data: { url: site.url, title: site.title, type: site.type },
     }),
     userEvent: "BOOKMARK_ADD",
   }),
@@ -54,16 +54,18 @@ export const LinkMenuOptions = {
     icon: "dismiss",
     action: ac.AlsoToMain({
       type: at.BLOCK_URL,
-      data: {url: site.open_url || site.url, pocket_id: site.pocket_id},
+      data: { url: site.open_url || site.url, pocket_id: site.pocket_id },
     }),
     impression: ac.ImpressionStats({
       source: eventSource,
       block: 0,
-      tiles: [{
-        id: site.guid,
-        pos: index,
-        ...(site.shim && site.shim.delete ? {shim: site.shim.delete} : {}),
-      }],
+      tiles: [
+        {
+          id: site.guid,
+          pos: index,
+          ...(site.shim && site.shim.delete ? { shim: site.shim.delete } : {}),
+        },
+      ],
     }),
     userEvent: "BLOCK",
   }),
@@ -87,11 +89,26 @@ export const LinkMenuOptions = {
       type: at.DIALOG_OPEN,
       data: {
         onConfirm: [
-          ac.AlsoToMain({type: at.DELETE_HISTORY_URL, data: {url: site.url, pocket_id: site.pocket_id, forceBlock: site.bookmarkGuid}}),
-          ac.UserEvent(Object.assign({event: "DELETE", source: eventSource, action_position: index}, siteInfo)),
+          ac.AlsoToMain({
+            type: at.DELETE_HISTORY_URL,
+            data: {
+              url: site.url,
+              pocket_id: site.pocket_id,
+              forceBlock: site.bookmarkGuid,
+            },
+          }),
+          ac.UserEvent(
+            Object.assign(
+              { event: "DELETE", source: eventSource, action_position: index },
+              siteInfo
+            )
+          ),
         ],
         eventSource,
-        body_string_id: ["newtab-confirm-delete-history-p1", "newtab-confirm-delete-history-p2"],
+        body_string_id: [
+          "newtab-confirm-delete-history-p1",
+          "newtab-confirm-delete-history-p2",
+        ],
         confirm_button_string_id: "newtab-topsites-delete-history-button",
         cancel_button_string_id: "newtab-topsites-cancel-button",
         icon: "modal-delete",
@@ -104,7 +121,7 @@ export const LinkMenuOptions = {
     icon: "search",
     action: ac.OnlyToMain({
       type: at.SHOW_DOWNLOAD_FILE,
-      data: {url: site.url},
+      data: { url: site.url },
     }),
   }),
   OpenFile: site => ({
@@ -112,7 +129,7 @@ export const LinkMenuOptions = {
     icon: "open-file",
     action: ac.OnlyToMain({
       type: at.OPEN_DOWNLOAD_FILE,
-      data: {url: site.url},
+      data: { url: site.url },
     }),
   }),
   CopyDownloadLink: site => ({
@@ -120,7 +137,7 @@ export const LinkMenuOptions = {
     icon: "copy",
     action: ac.OnlyToMain({
       type: at.COPY_DOWNLOAD_LINK,
-      data: {url: site.url},
+      data: { url: site.url },
     }),
   }),
   GoToDownloadPage: site => ({
@@ -128,7 +145,7 @@ export const LinkMenuOptions = {
     icon: "download",
     action: ac.OnlyToMain({
       type: at.OPEN_LINK,
-      data: {url: site.referrer},
+      data: { url: site.referrer },
     }),
     disabled: !site.referrer,
   }),
@@ -137,10 +154,10 @@ export const LinkMenuOptions = {
     icon: "delete",
     action: ac.OnlyToMain({
       type: at.REMOVE_DOWNLOAD_FILE,
-      data: {url: site.url},
+      data: { url: site.url },
     }),
   }),
-  PinTopSite: ({url, searchTopSite, label}, index) => ({
+  PinTopSite: ({ url, searchTopSite, label }, index) => ({
     id: "newtab-menu-pin",
     icon: "pin",
     action: ac.AlsoToMain({
@@ -148,7 +165,7 @@ export const LinkMenuOptions = {
       data: {
         site: {
           url,
-          ...(searchTopSite && {searchTopSite, label}),
+          ...(searchTopSite && { searchTopSite, label }),
         },
         index,
       },
@@ -160,7 +177,7 @@ export const LinkMenuOptions = {
     icon: "unpin",
     action: ac.AlsoToMain({
       type: at.TOP_SITES_UNPIN,
-      data: {site: {url: site.url}},
+      data: { site: { url: site.url } },
     }),
     userEvent: "UNPIN",
   }),
@@ -169,16 +186,18 @@ export const LinkMenuOptions = {
     icon: "pocket-save",
     action: ac.AlsoToMain({
       type: at.SAVE_TO_POCKET,
-      data: {site: {url: site.url, title: site.title}},
+      data: { site: { url: site.url, title: site.title } },
     }),
     impression: ac.ImpressionStats({
       source: eventSource,
       pocket: 0,
-      tiles: [{
-        id: site.guid,
-        pos: index,
-        ...(site.shim && site.shim.save ? {shim: site.shim.save} : {}),
-      }],
+      tiles: [
+        {
+          id: site.guid,
+          pos: index,
+          ...(site.shim && site.shim.save ? { shim: site.shim.save } : {}),
+        },
+      ],
     }),
     userEvent: "SAVE_TO_POCKET",
   }),
@@ -187,7 +206,7 @@ export const LinkMenuOptions = {
     icon: "pocket-delete",
     action: ac.AlsoToMain({
       type: at.DELETE_FROM_POCKET,
-      data: {pocket_id: site.pocket_id},
+      data: { pocket_id: site.pocket_id },
     }),
     userEvent: "DELETE_FROM_POCKET",
   }),
@@ -196,7 +215,7 @@ export const LinkMenuOptions = {
     icon: "pocket-archive",
     action: ac.AlsoToMain({
       type: at.ARCHIVE_FROM_POCKET,
-      data: {pocket_id: site.pocket_id},
+      data: { pocket_id: site.pocket_id },
     }),
     userEvent: "ARCHIVE_FROM_POCKET",
   }),
@@ -205,12 +224,25 @@ export const LinkMenuOptions = {
     icon: "edit",
     action: {
       type: at.TOP_SITES_EDIT,
-      data: {index},
+      data: { index },
     },
   }),
-  CheckBookmark: site => (site.bookmarkGuid ? LinkMenuOptions.RemoveBookmark(site) : LinkMenuOptions.AddBookmark(site)),
-  CheckPinTopSite: (site, index) => (site.isPinned ? LinkMenuOptions.UnpinTopSite(site) : LinkMenuOptions.PinTopSite(site, index)),
-  CheckSavedToPocket: (site, index) => (site.pocket_id ? LinkMenuOptions.DeleteFromPocket(site) : LinkMenuOptions.SaveToPocket(site, index)),
-  CheckBookmarkOrArchive: site => (site.pocket_id ? LinkMenuOptions.ArchiveFromPocket(site) : LinkMenuOptions.CheckBookmark(site)),
-  OpenInPrivateWindow: (site, index, eventSource, isEnabled) => (isEnabled ? _OpenInPrivateWindow(site) : LinkMenuOptions.EmptyItem()),
+  CheckBookmark: site =>
+    site.bookmarkGuid
+      ? LinkMenuOptions.RemoveBookmark(site)
+      : LinkMenuOptions.AddBookmark(site),
+  CheckPinTopSite: (site, index) =>
+    site.isPinned
+      ? LinkMenuOptions.UnpinTopSite(site)
+      : LinkMenuOptions.PinTopSite(site, index),
+  CheckSavedToPocket: (site, index) =>
+    site.pocket_id
+      ? LinkMenuOptions.DeleteFromPocket(site)
+      : LinkMenuOptions.SaveToPocket(site, index),
+  CheckBookmarkOrArchive: site =>
+    site.pocket_id
+      ? LinkMenuOptions.ArchiveFromPocket(site)
+      : LinkMenuOptions.CheckBookmark(site),
+  OpenInPrivateWindow: (site, index, eventSource, isEnabled) =>
+    isEnabled ? _OpenInPrivateWindow(site) : LinkMenuOptions.EmptyItem(),
 };

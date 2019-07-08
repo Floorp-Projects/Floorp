@@ -22,7 +22,7 @@ function tryBadScripts() {
     // Shouldn't exist!
     "http://example.com/non-existing/importScripts_worker_foo.js",
     // Not a valid url
-    "http://notadomain::notafile aword"
+    "http://notadomain::notafile aword",
   ];
 
   for (var i = 0; i < badScripts.length; i++) {
@@ -30,8 +30,7 @@ function tryBadScripts() {
     var url = badScripts[i];
     try {
       importScripts(url);
-    }
-    catch (e) {
+    } catch (e) {
       caughtException = true;
     }
     if (!caughtException) {
@@ -45,20 +44,20 @@ importScripts(url);
 
 onmessage = function(event) {
   switch (event.data) {
-    case 'start':
+    case "start":
       importScripts("importScripts_worker_imported2.js");
       importedScriptFunction2();
       tryBadScripts();
       postMessage(startResponse);
       break;
-    case 'stop':
+    case "stop":
       tryBadScripts();
-      postMessage('stopped');
+      postMessage("stopped");
       break;
     default:
       throw new Error("Bad message: " + event.data);
       break;
   }
-}
+};
 
 tryBadScripts();

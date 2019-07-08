@@ -2,19 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- var EXPORTED_SYMBOLS = [
-  "Utils",
-];
+var EXPORTED_SYMBOLS = ["Utils"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
 // See LOG_LEVELS in Console.jsm. Common examples: "all", "debug", "info", "warn", "error".
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  const { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  const { ConsoleAPI } = ChromeUtils.import(
+    "resource://gre/modules/Console.jsm",
+    {}
+  );
   return new ConsoleAPI({
     maxLogLevel: "warn",
     maxLogLevelPref: "services.settings.loglevel",
@@ -51,7 +54,9 @@ var Utils = {
    */
   async hasLocalDump(bucket, collection) {
     try {
-      await fetch(`resource://app/defaults/settings/${bucket}/${collection}.json`);
+      await fetch(
+        `resource://app/defaults/settings/${bucket}/${collection}.json`
+      );
       return true;
     } catch (e) {
       return false;
@@ -95,14 +100,20 @@ var Utils = {
       params._expected = expectedTimestamp;
     }
     if (params) {
-      url += "?" + Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
+      url +=
+        "?" +
+        Object.entries(params)
+          .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+          .join("&");
     }
     const response = await fetch(url, { headers });
 
     let changes = [];
     // If no changes since last time, go on with empty list of changes.
     if (response.status != 304) {
-      const is404FromCustomServer = response.status == 404 && Services.prefs.prefHasUserValue("services.settings.server");
+      const is404FromCustomServer =
+        response.status == 404 &&
+        Services.prefs.prefHasUserValue("services.settings.server");
 
       const ct = response.headers.get("Content-Type");
       if (!is404FromCustomServer && (!ct || !ct.includes("application/json"))) {
@@ -120,7 +131,11 @@ var Utils = {
         // expected data. For example, real server errors (Bug 1259145)
         // or dummy local server for tests (Bug 1481348)
         if (!is404FromCustomServer) {
-          throw new Error(`Server error ${response.status} ${response.statusText}: ${JSON.stringify(payload)}`);
+          throw new Error(
+            `Server error ${response.status} ${
+              response.statusText
+            }: ${JSON.stringify(payload)}`
+          );
         }
       } else {
         changes = payload.data;
@@ -128,10 +143,14 @@ var Utils = {
     }
     // The server should always return ETag. But we've had situations where the CDN
     // was interfering.
-    const currentEtag = response.headers.has("ETag") ? response.headers.get("ETag") : undefined;
+    const currentEtag = response.headers.has("ETag")
+      ? response.headers.get("ETag")
+      : undefined;
     let serverTimeMillis = Date.parse(response.headers.get("Date"));
     // Since the response is served via a CDN, the Date header value could have been cached.
-    const cacheAgeSeconds = response.headers.has("Age") ? parseInt(response.headers.get("Age"), 10) : 0;
+    const cacheAgeSeconds = response.headers.has("Age")
+      ? parseInt(response.headers.get("Age"), 10)
+      : 0;
     serverTimeMillis += cacheAgeSeconds * 1000;
 
     // Age of data (time between publication and now).
@@ -147,6 +166,12 @@ var Utils = {
       }
     }
 
-    return { changes, currentEtag, serverTimeMillis, backoffSeconds, ageSeconds };
+    return {
+      changes,
+      currentEtag,
+      serverTimeMillis,
+      backoffSeconds,
+      ageSeconds,
+    };
   },
 };

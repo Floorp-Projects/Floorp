@@ -27,13 +27,13 @@
 //   X - tab drag
 //   X - tab remove from the middle
 //   X - Without add-tab button -> can be hidden while testing manually. in talos always with the button
-let aboutNewTabService = Cc["@mozilla.org/browser/aboutnewtab-service;1"]
-                           .getService(Ci.nsIAboutNewTabService);
+let aboutNewTabService = Cc[
+  "@mozilla.org/browser/aboutnewtab-service;1"
+].getService(Ci.nsIAboutNewTabService);
 
 /* globals res:true, sequenceArray:true */
 
-function Tart() {
-}
+function Tart() {}
 
 Tart.prototype = {
   // Detector methods expect 'this' to be the detector object.
@@ -46,7 +46,7 @@ Tart.prototype = {
     },
 
     measureNow(e) {
-      return (e.type == "transitionend" && e.propertyName == "max-width");
+      return e.type == "transitionend" && e.propertyName == "max-width";
     },
 
     cleanup(handler, win) {
@@ -60,7 +60,7 @@ Tart.prototype = {
     },
 
     measureNow(e) {
-      return (e.type == "customizationready");
+      return e.type == "customizationready";
     },
 
     cleanup(handler, win) {
@@ -94,15 +94,18 @@ Tart.prototype = {
     },
 
     measureNow(e) {
-      return (e.type == "customization-transitionend");
+      return e.type == "customization-transitionend";
     },
 
     keepListening(e) {
-      return (e.type != "customizationready");
+      return e.type != "customizationready";
     },
 
     cleanup(handler, win) {
-      win.gNavToolbox.removeEventListener("customization-transitionend", handler);
+      win.gNavToolbox.removeEventListener(
+        "customization-transitionend",
+        handler
+      );
       win.gNavToolbox.removeEventListener("customizationready", handler);
     },
   },
@@ -113,7 +116,7 @@ Tart.prototype = {
     },
 
     measureNow(e) {
-      return (e.type == "aftercustomization");
+      return e.type == "aftercustomization";
     },
 
     cleanup(handler, win) {
@@ -141,7 +144,6 @@ Tart.prototype = {
     return this._win.gBrowser.selectedTab;
   },
 
-
   clickCloseCurrentTab() {
     this._endDetection = this.tabDetector;
     this._win.BrowserCloseTabOrWindow();
@@ -158,10 +160,11 @@ Tart.prototype = {
     this._win.gBrowser.selectedTab.setAttribute("fadein", "true");
   },
 
-
   addSomeChromeUriTab() {
     this._endDetection = this.tabDetector;
-    this._win.gBrowser.selectedTab = this._win.gBrowser.addTrustedTab("chrome://tart/content/blank.icon.html");
+    this._win.gBrowser.selectedTab = this._win.gBrowser.addTrustedTab(
+      "chrome://tart/content/blank.icon.html"
+    );
   },
 
   triggerCustomizeEnter() {
@@ -179,7 +182,6 @@ Tart.prototype = {
     this._win.gCustomizeMode.exit();
   },
 
-
   pinTart() {
     return this._win.gBrowser.pinTab(this._tartTab);
   },
@@ -189,14 +191,27 @@ Tart.prototype = {
   },
 
   USE_RECORDING_API: true, // true for Start[/Stop]FrameTimeRecording, otherwise record using rAF - which will also work with OMTC
-                           // but (currently) also records iterations without paint invalidations
+  // but (currently) also records iterations without paint invalidations
 
   _win: undefined,
   _tartTab: undefined,
   _results: [],
-  _config: {subtests: [], repeat: 1, rest: 500, tickle: true, controlProfiler: true},
+  _config: {
+    subtests: [],
+    repeat: 1,
+    rest: 500,
+    tickle: true,
+    controlProfiler: true,
+  },
 
-  _animate(preWaitMs, triggerFunc, onDoneCallback, isReportResult, name, referenceDuration) {
+  _animate(
+    preWaitMs,
+    triggerFunc,
+    onDoneCallback,
+    isReportResult,
+    name,
+    referenceDuration
+  ) {
     var self = this;
     var recordingHandle;
     var timeoutId = 0;
@@ -208,8 +223,9 @@ Tart.prototype = {
     var startRecordTimestamp;
     function startRecord() {
       if (self._config.controlProfiler) {
-        if (isReportResult)
+        if (isReportResult) {
           Profiler.resume(name);
+        }
       } else {
         Profiler.mark("Start: " + (isReportResult ? name : "[warmup]"), true);
       }
@@ -224,7 +240,9 @@ Tart.prototype = {
       var last = performance.now();
       function rec() {
         // self._win.getComputedStyle(self._win.gBrowser.selectedTab).width; // force draw - not good - too much regression
-        if (_abortRecording) return;
+        if (_abortRecording) {
+          return;
+        }
 
         var now = performance.now();
         _recording.push(now - last);
@@ -239,22 +257,22 @@ Tart.prototype = {
 
     var recordingAbsoluteDuration;
     function stopRecord() {
-      recordingAbsoluteDuration =  window.performance.now() - startRecordTimestamp;
+      recordingAbsoluteDuration =
+        window.performance.now() - startRecordTimestamp;
       if (self._config.controlProfiler) {
-        if (isReportResult)
+        if (isReportResult) {
           Profiler.pause(name);
+        }
       } else {
         Profiler.mark("End: " + (isReportResult ? name : "[warmup]"), true);
       }
       if (self.USE_RECORDING_API) {
-        return window.windowUtils
-                     .stopFrameTimeRecording(recordingHandle);
+        return window.windowUtils.stopFrameTimeRecording(recordingHandle);
       }
 
       _abortRecording = true;
       return _recording.slice(0); // clone
     }
-
 
     function addResult(intervals) {
       // For each animation sequence (intervals) we report 3 values:
@@ -274,7 +292,7 @@ Tart.prototype = {
           sumLastHalf += intervals[i];
           countLastHalf++;
         }
-        if (sumMost < referenceDuration * .85) {
+        if (sumMost < referenceDuration * 0.85) {
           sumMost += intervals[i];
         }
       }
@@ -282,12 +300,14 @@ Tart.prototype = {
 
       var averageLastHalf = countLastHalf ? sumLastHalf / countLastHalf : 0;
       var averageOverall = intervals.length ? sum / intervals.length : 0;
-      var durationDiff = Math.abs(recordingAbsoluteDuration - referenceDuration);
+      var durationDiff = Math.abs(
+        recordingAbsoluteDuration - referenceDuration
+      );
 
-      self._results.push({name: name + ".raw.TART",   value: intervals}); // Just for display if running manually - Not collected for talos.
-      self._results.push({name: name + ".half.TART",  value: averageLastHalf});
-      self._results.push({name: name + ".all.TART",   value: averageOverall});
-      self._results.push({name: name + ".error.TART", value: durationDiff});
+      self._results.push({ name: name + ".raw.TART", value: intervals }); // Just for display if running manually - Not collected for talos.
+      self._results.push({ name: name + ".half.TART", value: averageLastHalf });
+      self._results.push({ name: name + ".all.TART", value: averageOverall });
+      self._results.push({ name: name + ".error.TART", value: durationDiff });
     }
 
     function transEnd(e) {
@@ -303,7 +323,9 @@ Tart.prototype = {
         }
 
         // If detector supports keepListening, use it, otherwise - measurement indicates the end.
-        if (detector.keepListening ? detector.keepListening(e) : !isMeasureNow) {
+        if (
+          detector.keepListening ? detector.keepListening(e) : !isMeasureNow
+        ) {
           return;
         }
       } else {
@@ -319,8 +341,9 @@ Tart.prototype = {
     }
 
     function trigger(f) {
-      if (!self.USE_RECORDING_API)
+      if (!self.USE_RECORDING_API) {
         return rAF(f);
+      }
 
       // When using the recording API, the first interval is to last frame, which could have been a while ago.
       // To make sure the first interval is counted correctly, we "tickle" a widget
@@ -332,8 +355,9 @@ Tart.prototype = {
       var i = 0;
 
       function tickleLoop() {
-        if (i++ < ((isReportResult && self._config.tickle) ? 17 : 0)) {
-          self._win.document.getElementById(id).style.opacity = i % 10 / 10 + .05; // just some style modification which will force redraw
+        if (i++ < (isReportResult && self._config.tickle ? 17 : 0)) {
+          self._win.document.getElementById(id).style.opacity =
+            (i % 10) / 10 + 0.05; // just some style modification which will force redraw
           return rAF(tickleLoop);
         }
 
@@ -357,7 +381,6 @@ Tart.prototype = {
     }, preWaitMs);
   },
 
-
   _nextCommandIx: 0,
   _commands: [],
   _onSequenceComplete: 0,
@@ -379,8 +402,9 @@ Tart.prototype = {
   },
 
   _log(str) {
-    if (window.MozillaFileLogger && window.MozillaFileLogger.log)
+    if (window.MozillaFileLogger && window.MozillaFileLogger.log) {
       window.MozillaFileLogger.log(str);
+    }
 
     window.dump(str);
   },
@@ -393,7 +417,12 @@ Tart.prototype = {
     var out = "";
     for (var i in this._results) {
       res = this._results[i];
-      var disp = [].concat(res.value).map(function(a) { return (isNaN(a) ? -1 : a.toFixed(1)); }).join(" ");
+      var disp = []
+        .concat(res.value)
+        .map(function(a) {
+          return isNaN(a) ? -1 : a.toFixed(1);
+        })
+        .join(" ");
       out += res.name + ": " + disp + "\n";
     }
     this._log("\n" + out);
@@ -413,9 +442,9 @@ Tart.prototype = {
 
   _startTest() {
     // Save prefs and states which will change during the test, to get restored when done.
-    var origPreload =       Services.prefs.getBoolPref("browser.newtab.preload");
-    var origDpi =           Services.prefs.getCharPref("layout.css.devPixelsPerPx");
-    var origPinned =        this._tartTab.pinned;
+    var origPreload = Services.prefs.getBoolPref("browser.newtab.preload");
+    var origDpi = Services.prefs.getCharPref("layout.css.devPixelsPerPx");
+    var origPinned = this._tartTab.pinned;
 
     var self = this;
     var animate = this._animate.bind(this);
@@ -439,7 +468,13 @@ Tart.prototype = {
     function getMaxTabTransitionTimeMs(aTab) {
       let cstyle = window.getComputedStyle(aTab);
       try {
-        return 1000 * Math.max.apply(null, cstyle.transitionDuration.split(", ").map(s => parseFloat(s, 10)));
+        return (
+          1000 *
+          Math.max.apply(
+            null,
+            cstyle.transitionDuration.split(", ").map(s => parseFloat(s, 10))
+          )
+        );
       } catch (e) {
         return 250;
       }
@@ -455,7 +490,8 @@ Tart.prototype = {
     var custRefDuration = 0;
 
     var subtests = {
-      init: [ // This is called before each subtest, so it's safe to assume the following prefs:
+      init: [
+        // This is called before each subtest, so it's safe to assume the following prefs:
         function() {
           Services.prefs.setBoolPref("browser.newtab.preload", false);
           self.pinTart();
@@ -468,42 +504,98 @@ Tart.prototype = {
         function() {
           Services.prefs.setBoolPref("browser.newtab.preload", origPreload);
           Services.prefs.setCharPref("layout.css.devPixelsPerPx", origDpi);
-          if (origPinned) self.pinTart(); else self.unpinTart();
+          if (origPinned) {
+            self.pinTart();
+          } else {
+            self.unpinTart();
+          }
           self.makeNewTabURLChangePromise("about:newtab").then(next);
         },
       ],
 
       simple: [
-        function() { Services.prefs.setCharPref("layout.css.devPixelsPerPx", "1"); next(); },
-        function() { animate(0, addTab, next); },
-        function() { animate(0, closeCurrentTab, next); },
+        function() {
+          Services.prefs.setCharPref("layout.css.devPixelsPerPx", "1");
+          next();
+        },
+        function() {
+          animate(0, addTab, next);
+        },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
 
-        function() { animate(rest, addTab, next, true, "simple-open-DPI1", tabRefDuration); },
-        function() { animate(rest, closeCurrentTab, next, true, "simple-close-DPI1", tabRefDuration); },
+        function() {
+          animate(rest, addTab, next, true, "simple-open-DPI1", tabRefDuration);
+        },
+        function() {
+          animate(
+            rest,
+            closeCurrentTab,
+            next,
+            true,
+            "simple-close-DPI1",
+            tabRefDuration
+          );
+        },
       ],
 
       iconDpi1: [
         function() {
           Services.prefs.setCharPref("layout.css.devPixelsPerPx", "1");
-          self.makeNewTabURLChangePromise("chrome://tart/content/blank.icon.html").then(next);
+          self
+            .makeNewTabURLChangePromise("chrome://tart/content/blank.icon.html")
+            .then(next);
         },
-        function() { animate(0, addTab, next); },
-        function() { animate(0, closeCurrentTab, next); },
+        function() {
+          animate(0, addTab, next);
+        },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
 
-        function() { animate(rest, addTab, next, true, "icon-open-DPI1", tabRefDuration); },
-        function() { animate(rest, closeCurrentTab, next, true, "icon-close-DPI1", tabRefDuration); },
+        function() {
+          animate(rest, addTab, next, true, "icon-open-DPI1", tabRefDuration);
+        },
+        function() {
+          animate(
+            rest,
+            closeCurrentTab,
+            next,
+            true,
+            "icon-close-DPI1",
+            tabRefDuration
+          );
+        },
       ],
 
       iconDpi2: [
         function() {
           Services.prefs.setCharPref("layout.css.devPixelsPerPx", "2");
-          self.makeNewTabURLChangePromise("chrome://tart/content/blank.icon.html").then(next);
+          self
+            .makeNewTabURLChangePromise("chrome://tart/content/blank.icon.html")
+            .then(next);
         },
-        function() { animate(0, addTab, next); },
-        function() { animate(0, closeCurrentTab, next); },
+        function() {
+          animate(0, addTab, next);
+        },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
 
-        function() { animate(rest, addTab, next, true, "icon-open-DPI2", tabRefDuration); },
-        function() { animate(rest, closeCurrentTab, next, true, "icon-close-DPI2", tabRefDuration); },
+        function() {
+          animate(rest, addTab, next, true, "icon-open-DPI2", tabRefDuration);
+        },
+        function() {
+          animate(
+            rest,
+            closeCurrentTab,
+            next,
+            true,
+            "icon-close-DPI2",
+            tabRefDuration
+          );
+        },
       ],
 
       newtabNoPreload: [
@@ -512,8 +604,19 @@ Tart.prototype = {
           Services.prefs.setBoolPref("browser.newtab.preload", false);
           self.makeNewTabURLChangePromise("about:newtab").then(next);
         },
-        function() { animate(rest, addTab, next, true, "newtab-open-preload-no", tabRefDuration); },
-        function() { animate(0, closeCurrentTab, next); },
+        function() {
+          animate(
+            rest,
+            addTab,
+            next,
+            true,
+            "newtab-open-preload-no",
+            tabRefDuration
+          );
+        },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
       ],
 
       newtabYesPreload: [
@@ -522,108 +625,378 @@ Tart.prototype = {
           Services.prefs.setBoolPref("browser.newtab.preload", true);
           self.makeNewTabURLChangePromise("about:newtab").then(next);
         },
-        function() { animate(0, addTab, next); },
-        function() { animate(0, closeCurrentTab, next); },
+        function() {
+          animate(0, addTab, next);
+        },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
 
-        function() { animate(1000, addTab, next, true, "newtab-open-preload-yes", tabRefDuration); },
-        function() { animate(0, closeCurrentTab, next); },
+        function() {
+          animate(
+            1000,
+            addTab,
+            next,
+            true,
+            "newtab-open-preload-yes",
+            tabRefDuration
+          );
+        },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
       ],
 
       simple3open3closeDpiCurrent: [
-        function() { animate(rest, addTab, next, true, "simple3-1-open-DPIcurrent", tabRefDuration); },
-        function() { animate(rest, addTab, next, true, "simple3-2-open-DPIcurrent", tabRefDuration); },
-        function() { animate(rest, addTab, next, true, "simple3-3-open-DPIcurrent", tabRefDuration); },
+        function() {
+          animate(
+            rest,
+            addTab,
+            next,
+            true,
+            "simple3-1-open-DPIcurrent",
+            tabRefDuration
+          );
+        },
+        function() {
+          animate(
+            rest,
+            addTab,
+            next,
+            true,
+            "simple3-2-open-DPIcurrent",
+            tabRefDuration
+          );
+        },
+        function() {
+          animate(
+            rest,
+            addTab,
+            next,
+            true,
+            "simple3-3-open-DPIcurrent",
+            tabRefDuration
+          );
+        },
 
-        function() { animate(rest, closeCurrentTab, next, true, "simple3-3-close-DPIcurrent", tabRefDuration); },
-        function() { animate(rest, closeCurrentTab, next, true, "simple3-2-close-DPIcurrent", tabRefDuration); },
-        function() { animate(rest, closeCurrentTab, next, true, "simple3-1-close-DPIcurrent", tabRefDuration); },
+        function() {
+          animate(
+            rest,
+            closeCurrentTab,
+            next,
+            true,
+            "simple3-3-close-DPIcurrent",
+            tabRefDuration
+          );
+        },
+        function() {
+          animate(
+            rest,
+            closeCurrentTab,
+            next,
+            true,
+            "simple3-2-close-DPIcurrent",
+            tabRefDuration
+          );
+        },
+        function() {
+          animate(
+            rest,
+            closeCurrentTab,
+            next,
+            true,
+            "simple3-1-close-DPIcurrent",
+            tabRefDuration
+          );
+        },
       ],
 
       multi: [
         function() {
           Services.prefs.setCharPref("layout.css.devPixelsPerPx", "1.0");
-          self.makeNewTabURLChangePromise("chrome://tart/content/blank.icon.html").then(next);
+          self
+            .makeNewTabURLChangePromise("chrome://tart/content/blank.icon.html")
+            .then(next);
         },
 
-        function() { animate(0, addTab, next); },
-        function() { animate(0, addTab, next); },
-        function() { animate(0, addTab, next); },
-        function() { animate(0, addTab, next); },
-        function() { animate(0, addTab, next); },
-        function() { animate(0, addTab, next); },
+        function() {
+          animate(0, addTab, next);
+        },
+        function() {
+          animate(0, addTab, next);
+        },
+        function() {
+          animate(0, addTab, next);
+        },
+        function() {
+          animate(0, addTab, next);
+        },
+        function() {
+          animate(0, addTab, next);
+        },
+        function() {
+          animate(0, addTab, next);
+        },
 
-        function() { animate(rest * 2, addTab, next, true, "multi-open-DPI1", tabRefDuration); },
-        function() { animate(rest * 2, closeCurrentTab, next, true, "multi-close-DPI1", tabRefDuration); },
+        function() {
+          animate(
+            rest * 2,
+            addTab,
+            next,
+            true,
+            "multi-open-DPI1",
+            tabRefDuration
+          );
+        },
+        function() {
+          animate(
+            rest * 2,
+            closeCurrentTab,
+            next,
+            true,
+            "multi-close-DPI1",
+            tabRefDuration
+          );
+        },
 
-        function() { Services.prefs.setCharPref("layout.css.devPixelsPerPx", "2"); next(); },
-        function() { animate(0, addTab, next); },
-        function() { animate(0, closeCurrentTab, next); },
-        function() { animate(rest * 2, addTab, next, true, "multi-open-DPI2", tabRefDuration); },
-        function() { animate(rest * 2, closeCurrentTab, next, true, "multi-close-DPI2", tabRefDuration); },
+        function() {
+          Services.prefs.setCharPref("layout.css.devPixelsPerPx", "2");
+          next();
+        },
+        function() {
+          animate(0, addTab, next);
+        },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
+        function() {
+          animate(
+            rest * 2,
+            addTab,
+            next,
+            true,
+            "multi-open-DPI2",
+            tabRefDuration
+          );
+        },
+        function() {
+          animate(
+            rest * 2,
+            closeCurrentTab,
+            next,
+            true,
+            "multi-close-DPI2",
+            tabRefDuration
+          );
+        },
 
-        function() { Services.prefs.setCharPref("layout.css.devPixelsPerPx", "-1"); next(); },
+        function() {
+          Services.prefs.setCharPref("layout.css.devPixelsPerPx", "-1");
+          next();
+        },
 
-        function() { animate(0, closeCurrentTab, next); },
-        function() { animate(0, closeCurrentTab, next); },
-        function() { animate(0, closeCurrentTab, next); },
-        function() { animate(0, closeCurrentTab, next); },
-        function() { animate(0, closeCurrentTab, next); },
-        function() { animate(0, closeCurrentTab, next); },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
       ],
 
       simpleFadeDpiCurrent: [
-        function() { self.makeNewTabURLChangePromise("about:blank").then(next); },
+        function() {
+          self.makeNewTabURLChangePromise("about:blank").then(next);
+        },
 
-        function() { animate(0, addTab, next); },
-        function() { animate(rest, fadeout, next, true, "simpleFade-close-DPIcurrent", tabRefDuration); },
-        function() { animate(rest, fadein, next, true, "simpleFade-open-DPIcurrent", tabRefDuration); },
-        function() { animate(0, closeCurrentTab, next); },
+        function() {
+          animate(0, addTab, next);
+        },
+        function() {
+          animate(
+            rest,
+            fadeout,
+            next,
+            true,
+            "simpleFade-close-DPIcurrent",
+            tabRefDuration
+          );
+        },
+        function() {
+          animate(
+            rest,
+            fadein,
+            next,
+            true,
+            "simpleFade-open-DPIcurrent",
+            tabRefDuration
+          );
+        },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
       ],
 
       iconFadeDpiCurrent: [
-        function() { self.makeNewTabURLChangePromise("chrome://tart/content/blank.icon.html").then(next); },
+        function() {
+          self
+            .makeNewTabURLChangePromise("chrome://tart/content/blank.icon.html")
+            .then(next);
+        },
 
-        function() { animate(0, addTab, next); },
-        function() { animate(rest, fadeout, next, true, "iconFade-close-DPIcurrent", tabRefDuration); },
-        function() { animate(rest, fadein, next, true, "iconFade-open-DPIcurrent", tabRefDuration); },
-        function() { animate(0, closeCurrentTab, next); },
+        function() {
+          animate(0, addTab, next);
+        },
+        function() {
+          animate(
+            rest,
+            fadeout,
+            next,
+            true,
+            "iconFade-close-DPIcurrent",
+            tabRefDuration
+          );
+        },
+        function() {
+          animate(
+            rest,
+            fadein,
+            next,
+            true,
+            "iconFade-open-DPIcurrent",
+            tabRefDuration
+          );
+        },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
       ],
 
       iconFadeDpi2: [
         function() {
           Services.prefs.setCharPref("layout.css.devPixelsPerPx", "2");
-          self.makeNewTabURLChangePromise("chrome://tart/content/blank.icon.html").then(next);
+          self
+            .makeNewTabURLChangePromise("chrome://tart/content/blank.icon.html")
+            .then(next);
         },
-        function() { animate(0, addTab, next); },
-        function() { animate(rest, fadeout, next, true, "iconFade-close-DPI2", tabRefDuration); },
-        function() { animate(rest, fadein, next, true, "iconFade-open-DPI2", tabRefDuration); },
-        function() { animate(0, closeCurrentTab, next); },
+        function() {
+          animate(0, addTab, next);
+        },
+        function() {
+          animate(
+            rest,
+            fadeout,
+            next,
+            true,
+            "iconFade-close-DPI2",
+            tabRefDuration
+          );
+        },
+        function() {
+          animate(
+            rest,
+            fadein,
+            next,
+            true,
+            "iconFade-open-DPI2",
+            tabRefDuration
+          );
+        },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
       ],
 
       lastTabFadeDpiCurrent: [
         function() {
- self._win.gBrowser.selectedTab = self._win.gBrowser.tabs[gBrowser.tabs.length - 1];
-                   next();
-},
-        function() { animate(rest, fadeout, next, true, "lastTabFade-close-DPIcurrent", tabRefDuration); },
-        function() { animate(rest, fadein, next, true, "lastTabFade-open-DPIcurrent", tabRefDuration); },
+          self._win.gBrowser.selectedTab =
+            self._win.gBrowser.tabs[gBrowser.tabs.length - 1];
+          next();
+        },
+        function() {
+          animate(
+            rest,
+            fadeout,
+            next,
+            true,
+            "lastTabFade-close-DPIcurrent",
+            tabRefDuration
+          );
+        },
+        function() {
+          animate(
+            rest,
+            fadein,
+            next,
+            true,
+            "lastTabFade-open-DPIcurrent",
+            tabRefDuration
+          );
+        },
       ],
 
       customize: [
         // Test australis customize mode animation with default DPI.
-        function() { Services.prefs.setCharPref("layout.css.devPixelsPerPx", "-1"); next(); },
+        function() {
+          Services.prefs.setCharPref("layout.css.devPixelsPerPx", "-1");
+          next();
+        },
         // Adding a non-newtab since the behavior of exiting customize mode which was entered on newtab may change. See bug 957202.
-        function() { animate(0, addSomeTab, next); },
+        function() {
+          animate(0, addSomeTab, next);
+        },
 
         // The prefixes 1- and 2- were added because talos cuts common prefixes on all "pages", which ends up as "customize-e" prefix.
-        function() { animate(rest, customizeEnter, next, true, "1-customize-enter", custRefDuration); },
-        function() { animate(rest, customizeExit, next, true, "2-customize-exit", custRefDuration); },
+        function() {
+          animate(
+            rest,
+            customizeEnter,
+            next,
+            true,
+            "1-customize-enter",
+            custRefDuration
+          );
+        },
+        function() {
+          animate(
+            rest,
+            customizeExit,
+            next,
+            true,
+            "2-customize-exit",
+            custRefDuration
+          );
+        },
 
         // Measures the CSS-animation-only part of entering into customize mode
-        function() { animate(rest, customizeEnterCss, next, true, "3-customize-enter-css", custRefDuration); },
-        function() { animate(0, customizeExit, next); },
+        function() {
+          animate(
+            rest,
+            customizeEnterCss,
+            next,
+            true,
+            "3-customize-enter-css",
+            custRefDuration
+          );
+        },
+        function() {
+          animate(0, customizeExit, next);
+        },
 
-        function() { animate(0, closeCurrentTab, next); },
+        function() {
+          animate(0, closeCurrentTab, next);
+        },
       ],
     };
 
@@ -633,7 +1006,9 @@ Tart.prototype = {
     for (var i in this._config.subtests) {
       for (var r = 0; r < this._config.repeat; r++) {
         sequenceArray = sequenceArray.concat(subtests.init);
-        sequenceArray = sequenceArray.concat(subtests[this._config.subtests[i]]);
+        sequenceArray = sequenceArray.concat(
+          subtests[this._config.subtests[i]]
+        );
       }
     }
     sequenceArray = sequenceArray.concat(subtests.restore);

@@ -6,11 +6,12 @@
 
 /* global ExtensionAPI, XPCOMUtils */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "l10nStrings", function() {
   return Services.strings.createBundle(
-    "chrome://browser/locale/webcompatReporter.properties");
+    "chrome://browser/locale/webcompatReporter.properties"
+  );
 });
 
 let l10nManifest;

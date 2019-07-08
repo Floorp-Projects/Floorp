@@ -10,7 +10,7 @@ class MessageBarStackElement extends HTMLElement {
   constructor() {
     super();
     this._observer = null;
-    const shadowRoot = this.attachShadow({mode: "open"});
+    const shadowRoot = this.attachShadow({ mode: "open" });
     shadowRoot.append(this.constructor.template.content.cloneNode(true));
   }
 
@@ -24,9 +24,9 @@ class MessageBarStackElement extends HTMLElement {
     this._observer = new MutationObserver(() => {
       this._observer.disconnect();
       this.closeMessageBars();
-      this._observer.observe(this, {childList: true});
+      this._observer.observe(this, { childList: true });
     });
-    this._observer.observe(this, {childList: true});
+    this._observer.observe(this, { childList: true });
   }
 
   disconnectedCallback() {
@@ -35,7 +35,7 @@ class MessageBarStackElement extends HTMLElement {
   }
 
   closeMessageBars() {
-    const {maxMessageBarCount} = this;
+    const { maxMessageBarCount } = this;
     if (maxMessageBarCount > 1) {
       // Remove the older message bars if the stack reached the
       // maximum number of message bars allowed.
@@ -78,11 +78,12 @@ class MessageBarStackElement extends HTMLElement {
 class MessageBarElement extends HTMLElement {
   constructor() {
     super();
-    const shadowRoot = this.attachShadow({mode: "open"});
+    const shadowRoot = this.attachShadow({ mode: "open" });
     const content = this.constructor.template.content.cloneNode(true);
     shadowRoot.append(content);
-    this._closeIcon.addEventListener(
-      "click", () => this.remove(), {once: true});
+    this._closeIcon.addEventListener("click", () => this.remove(), {
+      once: true,
+    });
   }
 
   disconnectedCallback() {

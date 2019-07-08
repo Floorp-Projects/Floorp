@@ -6,15 +6,18 @@
 // Test whether new OS versions are matched properly.
 // Uses test_gfxBlacklist_OS.xml
 
-var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+var gTestserver = AddonTestUtils.createHttpServer({ hosts: ["example.com"] });
 gPort = gTestserver.identity.primaryPort;
 gTestserver.registerDirectory("/data/", do_get_file("../data"));
 
 function load_blocklist(file) {
-  Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
-                             gPort + "/data/" + file);
-  var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
-                  getService(Ci.nsITimerCallback);
+  Services.prefs.setCharPref(
+    "extensions.blocklist.url",
+    "http://localhost:" + gPort + "/data/" + file
+  );
+  var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(
+    Ci.nsITimerCallback
+  );
   blocklist.notify(null);
 }
 

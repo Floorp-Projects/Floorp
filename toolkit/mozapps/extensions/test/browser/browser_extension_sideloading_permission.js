@@ -3,9 +3,11 @@
  */
 
 /*
-* Test Permission Popup for Sideloaded Extensions.
-*/
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+ * Test Permission Popup for Sideloaded Extensions.
+ */
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 const ADDON_ID = "addon1@test.mozilla.org";
 
 AddonTestUtils.initMochitest(this);
@@ -13,13 +15,26 @@ AddonTestUtils.initMochitest(this);
 function assertDisabledSideloadedExtensionElement(managerWindow, addonElement) {
   const doc = addonElement.ownerDocument;
   if (managerWindow.useHtmlViews) {
-    const toggleDisabled = addonElement.querySelector('[action="toggle-disabled"]');
-    is(doc.l10n.getAttributes(toggleDisabled).id, "enable-addon-button",
-       "Addon toggle-disabled action has the enable label");
+    const toggleDisabled = addonElement.querySelector(
+      '[action="toggle-disabled"]'
+    );
+    is(
+      doc.l10n.getAttributes(toggleDisabled).id,
+      "enable-addon-button",
+      "Addon toggle-disabled action has the enable label"
+    );
   } else {
-    let el = doc.getAnonymousElementByAttribute(addonElement, "anonid", "disable-btn");
+    let el = doc.getAnonymousElementByAttribute(
+      addonElement,
+      "anonid",
+      "disable-btn"
+    );
     is_element_hidden(el, "Disable button not visible.");
-    el = doc.getAnonymousElementByAttribute(addonElement, "anonid", "enable-btn");
+    el = doc.getAnonymousElementByAttribute(
+      addonElement,
+      "anonid",
+      "enable-btn"
+    );
     is_element_visible(el, "Enable button visible");
   }
 }
@@ -27,13 +42,26 @@ function assertDisabledSideloadedExtensionElement(managerWindow, addonElement) {
 function assertEnabledSideloadedExtensionElement(managerWindow, addonElement) {
   const doc = addonElement.ownerDocument;
   if (managerWindow.useHtmlViews) {
-    const toggleDisabled = addonElement.querySelector('[action="toggle-disabled"]');
-    is(doc.l10n.getAttributes(toggleDisabled).id, "enable-addon-button",
-       "Addon toggle-disabled action has the enable label");
+    const toggleDisabled = addonElement.querySelector(
+      '[action="toggle-disabled"]'
+    );
+    is(
+      doc.l10n.getAttributes(toggleDisabled).id,
+      "enable-addon-button",
+      "Addon toggle-disabled action has the enable label"
+    );
   } else {
-    let el = doc.getAnonymousElementByAttribute(addonElement, "anonid", "disable-btn");
+    let el = doc.getAnonymousElementByAttribute(
+      addonElement,
+      "anonid",
+      "disable-btn"
+    );
     is_element_hidden(el, "Disable button not visible.");
-    el = doc.getAnonymousElementByAttribute(addonElement, "anonid", "enable-btn");
+    el = doc.getAnonymousElementByAttribute(
+      addonElement,
+      "anonid",
+      "enable-btn"
+    );
     is_element_visible(el, "Enable button visible");
   }
 }
@@ -43,8 +71,12 @@ function clickEnableExtension(managerWindow, addonElement) {
     addonElement.querySelector('[action="toggle-disabled"]').click();
   } else {
     const doc = addonElement.ownerDocument;
-    const el = doc.getAnonymousElementByAttribute(addonElement, "anonid", "enable-btn");
-    EventUtils.synthesizeMouseAtCenter(el, {clickCount: 1}, managerWindow);
+    const el = doc.getAnonymousElementByAttribute(
+      addonElement,
+      "anonid",
+      "enable-btn"
+    );
+    EventUtils.synthesizeMouseAtCenter(el, { clickCount: 1 }, managerWindow);
   }
 }
 
@@ -60,17 +92,19 @@ async function test_sideloaded_extension_permissions_prompt() {
 
   let options = {
     manifest: {
-      applications: {gecko: {id: ADDON_ID}},
+      applications: { gecko: { id: ADDON_ID } },
       name: "Test 1",
       permissions: ["history", "https://*/*"],
-      icons: {"64": "foo-icon.png"},
+      icons: { "64": "foo-icon.png" },
     },
   };
 
   let xpi = AddonTestUtils.createTempWebExtensionFile(options);
   await AddonTestUtils.manuallyInstall(xpi);
 
-  let changePromise = new Promise(resolve => ExtensionsUI.once("change", resolve));
+  let changePromise = new Promise(resolve =>
+    ExtensionsUI.once("change", resolve)
+  );
   ExtensionsUI._checkForSideloaded();
   await changePromise;
 
@@ -88,10 +122,16 @@ async function test_sideloaded_extension_permissions_prompt() {
 
   ok(PopupNotifications.isPanelOpen, "Permission popup should be visible");
   panel.secondaryButton.click();
-  ok(!PopupNotifications.isPanelOpen, "Permission popup should be closed / closing");
+  ok(
+    !PopupNotifications.isPanelOpen,
+    "Permission popup should be closed / closing"
+  );
 
   addon = await AddonManager.getAddonByID(ADDON_ID);
-  ok(!addon.seen, "Seen flag should remain false after permissions are refused");
+  ok(
+    !addon.seen,
+    "Seen flag should remain false after permissions are refused"
+  );
 
   // Test click event on permission accept option.
   addon = get_addon_element(manager, ADDON_ID);
@@ -105,10 +145,16 @@ async function test_sideloaded_extension_permissions_prompt() {
 
   ok(PopupNotifications.isPanelOpen, "Permission popup should be visible");
 
-  let notificationPromise = acceptAppMenuNotificationWhenShown("addon-installed", ADDON_ID);
+  let notificationPromise = acceptAppMenuNotificationWhenShown(
+    "addon-installed",
+    ADDON_ID
+  );
 
   panel.button.click();
-  ok(!PopupNotifications.isPanelOpen, "Permission popup should be closed / closing");
+  ok(
+    !PopupNotifications.isPanelOpen,
+    "Permission popup should be closed / closing"
+  );
   await notificationPromise;
 
   addon = await AddonManager.getAddonByID(ADDON_ID);

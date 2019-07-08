@@ -31,34 +31,57 @@ add_task(async function() {
   info("Check store as global variable is disabled for text only messages");
   await storeAsVariable(hud, msgWithText, "string");
 
-  info("Check store as global variable is disabled for text in complex messages");
+  info(
+    "Check store as global variable is disabled for text in complex messages"
+  );
   await storeAsVariable(hud, msgWithObj, "string");
 
-  info("Check store as global variable is enabled for objects in complex messages");
+  info(
+    "Check store as global variable is enabled for objects in complex messages"
+  );
   await storeAsVariable(hud, msgWithObj, "object", varIdx++, "window.bar");
 
-  info("Check store as global variable is enabled for top object in nested messages");
+  info(
+    "Check store as global variable is enabled for top object in nested messages"
+  );
   await storeAsVariable(hud, msgNested, "array", varIdx++, "window.array");
 
-  info("Check store as global variable is enabled for nested object in nested messages");
+  info(
+    "Check store as global variable is enabled for nested object in nested messages"
+  );
   await storeAsVariable(hud, msgNested, "object", varIdx++, "window.bar");
 
   info("Check store as global variable is enabled for long strings");
-  await storeAsVariable(hud, msgLongStr, "string", varIdx++, "window.longString");
+  await storeAsVariable(
+    hud,
+    msgLongStr,
+    "string",
+    varIdx++,
+    "window.longString"
+  );
 
   info("Check store as global variable is enabled for symbols");
   await storeAsVariable(hud, msgSymbol, "symbol", varIdx++, "window.symbol");
 
-  info("Check store as global variable is enabled for invisible-to-debugger objects");
+  info(
+    "Check store as global variable is enabled for invisible-to-debugger objects"
+  );
   const onMessageInvisible = waitForMessage(hud, "foo");
   ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
-    const obj = Cu.Sandbox(Cu.getObjectPrincipal(content), {invisibleToDebugger: true});
+    const obj = Cu.Sandbox(Cu.getObjectPrincipal(content), {
+      invisibleToDebugger: true,
+    });
     content.wrappedJSObject.invisibleToDebugger = obj;
     content.console.log("foo", obj);
   });
   const msgInvisible = (await onMessageInvisible).node;
-  await storeAsVariable(hud, msgInvisible, "object", varIdx++,
-                        "window.invisibleToDebugger");
+  await storeAsVariable(
+    hud,
+    msgInvisible,
+    "object",
+    varIdx++,
+    "window.invisibleToDebugger"
+  );
 });
 
 async function storeAsVariable(hud, msg, type, varIdx, equalTo) {
@@ -86,6 +109,8 @@ async function storeAsVariable(hud, msg, type, varIdx, equalTo) {
 
   is(getInputValue(hud), "temp" + varIdx, "Input was set");
 
-  const equal = await hud.jsterm.requestEvaluation("temp" + varIdx + " === " + equalTo);
+  const equal = await hud.jsterm.requestEvaluation(
+    "temp" + varIdx + " === " + equalTo
+  );
   is(equal.result, true, "Correct variable assigned into console.");
 }

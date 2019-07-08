@@ -2,8 +2,11 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Preferences",
+  "resource://gre/modules/Preferences.jsm"
+);
 
 const {
   createAppInfo,
@@ -39,7 +42,7 @@ add_task(async function test_browser_settings() {
   async function background() {
     browser.test.onMessage.addListener(async (msg, apiName, value) => {
       let apiObj = browser.browserSettings[apiName];
-      let result = await apiObj.set({value});
+      let result = await apiObj.set({ value });
       if (msg === "set") {
         browser.test.assertTrue(result, "set returns true.");
         browser.test.sendMessage("settingData", await apiObj.get({}));
@@ -76,12 +79,22 @@ add_task(async function test_browser_settings() {
   async function testSetting(setting, value, expected, expectedValue = value) {
     extension.sendMessage("set", setting, value);
     let data = await extension.awaitMessage("settingData");
-    deepEqual(data.value, expectedValue,
-              `The ${setting} setting has the expected value.`);
-    equal(data.levelOfControl, "controlled_by_this_extension",
-          `The ${setting} setting has the expected levelOfControl.`);
+    deepEqual(
+      data.value,
+      expectedValue,
+      `The ${setting} setting has the expected value.`
+    );
+    equal(
+      data.levelOfControl,
+      "controlled_by_this_extension",
+      `The ${setting} setting has the expected levelOfControl.`
+    );
     for (let pref in expected) {
-      equal(Preferences.get(pref), expected[pref], `${pref} set correctly for ${value}`);
+      equal(
+        Preferences.get(pref),
+        expected[pref],
+        `${pref} set correctly for ${value}`
+      );
     }
   }
 
@@ -89,133 +102,128 @@ add_task(async function test_browser_settings() {
     extension.sendMessage("setNoOp", setting, value);
     await extension.awaitMessage("no-op set");
     for (let pref in expected) {
-      equal(Preferences.get(pref), expected[pref], `${pref} set correctly for ${value}`);
+      equal(
+        Preferences.get(pref),
+        expected[pref],
+        `${pref} set correctly for ${value}`
+      );
     }
   }
 
-  await testSetting(
-    "cacheEnabled", false,
-    {
-      "browser.cache.disk.enable": false,
-      "browser.cache.memory.enable": false,
-    });
-  await testSetting(
-    "cacheEnabled", true,
-    {
-      "browser.cache.disk.enable": true,
-      "browser.cache.memory.enable": true,
-    });
+  await testSetting("cacheEnabled", false, {
+    "browser.cache.disk.enable": false,
+    "browser.cache.memory.enable": false,
+  });
+  await testSetting("cacheEnabled", true, {
+    "browser.cache.disk.enable": true,
+    "browser.cache.memory.enable": true,
+  });
 
-  await testSetting(
-    "allowPopupsForUserEvents", false,
-    {"dom.popup_allowed_events": ""});
-  await testSetting(
-    "allowPopupsForUserEvents", true,
-    {"dom.popup_allowed_events": PREFS["dom.popup_allowed_events"]});
+  await testSetting("allowPopupsForUserEvents", false, {
+    "dom.popup_allowed_events": "",
+  });
+  await testSetting("allowPopupsForUserEvents", true, {
+    "dom.popup_allowed_events": PREFS["dom.popup_allowed_events"],
+  });
 
   for (let value of ["normal", "none", "once"]) {
-    await testSetting(
-      "imageAnimationBehavior", value,
-      {"image.animation_mode": value});
+    await testSetting("imageAnimationBehavior", value, {
+      "image.animation_mode": value,
+    });
   }
 
-  await testSetting(
-    "webNotificationsDisabled", true,
-    {"permissions.default.desktop-notification": PERM_DENY_ACTION});
-  await testSetting(
-    "webNotificationsDisabled", false,
-    {
-      // This pref is not defaulted on Android.
-      "permissions.default.desktop-notification":
-        AppConstants.MOZ_BUILD_APP !== "browser" ? undefined : PERM_UNKNOWN_ACTION,
-    });
+  await testSetting("webNotificationsDisabled", true, {
+    "permissions.default.desktop-notification": PERM_DENY_ACTION,
+  });
+  await testSetting("webNotificationsDisabled", false, {
+    // This pref is not defaulted on Android.
+    "permissions.default.desktop-notification":
+      AppConstants.MOZ_BUILD_APP !== "browser"
+        ? undefined
+        : PERM_UNKNOWN_ACTION,
+  });
 
   // This setting is a no-op on Android.
   if (AppConstants.platform === "android") {
-    await testNoOpSetting("contextMenuShowEvent", "mouseup",
-                          {"ui.context_menus.after_mouseup": false});
+    await testNoOpSetting("contextMenuShowEvent", "mouseup", {
+      "ui.context_menus.after_mouseup": false,
+    });
   } else {
-    await testSetting(
-      "contextMenuShowEvent", "mouseup",
-      {"ui.context_menus.after_mouseup": true});
+    await testSetting("contextMenuShowEvent", "mouseup", {
+      "ui.context_menus.after_mouseup": true,
+    });
   }
 
   // "mousedown" is also a no-op on Windows.
   if (["android", "win"].includes(AppConstants.platform)) {
-    await testNoOpSetting(
-      "contextMenuShowEvent", "mousedown",
-      {"ui.context_menus.after_mouseup": AppConstants.platform === "win"});
+    await testNoOpSetting("contextMenuShowEvent", "mousedown", {
+      "ui.context_menus.after_mouseup": AppConstants.platform === "win",
+    });
   } else {
-    await testSetting(
-      "contextMenuShowEvent", "mousedown",
-      {"ui.context_menus.after_mouseup": false});
+    await testSetting("contextMenuShowEvent", "mousedown", {
+      "ui.context_menus.after_mouseup": false,
+    });
   }
 
   if (AppConstants.platform !== "android") {
-    await testSetting(
-      "closeTabsByDoubleClick", true,
-      {"browser.tabs.closeTabByDblclick": true});
-    await testSetting(
-      "closeTabsByDoubleClick", false,
-      {"browser.tabs.closeTabByDblclick": false});
+    await testSetting("closeTabsByDoubleClick", true, {
+      "browser.tabs.closeTabByDblclick": true,
+    });
+    await testSetting("closeTabsByDoubleClick", false, {
+      "browser.tabs.closeTabByDblclick": false,
+    });
   }
 
-  await testSetting(
-    "newTabPosition", "afterCurrent",
-    {
-      "browser.tabs.insertRelatedAfterCurrent": false,
-      "browser.tabs.insertAfterCurrent": true,
-    });
-  await testSetting(
-    "newTabPosition", "atEnd",
-    {
-      "browser.tabs.insertRelatedAfterCurrent": false,
-      "browser.tabs.insertAfterCurrent": false,
-    });
-  await testSetting(
-    "newTabPosition", "relatedAfterCurrent",
-    {
-      "browser.tabs.insertRelatedAfterCurrent": true,
-      "browser.tabs.insertAfterCurrent": false,
-    });
+  await testSetting("newTabPosition", "afterCurrent", {
+    "browser.tabs.insertRelatedAfterCurrent": false,
+    "browser.tabs.insertAfterCurrent": true,
+  });
+  await testSetting("newTabPosition", "atEnd", {
+    "browser.tabs.insertRelatedAfterCurrent": false,
+    "browser.tabs.insertAfterCurrent": false,
+  });
+  await testSetting("newTabPosition", "relatedAfterCurrent", {
+    "browser.tabs.insertRelatedAfterCurrent": true,
+    "browser.tabs.insertAfterCurrent": false,
+  });
 
-  await testSetting(
-    "openBookmarksInNewTabs", true,
-    {"browser.tabs.loadBookmarksInTabs": true});
-  await testSetting(
-    "openBookmarksInNewTabs", false,
-    {"browser.tabs.loadBookmarksInTabs": false});
+  await testSetting("openBookmarksInNewTabs", true, {
+    "browser.tabs.loadBookmarksInTabs": true,
+  });
+  await testSetting("openBookmarksInNewTabs", false, {
+    "browser.tabs.loadBookmarksInTabs": false,
+  });
 
-  await testSetting(
-    "openSearchResultsInNewTabs", true,
-    {"browser.search.openintab": true});
-  await testSetting(
-    "openSearchResultsInNewTabs", false,
-    {"browser.search.openintab": false});
+  await testSetting("openSearchResultsInNewTabs", true, {
+    "browser.search.openintab": true,
+  });
+  await testSetting("openSearchResultsInNewTabs", false, {
+    "browser.search.openintab": false,
+  });
 
-  await testSetting(
-    "openUrlbarResultsInNewTabs", true,
-    {"browser.urlbar.openintab": true});
-  await testSetting(
-    "openUrlbarResultsInNewTabs", false,
-    {"browser.urlbar.openintab": false});
+  await testSetting("openUrlbarResultsInNewTabs", true, {
+    "browser.urlbar.openintab": true,
+  });
+  await testSetting("openUrlbarResultsInNewTabs", false, {
+    "browser.urlbar.openintab": false,
+  });
 
-  await testSetting(
-    "overrideDocumentColors", "high-contrast-only",
-    {"browser.display.document_color_use": 0});
-  await testSetting(
-    "overrideDocumentColors", "never",
-    {"browser.display.document_color_use": 1});
-  await testSetting(
-    "overrideDocumentColors", "always",
-    {"browser.display.document_color_use": 2});
+  await testSetting("overrideDocumentColors", "high-contrast-only", {
+    "browser.display.document_color_use": 0,
+  });
+  await testSetting("overrideDocumentColors", "never", {
+    "browser.display.document_color_use": 1,
+  });
+  await testSetting("overrideDocumentColors", "always", {
+    "browser.display.document_color_use": 2,
+  });
 
-  await testSetting(
-    "useDocumentFonts", false,
-    {"browser.display.use_document_fonts": 0});
-  await testSetting(
-    "useDocumentFonts", true,
-    {"browser.display.use_document_fonts": 1});
+  await testSetting("useDocumentFonts", false, {
+    "browser.display.use_document_fonts": 0,
+  });
+  await testSetting("useDocumentFonts", true, {
+    "browser.display.use_document_fonts": 1,
+  });
 
   await extension.unload();
   await promiseShutdownManager();
@@ -224,19 +232,22 @@ add_task(async function test_browser_settings() {
 add_task(async function test_bad_value() {
   async function background() {
     await browser.test.assertRejects(
-      browser.browserSettings.contextMenuShowEvent.set({value: "bad"}),
+      browser.browserSettings.contextMenuShowEvent.set({ value: "bad" }),
       /bad is not a valid value for contextMenuShowEvent/,
-      "contextMenuShowEvent.set rejects with an invalid value.");
+      "contextMenuShowEvent.set rejects with an invalid value."
+    );
 
     await browser.test.assertRejects(
-      browser.browserSettings.overrideDocumentColors.set({value: 2}),
+      browser.browserSettings.overrideDocumentColors.set({ value: 2 }),
       /2 is not a valid value for overrideDocumentColors/,
-      "overrideDocumentColors.set rejects with an invalid value.");
+      "overrideDocumentColors.set rejects with an invalid value."
+    );
 
     await browser.test.assertRejects(
-      browser.browserSettings.overrideDocumentColors.set({value: "bad"}),
+      browser.browserSettings.overrideDocumentColors.set({ value: "bad" }),
       /bad is not a valid value for overrideDocumentColors/,
-      "overrideDocumentColors.set rejects with an invalid value.");
+      "overrideDocumentColors.set rejects with an invalid value."
+    );
 
     browser.test.sendMessage("done");
   }
@@ -260,19 +271,22 @@ add_task(async function test_bad_value_android() {
 
   async function background() {
     await browser.test.assertRejects(
-      browser.browserSettings.closeTabsByDoubleClick.set({value: true}),
+      browser.browserSettings.closeTabsByDoubleClick.set({ value: true }),
       /android is not a supported platform for the closeTabsByDoubleClick setting/,
-      "closeTabsByDoubleClick.set rejects on Android.");
+      "closeTabsByDoubleClick.set rejects on Android."
+    );
 
     await browser.test.assertRejects(
       browser.browserSettings.closeTabsByDoubleClick.get({}),
       /android is not a supported platform for the closeTabsByDoubleClick setting/,
-      "closeTabsByDoubleClick.get rejects on Android.");
+      "closeTabsByDoubleClick.get rejects on Android."
+    );
 
     await browser.test.assertRejects(
       browser.browserSettings.closeTabsByDoubleClick.clear({}),
       /android is not a supported platform for the closeTabsByDoubleClick setting/,
-      "closeTabsByDoubleClick.clear rejects on Android.");
+      "closeTabsByDoubleClick.clear rejects on Android."
+    );
 
     browser.test.sendMessage("done");
   }

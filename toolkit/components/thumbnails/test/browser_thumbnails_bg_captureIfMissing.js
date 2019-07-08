@@ -27,8 +27,10 @@ function* runTests() {
   is(numNotifications, 1, "still only 1 notification of item being created.");
   is(capturedURL, url, "Captured URL should be URL passed to second capture");
   ok(file.exists(), "Thumbnail should remain cached after second capture");
-  ok(file.lastModifiedTime < pastFudge,
-     "File should not have been overwritten");
+  ok(
+    file.lastModifiedTime < pastFudge,
+    "File should not have been overwritten"
+  );
 
   file.remove(false);
   Services.obs.removeObserver(observe, "page-thumbnail:create");

@@ -56,33 +56,44 @@ function testActions(aArray) {
     var actionIndex = actionObj.actionIndex;
     var actionName = actionObj.actionName;
     var events = actionObj.events;
-    var accOrElmOrIDOfTarget = actionObj.targetID ?
-      actionObj.targetID : accOrElmOrID;
+    var accOrElmOrIDOfTarget = actionObj.targetID
+      ? actionObj.targetID
+      : accOrElmOrID;
 
     var eventSeq = [];
     if (events) {
       var elm = getNode(accOrElmOrIDOfTarget);
-      if (events & MOUSEDOWN_EVENT)
+      if (events & MOUSEDOWN_EVENT) {
         eventSeq.push(new checkerOfActionInvoker("mousedown", elm, actionObj));
+      }
 
-      if (events & MOUSEUP_EVENT)
+      if (events & MOUSEUP_EVENT) {
         eventSeq.push(new checkerOfActionInvoker("mouseup", elm, actionObj));
+      }
 
-      if (events & CLICK_EVENT)
+      if (events & CLICK_EVENT) {
         eventSeq.push(new checkerOfActionInvoker("click", elm, actionObj));
+      }
 
-      if (events & COMMAND_EVENT)
+      if (events & COMMAND_EVENT) {
         eventSeq.push(new checkerOfActionInvoker("command", elm, actionObj));
+      }
 
-      if (events & FOCUS_EVENT)
+      if (events & FOCUS_EVENT) {
         eventSeq.push(new focusChecker(elm));
+      }
     }
 
-    if (actionObj.eventSeq)
+    if (actionObj.eventSeq) {
       eventSeq = eventSeq.concat(actionObj.eventSeq);
+    }
 
-    var invoker = new actionInvoker(accOrElmOrID, actionIndex, actionName,
-                                    eventSeq);
+    var invoker = new actionInvoker(
+      accOrElmOrID,
+      actionIndex,
+      actionName,
+      eventSeq
+    );
     gActionsQueue.push(invoker);
   }
 
@@ -93,15 +104,21 @@ function testActions(aArray) {
  * Test action names and descriptions.
  */
 function testActionNames(aID, aActions) {
-  var actions = (typeof aActions == "string") ?
-    [ aActions ] : (aActions || []);
+  var actions = typeof aActions == "string" ? [aActions] : aActions || [];
 
   var acc = getAccessible(aID);
   is(acc.actionCount, actions.length, "Wong number of actions.");
-  for (var i = 0; i < actions.length; i++ ) {
-    is(acc.getActionName(i), actions[i], "Wrong action name at " + i + " index.");
-    is(acc.getActionDescription(0), gActionDescrMap[actions[i]],
-       "Wrong action description at " + i + "index.");
+  for (var i = 0; i < actions.length; i++) {
+    is(
+      acc.getActionName(i),
+      actions[i],
+      "Wrong action name at " + i + " index."
+    );
+    is(
+      acc.getActionDescription(0),
+      gActionDescrMap[actions[i]],
+      "Wrong action description at " + i + "index."
+    );
   }
 }
 
@@ -113,18 +130,25 @@ var gActionsQueue = null;
 function actionInvoker(aAccOrElmOrId, aActionIndex, aActionName, aEventSeq) {
   this.invoke = function actionInvoker_invoke() {
     var acc = getAccessible(aAccOrElmOrId);
-    if (!acc)
+    if (!acc) {
       return INVOKER_ACTION_FAILED;
+    }
 
     var isThereActions = acc.actionCount > 0;
-    ok(isThereActions,
-       "No actions on the accessible for " + prettyName(aAccOrElmOrId));
+    ok(
+      isThereActions,
+      "No actions on the accessible for " + prettyName(aAccOrElmOrId)
+    );
 
-    if (!isThereActions)
+    if (!isThereActions) {
       return INVOKER_ACTION_FAILED;
+    }
 
-    is(acc.getActionName(aActionIndex), aActionName,
-       "Wrong action name of the accessible for " + prettyName(aAccOrElmOrId));
+    is(
+      acc.getActionName(aActionIndex),
+      aActionName,
+      "Wrong action name of the accessible for " + prettyName(aAccOrElmOrId)
+    );
 
     try {
       acc.doAction(aActionIndex);
@@ -138,8 +162,14 @@ function actionInvoker(aAccOrElmOrId, aActionIndex, aActionName, aEventSeq) {
   this.eventSeq = aEventSeq;
 
   this.getID = function actionInvoker_getID() {
-    return "invoke an action " + aActionName + " at index " + aActionIndex +
-      " on " + prettyName(aAccOrElmOrId);
+    return (
+      "invoke an action " +
+      aActionName +
+      " at index " +
+      aActionIndex +
+      " on " +
+      prettyName(aAccOrElmOrId)
+    );
   };
 }
 
@@ -159,13 +189,13 @@ function checkerOfActionInvoker(aType, aTarget, aActionObj) {
   };
 
   this.check = function check(aEvent) {
-    if (aType == "click" && aActionObj && "checkOnClickEvent" in aActionObj)
+    if (aType == "click" && aActionObj && "checkOnClickEvent" in aActionObj) {
       aActionObj.checkOnClickEvent(aEvent);
+    }
   };
 }
 
-var gActionDescrMap =
-{
+var gActionDescrMap = {
   jump: "Jump",
   press: "Press",
   check: "Check",

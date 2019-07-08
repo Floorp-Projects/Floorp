@@ -28,6 +28,7 @@
   --accessible-label-color: var(--grey-60);
   /* Similarly to webconsole, add more padding before the toolbar group. */
   --separator-inline-margin: 5px;
+  --accessibility-code-background: var(--grey-20);
 }
 
 :root.theme-dark {
@@ -42,6 +43,7 @@
   --accessible-label-background-color: var(--grey-80);
   --accessible-label-border-color: var(--grey-50);
   --accessible-label-color: var(--grey-40);
+  --accessibility-code-background: var(--grey-70);
 }
 
 /* General */
@@ -660,8 +662,31 @@ body {
   white-space: initial;
 }
 
-/* Color Contrast */
-.accessibility-color-contrast-check,
+/* Checks */
+.accessibility-check code {
+  background-color: var(--accessibility-code-background);
+  border-radius: 2px;
+  box-decoration-break: clone;
+  padding: 0 4px;
+}
+
+.accessibility-text-label-check .icon {
+  display: inline;
+  -moz-context-properties: fill;
+  vertical-align: top;
+  margin-block-start: 2px;
+  margin-inline-end: 4px;
+}
+
+.accessibility-text-label-check .icon.fail {
+  fill: var(--theme-icon-error-color);
+}
+
+.accessibility-text-label-check .icon.WARNING {
+  fill: var(--theme-icon-warning-color);
+}
+
+.accessibility-check,
 .accessibility-color-contrast {
   position: relative;
   display: flex;
@@ -669,7 +694,7 @@ body {
   height: inherit;
 }
 
-.accessibility-color-contrast-check {
+.accessibility-check {
   flex-direction: column;
   padding: 4px var(--accessibility-horizontal-indent);
   line-height: 20px;
@@ -679,20 +704,21 @@ body {
   align-items: baseline;
 }
 
-.accessibility-color-contrast-header {
+.accessibility-check-header {
   margin: 0;
   font-weight: bold;
   font-size: var(--accessibility-font-size);
   line-height: var(--accessibility-toolbar-height);
 }
 
-.accessibility-color-contrast-annotation {
+.accessibility-check-annotation {
+  display: inline;
   margin: 0;
   white-space: normal;
   color: var(--accessible-label-color);
 }
 
-.accessibility-color-contrast-annotation .link {
+.accessibility-check-annotation .link {
   color: var(--accessibility-link-color);
   cursor: pointer;
   outline: 0;
@@ -700,16 +726,16 @@ body {
   font-style: normal;
 }
 
-.accessibility-color-contrast-annotation .link:hover:not(:focus) {
+.accessibility-check-annotation .link:hover:not(:focus) {
   text-decoration: underline;
 }
 
-.accessibility-color-contrast-annotation .link:focus:not(:active) {
+.accessibility-check-annotation .link:focus:not(:active) {
   box-shadow: 0 0 0 2px var(--accessibility-toolbar-focus), 0 0 0 4px var(--accessibility-toolbar-focus-alpha30);
   border-radius: 2px;
 }
 
-.accessibility-color-contrast-annotation .link:active {
+.accessibility-check-annotation .link:active {
   color: var(--accessibility-link-color-active);
   text-decoration: underline;
 }

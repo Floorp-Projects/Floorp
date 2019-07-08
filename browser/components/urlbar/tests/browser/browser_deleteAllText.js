@@ -19,8 +19,9 @@ add_task(async function test() {
   await checkResults();
 
   // Backspace.  The popup should close.
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Backspace"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Backspace")
+  );
 
   // Type "x".  A new search should start.  Don't use
   // promiseAutocompleteResultPopup, which has some logic that starts the search
@@ -33,16 +34,18 @@ add_task(async function test() {
 
   // Now repeat the backspace + x two more times.  Same thing should happen.
   for (let i = 0; i < 2; i++) {
-    await UrlbarTestUtils.promisePopupClose(window,
-      () => EventUtils.synthesizeKey("KEY_Backspace"));
+    await UrlbarTestUtils.promisePopupClose(window, () =>
+      EventUtils.synthesizeKey("KEY_Backspace")
+    );
     EventUtils.synthesizeKey("x");
     await UrlbarTestUtils.promiseSearchComplete(window);
     await checkResults();
   }
 
   // Finally, backspace to close the popup.
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Backspace"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Backspace")
+  );
 });
 
 async function checkResults() {

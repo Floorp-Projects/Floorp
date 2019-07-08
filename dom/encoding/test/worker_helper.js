@@ -1,15 +1,15 @@
 /*
  * worker_helper.js
  * bug 764234 tests
-*/
+ */
 function runTestInWorker(files) {
   function workerRun() {
     var tests = [];
     var asserts;
     test = function(func, msg) {
       asserts = [];
-      tests.push({asserts: asserts, msg: msg});
-    }
+      tests.push({ asserts: asserts, msg: msg });
+    };
     assert_equals = function(result, expected, msg) {
       asserts.push(["assert_equals", result, expected, msg]);
     };
@@ -26,13 +26,16 @@ function runTestInWorker(files) {
     };
   }
 
-  var url = URL.createObjectURL(new Blob([
-    runTest.toString(), "\n\n",
-    "(", workerRun.toString(), ")();"
-  ]));
+  var url = URL.createObjectURL(
+    new Blob([runTest.toString(), "\n\n", "(", workerRun.toString(), ")();"])
+  );
   var worker = new Worker(url);
-  var base = location.toString().replace(/\/[^\/]*$/,"/");
-  worker.postMessage(files.map(function(f) { return base + f; }));
+  var base = location.toString().replace(/\/[^\/]*$/, "/");
+  worker.postMessage(
+    files.map(function(f) {
+      return base + f;
+    })
+  );
   worker.onmessage = function(event) {
     URL.revokeObjectURL(url);
     event.data.forEach(function(t) {

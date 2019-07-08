@@ -11,9 +11,13 @@ var EXPORTED_SYMBOLS = [
   "TokenServerClientServerError",
 ];
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {RESTRequest} = ChromeUtils.import("resource://services-common/rest.js");
-const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { RESTRequest } = ChromeUtils.import(
+  "resource://services-common/rest.js"
+);
+const { Observers } = ChromeUtils.import(
+  "resource://services-common/observers.js"
+);
 
 const PREF_LOG_LEVEL = "services.common.log.logger.tokenserverclient";
 
@@ -35,7 +39,7 @@ function TokenServerClientError(message) {
 TokenServerClientError.prototype = new Error();
 TokenServerClientError.prototype.constructor = TokenServerClientError;
 TokenServerClientError.prototype._toStringFields = function() {
-  return {message: this.message};
+  return { message: this.message };
 };
 TokenServerClientError.prototype.toString = function() {
   return this.name + "(" + JSON.stringify(this._toStringFields()) + ")";
@@ -58,10 +62,9 @@ function TokenServerClientNetworkError(error) {
   this.stack = Error().stack;
 }
 TokenServerClientNetworkError.prototype = new TokenServerClientError();
-TokenServerClientNetworkError.prototype.constructor =
-  TokenServerClientNetworkError;
+TokenServerClientNetworkError.prototype.constructor = TokenServerClientNetworkError;
 TokenServerClientNetworkError.prototype._toStringFields = function() {
-  return {error: this.error};
+  return { error: this.error };
 };
 
 /**
@@ -102,8 +105,7 @@ function TokenServerClientServerError(message, cause = "general") {
   this.stack = Error().stack;
 }
 TokenServerClientServerError.prototype = new TokenServerClientError();
-TokenServerClientServerError.prototype.constructor =
-  TokenServerClientServerError;
+TokenServerClientServerError.prototype.constructor = TokenServerClientServerError;
 
 TokenServerClientServerError.prototype._toStringFields = function() {
   let fields = {
@@ -274,8 +276,10 @@ TokenServerClient.prototype = {
       this._log.debug("Content-Type: " + ct);
       this._log.debug("Body: " + response.body);
 
-      let error = new TokenServerClientServerError("Non-JSON response.",
-                                                   "malformed-response");
+      let error = new TokenServerClientServerError(
+        "Non-JSON response.",
+        "malformed-response"
+      );
       error.response = response;
       throw error;
     }
@@ -285,8 +289,10 @@ TokenServerClient.prototype = {
       result = JSON.parse(response.body);
     } catch (ex) {
       this._log.warn("Invalid JSON returned by server: " + response.body);
-      let error = new TokenServerClientServerError("Malformed JSON.",
-                                                   "malformed-response");
+      let error = new TokenServerClientServerError(
+        "Malformed JSON.",
+        "malformed-response"
+      );
       error.response = response;
       throw error;
     }
@@ -331,7 +337,7 @@ TokenServerClient.prototype = {
 
           error.message = "Missing JSON fields.";
           error.cause = "malformed-response";
-        } else if (typeof(result.urls) != "object") {
+        } else if (typeof result.urls != "object") {
           error.message = "urls field is not a map.";
           error.cause = "malformed-response";
         } else {
@@ -353,9 +359,9 @@ TokenServerClient.prototype = {
 
     for (let k of ["id", "key", "api_endpoint", "uid", "duration"]) {
       if (!(k in result)) {
-        let error = new TokenServerClientServerError("Expected key not " +
-                                                     " present in result: " +
-                                                     k);
+        let error = new TokenServerClientServerError(
+          "Expected key not present in result: " + k
+        );
         error.cause = "malformed-response";
         error.response = response;
         throw error;
@@ -364,11 +370,11 @@ TokenServerClient.prototype = {
 
     this._log.debug("Successful token response");
     return {
-      id:             result.id,
-      key:            result.key,
-      endpoint:       result.api_endpoint,
-      uid:            result.uid,
-      duration:       result.duration,
+      id: result.id,
+      key: result.key,
+      endpoint: result.api_endpoint,
+      uid: result.uid,
+      duration: result.duration,
       hashed_fxa_uid: result.hashed_fxa_uid,
     };
   },
@@ -395,11 +401,18 @@ TokenServerClient.prototype = {
     try {
       backoffInterval = parseInt(headerVal, 10);
     } catch (ex) {
-      this._log.error("TokenServer response had invalid backoff value in '" +
-                      headerName + "' header: " + headerVal);
+      this._log.error(
+        "TokenServer response had invalid backoff value in '" +
+          headerName +
+          "' header: " +
+          headerVal
+      );
       return;
     }
-    Observers.notify(this.observerPrefix + ":backoff:interval", backoffInterval);
+    Observers.notify(
+      this.observerPrefix + ":backoff:interval",
+      backoffInterval
+    );
   },
 
   // override points for testing.

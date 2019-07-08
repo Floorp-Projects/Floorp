@@ -10,7 +10,7 @@
  * Initially copied from unit tests at https://github.com/alexei/sprintf.js
  */
 
-const {sprintf} = require("devtools/shared/sprintfjs/sprintf");
+const { sprintf } = require("devtools/shared/sprintfjs/sprintf");
 const PI = 3.141592653589793;
 
 function run_test() {
@@ -22,8 +22,8 @@ function run_test() {
   equal("2", sprintf("%i", 2));
   equal("2", sprintf("%d", "2"));
   equal("2", sprintf("%i", "2"));
-  equal("{\"foo\":\"bar\"}", sprintf("%j", {foo: "bar"}));
-  equal("[\"foo\",\"bar\"]", sprintf("%j", ["foo", "bar"]));
+  equal('{"foo":"bar"}', sprintf("%j", { foo: "bar" }));
+  equal('["foo","bar"]', sprintf("%j", ["foo", "bar"]));
   equal("2e+0", sprintf("%e", 2));
   equal("2", sprintf("%u", 2));
   equal("4294967294", sprintf("%u", -2));
@@ -33,9 +33,11 @@ function run_test() {
   equal("%s", sprintf("%s", "%s"));
   equal("ff", sprintf("%x", 255));
   equal("FF", sprintf("%X", 255));
-  equal("Polly wants a cracker",
-    sprintf("%2$s %3$s a %1$s", "cracker", "Polly", "wants"));
-  equal("Hello world!", sprintf("Hello %(who)s!", {who: "world"}));
+  equal(
+    "Polly wants a cracker",
+    sprintf("%2$s %3$s a %1$s", "cracker", "Polly", "wants")
+  );
+  equal("Hello world!", sprintf("Hello %(who)s!", { who: "world" }));
   equal("true", sprintf("%t", true));
   equal("t", sprintf("%.1t", true));
   equal("true", sprintf("%t", "true"));
@@ -52,7 +54,7 @@ function run_test() {
   equal("string", sprintf("%T", "This is a string"));
   equal("function", sprintf("%T", Math.log));
   equal("array", sprintf("%T", [1, 2, 3]));
-  equal("object", sprintf("%T", {foo: "bar"}));
+  equal("object", sprintf("%T", { foo: "bar" }));
 
   equal("regexp", sprintf("%T", /<("[^"]*"|"[^"]*"|[^"">])*>/));
 
@@ -60,9 +62,11 @@ function run_test() {
   equal("42", sprintf("%v", 42));
   equal("This is a string", sprintf("%v", "This is a string"));
   equal("1,2,3", sprintf("%v", [1, 2, 3]));
-  equal("[object Object]", sprintf("%v", {foo: "bar"}));
-  equal("/<(\"[^\"]*\"|'[^']*'|[^'\">])*>/",
-    sprintf("%v", /<("[^"]*"|'[^']*'|[^'">])*>/));
+  equal("[object Object]", sprintf("%v", { foo: "bar" }));
+  equal(
+    "/<(\"[^\"]*\"|'[^']*'|[^'\">])*>/",
+    sprintf("%v", /<("[^"]*"|'[^']*'|[^'">])*>/)
+  );
 
   // sign
   equal("2", sprintf("%d", 2));
@@ -99,15 +103,18 @@ function run_test() {
   equal("1234", sprintf("%02u", 1234));
   equal(" -10.235", sprintf("%8.3f", -10.23456));
   equal("-12.34 xxx", sprintf("%f %s", -12.34, "xxx"));
-  equal("{\n  \"foo\": \"bar\"\n}", sprintf("%2j", {foo: "bar"}));
-  equal("[\n  \"foo\",\n  \"bar\"\n]", sprintf("%2j", ["foo", "bar"]));
+  equal('{\n  "foo": "bar"\n}', sprintf("%2j", { foo: "bar" }));
+  equal('[\n  "foo",\n  "bar"\n]', sprintf("%2j", ["foo", "bar"]));
 
   // precision
   equal("2.3", sprintf("%.1f", 2.345));
   equal("xxxxx", sprintf("%5.5s", "xxxxxx"));
   equal("    x", sprintf("%5.1s", "xxxxxx"));
 
-  equal("foobar", sprintf("%s", function() {
-    return "foobar";
-  }));
+  equal(
+    "foobar",
+    sprintf("%s", function() {
+      return "foobar";
+    })
+  );
 }

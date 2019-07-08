@@ -2,24 +2,34 @@
 
 const PROXY_PREF = "network.proxy.type";
 
-ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
-                               "resource://gre/modules/ExtensionSettingsStore.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
-                                   "@mozilla.org/browser/aboutnewtab-service;1",
-                                   "nsIAboutNewTabService");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionSettingsStore",
+  "resource://gre/modules/ExtensionSettingsStore.jsm"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "aboutNewTabService",
+  "@mozilla.org/browser/aboutnewtab-service;1",
+  "nsIAboutNewTabService"
+);
 XPCOMUtils.defineLazyPreferenceGetter(this, "proxyType", PROXY_PREF);
 
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 AddonTestUtils.initMochitest(this);
 
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 const CHROME_URL_ROOT = TEST_DIR + "/";
-const PERMISSIONS_URL = "chrome://browser/content/preferences/sitePermissions.xul";
+const PERMISSIONS_URL =
+  "chrome://browser/content/preferences/sitePermissions.xul";
 let sitePermissionsDialog;
 
 function getSupportsFile(path) {
-  let cr = Cc["@mozilla.org/chrome/chrome-registry;1"]
-    .getService(Ci.nsIChromeRegistry);
+  let cr = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+    Ci.nsIChromeRegistry
+  );
   let uri = Services.io.newURI(CHROME_URL_ROOT + path);
   let fileurl = cr.convertChromeURL(uri);
   return fileurl.QueryInterface(Ci.nsIFileURL);
@@ -43,7 +53,11 @@ function installAddon(xpiName) {
   });
 }
 
-function waitForMessageChange(element, cb, opts = { attributes: true, attributeFilter: ["hidden"] }) {
+function waitForMessageChange(
+  element,
+  cb,
+  opts = { attributes: true, attributeFilter: ["hidden"] }
+) {
   return waitForMutation(element, opts, cb);
 }
 
@@ -52,25 +66,33 @@ function getElement(id, doc = gBrowser.contentDocument) {
 }
 
 function waitForMessageHidden(messageId, doc) {
-  return waitForMessageChange(getElement(messageId, doc), target => target.hidden);
+  return waitForMessageChange(
+    getElement(messageId, doc),
+    target => target.hidden
+  );
 }
 
 function waitForMessageShown(messageId, doc) {
-  return waitForMessageChange(getElement(messageId, doc), target => !target.hidden);
+  return waitForMessageChange(
+    getElement(messageId, doc),
+    target => !target.hidden
+  );
 }
 
 function waitForEnableMessage(messageId, doc) {
   return waitForMessageChange(
     getElement(messageId, doc),
     target => target.classList.contains("extension-controlled-disabled"),
-    { attributeFilter: ["class"], attributes: true });
+    { attributeFilter: ["class"], attributes: true }
+  );
 }
 
 function waitForMessageContent(messageId, l10nId, doc) {
   return waitForMessageChange(
     getElement(messageId, doc),
     target => doc.l10n.getAttributes(target).id === l10nId,
-    { childList: true });
+    { childList: true }
+  );
 }
 
 async function openNotificationsPermissionDialog() {
@@ -87,11 +109,15 @@ async function openNotificationsPermissionDialog() {
 }
 
 add_task(async function testExtensionControlledHomepage() {
-  await openPreferencesViaOpenPreferencesAPI("paneHome", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("paneHome", { leaveOpen: true });
   let doc = gBrowser.contentDocument;
-  is(gBrowser.currentURI.spec, "about:preferences#home",
-     "#home should be in the URI for about:preferences");
-  let homepagePref = () => Services.prefs.getCharPref("browser.startup.homepage");
+  is(
+    gBrowser.currentURI.spec,
+    "about:preferences#home",
+    "#home should be in the URI for about:preferences"
+  );
+  let homepagePref = () =>
+    Services.prefs.getCharPref("browser.startup.homepage");
   let originalHomepagePref = homepagePref();
   let extensionHomepage = "https://developer.mozilla.org/";
   let controlledContent = doc.getElementById("browserHomePageExtensionContent");
@@ -102,7 +128,11 @@ add_task(async function testExtensionControlledHomepage() {
   // The homepage is set to the default and the custom settings section is hidden
   ok(originalHomepagePref != extensionHomepage, "homepage is empty by default");
   is(homeModeEl.disabled, false, "The homepage menulist is enabled");
-  is(customSettingsSection.hidden, true, "The custom settings element is hidden");
+  is(
+    customSettingsSection.hidden,
+    true,
+    "The custom settings element is hidden"
+  );
   is(controlledContent.hidden, true, "The extension controlled row is hidden");
 
   // Install an extension that will set the homepage.
@@ -113,12 +143,16 @@ add_task(async function testExtensionControlledHomepage() {
   // The homepage has been set by the extension, the user is notified and it isn't editable.
   let controlledLabel = controlledContent.querySelector("description");
   is(homepagePref(), extensionHomepage, "homepage is set by extension");
-  Assert.deepEqual(doc.l10n.getAttributes(controlledLabel), {
-    id: "extension-controlled-homepage-override",
-    args: {
-      name: "set_homepage",
+  Assert.deepEqual(
+    doc.l10n.getAttributes(controlledLabel),
+    {
+      id: "extension-controlled-homepage-override",
+      args: {
+        name: "set_homepage",
+      },
     },
-  }, "The user is notified that an extension is controlling the homepage");
+    "The user is notified that an extension is controlling the homepage"
+  );
   is(controlledContent.hidden, false, "The extension controlled row is hidden");
   is(homeModeEl.disabled, true, "The homepage input is disabled");
 
@@ -128,9 +162,11 @@ add_task(async function testExtensionControlledHomepage() {
   await enableMessageShown;
 
   // The user is notified how to enable the extension.
-  is(doc.l10n.getAttributes(controlledLabel.querySelector("label")).id,
+  is(
+    doc.l10n.getAttributes(controlledLabel.querySelector("label")).id,
     "extension-controlled-enable",
-    "The user is notified of how to enable the extension again");
+    "The user is notified of how to enable the extension again"
+  );
 
   // The user can dismiss the enable instructions.
   let hidden = waitForMessageHidden("browserHomePageExtensionContent");
@@ -156,10 +192,13 @@ add_task(async function testExtensionControlledHomepage() {
 });
 
 add_task(async function testPrefLockedHomepage() {
-  await openPreferencesViaOpenPreferencesAPI("paneHome", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("paneHome", { leaveOpen: true });
   let doc = gBrowser.contentDocument;
-  is(gBrowser.currentURI.spec, "about:preferences#home",
-     "#home should be in the URI for about:preferences");
+  is(
+    gBrowser.currentURI.spec,
+    "about:preferences#home",
+    "#home should be in the URI for about:preferences"
+  );
 
   let homePagePref = "browser.startup.homepage";
   let buttonPrefs = [
@@ -170,18 +209,23 @@ add_task(async function testPrefLockedHomepage() {
   let homeModeEl = doc.getElementById("homeMode");
   let homePageInput = doc.getElementById("homePageUrl");
   let prefs = Services.prefs.getDefaultBranch(null);
-  let mutationOpts = {attributes: true, attributeFilter: ["disabled"]};
+  let mutationOpts = { attributes: true, attributeFilter: ["disabled"] };
   let controlledContent = doc.getElementById("browserHomePageExtensionContent");
 
   // Helper functions.
-  let getButton = pref => doc.querySelector(`.homepage-button[preference="${pref}"`);
-  let waitForAllMutations = () => Promise.all(
-    buttonPrefs.map(pref => waitForMutation(getButton(pref), mutationOpts))
-      .concat([
-        waitForMutation(homeModeEl, mutationOpts),
-        waitForMutation(homePageInput, mutationOpts),
-      ]));
-  let getHomepage = () => Services.prefs.getCharPref("browser.startup.homepage");
+  let getButton = pref =>
+    doc.querySelector(`.homepage-button[preference="${pref}"`);
+  let waitForAllMutations = () =>
+    Promise.all(
+      buttonPrefs
+        .map(pref => waitForMutation(getButton(pref), mutationOpts))
+        .concat([
+          waitForMutation(homeModeEl, mutationOpts),
+          waitForMutation(homePageInput, mutationOpts),
+        ])
+    );
+  let getHomepage = () =>
+    Services.prefs.getCharPref("browser.startup.homepage");
 
   let originalHomepage = getHomepage();
   let extensionHomepage = "https://developer.mozilla.org/";
@@ -206,7 +250,10 @@ add_task(async function testPrefLockedHomepage() {
     prefs.setCharPref(homePagePref, originalHomepage);
   };
 
-  ok(originalHomepage != extensionHomepage, "The extension will change the homepage");
+  ok(
+    originalHomepage != extensionHomepage,
+    "The extension will change the homepage"
+  );
 
   // Install an extension that sets the homepage to MDN.
   let promise = waitForMessageShown(controlledContent.id);
@@ -214,14 +261,38 @@ add_task(async function testPrefLockedHomepage() {
   await promise;
 
   // Check that everything is still disabled, homepage didn't change.
-  is(getHomepage(), extensionHomepage, "The reported homepage is set by the extension");
-  is(homePageInput.value, extensionHomepage, "The homepage is set by the extension");
-  is(homePageInput.disabled, true, "Homepage custom input is disabled when set by extension");
-  is(homeModeEl.disabled, true, "Homepage menulist is disabled when set by extension");
+  is(
+    getHomepage(),
+    extensionHomepage,
+    "The reported homepage is set by the extension"
+  );
+  is(
+    homePageInput.value,
+    extensionHomepage,
+    "The homepage is set by the extension"
+  );
+  is(
+    homePageInput.disabled,
+    true,
+    "Homepage custom input is disabled when set by extension"
+  );
+  is(
+    homeModeEl.disabled,
+    true,
+    "Homepage menulist is disabled when set by extension"
+  );
   buttonPrefs.forEach(pref => {
-    is(getButton(pref).disabled, true, `${pref} is disabled when set by extension`);
+    is(
+      getButton(pref).disabled,
+      true,
+      `${pref} is disabled when set by extension`
+    );
   });
-  is(controlledContent.hidden, false, "The extension controlled message is shown");
+  is(
+    controlledContent.hidden,
+    false,
+    "The extension controlled message is shown"
+  );
 
   // Lock all of the prefs, wait for the UI to update.
   let messageHidden = waitForMessageHidden(controlledContent.id);
@@ -232,13 +303,29 @@ add_task(async function testPrefLockedHomepage() {
   // Check that everything is now disabled.
   is(getHomepage(), lockedHomepage, "The reported homepage is set by the pref");
   is(homePageInput.value, lockedHomepage, "The homepage is set by the pref");
-  is(homePageInput.disabled, true, "The homepage is disabed when the pref is locked");
-  is(homeModeEl.disabled, true, "Homepage menulist is disabled when the pref is locked");
+  is(
+    homePageInput.disabled,
+    true,
+    "The homepage is disabed when the pref is locked"
+  );
+  is(
+    homeModeEl.disabled,
+    true,
+    "Homepage menulist is disabled when the pref is locked"
+  );
 
   buttonPrefs.forEach(pref => {
-    is(getButton(pref).disabled, true, `The ${pref} button is disabled when locked`);
+    is(
+      getButton(pref).disabled,
+      true,
+      `The ${pref} button is disabled when locked`
+    );
   });
-  is(controlledContent.hidden, true, "The extension controlled message is hidden when locked");
+  is(
+    controlledContent.hidden,
+    true,
+    "The extension controlled message is hidden when locked"
+  );
 
   // Unlock the prefs, wait for the UI to update.
   let messageShown = waitForMessageShown(controlledContent.id);
@@ -246,13 +333,33 @@ add_task(async function testPrefLockedHomepage() {
   await messageShown;
 
   // Verify that the UI is showing the extension's settings.
-  is(homePageInput.value, extensionHomepage, "The homepage is set by the extension");
-  is(homePageInput.disabled, true, "Homepage is disabled when set by extension");
-  is(homeModeEl.disabled, true, "Homepage menulist is disabled when set by extension");
+  is(
+    homePageInput.value,
+    extensionHomepage,
+    "The homepage is set by the extension"
+  );
+  is(
+    homePageInput.disabled,
+    true,
+    "Homepage is disabled when set by extension"
+  );
+  is(
+    homeModeEl.disabled,
+    true,
+    "Homepage menulist is disabled when set by extension"
+  );
   buttonPrefs.forEach(pref => {
-    is(getButton(pref).disabled, true, `${pref} is disabled when set by extension`);
+    is(
+      getButton(pref).disabled,
+      true,
+      `${pref} is disabled when set by extension`
+    );
   });
-  is(controlledContent.hidden, false, "The extension controlled message is shown when unlocked");
+  is(
+    controlledContent.hidden,
+    false,
+    "The extension controlled message is shown when unlocked"
+  );
 
   // Uninstall the add-on.
   let addon = await AddonManager.getAddonByID("@set_homepage");
@@ -261,12 +368,28 @@ add_task(async function testPrefLockedHomepage() {
   await promise;
 
   // Check that everything is now enabled again.
-  is(getHomepage(), originalHomepage, "The reported homepage is reset to original value");
+  is(
+    getHomepage(),
+    originalHomepage,
+    "The reported homepage is reset to original value"
+  );
   is(homePageInput.value, "", "The homepage is empty");
-  is(homePageInput.disabled, false, "The homepage is enabled after clearing lock");
-  is(homeModeEl.disabled, false, "Homepage menulist is enabled after clearing lock");
+  is(
+    homePageInput.disabled,
+    false,
+    "The homepage is enabled after clearing lock"
+  );
+  is(
+    homeModeEl.disabled,
+    false,
+    "Homepage menulist is enabled after clearing lock"
+  );
   buttonPrefs.forEach(pref => {
-    is(getButton(pref).disabled, false, `The ${pref} button is enabled when unlocked`);
+    is(
+      getButton(pref).disabled,
+      false,
+      `The ${pref} button is enabled when unlocked`
+    );
   });
 
   // Lock the prefs without an extension.
@@ -277,10 +400,22 @@ add_task(async function testPrefLockedHomepage() {
   // Check that everything is now disabled.
   is(getHomepage(), lockedHomepage, "The reported homepage is set by the pref");
   is(homePageInput.value, lockedHomepage, "The homepage is set by the pref");
-  is(homePageInput.disabled, true, "The homepage is disabed when the pref is locked");
-  is(homeModeEl.disabled, true, "Homepage menulist is disabled when prefis locked");
+  is(
+    homePageInput.disabled,
+    true,
+    "The homepage is disabed when the pref is locked"
+  );
+  is(
+    homeModeEl.disabled,
+    true,
+    "Homepage menulist is disabled when prefis locked"
+  );
   buttonPrefs.forEach(pref => {
-    is(getButton(pref).disabled, true, `The ${pref} button is disabled when locked`);
+    is(
+      getButton(pref).disabled,
+      true,
+      `The ${pref} button is disabled when locked`
+    );
   });
 
   // Unlock the prefs without an extension.
@@ -288,29 +423,54 @@ add_task(async function testPrefLockedHomepage() {
   await waitForAllMutations();
 
   // Check that everything is enabled again.
-  is(getHomepage(), originalHomepage, "The homepage is reset to the original value");
+  is(
+    getHomepage(),
+    originalHomepage,
+    "The homepage is reset to the original value"
+  );
   is(homePageInput.value, "", "The homepage is clear after being unlocked");
-  is(homePageInput.disabled, false, "The homepage is enabled after clearing lock");
-  is(homeModeEl.disabled, false, "Homepage menulist is enabled after clearing lock");
+  is(
+    homePageInput.disabled,
+    false,
+    "The homepage is enabled after clearing lock"
+  );
+  is(
+    homeModeEl.disabled,
+    false,
+    "Homepage menulist is enabled after clearing lock"
+  );
   buttonPrefs.forEach(pref => {
-    is(getButton(pref).disabled, false, `The ${pref} button is enabled when unlocked`);
+    is(
+      getButton(pref).disabled,
+      false,
+      `The ${pref} button is enabled when unlocked`
+    );
   });
-  is(controlledContent.hidden, true,
-     "The extension controlled message is hidden when unlocked with no extension");
+  is(
+    controlledContent.hidden,
+    true,
+    "The extension controlled message is hidden when unlocked with no extension"
+  );
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function testExtensionControlledNewTab() {
-  await openPreferencesViaOpenPreferencesAPI("paneHome", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("paneHome", { leaveOpen: true });
   let doc = gBrowser.contentDocument;
-  is(gBrowser.currentURI.spec, "about:preferences#home",
-     "#home should be in the URI for about:preferences");
+  is(
+    gBrowser.currentURI.spec,
+    "about:preferences#home",
+    "#home should be in the URI for about:preferences"
+  );
 
   let controlledContent = doc.getElementById("browserNewTabExtensionContent");
 
   // The new tab is set to the default and message is hidden.
-  ok(!aboutNewTabService.newTabURL.startsWith("moz-extension:"), "new tab is not set");
+  ok(
+    !aboutNewTabService.newTabURL.startsWith("moz-extension:"),
+    "new tab is not set"
+  );
   is(controlledContent.hidden, true, "The extension controlled row is hidden");
 
   // Install an extension that will set the new tab page.
@@ -320,13 +480,20 @@ add_task(async function testExtensionControlledNewTab() {
 
   // The new tab page has been set by the extension and the user is notified.
   let controlledLabel = controlledContent.querySelector("description");
-  ok(aboutNewTabService.newTabURL.startsWith("moz-extension:"), "new tab url is set by extension");
-  Assert.deepEqual(doc.l10n.getAttributes(controlledLabel), {
-    id: "extension-controlled-new-tab-url",
-    args: {
-      name: "set_newtab",
+  ok(
+    aboutNewTabService.newTabURL.startsWith("moz-extension:"),
+    "new tab url is set by extension"
+  );
+  Assert.deepEqual(
+    doc.l10n.getAttributes(controlledLabel),
+    {
+      id: "extension-controlled-new-tab-url",
+      args: {
+        name: "set_newtab",
+      },
     },
-  }, "The user is notified that an extension is controlling the new tab page");
+    "The user is notified that an extension is controlling the new tab page"
+  );
   is(controlledContent.hidden, false, "The extension controlled row is hidden");
 
   // Disable the extension.
@@ -334,9 +501,11 @@ add_task(async function testExtensionControlledNewTab() {
 
   // Verify the user is notified how to enable the extension.
   await waitForEnableMessage(controlledContent.id);
-  is(doc.l10n.getAttributes(controlledLabel.querySelector("label")).id,
+  is(
+    doc.l10n.getAttributes(controlledLabel.querySelector("label")).id,
     "extension-controlled-enable",
-    "The user is notified of how to enable the extension again");
+    "The user is notified of how to enable the extension again"
+  );
 
   // Verify the enable message can be dismissed.
   let hidden = waitForMessageHidden(controlledContent.id);
@@ -345,7 +514,10 @@ add_task(async function testExtensionControlledNewTab() {
   await hidden;
 
   // Ensure the New Tab page has been reset and there is no message.
-  ok(!aboutNewTabService.newTabURL.startsWith("moz-extension:"), "new tab page is set back to default");
+  ok(
+    !aboutNewTabService.newTabURL.startsWith("moz-extension:"),
+    "new tab page is set back to default"
+  );
   is(controlledContent.hidden, true, "The extension controlled row is shown");
 
   // Cleanup the tab and add-on.
@@ -360,31 +532,37 @@ add_task(async function testExtensionControlledWebNotificationsPermission() {
     name: "TestExtension",
     version: "1.0",
     description: "Testing WebNotificationsDisable",
-    applications: {gecko: {id: "@web_notifications_disable"}},
-    permissions: [
-      "browserSettings",
-    ],
+    applications: { gecko: { id: "@web_notifications_disable" } },
+    permissions: ["browserSettings"],
     browser_action: {
       default_title: "Testing",
     },
   };
 
-  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   await openNotificationsPermissionDialog();
 
   let doc = sitePermissionsDialog.document;
-  let extensionControlledContent = doc.getElementById("browserNotificationsPermissionExtensionContent");
+  let extensionControlledContent = doc.getElementById(
+    "browserNotificationsPermissionExtensionContent"
+  );
 
   // Test that extension content is initially hidden.
-  ok(extensionControlledContent.hidden, "Extension content is initially hidden");
+  ok(
+    extensionControlledContent.hidden,
+    "Extension content is initially hidden"
+  );
 
   // Install an extension that will disable web notifications permission.
-  let messageShown = waitForMessageShown("browserNotificationsPermissionExtensionContent", doc);
+  let messageShown = waitForMessageShown(
+    "browserNotificationsPermissionExtensionContent",
+    doc
+  );
   let extension = ExtensionTestUtils.loadExtension({
     manifest,
     useAddonManager: "permanent",
     background() {
-      browser.browserSettings.webNotificationsDisabled.set({value: true});
+      browser.browserSettings.webNotificationsDisabled.set({ value: true });
       browser.test.sendMessage("load-extension");
     },
   });
@@ -393,22 +571,32 @@ add_task(async function testExtensionControlledWebNotificationsPermission() {
   await messageShown;
 
   let controlledDesc = extensionControlledContent.querySelector("description");
-  Assert.deepEqual(doc.l10n.getAttributes(controlledDesc), {
-    id: "extension-controlled-web-notifications",
-    args: {
-      name: "TestExtension",
+  Assert.deepEqual(
+    doc.l10n.getAttributes(controlledDesc),
+    {
+      id: "extension-controlled-web-notifications",
+      args: {
+        name: "TestExtension",
+      },
     },
-  }, "The user is notified that an extension is controlling the web notifications permission");
-  is(extensionControlledContent.hidden, false, "The extension controlled row is not hidden");
+    "The user is notified that an extension is controlling the web notifications permission"
+  );
+  is(
+    extensionControlledContent.hidden,
+    false,
+    "The extension controlled row is not hidden"
+  );
 
   // Disable the extension.
   doc.getElementById("disableNotificationsPermissionExtension").click();
 
   // Verify the user is notified how to enable the extension.
   await waitForEnableMessage(extensionControlledContent.id, doc);
-  is(doc.l10n.getAttributes(controlledDesc.querySelector("label")).id,
+  is(
+    doc.l10n.getAttributes(controlledDesc.querySelector("label")).id,
     "extension-controlled-enable",
-    "The user is notified of how to enable the extension again");
+    "The user is notified of how to enable the extension again"
+  );
 
   // Verify the enable message can be dismissed.
   let hidden = waitForMessageHidden(extensionControlledContent.id, doc);
@@ -417,20 +605,24 @@ add_task(async function testExtensionControlledWebNotificationsPermission() {
   await hidden;
 
   // Verify that the extension controlled content in hidden again.
-  is(extensionControlledContent.hidden, true, "The extension controlled row is now hidden");
+  is(
+    extensionControlledContent.hidden,
+    true,
+    "The extension controlled row is now hidden"
+  );
 
   await extension.unload();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function testExtensionControlledDefaultSearch() {
-  await openPreferencesViaOpenPreferencesAPI("paneSearch", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("paneSearch", { leaveOpen: true });
   let doc = gBrowser.contentDocument;
   let extensionId = "@set_default_search";
   let manifest = {
     manifest_version: 2,
     name: "set_default_search",
-    applications: {gecko: {id: extensionId}},
+    applications: { gecko: { id: extensionId } },
     description: "set_default_search description",
     permissions: [],
     chrome_settings_overrides: {
@@ -447,14 +639,20 @@ add_task(async function testExtensionControlledDefaultSearch() {
   await Services.search.init();
 
   function setEngine(engine) {
-    doc.querySelector(`#defaultEngine menuitem[label="${engine.name}"]`)
-       .doCommand();
+    doc
+      .querySelector(`#defaultEngine menuitem[label="${engine.name}"]`)
+      .doCommand();
   }
 
-  is(gBrowser.currentURI.spec, "about:preferences#search",
-     "#search should be in the URI for about:preferences");
+  is(
+    gBrowser.currentURI.spec,
+    "about:preferences#search",
+    "#search should be in the URI for about:preferences"
+  );
 
-  let controlledContent = doc.getElementById("browserDefaultSearchExtensionContent");
+  let controlledContent = doc.getElementById(
+    "browserDefaultSearchExtensionContent"
+  );
   let initialEngine = Services.search.defaultEngine;
 
   // Ensure the controlled content is hidden when not controlled.
@@ -463,10 +661,12 @@ add_task(async function testExtensionControlledDefaultSearch() {
   // Install an extension that will set the default search engine.
   let originalExtension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
-    manifest: Object.assign({}, manifest, {version: "1.0"}),
+    manifest: Object.assign({}, manifest, { version: "1.0" }),
   });
 
-  let messageShown = waitForMessageShown("browserDefaultSearchExtensionContent");
+  let messageShown = waitForMessageShown(
+    "browserDefaultSearchExtensionContent"
+  );
   await originalExtension.startup();
   await AddonTestUtils.waitForSearchProviderStartup(originalExtension);
   await messageShown;
@@ -478,20 +678,27 @@ add_task(async function testExtensionControlledDefaultSearch() {
   let controlledLabel = controlledContent.querySelector("description");
   let extensionEngine = Services.search.defaultEngine;
   ok(initialEngine != extensionEngine, "The default engine has changed.");
-  Assert.deepEqual(doc.l10n.getAttributes(controlledLabel), {
-    id: "extension-controlled-default-search",
-    args: {
-      name: "set_default_search",
+  Assert.deepEqual(
+    doc.l10n.getAttributes(controlledLabel),
+    {
+      id: "extension-controlled-default-search",
+      args: {
+        name: "set_default_search",
+      },
     },
-  }, "The user is notified that an extension is controlling the default search engine");
+    "The user is notified that an extension is controlling the default search engine"
+  );
   is(controlledContent.hidden, false, "The extension controlled row is shown");
 
   // Set the engine back to the initial one, ensure the message is hidden.
   setEngine(initialEngine);
   await waitForMessageHidden(controlledContent.id);
 
-  is(initialEngine, Services.search.defaultEngine,
-     "default search engine is set back to default");
+  is(
+    initialEngine,
+    Services.search.defaultEngine,
+    "default search engine is set back to default"
+  );
   is(controlledContent.hidden, true, "The extension controlled row is hidden");
 
   // Setting the engine back to the extension's engine does not show the message.
@@ -499,9 +706,16 @@ add_task(async function testExtensionControlledDefaultSearch() {
   // Wait a tick for the Search Service's promises to resolve.
   await new Promise(resolve => executeSoon(resolve));
 
-  is(extensionEngine, Services.search.defaultEngine,
-     "default search engine is set back to extension");
-  is(controlledContent.hidden, true, "The extension controlled row is still hidden");
+  is(
+    extensionEngine,
+    Services.search.defaultEngine,
+    "default search engine is set back to extension"
+  );
+  is(
+    controlledContent.hidden,
+    true,
+    "The extension controlled row is still hidden"
+  );
 
   // Set the engine to the initial one and verify an upgrade doesn't change it.
   setEngine(initialEngine);
@@ -510,7 +724,7 @@ add_task(async function testExtensionControlledDefaultSearch() {
   // Update the extension and wait for "ready".
   let updatedExtension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
-    manifest: Object.assign({}, manifest, {version: "2.0"}),
+    manifest: Object.assign({}, manifest, { version: "2.0" }),
   });
   await updatedExtension.startup();
   await AddonTestUtils.waitForSearchProviderStartup(updatedExtension);
@@ -518,9 +732,16 @@ add_task(async function testExtensionControlledDefaultSearch() {
 
   // Verify the extension is updated and search engine didn't change.
   is(addon.version, "2.0", "The updated addon has the expected version");
-  is(controlledContent.hidden, true, "The extension controlled row is hidden after update");
-  is(initialEngine, Services.search.defaultEngine,
-     "default search engine is still the initial engine after update");
+  is(
+    controlledContent.hidden,
+    true,
+    "The extension controlled row is hidden after update"
+  );
+  is(
+    initialEngine,
+    Services.search.defaultEngine,
+    "default search engine is still the initial engine after update"
+  );
 
   await originalExtension.unload();
   await updatedExtension.unload();
@@ -529,17 +750,26 @@ add_task(async function testExtensionControlledDefaultSearch() {
 
 add_task(async function testExtensionControlledHomepageUninstalledAddon() {
   async function checkHomepageEnabled() {
-    await openPreferencesViaOpenPreferencesAPI("paneHome", {leaveOpen: true});
+    await openPreferencesViaOpenPreferencesAPI("paneHome", { leaveOpen: true });
     let doc = gBrowser.contentDocument;
-    is(gBrowser.currentURI.spec, "about:preferences#home",
-      "#home should be in the URI for about:preferences");
-    let controlledContent = doc.getElementById("browserHomePageExtensionContent");
+    is(
+      gBrowser.currentURI.spec,
+      "about:preferences#home",
+      "#home should be in the URI for about:preferences"
+    );
+    let controlledContent = doc.getElementById(
+      "browserHomePageExtensionContent"
+    );
 
     // The homepage is enabled.
     let homepageInput = doc.getElementById("homePageUrl");
     is(homepageInput.disabled, false, "The homepage input is enabled");
     is(homepageInput.value, "", "The homepage input is empty");
-    is(controlledContent.hidden, true, "The extension controlled row is hidden");
+    is(
+      controlledContent.hidden,
+      true,
+      "The extension controlled row is hidden"
+    );
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
@@ -547,8 +777,11 @@ add_task(async function testExtensionControlledHomepageUninstalledAddon() {
   await ExtensionSettingsStore.initialize();
 
   // Verify the setting isn't reported as controlled and the inputs are enabled.
-  is(ExtensionSettingsStore.getSetting("prefs", "homepage_override"), null,
-     "The homepage_override is not set");
+  is(
+    ExtensionSettingsStore.getSetting("prefs", "homepage_override"),
+    null,
+    "The homepage_override is not set"
+  );
   await checkHomepageEnabled();
 
   // Disarm any pending writes before we modify the JSONFile directly.
@@ -559,12 +792,14 @@ add_task(async function testExtensionControlledHomepageUninstalledAddon() {
     prefs: {
       homepage_override: {
         initialValue: "",
-        precedenceList: [{
-          id: "bad@mochi.test",
-          installDate: 1508802672,
-          value: "https://developer.mozilla.org",
-          enabled: true,
-        }],
+        precedenceList: [
+          {
+            id: "bad@mochi.test",
+            installDate: 1508802672,
+            value: "https://developer.mozilla.org",
+            enabled: true,
+          },
+        ],
       },
     },
   };
@@ -578,9 +813,11 @@ add_task(async function testExtensionControlledHomepageUninstalledAddon() {
 
   // Verify that the setting is reported as set, but the homepage is still enabled
   // since there is no matching installed extension.
-  is(ExtensionSettingsStore.getSetting("prefs", "homepage_override").value,
-      "https://developer.mozilla.org",
-      "The homepage_override appears to be set");
+  is(
+    ExtensionSettingsStore.getSetting("prefs", "homepage_override").value,
+    "https://developer.mozilla.org",
+    "The homepage_override appears to be set"
+  );
   await checkHomepageEnabled();
 
   // Remove the bad store file that we used.
@@ -590,25 +827,29 @@ add_task(async function testExtensionControlledHomepageUninstalledAddon() {
   // Don't finalize the current store since it will write out the bad data.
   await ExtensionSettingsStore._reloadFile(false);
 
-  is(ExtensionSettingsStore.getSetting("prefs", "homepage_override"), null,
-     "The ExtensionSettingsStore is left empty.");
+  is(
+    ExtensionSettingsStore.getSetting("prefs", "homepage_override"),
+    null,
+    "The ExtensionSettingsStore is left empty."
+  );
 });
 
 add_task(async function testExtensionControlledTrackingProtection() {
   const TP_PREF = "privacy.trackingprotection.enabled";
   const TP_DEFAULT = false;
   const EXTENSION_ID = "@set_tp";
-  const CONTROLLED_LABEL_ID = "contentBlockingTrackingProtectionExtensionContentLabel";
-  const CONTROLLED_BUTTON_ID = "contentBlockingDisableTrackingProtectionExtension";
+  const CONTROLLED_LABEL_ID =
+    "contentBlockingTrackingProtectionExtensionContentLabel";
+  const CONTROLLED_BUTTON_ID =
+    "contentBlockingDisableTrackingProtectionExtension";
   const DISABLE_BUTTON_ID = "contentBlockingDisableTrackingProtectionExtension";
 
   let tpEnabledPref = () => Services.prefs.getBoolPref(TP_PREF);
 
-  await SpecialPowers.pushPrefEnv(
-    {"set": [[TP_PREF, TP_DEFAULT]]});
+  await SpecialPowers.pushPrefEnv({ set: [[TP_PREF, TP_DEFAULT]] });
 
   function background() {
-    browser.privacy.websites.trackingProtectionMode.set({value: "always"});
+    browser.privacy.websites.trackingProtectionMode.set({ value: "always" });
   }
 
   function verifyState(isControlled) {
@@ -617,21 +858,35 @@ add_task(async function testExtensionControlledTrackingProtection() {
     let controlledLabel = doc.getElementById(CONTROLLED_LABEL_ID);
     let controlledButton = doc.getElementById(CONTROLLED_BUTTON_ID);
 
-    is(controlledLabel.hidden, !isControlled, "The extension controlled row's visibility is as expected.");
-    is(controlledButton.hidden, !isControlled, "The disable extension button's visibility is as expected.");
+    is(
+      controlledLabel.hidden,
+      !isControlled,
+      "The extension controlled row's visibility is as expected."
+    );
+    is(
+      controlledButton.hidden,
+      !isControlled,
+      "The disable extension button's visibility is as expected."
+    );
     if (isControlled) {
       let controlledDesc = controlledLabel.querySelector("description");
-      Assert.deepEqual(doc.l10n.getAttributes(controlledDesc), {
-        id: "extension-controlled-websites-content-blocking-all-trackers",
-        args: {
-          name: "set_tp",
+      Assert.deepEqual(
+        doc.l10n.getAttributes(controlledDesc),
+        {
+          id: "extension-controlled-websites-content-blocking-all-trackers",
+          args: {
+            name: "set_tp",
+          },
         },
-      }, "The user is notified that an extension is controlling TP.");
+        "The user is notified that an extension is controlling TP."
+      );
     }
 
-    is(doc.getElementById("trackingProtectionMenu").disabled,
-       isControlled,
-       "TP control is enabled.");
+    is(
+      doc.getElementById("trackingProtectionMenu").disabled,
+      isControlled,
+      "TP control is enabled."
+    );
   }
 
   async function disableViaClick() {
@@ -645,9 +900,11 @@ add_task(async function testExtensionControlledTrackingProtection() {
 
     // The user is notified how to enable the extension.
     let controlledDesc = controlledLabel.querySelector("description");
-    is(doc.l10n.getAttributes(controlledDesc.querySelector("label")).id,
+    is(
+      doc.l10n.getAttributes(controlledDesc.querySelector("label")).id,
       "extension-controlled-enable",
-      "The user is notified of how to enable the extension again");
+      "The user is notified of how to enable the extension again"
+    );
 
     // The user can dismiss the enable instructions.
     let hidden = waitForMessageHidden(labelId);
@@ -661,11 +918,16 @@ add_task(async function testExtensionControlledTrackingProtection() {
     await controlledMessageShown;
   }
 
-  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
+    leaveOpen: true,
+  });
   let doc = gBrowser.contentDocument;
 
-  is(gBrowser.currentURI.spec, "about:preferences#privacy",
-   "#privacy should be in the URI for about:preferences");
+  is(
+    gBrowser.currentURI.spec,
+    "about:preferences#privacy",
+    "#privacy should be in the URI for about:preferences"
+  );
 
   verifyState(false);
 
@@ -674,7 +936,7 @@ add_task(async function testExtensionControlledTrackingProtection() {
     useAddonManager: "permanent",
     manifest: {
       name: "set_tp",
-      applications: {gecko: {id: EXTENSION_ID}},
+      applications: { gecko: { id: EXTENSION_ID } },
       permissions: ["privacy"],
     },
     background,
@@ -710,16 +972,16 @@ add_task(async function testExtensionControlledProxyConfig() {
   const CONNECTION_SETTINGS_DESC_ID = "connectionSettingsDescription";
   const PANEL_URL = "chrome://browser/content/preferences/connection.xul";
 
-  await SpecialPowers.pushPrefEnv({"set": [[PROXY_PREF, PROXY_DEFAULT]]});
+  await SpecialPowers.pushPrefEnv({ set: [[PROXY_PREF, PROXY_DEFAULT]] });
 
   function background() {
-    browser.proxy.settings.set({value: {proxyType: "none"}});
+    browser.proxy.settings.set({ value: { proxyType: "none" } });
   }
 
   function expectedConnectionSettingsMessage(doc, isControlled) {
-    return isControlled ?
-      "extension-controlled-proxy-config" :
-      "network-proxy-connection-description";
+    return isControlled
+      ? "extension-controlled-proxy-config"
+      : "network-proxy-connection-description";
   }
 
   function connectionSettingsMessagePromise(doc, isControlled) {
@@ -732,61 +994,100 @@ add_task(async function testExtensionControlledProxyConfig() {
 
   function verifyState(doc, isControlled) {
     let isPanel = doc.getElementById(CONTROLLED_BUTTON_ID);
-    is(proxyType === proxySvc.PROXYCONFIG_DIRECT, isControlled,
-      "Proxy pref is set to the expected value.");
+    is(
+      proxyType === proxySvc.PROXYCONFIG_DIRECT,
+      isControlled,
+      "Proxy pref is set to the expected value."
+    );
 
     if (isPanel) {
       let controlledSection = doc.getElementById(CONTROLLED_SECTION_ID);
 
-      is(controlledSection.hidden, !isControlled, "The extension controlled row's visibility is as expected.");
+      is(
+        controlledSection.hidden,
+        !isControlled,
+        "The extension controlled row's visibility is as expected."
+      );
       if (isPanel) {
-        is(doc.getElementById(CONTROLLED_BUTTON_ID).hidden, !isControlled,
-           "The disable extension button's visibility is as expected.");
+        is(
+          doc.getElementById(CONTROLLED_BUTTON_ID).hidden,
+          !isControlled,
+          "The disable extension button's visibility is as expected."
+        );
       }
       if (isControlled) {
         let controlledDesc = controlledSection.querySelector("description");
-        Assert.deepEqual(doc.l10n.getAttributes(controlledDesc), {
-          id: "extension-controlled-proxy-config",
-          args: {
-            name: "set_proxy",
+        Assert.deepEqual(
+          doc.l10n.getAttributes(controlledDesc),
+          {
+            id: "extension-controlled-proxy-config",
+            args: {
+              name: "set_proxy",
+            },
           },
-        }, "The user is notified that an extension is controlling proxy settings.");
+          "The user is notified that an extension is controlling proxy settings."
+        );
       }
       function getProxyControls() {
         let controlGroup = doc.getElementById("networkProxyType");
         let manualControlContainer = controlGroup.querySelector("grid");
         return {
           manualControls: [
-            ...manualControlContainer.querySelectorAll("label[data-l10n-id]:not([control=networkProxyNone])"),
+            ...manualControlContainer.querySelectorAll(
+              "label[data-l10n-id]:not([control=networkProxyNone])"
+            ),
             ...manualControlContainer.querySelectorAll("textbox"),
             ...manualControlContainer.querySelectorAll("checkbox"),
-            ...doc.querySelectorAll("#networkProxySOCKSVersion > radio")],
+            ...doc.querySelectorAll("#networkProxySOCKSVersion > radio"),
+          ],
           pacControls: [doc.getElementById("networkProxyAutoconfigURL")],
           otherControls: [
             doc.querySelector("label[control=networkProxyNone]"),
             doc.getElementById("networkProxyNone"),
             ...controlGroup.querySelectorAll(":scope > radio"),
-            ...doc.querySelectorAll("#ConnectionsDialogPane > checkbox")],
+            ...doc.querySelectorAll("#ConnectionsDialogPane > checkbox"),
+          ],
         };
       }
       let controlState = isControlled ? "disabled" : "enabled";
       let controls = getProxyControls();
       for (let element of controls.manualControls) {
-        let disabled = isControlled || proxyType !== proxySvc.PROXYCONFIG_MANUAL;
-        is(element.disabled, disabled, `Manual proxy controls should be ${controlState} - control: ${element.outerHTML}.`);
+        let disabled =
+          isControlled || proxyType !== proxySvc.PROXYCONFIG_MANUAL;
+        is(
+          element.disabled,
+          disabled,
+          `Manual proxy controls should be ${controlState} - control: ${
+            element.outerHTML
+          }.`
+        );
       }
       for (let element of controls.pacControls) {
         let disabled = isControlled || proxyType !== proxySvc.PROXYCONFIG_PAC;
-        is(element.disabled, disabled, `PAC proxy controls should be ${controlState} - control: ${element.outerHTML}.`);
+        is(
+          element.disabled,
+          disabled,
+          `PAC proxy controls should be ${controlState} - control: ${
+            element.outerHTML
+          }.`
+        );
       }
       for (let element of controls.otherControls) {
-        is(element.disabled, isControlled, `Other proxy controls should be ${controlState} - control: ${element.outerHTML}.`);
+        is(
+          element.disabled,
+          isControlled,
+          `Other proxy controls should be ${controlState} - control: ${
+            element.outerHTML
+          }.`
+        );
       }
     } else {
       let elem = doc.getElementById(CONNECTION_SETTINGS_DESC_ID);
-      is(doc.l10n.getAttributes(elem).id,
+      is(
+        doc.l10n.getAttributes(elem).id,
         expectedConnectionSettingsMessage(doc, isControlled),
-        "The connection settings description is as expected.");
+        "The connection settings description is as expected."
+      );
     }
   }
 
@@ -800,9 +1101,11 @@ add_task(async function testExtensionControlledProxyConfig() {
 
     // The user is notified how to enable the extension.
     let controlledDesc = controlledSection.querySelector("description");
-    is(panelDoc.l10n.getAttributes(controlledDesc.querySelector("label")).id,
+    is(
+      panelDoc.l10n.getAttributes(controlledDesc.querySelector("label")).id,
       "extension-controlled-enable",
-      "The user is notified of how to enable the extension again");
+      "The user is notified of how to enable the extension again"
+    );
 
     // The user can dismiss the enable instructions.
     let hidden = waitForMessageHidden(sectionId, panelDoc);
@@ -818,9 +1121,12 @@ add_task(async function testExtensionControlledProxyConfig() {
 
   async function openProxyPanel() {
     let panel = await openAndLoadSubDialog(PANEL_URL);
-    let closingPromise = waitForEvent(panel.document.documentElement, "dialogclosing");
+    let closingPromise = waitForEvent(
+      panel.document.documentElement,
+      "dialogclosing"
+    );
     ok(panel, "Proxy panel opened.");
-    return {panel, closingPromise};
+    return { panel, closingPromise };
   }
 
   async function closeProxyPanel(panelObj) {
@@ -829,11 +1135,16 @@ add_task(async function testExtensionControlledProxyConfig() {
     ok(panelClosingEvent, "Proxy panel closed.");
   }
 
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+    leaveOpen: true,
+  });
   let mainDoc = gBrowser.contentDocument;
 
-  is(gBrowser.currentURI.spec, "about:preferences#general",
-   "#general should be in the URI for about:preferences");
+  is(
+    gBrowser.currentURI.spec,
+    "about:preferences#general",
+    "#general should be in the URI for about:preferences"
+  );
 
   verifyState(mainDoc, false);
 
@@ -855,7 +1166,7 @@ add_task(async function testExtensionControlledProxyConfig() {
     useAddonManager: "permanent",
     manifest: {
       name: "set_proxy",
-      applications: {gecko: {id: EXTENSION_ID}},
+      applications: { gecko: { id: EXTENSION_ID } },
       permissions: ["proxy"],
     },
     background,

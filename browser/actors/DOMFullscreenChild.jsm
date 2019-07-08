@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["DOMFullscreenChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
 
 class DOMFullscreenChild extends ActorChild {
   receiveMessage(aMessage) {
@@ -14,8 +16,10 @@ class DOMFullscreenChild extends ActorChild {
     switch (aMessage.name) {
       case "DOMFullscreen:Entered": {
         this._lastTransactionId = windowUtils.lastTransactionId;
-        if (!windowUtils.handleFullscreenRequests() &&
-            !this.content.document.fullscreenElement) {
+        if (
+          !windowUtils.handleFullscreenRequests() &&
+          !this.content.document.fullscreenElement
+        ) {
           // If we don't actually have any pending fullscreen request
           // to handle, neither we have been in fullscreen, tell the
           // parent to just exit.
@@ -69,8 +73,10 @@ class DOMFullscreenChild extends ActorChild {
         // the transition for the fullscreen change.
         // Note that this._lastTransactionId is not set when in non-e10s
         // mode, so we need to check that explicitly.
-        if (!this._lastTransactionId ||
-            aEvent.transactionId > this._lastTransactionId) {
+        if (
+          !this._lastTransactionId ||
+          aEvent.transactionId > this._lastTransactionId
+        ) {
           this.mm.removeEventListener("MozAfterPaint", this);
           this.mm.sendAsyncMessage("DOMFullscreen:Painted");
         }

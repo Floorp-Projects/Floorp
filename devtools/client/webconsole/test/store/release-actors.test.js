@@ -9,7 +9,9 @@ const {
   setupStore,
 } = require("devtools/client/webconsole/test/helpers");
 
-const { stubPackets } = require("devtools/client/webconsole/test/fixtures/stubs/index");
+const {
+  stubPackets,
+} = require("devtools/client/webconsole/test/fixtures/stubs/index");
 const expect = require("expect");
 
 describe("Release actor enhancer:", () => {
@@ -24,10 +26,10 @@ describe("Release actor enhancer:", () => {
       const logLimit = 100;
       const releasedActors = [];
       const { dispatch, getState } = setupStore([], {
-        storeOptions: {logLimit},
+        storeOptions: { logLimit },
         hud: {
           proxy: {
-            releaseActor: (actor) => {
+            releaseActor: actor => {
               releasedActors.push(actor);
             },
           },
@@ -35,8 +37,11 @@ describe("Release actor enhancer:", () => {
       });
 
       // Add a log message.
-      dispatch(actions.messagesAdd([
-        stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])")]));
+      dispatch(
+        actions.messagesAdd([
+          stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])"),
+        ])
+      );
 
       const firstMessage = getFirstMessage(getState());
       const firstMessageActor = firstMessage.parameters[1].actor;
@@ -47,8 +52,9 @@ describe("Release actor enhancer:", () => {
       const secondMessageActor = evaluationResultPacket.result.actor;
 
       const logCount = logLimit + 1;
-      const packet = clonePacket(stubPackets.get(
-        "console.assert(false, {message: 'foobar'})"));
+      const packet = clonePacket(
+        stubPackets.get("console.assert(false, {message: 'foobar'})")
+      );
       const thirdMessageActor = packet.message.arguments[0].actor;
 
       for (let i = 1; i <= logCount; i++) {
@@ -66,10 +72,10 @@ describe("Release actor enhancer:", () => {
       const logLimit = 100;
       const releasedActors = [];
       const { dispatch, getState } = setupStore([], {
-        storeOptions: {logLimit},
+        storeOptions: { logLimit },
         hud: {
           proxy: {
-            releaseActor: (actor) => {
+            releaseActor: actor => {
               releasedActors.push(actor);
             },
           },
@@ -77,8 +83,11 @@ describe("Release actor enhancer:", () => {
       });
 
       // Add a log message.
-      dispatch(actions.messagesAdd([
-        stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])")]));
+      dispatch(
+        actions.messagesAdd([
+          stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])"),
+        ])
+      );
 
       const firstMessage = getFirstMessage(getState());
       const firstMessageActor = firstMessage.parameters[1].actor;
@@ -89,7 +98,9 @@ describe("Release actor enhancer:", () => {
       const secondMessageActor = evaluationResultPacket.result.actor;
 
       // Add an assertion message.
-      const assertPacket = stubPackets.get("console.assert(false, {message: 'foobar'})");
+      const assertPacket = stubPackets.get(
+        "console.assert(false, {message: 'foobar'})"
+      );
       dispatch(actions.messagesAdd([assertPacket]));
       const thirdMessageActor = assertPacket.message.arguments[0].actor;
 
@@ -117,7 +128,7 @@ describe("Release actor enhancer:", () => {
       const { dispatch, getState } = setupStore([], {
         hud: {
           proxy: {
-            releaseActor: (actor) => {
+            releaseActor: actor => {
               releasedActors.push(actor);
             },
           },
@@ -125,14 +136,18 @@ describe("Release actor enhancer:", () => {
       });
 
       // Add a log message.
-      dispatch(actions.messagesAdd([
-        stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])")]));
+      dispatch(
+        actions.messagesAdd([
+          stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])"),
+        ])
+      );
 
       const firstMessage = getFirstMessage(getState());
       const firstMessageActor = firstMessage.parameters[1].actor;
 
-      const packet = clonePacket(stubPackets.get(
-        "console.assert(false, {message: 'foobar'})"));
+      const packet = clonePacket(
+        stubPackets.get("console.assert(false, {message: 'foobar'})")
+      );
       const secondMessageActor = packet.message.arguments[0].actor;
       dispatch(actions.messagesAdd([packet]));
 

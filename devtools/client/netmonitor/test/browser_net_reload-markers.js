@@ -23,10 +23,12 @@ add_task(async function() {
 
   ok(true, "Reloading finished");
 
-  is(markers[0].name, "dom-interactive",
-    "The first received marker is correct.");
-  is(markers[1].name, "dom-complete",
-    "The second received marker is correct.");
+  is(
+    markers[0].name,
+    "dom-interactive",
+    "The first received marker is correct."
+  );
+  is(markers[1].name, "dom-complete", "The second received marker is correct.");
 
   return teardown(monitor);
 });

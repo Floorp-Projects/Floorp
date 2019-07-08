@@ -9,12 +9,14 @@ add_task(async function test_switchtab_override_keynav() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   info("Opening and selecting second tab");
-  let secondTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  let secondTab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
   registerCleanupFunction(() => {
     try {
       gBrowser.removeTab(tab);
       gBrowser.removeTab(secondTab);
-    } catch (ex) { /* tabs may have already been closed in case of failure */ }
+    } catch (ex) {
+      /* tabs may have already been closed in case of failure */
+    }
     return PlacesUtils.history.clear();
   });
 
@@ -29,9 +31,12 @@ add_task(async function test_switchtab_override_keynav() {
 
   info("Shift+left on switch-to-tab entry");
 
-  EventUtils.synthesizeKey("KEY_Shift", {type: "keydown"});
-  EventUtils.synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
-  EventUtils.synthesizeKey("KEY_Shift", {type: "keyup"});
+  EventUtils.synthesizeKey("KEY_Shift", { type: "keydown" });
+  EventUtils.synthesizeKey("KEY_ArrowLeft", { shiftKey: true });
+  EventUtils.synthesizeKey("KEY_Shift", { type: "keyup" });
 
-  ok(!/moz-action:switchtab/.test(gURLBar.inputField.value), "switch to tab should be hidden");
+  ok(
+    !/moz-action:switchtab/.test(gURLBar.inputField.value),
+    "switch to tab should be hidden"
+  );
 });

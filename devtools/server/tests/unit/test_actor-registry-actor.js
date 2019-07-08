@@ -44,13 +44,16 @@ function registerNewActor() {
 function talkToNewActor() {
   gClient.mainRoot.getRoot().then(({ helloActor }) => {
     Assert.ok(!!helloActor);
-    gClient.request({
-      to: helloActor,
-      type: "hello",
-    }, response => {
-      Assert.ok(!response.error);
-      unregisterNewActor();
-    });
+    gClient.request(
+      {
+        to: helloActor,
+        type: "hello",
+      },
+      response => {
+        Assert.ok(!response.error);
+        unregisterNewActor();
+      }
+    );
   });
 }
 

@@ -5,8 +5,9 @@
 "use strict";
 
 const { Cc, Ci } = require("chrome");
-const { generateUUID } =
-  Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(
+  Ci.nsIUUIDGenerator
+);
 
 /**
  * Returns a new `uuid`.

@@ -82,8 +82,8 @@ void PathBuilderSkia::Arc(const Point& aOrigin, float aRadius,
 }
 
 already_AddRefed<Path> PathBuilderSkia::Finish() {
-  RefPtr<Path> path = MakeAndAddRef<PathSkia>(mPath, mFillRule,
-                                              mCurrentPoint, mBeginPoint);
+  RefPtr<Path> path =
+      MakeAndAddRef<PathSkia>(mPath, mFillRule, mCurrentPoint, mBeginPoint);
   mCurrentPoint = Point(0.0, 0.0);
   mBeginPoint = Point(0.0, 0.0);
   return path.forget();
@@ -98,8 +98,8 @@ already_AddRefed<PathBuilder> PathSkia::CopyToBuilder(
 
 already_AddRefed<PathBuilder> PathSkia::TransformedCopyToBuilder(
     const Matrix& aTransform, FillRule aFillRule) const {
-  RefPtr<PathBuilderSkia> builder = MakeAndAddRef<PathBuilderSkia>(
-    aTransform, mPath, aFillRule);
+  RefPtr<PathBuilderSkia> builder =
+      MakeAndAddRef<PathBuilderSkia>(aTransform, mPath, aFillRule);
 
   builder->mCurrentPoint = aTransform.TransformPoint(mCurrentPoint);
   builder->mBeginPoint = aTransform.TransformPoint(mBeginPoint);

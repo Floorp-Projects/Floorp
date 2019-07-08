@@ -2,9 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-var {
-  ExtensionError,
-} = ExtensionUtils;
+var { ExtensionError } = ExtensionUtils;
 
 /**
  * Represents (in the child extension process) a content script registered
@@ -31,13 +29,15 @@ class ContentScriptChild {
     this.unregistered = true;
 
     await this.context.childManager.callParentAsyncFunction(
-      "contentScripts.unregister", [this.scriptId]);
+      "contentScripts.unregister",
+      [this.scriptId]
+    );
 
     this.context = null;
   }
 
   api() {
-    const {context} = this;
+    const { context } = this;
 
     // TODO(rpl): allow to read the options related to the registered content script?
     return {
@@ -55,12 +55,15 @@ this.contentScripts = class extends ExtensionAPI {
         register(options) {
           return context.cloneScope.Promise.resolve().then(async () => {
             const scriptId = await context.childManager.callParentAsyncFunction(
-              "contentScripts.register", [options]);
+              "contentScripts.register",
+              [options]
+            );
 
             const registeredScript = new ContentScriptChild(context, scriptId);
 
-            return Cu.cloneInto(registeredScript.api(), context.cloneScope,
-                                {cloneFunctions: true});
+            return Cu.cloneInto(registeredScript.api(), context.cloneScope, {
+              cloneFunctions: true,
+            });
           });
         },
       },

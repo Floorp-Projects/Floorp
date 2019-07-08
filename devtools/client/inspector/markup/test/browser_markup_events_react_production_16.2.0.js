@@ -128,7 +128,9 @@ const TEST_DATA = [
 /* eslint-enable */
 
 add_task(async function() {
-  info("Switch to 2 pane inspector to avoid sidebar width issues with opening events");
+  info(
+    "Switch to 2 pane inspector to avoid sidebar width issues with opening events"
+  );
   await pushPref("devtools.inspector.three-pane-enabled", false);
   await pushPref("devtools.toolsidebar-width.inspector", 350);
   await runEventPopupTests(TEST_URL, TEST_DATA);

@@ -1,8 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Collection, WBORecord} = ChromeUtils.import("resource://services-sync/record.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { Collection, WBORecord } = ChromeUtils.import(
+  "resource://services-sync/record.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 function recordRange(lim, offset, total) {
   let res = [];
@@ -12,9 +14,13 @@ function recordRange(lim, offset, total) {
   return res;
 }
 
-function get_test_collection_info({ totalRecords, batchSize, lastModified,
-                                    throwAfter = Infinity,
-                                    interruptedAfter = Infinity }) {
+function get_test_collection_info({
+  totalRecords,
+  batchSize,
+  lastModified,
+  throwAfter = Infinity,
+  interruptedAfter = Infinity,
+}) {
   let coll = new Collection("http://example.com/test/", WBORecord, Service);
   coll.full = true;
   let requests = [];
@@ -97,7 +103,7 @@ add_task(async function test_success() {
   // use of this collection.
   ok(!coll._headers["x-if-unmodified-since"]);
   ok(!coll.offset);
-  ok(!coll.limit || (coll.limit == Infinity));
+  ok(!coll.limit || coll.limit == Infinity);
 });
 
 add_task(async function test_total_limit() {

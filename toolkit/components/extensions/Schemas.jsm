@@ -7,63 +7,89 @@
 
 const global = this;
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
-var {
-  DefaultMap,
-  DefaultWeakMap,
-} = ExtensionUtils;
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
+var { DefaultMap, DefaultWeakMap } = ExtensionUtils;
 
-ChromeUtils.defineModuleGetter(this, "ExtensionParent",
-                               "resource://gre/modules/ExtensionParent.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
-ChromeUtils.defineModuleGetter(this, "ShortcutUtils",
-                               "resource://gre/modules/ShortcutUtils.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "contentPolicyService",
-                                   "@mozilla.org/addons/content-policy;1",
-                                   "nsIAddonContentPolicy");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionParent",
+  "resource://gre/modules/ExtensionParent.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ShortcutUtils",
+  "resource://gre/modules/ShortcutUtils.jsm"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "contentPolicyService",
+  "@mozilla.org/addons/content-policy;1",
+  "nsIAddonContentPolicy"
+);
 
-XPCOMUtils.defineLazyGetter(this, "StartupCache", () => ExtensionParent.StartupCache);
+XPCOMUtils.defineLazyGetter(
+  this,
+  "StartupCache",
+  () => ExtensionParent.StartupCache
+);
 
 var EXPORTED_SYMBOLS = ["SchemaRoot", "Schemas"];
 
 const KEY_CONTENT_SCHEMAS = "extensions-framework/schemas/content";
 const KEY_PRIVILEGED_SCHEMAS = "extensions-framework/schemas/privileged";
 
-const {DEBUG} = AppConstants;
+const { DEBUG } = AppConstants;
 
-const isParentProcess = Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
+const isParentProcess =
+  Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
 
 function readJSON(url) {
   return new Promise((resolve, reject) => {
-    NetUtil.asyncFetch({uri: url, loadUsingSystemPrincipal: true}, (inputStream, status) => {
-      if (!Components.isSuccessCode(status)) {
-        // Convert status code to a string
-        let e = Components.Exception("", status);
-        reject(new Error(`Error while loading '${url}' (${e.name})`));
-        return;
-      }
-      try {
-        let text = NetUtil.readInputStreamToString(inputStream, inputStream.available());
+    NetUtil.asyncFetch(
+      { uri: url, loadUsingSystemPrincipal: true },
+      (inputStream, status) => {
+        if (!Components.isSuccessCode(status)) {
+          // Convert status code to a string
+          let e = Components.Exception("", status);
+          reject(new Error(`Error while loading '${url}' (${e.name})`));
+          return;
+        }
+        try {
+          let text = NetUtil.readInputStreamToString(
+            inputStream,
+            inputStream.available()
+          );
 
-        // Chrome JSON files include a license comment that we need to
-        // strip off for this to be valid JSON. As a hack, we just
-        // look for the first '[' character, which signals the start
-        // of the JSON content.
-        let index = text.indexOf("[");
-        text = text.slice(index);
+          // Chrome JSON files include a license comment that we need to
+          // strip off for this to be valid JSON. As a hack, we just
+          // look for the first '[' character, which signals the start
+          // of the JSON content.
+          let index = text.indexOf("[");
+          text = text.slice(index);
 
-        resolve(JSON.parse(text));
-      } catch (e) {
-        reject(e);
+          resolve(JSON.parse(text));
+        } catch (e) {
+          reject(e);
+        }
       }
-    });
+    );
   });
 }
 
@@ -203,8 +229,7 @@ function exportLazyProperty(object, prop, getter) {
         defaults.writable = true;
       }
 
-      Object.defineProperty(object, prop,
-                            Object.assign(defaults, desc));
+      Object.defineProperty(object, prop, Object.assign(defaults, desc));
     }
   };
 
@@ -227,7 +252,10 @@ function exportLazyProperty(object, prop, getter) {
 const POSTPROCESSORS = {
   convertImageDataToURL(imageData, context) {
     let document = context.cloneScope.document;
-    let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    let canvas = document.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "canvas"
+    );
     canvas.width = imageData.width;
     canvas.height = imageData.height;
     canvas.getContext("2d").putImageData(imageData, 0, 0);
@@ -236,8 +264,10 @@ const POSTPROCESSORS = {
   },
   webRequestBlockingPermissionRequired(string, context) {
     if (string === "blocking" && !context.hasPermission("webRequestBlocking")) {
-      throw new context.cloneScope.Error("Using webRequest.addListener with the " +
-                                         "blocking option requires the 'webRequestBlocking' permission.");
+      throw new context.cloneScope.Error(
+        "Using webRequest.addListener with the " +
+          "blocking option requires the 'webRequestBlocking' permission."
+      );
     }
 
     return string;
@@ -277,11 +307,7 @@ function getValueBaseType(value) {
 
 // Methods of Context that are used by Schemas.normalize. These methods can be
 // overridden at the construction of Context.
-const CONTEXT_FOR_VALIDATION = [
-  "checkLoadURL",
-  "hasPermission",
-  "logError",
-];
+const CONTEXT_FOR_VALIDATION = ["checkLoadURL", "hasPermission", "logError"];
 
 // Methods of Context that are used by Schemas.inject.
 // Callers of Schemas.inject should implement all of these methods.
@@ -357,7 +383,10 @@ class Context {
   }
 
   get principal() {
-    return this.params.principal || Services.scriptSecurityManager.createNullPrincipal({});
+    return (
+      this.params.principal ||
+      Services.scriptSecurityManager.createNullPrincipal({})
+    );
   }
 
   /**
@@ -369,9 +398,11 @@ class Context {
   checkLoadURL(url) {
     let ssm = Services.scriptSecurityManager;
     try {
-      ssm.checkLoadURIWithPrincipal(this.principal,
-                                    Services.io.newURI(url),
-                                    ssm.DISALLOW_INHERIT_PRINCIPAL);
+      ssm.checkLoadURIWithPrincipal(
+        this.principal,
+        Services.io.newURI(url),
+        ssm.DISALLOW_INHERIT_PRINCIPAL
+      );
     } catch (e) {
       return false;
     }
@@ -427,7 +458,7 @@ class Context {
    */
   error(errorMessage, choicesMessage = undefined) {
     if (choicesMessage !== null) {
-      let {choicePath} = this;
+      let { choicePath } = this;
       if (choicePath) {
         choicesMessage = `.${choicePath} must ${choicesMessage}`;
       }
@@ -436,10 +467,13 @@ class Context {
     }
 
     if (this.currentTarget) {
-      let {currentTarget} = this;
-      return {error: () => `Error processing ${currentTarget}: ${forceString(errorMessage)}`};
+      let { currentTarget } = this;
+      return {
+        error: () =>
+          `Error processing ${currentTarget}: ${forceString(errorMessage)}`,
+      };
     }
-    return {error: errorMessage};
+    return { error: errorMessage };
   }
 
   /**
@@ -496,7 +530,7 @@ class Context {
    *          an array of choices.
    */
   withChoices(callback) {
-    let {currentChoices, choicePathIndex} = this;
+    let { currentChoices, choicePathIndex } = this;
 
     let choices = new Set();
     this.currentChoices = choices;
@@ -505,7 +539,7 @@ class Context {
     try {
       let result = callback();
 
-      return {result, choices};
+      return { result, choices };
     } finally {
       this.currentChoices = currentChoices;
       this.choicePathIndex = choicePathIndex;
@@ -584,7 +618,7 @@ class InjectionEntry {
    *        injected.
    */
   get allowedContexts() {
-    let {allowedContexts} = this.entry;
+    let { allowedContexts } = this.entry;
     if (allowedContexts.length) {
       return allowedContexts;
     }
@@ -597,8 +631,12 @@ class InjectionEntry {
    *        revoked based on its permissions.
    */
   get isRevokable() {
-    return (this.entry.permissions &&
-            this.entry.permissions.some(perm => this.context.isPermissionRevokable(perm)));
+    return (
+      this.entry.permissions &&
+      this.entry.permissions.some(perm =>
+        this.context.isPermissionRevokable(perm)
+      )
+    );
   }
 
   /**
@@ -607,8 +645,10 @@ class InjectionEntry {
    *        appropriate permissions to access this entry.
    */
   get hasPermission() {
-    return (!this.entry.permissions ||
-            this.entry.permissions.some(perm => this.context.hasPermission(perm)));
+    return (
+      !this.entry.permissions ||
+      this.entry.permissions.some(perm => this.context.hasPermission(perm))
+    );
   }
 
   /**
@@ -617,7 +657,11 @@ class InjectionEntry {
    *        context, without respect to permissions.
    */
   get shouldInject() {
-    return this.context.shouldInject(this.path.join("."), this.name, this.allowedContexts);
+    return this.context.shouldInject(
+      this.path.join("."),
+      this.name,
+      this.allowedContexts
+    );
   }
 
   /**
@@ -639,7 +683,7 @@ class InjectionEntry {
         Cu.reportError(e);
       }
 
-      let {value} = this.injected.descriptor;
+      let { value } = this.injected.descriptor;
       if (value) {
         this.context.revokeChildren(value);
       }
@@ -661,7 +705,9 @@ class InjectionEntry {
 
     if (this.injected) {
       let path = [...this.path, this.name];
-      throw new Error(`Attempting to re-inject already injected entry: ${path.join(".")}`);
+      throw new Error(
+        `Attempting to re-inject already injected entry: ${path.join(".")}`
+      );
     }
 
     if (!this.shouldInject) {
@@ -692,7 +738,9 @@ class InjectionEntry {
   lazyInject() {
     if (this.lazyInjected || this.injected) {
       let path = [...this.path, this.name];
-      throw new Error(`Attempting to re-lazy-inject already injected entry: ${path.join(".")}`);
+      throw new Error(
+        `Attempting to re-lazy-inject already injected entry: ${path.join(".")}`
+      );
     }
 
     this.lazyInjected = true;
@@ -745,8 +793,7 @@ class InjectionContext extends Context {
     this.injectedRoots = new Set();
 
     if (params.setPermissionsChangedCallback) {
-      params.setPermissionsChangedCallback(
-        this.permissionsChanged.bind(this));
+      params.setPermissionsChangedCallback(this.permissionsChanged.bind(this));
     }
   }
 
@@ -826,7 +873,14 @@ class InjectionContext extends Context {
   }
 
   _getInjectionEntry(entry, dest, name, path, parentEntry) {
-    let injection = new InjectionEntry(this, entry, dest, name, path, parentEntry);
+    let injection = new InjectionEntry(
+      this,
+      entry,
+      dest,
+      name,
+      path,
+      parentEntry
+    );
 
     this.children.get(dest).set(name, injection);
 
@@ -853,7 +907,13 @@ class InjectionContext extends Context {
    *        not be injected.
    */
   getDescriptor(entry, dest, name, path, parentEntry) {
-    let injection = this._getInjectionEntry(entry, dest, name, path, parentEntry);
+    let injection = this._getInjectionEntry(
+      entry,
+      dest,
+      name,
+      path,
+      parentEntry
+    );
 
     return injection.getDescriptor();
   }
@@ -873,7 +933,13 @@ class InjectionContext extends Context {
    *        The parent entry for this entry.
    */
   injectInto(entry, dest, name, path, parentEntry) {
-    let injection = this._getInjectionEntry(entry, dest, name, path, parentEntry);
+    let injection = this._getInjectionEntry(
+      entry,
+      dest,
+      name,
+      path,
+      parentEntry
+    );
 
     injection.lazyInject();
   }
@@ -946,7 +1012,9 @@ const FORMATS = {
       }
     }
 
-    throw new SyntaxError(`String ${JSON.stringify(string)} must be a relative URL`);
+    throw new SyntaxError(
+      `String ${JSON.stringify(string)} must be a relative URL`
+    );
   },
 
   homepageUrl(string, context) {
@@ -954,17 +1022,25 @@ const FORMATS = {
     // set a single homepage. Encoding any pipes makes it one URL.
     return FORMATS.relativeUrl(
       string.replace(new RegExp("\\|", "g"), "%7C"),
-      context);
+      context
+    );
   },
 
   imageDataOrStrictRelativeUrl(string, context) {
     // Do not accept a string which resolves as an absolute URL, or any
     // protocol-relative URL, except PNG or JPG data URLs
-    if (!string.startsWith("data:image/png;base64,") && !string.startsWith("data:image/jpeg;base64,")) {
+    if (
+      !string.startsWith("data:image/png;base64,") &&
+      !string.startsWith("data:image/jpeg;base64,")
+    ) {
       try {
         return FORMATS.strictRelativeUrl(string, context);
       } catch (e) {
-        throw new SyntaxError(`String ${JSON.stringify(string)} must be a relative or PNG or JPG data:image URL`);
+        throw new SyntaxError(
+          `String ${JSON.stringify(
+            string
+          )} must be a relative or PNG or JPG data:image URL`
+        );
       }
     }
     return string;
@@ -997,11 +1073,12 @@ const FORMATS = {
     if (ShortcutUtils.validate(string) == ShortcutUtils.IS_VALID) {
       return string;
     }
-    let errorMessage = (`Value "${string}" must consist of `
-                        + `either a combination of one or two modifiers, including `
-                        + `a mandatory primary modifier and a key, separated by '+', `
-                        + `or a media key. For details see: `
-                        + `https://developer.mozilla.org/en-US/Add-ons/WebExtensions/manifest.json/commands#Key_combinations`);
+    let errorMessage =
+      `Value "${string}" must consist of ` +
+      `either a combination of one or two modifiers, including ` +
+      `a mandatory primary modifier and a key, separated by '+', ` +
+      `or a media key. For details see: ` +
+      `https://developer.mozilla.org/en-US/Add-ons/WebExtensions/manifest.json/commands#Key_combinations`;
     throw new Error(errorMessage);
   },
 };
@@ -1081,8 +1158,11 @@ class Entry {
       return result;
     }
 
-    let value = context.postprocessors[this.postprocessor](result.value, context);
-    return {value};
+    let value = context.postprocessors[this.postprocessor](
+      result.value,
+      context
+    );
+    return { value };
   }
 
   /**
@@ -1094,7 +1174,7 @@ class Entry {
    */
   logDeprecation(context, value = null) {
     let message = "This property is deprecated";
-    if (typeof(this.deprecated) == "string") {
+    if (typeof this.deprecated == "string") {
       message = this.deprecated;
       if (message.includes("${value}")) {
         try {
@@ -1148,7 +1228,13 @@ class Type extends Entry {
    *        schemas of this type.
    */
   static get EXTRA_PROPERTIES() {
-    return ["description", "deprecated", "preprocess", "postprocess", "allowedContexts"];
+    return [
+      "description",
+      "deprecated",
+      "preprocess",
+      "postprocess",
+      "allowedContexts",
+    ];
   }
 
   /**
@@ -1203,9 +1289,11 @@ class Type extends Entry {
 
       for (let prop of Object.keys(schema)) {
         if (!allowedSet.has(prop)) {
-          throw new Error(`Internal error: Namespace ${path.join(".")} has ` +
-                          `invalid type property "${prop}" ` +
-                          `in type "${schema.id || JSON.stringify(schema)}"`);
+          throw new Error(
+            `Internal error: Namespace ${path.join(".")} has ` +
+              `invalid type property "${prop}" ` +
+              `in type "${schema.id || JSON.stringify(schema)}"`
+          );
         }
       }
     }
@@ -1234,7 +1322,7 @@ class Type extends Entry {
   normalizeBase(type, value, context) {
     if (this.checkBaseType(getValueBaseType(value))) {
       this.checkDeprecated(context, value);
-      return {value: this.preprocess(value, context)};
+      return { value: this.preprocess(value, context) };
     }
 
     let choice;
@@ -1244,8 +1332,10 @@ class Type extends Entry {
       choice = `be a ${type} value`;
     }
 
-    return context.error(() => `Expected ${type} instead of ${JSON.stringify(value)}`,
-                         choice);
+    return context.error(
+      () => `Expected ${type} instead of ${JSON.stringify(value)}`,
+      choice
+    );
   }
 }
 
@@ -1253,7 +1343,7 @@ class Type extends Entry {
 class AnyType extends Type {
   normalize(value, context) {
     this.checkDeprecated(context, value);
-    return this.postprocess({value}, context);
+    return this.postprocess({ value }, context);
   }
 
   checkBaseType(baseType) {
@@ -1289,7 +1379,7 @@ class ChoiceType extends Type {
     this.checkDeprecated(context, value);
 
     let error;
-    let {choices, result} = context.withChoices(() => {
+    let { choices, result } = context.withChoices(() => {
       for (let choice of this.choices) {
         let r = choice.normalize(value, context);
         if (!r.error) {
@@ -1315,7 +1405,8 @@ class ChoiceType extends Type {
     if (typeof value === "object") {
       message = () => `Value must either: ${choices.join(", ")}`;
     } else {
-      message = () => `Value ${JSON.stringify(value)} must either: ${choices.join(", ")}`;
+      message = () =>
+        `Value ${JSON.stringify(value)} must either: ${choices.join(", ")}`;
     }
 
     return context.error(message, null);
@@ -1373,8 +1464,14 @@ class RefType extends Type {
 
 class StringType extends Type {
   static get EXTRA_PROPERTIES() {
-    return ["enum", "minLength", "maxLength", "pattern", "format",
-            ...super.EXTRA_PROPERTIES];
+    return [
+      "enum",
+      "minLength",
+      "maxLength",
+      "pattern",
+      "format",
+      ...super.EXTRA_PROPERTIES,
+    ];
   }
 
   static parseSchema(root, schema, path, extraProperties = []) {
@@ -1386,7 +1483,7 @@ class StringType extends Type {
       // valid values or else a list of {name, description} objects,
       // where the .name values are the valid values.
       enumeration = enumeration.map(e => {
-        if (typeof(e) == "object") {
+        if (typeof e == "object") {
           return e.name;
         }
         return e;
@@ -1398,27 +1495,41 @@ class StringType extends Type {
       try {
         pattern = parsePattern(schema.pattern);
       } catch (e) {
-        throw new Error(`Internal error: Invalid pattern ${JSON.stringify(schema.pattern)}`);
+        throw new Error(
+          `Internal error: Invalid pattern ${JSON.stringify(schema.pattern)}`
+        );
       }
     }
 
     let format = null;
     if (schema.format) {
       if (!(schema.format in FORMATS)) {
-        throw new Error(`Internal error: Invalid string format ${schema.format}`);
+        throw new Error(
+          `Internal error: Invalid string format ${schema.format}`
+        );
       }
       format = FORMATS[schema.format];
     }
-    return new this(schema,
-                    schema.id || undefined,
-                    enumeration,
-                    schema.minLength || 0,
-                    schema.maxLength || Infinity,
-                    pattern,
-                    format);
+    return new this(
+      schema,
+      schema.id || undefined,
+      enumeration,
+      schema.minLength || 0,
+      schema.maxLength || Infinity,
+      pattern,
+      format
+    );
   }
 
-  constructor(schema, name, enumeration, minLength, maxLength, pattern, format) {
+  constructor(
+    schema,
+    name,
+    enumeration,
+    minLength,
+    maxLength,
+    pattern,
+    format
+  ) {
     super(schema);
     this.name = name;
     this.enumeration = enumeration;
@@ -1437,34 +1548,51 @@ class StringType extends Type {
 
     if (this.enumeration) {
       if (this.enumeration.includes(value)) {
-        return this.postprocess({value}, context);
+        return this.postprocess({ value }, context);
       }
 
       let choices = this.enumeration.map(JSON.stringify).join(", ");
 
-      return context.error(() => `Invalid enumeration value ${JSON.stringify(value)}`,
-                           `be one of [${choices}]`);
+      return context.error(
+        () => `Invalid enumeration value ${JSON.stringify(value)}`,
+        `be one of [${choices}]`
+      );
     }
 
     if (value.length < this.minLength) {
-      return context.error(() => `String ${JSON.stringify(value)} is too short (must be ${this.minLength})`,
-                           `be longer than ${this.minLength}`);
+      return context.error(
+        () =>
+          `String ${JSON.stringify(value)} is too short (must be ${
+            this.minLength
+          })`,
+        `be longer than ${this.minLength}`
+      );
     }
     if (value.length > this.maxLength) {
-      return context.error(() => `String ${JSON.stringify(value)} is too long (must be ${this.maxLength})`,
-                           `be shorter than ${this.maxLength}`);
+      return context.error(
+        () =>
+          `String ${JSON.stringify(value)} is too long (must be ${
+            this.maxLength
+          })`,
+        `be shorter than ${this.maxLength}`
+      );
     }
 
     if (this.pattern && !this.pattern.test(value)) {
-      return context.error(() => `String ${JSON.stringify(value)} must match ${this.pattern}`,
-                           `match the pattern ${this.pattern.toSource()}`);
+      return context.error(
+        () => `String ${JSON.stringify(value)} must match ${this.pattern}`,
+        `match the pattern ${this.pattern.toSource()}`
+      );
     }
 
     if (this.format) {
       try {
         r.value = this.format(r.value, context);
       } catch (e) {
-        return context.error(String(e), `match the format "${this.format.name}"`);
+        return context.error(
+          String(e),
+          `match the format "${this.format.name}"`
+        );
       }
     }
 
@@ -1484,7 +1612,7 @@ class StringType extends Type {
       }
 
       return {
-        descriptor: {value: obj},
+        descriptor: { value: obj },
       };
     }
   }
@@ -1506,7 +1634,12 @@ let SubModuleType;
 
 class ObjectType extends Type {
   static get EXTRA_PROPERTIES() {
-    return ["properties", "patternProperties", "$import", ...super.EXTRA_PROPERTIES];
+    return [
+      "properties",
+      "patternProperties",
+      "$import",
+      ...super.EXTRA_PROPERTIES,
+    ];
   }
 
   static parseSchema(root, schema, path, extraProperties = []) {
@@ -1516,7 +1649,11 @@ class ObjectType extends Type {
 
     if (DEBUG && !("$extend" in schema)) {
       // Only allow extending "properties" and "patternProperties".
-      extraProperties = ["additionalProperties", "isInstanceOf", ...extraProperties];
+      extraProperties = [
+        "additionalProperties",
+        "isInstanceOf",
+        ...extraProperties,
+      ];
     }
     this.checkSchemaProperties(schema, path, extraProperties);
 
@@ -1533,8 +1670,17 @@ class ObjectType extends Type {
 
     let parseProperty = (schema, extraProps = []) => {
       return {
-        type: root.parseSchema(schema, path,
-                               DEBUG && ["unsupported", "onError", "permissions", "default", ...extraProps]),
+        type: root.parseSchema(
+          schema,
+          path,
+          DEBUG && [
+            "unsupported",
+            "onError",
+            "permissions",
+            "default",
+            ...extraProps,
+          ]
+        ),
         optional: schema.optional || false,
         unsupported: schema.unsupported || false,
         onError: schema.onError || null,
@@ -1545,7 +1691,9 @@ class ObjectType extends Type {
     // Parse explicit "properties" object.
     let properties = Object.create(null);
     for (let propName of Object.keys(schema.properties || {})) {
-      properties[propName] = parseProperty(schema.properties[propName], ["optional"]);
+      properties[propName] = parseProperty(schema.properties[propName], [
+        "optional",
+      ]);
     }
 
     // Parse regexp properties from "patternProperties" object.
@@ -1555,7 +1703,9 @@ class ObjectType extends Type {
       try {
         pattern = parsePattern(propName);
       } catch (e) {
-        throw new Error(`Internal error: Invalid property pattern ${JSON.stringify(propName)}`);
+        throw new Error(
+          `Internal error: Invalid property pattern ${JSON.stringify(propName)}`
+        );
       }
 
       patternProperties.push({
@@ -1569,16 +1719,30 @@ class ObjectType extends Type {
     if (schema.additionalProperties) {
       let type = schema.additionalProperties;
       if (type === true) {
-        type = {"type": "any"};
+        type = { type: "any" };
       }
 
       additionalProperties = root.parseSchema(type, path);
     }
 
-    return new this(schema, properties, additionalProperties, patternProperties, schema.isInstanceOf || null, imported);
+    return new this(
+      schema,
+      properties,
+      additionalProperties,
+      patternProperties,
+      schema.isInstanceOf || null,
+      imported
+    );
   }
 
-  constructor(schema, properties, additionalProperties, patternProperties, isInstanceOf, imported) {
+  constructor(
+    schema,
+    properties,
+    additionalProperties,
+    patternProperties,
+    isInstanceOf,
+    imported
+  ) {
     super(schema);
     this.properties = properties;
     this.additionalProperties = additionalProperties;
@@ -1594,20 +1758,31 @@ class ObjectType extends Type {
       }
 
       if (DEBUG && !(importedType instanceof ObjectType)) {
-        throw new Error(`Internal error: cannot import non-object type ${path}`);
+        throw new Error(
+          `Internal error: cannot import non-object type ${path}`
+        );
       }
 
-      this.properties = Object.assign({}, importedType.properties, this.properties);
-      this.patternProperties = [...importedType.patternProperties,
-                                ...this.patternProperties];
-      this.additionalProperties = importedType.additionalProperties || this.additionalProperties;
+      this.properties = Object.assign(
+        {},
+        importedType.properties,
+        this.properties
+      );
+      this.patternProperties = [
+        ...importedType.patternProperties,
+        ...this.patternProperties,
+      ];
+      this.additionalProperties =
+        importedType.additionalProperties || this.additionalProperties;
     }
   }
 
   extend(type) {
     for (let key of Object.keys(type.properties)) {
       if (key in this.properties) {
-        throw new Error(`InternalError: Attempt to extend an object with conflicting property "${key}"`);
+        throw new Error(
+          `InternalError: Attempt to extend an object with conflicting property "${key}"`
+        );
       }
       this.properties[key] = type.properties[key];
     }
@@ -1643,27 +1818,36 @@ class ObjectType extends Type {
 
     let klass = ChromeUtils.getClassName(value, true);
     if (klass != "Object") {
-      throw context.error(`Expected a plain JavaScript object, got a ${klass}`,
-                          `be a plain JavaScript object`);
+      throw context.error(
+        `Expected a plain JavaScript object, got a ${klass}`,
+        `be a plain JavaScript object`
+      );
     }
 
     return ChromeUtils.shallowClone(value);
   }
 
   checkProperty(context, prop, propType, result, properties, remainingProps) {
-    let {type, optional, unsupported, onError} = propType;
+    let { type, optional, unsupported, onError } = propType;
     let error = null;
 
     if (unsupported) {
       if (prop in properties) {
-        error = context.error(`Property "${prop}" is unsupported by Firefox`,
-                              `not contain an unsupported "${prop}" property`);
+        error = context.error(
+          `Property "${prop}" is unsupported by Firefox`,
+          `not contain an unsupported "${prop}" property`
+        );
       }
     } else if (prop in properties) {
-      if (optional && (properties[prop] === null || properties[prop] === undefined)) {
+      if (
+        optional &&
+        (properties[prop] === null || properties[prop] === undefined)
+      ) {
         result[prop] = propType.default;
       } else {
-        let r = context.withPath(prop, () => type.normalize(properties[prop], context));
+        let r = context.withPath(prop, () =>
+          type.normalize(properties[prop], context)
+        );
         if (r.error) {
           error = r;
         } else {
@@ -1673,8 +1857,10 @@ class ObjectType extends Type {
       }
       remainingProps.delete(prop);
     } else if (!optional) {
-      error = context.error(`Property "${prop}" is required`,
-                            `contain the required "${prop}" property`);
+      error = context.error(
+        `Property "${prop}" is required`,
+        `contain the required "${prop}" property`
+      );
     } else if (optional !== "omit-key-if-missing") {
       result[prop] = propType.default;
     }
@@ -1700,23 +1886,31 @@ class ObjectType extends Type {
 
       if (this.isInstanceOf) {
         if (DEBUG) {
-          if (Object.keys(this.properties).length ||
-              this.patternProperties.length ||
-              !(this.additionalProperties instanceof AnyType)) {
-            throw new Error("InternalError: isInstanceOf can only be used " +
-                            "with objects that are otherwise unrestricted");
+          if (
+            Object.keys(this.properties).length ||
+            this.patternProperties.length ||
+            !(this.additionalProperties instanceof AnyType)
+          ) {
+            throw new Error(
+              "InternalError: isInstanceOf can only be used " +
+                "with objects that are otherwise unrestricted"
+            );
           }
         }
 
-        if (ChromeUtils.getClassName(value) !== this.isInstanceOf &&
-            (this.isInstanceOf !== "Element" || value.nodeType !== 1)) {
-          return context.error(`Object must be an instance of ${this.isInstanceOf}`,
-                               `be an instance of ${this.isInstanceOf}`);
+        if (
+          ChromeUtils.getClassName(value) !== this.isInstanceOf &&
+          (this.isInstanceOf !== "Element" || value.nodeType !== 1)
+        ) {
+          return context.error(
+            `Object must be an instance of ${this.isInstanceOf}`,
+            `be an instance of ${this.isInstanceOf}`
+          );
         }
 
         // This is kind of a hack, but we can't normalize things that
         // aren't JSON, so we just return them.
-        return this.postprocess({value}, context);
+        return this.postprocess({ value }, context);
       }
 
       let properties = this.extractProperties(value, context);
@@ -1724,37 +1918,55 @@ class ObjectType extends Type {
 
       let result = {};
       for (let prop of Object.keys(this.properties)) {
-        this.checkProperty(context, prop, this.properties[prop], result,
-                           properties, remainingProps);
+        this.checkProperty(
+          context,
+          prop,
+          this.properties[prop],
+          result,
+          properties,
+          remainingProps
+        );
       }
 
       for (let prop of Object.keys(properties)) {
-        for (let {pattern, type} of this.patternProperties) {
+        for (let { pattern, type } of this.patternProperties) {
           if (pattern.test(prop)) {
-            this.checkProperty(context, prop, type, result,
-                               properties, remainingProps);
+            this.checkProperty(
+              context,
+              prop,
+              type,
+              result,
+              properties,
+              remainingProps
+            );
           }
         }
       }
 
       if (this.additionalProperties) {
         for (let prop of remainingProps) {
-          let r = context.withPath(prop, () => this.additionalProperties.normalize(properties[prop], context));
+          let r = context.withPath(prop, () =>
+            this.additionalProperties.normalize(properties[prop], context)
+          );
           if (r.error) {
             return r;
           }
           result[prop] = r.value;
         }
       } else if (remainingProps.size == 1) {
-        return context.error(`Unexpected property "${[...remainingProps]}"`,
-                             `not contain an unexpected "${[...remainingProps]}" property`);
+        return context.error(
+          `Unexpected property "${[...remainingProps]}"`,
+          `not contain an unexpected "${[...remainingProps]}" property`
+        );
       } else if (remainingProps.size) {
         let props = [...remainingProps].sort().join(", ");
-        return context.error(`Unexpected properties: ${props}`,
-                             `not contain the unexpected properties [${props}]`);
+        return context.error(
+          `Unexpected properties: ${props}`,
+          `not contain the unexpected properties [${props}]`
+        );
       }
 
-      return this.postprocess({value: result}, context);
+      return this.postprocess({ value: result }, context);
     } catch (e) {
       if (e.error) {
         return e;
@@ -1776,14 +1988,16 @@ SubModuleType = class SubModuleType extends Type {
 
     // The path we pass in here is only used for error messages.
     path = [...path, schema.id];
-    let functions = schema.functions.filter(fun => !fun.unsupported)
-                          .map(fun => FunctionEntry.parseSchema(root, fun, path));
+    let functions = schema.functions
+      .filter(fun => !fun.unsupported)
+      .map(fun => FunctionEntry.parseSchema(root, fun, path));
 
     let events = [];
 
     if (schema.events) {
-      events = schema.events.filter(event => !event.unsupported)
-                     .map(event => Event.parseSchema(root, event, path));
+      events = schema.events
+        .filter(event => !event.unsupported)
+        .map(event => Event.parseSchema(root, event, path));
     }
 
     return new this(functions, events);
@@ -1804,8 +2018,10 @@ class NumberType extends Type {
     }
 
     if (isNaN(r.value) || !Number.isFinite(r.value)) {
-      return context.error("NaN and infinity are not valid",
-                           "be a finite number");
+      return context.error(
+        "NaN and infinity are not valid",
+        "be a finite number"
+      );
     }
 
     return r;
@@ -1824,7 +2040,7 @@ class IntegerType extends Type {
   static parseSchema(root, schema, path, extraProperties = []) {
     this.checkSchemaProperties(schema, path, extraProperties);
 
-    let {minimum = -Infinity, maximum = Infinity} = schema;
+    let { minimum = -Infinity, maximum = Infinity } = schema;
     return new this(schema, minimum, maximum);
   }
 
@@ -1843,17 +2059,23 @@ class IntegerType extends Type {
 
     // Ensure it's between -2**31 and 2**31-1
     if (!Number.isSafeInteger(value)) {
-      return context.error("Integer is out of range",
-                           "be a valid 32 bit signed integer");
+      return context.error(
+        "Integer is out of range",
+        "be a valid 32 bit signed integer"
+      );
     }
 
     if (value < this.minimum) {
-      return context.error(`Integer ${value} is too small (must be at least ${this.minimum})`,
-                           `be at least ${this.minimum}`);
+      return context.error(
+        `Integer ${value} is too small (must be at least ${this.minimum})`,
+        `be at least ${this.minimum}`
+      );
     }
     if (value > this.maximum) {
-      return context.error(`Integer ${value} is too big (must be at most ${this.maximum})`,
-                           `be no greater than ${this.maximum}`);
+      return context.error(
+        `Integer ${value} is too big (must be at most ${this.maximum})`,
+        `be no greater than ${this.maximum}`
+      );
     }
 
     return this.postprocess(r, context);
@@ -1882,16 +2104,20 @@ class BooleanType extends Type {
 
   normalize(value, context) {
     if (!this.checkBaseType(getValueBaseType(value))) {
-      return context.error(() => `Expected boolean instead of ${JSON.stringify(value)}`,
-                           `be a boolean`);
+      return context.error(
+        () => `Expected boolean instead of ${JSON.stringify(value)}`,
+        `be a boolean`
+      );
     }
     value = this.preprocess(value, context);
     if (this.enumeration && !this.enumeration.includes(value)) {
-      return context.error(() => `Invalid value ${JSON.stringify(value)}`,
-                           `be ${this.enumeration}`);
+      return context.error(
+        () => `Invalid value ${JSON.stringify(value)}`,
+        `be ${this.enumeration}`
+      );
     }
     this.checkDeprecated(context, value);
-    return {value};
+    return { value };
   }
 
   checkBaseType(baseType) {
@@ -1909,7 +2135,12 @@ class ArrayType extends Type {
 
     let items = root.parseSchema(schema.items, path, ["onError"]);
 
-    return new this(schema, items, schema.minItems || 0, schema.maxItems || Infinity);
+    return new this(
+      schema,
+      items,
+      schema.minItems || 0,
+      schema.maxItems || Infinity
+    );
   }
 
   constructor(schema, itemType, minItems, maxItems) {
@@ -1929,7 +2160,9 @@ class ArrayType extends Type {
 
     let result = [];
     for (let [i, element] of value.entries()) {
-      element = context.withPath(String(i), () => this.itemType.normalize(element, context));
+      element = context.withPath(String(i), () =>
+        this.itemType.normalize(element, context)
+      );
       if (element.error) {
         if (this.onError == "warn") {
           context.logError(forceString(element.error));
@@ -1942,16 +2175,24 @@ class ArrayType extends Type {
     }
 
     if (result.length < this.minItems) {
-      return context.error(`Array requires at least ${this.minItems} items; you have ${result.length}`,
-                           `have at least ${this.minItems} items`);
+      return context.error(
+        `Array requires at least ${this.minItems} items; you have ${
+          result.length
+        }`,
+        `have at least ${this.minItems} items`
+      );
     }
 
     if (result.length > this.maxItems) {
-      return context.error(`Array requires at most ${this.maxItems} items; you have ${result.length}`,
-                           `have at most ${this.maxItems} items`);
+      return context.error(
+        `Array requires at most ${this.maxItems} items; you have ${
+          result.length
+        }`,
+        `have at most ${this.maxItems} items`
+      );
     }
 
-    return this.postprocess({value: result}, context);
+    return this.postprocess({ value: result }, context);
   }
 
   checkBaseType(baseType) {
@@ -1961,8 +2202,13 @@ class ArrayType extends Type {
 
 class FunctionType extends Type {
   static get EXTRA_PROPERTIES() {
-    return ["parameters", "async", "returns", "requireUserInput",
-            ...super.EXTRA_PROPERTIES];
+    return [
+      "parameters",
+      "async",
+      "returns",
+      "requireUserInput",
+      ...super.EXTRA_PROPERTIES,
+    ];
   }
 
   static parseSchema(root, schema, path, extraProperties = []) {
@@ -1991,30 +2237,44 @@ class FunctionType extends Type {
     }
     let hasAsyncCallback = false;
     if (isAsync) {
-      hasAsyncCallback = (parameters &&
-                          parameters.length &&
-                          parameters[parameters.length - 1].name == schema.async);
+      hasAsyncCallback =
+        parameters &&
+        parameters.length &&
+        parameters[parameters.length - 1].name == schema.async;
     }
 
     if (DEBUG) {
       if (isExpectingCallback) {
-        throw new Error(`Internal error: Expected a callback parameter ` +
-                        `with name ${schema.async}`);
+        throw new Error(
+          `Internal error: Expected a callback parameter ` +
+            `with name ${schema.async}`
+        );
       }
 
       if (isAsync && schema.returns) {
-        throw new Error("Internal error: Async functions must not " +
-                        "have return values.");
+        throw new Error(
+          "Internal error: Async functions must not have return values."
+        );
       }
-      if (isAsync && schema.allowAmbiguousOptionalArguments && !hasAsyncCallback) {
-        throw new Error("Internal error: Async functions with ambiguous " +
-                        "arguments must declare the callback as the last parameter");
+      if (
+        isAsync &&
+        schema.allowAmbiguousOptionalArguments &&
+        !hasAsyncCallback
+      ) {
+        throw new Error(
+          "Internal error: Async functions with ambiguous " +
+            "arguments must declare the callback as the last parameter"
+        );
       }
     }
 
-
-    return new this(schema, parameters, isAsync, hasAsyncCallback,
-                    !!schema.requireUserInput);
+    return new this(
+      schema,
+      parameters,
+      isAsync,
+      hasAsyncCallback,
+      !!schema.requireUserInput
+    );
   }
 
   constructor(schema, parameters, isAsync, hasAsyncCallback, requireUserInput) {
@@ -2045,7 +2305,7 @@ class ValueProperty extends Entry {
 
   getDescriptor(path, context) {
     return {
-      descriptor: {value: this.value},
+      descriptor: { value: this.value },
     };
   }
 }
@@ -2083,7 +2343,7 @@ class TypeProperty extends Entry {
     };
 
     if (this.writable) {
-      let setStub = (value) => {
+      let setStub = value => {
         let normalized = this.type.normalize(value, context);
         if (normalized.error) {
           this.throwError(context, forceString(normalized.error));
@@ -2140,8 +2400,10 @@ class SubModuleProperty extends Entry {
 
     if (DEBUG) {
       if (!type || !(type instanceof SubModuleType)) {
-        throw new Error(`Internal error: ${this.namespaceName}.${this.reference} ` +
-                        `is not a sub-module`);
+        throw new Error(
+          `Internal error: ${this.namespaceName}.${this.reference} ` +
+            `is not a sub-module`
+        );
       }
     }
     let subpath = [...path, this.name];
@@ -2159,7 +2421,7 @@ class SubModuleProperty extends Entry {
     // TODO: Inject this.properties.
 
     return {
-      descriptor: {value: obj},
+      descriptor: { value: obj },
       revoke() {
         let unwrapped = ChromeUtils.waiveXrays(obj);
         for (let fun of functions) {
@@ -2237,7 +2499,7 @@ class CallEntry extends Entry {
       // parse arguments.
       // The last argument for asynchronous methods is either a function or null.
       // This is specifically done for runtime.sendMessage.
-      if (this.hasAsyncCallback && typeof(args[args.length - 1]) != "function") {
+      if (this.hasAsyncCallback && typeof args[args.length - 1] != "function") {
         args.push(null);
       }
       return args;
@@ -2255,7 +2517,10 @@ class CallEntry extends Entry {
       let parameter = this.parameters[parameterIndex];
       let r = parameter.type.normalize(arg, context);
       if (r.error) {
-        this.throwError(context, `Type error for parameter ${parameter.name} (${forceString(r.error)})`);
+        this.throwError(
+          context,
+          `Type error for parameter ${parameter.name} (${forceString(r.error)})`
+        );
       }
       return r.value;
     });
@@ -2277,19 +2542,34 @@ FunctionEntry = class FunctionEntry extends CallEntry {
       };
     }
 
-    return new this(schema, path, schema.name,
-                    root.parseSchema(
-                      schema, path,
-                      ["name", "unsupported", "returns",
-                       "permissions",
-                       "allowAmbiguousOptionalArguments"]),
-                    schema.unsupported || false,
-                    schema.allowAmbiguousOptionalArguments || false,
-                    returns,
-                    schema.permissions || null);
+    return new this(
+      schema,
+      path,
+      schema.name,
+      root.parseSchema(schema, path, [
+        "name",
+        "unsupported",
+        "returns",
+        "permissions",
+        "allowAmbiguousOptionalArguments",
+      ]),
+      schema.unsupported || false,
+      schema.allowAmbiguousOptionalArguments || false,
+      returns,
+      schema.permissions || null
+    );
   }
 
-  constructor(schema, path, name, type, unsupported, allowAmbiguousOptionalArguments, returns, permissions) {
+  constructor(
+    schema,
+    path,
+    name,
+    type,
+    unsupported,
+    allowAmbiguousOptionalArguments,
+    returns,
+    permissions
+  ) {
     super(schema, path, name, type.parameters, allowAmbiguousOptionalArguments);
     this.unsupported = unsupported;
     this.returns = returns;
@@ -2300,20 +2580,25 @@ FunctionEntry = class FunctionEntry extends CallEntry {
     this.requireUserInput = type.requireUserInput;
   }
 
-  checkValue({type, optional, name}, value, context) {
+  checkValue({ type, optional, name }, value, context) {
     if (optional && value == null) {
       return;
     }
-    if (type.reference === "ExtensionPanel" ||
-        type.reference === "ExtensionSidebarPane" ||
-        type.reference === "Port") {
+    if (
+      type.reference === "ExtensionPanel" ||
+      type.reference === "ExtensionSidebarPane" ||
+      type.reference === "Port"
+    ) {
       // TODO: We currently treat objects with functions as SubModuleType,
       // which is just wrong, and a bigger yak.  Skipping for now.
       return;
     }
-    const {error} = type.normalize(value, context);
+    const { error } = type.normalize(value, context);
     if (error) {
-      this.throwError(context, `Type error for ${name} value (${forceString(error)})`);
+      this.throwError(
+        context,
+        `Type error for ${name} value (${forceString(error)})`
+      );
     }
   }
 
@@ -2349,7 +2634,11 @@ FunctionEntry = class FunctionEntry extends CallEntry {
             original(...args);
           };
         }
-        let result = apiImpl.callAsyncFunction(actuals, callback, this.requireUserInput);
+        let result = apiImpl.callAsyncFunction(
+          actuals,
+          callback,
+          this.requireUserInput
+        );
         if (DEBUG && this.hasAsyncCallback && !callback) {
           return result.then(result => {
             this.checkCallback([result], context);
@@ -2377,7 +2666,7 @@ FunctionEntry = class FunctionEntry extends CallEntry {
     }
 
     return {
-      descriptor: {value: Cu.exportFunction(stub, context.cloneScope)},
+      descriptor: { value: Cu.exportFunction(stub, context.cloneScope) },
       revoke() {
         apiImpl.revoke();
         apiImpl = null;
@@ -2390,7 +2679,8 @@ FunctionEntry = class FunctionEntry extends CallEntry {
 //
 // TODO Bug 1369722: we should be able to remove the eslint-disable-line that follows
 // once Bug 1369722 has been fixed.
-Event = class Event extends CallEntry { // eslint-disable-line no-global-assign
+// eslint-disable-next-line no-global-assign
+Event = class Event extends CallEntry {
   static parseSchema(root, event, path) {
     let extraParameters = Array.from(event.extraParameters || [], param => ({
       type: root.parseSchema(param, path, ["name", "optional", "default"]),
@@ -2399,18 +2689,36 @@ Event = class Event extends CallEntry { // eslint-disable-line no-global-assign
       default: param.default == undefined ? null : param.default,
     }));
 
-    let extraProperties = ["name", "unsupported", "permissions", "extraParameters",
-                           // We ignore these properties for now.
-                           "returns", "filters"];
+    let extraProperties = [
+      "name",
+      "unsupported",
+      "permissions",
+      "extraParameters",
+      // We ignore these properties for now.
+      "returns",
+      "filters",
+    ];
 
-    return new this(event, path, event.name,
-                    root.parseSchema(event, path, extraProperties),
-                    extraParameters,
-                    event.unsupported || false,
-                    event.permissions || null);
+    return new this(
+      event,
+      path,
+      event.name,
+      root.parseSchema(event, path, extraProperties),
+      extraParameters,
+      event.unsupported || false,
+      event.permissions || null
+    );
   }
 
-  constructor(schema, path, name, type, extraParameters, unsupported, permissions) {
+  constructor(
+    schema,
+    path,
+    name,
+    type,
+    extraParameters,
+    unsupported,
+    permissions
+  ) {
     super(schema, path, name, extraParameters);
     this.type = type;
     this.unsupported = unsupported;
@@ -2434,24 +2742,24 @@ Event = class Event extends CallEntry { // eslint-disable-line no-global-assign
       apiImpl.addListener(listener, actuals);
     };
 
-    let removeStub = (listener) => {
+    let removeStub = listener => {
       listener = this.checkListener(listener, context);
       apiImpl.removeListener(listener);
     };
 
-    let hasStub = (listener) => {
+    let hasStub = listener => {
       listener = this.checkListener(listener, context);
       return apiImpl.hasListener(listener);
     };
 
     let obj = Cu.createObjectIn(context.cloneScope);
 
-    Cu.exportFunction(addStub, obj, {defineAs: "addListener"});
-    Cu.exportFunction(removeStub, obj, {defineAs: "removeListener"});
-    Cu.exportFunction(hasStub, obj, {defineAs: "hasListener"});
+    Cu.exportFunction(addStub, obj, { defineAs: "addListener" });
+    Cu.exportFunction(removeStub, obj, { defineAs: "removeListener" });
+    Cu.exportFunction(hasStub, obj, { defineAs: "hasListener" });
 
     return {
-      descriptor: {value: obj},
+      descriptor: { value: obj },
       revoke() {
         apiImpl.revoke();
         apiImpl = null;
@@ -2465,17 +2773,19 @@ Event = class Event extends CallEntry { // eslint-disable-line no-global-assign
   }
 };
 
-const TYPES = Object.freeze(Object.assign(Object.create(null), {
-  any: AnyType,
-  array: ArrayType,
-  boolean: BooleanType,
-  function: FunctionType,
-  integer: IntegerType,
-  null: NullType,
-  number: NumberType,
-  object: ObjectType,
-  string: StringType,
-}));
+const TYPES = Object.freeze(
+  Object.assign(Object.create(null), {
+    any: AnyType,
+    array: ArrayType,
+    boolean: BooleanType,
+    function: FunctionType,
+    integer: IntegerType,
+    null: NullType,
+    number: NumberType,
+    object: ObjectType,
+    string: StringType,
+  })
+);
 
 const LOADERS = {
   events: "loadEvent",
@@ -2627,9 +2937,15 @@ class Namespace extends Map {
       type.type = "object";
     } else if (DEBUG) {
       if (!targetType) {
-        throw new Error(`Internal error: Attempt to extend a nonexistent type ${type.$extend}`);
+        throw new Error(
+          `Internal error: Attempt to extend a nonexistent type ${type.$extend}`
+        );
       } else if (!(targetType instanceof ChoiceType)) {
-        throw new Error(`Internal error: Attempt to extend a non-extensible type ${type.$extend}`);
+        throw new Error(
+          `Internal error: Attempt to extend a non-extensible type ${
+            type.$extend
+          }`
+        );
       }
     }
 
@@ -2647,19 +2963,34 @@ class Namespace extends Map {
   loadProperty(name, prop) {
     if ("$ref" in prop) {
       if (!prop.unsupported) {
-        return new SubModuleProperty(this.root,
-                                     prop, this.path, name,
-                                     prop.$ref, prop.properties || {},
-                                     prop.permissions || null);
+        return new SubModuleProperty(
+          this.root,
+          prop,
+          this.path,
+          name,
+          prop.$ref,
+          prop.properties || {},
+          prop.permissions || null
+        );
       }
     } else if ("value" in prop) {
       return new ValueProperty(prop, name, prop.value);
     } else {
       // We ignore the "optional" attribute on properties since we
       // don't inject anything here anyway.
-      let type = this.root.parseSchema(prop, [this.name], ["optional", "permissions", "writable"]);
-      return new TypeProperty(prop, this.path, name, type, prop.writable || false,
-                              prop.permissions || null);
+      let type = this.root.parseSchema(
+        prop,
+        [this.name],
+        ["optional", "permissions", "writable"]
+      );
+      return new TypeProperty(
+        prop,
+        this.path,
+        name,
+        type,
+        prop.writable || false,
+        prop.permissions || null
+      );
     }
   }
 
@@ -2698,7 +3029,7 @@ class Namespace extends Map {
     // Only inject the namespace object if it isn't empty.
     if (Object.keys(obj).length) {
       return {
-        descriptor: {value: obj},
+        descriptor: { value: obj },
       };
     }
   }
@@ -2708,7 +3039,7 @@ class Namespace extends Map {
     return super.keys();
   }
 
-  * entries() {
+  *entries() {
     for (let key of this.keys()) {
       yield [key, this.get(key)];
     }
@@ -2776,7 +3107,6 @@ class Namespace extends Map {
   }
 }
 
-
 /**
  * A namespace which combines the children of an arbitrary number of
  * sub-namespaces.
@@ -2840,7 +3170,7 @@ class SchemaRoots extends Namespaces {
     return ns;
   }
 
-  * getNamespaces(name) {
+  *getNamespaces(name) {
     for (let root of this.bases) {
       yield* root.getNamespaces(name);
     }
@@ -2871,7 +3201,7 @@ class SchemaRoot extends Namespace {
     this.schemaJSON = schemaJSON;
   }
 
-  * getNamespaces(path) {
+  *getNamespaces(path) {
     let name = path.join(".");
 
     let ns = this.getNamespace(name, false);
@@ -2970,8 +3300,7 @@ class SchemaRoot extends Namespace {
 
   loadSchema(json) {
     for (let namespace of json) {
-      this.getOwnNamespace(namespace.namespace)
-          .addSchema(namespace);
+      this.getOwnNamespace(namespace.namespace).addSchema(namespace);
     }
   }
 
@@ -3040,7 +3369,7 @@ class SchemaRoot extends Namespace {
 
     let result = type.normalize(obj, new Context(context));
     if (result.error) {
-      return {error: forceString(result.error)};
+      return { error: forceString(result.error) };
     }
     return result;
   }
@@ -3054,7 +3383,6 @@ this.Schemas = {
   // Maps a schema URL to the JSON contained in that schema file. This
   // is useful for sending the JSON across processes.
   schemaJSON: new Map(),
-
 
   // A map of schema JSON which should be available in all content processes.
   contentSchemaJSON: new Map(),
@@ -3106,9 +3434,11 @@ this.Schemas = {
   _loadCachedSchemasPromise: null,
   loadCachedSchemas() {
     if (!this._loadCachedSchemasPromise) {
-      this._loadCachedSchemasPromise = StartupCache.schemas.getAll().then(results => {
-        return results;
-      });
+      this._loadCachedSchemasPromise = StartupCache.schemas
+        .getAll()
+        .then(results => {
+          return results;
+        });
     }
 
     return this._loadCachedSchemasPromise;
@@ -3129,7 +3459,7 @@ this.Schemas = {
   },
 
   updateSharedSchemas() {
-    let {sharedData} = Services.ppmm;
+    let { sharedData } = Services.ppmm;
 
     sharedData.set(KEY_CONTENT_SCHEMAS, this.contentSchemaJSON);
     sharedData.set(KEY_PRIVILEGED_SCHEMAS, this.privilegedSchemaJSON);
@@ -3150,8 +3480,9 @@ this.Schemas = {
 
     let schemaCache = await this.loadCachedSchemas();
 
-    let blob = (schemaCache.get(url) ||
-                await StartupCache.schemas.get(url, readJSONAndBlobbify));
+    let blob =
+      schemaCache.get(url) ||
+      (await StartupCache.schemas.get(url, readJSONAndBlobbify));
 
     if (!this.schemaJSON.has(url)) {
       this.addSchema(url, blob, content);

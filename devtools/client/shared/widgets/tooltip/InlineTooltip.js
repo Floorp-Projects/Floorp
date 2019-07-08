@@ -56,7 +56,10 @@ InlineTooltip.prototype = {
    * @return {Boolean} true if the tooltip is visible
    */
   isVisible() {
-    return typeof this.panel.parentNode !== "undefined" && this.panel.parentNode !== null;
+    return (
+      typeof this.panel.parentNode !== "undefined" &&
+      this.panel.parentNode !== null
+    );
   },
 
   /**

@@ -38,7 +38,10 @@ var progressListener3 = {
 var expectListener4 = false;
 var progressListener4 = {
   onLocationChange: function onLocationChange() {
-    ok(expectListener4, "didn't call progressListener4 for the first location change");
+    ok(
+      expectListener4,
+      "didn't call progressListener4 for the first location change"
+    );
     gBrowser.removeProgressListener(this);
     executeSoon(finish);
   },

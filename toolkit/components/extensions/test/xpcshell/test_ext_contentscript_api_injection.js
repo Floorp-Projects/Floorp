@@ -1,27 +1,24 @@
 "use strict";
 
-const server = createHttpServer({hosts: ["example.com"]});
+const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));
-
 
 add_task(async function test_contentscript_api_injection() {
   let extensionData = {
     manifest: {
       content_scripts: [
         {
-          "matches": ["http://example.com/data/file_sample.html"],
-          "js": ["content_script.js"],
+          matches: ["http://example.com/data/file_sample.html"],
+          js: ["content_script.js"],
         },
       ],
-      "web_accessible_resources": [
-        "content_script_iframe.html",
-      ],
+      web_accessible_resources: ["content_script_iframe.html"],
     },
 
     files: {
       "content_script.js"() {
         let iframe = document.createElement("iframe");
-        iframe.src =  browser.runtime.getURL("content_script_iframe.html");
+        iframe.src = browser.runtime.getURL("content_script_iframe.html");
         document.body.appendChild(iframe);
       },
       "content_script_iframe.js"() {
@@ -50,11 +47,17 @@ add_task(async function test_contentscript_api_injection() {
 
   await extension.startup();
 
-  let contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/data/file_sample.html");
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/data/file_sample.html"
+  );
 
   let message = await awaitConsole;
-  ok(message.message.includes("WebExt Privilege Escalation: typeof(browser) = undefined"),
-     "Document does not have `browser` APIs.");
+  ok(
+    message.message.includes(
+      "WebExt Privilege Escalation: typeof(browser) = undefined"
+    ),
+    "Document does not have `browser` APIs."
+  );
 
   await contentPage.close();
 

@@ -11,7 +11,9 @@ const { createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Message = createFactory(require("devtools/client/webconsole/components/Output/Message"));
+const Message = createFactory(
+  require("devtools/client/webconsole/components/Output/Message")
+);
 
 WarningGroup.displayName = "WarningGroup";
 
@@ -33,22 +35,18 @@ function WarningGroup(props) {
     open,
   } = props;
 
-  const {
-    source,
-    type,
-    level,
-    id: messageId,
-    indent,
-    timeStamp,
-  } = message;
+  const { source, type, level, id: messageId, indent, timeStamp } = message;
 
   const messageBody = [
     message.messageText,
     " ",
-    dom.span({
-      className: "warning-group-badge",
-      title: `${badge} messages`,
-    }, badge),
+    dom.span(
+      {
+        className: "warning-group-badge",
+        title: `${badge} messages`,
+      },
+      badge
+    ),
   ];
   const topLevelClasses = ["cm-s-mozilla"];
 

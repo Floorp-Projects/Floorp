@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
+const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
 
 const userAgentID = "84afc774-6995-40d1-9c90-8c34ddcd0cb4";
 const clientChannelID = "4b42a681c99e4dfbbb166a7e01a09b8b";
@@ -23,7 +23,7 @@ add_task(async function test_register_wrong_id() {
   // Should reconnect after the register request times out.
   let registers = 0;
   let helloDone;
-  let helloPromise = new Promise(resolve => helloDone = after(2, resolve));
+  let helloPromise = new Promise(resolve => (helloDone = after(2, resolve)));
 
   PushServiceWebSocket._generateID = () => clientChannelID;
   PushService.init({
@@ -31,24 +31,31 @@ add_task(async function test_register_wrong_id() {
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          this.serverSendMsg(JSON.stringify({
-            messageType: "hello",
-            status: 200,
-            uaid: userAgentID,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "hello",
+              status: 200,
+              uaid: userAgentID,
+            })
+          );
           helloDone();
         },
         onRegister(request) {
-          equal(request.channelID, clientChannelID,
-            "Register: wrong channel ID");
+          equal(
+            request.channelID,
+            clientChannelID,
+            "Register: wrong channel ID"
+          );
           registers++;
-          this.serverSendMsg(JSON.stringify({
-            messageType: "register",
-            status: 200,
-            // Reply with a different channel ID. Since the ID is used as a
-            // nonce, the registration request will time out.
-            channelID: serverChannelID,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "register",
+              status: 200,
+              // Reply with a different channel ID. Since the ID is used as a
+              // nonce, the registration request will time out.
+              channelID: serverChannelID,
+            })
+          );
         },
       });
     },
@@ -57,8 +64,9 @@ add_task(async function test_register_wrong_id() {
   await Assert.rejects(
     PushService.register({
       scope: "https://example.com/mismatched",
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        { inIsolatedMozBrowser: false }),
+      originAttributes: ChromeUtils.originAttributesToSuffix({
+        inIsolatedMozBrowser: false,
+      }),
     }),
     /Registration error/,
     "Expected error for mismatched register reply"

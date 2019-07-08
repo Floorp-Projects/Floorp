@@ -2,12 +2,18 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 
 "use strict";
-const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
-                               "resource://gre/modules/ExtensionSettingsStore.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionControlledPopup",
-                               "resource:///modules/ExtensionControlledPopup.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionSettingsStore",
+  "resource://gre/modules/ExtensionSettingsStore.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionControlledPopup",
+  "resource:///modules/ExtensionControlledPopup.jsm"
+);
 
 function createMarkup(doc) {
   let panel = doc.getElementById("extension-notification-panel");
@@ -41,7 +47,7 @@ function createMarkup(doc) {
     popupnotification.remove();
   });
 
-  return {panel, popupnotification};
+  return { panel, popupnotification };
 }
 
 /*
@@ -53,7 +59,7 @@ add_task(async function testExtensionControlledPopup() {
   let id = "ext-controlled@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {gecko: {id}},
+      applications: { gecko: { id } },
       name: "Ext Controlled",
     },
     // We need to be able to find the extension using AddonManager.
@@ -87,7 +93,7 @@ add_task(async function testExtensionControlledPopup() {
   });
 
   let doc = Services.wm.getMostRecentWindow("navigator:browser").document;
-  let {panel, popupnotification} = createMarkup(doc);
+  let { panel, popupnotification } = createMarkup(doc);
 
   function openPopupWithEvent() {
     let popupShown = promisePopupShown(panel);
@@ -117,7 +123,13 @@ add_task(async function testExtensionControlledPopup() {
   ok(!beforeDisableAddon.called, "Settings have not been restored");
 
   // Add the setting and observer.
-  await ExtensionSettingsStore.addSetting(id, settingType, settingKey, "controlled", () => "init");
+  await ExtensionSettingsStore.addSetting(
+    id,
+    settingType,
+    settingKey,
+    "controlled",
+    () => "init"
+  );
   await popup.addObserver(id);
 
   // Ensure the panel isn't open.
@@ -128,7 +140,11 @@ add_task(async function testExtensionControlledPopup() {
   ok(panel.getAttribute("panelopen") != "true", "The panel is closed");
   is(popupnotification.hidden, true, "The popup is hidden");
   is(addon.userDisabled, false, "The extension is enabled");
-  is(await popup.userHasConfirmed(id), false, "The user is not initially confirmed");
+  is(
+    await popup.userHasConfirmed(id),
+    false,
+    "The user is not initially confirmed"
+  );
 
   // The popup should opened based on the observer event.
   await openPopupWithEvent();
@@ -143,12 +159,17 @@ add_task(async function testExtensionControlledPopup() {
 
   // Verify the description is populated.
   let description = doc.getElementById("extension-controlled-description");
-  is(description.textContent,
-     "An extension,  Ext Controlled, changed the page you see when you open a new tab.Learn more",
-     "The extension name is in the description");
+  is(
+    description.textContent,
+    "An extension,  Ext Controlled, changed the page you see when you open a new tab.Learn more",
+    "The extension name is in the description"
+  );
   let link = description.querySelector("label");
-  is(link.href, "http://127.0.0.1:8888/support-dummy/extension-controlled",
-     "The link has the href set from learnMoreLink");
+  is(
+    link.href,
+    "http://127.0.0.1:8888/support-dummy/extension-controlled",
+    "The link has the href set from learnMoreLink"
+  );
 
   // Force close the popup, as if a user clicked away from it.
   await closePopupWithAction("ignore");
@@ -188,7 +209,11 @@ add_task(async function testExtensionControlledPopup() {
 
   // Clear that the user was notified.
   await popup.clearConfirmation(id);
-  is(await popup.userHasConfirmed(id), false, "The user confirmation has been cleared");
+  is(
+    await popup.userHasConfirmed(id),
+    false,
+    "The user confirmation has been cleared"
+  );
 
   // Force add the observer again to restore changes.
   await popup.addObserver(id);

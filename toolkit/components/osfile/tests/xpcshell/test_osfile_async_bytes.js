@@ -1,6 +1,6 @@
 "use strict";
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function run_test() {
   do_test_pending();
@@ -12,14 +12,16 @@ function run_test() {
  * preserved.
  */
 add_task(async function test_bytes() {
-  let path = OS.Path.join(OS.Constants.Path.tmpDir,
-                          "test_osfile_async_bytes.tmp");
-  let file = await OS.File.open(path, {trunc: true, read: true, write: true});
+  let path = OS.Path.join(
+    OS.Constants.Path.tmpDir,
+    "test_osfile_async_bytes.tmp"
+  );
+  let file = await OS.File.open(path, { trunc: true, read: true, write: true });
   try {
     try {
       // 1. Test write, by supplying {bytes:} options smaller than the actual
       // buffer.
-      await file.write(new Uint8Array(2048), {bytes: 1024});
+      await file.write(new Uint8Array(2048), { bytes: 1024 });
       Assert.equal((await file.stat()).size, 1024);
 
       // 2. Test that passing nullish values for |options| still works.

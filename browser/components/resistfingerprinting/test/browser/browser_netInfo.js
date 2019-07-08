@@ -3,19 +3,25 @@
  *   spoofed correctly when 'privacy.resistFingerprinting' is true;
  */
 
-const TEST_PATH = "http://example.net/browser/browser/" +
-                  "components/resistfingerprinting/test/browser/";
-
+const TEST_PATH =
+  "http://example.net/browser/browser/" +
+  "components/resistfingerprinting/test/browser/";
 
 async function testWindow() {
   // Open a tab to test network information in a content.
   let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser, TEST_PATH + "file_dummy.html");
+    gBrowser,
+    TEST_PATH + "file_dummy.html"
+  );
 
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     ok("connection" in content.navigator, "navigator.connection should exist");
 
-    is(content.navigator.connection.type, "unknown", "The connection type is spoofed correctly");
+    is(
+      content.navigator.connection.type,
+      "unknown",
+      "The connection type is spoofed correctly"
+    );
   });
 
   BrowserTestUtils.removeTab(tab);
@@ -24,7 +30,9 @@ async function testWindow() {
 async function testWorker() {
   // Open a tab to test network information in a worker.
   let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser, TEST_PATH + "file_dummy.html");
+    gBrowser,
+    TEST_PATH + "file_dummy.html"
+  );
 
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     await new Promise(resolve => {
@@ -40,7 +48,7 @@ async function testWorker() {
           resolve();
         }
       };
-      worker.postMessage({type: "runTests"});
+      worker.postMessage({ type: "runTests" });
     });
   });
 
@@ -48,10 +56,10 @@ async function testWorker() {
 }
 
 add_task(async function runTest() {
-  await SpecialPowers.pushPrefEnv({"set":
-    [
+  await SpecialPowers.pushPrefEnv({
+    set: [
       ["privacy.resistFingerprinting", true],
-      ["dom.netinfo.enabled",          true],
+      ["dom.netinfo.enabled", true],
     ],
   });
 

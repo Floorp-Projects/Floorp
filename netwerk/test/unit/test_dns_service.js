@@ -7,16 +7,23 @@ var listener = {
 
     do_test_finished();
   },
-  QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"])
+  QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"]),
 };
 
 const defaultOriginAttributes = {};
 
 function run_test() {
-  var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
+  var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
+    Ci.nsIThreadManager
+  );
   var mainThread = threadManager.currentThread;
-  dns.asyncResolve("localhost", 0, listener, mainThread, defaultOriginAttributes);
+  dns.asyncResolve(
+    "localhost",
+    0,
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
 
   do_test_pending();
 }
-

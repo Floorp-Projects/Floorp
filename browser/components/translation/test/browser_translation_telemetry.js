@@ -5,23 +5,41 @@
 
 var tmp = {};
 ChromeUtils.import("resource:///modules/translation/Translation.jsm", tmp);
-var {Translation, TranslationTelemetry} = tmp;
+var { Translation, TranslationTelemetry } = tmp;
 const Telemetry = Services.telemetry;
 
 var MetricsChecker = {
   HISTOGRAMS: {
-    OPPORTUNITIES: Services.telemetry.getHistogramById("TRANSLATION_OPPORTUNITIES"),
-    OPPORTUNITIES_BY_LANG: Services.telemetry.getKeyedHistogramById("TRANSLATION_OPPORTUNITIES_BY_LANGUAGE"),
+    OPPORTUNITIES: Services.telemetry.getHistogramById(
+      "TRANSLATION_OPPORTUNITIES"
+    ),
+    OPPORTUNITIES_BY_LANG: Services.telemetry.getKeyedHistogramById(
+      "TRANSLATION_OPPORTUNITIES_BY_LANGUAGE"
+    ),
     PAGES: Services.telemetry.getHistogramById("TRANSLATED_PAGES"),
-    PAGES_BY_LANG: Services.telemetry.getKeyedHistogramById("TRANSLATED_PAGES_BY_LANGUAGE"),
+    PAGES_BY_LANG: Services.telemetry.getKeyedHistogramById(
+      "TRANSLATED_PAGES_BY_LANGUAGE"
+    ),
     CHARACTERS: Services.telemetry.getHistogramById("TRANSLATED_CHARACTERS"),
     DENIED: Services.telemetry.getHistogramById("DENIED_TRANSLATION_OFFERS"),
-    AUTO_REJECTED: Services.telemetry.getHistogramById("AUTO_REJECTED_TRANSLATION_OFFERS"),
-    SHOW_ORIGINAL: Services.telemetry.getHistogramById("REQUESTS_OF_ORIGINAL_CONTENT"),
-    TARGET_CHANGES: Services.telemetry.getHistogramById("CHANGES_OF_TARGET_LANGUAGE"),
-    DETECTION_CHANGES: Services.telemetry.getHistogramById("CHANGES_OF_DETECTED_LANGUAGE"),
-    SHOW_UI: Services.telemetry.getHistogramById("SHOULD_TRANSLATION_UI_APPEAR"),
-    DETECT_LANG: Services.telemetry.getHistogramById("SHOULD_AUTO_DETECT_LANGUAGE"),
+    AUTO_REJECTED: Services.telemetry.getHistogramById(
+      "AUTO_REJECTED_TRANSLATION_OFFERS"
+    ),
+    SHOW_ORIGINAL: Services.telemetry.getHistogramById(
+      "REQUESTS_OF_ORIGINAL_CONTENT"
+    ),
+    TARGET_CHANGES: Services.telemetry.getHistogramById(
+      "CHANGES_OF_TARGET_LANGUAGE"
+    ),
+    DETECTION_CHANGES: Services.telemetry.getHistogramById(
+      "CHANGES_OF_DETECTED_LANGUAGE"
+    ),
+    SHOW_UI: Services.telemetry.getHistogramById(
+      "SHOULD_TRANSLATION_UI_APPEAR"
+    ),
+    DETECT_LANG: Services.telemetry.getHistogramById(
+      "SHOULD_AUTO_DETECT_LANGUAGE"
+    ),
   },
 
   reset() {
@@ -39,8 +57,10 @@ var MetricsChecker = {
       deniedOffers: this.HISTOGRAMS.DENIED.snapshot().sum || 0,
       autoRejectedOffers: this.HISTOGRAMS.AUTO_REJECTED.snapshot().sum || 0,
       showOriginal: this.HISTOGRAMS.SHOW_ORIGINAL.snapshot().sum || 0,
-      detectedLanguageChangedBefore: this.HISTOGRAMS.DETECTION_CHANGES.snapshot().values[1] || 0,
-      detectedLanguageChangeAfter: this.HISTOGRAMS.DETECTION_CHANGES.snapshot().values[0] || 0,
+      detectedLanguageChangedBefore:
+        this.HISTOGRAMS.DETECTION_CHANGES.snapshot().values[1] || 0,
+      detectedLanguageChangeAfter:
+        this.HISTOGRAMS.DETECTION_CHANGES.snapshot().values[0] || 0,
       targetLanguageChanged: this.HISTOGRAMS.TARGET_CHANGES.snapshot().sum || 0,
       showUI: this.HISTOGRAMS.SHOW_UI.snapshot().sum || 0,
       detectLang: this.HISTOGRAMS.DETECT_LANG.snapshot().sum || 0,
@@ -52,10 +72,13 @@ var MetricsChecker = {
     let opportunities = this.HISTOGRAMS.OPPORTUNITIES_BY_LANG.snapshot();
     let pages = this.HISTOGRAMS.PAGES_BY_LANG.snapshot();
     for (let source of Translation.supportedSourceLanguages) {
-      this._metrics.opportunitiesCountByLang[source] = opportunities[source] ?
-        opportunities[source].sum : 0;
+      this._metrics.opportunitiesCountByLang[source] = opportunities[source]
+        ? opportunities[source].sum
+        : 0;
       for (let target of Translation.supportedTargetLanguages) {
-        if (source === target) continue;
+        if (source === target) {
+          continue;
+        }
         let key = source + " -> " + target;
         this._metrics.pageCountByLang[key] = pages[key] ? pages[key].sum : 0;
       }
@@ -82,12 +105,12 @@ var MetricsChecker = {
     this.updateMetrics();
     this._assertionLoop(prevMetrics, this._metrics, additions);
   },
-
 };
 
 function getInfobarElement(browser, anonid) {
-  let notif = browser.translationUI
-                     .notificationBox.getNotificationWithValue("translation");
+  let notif = browser.translationUI.notificationBox.getNotificationWithValue(
+    "translation"
+  );
   return notif._getAnonElt(anonid);
 }
 
@@ -99,9 +122,11 @@ var offerTranslationFor = async function(text, from) {
   let browser = gBrowser.getBrowserForTab(tab);
 
   // Send a translation offer.
-  Translation.documentStateReceived(browser, {state: Translation.STATE_OFFER,
-                                              originalShown: true,
-                                              detectedLanguage: from});
+  Translation.documentStateReceived(browser, {
+    state: Translation.STATE_OFFER,
+    originalShown: true,
+    detectedLanguage: from,
+  });
 
   return tab;
 };
@@ -122,7 +147,7 @@ var translate = async function(text, from, closeTab = true) {
   return tab;
 };
 
-function waitForMessage({messageManager}, name) {
+function waitForMessage({ messageManager }, name) {
   return new Promise(resolve => {
     messageManager.addMessageListener(name, function onMessage() {
       messageManager.removeMessageListener(name, onMessage);
@@ -179,7 +204,7 @@ add_task(async function test_telemetry() {
   await translate("<h1>Hallo Welt!</h1><h1>Bratwurst!</h1>", "de");
   await MetricsChecker.checkAdditions({
     opportunitiesCount: 2,
-    opportunitiesCountByLang: { "ru": 1, "de": 1 },
+    opportunitiesCountByLang: { ru: 1, de: 1 },
     pageCount: 1,
     pageCountByLang: { "de -> en": 1 },
     charCount: 21,
@@ -208,8 +233,11 @@ add_task(async function test_deny_translation_metric() {
 });
 
 add_task(async function test_show_original() {
-  let tab =
-    await translate("<h1>Hallo Welt!</h1><h1>Bratwurst!</h1>", "de", false);
+  let tab = await translate(
+    "<h1>Hallo Welt!</h1><h1>Bratwurst!</h1>",
+    "de",
+    false
+  );
   await MetricsChecker.checkAdditions({ pageCount: 1, showOriginal: 0 });
   getInfobarElement(tab.linkedBrowser, "showOriginal").doCommand();
   await MetricsChecker.checkAdditions({ pageCount: 0, showOriginal: 1 });
@@ -218,7 +246,8 @@ add_task(async function test_show_original() {
 
 add_task(async function test_language_change() {
   // This is run 4 times, the total additions are checked afterwards.
-  for (let i of Array(4)) { // eslint-disable-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
+  for (let i of Array(4)) {
     let tab = await offerTranslationFor("<h1>Hallo Welt!</h1>", "fr");
     let browser = tab.linkedBrowser;
     // In the offer state, translation is executed by the Translate button,
@@ -275,12 +304,12 @@ add_task(async function test_never_offer_translation() {
 add_task(async function test_translation_preferences() {
   let preferenceChecks = {
     "browser.translation.ui.show": [
-      {value: false, expected: {showUI: 0}},
-      {value: true, expected: {showUI: 1}},
+      { value: false, expected: { showUI: 0 } },
+      { value: true, expected: { showUI: 1 } },
     ],
     "browser.translation.detectLanguage": [
-      {value: false, expected: {detectLang: 0}},
-      {value: true, expected: {detectLang: 1}},
+      { value: false, expected: { detectLang: 0 } },
+      { value: true, expected: { detectLang: 1 } },
     ],
   };
 

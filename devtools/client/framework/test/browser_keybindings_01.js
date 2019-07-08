@@ -7,13 +7,19 @@
 
 // Tests that the keybindings for opening and closing the inspector work as expected
 // Can probably make this a shared test that tests all of the tools global keybindings
-const TEST_URL = "data:text/html,<html><head><title>Test for the " +
-                 "highlighter keybindings</title></head><body>" +
-                 "<h1>Keybindings!</h1></body></html>";
+const TEST_URL =
+  "data:text/html,<html><head><title>Test for the " +
+  "highlighter keybindings</title></head><body>" +
+  "<h1>Keybindings!</h1></body></html>";
 
-const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-  "resource://gre/modules/AppConstants.jsm");
+const {
+  gDevToolsBrowser,
+} = require("devtools/client/framework/devtools-browser");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
 const isMac = AppConstants.platform == "macosx";
 
 const allKeys = [];

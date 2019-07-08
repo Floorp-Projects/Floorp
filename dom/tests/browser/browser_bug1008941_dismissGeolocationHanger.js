@@ -4,13 +4,20 @@
  */
 "use strict";
 
-const TEST_URI = "https://example.com/" +
-                 "browser/dom/tests/browser/position.html";
+const TEST_URI =
+  // eslint-disable-next-line no-useless-concat
+  "https://example.com/" + "browser/dom/tests/browser/position.html";
 
 add_task(async function testDismissHanger() {
-  info("Check that location is not shared when dismissing the geolocation hanger");
+  info(
+    "Check that location is not shared when dismissing the geolocation hanger"
+  );
 
-  let promisePanelShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown", true);
+  let promisePanelShown = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown",
+    true
+  );
   await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URI);
   await promisePanelShown;
 
@@ -18,9 +25,13 @@ add_task(async function testDismissHanger() {
   window.document.getElementById("nav-bar").click();
   info("Clicked outside the Geolocation panel to dismiss it");
 
-  let hasLocation = await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
-    return content.document.body.innerHTML.includes("location...");
-  });
+  let hasLocation = await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    {},
+    async function() {
+      return content.document.body.innerHTML.includes("location...");
+    }
+  );
 
   ok(hasLocation, "Location is not shared");
 

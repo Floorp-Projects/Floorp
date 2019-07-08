@@ -5,8 +5,8 @@
 
 "use strict";
 
-var {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {colorUtils} = require("devtools/shared/css/color");
+var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { colorUtils } = require("devtools/shared/css/color");
 const InspectorUtils = require("InspectorUtils");
 
 const CLASSIFY_TESTS = [
@@ -45,8 +45,11 @@ function run_test() {
 
     const obj = new colorUtils.CssColor("purple");
     obj.setAuthoredUnitFromColor(test.input);
-    equal(obj.colorUnit, test.output,
-          "test setAuthoredUnitFromColor(" + test.input + ")");
+    equal(
+      obj.colorUnit,
+      test.output,
+      "test setAuthoredUnitFromColor(" + test.input + ")"
+    );
 
     // Check that our implementation matches InspectorUtils.
     compareWithInspectorUtils(test.input, true);

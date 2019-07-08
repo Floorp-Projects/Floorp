@@ -10,11 +10,13 @@ add_task(async function aboutAb() {
     search: "about:ab",
     autofilled: "about:about",
     completed: "about:about",
-    matches: [{
-      value: "about:about",
-      comment: "about:about",
-      style: ["autofill", "heuristic"],
-    }],
+    matches: [
+      {
+        value: "about:about",
+        comment: "about:about",
+        style: ["autofill", "heuristic"],
+      },
+    ],
   });
 });
 
@@ -24,11 +26,13 @@ add_task(async function aboutAb() {
     search: "about:Ab",
     autofilled: "about:About",
     completed: "about:about",
-    matches: [{
-      value: "about:about",
-      comment: "about:about",
-      style: ["autofill", "heuristic"],
-    }],
+    matches: [
+      {
+        value: "about:about",
+        comment: "about:about",
+        style: ["autofill", "heuristic"],
+      },
+    ],
   });
 });
 
@@ -38,11 +42,13 @@ add_task(async function aboutAbout() {
     search: "about:about",
     autofilled: "about:about",
     completed: "about:about",
-    matches: [{
-      value: "about:about",
-      comment: "about:about",
-      style: ["autofill", "heuristic"],
-    }],
+    matches: [
+      {
+        value: "about:about",
+        comment: "about:about",
+        style: ["autofill", "heuristic"],
+      },
+    ],
   });
 });
 
@@ -52,14 +58,17 @@ add_task(async function aboutAboutAndAboutAddons() {
     search: "about:a",
     autofilled: "about:about",
     completed: "about:about",
-    matches: [{
-      value: "about:about",
-      comment: "about:about",
-      style: ["autofill", "heuristic"],
-    }, {
-      value: "about:addons",
-      comment: "about:addons",
-    }],
+    matches: [
+      {
+        value: "about:about",
+        comment: "about:about",
+        style: ["autofill", "heuristic"],
+      },
+      {
+        value: "about:addons",
+        comment: "about:addons",
+      },
+    ],
   });
 });
 

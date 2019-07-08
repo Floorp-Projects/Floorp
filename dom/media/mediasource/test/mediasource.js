@@ -13,7 +13,7 @@ function addMSEPrefs(...prefs) {
 
 async function runWithMSE(testFunction) {
   await once(window, "load");
-  await SpecialPowers.pushPrefEnv({"set": gMSETestPrefs});
+  await SpecialPowers.pushPrefEnv({ set: gMSETestPrefs });
 
   const ms = new MediaSource();
 
@@ -41,7 +41,11 @@ async function fetchWithXHR(uri) {
     xhr.open("GET", uri, true);
     xhr.responseType = "arraybuffer";
     xhr.addEventListener("load", function() {
-      is(xhr.status, 200, "fetchWithXHR load uri='" + uri + "' status=" + xhr.status);
+      is(
+        xhr.status,
+        200,
+        "fetchWithXHR load uri='" + uri + "' status=" + xhr.status
+      );
       resolve(xhr.response);
     });
     xhr.send();
@@ -63,7 +67,10 @@ function must_throw(f, msg, error = true) {
   } catch (e) {
     ok(error, msg);
     if (error === true) {
-      ok(false, `Please provide name of expected error! Got ${e.name}: ${e.message}.`);
+      ok(
+        false,
+        `Please provide name of expected error! Got ${e.name}: ${e.message}.`
+      );
     } else if (e.name != error) {
       throw e;
     }
@@ -77,7 +84,10 @@ async function must_reject(f, msg, error = true) {
   } catch (e) {
     ok(error, msg);
     if (error === true) {
-      ok(false, `Please provide name of expected error! Got ${e.name}: ${e.message}.`);
+      ok(
+        false,
+        `Please provide name of expected error! Got ${e.name}: ${e.message}.`
+      );
     } else if (e.name != error) {
       throw e;
     }
@@ -90,7 +100,7 @@ const must_not_throw = (f, msg) => must_throw(f, msg, false);
 const must_not_reject = (f, msg) => must_reject(f, msg, false);
 
 async function once(target, name) {
-  return new Promise(r => target.addEventListener(name, r, {once: true}));
+  return new Promise(r => target.addEventListener(name, r, { once: true }));
 }
 
 function timeRangeToString(r) {
@@ -102,20 +112,29 @@ function timeRangeToString(r) {
 }
 
 async function loadSegment(sb, typedArrayOrArrayBuffer) {
-  const typedArray = (typedArrayOrArrayBuffer instanceof ArrayBuffer) ? new Uint8Array(typedArrayOrArrayBuffer)
-                                                                      : typedArrayOrArrayBuffer;
-  info(`Loading buffer: [${typedArray.byteOffset}, ${typedArray.byteOffset + typedArray.byteLength})`);
+  const typedArray =
+    typedArrayOrArrayBuffer instanceof ArrayBuffer
+      ? new Uint8Array(typedArrayOrArrayBuffer)
+      : typedArrayOrArrayBuffer;
+  info(
+    `Loading buffer: [${typedArray.byteOffset}, ${typedArray.byteOffset +
+      typedArray.byteLength})`
+  );
   const beforeBuffered = timeRangeToString(sb.buffered);
   const p = once(sb, "update");
   sb.appendBuffer(typedArray);
   await p;
   const afterBuffered = timeRangeToString(sb.buffered);
-  info(`SourceBuffer buffered ranges grew from ${beforeBuffered} to ${afterBuffered}`);
+  info(
+    `SourceBuffer buffered ranges grew from ${beforeBuffered} to ${afterBuffered}`
+  );
 }
 
 async function fetchAndLoad(sb, prefix, chunks, suffix) {
   // Fetch the buffers in parallel.
-  const buffers = await Promise.all(chunks.map(c => fetchWithXHR(prefix + c + suffix)));
+  const buffers = await Promise.all(
+    chunks.map(c => fetchWithXHR(prefix + c + suffix))
+  );
 
   // Load them in series, as required per spec.
   for (const buffer of buffers) {
@@ -124,13 +143,20 @@ async function fetchAndLoad(sb, prefix, chunks, suffix) {
 }
 
 function loadSegmentAsync(sb, typedArrayOrArrayBuffer) {
-  const typedArray = (typedArrayOrArrayBuffer instanceof ArrayBuffer) ? new Uint8Array(typedArrayOrArrayBuffer)
-                                                                      : typedArrayOrArrayBuffer;
-  info(`Loading buffer2: [${typedArray.byteOffset}, ${typedArray.byteOffset + typedArray.byteLength})`);
+  const typedArray =
+    typedArrayOrArrayBuffer instanceof ArrayBuffer
+      ? new Uint8Array(typedArrayOrArrayBuffer)
+      : typedArrayOrArrayBuffer;
+  info(
+    `Loading buffer2: [${typedArray.byteOffset}, ${typedArray.byteOffset +
+      typedArray.byteLength})`
+  );
   const beforeBuffered = timeRangeToString(sb.buffered);
   return sb.appendBufferAsync(typedArray).then(() => {
     const afterBuffered = timeRangeToString(sb.buffered);
-    info(`SourceBuffer buffered ranges grew from ${beforeBuffered} to ${afterBuffered}`);
+    info(
+      `SourceBuffer buffered ranges grew from ${beforeBuffered} to ${afterBuffered}`
+    );
   });
 }
 
@@ -139,7 +165,11 @@ function fetchAndLoadAsync(sb, prefix, chunks, suffix) {
   const buffers = {};
   const fetches = [];
   for (const chunk of chunks) {
-    fetches.push(fetchWithXHR(prefix + chunk + suffix).then(((c, x) => buffers[c] = x).bind(null, chunk)));
+    fetches.push(
+      fetchWithXHR(prefix + chunk + suffix).then(
+        ((c, x) => (buffers[c] = x)).bind(null, chunk)
+      )
+    );
   }
 
   // Load them in series, as required per spec.
@@ -178,8 +208,26 @@ async function waitUntilTime(target, targetTime) {
 // Log events for debugging.
 
 function logEvents(el) {
-  ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
-   "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
-   "waiting", "pause", "durationchange", "seeking",
-   "seeked"].forEach(type => el.addEventListener(type, e => info(`got ${e.type} event`)));
+  [
+    "suspend",
+    "play",
+    "canplay",
+    "canplaythrough",
+    "loadstart",
+    "loadedmetadata",
+    "loadeddata",
+    "playing",
+    "ended",
+    "error",
+    "stalled",
+    "emptied",
+    "abort",
+    "waiting",
+    "pause",
+    "durationchange",
+    "seeking",
+    "seeked",
+  ].forEach(type =>
+    el.addEventListener(type, e => info(`got ${e.type} event`))
+  );
 }

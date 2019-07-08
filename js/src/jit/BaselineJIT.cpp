@@ -150,13 +150,10 @@ JitExecStatus jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp,
       data.jitcode += MacroAssembler::ToggledCallSize(data.jitcode);
     }
   } else {
+    // As above, use the entry point that skips the debug trap.
     const BaselineInterpreter& interp =
         cx->runtime()->jitRuntime()->baselineInterpreter();
-    data.jitcode = interp.interpretOpAddr().value;
-    if (fp->isDebuggee()) {
-      // Skip the debug trap emitted by emitInterpreterLoop.
-      data.jitcode += MacroAssembler::ToggledCallSize(data.jitcode);
-    }
+    data.jitcode = interp.interpretOpNoDebugTrapAddr().value;
   }
 
   // Note: keep this in sync with SetEnterJitData.
@@ -1107,6 +1104,7 @@ void jit::ToggleBaselineTraceLoggerEngine(JSRuntime* runtime, bool enable) {
 #endif
 
 void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
+                               uint32_t interpretOpNoDebugTrapOffset,
                                uint32_t profilerEnterToggleOffset,
                                uint32_t profilerExitToggleOffset,
                                uint32_t debuggeeCheckOffset,
@@ -1114,6 +1112,7 @@ void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
                                CodeOffsetVector&& codeCoverageOffsets) {
   code_ = code;
   interpretOpOffset_ = interpretOpOffset;
+  interpretOpNoDebugTrapOffset_ = interpretOpNoDebugTrapOffset;
   profilerEnterToggleOffset_ = profilerEnterToggleOffset;
   profilerExitToggleOffset_ = profilerExitToggleOffset;
   debuggeeCheckOffset_ = debuggeeCheckOffset;

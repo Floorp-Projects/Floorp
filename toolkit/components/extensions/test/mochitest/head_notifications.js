@@ -3,10 +3,15 @@
 /* exported MockAlertsService */
 
 function mockServicesChromeScript() {
-  const MOCK_ALERTS_CID = Components.ID("{48068bc2-40ab-4904-8afd-4cdfb3a385f3}");
+  const MOCK_ALERTS_CID = Components.ID(
+    "{48068bc2-40ab-4904-8afd-4cdfb3a385f3}"
+  );
   const ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/alerts-service;1";
 
-  const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
+  const { setTimeout } = ChromeUtils.import(
+    "resource://gre/modules/Timer.jsm",
+    {}
+  );
   const registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
   let activeNotifications = Object.create(null);
@@ -31,20 +36,34 @@ function mockServicesChromeScript() {
       }
     },
 
-    showAlertNotification: function(imageUrl, title, text, textClickable,
-                                    cookie, alertListener, name) {
-      this.showAlert({
-        name: name,
-        cookie: cookie,
-        title: title,
-      }, alertListener);
+    showAlertNotification: function(
+      imageUrl,
+      title,
+      text,
+      textClickable,
+      cookie,
+      alertListener,
+      name
+    ) {
+      this.showAlert(
+        {
+          name: name,
+          cookie: cookie,
+          title: title,
+        },
+        alertListener
+      );
     },
 
     closeAlert: function(name) {
       let alertNotification = activeNotifications[name];
       if (alertNotification) {
         if (alertNotification.listener) {
-          alertNotification.listener.observe(null, "alertfinished", alertNotification.cookie);
+          alertNotification.listener.observe(
+            null,
+            "alertfinished",
+            alertNotification.cookie
+          );
         }
         delete activeNotifications[name];
       }
@@ -60,9 +79,12 @@ function mockServicesChromeScript() {
     },
   };
 
-  registrar.registerFactory(MOCK_ALERTS_CID, "alerts service",
-                            ALERTS_SERVICE_CONTRACT_ID,
-                            mockAlertsService);
+  registrar.registerFactory(
+    MOCK_ALERTS_CID,
+    "alerts service",
+    ALERTS_SERVICE_CONTRACT_ID,
+    mockAlertsService
+  );
 
   function closeAllNotifications() {
     for (let alertName of Object.keys(activeNotifications)) {
@@ -70,7 +92,7 @@ function mockServicesChromeScript() {
     }
   }
 
-  const {addMessageListener, sendAsyncMessage} = this;
+  const { addMessageListener, sendAsyncMessage } = this;
 
   addMessageListener("mock-alert-service:unregister", () => {
     closeAllNotifications();
@@ -79,7 +101,10 @@ function mockServicesChromeScript() {
     sendAsyncMessage("mock-alert-service:unregistered");
   });
 
-  addMessageListener("mock-alert-service:close-notifications", closeAllNotifications);
+  addMessageListener(
+    "mock-alert-service:close-notifications",
+    closeAllNotifications
+  );
 
   sendAsyncMessage("mock-alert-service:registered");
 }
@@ -89,7 +114,9 @@ const MockAlertsService = {
     if (this._chromeScript) {
       throw new Error("MockAlertsService already registered");
     }
-    this._chromeScript = SpecialPowers.loadChromeScript(mockServicesChromeScript);
+    this._chromeScript = SpecialPowers.loadChromeScript(
+      mockServicesChromeScript
+    );
     await this._chromeScript.promiseOneMessage("mock-alert-service:registered");
   },
   async unregister() {
@@ -97,12 +124,16 @@ const MockAlertsService = {
       throw new Error("MockAlertsService not registered");
     }
     this._chromeScript.sendAsyncMessage("mock-alert-service:unregister");
-    return this._chromeScript.promiseOneMessage("mock-alert-service:unregistered").then(() => {
-      this._chromeScript.destroy();
-      this._chromeScript = null;
-    });
+    return this._chromeScript
+      .promiseOneMessage("mock-alert-service:unregistered")
+      .then(() => {
+        this._chromeScript.destroy();
+        this._chromeScript = null;
+      });
   },
   async closeNotifications() {
-    await this._chromeScript.sendAsyncMessage("mock-alert-service:close-notifications");
+    await this._chromeScript.sendAsyncMessage(
+      "mock-alert-service:close-notifications"
+    );
   },
 };

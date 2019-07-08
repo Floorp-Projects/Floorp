@@ -8,7 +8,10 @@ const STRINGS_URI = "devtools/client/locales/jit-optimizations.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
 const { PluralForm } = require("devtools/shared/plural-form");
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Frame = createFactory(require("devtools/client/shared/components/Frame"));
@@ -17,8 +20,14 @@ const PROPNAME_MAX_LENGTH = 4;
 // in `devtools/client/themes/jit-optimizations.css`
 const TREE_ROW_HEIGHT = 14;
 
-const OPTIMIZATION_ITEM_TYPES = ["site", "attempts", "types", "attempt", "type",
-                                 "observedtype"];
+const OPTIMIZATION_ITEM_TYPES = [
+  "site",
+  "attempts",
+  "types",
+  "attempt",
+  "type",
+  "observedtype",
+];
 
 /* eslint-disable no-unused-vars */
 /**
@@ -26,7 +35,9 @@ const OPTIMIZATION_ITEM_TYPES = ["site", "attempts", "types", "attempt", "type",
  *        integrated as of yet.
  */
 const {
-  JITOptimizations, hasSuccessfulOutcome, isSuccessfulOutcome,
+  JITOptimizations,
+  hasSuccessfulOutcome,
+  isSuccessfulOutcome,
 } = require("devtools/client/performance/modules/logic/jit");
 const OPTIMIZATION_FAILURE = L10N.getStr("jit.optimizationFailure");
 const JIT_SAMPLES = L10N.getStr("jit.samples");
@@ -73,15 +84,17 @@ class JITOptimizationsItem extends Component {
       }
     }
 
-    const sampleString = PluralForm.get(site.samples, JIT_SAMPLES)
-      .replace("#1", site.samples);
+    const sampleString = PluralForm.get(site.samples, JIT_SAMPLES).replace(
+      "#1",
+      site.samples
+    );
     const text = dom.span(
       { className: "optimization-site-title" },
       `${lastStrategy}${propString} – (${sampleString})`
     );
     const frame = Frame({
-      onClick: () => onViewSourceInDebugger(frameData.url,
-        site.data.line, site.data.column),
+      onClick: () =>
+        onViewSourceInDebugger(frameData.url, site.data.line, site.data.column),
       frame: {
         source: frameData.url,
         line: +site.data.line,
@@ -98,13 +111,15 @@ class JITOptimizationsItem extends Component {
   }
 
   _renderAttempts({ item: attempts }) {
-    return dom.span({ className: "optimization-attempts" },
+    return dom.span(
+      { className: "optimization-attempts" },
       `${JIT_ATTEMPTS} (${attempts.length})`
     );
   }
 
   _renderTypes({ item: types }) {
-    return dom.span({ className: "optimization-types" },
+    return dom.span(
+      { className: "optimization-types" },
       `${JIT_TYPES} (${types.length})`
     );
   }
@@ -112,30 +127,40 @@ class JITOptimizationsItem extends Component {
   _renderAttempt({ item: attempt }) {
     const success = isSuccessfulOutcome(attempt.outcome);
     const { strategy, outcome } = attempt;
-    return dom.span({ className: "optimization-attempt" },
+    return dom.span(
+      { className: "optimization-attempt" },
       dom.span({ className: "optimization-strategy" }, strategy),
       " → ",
-      dom.span({ className: `optimization-outcome ${success ? "success" : "failure"}` },
-               outcome)
+      dom.span(
+        {
+          className: `optimization-outcome ${success ? "success" : "failure"}`,
+        },
+        outcome
+      )
     );
   }
 
   _renderType({ item: type }) {
-    return dom.span({ className: "optimization-ion-type" },
-                    `${type.site}:${type.mirType}`);
+    return dom.span(
+      { className: "optimization-ion-type" },
+      `${type.site}:${type.mirType}`
+    );
   }
 
   _renderObservedType({ onViewSourceInDebugger, item: type }) {
     const children = [
-      dom.span({ className: "optimization-observed-type-keyed" },
-        `${type.keyedBy}${type.name ? ` → ${type.name}` : ""}`),
+      dom.span(
+        { className: "optimization-observed-type-keyed" },
+        `${type.keyedBy}${type.name ? ` → ${type.name}` : ""}`
+      ),
     ];
 
     // If we have a line and location, make a link to the debugger
     if (type.location && type.line) {
       children.push(
         Frame({
-          onClick: () => onViewSourceInDebugger(type.location, type.line, type.column),
+          onClick: () =>
+            onViewSourceInDebugger(type.location, type.line, type.column),
           frame: {
             source: type.location,
             line: type.line,
@@ -143,7 +168,7 @@ class JITOptimizationsItem extends Component {
           },
         })
       );
-    // Otherwise if we just have a location, it's probably just a memory location.
+      // Otherwise if we just have a location, it's probably just a memory location.
     } else if (type.location) {
       children.push(`@${type.location}`);
     }
@@ -171,12 +196,24 @@ class JITOptimizationsItem extends Component {
 
     let content;
     switch (type) {
-      case "site": content = this._renderSite(this.props); break;
-      case "attempts": content = this._renderAttempts(this.props); break;
-      case "types": content = this._renderTypes(this.props); break;
-      case "attempt": content = this._renderAttempt(this.props); break;
-      case "type": content = this._renderType(this.props); break;
-      case "observedtype": content = this._renderObservedType(this.props); break;
+      case "site":
+        content = this._renderSite(this.props);
+        break;
+      case "attempts":
+        content = this._renderAttempts(this.props);
+        break;
+      case "types":
+        content = this._renderTypes(this.props);
+        break;
+      case "attempt":
+        content = this._renderAttempt(this.props);
+        break;
+      case "type":
+        content = this._renderType(this.props);
+        break;
+      case "observedtype":
+        content = this._renderObservedType(this.props);
+        break;
     }
 
     return dom.div(

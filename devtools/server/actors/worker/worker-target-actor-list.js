@@ -5,10 +5,16 @@
 "use strict";
 
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
-loader.lazyRequireGetter(this, "WorkerTargetActor", "devtools/server/actors/targets/worker", true);
+loader.lazyRequireGetter(
+  this,
+  "WorkerTargetActor",
+  "devtools/server/actors/targets/worker",
+  true
+);
 
 XPCOMUtils.defineLazyServiceGetter(
-  this, "wdm",
+  this,
+  "wdm",
   "@mozilla.org/dom/workers/workerdebuggermanager;1",
   "nsIWorkerDebuggerManager"
 );
@@ -81,7 +87,7 @@ WorkerTargetActorList.prototype = {
     }
 
     // Delete each actor for which we don't have a debugger.
-    for (const [dbg ] of this._actors) {
+    for (const [dbg] of this._actors) {
       if (!dbgs.has(dbg)) {
         this._actors.delete(dbg);
       }

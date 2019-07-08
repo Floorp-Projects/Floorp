@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 let syncedEngines = [];
 
@@ -35,12 +35,10 @@ function sync_httpd_setup(handlers) {
   delete collectionsHelper.collections.meta;
 
   let cr = new ServerWBO("keys");
-  handlers["/1.1/johndoe/storage/crypto/keys"] =
-    upd("crypto", cr.handler());
+  handlers["/1.1/johndoe/storage/crypto/keys"] = upd("crypto", cr.handler());
 
   let cl = new ServerCollection();
-  handlers["/1.1/johndoe/storage/clients"] =
-    upd("clients", cl.handler());
+  handlers["/1.1/johndoe/storage/clients"] = upd("clients", cl.handler());
 
   return httpd_setup(handlers);
 }
@@ -78,7 +76,7 @@ add_task(async function test_noEngines() {
 
   try {
     _("Sync with no engines specified.");
-    await Service.sync({engines: []});
+    await Service.sync({ engines: [] });
     deepEqual(syncedEngines, [], "no engines were synced");
   } finally {
     await Service.startOver();
@@ -94,7 +92,7 @@ add_task(async function test_oneEngine() {
 
   try {
     _("Sync with 1 engine specified.");
-    await Service.sync({engines: ["steam"]});
+    await Service.sync({ engines: ["steam"] });
     deepEqual(syncedEngines, ["steam"]);
   } finally {
     await Service.startOver();
@@ -110,7 +108,7 @@ add_task(async function test_bothEnginesSpecified() {
 
   try {
     _("Sync with both engines specified.");
-    await Service.sync({engines: ["steam", "stirling"]});
+    await Service.sync({ engines: ["steam", "stirling"] });
     deepEqual(syncedEngines, ["steam", "stirling"]);
   } finally {
     await Service.startOver();
@@ -126,7 +124,7 @@ add_task(async function test_bothEnginesSpecified() {
 
   try {
     _("Sync with both engines specified.");
-    await Service.sync({engines: ["stirling", "steam"]});
+    await Service.sync({ engines: ["stirling", "steam"] });
     deepEqual(syncedEngines, ["stirling", "steam"]);
   } finally {
     await Service.startOver();

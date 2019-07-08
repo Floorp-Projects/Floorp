@@ -30,7 +30,9 @@ add_task(async function test_firstRun() {
   let metadata = TelemetrySession.getMetadata();
   Assert.equal(false, "previousBuildID" in metadata);
   let appBuildID = getAppInfo().appBuildID;
-  let buildIDPref = Services.prefs.getCharPref(TelemetryUtils.Preferences.PreviousBuildID);
+  let buildIDPref = Services.prefs.getCharPref(
+    TelemetryUtils.Preferences.PreviousBuildID
+  );
   Assert.equal(appBuildID, buildIDPref);
 });
 
@@ -53,10 +55,11 @@ add_task(async function test_newBuild() {
   await TelemetryController.testReset();
   let metadata = TelemetrySession.getMetadata();
   Assert.equal(metadata.previousBuildId, oldBuildID);
-  let buildIDPref = Services.prefs.getCharPref(TelemetryUtils.Preferences.PreviousBuildID);
+  let buildIDPref = Services.prefs.getCharPref(
+    TelemetryUtils.Preferences.PreviousBuildID
+  );
   Assert.equal(NEW_BUILD_ID, buildIDPref);
 });
-
 
 function run_test() {
   // Make sure we have a profile directory.

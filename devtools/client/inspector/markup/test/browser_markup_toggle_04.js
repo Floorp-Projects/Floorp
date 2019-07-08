@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_toggle.html";
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
 
   info("Getting the container for the UL parent element");
   const container = await getContainerForSelector("ul", inspector);
@@ -20,8 +20,11 @@ add_task(async function() {
   const onChildren = waitForChildrenUpdated(inspector);
   const onUpdated = inspector.once("inspector-updated");
 
-  EventUtils.synthesizeMouseAtCenter(container.editor.expandBadge, {},
-    inspector.markup.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    container.editor.expandBadge,
+    {},
+    inspector.markup.doc.defaultView
+  );
   await onChildren;
   await onUpdated;
 
@@ -29,7 +32,9 @@ add_task(async function() {
   const numLi = await testActor.getNumberOfElementMatches("li");
   for (let i = 0; i < numLi; i++) {
     const liContainer = await getContainerForSelector(
-      `li:nth-child(${i + 1})`, inspector);
+      `li:nth-child(${i + 1})`,
+      inspector
+    );
     ok(liContainer, "A container for the child LI element was created");
   }
   ok(container.expanded, "Parent UL container is expanded");

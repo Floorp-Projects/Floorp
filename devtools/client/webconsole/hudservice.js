@@ -6,13 +6,36 @@
 
 var Services = require("Services");
 loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
-loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
-loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/debugger-client", true);
-loader.lazyRequireGetter(this, "l10n", "devtools/client/webconsole/webconsole-l10n");
-loader.lazyRequireGetter(this, "WebConsole", "devtools/client/webconsole/webconsole");
-loader.lazyRequireGetter(this, "BrowserConsole", "devtools/client/webconsole/browser-console");
+loader.lazyRequireGetter(
+  this,
+  "gDevTools",
+  "devtools/client/framework/devtools",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "DebuggerClient",
+  "devtools/shared/client/debugger-client",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "l10n",
+  "devtools/client/webconsole/webconsole-l10n"
+);
+loader.lazyRequireGetter(
+  this,
+  "WebConsole",
+  "devtools/client/webconsole/webconsole"
+);
+loader.lazyRequireGetter(
+  this,
+  "BrowserConsole",
+  "devtools/client/webconsole/browser-console"
+);
 
-const BC_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
+const BC_WINDOW_FEATURES =
+  "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
 function HUDService() {
   this.consoles = new Map();
@@ -129,8 +152,9 @@ HUDService.prototype = {
       // invisibleToDebugger, which will force it to be loaded in another compartment.
       // The console ends up using the debugger in autocomplete.
       const ChromeUtils = require("ChromeUtils");
-      const { DevToolsLoader } =
-        ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+      const { DevToolsLoader } = ChromeUtils.import(
+        "resource://devtools/shared/Loader.jsm"
+      );
       const loader = new DevToolsLoader();
       loader.invisibleToDebugger = true;
       const { DebuggerServer } = loader.require("devtools/server/main");
@@ -150,16 +174,21 @@ HUDService.prototype = {
     }
 
     async function openWindow(t) {
-      const win = Services.ww.openWindow(null, Tools.webConsole.url,
-                                       "_blank", BC_WINDOW_FEATURES, null);
+      const win = Services.ww.openWindow(
+        null,
+        Tools.webConsole.url,
+        "_blank",
+        BC_WINDOW_FEATURES,
+        null
+      );
 
       await new Promise(resolve => {
-        win.addEventListener("DOMContentLoaded", resolve, {once: true});
+        win.addEventListener("DOMContentLoaded", resolve, { once: true });
       });
 
       win.document.title = l10n.getStr("browserConsole.title");
 
-      return {iframeWindow: win, chromeWindow: win};
+      return { iframeWindow: win, chromeWindow: win };
     }
 
     // Temporarily cache the async startup sequence so that if toggleBrowserConsole
@@ -167,9 +196,12 @@ HUDService.prototype = {
     this._browserConsoleInitializing = (async () => {
       const target = await connect();
       await target.attach();
-      const {iframeWindow, chromeWindow} = await openWindow(target);
-      const browserConsole =
-        await this.openBrowserConsole(target, iframeWindow, chromeWindow);
+      const { iframeWindow, chromeWindow } = await openWindow(target);
+      const browserConsole = await this.openBrowserConsole(
+        target,
+        iframeWindow,
+        chromeWindow
+      );
       return browserConsole;
     })();
 

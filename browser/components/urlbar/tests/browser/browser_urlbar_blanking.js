@@ -12,7 +12,10 @@ add_task(async function() {
       continue;
     }
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, page);
-    ok(!gURLBar.value, "The URL bar should be empty if we load a plain " + page + " page.");
+    ok(
+      !gURLBar.value,
+      "The URL bar should be empty if we load a plain " + page + " page."
+    );
     BrowserTestUtils.removeTab(tab);
   }
 });
@@ -25,7 +28,10 @@ add_task(async function() {
     content.document.querySelector("a").click();
   });
   await browserLoaded;
-  ok(gURLBar.value.startsWith("javascript"), "The URL bar should have the JS URI");
+  ok(
+    gURLBar.value.startsWith("javascript"),
+    "The URL bar should have the JS URI"
+  );
   // When reloading, the javascript: uri we're using will throw an exception.
   // That's deliberate, so we need to tell mochitest to ignore it:
   SimpleTest.expectUncaughtException(true);

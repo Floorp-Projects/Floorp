@@ -2,7 +2,8 @@
  * Tests that visits across frames are correctly represented in the database.
  */
 
-const BASE_URL = "http://mochi.test:8888/browser/browser/components/places/tests/browser";
+const BASE_URL =
+  "http://mochi.test:8888/browser/browser/components/places/tests/browser";
 const PAGE_URL = BASE_URL + "/framedPage.html";
 const LEFT_URL = BASE_URL + "/frameLeft.html";
 const RIGHT_URL = BASE_URL + "/frameRight.html";
@@ -15,14 +16,19 @@ add_task(async function test() {
   Services.obs.addObserver(function observe(subject) {
     (async function() {
       let url = subject.QueryInterface(Ci.nsIURI).spec;
-      if (url == LEFT_URL ) {
-        is((await getTransitionForUrl(url)), null,
-           "Embed visits should not get a database entry.");
+      if (url == LEFT_URL) {
+        is(
+          await getTransitionForUrl(url),
+          null,
+          "Embed visits should not get a database entry."
+        );
         deferredLeftFrameVisit.resolve();
-      } else if (url == RIGHT_URL ) {
-        is((await getTransitionForUrl(url)),
-           PlacesUtils.history.TRANSITION_FRAMED_LINK,
-           "User activated visits should get a FRAMED_LINK transition.");
+      } else if (url == RIGHT_URL) {
+        is(
+          await getTransitionForUrl(url),
+          PlacesUtils.history.TRANSITION_FRAMED_LINK,
+          "User activated visits should get a FRAMED_LINK transition."
+        );
         Services.obs.removeObserver(observe, "uri-visit-saved");
         deferredRightFrameVisit.resolve();
       }
@@ -51,13 +57,19 @@ add_task(async function test() {
 });
 
 function getTransitionForUrl(url) {
-  return PlacesUtils.withConnectionWrapper("browser_markPageAsFollowedLink", async db => {
-    let rows = await db.execute(`
+  return PlacesUtils.withConnectionWrapper(
+    "browser_markPageAsFollowedLink",
+    async db => {
+      let rows = await db.execute(
+        `
       SELECT visit_type
       FROM moz_historyvisits
       JOIN moz_places h ON place_id = h.id
       WHERE url_hash = hash(:url) AND url = :url
-      `, { url });
-    return rows.length ? rows[0].getResultByName("visit_type") : null;
-  });
+      `,
+        { url }
+      );
+      return rows.length ? rows[0].getResultByName("visit_type") : null;
+    }
+  );
 }

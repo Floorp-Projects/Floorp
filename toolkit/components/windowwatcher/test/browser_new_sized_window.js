@@ -15,7 +15,7 @@
  * persisting the position, size or sizemode of the new browser
  * window.
  */
-function test_dimensions({ width, height}) {
+function test_dimensions({ width, height }) {
   let features = [];
   if (width) {
     features.push(`width=${width}`);
@@ -28,33 +28,36 @@ function test_dimensions({ width, height}) {
 
   let newWinPromise = BrowserTestUtils.waitForNewWindow();
 
-  return BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: SCRIPT_PAGE,
-  }, async function(browser) {
-    let win = await newWinPromise;
-    let rect = win.gBrowser.selectedBrowser.getBoundingClientRect();
+  return BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: SCRIPT_PAGE,
+    },
+    async function(browser) {
+      let win = await newWinPromise;
+      let rect = win.gBrowser.selectedBrowser.getBoundingClientRect();
 
-    if (width) {
-      Assert.equal(rect.width, width, "Should have the requested width");
+      if (width) {
+        Assert.equal(rect.width, width, "Should have the requested width");
+      }
+
+      if (height) {
+        Assert.equal(rect.height, height, "Should have the requested height");
+      }
+
+      let treeOwner = win.docShell.treeOwner;
+      let persistPosition = {};
+      let persistSize = {};
+      let persistSizeMode = {};
+      treeOwner.getPersistence(persistPosition, persistSize, persistSizeMode);
+
+      Assert.ok(!persistPosition.value, "Should not persist position");
+      Assert.ok(!persistSize.value, "Should not persist size");
+      Assert.ok(!persistSizeMode.value, "Should not persist size mode");
+
+      await BrowserTestUtils.closeWindow(win);
     }
-
-    if (height) {
-      Assert.equal(rect.height, height, "Should have the requested height");
-    }
-
-    let treeOwner = win.docShell.treeOwner;
-    let persistPosition = {};
-    let persistSize = {};
-    let persistSizeMode = {};
-    treeOwner.getPersistence(persistPosition, persistSize, persistSizeMode);
-
-    Assert.ok(!persistPosition.value, "Should not persist position");
-    Assert.ok(!persistSize.value, "Should not persist size");
-    Assert.ok(!persistSizeMode.value, "Should not persist size mode");
-
-    await BrowserTestUtils.closeWindow(win);
-  });
+  );
 }
 
 add_task(async function test_new_sized_window() {

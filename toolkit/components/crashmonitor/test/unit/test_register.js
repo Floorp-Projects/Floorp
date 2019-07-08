@@ -7,8 +7,9 @@
  * Test that CrashMonitor.jsm is correctly loaded from XPCOM component
  */
 add_task(function test_register() {
-  let cm = Cc["@mozilla.org/toolkit/crashmonitor;1"]
-             .createInstance(Ci.nsIObserver);
+  let cm = Cc["@mozilla.org/toolkit/crashmonitor;1"].createInstance(
+    Ci.nsIObserver
+  );
 
   // Send "profile-after-change" to trigger the initialization
   cm.observe(null, "profile-after-change", null);

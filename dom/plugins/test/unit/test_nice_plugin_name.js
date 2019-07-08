@@ -12,7 +12,10 @@ function createAppInfo(ID, name, version, platformVersion = "1.0") {
   let tmp = {};
   ChromeUtils.import("resource://testing-common/AppInfo.jsm", tmp);
   tmp.updateAppInfo({
-    ID, name, version, platformVersion,
+    ID,
+    name,
+    version,
+    platformVersion,
     crashReporter: true,
   });
   gAppInfo = tmp.getAppInfo();
@@ -24,23 +27,34 @@ function test_expected_permission_string(aPermString) {
   gPluginHost.reloadPlugins(false);
   let plugin = get_test_plugintag();
   Assert.equal(false, plugin == null);
-  Assert.equal(gPluginHost.getPermissionStringForType("application/x-test"),
-               aPermString);
+  Assert.equal(
+    gPluginHost.getPermissionStringForType("application/x-test"),
+    aPermString
+  );
 }
 
 function run_test() {
   allow_all_plugins();
   Assert.ok(gIsWindows || gIsOSX || gIsLinux);
-  Assert.ok(!(gIsWindows && gIsOSX) && !(gIsWindows && gIsLinux) &&
-            !(gIsOSX && gIsLinux));
+  Assert.ok(
+    !(gIsWindows && gIsOSX) &&
+      !(gIsWindows && gIsLinux) &&
+      !(gIsOSX && gIsLinux)
+  );
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
   gPluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 
   let expectedDefaultPermissionString = null;
-  if (gIsWindows) expectedDefaultPermissionString = "plugin:nptest";
-  if (gIsOSX) expectedDefaultPermissionString = "plugin:test";
-  if (gIsLinux) expectedDefaultPermissionString = "plugin:libnptest";
+  if (gIsWindows) {
+    expectedDefaultPermissionString = "plugin:nptest";
+  }
+  if (gIsOSX) {
+    expectedDefaultPermissionString = "plugin:test";
+  }
+  if (gIsLinux) {
+    expectedDefaultPermissionString = "plugin:libnptest";
+  }
   test_expected_permission_string(expectedDefaultPermissionString);
 
   let suffix = get_platform_specific_plugin_suffix();

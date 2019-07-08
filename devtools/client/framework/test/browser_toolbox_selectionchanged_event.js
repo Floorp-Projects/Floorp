@@ -31,11 +31,18 @@ add_task(async function() {
   // Listen to cleared selection changed
   const onClearSelectionChanged = toolbox.once("selection-changed");
 
-  info("Clear the selection and wait for the selection-changed event to be fired.");
-  inspector.selection.setNodeFront(undefined, { reason: "browser-context-menu" });
+  info(
+    "Clear the selection and wait for the selection-changed event to be fired."
+  );
+  inspector.selection.setNodeFront(undefined, {
+    reason: "browser-context-menu",
+  });
 
   await onClearSelectionChanged;
 
-  is(inspector.selection.nodeFront, undefined, "The selection is undefined as expected");
+  is(
+    inspector.selection.nodeFront,
+    undefined,
+    "The selection is undefined as expected"
+  );
 });
-

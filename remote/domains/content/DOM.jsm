@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["DOM"];
 
-const {ContentProcessDomain} = ChromeUtils.import("chrome://remote/content/domains/ContentProcessDomain.jsm");
+const { ContentProcessDomain } = ChromeUtils.import(
+  "chrome://remote/content/domains/ContentProcessDomain.jsm"
+);
 
 class DOM extends ContentProcessDomain {
   constructor(session) {
@@ -48,10 +50,14 @@ class DOM extends ContentProcessDomain {
     let quads = unsafeObject.getBoxQuads({ relativeTo: this.content.document });
     quads = quads.map(quad => {
       return [
-        quad.p1.x, quad.p1.y,
-        quad.p2.x, quad.p2.y,
-        quad.p3.x, quad.p3.y,
-        quad.p4.x, quad.p4.y,
+        quad.p1.x,
+        quad.p1.y,
+        quad.p2.x,
+        quad.p2.y,
+        quad.p3.x,
+        quad.p3.y,
+        quad.p4.x,
+        quad.p4.y,
       ].map(Math.round);
     });
     return { quads };
@@ -67,7 +73,10 @@ class DOM extends ContentProcessDomain {
       height: Math.round(bounding.height),
     };
     for (const box of ["content", "padding", "border", "margin"]) {
-      const quads = unsafeObject.getBoxQuads({box, relativeTo: this.content.document});
+      const quads = unsafeObject.getBoxQuads({
+        box,
+        relativeTo: this.content.document,
+      });
 
       // getBoxQuads may return more than one element. In this case we have to compute the bounding box
       // of all these boxes.
@@ -99,10 +108,14 @@ class DOM extends ContentProcessDomain {
       });
 
       model[box] = [
-        bounding.p1.x, bounding.p1.y,
-        bounding.p2.x, bounding.p2.y,
-        bounding.p3.x, bounding.p3.y,
-        bounding.p4.x, bounding.p4.y,
+        bounding.p1.x,
+        bounding.p1.y,
+        bounding.p2.x,
+        bounding.p2.y,
+        bounding.p3.x,
+        bounding.p3.y,
+        bounding.p4.x,
+        bounding.p4.y,
       ].map(Math.round);
     }
     return {

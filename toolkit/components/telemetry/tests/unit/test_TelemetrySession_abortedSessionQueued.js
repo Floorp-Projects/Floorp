@@ -42,7 +42,10 @@ function sendPing() {
 add_task(async function test_setup() {
   do_get_profile();
   PingServer.start();
-  Services.prefs.setCharPref(TelemetryUtils.Preferences.Server, "http://localhost:" + PingServer.port);
+  Services.prefs.setCharPref(
+    TelemetryUtils.Preferences.Server,
+    "http://localhost:" + PingServer.port
+  );
 });
 
 add_task(async function test_abortedSessionQueued() {
@@ -55,11 +58,13 @@ add_task(async function test_abortedSessionQueued() {
   let now = new Date(2040, 1, 1, 0, 0, 0);
   fakeNow(now);
   // Fake scheduler functions to control aborted-session flow in tests.
-  fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
+  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
   await TelemetryController.testReset();
 
-  Assert.ok((await OS.File.exists(DATAREPORTING_PATH)),
-            "Telemetry must create the aborted session directory when starting.");
+  Assert.ok(
+    await OS.File.exists(DATAREPORTING_PATH),
+    "Telemetry must create the aborted session directory when starting."
+  );
 
   // Fake now again so that the scheduled aborted-session save takes place.
   now = futureDate(now, ABORTED_SESSION_UPDATE_INTERVAL_MS);
@@ -69,23 +74,35 @@ add_task(async function test_abortedSessionQueued() {
   // Execute one scheduler tick.
   await schedulerTickCallback();
   // Check that the aborted session is due at the correct time.
-  Assert.ok((await OS.File.exists(ABORTED_FILE)),
-            "There must be an aborted session ping.");
+  Assert.ok(
+    await OS.File.exists(ABORTED_FILE),
+    "There must be an aborted session ping."
+  );
 
   await TelemetryStorage.testClearPendingPings();
   PingServer.clearRequests();
   await TelemetryController.testReset();
 
-  Assert.ok(!(await OS.File.exists(ABORTED_FILE)),
-            "The aborted session ping must be removed from the aborted session ping directory.");
+  Assert.ok(
+    !(await OS.File.exists(ABORTED_FILE)),
+    "The aborted session ping must be removed from the aborted session ping directory."
+  );
 
   // Restarting Telemetry again to trigger sending pings in TelemetrySend.
   await TelemetryController.testReset();
 
   // We should have received an aborted-session ping.
   const receivedPing = await PingServer.promiseNextPing();
-  Assert.equal(receivedPing.type, PING_TYPE_MAIN, "Should have the correct type");
-  Assert.equal(receivedPing.payload.info.reason, REASON_ABORTED_SESSION, "Ping should have the correct reason");
+  Assert.equal(
+    receivedPing.type,
+    PING_TYPE_MAIN,
+    "Should have the correct type"
+  );
+  Assert.equal(
+    receivedPing.payload.info.reason,
+    REASON_ABORTED_SESSION,
+    "Ping should have the correct reason"
+  );
 
   await TelemetryController.testShutdown();
 });
@@ -105,11 +122,13 @@ add_task(async function test_abortedSession_canary_clientid() {
   let now = new Date(2040, 1, 1, 0, 0, 0);
   fakeNow(now);
   // Fake scheduler functions to control aborted-session flow in tests.
-  fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
+  fakeSchedulerTimer(callback => (schedulerTickCallback = callback), () => {});
   await TelemetryController.testReset();
 
-  Assert.ok((await OS.File.exists(DATAREPORTING_PATH)),
-            "Telemetry must create the aborted session directory when starting.");
+  Assert.ok(
+    await OS.File.exists(DATAREPORTING_PATH),
+    "Telemetry must create the aborted session directory when starting."
+  );
 
   // Fake now again so that the scheduled aborted-session save takes place.
   now = futureDate(now, ABORTED_SESSION_UPDATE_INTERVAL_MS);
@@ -119,20 +138,26 @@ add_task(async function test_abortedSession_canary_clientid() {
   // Execute one scheduler tick.
   await schedulerTickCallback();
   // Check that the aborted session is due at the correct time.
-  Assert.ok((await OS.File.exists(ABORTED_FILE)),
-            "There must be an aborted session ping.");
+  Assert.ok(
+    await OS.File.exists(ABORTED_FILE),
+    "There must be an aborted session ping."
+  );
 
   // Set clientID in aborted-session ping to canary value
   let abortedPing = await CommonUtils.readJSON(ABORTED_FILE);
   abortedPing.clientId = TelemetryUtils.knownClientID;
-  OS.File.writeAtomic(ABORTED_FILE, JSON.stringify(abortedPing), { encoding: "utf-8" });
+  OS.File.writeAtomic(ABORTED_FILE, JSON.stringify(abortedPing), {
+    encoding: "utf-8",
+  });
 
   await TelemetryStorage.testClearPendingPings();
   PingServer.clearRequests();
   await TelemetryController.testReset();
 
-  Assert.ok(!(await OS.File.exists(ABORTED_FILE)),
-            "The aborted session ping must be removed from the aborted session ping directory.");
+  Assert.ok(
+    !(await OS.File.exists(ABORTED_FILE)),
+    "The aborted session ping must be removed from the aborted session ping directory."
+  );
 
   // Restarting Telemetry again to trigger sending pings in TelemetrySend.
   await TelemetryController.testReset();
@@ -142,7 +167,11 @@ add_task(async function test_abortedSession_canary_clientid() {
 
   // We should have received an aborted-session ping.
   const receivedPing = await PingServer.promiseNextPing();
-  Assert.equal(receivedPing.type, TEST_PING_TYPE, "Should have received test ping");
+  Assert.equal(
+    receivedPing.type,
+    TEST_PING_TYPE,
+    "Should have received test ping"
+  );
 
   await TelemetryController.testShutdown();
 });

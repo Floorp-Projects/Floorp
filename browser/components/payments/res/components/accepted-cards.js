@@ -9,7 +9,9 @@ import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.j
  * <accepted-cards></accepted-cards>
  */
 
-export default class AcceptedCards extends PaymentStateSubscriberMixin(HTMLElement) {
+export default class AcceptedCards extends PaymentStateSubscriberMixin(
+  HTMLElement
+) {
   constructor() {
     super();
 
@@ -42,10 +44,13 @@ export default class AcceptedCards extends PaymentStateSubscriberMixin(HTMLEleme
   }
 
   render(state) {
-    let basicCardMethod = state.request.paymentMethods
-      .find(method => method.supportedMethods == "basic-card");
-    let merchantNetworks = basicCardMethod && basicCardMethod.data &&
-                           basicCardMethod.data.supportedNetworks;
+    let basicCardMethod = state.request.paymentMethods.find(
+      method => method.supportedMethods == "basic-card"
+    );
+    let merchantNetworks =
+      basicCardMethod &&
+      basicCardMethod.data &&
+      basicCardMethod.data.supportedNetworks;
     if (merchantNetworks && merchantNetworks.length) {
       for (let item of this._listEl.children) {
         let network = item.dataset.networkId;

@@ -12,9 +12,13 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionProcessScript"];
 
-const {MessageChannel} = ChromeUtils.import("resource://gre/modules/MessageChannel.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { MessageChannel } = ChromeUtils.import(
+  "resource://gre/modules/MessageChannel.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionChild: "resource://gre/modules/ExtensionChild.jsm",
@@ -23,16 +27,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.jsm",
 });
 
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
 
-XPCOMUtils.defineLazyGetter(this, "console", () => ExtensionCommon.getConsole());
+XPCOMUtils.defineLazyGetter(this, "console", () =>
+  ExtensionCommon.getConsole()
+);
 
-const {
-  DefaultWeakMap,
-  getInnerWindowID,
-} = ExtensionUtils;
+const { DefaultWeakMap, getInnerWindowID } = ExtensionUtils;
 
-const {sharedData} = Services.cpmm;
+const { sharedData } = Services.cpmm;
 
 function getData(extension, key = "") {
   return sharedData.get(`extension/${extension.id}/${key}`);
@@ -74,12 +79,14 @@ class ExtensionGlobal {
 
   getFrameData(force = false) {
     if (!this.frameData && force) {
-      this.frameData = this.global.sendSyncMessage("Extension:GetTabAndWindowId")[0];
+      this.frameData = this.global.sendSyncMessage(
+        "Extension:GetTabAndWindowId"
+      )[0];
     }
     return this.frameData;
   }
 
-  receiveMessage({target, messageName, recipient, data, name}) {
+  receiveMessage({ target, messageName, recipient, data, name }) {
     switch (name) {
       case "Extension:SetFrameData":
         if (this.frameData) {
@@ -101,13 +108,19 @@ class ExtensionGlobal {
       throw new Error("Extension cannot access window");
     }
 
-    return ExtensionContent.receiveMessage(this.global, messageName, target, data, recipient);
+    return ExtensionContent.receiveMessage(
+      this.global,
+      messageName,
+      target,
+      data,
+      recipient
+    );
   }
 }
 
 ExtensionManager = {
   // WeakMap<WebExtensionPolicy, Map<string, WebExtensionContentScript>>
-  registeredContentScripts: new DefaultWeakMap((policy) => new Map()),
+  registeredContentScripts: new DefaultWeakMap(policy => new Map()),
 
   globals: new WeakMap(),
 
@@ -118,17 +131,21 @@ ExtensionManager = {
     Services.cpmm.addMessageListener("Extension:Shutdown", this);
     Services.cpmm.addMessageListener("Extension:FlushJarCache", this);
     Services.cpmm.addMessageListener("Extension:RegisterContentScript", this);
-    Services.cpmm.addMessageListener("Extension:UnregisterContentScripts", this);
+    Services.cpmm.addMessageListener(
+      "Extension:UnregisterContentScripts",
+      this
+    );
 
     // eslint-disable-next-line mozilla/balanced-listeners
     Services.obs.addObserver(
       global => this.globals.set(global, new ExtensionGlobal(global)),
-      "tab-content-frameloader-created");
+      "tab-content-frameloader-created"
+    );
 
     this.updateStubExtensions();
 
     for (let id of sharedData.get("extensions/activeIDs") || []) {
-      this.initExtension(getData({id}));
+      this.initExtension(getData({ id }));
     }
   },
 
@@ -149,7 +166,7 @@ ExtensionManager = {
     try {
       policy.active = true;
 
-      pendingExtensions.set(id, {policy, resolveReadyPromise});
+      pendingExtensions.set(id, { policy, resolveReadyPromise });
     } catch (e) {
       Cu.reportError(e);
     }
@@ -175,9 +192,9 @@ ExtensionManager = {
         localizeCallback = str => extensions.get(policy).localize(str);
       }
 
-      let {backgroundScripts} = extension;
+      let { backgroundScripts } = extension;
       if (!backgroundScripts && WebExtensionPolicy.isExtensionProcess) {
-        ({backgroundScripts} = getData(extension, "extendedData") || {});
+        ({ backgroundScripts } = getData(extension, "extendedData") || {});
       }
 
       policy = new WebExtensionPolicy({
@@ -199,14 +216,19 @@ ExtensionManager = {
         contentScripts: extension.contentScripts,
       });
 
-      policy.debugName = `${JSON.stringify(policy.name)} (ID: ${policy.id}, ${policy.getURL()})`;
+      policy.debugName = `${JSON.stringify(policy.name)} (ID: ${
+        policy.id
+      }, ${policy.getURL()})`;
 
       // Register any existent dynamically registered content script for the extension
       // when a content process is started for the first time (which also cover
       // a content process that crashed and it has been recreated).
-      const registeredContentScripts = this.registeredContentScripts.get(policy);
+      const registeredContentScripts = this.registeredContentScripts.get(
+        policy
+      );
 
-      for (let [scriptId, options] of getData(extension, "contentScripts") || []) {
+      for (let [scriptId, options] of getData(extension, "contentScripts") ||
+        []) {
         const script = new WebExtensionContentScript(policy, options);
 
         // If the script is a userScript, add the additional userScriptOptions
@@ -235,7 +257,7 @@ ExtensionManager = {
 
   initExtension(data) {
     if (typeof data === "string") {
-      data = getData({id: data});
+      data = getData({ id: data });
     }
     let policy = this.initExtensionPolicy(data);
 
@@ -243,12 +265,15 @@ ExtensionManager = {
   },
 
   handleEvent(event) {
-    if (event.type === "change" && event.changedKeys.includes("extensions/pending")) {
+    if (
+      event.type === "change" &&
+      event.changedKeys.includes("extensions/pending")
+    ) {
       this.updateStubExtensions();
     }
   },
 
-  receiveMessage({name, data}) {
+  receiveMessage({ name, data }) {
     try {
       switch (name) {
         case "Extension:Startup":
@@ -277,14 +302,27 @@ ExtensionManager = {
           let policy = WebExtensionPolicy.getByID(data.id);
 
           if (policy) {
-            const registeredContentScripts = this.registeredContentScripts.get(policy);
-            const type = "userScriptOptions" in data.options ? "userScript" : "contentScript";
+            const registeredContentScripts = this.registeredContentScripts.get(
+              policy
+            );
+            const type =
+              "userScriptOptions" in data.options
+                ? "userScript"
+                : "contentScript";
 
             if (registeredContentScripts.has(data.scriptId)) {
-              Cu.reportError(new Error(
-                `Registering ${type} ${data.scriptId} on ${data.id} more than once`));
+              Cu.reportError(
+                new Error(
+                  `Registering ${type} ${data.scriptId} on ${
+                    data.id
+                  } more than once`
+                )
+              );
             } else {
-              const script = new WebExtensionContentScript(policy, data.options);
+              const script = new WebExtensionContentScript(
+                policy,
+                data.options
+              );
 
               // If the script is a userScript, add the additional userScriptOptions
               // property to the WebExtensionContentScript instance.
@@ -303,7 +341,9 @@ ExtensionManager = {
           let policy = WebExtensionPolicy.getByID(data.id);
 
           if (policy) {
-            const registeredContentScripts = this.registeredContentScripts.get(policy);
+            const registeredContentScripts = this.registeredContentScripts.get(
+              policy
+            );
 
             for (const scriptId of data.scriptIds) {
               const script = registeredContentScripts.get(scriptId);
@@ -356,7 +396,9 @@ var ExtensionProcessScript = {
   },
 
   loadContentScript(contentScript, window) {
-    return ExtensionContent.contentScripts.get(contentScript).injectInto(window);
+    return ExtensionContent.contentScripts
+      .get(contentScript)
+      .injectInto(window);
   },
 };
 

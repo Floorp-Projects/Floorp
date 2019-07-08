@@ -20,7 +20,12 @@ async function run_test() {
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_LOADSOURCEFILE_FAILED);
   await waitForUpdateXMLFiles();
-  checkUpdateManager(STATE_NONE, false, STATE_FAILED,
-                     LOADSOURCE_ERROR_WRONG_SIZE, 1);
+  checkUpdateManager(
+    STATE_NONE,
+    false,
+    STATE_FAILED,
+    LOADSOURCE_ERROR_WRONG_SIZE,
+    1
+  );
   waitForFilesInUse();
 }

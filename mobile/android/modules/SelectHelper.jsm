@@ -5,7 +5,9 @@
 
 var EXPORTED_SYMBOLS = ["SelectHelper"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Prompt: "resource://gre/modules/Prompt.jsm",
@@ -18,7 +20,8 @@ var SelectHelper = {
   strings: function() {
     if (!this._strings) {
       this._strings = Services.strings.createBundle(
-          "chrome://browser/locale/browser.properties");
+        "chrome://browser/locale/browser.properties"
+      );
     }
     return this._strings;
   },
@@ -30,7 +33,11 @@ var SelectHelper = {
   handleClick: function(target) {
     // if we're busy looking at a select we want to eat any clicks that
     // come to us, but not to process them
-    if (this._uiBusy || !this._isMenu(target) || this._isDisabledElement(target)) {
+    if (
+      this._uiBusy ||
+      !this._isMenu(target) ||
+      this._isDisabledElement(target)
+    ) {
       return;
     }
 
@@ -79,25 +86,33 @@ var SelectHelper = {
 
     if (element.multiple) {
       p.addButton({
-        label: this.strings().GetStringFromName("selectHelper.closeMultipleSelectDialog"),
+        label: this.strings().GetStringFromName(
+          "selectHelper.closeMultipleSelectDialog"
+        ),
       }).setMultiChoiceItems(list);
     } else {
       p.setSingleChoiceItems(list);
     }
 
-    p.show((data) => {
+    p.show(data => {
       this._promptCallBack(data, element);
     });
   },
 
   _isXULElement: function(element, tag) {
-    return (!tag || element.localName == tag) &&
-           element.namespaceURI == "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    return (
+      (!tag || element.localName == tag) &&
+      element.namespaceURI ==
+        "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    );
   },
 
   _isMenu: function(element) {
     let win = element.ownerGlobal;
-    return (element instanceof win.HTMLSelectElement || this._isXULElement(element, "menulist"));
+    return (
+      element instanceof win.HTMLSelectElement ||
+      this._isXULElement(element, "menulist")
+    );
   },
 
   // Return a list of Option elements within a Select excluding
@@ -133,21 +148,22 @@ var SelectHelper = {
     let children = element.children;
     let numChildren = children.length;
 
-
     // if there are no children in this select, we add a dummy row so that at least something appears
     if (numChildren == 0) {
-      aFunction.call(this, {label: ""}, {isGroup: false}, parent);
+      aFunction.call(this, { label: "" }, { isGroup: false }, parent);
     }
 
     for (let i = 0; i < numChildren; i++) {
       let child = children[i];
       let style = win.getComputedStyle(child);
       if (style.display !== "none") {
-        if (child instanceof win.HTMLOptionElement ||
-            this._isXULElement(child)) {
-          aFunction.call(this, child, {isGroup: false}, parent);
+        if (
+          child instanceof win.HTMLOptionElement ||
+          this._isXULElement(child)
+        ) {
+          aFunction.call(this, child, { isGroup: false }, parent);
         } else if (child instanceof win.HTMLOptGroupElement) {
-          aFunction.call(this, child, {isGroup: true});
+          aFunction.call(this, child, { isGroup: true });
           this.forVisibleOptions(child, aFunction, child);
         }
       }
@@ -165,8 +181,19 @@ var SelectHelper = {
   fireOnCommand: function(element) {
     let win = element.ownerGlobal;
     let event = element.ownerDocument.createEvent("XULCommandEvent");
-    event.initCommandEvent("command", true, true, element.defaultView, 0,
-        false, false, false, false, null, 0);
+    event.initCommandEvent(
+      "command",
+      true,
+      true,
+      element.defaultView,
+      0,
+      false,
+      false,
+      false,
+      false,
+      null,
+      0
+    );
     win.setTimeout(function() {
       element.dispatchEvent(event);
     }, 0);

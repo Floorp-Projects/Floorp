@@ -6,14 +6,17 @@
 
 var EXPORTED_SYMBOLS = ["ControllersChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
 
 class ControllersChild extends ActorChild {
   receiveMessage(message) {
     switch (message.name) {
       case "ControllerCommands:Do":
-        if (this.docShell.isCommandEnabled(message.data))
+        if (this.docShell.isCommandEnabled(message.data)) {
           this.docShell.doCommand(message.data);
+        }
         break;
 
       case "ControllerCommands:DoWithParams":

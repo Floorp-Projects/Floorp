@@ -275,23 +275,22 @@ const HEADERS = [
     canFilter: false,
     subMenu: "timings",
   },
-  ...RESPONSE_HEADERS
-    .map(header => ({
-      name: header,
-      boxName: "response-header",
-      canFilter: false,
-      subMenu: "responseHeaders",
-      noLocalization: true,
-    })),
+  ...RESPONSE_HEADERS.map(header => ({
+    name: header,
+    boxName: "response-header",
+    canFilter: false,
+    subMenu: "responseHeaders",
+    noLocalization: true,
+  })),
   {
     name: "waterfall",
     canFilter: false,
   },
 ];
 
-const HEADER_FILTERS = HEADERS
-  .filter(h => h.canFilter)
-  .map(h => h.filterKey || h.name);
+const HEADER_FILTERS = HEADERS.filter(h => h.canFilter).map(
+  h => h.filterKey || h.name
+);
 
 const FILTER_FLAGS = [
   ...HEADER_FILTERS,

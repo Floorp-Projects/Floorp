@@ -3,14 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-var TESTS = [
-  "test.txt",
-  "test.png",
-];
+var TESTS = ["test.txt", "test.png"];
 
 var observer = {
-  onStartRequest(request) {
-  },
+  onStartRequest(request) {},
 
   onStopRequest(request, status) {
     Assert.equal(status, Cr.NS_OK);

@@ -11,15 +11,21 @@ function run_test() {
   const g = newGlobal();
   const dbg = new Debugger(g);
 
-  equal("AllocationMarker" in saveHeapSnapshotAndTakeCensus(dbg).objects, false,
-        "No allocation markers should exist in the census.");
+  equal(
+    "AllocationMarker" in saveHeapSnapshotAndTakeCensus(dbg).objects,
+    false,
+    "No allocation markers should exist in the census."
+  );
 
   this.ccw = g.allocationMarker();
 
   const census = saveHeapSnapshotAndTakeCensus(dbg);
-  equal(census.objects.AllocationMarker.count, 1,
-        "Should have one allocation marker in the census, because there " +
-        "is one cross-compartment wrapper referring to it.");
+  equal(
+    census.objects.AllocationMarker.count,
+    1,
+    "Should have one allocation marker in the census, because there " +
+      "is one cross-compartment wrapper referring to it."
+  );
 
   do_test_finished();
 }

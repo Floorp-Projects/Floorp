@@ -32,12 +32,17 @@ add_task(async function() {
   const privateWindow = await openNewBrowserWindow({ private: true });
   ok(PrivateBrowsingUtils.isWindowPrivate(privateWindow), "window is private");
   const privateBrowser = privateWindow.gBrowser;
-  privateBrowser.selectedTab = BrowserTestUtils.addTab(privateBrowser, PRIVATE_TEST_URI);
+  privateBrowser.selectedTab = BrowserTestUtils.addTab(
+    privateBrowser,
+    PRIVATE_TEST_URI
+  );
   const privateTab = privateBrowser.selectedTab;
 
   info("private tab opened");
-  ok(PrivateBrowsingUtils.isBrowserPrivate(privateBrowser.selectedBrowser),
-    "tab window is private");
+  ok(
+    PrivateBrowsingUtils.isBrowserPrivate(privateBrowser.selectedBrowser),
+    "tab window is private"
+  );
 
   let hud = await openConsole(privateTab);
   ok(hud, "web console opened");
@@ -58,7 +63,10 @@ add_task(async function() {
 
   await waitFor(() => findMessage(hud, PRIVATE_MESSAGE));
   await waitFor(() => findMessage(hud, PRIVATE_EXCEPTION, ".message.error"));
-  ok(true, "Messages are still displayed after closing and reopening the console");
+  ok(
+    true,
+    "Messages are still displayed after closing and reopening the console"
+  );
 
   info("Test browser console");
   await closeConsole(privateTab);
@@ -70,15 +78,26 @@ add_task(async function() {
   assertNoPrivateMessages(hud);
 
   // Add a non-private message to the console.
-  const onBrowserConsoleNonPrivateMessage = waitForMessage(hud, NON_PRIVATE_MESSAGE);
-  ContentTask.spawn(gBrowser.selectedBrowser, NON_PRIVATE_MESSAGE, function(msg) {
+  const onBrowserConsoleNonPrivateMessage = waitForMessage(
+    hud,
+    NON_PRIVATE_MESSAGE
+  );
+  ContentTask.spawn(gBrowser.selectedBrowser, NON_PRIVATE_MESSAGE, function(
+    msg
+  ) {
     content.console.log(msg);
   });
   await onBrowserConsoleNonPrivateMessage;
 
-  const onBrowserConsolePrivateLogMessage = waitForMessage(hud, PRIVATE_MESSAGE);
-  const onBrowserConsolePrivateErrorMessage =
-    waitForMessage(hud, PRIVATE_EXCEPTION, ".error");
+  const onBrowserConsolePrivateLogMessage = waitForMessage(
+    hud,
+    PRIVATE_MESSAGE
+  );
+  const onBrowserConsolePrivateErrorMessage = waitForMessage(
+    hud,
+    PRIVATE_EXCEPTION,
+    ".error"
+  );
   logPrivateMessages(privateBrowser.selectedBrowser);
 
   await onBrowserConsolePrivateLogMessage;
@@ -90,8 +109,10 @@ add_task(async function() {
   privateWindow.BrowserTryToCloseWindow();
   await onPrivateMessagesCleared;
 
-  ok(findMessage(hud, NON_PRIVATE_MESSAGE),
-    "non-private messages are still shown after private window closed");
+  ok(
+    findMessage(hud, NON_PRIVATE_MESSAGE),
+    "non-private messages are still shown after private window closed"
+  );
   assertNoPrivateMessages(hud);
 
   info("close the browser console");

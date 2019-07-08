@@ -24,7 +24,10 @@ function* do_run_test() {
   let profile = do_get_profile();
 
   // We don't want to have CookieSettings blocking this test.
-  Services.prefs.setBoolPref("network.cookieSettings.unblocked_for_testing", true);
+  Services.prefs.setBoolPref(
+    "network.cookieSettings.unblocked_for_testing",
+    true
+  );
 
   // Create URIs and channels pointing to foo.com and bar.com.
   // We will use these to put foo.com into first and third party contexts.
@@ -32,8 +35,14 @@ function* do_run_test() {
   var spec2 = "http://bar.com/bar.html";
   var uri1 = NetUtil.newURI(spec1);
   var uri2 = NetUtil.newURI(spec2);
-  var channel1 = NetUtil.newChannel({uri: uri1, loadUsingSystemPrincipal: true});
-  var channel2 = NetUtil.newChannel({uri: uri2, loadUsingSystemPrincipal: true});
+  var channel1 = NetUtil.newChannel({
+    uri: uri1,
+    loadUsingSystemPrincipal: true,
+  });
+  var channel2 = NetUtil.newChannel({
+    uri: uri2,
+    loadUsingSystemPrincipal: true,
+  });
 
   // Force the channel URI to be used when determining the originating URI of
   // the channel.

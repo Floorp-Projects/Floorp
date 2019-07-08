@@ -6,7 +6,10 @@
 /* exported gInit, gDestroy */
 
 const BrowserLoaderModule = {};
-ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
+ChromeUtils.import(
+  "resource://devtools/client/shared/browser-loader.js",
+  BrowserLoaderModule
+);
 const { require } = BrowserLoaderModule.BrowserLoader({
   baseURI: "resource://devtools/client/performance-new/",
   window,
@@ -36,31 +39,30 @@ async function gInit(perfFront, preferenceFront) {
 
   // Do some initialization, especially with privileged things that are part of the
   // the browser.
-  store.dispatch(actions.initializeStore({
-    perfFront,
-    receiveProfile,
-    // Pull the default recording settings from the reducer, and update them according
-    // to what's in the target's preferences. This way the preferences are stored
-    // on the target. This could be useful for something like Android where you might
-    // want to tweak the settings.
-    recordingSettingsFromPreferences: await getRecordingPreferences(
-      preferenceFront,
-      selectors.getRecordingSettings(store.getState())
-    ),
-    // Go ahead and hide the implementation details for the component on how the
-    // preference information is stored
-    setRecordingPreferences: () => setRecordingPreferences(
-      preferenceFront,
-      selectors.getRecordingSettings(store.getState())
-    ),
-  }));
+  store.dispatch(
+    actions.initializeStore({
+      perfFront,
+      receiveProfile,
+      // Pull the default recording settings from the reducer, and update them according
+      // to what's in the target's preferences. This way the preferences are stored
+      // on the target. This could be useful for something like Android where you might
+      // want to tweak the settings.
+      recordingSettingsFromPreferences: await getRecordingPreferences(
+        preferenceFront,
+        selectors.getRecordingSettings(store.getState())
+      ),
+      // Go ahead and hide the implementation details for the component on how the
+      // preference information is stored
+      setRecordingPreferences: () =>
+        setRecordingPreferences(
+          preferenceFront,
+          selectors.getRecordingSettings(store.getState())
+        ),
+    })
+  );
 
   ReactDOM.render(
-    React.createElement(
-      Provider,
-      { store },
-      React.createElement(Perf)
-    ),
+    React.createElement(Provider, { store }, React.createElement(Perf)),
     document.querySelector("#root")
   );
 }

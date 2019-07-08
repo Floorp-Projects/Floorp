@@ -14,43 +14,67 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionTestCommon", "MockExtension"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["TextEncoder"]);
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "Extension",
-                               "resource://gre/modules/Extension.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionParent",
-                               "resource://gre/modules/ExtensionParent.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionPermissions",
-                               "resource://gre/modules/ExtensionPermissions.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Extension",
+  "resource://gre/modules/Extension.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionParent",
+  "resource://gre/modules/ExtensionParent.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionPermissions",
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "apiManager",
-                            () => ExtensionParent.apiManager);
+XPCOMUtils.defineLazyGetter(
+  this,
+  "apiManager",
+  () => ExtensionParent.apiManager
+);
 
-const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const { ExtensionCommon } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionCommon.jsm"
+);
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
-                                   "@mozilla.org/uuid-generator;1",
-                                   "nsIUUIDGenerator");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "uuidGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
-const {
-  flushJarCache,
-} = ExtensionUtils;
+const { flushJarCache } = ExtensionUtils;
 
-const {
-  instanceOf,
-} = ExtensionCommon;
+const { instanceOf } = ExtensionCommon;
 
-XPCOMUtils.defineLazyGetter(this, "console", () => ExtensionCommon.getConsole());
+XPCOMUtils.defineLazyGetter(this, "console", () =>
+  ExtensionCommon.getConsole()
+);
 
 var ExtensionTestCommon;
 
@@ -73,21 +97,22 @@ class MockExtension {
     this.addonData = addonData;
     this.addon = null;
 
-    let promiseEvent = eventName => new Promise(resolve => {
-      let onstartup = async (msg, extension) => {
-        this.maybeSetID(extension.rootURI, extension.id);
-        if (!this.id && this.addonPromise) {
-          await this.addonPromise;
-        }
+    let promiseEvent = eventName =>
+      new Promise(resolve => {
+        let onstartup = async (msg, extension) => {
+          this.maybeSetID(extension.rootURI, extension.id);
+          if (!this.id && this.addonPromise) {
+            await this.addonPromise;
+          }
 
-        if (extension.id == this.id) {
-          apiManager.off(eventName, onstartup);
-          this._extension = extension;
-          resolve(extension);
-        }
-      };
-      apiManager.on(eventName, onstartup);
-    });
+          if (extension.id == this.id) {
+            apiManager.off(eventName, onstartup);
+            this._extension = extension;
+            resolve(extension);
+          }
+        };
+        apiManager.on(eventName, onstartup);
+      });
 
     this._extension = null;
     this._extensionPromise = promiseEvent("startup");
@@ -96,9 +121,11 @@ class MockExtension {
   }
 
   maybeSetID(uri, id) {
-    if (!this.id && uri instanceof Ci.nsIJARURI &&
-        uri.JARFile.QueryInterface(Ci.nsIFileURL)
-           .file.equals(this.file)) {
+    if (
+      !this.id &&
+      uri instanceof Ci.nsIJARURI &&
+      uri.JARFile.QueryInterface(Ci.nsIFileURL).file.equals(this.file)
+    ) {
       this.id = id;
     }
   }
@@ -166,11 +193,15 @@ class MockExtension {
   }
 
   cleanupGeneratedFile() {
-    return this._extensionPromise.then(extension => {
-      return extension.broadcast("Extension:FlushJarCache", {path: this.file.path});
-    }).then(() => {
-      return OS.File.remove(this.file.path);
-    });
+    return this._extensionPromise
+      .then(extension => {
+        return extension.broadcast("Extension:FlushJarCache", {
+          path: this.file.path,
+        });
+      })
+      .then(() => {
+        return OS.File.remove(this.file.path);
+      });
   }
 }
 
@@ -240,7 +271,10 @@ ExtensionTestCommon = class ExtensionTestCommon {
       let contents = files[filename];
       if (typeof contents == "function") {
         files[filename] = this.serializeScript(contents);
-      } else if (typeof contents != "string" && !instanceOf(contents, "ArrayBuffer")) {
+      } else if (
+        typeof contents != "string" &&
+        !instanceOf(contents, "ArrayBuffer")
+      ) {
         files[filename] = JSON.stringify(contents);
       }
     }
@@ -262,7 +296,10 @@ ExtensionTestCommon = class ExtensionTestCommon {
   }
 
   static generateZipFile(files, baseName = "generated-extension.xpi") {
-    let ZipWriter = Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
+    let ZipWriter = Components.Constructor(
+      "@mozilla.org/zipwriter;1",
+      "nsIZipWriter"
+    );
     let zipW = new ZipWriter();
 
     let file = FileUtils.getFile("TmpD", [baseName]);
@@ -292,7 +329,9 @@ ExtensionTestCommon = class ExtensionTestCommon {
         script = new TextEncoder("utf-8").encode(script).buffer;
       }
 
-      let stream = Cc["@mozilla.org/io/arraybuffer-input-stream;1"].createInstance(Ci.nsIArrayBufferInputStream);
+      let stream = Cc[
+        "@mozilla.org/io/arraybuffer-input-stream;1"
+      ].createInstance(Ci.nsIArrayBufferInputStream);
       stream.setData(script, 0, script.byteLength);
 
       generateFile(filename);
@@ -339,14 +378,20 @@ ExtensionTestCommon = class ExtensionTestCommon {
   }
 
   static setIncognitoOverride(extension) {
-    let {id, addonData} = extension;
+    let { id, addonData } = extension;
     if (!addonData || !addonData.incognitoOverride) {
       return;
     }
     if (addonData.incognitoOverride == "not_allowed") {
-      return ExtensionPermissions.remove(id, {permissions: ["internal:privateBrowsingAllowed"], origins: []});
+      return ExtensionPermissions.remove(id, {
+        permissions: ["internal:privateBrowsingAllowed"],
+        origins: [],
+      });
     }
-    return ExtensionPermissions.add(id, {permissions: ["internal:privateBrowsingAllowed"], origins: []});
+    return ExtensionPermissions.add(id, {
+      permissions: ["internal:privateBrowsingAllowed"],
+      origins: [],
+    });
   }
 
   static setExtensionID(data) {
@@ -357,8 +402,11 @@ ExtensionTestCommon = class ExtensionTestCommon {
     } catch (e) {
       // No ID is set.
     }
-    provide(data, ["manifest", "applications", "gecko", "id"],
-            uuidGen.generateUUID().number);
+    provide(
+      data,
+      ["manifest", "applications", "gecko", "id"],
+      uuidGen.generateUUID().number
+    );
   }
 
   /**
@@ -372,7 +420,9 @@ ExtensionTestCommon = class ExtensionTestCommon {
     let file = this.generateXPI(data);
 
     flushJarCache(file.path);
-    Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache", {path: file.path});
+    Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache", {
+      path: file.path,
+    });
 
     let fileURI = Services.io.newFileURI(file);
     let jarURI = Services.io.newURI("jar:" + fileURI.spec + "!/");
@@ -386,7 +436,10 @@ ExtensionTestCommon = class ExtensionTestCommon {
     if (data.manifest) {
       if (data.manifest.applications && data.manifest.applications.gecko) {
         id = data.manifest.applications.gecko.id;
-      } else if (data.manifest.browser_specific_settings && data.manifest.browser_specific_settings.gecko) {
+      } else if (
+        data.manifest.browser_specific_settings &&
+        data.manifest.browser_specific_settings.gecko
+      ) {
         id = data.manifest.browser_specific_settings.gecko.id;
       }
     }

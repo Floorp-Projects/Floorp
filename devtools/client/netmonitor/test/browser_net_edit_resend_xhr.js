@@ -1,5 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
-*  http://creativecommons.org/publicdomain/zero/1.0/ */
+ *  http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
@@ -23,8 +23,9 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "mousedown" }, xhrRequest);
 
   // Stores original request for comparison of values later
-  const { getSelectedRequest }
-  = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getSelectedRequest } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
   const original = getSelectedRequest(store.getState());
 
   // Context Menu > "Edit & Resend"
@@ -44,8 +45,10 @@ add_task(async function() {
   const cloned = getSelectedRequest(store.getState());
 
   // Compares if the requests have the same cause type (XHR)
-  ok(original.cause.type === cloned.cause.type,
-  "Both requests retain the same cause type");
+  ok(
+    original.cause.type === cloned.cause.type,
+    "Both requests retain the same cause type"
+  );
 
   return teardown(monitor);
 });

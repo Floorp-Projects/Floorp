@@ -15,10 +15,12 @@ const ADDONS = {
 // The ID in signed1.xpi and signed2.xpi
 const ID = "test@somewhere.com";
 
-let testserver = createHttpServer({hosts: ["example.com"]});
+let testserver = createHttpServer({ hosts: ["example.com"] });
 
-Services.prefs.setCharPref("extensions.update.background.url",
-                           "http://example.com/update.json");
+Services.prefs.setCharPref(
+  "extensions.update.background.url",
+  "http://example.com/update.json"
+);
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
 // Creates an add-on with a broken signature by changing an existing file
@@ -27,14 +29,20 @@ function createBrokenAddonModify(file) {
   brokenFile.append("broken.xpi");
   file.copyTo(brokenFile.parent, brokenFile.leafName);
 
-  var stream = Cc["@mozilla.org/io/string-input-stream;1"].
-               createInstance(Ci.nsIStringInputStream);
+  var stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   stream.setData("FOOBAR", -1);
   var zipW = Cc["@mozilla.org/zipwriter;1"].createInstance(Ci.nsIZipWriter);
   zipW.open(brokenFile, FileUtils.MODE_RDWR | FileUtils.MODE_APPEND);
   zipW.removeEntry("test.txt", false);
-  zipW.addEntryStream("test.txt", 0, Ci.nsIZipWriter.COMPRESSION_NONE,
-                      stream, false);
+  zipW.addEntryStream(
+    "test.txt",
+    0,
+    Ci.nsIZipWriter.COMPRESSION_NONE,
+    stream,
+    false
+  );
   zipW.close();
 
   return brokenFile;
@@ -46,13 +54,19 @@ function createBrokenAddonAdd(file) {
   brokenFile.append("broken.xpi");
   file.copyTo(brokenFile.parent, brokenFile.leafName);
 
-  var stream = Cc["@mozilla.org/io/string-input-stream;1"].
-               createInstance(Ci.nsIStringInputStream);
+  var stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   stream.setData("FOOBAR", -1);
   var zipW = Cc["@mozilla.org/zipwriter;1"].createInstance(Ci.nsIZipWriter);
   zipW.open(brokenFile, FileUtils.MODE_RDWR | FileUtils.MODE_APPEND);
-  zipW.addEntryStream("test2.txt", 0, Ci.nsIZipWriter.COMPRESSION_NONE,
-                      stream, false);
+  zipW.addEntryStream(
+    "test2.txt",
+    0,
+    Ci.nsIZipWriter.COMPRESSION_NONE,
+    stream,
+    false
+  );
   zipW.close();
 
   return brokenFile;
@@ -64,8 +78,9 @@ function createBrokenAddonRemove(file) {
   brokenFile.append("broken.xpi");
   file.copyTo(brokenFile.parent, brokenFile.leafName);
 
-  var stream = Cc["@mozilla.org/io/string-input-stream;1"].
-               createInstance(Ci.nsIStringInputStream);
+  var stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   stream.setData("FOOBAR", -1);
   var zipW = Cc["@mozilla.org/zipwriter;1"].createInstance(Ci.nsIZipWriter);
   zipW.open(brokenFile, FileUtils.MODE_RDWR | FileUtils.MODE_APPEND);
@@ -93,16 +108,17 @@ function serveUpdate(filename) {
         ],
       },
     },
-
   };
   AddonTestUtils.registerJSON(testserver, "/update.json", RESPONSE);
 }
 
-
 async function test_install_broken(file, expectedError) {
   let install = await AddonManager.getInstallForFile(file);
-  await Assert.rejects(install.install(), /Install failed/,
-                       "Install of an improperly signed extension should throw");
+  await Assert.rejects(
+    install.install(),
+    /Install failed/,
+    "Install of an improperly signed extension should throw"
+  );
 
   Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
   Assert.equal(install.error, expectedError);
@@ -133,8 +149,11 @@ async function test_update_broken(file1, file2, expectedError) {
   let addon = await promiseAddonByID(ID);
   let update = await promiseFindAddonUpdates(addon);
   let install = update.updateAvailable;
-  await Assert.rejects(install.install(), /Install failed/,
-                       "Update to an improperly signed extension should throw");
+  await Assert.rejects(
+    install.install(),
+    /Install failed/,
+    "Update to an improperly signed extension should throw"
+  );
 
   Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
   Assert.equal(install.error, expectedError);
@@ -156,10 +175,7 @@ async function test_update_working(file1, file2, expectedSignedState) {
   let addon = await promiseAddonByID(ID);
   let update = await promiseFindAddonUpdates(addon);
   let install = update.updateAvailable;
-  await Promise.all([
-    install.install(),
-    promiseWebExtensionStartup(ID),
-  ]);
+  await Promise.all([install.install(), promiseWebExtensionStartup(ID)]);
 
   Assert.equal(install.state, AddonManager.STATE_INSTALLED);
   Assert.notEqual(install.addon, null);
@@ -246,7 +262,11 @@ add_task(async function test_update_invalid_removed() {
 add_task(async function test_update_invalid_unsigned() {
   let file1 = do_get_file(DATA + ADDONS.signed1);
   let file2 = do_get_file(DATA + ADDONS.unsigned);
-  await test_update_broken(file1, file2, AddonManager.ERROR_SIGNEDSTATE_REQUIRED);
+  await test_update_broken(
+    file1,
+    file2,
+    AddonManager.ERROR_SIGNEDSTATE_REQUIRED
+  );
 });
 
 // Try to update to a signed add-on
@@ -257,4 +277,3 @@ add_task(async function test_update_valid() {
 });
 
 add_task(() => promiseShutdownManager());
-

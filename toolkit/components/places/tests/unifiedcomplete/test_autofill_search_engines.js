@@ -15,8 +15,10 @@ add_task(async function searchEngines() {
   let schemes = ["http", "https"];
   for (let i = 0; i < schemes.length; i++) {
     let scheme = schemes[i];
-    await Services.search.addEngineWithDetails("TestEngine",
-      {method: "GET", template: scheme + "://www.example.com/"});
+    await Services.search.addEngineWithDetails("TestEngine", {
+      method: "GET",
+      template: scheme + "://www.example.com/",
+    });
     let engine = Services.search.getEngineByName("TestEngine");
     engine.addParam("q", "{searchTerms}", null);
 
@@ -24,132 +26,156 @@ add_task(async function searchEngines() {
       search: "ex",
       autofilled: "example.com/",
       completed: scheme + "://www.example.com/",
-      matches: [{
-        value: "example.com/",
-        comment: "TestEngine",
-        style: ["heuristic", "priority-search"],
-      }],
+      matches: [
+        {
+          value: "example.com/",
+          comment: "TestEngine",
+          style: ["heuristic", "priority-search"],
+        },
+      ],
     });
 
     await check_autocomplete({
       search: "example.com",
       autofilled: "example.com/",
       completed: scheme + "://www.example.com/",
-      matches: [{
-        value: "example.com/",
-        comment: "TestEngine",
-        style: ["heuristic", "priority-search"],
-      }],
+      matches: [
+        {
+          value: "example.com/",
+          comment: "TestEngine",
+          style: ["heuristic", "priority-search"],
+        },
+      ],
     });
 
     await check_autocomplete({
       search: "example.com/",
       autofilled: "example.com/",
       completed: scheme + "://www.example.com/",
-      matches: [{
-        value: "example.com/",
-        comment: "TestEngine",
-        style: ["heuristic", "priority-search"],
-      }],
+      matches: [
+        {
+          value: "example.com/",
+          comment: "TestEngine",
+          style: ["heuristic", "priority-search"],
+        },
+      ],
     });
 
     await check_autocomplete({
       search: "www.ex",
       autofilled: "www.example.com/",
       completed: scheme + "://www.example.com/",
-      matches: [{
-        value: "www.example.com/",
-        comment: "TestEngine",
-        style: ["heuristic", "priority-search"],
-      }],
+      matches: [
+        {
+          value: "www.example.com/",
+          comment: "TestEngine",
+          style: ["heuristic", "priority-search"],
+        },
+      ],
     });
 
     await check_autocomplete({
       search: "www.example.com",
       autofilled: "www.example.com/",
       completed: scheme + "://www.example.com/",
-      matches: [{
-        value: "www.example.com/",
-        comment: "TestEngine",
-        style: ["heuristic", "priority-search"],
-      }],
+      matches: [
+        {
+          value: "www.example.com/",
+          comment: "TestEngine",
+          style: ["heuristic", "priority-search"],
+        },
+      ],
     });
 
     await check_autocomplete({
       search: "www.example.com/",
       autofilled: "www.example.com/",
       completed: scheme + "://www.example.com/",
-      matches: [{
-        value: "www.example.com/",
-        comment: "TestEngine",
-        style: ["heuristic", "priority-search"],
-      }],
+      matches: [
+        {
+          value: "www.example.com/",
+          comment: "TestEngine",
+          style: ["heuristic", "priority-search"],
+        },
+      ],
     });
 
     await check_autocomplete({
       search: scheme + "://ex",
       autofilled: scheme + "://example.com/",
       completed: scheme + "://www.example.com/",
-      matches: [{
-        value: scheme + "://example.com/",
-        comment: "TestEngine",
-        style: ["heuristic", "priority-search"],
-      }],
+      matches: [
+        {
+          value: scheme + "://example.com/",
+          comment: "TestEngine",
+          style: ["heuristic", "priority-search"],
+        },
+      ],
     });
 
     await check_autocomplete({
       search: scheme + "://example.com",
       autofilled: scheme + "://example.com/",
       completed: scheme + "://www.example.com/",
-      matches: [{
-        value: scheme + "://example.com/",
-        comment: "TestEngine",
-        style: ["heuristic", "priority-search"],
-      }],
+      matches: [
+        {
+          value: scheme + "://example.com/",
+          comment: "TestEngine",
+          style: ["heuristic", "priority-search"],
+        },
+      ],
     });
 
     await check_autocomplete({
       search: scheme + "://example.com/",
       autofilled: scheme + "://example.com/",
       completed: scheme + "://www.example.com/",
-      matches: [{
-        value: scheme + "://example.com/",
-        comment: "TestEngine",
-        style: ["heuristic", "priority-search"],
-      }],
+      matches: [
+        {
+          value: scheme + "://example.com/",
+          comment: "TestEngine",
+          style: ["heuristic", "priority-search"],
+        },
+      ],
     });
 
     await check_autocomplete({
       search: scheme + "://www.ex",
       autofilled: scheme + "://www.example.com/",
       completed: scheme + "://www.example.com/",
-      matches: [{
-        value: scheme + "://www.example.com/",
-        comment: "TestEngine",
-        style: ["heuristic", "priority-search"],
-      }],
+      matches: [
+        {
+          value: scheme + "://www.example.com/",
+          comment: "TestEngine",
+          style: ["heuristic", "priority-search"],
+        },
+      ],
     });
 
     await check_autocomplete({
       search: scheme + "://www.example.com",
       autofilled: scheme + "://www.example.com/",
       completed: scheme + "://www.example.com/",
-      matches: [{
-        value: scheme + "://www.example.com/",
-        comment: "TestEngine",
-        style: ["heuristic", "priority-search"],
-      }],
+      matches: [
+        {
+          value: scheme + "://www.example.com/",
+          comment: "TestEngine",
+          style: ["heuristic", "priority-search"],
+        },
+      ],
     });
 
     await check_autocomplete({
       search: scheme + "://www.example.com/",
       autofilled: scheme + "://www.example.com/",
       completed: scheme + "://www.example.com/",
-      matches: [{
-        value: scheme + "://www.example.com/",
-        comment: "TestEngine",
-        style: ["heuristic", "priority-search"],
-      }],
+      matches: [
+        {
+          value: scheme + "://www.example.com/",
+          comment: "TestEngine",
+          style: ["heuristic", "priority-search"],
+        },
+      ],
     });
 
     let otherScheme = schemes[(i + 1) % schemes.length];

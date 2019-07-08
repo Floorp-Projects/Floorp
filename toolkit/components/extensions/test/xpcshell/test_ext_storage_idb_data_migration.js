@@ -6,27 +6,34 @@
 // from the JSONFile backend to the IDB backend.
 
 AddonTestUtils.init(this);
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "42"
+);
 
-const {ExtensionStorage} = ChromeUtils.import("resource://gre/modules/ExtensionStorage.jsm");
-const {TelemetryController} = ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
+const { ExtensionStorage } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionStorage.jsm"
+);
+const { TelemetryController } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryController.jsm"
+);
 
-const {
-  ExtensionStorageIDB,
-} = ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm");
+const { ExtensionStorageIDB } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionStorageIDB.jsm"
+);
 
-const {
-  getTrimmedString,
-} = ChromeUtils.import("resource://gre/modules/ExtensionTelemetry.jsm", null);
+const { getTrimmedString } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionTelemetry.jsm",
+  null
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
 });
 
-const {
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+const { promiseShutdownManager, promiseStartupManager } = AddonTestUtils;
 
 const {
   IDB_MIGRATED_PREF_BRANCH,
@@ -44,40 +51,68 @@ async function createExtensionJSONFileWithData(extensionId, data) {
   const jsonFile = await ExtensionStorage.getFile(extensionId);
   await jsonFile._save();
   const oldStorageFilename = ExtensionStorage.getStorageFile(extensionId);
-  equal(await OS.File.exists(oldStorageFilename), true, "The old json file has been created");
+  equal(
+    await OS.File.exists(oldStorageFilename),
+    true,
+    "The old json file has been created"
+  );
 
-  return {jsonFile, oldStorageFilename};
+  return { jsonFile, oldStorageFilename };
 }
 
 function clearMigrationHistogram() {
-  const histogram = Services.telemetry.getHistogramById(IDB_MIGRATE_RESULT_HISTOGRAM);
+  const histogram = Services.telemetry.getHistogramById(
+    IDB_MIGRATE_RESULT_HISTOGRAM
+  );
   histogram.clear();
-  equal(histogram.snapshot().sum, 0,
-        `No data recorded for histogram ${IDB_MIGRATE_RESULT_HISTOGRAM}`);
+  equal(
+    histogram.snapshot().sum,
+    0,
+    `No data recorded for histogram ${IDB_MIGRATE_RESULT_HISTOGRAM}`
+  );
 }
 
 function assertMigrationHistogramCount(category, expectedCount) {
-  const histogram = Services.telemetry.getHistogramById(IDB_MIGRATE_RESULT_HISTOGRAM);
+  const histogram = Services.telemetry.getHistogramById(
+    IDB_MIGRATE_RESULT_HISTOGRAM
+  );
 
-  equal(histogram.snapshot().values[CATEGORIES.indexOf(category)], expectedCount,
-        `Got the expected count on category "${category}" for histogram ${IDB_MIGRATE_RESULT_HISTOGRAM}`);
+  equal(
+    histogram.snapshot().values[CATEGORIES.indexOf(category)],
+    expectedCount,
+    `Got the expected count on category "${category}" for histogram ${IDB_MIGRATE_RESULT_HISTOGRAM}`
+  );
 }
 
 function assertTelemetryEvents(extensionId, expectedEvents) {
-  const snapshot = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
+  const snapshot = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+    true
+  );
 
-  ok(snapshot.parent && snapshot.parent.length > 0, "Got parent telemetry events in the snapshot");
+  ok(
+    snapshot.parent && snapshot.parent.length > 0,
+    "Got parent telemetry events in the snapshot"
+  );
 
-  const migrateEvents = snapshot.parent.filter(([timestamp, category, method, object, value]) => {
-    return category === EVENT_CATEGORY &&
-      EVENT_METHODS.includes(method) &&
-      object === EVENT_OBJECT &&
-      value === extensionId;
-  }).map(event => {
-    return {method: event[2], extra: event[5]};
-  });
+  const migrateEvents = snapshot.parent
+    .filter(([timestamp, category, method, object, value]) => {
+      return (
+        category === EVENT_CATEGORY &&
+        EVENT_METHODS.includes(method) &&
+        object === EVENT_OBJECT &&
+        value === extensionId
+      );
+    })
+    .map(event => {
+      return { method: event[2], extra: event[5] };
+    });
 
-  Assert.deepEqual(migrateEvents, expectedEvents, "Got the expected telemetry events");
+  Assert.deepEqual(
+    migrateEvents,
+    expectedEvents,
+    "Got the expected telemetry events"
+  );
 }
 
 add_task(async function setup() {
@@ -110,25 +145,37 @@ add_task(async function test_storage_local_data_migration() {
   Services.prefs.setBoolPref(LEAVE_UUID_PREF, true);
 
   const data = {
-    "test_key_string": "test_value1",
-    "test_key_number": 1000,
-    "test_nested_data": {
-      "nested_key": true,
+    test_key_string: "test_value1",
+    test_key_number: 1000,
+    test_nested_data: {
+      nested_key: true,
     },
   };
 
   // Store some fake data in the storage.local file backend before starting the extension.
-  const {oldStorageFilename} = await createExtensionJSONFileWithData(EXTENSION_ID, data);
+  const { oldStorageFilename } = await createExtensionJSONFileWithData(
+    EXTENSION_ID,
+    data
+  );
 
   async function background() {
     const storedData = await browser.storage.local.get();
 
-    browser.test.assertEq("test_value1", storedData.test_key_string,
-                          "Got the expected data after the storage.local data migration");
-    browser.test.assertEq(1000, storedData.test_key_number,
-                          "Got the expected data after the storage.local data migration");
-    browser.test.assertEq(true, storedData.test_nested_data.nested_key,
-                          "Got the expected data after the storage.local data migration");
+    browser.test.assertEq(
+      "test_value1",
+      storedData.test_key_string,
+      "Got the expected data after the storage.local data migration"
+    );
+    browser.test.assertEq(
+      1000,
+      storedData.test_key_number,
+      "Got the expected data after the storage.local data migration"
+    );
+    browser.test.assertEq(
+      true,
+      storedData.test_nested_data.nested_key,
+      "Got the expected data after the storage.local data migration"
+    );
 
     browser.test.sendMessage("storage-local-data-migrated");
   }
@@ -154,21 +201,38 @@ add_task(async function test_storage_local_data_migration() {
 
   await extension.awaitMessage("storage-local-data-migrated");
 
-  const storagePrincipal = ExtensionStorageIDB.getStoragePrincipal(extension.extension);
+  const storagePrincipal = ExtensionStorageIDB.getStoragePrincipal(
+    extension.extension
+  );
 
   const idbConn = await ExtensionStorageIDB.open(storagePrincipal);
 
-  equal(await idbConn.isEmpty(extension.extension), false,
-        "Data stored in the ExtensionStorageIDB backend as expected");
+  equal(
+    await idbConn.isEmpty(extension.extension),
+    false,
+    "Data stored in the ExtensionStorageIDB backend as expected"
+  );
 
-  equal(await OS.File.exists(oldStorageFilename), false,
-        "The old json storage file name should not exist anymore");
+  equal(
+    await OS.File.exists(oldStorageFilename),
+    false,
+    "The old json storage file name should not exist anymore"
+  );
 
-  equal(await OS.File.exists(`${oldStorageFilename}.migrated`), true,
-        "The old json storage file name should have been renamed as .migrated");
+  equal(
+    await OS.File.exists(`${oldStorageFilename}.migrated`),
+    true,
+    "The old json storage file name should have been renamed as .migrated"
+  );
 
-  equal(Services.prefs.getBoolPref(`${IDB_MIGRATED_PREF_BRANCH}.${EXTENSION_ID}`, false),
-        true, `Got the ${IDB_MIGRATED_PREF_BRANCH} preference set to true as expected`);
+  equal(
+    Services.prefs.getBoolPref(
+      `${IDB_MIGRATED_PREF_BRANCH}.${EXTENSION_ID}`,
+      false
+    ),
+    true,
+    `Got the ${IDB_MIGRATED_PREF_BRANCH} preference set to true as expected`
+  );
 
   assertMigrationHistogramCount("success", 1);
   assertMigrationHistogramCount("failure", 0);
@@ -187,8 +251,14 @@ add_task(async function test_storage_local_data_migration() {
 
   await extension.unload();
 
-  equal(Services.prefs.getBoolPref(`${IDB_MIGRATED_PREF_BRANCH}.${EXTENSION_ID}`, false),
-        true, `${IDB_MIGRATED_PREF_BRANCH} should still be true on keepStorageOnUninstall=true`);
+  equal(
+    Services.prefs.getBoolPref(
+      `${IDB_MIGRATED_PREF_BRANCH}.${EXTENSION_ID}`,
+      false
+    ),
+    true,
+    `${IDB_MIGRATED_PREF_BRANCH} should still be true on keepStorageOnUninstall=true`
+  );
 
   // Re-install the extension and check that no telemetry events are being sent
   // for an already migrated extension.
@@ -203,29 +273,39 @@ add_task(async function test_storage_local_data_migration() {
   assertMigrationHistogramCount("failure", 0);
 
   // No new telemetry events recorded for the extension.
-  const snapshot = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
-  const filterByCategory = ([timestamp, category]) => category === EVENT_CATEGORY;
+  const snapshot = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+    true
+  );
+  const filterByCategory = ([timestamp, category]) =>
+    category === EVENT_CATEGORY;
 
-  ok(!snapshot.parent || snapshot.parent.filter(filterByCategory).length === 0,
-     "No telemetry events should be recorded for an already migrated extension");
+  ok(
+    !snapshot.parent || snapshot.parent.filter(filterByCategory).length === 0,
+    "No telemetry events should be recorded for an already migrated extension"
+  );
 
   Services.prefs.setBoolPref(LEAVE_STORAGE_PREF, false);
   Services.prefs.setBoolPref(LEAVE_UUID_PREF, false);
 
   await extension.unload();
 
-  equal(Services.prefs.getPrefType(`${IDB_MIGRATED_PREF_BRANCH}.${EXTENSION_ID}`),
-        Services.prefs.PREF_INVALID,
-        `Got the ${IDB_MIGRATED_PREF_BRANCH} preference has been cleared on addon uninstall`);
+  equal(
+    Services.prefs.getPrefType(`${IDB_MIGRATED_PREF_BRANCH}.${EXTENSION_ID}`),
+    Services.prefs.PREF_INVALID,
+    `Got the ${IDB_MIGRATED_PREF_BRANCH} preference has been cleared on addon uninstall`
+  );
 });
 
 // Test that the extensionId included in the telemetry event is being trimmed down to 80 chars
 // as expected.
 add_task(async function test_extensionId_trimmed_in_telemetry_event() {
   // Generated extensionId in email-like format, longer than 80 chars.
-  const EXTENSION_ID = `long.extension.id@${Array(80).fill("a").join("")}`;
+  const EXTENSION_ID = `long.extension.id@${Array(80)
+    .fill("a")
+    .join("")}`;
 
-  const data = {"test_key_string": "test_value"};
+  const data = { test_key_string: "test_value" };
 
   // Store some fake data in the storage.local file backend before starting the extension.
   await createExtensionJSONFileWithData(EXTENSION_ID, data);
@@ -233,8 +313,11 @@ add_task(async function test_extensionId_trimmed_in_telemetry_event() {
   async function background() {
     const storedData = await browser.storage.local.get("test_key_string");
 
-    browser.test.assertEq("test_value", storedData.test_key_string,
-                          "Got the expected data after the storage.local data migration");
+    browser.test.assertEq(
+      "test_value",
+      storedData.test_key_string,
+      "Got the expected data after the storage.local data migration"
+    );
 
     browser.test.sendMessage("storage-local-data-migrated");
   }
@@ -257,7 +340,11 @@ add_task(async function test_extensionId_trimmed_in_telemetry_event() {
 
   const expectedTrimmedExtensionId = getTrimmedString(EXTENSION_ID);
 
-  equal(expectedTrimmedExtensionId.length, 80, "The trimmed version of the extensionId should be 80 chars long");
+  equal(
+    expectedTrimmedExtensionId.length,
+    80,
+    "The trimmed version of the extensionId should be 80 chars long"
+  );
 
   assertTelemetryEvents(expectedTrimmedExtensionId, [
     {
@@ -287,21 +374,31 @@ add_task(async function test_storage_local_corrupted_data_migration() {
   const oldStorageFilename = ExtensionStorage.getStorageFile(EXTENSION_ID);
 
   const profileDir = OS.Constants.Path.profileDir;
-  await OS.File.makeDir(OS.Path.join(profileDir, "browser-extension-data", EXTENSION_ID),
-                        {from: profileDir, ignoreExisting: true});
+  await OS.File.makeDir(
+    OS.Path.join(profileDir, "browser-extension-data", EXTENSION_ID),
+    { from: profileDir, ignoreExisting: true }
+  );
 
   // Write the json file with some invalid data.
-  await OS.File.writeAtomic(oldStorageFilename, invalidData, {flush: true});
-  equal(await OS.File.read(oldStorageFilename, {encoding: "utf-8"}),
-        invalidData, "The old json file has been overwritten with invalid data");
+  await OS.File.writeAtomic(oldStorageFilename, invalidData, { flush: true });
+  equal(
+    await OS.File.read(oldStorageFilename, { encoding: "utf-8" }),
+    invalidData,
+    "The old json file has been overwritten with invalid data"
+  );
 
   async function background() {
     const storedData = await browser.storage.local.get();
 
-    browser.test.assertEq(Object.keys(storedData).length, 0,
-                          "No data should be found on invalid data migration");
+    browser.test.assertEq(
+      Object.keys(storedData).length,
+      0,
+      "No data should be found on invalid data migration"
+    );
 
-    await browser.storage.local.set({"test_key_string_on_IDBBackend": "expected-value"});
+    await browser.storage.local.set({
+      test_key_string_on_IDBBackend: "expected-value",
+    });
 
     browser.test.sendMessage("storage-local-data-migrated-and-set");
   }
@@ -324,21 +421,35 @@ add_task(async function test_storage_local_corrupted_data_migration() {
 
   await extension.awaitMessage("storage-local-data-migrated-and-set");
 
-  const storagePrincipal = ExtensionStorageIDB.getStoragePrincipal(extension.extension);
+  const storagePrincipal = ExtensionStorageIDB.getStoragePrincipal(
+    extension.extension
+  );
 
   const idbConn = await ExtensionStorageIDB.open(storagePrincipal);
 
-  equal(await idbConn.isEmpty(extension.extension), false,
-        "Data stored in the ExtensionStorageIDB backend as expected");
+  equal(
+    await idbConn.isEmpty(extension.extension),
+    false,
+    "Data stored in the ExtensionStorageIDB backend as expected"
+  );
 
-  equal(await OS.File.exists(`${oldStorageFilename}.corrupt`), true,
-        "The old json storage should still be available if failed to be read");
+  equal(
+    await OS.File.exists(`${oldStorageFilename}.corrupt`),
+    true,
+    "The old json storage should still be available if failed to be read"
+  );
 
   // The extension is still migrated successfully to the new backend if the file from the
   // original json file was corrupted.
 
-  equal(Services.prefs.getBoolPref(`${IDB_MIGRATED_PREF_BRANCH}.${EXTENSION_ID}`, false),
-        true, `Got the ${IDB_MIGRATED_PREF_BRANCH} preference set to true as expected`);
+  equal(
+    Services.prefs.getBoolPref(
+      `${IDB_MIGRATED_PREF_BRANCH}.${EXTENSION_ID}`,
+      false
+    ),
+    true,
+    `Got the ${IDB_MIGRATED_PREF_BRANCH} preference set to true as expected`
+  );
 
   assertMigrationHistogramCount("success", 1);
   assertMigrationHistogramCount("failure", 0);
@@ -376,7 +487,9 @@ add_task(async function test_storage_local_data_migration_failure() {
   jsonFile.data.set("fake_invalid_key", new Error());
 
   async function background() {
-    await browser.storage.local.set({"test_key_string_on_JSONFileBackend": "expected-value"});
+    await browser.storage.local.set({
+      test_key_string_on_JSONFileBackend: "expected-value",
+    });
     browser.test.sendMessage("storage-local-data-migrated-and-set");
   }
 
@@ -398,13 +511,21 @@ add_task(async function test_storage_local_data_migration_failure() {
 
   await extension.awaitMessage("storage-local-data-migrated-and-set");
 
-  const storagePrincipal = ExtensionStorageIDB.getStoragePrincipal(extension.extension);
+  const storagePrincipal = ExtensionStorageIDB.getStoragePrincipal(
+    extension.extension
+  );
 
   const idbConn = await ExtensionStorageIDB.open(storagePrincipal);
-  equal(await idbConn.isEmpty(extension.extension), true,
-        "No data stored in the ExtensionStorageIDB backend as expected");
-  equal(await OS.File.exists(oldStorageFilename), true,
-        "The old json storage should still be available if failed to be read");
+  equal(
+    await idbConn.isEmpty(extension.extension),
+    true,
+    "No data stored in the ExtensionStorageIDB backend as expected"
+  );
+  equal(
+    await OS.File.exists(oldStorageFilename),
+    true,
+    "The old json storage should still be available if failed to be read"
+  );
 
   await extension.unload();
 

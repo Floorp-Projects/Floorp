@@ -4,10 +4,16 @@
 /* globals window */
 "use strict";
 
-loader.lazyImporter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+loader.lazyImporter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Services = require("Services");
@@ -23,18 +29,27 @@ const WorkerTarget = createFactory(require("./Target"));
 const MultiE10SWarning = createFactory(require("./MultiE10sWarning"));
 const ServiceWorkerTarget = createFactory(require("./ServiceWorkerTarget"));
 
-loader.lazyImporter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+loader.lazyImporter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
-loader.lazyRequireGetter(this, "DebuggerClient",
-  "devtools/shared/client/debugger-client", true);
+loader.lazyRequireGetter(
+  this,
+  "DebuggerClient",
+  "devtools/shared/client/debugger-client",
+  true
+);
 
 const Strings = Services.strings.createBundle(
-  "chrome://devtools/locale/aboutdebugging.properties");
+  "chrome://devtools/locale/aboutdebugging.properties"
+);
 
 const WorkerIcon = "chrome://devtools/skin/images/debugging-workers.svg";
-const MORE_INFO_URL = "https://developer.mozilla.org/en-US/docs/Tools/about%3Adebugging" +
-                      "#Service_workers_not_compatible";
+const MORE_INFO_URL =
+  "https://developer.mozilla.org/en-US/docs/Tools/about%3Adebugging" +
+  "#Service_workers_not_compatible";
 
 class WorkersPanel extends Component {
   static get propTypes() {
@@ -70,7 +85,10 @@ class WorkersPanel extends Component {
     });
     client.mainRoot.on("workerListChanged", this.updateWorkers);
 
-    client.mainRoot.on("serviceWorkerRegistrationListChanged", this.updateWorkers);
+    client.mainRoot.on(
+      "serviceWorkerRegistrationListChanged",
+      this.updateWorkers
+    );
     client.mainRoot.on("processListChanged", this.updateWorkers);
 
     addMultiE10sListener(this.updateMultiE10S);
@@ -82,7 +100,10 @@ class WorkersPanel extends Component {
   componentWillUnmount() {
     const client = this.props.client;
     client.mainRoot.off("processListChanged", this.updateWorkers);
-    client.mainRoot.off("serviceWorkerRegistrationListChanged", this.updateWorkers);
+    client.mainRoot.off(
+      "serviceWorkerRegistrationListChanged",
+      this.updateWorkers
+    );
     client.mainRoot.off("workerListChanged", this.updateWorkers);
     for (const front of this.state.contentProcessFronts) {
       front.off("workerListChanged", this.updateWorkers);
@@ -118,17 +139,23 @@ class WorkersPanel extends Component {
   updateWorkers() {
     const workers = this.initialState.workers;
 
-    this.props.client.mainRoot.listAllWorkers().then(({service, other, shared}) => {
-      workers.service = service.map(f => Object.assign({ icon: WorkerIcon }, f));
-      workers.other = other.map(f => Object.assign({ icon: WorkerIcon }, f));
-      workers.shared = shared.map(f => Object.assign({ icon: WorkerIcon }, f));
+    this.props.client.mainRoot
+      .listAllWorkers()
+      .then(({ service, other, shared }) => {
+        workers.service = service.map(f =>
+          Object.assign({ icon: WorkerIcon }, f)
+        );
+        workers.other = other.map(f => Object.assign({ icon: WorkerIcon }, f));
+        workers.shared = shared.map(f =>
+          Object.assign({ icon: WorkerIcon }, f)
+        );
 
-      // XXX: Filter out the service worker registrations for which we couldn't
-      // find the scriptSpec.
-      workers.service = workers.service.filter(reg => !!reg.url);
+        // XXX: Filter out the service worker registrations for which we couldn't
+        // find the scriptSpec.
+        workers.service = workers.service.filter(reg => !!reg.url);
 
-      this.setState({ workers });
-    });
+        this.setState({ workers });
+      });
   }
 
   isE10S() {
@@ -138,8 +165,9 @@ class WorkersPanel extends Component {
   renderServiceWorkersError() {
     const isWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(window);
     const isPrivateBrowsingMode = PrivateBrowsingUtils.permanentPrivateBrowsing;
-    const isServiceWorkerDisabled = !Services.prefs
-                                    .getBoolPref("dom.serviceWorkers.enabled");
+    const isServiceWorkerDisabled = !Services.prefs.getBoolPref(
+      "dom.serviceWorkers.enabled"
+    );
 
     const isDisabled =
       isWindowPrivate || isPrivateBrowsingMode || isServiceWorkerDisabled;
@@ -163,7 +191,7 @@ class WorkersPanel extends Component {
           target: "_blank",
         },
         Strings.GetStringFromName("configurationIsNotCompatible.learnMore")
-      ),
+      )
     );
   }
 

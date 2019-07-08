@@ -24,7 +24,9 @@ add_task(async function test_profile_pushstate_page_info() {
 
   let foundPage = 0;
   // We need to find the correct content process for that tab.
-  let contentProcess = profile.processes.find(p => p.threads[0].pid == contentPid);
+  let contentProcess = profile.processes.find(
+    p => p.threads[0].pid == contentPid
+  );
   for (const page of contentProcess.pages) {
     // Before pushState
     if (page.url == url) {

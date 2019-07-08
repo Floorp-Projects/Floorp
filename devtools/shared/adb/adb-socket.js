@@ -8,8 +8,9 @@ const { Cu } = require("chrome");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 
 function createTCPSocket(location, port, options) {
-  const { TCPSocket } =
-    Cu.getGlobalForObject(Cu.import("resource://gre/modules/Services.jsm", {}));
+  const { TCPSocket } = Cu.getGlobalForObject(
+    Cu.import("resource://gre/modules/Services.jsm", {})
+  );
 
   return new TCPSocket(location, port, options);
 }
@@ -63,8 +64,7 @@ class AdbSocket {
   }
 
   close() {
-    if (this.s.readyState === "open" ||
-        this.s.readyState === "connecting") {
+    if (this.s.readyState === "open" || this.s.readyState === "connecting") {
       this.s.close();
     }
   }

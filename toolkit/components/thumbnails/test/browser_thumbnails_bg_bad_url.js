@@ -9,8 +9,10 @@ function* runTests() {
     onDone: function onDone(capturedURL) {
       is(capturedURL, url, "Captured URL should be URL passed to capture");
       is(numCalls++, 0, "onDone should be called only once");
-      ok(!thumbnailExists(url),
-         "Capture failed so thumbnail should not be cached");
+      ok(
+        !thumbnailExists(url),
+        "Capture failed so thumbnail should not be cached"
+      );
       next();
     },
   });

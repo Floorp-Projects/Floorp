@@ -5,8 +5,9 @@
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 
 function do_check_throws(f, result, stack) {
-  if (!stack)
+  if (!stack) {
     stack = Components.stack.caller;
+  }
 
   try {
     f();
@@ -17,16 +18,22 @@ function do_check_throws(f, result, stack) {
   ok(false, "expected result " + result + ", none thrown");
 }
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Register current test directory as provider for the profile directory.
 var provider = {
   getFile(prop, persistent) {
     persistent.value = true;
-    if (prop == NS_APP_USER_PROFILE_50_DIR)
+    if (prop == NS_APP_USER_PROFILE_50_DIR) {
       return Services.dirsvc.get("CurProcD", Ci.nsIFile);
-    throw Components.Exception("Tried to get test directory '" + prop + "'", Cr.NS_ERROR_FAILURE);
+    }
+    throw Components.Exception(
+      "Tried to get test directory '" + prop + "'",
+      Cr.NS_ERROR_FAILURE
+    );
   },
   QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"]),
 };
-Services.dirsvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
+Services.dirsvc
+  .QueryInterface(Ci.nsIDirectoryService)
+  .registerProvider(provider);
