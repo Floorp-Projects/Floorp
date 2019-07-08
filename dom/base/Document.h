@@ -2997,7 +2997,15 @@ class Document : public nsINode,
                : mAllowXULXBL == eTriFalse ? false : InternalAllowXULXBL();
   }
 
+  /**
+   * Returns true if this document is allowed to load DTDs from UI resources
+   * no matter what.
+   */
+  bool SkipDTDSecurityChecks() { return mSkipDTDSecurityChecks; }
+
   void ForceEnableXULXBL() { mAllowXULXBL = eTriTrue; }
+
+  void ForceSkipDTDSecurityChecks() { mSkipDTDSecurityChecks = true; }
 
   /**
    * Returns the template content owner document that owns the content of
@@ -4810,6 +4818,8 @@ class Document : public nsINode,
   enum Tri { eTriUnset = 0, eTriFalse, eTriTrue };
 
   Tri mAllowXULXBL;
+
+  bool mSkipDTDSecurityChecks;
 
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the

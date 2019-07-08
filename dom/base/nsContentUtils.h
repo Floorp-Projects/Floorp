@@ -1977,6 +1977,13 @@ class nsContentUtils {
   static bool OfflineAppAllowed(nsIPrincipal* aPrincipal);
 
   /**
+   * Determine whether the principal is allowed access to the localization
+   * system. We don't want the web to ever see this but all our UI including in
+   * content pages should pass this test.
+   */
+  static bool PrincipalAllowsL10n(nsIPrincipal* aPrincipal);
+
+  /**
    * If offline-apps.allow_by_default is true, we set offline-app permission
    * for the principal and return true.  Otherwise false.
    */

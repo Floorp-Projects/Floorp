@@ -328,8 +328,20 @@ static bool IsImageLoadInEditorAppType(nsILoadInfo* aLoadInfo) {
 }
 
 static nsresult DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
-  // Bug 1228117: determine the correct security policy for DTD loads
-  if (aLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DTD) {
+  // In practice, these DTDs are just used for localization, so applying the
+  // same principal check as Fluent.
+  if (aLoadInfo->InternalContentPolicyType() ==
+      nsIContentPolicy::TYPE_INTERNAL_DTD) {
+    return nsContentUtils::PrincipalAllowsL10n(aLoadInfo->TriggeringPrincipal())
+               ? NS_OK
+               : NS_ERROR_DOM_BAD_URI;
+  }
+
+  // This is used in order to allow a privileged DOMParser to parse documents
+  // that need to access localization DTDs. We just allow through
+  // TYPE_INTERNAL_FORCE_ALLOWED_DTD no matter what the triggering principal is.
+  if (aLoadInfo->InternalContentPolicyType() ==
+      nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD) {
     return NS_OK;
   }
 

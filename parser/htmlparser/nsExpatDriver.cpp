@@ -643,12 +643,16 @@ nsresult nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
         mSink == nsCOMPtr<nsIExpatSink>(do_QueryInterface(mOriginalSink)),
         "In nsExpatDriver::OpenInputStreamFromExternalDTD: "
         "mOriginalSink not the same object as mSink?");
+    nsContentPolicyType policyType = nsIContentPolicy::TYPE_INTERNAL_DTD;
     nsCOMPtr<nsIPrincipal> loadingPrincipal;
     if (mOriginalSink) {
       nsCOMPtr<Document> doc;
       doc = do_QueryInterface(mOriginalSink->GetTarget());
       if (doc) {
         loadingPrincipal = doc->NodePrincipal();
+        if (doc->SkipDTDSecurityChecks()) {
+          policyType = nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD;
+        }
       }
     }
     if (!loadingPrincipal) {
@@ -658,7 +662,7 @@ nsresult nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
     rv = NS_NewChannel(getter_AddRefs(channel), uri, loadingPrincipal,
                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
                            nsILoadInfo::SEC_ALLOW_CHROME,
-                       nsIContentPolicy::TYPE_DTD);
+                       policyType);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 

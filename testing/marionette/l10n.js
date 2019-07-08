@@ -21,7 +21,11 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
-XPCOMUtils.defineLazyGetter(this, "domParser", () => new DOMParser());
+XPCOMUtils.defineLazyGetter(this, "domParser", () => {
+  const parser = new DOMParser();
+  parser.forceEnableDTD();
+  return parser;
+});
 
 const { NoSuchElementError } = ChromeUtils.import(
   "chrome://marionette/content/error.js"
