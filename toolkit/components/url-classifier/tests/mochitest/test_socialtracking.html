@@ -92,7 +92,7 @@ async function runTests() {
 
   await new Promise(resolve => {
     chromeScript.addMessageListener("trackersUnloaded", resolve);
-    chromeScript.sendAsyncMessage("unloadTrackers");
+    chromeScript.sendSyncMessage("unloadTrackers");
   });
 
   chromeScript.destroy();

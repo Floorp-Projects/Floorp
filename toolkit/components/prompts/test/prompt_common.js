@@ -241,16 +241,10 @@ function PrompterProxy(chromeScript) {
             }
           }
 
-          let result;
-          chromeScript
-            .sendQuery("proxyPrompter", {
-              args,
-              methodName: prop,
-            })
-            .then(val => {
-              result = val;
-            });
-          SpecialPowers.Services.tm.spinEventLoopUntil(() => result);
+          let result = chromeScript.sendSyncMessage("proxyPrompter", {
+            args,
+            methodName: prop,
+          })[0][0];
 
           for (let outParam of outParams) {
             // Copy the out or inout param value over the original
