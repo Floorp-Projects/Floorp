@@ -416,11 +416,11 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
     let root;
     switch (mode) {
       case PARSE_CONTENT_MODE.PSUEDO_CUE:
-        root = window.document.createElement("div", {pseudo: "::cue"});
+        root = window.document.createElement("span", {pseudo: "::cue"});
         break;
       case PARSE_CONTENT_MODE.NORMAL_CUE:
       case PARSE_CONTENT_MODE.REGION_CUE:
-        root = window.document.createElement("div");
+        root = window.document.createElement("span");
         break;
       case PARSE_CONTENT_MODE.DOCUMENT_FRAGMENT:
         root = window.document.createDocumentFragment();
@@ -609,7 +609,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       // be adjusted by cue size.
       this.applyStyles({
         "background-color": "rgba(0, 0, 0, 0.8)",
-        "display": "inline",
       }, this.cueDiv);
     }
 
